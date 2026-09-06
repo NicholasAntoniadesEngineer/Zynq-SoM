@@ -1,0 +1,478 @@
+{
+  "schema": "schgen.circuit/1",
+  "name": "board_aux",
+  "title": "Board services: gated +3V3_AUX rail + PCA9306 I2C isolator",
+  "parts": [
+    {
+      "ref": "U1",
+      "lib_id": "SY6280AAC:SY6280AAC",
+      "value": "SY6280AAC",
+      "footprint": "SY6280AAC:SY6280AAC",
+      "fields": {
+        "LCSC": "C55136"
+      },
+      "pin_names": {
+        "OUT": [
+          "1"
+        ],
+        "GND": [
+          "2"
+        ],
+        "ISET": [
+          "3"
+        ],
+        "EN": [
+          "4"
+        ],
+        "IN": [
+          "5"
+        ]
+      },
+      "pin_numbers": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5"
+      ]
+    },
+    {
+      "ref": "R1",
+      "lib_id": "Device:R",
+      "value": "13k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C22797"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "C1",
+      "lib_id": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {
+        "LCSC": "C14663"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "C2",
+      "lib_id": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {
+        "LCSC": "C14663"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "C3",
+      "lib_id": "Device:C",
+      "value": "10u",
+      "footprint": "Capacitor_SMD:C_0805_2012Metric",
+      "fields": {
+        "LCSC": "C15850"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "SW1",
+      "lib_id": "DSHP04TSGER:DSHP04TSGER",
+      "value": "DSHP04TSGER",
+      "footprint": "DSHP04TSGER:DSHP04TSGER",
+      "fields": {
+        "LCSC": "C3293144"
+      },
+      "pin_names": {
+        "1": [
+          "1"
+        ],
+        "2": [
+          "2"
+        ],
+        "3": [
+          "3"
+        ],
+        "4": [
+          "4"
+        ],
+        "5": [
+          "5"
+        ],
+        "6": [
+          "6"
+        ],
+        "7": [
+          "7"
+        ],
+        "8": [
+          "8"
+        ]
+      },
+      "pin_numbers": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8"
+      ]
+    },
+    {
+      "ref": "R2",
+      "lib_id": "Device:R",
+      "value": "100k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C25803"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "D1",
+      "lib_id": "Device:LED",
+      "value": "red",
+      "footprint": "LED_SMD:LED_0603_1608Metric",
+      "fields": {
+        "LCSC": "C2286"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "R3",
+      "lib_id": "Device:R",
+      "value": "330R",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C23138"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "U2",
+      "lib_id": "PCA9306DCUR:PCA9306DCUR",
+      "value": "PCA9306DCUR",
+      "footprint": "PCA9306DCUR:PCA9306DCUR",
+      "fields": {
+        "LCSC": "C33196"
+      },
+      "pin_names": {
+        "GND": [
+          "1"
+        ],
+        "VREF1": [
+          "2"
+        ],
+        "SCL1": [
+          "3"
+        ],
+        "SDA1": [
+          "4"
+        ],
+        "SDA2": [
+          "5"
+        ],
+        "SCL2": [
+          "6"
+        ],
+        "VREF2": [
+          "7"
+        ],
+        "EN": [
+          "8"
+        ]
+      },
+      "pin_numbers": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8"
+      ]
+    },
+    {
+      "ref": "C4",
+      "lib_id": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {
+        "LCSC": "C14663"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "R4",
+      "lib_id": "Device:R",
+      "value": "100k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C25803"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "R5",
+      "lib_id": "Device:R",
+      "value": "4k7",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C23162"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "R6",
+      "lib_id": "Device:R",
+      "value": "4k7",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C23162"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "C5",
+      "lib_id": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {
+        "LCSC": "C14663"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "TP1",
+      "lib_id": "Connector:TestPoint",
+      "value": "+3V3_AUX",
+      "footprint": "TestPoint:TestPoint_Pad_D1.5mm",
+      "fields": {
+        "BOM": "exclude"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "TP2",
+      "lib_id": "Connector:TestPoint",
+      "value": "AUX_I2C_SCL",
+      "footprint": "TestPoint:TestPoint_Pad_D1.5mm",
+      "fields": {
+        "BOM": "exclude"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "TP3",
+      "lib_id": "Connector:TestPoint",
+      "value": "AUX_I2C_SDA",
+      "footprint": "TestPoint:TestPoint_Pad_D1.5mm",
+      "fields": {
+        "BOM": "exclude"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    }
+  ],
+  "nets": [
+    {
+      "name": "+3V3",
+      "net_class": "power",
+      "pins": [
+        "U1.5",
+        "C1.1",
+        "SW1.1",
+        "SW1.3",
+        "SW1.5",
+        "SW1.7"
+      ]
+    },
+    {
+      "name": "+3V3_AUX",
+      "net_class": "power",
+      "pins": [
+        "U1.1",
+        "C2.1",
+        "C3.1",
+        "D1.2",
+        "U2.7",
+        "R4.1",
+        "R5.1",
+        "R6.1",
+        "C5.1",
+        "TP1.1"
+      ]
+    },
+    {
+      "name": "GND",
+      "net_class": "ground",
+      "pins": [
+        "U1.2",
+        "R1.2",
+        "C1.2",
+        "C2.2",
+        "C3.2",
+        "R2.2",
+        "R3.2",
+        "U2.1",
+        "C4.2",
+        "C5.2"
+      ]
+    },
+    {
+      "name": "EN_AUX",
+      "net_class": "signal",
+      "pins": [
+        "U1.4",
+        "SW1.8",
+        "R2.1"
+      ]
+    },
+    {
+      "name": "BS_ISET_AUX",
+      "net_class": "signal",
+      "pins": [
+        "U1.3",
+        "R1.1"
+      ]
+    },
+    {
+      "name": "BS_PG_AUX",
+      "net_class": "signal",
+      "pins": [
+        "D1.1",
+        "R3.1"
+      ]
+    },
+    {
+      "name": "+3V3_SC",
+      "net_class": "power",
+      "pins": [
+        "U2.2",
+        "C4.1"
+      ]
+    },
+    {
+      "name": "STM32_I2C2_SCL",
+      "net_class": "port",
+      "pins": [
+        "U2.3"
+      ]
+    },
+    {
+      "name": "STM32_I2C2_SDA",
+      "net_class": "port",
+      "pins": [
+        "U2.4"
+      ]
+    },
+    {
+      "name": "AUX_I2C_SCL",
+      "net_class": "port",
+      "pins": [
+        "U2.6",
+        "R5.2",
+        "TP2.1"
+      ]
+    },
+    {
+      "name": "AUX_I2C_SDA",
+      "net_class": "port",
+      "pins": [
+        "U2.5",
+        "R6.2",
+        "TP3.1"
+      ]
+    },
+    {
+      "name": "AUX_ISO_EN",
+      "net_class": "signal",
+      "pins": [
+        "U2.8",
+        "R4.2"
+      ]
+    }
+  ],
+  "nc": [
+    "SW1.2",
+    "SW1.4",
+    "SW1.6"
+  ],
+  "port_types": {
+    "STM32_I2C2_SCL": {
+      "kind": "i2c",
+      "pair_with": null,
+      "impedance": null,
+      "role": "scl",
+      "bus": "STM32_I2C2",
+      "speed_hz": 400000,
+      "level_v": null,
+      "expect": "STM32_I2C2 management bus (bringup_rails / usb_pd / power_mon)"
+    },
+    "STM32_I2C2_SDA": {
+      "kind": "i2c",
+      "pair_with": null,
+      "impedance": null,
+      "role": "sda",
+      "bus": "STM32_I2C2",
+      "speed_hz": 400000,
+      "level_v": null,
+      "expect": "STM32_I2C2 management bus (bringup_rails / usb_pd / power_mon)"
+    },
+    "AUX_I2C_SCL": {
+      "kind": "i2c",
+      "pair_with": null,
+      "impedance": null,
+      "role": "scl",
+      "bus": "AUX_I2C",
+      "speed_hz": 400000,
+      "level_v": null,
+      "expect": "board_services (the gated peripherals on the isolated AUX bus)"
+    },
+    "AUX_I2C_SDA": {
+      "kind": "i2c",
+      "pair_with": null,
+      "impedance": null,
+      "role": "sda",
+      "bus": "AUX_I2C",
+      "speed_hz": 400000,
+      "level_v": null,
+      "expect": "board_services (the gated peripherals on the isolated AUX bus)"
+    }
+  },
+  "hints": {},
+  "loads": {
+    "+3V3_AUX": [
+      [
+        0.006,
+        "status LED 3.9mA + 2x4k7 AUX-bus pull-ups"
+      ]
+    ]
+  },
+  "tp_waivers": {},
+  "decap_waivers": {},
+  "pull_waivers": {},
+  "reset_waivers": {},
+  "strap_waivers": {},
+  "ep_waivers": {},
+  "thermal_waivers": {},
+  "part_rule_waivers": {}
+}

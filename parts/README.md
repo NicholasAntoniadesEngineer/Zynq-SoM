@@ -7,7 +7,7 @@ a part.
 
 ```
 parts/FUSB302BMPX/
-  FUSB302BMPX.py            # metadata + pin table (the electrical contract)
+  part.json                 # metadata + pin table (compiled into native/catalog.bin)
   FUSB302BMPX.kicad_sym     # schematic symbol
   FUSB302BMPX.kicad_mod     # footprint (pads exact to the physical part)
   FUSB302BMPX.step          # 3D model (MCAD)
@@ -15,11 +15,14 @@ parts/FUSB302BMPX/
   FUSB302BMPX.easyeda.json  # raw EasyEDA API response (provenance + offline regen)
 ```
 
-Every file in a folder carries the part's name. The `.py` module is the source
-of truth the rest of the build reads: `MPN`, `LCSC`, `DESCRIPTION`,
-`MANUFACTURER`, `PACKAGE`, `PREFIX` (reference designator letter), `DATASHEET`
-URL, `LIB_ID`/`FOOTPRINT`, the `MODELS_3D` list, and `PINS` — a
-`(number, name, etype)` table where `etype` is the KiCad pin electrical type.
+`part.json` is the authored electrical contract (`schema: schgen.part/1`).
+`scripts/build_native.sh` compiles every `parts/*/part.json` into
+`native/catalog.bin` (interned strings, pin tables, mmap). Runtime `use_part`
+looks up that binary — it does not parse JSON or exec Python. Required fields:
+`mpn`, `safe_name`, `lcsc`, `description`, `manufacturer`, `package`,
+`jlc_class`, `prefix`, `datasheet`, `product_url`, `lib_id`, `footprint`,
+`models_3d`, and `pins` (`num` / `name` / `etype`). Unknown keys fail the
+compile. Footprint copper stays in `.kicad_mod` (sexpr).
 
 ## Adding a part
 
@@ -85,11 +88,11 @@ Subsystems never vendor a symbol into a sheet. They reference a part by MPN:
 self.use_part("FUSB302BMPX", "U1")
 ```
 
-`use_part()` (`schgen/core/model.py`) loads `parts/<MPN>/<MPN>.py` and takes the
-`LIB_ID`, `FOOTPRINT`, reference prefix, LCSC code, and the **named** pin table
-from it — inline part metadata is rejected, and a missing folder is a build
-error that names the exact `schgen part add` command to fix it. Because the pin
-table is named, sheets wire pins by name and the build validates them against
-the symbol. The `LCSC` code carried on every part keys the BOM and the
-datasheet ratings checks, so a part's orderable identity can never drift from
-its library folder.
+`use_part()` (`schgen/core/model.py`) mmaps `native/catalog.bin` and takes the
+`lib_id`, `footprint`, reference prefix, LCSC code, and the **named** pin table
+from the compiled record. Inline part metadata is rejected. A missing
+`part.json` or a stale/absent catalog is a build error that names
+`schgen part add` / `scripts/build_native.sh`. Because the pin table is named,
+sheets wire pins by name and the build validates them against the symbol. The
+`LCSC` code carried on every part keys the BOM and the datasheet ratings
+checks, so a part's orderable identity can never drift from its library folder.

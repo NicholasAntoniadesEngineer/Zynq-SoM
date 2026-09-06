@@ -1,0 +1,31 @@
+{
+  "schema": "schgen.part/1",
+  "mpn": "0603WAF1002T5E",
+  "safe_name": "0603WAF1002T5E",
+  "lcsc": "C25804",
+  "description": "10KΩ (1002) ±1%",
+  "manufacturer": "UNI-ROYAL(厚声)",
+  "package": "R0603",
+  "jlc_class": "Basic Part",
+  "prefix": "R",
+  "datasheet": "https://www.lcsc.com/datasheet/C25804.pdf",
+  "product_url": "https://lcsc.com/product-detail/Chip-Resistor-Surface-Mount-UniOhm_10KR-1002-1_C25804.html",
+  "lib_id": "0603WAF1002T5E:0603WAF1002T5E",
+  "footprint": "0603WAF1002T5E:0603WAF1002T5E",
+  "models_3d": [
+    "0603WAF1002T5E.wrl",
+    "0603WAF1002T5E.step"
+  ],
+  "pins": [
+    {
+      "num": "2",
+      "name": "2",
+      "etype": "passive"
+    },
+    {
+      "num": "1",
+      "name": "1",
+      "etype": "passive"
+    }
+  ]
+}

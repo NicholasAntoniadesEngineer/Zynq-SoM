@@ -5,6 +5,7 @@ import re
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from schgen.core import native as _nat
 from schgen.generate.pcb import PcbModel, _inst_courtyard
 
 _TIERS: tuple[tuple[int, float, str], ...] = (
@@ -12,6 +13,7 @@ _TIERS: tuple[tuple[int, float, str], ...] = (
     (8,  1.50, "<=8-pin non-passive — 1.5 mm absolute floor (user law 2026-07-29)"),
 )
 _TIER_TOP = (2.00, ">=9-pin package — 2.0 mm floor (user law 2026-07-29)")
+_NEED_MM = [(max_pins, need) for max_pins, need, _basis in _TIERS]
 
 MIN_SUBJECT_PINS = 3
 
@@ -24,17 +26,44 @@ _NOT_PLAIN_PASSIVE = ("RS", "RJ", "RN", "LED")
 _TOUCH_EPS = 1e-4
 
 
-def _ref_prefix(ref: str) -> str:
+def _ref_prefix_py(ref: str) -> str:
     m = re.match(r"[A-Za-z]+", ref)
     return m.group(0) if m else ref
 
 
-def _is_cluster_passive(ref: str, pins: int) -> bool:
+def _ref_prefix(ref: str) -> str:
+    if not _nat.loaded():
+        raise RuntimeError("native ref_prefix required")
+    got = _nat.module().ref_prefix(ref)
+    if _nat.trace():
+        python_ref = _ref_prefix_py(ref)
+        if got != python_ref:
+            raise AssertionError(
+                "native ref_prefix DIVERGENCE: "
+                f"cpp={got} python={python_ref} ref={ref!r}")
+    return got
+
+
+def _is_cluster_passive_py(ref: str, pins: int) -> bool:
     if pins > 2:
         return False
     if ref.startswith(_NOT_PLAIN_PASSIVE):
         return False
-    return _ref_prefix(ref) in _PASSIVE_PREFIX
+    return _ref_prefix_py(ref) in _PASSIVE_PREFIX
+
+
+def _is_cluster_passive(ref: str, pins: int) -> bool:
+    if not _nat.loaded():
+        raise RuntimeError("native is_cluster_passive required")
+    got = bool(_nat.module().is_cluster_passive(
+        ref, pins, list(_NOT_PLAIN_PASSIVE), list(_PASSIVE_PREFIX)))
+    if _nat.trace():
+        python_ref = _is_cluster_passive_py(ref, pins)
+        if got != python_ref:
+            raise AssertionError(
+                "native is_cluster_passive DIVERGENCE: "
+                f"cpp={got} python={python_ref} ref={ref!r} pins={pins}")
+    return got
 
 
 def _is_df40(inst) -> bool:
@@ -45,8 +74,21 @@ def is_df40_part(sheet: str, pins: int) -> bool:
     return bool(_DF40_SHEET_RE.match(sheet)) or pins >= DF40_MIN_PINS
 
 
+def is_testpoint_ref_py(ref: str) -> bool:
+    return _ref_prefix_py(ref) == "TP"
+
+
 def is_testpoint_ref(ref: str) -> bool:
-    return _ref_prefix(ref) == "TP"
+    if not _nat.loaded():
+        raise RuntimeError("native is_testpoint_ref required")
+    got = bool(_nat.module().is_testpoint_ref(ref))
+    if _nat.trace():
+        python_ref = is_testpoint_ref_py(ref)
+        if got != python_ref:
+            raise AssertionError(
+                "native is_testpoint_ref DIVERGENCE: "
+                f"cpp={got} python={python_ref} ref={ref!r}")
+    return got
 
 
 def _is_fiducial(inst) -> bool:
@@ -61,14 +103,28 @@ def counts_as_crowder(ref: str, sheet: str, pins: int, footprint: str,
                 or (sheet == subject_sheet and _is_cluster_passive(ref, pins)))
 
 
-def intelligent_need(pins: int) -> tuple[float, str]:
+def intelligent_need_py(pins: int) -> tuple[float, str]:
     for max_pins, need, basis in _TIERS:
         if pins <= max_pins:
             return need, basis
     return _TIER_TOP
 
 
-def _rect_gap(a, b) -> float:
+def intelligent_need(pins: int) -> tuple[float, str]:
+    if not _nat.loaded():
+        raise RuntimeError("native intelligent_need required")
+    got = tuple(_nat.module().intelligent_need(
+        pins, list(_TIERS), _TIER_TOP[0], _TIER_TOP[1]))
+    if _nat.trace():
+        python_ref = intelligent_need_py(pins)
+        if got != python_ref:
+            raise AssertionError(
+                "native intelligent_need DIVERGENCE: "
+                f"cpp={got} python={python_ref} pins={pins}")
+    return got
+
+
+def _rect_gap_py(a, b) -> float:
     ax0, ay0, ax1, ay1 = a
     bx0, by0, bx1, by1 = b
     dx = max(bx0 - ax1, ax0 - bx1, 0.0)
@@ -80,6 +136,18 @@ def _rect_gap(a, b) -> float:
     if dy == 0.0:
         return dx
     return (dx * dx + dy * dy) ** 0.5
+
+
+def _rect_gap(a, b) -> float:
+    if not _nat.loaded():
+        raise RuntimeError("native rect_gap required")
+    got = _nat.module().rect_gap(a, b)
+    if _nat.trace():
+        ref = _rect_gap_py(a, b)
+        if got != ref:
+            raise AssertionError(
+                f"native rect_gap DIVERGENCE: cpp={got} python={ref}")
+    return got
 
 
 @dataclass
@@ -172,26 +240,35 @@ def check(model: PcbModel, baseline: int | None = None) -> FanoutResult:
         need, basis = intelligent_need(pins)
         my_box = _inst_courtyard(inst)
 
-        best_gap = float("inf")
-        best_ref = ""
-        best_sheet = ""
-        for other, obox in boxes:
-            if other is inst:
-                continue
-            if other.side != inst.side:
-                continue
-            if not counts_as_crowder(other.ref, other.sheet,
-                                     len(other.pad_nets), other.footprint,
-                                     inst.sheet):
-                continue
-            gap = _rect_gap(my_box, obox)
-            if gap < best_gap:
-                best_gap = gap
-                best_ref = other.ref
-                best_sheet = other.sheet
-
-        clearance = 0.0 if best_gap < _TOUCH_EPS else (
-            best_gap if best_gap != float("inf") else float("inf"))
+        crowders = [(other, obox) for other, obox in boxes
+                    if other is not inst
+                    and other.side == inst.side
+                    and counts_as_crowder(other.ref, other.sheet,
+                                          len(other.pad_nets), other.footprint,
+                                          inst.sheet)]
+        if not _nat.loaded():
+            raise RuntimeError("native nearest_rect_gap required")
+        others = [obox for _o, obox in crowders]
+        clearance, idx = _nat.module().nearest_rect_gap(
+            my_box, others, _TOUCH_EPS)
+        if _nat.trace():
+            best_gap = float("inf")
+            best_i = -1
+            for i, (_o, obox) in enumerate(crowders):
+                gap = _rect_gap_py(my_box, obox)
+                if gap < best_gap:
+                    best_gap = gap
+                    best_i = i
+            ref_clr = 0.0 if best_gap < _TOUCH_EPS else best_gap
+            if (clearance, idx) != (ref_clr, best_i):
+                raise AssertionError(
+                    "native nearest_rect_gap DIVERGENCE: "
+                    f"cpp={(clearance, idx)} python={(ref_clr, best_i)}")
+        if idx < 0:
+            best_ref, best_sheet = "", ""
+        else:
+            best_ref = crowders[idx][0].ref
+            best_sheet = crowders[idx][0].sheet
         res.records.append(FanoutRec(
             ref=inst.ref, sheet=inst.sheet, pins=pins, side=inst.side,
             clearance=clearance, need=need,

@@ -1,0 +1,541 @@
+{
+  "schema": "schgen.part/1",
+  "mpn": "DF40C-100DP-0.4V(51)",
+  "safe_name": "DF40C-100DP-0.4V_51",
+  "lcsc": "C531031",
+  "description": "DF40C-100DP-0.4V(51) (CONN-SMD_100P-P0.40_DF40C-100DP-0.4V-51)",
+  "manufacturer": "HRS(广濑)",
+  "package": "CONN-SMD_100P-P0.40_DF40C-100DP-0.4V-51",
+  "jlc_class": "Extended Part",
+  "prefix": "CN",
+  "datasheet": "https://www.lcsc.com/datasheet/C531031.pdf",
+  "product_url": "https://lcsc.com/product-detail/Mezzanine-Connectors-Board-to-Board_HRS-Hirose-HRS-DF40C-100DP-0-4V-51_C531031.html",
+  "lib_id": "DF40C-100DP-0.4V_51:DF40C-100DP-0.4V_51",
+  "footprint": "DF40C-100DP-0.4V_51:DF40C-100DP-0.4V_51",
+  "models_3d": [
+    "DF40C-100DP-0.4V_51.wrl",
+    "DF40C-100DP-0.4V_51.step"
+  ],
+  "pins": [
+    {
+      "num": "1",
+      "name": "1",
+      "etype": "passive"
+    },
+    {
+      "num": "2",
+      "name": "2",
+      "etype": "passive"
+    },
+    {
+      "num": "3",
+      "name": "3",
+      "etype": "passive"
+    },
+    {
+      "num": "4",
+      "name": "4",
+      "etype": "passive"
+    },
+    {
+      "num": "5",
+      "name": "5",
+      "etype": "passive"
+    },
+    {
+      "num": "6",
+      "name": "6",
+      "etype": "passive"
+    },
+    {
+      "num": "7",
+      "name": "7",
+      "etype": "passive"
+    },
+    {
+      "num": "8",
+      "name": "8",
+      "etype": "passive"
+    },
+    {
+      "num": "9",
+      "name": "9",
+      "etype": "passive"
+    },
+    {
+      "num": "10",
+      "name": "10",
+      "etype": "passive"
+    },
+    {
+      "num": "11",
+      "name": "11",
+      "etype": "passive"
+    },
+    {
+      "num": "12",
+      "name": "12",
+      "etype": "passive"
+    },
+    {
+      "num": "13",
+      "name": "13",
+      "etype": "passive"
+    },
+    {
+      "num": "14",
+      "name": "14",
+      "etype": "passive"
+    },
+    {
+      "num": "15",
+      "name": "15",
+      "etype": "passive"
+    },
+    {
+      "num": "16",
+      "name": "16",
+      "etype": "passive"
+    },
+    {
+      "num": "17",
+      "name": "17",
+      "etype": "passive"
+    },
+    {
+      "num": "18",
+      "name": "18",
+      "etype": "passive"
+    },
+    {
+      "num": "19",
+      "name": "19",
+      "etype": "passive"
+    },
+    {
+      "num": "20",
+      "name": "20",
+      "etype": "passive"
+    },
+    {
+      "num": "21",
+      "name": "21",
+      "etype": "passive"
+    },
+    {
+      "num": "22",
+      "name": "22",
+      "etype": "passive"
+    },
+    {
+      "num": "23",
+      "name": "23",
+      "etype": "passive"
+    },
+    {
+      "num": "24",
+      "name": "24",
+      "etype": "passive"
+    },
+    {
+      "num": "25",
+      "name": "25",
+      "etype": "passive"
+    },
+    {
+      "num": "26",
+      "name": "26",
+      "etype": "passive"
+    },
+    {
+      "num": "27",
+      "name": "27",
+      "etype": "passive"
+    },
+    {
+      "num": "28",
+      "name": "28",
+      "etype": "passive"
+    },
+    {
+      "num": "29",
+      "name": "29",
+      "etype": "passive"
+    },
+    {
+      "num": "30",
+      "name": "30",
+      "etype": "passive"
+    },
+    {
+      "num": "31",
+      "name": "31",
+      "etype": "passive"
+    },
+    {
+      "num": "32",
+      "name": "32",
+      "etype": "passive"
+    },
+    {
+      "num": "33",
+      "name": "33",
+      "etype": "passive"
+    },
+    {
+      "num": "34",
+      "name": "34",
+      "etype": "passive"
+    },
+    {
+      "num": "35",
+      "name": "35",
+      "etype": "passive"
+    },
+    {
+      "num": "36",
+      "name": "36",
+      "etype": "passive"
+    },
+    {
+      "num": "37",
+      "name": "37",
+      "etype": "passive"
+    },
+    {
+      "num": "38",
+      "name": "38",
+      "etype": "passive"
+    },
+    {
+      "num": "39",
+      "name": "39",
+      "etype": "passive"
+    },
+    {
+      "num": "40",
+      "name": "40",
+      "etype": "passive"
+    },
+    {
+      "num": "41",
+      "name": "41",
+      "etype": "passive"
+    },
+    {
+      "num": "42",
+      "name": "42",
+      "etype": "passive"
+    },
+    {
+      "num": "43",
+      "name": "43",
+      "etype": "passive"
+    },
+    {
+      "num": "44",
+      "name": "44",
+      "etype": "passive"
+    },
+    {
+      "num": "45",
+      "name": "45",
+      "etype": "passive"
+    },
+    {
+      "num": "46",
+      "name": "46",
+      "etype": "passive"
+    },
+    {
+      "num": "47",
+      "name": "47",
+      "etype": "passive"
+    },
+    {
+      "num": "48",
+      "name": "48",
+      "etype": "passive"
+    },
+    {
+      "num": "49",
+      "name": "49",
+      "etype": "passive"
+    },
+    {
+      "num": "50",
+      "name": "50",
+      "etype": "passive"
+    },
+    {
+      "num": "51",
+      "name": "51",
+      "etype": "passive"
+    },
+    {
+      "num": "52",
+      "name": "52",
+      "etype": "passive"
+    },
+    {
+      "num": "53",
+      "name": "53",
+      "etype": "passive"
+    },
+    {
+      "num": "54",
+      "name": "54",
+      "etype": "passive"
+    },
+    {
+      "num": "55",
+      "name": "55",
+      "etype": "passive"
+    },
+    {
+      "num": "56",
+      "name": "56",
+      "etype": "passive"
+    },
+    {
+      "num": "57",
+      "name": "57",
+      "etype": "passive"
+    },
+    {
+      "num": "58",
+      "name": "58",
+      "etype": "passive"
+    },
+    {
+      "num": "59",
+      "name": "59",
+      "etype": "passive"
+    },
+    {
+      "num": "60",
+      "name": "60",
+      "etype": "passive"
+    },
+    {
+      "num": "61",
+      "name": "61",
+      "etype": "passive"
+    },
+    {
+      "num": "62",
+      "name": "62",
+      "etype": "passive"
+    },
+    {
+      "num": "63",
+      "name": "63",
+      "etype": "passive"
+    },
+    {
+      "num": "64",
+      "name": "64",
+      "etype": "passive"
+    },
+    {
+      "num": "65",
+      "name": "65",
+      "etype": "passive"
+    },
+    {
+      "num": "66",
+      "name": "66",
+      "etype": "passive"
+    },
+    {
+      "num": "67",
+      "name": "67",
+      "etype": "passive"
+    },
+    {
+      "num": "68",
+      "name": "68",
+      "etype": "passive"
+    },
+    {
+      "num": "69",
+      "name": "69",
+      "etype": "passive"
+    },
+    {
+      "num": "70",
+      "name": "70",
+      "etype": "passive"
+    },
+    {
+      "num": "71",
+      "name": "71",
+      "etype": "passive"
+    },
+    {
+      "num": "72",
+      "name": "72",
+      "etype": "passive"
+    },
+    {
+      "num": "73",
+      "name": "73",
+      "etype": "passive"
+    },
+    {
+      "num": "74",
+      "name": "74",
+      "etype": "passive"
+    },
+    {
+      "num": "75",
+      "name": "75",
+      "etype": "passive"
+    },
+    {
+      "num": "76",
+      "name": "76",
+      "etype": "passive"
+    },
+    {
+      "num": "77",
+      "name": "77",
+      "etype": "passive"
+    },
+    {
+      "num": "78",
+      "name": "78",
+      "etype": "passive"
+    },
+    {
+      "num": "79",
+      "name": "79",
+      "etype": "passive"
+    },
+    {
+      "num": "80",
+      "name": "80",
+      "etype": "passive"
+    },
+    {
+      "num": "81",
+      "name": "81",
+      "etype": "passive"
+    },
+    {
+      "num": "82",
+      "name": "82",
+      "etype": "passive"
+    },
+    {
+      "num": "83",
+      "name": "83",
+      "etype": "passive"
+    },
+    {
+      "num": "84",
+      "name": "84",
+      "etype": "passive"
+    },
+    {
+      "num": "85",
+      "name": "85",
+      "etype": "passive"
+    },
+    {
+      "num": "86",
+      "name": "86",
+      "etype": "passive"
+    },
+    {
+      "num": "87",
+      "name": "87",
+      "etype": "passive"
+    },
+    {
+      "num": "88",
+      "name": "88",
+      "etype": "passive"
+    },
+    {
+      "num": "89",
+      "name": "89",
+      "etype": "passive"
+    },
+    {
+      "num": "90",
+      "name": "90",
+      "etype": "passive"
+    },
+    {
+      "num": "91",
+      "name": "91",
+      "etype": "passive"
+    },
+    {
+      "num": "92",
+      "name": "92",
+      "etype": "passive"
+    },
+    {
+      "num": "93",
+      "name": "93",
+      "etype": "passive"
+    },
+    {
+      "num": "94",
+      "name": "94",
+      "etype": "passive"
+    },
+    {
+      "num": "95",
+      "name": "95",
+      "etype": "passive"
+    },
+    {
+      "num": "96",
+      "name": "96",
+      "etype": "passive"
+    },
+    {
+      "num": "97",
+      "name": "97",
+      "etype": "passive"
+    },
+    {
+      "num": "98",
+      "name": "98",
+      "etype": "passive"
+    },
+    {
+      "num": "99",
+      "name": "99",
+      "etype": "passive"
+    },
+    {
+      "num": "100",
+      "name": "100",
+      "etype": "passive"
+    },
+    {
+      "num": "104",
+      "name": "104",
+      "etype": "passive"
+    },
+    {
+      "num": "103",
+      "name": "103",
+      "etype": "passive"
+    },
+    {
+      "num": "102",
+      "name": "102",
+      "etype": "passive"
+    },
+    {
+      "num": "101",
+      "name": "101",
+      "etype": "passive"
+    }
+  ]
+}

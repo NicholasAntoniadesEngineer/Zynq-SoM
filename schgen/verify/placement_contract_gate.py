@@ -4,6 +4,7 @@ import math
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from schgen.core import native as _nat
 from schgen.core import sexpr
 from schgen.core.project import PROJECT_ROOT
 from schgen.core.project import spec as _project_spec
@@ -22,23 +23,25 @@ _CONTRACT_ROOTS: tuple[tuple[Path, str | None], ...] = (
 _WIRED_SHEETS: frozenset[str] = _project_spec().wired_sheets
 
 
+def read_contract_file(path: Path) -> dict:
+    import json
+    try:
+        payload = json.loads(path.read_text())
+    except Exception as exc:
+        raise RuntimeError(
+            f"placement contract {path} is not valid JSON: {exc}") from exc
+    if not isinstance(payload, dict):
+        raise RuntimeError(f"placement contract {path} must be a JSON object")
+    return payload
+
+
 def discover_contract(sheet_name: str) -> dict | None:
-    import importlib
-    import importlib.util
-    for root_dir, pkg_prefix in _CONTRACT_ROOTS:
-        pkg = root_dir / sheet_name / "placement_contract.py"
+    for root_dir, _ in _CONTRACT_ROOTS:
+        pkg = root_dir / sheet_name / "placement_contract.json"
         if not pkg.exists():
             continue
-        if pkg_prefix is not None:
-            mod = importlib.import_module(
-                f"{pkg_prefix}.{sheet_name}.placement_contract")
-        else:
-            spec = importlib.util.spec_from_file_location(
-                f"_project_contract_{sheet_name}", pkg)
-            mod = importlib.util.module_from_spec(spec)
-            spec.loader.exec_module(mod)
-        contract = getattr(mod, "CONTRACT", None)
-        if contract is not None and sheet_name not in _PIN_VALIDATED:
+        contract = read_contract_file(pkg)
+        if sheet_name not in _PIN_VALIDATED:
             validate_contract_pins(sheet_name, contract)
             _PIN_VALIDATED.add(sheet_name)
         return contract
@@ -200,19 +203,10 @@ def wired_term_participants() -> tuple[frozenset[str], frozenset[str]]:
 _pad_box_cache: dict[tuple[str, float], dict[str, tuple]] = {}
 
 
-# side-independent: the emitted board applies no F->B mirror to bottom locals
-def _pad_boxes(
-    mod_path: Path, rotation: float
-) -> dict[str, tuple[float, float, float, float]]:
-    key = (str(mod_path), round(rotation or 0.0, 3))
-    hit = _pad_box_cache.get(key)
-    if hit is not None:
-        return hit
-    doc = sexpr.loads(mod_path.read_text())
-    R = math.radians(rotation or 0.0)
-    cs, sn = math.cos(R), math.sin(R)
-    out: dict[str, tuple[float, float, float, float]] = {}
-    for node in doc:
+def _pad_named_rows_py(text: str
+                       ) -> list[tuple[str, float, float, float, float, float]]:
+    rows: list[tuple[str, float, float, float, float, float]] = []
+    for node in sexpr.loads(text):
         if not (isinstance(node, list) and node and node[0] == Sym("pad")):
             continue
         name = str(node[1]) if len(node) > 1 else ""
@@ -220,11 +214,39 @@ def _pad_boxes(
         sz = sexpr.find(node, "size")
         if not (at and len(at) >= 3):
             continue
-        px, py = float(at[1]), float(at[2])
-        prot = math.radians(
-            float(at[3]) if len(at) > 3 and isinstance(at[3], (int, float))
-            else 0.0)
-        sw, sh = (float(sz[1]), float(sz[2])) if sz and len(sz) >= 3 else (0.0, 0.0)
+        prot = float(at[3]) if len(at) > 3 and isinstance(at[3], (int, float)) \
+            else 0.0
+        sw, sh = (float(sz[1]), float(sz[2])) if sz and len(sz) >= 3 \
+            else (0.0, 0.0)
+        rows.append((name, float(at[1]), float(at[2]), prot, sw, sh))
+    return rows
+
+
+def _pad_named_rows(mod_path: Path
+                    ) -> list[tuple[str, float, float, float, float, float]]:
+    text = mod_path.read_text()
+    if not _nat.loaded():
+        raise RuntimeError("native scan_pad_nodes required")
+    got = [(n, px, py, prot, sw, sh)
+           for n, _ptype, px, py, prot, sw, sh in
+           _nat.module().scan_pad_nodes(text)]
+    if _nat.trace():
+        ref = _pad_named_rows_py(text)
+        if got != ref:
+            raise AssertionError(
+                "native scan_pad_nodes DIVERGENCE: "
+                f"cpp={got} python={ref} path={mod_path}")
+    return got
+
+
+def _pad_boxes_py(
+    mod_path: Path, rotation: float
+) -> dict[str, tuple[float, float, float, float]]:
+    R = math.radians(rotation or 0.0)
+    cs, sn = math.cos(R), math.sin(R)
+    out: dict[str, tuple[float, float, float, float]] = {}
+    for name, px, py, prot_deg, sw, sh in _pad_named_rows(mod_path):
+        prot = math.radians(prot_deg)
         cx = px * cs + py * sn
         cy = -px * sn + py * cs
         tot = R + prot
@@ -236,25 +258,84 @@ def _pad_boxes(
             o = out[name]
             b = (min(o[0], b[0]), min(o[1], b[1]), max(o[2], b[2]), max(o[3], b[3]))
         out[name] = b
-    _pad_box_cache[key] = out
     return out
+
+
+def _pad_boxes(
+    mod_path: Path, rotation: float
+) -> dict[str, tuple[float, float, float, float]]:
+    key = (str(mod_path), round(rotation or 0.0, 3))
+    hit = _pad_box_cache.get(key)
+    if hit is not None:
+        return hit
+    if not _nat.loaded():
+        raise RuntimeError("native pad_boxes_named required")
+    rows = _pad_named_rows(mod_path)
+    got = {n: (x0, y0, x1, y1)
+           for n, x0, y0, x1, y1 in _nat.module().pad_boxes_named(
+               rows, rotation or 0.0)}
+    if _nat.trace():
+        ref = _pad_boxes_py(mod_path, rotation)
+        if got != ref:
+            raise AssertionError(
+                "native pad_boxes_named DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    _pad_box_cache[key] = got
+    return got
+
+
+def offset_named_boxes_py(
+    boxes: dict[str, tuple[float, float, float, float]], dx: float, dy: float
+) -> dict[str, tuple[float, float, float, float]]:
+    return {n: (dx + b[0], dy + b[1], dx + b[2], dy + b[3])
+            for n, b in boxes.items()}
+
+
+def offset_named_boxes(
+    boxes: dict[str, tuple[float, float, float, float]], dx: float, dy: float
+) -> dict[str, tuple[float, float, float, float]]:
+    if not _nat.loaded():
+        raise RuntimeError("native offset_named_boxes required")
+    rows = [(n, *b) for n, b in boxes.items()]
+    got = {n: (x0, y0, x1, y1)
+           for n, x0, y0, x1, y1 in _nat.module().offset_named_boxes(
+               rows, dx, dy)}
+    if _nat.trace():
+        ref = offset_named_boxes_py(boxes, dx, dy)
+        if got != ref:
+            raise AssertionError(
+                "native offset_named_boxes DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
 
 
 def _inst_pad_boxes(inst) -> dict[str, tuple[float, float, float, float]]:
     rel = _pad_boxes(inst.mod_path, inst.rotation or 0.0)
-    return {n: (inst.x + b[0], inst.y + b[1], inst.x + b[2], inst.y + b[3])
-            for n, b in rel.items()}
+    return offset_named_boxes(rel, inst.x, inst.y)
 
 
-def _box_gap(a: tuple[float, float, float, float],
-             b: tuple[float, float, float, float]) -> float:
+def _box_gap_py(a: tuple[float, float, float, float],
+                b: tuple[float, float, float, float]) -> float:
     dx = max(a[0] - b[2], b[0] - a[2], 0.0)
     dy = max(a[1] - b[3], b[1] - a[3], 0.0)
     return math.hypot(dx, dy)
 
 
-def _pins_to_part(pin_boxes: dict[str, tuple], part_boxes: dict[str, tuple],
-                  pins: list[str]) -> float | None:
+def _box_gap(a: tuple[float, float, float, float],
+             b: tuple[float, float, float, float]) -> float:
+    if not _nat.loaded():
+        raise RuntimeError("native box_gap required")
+    got = _nat.module().box_gap(a, b)
+    if _nat.trace():
+        ref = _box_gap_py(a, b)
+        if got != ref:
+            raise AssertionError(
+                f"native box_gap DIVERGENCE: cpp={got} python={ref}")
+    return got
+
+
+def _pins_to_part_py(pin_boxes: dict[str, tuple], part_boxes: dict[str, tuple],
+                     pins: list[str]) -> float | None:
     best: float | None = None
     part = list(part_boxes.values())
     if not part:
@@ -264,19 +345,50 @@ def _pins_to_part(pin_boxes: dict[str, tuple], part_boxes: dict[str, tuple],
         if pb is None:
             continue
         for qb in part:
-            g = _box_gap(pb, qb)
+            g = _box_gap_py(pb, qb)
+            best = g if best is None else min(best, g)
+    return best
+
+
+def _pins_to_part(pin_boxes: dict[str, tuple], part_boxes: dict[str, tuple],
+                  pins: list[str]) -> float | None:
+    part = list(part_boxes.values())
+    pin_hits = [pin_boxes[p] for p in pins if p in pin_boxes]
+    if not _nat.loaded():
+        raise RuntimeError("native min_box_gap required")
+    got = _nat.module().min_box_gap(pin_hits, part)
+    if _nat.trace():
+        ref = _pins_to_part_py(pin_boxes, part_boxes, pins)
+        if got != ref:
+            raise AssertionError(
+                "native min_box_gap DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
+
+
+def _part_to_part_py(a_boxes: dict[str, tuple], b_boxes: dict[str, tuple]
+                     ) -> float | None:
+    best: float | None = None
+    for ab in a_boxes.values():
+        for bb in b_boxes.values():
+            g = _box_gap_py(ab, bb)
             best = g if best is None else min(best, g)
     return best
 
 
 def _part_to_part(a_boxes: dict[str, tuple], b_boxes: dict[str, tuple]
                   ) -> float | None:
-    best: float | None = None
-    for ab in a_boxes.values():
-        for bb in b_boxes.values():
-            g = _box_gap(ab, bb)
-            best = g if best is None else min(best, g)
-    return best
+    if not _nat.loaded():
+        raise RuntimeError("native min_box_gap required")
+    got = _nat.module().min_box_gap(list(a_boxes.values()),
+                                    list(b_boxes.values()))
+    if _nat.trace():
+        ref = _part_to_part_py(a_boxes, b_boxes)
+        if got != ref:
+            raise AssertionError(
+                "native min_box_gap DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
 
 
 def _board_refs_by_sheet(sheet_name: str, parts=None) -> dict[str, str]:

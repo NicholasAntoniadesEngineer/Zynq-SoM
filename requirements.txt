@@ -7,6 +7,9 @@ pillow         # PNG handling / golden-render comparison
 pytest>=8      # fast unit suite: `python -m pytest schgen/tests/`
 pytest-xdist>=3  # default-parallel suite (pyproject addopts); serial: pytest -n 0
 
+# Native kernels (`scripts/build_native.sh`; SCHGEN_NATIVE=0 forces Python):
+nanobind>=2.0  # C++ bindings for schgen._geom
+
 # External tools (not pip-installable):
 #   kicad-cli   KiCad 9+  — netlist/ERC/SVG/PDF export (required)
 #   ngspice               — optional: `schgen spice` analytic-gate cross-check

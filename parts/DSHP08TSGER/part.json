@@ -1,0 +1,101 @@
+{
+  "schema": "schgen.part/1",
+  "mpn": "DSHP08TSGER",
+  "safe_name": "DSHP08TSGER",
+  "lcsc": "C3293147",
+  "description": "DSHP08TSGER_C3293147 (SW-SMD_16P-L11.7-W5.4-P1.27-LS8.5)",
+  "manufacturer": "康深",
+  "package": "SW-SMD_16P-L11.7-W5.4-P1.27-LS8.5",
+  "jlc_class": "Extended Part",
+  "prefix": "SW",
+  "datasheet": "https://www.lcsc.com/datasheet/C3293147.pdf",
+  "product_url": "",
+  "lib_id": "DSHP08TSGER:DSHP08TSGER",
+  "footprint": "DSHP08TSGER:DSHP08TSGER",
+  "models_3d": [
+    "DSHP08TSGER.wrl",
+    "DSHP08TSGER.step"
+  ],
+  "pins": [
+    {
+      "num": "1",
+      "name": "PIN1",
+      "etype": "passive"
+    },
+    {
+      "num": "2",
+      "name": "PIN2",
+      "etype": "passive"
+    },
+    {
+      "num": "3",
+      "name": "PIN3",
+      "etype": "passive"
+    },
+    {
+      "num": "4",
+      "name": "PIN4",
+      "etype": "passive"
+    },
+    {
+      "num": "5",
+      "name": "PIN5",
+      "etype": "passive"
+    },
+    {
+      "num": "6",
+      "name": "PIN6",
+      "etype": "passive"
+    },
+    {
+      "num": "7",
+      "name": "PIN7",
+      "etype": "passive"
+    },
+    {
+      "num": "8",
+      "name": "PIN8",
+      "etype": "passive"
+    },
+    {
+      "num": "9",
+      "name": "PIN9",
+      "etype": "passive"
+    },
+    {
+      "num": "10",
+      "name": "PIN10",
+      "etype": "passive"
+    },
+    {
+      "num": "11",
+      "name": "PIN11",
+      "etype": "passive"
+    },
+    {
+      "num": "12",
+      "name": "PIN12",
+      "etype": "passive"
+    },
+    {
+      "num": "13",
+      "name": "PIN13",
+      "etype": "passive"
+    },
+    {
+      "num": "14",
+      "name": "PIN14",
+      "etype": "passive"
+    },
+    {
+      "num": "15",
+      "name": "15",
+      "etype": "passive"
+    },
+    {
+      "num": "16",
+      "name": "16",
+      "etype": "passive"
+    }
+  ]
+}

@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 
 from schgen.core import fallbacks as _fb
+from schgen.core import native as _nat
 from schgen.core import quantize as _q
 from schgen.core.project import spec as _project_spec
 from schgen.verify import placement_contract_gate as _g
@@ -66,17 +67,48 @@ def _crtyd_half(mod: Path, rot: float) -> tuple[float, float]:
     return (rb[2] - rb[0]) / 2.0, (rb[3] - rb[1]) / 2.0
 
 
-def _pin_box(ic_boxes: dict[str, tuple], pins: list[str]
-             ) -> tuple[float, float, float, float]:
+def _pin_box_py(ic_boxes: dict[str, tuple], pins: list[str]
+                ) -> tuple[float, float, float, float]:
     boxes = [ic_boxes[p] for p in pins if p in ic_boxes]
     return (min(b[0] for b in boxes), min(b[1] for b in boxes),
             max(b[2] for b in boxes), max(b[3] for b in boxes))
 
 
-def _boxes_overlap(a: tuple[float, float, float, float],
-                   b: tuple[float, float, float, float], halo: float) -> bool:
+def _pin_box(ic_boxes: dict[str, tuple], pins: list[str]
+             ) -> tuple[float, float, float, float]:
+    boxes = [ic_boxes[p] for p in pins if p in ic_boxes]
+    if not _nat.loaded():
+        raise RuntimeError("native pin_box required")
+    got = _nat.module().boxes_union(boxes)
+    if got is None:
+        raise ValueError("pin box: no pads")
+    hit = tuple(got)
+    if _nat.trace():
+        ref = _pin_box_py(ic_boxes, pins)
+        if hit != ref:
+            raise AssertionError(
+                f"native pin_box DIVERGENCE: cpp={hit} python={ref}")
+    return hit
+
+
+def _boxes_overlap_py(a: tuple[float, float, float, float],
+                      b: tuple[float, float, float, float], halo: float) -> bool:
     return (a[0] - halo < b[2] and a[2] + halo > b[0]
             and a[1] - halo < b[3] and a[3] + halo > b[1])
+
+
+def _boxes_overlap(a: tuple[float, float, float, float],
+                   b: tuple[float, float, float, float], halo: float) -> bool:
+    if not _nat.loaded():
+        raise RuntimeError("native boxes_overlap required")
+    got = _nat.module().boxes_overlap(a, b, halo)
+    if _nat.trace():
+        ref = _boxes_overlap_py(a, b, halo)
+        if got is not ref:
+            raise AssertionError(
+                "native boxes_overlap DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
 
 
 _BUCK_CACHE: dict[tuple, list[tuple[float, float, float]]] = {}
@@ -121,11 +153,10 @@ def _build_buck_stage(ic_bref: str, members: dict[str, str],
     return parts
 
 
-def _beside(mod: Path, rot: float, side: str,
-            target: tuple[float, float, float, float],
-            direction: str, gap: float,
-            along_center: float | None = None) -> _Part:
-    hx, hy = _crtyd_half(mod, rot)
+def _beside_py(mod: Path, rot: float, side: str,
+               target: tuple[float, float, float, float],
+               direction: str, gap: float,
+               along_center: float | None, hx: float, hy: float) -> _Part:
     tcx = (target[0] + target[2]) / 2.0
     tcy = (target[1] + target[3]) / 2.0
     if direction == "L":
@@ -141,6 +172,25 @@ def _beside(mod: Path, rot: float, side: str,
         oy = target[3] + gap + hy
         ox = along_center if along_center is not None else tcx
     return _Part("", mod, rot, side, round(ox, 4), round(oy, 4))
+
+
+def _beside(mod: Path, rot: float, side: str,
+            target: tuple[float, float, float, float],
+            direction: str, gap: float,
+            along_center: float | None = None) -> _Part:
+    hx, hy = _crtyd_half(mod, rot)
+    if not _nat.loaded():
+        raise RuntimeError("native beside required")
+    ox, oy = _nat.module().beside_offset(
+        hx, hy, target, direction, gap, along_center)
+    if _nat.trace():
+        ref = _beside_py(mod, rot, side, target, direction, gap,
+                         along_center, hx, hy)
+        if (ox, oy) != (ref.ox, ref.oy):
+            raise AssertionError(
+                "native beside_offset DIVERGENCE: "
+                f"cpp={(ox, oy)} python={(ref.ox, ref.oy)}")
+    return _Part("", mod, rot, side, ox, oy)
 
 
 def _rebref(p: _Part, bref: str) -> _Part:
@@ -207,12 +257,20 @@ def _hf_cap(mod: Path, ib: dict[str, tuple], pair: list[str], direction: str,
             gap: float, ind_left: float, bref: str) -> _Part:
     p = _beside(mod, 0.0, "top", _pin_box(ib, pair), direction, gap)
     hx, _hy = _crtyd_half(mod, 0.0)
-    ox = ind_left - TEMPLATE_CLEAR - hx
-    return _Part(bref, mod, 0.0, "top", round(ox, 4), p.oy)
+    if not _nat.loaded():
+        raise RuntimeError("native hf_cap_pose required")
+    ox, oy = _nat.module().hf_cap_pose(p.oy, ind_left, TEMPLATE_CLEAR, hx)
+    if _nat.trace():
+        ref = (round(ind_left - TEMPLATE_CLEAR - hx, 4), p.oy)
+        if (ox, oy) != ref:
+            raise AssertionError(
+                "native hf_cap_pose DIVERGENCE: "
+                f"cpp={(ox, oy)} python={ref}")
+    return _Part(bref, mod, 0.0, "top", ox, oy)
 
 
-def _bulk_cap(mod: Path, hf: _Part, direction: str, gap: float,
-              ind_left: float, bref: str) -> _Part:
+def _bulk_cap_py(mod: Path, hf: _Part, direction: str, gap: float,
+                 ind_left: float, bref: str) -> _Part:
     hfb = hf.local_box()
     hx, hy = _crtyd_half(mod, 90.0)
     cy = (hfb[3] + gap + hy) if direction == "D" else (hfb[1] - gap - hy)
@@ -220,9 +278,26 @@ def _bulk_cap(mod: Path, hf: _Part, direction: str, gap: float,
     return _Part(bref, mod, 90.0, "top", round(ox, 4), round(cy, 4))
 
 
-def _cout_column(resolvable: dict[str, Path], out_caps: list[str],
-                 ind_out_box: tuple[float, float, float, float],
-                 pad: float) -> list[_Part]:
+def _bulk_cap(mod: Path, hf: _Part, direction: str, gap: float,
+              ind_left: float, bref: str) -> _Part:
+    if not _nat.loaded():
+        raise RuntimeError("native bulk_cap required")
+    hx, hy = _crtyd_half(mod, 90.0)
+    ox, oy = _nat.module().bulk_cap_pose(
+        hf.ox, hf.local_box(), direction, gap, hx, hy, ind_left,
+        TEMPLATE_CLEAR)
+    if _nat.trace():
+        ref = _bulk_cap_py(mod, hf, direction, gap, ind_left, bref)
+        if (ox, oy) != (ref.ox, ref.oy):
+            raise AssertionError(
+                "native bulk_cap_pose DIVERGENCE: "
+                f"cpp={(ox, oy)} python={(ref.ox, ref.oy)}")
+    return _Part(bref, mod, 90.0, "top", ox, oy)
+
+
+def _cout_column_py(resolvable: dict[str, Path], out_caps: list[str],
+                    ind_out_box: tuple[float, float, float, float],
+                    pad: float) -> list[_Part]:
     if not out_caps:
         return []
     mods = [resolvable[c] for c in out_caps]
@@ -239,6 +314,31 @@ def _cout_column(resolvable: dict[str, Path], out_caps: list[str],
         cy = y + chy
         parts.append(_Part(c, m, 90.0, "top", col_x, round(cy, 4)))
         y += 2 * chy + step
+    return parts
+
+
+def _cout_column(resolvable: dict[str, Path], out_caps: list[str],
+                 ind_out_box: tuple[float, float, float, float],
+                 pad: float) -> list[_Part]:
+    if not out_caps:
+        return []
+    if not _nat.loaded():
+        raise RuntimeError("native cout_column required")
+    mods = [resolvable[c] for c in out_caps]
+    halves = [_crtyd_half(m, 90.0) for m in mods]
+    centers = [tuple(p) for p in _nat.module().cout_column_centers(
+        ind_out_box, pad, _COUT_GAP, TEMPLATE_CLEAR, halves)]
+    parts = [_Part(c, m, 90.0, "top", cx, cy)
+             for c, m, (cx, cy) in zip(out_caps, mods, centers,
+                                       strict=True)]
+    if _nat.trace():
+        ref = _cout_column_py(resolvable, out_caps, ind_out_box, pad)
+        hit = [(p.bref, p.ox, p.oy) for p in parts]
+        want = [(p.bref, p.ox, p.oy) for p in ref]
+        if hit != want:
+            raise AssertionError(
+                "native cout_column_centers DIVERGENCE: "
+                f"cpp={hit} python={want}")
     return parts
 
 
@@ -262,6 +362,63 @@ def _candidates(bref: str, mod: Path, ib: dict[str, tuple],
                 bound: float, keep_pins: list[str] | None, keep_min: float,
                 pad: float, skel_boxes: list[tuple[float, float, float, float]],
                 forbid_plus_x: bool = True) -> list[_Cand]:
+    if not _nat.loaded():
+        raise RuntimeError("native candidates required")
+    got = _candidates_native(bref, mod, ib, icb, target_pins, bound,
+                             keep_pins, keep_min, pad, skel_boxes,
+                             forbid_plus_x)
+    if _nat.trace():
+        ref = _candidates_py(bref, mod, ib, icb, target_pins, bound,
+                             keep_pins, keep_min, pad, skel_boxes,
+                             forbid_plus_x)
+        a = [(p.rot, p.ox, p.oy) for p, _b in got]
+        b = [(p.rot, p.ox, p.oy) for p, _b in ref]
+        if a != b:
+            raise AssertionError(
+                f"native candidates DIVERGENCE: {bref} cpp={a[:6]} "
+                f"python={b[:6]} n={len(a)}/{len(b)}")
+    return got
+
+
+def _candidates_native(bref: str, mod: Path, ib: dict[str, tuple],
+                       icb: tuple[float, float, float, float],
+                       target_pins: list[str] | None,
+                       bound: float, keep_pins: list[str] | None,
+                       keep_min: float, pad: float,
+                       skel_boxes: list[tuple[float, float, float, float]],
+                       forbid_plus_x: bool) -> list[_Cand]:
+    if target_pins:
+        tgt = _pin_box(ib, target_pins)
+        all_pins = target_pins
+    else:
+        allb = list(ib.values())
+        tgt = (min(b[0] for b in allb), min(b[1] for b in allb),
+               max(b[2] for b in allb), max(b[3] for b in allb))
+        all_pins = list(ib)
+    tcx, tcy = (tgt[0] + tgt[2]) / 2.0, (tgt[1] + tgt[3]) / 2.0
+    n = int((_CAND_RADIUS + pad) / _CAND_STEP)
+    halo = TEMPLATE_CLEAR + pad
+    rots = (90.0, 0.0)
+    bodies = [turn_box(_footprint_bbox(mod), rot) for rot in rots]
+    rel_pads = [list(_g._pad_boxes(mod, rot).values()) for rot in rots]
+    target_boxes = [ib[p] for p in all_pins if p in ib]
+    keep_boxes = [ib[p] for p in keep_pins if p in ib] if keep_pins else []
+    hits, truncated = _nat.module().seat_candidates(
+        tcx, tcy, n, _CAND_STEP, halo, _q.snap_erosion_bound(bound),
+        keep_min, forbid_plus_x, _CAND_CAP, icb, list(skel_boxes),
+        list(rots), bodies, rel_pads, target_boxes, keep_boxes)
+    if truncated:
+        _fb.record("cand_cap_truncated")
+    return [(_Part(bref, mod, rot, "top", cx, cy), (x0, y0, x1, y1))
+            for _d, _ax, _ay, rot, cx, cy, x0, y0, x1, y1 in hits]
+
+
+def _candidates_py(bref: str, mod: Path, ib: dict[str, tuple],
+                   icb: tuple[float, float, float, float],
+                   target_pins: list[str] | None,
+                   bound: float, keep_pins: list[str] | None, keep_min: float,
+                   pad: float, skel_boxes: list[tuple[float, float, float, float]],
+                   forbid_plus_x: bool = True) -> list[_Cand]:
     if target_pins:
         tgt = _pin_box(ib, target_pins)
     else:
@@ -303,6 +460,56 @@ def _seat_all(demands: list[_Demand], resolvable: dict[str, Path],
               ib: dict[str, tuple], icb: tuple[float, float, float, float],
               skeleton: list[_Part], pad: float,
               forbid_plus_x: bool = True) -> list[_Part]:
+    if not _nat.loaded():
+        raise RuntimeError("native seat_all required")
+    got = _seat_all_native(demands, resolvable, ib, icb, skeleton, pad,
+                           forbid_plus_x)
+    if _nat.trace():
+        ref = _seat_all_py(demands, resolvable, ib, icb, skeleton, pad,
+                           forbid_plus_x)
+        a = [(p.bref, p.rot, p.ox, p.oy) for p in got]
+        b = [(p.bref, p.rot, p.ox, p.oy) for p in ref]
+        if a != b:
+            raise AssertionError(
+                f"native seat_dfs DIVERGENCE: cpp={a} python={b}")
+    return got
+
+
+def _seat_all_native(demands: list[_Demand], resolvable: dict[str, Path],
+                     ib: dict[str, tuple], icb: tuple[float, float, float, float],
+                     skeleton: list[_Part], pad: float,
+                     forbid_plus_x: bool) -> list[_Part]:
+    halo = TEMPLATE_CLEAR + pad
+    skel_boxes = [s.local_box() for s in skeleton]
+    cand: dict[str, list[_Cand]] = {}
+    for bref, tpins, bound, keep, kmin in demands:
+        cand[bref] = _candidates(bref, resolvable[bref], ib, icb, tpins, bound,
+                                 keep, kmin, pad, skel_boxes,
+                                 forbid_plus_x=forbid_plus_x)
+    order = sorted((d[0] for d in demands), key=lambda r: len(cand[r]))
+    rows = [[b for _p, b in cand[r]] for r in order]
+    try:
+        solved, budget_hit, _nodes, pick = _nat.module().seat_dfs(
+            rows, skel_boxes, halo, _NODE_BUDGET)
+    except RuntimeError as exc:
+        if "TRIPWIRE" in str(exc):
+            raise AssertionError(str(exc)) from exc
+        raise
+    if budget_hit:
+        _fb.record("seat_node_budget")
+    if solved:
+        picked = {order[i]: cand[order[i]][pick[i]][0]
+                  for i in range(len(order))}
+        return [picked[d[0]] for d in demands]
+    return [(cand[d[0]][0][0] if cand[d[0]]
+             else _Part(d[0], resolvable[d[0]], 90.0, "top", icb[0] - 1.0, 0.0))
+            for d in demands]
+
+
+def _seat_all_py(demands: list[_Demand], resolvable: dict[str, Path],
+                 ib: dict[str, tuple], icb: tuple[float, float, float, float],
+                 skeleton: list[_Part], pad: float,
+                 forbid_plus_x: bool = True) -> list[_Part]:
     halo = TEMPLATE_CLEAR + pad
     skel_boxes = [s.local_box() for s in skeleton]
     cand: dict[str, list[_Cand]] = {}
@@ -408,15 +615,11 @@ def _seat_all(demands: list[_Demand], resolvable: dict[str, Path],
 
 def _pins_to_target(p: _Part, ib: dict[str, tuple],
                     target_pins: list[str]) -> float:
-    best = 1e9
-    pads = list(p.pad_boxes().values())
-    for pin in target_pins:
-        pb = ib.get(pin)
-        if pb is None:
-            continue
-        for qb in pads:
-            best = min(best, _g._box_gap(pb, qb))
-    return best
+    pin_boxes = {pin: ib[pin] for pin in target_pins if pin in ib}
+    got = _g._pins_to_part(pin_boxes, p.pad_boxes(), list(pin_boxes))
+    if got is None:
+        return 1e9
+    return float(got)
 
 
 _PROX_CACHE: dict[tuple, list[tuple[float, float, float]]] = {}
@@ -561,7 +764,7 @@ def _raw_pad_centers(mod: Path) -> list[tuple[float, float]]:
     return out
 
 
-def _pad_set_180_symmetric(mod: Path) -> bool:
+def _pad_set_180_symmetric_py(mod: Path) -> bool:
     pts = _raw_pad_centers(mod)
     if not pts:
         return False
@@ -577,6 +780,20 @@ def _pad_set_180_symmetric(mod: Path) -> bool:
             return False
         rest.remove(hit)
     return True
+
+
+def _pad_set_180_symmetric(mod: Path) -> bool:
+    if not _nat.loaded():
+        raise RuntimeError("native pad_set_180_symmetric required")
+    pts = _raw_pad_centers(mod)
+    got = bool(_nat.module().pad_set_180_symmetric(pts, _FLIP_SYM_TOL))
+    if _nat.trace():
+        ref = _pad_set_180_symmetric_py(mod)
+        if got is not ref:
+            raise AssertionError(
+                "native pad_set_180_symmetric DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
 
 
 def _som_partner_nets() -> dict[str, tuple[Path, float, dict[str, tuple[str, ...]]]]:
@@ -632,7 +849,7 @@ def _sheet_inter_nets(sheet_name: str) -> dict[str, dict[str, tuple[str, ...]]]:
     return per_ref
 
 
-def _long_axis_coords(mod: Path, rot: float) -> dict[str, float]:
+def _long_axis_coords_py(mod: Path, rot: float) -> dict[str, float]:
     boxes = _g._pad_boxes(mod, rot)
     cs = {n: ((b[0] + b[2]) / 2.0, (b[1] + b[3]) / 2.0)
           for n, b in boxes.items()}
@@ -642,7 +859,25 @@ def _long_axis_coords(mod: Path, rot: float) -> dict[str, float]:
     return {n: c[ax] for n, c in cs.items()}
 
 
-def _inversion_count(pairs: list[tuple[float, float, str]]) -> int:
+def _long_axis_coords(mod: Path, rot: float) -> dict[str, float]:
+    if not _nat.loaded():
+        raise RuntimeError("native long_axis_coords required")
+    boxes = _g._pad_boxes(mod, rot)
+    if not boxes:
+        raise RuntimeError("long_axis_coords: centers required")
+    centers = [(n, (b[0] + b[2]) / 2.0, (b[1] + b[3]) / 2.0)
+               for n, b in boxes.items()]
+    got = {n: v for n, v in _nat.module().long_axis_coords(centers)}
+    if _nat.trace():
+        ref = _long_axis_coords_py(mod, rot)
+        if got != ref:
+            raise AssertionError(
+                "native long_axis_coords DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
+
+
+def _inversion_count_py(pairs: list[tuple[float, float, str]]) -> int:
     seq = [b for _a, b, _n in sorted(pairs, key=lambda t: (t[0], t[2]))]
     inv = 0
     for i in range(len(seq)):
@@ -650,6 +885,19 @@ def _inversion_count(pairs: list[tuple[float, float, str]]) -> int:
             if seq[i] > seq[j] + 1e-9:
                 inv += 1
     return inv
+
+
+def _inversion_count(pairs: list[tuple[float, float, str]]) -> int:
+    if not _nat.loaded():
+        raise RuntimeError("native inversion_count required")
+    got = int(_nat.module().inversion_count(pairs))
+    if _nat.trace():
+        ref = _inversion_count_py(pairs)
+        if got != ref:
+            raise AssertionError(
+                "native inversion_count DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
 
 
 def _som_flip_rot(sheet_name: str, lib_ref: str, mod: Path) -> float:
@@ -691,7 +939,7 @@ def _som_flip_rot(sheet_name: str, lib_ref: str, mod: Path) -> float:
     return rot
 
 
-def _topo_order(parts: set[str], deps: dict[str, set[str]]) -> list[str] | None:
+def _topo_order_py(parts: set[str], deps: dict[str, set[str]]) -> list[str] | None:
     indeg = {p: len(deps.get(p, set())) for p in parts}
     ready = sorted(p for p in parts if indeg[p] == 0)
     out: list[str] = []
@@ -705,6 +953,21 @@ def _topo_order(parts: set[str], deps: dict[str, set[str]]) -> list[str] | None:
                     ready.append(q)
         ready.sort()
     return out if len(out) == len(parts) else None
+
+
+def _topo_order(parts: set[str], deps: dict[str, set[str]]) -> list[str] | None:
+    if not _nat.loaded():
+        raise RuntimeError("native topo_order required")
+    raw = _nat.module().topo_order(
+        list(parts), [(k, list(v)) for k, v in deps.items()])
+    got = None if raw is None else list(raw)
+    if _nat.trace():
+        ref = _topo_order_py(parts, deps)
+        if got != ref:
+            raise AssertionError(
+                "native topo_order DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
 
 
 _SHEET_NETS_CACHE: dict[str, dict[tuple[str, str], str]] = {}
@@ -731,13 +994,32 @@ def _sheet_pad_nets(sheet_name: str) -> dict[tuple[str, str], str]:
     return out
 
 
-def _net_rot180_differs(mod: Path, mem_nets: dict[str, str]) -> bool:
+def _net_rot180_differs_py(mod: Path, mem_nets: dict[str, str]) -> bool:
     def sig(rot: float):
         return sorted((round((b[0] + b[2]) / 2, 2), round((b[1] + b[3]) / 2, 2),
                        mem_nets[n])
                       for n, b in _g._pad_boxes(mod, rot).items()
                       if n in mem_nets)
     return sig(0.0) != sig(180.0)
+
+
+def _net_rot180_differs(mod: Path, mem_nets: dict[str, str]) -> bool:
+    if not _nat.loaded():
+        raise RuntimeError("native named_box_center_sigs required")
+
+    def sig(rot: float):
+        rows = [(mem_nets[n], *b)
+                for n, b in _g._pad_boxes(mod, rot).items() if n in mem_nets]
+        return [tuple(r) for r in _nat.module().named_box_center_sigs(rows, 2)]
+
+    got = sig(0.0) != sig(180.0)
+    if _nat.trace():
+        ref = _net_rot180_differs_py(mod, mem_nets)
+        if got is not ref:
+            raise AssertionError(
+                "native named_box_center_sigs DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
 
 
 def _gcandidates(bref: str, mod: Path,
@@ -917,14 +1199,70 @@ def _gc_scan_ref(bref, mod, forbid, tcx, tcy, n, halo, placed_boxes, subjects,
     return [t[4] for t in scored[:_CAND_CAP]]
 
 
-def _gc_union(boxes):
+def _gc_union_py(boxes):
     if not boxes:
         return None
     return (min(b[0] for b in boxes), min(b[1] for b in boxes),
             max(b[2] for b in boxes), max(b[3] for b in boxes))
 
 
+def _gc_union(boxes):
+    if not _nat.loaded():
+        raise RuntimeError("native gc_union required")
+    got = _nat.module().boxes_union(list(boxes))
+    if got is not None:
+        got = tuple(got)
+    if _nat.trace():
+        ref = _gc_union_py(boxes)
+        if got != ref:
+            raise AssertionError(
+                f"native boxes_union DIVERGENCE: cpp={got} python={ref}")
+    return got
+
+
+def _gc_scan_native(bref, mod, forbid, tcx, tcy, n, halo, placed_boxes,
+                    subjects, att_pre, rep_pre, rots, align, rel_pads):
+    geom = _nat.module()
+    bodies = [turn_box(_footprint_bbox(mod), rot) for rot in rots]
+    hits, truncated = geom.seat_scan(
+        tcx, tcy, n, _CAND_STEP, halo, _NET_W, _CAND_CAP,
+        list(placed_boxes), list(forbid or ()),
+        [(sb, need) for sb, need in subjects],
+        [(tboxes, eff) for tboxes, eff in att_pre],
+        [(tboxes, mmv) for tboxes, mmv in rep_pre],
+        list(rots),
+        [list(rel_pads[rot]) for rot in rots],
+        bodies,
+        [list(align[rot]) for rot in rots])
+    if truncated:
+        _fb.record("cand_cap_truncated")
+    if _nat.trace():
+        ref = _gc_scan_fast_py(bref, mod, forbid, tcx, tcy, n, halo,
+                               placed_boxes, subjects, att_pre, rep_pre,
+                               rots, align, rel_pads)
+        got = [(h[3], h[4], h[5]) for h in hits]
+        want = [(q.rot, q.ox, q.oy) for q in ref]
+        if got != want:
+            idx = next((i for i, (a, b) in enumerate(zip(got, want, strict=False))
+                        if a != b), min(len(got), len(want)))
+            raise AssertionError(
+                f"native seat DIVERGENCE: {bref} at {idx} "
+                f"cpp={got[idx:idx + 4]} python={want[idx:idx + 4]} "
+                f"n={len(got)}/{len(want)}")
+    return [_Part(bref, mod, rot, "top", cx, cy)
+            for _s, _ax, _ay, rot, cx, cy in hits]
+
+
 def _gc_scan_fast(bref, mod, forbid, tcx, tcy, n, halo, placed_boxes, subjects,
+                  att_pre, rep_pre, rots, align, rel_pads):
+    if not _nat.loaded():
+        raise RuntimeError("native gc_scan_fast required")
+    return _gc_scan_native(bref, mod, forbid, tcx, tcy, n, halo,
+                           placed_boxes, subjects, att_pre, rep_pre,
+                           rots, align, rel_pads)
+
+
+def _gc_scan_fast_py(bref, mod, forbid, tcx, tcy, n, halo, placed_boxes, subjects,
                   att_pre, rep_pre, rots, align, rel_pads):
     _hypot = math.hypot
     att3 = [(tboxes, eff, _gc_union(tboxes)) for tboxes, eff in att_pre]
@@ -1431,21 +1769,51 @@ def _build_ldo_stage(ic_bref: str, resolvable: dict[str, Path],
     return parts
 
 
-def _any_overlap(parts: list[_Part]) -> bool:
-    boxes = [(p.bref, p.local_box()) for p in parts]
+def _any_overlap_py(boxes: list[tuple[float, float, float, float]]) -> bool:
     for i in range(len(boxes)):
         for j in range(i + 1, len(boxes)):
-            if _boxes_overlap(boxes[i][1], boxes[j][1], TEMPLATE_CLEAR):
+            if _boxes_overlap_py(boxes[i], boxes[j], TEMPLATE_CLEAR):
                 return True
     return False
 
 
-def _stage_extent(parts: list[_Part]) -> tuple[float, float, float, float]:
+def _any_overlap(parts: list[_Part]) -> bool:
+    boxes = [p.local_box() for p in parts]
+    if not _nat.loaded():
+        raise RuntimeError("native any_overlap required")
+    got = _nat.module().any_boxes_overlap(boxes, TEMPLATE_CLEAR)
+    if _nat.trace():
+        ref = _any_overlap_py(boxes)
+        if got is not ref:
+            raise AssertionError(
+                "native any_boxes_overlap DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
+
+
+def _stage_extent_py(parts: list[_Part]) -> tuple[float, float, float, float]:
     xs0 = [p.local_box()[0] for p in parts]
     ys0 = [p.local_box()[1] for p in parts]
     xs1 = [p.local_box()[2] for p in parts]
     ys1 = [p.local_box()[3] for p in parts]
     return (min(xs0), min(ys0), max(xs1), max(ys1))
+
+
+def _stage_extent(parts: list[_Part]) -> tuple[float, float, float, float]:
+    boxes = [p.local_box() for p in parts]
+    if not _nat.loaded():
+        raise RuntimeError("native stage_extent required")
+    got = _nat.module().boxes_union(boxes)
+    if got is None:
+        raise ValueError("stage extent: no parts")
+    hit = tuple(got)
+    if _nat.trace():
+        ref = _stage_extent_py(parts)
+        if hit != ref:
+            raise AssertionError(
+                "native stage_extent DIVERGENCE: "
+                f"cpp={hit} python={ref}")
+    return hit
 
 
 def contract_member_brefs(sheet_name: str, contract: dict,
@@ -2068,11 +2436,25 @@ def _foreign_ok(placed: dict[str, _Part], contract: dict,
     return True
 
 
-def _row_extent(placed: dict[str, _Part]) -> tuple[float, float]:
+def _row_extent_py(placed: dict[str, _Part]) -> tuple[float, float]:
     allb = [pp.local_box() for pp in placed.values()]
     zw = round(max(b[2] for b in allb) + ZONE_PAD, 4)
     zh = round(max(b[3] for b in allb) + ZONE_PAD, 4)
     return zw, zh
+
+
+def _row_extent(placed: dict[str, _Part]) -> tuple[float, float]:
+    if not _nat.loaded():
+        raise RuntimeError("native row_extent required")
+    allb = [pp.local_box() for pp in placed.values()]
+    got = tuple(_nat.module().row_extent(allb, ZONE_PAD))
+    if _nat.trace():
+        ref = _row_extent_py(placed)
+        if got != ref:
+            raise AssertionError(
+                "native row_extent DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
 
 
 _FACING_VEC: dict[str, tuple[float, float]] = {
@@ -2080,43 +2462,65 @@ _FACING_VEC: dict[str, tuple[float, float]] = {
 }
 
 
-def _pad_center(p: _Part) -> tuple[float, float]:
+def _pad_center_py(p: _Part) -> tuple[float, float]:
     b = p.pad_boxes().values()
     xs = [x for bb in b for x in (bb[0], bb[2])]
     ys = [y for bb in b for y in (bb[1], bb[3])]
     return ((min(xs) + max(xs)) / 2.0, (min(ys) + max(ys)) / 2.0)
 
 
-def _centroid(pts: list[tuple[float, float]]) -> tuple[float, float]:
+def _pad_center(p: _Part) -> tuple[float, float]:
+    if not _nat.loaded():
+        raise RuntimeError("native boxes_center required")
+    got = tuple(_nat.module().boxes_center(list(p.pad_boxes().values())))
+    if _nat.trace():
+        ref = _pad_center_py(p)
+        if got != ref:
+            raise AssertionError(
+                "native boxes_center DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
+
+
+def _centroid_py(pts: list[tuple[float, float]]) -> tuple[float, float]:
     return (sum(p[0] for p in pts) / len(pts),
             sum(p[1] for p in pts) / len(pts))
 
 
+def _centroid(pts: list[tuple[float, float]]) -> tuple[float, float]:
+    if not _nat.loaded():
+        raise RuntimeError("native points_centroid required")
+    got = tuple(_nat.module().points_centroid(pts))
+    if _nat.trace():
+        ref = _centroid_py(pts)
+        if got != ref:
+            raise AssertionError(
+                "native points_centroid DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
+
+
 def _turn_zone_180(placed: dict[str, _Part]) -> dict[str, _Part]:
+    if not _nat.loaded():
+        raise RuntimeError("native turn_origin_180 required")
     allpts: list[tuple[float, float]] = []
     for p in placed.values():
         for bb in p.pad_boxes().values():
             allpts.append((bb[0], bb[1]))
             allpts.append((bb[2], bb[3]))
-    ecx = (min(x for x, _ in allpts) + max(x for x, _ in allpts)) / 2.0
-    ecy = (min(y for _, y in allpts) + max(y for _, y in allpts)) / 2.0
+    ecx, ecy = _nat.module().aabb_center(allpts)
     out: dict[str, _Part] = {}
     for ref, p in placed.items():
         nrot = (p.rot + 180.0) % 360.0
         ob = _g._pad_boxes(p.mod, p.rot)
         nb = _g._pad_boxes(p.mod, nrot)
-        ocx = p.ox + (min(b[0] for b in ob.values())
-                      + max(b[2] for b in ob.values())) / 2.0
-        ocy = p.oy + (min(b[1] for b in ob.values())
-                      + max(b[3] for b in ob.values())) / 2.0
-        ncx = 2 * ecx - ocx
-        ncy = 2 * ecy - ocy
-        nhx = (min(b[0] for b in nb.values())
-               + max(b[2] for b in nb.values())) / 2.0
-        nhy = (min(b[1] for b in nb.values())
-               + max(b[3] for b in nb.values())) / 2.0
-        out[ref] = _Part(ref, p.mod, nrot, p.side,
-                         round(ncx - nhx, 4), round(ncy - nhy, 4))
+        ocx, ocy = _nat.module().boxes_span_center(list(ob.values()))
+        ocx += p.ox
+        ocy += p.oy
+        nhx, nhy = _nat.module().boxes_span_center(list(nb.values()))
+        nox, noy = _nat.module().turn_origin_180(
+            ecx, ecy, ocx, ocy, nhx, nhy, 4)
+        out[ref] = _Part(ref, p.mod, nrot, p.side, nox, noy)
     minx = min(bb[0] for p in out.values() for bb in p.pad_boxes().values())
     miny = min(bb[1] for p in out.values() for bb in p.pad_boxes().values())
     dx, dy = ZONE_PAD - minx, ZONE_PAD - miny
@@ -2137,7 +2541,8 @@ def _apply_facing(placed: dict[str, _Part], out_brefs: set[str],
     def _dot(pl: dict[str, _Part]) -> float:
         zc = _centroid([_pad_center(p) for p in pl.values()])
         oc = _centroid([_pad_center(pl[r]) for r in present])
-        return (oc[0] - zc[0]) * fv[0] + (oc[1] - zc[1]) * fv[1]
+        return _nat.module().facing_align_dot(
+            zc[0], zc[1], oc[0], oc[1], fv[0], fv[1])
 
     if _dot(placed) > 0.0:
         return placed
@@ -2168,8 +2573,8 @@ def _sheet_cross_mst(sheet_name: str,
                         r, sheet_name))
         for a, b in _mst_edges(pts):
             if pts[a][3] != pts[b][3]:
-                total += ((pts[a][0] - pts[b][0]) ** 2
-                          + (pts[a][1] - pts[b][1]) ** 2) ** 0.5
+                total += _nat.module().hypot_xy(
+                    pts[a][0], pts[a][1], pts[b][0], pts[b][1])
     return total
 
 
@@ -2197,37 +2602,30 @@ def refit_facing(sheet_name: str, contract: dict,
               for r, (x, y) in parts_xy.items()}
 
     def _gate_dot(xy: dict[str, tuple[float, float]]) -> float:
-        n = len(xy)
-        zcx = sum(p[0] for p in xy.values()) / n
-        zcy = sum(p[1] for p in xy.values()) / n
-        ocx = sum(xy[r][0] for r in present) / len(present)
-        ocy = sum(xy[r][1] for r in present) / len(present)
-        dvx = down_centroid[0] - zcx
-        dvy = down_centroid[1] - zcy
-        return (ocx - zcx) * dvx + (ocy - zcy) * dvy
+        zc = _nat.module().points_centroid(list(xy.values()))
+        oc = _nat.module().points_centroid([xy[r] for r in present])
+        return _nat.module().facing_align_dot(
+            zc[0], zc[1], oc[0], oc[1],
+            down_centroid[0] - zc[0], down_centroid[1] - zc[1])
 
     allpts: list[tuple[float, float]] = []
     for p in placed.values():
         for bb in p.pad_boxes().values():
             allpts.append((bb[0], bb[1]))
             allpts.append((bb[2], bb[3]))
-    ecx = (min(x for x, _ in allpts) + max(x for x, _ in allpts)) / 2.0
-    ecy = (min(y for _, y in allpts) + max(y for _, y in allpts)) / 2.0
+    ecx, ecy = _nat.module().aabb_center(allpts)
     turned: dict[str, tuple[float, float, float]] = {}
     for r, p in placed.items():
         nrot = (p.rot + 180.0) % 360.0
         ob = _g._pad_boxes(p.mod, p.rot)
         nb = _g._pad_boxes(p.mod, nrot)
-        ocx = p.ox + (min(b[0] for b in ob.values())
-                      + max(b[2] for b in ob.values())) / 2.0
-        ocy = p.oy + (min(b[1] for b in ob.values())
-                      + max(b[3] for b in ob.values())) / 2.0
-        nhx = (min(b[0] for b in nb.values())
-               + max(b[2] for b in nb.values())) / 2.0
-        nhy = (min(b[1] for b in nb.values())
-               + max(b[3] for b in nb.values())) / 2.0
-        turned[r] = (round(2 * ecx - ocx - nhx, 4),
-                     round(2 * ecy - ocy - nhy, 4), nrot)
+        ocx, ocy = _nat.module().boxes_span_center(list(ob.values()))
+        ocx += p.ox
+        ocy += p.oy
+        nhx, nhy = _nat.module().boxes_span_center(list(nb.values()))
+        nox, noy = _nat.module().turn_origin_180(
+            ecx, ecy, ocx, ocy, nhx, nhy, 4)
+        turned[r] = (nox, noy, nrot)
     turned_xy = {r: (t[0], t[1]) for r, t in turned.items()}
     gate_now = _gate_dot(parts_xy) > 0.0
     gate_turned = _gate_dot(turned_xy) > 0.0
@@ -2248,33 +2646,26 @@ def _turn_zone_quadrant(placed: dict[str, _Part], deg: float
     deg = deg % 360.0
     if abs(deg) < 1e-6:
         return placed
-    R = math.radians(deg)
-    cs, sn = math.cos(R), math.sin(R)
+    if not _nat.loaded():
+        raise RuntimeError("native rotate_origin required")
     allpts: list[tuple[float, float]] = []
     for p in placed.values():
         for bb in p.pad_boxes().values():
             allpts.append((bb[0], bb[1]))
             allpts.append((bb[2], bb[3]))
-    ecx = (min(x for x, _ in allpts) + max(x for x, _ in allpts)) / 2.0
-    ecy = (min(y for _, y in allpts) + max(y for _, y in allpts)) / 2.0
+    ecx, ecy = _nat.module().aabb_center(allpts)
     out: dict[str, _Part] = {}
     for ref, p in placed.items():
         nrot = (p.rot + deg) % 360.0
         ob = _g._pad_boxes(p.mod, p.rot)
         nb = _g._pad_boxes(p.mod, nrot)
-        ocx = p.ox + (min(b[0] for b in ob.values())
-                      + max(b[2] for b in ob.values())) / 2.0
-        ocy = p.oy + (min(b[1] for b in ob.values())
-                      + max(b[3] for b in ob.values())) / 2.0
-        rx, ry = ocx - ecx, ocy - ecy
-        ncx = ecx + (rx * cs + ry * sn)
-        ncy = ecy + (-rx * sn + ry * cs)
-        nhx = (min(b[0] for b in nb.values())
-               + max(b[2] for b in nb.values())) / 2.0
-        nhy = (min(b[1] for b in nb.values())
-               + max(b[3] for b in nb.values())) / 2.0
-        out[ref] = _Part(ref, p.mod, nrot, p.side,
-                         round(ncx - nhx, 4), round(ncy - nhy, 4))
+        ocx, ocy = _nat.module().boxes_span_center(list(ob.values()))
+        ocx += p.ox
+        ocy += p.oy
+        nhx, nhy = _nat.module().boxes_span_center(list(nb.values()))
+        nox, noy = _nat.module().rotate_origin(
+            ecx, ecy, ocx, ocy, nhx, nhy, deg, 4)
+        out[ref] = _Part(ref, p.mod, nrot, p.side, nox, noy)
     minx = min(bb[0] for p in out.values() for bb in p.pad_boxes().values())
     miny = min(bb[1] for p in out.values() for bb in p.pad_boxes().values())
     dx, dy = ZONE_PAD - minx, ZONE_PAD - miny
@@ -2295,7 +2686,8 @@ def _apply_media_facing(placed: dict[str, _Part], media_brefs: set[str],
     def _dot(pl: dict[str, _Part]) -> float:
         zc = _centroid([_pad_center(p) for p in pl.values()])
         mc = _centroid([_pad_center(pl[r]) for r in present])
-        return (mc[0] - zc[0]) * fv[0] + (mc[1] - zc[1]) * fv[1]
+        return _nat.module().facing_align_dot(
+            zc[0], zc[1], mc[0], mc[1], fv[0], fv[1])
 
     best = placed
     best_dot = _dot(placed)

@@ -4,6 +4,7 @@ import math
 from dataclasses import dataclass
 from pathlib import Path
 
+from schgen.core import native as _nat
 from schgen.core import sexpr
 
 GRID = 1.27
@@ -186,11 +187,26 @@ def _parse_symbol(lib_id: str, block: list) -> SymbolDef:
                      pin_names_hidden=pnames_hidden, pin_numbers_hidden=pnums_hidden)
 
 
-def pin_page_position(pin: Pin, anchor_x: float, anchor_y: float,
-                      rotation: int) -> tuple[float, float]:
+def pin_page_position_py(pin: Pin, anchor_x: float, anchor_y: float,
+                         rotation: int) -> tuple[float, float]:
     """Page position (+Y down) of a pin: the one symbol-to-page transform."""
     r = math.radians(rotation % 360)
     c, s = round(math.cos(r)), round(math.sin(r))
     px = anchor_x + (pin.x * c - pin.y * s)
     py = anchor_y + (-pin.x * s - pin.y * c)
     return (round(px, 4), round(py, 4))
+
+
+def pin_page_position(pin: Pin, anchor_x: float, anchor_y: float,
+                      rotation: int) -> tuple[float, float]:
+    if not _nat.loaded():
+        raise RuntimeError("native pin_page_position required")
+    got = tuple(_nat.module().pin_page_position(
+        pin.x, pin.y, anchor_x, anchor_y, rotation))
+    if _nat.trace():
+        ref = pin_page_position_py(pin, anchor_x, anchor_y, rotation)
+        if got != ref:
+            raise AssertionError(
+                "native pin_page_position DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got

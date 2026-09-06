@@ -1,11 +1,41 @@
 from __future__ import annotations
 
+from schgen.core import native as _nat
+
 
 class Sym(str):
     __slots__ = ()
 
 
+def _from_tagged(node):
+    kind, payload = node
+    if kind == "sym":
+        return Sym(payload)
+    if kind == "str":
+        return payload
+    if kind == "bool":
+        return bool(payload)
+    if kind == "num":
+        as_int = int(payload)
+        return as_int if as_int == payload else payload
+    if kind == "list":
+        return [_from_tagged(child) for child in payload]
+    raise ValueError(f"sexpr: unknown tagged node {kind!r}")
+
+
 def loads(text: str) -> list:
+    if not _nat.loaded():
+        raise RuntimeError("native sexpr_loads_tagged required")
+    got = _from_tagged(_nat.module().sexpr_loads_tagged(text))
+    if _nat.trace():
+        ref = _loads_py(text)
+        if got != ref:
+            raise AssertionError(
+                f"native sexpr loads DIVERGENCE: cpp={got!r} python={ref!r}")
+    return got
+
+
+def _loads_py(text: str) -> list:
     i, n = 0, len(text)
 
     def parse() -> object:
@@ -62,6 +92,12 @@ def loads(text: str) -> list:
 
 
 def _fmt_num(v: float) -> str:
+    if not _nat.loaded():
+        raise RuntimeError("native sexpr_fmt_num required")
+    return _nat.module().sexpr_fmt_num(float(v))
+
+
+def _fmt_num_py(v: float) -> str:
     if v == int(v):
         return str(int(v))
     s = f"{v:.6f}".rstrip("0").rstrip(".")
@@ -69,6 +105,18 @@ def _fmt_num(v: float) -> str:
 
 
 def dumps(node: object, indent: int = 0) -> str:
+    if not _nat.loaded():
+        raise RuntimeError("native sexpr_dumps_py required")
+    got = _nat.module().sexpr_dumps_py(node, indent)
+    if _nat.trace():
+        ref = _dumps_py(node, indent)
+        if got != ref:
+            raise AssertionError(
+                "native sexpr dumps DIVERGENCE")
+    return got
+
+
+def _dumps_py(node: object, indent: int = 0) -> str:
     pad = "\t" * indent
     if isinstance(node, Sym):
         return str(node)
@@ -78,12 +126,12 @@ def dumps(node: object, indent: int = 0) -> str:
     if isinstance(node, bool):
         return "yes" if node else "no"
     if isinstance(node, (int, float)):
-        return _fmt_num(float(node))
+        return _fmt_num_py(float(node))
     if isinstance(node, list):
         if not node:
             return "()"
         has_list = any(isinstance(x, list) for x in node)
-        inner = [dumps(x, indent + 1) for x in node]
+        inner = [_dumps_py(x, indent + 1) for x in node]
         if not has_list and sum(len(s) for s in inner) < 90:
             return "(" + " ".join(inner) + ")"
         head = inner[0]

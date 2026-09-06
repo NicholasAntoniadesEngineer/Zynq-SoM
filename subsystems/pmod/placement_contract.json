@@ -1,0 +1,107 @@
+{
+  "contract": "placement/lightweight-v0",
+  "subsystem": "pmod",
+  "sheet": "pmod",
+  "tier": "lightweight",
+  "citations": [],
+  "roles": {
+    "J1": "pmod0_socket",
+    "J2": "pmod1_socket",
+    "U1": "esd_array",
+    "U2": "esd_array",
+    "U3": "esd_array",
+    "U4": "esd_array"
+  },
+  "structures": [
+    {
+      "type": "proximity",
+      "anchor": "J1",
+      "members": [
+        "U1",
+        "U2"
+      ],
+      "max_mm": 5.0,
+      "same_side": true,
+      "basis": "judgment:5.0 — ESD at port entry (lightweight tier)"
+    },
+    {
+      "type": "proximity",
+      "anchor": "J2",
+      "members": [
+        "U3",
+        "U4"
+      ],
+      "max_mm": 5.0,
+      "same_side": true,
+      "basis": "judgment:5.0 — ESD at port entry (lightweight tier)"
+    },
+    {
+      "type": "proximity",
+      "anchor": "U1",
+      "members": [
+        "R1",
+        "R2",
+        "R3",
+        "R4"
+      ],
+      "max_mm": 8.0,
+      "basis": "port0 IO1-4 series R beside their clamp array; measured to 37.8mm cross-port|judgment:8.0"
+    },
+    {
+      "type": "proximity",
+      "anchor": "U2",
+      "members": [
+        "R5",
+        "R6",
+        "R7",
+        "R8"
+      ],
+      "max_mm": 8.0,
+      "basis": "port0 IO5-8 series R beside their clamp array|judgment:8.0"
+    },
+    {
+      "type": "proximity",
+      "anchor": "U3",
+      "members": [
+        "R9",
+        "R10",
+        "R11",
+        "R12"
+      ],
+      "max_mm": 8.0,
+      "basis": "port1 IO1-4 series R beside their clamp array|judgment:8.0"
+    },
+    {
+      "type": "proximity",
+      "anchor": "U4",
+      "members": [
+        "R13",
+        "R14",
+        "R15",
+        "R16"
+      ],
+      "max_mm": 8.0,
+      "basis": "port1 IO5-8 series R beside their clamp array|judgment:8.0"
+    },
+    {
+      "type": "proximity",
+      "anchor": "J1",
+      "members": [
+        "C1",
+        "C2"
+      ],
+      "max_mm": 6.0,
+      "basis": "+VCC_PMOD bypass at the socket power pads (shared rail, paired by convention)|judgment:6.0"
+    },
+    {
+      "type": "proximity",
+      "anchor": "J2",
+      "members": [
+        "C3",
+        "C4"
+      ],
+      "max_mm": 6.0,
+      "basis": "+VCC_PMOD bypass at the socket power pads|judgment:6.0"
+    }
+  ]
+}

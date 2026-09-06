@@ -1,0 +1,51 @@
+{
+  "schema": "schgen.part/1",
+  "mpn": "TPS54302DDCR",
+  "safe_name": "TPS54302DDCR",
+  "lcsc": "C311983",
+  "description": "TPS54302DDCR_C311983 (SOT-23-6_L2.9-W1.6-P0.95-LS2.8-BL)",
+  "manufacturer": "TI(德州仪器)",
+  "package": "SOT-23-6_L2.9-W1.6-P0.95-LS2.8-BL",
+  "jlc_class": "Extended Part",
+  "prefix": "U",
+  "datasheet": "https://www.lcsc.com/datasheet/C311983.pdf",
+  "product_url": "https://lcsc.com/product-detail/Others_Texas-Instruments_TPS54302DDCR_Texas-Instruments-TI-TPS54302DDCR_C311983.html",
+  "lib_id": "TPS54302DDCR:TPS54302DDCR",
+  "footprint": "TPS54302DDCR:TPS54302DDCR",
+  "models_3d": [
+    "TPS54302DDCR.wrl",
+    "TPS54302DDCR.step"
+  ],
+  "pins": [
+    {
+      "num": "1",
+      "name": "GND",
+      "etype": "passive"
+    },
+    {
+      "num": "2",
+      "name": "SW",
+      "etype": "passive"
+    },
+    {
+      "num": "3",
+      "name": "VIN",
+      "etype": "passive"
+    },
+    {
+      "num": "4",
+      "name": "FB",
+      "etype": "passive"
+    },
+    {
+      "num": "5",
+      "name": "EN",
+      "etype": "passive"
+    },
+    {
+      "num": "6",
+      "name": "BOOT",
+      "etype": "passive"
+    }
+  ]
+}

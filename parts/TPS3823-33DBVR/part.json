@@ -1,0 +1,46 @@
+{
+  "schema": "schgen.part/1",
+  "mpn": "TPS3823-33DBVR",
+  "safe_name": "TPS3823-33DBVR",
+  "lcsc": "C7719",
+  "description": "TPS3823-33DBVR (SOT-23-5_L3.0-W1.7-P0.95-LS2.8-BL)",
+  "manufacturer": "TI(德州仪器)",
+  "package": "SOT-23-5_L3.0-W1.7-P0.95-LS2.8-BL",
+  "jlc_class": "Extended Part",
+  "prefix": "U",
+  "datasheet": "https://www.lcsc.com/datasheet/C7719.pdf",
+  "product_url": "https://lcsc.com/product-detail/Microprocessor-Microcontroller-Supervisors_TI_TPS3823-33DBVR_TPS3823-33DBVR_C7719.html",
+  "lib_id": "TPS3823-33DBVR:TPS3823-33DBVR",
+  "footprint": "TPS3823-33DBVR:TPS3823-33DBVR",
+  "models_3d": [
+    "TPS3823-33DBVR.wrl",
+    "TPS3823-33DBVR.step"
+  ],
+  "pins": [
+    {
+      "num": "1",
+      "name": "RESET#",
+      "etype": "passive"
+    },
+    {
+      "num": "2",
+      "name": "GND",
+      "etype": "passive"
+    },
+    {
+      "num": "3",
+      "name": "MR#",
+      "etype": "passive"
+    },
+    {
+      "num": "4",
+      "name": "WDI",
+      "etype": "passive"
+    },
+    {
+      "num": "5",
+      "name": "VDD",
+      "etype": "passive"
+    }
+  ]
+}

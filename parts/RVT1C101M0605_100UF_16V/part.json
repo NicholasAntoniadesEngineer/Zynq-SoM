@@ -1,0 +1,31 @@
+{
+  "schema": "schgen.part/1",
+  "mpn": "RVT1C101M0605 100UF 16V",
+  "safe_name": "RVT1C101M0605_100UF_16V",
+  "lcsc": "C970684",
+  "description": "RVT1C101M0605_C970684 (CAP-SMD_BD6.3-L6.6-W6.6-LS7.2-FD)",
+  "manufacturer": "DMBJ(振宝佳)",
+  "package": "CAP-SMD_BD6.3-L6.6-W6.6-LS7.2-FD",
+  "jlc_class": "Extended Part",
+  "prefix": "C",
+  "datasheet": "https://www.lcsc.com/datasheet/C970684.pdf",
+  "product_url": "",
+  "lib_id": "RVT1C101M0605_100UF_16V:RVT1C101M0605_100UF_16V",
+  "footprint": "RVT1C101M0605_100UF_16V:RVT1C101M0605_100UF_16V",
+  "models_3d": [
+    "RVT1C101M0605_100UF_16V.wrl",
+    "RVT1C101M0605_100UF_16V.step"
+  ],
+  "pins": [
+    {
+      "num": "1",
+      "name": "1",
+      "etype": "passive"
+    },
+    {
+      "num": "2",
+      "name": "2",
+      "etype": "passive"
+    }
+  ]
+}

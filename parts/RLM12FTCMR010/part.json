@@ -1,0 +1,31 @@
+{
+  "schema": "schgen.part/1",
+  "mpn": "RLM12FTCMR010",
+  "safe_name": "RLM12FTCMR010",
+  "lcsc": "C188070",
+  "description": "RLM12FTCMR010 (R1206)",
+  "manufacturer": "大毅科技",
+  "package": "R1206",
+  "jlc_class": "Extended Part",
+  "prefix": "R",
+  "datasheet": "https://www.lcsc.com/datasheet/C188070.pdf",
+  "product_url": "https://lcsc.com/product-detail/Low-Resistors-Current-Sense-Resistors-Surface-Mount_TA-I-Tech-RLM12FTCMR010_C188070.html",
+  "lib_id": "RLM12FTCMR010:RLM12FTCMR010",
+  "footprint": "RLM12FTCMR010:RLM12FTCMR010",
+  "models_3d": [
+    "RLM12FTCMR010.wrl",
+    "RLM12FTCMR010.step"
+  ],
+  "pins": [
+    {
+      "num": "2",
+      "name": "2",
+      "etype": "passive"
+    },
+    {
+      "num": "1",
+      "name": "1",
+      "etype": "passive"
+    }
+  ]
+}

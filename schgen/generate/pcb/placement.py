@@ -5,6 +5,7 @@ from pathlib import Path
 
 from schgen.core import fallbacks as _fb
 from schgen.core import ledger as _led
+from schgen.core import native as _nat
 from schgen.core import quantize as _q
 
 from .constants import (
@@ -84,17 +85,11 @@ def _fanout_meta(refs: list[str], resolvable: dict[str, Path]
     return out
 
 
-def _shelf_pack(items: list[tuple[str, tuple, float]], target_w: float,
-                blockers: list[tuple[float, float, float, float]] | None = None,
-                fanout: dict[str, tuple[float, bool]] | None = None
-                ) -> tuple[dict[str, tuple[float, float]], float, float]:
-    blk = list(blockers or [])
-    placed: dict[str, tuple[float, float]] = {}
+def _shelf_meta(items: list[tuple[str, tuple, float]],
+                fanout: dict[str, tuple[float, bool]] | None
+                ) -> tuple[dict[str, tuple[float, float, float, float]],
+                           dict[str, float], dict[str, bool]]:
     fanout = fanout or {}
-    occ: list[tuple[float, float, float, float, float, bool]] = [
-        (b[0], b[1], b[2], b[3],
-         b[4] if len(b) > 4 else 0.0,
-         b[5] if len(b) > 5 else False) for b in blk]
     halo: dict[str, tuple[float, float, float, float]] = {}
     extra_of: dict[str, float] = {}
     iscp_of: dict[str, bool] = {}
@@ -106,6 +101,23 @@ def _shelf_pack(items: list[tuple[str, tuple, float]], target_w: float,
         extra_of[ref] = (max(0.0, _q.quant_credit(need) - PLACE_CLEAR)
                          if need > PLACE_CLEAR else 0.0)
         iscp_of[ref] = is_cp
+    return halo, extra_of, iscp_of
+
+
+def _shelf_blockers(blockers: list | None
+                    ) -> list[tuple[float, float, float, float, float, bool]]:
+    return [(b[0], b[1], b[2], b[3],
+             b[4] if len(b) > 4 else 0.0,
+             b[5] if len(b) > 5 else False) for b in (blockers or [])]
+
+
+def _shelf_pack_py(items: list[tuple[str, tuple, float]], target_w: float,
+                   blockers: list[tuple[float, float, float, float]] | None = None,
+                   fanout: dict[str, tuple[float, bool]] | None = None
+                   ) -> tuple[dict[str, tuple[float, float]], float, float]:
+    placed: dict[str, tuple[float, float]] = {}
+    occ = _shelf_blockers(blockers)
+    halo, extra_of, iscp_of = _shelf_meta(items, fanout)
     order = sorted(items, key=lambda it: (
         -(halo[it[0]][3] - halo[it[0]][1]),
         -(halo[it[0]][2] - halo[it[0]][0]), it[0]))
@@ -152,15 +164,37 @@ def _shelf_pack(items: list[tuple[str, tuple, float]], target_w: float,
     return placed, packed_w, packed_h
 
 
+def _shelf_pack(items: list[tuple[str, tuple, float]], target_w: float,
+                blockers: list[tuple[float, float, float, float]] | None = None,
+                fanout: dict[str, tuple[float, bool]] | None = None
+                ) -> tuple[dict[str, tuple[float, float]], float, float]:
+    if not _nat.loaded():
+        raise RuntimeError("native shelf_pack required")
+    halo, extra_of, iscp_of = _shelf_meta(items, fanout)
+    rows = [(ref, halo[ref][0], halo[ref][1], halo[ref][2], halo[ref][3],
+             extra_of[ref], iscp_of[ref]) for ref, _bbox, _rot in items]
+    placed_rows, packed_w, packed_h = _nat.module().shelf_pack(
+        rows, target_w, _shelf_blockers(blockers), ZONE_PAD)
+    got = ({ref: (ox, oy) for ref, ox, oy in placed_rows},
+           packed_w, packed_h)
+    if _nat.trace():
+        ref = _shelf_pack_py(items, target_w, blockers, fanout)
+        if got != ref:
+            raise AssertionError(
+                "native shelf_pack DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
+
+
 def _is_button(mod_path: Path) -> bool:
     return "TS-1187A" in mod_path.stem
 
 
-def _grid_controls(refs: list[str], bbox_of: dict, resolvable: dict,
-                   target_w: float
-                   ) -> tuple[dict[str, tuple[float, float]],
-                              list[tuple[float, float, float, float]],
-                              float, float]:
+def _grid_controls_py(refs: list[str], bbox_of: dict, resolvable: dict,
+                      target_w: float
+                      ) -> tuple[dict[str, tuple[float, float]],
+                                 list[tuple[float, float, float, float]],
+                                 float, float]:
     cell = 0.0
     bb: dict[str, tuple[float, float, float, float]] = {}
     for r in refs:
@@ -185,42 +219,41 @@ def _grid_controls(refs: list[str], bbox_of: dict, resolvable: dict,
     return off, occ, ZONE_PAD + cols * cell, ZONE_PAD + rows * cell
 
 
+def _grid_controls(refs: list[str], bbox_of: dict, resolvable: dict,
+                   target_w: float
+                   ) -> tuple[dict[str, tuple[float, float]],
+                              list[tuple[float, float, float, float]],
+                              float, float]:
+    items = [(r, *bbox_of[r]) for r in refs]
+    if not _nat.loaded():
+        raise RuntimeError("native grid_controls required")
+    offs, occ, pw, ph = _nat.module().grid_controls(
+        items, target_w, BUTTON_GAP, ZONE_PAD, PLACE_CLEAR)
+    got = ({r: (x, y) for r, x, y in offs},
+           [tuple(b) for b in occ], float(pw), float(ph))
+    if _nat.trace():
+        ref = _grid_controls_py(refs, bbox_of, resolvable, target_w)
+        if got != ref:
+            raise AssertionError(
+                "native grid_controls DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
+
+
 def _is_passive_ref(ref: str) -> bool:
-    return ref[:1] in ("R", "C", "L") and not ref.startswith(("RJ", "LED"))
+    return bool(_nat.module().is_passive_ref(ref))
 
 
 def _decoupling_caps(nets: dict[str, list]) -> set[str]:
-    cap_nets: dict[str, set[str]] = {}
-    for name, pins in nets.items():
-        if name.startswith("unconnected-"):
-            continue
-        for pr in pins:
-            if pr.ref.startswith("C") and not pr.ref.startswith("#"):
-                cap_nets.setdefault(pr.ref, set()).add(name)
-    out: set[str] = set()
-    for ref, ns in cap_nets.items():
-        has_gnd = "GND" in ns
-        rails = {n for n in ns if n != "GND"}
-        if has_gnd and len(rails) == 1 and len(ns) == 2:
-            out.add(ref)
-    return out
+    rows = [(name, [pr.ref for pr in pins]) for name, pins in nets.items()]
+    return set(_nat.module().decoupling_caps(rows))
 
 
 def _classify_side(ref: str, lib: str, bbox: tuple,
                    decoupling: set[str], two_side: bool) -> str:
-    if not two_side:
-        return "top"
-    if any(tok in lib for tok in _TOP_ALWAYS_LIBS):
-        return "top"
-    bx0, by0, bx1, by1 = bbox
-    area = (bx1 - bx0) * (by1 - by0)
-    if area >= TOP_AREA_MM2:
-        return "top"
-    if ref in decoupling:
-        return "bottom"
-    if _is_passive_ref(ref):
-        return "bottom"
-    return "top"
+    return str(_nat.module().classify_side(
+        ref, lib, bbox, ref in decoupling, two_side, TOP_AREA_MM2,
+        list(_TOP_ALWAYS_LIBS)))
 
 
 def _pack_one_zone(sheet_refs: list[str], side_of: dict[str, str],
@@ -247,7 +280,7 @@ def _pack_one_zone(sheet_refs: list[str], side_of: dict[str, str],
     tot_area = sum((bbox_of[r][2] - bbox_of[r][0] + PLACE_CLEAR) *
                    (bbox_of[r][3] - bbox_of[r][1] + PLACE_CLEAR)
                    for r in sheet_refs)
-    target_w = max(8.0, (tot_area * ZONE_PACK_FILL) ** 0.5) * aspect
+    target_w = _nat.module().zone_target_w(tot_area, ZONE_PACK_FILL, aspect, 8.0)
     fmeta = _fanout_meta(sheet_refs, resolvable)
     top_btns = [r for r in sr["top"] if _is_button(resolvable[r])]
     if len(top_btns) >= 2:
@@ -287,6 +320,30 @@ def _pack_one_zone(sheet_refs: list[str], side_of: dict[str, str],
     return t_off, b_off, round(max(tw, bw), 4), round(max(th, bh), 4)
 
 
+def _rotate_offsets_90_py(
+    offs: dict[str, tuple[float, float]], zone_w: float
+) -> dict[str, tuple[float, float]]:
+    return {ref: (round(dy, 4), round(zone_w - dx, 4))
+            for ref, (dx, dy) in offs.items()}
+
+
+def _rotate_offsets_90(
+    offs: dict[str, tuple[float, float]], zone_w: float
+) -> dict[str, tuple[float, float]]:
+    rows = [(ref, dx, dy) for ref, (dx, dy) in offs.items()]
+    if not _nat.loaded():
+        raise RuntimeError("native rotate_offsets_90 required")
+    got = {ref: (x, y) for ref, x, y in
+           _nat.module().rotate_offsets_90(rows, zone_w)}
+    if _nat.trace():
+        ref = _rotate_offsets_90_py(offs, zone_w)
+        if got != ref:
+            raise AssertionError(
+                "native rotate_offsets_90 DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
+
+
 def _rotate_zone_90(t_off: dict[str, tuple[float, float]],
                     b_off: dict[str, tuple[float, float]],
                     bbox_of: dict, side_of: dict[str, str],
@@ -295,14 +352,10 @@ def _rotate_zone_90(t_off: dict[str, tuple[float, float]],
                     ) -> tuple[dict[str, tuple[float, float]],
                                dict[str, tuple[float, float]],
                                dict[str, float], float, float]:
-    extra_rot: dict[str, float] = {}
-    new_t: dict[str, tuple[float, float]] = {}
-    new_b: dict[str, tuple[float, float]] = {}
-    for off_in, off_out in ((t_off, new_t), (b_off, new_b)):
-        for ref, (dx, dy) in off_in.items():
-            off_out[ref] = (round(dy, 4), round(zw - dx, 4))
-            extra_rot[ref] = 90.0
-    return new_t, new_b, extra_rot, round(zh, 4), round(zw, 4)
+    extra_rot: dict[str, float] = {ref: 90.0 for ref in t_off}
+    extra_rot.update({ref: 90.0 for ref in b_off})
+    return (_rotate_offsets_90(t_off, zw), _rotate_offsets_90(b_off, zw),
+            extra_rot, round(zh, 4), round(zw, 4))
 
 
 def _member_mirror_shape(sheet: str, t_off: dict[str, tuple[float, float]],
@@ -430,13 +483,31 @@ def _unreferenced_imp_sheets(sheets) -> dict[str, set[str]]:
     return out
 
 
-def _mirror_offsets_x(off: dict[str, tuple[float, float]], bbox_of: dict,
-                      rot_of: dict[str, float], zw: float
-                      ) -> dict[str, tuple[float, float]]:
+def _mirror_offsets_x_py(off: dict[str, tuple[float, float]], bbox_of: dict,
+                         rot_of: dict[str, float], zw: float
+                         ) -> dict[str, tuple[float, float]]:
     out: dict[str, tuple[float, float]] = {}
     for r, (ox, oy) in off.items():
         cb = turn_box(bbox_of[r], rot_of.get(r, 0.0))
         out[r] = (round(zw - ox - cb[0] - cb[2], 4), oy)
+    return out
+
+
+def _mirror_offsets_x(off: dict[str, tuple[float, float]], bbox_of: dict,
+                      rot_of: dict[str, float], zw: float
+                      ) -> dict[str, tuple[float, float]]:
+    if not _nat.loaded():
+        raise RuntimeError("native mirror_offsets_x required")
+    out: dict[str, tuple[float, float]] = {}
+    for r, (ox, oy) in off.items():
+        cb = turn_box(bbox_of[r], rot_of.get(r, 0.0))
+        out[r] = tuple(_nat.module().mirror_offset_x(ox, oy, cb, zw))
+    if _nat.trace():
+        ref = _mirror_offsets_x_py(off, bbox_of, rot_of, zw)
+        if out != ref:
+            raise AssertionError(
+                "native mirror_offset_x DIVERGENCE: "
+                f"cpp={out} python={ref}")
     return out
 
 
@@ -597,8 +668,8 @@ def _pack_connector_zone(sr: dict[str, list[str]], items, bbox_of: dict,
                    (bbox_of[r][3] - bbox_of[r][1] + PLACE_CLEAR)
                    for r in rest_top + rest_bot)
     row_span = max(cursor, 8.0)
-    target_w = max(row_span - ZONE_PAD,
-                   (tot_area * ZONE_PACK_FILL) ** 0.5 * aspect)
+    target_w = _nat.module().connector_target_w(
+        row_span, ZONE_PAD, tot_area, ZONE_PACK_FILL, aspect)
 
     fmeta = _fanout_meta(rest_top + rest_bot, resolvable)
     rt = [(r, bbox_of[r], 0.0) for r in rest_top]
@@ -1037,7 +1108,7 @@ def apply_chosen_shapes(zg: ZoneGeom, chosen: dict[str, int]) -> ZoneGeom:
                        bbox_of=bbox_of, mirror_refs=frozenset(mirror_refs))
 
 
-def _segments_cross(s1: tuple, s2: tuple) -> bool:
+def _segments_cross_py(s1: tuple, s2: tuple) -> bool:
     (p1, p2), (p3, p4) = s1, s2
     eps = 1e-9
     if {(p1[0], p1[1]), (p2[0], p2[1])} & {(p3[0], p3[1]), (p4[0], p4[1])}:
@@ -1052,17 +1123,304 @@ def _segments_cross(s1: tuple, s2: tuple) -> bool:
             and ((d3 > eps and d4 < -eps) or (d3 < -eps and d4 > eps)))
 
 
-def _reorder_interchangeable(pos: dict[str, tuple[float, float]],
-                             refs_by_sheet: dict[str, list[str]],
-                             side_of: dict[str, str],
-                             resolvable: dict[str, Path],
-                             fixed_rot: dict[str, float],
-                             bbox_of: dict,
-                             nets: dict,
-                             pin_net: dict[tuple[str, str], tuple[int, str]],
-                             conn_seated: set[str],
-                             skip_sheets: set[str]
-                             ) -> dict[str, list[tuple[str, int, int]]]:
+def _segments_cross(s1: tuple, s2: tuple) -> bool:
+    if not _nat.loaded():
+        raise RuntimeError("native segments_cross required")
+    (p1, p2), (p3, p4) = s1, s2
+    got = _nat.module().segments_cross(
+        p1[0], p1[1], p2[0], p2[1], p3[0], p3[1], p4[0], p4[1])
+    if _nat.trace():
+        ref = _segments_cross_py(s1, s2)
+        if got is not ref:
+            raise AssertionError(
+                "native segments_cross DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
+
+
+def _reorder_cluster_assign_py(
+    segs_xy: list[list[list[tuple[float, float, float, float]]]],
+    assign0: list[int],
+    sweeps: int,
+) -> tuple[int, int, list[int]]:
+    def fan(assign: list[int]) -> int:
+        segs = [((x0, y0), (x1, y1))
+                for i, slot in enumerate(assign)
+                for x0, y0, x1, y1 in segs_xy[i][slot]]
+        return sum(1 for a in range(len(segs))
+                   for b in range(a + 1, len(segs))
+                   if _segments_cross(segs[a], segs[b]))
+
+    assign = list(assign0)
+    before = fan(assign)
+    best = before
+    if before == 0:
+        return before, best, assign
+    for _sweep in range(sweeps):
+        improved = False
+        for a in range(len(assign)):
+            for b in range(a + 1, len(assign)):
+                assign[a], assign[b] = assign[b], assign[a]
+                trial = fan(assign)
+                if trial < best:
+                    best = trial
+                    improved = True
+                else:
+                    assign[a], assign[b] = assign[b], assign[a]
+        if not improved:
+            break
+    return before, best, assign
+
+
+def _reorder_cluster_assign(
+    segs_xy: list[list[list[tuple[float, float, float, float]]]],
+    assign0: list[int],
+    sweeps: int,
+) -> tuple[int, int, list[int]]:
+    if not _nat.loaded():
+        raise RuntimeError("native reorder_cluster_assign required")
+    before, best, out = _nat.module().reorder_cluster_assign(
+        segs_xy, list(assign0), sweeps)
+    got = (int(before), int(best), [int(v) for v in out])
+    if _nat.trace():
+        ref = _reorder_cluster_assign_py(segs_xy, assign0, sweeps)
+        if got != ref:
+            raise AssertionError(
+                "native reorder_cluster_assign DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
+
+
+def _cluster_interchangeable_rows_py(
+    pos: dict[str, tuple[float, float]], members: list[str],
+    tol_x: float, tol_y: float,
+) -> list[tuple[str, list[str]]]:
+    clusters: list[tuple[str, list[str]]] = []
+    rest: list[str] = []
+    row: list[str] = []
+    for m in sorted(members, key=lambda m: (pos[m][1], pos[m][0], m)):
+        if row and abs(pos[m][1] - pos[row[0]][1]) > tol_y:
+            if len(row) > 1:
+                clusters.append(("x", row))
+            else:
+                rest.extend(row)
+            row = []
+        row.append(m)
+    if len(row) > 1:
+        clusters.append(("x", row))
+    elif row:
+        rest.extend(row)
+    col: list[str] = []
+    for m in sorted(rest, key=lambda m: (pos[m][0], pos[m][1], m)):
+        if col and abs(pos[m][0] - pos[col[0]][0]) > tol_x:
+            if len(col) > 1:
+                clusters.append(("y", col))
+            col = []
+        col.append(m)
+    if len(col) > 1:
+        clusters.append(("y", col))
+    return clusters
+
+
+def _cluster_interchangeable_rows(
+    pos: dict[str, tuple[float, float]], members: list[str],
+    tol_x: float, tol_y: float,
+) -> list[tuple[str, list[str]]]:
+    rows = [(m, pos[m][0], pos[m][1]) for m in members]
+    if not _nat.loaded():
+        raise RuntimeError("native cluster_interchangeable_rows required")
+    got = [(axis, list(refs)) for axis, refs in
+           _nat.module().cluster_interchangeable_rows(rows, tol_x, tol_y)]
+    if _nat.trace():
+        ref = _cluster_interchangeable_rows_py(pos, members, tol_x, tol_y)
+        if got != ref:
+            raise AssertionError(
+                "native cluster_interchangeable_rows DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
+
+
+def _nearest_manhattan_py(
+    px: float, py: float, pts: list[tuple[float, float]]
+) -> tuple[float, float]:
+    return min(pts, key=lambda q: (abs(q[0] - px) + abs(q[1] - py), q[0], q[1]))
+
+
+def _nearest_manhattan(
+    px: float, py: float, pts: list[tuple[float, float]]
+) -> tuple[float, float]:
+    if not _nat.loaded():
+        raise RuntimeError("native nearest_manhattan required")
+    got = tuple(_nat.module().nearest_manhattan(px, py, pts))
+    if _nat.trace():
+        ref = _nearest_manhattan_py(px, py, pts)
+        if got != ref:
+            raise AssertionError(
+                "native nearest_manhattan DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
+
+
+def _group_interchangeable_py(
+    rows: list[tuple[str, str, str, float, bool]],
+) -> list[tuple[str, str, float, bool, list[str]]]:
+    groups: dict[tuple, list[str]] = {}
+    for ref, side, fp, rot, passive in rows:
+        gk = (side, fp, round(rot, 1) % 360.0, passive)
+        groups.setdefault(gk, []).append(ref)
+    return [(gk[0], gk[1], gk[2], gk[3], sorted(members))
+            for gk, members in sorted(groups.items())]
+
+
+def _cluster_slot_segs_py(
+    pad_offs: list[tuple[str, float, float]],
+    pad_nets: list[str],
+    slots: list[tuple[float, float]],
+    static_rows: list[tuple[str, list[tuple[float, float]]]],
+) -> list[list[tuple[float, float, float, float]]]:
+    pts_of = {n: list(pts) for n, pts in static_rows}
+    out: list[list[tuple[float, float, float, float]]] = []
+    for sx, sy in slots:
+        segs: list[tuple[float, float, float, float]] = []
+        for (_p, dx, dy), net in zip(pad_offs, pad_nets):
+            if not net:
+                continue
+            pts = pts_of.get(net)
+            if not pts:
+                continue
+            px, py = sx + dx, sy + dy
+            tx, ty = _nearest_manhattan_py(px, py, pts)
+            segs.append((px, py, tx, ty))
+        out.append(segs)
+    return out
+
+
+def _reorder_interchangeable_from_pads_py(
+    pos: dict[str, tuple[float, float]],
+    refs_by_sheet: dict[str, list[str]],
+    skip_sheets: set[str],
+    conn_seated: set[str],
+    members: list[tuple[str, str, str, float, bool]],
+    bbox_of: dict[str, tuple[float, float, float, float]],
+    pad_names_of: dict[str, list[str]],
+    pad_local: dict[str, dict[str, tuple[float, float]]],
+    pin_net: dict[tuple[str, str], str],
+    nets: dict[str, list[tuple[str, str]]],
+    resolvable: set[str],
+) -> tuple[dict[str, tuple[float, float]],
+           dict[str, list[tuple[str, int, int]]]]:
+    from schgen.generate.pcb.turn import turn_box_py
+    pos = dict(pos)
+    meta = {r: (side, fp, rot, passive)
+            for r, side, fp, rot, passive in members}
+    report: dict[str, list[tuple[str, int, int]]] = {}
+    for sheet in sorted(refs_by_sheet):
+        if sheet in skip_sheets:
+            continue
+        rows = []
+        for r in refs_by_sheet[sheet]:
+            if r not in pos or r not in resolvable or r in conn_seated:
+                continue
+            hit = meta.get(r)
+            if hit is None:
+                continue
+            side, fp, rot, passive = hit
+            rows.append((r, side, fp, rot, passive))
+        for _side, _fp, rot_key, _passive, mems in _group_interchangeable_py(
+                rows):
+            if len(mems) < 2:
+                continue
+            gset = set(mems)
+            eb = turn_box_py(bbox_of[mems[0]], rot_key)
+            tol_x = max(0.6, (eb[2] - eb[0]) / 2)
+            tol_y = max(0.6, (eb[3] - eb[1]) / 2)
+            clusters = _cluster_interchangeable_rows_py(
+                pos, mems, tol_x, tol_y)
+            for axis, cluster in clusters:
+                ai = 0 if axis == "x" else 1
+                mlist = sorted(cluster)
+                slots = sorted((pos[m] for m in cluster),
+                               key=lambda p: (p[ai], p[1 - ai]))
+                static_pts: dict[str, list[tuple[float, float]]] = {}
+                for m in mlist:
+                    for pad in pad_names_of.get(m, ()):
+                        n = pin_net.get((m, pad), "")
+                        if not n or n in static_pts or n not in nets:
+                            continue
+                        pts = []
+                        for pr_ref, pr_pin in nets[n]:
+                            if (pr_ref in gset or pr_ref.startswith("#")
+                                    or pr_ref not in pos
+                                    or pr_ref not in resolvable):
+                                continue
+                            offs = pad_local.get(pr_ref, {})
+                            if pr_pin not in offs:
+                                continue
+                            dx, dy = offs[pr_pin]
+                            pts.append((dx + pos[pr_ref][0],
+                                        dy + pos[pr_ref][1]))
+                        static_pts[n] = pts
+                order0 = sorted(cluster, key=lambda m: (pos[m][ai], m))
+                assign_map = {m: i for i, m in enumerate(order0)}
+                segs_xy = []
+                static_rows = [(n, pts) for n, pts in static_pts.items()]
+                for m in mlist:
+                    offs = pad_local.get(m, {})
+                    pad_offs = [(p, offs[p][0], offs[p][1])
+                                for p in sorted(offs)]
+                    pad_nets = [pin_net.get((m, p), "")
+                                for p, _dx, _dy in pad_offs]
+                    segs_xy.append(_cluster_slot_segs_py(
+                        pad_offs, pad_nets, slots, static_rows))
+                init = [assign_map[m] for m in mlist]
+                before, best, out = _reorder_cluster_assign_py(
+                    segs_xy, init, 6)
+                if best == before:
+                    continue
+                for i, m in enumerate(mlist):
+                    pos[m] = slots[out[i]]
+                report.setdefault(sheet, []).append(
+                    (f"{axis}-{len(cluster)}", before, best))
+    return pos, report
+
+
+def _reorder_collect_pads(
+    pos: dict[str, tuple[float, float]],
+    resolvable: dict[str, Path],
+    fixed_rot: dict[str, float],
+) -> tuple[dict[str, list[str]], dict[str, dict[str, tuple[float, float]]]]:
+    pad_names_of: dict[str, list[str]] = {}
+    pad_local: dict[str, dict[str, tuple[float, float]]] = {}
+    rotpads: dict[tuple[str, float], dict[str, tuple[float, float]]] = {}
+    for ref in pos:
+        if ref not in resolvable:
+            continue
+        path = resolvable[ref]
+        pad_names_of[ref] = pad_names(path)
+        rk = (str(path), fixed_rot.get(ref, 0.0))
+        base = rotpads.get(rk)
+        if base is None:
+            stub = FootprintInst(
+                ref=ref, value="", footprint="", x=0.0, y=0.0,
+                rotation=rk[1], pad_nets={}, mod_path=path,
+                sheet="", side="top")
+            base = {n: (x, y) for n, x, y, _nn in _inst_pad_geom(stub)}
+            rotpads[rk] = base
+        pad_local[ref] = base
+    return pad_names_of, pad_local
+
+
+def _reorder_interchangeable_py(pos: dict[str, tuple[float, float]],
+                                refs_by_sheet: dict[str, list[str]],
+                                side_of: dict[str, str],
+                                resolvable: dict[str, Path],
+                                fixed_rot: dict[str, float],
+                                bbox_of: dict,
+                                nets: dict,
+                                pin_net: dict[tuple[str, str], tuple[int, str]],
+                                conn_seated: set[str],
+                                skip_sheets: set[str]
+                                ) -> dict[str, list[tuple[str, int, int]]]:
     from schgen.verify.fanout_gate import _is_cluster_passive
 
     rotpads: dict[tuple[str, float], dict[str, tuple[float, float]]] = {}
@@ -1107,30 +1465,7 @@ def _reorder_interchangeable(pos: dict[str, tuple[float, float]],
             eb = turn_box(bbox_of[members[0]], gk[2])
             tol_x = max(0.6, (eb[2] - eb[0]) / 2)
             tol_y = max(0.6, (eb[3] - eb[1]) / 2)
-            clusters: list[tuple[str, list[str]]] = []
-            rest: list[str] = []
-            row: list[str] = []
-            for m in sorted(members, key=lambda m: (pos[m][1], pos[m][0], m)):
-                if row and abs(pos[m][1] - pos[row[0]][1]) > tol_y:
-                    if len(row) > 1:
-                        clusters.append(("x", row))
-                    else:
-                        rest.extend(row)
-                    row = []
-                row.append(m)
-            if len(row) > 1:
-                clusters.append(("x", row))
-            elif row:
-                rest.extend(row)
-            col: list[str] = []
-            for m in sorted(rest, key=lambda m: (pos[m][0], pos[m][1], m)):
-                if col and abs(pos[m][0] - pos[col[0]][0]) > tol_x:
-                    if len(col) > 1:
-                        clusters.append(("y", col))
-                    col = []
-                col.append(m)
-            if len(col) > 1:
-                clusters.append(("y", col))
+            clusters = _cluster_interchangeable_rows(pos, members, tol_x, tol_y)
             for axis, cluster in clusters:
                 ai = 0 if axis == "x" else 1
                 mlist = sorted(cluster)
@@ -1152,69 +1487,114 @@ def _reorder_interchangeable(pos: dict[str, tuple[float, float]],
                             if xy is not None:
                                 pts.append(xy)
                         static_pts[n] = pts
-                seg_of: dict[tuple[str, int], list[tuple]] = {}
+                order0 = sorted(cluster, key=lambda m: (pos[m][ai], m))
+                assign_map = {m: i for i, m in enumerate(order0)}
+                segs_xy = []
+                static_rows = [(n, pts) for n, pts in static_pts.items()]
                 for m in mlist:
                     offs = {p: (x - pos[m][0], y - pos[m][1])
                             for p, (x, y) in pad_xy(m).items()}
-                    for si, sp in enumerate(slots):
-                        segs = []
-                        for pad in sorted(offs):
-                            _num, n = pin_net.get((m, pad), (0, ""))
-                            pts = static_pts.get(n) if n else None
-                            if not pts:
-                                continue
-                            dx, dy = offs[pad]
-                            px, py = sp[0] + dx, sp[1] + dy
-                            tgt = min(pts, key=lambda q: (abs(q[0] - px)
-                                                          + abs(q[1] - py),
-                                                          q[0], q[1]))
-                            segs.append(((px, py), (tgt[0], tgt[1])))
-                        seg_of[(m, si)] = segs
-
-                def fan(assign: dict[str, int],
-                        _seg=seg_of, _ml=mlist) -> int:
-                    segs = [s for m in _ml for s in _seg[(m, assign[m])]]
-                    return sum(1 for a in range(len(segs))
-                               for b in range(a + 1, len(segs))
-                               if _segments_cross(segs[a], segs[b]))
-
-                order0 = sorted(cluster, key=lambda m: (pos[m][ai], m))
-                assign = {m: i for i, m in enumerate(order0)}
-                before = fan(assign)
-                if before == 0:
-                    continue
-                best = before
-                for _sweep in range(6):
-                    improved = False
-                    for a in range(len(mlist)):
-                        for b in range(a + 1, len(mlist)):
-                            ma, mb = mlist[a], mlist[b]
-                            assign[ma], assign[mb] = assign[mb], assign[ma]
-                            trial = fan(assign)
-                            if trial < best:
-                                best = trial
-                                improved = True
-                            else:
-                                assign[ma], assign[mb] = \
-                                    assign[mb], assign[ma]
-                    if not improved:
-                        break
+                    pad_offs = [(p, offs[p][0], offs[p][1])
+                                for p in sorted(offs)]
+                    pad_nets = [pin_net.get((m, p), (0, ""))[1]
+                                for p, _dx, _dy in pad_offs]
+                    segs_xy.append([
+                        [(s[0], s[1], s[2], s[3]) for s in row]
+                        for row in _nat.module().cluster_slot_segs(
+                            pad_offs, pad_nets, slots, static_rows)
+                    ])
+                init = [assign_map[m] for m in mlist]
+                before, best, out = _reorder_cluster_assign(segs_xy, init, 6)
                 if best == before:
                     continue
-                for m in mlist:
-                    pos[m] = slots[assign[m]]
+                for i, m in enumerate(mlist):
+                    pos[m] = slots[out[i]]
                 report.setdefault(sheet, []).append(
                     (f"{axis}-{len(cluster)}", before, best))
     return report
 
 
-def som_core_rect(som_x: float, som_y: float, som_w: float, som_h: float
-                  ) -> tuple[float, float, float, float]:
+def _reorder_interchangeable(pos: dict[str, tuple[float, float]],
+                             refs_by_sheet: dict[str, list[str]],
+                             side_of: dict[str, str],
+                             resolvable: dict[str, Path],
+                             fixed_rot: dict[str, float],
+                             bbox_of: dict,
+                             nets: dict,
+                             pin_net: dict[tuple[str, str], tuple[int, str]],
+                             conn_seated: set[str],
+                             skip_sheets: set[str]
+                             ) -> dict[str, list[tuple[str, int, int]]]:
+    from schgen.verify.fanout_gate import _is_cluster_passive
+    pad_names_of, pad_local = _reorder_collect_pads(pos, resolvable, fixed_rot)
+    members = []
+    for _sheet, refs in refs_by_sheet.items():
+        for r in refs:
+            if r not in pos or r not in resolvable:
+                continue
+            pins = len(pad_names_of[r])
+            members.append((
+                r, side_of.get(r, "top"), str(resolvable[r]),
+                fixed_rot.get(r, 0.0), _is_cluster_passive(r, pins)))
+    pos_rows = [(r, xy[0], xy[1]) for r, xy in pos.items()]
+    sheet_rows = [(s, list(refs)) for s, refs in refs_by_sheet.items()]
+    bbox_rows = [(r, b[0], b[1], b[2], b[3]) for r, b in bbox_of.items()]
+    pad_name_rows = [(r, list(p)) for r, p in pad_names_of.items()]
+    pad_local_rows = [
+        (r, [(p, xy[0], xy[1]) for p, xy in offs.items()])
+        for r, offs in pad_local.items()]
+    pin_net_rows = [(r, p, n) for (r, p), (_num, n) in pin_net.items()]
+    net_rows = [(n, [(pr.ref, pr.pin) for pr in pins])
+                for n, pins in nets.items()]
+    pos_out, report_rows = _nat.module().reorder_interchangeable(
+        pos_rows, sheet_rows, list(skip_sheets), list(conn_seated), members,
+        bbox_rows, pad_name_rows, pad_local_rows, pin_net_rows, net_rows,
+        list(resolvable))
+    if _nat.trace():
+        pos_ref = dict(pos)
+        report_ref = _reorder_interchangeable_py(
+            pos_ref, refs_by_sheet, side_of, resolvable, fixed_rot, bbox_of,
+            nets, pin_net, conn_seated, skip_sheets)
+        report_got: dict[str, list[tuple[str, int, int]]] = {}
+        for sheet, label, before, best in report_rows:
+            report_got.setdefault(sheet, []).append(
+                (label, int(before), int(best)))
+        pos_got = {r: (x, y) for r, x, y in pos_out}
+        if report_got != report_ref or pos_got != pos_ref:
+            raise AssertionError(
+                "native reorder_interchangeable DIVERGENCE: "
+                f"cpp=({pos_got}, {report_got}) python=({pos_ref}, {report_ref})")
+    for r, x, y in pos_out:
+        pos[r] = (x, y)
+    report: dict[str, list[tuple[str, int, int]]] = {}
+    for sheet, label, before, best in report_rows:
+        report.setdefault(sheet, []).append((label, int(before), int(best)))
+    return report
+
+
+def som_core_rect_py(som_x: float, som_y: float, som_w: float, som_h: float
+                     ) -> tuple[float, float, float, float]:
     ccx = som_w * SOM_CORE_CLEARANCE / 2
     ccy = som_h * SOM_CORE_CLEARANCE / 2
     return (ORIGIN_X + som_x - ccx, ORIGIN_Y + som_y - ccy,
             ORIGIN_X + som_x + som_w + ccx,
             ORIGIN_Y + som_y + som_h + ccy)
+
+
+def som_core_rect(som_x: float, som_y: float, som_w: float, som_h: float
+                  ) -> tuple[float, float, float, float]:
+    if not _nat.loaded():
+        raise RuntimeError("native som_core_rect required")
+    got = tuple(_nat.module().som_core_rect(
+        som_x, som_y, som_w, som_h, ORIGIN_X, ORIGIN_Y,
+        SOM_CORE_CLEARANCE))
+    if _nat.trace():
+        ref = som_core_rect_py(som_x, som_y, som_w, som_h)
+        if got != ref:
+            raise AssertionError(
+                "native som_core_rect DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
 
 
 SOM_DECOUPLING_INSET = 6.0
@@ -1224,8 +1604,8 @@ L4_PULL_STEP = 1.0
 L4_PULL_SPAN = 40.0
 
 
-def som_decoupling_grid(som_w: float, som_h: float, n: int
-                        ) -> tuple[float, float, int, int]:
+def som_decoupling_grid_py(som_w: float, som_h: float, n: int
+                           ) -> tuple[float, float, int, int]:
     rw = max(1.0, som_w - 2 * SOM_DECOUPLING_INSET)
     rh = max(1.0, som_h - 2 * SOM_DECOUPLING_INSET)
     cols = max(1, min(n, round((n * rw / rh) ** 0.5))) if n else 1
@@ -1233,17 +1613,50 @@ def som_decoupling_grid(som_w: float, som_h: float, n: int
     return rw, rh, cols, rows
 
 
-def som_decoupling_cells(som_x: float, som_y: float, som_w: float,
-                         som_h: float, n: int
-                         ) -> list[tuple[float, float]]:
+def som_decoupling_grid(som_w: float, som_h: float, n: int
+                        ) -> tuple[float, float, int, int]:
+    if not _nat.loaded():
+        raise RuntimeError("native som_decoupling_grid required")
+    got = tuple(_nat.module().som_decoupling_grid(
+        som_w, som_h, n, SOM_DECOUPLING_INSET))
+    got = (got[0], got[1], int(got[2]), int(got[3]))
+    if _nat.trace():
+        ref = som_decoupling_grid_py(som_w, som_h, n)
+        ref = (ref[0], ref[1], int(ref[2]), int(ref[3]))
+        if got != ref:
+            raise AssertionError(
+                "native som_decoupling_grid DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
+
+
+def som_decoupling_cells_py(som_x: float, som_y: float, som_w: float,
+                            som_h: float, n: int
+                            ) -> list[tuple[float, float]]:
     if n <= 0:
         return []
     rx0 = som_x + SOM_DECOUPLING_INSET
     ry0 = som_y + SOM_DECOUPLING_INSET
-    rw, rh, cols, rows = som_decoupling_grid(som_w, som_h, n)
+    rw, rh, cols, rows = som_decoupling_grid_py(som_w, som_h, n)
     return [(round(rx0 + rw * (i % cols + 0.5) / cols, 4),
              round(ry0 + rh * (i // cols + 0.5) / rows, 4))
             for i in range(n)]
+
+
+def som_decoupling_cells(som_x: float, som_y: float, som_w: float,
+                         som_h: float, n: int
+                         ) -> list[tuple[float, float]]:
+    if not _nat.loaded():
+        raise RuntimeError("native som_decoupling_cells required")
+    got = [tuple(p) for p in _nat.module().som_decoupling_cells(
+        som_x, som_y, som_w, som_h, n, SOM_DECOUPLING_INSET)]
+    if _nat.trace():
+        ref = som_decoupling_cells_py(som_x, som_y, som_w, som_h, n)
+        if got != ref:
+            raise AssertionError(
+                "native som_decoupling_cells DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
 
 
 def build_model(two_side: bool = True, spec=None) -> PcbModel:
@@ -1275,7 +1688,9 @@ def build_model(two_side: bool = True, spec=None) -> PcbModel:
             if not pr.ref.startswith("#"):
                 pin_net[(pr.ref, pr.pin)] = (num, name)
 
-    zg = subsystem_zone_geometry(two_side=two_side, spec=spec)
+    from schgen.core import timing as _tim
+    with _tim.span("pcb.zone_pack"):
+        zg = subsystem_zone_geometry(two_side=two_side, spec=spec)
     _trk.checkpoint("zone_pack", {})
     zone_box = zg.zone_box
     top_off = zg.top_off
@@ -1305,7 +1720,8 @@ def build_model(two_side: bool = True, spec=None) -> PcbModel:
     sheets = [load_subsystem(p.stem) for p in all_subsystem_paths()]
     link_result = link(sheets, load_som_contract())
     regs = powertree.analyze(sheets).regs
-    plan = fp.build_plan(sheets, link_result, regs, spec=spec)
+    with _tim.span("pcb.build_plan"):
+        plan = fp.build_plan(sheets, link_result, regs, spec=spec)
     _led.open_step("pcb.placement")
     _led.calc("edge_flush", EDGE_FLUSH_MM, edge_pad_clear=EDGE_PAD_CLEAR,
               flush_relief=EDGE_FLUSH_RELIEF)
@@ -1470,10 +1886,10 @@ def build_model(two_side: bool = True, spec=None) -> PcbModel:
                       and not r.startswith(("RJ", "LED"))]
             if len(movers) < 2:
                 continue
-            gcx = sum(pos[r][0] for r in movers) / len(movers)
-            gcy = sum(pos[r][1] for r in movers) / len(movers)
+            gcx, gcy = _nat.module().points_centroid(
+                [pos[r] for r in movers])
             vx, vy = som_cx - gcx, som_cy - gcy
-            dist = (vx * vx + vy * vy) ** 0.5
+            dist = _nat.module().hypot_xy(0.0, 0.0, vx, vy)
             if dist < 1.0:
                 continue
             ux, uy = vx / dist, vy / dist

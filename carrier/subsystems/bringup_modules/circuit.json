@@ -1,0 +1,1604 @@
+{
+  "schema": "schgen.circuit/1",
+  "name": "bringup_modules",
+  "title": "Bring-up module gates: 10x SY6280 + status/user LEDs",
+  "parts": [
+    {
+      "ref": "U1",
+      "lib_id": "SY6280AAC:SY6280AAC",
+      "value": "SY6280AAC",
+      "footprint": "SY6280AAC:SY6280AAC",
+      "fields": {
+        "LCSC": "C55136"
+      },
+      "pin_names": {
+        "OUT": [
+          "1"
+        ],
+        "GND": [
+          "2"
+        ],
+        "ISET": [
+          "3"
+        ],
+        "EN": [
+          "4"
+        ],
+        "IN": [
+          "5"
+        ]
+      },
+      "pin_numbers": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5"
+      ]
+    },
+    {
+      "ref": "R1",
+      "lib_id": "Device:R",
+      "value": "13k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C22797"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "C1",
+      "lib_id": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {
+        "LCSC": "C14663"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "C2",
+      "lib_id": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {
+        "LCSC": "C14663"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "D1",
+      "lib_id": "Device:LED",
+      "value": "red",
+      "footprint": "LED_SMD:LED_0603_1608Metric",
+      "fields": {
+        "LCSC": "C2286"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "R2",
+      "lib_id": "Device:R",
+      "value": "330R",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C23138"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "U2",
+      "lib_id": "SY6280AAC:SY6280AAC",
+      "value": "SY6280AAC",
+      "footprint": "SY6280AAC:SY6280AAC",
+      "fields": {
+        "LCSC": "C55136"
+      },
+      "pin_names": {
+        "OUT": [
+          "1"
+        ],
+        "GND": [
+          "2"
+        ],
+        "ISET": [
+          "3"
+        ],
+        "EN": [
+          "4"
+        ],
+        "IN": [
+          "5"
+        ]
+      },
+      "pin_numbers": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5"
+      ]
+    },
+    {
+      "ref": "R3",
+      "lib_id": "Device:R",
+      "value": "13k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C22797"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "C3",
+      "lib_id": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {
+        "LCSC": "C14663"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "C4",
+      "lib_id": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {
+        "LCSC": "C14663"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "D2",
+      "lib_id": "Device:LED",
+      "value": "red",
+      "footprint": "LED_SMD:LED_0603_1608Metric",
+      "fields": {
+        "LCSC": "C2286"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "R4",
+      "lib_id": "Device:R",
+      "value": "330R",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C23138"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "U3",
+      "lib_id": "SY6280AAC:SY6280AAC",
+      "value": "SY6280AAC",
+      "footprint": "SY6280AAC:SY6280AAC",
+      "fields": {
+        "LCSC": "C55136"
+      },
+      "pin_names": {
+        "OUT": [
+          "1"
+        ],
+        "GND": [
+          "2"
+        ],
+        "ISET": [
+          "3"
+        ],
+        "EN": [
+          "4"
+        ],
+        "IN": [
+          "5"
+        ]
+      },
+      "pin_numbers": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5"
+      ]
+    },
+    {
+      "ref": "R5",
+      "lib_id": "Device:R",
+      "value": "6.8k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C23212"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "C5",
+      "lib_id": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {
+        "LCSC": "C14663"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "C6",
+      "lib_id": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {
+        "LCSC": "C14663"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "D3",
+      "lib_id": "Device:LED",
+      "value": "red",
+      "footprint": "LED_SMD:LED_0603_1608Metric",
+      "fields": {
+        "LCSC": "C2286"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "R6",
+      "lib_id": "Device:R",
+      "value": "330R",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C23138"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "U4",
+      "lib_id": "SY6280AAC:SY6280AAC",
+      "value": "SY6280AAC",
+      "footprint": "SY6280AAC:SY6280AAC",
+      "fields": {
+        "LCSC": "C55136"
+      },
+      "pin_names": {
+        "OUT": [
+          "1"
+        ],
+        "GND": [
+          "2"
+        ],
+        "ISET": [
+          "3"
+        ],
+        "EN": [
+          "4"
+        ],
+        "IN": [
+          "5"
+        ]
+      },
+      "pin_numbers": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5"
+      ]
+    },
+    {
+      "ref": "R7",
+      "lib_id": "Device:R",
+      "value": "13k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C22797"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "C7",
+      "lib_id": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {
+        "LCSC": "C14663"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "C8",
+      "lib_id": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {
+        "LCSC": "C14663"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "D4",
+      "lib_id": "Device:LED",
+      "value": "red",
+      "footprint": "LED_SMD:LED_0603_1608Metric",
+      "fields": {
+        "LCSC": "C2286"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "R8",
+      "lib_id": "Device:R",
+      "value": "330R",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C23138"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "U5",
+      "lib_id": "SY6280AAC:SY6280AAC",
+      "value": "SY6280AAC",
+      "footprint": "SY6280AAC:SY6280AAC",
+      "fields": {
+        "LCSC": "C55136"
+      },
+      "pin_names": {
+        "OUT": [
+          "1"
+        ],
+        "GND": [
+          "2"
+        ],
+        "ISET": [
+          "3"
+        ],
+        "EN": [
+          "4"
+        ],
+        "IN": [
+          "5"
+        ]
+      },
+      "pin_numbers": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5"
+      ]
+    },
+    {
+      "ref": "R9",
+      "lib_id": "Device:R",
+      "value": "6.8k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C23212"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "C9",
+      "lib_id": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {
+        "LCSC": "C14663"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "C10",
+      "lib_id": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {
+        "LCSC": "C14663"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "D5",
+      "lib_id": "Device:LED",
+      "value": "red",
+      "footprint": "LED_SMD:LED_0603_1608Metric",
+      "fields": {
+        "LCSC": "C2286"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "R10",
+      "lib_id": "Device:R",
+      "value": "330R",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C23138"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "U6",
+      "lib_id": "SY6280AAC:SY6280AAC",
+      "value": "SY6280AAC",
+      "footprint": "SY6280AAC:SY6280AAC",
+      "fields": {
+        "LCSC": "C55136"
+      },
+      "pin_names": {
+        "OUT": [
+          "1"
+        ],
+        "GND": [
+          "2"
+        ],
+        "ISET": [
+          "3"
+        ],
+        "EN": [
+          "4"
+        ],
+        "IN": [
+          "5"
+        ]
+      },
+      "pin_numbers": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5"
+      ]
+    },
+    {
+      "ref": "R11",
+      "lib_id": "Device:R",
+      "value": "6.8k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C23212"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "C11",
+      "lib_id": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {
+        "LCSC": "C14663"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "C12",
+      "lib_id": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {
+        "LCSC": "C14663"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "D6",
+      "lib_id": "Device:LED",
+      "value": "red",
+      "footprint": "LED_SMD:LED_0603_1608Metric",
+      "fields": {
+        "LCSC": "C2286"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "R12",
+      "lib_id": "Device:R",
+      "value": "1k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C21190"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "U7",
+      "lib_id": "SY6280AAC:SY6280AAC",
+      "value": "SY6280AAC",
+      "footprint": "SY6280AAC:SY6280AAC",
+      "fields": {
+        "LCSC": "C55136"
+      },
+      "pin_names": {
+        "OUT": [
+          "1"
+        ],
+        "GND": [
+          "2"
+        ],
+        "ISET": [
+          "3"
+        ],
+        "EN": [
+          "4"
+        ],
+        "IN": [
+          "5"
+        ]
+      },
+      "pin_numbers": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5"
+      ]
+    },
+    {
+      "ref": "R13",
+      "lib_id": "Device:R",
+      "value": "13k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C22797"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "C13",
+      "lib_id": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {
+        "LCSC": "C14663"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "C14",
+      "lib_id": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {
+        "LCSC": "C14663"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "D7",
+      "lib_id": "Device:LED",
+      "value": "red",
+      "footprint": "LED_SMD:LED_0603_1608Metric",
+      "fields": {
+        "LCSC": "C2286"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "R14",
+      "lib_id": "Device:R",
+      "value": "330R",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C23138"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "U8",
+      "lib_id": "SY6280AAC:SY6280AAC",
+      "value": "SY6280AAC",
+      "footprint": "SY6280AAC:SY6280AAC",
+      "fields": {
+        "LCSC": "C55136"
+      },
+      "pin_names": {
+        "OUT": [
+          "1"
+        ],
+        "GND": [
+          "2"
+        ],
+        "ISET": [
+          "3"
+        ],
+        "EN": [
+          "4"
+        ],
+        "IN": [
+          "5"
+        ]
+      },
+      "pin_numbers": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5"
+      ]
+    },
+    {
+      "ref": "R15",
+      "lib_id": "Device:R",
+      "value": "13k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C22797"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "C15",
+      "lib_id": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {
+        "LCSC": "C14663"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "C16",
+      "lib_id": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {
+        "LCSC": "C14663"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "D8",
+      "lib_id": "Device:LED",
+      "value": "red",
+      "footprint": "LED_SMD:LED_0603_1608Metric",
+      "fields": {
+        "LCSC": "C2286"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "R16",
+      "lib_id": "Device:R",
+      "value": "330R",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C23138"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "U9",
+      "lib_id": "SY6280AAC:SY6280AAC",
+      "value": "SY6280AAC",
+      "footprint": "SY6280AAC:SY6280AAC",
+      "fields": {
+        "LCSC": "C55136"
+      },
+      "pin_names": {
+        "OUT": [
+          "1"
+        ],
+        "GND": [
+          "2"
+        ],
+        "ISET": [
+          "3"
+        ],
+        "EN": [
+          "4"
+        ],
+        "IN": [
+          "5"
+        ]
+      },
+      "pin_numbers": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5"
+      ]
+    },
+    {
+      "ref": "R17",
+      "lib_id": "Device:R",
+      "value": "13k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C22797"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "C17",
+      "lib_id": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {
+        "LCSC": "C14663"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "C18",
+      "lib_id": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {
+        "LCSC": "C14663"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "D9",
+      "lib_id": "Device:LED",
+      "value": "red",
+      "footprint": "LED_SMD:LED_0603_1608Metric",
+      "fields": {
+        "LCSC": "C2286"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "R18",
+      "lib_id": "Device:R",
+      "value": "1k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C21190"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "U10",
+      "lib_id": "SY6280AAC:SY6280AAC",
+      "value": "SY6280AAC",
+      "footprint": "SY6280AAC:SY6280AAC",
+      "fields": {
+        "LCSC": "C55136"
+      },
+      "pin_names": {
+        "OUT": [
+          "1"
+        ],
+        "GND": [
+          "2"
+        ],
+        "ISET": [
+          "3"
+        ],
+        "EN": [
+          "4"
+        ],
+        "IN": [
+          "5"
+        ]
+      },
+      "pin_numbers": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5"
+      ]
+    },
+    {
+      "ref": "R19",
+      "lib_id": "Device:R",
+      "value": "6.8k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C23212"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "C19",
+      "lib_id": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {
+        "LCSC": "C14663"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "C20",
+      "lib_id": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {
+        "LCSC": "C14663"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "D10",
+      "lib_id": "Device:LED",
+      "value": "red",
+      "footprint": "LED_SMD:LED_0603_1608Metric",
+      "fields": {
+        "LCSC": "C2286"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "R20",
+      "lib_id": "Device:R",
+      "value": "1k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C21190"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "R21",
+      "lib_id": "Device:R",
+      "value": "10k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C25804"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "TP1",
+      "lib_id": "Connector:TestPoint",
+      "value": "+3V3_HDMI_TX",
+      "footprint": "TestPoint:TestPoint_Pad_D1.5mm",
+      "fields": {
+        "BOM": "exclude"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "TP2",
+      "lib_id": "Connector:TestPoint",
+      "value": "+3V3_HDMI_RX",
+      "footprint": "TestPoint:TestPoint_Pad_D1.5mm",
+      "fields": {
+        "BOM": "exclude"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "TP3",
+      "lib_id": "Connector:TestPoint",
+      "value": "+3V3_LCD",
+      "footprint": "TestPoint:TestPoint_Pad_D1.5mm",
+      "fields": {
+        "BOM": "exclude"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "TP4",
+      "lib_id": "Connector:TestPoint",
+      "value": "+3V3_CAM",
+      "footprint": "TestPoint:TestPoint_Pad_D1.5mm",
+      "fields": {
+        "BOM": "exclude"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "TP5",
+      "lib_id": "Connector:TestPoint",
+      "value": "+3V3_SD",
+      "footprint": "TestPoint:TestPoint_Pad_D1.5mm",
+      "fields": {
+        "BOM": "exclude"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "TP6",
+      "lib_id": "Connector:TestPoint",
+      "value": "+5V_USB",
+      "footprint": "TestPoint:TestPoint_Pad_D1.5mm",
+      "fields": {
+        "BOM": "exclude"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "TP7",
+      "lib_id": "Connector:TestPoint",
+      "value": "+3V3_PMOD",
+      "footprint": "TestPoint:TestPoint_Pad_D1.5mm",
+      "fields": {
+        "BOM": "exclude"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "TP8",
+      "lib_id": "Connector:TestPoint",
+      "value": "+3V3_USER_LED",
+      "footprint": "TestPoint:TestPoint_Pad_D1.5mm",
+      "fields": {
+        "BOM": "exclude"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "TP9",
+      "lib_id": "Connector:TestPoint",
+      "value": "+5V_HDMI_TX",
+      "footprint": "TestPoint:TestPoint_Pad_D1.5mm",
+      "fields": {
+        "BOM": "exclude"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "TP10",
+      "lib_id": "Connector:TestPoint",
+      "value": "+5V_LCD",
+      "footprint": "TestPoint:TestPoint_Pad_D1.5mm",
+      "fields": {
+        "BOM": "exclude"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    }
+  ],
+  "nets": [
+    {
+      "name": "+3V3",
+      "net_class": "power",
+      "pins": [
+        "U1.5",
+        "C1.1",
+        "U2.5",
+        "C3.1",
+        "U3.5",
+        "C5.1",
+        "U4.5",
+        "C7.1",
+        "U5.5",
+        "C9.1",
+        "U7.5",
+        "C13.1",
+        "U8.5",
+        "C15.1"
+      ]
+    },
+    {
+      "name": "+3V3_HDMI_TX",
+      "net_class": "power",
+      "pins": [
+        "U1.1",
+        "C2.1",
+        "D1.2",
+        "TP1.1"
+      ]
+    },
+    {
+      "name": "GND",
+      "net_class": "ground",
+      "pins": [
+        "U1.2",
+        "R1.2",
+        "C1.2",
+        "C2.2",
+        "R2.2",
+        "U2.2",
+        "R3.2",
+        "C3.2",
+        "C4.2",
+        "R4.2",
+        "U3.2",
+        "R5.2",
+        "C5.2",
+        "C6.2",
+        "R6.2",
+        "U4.2",
+        "R7.2",
+        "C7.2",
+        "C8.2",
+        "R8.2",
+        "U5.2",
+        "R9.2",
+        "C9.2",
+        "C10.2",
+        "R10.2",
+        "U6.2",
+        "R11.2",
+        "C11.2",
+        "C12.2",
+        "R12.2",
+        "U7.2",
+        "R13.2",
+        "C13.2",
+        "C14.2",
+        "R14.2",
+        "U8.2",
+        "R15.2",
+        "C15.2",
+        "C16.2",
+        "R16.2",
+        "U9.2",
+        "R17.2",
+        "C17.2",
+        "C18.2",
+        "R18.2",
+        "U10.2",
+        "R19.2",
+        "C19.2",
+        "C20.2",
+        "R20.2",
+        "R21.2"
+      ]
+    },
+    {
+      "name": "EN_HDMI_TX",
+      "net_class": "port",
+      "pins": [
+        "U1.4"
+      ]
+    },
+    {
+      "name": "BU_ISET_HDMI_TX",
+      "net_class": "signal",
+      "pins": [
+        "U1.3",
+        "R1.1"
+      ]
+    },
+    {
+      "name": "BU_PG_HDMI_TX",
+      "net_class": "signal",
+      "pins": [
+        "D1.1",
+        "R2.1"
+      ]
+    },
+    {
+      "name": "+3V3_HDMI_RX",
+      "net_class": "power",
+      "pins": [
+        "U2.1",
+        "C4.1",
+        "D2.2",
+        "TP2.1"
+      ]
+    },
+    {
+      "name": "EN_HDMI_RX",
+      "net_class": "port",
+      "pins": [
+        "U2.4"
+      ]
+    },
+    {
+      "name": "BU_ISET_HDMI_RX",
+      "net_class": "signal",
+      "pins": [
+        "U2.3",
+        "R3.1"
+      ]
+    },
+    {
+      "name": "BU_PG_HDMI_RX",
+      "net_class": "signal",
+      "pins": [
+        "D2.1",
+        "R4.1"
+      ]
+    },
+    {
+      "name": "+3V3_LCD",
+      "net_class": "power",
+      "pins": [
+        "U3.1",
+        "C6.1",
+        "D3.2",
+        "TP3.1"
+      ]
+    },
+    {
+      "name": "EN_LCD",
+      "net_class": "port",
+      "pins": [
+        "U3.4"
+      ]
+    },
+    {
+      "name": "BU_ISET_LCD",
+      "net_class": "signal",
+      "pins": [
+        "U3.3",
+        "R5.1"
+      ]
+    },
+    {
+      "name": "BU_PG_LCD",
+      "net_class": "signal",
+      "pins": [
+        "D3.1",
+        "R6.1"
+      ]
+    },
+    {
+      "name": "+3V3_CAM",
+      "net_class": "power",
+      "pins": [
+        "U4.1",
+        "C8.1",
+        "D4.2",
+        "TP4.1"
+      ]
+    },
+    {
+      "name": "EN_CAM",
+      "net_class": "port",
+      "pins": [
+        "U4.4"
+      ]
+    },
+    {
+      "name": "BU_ISET_CAM",
+      "net_class": "signal",
+      "pins": [
+        "U4.3",
+        "R7.1"
+      ]
+    },
+    {
+      "name": "BU_PG_CAM",
+      "net_class": "signal",
+      "pins": [
+        "D4.1",
+        "R8.1"
+      ]
+    },
+    {
+      "name": "+3V3_SD",
+      "net_class": "power",
+      "pins": [
+        "U5.1",
+        "C10.1",
+        "D5.2",
+        "R21.1",
+        "TP5.1"
+      ]
+    },
+    {
+      "name": "EN_SD",
+      "net_class": "port",
+      "pins": [
+        "U5.4"
+      ]
+    },
+    {
+      "name": "BU_ISET_SD",
+      "net_class": "signal",
+      "pins": [
+        "U5.3",
+        "R9.1"
+      ]
+    },
+    {
+      "name": "BU_PG_SD",
+      "net_class": "signal",
+      "pins": [
+        "D5.1",
+        "R10.1"
+      ]
+    },
+    {
+      "name": "+5V",
+      "net_class": "power",
+      "pins": [
+        "U6.5",
+        "C11.1",
+        "U9.5",
+        "C17.1",
+        "U10.5",
+        "C19.1"
+      ]
+    },
+    {
+      "name": "+5V_USB",
+      "net_class": "power",
+      "pins": [
+        "U6.1",
+        "C12.1",
+        "D6.2",
+        "TP6.1"
+      ]
+    },
+    {
+      "name": "EN_USB",
+      "net_class": "port",
+      "pins": [
+        "U6.4"
+      ]
+    },
+    {
+      "name": "BU_ISET_USB",
+      "net_class": "signal",
+      "pins": [
+        "U6.3",
+        "R11.1"
+      ]
+    },
+    {
+      "name": "BU_PG_USB",
+      "net_class": "signal",
+      "pins": [
+        "D6.1",
+        "R12.1"
+      ]
+    },
+    {
+      "name": "+3V3_PMOD",
+      "net_class": "power",
+      "pins": [
+        "U7.1",
+        "C14.1",
+        "D7.2",
+        "TP7.1"
+      ]
+    },
+    {
+      "name": "EN_PMOD",
+      "net_class": "port",
+      "pins": [
+        "U7.4"
+      ]
+    },
+    {
+      "name": "BU_ISET_PMOD",
+      "net_class": "signal",
+      "pins": [
+        "U7.3",
+        "R13.1"
+      ]
+    },
+    {
+      "name": "BU_PG_PMOD",
+      "net_class": "signal",
+      "pins": [
+        "D7.1",
+        "R14.1"
+      ]
+    },
+    {
+      "name": "+3V3_USER_LED",
+      "net_class": "power",
+      "pins": [
+        "U8.1",
+        "C16.1",
+        "D8.2",
+        "TP8.1"
+      ]
+    },
+    {
+      "name": "EN_USER_LED",
+      "net_class": "port",
+      "pins": [
+        "U8.4"
+      ]
+    },
+    {
+      "name": "BU_ISET_USER_LED",
+      "net_class": "signal",
+      "pins": [
+        "U8.3",
+        "R15.1"
+      ]
+    },
+    {
+      "name": "BU_PG_USER_LED",
+      "net_class": "signal",
+      "pins": [
+        "D8.1",
+        "R16.1"
+      ]
+    },
+    {
+      "name": "+5V_HDMI_TX",
+      "net_class": "power",
+      "pins": [
+        "U9.1",
+        "C18.1",
+        "D9.2",
+        "TP9.1"
+      ]
+    },
+    {
+      "name": "EN_HDMI_TX_5V",
+      "net_class": "port",
+      "pins": [
+        "U9.4"
+      ]
+    },
+    {
+      "name": "BU_ISET_HDMI_TX_5V",
+      "net_class": "signal",
+      "pins": [
+        "U9.3",
+        "R17.1"
+      ]
+    },
+    {
+      "name": "BU_PG_HDMI_TX_5V",
+      "net_class": "signal",
+      "pins": [
+        "D9.1",
+        "R18.1"
+      ]
+    },
+    {
+      "name": "+5V_LCD",
+      "net_class": "power",
+      "pins": [
+        "U10.1",
+        "C20.1",
+        "D10.2",
+        "TP10.1"
+      ]
+    },
+    {
+      "name": "EN_LCD_5V",
+      "net_class": "port",
+      "pins": [
+        "U10.4"
+      ]
+    },
+    {
+      "name": "BU_ISET_LCD_5V",
+      "net_class": "signal",
+      "pins": [
+        "U10.3",
+        "R19.1"
+      ]
+    },
+    {
+      "name": "BU_PG_LCD_5V",
+      "net_class": "signal",
+      "pins": [
+        "D10.1",
+        "R20.1"
+      ]
+    }
+  ],
+  "nc": [],
+  "port_types": {
+    "EN_HDMI_TX": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "bringup_en (EN AND-gate cells, dossier section 3.2)"
+    },
+    "EN_HDMI_RX": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "bringup_en (EN AND-gate cells, dossier section 3.2)"
+    },
+    "EN_LCD": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "bringup_en (EN AND-gate cells, dossier section 3.2)"
+    },
+    "EN_CAM": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "bringup_en (EN AND-gate cells, dossier section 3.2)"
+    },
+    "EN_SD": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "bringup_en (EN AND-gate cells, dossier section 3.2)"
+    },
+    "EN_USB": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "bringup_en (EN AND-gate cells, dossier section 3.2)"
+    },
+    "EN_PMOD": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "bringup_en (EN AND-gate cells, dossier section 3.2)"
+    },
+    "EN_USER_LED": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "bringup_en (EN AND-gate cells, dossier section 3.2)"
+    },
+    "EN_HDMI_TX_5V": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "bringup_en (EN AND-gate cells, dossier section 3.2)"
+    },
+    "EN_LCD_5V": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "bringup_en (EN AND-gate cells, dossier section 3.2)"
+    }
+  },
+  "hints": {},
+  "loads": {
+    "+3V3_HDMI_TX": [
+      [
+        0.004,
+        "status LED (330R) on the gated output"
+      ]
+    ],
+    "+3V3_HDMI_RX": [
+      [
+        0.004,
+        "status LED (330R) on the gated output"
+      ]
+    ],
+    "+3V3_LCD": [
+      [
+        0.004,
+        "status LED (330R) on the gated output"
+      ]
+    ],
+    "+3V3_CAM": [
+      [
+        0.004,
+        "status LED (330R) on the gated output"
+      ]
+    ],
+    "+3V3_SD": [
+      [
+        0.004,
+        "status LED (330R) on the gated output"
+      ]
+    ],
+    "+5V_USB": [
+      [
+        0.003,
+        "status LED (1k) on the gated output"
+      ]
+    ],
+    "+3V3_PMOD": [
+      [
+        0.004,
+        "status LED (330R) on the gated output"
+      ]
+    ],
+    "+3V3_USER_LED": [
+      [
+        0.004,
+        "status LED (330R) on the gated output"
+      ]
+    ],
+    "+5V_HDMI_TX": [
+      [
+        0.003,
+        "status LED (1k) on the gated output"
+      ]
+    ],
+    "+5V_LCD": [
+      [
+        0.003,
+        "status LED (1k) on the gated output"
+      ]
+    ]
+  },
+  "tp_waivers": {},
+  "decap_waivers": {},
+  "pull_waivers": {},
+  "reset_waivers": {},
+  "strap_waivers": {},
+  "ep_waivers": {},
+  "thermal_waivers": {},
+  "part_rule_waivers": {}
+}

@@ -1,0 +1,51 @@
+{
+  "schema": "schgen.part/1",
+  "mpn": "TPD4E1U06DBVR",
+  "safe_name": "TPD4E1U06DBVR",
+  "lcsc": "C124691",
+  "description": "4 通道高速 ESD 保护器件 SOT-23-6",
+  "manufacturer": "TI(德州仪器)",
+  "package": "SOT-23-6_L2.9-W1.6-P0.95-LS2.8-BR",
+  "jlc_class": "Extended Part",
+  "prefix": "D",
+  "datasheet": "https://www.lcsc.com/datasheet/C124691.pdf",
+  "product_url": "https://lcsc.com/product-detail/Others_Texas-Instruments_TPD4E1U06DBVR_Texas-Instruments-TI-TPD4E1U06DBVR_C124691.html",
+  "lib_id": "TPD4E1U06DBVR:TPD4E1U06DBVR",
+  "footprint": "TPD4E1U06DBVR:TPD4E1U06DBVR",
+  "models_3d": [
+    "TPD4E1U06DBVR.wrl",
+    "TPD4E1U06DBVR.step"
+  ],
+  "pins": [
+    {
+      "num": "1",
+      "name": "D1+",
+      "etype": "passive"
+    },
+    {
+      "num": "2",
+      "name": "GND",
+      "etype": "passive"
+    },
+    {
+      "num": "3",
+      "name": "D2+",
+      "etype": "passive"
+    },
+    {
+      "num": "6",
+      "name": "D1-",
+      "etype": "passive"
+    },
+    {
+      "num": "5",
+      "name": "NC",
+      "etype": "passive"
+    },
+    {
+      "num": "4",
+      "name": "D2-",
+      "etype": "passive"
+    }
+  ]
+}

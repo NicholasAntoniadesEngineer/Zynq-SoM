@@ -28,7 +28,7 @@ def _structure_refs(st: dict) -> set[str]:
 @pytest.mark.parametrize("sheet", _LIGHTWEIGHT)
 def test_contract_imports_and_schema_is_lightweight(sheet):
     c = g.discover_contract(sheet)
-    assert c is not None, f"{sheet}: no placement_contract.py discovered"
+    assert c is not None, f"{sheet}: no placement_contract.json discovered"
     assert c.get("sheet") == sheet
     assert c.get("subsystem") == sheet
     assert c.get("tier") == "lightweight", c.get("tier")

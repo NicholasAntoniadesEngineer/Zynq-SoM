@@ -1,0 +1,41 @@
+{
+  "schema": "schgen.part/1",
+  "mpn": "TS-1187A-B-A-B",
+  "safe_name": "TS-1187A-B-A-B",
+  "lcsc": "C318884",
+  "description": "TS-1187A-B-A-B (SW-SMD_4P-L5.1-W5.1-P3.70-LS6.5-TL_H1.5)",
+  "manufacturer": "XKB Connection(中国星坤)",
+  "package": "SW-SMD_4P-L5.1-W5.1-P3.70-LS6.5-TL_H1.5",
+  "jlc_class": "Basic Part",
+  "prefix": "SW",
+  "datasheet": "https://www.lcsc.com/datasheet/C318884.pdf",
+  "product_url": "https://lcsc.com/product-detail/Tactile-Switches_XKB-Enterprise-TS-1187-B-A-A_C318884.html",
+  "lib_id": "TS-1187A-B-A-B:TS-1187A-B-A-B",
+  "footprint": "TS-1187A-B-A-B:TS-1187A-B-A-B",
+  "models_3d": [
+    "TS-1187A-B-A-B.wrl",
+    "TS-1187A-B-A-B.step"
+  ],
+  "pins": [
+    {
+      "num": "2",
+      "name": "B",
+      "etype": "passive"
+    },
+    {
+      "num": "1",
+      "name": "A",
+      "etype": "passive"
+    },
+    {
+      "num": "4",
+      "name": "D",
+      "etype": "passive"
+    },
+    {
+      "num": "3",
+      "name": "C",
+      "etype": "passive"
+    }
+  ]
+}

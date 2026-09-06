@@ -61,6 +61,15 @@ som/.som_audit_*.js
 # derived KiCad-exact mirrored footprint cache (schgen/generate/pcb/mirror.py)
 .mirrored_fp/
 
+# C++ extension build (scripts/build_native.sh)
+native/build/
+native/bin/
+native/catalog.bin
+native/circuits.bin
+schgen/_geom*.so
+schgen/_geom*.dylib
+schgen/*.so
+
 # macOS/iCloud sync duplicates ("file 2.png") — never products, never commit
 *[0-9] [0-9].*
 * [0-9].*

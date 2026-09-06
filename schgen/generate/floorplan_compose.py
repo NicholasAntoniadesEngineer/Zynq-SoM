@@ -4,6 +4,7 @@ import math
 from dataclasses import dataclass
 from pathlib import Path
 
+from schgen.core import native as _nat
 from schgen.core import quantize as _q
 from schgen.core.project import PROJECT_ROOT
 
@@ -30,6 +31,76 @@ CHANNEL_MIN_NETS = 6
 _KNOWN_EXTERNAL_KEYS = {"flow", "downstream", "output_roles", "far", "near_max",
                         "media_faces_near_max"}
 _SOM_TOKEN = "@som"
+
+
+def page_mid_local_py(page: tuple[float, float, float, float],
+                      origin_x: float, origin_y: float
+                      ) -> tuple[float, float]:
+    return ((page[0] + page[2]) / 2 - origin_x,
+            (page[1] + page[3]) / 2 - origin_y)
+
+
+def page_mid_local(page: tuple[float, float, float, float],
+                   origin_x: float, origin_y: float
+                   ) -> tuple[float, float]:
+    if not _nat.loaded():
+        raise RuntimeError("native page_mid_local required")
+    got = tuple(_nat.module().page_mid_local(page, origin_x, origin_y))
+    if _nat.trace():
+        ref = page_mid_local_py(page, origin_x, origin_y)
+        if got != ref:
+            raise AssertionError(
+                "native page_mid_local DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
+
+
+def pose_halo_abs_py(pose: tuple[float, float],
+                     halo: tuple[float, float, float, float]
+                     ) -> tuple[float, float, float, float]:
+    return (pose[0] + halo[0], pose[1] + halo[1],
+            pose[0] + halo[2], pose[1] + halo[3])
+
+
+def pose_halo_abs(pose: tuple[float, float],
+                  halo: tuple[float, float, float, float]
+                  ) -> tuple[float, float, float, float]:
+    if not _nat.loaded():
+        raise RuntimeError("native offset_rect required")
+    got = tuple(_nat.module().offset_rect(halo, pose[0], pose[1]))
+    if _nat.trace():
+        ref = pose_halo_abs_py(pose, halo)
+        if got != ref:
+            raise AssertionError(
+                "native offset_rect DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
+
+
+def weighted_median_py(pulls: list[tuple[float, float]]) -> float:
+    ordered = sorted(pulls, key=lambda pp: pp[1])
+    tot = sum(w for w, _ in ordered)
+    acc = 0.0
+    best = ordered[0][1]
+    for weight, pos in ordered:
+        acc += weight
+        if acc >= tot / 2 - 1e-12:
+            best = pos
+            break
+    return best
+
+
+def weighted_median(pulls: list[tuple[float, float]]) -> float:
+    if not _nat.loaded():
+        raise RuntimeError("native weighted_median required")
+    got = _nat.module().weighted_median(pulls)
+    if _nat.trace():
+        ref = weighted_median_py(pulls)
+        if got != ref:
+            raise AssertionError(
+                "native weighted_median DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
 
 
 ESCAPE_SIDECAR = PROJECT_ROOT / "escape_block.json"
@@ -358,9 +429,9 @@ def _emitted_zone_frame(pose: tuple[float, float]) -> tuple[float, float]:
     return pose
 
 
-def predicted_centroid(pose: tuple[float, float], m: LocalMetrics,
-                       refs: set[str] | None = None
-                       ) -> tuple[float, float] | None:
+def predicted_centroid_py(pose: tuple[float, float], m: LocalMetrics,
+                          refs: set[str] | None = None
+                          ) -> tuple[float, float] | None:
     from schgen.generate.pcb.constants import ORIGIN_X, ORIGIN_Y
     gzx, gzy = _emitted_zone_frame(pose)
     xs: list[float] = []
@@ -375,8 +446,27 @@ def predicted_centroid(pose: tuple[float, float], m: LocalMetrics,
     return (round(sum(xs) / len(xs), 4), round(sum(ys) / len(ys), 4))
 
 
-def predicted_bbox(pose: tuple[float, float], m: LocalMetrics
-                   ) -> tuple[float, float, float, float] | None:
+def predicted_centroid(pose: tuple[float, float], m: LocalMetrics,
+                       refs: set[str] | None = None
+                       ) -> tuple[float, float] | None:
+    if not _nat.loaded():
+        raise RuntimeError("native predicted_centroid required")
+    from schgen.generate.pcb.constants import ORIGIN_X, ORIGIN_Y
+    gzx, gzy = _emitted_zone_frame(pose)
+    allow = None if refs is None else list(refs)
+    got = _nat.module().predicted_centroid(
+        gzx, gzy, ORIGIN_X, ORIGIN_Y, list(m.offsets), allow)
+    if _nat.trace():
+        ref = predicted_centroid_py(pose, m, refs)
+        if got != ref:
+            raise AssertionError(
+                "native predicted_centroid DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
+
+
+def predicted_bbox_py(pose: tuple[float, float], m: LocalMetrics
+                      ) -> tuple[float, float, float, float] | None:
     from schgen.generate.pcb.constants import ORIGIN_X, ORIGIN_Y
     gzx, gzy = _emitted_zone_frame(pose)
     a: list[float] | None = None
@@ -398,14 +488,31 @@ def predicted_bbox(pose: tuple[float, float], m: LocalMetrics
     return (round(a[0], 4), round(a[1], 4), round(a[2], 4), round(a[3], 4))
 
 
-def evaluate_terms(board_w: float, board_h: float,
-                   som_core: tuple[float, float, float, float] | None,
-                   poses: dict[str, tuple[float, float]],
-                   metrics: dict[str, LocalMetrics],
-                   index: TermIndex,
-                   far_guard: dict[str, float] | None = None,
-                   som_j_rects: dict[str, tuple[float, float, float, float]]
-                   | None = None) -> list[TermEval]:
+def predicted_bbox(pose: tuple[float, float], m: LocalMetrics
+                   ) -> tuple[float, float, float, float] | None:
+    if not _nat.loaded():
+        raise RuntimeError("native predicted_bbox required")
+    from schgen.generate.pcb.constants import ORIGIN_X, ORIGIN_Y
+    gzx, gzy = _emitted_zone_frame(pose)
+    got = _nat.module().predicted_bbox(
+        gzx, gzy, ORIGIN_X, ORIGIN_Y, list(m.offsets), list(m.pad_union))
+    if _nat.trace():
+        ref = predicted_bbox_py(pose, m)
+        if got != ref:
+            raise AssertionError(
+                "native predicted_bbox DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
+
+
+def evaluate_terms_py(board_w: float, board_h: float,
+                      som_core: tuple[float, float, float, float] | None,
+                      poses: dict[str, tuple[float, float]],
+                      metrics: dict[str, LocalMetrics],
+                      index: TermIndex,
+                      far_guard: dict[str, float] | None = None,
+                      som_j_rects: dict[str, tuple[float, float, float, float]]
+                      | None = None) -> list[TermEval]:
     from schgen.verify.placement_flow_gate import (
         bbox_gap,
         facing_dot,
@@ -514,6 +621,49 @@ def evaluate_terms(board_w: float, board_h: float,
     return out
 
 
+def evaluate_terms(board_w: float, board_h: float,
+                   som_core: tuple[float, float, float, float] | None,
+                   poses: dict[str, tuple[float, float]],
+                   metrics: dict[str, LocalMetrics],
+                   index: TermIndex,
+                   far_guard: dict[str, float] | None = None,
+                   som_j_rects: dict[str, tuple[float, float, float, float]]
+                   | None = None) -> list[TermEval]:
+    if far_guard is None:
+        far_guard = FAR_L4_GUARD_MM
+    if not _nat.loaded():
+        raise RuntimeError("native evaluate_terms required")
+    from schgen.generate.pcb.constants import ORIGIN_X, ORIGIN_Y
+    term_rows = [
+        (t.kind, t.subject, t.target, t.bound, list(t.out_refs))
+        for t in index.terms]
+    metric_rows = [
+        (name, list(m.offsets), list(m.pad_union))
+        for name, m in metrics.items()]
+    pose_rows = list(poses.items())
+    jack_rows = list((som_j_rects or {}).items())
+    guard_rows = list(far_guard.items())
+    rows = _nat.module().evaluate_terms(
+        board_w, board_h, som_core, pose_rows, metric_rows, term_rows,
+        guard_rows, jack_rows, ORIGIN_X, ORIGIN_Y)
+    got = [TermEval(t, measured, bound, margin, ok, note)
+           for t, (measured, bound, margin, ok, note)
+           in zip(index.terms, rows, strict=True)]
+    if _nat.trace():
+        ref = evaluate_terms_py(
+            board_w, board_h, som_core, poses, metrics, index, far_guard,
+            som_j_rects)
+        got_t = [(e.term.key, e.measured, e.bound, e.margin, e.ok, e.note)
+                 for e in got]
+        ref_t = [(e.term.key, e.measured, e.bound, e.margin, e.ok, e.note)
+                 for e in ref]
+        if got_t != ref_t:
+            raise AssertionError(
+                f"native evaluate_terms DIVERGENCE: cpp={got_t} "
+                f"python={ref_t}")
+    return got
+
+
 def measure_terms(model, index: TermIndex | None = None) -> list[TermEval]:
     from schgen.verify.placement_contract_gate import _board_refs_by_sheet
     from schgen.verify.placement_flow_gate import (
@@ -536,7 +686,8 @@ def measure_terms(model, index: TermIndex | None = None) -> list[TermEval]:
             if model.som_core is None:
                 return None
             x0, y0, x1, y1 = model.som_core
-            return (round((x0 + x1) / 2.0, 4), round((y0 + y1) / 2.0, 4))
+            return tuple(_nat.module().round_xy(
+                (x0 + x1) / 2.0, (y0 + y1) / 2.0, 4))
         return centroids.get(name)
 
     def bbox_of(name: str) -> tuple[float, float, float, float] | None:
@@ -552,7 +703,7 @@ def measure_terms(model, index: TermIndex | None = None) -> list[TermEval]:
                 out.append(TermEval(t, math.inf, round(budget, 4), -math.inf,
                                     False, "UNRESOLVED"))
                 continue
-            d = math.hypot(ca[0] - cb[0], ca[1] - cb[1])
+            d = _nat.module().hypot_xy(ca[0], ca[1], cb[0], cb[1])
             out.append(TermEval(t, d, round(budget, 4),
                                 round(budget - d, 4), d <= budget))
         elif t.kind in ("near_max", "near_intent"):
@@ -574,7 +725,7 @@ def measure_terms(model, index: TermIndex | None = None) -> list[TermEval]:
                 out.append(TermEval(t, math.inf, t.bound or 0.0, -math.inf,
                                     False, "UNRESOLVED"))
                 continue
-            d = math.hypot(ca[0] - cb[0], ca[1] - cb[1])
+            d = _nat.module().hypot_xy(ca[0], ca[1], cb[0], cb[1])
             out.append(TermEval(t, d, t.bound or 0.0,
                                 round(d - (t.bound or 0.0), 4),
                                 d >= (t.bound or 0.0)))
@@ -612,14 +763,30 @@ def cross_airwires_by_pair(model, npp: dict | None = None,
             if sa == sb:
                 continue
             key = (sa, sb) if sa < sb else (sb, sa)
-            pairs.setdefault(key, []).append(math.hypot(xa - xb, ya - yb))
+            pairs.setdefault(key, []).append(
+                _nat.module().hypot_xy(xa, ya, xb, yb))
     return {k: (len(v), round(sum(v), 1)) for k, v in sorted(pairs.items())}
 
 
-def channel_demand_mm(n_airwires: int) -> float:
+def channel_demand_mm_py(n_airwires: int) -> float:
     if n_airwires < CHANNEL_MIN_NETS:
         return 0.0
     return CHANNEL_FLOOR_MM + CHANNEL_PER_NET_MM * n_airwires
+
+
+def channel_demand_mm(n_airwires: int) -> float:
+    if not _nat.loaded():
+        raise RuntimeError("native channel_demand_mm required")
+    got = _nat.module().channel_demand_mm(
+        n_airwires, CHANNEL_MIN_NETS, CHANNEL_FLOOR_MM,
+        CHANNEL_PER_NET_MM)
+    if _nat.trace():
+        ref = channel_demand_mm_py(n_airwires)
+        if got != ref:
+            raise AssertionError(
+                "native channel_demand_mm DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
 
 
 def compose_report(model, index: TermIndex | None = None,
@@ -691,8 +858,8 @@ class _Sep:
     flippable: bool
 
 
-def _pair_axis(a: tuple[float, float, float, float],
-               b: tuple[float, float, float, float]) -> tuple[str, bool]:
+def _pair_axis_py(a: tuple[float, float, float, float],
+                  b: tuple[float, float, float, float]) -> tuple[str, bool]:
     gx = max(b[0] - a[2], a[0] - b[2])
     gy = max(b[1] - a[3], a[1] - b[3])
     nx = gx / max(1.0, ((a[2] - a[0]) + (b[2] - b[0])) / 2.0)
@@ -702,9 +869,22 @@ def _pair_axis(a: tuple[float, float, float, float],
     return "y", a[1] <= b[1]
 
 
-def channel_gap_mm(a: str, b: str, demand: dict[frozenset, int],
-                   near_max_pairs: set[frozenset], clear: float
-                   ) -> tuple[float, str]:
+def _pair_axis(a: tuple[float, float, float, float],
+               b: tuple[float, float, float, float]) -> tuple[str, bool]:
+    if not _nat.loaded():
+        raise RuntimeError("native pair_axis required")
+    got = _nat.module().pair_axis(a, b)
+    if _nat.trace():
+        ref = _pair_axis_py(a, b)
+        if got != ref:
+            raise AssertionError(
+                f"native pair_axis DIVERGENCE: cpp={got} python={ref}")
+    return got
+
+
+def channel_gap_mm_py(a: str, b: str, demand: dict[frozenset, int],
+                      near_max_pairs: set[frozenset], clear: float
+                      ) -> tuple[float, str]:
     key = frozenset((a, b))
     if key in near_max_pairs:
         return clear, "near_max-adjacency(terminus)"
@@ -714,9 +894,26 @@ def channel_gap_mm(a: str, b: str, demand: dict[frozenset, int],
     return clear, "CLEAR"
 
 
-def _bellman_ford(nodes: list[str],
-                  edges: list[tuple[str, str, float, object]]
-                  ) -> tuple[dict[str, float] | None, list[object]]:
+def channel_gap_mm(a: str, b: str, demand: dict[frozenset, int],
+                   near_max_pairs: set[frozenset], clear: float
+                   ) -> tuple[float, str]:
+    key = frozenset((a, b))
+    if not _nat.loaded():
+        raise RuntimeError("native channel_gap_mm required")
+    got = _nat.module().channel_gap_mm(
+        key in near_max_pairs, demand.get(key, 0), clear,
+        CHANNEL_MIN_NETS, CHANNEL_FLOOR_MM, CHANNEL_PER_NET_MM)
+    if _nat.trace():
+        ref = channel_gap_mm_py(a, b, demand, near_max_pairs, clear)
+        if got != ref:
+            raise AssertionError(
+                f"native channel_gap_mm DIVERGENCE: cpp={got} python={ref}")
+    return got
+
+
+def _bellman_ford_py(nodes: list[str],
+                     edges: list[tuple[str, str, float, object]]
+                     ) -> tuple[dict[str, float] | None, list[object]]:
     dist = dict.fromkeys(nodes, 0.0)
     pred: dict[str, tuple[str, object]] = {}
     V = len(nodes)
@@ -743,6 +940,29 @@ def _bellman_ford(nodes: list[str],
         if node == start or len(tags) > V + 1:
             break
     return None, tags
+
+
+def _bellman_ford(nodes: list[str],
+                  edges: list[tuple[str, str, float, object]]
+                  ) -> tuple[dict[str, float] | None, list[object]]:
+    if not _nat.loaded():
+        raise RuntimeError("native bellman_ford required")
+    index = {name: i for i, name in enumerate(nodes)}
+    src = [index[u] for u, _v, _c, _tag in edges]
+    dst = [index[v] for _u, v, _c, _tag in edges]
+    cost = [c for _u, _v, c, _tag in edges]
+    ok, dist, cycle = _nat.module().bellman_ford(len(nodes), src, dst, cost)
+    if ok:
+        got: tuple[dict[str, float] | None, list[object]] = (
+            {name: dist[i] for i, name in enumerate(nodes)}, [])
+    else:
+        got = (None, [edges[i][3] for i in cycle])
+    if _nat.trace():
+        ref = _bellman_ford_py(nodes, edges)
+        if got != ref:
+            raise AssertionError(
+                f"native bellman_ford DIVERGENCE: cpp={got} python={ref}")
+    return got
 
 
 def legalize_compact(board_w: float, board_h: float,
@@ -774,19 +994,18 @@ def legalize_compact(board_w: float, board_h: float,
         m = metrics.get(sheet)
         if m is None or not m.pad_union:
             return None
-        return (min(b[1] for b in m.pad_union),
-                min(b[2] for b in m.pad_union),
-                max(b[3] for b in m.pad_union),
-                max(b[4] for b in m.pad_union))
+        if not _nat.loaded():
+            raise RuntimeError("native pad_union_hull required")
+        return _nat.module().pad_union_hull(list(m.pad_union))
 
     def cent_off(sheet: str) -> tuple[float, float]:
         m = metrics.get(sheet)
         if m is None or not m.offsets:
             v = by_name.get(sheet)
             return (v.w / 2, v.h / 2) if v else (0.0, 0.0)
-        xs = [dx for _r, dx, _dy in m.offsets]
-        ys = [dy for _r, _dx, dy in m.offsets]
-        return (sum(xs) / len(xs), sum(ys) / len(ys))
+        if not _nat.loaded():
+            raise RuntimeError("native centroid_offset required")
+        return _nat.module().centroid_offset(list(m.offsets), 0.0, 0.0)
 
     near_pairs = {frozenset((t.subject, t.target))
                   for t in hard if t.kind == "near_max"}
@@ -794,20 +1013,50 @@ def legalize_compact(board_w: float, board_h: float,
 
     seps: list[_Sep] = []
     seed_rect = {v.name: (v.x, v.y, v.x + v.w, v.y + v.h) for v in movable}
-    for i, a in enumerate(names):
-        for b in names[i + 1:]:
-            axis, first = _pair_axis(seed_rect[a], seed_rect[b])
-            gap, why = channel_gap_mm(a, b, channel_demand, near_pairs, clear)
-            lo, hi = (a, b) if first else (b, a)
-            seps.append(_Sep(axis, lo, hi, gap, why, True))
-        for fn in sorted(frect):
-            axis, first = _pair_axis(seed_rect[a], frect[fn])
-            gap, why = channel_gap_mm(a, fn, channel_demand, near_pairs,
-                                      clear)
-            lo, hi = (a, f"#{fn}") if first else (f"#{fn}", a)
-            seps.append(_Sep(axis, lo, hi, gap, why, True))
 
-    def build_edges(axis: str) -> list[tuple[str, str, float, object]]:
+    def _build_seps_py() -> list[_Sep]:
+        built: list[_Sep] = []
+        for i, a in enumerate(names):
+            for b in names[i + 1:]:
+                axis, first = _pair_axis(seed_rect[a], seed_rect[b])
+                gap, why = channel_gap_mm(a, b, channel_demand, near_pairs,
+                                          clear)
+                lo, hi = (a, b) if first else (b, a)
+                built.append(_Sep(axis, lo, hi, gap, why, True))
+            for fn in sorted(frect):
+                axis, first = _pair_axis(seed_rect[a], frect[fn])
+                gap, why = channel_gap_mm(a, fn, channel_demand, near_pairs,
+                                          clear)
+                lo, hi = (a, f"#{fn}") if first else (f"#{fn}", a)
+                built.append(_Sep(axis, lo, hi, gap, why, True))
+        return built
+
+    if not _nat.loaded():
+        raise RuntimeError("native build_seps_py required")
+    demand_rows = [(a, b, n) for key, n in channel_demand.items()
+                   for a, b in [tuple(key) if len(key) == 2
+                                else (next(iter(key)), next(iter(key)))]]
+    near_rows = [(a, b) for key in near_pairs
+                 for a, b in [tuple(key) if len(key) == 2
+                              else (next(iter(key)), next(iter(key)))]]
+    rows = _nat.module().legalize_build_seps(
+        names, [seed_rect[n] for n in names],
+        list(frect.keys()), [frect[n] for n in frect],
+        demand_rows, near_rows, clear, CHANNEL_MIN_NETS,
+        CHANNEL_FLOOR_MM, CHANNEL_PER_NET_MM)
+    seps = [_Sep(axis, lo, hi, gap, why, flip)
+            for axis, lo, hi, gap, why, flip in rows]
+    if _nat.trace():
+        ref = _build_seps_py()
+        got_t = [(s.axis, s.lo, s.hi, s.gap, s.basis, s.flippable)
+                 for s in seps]
+        ref_t = [(s.axis, s.lo, s.hi, s.gap, s.basis, s.flippable)
+                 for s in ref]
+        if got_t != ref_t:
+            raise AssertionError(
+                f"native legalize_build_seps DIVERGENCE: "
+                f"cpp={got_t} python={ref_t}")
+    def build_edges_py(axis: str) -> list[tuple[str, str, float, object]]:
         E: list[tuple[str, str, float, object]] = []
         for n in names:
             v = by_name[n]
@@ -841,8 +1090,46 @@ def legalize_compact(board_w: float, board_h: float,
                 E.append(e)
         return E
 
-    def _near_max_edges(t: Term, axis: str
-                        ) -> list[tuple[str, str, float, object]]:
+    def _edge_key(e: tuple) -> tuple:
+        src, dst, cost, tag = e
+        if isinstance(tag, tuple) and tag[0] == "sep":
+            return (src, dst, cost, "sep", tag[1].lo, tag[1].hi, tag[1].axis)
+        if isinstance(tag, tuple) and tag[0] in ("near_max", "near_max-perp"):
+            return (src, dst, cost, tag[0], tag[1].subject, tag[1].target)
+        if isinstance(tag, tuple):
+            return (src, dst, cost, tag[0], tag[1])
+        return (src, dst, cost, str(tag))
+
+    def build_edges(axis: str) -> list[tuple[str, str, float, object]]:
+        if not _nat.loaded():
+            raise RuntimeError("native wall_sep_edges required")
+        span = board_w if axis == "x" else board_h
+        sizes = [by_name[n].w if axis == "x" else by_name[n].h for n in names]
+        sep_in = [(s.axis == "x", s.lo, s.hi, s.gap) for s in seps]
+        frects = [(fn, r) for fn, r in frect.items()]
+        rows = _nat.module().wall_sep_edges(
+            axis == "x", names, sizes, span, clear, sep_in, frects)
+        E: list[tuple[str, str, float, object]] = []
+        for src, dst, cost, kind, sep_i, wall_n in rows:
+            if kind == "sep":
+                E.append((src, dst, cost, ("sep", seps[sep_i])))
+            else:
+                E.append((src, dst, cost, (kind, wall_n)))
+        for t in hard:
+            if t.kind != "near_max":
+                continue
+            E.extend(_near_max_edges(t, axis))
+        if _nat.trace():
+            ref = build_edges_py(axis)
+            if [_edge_key(e) for e in E] != [_edge_key(e) for e in ref]:
+                raise AssertionError(
+                    "native wall_sep_edges DIVERGENCE: "
+                    f"cpp={[ _edge_key(e) for e in E]} "
+                    f"python={[ _edge_key(e) for e in ref]}")
+        return E
+
+    def _near_max_edges_py(t: Term, axis: str
+                           ) -> list[tuple[str, str, float, object]]:
         s, g = t.subject, t.target
         _jr = (som_j_rects or {}).get(g) if g.startswith("som_j") else None
         hs, hg = hull(s), (hull(g) if _jr is None
@@ -852,10 +1139,10 @@ def legalize_compact(board_w: float, board_h: float,
                 or (s not in vset and g not in vset):
             return []
         sr = (seed_rect[s] if s in vset
-              else _abs(fixed_poses[s], hs))
+              else pose_halo_abs(fixed_poses[s], hs))
         gr = (_jr if _jr is not None
               else seed_rect[g] if g in vset
-              else _abs(fixed_poses[g], hg))
+              else pose_halo_abs(fixed_poses[g], hg))
         dom, s_first = _pair_axis(sr, gr)
         lo, hi = (s, g) if s_first else (g, s)
         hlo, hhi = (hs, hg) if s_first else (hg, hs)
@@ -891,22 +1178,120 @@ def legalize_compact(board_w: float, board_h: float,
                 out.append(("#0", g, f + a2 - b0, ("near_max-perp", t)))
         return out
 
-    def _abs(p: tuple[float, float], h: tuple[float, float, float, float]):
-        return (p[0] + h[0], p[1] + h[1], p[0] + h[2], p[1] + h[3])
+    def _near_max_edges(t: Term, axis: str
+                        ) -> list[tuple[str, str, float, object]]:
+        if not _nat.loaded():
+            raise RuntimeError("native near_max_edges required")
+        s, g = t.subject, t.target
+        _jr = (som_j_rects or {}).get(g) if g.startswith("som_j") else None
+        hs, hg = hull(s), (hull(g) if _jr is None
+                           else (0.0, 0.0, _jr[2] - _jr[0], _jr[3] - _jr[1]))
+        bound = (t.bound or 0.0) - GUARD_MM
+        if hs is None or hg is None or bound < 0 \
+                or (s not in vset and g not in vset):
+            return []
+        sr = (seed_rect[s] if s in vset
+              else pose_halo_abs(fixed_poses[s], hs))
+        gr = (_jr if _jr is not None
+              else seed_rect[g] if g in vset
+              else pose_halo_abs(fixed_poses[g], hg))
+        rows = _nat.module().near_max_edges(
+            s, g, bound, axis, hs, hg, sr, gr,
+            s in vset, g in vset,
+            None if s in vset else fixed_poses[s],
+            None if g in vset else fixed_poses[g])
+        got = [(src, dst, cost, (("near_max-perp" if perp else "near_max"), t))
+               for src, dst, cost, perp in rows]
+        if _nat.trace():
+            ref = _near_max_edges_py(t, axis)
+            g2 = [(a, b, c, k[0]) for a, b, c, k in got]
+            r2 = [(a, b, c, k[0]) for a, b, c, k in ref]
+            if g2 != r2:
+                raise AssertionError(
+                    "native near_max_edges DIVERGENCE: "
+                    f"cpp={g2} python={r2}")
+        return got
 
     def _descend(px: dict[str, float], py: dict[str, float],
                  hops: tuple[Term, ...], seed_only: bool) -> None:
+        if not _nat.loaded():
+            raise RuntimeError("native descend required")
+        from schgen.generate.pcb.constants import ORIGIN_X, ORIGIN_Y
+        edges_x = [(u, v, c) for u, v, c, _tag in build_edges("x")]
+        edges_y = [(u, v, c) for u, v, c, _tag in build_edges("y")]
+        hop_pairs = [(t.subject, t.target) for t in hops]
+        cents = [(n, cent_off(n)) for n in names]
+        cents.extend((fn, cent_off(fn)) for fn in frect)
+        mid_x, mid_y = page_mid_local(som_core_page, ORIGIN_X, ORIGIN_Y)
+        nx, ny = _nat.module().legalize_descend_passes(
+            names,
+            [px[n] for n in names], [py[n] for n in names],
+            [by_name[n].seed[0] for n in names],
+            [by_name[n].seed[1] for n in names],
+            edges_x, edges_y, hop_pairs, cents,
+            list(fixed_poses.items()), mid_x, mid_y, True, seed_only,
+            W_HOP, W_SEED, MEDIAN_PASSES)
+        if _nat.trace():
+            keepx, keepy = dict(px), dict(py)
+            _descend_py(keepx, keepy, hops, seed_only)
+            gotx = {n: nx[i] for i, n in enumerate(names)}
+            goty = {n: ny[i] for i, n in enumerate(names)}
+            if gotx != {n: keepx[n] for n in names} \
+                    or goty != {n: keepy[n] for n in names}:
+                raise AssertionError(
+                    f"native legalize_descend DIVERGENCE: "
+                    f"cpp={(gotx, goty)} python="
+                    f"{({n: keepx[n] for n in names}, {n: keepy[n] for n in names})}")
+        for i, n in enumerate(names):
+            px[n] = nx[i]
+            py[n] = ny[i]
+
+    def _descend_py(px: dict[str, float], py: dict[str, float],
+                    hops: tuple[Term, ...], seed_only: bool) -> None:
         for _pass in range(MEDIAN_PASSES):
             moved = 0.0
             for n in names:
                 v = by_name[n]
                 for axis, pos in (("x", px), ("y", py)):
-                    lo, hi = -math.inf, math.inf
-                    for u, w2, c, _tag in build_edges(axis):
-                        if w2 == n and u != n:
-                            hi = min(hi, pos.get(u, 0.0) + c)
-                        if u == n and w2 != n:
-                            lo = max(lo, pos.get(w2, 0.0) - c)
+                    edges = build_edges(axis)
+                    if not _nat.loaded():
+                        raise RuntimeError("native constraint_bounds required")
+                    nodes: list[str] = []
+                    index: dict[str, int] = {}
+                    src: list[int] = []
+                    dst: list[int] = []
+                    cost: list[float] = []
+                    for u, w2, c, _tag in edges:
+                        ui = index.get(u)
+                        if ui is None:
+                            ui = len(nodes)
+                            index[u] = ui
+                            nodes.append(u)
+                        vi = index.get(w2)
+                        if vi is None:
+                            vi = len(nodes)
+                            index[w2] = vi
+                            nodes.append(w2)
+                        src.append(ui)
+                        dst.append(vi)
+                        cost.append(c)
+                    if n not in index:
+                        index[n] = len(nodes)
+                        nodes.append(n)
+                    posv = [pos.get(nm, 0.0) for nm in nodes]
+                    lo, hi = _nat.module().constraint_bounds(
+                        index[n], src, dst, cost, posv)
+                    if _nat.trace():
+                        rlo, rhi = -math.inf, math.inf
+                        for u, w2, c, _tag in edges:
+                            if w2 == n and u != n:
+                                rhi = min(rhi, pos.get(u, 0.0) + c)
+                            if u == n and w2 != n:
+                                rlo = max(rlo, pos.get(w2, 0.0) - c)
+                        if (lo, hi) != (rlo, rhi):
+                            raise AssertionError(
+                                "native constraint_bounds DIVERGENCE: "
+                                f"cpp={(lo, hi)} python={(rlo, rhi)}")
                     if lo > hi:
                         continue
                     i = 0 if axis == "x" else 1
@@ -930,25 +1315,16 @@ def legalize_compact(board_w: float, board_h: float,
                                               fixed_poses[other][i]
                                               + oc[i] - co[i]))
                             elif other == _SOM_TOKEN:
-                                mid = (som_core_page[i]
-                                       + som_core_page[i + 2]) / 2
                                 from schgen.generate.pcb.constants import (
                                     ORIGIN_X,
                                     ORIGIN_Y,
                                 )
-                                mid -= (ORIGIN_X if axis == "x" else ORIGIN_Y)
-                                pulls.append((W_HOP, mid - co[i]))
+                                mid_xy = page_mid_local(
+                                    som_core_page, ORIGIN_X, ORIGIN_Y)
+                                pulls.append((W_HOP, mid_xy[i] - co[i]))
                     pulls.append((W_SEED if not seed_only else 1.0,
                                   v.seed[i]))
-                    pulls.sort(key=lambda pp: pp[1])
-                    tot = sum(w for w, _ in pulls)
-                    acc = 0.0
-                    best = pulls[0][1]
-                    for w2, p2 in pulls:
-                        acc += w2
-                        if acc >= tot / 2 - 1e-12:
-                            best = p2
-                            break
+                    best = weighted_median(pulls)
                     q = _q.legalize_pose_quantum(best)
                     q = max(lo, min(q, hi))
                     old = pos[n]
@@ -959,12 +1335,41 @@ def legalize_compact(board_w: float, board_h: float,
                 break
 
     def edges_ok(axis: str, pos: dict[str, float]) -> bool:
-        for u, v, c, _tag in build_edges(axis):
-            pu = pos.get(u, 0.0)
-            pv = pos.get(v, 0.0)
-            if pv - pu > c + 1e-9:
-                return False
-        return True
+        edges = build_edges(axis)
+        if not _nat.loaded():
+            raise RuntimeError("native constraint_edges_ok required")
+        nodes: list[str] = []
+        index: dict[str, int] = {}
+        src: list[int] = []
+        dst: list[int] = []
+        cost: list[float] = []
+        for u, v, c, _tag in edges:
+            ui = index.get(u)
+            if ui is None:
+                ui = len(nodes)
+                index[u] = ui
+                nodes.append(u)
+            vi = index.get(v)
+            if vi is None:
+                vi = len(nodes)
+                index[v] = vi
+                nodes.append(v)
+            src.append(ui)
+            dst.append(vi)
+            cost.append(c)
+        posv = [pos.get(n, 0.0) for n in nodes]
+        got = _nat.module().constraint_edges_ok(src, dst, cost, posv)
+        if _nat.trace():
+            ref = True
+            for u, v, c, _tag in edges:
+                if pos.get(v, 0.0) - pos.get(u, 0.0) > c + 1e-9:
+                    ref = False
+                    break
+            if got is not ref:
+                raise AssertionError(
+                    "native constraint_edges_ok DIVERGENCE: "
+                    f"cpp={got} python={ref}")
+        return got
 
     posx = {n: by_name[n].x for n in names}
     posy = {n: by_name[n].y for n in names}
@@ -972,39 +1377,98 @@ def legalize_compact(board_w: float, board_h: float,
     posy["#0"] = 0.0
     seed_feasible = edges_ok("x", posx) and edges_ok("y", posy)
 
+    def _repair_axis_py(axis: str, pos: dict[str, float]) -> bool:
+        for _rep in range(REPAIR_MAX + 1):
+            E = build_edges(axis)
+            dist, cycle = _bellman_ford(["#0"] + names, E)
+            if dist is not None:
+                base = dist["#0"]
+                for n in names:
+                    pos[n] = dist[n] - base
+                return True
+            flipped = False
+            for tag in cycle:
+                if isinstance(tag, tuple) and tag[0] == "sep" \
+                        and tag[1].flippable:
+                    sp = tag[1]
+                    seps.remove(sp)
+                    seps.append(_Sep("y" if sp.axis == "x" else "x",
+                                     sp.lo, sp.hi, sp.gap,
+                                     sp.basis + "|flipped", False))
+                    log.append(f"repair: flip {sp.lo}|{sp.hi} off "
+                               f"{sp.axis}")
+                    flipped = True
+                    break
+            if not flipped:
+                log.append(
+                    "INFEASIBLE " + axis + ": negative cycle ["
+                    + ", ".join(
+                        (t[1].lo + "|" + t[1].hi if isinstance(t, tuple)
+                         and t[0] == "sep" else str(t))
+                        for t in cycle[:6]) + "]")
+                return False
+        log.append(f"INFEASIBLE {axis}: REPAIR_MAX exhausted")
+        return False
+
+    def _repair_axis(axis: str, pos: dict[str, float]) -> bool:
+        if not _nat.loaded():
+            raise RuntimeError("native legalize_repair_axis required")
+        span = board_w if axis == "x" else board_h
+        sizes = [by_name[n].w if axis == "x" else by_name[n].h for n in names]
+        sep_in = [(s.axis == "x", s.lo, s.hi, s.gap, s.flippable) for s in seps]
+        frects = [(fn, r) for fn, r in frect.items()]
+        extra = [(u, v, c)
+                 for t in hard if t.kind == "near_max"
+                 for u, v, c, _tag in _near_max_edges(t, axis)]
+        keep_seps = list(seps)
+        keep_pos = dict(pos)
+        keep_log = list(log)
+        ok, newpos, newseps, flips, fail = _nat.module().legalize_repair_axis(
+            axis == "x", names, sizes, span, clear, sep_in, frects, extra,
+            REPAIR_MAX)
+        basis_of = {(s.lo, s.hi): s.basis for s in seps}
+        flipped_keys = {(lo, hi) for lo, hi, _was in flips}
+        seps.clear()
+        for ax, lo, hi, gap, flip in newseps:
+            basis = basis_of.get((lo, hi), "")
+            if (lo, hi) in flipped_keys and not basis.endswith("|flipped"):
+                basis = (basis + "|flipped") if basis else "flipped"
+            seps.append(_Sep("x" if ax else "y", lo, hi, gap, basis, flip))
+        if ok:
+            for i, n in enumerate(names):
+                pos[n] = newpos[i]
+            for lo, hi, was_x in flips:
+                log.append(f"repair: flip {lo}|{hi} off "
+                           f"{'x' if was_x else 'y'}")
+        if _nat.trace():
+            seps[:] = keep_seps
+            pos.clear()
+            pos.update(keep_pos)
+            log[:] = keep_log
+            ref_ok = _repair_axis_py(axis, pos)
+            if ok is not ref_ok:
+                raise AssertionError(
+                    "native legalize_repair_axis DIVERGENCE: "
+                    f"cpp_ok={ok} python_ok={ref_ok} fail={fail}")
+            if ok:
+                got = {n: newpos[i] for i, n in enumerate(names)}
+                refp = {n: pos[n] for n in names}
+                if got != refp:
+                    raise AssertionError(
+                        "native legalize_repair_axis DIVERGENCE: "
+                        f"cpp={got} python={refp}")
+            return ref_ok
+        if not ok:
+            if fail == "exhausted":
+                log.append(f"INFEASIBLE {axis}: REPAIR_MAX exhausted")
+            else:
+                log.append(f"INFEASIBLE {axis}: negative cycle")
+            return False
+        return True
+
     if not seed_feasible:
         for axis, pos in (("x", posx), ("y", posy)):
-            for _rep in range(REPAIR_MAX + 1):
-                E = build_edges(axis)
-                dist, cycle = _bellman_ford(["#0"] + names, E)
-                if dist is not None:
-                    base = dist["#0"]
-                    for n in names:
-                        pos[n] = dist[n] - base
-                    break
-                flipped = False
-                for tag in cycle:
-                    if isinstance(tag, tuple) and tag[0] == "sep" \
-                            and tag[1].flippable:
-                        sp = tag[1]
-                        seps.remove(sp)
-                        seps.append(_Sep("y" if sp.axis == "x" else "x",
-                                         sp.lo, sp.hi, sp.gap,
-                                         sp.basis + "|flipped", False))
-                        log.append(f"repair: flip {sp.lo}|{sp.hi} off "
-                                   f"{sp.axis}")
-                        flipped = True
-                        break
-                if not flipped:
-                    log.append(
-                        "INFEASIBLE " + axis + ": negative cycle ["
-                        + ", ".join(
-                            (t[1].lo + "|" + t[1].hi if isinstance(t, tuple)
-                             and t[0] == "sep" else str(t))
-                            for t in cycle[:6]) + "]")
-                    return False
-            else:
-                log.append(f"INFEASIBLE {axis}: REPAIR_MAX exhausted")
+            if not _repair_axis(axis, pos):
                 return False
         _descend(posx, posy, hops=(), seed_only=True)
         for axis, pos in (("x", posx), ("y", posy)):
@@ -1053,12 +1517,23 @@ def legalize_compact(board_w: float, board_h: float,
                 round(posy[n], 4) + by_name[n].h) for n in names}
     for i, n in enumerate(names):
         x0, y0, x1, y1 = rect[n]
-        for m, (u0, v0, u1, v1) in ([(m, rect[m]) for m in names[i + 1:]]
-                                    + sorted(frect.items())):
-            if (min(x1, u1) - max(x0, u0) > 1e-6
-                    and min(y1, v1) - max(y0, v0) > 1e-6):
-                log.append(f"REJECT: final rect overlap {n}|{m}")
-                return False
+        others = ([(m, rect[m]) for m in names[i + 1:]]
+                  + sorted(frect.items()))
+        if not _nat.loaded():
+            raise RuntimeError("native rects_overlap_any required")
+        hit = _nat.module().rects_overlap_any(
+            [(x0, y0, x1, y1)], [box for _m, box in others], 1e-6)
+        if _nat.trace():
+            ref = any(min(x1, u1) - max(x0, u0) > 1e-6
+                      and min(y1, v1) - max(y0, v0) > 1e-6
+                      for _m, (u0, v0, u1, v1) in others)
+            if hit is not ref:
+                raise AssertionError(
+                    f"native rects_overlap_any DIVERGENCE: cpp={hit} "
+                    f"python={ref}")
+        if hit:
+            log.append("REJECT: final rect overlap")
+            return False
     for n in names:
         v = by_name[n]
         v.x = round(posx[n], 4)

@@ -1,0 +1,41 @@
+{
+  "schema": "schgen.part/1",
+  "mpn": "XT60PW-M",
+  "safe_name": "XT60PW-M",
+  "lcsc": "C98732",
+  "description": "XT60PW-M (CONN-TH_XT60PW-M)",
+  "manufacturer": "AMASS(艾迈斯)",
+  "package": "CONN-TH_XT60PW-M",
+  "jlc_class": "Extended Part",
+  "prefix": "CN",
+  "datasheet": "https://www.lcsc.com/datasheet/C98732.pdf",
+  "product_url": "",
+  "lib_id": "XT60PW-M:XT60PW-M",
+  "footprint": "XT60PW-M:XT60PW-M",
+  "models_3d": [
+    "XT60PW-M.wrl",
+    "XT60PW-M.step"
+  ],
+  "pins": [
+    {
+      "num": "1",
+      "name": "-",
+      "etype": "passive"
+    },
+    {
+      "num": "2",
+      "name": "+",
+      "etype": "passive"
+    },
+    {
+      "num": "3",
+      "name": "3",
+      "etype": "passive"
+    },
+    {
+      "num": "4",
+      "name": "4",
+      "etype": "passive"
+    }
+  ]
+}

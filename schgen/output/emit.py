@@ -5,9 +5,10 @@ import uuid
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from schgen.core import native as _nat
 from schgen.core import sexpr
 from schgen.core.model import Circuit
-from schgen.core.sexpr import Sym
+from schgen.core.sexpr import Sym, _from_tagged
 from schgen.core.symbols import Library
 
 PAPER_DEFAULT = "A4"
@@ -135,22 +136,6 @@ class _IdFactory:
         return stable_uuid(self._scope, kind, n)
 
 
-def _effects(size: float = 1.27, hide: bool = False, justify: str | None = None):
-    e: list = [Sym("effects"), [Sym("font"), [Sym("size"), size, size]]]
-    if justify:
-        e.append([Sym("justify"), *[Sym(t) for t in justify.split()]])
-    if hide:
-        e.append([Sym("hide"), Sym("yes")])
-    return e
-
-
-def _prop(name: str, value: str, x: float, y: float, rot: int = 0,
-          hide: bool = False) -> list:
-    return [Sym("property"), name, value,
-            [Sym("at"), x, y, rot],
-            _effects(hide=hide)]
-
-
 def _embed_symbol(lib: Library, lib_id: str) -> list:
     block = copy.deepcopy(lib.get(lib_id).raw)
     block[1] = lib_id
@@ -184,61 +169,46 @@ def emit(design: PlacedDesign, out_path: Path, lib: Library, *,
     doc.append([Sym("lib_symbols"), *[_embed_symbol(lib, lid) for lid in lib_ids]])
 
     for w in design.wires:
-        doc.append([Sym("wire"),
-                    [Sym("pts"), [Sym("xy"), w.x0, w.y0], [Sym("xy"), w.x1, w.y1]],
-                    [Sym("stroke"), [Sym("width"), 0], [Sym("type"), Sym("default")]],
-                    [Sym("uuid"), uid("wire")]])
+        if not _nat.loaded():
+            raise RuntimeError("native emit_wire required")
+        doc.append(_from_tagged(_nat.module().emit_wire(
+            w.x0, w.y0, w.x1, w.y1, uid("wire"))))
     for j in design.junctions:
-        doc.append([Sym("junction"), [Sym("at"), j.x, j.y],
-                    [Sym("diameter"), 0], [Sym("color"), 0, 0, 0, 0],
-                    [Sym("uuid"), uid("junction")]])
+        if not _nat.loaded():
+            raise RuntimeError("native emit_junction required")
+        doc.append(_from_tagged(_nat.module().emit_junction(
+            j.x, j.y, uid("junction"))))
     for nc in design.no_connects:
-        doc.append([Sym("no_connect"), [Sym("at"), nc.x, nc.y],
-                    [Sym("uuid"), uid("no_connect")]])
+        if not _nat.loaded():
+            raise RuntimeError("native emit_no_connect required")
+        doc.append(_from_tagged(_nat.module().emit_no_connect(
+            nc.x, nc.y, uid("no_connect"))))
     for h in design.hlabels:
         just = "right" if h.rotation in (180, 270) else "left"
         tag = "global_label" if design.standalone else "hierarchical_label"
-        doc.append([Sym(tag), h.name,
-                    [Sym("shape"), Sym(h.shape)],
-                    [Sym("at"), h.x, h.y, h.rotation],
-                    _effects(justify=just),
-                    [Sym("uuid"), uid("hlabel")]])
+        if not _nat.loaded():
+            raise RuntimeError("native emit_sch_label required")
+        doc.append(_from_tagged(_nat.module().emit_sch_label(
+            tag, h.name, h.shape, h.x, h.y, float(h.rotation), just,
+            uid("hlabel"))))
     for ll in design.llabels:
         just = "right bottom" if ll.rotation == 180 else "left bottom"
-        doc.append([Sym("label"), ll.name,
-                    [Sym("at"), ll.x, ll.y, ll.rotation],
-                    _effects(justify=just),
-                    [Sym("uuid"), uid("llabel")]])
+        if not _nat.loaded():
+            raise RuntimeError("native emit_sch_label required")
+        doc.append(_from_tagged(_nat.module().emit_sch_label(
+            "label", ll.name, "", ll.x, ll.y, float(ll.rotation), just,
+            uid("llabel"))))
     for sh in design.sheets:
-        node: list = [Sym("sheet"),
-                      [Sym("at"), sh.x, sh.y],
-                      [Sym("size"), sh.w, sh.h],
-                      [Sym("exclude_from_sim"), Sym("no")],
-                      [Sym("in_bom"), Sym("yes")],
-                      [Sym("on_board"), Sym("yes")],
-                      [Sym("dnp"), Sym("no")],
-                      [Sym("fields_autoplaced"), Sym("yes")],
-                      [Sym("stroke"), [Sym("width"), 0.1524],
-                       [Sym("type"), Sym("solid")]],
-                      [Sym("fill"), [Sym("color"), 0, 0, 0, 0.0]],
-                      [Sym("uuid"), sh.uuid],
-                      [Sym("property"), "Sheetname", sh.name,
-                       [Sym("at"), sh.x, sh.y - 0.7116, 0],
-                       _effects(justify="left bottom")],
-                      [Sym("property"), "Sheetfile", sh.file,
-                       [Sym("at"), sh.x, sh.y + sh.h + 0.5846, 0],
-                       _effects(justify="left top")]]
+        if not _nat.loaded():
+            raise RuntimeError("native emit_sheet required")
+        pins = []
         for sp in sh.pins:
             just = "right" if sp.rotation in (180, 270) else "left"
-            node.append([Sym("pin"), sp.name, Sym(sp.shape),
-                         [Sym("at"), sp.x, sp.y, sp.rotation],
-                         _effects(justify=just),
-                         [Sym("uuid"), uid("sheet-pin")]])
-        node.append([Sym("instances"),
-                     [Sym("project"), inst_project,
-                      [Sym("path"), f"/{root_uuid}",
-                       [Sym("page"), sh.page]]]])
-        doc.append(node)
+            pins.append((sp.name, sp.shape, sp.x, sp.y,
+                         float(sp.rotation), just, uid("sheet-pin")))
+        doc.append(_from_tagged(_nat.module().emit_sheet(
+            sh.x, sh.y, sh.w, sh.h, sh.uuid, sh.name, sh.file,
+            inst_project, f"/{root_uuid}", sh.page, pins)))
 
     def _sym_instance(ref: str, lib_id: str, value: str, x: float, y: float,
                       rot: int, footprint: str,
@@ -248,31 +218,19 @@ def emit(design: PlacedDesign, out_path: Path, lib: Library, *,
                       extra_fields: dict[str, str] | None = None) -> list:
         extra_fields = dict(extra_fields or {})
         sdef = lib.get(lib_id)
-        node: list = [Sym("symbol"),
-                      [Sym("lib_id"), lib_id],
-                      [Sym("at"), x, y, rot],
-                      [Sym("unit"), 1],
-                      [Sym("exclude_from_sim"), Sym("no")],
-                      [Sym("in_bom"), Sym("yes")],
-                      [Sym("on_board"), Sym("yes")],
-                      [Sym("dnp"), Sym("no")],
-                      [Sym("uuid"), uid("symbol")]]
         rp = ref_pos or (x, y - 2.54, 0)
         vp = val_pos or (x, y + 2.54, 0)
-        node.append(_prop("Reference", ref, rp[0], rp[1], rp[2], hide=hide_ref))
-        node.append(_prop("Value", value, vp[0], vp[1], vp[2], hide=hide_val))
-        node.append(_prop("Footprint", footprint, x, y, 0, hide=True))
-        node.append(_prop("Datasheet", extra_fields.pop("Datasheet", ""),
-                          x, y, 0, hide=True))
-        for fname, fval in extra_fields.items():
-            node.append(_prop(fname, fval, x, y, 0, hide=True))
-        for p in sdef.pins:
-            node.append([Sym("pin"), p.number, [Sym("uuid"), uid("pin")]])
-        node.append([Sym("instances"),
-                     [Sym("project"), inst_project,
-                      [Sym("path"), inst_path,
-                       [Sym("reference"), ref], [Sym("unit"), 1]]]])
-        return node
+        if not _nat.loaded():
+            raise RuntimeError("native emit_symbol required")
+        fields = [("Datasheet", extra_fields.pop("Datasheet", ""))]
+        fields.extend(extra_fields.items())
+        symbol_uuid = uid("symbol")
+        pin_rows = [(p.number, uid("pin")) for p in sdef.pins]
+        return _from_tagged(_nat.module().emit_symbol(
+            lib_id, x, y, float(rot), symbol_uuid, ref,
+            rp[0], rp[1], float(rp[2]), hide_ref, value,
+            vp[0], vp[1], float(vp[2]), hide_val, footprint,
+            fields, pin_rows, inst_project, inst_path))
 
     for p in design.parts:
         part = c.parts.get(p.ref)

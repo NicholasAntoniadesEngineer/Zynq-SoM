@@ -4,6 +4,57 @@ import enum
 import re
 from dataclasses import dataclass, field, replace
 
+CIRCUIT_SCHEMA = "schgen.circuit/1"
+CIRCUIT_IR_KEYS = (
+    "schema",
+    "name",
+    "title",
+    "parts",
+    "nets",
+    "nc",
+    "port_types",
+    "hints",
+    "loads",
+    "tp_waivers",
+    "decap_waivers",
+    "pull_waivers",
+    "reset_waivers",
+    "strap_waivers",
+    "ep_waivers",
+    "thermal_waivers",
+    "part_rule_waivers",
+)
+PART_IR_KEYS = (
+    "ref",
+    "lib_id",
+    "value",
+    "footprint",
+    "fields",
+    "pin_names",
+    "pin_numbers",
+)
+NET_IR_KEYS = ("name", "net_class", "pins")
+PORT_TYPE_IR_KEYS = (
+    "kind",
+    "pair_with",
+    "impedance",
+    "role",
+    "bus",
+    "speed_hz",
+    "level_v",
+    "expect",
+)
+WAIVER_IR_ATTRS = (
+    "tp_waivers",
+    "decap_waivers",
+    "pull_waivers",
+    "reset_waivers",
+    "strap_waivers",
+    "ep_waivers",
+    "thermal_waivers",
+    "part_rule_waivers",
+)
+
 
 class NetClass(enum.Enum):
     POWER = "power"
@@ -92,6 +143,91 @@ class PartitionError(CircuitError):
     pass
 
 
+def _reject_unknown_keys(payload: dict, allowed: tuple[str, ...],
+                         where: str) -> None:
+    extra = set(payload) - set(allowed)
+    if extra:
+        raise CircuitError(
+            f"{where}: unknown key(s) {sorted(extra)}")
+    missing = [key for key in allowed if key not in payload]
+    if missing:
+        raise CircuitError(
+            f"{where}: missing key(s) {missing}")
+
+
+def _require_str(payload: dict, key: str, where: str,
+                 allow_empty: bool) -> str:
+    value = payload[key]
+    if not isinstance(value, str):
+        raise CircuitError(f"{where}: {key!r} must be a string")
+    if not allow_empty and not value:
+        raise CircuitError(f"{where}: {key!r} must not be empty")
+    return value
+
+
+def _require_str_dict(payload: dict, key: str, where: str) -> dict[str, str]:
+    value = payload[key]
+    if not isinstance(value, dict):
+        raise CircuitError(f"{where}: {key!r} must be an object")
+    out: dict[str, str] = {}
+    for item_key, item_val in value.items():
+        if not isinstance(item_key, str) or not item_key:
+            raise CircuitError(f"{where}: {key!r} keys must be non-empty strings")
+        if not isinstance(item_val, str):
+            raise CircuitError(
+                f"{where}: {key!r}[{item_key!r}] must be a string")
+        out[item_key] = item_val
+    return out
+
+
+def _require_str_list(value: object, where: str) -> list[str]:
+    if not isinstance(value, list):
+        raise CircuitError(f"{where} must be an array of strings")
+    out: list[str] = []
+    for item in value:
+        if not isinstance(item, str) or not item:
+            raise CircuitError(f"{where} entries must be non-empty strings")
+        out.append(item)
+    return out
+
+
+def _opt_str(value: object, where: str) -> str | None:
+    if value is None:
+        return None
+    if not isinstance(value, str):
+        raise CircuitError(f"{where} must be a string or null")
+    return value
+
+
+def _opt_int(value: object, where: str) -> int | None:
+    if value is None:
+        return None
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        raise CircuitError(f"{where} must be an integer or null")
+    if isinstance(value, float) and not value.is_integer():
+        raise CircuitError(f"{where} must be an integer or null")
+    return int(value)
+
+
+def _opt_float(value: object, where: str) -> float | None:
+    if value is None:
+        return None
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        raise CircuitError(f"{where} must be a number or null")
+    return float(value)
+
+
+def _pin_spec(ref: str, pin: str) -> str:
+    return f"{ref}.{pin}"
+
+
+def _split_pin_spec(spec: str, where: str) -> PinRef:
+    ref, sep, pin = spec.partition(".")
+    if not sep or not ref or not pin:
+        raise CircuitError(f"{where}: bad pin spec {spec!r} (want 'REF.PIN')")
+    return PinRef(ref, pin)
+
+
 _R_FP_0603 = "Resistor_SMD:R_0603_1608Metric"
 _C_FP_0603 = "Capacitor_SMD:C_0603_1608Metric"
 _C_FP_0805 = "Capacitor_SMD:C_0805_2012Metric"
@@ -150,31 +286,41 @@ class Circuit:
                  value: str | None = None, lcsc: str | None = None,
                  lib_id: str | None = None,
                  footprint: str | None = None) -> Part:
-        import importlib.util as _ilu
         from pathlib import Path as _P
+        from schgen.core import native as _nat
         safe = re.sub(r"[^A-Za-z0-9._-]+", "_", mpn).strip("_")
         parts_dir = _P(__file__).resolve().parents[2] / "parts"
-        meta = parts_dir / safe / f"{safe}.py"
+        meta = parts_dir / safe / "part.json"
         if not meta.exists():
             raise CircuitError(
-                f"use_part({mpn!r}): parts/{safe}/ is missing — generate it "
-                f"with:  schgen part add {lcsc or 'C<LCSC-id>'} --name {safe}")
-        spec = _ilu.spec_from_file_location(f"_part_{safe}", meta)
-        mod = _ilu.module_from_spec(spec)
-        spec.loader.exec_module(mod)          # type: ignore[union-attr]
+                f"use_part({mpn!r}): parts/{safe}/part.json is missing — "
+                f"generate it with:  schgen part add "
+                f"{lcsc or 'C<LCSC-id>'} --name {safe}")
+        try:
+            rec = _nat.catalog_part(safe)
+        except Exception as exc:
+            raise CircuitError(
+                f"use_part({mpn!r}): catalog lookup failed — {exc}") from exc
+        if rec["safe_name"] != safe:
+            raise CircuitError(
+                f"use_part({mpn!r}): catalog safe_name {rec['safe_name']!r} "
+                f"does not match folder {safe!r}")
         if ref is None:
-            ref = self.auto_ref(getattr(mod, "PREFIX", "U") or "U")
-        fields = {"LCSC": getattr(mod, "LCSC", "") or (lcsc or "")}
+            prefix = rec["prefix"]
+            if not prefix:
+                raise CircuitError(f"use_part({mpn!r}): catalog prefix is empty")
+            ref = self.auto_ref(prefix)
+        fields = {"LCSC": rec["lcsc"] or (lcsc or "")}
         if lib_id is not None:
-            fields["MPN"] = mod.MPN
-            if getattr(mod, "DATASHEET", ""):
-                fields["Datasheet"] = mod.DATASHEET
-        p = self.part(ref, lib_id or mod.LIB_ID, value or mod.MPN,
-                      footprint or mod.FOOTPRINT, **fields)
+            fields["MPN"] = rec["mpn"]
+            if rec["datasheet"]:
+                fields["Datasheet"] = rec["datasheet"]
+        p = self.part(ref, lib_id or rec["lib_id"], value or rec["mpn"],
+                      footprint or rec["footprint"], **fields)
         if lib_id is None:
             names: dict[str, list[str]] = {}
             nums: set[str] = set()
-            for num, name, _et in mod.PINS:
+            for num, name, _et in rec["pins"]:
                 nums.add(str(num))
                 names.setdefault(str(name), []).append(str(num))
             p.pin_names = names
@@ -622,3 +768,183 @@ class Circuit:
         if errors:
             raise CircuitError(
                 f"circuit {self.name!r} incomplete:\n  " + "\n  ".join(errors))
+
+    def to_ir(self) -> dict:
+        parts = []
+        for part in self.parts.values():
+            pin_names = {name: [str(num) for num in nums]
+                         for name, nums in part.pin_names.items()}
+            pin_numbers = [str(num) for num in sorted(part.pin_numbers)]
+            parts.append({
+                "ref": part.ref,
+                "lib_id": part.lib_id,
+                "value": part.value,
+                "footprint": part.footprint,
+                "fields": dict(part.fields),
+                "pin_names": pin_names,
+                "pin_numbers": pin_numbers,
+            })
+        nets = []
+        for net in self.nets.values():
+            nets.append({
+                "name": net.name,
+                "net_class": net.net_class.value,
+                "pins": [_pin_spec(pr.ref, pr.pin) for pr in net.pins],
+            })
+        nc = [_pin_spec(pr.ref, pr.pin)
+              for pr in sorted(self.nc_pins, key=lambda p: (p.ref, p.pin))]
+        port_types = {}
+        for name, pt in self.port_types.items():
+            port_types[name] = {
+                "kind": pt.kind,
+                "pair_with": pt.pair_with,
+                "impedance": pt.impedance,
+                "role": pt.role,
+                "bus": pt.bus,
+                "speed_hz": pt.speed_hz,
+                "level_v": pt.level_v,
+                "expect": pt.expect,
+            }
+        loads = {}
+        for rail, budget in self.loads.items():
+            loads[rail] = [[float(amps), note] for amps, note in budget]
+        ir = {
+            "schema": CIRCUIT_SCHEMA,
+            "name": self.name,
+            "title": self.title,
+            "parts": parts,
+            "nets": nets,
+            "nc": nc,
+            "port_types": port_types,
+            "hints": dict(self.hints),
+            "loads": loads,
+        }
+        for attr in WAIVER_IR_ATTRS:
+            ir[attr] = dict(getattr(self, attr))
+        return ir
+
+    def _restore_ref_counters(self) -> None:
+        counters: dict[str, int] = {}
+        for ref in self.parts:
+            match = re.match(r"^([A-Za-z]+[_A-Za-z]*)(\d+)$", ref)
+            if match is None:
+                continue
+            prefix, number = match.group(1), int(match.group(2))
+            if number > counters.get(prefix, 0):
+                counters[prefix] = number
+        self._ref_counters = counters
+
+    @classmethod
+    def from_ir(cls, payload: dict) -> Circuit:
+        if not isinstance(payload, dict):
+            raise CircuitError("circuit IR must be an object")
+        _reject_unknown_keys(payload, CIRCUIT_IR_KEYS, "circuit")
+        schema = _require_str(payload, "schema", "circuit", False)
+        if schema != CIRCUIT_SCHEMA:
+            raise CircuitError(
+                f"circuit schema must be {CIRCUIT_SCHEMA!r}, got {schema!r}")
+        name = _require_str(payload, "name", "circuit", False)
+        title = _require_str(payload, "title", "circuit", True)
+        circuit = cls(name, title)
+        parts = payload["parts"]
+        if not isinstance(parts, list):
+            raise CircuitError("circuit parts must be an array")
+        for index, prec in enumerate(parts):
+            where = f"circuit {name!r} parts[{index}]"
+            if not isinstance(prec, dict):
+                raise CircuitError(f"{where} must be an object")
+            _reject_unknown_keys(prec, PART_IR_KEYS, where)
+            ref = _require_str(prec, "ref", where, False)
+            if ref in circuit.parts:
+                raise CircuitError(f"{where}: duplicate reference {ref!r}")
+            lib_id = _require_str(prec, "lib_id", where, False)
+            value = _require_str(prec, "value", where, False)
+            footprint = _require_str(prec, "footprint", where, True)
+            fields = _require_str_dict(prec, "fields", where)
+            pin_names_raw = prec["pin_names"]
+            if not isinstance(pin_names_raw, dict):
+                raise CircuitError(f"{where}: pin_names must be an object")
+            pin_names: dict[str, list[str]] = {}
+            for pin_name, nums in pin_names_raw.items():
+                if not isinstance(pin_name, str) or not pin_name:
+                    raise CircuitError(
+                        f"{where}: pin_names keys must be non-empty strings")
+                pin_names[pin_name] = _require_str_list(
+                    nums, f"{where}: pin_names[{pin_name!r}]")
+            pin_numbers = frozenset(
+                _require_str_list(prec["pin_numbers"], f"{where}: pin_numbers"))
+            circuit.parts[ref] = Part(
+                ref=ref, lib_id=lib_id, value=value, footprint=footprint,
+                fields=fields, pin_names=pin_names, pin_numbers=pin_numbers)
+        nets = payload["nets"]
+        if not isinstance(nets, list):
+            raise CircuitError("circuit nets must be an array")
+        for index, nrec in enumerate(nets):
+            where = f"circuit {name!r} nets[{index}]"
+            if not isinstance(nrec, dict):
+                raise CircuitError(f"{where} must be an object")
+            _reject_unknown_keys(nrec, NET_IR_KEYS, where)
+            net_name = _require_str(nrec, "name", where, False)
+            if net_name in circuit.nets:
+                raise CircuitError(f"{where}: duplicate net {net_name!r}")
+            class_name = _require_str(nrec, "net_class", where, False)
+            try:
+                net_class = NetClass(class_name)
+            except ValueError as exc:
+                raise CircuitError(
+                    f"{where}: unknown net_class {class_name!r}") from exc
+            pin_specs = _require_str_list(nrec["pins"], f"{where}: pins")
+            pins = [_split_pin_spec(spec, where) for spec in pin_specs]
+            circuit.nets[net_name] = Net(
+                name=net_name, net_class=net_class, pins=pins)
+        nc_specs = _require_str_list(payload["nc"], f"circuit {name!r} nc")
+        for spec in nc_specs:
+            circuit.nc_pins.add(_split_pin_spec(spec, f"circuit {name!r} nc"))
+        port_types = payload["port_types"]
+        if not isinstance(port_types, dict):
+            raise CircuitError("circuit port_types must be an object")
+        for port_name, prec in port_types.items():
+            where = f"circuit {name!r} port_types[{port_name!r}]"
+            if not isinstance(port_name, str) or not port_name:
+                raise CircuitError("circuit port_types keys must be non-empty strings")
+            if not isinstance(prec, dict):
+                raise CircuitError(f"{where} must be an object")
+            _reject_unknown_keys(prec, PORT_TYPE_IR_KEYS, where)
+            kind = _require_str(prec, "kind", where, False)
+            if kind not in PORT_KINDS:
+                raise CircuitError(f"{where}: unknown kind {kind!r}")
+            circuit.port_types[port_name] = PortType(
+                kind=kind,
+                pair_with=_opt_str(prec["pair_with"], f"{where}: pair_with"),
+                impedance=_opt_int(prec["impedance"], f"{where}: impedance"),
+                role=_opt_str(prec["role"], f"{where}: role"),
+                bus=_opt_str(prec["bus"], f"{where}: bus"),
+                speed_hz=_opt_int(prec["speed_hz"], f"{where}: speed_hz"),
+                level_v=_opt_float(prec["level_v"], f"{where}: level_v"),
+                expect=_opt_str(prec["expect"], f"{where}: expect"),
+            )
+        circuit.hints = _require_str_dict(payload, "hints", f"circuit {name!r}")
+        loads_raw = payload["loads"]
+        if not isinstance(loads_raw, dict):
+            raise CircuitError("circuit loads must be an object")
+        for rail, budget in loads_raw.items():
+            where = f"circuit {name!r} loads[{rail!r}]"
+            if not isinstance(rail, str) or not rail:
+                raise CircuitError("circuit loads keys must be non-empty strings")
+            if not isinstance(budget, list) or not budget:
+                raise CircuitError(f"{where} must be a non-empty array")
+            rows: list[tuple[float, str]] = []
+            for row in budget:
+                if (not isinstance(row, list) or len(row) != 2
+                        or isinstance(row[0], bool)
+                        or not isinstance(row[0], (int, float))
+                        or not isinstance(row[1], str)):
+                    raise CircuitError(
+                        f"{where} entries must be [amps, note]")
+                rows.append((float(row[0]), row[1]))
+            circuit.loads[rail] = rows
+        for attr in WAIVER_IR_ATTRS:
+            setattr(circuit, attr, _require_str_dict(
+                payload, attr, f"circuit {name!r}"))
+        circuit._restore_ref_counters()
+        return circuit

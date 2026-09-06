@@ -3,9 +3,10 @@ from __future__ import annotations
 import hashlib
 import json
 import math
-from collections import Counter
 from dataclasses import dataclass, field
 from pathlib import Path
+
+from schgen.core import native as _nat
 
 R_CONSTRUCT = 1.8
 
@@ -80,18 +81,14 @@ def _contact_geometry(mod_path: Path) -> _Contacts:
     if not pads:
         raise EscapeError(f"{mod_path.name}: no pads — contact geometry "
                           f"underivable")
-    tally = Counter((w, h) for _u, _v, w, h in pads)
-    w, h = min(tally, key=lambda s: (-tally[s], s))
-    contacts = [(u, v) for u, v, pw, ph in pads if (pw, ph) == (w, h)]
-    cols = sorted({round(u, 4) for u, _v in contacts})
-    gaps = sorted(b - a for a, b in zip(cols, cols[1:], strict=False))
-    if not gaps:
-        raise EscapeError(f"{mod_path.name}: {len(cols)} contact column(s) — "
-                          f"pitch underivable")
-    return _Contacts(row_v=max(abs(v) for _u, v in contacts),
-                     half_w=w / 2, half_h=h / 2,
-                     span_u=max(abs(u) for u, _v, _w, _h in pads),
-                     pitch=gaps[len(gaps) // 2])
+    try:
+        row_v, half_w, half_h, span_u, pitch = _nat.module().contact_geometry(
+            pads)
+    except RuntimeError as exc:
+        raise EscapeError(f"{mod_path.name}: {exc}") from exc
+    return _Contacts(row_v=float(row_v), half_w=float(half_w),
+                     half_h=float(half_h), span_u=float(span_u),
+                     pitch=float(pitch))
 
 
 def _canonical_plane(model) -> tuple[tuple, list[tuple]]:
@@ -103,18 +100,15 @@ def _canonical_plane(model) -> tuple[tuple, list[tuple]]:
         ORIGIN_Y,
     )
     from .mating_face import _inst_courtyard
-    b = GND_PLANE_EDGE_BACK
-    plane = (round(ORIGIN_X + b, 3), round(ORIGIN_Y + b, 3),
-             round(ORIGIN_X + model.board_w - b, 3),
-             round(ORIGIN_Y + model.board_h - b, 3))
+    geom = _nat.module()
+    plane = tuple(geom.canonical_plane_rect(
+        ORIGIN_X, ORIGIN_Y, model.board_w, model.board_h, GND_PLANE_EDGE_BACK))
     voids: list[tuple] = []
     for inst in model.insts:
         if not inst.value.startswith(ISO_VOID_VALUES):
             continue
-        cx0, cy0, cx1, cy1 = _inst_courtyard(inst)
-        m = ISO_VOID_MARGIN
-        voids.append(((round(cx0 - m, 3), round(cy0 - m, 3),
-                       round(cx1 + m, 3), round(cy1 + m, 3)),
+        voids.append((tuple(geom.isolation_void_rect(
+            _inst_courtyard(inst), ISO_VOID_MARGIN)),
                       f"ethernet_isolation_void_{inst.ref}"))
     return plane, voids
 
@@ -124,30 +118,435 @@ def _frame(inst):
     return math.cos(r), math.sin(r)
 
 
-def _to_board(inst, u: float, v: float) -> tuple[float, float]:
+def _to_board_py(inst, u: float, v: float) -> tuple[float, float]:
     c, s = _frame(inst)
     return (inst.x + u * c + v * s, inst.y - u * s + v * c)
 
 
-def _to_local(inst, bx: float, by: float) -> tuple[float, float]:
+def _to_board(inst, u: float, v: float) -> tuple[float, float]:
+    if not _nat.loaded():
+        raise RuntimeError("native uv_to_board required")
+    got = tuple(_nat.module().uv_to_board(
+        inst.x, inst.y, u, v, inst.rotation or 0.0))
+    if _nat.trace():
+        ref = _to_board_py(inst, u, v)
+        if got != ref:
+            raise AssertionError(
+                "native uv_to_board DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
+
+
+def _to_local_py(inst, bx: float, by: float) -> tuple[float, float]:
     c, s = _frame(inst)
     qx, qy = bx - inst.x, by - inst.y
     return (qx * c - qy * s, qx * s + qy * c)
 
 
-def _box_dist(x: float, y: float, box: tuple[float, float, float, float]) -> float:
+def _to_local(inst, bx: float, by: float) -> tuple[float, float]:
+    if not _nat.loaded():
+        raise RuntimeError("native board_to_uv required")
+    got = tuple(_nat.module().board_to_uv(
+        inst.x, inst.y, bx, by, inst.rotation or 0.0))
+    if _nat.trace():
+        ref = _to_local_py(inst, bx, by)
+        if got != ref:
+            raise AssertionError(
+                "native board_to_uv DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
+
+
+def _box_dist_py(x: float, y: float, box: tuple[float, float, float, float]
+                 ) -> float:
     dx = max(box[0] - x, x - box[2], 0.0)
     dy = max(box[1] - y, y - box[3], 0.0)
     return math.hypot(dx, dy)
+
+
+def _box_dist(x: float, y: float, box: tuple[float, float, float, float]) -> float:
+    if not _nat.loaded():
+        raise RuntimeError("native point_box_dist required")
+    got = _nat.module().point_box_dist(x, y, box)
+    if _nat.trace():
+        ref = _box_dist_py(x, y, box)
+        if got != ref:
+            raise AssertionError(
+                "native point_box_dist DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
+
+
+def grow_rect_py(box: tuple[float, float, float, float], margin: float
+                 ) -> tuple[float, float, float, float]:
+    return (box[0] - margin, box[1] - margin, box[2] + margin, box[3] + margin)
+
+
+def grow_rect(box: tuple[float, float, float, float], margin: float
+              ) -> tuple[float, float, float, float]:
+    if not _nat.loaded():
+        raise RuntimeError("native grow_rect required")
+    got = tuple(_nat.module().grow_rect(box, margin))
+    if _nat.trace():
+        ref = grow_rect_py(box, margin)
+        if got != ref:
+            raise AssertionError(
+                "native grow_rect DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
+
+
+def offset_rect_py(box: tuple[float, float, float, float], dx: float, dy: float
+                   ) -> tuple[float, float, float, float]:
+    return (box[0] + dx, box[1] + dy, box[2] + dx, box[3] + dy)
+
+
+def offset_rect(box: tuple[float, float, float, float], dx: float, dy: float
+                ) -> tuple[float, float, float, float]:
+    if not _nat.loaded():
+        raise RuntimeError("native offset_rect required")
+    got = tuple(_nat.module().offset_rect(box, dx, dy))
+    if _nat.trace():
+        ref = offset_rect_py(box, dx, dy)
+        if got != ref:
+            raise AssertionError(
+                "native offset_rect DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
+
+
+def rect_covers_py(outer: tuple[float, float, float, float],
+                   inner: tuple[float, float, float, float]) -> bool:
+    return (outer[0] <= inner[0] and outer[1] <= inner[1]
+            and outer[2] >= inner[2] and outer[3] >= inner[3])
+
+
+def rect_covers(outer: tuple[float, float, float, float],
+                inner: tuple[float, float, float, float]) -> bool:
+    if not _nat.loaded():
+        raise RuntimeError("native rect_covers required")
+    got = bool(_nat.module().rect_covers(outer, inner))
+    if _nat.trace():
+        ref = rect_covers_py(outer, inner)
+        if got is not ref:
+            raise AssertionError(
+                "native rect_covers DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
+
+
+def rects_intersect_open_py(a: tuple[float, float, float, float],
+                            b: tuple[float, float, float, float]) -> bool:
+    return a[0] < b[2] and a[2] > b[0] and a[1] < b[3] and a[3] > b[1]
+
+
+def rects_intersect_open(a: tuple[float, float, float, float],
+                         b: tuple[float, float, float, float]) -> bool:
+    if not _nat.loaded():
+        raise RuntimeError("native rects_intersect_open required")
+    got = bool(_nat.module().rects_intersect_open(a, b))
+    if _nat.trace():
+        ref = rects_intersect_open_py(a, b)
+        if got is not ref:
+            raise AssertionError(
+                "native rects_intersect_open DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
+
+
+def point_in_rect_py(x: float, y: float,
+                     box: tuple[float, float, float, float]) -> bool:
+    return box[0] <= x <= box[2] and box[1] <= y <= box[3]
+
+
+def point_in_rect(x: float, y: float,
+                  box: tuple[float, float, float, float]) -> bool:
+    if not _nat.loaded():
+        raise RuntimeError("native point_in_rect required")
+    got = bool(_nat.module().point_in_rect(x, y, box))
+    if _nat.trace():
+        ref = point_in_rect_py(x, y, box)
+        if got is not ref:
+            raise AssertionError(
+                "native point_in_rect DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
+
+
+def rect_center_py(box: tuple[float, float, float, float]
+                   ) -> tuple[float, float]:
+    return ((box[0] + box[2]) / 2, (box[1] + box[3]) / 2)
+
+
+def rect_center(box: tuple[float, float, float, float]
+                ) -> tuple[float, float]:
+    if not _nat.loaded():
+        raise RuntimeError("native rect_center required")
+    got = tuple(_nat.module().rect_center(box))
+    if _nat.trace():
+        ref = rect_center_py(box)
+        if got != ref:
+            raise AssertionError(
+                "native rect_center DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
+
+
+def coexistence_region_py(span_u: float, row_v: float, half_h: float,
+                          lane_handle: float, margin: float
+                          ) -> tuple[float, float]:
+    return (span_u + margin, row_v + half_h + lane_handle + margin)
+
+
+def coexistence_region(span_u: float, row_v: float, half_h: float,
+                       lane_handle: float, margin: float
+                       ) -> tuple[float, float]:
+    if not _nat.loaded():
+        raise RuntimeError("native coexistence_region required")
+    got = tuple(_nat.module().coexistence_region(
+        span_u, row_v, half_h, lane_handle, margin))
+    if _nat.trace():
+        ref = coexistence_region_py(span_u, row_v, half_h, lane_handle, margin)
+        if got != ref:
+            raise AssertionError(
+                "native coexistence_region DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
+
+
+def construct_reach_py(r_construct: float, row_v: float) -> float:
+    return math.sqrt(max(r_construct ** 2 - row_v ** 2, 0.0))
+
+
+def construct_reach(r_construct: float, row_v: float) -> float:
+    if not _nat.loaded():
+        raise RuntimeError("native construct_reach required")
+    got = float(_nat.module().construct_reach(r_construct, row_v))
+    if _nat.trace():
+        ref = construct_reach_py(r_construct, row_v)
+        if got != ref:
+            raise AssertionError(
+                "native construct_reach DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
+
+
+def obstacle_scan_region_py(us: list[float], margin: float
+                            ) -> tuple[float, float, float, float]:
+    if not us:
+        raise RuntimeError("obstacle_scan_region: us required")
+    return (min(us) - margin, -margin, max(us) + margin, margin)
+
+
+def obstacle_scan_region(us: list[float], margin: float
+                         ) -> tuple[float, float, float, float]:
+    if not _nat.loaded():
+        raise RuntimeError("native obstacle_scan_region required")
+    got = tuple(_nat.module().obstacle_scan_region(us, margin))
+    if _nat.trace():
+        ref = obstacle_scan_region_py(us, margin)
+        if got != ref:
+            raise AssertionError(
+                "native obstacle_scan_region DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
+
+
+def escape_lane_extents_py(row_v: float, half_h: float, lane_handle: float
+                           ) -> tuple[float, float]:
+    pad_outer_tip = row_v + half_h
+    return (pad_outer_tip, pad_outer_tip + lane_handle)
+
+
+def escape_lane_extents(row_v: float, half_h: float, lane_handle: float
+                        ) -> tuple[float, float]:
+    if not _nat.loaded():
+        raise RuntimeError("native escape_lane_extents required")
+    got = tuple(_nat.module().escape_lane_extents(row_v, half_h, lane_handle))
+    if _nat.trace():
+        ref = escape_lane_extents_py(row_v, half_h, lane_handle)
+        if got != ref:
+            raise AssertionError(
+                "native escape_lane_extents DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
+
+
+def aabb_from_corners_py(x0: float, y0: float, x1: float, y1: float,
+                         digits: int) -> tuple[float, float, float, float]:
+    return (round(min(x0, x1), digits), round(min(y0, y1), digits),
+            round(max(x0, x1), digits), round(max(y0, y1), digits))
+
+
+def aabb_from_corners(x0: float, y0: float, x1: float, y1: float,
+                      digits: int) -> tuple[float, float, float, float]:
+    if not _nat.loaded():
+        raise RuntimeError("native aabb_from_corners required")
+    got = tuple(_nat.module().aabb_from_corners(x0, y0, x1, y1, digits))
+    if _nat.trace():
+        ref = aabb_from_corners_py(x0, y0, x1, y1, digits)
+        if got != ref:
+            raise AssertionError(
+                "native aabb_from_corners DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
+
+
+def min_hypot_to_points_py(u: float, v: float,
+                           pts: list[tuple[float, float]]) -> float:
+    if not pts:
+        raise RuntimeError("min_hypot_to_points: pts required")
+    return min(math.hypot(p[0] - u, p[1] - v) for p in pts)
+
+
+def min_hypot_to_points(u: float, v: float,
+                        pts: list[tuple[float, float]]) -> float:
+    if not _nat.loaded():
+        raise RuntimeError("native min_hypot_to_points required")
+    got = float(_nat.module().min_hypot_to_points(u, v, pts))
+    if _nat.trace():
+        ref = min_hypot_to_points_py(u, v, pts)
+        if got != ref:
+            raise AssertionError(
+                "native min_hypot_to_points DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
+
+
+def pair_convergence_py(same_row: bool, delta_lane: int) -> str:
+    if same_row and delta_lane == 1:
+        return "immediate"
+    if same_row and delta_lane == 2:
+        return "quad"
+    if same_row:
+        return "split"
+    return "row_wrap"
+
+
+def pair_convergence(same_row: bool, delta_lane: int) -> str:
+    if not _nat.loaded():
+        raise RuntimeError("native pair_convergence required")
+    got = str(_nat.module().pair_convergence(same_row, delta_lane))
+    if _nat.trace():
+        ref = pair_convergence_py(same_row, delta_lane)
+        if got != ref:
+            raise AssertionError(
+                "native pair_convergence DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
+
+
+def signed_mag_py(magnitude: float, sign: float) -> float:
+    return math.copysign(magnitude, sign)
+
+
+def signed_mag(magnitude: float, sign: float) -> float:
+    if not _nat.loaded():
+        raise RuntimeError("native signed_mag required")
+    got = float(_nat.module().signed_mag(magnitude, sign))
+    if _nat.trace():
+        ref = signed_mag_py(magnitude, sign)
+        if got != ref:
+            raise AssertionError(
+                "native signed_mag DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
+
+
+def pad_row_sign_py(v: float, deadband: float) -> int:
+    if abs(v) < deadband:
+        return 0
+    return 1 if v > 0 else -1
+
+
+def pad_row_sign(v: float, deadband: float) -> int:
+    if not _nat.loaded():
+        raise RuntimeError("native pad_row_sign required")
+    got = int(_nat.module().pad_row_sign(v, deadband))
+    if _nat.trace():
+        ref = pad_row_sign_py(v, deadband)
+        if got != ref:
+            raise AssertionError(
+                "native pad_row_sign DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
+
+
+def bus_lane_adjacent_py(a_net: str, b_net: str, a_lane: int, b_lane: int
+                         ) -> bool:
+    return a_net == b_net and b_lane - a_lane == 1
+
+
+def bus_lane_adjacent(a_net: str, b_net: str, a_lane: int, b_lane: int
+                      ) -> bool:
+    if not _nat.loaded():
+        raise RuntimeError("native bus_lane_adjacent required")
+    got = bool(_nat.module().bus_lane_adjacent(a_net, b_net, a_lane, b_lane))
+    if _nat.trace():
+        ref = bus_lane_adjacent_py(a_net, b_net, a_lane, b_lane)
+        if got is not ref:
+            raise AssertionError(
+                "native bus_lane_adjacent DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
+
+
+def genuine_pair_ok_py(same_row: bool, delta_lane: int) -> bool:
+    return same_row and delta_lane <= 2
+
+
+def genuine_pair_ok(same_row: bool, delta_lane: int) -> bool:
+    if not _nat.loaded():
+        raise RuntimeError("native genuine_pair_ok required")
+    got = bool(_nat.module().genuine_pair_ok(same_row, delta_lane))
+    if _nat.trace():
+        ref = genuine_pair_ok_py(same_row, delta_lane)
+        if got is not ref:
+            raise AssertionError(
+                "native genuine_pair_ok DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
+
+
+def round_xy_py(x: float, y: float, digits: int) -> tuple[float, float]:
+    return (round(x, digits), round(y, digits))
+
+
+def round_xy(x: float, y: float, digits: int) -> tuple[float, float]:
+    if not _nat.loaded():
+        raise RuntimeError("native round_xy required")
+    got = tuple(_nat.module().round_xy(x, y, digits))
+    if _nat.trace():
+        ref = round_xy_py(x, y, digits)
+        if got != ref:
+            raise AssertionError(
+                "native round_xy DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
+
+
+def rounded_unique_sorted_py(vs: list[float], digits: int) -> list[float]:
+    return sorted({round(v, digits) for v in vs})
+
+
+def rounded_unique_sorted(vs: list[float], digits: int) -> list[float]:
+    if not _nat.loaded():
+        raise RuntimeError("native rounded_unique_sorted required")
+    got = [float(v) for v in _nat.module().rounded_unique_sorted(vs, digits)]
+    if _nat.trace():
+        ref = rounded_unique_sorted_py(vs, digits)
+        if got != ref:
+            raise AssertionError(
+                "native rounded_unique_sorted DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
 
 
 CORRIDOR_V_MARGIN = 0.15
 CORRIDOR_LIP = 0.3
 
 
-def df40_corridor_local(mod_path) -> tuple[float, float, float, float]:
-    from schgen.verify import return_path_gate as rpg
-    pads = rpg._parse_pad_positions(mod_path)
+def df40_corridor_local_py(pads: dict) -> tuple[float, float, float, float]:
     us = [p[0] for p in pads.values()]
     vs = [p[1] for p in pads.values()]
     u_half = max(abs(min(us)), abs(max(us))) + R_CONSTRUCT
@@ -155,9 +554,26 @@ def df40_corridor_local(mod_path) -> tuple[float, float, float, float]:
     return (-u_half, -v_half, u_half, v_half)
 
 
-def corridor_board_rect(mod_path, cx: float, cy: float, rot: float
-                        ) -> tuple[float, float, float, float]:
-    cu0, cv0, cu1, cv1 = df40_corridor_local(mod_path)
+def df40_corridor_local(mod_path) -> tuple[float, float, float, float]:
+    from schgen.verify import return_path_gate as rpg
+    pads = rpg._parse_pad_positions(mod_path)
+    uv = list(pads.values())
+    if not _nat.loaded():
+        raise RuntimeError("native corridor_local_from_uv required")
+    got = tuple(_nat.module().corridor_local_from_uv(
+        uv, R_CONSTRUCT, CORRIDOR_V_MARGIN))
+    if _nat.trace():
+        ref = df40_corridor_local_py(pads)
+        if got != ref:
+            raise AssertionError(
+                "native corridor_local_from_uv DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
+
+
+def corridor_board_rect_py(local, cx: float, cy: float, rot: float
+                           ) -> tuple[float, float, float, float]:
+    cu0, cv0, cu1, cv1 = local
     c = math.cos(math.radians(rot or 0.0))
     s = math.sin(math.radians(rot or 0.0))
     xs = [cx + u * c + v * s for u in (cu0, cu1) for v in (cv0, cv1)]
@@ -166,14 +582,44 @@ def corridor_board_rect(mod_path, cx: float, cy: float, rot: float
             round(max(xs), 4), round(max(ys), 4))
 
 
-def _seg_box_dist(a: tuple[float, float], b: tuple[float, float],
-                  box: tuple[float, float, float, float]) -> float:
+def corridor_board_rect(mod_path, cx: float, cy: float, rot: float
+                        ) -> tuple[float, float, float, float]:
+    local = df40_corridor_local(mod_path)
+    if not _nat.loaded():
+        raise RuntimeError("native corridor_board_rect required")
+    got = tuple(_nat.module().corridor_board_rect(
+        local, cx, cy, rot or 0.0))
+    if _nat.trace():
+        ref = corridor_board_rect_py(local, cx, cy, rot)
+        if got != ref:
+            raise AssertionError(
+                "native corridor_board_rect DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
+
+
+def _seg_box_dist_py(a: tuple[float, float], b: tuple[float, float],
+                     box: tuple[float, float, float, float]) -> float:
     (x1, y1), (x2, y2) = a, b
     lo_x, hi_x = min(x1, x2), max(x1, x2)
     lo_y, hi_y = min(y1, y2), max(y1, y2)
     dx = max(box[0] - hi_x, lo_x - box[2], 0.0)
     dy = max(box[1] - hi_y, lo_y - box[3], 0.0)
     return math.hypot(dx, dy)
+
+
+def _seg_box_dist(a: tuple[float, float], b: tuple[float, float],
+                  box: tuple[float, float, float, float]) -> float:
+    if not _nat.loaded():
+        raise RuntimeError("native seg_box_dist required")
+    got = _nat.module().seg_box_dist(a[0], a[1], b[0], b[1], box)
+    if _nat.trace():
+        ref = _seg_box_dist_py(a, b, box)
+        if got != ref:
+            raise AssertionError(
+                "native seg_box_dist DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
 
 
 @dataclass
@@ -185,35 +631,59 @@ class _Obstacles:
 
 
 def _net_rule(model, net: str) -> float:
-    return 0.2 if model.netclass_of.get(net) == "POWER" else 0.15
+    if not _nat.loaded():
+        raise RuntimeError("native net_clearance_rule required")
+    power = model.netclass_of.get(net) == "POWER"
+    got = float(_nat.module().net_clearance_rule(power))
+    if _nat.trace():
+        ref = 0.2 if power else 0.15
+        if got != ref:
+            raise AssertionError(
+                "native net_clearance_rule DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
+
+
+def thru_pad_names_py(text: str) -> list[str]:
+    from schgen.core import sexpr
+    from schgen.core.sexpr import Sym
+    names: list[str] = []
+    for node in sexpr.loads(text):
+        if (isinstance(node, list) and node and node[0] == Sym("pad")
+                and len(node) > 2
+                and node[2] in (Sym("thru_hole"), Sym("np_thru_hole"))):
+            names.append(str(node[1]))
+    return names
+
+
+def thru_pad_names(text: str) -> list[str]:
+    if not _nat.loaded():
+        raise RuntimeError("native thru_pad_names required")
+    got = [str(n) for n in _nat.module().thru_pad_names(text)]
+    if _nat.trace():
+        ref = thru_pad_names_py(text)
+        if got != ref:
+            raise AssertionError(
+                "native thru_pad_names DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
 
 
 def _collect_obstacles(model, inst, pad_boxes_fn, region: tuple[float, float,
                                                                 float, float],
                        ) -> _Obstacles:
-    from schgen.core import sexpr
-    from schgen.core.sexpr import Sym
-
     obs = _Obstacles()
     u0, v0, u1, v1 = region
 
     def _local_box(bx):
-        cs = [_to_local(inst, x, y) for x in (bx[0], bx[2])
-              for y in (bx[1], bx[3])]
-        xs = [p[0] for p in cs]
-        ys = [p[1] for p in cs]
-        return (min(xs), min(ys), max(xs), max(ys))
+        return tuple(_nat.module().board_box_to_uv(
+            inst.x, inst.y, inst.rotation or 0.0, bx))
 
     for oi in sorted(model.insts, key=lambda i: i.ref):
         boxes = pad_boxes_fn(oi)
         thru: set[str] = set()
         try:
-            doc = sexpr.loads(oi.mod_path.read_text())
-            for node in doc:
-                if (isinstance(node, list) and node and node[0] == Sym("pad")
-                        and len(node) > 2
-                        and node[2] in (Sym("thru_hole"), Sym("np_thru_hole"))):
-                    thru.add(str(node[1]))
+            thru = set(thru_pad_names(oi.mod_path.read_text()))
         except Exception:  # noqa: BLE001
             pass
         for pad, bb in sorted(boxes.items()):
@@ -221,23 +691,48 @@ def _collect_obstacles(model, inst, pad_boxes_fn, region: tuple[float, float,
             label = f"{oi.ref}({oi.sheet}).{pad}"
             rule = _net_rule(model, net)
             lb = _local_box(bb)
-            if lb[2] < u0 or lb[0] > u1 or lb[3] < v0 or lb[1] > v1:
+            if not _nat.loaded():
+                raise RuntimeError("native obstacle_bucket required")
+            bucket = int(_nat.module().obstacle_bucket(
+                u0, v0, u1, v1, lb[0], lb[1], lb[2], lb[3],
+                oi.ref == inst.ref, net == "GND", oi.side == "top"))
+            if _nat.trace():
+                if lb[2] < u0 or lb[0] > u1 or lb[3] < v0 or lb[1] > v1:
+                    ref = 0
+                elif oi.ref == inst.ref and net == "GND":
+                    ref = 1
+                elif oi.side == "top" or oi.ref == inst.ref:
+                    ref = 2
+                else:
+                    ref = 3
+                if bucket != ref:
+                    raise AssertionError(
+                        "native obstacle_bucket DIVERGENCE: "
+                        f"cpp={bucket} python={ref}")
+            if bucket == 0:
                 continue
-            if oi.ref == inst.ref and net == "GND":
+            if bucket == 1:
                 obs.samenet_pads.append((*lb, rule, label))
-            elif oi.side == "top" or oi.ref == inst.ref:
+            elif bucket == 2:
                 obs.f_cu.append((*lb, rule, label))
             else:
                 obs.b_cu.append((*lb, rule, label))
             if pad in thru:
-                cu, cv = (lb[0] + lb[2]) / 2, (lb[1] + lb[3]) / 2
-                r = max(lb[2] - lb[0], lb[3] - lb[1]) / 2
+                cu, cv, r = _nat.module().obstacle_hole(
+                    lb[0], lb[1], lb[2], lb[3])
+                if _nat.trace():
+                    ref_h = ((lb[0] + lb[2]) / 2, (lb[1] + lb[3]) / 2,
+                             max(lb[2] - lb[0], lb[3] - lb[1]) / 2)
+                    if (cu, cv, r) != ref_h:
+                        raise AssertionError(
+                            "native obstacle_hole DIVERGENCE: "
+                            f"cpp={(cu, cv, r)} python={ref_h}")
                 obs.holes.append((cu, cv, r, label))
     return obs
 
 
-def band_cover(points: list[tuple[float, str]], reach: float,
-               ) -> list[list[tuple[float, str]]]:
+def band_cover_py(points: list[tuple[float, str]], reach: float,
+                  ) -> list[list[tuple[float, str]]]:
     pts = sorted(points, key=lambda t: (round(t[0], 4), int(t[1])))
     bands: list[list[tuple[float, str]]] = []
     i = 0
@@ -251,6 +746,20 @@ def band_cover(points: list[tuple[float, str]], reach: float,
     return bands
 
 
+def band_cover(points: list[tuple[float, str]], reach: float,
+               ) -> list[list[tuple[float, str]]]:
+    if not _nat.loaded():
+        raise RuntimeError("native band_cover required")
+    got = [[(float(u), p) for u, p in band]
+           for band in _nat.module().band_cover(points, reach)]
+    if _nat.trace():
+        ref = band_cover_py(points, reach)
+        if got != ref:
+            raise AssertionError(
+                f"native band_cover DIVERGENCE: cpp={got} python={ref}")
+    return got
+
+
 @dataclass
 class _Member:
     pad: str
@@ -260,8 +769,8 @@ class _Member:
     klass: str
 
 
-def _coverage_ok(u: float, v: float, members: list[_Member],
-                 bound: float) -> tuple[bool, float]:
+def _coverage_ok_py(u: float, v: float, members: list[_Member],
+                    bound: float) -> tuple[bool, float]:
     worst = 0.0
     for m in members:
         d = math.hypot(u - m.u, v - m.v)
@@ -271,101 +780,270 @@ def _coverage_ok(u: float, v: float, members: list[_Member],
     return True, worst
 
 
+def escape_ladder_plan_py(gnd_pads: list, vias: list, pitch: float,
+                          pitch_tol: float, row_v: float, stub_w_pair: float,
+                          stub_w_single: float, spine_w: float) -> list:
+    pads = sorted((round(u, 4), round(v, 4), p) for u, v, p in gnd_pads)
+    cols: dict[float, set[float]] = {}
+    for pad_u, pad_v, _pad in pads:
+        cols.setdefault(pad_u, set()).add(pad_v)
+    both_rows = sorted(col_u for col_u, vs in cols.items() if len(vs) >= 2)
+    attaches: list[tuple] = []
+    used_cols: set[float] = set()
+    for left_u, right_u in zip(both_rows, both_rows[1:], strict=False):
+        if abs(right_u - left_u - pitch) < pitch_tol:
+            attaches.append((round((left_u + right_u) / 2, 4), "pair",
+                             (left_u, right_u)))
+            used_cols.update((left_u, right_u))
+    for col_u in both_rows:
+        if col_u not in used_cols:
+            attaches.append((col_u, "column", col_u))
+    for pad_u, pad_v, pad in pads:
+        if pad_u not in both_rows:
+            attaches.append((pad_u, "pad", (pad_u, pad_v, pad)))
+    attaches.sort()
+    if not attaches:
+        raise EscapeError("no GND attach options on the connector")
+    needed: list[tuple] = []
+    for via_u, _via_v in sorted(vias, key=lambda row: row[0]):
+        left = [row for row in attaches if row[0] <= via_u]
+        right = [row for row in attaches if row[0] >= via_u]
+        picks = []
+        if left:
+            picks.append(left[-1])
+        if right:
+            picks.append(right[0])
+        if len(picks) < 2:
+            picks = sorted(attaches,
+                           key=lambda row: (abs(row[0] - via_u), row[0]))[:2]
+        for pick in picks:
+            if pick not in needed:
+                needed.append(pick)
+    needed.sort()
+    stub_segs: list[tuple] = []
+    for attach_u, kind, payload in needed:
+        if kind == "pair":
+            stub_segs.append((attach_u, -row_v, attach_u, row_v, stub_w_pair,
+                              "stub_pair"))
+        elif kind == "column":
+            stub_segs.append((attach_u, -row_v, attach_u, row_v,
+                              stub_w_single, "stub_column"))
+        else:
+            pad_u, pad_v, _pad = payload
+            stub_segs.append((pad_u, math.copysign(row_v, pad_v), pad_u, 0.0,
+                              stub_w_single, "stub_pad"))
+    for via_u, via_v in vias:
+        if abs(via_v) > 1e-9:
+            stub_segs.append((via_u, 0.0, via_u, via_v, stub_w_single,
+                              "stub_via"))
+    attach_us = [row[0] for row in needed] + [via_u for via_u, _via_v in vias]
+    spine = (min(attach_us), 0.0, max(attach_us), 0.0, spine_w, "spine")
+    return [spine] + stub_segs
+
+
+def escape_ladder_plan(gnd_pads: list, vias: list, pitch: float,
+                       pitch_tol: float, row_v: float, stub_w_pair: float,
+                       stub_w_single: float, spine_w: float) -> list:
+    if not _nat.loaded():
+        raise RuntimeError("native escape_ladder_plan required")
+    try:
+        got = [tuple(row) for row in _nat.module().escape_ladder_plan(
+            [(float(u), float(v), str(p)) for u, v, p in gnd_pads],
+            [(float(u), float(v)) for u, v in vias],
+            pitch, pitch_tol, row_v, stub_w_pair, stub_w_single, spine_w)]
+    except RuntimeError as exc:
+        raise EscapeError(str(exc)) from exc
+    if _nat.trace():
+        ref = escape_ladder_plan_py(
+            gnd_pads, vias, pitch, pitch_tol, row_v, stub_w_pair,
+            stub_w_single, spine_w)
+        if got != ref:
+            raise AssertionError(
+                "native escape_ladder_plan DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
+
+
+def escape_ladder_connected_py(vias: list, segs: list, pads: list,
+                               half_w: float, half_h: float) -> tuple[int, int]:
+    nodes: list[tuple[str, object]] = (
+        [("via", via) for via in vias] + [("seg", seg) for seg in segs]
+        + [("pad", pad) for pad in pads])
+    parent = list(range(len(nodes)))
+
+    def find(index: int) -> int:
+        while parent[index] != index:
+            parent[index] = parent[parent[index]]
+            index = parent[index]
+        return index
+
+    def union(left: int, right: int) -> None:
+        parent[find(left)] = find(right)
+
+    def pad_box(pad) -> tuple[float, float, float, float]:
+        pad_u, pad_v = pad[0], pad[1]
+        return (pad_u - half_w, pad_v - half_h, pad_u + half_w, pad_v + half_h)
+
+    def touches(left, right) -> bool:
+        left_kind, left_val = left
+        right_kind, right_val = right
+        if left_kind == "seg" and right_kind == "seg":
+            box = (min(right_val["a"][0], right_val["b"][0]) - right_val["w"] / 2,
+                   min(right_val["a"][1], right_val["b"][1]) - right_val["w"] / 2,
+                   max(right_val["a"][0], right_val["b"][0]) + right_val["w"] / 2,
+                   max(right_val["a"][1], right_val["b"][1]) + right_val["w"] / 2)
+            return _seg_box_dist(left_val["a"], left_val["b"], box) <= (
+                left_val["w"] / 2 + 1e-9)
+        if left_kind == "seg" and right_kind == "via":
+            return (_seg_box_dist(left_val["a"], left_val["b"],
+                                  (right_val["u"], right_val["v"],
+                                   right_val["u"], right_val["v"]))
+                    <= left_val["w"] / 2 + right_val["dia"] / 2 + 1e-9)
+        if left_kind == "seg" and right_kind == "pad":
+            return (_seg_box_dist(left_val["a"], left_val["b"], pad_box(right_val))
+                    <= left_val["w"] / 2 + 1e-9)
+        if left_kind == "via" and right_kind == "pad":
+            return (_box_dist(left_val["u"], left_val["v"], pad_box(right_val))
+                    <= left_val["dia"] / 2 + 1e-9)
+        if left_kind == "via" and right_kind == "via":
+            return (math.hypot(left_val["u"] - right_val["u"],
+                               left_val["v"] - right_val["v"])
+                    <= (left_val["dia"] + right_val["dia"]) / 2 + 1e-9)
+        if left_kind == "pad" and right_kind == "pad":
+            return False
+        return touches(right, left)
+
+    for i in range(len(nodes)):
+        for j in range(i + 1, len(nodes)):
+            if touches(nodes[i], nodes[j]):
+                union(i, j)
+    via_roots = {find(i) for i, node in enumerate(nodes) if node[0] == "via"}
+    seg_roots = {find(i) for i, node in enumerate(nodes) if node[0] == "seg"}
+    pad_stubs = sum(1 for seg in segs
+                    if seg["role"] in ("stub_pair", "stub_column", "stub_pad"))
+    return len(via_roots | seg_roots), pad_stubs
+
+
+def escape_ladder_connected(vias: list, segs: list, pads: list,
+                            half_w: float, half_h: float) -> tuple[int, int]:
+    if not _nat.loaded():
+        raise RuntimeError("native escape_ladder_connected required")
+    via_rows = [(float(via["u"]), float(via["v"]), float(via["dia"]))
+                for via in vias]
+    seg_rows = [(float(seg["a"][0]), float(seg["a"][1]), float(seg["b"][0]),
+                 float(seg["b"][1]), float(seg["w"]), str(seg["role"]))
+                for seg in segs]
+    pad_rows = [(float(pad[0]), float(pad[1])) for pad in pads]
+    got = tuple(_nat.module().escape_ladder_connected(
+        via_rows, seg_rows, pad_rows, half_w, half_h))
+    if _nat.trace():
+        ref = escape_ladder_connected_py(vias, segs, pads, half_w, half_h)
+        if got != ref:
+            raise AssertionError(
+                "native escape_ladder_connected DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
+
+
+def escape_redundancy_u_py(base_u: float, base_v: float, dia: float,
+                           drill: float, obs: _Obstacles,
+                           redundancy_offset: float, lattice: float,
+                           max_steps: int) -> float | None:
+    for offset in (redundancy_offset, -redundancy_offset):
+        for step in range(0, max_steps):
+            for sign in (1, -1):
+                candidate = round(base_u + offset + sign * step * lattice, 6)
+                if _via_feasible(candidate, base_v, dia, drill, obs):
+                    return candidate
+    return None
+
+
+def escape_redundancy_u(base_u: float, base_v: float, dia: float, drill: float,
+                        obs: _Obstacles, redundancy_offset: float,
+                        lattice: float, max_steps: int) -> float | None:
+    if not _nat.loaded():
+        raise RuntimeError("native escape_redundancy_u required")
+    got = _nat.module().escape_redundancy_u(
+        base_u, base_v, dia, drill, obs.f_cu, obs.b_cu, obs.samenet_pads,
+        obs.holes, _via_clear(), redundancy_offset, lattice, max_steps)
+    if got is not None:
+        got = float(got)
+    if _nat.trace():
+        ref = escape_redundancy_u_py(
+            base_u, base_v, dia, drill, obs, redundancy_offset, lattice,
+            max_steps)
+        if got != ref:
+            raise AssertionError(
+                "native escape_redundancy_u DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
+
+
+def _coverage_ok(u: float, v: float, members: list[_Member],
+                 bound: float) -> tuple[bool, float]:
+    if not _nat.loaded():
+        raise RuntimeError("native coverage_ok required")
+    got = tuple(_nat.module().coverage_ok(
+        u, v, [(m.u, m.v) for m in members], bound))
+    if _nat.trace():
+        ref = _coverage_ok_py(u, v, members, bound)
+        if got != ref:
+            raise AssertionError(
+                "native coverage_ok DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
+
+
+def _via_clear() -> tuple[float, float, float, float]:
+    return (CLR_MARGIN, CLR_HOLE_FOREIGN, CLR_HOLE_SAMENET_PAD, CLR_HOLE_HOLE)
+
+
 def _via_feasible(u: float, v: float, dia: float, drill: float,
                   obs: _Obstacles, audit: list[str] | None = None) -> bool:
-    rv, rh = dia / 2, drill / 2
-
-    def fail(msg: str) -> bool:
-        if audit is not None:
-            audit.append(msg)
-        return False
-
-    for layer, boxes in (("F.Cu", obs.f_cu), ("B.Cu", obs.b_cu)):
-        for bx in boxes:
-            d = _box_dist(u, v, bx[:4])
-            need = rv + bx[4] + CLR_MARGIN
-            if d < need:
-                return fail(f"{layer} {bx[5]} annulus {d:.4f} < {need:.4f}")
-            if d < rh + CLR_HOLE_FOREIGN:
-                return fail(f"{layer} {bx[5]} hole {d:.4f}")
-    for bx in obs.samenet_pads:
-        d = _box_dist(u, v, bx[:4])
-        if d < rh + CLR_HOLE_SAMENET_PAD:
-            return fail(f"same-net {bx[5]} drill {d:.4f} < "
-                        f"{rh + CLR_HOLE_SAMENET_PAD:.4f} (via-in-pad DFM)")
-    for hu, hv, hr, lbl in obs.holes:
-        d = math.hypot(u - hu, v - hv)
-        if d < hr + rh + CLR_HOLE_HOLE:
-            return fail(f"hole-hole {lbl} {d:.4f}")
-    return True
+    ok, msg = _nat.module().via_feasible(
+        u, v, dia, drill, obs.f_cu, obs.b_cu, obs.samenet_pads, obs.holes,
+        _via_clear(), audit is not None)
+    if not ok and audit is not None and msg:
+        audit.append(msg)
+    return bool(ok)
 
 
 def _seat_band(members: list[_Member], obs: _Obstacles, contacts: _Contacts,
                ledger: list[dict], conn: str, depth: int = 0,
                ) -> list[dict]:
-    us = sorted({m.u for m in members})
-    u_first, u_last = us[0], us[-1]
-    center = (u_first + u_last) / 2
-    audit: list[str] = []
-
-    for dia, drill in VIA_LADDER:
-        rv = dia / 2
-        v_max = contacts.row_v - contacts.half_h - rv - CLR_VIA_ROW
-        reach = math.sqrt(max(R_CONSTRUCT ** 2 - contacts.row_v ** 2, 0.0))
-        lo = u_last - reach
-        hi = u_first + reach
-        i0 = math.ceil(lo / LATTICE_MM - 1e-9)
-        i1 = math.floor(hi / LATTICE_MM + 1e-9)
-        u_cands = sorted(
-            (round(i * LATTICE_MM, 6) for i in range(i0, i1 + 1)),
-            key=lambda x: (abs(x - center), -x))
-        v_cands = sorted(
-            (round(k * LATTICE_MM, 6)
-             for k in range(-int(v_max / LATTICE_MM),
-                            int(v_max / LATTICE_MM) + 1)),
-            key=lambda x: (abs(x), -x))
-        for v in v_cands:
-            for u in u_cands:
-                ok_cov, worst = _coverage_ok(u, v, members, R_CONSTRUCT)
-                if not ok_cov:
-                    continue
-                if _via_feasible(u, v, dia, drill, obs, audit):
-                    ledger.append({
-                        "conn": conn, "kind": "seat",
-                        "members": [m.pad for m in members],
-                        "u": u, "v": v, "dia": dia, "drill": drill,
-                        "worst_cover_mm": round(worst, 4), "depth": depth})
-                    return [{"u": u, "v": v, "dia": dia, "drill": drill,
-                             "members": members, "worst": worst}]
-
-    if len(us) > 1:
-        gaps = [(us[i + 1] - us[i], i) for i in range(len(us) - 1)]
-        gaps.sort(key=lambda g: (-g[0], abs(us[g[1]] - center)))
-        cut = (us[gaps[0][1]] + us[gaps[0][1] + 1]) / 2
-        ledger.append({"conn": conn, "kind": "split_u", "at": round(cut, 4),
-                       "members": [m.pad for m in members], "depth": depth})
-        left = [m for m in members if m.u < cut]
-        right = [m for m in members if m.u > cut]
-        return (_seat_band(left, obs, contacts, ledger, conn, depth + 1)
-                + _seat_band(right, obs, contacts, ledger, conn, depth + 1))
-
-    rows = sorted({m.v for m in members})
-    if len(rows) > 1:
-        ledger.append({"conn": conn, "kind": "split_row",
-                       "members": [m.pad for m in members], "depth": depth})
-        out: list[dict] = []
-        for rv_ in rows:
-            sub = [m for m in members if m.v == rv_]
-            out += _seat_band(sub, obs, contacts, ledger, conn, depth + 1)
-        return out
-
-    raise EscapeError(
-        f"{conn}: no feasible stitch-via seat for contacts "
-        f"{[m.pad for m in members]} (nets {[m.net for m in members]}) at "
-        f"R_CONSTRUCT={R_CONSTRUCT}; candidate audit (last 40): "
-        f"{audit[-40:]} — remedy is the queued bottom-channel-keepout unit "
-        f"(move the blocking B.Cu strays in a reviewed byte-diff wave), "
-        f"never a threshold relax")
+    by_pad = {m.pad: m for m in members}
+    vias, led_rows, audit = _nat.module().seat_band(
+        [(m.pad, m.u, m.v) for m in members],
+        obs.f_cu, obs.b_cu, obs.samenet_pads, obs.holes,
+        contacts.row_v, contacts.half_h, list(VIA_LADDER), _via_clear(),
+        CLR_VIA_ROW, R_CONSTRUCT, LATTICE_MM, conn, depth)
+    for kind, led_conn, u, v, dia, drill, worst, at, dep, pads in led_rows:
+        if kind == "seat":
+            ledger.append({
+                "conn": led_conn, "kind": "seat", "members": list(pads),
+                "u": u, "v": v, "dia": dia, "drill": drill,
+                "worst_cover_mm": worst, "depth": int(dep)})
+        elif kind == "split_u":
+            ledger.append({"conn": led_conn, "kind": "split_u",
+                           "at": at, "members": list(pads),
+                           "depth": int(dep)})
+        elif kind == "split_row":
+            ledger.append({"conn": led_conn, "kind": "split_row",
+                           "members": list(pads), "depth": int(dep)})
+    if not vias:
+        raise EscapeError(
+            f"{conn}: no feasible stitch-via seat for contacts "
+            f"{[m.pad for m in members]} (nets {[m.net for m in members]}) at "
+            f"R_CONSTRUCT={R_CONSTRUCT}; candidate audit (last 40): "
+            f"{list(audit)[-40:]} — remedy is the queued bottom-channel-keepout "
+            f"unit (move the blocking B.Cu strays in a reviewed byte-diff "
+            f"wave), never a threshold relax")
+    out: list[dict] = []
+    for u, v, dia, drill, worst, pads in vias:
+        out.append({"u": u, "v": v, "dia": dia, "drill": drill,
+                    "members": [by_pad[p] for p in pads if p in by_pad],
+                    "worst": worst})
+    return out
 
 
 def build_escape_copper(model) -> tuple[list[dict], dict]:
@@ -401,49 +1079,38 @@ def build_escape_copper(model) -> tuple[list[dict], dict]:
 
     if model.som_keepout is None:
         raise EscapeError("model has no SoM keepout — escape region underivable")
-    kx0, ky0, kx1, ky1 = model.som_keepout
-    zone = (kx0 - SOM_ZONE_GROW, ky0 - SOM_ZONE_GROW,
-            kx1 + SOM_ZONE_GROW, ky1 + SOM_ZONE_GROW)
+    zone = grow_rect(tuple(model.som_keepout), SOM_ZONE_GROW)
     plane_rect, void_rects = _canonical_plane(model)
-    if not (plane_rect[0] <= zone[0] and plane_rect[1] <= zone[1]
-            and plane_rect[2] >= zone[2] and plane_rect[3] >= zone[3]):
+    if not rect_covers(plane_rect, zone):
         raise EscapeError(
             f"the canonical In1 GND plane {plane_rect} does not cover the "
             f"escape region {zone} — the return stitching has no plane to "
             f"land on (GAP1 geometry changed; re-derive deliberately)")
     for vr, label in void_rects:
-        if (vr[0] < zone[2] and vr[2] > zone[0]
-                and vr[1] < zone[3] and vr[3] > zone[1]):
+        if rects_intersect_open(vr, zone):
             raise EscapeError(
                 f"In1 plane VOID {label} {vr} intersects the escape region "
                 f"{zone} — the return plane under the DF40 field would be "
                 f"perforated (a placement wave moved the ethernet media "
                 f"parts under the SoM?); fail loud")
-    from schgen.core import sexpr
-    from schgen.core.sexpr import Sym
     foreign_barrels: list[str] = []
     for oi in sorted(model.insts, key=lambda i: i.ref):
         try:
-            doc = sexpr.loads(oi.mod_path.read_text())
+            text = oi.mod_path.read_text()
         except Exception:  # noqa: BLE001
             continue
         boxes = None
-        for node in doc:
-            if not (isinstance(node, list) and node and node[0] == Sym("pad")
-                    and len(node) > 2
-                    and node[2] in (Sym("thru_hole"), Sym("np_thru_hole"))):
-                continue
+        for pad in thru_pad_names(text):
             if boxes is None:
                 boxes = _inst_pad_boxes(oi)
-            pad = str(node[1])
             net = oi.pad_nets.get(pad, (0, ""))[1]
             if net == "GND":
                 continue
             bb = boxes.get(pad)
             if bb is None:
                 continue
-            cx, cy = (bb[0] + bb[2]) / 2, (bb[1] + bb[3]) / 2
-            if zone[0] <= cx <= zone[2] and zone[1] <= cy <= zone[3]:
+            cx, cy = rect_center(bb)
+            if point_in_rect(cx, cy, zone):
                 foreign_barrels.append(f"{oi.ref}.{pad} ({net or 'no-net'}) "
                                        f"at ({cx:.2f},{cy:.2f})")
     if foreign_barrels:
@@ -471,12 +1138,11 @@ def build_escape_copper(model) -> tuple[list[dict], dict]:
                 "basis": kl.basis}
         contacts = _contact_geometry(inst.mod_path)
         contacts_by_conn[ref] = contacts
-        reach = math.sqrt(max(R_CONSTRUCT ** 2 - contacts.row_v ** 2, 0.0))
+        reach = construct_reach(R_CONSTRUCT, contacts.row_v)
         pts = [(m.u, m.pad) for m in members]
         by_pad = {m.pad: m for m in members}
-        us = sorted({round(x, 3) for x, _ in pts})
-        region = (min(us) - OBSTACLE_MARGIN, -OBSTACLE_MARGIN,
-                  max(us) + OBSTACLE_MARGIN, OBSTACLE_MARGIN)
+        us = rounded_unique_sorted([x for x, _ in pts], 3)
+        region = obstacle_scan_region(us, OBSTACLE_MARGIN)
         obstacles[ref] = _collect_obstacles(model, inst, _inst_pad_boxes,
                                             region)
         for band in band_cover(pts, reach):
@@ -494,7 +1160,8 @@ def build_escape_copper(model) -> tuple[list[dict], dict]:
             obstacles[ref].holes.append(
                 (s["u"], s["v"], s["drill"] / 2, f"escape-via {ref}"))
         for m in bm:
-            best = min(math.hypot(s["u"] - m.u, s["v"] - m.v) for s in seats)
+            best = min_hypot_to_points(
+                m.u, m.v, [(s["u"], s["v"]) for s in seats])
             coverage.setdefault(ref, {})[m.pad] = best
 
     for ref, vias in sorted(vias_by_conn.items()):
@@ -502,30 +1169,19 @@ def build_escape_copper(model) -> tuple[list[dict], dict]:
             continue
         base = vias[0]
         dia, drill = base["dia"], base["drill"]
-        seated = False
-        for du in (REDUNDANCY_OFFSET, -REDUNDANCY_OFFSET):
-            for step in range(0, 21):
-                for sgn in (1, -1):
-                    u = round(base["u"] + du + sgn * step * LATTICE_MM, 6)
-                    if _via_feasible(u, base["v"], dia, drill,
-                                     obstacles[ref]):
-                        vias.append({"u": u, "v": base["v"], "dia": dia,
-                                     "drill": drill, "conn": ref,
-                                     "members": [], "worst": 0.0,
-                                     "role": "redundant"})
-                        obstacles[ref].holes.append(
-                            (u, base["v"], drill / 2, f"escape-via {ref}"))
-                        ledger.append({"conn": ref, "kind": "redundant_via",
-                                       "u": u, "v": base["v"]})
-                        seated = True
-                        break
-                if seated:
-                    break
-            if seated:
-                break
-        if not seated:
+        partner_u = escape_redundancy_u(
+            base["u"], base["v"], dia, drill, obstacles[ref],
+            REDUNDANCY_OFFSET, LATTICE_MM, 21)
+        if partner_u is None:
             raise EscapeError(f"{ref}: no feasible redundancy-partner seat "
                               f"(judgment:2 — a lone stitch via is a SPOF)")
+        vias.append({"u": partner_u, "v": base["v"], "dia": dia,
+                     "drill": drill, "conn": ref, "members": [], "worst": 0.0,
+                     "role": "redundant"})
+        obstacles[ref].holes.append(
+            (partner_u, base["v"], drill / 2, f"escape-via {ref}"))
+        ledger.append({"conn": ref, "kind": "redundant_via",
+                       "u": partner_u, "v": base["v"]})
 
     ladder_segs: list[dict] = []
     for ref, vias in sorted(vias_by_conn.items()):
@@ -536,68 +1192,15 @@ def build_escape_copper(model) -> tuple[list[dict], dict]:
             (round(pads_local[p][0], 4), round(pads_local[p][1], 4), p)
             for p, (num, name) in inst.pad_nets.items()
             if num > 0 and name == "GND" and p in pads_local)
-        cols: dict[float, set[float]] = {}
-        for u, v, _p in gnd_pads:
-            cols.setdefault(u, set()).add(v)
-        both_rows = sorted(u for u, vs in cols.items() if len(vs) >= 2)
-        adjacent = [(a, b)
-                    for a, b in zip(both_rows, both_rows[1:], strict=False)
-                    if abs(b - a - contacts.pitch) < PITCH_TOL_MM]
-        attaches: list[tuple[float, str, object]] = []
-        used_cols: set[float] = set()
-        for a, b in adjacent:
-            attaches.append((round((a + b) / 2, 4), "pair", (a, b)))
-            used_cols.update((a, b))
-        for u in both_rows:
-            if u not in used_cols:
-                attaches.append((u, "column", u))
-        for u, v, p in gnd_pads:
-            if u not in both_rows:
-                attaches.append((u, "pad", (u, v, p)))
-        attaches.sort()
-        if not attaches:
-            raise EscapeError(f"{ref}: no GND attach options on the connector")
-
-        needed: list[tuple[float, str, object]] = []
-        for s in sorted(vias, key=lambda x: x["u"]):
-            left = [a for a in attaches if a[0] <= s["u"]]
-            right = [a for a in attaches if a[0] >= s["u"]]
-            picks = []
-            if left:
-                picks.append(left[-1])
-            if right:
-                picks.append(right[0])
-            if len(picks) < 2:
-                picks = sorted(attaches,
-                               key=lambda a: (abs(a[0] - s["u"]), a[0]))[:2]
-            for pk in picks:
-                if pk not in needed:
-                    needed.append(pk)
-        needed.sort()
-
-        stub_segs: list[dict] = []
-        for u, kind, payload in needed:
-            if kind == "pair":
-                stub_segs.append({"a": (u, -contacts.row_v),
-                                  "b": (u, contacts.row_v),
-                                  "w": STUB_W_PAIR, "role": "stub_pair"})
-            elif kind == "column":
-                stub_segs.append({"a": (u, -contacts.row_v),
-                                  "b": (u, contacts.row_v),
-                                  "w": STUB_W_SINGLE, "role": "stub_column"})
-            else:
-                pu, pv, _p = payload
-                stub_segs.append({"a": (pu, math.copysign(contacts.row_v, pv)),
-                                  "b": (pu, 0.0),
-                                  "w": STUB_W_SINGLE, "role": "stub_pad"})
-        for s in vias:
-            if abs(s["v"]) > 1e-9:
-                stub_segs.append({"a": (s["u"], 0.0), "b": (s["u"], s["v"]),
-                                  "w": STUB_W_SINGLE, "role": "stub_via"})
-        attach_us = ([a[0] for a in needed] + [s["u"] for s in vias])
-        spine = {"a": (min(attach_us), 0.0), "b": (max(attach_us), 0.0),
-                 "w": SPINE_W, "role": "spine"}
-        segs = [spine] + stub_segs
+        via_uv = [(s["u"], s["v"]) for s in vias]
+        try:
+            planned = escape_ladder_plan(
+                gnd_pads, via_uv, contacts.pitch, PITCH_TOL_MM,
+                contacts.row_v, STUB_W_PAIR, STUB_W_SINGLE, SPINE_W)
+        except EscapeError as exc:
+            raise EscapeError(f"{ref}: {exc}") from exc
+        segs = [{"a": (ax, ay), "b": (bx, by), "w": width, "role": role}
+                for ax, ay, bx, by, width, role in planned]
 
         for sseg in segs:
             for bx in obstacles[ref].f_cu:
@@ -616,8 +1219,9 @@ def build_escape_copper(model) -> tuple[list[dict], dict]:
         inst = conns[ref]
         for s in sorted(vias_by_conn[ref], key=lambda x: (x["u"], x["v"])):
             bx, by = _to_board(inst, s["u"], s["v"])
+            vx, vy = round_xy(bx, by, 4)
             copper.append({
-                "kind": "via", "x": round(bx, 4), "y": round(by, 4),
+                "kind": "via", "x": vx, "y": vy,
                 "size": s["dia"], "drill": s["drill"], "net": gnd_num,
                 "net_name": "GND", "group": "som_escape", "conn": ref,
                 "role": s.get("role", "stitch")})
@@ -626,9 +1230,11 @@ def build_escape_copper(model) -> tuple[list[dict], dict]:
         inst = conns[sseg["conn"]]
         ax, ay = _to_board(inst, *sseg["a"])
         bx, by = _to_board(inst, *sseg["b"])
+        sx1, sy1 = round_xy(ax, ay, 4)
+        sx2, sy2 = round_xy(bx, by, 4)
         copper.append({
-            "kind": "segment", "x1": round(ax, 4), "y1": round(ay, 4),
-            "x2": round(bx, 4), "y2": round(by, 4), "width": sseg["w"],
+            "kind": "segment", "x1": sx1, "y1": sy1,
+            "x2": sx2, "y2": sy2, "width": sseg["w"],
             "layer": "F.Cu", "net": gnd_num, "net_name": "GND",
             "group": "som_escape", "conn": sseg["conn"], "role": sseg["role"]})
 
@@ -683,72 +1289,31 @@ def _self_check(conns, vias_by_conn, ladder_segs, zone, gnd_num) -> None:
                     if num > 0 and name == "GND" and p in pads_local]
         segs = [s for s in ladder_segs if s["conn"] == ref]
         vias = vias_by_conn[ref]
-        nodes: list[tuple[str, object]] = (
-            [("via", s) for s in vias] + [("seg", s) for s in segs]
-            + [("pad", p) for p in gnd_pads])
-        parent = list(range(len(nodes)))
-
-        def find(i, parent=parent):
-            while parent[i] != i:
-                parent[i] = parent[parent[i]]
-                i = parent[i]
-            return i
-
-        def union(i, j, parent=parent):
-            parent[find(i)] = find(j)
-
-        def pad_box(vb, g=contacts):
-            pu, pv, _ = vb
-            return (pu - g.half_w, pv - g.half_h, pu + g.half_w, pv + g.half_h)
-
-        def touches(a, b) -> bool:
-            ka, va = a
-            kb, vb = b
-            if ka == "seg" and kb == "seg":
-                bx = (min(vb["a"][0], vb["b"][0]) - vb["w"] / 2,
-                      min(vb["a"][1], vb["b"][1]) - vb["w"] / 2,
-                      max(vb["a"][0], vb["b"][0]) + vb["w"] / 2,
-                      max(vb["a"][1], vb["b"][1]) + vb["w"] / 2)
-                return _seg_box_dist(va["a"], va["b"], bx) <= va["w"] / 2 + 1e-9
-            if ka == "seg" and kb == "via":
-                return (_seg_box_dist(va["a"], va["b"],
-                                      (vb["u"], vb["v"], vb["u"], vb["v"]))
-                        <= va["w"] / 2 + vb["dia"] / 2 + 1e-9)
-            if ka == "seg" and kb == "pad":
-                return (_seg_box_dist(va["a"], va["b"], pad_box(vb))
-                        <= va["w"] / 2 + 1e-9)
-            if ka == "via" and kb == "pad":
-                return (_box_dist(va["u"], va["v"], pad_box(vb))
-                        <= va["dia"] / 2 + 1e-9)
-            if ka == "via" and kb == "via":
-                return (math.hypot(va["u"] - vb["u"], va["v"] - vb["v"])
-                        <= (va["dia"] + vb["dia"]) / 2 + 1e-9)
-            if ka == "pad" and kb == "pad":
-                return False
-            return touches(b, a)
-
-        for i in range(len(nodes)):
-            for j in range(i + 1, len(nodes)):
-                if touches(nodes[i], nodes[j]):
-                    union(i, j)
-        via_roots = {find(i) for i, n in enumerate(nodes) if n[0] == "via"}
-        seg_roots = {find(i) for i, n in enumerate(nodes) if n[0] == "seg"}
-        if len(via_roots | seg_roots) != 1:
+        pad_uv = [(u, v) for u, v, _p in gnd_pads]
+        components, pad_stubs = escape_ladder_connected(
+            vias, segs, pad_uv, contacts.half_w, contacts.half_h)
+        if components != 1:
             raise EscapeError(
                 f"{ref}: LAW-0 self-check FAILED — ladder+vias form "
-                f"{len(via_roots | seg_roots)} components, expected 1")
+                f"{components} components, expected 1")
         inst_zone = zone
         for s in vias:
             bx, by = _to_board(conns[ref], s["u"], s["v"])
-            if not (inst_zone[0] + 0.5 <= bx <= inst_zone[2] - 0.5
-                    and inst_zone[1] + 0.5 <= by <= inst_zone[3] - 0.5):
+            if not _nat.loaded():
+                raise RuntimeError("native via_in_escape_region required")
+            ok = bool(_nat.module().via_in_escape_region(bx, by, inst_zone, 0.5))
+            if _nat.trace():
+                ref_ok = (inst_zone[0] + 0.5 <= bx <= inst_zone[2] - 0.5
+                          and inst_zone[1] + 0.5 <= by <= inst_zone[3] - 0.5)
+                if ok is not ref_ok:
+                    raise AssertionError(
+                        "native via_in_escape_region DIVERGENCE: "
+                        f"cpp={ok} python={ref_ok}")
+            if not ok:
                 raise EscapeError(f"{ref}: via at ({bx:.2f},{by:.2f}) outside "
                                   f"the escape region {inst_zone} (+0.5 margin)")
-        n_pad_stubs = sum(1 for s in segs
-                          if s["role"] in ("stub_pair", "stub_column",
-                                           "stub_pad"))
-        if n_pad_stubs < 2:
-            raise EscapeError(f"{ref}: only {n_pad_stubs} GND-pad stub(s) — "
+        if pad_stubs < 2:
+            raise EscapeError(f"{ref}: only {pad_stubs} GND-pad stub(s) — "
                               f"rule is >= 2 per remediated connector")
 
 
@@ -761,21 +1326,32 @@ def _coexistence(model, conns, ledger) -> list[dict]:
                    if e["kind"] in ("split_u", "split_row")}
     for ref, inst in sorted(conns.items()):
         contacts = _contact_geometry(inst.mod_path)
-        region_u = contacts.span_u + COEX_MARGIN
-        region_v = (contacts.row_v + contacts.half_h + LANE_HANDLE
-                    + COEX_MARGIN)
+        region_u, region_v = coexistence_region(
+            contacts.span_u, contacts.row_v, contacts.half_h, LANE_HANDLE,
+            COEX_MARGIN)
         for oi in sorted(model.insts, key=lambda i: i.ref):
             if oi.side != "bottom" or oi.ref == inst.ref:
                 continue
             boxes = _inst_pad_boxes(oi)
             hit = False
             for bb in boxes.values():
-                cs = [_to_local(inst, x, y) for x in (bb[0], bb[2])
-                      for y in (bb[1], bb[3])]
-                xs = [p[0] for p in cs]
-                ys = [p[1] for p in cs]
-                if (max(xs) >= -region_u and min(xs) <= region_u
-                        and max(ys) >= -region_v and min(ys) <= region_v):
+                if not _nat.loaded():
+                    raise RuntimeError("native coexistence_box_hit required")
+                got = bool(_nat.module().coexistence_box_hit(
+                    inst.x, inst.y, inst.rotation or 0.0, bb, region_u,
+                    region_v))
+                if _nat.trace():
+                    cs = [_to_local_py(inst, x, y) for x in (bb[0], bb[2])
+                          for y in (bb[1], bb[3])]
+                    xs = [p[0] for p in cs]
+                    ys = [p[1] for p in cs]
+                    ref = (max(xs) >= -region_u and min(xs) <= region_u
+                           and max(ys) >= -region_v and min(ys) <= region_v)
+                    if got is not ref:
+                        raise AssertionError(
+                            "native coexistence_box_hit DIVERGENCE: "
+                            f"cpp={got} python={ref}")
+                if got:
                     hit = True
                     break
             if not hit:
@@ -829,8 +1405,8 @@ def build_escape_plan(model) -> dict:
     for ref, inst in sorted(conns.items()):
         pads_local = rpg._parse_pad_positions(inst.mod_path)
         contacts = _contact_geometry(inst.mod_path)
-        pad_outer_tip = contacts.row_v + contacts.half_h
-        escape_v = pad_outer_tip + LANE_HANDLE
+        pad_outer_tip, escape_v = escape_lane_extents(
+            contacts.row_v, contacts.half_h, LANE_HANDLE)
         rows: dict[int, list] = {}
         n_netted = 0
         for pad, (num, name) in sorted(inst.pad_nets.items(),
@@ -839,9 +1415,10 @@ def build_escape_plan(model) -> dict:
                 continue
             n_netted += 1
             u, v = pads_local[pad]
-            if abs(v) < 0.5:
+            row_sign = pad_row_sign(v, 0.5)
+            if row_sign == 0:
                 continue
-            rows.setdefault(1 if v > 0 else -1, []).append((u, pad, name))
+            rows.setdefault(row_sign, []).append((u, pad, name))
         netted_counts[ref] = n_netted
         out: list[dict] = []
         for sgn in sorted(rows):
@@ -853,10 +1430,10 @@ def build_escape_plan(model) -> dict:
                     width, si = SPINE_W, "GND"
                 elif klass == "POWER":
                     direction = "plane"
-                    port_v = math.copysign(pad_outer_tip + 0.5, sgn)
+                    port_v = signed_mag(pad_outer_tip + 0.5, sgn)
                     width, si = 0.4, "POWER"
                 else:
-                    direction, port_v = "outward", math.copysign(escape_v, sgn)
+                    direction, port_v = "outward", signed_mag(escape_v, sgn)
                     cls = model.netclass_of.get(name, "Default")
                     geo = model.classes.get(cls)
                     if geo is None and cls.startswith("DP"):
@@ -868,7 +1445,7 @@ def build_escape_plan(model) -> dict:
                 px, py = _to_board(inst, u, port_v)
                 out.append({"pad": pad, "net": name, "lane": lane_idx,
                             "row": sgn, "dir": direction,
-                            "port": (round(px, 4), round(py, 4)),
+                            "port": round_xy(px, py, 4),
                             "layer": "F.Cu", "width": round(width, 4),
                             "si_class": si, "bus_group": None})
         for sgn in (-1, 1):
@@ -877,8 +1454,8 @@ def build_escape_plan(model) -> dict:
                                key=lambda ln: ln["lane"])
             for prev, cur in zip(row_lanes, row_lanes[1:],
                                  strict=False):
-                if (cur["net"] == prev["net"]
-                        and cur["lane"] - prev["lane"] == 1):
+                if bus_lane_adjacent(prev["net"], cur["net"],
+                                     prev["lane"], cur["lane"]):
                     grp = prev["bus_group"] or f"{ref}:{prev['net']}:{sgn}"
                     prev["bus_group"] = grp
                     cur["bus_group"] = grp
@@ -886,13 +1463,11 @@ def build_escape_plan(model) -> dict:
         for sgn in sorted(rows):
             us = [u for u, _p, _n in rows[sgn]]
             c0 = _to_board(conns[ref], min(us) - 0.5,
-                           math.copysign(pad_outer_tip, sgn))
+                           signed_mag(pad_outer_tip, sgn))
             c1 = _to_board(conns[ref], max(us) + 0.5,
-                           math.copysign(escape_v + CORRIDOR_LIP, sgn))
+                           signed_mag(escape_v + CORRIDOR_LIP, sgn))
             corridors[f"{ref}:{'S' if sgn > 0 else 'N'}"] = {
-                "rect": tuple(round(c, 4) for c in
-                              (min(c0[0], c1[0]), min(c0[1], c1[1]),
-                               max(c0[0], c1[0]), max(c0[1], c1[1]))),
+                "rect": aabb_from_corners(c0[0], c0[1], c1[0], c1[1], 4),
                 "purpose": "DF40 escape-lane corridor (T2) — composition "
                            "legalizer must keep parts + zones out"}
 
@@ -912,21 +1487,14 @@ def build_escape_plan(model) -> dict:
                         key=lambda k: -si_triage.RANK[k])
             same_row = a["row"] == b["row"]
             dlane = abs(a["lane"] - b["lane"])
-            if same_row and dlane == 1:
-                conv = "immediate"
-            elif same_row and dlane == 2:
-                conv = "quad"
-            elif same_row:
-                conv = "split"
-            else:
-                conv = "row_wrap"
+            conv = pair_convergence(same_row, dlane)
             rec = {"base": base, "conn": ref, "halves": halves,
                    "si_class": klass, "same_row": same_row,
                    "delta_lane": dlane, "convergence": conv}
             pair_recs.append(rec)
             if klass == si_triage.GENUINE:
                 genuine_bases.add(base)
-                if not same_row or dlane > 2:
+                if not genuine_pair_ok(same_row, dlane):
                     raise EscapeError(
                         f"GENUINE pair {base} on {ref}: same_row={same_row} "
                         f"delta_lane={dlane} violates the hard pair terms "

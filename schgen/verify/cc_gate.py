@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
+from schgen.core import native as _nat
 from schgen.core.model import Circuit, PinRef
 from schgen.core.symbols import Library, pin_page_position
 from schgen.verify.visual_gate import Seg, _point_on_seg
@@ -9,8 +10,20 @@ from schgen.verify.visual_gate import Seg, _point_on_seg
 _QUANT = 1000.0
 
 
-def _key(x: float, y: float) -> tuple[int, int]:
+def _key_py(x: float, y: float) -> tuple[int, int]:
     return (round(x * _QUANT), round(y * _QUANT))
+
+
+def _key(x: float, y: float) -> tuple[int, int]:
+    if not _nat.loaded():
+        raise RuntimeError("native geom_key required")
+    got = tuple(_nat.module().geom_key(x, y))
+    if _nat.trace():
+        ref = _key_py(x, y)
+        if got != ref:
+            raise AssertionError(
+                f"native geom_key DIVERGENCE: cpp={got} python={ref}")
+    return got
 
 
 @dataclass
@@ -113,33 +126,55 @@ def _harvest_nodes(circuit: Circuit, placement, routed,
     return nodes, uf, segs, bonds
 
 
-def _seed_geometry_unions(nodes: dict, uf: _UF, segs: list[Seg],
-                          bonds: list) -> None:
+def _seed_geometry_unions_py(nodes: dict, uf: _UF, segs: list[Seg],
+                             bonds: list) -> None:
     node_list = list(nodes.values())
 
     for s in segs:
-        uf.union(_key(s.x0, s.y0), _key(s.x1, s.y1))
+        uf.union(_key_py(s.x0, s.y0), _key_py(s.x1, s.y1))
 
     for s in segs:
-        ka = _key(s.x0, s.y0)
+        ka = _key_py(s.x0, s.y0)
         for n in node_list:
-            if n.key == ka or n.key == _key(s.x1, s.y1):
+            if n.key == ka or n.key == _key_py(s.x1, s.y1):
                 continue
             if _point_on_seg(n.x, n.y, s, interior_only=False):
                 uf.union(n.key, ka)
 
-    eps_keys = {(_key(s.x0, s.y0), s) for s in segs} | \
-               {(_key(s.x1, s.y1), s) for s in segs}
+    eps_keys = {(_key_py(s.x0, s.y0), s) for s in segs} | \
+               {(_key_py(s.x1, s.y1), s) for s in segs}
     for ek, owner in eps_keys:
         ex, ey = nodes[ek].x, nodes[ek].y
         for s in segs:
             if s is owner:
                 continue
             if _point_on_seg(ex, ey, s, interior_only=False):
-                uf.union(ek, _key(s.x0, s.y0))
+                uf.union(ek, _key_py(s.x0, s.y0))
 
     for a, b in bonds:
-        uf.union(_key(*a), _key(*b))
+        uf.union(_key_py(*a), _key_py(*b))
+
+
+def _seed_geometry_unions(nodes: dict, uf: _UF, segs: list[Seg],
+                          bonds: list) -> None:
+    if not _nat.loaded():
+        raise RuntimeError("native seed_geometry_unions required")
+    node_list = list(nodes.values())
+    raw_nodes = [(n.key[0], n.key[1], n.x, n.y) for n in node_list]
+    raw_segs = [(s.x0, s.y0, s.x1, s.y1) for s in segs]
+    raw_bonds = [((a[0], a[1]), (b[0], b[1])) for a, b in bonds]
+    roots = [tuple(r) for r in _nat.module().seed_geometry_unions(
+        raw_nodes, raw_segs, raw_bonds)]
+    if _nat.trace():
+        probe = _UF()
+        _seed_geometry_unions_py(nodes, probe, segs, bonds)
+        ref = [probe.find(n.key) for n in node_list]
+        if roots != ref:
+            raise AssertionError(
+                "native seed_geometry_unions DIVERGENCE: "
+                f"cpp={roots} python={ref}")
+    for n, root in zip(node_list, roots, strict=True):
+        uf.union(n.key, root)
 
 
 def _legal_name_unions(nodes: dict, uf: _UF) -> None:

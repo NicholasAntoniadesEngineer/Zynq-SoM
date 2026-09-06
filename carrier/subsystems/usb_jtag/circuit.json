@@ -1,0 +1,735 @@
+{
+  "schema": "schgen.circuit/1",
+  "name": "usb_jtag",
+  "title": "USB-JTAG/UART bridge: CH347T, isolated",
+  "parts": [
+    {
+      "ref": "U4",
+      "lib_id": "AP2112K-3.3TRG1:AP2112K-3.3TRG1",
+      "value": "AP2112K-3.3TRG1",
+      "footprint": "AP2112K-3.3TRG1:AP2112K-3.3TRG1",
+      "fields": {
+        "LCSC": "C51118"
+      },
+      "pin_names": {
+        "VIN": [
+          "1"
+        ],
+        "GND": [
+          "2"
+        ],
+        "EN": [
+          "3"
+        ],
+        "NC": [
+          "4"
+        ],
+        "VOUT": [
+          "5"
+        ]
+      },
+      "pin_numbers": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5"
+      ]
+    },
+    {
+      "ref": "C1",
+      "lib_id": "Device:C",
+      "value": "1u",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {
+        "LCSC": "C15849"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "C2",
+      "lib_id": "Device:C",
+      "value": "10u",
+      "footprint": "Capacitor_SMD:C_0805_2012Metric",
+      "fields": {
+        "LCSC": "C15850"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "C3",
+      "lib_id": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {
+        "LCSC": "C14663"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "U1",
+      "lib_id": "CH347T:CH347T",
+      "value": "CH347T",
+      "footprint": "CH347T:CH347T",
+      "fields": {
+        "LCSC": "C5122332"
+      },
+      "pin_names": {
+        "RST#": [
+          "1"
+        ],
+        "CTS1/GPIO6": [
+          "2"
+        ],
+        "TXD1": [
+          "3"
+        ],
+        "RXD1": [
+          "4"
+        ],
+        "DSR0/GPIO2/SCS0/TMS": [
+          "5"
+        ],
+        "CTS0/GPIO0/SCK/TCK": [
+          "6"
+        ],
+        "RTS0/GPIO1/MISO/TDO": [
+          "7"
+        ],
+        "TXD0/MOSI/TDI": [
+          "8"
+        ],
+        "TNOW0/DTR0/GPIO5/SCS1/TRST": [
+          "9"
+        ],
+        "TNOW1/DTR1": [
+          "10"
+        ],
+        "RI0/GPIO3/SCL": [
+          "11"
+        ],
+        "RXD0/SDA": [
+          "12"
+        ],
+        "RTS1/GPIO7": [
+          "13"
+        ],
+        "VCC": [
+          "14"
+        ],
+        "DCD0/GPIO4/ACT": [
+          "15"
+        ],
+        "UD-": [
+          "16"
+        ],
+        "UD+": [
+          "17"
+        ],
+        "GND": [
+          "18"
+        ],
+        "XI": [
+          "19"
+        ],
+        "XO": [
+          "20"
+        ]
+      },
+      "pin_numbers": [
+        "1",
+        "10",
+        "11",
+        "12",
+        "13",
+        "14",
+        "15",
+        "16",
+        "17",
+        "18",
+        "19",
+        "2",
+        "20",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9"
+      ]
+    },
+    {
+      "ref": "C4",
+      "lib_id": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {
+        "LCSC": "C14663"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "Y1",
+      "lib_id": "1C208000BC0R:1C208000BC0R",
+      "value": "8MHz",
+      "footprint": "1C208000BC0R:1C208000BC0R",
+      "fields": {
+        "LCSC": "C57131"
+      },
+      "pin_names": {
+        "OSC2": [
+          "3"
+        ],
+        "NC": [
+          "2",
+          "4"
+        ],
+        "OSC1": [
+          "1"
+        ]
+      },
+      "pin_numbers": [
+        "1",
+        "2",
+        "3",
+        "4"
+      ]
+    },
+    {
+      "ref": "C5",
+      "lib_id": "Device:C",
+      "value": "16p",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {
+        "LCSC": "C162205"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "C6",
+      "lib_id": "Device:C",
+      "value": "16p",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {
+        "LCSC": "C162205"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "R1",
+      "lib_id": "Device:R",
+      "value": "10k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C25804"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "R2",
+      "lib_id": "Device:R",
+      "value": "10k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C25804"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "R3",
+      "lib_id": "Device:R",
+      "value": "10k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C25804"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "U2",
+      "lib_id": "SN74LVC125ADR:SN74LVC125ADR",
+      "value": "SN74LVC125ADR",
+      "footprint": "SN74LVC125ADR:SN74LVC125ADR",
+      "fields": {
+        "LCSC": "C7661"
+      },
+      "pin_names": {
+        "1OE#": [
+          "1"
+        ],
+        "1A": [
+          "2"
+        ],
+        "1Y": [
+          "3"
+        ],
+        "2OE#": [
+          "4"
+        ],
+        "2A": [
+          "5"
+        ],
+        "2Y": [
+          "6"
+        ],
+        "GND": [
+          "7"
+        ],
+        "3Y": [
+          "8"
+        ],
+        "3A": [
+          "9"
+        ],
+        "3OE#": [
+          "10"
+        ],
+        "4Y": [
+          "11"
+        ],
+        "4A": [
+          "12"
+        ],
+        "4OE#": [
+          "13"
+        ],
+        "VCC": [
+          "14"
+        ]
+      },
+      "pin_numbers": [
+        "1",
+        "10",
+        "11",
+        "12",
+        "13",
+        "14",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9"
+      ]
+    },
+    {
+      "ref": "C7",
+      "lib_id": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {
+        "LCSC": "C14663"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "R4",
+      "lib_id": "Device:R",
+      "value": "100k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C25803"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "SW1",
+      "lib_id": "DSHP04TSGER:DSHP04TSGER",
+      "value": "DSHP04TSGER",
+      "footprint": "DSHP04TSGER:DSHP04TSGER",
+      "fields": {
+        "LCSC": "C3293144"
+      },
+      "pin_names": {
+        "1": [
+          "1"
+        ],
+        "2": [
+          "2"
+        ],
+        "3": [
+          "3"
+        ],
+        "4": [
+          "4"
+        ],
+        "5": [
+          "5"
+        ],
+        "6": [
+          "6"
+        ],
+        "7": [
+          "7"
+        ],
+        "8": [
+          "8"
+        ]
+      },
+      "pin_numbers": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8"
+      ]
+    },
+    {
+      "ref": "TP1",
+      "lib_id": "Connector:TestPoint",
+      "value": "+3V3_DBG",
+      "footprint": "TestPoint:TestPoint_Pad_D1.5mm",
+      "fields": {
+        "BOM": "exclude"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "TP2",
+      "lib_id": "Connector:TestPoint",
+      "value": "DBG_UART_TXD",
+      "footprint": "TestPoint:TestPoint_Pad_D1.5mm",
+      "fields": {
+        "BOM": "exclude"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "TP3",
+      "lib_id": "Connector:TestPoint",
+      "value": "DBG_UART_RXD",
+      "footprint": "TestPoint:TestPoint_Pad_D1.5mm",
+      "fields": {
+        "BOM": "exclude"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    }
+  ],
+  "nets": [
+    {
+      "name": "+5V_DBG",
+      "net_class": "power",
+      "pins": [
+        "U4.1",
+        "U4.3",
+        "C1.1"
+      ]
+    },
+    {
+      "name": "+3V3_DBG",
+      "net_class": "power",
+      "pins": [
+        "U4.5",
+        "C2.1",
+        "C3.1",
+        "U1.14",
+        "C4.1",
+        "R1.1",
+        "U2.14",
+        "C7.1",
+        "R4.1",
+        "TP1.1"
+      ]
+    },
+    {
+      "name": "GND",
+      "net_class": "ground",
+      "pins": [
+        "U4.2",
+        "C1.2",
+        "C2.2",
+        "C3.2",
+        "U1.18",
+        "C4.2",
+        "Y1.2",
+        "Y1.4",
+        "C5.2",
+        "C6.2",
+        "R2.2",
+        "R3.2",
+        "U2.7",
+        "C7.2",
+        "SW1.8"
+      ]
+    },
+    {
+      "name": "DBG_USB_DP",
+      "net_class": "port",
+      "pins": [
+        "U1.17"
+      ]
+    },
+    {
+      "name": "DBG_USB_DM",
+      "net_class": "port",
+      "pins": [
+        "U1.16"
+      ]
+    },
+    {
+      "name": "DBG_XI",
+      "net_class": "signal",
+      "pins": [
+        "U1.19",
+        "Y1.1",
+        "C5.1"
+      ]
+    },
+    {
+      "name": "DBG_XO",
+      "net_class": "signal",
+      "pins": [
+        "U1.20",
+        "Y1.3",
+        "C6.1"
+      ]
+    },
+    {
+      "name": "DBG_RST_N",
+      "net_class": "signal",
+      "pins": [
+        "U1.1",
+        "R1.2"
+      ]
+    },
+    {
+      "name": "DBG_MODE_DTR1",
+      "net_class": "signal",
+      "pins": [
+        "U1.10",
+        "R2.1"
+      ]
+    },
+    {
+      "name": "DBG_MODE_RTS1",
+      "net_class": "signal",
+      "pins": [
+        "U1.13",
+        "R3.1"
+      ]
+    },
+    {
+      "name": "DBG_FT_TCK",
+      "net_class": "signal",
+      "pins": [
+        "U1.6",
+        "U2.2"
+      ]
+    },
+    {
+      "name": "DBG_FT_TMS",
+      "net_class": "signal",
+      "pins": [
+        "U1.5",
+        "U2.12"
+      ]
+    },
+    {
+      "name": "DBG_FT_TDI",
+      "net_class": "signal",
+      "pins": [
+        "U1.8",
+        "U2.5"
+      ]
+    },
+    {
+      "name": "DBG_FT_TDO",
+      "net_class": "signal",
+      "pins": [
+        "U1.7",
+        "U2.8"
+      ]
+    },
+    {
+      "name": "ZYNQ_TCK",
+      "net_class": "port",
+      "pins": [
+        "U2.3"
+      ]
+    },
+    {
+      "name": "ZYNQ_TDI",
+      "net_class": "port",
+      "pins": [
+        "U2.6"
+      ]
+    },
+    {
+      "name": "ZYNQ_TMS",
+      "net_class": "port",
+      "pins": [
+        "U2.11"
+      ]
+    },
+    {
+      "name": "ZYNQ_TDO",
+      "net_class": "port",
+      "pins": [
+        "U2.9"
+      ]
+    },
+    {
+      "name": "DBG_JTAG_OE_N",
+      "net_class": "signal",
+      "pins": [
+        "U2.1",
+        "U2.4",
+        "U2.10",
+        "U2.13",
+        "R4.2",
+        "SW1.1"
+      ]
+    },
+    {
+      "name": "DBG_UART_RXD",
+      "net_class": "port",
+      "pins": [
+        "U1.3",
+        "TP3.1"
+      ]
+    },
+    {
+      "name": "DBG_UART_TXD",
+      "net_class": "port",
+      "pins": [
+        "U1.4",
+        "TP2.1"
+      ]
+    }
+  ],
+  "nc": [
+    "SW1.2",
+    "SW1.3",
+    "SW1.4",
+    "SW1.5",
+    "SW1.6",
+    "SW1.7",
+    "U1.11",
+    "U1.12",
+    "U1.15",
+    "U1.2",
+    "U1.9",
+    "U4.4"
+  ],
+  "port_types": {
+    "DBG_USB_DP": {
+      "kind": "usb_hs_pair",
+      "pair_with": "DBG_USB_DM",
+      "impedance": 90,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "usb_jtag_connector (USB-C UFP receptacle + USBLC6 ESD)"
+    },
+    "DBG_USB_DM": {
+      "kind": "usb_hs_pair",
+      "pair_with": "DBG_USB_DP",
+      "impedance": 90,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "usb_jtag_connector (USB-C UFP receptacle + USBLC6 ESD)"
+    },
+    "ZYNQ_TCK": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "debug_boot (the 2x7 JTAG header carries the same ZYNQ_T* nets)"
+    },
+    "ZYNQ_TDI": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "debug_boot (the 2x7 JTAG header carries the same ZYNQ_T* nets)"
+    },
+    "ZYNQ_TMS": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "debug_boot (the 2x7 JTAG header carries the same ZYNQ_T* nets)"
+    },
+    "ZYNQ_TDO": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "debug_boot (the 2x7 JTAG header carries the same ZYNQ_T* nets)"
+    },
+    "DBG_UART_RXD": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j2_connector (PL bank 13 EMIO UART, LVCMOS33 — FUNCTION_MAP)"
+    },
+    "DBG_UART_TXD": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j2_connector (PL bank 13 EMIO UART, LVCMOS33 — FUNCTION_MAP)"
+    }
+  },
+  "hints": {},
+  "loads": {
+    "+3V3_DBG": [
+      [
+        0.045,
+        "CH347 ~38 mA typ (DS) + SN74LVC125 + RST/mode/OE pull network"
+      ]
+    ]
+  },
+  "tp_waivers": {},
+  "decap_waivers": {},
+  "pull_waivers": {},
+  "reset_waivers": {
+    "DBG_RST_N": "CH347 RST#: 10k pull-up + the chip's built-in power-on reset (DS 5.1); no external RC cap fitted by design"
+  },
+  "strap_waivers": {},
+  "ep_waivers": {},
+  "thermal_waivers": {},
+  "part_rule_waivers": {}
+}

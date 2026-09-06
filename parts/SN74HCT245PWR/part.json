@@ -1,0 +1,121 @@
+{
+  "schema": "schgen.part/1",
+  "mpn": "SN74HCT245PWR",
+  "safe_name": "SN74HCT245PWR",
+  "lcsc": "C6779",
+  "description": "74系列逻辑芯片",
+  "manufacturer": "TI(德州仪器)",
+  "package": "TSSOP-20_L6.5-W4.4-P0.65-LS6.4-BL",
+  "jlc_class": "Extended Part",
+  "prefix": "U",
+  "datasheet": "https://www.lcsc.com/datasheet/C6779.pdf",
+  "product_url": "https://lcsc.com/product-detail/74-Series_TI_SN74HCT245PWR_SN74HCT245PWR_C6779.html",
+  "lib_id": "SN74HCT245PWR:SN74HCT245PWR",
+  "footprint": "SN74HCT245PWR:SN74HCT245PWR",
+  "models_3d": [
+    "SN74HCT245PWR.wrl",
+    "SN74HCT245PWR.step"
+  ],
+  "pins": [
+    {
+      "num": "1",
+      "name": "DIR",
+      "etype": "passive"
+    },
+    {
+      "num": "2",
+      "name": "A1",
+      "etype": "passive"
+    },
+    {
+      "num": "3",
+      "name": "A2",
+      "etype": "passive"
+    },
+    {
+      "num": "4",
+      "name": "A3",
+      "etype": "passive"
+    },
+    {
+      "num": "5",
+      "name": "A4",
+      "etype": "passive"
+    },
+    {
+      "num": "6",
+      "name": "A5",
+      "etype": "passive"
+    },
+    {
+      "num": "7",
+      "name": "A6",
+      "etype": "passive"
+    },
+    {
+      "num": "8",
+      "name": "A7",
+      "etype": "passive"
+    },
+    {
+      "num": "9",
+      "name": "A8",
+      "etype": "passive"
+    },
+    {
+      "num": "10",
+      "name": "GND",
+      "etype": "passive"
+    },
+    {
+      "num": "11",
+      "name": "B8",
+      "etype": "passive"
+    },
+    {
+      "num": "12",
+      "name": "B7",
+      "etype": "passive"
+    },
+    {
+      "num": "13",
+      "name": "B6",
+      "etype": "passive"
+    },
+    {
+      "num": "14",
+      "name": "B5",
+      "etype": "passive"
+    },
+    {
+      "num": "15",
+      "name": "B4",
+      "etype": "passive"
+    },
+    {
+      "num": "16",
+      "name": "B3",
+      "etype": "passive"
+    },
+    {
+      "num": "17",
+      "name": "B2",
+      "etype": "passive"
+    },
+    {
+      "num": "18",
+      "name": "B1",
+      "etype": "passive"
+    },
+    {
+      "num": "19",
+      "name": "#OE",
+      "etype": "passive"
+    },
+    {
+      "num": "20",
+      "name": "VCC",
+      "etype": "passive"
+    }
+  ]
+}

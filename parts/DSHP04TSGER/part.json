@@ -1,0 +1,61 @@
+{
+  "schema": "schgen.part/1",
+  "mpn": "DSHP04TSGER",
+  "safe_name": "DSHP04TSGER",
+  "lcsc": "C3293144",
+  "description": "DSHP04TSGER_C3293144 (SW-SMD_8P-L6.7-W5.4-P1.27-LS8.4)",
+  "manufacturer": "康深",
+  "package": "SW-SMD_8P-L6.7-W5.4-P1.27-LS8.4",
+  "jlc_class": "Extended Part",
+  "prefix": "U",
+  "datasheet": "https://www.lcsc.com/datasheet/C3293144.pdf",
+  "product_url": "",
+  "lib_id": "DSHP04TSGER:DSHP04TSGER",
+  "footprint": "DSHP04TSGER:DSHP04TSGER",
+  "models_3d": [
+    "DSHP04TSGER.wrl",
+    "DSHP04TSGER.step"
+  ],
+  "pins": [
+    {
+      "num": "1",
+      "name": "1",
+      "etype": "passive"
+    },
+    {
+      "num": "2",
+      "name": "2",
+      "etype": "passive"
+    },
+    {
+      "num": "3",
+      "name": "3",
+      "etype": "passive"
+    },
+    {
+      "num": "4",
+      "name": "4",
+      "etype": "passive"
+    },
+    {
+      "num": "5",
+      "name": "5",
+      "etype": "passive"
+    },
+    {
+      "num": "6",
+      "name": "6",
+      "etype": "passive"
+    },
+    {
+      "num": "7",
+      "name": "7",
+      "etype": "passive"
+    },
+    {
+      "num": "8",
+      "name": "8",
+      "etype": "passive"
+    }
+  ]
+}

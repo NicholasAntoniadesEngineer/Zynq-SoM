@@ -3,6 +3,7 @@ from __future__ import annotations
 import math
 from dataclasses import dataclass, field
 
+from schgen.core import native as _nat
 from schgen.generate.pcb import PcbModel
 from schgen.verify.placement_contract_gate import (
     _board_refs_by_sheet,
@@ -15,14 +16,27 @@ FLOW_K = 0.35
 FLOW_SOM_K = 1.0
 
 
-def flow_budget(board_w: float, board_h: float,
-                som_core: tuple[float, float, float, float] | None) -> float:
+def flow_budget_py(board_w: float, board_h: float,
+                   som_core: tuple[float, float, float, float] | None) -> float:
     area = max(float(board_w) * float(board_h), 1.0)
     som_diag = 0.0
     if som_core is not None:
         sx0, sy0, sx1, sy1 = som_core
         som_diag = math.hypot(sx1 - sx0, sy1 - sy0)
     return FLOW_K * math.sqrt(area) + FLOW_SOM_K * som_diag
+
+
+def flow_budget(board_w: float, board_h: float,
+                som_core: tuple[float, float, float, float] | None) -> float:
+    if not _nat.loaded():
+        raise RuntimeError("native flow_budget required")
+    got = _nat.module().flow_budget(board_w, board_h, som_core)
+    if _nat.trace():
+        ref = flow_budget_py(board_w, board_h, som_core)
+        if got != ref:
+            raise AssertionError(
+                f"native flow_budget DIVERGENCE: cpp={got} python={ref}")
+    return got
 
 
 def zone_centroids(model: PcbModel) -> dict[str, tuple[float, float]]:
@@ -32,8 +46,15 @@ def zone_centroids(model: PcbModel) -> dict[str, tuple[float, float]]:
         a[0] += i.x
         a[1] += i.y
         a[2] += 1.0
-    return {s: (round(a[0] / a[2], 4), round(a[1] / a[2], 4))
-            for s, a in acc.items() if a[2] > 0}
+    if not _nat.loaded():
+        raise RuntimeError("native rounded_centroid required")
+    out: dict[str, tuple[float, float]] = {}
+    for sheet, acc_row in acc.items():
+        if acc_row[2] <= 0:
+            continue
+        out[sheet] = tuple(_nat.module().round_xy(
+            acc_row[0] / acc_row[2], acc_row[1] / acc_row[2], 4))
+    return out
 
 
 def zone_bboxes(model: PcbModel) -> dict[str, tuple[float, float, float, float]]:
@@ -56,19 +77,34 @@ def zone_bboxes(model: PcbModel) -> dict[str, tuple[float, float, float, float]]
                 a[1] = min(a[1], b[1])
                 a[2] = max(a[2], b[2])
                 a[3] = max(a[3], b[3])
-    return {s: (round(a[0], 4), round(a[1], 4), round(a[2], 4), round(a[3], 4))
+    if not _nat.loaded():
+        raise RuntimeError("native round_box required")
+    return {s: tuple(_nat.module().round_box(tuple(a), 4))
             for s, a in acc.items()}
 
 
-def bbox_gap(a: tuple[float, float, float, float],
-             b: tuple[float, float, float, float]) -> float:
+def bbox_gap_py(a: tuple[float, float, float, float],
+                b: tuple[float, float, float, float]) -> float:
     dx = max(a[0] - b[2], b[0] - a[2], 0.0)
     dy = max(a[1] - b[3], b[1] - a[3], 0.0)
     return math.hypot(dx, dy)
 
 
-def facing_dot(czone: tuple[float, float], cout: tuple[float, float],
-               cdown: tuple[float, float]) -> tuple[float, float]:
+def bbox_gap(a: tuple[float, float, float, float],
+             b: tuple[float, float, float, float]) -> float:
+    if not _nat.loaded():
+        raise RuntimeError("native bbox_gap required")
+    got = _nat.module().bbox_gap(a, b)
+    if _nat.trace():
+        ref = bbox_gap_py(a, b)
+        if got != ref:
+            raise AssertionError(
+                f"native bbox_gap DIVERGENCE: cpp={got} python={ref}")
+    return got
+
+
+def facing_dot_py(czone: tuple[float, float], cout: tuple[float, float],
+                  cdown: tuple[float, float]) -> tuple[float, float]:
     ox, oy = cout[0] - czone[0], cout[1] - czone[1]
     dx, dy = cdown[0] - czone[0], cdown[1] - czone[1]
     dot = ox * dx + oy * dy
@@ -77,6 +113,20 @@ def facing_dot(czone: tuple[float, float], cout: tuple[float, float],
     angle = (math.degrees(math.acos(max(-1.0, min(1.0, dot / (mo * md)))))
              if mo > 1e-9 and md > 1e-9 else 180.0)
     return dot, angle
+
+
+def facing_dot(czone: tuple[float, float], cout: tuple[float, float],
+               cdown: tuple[float, float]) -> tuple[float, float]:
+    if not _nat.loaded():
+        raise RuntimeError("native facing_dot required")
+    got = _nat.module().facing_dot(czone[0], czone[1], cout[0], cout[1],
+                                   cdown[0], cdown[1])
+    if _nat.trace():
+        ref = facing_dot_py(czone, cout, cdown)
+        if got != ref:
+            raise AssertionError(
+                f"native facing_dot DIVERGENCE: cpp={got} python={ref}")
+    return got
 
 
 _zone_centroids = zone_centroids
@@ -99,8 +149,10 @@ _SOM_TOKEN = "@som"
 def _som_centroid(model: PcbModel) -> tuple[float, float] | None:
     if model.som_core is None:
         return None
+    if not _nat.loaded():
+        raise RuntimeError("native round_xy required")
     x0, y0, x1, y1 = model.som_core
-    return (round((x0 + x1) / 2.0, 4), round((y0 + y1) / 2.0, 4))
+    return tuple(_nat.module().round_xy((x0 + x1) / 2.0, (y0 + y1) / 2.0, 4))
 
 
 def _resolve_target(name: str, centroids: dict[str, tuple[float, float]],
@@ -120,11 +172,16 @@ def _members_centroid(model: PcbModel, sheet: str,
             ys.append(i.y)
     if not xs:
         return None
-    return (round(sum(xs) / len(xs), 4), round(sum(ys) / len(ys), 4))
+    if not _nat.loaded():
+        raise RuntimeError("native rounded_centroid required")
+    return tuple(_nat.module().rounded_centroid(list(zip(xs, ys, strict=True)),
+                                                4))
 
 
 def _dist(a: tuple[float, float], b: tuple[float, float]) -> float:
-    return math.hypot(a[0] - b[0], a[1] - b[1])
+    if not _nat.loaded():
+        raise RuntimeError("native hypot_xy required")
+    return _nat.module().hypot_xy(a[0], a[1], b[0], b[1])
 
 
 @dataclass(frozen=True)

@@ -1,0 +1,537 @@
+{
+  "schema": "schgen.circuit/1",
+  "name": "camera",
+  "title": "RPi camera port: 2-lane MIPI CSI-2 (15P FFC)",
+  "parts": [
+    {
+      "ref": "J1",
+      "lib_id": "SFW15R-1STE1LF:SFW15R-1STE1LF",
+      "value": "SFW15R-1STE1LF",
+      "footprint": "SFW15R-1STE1LF:SFW15R-1STE1LF",
+      "fields": {
+        "LCSC": "C3168538"
+      },
+      "pin_names": {
+        "1": [
+          "1"
+        ],
+        "2": [
+          "2"
+        ],
+        "3": [
+          "3"
+        ],
+        "4": [
+          "4"
+        ],
+        "5": [
+          "5"
+        ],
+        "6": [
+          "6"
+        ],
+        "7": [
+          "7"
+        ],
+        "8": [
+          "8"
+        ],
+        "9": [
+          "9"
+        ],
+        "10": [
+          "10"
+        ],
+        "11": [
+          "11"
+        ],
+        "12": [
+          "12"
+        ],
+        "13": [
+          "13"
+        ],
+        "14": [
+          "14"
+        ],
+        "15": [
+          "15"
+        ],
+        "16": [
+          "16"
+        ],
+        "17": [
+          "17"
+        ]
+      },
+      "pin_numbers": [
+        "1",
+        "10",
+        "11",
+        "12",
+        "13",
+        "14",
+        "15",
+        "16",
+        "17",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9"
+      ]
+    },
+    {
+      "ref": "U1",
+      "lib_id": "TPD4E02B04DQAR:TPD4E02B04DQAR",
+      "value": "TPD4E02B04DQAR",
+      "footprint": "TPD4E02B04DQAR:TPD4E02B04DQAR",
+      "fields": {
+        "LCSC": "C106794"
+      },
+      "pin_names": {
+        "IO1": [
+          "1"
+        ],
+        "GND": [
+          "8",
+          "3"
+        ],
+        "IO2": [
+          "2"
+        ],
+        "IO3": [
+          "4"
+        ],
+        "IO4": [
+          "5"
+        ],
+        "NC": [
+          "6",
+          "7",
+          "9",
+          "10"
+        ]
+      },
+      "pin_numbers": [
+        "1",
+        "10",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9"
+      ]
+    },
+    {
+      "ref": "U2",
+      "lib_id": "TPD4E02B04DQAR:TPD4E02B04DQAR",
+      "value": "TPD4E02B04DQAR",
+      "footprint": "TPD4E02B04DQAR:TPD4E02B04DQAR",
+      "fields": {
+        "LCSC": "C106794"
+      },
+      "pin_names": {
+        "IO1": [
+          "1"
+        ],
+        "GND": [
+          "8",
+          "3"
+        ],
+        "IO2": [
+          "2"
+        ],
+        "IO3": [
+          "4"
+        ],
+        "IO4": [
+          "5"
+        ],
+        "NC": [
+          "6",
+          "7",
+          "9",
+          "10"
+        ]
+      },
+      "pin_numbers": [
+        "1",
+        "10",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9"
+      ]
+    },
+    {
+      "ref": "R1",
+      "lib_id": "Device:R",
+      "value": "100R",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C22775"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "R2",
+      "lib_id": "Device:R",
+      "value": "100R",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C22775"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "R3",
+      "lib_id": "Device:R",
+      "value": "100R",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C22775"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "R4",
+      "lib_id": "Device:R",
+      "value": "4k7",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C23162"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "R5",
+      "lib_id": "Device:R",
+      "value": "4k7",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C23162"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "C1",
+      "lib_id": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {
+        "LCSC": "C14663"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "C2",
+      "lib_id": "Device:C",
+      "value": "10u",
+      "footprint": "Capacitor_SMD:C_0805_2012Metric",
+      "fields": {
+        "LCSC": "C15850"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "TP1",
+      "lib_id": "Connector:TestPoint",
+      "value": "CAM_SCL",
+      "footprint": "TestPoint:TestPoint_Pad_D1.5mm",
+      "fields": {
+        "BOM": "exclude"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "TP2",
+      "lib_id": "Connector:TestPoint",
+      "value": "CAM_SDA",
+      "footprint": "TestPoint:TestPoint_Pad_D1.5mm",
+      "fields": {
+        "BOM": "exclude"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "TP3",
+      "lib_id": "Connector:TestPoint",
+      "value": "CAM_EN",
+      "footprint": "TestPoint:TestPoint_Pad_D1.5mm",
+      "fields": {
+        "BOM": "exclude"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    }
+  ],
+  "nets": [
+    {
+      "name": "CAM_D0_P",
+      "net_class": "port",
+      "pins": [
+        "J1.3",
+        "R1.1",
+        "U1.1"
+      ]
+    },
+    {
+      "name": "CAM_D0_N",
+      "net_class": "port",
+      "pins": [
+        "J1.2",
+        "R1.2",
+        "U1.2"
+      ]
+    },
+    {
+      "name": "CAM_D1_P",
+      "net_class": "port",
+      "pins": [
+        "J1.6",
+        "R2.1",
+        "U1.4"
+      ]
+    },
+    {
+      "name": "CAM_D1_N",
+      "net_class": "port",
+      "pins": [
+        "J1.5",
+        "R2.2",
+        "U1.5"
+      ]
+    },
+    {
+      "name": "CAM_CLK_P",
+      "net_class": "port",
+      "pins": [
+        "J1.9",
+        "R3.1",
+        "U2.1"
+      ]
+    },
+    {
+      "name": "CAM_CLK_N",
+      "net_class": "port",
+      "pins": [
+        "J1.8",
+        "R3.2",
+        "U2.2"
+      ]
+    },
+    {
+      "name": "GND",
+      "net_class": "ground",
+      "pins": [
+        "U1.8",
+        "U1.3",
+        "U2.8",
+        "U2.3",
+        "J1.1",
+        "J1.4",
+        "J1.7",
+        "J1.10",
+        "C1.2",
+        "C2.2",
+        "J1.16",
+        "J1.17"
+      ]
+    },
+    {
+      "name": "CAM_SCL",
+      "net_class": "port",
+      "pins": [
+        "J1.13",
+        "R4.2",
+        "U2.4",
+        "TP1.1"
+      ]
+    },
+    {
+      "name": "CAM_SDA",
+      "net_class": "port",
+      "pins": [
+        "J1.14",
+        "R5.2",
+        "U2.5",
+        "TP2.1"
+      ]
+    },
+    {
+      "name": "+3V3_CAM",
+      "net_class": "power",
+      "pins": [
+        "R4.1",
+        "R5.1",
+        "J1.15",
+        "C1.1",
+        "C2.1"
+      ]
+    },
+    {
+      "name": "CAM_EN",
+      "net_class": "port",
+      "pins": [
+        "J1.11",
+        "TP3.1"
+      ]
+    },
+    {
+      "name": "CAM_LED",
+      "net_class": "port",
+      "pins": [
+        "J1.12"
+      ]
+    }
+  ],
+  "nc": [
+    "U1.10",
+    "U1.6",
+    "U1.7",
+    "U1.9",
+    "U2.10",
+    "U2.6",
+    "U2.7",
+    "U2.9"
+  ],
+  "port_types": {
+    "CAM_D0_P": {
+      "kind": "diff_pair",
+      "pair_with": "CAM_D0_N",
+      "impedance": 100,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j3_connector (PL bank 35, LVDS_25, +VCCO_35=2.5V)"
+    },
+    "CAM_D0_N": {
+      "kind": "diff_pair",
+      "pair_with": "CAM_D0_P",
+      "impedance": 100,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j3_connector (PL bank 35, LVDS_25, +VCCO_35=2.5V)"
+    },
+    "CAM_D1_P": {
+      "kind": "diff_pair",
+      "pair_with": "CAM_D1_N",
+      "impedance": 100,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j3_connector (PL bank 35, LVDS_25, +VCCO_35=2.5V)"
+    },
+    "CAM_D1_N": {
+      "kind": "diff_pair",
+      "pair_with": "CAM_D1_P",
+      "impedance": 100,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j3_connector (PL bank 35, LVDS_25, +VCCO_35=2.5V)"
+    },
+    "CAM_CLK_P": {
+      "kind": "diff_pair",
+      "pair_with": "CAM_CLK_N",
+      "impedance": 100,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j3_connector (PL bank 35, LVDS_25, +VCCO_35=2.5V)"
+    },
+    "CAM_CLK_N": {
+      "kind": "diff_pair",
+      "pair_with": "CAM_CLK_P",
+      "impedance": 100,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j3_connector (PL bank 35, LVDS_25, +VCCO_35=2.5V)"
+    },
+    "CAM_SCL": {
+      "kind": "i2c",
+      "pair_with": null,
+      "impedance": null,
+      "role": "scl",
+      "bus": "CAM_I2C",
+      "speed_hz": 400000,
+      "level_v": null,
+      "expect": "som_j3_connector (PL bank 33, +VCCO_33=3.3V)"
+    },
+    "CAM_SDA": {
+      "kind": "i2c",
+      "pair_with": null,
+      "impedance": null,
+      "role": "sda",
+      "bus": "CAM_I2C",
+      "speed_hz": 400000,
+      "level_v": null,
+      "expect": "som_j3_connector (PL bank 33, +VCCO_33=3.3V)"
+    },
+    "CAM_EN": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j3_connector (PL bank 33, +VCCO_33=3.3V)"
+    },
+    "CAM_LED": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j3_connector (PL bank 33, +VCCO_33=3.3V)"
+    }
+  },
+  "hints": {},
+  "loads": {
+    "+3V3_CAM": [
+      [
+        0.3,
+        "RPi camera module budget (camera_csi.md: V2 typ ~250 mA)"
+      ]
+    ]
+  },
+  "tp_waivers": {},
+  "decap_waivers": {},
+  "pull_waivers": {},
+  "reset_waivers": {},
+  "strap_waivers": {},
+  "ep_waivers": {},
+  "thermal_waivers": {},
+  "part_rule_waivers": {}
+}

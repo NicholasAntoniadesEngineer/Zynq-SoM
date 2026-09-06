@@ -1,0 +1,61 @@
+{
+  "schema": "schgen.part/1",
+  "mpn": "RV-3028-C7-32.768kHz-1ppm-TA-QC",
+  "safe_name": "RV-3028-C7-32.768kHz-1ppm-TA-QC",
+  "lcsc": "C3019759",
+  "description": "RV-3028-C7 32.768KHZ 1PPM TA QC (OSC-SMD_8P-L3.2-W1.5-P0.90-BL)",
+  "manufacturer": "Micro Crystal(瑞士微晶)",
+  "package": "OSC-SMD_8P-L3.2-W1.5-P0.90-BL",
+  "jlc_class": "Extended Part",
+  "prefix": "U",
+  "datasheet": "https://www.lcsc.com/datasheet/C3019759.pdf",
+  "product_url": "",
+  "lib_id": "RV-3028-C7-32.768kHz-1ppm-TA-QC:RV-3028-C7-32.768kHz-1ppm-TA-QC",
+  "footprint": "RV-3028-C7-32.768kHz-1ppm-TA-QC:RV-3028-C7-32.768kHz-1ppm-TA-QC",
+  "models_3d": [
+    "RV-3028-C7-32.768kHz-1ppm-TA-QC.wrl",
+    "RV-3028-C7-32.768kHz-1ppm-TA-QC.step"
+  ],
+  "pins": [
+    {
+      "num": "1",
+      "name": "CLKOUT",
+      "etype": "passive"
+    },
+    {
+      "num": "2",
+      "name": "INT#",
+      "etype": "passive"
+    },
+    {
+      "num": "3",
+      "name": "SCL",
+      "etype": "passive"
+    },
+    {
+      "num": "4",
+      "name": "SDA",
+      "etype": "passive"
+    },
+    {
+      "num": "5",
+      "name": "VSS",
+      "etype": "passive"
+    },
+    {
+      "num": "6",
+      "name": "VBACKUP",
+      "etype": "passive"
+    },
+    {
+      "num": "7",
+      "name": "VDD",
+      "etype": "passive"
+    },
+    {
+      "num": "8",
+      "name": "EVI",
+      "etype": "passive"
+    }
+  ]
+}

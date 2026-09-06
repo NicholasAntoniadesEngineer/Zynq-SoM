@@ -384,8 +384,12 @@ def cmd_board(args: argparse.Namespace) -> int:
 
     from schgen.core import ledger as _led
     from schgen.core import quantize as _quant
+    from schgen.core import timing as _tim
     _led.reset()
     _quant.reset_engagements()
+    _tim.reset()
+    if getattr(args, "timing", False):
+        _tim.enable()
 
     names = [p.stem for p in all_subsystem_paths()]
     sheets = []
@@ -1206,12 +1210,14 @@ def cmd_board(args: argparse.Namespace) -> int:
 
     _golden_check(ren_dir, bless=args.bless)
     _lap("si_constraints + manifest + golden check")
-    if getattr(args, "timing", False):
+    if getattr(args, "timing", False) or _tim.enabled():
         total = sum(d for _, d in _laps)
         print("\n=== board phase timing (wall s) ===")
         for label, dt in sorted(_laps, key=lambda x: -x[1]):
             print(f"  {dt:7.2f}  ({100 * dt / total:4.1f}%)  {label}")
         print(f"  {total:7.2f}  TOTAL")
+        print()
+        print(_tim.report())
     if pcb_res is not None:
         import dataclasses as _dc
 
@@ -1378,7 +1384,7 @@ def main(argv: list[str] | None = None) -> int:
     pa_sub = pa.add_subparsers(dest="part_cmd", required=True)
     padd = pa_sub.add_parser(
         "add", help="fetch an LCSC part and generate parts/<MPN>/ "
-                    "(<MPN>.py + symbol + faithful footprint + 3D)")
+                    "(part.json + symbol + faithful footprint + 3D)")
     padd.add_argument("lcsc_id", help="LCSC id, e.g. C132291")
     padd.add_argument("--name", default=None,
                       help="folder/symbol name override (default: MPN)")

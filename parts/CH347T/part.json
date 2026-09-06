@@ -1,0 +1,121 @@
+{
+  "schema": "schgen.part/1",
+  "mpn": "CH347T",
+  "safe_name": "CH347T",
+  "lcsc": "C5122332",
+  "description": "CH347T (TSSOP-20_L6.5-W4.4-P0.65-LS6.4-BL)",
+  "manufacturer": "WCH(南京沁恒)",
+  "package": "TSSOP-20_L6.5-W4.4-P0.65-LS6.4-BL",
+  "jlc_class": "Extended Part",
+  "prefix": "U",
+  "datasheet": "https://www.lcsc.com/datasheet/C5122332.pdf",
+  "product_url": "",
+  "lib_id": "CH347T:CH347T",
+  "footprint": "CH347T:CH347T",
+  "models_3d": [
+    "CH347T.wrl",
+    "CH347T.step"
+  ],
+  "pins": [
+    {
+      "num": "1",
+      "name": "RST#",
+      "etype": "passive"
+    },
+    {
+      "num": "2",
+      "name": "CTS1/GPIO6",
+      "etype": "passive"
+    },
+    {
+      "num": "3",
+      "name": "TXD1",
+      "etype": "passive"
+    },
+    {
+      "num": "4",
+      "name": "RXD1",
+      "etype": "passive"
+    },
+    {
+      "num": "5",
+      "name": "DSR0/GPIO2/SCS0/TMS",
+      "etype": "passive"
+    },
+    {
+      "num": "6",
+      "name": "CTS0/GPIO0/SCK/TCK",
+      "etype": "passive"
+    },
+    {
+      "num": "7",
+      "name": "RTS0/GPIO1/MISO/TDO",
+      "etype": "passive"
+    },
+    {
+      "num": "8",
+      "name": "TXD0/MOSI/TDI",
+      "etype": "passive"
+    },
+    {
+      "num": "9",
+      "name": "TNOW0/DTR0/GPIO5/SCS1/TRST",
+      "etype": "passive"
+    },
+    {
+      "num": "10",
+      "name": "TNOW1/DTR1",
+      "etype": "passive"
+    },
+    {
+      "num": "11",
+      "name": "RI0/GPIO3/SCL",
+      "etype": "passive"
+    },
+    {
+      "num": "12",
+      "name": "RXD0/SDA",
+      "etype": "passive"
+    },
+    {
+      "num": "13",
+      "name": "RTS1/GPIO7",
+      "etype": "passive"
+    },
+    {
+      "num": "14",
+      "name": "VCC",
+      "etype": "passive"
+    },
+    {
+      "num": "15",
+      "name": "DCD0/GPIO4/ACT",
+      "etype": "passive"
+    },
+    {
+      "num": "16",
+      "name": "UD-",
+      "etype": "passive"
+    },
+    {
+      "num": "17",
+      "name": "UD+",
+      "etype": "passive"
+    },
+    {
+      "num": "18",
+      "name": "GND",
+      "etype": "passive"
+    },
+    {
+      "num": "19",
+      "name": "XI",
+      "etype": "passive"
+    },
+    {
+      "num": "20",
+      "name": "XO",
+      "etype": "passive"
+    }
+  ]
+}

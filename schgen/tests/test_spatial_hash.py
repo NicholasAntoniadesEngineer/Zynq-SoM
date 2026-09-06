@@ -82,6 +82,7 @@ def test_place_near_first_fit_identical_to_exhaustive(monkeypatch):
         occ.add(20.0, 90.0, 18.0, 26.0, _REACHES[2])
     hashed = _Occupancy(far_ceil=10.0, max_reach=3.32)
     exhaustive = _Occupancy(far_ceil=10.0, max_reach=3.32)
+    exhaustive._cpp = None
     exhaustive.fits = exhaustive._fits_exhaustive
     _fill(hashed)
     _fill(exhaustive)
@@ -117,8 +118,12 @@ def test_reach_bound_raises_loud():
 
 
 def test_trace_kernel_selected_by_env():
-    expect = (_Occupancy._fits_traced if fp._SPATIAL_TRACE
-              else _Occupancy._fits_hashed)
+    if fp._SPATIAL_TRACE:
+        expect = _Occupancy._fits_traced
+    else:
+        expect = _Occupancy._fits_native
     assert _Occupancy.fits is expect
     src = fp.Path(fp.__file__).read_text()
-    assert "fits = _fits_traced if _SPATIAL_TRACE else _fits_hashed" in src
+    assert "fits = _fits_traced" in src
+    assert "fits = _fits_native" in src
+    assert "native occupancy fits required" in src

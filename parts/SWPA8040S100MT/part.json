@@ -1,0 +1,31 @@
+{
+  "schema": "schgen.part/1",
+  "mpn": "SWPA8040S100MT",
+  "safe_name": "SWPA8040S100MT",
+  "lcsc": "C37429",
+  "description": "SWPA8040S100MT",
+  "manufacturer": "Sunlord(顺络)",
+  "package": "IND-SMD_L8.0-W8.0_SMNR8040",
+  "jlc_class": "Extended Part",
+  "prefix": "L",
+  "datasheet": "https://www.lcsc.com/datasheet/C37429.pdf",
+  "product_url": "https://lcsc.com/product-detail/Power-Inductors_10uH-20_C37429.html",
+  "lib_id": "SWPA8040S100MT:SWPA8040S100MT",
+  "footprint": "SWPA8040S100MT:SWPA8040S100MT",
+  "models_3d": [
+    "SWPA8040S100MT.wrl",
+    "SWPA8040S100MT.step"
+  ],
+  "pins": [
+    {
+      "num": "2",
+      "name": "2",
+      "etype": "passive"
+    },
+    {
+      "num": "1",
+      "name": "1",
+      "etype": "passive"
+    }
+  ]
+}

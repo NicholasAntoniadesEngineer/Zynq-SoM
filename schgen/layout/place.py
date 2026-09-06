@@ -6,8 +6,9 @@ import os
 import sys
 from dataclasses import dataclass, field
 
+from schgen.core import native as _nat
 from schgen.core import sexpr
-from schgen.core.config import GRID
+from schgen.core.config import CHAR_W, GRID
 from schgen.core.model import Circuit, NetClass, PinRef
 from schgen.core.symbols import Library, Pin, SymbolDef, pin_page_position
 from schgen.layout import route
@@ -56,15 +57,55 @@ class PlaceError(ValueError):
 
 
 def gsnap(v: float) -> float:
+    if _nat.loaded():
+        return _nat.module().gsnap(v, U)
     return round(round(v / U) * U, 3)
 
 
 def gfloor(v: float) -> float:
+    if _nat.loaded():
+        return _nat.module().gfloor(v, U)
     return round(math.floor(v / U + 1e-6) * U, 3)
 
 
 def gceil(v: float) -> float:
+    if _nat.loaded():
+        return _nat.module().gceil(v, U)
     return round(math.ceil(v / U - 1e-6) * U, 3)
+
+
+def _farm_row_right_bound_py(ex0: float, ex1_flow: float, a3_center_x: float,
+                             titleblock_left: float, titleblock_margin: float,
+                             cap_pitch: float) -> float:
+    flow_centre = (ex0 + ex1_flow) / 2.0
+    dx = a3_center_x - flow_centre
+    local_limit = (titleblock_left - titleblock_margin) - dx
+    return local_limit - cap_pitch / 2.0
+
+
+def _conn_port_columns_py(ys: list[float], row_pitch: float,
+                          eps: float) -> list[str]:
+    cols: list[str] = []
+    prev_y = prev_col = None
+    for y in ys:
+        col = ("outer" if prev_y is not None
+               and abs(y - prev_y - row_pitch) < eps
+               and prev_col == "inner"
+               else "inner")
+        cols.append(col)
+        prev_y, prev_col = y, col
+    return cols
+
+
+def _conn_cluster_groups_py(ys: list[float], row_pitch: float,
+                            eps: float) -> list[list[int]]:
+    groups: list[list[int]] = []
+    for i, y in enumerate(ys):
+        if groups and abs(y - ys[groups[-1][-1]] - row_pitch) < eps:
+            groups[-1].append(i)
+        else:
+            groups.append([i])
+    return groups
 
 
 @dataclass
@@ -110,16 +151,40 @@ class Placement:
             [(round(p[0], 3), round(p[1], 3)) for p in pts])
 
 
-def _xform(x: float, y: float, ax: float, ay: float,
-           rot: int) -> tuple[float, float]:
+def _xform_py(x: float, y: float, ax: float, ay: float,
+              rot: int) -> tuple[float, float]:
     r = math.radians(rot % 360)
     c, s = round(math.cos(r)), round(math.sin(r))
     return (round(ax + x * c - y * s, 3), round(ay - x * s - y * c, 3))
 
 
+def _xform(x: float, y: float, ax: float, ay: float,
+           rot: int) -> tuple[float, float]:
+    if _nat.loaded():
+        got = tuple(_nat.module().sch_xform(x, y, ax, ay, rot))
+        if _nat.trace():
+            ref = _xform_py(x, y, ax, ay, rot)
+            if got != ref:
+                raise AssertionError(
+                    f"native sch_xform DIVERGENCE: cpp={got} python={ref}")
+        return got
+    return _xform_py(x, y, ax, ay, rot)
+
+
 def body_box_page(sdef: SymbolDef, ax: float, ay: float, rot: int,
                   kind: str, owner: str) -> Box:
     x0, y0, x1, y1 = sdef.body
+    if _nat.loaded():
+        got = tuple(_nat.module().body_box(x0, y0, x1, y1, ax, ay, rot))
+        if _nat.trace():
+            pts = [_xform_py(px, py, ax, ay, rot)
+                   for px in (x0, x1) for py in (y0, y1)]
+            ref = (min(p[0] for p in pts), min(p[1] for p in pts),
+                   max(p[0] for p in pts), max(p[1] for p in pts))
+            if got != ref:
+                raise AssertionError(
+                    f"native body_box DIVERGENCE: cpp={got} python={ref}")
+        return Box(*got, kind, owner)
     pts = [_xform(px, py, ax, ay, rot)
            for px in (x0, x1) for py in (y0, y1)]
     xs = [p[0] for p in pts]
@@ -136,7 +201,7 @@ def _value_anchor(sdef: SymbolDef, ax: float, ay: float,
     return (ax, ay - 3.556)
 
 
-def _pin_text_boxes(sdef: SymbolDef, part: PlacedPart) -> list[Box]:
+def _pin_text_boxes_py(sdef: SymbolDef, part: PlacedPart) -> list[Box]:
     out: list[Box] = []
     for pin in sdef.pins:
         if pin.hidden:
@@ -177,6 +242,27 @@ def _pin_text_boxes(sdef: SymbolDef, part: PlacedPart) -> list[Box]:
                                tip[0] + h / 2, root[1] - 0.2,
                                "pin_name", part.ref))
     return out
+
+
+def _pin_text_boxes(sdef: SymbolDef, part: PlacedPart) -> list[Box]:
+    if _nat.loaded():
+        pins = [(p.x, p.y, int(p.rotation), p.length, bool(p.hidden),
+                 p.number, p.name) for p in sdef.pins]
+        got = [Box(x0, y0, x1, y1, kind, part.ref)
+               for x0, y0, x1, y1, kind in _nat.module().pin_text_boxes(
+                   pins, part.x, part.y, int(part.rotation),
+                   bool(sdef.pin_numbers_hidden), bool(sdef.pin_names_hidden),
+                   CHAR_W, tm.LINE_H, tm.SIZE)]
+        if _nat.trace():
+            ref = _pin_text_boxes_py(sdef, part)
+            hit = [(b.x0, b.y0, b.x1, b.y1, b.kind, b.owner) for b in got]
+            want = [(b.x0, b.y0, b.x1, b.y1, b.kind, b.owner) for b in ref]
+            if hit != want:
+                raise AssertionError(
+                    "native pin_text_boxes DIVERGENCE: "
+                    f"cpp={hit} python={want}")
+        return got
+    return _pin_text_boxes_py(sdef, part)
 
 
 def _pin(sdef: SymbolDef, number: str) -> Pin:
@@ -270,9 +356,25 @@ class _Engine:
 
     def _dodge_value_off_nc(self, text: str, vp: tuple[float, float],
                             ax: float, ay: float) -> tuple[float, float]:
+        ncs = list(self._nc_boxes())
+        if _nat.loaded():
+            got = tuple(_nat.module().dodge_value_off_nc(
+                text, vp[0], vp[1], ax, ay, U, CHAR_W, tm.LINE_H, tm.SIZE,
+                ncs, 0.2))
+            if _nat.trace():
+                ref = self._dodge_value_off_nc_py(text, vp, ax, ay, ncs)
+                if got != ref:
+                    raise AssertionError(
+                        "native dodge_value_off_nc DIVERGENCE: "
+                        f"cpp={got} python={ref}")
+            return got
+        return self._dodge_value_off_nc_py(text, vp, ax, ay, ncs)
+
+    def _dodge_value_off_nc_py(self, text: str, vp: tuple[float, float],
+                               ax: float, ay: float, ncs) -> tuple[float, float]:
         def hits_nc(px: float, py: float) -> bool:
-            bx = tm.centered_box(text, px, py)
-            for (nx0, ny0, nx1, ny1) in self._nc_boxes():
+            bx = tm.centered_box_py(text, px, py)
+            for (nx0, ny0, nx1, ny1) in ncs:
                 if bx[0] - 0.2 < nx1 and bx[2] + 0.2 > nx0 \
                         and bx[1] - 0.2 < ny1 and bx[3] + 0.2 > ny0:
                     return True
@@ -370,6 +472,11 @@ class _Engine:
 
     def _spot_free(self, bx: tuple[float, float, float, float],
                    pad: float = 0.25) -> bool:
+        if _nat.loaded():
+            parts = [(b.x0, b.y0, b.x1, b.y1) for b in self.pl.boxes]
+            segs = list(self._plan_seg_boxes())
+            ncs = list(self._nc_boxes())
+            return _nat.module().spot_free(bx, pad, parts, segs, ncs)
         x0, y0, x1, y1 = bx
         for b in self.pl.boxes:
             if x0 - pad < b.x1 and x1 + pad > b.x0 \
@@ -385,23 +492,51 @@ class _Engine:
         return True
 
     def _extent(self) -> tuple[float, float, float, float]:
-        xs = [v for b in self.pl.boxes for v in (b.x0, b.x1)]
-        ys = [v for b in self.pl.boxes for v in (b.y0, b.y1)]
-        for paths in self.pl.plans.values():
-            for path in paths:
-                xs += [p[0] for p in path]
-                ys += [p[1] for p in path]
+        boxes = [(b.x0, b.y0, b.x1, b.y1) for b in self.pl.boxes]
+        pts = [p for paths in self.pl.plans.values() for path in paths
+               for p in path]
+        if _nat.loaded():
+            got = tuple(_nat.module().boxes_paths_extent(boxes, pts))
+            if _nat.trace():
+                ref = self._extent_py(boxes, pts)
+                if got != ref:
+                    raise AssertionError(
+                        "native boxes_paths_extent DIVERGENCE: "
+                        f"cpp={got} python={ref}")
+            return got
+        return self._extent_py(boxes, pts)
+
+    def _extent_py(self, boxes, pts) -> tuple[float, float, float, float]:
+        xs = [v for b in boxes for v in (b[0], b[2])]
+        ys = [v for b in boxes for v in (b[1], b[3])]
+        xs += [p[0] for p in pts]
+        ys += [p[1] for p in pts]
         if not xs:
             return (0.0, 0.0, 0.0, 0.0)
         return (min(xs), min(ys), max(xs), max(ys))
 
     def _band_edge(self, y0: float, y1: float, side: int,
                    default: float) -> float:
+        boxes = [(b.x0, b.y0, b.x1, b.y1) for b in self.pl.boxes]
+        segs = list(self._plan_seg_boxes())
+        if _nat.loaded():
+            got = _nat.module().band_edge(y0, y1, side, default, boxes, segs)
+            if _nat.trace():
+                ref = self._band_edge_py(y0, y1, side, default, boxes, segs)
+                if got != ref:
+                    raise AssertionError(
+                        "native band_edge DIVERGENCE: "
+                        f"cpp={got} python={ref}")
+            return got
+        return self._band_edge_py(y0, y1, side, default, boxes, segs)
+
+    def _band_edge_py(self, y0: float, y1: float, side: int, default: float,
+                      boxes, segs) -> float:
         edge = default
-        for b in self.pl.boxes:
-            if b.y0 < y1 and b.y1 > y0:
-                edge = min(edge, b.x0) if side < 0 else max(edge, b.x1)
-        for (sx0, sy0, sx1, sy1) in self._plan_seg_boxes():
+        for b in boxes:
+            if b[1] < y1 and b[3] > y0:
+                edge = min(edge, b[0]) if side < 0 else max(edge, b[2])
+        for (sx0, sy0, sx1, sy1) in segs:
             if sy0 < y1 and sy1 > y0:
                 edge = min(edge, sx0) if side < 0 else max(edge, sx1)
         return edge
@@ -1000,15 +1135,24 @@ class _Engine:
 
     def _foreign_rows_clear(self, box: tuple[float, float, float, float],
                             net: str, own_ys: set[float]) -> bool:
+        foreign = [r for r, rnet in self._rail_row_net.items()
+                   if rnet != net and r not in own_ys]
+        foreign += [r for r in self._sig_rows if r not in own_ys]
+        if _nat.loaded():
+            got = _nat.module().foreign_rows_clear(box, foreign, 1e-6)
+            if _nat.trace():
+                ref = self._foreign_rows_clear_py(box, foreign)
+                if got is not ref:
+                    raise AssertionError(
+                        "native foreign_rows_clear DIVERGENCE: "
+                        f"cpp={got} python={ref}")
+            return got
+        return self._foreign_rows_clear_py(box, foreign)
+
+    def _foreign_rows_clear_py(self, box: tuple[float, float, float, float],
+                               foreign: list[float]) -> bool:
         y0, y1 = box[1], box[3]
-        for r, rnet in self._rail_row_net.items():
-            if rnet == net or r in own_ys:
-                continue
-            if y0 - 1e-6 < r < y1 + 1e-6:
-                return False
-        for r in self._sig_rows:
-            if r in own_ys:
-                continue
+        for r in foreign:
             if y0 - 1e-6 < r < y1 + 1e-6:
                 return False
         return True
@@ -1477,11 +1621,25 @@ class _Engine:
         return None
 
     def _cell_floor(self, x0: float, x1: float) -> float:
+        boxes = [(b.x0, b.y0, b.x1, b.y1) for b in self.pl.boxes]
+        segs = list(self._plan_seg_boxes())
+        if _nat.loaded():
+            got = _nat.module().cell_floor(x0, x1, boxes, segs)
+            if _nat.trace():
+                ref = self._cell_floor_py(x0, x1, boxes, segs)
+                if got != ref:
+                    raise AssertionError(
+                        "native cell_floor DIVERGENCE: "
+                        f"cpp={got} python={ref}")
+            return got
+        return self._cell_floor_py(x0, x1, boxes, segs)
+
+    def _cell_floor_py(self, x0: float, x1: float, boxes, segs) -> float:
         floor = 0.0
-        for b in self.pl.boxes:
-            if b.x0 < x1 and b.x1 > x0:
-                floor = max(floor, b.y1)
-        for (sx0, _sy0, sx1, sy1) in self._plan_seg_boxes():
+        for b in boxes:
+            if b[0] < x1 and b[2] > x0:
+                floor = max(floor, b[3])
+        for (sx0, _sy0, sx1, sy1) in segs:
             if sx0 < x1 and sx1 > x0:
                 floor = max(floor, sy1)
         return floor
@@ -1790,17 +1948,63 @@ class _Engine:
         raise PlaceError(f"{attach_net}: no free ladder column from {start}")
 
     def _lane_x(self, sgn: int, y0: float, y1: float, start: float) -> float:
+        if _nat.loaded():
+            parts = [(b.x0, b.y0, b.x1, b.y1) for b in self.pl.boxes]
+            segs = list(self._plan_seg_boxes())
+            ncs = list(self._nc_boxes())
+            got = _nat.module().lane_x(int(sgn), y0, y1, start, U, 0.7, 0.3,
+                                       0.0, parts, segs, ncs)
+            if _nat.trace():
+                ref = self._lane_x_py(sgn, y0, y1, start)
+                if got != ref and not (got is None and ref is None):
+                    raise AssertionError(
+                        f"native lane_x DIVERGENCE: cpp={got} python={ref}")
+            if got is None:
+                raise PlaceError("no free lane found")
+            return got
+        hit = self._lane_x_py(sgn, y0, y1, start)
+        if hit is None:
+            raise PlaceError("no free lane found")
+        return hit
+
+    def _lane_x_py(self, sgn: int, y0: float, y1: float, start: float):
         x = gfloor(start) if sgn < 0 else gceil(start)
         for _ in range(120):
             band = (x - 0.7, y0 - 0.3, x + 0.7, y1 + 0.3)
             if self._spot_free(band, pad=0.0):
                 return x
             x = round(x + sgn * 2 * U, 3)
-        raise PlaceError("no free lane found")
+        return None
 
     def _escape_run_legs(self, net: str, px: float, py: float,
                          tx: float) -> list[tuple[tuple[float, float],
                                                   tuple[float, float]]]:
+        if _nat.loaded():
+            owned = [(b.x0, b.y0, b.x1, b.y1, b.owner, b.kind)
+                     for b in self.pl.boxes]
+            parts = [(b.x0, b.y0, b.x1, b.y1) for b in self.pl.boxes]
+            spot_segs = list(self._plan_seg_boxes())
+            ncs = list(self._nc_boxes())
+            skip = {net}
+            corr_segs = (list(self._plan_raw_segs(skip))
+                         + list(self._stem_segs(skip)))
+            stems = list(self._stem_segs(skip))
+            raw = _nat.module().escape_run_legs(
+                px, py, tx, U, 0.127, owned, parts, spot_segs, ncs, parts,
+                corr_segs, stems, 0.0, 0.3, 0.3)
+            got = [((a, b), (c, d)) for a, b, c, d in raw]
+            if _nat.trace():
+                ref = self._escape_run_legs_py(net, px, py, tx)
+                if got != ref:
+                    raise AssertionError(
+                        "native escape_run_legs DIVERGENCE: "
+                        f"cpp={got} python={ref}")
+            return got
+        return self._escape_run_legs_py(net, px, py, tx)
+
+    def _escape_run_legs_py(self, net: str, px: float, py: float,
+                            tx: float) -> list[tuple[tuple[float, float],
+                                                     tuple[float, float]]]:
         sgn = 1.0 if tx >= px else -1.0
         ec = 0.127
         bx0r, bx1r = min(px, tx), max(px, tx)
@@ -1864,8 +2068,35 @@ class _Engine:
         legs.append(((cur_x, py), (tx, py)))
         return legs
 
+    def _plan_raw_segs(self, skip: set[str]):
+        for net, paths in self.pl.plans.items():
+            if net in skip:
+                continue
+            for path in paths:
+                for a, bb in zip(path, path[1:], strict=False):
+                    yield (a[0], a[1], bb[0], bb[1])
+
+    def _stem_segs(self, skip: set[str]):
+        for part in self.pl.parts:
+            sdef = self.lib.get(part.lib_id)
+            for pin in sdef.pins:
+                if pin.hidden:
+                    continue
+                n = self.net_of(part.ref, pin.number)
+                if n is not None and n.name in skip:
+                    continue
+                tip = pin_page_position(pin, part.x, part.y, part.rotation)
+                dxn, dyn = route._stem_dir(pin.rotation, part.rotation)
+                root = (round(tip[0] + dxn * pin.length, 3),
+                        round(tip[1] + dyn * pin.length, 3))
+                yield (tip[0], tip[1], root[0], root[1])
+
     def _corridor_free(self, y: float, xa: float, xb: float,
                        skip: set[str]) -> bool:
+        if _nat.loaded():
+            boxes = [(b.x0, b.y0, b.x1, b.y1) for b in self.pl.boxes]
+            segs = list(self._plan_raw_segs(skip)) + list(self._stem_segs(skip))
+            return _nat.module().corridor_free(y, xa, xb, boxes, segs, 0.3)
         x0, x1 = sorted((xa, xb))
         for b in self.pl.boxes:
             if b.y0 + 1e-6 < y < b.y1 - 1e-6 and b.x0 < x1 and b.x1 > x0:
@@ -1901,6 +2132,23 @@ class _Engine:
 
     def _vband_stem_free(self, x: float, y0: float, y1: float,
                          skip: set[str]) -> bool:
+        if _nat.loaded():
+            segs = list(self._stem_segs(skip))
+            got = _nat.module().vband_stem_free(x, y0, y1, segs, 0.3)
+            if _nat.trace():
+                ref = True
+                for sx0, sy0, sx1, sy1 in segs:
+                    a, b = sorted((sx0, sx1))
+                    c, d = sorted((sy0, sy1))
+                    if (a - 0.3 <= x <= b + 0.3
+                            and c - 0.3 <= y1 and d + 0.3 >= y0):
+                        ref = False
+                        break
+                if got is not ref:
+                    raise AssertionError(
+                        "native vband_stem_free DIVERGENCE: "
+                        f"cpp={got} python={ref}")
+            return got
         for part in self.pl.parts:
             sdef = self.lib.get(part.lib_id)
             for pin in sdef.pins:
@@ -1922,6 +2170,27 @@ class _Engine:
 
     def _lane_in_dir(self, sgn: int, pt: tuple[float, float], ty: float,
                      net: str) -> float | None:
+        if _nat.loaded():
+            parts = [(b.x0, b.y0, b.x1, b.y1) for b in self.pl.boxes]
+            spot_segs = list(self._plan_seg_boxes())
+            ncs = list(self._nc_boxes())
+            corr_boxes = parts
+            corr_segs = (list(self._plan_raw_segs({net}))
+                         + list(self._stem_segs({net})))
+            got = _nat.module().lane_in_dir(
+                int(sgn), pt[0], pt[1], ty, U, 0.7, 0.3, 0.0, 0.3, 0.01,
+                parts, spot_segs, ncs, corr_boxes, corr_segs)
+            if _nat.trace():
+                ref = self._lane_in_dir_py(sgn, pt, ty, net)
+                if got != ref:
+                    raise AssertionError(
+                        "native lane_in_dir DIVERGENCE: "
+                        f"cpp={got} python={ref}")
+            return got
+        return self._lane_in_dir_py(sgn, pt, ty, net)
+
+    def _lane_in_dir_py(self, sgn: int, pt: tuple[float, float], ty: float,
+                        net: str) -> float | None:
         y0, y1 = sorted((pt[1], ty))
         x = gfloor(pt[0] + sgn * 3 * U) if sgn < 0 \
             else gceil(pt[0] + sgn * 3 * U)
@@ -1935,6 +2204,11 @@ class _Engine:
 
     def _corridor_clear_vert(self, x: float, y_pin: float, ty: float,
                              net: str) -> bool:
+        if _nat.loaded():
+            boxes = [(b.x0, b.y0, b.x1, b.y1) for b in self.pl.boxes]
+            segs = list(self._plan_raw_segs({net}))
+            return _nat.module().corridor_clear_vert(
+                x, y_pin, ty, boxes, segs, 0.2)
         y0, y1 = sorted((y_pin, ty))
         for b in self.pl.boxes:
             if b.x0 - 0.2 < x < b.x1 + 0.2 \
@@ -1964,6 +2238,10 @@ class _Engine:
         raise PlaceError(f"{net}: no free escape lane from {pt}")
 
     def _cell_free(self, x: float, y: float, net: str) -> bool:
+        if _nat.loaded():
+            boxes = [(b.x0, b.y0, b.x1, b.y1) for b in self.pl.boxes]
+            segs = list(self._plan_raw_segs({net})) + list(self._stem_segs({net}))
+            return _nat.module().cell_free_point(x, y, boxes, segs, 0.3)
         for b in self.pl.boxes:
             if b.x0 + 1e-6 < x < b.x1 - 1e-6 and b.y0 + 1e-6 < y < b.y1 - 1e-6:
                 return False
@@ -2006,6 +2284,31 @@ class _Engine:
 
     def _bfs_escape(self, pt: tuple[float, float], ty: float,
                     net: str) -> list[tuple[float, float]]:
+        if _nat.loaded():
+            ex0, ey0, ex1, ey1 = self._extent()
+            boxes = [(b.x0, b.y0, b.x1, b.y1) for b in self.pl.boxes]
+            segs = (list(self._plan_raw_segs({net}))
+                    + list(self._stem_segs({net})))
+            raw = _nat.module().bfs_escape(
+                pt[0], pt[1], ty, U, ex0, ey0, ex1, ey1, 16.0, boxes, segs,
+                0.3)
+            got = None if raw is None else [tuple(p) for p in raw]
+            if _nat.trace():
+                try:
+                    ref = self._bfs_escape_py(pt, ty, net)
+                except PlaceError:
+                    ref = None
+                if got != ref:
+                    raise AssertionError(
+                        "native bfs_escape DIVERGENCE: "
+                        f"cpp={got} python={ref}")
+            if got is None:
+                raise PlaceError(f"{net}: no free escape lane from {pt}")
+            return got
+        return self._bfs_escape_py(pt, ty, net)
+
+    def _bfs_escape_py(self, pt: tuple[float, float], ty: float,
+                       net: str) -> list[tuple[float, float]]:
         ex0, ey0, ex1, ey1 = self._extent()
         margin = 16 * U
         i0 = int(gfloor(min(ex0, pt[0]) - margin) / U)
@@ -2066,14 +2369,37 @@ class _Engine:
             for p in self.lib.get(part.lib_id).pins:
                 etype_of[(ref, p.number)] = p.etype
         pins = self.c.nets[net].pins
-        ets = {etype_of.get((pr.ref, pr.pin), "?") for pr in pins}
-        return "power_in" in ets and not (ets & _FLAG_DRIVER_ETYPES)
+        ets = [etype_of.get((pr.ref, pr.pin), "?") for pr in pins]
+        drivers = list(_FLAG_DRIVER_ETYPES)
+        if _nat.loaded():
+            got = _nat.module().needs_flag(ets, drivers)
+            if _nat.trace():
+                ref = "power_in" in ets and not (
+                    set(ets) & _FLAG_DRIVER_ETYPES)
+                if got is not ref:
+                    raise AssertionError(
+                        "native needs_flag DIVERGENCE: "
+                        f"cpp={got} python={ref}")
+            return got
+        return "power_in" in ets and not (set(ets) & _FLAG_DRIVER_ETYPES)
 
     def _farm_row_right_bound(self, ex0: float, ex1_flow: float) -> float:
-        flow_centre = (ex0 + ex1_flow) / 2.0
-        dx = A3_CENTER[0] - flow_centre
-        local_limit = (A3_TITLEBLOCK_LEFT - TITLEBLOCK_MARGIN) - dx
-        return local_limit - self.sp.cap_pitch / 2.0
+        if _nat.loaded():
+            got = _nat.module().farm_row_right_bound(
+                ex0, ex1_flow, A3_CENTER[0], A3_TITLEBLOCK_LEFT,
+                TITLEBLOCK_MARGIN, self.sp.cap_pitch)
+            if _nat.trace():
+                ref = _farm_row_right_bound_py(
+                    ex0, ex1_flow, A3_CENTER[0], A3_TITLEBLOCK_LEFT,
+                    TITLEBLOCK_MARGIN, self.sp.cap_pitch)
+                if got != ref:
+                    raise AssertionError(
+                        "native farm_row_right_bound DIVERGENCE: "
+                        f"cpp={got} python={ref}")
+            return got
+        return _farm_row_right_bound_py(
+            ex0, ex1_flow, A3_CENTER[0], A3_TITLEBLOCK_LEFT,
+            TITLEBLOCK_MARGIN, self.sp.cap_pitch)
 
     def _decoupling_cluster(self, ax: float, ay: float, body: Box) -> None:
         sp = self.sp
@@ -2084,11 +2410,26 @@ class _Engine:
         span = (n_caps - 1) * sp.cap_pitch
         if n_caps > 5:
             ex0, _, ex1_flow, ey1 = self._extent()
-            col_x = gsnap(ex0 + 4 * U)
-            farm_left = col_x
-            row_step = gceil(8 * U)
+            if _nat.loaded():
+                col_x, farm_left, row_step, cy = (
+                    _nat.module().farm_cluster_origin(
+                        ex0, ey1, U, self._n_box_bucks))
+                if _nat.trace():
+                    ref = (gsnap(ex0 + 4 * U), gsnap(ex0 + 4 * U),
+                           gceil(8 * U),
+                           gceil(ey1 + (12 if self._n_box_bucks >= 2
+                                        else 8) * U))
+                    if (col_x, farm_left, row_step, cy) != ref:
+                        raise AssertionError(
+                            "native farm_cluster_origin DIVERGENCE: "
+                            f"cpp={(col_x, farm_left, row_step, cy)} "
+                            f"python={ref}")
+            else:
+                col_x = gsnap(ex0 + 4 * U)
+                farm_left = col_x
+                row_step = gceil(8 * U)
+                cy = gceil(ey1 + (12 if self._n_box_bucks >= 2 else 8) * U)
             max_right = self._farm_row_right_bound(ex0, ex1_flow)
-            cy = gceil(ey1 + (12 if self._n_box_bucks >= 2 else 8) * U)
         else:
             col_x = min(col_x, gfloor(body.x0 - span - 4 * sp.hang_stub))
             cy = max(ay + sp.cluster_dy, gceil(body.y1 + 3 * sp.hang_stub))
@@ -2101,15 +2442,46 @@ class _Engine:
         prev_rail_w: float | None = None
         for rail, caps in self.cluster.items():
             if prev_rail_w is not None:
-                col_x = gceil(col_x - sp.cap_pitch
-                              + max(sp.cap_pitch,
-                                    prev_rail_w / 2
-                                    + tm.text_wh(rail)[0] / 2 + 1.27))
+                rail_w = tm.text_wh(rail)[0]
+                if _nat.loaded():
+                    nxt = _nat.module().next_rail_col(
+                        col_x, sp.cap_pitch, prev_rail_w, rail_w, U, 1.27)
+                    if _nat.trace():
+                        ref = gceil(col_x - sp.cap_pitch
+                                    + max(sp.cap_pitch,
+                                          prev_rail_w / 2 + rail_w / 2 + 1.27))
+                        if nxt != ref:
+                            raise AssertionError(
+                                "native next_rail_col DIVERGENCE: "
+                                f"cpp={nxt} python={ref}")
+                    col_x = nxt
+                else:
+                    col_x = gceil(col_x - sp.cap_pitch
+                                  + max(sp.cap_pitch,
+                                        prev_rail_w / 2
+                                        + rail_w / 2 + 1.27))
             prev_rail_w = tm.text_wh(rail)[0]
             runs: list[tuple[float, list[float]]] = []
             cur: list[float] = []
             for ref in caps:
-                if col_x > max_right and cur:
+                if _nat.loaded():
+                    wrapped, nxt_x, nxt_y = _nat.module().farm_wrap_advance(
+                        col_x, max_right, bool(cur), farm_left, cy, row_step,
+                        U)
+                    if _nat.trace():
+                        ref_wrap = col_x > max_right and bool(cur)
+                        ref_x = farm_left if ref_wrap else col_x
+                        ref_y = gceil(cy + row_step) if ref_wrap else cy
+                        if (wrapped, nxt_x, nxt_y) != (ref_wrap, ref_x, ref_y):
+                            raise AssertionError(
+                                "native farm_wrap_advance DIVERGENCE: "
+                                f"cpp={(wrapped, nxt_x, nxt_y)} "
+                                f"python={(ref_wrap, ref_x, ref_y)}")
+                    if wrapped:
+                        runs.append((cy, cur))
+                        cur = []
+                        col_x, cy = nxt_x, nxt_y
+                elif col_x > max_right and cur:
                     runs.append((cy, cur))
                     cur = []
                     col_x = farm_left
@@ -2160,14 +2532,35 @@ class _Engine:
         if not rails:
             return
         ex0, _, _, ey1 = self._extent()
-        fy = gceil(ey1 + 6 * U)
-        fx = gsnap(ex0 + 4 * U)
+        if _nat.loaded():
+            fx, fy = _nat.module().flags_row_origin(ex0, ey1, U)
+            if _nat.trace():
+                ref = (gsnap(ex0 + 4 * U), gceil(ey1 + 6 * U))
+                if (fx, fy) != ref:
+                    raise AssertionError(
+                        "native flags_row_origin DIVERGENCE: "
+                        f"cpp={(fx, fy)} python={ref}")
+        else:
+            fy = gceil(ey1 + 6 * U)
+            fx = gsnap(ex0 + 4 * U)
         prev_w = None
         for net in rails:
             w = tm.text_wh(net.name)[0]
             if prev_w is not None:
-                fx = gceil(fx + max(self.sp.flag_pitch,
-                                    prev_w / 2 + w / 2 + 2.54))
+                if _nat.loaded():
+                    nxt = _nat.module().next_flag_x(
+                        fx, self.sp.flag_pitch, prev_w, w, U, 2.54)
+                    if _nat.trace():
+                        ref = gceil(fx + max(self.sp.flag_pitch,
+                                             prev_w / 2 + w / 2 + 2.54))
+                        if nxt != ref:
+                            raise AssertionError(
+                                "native next_flag_x DIVERGENCE: "
+                                f"cpp={nxt} python={ref}")
+                    fx = nxt
+                else:
+                    fx = gceil(fx + max(self.sp.flag_pitch,
+                                        prev_w / 2 + w / 2 + 2.54))
             if net.net_class == NetClass.GROUND:
                 self.power(net.name, fx, fy)
                 self.pl.plan(net.name, (fx, fy), (fx, fy - 2.54))
@@ -2265,6 +2658,15 @@ class _Engine:
         ax, ay = 0.0, 0.0
 
         def out(sgn: int, mag: float) -> float:
+            if _nat.loaded():
+                got = _nat.module().conn_signed_ceil(sgn, mag, U)
+                if _nat.trace():
+                    ref = sgn * gceil(mag)
+                    if got != ref:
+                        raise AssertionError(
+                            "native conn_signed_ceil DIVERGENCE: "
+                            f"cpp={got} python={ref}")
+                return got
             return sgn * gceil(mag)
 
         body = body_box_page(sdef, ax, ay, 0, "body", jref)
@@ -2298,15 +2700,18 @@ class _Engine:
                     rails.setdefault(net.name, []).append((py, px))
 
             lx_inner = sgn * (5.08 + self.CONN_RUN)
-            cols: list[str] = []
-            prev_y = prev_col = None
-            for y, _, _ in ports:
-                col = ("outer" if prev_y is not None
-                       and abs(y - prev_y - self.CONN_ROW) < 1e-6
-                       and prev_col == "inner"
-                       else "inner")
-                cols.append(col)
-                prev_y, prev_col = y, col
+            port_ys = [y for y, _, _ in ports]
+            if _nat.loaded():
+                cols = list(_nat.module().conn_port_columns(
+                    port_ys, self.CONN_ROW, 1e-6))
+                if _nat.trace():
+                    ref = _conn_port_columns_py(port_ys, self.CONN_ROW, 1e-6)
+                    if list(cols) != ref:
+                        raise AssertionError(
+                            "native conn_port_columns DIVERGENCE: "
+                            f"cpp={list(cols)} python={ref}")
+            else:
+                cols = _conn_port_columns_py(port_ys, self.CONN_ROW, 1e-6)
             inner_len = max((self._glabel_len(n)
                              for (y, x, n), cl in zip(ports, cols, strict=False)
                              if cl == "inner"), default=0.0)
@@ -2338,14 +2743,19 @@ class _Engine:
 
             def cluster_taps(taps: list[tuple[float, float]]
                              ) -> list[list[tuple[float, float]]]:
-                groups: list[list[tuple[float, float]]] = []
-                for t in taps:
-                    if groups and abs(t[0] - groups[-1][-1][0]
-                                      - self.CONN_ROW) < 1e-6:
-                        groups[-1].append(t)
-                    else:
-                        groups.append([t])
-                return groups
+                ys = [t[0] for t in taps]
+                if _nat.loaded():
+                    idxs = [list(g) for g in _nat.module().conn_cluster_groups(
+                        ys, self.CONN_ROW, 1e-6)]
+                    if _nat.trace():
+                        ref = _conn_cluster_groups_py(ys, self.CONN_ROW, 1e-6)
+                        if idxs != ref:
+                            raise AssertionError(
+                                "native conn_cluster_groups DIVERGENCE: "
+                                f"cpp={idxs} python={ref}")
+                else:
+                    idxs = _conn_cluster_groups_py(ys, self.CONN_ROW, 1e-6)
+                return [[taps[i] for i in g] for g in idxs]
 
             def place_power_cluster(net: str,
                                     taps: list[tuple[float, float]],
@@ -2388,8 +2798,19 @@ class _Engine:
                 for cl in cluster_taps(taps):
                     place_power_cluster(net, cl)
 
-            inner_limit = max(label_edge, abs(mid_x) + strip_reach)
-            x_g = out(sgn, inner_limit + 5.08)
+            if _nat.loaded():
+                x_g = _nat.module().conn_gnd_x(
+                    sgn, label_edge, mid_x, strip_reach, 5.08, U)
+                if _nat.trace():
+                    inner_limit = max(label_edge, abs(mid_x) + strip_reach)
+                    ref = out(sgn, inner_limit + 5.08)
+                    if x_g != ref:
+                        raise AssertionError(
+                            "native conn_gnd_x DIVERGENCE: "
+                            f"cpp={x_g} python={ref}")
+            else:
+                inner_limit = max(label_edge, abs(mid_x) + strip_reach)
+                x_g = out(sgn, inner_limit + 5.08)
             for net, taps in gnd_items:
                 trunk(net, taps, x_g)
                 y_bot = taps[-1][0]
@@ -2398,8 +2819,19 @@ class _Engine:
 
         rail_nets = sorted(n.name for n in c.nets.values()
                            if n.net_class in (NetClass.POWER, NetClass.GROUND))
-        flag_y = gceil(self._extent()[3] + 8 * U)
-        fx = gsnap(-sp.flag_pitch * (len(rail_nets) - 1) / 2)
+        if _nat.loaded() and rail_nets:
+            flag_y = _nat.module().conn_flag_y(self._extent()[3], U)
+            fx = _nat.module().conn_flag_x0(sp.flag_pitch, len(rail_nets), U)
+            if _nat.trace():
+                ref_y = gceil(self._extent()[3] + 8 * U)
+                ref_x = gsnap(-sp.flag_pitch * (len(rail_nets) - 1) / 2)
+                if (flag_y, fx) != (ref_y, ref_x):
+                    raise AssertionError(
+                        "native conn_flag DIVERGENCE: "
+                        f"cpp={(flag_y, fx)} python={(ref_y, ref_x)}")
+        else:
+            flag_y = gceil(self._extent()[3] + 8 * U)
+            fx = gsnap(-sp.flag_pitch * (len(rail_nets) - 1) / 2)
         for net in rail_nets:
             if c.nets[net].net_class is NetClass.GROUND:
                 self.power(net, fx, flag_y)

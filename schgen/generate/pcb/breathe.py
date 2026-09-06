@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from math import hypot, pi
 from pathlib import Path
 
+from schgen.core import native as _nat
 from schgen.core import quantize as _q
 from schgen.verify.fanout_gate import (
     _is_cluster_passive,
@@ -50,18 +51,47 @@ class BreatheStats:
     reverted_sheets: tuple[str, ...] = ()
 
 
-def _eff_box(bbox: tuple[float, float, float, float], rot: float,
-             px: float, py: float) -> tuple[float, float, float, float]:
+def _eff_box_py(bbox: tuple[float, float, float, float], rot: float,
+                px: float, py: float) -> tuple[float, float, float, float]:
     ex0, ey0, ex1, ey1 = turn_box(bbox, rot)
     return (px + ex0, py + ey0, px + ex1, py + ey1)
 
 
-def _halo(b: tuple[float, float, float, float], m: float
-          ) -> tuple[float, float, float, float]:
+def _eff_box(bbox: tuple[float, float, float, float], rot: float,
+             px: float, py: float) -> tuple[float, float, float, float]:
+    turned = turn_box(bbox, rot)
+    if not _nat.loaded():
+        raise RuntimeError("native offset_rect required")
+    got = tuple(_nat.module().offset_rect(turned, px, py))
+    if _nat.trace():
+        ref = _eff_box_py(bbox, rot, px, py)
+        if got != ref:
+            raise AssertionError(
+                "native offset_rect DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
+
+
+def _halo_py(b: tuple[float, float, float, float], m: float
+             ) -> tuple[float, float, float, float]:
     return (b[0] - m, b[1] - m, b[2] + m, b[3] + m)
 
 
-class _Grid:
+def _halo(b: tuple[float, float, float, float], m: float
+          ) -> tuple[float, float, float, float]:
+    if not _nat.loaded():
+        raise RuntimeError("native grow_rect required")
+    got = tuple(_nat.module().grow_rect(b, m))
+    if _nat.trace():
+        ref = _halo_py(b, m)
+        if got != ref:
+            raise AssertionError(
+                "native grow_rect DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
+
+
+class _GridPy:
     __slots__ = ("nx", "ny", "cells")
 
     def __init__(self, board_w: float, board_h: float) -> None:
@@ -104,6 +134,37 @@ class _Grid:
                 if self.cells[base + c]:
                     return False
         return True
+
+
+class _Grid:
+    __slots__ = ("_cpp", "_py")
+
+    def __init__(self, board_w: float, board_h: float) -> None:
+        if not _nat.loaded():
+            raise RuntimeError("native BreatheGrid required")
+        self._cpp = _nat.module().BreatheGrid(
+            board_w, board_h, CELL, ORIGIN_X, ORIGIN_Y)
+        self._py = _GridPy(board_w, board_h) if _nat.trace() else None
+
+    def stamp(self, box: tuple[float, float, float, float], val: int = 1) -> None:
+        if self._cpp is not None:
+            self._cpp.stamp(box, val)
+            if self._py is not None:
+                self._py.stamp(box, val)
+            return
+        self._py.stamp(box, val)
+
+    def free(self, box: tuple[float, float, float, float]) -> bool:
+        if self._cpp is not None:
+            got = self._cpp.free(box)
+            if self._py is not None:
+                ref = self._py.free(box)
+                if got is not ref:
+                    raise AssertionError(
+                        "native BreatheGrid.free DIVERGENCE: "
+                        f"cpp={got} python={ref}")
+            return got
+        return self._py.free(box)
 
 
 def _is_fixed(ref: str, sheet: str, footprint: str, *,

@@ -1,0 +1,36 @@
+{
+  "schema": "schgen.part/1",
+  "mpn": "AO3400A",
+  "safe_name": "AO3400A",
+  "lcsc": "C20917",
+  "description": "AO3400A",
+  "manufacturer": "AOS",
+  "package": "SOT-23-3_L2.9-W1.3-P1.90-LS2.4-BR",
+  "jlc_class": "Basic Part",
+  "prefix": "Q",
+  "datasheet": "https://www.lcsc.com/datasheet/C20917.pdf",
+  "product_url": "https://lcsc.com/product-detail/MOSFET_AOS_AO3400A_AO3400A_C20917.html",
+  "lib_id": "AO3400A:AO3400A",
+  "footprint": "AO3400A:AO3400A",
+  "models_3d": [
+    "AO3400A.wrl",
+    "AO3400A.step"
+  ],
+  "pins": [
+    {
+      "num": "3",
+      "name": "D",
+      "etype": "passive"
+    },
+    {
+      "num": "1",
+      "name": "G",
+      "etype": "passive"
+    },
+    {
+      "num": "2",
+      "name": "S",
+      "etype": "passive"
+    }
+  ]
+}
