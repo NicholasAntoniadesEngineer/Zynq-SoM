@@ -1542,6 +1542,11 @@ def test_pcb_scan_and_place_helpers(geom):
                  ) == (False, 10.0, 12.0)
     assert geom.conn_flag_y(10.0, U) == gceil(10.0 + 8 * U)
     assert geom.conn_flag_x0(7.62, 3, U) == gsnap(-7.62 * 2 / 2)
+    assert tuple(geom.rail_decouple_origin(0.0, 10.0, U)) == (
+        gsnap(0.0 + 8 * U), gceil(10.0 + 8 * U))
+    posed = _from_tagged(geom.apply_refdes_pose(prop, 0.4, -0.2, True, 0.8))
+    assert posed[3][1] == 0.4
+    assert posed[3][2] == -0.2
 
 
 def test_timing_span_records():

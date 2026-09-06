@@ -60,4 +60,10 @@ double conn_flag_x0(double flag_pitch, int rail_count, double unit) {
                  unit);
 }
 
+std::pair<double, double> rail_decouple_origin(double extent_x0,
+                                               double extent_y1, double unit) {
+    return {gsnap(extent_x0 + 8.0 * unit, unit),
+            gceil(extent_y1 + 8.0 * unit, unit)};
+}
+
 }  // namespace schgen

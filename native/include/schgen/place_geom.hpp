@@ -29,4 +29,7 @@ double conn_flag_y(double extent_y1, double unit);
 
 double conn_flag_x0(double flag_pitch, int rail_count, double unit);
 
+std::pair<double, double> rail_decouple_origin(double extent_x0,
+                                               double extent_y1, double unit);
+
 }  // namespace schgen

@@ -574,6 +574,23 @@ Sexpr set_font_size(Sexpr prop, double size) {
     return prop;
 }
 
+Sexpr apply_refdes_pose(Sexpr prop, double lx, double ly, bool resize,
+                        double size) {
+    if (!std::holds_alternative<SexprList>(prop.v)) {
+        throw std::runtime_error("apply_refdes_pose: property list required");
+    }
+    SexprList& node = std::get<SexprList>(prop.v);
+    SexprList* at = find_tagged_child_mut(node, "at");
+    if (at != nullptr && at->size() >= 3) {
+        (*at)[1] = Sexpr{lx};
+        (*at)[2] = Sexpr{ly};
+    }
+    if (resize) {
+        return set_font_size(std::move(prop), size);
+    }
+    return prop;
+}
+
 std::pair<Sexpr, int> hide_undersom_bottom_refs(
     Sexpr doc, double x0, double y0, double x1, double y1) {
     if (!std::holds_alternative<SexprList>(doc.v)) {

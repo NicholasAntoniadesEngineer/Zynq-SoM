@@ -660,6 +660,31 @@ def _set_font_size(prop: list, size: float) -> None:
     _set_font_size_py(prop, size)
 
 
+def _apply_refdes_pose(prop: list, lat: list, lx: float, ly: float,
+                       size: float, new_size: float) -> None:
+    if _nat.loaded():
+        got = _from_tagged(_nat.module().apply_refdes_pose(
+            prop, lx, ly, new_size != size, new_size))
+        if _nat.trace():
+            ref = copy.deepcopy(prop)
+            rlat = _sub(ref, "at")
+            if rlat is not None:
+                rlat[1] = lx
+                rlat[2] = ly
+            if new_size != size:
+                _set_font_size_py(ref, new_size)
+            if sexpr.dumps(got) != sexpr.dumps(ref):
+                raise AssertionError(
+                    "native apply_refdes_pose DIVERGENCE: "
+                    f"cpp={sexpr.dumps(got)} python={sexpr.dumps(ref)}")
+        prop[:] = got
+        return
+    lat[1] = lx
+    lat[2] = ly
+    if new_size != size:
+        _set_font_size(prop, new_size)
+
+
 def _hide_undersom_bottom_refs_py(model, doc: list) -> int:
     kp = model.som_keepout
     if kp is None:
@@ -830,10 +855,7 @@ def _declutter_refdes(model, uid, doc: list) -> int:
                         f"python={(ref_move, ref_lx, ref_ly, ref_size, ref_box)}")
             plc.add(add_box)
             if moved_hit:
-                lat[1] = lx
-                lat[2] = ly
-                if new_size != size:
-                    _set_font_size(c, new_size)
+                _apply_refdes_pose(c, lat, lx, ly, size, new_size)
                 moved += 1
             continue
         moved_hit, lx, ly, new_size, add_box = _place_refdes_py(
@@ -841,9 +863,6 @@ def _declutter_refdes(model, uid, doc: list) -> int:
             (ex0, ey0, ex1, ey1))
         plc.add(add_box)
         if moved_hit:
-            lat[1] = lx
-            lat[2] = ly
-            if new_size != size:
-                _set_font_size(c, new_size)
+            _apply_refdes_pose(c, lat, lx, ly, size, new_size)
             moved += 1
     return moved

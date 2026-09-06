@@ -79,6 +79,9 @@ double next_rail_col(double col_x, double cap_pitch, double prev_rail_w,
 
 Sexpr set_font_size(Sexpr prop, double size);
 
+Sexpr apply_refdes_pose(Sexpr prop, double lx, double ly, bool resize,
+                        double size);
+
 std::pair<Sexpr, int> hide_undersom_bottom_refs(
     Sexpr doc, double x0, double y0, double x1, double y1);
 

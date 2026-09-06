@@ -1355,6 +1355,11 @@ NB_MODULE(_geom, m) {
               return sexpr_to_tagged(
                   schgen::set_font_size(sexpr_from_py(node), size));
           });
+    m.def("apply_refdes_pose",
+          [](nb::handle node, double lx, double ly, bool resize, double size) {
+              return sexpr_to_tagged(schgen::apply_refdes_pose(
+                  sexpr_from_py(node), lx, ly, resize, size));
+          });
     m.def("hide_undersom_bottom_refs",
           [](nb::handle doc, double x0, double y0, double x1, double y1) {
               auto hit = schgen::hide_undersom_bottom_refs(
@@ -1378,6 +1383,12 @@ NB_MODULE(_geom, m) {
           });
     m.def("conn_flag_y", &schgen::conn_flag_y);
     m.def("conn_flag_x0", &schgen::conn_flag_x0);
+    m.def("rail_decouple_origin",
+          [](double extent_x0, double extent_y1, double unit) {
+              auto hit = schgen::rail_decouple_origin(extent_x0, extent_y1,
+                                                      unit);
+              return std::make_tuple(hit.first, hit.second);
+          });
     m.def("turn_point",
           [](double x, double y, double deg) {
               auto p = schgen::turn_point(x, y, deg);

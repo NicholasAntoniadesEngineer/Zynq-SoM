@@ -2606,8 +2606,17 @@ class _Engine:
         if not self.cluster:
             return
         ex0, _, _, ey1 = self._extent()
-        x = gsnap(ex0 + 8 * U)
-        y0 = gceil(ey1 + 8 * U)
+        if _nat.loaded():
+            x, y0 = _nat.module().rail_decouple_origin(ex0, ey1, U)
+            if _nat.trace():
+                ref = (gsnap(ex0 + 8 * U), gceil(ey1 + 8 * U))
+                if (x, y0) != ref:
+                    raise AssertionError(
+                        "native rail_decouple_origin DIVERGENCE: "
+                        f"cpp={(x, y0)} python={ref}")
+        else:
+            x = gsnap(ex0 + 8 * U)
+            y0 = gceil(ey1 + 8 * U)
         for rail in sorted(self.cluster):
             for ref in self.cluster[rail]:
                 self.power(rail, x, y0)
