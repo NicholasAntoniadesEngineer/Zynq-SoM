@@ -238,4 +238,61 @@ std::optional<std::string> affinity_j_from_target(const std::string& target) {
     return std::nullopt;
 }
 
+std::vector<std::pair<std::string, std::vector<std::pair<std::string, int>>>>
+j_affinity(
+    const std::vector<std::string>& sheets,
+    const std::vector<std::tuple<std::string, bool, std::string,
+                                 std::vector<std::string>>>& bindings) {
+    std::vector<std::pair<std::string, std::vector<std::pair<std::string, int>>>>
+        out;
+    out.reserve(sheets.size());
+    for (const auto& name : sheets) {
+        out.emplace_back(name, std::vector<std::pair<std::string, int>>{});
+    }
+    auto counts_of = [&](const std::string& sheet)
+        -> std::vector<std::pair<std::string, int>>& {
+        for (auto& row : out) {
+            if (row.first == sheet) {
+                return row.second;
+            }
+        }
+        out.emplace_back(sheet, std::vector<std::pair<std::string, int>>{});
+        return out.back().second;
+    };
+    auto bump = [](std::vector<std::pair<std::string, int>>& counts,
+                   const std::string& jack) {
+        for (auto& row : counts) {
+            if (row.first == jack) {
+                row.second += 1;
+                return;
+            }
+        }
+        counts.emplace_back(jack, 1);
+    };
+    for (const auto& binding : bindings) {
+        const std::string& sheet = std::get<0>(binding);
+        const bool deferred = std::get<1>(binding);
+        const std::string& expect = std::get<2>(binding);
+        const auto& targets = std::get<3>(binding);
+        auto& counts = counts_of(sheet);
+        if (deferred) {
+            if (expect.empty()) {
+                throw std::runtime_error(
+                    "j_affinity: deferred expect required");
+            }
+            for (const auto& jack : affinity_j_from_expect(expect)) {
+                bump(counts, jack);
+            }
+            continue;
+        }
+        for (const auto& target : targets) {
+            const auto jack = affinity_j_from_target(target);
+            if (jack.has_value()) {
+                bump(counts, *jack);
+            }
+        }
+    }
+    return out;
+}
+
 }  // namespace schgen

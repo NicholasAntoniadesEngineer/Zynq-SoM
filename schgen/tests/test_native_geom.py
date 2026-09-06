@@ -2078,6 +2078,54 @@ def test_j_edge_and_affinity_tokens_match_python(geom, monkeypatch):
             _affinity_j_from_target_py(text))
 
 
+def test_j_affinity_nets_conn_and_obstacles_match_python(geom, monkeypatch):
+    from types import SimpleNamespace
+
+    from schgen.generate.floorplan import (
+        _j_affinity,
+        _j_affinity_py,
+        _nets_by_sheet,
+        _nets_by_sheet_py,
+    )
+    from schgen.generate.pcb.escape import _net_rule
+
+    monkeypatch.setattr(fp._nat, "trace", lambda: True)
+    sheets = [SimpleNamespace(name="usb"), SimpleNamespace(name="hdmi")]
+    bindings = [
+        SimpleNamespace(sheet="usb", status="deferred",
+                        ptype=SimpleNamespace(expect="use j1 and j3"),
+                        targets=[]),
+        SimpleNamespace(sheet="hdmi", status="bound",
+                        ptype=SimpleNamespace(expect=""),
+                        targets=["sheet som_j2:HDMI", "other"]),
+        SimpleNamespace(sheet="extra", status="bound",
+                        ptype=SimpleNamespace(expect=""),
+                        targets=["SoM east (J3)"]),
+    ]
+    link = SimpleNamespace(bindings=bindings)
+    assert _j_affinity(sheets, link) == _j_affinity_py(sheets, link)
+    net_pts = {
+        "N_B": [("R1", "hdmi", ()), ("R2", "usb", ())],
+        "N_A": [("R3", "usb", ()), ("R4", "usb", ())],
+        "N_C": [("R5", "extra", ())],
+    }
+    assert _nets_by_sheet(net_pts) == _nets_by_sheet_py(net_pts)
+    assert geom.pack_conn_weight([1.0, 2.0], 0.5) == 1.0 + 2.0 + 3.0 * 0.5
+    assert geom.pack_conn_weight([], 0.0) == 0.0
+    assert geom.obstacle_bucket(0.0, 0.0, 10.0, 10.0, 11.0, 0.0, 12.0, 1.0,
+                                True, True, True) == 0
+    assert geom.obstacle_bucket(0.0, 0.0, 10.0, 10.0, 1.0, 1.0, 2.0, 2.0,
+                                True, True, False) == 1
+    assert geom.obstacle_bucket(0.0, 0.0, 10.0, 10.0, 1.0, 1.0, 2.0, 2.0,
+                                True, False, False) == 2
+    assert geom.obstacle_bucket(0.0, 0.0, 10.0, 10.0, 1.0, 1.0, 2.0, 2.0,
+                                False, False, False) == 3
+    assert tuple(geom.obstacle_hole(0.0, 2.0, 4.0, 6.0)) == (2.0, 4.0, 2.0)
+    model = SimpleNamespace(netclass_of={"+VIN": "POWER", "GND": "GROUND"})
+    assert _net_rule(model, "+VIN") == 0.2
+    assert _net_rule(model, "GND") == 0.15
+
+
 def test_place_geom_wrappers_match_python(geom, monkeypatch):
     from schgen.layout import place as pl
     monkeypatch.setattr(pl._nat, "trace", lambda: True)

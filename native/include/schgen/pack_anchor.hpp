@@ -56,5 +56,10 @@ std::optional<std::string> dominant_j(
     const std::vector<std::pair<std::string, int>>& affinity);
 std::vector<std::string> affinity_j_from_expect(const std::string& expect);
 std::optional<std::string> affinity_j_from_target(const std::string& target);
+std::vector<std::pair<std::string, std::vector<std::pair<std::string, int>>>>
+j_affinity(
+    const std::vector<std::string>& sheets,
+    const std::vector<std::tuple<std::string, bool, std::string,
+                                 std::vector<std::string>>>& bindings);
 
 }  // namespace schgen

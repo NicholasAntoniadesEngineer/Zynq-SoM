@@ -266,7 +266,17 @@ class _Obstacles:
 
 
 def _net_rule(model, net: str) -> float:
-    return 0.2 if model.netclass_of.get(net) == "POWER" else 0.15
+    if not _nat.loaded():
+        raise RuntimeError("native net_clearance_rule required")
+    power = model.netclass_of.get(net) == "POWER"
+    got = float(_nat.module().net_clearance_rule(power))
+    if _nat.trace():
+        ref = 0.2 if power else 0.15
+        if got != ref:
+            raise AssertionError(
+                "native net_clearance_rule DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
 
 
 def _collect_obstacles(model, inst, pad_boxes_fn, region: tuple[float, float,
@@ -299,17 +309,42 @@ def _collect_obstacles(model, inst, pad_boxes_fn, region: tuple[float, float,
             label = f"{oi.ref}({oi.sheet}).{pad}"
             rule = _net_rule(model, net)
             lb = _local_box(bb)
-            if lb[2] < u0 or lb[0] > u1 or lb[3] < v0 or lb[1] > v1:
+            if not _nat.loaded():
+                raise RuntimeError("native obstacle_bucket required")
+            bucket = int(_nat.module().obstacle_bucket(
+                u0, v0, u1, v1, lb[0], lb[1], lb[2], lb[3],
+                oi.ref == inst.ref, net == "GND", oi.side == "top"))
+            if _nat.trace():
+                if lb[2] < u0 or lb[0] > u1 or lb[3] < v0 or lb[1] > v1:
+                    ref = 0
+                elif oi.ref == inst.ref and net == "GND":
+                    ref = 1
+                elif oi.side == "top" or oi.ref == inst.ref:
+                    ref = 2
+                else:
+                    ref = 3
+                if bucket != ref:
+                    raise AssertionError(
+                        "native obstacle_bucket DIVERGENCE: "
+                        f"cpp={bucket} python={ref}")
+            if bucket == 0:
                 continue
-            if oi.ref == inst.ref and net == "GND":
+            if bucket == 1:
                 obs.samenet_pads.append((*lb, rule, label))
-            elif oi.side == "top" or oi.ref == inst.ref:
+            elif bucket == 2:
                 obs.f_cu.append((*lb, rule, label))
             else:
                 obs.b_cu.append((*lb, rule, label))
             if pad in thru:
-                cu, cv = (lb[0] + lb[2]) / 2, (lb[1] + lb[3]) / 2
-                r = max(lb[2] - lb[0], lb[3] - lb[1]) / 2
+                cu, cv, r = _nat.module().obstacle_hole(
+                    lb[0], lb[1], lb[2], lb[3])
+                if _nat.trace():
+                    ref_h = ((lb[0] + lb[2]) / 2, (lb[1] + lb[3]) / 2,
+                             max(lb[2] - lb[0], lb[3] - lb[1]) / 2)
+                    if (cu, cv, r) != ref_h:
+                        raise AssertionError(
+                            "native obstacle_hole DIVERGENCE: "
+                            f"cpp={(cu, cv, r)} python={ref_h}")
                 obs.holes.append((cu, cv, r, label))
     return obs
 

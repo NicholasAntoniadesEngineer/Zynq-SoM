@@ -182,6 +182,18 @@ std::vector<int> pack_interior_order(const std::vector<std::string>& names,
                                      const std::vector<int>& tiers,
                                      const std::vector<double>& conn,
                                      const std::vector<double>& area);
+double pack_conn_weight(const std::vector<double>& aff_weights,
+                        double som_pull);
+std::vector<std::pair<std::string, std::vector<std::string>>> nets_by_sheet(
+    const std::vector<std::pair<std::string, std::vector<std::string>>>&
+        net_sheets);
+int obstacle_bucket(double region_u0, double region_v0, double region_u1,
+                    double region_v1, double box_u0, double box_v0,
+                    double box_u1, double box_v1, bool same_ref, bool net_gnd,
+                    bool side_top);
+std::tuple<double, double, double> obstacle_hole(double box_u0, double box_v0,
+                                                 double box_u1, double box_v1);
+double net_clearance_rule(bool power);
 std::vector<std::pair<double, double>> cout_column_centers(
     const Box4& inductor_out, double pad, double cout_gap,
     double template_clear, const std::vector<std::pair<double, double>>& halves);

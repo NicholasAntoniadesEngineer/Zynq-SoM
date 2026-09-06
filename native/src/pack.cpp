@@ -872,6 +872,70 @@ std::vector<int> pack_interior_order(const std::vector<std::string>& names,
     return order;
 }
 
+double pack_conn_weight(const std::vector<double>& aff_weights,
+                        double som_pull) {
+    double total = 0.0;
+    for (double weight : aff_weights) {
+        total += weight;
+    }
+    return total + 3.0 * som_pull;
+}
+
+std::vector<std::pair<std::string, std::vector<std::string>>> nets_by_sheet(
+    const std::vector<std::pair<std::string, std::vector<std::string>>>&
+        net_sheets) {
+    std::vector<std::pair<std::string, std::vector<std::string>>> ordered =
+        net_sheets;
+    std::sort(ordered.begin(), ordered.end(),
+              [](const auto& left, const auto& right) {
+                  return left.first < right.first;
+              });
+    std::vector<std::pair<std::string, std::vector<std::string>>> out;
+    std::unordered_map<std::string, std::size_t> index;
+    for (auto& row : ordered) {
+        std::vector<std::string> sheets = row.second;
+        std::sort(sheets.begin(), sheets.end());
+        sheets.erase(std::unique(sheets.begin(), sheets.end()), sheets.end());
+        for (const auto& sheet : sheets) {
+            const auto found = index.find(sheet);
+            if (found == index.end()) {
+                index.emplace(sheet, out.size());
+                out.emplace_back(sheet, std::vector<std::string>{row.first});
+            } else {
+                out[found->second].second.push_back(row.first);
+            }
+        }
+    }
+    return out;
+}
+
+int obstacle_bucket(double region_u0, double region_v0, double region_u1,
+                    double region_v1, double box_u0, double box_v0,
+                    double box_u1, double box_v1, bool same_ref, bool net_gnd,
+                    bool side_top) {
+    if (box_u1 < region_u0 || box_u0 > region_u1 || box_v1 < region_v0
+        || box_v0 > region_v1) {
+        return 0;
+    }
+    if (same_ref && net_gnd) {
+        return 1;
+    }
+    if (side_top || same_ref) {
+        return 2;
+    }
+    return 3;
+}
+
+std::tuple<double, double, double> obstacle_hole(double box_u0, double box_v0,
+                                                 double box_u1, double box_v1) {
+    return {(box_u0 + box_u1) / 2.0, (box_v0 + box_v1) / 2.0,
+            std::max(box_u1 - box_u0, box_v1 - box_v0) / 2.0};
+}
+
+double net_clearance_rule(bool power) {
+    return power ? 0.2 : 0.15;
+}
+
 std::vector<std::pair<double, double>> cout_column_centers(
     const Box4& inductor_out, double pad, double cout_gap,
     double template_clear, const std::vector<std::pair<double, double>>& halves) {

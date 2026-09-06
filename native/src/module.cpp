@@ -910,6 +910,11 @@ NB_MODULE(_geom, m) {
                   rows, board_w, board_h, edge_margin, overflow_tol);
           });
     m.def("pack_interior_order", &schgen::pack_interior_order);
+    m.def("pack_conn_weight", &schgen::pack_conn_weight);
+    m.def("nets_by_sheet", &schgen::nets_by_sheet);
+    m.def("obstacle_bucket", &schgen::obstacle_bucket);
+    m.def("obstacle_hole", &schgen::obstacle_hole);
+    m.def("net_clearance_rule", &schgen::net_clearance_rule);
     m.def("next_flag_x", &schgen::next_flag_x);
     m.def("flags_row_origin", &schgen::flags_row_origin);
     m.def("conn_signed_ceil", &schgen::conn_signed_ceil);
@@ -1536,6 +1541,7 @@ NB_MODULE(_geom, m) {
           [](const std::string& target) -> std::optional<std::string> {
               return schgen::affinity_j_from_target(target);
           });
+    m.def("j_affinity", &schgen::j_affinity);
     m.def("pack_anchor",
           [](bool face_override, const char* face, double som_x, double som_y,
              double som_w, double som_h, double som_halo, double block_w,

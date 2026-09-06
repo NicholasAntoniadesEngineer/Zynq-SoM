@@ -733,19 +733,38 @@ def _affinity_j_from_target(target: str) -> str | None:
     return got
 
 
-def _j_affinity(sheets, link_result) -> dict[str, dict[str, int]]:
+def _j_affinity_py(sheets, link_result) -> dict[str, dict[str, int]]:
     aff: dict[str, dict[str, int]] = {sc.name: {} for sc in sheets}
     for b in link_result.bindings:
         d = aff.setdefault(b.sheet, {})
         if b.status == "deferred" and b.ptype.expect:
-            for name in _affinity_j_from_expect(b.ptype.expect):
+            for name in _affinity_j_from_expect_py(b.ptype.expect):
                 d[name] = d.get(name, 0) + 1
             continue
         for t in b.targets:
-            name = _affinity_j_from_target(t)
+            name = _affinity_j_from_target_py(t)
             if name is not None:
                 d[name] = d.get(name, 0) + 1
     return aff
+
+
+def _j_affinity(sheets, link_result) -> dict[str, dict[str, int]]:
+    if not _nat.loaded():
+        raise RuntimeError("native j_affinity required")
+    rows = []
+    for b in link_result.bindings:
+        deferred = b.status == "deferred" and bool(b.ptype.expect)
+        rows.append((b.sheet, deferred,
+                     b.ptype.expect if deferred else "", list(b.targets)))
+    got = {name: {jack: int(n) for jack, n in pairs}
+           for name, pairs in _nat.module().j_affinity(
+               [sc.name for sc in sheets], rows)}
+    if _nat.trace():
+        ref = _j_affinity_py(sheets, link_result)
+        if got != ref:
+            raise AssertionError(
+                f"native j_affinity DIVERGENCE: cpp={got} python={ref}")
+    return got
 
 
 def _dominant_j_py(aff: dict[str, int]) -> str | None:
@@ -2657,12 +2676,26 @@ def _cross_net_cost(pts, via_mm, bot_sel, sides) -> float:
     return got
 
 
-def _nets_by_sheet(net_pts: dict) -> dict[str, tuple[str, ...]]:
+def _nets_by_sheet_py(net_pts: dict) -> dict[str, tuple[str, ...]]:
     out: dict[str, list[str]] = {}
     for nname in sorted(net_pts):
         for s in sorted({s for _r, s, _p in net_pts[nname]}):
             out.setdefault(s, []).append(nname)
     return {s: tuple(ns) for s, ns in out.items()}
+
+
+def _nets_by_sheet(net_pts: dict) -> dict[str, tuple[str, ...]]:
+    if not _nat.loaded():
+        raise RuntimeError("native nets_by_sheet required")
+    rows = [(nname, [s for _r, s, _p in pts]) for nname, pts in net_pts.items()]
+    got = {sheet: tuple(nets)
+           for sheet, nets in _nat.module().nets_by_sheet(rows)}
+    if _nat.trace():
+        ref = _nets_by_sheet_py(net_pts)
+        if got != ref:
+            raise AssertionError(
+                f"native nets_by_sheet DIVERGENCE: cpp={got} python={ref}")
+    return got
 
 
 _VIA_SPLIT: list = [0, 0, ""]
@@ -2889,8 +2922,19 @@ def _attempt_pack(plan: Plan, interior: list[Block],
     som_cy = plan.som_y + plan.som.h / 2
 
     def _conn(b: Block) -> float:
-        return (sum(affinity.get(b.name, {}).values())
-                + 3.0 * som_pull.get(b.name, 0.0))
+        if not _nat.loaded():
+            raise RuntimeError("native pack_conn_weight required")
+        weights = list(affinity.get(b.name, {}).values())
+        got = float(_nat.module().pack_conn_weight(
+            weights, som_pull.get(b.name, 0.0)))
+        if _nat.trace():
+            ref = (sum(affinity.get(b.name, {}).values())
+                   + 3.0 * som_pull.get(b.name, 0.0))
+            if got != ref:
+                raise AssertionError(
+                    "native pack_conn_weight DIVERGENCE: "
+                    f"cpp={got} python={ref}")
+        return got
 
     def _anchor_py(b: Block) -> tuple[float, float]:
         _mfa = _project_spec().module_face_anchors
