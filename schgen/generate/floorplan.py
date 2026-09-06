@@ -2364,6 +2364,33 @@ _SEAT_FIELDS = ("x", "y", "w", "h", "area", "shape_idx", "side",
 _RESEAT_EVICT_BUDGET = 3
 
 
+def _block_area(w: float, h: float) -> float:
+    if _nat.loaded():
+        got = _nat.module().block_area(w, h)
+        if _nat.trace():
+            ref = round(w * h, 1)
+            if got != ref:
+                raise AssertionError(
+                    "native block_area DIVERGENCE: "
+                    f"cpp={got} python={ref}")
+        return got
+    return round(w * h, 1)
+
+
+def _box_center(x: float, y: float, w: float, h: float
+                ) -> tuple[float, float]:
+    if _nat.loaded():
+        got = tuple(_nat.module().box_center(x, y, w, h))
+        if _nat.trace():
+            ref = (x + w / 2, y + h / 2)
+            if got != ref:
+                raise AssertionError(
+                    "native box_center DIVERGENCE: "
+                    f"cpp={got} python={ref}")
+        return got
+    return (x + w / 2, y + h / 2)
+
+
 def _attempt_pack(plan: Plan, interior: list[Block],
                   edge_of: dict[str, str],
                   zbox: dict[str, tuple[float, float]],
@@ -2379,7 +2406,7 @@ def _attempt_pack(plan: Plan, interior: list[Block],
     plan.spilled = []
     for b in plan.edge_blocks:
         b.w, b.h = zbox[b.name]
-        b.area = round(b.w * b.h, 1)
+        b.area = _block_area(b.w, b.h)
     _pack_edges(plan, edge_of)
 
     for b in plan.edge_blocks:
@@ -2700,7 +2727,7 @@ def _attempt_pack(plan: Plan, interior: list[Block],
         chosen_comps[b.name] = cc
         b.fanout_reach = rch
         b.fanout_inset = ins
-        b.area = round(b.w * b.h, 1)
+        b.area = _block_area(b.w, b.h)
         return True
 
     def _blk_snap(bb: Block) -> tuple:
@@ -2746,7 +2773,7 @@ def _attempt_pack(plan: Plan, interior: list[Block],
             ok = _seat_shape(b, ax, ay, e)
             if ok:
                 _occ_put(b)
-                centers[b.name] = (b.x + b.w / 2, b.y + b.h / 2)
+                centers[b.name] = _box_center(b.x, b.y, b.w, b.h)
                 eax, eay = _anchor(e)
                 epos = occ.place_near(eax, eay, e.w, e.h, e.fanout_reach,
                                       e.fanout_inset, _side_mask(e.side),
@@ -2757,7 +2784,7 @@ def _attempt_pack(plan: Plan, interior: list[Block],
                 else:
                     e.x, e.y = epos[0], epos[1]
                     _occ_put(e)
-                    centers[e.name] = (e.x + e.w / 2, e.y + e.h / 2)
+                    centers[e.name] = _box_center(e.x, e.y, e.w, e.h)
             if ok:
                 evict_budget[0] -= 1
                 _fb.record("interior_reseat_retry")
@@ -2769,11 +2796,11 @@ def _attempt_pack(plan: Plan, interior: list[Block],
 
     for b in order:
         b.w, b.h = zbox[b.name]
-        b.area = round(b.w * b.h, 1)
+        b.area = _block_area(b.w, b.h)
         ax, ay = _anchor(b)
         if _seat_shape(b, ax, ay):
             _occ_put(b)
-            centers[b.name] = (b.x + b.w / 2, b.y + b.h / 2)
+            centers[b.name] = _box_center(b.x, b.y, b.w, b.h)
         elif not _reseat_retry(b, ax, ay):
             return False
         placed.append(b)
@@ -2818,7 +2845,7 @@ def _attempt_pack(plan: Plan, interior: list[Block],
             b.x, b.y = nx, ny
             occ.add(b.x, b.y, b.w, b.h, b.fanout_reach, b.fanout_inset,
                     _side_mask(b.side), _bcomps(b))
-            centers[b.name] = (b.x + b.w / 2, b.y + b.h / 2)
+            centers[b.name] = _box_center(b.x, b.y, b.w, b.h)
 
     def _refine_passes_py() -> None:
         for _pass in range(16):
@@ -2840,7 +2867,7 @@ def _attempt_pack(plan: Plan, interior: list[Block],
                 b.x, b.y = nx, ny
                 occ.add(b.x, b.y, b.w, b.h, b.fanout_reach, b.fanout_inset,
                         _side_mask(b.side), _bcomps(b))
-                centers[b.name] = (b.x + b.w / 2, b.y + b.h / 2)
+                centers[b.name] = _box_center(b.x, b.y, b.w, b.h)
             if not moved:
                 break
 

@@ -135,7 +135,16 @@ def _build_buck_stage(ic_bref: str, members: dict[str, str],
     parts: list[_Part] = []
     solved = False
     for scale in range(0, 20):
-        pad = scale * _RELAX_STEP
+        if _nat.loaded():
+            pad = _nat.module().relax_pad(scale, _RELAX_STEP)
+            if _nat.trace():
+                ref = scale * _RELAX_STEP
+                if pad != ref:
+                    raise AssertionError(
+                        "native relax_pad DIVERGENCE: "
+                        f"cpp={pad} python={ref}")
+        else:
+            pad = scale * _RELAX_STEP
         parts = _lay_buck(ic_bref, ic_mod, resolvable, hf_caps, bulk_caps,
                           out_caps, inductor, fb_members, boot_cap, vcc_cap,
                           bias_r, bias_c, rt_r, pins, pad)
@@ -209,7 +218,16 @@ def _lay_buck(ic_bref: str, ic_mod: Path, resolvable: dict[str, Path],
     parts: list[_Part] = [ic]
 
     m = 0.2
-    clr = TEMPLATE_CLEAR + m + pad
+    if _nat.loaded():
+        clr = _nat.module().template_clear_pad(TEMPLATE_CLEAR, m, pad)
+        if _nat.trace():
+            ref = TEMPLATE_CLEAR + m + pad
+            if clr != ref:
+                raise AssertionError(
+                    "native template_clear_pad DIVERGENCE: "
+                    f"cpp={clr} python={ref}")
+    else:
+        clr = TEMPLATE_CLEAR + m + pad
     vin1, pgnd1 = pins["vin1"], pins["pgnd1"]
     vin2, pgnd2 = pins["vin2"], pins["pgnd2"]
 

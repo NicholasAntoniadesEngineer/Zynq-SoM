@@ -1564,6 +1564,14 @@ def test_pcb_scan_and_place_helpers(geom):
     assert geom.nearest_named([("b", 2.0), ("a", 1.0), ("c", 1.5)]) == (
         "a", 1.0)
     assert geom.nearest_named([]) is None
+    assert geom.block_area(10.0, 8.0) == round(10.0 * 8.0, 1)
+    assert tuple(geom.box_center(2.0, 4.0, 6.0, 8.0)) == (5.0, 8.0)
+    assert geom.port_label_x(1.27, 10.16, 1.0) == round(1.27 + 10.16, 3)
+    assert geom.port_label_x(1.27, 10.16, -1.0) == round(1.27 - 10.16, 3)
+    assert list(geom.buck_cin_cols(20.0, 5.08, 2.54, 3, U)) == [
+        gfloor(20.0 - 5.08 + i * -2.54) for i in range(3)]
+    assert geom.template_clear_pad(0.2, 0.2, 0.5) == 0.9
+    assert geom.relax_pad(3, 0.25) == 0.75
     top, bot = geom.collect_doc_silk_gfx(pcb)
     assert [tuple(b) for b in top] or [tuple(b) for b in bot] or True
 

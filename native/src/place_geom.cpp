@@ -1,9 +1,11 @@
 #include "schgen/place_geom.hpp"
 
+#include "schgen/occupancy.hpp"
 #include "schgen/quantize.hpp"
 
 #include <algorithm>
 #include <cmath>
+#include <cstddef>
 #include <stdexcept>
 
 namespace schgen {
@@ -86,6 +88,44 @@ double farm_run_ry(double run_cy, double drop) {
 
 double farm_run_mid(double first, double last, double unit) {
     return gsnap((first + last) / 2.0, unit);
+}
+
+double block_area(double w, double h) {
+    return py_round(w * h, 1);
+}
+
+std::pair<double, double> box_center(double x, double y, double w, double h) {
+    return {x + w / 2.0, y + h / 2.0};
+}
+
+double port_label_x(double pin_x, double run, double sign) {
+    return py_round(pin_x + sign * run, 3);
+}
+
+std::vector<double> buck_cin_cols(double pv_x, double cluster_dx,
+                                  double cap_pitch, int n, double unit) {
+    if (n < 0) {
+        throw std::runtime_error("buck_cin_cols: n required");
+    }
+    std::vector<double> out;
+    out.reserve(static_cast<std::size_t>(n));
+    for (int i = 0; i < n; ++i) {
+        out.push_back(gfloor(pv_x - cluster_dx
+                                 + static_cast<double>(i) * -cap_pitch,
+                             unit));
+    }
+    return out;
+}
+
+double template_clear_pad(double clear, double margin, double pad) {
+    return clear + margin + pad;
+}
+
+double relax_pad(int scale, double step) {
+    if (scale < 0) {
+        throw std::runtime_error("relax_pad: scale required");
+    }
+    return static_cast<double>(scale) * step;
 }
 
 }  // namespace schgen

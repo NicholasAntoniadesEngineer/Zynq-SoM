@@ -74,6 +74,19 @@ def gceil(v: float) -> float:
     return round(math.ceil(v / U - 1e-6) * U, 3)
 
 
+def _port_label_x(pin_x: float, run: float, sign: float) -> float:
+    if _nat.loaded():
+        got = _nat.module().port_label_x(pin_x, run, sign)
+        if _nat.trace():
+            ref = round(pin_x + sign * run, 3)
+            if got != ref:
+                raise AssertionError(
+                    "native port_label_x DIVERGENCE: "
+                    f"cpp={got} python={ref}")
+        return got
+    return round(pin_x + sign * run, 3)
+
+
 def _farm_row_right_bound_py(ex0: float, ex1_flow: float, a3_center_x: float,
                              titleblock_left: float, titleblock_margin: float,
                              cap_pitch: float) -> float:
@@ -3162,7 +3175,7 @@ class _Engine:
                 continue
             if n.net_class is NetClass.PORT:
                 pe = pins[p.number]
-                lx = round(pe[0] + sp.port_run, 3)
+                lx = _port_label_x(pe[0], sp.port_run, 1.0)
                 self.pl.plan(n.name, pe, (lx, pe[1]))
                 shape = {"input": "input", "output": "output"}.get(
                     p.etype, "bidirectional")
@@ -3186,7 +3199,7 @@ class _Engine:
 
     def _box_right_pin_islet(self, name: str, pt: tuple[float, float]) -> None:
         sp = self.sp
-        rx = round(pt[0] + sp.port_run, 3)
+        rx = _port_label_x(pt[0], sp.port_run, 1.0)
         for _k in range(8):
             lb = tm.llabel_box(name, rx, pt[1], 0)
             if self._spot_free(lb) and self._corridor_free(
@@ -3201,7 +3214,7 @@ class _Engine:
     def _box_left_pin_islet(self, name: str, pt: tuple[float, float],
                             body: Box) -> None:
         sp = self.sp
-        lx = round(pt[0] - sp.port_run, 3)
+        lx = _port_label_x(pt[0], sp.port_run, -1.0)
         for _k in range(6):
             lb = tm.llabel_box(name, lx, pt[1], 180)
             if self._spot_free(lb) and self._corridor_free(
@@ -3333,8 +3346,19 @@ class _Engine:
         strap_taps = [(round(pv[0] - 2 * U * (k + 1), 3), spt)
                       for k, spt in enumerate(straps)]
         cin = in_caps.pop(in_rail, [])
-        cols = [gfloor(pv[0] - sp.cluster_dx + i * -sp.cap_pitch)
-                for i in range(len(cin))]
+        if _nat.loaded():
+            cols = list(_nat.module().buck_cin_cols(
+                pv[0], sp.cluster_dx, sp.cap_pitch, len(cin), U))
+            if _nat.trace():
+                ref = [gfloor(pv[0] - sp.cluster_dx + i * -sp.cap_pitch)
+                       for i in range(len(cin))]
+                if list(cols) != ref:
+                    raise AssertionError(
+                        "native buck_cin_cols DIVERGENCE: "
+                        f"cpp={list(cols)} python={ref}")
+        else:
+            cols = [gfloor(pv[0] - sp.cluster_dx + i * -sp.cap_pitch)
+                    for i in range(len(cin))]
         uvlo_col = None
         uvlo_gnd = []
         if p_en_uvlo is not None:

@@ -1413,6 +1413,16 @@ NB_MODULE(_geom, m) {
     m.def("farm_lift_cy", &schgen::farm_lift_cy);
     m.def("farm_run_ry", &schgen::farm_run_ry);
     m.def("farm_run_mid", &schgen::farm_run_mid);
+    m.def("block_area", &schgen::block_area);
+    m.def("box_center",
+          [](double x, double y, double w, double h) {
+              auto hit = schgen::box_center(x, y, w, h);
+              return std::make_tuple(hit.first, hit.second);
+          });
+    m.def("port_label_x", &schgen::port_label_x);
+    m.def("buck_cin_cols", &schgen::buck_cin_cols);
+    m.def("template_clear_pad", &schgen::template_clear_pad);
+    m.def("relax_pad", &schgen::relax_pad);
     m.def("turn_point",
           [](double x, double y, double deg) {
               auto p = schgen::turn_point(x, y, deg);

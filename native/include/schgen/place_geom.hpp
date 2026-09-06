@@ -1,6 +1,7 @@
 #pragma once
 
 #include <utility>
+#include <vector>
 
 namespace schgen {
 
@@ -43,5 +44,18 @@ double farm_lift_cy(double cy, double floor, double hang_stub, double unit);
 double farm_run_ry(double run_cy, double drop);
 
 double farm_run_mid(double first, double last, double unit);
+
+double block_area(double w, double h);
+
+std::pair<double, double> box_center(double x, double y, double w, double h);
+
+double port_label_x(double pin_x, double run, double sign);
+
+std::vector<double> buck_cin_cols(double pv_x, double cluster_dx,
+                                  double cap_pitch, int n, double unit);
+
+double template_clear_pad(double clear, double margin, double pad);
+
+double relax_pad(int scale, double step);
 
 }  // namespace schgen
