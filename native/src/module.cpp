@@ -24,6 +24,7 @@
 #include "schgen/pack_edges.hpp"
 #include "schgen/pack_refine.hpp"
 #include "schgen/pcb_scan.hpp"
+#include "schgen/place_geom.hpp"
 #include "schgen/place_search.hpp"
 #include "schgen/quantize.hpp"
 #include "schgen/route.hpp"
@@ -351,6 +352,114 @@ NB_MODULE(_geom, m) {
               return std::make_tuple(hit->x0, hit->y0, hit->x1, hit->y1);
           });
     m.def("channel_demand_mm", &schgen::channel_demand_mm);
+    m.def("channel_gap_mm",
+          [](bool near_max_adjacent, int cross_airwire_count, double clear,
+             int channel_min_nets, double channel_floor_mm,
+             double channel_per_net_mm) {
+              return schgen::channel_gap_mm(
+                  near_max_adjacent, cross_airwire_count, clear,
+                  channel_min_nets, channel_floor_mm, channel_per_net_mm);
+          });
+    m.def("legalize_build_seps",
+          [](const std::vector<std::string>& names,
+             const std::vector<BoxTup>& seed_rects,
+             const std::vector<std::string>& fixed_names,
+             const std::vector<BoxTup>& fixed_rects,
+             const std::vector<std::tuple<std::string, std::string, int>>&
+                 demand_rows,
+             const std::vector<std::pair<std::string, std::string>>&
+                 near_max_pairs,
+             double clear, int channel_min_nets, double channel_floor_mm,
+             double channel_per_net_mm) {
+              auto seps = schgen::legalize_build_seps(
+                  names, as_boxes(seed_rects), fixed_names,
+                  as_boxes(fixed_rects), demand_rows, near_max_pairs, clear,
+                  channel_min_nets, channel_floor_mm, channel_per_net_mm);
+              std::vector<std::tuple<std::string, std::string, std::string,
+                                     double, std::string, bool>>
+                  out;
+              out.reserve(seps.size());
+              for (const auto& sep : seps) {
+                  out.emplace_back(sep.axis, sep.lo, sep.hi, sep.gap,
+                                   sep.basis, sep.flippable);
+              }
+              return out;
+          });
+    m.def("rects_overlap_any",
+          [](const std::vector<BoxTup>& probes,
+             const std::vector<BoxTup>& obstacles, double eps) {
+              return schgen::rects_overlap_any(as_boxes(probes),
+                                               as_boxes(obstacles), eps);
+          });
+    m.def("cross_edge_fanout_hold",
+          [](const std::vector<std::tuple<
+                 double, double, double, double, BoxTup, BoxTup, std::string>>&
+                 blocks,
+             double clear) {
+              std::vector<schgen::EdgeFanoutBlock> rows;
+              rows.reserve(blocks.size());
+              for (const auto& block : blocks) {
+                  const std::string& edge = std::get<6>(block);
+                  if (edge.empty()) {
+                      throw std::runtime_error(
+                          "_geom.cross_edge_fanout_hold: edge required");
+                  }
+                  rows.push_back(schgen::EdgeFanoutBlock{
+                      std::get<0>(block), std::get<1>(block),
+                      std::get<2>(block), std::get<3>(block),
+                      as_halo(std::get<4>(block)), as_halo(std::get<5>(block)),
+                      edge[0]});
+              }
+              return schgen::cross_edge_fanout_hold(rows, clear);
+          });
+    m.def("edge_run_margin_ok",
+          [](const char* edge, double x, double y, double w, double h,
+             double board_w, double board_h, double edge_margin,
+             double overflow_tol) {
+              if (edge == nullptr || edge[0] == '\0') {
+                  throw std::runtime_error(
+                      "_geom.edge_run_margin_ok: edge required");
+              }
+              return schgen::edge_run_margin_ok(
+                  edge[0], x, y, w, h, board_w, board_h, edge_margin,
+                  overflow_tol);
+          });
+    m.def("edge_runs_margin_ok",
+          [](const std::vector<
+                 std::tuple<std::string, double, double, double, double>>&
+                 blocks,
+             double board_w, double board_h, double edge_margin,
+             double overflow_tol) {
+              std::vector<std::tuple<char, double, double, double, double>>
+                  rows;
+              rows.reserve(blocks.size());
+              for (const auto& block : blocks) {
+                  const std::string& edge = std::get<0>(block);
+                  if (edge.empty()) {
+                      throw std::runtime_error(
+                          "_geom.edge_runs_margin_ok: edge required");
+                  }
+                  rows.emplace_back(edge[0], std::get<1>(block),
+                                    std::get<2>(block), std::get<3>(block),
+                                    std::get<4>(block));
+              }
+              return schgen::edge_runs_margin_ok(
+                  rows, board_w, board_h, edge_margin, overflow_tol);
+          });
+    m.def("pack_interior_order", &schgen::pack_interior_order);
+    m.def("next_flag_x", &schgen::next_flag_x);
+    m.def("flags_row_origin", &schgen::flags_row_origin);
+    m.def("conn_signed_ceil", &schgen::conn_signed_ceil);
+    m.def("conn_gnd_x", &schgen::conn_gnd_x);
+    m.def("farm_wrap_advance",
+          [](double col_x, double max_right, bool has_cur, double farm_left,
+             double cy, double row_step, double unit) {
+              auto hit = schgen::farm_wrap_advance(
+                  col_x, max_right, has_cur, farm_left, cy, row_step, unit);
+              return std::make_tuple(hit.wrapped, hit.col_x, hit.cy);
+          });
+    m.def("conn_flag_y", &schgen::conn_flag_y);
+    m.def("conn_flag_x0", &schgen::conn_flag_x0);
     m.def("mst_manhattan",
           [](const std::vector<PtTup>& pts) {
               auto edges = schgen::mst_manhattan(as_pts(pts));

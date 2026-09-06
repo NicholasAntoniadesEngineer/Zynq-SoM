@@ -44,6 +44,31 @@ std::optional<std::pair<double, double>> predicted_centroid(
 
 double channel_demand_mm(int n_airwires, int min_nets, double floor_mm,
                          double per_net_mm);
+std::pair<double, std::string> channel_gap_mm(
+    bool near_max_adjacent, int cross_airwire_count, double clear,
+    int channel_min_nets, double channel_floor_mm, double channel_per_net_mm);
+
+struct BuiltSep {
+    std::string axis;
+    std::string lo;
+    std::string hi;
+    double gap = 0.0;
+    std::string basis;
+    bool flippable = true;
+};
+
+std::vector<BuiltSep> legalize_build_seps(
+    const std::vector<std::string>& names,
+    const std::vector<Box4>& seed_rects,
+    const std::vector<std::string>& fixed_names,
+    const std::vector<Box4>& fixed_rects,
+    const std::vector<std::tuple<std::string, std::string, int>>& demand_rows,
+    const std::vector<std::pair<std::string, std::string>>& near_max_pairs,
+    double clear, int channel_min_nets, double channel_floor_mm,
+    double channel_per_net_mm);
+
+bool rects_overlap_any(const std::vector<Box4>& probes,
+                       const std::vector<Box4>& obstacles, double eps);
 std::vector<std::pair<int, int>> mst_manhattan(
     const std::vector<std::pair<double, double>>& pts);
 double weighted_median(const std::vector<std::pair<double, double>>& pulls);

@@ -4,6 +4,7 @@
 #include <cmath>
 #include <cstddef>
 #include <limits>
+#include <numeric>
 #include <set>
 #include <stdexcept>
 #include <tuple>
@@ -832,6 +833,34 @@ bool any_boxes_overlap(const std::vector<Box4>& boxes, double halo) {
         }
     }
     return false;
+}
+
+std::vector<int> pack_interior_order(const std::vector<std::string>& names,
+                                     const std::vector<int>& tiers,
+                                     const std::vector<double>& conn,
+                                     const std::vector<double>& area) {
+    if (names.size() != tiers.size() || names.size() != conn.size()
+        || names.size() != area.size()) {
+        throw std::runtime_error(
+            "pack_interior_order: names/tiers/conn/area required same length");
+    }
+    std::vector<int> order(static_cast<int>(names.size()));
+    std::iota(order.begin(), order.end(), 0);
+    std::sort(order.begin(), order.end(), [&](int left, int right) {
+        const std::size_t i = static_cast<std::size_t>(left);
+        const std::size_t j = static_cast<std::size_t>(right);
+        if (tiers[i] != tiers[j]) {
+            return tiers[i] < tiers[j];
+        }
+        if (conn[i] != conn[j]) {
+            return conn[i] > conn[j];
+        }
+        if (area[i] != area[j]) {
+            return area[i] > area[j];
+        }
+        return names[i] < names[j];
+    });
+    return order;
 }
 
 std::vector<std::pair<double, double>> cout_column_centers(

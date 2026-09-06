@@ -34,7 +34,7 @@ nanobind_add_module(_geom src/module.cpp src/occupancy.cpp src/seat.cpp
                     src/quantize.cpp src/turn.cpp src/pack.cpp
                     src/pack_anchor.cpp src/place_search.cpp src/cc.cpp
                     src/embed_fp.cpp src/pack_edges.cpp src/pcb_scan.cpp
-                    src/pack_refine.cpp)
+                    src/pack_refine.cpp src/place_geom.cpp)
 target_include_directories(_geom PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/include")
 target_compile_options(_geom PRIVATE -Wall -Wextra -Wpedantic -Werror)
 set_source_files_properties(src/turn.cpp src/pack_anchor.cpp
@@ -51,7 +51,7 @@ add_executable(schgen src/main.cpp src/occupancy.cpp src/seat.cpp
                src/quantize.cpp src/turn.cpp src/pack.cpp
                src/pack_anchor.cpp src/place_search.cpp src/cc.cpp
                src/embed_fp.cpp src/pack_edges.cpp src/pcb_scan.cpp
-               src/pack_refine.cpp)
+               src/pack_refine.cpp src/place_geom.cpp)
 target_include_directories(schgen PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/include")
 target_compile_options(schgen PRIVATE -Wall -Wextra -Wpedantic -Werror)
 set_target_properties(schgen PROPERTIES

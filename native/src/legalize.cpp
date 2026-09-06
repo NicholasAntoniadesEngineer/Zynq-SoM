@@ -260,6 +260,120 @@ double channel_demand_mm(int n_airwires, int min_nets, double floor_mm,
     return floor_mm + per_net_mm * static_cast<double>(n_airwires);
 }
 
+std::pair<double, std::string> channel_gap_mm(
+    bool near_max_adjacent, int cross_airwire_count, double clear,
+    int channel_min_nets, double channel_floor_mm, double channel_per_net_mm) {
+    if (channel_min_nets <= 0) {
+        throw std::runtime_error("channel_gap_mm: channel_min_nets required");
+    }
+    if (near_max_adjacent) {
+        return {clear, "near_max-adjacency(terminus)"};
+    }
+    const double channel = channel_demand_mm(
+        cross_airwire_count, channel_min_nets, channel_floor_mm,
+        channel_per_net_mm);
+    if (channel > clear) {
+        return {channel,
+                "D13-channel(" + std::to_string(cross_airwire_count)
+                    + " nets)"};
+    }
+    return {clear, "CLEAR"};
+}
+
+namespace {
+
+std::string pair_key(const std::string& a, const std::string& b) {
+    if (a <= b) {
+        return a + '\x1f' + b;
+    }
+    return b + '\x1f' + a;
+}
+
+}  // namespace
+
+std::vector<BuiltSep> legalize_build_seps(
+    const std::vector<std::string>& names,
+    const std::vector<Box4>& seed_rects,
+    const std::vector<std::string>& fixed_names,
+    const std::vector<Box4>& fixed_rects,
+    const std::vector<std::tuple<std::string, std::string, int>>& demand_rows,
+    const std::vector<std::pair<std::string, std::string>>& near_max_pairs,
+    double clear, int channel_min_nets, double channel_floor_mm,
+    double channel_per_net_mm) {
+    if (names.size() != seed_rects.size()) {
+        throw std::runtime_error(
+            "legalize_build_seps: names and seed_rects required same length");
+    }
+    if (fixed_names.size() != fixed_rects.size()) {
+        throw std::runtime_error(
+            "legalize_build_seps: fixed_names and fixed_rects required same "
+            "length");
+    }
+    std::unordered_map<std::string, int> demand_of;
+    for (const auto& row : demand_rows) {
+        demand_of[pair_key(std::get<0>(row), std::get<1>(row))] =
+            std::get<2>(row);
+    }
+    std::unordered_set<std::string> near_of;
+    for (const auto& pair : near_max_pairs) {
+        near_of.insert(pair_key(pair.first, pair.second));
+    }
+    std::vector<std::size_t> fixed_order(fixed_names.size());
+    for (std::size_t i = 0; i < fixed_order.size(); ++i) {
+        fixed_order[i] = i;
+    }
+    std::sort(fixed_order.begin(), fixed_order.end(),
+              [&](std::size_t a, std::size_t b) {
+                  return fixed_names[a] < fixed_names[b];
+              });
+    auto gap_of = [&](const std::string& a, const std::string& b) {
+        const std::string key = pair_key(a, b);
+        const auto near_it = near_of.find(key);
+        const auto demand_it = demand_of.find(key);
+        const int count = demand_it == demand_of.end() ? 0 : demand_it->second;
+        return channel_gap_mm(near_it != near_of.end(), count, clear,
+                              channel_min_nets, channel_floor_mm,
+                              channel_per_net_mm);
+    };
+    std::vector<BuiltSep> seps;
+    for (std::size_t i = 0; i < names.size(); ++i) {
+        for (std::size_t j = i + 1; j < names.size(); ++j) {
+            const PairAxis axis = pair_axis(seed_rects[i], seed_rects[j]);
+            const auto gap = gap_of(names[i], names[j]);
+            const std::string& lo = axis.a_first ? names[i] : names[j];
+            const std::string& hi = axis.a_first ? names[j] : names[i];
+            seps.push_back(BuiltSep{axis.axis_x ? "x" : "y", lo, hi, gap.first,
+                                    gap.second, true});
+        }
+        for (std::size_t fi : fixed_order) {
+            const PairAxis axis = pair_axis(seed_rects[i], fixed_rects[fi]);
+            const auto gap = gap_of(names[i], fixed_names[fi]);
+            const std::string tagged = "#" + fixed_names[fi];
+            const std::string lo = axis.a_first ? names[i] : tagged;
+            const std::string hi = axis.a_first ? tagged : names[i];
+            seps.push_back(BuiltSep{axis.axis_x ? "x" : "y", lo, hi, gap.first,
+                                    gap.second, true});
+        }
+    }
+    return seps;
+}
+
+bool rects_overlap_any(const std::vector<Box4>& probes,
+                       const std::vector<Box4>& obstacles, double eps) {
+    for (const Box4& probe : probes) {
+        for (const Box4& obstacle : obstacles) {
+            if (std::min(probe.x1, obstacle.x1) - std::max(probe.x0, obstacle.x0)
+                    > eps
+                && std::min(probe.y1, obstacle.y1)
+                           - std::max(probe.y0, obstacle.y0)
+                       > eps) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
 std::vector<std::pair<int, int>> mst_manhattan(
     const std::vector<std::pair<double, double>>& pts) {
     const int n = static_cast<int>(pts.size());

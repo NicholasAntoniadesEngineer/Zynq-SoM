@@ -172,6 +172,68 @@ bool boxes_separated(double ax, double ay, double aw, double ah,
         || ay + ah + gy <= by || by + bh + gy <= ay;
 }
 
+bool cross_edge_fanout_hold(const std::vector<EdgeFanoutBlock>& blocks,
+                            double clear) {
+    for (std::size_t i = 0; i < blocks.size(); ++i) {
+        const EdgeFanoutBlock& a = blocks[i];
+        if (a.edge != 'N' && a.edge != 'E' && a.edge != 'S' && a.edge != 'W') {
+            throw std::runtime_error(
+                "cross_edge_fanout_hold: edge must be N/E/S/W");
+        }
+        for (std::size_t j = i + 1; j < blocks.size(); ++j) {
+            const EdgeFanoutBlock& b = blocks[j];
+            if (b.edge != 'N' && b.edge != 'E' && b.edge != 'S'
+                && b.edge != 'W') {
+                throw std::runtime_error(
+                    "cross_edge_fanout_hold: edge must be N/E/S/W");
+            }
+            if (a.edge == b.edge) {
+                continue;
+            }
+            const double gap_x = std::max(
+                clear, fanout_sep(a.reach, a.inset, b.reach, b.inset,
+                                  a.x <= b.x ? 'E' : 'W'));
+            const double gap_y = std::max(
+                clear, fanout_sep(a.reach, a.inset, b.reach, b.inset,
+                                  a.y <= b.y ? 'S' : 'N'));
+            if (!boxes_separated(a.x, a.y, a.w, a.h, b.x, b.y, b.w, b.h,
+                                 gap_x, gap_y)) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+bool edge_run_margin_ok(char edge, double x, double y, double w, double h,
+                        double board_w, double board_h, double edge_margin,
+                        double overflow_tol) {
+    if (edge != 'N' && edge != 'E' && edge != 'S' && edge != 'W') {
+        throw std::runtime_error("edge_run_margin_ok: edge must be N/E/S/W");
+    }
+    const bool vertical = (edge == 'W' || edge == 'E');
+    const double near = vertical ? y : x;
+    const double span = vertical ? h : w;
+    const double dim = vertical ? board_h : board_w;
+    return !(near < edge_margin - overflow_tol
+             || near + span > dim - edge_margin + overflow_tol);
+}
+
+bool edge_runs_margin_ok(
+    const std::vector<std::tuple<char, double, double, double, double>>&
+        blocks,
+    double board_w, double board_h, double edge_margin, double overflow_tol) {
+    for (const auto& block : blocks) {
+        if (!edge_run_margin_ok(std::get<0>(block), std::get<1>(block),
+                                std::get<2>(block), std::get<3>(block),
+                                std::get<4>(block), board_w, board_h,
+                                edge_margin, overflow_tol)) {
+            return false;
+        }
+    }
+    return true;
+}
+
 bool pairs_hold(const std::vector<std::vector<Rect>>& groups,
                 std::size_t subject_count, double clear) {
     if (subject_count > groups.size()) {

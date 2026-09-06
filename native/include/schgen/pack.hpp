@@ -178,6 +178,10 @@ std::vector<Comp> som_components(
     const std::vector<std::pair<double, double>>& cells,
     const std::vector<Box4>& bands, int bottom_mask, int punch_mask);
 bool any_boxes_overlap(const std::vector<Box4>& boxes, double halo);
+std::vector<int> pack_interior_order(const std::vector<std::string>& names,
+                                     const std::vector<int>& tiers,
+                                     const std::vector<double>& conn,
+                                     const std::vector<double>& area);
 std::vector<std::pair<double, double>> cout_column_centers(
     const Box4& inductor_out, double pad, double cout_gap,
     double template_clear, const std::vector<std::pair<double, double>>& halves);

@@ -2382,14 +2382,37 @@ def _attempt_pack(plan: Plan, interior: list[Block],
         b.area = round(b.w * b.h, 1)
     _pack_edges(plan, edge_of)
 
-    for b in plan.edge_blocks:
-        if b.edge in ("W", "E"):
-            near, span_b, dim = b.y, b.h, BOARD_H
-        else:
-            near, span_b, dim = b.x, b.w, BOARD_W
-        if (near < EDGE_MARGIN - _q.run_overflow_tol()
-                or near + span_b > dim - EDGE_MARGIN + _q.run_overflow_tol()):
+    overflow_tol = _q.run_overflow_tol()
+    if _nat.loaded():
+        rows = [(b.edge, b.x, b.y, b.w, b.h) for b in plan.edge_blocks]
+        ok = _nat.module().edge_runs_margin_ok(
+            rows, BOARD_W, BOARD_H, EDGE_MARGIN, overflow_tol)
+        if _nat.trace():
+            ref = True
+            for b in plan.edge_blocks:
+                if b.edge in ("W", "E"):
+                    near, span_b, dim = b.y, b.h, BOARD_H
+                else:
+                    near, span_b, dim = b.x, b.w, BOARD_W
+                if (near < EDGE_MARGIN - overflow_tol
+                        or near + span_b > dim - EDGE_MARGIN + overflow_tol):
+                    ref = False
+                    break
+            if ok is not ref:
+                raise AssertionError(
+                    f"native edge_runs_margin_ok DIVERGENCE: cpp={ok} "
+                    f"python={ref}")
+        if not ok:
             return False
+    else:
+        for b in plan.edge_blocks:
+            if b.edge in ("W", "E"):
+                near, span_b, dim = b.y, b.h, BOARD_H
+            else:
+                near, span_b, dim = b.x, b.w, BOARD_W
+            if (near < EDGE_MARGIN - overflow_tol
+                    or near + span_b > dim - EDGE_MARGIN + overflow_tol):
+                return False
 
     som_rects = [(plan.som_x - SOM_OCC_PAD_MM, plan.som_y - SOM_OCC_PAD_MM,
                   plan.som_x + plan.som.w + SOM_OCC_PAD_MM,
@@ -2399,28 +2422,83 @@ def _attempt_pack(plan: Plan, interior: list[Block],
                           plan.som_y + j.y - j.h / 2 - SOM_SEAT_BAND_MM,
                           plan.som_x + j.x + j.w / 2 + SOM_SEAT_BAND_MM,
                           plan.som_y + j.y + j.h / 2 + SOM_SEAT_BAND_MM))
-    for b in plan.edge_blocks:
-        for rx0, ry0, rx1, ry1 in som_rects:
-            if (min(b.x + b.w, rx1) - max(b.x, rx0) > 1e-6
-                    and min(b.y + b.h, ry1) - max(b.y, ry0) > 1e-6):
-                return False
+    edge_boxes = [(b.x, b.y, b.x + b.w, b.y + b.h) for b in plan.edge_blocks]
+    if _nat.loaded():
+        hit = _nat.module().rects_overlap_any(edge_boxes, som_rects, 1e-6)
+        if _nat.trace():
+            ref = False
+            for b in plan.edge_blocks:
+                for rx0, ry0, rx1, ry1 in som_rects:
+                    if (min(b.x + b.w, rx1) - max(b.x, rx0) > 1e-6
+                            and min(b.y + b.h, ry1) - max(b.y, ry0) > 1e-6):
+                        ref = True
+                        break
+                if ref:
+                    break
+            if hit is not ref:
+                raise AssertionError(
+                    f"native rects_overlap_any DIVERGENCE: cpp={hit} "
+                    f"python={ref}")
+        if hit:
+            return False
+    else:
+        for b in plan.edge_blocks:
+            for rx0, ry0, rx1, ry1 in som_rects:
+                if (min(b.x + b.w, rx1) - max(b.x, rx0) > 1e-6
+                        and min(b.y + b.h, ry1) - max(b.y, ry0) > 1e-6):
+                    return False
 
     eb = plan.edge_blocks
-    for i in range(len(eb)):
-        a = eb[i]
-        for j in range(i + 1, len(eb)):
-            b = eb[j]
-            if a.edge == b.edge:
-                continue
-            cgx = max(CLEAR, _fanout_sep(a.fanout_reach, a.fanout_inset,
-                                         b.fanout_reach, b.fanout_inset,
-                                         "E" if a.x <= b.x else "W"))
-            cgy = max(CLEAR, _fanout_sep(a.fanout_reach, a.fanout_inset,
-                                         b.fanout_reach, b.fanout_inset,
-                                         "S" if a.y <= b.y else "N"))
-            if not (a.x + a.w + cgx <= b.x or b.x + b.w + cgx <= a.x
-                    or a.y + a.h + cgy <= b.y or b.y + b.h + cgy <= a.y):
-                return False
+    if _nat.loaded():
+        fanout_rows = [
+            (b.x, b.y, b.w, b.h, b.fanout_reach, b.fanout_inset, b.edge)
+            for b in eb]
+        ok = _nat.module().cross_edge_fanout_hold(fanout_rows, CLEAR)
+        if _nat.trace():
+            ref = True
+            for i in range(len(eb)):
+                a = eb[i]
+                for j in range(i + 1, len(eb)):
+                    b = eb[j]
+                    if a.edge == b.edge:
+                        continue
+                    cgx = max(CLEAR, _fanout_sep(
+                        a.fanout_reach, a.fanout_inset,
+                        b.fanout_reach, b.fanout_inset,
+                        "E" if a.x <= b.x else "W"))
+                    cgy = max(CLEAR, _fanout_sep(
+                        a.fanout_reach, a.fanout_inset,
+                        b.fanout_reach, b.fanout_inset,
+                        "S" if a.y <= b.y else "N"))
+                    if not (a.x + a.w + cgx <= b.x or b.x + b.w + cgx <= a.x
+                            or a.y + a.h + cgy <= b.y
+                            or b.y + b.h + cgy <= a.y):
+                        ref = False
+                        break
+                if not ref:
+                    break
+            if ok is not ref:
+                raise AssertionError(
+                    f"native cross_edge_fanout_hold DIVERGENCE: cpp={ok} "
+                    f"python={ref}")
+        if not ok:
+            return False
+    else:
+        for i in range(len(eb)):
+            a = eb[i]
+            for j in range(i + 1, len(eb)):
+                b = eb[j]
+                if a.edge == b.edge:
+                    continue
+                cgx = max(CLEAR, _fanout_sep(a.fanout_reach, a.fanout_inset,
+                                             b.fanout_reach, b.fanout_inset,
+                                             "E" if a.x <= b.x else "W"))
+                cgy = max(CLEAR, _fanout_sep(a.fanout_reach, a.fanout_inset,
+                                             b.fanout_reach, b.fanout_inset,
+                                             "S" if a.y <= b.y else "N"))
+                if not (a.x + a.w + cgx <= b.x or b.x + b.w + cgx <= a.x
+                        or a.y + a.h + cgy <= b.y or b.y + b.h + cgy <= a.y):
+                    return False
 
     free = plan.punch_free
     som_mask = OCC_TOP if free else OCC_PUNCH
@@ -2552,12 +2630,37 @@ def _attempt_pack(plan: Plan, interior: list[Block],
         return got
 
     _mfa_prio = _project_spec().module_face_anchors
-    order = sorted(
-        interior,
-        key=lambda b: (0 if b.name in _mfa_prio else
-                       1 if (b.pull and b.pull.get("exclusive", False)) else 2,
-                       -_conn(b),
-                       -(zbox[b.name][0] * zbox[b.name][1]), b.name))
+
+    def _interior_tier(block: Block) -> int:
+        if block.name in _mfa_prio:
+            return 0
+        if block.pull and block.pull.get("exclusive", False):
+            return 1
+        return 2
+
+    if _nat.loaded():
+        names = [b.name for b in interior]
+        tiers = [_interior_tier(b) for b in interior]
+        conn = [_conn(b) for b in interior]
+        area = [zbox[b.name][0] * zbox[b.name][1] for b in interior]
+        idxs = [int(i) for i in _nat.module().pack_interior_order(
+            names, tiers, conn, area)]
+        order = [interior[i] for i in idxs]
+        if _nat.trace():
+            ref = sorted(
+                interior,
+                key=lambda b: (_interior_tier(b), -_conn(b),
+                               -(zbox[b.name][0] * zbox[b.name][1]), b.name))
+            if [b.name for b in order] != [b.name for b in ref]:
+                raise AssertionError(
+                    "native pack_interior_order DIVERGENCE: "
+                    f"cpp={[b.name for b in order]} "
+                    f"python={[b.name for b in ref]}")
+    else:
+        order = sorted(
+            interior,
+            key=lambda b: (_interior_tier(b), -_conn(b),
+                           -(zbox[b.name][0] * zbox[b.name][1]), b.name))
     chosen_comps: dict[str, tuple] = {}
 
     def _bcomps(bb: Block) -> tuple:

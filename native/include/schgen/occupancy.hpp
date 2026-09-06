@@ -115,6 +115,26 @@ bool boxes_separated(double ax, double ay, double aw, double ah,
                      double gx, double gy);
 bool pairs_hold(const std::vector<std::vector<Rect>>& groups,
                 std::size_t subject_count, double clear);
+
+struct EdgeFanoutBlock {
+    double x = 0.0;
+    double y = 0.0;
+    double w = 0.0;
+    double h = 0.0;
+    Halo reach;
+    Halo inset;
+    char edge = '\0';
+};
+
+bool cross_edge_fanout_hold(const std::vector<EdgeFanoutBlock>& blocks,
+                            double clear);
+bool edge_run_margin_ok(char edge, double x, double y, double w, double h,
+                        double board_w, double board_h, double edge_margin,
+                        double overflow_tol);
+bool edge_runs_margin_ok(
+    const std::vector<std::tuple<char, double, double, double, double>>&
+        blocks,
+    double board_w, double board_h, double edge_margin, double overflow_tol);
 std::tuple<double, double, double, double> evict_window(
     double ex, double ey, double ew, double eh, const Halo& e_reach,
     const Halo& e_inset, const std::vector<Comp>& e_comps, double w, double h,

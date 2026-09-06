@@ -793,9 +793,9 @@ def _pair_axis(a: tuple[float, float, float, float],
     return _pair_axis_py(a, b)
 
 
-def channel_gap_mm(a: str, b: str, demand: dict[frozenset, int],
-                   near_max_pairs: set[frozenset], clear: float
-                   ) -> tuple[float, str]:
+def channel_gap_mm_py(a: str, b: str, demand: dict[frozenset, int],
+                      near_max_pairs: set[frozenset], clear: float
+                      ) -> tuple[float, str]:
     key = frozenset((a, b))
     if key in near_max_pairs:
         return clear, "near_max-adjacency(terminus)"
@@ -803,6 +803,23 @@ def channel_gap_mm(a: str, b: str, demand: dict[frozenset, int],
     if ch > clear:
         return ch, f"D13-channel({demand.get(key, 0)} nets)"
     return clear, "CLEAR"
+
+
+def channel_gap_mm(a: str, b: str, demand: dict[frozenset, int],
+                   near_max_pairs: set[frozenset], clear: float
+                   ) -> tuple[float, str]:
+    key = frozenset((a, b))
+    if _nat.loaded():
+        got = _nat.module().channel_gap_mm(
+            key in near_max_pairs, demand.get(key, 0), clear,
+            CHANNEL_MIN_NETS, CHANNEL_FLOOR_MM, CHANNEL_PER_NET_MM)
+        if _nat.trace():
+            ref = channel_gap_mm_py(a, b, demand, near_max_pairs, clear)
+            if got != ref:
+                raise AssertionError(
+                    f"native channel_gap_mm DIVERGENCE: cpp={got} python={ref}")
+        return got
+    return channel_gap_mm_py(a, b, demand, near_max_pairs, clear)
 
 
 def _bellman_ford_py(nodes: list[str],
@@ -912,18 +929,50 @@ def legalize_compact(board_w: float, board_h: float,
 
     seps: list[_Sep] = []
     seed_rect = {v.name: (v.x, v.y, v.x + v.w, v.y + v.h) for v in movable}
-    for i, a in enumerate(names):
-        for b in names[i + 1:]:
-            axis, first = _pair_axis(seed_rect[a], seed_rect[b])
-            gap, why = channel_gap_mm(a, b, channel_demand, near_pairs, clear)
-            lo, hi = (a, b) if first else (b, a)
-            seps.append(_Sep(axis, lo, hi, gap, why, True))
-        for fn in sorted(frect):
-            axis, first = _pair_axis(seed_rect[a], frect[fn])
-            gap, why = channel_gap_mm(a, fn, channel_demand, near_pairs,
-                                      clear)
-            lo, hi = (a, f"#{fn}") if first else (f"#{fn}", a)
-            seps.append(_Sep(axis, lo, hi, gap, why, True))
+
+    def _build_seps_py() -> list[_Sep]:
+        built: list[_Sep] = []
+        for i, a in enumerate(names):
+            for b in names[i + 1:]:
+                axis, first = _pair_axis(seed_rect[a], seed_rect[b])
+                gap, why = channel_gap_mm(a, b, channel_demand, near_pairs,
+                                          clear)
+                lo, hi = (a, b) if first else (b, a)
+                built.append(_Sep(axis, lo, hi, gap, why, True))
+            for fn in sorted(frect):
+                axis, first = _pair_axis(seed_rect[a], frect[fn])
+                gap, why = channel_gap_mm(a, fn, channel_demand, near_pairs,
+                                          clear)
+                lo, hi = (a, f"#{fn}") if first else (f"#{fn}", a)
+                built.append(_Sep(axis, lo, hi, gap, why, True))
+        return built
+
+    if _nat.loaded():
+        demand_rows = [(a, b, n) for key, n in channel_demand.items()
+                       for a, b in [tuple(key) if len(key) == 2
+                                    else (next(iter(key)), next(iter(key)))]]
+        near_rows = [(a, b) for key in near_pairs
+                     for a, b in [tuple(key) if len(key) == 2
+                                  else (next(iter(key)), next(iter(key)))]]
+        rows = _nat.module().legalize_build_seps(
+            names, [seed_rect[n] for n in names],
+            list(frect.keys()), [frect[n] for n in frect],
+            demand_rows, near_rows, clear, CHANNEL_MIN_NETS,
+            CHANNEL_FLOOR_MM, CHANNEL_PER_NET_MM)
+        seps = [_Sep(axis, lo, hi, gap, why, flip)
+                for axis, lo, hi, gap, why, flip in rows]
+        if _nat.trace():
+            ref = _build_seps_py()
+            got_t = [(s.axis, s.lo, s.hi, s.gap, s.basis, s.flippable)
+                     for s in seps]
+            ref_t = [(s.axis, s.lo, s.hi, s.gap, s.basis, s.flippable)
+                     for s in ref]
+            if got_t != ref_t:
+                raise AssertionError(
+                    f"native legalize_build_seps DIVERGENCE: "
+                    f"cpp={got_t} python={ref_t}")
+    else:
+        seps = _build_seps_py()
 
     def build_edges_py(axis: str) -> list[tuple[str, str, float, object]]:
         E: list[tuple[str, str, float, object]] = []
@@ -1308,8 +1357,24 @@ def legalize_compact(board_w: float, board_h: float,
                 round(posy[n], 4) + by_name[n].h) for n in names}
     for i, n in enumerate(names):
         x0, y0, x1, y1 = rect[n]
-        for m, (u0, v0, u1, v1) in ([(m, rect[m]) for m in names[i + 1:]]
-                                    + sorted(frect.items())):
+        others = ([(m, rect[m]) for m in names[i + 1:]]
+                  + sorted(frect.items()))
+        if _nat.loaded():
+            hit = _nat.module().rects_overlap_any(
+                [(x0, y0, x1, y1)], [box for _m, box in others], 1e-6)
+            if _nat.trace():
+                ref = any(min(x1, u1) - max(x0, u0) > 1e-6
+                          and min(y1, v1) - max(y0, v0) > 1e-6
+                          for _m, (u0, v0, u1, v1) in others)
+                if hit is not ref:
+                    raise AssertionError(
+                        f"native rects_overlap_any DIVERGENCE: cpp={hit} "
+                        f"python={ref}")
+            if hit:
+                log.append("REJECT: final rect overlap")
+                return False
+            continue
+        for m, (u0, v0, u1, v1) in others:
             if (min(x1, u1) - max(x0, u0) > 1e-6
                     and min(y1, v1) - max(y0, v0) > 1e-6):
                 log.append(f"REJECT: final rect overlap {n}|{m}")

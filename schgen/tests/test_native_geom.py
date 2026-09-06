@@ -1531,6 +1531,74 @@ def test_pcb_scan_and_place_helpers(geom):
     assert str(hid[1][4][3][1]) == "yes"
 
 
+def test_pack_legalize_preflight_kernels(geom):
+    from schgen.generate.floorplan_compose import (
+        CHANNEL_FLOOR_MM, CHANNEL_MIN_NETS, CHANNEL_PER_NET_MM,
+        channel_gap_mm, channel_gap_mm_py)
+
+    demand = {frozenset(("power", "usb")): 10}
+    near = {frozenset(("power", "som"))}
+    assert channel_gap_mm("power", "usb", demand, near, 0.3) == (
+        channel_gap_mm_py("power", "usb", demand, near, 0.3))
+    assert geom.channel_gap_mm(
+        False, 10, 0.3, CHANNEL_MIN_NETS, CHANNEL_FLOOR_MM,
+        CHANNEL_PER_NET_MM) == (CHANNEL_FLOOR_MM + 10 * CHANNEL_PER_NET_MM,
+                                "D13-channel(10 nets)")
+    assert geom.channel_gap_mm(
+        True, 10, 0.3, CHANNEL_MIN_NETS, CHANNEL_FLOOR_MM,
+        CHANNEL_PER_NET_MM) == (0.3, "near_max-adjacency(terminus)")
+    assert geom.channel_gap_mm(
+        False, 0, 0.3, CHANNEL_MIN_NETS, CHANNEL_FLOOR_MM,
+        CHANNEL_PER_NET_MM) == (0.3, "CLEAR")
+
+    a = (0.0, 0.0, 10.0, 8.0)
+    b = (12.0, 0.0, 16.0, 8.0)
+    c = (9.5, 0.0, 14.0, 4.0)
+    assert geom.rects_overlap_any([a], [b], 1e-6) is False
+    assert geom.rects_overlap_any([a], [c], 1e-6) is True
+    assert geom.rects_overlap_any([a], [a], 1e-6) is True
+
+    zero = (0.0, 0.0, 0.0, 0.0)
+    reach = (1.5, 0.3, 0.0, 2.2)
+    hold = geom.cross_edge_fanout_hold(
+        [(0.0, 10.0, 20.0, 8.0, zero, zero, "N"),
+         (40.0, 10.0, 20.0, 8.0, reach, zero, "S")],
+        0.3)
+    fail = geom.cross_edge_fanout_hold(
+        [(0.0, 10.0, 20.0, 8.0, reach, zero, "W"),
+         (10.0, 10.0, 20.0, 8.0, reach, zero, "E")],
+        0.3)
+    assert hold is True
+    assert fail is False
+    assert geom.edge_run_margin_ok(
+        "N", 10.0, 0.0, 20.0, 8.0, 80.0, 60.0, 10.0, 0.1) is False
+    assert geom.edge_runs_margin_ok(
+        [("S", 12.0, 42.0, 20.0, 8.0)], 80.0, 60.0, 10.0, 0.1) is True
+    assert list(geom.pack_interior_order(
+        ["z", "a", "m"], [2, 0, 1], [1.0, 0.5, 3.0], [10.0, 4.0, 8.0])) == (
+        [1, 2, 0])
+    seps = geom.legalize_build_seps(
+        ["a", "b"], [a, b], ["som"], [(20.0, 20.0, 40.0, 40.0)],
+        [("a", "b", 10)], [], 0.3, CHANNEL_MIN_NETS, CHANNEL_FLOOR_MM,
+        CHANNEL_PER_NET_MM)
+    assert seps
+    assert seps[0][0] in ("x", "y")
+    from schgen.layout.place import U, gceil, gsnap
+
+    assert geom.next_flag_x(10.0, 10.16, 4.0, 4.0, U, 2.54) == gceil(
+        10.0 + max(10.16, 2.0 + 2.0 + 2.54))
+    assert tuple(geom.flags_row_origin(0.0, 10.0, U)) == (
+        gsnap(0.0 + 4 * U), gceil(10.0 + 6 * U))
+    assert geom.conn_signed_ceil(1, 5.08, U) == gceil(5.08)
+    assert geom.conn_gnd_x(1, 4.0, 0.0, 2.0, 5.08, U) == gceil(4.0 + 5.08)
+    wrap = geom.farm_wrap_advance(40.0, 30.0, True, 10.0, 5.0, 8.0, U)
+    assert wrap[0] is True
+    assert wrap[1] == 10.0
+    assert wrap[2] == gceil(5.0 + 8.0)
+    assert geom.conn_flag_y(10.0, U) == gceil(10.0 + 8 * U)
+    assert geom.conn_flag_x0(10.16, 3, U) == gsnap(-10.16)
+
+
 def test_timing_span_records():
     from schgen.core import timing
     timing.reset()
