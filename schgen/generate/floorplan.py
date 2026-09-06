@@ -2744,28 +2744,101 @@ def _attempt_pack(plan: Plan, interior: list[Block],
             return False
         placed.append(b)
 
-    for _pass in range(16):
-        moved = False
-        for b in order:
+    def _refine_anchor_row(b: Block):
+        _mfa = _project_spec().module_face_anchors
+        face_override = b.name in _mfa and bool(SOM_DX or SOM_DY)
+        face = _mfa[b.name] if face_override else ""
+        zone_is_at_edge = (b.zone.startswith("@")
+                           and b.zone[1:] in edge_pos)
+        if zone_is_at_edge:
+            eb = edge_pos[b.zone[1:]]
+            zax, zay = eb.cx, eb.cy
+            eb_x, eb_y, eb_w, eb_h, eb_cx, eb_cy = (
+                eb.x, eb.y, eb.w, eb.h, eb.cx, eb.cy)
+            edge = getattr(eb, "edge", "")
+        else:
+            zax, zay = _zone_anchor(
+                plan, b.zone if b.zone in ("N", "E", "S", "W") else "E")
+            eb_x = eb_y = eb_w = eb_h = eb_cx = eb_cy = 0.0
+            edge = ""
+        pull = b.pull
+        exclusive = bool(pull and pull.get("exclusive", False))
+        inboard = bool(pull and pull.get("face", "center") == "inboard")
+        pull_weight = float(pull["weight"]) if pull else 0.0
+        pull_to = pull["to"] if pull and not exclusive else ""
+        return (b.name, b.x, b.y, b.w, b.h, b.fanout_reach, b.fanout_inset,
+                _side_mask(b.side), list(_bcomps(b)), face_override, face,
+                plan.som_x, plan.som_y, plan.som.w, plan.som.h, SOM_HALO,
+                zax, zay, exclusive, inboard, zone_is_at_edge, edge,
+                eb_x, eb_y, eb_w, eb_h, eb_cx, eb_cy, pull_weight, pull_to,
+                ANCHOR_ZONE_W, ANCHOR_SOM_W, som_pull.get(b.name, 0.0),
+                ANCHOR_AFF_POW, som_cx, som_cy,
+                list(affinity.get(b.name, {}).items()))
+
+    def _refine_apply(poses) -> None:
+        for b, (nx, ny) in zip(order, poses, strict=True):
+            if (nx, ny) == (b.x, b.y):
+                continue
             occ.remove(b.x, b.y, b.w, b.h, b.fanout_reach, b.fanout_inset,
                        _side_mask(b.side), _bcomps(b))
-            ax, ay = _anchor(b)
-            pos = occ.place_near(ax, ay, b.w, b.h, b.fanout_reach,
-                                 b.fanout_inset, _side_mask(b.side),
-                                 _bcomps(b))
-            if pos is None:
-                occ.add(b.x, b.y, b.w, b.h, b.fanout_reach, b.fanout_inset,
-                        _side_mask(b.side), _bcomps(b))
-                continue
-            nx, ny, _w, _h = pos
-            if (nx, ny) != (b.x, b.y):
-                moved = True
             b.x, b.y = nx, ny
             occ.add(b.x, b.y, b.w, b.h, b.fanout_reach, b.fanout_inset,
                     _side_mask(b.side), _bcomps(b))
             centers[b.name] = (b.x + b.w / 2, b.y + b.h / 2)
-        if not moved:
-            break
+
+    def _refine_passes_py() -> None:
+        for _pass in range(16):
+            moved = False
+            for b in order:
+                occ.remove(b.x, b.y, b.w, b.h, b.fanout_reach, b.fanout_inset,
+                           _side_mask(b.side), _bcomps(b))
+                ax, ay = _anchor(b)
+                pos = occ.place_near(ax, ay, b.w, b.h, b.fanout_reach,
+                                     b.fanout_inset, _side_mask(b.side),
+                                     _bcomps(b))
+                if pos is None:
+                    occ.add(b.x, b.y, b.w, b.h, b.fanout_reach,
+                            b.fanout_inset, _side_mask(b.side), _bcomps(b))
+                    continue
+                nx, ny, _w, _h = pos
+                if (nx, ny) != (b.x, b.y):
+                    moved = True
+                b.x, b.y = nx, ny
+                occ.add(b.x, b.y, b.w, b.h, b.fanout_reach, b.fanout_inset,
+                        _side_mask(b.side), _bcomps(b))
+                centers[b.name] = (b.x + b.w / 2, b.y + b.h / 2)
+            if not moved:
+                break
+
+    if _nat.loaded() and occ._cpp is not None:
+        ref_poses = None
+        if _nat.trace():
+            snap = [(b.x, b.y) for b in order]
+            snap_c = dict(centers)
+            _refine_passes_py()
+            ref_poses = [(b.x, b.y) for b in order]
+            for b, (ox, oy) in zip(order, snap, strict=True):
+                if (b.x, b.y) == (ox, oy):
+                    continue
+                occ.remove(b.x, b.y, b.w, b.h, b.fanout_reach, b.fanout_inset,
+                           _side_mask(b.side), _bcomps(b))
+                b.x, b.y = ox, oy
+                occ.add(b.x, b.y, b.w, b.h, b.fanout_reach, b.fanout_inset,
+                        _side_mask(b.side), _bcomps(b))
+            centers.clear()
+            centers.update(snap_c)
+        rows = [_refine_anchor_row(b) for b in order]
+        center_rows = [(n, c[0], c[1]) for n, c in centers.items()]
+        poses, _passes = _nat.module().refine_pack_passes(
+            occ._cpp, rows, center_rows, 16, BOARD_W, BOARD_H)
+        got = [(float(x), float(y)) for x, y in poses]
+        if ref_poses is not None and got != ref_poses:
+            raise AssertionError(
+                "native refine_pack_passes DIVERGENCE: "
+                f"cpp={got} python={ref_poses}")
+        _refine_apply(got)
+    else:
+        _refine_passes_py()
 
     if compose is not None:
         c_index, c_metrics, c_channels, c_corridors, c_shape_metrics = compose

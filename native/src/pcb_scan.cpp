@@ -4,9 +4,11 @@
 #include "schgen/emit.hpp"
 #include "schgen/occupancy.hpp"
 #include "schgen/pack.hpp"
+#include "schgen/quantize.hpp"
 #include "schgen/sexpr.hpp"
 #include "schgen/turn.hpp"
 
+#include <algorithm>
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
@@ -368,6 +370,169 @@ std::vector<std::vector<int>> conn_cluster_groups(
         }
     }
     return groups;
+}
+
+std::vector<RefdesProp> collect_refdes_props(const Sexpr& doc,
+                                             double default_size) {
+    std::vector<RefdesProp> top;
+    std::vector<RefdesProp> bot;
+    if (!std::holds_alternative<SexprList>(doc.v)) {
+        return {};
+    }
+    const SexprList& nodes = std::get<SexprList>(doc.v);
+    for (int fi = 0; fi < static_cast<int>(nodes.size()); ++fi) {
+        const Sexpr& node = nodes[static_cast<std::size_t>(fi)];
+        if (!std::holds_alternative<SexprList>(node.v)) {
+            continue;
+        }
+        const SexprList& fp = std::get<SexprList>(node.v);
+        if (fp.empty()) {
+            continue;
+        }
+        try {
+            if (py_str(fp[0]) != "footprint") {
+                continue;
+            }
+        } catch (const std::runtime_error&) {
+            continue;
+        }
+        const SexprList* fat = find_tagged_child(fp, "at");
+        if (fat == nullptr || fat->size() < 3 || !is_number((*fat)[1])
+            || !is_number((*fat)[2])) {
+            continue;
+        }
+        const double fx = std::get<double>((*fat)[1].v);
+        const double fy = std::get<double>((*fat)[2].v);
+        double frot = 0.0;
+        if (fat->size() > 3 && is_number((*fat)[3])) {
+            frot = std::get<double>((*fat)[3].v);
+        }
+        const double angle = frot * (M_PI / 180.0);
+        const double ca = std::cos(angle);
+        const double sa = std::sin(angle);
+        const SexprList* flay = find_tagged_child(fp, "layer");
+        bool bottom = false;
+        if (flay != nullptr && flay->size() >= 2) {
+            bottom = py_str((*flay)[1]) == "B.Cu";
+        }
+        const std::string want = bottom ? "B.SilkS" : "F.SilkS";
+        for (int pi = 0; pi < static_cast<int>(fp.size()); ++pi) {
+            const Sexpr& child = fp[static_cast<std::size_t>(pi)];
+            if (!std::holds_alternative<SexprList>(child.v)) {
+                continue;
+            }
+            const SexprList& prop = std::get<SexprList>(child.v);
+            if (prop.size() <= 2) {
+                continue;
+            }
+            try {
+                if (py_str(prop[0]) != "property"
+                    || py_str(prop[1]) != "Reference") {
+                    continue;
+                }
+            } catch (const std::runtime_error&) {
+                continue;
+            }
+            const SexprList* lay = find_tagged_child(prop, "layer");
+            if (lay == nullptr || lay->size() < 2
+                || py_str((*lay)[1]) != want) {
+                continue;
+            }
+            const SexprList* hide = find_tagged_child(prop, "hide");
+            if (hide != nullptr
+                && (hide->size() < 2 || py_str((*hide)[1]) == "yes")) {
+                continue;
+            }
+            const SexprList* lat = find_tagged_child(prop, "at");
+            if (lat == nullptr || lat->size() < 3 || !is_number((*lat)[1])
+                || !is_number((*lat)[2])) {
+                continue;
+            }
+            RefdesProp hit;
+            hit.footprint_index = fi;
+            hit.property_index = pi;
+            hit.ref = py_str(prop[2]);
+            hit.fp_x = fx;
+            hit.fp_y = fy;
+            hit.cos_a = ca;
+            hit.sin_a = sa;
+            hit.local_x = std::get<double>((*lat)[1].v);
+            hit.local_y = std::get<double>((*lat)[2].v);
+            hit.size = font_size_of(prop, default_size);
+            hit.bottom = bottom;
+            const double bx = fx + hit.local_x * ca + hit.local_y * sa;
+            const double by = fy - hit.local_x * sa + hit.local_y * ca;
+            hit.text_box = text_box(hit.ref, bx, by, hit.size, 0.15);
+            (bottom ? bot : top).push_back(std::move(hit));
+        }
+    }
+    std::sort(top.begin(), top.end(),
+              [](const RefdesProp& a, const RefdesProp& b) {
+                  return a.ref < b.ref;
+              });
+    std::sort(bot.begin(), bot.end(),
+              [](const RefdesProp& a, const RefdesProp& b) {
+                  return a.ref < b.ref;
+              });
+    top.insert(top.end(), bot.begin(), bot.end());
+    return top;
+}
+
+std::string footprint_alias(
+    const std::string& footprint,
+    const std::vector<std::pair<std::string, std::string>>& aliases) {
+    for (const auto& kv : aliases) {
+        if (kv.first == footprint) {
+            return kv.second;
+        }
+    }
+    return footprint;
+}
+
+bool mirror_assert_ok(bool mirror, const std::string& side,
+                      bool mirrored_path) {
+    if (!mirror) {
+        return true;
+    }
+    return side == "bottom" && mirrored_path;
+}
+
+bool needs_flag(const std::vector<std::string>& pin_etypes,
+                const std::vector<std::string>& driver_etypes) {
+    bool has_power_in = false;
+    for (const auto& et : pin_etypes) {
+        if (et == "power_in") {
+            has_power_in = true;
+            break;
+        }
+    }
+    if (!has_power_in) {
+        return false;
+    }
+    for (const auto& et : pin_etypes) {
+        for (const auto& driver : driver_etypes) {
+            if (et == driver) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+std::tuple<double, double, double, double> farm_cluster_origin(
+    double extent_x0, double extent_y1, double unit, int n_box_bucks) {
+    const double col_x = gsnap(extent_x0 + 4.0 * unit, unit);
+    const double row_step = gceil(8.0 * unit, unit);
+    const double rise = (n_box_bucks >= 2 ? 12.0 : 8.0) * unit;
+    const double cy = gceil(extent_y1 + rise, unit);
+    return {col_x, col_x, row_step, cy};
+}
+
+double next_rail_col(double col_x, double cap_pitch, double prev_rail_w,
+                     double rail_w, double unit, double extra) {
+    const double need = std::max(cap_pitch, prev_rail_w / 2.0 + rail_w / 2.0
+                                              + extra);
+    return gceil(col_x - cap_pitch + need, unit);
 }
 
 }  // namespace schgen

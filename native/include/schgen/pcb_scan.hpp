@@ -43,4 +43,38 @@ Box4 inst_placed_box(const Box4& local_bbox, double inst_x, double inst_y,
 
 std::vector<Box4> collect_gr_text_boxes(const Sexpr& doc, double default_size);
 
+struct RefdesProp {
+    int footprint_index = -1;
+    int property_index = -1;
+    std::string ref;
+    double fp_x = 0.0;
+    double fp_y = 0.0;
+    double cos_a = 0.0;
+    double sin_a = 0.0;
+    double local_x = 0.0;
+    double local_y = 0.0;
+    double size = 0.0;
+    bool bottom = false;
+    Box4 text_box;
+};
+
+std::vector<RefdesProp> collect_refdes_props(const Sexpr& doc,
+                                             double default_size);
+
+std::string footprint_alias(
+    const std::string& footprint,
+    const std::vector<std::pair<std::string, std::string>>& aliases);
+
+bool mirror_assert_ok(bool mirror, const std::string& side,
+                      bool mirrored_path);
+
+bool needs_flag(const std::vector<std::string>& pin_etypes,
+                const std::vector<std::string>& driver_etypes);
+
+std::tuple<double, double, double, double> farm_cluster_origin(
+    double extent_x0, double extent_y1, double unit, int n_box_bucks);
+
+double next_rail_col(double col_x, double cap_pitch, double prev_rail_w,
+                     double rail_w, double unit, double extra);
+
 }  // namespace schgen

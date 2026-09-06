@@ -22,6 +22,7 @@
 #include "schgen/pack.hpp"
 #include "schgen/pack_anchor.hpp"
 #include "schgen/pack_edges.hpp"
+#include "schgen/pack_refine.hpp"
 #include "schgen/pcb_scan.hpp"
 #include "schgen/place_search.hpp"
 #include "schgen/quantize.hpp"
@@ -1192,6 +1193,107 @@ NB_MODULE(_geom, m) {
               }
               return out;
           });
+    m.def("refine_pack_passes",
+          [](const schgen::Occupancy& occupancy,
+             const std::vector<std::tuple<
+                 std::string, double, double, double, double,
+                 std::tuple<double, double, double, double>,
+                 std::tuple<double, double, double, double>, int,
+                 std::vector<std::tuple<double, double, double, double, int>>,
+                 bool, std::string, double, double, double, double, double,
+                 double, double, bool, bool, bool, std::string, double, double,
+                 double, double, double, double, double, std::string, double,
+                 double, double, double, double, double,
+                 std::vector<std::pair<std::string, double>>>>& rows,
+             const std::vector<std::tuple<std::string, double, double>>&
+                 center_rows,
+             int max_passes, double board_w, double board_h) {
+              std::vector<schgen::RefineBlock> blocks;
+              blocks.reserve(rows.size());
+              for (const auto& r : rows) {
+                  schgen::RefineBlock block;
+                  block.name = std::get<0>(r);
+                  block.x = std::get<1>(r);
+                  block.y = std::get<2>(r);
+                  block.w = std::get<3>(r);
+                  block.h = std::get<4>(r);
+                  block.reach = as_halo(std::get<5>(r));
+                  block.inset = as_halo(std::get<6>(r));
+                  block.mask = std::get<7>(r);
+                  block.comps = as_comps(std::get<8>(r));
+                  schgen::PackAnchorIn in;
+                  in.face_override = std::get<9>(r);
+                  const std::string& face = std::get<10>(r);
+                  in.face = face.empty() ? '\0' : face[0];
+                  in.som_x = std::get<11>(r);
+                  in.som_y = std::get<12>(r);
+                  in.som_w = std::get<13>(r);
+                  in.som_h = std::get<14>(r);
+                  in.som_halo = std::get<15>(r);
+                  in.zone_ax = std::get<16>(r);
+                  in.zone_ay = std::get<17>(r);
+                  in.exclusive = std::get<18>(r);
+                  in.inboard = std::get<19>(r);
+                  in.zone_is_at_edge = std::get<20>(r);
+                  const std::string& edge = std::get<21>(r);
+                  in.edge = edge.empty() ? '\0' : edge[0];
+                  in.eb_x = std::get<22>(r);
+                  in.eb_y = std::get<23>(r);
+                  in.eb_w = std::get<24>(r);
+                  in.eb_h = std::get<25>(r);
+                  in.eb_cx = std::get<26>(r);
+                  in.eb_cy = std::get<27>(r);
+                  in.pull_weight = std::get<28>(r);
+                  block.pull_to = std::get<29>(r);
+                  in.zone_w = std::get<30>(r);
+                  in.som_w_scale = std::get<31>(r);
+                  in.som_pull = std::get<32>(r);
+                  in.aff_pow = std::get<33>(r);
+                  in.som_cx = std::get<34>(r);
+                  in.som_cy = std::get<35>(r);
+                  block.anchor = in;
+                  block.aff_named = std::get<36>(r);
+                  blocks.push_back(std::move(block));
+              }
+              std::unordered_map<std::string, std::pair<double, double>>
+                  centers;
+              for (const auto& c : center_rows) {
+                  centers.emplace(std::get<0>(c),
+                                  std::make_pair(std::get<1>(c),
+                                                 std::get<2>(c)));
+              }
+              auto hit = schgen::refine_pack_passes(
+                  occupancy, std::move(blocks), centers, max_passes, board_w,
+                  board_h);
+              return std::make_tuple(hit.poses, hit.passes);
+          });
+    m.def("collect_refdes_props",
+          [](nb::handle doc, double default_size) {
+              auto hits = schgen::collect_refdes_props(sexpr_from_py(doc),
+                                                       default_size);
+              std::vector<std::tuple<
+                  int, int, std::string, double, double, double, double,
+                  double, double, double, bool, double, double, double,
+                  double>>
+                  out;
+              out.reserve(hits.size());
+              for (const auto& h : hits) {
+                  out.emplace_back(h.footprint_index, h.property_index, h.ref,
+                                   h.fp_x, h.fp_y, h.cos_a, h.sin_a, h.local_x,
+                                   h.local_y, h.size, h.bottom, h.text_box.x0,
+                                   h.text_box.y0, h.text_box.x1, h.text_box.y1);
+              }
+              return out;
+          });
+    m.def("footprint_alias", &schgen::footprint_alias);
+    m.def("mirror_assert_ok", &schgen::mirror_assert_ok);
+    m.def("needs_flag", &schgen::needs_flag);
+    m.def("farm_cluster_origin",
+          [](double extent_x0, double extent_y1, double unit, int n_box_bucks) {
+              return schgen::farm_cluster_origin(extent_x0, extent_y1, unit,
+                                                 n_box_bucks);
+          });
+    m.def("next_rail_col", &schgen::next_rail_col);
     m.def("turn_point",
           [](double x, double y, double deg) {
               auto p = schgen::turn_point(x, y, deg);
