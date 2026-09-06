@@ -25,10 +25,25 @@ def connector_edge_rotation(mating_face: str, edge: str) -> float:
     return _ROT_TABLES.get(mating_face, _ROT_FACE_POS_Y).get(edge, 0.0)
 
 
-def _mating_face_out_dir(mating_face: str, rot: float) -> tuple[int, int]:
+def _mating_face_out_dir_py(mating_face: str, rot: float) -> tuple[int, int]:
     fx, fy = _FACE_VEC.get(mating_face, _FACE_VEC[DEFAULT_FACE])
     ox, oy = turn_point(float(fx), float(fy), rot)
     return (int(round(ox)), int(round(oy)))
+
+
+def _mating_face_out_dir(mating_face: str, rot: float) -> tuple[int, int]:
+    fx, fy = _FACE_VEC.get(mating_face, _FACE_VEC[DEFAULT_FACE])
+    if _nat.loaded():
+        ox, oy = _nat.module().turn_point(float(fx), float(fy), rot)
+        got = (int(round(ox)), int(round(oy)))
+        if _nat.trace():
+            ref = _mating_face_out_dir_py(mating_face, rot)
+            if got != ref:
+                raise AssertionError(
+                    "native mating_face_out_dir DIVERGENCE: "
+                    f"cpp={got} python={ref}")
+        return got
+    return _mating_face_out_dir_py(mating_face, rot)
 
 
 _PAD_ROW_CACHE: dict[str, tuple[tuple[str, float, float, float,
@@ -112,13 +127,27 @@ def thru_pad_boxes(mod_path: Path, rotation: float
             if ptype in ("thru_hole", "np_thru_hole")]
 
 
-def _rot_pad_bbox(mod_path: Path,
-                  rotation: float) -> tuple[float, float, float, float] | None:
-    boxes = _pad_boxes_local(mod_path, rotation)
+def _rot_pad_bbox_py(boxes) -> tuple[float, float, float, float] | None:
     if not boxes:
         return None
     return (min(b[1] for b in boxes), min(b[2] for b in boxes),
             max(b[3] for b in boxes), max(b[4] for b in boxes))
+
+
+def _rot_pad_bbox(mod_path: Path,
+                  rotation: float) -> tuple[float, float, float, float] | None:
+    boxes = _pad_boxes_local(mod_path, rotation)
+    if _nat.loaded():
+        hit = _nat.module().pad_union_hull(boxes)
+        got = None if hit is None else tuple(hit)
+        if _nat.trace():
+            ref = _rot_pad_bbox_py(boxes)
+            if got != ref:
+                raise AssertionError(
+                    "native pad_union_hull DIVERGENCE: "
+                    f"cpp={got} python={ref}")
+        return got
+    return _rot_pad_bbox_py(boxes)
 
 
 def _inst_pad_geom(inst: FootprintInst) -> list[tuple[str, float, float, str]]:

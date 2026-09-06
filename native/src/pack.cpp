@@ -9,6 +9,7 @@
 #include <cstddef>
 #include <limits>
 #include <numeric>
+#include <optional>
 #include <set>
 #include <stdexcept>
 #include <string>
@@ -1321,6 +1322,187 @@ bool collinear_overlap(double ax0, double ay0, double ax1, double ay1,
         return std::min(a1, b1) - std::max(a0, b0) > eps;
     }
     return false;
+}
+
+Box4 som_core_rect(double som_x, double som_y, double som_w, double som_h,
+                   double origin_x, double origin_y, double clearance) {
+    const double ccx = som_w * clearance / 2.0;
+    const double ccy = som_h * clearance / 2.0;
+    return Box4{origin_x + som_x - ccx, origin_y + som_y - ccy,
+                origin_x + som_x + som_w + ccx,
+                origin_y + som_y + som_h + ccy};
+}
+
+std::vector<std::tuple<std::string, double, double>> rotate_offsets_90(
+    const std::vector<std::tuple<std::string, double, double>>& offs,
+    double zone_w) {
+    std::vector<std::tuple<std::string, double, double>> out;
+    out.reserve(offs.size());
+    for (const auto& row : offs) {
+        out.emplace_back(std::get<0>(row), py_round(std::get<2>(row), 4),
+                         py_round(zone_w - std::get<1>(row), 4));
+    }
+    return out;
+}
+
+std::vector<std::tuple<std::string, std::vector<std::string>>>
+cluster_interchangeable_rows(
+    const std::vector<std::tuple<std::string, double, double>>& members,
+    double tol_x, double tol_y) {
+    std::vector<std::tuple<std::string, double, double>> by_y = members;
+    std::stable_sort(by_y.begin(), by_y.end(),
+                     [](const auto& a, const auto& b) {
+                         if (std::get<2>(a) != std::get<2>(b)) {
+                             return std::get<2>(a) < std::get<2>(b);
+                         }
+                         if (std::get<1>(a) != std::get<1>(b)) {
+                             return std::get<1>(a) < std::get<1>(b);
+                         }
+                         return std::get<0>(a) < std::get<0>(b);
+                     });
+    std::vector<std::tuple<std::string, std::vector<std::string>>> clusters;
+    std::vector<std::tuple<std::string, double, double>> rest;
+    std::vector<std::tuple<std::string, double, double>> row;
+    for (const auto& m : by_y) {
+        if (!row.empty()
+            && std::fabs(std::get<2>(m) - std::get<2>(row[0])) > tol_y) {
+            if (row.size() > 1) {
+                std::vector<std::string> refs;
+                refs.reserve(row.size());
+                for (const auto& r : row) {
+                    refs.push_back(std::get<0>(r));
+                }
+                clusters.emplace_back("x", std::move(refs));
+            } else {
+                rest.insert(rest.end(), row.begin(), row.end());
+            }
+            row.clear();
+        }
+        row.push_back(m);
+    }
+    if (row.size() > 1) {
+        std::vector<std::string> refs;
+        refs.reserve(row.size());
+        for (const auto& r : row) {
+            refs.push_back(std::get<0>(r));
+        }
+        clusters.emplace_back("x", std::move(refs));
+    } else if (!row.empty()) {
+        rest.insert(rest.end(), row.begin(), row.end());
+    }
+    std::stable_sort(rest.begin(), rest.end(),
+                     [](const auto& a, const auto& b) {
+                         if (std::get<1>(a) != std::get<1>(b)) {
+                             return std::get<1>(a) < std::get<1>(b);
+                         }
+                         if (std::get<2>(a) != std::get<2>(b)) {
+                             return std::get<2>(a) < std::get<2>(b);
+                         }
+                         return std::get<0>(a) < std::get<0>(b);
+                     });
+    std::vector<std::tuple<std::string, double, double>> col;
+    for (const auto& m : rest) {
+        if (!col.empty()
+            && std::fabs(std::get<1>(m) - std::get<1>(col[0])) > tol_x) {
+            if (col.size() > 1) {
+                std::vector<std::string> refs;
+                refs.reserve(col.size());
+                for (const auto& r : col) {
+                    refs.push_back(std::get<0>(r));
+                }
+                clusters.emplace_back("y", std::move(refs));
+            }
+            col.clear();
+        }
+        col.push_back(m);
+    }
+    if (col.size() > 1) {
+        std::vector<std::string> refs;
+        refs.reserve(col.size());
+        for (const auto& r : col) {
+            refs.push_back(std::get<0>(r));
+        }
+        clusters.emplace_back("y", std::move(refs));
+    }
+    return clusters;
+}
+
+std::pair<double, double> nearest_manhattan(
+    double px, double py, const std::vector<std::pair<double, double>>& pts) {
+    if (pts.empty()) {
+        throw std::runtime_error("nearest_manhattan: pts required");
+    }
+    std::size_t best = 0;
+    double best_d = std::fabs(pts[0].first - px) + std::fabs(pts[0].second - py);
+    for (std::size_t i = 1; i < pts.size(); ++i) {
+        const double d =
+            std::fabs(pts[i].first - px) + std::fabs(pts[i].second - py);
+        if (d < best_d
+            || (d == best_d
+                && (pts[i].first < pts[best].first
+                    || (pts[i].first == pts[best].first
+                        && pts[i].second < pts[best].second)))) {
+            best = i;
+            best_d = d;
+        }
+    }
+    return pts[best];
+}
+
+double overlap_1d(double a0, double a1, double b0, double b1) {
+    return std::max(0.0, std::min(a1, b1) - std::max(a0, b0));
+}
+
+std::optional<std::pair<std::string, double>> same_edge_gap(
+    const Box4& a, const Box4& b, double band_frac) {
+    const double ox = overlap_1d(a.x0, a.x1, b.x0, b.x1);
+    const double oy = overlap_1d(a.y0, a.y1, b.y0, b.y1);
+    const double wx = std::min(a.x1 - a.x0, b.x1 - b.x0);
+    const double hy = std::min(a.y1 - a.y0, b.y1 - b.y0);
+    const bool same_x = wx > 0.0 && ox >= band_frac * wx;
+    const bool same_y = hy > 0.0 && oy >= band_frac * hy;
+    if (same_y && !same_x) {
+        return std::make_pair(
+            std::string{"x"},
+            std::max(a.x0, b.x0) - std::min(a.x1, b.x1));
+    }
+    if (same_x && !same_y) {
+        return std::make_pair(
+            std::string{"y"},
+            std::max(a.y0, b.y0) - std::min(a.y1, b.y1));
+    }
+    return std::nullopt;
+}
+
+std::optional<std::pair<double, double>> foreign_t_touch(
+    double ax0, double ay0, double ax1, double ay1, double bx0, double by0,
+    double bx1, double by1, bool same_net) {
+    if (same_net) {
+        return std::nullopt;
+    }
+    const double ends[4][2] = {{ax0, ay0}, {ax1, ay1}, {bx0, by0}, {bx1, by1}};
+    const bool other_is_b[4] = {true, true, false, false};
+    for (int i = 0; i < 4; ++i) {
+        const double ox0 = other_is_b[i] ? bx0 : ax0;
+        const double oy0 = other_is_b[i] ? by0 : ay0;
+        const double ox1 = other_is_b[i] ? bx1 : ax1;
+        const double oy1 = other_is_b[i] ? by1 : ay1;
+        if (point_on_seg(ends[i][0], ends[i][1], ox0, oy0, ox1, oy1, false)) {
+            return std::make_pair(ends[i][0], ends[i][1]);
+        }
+    }
+    return std::nullopt;
+}
+
+std::tuple<double, double, double, double, double, double> refdes_hit_court(
+    double fx, double fy, double ca, double sa, double lx, double ly,
+    const std::optional<Box4>& court) {
+    const double bx = fx + lx * ca + ly * sa;
+    const double by = fy - lx * sa + ly * ca;
+    if (court.has_value()) {
+        return {bx, by, court->x0, court->y0, court->x1, court->y1};
+    }
+    return {bx, by, bx - 1.0, by - 1.0, bx + 1.0, by + 1.0};
 }
 
 }  // namespace schgen

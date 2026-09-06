@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
+from schgen.core import native as _nat
 from schgen.generate.floorplan import OVERMOLD_SIDE_GAP
 from schgen.generate.pcb import (
     CONN_MATING_FACE,
@@ -31,13 +32,26 @@ def _conn_mpn(inst) -> str | None:
     return None
 
 
-def _overlap_1d(a0: float, a1: float, b0: float, b1: float) -> float:
+def _overlap_1d_py(a0: float, a1: float, b0: float, b1: float) -> float:
     return max(0.0, min(a1, b1) - max(a0, b0))
 
 
-def _same_edge_gap(a: tuple, b: tuple) -> tuple[str, float] | None:
-    ox = _overlap_1d(a[0], a[2], b[0], b[2])
-    oy = _overlap_1d(a[1], a[3], b[1], b[3])
+def _overlap_1d(a0: float, a1: float, b0: float, b1: float) -> float:
+    if _nat.loaded():
+        got = float(_nat.module().overlap_1d(a0, a1, b0, b1))
+        if _nat.trace():
+            ref = _overlap_1d_py(a0, a1, b0, b1)
+            if got != ref:
+                raise AssertionError(
+                    "native overlap_1d DIVERGENCE: "
+                    f"cpp={got} python={ref}")
+        return got
+    return _overlap_1d_py(a0, a1, b0, b1)
+
+
+def _same_edge_gap_py(a: tuple, b: tuple) -> tuple[str, float] | None:
+    ox = _overlap_1d_py(a[0], a[2], b[0], b[2])
+    oy = _overlap_1d_py(a[1], a[3], b[1], b[3])
     wx = min(a[2] - a[0], b[2] - b[0])
     hy = min(a[3] - a[1], b[3] - b[1])
     same_x_band = wx > 0 and ox >= _SAME_BAND_FRAC * wx
@@ -47,6 +61,20 @@ def _same_edge_gap(a: tuple, b: tuple) -> tuple[str, float] | None:
     if same_x_band and not same_y_band:
         return "y", max(a[1], b[1]) - min(a[3], b[3])
     return None
+
+
+def _same_edge_gap(a: tuple, b: tuple) -> tuple[str, float] | None:
+    if _nat.loaded():
+        hit = _nat.module().same_edge_gap(a, b, _SAME_BAND_FRAC)
+        got = None if hit is None else (str(hit[0]), float(hit[1]))
+        if _nat.trace():
+            ref = _same_edge_gap_py(a, b)
+            if got != ref:
+                raise AssertionError(
+                    "native same_edge_gap DIVERGENCE: "
+                    f"cpp={got} python={ref}")
+        return got
+    return _same_edge_gap_py(a, b)
 
 
 @dataclass

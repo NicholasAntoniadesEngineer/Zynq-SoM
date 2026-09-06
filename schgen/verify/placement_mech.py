@@ -3,6 +3,7 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass, field
 
+from schgen.core import native as _nat
 from schgen.generate.pcb import (
     CONN_MATING_FACE,
     EDGE_FLUSH_MM,
@@ -37,12 +38,25 @@ def _is_control(ref: str) -> bool:
     return _ref_prefix(ref) in (_BUTTON_PREFIX + _COINCELL_PREFIX)
 
 
-def _rect_overlap_area(a, b) -> float:
+def _rect_overlap_area_py(a, b) -> float:
     ax0, ay0, ax1, ay1 = a
     bx0, by0, bx1, by1 = b
     ox = max(0.0, min(ax1, bx1) - max(ax0, bx0))
     oy = max(0.0, min(ay1, by1) - max(ay0, by0))
     return ox * oy
+
+
+def _rect_overlap_area(a, b) -> float:
+    if _nat.loaded():
+        got = float(_nat.module().overlap_area(a, b))
+        if _nat.trace():
+            ref = _rect_overlap_area_py(a, b)
+            if got != ref:
+                raise AssertionError(
+                    "native overlap_area DIVERGENCE: "
+                    f"cpp={got} python={ref}")
+        return got
+    return _rect_overlap_area_py(a, b)
 
 
 @dataclass

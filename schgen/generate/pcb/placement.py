@@ -321,6 +321,30 @@ def _pack_one_zone(sheet_refs: list[str], side_of: dict[str, str],
     return t_off, b_off, round(max(tw, bw), 4), round(max(th, bh), 4)
 
 
+def _rotate_offsets_90_py(
+    offs: dict[str, tuple[float, float]], zone_w: float
+) -> dict[str, tuple[float, float]]:
+    return {ref: (round(dy, 4), round(zone_w - dx, 4))
+            for ref, (dx, dy) in offs.items()}
+
+
+def _rotate_offsets_90(
+    offs: dict[str, tuple[float, float]], zone_w: float
+) -> dict[str, tuple[float, float]]:
+    rows = [(ref, dx, dy) for ref, (dx, dy) in offs.items()]
+    if _nat.loaded():
+        got = {ref: (x, y) for ref, x, y in
+               _nat.module().rotate_offsets_90(rows, zone_w)}
+        if _nat.trace():
+            ref = _rotate_offsets_90_py(offs, zone_w)
+            if got != ref:
+                raise AssertionError(
+                    "native rotate_offsets_90 DIVERGENCE: "
+                    f"cpp={got} python={ref}")
+        return got
+    return _rotate_offsets_90_py(offs, zone_w)
+
+
 def _rotate_zone_90(t_off: dict[str, tuple[float, float]],
                     b_off: dict[str, tuple[float, float]],
                     bbox_of: dict, side_of: dict[str, str],
@@ -329,14 +353,10 @@ def _rotate_zone_90(t_off: dict[str, tuple[float, float]],
                     ) -> tuple[dict[str, tuple[float, float]],
                                dict[str, tuple[float, float]],
                                dict[str, float], float, float]:
-    extra_rot: dict[str, float] = {}
-    new_t: dict[str, tuple[float, float]] = {}
-    new_b: dict[str, tuple[float, float]] = {}
-    for off_in, off_out in ((t_off, new_t), (b_off, new_b)):
-        for ref, (dx, dy) in off_in.items():
-            off_out[ref] = (round(dy, 4), round(zw - dx, 4))
-            extra_rot[ref] = 90.0
-    return new_t, new_b, extra_rot, round(zh, 4), round(zw, 4)
+    extra_rot: dict[str, float] = {ref: 90.0 for ref in t_off}
+    extra_rot.update({ref: 90.0 for ref in b_off})
+    return (_rotate_offsets_90(t_off, zw), _rotate_offsets_90(b_off, zw),
+            extra_rot, round(zh, 4), round(zw, 4))
 
 
 def _member_mirror_shape(sheet: str, t_off: dict[str, tuple[float, float]],
@@ -1154,6 +1174,76 @@ def _reorder_cluster_assign(
     return _reorder_cluster_assign_py(segs_xy, assign0, sweeps)
 
 
+def _cluster_interchangeable_rows_py(
+    pos: dict[str, tuple[float, float]], members: list[str],
+    tol_x: float, tol_y: float,
+) -> list[tuple[str, list[str]]]:
+    clusters: list[tuple[str, list[str]]] = []
+    rest: list[str] = []
+    row: list[str] = []
+    for m in sorted(members, key=lambda m: (pos[m][1], pos[m][0], m)):
+        if row and abs(pos[m][1] - pos[row[0]][1]) > tol_y:
+            if len(row) > 1:
+                clusters.append(("x", row))
+            else:
+                rest.extend(row)
+            row = []
+        row.append(m)
+    if len(row) > 1:
+        clusters.append(("x", row))
+    elif row:
+        rest.extend(row)
+    col: list[str] = []
+    for m in sorted(rest, key=lambda m: (pos[m][0], pos[m][1], m)):
+        if col and abs(pos[m][0] - pos[col[0]][0]) > tol_x:
+            if len(col) > 1:
+                clusters.append(("y", col))
+            col = []
+        col.append(m)
+    if len(col) > 1:
+        clusters.append(("y", col))
+    return clusters
+
+
+def _cluster_interchangeable_rows(
+    pos: dict[str, tuple[float, float]], members: list[str],
+    tol_x: float, tol_y: float,
+) -> list[tuple[str, list[str]]]:
+    rows = [(m, pos[m][0], pos[m][1]) for m in members]
+    if _nat.loaded():
+        got = [(axis, list(refs)) for axis, refs in
+               _nat.module().cluster_interchangeable_rows(rows, tol_x, tol_y)]
+        if _nat.trace():
+            ref = _cluster_interchangeable_rows_py(pos, members, tol_x, tol_y)
+            if got != ref:
+                raise AssertionError(
+                    "native cluster_interchangeable_rows DIVERGENCE: "
+                    f"cpp={got} python={ref}")
+        return got
+    return _cluster_interchangeable_rows_py(pos, members, tol_x, tol_y)
+
+
+def _nearest_manhattan_py(
+    px: float, py: float, pts: list[tuple[float, float]]
+) -> tuple[float, float]:
+    return min(pts, key=lambda q: (abs(q[0] - px) + abs(q[1] - py), q[0], q[1]))
+
+
+def _nearest_manhattan(
+    px: float, py: float, pts: list[tuple[float, float]]
+) -> tuple[float, float]:
+    if _nat.loaded():
+        got = tuple(_nat.module().nearest_manhattan(px, py, pts))
+        if _nat.trace():
+            ref = _nearest_manhattan_py(px, py, pts)
+            if got != ref:
+                raise AssertionError(
+                    "native nearest_manhattan DIVERGENCE: "
+                    f"cpp={got} python={ref}")
+        return got
+    return _nearest_manhattan_py(px, py, pts)
+
+
 def _reorder_interchangeable(pos: dict[str, tuple[float, float]],
                              refs_by_sheet: dict[str, list[str]],
                              side_of: dict[str, str],
@@ -1209,30 +1299,7 @@ def _reorder_interchangeable(pos: dict[str, tuple[float, float]],
             eb = turn_box(bbox_of[members[0]], gk[2])
             tol_x = max(0.6, (eb[2] - eb[0]) / 2)
             tol_y = max(0.6, (eb[3] - eb[1]) / 2)
-            clusters: list[tuple[str, list[str]]] = []
-            rest: list[str] = []
-            row: list[str] = []
-            for m in sorted(members, key=lambda m: (pos[m][1], pos[m][0], m)):
-                if row and abs(pos[m][1] - pos[row[0]][1]) > tol_y:
-                    if len(row) > 1:
-                        clusters.append(("x", row))
-                    else:
-                        rest.extend(row)
-                    row = []
-                row.append(m)
-            if len(row) > 1:
-                clusters.append(("x", row))
-            elif row:
-                rest.extend(row)
-            col: list[str] = []
-            for m in sorted(rest, key=lambda m: (pos[m][0], pos[m][1], m)):
-                if col and abs(pos[m][0] - pos[col[0]][0]) > tol_x:
-                    if len(col) > 1:
-                        clusters.append(("y", col))
-                    col = []
-                col.append(m)
-            if len(col) > 1:
-                clusters.append(("y", col))
+            clusters = _cluster_interchangeable_rows(pos, members, tol_x, tol_y)
             for axis, cluster in clusters:
                 ai = 0 if axis == "x" else 1
                 mlist = sorted(cluster)
@@ -1267,9 +1334,7 @@ def _reorder_interchangeable(pos: dict[str, tuple[float, float]],
                                 continue
                             dx, dy = offs[pad]
                             px, py = sp[0] + dx, sp[1] + dy
-                            tgt = min(pts, key=lambda q: (abs(q[0] - px)
-                                                          + abs(q[1] - py),
-                                                          q[0], q[1]))
+                            tgt = _nearest_manhattan(px, py, pts)
                             segs.append(((px, py), (tgt[0], tgt[1])))
                         seg_of[(m, si)] = segs
 
@@ -1293,13 +1358,29 @@ def _reorder_interchangeable(pos: dict[str, tuple[float, float]],
     return report
 
 
-def som_core_rect(som_x: float, som_y: float, som_w: float, som_h: float
-                  ) -> tuple[float, float, float, float]:
+def som_core_rect_py(som_x: float, som_y: float, som_w: float, som_h: float
+                     ) -> tuple[float, float, float, float]:
     ccx = som_w * SOM_CORE_CLEARANCE / 2
     ccy = som_h * SOM_CORE_CLEARANCE / 2
     return (ORIGIN_X + som_x - ccx, ORIGIN_Y + som_y - ccy,
             ORIGIN_X + som_x + som_w + ccx,
             ORIGIN_Y + som_y + som_h + ccy)
+
+
+def som_core_rect(som_x: float, som_y: float, som_w: float, som_h: float
+                  ) -> tuple[float, float, float, float]:
+    if _nat.loaded():
+        got = tuple(_nat.module().som_core_rect(
+            som_x, som_y, som_w, som_h, ORIGIN_X, ORIGIN_Y,
+            SOM_CORE_CLEARANCE))
+        if _nat.trace():
+            ref = som_core_rect_py(som_x, som_y, som_w, som_h)
+            if got != ref:
+                raise AssertionError(
+                    "native som_core_rect DIVERGENCE: "
+                    f"cpp={got} python={ref}")
+        return got
+    return som_core_rect_py(som_x, som_y, som_w, som_h)
 
 
 SOM_DECOUPLING_INSET = 6.0

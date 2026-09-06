@@ -831,6 +831,43 @@ NB_MODULE(_geom, m) {
               auto hit = schgen::reorder_cluster_assign(rows, assign0, sweeps);
               return std::make_tuple(hit.before, hit.best, hit.assign);
           });
+    m.def("som_core_rect",
+          [](double som_x, double som_y, double som_w, double som_h,
+             double origin_x, double origin_y, double clearance) {
+              auto b = schgen::som_core_rect(som_x, som_y, som_w, som_h,
+                                             origin_x, origin_y, clearance);
+              return std::make_tuple(b.x0, b.y0, b.x1, b.y1);
+          });
+    m.def("rotate_offsets_90", &schgen::rotate_offsets_90);
+    m.def("cluster_interchangeable_rows",
+          &schgen::cluster_interchangeable_rows);
+    m.def("nearest_manhattan",
+          [](double px, double py,
+             const std::vector<std::pair<double, double>>& pts) {
+              return schgen::nearest_manhattan(px, py, pts);
+          });
+    m.def("overlap_1d", &schgen::overlap_1d);
+    m.def("same_edge_gap",
+          [](const BoxTup& a, const BoxTup& b, double band_frac)
+              -> std::optional<std::pair<std::string, double>> {
+              return schgen::same_edge_gap(as_box(a), as_box(b), band_frac);
+          });
+    m.def("foreign_t_touch",
+          [](double ax0, double ay0, double ax1, double ay1, double bx0,
+             double by0, double bx1, double by1, bool same_net)
+              -> std::optional<std::pair<double, double>> {
+              return schgen::foreign_t_touch(ax0, ay0, ax1, ay1, bx0, by0,
+                                             bx1, by1, same_net);
+          });
+    m.def("refdes_hit_court",
+          [](double fx, double fy, double ca, double sa, double lx, double ly,
+             const std::optional<BoxTup>& court) {
+              std::optional<schgen::Box4> box;
+              if (court.has_value()) {
+                  box = as_box(*court);
+              }
+              return schgen::refdes_hit_court(fx, fy, ca, sa, lx, ly, box);
+          });
     m.def("boxes_union",
           [](const std::vector<BoxTup>& boxes) -> std::optional<BoxTup> {
               auto hit = schgen::boxes_union(as_boxes(boxes));

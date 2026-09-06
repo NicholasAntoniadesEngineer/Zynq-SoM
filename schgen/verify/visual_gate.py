@@ -154,7 +154,7 @@ def _point_on_seg(px: float, py: float, s: Seg, *, interior_only: bool) -> bool:
     return _point_on_seg_py(px, py, s, interior_only=interior_only)
 
 
-def _foreign_t_touch(a: Seg, b: Seg) -> tuple[float, float] | None:
+def _foreign_t_touch_py(a: Seg, b: Seg) -> tuple[float, float] | None:
     if a.net == b.net:
         return None
     for (ex, ey), other in (((a.x0, a.y0), b), ((a.x1, a.y1), b),
@@ -162,6 +162,21 @@ def _foreign_t_touch(a: Seg, b: Seg) -> tuple[float, float] | None:
         if _point_on_seg(ex, ey, other, interior_only=False):
             return (ex, ey)
     return None
+
+
+def _foreign_t_touch(a: Seg, b: Seg) -> tuple[float, float] | None:
+    if _nat.loaded():
+        hit = _nat.module().foreign_t_touch(
+            a.x0, a.y0, a.x1, a.y1, b.x0, b.y0, b.x1, b.y1, a.net == b.net)
+        got = None if hit is None else (float(hit[0]), float(hit[1]))
+        if _nat.trace():
+            ref = _foreign_t_touch_py(a, b)
+            if got != ref:
+                raise AssertionError(
+                    "native foreign_t_touch DIVERGENCE: "
+                    f"cpp={got} python={ref}")
+        return got
+    return _foreign_t_touch_py(a, b)
 
 
 def _seg_box(s: Seg, half: float = 0.127) -> Box:

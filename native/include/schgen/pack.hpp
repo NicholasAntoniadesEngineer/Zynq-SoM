@@ -254,4 +254,32 @@ bool visual_hv_cross(double ax0, double ay0, double ax1, double ay1,
 bool collinear_overlap(double ax0, double ay0, double ax1, double ay1,
                        double bx0, double by0, double bx1, double by1);
 
+Box4 som_core_rect(double som_x, double som_y, double som_w, double som_h,
+                   double origin_x, double origin_y, double clearance);
+
+std::vector<std::tuple<std::string, double, double>> rotate_offsets_90(
+    const std::vector<std::tuple<std::string, double, double>>& offs,
+    double zone_w);
+
+std::vector<std::tuple<std::string, std::vector<std::string>>>
+cluster_interchangeable_rows(
+    const std::vector<std::tuple<std::string, double, double>>& members,
+    double tol_x, double tol_y);
+
+std::pair<double, double> nearest_manhattan(
+    double px, double py, const std::vector<std::pair<double, double>>& pts);
+
+double overlap_1d(double a0, double a1, double b0, double b1);
+
+std::optional<std::pair<std::string, double>> same_edge_gap(
+    const Box4& a, const Box4& b, double band_frac);
+
+std::optional<std::pair<double, double>> foreign_t_touch(
+    double ax0, double ay0, double ax1, double ay1, double bx0, double by0,
+    double bx1, double by1, bool same_net);
+
+std::tuple<double, double, double, double, double, double> refdes_hit_court(
+    double fx, double fy, double ca, double sa, double lx, double ly,
+    const std::optional<Box4>& court);
+
 }  // namespace schgen

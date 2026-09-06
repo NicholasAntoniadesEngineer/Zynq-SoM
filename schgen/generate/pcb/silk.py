@@ -157,15 +157,37 @@ def _collect_refdes_props_py(doc: list) -> list:
     return sorted(top, key=lambda r: r[2]) + sorted(bot, key=lambda r: r[2])
 
 
+def _refdes_hit_court_py(fx, fy, ca, sa, lx, ly, court):
+    bx = fx + lx * ca + ly * sa
+    by = fy - lx * sa + ly * ca
+    if court is None:
+        court = (bx - 1, by - 1, bx + 1, by + 1)
+    return bx, by, court
+
+
+def _refdes_hit_court(fx, fy, ca, sa, lx, ly, court):
+    if _nat.loaded():
+        got = _nat.module().refdes_hit_court(fx, fy, ca, sa, lx, ly, court)
+        bx, by, x0, y0, x1, y1 = got
+        out = (bx, by, (x0, y0, x1, y1))
+        if _nat.trace():
+            ref = _refdes_hit_court_py(fx, fy, ca, sa, lx, ly, court)
+            if out != ref:
+                raise AssertionError(
+                    "native refdes_hit_court DIVERGENCE: "
+                    f"cpp={out} python={ref}")
+        return out
+    return _refdes_hit_court_py(fx, fy, ca, sa, lx, ly, court)
+
+
 def _refdes_hits_to_rows(doc: list, hits, court_by_ref: dict) -> list:
     rows = []
     for (fi, pi, ref, fx, fy, ca, sa, lx, ly, size, bottom, *box) in hits:
         node = doc[int(fi)]
         c = node[int(pi)]
         lat = _sub(c, "at")
-        bx = fx + lx * ca + ly * sa
-        by = fy - lx * sa + ly * ca
-        court = court_by_ref.get(ref, (bx - 1, by - 1, bx + 1, by + 1))
+        _bx, _by, court = _refdes_hit_court(
+            fx, fy, ca, sa, lx, ly, court_by_ref.get(ref))
         rows.append((ref, c, lat, fx, fy, ca, sa, court, size,
                      tuple(box), bool(bottom)))
     return rows

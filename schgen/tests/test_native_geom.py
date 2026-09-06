@@ -2157,6 +2157,135 @@ def test_cross_reorder_and_visual_kernels_match_python(geom, monkeypatch):
             assert _collinear_overlap(a, b) == _collinear_overlap_py(a, b)
 
 
+def test_som_cluster_gap_and_court_kernels_match_python(geom, monkeypatch):
+    from schgen.generate.pcb import mating_face as mf
+    from schgen.generate.pcb import placement as pl
+    from schgen.generate.pcb import silk as sk
+    from schgen.generate.pcb.constants import (
+        ORIGIN_X,
+        ORIGIN_Y,
+        SOM_CORE_CLEARANCE,
+    )
+    from schgen.generate.pcb.mating_face import (
+        _mating_face_out_dir,
+        _mating_face_out_dir_py,
+    )
+    from schgen.generate.pcb.placement import (
+        _cluster_interchangeable_rows,
+        _cluster_interchangeable_rows_py,
+        _nearest_manhattan,
+        _nearest_manhattan_py,
+        _rotate_offsets_90,
+        _rotate_offsets_90_py,
+        som_core_rect,
+        som_core_rect_py,
+    )
+    from schgen.generate.pcb.silk import _refdes_hit_court, _refdes_hit_court_py
+    from schgen.verify import connector_spacing_gate as csg
+    from schgen.verify import placement_mech as pm
+    from schgen.verify import visual_gate as vg
+    from schgen.verify.connector_spacing_gate import (
+        _overlap_1d,
+        _overlap_1d_py,
+        _same_edge_gap,
+        _same_edge_gap_py,
+    )
+    from schgen.verify.placement_mech import (
+        _rect_overlap_area,
+        _rect_overlap_area_py,
+    )
+    from schgen.verify.visual_gate import Seg, _foreign_t_touch, _foreign_t_touch_py
+
+    monkeypatch.setattr(pl._nat, "trace", lambda: True)
+    monkeypatch.setattr(mf._nat, "trace", lambda: True)
+    monkeypatch.setattr(sk._nat, "trace", lambda: True)
+    monkeypatch.setattr(pm._nat, "trace", lambda: True)
+    monkeypatch.setattr(csg._nat, "trace", lambda: True)
+    monkeypatch.setattr(vg._nat, "trace", lambda: True)
+
+    got = tuple(geom.som_core_rect(
+        10.0, 12.0, 50.0, 40.0, ORIGIN_X, ORIGIN_Y, SOM_CORE_CLEARANCE))
+    assert got == som_core_rect_py(10.0, 12.0, 50.0, 40.0)
+    assert som_core_rect(10.0, 12.0, 50.0, 40.0) == got
+
+    offs = {"R1": (1.25, 3.5), "U2": (0.0, 8.0), "C3": (4.4444, 0.1111)}
+    ref = _rotate_offsets_90_py(offs, 12.0)
+    native_rows = [(r, x, y) for r, x, y in geom.rotate_offsets_90(
+        [(k, v[0], v[1]) for k, v in offs.items()], 12.0)]
+    assert {r: (x, y) for r, x, y in native_rows} == ref
+    assert _rotate_offsets_90(offs, 12.0) == ref
+
+    pos = {
+        "A": (0.0, 0.0), "B": (2.0, 0.1), "C": (4.0, 0.05),
+        "D": (0.1, 5.0), "E": (0.2, 7.0), "F": (10.0, 10.0),
+    }
+    members = list(pos)
+    ref_cl = _cluster_interchangeable_rows_py(pos, members, 1.5, 0.5)
+    rows = [(m, pos[m][0], pos[m][1]) for m in members]
+    got_cl = [(axis, list(refs)) for axis, refs in
+              geom.cluster_interchangeable_rows(rows, 1.5, 0.5)]
+    assert got_cl == ref_cl
+    assert _cluster_interchangeable_rows(pos, members, 1.5, 0.5) == ref_cl
+
+    pts = [(3.0, 1.0), (0.0, 0.0), (1.0, 1.0), (1.0, 0.5)]
+    assert tuple(geom.nearest_manhattan(1.0, 0.0, pts)) == (
+        _nearest_manhattan_py(1.0, 0.0, pts))
+    assert _nearest_manhattan(1.0, 0.0, pts) == _nearest_manhattan_py(
+        1.0, 0.0, pts)
+
+    a = (0.0, 0.0, 2.0, 2.0)
+    b = (1.0, 1.0, 3.0, 1.5)
+    assert geom.overlap_area(a, b) == _rect_overlap_area_py(a, b)
+    assert _rect_overlap_area(a, b) == _rect_overlap_area_py(a, b)
+    assert geom.overlap_1d(0.0, 2.0, 1.5, 4.0) == _overlap_1d_py(
+        0.0, 2.0, 1.5, 4.0)
+    assert _overlap_1d(0.0, 2.0, 1.5, 4.0) == _overlap_1d_py(0.0, 2.0, 1.5, 4.0)
+    boxes = (
+        (0.0, 0.0, 4.0, 1.0),
+        (5.0, 0.1, 8.0, 0.9),
+        (0.0, 3.0, 1.0, 6.0),
+        (0.2, 7.0, 0.8, 9.0),
+        (0.0, 0.0, 1.0, 1.0),
+        (2.0, 2.0, 3.0, 3.0),
+    )
+    for i, aa in enumerate(boxes):
+        for bb in boxes[i:]:
+            assert geom.same_edge_gap(aa, bb, 0.5) == _same_edge_gap_py(aa, bb)
+            assert _same_edge_gap(aa, bb) == _same_edge_gap_py(aa, bb)
+
+    segs = (
+        Seg(0.0, 0.0, 4.0, 0.0, "n1"),
+        Seg(2.0, 0.0, 2.0, 3.0, "n2"),
+        Seg(0.0, 0.0, 4.0, 0.0, "n1"),
+        Seg(1.0, 1.0, 3.0, 1.0, "n3"),
+    )
+    for s0 in segs:
+        for s1 in segs:
+            hit = geom.foreign_t_touch(
+                s0.x0, s0.y0, s0.x1, s0.y1, s1.x0, s1.y0, s1.x1, s1.y1,
+                s0.net == s1.net)
+            ref_hit = _foreign_t_touch_py(s0, s1)
+            if hit is None:
+                assert ref_hit is None
+            else:
+                assert ref_hit == (float(hit[0]), float(hit[1]))
+            assert _foreign_t_touch(s0, s1) == ref_hit
+
+    court = _refdes_hit_court_py(10.0, 20.0, 1.0, 0.0, 0.5, -0.25, None)
+    got_c = geom.refdes_hit_court(10.0, 20.0, 1.0, 0.0, 0.5, -0.25, None)
+    assert (got_c[0], got_c[1], (got_c[2], got_c[3], got_c[4], got_c[5])) == court
+    assert _refdes_hit_court(10.0, 20.0, 1.0, 0.0, 0.5, -0.25, None) == court
+    known = (0.0, 0.0, 2.0, 2.0)
+    assert _refdes_hit_court(
+        10.0, 20.0, 0.0, 1.0, 1.0, 0.0, known) == _refdes_hit_court_py(
+            10.0, 20.0, 0.0, 1.0, 1.0, 0.0, known)
+
+    for face in ("+Y", "-Y", "+X", "-X", "nope"):
+        for rot in (0.0, 90.0, 180.0, 270.0, 45.0):
+            assert _mating_face_out_dir(face, rot) == _mating_face_out_dir_py(
+                face, rot)
+
+
 def test_timing_span_records():
     from schgen.core import timing
     timing.reset()
