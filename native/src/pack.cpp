@@ -2906,4 +2906,21 @@ std::vector<std::pair<double, double>> closed_rect_pts(const Box4& box,
     return out;
 }
 
+std::vector<std::tuple<std::string, double, double, double, double>>
+offset_named_boxes(
+    const std::vector<std::tuple<std::string, double, double, double, double>>&
+        boxes,
+    double dx, double dy) {
+    std::vector<std::tuple<std::string, double, double, double, double>> out;
+    out.reserve(boxes.size());
+    for (const auto& row : boxes) {
+        const auto b = offset_rect(
+            {std::get<1>(row), std::get<2>(row), std::get<3>(row),
+             std::get<4>(row)},
+            dx, dy);
+        out.emplace_back(std::get<0>(row), b.x0, b.y0, b.x1, b.y1);
+    }
+    return out;
+}
+
 }  // namespace schgen

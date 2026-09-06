@@ -225,18 +225,18 @@ def _pad_named_rows_py(text: str
 def _pad_named_rows(mod_path: Path
                     ) -> list[tuple[str, float, float, float, float, float]]:
     text = mod_path.read_text()
-    if _nat.loaded():
-        got = [(n, px, py, prot, sw, sh)
-               for n, _ptype, px, py, prot, sw, sh in
-               _nat.module().scan_pad_nodes(text)]
-        if _nat.trace():
-            ref = _pad_named_rows_py(text)
-            if got != ref:
-                raise AssertionError(
-                    "native scan_pad_nodes DIVERGENCE: "
-                    f"cpp={got} python={ref} path={mod_path}")
-        return got
-    return _pad_named_rows_py(text)
+    if not _nat.loaded():
+        raise RuntimeError("native scan_pad_nodes required")
+    got = [(n, px, py, prot, sw, sh)
+           for n, _ptype, px, py, prot, sw, sh in
+           _nat.module().scan_pad_nodes(text)]
+    if _nat.trace():
+        ref = _pad_named_rows_py(text)
+        if got != ref:
+            raise AssertionError(
+                "native scan_pad_nodes DIVERGENCE: "
+                f"cpp={got} python={ref} path={mod_path}")
+    return got
 
 
 def _pad_boxes_py(
@@ -268,28 +268,50 @@ def _pad_boxes(
     hit = _pad_box_cache.get(key)
     if hit is not None:
         return hit
-    if _nat.loaded():
-        rows = _pad_named_rows(mod_path)
-        got = {n: (x0, y0, x1, y1)
-               for n, x0, y0, x1, y1 in _nat.module().pad_boxes_named(
-                   rows, rotation or 0.0)}
-        if _nat.trace():
-            ref = _pad_boxes_py(mod_path, rotation)
-            if got != ref:
-                raise AssertionError(
-                    "native pad_boxes_named DIVERGENCE: "
-                    f"cpp={got} python={ref}")
-        _pad_box_cache[key] = got
-        return got
-    out = _pad_boxes_py(mod_path, rotation)
-    _pad_box_cache[key] = out
-    return out
+    if not _nat.loaded():
+        raise RuntimeError("native pad_boxes_named required")
+    rows = _pad_named_rows(mod_path)
+    got = {n: (x0, y0, x1, y1)
+           for n, x0, y0, x1, y1 in _nat.module().pad_boxes_named(
+               rows, rotation or 0.0)}
+    if _nat.trace():
+        ref = _pad_boxes_py(mod_path, rotation)
+        if got != ref:
+            raise AssertionError(
+                "native pad_boxes_named DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    _pad_box_cache[key] = got
+    return got
+
+
+def offset_named_boxes_py(
+    boxes: dict[str, tuple[float, float, float, float]], dx: float, dy: float
+) -> dict[str, tuple[float, float, float, float]]:
+    return {n: (dx + b[0], dy + b[1], dx + b[2], dy + b[3])
+            for n, b in boxes.items()}
+
+
+def offset_named_boxes(
+    boxes: dict[str, tuple[float, float, float, float]], dx: float, dy: float
+) -> dict[str, tuple[float, float, float, float]]:
+    if not _nat.loaded():
+        raise RuntimeError("native offset_named_boxes required")
+    rows = [(n, *b) for n, b in boxes.items()]
+    got = {n: (x0, y0, x1, y1)
+           for n, x0, y0, x1, y1 in _nat.module().offset_named_boxes(
+               rows, dx, dy)}
+    if _nat.trace():
+        ref = offset_named_boxes_py(boxes, dx, dy)
+        if got != ref:
+            raise AssertionError(
+                "native offset_named_boxes DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
 
 
 def _inst_pad_boxes(inst) -> dict[str, tuple[float, float, float, float]]:
     rel = _pad_boxes(inst.mod_path, inst.rotation or 0.0)
-    return {n: (inst.x + b[0], inst.y + b[1], inst.x + b[2], inst.y + b[3])
-            for n, b in rel.items()}
+    return offset_named_boxes(rel, inst.x, inst.y)
 
 
 def _box_gap_py(a: tuple[float, float, float, float],

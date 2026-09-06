@@ -513,6 +513,11 @@ std::vector<double> rounded_unique_sorted(const std::vector<double>& vs,
                                           int digits);
 std::vector<std::pair<double, double>> closed_rect_pts(const Box4& box,
                                                        int digits);
+std::vector<std::tuple<std::string, double, double, double, double>>
+offset_named_boxes(
+    const std::vector<std::tuple<std::string, double, double, double, double>>&
+        boxes,
+    double dx, double dy);
 
 std::vector<std::vector<Seg2>> cluster_slot_segs(
     const std::vector<std::tuple<std::string, double, double>>& pad_offs,

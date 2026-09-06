@@ -2347,6 +2347,21 @@ def test_area_round_pair_and_svg_map_match_python(geom, monkeypatch):
         round(box[0], 3), round(box[1], 3), round(box[2], 3), round(box[3], 3))
 
 
+def test_offset_named_boxes_match_python(geom, monkeypatch):
+    from schgen.verify import placement_contract_gate as pcg
+    monkeypatch.setattr(pcg._nat, "trace", lambda: True)
+    boxes = {
+        "1": (0.0, 0.0, 1.0, 0.5),
+        "A": (-2.0, 3.0, 0.25, 4.5),
+    }
+    assert pcg.offset_named_boxes(boxes, 10.0, -4.0) == (
+        pcg.offset_named_boxes_py(boxes, 10.0, -4.0))
+    got = {n: (x0, y0, x1, y1)
+           for n, x0, y0, x1, y1 in geom.offset_named_boxes(
+               [("1", 0.0, 0.0, 1.0, 0.5)], 5.0, 6.0)}
+    assert got == {"1": (5.0, 6.0, 6.0, 6.5)}
+
+
 def test_place_geom_wrappers_match_python(geom, monkeypatch):
     from schgen.layout import place as pl
     monkeypatch.setattr(pl._nat, "trace", lambda: True)

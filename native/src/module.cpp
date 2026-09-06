@@ -1283,6 +1283,7 @@ NB_MODULE(_geom, m) {
           [](const BoxTup& box, int digits) {
               return schgen::closed_rect_pts(as_box(box), digits);
           });
+    m.def("offset_named_boxes", &schgen::offset_named_boxes);
     m.def("board_to_uv",
           [](double cx, double cy, double bx, double by, double rot) {
               return schgen::board_to_uv(cx, cy, bx, by, rot);
