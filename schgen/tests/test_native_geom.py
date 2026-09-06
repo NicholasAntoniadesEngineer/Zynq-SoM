@@ -1370,7 +1370,7 @@ def test_pack_edges_and_hf_pose(geom):
 
 
 def test_pcb_scan_and_place_helpers(geom):
-    from schgen.core.sexpr import Sym
+    from schgen.core.sexpr import Sym, _from_tagged
     from schgen.generate.pcb.embed import _thermal_via_nets_py
     from schgen.generate.pcb.silk import (
         _collect_fp_silk_gfx_py,
@@ -1496,6 +1496,39 @@ def test_pcb_scan_and_place_helpers(geom):
         occ, [row], [("a", 13.0, 13.0)], 16, 80.0, 60.0)
     assert npass >= 1
     assert len(poses) == 1
+    win = (-80.0, 160.0, -60.0, 120.0)
+    hits = geom.seat_shape_sides(
+        occ, 40.0, 20.0,
+        [(0, 6.0, 6.0, zero, zero, 1, "top", [], *win),
+         (1, 6.0, 6.0, zero, zero, 2, "bottom", [], *win),
+         (2, 200.0, 6.0, zero, zero, 1, "top", [], *win)],
+        80.0, 60.0, 0.3)
+    assert [h[0] for h in hits][0] == "top"
+    assert {h[0] for h in hits} <= {"top", "bottom"}
+    from schgen.core.sexpr import dumps as sexpr_dumps
+    from schgen.generate.pcb.silk import _set_font_size_py
+
+    prop = [Sym("property"), "Reference", "R1",
+            [Sym("at"), 0.0, 0.0],
+            [Sym("effects"),
+             [Sym("font"),
+              [Sym("size"), 1.0, 1.0],
+              [Sym("thickness"), 0.15]]]]
+    got_font = _from_tagged(geom.set_font_size(prop, 0.8))
+    ref_font = copy.deepcopy(prop)
+    _set_font_size_py(ref_font, 0.8)
+    assert sexpr_dumps(got_font) == sexpr_dumps(ref_font)
+    pcb = [Sym("kicad_pcb"),
+           [Sym("footprint"), "C",
+            [Sym("layer"), Sym("B.Cu")],
+            [Sym("at"), 5.0, 5.0],
+            [Sym("property"), "Reference", "C1",
+             [Sym("at"), 0.0, 0.0]]]]
+    tagged, hidden = geom.hide_undersom_bottom_refs(pcb, 0.0, 0.0, 10.0, 10.0)
+    hid = _from_tagged(tagged)
+    assert hidden == 1
+    assert str(hid[1][4][3][0]) == "hide"
+    assert str(hid[1][4][3][1]) == "yes"
 
 
 def test_timing_span_records():

@@ -77,4 +77,9 @@ std::tuple<double, double, double, double> farm_cluster_origin(
 double next_rail_col(double col_x, double cap_pitch, double prev_rail_w,
                      double rail_w, double unit, double extra);
 
+Sexpr set_font_size(Sexpr prop, double size);
+
+std::pair<Sexpr, int> hide_undersom_bottom_refs(
+    Sexpr doc, double x0, double y0, double x1, double y1);
+
 }  // namespace schgen
