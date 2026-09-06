@@ -637,18 +637,58 @@ def _pad_obstacles(inst) -> list[tuple[float, float, float, float, str, float, s
     return out
 
 
+def within_reach_py(ax: float, ay: float, bx: float, by: float,
+                    reach: float) -> bool:
+    return math.hypot(ax - bx, ay - by) <= reach
+
+
+def within_reach(ax: float, ay: float, bx: float, by: float,
+                 reach: float) -> bool:
+    if not _nat.loaded():
+        raise RuntimeError("native within_reach required")
+    got = bool(_nat.module().within_reach(ax, ay, bx, by, reach))
+    if _nat.trace():
+        ref = within_reach_py(ax, ay, bx, by, reach)
+        if got is not ref:
+            raise AssertionError(
+                "native within_reach DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
+
+
+def count_within_reach_py(cx: float, cy: float,
+                          pts: list[tuple[float, float]],
+                          radius: float) -> int:
+    return sum(1 for px, py in pts if math.hypot(px - cx, py - cy) <= radius)
+
+
+def count_within_reach(cx: float, cy: float,
+                       pts: list[tuple[float, float]],
+                       radius: float) -> int:
+    if not _nat.loaded():
+        raise RuntimeError("native count_within_reach required")
+    got = int(_nat.module().count_within_reach(cx, cy, pts, radius))
+    if _nat.trace():
+        ref = count_within_reach_py(cx, cy, pts, radius)
+        if got != ref:
+            raise AssertionError(
+                "native count_within_reach DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
+
+
 def _via_obstacles(model: PcbModel, inst, reach: float) \
         -> list[tuple[float, float, float, float, str, float, str]]:
     names = {num: nm for nm, num in model.net_numbers.items()}
     out: list[tuple[float, float, float, float, str, float, str]] = []
     for other in model.insts:
-        if math.hypot(other.x - inst.x, other.y - inst.y) <= reach:
+        if within_reach(other.x, other.y, inst.x, inst.y, reach):
             out.extend(_pad_obstacles(other))
     for c in model.copper:
         if c.get("kind") != "via":
             continue
         cx, cy = float(c["x"]), float(c["y"])
-        if math.hypot(cx - inst.x, cy - inst.y) > reach:
+        if not within_reach(cx, cy, inst.x, inst.y, reach):
             continue
         vr = float(c.get("size", THERMAL_VIA_SIZE)) / 2
         out.append((round(cx, 4), round(cy, 4), vr, vr,
@@ -762,8 +802,7 @@ def _report_via_shortfall(inst, chosen: list[tuple[float, float]],
     need = _pour_credit_need(inst.value)
     if need is None:
         return None
-    n_in = sum(1 for vx, vy in chosen
-               if math.hypot(vx - inst.x, vy - inst.y) <= need.radius_mm)
+    n_in = count_within_reach(inst.x, inst.y, chosen, need.radius_mm)
     if n_in >= need.min_vias:
         return None
     top = sorted(vetoes.items(), key=lambda kv: (-kv[1], kv[0]))[:4]

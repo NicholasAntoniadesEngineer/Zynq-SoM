@@ -488,6 +488,14 @@ Box4 aabb_from_corners(double x0, double y0, double x1, double y1, int digits);
 double min_hypot_to_points(
     double u, double v,
     const std::vector<std::pair<double, double>>& pts);
+bool within_reach(double ax, double ay, double bx, double by, double reach);
+int count_within_reach(
+    double cx, double cy,
+    const std::vector<std::pair<double, double>>& pts, double radius);
+std::pair<double, double> page_mid_local(const Box4& page, double origin_x,
+                                         double origin_y);
+std::string pair_convergence(bool same_row, int delta_lane);
+double signed_mag(double magnitude, double sign);
 
 std::vector<std::vector<Seg2>> cluster_slot_segs(
     const std::vector<std::tuple<std::string, double, double>>& pad_offs,

@@ -413,6 +413,46 @@ def min_hypot_to_points(u: float, v: float,
     return got
 
 
+def pair_convergence_py(same_row: bool, delta_lane: int) -> str:
+    if same_row and delta_lane == 1:
+        return "immediate"
+    if same_row and delta_lane == 2:
+        return "quad"
+    if same_row:
+        return "split"
+    return "row_wrap"
+
+
+def pair_convergence(same_row: bool, delta_lane: int) -> str:
+    if not _nat.loaded():
+        raise RuntimeError("native pair_convergence required")
+    got = str(_nat.module().pair_convergence(same_row, delta_lane))
+    if _nat.trace():
+        ref = pair_convergence_py(same_row, delta_lane)
+        if got != ref:
+            raise AssertionError(
+                "native pair_convergence DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
+
+
+def signed_mag_py(magnitude: float, sign: float) -> float:
+    return math.copysign(magnitude, sign)
+
+
+def signed_mag(magnitude: float, sign: float) -> float:
+    if not _nat.loaded():
+        raise RuntimeError("native signed_mag required")
+    got = float(_nat.module().signed_mag(magnitude, sign))
+    if _nat.trace():
+        ref = signed_mag_py(magnitude, sign)
+        if got != ref:
+            raise AssertionError(
+                "native signed_mag DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
+
+
 CORRIDOR_V_MARGIN = 0.15
 CORRIDOR_LIP = 0.3
 
@@ -1287,10 +1327,10 @@ def build_escape_plan(model) -> dict:
                     width, si = SPINE_W, "GND"
                 elif klass == "POWER":
                     direction = "plane"
-                    port_v = math.copysign(pad_outer_tip + 0.5, sgn)
+                    port_v = signed_mag(pad_outer_tip + 0.5, sgn)
                     width, si = 0.4, "POWER"
                 else:
-                    direction, port_v = "outward", math.copysign(escape_v, sgn)
+                    direction, port_v = "outward", signed_mag(escape_v, sgn)
                     cls = model.netclass_of.get(name, "Default")
                     geo = model.classes.get(cls)
                     if geo is None and cls.startswith("DP"):
@@ -1320,9 +1360,9 @@ def build_escape_plan(model) -> dict:
         for sgn in sorted(rows):
             us = [u for u, _p, _n in rows[sgn]]
             c0 = _to_board(conns[ref], min(us) - 0.5,
-                           math.copysign(pad_outer_tip, sgn))
+                           signed_mag(pad_outer_tip, sgn))
             c1 = _to_board(conns[ref], max(us) + 0.5,
-                           math.copysign(escape_v + CORRIDOR_LIP, sgn))
+                           signed_mag(escape_v + CORRIDOR_LIP, sgn))
             corridors[f"{ref}:{'S' if sgn > 0 else 'N'}"] = {
                 "rect": aabb_from_corners(c0[0], c0[1], c1[0], c1[1], 4),
                 "purpose": "DF40 escape-lane corridor (T2) — composition "
@@ -1344,14 +1384,7 @@ def build_escape_plan(model) -> dict:
                         key=lambda k: -si_triage.RANK[k])
             same_row = a["row"] == b["row"]
             dlane = abs(a["lane"] - b["lane"])
-            if same_row and dlane == 1:
-                conv = "immediate"
-            elif same_row and dlane == 2:
-                conv = "quad"
-            elif same_row:
-                conv = "split"
-            else:
-                conv = "row_wrap"
+            conv = pair_convergence(same_row, dlane)
             rec = {"base": base, "conn": ref, "halves": halves,
                    "si_class": klass, "same_row": same_row,
                    "delta_lane": dlane, "convergence": conv}

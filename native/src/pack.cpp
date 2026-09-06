@@ -2791,4 +2791,43 @@ double min_hypot_to_points(
     return best;
 }
 
+bool within_reach(double ax, double ay, double bx, double by, double reach) {
+    return std::hypot(ax - bx, ay - by) <= reach;
+}
+
+int count_within_reach(
+    double cx, double cy,
+    const std::vector<std::pair<double, double>>& pts, double radius) {
+    int n = 0;
+    for (const auto& pt : pts) {
+        if (std::hypot(pt.first - cx, pt.second - cy) <= radius) {
+            ++n;
+        }
+    }
+    return n;
+}
+
+std::pair<double, double> page_mid_local(const Box4& page, double origin_x,
+                                         double origin_y) {
+    const auto c = rect_center(page);
+    return {c.first - origin_x, c.second - origin_y};
+}
+
+std::string pair_convergence(bool same_row, int delta_lane) {
+    if (same_row && delta_lane == 1) {
+        return "immediate";
+    }
+    if (same_row && delta_lane == 2) {
+        return "quad";
+    }
+    if (same_row) {
+        return "split";
+    }
+    return "row_wrap";
+}
+
+double signed_mag(double magnitude, double sign) {
+    return std::copysign(magnitude, sign);
+}
+
 }  // namespace schgen

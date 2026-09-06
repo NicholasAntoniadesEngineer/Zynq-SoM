@@ -33,6 +33,50 @@ _KNOWN_EXTERNAL_KEYS = {"flow", "downstream", "output_roles", "far", "near_max",
 _SOM_TOKEN = "@som"
 
 
+def page_mid_local_py(page: tuple[float, float, float, float],
+                      origin_x: float, origin_y: float
+                      ) -> tuple[float, float]:
+    return ((page[0] + page[2]) / 2 - origin_x,
+            (page[1] + page[3]) / 2 - origin_y)
+
+
+def page_mid_local(page: tuple[float, float, float, float],
+                   origin_x: float, origin_y: float
+                   ) -> tuple[float, float]:
+    if not _nat.loaded():
+        raise RuntimeError("native page_mid_local required")
+    got = tuple(_nat.module().page_mid_local(page, origin_x, origin_y))
+    if _nat.trace():
+        ref = page_mid_local_py(page, origin_x, origin_y)
+        if got != ref:
+            raise AssertionError(
+                "native page_mid_local DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
+
+
+def pose_halo_abs_py(pose: tuple[float, float],
+                     halo: tuple[float, float, float, float]
+                     ) -> tuple[float, float, float, float]:
+    return (pose[0] + halo[0], pose[1] + halo[1],
+            pose[0] + halo[2], pose[1] + halo[3])
+
+
+def pose_halo_abs(pose: tuple[float, float],
+                  halo: tuple[float, float, float, float]
+                  ) -> tuple[float, float, float, float]:
+    if not _nat.loaded():
+        raise RuntimeError("native offset_rect required")
+    got = tuple(_nat.module().offset_rect(halo, pose[0], pose[1]))
+    if _nat.trace():
+        ref = pose_halo_abs_py(pose, halo)
+        if got != ref:
+            raise AssertionError(
+                "native offset_rect DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
+
+
 def weighted_median_py(pulls: list[tuple[float, float]]) -> float:
     ordered = sorted(pulls, key=lambda pp: pp[1])
     tot = sum(w for w, _ in ordered)
@@ -1093,10 +1137,10 @@ def legalize_compact(board_w: float, board_h: float,
                 or (s not in vset and g not in vset):
             return []
         sr = (seed_rect[s] if s in vset
-              else _abs(fixed_poses[s], hs))
+              else pose_halo_abs(fixed_poses[s], hs))
         gr = (_jr if _jr is not None
               else seed_rect[g] if g in vset
-              else _abs(fixed_poses[g], hg))
+              else pose_halo_abs(fixed_poses[g], hg))
         dom, s_first = _pair_axis(sr, gr)
         lo, hi = (s, g) if s_first else (g, s)
         hlo, hhi = (hs, hg) if s_first else (hg, hs)
@@ -1145,10 +1189,10 @@ def legalize_compact(board_w: float, board_h: float,
                 or (s not in vset and g not in vset):
             return []
         sr = (seed_rect[s] if s in vset
-              else _abs(fixed_poses[s], hs))
+              else pose_halo_abs(fixed_poses[s], hs))
         gr = (_jr if _jr is not None
               else seed_rect[g] if g in vset
-              else _abs(fixed_poses[g], hg))
+              else pose_halo_abs(fixed_poses[g], hg))
         rows = _nat.module().near_max_edges(
             s, g, bound, axis, hs, hg, sr, gr,
             s in vset, g in vset,
@@ -1166,9 +1210,6 @@ def legalize_compact(board_w: float, board_h: float,
                     f"cpp={g2} python={r2}")
         return got
 
-    def _abs(p: tuple[float, float], h: tuple[float, float, float, float]):
-        return (p[0] + h[0], p[1] + h[1], p[0] + h[2], p[1] + h[3])
-
     def _descend(px: dict[str, float], py: dict[str, float],
                  hops: tuple[Term, ...], seed_only: bool) -> None:
         if not _nat.loaded():
@@ -1179,8 +1220,7 @@ def legalize_compact(board_w: float, board_h: float,
         hop_pairs = [(t.subject, t.target) for t in hops]
         cents = [(n, cent_off(n)) for n in names]
         cents.extend((fn, cent_off(fn)) for fn in frect)
-        mid_x = (som_core_page[0] + som_core_page[2]) / 2 - ORIGIN_X
-        mid_y = (som_core_page[1] + som_core_page[3]) / 2 - ORIGIN_Y
+        mid_x, mid_y = page_mid_local(som_core_page, ORIGIN_X, ORIGIN_Y)
         nx, ny = _nat.module().legalize_descend_passes(
             names,
             [px[n] for n in names], [py[n] for n in names],
@@ -1273,14 +1313,13 @@ def legalize_compact(board_w: float, board_h: float,
                                               fixed_poses[other][i]
                                               + oc[i] - co[i]))
                             elif other == _SOM_TOKEN:
-                                mid = (som_core_page[i]
-                                       + som_core_page[i + 2]) / 2
                                 from schgen.generate.pcb.constants import (
                                     ORIGIN_X,
                                     ORIGIN_Y,
                                 )
-                                mid -= (ORIGIN_X if axis == "x" else ORIGIN_Y)
-                                pulls.append((W_HOP, mid - co[i]))
+                                mid_xy = page_mid_local(
+                                    som_core_page, ORIGIN_X, ORIGIN_Y)
+                                pulls.append((W_HOP, mid_xy[i] - co[i]))
                     pulls.append((W_SEED if not seed_only else 1.0,
                                   v.seed[i]))
                     best = weighted_median(pulls)

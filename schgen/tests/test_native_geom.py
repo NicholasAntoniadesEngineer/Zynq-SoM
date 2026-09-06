@@ -2225,6 +2225,45 @@ def test_escape_zone_cover_reach_and_halo_match_python(geom, monkeypatch):
         br._eff_box_py((0.0, 0.0, 4.0, 2.0), 90.0, 10.0, 20.0))
 
 
+def test_reach_mid_pair_and_signed_mag_match_python(geom, monkeypatch):
+    from schgen.generate import floorplan_compose as fc
+    from schgen.generate.pcb import embed as em
+    from schgen.generate.pcb import escape as esc
+    from schgen.generate.pcb.embed import (
+        count_within_reach,
+        count_within_reach_py,
+        within_reach,
+        within_reach_py,
+    )
+    from schgen.generate.pcb.escape import (
+        pair_convergence,
+        pair_convergence_py,
+        signed_mag,
+        signed_mag_py,
+    )
+    monkeypatch.setattr(esc._nat, "trace", lambda: True)
+    monkeypatch.setattr(em._nat, "trace", lambda: True)
+    monkeypatch.setattr(fc._nat, "trace", lambda: True)
+    assert within_reach(0.0, 0.0, 3.0, 4.0, 5.0) is True
+    assert within_reach_py(0.0, 0.0, 3.0, 4.0, 4.9) is False
+    pts = [(1.0, 0.0), (10.0, 0.0), (0.0, 2.0)]
+    assert count_within_reach(0.0, 0.0, pts, 2.0) == count_within_reach_py(
+        0.0, 0.0, pts, 2.0) == 2
+    page = (25.0, 37.0, 55.0, 67.0)
+    assert fc.page_mid_local(page, 25.0, 25.0) == fc.page_mid_local_py(
+        page, 25.0, 25.0)
+    halo = (-1.0, -2.0, 8.0, 6.0)
+    assert fc.pose_halo_abs((10.0, 20.0), halo) == fc.pose_halo_abs_py(
+        (10.0, 20.0), halo)
+    assert pair_convergence(True, 1) == pair_convergence_py(True, 1) == (
+        "immediate")
+    assert pair_convergence(True, 2) == "quad"
+    assert pair_convergence(True, 5) == "split"
+    assert pair_convergence(False, 1) == "row_wrap"
+    assert signed_mag(3.5, -1.0) == signed_mag_py(3.5, -1.0) == -3.5
+    assert signed_mag(3.5, 1.0) == 3.5
+
+
 def test_place_geom_wrappers_match_python(geom, monkeypatch):
     from schgen.layout import place as pl
     monkeypatch.setattr(pl._nat, "trace", lambda: True)

@@ -1246,6 +1246,14 @@ NB_MODULE(_geom, m) {
              const std::vector<std::pair<double, double>>& pts) {
               return schgen::min_hypot_to_points(u, v, pts);
           });
+    m.def("within_reach", &schgen::within_reach);
+    m.def("count_within_reach", &schgen::count_within_reach);
+    m.def("page_mid_local",
+          [](const BoxTup& page, double origin_x, double origin_y) {
+              return schgen::page_mid_local(as_box(page), origin_x, origin_y);
+          });
+    m.def("pair_convergence", &schgen::pair_convergence);
+    m.def("signed_mag", &schgen::signed_mag);
     m.def("board_to_uv",
           [](double cx, double cy, double bx, double by, double rot) {
               return schgen::board_to_uv(cx, cy, bx, by, rot);
