@@ -385,6 +385,122 @@ NB_MODULE(_geom, m) {
               }
               return out;
           });
+    m.def("evaluate_terms",
+          [](double board_w, double board_h,
+             const std::optional<BoxTup>& som_core,
+             const std::vector<std::pair<std::string, PtTup>>& poses,
+             const std::vector<std::tuple<
+                 std::string,
+                 std::vector<std::tuple<std::string, double, double>>,
+                 std::vector<std::tuple<std::string, double, double, double,
+                                        double>>>>& metrics,
+             const std::vector<std::tuple<std::string, std::string, std::string,
+                                          std::optional<double>,
+                                          std::vector<std::string>>>& terms,
+             const std::vector<std::pair<std::string, double>>& far_guard,
+             const std::vector<std::pair<std::string, BoxTup>>& som_j_rects,
+             double origin_x, double origin_y) {
+              std::optional<schgen::Box4> core;
+              if (som_core.has_value()) {
+                  core = as_box(*som_core);
+              }
+              std::vector<std::pair<std::string, std::pair<double, double>>>
+                  pose_rows;
+              pose_rows.reserve(poses.size());
+              for (const auto& p : poses) {
+                  pose_rows.emplace_back(
+                      p.first,
+                      std::make_pair(std::get<0>(p.second),
+                                     std::get<1>(p.second)));
+              }
+              std::vector<schgen::EvalMetric> mets;
+              mets.reserve(metrics.size());
+              for (const auto& m : metrics) {
+                  schgen::EvalMetric row;
+                  row.name = std::get<0>(m);
+                  row.offsets = std::get<1>(m);
+                  row.pad_union = std::get<2>(m);
+                  mets.push_back(std::move(row));
+              }
+              std::vector<schgen::EvalTermIn> tin;
+              tin.reserve(terms.size());
+              for (const auto& t : terms) {
+                  schgen::EvalTermIn row;
+                  row.kind = std::get<0>(t);
+                  row.subject = std::get<1>(t);
+                  row.target = std::get<2>(t);
+                  if (std::get<3>(t).has_value()) {
+                      row.bound = *std::get<3>(t);
+                      row.bound_set = true;
+                  }
+                  row.out_refs = std::get<4>(t);
+                  tin.push_back(std::move(row));
+              }
+              std::vector<std::pair<std::string, schgen::Box4>> jacks;
+              jacks.reserve(som_j_rects.size());
+              for (const auto& j : som_j_rects) {
+                  jacks.emplace_back(j.first, as_box(j.second));
+              }
+              auto hits = schgen::evaluate_terms(
+                  board_w, board_h, core, pose_rows, mets, tin, far_guard,
+                  jacks, origin_x, origin_y);
+              std::vector<std::tuple<double, double, double, bool, std::string>>
+                  out;
+              out.reserve(hits.size());
+              for (const auto& h : hits) {
+                  out.emplace_back(h.measured, h.bound, h.margin, h.ok,
+                                   h.note);
+              }
+              return out;
+          });
+    m.def("legalize_descend_passes",
+          [](const std::vector<std::string>& names,
+             const std::vector<double>& pos_x,
+             const std::vector<double>& pos_y,
+             const std::vector<double>& seed_x,
+             const std::vector<double>& seed_y,
+             const std::vector<std::tuple<std::string, std::string, double>>&
+                 edges_x,
+             const std::vector<std::tuple<std::string, std::string, double>>&
+                 edges_y,
+             const std::vector<std::pair<std::string, std::string>>& hops,
+             const std::vector<std::pair<std::string, PtTup>>& cent_off,
+             const std::vector<std::pair<std::string, PtTup>>& fixed_poses,
+             double som_mid_x, double som_mid_y, bool has_som, bool seed_only,
+             double hop_weight, double seed_weight, int median_passes) {
+              std::vector<schgen::NamedEdge> ex;
+              std::vector<schgen::NamedEdge> ey;
+              ex.reserve(edges_x.size());
+              ey.reserve(edges_y.size());
+              for (const auto& e : edges_x) {
+                  ex.push_back(schgen::NamedEdge{std::get<0>(e), std::get<1>(e),
+                                                 std::get<2>(e)});
+              }
+              for (const auto& e : edges_y) {
+                  ey.push_back(schgen::NamedEdge{std::get<0>(e), std::get<1>(e),
+                                                 std::get<2>(e)});
+              }
+              std::vector<std::pair<std::string, std::pair<double, double>>>
+                  cents;
+              std::vector<std::pair<std::string, std::pair<double, double>>>
+                  fixed;
+              cents.reserve(cent_off.size());
+              fixed.reserve(fixed_poses.size());
+              for (const auto& c : cent_off) {
+                  cents.emplace_back(
+                      c.first, std::make_pair(std::get<0>(c.second),
+                                              std::get<1>(c.second)));
+              }
+              for (const auto& f : fixed_poses) {
+                  fixed.emplace_back(
+                      f.first, std::make_pair(std::get<0>(f.second),
+                                              std::get<1>(f.second)));
+              }
+              return schgen::legalize_descend_passes(
+                  names, pos_x, pos_y, seed_x, seed_y, ex, ey, hops, cents,
+                  fixed, som_mid_x, som_mid_y, has_som, seed_only, hop_weight,
+                  seed_weight, median_passes);
+          });
     m.def("rects_overlap_any",
           [](const std::vector<BoxTup>& probes,
              const std::vector<BoxTup>& obstacles, double eps) {

@@ -1601,6 +1601,153 @@ def test_pack_legalize_preflight_kernels(geom):
     assert geom.conn_flag_x0(10.16, 3, U) == gsnap(-10.16)
 
 
+def test_evaluate_terms_matches_python(geom, monkeypatch):
+    from schgen.generate import floorplan_compose as fc
+    from schgen.generate.pcb.constants import ORIGIN_X, ORIGIN_Y
+
+    def metrics_one_part(width, height):
+        return fc.LocalMetrics(
+            offsets=(("U1", width / 2, height / 2),),
+            pad_union=(("U1", 0.0, 0.0, width, height),),
+            zone_wh=(width, height))
+
+    mets = {"a": metrics_one_part(10, 10), "b": metrics_one_part(8, 8)}
+    som = (60.0, 60.0, 111.0, 103.0)
+    poses = {"a": (20.0, 20.0), "b": (54.0, 20.0)}
+    hop = fc.Term(kind="flow_hop", sheet="a", subject="a", target_raw="b",
+                  bound=None, basis="test", enforced=True)
+    near = fc.Term(kind="near_max", sheet="a", subject="a", target_raw="b",
+                   bound=12.0, basis="test", enforced=True)
+    intent = fc.Term(kind="near_intent", sheet="a", subject="a",
+                     target_raw="b", bound=None, basis="test", enforced=False)
+    far = fc.Term(kind="far_min", sheet="a", subject="a", target_raw="b",
+                  bound=5.0, basis="test", enforced=True)
+    face = fc.Term(kind="facing", sheet="a", subject="a", target_raw="b",
+                   bound=None, basis="test", enforced=True,
+                   out_refs=("U1",))
+    missing = fc.Term(kind="near_max", sheet="a", subject="a",
+                      target_raw="gone", bound=4.0, basis="test",
+                      enforced=True)
+    index = fc.TermIndex(hard=(hop, near, far, face, missing), soft=(intent,))
+    monkeypatch.setattr(fc._nat, "trace", lambda: True)
+    got = fc.evaluate_terms(170.0, 151.0, som, poses, mets, index)
+    ref = fc.evaluate_terms_py(170.0, 151.0, som, poses, mets, index)
+    assert [(e.term.key, e.measured, e.bound, e.margin, e.ok, e.note)
+            for e in got] == [
+                (e.term.key, e.measured, e.bound, e.margin, e.ok, e.note)
+                for e in ref]
+    rows = geom.evaluate_terms(
+        170.0, 151.0, som, list(poses.items()),
+        [(name, list(m.offsets), list(m.pad_union))
+         for name, m in mets.items()],
+        [(t.kind, t.subject, t.target, t.bound, list(t.out_refs))
+         for t in index.terms],
+        list(fc.FAR_L4_GUARD_MM.items()), [], ORIGIN_X, ORIGIN_Y)
+    assert [(measured, bound, margin, ok, note)
+            for measured, bound, margin, ok, note in rows] == [
+                (e.measured, e.bound, e.margin, e.ok, e.note) for e in ref]
+
+
+def test_legalize_descend_matches_python(geom, monkeypatch):
+    from schgen.generate import floorplan_compose as fc
+
+    def metrics_one_part(width, height):
+        return fc.LocalMetrics(
+            offsets=(("U1", width / 2, height / 2),),
+            pad_union=(("U1", 0.0, 0.0, width, height),),
+            zone_wh=(width, height))
+
+    monkeypatch.setattr(fc._nat, "trace", lambda: True)
+    mets = {"a": metrics_one_part(10, 10), "b": metrics_one_part(8, 8)}
+    movable = fc.LegalizeVar("a", 10, 10, (20.0, 20.0), 20.0, 20.0)
+    hop = fc.Term(kind="flow_hop", sheet="a", subject="a", target_raw="b",
+                  bound=None, basis="test", enforced=True)
+    near = fc.Term(kind="near_max", sheet="a", subject="a", target_raw="b",
+                   bound=12.0, basis="test", enforced=True)
+    index = fc.TermIndex(hard=(hop, near), soft=())
+    log = []
+    ok = fc.legalize_compact(
+        170.0, 151.0, (60.0, 60.0, 111.0, 103.0),
+        [("b", 100.0, 20.0, 108.0, 28.0)], [movable], index, mets,
+        {"b": (100.0, 20.0)}, {}, 0.3, compact=True, log=log)
+    assert ok, log
+    names = ["a"]
+    pos_x = [20.0]
+    pos_y = [20.0]
+    seed_x = [20.0]
+    seed_y = [20.0]
+    edges_x = [("#0", "a", 159.7), ("a", "#0", -0.3)]
+    edges_y = [("#0", "a", 140.7), ("a", "#0", -0.3)]
+    nx, ny = geom.legalize_descend_passes(
+        names, pos_x, pos_y, seed_x, seed_y, edges_x, edges_y,
+        [("a", "b")], [("a", (5.0, 5.0)), ("b", (4.0, 4.0))],
+        [("b", (100.0, 20.0))], 60.5, 56.5, True, False, 1.0, 0.05, 8)
+    keep_x = {"a": 20.0, "#0": 0.0}
+    keep_y = {"a": 20.0, "#0": 0.0}
+    hops = (("a", "b"),)
+    cents = {"a": (5.0, 5.0), "b": (4.0, 4.0)}
+    fixed = {"b": (100.0, 20.0)}
+    for _pass in range(8):
+        moved = 0.0
+        for name in names:
+            for axis, pos, edges, seed in (
+                    ("x", keep_x, edges_x, seed_x),
+                    ("y", keep_y, edges_y, seed_y)):
+                lo, hi = -math.inf, math.inf
+                for src, dst, cost in edges:
+                    if dst == name and src != name:
+                        hi = min(hi, pos.get(src, 0.0) + cost)
+                    if src == name and dst != name:
+                        lo = max(lo, pos.get(dst, 0.0) - cost)
+                if lo > hi:
+                    continue
+                axis_i = 0 if axis == "x" else 1
+                pulls = []
+                self_c = cents[name][axis_i]
+                for left, right in hops:
+                    other = (right if left == name
+                             else left if right == name else None)
+                    if other is None:
+                        continue
+                    other_c = cents[other][axis_i]
+                    if other in keep_x:
+                        other_p = (keep_x if axis == "x" else keep_y)[other]
+                        pulls.append((1.0, other_p + other_c - self_c))
+                    elif other in fixed:
+                        pulls.append((1.0, fixed[other][axis_i]
+                                      + other_c - self_c))
+                pulls.append((0.05, seed[0]))
+                best = fc.weighted_median_py(pulls)
+                from schgen.core.quantize import legalize_pose_quantum
+                quant = legalize_pose_quantum(best)
+                quant = max(lo, min(quant, hi))
+                old = pos[name]
+                if abs(quant - old) > 1e-12:
+                    pos[name] = quant
+                    moved = max(moved, abs(quant - old))
+        if moved <= 1e-9:
+            break
+    assert nx[0] == keep_x["a"]
+    assert ny[0] == keep_y["a"]
+
+
+def test_place_geom_wrappers_match_python(geom, monkeypatch):
+    from schgen.layout import place as pl
+    monkeypatch.setattr(pl._nat, "trace", lambda: True)
+    assert pl.gceil(5.08) == geom.conn_signed_ceil(1, 5.08, pl.U)
+    assert geom.conn_signed_ceil(-1, 5.08, pl.U) == -pl.gceil(5.08)
+    assert tuple(geom.flags_row_origin(2.0, 11.0, pl.U)) == (
+        pl.gsnap(2.0 + 4 * pl.U), pl.gceil(11.0 + 6 * pl.U))
+    assert geom.next_flag_x(10.0, 10.16, 4.0, 6.0, pl.U, 2.54) == pl.gceil(
+        10.0 + max(10.16, 2.0 + 3.0 + 2.54))
+    assert geom.conn_gnd_x(-1, 8.0, 0.0, 3.0, 5.08, pl.U) == (
+        -pl.gceil(max(8.0, 3.0) + 5.08))
+    wrap = geom.farm_wrap_advance(12.0, 30.0, True, 4.0, 5.0, 8.0, pl.U)
+    assert wrap == (False, 12.0, 5.0)
+    wrap = geom.farm_wrap_advance(40.0, 30.0, False, 4.0, 5.0, 8.0, pl.U)
+    assert wrap == (False, 40.0, 5.0)
+
+
 def test_timing_span_records():
     from schgen.core import timing
     timing.reset()

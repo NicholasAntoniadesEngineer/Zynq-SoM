@@ -1,9 +1,11 @@
 #include "schgen/legalize.hpp"
 
 #include "schgen/occupancy.hpp"
+#include "schgen/quantize.hpp"
 
 #include <algorithm>
 #include <cmath>
+#include <cstdio>
 #include <limits>
 #include <stdexcept>
 #include <tuple>
@@ -649,6 +651,390 @@ std::vector<NearMaxEdge> near_max_edges(
         }
     }
     return out;
+}
+
+namespace {
+
+std::string format_g(double value) {
+    char buf[64];
+    std::snprintf(buf, sizeof(buf), "%g", value);
+    return buf;
+}
+
+std::string format_dot(double value) {
+    char buf[64];
+    std::snprintf(buf, sizeof(buf), "%+.2f", value);
+    return buf;
+}
+
+}  // namespace
+
+std::vector<EvalTermOut> evaluate_terms(
+    double board_w, double board_h, const std::optional<Box4>& som_core,
+    const std::vector<std::pair<std::string, std::pair<double, double>>>&
+        poses,
+    const std::vector<EvalMetric>& metrics, const std::vector<EvalTermIn>& terms,
+    const std::vector<std::pair<std::string, double>>& far_guard,
+    const std::vector<std::pair<std::string, Box4>>& som_j_rects,
+    double origin_x, double origin_y) {
+    std::unordered_map<std::string, std::pair<double, double>> pose_of;
+    for (const auto& p : poses) {
+        pose_of[p.first] = p.second;
+    }
+    std::unordered_map<std::string, const EvalMetric*> metric_of;
+    for (const auto& m : metrics) {
+        metric_of[m.name] = &m;
+    }
+    std::unordered_map<std::string, double> guard_of;
+    for (const auto& g : far_guard) {
+        guard_of[g.first] = g.second;
+    }
+    std::unordered_map<std::string, Box4> jack_of;
+    for (const auto& j : som_j_rects) {
+        jack_of[j.first] = j.second;
+    }
+    const double budget = flow_budget(board_w, board_h, som_core);
+
+    auto centroid_of =
+        [&](const std::string& name) -> std::optional<std::pair<double, double>> {
+        if (name == "@som") {
+            if (!som_core.has_value()) {
+                return std::nullopt;
+            }
+            const Box4& s = *som_core;
+            return std::make_pair(py_round((s.x0 + s.x1) / 2.0, 4),
+                                  py_round((s.y0 + s.y1) / 2.0, 4));
+        }
+        if (name.rfind("som_j", 0) == 0) {
+            const auto it = jack_of.find(name);
+            if (it == jack_of.end()) {
+                return std::nullopt;
+            }
+            const Box4& r = it->second;
+            return std::make_pair(
+                py_round((r.x0 + r.x1) / 2.0 + origin_x, 4),
+                py_round((r.y0 + r.y1) / 2.0 + origin_y, 4));
+        }
+        const auto pose_it = pose_of.find(name);
+        const auto met_it = metric_of.find(name);
+        if (pose_it == pose_of.end() || met_it == metric_of.end()) {
+            return std::nullopt;
+        }
+        return predicted_centroid(pose_it->second.first, pose_it->second.second,
+                                  origin_x, origin_y, met_it->second->offsets,
+                                  nullptr);
+    };
+
+    auto bbox_of = [&](const std::string& name) -> std::optional<Box4> {
+        if (name == "@som") {
+            return som_core;
+        }
+        if (name.rfind("som_j", 0) == 0) {
+            const auto it = jack_of.find(name);
+            if (it == jack_of.end()) {
+                return std::nullopt;
+            }
+            const Box4& r = it->second;
+            return Box4{r.x0 + origin_x, r.y0 + origin_y, r.x1 + origin_x,
+                        r.y1 + origin_y};
+        }
+        const auto pose_it = pose_of.find(name);
+        const auto met_it = metric_of.find(name);
+        if (pose_it == pose_of.end() || met_it == metric_of.end()) {
+            return std::nullopt;
+        }
+        return predicted_bbox(pose_it->second.first, pose_it->second.second,
+                              origin_x, origin_y, met_it->second->offsets,
+                              met_it->second->pad_union);
+    };
+
+    auto guard_at = [&](const std::string& name) {
+        const auto it = guard_of.find(name);
+        return it == guard_of.end() ? 0.0 : it->second;
+    };
+
+    std::vector<EvalTermOut> out;
+    out.reserve(terms.size());
+    for (const EvalTermIn& t : terms) {
+        if (t.kind == "flow_hop") {
+            const auto ca = centroid_of(t.subject);
+            const auto cb = centroid_of(t.target);
+            if (!ca.has_value() || !cb.has_value()) {
+                out.push_back(EvalTermOut{std::numeric_limits<double>::infinity(),
+                                          py_round(budget, 4),
+                                          -std::numeric_limits<double>::infinity(),
+                                          false, "UNRESOLVED"});
+                continue;
+            }
+            const double d = std::hypot(ca->first - cb->first,
+                                        ca->second - cb->second);
+            const double g = guard_at(t.subject) + guard_at(t.target);
+            const double eff = budget - g;
+            std::string note;
+            if (g != 0.0) {
+                note = "incl L4 guard " + format_g(g) + "mm";
+            }
+            out.push_back(EvalTermOut{d, py_round(eff, 4),
+                                      py_round(eff - d, 4), d <= eff, note});
+        } else if (t.kind == "near_max" || t.kind == "near_intent") {
+            const auto ba = bbox_of(t.subject);
+            const auto bb = bbox_of(t.target);
+            const double bound = t.bound_set ? t.bound : 0.0;
+            if (!ba.has_value() || !bb.has_value()) {
+                out.push_back(EvalTermOut{
+                    std::numeric_limits<double>::infinity(), bound,
+                    -std::numeric_limits<double>::infinity(),
+                    t.kind == "near_intent", "UNRESOLVED"});
+                continue;
+            }
+            const double g = bbox_gap(*ba, *bb);
+            if (t.kind == "near_intent") {
+                out.push_back(EvalTermOut{g, 0.0, 0.0, true, "advisory"});
+            } else {
+                out.push_back(EvalTermOut{g, bound, py_round(bound - g, 4),
+                                          g <= bound, ""});
+            }
+        } else if (t.kind == "far_min") {
+            const auto ca = centroid_of(t.subject);
+            const auto cb = centroid_of(t.target);
+            const double guard = std::max(guard_at(t.subject),
+                                          guard_at(t.target));
+            const double bound = (t.bound_set ? t.bound : 0.0) + guard;
+            if (!ca.has_value() || !cb.has_value()) {
+                out.push_back(EvalTermOut{
+                    std::numeric_limits<double>::infinity(), bound,
+                    -std::numeric_limits<double>::infinity(), false,
+                    "UNRESOLVED"});
+                continue;
+            }
+            const double d = std::hypot(ca->first - cb->first,
+                                        ca->second - cb->second);
+            std::string note;
+            if (guard != 0.0) {
+                note = "incl FAR_L4_GUARD " + format_g(guard) + "mm";
+            }
+            out.push_back(EvalTermOut{d, bound, py_round(d - bound, 4),
+                                      d >= bound, note});
+        } else if (t.kind == "facing") {
+            const auto czone = centroid_of(t.subject);
+            std::optional<std::pair<double, double>> cout;
+            const auto pose_it = pose_of.find(t.subject);
+            const auto met_it = metric_of.find(t.subject);
+            if (pose_it != pose_of.end() && met_it != metric_of.end()) {
+                cout = predicted_centroid(
+                    pose_it->second.first, pose_it->second.second, origin_x,
+                    origin_y, met_it->second->offsets, &t.out_refs);
+            }
+            const auto cdown = centroid_of(t.target);
+            if (!czone.has_value() || !cout.has_value() || !cdown.has_value()) {
+                out.push_back(EvalTermOut{180.0, 90.0, -90.0, false,
+                                          "UNRESOLVED"});
+                continue;
+            }
+            const auto face = facing_dot(czone->first, czone->second,
+                                         cout->first, cout->second,
+                                         cdown->first, cdown->second);
+            const std::string dot_note = "dot=" + format_dot(face.first);
+            if (guard_at(t.subject) != 0.0 || guard_at(t.target) != 0.0) {
+                out.push_back(EvalTermOut{
+                    face.second, 90.0, py_round(90.0 - face.second, 4), true,
+                    dot_note + " L4-guarded participant - gate-arbitrated"});
+            } else {
+                out.push_back(EvalTermOut{
+                    face.second, 90.0, py_round(90.0 - face.second, 4),
+                    face.first > 0.0, dot_note});
+            }
+        } else {
+            throw std::runtime_error("evaluate_terms: unknown term kind "
+                                     + t.kind);
+        }
+    }
+    return out;
+}
+
+namespace {
+
+void collect_nodes(const std::vector<NamedEdge>& edges,
+                   const std::vector<std::string>& names,
+                   std::vector<std::string>* nodes,
+                   std::unordered_map<std::string, int>* index) {
+    auto add = [&](const std::string& name) {
+        if (index->find(name) != index->end()) {
+            return;
+        }
+        (*index)[name] = static_cast<int>(nodes->size());
+        nodes->push_back(name);
+    };
+    add("#0");
+    for (const std::string& name : names) {
+        add(name);
+    }
+    for (const NamedEdge& e : edges) {
+        add(e.src);
+        add(e.dst);
+    }
+}
+
+void edges_to_arrays(const std::vector<NamedEdge>& edges,
+                     const std::unordered_map<std::string, int>& index,
+                     std::vector<int>* src, std::vector<int>* dst,
+                     std::vector<double>* cost) {
+    src->clear();
+    dst->clear();
+    cost->clear();
+    src->reserve(edges.size());
+    dst->reserve(edges.size());
+    cost->reserve(edges.size());
+    for (const NamedEdge& e : edges) {
+        src->push_back(index.at(e.src));
+        dst->push_back(index.at(e.dst));
+        cost->push_back(e.cost);
+    }
+}
+
+}  // namespace
+
+std::pair<std::vector<double>, std::vector<double>> legalize_descend_passes(
+    const std::vector<std::string>& names,
+    const std::vector<double>& pos_x, const std::vector<double>& pos_y,
+    const std::vector<double>& seed_x, const std::vector<double>& seed_y,
+    const std::vector<NamedEdge>& edges_x,
+    const std::vector<NamedEdge>& edges_y,
+    const std::vector<std::pair<std::string, std::string>>& hops,
+    const std::vector<std::pair<std::string, std::pair<double, double>>>&
+        cent_off,
+    const std::vector<std::pair<std::string, std::pair<double, double>>>&
+        fixed_poses,
+    double som_mid_x, double som_mid_y, bool has_som, bool seed_only,
+    double hop_weight, double seed_weight, int median_passes) {
+    if (names.size() != pos_x.size() || names.size() != pos_y.size()
+        || names.size() != seed_x.size() || names.size() != seed_y.size()) {
+        throw std::runtime_error(
+            "legalize_descend_passes: name arrays required same length");
+    }
+    if (median_passes <= 0) {
+        throw std::runtime_error(
+            "legalize_descend_passes: median_passes required");
+    }
+    std::unordered_map<std::string, int> name_index;
+    for (std::size_t i = 0; i < names.size(); ++i) {
+        name_index[names[i]] = static_cast<int>(i);
+    }
+    std::unordered_map<std::string, std::pair<double, double>> fixed_of;
+    for (const auto& f : fixed_poses) {
+        fixed_of[f.first] = f.second;
+    }
+    std::unordered_map<std::string, std::pair<double, double>> cent_of;
+    for (const auto& c : cent_off) {
+        cent_of[c.first] = c.second;
+    }
+    auto centroid_xy = [&](const std::string& name) {
+        const auto it = cent_of.find(name);
+        return it == cent_of.end() ? std::pair<double, double>{0.0, 0.0}
+                                   : it->second;
+    };
+    std::vector<double> px = pos_x;
+    std::vector<double> py = pos_y;
+    std::vector<std::string> nodes_x;
+    std::vector<std::string> nodes_y;
+    std::unordered_map<std::string, int> index_x;
+    std::unordered_map<std::string, int> index_y;
+    collect_nodes(edges_x, names, &nodes_x, &index_x);
+    collect_nodes(edges_y, names, &nodes_y, &index_y);
+    std::vector<int> src_x;
+    std::vector<int> dst_x;
+    std::vector<double> cost_x;
+    std::vector<int> src_y;
+    std::vector<int> dst_y;
+    std::vector<double> cost_y;
+    edges_to_arrays(edges_x, index_x, &src_x, &dst_x, &cost_x);
+    edges_to_arrays(edges_y, index_y, &src_y, &dst_y, &cost_y);
+
+    for (int pass = 0; pass < median_passes; ++pass) {
+        double moved = 0.0;
+        for (std::size_t ni = 0; ni < names.size(); ++ni) {
+            const std::string& n = names[ni];
+            for (int axis = 0; axis < 2; ++axis) {
+                const bool axis_x = (axis == 0);
+                auto& pos = axis_x ? px : py;
+                const auto& index = axis_x ? index_x : index_y;
+                const auto& nodes = axis_x ? nodes_x : nodes_y;
+                const auto& src = axis_x ? src_x : src_y;
+                const auto& dst = axis_x ? dst_x : dst_y;
+                const auto& cost = axis_x ? cost_x : cost_y;
+                std::vector<double> posv(nodes.size(), 0.0);
+                for (std::size_t k = 0; k < nodes.size(); ++k) {
+                    if (nodes[k] == "#0") {
+                        posv[k] = 0.0;
+                        continue;
+                    }
+                    const auto it = name_index.find(nodes[k]);
+                    if (it != name_index.end()) {
+                        posv[k] = pos[static_cast<std::size_t>(it->second)];
+                    }
+                }
+                const auto nit = index.find(n);
+                if (nit == index.end()) {
+                    continue;
+                }
+                const auto bounds = constraint_bounds(nit->second, src, dst,
+                                                      cost, posv);
+                const double lo = bounds.first;
+                const double hi = bounds.second;
+                if (lo > hi) {
+                    continue;
+                }
+                std::vector<std::pair<double, double>> pulls;
+                if (!seed_only) {
+                    const auto self_c = centroid_xy(n);
+                    const double co = axis_x ? self_c.first : self_c.second;
+                    for (const auto& hop : hops) {
+                        const std::string* other = nullptr;
+                        if (hop.first == n) {
+                            other = &hop.second;
+                        } else if (hop.second == n) {
+                            other = &hop.first;
+                        }
+                        if (other == nullptr) {
+                            continue;
+                        }
+                        const auto oit = name_index.find(*other);
+                        const auto oc_xy = centroid_xy(*other);
+                        const double oc = axis_x ? oc_xy.first : oc_xy.second;
+                        if (oit != name_index.end()) {
+                            const std::size_t oi =
+                                static_cast<std::size_t>(oit->second);
+                            const double op = (axis_x ? px : py)[oi];
+                            pulls.emplace_back(hop_weight, op + oc - co);
+                        } else if (fixed_of.find(*other) != fixed_of.end()) {
+                            const auto& fp = fixed_of[*other];
+                            pulls.emplace_back(
+                                hop_weight,
+                                (axis_x ? fp.first : fp.second) + oc - co);
+                        } else if (*other == "@som" && has_som) {
+                            pulls.emplace_back(
+                                hop_weight,
+                                (axis_x ? som_mid_x : som_mid_y) - co);
+                        }
+                    }
+                }
+                pulls.emplace_back(seed_only ? 1.0 : seed_weight,
+                                   axis_x ? seed_x[ni] : seed_y[ni]);
+                const double best = weighted_median(pulls);
+                double q = legalize_pose_quantum(best);
+                q = std::max(lo, std::min(q, hi));
+                const double old = pos[ni];
+                if (std::fabs(q - old) > 1e-12) {
+                    pos[ni] = q;
+                    moved = std::max(moved, std::fabs(q - old));
+                }
+            }
+        }
+        if (moved <= 1e-9) {
+            break;
+        }
+    }
+    return {px, py};
 }
 
 }  // namespace schgen

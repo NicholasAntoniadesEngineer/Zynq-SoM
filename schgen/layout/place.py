@@ -2464,7 +2464,24 @@ class _Engine:
             runs: list[tuple[float, list[float]]] = []
             cur: list[float] = []
             for ref in caps:
-                if col_x > max_right and cur:
+                if _nat.loaded():
+                    wrapped, nxt_x, nxt_y = _nat.module().farm_wrap_advance(
+                        col_x, max_right, bool(cur), farm_left, cy, row_step,
+                        U)
+                    if _nat.trace():
+                        ref_wrap = col_x > max_right and bool(cur)
+                        ref_x = farm_left if ref_wrap else col_x
+                        ref_y = gceil(cy + row_step) if ref_wrap else cy
+                        if (wrapped, nxt_x, nxt_y) != (ref_wrap, ref_x, ref_y):
+                            raise AssertionError(
+                                "native farm_wrap_advance DIVERGENCE: "
+                                f"cpp={(wrapped, nxt_x, nxt_y)} "
+                                f"python={(ref_wrap, ref_x, ref_y)}")
+                    if wrapped:
+                        runs.append((cy, cur))
+                        cur = []
+                        col_x, cy = nxt_x, nxt_y
+                elif col_x > max_right and cur:
                     runs.append((cy, cur))
                     cur = []
                     col_x = farm_left
@@ -2515,14 +2532,35 @@ class _Engine:
         if not rails:
             return
         ex0, _, _, ey1 = self._extent()
-        fy = gceil(ey1 + 6 * U)
-        fx = gsnap(ex0 + 4 * U)
+        if _nat.loaded():
+            fx, fy = _nat.module().flags_row_origin(ex0, ey1, U)
+            if _nat.trace():
+                ref = (gsnap(ex0 + 4 * U), gceil(ey1 + 6 * U))
+                if (fx, fy) != ref:
+                    raise AssertionError(
+                        "native flags_row_origin DIVERGENCE: "
+                        f"cpp={(fx, fy)} python={ref}")
+        else:
+            fy = gceil(ey1 + 6 * U)
+            fx = gsnap(ex0 + 4 * U)
         prev_w = None
         for net in rails:
             w = tm.text_wh(net.name)[0]
             if prev_w is not None:
-                fx = gceil(fx + max(self.sp.flag_pitch,
-                                    prev_w / 2 + w / 2 + 2.54))
+                if _nat.loaded():
+                    nxt = _nat.module().next_flag_x(
+                        fx, self.sp.flag_pitch, prev_w, w, U, 2.54)
+                    if _nat.trace():
+                        ref = gceil(fx + max(self.sp.flag_pitch,
+                                             prev_w / 2 + w / 2 + 2.54))
+                        if nxt != ref:
+                            raise AssertionError(
+                                "native next_flag_x DIVERGENCE: "
+                                f"cpp={nxt} python={ref}")
+                    fx = nxt
+                else:
+                    fx = gceil(fx + max(self.sp.flag_pitch,
+                                        prev_w / 2 + w / 2 + 2.54))
             if net.net_class == NetClass.GROUND:
                 self.power(net.name, fx, fy)
                 self.pl.plan(net.name, (fx, fy), (fx, fy - 2.54))
@@ -2620,6 +2658,15 @@ class _Engine:
         ax, ay = 0.0, 0.0
 
         def out(sgn: int, mag: float) -> float:
+            if _nat.loaded():
+                got = _nat.module().conn_signed_ceil(sgn, mag, U)
+                if _nat.trace():
+                    ref = sgn * gceil(mag)
+                    if got != ref:
+                        raise AssertionError(
+                            "native conn_signed_ceil DIVERGENCE: "
+                            f"cpp={got} python={ref}")
+                return got
             return sgn * gceil(mag)
 
         body = body_box_page(sdef, ax, ay, 0, "body", jref)
@@ -2751,8 +2798,19 @@ class _Engine:
                 for cl in cluster_taps(taps):
                     place_power_cluster(net, cl)
 
-            inner_limit = max(label_edge, abs(mid_x) + strip_reach)
-            x_g = out(sgn, inner_limit + 5.08)
+            if _nat.loaded():
+                x_g = _nat.module().conn_gnd_x(
+                    sgn, label_edge, mid_x, strip_reach, 5.08, U)
+                if _nat.trace():
+                    inner_limit = max(label_edge, abs(mid_x) + strip_reach)
+                    ref = out(sgn, inner_limit + 5.08)
+                    if x_g != ref:
+                        raise AssertionError(
+                            "native conn_gnd_x DIVERGENCE: "
+                            f"cpp={x_g} python={ref}")
+            else:
+                inner_limit = max(label_edge, abs(mid_x) + strip_reach)
+                x_g = out(sgn, inner_limit + 5.08)
             for net, taps in gnd_items:
                 trunk(net, taps, x_g)
                 y_bot = taps[-1][0]
@@ -2761,8 +2819,19 @@ class _Engine:
 
         rail_nets = sorted(n.name for n in c.nets.values()
                            if n.net_class in (NetClass.POWER, NetClass.GROUND))
-        flag_y = gceil(self._extent()[3] + 8 * U)
-        fx = gsnap(-sp.flag_pitch * (len(rail_nets) - 1) / 2)
+        if _nat.loaded() and rail_nets:
+            flag_y = _nat.module().conn_flag_y(self._extent()[3], U)
+            fx = _nat.module().conn_flag_x0(sp.flag_pitch, len(rail_nets), U)
+            if _nat.trace():
+                ref_y = gceil(self._extent()[3] + 8 * U)
+                ref_x = gsnap(-sp.flag_pitch * (len(rail_nets) - 1) / 2)
+                if (flag_y, fx) != (ref_y, ref_x):
+                    raise AssertionError(
+                        "native conn_flag DIVERGENCE: "
+                        f"cpp={(flag_y, fx)} python={(ref_y, ref_x)}")
+        else:
+            flag_y = gceil(self._extent()[3] + 8 * U)
+            fx = gsnap(-sp.flag_pitch * (len(rail_nets) - 1) / 2)
         for net in rail_nets:
             if c.nets[net].net_class is NetClass.GROUND:
                 self.power(net, fx, flag_y)

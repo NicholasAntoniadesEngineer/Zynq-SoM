@@ -69,6 +69,59 @@ std::vector<BuiltSep> legalize_build_seps(
 
 bool rects_overlap_any(const std::vector<Box4>& probes,
                        const std::vector<Box4>& obstacles, double eps);
+
+struct EvalTermIn {
+    std::string kind;
+    std::string subject;
+    std::string target;
+    double bound = 0.0;
+    bool bound_set = false;
+    std::vector<std::string> out_refs;
+};
+
+struct EvalMetric {
+    std::string name;
+    std::vector<std::tuple<std::string, double, double>> offsets;
+    std::vector<std::tuple<std::string, double, double, double, double>>
+        pad_union;
+};
+
+struct EvalTermOut {
+    double measured = 0.0;
+    double bound = 0.0;
+    double margin = 0.0;
+    bool ok = false;
+    std::string note;
+};
+
+std::vector<EvalTermOut> evaluate_terms(
+    double board_w, double board_h, const std::optional<Box4>& som_core,
+    const std::vector<std::pair<std::string, std::pair<double, double>>>&
+        poses,
+    const std::vector<EvalMetric>& metrics, const std::vector<EvalTermIn>& terms,
+    const std::vector<std::pair<std::string, double>>& far_guard,
+    const std::vector<std::pair<std::string, Box4>>& som_j_rects,
+    double origin_x, double origin_y);
+
+struct NamedEdge {
+    std::string src;
+    std::string dst;
+    double cost = 0.0;
+};
+
+std::pair<std::vector<double>, std::vector<double>> legalize_descend_passes(
+    const std::vector<std::string>& names,
+    const std::vector<double>& pos_x, const std::vector<double>& pos_y,
+    const std::vector<double>& seed_x, const std::vector<double>& seed_y,
+    const std::vector<NamedEdge>& edges_x,
+    const std::vector<NamedEdge>& edges_y,
+    const std::vector<std::pair<std::string, std::string>>& hops,
+    const std::vector<std::pair<std::string, std::pair<double, double>>>&
+        cent_off,
+    const std::vector<std::pair<std::string, std::pair<double, double>>>&
+        fixed_poses,
+    double som_mid_x, double som_mid_y, bool has_som, bool seed_only,
+    double hop_weight, double seed_weight, int median_passes);
 std::vector<std::pair<int, int>> mst_manhattan(
     const std::vector<std::pair<double, double>>& pts);
 double weighted_median(const std::vector<std::pair<double, double>>& pulls);

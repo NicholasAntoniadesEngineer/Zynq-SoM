@@ -461,14 +461,14 @@ def predicted_bbox(pose: tuple[float, float], m: LocalMetrics
     return predicted_bbox_py(pose, m)
 
 
-def evaluate_terms(board_w: float, board_h: float,
-                   som_core: tuple[float, float, float, float] | None,
-                   poses: dict[str, tuple[float, float]],
-                   metrics: dict[str, LocalMetrics],
-                   index: TermIndex,
-                   far_guard: dict[str, float] | None = None,
-                   som_j_rects: dict[str, tuple[float, float, float, float]]
-                   | None = None) -> list[TermEval]:
+def evaluate_terms_py(board_w: float, board_h: float,
+                      som_core: tuple[float, float, float, float] | None,
+                      poses: dict[str, tuple[float, float]],
+                      metrics: dict[str, LocalMetrics],
+                      index: TermIndex,
+                      far_guard: dict[str, float] | None = None,
+                      som_j_rects: dict[str, tuple[float, float, float, float]]
+                      | None = None) -> list[TermEval]:
     from schgen.verify.placement_flow_gate import (
         bbox_gap,
         facing_dot,
@@ -575,6 +575,51 @@ def evaluate_terms(board_w: float, board_h: float,
         else:
             raise ValueError(f"unknown term kind {t.kind!r}")
     return out
+
+
+def evaluate_terms(board_w: float, board_h: float,
+                   som_core: tuple[float, float, float, float] | None,
+                   poses: dict[str, tuple[float, float]],
+                   metrics: dict[str, LocalMetrics],
+                   index: TermIndex,
+                   far_guard: dict[str, float] | None = None,
+                   som_j_rects: dict[str, tuple[float, float, float, float]]
+                   | None = None) -> list[TermEval]:
+    if far_guard is None:
+        far_guard = FAR_L4_GUARD_MM
+    if _nat.loaded():
+        from schgen.generate.pcb.constants import ORIGIN_X, ORIGIN_Y
+        term_rows = [
+            (t.kind, t.subject, t.target, t.bound, list(t.out_refs))
+            for t in index.terms]
+        metric_rows = [
+            (name, list(m.offsets), list(m.pad_union))
+            for name, m in metrics.items()]
+        pose_rows = list(poses.items())
+        jack_rows = list((som_j_rects or {}).items())
+        guard_rows = list(far_guard.items())
+        rows = _nat.module().evaluate_terms(
+            board_w, board_h, som_core, pose_rows, metric_rows, term_rows,
+            guard_rows, jack_rows, ORIGIN_X, ORIGIN_Y)
+        got = [TermEval(t, measured, bound, margin, ok, note)
+               for t, (measured, bound, margin, ok, note)
+               in zip(index.terms, rows, strict=True)]
+        if _nat.trace():
+            ref = evaluate_terms_py(
+                board_w, board_h, som_core, poses, metrics, index, far_guard,
+                som_j_rects)
+            got_t = [(e.term.key, e.measured, e.bound, e.margin, e.ok, e.note)
+                     for e in got]
+            ref_t = [(e.term.key, e.measured, e.bound, e.margin, e.ok, e.note)
+                     for e in ref]
+            if got_t != ref_t:
+                raise AssertionError(
+                    f"native evaluate_terms DIVERGENCE: cpp={got_t} "
+                    f"python={ref_t}")
+        return got
+    return evaluate_terms_py(
+        board_w, board_h, som_core, poses, metrics, index, far_guard,
+        som_j_rects)
 
 
 def measure_terms(model, index: TermIndex | None = None) -> list[TermEval]:
@@ -1135,6 +1180,42 @@ def legalize_compact(board_w: float, board_h: float,
 
     def _descend(px: dict[str, float], py: dict[str, float],
                  hops: tuple[Term, ...], seed_only: bool) -> None:
+        if _nat.loaded():
+            from schgen.generate.pcb.constants import ORIGIN_X, ORIGIN_Y
+            edges_x = [(u, v, c) for u, v, c, _tag in build_edges("x")]
+            edges_y = [(u, v, c) for u, v, c, _tag in build_edges("y")]
+            hop_pairs = [(t.subject, t.target) for t in hops]
+            cents = [(n, cent_off(n)) for n in names]
+            cents.extend((fn, cent_off(fn)) for fn in frect)
+            mid_x = (som_core_page[0] + som_core_page[2]) / 2 - ORIGIN_X
+            mid_y = (som_core_page[1] + som_core_page[3]) / 2 - ORIGIN_Y
+            nx, ny = _nat.module().legalize_descend_passes(
+                names,
+                [px[n] for n in names], [py[n] for n in names],
+                [by_name[n].seed[0] for n in names],
+                [by_name[n].seed[1] for n in names],
+                edges_x, edges_y, hop_pairs, cents,
+                list(fixed_poses.items()), mid_x, mid_y, True, seed_only,
+                W_HOP, W_SEED, MEDIAN_PASSES)
+            if _nat.trace():
+                keepx, keepy = dict(px), dict(py)
+                _descend_py(keepx, keepy, hops, seed_only)
+                gotx = {n: nx[i] for i, n in enumerate(names)}
+                goty = {n: ny[i] for i, n in enumerate(names)}
+                if gotx != {n: keepx[n] for n in names} \
+                        or goty != {n: keepy[n] for n in names}:
+                    raise AssertionError(
+                        f"native legalize_descend DIVERGENCE: "
+                        f"cpp={(gotx, goty)} python="
+                        f"{({n: keepx[n] for n in names}, {n: keepy[n] for n in names})}")
+            for i, n in enumerate(names):
+                px[n] = nx[i]
+                py[n] = ny[i]
+            return
+        _descend_py(px, py, hops, seed_only)
+
+    def _descend_py(px: dict[str, float], py: dict[str, float],
+                    hops: tuple[Term, ...], seed_only: bool) -> None:
         for _pass in range(MEDIAN_PASSES):
             moved = 0.0
             for n in names:
