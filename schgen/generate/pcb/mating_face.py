@@ -41,8 +41,28 @@ def _pad_rows(mod_path: Path) -> tuple[tuple[str, float, float, float,
     cached = _PAD_ROW_CACHE.get(key)
     if cached is not None:
         return cached
+    text = mod_path.read_text()
+    if _nat.loaded():
+        rows = [(_ptype, px, py, prot, sw, sh)
+                for _name, _ptype, px, py, prot, sw, sh in
+                _nat.module().scan_pad_nodes(text)]
+        if _nat.trace():
+            ref = _pad_rows_py(text)
+            if tuple(rows) != ref:
+                raise AssertionError(
+                    "native scan_pad_nodes DIVERGENCE: "
+                    f"cpp={rows} python={ref} path={mod_path}")
+        _PAD_ROW_CACHE[key] = tuple(rows)
+        return _PAD_ROW_CACHE[key]
+    rows = list(_pad_rows_py(text))
+    _PAD_ROW_CACHE[key] = tuple(rows)
+    return _PAD_ROW_CACHE[key]
+
+
+def _pad_rows_py(text: str) -> tuple[tuple[str, float, float, float,
+                                           float, float], ...]:
     rows: list[tuple[str, float, float, float, float, float]] = []
-    for node in sexpr.loads(mod_path.read_text()):
+    for node in sexpr.loads(text):
         if not (isinstance(node, list) and node and node[0] == Sym("pad")):
             continue
         at = sexpr.find(node, "at")
@@ -55,8 +75,7 @@ def _pad_rows(mod_path: Path) -> tuple[tuple[str, float, float, float,
             else (0.0, 0.0)
         rows.append((str(node[2]) if len(node) > 2 else "",
                      float(at[1]), float(at[2]), prot, sw, sh))
-    _PAD_ROW_CACHE[key] = tuple(rows)
-    return _PAD_ROW_CACHE[key]
+    return tuple(rows)
 
 
 def _pad_boxes_local_py(mod_path: Path, rotation: float

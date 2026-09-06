@@ -3,6 +3,7 @@
 #include "schgen/seat.hpp"
 #include "schgen/sexpr.hpp"
 
+#include <optional>
 #include <string>
 #include <tuple>
 #include <unordered_map>
@@ -108,5 +109,16 @@ pad_boxes_named(
     const std::vector<std::tuple<std::string, double, double, double, double,
                                  double>>& rows,
     double rotation);
+
+std::optional<std::pair<double, double>> courtyard_dims_from_text(
+    const std::string& text);
+
+std::vector<std::string> pad_names_from_text(const std::string& text);
+
+bool has_thru_pads_from_text(const std::string& text);
+
+std::vector<std::tuple<std::string, std::string, double, double, double, double,
+                       double>>
+scan_pad_nodes(const Sexpr& doc);
 
 }  // namespace schgen

@@ -41,18 +41,49 @@ def resolve_mod(footprint: str) -> Path | None:
     return None
 
 
+def pad_names_py(text: str) -> list[str]:
+    return _PAD_RE.findall(text)
+
+
 def pad_names(mod_path: Path) -> list[str]:
-    return _PAD_RE.findall(mod_path.read_text())
+    text = mod_path.read_text()
+    if _nat.loaded():
+        got = list(_nat.module().pad_names_from_text(text))
+        if _nat.trace():
+            ref = pad_names_py(text)
+            if got != ref:
+                raise AssertionError(
+                    "native pad_names_from_text DIVERGENCE: "
+                    f"cpp={got} python={ref} path={mod_path}")
+        return got
+    return pad_names_py(text)
 
 
 _thru_cache: dict[str, bool] = {}
 
 
+def has_thru_pads_py(text: str) -> bool:
+    return bool(_THRU_PAD_RE.search(text))
+
+
 def has_thru_pads(mod_path: Path) -> bool:
     key = str(mod_path)
-    if key not in _thru_cache:
-        _thru_cache[key] = bool(_THRU_PAD_RE.search(mod_path.read_text()))
-    return _thru_cache[key]
+    if key in _thru_cache:
+        return _thru_cache[key]
+    text = mod_path.read_text()
+    if _nat.loaded():
+        got = bool(_nat.module().has_thru_pads_from_text(text))
+        if _nat.trace():
+            ref = has_thru_pads_py(text)
+            if got != ref:
+                raise AssertionError(
+                    "native has_thru_pads_from_text DIVERGENCE: "
+                    f"cpp={got} python={ref} path={mod_path}")
+        _thru_cache[key] = got
+        return got
+    hit = has_thru_pads_py(text)
+    _thru_cache[key] = hit
+    return hit
 
 
 def board_netlist() -> dict[str, list]:

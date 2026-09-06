@@ -218,4 +218,25 @@ std::pair<double, double> part_dims_from_name(
     const std::vector<std::tuple<std::string, double, double>>& fixed_dims,
     double default_w, double default_h);
 
+std::string ref_prefix(const std::string& ref);
+
+bool is_testpoint_ref(const std::string& ref);
+
+bool is_cluster_passive(
+    const std::string& ref, int pins,
+    const std::vector<std::string>& not_plain,
+    const std::vector<std::string>& prefixes);
+
+std::pair<double, std::string> intelligent_need(
+    int pins,
+    const std::vector<std::tuple<int, double, std::string>>& tiers,
+    double top_need, const std::string& top_basis);
+
+std::vector<std::tuple<double, double, double, double, int, double>>
+zone_fanout_members_rows(
+    const std::vector<std::tuple<double, double, double, double, double, double,
+                                 double, int>>& rows,
+    int min_subject_pins,
+    const std::vector<std::tuple<int, double>>& need_tiers, double top_need);
+
 }  // namespace schgen

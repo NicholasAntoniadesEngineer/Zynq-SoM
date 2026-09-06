@@ -1,5 +1,8 @@
 #include "schgen/pack.hpp"
 
+#include "schgen/quantize.hpp"
+#include "schgen/turn.hpp"
+
 #include <algorithm>
 #include <cctype>
 #include <cmath>
@@ -1081,6 +1084,98 @@ std::pair<double, double> part_dims_from_name(
         return {static_cast<double>(a) / 10.0, static_cast<double>(b) / 10.0};
     }
     return {default_w, default_h};
+}
+
+std::string ref_prefix(const std::string& ref) {
+    std::size_t i = 0;
+    while (i < ref.size()) {
+        const unsigned char ch = static_cast<unsigned char>(ref[i]);
+        if (!((ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z'))) {
+            break;
+        }
+        ++i;
+    }
+    if (i == 0) {
+        return ref;
+    }
+    return ref.substr(0, i);
+}
+
+bool is_testpoint_ref(const std::string& ref) {
+    return ref_prefix(ref) == "TP";
+}
+
+bool is_cluster_passive(
+    const std::string& ref, int pins,
+    const std::vector<std::string>& not_plain,
+    const std::vector<std::string>& prefixes) {
+    if (pins > 2) {
+        return false;
+    }
+    for (const auto& token : not_plain) {
+        if (ref.size() >= token.size()
+            && ref.compare(0, token.size(), token) == 0) {
+            return false;
+        }
+    }
+    const std::string prefix = ref_prefix(ref);
+    for (const auto& token : prefixes) {
+        if (prefix == token) {
+            return true;
+        }
+    }
+    return false;
+}
+
+std::pair<double, std::string> intelligent_need(
+    int pins,
+    const std::vector<std::tuple<int, double, std::string>>& tiers,
+    double top_need, const std::string& top_basis) {
+    for (const auto& row : tiers) {
+        if (pins <= std::get<0>(row)) {
+            return {std::get<1>(row), std::get<2>(row)};
+        }
+    }
+    return {top_need, top_basis};
+}
+
+namespace {
+
+double intelligent_need_mm(
+    int pins, const std::vector<std::tuple<int, double>>& need_tiers,
+    double top_need) {
+    for (const auto& row : need_tiers) {
+        if (pins <= std::get<0>(row)) {
+            return std::get<1>(row);
+        }
+    }
+    return top_need;
+}
+
+}  // namespace
+
+std::vector<std::tuple<double, double, double, double, int, double>>
+zone_fanout_members_rows(
+    const std::vector<std::tuple<double, double, double, double, double, double,
+                                 double, int>>& rows,
+    int min_subject_pins,
+    const std::vector<std::tuple<int, double>>& need_tiers, double top_need) {
+    std::vector<std::tuple<double, double, double, double, int, double>> out;
+    out.reserve(rows.size());
+    for (const auto& row : rows) {
+        const double ox = std::get<0>(row);
+        const double oy = std::get<1>(row);
+        const Box4 rb = turn_box(Box4{std::get<2>(row), std::get<3>(row),
+                                      std::get<4>(row), std::get<5>(row)},
+                                 std::get<6>(row));
+        const int pins = std::get<7>(row);
+        const double lim = pins >= min_subject_pins
+            ? quant_credit(intelligent_need_mm(pins, need_tiers, top_need))
+            : 0.0;
+        out.emplace_back(ox + rb.x0, oy + rb.y0, ox + rb.x1, oy + rb.y1, pins,
+                         lim);
+    }
+    return out;
 }
 
 }  // namespace schgen

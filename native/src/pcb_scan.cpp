@@ -13,6 +13,7 @@
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
@@ -1033,6 +1034,297 @@ pad_boxes_named(
             std::get<3>(hit) = std::max(std::get<3>(hit), box.x1);
             std::get<4>(hit) = std::max(std::get<4>(hit), box.y1);
         }
+    }
+    return out;
+}
+
+namespace {
+
+bool word_char(unsigned char ch) {
+    return (ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z')
+        || (ch >= '0' && ch <= '9') || ch == '_';
+}
+
+bool parse_py_plain(const std::string& text, std::size_t start, double* value,
+                    std::size_t* after) {
+    const std::size_t n = text.size();
+    std::size_t i = start;
+    if (i < n && text[i] == '-') {
+        ++i;
+    }
+    if (i >= n || !std::isdigit(static_cast<unsigned char>(text[i]))) {
+        return false;
+    }
+    ++i;
+    while (i < n && std::isdigit(static_cast<unsigned char>(text[i]))) {
+        ++i;
+    }
+    if (i < n && text[i] == '.' && i + 1 < n
+        && std::isdigit(static_cast<unsigned char>(text[i + 1]))) {
+        i += 2;
+        while (i < n && std::isdigit(static_cast<unsigned char>(text[i]))) {
+            ++i;
+        }
+    }
+    *value = std::stod(text.substr(start, i - start));
+    *after = i;
+    return true;
+}
+
+bool match_fp_gfx(const std::string& text, std::size_t i, std::size_t* after) {
+    static const char* tags[] = {"(fp_line", "(fp_rect", "(fp_poly",
+                                 "(fp_circle", "(fp_arc"};
+    for (const char* tag : tags) {
+        const std::size_t len = std::char_traits<char>::length(tag);
+        if (i + len <= text.size() && text.compare(i, len, tag) == 0) {
+            if (i + len == text.size()
+                || !word_char(static_cast<unsigned char>(text[i + len]))) {
+                *after = i + len;
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+void collect_coord_pair(const std::string& text, std::size_t begin,
+                        std::size_t end, std::vector<double>* xs,
+                        std::vector<double>* ys) {
+    static const char* tags[] = {"start", "end", "mid", "xy", "center"};
+    std::size_t i = begin;
+    while (i < end) {
+        if (text[i] != '(') {
+            ++i;
+            continue;
+        }
+        bool hit = false;
+        std::size_t after_tag = 0;
+        for (const char* tag : tags) {
+            const std::size_t len = std::char_traits<char>::length(tag);
+            if (i + 1 + len < end && text.compare(i + 1, len, tag) == 0
+                && text[i + 1 + len] == ' ') {
+                after_tag = i + 1 + len + 1;
+                hit = true;
+                break;
+            }
+        }
+        if (!hit) {
+            ++i;
+            continue;
+        }
+        double x = 0.0;
+        double y = 0.0;
+        std::size_t after_x = 0;
+        std::size_t after_y = 0;
+        if (!parse_py_plain(text, after_tag, &x, &after_x)
+            || after_x >= end || text[after_x] != ' '
+            || !parse_py_plain(text, after_x + 1, &y, &after_y)
+            || after_y >= end || text[after_y] != ')') {
+            ++i;
+            continue;
+        }
+        xs->push_back(x);
+        ys->push_back(y);
+        i = after_y + 1;
+    }
+}
+
+}  // namespace
+
+std::optional<std::pair<double, double>> courtyard_dims_from_text(
+    const std::string& text) {
+    std::vector<double> xs;
+    std::vector<double> ys;
+    const std::string layer = "(layer \"F.CrtYd\")";
+    std::size_t i = 0;
+    while (i < text.size()) {
+        std::size_t after = 0;
+        if (!match_fp_gfx(text, i, &after)) {
+            ++i;
+            continue;
+        }
+        const auto layer_at = text.find(layer, after);
+        if (layer_at == std::string::npos) {
+            break;
+        }
+        collect_coord_pair(text, after, layer_at, &xs, &ys);
+        i = layer_at + layer.size();
+    }
+    if (xs.empty()) {
+        i = 0;
+        while (i < text.size()) {
+            if (i + 5 > text.size() || text.compare(i, 5, "(pad ") != 0) {
+                ++i;
+                continue;
+            }
+            const auto nl = text.find('\n', i + 5);
+            if (nl == std::string::npos) {
+                break;
+            }
+            std::size_t j = nl + 1;
+            while (j < text.size()
+                   && std::isspace(static_cast<unsigned char>(text[j]))) {
+                ++j;
+            }
+            if (j + 4 > text.size() || text.compare(j, 4, "(at ") != 0) {
+                i = nl + 1;
+                continue;
+            }
+            double x = 0.0;
+            double y = 0.0;
+            std::size_t after_x = 0;
+            std::size_t after_y = 0;
+            if (parse_py_plain(text, j + 4, &x, &after_x)
+                && after_x < text.size() && text[after_x] == ' '
+                && parse_py_plain(text, after_x + 1, &y, &after_y)) {
+                xs.push_back(x);
+                ys.push_back(y);
+            }
+            i = nl + 1;
+        }
+    }
+    if (xs.empty()) {
+        return std::nullopt;
+    }
+    const auto [xmin, xmax] = std::minmax_element(xs.begin(), xs.end());
+    const auto [ymin, ymax] = std::minmax_element(ys.begin(), ys.end());
+    return std::make_pair(py_round(*xmax - *xmin, 2),
+                          py_round(*ymax - *ymin, 2));
+}
+
+std::vector<std::string> pad_names_from_text(const std::string& text) {
+    std::vector<std::string> out;
+    std::size_t i = 0;
+    while (i < text.size()) {
+        const auto pad = text.find("(pad", i);
+        if (pad == std::string::npos) {
+            break;
+        }
+        std::size_t j = pad + 4;
+        if (j >= text.size()
+            || !std::isspace(static_cast<unsigned char>(text[j]))) {
+            i = pad + 4;
+            continue;
+        }
+        while (j < text.size()
+               && std::isspace(static_cast<unsigned char>(text[j]))) {
+            ++j;
+        }
+        if (j >= text.size() || text[j] != '"') {
+            i = j;
+            continue;
+        }
+        const auto end = text.find('"', j + 1);
+        if (end == std::string::npos) {
+            break;
+        }
+        if (end > j + 1) {
+            out.push_back(text.substr(j + 1, end - j - 1));
+        }
+        i = end + 1;
+    }
+    return out;
+}
+
+bool has_thru_pads_from_text(const std::string& text) {
+    std::size_t i = 0;
+    while (i < text.size()) {
+        const auto pad = text.find("(pad", i);
+        if (pad == std::string::npos) {
+            return false;
+        }
+        std::size_t j = pad + 4;
+        if (j >= text.size()
+            || !std::isspace(static_cast<unsigned char>(text[j]))) {
+            i = pad + 4;
+            continue;
+        }
+        while (j < text.size()
+               && std::isspace(static_cast<unsigned char>(text[j]))) {
+            ++j;
+        }
+        if (j >= text.size() || text[j] != '"') {
+            i = j;
+            continue;
+        }
+        const auto end = text.find('"', j + 1);
+        if (end == std::string::npos) {
+            return false;
+        }
+        j = end + 1;
+        if (j >= text.size()
+            || !std::isspace(static_cast<unsigned char>(text[j]))) {
+            i = end + 1;
+            continue;
+        }
+        while (j < text.size()
+               && std::isspace(static_cast<unsigned char>(text[j]))) {
+            ++j;
+        }
+        if ((j + 9 <= text.size() && text.compare(j, 9, "thru_hole") == 0
+             && (j + 9 == text.size()
+                 || !word_char(static_cast<unsigned char>(text[j + 9]))))
+            || (j + 12 <= text.size()
+                && text.compare(j, 12, "np_thru_hole") == 0
+                && (j + 12 == text.size()
+                    || !word_char(
+                        static_cast<unsigned char>(text[j + 12]))))) {
+            return true;
+        }
+        i = end + 1;
+    }
+    return false;
+}
+
+std::vector<std::tuple<std::string, std::string, double, double, double, double,
+                       double>>
+scan_pad_nodes(const Sexpr& doc) {
+    std::vector<std::tuple<std::string, std::string, double, double, double,
+                           double, double>>
+        out;
+    if (!std::holds_alternative<SexprList>(doc.v)) {
+        return out;
+    }
+    for (const Sexpr& child : std::get<SexprList>(doc.v)) {
+        if (!is_tagged_list(child, "pad")) {
+            continue;
+        }
+        const SexprList& lst = std::get<SexprList>(child.v);
+        std::string name;
+        std::string ptype;
+        if (lst.size() > 1) {
+            try {
+                name = py_str(lst[1]);
+            } catch (const std::runtime_error&) {
+                name.clear();
+            }
+        }
+        if (lst.size() > 2) {
+            try {
+                ptype = py_str(lst[2]);
+            } catch (const std::runtime_error&) {
+                ptype.clear();
+            }
+        }
+        const SexprList* at = find_tagged_child(lst, "at");
+        if (at == nullptr || at->size() < 3 || !is_number((*at)[1])
+            || !is_number((*at)[2])) {
+            continue;
+        }
+        double prot = 0.0;
+        if (at->size() > 3 && is_number((*at)[3])) {
+            prot = std::get<double>((*at)[3].v);
+        }
+        double sw = 0.0;
+        double sh = 0.0;
+        const SexprList* size = find_tagged_child(lst, "size");
+        if (size != nullptr && size->size() >= 3 && is_number((*size)[1])
+            && is_number((*size)[2])) {
+            sw = std::get<double>((*size)[1].v);
+            sh = std::get<double>((*size)[2].v);
+        }
+        out.emplace_back(name, ptype, std::get<double>((*at)[1].v),
+                         std::get<double>((*at)[2].v), prot, sw, sh);
     }
     return out;
 }

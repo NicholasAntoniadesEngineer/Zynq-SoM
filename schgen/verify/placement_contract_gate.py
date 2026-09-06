@@ -201,10 +201,10 @@ def wired_term_participants() -> tuple[frozenset[str], frozenset[str]]:
 _pad_box_cache: dict[tuple[str, float], dict[str, tuple]] = {}
 
 
-def _pad_named_rows(mod_path: Path
-                    ) -> list[tuple[str, float, float, float, float, float]]:
+def _pad_named_rows_py(text: str
+                       ) -> list[tuple[str, float, float, float, float, float]]:
     rows: list[tuple[str, float, float, float, float, float]] = []
-    for node in sexpr.loads(mod_path.read_text()):
+    for node in sexpr.loads(text):
         if not (isinstance(node, list) and node and node[0] == Sym("pad")):
             continue
         name = str(node[1]) if len(node) > 1 else ""
@@ -218,6 +218,23 @@ def _pad_named_rows(mod_path: Path
             else (0.0, 0.0)
         rows.append((name, float(at[1]), float(at[2]), prot, sw, sh))
     return rows
+
+
+def _pad_named_rows(mod_path: Path
+                    ) -> list[tuple[str, float, float, float, float, float]]:
+    text = mod_path.read_text()
+    if _nat.loaded():
+        got = [(n, px, py, prot, sw, sh)
+               for n, _ptype, px, py, prot, sw, sh in
+               _nat.module().scan_pad_nodes(text)]
+        if _nat.trace():
+            ref = _pad_named_rows_py(text)
+            if got != ref:
+                raise AssertionError(
+                    "native scan_pad_nodes DIVERGENCE: "
+                    f"cpp={got} python={ref} path={mod_path}")
+        return got
+    return _pad_named_rows_py(text)
 
 
 def _pad_boxes_py(

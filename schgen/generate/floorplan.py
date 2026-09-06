@@ -214,18 +214,45 @@ def _zone_components(zg, t_off: dict, b_off: dict, extra_rot: dict,
         minor, punches, OCC_TOP if side == "bottom" else OCC_BOTTOM)
 
 
+def _zone_fanout_members_rows_py(
+    rows: list[tuple[float, float, float, float, float, float, float, int]],
+) -> list[tuple[float, float, float, float, int, float]]:
+    from schgen.generate.pcb.turn import turn_box
+    from schgen.verify.fanout_gate import MIN_SUBJECT_PINS, intelligent_need
+    members: list[tuple[float, float, float, float, int, float]] = []
+    for ox, oy, x0, y0, x1, y1, rot, pins in rows:
+        rb = turn_box((x0, y0, x1, y1), rot)
+        lim = (_q.quant_credit(intelligent_need(pins)[0])
+               if pins >= MIN_SUBJECT_PINS else 0.0)
+        members.append((ox + rb[0], oy + rb[1], ox + rb[2], oy + rb[3],
+                        pins, lim))
+    return members
+
+
+def _zone_fanout_members_rows(
+    rows: list[tuple[float, float, float, float, float, float, float, int]],
+) -> list[tuple[float, float, float, float, int, float]]:
+    from schgen.verify.fanout_gate import MIN_SUBJECT_PINS, _NEED_MM, _TIER_TOP
+    if _nat.loaded():
+        got = [tuple(r) for r in _nat.module().zone_fanout_members_rows(
+            rows, MIN_SUBJECT_PINS, _NEED_MM, _TIER_TOP[0])]
+        if _nat.trace():
+            ref = _zone_fanout_members_rows_py(rows)
+            if got != ref:
+                raise AssertionError(
+                    "native zone_fanout_members_rows DIVERGENCE: "
+                    f"cpp={got} python={ref}")
+        return got
+    return _zone_fanout_members_rows_py(rows)
+
+
 def _zone_fanout_members(side_offs, rot_of: dict, zg,
                          mods: dict | None = None
                          ) -> list[tuple[float, float, float, float, int, float]]:
     from schgen.generate.pcb import placement as _pl
     from schgen.generate.pcb.footprint import _footprint_bbox
-    from schgen.generate.pcb.turn import turn_box
-    from schgen.verify.fanout_gate import (
-        MIN_SUBJECT_PINS,
-        intelligent_need,
-        is_testpoint_ref,
-    )
-    members: list[tuple[float, float, float, float, int, float]] = []
+    from schgen.verify.fanout_gate import is_testpoint_ref
+    rows: list[tuple[float, float, float, float, float, float, float, int]] = []
     for side_off in side_offs:
         for ref, (ox, oy) in side_off.items():
             mod = zg.resolvable.get(ref)
@@ -237,13 +264,9 @@ def _zone_fanout_members(side_offs, rot_of: dict, zg,
                 continue
             if "Fiducial" in mod.stem or is_testpoint_ref(ref):
                 continue
-            rb = turn_box(bbox, rot_of.get(ref, 0.0))
-            pins = len(_pl.pad_names(mod))
-            lim = (_q.quant_credit(intelligent_need(pins)[0])
-                   if pins >= MIN_SUBJECT_PINS else 0.0)
-            members.append((ox + rb[0], oy + rb[1], ox + rb[2], oy + rb[3],
-                            pins, lim))
-    return members
+            rows.append((ox, oy, bbox[0], bbox[1], bbox[2], bbox[3],
+                         rot_of.get(ref, 0.0), len(_pl.pad_names(mod))))
+    return _zone_fanout_members_rows(rows)
 
 
 def _zone_fanout_reach_py(zw: float, zh: float, side_offs, rot_of: dict, zg,
@@ -454,31 +477,50 @@ _DEFAULT_DIMS = (1.6, 0.8)
 _crtyd_cache: dict[str, tuple[float, float] | None] = {}
 
 
+def _courtyard_dims_from_text_py(text: str) -> tuple[float, float] | None:
+    xs: list[float] = []
+    ys: list[float] = []
+    for m in re.finditer(
+            r"\(fp_(?:line|rect|poly|circle|arc)\b(.*?)"
+            r"\(layer \"F\.CrtYd\"\)", text, re.S):
+        for c in re.finditer(
+                r"\((?:start|end|mid|xy|center) (-?\d+(?:\.\d+)?) "
+                r"(-?\d+(?:\.\d+)?)\)", m.group(1)):
+            xs.append(float(c.group(1)))
+            ys.append(float(c.group(2)))
+    if not xs:
+        for m in re.finditer(
+                r"\(pad [^\n]*\n\s*\(at (-?\d+(?:\.\d+)?) "
+                r"(-?\d+(?:\.\d+)?)", text):
+            xs.append(float(m.group(1)))
+            ys.append(float(m.group(2)))
+    if not xs:
+        return None
+    return (round(max(xs) - min(xs), 2), round(max(ys) - min(ys), 2))
+
+
+def _courtyard_dims_from_text(text: str) -> tuple[float, float] | None:
+    if _nat.loaded():
+        got = _nat.module().courtyard_dims_from_text(text)
+        if got is not None:
+            got = (float(got[0]), float(got[1]))
+        if _nat.trace():
+            ref = _courtyard_dims_from_text_py(text)
+            if got != ref:
+                raise AssertionError(
+                    "native courtyard_dims_from_text DIVERGENCE: "
+                    f"cpp={got} python={ref}")
+        return got
+    return _courtyard_dims_from_text_py(text)
+
+
 def _courtyard_dims(lib: str) -> tuple[float, float] | None:
     if lib in _crtyd_cache:
         return _crtyd_cache[lib]
     mod = PARTS_DIR / lib / f"{lib}.kicad_mod"
     dims = None
     if mod.exists():
-        text = mod.read_text()
-        xs: list[float] = []
-        ys: list[float] = []
-        for m in re.finditer(
-                r"\(fp_(?:line|rect|poly|circle|arc)\b(.*?)"
-                r"\(layer \"F\.CrtYd\"\)", text, re.S):
-            for c in re.finditer(
-                    r"\((?:start|end|mid|xy|center) (-?\d+(?:\.\d+)?) "
-                    r"(-?\d+(?:\.\d+)?)\)", m.group(1)):
-                xs.append(float(c.group(1)))
-                ys.append(float(c.group(2)))
-        if not xs:
-            for m in re.finditer(
-                    r"\(pad [^\n]*\n\s*\(at (-?\d+(?:\.\d+)?) "
-                    r"(-?\d+(?:\.\d+)?)", text):
-                xs.append(float(m.group(1)))
-                ys.append(float(m.group(2)))
-        if xs:
-            dims = (round(max(xs) - min(xs), 2), round(max(ys) - min(ys), 2))
+        dims = _courtyard_dims_from_text(mod.read_text())
     _crtyd_cache[lib] = dims
     return dims
 

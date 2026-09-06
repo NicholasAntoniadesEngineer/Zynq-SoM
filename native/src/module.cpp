@@ -1532,6 +1532,62 @@ NB_MODULE(_geom, m) {
                                                      default_w, default_h);
               return std::make_tuple(hit.first, hit.second);
           });
+    m.def("courtyard_dims_from_text",
+          [](const char* text)
+              -> std::optional<std::pair<double, double>> {
+              if (text == nullptr) {
+                  throw std::runtime_error(
+                      "courtyard_dims_from_text: text required");
+              }
+              return schgen::courtyard_dims_from_text(text);
+          });
+    m.def("pad_names_from_text",
+          [](const char* text) {
+              if (text == nullptr) {
+                  throw std::runtime_error("pad_names_from_text: text required");
+              }
+              return schgen::pad_names_from_text(text);
+          });
+    m.def("has_thru_pads_from_text",
+          [](const char* text) {
+              if (text == nullptr) {
+                  throw std::runtime_error(
+                      "has_thru_pads_from_text: text required");
+              }
+              return schgen::has_thru_pads_from_text(text);
+          });
+    m.def("scan_pad_nodes",
+          [](const char* text) {
+              if (text == nullptr) {
+                  throw std::runtime_error("scan_pad_nodes: text required");
+              }
+              return schgen::scan_pad_nodes(schgen::sexpr_loads(text));
+          });
+    m.def("ref_prefix", &schgen::ref_prefix);
+    m.def("is_testpoint_ref", &schgen::is_testpoint_ref);
+    m.def("is_cluster_passive",
+          [](const std::string& ref, int pins,
+             const std::vector<std::string>& not_plain,
+             const std::vector<std::string>& prefixes) {
+              return schgen::is_cluster_passive(ref, pins, not_plain,
+                                                prefixes);
+          });
+    m.def("intelligent_need",
+          [](int pins,
+             const std::vector<std::tuple<int, double, std::string>>& tiers,
+             double top_need, const std::string& top_basis) {
+              return schgen::intelligent_need(pins, tiers, top_need,
+                                              top_basis);
+          });
+    m.def("zone_fanout_members_rows",
+          [](const std::vector<std::tuple<double, double, double, double,
+                                          double, double, double, int>>& rows,
+             int min_subject_pins,
+             const std::vector<std::tuple<int, double>>& need_tiers,
+             double top_need) {
+              return schgen::zone_fanout_members_rows(
+                  rows, min_subject_pins, need_tiers, top_need);
+          });
     m.def("inst_placed_box",
           [](const std::tuple<double, double, double, double>& local,
              double inst_x, double inst_y, double rotation, int decimals) {

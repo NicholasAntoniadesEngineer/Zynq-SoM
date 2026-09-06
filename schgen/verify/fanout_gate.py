@@ -13,6 +13,7 @@ _TIERS: tuple[tuple[int, float, str], ...] = (
     (8,  1.50, "<=8-pin non-passive — 1.5 mm absolute floor (user law 2026-07-29)"),
 )
 _TIER_TOP = (2.00, ">=9-pin package — 2.0 mm floor (user law 2026-07-29)")
+_NEED_MM = [(max_pins, need) for max_pins, need, _basis in _TIERS]
 
 MIN_SUBJECT_PINS = 3
 
@@ -25,17 +26,44 @@ _NOT_PLAIN_PASSIVE = ("RS", "RJ", "RN", "LED")
 _TOUCH_EPS = 1e-4
 
 
-def _ref_prefix(ref: str) -> str:
+def _ref_prefix_py(ref: str) -> str:
     m = re.match(r"[A-Za-z]+", ref)
     return m.group(0) if m else ref
 
 
-def _is_cluster_passive(ref: str, pins: int) -> bool:
+def _ref_prefix(ref: str) -> str:
+    if _nat.loaded():
+        got = _nat.module().ref_prefix(ref)
+        if _nat.trace():
+            python_ref = _ref_prefix_py(ref)
+            if got != python_ref:
+                raise AssertionError(
+                    "native ref_prefix DIVERGENCE: "
+                    f"cpp={got} python={python_ref} ref={ref!r}")
+        return got
+    return _ref_prefix_py(ref)
+
+
+def _is_cluster_passive_py(ref: str, pins: int) -> bool:
     if pins > 2:
         return False
     if ref.startswith(_NOT_PLAIN_PASSIVE):
         return False
-    return _ref_prefix(ref) in _PASSIVE_PREFIX
+    return _ref_prefix_py(ref) in _PASSIVE_PREFIX
+
+
+def _is_cluster_passive(ref: str, pins: int) -> bool:
+    if _nat.loaded():
+        got = bool(_nat.module().is_cluster_passive(
+            ref, pins, list(_NOT_PLAIN_PASSIVE), list(_PASSIVE_PREFIX)))
+        if _nat.trace():
+            python_ref = _is_cluster_passive_py(ref, pins)
+            if got != python_ref:
+                raise AssertionError(
+                    "native is_cluster_passive DIVERGENCE: "
+                    f"cpp={got} python={python_ref} ref={ref!r} pins={pins}")
+        return got
+    return _is_cluster_passive_py(ref, pins)
 
 
 def _is_df40(inst) -> bool:
@@ -46,8 +74,21 @@ def is_df40_part(sheet: str, pins: int) -> bool:
     return bool(_DF40_SHEET_RE.match(sheet)) or pins >= DF40_MIN_PINS
 
 
+def is_testpoint_ref_py(ref: str) -> bool:
+    return _ref_prefix_py(ref) == "TP"
+
+
 def is_testpoint_ref(ref: str) -> bool:
-    return _ref_prefix(ref) == "TP"
+    if _nat.loaded():
+        got = bool(_nat.module().is_testpoint_ref(ref))
+        if _nat.trace():
+            python_ref = is_testpoint_ref_py(ref)
+            if got != python_ref:
+                raise AssertionError(
+                    "native is_testpoint_ref DIVERGENCE: "
+                    f"cpp={got} python={python_ref} ref={ref!r}")
+        return got
+    return is_testpoint_ref_py(ref)
 
 
 def _is_fiducial(inst) -> bool:
@@ -62,11 +103,25 @@ def counts_as_crowder(ref: str, sheet: str, pins: int, footprint: str,
                 or (sheet == subject_sheet and _is_cluster_passive(ref, pins)))
 
 
-def intelligent_need(pins: int) -> tuple[float, str]:
+def intelligent_need_py(pins: int) -> tuple[float, str]:
     for max_pins, need, basis in _TIERS:
         if pins <= max_pins:
             return need, basis
     return _TIER_TOP
+
+
+def intelligent_need(pins: int) -> tuple[float, str]:
+    if _nat.loaded():
+        got = tuple(_nat.module().intelligent_need(
+            pins, list(_TIERS), _TIER_TOP[0], _TIER_TOP[1]))
+        if _nat.trace():
+            python_ref = intelligent_need_py(pins)
+            if got != python_ref:
+                raise AssertionError(
+                    "native intelligent_need DIVERGENCE: "
+                    f"cpp={got} python={python_ref} pins={pins}")
+        return got
+    return intelligent_need_py(pins)
 
 
 def _rect_gap_py(a, b) -> float:

@@ -1988,6 +1988,101 @@ def test_som_keepout_and_zone_assemble_match_python(geom, monkeypatch):
     assert _zone_components_assemble(minor, punches, OCC_BOTTOM) == ref
 
 
+def test_courtyard_pad_scan_and_fanout_policy_match_python(geom, monkeypatch):
+    from pathlib import Path
+
+    from schgen.generate.floorplan import (
+        PARTS_DIR,
+        _courtyard_dims_from_text,
+        _courtyard_dims_from_text_py,
+        _zone_fanout_members_rows,
+        _zone_fanout_members_rows_py,
+    )
+    from schgen.generate.pcb.footprint import (
+        has_thru_pads,
+        has_thru_pads_py,
+        pad_names,
+        pad_names_py,
+    )
+    from schgen.generate.pcb.mating_face import _pad_rows, _pad_rows_py
+    from schgen.verify import fanout_gate as fg
+    from schgen.verify.placement_contract_gate import (
+        _pad_named_rows,
+        _pad_named_rows_py,
+    )
+
+    monkeypatch.setattr(fp._nat, "trace", lambda: True)
+    monkeypatch.setattr(fg._nat, "trace", lambda: True)
+    from schgen.generate.pcb import footprint as fpp
+    from schgen.generate.pcb import mating_face as mf
+    from schgen.verify import placement_contract_gate as pcg
+    monkeypatch.setattr(fpp._nat, "trace", lambda: True)
+    monkeypatch.setattr(mf._nat, "trace", lambda: True)
+    monkeypatch.setattr(pcg._nat, "trace", lambda: True)
+
+    samples = (
+        "0603WAF1001T5E",
+        "TPS54302DDCR",
+        "DF40C-100DS-0.4V_51",
+        "HX_PZ2.54-3x8P_ZZ",
+        "MountingHole_3.2mm_M3_Pad",
+    )
+    for lib in samples:
+        mod = PARTS_DIR / lib / f"{lib}.kicad_mod"
+        if not mod.exists():
+            continue
+        text = Path(mod).read_text()
+        assert geom.courtyard_dims_from_text(text) == (
+            _courtyard_dims_from_text_py(text) or None)
+        assert _courtyard_dims_from_text(text) == _courtyard_dims_from_text_py(
+            text)
+        assert list(geom.pad_names_from_text(text)) == pad_names_py(text)
+        assert pad_names(mod) == pad_names_py(text)
+        assert geom.has_thru_pads_from_text(text) == has_thru_pads_py(text)
+        fpp._thru_cache.clear()
+        assert has_thru_pads(mod) == has_thru_pads_py(text)
+        named = [(n, px, py, prot, sw, sh)
+                 for n, _t, px, py, prot, sw, sh in geom.scan_pad_nodes(text)]
+        typed = [(_t, px, py, prot, sw, sh)
+                 for _n, _t, px, py, prot, sw, sh in geom.scan_pad_nodes(text)]
+        assert named == _pad_named_rows_py(text)
+        assert tuple(typed) == _pad_rows_py(text)
+        assert _pad_named_rows(mod) == _pad_named_rows_py(text)
+        mf._PAD_ROW_CACHE.clear()
+        assert _pad_rows(mod) == _pad_rows_py(text)
+
+    refs = ("R1", "C12", "L3", "RS1", "RJ45", "RN2", "LED1", "U7", "TP3",
+            "J1", "1R", "TP")
+    for ref in refs:
+        assert geom.ref_prefix(ref) == fg._ref_prefix_py(ref)
+        assert geom.is_testpoint_ref(ref) == fg.is_testpoint_ref_py(ref)
+        assert fg._ref_prefix(ref) == fg._ref_prefix_py(ref)
+        assert fg.is_testpoint_ref(ref) == fg.is_testpoint_ref_py(ref)
+        for pins in (1, 2, 3, 8, 9, 40):
+            assert geom.is_cluster_passive(
+                ref, pins, list(fg._NOT_PLAIN_PASSIVE),
+                list(fg._PASSIVE_PREFIX)) == fg._is_cluster_passive_py(
+                    ref, pins)
+            assert fg._is_cluster_passive(ref, pins) == (
+                fg._is_cluster_passive_py(ref, pins))
+    for pins in range(0, 12):
+        assert tuple(geom.intelligent_need(
+            pins, list(fg._TIERS), fg._TIER_TOP[0],
+            fg._TIER_TOP[1])) == fg.intelligent_need_py(pins)
+        assert fg.intelligent_need(pins) == fg.intelligent_need_py(pins)
+
+    rows = [
+        (1.0, 2.0, -1.5, -0.8, 1.5, 0.8, 0.0, 2),
+        (4.0, 5.0, -3.0, -2.0, 3.0, 2.0, 90.0, 8),
+        (0.0, 0.0, 0.0, 0.0, 4.0, 4.0, 180.0, 16),
+    ]
+    ref = _zone_fanout_members_rows_py(rows)
+    got = [tuple(r) for r in geom.zone_fanout_members_rows(
+        rows, fg.MIN_SUBJECT_PINS, fg._NEED_MM, fg._TIER_TOP[0])]
+    assert got == ref
+    assert _zone_fanout_members_rows(rows) == ref
+
+
 def test_timing_span_records():
     from schgen.core import timing
     timing.reset()
