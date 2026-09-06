@@ -2852,4 +2852,18 @@ bool bus_lane_adjacent(const std::string& a_net, const std::string& b_net,
     return a_net == b_net && b_lane - a_lane == 1;
 }
 
+std::tuple<double, double, double, double> padded_xywh(
+    double x, double y, double w, double h, double pad) {
+    return {x - pad, y - pad, w + 2.0 * pad, h + 2.0 * pad};
+}
+
+std::tuple<double, double, double, double> box_to_xywh(const Box4& box) {
+    return {box.x0, box.y0, box.x1 - box.x0, box.y1 - box.y0};
+}
+
+std::vector<std::pair<double, double>> rect_corners_ccw(const Box4& box) {
+    return {{box.x0, box.y0}, {box.x1, box.y0}, {box.x1, box.y1},
+            {box.x0, box.y1}};
+}
+
 }  // namespace schgen

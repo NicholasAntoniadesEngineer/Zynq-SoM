@@ -574,18 +574,54 @@ def _gnd_plane_zone(model: PcbModel, uid) -> list | None:
                       "gnd-plane", uid, GND_PLANE_CLEARANCE, solid=False)
 
 
+def isolation_void_rect_py(court: tuple[float, float, float, float],
+                           margin: float) -> tuple[float, float, float, float]:
+    return (round(court[0] - margin, 3), round(court[1] - margin, 3),
+            round(court[2] + margin, 3), round(court[3] + margin, 3))
+
+
+def isolation_void_rect(court: tuple[float, float, float, float],
+                        margin: float) -> tuple[float, float, float, float]:
+    if not _nat.loaded():
+        raise RuntimeError("native isolation_void_rect required")
+    got = tuple(_nat.module().isolation_void_rect(court, margin))
+    if _nat.trace():
+        ref = isolation_void_rect_py(court, margin)
+        if got != ref:
+            raise AssertionError(
+                "native isolation_void_rect DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
+
+
+def rect_corners_ccw_py(box: tuple[float, float, float, float]
+                        ) -> list[tuple[float, float]]:
+    return [(box[0], box[1]), (box[2], box[1]), (box[2], box[3]),
+            (box[0], box[3])]
+
+
+def rect_corners_ccw(box: tuple[float, float, float, float]
+                     ) -> list[tuple[float, float]]:
+    if not _nat.loaded():
+        raise RuntimeError("native rect_corners_ccw required")
+    got = [(float(x), float(y)) for x, y in _nat.module().rect_corners_ccw(box)]
+    if _nat.trace():
+        ref = rect_corners_ccw_py(box)
+        if got != ref:
+            raise AssertionError(
+                "native rect_corners_ccw DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
+
+
 def _iso_void_zones(model: PcbModel, uid) -> list[list]:
     from .mating_face import _inst_courtyard
     out: list[list] = []
     for inst in model.insts:
         if not inst.value.startswith(ISO_VOID_VALUES):
             continue
-        cx0, cy0, cx1, cy1 = _inst_courtyard(inst)
-        m = ISO_VOID_MARGIN
-        corners = [(round(cx0 - m, 3), round(cy0 - m, 3)),
-                   (round(cx1 + m, 3), round(cy0 - m, 3)),
-                   (round(cx1 + m, 3), round(cy1 + m, 3)),
-                   (round(cx0 - m, 3), round(cy1 + m, 3))]
+        void_box = isolation_void_rect(_inst_courtyard(inst), ISO_VOID_MARGIN)
+        corners = rect_corners_ccw(void_box)
         name = f"ethernet_isolation_void_{inst.ref}"
         zuid = uid(f"iso-void:{inst.ref}")
         if not _nat.loaded():

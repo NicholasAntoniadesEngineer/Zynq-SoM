@@ -2293,6 +2293,26 @@ def test_row_tier_bus_and_world_point_match_python(geom, monkeypatch):
         world_turned_point_py(10.0, 20.0, 1.25, -0.4, 90.0, 4))
 
 
+def test_padded_box_and_void_corners_match_python(geom, monkeypatch):
+    from schgen.generate.pcb import embed as em
+    from schgen.generate.pcb.embed import (
+        isolation_void_rect,
+        isolation_void_rect_py,
+        rect_corners_ccw,
+        rect_corners_ccw_py,
+    )
+    monkeypatch.setattr(fp._nat, "trace", lambda: True)
+    monkeypatch.setattr(em._nat, "trace", lambda: True)
+    assert fp.padded_xywh(10.0, 12.0, 20.0, 8.0, 1.5) == fp.padded_xywh_py(
+        10.0, 12.0, 20.0, 8.0, 1.5)
+    box = (8.5, 10.5, 31.5, 21.5)
+    assert fp.box_to_xywh(box) == fp.box_to_xywh_py(box)
+    court = (10.0, 12.0, 14.0, 16.0)
+    void = isolation_void_rect(court, 0.6)
+    assert void == isolation_void_rect_py(court, 0.6)
+    assert rect_corners_ccw(void) == rect_corners_ccw_py(void)
+
+
 def test_place_geom_wrappers_match_python(geom, monkeypatch):
     from schgen.layout import place as pl
     monkeypatch.setattr(pl._nat, "trace", lambda: True)

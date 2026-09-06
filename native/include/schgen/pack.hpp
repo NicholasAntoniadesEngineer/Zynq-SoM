@@ -500,6 +500,10 @@ int pad_row_sign(double v, double deadband);
 int interior_tier(bool module_face, bool exclusive);
 bool bus_lane_adjacent(const std::string& a_net, const std::string& b_net,
                        int a_lane, int b_lane);
+std::tuple<double, double, double, double> padded_xywh(
+    double x, double y, double w, double h, double pad);
+std::tuple<double, double, double, double> box_to_xywh(const Box4& box);
+std::vector<std::pair<double, double>> rect_corners_ccw(const Box4& box);
 
 std::vector<std::vector<Seg2>> cluster_slot_segs(
     const std::vector<std::tuple<std::string, double, double>>& pad_offs,

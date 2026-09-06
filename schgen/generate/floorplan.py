@@ -1272,6 +1272,44 @@ def _som_keepout_rects_py(plan: Plan) -> list[tuple[float, float, float, float]]
     return rows
 
 
+def padded_xywh_py(x: float, y: float, w: float, h: float, pad: float
+                   ) -> tuple[float, float, float, float]:
+    return (x - pad, y - pad, w + 2 * pad, h + 2 * pad)
+
+
+def padded_xywh(x: float, y: float, w: float, h: float, pad: float
+                ) -> tuple[float, float, float, float]:
+    if not _nat.loaded():
+        raise RuntimeError("native padded_xywh required")
+    got = tuple(_nat.module().padded_xywh(x, y, w, h, pad))
+    if _nat.trace():
+        ref = padded_xywh_py(x, y, w, h, pad)
+        if got != ref:
+            raise AssertionError(
+                "native padded_xywh DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
+
+
+def box_to_xywh_py(box: tuple[float, float, float, float]
+                   ) -> tuple[float, float, float, float]:
+    return (box[0], box[1], box[2] - box[0], box[3] - box[1])
+
+
+def box_to_xywh(box: tuple[float, float, float, float]
+                ) -> tuple[float, float, float, float]:
+    if not _nat.loaded():
+        raise RuntimeError("native box_to_xywh required")
+    got = tuple(_nat.module().box_to_xywh(box))
+    if _nat.trace():
+        ref = box_to_xywh_py(box)
+        if got != ref:
+            raise AssertionError(
+                "native box_to_xywh DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
+
+
 def _som_keepout_rects(plan: Plan) -> list[tuple[float, float, float, float]]:
     if not _nat.loaded():
         raise RuntimeError("native som_keepout_rects required")
@@ -2897,8 +2935,8 @@ def _attempt_pack(plan: Plan, interior: list[Block],
 
     free = plan.punch_free
     som_mask = OCC_TOP if free else OCC_PUNCH
-    som_occ = (plan.som_x - SOM_OCC_PAD_MM, plan.som_y - SOM_OCC_PAD_MM,
-               plan.som.w + 2 * SOM_OCC_PAD_MM, plan.som.h + 2 * SOM_OCC_PAD_MM)
+    som_occ = padded_xywh(
+        plan.som_x, plan.som_y, plan.som.w, plan.som.h, SOM_OCC_PAD_MM)
     som_comps = _som_components(plan, som_occ, som_rects[1:]) if free else ()
     edge_mask = OCC_TOP if free else OCC_PUNCH
     edge_comps = {b.name: _edge_components(
@@ -2907,10 +2945,11 @@ def _attempt_pack(plan: Plan, interior: list[Block],
 
     occ = _Occupancy(far_ceil, max_reach)
     occ.add(*som_occ, _ZeroReach, _ZeroReach, som_mask, som_comps)
-    for cx, cy in ((0.0, 0.0), (BOARD_W - MH_CORNER_KO, 0.0),
-                   (BOARD_W - MH_CORNER_KO, BOARD_H - MH_CORNER_KO),
-                   (0.0, BOARD_H - MH_CORNER_KO)):
-        occ.add(cx, cy, MH_CORNER_KO, MH_CORNER_KO)
+    if not _nat.loaded():
+        raise RuntimeError("native legalize_mh_corners required")
+    for corner in _nat.module().legalize_mh_corners(
+            BOARD_W, BOARD_H, MH_CORNER_KO):
+        occ.add(*box_to_xywh(tuple(corner)))
     centers: dict[str, tuple[float, float]] = {}
     for b in plan.edge_blocks:
         occ.add(b.x, b.y, b.w, b.h, b.fanout_reach, b.fanout_inset,

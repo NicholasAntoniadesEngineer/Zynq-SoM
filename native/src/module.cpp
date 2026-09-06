@@ -1257,6 +1257,15 @@ NB_MODULE(_geom, m) {
     m.def("pad_row_sign", &schgen::pad_row_sign);
     m.def("interior_tier", &schgen::interior_tier);
     m.def("bus_lane_adjacent", &schgen::bus_lane_adjacent);
+    m.def("padded_xywh", &schgen::padded_xywh);
+    m.def("box_to_xywh",
+          [](const BoxTup& box) {
+              return schgen::box_to_xywh(as_box(box));
+          });
+    m.def("rect_corners_ccw",
+          [](const BoxTup& box) {
+              return schgen::rect_corners_ccw(as_box(box));
+          });
     m.def("board_to_uv",
           [](double cx, double cy, double bx, double by, double rot) {
               return schgen::board_to_uv(cx, cy, bx, by, rot);
