@@ -123,11 +123,38 @@ def _embed_footprint(inst, uid) -> list:
     mod = sexpr.loads(inst.mod_path.read_text())
     assert isinstance(mod, list) and mod and mod[0] == Sym("footprint")
 
-    mod[1] = _FOOTPRINT_ALIASES.get(inst.footprint, inst.footprint)
+    aliases = list(_FOOTPRINT_ALIASES.items())
+    if _nat.loaded():
+        aliased = _nat.module().footprint_alias(inst.footprint, aliases)
+        if _nat.trace():
+            ref = _FOOTPRINT_ALIASES.get(inst.footprint, inst.footprint)
+            if aliased != ref:
+                raise AssertionError(
+                    "native footprint_alias DIVERGENCE: "
+                    f"cpp={aliased!r} python={ref!r}")
+        mod[1] = aliased
+    else:
+        mod[1] = _FOOTPRINT_ALIASES.get(inst.footprint, inst.footprint)
 
-    if inst.mirror:
-        from .mirror import is_mirrored_path
-        assert inst.side == "bottom" and is_mirrored_path(inst.mod_path), (
+    from .mirror import is_mirrored_path
+    mirrored = is_mirrored_path(inst.mod_path)
+    if _nat.loaded():
+        ok = _nat.module().mirror_assert_ok(bool(inst.mirror), inst.side,
+                                            mirrored)
+        if _nat.trace():
+            ref = (not inst.mirror) or (
+                inst.side == "bottom" and mirrored)
+            if ok is not ref:
+                raise AssertionError(
+                    "native mirror_assert_ok DIVERGENCE: "
+                    f"cpp={ok} python={ref}")
+        if not ok:
+            raise AssertionError(
+                f"{inst.ref}: mirror=True demands side=bottom + a .mirrored_fp "
+                f"document (got side={inst.side!r}, mod={inst.mod_path}) — a "
+                f"mirrored instance emitted any other way is chiral-wrong copper")
+    elif inst.mirror:
+        assert inst.side == "bottom" and mirrored, (
             f"{inst.ref}: mirror=True demands side=bottom + a .mirrored_fp "
             f"document (got side={inst.side!r}, mod={inst.mod_path}) — a "
             f"mirrored instance emitted any other way is chiral-wrong copper")

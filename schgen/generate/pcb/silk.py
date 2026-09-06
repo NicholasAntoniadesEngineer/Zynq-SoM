@@ -117,6 +117,103 @@ def _silk_gfx_box_py(c, fx, fy, ca, sa):
     return (min(bxs) - hw, min(bys) - hw, max(bxs) + hw, max(bys) + hw)
 
 
+def _collect_refdes_props_py(doc: list) -> list:
+    import math
+    top: list = []
+    bot: list = []
+    for fi, node in enumerate(doc):
+        if not (isinstance(node, list) and node and str(node[0]) == "footprint"):
+            continue
+        fat = _sub(node, "at")
+        if fat is None:
+            continue
+        fx, fy = float(fat[1]), float(fat[2])
+        frot = (
+            float(fat[3])
+            if (len(fat) > 3 and isinstance(fat[3], (int, float)))
+            else 0.0
+        )
+        a = math.radians(frot)
+        ca, sa = math.cos(a), math.sin(a)
+        flay = _sub(node, "layer")
+        bottom = flay is not None and str(flay[1]) == "B.Cu"
+        want = "B.SilkS" if bottom else "F.SilkS"
+        for pi, c in enumerate(node):
+            if not (isinstance(c, list) and len(c) > 2
+                    and str(c[0]) == "property" and c[1] == "Reference"):
+                continue
+            lay = _sub(c, "layer")
+            if lay is None or str(lay[1]) != want:
+                continue
+            hb = _sub(c, "hide")
+            if hb is not None and (len(hb) < 2 or str(hb[1]) == "yes"):
+                continue
+            lat = _sub(c, "at")
+            if lat is None:
+                continue
+            (bot if bottom else top).append((fi, pi, c[2], bottom))
+    return sorted(top, key=lambda r: r[2]) + sorted(bot, key=lambda r: r[2])
+
+
+def _refdes_hits_to_rows(doc: list, hits, court_by_ref: dict) -> list:
+    rows = []
+    for (fi, pi, ref, fx, fy, ca, sa, lx, ly, size, bottom, *box) in hits:
+        node = doc[int(fi)]
+        c = node[int(pi)]
+        lat = _sub(c, "at")
+        bx = fx + lx * ca + ly * sa
+        by = fy - lx * sa + ly * ca
+        court = court_by_ref.get(ref, (bx - 1, by - 1, bx + 1, by + 1))
+        rows.append((ref, c, lat, fx, fy, ca, sa, court, size,
+                     tuple(box), bool(bottom)))
+    return rows
+
+
+def _collect_refdes_rows_py(doc: list, court_by_ref: dict) -> list:
+    import math
+    top: list = []
+    bot: list = []
+    for node in doc:
+        if not (isinstance(node, list) and node and str(node[0]) == "footprint"):
+            continue
+        fat = _sub(node, "at")
+        if fat is None:
+            continue
+        fx, fy = float(fat[1]), float(fat[2])
+        frot = (
+            float(fat[3])
+            if (len(fat) > 3 and isinstance(fat[3], (int, float)))
+            else 0.0
+        )
+        a = math.radians(frot)
+        ca, sa = math.cos(a), math.sin(a)
+        flay = _sub(node, "layer")
+        bottom = flay is not None and str(flay[1]) == "B.Cu"
+        want = "B.SilkS" if bottom else "F.SilkS"
+        for c in node:
+            if not (isinstance(c, list) and len(c) > 2
+                    and str(c[0]) == "property" and c[1] == "Reference"):
+                continue
+            lay = _sub(c, "layer")
+            if lay is None or str(lay[1]) != want:
+                continue
+            hb = _sub(c, "hide")
+            if hb is not None and (len(hb) < 2 or str(hb[1]) == "yes"):
+                continue
+            lat = _sub(c, "at")
+            if lat is None:
+                continue
+            ref, size = c[2], _font_size(c)
+            lx, ly = float(lat[1]), float(lat[2])
+            bx, by = fx + lx * ca + ly * sa, fy - lx * sa + ly * ca
+            court = court_by_ref.get(ref, (bx - 1, by - 1, bx + 1, by + 1))
+            (bot if bottom else top).append(
+                (ref, c, lat, fx, fy, ca, sa, court, size,
+                 _text_box(ref, bx, by, size), bottom))
+    return (sorted(top, key=lambda r: r[0])
+            + sorted(bot, key=lambda r: r[0]))
+
+
 def _collect_gr_text_boxes_py(doc: list) -> list:
     boxes: list = []
     for node in doc:
@@ -657,47 +754,18 @@ def _declutter_refdes(model, uid, doc: list) -> int:
         [_inst_courtyard(i) for i in model.insts if i.side == "bottom"]
         + silk_gfx_bot)
     court_by_ref = {i.ref: _inst_courtyard(i) for i in model.insts}
-    top_refs: list = []
-    bot_refs: list = []
-    for node in doc:
-        if not (isinstance(node, list) and node and str(node[0]) == "footprint"):
-            continue
-        fat = _sub(node, "at")
-        if fat is None:
-            continue
-        fx, fy = float(fat[1]), float(fat[2])
-        frot = (
-            float(fat[3])
-            if (len(fat) > 3 and isinstance(fat[3], (int, float)))
-            else 0.0
-        )
-        a = math.radians(frot)
-        ca, sa = math.cos(a), math.sin(a)
-        flay = _sub(node, "layer")
-        bottom = flay is not None and str(flay[1]) == "B.Cu"
-        want = "B.SilkS" if bottom else "F.SilkS"
-        for c in node:
-            if not (isinstance(c, list) and len(c) > 2 and str(c[0]) == "property"
-                    and c[1] == "Reference"):
-                continue
-            lay = _sub(c, "layer")
-            if lay is None or str(lay[1]) != want:
-                continue
-            hb = _sub(c, "hide")
-            if hb is not None and (len(hb) < 2 or str(hb[1]) == "yes"):
-                continue
-            lat = _sub(c, "at")
-            if lat is None:
-                continue
-            ref, size = c[2], _font_size(c)
-            lx, ly = float(lat[1]), float(lat[2])
-            bx, by = fx + lx * ca + ly * sa, fy - lx * sa + ly * ca
-            court = court_by_ref.get(ref, (bx - 1, by - 1, bx + 1, by + 1))
-            (bot_refs if bottom else top_refs).append(
-                (ref, c, lat, fx, fy, ca, sa, court, size,
-                 _text_box(ref, bx, by, size), bottom))
-    refs = (sorted(top_refs, key=lambda r: r[0])
-            + sorted(bot_refs, key=lambda r: r[0]))
+    if _nat.loaded():
+        hits = _nat.module().collect_refdes_props(doc, 1.0)
+        if _nat.trace():
+            ref_hits = _collect_refdes_props_py(doc)
+            got = [(int(h[0]), int(h[1]), h[2], bool(h[10])) for h in hits]
+            if got != ref_hits:
+                raise AssertionError(
+                    "native collect_refdes_props DIVERGENCE: "
+                    f"cpp={got} python={ref_hits}")
+        refs = _refdes_hits_to_rows(doc, hits, court_by_ref)
+    else:
+        refs = _collect_refdes_rows_py(doc, court_by_ref)
     placed_top = _BoxIndex()
     placed_bot = _BoxIndex()
     moved = 0

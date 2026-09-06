@@ -1452,6 +1452,50 @@ def test_pcb_scan_and_place_helpers(geom):
             [Sym("effects"), [Sym("font"), [Sym("size"), 1.2, 1.2]]]]]
     assert [tuple(b) for b in geom.collect_gr_text_boxes(doc, 1.0)] == (
         _collect_gr_text_boxes_py(doc))
+    from schgen.generate.pcb.silk import _collect_refdes_props_py
+    from schgen.layout.place import U, gceil, gsnap
+
+    fp_ref = [Sym("footprint"), "R",
+              [Sym("at"), 4.0, 5.0, 0.0],
+              [Sym("layer"), Sym("F.Cu")],
+              [Sym("property"), "Reference", "R1",
+               [Sym("at"), 0.5, 0.25],
+               [Sym("layer"), Sym("F.SilkS")],
+               [Sym("effects"), [Sym("font"), [Sym("size"), 1.0, 1.0]]]]]
+    pcb = [Sym("kicad_pcb"), fp_ref]
+    hits = geom.collect_refdes_props(pcb, 1.0)
+    assert [(int(h[0]), int(h[1]), h[2], bool(h[10])) for h in hits] == (
+        _collect_refdes_props_py(pcb))
+    assert geom.footprint_alias(
+        "Capacitor_SMD:C_1206_3225Metric",
+        [("Capacitor_SMD:C_1206_3225Metric",
+          "Capacitor_SMD:C_1206_3216Metric")]) == (
+        "Capacitor_SMD:C_1206_3216Metric")
+    assert geom.footprint_alias("X", []) == "X"
+    assert geom.mirror_assert_ok(False, "top", False) is True
+    assert geom.mirror_assert_ok(True, "top", True) is False
+    assert geom.mirror_assert_ok(True, "bottom", True) is True
+    assert geom.needs_flag(["passive", "power_in"], ["power_out", "output"])
+    assert not geom.needs_flag(["power_in", "output"], ["power_out", "output"])
+    assert tuple(geom.farm_cluster_origin(0.0, 10.0, U, 2)) == (
+        gsnap(0.0 + 4 * U), gsnap(0.0 + 4 * U), gceil(8 * U),
+        gceil(10.0 + 12 * U))
+    assert geom.next_rail_col(20.0, 10.16, 4.0, 4.0, U, 1.27) == gceil(
+        20.0 - 10.16 + max(10.16, 2.0 + 2.0 + 1.27))
+    zero = (0.0, 0.0, 0.0, 0.0)
+    occ = geom.Occupancy(80.0, 60.0, 0.3, 8.0, 2.0, 1.0, 0.05)
+    occ.set_board(80.0, 60.0)
+    occ.add(10.0, 10.0, 6.0, 6.0, zero, zero, 1, [])
+    occ.add(30.0, 10.0, 6.0, 6.0, zero, zero, 1, [])
+    row = ("a", 10.0, 10.0, 6.0, 6.0, zero, zero, 1, [],
+           False, "", 20.0, 15.0, 20.0, 20.0, 7.0,
+           12.0, 12.0, False, False, False, "",
+           0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, "",
+           1.0, 0.0, 0.0, 1.6, 30.0, 25.0, [])
+    poses, npass = geom.refine_pack_passes(
+        occ, [row], [("a", 13.0, 13.0)], 16, 80.0, 60.0)
+    assert npass >= 1
+    assert len(poses) == 1
 
 
 def test_timing_span_records():

@@ -2369,8 +2369,19 @@ class _Engine:
             for p in self.lib.get(part.lib_id).pins:
                 etype_of[(ref, p.number)] = p.etype
         pins = self.c.nets[net].pins
-        ets = {etype_of.get((pr.ref, pr.pin), "?") for pr in pins}
-        return "power_in" in ets and not (ets & _FLAG_DRIVER_ETYPES)
+        ets = [etype_of.get((pr.ref, pr.pin), "?") for pr in pins]
+        drivers = list(_FLAG_DRIVER_ETYPES)
+        if _nat.loaded():
+            got = _nat.module().needs_flag(ets, drivers)
+            if _nat.trace():
+                ref = "power_in" in ets and not (
+                    set(ets) & _FLAG_DRIVER_ETYPES)
+                if got is not ref:
+                    raise AssertionError(
+                        "native needs_flag DIVERGENCE: "
+                        f"cpp={got} python={ref}")
+            return got
+        return "power_in" in ets and not (set(ets) & _FLAG_DRIVER_ETYPES)
 
     def _farm_row_right_bound(self, ex0: float, ex1_flow: float) -> float:
         if _nat.loaded():
@@ -2399,11 +2410,26 @@ class _Engine:
         span = (n_caps - 1) * sp.cap_pitch
         if n_caps > 5:
             ex0, _, ex1_flow, ey1 = self._extent()
-            col_x = gsnap(ex0 + 4 * U)
-            farm_left = col_x
-            row_step = gceil(8 * U)
+            if _nat.loaded():
+                col_x, farm_left, row_step, cy = (
+                    _nat.module().farm_cluster_origin(
+                        ex0, ey1, U, self._n_box_bucks))
+                if _nat.trace():
+                    ref = (gsnap(ex0 + 4 * U), gsnap(ex0 + 4 * U),
+                           gceil(8 * U),
+                           gceil(ey1 + (12 if self._n_box_bucks >= 2
+                                        else 8) * U))
+                    if (col_x, farm_left, row_step, cy) != ref:
+                        raise AssertionError(
+                            "native farm_cluster_origin DIVERGENCE: "
+                            f"cpp={(col_x, farm_left, row_step, cy)} "
+                            f"python={ref}")
+            else:
+                col_x = gsnap(ex0 + 4 * U)
+                farm_left = col_x
+                row_step = gceil(8 * U)
+                cy = gceil(ey1 + (12 if self._n_box_bucks >= 2 else 8) * U)
             max_right = self._farm_row_right_bound(ex0, ex1_flow)
-            cy = gceil(ey1 + (12 if self._n_box_bucks >= 2 else 8) * U)
         else:
             col_x = min(col_x, gfloor(body.x0 - span - 4 * sp.hang_stub))
             cy = max(ay + sp.cluster_dy, gceil(body.y1 + 3 * sp.hang_stub))
@@ -2416,10 +2442,24 @@ class _Engine:
         prev_rail_w: float | None = None
         for rail, caps in self.cluster.items():
             if prev_rail_w is not None:
-                col_x = gceil(col_x - sp.cap_pitch
-                              + max(sp.cap_pitch,
-                                    prev_rail_w / 2
-                                    + tm.text_wh(rail)[0] / 2 + 1.27))
+                rail_w = tm.text_wh(rail)[0]
+                if _nat.loaded():
+                    nxt = _nat.module().next_rail_col(
+                        col_x, sp.cap_pitch, prev_rail_w, rail_w, U, 1.27)
+                    if _nat.trace():
+                        ref = gceil(col_x - sp.cap_pitch
+                                    + max(sp.cap_pitch,
+                                          prev_rail_w / 2 + rail_w / 2 + 1.27))
+                        if nxt != ref:
+                            raise AssertionError(
+                                "native next_rail_col DIVERGENCE: "
+                                f"cpp={nxt} python={ref}")
+                    col_x = nxt
+                else:
+                    col_x = gceil(col_x - sp.cap_pitch
+                                  + max(sp.cap_pitch,
+                                        prev_rail_w / 2
+                                        + rail_w / 2 + 1.27))
             prev_rail_w = tm.text_wh(rail)[0]
             runs: list[tuple[float, list[float]]] = []
             cur: list[float] = []
