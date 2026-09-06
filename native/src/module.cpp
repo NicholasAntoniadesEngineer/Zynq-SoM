@@ -1298,6 +1298,16 @@ NB_MODULE(_geom, m) {
           });
     m.def("long_axis_coords", &schgen::long_axis_coords);
     m.def("topo_order", &schgen::topo_order);
+    m.def("aabb_center", &schgen::aabb_center);
+    m.def("boxes_span_center",
+          [](const std::vector<BoxTup>& boxes) {
+              return schgen::boxes_span_center(as_boxes(boxes));
+          });
+    m.def("pad_set_180_symmetric", &schgen::pad_set_180_symmetric);
+    m.def("facing_align_dot", &schgen::facing_align_dot);
+    m.def("turn_origin_180", &schgen::turn_origin_180);
+    m.def("rotate_origin", &schgen::rotate_origin);
+    m.def("named_box_center_sigs", &schgen::named_box_center_sigs);
     m.def("board_to_uv",
           [](double cx, double cy, double bx, double by, double rot) {
               return schgen::board_to_uv(cx, cy, bx, by, rot);

@@ -3075,4 +3075,104 @@ std::optional<std::vector<std::string>> topo_order(
     return out;
 }
 
+std::pair<double, double> aabb_center(
+    const std::vector<std::pair<double, double>>& pts) {
+    if (pts.empty()) {
+        throw std::runtime_error("aabb_center: pts required");
+    }
+    double min_x = pts[0].first;
+    double max_x = pts[0].first;
+    double min_y = pts[0].second;
+    double max_y = pts[0].second;
+    for (const auto& pt : pts) {
+        min_x = std::min(min_x, pt.first);
+        max_x = std::max(max_x, pt.first);
+        min_y = std::min(min_y, pt.second);
+        max_y = std::max(max_y, pt.second);
+    }
+    return {(min_x + max_x) / 2.0, (min_y + max_y) / 2.0};
+}
+
+std::pair<double, double> boxes_span_center(const std::vector<Box4>& boxes) {
+    if (boxes.empty()) {
+        throw std::runtime_error("boxes_span_center: boxes required");
+    }
+    double min_x0 = boxes[0].x0;
+    double max_x1 = boxes[0].x1;
+    double min_y0 = boxes[0].y0;
+    double max_y1 = boxes[0].y1;
+    for (const auto& box : boxes) {
+        min_x0 = std::min(min_x0, box.x0);
+        max_x1 = std::max(max_x1, box.x1);
+        min_y0 = std::min(min_y0, box.y0);
+        max_y1 = std::max(max_y1, box.y1);
+    }
+    return {(min_x0 + max_x1) / 2.0, (min_y0 + max_y1) / 2.0};
+}
+
+bool pad_set_180_symmetric(const std::vector<std::pair<double, double>>& pts,
+                           double tol) {
+    if (pts.empty()) {
+        return false;
+    }
+    const auto center = aabb_center(pts);
+    std::vector<std::pair<double, double>> rest = pts;
+    std::sort(rest.begin(), rest.end());
+    for (const auto& pt : pts) {
+        const double tx = 2.0 * center.first - pt.first;
+        const double ty = 2.0 * center.second - pt.second;
+        auto it = std::find_if(rest.begin(), rest.end(),
+                               [&](const std::pair<double, double>& q) {
+                                   return std::fabs(q.first - tx) <= tol
+                                       && std::fabs(q.second - ty) <= tol;
+                               });
+        if (it == rest.end()) {
+            return false;
+        }
+        rest.erase(it);
+    }
+    return true;
+}
+
+double facing_align_dot(double zone_x, double zone_y, double out_x,
+                        double out_y, double face_x, double face_y) {
+    return (out_x - zone_x) * face_x + (out_y - zone_y) * face_y;
+}
+
+std::pair<double, double> turn_origin_180(double ecx, double ecy, double ocx,
+                                          double ocy, double nhx, double nhy,
+                                          int digits) {
+    return {py_round(2.0 * ecx - ocx - nhx, digits),
+            py_round(2.0 * ecy - ocy - nhy, digits)};
+}
+
+std::pair<double, double> rotate_origin(double ecx, double ecy, double ocx,
+                                        double ocy, double nhx, double nhy,
+                                        double deg, int digits) {
+    const double rad = deg * (M_PI / 180.0);
+    const double cs = std::cos(rad);
+    const double sn = std::sin(rad);
+    const double rx = ocx - ecx;
+    const double ry = ocy - ecy;
+    const double ncx = ecx + (rx * cs + ry * sn);
+    const double ncy = ecy + (-rx * sn + ry * cs);
+    return {py_round(ncx - nhx, digits), py_round(ncy - nhy, digits)};
+}
+
+std::vector<std::tuple<double, double, std::string>> named_box_center_sigs(
+    const std::vector<std::tuple<std::string, double, double, double, double>>&
+        boxes,
+    int digits) {
+    std::vector<std::tuple<double, double, std::string>> out;
+    out.reserve(boxes.size());
+    for (const auto& row : boxes) {
+        out.emplace_back(
+            py_round((std::get<1>(row) + std::get<3>(row)) / 2.0, digits),
+            py_round((std::get<2>(row) + std::get<4>(row)) / 2.0, digits),
+            std::get<0>(row));
+    }
+    std::sort(out.begin(), out.end());
+    return out;
+}
+
 }  // namespace schgen

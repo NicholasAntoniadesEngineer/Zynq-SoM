@@ -764,7 +764,7 @@ def _raw_pad_centers(mod: Path) -> list[tuple[float, float]]:
     return out
 
 
-def _pad_set_180_symmetric(mod: Path) -> bool:
+def _pad_set_180_symmetric_py(mod: Path) -> bool:
     pts = _raw_pad_centers(mod)
     if not pts:
         return False
@@ -780,6 +780,20 @@ def _pad_set_180_symmetric(mod: Path) -> bool:
             return False
         rest.remove(hit)
     return True
+
+
+def _pad_set_180_symmetric(mod: Path) -> bool:
+    if not _nat.loaded():
+        raise RuntimeError("native pad_set_180_symmetric required")
+    pts = _raw_pad_centers(mod)
+    got = bool(_nat.module().pad_set_180_symmetric(pts, _FLIP_SYM_TOL))
+    if _nat.trace():
+        ref = _pad_set_180_symmetric_py(mod)
+        if got is not ref:
+            raise AssertionError(
+                "native pad_set_180_symmetric DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
 
 
 def _som_partner_nets() -> dict[str, tuple[Path, float, dict[str, tuple[str, ...]]]]:
@@ -980,13 +994,32 @@ def _sheet_pad_nets(sheet_name: str) -> dict[tuple[str, str], str]:
     return out
 
 
-def _net_rot180_differs(mod: Path, mem_nets: dict[str, str]) -> bool:
+def _net_rot180_differs_py(mod: Path, mem_nets: dict[str, str]) -> bool:
     def sig(rot: float):
         return sorted((round((b[0] + b[2]) / 2, 2), round((b[1] + b[3]) / 2, 2),
                        mem_nets[n])
                       for n, b in _g._pad_boxes(mod, rot).items()
                       if n in mem_nets)
     return sig(0.0) != sig(180.0)
+
+
+def _net_rot180_differs(mod: Path, mem_nets: dict[str, str]) -> bool:
+    if not _nat.loaded():
+        raise RuntimeError("native named_box_center_sigs required")
+
+    def sig(rot: float):
+        rows = [(mem_nets[n], *b)
+                for n, b in _g._pad_boxes(mod, rot).items() if n in mem_nets]
+        return [tuple(r) for r in _nat.module().named_box_center_sigs(rows, 2)]
+
+    got = sig(0.0) != sig(180.0)
+    if _nat.trace():
+        ref = _net_rot180_differs_py(mod, mem_nets)
+        if got is not ref:
+            raise AssertionError(
+                "native named_box_center_sigs DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
 
 
 def _gcandidates(bref: str, mod: Path,
@@ -2468,30 +2501,26 @@ def _centroid(pts: list[tuple[float, float]]) -> tuple[float, float]:
 
 
 def _turn_zone_180(placed: dict[str, _Part]) -> dict[str, _Part]:
+    if not _nat.loaded():
+        raise RuntimeError("native turn_origin_180 required")
     allpts: list[tuple[float, float]] = []
     for p in placed.values():
         for bb in p.pad_boxes().values():
             allpts.append((bb[0], bb[1]))
             allpts.append((bb[2], bb[3]))
-    ecx = (min(x for x, _ in allpts) + max(x for x, _ in allpts)) / 2.0
-    ecy = (min(y for _, y in allpts) + max(y for _, y in allpts)) / 2.0
+    ecx, ecy = _nat.module().aabb_center(allpts)
     out: dict[str, _Part] = {}
     for ref, p in placed.items():
         nrot = (p.rot + 180.0) % 360.0
         ob = _g._pad_boxes(p.mod, p.rot)
         nb = _g._pad_boxes(p.mod, nrot)
-        ocx = p.ox + (min(b[0] for b in ob.values())
-                      + max(b[2] for b in ob.values())) / 2.0
-        ocy = p.oy + (min(b[1] for b in ob.values())
-                      + max(b[3] for b in ob.values())) / 2.0
-        ncx = 2 * ecx - ocx
-        ncy = 2 * ecy - ocy
-        nhx = (min(b[0] for b in nb.values())
-               + max(b[2] for b in nb.values())) / 2.0
-        nhy = (min(b[1] for b in nb.values())
-               + max(b[3] for b in nb.values())) / 2.0
-        out[ref] = _Part(ref, p.mod, nrot, p.side,
-                         round(ncx - nhx, 4), round(ncy - nhy, 4))
+        ocx, ocy = _nat.module().boxes_span_center(list(ob.values()))
+        ocx += p.ox
+        ocy += p.oy
+        nhx, nhy = _nat.module().boxes_span_center(list(nb.values()))
+        nox, noy = _nat.module().turn_origin_180(
+            ecx, ecy, ocx, ocy, nhx, nhy, 4)
+        out[ref] = _Part(ref, p.mod, nrot, p.side, nox, noy)
     minx = min(bb[0] for p in out.values() for bb in p.pad_boxes().values())
     miny = min(bb[1] for p in out.values() for bb in p.pad_boxes().values())
     dx, dy = ZONE_PAD - minx, ZONE_PAD - miny
@@ -2512,7 +2541,8 @@ def _apply_facing(placed: dict[str, _Part], out_brefs: set[str],
     def _dot(pl: dict[str, _Part]) -> float:
         zc = _centroid([_pad_center(p) for p in pl.values()])
         oc = _centroid([_pad_center(pl[r]) for r in present])
-        return (oc[0] - zc[0]) * fv[0] + (oc[1] - zc[1]) * fv[1]
+        return _nat.module().facing_align_dot(
+            zc[0], zc[1], oc[0], oc[1], fv[0], fv[1])
 
     if _dot(placed) > 0.0:
         return placed
@@ -2572,37 +2602,30 @@ def refit_facing(sheet_name: str, contract: dict,
               for r, (x, y) in parts_xy.items()}
 
     def _gate_dot(xy: dict[str, tuple[float, float]]) -> float:
-        n = len(xy)
-        zcx = sum(p[0] for p in xy.values()) / n
-        zcy = sum(p[1] for p in xy.values()) / n
-        ocx = sum(xy[r][0] for r in present) / len(present)
-        ocy = sum(xy[r][1] for r in present) / len(present)
-        dvx = down_centroid[0] - zcx
-        dvy = down_centroid[1] - zcy
-        return (ocx - zcx) * dvx + (ocy - zcy) * dvy
+        zc = _nat.module().points_centroid(list(xy.values()))
+        oc = _nat.module().points_centroid([xy[r] for r in present])
+        return _nat.module().facing_align_dot(
+            zc[0], zc[1], oc[0], oc[1],
+            down_centroid[0] - zc[0], down_centroid[1] - zc[1])
 
     allpts: list[tuple[float, float]] = []
     for p in placed.values():
         for bb in p.pad_boxes().values():
             allpts.append((bb[0], bb[1]))
             allpts.append((bb[2], bb[3]))
-    ecx = (min(x for x, _ in allpts) + max(x for x, _ in allpts)) / 2.0
-    ecy = (min(y for _, y in allpts) + max(y for _, y in allpts)) / 2.0
+    ecx, ecy = _nat.module().aabb_center(allpts)
     turned: dict[str, tuple[float, float, float]] = {}
     for r, p in placed.items():
         nrot = (p.rot + 180.0) % 360.0
         ob = _g._pad_boxes(p.mod, p.rot)
         nb = _g._pad_boxes(p.mod, nrot)
-        ocx = p.ox + (min(b[0] for b in ob.values())
-                      + max(b[2] for b in ob.values())) / 2.0
-        ocy = p.oy + (min(b[1] for b in ob.values())
-                      + max(b[3] for b in ob.values())) / 2.0
-        nhx = (min(b[0] for b in nb.values())
-               + max(b[2] for b in nb.values())) / 2.0
-        nhy = (min(b[1] for b in nb.values())
-               + max(b[3] for b in nb.values())) / 2.0
-        turned[r] = (round(2 * ecx - ocx - nhx, 4),
-                     round(2 * ecy - ocy - nhy, 4), nrot)
+        ocx, ocy = _nat.module().boxes_span_center(list(ob.values()))
+        ocx += p.ox
+        ocy += p.oy
+        nhx, nhy = _nat.module().boxes_span_center(list(nb.values()))
+        nox, noy = _nat.module().turn_origin_180(
+            ecx, ecy, ocx, ocy, nhx, nhy, 4)
+        turned[r] = (nox, noy, nrot)
     turned_xy = {r: (t[0], t[1]) for r, t in turned.items()}
     gate_now = _gate_dot(parts_xy) > 0.0
     gate_turned = _gate_dot(turned_xy) > 0.0
@@ -2623,33 +2646,26 @@ def _turn_zone_quadrant(placed: dict[str, _Part], deg: float
     deg = deg % 360.0
     if abs(deg) < 1e-6:
         return placed
-    R = math.radians(deg)
-    cs, sn = math.cos(R), math.sin(R)
+    if not _nat.loaded():
+        raise RuntimeError("native rotate_origin required")
     allpts: list[tuple[float, float]] = []
     for p in placed.values():
         for bb in p.pad_boxes().values():
             allpts.append((bb[0], bb[1]))
             allpts.append((bb[2], bb[3]))
-    ecx = (min(x for x, _ in allpts) + max(x for x, _ in allpts)) / 2.0
-    ecy = (min(y for _, y in allpts) + max(y for _, y in allpts)) / 2.0
+    ecx, ecy = _nat.module().aabb_center(allpts)
     out: dict[str, _Part] = {}
     for ref, p in placed.items():
         nrot = (p.rot + deg) % 360.0
         ob = _g._pad_boxes(p.mod, p.rot)
         nb = _g._pad_boxes(p.mod, nrot)
-        ocx = p.ox + (min(b[0] for b in ob.values())
-                      + max(b[2] for b in ob.values())) / 2.0
-        ocy = p.oy + (min(b[1] for b in ob.values())
-                      + max(b[3] for b in ob.values())) / 2.0
-        rx, ry = ocx - ecx, ocy - ecy
-        ncx = ecx + (rx * cs + ry * sn)
-        ncy = ecy + (-rx * sn + ry * cs)
-        nhx = (min(b[0] for b in nb.values())
-               + max(b[2] for b in nb.values())) / 2.0
-        nhy = (min(b[1] for b in nb.values())
-               + max(b[3] for b in nb.values())) / 2.0
-        out[ref] = _Part(ref, p.mod, nrot, p.side,
-                         round(ncx - nhx, 4), round(ncy - nhy, 4))
+        ocx, ocy = _nat.module().boxes_span_center(list(ob.values()))
+        ocx += p.ox
+        ocy += p.oy
+        nhx, nhy = _nat.module().boxes_span_center(list(nb.values()))
+        nox, noy = _nat.module().rotate_origin(
+            ecx, ecy, ocx, ocy, nhx, nhy, deg, 4)
+        out[ref] = _Part(ref, p.mod, nrot, p.side, nox, noy)
     minx = min(bb[0] for p in out.values() for bb in p.pad_boxes().values())
     miny = min(bb[1] for p in out.values() for bb in p.pad_boxes().values())
     dx, dy = ZONE_PAD - minx, ZONE_PAD - miny
@@ -2670,7 +2686,8 @@ def _apply_media_facing(placed: dict[str, _Part], media_brefs: set[str],
     def _dot(pl: dict[str, _Part]) -> float:
         zc = _centroid([_pad_center(p) for p in pl.values()])
         mc = _centroid([_pad_center(pl[r]) for r in present])
-        return (mc[0] - zc[0]) * fv[0] + (mc[1] - zc[1]) * fv[1]
+        return _nat.module().facing_align_dot(
+            zc[0], zc[1], mc[0], mc[1], fv[0], fv[1])
 
     best = placed
     best_dot = _dot(placed)

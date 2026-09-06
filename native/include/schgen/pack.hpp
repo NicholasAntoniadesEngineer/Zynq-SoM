@@ -534,6 +534,23 @@ std::vector<std::pair<std::string, double>> long_axis_coords(
 std::optional<std::vector<std::string>> topo_order(
     const std::vector<std::string>& parts,
     const std::vector<std::pair<std::string, std::vector<std::string>>>& deps);
+std::pair<double, double> aabb_center(
+    const std::vector<std::pair<double, double>>& pts);
+std::pair<double, double> boxes_span_center(const std::vector<Box4>& boxes);
+bool pad_set_180_symmetric(const std::vector<std::pair<double, double>>& pts,
+                           double tol);
+double facing_align_dot(double zone_x, double zone_y, double out_x,
+                        double out_y, double face_x, double face_y);
+std::pair<double, double> turn_origin_180(double ecx, double ecy, double ocx,
+                                          double ocy, double nhx, double nhy,
+                                          int digits);
+std::pair<double, double> rotate_origin(double ecx, double ecy, double ocx,
+                                        double ocy, double nhx, double nhy,
+                                        double deg, int digits);
+std::vector<std::tuple<double, double, std::string>> named_box_center_sigs(
+    const std::vector<std::tuple<std::string, double, double, double, double>>&
+        boxes,
+    int digits);
 
 std::vector<std::vector<Seg2>> cluster_slot_segs(
     const std::vector<std::tuple<std::string, double, double>>& pad_offs,

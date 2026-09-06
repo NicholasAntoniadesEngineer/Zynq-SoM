@@ -3193,3 +3193,26 @@ def test_stage_flow_and_verify_leftover_kernels_match_python(geom, monkeypatch):
     b = vg.Box(1.5, 1.5, 3.0, 3.0, "body", "U2")
     assert a.intersects(b, 0.0) is a.intersects_py(b, 0.0)
     assert a.intersects(b, 0.6) is a.intersects_py(b, 0.6)
+
+    pts = [(0.0, 0.0), (4.0, 0.0), (0.0, 2.0), (4.0, 2.0)]
+    assert tuple(geom.aabb_center(pts)) == (2.0, 1.0)
+    assert geom.pad_set_180_symmetric(pts, 0.1) is True
+    assert geom.pad_set_180_symmetric([(0.0, 0.0), (1.0, 0.0), (0.0, 1.0)],
+                                      0.1) is False
+    assert geom.facing_align_dot(0.0, 0.0, 2.0, 0.0, 1.0, 0.0) == 2.0
+    assert tuple(geom.boxes_span_center([(0.0, 0.0, 2.0, 1.0),
+                                         (3.0, -1.0, 5.0, 4.0)])) == (2.5, 1.5)
+    assert tuple(geom.turn_origin_180(10.0, 20.0, 12.0, 18.0, 1.0, 0.5, 4)) == (
+        round(2.0 * 10.0 - 12.0 - 1.0, 4),
+        round(2.0 * 20.0 - 18.0 - 0.5, 4))
+    import math
+    deg = 90.0
+    cs, sn = math.cos(math.radians(deg)), math.sin(math.radians(deg))
+    rx, ry = 12.0 - 10.0, 18.0 - 20.0
+    ncx = 10.0 + (rx * cs + ry * sn)
+    ncy = 20.0 + (-rx * sn + ry * cs)
+    assert tuple(geom.rotate_origin(10.0, 20.0, 12.0, 18.0, 1.0, 0.5, deg, 4)
+                 ) == (round(ncx - 1.0, 4), round(ncy - 0.5, 4))
+    sigs = [tuple(r) for r in geom.named_box_center_sigs(
+        [("N1", 0.0, 0.0, 2.0, 2.0), ("N0", 4.0, 1.0, 6.0, 3.0)], 2)]
+    assert sigs == [(1.0, 1.0, "N1"), (5.0, 2.0, "N0")]
