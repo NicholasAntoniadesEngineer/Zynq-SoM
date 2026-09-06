@@ -2126,6 +2126,36 @@ def test_j_affinity_nets_conn_and_obstacles_match_python(geom, monkeypatch):
     assert _net_rule(model, "GND") == 0.15
 
 
+def test_escape_region_legalize_rects_and_stagger_match_python(geom):
+    zone = (10.0, 20.0, 40.0, 50.0)
+    assert geom.via_in_escape_region(25.0, 35.0, zone, 0.5) is True
+    assert geom.via_in_escape_region(10.4, 35.0, zone, 0.5) is False
+    assert geom.via_in_escape_region(25.0, 49.6, zone, 0.5) is False
+    box = (1.0, 1.0, 2.0, 2.0)
+    assert geom.coexistence_box_hit(0.0, 0.0, 0.0, box, 3.0, 3.0) is True
+    assert geom.coexistence_box_hit(0.0, 0.0, 0.0, box, 0.4, 0.4) is False
+    assert tuple(geom.legalize_som_rect(10.0, 12.0, 20.0, 8.0, 1.5)) == (
+        8.5, 10.5, 31.5, 21.5)
+    assert [tuple(r) for r in geom.legalize_mh_corners(100.0, 80.0, 10.0)] == [
+        (0.0, 0.0, 10.0, 10.0),
+        (90.0, 0.0, 100.0, 10.0),
+        (90.0, 70.0, 100.0, 80.0),
+        (0.0, 70.0, 10.0, 80.0),
+    ]
+    jacks = [("J1", 4.0, 6.0, 2.0, 4.0), ("J2", 8.0, 1.0, 6.0, 2.0)]
+    got = {n: (x0, y0, x1, y1)
+           for n, x0, y0, x1, y1 in geom.som_jack_rects(10.0, 20.0, jacks)}
+    assert got == {
+        "som_j1": (13.0, 24.0, 15.0, 28.0),
+        "som_j2": (15.0, 20.0, 21.0, 22.0),
+    }
+    q0 = [(0.0, 0.0), (2.0, 0.0), (2.0, 2.0), (0.0, 2.0)]
+    q1 = [(1.0, 1.0), (3.0, 1.0), (3.0, 3.0), (1.0, 3.0)]
+    q2 = [(10.0, 10.0), (11.0, 10.0), (11.0, 11.0), (10.0, 11.0)]
+    assert [int(k) for k in geom.stagger_overlap_ranks([q0, q1, q2])] == [
+        0, 1, 0]
+
+
 def test_place_geom_wrappers_match_python(geom, monkeypatch):
     from schgen.layout import place as pl
     monkeypatch.setattr(pl._nat, "trace", lambda: True)

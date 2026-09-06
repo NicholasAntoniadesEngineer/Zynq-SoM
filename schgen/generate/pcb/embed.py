@@ -889,23 +889,36 @@ def _stagger_overlapping_pours(
     for layer, corners, z in zone_geom:
         by_layer.setdefault(layer, []).append((corners, z))
     for members in by_layer.values():
-        comp = list(range(len(members)))
+        if not _nat.loaded():
+            raise RuntimeError("native stagger_overlap_ranks required")
+        ranks_list = [int(k) for k in _nat.module().stagger_overlap_ranks(
+            [corners for corners, _z in members])]
+        if _nat.trace():
+            ref_comp = list(range(len(members)))
 
-        def find(i: int, comp: list[int] = comp) -> int:
-            while comp[i] != i:
-                comp[i] = comp[comp[i]]
-                i = comp[i]
-            return i
+            def find_ref(i: int, comp: list[int] = ref_comp) -> int:
+                while comp[i] != i:
+                    comp[i] = comp[comp[i]]
+                    i = comp[i]
+                return i
 
-        for i in range(len(members)):
-            for j in range(i + 1, len(members)):
-                if _quads_overlap(members[i][0], members[j][0]):
-                    comp[find(i)] = find(j)
-        ranks: dict[int, int] = {}
+            for i in range(len(members)):
+                for j in range(i + 1, len(members)):
+                    if _quads_overlap(members[i][0], members[j][0]):
+                        ref_comp[find_ref(i)] = find_ref(j)
+            ref_ranks: dict[int, int] = {}
+            expect: list[int] = []
+            for i in range(len(members)):
+                root = find_ref(i)
+                k = ref_ranks.get(root, 0)
+                ref_ranks[root] = k + 1
+                expect.append(k)
+            if ranks_list != expect:
+                raise AssertionError(
+                    "native stagger_overlap_ranks DIVERGENCE: "
+                    f"cpp={ranks_list} python={expect}")
         for i, (_c, z) in enumerate(members):
-            root = find(i)
-            k = ranks.get(root, 0)
-            ranks[root] = k + 1
+            k = ranks_list[i]
             if k:
                 hatch_at = next(idx for idx, node in enumerate(z)
                                 if isinstance(node, list) and node

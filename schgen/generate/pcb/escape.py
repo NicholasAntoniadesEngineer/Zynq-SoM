@@ -925,8 +925,17 @@ def _self_check(conns, vias_by_conn, ladder_segs, zone, gnd_num) -> None:
         inst_zone = zone
         for s in vias:
             bx, by = _to_board(conns[ref], s["u"], s["v"])
-            if not (inst_zone[0] + 0.5 <= bx <= inst_zone[2] - 0.5
-                    and inst_zone[1] + 0.5 <= by <= inst_zone[3] - 0.5):
+            if not _nat.loaded():
+                raise RuntimeError("native via_in_escape_region required")
+            ok = bool(_nat.module().via_in_escape_region(bx, by, inst_zone, 0.5))
+            if _nat.trace():
+                ref_ok = (inst_zone[0] + 0.5 <= bx <= inst_zone[2] - 0.5
+                          and inst_zone[1] + 0.5 <= by <= inst_zone[3] - 0.5)
+                if ok is not ref_ok:
+                    raise AssertionError(
+                        "native via_in_escape_region DIVERGENCE: "
+                        f"cpp={ok} python={ref_ok}")
+            if not ok:
                 raise EscapeError(f"{ref}: via at ({bx:.2f},{by:.2f}) outside "
                                   f"the escape region {inst_zone} (+0.5 margin)")
         if pad_stubs < 2:
@@ -952,12 +961,23 @@ def _coexistence(model, conns, ledger) -> list[dict]:
             boxes = _inst_pad_boxes(oi)
             hit = False
             for bb in boxes.values():
-                cs = [_to_local(inst, x, y) for x in (bb[0], bb[2])
-                      for y in (bb[1], bb[3])]
-                xs = [p[0] for p in cs]
-                ys = [p[1] for p in cs]
-                if (max(xs) >= -region_u and min(xs) <= region_u
-                        and max(ys) >= -region_v and min(ys) <= region_v):
+                if not _nat.loaded():
+                    raise RuntimeError("native coexistence_box_hit required")
+                got = bool(_nat.module().coexistence_box_hit(
+                    inst.x, inst.y, inst.rotation or 0.0, bb, region_u,
+                    region_v))
+                if _nat.trace():
+                    cs = [_to_local_py(inst, x, y) for x in (bb[0], bb[2])
+                          for y in (bb[1], bb[3])]
+                    xs = [p[0] for p in cs]
+                    ys = [p[1] for p in cs]
+                    ref = (max(xs) >= -region_u and min(xs) <= region_u
+                           and max(ys) >= -region_v and min(ys) <= region_v)
+                    if got is not ref:
+                        raise AssertionError(
+                            "native coexistence_box_hit DIVERGENCE: "
+                            f"cpp={got} python={ref}")
+                if got:
                     hit = True
                     break
             if not hit:

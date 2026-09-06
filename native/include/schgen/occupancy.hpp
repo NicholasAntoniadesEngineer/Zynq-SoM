@@ -172,5 +172,7 @@ std::tuple<double, double, double, double> evict_window(
     double clear);
 bool quads_overlap(const std::vector<std::pair<double, double>>& a,
                    const std::vector<std::pair<double, double>>& b);
+std::vector<int> stagger_overlap_ranks(
+    const std::vector<std::vector<std::pair<double, double>>>& quads);
 
 }  // namespace schgen

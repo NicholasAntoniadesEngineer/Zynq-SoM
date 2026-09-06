@@ -10,6 +10,7 @@
 #include <stdexcept>
 #include <string>
 #include <tuple>
+#include <unordered_map>
 #include <unordered_set>
 #include <utility>
 
@@ -405,6 +406,44 @@ bool quads_overlap(const std::vector<std::pair<double, double>>& a,
         }
     }
     return true;
+}
+
+std::vector<int> stagger_overlap_ranks(
+    const std::vector<std::vector<std::pair<double, double>>>& quads) {
+    const int n = static_cast<int>(quads.size());
+    std::vector<int> parent(n);
+    for (int i = 0; i < n; ++i) {
+        parent[i] = i;
+    }
+    auto find = [&](int i) {
+        while (parent[i] != i) {
+            parent[i] = parent[parent[i]];
+            i = parent[i];
+        }
+        return i;
+    };
+    for (int i = 0; i < n; ++i) {
+        for (int j = i + 1; j < n; ++j) {
+            if (quads_overlap(quads[static_cast<std::size_t>(i)],
+                              quads[static_cast<std::size_t>(j)])) {
+                parent[find(i)] = find(j);
+            }
+        }
+    }
+    std::vector<int> ranks(n, 0);
+    std::unordered_map<int, int> seen;
+    for (int i = 0; i < n; ++i) {
+        const int root = find(i);
+        const auto hit = seen.find(root);
+        if (hit == seen.end()) {
+            seen.emplace(root, 0);
+            ranks[static_cast<std::size_t>(i)] = 0;
+        } else {
+            hit->second += 1;
+            ranks[static_cast<std::size_t>(i)] = hit->second;
+        }
+    }
+    return ranks;
 }
 
 Occupancy::Occupancy(double board_w, double board_h, double clear,

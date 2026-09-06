@@ -3403,18 +3403,38 @@ def _attempt_pack(plan: Plan, interior: list[Block],
             _exempt, _ = wired_term_participants()
             movable_names = sorted(parts_ & inames & set(_exempt))
             if movable_names:
+                if not _nat.loaded():
+                    raise RuntimeError("native legalize_som_rect required")
+                sx0, sy0, sx1, sy1 = _nat.module().legalize_som_rect(
+                    plan.som_x, plan.som_y, plan.som.w, plan.som.h,
+                    SOM_OCC_PAD_MM)
+                if _nat.trace():
+                    ref = (plan.som_x - SOM_OCC_PAD_MM,
+                           plan.som_y - SOM_OCC_PAD_MM,
+                           plan.som_x + plan.som.w + SOM_OCC_PAD_MM,
+                           plan.som_y + plan.som.h + SOM_OCC_PAD_MM)
+                    if (sx0, sy0, sx1, sy1) != ref:
+                        raise AssertionError(
+                            "native legalize_som_rect DIVERGENCE: "
+                            f"cpp={(sx0, sy0, sx1, sy1)} python={ref}")
                 fixed_rects: list[tuple[str, float, float, float, float]] = [
-                    ("som", plan.som_x - SOM_OCC_PAD_MM,
-                     plan.som_y - SOM_OCC_PAD_MM,
-                     plan.som_x + plan.som.w + SOM_OCC_PAD_MM,
-                     plan.som_y + plan.som.h + SOM_OCC_PAD_MM)]
-                for kx, ky in ((0.0, 0.0), (BOARD_W - MH_CORNER_KO, 0.0),
-                               (BOARD_W - MH_CORNER_KO,
-                                BOARD_H - MH_CORNER_KO),
-                               (0.0, BOARD_H - MH_CORNER_KO)):
-                    fixed_rects.append((f"corner@{kx:g},{ky:g}", kx, ky,
-                                        kx + MH_CORNER_KO,
-                                        ky + MH_CORNER_KO))
+                    ("som", sx0, sy0, sx1, sy1)]
+                corners = [tuple(r) for r in _nat.module().legalize_mh_corners(
+                    BOARD_W, BOARD_H, MH_CORNER_KO)]
+                if _nat.trace():
+                    ref_c = [
+                        (0.0, 0.0, MH_CORNER_KO, MH_CORNER_KO),
+                        (BOARD_W - MH_CORNER_KO, 0.0, BOARD_W, MH_CORNER_KO),
+                        (BOARD_W - MH_CORNER_KO, BOARD_H - MH_CORNER_KO,
+                         BOARD_W, BOARD_H),
+                        (0.0, BOARD_H - MH_CORNER_KO, MH_CORNER_KO, BOARD_H)]
+                    if corners != ref_c:
+                        raise AssertionError(
+                            "native legalize_mh_corners DIVERGENCE: "
+                            f"cpp={corners} python={ref_c}")
+                for x0, y0, x1, y1 in corners:
+                    fixed_rects.append((f"corner@{x0:g},{y0:g}", x0, y0,
+                                        x1, y1))
                 for b in plan.edge_blocks:
                     fixed_rects.append((b.name, b.x, b.y,
                                         b.x + b.w, b.y + b.h))
@@ -3430,11 +3450,23 @@ def _attempt_pack(plan: Plan, interior: list[Block],
                         fixed_poses[b.name] = (b.x, b.y)
                 som_page = som_core_rect(plan.som_x, plan.som_y,
                                          plan.som.w, plan.som.h)
-                _j_rects = {
-                    f"som_j{j.ref[1:].lower()}": (
-                        plan.som_x + j.x - j.w / 2, plan.som_y + j.y - j.h / 2,
-                        plan.som_x + j.x + j.w / 2, plan.som_y + j.y + j.h / 2)
-                    for j in plan.som.js}
+                jack_rows = [(j.ref, j.x, j.y, j.w, j.h) for j in plan.som.js]
+                _j_rects = {name: (x0, y0, x1, y1)
+                            for name, x0, y0, x1, y1 in
+                            _nat.module().som_jack_rects(
+                                plan.som_x, plan.som_y, jack_rows)}
+                if _nat.trace():
+                    ref_j = {
+                        f"som_j{j.ref[1:].lower()}": (
+                            plan.som_x + j.x - j.w / 2,
+                            plan.som_y + j.y - j.h / 2,
+                            plan.som_x + j.x + j.w / 2,
+                            plan.som_y + j.y + j.h / 2)
+                        for j in plan.som.js}
+                    if _j_rects != ref_j:
+                        raise AssertionError(
+                            "native som_jack_rects DIVERGENCE: "
+                            f"cpp={_j_rects} python={ref_j}")
                 byn = {b.name: b for b in interior}
                 orig = {b.name: (b.x, b.y) for b in interior}
 

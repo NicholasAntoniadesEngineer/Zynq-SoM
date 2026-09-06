@@ -2636,4 +2636,84 @@ std::optional<double> escape_redundancy_u(
     return std::nullopt;
 }
 
+bool via_in_escape_region(double bx, double by, const Box4& zone,
+                          double margin) {
+    return zone.x0 + margin <= bx && bx <= zone.x1 - margin
+        && zone.y0 + margin <= by && by <= zone.y1 - margin;
+}
+
+bool coexistence_box_hit(double inst_x, double inst_y, double rot,
+                         const Box4& box, double region_u, double region_v) {
+    const double xs[2] = {box.x0, box.x1};
+    const double ys[2] = {box.y0, box.y1};
+    double min_u = 0.0;
+    double max_u = 0.0;
+    double min_v = 0.0;
+    double max_v = 0.0;
+    bool first = true;
+    for (double x : xs) {
+        for (double y : ys) {
+            const auto uv = board_to_uv(inst_x, inst_y, x, y, rot);
+            if (first) {
+                min_u = max_u = uv.first;
+                min_v = max_v = uv.second;
+                first = false;
+            } else {
+                min_u = std::min(min_u, uv.first);
+                max_u = std::max(max_u, uv.first);
+                min_v = std::min(min_v, uv.second);
+                max_v = std::max(max_v, uv.second);
+            }
+        }
+    }
+    return max_u >= -region_u && min_u <= region_u
+        && max_v >= -region_v && min_v <= region_v;
+}
+
+Box4 legalize_som_rect(double som_x, double som_y, double som_w, double som_h,
+                       double pad) {
+    return {som_x - pad, som_y - pad, som_x + som_w + pad,
+            som_y + som_h + pad};
+}
+
+std::vector<Box4> legalize_mh_corners(double board_w, double board_h,
+                                      double mh_ko) {
+    if (mh_ko <= 0.0) {
+        throw std::runtime_error("legalize_mh_corners: mh_ko required");
+    }
+    return {
+        {0.0, 0.0, mh_ko, mh_ko},
+        {board_w - mh_ko, 0.0, board_w, mh_ko},
+        {board_w - mh_ko, board_h - mh_ko, board_w, board_h},
+        {0.0, board_h - mh_ko, mh_ko, board_h},
+    };
+}
+
+std::vector<std::tuple<std::string, double, double, double, double>>
+som_jack_rects(
+    double som_x, double som_y,
+    const std::vector<std::tuple<std::string, double, double, double, double>>&
+        jacks) {
+    std::vector<std::tuple<std::string, double, double, double, double>> out;
+    out.reserve(jacks.size());
+    for (const auto& jack : jacks) {
+        const std::string& ref = std::get<0>(jack);
+        if (ref.size() < 2) {
+            throw std::runtime_error("som_jack_rects: jack ref required");
+        }
+        std::string name = "som_j";
+        for (std::size_t i = 1; i < ref.size(); ++i) {
+            name.push_back(static_cast<char>(
+                std::tolower(static_cast<unsigned char>(ref[i]))));
+        }
+        const double jx = std::get<1>(jack);
+        const double jy = std::get<2>(jack);
+        const double jw = std::get<3>(jack);
+        const double jh = std::get<4>(jack);
+        out.emplace_back(name, som_x + jx - jw / 2.0, som_y + jy - jh / 2.0,
+                         som_x + jx + jw / 2.0, som_y + jy + jh / 2.0);
+    }
+    return out;
+}
+
 }  // namespace schgen

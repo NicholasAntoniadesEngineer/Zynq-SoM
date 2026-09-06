@@ -458,6 +458,20 @@ std::vector<EscapeLadderSeg> escape_ladder_plan(
     double pitch_tol, double row_v, double stub_w_pair,
     double stub_w_single, double spine_w);
 
+bool via_in_escape_region(double bx, double by, const Box4& zone,
+                          double margin);
+bool coexistence_box_hit(double inst_x, double inst_y, double rot,
+                         const Box4& box, double region_u, double region_v);
+Box4 legalize_som_rect(double som_x, double som_y, double som_w, double som_h,
+                       double pad);
+std::vector<Box4> legalize_mh_corners(double board_w, double board_h,
+                                      double mh_ko);
+std::vector<std::tuple<std::string, double, double, double, double>>
+som_jack_rects(
+    double som_x, double som_y,
+    const std::vector<std::tuple<std::string, double, double, double, double>>&
+        jacks);
+
 std::vector<std::vector<Seg2>> cluster_slot_segs(
     const std::vector<std::tuple<std::string, double, double>>& pad_offs,
     const std::vector<std::string>& pad_nets,

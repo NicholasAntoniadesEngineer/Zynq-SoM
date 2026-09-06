@@ -1171,6 +1171,37 @@ NB_MODULE(_geom, m) {
           [](double cx, double cy, double u, double v, double rot) {
               return schgen::uv_to_board(cx, cy, u, v, rot);
           });
+    m.def("via_in_escape_region",
+          [](double bx, double by,
+             const std::tuple<double, double, double, double>& zone,
+             double margin) {
+              return schgen::via_in_escape_region(bx, by, as_box(zone), margin);
+          });
+    m.def("coexistence_box_hit",
+          [](double inst_x, double inst_y, double rot,
+             const std::tuple<double, double, double, double>& box,
+             double region_u, double region_v) {
+              return schgen::coexistence_box_hit(inst_x, inst_y, rot,
+                                                 as_box(box), region_u,
+                                                 region_v);
+          });
+    m.def("legalize_som_rect",
+          [](double som_x, double som_y, double som_w, double som_h,
+             double pad) {
+              auto b = schgen::legalize_som_rect(som_x, som_y, som_w, som_h,
+                                                 pad);
+              return std::make_tuple(b.x0, b.y0, b.x1, b.y1);
+          });
+    m.def("legalize_mh_corners",
+          [](double board_w, double board_h, double mh_ko) {
+              std::vector<std::tuple<double, double, double, double>> out;
+              for (const auto& b : schgen::legalize_mh_corners(
+                       board_w, board_h, mh_ko)) {
+                  out.emplace_back(b.x0, b.y0, b.x1, b.y1);
+              }
+              return out;
+          });
+    m.def("som_jack_rects", &schgen::som_jack_rects);
     m.def("board_to_uv",
           [](double cx, double cy, double bx, double by, double rot) {
               return schgen::board_to_uv(cx, cy, bx, by, rot);
@@ -2856,6 +2887,15 @@ NB_MODULE(_geom, m) {
     m.def("quads_overlap",
           [](const std::vector<PtTup>& a, const std::vector<PtTup>& b) {
               return schgen::quads_overlap(as_pts(a), as_pts(b));
+          });
+    m.def("stagger_overlap_ranks",
+          [](const std::vector<std::vector<PtTup>>& quads) {
+              std::vector<std::vector<std::pair<double, double>>> rows;
+              rows.reserve(quads.size());
+              for (const auto& q : quads) {
+                  rows.push_back(as_pts(q));
+              }
+              return schgen::stagger_overlap_ranks(rows);
           });
     m.def("emit_wire",
           [](double x0, double y0, double x1, double y1, const char* uuid) {
