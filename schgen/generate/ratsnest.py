@@ -79,17 +79,17 @@ def _mst_edges_py(pts: list[tuple[float, float, str, str]]
 
 def _mst_edges(pts: list[tuple[float, float, str, str]]
                ) -> list[tuple[int, int]]:
-    if _nat.loaded():
-        got = [(int(a), int(b))
-               for a, b in _nat.module().mst_manhattan(
-                   [(p[0], p[1]) for p in pts])]
-        if _nat.trace():
-            ref = _mst_edges_py(pts)
-            if got != ref:
-                raise AssertionError(
-                    f"native mst_manhattan DIVERGENCE: cpp={got} python={ref}")
-        return got
-    return _mst_edges_py(pts)
+    if not _nat.loaded():
+        raise RuntimeError("native mst_manhattan required")
+    got = [(int(a), int(b))
+           for a, b in _nat.module().mst_manhattan(
+               [(p[0], p[1]) for p in pts])]
+    if _nat.trace():
+        ref = _mst_edges_py(pts)
+        if got != ref:
+            raise AssertionError(
+                f"native mst_manhattan DIVERGENCE: cpp={got} python={ref}")
+    return got
 
 
 def net_mst_edges(model: PcbModel,

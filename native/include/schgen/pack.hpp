@@ -416,6 +416,30 @@ struct EscapeLadderSeg {
     std::string role;
 };
 
+struct EscapeLadderCheck {
+    int via_seg_components = 0;
+    int pad_stubs = 0;
+};
+
+EscapeLadderCheck escape_ladder_connected(
+    const std::vector<std::tuple<double, double, double>>& vias,
+    const std::vector<std::tuple<double, double, double, double, double,
+                                 std::string>>& segs,
+    const std::vector<std::pair<double, double>>& pads, double half_w,
+    double half_h);
+
+std::optional<double> escape_redundancy_u(
+    double base_u, double base_v, double dia, double drill,
+    const std::vector<std::tuple<double, double, double, double, double,
+                                 std::string>>& front_cu,
+    const std::vector<std::tuple<double, double, double, double, double,
+                                 std::string>>& back_cu,
+    const std::vector<std::tuple<double, double, double, double, double,
+                                 std::string>>& samenet,
+    const std::vector<std::tuple<double, double, double, std::string>>& holes,
+    const ViaClear& clear, double redundancy_offset, double lattice,
+    int max_steps);
+
 std::vector<EscapeLadderSeg> escape_ladder_plan(
     const std::vector<std::tuple<double, double, std::string>>& gnd_pads,
     const std::vector<std::pair<double, double>>& vias, double pitch,

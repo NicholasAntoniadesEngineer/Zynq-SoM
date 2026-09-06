@@ -27,15 +27,15 @@ def turn_point_py(x: float, y: float, deg: float) -> tuple[float, float]:
 
 
 def turn_point(x: float, y: float, deg: float) -> tuple[float, float]:
-    if _nat.loaded():
-        got = _nat.module().turn_point(x, y, deg)
-        if _nat.trace():
-            ref = turn_point_py(x, y, deg)
-            if got != ref:
-                raise AssertionError(
-                    f"native turn_point DIVERGENCE: cpp={got} python={ref}")
-        return got
-    return turn_point_py(x, y, deg)
+    if not _nat.loaded():
+        raise RuntimeError("native turn_point required")
+    got = _nat.module().turn_point(x, y, deg)
+    if _nat.trace():
+        ref = turn_point_py(x, y, deg)
+        if got != ref:
+            raise AssertionError(
+                f"native turn_point DIVERGENCE: cpp={got} python={ref}")
+    return got
 
 
 def turn_box_py(box: Box, deg: float) -> Box:
@@ -47,15 +47,15 @@ def turn_box_py(box: Box, deg: float) -> Box:
 
 
 def turn_box(box: Box, deg: float) -> Box:
-    if _nat.loaded():
-        got = _nat.module().turn_box(box, deg)
-        if _nat.trace():
-            ref = turn_box_py(box, deg)
-            if got != ref:
-                raise AssertionError(
-                    f"native turn_box DIVERGENCE: cpp={got} python={ref}")
-        return got
-    return turn_box_py(box, deg)
+    if not _nat.loaded():
+        raise RuntimeError("native turn_box required")
+    got = _nat.module().turn_box(box, deg)
+    if _nat.trace():
+        ref = turn_box_py(box, deg)
+        if got != ref:
+            raise AssertionError(
+                f"native turn_box DIVERGENCE: cpp={got} python={ref}")
+    return got
 
 
 def pad_half_extent_py(size_w: float, size_h: float,
@@ -68,13 +68,13 @@ def pad_half_extent_py(size_w: float, size_h: float,
 
 def pad_half_extent(size_w: float, size_h: float,
                     deg: float) -> tuple[float, float]:
-    if _nat.loaded():
-        got = _nat.module().pad_half_extent(size_w, size_h, deg)
-        if _nat.trace():
-            ref = pad_half_extent_py(size_w, size_h, deg)
-            if got != ref:
-                raise AssertionError(
-                    "native pad_half_extent DIVERGENCE: "
-                    f"cpp={got} python={ref}")
-        return got
-    return pad_half_extent_py(size_w, size_h, deg)
+    if not _nat.loaded():
+        raise RuntimeError("native pad_half_extent required")
+    got = _nat.module().pad_half_extent(size_w, size_h, deg)
+    if _nat.trace():
+        ref = pad_half_extent_py(size_w, size_h, deg)
+        if got != ref:
+            raise AssertionError(
+                "native pad_half_extent DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got

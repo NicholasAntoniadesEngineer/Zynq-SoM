@@ -580,6 +580,51 @@ def test_escape_ladder_plan_matches_python(geom):
         STUB_W_SINGLE, SPINE_W) == ref
 
 
+def test_escape_ladder_connected_and_redundancy_match_python(geom):
+    from schgen.generate.pcb.escape import (
+        LATTICE_MM,
+        REDUNDANCY_OFFSET,
+        _Obstacles,
+        _via_clear,
+        escape_ladder_connected,
+        escape_ladder_connected_py,
+        escape_redundancy_u,
+        escape_redundancy_u_py,
+    )
+    vias = [
+        {"u": 0.0, "v": 1.2, "dia": 0.45},
+        {"u": 1.6, "v": 1.2, "dia": 0.45},
+    ]
+    segs = [
+        {"a": (-0.8, 0.0), "b": (2.4, 0.0), "w": 0.30, "role": "spine"},
+        {"a": (0.0, 0.0), "b": (0.0, 1.2), "w": 0.25, "role": "stub_via"},
+        {"a": (1.6, 0.0), "b": (1.6, 1.2), "w": 0.25, "role": "stub_via"},
+        {"a": (-0.8, -0.4), "b": (-0.8, 0.4), "w": 0.30, "role": "stub_pair"},
+        {"a": (2.4, -0.4), "b": (2.4, 0.4), "w": 0.30, "role": "stub_pair"},
+    ]
+    pads = [(-1.6, 0.4), (-1.6, -0.4), (0.0, 0.4), (0.0, -0.4),
+            (1.6, 0.4), (1.6, -0.4)]
+    ref = escape_ladder_connected_py(vias, segs, pads, 0.2, 0.15)
+    got = tuple(geom.escape_ladder_connected(
+        [(via["u"], via["v"], via["dia"]) for via in vias],
+        [(seg["a"][0], seg["a"][1], seg["b"][0], seg["b"][1], seg["w"],
+          seg["role"]) for seg in segs],
+        pads, 0.2, 0.15))
+    assert got == ref
+    assert escape_ladder_connected(vias, segs, pads, 0.2, 0.15) == ref
+
+    obs = _Obstacles()
+    obs.f_cu.append((-10.0, -10.0, -9.0, -9.0, 0.15, "far"))
+    ref_u = escape_redundancy_u_py(
+        0.4, 1.2, 0.45, 0.3, obs, REDUNDANCY_OFFSET, LATTICE_MM, 21)
+    got_u = geom.escape_redundancy_u(
+        0.4, 1.2, 0.45, 0.3, obs.f_cu, obs.b_cu, obs.samenet_pads, obs.holes,
+        _via_clear(), REDUNDANCY_OFFSET, LATTICE_MM, 21)
+    assert got_u == ref_u
+    assert escape_redundancy_u(
+        0.4, 1.2, 0.45, 0.3, obs, REDUNDANCY_OFFSET, LATTICE_MM, 21) == ref_u
+
+
 def test_pair_axis_matches_python(geom):
     from schgen.generate.floorplan_compose import _pair_axis, _pair_axis_py
     cases = (

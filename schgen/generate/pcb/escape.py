@@ -447,6 +447,121 @@ def escape_ladder_plan(gnd_pads: list, vias: list, pitch: float,
     return got
 
 
+def escape_ladder_connected_py(vias: list, segs: list, pads: list,
+                               half_w: float, half_h: float) -> tuple[int, int]:
+    nodes: list[tuple[str, object]] = (
+        [("via", via) for via in vias] + [("seg", seg) for seg in segs]
+        + [("pad", pad) for pad in pads])
+    parent = list(range(len(nodes)))
+
+    def find(index: int) -> int:
+        while parent[index] != index:
+            parent[index] = parent[parent[index]]
+            index = parent[index]
+        return index
+
+    def union(left: int, right: int) -> None:
+        parent[find(left)] = find(right)
+
+    def pad_box(pad) -> tuple[float, float, float, float]:
+        pad_u, pad_v = pad[0], pad[1]
+        return (pad_u - half_w, pad_v - half_h, pad_u + half_w, pad_v + half_h)
+
+    def touches(left, right) -> bool:
+        left_kind, left_val = left
+        right_kind, right_val = right
+        if left_kind == "seg" and right_kind == "seg":
+            box = (min(right_val["a"][0], right_val["b"][0]) - right_val["w"] / 2,
+                   min(right_val["a"][1], right_val["b"][1]) - right_val["w"] / 2,
+                   max(right_val["a"][0], right_val["b"][0]) + right_val["w"] / 2,
+                   max(right_val["a"][1], right_val["b"][1]) + right_val["w"] / 2)
+            return _seg_box_dist(left_val["a"], left_val["b"], box) <= (
+                left_val["w"] / 2 + 1e-9)
+        if left_kind == "seg" and right_kind == "via":
+            return (_seg_box_dist(left_val["a"], left_val["b"],
+                                  (right_val["u"], right_val["v"],
+                                   right_val["u"], right_val["v"]))
+                    <= left_val["w"] / 2 + right_val["dia"] / 2 + 1e-9)
+        if left_kind == "seg" and right_kind == "pad":
+            return (_seg_box_dist(left_val["a"], left_val["b"], pad_box(right_val))
+                    <= left_val["w"] / 2 + 1e-9)
+        if left_kind == "via" and right_kind == "pad":
+            return (_box_dist(left_val["u"], left_val["v"], pad_box(right_val))
+                    <= left_val["dia"] / 2 + 1e-9)
+        if left_kind == "via" and right_kind == "via":
+            return (math.hypot(left_val["u"] - right_val["u"],
+                               left_val["v"] - right_val["v"])
+                    <= (left_val["dia"] + right_val["dia"]) / 2 + 1e-9)
+        if left_kind == "pad" and right_kind == "pad":
+            return False
+        return touches(right, left)
+
+    for i in range(len(nodes)):
+        for j in range(i + 1, len(nodes)):
+            if touches(nodes[i], nodes[j]):
+                union(i, j)
+    via_roots = {find(i) for i, node in enumerate(nodes) if node[0] == "via"}
+    seg_roots = {find(i) for i, node in enumerate(nodes) if node[0] == "seg"}
+    pad_stubs = sum(1 for seg in segs
+                    if seg["role"] in ("stub_pair", "stub_column", "stub_pad"))
+    return len(via_roots | seg_roots), pad_stubs
+
+
+def escape_ladder_connected(vias: list, segs: list, pads: list,
+                            half_w: float, half_h: float) -> tuple[int, int]:
+    if not _nat.loaded():
+        raise RuntimeError("native escape_ladder_connected required")
+    via_rows = [(float(via["u"]), float(via["v"]), float(via["dia"]))
+                for via in vias]
+    seg_rows = [(float(seg["a"][0]), float(seg["a"][1]), float(seg["b"][0]),
+                 float(seg["b"][1]), float(seg["w"]), str(seg["role"]))
+                for seg in segs]
+    pad_rows = [(float(pad[0]), float(pad[1])) for pad in pads]
+    got = tuple(_nat.module().escape_ladder_connected(
+        via_rows, seg_rows, pad_rows, half_w, half_h))
+    if _nat.trace():
+        ref = escape_ladder_connected_py(vias, segs, pads, half_w, half_h)
+        if got != ref:
+            raise AssertionError(
+                "native escape_ladder_connected DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
+
+
+def escape_redundancy_u_py(base_u: float, base_v: float, dia: float,
+                           drill: float, obs: _Obstacles,
+                           redundancy_offset: float, lattice: float,
+                           max_steps: int) -> float | None:
+    for offset in (redundancy_offset, -redundancy_offset):
+        for step in range(0, max_steps):
+            for sign in (1, -1):
+                candidate = round(base_u + offset + sign * step * lattice, 6)
+                if _via_feasible(candidate, base_v, dia, drill, obs):
+                    return candidate
+    return None
+
+
+def escape_redundancy_u(base_u: float, base_v: float, dia: float, drill: float,
+                        obs: _Obstacles, redundancy_offset: float,
+                        lattice: float, max_steps: int) -> float | None:
+    if not _nat.loaded():
+        raise RuntimeError("native escape_redundancy_u required")
+    got = _nat.module().escape_redundancy_u(
+        base_u, base_v, dia, drill, obs.f_cu, obs.b_cu, obs.samenet_pads,
+        obs.holes, _via_clear(), redundancy_offset, lattice, max_steps)
+    if got is not None:
+        got = float(got)
+    if _nat.trace():
+        ref = escape_redundancy_u_py(
+            base_u, base_v, dia, drill, obs, redundancy_offset, lattice,
+            max_steps)
+        if got != ref:
+            raise AssertionError(
+                "native escape_redundancy_u DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
+
+
 def _coverage_ok(u: float, v: float, members: list[_Member],
                  bound: float) -> tuple[bool, float]:
     if not _nat.loaded():
@@ -648,30 +763,19 @@ def build_escape_copper(model) -> tuple[list[dict], dict]:
             continue
         base = vias[0]
         dia, drill = base["dia"], base["drill"]
-        seated = False
-        for du in (REDUNDANCY_OFFSET, -REDUNDANCY_OFFSET):
-            for step in range(0, 21):
-                for sgn in (1, -1):
-                    u = round(base["u"] + du + sgn * step * LATTICE_MM, 6)
-                    if _via_feasible(u, base["v"], dia, drill,
-                                     obstacles[ref]):
-                        vias.append({"u": u, "v": base["v"], "dia": dia,
-                                     "drill": drill, "conn": ref,
-                                     "members": [], "worst": 0.0,
-                                     "role": "redundant"})
-                        obstacles[ref].holes.append(
-                            (u, base["v"], drill / 2, f"escape-via {ref}"))
-                        ledger.append({"conn": ref, "kind": "redundant_via",
-                                       "u": u, "v": base["v"]})
-                        seated = True
-                        break
-                if seated:
-                    break
-            if seated:
-                break
-        if not seated:
+        partner_u = escape_redundancy_u(
+            base["u"], base["v"], dia, drill, obstacles[ref],
+            REDUNDANCY_OFFSET, LATTICE_MM, 21)
+        if partner_u is None:
             raise EscapeError(f"{ref}: no feasible redundancy-partner seat "
                               f"(judgment:2 — a lone stitch via is a SPOF)")
+        vias.append({"u": partner_u, "v": base["v"], "dia": dia,
+                     "drill": drill, "conn": ref, "members": [], "worst": 0.0,
+                     "role": "redundant"})
+        obstacles[ref].holes.append(
+            (partner_u, base["v"], drill / 2, f"escape-via {ref}"))
+        ledger.append({"conn": ref, "kind": "redundant_via",
+                       "u": partner_u, "v": base["v"]})
 
     ladder_segs: list[dict] = []
     for ref, vias in sorted(vias_by_conn.items()):
@@ -776,60 +880,13 @@ def _self_check(conns, vias_by_conn, ladder_segs, zone, gnd_num) -> None:
                     if num > 0 and name == "GND" and p in pads_local]
         segs = [s for s in ladder_segs if s["conn"] == ref]
         vias = vias_by_conn[ref]
-        nodes: list[tuple[str, object]] = (
-            [("via", s) for s in vias] + [("seg", s) for s in segs]
-            + [("pad", p) for p in gnd_pads])
-        parent = list(range(len(nodes)))
-
-        def find(i, parent=parent):
-            while parent[i] != i:
-                parent[i] = parent[parent[i]]
-                i = parent[i]
-            return i
-
-        def union(i, j, parent=parent):
-            parent[find(i)] = find(j)
-
-        def pad_box(vb, g=contacts):
-            pu, pv, _ = vb
-            return (pu - g.half_w, pv - g.half_h, pu + g.half_w, pv + g.half_h)
-
-        def touches(a, b) -> bool:
-            ka, va = a
-            kb, vb = b
-            if ka == "seg" and kb == "seg":
-                bx = (min(vb["a"][0], vb["b"][0]) - vb["w"] / 2,
-                      min(vb["a"][1], vb["b"][1]) - vb["w"] / 2,
-                      max(vb["a"][0], vb["b"][0]) + vb["w"] / 2,
-                      max(vb["a"][1], vb["b"][1]) + vb["w"] / 2)
-                return _seg_box_dist(va["a"], va["b"], bx) <= va["w"] / 2 + 1e-9
-            if ka == "seg" and kb == "via":
-                return (_seg_box_dist(va["a"], va["b"],
-                                      (vb["u"], vb["v"], vb["u"], vb["v"]))
-                        <= va["w"] / 2 + vb["dia"] / 2 + 1e-9)
-            if ka == "seg" and kb == "pad":
-                return (_seg_box_dist(va["a"], va["b"], pad_box(vb))
-                        <= va["w"] / 2 + 1e-9)
-            if ka == "via" and kb == "pad":
-                return (_box_dist(va["u"], va["v"], pad_box(vb))
-                        <= va["dia"] / 2 + 1e-9)
-            if ka == "via" and kb == "via":
-                return (math.hypot(va["u"] - vb["u"], va["v"] - vb["v"])
-                        <= (va["dia"] + vb["dia"]) / 2 + 1e-9)
-            if ka == "pad" and kb == "pad":
-                return False
-            return touches(b, a)
-
-        for i in range(len(nodes)):
-            for j in range(i + 1, len(nodes)):
-                if touches(nodes[i], nodes[j]):
-                    union(i, j)
-        via_roots = {find(i) for i, n in enumerate(nodes) if n[0] == "via"}
-        seg_roots = {find(i) for i, n in enumerate(nodes) if n[0] == "seg"}
-        if len(via_roots | seg_roots) != 1:
+        pad_uv = [(u, v) for u, v, _p in gnd_pads]
+        components, pad_stubs = escape_ladder_connected(
+            vias, segs, pad_uv, contacts.half_w, contacts.half_h)
+        if components != 1:
             raise EscapeError(
                 f"{ref}: LAW-0 self-check FAILED — ladder+vias form "
-                f"{len(via_roots | seg_roots)} components, expected 1")
+                f"{components} components, expected 1")
         inst_zone = zone
         for s in vias:
             bx, by = _to_board(conns[ref], s["u"], s["v"])
@@ -837,11 +894,8 @@ def _self_check(conns, vias_by_conn, ladder_segs, zone, gnd_num) -> None:
                     and inst_zone[1] + 0.5 <= by <= inst_zone[3] - 0.5):
                 raise EscapeError(f"{ref}: via at ({bx:.2f},{by:.2f}) outside "
                                   f"the escape region {inst_zone} (+0.5 margin)")
-        n_pad_stubs = sum(1 for s in segs
-                          if s["role"] in ("stub_pair", "stub_column",
-                                           "stub_pad"))
-        if n_pad_stubs < 2:
-            raise EscapeError(f"{ref}: only {n_pad_stubs} GND-pad stub(s) — "
+        if pad_stubs < 2:
+            raise EscapeError(f"{ref}: only {pad_stubs} GND-pad stub(s) — "
                               f"rule is >= 2 per remediated connector")
 
 

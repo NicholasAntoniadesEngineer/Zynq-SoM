@@ -94,17 +94,17 @@ def _silk_gfx_pts_py(c):
 
 
 def _silk_gfx_pts(c):
-    if _nat.loaded():
-        pts, hw = _nat.module().silk_gfx_pts(c)
-        got = ([tuple(p) for p in pts], hw)
-        if _nat.trace():
-            ref = _silk_gfx_pts_py(c)
-            if got != ref:
-                raise AssertionError(
-                    "native silk_gfx_pts DIVERGENCE: "
-                    f"cpp={got} python={ref}")
-        return got
-    return _silk_gfx_pts_py(c)
+    if not _nat.loaded():
+        raise RuntimeError("native silk_gfx_pts required")
+    pts, hw = _nat.module().silk_gfx_pts(c)
+    got = ([tuple(p) for p in pts], hw)
+    if _nat.trace():
+        ref = _silk_gfx_pts_py(c)
+        if got != ref:
+            raise AssertionError(
+                "native silk_gfx_pts DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
 
 
 def _silk_gfx_box_py(c, fx, fy, ca, sa):
@@ -163,18 +163,18 @@ def _refdes_hit_court_py(fx, fy, ca, sa, lx, ly, court):
 
 
 def _refdes_hit_court(fx, fy, ca, sa, lx, ly, court):
-    if _nat.loaded():
-        got = _nat.module().refdes_hit_court(fx, fy, ca, sa, lx, ly, court)
-        bx, by, x0, y0, x1, y1 = got
-        out = (bx, by, (x0, y0, x1, y1))
-        if _nat.trace():
-            ref = _refdes_hit_court_py(fx, fy, ca, sa, lx, ly, court)
-            if out != ref:
-                raise AssertionError(
-                    "native refdes_hit_court DIVERGENCE: "
-                    f"cpp={out} python={ref}")
-        return out
-    return _refdes_hit_court_py(fx, fy, ca, sa, lx, ly, court)
+    if not _nat.loaded():
+        raise RuntimeError("native refdes_hit_court required")
+    got = _nat.module().refdes_hit_court(fx, fy, ca, sa, lx, ly, court)
+    bx, by, x0, y0, x1, y1 = got
+    out = (bx, by, (x0, y0, x1, y1))
+    if _nat.trace():
+        ref = _refdes_hit_court_py(fx, fy, ca, sa, lx, ly, court)
+        if out != ref:
+            raise AssertionError(
+                "native refdes_hit_court DIVERGENCE: "
+                f"cpp={out} python={ref}")
+    return out
 
 
 def _collect_refdes_rows(doc: list, court_by_ref: dict) -> list:
@@ -276,19 +276,19 @@ def _collect_fp_silk_gfx_py(node):
 
 
 def _silk_gfx_box(c, fx, fy, ca, sa):
-    if _nat.loaded():
-        pts, hw = _silk_gfx_pts(c)
-        got = _nat.module().silk_gfx_extent(pts, fx, fy, ca, sa, hw)
-        if got is not None:
-            got = tuple(got)
-        if _nat.trace():
-            ref = _silk_gfx_box_py(c, fx, fy, ca, sa)
-            if got != ref:
-                raise AssertionError(
-                    "native silk_gfx_extent DIVERGENCE: "
-                    f"cpp={got} python={ref}")
-        return got
-    return _silk_gfx_box_py(c, fx, fy, ca, sa)
+    if not _nat.loaded():
+        raise RuntimeError("native silk_gfx_extent required")
+    pts, hw = _silk_gfx_pts(c)
+    got = _nat.module().silk_gfx_extent(pts, fx, fy, ca, sa, hw)
+    if got is not None:
+        got = tuple(got)
+    if _nat.trace():
+        ref = _silk_gfx_box_py(c, fx, fy, ca, sa)
+        if got != ref:
+            raise AssertionError(
+                "native silk_gfx_extent DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
 
 
 def _emitted_text_boxes(doc: list, include_silk_gfx: bool = False) -> list:
@@ -303,15 +303,15 @@ def _overlap_area_py(a, b) -> float:
 
 
 def _overlap_area(a, b) -> float:
-    if _nat.loaded():
-        got = _nat.module().overlap_area(a, b)
-        if _nat.trace():
-            ref = _overlap_area_py(a, b)
-            if got != ref:
-                raise AssertionError(
-                    f"native overlap_area DIVERGENCE: cpp={got} python={ref}")
-        return got
-    return _overlap_area_py(a, b)
+    if not _nat.loaded():
+        raise RuntimeError("native overlap_area required")
+    got = _nat.module().overlap_area(a, b)
+    if _nat.trace():
+        ref = _overlap_area_py(a, b)
+        if got != ref:
+            raise AssertionError(
+                f"native overlap_area DIVERGENCE: cpp={got} python={ref}")
+    return got
 
 
 class _BoxIndexPy:
@@ -360,13 +360,12 @@ class _BoxIndex:
         self._cpp = None
         self._py = None
         self._boxes = list(boxes)
-        if _nat.loaded():
-            self._cpp = _nat.module().SilkBoxIndex(cell)
-            for b in boxes:
-                self._cpp.add(b)
-            if _nat.trace():
-                self._py = _BoxIndexPy(boxes, cell)
-        else:
+        if not _nat.loaded():
+            raise RuntimeError("native SilkBoxIndex required")
+        self._cpp = _nat.module().SilkBoxIndex(cell)
+        for b in boxes:
+            self._cpp.add(b)
+        if _nat.trace():
             self._py = _BoxIndexPy(boxes, cell)
 
     def add(self, b) -> None:
@@ -606,18 +605,17 @@ def _set_font_size_py(prop: list, size: float) -> None:
 
 
 def _set_font_size(prop: list, size: float) -> None:
-    if _nat.loaded():
-        got = _from_tagged(_nat.module().set_font_size(prop, size))
-        if _nat.trace():
-            ref = copy.deepcopy(prop)
-            _set_font_size_py(ref, size)
-            if sexpr.dumps(got) != sexpr.dumps(ref):
-                raise AssertionError(
-                    "native set_font_size DIVERGENCE: "
-                    f"cpp={sexpr.dumps(got)} python={sexpr.dumps(ref)}")
-        prop[:] = got
-        return
-    _set_font_size_py(prop, size)
+    if not _nat.loaded():
+        raise RuntimeError("native set_font_size required")
+    got = _from_tagged(_nat.module().set_font_size(prop, size))
+    if _nat.trace():
+        ref = copy.deepcopy(prop)
+        _set_font_size_py(ref, size)
+        if sexpr.dumps(got) != sexpr.dumps(ref):
+            raise AssertionError(
+                "native set_font_size DIVERGENCE: "
+                f"cpp={sexpr.dumps(got)} python={sexpr.dumps(ref)}")
+    prop[:] = got
 
 
 def _hide_undersom_bottom_refs_py(model, doc: list) -> int:
@@ -655,20 +653,20 @@ def _hide_undersom_bottom_refs(model, doc: list) -> int:
     kp = model.som_keepout
     if kp is None:
         return 0
-    if _nat.loaded():
-        tagged, n = _nat.module().hide_undersom_bottom_refs(doc, *kp)
-        got = _from_tagged(tagged)
-        if _nat.trace():
-            ref = copy.deepcopy(doc)
-            rn = _hide_undersom_bottom_refs_py(model, ref)
-            if int(n) != rn or sexpr.dumps(got) != sexpr.dumps(ref):
-                raise AssertionError(
-                    "native hide_undersom_bottom_refs DIVERGENCE: "
-                    f"cpp=({int(n)}, {sexpr.dumps(got)}) "
-                    f"python=({rn}, {sexpr.dumps(ref)})")
-        doc[:] = got
-        return int(n)
-    return _hide_undersom_bottom_refs_py(model, doc)
+    if not _nat.loaded():
+        raise RuntimeError("native hide_undersom_bottom_refs required")
+    tagged, n = _nat.module().hide_undersom_bottom_refs(doc, *kp)
+    got = _from_tagged(tagged)
+    if _nat.trace():
+        ref = copy.deepcopy(doc)
+        rn = _hide_undersom_bottom_refs_py(model, ref)
+        if int(n) != rn or sexpr.dumps(got) != sexpr.dumps(ref):
+            raise AssertionError(
+                "native hide_undersom_bottom_refs DIVERGENCE: "
+                f"cpp=({int(n)}, {sexpr.dumps(got)}) "
+                f"python=({rn}, {sexpr.dumps(ref)})")
+    doc[:] = got
+    return int(n)
 
 
 def _place_refdes_py(occ, plc, court, ref, size, box, fx, fy, ca, sa, bounds):

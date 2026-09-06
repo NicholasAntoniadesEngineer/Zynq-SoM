@@ -2387,4 +2387,189 @@ std::vector<EscapeLadderSeg> escape_ladder_plan(
     return segs;
 }
 
+namespace {
+
+int escape_find(std::vector<int>& parent, int index) {
+    while (parent[static_cast<std::size_t>(index)] != index) {
+        const int grand =
+            parent[static_cast<std::size_t>(
+                parent[static_cast<std::size_t>(index)])];
+        parent[static_cast<std::size_t>(index)] = grand;
+        index = grand;
+    }
+    return index;
+}
+
+void escape_union(std::vector<int>& parent, int left, int right) {
+    parent[static_cast<std::size_t>(escape_find(parent, left))] =
+        escape_find(parent, right);
+}
+
+Box4 escape_pad_box(double pad_u, double pad_v, double half_w, double half_h) {
+    return Box4{pad_u - half_w, pad_v - half_h, pad_u + half_w,
+                pad_v + half_h};
+}
+
+bool escape_nodes_touch(
+    int left_kind, std::size_t left_idx, int right_kind, std::size_t right_idx,
+    const std::vector<std::tuple<double, double, double>>& vias,
+    const std::vector<std::tuple<double, double, double, double, double,
+                                 std::string>>& segs,
+    const std::vector<std::pair<double, double>>& pads, double half_w,
+    double half_h) {
+    if (left_kind > right_kind) {
+        return escape_nodes_touch(right_kind, right_idx, left_kind, left_idx,
+                                  vias, segs, pads, half_w, half_h);
+    }
+    if (left_kind == 1 && right_kind == 1) {
+        const auto& left = segs[left_idx];
+        const auto& right = segs[right_idx];
+        const Box4 box{
+            std::min(std::get<0>(right), std::get<2>(right))
+                - std::get<4>(right) / 2.0,
+            std::min(std::get<1>(right), std::get<3>(right))
+                - std::get<4>(right) / 2.0,
+            std::max(std::get<0>(right), std::get<2>(right))
+                + std::get<4>(right) / 2.0,
+            std::max(std::get<1>(right), std::get<3>(right))
+                + std::get<4>(right) / 2.0};
+        return seg_box_dist(std::get<0>(left), std::get<1>(left),
+                            std::get<2>(left), std::get<3>(left), box)
+            <= std::get<4>(left) / 2.0 + 1e-9;
+    }
+    if (left_kind == 0 && right_kind == 1) {
+        const auto& via = vias[left_idx];
+        const auto& seg = segs[right_idx];
+        const Box4 box{std::get<0>(via), std::get<1>(via), std::get<0>(via),
+                       std::get<1>(via)};
+        return seg_box_dist(std::get<0>(seg), std::get<1>(seg),
+                            std::get<2>(seg), std::get<3>(seg), box)
+            <= std::get<4>(seg) / 2.0 + std::get<2>(via) / 2.0 + 1e-9;
+    }
+    if (left_kind == 1 && right_kind == 2) {
+        const auto& seg = segs[left_idx];
+        const auto& pad = pads[right_idx];
+        return seg_box_dist(std::get<0>(seg), std::get<1>(seg),
+                            std::get<2>(seg), std::get<3>(seg),
+                            escape_pad_box(pad.first, pad.second, half_w,
+                                           half_h))
+            <= std::get<4>(seg) / 2.0 + 1e-9;
+    }
+    if (left_kind == 0 && right_kind == 2) {
+        const auto& via = vias[left_idx];
+        const auto& pad = pads[right_idx];
+        return point_box_dist(std::get<0>(via), std::get<1>(via),
+                              escape_pad_box(pad.first, pad.second, half_w,
+                                             half_h))
+            <= std::get<2>(via) / 2.0 + 1e-9;
+    }
+    if (left_kind == 0 && right_kind == 0) {
+        const auto& left = vias[left_idx];
+        const auto& right = vias[right_idx];
+        return std::hypot(std::get<0>(left) - std::get<0>(right),
+                          std::get<1>(left) - std::get<1>(right))
+            <= (std::get<2>(left) + std::get<2>(right)) / 2.0 + 1e-9;
+    }
+    return false;
+}
+
+}
+
+EscapeLadderCheck escape_ladder_connected(
+    const std::vector<std::tuple<double, double, double>>& vias,
+    const std::vector<std::tuple<double, double, double, double, double,
+                                 std::string>>& segs,
+    const std::vector<std::pair<double, double>>& pads, double half_w,
+    double half_h) {
+    if (vias.empty()) {
+        throw std::runtime_error("escape_ladder_connected: vias required");
+    }
+    const std::size_t via_count = vias.size();
+    const std::size_t seg_count = segs.size();
+    const std::size_t pad_count = pads.size();
+    const std::size_t node_count = via_count + seg_count + pad_count;
+    std::vector<int> kinds;
+    std::vector<std::size_t> local;
+    kinds.reserve(node_count);
+    local.reserve(node_count);
+    for (std::size_t i = 0; i < via_count; ++i) {
+        kinds.push_back(0);
+        local.push_back(i);
+    }
+    for (std::size_t i = 0; i < seg_count; ++i) {
+        kinds.push_back(1);
+        local.push_back(i);
+    }
+    for (std::size_t i = 0; i < pad_count; ++i) {
+        kinds.push_back(2);
+        local.push_back(i);
+    }
+    std::vector<int> parent(node_count);
+    for (std::size_t i = 0; i < node_count; ++i) {
+        parent[i] = static_cast<int>(i);
+    }
+    for (std::size_t i = 0; i < node_count; ++i) {
+        for (std::size_t j = i + 1; j < node_count; ++j) {
+            if (escape_nodes_touch(kinds[i], local[i], kinds[j], local[j],
+                                   vias, segs, pads, half_w, half_h)) {
+                escape_union(parent, static_cast<int>(i),
+                             static_cast<int>(j));
+            }
+        }
+    }
+    std::set<int> via_seg_roots;
+    for (std::size_t i = 0; i < via_count + seg_count; ++i) {
+        via_seg_roots.insert(escape_find(parent, static_cast<int>(i)));
+    }
+    int pad_stubs = 0;
+    for (const auto& seg : segs) {
+        const std::string& role = std::get<5>(seg);
+        if (role == "stub_pair" || role == "stub_column"
+            || role == "stub_pad") {
+            pad_stubs += 1;
+        }
+    }
+    EscapeLadderCheck check;
+    check.via_seg_components = static_cast<int>(via_seg_roots.size());
+    check.pad_stubs = pad_stubs;
+    return check;
+}
+
+std::optional<double> escape_redundancy_u(
+    double base_u, double base_v, double dia, double drill,
+    const std::vector<std::tuple<double, double, double, double, double,
+                                 std::string>>& front_cu,
+    const std::vector<std::tuple<double, double, double, double, double,
+                                 std::string>>& back_cu,
+    const std::vector<std::tuple<double, double, double, double, double,
+                                 std::string>>& samenet,
+    const std::vector<std::tuple<double, double, double, std::string>>& holes,
+    const ViaClear& clear, double redundancy_offset, double lattice,
+    int max_steps) {
+    if (max_steps < 0) {
+        throw std::runtime_error("escape_redundancy_u: max_steps required");
+    }
+    if (lattice <= 0.0) {
+        throw std::runtime_error("escape_redundancy_u: lattice required");
+    }
+    const double offsets[2] = {redundancy_offset, -redundancy_offset};
+    const int signs[2] = {1, -1};
+    for (double offset : offsets) {
+        for (int step = 0; step < max_steps; ++step) {
+            for (int sign : signs) {
+                const double candidate = py_round(
+                    base_u + offset
+                        + static_cast<double>(sign * step) * lattice,
+                    6);
+                if (via_feasible(candidate, base_v, dia, drill, front_cu,
+                                 back_cu, samenet, holes, clear, false)
+                        .first) {
+                    return candidate;
+                }
+            }
+        }
+    }
+    return std::nullopt;
+}
+
 }  // namespace schgen

@@ -33,17 +33,17 @@ def _mating_face_out_dir_py(mating_face: str, rot: float) -> tuple[int, int]:
 
 def _mating_face_out_dir(mating_face: str, rot: float) -> tuple[int, int]:
     fx, fy = _FACE_VEC.get(mating_face, _FACE_VEC[DEFAULT_FACE])
-    if _nat.loaded():
-        ox, oy = _nat.module().turn_point(float(fx), float(fy), rot)
-        got = (int(round(ox)), int(round(oy)))
-        if _nat.trace():
-            ref = _mating_face_out_dir_py(mating_face, rot)
-            if got != ref:
-                raise AssertionError(
-                    "native mating_face_out_dir DIVERGENCE: "
-                    f"cpp={got} python={ref}")
-        return got
-    return _mating_face_out_dir_py(mating_face, rot)
+    if not _nat.loaded():
+        raise RuntimeError("native turn_point required")
+    ox, oy = _nat.module().turn_point(float(fx), float(fy), rot)
+    got = (int(round(ox)), int(round(oy)))
+    if _nat.trace():
+        ref = _mating_face_out_dir_py(mating_face, rot)
+        if got != ref:
+            raise AssertionError(
+                "native mating_face_out_dir DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
 
 
 _PAD_ROW_CACHE: dict[str, tuple[tuple[str, float, float, float,
@@ -57,19 +57,17 @@ def _pad_rows(mod_path: Path) -> tuple[tuple[str, float, float, float,
     if cached is not None:
         return cached
     text = mod_path.read_text()
-    if _nat.loaded():
-        rows = [(_ptype, px, py, prot, sw, sh)
-                for _name, _ptype, px, py, prot, sw, sh in
-                _nat.module().scan_pad_nodes(text)]
-        if _nat.trace():
-            ref = _pad_rows_py(text)
-            if tuple(rows) != ref:
-                raise AssertionError(
-                    "native scan_pad_nodes DIVERGENCE: "
-                    f"cpp={rows} python={ref} path={mod_path}")
-        _PAD_ROW_CACHE[key] = tuple(rows)
-        return _PAD_ROW_CACHE[key]
-    rows = list(_pad_rows_py(text))
+    if not _nat.loaded():
+        raise RuntimeError("native scan_pad_nodes required")
+    rows = [(_ptype, px, py, prot, sw, sh)
+            for _name, _ptype, px, py, prot, sw, sh in
+            _nat.module().scan_pad_nodes(text)]
+    if _nat.trace():
+        ref = _pad_rows_py(text)
+        if tuple(rows) != ref:
+            raise AssertionError(
+                "native scan_pad_nodes DIVERGENCE: "
+                f"cpp={rows} python={ref} path={mod_path}")
     _PAD_ROW_CACHE[key] = tuple(rows)
     return _PAD_ROW_CACHE[key]
 
@@ -107,17 +105,17 @@ def _pad_boxes_local_py(mod_path: Path, rotation: float
 def _pad_boxes_local(mod_path: Path, rotation: float
                      ) -> list[tuple[str, float, float, float, float]]:
     rot = rotation or 0.0
-    if _nat.loaded():
-        rows = list(_pad_rows(mod_path))
-        got = [tuple(r) for r in _nat.module().pad_boxes_local(rows, rot)]
-        if _nat.trace():
-            ref = _pad_boxes_local_py(mod_path, rotation)
-            if got != ref:
-                raise AssertionError(
-                    "native pad_boxes_local DIVERGENCE: "
-                    f"cpp={got} python={ref}")
-        return got
-    return _pad_boxes_local_py(mod_path, rotation)
+    if not _nat.loaded():
+        raise RuntimeError("native pad_boxes_local required")
+    rows = list(_pad_rows(mod_path))
+    got = [tuple(r) for r in _nat.module().pad_boxes_local(rows, rot)]
+    if _nat.trace():
+        ref = _pad_boxes_local_py(mod_path, rotation)
+        if got != ref:
+            raise AssertionError(
+                "native pad_boxes_local DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
 
 
 def thru_pad_boxes(mod_path: Path, rotation: float
@@ -137,17 +135,17 @@ def _rot_pad_bbox_py(boxes) -> tuple[float, float, float, float] | None:
 def _rot_pad_bbox(mod_path: Path,
                   rotation: float) -> tuple[float, float, float, float] | None:
     boxes = _pad_boxes_local(mod_path, rotation)
-    if _nat.loaded():
-        hit = _nat.module().pad_union_hull(boxes)
-        got = None if hit is None else tuple(hit)
-        if _nat.trace():
-            ref = _rot_pad_bbox_py(boxes)
-            if got != ref:
-                raise AssertionError(
-                    "native pad_union_hull DIVERGENCE: "
-                    f"cpp={got} python={ref}")
-        return got
-    return _rot_pad_bbox_py(boxes)
+    if not _nat.loaded():
+        raise RuntimeError("native pad_union_hull required")
+    hit = _nat.module().pad_union_hull(boxes)
+    got = None if hit is None else tuple(hit)
+    if _nat.trace():
+        ref = _rot_pad_bbox_py(boxes)
+        if got != ref:
+            raise AssertionError(
+                "native pad_union_hull DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
 
 
 def _inst_pad_geom(inst: FootprintInst) -> list[tuple[str, float, float, str]]:
@@ -171,41 +169,38 @@ def _inst_courtyard_py(inst: FootprintInst) -> tuple[float, float, float, float]
 
 
 def _inst_courtyard(inst: FootprintInst) -> tuple[float, float, float, float]:
-    if _nat.loaded():
-        got = tuple(_nat.module().inst_placed_box(
-            _footprint_bbox(inst.mod_path), inst.x, inst.y,
-            inst.rotation or 0.0, COURTYARD_DECIMALS))
-        if _nat.trace():
-            ref = _inst_courtyard_py(inst)
-            if got != ref:
-                raise AssertionError(
-                    "native inst_placed_box DIVERGENCE: "
-                    f"cpp={got} python={ref}")
-        return got
-    return _inst_courtyard_py(inst)
+    if not _nat.loaded():
+        raise RuntimeError("native inst_placed_box required")
+    got = tuple(_nat.module().inst_placed_box(
+        _footprint_bbox(inst.mod_path), inst.x, inst.y,
+        inst.rotation or 0.0, COURTYARD_DECIMALS))
+    if _nat.trace():
+        ref = _inst_courtyard_py(inst)
+        if got != ref:
+            raise AssertionError(
+                "native inst_placed_box DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
 
 
 def _inst_pad_bbox(inst: FootprintInst) -> tuple[float, float, float, float]:
     pb = _rot_pad_bbox(inst.mod_path, inst.rotation or 0.0)
     if pb is None:
         return _inst_courtyard(inst)
-    if _nat.loaded():
-        got = tuple(_nat.module().inst_placed_box(
-            pb, inst.x, inst.y, 0.0, PAD_DECIMALS))
-        if _nat.trace():
-            ref = (round(inst.x + pb[0], PAD_DECIMALS),
-                   round(inst.y + pb[1], PAD_DECIMALS),
-                   round(inst.x + pb[2], PAD_DECIMALS),
-                   round(inst.y + pb[3], PAD_DECIMALS))
-            if got != ref:
-                raise AssertionError(
-                    "native inst_placed_box pad DIVERGENCE: "
-                    f"cpp={got} python={ref}")
-        return got
-    return (round(inst.x + pb[0], PAD_DECIMALS),
-            round(inst.y + pb[1], PAD_DECIMALS),
-            round(inst.x + pb[2], PAD_DECIMALS),
-            round(inst.y + pb[3], PAD_DECIMALS))
+    if not _nat.loaded():
+        raise RuntimeError("native inst_placed_box required")
+    got = tuple(_nat.module().inst_placed_box(
+        pb, inst.x, inst.y, 0.0, PAD_DECIMALS))
+    if _nat.trace():
+        ref = (round(inst.x + pb[0], PAD_DECIMALS),
+               round(inst.y + pb[1], PAD_DECIMALS),
+               round(inst.x + pb[2], PAD_DECIMALS),
+               round(inst.y + pb[3], PAD_DECIMALS))
+        if got != ref:
+            raise AssertionError(
+                "native inst_placed_box pad DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
 
 
 def net_pad_positions(

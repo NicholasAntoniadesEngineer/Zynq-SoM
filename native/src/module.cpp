@@ -1305,6 +1305,38 @@ NB_MODULE(_geom, m) {
               }
               return out;
           });
+    m.def("escape_ladder_connected",
+          [](const std::vector<std::tuple<double, double, double>>& vias,
+             const std::vector<std::tuple<double, double, double, double,
+                                          double, std::string>>& segs,
+             const std::vector<std::pair<double, double>>& pads, double half_w,
+             double half_h) {
+              auto hit = schgen::escape_ladder_connected(vias, segs, pads,
+                                                         half_w, half_h);
+              return std::make_tuple(hit.via_seg_components, hit.pad_stubs);
+          });
+    m.def("escape_redundancy_u",
+          [](double base_u, double base_v, double dia, double drill,
+             const std::vector<std::tuple<double, double, double, double,
+                                          double, std::string>>& front_cu,
+             const std::vector<std::tuple<double, double, double, double,
+                                          double, std::string>>& back_cu,
+             const std::vector<std::tuple<double, double, double, double,
+                                          double, std::string>>& samenet,
+             const std::vector<std::tuple<double, double, double, std::string>>&
+                 holes,
+             const std::tuple<double, double, double, double>& clear,
+             double redundancy_offset, double lattice, int max_steps)
+              -> std::optional<double> {
+              schgen::ViaClear via_clear;
+              via_clear.margin = std::get<0>(clear);
+              via_clear.hole_foreign = std::get<1>(clear);
+              via_clear.hole_samenet = std::get<2>(clear);
+              via_clear.hole_hole = std::get<3>(clear);
+              return schgen::escape_redundancy_u(
+                  base_u, base_v, dia, drill, front_cu, back_cu, samenet,
+                  holes, via_clear, redundancy_offset, lattice, max_steps);
+          });
     m.def("is_passive_ref", &schgen::is_passive_ref);
     m.def("classify_side",
           [](const char* ref, const char* lib,

@@ -47,16 +47,16 @@ def pad_names_py(text: str) -> list[str]:
 
 def pad_names(mod_path: Path) -> list[str]:
     text = mod_path.read_text()
-    if _nat.loaded():
-        got = list(_nat.module().pad_names_from_text(text))
-        if _nat.trace():
-            ref = pad_names_py(text)
-            if got != ref:
-                raise AssertionError(
-                    "native pad_names_from_text DIVERGENCE: "
-                    f"cpp={got} python={ref} path={mod_path}")
-        return got
-    return pad_names_py(text)
+    if not _nat.loaded():
+        raise RuntimeError("native pad_names_from_text required")
+    got = list(_nat.module().pad_names_from_text(text))
+    if _nat.trace():
+        ref = pad_names_py(text)
+        if got != ref:
+            raise AssertionError(
+                "native pad_names_from_text DIVERGENCE: "
+                f"cpp={got} python={ref} path={mod_path}")
+    return got
 
 
 _thru_cache: dict[str, bool] = {}
@@ -71,19 +71,17 @@ def has_thru_pads(mod_path: Path) -> bool:
     if key in _thru_cache:
         return _thru_cache[key]
     text = mod_path.read_text()
-    if _nat.loaded():
-        got = bool(_nat.module().has_thru_pads_from_text(text))
-        if _nat.trace():
-            ref = has_thru_pads_py(text)
-            if got != ref:
-                raise AssertionError(
-                    "native has_thru_pads_from_text DIVERGENCE: "
-                    f"cpp={got} python={ref} path={mod_path}")
-        _thru_cache[key] = got
-        return got
-    hit = has_thru_pads_py(text)
-    _thru_cache[key] = hit
-    return hit
+    if not _nat.loaded():
+        raise RuntimeError("native has_thru_pads_from_text required")
+    got = bool(_nat.module().has_thru_pads_from_text(text))
+    if _nat.trace():
+        ref = has_thru_pads_py(text)
+        if got != ref:
+            raise AssertionError(
+                "native has_thru_pads_from_text DIVERGENCE: "
+                f"cpp={got} python={ref} path={mod_path}")
+    _thru_cache[key] = got
+    return got
 
 
 def board_netlist() -> dict[str, list]:
@@ -201,30 +199,21 @@ def _footprint_bbox(mod_path: Path) -> tuple[float, float, float, float]:
     if key in _bbox_cache:
         return _bbox_cache[key]
     text = mod_path.read_text()
-    if _nat.loaded():
-        try:
-            got = tuple(_nat.module().footprint_bbox(text, BBOX_DECIMALS))
-        except RuntimeError as exc:
-            raise AssertionError(
-                f"{mod_path} carries neither a courtyard outline nor a single "
-                f"sized pad — it has no measurable extent, and every consumer of "
-                f"this bbox (courtyard, clearance, zone packing) would be reading "
-                f"invented geometry. Fix the footprint document.") from exc
-        if _nat.trace():
-            ref = _footprint_bbox_from_doc_py(sexpr.loads(text))
-            if got != ref:
-                raise AssertionError(
-                    "native footprint_bbox DIVERGENCE: "
-                    f"cpp={got} python={ref} path={mod_path}")
-        _bbox_cache[key] = got
-        return got
+    if not _nat.loaded():
+        raise RuntimeError("native footprint_bbox required")
     try:
-        bbox = _footprint_bbox_from_doc_py(sexpr.loads(text))
-    except AssertionError as exc:
+        got = tuple(_nat.module().footprint_bbox(text, BBOX_DECIMALS))
+    except RuntimeError as exc:
         raise AssertionError(
             f"{mod_path} carries neither a courtyard outline nor a single "
             f"sized pad — it has no measurable extent, and every consumer of "
             f"this bbox (courtyard, clearance, zone packing) would be reading "
             f"invented geometry. Fix the footprint document.") from exc
-    _bbox_cache[key] = bbox
-    return bbox
+    if _nat.trace():
+        ref = _footprint_bbox_from_doc_py(sexpr.loads(text))
+        if got != ref:
+            raise AssertionError(
+                "native footprint_bbox DIVERGENCE: "
+                f"cpp={got} python={ref} path={mod_path}")
+    _bbox_cache[key] = got
+    return got
