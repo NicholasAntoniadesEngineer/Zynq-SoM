@@ -51,6 +51,19 @@ const SexprList* find_tagged_child(const SexprList& node, const char* tag) {
     return nullptr;
 }
 
+SexprList* find_tagged_child_mut(SexprList& node, const char* tag) {
+    for (Sexpr& child : node) {
+        if (!std::holds_alternative<SexprList>(child.v)) {
+            continue;
+        }
+        SexprList& lst = std::get<SexprList>(child.v);
+        if (!lst.empty() && is_sym(lst[0], tag)) {
+            return &lst;
+        }
+    }
+    return nullptr;
+}
+
 std::string py_str(const Sexpr& node) {
     if (std::holds_alternative<std::string>(node.v)) {
         return std::get<std::string>(node.v);
@@ -533,6 +546,103 @@ double next_rail_col(double col_x, double cap_pitch, double prev_rail_w,
     const double need = std::max(cap_pitch, prev_rail_w / 2.0 + rail_w / 2.0
                                               + extra);
     return gceil(col_x - cap_pitch + need, unit);
+}
+
+Sexpr set_font_size(Sexpr prop, double size) {
+    if (!std::holds_alternative<SexprList>(prop.v)) {
+        throw std::runtime_error("set_font_size: property list required");
+    }
+    SexprList& node = std::get<SexprList>(prop.v);
+    SexprList* effects = find_tagged_child_mut(node, "effects");
+    if (effects == nullptr) {
+        return prop;
+    }
+    SexprList* font = find_tagged_child_mut(*effects, "font");
+    if (font == nullptr) {
+        return prop;
+    }
+    const double sz = py_round(size, 3);
+    SexprList* szn = find_tagged_child_mut(*font, "size");
+    if (szn != nullptr && szn->size() >= 3) {
+        (*szn)[1] = Sexpr{sz};
+        (*szn)[2] = Sexpr{sz};
+    }
+    SexprList* thk = find_tagged_child_mut(*font, "thickness");
+    if (thk != nullptr && thk->size() >= 2) {
+        (*thk)[1] = Sexpr{py_round(std::max(0.1, size * 0.15), 3)};
+    }
+    return prop;
+}
+
+std::pair<Sexpr, int> hide_undersom_bottom_refs(
+    Sexpr doc, double x0, double y0, double x1, double y1) {
+    if (!std::holds_alternative<SexprList>(doc.v)) {
+        throw std::runtime_error("hide_undersom_bottom_refs: list required");
+    }
+    SexprList& nodes = std::get<SexprList>(doc.v);
+    int hidden = 0;
+    for (Sexpr& node : nodes) {
+        if (!std::holds_alternative<SexprList>(node.v)) {
+            continue;
+        }
+        SexprList& fp = std::get<SexprList>(node.v);
+        if (fp.empty()) {
+            continue;
+        }
+        try {
+            if (py_str(fp[0]) != "footprint") {
+                continue;
+            }
+        } catch (const std::runtime_error&) {
+            continue;
+        }
+        const SexprList* flay = find_tagged_child(fp, "layer");
+        if (flay == nullptr || flay->size() < 2
+            || py_str((*flay)[1]) != "B.Cu") {
+            continue;
+        }
+        const SexprList* fat = find_tagged_child(fp, "at");
+        if (fat == nullptr || fat->size() < 3 || !is_number((*fat)[1])
+            || !is_number((*fat)[2])) {
+            continue;
+        }
+        const double fx = std::get<double>((*fat)[1].v);
+        const double fy = std::get<double>((*fat)[2].v);
+        if (!(x0 <= fx && fx <= x1 && y0 <= fy && fy <= y1)) {
+            continue;
+        }
+        for (Sexpr& child : fp) {
+            if (!std::holds_alternative<SexprList>(child.v)) {
+                continue;
+            }
+            SexprList& prop = std::get<SexprList>(child.v);
+            if (prop.size() <= 2) {
+                continue;
+            }
+            try {
+                if (py_str(prop[0]) != "property"
+                    || py_str(prop[1]) != "Reference") {
+                    continue;
+                }
+            } catch (const std::runtime_error&) {
+                continue;
+            }
+            SexprList* hide = find_tagged_child_mut(prop, "hide");
+            if (hide != nullptr && hide->size() >= 2) {
+                (*hide)[1] = Sexpr{Sexpr::Sym{"yes"}};
+            } else {
+                SexprList hide_node{Sexpr{Sexpr::Sym{"hide"}},
+                                    Sexpr{Sexpr::Sym{"yes"}}};
+                const auto at = std::min(static_cast<std::size_t>(3),
+                                         prop.size());
+                prop.insert(prop.begin() + static_cast<std::ptrdiff_t>(at),
+                            Sexpr{std::move(hide_node)});
+            }
+            hidden += 1;
+            break;
+        }
+    }
+    return {std::move(doc), hidden};
 }
 
 }  // namespace schgen

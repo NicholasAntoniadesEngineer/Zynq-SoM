@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+import copy
 import math
 
 from schgen.core import native as _nat
-from schgen.core.sexpr import Sym
+from schgen.core import sexpr
+from schgen.core.sexpr import Sym, _from_tagged
 
 from .constants import (
     _CONN_DESC,
@@ -630,7 +632,7 @@ def _connector_descriptors(model, uid, doc: list) -> list:
     return out
 
 
-def _set_font_size(prop: list, size: float) -> None:
+def _set_font_size_py(prop: list, size: float) -> None:
     eff = _sub(prop, "effects")
     fnt = _sub(eff, "font") if eff is not None else None
     if fnt is None:
@@ -643,7 +645,22 @@ def _set_font_size(prop: list, size: float) -> None:
         thk[1] = round(max(0.1, size * 0.15), 3)
 
 
-def _hide_undersom_bottom_refs(model, doc: list) -> int:
+def _set_font_size(prop: list, size: float) -> None:
+    if _nat.loaded():
+        got = _from_tagged(_nat.module().set_font_size(prop, size))
+        if _nat.trace():
+            ref = copy.deepcopy(prop)
+            _set_font_size_py(ref, size)
+            if sexpr.dumps(got) != sexpr.dumps(ref):
+                raise AssertionError(
+                    "native set_font_size DIVERGENCE: "
+                    f"cpp={sexpr.dumps(got)} python={sexpr.dumps(ref)}")
+        prop[:] = got
+        return
+    _set_font_size_py(prop, size)
+
+
+def _hide_undersom_bottom_refs_py(model, doc: list) -> int:
     kp = model.som_keepout
     if kp is None:
         return 0
@@ -672,6 +689,26 @@ def _hide_undersom_bottom_refs(model, doc: list) -> int:
                 n += 1
                 break
     return n
+
+
+def _hide_undersom_bottom_refs(model, doc: list) -> int:
+    kp = model.som_keepout
+    if kp is None:
+        return 0
+    if _nat.loaded():
+        tagged, n = _nat.module().hide_undersom_bottom_refs(doc, *kp)
+        got = _from_tagged(tagged)
+        if _nat.trace():
+            ref = copy.deepcopy(doc)
+            rn = _hide_undersom_bottom_refs_py(model, ref)
+            if int(n) != rn or sexpr.dumps(got) != sexpr.dumps(ref):
+                raise AssertionError(
+                    "native hide_undersom_bottom_refs DIVERGENCE: "
+                    f"cpp=({int(n)}, {sexpr.dumps(got)}) "
+                    f"python=({rn}, {sexpr.dumps(ref)})")
+        doc[:] = got
+        return int(n)
+    return _hide_undersom_bottom_refs_py(model, doc)
 
 
 def _place_refdes_py(occ, plc, court, ref, size, box, fx, fy, ca, sa, bounds):

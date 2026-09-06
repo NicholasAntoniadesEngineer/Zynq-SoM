@@ -1267,6 +1267,61 @@ NB_MODULE(_geom, m) {
                   board_h);
               return std::make_tuple(hit.poses, hit.passes);
           });
+    m.def("seat_shape_sides",
+          [](const schgen::Occupancy& occupancy, double ax, double ay,
+             const std::vector<std::tuple<
+                 int, double, double,
+                 std::tuple<double, double, double, double>,
+                 std::tuple<double, double, double, double>, int, std::string,
+                 std::vector<std::tuple<double, double, double, double, int>>,
+                 double, double, double, double>>& rows,
+             double board_w, double board_h, double clear) {
+              std::vector<schgen::SeatShapeCand> cands;
+              cands.reserve(rows.size());
+              for (const auto& r : rows) {
+                  schgen::SeatShapeCand cand;
+                  cand.index = std::get<0>(r);
+                  cand.w = std::get<1>(r);
+                  cand.h = std::get<2>(r);
+                  cand.reach = as_halo(std::get<3>(r));
+                  cand.inset = as_halo(std::get<4>(r));
+                  cand.mask = std::get<5>(r);
+                  cand.side = std::get<6>(r);
+                  cand.comps = as_comps(std::get<7>(r));
+                  cand.win_x0 = std::get<8>(r);
+                  cand.win_x1 = std::get<9>(r);
+                  cand.win_y0 = std::get<10>(r);
+                  cand.win_y1 = std::get<11>(r);
+                  cands.push_back(std::move(cand));
+              }
+              auto hits = schgen::seat_shape_sides(
+                  occupancy, ax, ay, cands, board_w, board_h, clear);
+              std::vector<std::tuple<
+                  std::string, int, double, double, double, double,
+                  std::tuple<double, double, double, double>,
+                  std::tuple<double, double, double, double>,
+                  std::vector<std::tuple<double, double, double, double, int>>,
+                  double>>
+                  out;
+              out.reserve(hits.size());
+              for (const auto& hit : hits) {
+                  std::vector<std::tuple<double, double, double, double, int>>
+                      comps;
+                  comps.reserve(hit.comps.size());
+                  for (const auto& comp : hit.comps) {
+                      comps.emplace_back(comp.dx, comp.dy, comp.w, comp.h,
+                                         comp.mask);
+                  }
+                  out.emplace_back(
+                      hit.side, hit.index, hit.x, hit.y, hit.w, hit.h,
+                      std::make_tuple(hit.reach.w, hit.reach.e, hit.reach.n,
+                                      hit.reach.s),
+                      std::make_tuple(hit.inset.w, hit.inset.e, hit.inset.n,
+                                      hit.inset.s),
+                      std::move(comps), hit.dist_key);
+              }
+              return out;
+          });
     m.def("collect_refdes_props",
           [](nb::handle doc, double default_size) {
               auto hits = schgen::collect_refdes_props(sexpr_from_py(doc),
@@ -1294,6 +1349,17 @@ NB_MODULE(_geom, m) {
                                                  n_box_bucks);
           });
     m.def("next_rail_col", &schgen::next_rail_col);
+    m.def("set_font_size",
+          [](nb::handle node, double size) {
+              return sexpr_to_tagged(
+                  schgen::set_font_size(sexpr_from_py(node), size));
+          });
+    m.def("hide_undersom_bottom_refs",
+          [](nb::handle doc, double x0, double y0, double x1, double y1) {
+              auto hit = schgen::hide_undersom_bottom_refs(
+                  sexpr_from_py(doc), x0, y0, x1, y1);
+              return std::make_tuple(sexpr_to_tagged(hit.first), hit.second);
+          });
     m.def("turn_point",
           [](double x, double y, double deg) {
               auto p = schgen::turn_point(x, y, deg);

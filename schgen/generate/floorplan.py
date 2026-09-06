@@ -2624,19 +2624,53 @@ def _attempt_pack(plan: Plan, interior: list[Block],
             chosen_comps[b.name] = cc0
             b.x, b.y, b.w, b.h = pos
             return True
+        def _cand_win(w, h, rch, ins, cc):
+            if evicted is None:
+                return (-BOARD_W, 2 * BOARD_W, -BOARD_H, 2 * BOARD_H)
+            return _evict_window(evicted, w, h, rch, ins, cc)
+
+        def _seat_shape_by_side_py() -> dict[str, tuple]:
+            found: dict[str, tuple] = {}
+            for k, (w, h, rch, ins, sd, cc) in enumerate(cands):
+                if w > BOARD_W - 2 * CLEAR or h > BOARD_H - 2 * CLEAR:
+                    continue
+                p = occ.place_near(ax, ay, w, h, rch, ins, _side_mask(sd), cc,
+                                   None if evicted is None else _evict_window(
+                                       evicted, w, h, rch, ins, cc))
+                if p is None:
+                    continue
+                d = abs(p[0] + w / 2 - ax) + abs(p[1] + h / 2 - ay)
+                key = (round(d, 4), k)
+                if sd not in found or key < found[sd][0]:
+                    found[sd] = (key, (k, p, rch, ins, sd, cc))
+            return found
+
         by_side: dict[str, tuple] = {}
-        for k, (w, h, rch, ins, sd, cc) in enumerate(cands):
-            if w > BOARD_W - 2 * CLEAR or h > BOARD_H - 2 * CLEAR:
-                continue
-            p = occ.place_near(ax, ay, w, h, rch, ins, _side_mask(sd), cc,
-                               None if evicted is None else _evict_window(
-                                   evicted, w, h, rch, ins, cc))
-            if p is None:
-                continue
-            d = abs(p[0] + w / 2 - ax) + abs(p[1] + h / 2 - ay)
-            key = (round(d, 4), k)
-            if sd not in by_side or key < by_side[sd][0]:
-                by_side[sd] = (key, (k, p, rch, ins, sd, cc))
+        if _nat.loaded() and occ._cpp is not None:
+            rows = []
+            for k, (w, h, rch, ins, sd, cc) in enumerate(cands):
+                wx0, wx1, wy0, wy1 = _cand_win(w, h, rch, ins, cc)
+                rows.append((k, w, h, rch, ins, _side_mask(sd), sd, list(cc),
+                             wx0, wx1, wy0, wy1))
+            hits = _nat.module().seat_shape_sides(
+                occ._cpp, ax, ay, rows, BOARD_W, BOARD_H, CLEAR)
+            for side, idx, x, y, w, h, _rch, _ins, _comps, dist_key in hits:
+                _w, _h, rch, ins, sd, cc = cands[int(idx)]
+                p = (x, y, w, h)
+                by_side[side] = ((dist_key, int(idx)),
+                                 (int(idx), p, rch, ins, sd, cc))
+            if _nat.trace():
+                ref = _seat_shape_by_side_py()
+                got = {sd: (key, (row[0], row[1], row[2], row[3], row[4]))
+                       for sd, (key, row) in by_side.items()}
+                exp = {sd: (key, (row[0], row[1], row[2], row[3], row[4]))
+                       for sd, (key, row) in ref.items()}
+                if got != exp:
+                    raise AssertionError(
+                        "native seat_shape_sides DIVERGENCE: "
+                        f"cpp={got} python={exp}")
+        else:
+            by_side = _seat_shape_by_side_py()
         if not by_side:
             return False
         if len(by_side) == 1:
