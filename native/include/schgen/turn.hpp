@@ -8,6 +8,9 @@
 namespace schgen {
 
 std::pair<double, double> turn_point(double x, double y, double deg);
+std::pair<double, double> world_turned_point(double inst_x, double inst_y,
+                                             double lx, double ly, double rot,
+                                             int decimals);
 Box4 turn_box(const Box4& box, double deg);
 std::pair<double, double> pad_half_extent(double size_w, double size_h,
                                           double deg);

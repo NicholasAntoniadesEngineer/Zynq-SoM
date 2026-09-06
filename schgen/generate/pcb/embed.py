@@ -35,7 +35,7 @@ from .constants import (
     PcbModel,
 )
 from .footprint import pad_half_size
-from .turn import pad_half_extent, turn_point
+from .turn import pad_half_extent, world_turned_point
 
 COPPER_DECIMALS = 4
 CORNER_DECIMALS = 3
@@ -628,12 +628,10 @@ def _pad_obstacles(inst) -> list[tuple[float, float, float, float, str, float, s
     rot = inst.rotation or 0.0
     out: list[tuple[float, float, float, float, str, float, str]] = []
     for name, px, py, prot, sw, sh, drill in _mod_pads(inst.mod_path):
-        tx, ty = turn_point(px, py, rot)
+        wx, wy = world_turned_point(inst.x, inst.y, px, py, rot, COPPER_DECIMALS)
         hx, hy = pad_half_extent(sw, sh, rot + prot)
         nname = inst.pad_nets.get(name, (0, ""))[1]
-        out.append((round(inst.x + tx, COPPER_DECIMALS),
-                    round(inst.y + ty, COPPER_DECIMALS), hx, hy, nname, drill,
-                    f"{inst.ref}.{name}"))
+        out.append((wx, wy, hx, hy, nname, drill, f"{inst.ref}.{name}"))
     return out
 
 
@@ -868,9 +866,8 @@ def _thermal_copper_nodes(model: PcbModel, uid) -> tuple[list[list], list[list]]
         for ci, (sx, sy) in enumerate(candidates):
             if len(chosen) >= spec["max_vias"]:
                 break
-            tx, ty = turn_point(sx, sy, rot)
-            vx = round(inst.x + tx, VIA_DECIMALS)
-            vy = round(inst.y + ty, VIA_DECIMALS)
+            vx, vy = world_turned_point(
+                inst.x, inst.y, sx, sy, rot, VIA_DECIMALS)
             veto = _via_site_blocker(vx, vy, model, obstacles, placed + chosen)
             if veto is None:
                 chosen.append((vx, vy))

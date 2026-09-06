@@ -453,6 +453,44 @@ def signed_mag(magnitude: float, sign: float) -> float:
     return got
 
 
+def pad_row_sign_py(v: float, deadband: float) -> int:
+    if abs(v) < deadband:
+        return 0
+    return 1 if v > 0 else -1
+
+
+def pad_row_sign(v: float, deadband: float) -> int:
+    if not _nat.loaded():
+        raise RuntimeError("native pad_row_sign required")
+    got = int(_nat.module().pad_row_sign(v, deadband))
+    if _nat.trace():
+        ref = pad_row_sign_py(v, deadband)
+        if got != ref:
+            raise AssertionError(
+                "native pad_row_sign DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
+
+
+def bus_lane_adjacent_py(a_net: str, b_net: str, a_lane: int, b_lane: int
+                         ) -> bool:
+    return a_net == b_net and b_lane - a_lane == 1
+
+
+def bus_lane_adjacent(a_net: str, b_net: str, a_lane: int, b_lane: int
+                      ) -> bool:
+    if not _nat.loaded():
+        raise RuntimeError("native bus_lane_adjacent required")
+    got = bool(_nat.module().bus_lane_adjacent(a_net, b_net, a_lane, b_lane))
+    if _nat.trace():
+        ref = bus_lane_adjacent_py(a_net, b_net, a_lane, b_lane)
+        if got is not ref:
+            raise AssertionError(
+                "native bus_lane_adjacent DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
+
+
 CORRIDOR_V_MARGIN = 0.15
 CORRIDOR_LIP = 0.3
 
@@ -1313,9 +1351,10 @@ def build_escape_plan(model) -> dict:
                 continue
             n_netted += 1
             u, v = pads_local[pad]
-            if abs(v) < 0.5:
+            row_sign = pad_row_sign(v, 0.5)
+            if row_sign == 0:
                 continue
-            rows.setdefault(1 if v > 0 else -1, []).append((u, pad, name))
+            rows.setdefault(row_sign, []).append((u, pad, name))
         netted_counts[ref] = n_netted
         out: list[dict] = []
         for sgn in sorted(rows):
@@ -1351,8 +1390,8 @@ def build_escape_plan(model) -> dict:
                                key=lambda ln: ln["lane"])
             for prev, cur in zip(row_lanes, row_lanes[1:],
                                  strict=False):
-                if (cur["net"] == prev["net"]
-                        and cur["lane"] - prev["lane"] == 1):
+                if bus_lane_adjacent(prev["net"], cur["net"],
+                                     prev["lane"], cur["lane"]):
                     grp = prev["bus_group"] or f"{ref}:{prev['net']}:{sgn}"
                     prev["bus_group"] = grp
                     cur["bus_group"] = grp

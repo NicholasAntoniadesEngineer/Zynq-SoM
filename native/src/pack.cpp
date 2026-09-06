@@ -2830,4 +2830,26 @@ double signed_mag(double magnitude, double sign) {
     return std::copysign(magnitude, sign);
 }
 
+int pad_row_sign(double v, double deadband) {
+    if (std::fabs(v) < deadband) {
+        return 0;
+    }
+    return v > 0.0 ? 1 : -1;
+}
+
+int interior_tier(bool module_face, bool exclusive) {
+    if (module_face) {
+        return 0;
+    }
+    if (exclusive) {
+        return 1;
+    }
+    return 2;
+}
+
+bool bus_lane_adjacent(const std::string& a_net, const std::string& b_net,
+                       int a_lane, int b_lane) {
+    return a_net == b_net && b_lane - a_lane == 1;
+}
+
 }  // namespace schgen

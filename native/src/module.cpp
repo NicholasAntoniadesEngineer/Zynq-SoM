@@ -1254,6 +1254,9 @@ NB_MODULE(_geom, m) {
           });
     m.def("pair_convergence", &schgen::pair_convergence);
     m.def("signed_mag", &schgen::signed_mag);
+    m.def("pad_row_sign", &schgen::pad_row_sign);
+    m.def("interior_tier", &schgen::interior_tier);
+    m.def("bus_lane_adjacent", &schgen::bus_lane_adjacent);
     m.def("board_to_uv",
           [](double cx, double cy, double bx, double by, double rot) {
               return schgen::board_to_uv(cx, cy, bx, by, rot);
@@ -2500,6 +2503,12 @@ NB_MODULE(_geom, m) {
           [](double x, double y, double deg) {
               auto p = schgen::turn_point(x, y, deg);
               return std::make_tuple(p.first, p.second);
+          });
+    m.def("world_turned_point",
+          [](double inst_x, double inst_y, double lx, double ly, double rot,
+             int decimals) {
+              return schgen::world_turned_point(inst_x, inst_y, lx, ly, rot,
+                                                decimals);
           });
     m.def("turn_box",
           [](const std::tuple<double, double, double, double>& box,

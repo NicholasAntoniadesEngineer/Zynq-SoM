@@ -496,6 +496,10 @@ std::pair<double, double> page_mid_local(const Box4& page, double origin_x,
                                          double origin_y);
 std::string pair_convergence(bool same_row, int delta_lane);
 double signed_mag(double magnitude, double sign);
+int pad_row_sign(double v, double deadband);
+int interior_tier(bool module_face, bool exclusive);
+bool bus_lane_adjacent(const std::string& a_net, const std::string& b_net,
+                       int a_lane, int b_lane);
 
 std::vector<std::vector<Seg2>> cluster_slot_segs(
     const std::vector<std::tuple<std::string, double, double>>& pad_offs,

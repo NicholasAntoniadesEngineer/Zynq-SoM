@@ -38,6 +38,29 @@ def turn_point(x: float, y: float, deg: float) -> tuple[float, float]:
     return got
 
 
+def world_turned_point_py(inst_x: float, inst_y: float, lx: float, ly: float,
+                          rot: float, decimals: int) -> tuple[float, float]:
+    if decimals < 0:
+        raise RuntimeError("world_turned_point: decimals required")
+    tx, ty = turn_point_py(lx, ly, rot)
+    return (round(inst_x + tx, decimals), round(inst_y + ty, decimals))
+
+
+def world_turned_point(inst_x: float, inst_y: float, lx: float, ly: float,
+                       rot: float, decimals: int) -> tuple[float, float]:
+    if not _nat.loaded():
+        raise RuntimeError("native world_turned_point required")
+    got = tuple(_nat.module().world_turned_point(
+        inst_x, inst_y, lx, ly, rot, decimals))
+    if _nat.trace():
+        ref = world_turned_point_py(inst_x, inst_y, lx, ly, rot, decimals)
+        if got != ref:
+            raise AssertionError(
+                "native world_turned_point DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
+
+
 def turn_box_py(box: Box, deg: float) -> Box:
     corners = [turn_point_py(px, py, deg)
                for px in (box[0], box[2]) for py in (box[1], box[3])]

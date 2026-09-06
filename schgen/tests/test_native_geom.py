@@ -2264,6 +2264,35 @@ def test_reach_mid_pair_and_signed_mag_match_python(geom, monkeypatch):
     assert signed_mag(3.5, 1.0) == 3.5
 
 
+def test_row_tier_bus_and_world_point_match_python(geom, monkeypatch):
+    from schgen.generate.pcb import escape as esc
+    from schgen.generate.pcb import turn as tn
+    from schgen.generate.pcb.escape import (
+        bus_lane_adjacent,
+        bus_lane_adjacent_py,
+        pad_row_sign,
+        pad_row_sign_py,
+    )
+    from schgen.generate.pcb.turn import (
+        world_turned_point,
+        world_turned_point_py,
+    )
+    monkeypatch.setattr(esc._nat, "trace", lambda: True)
+    monkeypatch.setattr(tn._nat, "trace", lambda: True)
+    monkeypatch.setattr(fp._nat, "trace", lambda: True)
+    assert pad_row_sign(0.4, 0.5) == pad_row_sign_py(0.4, 0.5) == 0
+    assert pad_row_sign(0.5, 0.5) == 1
+    assert pad_row_sign(-0.5, 0.5) == -1
+    assert bus_lane_adjacent("VCC", "VCC", 3, 4) is True
+    assert bus_lane_adjacent_py("VCC", "VCC", 3, 5) is False
+    assert bus_lane_adjacent("VCC", "GND", 3, 4) is False
+    assert geom.interior_tier(True, False) == 0
+    assert geom.interior_tier(False, True) == 1
+    assert geom.interior_tier(False, False) == 2
+    assert world_turned_point(10.0, 20.0, 1.25, -0.4, 90.0, 4) == (
+        world_turned_point_py(10.0, 20.0, 1.25, -0.4, 90.0, 4))
+
+
 def test_place_geom_wrappers_match_python(geom, monkeypatch):
     from schgen.layout import place as pl
     monkeypatch.setattr(pl._nat, "trace", lambda: True)

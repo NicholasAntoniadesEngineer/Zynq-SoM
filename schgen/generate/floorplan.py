@@ -3037,12 +3037,26 @@ def _attempt_pack(plan: Plan, interior: list[Block],
 
     _mfa_prio = _project_spec().module_face_anchors
 
-    def _interior_tier(block: Block) -> int:
+    def _interior_tier_py(block: Block) -> int:
         if block.name in _mfa_prio:
             return 0
         if block.pull and block.pull.get("exclusive", False):
             return 1
         return 2
+
+    def _interior_tier(block: Block) -> int:
+        if not _nat.loaded():
+            raise RuntimeError("native interior_tier required")
+        exclusive = bool(block.pull and block.pull.get("exclusive", False))
+        got = int(_nat.module().interior_tier(
+            block.name in _mfa_prio, exclusive))
+        if _nat.trace():
+            ref = _interior_tier_py(block)
+            if got != ref:
+                raise AssertionError(
+                    "native interior_tier DIVERGENCE: "
+                    f"cpp={got} python={ref}")
+        return got
 
     if not _nat.loaded():
         raise RuntimeError("native pack_interior_order required")
