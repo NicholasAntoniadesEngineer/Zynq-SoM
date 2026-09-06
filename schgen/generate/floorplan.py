@@ -1695,7 +1695,8 @@ class _Occupancy:
                         f"native place_near DIVERGENCE: python={ref} "
                         f"cpp={hit} anchor=({ax},{ay}) size=({w},{h})")
             return hit
-        raise RuntimeError("native occupancy place_near required")
+        return self._place_near_py(ax, ay, w, h, reach, inset, mask, comps,
+                                   win)
 
     def _place_near_py(self, ax, ay, w, h, reach, inset, mask, comps, win
                        ) -> tuple[float, float, float, float] | None:
