@@ -5,7 +5,9 @@ from pathlib import Path
 from types import ModuleType
 
 _CATALOG_PATH = Path(__file__).resolve().parents[2] / "native" / "catalog.bin"
+_CIRCUITS_PATH = Path(__file__).resolve().parents[2] / "native" / "circuits.bin"
 _CATALOG_OPEN = False
+_CIRCUITS_OPEN = False
 
 _REQUIRE = os.environ.get("SCHGEN_NATIVE", "")
 _TRACE = os.environ.get("SCHGEN_NATIVE_TRACE", "") == "1"
@@ -69,6 +71,44 @@ def catalog_part(mpn: str) -> dict:
         return geom.catalog_lookup(mpn)
     except Exception as exc:
         raise RuntimeError(f"catalog_part({mpn!r}) failed: {exc}") from exc
+
+
+def circuits_path() -> Path:
+    return _CIRCUITS_PATH
+
+
+def circuit_sheet(name: str) -> dict:
+    global _CIRCUITS_OPEN
+    try:
+        geom = module()
+        if not _CIRCUITS_OPEN:
+            if not _CIRCUITS_PATH.is_file():
+                raise RuntimeError(
+                    f"native/circuits.bin is missing — build it with "
+                    f"scripts/build_native.sh")
+            if not geom.circuit_open(str(_CIRCUITS_PATH)):
+                raise RuntimeError(
+                    f"circuit_open returned false for {_CIRCUITS_PATH}")
+            _CIRCUITS_OPEN = True
+        return geom.circuit_lookup(name)
+    except Exception as exc:
+        raise RuntimeError(f"circuit_sheet({name!r}) failed: {exc}") from exc
+
+
+def circuit_recompile(circuits_dir: Path | None = None) -> bool:
+    global _CIRCUITS_OPEN
+    try:
+        geom = module()
+        source_dir = Path(circuits_dir) if circuits_dir is not None else (
+            Path(__file__).resolve().parents[2] / "carrier" / "subsystems")
+        if not geom.circuit_compile(str(source_dir), str(_CIRCUITS_PATH)):
+            raise RuntimeError(
+                f"circuit_compile returned false for {_CIRCUITS_PATH}")
+        geom.circuit_close()
+        _CIRCUITS_OPEN = False
+        return True
+    except Exception as exc:
+        raise RuntimeError(f"circuit_recompile failed: {exc}") from exc
 
 
 def catalog_recompile(parts_dir: Path | None = None) -> bool:

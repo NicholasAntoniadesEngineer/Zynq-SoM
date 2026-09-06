@@ -1,0 +1,605 @@
+{
+  "schema": "schgen.circuit/1",
+  "name": "hdmi_rx",
+  "title": "HDMI RX: HDMI-A sink + EDID EEPROM",
+  "parts": [
+    {
+      "ref": "J1",
+      "lib_id": "HDMI-019S:HDMI-019S",
+      "value": "HDMI-019S",
+      "footprint": "HDMI-019S:HDMI-019S",
+      "fields": {
+        "LCSC": "C111617"
+      },
+      "pin_names": {
+        "D2+": [
+          "1"
+        ],
+        "D2_SHIELD": [
+          "2"
+        ],
+        "D2-": [
+          "3"
+        ],
+        "D1+": [
+          "4"
+        ],
+        "D1_SHIELD": [
+          "5"
+        ],
+        "D1-": [
+          "6"
+        ],
+        "D0+": [
+          "7"
+        ],
+        "D0_SHIELD": [
+          "8"
+        ],
+        "D0-": [
+          "9"
+        ],
+        "CK+": [
+          "10"
+        ],
+        "CK_SHIELD": [
+          "11"
+        ],
+        "CK-": [
+          "12"
+        ],
+        "CEC": [
+          "13"
+        ],
+        "HEC": [
+          "14"
+        ],
+        "I2C-CLK": [
+          "15"
+        ],
+        "I2C_DATA": [
+          "16"
+        ],
+        "GND": [
+          "17"
+        ],
+        "+5V": [
+          "18"
+        ],
+        "HOT_PLUG_DET": [
+          "19"
+        ],
+        "SHD": [
+          "20",
+          "21",
+          "22",
+          "23"
+        ]
+      },
+      "pin_numbers": [
+        "1",
+        "10",
+        "11",
+        "12",
+        "13",
+        "14",
+        "15",
+        "16",
+        "17",
+        "18",
+        "19",
+        "2",
+        "20",
+        "21",
+        "22",
+        "23",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9"
+      ]
+    },
+    {
+      "ref": "U1",
+      "lib_id": "Memory_EEPROM:M24C02-WMN",
+      "value": "M24C02-WMN6TP",
+      "footprint": "M24C02-WMN6TP:M24C02-WMN6TP",
+      "fields": {
+        "LCSC": "C7562",
+        "MPN": "M24C02-WMN6TP",
+        "Datasheet": "https://www.lcsc.com/datasheet/C7562.pdf"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "R1",
+      "lib_id": "Device:R",
+      "value": "1k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C21190"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "R2",
+      "lib_id": "Device:R",
+      "value": "27k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C22967"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "R3",
+      "lib_id": "Device:R",
+      "value": "10k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C25804"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "R4",
+      "lib_id": "Device:R",
+      "value": "15k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C22809"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "C1",
+      "lib_id": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {
+        "LCSC": "C14663"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "U2",
+      "lib_id": "TPD4E02B04DQAR:TPD4E02B04DQAR",
+      "value": "TPD4E02B04DQAR",
+      "footprint": "TPD4E02B04DQAR:TPD4E02B04DQAR",
+      "fields": {
+        "LCSC": "C106794"
+      },
+      "pin_names": {
+        "IO1": [
+          "1"
+        ],
+        "GND": [
+          "8",
+          "3"
+        ],
+        "IO2": [
+          "2"
+        ],
+        "IO3": [
+          "4"
+        ],
+        "IO4": [
+          "5"
+        ],
+        "NC": [
+          "6",
+          "7",
+          "9",
+          "10"
+        ]
+      },
+      "pin_numbers": [
+        "1",
+        "10",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9"
+      ]
+    },
+    {
+      "ref": "U3",
+      "lib_id": "TPD4E02B04DQAR:TPD4E02B04DQAR",
+      "value": "TPD4E02B04DQAR",
+      "footprint": "TPD4E02B04DQAR:TPD4E02B04DQAR",
+      "fields": {
+        "LCSC": "C106794"
+      },
+      "pin_names": {
+        "IO1": [
+          "1"
+        ],
+        "GND": [
+          "8",
+          "3"
+        ],
+        "IO2": [
+          "2"
+        ],
+        "IO3": [
+          "4"
+        ],
+        "IO4": [
+          "5"
+        ],
+        "NC": [
+          "6",
+          "7",
+          "9",
+          "10"
+        ]
+      },
+      "pin_numbers": [
+        "1",
+        "10",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9"
+      ]
+    },
+    {
+      "ref": "U4",
+      "lib_id": "TPD4E05U06DQAR:TPD4E05U06DQAR",
+      "value": "TPD4E05U06DQAR",
+      "footprint": "TPD4E05U06DQAR:TPD4E05U06DQAR",
+      "fields": {
+        "LCSC": "C138714"
+      },
+      "pin_names": {
+        "D1+": [
+          "1"
+        ],
+        "D1-": [
+          "2"
+        ],
+        "GND": [
+          "3",
+          "8"
+        ],
+        "D2+": [
+          "4"
+        ],
+        "D2-": [
+          "5"
+        ],
+        "NC": [
+          "6",
+          "7",
+          "9",
+          "10"
+        ]
+      },
+      "pin_numbers": [
+        "1",
+        "10",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9"
+      ]
+    }
+  ],
+  "nets": [
+    {
+      "name": "HDMI_RX_D2_P",
+      "net_class": "port",
+      "pins": [
+        "J1.1",
+        "U2.1"
+      ]
+    },
+    {
+      "name": "HDMI_RX_D2_N",
+      "net_class": "port",
+      "pins": [
+        "J1.3",
+        "U2.2"
+      ]
+    },
+    {
+      "name": "HDMI_RX_D1_P",
+      "net_class": "port",
+      "pins": [
+        "J1.4",
+        "U2.4"
+      ]
+    },
+    {
+      "name": "HDMI_RX_D1_N",
+      "net_class": "port",
+      "pins": [
+        "J1.6",
+        "U2.5"
+      ]
+    },
+    {
+      "name": "HDMI_RX_D0_P",
+      "net_class": "port",
+      "pins": [
+        "J1.7",
+        "U3.1"
+      ]
+    },
+    {
+      "name": "HDMI_RX_D0_N",
+      "net_class": "port",
+      "pins": [
+        "J1.9",
+        "U3.2"
+      ]
+    },
+    {
+      "name": "HDMI_RX_CLK_P",
+      "net_class": "port",
+      "pins": [
+        "J1.10",
+        "U3.4"
+      ]
+    },
+    {
+      "name": "HDMI_RX_CLK_N",
+      "net_class": "port",
+      "pins": [
+        "J1.12",
+        "U3.5"
+      ]
+    },
+    {
+      "name": "GND",
+      "net_class": "ground",
+      "pins": [
+        "U2.8",
+        "U2.3",
+        "U3.8",
+        "U3.3",
+        "U4.3",
+        "U4.8",
+        "C1.2",
+        "R4.2",
+        "J1.2",
+        "J1.5",
+        "J1.8",
+        "J1.11",
+        "J1.17",
+        "U1.1",
+        "U1.2",
+        "U1.3",
+        "U1.4"
+      ]
+    },
+    {
+      "name": "HDMI_RX_SDA",
+      "net_class": "signal",
+      "pins": [
+        "J1.16",
+        "U1.5",
+        "U4.2"
+      ]
+    },
+    {
+      "name": "HDMI_RX_SCL",
+      "net_class": "signal",
+      "pins": [
+        "J1.15",
+        "U1.6",
+        "U4.1"
+      ]
+    },
+    {
+      "name": "HDMI_RX_5V",
+      "net_class": "signal",
+      "pins": [
+        "J1.18",
+        "U1.8",
+        "U1.7",
+        "C1.1",
+        "R1.1",
+        "R3.1"
+      ]
+    },
+    {
+      "name": "HDMI_RX_HPD",
+      "net_class": "signal",
+      "pins": [
+        "J1.19",
+        "R1.2",
+        "U4.5"
+      ]
+    },
+    {
+      "name": "HDMI_RX_5V_DET",
+      "net_class": "port",
+      "pins": [
+        "R3.2",
+        "R4.1"
+      ]
+    },
+    {
+      "name": "HDMI_RX_CEC",
+      "net_class": "port",
+      "pins": [
+        "J1.13",
+        "R2.2",
+        "U4.4"
+      ]
+    },
+    {
+      "name": "+3V3_HDMI_RX",
+      "net_class": "power",
+      "pins": [
+        "R2.1"
+      ]
+    },
+    {
+      "name": "CHASSIS_GND",
+      "net_class": "ground",
+      "pins": [
+        "J1.20",
+        "J1.21",
+        "J1.22",
+        "J1.23"
+      ]
+    }
+  ],
+  "nc": [
+    "J1.14",
+    "U2.10",
+    "U2.6",
+    "U2.7",
+    "U2.9",
+    "U3.10",
+    "U3.6",
+    "U3.7",
+    "U3.9",
+    "U4.10",
+    "U4.6",
+    "U4.7",
+    "U4.9"
+  ],
+  "port_types": {
+    "HDMI_RX_D2_P": {
+      "kind": "tmds_pair",
+      "pair_with": "HDMI_RX_D2_N",
+      "impedance": 100,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j2_j3_connector (wave 3 FPGA bank function map)"
+    },
+    "HDMI_RX_D2_N": {
+      "kind": "tmds_pair",
+      "pair_with": "HDMI_RX_D2_P",
+      "impedance": 100,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j2_j3_connector (wave 3 FPGA bank function map)"
+    },
+    "HDMI_RX_D1_P": {
+      "kind": "tmds_pair",
+      "pair_with": "HDMI_RX_D1_N",
+      "impedance": 100,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j2_j3_connector (wave 3 FPGA bank function map)"
+    },
+    "HDMI_RX_D1_N": {
+      "kind": "tmds_pair",
+      "pair_with": "HDMI_RX_D1_P",
+      "impedance": 100,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j2_j3_connector (wave 3 FPGA bank function map)"
+    },
+    "HDMI_RX_D0_P": {
+      "kind": "tmds_pair",
+      "pair_with": "HDMI_RX_D0_N",
+      "impedance": 100,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j2_j3_connector (wave 3 FPGA bank function map)"
+    },
+    "HDMI_RX_D0_N": {
+      "kind": "tmds_pair",
+      "pair_with": "HDMI_RX_D0_P",
+      "impedance": 100,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j2_j3_connector (wave 3 FPGA bank function map)"
+    },
+    "HDMI_RX_CLK_P": {
+      "kind": "tmds_pair",
+      "pair_with": "HDMI_RX_CLK_N",
+      "impedance": 100,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j2_j3_connector (wave 3 FPGA bank function map)"
+    },
+    "HDMI_RX_CLK_N": {
+      "kind": "tmds_pair",
+      "pair_with": "HDMI_RX_CLK_P",
+      "impedance": 100,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j2_j3_connector (wave 3 FPGA bank function map)"
+    },
+    "HDMI_RX_5V_DET": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j2_j3_connector (wave 3 FPGA bank function map)"
+    },
+    "HDMI_RX_CEC": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j2_j3_connector (wave 3 FPGA bank function map)"
+    }
+  },
+  "hints": {},
+  "loads": {
+    "+3V3_HDMI_RX": [
+      [
+        0.001,
+        "CEC 27k pull-up (EEPROM + EDID WC# are cable-5V-fed)"
+      ]
+    ]
+  },
+  "tp_waivers": {},
+  "decap_waivers": {},
+  "pull_waivers": {},
+  "reset_waivers": {},
+  "strap_waivers": {},
+  "ep_waivers": {},
+  "thermal_waivers": {},
+  "part_rule_waivers": {}
+}

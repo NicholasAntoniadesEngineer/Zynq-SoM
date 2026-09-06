@@ -1,0 +1,75 @@
+{
+  "schema": "schgen.circuit/1",
+  "name": "mechanical",
+  "title": "Mechanical: M3 mounts + chassis-GND bond (fiducials are PCB-only, emitted by the placer)",
+  "parts": [
+    {
+      "ref": "H1",
+      "lib_id": "Mechanical:MountingHole_Pad",
+      "value": "MountingHole_M3",
+      "footprint": "MountingHole:MountingHole_3.2mm_M3_Pad",
+      "fields": {
+        "BOM": "exclude"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "H2",
+      "lib_id": "Mechanical:MountingHole_Pad",
+      "value": "MountingHole_M3",
+      "footprint": "MountingHole:MountingHole_3.2mm_M3_Pad",
+      "fields": {
+        "BOM": "exclude"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "H3",
+      "lib_id": "Mechanical:MountingHole_Pad",
+      "value": "MountingHole_M3",
+      "footprint": "MountingHole:MountingHole_3.2mm_M3_Pad",
+      "fields": {
+        "BOM": "exclude"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "H4",
+      "lib_id": "Mechanical:MountingHole_Pad",
+      "value": "MountingHole_M3",
+      "footprint": "MountingHole:MountingHole_3.2mm_M3_Pad",
+      "fields": {
+        "BOM": "exclude"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    }
+  ],
+  "nets": [
+    {
+      "name": "CHASSIS_GND",
+      "net_class": "ground",
+      "pins": [
+        "H1.1",
+        "H2.1",
+        "H3.1",
+        "H4.1"
+      ]
+    }
+  ],
+  "nc": [],
+  "port_types": {},
+  "hints": {},
+  "loads": {},
+  "tp_waivers": {},
+  "decap_waivers": {},
+  "pull_waivers": {},
+  "reset_waivers": {},
+  "strap_waivers": {},
+  "ep_waivers": {},
+  "thermal_waivers": {},
+  "part_rule_waivers": {}
+}

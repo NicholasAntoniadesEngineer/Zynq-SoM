@@ -177,16 +177,15 @@ def _refdes_hit_court(fx, fy, ca, sa, lx, ly, court):
     return _refdes_hit_court_py(fx, fy, ca, sa, lx, ly, court)
 
 
-def _refdes_hits_to_rows(doc: list, hits, court_by_ref: dict) -> list:
+def _collect_refdes_rows(doc: list, court_by_ref: dict) -> list:
+    hits = _nat.module().collect_refdes_rows(
+        doc, list(court_by_ref.items()), 1.0)
     rows = []
-    for (fi, pi, ref, fx, fy, ca, sa, lx, ly, size, bottom, *box) in hits:
+    for (fi, pi, ref, fx, fy, ca, sa, court, size, box, bottom) in hits:
         node = doc[int(fi)]
         c = node[int(pi)]
-        lat = _sub(c, "at")
-        _bx, _by, court = _refdes_hit_court(
-            fx, fy, ca, sa, lx, ly, court_by_ref.get(ref))
-        rows.append((ref, c, lat, fx, fy, ca, sa, court, size,
-                     tuple(box), bool(bottom)))
+        rows.append((ref, c, _sub(c, "at"), fx, fy, ca, sa, tuple(court),
+                     size, tuple(box), bool(bottom)))
     return rows
 
 
@@ -710,40 +709,31 @@ def _place_refdes_py(occ, plc, court, ref, size, box, fx, fy, ca, sa, bounds):
 # Must run after the footprint loop AND _connector_descriptors — it reads their
 # courtyards and function labels as the occupied set.
 def _declutter_refdes(model, uid, doc: list) -> int:
-    import math
     ex0, ey0 = ORIGIN_X, ORIGIN_Y
     ex1, ey1 = ORIGIN_X + model.board_w, ORIGIN_Y + model.board_h
     occupied = [_inst_courtyard(i) for i in model.insts]
-    if _nat.loaded():
-        texts = [tuple(b) for b in _nat.module().collect_gr_text_boxes(doc, 1.0)]
-        if _nat.trace():
-            ref = _collect_gr_text_boxes_py(doc)
-            if texts != ref:
-                raise AssertionError(
-                    "native collect_gr_text_boxes DIVERGENCE: "
-                    f"cpp={texts} python={ref}")
-        occupied.extend(texts)
-    else:
-        occupied.extend(_collect_gr_text_boxes_py(doc))
+    texts = [tuple(b) for b in _nat.module().collect_gr_text_boxes(doc, 1.0)]
+    if _nat.trace():
+        ref = _collect_gr_text_boxes_py(doc)
+        if texts != ref:
+            raise AssertionError(
+                "native collect_gr_text_boxes DIVERGENCE: "
+                f"cpp={texts} python={ref}")
+    occupied.extend(texts)
     silk_gfx_top: list = []
     silk_gfx_bot: list = []
     for node in doc:
         if not (isinstance(node, list) and node and str(node[0]) == "footprint"):
             continue
-        if _nat.loaded():
-            top, bot = _nat.module().collect_fp_silk_gfx(node)
-            top = [tuple(b) for b in top]
-            bot = [tuple(b) for b in bot]
-            if _nat.trace():
-                ref_top, ref_bot = _collect_fp_silk_gfx_py(node)
-                if top != ref_top or bot != ref_bot:
-                    raise AssertionError(
-                        "native collect_fp_silk_gfx DIVERGENCE: "
-                        f"cpp={(top, bot)} python={(ref_top, ref_bot)}")
-            silk_gfx_top.extend(top)
-            silk_gfx_bot.extend(bot)
-            continue
-        top, bot = _collect_fp_silk_gfx_py(node)
+        top, bot = _nat.module().collect_fp_silk_gfx(node)
+        top = [tuple(b) for b in top]
+        bot = [tuple(b) for b in bot]
+        if _nat.trace():
+            ref_top, ref_bot = _collect_fp_silk_gfx_py(node)
+            if top != ref_top or bot != ref_bot:
+                raise AssertionError(
+                    "native collect_fp_silk_gfx DIVERGENCE: "
+                    f"cpp={(top, bot)} python={(ref_top, ref_bot)}")
         silk_gfx_top.extend(top)
         silk_gfx_bot.extend(bot)
     occupied += silk_gfx_top
@@ -752,54 +742,32 @@ def _declutter_refdes(model, uid, doc: list) -> int:
         [_inst_courtyard(i) for i in model.insts if i.side == "bottom"]
         + silk_gfx_bot)
     court_by_ref = {i.ref: _inst_courtyard(i) for i in model.insts}
-    if _nat.loaded():
-        hits = _nat.module().collect_refdes_props(doc, 1.0)
-        if _nat.trace():
-            ref_hits = _collect_refdes_props_py(doc)
-            got = [(int(h[0]), int(h[1]), h[2], bool(h[10])) for h in hits]
-            if got != ref_hits:
-                raise AssertionError(
-                    "native collect_refdes_props DIVERGENCE: "
-                    f"cpp={got} python={ref_hits}")
-        refs = _refdes_hits_to_rows(doc, hits, court_by_ref)
-    else:
-        refs = _collect_refdes_rows_py(doc, court_by_ref)
+    refs = _collect_refdes_rows(doc, court_by_ref)
     placed_top = _BoxIndex()
     placed_bot = _BoxIndex()
     moved = 0
     for ref, c, lat, fx, fy, ca, sa, court, size, box, bottom in refs:
         occ = occupied_bot if bottom else occupied
         plc = placed_bot if bottom else placed_top
-        if (_nat.loaded() and occ._cpp is not None
-                and plc._cpp is not None):
-            got = _nat.module().place_refdes(
-                court, ref, size, box, occ._cpp, plc._cpp,
-                (ex0, ey0, ex1, ey1), fx, fy, ca, sa, _REFDES_MIN_SIZE,
-                0.02, 8.0, 1e-9, 0.5, (0.78, 0.62))
-            moved_hit, lx, ly, new_size, ax0, ay0, ax1, ay1 = got
-            add_box = (ax0, ay0, ax1, ay1)
-            if _nat.trace():
-                ref_move, ref_lx, ref_ly, ref_size, ref_box = (
-                    _place_refdes_py(
-                        occ, plc, court, ref, size, box, fx, fy, ca, sa,
-                        (ex0, ey0, ex1, ey1)))
-                if (moved_hit, lx, ly, new_size, add_box) != (
-                        ref_move, ref_lx, ref_ly, ref_size, ref_box):
-                    raise AssertionError(
-                        "native place_refdes DIVERGENCE: "
-                        f"cpp={(moved_hit, lx, ly, new_size, add_box)} "
-                        f"python={(ref_move, ref_lx, ref_ly, ref_size, ref_box)}")
-            plc.add(add_box)
-            if moved_hit:
-                lat[1] = lx
-                lat[2] = ly
-                if new_size != size:
-                    _set_font_size(c, new_size)
-                moved += 1
-            continue
-        moved_hit, lx, ly, new_size, add_box = _place_refdes_py(
-            occ, plc, court, ref, size, box, fx, fy, ca, sa,
-            (ex0, ey0, ex1, ey1))
+        if occ._cpp is None or plc._cpp is None:
+            raise RuntimeError("native SilkBoxIndex required")
+        got = _nat.module().place_refdes(
+            court, ref, size, box, occ._cpp, plc._cpp,
+            (ex0, ey0, ex1, ey1), fx, fy, ca, sa, _REFDES_MIN_SIZE,
+            0.02, 8.0, 1e-9, 0.5, (0.78, 0.62))
+        moved_hit, lx, ly, new_size, ax0, ay0, ax1, ay1 = got
+        add_box = (ax0, ay0, ax1, ay1)
+        if _nat.trace():
+            ref_move, ref_lx, ref_ly, ref_size, ref_box = (
+                _place_refdes_py(
+                    occ, plc, court, ref, size, box, fx, fy, ca, sa,
+                    (ex0, ey0, ex1, ey1)))
+            if (moved_hit, lx, ly, new_size, add_box) != (
+                    ref_move, ref_lx, ref_ly, ref_size, ref_box):
+                raise AssertionError(
+                    "native place_refdes DIVERGENCE: "
+                    f"cpp={(moved_hit, lx, ly, new_size, add_box)} "
+                    f"python={(ref_move, ref_lx, ref_ly, ref_size, ref_box)}")
         plc.add(add_box)
         if moved_hit:
             lat[1] = lx

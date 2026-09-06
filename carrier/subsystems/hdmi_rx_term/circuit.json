@@ -1,0 +1,299 @@
+{
+  "schema": "schgen.circuit/1",
+  "name": "hdmi_rx_term",
+  "title": "HDMI-RX TMDS sink termination (8x49.9R to AVCC=+3V3)",
+  "parts": [
+    {
+      "ref": "R1",
+      "lib_id": "Device:R",
+      "value": "49.9R",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C114625"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "R2",
+      "lib_id": "Device:R",
+      "value": "49.9R",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C114625"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "R3",
+      "lib_id": "Device:R",
+      "value": "49.9R",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C114625"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "R4",
+      "lib_id": "Device:R",
+      "value": "49.9R",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C114625"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "R5",
+      "lib_id": "Device:R",
+      "value": "49.9R",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C114625"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "R6",
+      "lib_id": "Device:R",
+      "value": "49.9R",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C114625"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "R7",
+      "lib_id": "Device:R",
+      "value": "49.9R",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C114625"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "R8",
+      "lib_id": "Device:R",
+      "value": "49.9R",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C114625"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "C1",
+      "lib_id": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {
+        "LCSC": "C14663"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "C2",
+      "lib_id": "Device:C",
+      "value": "1u",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {
+        "LCSC": "C15849"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    }
+  ],
+  "nets": [
+    {
+      "name": "HDMI_RX_D2_P",
+      "net_class": "port",
+      "pins": [
+        "R1.1"
+      ]
+    },
+    {
+      "name": "+3V3",
+      "net_class": "power",
+      "pins": [
+        "R1.2",
+        "R2.2",
+        "R3.2",
+        "R4.2",
+        "R5.2",
+        "R6.2",
+        "R7.2",
+        "R8.2",
+        "C1.1",
+        "C2.1"
+      ]
+    },
+    {
+      "name": "HDMI_RX_D2_N",
+      "net_class": "port",
+      "pins": [
+        "R2.1"
+      ]
+    },
+    {
+      "name": "HDMI_RX_D1_P",
+      "net_class": "port",
+      "pins": [
+        "R3.1"
+      ]
+    },
+    {
+      "name": "HDMI_RX_D1_N",
+      "net_class": "port",
+      "pins": [
+        "R4.1"
+      ]
+    },
+    {
+      "name": "HDMI_RX_D0_P",
+      "net_class": "port",
+      "pins": [
+        "R5.1"
+      ]
+    },
+    {
+      "name": "HDMI_RX_D0_N",
+      "net_class": "port",
+      "pins": [
+        "R6.1"
+      ]
+    },
+    {
+      "name": "HDMI_RX_CLK_P",
+      "net_class": "port",
+      "pins": [
+        "R7.1"
+      ]
+    },
+    {
+      "name": "HDMI_RX_CLK_N",
+      "net_class": "port",
+      "pins": [
+        "R8.1"
+      ]
+    },
+    {
+      "name": "GND",
+      "net_class": "ground",
+      "pins": [
+        "C1.2",
+        "C2.2"
+      ]
+    }
+  ],
+  "nc": [],
+  "port_types": {
+    "HDMI_RX_D2_P": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j2_j3_connector (FPGA bank 33 — TMDS RX receiver end)"
+    },
+    "HDMI_RX_D2_N": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j2_j3_connector (FPGA bank 33 — TMDS RX receiver end)"
+    },
+    "HDMI_RX_D1_P": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j2_j3_connector (FPGA bank 33 — TMDS RX receiver end)"
+    },
+    "HDMI_RX_D1_N": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j2_j3_connector (FPGA bank 33 — TMDS RX receiver end)"
+    },
+    "HDMI_RX_D0_P": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j2_j3_connector (FPGA bank 33 — TMDS RX receiver end)"
+    },
+    "HDMI_RX_D0_N": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j2_j3_connector (FPGA bank 33 — TMDS RX receiver end)"
+    },
+    "HDMI_RX_CLK_P": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j2_j3_connector (FPGA bank 33 — TMDS RX receiver end)"
+    },
+    "HDMI_RX_CLK_N": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j2_j3_connector (FPGA bank 33 — TMDS RX receiver end)"
+    }
+  },
+  "hints": {},
+  "loads": {
+    "+3V3": [
+      [
+        0.064,
+        "8x TMDS sink termination 49.9R to AVCC (~8 mA/line driven low)"
+      ]
+    ]
+  },
+  "tp_waivers": {},
+  "decap_waivers": {},
+  "pull_waivers": {},
+  "reset_waivers": {},
+  "strap_waivers": {},
+  "ep_waivers": {},
+  "thermal_waivers": {},
+  "part_rule_waivers": {}
+}

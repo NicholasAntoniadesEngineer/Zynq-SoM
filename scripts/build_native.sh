@@ -24,3 +24,7 @@ if [ ! -f "${REPO_ROOT}/native/catalog.bin" ]; then
     echo "native/catalog.bin missing after build" >&2
     exit 1
 fi
+if [ ! -f "${REPO_ROOT}/native/circuits.bin" ]; then
+    echo "native/circuits.bin missing after build" >&2
+    exit 1
+fi

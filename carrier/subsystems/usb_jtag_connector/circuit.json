@@ -1,0 +1,274 @@
+{
+  "schema": "schgen.circuit/1",
+  "name": "usb_jtag_connector",
+  "title": "USB-C UFP debug port -> CH347T (protected)",
+  "parts": [
+    {
+      "ref": "J1",
+      "lib_id": "TYPE-C-31-M-12:TYPE-C-31-M-12",
+      "value": "TYPE-C-31-M-12",
+      "footprint": "TYPE-C-31-M-12:TYPE-C-31-M-12",
+      "fields": {
+        "LCSC": "C165948"
+      },
+      "pin_names": {
+        "GND": [
+          "A1B12",
+          "B1A12"
+        ],
+        "VBUS": [
+          "A4B9",
+          "B4A9"
+        ],
+        "SBU2": [
+          "B8"
+        ],
+        "CC1": [
+          "A5"
+        ],
+        "DN2": [
+          "B7"
+        ],
+        "DP1": [
+          "A6"
+        ],
+        "DN1": [
+          "A7"
+        ],
+        "DP2": [
+          "B6"
+        ],
+        "SBU1": [
+          "A8"
+        ],
+        "CC2": [
+          "B5"
+        ],
+        "EH": [
+          "4",
+          "3",
+          "2",
+          "1"
+        ]
+      },
+      "pin_numbers": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "A1B12",
+        "A4B9",
+        "A5",
+        "A6",
+        "A7",
+        "A8",
+        "B1A12",
+        "B4A9",
+        "B5",
+        "B6",
+        "B7",
+        "B8"
+      ]
+    },
+    {
+      "ref": "U1",
+      "lib_id": "USBLC6-2SC6:USBLC6-2SC6",
+      "value": "USBLC6-2SC6",
+      "footprint": "USBLC6-2SC6:USBLC6-2SC6",
+      "fields": {
+        "LCSC": "C7519"
+      },
+      "pin_names": {
+        "1": [
+          "1"
+        ],
+        "2": [
+          "2"
+        ],
+        "3": [
+          "3"
+        ],
+        "4": [
+          "4"
+        ],
+        "5": [
+          "5"
+        ],
+        "6": [
+          "6"
+        ]
+      },
+      "pin_numbers": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6"
+      ]
+    },
+    {
+      "ref": "C1",
+      "lib_id": "Device:C",
+      "value": "10u",
+      "footprint": "Capacitor_SMD:C_0805_2012Metric",
+      "fields": {
+        "LCSC": "C15850"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "R1",
+      "lib_id": "Device:R",
+      "value": "5.1k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C23186"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "R2",
+      "lib_id": "Device:R",
+      "value": "5.1k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C23186"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "TP1",
+      "lib_id": "Connector:TestPoint",
+      "value": "+5V_DBG",
+      "footprint": "TestPoint:TestPoint_Pad_D1.5mm",
+      "fields": {
+        "BOM": "exclude"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    }
+  ],
+  "nets": [
+    {
+      "name": "+5V_DBG",
+      "net_class": "power",
+      "pins": [
+        "J1.A4B9",
+        "J1.B4A9",
+        "U1.5",
+        "C1.1",
+        "TP1.1"
+      ]
+    },
+    {
+      "name": "GND",
+      "net_class": "ground",
+      "pins": [
+        "C1.2",
+        "U1.2",
+        "R1.2",
+        "R2.2",
+        "J1.A1B12",
+        "J1.B1A12"
+      ]
+    },
+    {
+      "name": "DBG_USB_DP_CONN",
+      "net_class": "signal",
+      "pins": [
+        "J1.A6",
+        "J1.B6",
+        "U1.1"
+      ]
+    },
+    {
+      "name": "DBG_USB_DM_CONN",
+      "net_class": "signal",
+      "pins": [
+        "J1.A7",
+        "J1.B7",
+        "U1.3"
+      ]
+    },
+    {
+      "name": "DBG_USB_DP",
+      "net_class": "port",
+      "pins": [
+        "U1.6"
+      ]
+    },
+    {
+      "name": "DBG_USB_DM",
+      "net_class": "port",
+      "pins": [
+        "U1.4"
+      ]
+    },
+    {
+      "name": "DBG_R1_CC",
+      "net_class": "signal",
+      "pins": [
+        "R1.1",
+        "J1.A5"
+      ]
+    },
+    {
+      "name": "DBG_R2_CC",
+      "net_class": "signal",
+      "pins": [
+        "R2.1",
+        "J1.B5"
+      ]
+    },
+    {
+      "name": "CHASSIS_GND",
+      "net_class": "ground",
+      "pins": [
+        "J1.4",
+        "J1.3",
+        "J1.2",
+        "J1.1"
+      ]
+    }
+  ],
+  "nc": [
+    "J1.A8",
+    "J1.B8"
+  ],
+  "port_types": {
+    "DBG_USB_DP": {
+      "kind": "usb_hs_pair",
+      "pair_with": "DBG_USB_DM",
+      "impedance": 90,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "usb_jtag (CH347T bridge)"
+    },
+    "DBG_USB_DM": {
+      "kind": "usb_hs_pair",
+      "pair_with": "DBG_USB_DP",
+      "impedance": 90,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "usb_jtag (CH347T bridge)"
+    }
+  },
+  "hints": {},
+  "loads": {},
+  "tp_waivers": {},
+  "decap_waivers": {},
+  "pull_waivers": {},
+  "reset_waivers": {},
+  "strap_waivers": {},
+  "ep_waivers": {},
+  "thermal_waivers": {},
+  "part_rule_waivers": {}
+}

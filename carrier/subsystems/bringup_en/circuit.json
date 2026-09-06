@@ -1,0 +1,386 @@
+{
+  "schema": "schgen.circuit/1",
+  "name": "bringup_en",
+  "title": "Bring-up EN cells: 3x SN74LVC1G08 rail DIP-AND-override",
+  "parts": [
+    {
+      "ref": "U1",
+      "lib_id": "74xGxx:74LVC1G08",
+      "value": "SN74LVC1G08",
+      "footprint": "Package_TO_SOT_SMD:SOT-23-5",
+      "fields": {
+        "LCSC": "C7666"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "R1",
+      "lib_id": "Device:R",
+      "value": "100k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C25803"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "R2",
+      "lib_id": "Device:R",
+      "value": "100k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C25803"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "C1",
+      "lib_id": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {
+        "LCSC": "C14663"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "U2",
+      "lib_id": "74xGxx:74LVC1G08",
+      "value": "SN74LVC1G08",
+      "footprint": "Package_TO_SOT_SMD:SOT-23-5",
+      "fields": {
+        "LCSC": "C7666"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "R3",
+      "lib_id": "Device:R",
+      "value": "100k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C25803"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "R4",
+      "lib_id": "Device:R",
+      "value": "100k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C25803"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "C2",
+      "lib_id": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {
+        "LCSC": "C14663"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "U3",
+      "lib_id": "74xGxx:74LVC1G08",
+      "value": "SN74LVC1G08",
+      "footprint": "Package_TO_SOT_SMD:SOT-23-5",
+      "fields": {
+        "LCSC": "C7666"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "R5",
+      "lib_id": "Device:R",
+      "value": "100k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C25803"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "R6",
+      "lib_id": "Device:R",
+      "value": "100k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C25803"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "C3",
+      "lib_id": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {
+        "LCSC": "C14663"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "TP1",
+      "lib_id": "Connector:TestPoint",
+      "value": "EN_5V0",
+      "footprint": "TestPoint:TestPoint_Pad_D1.5mm",
+      "fields": {
+        "BOM": "exclude"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "TP2",
+      "lib_id": "Connector:TestPoint",
+      "value": "EN_3V3",
+      "footprint": "TestPoint:TestPoint_Pad_D1.5mm",
+      "fields": {
+        "BOM": "exclude"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "TP3",
+      "lib_id": "Connector:TestPoint",
+      "value": "EN_1V8",
+      "footprint": "TestPoint:TestPoint_Pad_D1.5mm",
+      "fields": {
+        "BOM": "exclude"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    }
+  ],
+  "nets": [
+    {
+      "name": "BU_DIP_5V0",
+      "net_class": "port",
+      "pins": [
+        "U1.1",
+        "R1.1"
+      ]
+    },
+    {
+      "name": "GND",
+      "net_class": "ground",
+      "pins": [
+        "R1.2",
+        "U1.3",
+        "C1.2",
+        "R3.2",
+        "U2.3",
+        "C2.2",
+        "R5.2",
+        "U3.3",
+        "C3.2"
+      ]
+    },
+    {
+      "name": "STM32_RAIL_EN_5V0",
+      "net_class": "port",
+      "pins": [
+        "U1.2",
+        "R2.2"
+      ]
+    },
+    {
+      "name": "+3V3_SC",
+      "net_class": "power",
+      "pins": [
+        "R2.1",
+        "U1.5",
+        "C1.1",
+        "R4.1",
+        "U2.5",
+        "C2.1",
+        "R6.1",
+        "U3.5",
+        "C3.1"
+      ]
+    },
+    {
+      "name": "EN_5V0",
+      "net_class": "port",
+      "pins": [
+        "U1.4",
+        "TP1.1"
+      ]
+    },
+    {
+      "name": "BU_DIP_3V3",
+      "net_class": "port",
+      "pins": [
+        "U2.1",
+        "R3.1"
+      ]
+    },
+    {
+      "name": "STM32_RAIL_EN_3V3",
+      "net_class": "port",
+      "pins": [
+        "U2.2",
+        "R4.2"
+      ]
+    },
+    {
+      "name": "EN_3V3",
+      "net_class": "port",
+      "pins": [
+        "U2.4",
+        "TP2.1"
+      ]
+    },
+    {
+      "name": "BU_DIP_1V8",
+      "net_class": "port",
+      "pins": [
+        "U3.1",
+        "R5.1"
+      ]
+    },
+    {
+      "name": "STM32_RAIL_EN_1V8",
+      "net_class": "port",
+      "pins": [
+        "U3.2",
+        "R6.2"
+      ]
+    },
+    {
+      "name": "EN_1V8",
+      "net_class": "port",
+      "pins": [
+        "U3.4",
+        "TP3.1"
+      ]
+    }
+  ],
+  "nc": [],
+  "port_types": {
+    "BU_DIP_5V0": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "bringup_rails (DIP / TCA9535 control surfaces)"
+    },
+    "STM32_RAIL_EN_5V0": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j3_connector (wave 3 STM32 GPIO function map)"
+    },
+    "EN_5V0": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "power (regulator EN pins, dossier section 3.1)"
+    },
+    "BU_DIP_3V3": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "bringup_rails (DIP / TCA9535 control surfaces)"
+    },
+    "STM32_RAIL_EN_3V3": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j3_connector (wave 3 STM32 GPIO function map)"
+    },
+    "EN_3V3": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "power (regulator EN pins, dossier section 3.1)"
+    },
+    "BU_DIP_1V8": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "bringup_rails (DIP / TCA9535 control surfaces)"
+    },
+    "STM32_RAIL_EN_1V8": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j3_connector (wave 3 STM32 GPIO function map)"
+    },
+    "EN_1V8": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "power (regulator EN pins, dossier section 3.1)"
+    }
+  },
+  "hints": {},
+  "loads": {
+    "+3V3_SC": [
+      [
+        0.002,
+        "3x SN74LVC1G08 + 100k pull networks"
+      ]
+    ]
+  },
+  "tp_waivers": {},
+  "decap_waivers": {},
+  "pull_waivers": {},
+  "reset_waivers": {},
+  "strap_waivers": {},
+  "ep_waivers": {},
+  "thermal_waivers": {},
+  "part_rule_waivers": {}
+}

@@ -1,0 +1,291 @@
+{
+  "schema": "schgen.circuit/1",
+  "name": "rj45_connector",
+  "title": "RJ45 8P8C jack (plain, ext. magnetics)",
+  "parts": [
+    {
+      "ref": "J1",
+      "lib_id": "KH-5224-8P8C-D:KH-5224-8P8C-D",
+      "value": "KH-5224-8P8C-D",
+      "footprint": "KH-5224-8P8C-D:KH-5224-8P8C-D",
+      "fields": {
+        "LCSC": "C2828085"
+      },
+      "pin_names": {
+        "LED-L-": [
+          "10"
+        ],
+        "LED-L+": [
+          "9"
+        ],
+        "8": [
+          "8"
+        ],
+        "7": [
+          "7"
+        ],
+        "1": [
+          "1"
+        ],
+        "2": [
+          "2"
+        ],
+        "3": [
+          "3"
+        ],
+        "4": [
+          "4"
+        ],
+        "5": [
+          "5"
+        ],
+        "6": [
+          "6"
+        ],
+        "LED-R+": [
+          "11"
+        ],
+        "LED-R-": [
+          "12"
+        ],
+        "SHELL": [
+          "13"
+        ]
+      },
+      "pin_numbers": [
+        "1",
+        "10",
+        "11",
+        "12",
+        "13",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9"
+      ]
+    },
+    {
+      "ref": "R1",
+      "lib_id": "Device:R",
+      "value": "330R",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C23138"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "R2",
+      "lib_id": "Device:R",
+      "value": "330R",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C23138"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    }
+  ],
+  "nets": [
+    {
+      "name": "ETH_LINE_MDI_0_P",
+      "net_class": "port",
+      "pins": [
+        "J1.1"
+      ]
+    },
+    {
+      "name": "ETH_LINE_MDI_0_N",
+      "net_class": "port",
+      "pins": [
+        "J1.2"
+      ]
+    },
+    {
+      "name": "ETH_LINE_MDI_1_P",
+      "net_class": "port",
+      "pins": [
+        "J1.3"
+      ]
+    },
+    {
+      "name": "ETH_LINE_MDI_1_N",
+      "net_class": "port",
+      "pins": [
+        "J1.6"
+      ]
+    },
+    {
+      "name": "ETH_LINE_MDI_2_P",
+      "net_class": "port",
+      "pins": [
+        "J1.4"
+      ]
+    },
+    {
+      "name": "ETH_LINE_MDI_2_N",
+      "net_class": "port",
+      "pins": [
+        "J1.5"
+      ]
+    },
+    {
+      "name": "ETH_LINE_MDI_3_P",
+      "net_class": "port",
+      "pins": [
+        "J1.7"
+      ]
+    },
+    {
+      "name": "ETH_LINE_MDI_3_N",
+      "net_class": "port",
+      "pins": [
+        "J1.8"
+      ]
+    },
+    {
+      "name": "+3V3",
+      "net_class": "power",
+      "pins": [
+        "R1.1",
+        "R2.1"
+      ]
+    },
+    {
+      "name": "RJ45_LED_L",
+      "net_class": "signal",
+      "pins": [
+        "R1.2",
+        "J1.9"
+      ]
+    },
+    {
+      "name": "GND",
+      "net_class": "ground",
+      "pins": [
+        "J1.10",
+        "J1.12"
+      ]
+    },
+    {
+      "name": "RJ45_LED_R",
+      "net_class": "signal",
+      "pins": [
+        "R2.2",
+        "J1.11"
+      ]
+    },
+    {
+      "name": "CHASSIS_GND",
+      "net_class": "ground",
+      "pins": [
+        "J1.13"
+      ]
+    }
+  ],
+  "nc": [],
+  "port_types": {
+    "ETH_LINE_MDI_0_P": {
+      "kind": "diff_pair",
+      "pair_with": "ETH_LINE_MDI_0_N",
+      "impedance": 100,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": null
+    },
+    "ETH_LINE_MDI_0_N": {
+      "kind": "diff_pair",
+      "pair_with": "ETH_LINE_MDI_0_P",
+      "impedance": 100,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": null
+    },
+    "ETH_LINE_MDI_1_P": {
+      "kind": "diff_pair",
+      "pair_with": "ETH_LINE_MDI_1_N",
+      "impedance": 100,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": null
+    },
+    "ETH_LINE_MDI_1_N": {
+      "kind": "diff_pair",
+      "pair_with": "ETH_LINE_MDI_1_P",
+      "impedance": 100,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": null
+    },
+    "ETH_LINE_MDI_2_P": {
+      "kind": "diff_pair",
+      "pair_with": "ETH_LINE_MDI_2_N",
+      "impedance": 100,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": null
+    },
+    "ETH_LINE_MDI_2_N": {
+      "kind": "diff_pair",
+      "pair_with": "ETH_LINE_MDI_2_P",
+      "impedance": 100,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": null
+    },
+    "ETH_LINE_MDI_3_P": {
+      "kind": "diff_pair",
+      "pair_with": "ETH_LINE_MDI_3_N",
+      "impedance": 100,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": null
+    },
+    "ETH_LINE_MDI_3_N": {
+      "kind": "diff_pair",
+      "pair_with": "ETH_LINE_MDI_3_P",
+      "impedance": 100,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": null
+    }
+  },
+  "hints": {},
+  "loads": {
+    "+3V3": [
+      [
+        0.008,
+        "RJ45 housing LEDs (2x 330R port-present indicator)"
+      ]
+    ]
+  },
+  "tp_waivers": {},
+  "decap_waivers": {},
+  "pull_waivers": {},
+  "reset_waivers": {},
+  "strap_waivers": {},
+  "ep_waivers": {},
+  "thermal_waivers": {},
+  "part_rule_waivers": {}
+}

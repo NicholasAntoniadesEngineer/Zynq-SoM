@@ -1,0 +1,536 @@
+{
+  "schema": "schgen.circuit/1",
+  "name": "debug_boot",
+  "title": "JTAG + SWD headers, boot-request DIP, reset",
+  "parts": [
+    {
+      "ref": "J1",
+      "lib_id": "878311420:878311420",
+      "value": "878311420",
+      "footprint": "878311420:878311420",
+      "fields": {
+        "LCSC": "C240854"
+      },
+      "pin_names": {
+        "1": [
+          "1"
+        ],
+        "3": [
+          "3"
+        ],
+        "5": [
+          "5"
+        ],
+        "7": [
+          "7"
+        ],
+        "9": [
+          "9"
+        ],
+        "11": [
+          "11"
+        ],
+        "13": [
+          "13"
+        ],
+        "14": [
+          "14"
+        ],
+        "12": [
+          "12"
+        ],
+        "10": [
+          "10"
+        ],
+        "8": [
+          "8"
+        ],
+        "6": [
+          "6"
+        ],
+        "4": [
+          "4"
+        ],
+        "2": [
+          "2"
+        ]
+      },
+      "pin_numbers": [
+        "1",
+        "10",
+        "11",
+        "12",
+        "13",
+        "14",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9"
+      ]
+    },
+    {
+      "ref": "J2",
+      "lib_id": "HX_JN1.27-2x5_TP_H4.9:HX_JN1.27-2x5_TP_H4.9",
+      "value": "HX_JN1.27-2x5",
+      "footprint": "HX_JN1.27-2x5_TP_H4.9:HX_JN1.27-2x5_TP_H4.9",
+      "fields": {
+        "LCSC": "C42372555"
+      },
+      "pin_names": {
+        "1": [
+          "1"
+        ],
+        "10": [
+          "10"
+        ],
+        "3": [
+          "3"
+        ],
+        "8": [
+          "8"
+        ],
+        "5": [
+          "5"
+        ],
+        "6": [
+          "6"
+        ],
+        "7": [
+          "7"
+        ],
+        "4": [
+          "4"
+        ],
+        "9": [
+          "9"
+        ],
+        "2": [
+          "2"
+        ]
+      },
+      "pin_numbers": [
+        "1",
+        "10",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9"
+      ]
+    },
+    {
+      "ref": "SW1",
+      "lib_id": "DSHP04TSGER:DSHP04TSGER",
+      "value": "DIP-4",
+      "footprint": "DSHP04TSGER:DSHP04TSGER",
+      "fields": {
+        "LCSC": "C3293144"
+      },
+      "pin_names": {
+        "1": [
+          "1"
+        ],
+        "2": [
+          "2"
+        ],
+        "3": [
+          "3"
+        ],
+        "4": [
+          "4"
+        ],
+        "5": [
+          "5"
+        ],
+        "6": [
+          "6"
+        ],
+        "7": [
+          "7"
+        ],
+        "8": [
+          "8"
+        ]
+      },
+      "pin_numbers": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8"
+      ]
+    },
+    {
+      "ref": "SW2",
+      "lib_id": "TS-1187A-B-A-B:TS-1187A-B-A-B",
+      "value": "RESET",
+      "footprint": "TS-1187A-B-A-B:TS-1187A-B-A-B",
+      "fields": {
+        "LCSC": "C318884"
+      },
+      "pin_names": {
+        "B": [
+          "2"
+        ],
+        "A": [
+          "1"
+        ],
+        "D": [
+          "4"
+        ],
+        "C": [
+          "3"
+        ]
+      },
+      "pin_numbers": [
+        "1",
+        "2",
+        "3",
+        "4"
+      ]
+    },
+    {
+      "ref": "R1",
+      "lib_id": "Device:R",
+      "value": "4k7",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C23162"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "R2",
+      "lib_id": "Device:R",
+      "value": "4k7",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C23162"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "R3",
+      "lib_id": "Device:R",
+      "value": "100R",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C22775"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "R4",
+      "lib_id": "Device:R",
+      "value": "10k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C25804"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "R5",
+      "lib_id": "Device:R",
+      "value": "10k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C25804"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "R6",
+      "lib_id": "Device:R",
+      "value": "10k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C25804"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    }
+  ],
+  "nets": [
+    {
+      "name": "GND",
+      "net_class": "ground",
+      "pins": [
+        "J1.1",
+        "J1.3",
+        "J1.5",
+        "J1.7",
+        "J1.9",
+        "J1.11",
+        "J1.13",
+        "J2.3",
+        "J2.5",
+        "J2.9",
+        "SW2.3",
+        "SW2.4",
+        "SW1.7",
+        "SW1.6",
+        "SW1.5"
+      ]
+    },
+    {
+      "name": "+3V3",
+      "net_class": "power",
+      "pins": [
+        "J1.2",
+        "R1.1",
+        "R2.1"
+      ]
+    },
+    {
+      "name": "ZYNQ_TMS",
+      "net_class": "port",
+      "pins": [
+        "J1.4",
+        "R1.2"
+      ]
+    },
+    {
+      "name": "ZYNQ_TCK",
+      "net_class": "port",
+      "pins": [
+        "J1.6"
+      ]
+    },
+    {
+      "name": "ZYNQ_TDO",
+      "net_class": "port",
+      "pins": [
+        "J1.8"
+      ]
+    },
+    {
+      "name": "ZYNQ_TDI",
+      "net_class": "port",
+      "pins": [
+        "J1.10",
+        "R2.2"
+      ]
+    },
+    {
+      "name": "+3V3_SC",
+      "net_class": "power",
+      "pins": [
+        "J2.1",
+        "R3.1",
+        "R4.1",
+        "R5.1",
+        "R6.1"
+      ]
+    },
+    {
+      "name": "STM32_GPIO6",
+      "net_class": "port",
+      "pins": [
+        "J2.2"
+      ]
+    },
+    {
+      "name": "STM32_GPIO5",
+      "net_class": "port",
+      "pins": [
+        "J2.4"
+      ]
+    },
+    {
+      "name": "STM32_NRST",
+      "net_class": "port",
+      "pins": [
+        "J2.10",
+        "SW2.1",
+        "SW2.2"
+      ]
+    },
+    {
+      "name": "STM32_BOOT0",
+      "net_class": "port",
+      "pins": [
+        "SW1.1"
+      ]
+    },
+    {
+      "name": "BOOT0_SET",
+      "net_class": "signal",
+      "pins": [
+        "SW1.8",
+        "R3.2"
+      ]
+    },
+    {
+      "name": "STM32_GPIO7",
+      "net_class": "port",
+      "pins": [
+        "SW1.2",
+        "R4.2"
+      ]
+    },
+    {
+      "name": "STM32_GPIO8",
+      "net_class": "port",
+      "pins": [
+        "SW1.3",
+        "R5.2"
+      ]
+    },
+    {
+      "name": "BOOT_SPARE",
+      "net_class": "signal",
+      "pins": [
+        "SW1.4",
+        "R6.2"
+      ]
+    }
+  ],
+  "nc": [
+    "J1.12",
+    "J1.14",
+    "J2.6",
+    "J2.7",
+    "J2.8"
+  ],
+  "port_types": {
+    "ZYNQ_TMS": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j1_connector"
+    },
+    "ZYNQ_TCK": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j1_connector"
+    },
+    "ZYNQ_TDO": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j1_connector"
+    },
+    "ZYNQ_TDI": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j1_connector"
+    },
+    "STM32_GPIO6": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j1_connector"
+    },
+    "STM32_GPIO5": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j1_connector"
+    },
+    "STM32_NRST": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j1_connector"
+    },
+    "STM32_BOOT0": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j1_connector"
+    },
+    "STM32_GPIO7": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j1_connector"
+    },
+    "STM32_GPIO8": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j1_connector"
+    }
+  },
+  "hints": {},
+  "loads": {
+    "+3V3_SC": [
+      [
+        0.004,
+        "BOOT0 strap ~2 mA closed + BOOTSEL pulls"
+      ]
+    ],
+    "+3V3": [
+      [
+        0.002,
+        "JTAG TMS/TDI 4k7 insurance pulls when driven"
+      ]
+    ]
+  },
+  "tp_waivers": {},
+  "decap_waivers": {},
+  "pull_waivers": {},
+  "reset_waivers": {},
+  "strap_waivers": {},
+  "ep_waivers": {},
+  "thermal_waivers": {},
+  "part_rule_waivers": {}
+}

@@ -15,6 +15,7 @@
 #include <nanobind/stl/vector.h>
 
 #include "schgen/catalog.hpp"
+#include "schgen/circuit.hpp"
 #include "schgen/cc.hpp"
 #include "schgen/embed_fp.hpp"
 #include "schgen/emit.hpp"
@@ -180,6 +181,172 @@ NB_MODULE(_geom, m) {
             pins.append(nb::make_tuple(pin.number, pin.name, pin.etype));
         }
         rec["pins"] = pins;
+        return rec;
+    });
+    m.def("circuit_compile",
+          [](const std::string& circuits_dir, const std::string& catalog_path) {
+              return schgen::compile_circuit_catalog(circuits_dir, catalog_path);
+          });
+    m.def("circuit_open",
+          [](const std::string& catalog_path) {
+              return schgen::open_circuit_catalog(catalog_path);
+          });
+    m.def("circuit_close", []() { return schgen::close_circuit_catalog(); });
+    m.def("circuit_count", []() { return schgen::circuit_catalog_count(); });
+    m.def("circuit_lookup", [](const std::string& name) {
+        const schgen::CircuitSheetIr sheet = schgen::lookup_circuit_catalog(name);
+        nb::dict rec;
+        rec["schema"] = sheet.schema;
+        rec["name"] = sheet.name;
+        rec["title"] = sheet.title;
+        nb::list parts;
+        for (const schgen::CircuitPartIr& part : sheet.parts) {
+            nb::dict prec;
+            prec["ref"] = part.ref;
+            prec["lib_id"] = part.lib_id;
+            prec["value"] = part.value;
+            prec["footprint"] = part.footprint;
+            nb::dict fields;
+            for (const schgen::CircuitFieldIr& field : part.fields) {
+                fields[field.key.c_str()] = field.value;
+            }
+            prec["fields"] = fields;
+            nb::dict pin_names;
+            for (const schgen::CircuitPinNameIr& pin_name : part.pin_names) {
+                nb::list nums;
+                for (const std::string& number : pin_name.numbers) {
+                    nums.append(number);
+                }
+                pin_names[pin_name.name.c_str()] = nums;
+            }
+            prec["pin_names"] = pin_names;
+            nb::list pin_numbers;
+            for (const std::string& number : part.pin_numbers) {
+                pin_numbers.append(number);
+            }
+            prec["pin_numbers"] = pin_numbers;
+            parts.append(prec);
+        }
+        rec["parts"] = parts;
+        nb::list nets;
+        for (const schgen::CircuitNetIr& net : sheet.nets) {
+            nb::dict nrec;
+            nrec["name"] = net.name;
+            nrec["net_class"] = net.net_class;
+            nb::list pins;
+            for (const schgen::CircuitPinRefIr& pin : net.pins) {
+                pins.append(pin.ref + "." + pin.pin);
+            }
+            nrec["pins"] = pins;
+            nets.append(nrec);
+        }
+        rec["nets"] = nets;
+        nb::list nc;
+        for (const schgen::CircuitPinRefIr& pin : sheet.nc) {
+            nc.append(pin.ref + "." + pin.pin);
+        }
+        rec["nc"] = nc;
+        nb::dict port_types;
+        for (const schgen::CircuitPortIr& port : sheet.port_types) {
+            nb::dict prec;
+            prec["kind"] = port.kind;
+            if (port.has_pair_with) {
+                prec["pair_with"] = port.pair_with;
+            } else {
+                prec["pair_with"] = nb::none();
+            }
+            if (port.has_impedance) {
+                prec["impedance"] = port.impedance;
+            } else {
+                prec["impedance"] = nb::none();
+            }
+            if (port.has_role) {
+                prec["role"] = port.role;
+            } else {
+                prec["role"] = nb::none();
+            }
+            if (port.has_bus) {
+                prec["bus"] = port.bus;
+            } else {
+                prec["bus"] = nb::none();
+            }
+            if (port.has_speed_hz) {
+                prec["speed_hz"] = port.speed_hz;
+            } else {
+                prec["speed_hz"] = nb::none();
+            }
+            if (port.has_level_v) {
+                prec["level_v"] = port.level_v;
+            } else {
+                prec["level_v"] = nb::none();
+            }
+            if (port.has_expect) {
+                prec["expect"] = port.expect;
+            } else {
+                prec["expect"] = nb::none();
+            }
+            port_types[port.net.c_str()] = prec;
+        }
+        rec["port_types"] = port_types;
+        nb::dict hints;
+        for (const schgen::CircuitHintIr& hint : sheet.hints) {
+            hints[hint.net.c_str()] = hint.style;
+        }
+        rec["hints"] = hints;
+        nb::dict loads;
+        for (const schgen::CircuitLoadIr& load : sheet.loads) {
+            nb::object existing = loads.attr("get")(load.rail.c_str(), nb::none());
+            nb::list rows;
+            if (!existing.is_none()) {
+                rows = nb::cast<nb::list>(existing);
+            }
+            nb::list row;
+            row.append(load.amps);
+            row.append(load.note);
+            rows.append(row);
+            loads[load.rail.c_str()] = rows;
+        }
+        rec["loads"] = loads;
+        nb::dict tp_waivers;
+        nb::dict decap_waivers;
+        nb::dict pull_waivers;
+        nb::dict reset_waivers;
+        nb::dict strap_waivers;
+        nb::dict ep_waivers;
+        nb::dict thermal_waivers;
+        nb::dict part_rule_waivers;
+        for (const schgen::CircuitWaiverIr& waiver : sheet.waivers) {
+            nb::dict* dest = nullptr;
+            if (waiver.kind == "tp_waivers") {
+                dest = &tp_waivers;
+            } else if (waiver.kind == "decap_waivers") {
+                dest = &decap_waivers;
+            } else if (waiver.kind == "pull_waivers") {
+                dest = &pull_waivers;
+            } else if (waiver.kind == "reset_waivers") {
+                dest = &reset_waivers;
+            } else if (waiver.kind == "strap_waivers") {
+                dest = &strap_waivers;
+            } else if (waiver.kind == "ep_waivers") {
+                dest = &ep_waivers;
+            } else if (waiver.kind == "thermal_waivers") {
+                dest = &thermal_waivers;
+            } else if (waiver.kind == "part_rule_waivers") {
+                dest = &part_rule_waivers;
+            } else {
+                throw std::runtime_error("circuit_lookup: unknown waiver kind "
+                                         + waiver.kind);
+            }
+            (*dest)[waiver.key.c_str()] = waiver.reason;
+        }
+        rec["tp_waivers"] = tp_waivers;
+        rec["decap_waivers"] = decap_waivers;
+        rec["pull_waivers"] = pull_waivers;
+        rec["reset_waivers"] = reset_waivers;
+        rec["strap_waivers"] = strap_waivers;
+        rec["ep_waivers"] = ep_waivers;
+        rec["thermal_waivers"] = thermal_waivers;
+        rec["part_rule_waivers"] = part_rule_waivers;
         return rec;
     });
     m.def("fanout_sep",
@@ -2035,6 +2202,36 @@ NB_MODULE(_geom, m) {
                                    h.fp_x, h.fp_y, h.cos_a, h.sin_a, h.local_x,
                                    h.local_y, h.size, h.bottom, h.text_box.x0,
                                    h.text_box.y0, h.text_box.x1, h.text_box.y1);
+              }
+              return out;
+          });
+    m.def("collect_refdes_rows",
+          [](nb::handle doc,
+             const std::vector<std::pair<std::string, BoxTup>>& courts,
+             double default_size) {
+              std::unordered_map<std::string, schgen::Box4> court_by_ref;
+              court_by_ref.reserve(courts.size());
+              for (const auto& kv : courts) {
+                  court_by_ref.emplace(kv.first, as_box(kv.second));
+              }
+              auto rows = schgen::collect_refdes_rows(
+                  sexpr_from_py(doc), court_by_ref, default_size);
+              std::vector<std::tuple<
+                  int, int, std::string, double, double, double, double,
+                  std::tuple<double, double, double, double>, double,
+                  std::tuple<double, double, double, double>, bool>>
+                  out;
+              out.reserve(rows.size());
+              for (const auto& r : rows) {
+                  out.emplace_back(
+                      r.footprint_index, r.property_index, r.ref, r.fp_x,
+                      r.fp_y, r.cos_a, r.sin_a,
+                      std::make_tuple(r.court.x0, r.court.y0, r.court.x1,
+                                      r.court.y1),
+                      r.size,
+                      std::make_tuple(r.text_box.x0, r.text_box.y0,
+                                      r.text_box.x1, r.text_box.y1),
+                      r.bottom);
               }
               return out;
           });

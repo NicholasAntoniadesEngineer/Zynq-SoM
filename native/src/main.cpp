@@ -1,4 +1,5 @@
 #include "schgen/catalog.hpp"
+#include "schgen/circuit.hpp"
 #include "schgen/legalize.hpp"
 #include "schgen/occupancy.hpp"
 #include "schgen/quantize.hpp"
@@ -21,6 +22,17 @@ int main(int argc, char** argv) {
                 throw std::runtime_error("catalog-compile returned false");
             }
             std::cout << "catalog compiled " << argv[3] << "\n";
+            return 0;
+        }
+        if (argc >= 2 && std::string(argv[1]) == "circuit-compile") {
+            if (argc != 4) {
+                throw std::runtime_error(
+                    "usage: schgen circuit-compile <circuits_dir> <circuits.bin>");
+            }
+            if (!schgen::compile_circuit_catalog(argv[2], argv[3])) {
+                throw std::runtime_error("circuit-compile returned false");
+            }
+            std::cout << "circuits compiled " << argv[3] << "\n";
             return 0;
         }
         const schgen::Box4 a{0.0, 0.0, 10.0, 8.0};

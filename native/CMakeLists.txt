@@ -34,7 +34,8 @@ nanobind_add_module(_geom src/module.cpp src/occupancy.cpp src/seat.cpp
                     src/quantize.cpp src/turn.cpp src/pack.cpp
                     src/pack_anchor.cpp src/place_search.cpp src/cc.cpp
                     src/embed_fp.cpp src/pack_edges.cpp src/pcb_scan.cpp
-                    src/pack_refine.cpp src/place_geom.cpp src/catalog.cpp)
+                    src/pack_refine.cpp src/place_geom.cpp src/catalog.cpp
+                    src/json.cpp src/circuit.cpp)
 target_include_directories(_geom PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/include")
 target_compile_options(_geom PRIVATE -Wall -Wextra -Wpedantic -Werror)
 set_source_files_properties(src/turn.cpp src/pack_anchor.cpp
@@ -51,12 +52,16 @@ add_executable(schgen src/main.cpp src/occupancy.cpp src/seat.cpp
                src/quantize.cpp src/turn.cpp src/pack.cpp
                src/pack_anchor.cpp src/place_search.cpp src/cc.cpp
                src/embed_fp.cpp src/pack_edges.cpp src/pcb_scan.cpp
-               src/pack_refine.cpp src/place_geom.cpp src/catalog.cpp)
+               src/pack_refine.cpp src/place_geom.cpp src/catalog.cpp
+               src/json.cpp src/circuit.cpp)
 add_custom_command(TARGET schgen POST_BUILD
     COMMAND "$<TARGET_FILE:schgen>" catalog-compile
             "${CMAKE_CURRENT_SOURCE_DIR}/../parts"
             "${CMAKE_CURRENT_SOURCE_DIR}/catalog.bin"
-    COMMENT "Compile parts/*/part.json into native/catalog.bin")
+    COMMAND "$<TARGET_FILE:schgen>" circuit-compile
+            "${CMAKE_CURRENT_SOURCE_DIR}/../carrier/subsystems"
+            "${CMAKE_CURRENT_SOURCE_DIR}/circuits.bin"
+    COMMENT "Compile parts and circuit JSON into native catalogs")
 target_include_directories(schgen PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/include")
 target_compile_options(schgen PRIVATE -Wall -Wextra -Wpedantic -Werror)
 set_target_properties(schgen PROPERTIES

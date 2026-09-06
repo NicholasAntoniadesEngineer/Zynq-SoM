@@ -493,6 +493,40 @@ std::vector<RefdesProp> collect_refdes_props(const Sexpr& doc,
     return top;
 }
 
+std::vector<RefdesRow> collect_refdes_rows(
+    const Sexpr& doc,
+    const std::unordered_map<std::string, Box4>& court_by_ref,
+    double default_size) {
+    auto hits = collect_refdes_props(doc, default_size);
+    std::vector<RefdesRow> rows;
+    rows.reserve(hits.size());
+    for (const auto& hit : hits) {
+        const double bx =
+            hit.fp_x + hit.local_x * hit.cos_a + hit.local_y * hit.sin_a;
+        const double by =
+            hit.fp_y - hit.local_x * hit.sin_a + hit.local_y * hit.cos_a;
+        RefdesRow row;
+        row.footprint_index = hit.footprint_index;
+        row.property_index = hit.property_index;
+        row.ref = hit.ref;
+        row.fp_x = hit.fp_x;
+        row.fp_y = hit.fp_y;
+        row.cos_a = hit.cos_a;
+        row.sin_a = hit.sin_a;
+        const auto found = court_by_ref.find(hit.ref);
+        if (found != court_by_ref.end()) {
+            row.court = found->second;
+        } else {
+            row.court = Box4{bx - 1.0, by - 1.0, bx + 1.0, by + 1.0};
+        }
+        row.size = hit.size;
+        row.text_box = hit.text_box;
+        row.bottom = hit.bottom;
+        rows.push_back(std::move(row));
+    }
+    return rows;
+}
+
 std::string footprint_alias(
     const std::string& footprint,
     const std::vector<std::pair<std::string, std::string>>& aliases) {

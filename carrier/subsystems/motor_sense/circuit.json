@@ -1,0 +1,377 @@
+{
+  "schema": "schgen.circuit/1",
+  "name": "motor_sense",
+  "title": "ESC motor-rail telemetry: INA3221 + 10mR shunt (I2C 0x42)",
+  "parts": [
+    {
+      "ref": "J2",
+      "lib_id": "XT60PW-M:XT60PW-M",
+      "value": "XT60PW-M",
+      "footprint": "XT60PW-M:XT60PW-M",
+      "fields": {
+        "LCSC": "C98732"
+      },
+      "pin_names": {
+        "-": [
+          "1"
+        ],
+        "+": [
+          "2"
+        ],
+        "3": [
+          "3"
+        ],
+        "4": [
+          "4"
+        ]
+      },
+      "pin_numbers": [
+        "1",
+        "2",
+        "3",
+        "4"
+      ]
+    },
+    {
+      "ref": "D1",
+      "lib_id": "SMBJ28A:SMBJ28A",
+      "value": "SMBJ28A",
+      "footprint": "SMBJ28A:SMBJ28A",
+      "fields": {
+        "LCSC": "C42440491"
+      },
+      "pin_names": {
+        "A": [
+          "2"
+        ],
+        "K": [
+          "1"
+        ]
+      },
+      "pin_numbers": [
+        "1",
+        "2"
+      ]
+    },
+    {
+      "ref": "C1",
+      "lib_id": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {
+        "LCSC": "C14663"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "RS1",
+      "lib_id": "RLM12FTCMR010:RLM12FTCMR010",
+      "value": "10mR",
+      "footprint": "RLM12FTCMR010:RLM12FTCMR010",
+      "fields": {
+        "LCSC": "C188070"
+      },
+      "pin_names": {
+        "2": [
+          "2"
+        ],
+        "1": [
+          "1"
+        ]
+      },
+      "pin_numbers": [
+        "1",
+        "2"
+      ]
+    },
+    {
+      "ref": "J3",
+      "lib_id": "XT60PW-M:XT60PW-M",
+      "value": "XT60PW-M",
+      "footprint": "XT60PW-M:XT60PW-M",
+      "fields": {
+        "LCSC": "C98732"
+      },
+      "pin_names": {
+        "-": [
+          "1"
+        ],
+        "+": [
+          "2"
+        ],
+        "3": [
+          "3"
+        ],
+        "4": [
+          "4"
+        ]
+      },
+      "pin_numbers": [
+        "1",
+        "2",
+        "3",
+        "4"
+      ]
+    },
+    {
+      "ref": "U2",
+      "lib_id": "INA3221AIRGVR:INA3221AIRGVR",
+      "value": "INA3221AIRGVR",
+      "footprint": "INA3221AIRGVR:INA3221AIRGVR",
+      "fields": {
+        "LCSC": "C181255"
+      },
+      "pin_names": {
+        "IN-3": [
+          "1"
+        ],
+        "IN+3": [
+          "2"
+        ],
+        "GND": [
+          "3"
+        ],
+        "VS": [
+          "4"
+        ],
+        "A0": [
+          "5"
+        ],
+        "SCL": [
+          "6"
+        ],
+        "SDA": [
+          "7"
+        ],
+        "WARNING": [
+          "8"
+        ],
+        "CRITICAL": [
+          "9"
+        ],
+        "PV": [
+          "10"
+        ],
+        "IN-1": [
+          "11"
+        ],
+        "IN+1": [
+          "12"
+        ],
+        "TC": [
+          "13"
+        ],
+        "IN-2": [
+          "14"
+        ],
+        "IN+2": [
+          "15"
+        ],
+        "VPU": [
+          "16"
+        ],
+        "PAD": [
+          "17"
+        ]
+      },
+      "pin_numbers": [
+        "1",
+        "10",
+        "11",
+        "12",
+        "13",
+        "14",
+        "15",
+        "16",
+        "17",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9"
+      ]
+    },
+    {
+      "ref": "C2",
+      "lib_id": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {
+        "LCSC": "C14663"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "C3",
+      "lib_id": "Device:C",
+      "value": "10u",
+      "footprint": "Capacitor_SMD:C_0805_2012Metric",
+      "fields": {
+        "LCSC": "C15850"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "R1",
+      "lib_id": "Device:R",
+      "value": "10k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C25804"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "C4",
+      "lib_id": "Device:C_Polarized",
+      "value": "470uF/35V",
+      "footprint": "Capacitor_SMD:CP_Elec_10x10.5",
+      "fields": {
+        "LCSC": "C976030"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    }
+  ],
+  "nets": [
+    {
+      "name": "ESC_VRAIL_IN",
+      "net_class": "signal",
+      "pins": [
+        "J2.2",
+        "D1.1",
+        "C1.1",
+        "RS1.1",
+        "U2.12"
+      ]
+    },
+    {
+      "name": "GND",
+      "net_class": "ground",
+      "pins": [
+        "J2.1",
+        "J2.3",
+        "J2.4",
+        "D1.2",
+        "C1.2",
+        "J3.1",
+        "J3.3",
+        "J3.4",
+        "U2.15",
+        "U2.14",
+        "U2.2",
+        "U2.1",
+        "U2.3",
+        "U2.17",
+        "C2.2",
+        "C3.2",
+        "C4.2"
+      ]
+    },
+    {
+      "name": "ESC_VRAIL",
+      "net_class": "signal",
+      "pins": [
+        "RS1.2",
+        "J3.2",
+        "U2.11",
+        "C4.1"
+      ]
+    },
+    {
+      "name": "+3V3_SC",
+      "net_class": "power",
+      "pins": [
+        "U2.4",
+        "U2.16",
+        "C2.1",
+        "C3.1",
+        "R1.1"
+      ]
+    },
+    {
+      "name": "STM32_I2C2_SDA",
+      "net_class": "port",
+      "pins": [
+        "U2.7",
+        "U2.5"
+      ]
+    },
+    {
+      "name": "STM32_I2C2_SCL",
+      "net_class": "port",
+      "pins": [
+        "U2.6"
+      ]
+    },
+    {
+      "name": "ESC_FAULT_N",
+      "net_class": "port",
+      "pins": [
+        "U2.9",
+        "R1.2"
+      ]
+    }
+  ],
+  "nc": [
+    "U2.10",
+    "U2.13",
+    "U2.8"
+  ],
+  "port_types": {
+    "STM32_I2C2_SDA": {
+      "kind": "i2c",
+      "pair_with": null,
+      "impedance": null,
+      "role": "sda",
+      "bus": "STM32_I2C2",
+      "speed_hz": 400000,
+      "level_v": null,
+      "expect": "som_j1_connector (STM32_I2C2 SC management bus)"
+    },
+    "STM32_I2C2_SCL": {
+      "kind": "i2c",
+      "pair_with": null,
+      "impedance": null,
+      "role": "scl",
+      "bus": "STM32_I2C2",
+      "speed_hz": 400000,
+      "level_v": null,
+      "expect": "som_j1_connector (STM32_I2C2 SC management bus)"
+    },
+    "ESC_FAULT_N": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j2_connector (bank 13 PL — ESC_FAULT_N)"
+    }
+  },
+  "hints": {},
+  "loads": {
+    "+3V3_SC": [
+      [
+        0.002,
+        "INA3221 ~0.35 mA + CRITICAL pull-up"
+      ]
+    ]
+  },
+  "tp_waivers": {},
+  "decap_waivers": {},
+  "pull_waivers": {},
+  "reset_waivers": {},
+  "strap_waivers": {},
+  "ep_waivers": {},
+  "thermal_waivers": {},
+  "part_rule_waivers": {}
+}

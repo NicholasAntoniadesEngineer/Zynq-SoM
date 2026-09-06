@@ -1,0 +1,566 @@
+{
+  "schema": "schgen.circuit/1",
+  "name": "ethernet",
+  "title": "Ethernet: HX5008NL magnetics + Bob-Smith",
+  "parts": [
+    {
+      "ref": "T1",
+      "lib_id": "HX5008NLT:HX5008NLT",
+      "value": "HX5008NLT",
+      "footprint": "HX5008NLT:HX5008NLT",
+      "fields": {
+        "LCSC": "C962544",
+        "ALT_LCSC": "C47575004"
+      },
+      "pin_names": {
+        "TCT1": [
+          "1"
+        ],
+        "TD1+": [
+          "2"
+        ],
+        "TD1-": [
+          "3"
+        ],
+        "TCT2": [
+          "4"
+        ],
+        "TD2+": [
+          "5"
+        ],
+        "TD2-": [
+          "6"
+        ],
+        "TCT3": [
+          "7"
+        ],
+        "TD3+": [
+          "8"
+        ],
+        "TD3-": [
+          "9"
+        ],
+        "TCT4": [
+          "10"
+        ],
+        "TD4+": [
+          "11"
+        ],
+        "TD4-": [
+          "12"
+        ],
+        "MX4-": [
+          "13"
+        ],
+        "MX4+": [
+          "14"
+        ],
+        "MCT4": [
+          "15"
+        ],
+        "MX3-": [
+          "16"
+        ],
+        "MX3+": [
+          "17"
+        ],
+        "MCT3": [
+          "18"
+        ],
+        "MX2-": [
+          "19"
+        ],
+        "MX2+": [
+          "20"
+        ],
+        "MCT2": [
+          "21"
+        ],
+        "MX1-": [
+          "22"
+        ],
+        "MX1+": [
+          "23"
+        ],
+        "MCT1": [
+          "24"
+        ]
+      },
+      "pin_numbers": [
+        "1",
+        "10",
+        "11",
+        "12",
+        "13",
+        "14",
+        "15",
+        "16",
+        "17",
+        "18",
+        "19",
+        "2",
+        "20",
+        "21",
+        "22",
+        "23",
+        "24",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9"
+      ]
+    },
+    {
+      "ref": "R1",
+      "lib_id": "Device:R",
+      "value": "75R",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C4275"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "C1",
+      "lib_id": "Device:C",
+      "value": "1n",
+      "footprint": "Capacitor_SMD:C_1206_3225Metric",
+      "fields": {
+        "LCSC": "C9196"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "R2",
+      "lib_id": "Device:R",
+      "value": "75R",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C4275"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "C2",
+      "lib_id": "Device:C",
+      "value": "1n",
+      "footprint": "Capacitor_SMD:C_1206_3225Metric",
+      "fields": {
+        "LCSC": "C9196"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "R3",
+      "lib_id": "Device:R",
+      "value": "75R",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C4275"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "C3",
+      "lib_id": "Device:C",
+      "value": "1n",
+      "footprint": "Capacitor_SMD:C_1206_3225Metric",
+      "fields": {
+        "LCSC": "C9196"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "R4",
+      "lib_id": "Device:R",
+      "value": "75R",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C4275"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "C4",
+      "lib_id": "Device:C",
+      "value": "1n",
+      "footprint": "Capacitor_SMD:C_1206_3225Metric",
+      "fields": {
+        "LCSC": "C9196"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "C5",
+      "lib_id": "Device:C",
+      "value": "1n",
+      "footprint": "Capacitor_SMD:C_1206_3225Metric",
+      "fields": {
+        "LCSC": "C9196"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    }
+  ],
+  "nets": [
+    {
+      "name": "ETH_PHY_MDI0_P",
+      "net_class": "port",
+      "pins": [
+        "T1.2"
+      ]
+    },
+    {
+      "name": "ETH_PHY_MDI0_N",
+      "net_class": "port",
+      "pins": [
+        "T1.3"
+      ]
+    },
+    {
+      "name": "ETH_LINE_MDI_0_P",
+      "net_class": "port",
+      "pins": [
+        "T1.23"
+      ]
+    },
+    {
+      "name": "ETH_LINE_MDI_0_N",
+      "net_class": "port",
+      "pins": [
+        "T1.22"
+      ]
+    },
+    {
+      "name": "ETH_PHY_MDI1_P",
+      "net_class": "port",
+      "pins": [
+        "T1.5"
+      ]
+    },
+    {
+      "name": "ETH_PHY_MDI1_N",
+      "net_class": "port",
+      "pins": [
+        "T1.6"
+      ]
+    },
+    {
+      "name": "ETH_LINE_MDI_1_P",
+      "net_class": "port",
+      "pins": [
+        "T1.20"
+      ]
+    },
+    {
+      "name": "ETH_LINE_MDI_1_N",
+      "net_class": "port",
+      "pins": [
+        "T1.19"
+      ]
+    },
+    {
+      "name": "ETH_PHY_MDI2_P",
+      "net_class": "port",
+      "pins": [
+        "T1.8"
+      ]
+    },
+    {
+      "name": "ETH_PHY_MDI2_N",
+      "net_class": "port",
+      "pins": [
+        "T1.9"
+      ]
+    },
+    {
+      "name": "ETH_LINE_MDI_2_P",
+      "net_class": "port",
+      "pins": [
+        "T1.17"
+      ]
+    },
+    {
+      "name": "ETH_LINE_MDI_2_N",
+      "net_class": "port",
+      "pins": [
+        "T1.16"
+      ]
+    },
+    {
+      "name": "ETH_PHY_MDI3_P",
+      "net_class": "port",
+      "pins": [
+        "T1.11"
+      ]
+    },
+    {
+      "name": "ETH_PHY_MDI3_N",
+      "net_class": "port",
+      "pins": [
+        "T1.12"
+      ]
+    },
+    {
+      "name": "ETH_LINE_MDI_3_P",
+      "net_class": "port",
+      "pins": [
+        "T1.14"
+      ]
+    },
+    {
+      "name": "ETH_LINE_MDI_3_N",
+      "net_class": "port",
+      "pins": [
+        "T1.13"
+      ]
+    },
+    {
+      "name": "MCT1",
+      "net_class": "signal",
+      "pins": [
+        "T1.24",
+        "R1.1",
+        "C1.1"
+      ]
+    },
+    {
+      "name": "BS_COMMON",
+      "net_class": "signal",
+      "pins": [
+        "R1.2",
+        "C1.2",
+        "R2.2",
+        "C2.2",
+        "R3.2",
+        "C3.2",
+        "R4.2",
+        "C4.2",
+        "C5.1"
+      ]
+    },
+    {
+      "name": "MCT2",
+      "net_class": "signal",
+      "pins": [
+        "T1.21",
+        "R2.1",
+        "C2.1"
+      ]
+    },
+    {
+      "name": "MCT3",
+      "net_class": "signal",
+      "pins": [
+        "T1.18",
+        "R3.1",
+        "C3.1"
+      ]
+    },
+    {
+      "name": "MCT4",
+      "net_class": "signal",
+      "pins": [
+        "T1.15",
+        "R4.1",
+        "C4.1"
+      ]
+    },
+    {
+      "name": "CHASSIS_GND",
+      "net_class": "ground",
+      "pins": [
+        "C5.2"
+      ]
+    }
+  ],
+  "nc": [
+    "T1.1",
+    "T1.10",
+    "T1.4",
+    "T1.7"
+  ],
+  "port_types": {
+    "ETH_PHY_MDI0_P": {
+      "kind": "diff_pair",
+      "pair_with": "ETH_PHY_MDI0_N",
+      "impedance": 100,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": null
+    },
+    "ETH_PHY_MDI0_N": {
+      "kind": "diff_pair",
+      "pair_with": "ETH_PHY_MDI0_P",
+      "impedance": 100,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": null
+    },
+    "ETH_LINE_MDI_0_P": {
+      "kind": "diff_pair",
+      "pair_with": "ETH_LINE_MDI_0_N",
+      "impedance": 100,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "rj45_connector (wave 2)"
+    },
+    "ETH_LINE_MDI_0_N": {
+      "kind": "diff_pair",
+      "pair_with": "ETH_LINE_MDI_0_P",
+      "impedance": 100,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "rj45_connector (wave 2)"
+    },
+    "ETH_PHY_MDI1_P": {
+      "kind": "diff_pair",
+      "pair_with": "ETH_PHY_MDI1_N",
+      "impedance": 100,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": null
+    },
+    "ETH_PHY_MDI1_N": {
+      "kind": "diff_pair",
+      "pair_with": "ETH_PHY_MDI1_P",
+      "impedance": 100,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": null
+    },
+    "ETH_LINE_MDI_1_P": {
+      "kind": "diff_pair",
+      "pair_with": "ETH_LINE_MDI_1_N",
+      "impedance": 100,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "rj45_connector (wave 2)"
+    },
+    "ETH_LINE_MDI_1_N": {
+      "kind": "diff_pair",
+      "pair_with": "ETH_LINE_MDI_1_P",
+      "impedance": 100,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "rj45_connector (wave 2)"
+    },
+    "ETH_PHY_MDI2_P": {
+      "kind": "diff_pair",
+      "pair_with": "ETH_PHY_MDI2_N",
+      "impedance": 100,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": null
+    },
+    "ETH_PHY_MDI2_N": {
+      "kind": "diff_pair",
+      "pair_with": "ETH_PHY_MDI2_P",
+      "impedance": 100,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": null
+    },
+    "ETH_LINE_MDI_2_P": {
+      "kind": "diff_pair",
+      "pair_with": "ETH_LINE_MDI_2_N",
+      "impedance": 100,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "rj45_connector (wave 2)"
+    },
+    "ETH_LINE_MDI_2_N": {
+      "kind": "diff_pair",
+      "pair_with": "ETH_LINE_MDI_2_P",
+      "impedance": 100,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "rj45_connector (wave 2)"
+    },
+    "ETH_PHY_MDI3_P": {
+      "kind": "diff_pair",
+      "pair_with": "ETH_PHY_MDI3_N",
+      "impedance": 100,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": null
+    },
+    "ETH_PHY_MDI3_N": {
+      "kind": "diff_pair",
+      "pair_with": "ETH_PHY_MDI3_P",
+      "impedance": 100,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": null
+    },
+    "ETH_LINE_MDI_3_P": {
+      "kind": "diff_pair",
+      "pair_with": "ETH_LINE_MDI_3_N",
+      "impedance": 100,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "rj45_connector (wave 2)"
+    },
+    "ETH_LINE_MDI_3_N": {
+      "kind": "diff_pair",
+      "pair_with": "ETH_LINE_MDI_3_P",
+      "impedance": 100,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "rj45_connector (wave 2)"
+    }
+  },
+  "hints": {},
+  "loads": {},
+  "tp_waivers": {},
+  "decap_waivers": {},
+  "pull_waivers": {},
+  "reset_waivers": {},
+  "strap_waivers": {},
+  "ep_waivers": {},
+  "thermal_waivers": {},
+  "part_rule_waivers": {}
+}

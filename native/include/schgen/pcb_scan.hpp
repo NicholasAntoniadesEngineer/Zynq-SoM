@@ -62,6 +62,25 @@ struct RefdesProp {
 std::vector<RefdesProp> collect_refdes_props(const Sexpr& doc,
                                              double default_size);
 
+struct RefdesRow {
+    int footprint_index = -1;
+    int property_index = -1;
+    std::string ref;
+    double fp_x = 0.0;
+    double fp_y = 0.0;
+    double cos_a = 0.0;
+    double sin_a = 0.0;
+    Box4 court;
+    double size = 0.0;
+    Box4 text_box;
+    bool bottom = false;
+};
+
+std::vector<RefdesRow> collect_refdes_rows(
+    const Sexpr& doc,
+    const std::unordered_map<std::string, Box4>& court_by_ref,
+    double default_size);
+
 std::string footprint_alias(
     const std::string& footprint,
     const std::vector<std::pair<std::string, std::string>>& aliases);

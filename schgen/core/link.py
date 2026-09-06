@@ -50,7 +50,14 @@ def _carrier_subsystem_file(name: str) -> Path | None:
     return flat if flat.exists() else None
 
 
-def load_subsystem(name_or_path: str) -> SheetCircuit:
+def _circuit_json_file(name: str) -> Path | None:
+    foldered = SUBSYSTEMS_DIR / name / "circuit.json"
+    if foldered.exists():
+        return foldered
+    return None
+
+
+def exec_subsystem_py(name_or_path: str) -> SheetCircuit:
     path = Path(name_or_path)
     if path.suffix != ".py":
         path = _carrier_subsystem_file(Path(name_or_path).stem)
@@ -63,8 +70,23 @@ def load_subsystem(name_or_path: str) -> SheetCircuit:
     return SheetCircuit(name=c.name, circuit=c, path=path, module=mod)
 
 
+def load_subsystem(name_or_path: str) -> SheetCircuit:
+    from schgen.core import native as _nat
+    from schgen.core.model import Circuit
+    name = Path(name_or_path).stem
+    json_path = _circuit_json_file(name)
+    if json_path is None:
+        raise SystemExit(
+            f"subsystem circuit.json missing: {name} — dump it with "
+            f"scripts/dump_circuits.py")
+    rec = _nat.circuit_sheet(name)
+    circuit = Circuit.from_ir(rec)
+    return SheetCircuit(name=circuit.name, circuit=circuit, path=json_path,
+                        module=None)
+
+
 def has_subsystem(name: str) -> bool:
-    return _carrier_subsystem_file(name) is not None
+    return _circuit_json_file(name) is not None or _carrier_subsystem_file(name) is not None
 
 
 def missing_subsystems(names: tuple[str, ...]) -> list[str]:

@@ -1531,6 +1531,73 @@ def test_pcb_scan_and_place_helpers(geom):
     assert str(hid[1][4][3][1]) == "yes"
 
 
+def test_collect_refdes_rows_matches_python(geom):
+    from schgen.core.sexpr import Sym
+    from schgen.generate.pcb.silk import (
+        _collect_refdes_rows,
+        _collect_refdes_rows_py,
+    )
+
+    r2_at = [Sym("at"), 0.25, -0.5]
+    r2_prop = [Sym("property"), "Reference", "R2",
+               r2_at,
+               [Sym("layer"), Sym("F.SilkS")],
+               [Sym("effects"), [Sym("font"), [Sym("size"), 1.2, 1.2]]]]
+    r1_at = [Sym("at"), 0.5, 0.25]
+    r1_prop = [Sym("property"), "Reference", "R1",
+               r1_at,
+               [Sym("layer"), Sym("F.SilkS")],
+               [Sym("effects"), [Sym("font"), [Sym("size"), 1.0, 1.0]]]]
+    c1_at = [Sym("at"), 1.0, 0.0]
+    c1_prop = [Sym("property"), "Reference", "C1",
+               c1_at,
+               [Sym("layer"), Sym("B.SilkS")],
+               [Sym("effects"), [Sym("font"), [Sym("size"), 0.8, 0.8]]]]
+    hidden = [Sym("property"), "Reference", "TP1",
+              [Sym("at"), 0.0, 0.0],
+              [Sym("layer"), Sym("F.SilkS")],
+              [Sym("hide"), Sym("yes")]]
+    wrong_lay = [Sym("property"), "Reference", "R9",
+                 [Sym("at"), 0.0, 0.0],
+                 [Sym("layer"), Sym("B.SilkS")]]
+    no_at = [Sym("property"), "Reference", "R8",
+             [Sym("layer"), Sym("F.SilkS")]]
+    pcb = [Sym("kicad_pcb"),
+           [Sym("footprint"), "R",
+            [Sym("at"), 4.0, 5.0, 0.0],
+            [Sym("layer"), Sym("F.Cu")],
+            r2_prop, hidden, wrong_lay, no_at],
+           [Sym("gr_text"), "skip"],
+           [Sym("footprint"), "R",
+            [Sym("at"), 10.0, 8.0],
+            [Sym("layer"), Sym("F.Cu")],
+            r1_prop],
+           [Sym("footprint"), "C",
+            [Sym("at"), 2.0, 3.0, 90.0],
+            [Sym("layer"), Sym("B.Cu")],
+            c1_prop]]
+    courts = {"R1": (9.0, 7.0, 12.0, 10.0)}
+    raw = geom.collect_refdes_rows(pcb, list(courts.items()), 1.0)
+    oracle = _collect_refdes_rows_py(pcb, courts)
+    assert [(int(h[0]), int(h[1]), h[2], bool(h[10])) for h in raw] == [
+        (3, 4, "R1", False),
+        (1, 4, "R2", False),
+        (4, 4, "C1", True),
+    ]
+    got = _collect_refdes_rows(pcb, courts)
+    assert len(got) == len(oracle) == 3
+    for row, ref in zip(got, oracle):
+        assert row[0] == ref[0]
+        assert row[1] is ref[1]
+        assert row[2] is ref[2]
+        assert row[3:] == ref[3:]
+    assert got[0][1] is r1_prop and got[0][2] is r1_at
+    assert got[1][1] is r2_prop and got[1][2] is r2_at
+    assert got[2][1] is c1_prop and got[2][2] is c1_at
+    empty = _collect_refdes_rows(pcb, {})
+    assert empty[0][7] == _collect_refdes_rows_py(pcb, {})[0][7]
+
+
 def test_pack_legalize_preflight_kernels(geom):
     from schgen.generate.floorplan_compose import (
         CHANNEL_FLOOR_MM, CHANNEL_MIN_NETS, CHANNEL_PER_NET_MM,
