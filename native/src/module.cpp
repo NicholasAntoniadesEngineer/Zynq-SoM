@@ -1266,6 +1266,23 @@ NB_MODULE(_geom, m) {
           [](const BoxTup& box) {
               return schgen::rect_corners_ccw(as_box(box));
           });
+    m.def("block_area", &schgen::block_area);
+    m.def("genuine_pair_ok", &schgen::genuine_pair_ok);
+    m.def("round_xy",
+          [](double x, double y, int digits) {
+              return schgen::round_xy(x, y, digits);
+          });
+    m.def("round_box",
+          [](const BoxTup& box, int digits) {
+              auto b = schgen::round_box(as_box(box), digits);
+              return std::make_tuple(b.x0, b.y0, b.x1, b.y1);
+          });
+    m.def("svg_map", &schgen::svg_map);
+    m.def("rounded_unique_sorted", &schgen::rounded_unique_sorted);
+    m.def("closed_rect_pts",
+          [](const BoxTup& box, int digits) {
+              return schgen::closed_rect_pts(as_box(box), digits);
+          });
     m.def("board_to_uv",
           [](double cx, double cy, double bx, double by, double rot) {
               return schgen::board_to_uv(cx, cy, bx, by, rot);

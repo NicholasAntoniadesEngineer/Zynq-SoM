@@ -2313,6 +2313,40 @@ def test_padded_box_and_void_corners_match_python(geom, monkeypatch):
     assert rect_corners_ccw(void) == rect_corners_ccw_py(void)
 
 
+def test_area_round_pair_and_svg_map_match_python(geom, monkeypatch):
+    from schgen.generate.pcb import embed as em
+    from schgen.generate.pcb import escape as esc
+    from schgen.generate.pcb.embed import (
+        closed_rect_pts,
+        closed_rect_pts_py,
+        round_xy,
+        round_xy_py,
+    )
+    from schgen.generate.pcb.escape import (
+        genuine_pair_ok,
+        genuine_pair_ok_py,
+        rounded_unique_sorted,
+        rounded_unique_sorted_py,
+    )
+    monkeypatch.setattr(fp._nat, "trace", lambda: True)
+    monkeypatch.setattr(esc._nat, "trace", lambda: True)
+    monkeypatch.setattr(em._nat, "trace", lambda: True)
+    assert fp.block_area(12.3, 8.7) == fp.block_area_py(12.3, 8.7)
+    assert fp.svg_map(10.0, 46.0, 6.0) == fp.svg_map_py(10.0, 46.0, 6.0)
+    assert fp._px(10.0) == fp.svg_map(10.0, fp.OX, fp.SCALE)
+    assert fp._py(8.0) == fp.svg_map(8.0, fp.OY, fp.SCALE)
+    assert genuine_pair_ok(True, 2) is True
+    assert genuine_pair_ok_py(True, 3) is False
+    assert genuine_pair_ok(False, 1) is False
+    assert rounded_unique_sorted([1.2344, 1.2346, -0.001, 1.2344], 3) == (
+        rounded_unique_sorted_py([1.2344, 1.2346, -0.001, 1.2344], 3))
+    assert round_xy(12.34567, 9.87654, 4) == round_xy_py(12.34567, 9.87654, 4)
+    box = (10.1234, 20.9876, 40.1111, 50.5555)
+    assert closed_rect_pts(box, 3) == closed_rect_pts_py(box, 3)
+    assert tuple(geom.round_box(box, 3)) == (
+        round(box[0], 3), round(box[1], 3), round(box[2], 3), round(box[3], 3))
+
+
 def test_place_geom_wrappers_match_python(geom, monkeypatch):
     from schgen.layout import place as pl
     monkeypatch.setattr(pl._nat, "trace", lambda: True)

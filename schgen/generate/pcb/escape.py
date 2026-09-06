@@ -491,6 +491,57 @@ def bus_lane_adjacent(a_net: str, b_net: str, a_lane: int, b_lane: int
     return got
 
 
+def genuine_pair_ok_py(same_row: bool, delta_lane: int) -> bool:
+    return same_row and delta_lane <= 2
+
+
+def genuine_pair_ok(same_row: bool, delta_lane: int) -> bool:
+    if not _nat.loaded():
+        raise RuntimeError("native genuine_pair_ok required")
+    got = bool(_nat.module().genuine_pair_ok(same_row, delta_lane))
+    if _nat.trace():
+        ref = genuine_pair_ok_py(same_row, delta_lane)
+        if got is not ref:
+            raise AssertionError(
+                "native genuine_pair_ok DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
+
+
+def round_xy_py(x: float, y: float, digits: int) -> tuple[float, float]:
+    return (round(x, digits), round(y, digits))
+
+
+def round_xy(x: float, y: float, digits: int) -> tuple[float, float]:
+    if not _nat.loaded():
+        raise RuntimeError("native round_xy required")
+    got = tuple(_nat.module().round_xy(x, y, digits))
+    if _nat.trace():
+        ref = round_xy_py(x, y, digits)
+        if got != ref:
+            raise AssertionError(
+                "native round_xy DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
+
+
+def rounded_unique_sorted_py(vs: list[float], digits: int) -> list[float]:
+    return sorted({round(v, digits) for v in vs})
+
+
+def rounded_unique_sorted(vs: list[float], digits: int) -> list[float]:
+    if not _nat.loaded():
+        raise RuntimeError("native rounded_unique_sorted required")
+    got = [float(v) for v in _nat.module().rounded_unique_sorted(vs, digits)]
+    if _nat.trace():
+        ref = rounded_unique_sorted_py(vs, digits)
+        if got != ref:
+            raise AssertionError(
+                "native rounded_unique_sorted DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
+
+
 CORRIDOR_V_MARGIN = 0.15
 CORRIDOR_LIP = 0.3
 
@@ -1090,7 +1141,7 @@ def build_escape_copper(model) -> tuple[list[dict], dict]:
         reach = construct_reach(R_CONSTRUCT, contacts.row_v)
         pts = [(m.u, m.pad) for m in members]
         by_pad = {m.pad: m for m in members}
-        us = sorted({round(x, 3) for x, _ in pts})
+        us = rounded_unique_sorted([x for x, _ in pts], 3)
         region = obstacle_scan_region(us, OBSTACLE_MARGIN)
         obstacles[ref] = _collect_obstacles(model, inst, _inst_pad_boxes,
                                             region)
@@ -1168,8 +1219,9 @@ def build_escape_copper(model) -> tuple[list[dict], dict]:
         inst = conns[ref]
         for s in sorted(vias_by_conn[ref], key=lambda x: (x["u"], x["v"])):
             bx, by = _to_board(inst, s["u"], s["v"])
+            vx, vy = round_xy(bx, by, 4)
             copper.append({
-                "kind": "via", "x": round(bx, 4), "y": round(by, 4),
+                "kind": "via", "x": vx, "y": vy,
                 "size": s["dia"], "drill": s["drill"], "net": gnd_num,
                 "net_name": "GND", "group": "som_escape", "conn": ref,
                 "role": s.get("role", "stitch")})
@@ -1178,9 +1230,11 @@ def build_escape_copper(model) -> tuple[list[dict], dict]:
         inst = conns[sseg["conn"]]
         ax, ay = _to_board(inst, *sseg["a"])
         bx, by = _to_board(inst, *sseg["b"])
+        sx1, sy1 = round_xy(ax, ay, 4)
+        sx2, sy2 = round_xy(bx, by, 4)
         copper.append({
-            "kind": "segment", "x1": round(ax, 4), "y1": round(ay, 4),
-            "x2": round(bx, 4), "y2": round(by, 4), "width": sseg["w"],
+            "kind": "segment", "x1": sx1, "y1": sy1,
+            "x2": sx2, "y2": sy2, "width": sseg["w"],
             "layer": "F.Cu", "net": gnd_num, "net_name": "GND",
             "group": "som_escape", "conn": sseg["conn"], "role": sseg["role"]})
 
@@ -1391,7 +1445,7 @@ def build_escape_plan(model) -> dict:
                 px, py = _to_board(inst, u, port_v)
                 out.append({"pad": pad, "net": name, "lane": lane_idx,
                             "row": sgn, "dir": direction,
-                            "port": (round(px, 4), round(py, 4)),
+                            "port": round_xy(px, py, 4),
                             "layer": "F.Cu", "width": round(width, 4),
                             "si_class": si, "bus_group": None})
         for sgn in (-1, 1):
@@ -1440,7 +1494,7 @@ def build_escape_plan(model) -> dict:
             pair_recs.append(rec)
             if klass == si_triage.GENUINE:
                 genuine_bases.add(base)
-                if not same_row or dlane > 2:
+                if not genuine_pair_ok(same_row, dlane):
                     raise EscapeError(
                         f"GENUINE pair {base} on {ref}: same_row={same_row} "
                         f"delta_lane={dlane} violates the hard pair terms "

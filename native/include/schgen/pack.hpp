@@ -504,6 +504,15 @@ std::tuple<double, double, double, double> padded_xywh(
     double x, double y, double w, double h, double pad);
 std::tuple<double, double, double, double> box_to_xywh(const Box4& box);
 std::vector<std::pair<double, double>> rect_corners_ccw(const Box4& box);
+double block_area(double w, double h);
+bool genuine_pair_ok(bool same_row, int delta_lane);
+std::pair<double, double> round_xy(double x, double y, int digits);
+Box4 round_box(const Box4& box, int digits);
+double svg_map(double value, double origin, double scale);
+std::vector<double> rounded_unique_sorted(const std::vector<double>& vs,
+                                          int digits);
+std::vector<std::pair<double, double>> closed_rect_pts(const Box4& box,
+                                                       int digits);
 
 std::vector<std::vector<Seg2>> cluster_slot_segs(
     const std::vector<std::tuple<std::string, double, double>>& pad_offs,

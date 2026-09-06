@@ -461,9 +461,9 @@ def _edge_rect(x0, y0, x1, y1, uid) -> list:
 
 
 def _som_body_silk(box: tuple[float, float, float, float], uid) -> list:
-    x0, y0, x1, y1 = box
+    x0, y0 = box[0], box[1]
     out: list = []
-    pts = [(x0, y0), (x1, y0), (x1, y1), (x0, y1), (x0, y0)]
+    pts = closed_rect_pts(box, 3)
     if not _nat.loaded():
         raise RuntimeError("native emit_gr_line required")
     geom = _nat.module()
@@ -471,14 +471,15 @@ def _som_body_silk(box: tuple[float, float, float, float], uid) -> list:
         ax, ay = pts[i]
         bx, by = pts[i + 1]
         out.append(_from_tagged(geom.emit_gr_line(
-            round(ax, 3), round(ay, 3), round(bx, 3), round(by, 3),
-            0.15, "F.SilkS", uid(f"som-silk:{i}"))))
+            ax, ay, bx, by, 0.15, "F.SilkS", uid(f"som-silk:{i}"))))
     ch = 3.0
+    cax, cay = round_xy(x0, y0 + ch, 3)
+    cbx, cby = round_xy(x0 + ch, y0, 3)
     out.append(_from_tagged(geom.emit_gr_line(
-        round(x0, 3), round(y0 + ch, 3), round(x0 + ch, 3), round(y0, 3),
-        0.15, "F.SilkS", uid("som-silk:ch"))))
+        cax, cay, cbx, cby, 0.15, "F.SilkS", uid("som-silk:ch"))))
+    lx, ly = round_xy(x0 + 1.0, y0 - 1.2, 3)
     out.append(_from_tagged(geom.emit_gr_text(
-        "Zynq SoM", round(x0 + 1.0, 3), round(y0 - 1.2, 3), 0.0,
+        "Zynq SoM", lx, ly, 0.0,
         "F.SilkS", uid("som-silk:label"), 1.4, 0.25, "left bottom")))
     return out
 
@@ -502,11 +503,7 @@ def _segment_node(c: dict, uid) -> list:
 
 # Marker only — planes + fanout vias right beneath the connector stay legal.
 def _som_keepout_zone(box: tuple[float, float, float, float], uid) -> list:
-    x0, y0, x1, y1 = box
-    corners = [(round(x0, 3), round(y0, 3)),
-               (round(x1, 3), round(y0, 3)),
-               (round(x1, 3), round(y1, 3)),
-               (round(x0, 3), round(y1, 3))]
+    corners = closed_rect_pts(box, 3)[:4]
     if not _nat.loaded():
         raise RuntimeError("native emit_keepout_zone required")
     return _from_tagged(_nat.module().emit_keepout_zone(
@@ -610,6 +607,45 @@ def rect_corners_ccw(box: tuple[float, float, float, float]
         if got != ref:
             raise AssertionError(
                 "native rect_corners_ccw DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
+
+
+def round_xy_py(x: float, y: float, digits: int) -> tuple[float, float]:
+    return (round(x, digits), round(y, digits))
+
+
+def round_xy(x: float, y: float, digits: int) -> tuple[float, float]:
+    if not _nat.loaded():
+        raise RuntimeError("native round_xy required")
+    got = tuple(_nat.module().round_xy(x, y, digits))
+    if _nat.trace():
+        ref = round_xy_py(x, y, digits)
+        if got != ref:
+            raise AssertionError(
+                "native round_xy DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
+
+
+def closed_rect_pts_py(box: tuple[float, float, float, float], digits: int
+                       ) -> list[tuple[float, float]]:
+    x0, y0, x1, y1 = (round(box[0], digits), round(box[1], digits),
+                      round(box[2], digits), round(box[3], digits))
+    return [(x0, y0), (x1, y0), (x1, y1), (x0, y1), (x0, y0)]
+
+
+def closed_rect_pts(box: tuple[float, float, float, float], digits: int
+                    ) -> list[tuple[float, float]]:
+    if not _nat.loaded():
+        raise RuntimeError("native closed_rect_pts required")
+    got = [(float(x), float(y))
+           for x, y in _nat.module().closed_rect_pts(box, digits)]
+    if _nat.trace():
+        ref = closed_rect_pts_py(box, digits)
+        if got != ref:
+            raise AssertionError(
+                "native closed_rect_pts DIVERGENCE: "
                 f"cpp={got} python={ref}")
     return got
 
@@ -742,7 +778,8 @@ def _via_obstacles(model: PcbModel, inst, reach: float) \
         if not within_reach(cx, cy, inst.x, inst.y, reach):
             continue
         vr = float(c.get("size", THERMAL_VIA_SIZE)) / 2
-        out.append((round(cx, 4), round(cy, 4), vr, vr,
+        vx, vy = round_xy(cx, cy, 4)
+        out.append((vx, vy, vr, vr,
                     names.get(int(c.get("net", 0)), ""),
                     float(c.get("drill", THERMAL_VIA_DRILL)),
                     f"escape via @({cx:.3f},{cy:.3f})"))

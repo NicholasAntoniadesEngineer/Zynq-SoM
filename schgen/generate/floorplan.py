@@ -1310,6 +1310,40 @@ def box_to_xywh(box: tuple[float, float, float, float]
     return got
 
 
+def block_area_py(w: float, h: float) -> float:
+    return round(w * h, 1)
+
+
+def block_area(w: float, h: float) -> float:
+    if not _nat.loaded():
+        raise RuntimeError("native block_area required")
+    got = float(_nat.module().block_area(w, h))
+    if _nat.trace():
+        ref = block_area_py(w, h)
+        if got != ref:
+            raise AssertionError(
+                "native block_area DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
+
+
+def svg_map_py(value: float, origin: float, scale: float) -> float:
+    return round(origin + value * scale, 1)
+
+
+def svg_map(value: float, origin: float, scale: float) -> float:
+    if not _nat.loaded():
+        raise RuntimeError("native svg_map required")
+    got = float(_nat.module().svg_map(value, origin, scale))
+    if _nat.trace():
+        ref = svg_map_py(value, origin, scale)
+        if got != ref:
+            raise AssertionError(
+                "native svg_map DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
+
+
 def _som_keepout_rects(plan: Plan) -> list[tuple[float, float, float, float]]:
     if not _nat.loaded():
         raise RuntimeError("native som_keepout_rects required")
@@ -2847,7 +2881,7 @@ def _attempt_pack(plan: Plan, interior: list[Block],
     plan.spilled = []
     for b in plan.edge_blocks:
         b.w, b.h = zbox[b.name]
-        b.area = round(b.w * b.h, 1)
+        b.area = block_area(b.w, b.h)
     _pack_edges(plan, edge_of)
 
     overflow_tol = _q.run_overflow_tol()
@@ -3257,7 +3291,7 @@ def _attempt_pack(plan: Plan, interior: list[Block],
         chosen_comps[b.name] = cc
         b.fanout_reach = rch
         b.fanout_inset = ins
-        b.area = round(b.w * b.h, 1)
+        b.area = block_area(b.w, b.h)
         return True
 
     def _blk_snap(bb: Block) -> tuple:
@@ -3322,7 +3356,7 @@ def _attempt_pack(plan: Plan, interior: list[Block],
 
     for b in order:
         b.w, b.h = zbox[b.name]
-        b.area = round(b.w * b.h, 1)
+        b.area = block_area(b.w, b.h)
         ax, ay = _anchor(b)
         if _seat_shape(b, ax, ay):
             _occ_put(b)
@@ -3808,11 +3842,11 @@ def _esc(s: str) -> str:
 
 
 def _px(x: float) -> float:
-    return round(OX + x * SCALE, 1)
+    return svg_map(x, OX, SCALE)
 
 
 def _py(y: float) -> float:
-    return round(OY + y * SCALE, 1)
+    return svg_map(y, OY, SCALE)
 
 
 def render_svg(plan: Plan, notes: list[Note], out: Path) -> Path:

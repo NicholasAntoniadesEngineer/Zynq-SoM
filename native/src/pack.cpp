@@ -2866,4 +2866,44 @@ std::vector<std::pair<double, double>> rect_corners_ccw(const Box4& box) {
             {box.x0, box.y1}};
 }
 
+double block_area(double w, double h) {
+    return py_round(w * h, 1);
+}
+
+bool genuine_pair_ok(bool same_row, int delta_lane) {
+    return same_row && delta_lane <= 2;
+}
+
+std::pair<double, double> round_xy(double x, double y, int digits) {
+    return {py_round(x, digits), py_round(y, digits)};
+}
+
+Box4 round_box(const Box4& box, int digits) {
+    return {py_round(box.x0, digits), py_round(box.y0, digits),
+            py_round(box.x1, digits), py_round(box.y1, digits)};
+}
+
+double svg_map(double value, double origin, double scale) {
+    return py_round(origin + value * scale, 1);
+}
+
+std::vector<double> rounded_unique_sorted(const std::vector<double>& vs,
+                                          int digits) {
+    std::set<double> uniq;
+    for (double v : vs) {
+        uniq.insert(py_round(v, digits));
+    }
+    return {uniq.begin(), uniq.end()};
+}
+
+std::vector<std::pair<double, double>> closed_rect_pts(const Box4& box,
+                                                       int digits) {
+    const auto corners = rect_corners_ccw(round_box(box, digits));
+    std::vector<std::pair<double, double>> out = corners;
+    if (!out.empty()) {
+        out.push_back(out.front());
+    }
+    return out;
+}
+
 }  // namespace schgen
