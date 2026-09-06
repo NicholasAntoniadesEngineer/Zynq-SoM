@@ -32,16 +32,16 @@ def _ref_prefix_py(ref: str) -> str:
 
 
 def _ref_prefix(ref: str) -> str:
-    if _nat.loaded():
-        got = _nat.module().ref_prefix(ref)
-        if _nat.trace():
-            python_ref = _ref_prefix_py(ref)
-            if got != python_ref:
-                raise AssertionError(
-                    "native ref_prefix DIVERGENCE: "
-                    f"cpp={got} python={python_ref} ref={ref!r}")
-        return got
-    return _ref_prefix_py(ref)
+    if not _nat.loaded():
+        raise RuntimeError("native ref_prefix required")
+    got = _nat.module().ref_prefix(ref)
+    if _nat.trace():
+        python_ref = _ref_prefix_py(ref)
+        if got != python_ref:
+            raise AssertionError(
+                "native ref_prefix DIVERGENCE: "
+                f"cpp={got} python={python_ref} ref={ref!r}")
+    return got
 
 
 def _is_cluster_passive_py(ref: str, pins: int) -> bool:
@@ -53,17 +53,17 @@ def _is_cluster_passive_py(ref: str, pins: int) -> bool:
 
 
 def _is_cluster_passive(ref: str, pins: int) -> bool:
-    if _nat.loaded():
-        got = bool(_nat.module().is_cluster_passive(
-            ref, pins, list(_NOT_PLAIN_PASSIVE), list(_PASSIVE_PREFIX)))
-        if _nat.trace():
-            python_ref = _is_cluster_passive_py(ref, pins)
-            if got != python_ref:
-                raise AssertionError(
-                    "native is_cluster_passive DIVERGENCE: "
-                    f"cpp={got} python={python_ref} ref={ref!r} pins={pins}")
-        return got
-    return _is_cluster_passive_py(ref, pins)
+    if not _nat.loaded():
+        raise RuntimeError("native is_cluster_passive required")
+    got = bool(_nat.module().is_cluster_passive(
+        ref, pins, list(_NOT_PLAIN_PASSIVE), list(_PASSIVE_PREFIX)))
+    if _nat.trace():
+        python_ref = _is_cluster_passive_py(ref, pins)
+        if got != python_ref:
+            raise AssertionError(
+                "native is_cluster_passive DIVERGENCE: "
+                f"cpp={got} python={python_ref} ref={ref!r} pins={pins}")
+    return got
 
 
 def _is_df40(inst) -> bool:
@@ -79,16 +79,16 @@ def is_testpoint_ref_py(ref: str) -> bool:
 
 
 def is_testpoint_ref(ref: str) -> bool:
-    if _nat.loaded():
-        got = bool(_nat.module().is_testpoint_ref(ref))
-        if _nat.trace():
-            python_ref = is_testpoint_ref_py(ref)
-            if got != python_ref:
-                raise AssertionError(
-                    "native is_testpoint_ref DIVERGENCE: "
-                    f"cpp={got} python={python_ref} ref={ref!r}")
-        return got
-    return is_testpoint_ref_py(ref)
+    if not _nat.loaded():
+        raise RuntimeError("native is_testpoint_ref required")
+    got = bool(_nat.module().is_testpoint_ref(ref))
+    if _nat.trace():
+        python_ref = is_testpoint_ref_py(ref)
+        if got != python_ref:
+            raise AssertionError(
+                "native is_testpoint_ref DIVERGENCE: "
+                f"cpp={got} python={python_ref} ref={ref!r}")
+    return got
 
 
 def _is_fiducial(inst) -> bool:
@@ -111,17 +111,17 @@ def intelligent_need_py(pins: int) -> tuple[float, str]:
 
 
 def intelligent_need(pins: int) -> tuple[float, str]:
-    if _nat.loaded():
-        got = tuple(_nat.module().intelligent_need(
-            pins, list(_TIERS), _TIER_TOP[0], _TIER_TOP[1]))
-        if _nat.trace():
-            python_ref = intelligent_need_py(pins)
-            if got != python_ref:
-                raise AssertionError(
-                    "native intelligent_need DIVERGENCE: "
-                    f"cpp={got} python={python_ref} pins={pins}")
-        return got
-    return intelligent_need_py(pins)
+    if not _nat.loaded():
+        raise RuntimeError("native intelligent_need required")
+    got = tuple(_nat.module().intelligent_need(
+        pins, list(_TIERS), _TIER_TOP[0], _TIER_TOP[1]))
+    if _nat.trace():
+        python_ref = intelligent_need_py(pins)
+        if got != python_ref:
+            raise AssertionError(
+                "native intelligent_need DIVERGENCE: "
+                f"cpp={got} python={python_ref} pins={pins}")
+    return got
 
 
 def _rect_gap_py(a, b) -> float:
@@ -139,15 +139,15 @@ def _rect_gap_py(a, b) -> float:
 
 
 def _rect_gap(a, b) -> float:
-    if _nat.loaded():
-        got = _nat.module().rect_gap(a, b)
-        if _nat.trace():
-            ref = _rect_gap_py(a, b)
-            if got != ref:
-                raise AssertionError(
-                    f"native rect_gap DIVERGENCE: cpp={got} python={ref}")
-        return got
-    return _rect_gap_py(a, b)
+    if not _nat.loaded():
+        raise RuntimeError("native rect_gap required")
+    got = _nat.module().rect_gap(a, b)
+    if _nat.trace():
+        ref = _rect_gap_py(a, b)
+        if got != ref:
+            raise AssertionError(
+                f"native rect_gap DIVERGENCE: cpp={got} python={ref}")
+    return got
 
 
 @dataclass
