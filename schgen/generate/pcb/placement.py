@@ -190,11 +190,11 @@ def _is_button(mod_path: Path) -> bool:
     return "TS-1187A" in mod_path.stem
 
 
-def _grid_controls(refs: list[str], bbox_of: dict, resolvable: dict,
-                   target_w: float
-                   ) -> tuple[dict[str, tuple[float, float]],
-                              list[tuple[float, float, float, float]],
-                              float, float]:
+def _grid_controls_py(refs: list[str], bbox_of: dict, resolvable: dict,
+                      target_w: float
+                      ) -> tuple[dict[str, tuple[float, float]],
+                                 list[tuple[float, float, float, float]],
+                                 float, float]:
     cell = 0.0
     bb: dict[str, tuple[float, float, float, float]] = {}
     for r in refs:
@@ -217,6 +217,27 @@ def _grid_controls(refs: list[str], bbox_of: dict, resolvable: dict,
         occ.append((x0, y0, x0 + cell, y0 + cell))
     rows = (len(refs) + cols - 1) // cols
     return off, occ, ZONE_PAD + cols * cell, ZONE_PAD + rows * cell
+
+
+def _grid_controls(refs: list[str], bbox_of: dict, resolvable: dict,
+                   target_w: float
+                   ) -> tuple[dict[str, tuple[float, float]],
+                              list[tuple[float, float, float, float]],
+                              float, float]:
+    items = [(r, *bbox_of[r]) for r in refs]
+    if _nat.loaded():
+        offs, occ, pw, ph = _nat.module().grid_controls(
+            items, target_w, BUTTON_GAP, ZONE_PAD, PLACE_CLEAR)
+        got = ({r: (x, y) for r, x, y in offs},
+               [tuple(b) for b in occ], float(pw), float(ph))
+        if _nat.trace():
+            ref = _grid_controls_py(refs, bbox_of, resolvable, target_w)
+            if got != ref:
+                raise AssertionError(
+                    "native grid_controls DIVERGENCE: "
+                    f"cpp={got} python={ref}")
+        return got
+    return _grid_controls_py(refs, bbox_of, resolvable, target_w)
 
 
 def _is_passive_ref(ref: str) -> bool:
@@ -484,14 +505,32 @@ def _unreferenced_imp_sheets(sheets) -> dict[str, set[str]]:
     return out
 
 
-def _mirror_offsets_x(off: dict[str, tuple[float, float]], bbox_of: dict,
-                      rot_of: dict[str, float], zw: float
-                      ) -> dict[str, tuple[float, float]]:
+def _mirror_offsets_x_py(off: dict[str, tuple[float, float]], bbox_of: dict,
+                         rot_of: dict[str, float], zw: float
+                         ) -> dict[str, tuple[float, float]]:
     out: dict[str, tuple[float, float]] = {}
     for r, (ox, oy) in off.items():
         cb = turn_box(bbox_of[r], rot_of.get(r, 0.0))
         out[r] = (round(zw - ox - cb[0] - cb[2], 4), oy)
     return out
+
+
+def _mirror_offsets_x(off: dict[str, tuple[float, float]], bbox_of: dict,
+                      rot_of: dict[str, float], zw: float
+                      ) -> dict[str, tuple[float, float]]:
+    if _nat.loaded():
+        out: dict[str, tuple[float, float]] = {}
+        for r, (ox, oy) in off.items():
+            cb = turn_box(bbox_of[r], rot_of.get(r, 0.0))
+            out[r] = tuple(_nat.module().mirror_offset_x(ox, oy, cb, zw))
+        if _nat.trace():
+            ref = _mirror_offsets_x_py(off, bbox_of, rot_of, zw)
+            if out != ref:
+                raise AssertionError(
+                    "native mirror_offset_x DIVERGENCE: "
+                    f"cpp={out} python={ref}")
+        return out
+    return _mirror_offsets_x_py(off, bbox_of, rot_of, zw)
 
 
 def _mirror_pack(t_off: dict[str, tuple[float, float]],

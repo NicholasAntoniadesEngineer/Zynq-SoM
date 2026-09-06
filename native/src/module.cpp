@@ -868,6 +868,49 @@ NB_MODULE(_geom, m) {
               }
               return schgen::refdes_hit_court(fx, fy, ca, sa, lx, ly, box);
           });
+    m.def("uv_to_board",
+          [](double cx, double cy, double u, double v, double rot) {
+              return schgen::uv_to_board(cx, cy, u, v, rot);
+          });
+    m.def("board_to_uv",
+          [](double cx, double cy, double bx, double by, double rot) {
+              return schgen::board_to_uv(cx, cy, bx, by, rot);
+          });
+    m.def("corridor_local_from_uv",
+          [](const std::vector<std::pair<double, double>>& pads,
+             double r_construct, double v_margin) {
+              auto b = schgen::corridor_local_from_uv(pads, r_construct,
+                                                      v_margin);
+              return std::make_tuple(b.x0, b.y0, b.x1, b.y1);
+          });
+    m.def("corridor_board_rect",
+          [](const BoxTup& local, double cx, double cy, double rot) {
+              auto b = schgen::corridor_board_rect(as_box(local), cx, cy, rot);
+              return std::make_tuple(b.x0, b.y0, b.x1, b.y1);
+          });
+    m.def("mirror_offset_x",
+          [](double ox, double oy, const BoxTup& cb, double zone_w) {
+              return schgen::mirror_offset_x(ox, oy, as_box(cb), zone_w);
+          });
+    m.def("offset_turned_box",
+          [](const BoxTup& bbox, double rot, double ox, double oy) {
+              auto b = schgen::offset_turned_box(as_box(bbox), rot, ox, oy);
+              return std::make_tuple(b.x0, b.y0, b.x1, b.y1);
+          });
+    m.def("grid_controls",
+          [](const std::vector<std::tuple<std::string, double, double, double,
+                                          double>>& items,
+             double target_w, double button_gap, double zone_pad,
+             double place_clear) {
+              auto hit = schgen::grid_controls(items, target_w, button_gap,
+                                               zone_pad, place_clear);
+              std::vector<std::tuple<double, double, double, double>> occ;
+              occ.reserve(hit.occ.size());
+              for (const auto& b : hit.occ) {
+                  occ.emplace_back(b.x0, b.y0, b.x1, b.y1);
+              }
+              return std::make_tuple(hit.offs, occ, hit.packed_w, hit.packed_h);
+          });
     m.def("boxes_union",
           [](const std::vector<BoxTup>& boxes) -> std::optional<BoxTup> {
               auto hit = schgen::boxes_union(as_boxes(boxes));

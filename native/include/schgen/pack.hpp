@@ -282,4 +282,32 @@ std::tuple<double, double, double, double, double, double> refdes_hit_court(
     double fx, double fy, double ca, double sa, double lx, double ly,
     const std::optional<Box4>& court);
 
+std::pair<double, double> uv_to_board(double cx, double cy, double u, double v,
+                                      double rot);
+std::pair<double, double> board_to_uv(double cx, double cy, double bx,
+                                      double by, double rot);
+
+Box4 corridor_local_from_uv(
+    const std::vector<std::pair<double, double>>& pads, double r_construct,
+    double v_margin);
+
+Box4 corridor_board_rect(const Box4& local, double cx, double cy, double rot);
+
+std::pair<double, double> mirror_offset_x(double ox, double oy, const Box4& cb,
+                                          double zone_w);
+
+Box4 offset_turned_box(const Box4& bbox, double rot, double ox, double oy);
+
+struct GridControls {
+    std::vector<std::tuple<std::string, double, double>> offs;
+    std::vector<Box4> occ;
+    double packed_w = 0.0;
+    double packed_h = 0.0;
+};
+
+GridControls grid_controls(
+    const std::vector<std::tuple<std::string, double, double, double, double>>&
+        items,
+    double target_w, double button_gap, double zone_pad, double place_clear);
+
 }  // namespace schgen

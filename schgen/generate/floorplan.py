@@ -186,6 +186,17 @@ def _zone_components(zg, t_off: dict, b_off: dict, extra_rot: dict,
         bb = _footprint_bbox(mp) if mp is not None else zg.bbox_of.get(r)
         if bb is None:
             return None
+        if _nat.loaded():
+            got = tuple(_nat.module().offset_turned_box(
+                bb, rot_of.get(r, 0.0), ox, oy))
+            if _nat.trace():
+                c = turn_box(bb, rot_of.get(r, 0.0))
+                ref = (ox + c[0], oy + c[1], ox + c[2], oy + c[3])
+                if got != ref:
+                    raise AssertionError(
+                        "native offset_turned_box DIVERGENCE: "
+                        f"cpp={got} python={ref}")
+            return got
         c = turn_box(bb, rot_of.get(r, 0.0))
         return (ox + c[0], oy + c[1], ox + c[2], oy + c[3])
 

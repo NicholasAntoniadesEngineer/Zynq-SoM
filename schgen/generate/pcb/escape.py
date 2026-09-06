@@ -126,15 +126,43 @@ def _frame(inst):
     return math.cos(r), math.sin(r)
 
 
-def _to_board(inst, u: float, v: float) -> tuple[float, float]:
+def _to_board_py(inst, u: float, v: float) -> tuple[float, float]:
     c, s = _frame(inst)
     return (inst.x + u * c + v * s, inst.y - u * s + v * c)
 
 
-def _to_local(inst, bx: float, by: float) -> tuple[float, float]:
+def _to_board(inst, u: float, v: float) -> tuple[float, float]:
+    if _nat.loaded():
+        got = tuple(_nat.module().uv_to_board(
+            inst.x, inst.y, u, v, inst.rotation or 0.0))
+        if _nat.trace():
+            ref = _to_board_py(inst, u, v)
+            if got != ref:
+                raise AssertionError(
+                    "native uv_to_board DIVERGENCE: "
+                    f"cpp={got} python={ref}")
+        return got
+    return _to_board_py(inst, u, v)
+
+
+def _to_local_py(inst, bx: float, by: float) -> tuple[float, float]:
     c, s = _frame(inst)
     qx, qy = bx - inst.x, by - inst.y
     return (qx * c - qy * s, qx * s + qy * c)
+
+
+def _to_local(inst, bx: float, by: float) -> tuple[float, float]:
+    if _nat.loaded():
+        got = tuple(_nat.module().board_to_uv(
+            inst.x, inst.y, bx, by, inst.rotation or 0.0))
+        if _nat.trace():
+            ref = _to_local_py(inst, bx, by)
+            if got != ref:
+                raise AssertionError(
+                    "native board_to_uv DIVERGENCE: "
+                    f"cpp={got} python={ref}")
+        return got
+    return _to_local_py(inst, bx, by)
 
 
 def _box_dist_py(x: float, y: float, box: tuple[float, float, float, float]
@@ -161,9 +189,7 @@ CORRIDOR_V_MARGIN = 0.15
 CORRIDOR_LIP = 0.3
 
 
-def df40_corridor_local(mod_path) -> tuple[float, float, float, float]:
-    from schgen.verify import return_path_gate as rpg
-    pads = rpg._parse_pad_positions(mod_path)
+def df40_corridor_local_py(pads: dict) -> tuple[float, float, float, float]:
     us = [p[0] for p in pads.values()]
     vs = [p[1] for p in pads.values()]
     u_half = max(abs(min(us)), abs(max(us))) + R_CONSTRUCT
@@ -171,15 +197,48 @@ def df40_corridor_local(mod_path) -> tuple[float, float, float, float]:
     return (-u_half, -v_half, u_half, v_half)
 
 
-def corridor_board_rect(mod_path, cx: float, cy: float, rot: float
-                        ) -> tuple[float, float, float, float]:
-    cu0, cv0, cu1, cv1 = df40_corridor_local(mod_path)
+def df40_corridor_local(mod_path) -> tuple[float, float, float, float]:
+    from schgen.verify import return_path_gate as rpg
+    pads = rpg._parse_pad_positions(mod_path)
+    uv = list(pads.values())
+    if _nat.loaded():
+        got = tuple(_nat.module().corridor_local_from_uv(
+            uv, R_CONSTRUCT, CORRIDOR_V_MARGIN))
+        if _nat.trace():
+            ref = df40_corridor_local_py(pads)
+            if got != ref:
+                raise AssertionError(
+                    "native corridor_local_from_uv DIVERGENCE: "
+                    f"cpp={got} python={ref}")
+        return got
+    return df40_corridor_local_py(pads)
+
+
+def corridor_board_rect_py(local, cx: float, cy: float, rot: float
+                           ) -> tuple[float, float, float, float]:
+    cu0, cv0, cu1, cv1 = local
     c = math.cos(math.radians(rot or 0.0))
     s = math.sin(math.radians(rot or 0.0))
     xs = [cx + u * c + v * s for u in (cu0, cu1) for v in (cv0, cv1)]
     ys = [cy - u * s + v * c for u in (cu0, cu1) for v in (cv0, cv1)]
     return (round(min(xs), 4), round(min(ys), 4),
             round(max(xs), 4), round(max(ys), 4))
+
+
+def corridor_board_rect(mod_path, cx: float, cy: float, rot: float
+                        ) -> tuple[float, float, float, float]:
+    local = df40_corridor_local(mod_path)
+    if _nat.loaded():
+        got = tuple(_nat.module().corridor_board_rect(
+            local, cx, cy, rot or 0.0))
+        if _nat.trace():
+            ref = corridor_board_rect_py(local, cx, cy, rot)
+            if got != ref:
+                raise AssertionError(
+                    "native corridor_board_rect DIVERGENCE: "
+                    f"cpp={got} python={ref}")
+        return got
+    return corridor_board_rect_py(local, cx, cy, rot)
 
 
 def _seg_box_dist_py(a: tuple[float, float], b: tuple[float, float],

@@ -2286,6 +2286,86 @@ def test_som_cluster_gap_and_court_kernels_match_python(geom, monkeypatch):
                 face, rot)
 
 
+def test_escape_frame_corridor_and_grid_match_python(geom, monkeypatch):
+    from types import SimpleNamespace
+
+    from schgen.generate.pcb import escape as esc
+    from schgen.generate.pcb import placement as pl
+    from schgen.generate.pcb.constants import (
+        BUTTON_GAP,
+        PLACE_CLEAR,
+        ZONE_PAD,
+    )
+    from schgen.generate.pcb.escape import (
+        CORRIDOR_V_MARGIN,
+        R_CONSTRUCT,
+        _to_board,
+        _to_board_py,
+        _to_local,
+        _to_local_py,
+        corridor_board_rect_py,
+        df40_corridor_local_py,
+    )
+    from schgen.generate.pcb.placement import (
+        _grid_controls,
+        _grid_controls_py,
+        _mirror_offsets_x,
+        _mirror_offsets_x_py,
+    )
+    from schgen.generate.pcb.turn import turn_box
+
+    monkeypatch.setattr(esc._nat, "trace", lambda: True)
+    monkeypatch.setattr(pl._nat, "trace", lambda: True)
+    monkeypatch.setattr(fp._nat, "trace", lambda: True)
+
+    inst = SimpleNamespace(x=40.0, y=30.0, rotation=90.0)
+    for u, v in ((0.0, 0.0), (1.5, -0.8), (-2.0, 3.25)):
+        assert tuple(geom.uv_to_board(inst.x, inst.y, u, v, inst.rotation)) == (
+            _to_board_py(inst, u, v))
+        assert _to_board(inst, u, v) == _to_board_py(inst, u, v)
+        bx, by = _to_board_py(inst, u, v)
+        assert tuple(geom.board_to_uv(inst.x, inst.y, bx, by, inst.rotation)) == (
+            _to_local_py(inst, bx, by))
+        assert _to_local(inst, bx, by) == _to_local_py(inst, bx, by)
+
+    pads = {"1": (-3.2, 0.4), "2": (3.2, -0.4), "3": (0.0, 1.1)}
+    ref_loc = df40_corridor_local_py(pads)
+    assert tuple(geom.corridor_local_from_uv(
+        list(pads.values()), R_CONSTRUCT, CORRIDOR_V_MARGIN)) == ref_loc
+    ref_br = corridor_board_rect_py(ref_loc, 25.0, 40.0, 180.0)
+    assert tuple(geom.corridor_board_rect(ref_loc, 25.0, 40.0, 180.0)) == ref_br
+
+    bbox = (-1.6, -0.8, 1.6, 0.8)
+    rot = 90.0
+    ox, oy = 4.0, 5.5
+    c = turn_box(bbox, rot)
+    ref_off = (ox + c[0], oy + c[1], ox + c[2], oy + c[3])
+    assert tuple(geom.offset_turned_box(bbox, rot, ox, oy)) == ref_off
+    cb = turn_box(bbox, 0.0)
+    assert tuple(geom.mirror_offset_x(2.0, 3.0, cb, 20.0)) == (
+        round(20.0 - 2.0 - cb[0] - cb[2], 4), 3.0)
+    offs = {"R2": (2.0, 3.0), "R1": (0.5, 1.0)}
+    bbox_of = {"R1": bbox, "R2": (-2.0, -1.0, 2.0, 1.0)}
+    rot_of = {"R1": 0.0, "R2": 90.0}
+    assert _mirror_offsets_x(offs, bbox_of, rot_of, 20.0) == (
+        _mirror_offsets_x_py(offs, bbox_of, rot_of, 20.0))
+
+    refs = ["SW2", "SW1", "SW3"]
+    boxes = {
+        "SW1": (-2.0, -1.0, 2.0, 1.0),
+        "SW2": (-1.5, -1.5, 1.5, 1.5),
+        "SW3": (-2.5, -1.0, 2.5, 1.0),
+    }
+    ref_grid = _grid_controls_py(refs, boxes, {}, 12.0)
+    items = [(r, *boxes[r]) for r in refs]
+    native = geom.grid_controls(items, 12.0, BUTTON_GAP, ZONE_PAD, PLACE_CLEAR)
+    got_grid = ({r: (x, y) for r, x, y in native[0]},
+                [tuple(b) for b in native[1]], float(native[2]),
+                float(native[3]))
+    assert got_grid == ref_grid
+    assert _grid_controls(refs, boxes, {}, 12.0) == ref_grid
+
+
 def test_timing_span_records():
     from schgen.core import timing
     timing.reset()

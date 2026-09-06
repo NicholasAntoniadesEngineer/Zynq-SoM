@@ -1505,4 +1505,135 @@ std::tuple<double, double, double, double, double, double> refdes_hit_court(
     return {bx, by, bx - 1.0, by - 1.0, bx + 1.0, by + 1.0};
 }
 
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
+
+std::pair<double, double> uv_to_board(double cx, double cy, double u, double v,
+                                      double rot) {
+    const double turn = rot * (M_PI / 180.0);
+    const double cs = std::cos(turn);
+    const double sn = std::sin(turn);
+    return {cx + u * cs + v * sn, cy - u * sn + v * cs};
+}
+
+std::pair<double, double> board_to_uv(double cx, double cy, double bx,
+                                      double by, double rot) {
+    const double turn = rot * (M_PI / 180.0);
+    const double cs = std::cos(turn);
+    const double sn = std::sin(turn);
+    const double qx = bx - cx;
+    const double qy = by - cy;
+    return {qx * cs - qy * sn, qx * sn + qy * cs};
+}
+
+Box4 corridor_local_from_uv(
+    const std::vector<std::pair<double, double>>& pads, double r_construct,
+    double v_margin) {
+    if (pads.empty()) {
+        throw std::runtime_error("corridor_local_from_uv: pads required");
+    }
+    double u0 = pads[0].first;
+    double u1 = pads[0].first;
+    double v0 = pads[0].second;
+    double v1 = pads[0].second;
+    for (const auto& p : pads) {
+        u0 = std::min(u0, p.first);
+        u1 = std::max(u1, p.first);
+        v0 = std::min(v0, p.second);
+        v1 = std::max(v1, p.second);
+    }
+    const double u_half = std::max(std::fabs(u0), std::fabs(u1)) + r_construct;
+    const double v_half = std::max(std::fabs(v0), std::fabs(v1)) + v_margin;
+    return Box4{-u_half, -v_half, u_half, v_half};
+}
+
+Box4 corridor_board_rect(const Box4& local, double cx, double cy, double rot) {
+    const double us[2] = {local.x0, local.x1};
+    const double vs[2] = {local.y0, local.y1};
+    bool any = false;
+    double min_x = 0.0;
+    double min_y = 0.0;
+    double max_x = 0.0;
+    double max_y = 0.0;
+    for (double u : us) {
+        for (double v : vs) {
+            const auto p = uv_to_board(cx, cy, u, v, rot);
+            if (!any) {
+                min_x = max_x = p.first;
+                min_y = max_y = p.second;
+                any = true;
+            } else {
+                min_x = std::min(min_x, p.first);
+                min_y = std::min(min_y, p.second);
+                max_x = std::max(max_x, p.first);
+                max_y = std::max(max_y, p.second);
+            }
+        }
+    }
+    return Box4{py_round(min_x, 4), py_round(min_y, 4), py_round(max_x, 4),
+                py_round(max_y, 4)};
+}
+
+std::pair<double, double> mirror_offset_x(double ox, double oy, const Box4& cb,
+                                          double zone_w) {
+    return {py_round(zone_w - ox - cb.x0 - cb.x1, 4), oy};
+}
+
+Box4 offset_turned_box(const Box4& bbox, double rot, double ox, double oy) {
+    const Box4 turned = turn_box(bbox, rot);
+    return Box4{ox + turned.x0, oy + turned.y0, ox + turned.x1,
+                oy + turned.y1};
+}
+
+GridControls grid_controls(
+    const std::vector<std::tuple<std::string, double, double, double, double>>&
+        items,
+    double target_w, double button_gap, double zone_pad, double place_clear) {
+    if (items.empty()) {
+        throw std::runtime_error("grid_controls: refs required");
+    }
+    double cell = 0.0;
+    for (const auto& row : items) {
+        const double bw = std::get<3>(row) - std::get<1>(row);
+        const double bh = std::get<4>(row) - std::get<2>(row);
+        cell = std::max(cell, std::max(bw + button_gap, bh + button_gap));
+    }
+    if (cell == 0.0) {
+        throw std::runtime_error("grid_controls: cell required");
+    }
+    const int n = static_cast<int>(items.size());
+    const int fit = static_cast<int>(target_w / cell);
+    const int cols = std::max(1, std::min(n, fit == 0 ? 1 : fit));
+    std::vector<std::tuple<std::string, double, double, double, double>>
+        order = items;
+    std::stable_sort(order.begin(), order.end(),
+                     [](const auto& a, const auto& b) {
+                         return std::get<0>(a) < std::get<0>(b);
+                     });
+    GridControls out;
+    out.offs.reserve(order.size());
+    out.occ.reserve(order.size());
+    for (int i = 0; i < static_cast<int>(order.size()); ++i) {
+        const auto& row = order[static_cast<std::size_t>(i)];
+        const int cx = i % cols;
+        const int cy = i / cols;
+        const double x0 = zone_pad + static_cast<double>(cx) * cell;
+        const double y0 = zone_pad + static_cast<double>(cy) * cell;
+        const double bx0 = std::get<1>(row);
+        const double by0 = std::get<2>(row);
+        const double fw = (std::get<3>(row) - bx0) + place_clear;
+        const double fh = (std::get<4>(row) - by0) + place_clear;
+        const double ox = x0 + (cell - fw) / 2.0 - bx0 + place_clear / 2.0;
+        const double oy = y0 + (cell - fh) / 2.0 - by0 + place_clear / 2.0;
+        out.offs.emplace_back(std::get<0>(row), py_round(ox, 4),
+                              py_round(oy, 4));
+        out.occ.push_back(Box4{x0, y0, x0 + cell, y0 + cell});
+    }
+    const int rows = (n + cols - 1) / cols;
+    out.packed_w = zone_pad + static_cast<double>(cols) * cell;
+    out.packed_h = zone_pad + static_cast<double>(rows) * cell;
+    return out;
+}
+
 }  // namespace schgen
