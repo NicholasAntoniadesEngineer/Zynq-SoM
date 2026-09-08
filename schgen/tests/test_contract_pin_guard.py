@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import copy
-import importlib
 from pathlib import Path
 
 import pytest
@@ -14,7 +13,7 @@ _REPO = Path(__file__).resolve().parents[2]
 def _contract_sheets() -> list[str]:
     return sorted(p.parent.name for root in
                   (_REPO / "subsystems", _REPO / "carrier" / "subsystems")
-                  for p in root.glob("*/placement_contract.py"))
+                  for p in root.glob("*/placement_contract.json"))
 
 
 def test_every_authored_contract_passes_pin_validation():
@@ -64,11 +63,10 @@ def test_unresolvable_part_stays_soft():
 
 
 def test_chokepoint_is_wired_into_discover(monkeypatch):
-    mod = importlib.import_module("subsystems.pd_input.placement_contract")
-    bad = copy.deepcopy(mod.CONTRACT)
+    bad = copy.deepcopy(g.discover_contract("pd_input"))
     next(s for s in bad["structures"]
          if s.get("type") == "proximity")["anchor_pins"] = ["ILIM"]
-    monkeypatch.setattr(mod, "CONTRACT", bad)
+    monkeypatch.setattr(g, "read_contract_file", lambda _path: bad)
     monkeypatch.setattr(g, "_PIN_VALIDATED", set())
     with pytest.raises(g.ContractPinError, match=r"'ILIM'"):
         g.discover_contract("pd_input")

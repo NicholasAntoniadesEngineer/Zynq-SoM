@@ -18,54 +18,47 @@ class RouteError(ValueError):
 
 
 def snap_ok(v: float) -> bool:
-    if _nat.loaded():
-        return _nat.module().route_snap_ok(v, GRID)
-    return abs(v / GRID - round(v / GRID)) < 1e-3
+    if not _nat.loaded():
+        raise RuntimeError("native route_snap_ok required")
+    return _nat.module().route_snap_ok(v, GRID)
 
 
 def cell_of(p: Point) -> Cell:
-    if _nat.loaded():
-        try:
-            i, j = _nat.module().route_cell_of(p[0], p[1], GRID)
-            return (int(i), int(j))
-        except RuntimeError as exc:
-            raise RouteError(f"point {p} is off the {GRID} mm grid") from exc
-    if not (snap_ok(p[0]) and snap_ok(p[1])):
-        raise RouteError(f"point {p} is off the {GRID} mm grid")
-    return (round(p[0] / GRID), round(p[1] / GRID))
+    if not _nat.loaded():
+        raise RuntimeError("native route_cell_of required")
+    try:
+        i, j = _nat.module().route_cell_of(p[0], p[1], GRID)
+        return (int(i), int(j))
+    except RuntimeError as exc:
+        raise RouteError(f"point {p} is off the {GRID} mm grid") from exc
 
 
 def point_of(c: Cell) -> Point:
-    if _nat.loaded():
-        x, y = _nat.module().route_point_of(int(c[0]), int(c[1]), GRID)
-        return (float(x), float(y))
-    return (round(c[0] * GRID, 3), round(c[1] * GRID, 3))
+    if not _nat.loaded():
+        raise RuntimeError("native route_point_of required")
+    x, y = _nat.module().route_point_of(int(c[0]), int(c[1]), GRID)
+    return (float(x), float(y))
 
 
 def cells_between(a: Point, b: Point) -> list[Cell]:
-    if _nat.loaded():
-        try:
-            return [(int(i), int(j)) for i, j in
-                    _nat.module().route_cells_between(a[0], a[1], b[0], b[1],
-                                                      GRID)]
-        except RuntimeError as exc:
-            if "orthogonal" in str(exc):
-                raise RouteError(f"segment {a}->{b} is not orthogonal") from exc
-            raise RouteError(str(exc)) from exc
-    ca, cb = cell_of(a), cell_of(b)
-    if ca[0] != cb[0] and ca[1] != cb[1]:
-        raise RouteError(f"segment {a}->{b} is not orthogonal")
-    if ca[0] == cb[0]:
-        lo, hi = sorted((ca[1], cb[1]))
-        return [(ca[0], j) for j in range(lo, hi + 1)]
-    lo, hi = sorted((ca[0], cb[0]))
-    return [(i, ca[1]) for i in range(lo, hi + 1)]
+    if not _nat.loaded():
+        raise RuntimeError("native route_cells_between required")
+    try:
+        return [(int(i), int(j)) for i, j in
+                _nat.module().route_cells_between(a[0], a[1], b[0], b[1],
+                                                  GRID)]
+    except RuntimeError as exc:
+        if "orthogonal" in str(exc):
+            raise RouteError(f"segment {a}->{b} is not orthogonal") from exc
+        raise RouteError(str(exc)) from exc
 
 
 class Grid:
     def __init__(self) -> None:
         self.owner: dict[Cell, str] = {}
-        self._cpp = _nat.module().RouteGrid() if _nat.loaded() else None
+        if not _nat.loaded():
+            raise RuntimeError("native RouteGrid required")
+        self._cpp = _nat.module().RouteGrid()
 
     def claim(self, owner: str, cells: list[Cell], what: str = "") -> None:
         if self._cpp is not None:
@@ -321,15 +314,15 @@ def _stem_dir_py(pin_rot: int, part_rot: int) -> tuple[int, int]:
 
 
 def _stem_dir(pin_rot: int, part_rot: int) -> tuple[int, int]:
-    if _nat.loaded():
-        got = tuple(_nat.module().stem_dir(int(pin_rot), int(part_rot)))
-        if _nat.trace():
-            ref = _stem_dir_py(pin_rot, part_rot)
-            if got != ref:
-                raise AssertionError(
-                    f"native stem_dir DIVERGENCE: cpp={got} python={ref}")
-        return got
-    return _stem_dir_py(pin_rot, part_rot)
+    if not _nat.loaded():
+        raise RuntimeError("native stem_dir required")
+    got = tuple(_nat.module().stem_dir(int(pin_rot), int(part_rot)))
+    if _nat.trace():
+        ref = _stem_dir_py(pin_rot, part_rot)
+        if got != ref:
+            raise AssertionError(
+                f"native stem_dir DIVERGENCE: cpp={got} python={ref}")
+    return got
 
 
 def _components(g: _NetGeom) -> list[set[Point]]:
@@ -357,19 +350,8 @@ def _components(g: _NetGeom) -> list[set[Point]]:
     return comps
 
 
-def _bfs_join(grid: Grid, net: str, comp_a: set[Point],
-              comp_b: set[Point]) -> list[Point]:
-    if _nat.loaded() and grid._cpp is not None:
-        starts = {cell_of(p) for p in comp_a}
-        goals = {cell_of(p) for p in comp_b}
-        try:
-            return [tuple(p) for p in _nat.module().route_bfs_join(
-                grid._cpp, net,
-                [point_of(c) for c in starts],
-                [point_of(c) for c in goals], GRID)]
-        except RuntimeError as exc:
-            raise RouteError(f"net {net}: no free corridor joins its parts "
-                             f"— placement must expand") from exc
+def _bfs_join_py(grid: Grid, net: str, comp_a: set[Point],
+                 comp_b: set[Point]) -> list[Point]:
     starts = {cell_of(p) for p in comp_a}
     goals = {cell_of(p) for p in comp_b}
     occ = list(grid.owner) + list(starts) + list(goals)
@@ -399,7 +381,7 @@ def _bfs_join(grid: Grid, net: str, comp_a: set[Point],
                          f"— placement must expand")
     chain: list[Cell] = [hit]
     while prev[chain[-1]] is not None:
-        chain.append(prev[chain[-1]])          # type: ignore[arg-type]
+        chain.append(prev[chain[-1]])
     chain.reverse()
     pts = [point_of(c) for c in chain]
     way = [pts[0]]
@@ -409,3 +391,25 @@ def _bfs_join(grid: Grid, net: str, comp_a: set[Point],
             way.append(pts[i])
     way.append(pts[-1])
     return way
+
+
+def _bfs_join(grid: Grid, net: str, comp_a: set[Point],
+              comp_b: set[Point]) -> list[Point]:
+    if grid._cpp is None:
+        raise RuntimeError("native RouteGrid required")
+    starts = {cell_of(p) for p in comp_a}
+    goals = {cell_of(p) for p in comp_b}
+    try:
+        got = [tuple(p) for p in _nat.module().route_bfs_join(
+            grid._cpp, net,
+            [point_of(c) for c in starts],
+            [point_of(c) for c in goals], GRID)]
+    except RuntimeError as exc:
+        raise RouteError(f"net {net}: no free corridor joins its parts "
+                         f"— placement must expand") from exc
+    if _nat.trace():
+        ref = _bfs_join_py(grid, net, comp_a, comp_b)
+        if got != ref:
+            raise AssertionError(
+                f"native route_bfs_join DIVERGENCE: cpp={got} python={ref}")
+    return got

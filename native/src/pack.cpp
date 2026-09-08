@@ -1,12 +1,22 @@
 #include "schgen/pack.hpp"
 
+#include "schgen/quantize.hpp"
+#include "schgen/turn.hpp"
+
 #include <algorithm>
+#include <cctype>
 #include <cmath>
 #include <cstddef>
+#include <cstdio>
 #include <limits>
+#include <map>
+#include <numeric>
+#include <optional>
 #include <set>
 #include <stdexcept>
+#include <string>
 #include <tuple>
+#include <unordered_map>
 
 namespace schgen {
 namespace {
@@ -834,6 +844,98 @@ bool any_boxes_overlap(const std::vector<Box4>& boxes, double halo) {
     return false;
 }
 
+std::vector<int> pack_interior_order(const std::vector<std::string>& names,
+                                     const std::vector<int>& tiers,
+                                     const std::vector<double>& conn,
+                                     const std::vector<double>& area) {
+    if (names.size() != tiers.size() || names.size() != conn.size()
+        || names.size() != area.size()) {
+        throw std::runtime_error(
+            "pack_interior_order: names/tiers/conn/area required same length");
+    }
+    std::vector<int> order(static_cast<int>(names.size()));
+    std::iota(order.begin(), order.end(), 0);
+    std::sort(order.begin(), order.end(), [&](int left, int right) {
+        const std::size_t i = static_cast<std::size_t>(left);
+        const std::size_t j = static_cast<std::size_t>(right);
+        if (tiers[i] != tiers[j]) {
+            return tiers[i] < tiers[j];
+        }
+        if (conn[i] != conn[j]) {
+            return conn[i] > conn[j];
+        }
+        if (area[i] != area[j]) {
+            return area[i] > area[j];
+        }
+        return names[i] < names[j];
+    });
+    return order;
+}
+
+double pack_conn_weight(const std::vector<double>& aff_weights,
+                        double som_pull) {
+    double total = 0.0;
+    for (double weight : aff_weights) {
+        total += weight;
+    }
+    return total + 3.0 * som_pull;
+}
+
+std::vector<std::pair<std::string, std::vector<std::string>>> nets_by_sheet(
+    const std::vector<std::pair<std::string, std::vector<std::string>>>&
+        net_sheets) {
+    std::vector<std::pair<std::string, std::vector<std::string>>> ordered =
+        net_sheets;
+    std::sort(ordered.begin(), ordered.end(),
+              [](const auto& left, const auto& right) {
+                  return left.first < right.first;
+              });
+    std::vector<std::pair<std::string, std::vector<std::string>>> out;
+    std::unordered_map<std::string, std::size_t> index;
+    for (auto& row : ordered) {
+        std::vector<std::string> sheets = row.second;
+        std::sort(sheets.begin(), sheets.end());
+        sheets.erase(std::unique(sheets.begin(), sheets.end()), sheets.end());
+        for (const auto& sheet : sheets) {
+            const auto found = index.find(sheet);
+            if (found == index.end()) {
+                index.emplace(sheet, out.size());
+                out.emplace_back(sheet, std::vector<std::string>{row.first});
+            } else {
+                out[found->second].second.push_back(row.first);
+            }
+        }
+    }
+    return out;
+}
+
+int obstacle_bucket(double region_u0, double region_v0, double region_u1,
+                    double region_v1, double box_u0, double box_v0,
+                    double box_u1, double box_v1, bool same_ref, bool net_gnd,
+                    bool side_top) {
+    if (box_u1 < region_u0 || box_u0 > region_u1 || box_v1 < region_v0
+        || box_v0 > region_v1) {
+        return 0;
+    }
+    if (same_ref && net_gnd) {
+        return 1;
+    }
+    if (side_top || same_ref) {
+        return 2;
+    }
+    return 3;
+}
+
+std::tuple<double, double, double> obstacle_hole(double box_u0, double box_v0,
+                                                 double box_u1, double box_v1) {
+    return {(box_u0 + box_u1) / 2.0, (box_v0 + box_v1) / 2.0,
+            std::max(box_u1 - box_u0, box_v1 - box_v0) / 2.0};
+}
+
+double net_clearance_rule(bool power) {
+    return power ? 0.2 : 0.15;
+}
+
 std::vector<std::pair<double, double>> cout_column_centers(
     const Box4& inductor_out, double pad, double cout_gap,
     double template_clear, const std::vector<std::pair<double, double>>& halves) {
@@ -924,6 +1026,2161 @@ RefdesMove place_refdes(
     const double dy = ty - fy;
     return RefdesMove{true, py_round(dx * ca - dy * sa, 4),
                       py_round(dx * sa + dy * ca, 4), new_size, nbox};
+}
+
+std::vector<Box4> som_keepout_rects(
+    double som_x, double som_y, double som_w, double som_h, double occ_pad,
+    const std::vector<std::tuple<double, double, double, double>>& connectors,
+    double seat_band) {
+    std::vector<Box4> out;
+    out.push_back(Box4{som_x - occ_pad, som_y - occ_pad,
+                       som_x + som_w + occ_pad, som_y + som_h + occ_pad});
+    for (const auto& row : connectors) {
+        const double jx = std::get<0>(row);
+        const double jy = std::get<1>(row);
+        const double jw = std::get<2>(row);
+        const double jh = std::get<3>(row);
+        out.push_back(Box4{som_x + jx - jw / 2.0 - seat_band,
+                           som_y + jy - jh / 2.0 - seat_band,
+                           som_x + jx + jw / 2.0 + seat_band,
+                           som_y + jy + jh / 2.0 + seat_band});
+    }
+    return out;
+}
+
+std::vector<Comp> zone_components_assemble(
+    const std::vector<Box4>& minor_boxes, const std::vector<Box4>& punch_boxes,
+    int minor_mask, int punch_mask) {
+    std::vector<Comp> out;
+    if (!minor_boxes.empty()) {
+        double x0 = minor_boxes[0].x0;
+        double y0 = minor_boxes[0].y0;
+        double x1 = minor_boxes[0].x1;
+        double y1 = minor_boxes[0].y1;
+        for (const auto& box : minor_boxes) {
+            x0 = std::min(x0, box.x0);
+            y0 = std::min(y0, box.y0);
+            x1 = std::max(x1, box.x1);
+            y1 = std::max(y1, box.y1);
+        }
+        out.push_back(Comp{py_round(x0, 4), py_round(y0, 4),
+                           py_round(x1 - x0, 4), py_round(y1 - y0, 4),
+                           minor_mask});
+    }
+    for (const auto& box : punch_boxes) {
+        out.push_back(Comp{py_round(box.x0, 4), py_round(box.y0, 4),
+                           py_round(box.x1 - box.x0, 4),
+                           py_round(box.y1 - box.y0, 4), punch_mask});
+    }
+    return out;
+}
+
+namespace {
+
+bool parse_plain_number(const std::string& text, std::size_t start,
+                        std::size_t* end, double* value) {
+    if (start >= text.size()
+        || !std::isdigit(static_cast<unsigned char>(text[start]))) {
+        return false;
+    }
+    std::size_t i = start + 1;
+    while (i < text.size()
+           && std::isdigit(static_cast<unsigned char>(text[i]))) {
+        ++i;
+    }
+    if (i < text.size() && text[i] == '.' && i + 1 < text.size()
+        && std::isdigit(static_cast<unsigned char>(text[i + 1]))) {
+        i += 2;
+        while (i < text.size()
+               && std::isdigit(static_cast<unsigned char>(text[i]))) {
+            ++i;
+        }
+    }
+    *end = i;
+    *value = std::stod(text.substr(start, i - start));
+    return true;
+}
+
+}  // namespace
+
+std::pair<double, double> part_dims_from_name(
+    const std::string& name,
+    const std::vector<std::tuple<std::string, double, double>>& fixed_dims,
+    double default_w, double default_h) {
+    for (const auto& row : fixed_dims) {
+        if (name.find(std::get<0>(row)) != std::string::npos) {
+            return {std::get<1>(row), std::get<2>(row)};
+        }
+    }
+    for (std::size_t i = 0; i + 3 < name.size(); ++i) {
+        if (name[i] != '_') {
+            continue;
+        }
+        std::size_t after_w = 0;
+        double width = 0.0;
+        if (!parse_plain_number(name, i + 1, &after_w, &width)) {
+            continue;
+        }
+        if (after_w >= name.size() || name[after_w] != 'x') {
+            continue;
+        }
+        std::size_t after_h = 0;
+        double height = 0.0;
+        if (!parse_plain_number(name, after_w + 1, &after_h, &height)) {
+            continue;
+        }
+        if (after_h + 1 < name.size() && name.compare(after_h, 2, "mm") == 0) {
+            return {width, height};
+        }
+    }
+    for (std::size_t i = 0; i + 11 <= name.size(); ++i) {
+        if (name[i] != '_') {
+            continue;
+        }
+        bool digits = true;
+        for (std::size_t k = 1; k <= 4; ++k) {
+            if (!std::isdigit(static_cast<unsigned char>(name[i + k]))) {
+                digits = false;
+                break;
+            }
+        }
+        if (!digits || name.compare(i + 5, 6, "Metric") != 0) {
+            continue;
+        }
+        const int a = (name[i + 1] - '0') * 10 + (name[i + 2] - '0');
+        const int b = (name[i + 3] - '0') * 10 + (name[i + 4] - '0');
+        return {static_cast<double>(a) / 10.0, static_cast<double>(b) / 10.0};
+    }
+    return {default_w, default_h};
+}
+
+std::string ref_prefix(const std::string& ref) {
+    std::size_t i = 0;
+    while (i < ref.size()) {
+        const unsigned char ch = static_cast<unsigned char>(ref[i]);
+        if (!((ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z'))) {
+            break;
+        }
+        ++i;
+    }
+    if (i == 0) {
+        return ref;
+    }
+    return ref.substr(0, i);
+}
+
+bool is_testpoint_ref(const std::string& ref) {
+    return ref_prefix(ref) == "TP";
+}
+
+bool is_cluster_passive(
+    const std::string& ref, int pins,
+    const std::vector<std::string>& not_plain,
+    const std::vector<std::string>& prefixes) {
+    if (pins > 2) {
+        return false;
+    }
+    for (const auto& token : not_plain) {
+        if (ref.size() >= token.size()
+            && ref.compare(0, token.size(), token) == 0) {
+            return false;
+        }
+    }
+    const std::string prefix = ref_prefix(ref);
+    for (const auto& token : prefixes) {
+        if (prefix == token) {
+            return true;
+        }
+    }
+    return false;
+}
+
+std::pair<double, std::string> intelligent_need(
+    int pins,
+    const std::vector<std::tuple<int, double, std::string>>& tiers,
+    double top_need, const std::string& top_basis) {
+    for (const auto& row : tiers) {
+        if (pins <= std::get<0>(row)) {
+            return {std::get<1>(row), std::get<2>(row)};
+        }
+    }
+    return {top_need, top_basis};
+}
+
+namespace {
+
+double intelligent_need_mm(
+    int pins, const std::vector<std::tuple<int, double>>& need_tiers,
+    double top_need) {
+    for (const auto& row : need_tiers) {
+        if (pins <= std::get<0>(row)) {
+            return std::get<1>(row);
+        }
+    }
+    return top_need;
+}
+
+}  // namespace
+
+std::vector<std::tuple<double, double, double, double, int, double>>
+zone_fanout_members_rows(
+    const std::vector<std::tuple<double, double, double, double, double, double,
+                                 double, int>>& rows,
+    int min_subject_pins,
+    const std::vector<std::tuple<int, double>>& need_tiers, double top_need) {
+    std::vector<std::tuple<double, double, double, double, int, double>> out;
+    out.reserve(rows.size());
+    for (const auto& row : rows) {
+        const double ox = std::get<0>(row);
+        const double oy = std::get<1>(row);
+        const Box4 rb = turn_box(Box4{std::get<2>(row), std::get<3>(row),
+                                      std::get<4>(row), std::get<5>(row)},
+                                 std::get<6>(row));
+        const int pins = std::get<7>(row);
+        const double lim = pins >= min_subject_pins
+            ? quant_credit(intelligent_need_mm(pins, need_tiers, top_need))
+            : 0.0;
+        out.emplace_back(ox + rb.x0, oy + rb.y0, ox + rb.x1, oy + rb.y1, pins,
+                         lim);
+    }
+    return out;
+}
+
+namespace {
+
+int fan_cross_count(const std::vector<std::vector<std::vector<Seg2>>>& segs,
+                    const std::vector<int>& assign) {
+    std::vector<Seg2> flat;
+    for (std::size_t i = 0; i < assign.size(); ++i) {
+        const int slot = assign[i];
+        if (slot < 0
+            || static_cast<std::size_t>(slot) >= segs[i].size()) {
+            throw std::runtime_error("reorder_cluster_assign: slot");
+        }
+        const auto& row = segs[i][static_cast<std::size_t>(slot)];
+        flat.insert(flat.end(), row.begin(), row.end());
+    }
+    int n = 0;
+    for (std::size_t a = 0; a < flat.size(); ++a) {
+        for (std::size_t b = a + 1; b < flat.size(); ++b) {
+            if (segments_cross(flat[a].x0, flat[a].y0, flat[a].x1, flat[a].y1,
+                               flat[b].x0, flat[b].y0, flat[b].x1,
+                               flat[b].y1)) {
+                ++n;
+            }
+        }
+    }
+    return n;
+}
+
+}  // namespace
+
+ReorderAssign reorder_cluster_assign(
+    const std::vector<std::vector<std::vector<Seg2>>>& segs,
+    const std::vector<int>& assign0, int sweeps) {
+    if (sweeps < 0) {
+        throw std::runtime_error("reorder_cluster_assign: sweeps required");
+    }
+    if (segs.size() != assign0.size()) {
+        throw std::runtime_error("reorder_cluster_assign: assign size");
+    }
+    std::vector<int> assign = assign0;
+    const int before = fan_cross_count(segs, assign);
+    ReorderAssign out;
+    out.before = before;
+    out.best = before;
+    out.assign = assign;
+    if (before == 0) {
+        return out;
+    }
+    for (int sweep = 0; sweep < sweeps; ++sweep) {
+        bool improved = false;
+        for (std::size_t a = 0; a < assign.size(); ++a) {
+            for (std::size_t b = a + 1; b < assign.size(); ++b) {
+                std::swap(assign[a], assign[b]);
+                const int trial = fan_cross_count(segs, assign);
+                if (trial < out.best) {
+                    out.best = trial;
+                    improved = true;
+                } else {
+                    std::swap(assign[a], assign[b]);
+                }
+            }
+        }
+        if (!improved) {
+            break;
+        }
+    }
+    out.assign = assign;
+    return out;
+}
+
+bool visual_hv_cross(double ax0, double ay0, double ax1, double ay1,
+                     double bx0, double by0, double bx1, double by1) {
+    const double eps = 1e-6;
+    const bool a_h = std::fabs(ay0 - ay1) < eps;
+    const bool a_v = std::fabs(ax0 - ax1) < eps;
+    const bool b_h = std::fabs(by0 - by1) < eps;
+    const bool b_v = std::fabs(bx0 - bx1) < eps;
+    double hx0 = 0.0;
+    double hx1 = 0.0;
+    double hy = 0.0;
+    double vx = 0.0;
+    double vy0 = 0.0;
+    double vy1 = 0.0;
+    if (a_h && b_v) {
+        hx0 = ax0;
+        hx1 = ax1;
+        hy = ay0;
+        vx = bx0;
+        vy0 = by0;
+        vy1 = by1;
+    } else if (a_v && b_h) {
+        hx0 = bx0;
+        hx1 = bx1;
+        hy = by0;
+        vx = ax0;
+        vy0 = ay0;
+        vy1 = ay1;
+    } else {
+        return false;
+    }
+    if (hx0 > hx1) {
+        std::swap(hx0, hx1);
+    }
+    if (vy0 > vy1) {
+        std::swap(vy0, vy1);
+    }
+    return (hx0 + eps < vx && vx < hx1 - eps)
+        && (vy0 + eps < hy && hy < vy1 - eps);
+}
+
+bool collinear_overlap(double ax0, double ay0, double ax1, double ay1,
+                       double bx0, double by0, double bx1, double by1) {
+    const double eps = 1e-6;
+    const bool a_h = std::fabs(ay0 - ay1) < eps;
+    const bool b_h = std::fabs(by0 - by1) < eps;
+    const bool a_v = std::fabs(ax0 - ax1) < eps;
+    const bool b_v = std::fabs(bx0 - bx1) < eps;
+    if (a_h && b_h && std::fabs(ay0 - by0) < eps) {
+        double a0 = ax0;
+        double a1 = ax1;
+        double b0 = bx0;
+        double b1 = bx1;
+        if (a0 > a1) {
+            std::swap(a0, a1);
+        }
+        if (b0 > b1) {
+            std::swap(b0, b1);
+        }
+        return std::min(a1, b1) - std::max(a0, b0) > eps;
+    }
+    if (a_v && b_v && std::fabs(ax0 - bx0) < eps) {
+        double a0 = ay0;
+        double a1 = ay1;
+        double b0 = by0;
+        double b1 = by1;
+        if (a0 > a1) {
+            std::swap(a0, a1);
+        }
+        if (b0 > b1) {
+            std::swap(b0, b1);
+        }
+        return std::min(a1, b1) - std::max(a0, b0) > eps;
+    }
+    return false;
+}
+
+Box4 som_core_rect(double som_x, double som_y, double som_w, double som_h,
+                   double origin_x, double origin_y, double clearance) {
+    const double ccx = som_w * clearance / 2.0;
+    const double ccy = som_h * clearance / 2.0;
+    return Box4{origin_x + som_x - ccx, origin_y + som_y - ccy,
+                origin_x + som_x + som_w + ccx,
+                origin_y + som_y + som_h + ccy};
+}
+
+std::vector<std::tuple<std::string, double, double>> rotate_offsets_90(
+    const std::vector<std::tuple<std::string, double, double>>& offs,
+    double zone_w) {
+    std::vector<std::tuple<std::string, double, double>> out;
+    out.reserve(offs.size());
+    for (const auto& row : offs) {
+        out.emplace_back(std::get<0>(row), py_round(std::get<2>(row), 4),
+                         py_round(zone_w - std::get<1>(row), 4));
+    }
+    return out;
+}
+
+std::vector<std::tuple<std::string, std::vector<std::string>>>
+cluster_interchangeable_rows(
+    const std::vector<std::tuple<std::string, double, double>>& members,
+    double tol_x, double tol_y) {
+    std::vector<std::tuple<std::string, double, double>> by_y = members;
+    std::stable_sort(by_y.begin(), by_y.end(),
+                     [](const auto& a, const auto& b) {
+                         if (std::get<2>(a) != std::get<2>(b)) {
+                             return std::get<2>(a) < std::get<2>(b);
+                         }
+                         if (std::get<1>(a) != std::get<1>(b)) {
+                             return std::get<1>(a) < std::get<1>(b);
+                         }
+                         return std::get<0>(a) < std::get<0>(b);
+                     });
+    std::vector<std::tuple<std::string, std::vector<std::string>>> clusters;
+    std::vector<std::tuple<std::string, double, double>> rest;
+    std::vector<std::tuple<std::string, double, double>> row;
+    for (const auto& m : by_y) {
+        if (!row.empty()
+            && std::fabs(std::get<2>(m) - std::get<2>(row[0])) > tol_y) {
+            if (row.size() > 1) {
+                std::vector<std::string> refs;
+                refs.reserve(row.size());
+                for (const auto& r : row) {
+                    refs.push_back(std::get<0>(r));
+                }
+                clusters.emplace_back("x", std::move(refs));
+            } else {
+                rest.insert(rest.end(), row.begin(), row.end());
+            }
+            row.clear();
+        }
+        row.push_back(m);
+    }
+    if (row.size() > 1) {
+        std::vector<std::string> refs;
+        refs.reserve(row.size());
+        for (const auto& r : row) {
+            refs.push_back(std::get<0>(r));
+        }
+        clusters.emplace_back("x", std::move(refs));
+    } else if (!row.empty()) {
+        rest.insert(rest.end(), row.begin(), row.end());
+    }
+    std::stable_sort(rest.begin(), rest.end(),
+                     [](const auto& a, const auto& b) {
+                         if (std::get<1>(a) != std::get<1>(b)) {
+                             return std::get<1>(a) < std::get<1>(b);
+                         }
+                         if (std::get<2>(a) != std::get<2>(b)) {
+                             return std::get<2>(a) < std::get<2>(b);
+                         }
+                         return std::get<0>(a) < std::get<0>(b);
+                     });
+    std::vector<std::tuple<std::string, double, double>> col;
+    for (const auto& m : rest) {
+        if (!col.empty()
+            && std::fabs(std::get<1>(m) - std::get<1>(col[0])) > tol_x) {
+            if (col.size() > 1) {
+                std::vector<std::string> refs;
+                refs.reserve(col.size());
+                for (const auto& r : col) {
+                    refs.push_back(std::get<0>(r));
+                }
+                clusters.emplace_back("y", std::move(refs));
+            }
+            col.clear();
+        }
+        col.push_back(m);
+    }
+    if (col.size() > 1) {
+        std::vector<std::string> refs;
+        refs.reserve(col.size());
+        for (const auto& r : col) {
+            refs.push_back(std::get<0>(r));
+        }
+        clusters.emplace_back("y", std::move(refs));
+    }
+    return clusters;
+}
+
+std::pair<double, double> nearest_manhattan(
+    double px, double py, const std::vector<std::pair<double, double>>& pts) {
+    if (pts.empty()) {
+        throw std::runtime_error("nearest_manhattan: pts required");
+    }
+    std::size_t best = 0;
+    double best_d = std::fabs(pts[0].first - px) + std::fabs(pts[0].second - py);
+    for (std::size_t i = 1; i < pts.size(); ++i) {
+        const double d =
+            std::fabs(pts[i].first - px) + std::fabs(pts[i].second - py);
+        if (d < best_d
+            || (d == best_d
+                && (pts[i].first < pts[best].first
+                    || (pts[i].first == pts[best].first
+                        && pts[i].second < pts[best].second)))) {
+            best = i;
+            best_d = d;
+        }
+    }
+    return pts[best];
+}
+
+double overlap_1d(double a0, double a1, double b0, double b1) {
+    return std::max(0.0, std::min(a1, b1) - std::max(a0, b0));
+}
+
+std::optional<std::pair<std::string, double>> same_edge_gap(
+    const Box4& a, const Box4& b, double band_frac) {
+    const double ox = overlap_1d(a.x0, a.x1, b.x0, b.x1);
+    const double oy = overlap_1d(a.y0, a.y1, b.y0, b.y1);
+    const double wx = std::min(a.x1 - a.x0, b.x1 - b.x0);
+    const double hy = std::min(a.y1 - a.y0, b.y1 - b.y0);
+    const bool same_x = wx > 0.0 && ox >= band_frac * wx;
+    const bool same_y = hy > 0.0 && oy >= band_frac * hy;
+    if (same_y && !same_x) {
+        return std::make_pair(
+            std::string{"x"},
+            std::max(a.x0, b.x0) - std::min(a.x1, b.x1));
+    }
+    if (same_x && !same_y) {
+        return std::make_pair(
+            std::string{"y"},
+            std::max(a.y0, b.y0) - std::min(a.y1, b.y1));
+    }
+    return std::nullopt;
+}
+
+std::optional<std::pair<double, double>> foreign_t_touch(
+    double ax0, double ay0, double ax1, double ay1, double bx0, double by0,
+    double bx1, double by1, bool same_net) {
+    if (same_net) {
+        return std::nullopt;
+    }
+    const double ends[4][2] = {{ax0, ay0}, {ax1, ay1}, {bx0, by0}, {bx1, by1}};
+    const bool other_is_b[4] = {true, true, false, false};
+    for (int i = 0; i < 4; ++i) {
+        const double ox0 = other_is_b[i] ? bx0 : ax0;
+        const double oy0 = other_is_b[i] ? by0 : ay0;
+        const double ox1 = other_is_b[i] ? bx1 : ax1;
+        const double oy1 = other_is_b[i] ? by1 : ay1;
+        if (point_on_seg(ends[i][0], ends[i][1], ox0, oy0, ox1, oy1, false)) {
+            return std::make_pair(ends[i][0], ends[i][1]);
+        }
+    }
+    return std::nullopt;
+}
+
+std::tuple<double, double, double, double, double, double> refdes_hit_court(
+    double fx, double fy, double ca, double sa, double lx, double ly,
+    const std::optional<Box4>& court) {
+    const double bx = fx + lx * ca + ly * sa;
+    const double by = fy - lx * sa + ly * ca;
+    if (court.has_value()) {
+        return {bx, by, court->x0, court->y0, court->x1, court->y1};
+    }
+    return {bx, by, bx - 1.0, by - 1.0, bx + 1.0, by + 1.0};
+}
+
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
+
+std::pair<double, double> uv_to_board(double cx, double cy, double u, double v,
+                                      double rot) {
+    const double turn = rot * (M_PI / 180.0);
+    const double cs = std::cos(turn);
+    const double sn = std::sin(turn);
+    return {cx + u * cs + v * sn, cy - u * sn + v * cs};
+}
+
+std::pair<double, double> board_to_uv(double cx, double cy, double bx,
+                                      double by, double rot) {
+    const double turn = rot * (M_PI / 180.0);
+    const double cs = std::cos(turn);
+    const double sn = std::sin(turn);
+    const double qx = bx - cx;
+    const double qy = by - cy;
+    return {qx * cs - qy * sn, qx * sn + qy * cs};
+}
+
+Box4 corridor_local_from_uv(
+    const std::vector<std::pair<double, double>>& pads, double r_construct,
+    double v_margin) {
+    if (pads.empty()) {
+        throw std::runtime_error("corridor_local_from_uv: pads required");
+    }
+    double u0 = pads[0].first;
+    double u1 = pads[0].first;
+    double v0 = pads[0].second;
+    double v1 = pads[0].second;
+    for (const auto& p : pads) {
+        u0 = std::min(u0, p.first);
+        u1 = std::max(u1, p.first);
+        v0 = std::min(v0, p.second);
+        v1 = std::max(v1, p.second);
+    }
+    const double u_half = std::max(std::fabs(u0), std::fabs(u1)) + r_construct;
+    const double v_half = std::max(std::fabs(v0), std::fabs(v1)) + v_margin;
+    return Box4{-u_half, -v_half, u_half, v_half};
+}
+
+Box4 corridor_board_rect(const Box4& local, double cx, double cy, double rot) {
+    const double us[2] = {local.x0, local.x1};
+    const double vs[2] = {local.y0, local.y1};
+    bool any = false;
+    double min_x = 0.0;
+    double min_y = 0.0;
+    double max_x = 0.0;
+    double max_y = 0.0;
+    for (double u : us) {
+        for (double v : vs) {
+            const auto p = uv_to_board(cx, cy, u, v, rot);
+            if (!any) {
+                min_x = max_x = p.first;
+                min_y = max_y = p.second;
+                any = true;
+            } else {
+                min_x = std::min(min_x, p.first);
+                min_y = std::min(min_y, p.second);
+                max_x = std::max(max_x, p.first);
+                max_y = std::max(max_y, p.second);
+            }
+        }
+    }
+    return Box4{py_round(min_x, 4), py_round(min_y, 4), py_round(max_x, 4),
+                py_round(max_y, 4)};
+}
+
+std::pair<double, double> mirror_offset_x(double ox, double oy, const Box4& cb,
+                                          double zone_w) {
+    return {py_round(zone_w - ox - cb.x0 - cb.x1, 4), oy};
+}
+
+Box4 offset_turned_box(const Box4& bbox, double rot, double ox, double oy) {
+    const Box4 turned = turn_box(bbox, rot);
+    return Box4{ox + turned.x0, oy + turned.y0, ox + turned.x1,
+                oy + turned.y1};
+}
+
+std::vector<Box4> offset_boxes(const std::vector<Box4>& boxes, double ox,
+                               double oy) {
+    std::vector<Box4> out;
+    out.reserve(boxes.size());
+    for (const auto& box : boxes) {
+        out.push_back(Box4{ox + box.x0, oy + box.y0, ox + box.x1,
+                           oy + box.y1});
+    }
+    return out;
+}
+
+GridControls grid_controls(
+    const std::vector<std::tuple<std::string, double, double, double, double>>&
+        items,
+    double target_w, double button_gap, double zone_pad, double place_clear) {
+    if (items.empty()) {
+        throw std::runtime_error("grid_controls: refs required");
+    }
+    double cell = 0.0;
+    for (const auto& row : items) {
+        const double bw = std::get<3>(row) - std::get<1>(row);
+        const double bh = std::get<4>(row) - std::get<2>(row);
+        cell = std::max(cell, std::max(bw + button_gap, bh + button_gap));
+    }
+    if (cell == 0.0) {
+        throw std::runtime_error("grid_controls: cell required");
+    }
+    const int n = static_cast<int>(items.size());
+    const int fit = static_cast<int>(target_w / cell);
+    const int cols = std::max(1, std::min(n, fit == 0 ? 1 : fit));
+    std::vector<std::tuple<std::string, double, double, double, double>>
+        order = items;
+    std::stable_sort(order.begin(), order.end(),
+                     [](const auto& a, const auto& b) {
+                         return std::get<0>(a) < std::get<0>(b);
+                     });
+    GridControls out;
+    out.offs.reserve(order.size());
+    out.occ.reserve(order.size());
+    for (int i = 0; i < static_cast<int>(order.size()); ++i) {
+        const auto& row = order[static_cast<std::size_t>(i)];
+        const int cx = i % cols;
+        const int cy = i / cols;
+        const double x0 = zone_pad + static_cast<double>(cx) * cell;
+        const double y0 = zone_pad + static_cast<double>(cy) * cell;
+        const double bx0 = std::get<1>(row);
+        const double by0 = std::get<2>(row);
+        const double fw = (std::get<3>(row) - bx0) + place_clear;
+        const double fh = (std::get<4>(row) - by0) + place_clear;
+        const double ox = x0 + (cell - fw) / 2.0 - bx0 + place_clear / 2.0;
+        const double oy = y0 + (cell - fh) / 2.0 - by0 + place_clear / 2.0;
+        out.offs.emplace_back(std::get<0>(row), py_round(ox, 4),
+                              py_round(oy, 4));
+        out.occ.push_back(Box4{x0, y0, x0 + cell, y0 + cell});
+    }
+    const int rows = (n + cols - 1) / cols;
+    out.packed_w = zone_pad + static_cast<double>(cols) * cell;
+    out.packed_h = zone_pad + static_cast<double>(rows) * cell;
+    return out;
+}
+
+namespace {
+
+std::string fmt4(double value) {
+    char buf[32];
+    std::snprintf(buf, sizeof(buf), "%.4f", value);
+    return buf;
+}
+
+using CuBox = std::tuple<double, double, double, double, double, std::string>;
+using Hole = std::tuple<double, double, double, std::string>;
+
+}  // namespace
+
+ContactGeom contact_geometry(
+    const std::vector<std::tuple<double, double, double, double>>& pads) {
+    if (pads.empty()) {
+        throw std::runtime_error("no pads — contact geometry underivable");
+    }
+    std::map<std::pair<double, double>, int> tally;
+    double span_u = 0.0;
+    for (const auto& pad : pads) {
+        const double uu = std::get<0>(pad);
+        const double ww = std::get<2>(pad);
+        const double hh = std::get<3>(pad);
+        tally[{ww, hh}] += 1;
+        span_u = std::max(span_u, std::fabs(uu));
+    }
+    std::pair<double, double> best = tally.begin()->first;
+    int best_n = -1;
+    for (const auto& kv : tally) {
+        if (kv.second > best_n
+            || (kv.second == best_n && kv.first < best)) {
+            best_n = kv.second;
+            best = kv.first;
+        }
+    }
+    std::vector<std::pair<double, double>> contacts;
+    contacts.reserve(pads.size());
+    for (const auto& pad : pads) {
+        if (std::get<2>(pad) == best.first && std::get<3>(pad) == best.second) {
+            contacts.emplace_back(std::get<0>(pad), std::get<1>(pad));
+        }
+    }
+    std::set<double> col_set;
+    double row_v = 0.0;
+    for (const auto& c : contacts) {
+        col_set.insert(py_round(c.first, 4));
+        row_v = std::max(row_v, std::fabs(c.second));
+    }
+    std::vector<double> cols(col_set.begin(), col_set.end());
+    if (cols.size() < 2) {
+        throw std::runtime_error(std::to_string(cols.size())
+                                 + " contact column(s) — pitch underivable");
+    }
+    std::vector<double> gaps;
+    gaps.reserve(cols.size() - 1);
+    for (std::size_t i = 0; i + 1 < cols.size(); ++i) {
+        gaps.push_back(cols[i + 1] - cols[i]);
+    }
+    std::sort(gaps.begin(), gaps.end());
+    ContactGeom out;
+    out.row_v = row_v;
+    out.half_w = best.first / 2.0;
+    out.half_h = best.second / 2.0;
+    out.span_u = span_u;
+    out.pitch = gaps[gaps.size() / 2];
+    return out;
+}
+
+std::pair<bool, std::string> via_feasible(
+    double u, double v, double dia, double drill,
+    const std::vector<CuBox>& front_cu, const std::vector<CuBox>& back_cu,
+    const std::vector<CuBox>& samenet, const std::vector<Hole>& holes,
+    const ViaClear& clear, bool want_audit) {
+    const double rv = dia / 2.0;
+    const double rh = drill / 2.0;
+    const std::pair<const char*, const std::vector<CuBox>*> layers[2] = {
+        {"F.Cu", &front_cu},
+        {"B.Cu", &back_cu},
+    };
+    for (const auto& layer : layers) {
+        for (const auto& bx : *layer.second) {
+            const Box4 box{std::get<0>(bx), std::get<1>(bx), std::get<2>(bx),
+                           std::get<3>(bx)};
+            const double d = point_box_dist(u, v, box);
+            const double need = rv + std::get<4>(bx) + clear.margin;
+            if (d < need) {
+                if (!want_audit) {
+                    return {false, {}};
+                }
+                return {false, std::string(layer.first) + " " + std::get<5>(bx)
+                                   + " annulus " + fmt4(d) + " < " + fmt4(need)};
+            }
+            if (d < rh + clear.hole_foreign) {
+                if (!want_audit) {
+                    return {false, {}};
+                }
+                return {false, std::string(layer.first) + " " + std::get<5>(bx)
+                                   + " hole " + fmt4(d)};
+            }
+        }
+    }
+    for (const auto& bx : samenet) {
+        const Box4 box{std::get<0>(bx), std::get<1>(bx), std::get<2>(bx),
+                       std::get<3>(bx)};
+        const double d = point_box_dist(u, v, box);
+        if (d < rh + clear.hole_samenet) {
+            if (!want_audit) {
+                return {false, {}};
+            }
+            return {false, "same-net " + std::get<5>(bx) + " drill " + fmt4(d)
+                               + " < " + fmt4(rh + clear.hole_samenet)
+                               + " (via-in-pad DFM)"};
+        }
+    }
+    for (const auto& hole : holes) {
+        const double du = u - std::get<0>(hole);
+        const double dv = v - std::get<1>(hole);
+        const double d = std::hypot(du, dv);
+        if (d < std::get<2>(hole) + rh + clear.hole_hole) {
+            if (!want_audit) {
+                return {false, {}};
+            }
+            return {false, "hole-hole " + std::get<3>(hole) + " " + fmt4(d)};
+        }
+    }
+    return {true, {}};
+}
+
+SeatBandResult seat_band(
+    const std::vector<std::tuple<std::string, double, double>>& members,
+    const std::vector<CuBox>& front_cu, const std::vector<CuBox>& back_cu,
+    const std::vector<CuBox>& samenet, const std::vector<Hole>& holes,
+    double row_v, double half_h,
+    const std::vector<std::pair<double, double>>& ladder, const ViaClear& clear,
+    double via_row, double r_construct, double lattice, const std::string& conn,
+    int depth) {
+    if (members.empty()) {
+        throw std::runtime_error("seat_band: members required");
+    }
+    SeatBandResult out;
+    std::vector<double> us;
+    us.reserve(members.size());
+    for (const auto& m : members) {
+        us.push_back(std::get<1>(m));
+    }
+    std::sort(us.begin(), us.end());
+    us.erase(std::unique(us.begin(), us.end()), us.end());
+    const double u_first = us.front();
+    const double u_last = us.back();
+    const double center = (u_first + u_last) / 2.0;
+    std::vector<std::string> names;
+    names.reserve(members.size());
+    for (const auto& m : members) {
+        names.push_back(std::get<0>(m));
+    }
+    std::vector<std::pair<double, double>> pts;
+    pts.reserve(members.size());
+    for (const auto& m : members) {
+        pts.emplace_back(std::get<1>(m), std::get<2>(m));
+    }
+    for (const auto& rung : ladder) {
+        const double dia = rung.first;
+        const double drill = rung.second;
+        const double rv = dia / 2.0;
+        const double v_max = row_v - half_h - rv - via_row;
+        const double reach =
+            std::sqrt(std::max(r_construct * r_construct - row_v * row_v, 0.0));
+        const double lo = u_last - reach;
+        const double hi = u_first + reach;
+        const long i0 =
+            static_cast<long>(std::ceil(lo / lattice - 1e-9));
+        const long i1 =
+            static_cast<long>(std::floor(hi / lattice + 1e-9));
+        std::vector<double> u_cands;
+        for (long i = i0; i <= i1; ++i) {
+            u_cands.push_back(
+                py_round(static_cast<double>(i) * lattice, 6));
+        }
+        std::sort(u_cands.begin(), u_cands.end(),
+                  [center](double a, double b) {
+                      const double da = std::fabs(a - center);
+                      const double db = std::fabs(b - center);
+                      if (da != db) {
+                          return da < db;
+                      }
+                      return -a < -b;
+                  });
+        const int vmax_n = static_cast<int>(v_max / lattice);
+        std::vector<double> v_cands;
+        for (int k = -vmax_n; k <= vmax_n; ++k) {
+            v_cands.push_back(
+                py_round(static_cast<double>(k) * lattice, 6));
+        }
+        std::sort(v_cands.begin(), v_cands.end(), [](double a, double b) {
+            const double da = std::fabs(a);
+            const double db = std::fabs(b);
+            if (da != db) {
+                return da < db;
+            }
+            return -a < -b;
+        });
+        for (double vv : v_cands) {
+            for (double uu : u_cands) {
+                const auto cov = coverage_ok(uu, vv, pts, r_construct);
+                if (!cov.first) {
+                    continue;
+                }
+                const auto hit = via_feasible(uu, vv, dia, drill, front_cu,
+                                              back_cu, samenet, holes, clear,
+                                              true);
+                if (!hit.first) {
+                    if (!hit.second.empty()) {
+                        out.audit.push_back(hit.second);
+                    }
+                    continue;
+                }
+                SeatLedger led;
+                led.kind = "seat";
+                led.conn = conn;
+                led.u = uu;
+                led.v = vv;
+                led.dia = dia;
+                led.drill = drill;
+                led.worst = py_round(cov.second, 4);
+                led.depth = depth;
+                led.members = names;
+                out.ledger.push_back(std::move(led));
+                SeatVia via;
+                via.u = uu;
+                via.v = vv;
+                via.dia = dia;
+                via.drill = drill;
+                via.worst = cov.second;
+                via.members = names;
+                out.vias.push_back(std::move(via));
+                return out;
+            }
+        }
+    }
+    if (us.size() > 1) {
+        std::vector<std::pair<double, std::size_t>> gaps;
+        for (std::size_t i = 0; i + 1 < us.size(); ++i) {
+            gaps.emplace_back(us[i + 1] - us[i], i);
+        }
+        std::sort(gaps.begin(), gaps.end(),
+                  [center, &us](const auto& a, const auto& b) {
+                      if (a.first != b.first) {
+                          return a.first > b.first;
+                      }
+                      return std::fabs(us[a.second] - center)
+                          < std::fabs(us[b.second] - center);
+                  });
+        const double cut =
+            (us[gaps[0].second] + us[gaps[0].second + 1]) / 2.0;
+        SeatLedger led;
+        led.kind = "split_u";
+        led.conn = conn;
+        led.at = py_round(cut, 4);
+        led.depth = depth;
+        led.members = names;
+        out.ledger.push_back(std::move(led));
+        std::vector<std::tuple<std::string, double, double>> left;
+        std::vector<std::tuple<std::string, double, double>> right;
+        for (const auto& m : members) {
+            if (std::get<1>(m) < cut) {
+                left.push_back(m);
+            } else if (std::get<1>(m) > cut) {
+                right.push_back(m);
+            }
+        }
+        auto lhit = seat_band(left, front_cu, back_cu, samenet, holes, row_v,
+                              half_h, ladder, clear, via_row, r_construct,
+                              lattice, conn, depth + 1);
+        out.ledger.insert(out.ledger.end(), lhit.ledger.begin(),
+                          lhit.ledger.end());
+        out.audit.insert(out.audit.end(), lhit.audit.begin(), lhit.audit.end());
+        if (lhit.vias.empty()) {
+            return out;
+        }
+        auto rhit = seat_band(right, front_cu, back_cu, samenet, holes, row_v,
+                              half_h, ladder, clear, via_row, r_construct,
+                              lattice, conn, depth + 1);
+        out.ledger.insert(out.ledger.end(), rhit.ledger.begin(),
+                          rhit.ledger.end());
+        out.audit.insert(out.audit.end(), rhit.audit.begin(), rhit.audit.end());
+        if (rhit.vias.empty()) {
+            return out;
+        }
+        out.vias.insert(out.vias.end(), lhit.vias.begin(), lhit.vias.end());
+        out.vias.insert(out.vias.end(), rhit.vias.begin(), rhit.vias.end());
+        return out;
+    }
+    std::vector<double> rows;
+    for (const auto& m : members) {
+        rows.push_back(std::get<2>(m));
+    }
+    std::sort(rows.begin(), rows.end());
+    rows.erase(std::unique(rows.begin(), rows.end()), rows.end());
+    if (rows.size() > 1) {
+        SeatLedger led;
+        led.kind = "split_row";
+        led.conn = conn;
+        led.depth = depth;
+        led.members = names;
+        out.ledger.push_back(std::move(led));
+        for (double rv : rows) {
+            std::vector<std::tuple<std::string, double, double>> sub;
+            for (const auto& m : members) {
+                if (std::get<2>(m) == rv) {
+                    sub.push_back(m);
+                }
+            }
+            auto hit = seat_band(sub, front_cu, back_cu, samenet, holes, row_v,
+                                 half_h, ladder, clear, via_row, r_construct,
+                                 lattice, conn, depth + 1);
+            out.ledger.insert(out.ledger.end(), hit.ledger.begin(),
+                              hit.ledger.end());
+            out.audit.insert(out.audit.end(), hit.audit.begin(),
+                             hit.audit.end());
+            if (hit.vias.empty()) {
+                out.vias.clear();
+                return out;
+            }
+            out.vias.insert(out.vias.end(), hit.vias.begin(), hit.vias.end());
+        }
+        return out;
+    }
+    return out;
+}
+
+bool is_passive_ref(const std::string& ref) {
+    if (ref.empty()) {
+        return false;
+    }
+    const char head = ref[0];
+    if (head != 'R' && head != 'C' && head != 'L') {
+        return false;
+    }
+    if (ref.size() >= 2 && ref[0] == 'R' && ref[1] == 'J') {
+        return false;
+    }
+    if (ref.size() >= 3 && ref.compare(0, 3, "LED") == 0) {
+        return false;
+    }
+    return true;
+}
+
+std::string classify_side(const std::string& ref, const std::string& lib,
+                          const Box4& bbox, bool in_decoupling, bool two_side,
+                          double top_area,
+                          const std::vector<std::string>& top_always) {
+    if (!two_side) {
+        return "top";
+    }
+    for (const auto& tok : top_always) {
+        if (lib.find(tok) != std::string::npos) {
+            return "top";
+        }
+    }
+    const double area = (bbox.x1 - bbox.x0) * (bbox.y1 - bbox.y0);
+    if (area >= top_area) {
+        return "top";
+    }
+    if (in_decoupling) {
+        return "bottom";
+    }
+    if (is_passive_ref(ref)) {
+        return "bottom";
+    }
+    return "top";
+}
+
+std::vector<std::string> decoupling_caps(
+    const std::vector<std::tuple<std::string, std::vector<std::string>>>&
+        net_refs) {
+    std::map<std::string, std::set<std::string>> cap_nets;
+    for (const auto& row : net_refs) {
+        const std::string& name = std::get<0>(row);
+        if (name.size() >= 13 && name.compare(0, 13, "unconnected-") == 0) {
+            continue;
+        }
+        for (const auto& ref : std::get<1>(row)) {
+            if (!ref.empty() && ref[0] == 'C' && ref[0] != '#') {
+                cap_nets[ref].insert(name);
+            }
+        }
+    }
+    std::vector<std::string> out;
+    for (const auto& kv : cap_nets) {
+        const bool has_gnd = kv.second.count("GND") != 0;
+        int rails = 0;
+        for (const auto& n : kv.second) {
+            if (n != "GND") {
+                rails += 1;
+            }
+        }
+        if (has_gnd && rails == 1
+            && static_cast<int>(kv.second.size()) == 2) {
+            out.push_back(kv.first);
+        }
+    }
+    return out;
+}
+
+double zone_target_w(double tot_area, double fill, double aspect,
+                     double floor_mm) {
+    return std::max(floor_mm, std::sqrt(tot_area * fill)) * aspect;
+}
+
+double connector_target_w(double row_span, double zone_pad, double tot_area,
+                          double fill, double aspect) {
+    return std::max(row_span - zone_pad, std::sqrt(tot_area * fill) * aspect);
+}
+
+Box4 canonical_plane_rect(double origin_x, double origin_y, double board_w,
+                          double board_h, double edge_back) {
+    return Box4{py_round(origin_x + edge_back, 3),
+                py_round(origin_y + edge_back, 3),
+                py_round(origin_x + board_w - edge_back, 3),
+                py_round(origin_y + board_h - edge_back, 3)};
+}
+
+Box4 isolation_void_rect(const Box4& court, double margin) {
+    return Box4{py_round(court.x0 - margin, 3), py_round(court.y0 - margin, 3),
+                py_round(court.x1 + margin, 3), py_round(court.y1 + margin, 3)};
+}
+
+Box4 board_box_to_uv(double cx, double cy, double rot, const Box4& box) {
+    const double xs[2] = {box.x0, box.x1};
+    const double ys[2] = {box.y0, box.y1};
+    bool any = false;
+    double min_u = 0.0;
+    double min_v = 0.0;
+    double max_u = 0.0;
+    double max_v = 0.0;
+    for (double x : xs) {
+        for (double y : ys) {
+            const auto uv = board_to_uv(cx, cy, x, y, rot);
+            if (!any) {
+                min_u = max_u = uv.first;
+                min_v = max_v = uv.second;
+                any = true;
+            } else {
+                min_u = std::min(min_u, uv.first);
+                min_v = std::min(min_v, uv.second);
+                max_u = std::max(max_u, uv.first);
+                max_v = std::max(max_v, uv.second);
+            }
+        }
+    }
+    return Box4{min_u, min_v, max_u, max_v};
+}
+
+std::vector<std::vector<Seg2>> cluster_slot_segs(
+    const std::vector<std::tuple<std::string, double, double>>& pad_offs,
+    const std::vector<std::string>& pad_nets,
+    const std::vector<std::pair<double, double>>& slots,
+    const std::vector<
+        std::tuple<std::string, std::vector<std::pair<double, double>>>>&
+        static_pts) {
+    if (pad_offs.size() != pad_nets.size()) {
+        throw std::runtime_error("cluster_slot_segs: pad/net size mismatch");
+    }
+    std::unordered_map<std::string, std::vector<std::pair<double, double>>>
+        pts_of;
+    for (const auto& row : static_pts) {
+        pts_of[std::get<0>(row)] = std::get<1>(row);
+    }
+    std::vector<std::vector<Seg2>> out;
+    out.reserve(slots.size());
+    for (const auto& slot : slots) {
+        std::vector<Seg2> segs;
+        for (std::size_t i = 0; i < pad_offs.size(); ++i) {
+            const std::string& net = pad_nets[i];
+            if (net.empty()) {
+                continue;
+            }
+            auto found = pts_of.find(net);
+            if (found == pts_of.end() || found->second.empty()) {
+                continue;
+            }
+            const double px = slot.first + std::get<1>(pad_offs[i]);
+            const double py = slot.second + std::get<2>(pad_offs[i]);
+            const auto tgt = nearest_manhattan(px, py, found->second);
+            segs.push_back(Seg2{px, py, tgt.first, tgt.second});
+        }
+        out.push_back(std::move(segs));
+    }
+    return out;
+}
+
+namespace {
+
+struct EscapeAttach {
+    double u = 0.0;
+    std::string kind;
+    double a = 0.0;
+    double b = 0.0;
+    std::string pad;
+};
+
+int attach_kind_rank(const std::string& kind) {
+    if (kind == "column") {
+        return 0;
+    }
+    if (kind == "pad") {
+        return 1;
+    }
+    if (kind == "pair") {
+        return 2;
+    }
+    throw std::runtime_error("escape_ladder_plan: unknown attach kind");
+}
+
+bool attach_less(const EscapeAttach& left, const EscapeAttach& right) {
+    if (left.u != right.u) {
+        return left.u < right.u;
+    }
+    const int left_rank = attach_kind_rank(left.kind);
+    const int right_rank = attach_kind_rank(right.kind);
+    if (left_rank != right_rank) {
+        return left_rank < right_rank;
+    }
+    if (left.kind == "column") {
+        return false;
+    }
+    if (left.a != right.a) {
+        return left.a < right.a;
+    }
+    if (left.b != right.b) {
+        return left.b < right.b;
+    }
+    return left.pad < right.pad;
+}
+
+bool attach_same(const EscapeAttach& left, const EscapeAttach& right) {
+    return left.u == right.u && left.kind == right.kind && left.a == right.a
+        && left.b == right.b && left.pad == right.pad;
+}
+
+}
+
+std::vector<EscapeLadderSeg> escape_ladder_plan(
+    const std::vector<std::tuple<double, double, std::string>>& gnd_pads,
+    const std::vector<std::pair<double, double>>& vias, double pitch,
+    double pitch_tol, double row_v, double stub_w_pair,
+    double stub_w_single, double spine_w) {
+    if (gnd_pads.empty()) {
+        throw std::runtime_error("escape_ladder_plan: GND pads required");
+    }
+    if (vias.empty()) {
+        throw std::runtime_error("escape_ladder_plan: vias required");
+    }
+    if (pitch_tol < 0.0) {
+        throw std::runtime_error("escape_ladder_plan: pitch_tol required");
+    }
+    std::vector<std::tuple<double, double, std::string>> pads = gnd_pads;
+    for (auto& pad : pads) {
+        std::get<0>(pad) = py_round(std::get<0>(pad), 4);
+        std::get<1>(pad) = py_round(std::get<1>(pad), 4);
+    }
+    std::sort(pads.begin(), pads.end());
+    std::map<double, std::set<double>> cols;
+    for (const auto& pad : pads) {
+        cols[std::get<0>(pad)].insert(std::get<1>(pad));
+    }
+    std::vector<double> both_rows;
+    for (const auto& col : cols) {
+        if (col.second.size() >= 2) {
+            both_rows.push_back(col.first);
+        }
+    }
+    std::vector<EscapeAttach> attaches;
+    std::set<double> used_cols;
+    for (std::size_t i = 0; i + 1 < both_rows.size(); ++i) {
+        const double left_u = both_rows[i];
+        const double right_u = both_rows[i + 1];
+        if (std::abs(right_u - left_u - pitch) < pitch_tol) {
+            EscapeAttach attach;
+            attach.u = py_round((left_u + right_u) / 2.0, 4);
+            attach.kind = "pair";
+            attach.a = left_u;
+            attach.b = right_u;
+            attaches.push_back(attach);
+            used_cols.insert(left_u);
+            used_cols.insert(right_u);
+        }
+    }
+    for (double col_u : both_rows) {
+        if (used_cols.find(col_u) == used_cols.end()) {
+            EscapeAttach attach;
+            attach.u = col_u;
+            attach.kind = "column";
+            attach.a = col_u;
+            attaches.push_back(attach);
+        }
+    }
+    for (const auto& pad : pads) {
+        const double pad_u = std::get<0>(pad);
+        if (std::find(both_rows.begin(), both_rows.end(), pad_u)
+            == both_rows.end()) {
+            EscapeAttach attach;
+            attach.u = pad_u;
+            attach.kind = "pad";
+            attach.a = pad_u;
+            attach.b = std::get<1>(pad);
+            attach.pad = std::get<2>(pad);
+            attaches.push_back(attach);
+        }
+    }
+    std::sort(attaches.begin(), attaches.end(), attach_less);
+    if (attaches.empty()) {
+        throw std::runtime_error("escape_ladder_plan: no GND attach options");
+    }
+    std::vector<std::pair<double, double>> via_rows = vias;
+    std::sort(via_rows.begin(), via_rows.end(),
+              [](const std::pair<double, double>& left,
+                 const std::pair<double, double>& right) {
+                  return left.first < right.first;
+              });
+    std::vector<EscapeAttach> needed;
+    for (const auto& via : via_rows) {
+        std::vector<EscapeAttach> left;
+        std::vector<EscapeAttach> right;
+        for (const auto& attach : attaches) {
+            if (attach.u <= via.first) {
+                left.push_back(attach);
+            }
+            if (attach.u >= via.first) {
+                right.push_back(attach);
+            }
+        }
+        std::vector<EscapeAttach> picks;
+        if (!left.empty()) {
+            picks.push_back(left.back());
+        }
+        if (!right.empty()) {
+            picks.push_back(right.front());
+        }
+        if (picks.size() < 2) {
+            picks = attaches;
+            std::stable_sort(
+                picks.begin(), picks.end(),
+                [&](const EscapeAttach& left_a, const EscapeAttach& right_a) {
+                    const double left_d = std::abs(left_a.u - via.first);
+                    const double right_d = std::abs(right_a.u - via.first);
+                    if (left_d != right_d) {
+                        return left_d < right_d;
+                    }
+                    if (left_a.u != right_a.u) {
+                        return left_a.u < right_a.u;
+                    }
+                    return false;
+                });
+            if (picks.size() > 2) {
+                picks.resize(2);
+            }
+        }
+        for (const auto& pick : picks) {
+            bool seen = false;
+            for (const auto& have : needed) {
+                if (attach_same(have, pick)) {
+                    seen = true;
+                    break;
+                }
+            }
+            if (!seen) {
+                needed.push_back(pick);
+            }
+        }
+    }
+    std::sort(needed.begin(), needed.end(), attach_less);
+    std::vector<EscapeLadderSeg> stub_segs;
+    for (const auto& attach : needed) {
+        EscapeLadderSeg seg;
+        if (attach.kind == "pair") {
+            seg.ax = attach.u;
+            seg.ay = -row_v;
+            seg.bx = attach.u;
+            seg.by = row_v;
+            seg.w = stub_w_pair;
+            seg.role = "stub_pair";
+        } else if (attach.kind == "column") {
+            seg.ax = attach.u;
+            seg.ay = -row_v;
+            seg.bx = attach.u;
+            seg.by = row_v;
+            seg.w = stub_w_single;
+            seg.role = "stub_column";
+        } else {
+            seg.ax = attach.a;
+            seg.ay = std::copysign(row_v, attach.b);
+            seg.bx = attach.a;
+            seg.by = 0.0;
+            seg.w = stub_w_single;
+            seg.role = "stub_pad";
+        }
+        stub_segs.push_back(seg);
+    }
+    for (const auto& via : vias) {
+        if (std::abs(via.second) > 1e-9) {
+            EscapeLadderSeg seg;
+            seg.ax = via.first;
+            seg.ay = 0.0;
+            seg.bx = via.first;
+            seg.by = via.second;
+            seg.w = stub_w_single;
+            seg.role = "stub_via";
+            stub_segs.push_back(seg);
+        }
+    }
+    std::vector<double> attach_us;
+    attach_us.reserve(needed.size() + vias.size());
+    for (const auto& attach : needed) {
+        attach_us.push_back(attach.u);
+    }
+    for (const auto& via : vias) {
+        attach_us.push_back(via.first);
+    }
+    if (attach_us.empty()) {
+        throw std::runtime_error("escape_ladder_plan: spine span required");
+    }
+    EscapeLadderSeg spine;
+    spine.ax = *std::min_element(attach_us.begin(), attach_us.end());
+    spine.ay = 0.0;
+    spine.bx = *std::max_element(attach_us.begin(), attach_us.end());
+    spine.by = 0.0;
+    spine.w = spine_w;
+    spine.role = "spine";
+    std::vector<EscapeLadderSeg> segs;
+    segs.reserve(1 + stub_segs.size());
+    segs.push_back(spine);
+    segs.insert(segs.end(), stub_segs.begin(), stub_segs.end());
+    return segs;
+}
+
+namespace {
+
+int escape_find(std::vector<int>& parent, int index) {
+    while (parent[static_cast<std::size_t>(index)] != index) {
+        const int grand =
+            parent[static_cast<std::size_t>(
+                parent[static_cast<std::size_t>(index)])];
+        parent[static_cast<std::size_t>(index)] = grand;
+        index = grand;
+    }
+    return index;
+}
+
+void escape_union(std::vector<int>& parent, int left, int right) {
+    parent[static_cast<std::size_t>(escape_find(parent, left))] =
+        escape_find(parent, right);
+}
+
+Box4 escape_pad_box(double pad_u, double pad_v, double half_w, double half_h) {
+    return Box4{pad_u - half_w, pad_v - half_h, pad_u + half_w,
+                pad_v + half_h};
+}
+
+bool escape_nodes_touch(
+    int left_kind, std::size_t left_idx, int right_kind, std::size_t right_idx,
+    const std::vector<std::tuple<double, double, double>>& vias,
+    const std::vector<std::tuple<double, double, double, double, double,
+                                 std::string>>& segs,
+    const std::vector<std::pair<double, double>>& pads, double half_w,
+    double half_h) {
+    if (left_kind > right_kind) {
+        return escape_nodes_touch(right_kind, right_idx, left_kind, left_idx,
+                                  vias, segs, pads, half_w, half_h);
+    }
+    if (left_kind == 1 && right_kind == 1) {
+        const auto& left = segs[left_idx];
+        const auto& right = segs[right_idx];
+        const Box4 box{
+            std::min(std::get<0>(right), std::get<2>(right))
+                - std::get<4>(right) / 2.0,
+            std::min(std::get<1>(right), std::get<3>(right))
+                - std::get<4>(right) / 2.0,
+            std::max(std::get<0>(right), std::get<2>(right))
+                + std::get<4>(right) / 2.0,
+            std::max(std::get<1>(right), std::get<3>(right))
+                + std::get<4>(right) / 2.0};
+        return seg_box_dist(std::get<0>(left), std::get<1>(left),
+                            std::get<2>(left), std::get<3>(left), box)
+            <= std::get<4>(left) / 2.0 + 1e-9;
+    }
+    if (left_kind == 0 && right_kind == 1) {
+        const auto& via = vias[left_idx];
+        const auto& seg = segs[right_idx];
+        const Box4 box{std::get<0>(via), std::get<1>(via), std::get<0>(via),
+                       std::get<1>(via)};
+        return seg_box_dist(std::get<0>(seg), std::get<1>(seg),
+                            std::get<2>(seg), std::get<3>(seg), box)
+            <= std::get<4>(seg) / 2.0 + std::get<2>(via) / 2.0 + 1e-9;
+    }
+    if (left_kind == 1 && right_kind == 2) {
+        const auto& seg = segs[left_idx];
+        const auto& pad = pads[right_idx];
+        return seg_box_dist(std::get<0>(seg), std::get<1>(seg),
+                            std::get<2>(seg), std::get<3>(seg),
+                            escape_pad_box(pad.first, pad.second, half_w,
+                                           half_h))
+            <= std::get<4>(seg) / 2.0 + 1e-9;
+    }
+    if (left_kind == 0 && right_kind == 2) {
+        const auto& via = vias[left_idx];
+        const auto& pad = pads[right_idx];
+        return point_box_dist(std::get<0>(via), std::get<1>(via),
+                              escape_pad_box(pad.first, pad.second, half_w,
+                                             half_h))
+            <= std::get<2>(via) / 2.0 + 1e-9;
+    }
+    if (left_kind == 0 && right_kind == 0) {
+        const auto& left = vias[left_idx];
+        const auto& right = vias[right_idx];
+        return std::hypot(std::get<0>(left) - std::get<0>(right),
+                          std::get<1>(left) - std::get<1>(right))
+            <= (std::get<2>(left) + std::get<2>(right)) / 2.0 + 1e-9;
+    }
+    return false;
+}
+
+}
+
+EscapeLadderCheck escape_ladder_connected(
+    const std::vector<std::tuple<double, double, double>>& vias,
+    const std::vector<std::tuple<double, double, double, double, double,
+                                 std::string>>& segs,
+    const std::vector<std::pair<double, double>>& pads, double half_w,
+    double half_h) {
+    if (vias.empty()) {
+        throw std::runtime_error("escape_ladder_connected: vias required");
+    }
+    const std::size_t via_count = vias.size();
+    const std::size_t seg_count = segs.size();
+    const std::size_t pad_count = pads.size();
+    const std::size_t node_count = via_count + seg_count + pad_count;
+    std::vector<int> kinds;
+    std::vector<std::size_t> local;
+    kinds.reserve(node_count);
+    local.reserve(node_count);
+    for (std::size_t i = 0; i < via_count; ++i) {
+        kinds.push_back(0);
+        local.push_back(i);
+    }
+    for (std::size_t i = 0; i < seg_count; ++i) {
+        kinds.push_back(1);
+        local.push_back(i);
+    }
+    for (std::size_t i = 0; i < pad_count; ++i) {
+        kinds.push_back(2);
+        local.push_back(i);
+    }
+    std::vector<int> parent(node_count);
+    for (std::size_t i = 0; i < node_count; ++i) {
+        parent[i] = static_cast<int>(i);
+    }
+    for (std::size_t i = 0; i < node_count; ++i) {
+        for (std::size_t j = i + 1; j < node_count; ++j) {
+            if (escape_nodes_touch(kinds[i], local[i], kinds[j], local[j],
+                                   vias, segs, pads, half_w, half_h)) {
+                escape_union(parent, static_cast<int>(i),
+                             static_cast<int>(j));
+            }
+        }
+    }
+    std::set<int> via_seg_roots;
+    for (std::size_t i = 0; i < via_count + seg_count; ++i) {
+        via_seg_roots.insert(escape_find(parent, static_cast<int>(i)));
+    }
+    int pad_stubs = 0;
+    for (const auto& seg : segs) {
+        const std::string& role = std::get<5>(seg);
+        if (role == "stub_pair" || role == "stub_column"
+            || role == "stub_pad") {
+            pad_stubs += 1;
+        }
+    }
+    EscapeLadderCheck check;
+    check.via_seg_components = static_cast<int>(via_seg_roots.size());
+    check.pad_stubs = pad_stubs;
+    return check;
+}
+
+std::optional<double> escape_redundancy_u(
+    double base_u, double base_v, double dia, double drill,
+    const std::vector<std::tuple<double, double, double, double, double,
+                                 std::string>>& front_cu,
+    const std::vector<std::tuple<double, double, double, double, double,
+                                 std::string>>& back_cu,
+    const std::vector<std::tuple<double, double, double, double, double,
+                                 std::string>>& samenet,
+    const std::vector<std::tuple<double, double, double, std::string>>& holes,
+    const ViaClear& clear, double redundancy_offset, double lattice,
+    int max_steps) {
+    if (max_steps < 0) {
+        throw std::runtime_error("escape_redundancy_u: max_steps required");
+    }
+    if (lattice <= 0.0) {
+        throw std::runtime_error("escape_redundancy_u: lattice required");
+    }
+    const double offsets[2] = {redundancy_offset, -redundancy_offset};
+    const int signs[2] = {1, -1};
+    for (double offset : offsets) {
+        for (int step = 0; step < max_steps; ++step) {
+            for (int sign : signs) {
+                const double candidate = py_round(
+                    base_u + offset
+                        + static_cast<double>(sign * step) * lattice,
+                    6);
+                if (via_feasible(candidate, base_v, dia, drill, front_cu,
+                                 back_cu, samenet, holes, clear, false)
+                        .first) {
+                    return candidate;
+                }
+            }
+        }
+    }
+    return std::nullopt;
+}
+
+bool via_in_escape_region(double bx, double by, const Box4& zone,
+                          double margin) {
+    return zone.x0 + margin <= bx && bx <= zone.x1 - margin
+        && zone.y0 + margin <= by && by <= zone.y1 - margin;
+}
+
+bool coexistence_box_hit(double inst_x, double inst_y, double rot,
+                         const Box4& box, double region_u, double region_v) {
+    const double xs[2] = {box.x0, box.x1};
+    const double ys[2] = {box.y0, box.y1};
+    double min_u = 0.0;
+    double max_u = 0.0;
+    double min_v = 0.0;
+    double max_v = 0.0;
+    bool first = true;
+    for (double x : xs) {
+        for (double y : ys) {
+            const auto uv = board_to_uv(inst_x, inst_y, x, y, rot);
+            if (first) {
+                min_u = max_u = uv.first;
+                min_v = max_v = uv.second;
+                first = false;
+            } else {
+                min_u = std::min(min_u, uv.first);
+                max_u = std::max(max_u, uv.first);
+                min_v = std::min(min_v, uv.second);
+                max_v = std::max(max_v, uv.second);
+            }
+        }
+    }
+    return max_u >= -region_u && min_u <= region_u
+        && max_v >= -region_v && min_v <= region_v;
+}
+
+Box4 legalize_som_rect(double som_x, double som_y, double som_w, double som_h,
+                       double pad) {
+    return {som_x - pad, som_y - pad, som_x + som_w + pad,
+            som_y + som_h + pad};
+}
+
+std::vector<Box4> legalize_mh_corners(double board_w, double board_h,
+                                      double mh_ko) {
+    if (mh_ko <= 0.0) {
+        throw std::runtime_error("legalize_mh_corners: mh_ko required");
+    }
+    return {
+        {0.0, 0.0, mh_ko, mh_ko},
+        {board_w - mh_ko, 0.0, board_w, mh_ko},
+        {board_w - mh_ko, board_h - mh_ko, board_w, board_h},
+        {0.0, board_h - mh_ko, mh_ko, board_h},
+    };
+}
+
+std::vector<std::tuple<std::string, double, double, double, double>>
+som_jack_rects(
+    double som_x, double som_y,
+    const std::vector<std::tuple<std::string, double, double, double, double>>&
+        jacks) {
+    std::vector<std::tuple<std::string, double, double, double, double>> out;
+    out.reserve(jacks.size());
+    for (const auto& jack : jacks) {
+        const std::string& ref = std::get<0>(jack);
+        if (ref.size() < 2) {
+            throw std::runtime_error("som_jack_rects: jack ref required");
+        }
+        std::string name = "som_j";
+        for (std::size_t i = 1; i < ref.size(); ++i) {
+            name.push_back(static_cast<char>(
+                std::tolower(static_cast<unsigned char>(ref[i]))));
+        }
+        const double jx = std::get<1>(jack);
+        const double jy = std::get<2>(jack);
+        const double jw = std::get<3>(jack);
+        const double jh = std::get<4>(jack);
+        out.emplace_back(name, som_x + jx - jw / 2.0, som_y + jy - jh / 2.0,
+                         som_x + jx + jw / 2.0, som_y + jy + jh / 2.0);
+    }
+    return out;
+}
+
+Box4 grow_rect(const Box4& box, double margin) {
+    return {box.x0 - margin, box.y0 - margin, box.x1 + margin,
+            box.y1 + margin};
+}
+
+Box4 offset_rect(const Box4& box, double dx, double dy) {
+    return {box.x0 + dx, box.y0 + dy, box.x1 + dx, box.y1 + dy};
+}
+
+bool rect_covers(const Box4& outer, const Box4& inner) {
+    return outer.x0 <= inner.x0 && outer.y0 <= inner.y0
+        && outer.x1 >= inner.x1 && outer.y1 >= inner.y1;
+}
+
+bool rects_intersect_open(const Box4& a, const Box4& b) {
+    return a.x0 < b.x1 && a.x1 > b.x0 && a.y0 < b.y1 && a.y1 > b.y0;
+}
+
+bool point_in_rect(double x, double y, const Box4& box) {
+    return box.x0 <= x && x <= box.x1 && box.y0 <= y && y <= box.y1;
+}
+
+std::pair<double, double> rect_center(const Box4& box) {
+    return {(box.x0 + box.x1) / 2.0, (box.y0 + box.y1) / 2.0};
+}
+
+std::pair<double, double> coexistence_region(double span_u, double row_v,
+                                             double half_h, double lane_handle,
+                                             double margin) {
+    return {span_u + margin, row_v + half_h + lane_handle + margin};
+}
+
+double construct_reach(double r_construct, double row_v) {
+    return std::sqrt(std::max(r_construct * r_construct - row_v * row_v, 0.0));
+}
+
+Box4 obstacle_scan_region(const std::vector<double>& us, double margin) {
+    if (us.empty()) {
+        throw std::runtime_error("obstacle_scan_region: us required");
+    }
+    double min_u = us.front();
+    double max_u = us.front();
+    for (double u : us) {
+        min_u = std::min(min_u, u);
+        max_u = std::max(max_u, u);
+    }
+    return {min_u - margin, -margin, max_u + margin, margin};
+}
+
+std::pair<double, double> escape_lane_extents(double row_v, double half_h,
+                                              double lane_handle) {
+    const double pad_outer_tip = row_v + half_h;
+    return {pad_outer_tip, pad_outer_tip + lane_handle};
+}
+
+Box4 aabb_from_corners(double x0, double y0, double x1, double y1, int digits) {
+    return {py_round(std::min(x0, x1), digits),
+            py_round(std::min(y0, y1), digits),
+            py_round(std::max(x0, x1), digits),
+            py_round(std::max(y0, y1), digits)};
+}
+
+double min_hypot_to_points(
+    double u, double v,
+    const std::vector<std::pair<double, double>>& pts) {
+    if (pts.empty()) {
+        throw std::runtime_error("min_hypot_to_points: pts required");
+    }
+    double best = std::hypot(pts.front().first - u, pts.front().second - v);
+    for (const auto& pt : pts) {
+        best = std::min(best, std::hypot(pt.first - u, pt.second - v));
+    }
+    return best;
+}
+
+bool within_reach(double ax, double ay, double bx, double by, double reach) {
+    return std::hypot(ax - bx, ay - by) <= reach;
+}
+
+int count_within_reach(
+    double cx, double cy,
+    const std::vector<std::pair<double, double>>& pts, double radius) {
+    int n = 0;
+    for (const auto& pt : pts) {
+        if (std::hypot(pt.first - cx, pt.second - cy) <= radius) {
+            ++n;
+        }
+    }
+    return n;
+}
+
+std::pair<double, double> page_mid_local(const Box4& page, double origin_x,
+                                         double origin_y) {
+    const auto c = rect_center(page);
+    return {c.first - origin_x, c.second - origin_y};
+}
+
+std::string pair_convergence(bool same_row, int delta_lane) {
+    if (same_row && delta_lane == 1) {
+        return "immediate";
+    }
+    if (same_row && delta_lane == 2) {
+        return "quad";
+    }
+    if (same_row) {
+        return "split";
+    }
+    return "row_wrap";
+}
+
+double signed_mag(double magnitude, double sign) {
+    return std::copysign(magnitude, sign);
+}
+
+int pad_row_sign(double v, double deadband) {
+    if (std::fabs(v) < deadband) {
+        return 0;
+    }
+    return v > 0.0 ? 1 : -1;
+}
+
+int interior_tier(bool module_face, bool exclusive) {
+    if (module_face) {
+        return 0;
+    }
+    if (exclusive) {
+        return 1;
+    }
+    return 2;
+}
+
+bool bus_lane_adjacent(const std::string& a_net, const std::string& b_net,
+                       int a_lane, int b_lane) {
+    return a_net == b_net && b_lane - a_lane == 1;
+}
+
+std::tuple<double, double, double, double> padded_xywh(
+    double x, double y, double w, double h, double pad) {
+    return {x - pad, y - pad, w + 2.0 * pad, h + 2.0 * pad};
+}
+
+std::tuple<double, double, double, double> box_to_xywh(const Box4& box) {
+    return {box.x0, box.y0, box.x1 - box.x0, box.y1 - box.y0};
+}
+
+std::vector<std::pair<double, double>> rect_corners_ccw(const Box4& box) {
+    return {{box.x0, box.y0}, {box.x1, box.y0}, {box.x1, box.y1},
+            {box.x0, box.y1}};
+}
+
+double block_area(double w, double h) {
+    return py_round(w * h, 1);
+}
+
+bool genuine_pair_ok(bool same_row, int delta_lane) {
+    return same_row && delta_lane <= 2;
+}
+
+std::pair<double, double> round_xy(double x, double y, int digits) {
+    return {py_round(x, digits), py_round(y, digits)};
+}
+
+Box4 round_box(const Box4& box, int digits) {
+    return {py_round(box.x0, digits), py_round(box.y0, digits),
+            py_round(box.x1, digits), py_round(box.y1, digits)};
+}
+
+double svg_map(double value, double origin, double scale) {
+    return py_round(origin + value * scale, 1);
+}
+
+std::vector<double> rounded_unique_sorted(const std::vector<double>& vs,
+                                          int digits) {
+    std::set<double> uniq;
+    for (double v : vs) {
+        uniq.insert(py_round(v, digits));
+    }
+    return {uniq.begin(), uniq.end()};
+}
+
+std::vector<std::pair<double, double>> closed_rect_pts(const Box4& box,
+                                                       int digits) {
+    const auto corners = rect_corners_ccw(round_box(box, digits));
+    std::vector<std::pair<double, double>> out = corners;
+    if (!out.empty()) {
+        out.push_back(out.front());
+    }
+    return out;
+}
+
+std::vector<std::tuple<std::string, double, double, double, double>>
+offset_named_boxes(
+    const std::vector<std::tuple<std::string, double, double, double, double>>&
+        boxes,
+    double dx, double dy) {
+    std::vector<std::tuple<std::string, double, double, double, double>> out;
+    out.reserve(boxes.size());
+    for (const auto& row : boxes) {
+        const auto b = offset_rect(
+            {std::get<1>(row), std::get<2>(row), std::get<3>(row),
+             std::get<4>(row)},
+            dx, dy);
+        out.emplace_back(std::get<0>(row), b.x0, b.y0, b.x1, b.y1);
+    }
+    return out;
+}
+
+int inversion_count(
+    const std::vector<std::tuple<double, double, std::string>>& pairs) {
+    std::vector<std::tuple<double, double, std::string>> sorted = pairs;
+    std::stable_sort(sorted.begin(), sorted.end(), [](const auto& left,
+                                                      const auto& right) {
+        if (std::get<0>(left) != std::get<0>(right)) {
+            return std::get<0>(left) < std::get<0>(right);
+        }
+        return std::get<2>(left) < std::get<2>(right);
+    });
+    std::vector<double> seq;
+    seq.reserve(sorted.size());
+    for (const auto& row : sorted) {
+        seq.push_back(std::get<1>(row));
+    }
+    int inversions = 0;
+    for (std::size_t i = 0; i < seq.size(); ++i) {
+        for (std::size_t j = i + 1; j < seq.size(); ++j) {
+            if (seq[i] > seq[j] + 1e-9) {
+                ++inversions;
+            }
+        }
+    }
+    return inversions;
+}
+
+std::pair<double, double> points_centroid(
+    const std::vector<std::pair<double, double>>& pts) {
+    if (pts.empty()) {
+        throw std::runtime_error("points_centroid: pts required");
+    }
+    double sum_x = 0.0;
+    double sum_y = 0.0;
+    for (const auto& pt : pts) {
+        sum_x += pt.first;
+        sum_y += pt.second;
+    }
+    const double count = static_cast<double>(pts.size());
+    return {sum_x / count, sum_y / count};
+}
+
+std::pair<double, double> rounded_centroid(
+    const std::vector<std::pair<double, double>>& pts, int digits) {
+    const auto center = points_centroid(pts);
+    return {py_round(center.first, digits), py_round(center.second, digits)};
+}
+
+double hypot_xy(double ax, double ay, double bx, double by) {
+    return std::hypot(ax - bx, ay - by);
+}
+
+std::pair<double, double> boxes_center(const std::vector<Box4>& boxes) {
+    if (boxes.empty()) {
+        throw std::runtime_error("boxes_center: boxes required");
+    }
+    double min_x = boxes[0].x0;
+    double max_x = boxes[0].x0;
+    double min_y = boxes[0].y0;
+    double max_y = boxes[0].y0;
+    for (const auto& box : boxes) {
+        min_x = std::min(min_x, std::min(box.x0, box.x1));
+        max_x = std::max(max_x, std::max(box.x0, box.x1));
+        min_y = std::min(min_y, std::min(box.y0, box.y1));
+        max_y = std::max(max_y, std::max(box.y0, box.y1));
+    }
+    return {(min_x + max_x) / 2.0, (min_y + max_y) / 2.0};
+}
+
+std::pair<double, double> row_extent(const std::vector<Box4>& boxes,
+                                     double zone_pad) {
+    if (boxes.empty()) {
+        throw std::runtime_error("row_extent: boxes required");
+    }
+    double max_x1 = boxes[0].x1;
+    double max_y1 = boxes[0].y1;
+    for (const auto& box : boxes) {
+        max_x1 = std::max(max_x1, box.x1);
+        max_y1 = std::max(max_y1, box.y1);
+    }
+    return {py_round(max_x1 + zone_pad, 4), py_round(max_y1 + zone_pad, 4)};
+}
+
+std::vector<std::pair<std::string, double>> long_axis_coords(
+    const std::vector<std::tuple<std::string, double, double>>& centers) {
+    if (centers.empty()) {
+        throw std::runtime_error("long_axis_coords: centers required");
+    }
+    double min_x = std::get<1>(centers[0]);
+    double max_x = min_x;
+    double min_y = std::get<2>(centers[0]);
+    double max_y = min_y;
+    for (const auto& row : centers) {
+        min_x = std::min(min_x, std::get<1>(row));
+        max_x = std::max(max_x, std::get<1>(row));
+        min_y = std::min(min_y, std::get<2>(row));
+        max_y = std::max(max_y, std::get<2>(row));
+    }
+    const bool use_x = (max_x - min_x) >= (max_y - min_y);
+    std::vector<std::pair<std::string, double>> out;
+    out.reserve(centers.size());
+    for (const auto& row : centers) {
+        out.emplace_back(std::get<0>(row),
+                         use_x ? std::get<1>(row) : std::get<2>(row));
+    }
+    return out;
+}
+
+std::optional<std::vector<std::string>> topo_order(
+    const std::vector<std::string>& parts,
+    const std::vector<std::pair<std::string, std::vector<std::string>>>& deps) {
+    std::set<std::string> part_set(parts.begin(), parts.end());
+    std::map<std::string, std::set<std::string>> dep_map;
+    for (const auto& row : deps) {
+        dep_map[row.first].insert(row.second.begin(), row.second.end());
+    }
+    std::map<std::string, int> indeg;
+    for (const auto& part : part_set) {
+        const auto it = dep_map.find(part);
+        indeg[part] = (it == dep_map.end())
+            ? 0
+            : static_cast<int>(it->second.size());
+    }
+    std::vector<std::string> ready;
+    for (const auto& part : part_set) {
+        if (indeg[part] == 0) {
+            ready.push_back(part);
+        }
+    }
+    std::sort(ready.begin(), ready.end());
+    std::vector<std::string> sorted_parts(part_set.begin(), part_set.end());
+    std::vector<std::string> out;
+    while (!ready.empty()) {
+        const std::string part = ready.front();
+        ready.erase(ready.begin());
+        out.push_back(part);
+        for (const auto& other : sorted_parts) {
+            const auto it = dep_map.find(other);
+            if (it != dep_map.end() && it->second.count(part) != 0) {
+                indeg[other] -= 1;
+                if (indeg[other] == 0) {
+                    ready.push_back(other);
+                }
+            }
+        }
+        std::sort(ready.begin(), ready.end());
+    }
+    if (out.size() != part_set.size()) {
+        return std::nullopt;
+    }
+    return out;
+}
+
+std::pair<double, double> aabb_center(
+    const std::vector<std::pair<double, double>>& pts) {
+    if (pts.empty()) {
+        throw std::runtime_error("aabb_center: pts required");
+    }
+    double min_x = pts[0].first;
+    double max_x = pts[0].first;
+    double min_y = pts[0].second;
+    double max_y = pts[0].second;
+    for (const auto& pt : pts) {
+        min_x = std::min(min_x, pt.first);
+        max_x = std::max(max_x, pt.first);
+        min_y = std::min(min_y, pt.second);
+        max_y = std::max(max_y, pt.second);
+    }
+    return {(min_x + max_x) / 2.0, (min_y + max_y) / 2.0};
+}
+
+std::pair<double, double> boxes_span_center(const std::vector<Box4>& boxes) {
+    if (boxes.empty()) {
+        throw std::runtime_error("boxes_span_center: boxes required");
+    }
+    double min_x0 = boxes[0].x0;
+    double max_x1 = boxes[0].x1;
+    double min_y0 = boxes[0].y0;
+    double max_y1 = boxes[0].y1;
+    for (const auto& box : boxes) {
+        min_x0 = std::min(min_x0, box.x0);
+        max_x1 = std::max(max_x1, box.x1);
+        min_y0 = std::min(min_y0, box.y0);
+        max_y1 = std::max(max_y1, box.y1);
+    }
+    return {(min_x0 + max_x1) / 2.0, (min_y0 + max_y1) / 2.0};
+}
+
+bool pad_set_180_symmetric(const std::vector<std::pair<double, double>>& pts,
+                           double tol) {
+    if (pts.empty()) {
+        return false;
+    }
+    const auto center = aabb_center(pts);
+    std::vector<std::pair<double, double>> rest = pts;
+    std::sort(rest.begin(), rest.end());
+    for (const auto& pt : pts) {
+        const double tx = 2.0 * center.first - pt.first;
+        const double ty = 2.0 * center.second - pt.second;
+        auto it = std::find_if(rest.begin(), rest.end(),
+                               [&](const std::pair<double, double>& q) {
+                                   return std::fabs(q.first - tx) <= tol
+                                       && std::fabs(q.second - ty) <= tol;
+                               });
+        if (it == rest.end()) {
+            return false;
+        }
+        rest.erase(it);
+    }
+    return true;
+}
+
+double facing_align_dot(double zone_x, double zone_y, double out_x,
+                        double out_y, double face_x, double face_y) {
+    return (out_x - zone_x) * face_x + (out_y - zone_y) * face_y;
+}
+
+std::pair<double, double> turn_origin_180(double ecx, double ecy, double ocx,
+                                          double ocy, double nhx, double nhy,
+                                          int digits) {
+    return {py_round(2.0 * ecx - ocx - nhx, digits),
+            py_round(2.0 * ecy - ocy - nhy, digits)};
+}
+
+std::pair<double, double> rotate_origin(double ecx, double ecy, double ocx,
+                                        double ocy, double nhx, double nhy,
+                                        double deg, int digits) {
+    const double rad = deg * (M_PI / 180.0);
+    const double cs = std::cos(rad);
+    const double sn = std::sin(rad);
+    const double rx = ocx - ecx;
+    const double ry = ocy - ecy;
+    const double ncx = ecx + (rx * cs + ry * sn);
+    const double ncy = ecy + (-rx * sn + ry * cs);
+    return {py_round(ncx - nhx, digits), py_round(ncy - nhy, digits)};
+}
+
+std::vector<std::tuple<double, double, std::string>> named_box_center_sigs(
+    const std::vector<std::tuple<std::string, double, double, double, double>>&
+        boxes,
+    int digits) {
+    std::vector<std::tuple<double, double, std::string>> out;
+    out.reserve(boxes.size());
+    for (const auto& row : boxes) {
+        out.emplace_back(
+            py_round((std::get<1>(row) + std::get<3>(row)) / 2.0, digits),
+            py_round((std::get<2>(row) + std::get<4>(row)) / 2.0, digits),
+            std::get<0>(row));
+    }
+    std::sort(out.begin(), out.end());
+    return out;
+}
+
+double cross_budget(double board_w, double board_h, double n_sub, double k) {
+    const double area = board_w * board_h;
+    if (area < 0.0) {
+        throw std::runtime_error("cross_budget: area must be non-negative");
+    }
+    return k * std::sqrt(area) * n_sub;
 }
 
 }  // namespace schgen

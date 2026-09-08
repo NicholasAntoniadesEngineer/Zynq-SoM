@@ -24,15 +24,15 @@ def _from_tagged(node):
 
 
 def loads(text: str) -> list:
-    if _nat.loaded():
-        got = _from_tagged(_nat.module().sexpr_loads_tagged(text))
-        if _nat.trace():
-            ref = _loads_py(text)
-            if got != ref:
-                raise AssertionError(
-                    f"native sexpr loads DIVERGENCE: cpp={got!r} python={ref!r}")
-        return got
-    return _loads_py(text)
+    if not _nat.loaded():
+        raise RuntimeError("native sexpr_loads_tagged required")
+    got = _from_tagged(_nat.module().sexpr_loads_tagged(text))
+    if _nat.trace():
+        ref = _loads_py(text)
+        if got != ref:
+            raise AssertionError(
+                f"native sexpr loads DIVERGENCE: cpp={got!r} python={ref!r}")
+    return got
 
 
 def _loads_py(text: str) -> list:
@@ -92,9 +92,9 @@ def _loads_py(text: str) -> list:
 
 
 def _fmt_num(v: float) -> str:
-    if _nat.loaded():
-        return _nat.module().sexpr_fmt_num(float(v))
-    return _fmt_num_py(v)
+    if not _nat.loaded():
+        raise RuntimeError("native sexpr_fmt_num required")
+    return _nat.module().sexpr_fmt_num(float(v))
 
 
 def _fmt_num_py(v: float) -> str:
@@ -105,15 +105,15 @@ def _fmt_num_py(v: float) -> str:
 
 
 def dumps(node: object, indent: int = 0) -> str:
-    if _nat.loaded():
-        got = _nat.module().sexpr_dumps_py(node, indent)
-        if _nat.trace():
-            ref = _dumps_py(node, indent)
-            if got != ref:
-                raise AssertionError(
-                    "native sexpr dumps DIVERGENCE")
-        return got
-    return _dumps_py(node, indent)
+    if not _nat.loaded():
+        raise RuntimeError("native sexpr_dumps_py required")
+    got = _nat.module().sexpr_dumps_py(node, indent)
+    if _nat.trace():
+        ref = _dumps_py(node, indent)
+        if got != ref:
+            raise AssertionError(
+                "native sexpr dumps DIVERGENCE")
+    return got
 
 
 def _dumps_py(node: object, indent: int = 0) -> str:

@@ -1,0 +1,573 @@
+{
+  "schema": "schgen.circuit/1",
+  "name": "pmod_expansion",
+  "title": "Pmod expansion (2x6, bank 13, ESD, gated 3V3)",
+  "parts": [
+    {
+      "ref": "U1",
+      "lib_id": "SY6280AAC:SY6280AAC",
+      "value": "SY6280AAC",
+      "footprint": "SY6280AAC:SY6280AAC",
+      "fields": {
+        "LCSC": "C55136"
+      },
+      "pin_names": {
+        "OUT": [
+          "1"
+        ],
+        "GND": [
+          "2"
+        ],
+        "ISET": [
+          "3"
+        ],
+        "EN": [
+          "4"
+        ],
+        "IN": [
+          "5"
+        ]
+      },
+      "pin_numbers": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5"
+      ]
+    },
+    {
+      "ref": "R1",
+      "lib_id": "Device:R",
+      "value": "13k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C22797"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "C1",
+      "lib_id": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {
+        "LCSC": "C14663"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "C2",
+      "lib_id": "Device:C",
+      "value": "10u",
+      "footprint": "Capacitor_SMD:C_0805_2012Metric",
+      "fields": {
+        "LCSC": "C15850"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "C3",
+      "lib_id": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {
+        "LCSC": "C14663"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "SW1",
+      "lib_id": "DSHP04TSGER:DSHP04TSGER",
+      "value": "DSHP04TSGER",
+      "footprint": "DSHP04TSGER:DSHP04TSGER",
+      "fields": {
+        "LCSC": "C3293144"
+      },
+      "pin_names": {
+        "1": [
+          "1"
+        ],
+        "2": [
+          "2"
+        ],
+        "3": [
+          "3"
+        ],
+        "4": [
+          "4"
+        ],
+        "5": [
+          "5"
+        ],
+        "6": [
+          "6"
+        ],
+        "7": [
+          "7"
+        ],
+        "8": [
+          "8"
+        ]
+      },
+      "pin_numbers": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8"
+      ]
+    },
+    {
+      "ref": "R2",
+      "lib_id": "Device:R",
+      "value": "100k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C25803"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "D1",
+      "lib_id": "Device:LED",
+      "value": "red",
+      "footprint": "LED_SMD:LED_0603_1608Metric",
+      "fields": {
+        "LCSC": "C2286"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "R3",
+      "lib_id": "Device:R",
+      "value": "330R",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C23138"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "J1",
+      "lib_id": "DS1024-2x6R2:DS1024-2x6R2",
+      "value": "DS1024-2x6R2",
+      "footprint": "DS1024-2x6R2:DS1024-2x6R2",
+      "fields": {
+        "LCSC": "C49284652"
+      },
+      "pin_names": {
+        "1": [
+          "1"
+        ],
+        "12": [
+          "12"
+        ],
+        "3": [
+          "3"
+        ],
+        "10": [
+          "10"
+        ],
+        "5": [
+          "5"
+        ],
+        "8": [
+          "8"
+        ],
+        "7": [
+          "7"
+        ],
+        "6": [
+          "6"
+        ],
+        "9": [
+          "9"
+        ],
+        "4": [
+          "4"
+        ],
+        "11": [
+          "11"
+        ],
+        "2": [
+          "2"
+        ]
+      },
+      "pin_numbers": [
+        "1",
+        "10",
+        "11",
+        "12",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9"
+      ]
+    },
+    {
+      "ref": "U2",
+      "lib_id": "TPD4E1U06DBVR:TPD4E1U06DBVR",
+      "value": "TPD4E1U06",
+      "footprint": "TPD4E1U06DBVR:TPD4E1U06DBVR",
+      "fields": {
+        "LCSC": "C124691"
+      },
+      "pin_names": {
+        "D1+": [
+          "1"
+        ],
+        "GND": [
+          "2"
+        ],
+        "D2+": [
+          "3"
+        ],
+        "D1-": [
+          "6"
+        ],
+        "NC": [
+          "5"
+        ],
+        "D2-": [
+          "4"
+        ]
+      },
+      "pin_numbers": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6"
+      ]
+    },
+    {
+      "ref": "U3",
+      "lib_id": "TPD4E1U06DBVR:TPD4E1U06DBVR",
+      "value": "TPD4E1U06",
+      "footprint": "TPD4E1U06DBVR:TPD4E1U06DBVR",
+      "fields": {
+        "LCSC": "C124691"
+      },
+      "pin_names": {
+        "D1+": [
+          "1"
+        ],
+        "GND": [
+          "2"
+        ],
+        "D2+": [
+          "3"
+        ],
+        "D1-": [
+          "6"
+        ],
+        "NC": [
+          "5"
+        ],
+        "D2-": [
+          "4"
+        ]
+      },
+      "pin_numbers": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6"
+      ]
+    },
+    {
+      "ref": "C4",
+      "lib_id": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {
+        "LCSC": "C14663"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "C5",
+      "lib_id": "Device:C",
+      "value": "10u",
+      "footprint": "Capacitor_SMD:C_0805_2012Metric",
+      "fields": {
+        "LCSC": "C15850"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "TP1",
+      "lib_id": "Connector:TestPoint",
+      "value": "+3V3_PMODX",
+      "footprint": "TestPoint:TestPoint_Pad_D1.5mm",
+      "fields": {
+        "BOM": "exclude"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    }
+  ],
+  "nets": [
+    {
+      "name": "+3V3",
+      "net_class": "power",
+      "pins": [
+        "U1.5",
+        "C1.1",
+        "C2.1",
+        "SW1.1",
+        "SW1.3",
+        "SW1.5",
+        "SW1.7"
+      ]
+    },
+    {
+      "name": "+3V3_PMODX",
+      "net_class": "power",
+      "pins": [
+        "U1.1",
+        "C3.1",
+        "D1.2",
+        "J1.11",
+        "J1.12",
+        "C4.1",
+        "C5.1",
+        "TP1.1"
+      ]
+    },
+    {
+      "name": "GND",
+      "net_class": "ground",
+      "pins": [
+        "U1.2",
+        "R1.2",
+        "C1.2",
+        "C2.2",
+        "C3.2",
+        "R2.2",
+        "R3.2",
+        "U2.2",
+        "U3.2",
+        "J1.9",
+        "J1.10",
+        "C4.2",
+        "C5.2"
+      ]
+    },
+    {
+      "name": "EN_PMODX",
+      "net_class": "signal",
+      "pins": [
+        "U1.4",
+        "SW1.8",
+        "R2.1"
+      ]
+    },
+    {
+      "name": "BS_ISET_PMODX",
+      "net_class": "signal",
+      "pins": [
+        "U1.3",
+        "R1.1"
+      ]
+    },
+    {
+      "name": "BS_PG_PMODX",
+      "net_class": "signal",
+      "pins": [
+        "D1.1",
+        "R3.1"
+      ]
+    },
+    {
+      "name": "PMODX_IO1",
+      "net_class": "port",
+      "pins": [
+        "J1.1",
+        "U2.1"
+      ]
+    },
+    {
+      "name": "PMODX_IO2",
+      "net_class": "port",
+      "pins": [
+        "J1.3",
+        "U2.3"
+      ]
+    },
+    {
+      "name": "PMODX_IO3",
+      "net_class": "port",
+      "pins": [
+        "J1.5",
+        "U2.6"
+      ]
+    },
+    {
+      "name": "PMODX_IO4",
+      "net_class": "port",
+      "pins": [
+        "J1.7",
+        "U2.4"
+      ]
+    },
+    {
+      "name": "PMODX_IO5",
+      "net_class": "port",
+      "pins": [
+        "J1.2",
+        "U3.1"
+      ]
+    },
+    {
+      "name": "PMODX_IO6",
+      "net_class": "port",
+      "pins": [
+        "J1.4",
+        "U3.3"
+      ]
+    },
+    {
+      "name": "PMODX_IO7",
+      "net_class": "port",
+      "pins": [
+        "J1.6",
+        "U3.6"
+      ]
+    },
+    {
+      "name": "PMODX_IO8",
+      "net_class": "port",
+      "pins": [
+        "J1.8",
+        "U3.4"
+      ]
+    }
+  ],
+  "nc": [
+    "SW1.2",
+    "SW1.4",
+    "SW1.6",
+    "U2.5",
+    "U3.5"
+  ],
+  "port_types": {
+    "PMODX_IO1": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j2_connector (PL bank 13, +VCCO_13=+3V3, LVCMOS33)"
+    },
+    "PMODX_IO2": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j2_connector (PL bank 13, +VCCO_13=+3V3, LVCMOS33)"
+    },
+    "PMODX_IO3": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j2_connector (PL bank 13, +VCCO_13=+3V3, LVCMOS33)"
+    },
+    "PMODX_IO4": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j2_connector (PL bank 13, +VCCO_13=+3V3, LVCMOS33)"
+    },
+    "PMODX_IO5": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j2_connector (PL bank 13, +VCCO_13=+3V3, LVCMOS33)"
+    },
+    "PMODX_IO6": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j2_connector (PL bank 13, +VCCO_13=+3V3, LVCMOS33)"
+    },
+    "PMODX_IO7": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j2_connector (PL bank 13, +VCCO_13=+3V3, LVCMOS33)"
+    },
+    "PMODX_IO8": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j2_connector (PL bank 13, +VCCO_13=+3V3, LVCMOS33)"
+    }
+  },
+  "hints": {},
+  "loads": {
+    "+3V3_PMODX": [
+      [
+        0.104,
+        "1x Pmod module budget ~100 mA (Digilent spec) + status LED"
+      ]
+    ]
+  },
+  "tp_waivers": {},
+  "decap_waivers": {},
+  "pull_waivers": {},
+  "reset_waivers": {},
+  "strap_waivers": {},
+  "ep_waivers": {},
+  "thermal_waivers": {},
+  "part_rule_waivers": {}
+}

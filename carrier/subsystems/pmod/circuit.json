@@ -1,0 +1,972 @@
+{
+  "schema": "schgen.circuit/1",
+  "name": "pmod",
+  "title": "2x Pmod host ports (bank 13, 200R series, gated 3V3)",
+  "parts": [
+    {
+      "ref": "J1",
+      "lib_id": "DS1024-2x6R2:DS1024-2x6R2",
+      "value": "DS1024-2x6R2",
+      "footprint": "DS1024-2x6R2:DS1024-2x6R2",
+      "fields": {
+        "LCSC": "C49284652"
+      },
+      "pin_names": {
+        "1": [
+          "1"
+        ],
+        "12": [
+          "12"
+        ],
+        "3": [
+          "3"
+        ],
+        "10": [
+          "10"
+        ],
+        "5": [
+          "5"
+        ],
+        "8": [
+          "8"
+        ],
+        "7": [
+          "7"
+        ],
+        "6": [
+          "6"
+        ],
+        "9": [
+          "9"
+        ],
+        "4": [
+          "4"
+        ],
+        "11": [
+          "11"
+        ],
+        "2": [
+          "2"
+        ]
+      },
+      "pin_numbers": [
+        "1",
+        "10",
+        "11",
+        "12",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9"
+      ]
+    },
+    {
+      "ref": "U1",
+      "lib_id": "TPD4E1U06DBVR:TPD4E1U06DBVR",
+      "value": "TPD4E1U06",
+      "footprint": "TPD4E1U06DBVR:TPD4E1U06DBVR",
+      "fields": {
+        "LCSC": "C124691"
+      },
+      "pin_names": {
+        "D1+": [
+          "1"
+        ],
+        "GND": [
+          "2"
+        ],
+        "D2+": [
+          "3"
+        ],
+        "D1-": [
+          "6"
+        ],
+        "NC": [
+          "5"
+        ],
+        "D2-": [
+          "4"
+        ]
+      },
+      "pin_numbers": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6"
+      ]
+    },
+    {
+      "ref": "U2",
+      "lib_id": "TPD4E1U06DBVR:TPD4E1U06DBVR",
+      "value": "TPD4E1U06",
+      "footprint": "TPD4E1U06DBVR:TPD4E1U06DBVR",
+      "fields": {
+        "LCSC": "C124691"
+      },
+      "pin_names": {
+        "D1+": [
+          "1"
+        ],
+        "GND": [
+          "2"
+        ],
+        "D2+": [
+          "3"
+        ],
+        "D1-": [
+          "6"
+        ],
+        "NC": [
+          "5"
+        ],
+        "D2-": [
+          "4"
+        ]
+      },
+      "pin_numbers": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6"
+      ]
+    },
+    {
+      "ref": "R1",
+      "lib_id": "Device:R",
+      "value": "200R",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C8218"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "R2",
+      "lib_id": "Device:R",
+      "value": "200R",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C8218"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "R3",
+      "lib_id": "Device:R",
+      "value": "200R",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C8218"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "R4",
+      "lib_id": "Device:R",
+      "value": "200R",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C8218"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "R5",
+      "lib_id": "Device:R",
+      "value": "200R",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C8218"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "R6",
+      "lib_id": "Device:R",
+      "value": "200R",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C8218"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "R7",
+      "lib_id": "Device:R",
+      "value": "200R",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C8218"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "R8",
+      "lib_id": "Device:R",
+      "value": "200R",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C8218"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "J2",
+      "lib_id": "DS1024-2x6R2:DS1024-2x6R2",
+      "value": "DS1024-2x6R2",
+      "footprint": "DS1024-2x6R2:DS1024-2x6R2",
+      "fields": {
+        "LCSC": "C49284652"
+      },
+      "pin_names": {
+        "1": [
+          "1"
+        ],
+        "12": [
+          "12"
+        ],
+        "3": [
+          "3"
+        ],
+        "10": [
+          "10"
+        ],
+        "5": [
+          "5"
+        ],
+        "8": [
+          "8"
+        ],
+        "7": [
+          "7"
+        ],
+        "6": [
+          "6"
+        ],
+        "9": [
+          "9"
+        ],
+        "4": [
+          "4"
+        ],
+        "11": [
+          "11"
+        ],
+        "2": [
+          "2"
+        ]
+      },
+      "pin_numbers": [
+        "1",
+        "10",
+        "11",
+        "12",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9"
+      ]
+    },
+    {
+      "ref": "U3",
+      "lib_id": "TPD4E1U06DBVR:TPD4E1U06DBVR",
+      "value": "TPD4E1U06",
+      "footprint": "TPD4E1U06DBVR:TPD4E1U06DBVR",
+      "fields": {
+        "LCSC": "C124691"
+      },
+      "pin_names": {
+        "D1+": [
+          "1"
+        ],
+        "GND": [
+          "2"
+        ],
+        "D2+": [
+          "3"
+        ],
+        "D1-": [
+          "6"
+        ],
+        "NC": [
+          "5"
+        ],
+        "D2-": [
+          "4"
+        ]
+      },
+      "pin_numbers": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6"
+      ]
+    },
+    {
+      "ref": "U4",
+      "lib_id": "TPD4E1U06DBVR:TPD4E1U06DBVR",
+      "value": "TPD4E1U06",
+      "footprint": "TPD4E1U06DBVR:TPD4E1U06DBVR",
+      "fields": {
+        "LCSC": "C124691"
+      },
+      "pin_names": {
+        "D1+": [
+          "1"
+        ],
+        "GND": [
+          "2"
+        ],
+        "D2+": [
+          "3"
+        ],
+        "D1-": [
+          "6"
+        ],
+        "NC": [
+          "5"
+        ],
+        "D2-": [
+          "4"
+        ]
+      },
+      "pin_numbers": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6"
+      ]
+    },
+    {
+      "ref": "R9",
+      "lib_id": "Device:R",
+      "value": "200R",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C8218"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "R10",
+      "lib_id": "Device:R",
+      "value": "200R",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C8218"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "R11",
+      "lib_id": "Device:R",
+      "value": "200R",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C8218"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "R12",
+      "lib_id": "Device:R",
+      "value": "200R",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C8218"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "R13",
+      "lib_id": "Device:R",
+      "value": "200R",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C8218"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "R14",
+      "lib_id": "Device:R",
+      "value": "200R",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C8218"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "R15",
+      "lib_id": "Device:R",
+      "value": "200R",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C8218"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "R16",
+      "lib_id": "Device:R",
+      "value": "200R",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C8218"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "C1",
+      "lib_id": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {
+        "LCSC": "C14663"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "C2",
+      "lib_id": "Device:C",
+      "value": "10u",
+      "footprint": "Capacitor_SMD:C_0805_2012Metric",
+      "fields": {
+        "LCSC": "C15850"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "C3",
+      "lib_id": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {
+        "LCSC": "C14663"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "C4",
+      "lib_id": "Device:C",
+      "value": "10u",
+      "footprint": "Capacitor_SMD:C_0805_2012Metric",
+      "fields": {
+        "LCSC": "C15850"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    }
+  ],
+  "nets": [
+    {
+      "name": "IO_L2_P_13",
+      "net_class": "port",
+      "pins": [
+        "R1.1",
+        "U1.1"
+      ]
+    },
+    {
+      "name": "PMOD0_IO1",
+      "net_class": "signal",
+      "pins": [
+        "R1.2",
+        "J1.1"
+      ]
+    },
+    {
+      "name": "IO_L2_N_13",
+      "net_class": "port",
+      "pins": [
+        "R2.1",
+        "U1.3"
+      ]
+    },
+    {
+      "name": "PMOD0_IO2",
+      "net_class": "signal",
+      "pins": [
+        "R2.2",
+        "J1.3"
+      ]
+    },
+    {
+      "name": "IO_L3_P_13",
+      "net_class": "port",
+      "pins": [
+        "R3.1",
+        "U1.6"
+      ]
+    },
+    {
+      "name": "PMOD0_IO3",
+      "net_class": "signal",
+      "pins": [
+        "R3.2",
+        "J1.5"
+      ]
+    },
+    {
+      "name": "IO_L3_N_13",
+      "net_class": "port",
+      "pins": [
+        "R4.1",
+        "U1.4"
+      ]
+    },
+    {
+      "name": "PMOD0_IO4",
+      "net_class": "signal",
+      "pins": [
+        "R4.2",
+        "J1.7"
+      ]
+    },
+    {
+      "name": "IO_L4_P_13",
+      "net_class": "port",
+      "pins": [
+        "R5.1",
+        "U2.1"
+      ]
+    },
+    {
+      "name": "PMOD0_IO5",
+      "net_class": "signal",
+      "pins": [
+        "R5.2",
+        "J1.2"
+      ]
+    },
+    {
+      "name": "IO_L4_N_13",
+      "net_class": "port",
+      "pins": [
+        "R6.1",
+        "U2.3"
+      ]
+    },
+    {
+      "name": "PMOD0_IO6",
+      "net_class": "signal",
+      "pins": [
+        "R6.2",
+        "J1.4"
+      ]
+    },
+    {
+      "name": "IO_L5P_13",
+      "net_class": "port",
+      "pins": [
+        "R7.1",
+        "U2.6"
+      ]
+    },
+    {
+      "name": "PMOD0_IO7",
+      "net_class": "signal",
+      "pins": [
+        "R7.2",
+        "J1.6"
+      ]
+    },
+    {
+      "name": "IO_L5_N_13",
+      "net_class": "port",
+      "pins": [
+        "R8.1",
+        "U2.4"
+      ]
+    },
+    {
+      "name": "PMOD0_IO8",
+      "net_class": "signal",
+      "pins": [
+        "R8.2",
+        "J1.8"
+      ]
+    },
+    {
+      "name": "IO_L7_P_13",
+      "net_class": "port",
+      "pins": [
+        "R9.1",
+        "U3.1"
+      ]
+    },
+    {
+      "name": "PMOD1_IO1",
+      "net_class": "signal",
+      "pins": [
+        "R9.2",
+        "J2.1"
+      ]
+    },
+    {
+      "name": "IO_L7_N_13",
+      "net_class": "port",
+      "pins": [
+        "R10.1",
+        "U3.3"
+      ]
+    },
+    {
+      "name": "PMOD1_IO2",
+      "net_class": "signal",
+      "pins": [
+        "R10.2",
+        "J2.3"
+      ]
+    },
+    {
+      "name": "IO_L8_P_13",
+      "net_class": "port",
+      "pins": [
+        "R11.1",
+        "U3.6"
+      ]
+    },
+    {
+      "name": "PMOD1_IO3",
+      "net_class": "signal",
+      "pins": [
+        "R11.2",
+        "J2.5"
+      ]
+    },
+    {
+      "name": "IO_L8_N_13",
+      "net_class": "port",
+      "pins": [
+        "R12.1",
+        "U3.4"
+      ]
+    },
+    {
+      "name": "PMOD1_IO4",
+      "net_class": "signal",
+      "pins": [
+        "R12.2",
+        "J2.7"
+      ]
+    },
+    {
+      "name": "IO_L9_DQS_P_13",
+      "net_class": "port",
+      "pins": [
+        "R13.1",
+        "U4.1"
+      ]
+    },
+    {
+      "name": "PMOD1_IO5",
+      "net_class": "signal",
+      "pins": [
+        "R13.2",
+        "J2.2"
+      ]
+    },
+    {
+      "name": "IO_L9_DQS_N_13",
+      "net_class": "port",
+      "pins": [
+        "R14.1",
+        "U4.3"
+      ]
+    },
+    {
+      "name": "PMOD1_IO6",
+      "net_class": "signal",
+      "pins": [
+        "R14.2",
+        "J2.4"
+      ]
+    },
+    {
+      "name": "IO_L10_P_13",
+      "net_class": "port",
+      "pins": [
+        "R15.1",
+        "U4.6"
+      ]
+    },
+    {
+      "name": "PMOD1_IO7",
+      "net_class": "signal",
+      "pins": [
+        "R15.2",
+        "J2.6"
+      ]
+    },
+    {
+      "name": "IO_L10_N_13",
+      "net_class": "port",
+      "pins": [
+        "R16.1",
+        "U4.4"
+      ]
+    },
+    {
+      "name": "PMOD1_IO8",
+      "net_class": "signal",
+      "pins": [
+        "R16.2",
+        "J2.8"
+      ]
+    },
+    {
+      "name": "+3V3_PMOD",
+      "net_class": "power",
+      "pins": [
+        "J1.11",
+        "J1.12",
+        "J2.11",
+        "J2.12",
+        "C1.1",
+        "C2.1",
+        "C3.1",
+        "C4.1"
+      ]
+    },
+    {
+      "name": "GND",
+      "net_class": "ground",
+      "pins": [
+        "J1.9",
+        "J1.10",
+        "J2.9",
+        "J2.10",
+        "U1.2",
+        "U2.2",
+        "U3.2",
+        "U4.2",
+        "C1.2",
+        "C2.2",
+        "C3.2",
+        "C4.2"
+      ]
+    }
+  ],
+  "nc": [
+    "U1.5",
+    "U2.5",
+    "U3.5",
+    "U4.5"
+  ],
+  "port_types": {
+    "IO_L2_P_13": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j2_connector"
+    },
+    "IO_L2_N_13": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j2_connector"
+    },
+    "IO_L3_P_13": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j2_connector"
+    },
+    "IO_L3_N_13": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j2_connector"
+    },
+    "IO_L4_P_13": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j2_connector"
+    },
+    "IO_L4_N_13": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j2_connector"
+    },
+    "IO_L5P_13": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j2_connector"
+    },
+    "IO_L5_N_13": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j2_connector"
+    },
+    "IO_L7_P_13": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j2_connector"
+    },
+    "IO_L7_N_13": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j2_connector"
+    },
+    "IO_L8_P_13": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j2_connector"
+    },
+    "IO_L8_N_13": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j2_connector"
+    },
+    "IO_L9_DQS_P_13": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j2_connector"
+    },
+    "IO_L9_DQS_N_13": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j2_connector"
+    },
+    "IO_L10_P_13": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j2_connector"
+    },
+    "IO_L10_N_13": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j2_connector"
+    }
+  },
+  "hints": {},
+  "loads": {
+    "+3V3_PMOD": [
+      [
+        0.2,
+        "2x Pmod module budget ~100 mA each"
+      ]
+    ]
+  },
+  "tp_waivers": {},
+  "decap_waivers": {},
+  "pull_waivers": {},
+  "reset_waivers": {},
+  "strap_waivers": {},
+  "ep_waivers": {},
+  "thermal_waivers": {},
+  "part_rule_waivers": {}
+}

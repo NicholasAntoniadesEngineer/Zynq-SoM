@@ -1,0 +1,1252 @@
+{
+  "schema": "schgen.circuit/1",
+  "name": "bringup_rails",
+  "title": "Bring-up controls: rail/module DIPs + TCA9535 + buttons",
+  "parts": [
+    {
+      "ref": "SW1",
+      "lib_id": "DSHP04TSGER:DSHP04TSGER",
+      "value": "DSHP04TSGER",
+      "footprint": "DSHP04TSGER:DSHP04TSGER",
+      "fields": {
+        "LCSC": "C3293144"
+      },
+      "pin_names": {
+        "1": [
+          "1"
+        ],
+        "2": [
+          "2"
+        ],
+        "3": [
+          "3"
+        ],
+        "4": [
+          "4"
+        ],
+        "5": [
+          "5"
+        ],
+        "6": [
+          "6"
+        ],
+        "7": [
+          "7"
+        ],
+        "8": [
+          "8"
+        ]
+      },
+      "pin_numbers": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8"
+      ]
+    },
+    {
+      "ref": "SW2",
+      "lib_id": "DSHP08TSGER:DSHP08TSGER",
+      "value": "DSHP08TSGER",
+      "footprint": "DSHP08TSGER:DSHP08TSGER",
+      "fields": {
+        "LCSC": "C3293147"
+      },
+      "pin_names": {
+        "PIN1": [
+          "1"
+        ],
+        "PIN2": [
+          "2"
+        ],
+        "PIN3": [
+          "3"
+        ],
+        "PIN4": [
+          "4"
+        ],
+        "PIN5": [
+          "5"
+        ],
+        "PIN6": [
+          "6"
+        ],
+        "PIN7": [
+          "7"
+        ],
+        "PIN8": [
+          "8"
+        ],
+        "PIN9": [
+          "9"
+        ],
+        "PIN10": [
+          "10"
+        ],
+        "PIN11": [
+          "11"
+        ],
+        "PIN12": [
+          "12"
+        ],
+        "PIN13": [
+          "13"
+        ],
+        "PIN14": [
+          "14"
+        ],
+        "15": [
+          "15"
+        ],
+        "16": [
+          "16"
+        ]
+      },
+      "pin_numbers": [
+        "1",
+        "10",
+        "11",
+        "12",
+        "13",
+        "14",
+        "15",
+        "16",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9"
+      ]
+    },
+    {
+      "ref": "SW6",
+      "lib_id": "DSHP04TSGER:DSHP04TSGER",
+      "value": "DSHP04TSGER",
+      "footprint": "DSHP04TSGER:DSHP04TSGER",
+      "fields": {
+        "LCSC": "C3293144"
+      },
+      "pin_names": {
+        "1": [
+          "1"
+        ],
+        "2": [
+          "2"
+        ],
+        "3": [
+          "3"
+        ],
+        "4": [
+          "4"
+        ],
+        "5": [
+          "5"
+        ],
+        "6": [
+          "6"
+        ],
+        "7": [
+          "7"
+        ],
+        "8": [
+          "8"
+        ]
+      },
+      "pin_numbers": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8"
+      ]
+    },
+    {
+      "ref": "U1",
+      "lib_id": "TCA9535PWR:TCA9535PWR",
+      "value": "TCA9535PWR",
+      "footprint": "TCA9535PWR:TCA9535PWR",
+      "fields": {
+        "LCSC": "C130204"
+      },
+      "pin_names": {
+        "INT#": [
+          "1"
+        ],
+        "A1": [
+          "2"
+        ],
+        "A2": [
+          "3"
+        ],
+        "P00": [
+          "4"
+        ],
+        "P01": [
+          "5"
+        ],
+        "P02": [
+          "6"
+        ],
+        "P03": [
+          "7"
+        ],
+        "P04": [
+          "8"
+        ],
+        "P05": [
+          "9"
+        ],
+        "P06": [
+          "10"
+        ],
+        "P07": [
+          "11"
+        ],
+        "GND": [
+          "12"
+        ],
+        "P10": [
+          "13"
+        ],
+        "P11": [
+          "14"
+        ],
+        "P12": [
+          "15"
+        ],
+        "P13": [
+          "16"
+        ],
+        "P14": [
+          "17"
+        ],
+        "P15": [
+          "18"
+        ],
+        "P16": [
+          "19"
+        ],
+        "P17": [
+          "20"
+        ],
+        "A0": [
+          "21"
+        ],
+        "SCL": [
+          "22"
+        ],
+        "SDA": [
+          "23"
+        ],
+        "VCC": [
+          "24"
+        ]
+      },
+      "pin_numbers": [
+        "1",
+        "10",
+        "11",
+        "12",
+        "13",
+        "14",
+        "15",
+        "16",
+        "17",
+        "18",
+        "19",
+        "2",
+        "20",
+        "21",
+        "22",
+        "23",
+        "24",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9"
+      ]
+    },
+    {
+      "ref": "C1",
+      "lib_id": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {
+        "LCSC": "C14663"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "R1",
+      "lib_id": "Device:R",
+      "value": "100k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C25803"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "R2",
+      "lib_id": "Device:R",
+      "value": "100k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C25803"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "R3",
+      "lib_id": "Device:R",
+      "value": "100k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C25803"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "R4",
+      "lib_id": "Device:R",
+      "value": "4k7",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C23162"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "R5",
+      "lib_id": "Device:R",
+      "value": "4k7",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C23162"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "R6",
+      "lib_id": "Device:R",
+      "value": "10k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C25804"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "SW3",
+      "lib_id": "TS-1187A-B-A-B:TS-1187A-B-A-B",
+      "value": "TS-1187A-B-A-B",
+      "footprint": "TS-1187A-B-A-B:TS-1187A-B-A-B",
+      "fields": {
+        "LCSC": "C318884"
+      },
+      "pin_names": {
+        "B": [
+          "2"
+        ],
+        "A": [
+          "1"
+        ],
+        "D": [
+          "4"
+        ],
+        "C": [
+          "3"
+        ]
+      },
+      "pin_numbers": [
+        "1",
+        "2",
+        "3",
+        "4"
+      ]
+    },
+    {
+      "ref": "C2",
+      "lib_id": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {
+        "LCSC": "C14663"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "R7",
+      "lib_id": "Device:R",
+      "value": "10k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C25804"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "SW4",
+      "lib_id": "TS-1187A-B-A-B:TS-1187A-B-A-B",
+      "value": "TS-1187A-B-A-B",
+      "footprint": "TS-1187A-B-A-B:TS-1187A-B-A-B",
+      "fields": {
+        "LCSC": "C318884"
+      },
+      "pin_names": {
+        "B": [
+          "2"
+        ],
+        "A": [
+          "1"
+        ],
+        "D": [
+          "4"
+        ],
+        "C": [
+          "3"
+        ]
+      },
+      "pin_numbers": [
+        "1",
+        "2",
+        "3",
+        "4"
+      ]
+    },
+    {
+      "ref": "C3",
+      "lib_id": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {
+        "LCSC": "C14663"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "R8",
+      "lib_id": "Device:R",
+      "value": "10k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C25804"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "SW5",
+      "lib_id": "TS-1187A-B-A-B:TS-1187A-B-A-B",
+      "value": "TS-1187A-B-A-B",
+      "footprint": "TS-1187A-B-A-B:TS-1187A-B-A-B",
+      "fields": {
+        "LCSC": "C318884"
+      },
+      "pin_names": {
+        "B": [
+          "2"
+        ],
+        "A": [
+          "1"
+        ],
+        "D": [
+          "4"
+        ],
+        "C": [
+          "3"
+        ]
+      },
+      "pin_numbers": [
+        "1",
+        "2",
+        "3",
+        "4"
+      ]
+    },
+    {
+      "ref": "C4",
+      "lib_id": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {
+        "LCSC": "C14663"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "R9",
+      "lib_id": "Device:R",
+      "value": "10k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C25804"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "TP1",
+      "lib_id": "Connector:TestPoint",
+      "value": "+3V3_SC",
+      "footprint": "TestPoint:TestPoint_Pad_D1.5mm",
+      "fields": {
+        "BOM": "exclude"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "TP2",
+      "lib_id": "Connector:TestPoint",
+      "value": "STM32_I2C2_SDA",
+      "footprint": "TestPoint:TestPoint_Pad_D1.5mm",
+      "fields": {
+        "BOM": "exclude"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "TP3",
+      "lib_id": "Connector:TestPoint",
+      "value": "STM32_I2C2_SCL",
+      "footprint": "TestPoint:TestPoint_Pad_D1.5mm",
+      "fields": {
+        "BOM": "exclude"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    }
+  ],
+  "nets": [
+    {
+      "name": "+3V3_SC",
+      "net_class": "power",
+      "pins": [
+        "SW1.1",
+        "SW1.3",
+        "SW1.5",
+        "SW1.7",
+        "SW2.1",
+        "SW2.2",
+        "SW2.3",
+        "SW2.4",
+        "SW2.5",
+        "SW2.6",
+        "SW2.7",
+        "SW2.8",
+        "SW6.1",
+        "SW6.3",
+        "SW6.5",
+        "SW6.7",
+        "U1.24",
+        "C1.1",
+        "R4.1",
+        "R5.1",
+        "R6.1",
+        "TP1.1"
+      ]
+    },
+    {
+      "name": "BU_DIP_5V0",
+      "net_class": "port",
+      "pins": [
+        "SW1.8"
+      ]
+    },
+    {
+      "name": "BU_DIP_3V3",
+      "net_class": "port",
+      "pins": [
+        "SW1.2"
+      ]
+    },
+    {
+      "name": "BU_DIP_1V8",
+      "net_class": "port",
+      "pins": [
+        "SW1.6"
+      ]
+    },
+    {
+      "name": "BU_DIP_USER_LED",
+      "net_class": "port",
+      "pins": [
+        "SW1.4"
+      ]
+    },
+    {
+      "name": "BU_DIP_HDMI_TX",
+      "net_class": "port",
+      "pins": [
+        "SW2.9"
+      ]
+    },
+    {
+      "name": "BU_DIP_HDMI_RX",
+      "net_class": "port",
+      "pins": [
+        "SW2.10"
+      ]
+    },
+    {
+      "name": "BU_DIP_LCD",
+      "net_class": "port",
+      "pins": [
+        "SW2.11"
+      ]
+    },
+    {
+      "name": "BU_DIP_CAM",
+      "net_class": "port",
+      "pins": [
+        "SW2.12"
+      ]
+    },
+    {
+      "name": "BU_DIP_SD",
+      "net_class": "port",
+      "pins": [
+        "SW2.13"
+      ]
+    },
+    {
+      "name": "BU_DIP_USB",
+      "net_class": "port",
+      "pins": [
+        "SW2.14"
+      ]
+    },
+    {
+      "name": "BU_DIP_PMOD",
+      "net_class": "port",
+      "pins": [
+        "SW2.15"
+      ]
+    },
+    {
+      "name": "BU_DIP_SPARE",
+      "net_class": "port",
+      "pins": [
+        "SW2.16"
+      ]
+    },
+    {
+      "name": "BU_DIP_HDMI_TX_5V",
+      "net_class": "port",
+      "pins": [
+        "SW6.8"
+      ]
+    },
+    {
+      "name": "BU_DIP_LCD_5V",
+      "net_class": "port",
+      "pins": [
+        "SW6.2"
+      ]
+    },
+    {
+      "name": "GND",
+      "net_class": "ground",
+      "pins": [
+        "C1.2",
+        "U1.12",
+        "U1.2",
+        "U1.3",
+        "U1.21",
+        "R1.2",
+        "R2.2",
+        "R3.2",
+        "SW3.3",
+        "SW3.4",
+        "C2.2",
+        "SW4.3",
+        "SW4.4",
+        "C3.2",
+        "SW5.3",
+        "SW5.4",
+        "C4.2",
+        "R9.1"
+      ]
+    },
+    {
+      "name": "BU_OVR_HDMI_TX",
+      "net_class": "port",
+      "pins": [
+        "U1.4"
+      ]
+    },
+    {
+      "name": "BU_OVR_HDMI_RX",
+      "net_class": "port",
+      "pins": [
+        "U1.5"
+      ]
+    },
+    {
+      "name": "BU_OVR_LCD",
+      "net_class": "port",
+      "pins": [
+        "U1.6"
+      ]
+    },
+    {
+      "name": "BU_OVR_CAM",
+      "net_class": "port",
+      "pins": [
+        "U1.7"
+      ]
+    },
+    {
+      "name": "BU_OVR_SD",
+      "net_class": "port",
+      "pins": [
+        "U1.8"
+      ]
+    },
+    {
+      "name": "BU_OVR_USB",
+      "net_class": "port",
+      "pins": [
+        "U1.9"
+      ]
+    },
+    {
+      "name": "BU_OVR_PMOD",
+      "net_class": "port",
+      "pins": [
+        "U1.10"
+      ]
+    },
+    {
+      "name": "BU_OVR_USER_LED",
+      "net_class": "port",
+      "pins": [
+        "U1.11"
+      ]
+    },
+    {
+      "name": "BU_OVR_LCD_BL",
+      "net_class": "port",
+      "pins": [
+        "U1.13",
+        "R1.1"
+      ]
+    },
+    {
+      "name": "BU_OVR_HDMI_TX_5V",
+      "net_class": "port",
+      "pins": [
+        "U1.15"
+      ]
+    },
+    {
+      "name": "BU_OVR_LCD_5V",
+      "net_class": "port",
+      "pins": [
+        "U1.16"
+      ]
+    },
+    {
+      "name": "PMON_ALERT_N",
+      "net_class": "port",
+      "pins": [
+        "U1.14"
+      ]
+    },
+    {
+      "name": "USBOTG_FLT_N",
+      "net_class": "port",
+      "pins": [
+        "U1.17"
+      ]
+    },
+    {
+      "name": "PD_FLT_N",
+      "net_class": "port",
+      "pins": [
+        "U1.18"
+      ]
+    },
+    {
+      "name": "BU_P16",
+      "net_class": "signal",
+      "pins": [
+        "U1.19",
+        "R2.1"
+      ]
+    },
+    {
+      "name": "BU_P17",
+      "net_class": "signal",
+      "pins": [
+        "U1.20",
+        "R3.1"
+      ]
+    },
+    {
+      "name": "STM32_I2C2_SCL",
+      "net_class": "port",
+      "pins": [
+        "U1.22",
+        "R4.2",
+        "TP3.1"
+      ]
+    },
+    {
+      "name": "STM32_I2C2_SDA",
+      "net_class": "port",
+      "pins": [
+        "U1.23",
+        "R5.2",
+        "TP2.1"
+      ]
+    },
+    {
+      "name": "SC_INT_N",
+      "net_class": "port",
+      "pins": [
+        "U1.1",
+        "R6.2"
+      ]
+    },
+    {
+      "name": "PL_BTN0",
+      "net_class": "port",
+      "pins": [
+        "SW3.1",
+        "SW3.2",
+        "C2.1",
+        "R7.2"
+      ]
+    },
+    {
+      "name": "+3V3",
+      "net_class": "power",
+      "pins": [
+        "R7.1",
+        "R8.1"
+      ]
+    },
+    {
+      "name": "PL_BTN1",
+      "net_class": "port",
+      "pins": [
+        "SW4.1",
+        "SW4.2",
+        "C3.1",
+        "R8.2"
+      ]
+    },
+    {
+      "name": "STM32_NRST",
+      "net_class": "port",
+      "pins": [
+        "SW5.1",
+        "SW5.2",
+        "C4.1"
+      ]
+    },
+    {
+      "name": "PUDC_34",
+      "net_class": "port",
+      "pins": [
+        "R9.2"
+      ]
+    }
+  ],
+  "nc": [
+    "SW6.4",
+    "SW6.6"
+  ],
+  "port_types": {
+    "BU_DIP_5V0": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "bringup_en (EN AND-gate cells, dossier section 3.1/3.2)"
+    },
+    "BU_DIP_3V3": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "bringup_en (EN AND-gate cells, dossier section 3.1/3.2)"
+    },
+    "BU_DIP_1V8": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "bringup_en (EN AND-gate cells, dossier section 3.1/3.2)"
+    },
+    "BU_DIP_USER_LED": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "bringup_en (EN AND-gate cells, dossier section 3.1/3.2)"
+    },
+    "BU_DIP_HDMI_TX": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "bringup_en (EN AND-gate cells, dossier section 3.1/3.2)"
+    },
+    "BU_DIP_HDMI_RX": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "bringup_en (EN AND-gate cells, dossier section 3.1/3.2)"
+    },
+    "BU_DIP_LCD": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "bringup_en (EN AND-gate cells, dossier section 3.1/3.2)"
+    },
+    "BU_DIP_CAM": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "bringup_en (EN AND-gate cells, dossier section 3.1/3.2)"
+    },
+    "BU_DIP_SD": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "bringup_en (EN AND-gate cells, dossier section 3.1/3.2)"
+    },
+    "BU_DIP_USB": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "bringup_en (EN AND-gate cells, dossier section 3.1/3.2)"
+    },
+    "BU_DIP_PMOD": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "bringup_en (EN AND-gate cells, dossier section 3.1/3.2)"
+    },
+    "BU_DIP_SPARE": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "bringup_en (EN AND-gate cells, dossier section 3.1/3.2)"
+    },
+    "BU_DIP_HDMI_TX_5V": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "bringup_en (EN AND-gate cells, dossier section 3.1/3.2)"
+    },
+    "BU_DIP_LCD_5V": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "bringup_en (EN AND-gate cells, dossier section 3.1/3.2)"
+    },
+    "BU_OVR_HDMI_TX": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "bringup_en (EN AND-gate cells, dossier section 3.1/3.2)"
+    },
+    "BU_OVR_HDMI_RX": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "bringup_en (EN AND-gate cells, dossier section 3.1/3.2)"
+    },
+    "BU_OVR_LCD": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "bringup_en (EN AND-gate cells, dossier section 3.1/3.2)"
+    },
+    "BU_OVR_CAM": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "bringup_en (EN AND-gate cells, dossier section 3.1/3.2)"
+    },
+    "BU_OVR_SD": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "bringup_en (EN AND-gate cells, dossier section 3.1/3.2)"
+    },
+    "BU_OVR_USB": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "bringup_en (EN AND-gate cells, dossier section 3.1/3.2)"
+    },
+    "BU_OVR_PMOD": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "bringup_en (EN AND-gate cells, dossier section 3.1/3.2)"
+    },
+    "BU_OVR_USER_LED": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "bringup_en (EN AND-gate cells, dossier section 3.1/3.2)"
+    },
+    "BU_OVR_LCD_BL": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "bringup_en (EN AND-gate cells, dossier section 3.1/3.2)"
+    },
+    "BU_OVR_HDMI_TX_5V": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "bringup_en (EN AND-gate cells, dossier section 3.1/3.2)"
+    },
+    "BU_OVR_LCD_5V": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "bringup_en (EN AND-gate cells, dossier section 3.1/3.2)"
+    },
+    "PMON_ALERT_N": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "power_mon (INA3221 CRITICAL wire-OR, 10k PU +3V3_SC)"
+    },
+    "USBOTG_FLT_N": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "usbc_otg (TPS2051C FLT#, 100k PU +3V3_SC)"
+    },
+    "PD_FLT_N": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "pd_input (TPS26631 eFuse FLT#, 100k PU +3V3_SC)"
+    },
+    "STM32_I2C2_SCL": {
+      "kind": "i2c",
+      "pair_with": null,
+      "impedance": null,
+      "role": "scl",
+      "bus": "STM32_I2C2",
+      "speed_hz": 400000,
+      "level_v": null,
+      "expect": "som_j3_connector (wave 3 STM32 GPIO function map)"
+    },
+    "STM32_I2C2_SDA": {
+      "kind": "i2c",
+      "pair_with": null,
+      "impedance": null,
+      "role": "sda",
+      "bus": "STM32_I2C2",
+      "speed_hz": 400000,
+      "level_v": null,
+      "expect": "som_j3_connector (wave 3 STM32 GPIO function map)"
+    },
+    "SC_INT_N": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j3_connector (wave 3 STM32 GPIO function map)"
+    },
+    "PL_BTN0": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j1_j2 bank-33 PL pin assignment (P3 linker)"
+    },
+    "PL_BTN1": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j1_j2 bank-33 PL pin assignment (P3 linker)"
+    },
+    "PUDC_34": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j3_connector (wave 3 STM32 GPIO function map)"
+    }
+  },
+  "hints": {},
+  "loads": {
+    "+3V3_SC": [
+      [
+        0.005,
+        "TCA9535 + DIP/I2C/INT pull networks (dossier R3 < 5 mA)"
+      ]
+    ],
+    "+3V3": [
+      [
+        0.001,
+        "2x user-button 10k pull-ups when pressed"
+      ]
+    ]
+  },
+  "tp_waivers": {},
+  "decap_waivers": {},
+  "pull_waivers": {},
+  "reset_waivers": {},
+  "strap_waivers": {},
+  "ep_waivers": {},
+  "thermal_waivers": {},
+  "part_rule_waivers": {}
+}

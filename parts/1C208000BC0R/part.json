@@ -1,0 +1,41 @@
+{
+  "schema": "schgen.part/1",
+  "mpn": "1C208000BC0R",
+  "safe_name": "1C208000BC0R",
+  "lcsc": "C57131",
+  "description": "DSX321G 8MHz (CRYSTAL-SMD_4P-L3.2-W2.5-BL-1)",
+  "manufacturer": "KDS(大真空)",
+  "package": "CRYSTAL-SMD_4P-L3.2-W2.5-BL-1",
+  "jlc_class": "Extended Part",
+  "prefix": "X",
+  "datasheet": "https://www.lcsc.com/datasheet/C57131.pdf",
+  "product_url": "https://lcsc.com/product-detail/SMD-Crystals_KDS_DSX321G-8MHz_8MHz-12pF-20ppm_C57131.html",
+  "lib_id": "1C208000BC0R:1C208000BC0R",
+  "footprint": "1C208000BC0R:1C208000BC0R",
+  "models_3d": [
+    "1C208000BC0R.wrl",
+    "1C208000BC0R.step"
+  ],
+  "pins": [
+    {
+      "num": "3",
+      "name": "OSC2",
+      "etype": "passive"
+    },
+    {
+      "num": "2",
+      "name": "NC",
+      "etype": "passive"
+    },
+    {
+      "num": "4",
+      "name": "NC",
+      "etype": "passive"
+    },
+    {
+      "num": "1",
+      "name": "OSC1",
+      "etype": "passive"
+    }
+  ]
+}

@@ -1,0 +1,671 @@
+{
+  "schema": "schgen.circuit/1",
+  "name": "fmc",
+  "title": "SoM bank-35 IO breakout (2x20 2.54mm header, VADJ 2.5V)",
+  "parts": [
+    {
+      "ref": "J1",
+      "lib_id": "Connector_Generic:Conn_02x20_Odd_Even",
+      "value": "Header_2x20_2.54mm",
+      "footprint": "Connector_PinHeader_2.54mm:PinHeader_2x20_P2.54mm_Vertical",
+      "fields": {},
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "U1",
+      "lib_id": "TLV75725PDYDR:TLV75725PDYDR",
+      "value": "TLV75725PDYDR",
+      "footprint": "TLV75725PDYDR:TLV75725PDYDR",
+      "fields": {
+        "LCSC": "C35209004"
+      },
+      "pin_names": {
+        "IN": [
+          "1"
+        ],
+        "GND": [
+          "2"
+        ],
+        "EN": [
+          "3"
+        ],
+        "NC": [
+          "4"
+        ],
+        "OUT": [
+          "5"
+        ],
+        "EP": [
+          "6"
+        ]
+      },
+      "pin_numbers": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6"
+      ]
+    },
+    {
+      "ref": "C1",
+      "lib_id": "Device:C",
+      "value": "10u",
+      "footprint": "Capacitor_SMD:C_0805_2012Metric",
+      "fields": {
+        "LCSC": "C15850"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "C2",
+      "lib_id": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {
+        "LCSC": "C14663"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "C3",
+      "lib_id": "Device:C",
+      "value": "1u",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {
+        "LCSC": "C15849"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "C4",
+      "lib_id": "Device:C",
+      "value": "10u",
+      "footprint": "Capacitor_SMD:C_0805_2012Metric",
+      "fields": {
+        "LCSC": "C15850"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "C5",
+      "lib_id": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {
+        "LCSC": "C14663"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "TP1",
+      "lib_id": "Connector:TestPoint",
+      "value": "+2V5_VADJ",
+      "footprint": "TestPoint:TestPoint_Pad_D1.5mm",
+      "fields": {
+        "BOM": "exclude"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    }
+  ],
+  "nets": [
+    {
+      "name": "FMC_CLK0_M2C_P",
+      "net_class": "port",
+      "pins": [
+        "J1.3"
+      ]
+    },
+    {
+      "name": "FMC_CLK0_M2C_N",
+      "net_class": "port",
+      "pins": [
+        "J1.4"
+      ]
+    },
+    {
+      "name": "FMC_CLK1_M2C_P",
+      "net_class": "port",
+      "pins": [
+        "J1.5"
+      ]
+    },
+    {
+      "name": "FMC_CLK1_M2C_N",
+      "net_class": "port",
+      "pins": [
+        "J1.6"
+      ]
+    },
+    {
+      "name": "FMC_LA00_CC_P",
+      "net_class": "port",
+      "pins": [
+        "J1.9"
+      ]
+    },
+    {
+      "name": "FMC_LA00_CC_N",
+      "net_class": "port",
+      "pins": [
+        "J1.10"
+      ]
+    },
+    {
+      "name": "FMC_LA01_CC_P",
+      "net_class": "port",
+      "pins": [
+        "J1.11"
+      ]
+    },
+    {
+      "name": "FMC_LA01_CC_N",
+      "net_class": "port",
+      "pins": [
+        "J1.12"
+      ]
+    },
+    {
+      "name": "FMC_LA02_P",
+      "net_class": "port",
+      "pins": [
+        "J1.13"
+      ]
+    },
+    {
+      "name": "FMC_LA02_N",
+      "net_class": "port",
+      "pins": [
+        "J1.14"
+      ]
+    },
+    {
+      "name": "FMC_LA03_P",
+      "net_class": "port",
+      "pins": [
+        "J1.17"
+      ]
+    },
+    {
+      "name": "FMC_LA03_N",
+      "net_class": "port",
+      "pins": [
+        "J1.18"
+      ]
+    },
+    {
+      "name": "FMC_LA04_P",
+      "net_class": "port",
+      "pins": [
+        "J1.19"
+      ]
+    },
+    {
+      "name": "FMC_LA04_N",
+      "net_class": "port",
+      "pins": [
+        "J1.20"
+      ]
+    },
+    {
+      "name": "FMC_LA05_P",
+      "net_class": "port",
+      "pins": [
+        "J1.21"
+      ]
+    },
+    {
+      "name": "FMC_LA05_N",
+      "net_class": "port",
+      "pins": [
+        "J1.22"
+      ]
+    },
+    {
+      "name": "FMC_LA06_P",
+      "net_class": "port",
+      "pins": [
+        "J1.25"
+      ]
+    },
+    {
+      "name": "FMC_LA06_N",
+      "net_class": "port",
+      "pins": [
+        "J1.26"
+      ]
+    },
+    {
+      "name": "FMC_LA07_P",
+      "net_class": "port",
+      "pins": [
+        "J1.27"
+      ]
+    },
+    {
+      "name": "FMC_LA07_N",
+      "net_class": "port",
+      "pins": [
+        "J1.28"
+      ]
+    },
+    {
+      "name": "FMC_LA08_P",
+      "net_class": "port",
+      "pins": [
+        "J1.29"
+      ]
+    },
+    {
+      "name": "FMC_LA08_N",
+      "net_class": "port",
+      "pins": [
+        "J1.30"
+      ]
+    },
+    {
+      "name": "FMC_LA09_P",
+      "net_class": "port",
+      "pins": [
+        "J1.33"
+      ]
+    },
+    {
+      "name": "FMC_LA09_N",
+      "net_class": "port",
+      "pins": [
+        "J1.34"
+      ]
+    },
+    {
+      "name": "FMC_LA10_P",
+      "net_class": "port",
+      "pins": [
+        "J1.35"
+      ]
+    },
+    {
+      "name": "FMC_LA10_N",
+      "net_class": "port",
+      "pins": [
+        "J1.36"
+      ]
+    },
+    {
+      "name": "FMC_LA11_P",
+      "net_class": "port",
+      "pins": [
+        "J1.37"
+      ]
+    },
+    {
+      "name": "FMC_LA11_N",
+      "net_class": "port",
+      "pins": [
+        "J1.38"
+      ]
+    },
+    {
+      "name": "+3V3",
+      "net_class": "power",
+      "pins": [
+        "J1.1",
+        "U1.1",
+        "U1.3",
+        "C1.1",
+        "C2.1",
+        "C3.1"
+      ]
+    },
+    {
+      "name": "+2V5_VADJ",
+      "net_class": "power",
+      "pins": [
+        "J1.2",
+        "U1.5",
+        "C4.1",
+        "C5.1",
+        "TP1.1"
+      ]
+    },
+    {
+      "name": "GND",
+      "net_class": "ground",
+      "pins": [
+        "J1.7",
+        "J1.8",
+        "J1.15",
+        "J1.16",
+        "J1.23",
+        "J1.24",
+        "J1.31",
+        "J1.32",
+        "J1.39",
+        "J1.40",
+        "U1.2",
+        "U1.6",
+        "C1.2",
+        "C2.2",
+        "C3.2",
+        "C4.2",
+        "C5.2"
+      ]
+    }
+  ],
+  "nc": [
+    "U1.4"
+  ],
+  "port_types": {
+    "FMC_CLK0_M2C_P": {
+      "kind": "diff_pair",
+      "pair_with": "FMC_CLK0_M2C_N",
+      "impedance": 100,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j3/j1 bank-35 pin map (dossier fmc.md section 1, P3 linker)"
+    },
+    "FMC_CLK0_M2C_N": {
+      "kind": "diff_pair",
+      "pair_with": "FMC_CLK0_M2C_P",
+      "impedance": 100,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j3/j1 bank-35 pin map (dossier fmc.md section 1, P3 linker)"
+    },
+    "FMC_CLK1_M2C_P": {
+      "kind": "diff_pair",
+      "pair_with": "FMC_CLK1_M2C_N",
+      "impedance": 100,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j3/j1 bank-35 pin map (dossier fmc.md section 1, P3 linker)"
+    },
+    "FMC_CLK1_M2C_N": {
+      "kind": "diff_pair",
+      "pair_with": "FMC_CLK1_M2C_P",
+      "impedance": 100,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j3/j1 bank-35 pin map (dossier fmc.md section 1, P3 linker)"
+    },
+    "FMC_LA00_CC_P": {
+      "kind": "diff_pair",
+      "pair_with": "FMC_LA00_CC_N",
+      "impedance": 100,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j3/j1 bank-35 pin map (dossier fmc.md section 1, P3 linker)"
+    },
+    "FMC_LA00_CC_N": {
+      "kind": "diff_pair",
+      "pair_with": "FMC_LA00_CC_P",
+      "impedance": 100,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j3/j1 bank-35 pin map (dossier fmc.md section 1, P3 linker)"
+    },
+    "FMC_LA01_CC_P": {
+      "kind": "diff_pair",
+      "pair_with": "FMC_LA01_CC_N",
+      "impedance": 100,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j3/j1 bank-35 pin map (dossier fmc.md section 1, P3 linker)"
+    },
+    "FMC_LA01_CC_N": {
+      "kind": "diff_pair",
+      "pair_with": "FMC_LA01_CC_P",
+      "impedance": 100,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j3/j1 bank-35 pin map (dossier fmc.md section 1, P3 linker)"
+    },
+    "FMC_LA02_P": {
+      "kind": "diff_pair",
+      "pair_with": "FMC_LA02_N",
+      "impedance": 100,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j3/j1 bank-35 pin map (dossier fmc.md section 1, P3 linker)"
+    },
+    "FMC_LA02_N": {
+      "kind": "diff_pair",
+      "pair_with": "FMC_LA02_P",
+      "impedance": 100,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j3/j1 bank-35 pin map (dossier fmc.md section 1, P3 linker)"
+    },
+    "FMC_LA03_P": {
+      "kind": "diff_pair",
+      "pair_with": "FMC_LA03_N",
+      "impedance": 100,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j3/j1 bank-35 pin map (dossier fmc.md section 1, P3 linker)"
+    },
+    "FMC_LA03_N": {
+      "kind": "diff_pair",
+      "pair_with": "FMC_LA03_P",
+      "impedance": 100,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j3/j1 bank-35 pin map (dossier fmc.md section 1, P3 linker)"
+    },
+    "FMC_LA04_P": {
+      "kind": "diff_pair",
+      "pair_with": "FMC_LA04_N",
+      "impedance": 100,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j3/j1 bank-35 pin map (dossier fmc.md section 1, P3 linker)"
+    },
+    "FMC_LA04_N": {
+      "kind": "diff_pair",
+      "pair_with": "FMC_LA04_P",
+      "impedance": 100,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j3/j1 bank-35 pin map (dossier fmc.md section 1, P3 linker)"
+    },
+    "FMC_LA05_P": {
+      "kind": "diff_pair",
+      "pair_with": "FMC_LA05_N",
+      "impedance": 100,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j3/j1 bank-35 pin map (dossier fmc.md section 1, P3 linker)"
+    },
+    "FMC_LA05_N": {
+      "kind": "diff_pair",
+      "pair_with": "FMC_LA05_P",
+      "impedance": 100,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j3/j1 bank-35 pin map (dossier fmc.md section 1, P3 linker)"
+    },
+    "FMC_LA06_P": {
+      "kind": "diff_pair",
+      "pair_with": "FMC_LA06_N",
+      "impedance": 100,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j3/j1 bank-35 pin map (dossier fmc.md section 1, P3 linker)"
+    },
+    "FMC_LA06_N": {
+      "kind": "diff_pair",
+      "pair_with": "FMC_LA06_P",
+      "impedance": 100,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j3/j1 bank-35 pin map (dossier fmc.md section 1, P3 linker)"
+    },
+    "FMC_LA07_P": {
+      "kind": "diff_pair",
+      "pair_with": "FMC_LA07_N",
+      "impedance": 100,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j3/j1 bank-35 pin map (dossier fmc.md section 1, P3 linker)"
+    },
+    "FMC_LA07_N": {
+      "kind": "diff_pair",
+      "pair_with": "FMC_LA07_P",
+      "impedance": 100,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j3/j1 bank-35 pin map (dossier fmc.md section 1, P3 linker)"
+    },
+    "FMC_LA08_P": {
+      "kind": "diff_pair",
+      "pair_with": "FMC_LA08_N",
+      "impedance": 100,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j3/j1 bank-35 pin map (dossier fmc.md section 1, P3 linker)"
+    },
+    "FMC_LA08_N": {
+      "kind": "diff_pair",
+      "pair_with": "FMC_LA08_P",
+      "impedance": 100,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j3/j1 bank-35 pin map (dossier fmc.md section 1, P3 linker)"
+    },
+    "FMC_LA09_P": {
+      "kind": "diff_pair",
+      "pair_with": "FMC_LA09_N",
+      "impedance": 100,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j3/j1 bank-35 pin map (dossier fmc.md section 1, P3 linker)"
+    },
+    "FMC_LA09_N": {
+      "kind": "diff_pair",
+      "pair_with": "FMC_LA09_P",
+      "impedance": 100,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j3/j1 bank-35 pin map (dossier fmc.md section 1, P3 linker)"
+    },
+    "FMC_LA10_P": {
+      "kind": "diff_pair",
+      "pair_with": "FMC_LA10_N",
+      "impedance": 100,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j3/j1 bank-35 pin map (dossier fmc.md section 1, P3 linker)"
+    },
+    "FMC_LA10_N": {
+      "kind": "diff_pair",
+      "pair_with": "FMC_LA10_P",
+      "impedance": 100,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j3/j1 bank-35 pin map (dossier fmc.md section 1, P3 linker)"
+    },
+    "FMC_LA11_P": {
+      "kind": "diff_pair",
+      "pair_with": "FMC_LA11_N",
+      "impedance": 100,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j3/j1 bank-35 pin map (dossier fmc.md section 1, P3 linker)"
+    },
+    "FMC_LA11_N": {
+      "kind": "diff_pair",
+      "pair_with": "FMC_LA11_P",
+      "impedance": 100,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j3/j1 bank-35 pin map (dossier fmc.md section 1, P3 linker)"
+    }
+  },
+  "hints": {},
+  "loads": {
+    "+3V3": [
+      [
+        0.5,
+        "bank-35 IO header +3V3 add-on allowance"
+      ]
+    ],
+    "+2V5_VADJ": [
+      [
+        0.35,
+        "VADJ bank-35 VCCO budget (TLV75725 DYD 0.40 A envelope less ~0.05 A bank-35 VCCO)"
+      ]
+    ]
+  },
+  "tp_waivers": {},
+  "decap_waivers": {},
+  "pull_waivers": {},
+  "reset_waivers": {},
+  "strap_waivers": {},
+  "ep_waivers": {},
+  "thermal_waivers": {},
+  "part_rule_waivers": {}
+}

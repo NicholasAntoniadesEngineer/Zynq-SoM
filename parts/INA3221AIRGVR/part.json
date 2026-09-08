@@ -1,0 +1,106 @@
+{
+  "schema": "schgen.part/1",
+  "mpn": "INA3221AIRGVR",
+  "safe_name": "INA3221AIRGVR",
+  "lcsc": "C181255",
+  "description": "INA3221AIRGVR (QFN-16_L4.0-W4.0-P0.65-TL-EP2.2)",
+  "manufacturer": "TI(德州仪器)",
+  "package": "QFN-16_L4.0-W4.0-P0.65-TL-EP2.2",
+  "jlc_class": "Extended Part",
+  "prefix": "U",
+  "datasheet": "https://www.lcsc.com/datasheet/C181255.pdf",
+  "product_url": "https://lcsc.com/product-detail/PMIC-Current-Power-Monitors-Regulators_TI_INA3221AIRGVR_INA3221AIRGVR_C181255.html",
+  "lib_id": "INA3221AIRGVR:INA3221AIRGVR",
+  "footprint": "INA3221AIRGVR:INA3221AIRGVR",
+  "models_3d": [
+    "INA3221AIRGVR.wrl",
+    "INA3221AIRGVR.step"
+  ],
+  "pins": [
+    {
+      "num": "1",
+      "name": "IN-3",
+      "etype": "passive"
+    },
+    {
+      "num": "2",
+      "name": "IN+3",
+      "etype": "passive"
+    },
+    {
+      "num": "3",
+      "name": "GND",
+      "etype": "passive"
+    },
+    {
+      "num": "4",
+      "name": "VS",
+      "etype": "passive"
+    },
+    {
+      "num": "5",
+      "name": "A0",
+      "etype": "passive"
+    },
+    {
+      "num": "6",
+      "name": "SCL",
+      "etype": "passive"
+    },
+    {
+      "num": "7",
+      "name": "SDA",
+      "etype": "passive"
+    },
+    {
+      "num": "8",
+      "name": "WARNING",
+      "etype": "passive"
+    },
+    {
+      "num": "9",
+      "name": "CRITICAL",
+      "etype": "passive"
+    },
+    {
+      "num": "10",
+      "name": "PV",
+      "etype": "passive"
+    },
+    {
+      "num": "11",
+      "name": "IN-1",
+      "etype": "passive"
+    },
+    {
+      "num": "12",
+      "name": "IN+1",
+      "etype": "passive"
+    },
+    {
+      "num": "13",
+      "name": "TC",
+      "etype": "passive"
+    },
+    {
+      "num": "14",
+      "name": "IN-2",
+      "etype": "passive"
+    },
+    {
+      "num": "15",
+      "name": "IN+2",
+      "etype": "passive"
+    },
+    {
+      "num": "16",
+      "name": "VPU",
+      "etype": "passive"
+    },
+    {
+      "num": "17",
+      "name": "PAD",
+      "etype": "passive"
+    }
+  ]
+}

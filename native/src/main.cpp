@@ -1,3 +1,5 @@
+#include "schgen/catalog.hpp"
+#include "schgen/circuit.hpp"
 #include "schgen/legalize.hpp"
 #include "schgen/occupancy.hpp"
 #include "schgen/quantize.hpp"
@@ -10,9 +12,29 @@
 #include <string>
 
 int main(int argc, char** argv) {
-    (void)argc;
-    (void)argv;
     try {
+        if (argc >= 2 && std::string(argv[1]) == "catalog-compile") {
+            if (argc != 4) {
+                throw std::runtime_error(
+                    "usage: schgen catalog-compile <parts_dir> <catalog.bin>");
+            }
+            if (!schgen::compile_part_catalog(argv[2], argv[3])) {
+                throw std::runtime_error("catalog-compile returned false");
+            }
+            std::cout << "catalog compiled " << argv[3] << "\n";
+            return 0;
+        }
+        if (argc >= 2 && std::string(argv[1]) == "circuit-compile") {
+            if (argc != 4) {
+                throw std::runtime_error(
+                    "usage: schgen circuit-compile <circuits_dir> <circuits.bin>");
+            }
+            if (!schgen::compile_circuit_catalog(argv[2], argv[3])) {
+                throw std::runtime_error("circuit-compile returned false");
+            }
+            std::cout << "circuits compiled " << argv[3] << "\n";
+            return 0;
+        }
         const schgen::Box4 a{0.0, 0.0, 10.0, 8.0};
         const schgen::Box4 b{12.0, 0.0, 16.0, 8.0};
         if (schgen::boxes_overlap(a, b, 0.3)) {
@@ -51,10 +73,18 @@ int main(int argc, char** argv) {
         if (dumped.find("kicad_pcb") == std::string::npos) {
             throw std::runtime_error("schgen: sexpr roundtrip dropped the tag");
         }
+        if (!schgen::cross_edge_fanout_hold(
+                {{0.0, 10.0, 20.0, 8.0, {}, {}, 'N'},
+                 {40.0, 10.0, 20.0, 8.0, {}, {}, 'S'}},
+                0.3)) {
+            throw std::runtime_error("schgen: cross_edge_fanout_hold rejected a free pair");
+        }
+        if (schgen::rects_overlap_any({{0.0, 0.0, 10.0, 8.0}},
+                                      {{12.0, 0.0, 16.0, 8.0}}, 1e-6)) {
+            throw std::runtime_error("schgen: rects_overlap_any flagged a gap");
+        }
         std::cout << "schgen native occupancy+seat+route+sexpr+emit"
                   << " — kernel self-check ok\n";
-        std::cout << "full board generate is still `python -m schgen board` "
-                     "until gates and the design DSL land in this binary\n";
         return 0;
     } catch (const std::exception& exc) {
         std::cerr << "schgen: " << exc.what() << "\n";

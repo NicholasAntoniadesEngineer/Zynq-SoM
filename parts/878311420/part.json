@@ -1,0 +1,91 @@
+{
+  "schema": "schgen.part/1",
+  "mpn": "878311420",
+  "safe_name": "878311420",
+  "lcsc": "C240854",
+  "description": "87831-1420 (CONN-TH_14P-P2.00_87831-1420)",
+  "manufacturer": "MOLEX",
+  "package": "CONN-TH_14P-P2.00_87831-1420",
+  "jlc_class": "Extended Part",
+  "prefix": "CN",
+  "datasheet": "https://www.lcsc.com/datasheet/C240854.pdf",
+  "product_url": "https://lcsc.com/product-detail/Others_MOLEX_87831-1420_MOLEX-87831-1420_C240854.html",
+  "lib_id": "878311420:878311420",
+  "footprint": "878311420:878311420",
+  "models_3d": [
+    "878311420.wrl",
+    "878311420.step"
+  ],
+  "pins": [
+    {
+      "num": "1",
+      "name": "1",
+      "etype": "passive"
+    },
+    {
+      "num": "3",
+      "name": "3",
+      "etype": "passive"
+    },
+    {
+      "num": "5",
+      "name": "5",
+      "etype": "passive"
+    },
+    {
+      "num": "7",
+      "name": "7",
+      "etype": "passive"
+    },
+    {
+      "num": "9",
+      "name": "9",
+      "etype": "passive"
+    },
+    {
+      "num": "11",
+      "name": "11",
+      "etype": "passive"
+    },
+    {
+      "num": "13",
+      "name": "13",
+      "etype": "passive"
+    },
+    {
+      "num": "14",
+      "name": "14",
+      "etype": "passive"
+    },
+    {
+      "num": "12",
+      "name": "12",
+      "etype": "passive"
+    },
+    {
+      "num": "10",
+      "name": "10",
+      "etype": "passive"
+    },
+    {
+      "num": "8",
+      "name": "8",
+      "etype": "passive"
+    },
+    {
+      "num": "6",
+      "name": "6",
+      "etype": "passive"
+    },
+    {
+      "num": "4",
+      "name": "4",
+      "etype": "passive"
+    },
+    {
+      "num": "2",
+      "name": "2",
+      "etype": "passive"
+    }
+  ]
+}

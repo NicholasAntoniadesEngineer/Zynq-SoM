@@ -51,15 +51,44 @@ class BreatheStats:
     reverted_sheets: tuple[str, ...] = ()
 
 
-def _eff_box(bbox: tuple[float, float, float, float], rot: float,
-             px: float, py: float) -> tuple[float, float, float, float]:
+def _eff_box_py(bbox: tuple[float, float, float, float], rot: float,
+                px: float, py: float) -> tuple[float, float, float, float]:
     ex0, ey0, ex1, ey1 = turn_box(bbox, rot)
     return (px + ex0, py + ey0, px + ex1, py + ey1)
 
 
+def _eff_box(bbox: tuple[float, float, float, float], rot: float,
+             px: float, py: float) -> tuple[float, float, float, float]:
+    turned = turn_box(bbox, rot)
+    if not _nat.loaded():
+        raise RuntimeError("native offset_rect required")
+    got = tuple(_nat.module().offset_rect(turned, px, py))
+    if _nat.trace():
+        ref = _eff_box_py(bbox, rot, px, py)
+        if got != ref:
+            raise AssertionError(
+                "native offset_rect DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
+
+
+def _halo_py(b: tuple[float, float, float, float], m: float
+             ) -> tuple[float, float, float, float]:
+    return (b[0] - m, b[1] - m, b[2] + m, b[3] + m)
+
+
 def _halo(b: tuple[float, float, float, float], m: float
           ) -> tuple[float, float, float, float]:
-    return (b[0] - m, b[1] - m, b[2] + m, b[3] + m)
+    if not _nat.loaded():
+        raise RuntimeError("native grow_rect required")
+    got = tuple(_nat.module().grow_rect(b, m))
+    if _nat.trace():
+        ref = _halo_py(b, m)
+        if got != ref:
+            raise AssertionError(
+                "native grow_rect DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got
 
 
 class _GridPy:
@@ -111,15 +140,11 @@ class _Grid:
     __slots__ = ("_cpp", "_py")
 
     def __init__(self, board_w: float, board_h: float) -> None:
-        self._cpp = None
-        self._py = None
-        if _nat.loaded():
-            self._cpp = _nat.module().BreatheGrid(
-                board_w, board_h, CELL, ORIGIN_X, ORIGIN_Y)
-            if _nat.trace():
-                self._py = _GridPy(board_w, board_h)
-        else:
-            self._py = _GridPy(board_w, board_h)
+        if not _nat.loaded():
+            raise RuntimeError("native BreatheGrid required")
+        self._cpp = _nat.module().BreatheGrid(
+            board_w, board_h, CELL, ORIGIN_X, ORIGIN_Y)
+        self._py = _GridPy(board_w, board_h) if _nat.trace() else None
 
     def stamp(self, box: tuple[float, float, float, float], val: int = 1) -> None:
         if self._cpp is not None:

@@ -199,14 +199,14 @@ def pin_page_position_py(pin: Pin, anchor_x: float, anchor_y: float,
 
 def pin_page_position(pin: Pin, anchor_x: float, anchor_y: float,
                       rotation: int) -> tuple[float, float]:
-    if _nat.loaded():
-        got = tuple(_nat.module().pin_page_position(
-            pin.x, pin.y, anchor_x, anchor_y, rotation))
-        if _nat.trace():
-            ref = pin_page_position_py(pin, anchor_x, anchor_y, rotation)
-            if got != ref:
-                raise AssertionError(
-                    "native pin_page_position DIVERGENCE: "
-                    f"cpp={got} python={ref}")
-        return got
-    return pin_page_position_py(pin, anchor_x, anchor_y, rotation)
+    if not _nat.loaded():
+        raise RuntimeError("native pin_page_position required")
+    got = tuple(_nat.module().pin_page_position(
+        pin.x, pin.y, anchor_x, anchor_y, rotation))
+    if _nat.trace():
+        ref = pin_page_position_py(pin, anchor_x, anchor_y, rotation)
+        if got != ref:
+            raise AssertionError(
+                "native pin_page_position DIVERGENCE: "
+                f"cpp={got} python={ref}")
+    return got

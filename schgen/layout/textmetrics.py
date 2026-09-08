@@ -24,15 +24,15 @@ def text_wh_py(text: str, size: float = SIZE) -> tuple[float, float]:
 
 
 def text_wh(text: str, size: float = SIZE) -> tuple[float, float]:
-    if _nat.loaded():
-        got = tuple(_nat.module().text_wh(text, size, CHAR_W, LINE_H))
-        if _nat.trace():
-            ref = text_wh_py(text, size)
-            if got != ref:
-                raise AssertionError(
-                    f"native text_wh DIVERGENCE: cpp={got} python={ref}")
-        return got
-    return text_wh_py(text, size)
+    if not _nat.loaded():
+        raise RuntimeError("native text_wh required")
+    got = tuple(_nat.module().text_wh(text, size, CHAR_W, LINE_H))
+    if _nat.trace():
+        ref = text_wh_py(text, size)
+        if got != ref:
+            raise AssertionError(
+                f"native text_wh DIVERGENCE: cpp={got} python={ref}")
+    return got
 
 
 def centered_box_py(text: str, cx: float, cy: float, size: float = SIZE,
@@ -45,16 +45,16 @@ def centered_box_py(text: str, cx: float, cy: float, size: float = SIZE,
 
 def centered_box(text: str, cx: float, cy: float, size: float = SIZE,
                  vertical: bool = False) -> tuple[float, float, float, float]:
-    if _nat.loaded():
-        got = tuple(_nat.module().centered_box(
-            text, cx, cy, size, CHAR_W, LINE_H, vertical))
-        if _nat.trace():
-            ref = centered_box_py(text, cx, cy, size, vertical)
-            if got != ref:
-                raise AssertionError(
-                    f"native centered_box DIVERGENCE: cpp={got} python={ref}")
-        return got
-    return centered_box_py(text, cx, cy, size, vertical)
+    if not _nat.loaded():
+        raise RuntimeError("native centered_box required")
+    got = tuple(_nat.module().centered_box(
+        text, cx, cy, size, CHAR_W, LINE_H, vertical))
+    if _nat.trace():
+        ref = centered_box_py(text, cx, cy, size, vertical)
+        if got != ref:
+            raise AssertionError(
+                f"native centered_box DIVERGENCE: cpp={got} python={ref}")
+    return got
 
 
 def llabel_box_py(text: str, x: float, y: float, rotation: int = 0,
@@ -72,17 +72,17 @@ def llabel_box_py(text: str, x: float, y: float, rotation: int = 0,
 
 def llabel_box(text: str, x: float, y: float, rotation: int = 0,
                size: float = SIZE) -> tuple[float, float, float, float]:
-    if _nat.loaded():
-        got = tuple(_nat.module().llabel_box(
-            text, x, y, rotation, size, CHAR_W, LINE_H,
-            _LLABEL_WIDTH_PAD, _LLABEL_GAP))
-        if _nat.trace():
-            ref = llabel_box_py(text, x, y, rotation, size)
-            if got != ref:
-                raise AssertionError(
-                    f"native llabel_box DIVERGENCE: cpp={got} python={ref}")
-        return got
-    return llabel_box_py(text, x, y, rotation, size)
+    if not _nat.loaded():
+        raise RuntimeError("native llabel_box required")
+    got = tuple(_nat.module().llabel_box(
+        text, x, y, rotation, size, CHAR_W, LINE_H,
+        _LLABEL_WIDTH_PAD, _LLABEL_GAP))
+    if _nat.trace():
+        ref = llabel_box_py(text, x, y, rotation, size)
+        if got != ref:
+            raise AssertionError(
+                f"native llabel_box DIVERGENCE: cpp={got} python={ref}")
+    return got
 
 
 def glabel_box_py(text: str, x: float, y: float, rotation: int,
@@ -104,14 +104,14 @@ def glabel_box_py(text: str, x: float, y: float, rotation: int,
 
 def glabel_box(text: str, x: float, y: float, rotation: int,
                size: float = SIZE) -> tuple[float, float, float, float]:
-    if _nat.loaded():
-        got = tuple(_nat.module().glabel_box(
-            text, x, y, rotation, size, CHAR_W, LINE_H,
-            GLABEL_PAD_LEN, GLABEL_H, GLABEL_INSET))
-        if _nat.trace():
-            ref = glabel_box_py(text, x, y, rotation, size)
-            if got != ref:
-                raise AssertionError(
-                    f"native glabel_box DIVERGENCE: cpp={got} python={ref}")
-        return got
-    return glabel_box_py(text, x, y, rotation, size)
+    if not _nat.loaded():
+        raise RuntimeError("native glabel_box required")
+    got = tuple(_nat.module().glabel_box(
+        text, x, y, rotation, size, CHAR_W, LINE_H,
+        GLABEL_PAD_LEN, GLABEL_H, GLABEL_INSET))
+    if _nat.trace():
+        ref = glabel_box_py(text, x, y, rotation, size)
+        if got != ref:
+            raise AssertionError(
+                f"native glabel_box DIVERGENCE: cpp={got} python={ref}")
+    return got

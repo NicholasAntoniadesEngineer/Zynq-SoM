@@ -1,0 +1,483 @@
+{
+  "schema": "schgen.circuit/1",
+  "name": "power_mon",
+  "title": "Rail telemetry: 2x INA3221 + shunts (I2C 0x40/41)",
+  "parts": [
+    {
+      "ref": "U1",
+      "lib_id": "INA3221AIRGVR:INA3221AIRGVR",
+      "value": "INA3221AIRGVR",
+      "footprint": "INA3221AIRGVR:INA3221AIRGVR",
+      "fields": {
+        "LCSC": "C181255"
+      },
+      "pin_names": {
+        "IN-3": [
+          "1"
+        ],
+        "IN+3": [
+          "2"
+        ],
+        "GND": [
+          "3"
+        ],
+        "VS": [
+          "4"
+        ],
+        "A0": [
+          "5"
+        ],
+        "SCL": [
+          "6"
+        ],
+        "SDA": [
+          "7"
+        ],
+        "WARNING": [
+          "8"
+        ],
+        "CRITICAL": [
+          "9"
+        ],
+        "PV": [
+          "10"
+        ],
+        "IN-1": [
+          "11"
+        ],
+        "IN+1": [
+          "12"
+        ],
+        "TC": [
+          "13"
+        ],
+        "IN-2": [
+          "14"
+        ],
+        "IN+2": [
+          "15"
+        ],
+        "VPU": [
+          "16"
+        ],
+        "PAD": [
+          "17"
+        ]
+      },
+      "pin_numbers": [
+        "1",
+        "10",
+        "11",
+        "12",
+        "13",
+        "14",
+        "15",
+        "16",
+        "17",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9"
+      ]
+    },
+    {
+      "ref": "U2",
+      "lib_id": "INA3221AIRGVR:INA3221AIRGVR",
+      "value": "INA3221AIRGVR",
+      "footprint": "INA3221AIRGVR:INA3221AIRGVR",
+      "fields": {
+        "LCSC": "C181255"
+      },
+      "pin_names": {
+        "IN-3": [
+          "1"
+        ],
+        "IN+3": [
+          "2"
+        ],
+        "GND": [
+          "3"
+        ],
+        "VS": [
+          "4"
+        ],
+        "A0": [
+          "5"
+        ],
+        "SCL": [
+          "6"
+        ],
+        "SDA": [
+          "7"
+        ],
+        "WARNING": [
+          "8"
+        ],
+        "CRITICAL": [
+          "9"
+        ],
+        "PV": [
+          "10"
+        ],
+        "IN-1": [
+          "11"
+        ],
+        "IN+1": [
+          "12"
+        ],
+        "TC": [
+          "13"
+        ],
+        "IN-2": [
+          "14"
+        ],
+        "IN+2": [
+          "15"
+        ],
+        "VPU": [
+          "16"
+        ],
+        "PAD": [
+          "17"
+        ]
+      },
+      "pin_numbers": [
+        "1",
+        "10",
+        "11",
+        "12",
+        "13",
+        "14",
+        "15",
+        "16",
+        "17",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9"
+      ]
+    },
+    {
+      "ref": "RS1",
+      "lib_id": "RLM12FTCMR010:RLM12FTCMR010",
+      "value": "10mR",
+      "footprint": "RLM12FTCMR010:RLM12FTCMR010",
+      "fields": {
+        "LCSC": "C188070"
+      },
+      "pin_names": {
+        "2": [
+          "2"
+        ],
+        "1": [
+          "1"
+        ]
+      },
+      "pin_numbers": [
+        "1",
+        "2"
+      ]
+    },
+    {
+      "ref": "RS2",
+      "lib_id": "RLM12FTCMR010:RLM12FTCMR010",
+      "value": "10mR",
+      "footprint": "RLM12FTCMR010:RLM12FTCMR010",
+      "fields": {
+        "LCSC": "C188070"
+      },
+      "pin_names": {
+        "2": [
+          "2"
+        ],
+        "1": [
+          "1"
+        ]
+      },
+      "pin_numbers": [
+        "1",
+        "2"
+      ]
+    },
+    {
+      "ref": "RS3",
+      "lib_id": "RLM12FTCMR010:RLM12FTCMR010",
+      "value": "10mR",
+      "footprint": "RLM12FTCMR010:RLM12FTCMR010",
+      "fields": {
+        "LCSC": "C188070"
+      },
+      "pin_names": {
+        "2": [
+          "2"
+        ],
+        "1": [
+          "1"
+        ]
+      },
+      "pin_numbers": [
+        "1",
+        "2"
+      ]
+    },
+    {
+      "ref": "RS4",
+      "lib_id": "RLM12FTCMR020:RLM12FTCMR020",
+      "value": "20mR",
+      "footprint": "RLM12FTCMR020:RLM12FTCMR020",
+      "fields": {
+        "LCSC": "C393094"
+      },
+      "pin_names": {
+        "1": [
+          "1"
+        ],
+        "2": [
+          "2"
+        ]
+      },
+      "pin_numbers": [
+        "1",
+        "2"
+      ]
+    },
+    {
+      "ref": "C1",
+      "lib_id": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {
+        "LCSC": "C14663"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "C2",
+      "lib_id": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {
+        "LCSC": "C14663"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "C3",
+      "lib_id": "Device:C",
+      "value": "10u",
+      "footprint": "Capacitor_SMD:C_0805_2012Metric",
+      "fields": {
+        "LCSC": "C15850"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "R1",
+      "lib_id": "Device:R",
+      "value": "10k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C25804"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    }
+  ],
+  "nets": [
+    {
+      "name": "+VIN",
+      "net_class": "power",
+      "pins": [
+        "RS1.1",
+        "U1.12"
+      ]
+    },
+    {
+      "name": "+VIN_SYS",
+      "net_class": "power",
+      "pins": [
+        "RS1.2",
+        "U1.11"
+      ]
+    },
+    {
+      "name": "+5V_REG",
+      "net_class": "power",
+      "pins": [
+        "RS2.1",
+        "U1.15"
+      ]
+    },
+    {
+      "name": "+5V",
+      "net_class": "power",
+      "pins": [
+        "RS2.2",
+        "U1.14"
+      ]
+    },
+    {
+      "name": "+3V3_REG",
+      "net_class": "power",
+      "pins": [
+        "RS3.1",
+        "U1.2"
+      ]
+    },
+    {
+      "name": "+3V3",
+      "net_class": "power",
+      "pins": [
+        "RS3.2",
+        "U1.1"
+      ]
+    },
+    {
+      "name": "+1V8_REG",
+      "net_class": "power",
+      "pins": [
+        "RS4.1",
+        "U2.12"
+      ]
+    },
+    {
+      "name": "+1V8",
+      "net_class": "power",
+      "pins": [
+        "RS4.2",
+        "U2.11"
+      ]
+    },
+    {
+      "name": "GND",
+      "net_class": "ground",
+      "pins": [
+        "U2.15",
+        "U2.14",
+        "U2.2",
+        "U2.1",
+        "U1.3",
+        "U1.17",
+        "U2.3",
+        "U2.17",
+        "U1.5",
+        "C1.2",
+        "C2.2",
+        "C3.2"
+      ]
+    },
+    {
+      "name": "+3V3_SC",
+      "net_class": "power",
+      "pins": [
+        "U1.4",
+        "U1.16",
+        "U2.4",
+        "U2.16",
+        "U2.5",
+        "C1.1",
+        "C2.1",
+        "C3.1",
+        "R1.1"
+      ]
+    },
+    {
+      "name": "STM32_I2C2_SDA",
+      "net_class": "port",
+      "pins": [
+        "U1.7",
+        "U2.7"
+      ]
+    },
+    {
+      "name": "STM32_I2C2_SCL",
+      "net_class": "port",
+      "pins": [
+        "U1.6",
+        "U2.6"
+      ]
+    },
+    {
+      "name": "PMON_ALERT_N",
+      "net_class": "port",
+      "pins": [
+        "U1.9",
+        "U2.9",
+        "R1.2"
+      ]
+    }
+  ],
+  "nc": [
+    "U1.10",
+    "U1.13",
+    "U1.8",
+    "U2.10",
+    "U2.13",
+    "U2.8"
+  ],
+  "port_types": {
+    "STM32_I2C2_SDA": {
+      "kind": "i2c",
+      "pair_with": null,
+      "impedance": null,
+      "role": "sda",
+      "bus": "STM32_I2C2",
+      "speed_hz": 400000,
+      "level_v": null,
+      "expect": "som_j1_connector"
+    },
+    "STM32_I2C2_SCL": {
+      "kind": "i2c",
+      "pair_with": null,
+      "impedance": null,
+      "role": "scl",
+      "bus": "STM32_I2C2",
+      "speed_hz": 400000,
+      "level_v": null,
+      "expect": "som_j1_connector"
+    },
+    "PMON_ALERT_N": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "bringup (TCA9535 spare port P11)"
+    }
+  },
+  "hints": {},
+  "loads": {
+    "+3V3_SC": [
+      [
+        0.002,
+        "2x INA3221 ~0.7 mA + ALERT pull-up"
+      ]
+    ]
+  },
+  "tp_waivers": {
+    "+VIN_SYS": "reg-side of RS1 — probe across the shunt (the +VIN @ pd_input TP is the post-shunt/load side)",
+    "+5V_REG": "reg-side of RS2 — probe across the shunt (the +5V TP is the post-shunt/load side)",
+    "+3V3_REG": "reg-side of RS3 — probe across the shunt (the +3V3 TP is the post-shunt/load side)",
+    "+1V8_REG": "reg-side of RS4 — probe across the shunt (the +1V8 TP is the post-shunt/load side)"
+  },
+  "decap_waivers": {},
+  "pull_waivers": {},
+  "reset_waivers": {},
+  "strap_waivers": {},
+  "ep_waivers": {},
+  "thermal_waivers": {},
+  "part_rule_waivers": {}
+}

@@ -1,0 +1,71 @@
+{
+  "schema": "schgen.part/1",
+  "mpn": "HX JN1.27-2x5 TP H4.9",
+  "safe_name": "HX_JN1.27-2x5_TP_H4.9",
+  "lcsc": "C42372555",
+  "description": "HX JN1.27-2X5 TP H4.9 (IDC-SMD_10P-P1.27-3220-10-0300-00)",
+  "manufacturer": "hanxia(韩下)",
+  "package": "IDC-SMD_10P-P1.27-3220-10-0300-00",
+  "jlc_class": "Extended Part",
+  "prefix": "CN",
+  "datasheet": "https://www.lcsc.com/datasheet/C42372555.pdf",
+  "product_url": "",
+  "lib_id": "HX_JN1.27-2x5_TP_H4.9:HX_JN1.27-2x5_TP_H4.9",
+  "footprint": "HX_JN1.27-2x5_TP_H4.9:HX_JN1.27-2x5_TP_H4.9",
+  "models_3d": [
+    "HX_JN1.27-2x5_TP_H4.9.wrl",
+    "HX_JN1.27-2x5_TP_H4.9.step"
+  ],
+  "pins": [
+    {
+      "num": "1",
+      "name": "1",
+      "etype": "passive"
+    },
+    {
+      "num": "10",
+      "name": "10",
+      "etype": "passive"
+    },
+    {
+      "num": "3",
+      "name": "3",
+      "etype": "passive"
+    },
+    {
+      "num": "8",
+      "name": "8",
+      "etype": "passive"
+    },
+    {
+      "num": "5",
+      "name": "5",
+      "etype": "passive"
+    },
+    {
+      "num": "6",
+      "name": "6",
+      "etype": "passive"
+    },
+    {
+      "num": "7",
+      "name": "7",
+      "etype": "passive"
+    },
+    {
+      "num": "4",
+      "name": "4",
+      "etype": "passive"
+    },
+    {
+      "num": "9",
+      "name": "9",
+      "etype": "passive"
+    },
+    {
+      "num": "2",
+      "name": "2",
+      "etype": "passive"
+    }
+  ]
+}

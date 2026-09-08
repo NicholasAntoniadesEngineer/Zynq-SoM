@@ -74,19 +74,6 @@ def gceil(v: float) -> float:
     return round(math.ceil(v / U - 1e-6) * U, 3)
 
 
-def _port_label_x(pin_x: float, run: float, sign: float) -> float:
-    if _nat.loaded():
-        got = _nat.module().port_label_x(pin_x, run, sign)
-        if _nat.trace():
-            ref = round(pin_x + sign * run, 3)
-            if got != ref:
-                raise AssertionError(
-                    "native port_label_x DIVERGENCE: "
-                    f"cpp={got} python={ref}")
-        return got
-    return round(pin_x + sign * run, 3)
-
-
 def _farm_row_right_bound_py(ex0: float, ex1_flow: float, a3_center_x: float,
                              titleblock_left: float, titleblock_margin: float,
                              cap_pitch: float) -> float:
@@ -2444,41 +2431,11 @@ class _Engine:
                 cy = gceil(ey1 + (12 if self._n_box_bucks >= 2 else 8) * U)
             max_right = self._farm_row_right_bound(ex0, ex1_flow)
         else:
-            if _nat.loaded():
-                nxt = _nat.module().farm_compact_col(
-                    col_x, body.x0, span, sp.hang_stub, U)
-                if _nat.trace():
-                    ref = min(col_x, gfloor(body.x0 - span - 4 * sp.hang_stub))
-                    if nxt != ref:
-                        raise AssertionError(
-                            "native farm_compact_col DIVERGENCE: "
-                            f"cpp={nxt} python={ref}")
-                col_x = nxt
-                cy = _nat.module().farm_compact_cy(
-                    ay, sp.cluster_dy, body.y1, sp.hang_stub, U)
-                if _nat.trace():
-                    ref = max(ay + sp.cluster_dy,
-                              gceil(body.y1 + 3 * sp.hang_stub))
-                    if cy != ref:
-                        raise AssertionError(
-                            "native farm_compact_cy DIVERGENCE: "
-                            f"cpp={cy} python={ref}")
-            else:
-                col_x = min(col_x, gfloor(body.x0 - span - 4 * sp.hang_stub))
-                cy = max(ay + sp.cluster_dy, gceil(body.y1 + 3 * sp.hang_stub))
+            col_x = min(col_x, gfloor(body.x0 - span - 4 * sp.hang_stub))
+            cy = max(ay + sp.cluster_dy, gceil(body.y1 + 3 * sp.hang_stub))
             floor = self._cell_floor(col_x - 2 * sp.cap_pitch,
                                      col_x + span + 2 * sp.cap_pitch)
-            if _nat.loaded():
-                lifted = _nat.module().farm_lift_cy(cy, floor, sp.hang_stub, U)
-                if _nat.trace():
-                    ref = max(cy, gceil(floor + 4 * sp.hang_stub))
-                    if lifted != ref:
-                        raise AssertionError(
-                            "native farm_lift_cy DIVERGENCE: "
-                            f"cpp={lifted} python={ref}")
-                cy = lifted
-            else:
-                cy = max(cy, gceil(floor + 4 * sp.hang_stub))
+            cy = max(cy, gceil(floor + 4 * sp.hang_stub))
             farm_left = col_x
             row_step = 0.0
             max_right = float("inf")
@@ -2508,19 +2465,19 @@ class _Engine:
             cur: list[float] = []
             for ref in caps:
                 if _nat.loaded():
-                    wrap, nxt_x, nxt_y = _nat.module().farm_wrap_advance(
+                    wrapped, nxt_x, nxt_y = _nat.module().farm_wrap_advance(
                         col_x, max_right, bool(cur), farm_left, cy, row_step,
                         U)
                     if _nat.trace():
-                        refw = col_x > max_right and bool(cur)
-                        refx = farm_left if refw else col_x
-                        refy = gceil(cy + row_step) if refw else cy
-                        if (bool(wrap), nxt_x, nxt_y) != (refw, refx, refy):
+                        ref_wrap = col_x > max_right and bool(cur)
+                        ref_x = farm_left if ref_wrap else col_x
+                        ref_y = gceil(cy + row_step) if ref_wrap else cy
+                        if (wrapped, nxt_x, nxt_y) != (ref_wrap, ref_x, ref_y):
                             raise AssertionError(
                                 "native farm_wrap_advance DIVERGENCE: "
-                                f"cpp={(bool(wrap), nxt_x, nxt_y)} "
-                                f"python={(refw, refx, refy)}")
-                    if wrap:
+                                f"cpp={(wrapped, nxt_x, nxt_y)} "
+                                f"python={(ref_wrap, ref_x, ref_y)}")
+                    if wrapped:
                         runs.append((cy, cur))
                         cur = []
                         col_x, cy = nxt_x, nxt_y
@@ -2535,29 +2492,11 @@ class _Engine:
             if cur:
                 runs.append((cy, cur))
             for run_cy, tops in runs:
-                if _nat.loaded():
-                    ry = _nat.module().farm_run_ry(run_cy, 3.81)
-                    if _nat.trace():
-                        ref = run_cy - 3.81
-                        if ry != ref:
-                            raise AssertionError(
-                                "native farm_run_ry DIVERGENCE: "
-                                f"cpp={ry} python={ref}")
-                else:
-                    ry = run_cy - 3.81
+                ry = run_cy - 3.81
                 if len(tops) == 1:
                     self.power(rail, tops[0], ry)
                 else:
-                    if _nat.loaded():
-                        xm = _nat.module().farm_run_mid(tops[0], tops[-1], U)
-                        if _nat.trace():
-                            ref = gsnap((tops[0] + tops[-1]) / 2)
-                            if xm != ref:
-                                raise AssertionError(
-                                    "native farm_run_mid DIVERGENCE: "
-                                    f"cpp={xm} python={ref}")
-                    else:
-                        xm = gsnap((tops[0] + tops[-1]) / 2)
+                    xm = gsnap((tops[0] + tops[-1]) / 2)
                     nodes = sorted(set(tops + [xm]))
                     for a, b in zip(nodes, nodes[1:], strict=False):
                         self.pl.plan(rail, (a, ry), (b, ry))
@@ -2667,17 +2606,8 @@ class _Engine:
         if not self.cluster:
             return
         ex0, _, _, ey1 = self._extent()
-        if _nat.loaded():
-            x, y0 = _nat.module().rail_decouple_origin(ex0, ey1, U)
-            if _nat.trace():
-                ref = (gsnap(ex0 + 8 * U), gceil(ey1 + 8 * U))
-                if (x, y0) != ref:
-                    raise AssertionError(
-                        "native rail_decouple_origin DIVERGENCE: "
-                        f"cpp={(x, y0)} python={ref}")
-        else:
-            x = gsnap(ex0 + 8 * U)
-            y0 = gceil(ey1 + 8 * U)
+        x = gsnap(ex0 + 8 * U)
+        y0 = gceil(ey1 + 8 * U)
         for rail in sorted(self.cluster):
             for ref in self.cluster[rail]:
                 self.power(rail, x, y0)
@@ -2889,7 +2819,7 @@ class _Engine:
 
         rail_nets = sorted(n.name for n in c.nets.values()
                            if n.net_class in (NetClass.POWER, NetClass.GROUND))
-        if _nat.loaded():
+        if _nat.loaded() and rail_nets:
             flag_y = _nat.module().conn_flag_y(self._extent()[3], U)
             fx = _nat.module().conn_flag_x0(sp.flag_pitch, len(rail_nets), U)
             if _nat.trace():
@@ -2897,7 +2827,7 @@ class _Engine:
                 ref_x = gsnap(-sp.flag_pitch * (len(rail_nets) - 1) / 2)
                 if (flag_y, fx) != (ref_y, ref_x):
                     raise AssertionError(
-                        "native conn_flag origin DIVERGENCE: "
+                        "native conn_flag DIVERGENCE: "
                         f"cpp={(flag_y, fx)} python={(ref_y, ref_x)}")
         else:
             flag_y = gceil(self._extent()[3] + 8 * U)
@@ -3175,7 +3105,7 @@ class _Engine:
                 continue
             if n.net_class is NetClass.PORT:
                 pe = pins[p.number]
-                lx = _port_label_x(pe[0], sp.port_run, 1.0)
+                lx = round(pe[0] + sp.port_run, 3)
                 self.pl.plan(n.name, pe, (lx, pe[1]))
                 shape = {"input": "input", "output": "output"}.get(
                     p.etype, "bidirectional")
@@ -3199,7 +3129,7 @@ class _Engine:
 
     def _box_right_pin_islet(self, name: str, pt: tuple[float, float]) -> None:
         sp = self.sp
-        rx = _port_label_x(pt[0], sp.port_run, 1.0)
+        rx = round(pt[0] + sp.port_run, 3)
         for _k in range(8):
             lb = tm.llabel_box(name, rx, pt[1], 0)
             if self._spot_free(lb) and self._corridor_free(
@@ -3214,7 +3144,7 @@ class _Engine:
     def _box_left_pin_islet(self, name: str, pt: tuple[float, float],
                             body: Box) -> None:
         sp = self.sp
-        lx = _port_label_x(pt[0], sp.port_run, -1.0)
+        lx = round(pt[0] - sp.port_run, 3)
         for _k in range(6):
             lb = tm.llabel_box(name, lx, pt[1], 180)
             if self._spot_free(lb) and self._corridor_free(
@@ -3346,19 +3276,8 @@ class _Engine:
         strap_taps = [(round(pv[0] - 2 * U * (k + 1), 3), spt)
                       for k, spt in enumerate(straps)]
         cin = in_caps.pop(in_rail, [])
-        if _nat.loaded():
-            cols = list(_nat.module().buck_cin_cols(
-                pv[0], sp.cluster_dx, sp.cap_pitch, len(cin), U))
-            if _nat.trace():
-                ref = [gfloor(pv[0] - sp.cluster_dx + i * -sp.cap_pitch)
-                       for i in range(len(cin))]
-                if list(cols) != ref:
-                    raise AssertionError(
-                        "native buck_cin_cols DIVERGENCE: "
-                        f"cpp={list(cols)} python={ref}")
-        else:
-            cols = [gfloor(pv[0] - sp.cluster_dx + i * -sp.cap_pitch)
-                    for i in range(len(cin))]
+        cols = [gfloor(pv[0] - sp.cluster_dx + i * -sp.cap_pitch)
+                for i in range(len(cin))]
         uvlo_col = None
         uvlo_gnd = []
         if p_en_uvlo is not None:

@@ -3,6 +3,7 @@
 #include "schgen/seat.hpp"
 #include "schgen/sexpr.hpp"
 
+#include <optional>
 #include <string>
 #include <tuple>
 #include <unordered_map>
@@ -21,9 +22,6 @@ std::pair<std::vector<std::pair<double, double>>, double> silk_gfx_pts(
 
 std::pair<std::vector<Box4>, std::vector<Box4>> collect_fp_silk_gfx(
     const Sexpr& footprint);
-
-std::pair<std::vector<Box4>, std::vector<Box4>> collect_doc_silk_gfx(
-    const Sexpr& doc);
 
 double farm_row_right_bound(double extent_x0, double extent_x1_flow,
                             double a3_center_x, double titleblock_left,
@@ -64,6 +62,25 @@ struct RefdesProp {
 std::vector<RefdesProp> collect_refdes_props(const Sexpr& doc,
                                              double default_size);
 
+struct RefdesRow {
+    int footprint_index = -1;
+    int property_index = -1;
+    std::string ref;
+    double fp_x = 0.0;
+    double fp_y = 0.0;
+    double cos_a = 0.0;
+    double sin_a = 0.0;
+    Box4 court;
+    double size = 0.0;
+    Box4 text_box;
+    bool bottom = false;
+};
+
+std::vector<RefdesRow> collect_refdes_rows(
+    const Sexpr& doc,
+    const std::unordered_map<std::string, Box4>& court_by_ref,
+    double default_size);
+
 std::string footprint_alias(
     const std::string& footprint,
     const std::vector<std::pair<std::string, std::string>>& aliases);
@@ -82,10 +99,61 @@ double next_rail_col(double col_x, double cap_pitch, double prev_rail_w,
 
 Sexpr set_font_size(Sexpr prop, double size);
 
-Sexpr apply_refdes_pose(Sexpr prop, double lx, double ly, bool resize,
-                        double size);
-
 std::pair<Sexpr, int> hide_undersom_bottom_refs(
     Sexpr doc, double x0, double y0, double x1, double y1);
+
+Box4 footprint_bbox(const Sexpr& doc, int decimals);
+
+struct SomJGeom {
+    std::string ref;
+    double pcb_x = 0.0;
+    double pcb_y = 0.0;
+    double rot = 0.0;
+    double x = 0.0;
+    double y = 0.0;
+    double w = 0.0;
+    double h = 0.0;
+};
+
+struct SomOutline {
+    double w = 0.0;
+    double h = 0.0;
+    std::vector<SomJGeom> js;
+};
+
+SomOutline extract_som_scan(const std::string& text);
+
+std::vector<std::tuple<std::string, double, double, double, double>>
+pad_boxes_named(
+    const std::vector<std::tuple<std::string, double, double, double, double,
+                                 double>>& rows,
+    double rotation);
+
+std::optional<std::pair<double, double>> courtyard_dims_from_text(
+    const std::string& text);
+
+std::vector<std::string> pad_names_from_text(const std::string& text);
+
+bool has_thru_pads_from_text(const std::string& text);
+
+std::vector<std::tuple<std::string, std::string, double, double, double, double,
+                       double>>
+scan_pad_nodes(const Sexpr& doc);
+std::vector<std::tuple<std::string, double, double, double, double, double,
+                       double>>
+scan_mod_pads(const Sexpr& doc);
+std::vector<std::string> thru_pad_names(const Sexpr& doc);
+
+std::vector<double> scan_floats(const std::string& text);
+
+double font_size(const Sexpr& node, double default_size);
+
+std::vector<std::tuple<std::string, double, double>> inst_pad_xy(
+    const std::vector<std::tuple<std::string, double, double>>& pads,
+    double inst_x, double inst_y, double rotation, int decimals);
+
+std::vector<Box4> collect_emitted_text_boxes(const Sexpr& doc,
+                                             bool include_silk_gfx,
+                                             double default_size);
 
 }  // namespace schgen

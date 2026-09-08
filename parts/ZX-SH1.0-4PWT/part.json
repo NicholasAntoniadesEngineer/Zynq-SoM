@@ -1,0 +1,51 @@
+{
+  "schema": "schgen.part/1",
+  "mpn": "ZX-SH1.0-4PWT",
+  "safe_name": "ZX-SH1.0-4PWT",
+  "lcsc": "C7430446",
+  "description": "ZX-SH1.0-4PWT (CONN-SMD_4P-P1.00_MEGASTAR_ZX-SH1.0-4PWT)",
+  "manufacturer": "Megastar(兆星)",
+  "package": "CONN-SMD_4P-P1.00_MEGASTAR_ZX-SH1.0-4PWT",
+  "jlc_class": "Extended Part",
+  "prefix": "U",
+  "datasheet": "https://www.lcsc.com/datasheet/C7430446.pdf",
+  "product_url": "",
+  "lib_id": "ZX-SH1.0-4PWT:ZX-SH1.0-4PWT",
+  "footprint": "ZX-SH1.0-4PWT:ZX-SH1.0-4PWT",
+  "models_3d": [
+    "ZX-SH1.0-4PWT.wrl",
+    "ZX-SH1.0-4PWT.step"
+  ],
+  "pins": [
+    {
+      "num": "6",
+      "name": "6",
+      "etype": "passive"
+    },
+    {
+      "num": "5",
+      "name": "5",
+      "etype": "passive"
+    },
+    {
+      "num": "4",
+      "name": "4",
+      "etype": "passive"
+    },
+    {
+      "num": "3",
+      "name": "3",
+      "etype": "passive"
+    },
+    {
+      "num": "2",
+      "name": "2",
+      "etype": "passive"
+    },
+    {
+      "num": "1",
+      "name": "1",
+      "etype": "passive"
+    }
+  ]
+}

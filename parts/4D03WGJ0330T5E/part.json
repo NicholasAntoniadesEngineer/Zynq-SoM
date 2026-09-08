@@ -1,0 +1,61 @@
+{
+  "schema": "schgen.part/1",
+  "mpn": "4D03WGJ0330T5E",
+  "safe_name": "4D03WGJ0330T5E",
+  "lcsc": "C25508",
+  "description": "33Ω (330) ±5%",
+  "manufacturer": "UNI-ROYAL(厚声)",
+  "package": "RES-ARRAY-SMD_0603-8P-L3.2-W1.6-BL",
+  "jlc_class": "Extended Part",
+  "prefix": "RN",
+  "datasheet": "https://www.lcsc.com/datasheet/C25508.pdf",
+  "product_url": "https://lcsc.com/product-detail/Resistor-Networks-Arrays_33R-330-5_C25508.html",
+  "lib_id": "4D03WGJ0330T5E:4D03WGJ0330T5E",
+  "footprint": "4D03WGJ0330T5E:4D03WGJ0330T5E",
+  "models_3d": [
+    "4D03WGJ0330T5E.wrl",
+    "4D03WGJ0330T5E.step"
+  ],
+  "pins": [
+    {
+      "num": "1",
+      "name": "1",
+      "etype": "passive"
+    },
+    {
+      "num": "2",
+      "name": "2",
+      "etype": "passive"
+    },
+    {
+      "num": "3",
+      "name": "3",
+      "etype": "passive"
+    },
+    {
+      "num": "4",
+      "name": "4",
+      "etype": "passive"
+    },
+    {
+      "num": "5",
+      "name": "5",
+      "etype": "passive"
+    },
+    {
+      "num": "6",
+      "name": "6",
+      "etype": "passive"
+    },
+    {
+      "num": "7",
+      "name": "7",
+      "etype": "passive"
+    },
+    {
+      "num": "8",
+      "name": "8",
+      "etype": "passive"
+    }
+  ]
+}

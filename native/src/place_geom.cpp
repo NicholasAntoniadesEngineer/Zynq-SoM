@@ -1,11 +1,9 @@
 #include "schgen/place_geom.hpp"
 
-#include "schgen/occupancy.hpp"
 #include "schgen/quantize.hpp"
 
 #include <algorithm>
 #include <cmath>
-#include <cstddef>
 #include <stdexcept>
 
 namespace schgen {
@@ -55,77 +53,11 @@ double conn_flag_y(double extent_y1, double unit) {
 }
 
 double conn_flag_x0(double flag_pitch, int rail_count, double unit) {
-    if (rail_count < 0) {
+    if (rail_count < 1) {
         throw std::runtime_error("conn_flag_x0: rail_count required");
     }
     return gsnap(-flag_pitch * static_cast<double>(rail_count - 1) / 2.0,
                  unit);
-}
-
-std::pair<double, double> rail_decouple_origin(double extent_x0,
-                                               double extent_y1, double unit) {
-    return {gsnap(extent_x0 + 8.0 * unit, unit),
-            gceil(extent_y1 + 8.0 * unit, unit)};
-}
-
-double farm_compact_col(double col_x, double body_x0, double span,
-                        double hang_stub, double unit) {
-    return std::min(col_x, gfloor(body_x0 - span - 4.0 * hang_stub, unit));
-}
-
-double farm_compact_cy(double ay, double cluster_dy, double body_y1,
-                       double hang_stub, double unit) {
-    return std::max(ay + cluster_dy, gceil(body_y1 + 3.0 * hang_stub, unit));
-}
-
-double farm_lift_cy(double cy, double floor, double hang_stub, double unit) {
-    return std::max(cy, gceil(floor + 4.0 * hang_stub, unit));
-}
-
-double farm_run_ry(double run_cy, double drop) {
-    return run_cy - drop;
-}
-
-double farm_run_mid(double first, double last, double unit) {
-    return gsnap((first + last) / 2.0, unit);
-}
-
-double block_area(double w, double h) {
-    return py_round(w * h, 1);
-}
-
-std::pair<double, double> box_center(double x, double y, double w, double h) {
-    return {x + w / 2.0, y + h / 2.0};
-}
-
-double port_label_x(double pin_x, double run, double sign) {
-    return py_round(pin_x + sign * run, 3);
-}
-
-std::vector<double> buck_cin_cols(double pv_x, double cluster_dx,
-                                  double cap_pitch, int n, double unit) {
-    if (n < 0) {
-        throw std::runtime_error("buck_cin_cols: n required");
-    }
-    std::vector<double> out;
-    out.reserve(static_cast<std::size_t>(n));
-    for (int i = 0; i < n; ++i) {
-        out.push_back(gfloor(pv_x - cluster_dx
-                                 + static_cast<double>(i) * -cap_pitch,
-                             unit));
-    }
-    return out;
-}
-
-double template_clear_pad(double clear, double margin, double pad) {
-    return clear + margin + pad;
-}
-
-double relax_pad(int scale, double step) {
-    if (scale < 0) {
-        throw std::runtime_error("relax_pad: scale required");
-    }
-    return static_cast<double>(scale) * step;
 }
 
 }  // namespace schgen

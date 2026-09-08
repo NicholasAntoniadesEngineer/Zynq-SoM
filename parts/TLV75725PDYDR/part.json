@@ -1,0 +1,51 @@
+{
+  "schema": "schgen.part/1",
+  "mpn": "TLV75725PDYDR",
+  "safe_name": "TLV75725PDYDR",
+  "lcsc": "C35209004",
+  "description": "TLV75725PDYDR (SOT-23-5_L2.8-W1.7-P0.95-BL-EP_TI_DYD)",
+  "manufacturer": "TI(德州仪器)",
+  "package": "SOT-23-5_L2.8-W1.7-P0.95-BL-EP_TI_DYD",
+  "jlc_class": "Extended Part",
+  "prefix": "U",
+  "datasheet": "https://www.lcsc.com/datasheet/C35209004.pdf",
+  "product_url": "",
+  "lib_id": "TLV75725PDYDR:TLV75725PDYDR",
+  "footprint": "TLV75725PDYDR:TLV75725PDYDR",
+  "models_3d": [
+    "TLV75725PDYDR.wrl",
+    "TLV75725PDYDR.step"
+  ],
+  "pins": [
+    {
+      "num": "1",
+      "name": "IN",
+      "etype": "passive"
+    },
+    {
+      "num": "2",
+      "name": "GND",
+      "etype": "passive"
+    },
+    {
+      "num": "3",
+      "name": "EN",
+      "etype": "passive"
+    },
+    {
+      "num": "4",
+      "name": "NC",
+      "etype": "passive"
+    },
+    {
+      "num": "5",
+      "name": "OUT",
+      "etype": "passive"
+    },
+    {
+      "num": "6",
+      "name": "EP",
+      "etype": "passive"
+    }
+  ]
+}

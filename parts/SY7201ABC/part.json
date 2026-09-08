@@ -1,0 +1,51 @@
+{
+  "schema": "schgen.part/1",
+  "mpn": "SY7201ABC",
+  "safe_name": "SY7201ABC",
+  "lcsc": "C82173",
+  "description": "SY7201ABC",
+  "manufacturer": "Silergy(矽力杰)",
+  "package": "SOT-23-6_L2.9-W1.6-P0.95-LS2.8-BR",
+  "jlc_class": "Extended Part",
+  "prefix": "U",
+  "datasheet": "https://www.lcsc.com/datasheet/C82173.pdf",
+  "product_url": "https://lcsc.com/product-detail/LED-Drivers_Silergy_SY7201ABC_SY7201ABC_C82173.html",
+  "lib_id": "SY7201ABC:SY7201ABC",
+  "footprint": "SY7201ABC:SY7201ABC",
+  "models_3d": [
+    "SY7201ABC.wrl",
+    "SY7201ABC.step"
+  ],
+  "pins": [
+    {
+      "num": "1",
+      "name": "LX",
+      "etype": "passive"
+    },
+    {
+      "num": "2",
+      "name": "GND",
+      "etype": "passive"
+    },
+    {
+      "num": "3",
+      "name": "FB",
+      "etype": "passive"
+    },
+    {
+      "num": "4",
+      "name": "EN/PWM",
+      "etype": "passive"
+    },
+    {
+      "num": "5",
+      "name": "OVP",
+      "etype": "passive"
+    },
+    {
+      "num": "6",
+      "name": "IN",
+      "etype": "passive"
+    }
+  ]
+}

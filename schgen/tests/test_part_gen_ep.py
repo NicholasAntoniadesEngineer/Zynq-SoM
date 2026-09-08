@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 from schgen.partlib import part_gen
@@ -50,7 +51,8 @@ def test_add_part_synthesizes_ep_end_to_end(tmp_path):
     out = part_gen.add_part("C3192119", parts_dir=tmp_path, from_json=cached)
     sym = (out / "MPQ4423HGQ-Z.kicad_sym").read_text()
     mod = (out / "MPQ4423HGQ-Z.kicad_mod").read_text()
-    py = (out / "MPQ4423HGQ-Z.py").read_text()
+    part = json.loads((out / "part.json").read_text())
     assert '"EP"' in sym and '"9"' in sym
     assert '"9"' in mod
-    assert "('9', 'EP', 'passive')" in py
+    assert any(p["num"] == "9" and p["name"] == "EP" and p["etype"] == "passive"
+               for p in part["pins"])

@@ -1,0 +1,1181 @@
+{
+  "schema": "schgen.circuit/1",
+  "name": "lcd",
+  "title": "40-pin TTL RGB LCD + SY7201 backlight boost",
+  "parts": [
+    {
+      "ref": "J1",
+      "lib_id": "AFC07-S40FCA-00:AFC07-S40FCA-00",
+      "value": "AFC07-S40FCA-00",
+      "footprint": "AFC07-S40FCA-00:AFC07-S40FCA-00",
+      "fields": {
+        "LCSC": "C262572"
+      },
+      "pin_names": {
+        "1": [
+          "1"
+        ],
+        "2": [
+          "2"
+        ],
+        "3": [
+          "3"
+        ],
+        "4": [
+          "4"
+        ],
+        "5": [
+          "5"
+        ],
+        "6": [
+          "6"
+        ],
+        "7": [
+          "7"
+        ],
+        "8": [
+          "8"
+        ],
+        "9": [
+          "9"
+        ],
+        "10": [
+          "10"
+        ],
+        "11": [
+          "11"
+        ],
+        "12": [
+          "12"
+        ],
+        "13": [
+          "13"
+        ],
+        "14": [
+          "14"
+        ],
+        "15": [
+          "15"
+        ],
+        "16": [
+          "16"
+        ],
+        "17": [
+          "17"
+        ],
+        "18": [
+          "18"
+        ],
+        "19": [
+          "19"
+        ],
+        "20": [
+          "20"
+        ],
+        "21": [
+          "21"
+        ],
+        "22": [
+          "22"
+        ],
+        "23": [
+          "23"
+        ],
+        "24": [
+          "24"
+        ],
+        "25": [
+          "25"
+        ],
+        "26": [
+          "26"
+        ],
+        "27": [
+          "27"
+        ],
+        "28": [
+          "28"
+        ],
+        "29": [
+          "29"
+        ],
+        "30": [
+          "30"
+        ],
+        "31": [
+          "31"
+        ],
+        "32": [
+          "32"
+        ],
+        "33": [
+          "33"
+        ],
+        "34": [
+          "34"
+        ],
+        "35": [
+          "35"
+        ],
+        "36": [
+          "36"
+        ],
+        "37": [
+          "37"
+        ],
+        "38": [
+          "38"
+        ],
+        "39": [
+          "39"
+        ],
+        "40": [
+          "40"
+        ],
+        "41": [
+          "41"
+        ],
+        "42": [
+          "42"
+        ]
+      },
+      "pin_numbers": [
+        "1",
+        "10",
+        "11",
+        "12",
+        "13",
+        "14",
+        "15",
+        "16",
+        "17",
+        "18",
+        "19",
+        "2",
+        "20",
+        "21",
+        "22",
+        "23",
+        "24",
+        "25",
+        "26",
+        "27",
+        "28",
+        "29",
+        "3",
+        "30",
+        "31",
+        "32",
+        "33",
+        "34",
+        "35",
+        "36",
+        "37",
+        "38",
+        "39",
+        "4",
+        "40",
+        "41",
+        "42",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9"
+      ]
+    },
+    {
+      "ref": "U1",
+      "lib_id": "SY7201ABC:SY7201ABC",
+      "value": "SY7201ABC",
+      "footprint": "SY7201ABC:SY7201ABC",
+      "fields": {
+        "LCSC": "C82173"
+      },
+      "pin_names": {
+        "LX": [
+          "1"
+        ],
+        "GND": [
+          "2"
+        ],
+        "FB": [
+          "3"
+        ],
+        "EN/PWM": [
+          "4"
+        ],
+        "OVP": [
+          "5"
+        ],
+        "IN": [
+          "6"
+        ]
+      },
+      "pin_numbers": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6"
+      ]
+    },
+    {
+      "ref": "L1",
+      "lib_id": "SWPA4030S100MT:SWPA4030S100MT",
+      "value": "10uH",
+      "footprint": "SWPA4030S100MT:SWPA4030S100MT",
+      "fields": {
+        "LCSC": "C38117"
+      },
+      "pin_names": {
+        "2": [
+          "2"
+        ],
+        "1": [
+          "1"
+        ]
+      },
+      "pin_numbers": [
+        "1",
+        "2"
+      ]
+    },
+    {
+      "ref": "D1",
+      "lib_id": "Device:D_Schottky",
+      "value": "SS34",
+      "footprint": "Diode_SMD:D_SMA",
+      "fields": {
+        "LCSC": "C8678"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "R1",
+      "lib_id": "Device:R",
+      "value": "1.5R",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C22769"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "C1",
+      "lib_id": "Device:C",
+      "value": "10u",
+      "footprint": "Capacitor_SMD:C_0805_2012Metric",
+      "fields": {
+        "LCSC": "C15850"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "C2",
+      "lib_id": "Device:C",
+      "value": "2.2u",
+      "footprint": "Capacitor_SMD:C_0805_2012Metric",
+      "fields": {
+        "LCSC": "C125847"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "C3",
+      "lib_id": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {
+        "LCSC": "C14663"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "U2",
+      "lib_id": "USBLC6-2SC6:USBLC6-2SC6",
+      "value": "USBLC6-2SC6",
+      "footprint": "USBLC6-2SC6:USBLC6-2SC6",
+      "fields": {
+        "LCSC": "C7519"
+      },
+      "pin_names": {
+        "1": [
+          "1"
+        ],
+        "2": [
+          "2"
+        ],
+        "3": [
+          "3"
+        ],
+        "4": [
+          "4"
+        ],
+        "5": [
+          "5"
+        ],
+        "6": [
+          "6"
+        ]
+      },
+      "pin_numbers": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6"
+      ]
+    },
+    {
+      "ref": "R2",
+      "lib_id": "Device:R",
+      "value": "4k7",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C23162"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "R3",
+      "lib_id": "Device:R",
+      "value": "4k7",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C23162"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "R5",
+      "lib_id": "Device:R",
+      "value": "100k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C25803"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "R6",
+      "lib_id": "Device:R",
+      "value": "10k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C25804"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "R7",
+      "lib_id": "Device:R",
+      "value": "22R",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C23345"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "C4",
+      "lib_id": "Device:C",
+      "value": "10u",
+      "footprint": "Capacitor_SMD:C_0805_2012Metric",
+      "fields": {
+        "LCSC": "C15850"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "C5",
+      "lib_id": "Device:C",
+      "value": "1u",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {
+        "LCSC": "C15849"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "R4",
+      "lib_id": "Device:R",
+      "value": "100k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C25803"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "TP1",
+      "lib_id": "Connector:TestPoint",
+      "value": "+5V_LCD",
+      "footprint": "TestPoint:TestPoint_Pad_D1.5mm",
+      "fields": {
+        "BOM": "exclude"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "TP2",
+      "lib_id": "Connector:TestPoint",
+      "value": "LCD_CTP_SDA",
+      "footprint": "TestPoint:TestPoint_Pad_D1.5mm",
+      "fields": {
+        "BOM": "exclude"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "TP3",
+      "lib_id": "Connector:TestPoint",
+      "value": "LCD_CTP_SCL",
+      "footprint": "TestPoint:TestPoint_Pad_D1.5mm",
+      "fields": {
+        "BOM": "exclude"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    }
+  ],
+  "nets": [
+    {
+      "name": "LCD_R0",
+      "net_class": "port",
+      "pins": [
+        "J1.5"
+      ]
+    },
+    {
+      "name": "LCD_R1",
+      "net_class": "port",
+      "pins": [
+        "J1.6"
+      ]
+    },
+    {
+      "name": "LCD_R2",
+      "net_class": "port",
+      "pins": [
+        "J1.7"
+      ]
+    },
+    {
+      "name": "LCD_R3",
+      "net_class": "port",
+      "pins": [
+        "J1.8"
+      ]
+    },
+    {
+      "name": "LCD_R4",
+      "net_class": "port",
+      "pins": [
+        "J1.9"
+      ]
+    },
+    {
+      "name": "LCD_R5",
+      "net_class": "port",
+      "pins": [
+        "J1.10"
+      ]
+    },
+    {
+      "name": "LCD_R6",
+      "net_class": "port",
+      "pins": [
+        "J1.11"
+      ]
+    },
+    {
+      "name": "LCD_R7",
+      "net_class": "port",
+      "pins": [
+        "J1.12"
+      ]
+    },
+    {
+      "name": "LCD_G0",
+      "net_class": "port",
+      "pins": [
+        "J1.13"
+      ]
+    },
+    {
+      "name": "LCD_G1",
+      "net_class": "port",
+      "pins": [
+        "J1.14"
+      ]
+    },
+    {
+      "name": "LCD_G2",
+      "net_class": "port",
+      "pins": [
+        "J1.15"
+      ]
+    },
+    {
+      "name": "LCD_G3",
+      "net_class": "port",
+      "pins": [
+        "J1.16"
+      ]
+    },
+    {
+      "name": "LCD_G4",
+      "net_class": "port",
+      "pins": [
+        "J1.17"
+      ]
+    },
+    {
+      "name": "LCD_G5",
+      "net_class": "port",
+      "pins": [
+        "J1.18"
+      ]
+    },
+    {
+      "name": "LCD_G6",
+      "net_class": "port",
+      "pins": [
+        "J1.19"
+      ]
+    },
+    {
+      "name": "LCD_G7",
+      "net_class": "port",
+      "pins": [
+        "J1.20"
+      ]
+    },
+    {
+      "name": "LCD_B0",
+      "net_class": "port",
+      "pins": [
+        "J1.21"
+      ]
+    },
+    {
+      "name": "LCD_B1",
+      "net_class": "port",
+      "pins": [
+        "J1.22"
+      ]
+    },
+    {
+      "name": "LCD_B2",
+      "net_class": "port",
+      "pins": [
+        "J1.23"
+      ]
+    },
+    {
+      "name": "LCD_B3",
+      "net_class": "port",
+      "pins": [
+        "J1.24"
+      ]
+    },
+    {
+      "name": "LCD_B4",
+      "net_class": "port",
+      "pins": [
+        "J1.25"
+      ]
+    },
+    {
+      "name": "LCD_B5",
+      "net_class": "port",
+      "pins": [
+        "J1.26"
+      ]
+    },
+    {
+      "name": "LCD_B6",
+      "net_class": "port",
+      "pins": [
+        "J1.27"
+      ]
+    },
+    {
+      "name": "LCD_B7",
+      "net_class": "port",
+      "pins": [
+        "J1.28"
+      ]
+    },
+    {
+      "name": "LCD_DISP",
+      "net_class": "port",
+      "pins": [
+        "J1.31",
+        "R6.1"
+      ]
+    },
+    {
+      "name": "LCD_HSYNC",
+      "net_class": "port",
+      "pins": [
+        "J1.32"
+      ]
+    },
+    {
+      "name": "LCD_VSYNC",
+      "net_class": "port",
+      "pins": [
+        "J1.33"
+      ]
+    },
+    {
+      "name": "LCD_DE",
+      "net_class": "port",
+      "pins": [
+        "J1.34"
+      ]
+    },
+    {
+      "name": "CTP_SDA_FFC",
+      "net_class": "signal",
+      "pins": [
+        "J1.37",
+        "U2.1"
+      ]
+    },
+    {
+      "name": "CTP_SCL_FFC",
+      "net_class": "signal",
+      "pins": [
+        "J1.38",
+        "U2.3"
+      ]
+    },
+    {
+      "name": "LCD_CTP_SDA",
+      "net_class": "port",
+      "pins": [
+        "U2.6",
+        "R2.1",
+        "TP2.1"
+      ]
+    },
+    {
+      "name": "LCD_CTP_SCL",
+      "net_class": "port",
+      "pins": [
+        "U2.4",
+        "R3.1",
+        "TP3.1"
+      ]
+    },
+    {
+      "name": "+3V3",
+      "net_class": "power",
+      "pins": [
+        "U2.5"
+      ]
+    },
+    {
+      "name": "GND",
+      "net_class": "ground",
+      "pins": [
+        "U2.2",
+        "R5.2",
+        "J1.3",
+        "J1.29",
+        "J1.36",
+        "C3.2",
+        "C4.2",
+        "U1.2",
+        "C1.2",
+        "C2.2",
+        "R1.2",
+        "C5.2",
+        "R4.2"
+      ]
+    },
+    {
+      "name": "LCD_CTP_RST",
+      "net_class": "port",
+      "pins": [
+        "J1.39",
+        "R5.1"
+      ]
+    },
+    {
+      "name": "LCD_CTP_INT",
+      "net_class": "port",
+      "pins": [
+        "J1.40"
+      ]
+    },
+    {
+      "name": "+3V3_LCD",
+      "net_class": "power",
+      "pins": [
+        "R2.2",
+        "R3.2",
+        "R6.2",
+        "J1.4",
+        "C3.1",
+        "C4.1"
+      ]
+    },
+    {
+      "name": "LCD_PCLK_PANEL",
+      "net_class": "signal",
+      "pins": [
+        "J1.30",
+        "R7.1"
+      ]
+    },
+    {
+      "name": "LCD_PCLK",
+      "net_class": "port",
+      "pins": [
+        "R7.2"
+      ]
+    },
+    {
+      "name": "+5V_LCD",
+      "net_class": "power",
+      "pins": [
+        "U1.6",
+        "L1.1",
+        "C1.1",
+        "C5.1",
+        "TP1.1"
+      ]
+    },
+    {
+      "name": "LCD_BL_SW",
+      "net_class": "signal",
+      "pins": [
+        "L1.2",
+        "U1.1",
+        "D1.2"
+      ]
+    },
+    {
+      "name": "LCD_VLED_P",
+      "net_class": "signal",
+      "pins": [
+        "D1.1",
+        "C2.1",
+        "U1.5",
+        "J1.2"
+      ]
+    },
+    {
+      "name": "LCD_VLED_N",
+      "net_class": "signal",
+      "pins": [
+        "J1.1",
+        "R1.1",
+        "U1.3"
+      ]
+    },
+    {
+      "name": "LCD_BL_PWM",
+      "net_class": "port",
+      "pins": [
+        "U1.4",
+        "R4.1"
+      ]
+    }
+  ],
+  "nc": [
+    "J1.35",
+    "J1.41",
+    "J1.42"
+  ],
+  "port_types": {
+    "LCD_R0": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j3_connector (PL bank 34, +VCCO_34=3.3V)"
+    },
+    "LCD_R1": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j3_connector (PL bank 34, +VCCO_34=3.3V)"
+    },
+    "LCD_R2": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j3_connector (PL bank 34, +VCCO_34=3.3V)"
+    },
+    "LCD_R3": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j3_connector (PL bank 34, +VCCO_34=3.3V)"
+    },
+    "LCD_R4": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j3_connector (PL bank 34, +VCCO_34=3.3V)"
+    },
+    "LCD_R5": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j3_connector (PL bank 34, +VCCO_34=3.3V)"
+    },
+    "LCD_R6": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j3_connector (PL bank 34, +VCCO_34=3.3V)"
+    },
+    "LCD_R7": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j3_connector (PL bank 34, +VCCO_34=3.3V)"
+    },
+    "LCD_G0": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j3_connector (PL bank 34, +VCCO_34=3.3V)"
+    },
+    "LCD_G1": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j3_connector (PL bank 34, +VCCO_34=3.3V)"
+    },
+    "LCD_G2": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j3_connector (PL bank 34, +VCCO_34=3.3V)"
+    },
+    "LCD_G3": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j3_connector (PL bank 34, +VCCO_34=3.3V)"
+    },
+    "LCD_G4": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j3_connector (PL bank 34, +VCCO_34=3.3V)"
+    },
+    "LCD_G5": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j3_connector (PL bank 34, +VCCO_34=3.3V)"
+    },
+    "LCD_G6": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j3_connector (PL bank 34, +VCCO_34=3.3V)"
+    },
+    "LCD_G7": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j3_connector (PL bank 34, +VCCO_34=3.3V)"
+    },
+    "LCD_B0": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j3_connector (PL bank 34, +VCCO_34=3.3V)"
+    },
+    "LCD_B1": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j3_connector (PL bank 34, +VCCO_34=3.3V)"
+    },
+    "LCD_B2": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j3_connector (PL bank 34, +VCCO_34=3.3V)"
+    },
+    "LCD_B3": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j3_connector (PL bank 34, +VCCO_34=3.3V)"
+    },
+    "LCD_B4": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j3_connector (PL bank 34, +VCCO_34=3.3V)"
+    },
+    "LCD_B5": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j3_connector (PL bank 34, +VCCO_34=3.3V)"
+    },
+    "LCD_B6": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j3_connector (PL bank 34, +VCCO_34=3.3V)"
+    },
+    "LCD_B7": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j3_connector (PL bank 34, +VCCO_34=3.3V)"
+    },
+    "LCD_DISP": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j3_connector (PL bank 34, +VCCO_34=3.3V)"
+    },
+    "LCD_HSYNC": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j3_connector (PL bank 34, +VCCO_34=3.3V)"
+    },
+    "LCD_VSYNC": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j3_connector (PL bank 34, +VCCO_34=3.3V)"
+    },
+    "LCD_DE": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j3_connector (PL bank 34, +VCCO_34=3.3V)"
+    },
+    "LCD_CTP_SDA": {
+      "kind": "i2c",
+      "pair_with": null,
+      "impedance": null,
+      "role": "sda",
+      "bus": "LCD_CTP",
+      "speed_hz": 400000,
+      "level_v": null,
+      "expect": "som_j2_connector (PL bank 13 — touch I2C only)"
+    },
+    "LCD_CTP_SCL": {
+      "kind": "i2c",
+      "pair_with": null,
+      "impedance": null,
+      "role": "scl",
+      "bus": "LCD_CTP",
+      "speed_hz": 400000,
+      "level_v": null,
+      "expect": "som_j2_connector (PL bank 13 — touch I2C only)"
+    },
+    "LCD_CTP_RST": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j2_connector (PL bank 13 — touch I2C only)"
+    },
+    "LCD_CTP_INT": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j2_connector (PL bank 13 — touch I2C only)"
+    },
+    "LCD_PCLK": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j3_connector (PL bank 34, +VCCO_34=3.3V)"
+    },
+    "LCD_BL_PWM": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j3_connector (PL bank 34, +VCCO_34=3.3V)"
+    }
+  },
+  "hints": {},
+  "loads": {
+    "+3V3_LCD": [
+      [
+        0.1,
+        "panel logic 25-75 mA + touch <= 25 mA (lcd_backlight.md)"
+      ]
+    ],
+    "+5V_LCD": [
+      [
+        0.45,
+        "SY7201 boost input @133 mA LED string (lcd_backlight.md operating point + margin)"
+      ]
+    ]
+  },
+  "tp_waivers": {},
+  "decap_waivers": {},
+  "pull_waivers": {},
+  "reset_waivers": {
+    "LCD_CTP_RST": "GPIO-driven reset, held by 100k pull-down until PL releases"
+  },
+  "strap_waivers": {},
+  "ep_waivers": {},
+  "thermal_waivers": {},
+  "part_rule_waivers": {
+    "C2": "MLCC 50V on LCD_VLED_P: the 30V is the rare open-LED OVP-clamp transient, not continuous (string ~9.6V); 50V/X7R dossier-sized for it (lcd_backlight.md). 2x derate targets continuous DC bias, not a fault clamp"
+  }
+}

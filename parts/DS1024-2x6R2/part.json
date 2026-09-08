@@ -1,0 +1,81 @@
+{
+  "schema": "schgen.part/1",
+  "mpn": "DS1024-2x6R2",
+  "safe_name": "DS1024-2x6R2",
+  "lcsc": "C49284652",
+  "description": "DS1024-2X6R2 (HDR-TH_12P-P2.54-H-F-R2-C6-S2.54-W10.2)",
+  "manufacturer": "CONNFLY",
+  "package": "HDR-TH_12P-P2.54-H-F-R2-C6-S2.54-W10.2",
+  "jlc_class": "Extended Part",
+  "prefix": "U",
+  "datasheet": "https://www.lcsc.com/datasheet/C49284652.pdf",
+  "product_url": "",
+  "lib_id": "DS1024-2x6R2:DS1024-2x6R2",
+  "footprint": "DS1024-2x6R2:DS1024-2x6R2",
+  "models_3d": [
+    "DS1024-2x6R2.wrl",
+    "DS1024-2x6R2.step"
+  ],
+  "pins": [
+    {
+      "num": "1",
+      "name": "1",
+      "etype": "passive"
+    },
+    {
+      "num": "12",
+      "name": "12",
+      "etype": "passive"
+    },
+    {
+      "num": "3",
+      "name": "3",
+      "etype": "passive"
+    },
+    {
+      "num": "10",
+      "name": "10",
+      "etype": "passive"
+    },
+    {
+      "num": "5",
+      "name": "5",
+      "etype": "passive"
+    },
+    {
+      "num": "8",
+      "name": "8",
+      "etype": "passive"
+    },
+    {
+      "num": "7",
+      "name": "7",
+      "etype": "passive"
+    },
+    {
+      "num": "6",
+      "name": "6",
+      "etype": "passive"
+    },
+    {
+      "num": "9",
+      "name": "9",
+      "etype": "passive"
+    },
+    {
+      "num": "4",
+      "name": "4",
+      "etype": "passive"
+    },
+    {
+      "num": "11",
+      "name": "11",
+      "etype": "passive"
+    },
+    {
+      "num": "2",
+      "name": "2",
+      "etype": "passive"
+    }
+  ]
+}

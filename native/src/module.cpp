@@ -14,6 +14,8 @@
 #include <nanobind/stl/tuple.h>
 #include <nanobind/stl/vector.h>
 
+#include "schgen/catalog.hpp"
+#include "schgen/circuit.hpp"
 #include "schgen/cc.hpp"
 #include "schgen/embed_fp.hpp"
 #include "schgen/emit.hpp"
@@ -27,6 +29,7 @@
 #include "schgen/place_geom.hpp"
 #include "schgen/place_search.hpp"
 #include "schgen/quantize.hpp"
+#include "schgen/reorder.hpp"
 #include "schgen/route.hpp"
 #include "schgen/seat.hpp"
 #include "schgen/sexpr.hpp"
@@ -54,6 +57,44 @@ std::vector<schgen::Comp> as_comps(
 }
 
 using BoxTup = std::tuple<double, double, double, double>;
+using HaloTup = std::tuple<double, double, double, double>;
+using EntTup = std::tuple<double, double, double, double, HaloTup, HaloTup, int,
+                          int, bool>;
+using CompTup = std::tuple<double, double, double, double, int>;
+using BlockTup = std::tuple<double, double, double, double, HaloTup, HaloTup,
+                            int, std::vector<CompTup>>;
+
+EntTup as_ent(const schgen::Rect& rect) {
+    return EntTup{rect.x, rect.y, rect.w, rect.h,
+                  HaloTup{rect.reach.w, rect.reach.e, rect.reach.n,
+                          rect.reach.s},
+                  HaloTup{rect.inset.w, rect.inset.e, rect.inset.n,
+                          rect.inset.s},
+                  rect.mask, rect.pmask, rect.main};
+}
+
+schgen::PairsBlock as_pairs_block(const BlockTup& row) {
+    schgen::PairsBlock block;
+    block.x = std::get<0>(row);
+    block.y = std::get<1>(row);
+    block.w = std::get<2>(row);
+    block.h = std::get<3>(row);
+    block.reach = as_halo(std::get<4>(row));
+    block.inset = as_halo(std::get<5>(row));
+    block.mask = std::get<6>(row);
+    block.comps = as_comps(std::get<7>(row));
+    return block;
+}
+
+std::vector<schgen::PairsBlock> as_pairs_blocks(
+    const std::vector<BlockTup>& rows) {
+    std::vector<schgen::PairsBlock> out;
+    out.reserve(rows.size());
+    for (const auto& row : rows) {
+        out.push_back(as_pairs_block(row));
+    }
+    return out;
+}
 
 schgen::Box4 as_box(const BoxTup& t) {
     return schgen::Box4{std::get<0>(t), std::get<1>(t), std::get<2>(t),
@@ -143,7 +184,210 @@ schgen::Sexpr sexpr_from_py(nb::handle handle) {
 }  // namespace
 
 NB_MODULE(_geom, m) {
-    m.doc() = "schgen native kernels — occupancy, seat, sexpr";
+    m.doc() = "schgen native kernels — occupancy, seat, sexpr, catalog";
+    m.def("catalog_compile",
+          [](const std::string& parts_dir, const std::string& catalog_path) {
+              return schgen::compile_part_catalog(parts_dir, catalog_path);
+          });
+    m.def("catalog_open",
+          [](const std::string& catalog_path) {
+              return schgen::open_part_catalog(catalog_path);
+          });
+    m.def("catalog_close", []() { return schgen::close_part_catalog(); });
+    m.def("catalog_count", []() { return schgen::part_catalog_count(); });
+    m.def("catalog_lookup", [](const std::string& mpn) {
+        const schgen::CatalogPart part = schgen::lookup_part_catalog(mpn);
+        nb::dict rec;
+        rec["mpn"] = part.mpn;
+        rec["safe_name"] = part.safe_name;
+        rec["lcsc"] = part.lcsc;
+        rec["description"] = part.description;
+        rec["manufacturer"] = part.manufacturer;
+        rec["package"] = part.package;
+        rec["jlc_class"] = part.jlc_class;
+        rec["prefix"] = part.prefix;
+        rec["datasheet"] = part.datasheet;
+        rec["product_url"] = part.product_url;
+        rec["lib_id"] = part.lib_id;
+        rec["footprint"] = part.footprint;
+        nb::list models;
+        for (const std::string& model : part.models_3d) {
+            models.append(model);
+        }
+        rec["models_3d"] = models;
+        nb::list pins;
+        for (const schgen::CatalogPin& pin : part.pins) {
+            pins.append(nb::make_tuple(pin.number, pin.name, pin.etype));
+        }
+        rec["pins"] = pins;
+        return rec;
+    });
+    m.def("circuit_compile",
+          [](const std::string& circuits_dir, const std::string& catalog_path) {
+              return schgen::compile_circuit_catalog(circuits_dir, catalog_path);
+          });
+    m.def("circuit_open",
+          [](const std::string& catalog_path) {
+              return schgen::open_circuit_catalog(catalog_path);
+          });
+    m.def("circuit_close", []() { return schgen::close_circuit_catalog(); });
+    m.def("circuit_count", []() { return schgen::circuit_catalog_count(); });
+    m.def("circuit_lookup", [](const std::string& name) {
+        const schgen::CircuitSheetIr sheet = schgen::lookup_circuit_catalog(name);
+        nb::dict rec;
+        rec["schema"] = sheet.schema;
+        rec["name"] = sheet.name;
+        rec["title"] = sheet.title;
+        nb::list parts;
+        for (const schgen::CircuitPartIr& part : sheet.parts) {
+            nb::dict prec;
+            prec["ref"] = part.ref;
+            prec["lib_id"] = part.lib_id;
+            prec["value"] = part.value;
+            prec["footprint"] = part.footprint;
+            nb::dict fields;
+            for (const schgen::CircuitFieldIr& field : part.fields) {
+                fields[field.key.c_str()] = field.value;
+            }
+            prec["fields"] = fields;
+            nb::dict pin_names;
+            for (const schgen::CircuitPinNameIr& pin_name : part.pin_names) {
+                nb::list nums;
+                for (const std::string& number : pin_name.numbers) {
+                    nums.append(number);
+                }
+                pin_names[pin_name.name.c_str()] = nums;
+            }
+            prec["pin_names"] = pin_names;
+            nb::list pin_numbers;
+            for (const std::string& number : part.pin_numbers) {
+                pin_numbers.append(number);
+            }
+            prec["pin_numbers"] = pin_numbers;
+            parts.append(prec);
+        }
+        rec["parts"] = parts;
+        nb::list nets;
+        for (const schgen::CircuitNetIr& net : sheet.nets) {
+            nb::dict nrec;
+            nrec["name"] = net.name;
+            nrec["net_class"] = net.net_class;
+            nb::list pins;
+            for (const schgen::CircuitPinRefIr& pin : net.pins) {
+                pins.append(pin.ref + "." + pin.pin);
+            }
+            nrec["pins"] = pins;
+            nets.append(nrec);
+        }
+        rec["nets"] = nets;
+        nb::list nc;
+        for (const schgen::CircuitPinRefIr& pin : sheet.nc) {
+            nc.append(pin.ref + "." + pin.pin);
+        }
+        rec["nc"] = nc;
+        nb::dict port_types;
+        for (const schgen::CircuitPortIr& port : sheet.port_types) {
+            nb::dict prec;
+            prec["kind"] = port.kind;
+            if (port.has_pair_with) {
+                prec["pair_with"] = port.pair_with;
+            } else {
+                prec["pair_with"] = nb::none();
+            }
+            if (port.has_impedance) {
+                prec["impedance"] = port.impedance;
+            } else {
+                prec["impedance"] = nb::none();
+            }
+            if (port.has_role) {
+                prec["role"] = port.role;
+            } else {
+                prec["role"] = nb::none();
+            }
+            if (port.has_bus) {
+                prec["bus"] = port.bus;
+            } else {
+                prec["bus"] = nb::none();
+            }
+            if (port.has_speed_hz) {
+                prec["speed_hz"] = port.speed_hz;
+            } else {
+                prec["speed_hz"] = nb::none();
+            }
+            if (port.has_level_v) {
+                prec["level_v"] = port.level_v;
+            } else {
+                prec["level_v"] = nb::none();
+            }
+            if (port.has_expect) {
+                prec["expect"] = port.expect;
+            } else {
+                prec["expect"] = nb::none();
+            }
+            port_types[port.net.c_str()] = prec;
+        }
+        rec["port_types"] = port_types;
+        nb::dict hints;
+        for (const schgen::CircuitHintIr& hint : sheet.hints) {
+            hints[hint.net.c_str()] = hint.style;
+        }
+        rec["hints"] = hints;
+        nb::dict loads;
+        for (const schgen::CircuitLoadIr& load : sheet.loads) {
+            nb::object existing = loads.attr("get")(load.rail.c_str(), nb::none());
+            nb::list rows;
+            if (!existing.is_none()) {
+                rows = nb::cast<nb::list>(existing);
+            }
+            nb::list row;
+            row.append(load.amps);
+            row.append(load.note);
+            rows.append(row);
+            loads[load.rail.c_str()] = rows;
+        }
+        rec["loads"] = loads;
+        nb::dict tp_waivers;
+        nb::dict decap_waivers;
+        nb::dict pull_waivers;
+        nb::dict reset_waivers;
+        nb::dict strap_waivers;
+        nb::dict ep_waivers;
+        nb::dict thermal_waivers;
+        nb::dict part_rule_waivers;
+        for (const schgen::CircuitWaiverIr& waiver : sheet.waivers) {
+            nb::dict* dest = nullptr;
+            if (waiver.kind == "tp_waivers") {
+                dest = &tp_waivers;
+            } else if (waiver.kind == "decap_waivers") {
+                dest = &decap_waivers;
+            } else if (waiver.kind == "pull_waivers") {
+                dest = &pull_waivers;
+            } else if (waiver.kind == "reset_waivers") {
+                dest = &reset_waivers;
+            } else if (waiver.kind == "strap_waivers") {
+                dest = &strap_waivers;
+            } else if (waiver.kind == "ep_waivers") {
+                dest = &ep_waivers;
+            } else if (waiver.kind == "thermal_waivers") {
+                dest = &thermal_waivers;
+            } else if (waiver.kind == "part_rule_waivers") {
+                dest = &part_rule_waivers;
+            } else {
+                throw std::runtime_error("circuit_lookup: unknown waiver kind "
+                                         + waiver.kind);
+            }
+            (*dest)[waiver.key.c_str()] = waiver.reason;
+        }
+        rec["tp_waivers"] = tp_waivers;
+        rec["decap_waivers"] = decap_waivers;
+        rec["pull_waivers"] = pull_waivers;
+        rec["reset_waivers"] = reset_waivers;
+        rec["strap_waivers"] = strap_waivers;
+        rec["ep_waivers"] = ep_waivers;
+        rec["thermal_waivers"] = thermal_waivers;
+        rec["part_rule_waivers"] = part_rule_waivers;
+        return rec;
+    });
     m.def("fanout_sep",
           [](const std::tuple<double, double, double, double>& ar,
              const std::tuple<double, double, double, double>& ai,
@@ -174,6 +418,15 @@ NB_MODULE(_geom, m) {
                   as_comps(cc), clear);
           });
     m.def("boxes_separated", &schgen::boxes_separated);
+    m.def("halo4",
+          [](const std::tuple<double, double, double, double>& reach,
+             const std::tuple<double, double, double, double>& inset) {
+              const schgen::Halo hit =
+                  schgen::halo4(as_halo(reach), as_halo(inset));
+              return std::make_tuple(hit.w, hit.e, hit.n, hit.s);
+          });
+    m.def("occ_pair_active", &schgen::occ_pair_active);
+    m.def("spatial_bounds", &schgen::spatial_bounds);
     m.def("pairs_hold",
           [](const std::vector<std::vector<std::tuple<
                  double, double, double, double,
@@ -208,10 +461,63 @@ NB_MODULE(_geom, m) {
                                         static_cast<std::size_t>(subject_count),
                                         clear);
           });
+    m.def("pairs_entity",
+          [](double x, double y, double w, double h, const HaloTup& reach,
+             const HaloTup& inset, int mask, const std::vector<CompTup>& comps) {
+              auto rows = schgen::pairs_entity(x, y, w, h, as_halo(reach),
+                                               as_halo(inset), mask,
+                                               as_comps(comps));
+              std::vector<EntTup> out;
+              out.reserve(rows.size());
+              for (const auto& rect : rows) {
+                  out.push_back(as_ent(rect));
+              }
+              return out;
+          });
+    m.def("pairs_hold_groups",
+          [](const std::vector<BlockTup>& interior,
+             const std::vector<BlockTup>& edges, const BoxTup& som_occ,
+             int som_mask, const std::vector<CompTup>& som_comps,
+             double board_w, double board_h, double mh_corner_ko,
+             int punch_mask) {
+              auto groups = schgen::pairs_hold_groups(
+                  as_pairs_blocks(interior), as_pairs_blocks(edges),
+                  std::get<0>(som_occ), std::get<1>(som_occ),
+                  std::get<2>(som_occ), std::get<3>(som_occ), som_mask,
+                  as_comps(som_comps), board_w, board_h, mh_corner_ko,
+                  punch_mask);
+              std::vector<std::vector<EntTup>> out;
+              out.reserve(groups.size());
+              for (const auto& group : groups) {
+                  std::vector<EntTup> row;
+                  row.reserve(group.size());
+                  for (const auto& rect : group) {
+                      row.push_back(as_ent(rect));
+                  }
+                  out.push_back(std::move(row));
+              }
+              return out;
+          });
+    m.def("pairs_hold_from_layout",
+          [](const std::vector<BlockTup>& interior,
+             const std::vector<BlockTup>& edges, const BoxTup& som_occ,
+             int som_mask, const std::vector<CompTup>& som_comps,
+             double board_w, double board_h, double mh_corner_ko,
+             int punch_mask, double clear) {
+              return schgen::pairs_hold_from_layout(
+                  as_pairs_blocks(interior), as_pairs_blocks(edges),
+                  std::get<0>(som_occ), std::get<1>(som_occ),
+                  std::get<2>(som_occ), std::get<3>(som_occ), som_mask,
+                  as_comps(som_comps), board_w, board_h, mh_corner_ko,
+                  punch_mask, clear);
+          });
     m.def("py_round", &schgen::py_round);
     m.def("fixed_part_grid", &schgen::fixed_part_grid);
     m.def("evict_corridor_grid", &schgen::evict_corridor_grid);
     m.def("som_pose_half_mm", &schgen::som_pose_half_mm);
+    m.def("placeholder_zone_half_mm", &schgen::placeholder_zone_half_mm);
+    m.def("interior_dims", &schgen::interior_dims);
+    m.def("derive_outline_wh", &schgen::derive_outline_wh);
     m.def("legalize_pose_quantum", &schgen::legalize_pose_quantum);
     m.def("quant_credit", &schgen::quant_credit);
     m.def("snap_erosion_bound", &schgen::snap_erosion_bound);
@@ -352,6 +658,276 @@ NB_MODULE(_geom, m) {
               return std::make_tuple(hit->x0, hit->y0, hit->x1, hit->y1);
           });
     m.def("channel_demand_mm", &schgen::channel_demand_mm);
+    m.def("channel_gap_mm",
+          [](bool near_max_adjacent, int cross_airwire_count, double clear,
+             int channel_min_nets, double channel_floor_mm,
+             double channel_per_net_mm) {
+              return schgen::channel_gap_mm(
+                  near_max_adjacent, cross_airwire_count, clear,
+                  channel_min_nets, channel_floor_mm, channel_per_net_mm);
+          });
+    m.def("legalize_build_seps",
+          [](const std::vector<std::string>& names,
+             const std::vector<BoxTup>& seed_rects,
+             const std::vector<std::string>& fixed_names,
+             const std::vector<BoxTup>& fixed_rects,
+             const std::vector<std::tuple<std::string, std::string, int>>&
+                 demand_rows,
+             const std::vector<std::pair<std::string, std::string>>&
+                 near_max_pairs,
+             double clear, int channel_min_nets, double channel_floor_mm,
+             double channel_per_net_mm) {
+              auto seps = schgen::legalize_build_seps(
+                  names, as_boxes(seed_rects), fixed_names,
+                  as_boxes(fixed_rects), demand_rows, near_max_pairs, clear,
+                  channel_min_nets, channel_floor_mm, channel_per_net_mm);
+              std::vector<std::tuple<std::string, std::string, std::string,
+                                     double, std::string, bool>>
+                  out;
+              out.reserve(seps.size());
+              for (const auto& sep : seps) {
+                  out.emplace_back(sep.axis, sep.lo, sep.hi, sep.gap,
+                                   sep.basis, sep.flippable);
+              }
+              return out;
+          });
+    m.def("evaluate_terms",
+          [](double board_w, double board_h,
+             const std::optional<BoxTup>& som_core,
+             const std::vector<std::pair<std::string, PtTup>>& poses,
+             const std::vector<std::tuple<
+                 std::string,
+                 std::vector<std::tuple<std::string, double, double>>,
+                 std::vector<std::tuple<std::string, double, double, double,
+                                        double>>>>& metrics,
+             const std::vector<std::tuple<std::string, std::string, std::string,
+                                          std::optional<double>,
+                                          std::vector<std::string>>>& terms,
+             const std::vector<std::pair<std::string, double>>& far_guard,
+             const std::vector<std::pair<std::string, BoxTup>>& som_j_rects,
+             double origin_x, double origin_y) {
+              std::optional<schgen::Box4> core;
+              if (som_core.has_value()) {
+                  core = as_box(*som_core);
+              }
+              std::vector<std::pair<std::string, std::pair<double, double>>>
+                  pose_rows;
+              pose_rows.reserve(poses.size());
+              for (const auto& p : poses) {
+                  pose_rows.emplace_back(
+                      p.first,
+                      std::make_pair(std::get<0>(p.second),
+                                     std::get<1>(p.second)));
+              }
+              std::vector<schgen::EvalMetric> mets;
+              mets.reserve(metrics.size());
+              for (const auto& m : metrics) {
+                  schgen::EvalMetric row;
+                  row.name = std::get<0>(m);
+                  row.offsets = std::get<1>(m);
+                  row.pad_union = std::get<2>(m);
+                  mets.push_back(std::move(row));
+              }
+              std::vector<schgen::EvalTermIn> tin;
+              tin.reserve(terms.size());
+              for (const auto& t : terms) {
+                  schgen::EvalTermIn row;
+                  row.kind = std::get<0>(t);
+                  row.subject = std::get<1>(t);
+                  row.target = std::get<2>(t);
+                  if (std::get<3>(t).has_value()) {
+                      row.bound = *std::get<3>(t);
+                      row.bound_set = true;
+                  }
+                  row.out_refs = std::get<4>(t);
+                  tin.push_back(std::move(row));
+              }
+              std::vector<std::pair<std::string, schgen::Box4>> jacks;
+              jacks.reserve(som_j_rects.size());
+              for (const auto& j : som_j_rects) {
+                  jacks.emplace_back(j.first, as_box(j.second));
+              }
+              auto hits = schgen::evaluate_terms(
+                  board_w, board_h, core, pose_rows, mets, tin, far_guard,
+                  jacks, origin_x, origin_y);
+              std::vector<std::tuple<double, double, double, bool, std::string>>
+                  out;
+              out.reserve(hits.size());
+              for (const auto& h : hits) {
+                  out.emplace_back(h.measured, h.bound, h.margin, h.ok,
+                                   h.note);
+              }
+              return out;
+          });
+    m.def("legalize_descend_passes",
+          [](const std::vector<std::string>& names,
+             const std::vector<double>& pos_x,
+             const std::vector<double>& pos_y,
+             const std::vector<double>& seed_x,
+             const std::vector<double>& seed_y,
+             const std::vector<std::tuple<std::string, std::string, double>>&
+                 edges_x,
+             const std::vector<std::tuple<std::string, std::string, double>>&
+                 edges_y,
+             const std::vector<std::pair<std::string, std::string>>& hops,
+             const std::vector<std::pair<std::string, PtTup>>& cent_off,
+             const std::vector<std::pair<std::string, PtTup>>& fixed_poses,
+             double som_mid_x, double som_mid_y, bool has_som, bool seed_only,
+             double hop_weight, double seed_weight, int median_passes) {
+              std::vector<schgen::NamedEdge> ex;
+              std::vector<schgen::NamedEdge> ey;
+              ex.reserve(edges_x.size());
+              ey.reserve(edges_y.size());
+              for (const auto& e : edges_x) {
+                  ex.push_back(schgen::NamedEdge{std::get<0>(e), std::get<1>(e),
+                                                 std::get<2>(e)});
+              }
+              for (const auto& e : edges_y) {
+                  ey.push_back(schgen::NamedEdge{std::get<0>(e), std::get<1>(e),
+                                                 std::get<2>(e)});
+              }
+              std::vector<std::pair<std::string, std::pair<double, double>>>
+                  cents;
+              std::vector<std::pair<std::string, std::pair<double, double>>>
+                  fixed;
+              cents.reserve(cent_off.size());
+              fixed.reserve(fixed_poses.size());
+              for (const auto& c : cent_off) {
+                  cents.emplace_back(
+                      c.first, std::make_pair(std::get<0>(c.second),
+                                              std::get<1>(c.second)));
+              }
+              for (const auto& f : fixed_poses) {
+                  fixed.emplace_back(
+                      f.first, std::make_pair(std::get<0>(f.second),
+                                              std::get<1>(f.second)));
+              }
+              return schgen::legalize_descend_passes(
+                  names, pos_x, pos_y, seed_x, seed_y, ex, ey, hops, cents,
+                  fixed, som_mid_x, som_mid_y, has_som, seed_only, hop_weight,
+                  seed_weight, median_passes);
+          });
+    m.def("legalize_repair_axis",
+          [](bool axis_x, const std::vector<std::string>& names,
+             const std::vector<double>& sizes, double span, double clear,
+             const std::vector<std::tuple<bool, std::string, std::string,
+                                          double, bool>>& seps,
+             const std::vector<std::tuple<std::string, BoxTup>>& frects,
+             const std::vector<std::tuple<std::string, std::string, double>>&
+                 extra,
+             int repair_max) {
+              std::vector<schgen::RepairSep> spec;
+              spec.reserve(seps.size());
+              for (const auto& s : seps) {
+                  spec.push_back(schgen::RepairSep{
+                      std::get<0>(s), std::get<1>(s), std::get<2>(s),
+                      std::get<3>(s), std::get<4>(s)});
+              }
+              std::vector<std::pair<std::string, schgen::Box4>> fr;
+              fr.reserve(frects.size());
+              for (const auto& r : frects) {
+                  fr.emplace_back(std::get<0>(r), as_box(std::get<1>(r)));
+              }
+              std::vector<schgen::NamedEdge> extra_e;
+              extra_e.reserve(extra.size());
+              for (const auto& e : extra) {
+                  extra_e.push_back(schgen::NamedEdge{
+                      std::get<0>(e), std::get<1>(e), std::get<2>(e)});
+              }
+              auto hit = schgen::legalize_repair_axis(
+                  axis_x, names, sizes, span, clear, spec, fr, extra_e,
+                  repair_max);
+              std::vector<std::tuple<bool, std::string, std::string, double,
+                                     bool>>
+                  seps_out;
+              seps_out.reserve(hit.seps.size());
+              for (const auto& s : hit.seps) {
+                  seps_out.emplace_back(s.axis_x, s.lo, s.hi, s.gap,
+                                        s.flippable);
+              }
+              return std::make_tuple(hit.ok, hit.pos, seps_out, hit.flips,
+                                     hit.fail);
+          });
+    m.def("rects_overlap_any",
+          [](const std::vector<BoxTup>& probes,
+             const std::vector<BoxTup>& obstacles, double eps) {
+              return schgen::rects_overlap_any(as_boxes(probes),
+                                               as_boxes(obstacles), eps);
+          });
+    m.def("cross_edge_fanout_hold",
+          [](const std::vector<std::tuple<
+                 double, double, double, double, BoxTup, BoxTup, std::string>>&
+                 blocks,
+             double clear) {
+              std::vector<schgen::EdgeFanoutBlock> rows;
+              rows.reserve(blocks.size());
+              for (const auto& block : blocks) {
+                  const std::string& edge = std::get<6>(block);
+                  if (edge.empty()) {
+                      throw std::runtime_error(
+                          "_geom.cross_edge_fanout_hold: edge required");
+                  }
+                  rows.push_back(schgen::EdgeFanoutBlock{
+                      std::get<0>(block), std::get<1>(block),
+                      std::get<2>(block), std::get<3>(block),
+                      as_halo(std::get<4>(block)), as_halo(std::get<5>(block)),
+                      edge[0]});
+              }
+              return schgen::cross_edge_fanout_hold(rows, clear);
+          });
+    m.def("edge_run_margin_ok",
+          [](const char* edge, double x, double y, double w, double h,
+             double board_w, double board_h, double edge_margin,
+             double overflow_tol) {
+              if (edge == nullptr || edge[0] == '\0') {
+                  throw std::runtime_error(
+                      "_geom.edge_run_margin_ok: edge required");
+              }
+              return schgen::edge_run_margin_ok(
+                  edge[0], x, y, w, h, board_w, board_h, edge_margin,
+                  overflow_tol);
+          });
+    m.def("edge_runs_margin_ok",
+          [](const std::vector<
+                 std::tuple<std::string, double, double, double, double>>&
+                 blocks,
+             double board_w, double board_h, double edge_margin,
+             double overflow_tol) {
+              std::vector<std::tuple<char, double, double, double, double>>
+                  rows;
+              rows.reserve(blocks.size());
+              for (const auto& block : blocks) {
+                  const std::string& edge = std::get<0>(block);
+                  if (edge.empty()) {
+                      throw std::runtime_error(
+                          "_geom.edge_runs_margin_ok: edge required");
+                  }
+                  rows.emplace_back(edge[0], std::get<1>(block),
+                                    std::get<2>(block), std::get<3>(block),
+                                    std::get<4>(block));
+              }
+              return schgen::edge_runs_margin_ok(
+                  rows, board_w, board_h, edge_margin, overflow_tol);
+          });
+    m.def("pack_interior_order", &schgen::pack_interior_order);
+    m.def("pack_conn_weight", &schgen::pack_conn_weight);
+    m.def("nets_by_sheet", &schgen::nets_by_sheet);
+    m.def("obstacle_bucket", &schgen::obstacle_bucket);
+    m.def("obstacle_hole", &schgen::obstacle_hole);
+    m.def("net_clearance_rule", &schgen::net_clearance_rule);
+    m.def("next_flag_x", &schgen::next_flag_x);
+    m.def("flags_row_origin", &schgen::flags_row_origin);
+    m.def("conn_signed_ceil", &schgen::conn_signed_ceil);
+    m.def("conn_gnd_x", &schgen::conn_gnd_x);
+    m.def("farm_wrap_advance",
+          [](double col_x, double max_right, bool has_cur, double farm_left,
+             double cy, double row_step, double unit) {
+              auto hit = schgen::farm_wrap_advance(
+                  col_x, max_right, has_cur, farm_left, cy, row_step, unit);
+              return std::make_tuple(hit.wrapped, hit.col_x, hit.cy);
+          });
+    m.def("conn_flag_y", &schgen::conn_flag_y);
+    m.def("conn_flag_x0", &schgen::conn_flag_x0);
     m.def("mst_manhattan",
           [](const std::vector<PtTup>& pts) {
               auto edges = schgen::mst_manhattan(as_pts(pts));
@@ -361,6 +937,11 @@ NB_MODULE(_geom, m) {
                   out.emplace_back(e.first, e.second);
               }
               return out;
+          });
+    m.def("cross_net_cost",
+          [](const std::vector<std::tuple<double, double, int, int>>& pts,
+             double via_mm, const std::vector<std::uint8_t>& sheet_is_bot) {
+              return schgen::cross_net_cost(pts, via_mm, sheet_is_bot);
           });
     m.def("weighted_median",
           [](const std::vector<std::tuple<double, double>>& pulls) {
@@ -531,6 +1112,449 @@ NB_MODULE(_geom, m) {
           nb::arg("label"), nb::arg("size"), nb::arg("occupied"),
           nb::arg("placed") = nb::none(), nb::arg("bounds") = nb::none());
     m.def("segments_cross", &schgen::segments_cross);
+    m.def("visual_hv_cross", &schgen::visual_hv_cross);
+    m.def("collinear_overlap", &schgen::collinear_overlap);
+    m.def("reorder_cluster_assign",
+          [](const std::vector<std::vector<std::vector<BoxTup>>>& segs,
+             const std::vector<int>& assign0, int sweeps) {
+              std::vector<std::vector<std::vector<schgen::Seg2>>> rows;
+              rows.reserve(segs.size());
+              for (const auto& member : segs) {
+                  std::vector<std::vector<schgen::Seg2>> slots;
+                  slots.reserve(member.size());
+                  for (const auto& slot : member) {
+                      slots.push_back(as_segs(slot));
+                  }
+                  rows.push_back(std::move(slots));
+              }
+              auto hit = schgen::reorder_cluster_assign(rows, assign0, sweeps);
+              return std::make_tuple(hit.before, hit.best, hit.assign);
+          });
+    m.def("som_core_rect",
+          [](double som_x, double som_y, double som_w, double som_h,
+             double origin_x, double origin_y, double clearance) {
+              auto b = schgen::som_core_rect(som_x, som_y, som_w, som_h,
+                                             origin_x, origin_y, clearance);
+              return std::make_tuple(b.x0, b.y0, b.x1, b.y1);
+          });
+    m.def("rotate_offsets_90", &schgen::rotate_offsets_90);
+    m.def("cluster_interchangeable_rows",
+          &schgen::cluster_interchangeable_rows);
+    m.def("nearest_manhattan",
+          [](double px, double py,
+             const std::vector<std::pair<double, double>>& pts) {
+              return schgen::nearest_manhattan(px, py, pts);
+          });
+    m.def("overlap_1d", &schgen::overlap_1d);
+    m.def("same_edge_gap",
+          [](const BoxTup& a, const BoxTup& b, double band_frac)
+              -> std::optional<std::pair<std::string, double>> {
+              return schgen::same_edge_gap(as_box(a), as_box(b), band_frac);
+          });
+    m.def("foreign_t_touch",
+          [](double ax0, double ay0, double ax1, double ay1, double bx0,
+             double by0, double bx1, double by1, bool same_net)
+              -> std::optional<std::pair<double, double>> {
+              return schgen::foreign_t_touch(ax0, ay0, ax1, ay1, bx0, by0,
+                                             bx1, by1, same_net);
+          });
+    m.def("refdes_hit_court",
+          [](double fx, double fy, double ca, double sa, double lx, double ly,
+             const std::optional<BoxTup>& court) {
+              std::optional<schgen::Box4> box;
+              if (court.has_value()) {
+                  box = as_box(*court);
+              }
+              return schgen::refdes_hit_court(fx, fy, ca, sa, lx, ly, box);
+          });
+    m.def("uv_to_board",
+          [](double cx, double cy, double u, double v, double rot) {
+              return schgen::uv_to_board(cx, cy, u, v, rot);
+          });
+    m.def("via_in_escape_region",
+          [](double bx, double by,
+             const std::tuple<double, double, double, double>& zone,
+             double margin) {
+              return schgen::via_in_escape_region(bx, by, as_box(zone), margin);
+          });
+    m.def("coexistence_box_hit",
+          [](double inst_x, double inst_y, double rot,
+             const std::tuple<double, double, double, double>& box,
+             double region_u, double region_v) {
+              return schgen::coexistence_box_hit(inst_x, inst_y, rot,
+                                                 as_box(box), region_u,
+                                                 region_v);
+          });
+    m.def("legalize_som_rect",
+          [](double som_x, double som_y, double som_w, double som_h,
+             double pad) {
+              auto b = schgen::legalize_som_rect(som_x, som_y, som_w, som_h,
+                                                 pad);
+              return std::make_tuple(b.x0, b.y0, b.x1, b.y1);
+          });
+    m.def("legalize_mh_corners",
+          [](double board_w, double board_h, double mh_ko) {
+              std::vector<std::tuple<double, double, double, double>> out;
+              for (const auto& b : schgen::legalize_mh_corners(
+                       board_w, board_h, mh_ko)) {
+                  out.emplace_back(b.x0, b.y0, b.x1, b.y1);
+              }
+              return out;
+          });
+    m.def("som_jack_rects", &schgen::som_jack_rects);
+    m.def("grow_rect",
+          [](const BoxTup& box, double margin) {
+              auto b = schgen::grow_rect(as_box(box), margin);
+              return std::make_tuple(b.x0, b.y0, b.x1, b.y1);
+          });
+    m.def("offset_rect",
+          [](const BoxTup& box, double dx, double dy) {
+              auto b = schgen::offset_rect(as_box(box), dx, dy);
+              return std::make_tuple(b.x0, b.y0, b.x1, b.y1);
+          });
+    m.def("rect_covers",
+          [](const BoxTup& outer, const BoxTup& inner) {
+              return schgen::rect_covers(as_box(outer), as_box(inner));
+          });
+    m.def("rects_intersect_open",
+          [](const BoxTup& a, const BoxTup& b) {
+              return schgen::rects_intersect_open(as_box(a), as_box(b));
+          });
+    m.def("point_in_rect",
+          [](double x, double y, const BoxTup& box) {
+              return schgen::point_in_rect(x, y, as_box(box));
+          });
+    m.def("rect_center",
+          [](const BoxTup& box) {
+              return schgen::rect_center(as_box(box));
+          });
+    m.def("coexistence_region", &schgen::coexistence_region);
+    m.def("construct_reach", &schgen::construct_reach);
+    m.def("obstacle_scan_region",
+          [](const std::vector<double>& us, double margin) {
+              auto b = schgen::obstacle_scan_region(us, margin);
+              return std::make_tuple(b.x0, b.y0, b.x1, b.y1);
+          });
+    m.def("escape_lane_extents", &schgen::escape_lane_extents);
+    m.def("aabb_from_corners",
+          [](double x0, double y0, double x1, double y1, int digits) {
+              auto b = schgen::aabb_from_corners(x0, y0, x1, y1, digits);
+              return std::make_tuple(b.x0, b.y0, b.x1, b.y1);
+          });
+    m.def("min_hypot_to_points",
+          [](double u, double v,
+             const std::vector<std::pair<double, double>>& pts) {
+              return schgen::min_hypot_to_points(u, v, pts);
+          });
+    m.def("within_reach", &schgen::within_reach);
+    m.def("count_within_reach", &schgen::count_within_reach);
+    m.def("page_mid_local",
+          [](const BoxTup& page, double origin_x, double origin_y) {
+              return schgen::page_mid_local(as_box(page), origin_x, origin_y);
+          });
+    m.def("pair_convergence", &schgen::pair_convergence);
+    m.def("signed_mag", &schgen::signed_mag);
+    m.def("pad_row_sign", &schgen::pad_row_sign);
+    m.def("interior_tier", &schgen::interior_tier);
+    m.def("bus_lane_adjacent", &schgen::bus_lane_adjacent);
+    m.def("padded_xywh", &schgen::padded_xywh);
+    m.def("box_to_xywh",
+          [](const BoxTup& box) {
+              return schgen::box_to_xywh(as_box(box));
+          });
+    m.def("rect_corners_ccw",
+          [](const BoxTup& box) {
+              return schgen::rect_corners_ccw(as_box(box));
+          });
+    m.def("block_area", &schgen::block_area);
+    m.def("genuine_pair_ok", &schgen::genuine_pair_ok);
+    m.def("round_xy",
+          [](double x, double y, int digits) {
+              return schgen::round_xy(x, y, digits);
+          });
+    m.def("round_box",
+          [](const BoxTup& box, int digits) {
+              auto b = schgen::round_box(as_box(box), digits);
+              return std::make_tuple(b.x0, b.y0, b.x1, b.y1);
+          });
+    m.def("svg_map", &schgen::svg_map);
+    m.def("rounded_unique_sorted", &schgen::rounded_unique_sorted);
+    m.def("closed_rect_pts",
+          [](const BoxTup& box, int digits) {
+              return schgen::closed_rect_pts(as_box(box), digits);
+          });
+    m.def("offset_named_boxes", &schgen::offset_named_boxes);
+    m.def("inversion_count", &schgen::inversion_count);
+    m.def("points_centroid", &schgen::points_centroid);
+    m.def("rounded_centroid", &schgen::rounded_centroid);
+    m.def("hypot_xy", &schgen::hypot_xy);
+    m.def("boxes_center",
+          [](const std::vector<BoxTup>& boxes) {
+              return schgen::boxes_center(as_boxes(boxes));
+          });
+    m.def("row_extent",
+          [](const std::vector<BoxTup>& boxes, double zone_pad) {
+              return schgen::row_extent(as_boxes(boxes), zone_pad);
+          });
+    m.def("long_axis_coords", &schgen::long_axis_coords);
+    m.def("topo_order", &schgen::topo_order);
+    m.def("aabb_center", &schgen::aabb_center);
+    m.def("boxes_span_center",
+          [](const std::vector<BoxTup>& boxes) {
+              return schgen::boxes_span_center(as_boxes(boxes));
+          });
+    m.def("pad_set_180_symmetric", &schgen::pad_set_180_symmetric);
+    m.def("facing_align_dot", &schgen::facing_align_dot);
+    m.def("turn_origin_180", &schgen::turn_origin_180);
+    m.def("rotate_origin", &schgen::rotate_origin);
+    m.def("named_box_center_sigs", &schgen::named_box_center_sigs);
+    m.def("cross_budget", &schgen::cross_budget);
+    m.def("board_to_uv",
+          [](double cx, double cy, double bx, double by, double rot) {
+              return schgen::board_to_uv(cx, cy, bx, by, rot);
+          });
+    m.def("corridor_local_from_uv",
+          [](const std::vector<std::pair<double, double>>& pads,
+             double r_construct, double v_margin) {
+              auto b = schgen::corridor_local_from_uv(pads, r_construct,
+                                                      v_margin);
+              return std::make_tuple(b.x0, b.y0, b.x1, b.y1);
+          });
+    m.def("corridor_board_rect",
+          [](const BoxTup& local, double cx, double cy, double rot) {
+              auto b = schgen::corridor_board_rect(as_box(local), cx, cy, rot);
+              return std::make_tuple(b.x0, b.y0, b.x1, b.y1);
+          });
+    m.def("mirror_offset_x",
+          [](double ox, double oy, const BoxTup& cb, double zone_w) {
+              return schgen::mirror_offset_x(ox, oy, as_box(cb), zone_w);
+          });
+    m.def("offset_turned_box",
+          [](const BoxTup& bbox, double rot, double ox, double oy) {
+              auto b = schgen::offset_turned_box(as_box(bbox), rot, ox, oy);
+              return std::make_tuple(b.x0, b.y0, b.x1, b.y1);
+          });
+    m.def("offset_boxes",
+          [](const std::vector<BoxTup>& boxes, double ox, double oy) {
+              auto rows = schgen::offset_boxes(as_boxes(boxes), ox, oy);
+              std::vector<BoxTup> out;
+              out.reserve(rows.size());
+              for (const auto& box : rows) {
+                  out.emplace_back(box.x0, box.y0, box.x1, box.y1);
+              }
+              return out;
+          });
+    m.def("grid_controls",
+          [](const std::vector<std::tuple<std::string, double, double, double,
+                                          double>>& items,
+             double target_w, double button_gap, double zone_pad,
+             double place_clear) {
+              auto hit = schgen::grid_controls(items, target_w, button_gap,
+                                               zone_pad, place_clear);
+              std::vector<std::tuple<double, double, double, double>> occ;
+              occ.reserve(hit.occ.size());
+              for (const auto& b : hit.occ) {
+                  occ.emplace_back(b.x0, b.y0, b.x1, b.y1);
+              }
+              return std::make_tuple(hit.offs, occ, hit.packed_w, hit.packed_h);
+          });
+    m.def("contact_geometry",
+          [](const std::vector<std::tuple<double, double, double, double>>&
+                 pads) {
+              auto hit = schgen::contact_geometry(pads);
+              return std::make_tuple(hit.row_v, hit.half_w, hit.half_h,
+                                     hit.span_u, hit.pitch);
+          });
+    m.def("via_feasible",
+          [](double u, double v, double dia, double drill,
+             const std::vector<std::tuple<double, double, double, double,
+                                          double, std::string>>& front_cu,
+             const std::vector<std::tuple<double, double, double, double,
+                                          double, std::string>>& back_cu,
+             const std::vector<std::tuple<double, double, double, double,
+                                          double, std::string>>& samenet,
+             const std::vector<std::tuple<double, double, double, std::string>>&
+                 holes,
+             const std::tuple<double, double, double, double>& clear,
+             bool want_audit) {
+              schgen::ViaClear vc;
+              vc.margin = std::get<0>(clear);
+              vc.hole_foreign = std::get<1>(clear);
+              vc.hole_samenet = std::get<2>(clear);
+              vc.hole_hole = std::get<3>(clear);
+              return schgen::via_feasible(u, v, dia, drill, front_cu, back_cu,
+                                          samenet, holes, vc, want_audit);
+          });
+    m.def("seat_band",
+          [](const std::vector<std::tuple<std::string, double, double>>&
+                 members,
+             const std::vector<std::tuple<double, double, double, double,
+                                          double, std::string>>& front_cu,
+             const std::vector<std::tuple<double, double, double, double,
+                                          double, std::string>>& back_cu,
+             const std::vector<std::tuple<double, double, double, double,
+                                          double, std::string>>& samenet,
+             const std::vector<std::tuple<double, double, double, std::string>>&
+                 holes,
+             double row_v, double half_h,
+             const std::vector<std::pair<double, double>>& ladder,
+             const std::tuple<double, double, double, double>& clear,
+             double via_row, double r_construct, double lattice,
+             const char* conn, int depth) {
+              schgen::ViaClear vc;
+              vc.margin = std::get<0>(clear);
+              vc.hole_foreign = std::get<1>(clear);
+              vc.hole_samenet = std::get<2>(clear);
+              vc.hole_hole = std::get<3>(clear);
+              auto hit = schgen::seat_band(
+                  members, front_cu, back_cu, samenet, holes, row_v, half_h,
+                  ladder, vc, via_row, r_construct, lattice,
+                  conn == nullptr ? "" : conn, depth);
+              std::vector<std::tuple<double, double, double, double, double,
+                                     std::vector<std::string>>>
+                  vias;
+              vias.reserve(hit.vias.size());
+              for (const auto& v : hit.vias) {
+                  vias.emplace_back(v.u, v.v, v.dia, v.drill, v.worst,
+                                    v.members);
+              }
+              std::vector<std::tuple<std::string, std::string, double, double,
+                                     double, double, double, double, int,
+                                     std::vector<std::string>>>
+                  ledger;
+              ledger.reserve(hit.ledger.size());
+              for (const auto& e : hit.ledger) {
+                  ledger.emplace_back(e.kind, e.conn, e.u, e.v, e.dia, e.drill,
+                                      e.worst, e.at, e.depth, e.members);
+              }
+              return std::make_tuple(vias, ledger, hit.audit);
+          });
+    m.def("escape_ladder_plan",
+          [](const std::vector<std::tuple<double, double, std::string>>&
+                 gnd_pads,
+             const std::vector<std::pair<double, double>>& vias, double pitch,
+             double pitch_tol, double row_v, double stub_w_pair,
+             double stub_w_single, double spine_w) {
+              auto rows = schgen::escape_ladder_plan(
+                  gnd_pads, vias, pitch, pitch_tol, row_v, stub_w_pair,
+                  stub_w_single, spine_w);
+              std::vector<std::tuple<double, double, double, double, double,
+                                     std::string>>
+                  out;
+              out.reserve(rows.size());
+              for (const auto& seg : rows) {
+                  out.emplace_back(seg.ax, seg.ay, seg.bx, seg.by, seg.w,
+                                   seg.role);
+              }
+              return out;
+          });
+    m.def("escape_ladder_connected",
+          [](const std::vector<std::tuple<double, double, double>>& vias,
+             const std::vector<std::tuple<double, double, double, double,
+                                          double, std::string>>& segs,
+             const std::vector<std::pair<double, double>>& pads, double half_w,
+             double half_h) {
+              auto hit = schgen::escape_ladder_connected(vias, segs, pads,
+                                                         half_w, half_h);
+              return std::make_tuple(hit.via_seg_components, hit.pad_stubs);
+          });
+    m.def("escape_redundancy_u",
+          [](double base_u, double base_v, double dia, double drill,
+             const std::vector<std::tuple<double, double, double, double,
+                                          double, std::string>>& front_cu,
+             const std::vector<std::tuple<double, double, double, double,
+                                          double, std::string>>& back_cu,
+             const std::vector<std::tuple<double, double, double, double,
+                                          double, std::string>>& samenet,
+             const std::vector<std::tuple<double, double, double, std::string>>&
+                 holes,
+             const std::tuple<double, double, double, double>& clear,
+             double redundancy_offset, double lattice, int max_steps)
+              -> std::optional<double> {
+              schgen::ViaClear via_clear;
+              via_clear.margin = std::get<0>(clear);
+              via_clear.hole_foreign = std::get<1>(clear);
+              via_clear.hole_samenet = std::get<2>(clear);
+              via_clear.hole_hole = std::get<3>(clear);
+              return schgen::escape_redundancy_u(
+                  base_u, base_v, dia, drill, front_cu, back_cu, samenet,
+                  holes, via_clear, redundancy_offset, lattice, max_steps);
+          });
+    m.def("is_passive_ref", &schgen::is_passive_ref);
+    m.def("classify_side",
+          [](const char* ref, const char* lib,
+             const std::tuple<double, double, double, double>& bbox,
+             bool in_decoupling, bool two_side, double top_area,
+             const std::vector<std::string>& top_always) {
+              return schgen::classify_side(
+                  ref == nullptr ? "" : ref, lib == nullptr ? "" : lib,
+                  as_box(bbox), in_decoupling, two_side, top_area, top_always);
+          });
+    m.def("decoupling_caps", &schgen::decoupling_caps);
+    m.def("zone_target_w", &schgen::zone_target_w);
+    m.def("connector_target_w", &schgen::connector_target_w);
+    m.def("canonical_plane_rect",
+          [](double origin_x, double origin_y, double board_w, double board_h,
+             double edge_back) {
+              auto b = schgen::canonical_plane_rect(origin_x, origin_y, board_w,
+                                                    board_h, edge_back);
+              return std::make_tuple(b.x0, b.y0, b.x1, b.y1);
+          });
+    m.def("isolation_void_rect",
+          [](const std::tuple<double, double, double, double>& court,
+             double margin) {
+              auto b = schgen::isolation_void_rect(as_box(court), margin);
+              return std::make_tuple(b.x0, b.y0, b.x1, b.y1);
+          });
+    m.def("board_box_to_uv",
+          [](double cx, double cy, double rot,
+             const std::tuple<double, double, double, double>& box) {
+              auto b = schgen::board_box_to_uv(cx, cy, rot, as_box(box));
+              return std::make_tuple(b.x0, b.y0, b.x1, b.y1);
+          });
+    m.def("cluster_slot_segs",
+          [](const std::vector<std::tuple<std::string, double, double>>&
+                 pad_offs,
+             const std::vector<std::string>& pad_nets,
+             const std::vector<std::pair<double, double>>& slots,
+             const std::vector<std::tuple<
+                 std::string, std::vector<std::pair<double, double>>>>&
+                 static_pts) {
+              auto hit = schgen::cluster_slot_segs(pad_offs, pad_nets, slots,
+                                                   static_pts);
+              std::vector<std::vector<
+                  std::tuple<double, double, double, double>>>
+                  out;
+              out.reserve(hit.size());
+              for (const auto& segs : hit) {
+                  std::vector<std::tuple<double, double, double, double>> row;
+                  row.reserve(segs.size());
+                  for (const auto& s : segs) {
+                      row.emplace_back(s.x0, s.y0, s.x1, s.y1);
+                  }
+                  out.push_back(std::move(row));
+              }
+              return out;
+          });
+    m.def("group_interchangeable", &schgen::group_interchangeable);
+    m.def("reorder_interchangeable", &schgen::reorder_interchangeable);
+    m.def("scan_floats", &schgen::scan_floats);
+    m.def("font_size",
+          [](nb::handle node, double default_size) {
+              return schgen::font_size(sexpr_from_py(node), default_size);
+          });
+    m.def("inst_pad_xy", &schgen::inst_pad_xy);
+    m.def("collect_emitted_text_boxes",
+          [](nb::handle doc, bool include_silk_gfx, double default_size) {
+              auto boxes = schgen::collect_emitted_text_boxes(
+                  sexpr_from_py(doc), include_silk_gfx, default_size);
+              std::vector<std::tuple<double, double, double, double>> out;
+              out.reserve(boxes.size());
+              for (const auto& b : boxes) {
+                  out.emplace_back(b.x0, b.y0, b.x1, b.y1);
+              }
+              return out;
+          });
     m.def("boxes_union",
           [](const std::vector<BoxTup>& boxes) -> std::optional<BoxTup> {
               auto hit = schgen::boxes_union(as_boxes(boxes));
@@ -597,10 +1621,6 @@ NB_MODULE(_geom, m) {
               -> std::optional<double> {
               return schgen::min_box_gap(as_boxes(a), as_boxes(b));
           });
-    m.def("gap_over_limit", &schgen::gap_over_limit);
-    m.def("gap_under_limit", &schgen::gap_under_limit);
-    m.def("min_present", &schgen::min_present);
-    m.def("nearest_named", &schgen::nearest_named);
     m.def("flip_to_bottom",
           [](nb::handle node) {
               auto tree = sexpr_from_py(node);
@@ -647,6 +1667,19 @@ NB_MODULE(_geom, m) {
                                            som_h, board_w, board_h);
               return std::make_tuple(p.first, p.second);
           });
+    m.def("j_edge_of", &schgen::j_edge_of);
+    m.def("j_edge_map", &schgen::j_edge_map);
+    m.def("dominant_j",
+          [](const std::vector<std::pair<std::string, int>>& affinity)
+              -> std::optional<std::string> {
+              return schgen::dominant_j(affinity);
+          });
+    m.def("affinity_j_from_expect", &schgen::affinity_j_from_expect);
+    m.def("affinity_j_from_target",
+          [](const std::string& target) -> std::optional<std::string> {
+              return schgen::affinity_j_from_target(target);
+          });
+    m.def("j_affinity", &schgen::j_affinity);
     m.def("pack_anchor",
           [](bool face_override, const char* face, double som_x, double som_y,
              double som_w, double som_h, double som_halo, double block_w,
@@ -1171,21 +2204,6 @@ NB_MODULE(_geom, m) {
               }
               return std::make_tuple(top, bot);
           });
-    m.def("collect_doc_silk_gfx",
-          [](nb::handle doc) {
-              auto hit = schgen::collect_doc_silk_gfx(sexpr_from_py(doc));
-              std::vector<std::tuple<double, double, double, double>> top;
-              std::vector<std::tuple<double, double, double, double>> bot;
-              top.reserve(hit.first.size());
-              bot.reserve(hit.second.size());
-              for (const auto& b : hit.first) {
-                  top.emplace_back(b.x0, b.y0, b.x1, b.y1);
-              }
-              for (const auto& b : hit.second) {
-                  bot.emplace_back(b.x0, b.y0, b.x1, b.y1);
-              }
-              return std::make_tuple(top, bot);
-          });
     m.def("farm_row_right_bound", &schgen::farm_row_right_bound);
     m.def("conn_port_columns", &schgen::conn_port_columns);
     m.def("conn_cluster_groups", &schgen::conn_cluster_groups);
@@ -1194,6 +2212,143 @@ NB_MODULE(_geom, m) {
                                           double, double>>& rows,
              double rotation) {
               return schgen::pad_boxes_local(rows, rotation);
+          });
+    m.def("pad_boxes_named",
+          [](const std::vector<std::tuple<std::string, double, double, double,
+                                          double, double>>& rows,
+             double rotation) {
+              return schgen::pad_boxes_named(rows, rotation);
+          });
+    m.def("footprint_bbox",
+          [](const char* text, int decimals) {
+              if (text == nullptr) {
+                  throw std::runtime_error("footprint_bbox: text required");
+              }
+              auto box = schgen::footprint_bbox(schgen::sexpr_loads(text),
+                                                decimals);
+              return std::make_tuple(box.x0, box.y0, box.x1, box.y1);
+          });
+    m.def("extract_som_scan",
+          [](const char* text) {
+              if (text == nullptr) {
+                  throw std::runtime_error("extract_som_scan: text required");
+              }
+              auto hit = schgen::extract_som_scan(text);
+              std::vector<std::tuple<std::string, double, double, double,
+                                     double, double, double, double>>
+                  js;
+              js.reserve(hit.js.size());
+              for (const auto& j : hit.js) {
+                  js.emplace_back(j.ref, j.pcb_x, j.pcb_y, j.rot, j.x, j.y,
+                                  j.w, j.h);
+              }
+              return std::make_tuple(hit.w, hit.h, js);
+          });
+    m.def("som_keepout_rects",
+          [](double som_x, double som_y, double som_w, double som_h,
+             double occ_pad,
+             const std::vector<std::tuple<double, double, double, double>>&
+                 connectors,
+             double seat_band) {
+              auto boxes = schgen::som_keepout_rects(
+                  som_x, som_y, som_w, som_h, occ_pad, connectors, seat_band);
+              std::vector<std::tuple<double, double, double, double>> out;
+              out.reserve(boxes.size());
+              for (const auto& b : boxes) {
+                  out.emplace_back(b.x0, b.y0, b.x1, b.y1);
+              }
+              return out;
+          });
+    m.def("zone_components_assemble",
+          [](const std::vector<BoxTup>& minor, const std::vector<BoxTup>& punch,
+             int minor_mask, int punch_mask) {
+              auto rows = schgen::zone_components_assemble(
+                  as_boxes(minor), as_boxes(punch), minor_mask, punch_mask);
+              std::vector<std::tuple<double, double, double, double, int>> out;
+              out.reserve(rows.size());
+              for (const auto& c : rows) {
+                  out.emplace_back(c.dx, c.dy, c.w, c.h, c.mask);
+              }
+              return out;
+          });
+    m.def("part_dims_from_name",
+          [](const std::string& name,
+             const std::vector<std::tuple<std::string, double, double>>&
+                 fixed_dims,
+             double default_w, double default_h) {
+              auto hit = schgen::part_dims_from_name(name, fixed_dims,
+                                                     default_w, default_h);
+              return std::make_tuple(hit.first, hit.second);
+          });
+    m.def("courtyard_dims_from_text",
+          [](const char* text)
+              -> std::optional<std::pair<double, double>> {
+              if (text == nullptr) {
+                  throw std::runtime_error(
+                      "courtyard_dims_from_text: text required");
+              }
+              return schgen::courtyard_dims_from_text(text);
+          });
+    m.def("pad_names_from_text",
+          [](const char* text) {
+              if (text == nullptr) {
+                  throw std::runtime_error("pad_names_from_text: text required");
+              }
+              return schgen::pad_names_from_text(text);
+          });
+    m.def("has_thru_pads_from_text",
+          [](const char* text) {
+              if (text == nullptr) {
+                  throw std::runtime_error(
+                      "has_thru_pads_from_text: text required");
+              }
+              return schgen::has_thru_pads_from_text(text);
+          });
+    m.def("scan_pad_nodes",
+          [](const char* text) {
+              if (text == nullptr) {
+                  throw std::runtime_error("scan_pad_nodes: text required");
+              }
+              return schgen::scan_pad_nodes(schgen::sexpr_loads(text));
+          });
+    m.def("scan_mod_pads",
+          [](const char* text) {
+              if (text == nullptr) {
+                  throw std::runtime_error("scan_mod_pads: text required");
+              }
+              return schgen::scan_mod_pads(schgen::sexpr_loads(text));
+          });
+    m.def("thru_pad_names",
+          [](const char* text) {
+              if (text == nullptr) {
+                  throw std::runtime_error("thru_pad_names: text required");
+              }
+              return schgen::thru_pad_names(schgen::sexpr_loads(text));
+          });
+    m.def("ref_prefix", &schgen::ref_prefix);
+    m.def("is_testpoint_ref", &schgen::is_testpoint_ref);
+    m.def("is_cluster_passive",
+          [](const std::string& ref, int pins,
+             const std::vector<std::string>& not_plain,
+             const std::vector<std::string>& prefixes) {
+              return schgen::is_cluster_passive(ref, pins, not_plain,
+                                                prefixes);
+          });
+    m.def("intelligent_need",
+          [](int pins,
+             const std::vector<std::tuple<int, double, std::string>>& tiers,
+             double top_need, const std::string& top_basis) {
+              return schgen::intelligent_need(pins, tiers, top_need,
+                                              top_basis);
+          });
+    m.def("zone_fanout_members_rows",
+          [](const std::vector<std::tuple<double, double, double, double,
+                                          double, double, double, int>>& rows,
+             int min_subject_pins,
+             const std::vector<std::tuple<int, double>>& need_tiers,
+             double top_need) {
+              return schgen::zone_fanout_members_rows(
+                  rows, min_subject_pins, need_tiers, top_need);
           });
     m.def("inst_placed_box",
           [](const std::tuple<double, double, double, double>& local,
@@ -1360,6 +2515,36 @@ NB_MODULE(_geom, m) {
               }
               return out;
           });
+    m.def("collect_refdes_rows",
+          [](nb::handle doc,
+             const std::vector<std::pair<std::string, BoxTup>>& courts,
+             double default_size) {
+              std::unordered_map<std::string, schgen::Box4> court_by_ref;
+              court_by_ref.reserve(courts.size());
+              for (const auto& kv : courts) {
+                  court_by_ref.emplace(kv.first, as_box(kv.second));
+              }
+              auto rows = schgen::collect_refdes_rows(
+                  sexpr_from_py(doc), court_by_ref, default_size);
+              std::vector<std::tuple<
+                  int, int, std::string, double, double, double, double,
+                  std::tuple<double, double, double, double>, double,
+                  std::tuple<double, double, double, double>, bool>>
+                  out;
+              out.reserve(rows.size());
+              for (const auto& r : rows) {
+                  out.emplace_back(
+                      r.footprint_index, r.property_index, r.ref, r.fp_x,
+                      r.fp_y, r.cos_a, r.sin_a,
+                      std::make_tuple(r.court.x0, r.court.y0, r.court.x1,
+                                      r.court.y1),
+                      r.size,
+                      std::make_tuple(r.text_box.x0, r.text_box.y0,
+                                      r.text_box.x1, r.text_box.y1),
+                      r.bottom);
+              }
+              return out;
+          });
     m.def("footprint_alias", &schgen::footprint_alias);
     m.def("mirror_assert_ok", &schgen::mirror_assert_ok);
     m.def("needs_flag", &schgen::needs_flag);
@@ -1374,59 +2559,22 @@ NB_MODULE(_geom, m) {
               return sexpr_to_tagged(
                   schgen::set_font_size(sexpr_from_py(node), size));
           });
-    m.def("apply_refdes_pose",
-          [](nb::handle node, double lx, double ly, bool resize, double size) {
-              return sexpr_to_tagged(schgen::apply_refdes_pose(
-                  sexpr_from_py(node), lx, ly, resize, size));
-          });
     m.def("hide_undersom_bottom_refs",
           [](nb::handle doc, double x0, double y0, double x1, double y1) {
               auto hit = schgen::hide_undersom_bottom_refs(
                   sexpr_from_py(doc), x0, y0, x1, y1);
               return std::make_tuple(sexpr_to_tagged(hit.first), hit.second);
           });
-    m.def("next_flag_x", &schgen::next_flag_x);
-    m.def("flags_row_origin",
-          [](double extent_x0, double extent_y1, double unit) {
-              auto hit = schgen::flags_row_origin(extent_x0, extent_y1, unit);
-              return std::make_tuple(hit.first, hit.second);
-          });
-    m.def("conn_signed_ceil", &schgen::conn_signed_ceil);
-    m.def("conn_gnd_x", &schgen::conn_gnd_x);
-    m.def("farm_wrap_advance",
-          [](double col_x, double max_right, bool has_cur, double farm_left,
-             double cy, double row_step, double unit) {
-              auto hit = schgen::farm_wrap_advance(
-                  col_x, max_right, has_cur, farm_left, cy, row_step, unit);
-              return std::make_tuple(hit.wrapped, hit.col_x, hit.cy);
-          });
-    m.def("conn_flag_y", &schgen::conn_flag_y);
-    m.def("conn_flag_x0", &schgen::conn_flag_x0);
-    m.def("rail_decouple_origin",
-          [](double extent_x0, double extent_y1, double unit) {
-              auto hit = schgen::rail_decouple_origin(extent_x0, extent_y1,
-                                                      unit);
-              return std::make_tuple(hit.first, hit.second);
-          });
-    m.def("farm_compact_col", &schgen::farm_compact_col);
-    m.def("farm_compact_cy", &schgen::farm_compact_cy);
-    m.def("farm_lift_cy", &schgen::farm_lift_cy);
-    m.def("farm_run_ry", &schgen::farm_run_ry);
-    m.def("farm_run_mid", &schgen::farm_run_mid);
-    m.def("block_area", &schgen::block_area);
-    m.def("box_center",
-          [](double x, double y, double w, double h) {
-              auto hit = schgen::box_center(x, y, w, h);
-              return std::make_tuple(hit.first, hit.second);
-          });
-    m.def("port_label_x", &schgen::port_label_x);
-    m.def("buck_cin_cols", &schgen::buck_cin_cols);
-    m.def("template_clear_pad", &schgen::template_clear_pad);
-    m.def("relax_pad", &schgen::relax_pad);
     m.def("turn_point",
           [](double x, double y, double deg) {
               auto p = schgen::turn_point(x, y, deg);
               return std::make_tuple(p.first, p.second);
+          });
+    m.def("world_turned_point",
+          [](double inst_x, double inst_y, double lx, double ly, double rot,
+             int decimals) {
+              return schgen::world_turned_point(inst_x, inst_y, lx, ly, rot,
+                                                decimals);
           });
     m.def("turn_box",
           [](const std::tuple<double, double, double, double>& box,
@@ -1866,6 +3014,15 @@ NB_MODULE(_geom, m) {
     m.def("quads_overlap",
           [](const std::vector<PtTup>& a, const std::vector<PtTup>& b) {
               return schgen::quads_overlap(as_pts(a), as_pts(b));
+          });
+    m.def("stagger_overlap_ranks",
+          [](const std::vector<std::vector<PtTup>>& quads) {
+              std::vector<std::vector<std::pair<double, double>>> rows;
+              rows.reserve(quads.size());
+              for (const auto& q : quads) {
+                  rows.push_back(as_pts(q));
+              }
+              return schgen::stagger_overlap_ranks(rows);
           });
     m.def("emit_wire",
           [](double x0, double y0, double x1, double y1, const char* uuid) {

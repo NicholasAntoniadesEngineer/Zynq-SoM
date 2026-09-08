@@ -1,0 +1,1291 @@
+{
+  "schema": "schgen.circuit/1",
+  "name": "som_j3",
+  "title": "SoM J3: FPGA bank 33/34/35 IO + VCCO rails",
+  "parts": [
+    {
+      "ref": "J3",
+      "lib_id": "DF40C-100DP-0.4V_51:DF40C-100DP-0.4V_51",
+      "value": "DF40C-100DP-0.4V(51)",
+      "footprint": "DF40C-100DP-0.4V_51:DF40C-100DP-0.4V_51",
+      "fields": {
+        "LCSC": "C531031"
+      },
+      "pin_names": {
+        "1": [
+          "1"
+        ],
+        "2": [
+          "2"
+        ],
+        "3": [
+          "3"
+        ],
+        "4": [
+          "4"
+        ],
+        "5": [
+          "5"
+        ],
+        "6": [
+          "6"
+        ],
+        "7": [
+          "7"
+        ],
+        "8": [
+          "8"
+        ],
+        "9": [
+          "9"
+        ],
+        "10": [
+          "10"
+        ],
+        "11": [
+          "11"
+        ],
+        "12": [
+          "12"
+        ],
+        "13": [
+          "13"
+        ],
+        "14": [
+          "14"
+        ],
+        "15": [
+          "15"
+        ],
+        "16": [
+          "16"
+        ],
+        "17": [
+          "17"
+        ],
+        "18": [
+          "18"
+        ],
+        "19": [
+          "19"
+        ],
+        "20": [
+          "20"
+        ],
+        "21": [
+          "21"
+        ],
+        "22": [
+          "22"
+        ],
+        "23": [
+          "23"
+        ],
+        "24": [
+          "24"
+        ],
+        "25": [
+          "25"
+        ],
+        "26": [
+          "26"
+        ],
+        "27": [
+          "27"
+        ],
+        "28": [
+          "28"
+        ],
+        "29": [
+          "29"
+        ],
+        "30": [
+          "30"
+        ],
+        "31": [
+          "31"
+        ],
+        "32": [
+          "32"
+        ],
+        "33": [
+          "33"
+        ],
+        "34": [
+          "34"
+        ],
+        "35": [
+          "35"
+        ],
+        "36": [
+          "36"
+        ],
+        "37": [
+          "37"
+        ],
+        "38": [
+          "38"
+        ],
+        "39": [
+          "39"
+        ],
+        "40": [
+          "40"
+        ],
+        "41": [
+          "41"
+        ],
+        "42": [
+          "42"
+        ],
+        "43": [
+          "43"
+        ],
+        "44": [
+          "44"
+        ],
+        "45": [
+          "45"
+        ],
+        "46": [
+          "46"
+        ],
+        "47": [
+          "47"
+        ],
+        "48": [
+          "48"
+        ],
+        "49": [
+          "49"
+        ],
+        "50": [
+          "50"
+        ],
+        "51": [
+          "51"
+        ],
+        "52": [
+          "52"
+        ],
+        "53": [
+          "53"
+        ],
+        "54": [
+          "54"
+        ],
+        "55": [
+          "55"
+        ],
+        "56": [
+          "56"
+        ],
+        "57": [
+          "57"
+        ],
+        "58": [
+          "58"
+        ],
+        "59": [
+          "59"
+        ],
+        "60": [
+          "60"
+        ],
+        "61": [
+          "61"
+        ],
+        "62": [
+          "62"
+        ],
+        "63": [
+          "63"
+        ],
+        "64": [
+          "64"
+        ],
+        "65": [
+          "65"
+        ],
+        "66": [
+          "66"
+        ],
+        "67": [
+          "67"
+        ],
+        "68": [
+          "68"
+        ],
+        "69": [
+          "69"
+        ],
+        "70": [
+          "70"
+        ],
+        "71": [
+          "71"
+        ],
+        "72": [
+          "72"
+        ],
+        "73": [
+          "73"
+        ],
+        "74": [
+          "74"
+        ],
+        "75": [
+          "75"
+        ],
+        "76": [
+          "76"
+        ],
+        "77": [
+          "77"
+        ],
+        "78": [
+          "78"
+        ],
+        "79": [
+          "79"
+        ],
+        "80": [
+          "80"
+        ],
+        "81": [
+          "81"
+        ],
+        "82": [
+          "82"
+        ],
+        "83": [
+          "83"
+        ],
+        "84": [
+          "84"
+        ],
+        "85": [
+          "85"
+        ],
+        "86": [
+          "86"
+        ],
+        "87": [
+          "87"
+        ],
+        "88": [
+          "88"
+        ],
+        "89": [
+          "89"
+        ],
+        "90": [
+          "90"
+        ],
+        "91": [
+          "91"
+        ],
+        "92": [
+          "92"
+        ],
+        "93": [
+          "93"
+        ],
+        "94": [
+          "94"
+        ],
+        "95": [
+          "95"
+        ],
+        "96": [
+          "96"
+        ],
+        "97": [
+          "97"
+        ],
+        "98": [
+          "98"
+        ],
+        "99": [
+          "99"
+        ],
+        "100": [
+          "100"
+        ],
+        "104": [
+          "104"
+        ],
+        "103": [
+          "103"
+        ],
+        "102": [
+          "102"
+        ],
+        "101": [
+          "101"
+        ]
+      },
+      "pin_numbers": [
+        "1",
+        "10",
+        "100",
+        "101",
+        "102",
+        "103",
+        "104",
+        "11",
+        "12",
+        "13",
+        "14",
+        "15",
+        "16",
+        "17",
+        "18",
+        "19",
+        "2",
+        "20",
+        "21",
+        "22",
+        "23",
+        "24",
+        "25",
+        "26",
+        "27",
+        "28",
+        "29",
+        "3",
+        "30",
+        "31",
+        "32",
+        "33",
+        "34",
+        "35",
+        "36",
+        "37",
+        "38",
+        "39",
+        "4",
+        "40",
+        "41",
+        "42",
+        "43",
+        "44",
+        "45",
+        "46",
+        "47",
+        "48",
+        "49",
+        "5",
+        "50",
+        "51",
+        "52",
+        "53",
+        "54",
+        "55",
+        "56",
+        "57",
+        "58",
+        "59",
+        "6",
+        "60",
+        "61",
+        "62",
+        "63",
+        "64",
+        "65",
+        "66",
+        "67",
+        "68",
+        "69",
+        "7",
+        "70",
+        "71",
+        "72",
+        "73",
+        "74",
+        "75",
+        "76",
+        "77",
+        "78",
+        "79",
+        "8",
+        "80",
+        "81",
+        "82",
+        "83",
+        "84",
+        "85",
+        "86",
+        "87",
+        "88",
+        "89",
+        "9",
+        "90",
+        "91",
+        "92",
+        "93",
+        "94",
+        "95",
+        "96",
+        "97",
+        "98",
+        "99"
+      ]
+    }
+  ],
+  "nets": [
+    {
+      "name": "+2V5_VADJ",
+      "net_class": "power",
+      "pins": [
+        "J3.1",
+        "J3.2",
+        "J3.4"
+      ]
+    },
+    {
+      "name": "GND",
+      "net_class": "ground",
+      "pins": [
+        "J3.3",
+        "J3.6",
+        "J3.12",
+        "J3.13",
+        "J3.18",
+        "J3.23",
+        "J3.28",
+        "J3.33",
+        "J3.38",
+        "J3.43",
+        "J3.48",
+        "J3.53",
+        "J3.58",
+        "J3.63",
+        "J3.68",
+        "J3.73",
+        "J3.80",
+        "J3.83",
+        "J3.90",
+        "J3.95",
+        "J3.100"
+      ]
+    },
+    {
+      "name": "CAM_D0_P",
+      "net_class": "port",
+      "pins": [
+        "J3.5"
+      ]
+    },
+    {
+      "name": "CAM_D0_N",
+      "net_class": "port",
+      "pins": [
+        "J3.7"
+      ]
+    },
+    {
+      "name": "FMC_CLK1_M2C_P",
+      "net_class": "port",
+      "pins": [
+        "J3.8"
+      ]
+    },
+    {
+      "name": "CAM_CLK_P",
+      "net_class": "port",
+      "pins": [
+        "J3.9"
+      ]
+    },
+    {
+      "name": "FMC_CLK1_M2C_N",
+      "net_class": "port",
+      "pins": [
+        "J3.10"
+      ]
+    },
+    {
+      "name": "CAM_CLK_N",
+      "net_class": "port",
+      "pins": [
+        "J3.11"
+      ]
+    },
+    {
+      "name": "FMC_CLK0_M2C_P",
+      "net_class": "port",
+      "pins": [
+        "J3.14"
+      ]
+    },
+    {
+      "name": "CAM_D1_N",
+      "net_class": "port",
+      "pins": [
+        "J3.15"
+      ]
+    },
+    {
+      "name": "FMC_CLK0_M2C_N",
+      "net_class": "port",
+      "pins": [
+        "J3.16"
+      ]
+    },
+    {
+      "name": "CAM_D1_P",
+      "net_class": "port",
+      "pins": [
+        "J3.17"
+      ]
+    },
+    {
+      "name": "LCD_R0",
+      "net_class": "port",
+      "pins": [
+        "J3.19"
+      ]
+    },
+    {
+      "name": "FMC_LA00_CC_N",
+      "net_class": "port",
+      "pins": [
+        "J3.20"
+      ]
+    },
+    {
+      "name": "LCD_R1",
+      "net_class": "port",
+      "pins": [
+        "J3.21"
+      ]
+    },
+    {
+      "name": "FMC_LA00_CC_P",
+      "net_class": "port",
+      "pins": [
+        "J3.22"
+      ]
+    },
+    {
+      "name": "FMC_LA01_CC_P",
+      "net_class": "port",
+      "pins": [
+        "J3.24"
+      ]
+    },
+    {
+      "name": "IO_L18_N_35",
+      "net_class": "port",
+      "pins": [
+        "J3.25"
+      ]
+    },
+    {
+      "name": "FMC_LA01_CC_N",
+      "net_class": "port",
+      "pins": [
+        "J3.26"
+      ]
+    },
+    {
+      "name": "IO_L18_P_35",
+      "net_class": "port",
+      "pins": [
+        "J3.27"
+      ]
+    },
+    {
+      "name": "IO_L16_N_35",
+      "net_class": "port",
+      "pins": [
+        "J3.29"
+      ]
+    },
+    {
+      "name": "LCD_R2",
+      "net_class": "port",
+      "pins": [
+        "J3.30"
+      ]
+    },
+    {
+      "name": "IO_L16_P_35",
+      "net_class": "port",
+      "pins": [
+        "J3.31"
+      ]
+    },
+    {
+      "name": "FMC_LA03_N",
+      "net_class": "port",
+      "pins": [
+        "J3.32"
+      ]
+    },
+    {
+      "name": "FMC_LA03_P",
+      "net_class": "port",
+      "pins": [
+        "J3.34"
+      ]
+    },
+    {
+      "name": "FMC_LA02_N",
+      "net_class": "port",
+      "pins": [
+        "J3.35"
+      ]
+    },
+    {
+      "name": "LCD_R3",
+      "net_class": "port",
+      "pins": [
+        "J3.36"
+      ]
+    },
+    {
+      "name": "FMC_LA02_P",
+      "net_class": "port",
+      "pins": [
+        "J3.37"
+      ]
+    },
+    {
+      "name": "PUDC_34",
+      "net_class": "port",
+      "pins": [
+        "J3.39"
+      ]
+    },
+    {
+      "name": "LCD_R4",
+      "net_class": "port",
+      "pins": [
+        "J3.40"
+      ]
+    },
+    {
+      "name": "LCD_R5",
+      "net_class": "port",
+      "pins": [
+        "J3.41"
+      ]
+    },
+    {
+      "name": "FMC_LA04_P",
+      "net_class": "port",
+      "pins": [
+        "J3.42"
+      ]
+    },
+    {
+      "name": "FMC_LA04_N",
+      "net_class": "port",
+      "pins": [
+        "J3.44"
+      ]
+    },
+    {
+      "name": "FMC_LA05_N",
+      "net_class": "port",
+      "pins": [
+        "J3.45"
+      ]
+    },
+    {
+      "name": "LCD_R6",
+      "net_class": "port",
+      "pins": [
+        "J3.46"
+      ]
+    },
+    {
+      "name": "FMC_LA05_P",
+      "net_class": "port",
+      "pins": [
+        "J3.47"
+      ]
+    },
+    {
+      "name": "FMC_LA06_N",
+      "net_class": "port",
+      "pins": [
+        "J3.49"
+      ]
+    },
+    {
+      "name": "FMC_LA07_P",
+      "net_class": "port",
+      "pins": [
+        "J3.50"
+      ]
+    },
+    {
+      "name": "FMC_LA06_P",
+      "net_class": "port",
+      "pins": [
+        "J3.51"
+      ]
+    },
+    {
+      "name": "FMC_LA07_N",
+      "net_class": "port",
+      "pins": [
+        "J3.52"
+      ]
+    },
+    {
+      "name": "LCD_R7",
+      "net_class": "port",
+      "pins": [
+        "J3.54"
+      ]
+    },
+    {
+      "name": "LCD_G0",
+      "net_class": "port",
+      "pins": [
+        "J3.55"
+      ]
+    },
+    {
+      "name": "LCD_G1",
+      "net_class": "port",
+      "pins": [
+        "J3.56"
+      ]
+    },
+    {
+      "name": "LCD_G2",
+      "net_class": "port",
+      "pins": [
+        "J3.57"
+      ]
+    },
+    {
+      "name": "LCD_G3",
+      "net_class": "port",
+      "pins": [
+        "J3.59"
+      ]
+    },
+    {
+      "name": "LCD_G4",
+      "net_class": "port",
+      "pins": [
+        "J3.60"
+      ]
+    },
+    {
+      "name": "LCD_G5",
+      "net_class": "port",
+      "pins": [
+        "J3.61"
+      ]
+    },
+    {
+      "name": "LCD_G6",
+      "net_class": "port",
+      "pins": [
+        "J3.62"
+      ]
+    },
+    {
+      "name": "LCD_G7",
+      "net_class": "port",
+      "pins": [
+        "J3.64"
+      ]
+    },
+    {
+      "name": "LCD_B0",
+      "net_class": "port",
+      "pins": [
+        "J3.65"
+      ]
+    },
+    {
+      "name": "LCD_B1",
+      "net_class": "port",
+      "pins": [
+        "J3.66"
+      ]
+    },
+    {
+      "name": "LCD_B2",
+      "net_class": "port",
+      "pins": [
+        "J3.67"
+      ]
+    },
+    {
+      "name": "LCD_B3",
+      "net_class": "port",
+      "pins": [
+        "J3.69"
+      ]
+    },
+    {
+      "name": "LCD_B4",
+      "net_class": "port",
+      "pins": [
+        "J3.70"
+      ]
+    },
+    {
+      "name": "LCD_B5",
+      "net_class": "port",
+      "pins": [
+        "J3.71"
+      ]
+    },
+    {
+      "name": "LCD_B6",
+      "net_class": "port",
+      "pins": [
+        "J3.72"
+      ]
+    },
+    {
+      "name": "LCD_B7",
+      "net_class": "port",
+      "pins": [
+        "J3.74"
+      ]
+    },
+    {
+      "name": "LCD_PCLK",
+      "net_class": "port",
+      "pins": [
+        "J3.75"
+      ]
+    },
+    {
+      "name": "LCD_HSYNC",
+      "net_class": "port",
+      "pins": [
+        "J3.76"
+      ]
+    },
+    {
+      "name": "LCD_VSYNC",
+      "net_class": "port",
+      "pins": [
+        "J3.77"
+      ]
+    },
+    {
+      "name": "LCD_DE",
+      "net_class": "port",
+      "pins": [
+        "J3.78"
+      ]
+    },
+    {
+      "name": "LCD_DISP",
+      "net_class": "port",
+      "pins": [
+        "J3.79"
+      ]
+    },
+    {
+      "name": "LCD_BL_PWM",
+      "net_class": "port",
+      "pins": [
+        "J3.81"
+      ]
+    },
+    {
+      "name": "IO_L24_P_34",
+      "net_class": "port",
+      "pins": [
+        "J3.82"
+      ]
+    },
+    {
+      "name": "IO_L22_N_34",
+      "net_class": "port",
+      "pins": [
+        "J3.84"
+      ]
+    },
+    {
+      "name": "CAM_EN",
+      "net_class": "port",
+      "pins": [
+        "J3.85"
+      ]
+    },
+    {
+      "name": "CAM_SCL",
+      "net_class": "port",
+      "pins": [
+        "J3.86"
+      ]
+    },
+    {
+      "name": "CAM_LED",
+      "net_class": "port",
+      "pins": [
+        "J3.87"
+      ]
+    },
+    {
+      "name": "IO_L23_P_34",
+      "net_class": "port",
+      "pins": [
+        "J3.88"
+      ]
+    },
+    {
+      "name": "CAM_SDA",
+      "net_class": "port",
+      "pins": [
+        "J3.89"
+      ]
+    },
+    {
+      "name": "ESC_PWM_IN4",
+      "net_class": "port",
+      "pins": [
+        "J3.91"
+      ]
+    },
+    {
+      "name": "ESC_PWM_IN6",
+      "net_class": "port",
+      "pins": [
+        "J3.92"
+      ]
+    },
+    {
+      "name": "ESC_PWM_IN5",
+      "net_class": "port",
+      "pins": [
+        "J3.93"
+      ]
+    },
+    {
+      "name": "ESC_PWM_IN7",
+      "net_class": "port",
+      "pins": [
+        "J3.94"
+      ]
+    },
+    {
+      "name": "WATCHDOG_KICK",
+      "net_class": "port",
+      "pins": [
+        "J3.96"
+      ]
+    },
+    {
+      "name": "+3V3",
+      "net_class": "power",
+      "pins": [
+        "J3.97",
+        "J3.99"
+      ]
+    },
+    {
+      "name": "WATCHDOG_RST_N",
+      "net_class": "port",
+      "pins": [
+        "J3.98"
+      ]
+    }
+  ],
+  "nc": [
+    "J3.101",
+    "J3.102",
+    "J3.103",
+    "J3.104"
+  ],
+  "port_types": {
+    "CAM_CLK_P": {
+      "kind": "diff_pair",
+      "pair_with": "CAM_CLK_N",
+      "impedance": 100,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": null
+    },
+    "CAM_CLK_N": {
+      "kind": "diff_pair",
+      "pair_with": "CAM_CLK_P",
+      "impedance": 100,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": null
+    },
+    "CAM_D0_P": {
+      "kind": "diff_pair",
+      "pair_with": "CAM_D0_N",
+      "impedance": 100,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": null
+    },
+    "CAM_D0_N": {
+      "kind": "diff_pair",
+      "pair_with": "CAM_D0_P",
+      "impedance": 100,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": null
+    },
+    "CAM_D1_P": {
+      "kind": "diff_pair",
+      "pair_with": "CAM_D1_N",
+      "impedance": 100,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": null
+    },
+    "CAM_D1_N": {
+      "kind": "diff_pair",
+      "pair_with": "CAM_D1_P",
+      "impedance": 100,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": null
+    },
+    "FMC_CLK0_M2C_P": {
+      "kind": "diff_pair",
+      "pair_with": "FMC_CLK0_M2C_N",
+      "impedance": 100,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": null
+    },
+    "FMC_CLK0_M2C_N": {
+      "kind": "diff_pair",
+      "pair_with": "FMC_CLK0_M2C_P",
+      "impedance": 100,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": null
+    },
+    "FMC_CLK1_M2C_P": {
+      "kind": "diff_pair",
+      "pair_with": "FMC_CLK1_M2C_N",
+      "impedance": 100,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": null
+    },
+    "FMC_CLK1_M2C_N": {
+      "kind": "diff_pair",
+      "pair_with": "FMC_CLK1_M2C_P",
+      "impedance": 100,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": null
+    },
+    "FMC_LA00_CC_P": {
+      "kind": "diff_pair",
+      "pair_with": "FMC_LA00_CC_N",
+      "impedance": 100,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": null
+    },
+    "FMC_LA00_CC_N": {
+      "kind": "diff_pair",
+      "pair_with": "FMC_LA00_CC_P",
+      "impedance": 100,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": null
+    },
+    "FMC_LA01_CC_P": {
+      "kind": "diff_pair",
+      "pair_with": "FMC_LA01_CC_N",
+      "impedance": 100,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": null
+    },
+    "FMC_LA01_CC_N": {
+      "kind": "diff_pair",
+      "pair_with": "FMC_LA01_CC_P",
+      "impedance": 100,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": null
+    },
+    "FMC_LA02_P": {
+      "kind": "diff_pair",
+      "pair_with": "FMC_LA02_N",
+      "impedance": 100,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": null
+    },
+    "FMC_LA02_N": {
+      "kind": "diff_pair",
+      "pair_with": "FMC_LA02_P",
+      "impedance": 100,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": null
+    },
+    "FMC_LA03_P": {
+      "kind": "diff_pair",
+      "pair_with": "FMC_LA03_N",
+      "impedance": 100,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": null
+    },
+    "FMC_LA03_N": {
+      "kind": "diff_pair",
+      "pair_with": "FMC_LA03_P",
+      "impedance": 100,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": null
+    },
+    "FMC_LA04_P": {
+      "kind": "diff_pair",
+      "pair_with": "FMC_LA04_N",
+      "impedance": 100,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": null
+    },
+    "FMC_LA04_N": {
+      "kind": "diff_pair",
+      "pair_with": "FMC_LA04_P",
+      "impedance": 100,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": null
+    },
+    "FMC_LA05_P": {
+      "kind": "diff_pair",
+      "pair_with": "FMC_LA05_N",
+      "impedance": 100,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": null
+    },
+    "FMC_LA05_N": {
+      "kind": "diff_pair",
+      "pair_with": "FMC_LA05_P",
+      "impedance": 100,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": null
+    },
+    "FMC_LA06_P": {
+      "kind": "diff_pair",
+      "pair_with": "FMC_LA06_N",
+      "impedance": 100,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": null
+    },
+    "FMC_LA06_N": {
+      "kind": "diff_pair",
+      "pair_with": "FMC_LA06_P",
+      "impedance": 100,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": null
+    },
+    "FMC_LA07_P": {
+      "kind": "diff_pair",
+      "pair_with": "FMC_LA07_N",
+      "impedance": 100,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": null
+    },
+    "FMC_LA07_N": {
+      "kind": "diff_pair",
+      "pair_with": "FMC_LA07_P",
+      "impedance": 100,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": null
+    }
+  },
+  "hints": {},
+  "loads": {
+    "+2V5_VADJ": [
+      [
+        0.05,
+        "Zynq bank 35 VCCO (LVDS_25 drivers, camera/FMC) — sec 3.1 re-budget"
+      ]
+    ],
+    "+3V3": [
+      [
+        0.01,
+        "Zynq bank 34 VCCO (LCD LVCMOS33 bus drive)"
+      ]
+    ]
+  },
+  "tp_waivers": {},
+  "decap_waivers": {},
+  "pull_waivers": {},
+  "reset_waivers": {},
+  "strap_waivers": {},
+  "ep_waivers": {},
+  "thermal_waivers": {},
+  "part_rule_waivers": {}
+}

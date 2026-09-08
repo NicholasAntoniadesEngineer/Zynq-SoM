@@ -1,0 +1,417 @@
+{
+  "schema": "schgen.circuit/1",
+  "name": "uart_bridge",
+  "title": "UART bridge: CP2102N USB-UART",
+  "parts": [
+    {
+      "ref": "U1",
+      "lib_id": "CP2102N-A02-GQFN24R:CP2102N-A02-GQFN24R",
+      "value": "CP2102N-A02",
+      "footprint": "CP2102N-A02-GQFN24R:CP2102N-A02-GQFN24R",
+      "fields": {
+        "LCSC": "C969151"
+      },
+      "pin_names": {
+        "RI/CLK": [
+          "1"
+        ],
+        "GND": [
+          "2",
+          "25"
+        ],
+        "D+": [
+          "3"
+        ],
+        "D-": [
+          "4"
+        ],
+        "VIO": [
+          "5"
+        ],
+        "VDD": [
+          "6"
+        ],
+        "VREGIN": [
+          "7"
+        ],
+        "VBUS": [
+          "8"
+        ],
+        "RSTb": [
+          "9"
+        ],
+        "NC": [
+          "10",
+          "16"
+        ],
+        "GPIO.3/WAKEUP": [
+          "11"
+        ],
+        "GPIO.2/RS485": [
+          "12"
+        ],
+        "GPIO.1/RXT": [
+          "13"
+        ],
+        "GPIO.0/TXT": [
+          "14"
+        ],
+        "SUSPENDb": [
+          "15"
+        ],
+        "SUSPEND": [
+          "17"
+        ],
+        "CTS": [
+          "18"
+        ],
+        "RTS": [
+          "19"
+        ],
+        "RXD": [
+          "20"
+        ],
+        "TXD": [
+          "21"
+        ],
+        "DSR": [
+          "22"
+        ],
+        "DTR": [
+          "23"
+        ],
+        "DCD": [
+          "24"
+        ]
+      },
+      "pin_numbers": [
+        "1",
+        "10",
+        "11",
+        "12",
+        "13",
+        "14",
+        "15",
+        "16",
+        "17",
+        "18",
+        "19",
+        "2",
+        "20",
+        "21",
+        "22",
+        "23",
+        "24",
+        "25",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9"
+      ]
+    },
+    {
+      "ref": "C1",
+      "lib_id": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {
+        "LCSC": "C14663"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "C2",
+      "lib_id": "Device:C",
+      "value": "10u",
+      "footprint": "Capacitor_SMD:C_0805_2012Metric",
+      "fields": {
+        "LCSC": "C15850"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "C3",
+      "lib_id": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {
+        "LCSC": "C14663"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "C4",
+      "lib_id": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {
+        "LCSC": "C14663"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "R1",
+      "lib_id": "Device:R",
+      "value": "1k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C21190"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "R2",
+      "lib_id": "Device:R",
+      "value": "22k1",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C25961"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "R3",
+      "lib_id": "Device:R",
+      "value": "47k5",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C23061"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "TP1",
+      "lib_id": "Connector:TestPoint",
+      "value": "ZYNQ_PS_UART0_TXD",
+      "footprint": "TestPoint:TestPoint_Pad_D1.5mm",
+      "fields": {
+        "BOM": "exclude"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "TP2",
+      "lib_id": "Connector:TestPoint",
+      "value": "ZYNQ_PS_UART0_RXD",
+      "footprint": "TestPoint:TestPoint_Pad_D1.5mm",
+      "fields": {
+        "BOM": "exclude"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    }
+  ],
+  "nets": [
+    {
+      "name": "+3V3",
+      "net_class": "power",
+      "pins": [
+        "U1.5",
+        "U1.6",
+        "U1.7",
+        "C1.1",
+        "C2.1",
+        "C3.1",
+        "C4.1",
+        "R1.1"
+      ]
+    },
+    {
+      "name": "GND",
+      "net_class": "ground",
+      "pins": [
+        "U1.2",
+        "U1.25",
+        "C1.2",
+        "C2.2",
+        "C3.2",
+        "C4.2",
+        "R3.2"
+      ]
+    },
+    {
+      "name": "CP2102N_RST_N",
+      "net_class": "signal",
+      "pins": [
+        "U1.9",
+        "R1.2"
+      ]
+    },
+    {
+      "name": "USB_UART_VBUS",
+      "net_class": "port",
+      "pins": [
+        "R2.1"
+      ]
+    },
+    {
+      "name": "CP2102N_VBUS_SNS",
+      "net_class": "signal",
+      "pins": [
+        "U1.8",
+        "R2.2",
+        "R3.1"
+      ]
+    },
+    {
+      "name": "USB_UART_DP",
+      "net_class": "port",
+      "pins": [
+        "U1.3"
+      ]
+    },
+    {
+      "name": "USB_UART_DM",
+      "net_class": "port",
+      "pins": [
+        "U1.4"
+      ]
+    },
+    {
+      "name": "ZYNQ_PS_UART0_RXD",
+      "net_class": "port",
+      "pins": [
+        "U1.21",
+        "TP2.1"
+      ]
+    },
+    {
+      "name": "ZYNQ_PS_UART0_TXD",
+      "net_class": "port",
+      "pins": [
+        "U1.20",
+        "TP1.1"
+      ]
+    },
+    {
+      "name": "ZYNQ_PS_UART0_CTS_N",
+      "net_class": "port",
+      "pins": [
+        "U1.19"
+      ]
+    },
+    {
+      "name": "ZYNQ_PS_UART0_RTS_N",
+      "net_class": "port",
+      "pins": [
+        "U1.18"
+      ]
+    }
+  ],
+  "nc": [
+    "U1.1",
+    "U1.10",
+    "U1.11",
+    "U1.12",
+    "U1.13",
+    "U1.14",
+    "U1.15",
+    "U1.16",
+    "U1.17",
+    "U1.22",
+    "U1.23",
+    "U1.24"
+  ],
+  "port_types": {
+    "USB_UART_VBUS": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "usb_uart_connector (wave 2)"
+    },
+    "USB_UART_DP": {
+      "kind": "usb_hs_pair",
+      "pair_with": "USB_UART_DM",
+      "impedance": 90,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "usb_uart_connector (wave 2)"
+    },
+    "USB_UART_DM": {
+      "kind": "usb_hs_pair",
+      "pair_with": "USB_UART_DP",
+      "impedance": 90,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "usb_uart_connector (wave 2)"
+    },
+    "ZYNQ_PS_UART0_RXD": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j1_connector (wave 3 MIO function map)"
+    },
+    "ZYNQ_PS_UART0_TXD": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j1_connector (wave 3 MIO function map)"
+    },
+    "ZYNQ_PS_UART0_CTS_N": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j1_connector (wave 3 MIO function map)"
+    },
+    "ZYNQ_PS_UART0_RTS_N": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j1_connector (wave 3 MIO function map)"
+    }
+  },
+  "hints": {},
+  "loads": {
+    "+3V3": [
+      [
+        0.015,
+        "CP2102N active ~14 mA typ + RST 1k pull-up"
+      ]
+    ]
+  },
+  "tp_waivers": {},
+  "decap_waivers": {},
+  "pull_waivers": {},
+  "reset_waivers": {
+    "CP2102N_RST_N": "open-drain RST: 1k pull-up only, internal POR; no RC cap"
+  },
+  "strap_waivers": {},
+  "ep_waivers": {},
+  "thermal_waivers": {},
+  "part_rule_waivers": {}
+}

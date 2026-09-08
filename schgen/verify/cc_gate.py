@@ -15,15 +15,15 @@ def _key_py(x: float, y: float) -> tuple[int, int]:
 
 
 def _key(x: float, y: float) -> tuple[int, int]:
-    if _nat.loaded():
-        got = tuple(_nat.module().geom_key(x, y))
-        if _nat.trace():
-            ref = _key_py(x, y)
-            if got != ref:
-                raise AssertionError(
-                    f"native geom_key DIVERGENCE: cpp={got} python={ref}")
-        return got
-    return _key_py(x, y)
+    if not _nat.loaded():
+        raise RuntimeError("native geom_key required")
+    got = tuple(_nat.module().geom_key(x, y))
+    if _nat.trace():
+        ref = _key_py(x, y)
+        if got != ref:
+            raise AssertionError(
+                f"native geom_key DIVERGENCE: cpp={got} python={ref}")
+    return got
 
 
 @dataclass
@@ -157,25 +157,24 @@ def _seed_geometry_unions_py(nodes: dict, uf: _UF, segs: list[Seg],
 
 def _seed_geometry_unions(nodes: dict, uf: _UF, segs: list[Seg],
                           bonds: list) -> None:
-    if _nat.loaded():
-        node_list = list(nodes.values())
-        raw_nodes = [(n.key[0], n.key[1], n.x, n.y) for n in node_list]
-        raw_segs = [(s.x0, s.y0, s.x1, s.y1) for s in segs]
-        raw_bonds = [((a[0], a[1]), (b[0], b[1])) for a, b in bonds]
-        roots = [tuple(r) for r in _nat.module().seed_geometry_unions(
-            raw_nodes, raw_segs, raw_bonds)]
-        if _nat.trace():
-            probe = _UF()
-            _seed_geometry_unions_py(nodes, probe, segs, bonds)
-            ref = [probe.find(n.key) for n in node_list]
-            if roots != ref:
-                raise AssertionError(
-                    "native seed_geometry_unions DIVERGENCE: "
-                    f"cpp={roots} python={ref}")
-        for n, root in zip(node_list, roots, strict=True):
-            uf.union(n.key, root)
-        return
-    _seed_geometry_unions_py(nodes, uf, segs, bonds)
+    if not _nat.loaded():
+        raise RuntimeError("native seed_geometry_unions required")
+    node_list = list(nodes.values())
+    raw_nodes = [(n.key[0], n.key[1], n.x, n.y) for n in node_list]
+    raw_segs = [(s.x0, s.y0, s.x1, s.y1) for s in segs]
+    raw_bonds = [((a[0], a[1]), (b[0], b[1])) for a, b in bonds]
+    roots = [tuple(r) for r in _nat.module().seed_geometry_unions(
+        raw_nodes, raw_segs, raw_bonds)]
+    if _nat.trace():
+        probe = _UF()
+        _seed_geometry_unions_py(nodes, probe, segs, bonds)
+        ref = [probe.find(n.key) for n in node_list]
+        if roots != ref:
+            raise AssertionError(
+                "native seed_geometry_unions DIVERGENCE: "
+                f"cpp={roots} python={ref}")
+    for n, root in zip(node_list, roots, strict=True):
+        uf.union(n.key, root)
 
 
 def _legal_name_unions(nodes: dict, uf: _UF) -> None:

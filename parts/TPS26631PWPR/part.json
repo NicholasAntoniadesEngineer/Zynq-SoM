@@ -1,0 +1,126 @@
+{
+  "schema": "schgen.part/1",
+  "mpn": "TPS26631PWPR",
+  "safe_name": "TPS26631PWPR",
+  "lcsc": "C2866319",
+  "description": "TPS26631PWPR (HTSSOP-20_L6.5-W4.4-P0.65-LS6.4-BL-EP)",
+  "manufacturer": "TI(德州仪器)",
+  "package": "HTSSOP-20_L6.5-W4.4-P0.65-LS6.4-BL-EP",
+  "jlc_class": "Extended Part",
+  "prefix": "U",
+  "datasheet": "https://www.lcsc.com/datasheet/C2866319.pdf",
+  "product_url": "",
+  "lib_id": "TPS26631PWPR:TPS26631PWPR",
+  "footprint": "TPS26631PWPR:TPS26631PWPR",
+  "models_3d": [
+    "TPS26631PWPR.wrl",
+    "TPS26631PWPR.step"
+  ],
+  "pins": [
+    {
+      "num": "1",
+      "name": "IN",
+      "etype": "passive"
+    },
+    {
+      "num": "2",
+      "name": "IN",
+      "etype": "passive"
+    },
+    {
+      "num": "3",
+      "name": "IN",
+      "etype": "passive"
+    },
+    {
+      "num": "4",
+      "name": "B_GATE",
+      "etype": "passive"
+    },
+    {
+      "num": "5",
+      "name": "DRV",
+      "etype": "passive"
+    },
+    {
+      "num": "6",
+      "name": "IN_SYS",
+      "etype": "passive"
+    },
+    {
+      "num": "7",
+      "name": "UVLO",
+      "etype": "passive"
+    },
+    {
+      "num": "8",
+      "name": "OVP",
+      "etype": "passive"
+    },
+    {
+      "num": "9",
+      "name": "GND",
+      "etype": "passive"
+    },
+    {
+      "num": "10",
+      "name": "dVdT",
+      "etype": "passive"
+    },
+    {
+      "num": "11",
+      "name": "ILIM",
+      "etype": "passive"
+    },
+    {
+      "num": "12",
+      "name": "MODE",
+      "etype": "passive"
+    },
+    {
+      "num": "13",
+      "name": "SHDN#",
+      "etype": "passive"
+    },
+    {
+      "num": "14",
+      "name": "IMON",
+      "etype": "passive"
+    },
+    {
+      "num": "15",
+      "name": "FLT#",
+      "etype": "passive"
+    },
+    {
+      "num": "16",
+      "name": "PGTH",
+      "etype": "passive"
+    },
+    {
+      "num": "17",
+      "name": "PGOOD",
+      "etype": "passive"
+    },
+    {
+      "num": "18",
+      "name": "OUT",
+      "etype": "passive"
+    },
+    {
+      "num": "19",
+      "name": "OUT",
+      "etype": "passive"
+    },
+    {
+      "num": "20",
+      "name": "OUT",
+      "etype": "passive"
+    },
+    {
+      "num": "21",
+      "name": "EP",
+      "etype": "passive"
+    }
+  ]
+}

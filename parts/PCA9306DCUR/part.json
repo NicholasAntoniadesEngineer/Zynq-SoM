@@ -1,0 +1,61 @@
+{
+  "schema": "schgen.part/1",
+  "mpn": "PCA9306DCUR",
+  "safe_name": "PCA9306DCUR",
+  "lcsc": "C33196",
+  "description": "PCA9306DCUR (SSOP-8_L2.0-W2.3-P0.50-LS3.1-BR)",
+  "manufacturer": "TI(德州仪器)",
+  "package": "SSOP-8_L2.0-W2.3-P0.50-LS3.1-BR",
+  "jlc_class": "Extended Part",
+  "prefix": "U",
+  "datasheet": "https://www.lcsc.com/datasheet/C33196.pdf",
+  "product_url": "https://lcsc.com/product-detail/Interface-ICs_TI_PCA9306DCUR_PCA9306DCUR_C33196.html",
+  "lib_id": "PCA9306DCUR:PCA9306DCUR",
+  "footprint": "PCA9306DCUR:PCA9306DCUR",
+  "models_3d": [
+    "PCA9306DCUR.wrl",
+    "PCA9306DCUR.step"
+  ],
+  "pins": [
+    {
+      "num": "1",
+      "name": "GND",
+      "etype": "passive"
+    },
+    {
+      "num": "2",
+      "name": "VREF1",
+      "etype": "passive"
+    },
+    {
+      "num": "3",
+      "name": "SCL1",
+      "etype": "passive"
+    },
+    {
+      "num": "4",
+      "name": "SDA1",
+      "etype": "passive"
+    },
+    {
+      "num": "5",
+      "name": "SDA2",
+      "etype": "passive"
+    },
+    {
+      "num": "6",
+      "name": "SCL2",
+      "etype": "passive"
+    },
+    {
+      "num": "7",
+      "name": "VREF2",
+      "etype": "passive"
+    },
+    {
+      "num": "8",
+      "name": "EN",
+      "etype": "passive"
+    }
+  ]
+}

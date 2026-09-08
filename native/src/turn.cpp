@@ -117,6 +117,17 @@ std::vector<std::pair<double, double>> corners_rot(
     return out;
 }
 
+std::pair<double, double> world_turned_point(double inst_x, double inst_y,
+                                             double lx, double ly, double rot,
+                                             int decimals) {
+    if (decimals < 0) {
+        throw std::runtime_error("world_turned_point: decimals required");
+    }
+    const auto t = turn_point(lx, ly, rot);
+    return {py_round(inst_x + t.first, decimals),
+            py_round(inst_y + t.second, decimals)};
+}
+
 std::pair<double, double> sch_xform(double x, double y, double ax, double ay,
                                     int rot) {
     int deg = rot % 360;

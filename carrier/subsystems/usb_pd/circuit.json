@@ -1,0 +1,201 @@
+{
+  "schema": "schgen.circuit/1",
+  "name": "usb_pd",
+  "title": "USB-PD: FUSB302B Type-C controller",
+  "parts": [
+    {
+      "ref": "U1",
+      "lib_id": "Interface_USB:FUSB302BMPX",
+      "value": "FUSB302BMPX",
+      "footprint": "Package_DFN_QFN:WQFN-14-1EP_2.5x2.5mm_P0.5mm_EP1.45x1.45mm",
+      "fields": {
+        "LCSC": "C132291",
+        "MPN": "FUSB302BMPX",
+        "Datasheet": "https://www.lcsc.com/datasheet/C132291.pdf"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "C1",
+      "lib_id": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {
+        "LCSC": "C14663"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "C2",
+      "lib_id": "Device:C",
+      "value": "10u",
+      "footprint": "Capacitor_SMD:C_0805_2012Metric",
+      "fields": {
+        "LCSC": "C15850"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "C3",
+      "lib_id": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {
+        "LCSC": "C14663"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "C4",
+      "lib_id": "Device:C",
+      "value": "200p",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {
+        "LCSC": "C113796"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "C5",
+      "lib_id": "Device:C",
+      "value": "200p",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {
+        "LCSC": "C113796"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    }
+  ],
+  "nets": [
+    {
+      "name": "+3V3_SC",
+      "net_class": "power",
+      "pins": [
+        "U1.3",
+        "U1.4",
+        "C1.1",
+        "C2.1"
+      ]
+    },
+    {
+      "name": "+VBUS_IN",
+      "net_class": "power",
+      "pins": [
+        "U1.2",
+        "C3.1"
+      ]
+    },
+    {
+      "name": "GND",
+      "net_class": "ground",
+      "pins": [
+        "U1.8",
+        "U1.9",
+        "U1.15",
+        "C1.2",
+        "C2.2",
+        "C3.2",
+        "C4.2",
+        "C5.2"
+      ]
+    },
+    {
+      "name": "STM32_USB_CC1",
+      "net_class": "port",
+      "pins": [
+        "U1.10",
+        "U1.11",
+        "C4.1"
+      ]
+    },
+    {
+      "name": "STM32_USB_CC2",
+      "net_class": "port",
+      "pins": [
+        "U1.1",
+        "U1.14",
+        "C5.1"
+      ]
+    },
+    {
+      "name": "STM32_I2C2_SDA",
+      "net_class": "port",
+      "pins": [
+        "U1.7"
+      ]
+    },
+    {
+      "name": "STM32_I2C2_SCL",
+      "net_class": "port",
+      "pins": [
+        "U1.6"
+      ]
+    },
+    {
+      "name": "SC_INT_N",
+      "net_class": "port",
+      "pins": [
+        "U1.5"
+      ]
+    }
+  ],
+  "nc": [
+    "U1.12",
+    "U1.13"
+  ],
+  "port_types": {
+    "STM32_I2C2_SDA": {
+      "kind": "i2c",
+      "pair_with": null,
+      "impedance": null,
+      "role": "sda",
+      "bus": "STM32_I2C2",
+      "speed_hz": 400000,
+      "level_v": null,
+      "expect": "som_j1_connector (wave 3 STM32 GPIO function map)"
+    },
+    "STM32_I2C2_SCL": {
+      "kind": "i2c",
+      "pair_with": null,
+      "impedance": null,
+      "role": "scl",
+      "bus": "STM32_I2C2",
+      "speed_hz": 400000,
+      "level_v": null,
+      "expect": "som_j1_connector (wave 3 STM32 GPIO function map)"
+    },
+    "SC_INT_N": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j1_connector (wave 3 STM32 GPIO function map)"
+    }
+  },
+  "hints": {},
+  "loads": {
+    "+3V3_SC": [
+      [
+        0.002,
+        "FUSB302B VDD (<1 mA); SC_INT_N pulled on bringup_rails (G2 wire-OR, single 10k)"
+      ]
+    ]
+  },
+  "tp_waivers": {},
+  "decap_waivers": {},
+  "pull_waivers": {},
+  "reset_waivers": {},
+  "strap_waivers": {},
+  "ep_waivers": {},
+  "thermal_waivers": {},
+  "part_rule_waivers": {}
+}

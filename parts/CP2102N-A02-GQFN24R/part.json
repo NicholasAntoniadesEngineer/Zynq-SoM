@@ -1,0 +1,146 @@
+{
+  "schema": "schgen.part/1",
+  "mpn": "CP2102N-A02-GQFN24R",
+  "safe_name": "CP2102N-A02-GQFN24R",
+  "lcsc": "C969151",
+  "description": "CP2102N-A02-GQFN24R (QFN-24_L4.0-W4.0-P0.50-TL-EP2.6)",
+  "manufacturer": "SKYWORKS/SILICON LABS(芯科)",
+  "package": "QFN-24_L4.0-W4.0-P0.50-TL-EP2.6",
+  "jlc_class": "Extended Part",
+  "prefix": "U",
+  "datasheet": "https://www.lcsc.com/datasheet/C969151.pdf",
+  "product_url": "",
+  "lib_id": "CP2102N-A02-GQFN24R:CP2102N-A02-GQFN24R",
+  "footprint": "CP2102N-A02-GQFN24R:CP2102N-A02-GQFN24R",
+  "models_3d": [
+    "CP2102N-A02-GQFN24R.wrl",
+    "CP2102N-A02-GQFN24R.step"
+  ],
+  "pins": [
+    {
+      "num": "1",
+      "name": "RI/CLK",
+      "etype": "passive"
+    },
+    {
+      "num": "2",
+      "name": "GND",
+      "etype": "passive"
+    },
+    {
+      "num": "3",
+      "name": "D+",
+      "etype": "passive"
+    },
+    {
+      "num": "4",
+      "name": "D-",
+      "etype": "passive"
+    },
+    {
+      "num": "5",
+      "name": "VIO",
+      "etype": "passive"
+    },
+    {
+      "num": "6",
+      "name": "VDD",
+      "etype": "passive"
+    },
+    {
+      "num": "7",
+      "name": "VREGIN",
+      "etype": "passive"
+    },
+    {
+      "num": "8",
+      "name": "VBUS",
+      "etype": "passive"
+    },
+    {
+      "num": "9",
+      "name": "RSTb",
+      "etype": "passive"
+    },
+    {
+      "num": "10",
+      "name": "NC",
+      "etype": "passive"
+    },
+    {
+      "num": "11",
+      "name": "GPIO.3/WAKEUP",
+      "etype": "passive"
+    },
+    {
+      "num": "12",
+      "name": "GPIO.2/RS485",
+      "etype": "passive"
+    },
+    {
+      "num": "13",
+      "name": "GPIO.1/RXT",
+      "etype": "passive"
+    },
+    {
+      "num": "14",
+      "name": "GPIO.0/TXT",
+      "etype": "passive"
+    },
+    {
+      "num": "15",
+      "name": "SUSPENDb",
+      "etype": "passive"
+    },
+    {
+      "num": "16",
+      "name": "NC",
+      "etype": "passive"
+    },
+    {
+      "num": "17",
+      "name": "SUSPEND",
+      "etype": "passive"
+    },
+    {
+      "num": "18",
+      "name": "CTS",
+      "etype": "passive"
+    },
+    {
+      "num": "19",
+      "name": "RTS",
+      "etype": "passive"
+    },
+    {
+      "num": "20",
+      "name": "RXD",
+      "etype": "passive"
+    },
+    {
+      "num": "21",
+      "name": "TXD",
+      "etype": "passive"
+    },
+    {
+      "num": "22",
+      "name": "DSR",
+      "etype": "passive"
+    },
+    {
+      "num": "23",
+      "name": "DTR",
+      "etype": "passive"
+    },
+    {
+      "num": "24",
+      "name": "DCD",
+      "etype": "passive"
+    },
+    {
+      "num": "25",
+      "name": "GND",
+      "etype": "passive"
+    }
+  ]
+}

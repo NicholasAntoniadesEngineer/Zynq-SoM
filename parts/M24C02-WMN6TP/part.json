@@ -1,0 +1,61 @@
+{
+  "schema": "schgen.part/1",
+  "mpn": "M24C02-WMN6TP",
+  "safe_name": "M24C02-WMN6TP",
+  "lcsc": "C7562",
+  "description": "EEPROM",
+  "manufacturer": "ST(意法半导体)",
+  "package": "SOIC-8_L4.9-W3.9-P1.27-LS6.0-BL",
+  "jlc_class": "Extended Part",
+  "prefix": "U",
+  "datasheet": "https://www.lcsc.com/datasheet/C7562.pdf",
+  "product_url": "https://lcsc.com/product-detail/EEPROM_STMicroelectronics_M24C02-WMN6TP_M24C02-WMN6TP_C7562.html",
+  "lib_id": "M24C02-WMN6TP:M24C02-WMN6TP",
+  "footprint": "M24C02-WMN6TP:M24C02-WMN6TP",
+  "models_3d": [
+    "M24C02-WMN6TP.wrl",
+    "M24C02-WMN6TP.step"
+  ],
+  "pins": [
+    {
+      "num": "1",
+      "name": "E0",
+      "etype": "passive"
+    },
+    {
+      "num": "2",
+      "name": "E1",
+      "etype": "passive"
+    },
+    {
+      "num": "3",
+      "name": "E2",
+      "etype": "passive"
+    },
+    {
+      "num": "4",
+      "name": "VSS",
+      "etype": "passive"
+    },
+    {
+      "num": "5",
+      "name": "SDA",
+      "etype": "passive"
+    },
+    {
+      "num": "6",
+      "name": "SCL",
+      "etype": "passive"
+    },
+    {
+      "num": "7",
+      "name": "WC#",
+      "etype": "passive"
+    },
+    {
+      "num": "8",
+      "name": "VCC",
+      "etype": "passive"
+    }
+  ]
+}

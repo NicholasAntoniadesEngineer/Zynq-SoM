@@ -1,5 +1,7 @@
 #include "schgen/occupancy.hpp"
 
+#include "schgen/quantize.hpp"
+
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
@@ -8,6 +10,7 @@
 #include <stdexcept>
 #include <string>
 #include <tuple>
+#include <unordered_map>
 #include <unordered_set>
 #include <utility>
 
@@ -154,6 +157,16 @@ bool occ_pair_active(int a_mask, int a_pmask, bool a_main,
     return (a_pmask & b_pmask) == 0;
 }
 
+std::pair<double, double> spatial_bounds(double far_ceil, double max_reach,
+                                         double clear, double place_clear,
+                                         double cable_gap, double need_ceil) {
+    const double reach_floor = py_round(quant_credit(need_ceil), 4);
+    const double reach_bound = std::max(reach_floor, max_reach);
+    const double envelope = std::max({clear, place_clear, 2.0 * reach_bound,
+                                      cable_gap, far_ceil});
+    return {reach_bound, envelope};
+}
+
 double fanout_sep(const Halo& a_reach, const Halo& a_inset,
                   const Halo& b_reach, const Halo& b_inset, char axis) {
     const int ia = axis_ia(axis);
@@ -170,6 +183,68 @@ bool boxes_separated(double ax, double ay, double aw, double ah,
                      double gx, double gy) {
     return ax + aw + gx <= bx || bx + bw + gx <= ax
         || ay + ah + gy <= by || by + bh + gy <= ay;
+}
+
+bool cross_edge_fanout_hold(const std::vector<EdgeFanoutBlock>& blocks,
+                            double clear) {
+    for (std::size_t i = 0; i < blocks.size(); ++i) {
+        const EdgeFanoutBlock& a = blocks[i];
+        if (a.edge != 'N' && a.edge != 'E' && a.edge != 'S' && a.edge != 'W') {
+            throw std::runtime_error(
+                "cross_edge_fanout_hold: edge must be N/E/S/W");
+        }
+        for (std::size_t j = i + 1; j < blocks.size(); ++j) {
+            const EdgeFanoutBlock& b = blocks[j];
+            if (b.edge != 'N' && b.edge != 'E' && b.edge != 'S'
+                && b.edge != 'W') {
+                throw std::runtime_error(
+                    "cross_edge_fanout_hold: edge must be N/E/S/W");
+            }
+            if (a.edge == b.edge) {
+                continue;
+            }
+            const double gap_x = std::max(
+                clear, fanout_sep(a.reach, a.inset, b.reach, b.inset,
+                                  a.x <= b.x ? 'E' : 'W'));
+            const double gap_y = std::max(
+                clear, fanout_sep(a.reach, a.inset, b.reach, b.inset,
+                                  a.y <= b.y ? 'S' : 'N'));
+            if (!boxes_separated(a.x, a.y, a.w, a.h, b.x, b.y, b.w, b.h,
+                                 gap_x, gap_y)) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+bool edge_run_margin_ok(char edge, double x, double y, double w, double h,
+                        double board_w, double board_h, double edge_margin,
+                        double overflow_tol) {
+    if (edge != 'N' && edge != 'E' && edge != 'S' && edge != 'W') {
+        throw std::runtime_error("edge_run_margin_ok: edge must be N/E/S/W");
+    }
+    const bool vertical = (edge == 'W' || edge == 'E');
+    const double near = vertical ? y : x;
+    const double span = vertical ? h : w;
+    const double dim = vertical ? board_h : board_w;
+    return !(near < edge_margin - overflow_tol
+             || near + span > dim - edge_margin + overflow_tol);
+}
+
+bool edge_runs_margin_ok(
+    const std::vector<std::tuple<char, double, double, double, double>>&
+        blocks,
+    double board_w, double board_h, double edge_margin, double overflow_tol) {
+    for (const auto& block : blocks) {
+        if (!edge_run_margin_ok(std::get<0>(block), std::get<1>(block),
+                                std::get<2>(block), std::get<3>(block),
+                                std::get<4>(block), board_w, board_h,
+                                edge_margin, overflow_tol)) {
+            return false;
+        }
+    }
+    return true;
 }
 
 bool pairs_hold(const std::vector<std::vector<Rect>>& groups,
@@ -202,6 +277,90 @@ bool pairs_hold(const std::vector<std::vector<Rect>>& groups,
         }
     }
     return true;
+}
+
+std::vector<Rect> pairs_entity(double x, double y, double w, double h,
+                               const Halo& reach, const Halo& inset, int mask,
+                               const std::vector<Comp>& comps) {
+    std::vector<Rect> entity;
+    entity.reserve(1 + comps.size());
+    Rect main;
+    main.x = x;
+    main.y = y;
+    main.w = w;
+    main.h = h;
+    main.reach = reach;
+    main.inset = inset;
+    main.mask = mask;
+    main.pmask = mask;
+    main.main = true;
+    entity.push_back(main);
+    const Halo zero{};
+    for (const Comp& comp : comps) {
+        Rect child;
+        child.x = py_round(x + comp.dx, 4);
+        child.y = py_round(y + comp.dy, 4);
+        child.w = comp.w;
+        child.h = comp.h;
+        child.reach = zero;
+        child.inset = zero;
+        child.mask = comp.mask;
+        child.pmask = mask;
+        child.main = false;
+        entity.push_back(child);
+    }
+    return entity;
+}
+
+std::vector<std::vector<Rect>> pairs_hold_groups(
+    const std::vector<PairsBlock>& interior,
+    const std::vector<PairsBlock>& edges, double som_x, double som_y,
+    double som_w, double som_h, int som_mask,
+    const std::vector<Comp>& som_comps, double board_w, double board_h,
+    double mh_corner_ko, int punch_mask) {
+    if (mh_corner_ko < 0.0) {
+        throw std::runtime_error("pairs_hold_groups: mh_corner_ko required");
+    }
+    std::vector<std::vector<Rect>> groups;
+    groups.reserve(interior.size() + edges.size() + 5);
+    for (const PairsBlock& block : interior) {
+        groups.push_back(pairs_entity(block.x, block.y, block.w, block.h,
+                                      block.reach, block.inset, block.mask,
+                                      block.comps));
+    }
+    for (const PairsBlock& block : edges) {
+        groups.push_back(pairs_entity(block.x, block.y, block.w, block.h,
+                                      block.reach, block.inset, block.mask,
+                                      block.comps));
+    }
+    const Halo zero{};
+    groups.push_back(pairs_entity(som_x, som_y, som_w, som_h, zero, zero,
+                                  som_mask, som_comps));
+    const std::pair<double, double> corners[4] = {
+        {0.0, 0.0},
+        {board_w - mh_corner_ko, 0.0},
+        {board_w - mh_corner_ko, board_h - mh_corner_ko},
+        {0.0, board_h - mh_corner_ko},
+    };
+    for (const auto& corner : corners) {
+        groups.push_back(pairs_entity(corner.first, corner.second,
+                                      mh_corner_ko, mh_corner_ko, zero, zero,
+                                      punch_mask, {}));
+    }
+    return groups;
+}
+
+bool pairs_hold_from_layout(const std::vector<PairsBlock>& interior,
+                            const std::vector<PairsBlock>& edges, double som_x,
+                            double som_y, double som_w, double som_h,
+                            int som_mask, const std::vector<Comp>& som_comps,
+                            double board_w, double board_h,
+                            double mh_corner_ko, int punch_mask,
+                            double clear) {
+    return pairs_hold(pairs_hold_groups(interior, edges, som_x, som_y, som_w,
+                                        som_h, som_mask, som_comps, board_w,
+                                        board_h, mh_corner_ko, punch_mask),
+                      interior.size(), clear);
 }
 
 bool quads_overlap(const std::vector<std::pair<double, double>>& a,
@@ -247,6 +406,44 @@ bool quads_overlap(const std::vector<std::pair<double, double>>& a,
         }
     }
     return true;
+}
+
+std::vector<int> stagger_overlap_ranks(
+    const std::vector<std::vector<std::pair<double, double>>>& quads) {
+    const int n = static_cast<int>(quads.size());
+    std::vector<int> parent(n);
+    for (int i = 0; i < n; ++i) {
+        parent[i] = i;
+    }
+    auto find = [&](int i) {
+        while (parent[i] != i) {
+            parent[i] = parent[parent[i]];
+            i = parent[i];
+        }
+        return i;
+    };
+    for (int i = 0; i < n; ++i) {
+        for (int j = i + 1; j < n; ++j) {
+            if (quads_overlap(quads[static_cast<std::size_t>(i)],
+                              quads[static_cast<std::size_t>(j)])) {
+                parent[find(i)] = find(j);
+            }
+        }
+    }
+    std::vector<int> ranks(n, 0);
+    std::unordered_map<int, int> seen;
+    for (int i = 0; i < n; ++i) {
+        const int root = find(i);
+        const auto hit = seen.find(root);
+        if (hit == seen.end()) {
+            seen.emplace(root, 0);
+            ranks[static_cast<std::size_t>(i)] = 0;
+        } else {
+            hit->second += 1;
+            ranks[static_cast<std::size_t>(i)] = hit->second;
+        }
+    }
+    return ranks;
 }
 
 Occupancy::Occupancy(double board_w, double board_h, double clear,

@@ -1,0 +1,71 @@
+{
+  "schema": "schgen.part/1",
+  "mpn": "TPD6E001RSER",
+  "safe_name": "TPD6E001RSER",
+  "lcsc": "C1973318",
+  "description": "TPD6E001RSER (UQFN-10_L2.0-W1.5-P0.50-BL)",
+  "manufacturer": "TI(德州仪器)",
+  "package": "UQFN-10_L2.0-W1.5-P0.50-BL",
+  "jlc_class": "Extended Part",
+  "prefix": "D",
+  "datasheet": "https://www.lcsc.com/datasheet/C1973318.pdf",
+  "product_url": "",
+  "lib_id": "TPD6E001RSER:TPD6E001RSER",
+  "footprint": "TPD6E001RSER:TPD6E001RSER",
+  "models_3d": [
+    "TPD6E001RSER.wrl",
+    "TPD6E001RSER.step"
+  ],
+  "pins": [
+    {
+      "num": "1",
+      "name": "IO1",
+      "etype": "passive"
+    },
+    {
+      "num": "2",
+      "name": "IO2",
+      "etype": "passive"
+    },
+    {
+      "num": "3",
+      "name": "IO3",
+      "etype": "passive"
+    },
+    {
+      "num": "4",
+      "name": "NC",
+      "etype": "passive"
+    },
+    {
+      "num": "5",
+      "name": "GND",
+      "etype": "passive"
+    },
+    {
+      "num": "6",
+      "name": "IO4",
+      "etype": "passive"
+    },
+    {
+      "num": "7",
+      "name": "IO5",
+      "etype": "passive"
+    },
+    {
+      "num": "8",
+      "name": "IO6",
+      "etype": "passive"
+    },
+    {
+      "num": "9",
+      "name": "NC",
+      "etype": "passive"
+    },
+    {
+      "num": "10",
+      "name": "VCC",
+      "etype": "passive"
+    }
+  ]
+}

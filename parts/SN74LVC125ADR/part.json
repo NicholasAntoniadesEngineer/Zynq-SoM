@@ -1,0 +1,91 @@
+{
+  "schema": "schgen.part/1",
+  "mpn": "SN74LVC125ADR",
+  "safe_name": "SN74LVC125ADR",
+  "lcsc": "C7661",
+  "description": "SN74LVC125ADR (SOIC-14_L8.7-W3.9-P1.27-LS6.0-BL)",
+  "manufacturer": "TI(德州仪器)",
+  "package": "SOIC-14_L8.7-W3.9-P1.27-LS6.0-BL",
+  "jlc_class": "Extended Part",
+  "prefix": "U",
+  "datasheet": "https://www.lcsc.com/datasheet/C7661.pdf",
+  "product_url": "https://lcsc.com/product-detail/74-Series_TI_SN74LVC125ADRG4_SN74LVC125ADRG4_C7661.html",
+  "lib_id": "SN74LVC125ADR:SN74LVC125ADR",
+  "footprint": "SN74LVC125ADR:SN74LVC125ADR",
+  "models_3d": [
+    "SN74LVC125ADR.wrl",
+    "SN74LVC125ADR.step"
+  ],
+  "pins": [
+    {
+      "num": "1",
+      "name": "1OE#",
+      "etype": "passive"
+    },
+    {
+      "num": "2",
+      "name": "1A",
+      "etype": "passive"
+    },
+    {
+      "num": "3",
+      "name": "1Y",
+      "etype": "passive"
+    },
+    {
+      "num": "4",
+      "name": "2OE#",
+      "etype": "passive"
+    },
+    {
+      "num": "5",
+      "name": "2A",
+      "etype": "passive"
+    },
+    {
+      "num": "6",
+      "name": "2Y",
+      "etype": "passive"
+    },
+    {
+      "num": "7",
+      "name": "GND",
+      "etype": "passive"
+    },
+    {
+      "num": "8",
+      "name": "3Y",
+      "etype": "passive"
+    },
+    {
+      "num": "9",
+      "name": "3A",
+      "etype": "passive"
+    },
+    {
+      "num": "10",
+      "name": "3OE#",
+      "etype": "passive"
+    },
+    {
+      "num": "11",
+      "name": "4Y",
+      "etype": "passive"
+    },
+    {
+      "num": "12",
+      "name": "4A",
+      "etype": "passive"
+    },
+    {
+      "num": "13",
+      "name": "4OE#",
+      "etype": "passive"
+    },
+    {
+      "num": "14",
+      "name": "VCC",
+      "etype": "passive"
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "schema": "schgen.part/1",
+  "mpn": "0603WAF1001T5E",
+  "safe_name": "0603WAF1001T5E",
+  "lcsc": "C21190",
+  "description": "1KΩ (1001) ±1%",
+  "manufacturer": "UNI-ROYAL(厚声)",
+  "package": "R0603",
+  "jlc_class": "Basic Part",
+  "prefix": "R",
+  "datasheet": "https://www.lcsc.com/datasheet/C21190.pdf",
+  "product_url": "https://lcsc.com/product-detail/Chip-Resistor-Surface-Mount-UniOhm_1KR-1001-1_C21190.html",
+  "lib_id": "0603WAF1001T5E:0603WAF1001T5E",
+  "footprint": "0603WAF1001T5E:0603WAF1001T5E",
+  "models_3d": [
+    "0603WAF1001T5E.wrl",
+    "0603WAF1001T5E.step"
+  ],
+  "pins": [
+    {
+      "num": "2",
+      "name": "2",
+      "etype": "passive"
+    },
+    {
+      "num": "1",
+      "name": "1",
+      "etype": "passive"
+    }
+  ]
+}

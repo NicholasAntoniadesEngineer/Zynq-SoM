@@ -109,12 +109,62 @@ double fanout_sep(const Halo& a_reach, const Halo& a_inset,
 Halo halo4(const Halo& reach, const Halo& inset);
 bool occ_pair_active(int a_mask, int a_pmask, bool a_main,
                      int b_mask, int b_pmask, bool b_main);
+std::pair<double, double> spatial_bounds(double far_ceil, double max_reach,
+                                         double clear, double place_clear,
+                                         double cable_gap, double need_ceil);
 double py_round(double value, int digits);
 bool boxes_separated(double ax, double ay, double aw, double ah,
                      double bx, double by, double bw, double bh,
                      double gx, double gy);
 bool pairs_hold(const std::vector<std::vector<Rect>>& groups,
                 std::size_t subject_count, double clear);
+
+struct PairsBlock {
+    double x = 0.0;
+    double y = 0.0;
+    double w = 0.0;
+    double h = 0.0;
+    Halo reach;
+    Halo inset;
+    int mask = 0;
+    std::vector<Comp> comps;
+};
+
+std::vector<Rect> pairs_entity(double x, double y, double w, double h,
+                               const Halo& reach, const Halo& inset, int mask,
+                               const std::vector<Comp>& comps);
+std::vector<std::vector<Rect>> pairs_hold_groups(
+    const std::vector<PairsBlock>& interior,
+    const std::vector<PairsBlock>& edges, double som_x, double som_y,
+    double som_w, double som_h, int som_mask,
+    const std::vector<Comp>& som_comps, double board_w, double board_h,
+    double mh_corner_ko, int punch_mask);
+bool pairs_hold_from_layout(const std::vector<PairsBlock>& interior,
+                            const std::vector<PairsBlock>& edges, double som_x,
+                            double som_y, double som_w, double som_h,
+                            int som_mask, const std::vector<Comp>& som_comps,
+                            double board_w, double board_h,
+                            double mh_corner_ko, int punch_mask, double clear);
+
+struct EdgeFanoutBlock {
+    double x = 0.0;
+    double y = 0.0;
+    double w = 0.0;
+    double h = 0.0;
+    Halo reach;
+    Halo inset;
+    char edge = '\0';
+};
+
+bool cross_edge_fanout_hold(const std::vector<EdgeFanoutBlock>& blocks,
+                            double clear);
+bool edge_run_margin_ok(char edge, double x, double y, double w, double h,
+                        double board_w, double board_h, double edge_margin,
+                        double overflow_tol);
+bool edge_runs_margin_ok(
+    const std::vector<std::tuple<char, double, double, double, double>>&
+        blocks,
+    double board_w, double board_h, double edge_margin, double overflow_tol);
 std::tuple<double, double, double, double> evict_window(
     double ex, double ey, double ew, double eh, const Halo& e_reach,
     const Halo& e_inset, const std::vector<Comp>& e_comps, double w, double h,
@@ -122,5 +172,7 @@ std::tuple<double, double, double, double> evict_window(
     double clear);
 bool quads_overlap(const std::vector<std::pair<double, double>>& a,
                    const std::vector<std::pair<double, double>>& b);
+std::vector<int> stagger_overlap_ranks(
+    const std::vector<std::vector<std::pair<double, double>>>& quads);
 
 }  // namespace schgen

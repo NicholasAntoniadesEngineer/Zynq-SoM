@@ -1,0 +1,51 @@
+{
+  "schema": "schgen.part/1",
+  "mpn": "USBLC6-2SC6",
+  "safe_name": "USBLC6-2SC6",
+  "lcsc": "C7519",
+  "description": "USBLC6-2SC6",
+  "manufacturer": "ST(意法半导体)",
+  "package": "SOT-23-6_L2.9-W1.6-P0.95-LS2.8-BL",
+  "jlc_class": "Extended Part",
+  "prefix": "D",
+  "datasheet": "https://www.lcsc.com/datasheet/C7519.pdf",
+  "product_url": "https://lcsc.com/product-detail/Diodes-ESD_STMicroelectronics_USBLC6-2SC6_USBLC6-2SC6_C7519.html",
+  "lib_id": "USBLC6-2SC6:USBLC6-2SC6",
+  "footprint": "USBLC6-2SC6:USBLC6-2SC6",
+  "models_3d": [
+    "USBLC6-2SC6.wrl",
+    "USBLC6-2SC6.step"
+  ],
+  "pins": [
+    {
+      "num": "1",
+      "name": "1",
+      "etype": "passive"
+    },
+    {
+      "num": "2",
+      "name": "2",
+      "etype": "passive"
+    },
+    {
+      "num": "3",
+      "name": "3",
+      "etype": "passive"
+    },
+    {
+      "num": "4",
+      "name": "4",
+      "etype": "passive"
+    },
+    {
+      "num": "5",
+      "name": "5",
+      "etype": "passive"
+    },
+    {
+      "num": "6",
+      "name": "6",
+      "etype": "passive"
+    }
+  ]
+}

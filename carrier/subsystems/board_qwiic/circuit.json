@@ -1,0 +1,177 @@
+{
+  "schema": "schgen.circuit/1",
+  "name": "board_qwiic",
+  "title": "QWIIC / STEMMA-QT expansion connector + USBLC6 ESD array",
+  "parts": [
+    {
+      "ref": "J1",
+      "lib_id": "ZX-SH1.0-4PWT:ZX-SH1.0-4PWT",
+      "value": "ZX-SH1.0-4PWT",
+      "footprint": "ZX-SH1.0-4PWT:ZX-SH1.0-4PWT",
+      "fields": {
+        "LCSC": "C7430446"
+      },
+      "pin_names": {
+        "6": [
+          "6"
+        ],
+        "5": [
+          "5"
+        ],
+        "4": [
+          "4"
+        ],
+        "3": [
+          "3"
+        ],
+        "2": [
+          "2"
+        ],
+        "1": [
+          "1"
+        ]
+      },
+      "pin_numbers": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6"
+      ]
+    },
+    {
+      "ref": "U1",
+      "lib_id": "USBLC6-2SC6:USBLC6-2SC6",
+      "value": "USBLC6-2SC6",
+      "footprint": "USBLC6-2SC6:USBLC6-2SC6",
+      "fields": {
+        "LCSC": "C7519"
+      },
+      "pin_names": {
+        "1": [
+          "1"
+        ],
+        "2": [
+          "2"
+        ],
+        "3": [
+          "3"
+        ],
+        "4": [
+          "4"
+        ],
+        "5": [
+          "5"
+        ],
+        "6": [
+          "6"
+        ]
+      },
+      "pin_numbers": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6"
+      ]
+    }
+  ],
+  "nets": [
+    {
+      "name": "GND",
+      "net_class": "ground",
+      "pins": [
+        "J1.1",
+        "J1.5",
+        "J1.6",
+        "U1.2"
+      ]
+    },
+    {
+      "name": "+3V3_AUX",
+      "net_class": "power",
+      "pins": [
+        "J1.2"
+      ]
+    },
+    {
+      "name": "QWIIC_SDA",
+      "net_class": "signal",
+      "pins": [
+        "J1.3",
+        "U1.1"
+      ]
+    },
+    {
+      "name": "QWIIC_SCL",
+      "net_class": "signal",
+      "pins": [
+        "J1.4",
+        "U1.3"
+      ]
+    },
+    {
+      "name": "AUX_I2C_SDA",
+      "net_class": "port",
+      "pins": [
+        "U1.6"
+      ]
+    },
+    {
+      "name": "AUX_I2C_SCL",
+      "net_class": "port",
+      "pins": [
+        "U1.4"
+      ]
+    },
+    {
+      "name": "+3V3",
+      "net_class": "power",
+      "pins": [
+        "U1.5"
+      ]
+    }
+  ],
+  "nc": [],
+  "port_types": {
+    "AUX_I2C_SDA": {
+      "kind": "i2c",
+      "pair_with": null,
+      "impedance": null,
+      "role": "sda",
+      "bus": "AUX_I2C",
+      "speed_hz": 400000,
+      "level_v": null,
+      "expect": "board_aux / board_services (the isolated AUX I2C bus)"
+    },
+    "AUX_I2C_SCL": {
+      "kind": "i2c",
+      "pair_with": null,
+      "impedance": null,
+      "role": "scl",
+      "bus": "AUX_I2C",
+      "speed_hz": 400000,
+      "level_v": null,
+      "expect": "board_aux / board_services (the isolated AUX I2C bus)"
+    }
+  },
+  "hints": {},
+  "loads": {
+    "+3V3_AUX": [
+      [
+        0.2,
+        "QWIIC external module budget (200 mA)"
+      ]
+    ]
+  },
+  "tp_waivers": {},
+  "decap_waivers": {},
+  "pull_waivers": {},
+  "reset_waivers": {},
+  "strap_waivers": {},
+  "ep_waivers": {},
+  "thermal_waivers": {},
+  "part_rule_waivers": {}
+}

@@ -1,0 +1,86 @@
+{
+  "schema": "schgen.part/1",
+  "mpn": "TF-01A",
+  "safe_name": "TF-01A",
+  "lcsc": "C91145",
+  "description": "TF-01A (TF-SMD_TF-01A)",
+  "manufacturer": "韩国韩荣",
+  "package": "TF-SMD_TF-01A",
+  "jlc_class": "Extended Part",
+  "prefix": "Card",
+  "datasheet": "https://www.lcsc.com/datasheet/C91145.pdf",
+  "product_url": "https://lcsc.com/product-detail/Card-Sockets_TF-01A_C91145.html",
+  "lib_id": "TF-01A:TF-01A",
+  "footprint": "TF-01A:TF-01A",
+  "models_3d": [
+    "TF-01A.wrl",
+    "TF-01A.step"
+  ],
+  "pins": [
+    {
+      "num": "1",
+      "name": "DAT2(RSV)",
+      "etype": "bidirectional"
+    },
+    {
+      "num": "2",
+      "name": "CDDAT3(CS)",
+      "etype": "bidirectional"
+    },
+    {
+      "num": "3",
+      "name": "CMD(DI)",
+      "etype": "input"
+    },
+    {
+      "num": "4",
+      "name": "VDD",
+      "etype": "input"
+    },
+    {
+      "num": "5",
+      "name": "CLK(SCLK)",
+      "etype": "input"
+    },
+    {
+      "num": "6",
+      "name": "VSS",
+      "etype": "input"
+    },
+    {
+      "num": "7",
+      "name": "DAT0(D0)",
+      "etype": "bidirectional"
+    },
+    {
+      "num": "8",
+      "name": "DAT1(RSV)",
+      "etype": "bidirectional"
+    },
+    {
+      "num": "13",
+      "name": "GND",
+      "etype": "input"
+    },
+    {
+      "num": "10",
+      "name": "GND",
+      "etype": "input"
+    },
+    {
+      "num": "11",
+      "name": "GND",
+      "etype": "input"
+    },
+    {
+      "num": "12",
+      "name": "GND",
+      "etype": "input"
+    },
+    {
+      "num": "9",
+      "name": "CD",
+      "etype": "input"
+    }
+  ]
+}

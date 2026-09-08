@@ -1,0 +1,141 @@
+{
+  "schema": "schgen.part/1",
+  "mpn": "HX5008NLT",
+  "safe_name": "HX5008NLT",
+  "lcsc": "C962544",
+  "description": "HX5008NLT (SOP-24_L13.2-W15.1-P0.99-LS18.7-BL)",
+  "manufacturer": "PULSE(普思)",
+  "package": "SOP-24_L13.2-W15.1-P0.99-LS18.7-BL",
+  "jlc_class": "Extended Part",
+  "prefix": "L",
+  "datasheet": "https://www.lcsc.com/datasheet/C962544.pdf",
+  "product_url": "",
+  "lib_id": "HX5008NLT:HX5008NLT",
+  "footprint": "HX5008NLT:HX5008NLT",
+  "models_3d": [
+    "HX5008NLT.wrl",
+    "HX5008NLT.step"
+  ],
+  "pins": [
+    {
+      "num": "1",
+      "name": "TCT1",
+      "etype": "passive"
+    },
+    {
+      "num": "2",
+      "name": "TD1+",
+      "etype": "passive"
+    },
+    {
+      "num": "3",
+      "name": "TD1-",
+      "etype": "passive"
+    },
+    {
+      "num": "4",
+      "name": "TCT2",
+      "etype": "passive"
+    },
+    {
+      "num": "5",
+      "name": "TD2+",
+      "etype": "passive"
+    },
+    {
+      "num": "6",
+      "name": "TD2-",
+      "etype": "passive"
+    },
+    {
+      "num": "7",
+      "name": "TCT3",
+      "etype": "passive"
+    },
+    {
+      "num": "8",
+      "name": "TD3+",
+      "etype": "passive"
+    },
+    {
+      "num": "9",
+      "name": "TD3-",
+      "etype": "passive"
+    },
+    {
+      "num": "10",
+      "name": "TCT4",
+      "etype": "passive"
+    },
+    {
+      "num": "11",
+      "name": "TD4+",
+      "etype": "passive"
+    },
+    {
+      "num": "12",
+      "name": "TD4-",
+      "etype": "passive"
+    },
+    {
+      "num": "13",
+      "name": "MX4-",
+      "etype": "passive"
+    },
+    {
+      "num": "14",
+      "name": "MX4+",
+      "etype": "passive"
+    },
+    {
+      "num": "15",
+      "name": "MCT4",
+      "etype": "passive"
+    },
+    {
+      "num": "16",
+      "name": "MX3-",
+      "etype": "passive"
+    },
+    {
+      "num": "17",
+      "name": "MX3+",
+      "etype": "passive"
+    },
+    {
+      "num": "18",
+      "name": "MCT3",
+      "etype": "passive"
+    },
+    {
+      "num": "19",
+      "name": "MX2-",
+      "etype": "passive"
+    },
+    {
+      "num": "20",
+      "name": "MX2+",
+      "etype": "passive"
+    },
+    {
+      "num": "21",
+      "name": "MCT2",
+      "etype": "passive"
+    },
+    {
+      "num": "22",
+      "name": "MX1-",
+      "etype": "passive"
+    },
+    {
+      "num": "23",
+      "name": "MX1+",
+      "etype": "passive"
+    },
+    {
+      "num": "24",
+      "name": "MCT1",
+      "etype": "passive"
+    }
+  ]
+}
