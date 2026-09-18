@@ -99,6 +99,27 @@ int main(int argc, char** argv) {
                 "circuit reader changed during rebuild");
         require(read(circuits) == circuit_bytes, "circuit rebuild is not deterministic");
         schgen::close_circuit_catalog();
+        // Corrupt headers must be rejected before a pool pointer or record is
+        // exposed. Restore/open the valid catalog after each failed attempt.
+        auto poke = [](std::vector<uint8_t>& bytes, std::size_t offset, uint32_t value) {
+            for (unsigned shift = 0; shift < 32; shift += 8) {
+                bytes.at(offset++) = static_cast<uint8_t>(value >> shift);
+            }
+        };
+        for (const auto offset : {12u, 60u, 64u, 68u, 72u, 116u, 120u, 136u}) {
+            auto bad = circuit_bytes;
+            poke(bad, offset, 0xFFFFFFFFu);
+            schgen::write_atomic_file(circuits, bad);
+            bool rejected = false;
+            try { schgen::open_circuit_catalog(circuits); }
+            catch (const std::runtime_error&) { rejected = true; }
+            require(rejected, "malformed circuit catalog was accepted");
+            schgen::write_atomic_file(circuits, circuit_bytes);
+            schgen::open_circuit_catalog(circuits);
+            require(schgen::circuit_catalog_count() == circuit_count,
+                    "invalid catalog poisoned subsequent open");
+            schgen::close_circuit_catalog();
+        }
         return 0;
     } catch (const std::exception& exc) {
         std::cerr << exc.what() << '\n';

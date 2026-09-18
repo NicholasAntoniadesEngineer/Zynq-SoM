@@ -396,6 +396,128 @@ std::vector<CircuitWaiverIr> parse_waivers(const JsonNode& node,
     return out;
 }
 
+void validate_circuit_semantics(const CircuitSheetIr& sheet) {
+    std::map<std::string, std::set<std::string>> pins_by_ref;
+    for (const auto& part : sheet.parts) {
+        pins_by_ref.emplace(part.ref, std::set<std::string>(
+            part.pin_numbers.begin(), part.pin_numbers.end()));
+    }
+    auto check_pin = [&](const CircuitPinRefIr& pin) {
+        const std::string spec = pin.ref + "." + pin.pin;
+        const auto part = pins_by_ref.find(pin.ref);
+        if (part == pins_by_ref.end()) {
+            throw std::runtime_error(spec + ": unknown part '" + pin.ref + "'");
+        }
+        // Empty metadata is used by inline library symbols. Their pin validity
+        // still requires the symbol-library gate, not a global catalog lookup.
+        if (!part->second.empty() && part->second.count(pin.pin) == 0) {
+            throw std::runtime_error(spec + ": pin does not exist on " + pin.ref);
+        }
+    };
+    for (const auto& part : sheet.parts) {
+        for (const auto& alias : part.pin_names) {
+            if (alias.numbers.empty()) {
+                throw std::runtime_error(part.ref + ": pin alias '" + alias.name
+                                         + "' must target at least one pin");
+            }
+            for (const auto& number : alias.numbers) {
+                // Unlike an inline symbol with no metadata, an explicit alias
+                // must resolve against the pin table carried by this IR.
+                if (pins_by_ref.at(part.ref).count(number) == 0) {
+                    throw std::runtime_error(part.ref + ": pin alias '" + alias.name
+                        + "' targets undeclared pin '" + number + "'");
+                }
+            }
+        }
+    }
+    std::map<std::pair<std::string, std::string>, std::string> owners;
+    std::map<std::string, std::string> net_classes;
+    for (const auto& net : sheet.nets) {
+        net_classes.emplace(net.name, net.net_class);
+        for (const auto& pin : net.pins) {
+            check_pin(pin);
+            const auto inserted = owners.emplace(std::make_pair(pin.ref, pin.pin), net.name);
+            if (!inserted.second && inserted.first->second != net.name) {
+                throw std::runtime_error(pin.ref + "." + pin.pin + " already on net '"
+                    + inserted.first->second + "', cannot also join '" + net.name + "'");
+            }
+        }
+    }
+    for (const auto& pin : sheet.nc) {
+        check_pin(pin);
+        if (owners.count({pin.ref, pin.pin}) != 0) {
+            throw std::runtime_error(pin.ref + "." + pin.pin + " carries a net, cannot be NC");
+        }
+    }
+    const std::set<std::string> kinds = {
+        "single", "diff_pair", "usb_hs_pair", "tmds_pair", "i2c", "sd_bus"};
+    auto is_port = [&](const std::string& name) {
+        const auto found = net_classes.find(name);
+        return found != net_classes.end() && found->second == "port";
+    };
+    std::map<std::string, const CircuitPortIr*> port_types;
+    for (const auto& port : sheet.port_types) {
+        port_types.emplace(port.net, &port);
+        const std::string where = "port_type('" + port.net + "'): ";
+        if (kinds.count(port.kind) == 0) {
+            throw std::runtime_error(where + "unknown kind '" + port.kind + "'");
+        }
+        if (!is_port(port.net)) {
+            throw std::runtime_error(where + "not a declared PORT net");
+        }
+        const bool pair = port.kind == "diff_pair" || port.kind == "usb_hs_pair"
+                          || port.kind == "tmds_pair";
+        if (pair) {
+            if (!port.has_pair_with) {
+                throw std::runtime_error(where + port.kind + " needs pair_with=");
+            }
+            if (!is_port(port.pair_with)) {
+                throw std::runtime_error(where + "pair_with '" + port.pair_with
+                                         + "' is not a declared PORT net");
+            }
+            if (port.pair_with == port.net) {
+                throw std::runtime_error(where + "cannot pair with itself");
+            }
+            if (!port.has_impedance) {
+                throw std::runtime_error(where + "expanded pair needs impedance=");
+            }
+        } else if (port.has_pair_with) {
+            throw std::runtime_error(where + "pair_with only valid for pair kinds");
+        }
+        if (port.kind == "i2c") {
+            if (!port.has_role || (port.role != "scl" && port.role != "sda")) {
+                throw std::runtime_error(where + "i2c needs role='scl' or 'sda'");
+            }
+        } else if (port.has_role) {
+            throw std::runtime_error(where + "role only valid for i2c");
+        }
+        if (port.kind == "sd_bus" && !port.has_level_v) {
+            throw std::runtime_error(where + "sd_bus needs level_v=");
+        }
+    }
+    // Authoring expands each differential pair into two reciprocal records.
+    // Only the shared attributes are symmetric: speed/level may be present on
+    // the originally declared side alone, per Circuit.port_type()'s contract.
+    for (const auto& port : sheet.port_types) {
+        if (!port.has_pair_with) continue;
+        const auto found = port_types.find(port.pair_with);
+        if (found == port_types.end()) {
+            throw std::runtime_error("port_type('" + port.net
+                + "'): expanded pair needs reciprocal port_type for '"
+                + port.pair_with + "'");
+        }
+        const auto& other = *found->second;
+        if (!other.has_pair_with || other.pair_with != port.net
+            || other.kind != port.kind || other.impedance != port.impedance
+            || other.has_bus != port.has_bus || other.bus != port.bus
+            || other.has_expect != port.has_expect || other.expect != port.expect) {
+            throw std::runtime_error("port_type('" + port.net
+                + "'): conflicting reciprocal pair metadata for '"
+                + port.pair_with + "'");
+        }
+    }
+}
+
 CircuitSheetIr parse_circuit_json(const fs::path& path) {
     const JsonNode root = parse_json_file(path.string());
     static const std::set<std::string> allowed = {
@@ -491,6 +613,7 @@ CircuitSheetIr parse_circuit_json(const fs::path& path) {
     sheet.hints = parse_hints(root, "circuit");
     sheet.loads = parse_loads(root, "circuit");
     sheet.waivers = parse_waivers(root, "circuit");
+    validate_circuit_semantics(sheet);
     return sheet;
 }
 
@@ -506,6 +629,60 @@ void validate_header(const uint8_t* data, std::size_t size) {
     }
     if (read_u32(data, 8, size) != kHeaderBytes) {
         throw std::runtime_error("circuit: header size mismatch");
+    }
+    const uint32_t widths[] = {kCircuitRecBytes, kPartRecBytes, kFieldRecBytes,
+        kPinNameRecBytes, kPinNumRecBytes, kNetRecBytes, kNetPinRecBytes,
+        kNcRecBytes, kPortRecBytes, kHintRecBytes, kLoadRecBytes,
+        kWaiverRecBytes, kHashSlotBytes};
+    uint32_t counts[13], offsets[13];
+    uint64_t end = kHeaderBytes;
+    for (std::size_t table = 0; table < 13; ++table) {
+        counts[table] = read_u32(data, 12 + table * 4, size);
+        offsets[table] = read_u32(data, 68 + table * 4, size);
+        if (offsets[table] != end) {
+            throw std::runtime_error("circuit: inconsistent table layout");
+        }
+        end += static_cast<uint64_t>(counts[table]) * widths[table];
+        if (end > size) throw std::runtime_error("circuit: table overruns file");
+    }
+    const uint32_t slots = counts[12];
+    if (slots == 0 || (slots & (slots - 1)) != 0) {
+        throw std::runtime_error("circuit: hash_slots must be a power of two");
+    }
+    const auto pool_off = read_u32(data, 120, size);
+    const auto pool_bytes = read_u32(data, 64, size);
+    if (pool_off != end || pool_bytes == 0 || end + pool_bytes > size) {
+        throw std::runtime_error("circuit: invalid string pool span");
+    }
+    auto range = [&](std::size_t record, std::size_t field, std::size_t table) {
+        const uint32_t first = read_u32(data, record + field, size);
+        const uint32_t count = read_u32(data, record + field + 4, size);
+        if (first > counts[table] || count > counts[table] - first) {
+            throw std::runtime_error("circuit: record range exceeds table");
+        }
+    };
+    const std::size_t children[] = {1, 5, 7, 8, 9, 10, 11};
+    for (std::size_t i = 0; i < counts[0]; ++i) {
+        for (std::size_t j = 0; j < 7; ++j) {
+            range(offsets[0] + i * kCircuitRecBytes, 8 + j * 8, children[j]);
+        }
+    }
+    for (std::size_t i = 0; i < counts[1]; ++i) {
+        for (std::size_t j = 0; j < 3; ++j) {
+            range(offsets[1] + i * kPartRecBytes, 16 + j * 8, 2 + j);
+        }
+    }
+    for (std::size_t i = 0; i < counts[5]; ++i) {
+        range(offsets[5] + i * kNetRecBytes, 8, 6);
+    }
+    for (std::size_t i = 0; i < slots; ++i) {
+        const auto record = offsets[12] + i * kHashSlotBytes;
+        const auto name = read_u32(data, record, size);
+        if (name == kEmptySlot) continue;
+        pool_string(data, pool_off, pool_bytes, name);
+        if (read_u32(data, record + 4, size) >= counts[0]) {
+            throw std::runtime_error("circuit: hash index exceeds circuit table");
+        }
     }
 }
 

@@ -946,5 +946,88 @@ class Circuit:
         for attr in WAIVER_IR_ATTRS:
             setattr(circuit, attr, _require_str_dict(
                 payload, attr, f"circuit {name!r}"))
+
+        # Expanded IR bypasses net()/nc(); enforce their ownership invariants
+        # without loading a symbol library or the process-global part catalog.
+        def check_pin(pr: PinRef) -> None:
+            part = circuit.parts.get(pr.ref)
+            if part is None:
+                raise CircuitError(f"{pr}: unknown part {pr.ref!r}")
+            if part.pin_numbers and pr.pin not in part.pin_numbers:
+                raise CircuitError(f"{pr}: pin does not exist on {pr.ref}")
+
+        for part in circuit.parts.values():
+            for alias, nums in part.pin_names.items():
+                if not nums:
+                    raise CircuitError(
+                        f"{part.ref}: pin alias {alias!r} must target at least one pin")
+                for num in nums:
+                    # Explicit aliases need a local authoritative pin table;
+                    # inline symbols without any metadata remain supported.
+                    if num not in part.pin_numbers:
+                        raise CircuitError(
+                            f"{part.ref}: pin alias {alias!r} "
+                            f"targets undeclared pin {num!r}")
+        owners: dict[PinRef, str] = {}
+        for net in circuit.nets.values():
+            for pr in net.pins:
+                check_pin(pr)
+                previous = owners.get(pr)
+                if previous is not None and previous != net.name:
+                    raise CircuitError(
+                        f"{pr} already on net {previous!r}, "
+                        f"cannot also join {net.name!r}")
+                owners[pr] = net.name
+        for pr in circuit.nc_pins:
+            check_pin(pr)
+            if pr in owners:
+                raise CircuitError(f"{pr} carries a net, cannot be NC")
+        for net_name, pt in circuit.port_types.items():
+            net = circuit.nets.get(net_name)
+            if net is None or net.net_class != NetClass.PORT:
+                raise CircuitError(
+                    f"port_type({net_name!r}): not a declared PORT net")
+            if pt.kind in PAIR_KINDS:
+                if pt.pair_with is None:
+                    raise CircuitError(
+                        f"port_type({net_name!r}): {pt.kind} needs pair_with=")
+                comp = circuit.nets.get(pt.pair_with)
+                if comp is None or comp.net_class != NetClass.PORT:
+                    raise CircuitError(
+                        f"port_type({net_name!r}): pair_with {pt.pair_with!r} "
+                        "is not a declared PORT net")
+                if pt.pair_with == net_name:
+                    raise CircuitError(
+                        f"port_type({net_name!r}): cannot pair with itself")
+                if pt.impedance is None:
+                    raise CircuitError(
+                        f"port_type({net_name!r}): expanded pair needs impedance=")
+            elif pt.pair_with is not None:
+                raise CircuitError(
+                    f"port_type({net_name!r}): pair_with only valid for pair kinds")
+            if pt.kind == "i2c":
+                if pt.role not in ("scl", "sda"):
+                    raise CircuitError(
+                        f"port_type({net_name!r}): i2c needs role='scl' or 'sda'")
+            elif pt.role is not None:
+                raise CircuitError(f"port_type({net_name!r}): role only valid for i2c")
+            if pt.kind == "sd_bus" and pt.level_v is None:
+                raise CircuitError(f"port_type({net_name!r}): sd_bus needs level_v=")
+        # port_type() expands pairs in both directions. Do not compare entire
+        # PortType objects: speed_hz/level_v can legitimately be one-sided.
+        for net_name, pt in circuit.port_types.items():
+            if pt.kind not in PAIR_KINDS:
+                continue
+            comp = circuit.port_types.get(pt.pair_with)
+            if comp is None:
+                raise CircuitError(
+                    f"port_type({net_name!r}): expanded pair needs reciprocal "
+                    f"port_type for {pt.pair_with!r}")
+            if (comp.pair_with != net_name or comp.kind != pt.kind
+                    or comp.impedance != pt.impedance or comp.bus != pt.bus
+                    or comp.expect != pt.expect):
+                raise CircuitError(
+                    f"port_type({net_name!r}): conflicting reciprocal pair "
+                    f"metadata for {pt.pair_with!r}")
         circuit._restore_ref_counters()
         return circuit

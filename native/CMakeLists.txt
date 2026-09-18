@@ -76,6 +76,12 @@ add_custom_target(schgen_catalogs ALL DEPENDS
 
 include(CTest)
 if(BUILD_TESTING)
+    add_executable(schgen_circuit_semantic_contracts tests/circuit_semantic_contracts.cpp)
+    target_link_libraries(schgen_circuit_semantic_contracts PRIVATE schgen_core)
+    target_compile_options(schgen_circuit_semantic_contracts PRIVATE
+        -Wall -Wextra -Wpedantic -Werror)
+    add_test(NAME native_circuit_semantic_contracts COMMAND schgen_circuit_semantic_contracts
+        "${CMAKE_CURRENT_SOURCE_DIR}/../carrier/subsystems")
     add_executable(schgen_xdc_contracts tests/xdc_contracts.cpp)
     target_link_libraries(schgen_xdc_contracts PRIVATE schgen_core)
     target_compile_options(schgen_xdc_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror)
