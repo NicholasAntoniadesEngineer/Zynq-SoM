@@ -15,21 +15,23 @@ _MOD: ModuleType | None = None
 _LOAD_ERROR: str = ""
 
 
-def _load() -> ModuleType | None:
+def _load() -> ModuleType:
     global _MOD, _LOAD_ERROR
     if _REQUIRE == "0":
         raise RuntimeError(
-            "SCHGEN_NATIVE=0 is removed — the engine is C++ only. "
+            "SCHGEN_NATIVE=0 is removed — native kernels are required. "
             "Build scripts/build_native.sh")
-    if _MOD is not None or _LOAD_ERROR:
+    if _MOD is not None:
         return _MOD
+    if _LOAD_ERROR:
+        raise RuntimeError(_LOAD_ERROR)
     try:
         from schgen import _geom as mod
     except ImportError as exc:
-        _LOAD_ERROR = str(exc)
-        raise RuntimeError(
+        _LOAD_ERROR = (
             f"schgen._geom failed to import: {exc}. Build it with "
-            f"scripts/build_native.sh") from exc
+            f"scripts/build_native.sh")
+        raise RuntimeError(_LOAD_ERROR) from exc
     _MOD = mod
     return _MOD
 
@@ -39,12 +41,7 @@ def loaded() -> bool:
 
 
 def module() -> ModuleType:
-    mod = _load()
-    if mod is None:
-        raise RuntimeError(
-            "schgen._geom is not loaded — build scripts/build_native.sh "
-            "or unset SCHGEN_NATIVE=1")
-    return mod
+    return _load()
 
 
 def trace() -> bool:
@@ -62,8 +59,8 @@ def catalog_part(mpn: str) -> dict:
         if not _CATALOG_OPEN:
             if not _CATALOG_PATH.is_file():
                 raise RuntimeError(
-                    f"native/catalog.bin is missing — build it with "
-                    f"scripts/build_native.sh")
+                    "native/catalog.bin is missing — build it with "
+                    "scripts/build_native.sh")
             if not geom.catalog_open(str(_CATALOG_PATH)):
                 raise RuntimeError(
                     f"catalog_open returned false for {_CATALOG_PATH}")
@@ -84,8 +81,8 @@ def circuit_sheet(name: str) -> dict:
         if not _CIRCUITS_OPEN:
             if not _CIRCUITS_PATH.is_file():
                 raise RuntimeError(
-                    f"native/circuits.bin is missing — build it with "
-                    f"scripts/build_native.sh")
+                    "native/circuits.bin is missing — build it with "
+                    "scripts/build_native.sh")
             if not geom.circuit_open(str(_CIRCUITS_PATH)):
                 raise RuntimeError(
                     f"circuit_open returned false for {_CIRCUITS_PATH}")
