@@ -125,6 +125,29 @@ def test_mirrored_mod_cache_and_location(tmp_path):
     assert pad_names(p1) == pad_names(_src("AP2112K-3.3TRG1"))
 
 
+def test_mirror_failure_is_transactional():
+    doc = sexpr.loads('(footprint "bad" (fp_line (start 1 2) (end 3 4))'
+                      ' (fp_text_box "unsupported"))')
+    original = sexpr.dumps(doc)
+    with pytest.raises(MirrorUnsupported):
+        mirror_fp_doc(doc)
+    assert sexpr.dumps(doc) == original
+
+
+def test_mirror_source_edits_are_not_cached_forever(tmp_path, monkeypatch):
+    from schgen.generate.pcb import mirror
+    monkeypatch.setattr(mirror, "MIRROR_DIR", tmp_path / ".mirrored_fp")
+    source = tmp_path / "mutable.kicad_mod"
+    source.write_text('(footprint "x" (pad "1" smd circle (at 1 2)'
+                      ' (size 1 1) (layers "F.Cu")))')
+    output = mirror.mirrored_mod(source)
+    assert '(at 1 -2)' in output.read_text()
+    source.write_text('(footprint "x" (pad "1" smd circle (at 1 7)'
+                      ' (size 1 1) (layers "F.Cu")))')
+    assert mirror.mirrored_mod(source) == output
+    assert '(at 1 -7)' in output.read_text()
+
+
 def _emitted_pad_globals(node: list) -> dict[str, list[tuple[float, float]]]:
     at = next(x for x in node
               if isinstance(x, list) and x and x[0] == Sym("at"))

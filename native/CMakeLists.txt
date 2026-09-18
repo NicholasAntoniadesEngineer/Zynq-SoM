@@ -20,7 +20,7 @@ add_library(schgen_core STATIC
     src/schematic.cpp src/schematic_route.cpp src/netlist_gate.cpp src/design_rules.cpp
     src/schematic_place_core.cpp src/schematic_place_fanout.cpp
     src/schematic_place_templates.cpp src/schematic_place_chain.cpp src/schematic_place_pages.cpp
-    src/selftest.cpp src/board_schematic.cpp)
+    src/selftest.cpp src/board_schematic.cpp src/mirror.cpp)
 find_package(Threads REQUIRED)
 find_package(LibXml2 REQUIRED)
 target_link_libraries(schgen_core PUBLIC LibXml2::LibXml2 Threads::Threads)
@@ -88,6 +88,11 @@ add_custom_target(schgen_catalogs ALL DEPENDS
 
 include(CTest)
 if(BUILD_TESTING)
+    add_executable(schgen_mirror_contracts tests/mirror_contracts.cpp)
+    target_link_libraries(schgen_mirror_contracts PRIVATE schgen_core)
+    target_compile_options(schgen_mirror_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror)
+    add_test(NAME native_mirror_contracts COMMAND schgen_mirror_contracts
+        "${CMAKE_CURRENT_SOURCE_DIR}/tests/data/mirror")
     add_executable(schgen_board_schematic_contracts tests/board_schematic_contracts.cpp)
     target_link_libraries(schgen_board_schematic_contracts PRIVATE schgen_core)
     target_compile_options(schgen_board_schematic_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror -ffp-contract=off)

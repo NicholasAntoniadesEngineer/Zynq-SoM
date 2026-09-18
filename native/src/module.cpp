@@ -20,6 +20,7 @@
 #include "schgen/cc.hpp"
 #include "schgen/embed_fp.hpp"
 #include "schgen/footprint_library.hpp"
+#include "schgen/mirror.hpp"
 #include "schgen/emit.hpp"
 #include "schgen/legalize.hpp"
 #include "schgen/occupancy.hpp"
@@ -1679,6 +1680,15 @@ NB_MODULE(_geom, m) {
               schgen::flip_to_bottom(tree);
               return sexpr_to_tagged(tree);
           });
+    nb::exception<schgen::MirrorUnsupported>(m, "MirrorUnsupported", PyExc_AssertionError);
+    m.def("mirror_footprint", [](nb::handle node) {
+        auto tree = sexpr_from_py(node);
+        { nb::gil_scoped_release release; schgen::mirror_footprint(tree); }
+        return sexpr_to_tagged(tree);
+    });
+    m.def("write_mirrored_footprint", [](const std::string& source, const std::string& directory) {
+        return schgen::write_mirrored_footprint(source, directory).string();
+    }, nb::call_guard<nb::gil_scoped_release>());
     m.def("restamp_uuid",
           [](nb::handle node, const std::string& uuid) {
               auto tree = sexpr_from_py(node);
