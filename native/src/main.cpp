@@ -22,6 +22,7 @@ int main(int argc, char** argv) {
                          "  project-check [--repo ROOT] [--project NAME] [SUBSYSTEM ...]\n"
                          "  circuit-check [--repo ROOT] [--project NAME] [SUBSYSTEM ...]\n"
                          "  board-schematic [--project NAME] [SUBSYSTEM ...] -o DIRECTORY\n"
+                         "  constraints [--project NAME] [SUBSYSTEM ...] [-o DIRECTORY]\n"
                          "  design-rules|testpoints [--project NAME] [SUBSYSTEM ...] [-o REPORT]\n"
                          "  som-interface [--project NAME] [--som FILE] [--refs J1,J2,J3] [-o FILE]\n"
                          "  xdc|vivado [--project NAME] [--som FILE] [--contract FILE] [-o FILE]\n"

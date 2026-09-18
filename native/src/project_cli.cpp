@@ -2,6 +2,7 @@
 
 #include "schgen/bom.hpp"
 #include "schgen/board_schematic.hpp"
+#include "schgen/constraints.hpp"
 #include "schgen/devicetree.hpp"
 #include "schgen/design_rules.hpp"
 #include "schgen/link.hpp"
@@ -30,7 +31,7 @@ struct Options {
     std::vector<std::string> subsystems;
     bool allow_missing = false, qualified_refs = false;
 };
-const std::set<std::string> commands{"project-check", "circuit-check", "som-interface", "xdc", "vivado", "fpga", "bom", "link", "devicetree", "design-rules", "testpoints", "board-schematic"};
+const std::set<std::string> commands{"project-check", "circuit-check", "som-interface", "xdc", "vivado", "fpga", "bom", "link", "devicetree", "design-rules", "testpoints", "board-schematic", "constraints"};
 Options parse(int argc, char** argv) {
     Options out;
     std::set<std::string> seen;
@@ -76,7 +77,7 @@ Options parse(int argc, char** argv) {
         allowed.insert("--contract");
     } else if (out.command == "board-schematic") {
         allowed.insert("--kicad-cli");
-    } else if (!check_only && out.command != "design-rules" && out.command != "testpoints") {
+    } else if (!check_only && out.command != "design-rules" && out.command != "testpoints" && out.command != "constraints") {
         allowed.insert("--som"); allowed.insert("--refs"); allowed.insert("--kicad-cli");
         if (out.command != "som-interface") allowed.insert("--contract");
         if (out.command == "vivado" || out.command == "fpga") allowed.insert("--xdc");
@@ -140,6 +141,12 @@ std::optional<int> run_project_command(int argc, char** argv) {
     std::vector<CircuitSheetIr> sheets;
     sheets.reserve(circuits.size());
     for (const auto& circuit : circuits) sheets.push_back(circuit.circuit);
+    if (options.command == "constraints") {
+        const auto directory = options.output.empty() ? paths.project_root / "manufacturing" : options.output;
+        const auto result = write_layout_constraints(circuits, paths.project_root / "research/si_spec.json", directory);
+        std::cout << "LAYOUT CONSTRAINTS: " << result.port_count << " ports -> " << directory.string() << '\n';
+        return 0;
+    }
     if (options.command == "board-schematic") {
         // A schematic-stage command, not an alias for the complete board
         // pipeline: PCB, manufacturing and model gates remain separate.
