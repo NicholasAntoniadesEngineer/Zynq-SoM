@@ -1,4 +1,5 @@
 #include "schgen/circuit.hpp"
+#include "schgen/atomic_file.hpp"
 #include "schgen/json.hpp"
 
 #include <algorithm>
@@ -787,19 +788,7 @@ bool compile_circuit_catalog(const std::string& circuits_dir,
         }
         poke_u32(buf, 64, static_cast<uint32_t>(pool.bytes.size()));
         buf.insert(buf.end(), pool.bytes.begin(), pool.bytes.end());
-        const fs::path out_path(catalog_path);
-        if (!out_path.parent_path().empty()) {
-            fs::create_directories(out_path.parent_path());
-        }
-        std::ofstream out(out_path, std::ios::binary | std::ios::trunc);
-        if (!out) {
-            throw std::runtime_error("circuit: cannot write " + catalog_path);
-        }
-        out.write(reinterpret_cast<const char*>(buf.data()),
-                  static_cast<std::streamsize>(buf.size()));
-        if (!out) {
-            throw std::runtime_error("circuit: write failed " + catalog_path);
-        }
+        write_atomic_file(catalog_path, buf);
         return true;
     } catch (const std::exception& exc) {
         throw std::runtime_error(std::string("circuit compile failed: ") + exc.what());

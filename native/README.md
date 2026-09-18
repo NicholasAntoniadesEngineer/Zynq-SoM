@@ -26,6 +26,9 @@ once per build directory. Preserve the per-source floating-point settings:
 these are part of the deterministic-output contract.
 
 Catalogs depend on their JSON inputs and regenerate when those inputs change.
+Compilers publish complete catalogs by atomic replacement, so existing mapped
+readers retain their snapshot during a rebuild. Close and reopen a catalog to
+read its new version. Failed publication leaves the previous file untouched.
 Build directories share the in-tree binary and catalog outputs, so build them
 sequentially.
 

@@ -13,7 +13,7 @@ add_library(schgen_core STATIC
     src/legalize.cpp src/quantize.cpp src/turn.cpp src/pack.cpp
     src/pack_anchor.cpp src/place_search.cpp src/cc.cpp src/embed_fp.cpp
     src/pack_edges.cpp src/pcb_scan.cpp src/pack_refine.cpp src/place_geom.cpp
-    src/catalog.cpp src/json.cpp src/circuit.cpp src/reorder.cpp)
+    src/catalog.cpp src/json.cpp src/circuit.cpp src/reorder.cpp src/atomic_file.cpp)
 target_include_directories(schgen_core PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
 target_compile_options(schgen_core PRIVATE -Wall -Wextra -Wpedantic -Werror)
 set_source_files_properties(src/turn.cpp src/pack_anchor.cpp
@@ -75,6 +75,11 @@ add_custom_target(schgen_catalogs ALL DEPENDS
 
 include(CTest)
 if(BUILD_TESTING)
+    add_executable(schgen_catalog_lifecycle tests/catalog_lifecycle.cpp)
+    target_link_libraries(schgen_catalog_lifecycle PRIVATE schgen_core)
+    target_compile_options(schgen_catalog_lifecycle PRIVATE -Wall -Wextra -Wpedantic -Werror)
+    add_test(NAME native_catalog_lifecycle COMMAND schgen_catalog_lifecycle
+        "${CMAKE_CURRENT_SOURCE_DIR}/..")
     add_executable(schgen_kernel_contracts tests/kernel_contracts.cpp)
     target_link_libraries(schgen_kernel_contracts PRIVATE schgen_core)
     target_compile_options(schgen_kernel_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror)
