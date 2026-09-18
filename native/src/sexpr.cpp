@@ -1,6 +1,7 @@
 #include "schgen/sexpr.hpp"
 
 #include <cmath>
+#include <cerrno>
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
@@ -9,6 +10,11 @@
 
 namespace schgen {
 namespace {
+
+// INT64_MAX rounds up to 2^63 as a double: the upper bound MUST be exclusive.
+bool supported_number(double value) {
+    return std::isfinite(value) && value >= -0x1p63 && value < 0x1p63;
+}
 
 struct Parser {
     std::string_view text;
@@ -65,14 +71,27 @@ struct Parser {
             ++i;
         }
         const std::string tok(text.substr(j0, i - j0));
+        if (tok.empty()) {
+            throw std::runtime_error("sexpr: unexpected delimiter");
+        }
         char* end = nullptr;
+        errno = 0;
         const long long as_int = std::strtoll(tok.c_str(), &end, 10);
         if (end == tok.c_str() + tok.size()) {
-            return Sexpr{static_cast<double>(as_int)};
+            const double value = static_cast<double>(as_int);
+            if (errno == ERANGE || !supported_number(value)
+                || static_cast<int64_t>(value) != as_int) {
+                throw std::runtime_error("sexpr: integer outside exact numeric domain");
+            }
+            return Sexpr{value};
         }
         end = nullptr;
+        errno = 0;
         const double as_float = std::strtod(tok.c_str(), &end);
         if (end == tok.c_str() + tok.size()) {
+            if (errno == ERANGE || !supported_number(as_float)) {
+                throw std::runtime_error("sexpr: float outside supported numeric domain");
+            }
             return Sexpr{as_float};
         }
         return Sexpr{Sexpr::Sym{tok}};
@@ -82,13 +101,17 @@ struct Parser {
 }  // namespace
 
 std::string sexpr_fmt_num(double value) {
-    if (std::isfinite(value) && value == std::floor(value)
-        && value >= static_cast<double>(INT64_MIN)
-        && value <= static_cast<double>(INT64_MAX)) {
+    if (!supported_number(value)) {
+        throw std::runtime_error("sexpr: number outside supported numeric domain");
+    }
+    if (value == std::floor(value)) {
         return std::to_string(static_cast<int64_t>(value));
     }
     char buf[64];
-    std::snprintf(buf, sizeof(buf), "%.6f", value);
+    const int count = std::snprintf(buf, sizeof(buf), "%.6f", value);
+    if (count < 0 || static_cast<std::size_t>(count) >= sizeof(buf)) {
+        throw std::runtime_error("sexpr: numeric formatting failed or truncated");
+    }
     std::string s(buf);
     while (!s.empty() && s.back() == '0') {
         s.pop_back();

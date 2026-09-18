@@ -1,6 +1,7 @@
 #include "schgen/atomic_file.hpp"
 #include "schgen/catalog.hpp"
 #include "schgen/circuit.hpp"
+#include "schgen/footprint_library.hpp"
 
 #include <cstdlib>
 #include <filesystem>
@@ -35,6 +36,19 @@ int main(int argc, char** argv) {
     try {
         require(argc == 2, "expected repository path");
         TempDir tmp;
+        const auto footprint = (tmp.path / "pad.kicad_mod").string();
+        const std::string first = "(footprint test (pad \"1\" smd rect))";
+        schgen::write_atomic_file(footprint, {first.begin(), first.end()});
+        schgen::FootprintLibrary library;
+        require(library.pad_names(footprint) == std::vector<std::string>{"1"},
+                "footprint cache lost pad names");
+        const std::string second = "(footprint test (pad \"22\" smd rect))";
+        schgen::write_atomic_file(footprint, {second.begin(), second.end()});
+        require(library.pad_names(footprint) == std::vector<std::string>{"22"},
+                "footprint cache ignored edited file");
+        library.clear();
+        require(library.pad_names(footprint) == std::vector<std::string>{"22"},
+                "footprint cache clear changed file semantics");
         const auto output = (tmp.path / "mapped.bin").string();
         schgen::write_atomic_file(output, {1, 2, 3, 4});
         const int fd = ::open(output.c_str(), O_RDONLY);

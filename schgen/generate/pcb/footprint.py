@@ -45,13 +45,16 @@ def pad_names_py(text: str) -> list[str]:
     return _PAD_RE.findall(text)
 
 
+_footprint_library = None
+
+
 def pad_names(mod_path: Path) -> list[str]:
-    text = mod_path.read_text()
-    if not _nat.loaded():
-        raise RuntimeError("native pad_names_from_text required")
-    got = list(_nat.module().pad_names_from_text(text))
+    global _footprint_library
+    if _footprint_library is None:
+        _footprint_library = _nat.module().FootprintLibrary()
+    got = _footprint_library.pad_names(str(mod_path))
     if _nat.trace():
-        ref = pad_names_py(text)
+        ref = pad_names_py(mod_path.read_text())
         if got != ref:
             raise AssertionError(
                 "native pad_names_from_text DIVERGENCE: "

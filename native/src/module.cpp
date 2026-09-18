@@ -19,6 +19,7 @@
 #include "schgen/circuit.hpp"
 #include "schgen/cc.hpp"
 #include "schgen/embed_fp.hpp"
+#include "schgen/footprint_library.hpp"
 #include "schgen/emit.hpp"
 #include "schgen/legalize.hpp"
 #include "schgen/occupancy.hpp"
@@ -187,6 +188,10 @@ schgen::Sexpr sexpr_from_py(nb::handle handle) {
 
 NB_MODULE(_geom, m) {
     m.doc() = "schgen native kernels — occupancy, seat, sexpr, catalog";
+    nb::class_<schgen::FootprintLibrary>(m, "FootprintLibrary")
+        .def(nb::init<>())
+        .def("pad_names", &schgen::FootprintLibrary::pad_names, nb::rv_policy::copy)
+        .def("clear", &schgen::FootprintLibrary::clear);
     m.def("catalog_compile",
           [](const std::string& parts_dir, const std::string& catalog_path) {
               return schgen::compile_part_catalog(parts_dir, catalog_path);

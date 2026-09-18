@@ -14,7 +14,7 @@ add_library(schgen_core STATIC
     src/pack_anchor.cpp src/place_search.cpp src/cc.cpp src/embed_fp.cpp
     src/pack_edges.cpp src/pcb_scan.cpp src/pack_refine.cpp src/place_geom.cpp
     src/catalog.cpp src/json.cpp src/circuit.cpp src/reorder.cpp src/atomic_file.cpp
-    src/ratsnest.cpp)
+    src/ratsnest.cpp src/footprint_library.cpp)
 target_include_directories(schgen_core PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
 target_compile_options(schgen_core PRIVATE -Wall -Wextra -Wpedantic -Werror)
 set_source_files_properties(src/turn.cpp src/pack_anchor.cpp
@@ -76,6 +76,12 @@ add_custom_target(schgen_catalogs ALL DEPENDS
 
 include(CTest)
 if(BUILD_TESTING)
+    foreach(contract numeric_contracts placement_search)
+        add_executable(schgen_${contract} tests/${contract}.cpp)
+        target_link_libraries(schgen_${contract} PRIVATE schgen_core)
+        target_compile_options(schgen_${contract} PRIVATE -Wall -Wextra -Wpedantic -Werror)
+        add_test(NAME native_${contract} COMMAND schgen_${contract})
+    endforeach()
     add_executable(schgen_catalog_lifecycle tests/catalog_lifecycle.cpp)
     target_link_libraries(schgen_catalog_lifecycle PRIVATE schgen_core)
     target_compile_options(schgen_catalog_lifecycle PRIVATE -Wall -Wextra -Wpedantic -Werror)

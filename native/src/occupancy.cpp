@@ -74,13 +74,6 @@ struct HeapNode {
     }
 };
 
-struct PairHash {
-    std::size_t operator()(const std::pair<int, int>& p) const {
-        return (static_cast<std::size_t>(static_cast<uint32_t>(p.first)) << 32)
-            ^ static_cast<uint32_t>(p.second);
-    }
-};
-
 }  // namespace
 
 double py_round(double value, int digits) {
@@ -88,10 +81,15 @@ double py_round(double value, int digits) {
     // quantize the exact binary value onto 10**-ndigits, half toward even.
     // Binary `value * 10**n` is not that — 11.24955 * 10000 looks like a
     // halfway case in IEEE but the real number sits below the decimal halfway.
-    if (digits < 0) {
-        throw std::runtime_error("py_round: digits must be >= 0");
+    // Geometry kernel, not an arbitrary-precision replacement for Python:
+    // support 0..15 digits and at most 2^53 quantized decimal units so both the
+    // numerator and 10^digits convert to double exactly before division.
+    // Integral doubles need no quantization and are supported at any magnitude.
+    // Validate digits even for zero/nonfinite values for a consistent contract.
+    if (digits < 0 || digits > 15) {
+        throw std::runtime_error("py_round: digits must be in [0, 15]");
     }
-    if (!std::isfinite(value) || value == 0.0) {
+    if (!std::isfinite(value) || value == std::floor(value)) {
         return value;
     }
     const bool negative = std::signbit(value);
@@ -103,15 +101,15 @@ double py_round(double value, int digits) {
     const int binary_exp = exp2 - 53;
 
     __int128 scaled = mantissa;
+    // At most 53 + ceil(log2(5^15)) = 88 bits; no product can overflow.
     for (int i = 0; i < digits; ++i) {
         scaled *= 5;
     }
     const int two_exp = binary_exp + digits;
     __int128 quantized = 0;
     if (two_exp >= 0) {
-        if (two_exp >= 70) {
-            throw std::runtime_error("py_round: magnitude exceeds kernel range");
-        }
+        // Nonintegral doubles have exp2 <= 52, hence two_exp <= 14.
+        // With the bound above, this left shift stays below 102 bits.
         quantized = scaled << two_exp;
     } else {
         const int shift = -two_exp;
@@ -128,12 +126,15 @@ double py_round(double value, int digits) {
             }
         }
     }
+    if (quantized > (static_cast<__int128>(1) << 53)) {
+        throw std::runtime_error("py_round: quantized magnitude exceeds exact kernel range");
+    }
     double scale = 1.0;
     for (int i = 0; i < digits; ++i) {
         scale *= 10.0;
     }
     const double out =
-        static_cast<double>(static_cast<int64_t>(quantized)) / scale;
+        static_cast<double>(quantized) / scale;
     return negative ? -out : out;
 }
 
@@ -677,8 +678,6 @@ std::optional<Pose> Occupancy::place_near(
     }
     std::priority_queue<HeapNode, std::vector<HeapNode>, std::greater<HeapNode>> heap;
     heap.push(HeapNode{xs[0].first + ys[0].first, 0, 0});
-    std::unordered_set<std::pair<int, int>, PairHash> seen;
-    seen.emplace(0, 0);
     std::unordered_map<double, std::vector<std::pair<double, double>>> buckets;
     std::priority_queue<double, std::vector<double>, std::greater<double>> bkeys;
 
@@ -717,14 +716,16 @@ std::optional<Pose> Occupancy::place_near(
         } else {
             bit->second.emplace_back(x, y);
         }
-        if (node.i + 1 < static_cast<int>(xs.size())
-            && seen.emplace(node.i + 1, node.j).second) {
+        // Merge sorted rows lazily: each row advances only along y, and its
+        // first element introduces the next row. Row minima are ordered by x
+        // cost, so this visits the same (distance, i, j) order as the two-way
+        // frontier without a hash allocation/lookup for every visited cell.
+        if (node.j == 0 && node.i + 1 < static_cast<int>(xs.size())) {
             heap.push(HeapNode{xs[static_cast<std::size_t>(node.i + 1)].first
                                    + ys[static_cast<std::size_t>(node.j)].first,
                                node.i + 1, node.j});
         }
-        if (node.j + 1 < static_cast<int>(ys.size())
-            && seen.emplace(node.i, node.j + 1).second) {
+        if (node.j + 1 < static_cast<int>(ys.size())) {
             heap.push(HeapNode{xs[static_cast<std::size_t>(node.i)].first
                                    + ys[static_cast<std::size_t>(node.j + 1)].first,
                                node.i, node.j + 1});

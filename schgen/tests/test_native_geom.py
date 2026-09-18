@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import copy
 import math
+import random
 
 import pytest
 
@@ -99,6 +100,46 @@ def test_place_near_matches_python(geom, monkeypatch):
         assert cpp == py
         assert py is not None
         hashed.add(*py, reach)
+
+
+def test_place_near_frontier_matches_reference(geom, monkeypatch):
+    monkeypatch.setattr(fp, "BOARD_W", 24.0)
+    monkeypatch.setattr(fp, "BOARD_H", 22.0)
+    rng = random.Random(314159)
+    for _ in range(120):
+        occ = _Occupancy(far_ceil=10.0, max_reach=3.32)
+        for _ in range(5):
+            occ.add(rng.randrange(20), rng.randrange(18),
+                    rng.randrange(1, 8), rng.randrange(1, 8),
+                    rng.choice(_REACHES))
+        ax, ay = rng.randrange(-10, 35) / 2, rng.randrange(-10, 35) / 2
+        w, h = rng.randrange(1, 30), rng.randrange(1, 28)
+        reach = rng.choice(_REACHES)
+        win = rng.choice((None, (2.0, 14.0, 3.0, 15.0),
+                          (3.0, 3.0, 2.0, 12.0), (4.0, 2.0, 0.0, 20.0)))
+        expected = occ._place_near_py(ax, ay, w, h, reach, _ZERO,
+                                     fp.OCC_PUNCH, (), win)
+        bounds = win or (-24.0, 48.0, -22.0, 44.0)
+        got = occ._cpp.place_near(ax, ay, w, h, reach, _ZERO,
+                                  fp.OCC_PUNCH, [], *bounds)
+        assert got == expected
+
+
+def test_footprint_library_invalidates_and_isolates_results(geom, tmp_path):
+    path = tmp_path / "example.kicad_mod"
+    path.write_text('(footprint "test" (pad "1" smd rect))')
+    library = geom.FootprintLibrary()
+    got = library.pad_names(str(path))
+    assert got == ["1"]
+    got.append("mutated")
+    assert library.pad_names(str(path)) == ["1"]
+    path.write_text('(footprint "test" (pad "2" smd rect) (pad "3" smd rect))')
+    assert library.pad_names(str(path)) == ["2", "3"]
+    library.clear()
+    assert library.pad_names(str(path)) == ["2", "3"]
+    path.unlink()
+    with pytest.raises(RuntimeError):
+        library.pad_names(str(path))
 
 
 def test_box_gap_matches_python(geom):
