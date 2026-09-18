@@ -13,9 +13,8 @@ checked: 15 IC supply pins, 2 i2c nets, 2 reset nets, 0 config pins, 3 exposed p
 DECAP — missing decoupling (0):
   (none)
 
-I2C — i2c bus with no pull-up (2):
-  * STM32_I2C2_SCL (i2c, typed on power_mon) has NO pull-up resistor to any power rail anywhere on the board — an open-drain I2C bus is dead without pull-ups; add a pull-up or c.waive_pull('STM32_I2C2_SCL', reason)
-  * STM32_I2C2_SDA (i2c, typed on power_mon) has NO pull-up resistor to any power rail anywhere on the board — an open-drain I2C bus is dead without pull-ups; add a pull-up or c.waive_pull('STM32_I2C2_SDA', reason)
+I2C — i2c bus with no pull-up (0):
+  (none)
 
 RESET — reset without a full RC (0):
   (none)
@@ -30,4 +29,4 @@ waivers — author-declared, verbatim (2):
   RESET CP2102N_RST_N (on uart_bridge): open-drain RST: 1k pull-up only, internal POR; no RC cap
   RESET STM32_NRST (on debug_boot): internal-pull whitelist (part provides its own pull; external RC optional)
 
-DESIGN RULES: FAIL (2 findings, 2 waived)
+DESIGN RULES: PASS (0 findings, 2 waived)

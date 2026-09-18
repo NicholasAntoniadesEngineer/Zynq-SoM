@@ -259,6 +259,10 @@ def regulator_chain(power: Circuit, root: str = "+VIN",
     for net in power.nets.values():
         if net.net_class == NetClass.PORT and net.name.startswith("EN_"):
             for pr in net.pins:
+                # Probe pads observe the enable net; they are not regulator
+                # stages and have no input/output power path to traverse.
+                if power.parts[pr.ref].lib_id == Circuit.TP_LIB_ID:
+                    continue
                 regs[pr.ref] = net.name
     inductors = [r for r, p in power.parts.items() if p.lib_id == "Device:L"]
     cands: dict[str, set[str]] = {}

@@ -23,6 +23,7 @@ STM32_GPIO6,debug_boot,single,Default,,,,,,,deferred: som_j1_connector
 STM32_GPIO7,debug_boot,single,Default,,,,,,,deferred: som_j1_connector
 STM32_GPIO8,debug_boot,single,Default,,,,,,,deferred: som_j1_connector
 STM32_NRST,debug_boot,single,Default,,,,,,,deferred: som_j1_connector
+VBUS_OUT_EN,debug_boot,single,Default,,,,,,,deferred: som_j1_connector
 ZYNQ_TCK,debug_boot,single,Default,,,,,,,deferred: som_j1_connector
 ZYNQ_TDI,debug_boot,single,Default,,,,,,,deferred: som_j1_connector
 ZYNQ_TDO,debug_boot,single,Default,,,,,,,deferred: som_j1_connector
@@ -226,8 +227,12 @@ ZYNQ_PS_UART0_RTS_N,uart_bridge,single,Default,,,,,,,deferred: som_j1_connector 
 ZYNQ_PS_UART0_RXD,uart_bridge,single,Default,,,,,,,deferred: som_j1_connector (wave 3 MIO function map)
 ZYNQ_PS_UART0_TXD,uart_bridge,single,Default,,,,,,,deferred: som_j1_connector (wave 3 MIO function map)
 USB_UART_VBUS,usb_uart_connector,single,Default,,,,,,,
+STM32_I2C2_SCL,debug_boot,i2c,I2C,,,,,,,bus=STM32_I2C2; speed=400000Hz; deferred: som_j1_connector
+STM32_I2C2_SDA,debug_boot,i2c,I2C,,,,,,,bus=STM32_I2C2; speed=400000Hz; deferred: som_j1_connector
 STM32_I2C2_SCL,power_mon,i2c,I2C,,,,,,,bus=STM32_I2C2; speed=400000Hz; deferred: som_j1_connector
 STM32_I2C2_SDA,power_mon,i2c,I2C,,,,,,,bus=STM32_I2C2; speed=400000Hz; deferred: som_j1_connector
+SDIO_CLK,debug_boot,sd_bus,SD_1V8,,,,,BUS:SDIO,2.5,bus=SDIO; level=1.8V; deferred: som_j1_connector
+SDIO_CMD,debug_boot,sd_bus,SD_1V8,,,,,BUS:SDIO,2.5,bus=SDIO; level=1.8V; deferred: som_j1_connector
 SDIO_CLK,som_j1,sd_bus,SD_1V8,,,,,BUS:SDIO,2.5,bus=SDIO; level=1.8V
 SDIO_CMD,som_j1,sd_bus,SD_1V8,,,,,BUS:SDIO,2.5,bus=SDIO; level=1.8V
 SDIO_D0,som_j1,sd_bus,SD_1V8,,,,,BUS:SDIO,2.5,bus=SDIO; level=1.8V

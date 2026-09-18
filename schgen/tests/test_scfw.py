@@ -15,6 +15,18 @@ def test_regulator_chain_order(model):
     assert order == [("+VIN", "+5V"), ("+5V", "+3V3"), ("+3V3", "+1V8")]
 
 
+def test_enable_probes_do_not_become_regulator_stages():
+    from schgen.core.link import load_subsystem
+    from schgen.generate.bringup_facts import regulator_chain
+
+    power = load_subsystem("power").circuit
+    monitor = load_subsystem("power_mon").circuit
+    expected = regulator_chain(power, monitor=monitor)
+    for index, net in enumerate(("EN_5V0", "EN_3V3", "EN_1V8"), 1):
+        power.testpoint(net, ref=f"PROBE{index}")
+    assert regulator_chain(power, monitor=monitor) == expected
+
+
 def test_setpoints_derived(model):
     mv = {st.rail_out: round(st.vout * 1000) for st in model.chain}
     assert mv == {"+5V": 5020, "+3V3": 3320, "+1V8": 1800}

@@ -1,6 +1,6 @@
 # Assembly order — devkit_mini
 
-Board 100 x 100 mm. 147 placed parts (92 top / 55 bottom); 5 fiducials are bare-copper marks, excluded from every phase and step.
+Board 100 x 100 mm. 158 placed parts (101 top / 57 bottom); 5 fiducials are bare-copper marks, excluded from every phase and step.
 Section A is the staged hand-assembly + bring-up order; section B is the PCBA process order. Every part appears in exactly one phase and exactly one step.
 
 ## A. Incremental bring-up order
@@ -8,12 +8,12 @@ Section A is the staged hand-assembly + bring-up order; section B is the PCBA pr
 | phase | section | parts | checkpoint |
 |---|---|---|---|
 | 1 | power entry (pd_input) | 13 | verify +VBUS_IN at TP3001; verify +VIN at TP3002 |
-| 2 | power_mon | 10 | — |
-| 3 | power | 51 | verify +5V at TP4001; verify +3V3 at TP4002; verify +1V8 at TP4003 |
+| 2 | power_mon | 13 | — |
+| 3 | power | 54 | verify +5V at TP4001; verify +3V3 at TP4002; verify +1V8 at TP4003 |
 | 4 | power_som | 23 | verify +5V_SOM at TP6001 |
 | 5 | SoM interface (som_decoupling, som_j1, som_j2, som_j3) | 21 | — |
 | 6 | SoM module mate | 0 | boot/debug via debug_boot: J1001 (JTAG), J1002 (SWD), SW1001 (BOOT: DFU BSEL BSEL), SW1002 (RST) |
-| 7 | debug_boot | 10 | — |
+| 7 | debug_boot | 15 | — |
 | 8 | uart_bridge | 10 | — |
 | 9 | usb_uart_connector | 5 | — |
 | 10 | mechanical hardware (mechanical) | 4 | — |
@@ -47,7 +47,7 @@ CHECKPOINT: verify +VIN at TP3002
 
 ![phase 2](../renders/assembly/phase_02_power_mon.png)
 
-10 parts (2 top / 8 bottom)
+13 parts (5 top / 8 bottom)
 
 | ref | value | package | sheet |
 |---|---|---|---|
@@ -59,6 +59,9 @@ CHECKPOINT: verify +VIN at TP3002
 | RS5002 | 10mR | RLM12FTCMR010 | power_mon |
 | RS5003 | 10mR | RLM12FTCMR010 | power_mon |
 | RS5004 | 20mR | RLM12FTCMR020 | power_mon |
+| TP5001 | +3V3_SC | TestPoint_Pad_D1.5mm | power_mon |
+| TP5002 | STM32_I2C2_SCL | TestPoint_Pad_D1.5mm | power_mon |
+| TP5003 | STM32_I2C2_SDA | TestPoint_Pad_D1.5mm | power_mon |
 | U5001 | INA3221AIRGVR | INA3221AIRGVR | power_mon |
 | U5002 | INA3221AIRGVR | INA3221AIRGVR | power_mon |
 
@@ -66,7 +69,7 @@ CHECKPOINT: verify +VIN at TP3002
 
 ![phase 3](../renders/assembly/phase_03_power.png)
 
-51 parts (46 top / 5 bottom)
+54 parts (49 top / 5 bottom)
 
 | ref | value | package | sheet |
 |---|---|---|---|
@@ -118,6 +121,9 @@ CHECKPOINT: verify +VIN at TP3002
 | TP4002 | +3V3 | TestPoint_Pad_D1.5mm | power |
 | TP4003 | +1V8 | TestPoint_Pad_D1.5mm | power |
 | TP4004 | GND | TestPoint_Pad_D1.5mm | power |
+| TP4005 | EN_5V0 | TestPoint_Pad_D1.5mm | power |
+| TP4006 | EN_3V3 | TestPoint_Pad_D1.5mm | power |
+| TP4007 | EN_1V8 | TestPoint_Pad_D1.5mm | power |
 | U4001 | LM61460AANRJRR | LM61460AANRJRR | power |
 | U4002 | LM61460AANRJRR | LM61460AANRJRR | power |
 | U4003 | AP2112K-1.8 | SOT-23-5 | power |
@@ -202,7 +208,7 @@ CHECKPOINT: boot/debug via debug_boot: J1001 (JTAG), J1002 (SWD), SW1001 (BOOT: 
 
 ![phase 7](../renders/assembly/phase_07_debug_boot.png)
 
-10 parts (4 top / 6 bottom)
+15 parts (7 top / 8 bottom)
 
 | ref | value | package | sheet |
 |---|---|---|---|
@@ -214,8 +220,13 @@ CHECKPOINT: boot/debug via debug_boot: J1001 (JTAG), J1002 (SWD), SW1001 (BOOT: 
 | R1004 | 10k | R_0603_1608Metric | debug_boot |
 | R1005 | 10k | R_0603_1608Metric | debug_boot |
 | R1006 | 10k | R_0603_1608Metric | debug_boot |
+| R1007 | 4k7 | R_0603_1608Metric | debug_boot |
+| R1008 | 4k7 | R_0603_1608Metric | debug_boot |
 | SW1001 | DIP-4 | DSHP04TSGER | debug_boot |
 | SW1002 | RESET | TS-1187A-B-A-B | debug_boot |
+| TP1001 | SDIO_CLK | TestPoint_Pad_D1.5mm | debug_boot |
+| TP1002 | SDIO_CMD | TestPoint_Pad_D1.5mm | debug_boot |
+| TP1003 | VBUS_OUT_EN | TestPoint_Pad_D1.5mm | debug_boot |
 
 ### Phase 8 — uart_bridge
 
@@ -269,7 +280,7 @@ CHECKPOINT: boot/debug via debug_boot: J1001 (JTAG), J1002 (SWD), SW1001 (BOOT: 
 
 ![step 1](../renders/assembly/step_1_bottom_smd.png)
 
-55 parts (0 top / 55 bottom)
+57 parts (0 top / 57 bottom)
 
 | ref | value | package | sheet |
 |---|---|---|---|
@@ -311,6 +322,8 @@ CHECKPOINT: boot/debug via debug_boot: J1001 (JTAG), J1002 (SWD), SW1001 (BOOT: 
 | R1004 | 10k | R_0603_1608Metric | debug_boot |
 | R1005 | 10k | R_0603_1608Metric | debug_boot |
 | R1006 | 10k | R_0603_1608Metric | debug_boot |
+| R1007 | 4k7 | R_0603_1608Metric | debug_boot |
+| R1008 | 4k7 | R_0603_1608Metric | debug_boot |
 | R4003 | 1k | R_0603_1608Metric | power |
 | R4006 | 330R | R_0603_1608Metric | power |
 | R4007 | 1k | R_0603_1608Metric | power |
@@ -333,7 +346,7 @@ CHECKPOINT: boot/debug via debug_boot: J1001 (JTAG), J1002 (SWD), SW1001 (BOOT: 
 
 ![step 2](../renders/assembly/step_2_top_smd.png)
 
-81 parts (81 top / 0 bottom)
+90 parts (90 top / 0 bottom)
 
 | ref | value | package | sheet |
 |---|---|---|---|
@@ -399,12 +412,21 @@ CHECKPOINT: boot/debug via debug_boot: J1001 (JTAG), J1002 (SWD), SW1001 (BOOT: 
 | R12002 | 5.1k | R_0603_1608Metric | usb_uart_connector |
 | SW1001 | DIP-4 | DSHP04TSGER | debug_boot |
 | SW1002 | RESET | TS-1187A-B-A-B | debug_boot |
+| TP1001 | SDIO_CLK | TestPoint_Pad_D1.5mm | debug_boot |
+| TP1002 | SDIO_CMD | TestPoint_Pad_D1.5mm | debug_boot |
+| TP1003 | VBUS_OUT_EN | TestPoint_Pad_D1.5mm | debug_boot |
 | TP3001 | +VBUS_IN | TestPoint_Pad_D1.5mm | pd_input |
 | TP3002 | +VIN | TestPoint_Pad_D1.5mm | pd_input |
 | TP4001 | +5V | TestPoint_Pad_D1.5mm | power |
 | TP4002 | +3V3 | TestPoint_Pad_D1.5mm | power |
 | TP4003 | +1V8 | TestPoint_Pad_D1.5mm | power |
 | TP4004 | GND | TestPoint_Pad_D1.5mm | power |
+| TP4005 | EN_5V0 | TestPoint_Pad_D1.5mm | power |
+| TP4006 | EN_3V3 | TestPoint_Pad_D1.5mm | power |
+| TP4007 | EN_1V8 | TestPoint_Pad_D1.5mm | power |
+| TP5001 | +3V3_SC | TestPoint_Pad_D1.5mm | power_mon |
+| TP5002 | STM32_I2C2_SCL | TestPoint_Pad_D1.5mm | power_mon |
+| TP5003 | STM32_I2C2_SDA | TestPoint_Pad_D1.5mm | power_mon |
 | TP6001 | +5V_SOM | TestPoint_Pad_D1.5mm | power_som |
 | TP11001 | ZYNQ_PS_UART0_TXD | TestPoint_Pad_D1.5mm | uart_bridge |
 | TP11002 | ZYNQ_PS_UART0_RXD | TestPoint_Pad_D1.5mm | uart_bridge |

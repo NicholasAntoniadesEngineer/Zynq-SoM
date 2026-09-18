@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from devkit_mini.basis import register
+from devkit_mini.som_conn_gen import SDIO_LEVEL_V
 from schgen.core.model import Circuit
 
 R0603 = "Resistor_SMD:R_0603_1608Metric"
@@ -51,6 +52,27 @@ JTAG_DRAW_A = register("debug_boot.jtag_draw", 0.002, "A",
                        "The two 4k7 TMS/TDI insurance pulls when driven low.",
                        "datasheet")
 
+I2C_SPEED_HZ = register(
+    "debug_boot.i2c_speed", 400_000, "Hz",
+    "Fast-mode STM32_I2C2, shared with the two INA3221 monitors.",
+    "datasheet")
+
+I2C_PULLUP = register(
+    "debug_boot.i2c_pullup", "4k7", "ohm",
+    "The devkit omits bringup_rails, so its SC debug sheet owns one pull-up "
+    "per STM32_I2C2 line to always-on +3V3_SC, matching the carrier and the "
+    "INA3221/STM32 supply domain. C23162, 0603 1%. About 0.70 mA per "
+    "asserted line; at 400 kHz the 300 ns rise-time limit allows about "
+    "74 pF including resistor tolerance. Keep bus/probe stubs short and "
+    "verify rise time at bring-up.",
+    "datasheet")
+
+I2C_PULLUP_DRAW_A = register(
+    "debug_boot.i2c_pullup_draw", 0.0015, "A",
+    "Both 4k7 lines held low: 2 * (3.3 V + 5%) / (4.7k - 1%) = "
+    "1.49 mA, rounded up separately from BOOT0/BOOTSEL loads.",
+    "policy")
+
 
 def circuit() -> Circuit:
     c = Circuit("debug_boot", "JTAG + SWD headers, boot-request DIP, reset")
@@ -95,6 +117,28 @@ def circuit() -> Circuit:
     c.net("GND", "SW1.5")
     c.net("+3V3_SC", "R4.1", "R5.1", "R6.1")
 
+    # The SC debug sheet provides the management bus termination even while
+    # switched carrier rails are off. Keep the monitor sheet's shared bus bare.
+    for net, role in (("STM32_I2C2_SCL", "scl"), ("STM32_I2C2_SDA", "sda")):
+        r = c.part(c.auto_ref("R"), "Device:R", I2C_PULLUP, R0603, LCSC="C23162")
+        c.net("+3V3_SC", f"{r.ref}.1")
+        c.port(net, f"{r.ref}.2", kind="i2c", role=role, bus="STM32_I2C2",
+               speed_hz=I2C_SPEED_HZ, expect=J1_MAP)
+
+    # The devkit omits the SD/OTG peripheral sheets. Put their bare probe pads
+    # with the other debug interfaces rather than under the SoM mezzanine.
+    # These are the local endpoints, so declare each physical pad before its
+    # port. SDIO keeps the SoM's 1.8 V level and gains no bias or level shift.
+    for net in ("SDIO_CLK", "SDIO_CMD", "VBUS_OUT_EN"):
+        tp = c.part(c.auto_ref("TP"), Circuit.TP_LIB_ID, net,
+                    Circuit.TP_FOOTPRINT, BOM="exclude")
+        if net.startswith("SDIO_"):
+            c.port(net, f"{tp.ref}.1", kind="sd_bus", bus="SDIO",
+                   level_v=SDIO_LEVEL_V, expect=J1_MAP)
+        else:
+            c.port(net, f"{tp.ref}.1", expect=J1_MAP)
+
     c.draws("+3V3_SC", SC_DRAW_A, "BOOT0 strap ~2 mA closed + BOOTSEL pulls")
+    c.draws("+3V3_SC", I2C_PULLUP_DRAW_A, "2x4k7 STM32_I2C2 pull-ups")
     c.draws("+3V3", JTAG_DRAW_A, "JTAG TMS/TDI 4k7 insurance pulls when driven")
     return c

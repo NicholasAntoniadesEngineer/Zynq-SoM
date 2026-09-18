@@ -578,12 +578,22 @@ def sheet_area(c, factor: float) -> float:
     return total
 
 
+def _zone_parts(sc) -> dict:
+    """Keep connector-sheet auxiliaries in the ordinary placement solver.
+
+    Only the mezzanine connectors and the dedicated decoupling bank have
+    positions derived directly from the SoM geometry.
+    """
+    if sc.name == "som_decoupling":
+        return {}
+    return {ref: part for ref, part in sc.circuit.parts.items()
+            if not (sc.name.startswith("som_j") and ref.startswith("J"))}
+
+
 def _raw_component_area(sheets) -> float:
     total = 0.0
     for sc in sheets:
-        if sc.name.startswith("som_j") or sc.name == "som_decoupling":
-            continue
-        for part in sc.circuit.parts.values():
+        for part in _zone_parts(sc).values():
             w, h = part_dims(part.footprint)
             total += w * h
     return total
@@ -1987,8 +1997,10 @@ def _build_plan_body(sheets, link_result, regs, spec: FloorplanSpec | None
     j_edge = _j_edge_map(som)
     reg_sheets = {r.sheet for r in regs}
     by_name = {sc.name: sc for sc in sheets}
+    parts_by_sheet = {sc.name: _zone_parts(sc) for sc in sheets}
 
-    valid_names = {sc.name for sc in sheets if not sc.name.startswith("som_j")}
+    valid_names = {sc.name for sc in sheets
+                   if not sc.name.startswith("som_j") or parts_by_sheet[sc.name]}
     if spec is None:
         spec = load_floorplan_spec(valid_names=valid_names)
     spec_edge_of = spec.edge_of if spec else {}
@@ -1998,11 +2010,13 @@ def _build_plan_body(sheets, link_result, regs, spec: FloorplanSpec | None
     edge_of: dict[str, str] = {}
     interior: list[Block] = []
     for sc in sorted(sheets, key=lambda s: s.name):
-        if sc.name.startswith("som_j") or sc.name == "som_decoupling":
+        zone_parts = parts_by_sheet[sc.name]
+        if ((sc.name.startswith("som_j") or sc.name == "som_decoupling")
+                and not zone_parts):
             continue
         c = sc.circuit
         conns = []
-        for ref, part in sorted(c.parts.items()):
+        for ref, part in sorted(zone_parts.items()):
             fam = next((f for f in _EDGE_FAMILIES if part.value == f), None)
             if fam:
                 w, h = part_dims(part.footprint)
@@ -2016,7 +2030,7 @@ def _build_plan_body(sheets, link_result, regs, spec: FloorplanSpec | None
         is_edge = spec_e is not None or (auto_edge and sc.name not in spec_interior)
         b = Block(name=sc.name, kind="edge" if is_edge else "interior",
                   conns=conns, reserved=reserved,
-                  n_parts=len(c.parts), j_aff=aff.get(sc.name, {}))
+                  n_parts=len(zone_parts), j_aff=aff.get(sc.name, {}))
         if b.kind == "edge":
             if spec_e is not None:
                 edge_of[b.name] = spec_e
@@ -2032,9 +2046,11 @@ def _build_plan_body(sheets, link_result, regs, spec: FloorplanSpec | None
     port_sheets: dict[str, set[str]] = {}
     from schgen.core.model import NetClass
     for sc in sheets:
-        if sc.name.startswith("som_j"):
-            continue
         for net in sc.circuit.nets.values():
+            if (sc.name.startswith("som_j")
+                    and not any(p.ref in parts_by_sheet[sc.name]
+                                for p in net.pins)):
+                continue
             if net.net_class == NetClass.PORT:
                 port_sheets.setdefault(net.name, set()).add(sc.name)
     for b in interior:
@@ -2070,9 +2086,11 @@ def _build_plan_body(sheets, link_result, regs, spec: FloorplanSpec | None
 
     sheets_of_net: dict[str, set[str]] = {}
     for sc in sheets:
-        if sc.name.startswith("som_j"):
-            continue
         for net in sc.circuit.nets.values():
+            if (sc.name.startswith("som_j")
+                    and not any(p.ref in parts_by_sheet[sc.name]
+                                for p in net.pins)):
+                continue
             sheets_of_net.setdefault(net.name, set()).add(sc.name)
     som_nets: set[str] = set()
     for sc in sheets:
@@ -2579,6 +2597,10 @@ def _cross_estimator(plan: Plan, zg, sheets):
         pad_rel[bref] = _pads_at(bref, rot_of.get(bref, 0.0))
         sh = sheet_of[bref]
         for k in range(1, n_shapes.get(sh, 1)):
+            if owner_of[bref][0] != "zone":
+                # An auxiliary block can turn without turning its fixed DF40.
+                pad_rel_k[(bref, k)] = pad_rel[bref]
+                continue
             r_k = rot_k[(sh, k)].get(bref, 0.0)
             mp = mir_k.get((sh, k), {}).get(bref)
             if mp is None and r_k == rot_of.get(bref, 0.0):
@@ -4197,8 +4219,9 @@ def render_md(plan: Plan, notes: list[Note], sheets, regs,
     L.append("- The mirror convention (bottom view) must be checked "
              "against the DF40 mating datasheet before any footprint is "
              "placed.")
-    L.append("- som_j1/j2/j3 sheets are not blocks: they ARE the three "
-             "DF40 strips drawn inside the SoM footprint.")
+    L.append("- The som_j1/j2/j3 DF40 connectors are fixed inside the SoM "
+             "footprint; any additional parts on those sheets form "
+             "ordinary packed blocks.")
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text("\n".join(L) + "\n")
     return out

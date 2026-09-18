@@ -3,7 +3,7 @@ schgen power-tree budget gate
 
 sources:
   +VBUS_IN    20.0 V  limit 3.00 A  load 0.571 A  (19%)  — USB-C PD sink contract 20 V / 3 A at the receptacle (pd_input J1; +VIN sits behind the TPS26631 eFuse, round 5)
-  +3V3_SC      3.3 V  limit 0.30 A  load 0.006 A  (2%)  — SoM TPS7A20 always-on SC LDO U13 (J1.37); 300 mA class — the SoM power_architecture sheet says '3V3 (300mA)'. Envelope shared with the SoM-side SC (STM32G431 ~50 mA); carrier tally only here
+  +3V3_SC      3.3 V  limit 0.30 A  load 0.007 A  (2%)  — SoM TPS7A20 always-on SC LDO U13 (J1.37); 300 mA class — the SoM power_architecture sheet says '3V3 (300mA)'. Envelope shared with the SoM-side SC (STM32G431 ~50 mA); carrier tally only here
   +5V_DBG      5.0 V  limit 0.50 A  load 0.000 A  (0%)  — debug USB-C VBUS (usb_jtag_connector J1) — host-supplied 5 V / 0.5 A USB2 default; feeds the usb_jtag AP2112K-3.3 debug-island LDO; isolated from carrier +5V
 
 regulators (5) — numbered as in carrier/docs/power_tree.svg:
@@ -27,6 +27,7 @@ declared draws (c.draws — every number cites its source):
   +3V3                 20.0 mA  som_j3             Zynq banks 34+35 VCCO static (both +3V3 on this board; bank 35 unused, no LVDS load)
   +3V3                 15.0 mA  uart_bridge        CP2102N active ~14 mA typ + RST 1k pull-up
   +3V3_SC               4.0 mA  debug_boot         BOOT0 strap ~2 mA closed + BOOTSEL pulls
+  +3V3_SC               1.5 mA  debug_boot         2x4k7 STM32_I2C2 pull-ups
   +3V3_SC               2.0 mA  power_mon          2x INA3221 ~0.7 mA + ALERT pull-up
   +5V                   4.0 mA  power              PG LED (KT-0603R + 1k, ~3 mA) + FB divider 60 uA
   +5V_SOM               4.0 mA  power_som          PG LED (KT-0603R + 1k, ~3 mA) + FB divider 60 uA (SoM module load declared on som_j1)
@@ -37,7 +38,7 @@ rail totals (declared + child regulator inputs):
   +1V8_REG           0.001 A  @ 1.8 V
   +3V3               0.067 A  @ 3.3 V
   +3V3_REG           0.067 A  @ 3.3 V
-  +3V3_SC            0.006 A  @ 3.3 V
+  +3V3_SC            0.007 A  @ 3.3 V
   +5V                0.053 A  @ 5.0 V
   +5V_REG            0.053 A  @ 5.0 V
   +5V_SOM            2.154 A  @ 4.7 V

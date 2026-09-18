@@ -1405,26 +1405,38 @@ def test_som_lane_and_stage_kernels(geom):
     assert geom.any_boxes_overlap([], TEMPLATE_CLEAR) is False
 
 
+def test_stem_dir_frozen_python_vectors(geom):
+    from schgen.layout.route import _stem_dir
+
+    # Captured from the original Python math implementation before its removal.
+    # These constants are independent of both the adapter and native kernel.
+    rotations = (0, 90, 180, 270, -90)
+    expected = {
+        0: ((1, 0), (0, -1), (-1, 0), (0, 1), (0, 1)),
+        90: ((0, -1), (-1, 0), (0, 1), (1, 0), (1, 0)),
+        180: ((-1, 0), (0, 1), (1, 0), (0, -1), (0, -1)),
+        270: ((0, 1), (1, 0), (0, -1), (-1, 0), (-1, 0)),
+    }
+    cases = [(pin, part, want) for pin, row in expected.items()
+             for part, want in zip(rotations, row, strict=True)]
+    cases += [(-90, -450, (-1, 0)), (450, 450, (-1, 0)),
+              (0, 30, (1, 0)), (0, 45, (1, -1)), (0, 60, (1, -1)),
+              (90, -45, (1, -1)), (180, 135, (1, 1)),
+              (270, -135, (-1, -1))]
+    for pin, part, want in cases:
+        assert tuple(geom.stem_dir(pin, part)) == want
+        assert _stem_dir(pin, part) == want
+
+
 def test_pin_escape_and_buck_kernels(geom):
     from schgen.core.config import CHAR_W
-    from schgen.core.symbols import Pin, pin_page_position_py
-    from schgen.layout.route import _stem_dir_py
-    from schgen.layout.textmetrics import LINE_H, SIZE
-
-    pin = Pin(number="1", name="VIN", etype="passive", x=2.54, y=-1.27,
-              rotation=0, length=2.54, hidden=False)
-    for rot in (0, 90, 180, 270, -90, 450):
-        assert tuple(geom.pin_page_position(
-            pin.x, pin.y, 10.0, 20.0, rot)) == pin_page_position_py(
-            pin, 10.0, 20.0, rot)
-    for pin_rot in (0, 90, 180, 270):
-        for part_rot in (0, 90, 180, 270, -90):
-            assert tuple(geom.stem_dir(pin_rot, part_rot)) == _stem_dir_py(
-                pin_rot, part_rot)
-    from schgen.core.symbols import SymbolDef
+    from schgen.core.symbols import Pin, SymbolDef
     from schgen.layout.place import _pin_text_boxes_py
+    from schgen.layout.textmetrics import LINE_H, SIZE
     from schgen.output.emit import PlacedPart
 
+    # Pin-page transforms use independent frozen Python golden metadata in
+    # native/tests/symbols_contracts.cpp, including noncardinal rounding cases.
     pins_obj = [
         Pin(number="1", name="VIN", etype="passive", x=2.54, y=-1.27,
             rotation=0, length=2.54, hidden=False),

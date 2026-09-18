@@ -1,13 +1,13 @@
 {
  "assembly": {
-  "n_parts": 147,
+  "n_parts": 158,
   "n_phases": 10,
   "n_pngs": 14,
   "n_steps": 4,
   "ok": true
  },
  "board_h": 100.0,
- "board_ok": false,
+ "board_ok": true,
  "board_w": 100.0,
  "connector_model": {
   "bad_z": [],
@@ -118,11 +118,11 @@
    "lib_footprint_issues": 25,
    "silk_edge_clearance": 4,
    "silk_over_copper": 6,
-   "silk_overlap": 29,
+   "silk_overlap": 20,
    "text_height": 4
   },
-  "n_unconnected": 400,
-  "n_violations": 68,
+  "n_unconnected": 413,
+  "n_violations": 59,
   "returncode": 0,
   "stderr": ""
  },
@@ -134,7 +134,7 @@
   "violations": []
  },
  "fallback_gate": {
-  "n_fired": 5,
+  "n_fired": 4,
   "n_names": 10,
   "ok": true,
   "pinned": false
@@ -145,8 +145,8 @@
   "cand_cap_truncated": 7,
   "corridor_evict_moved": 8,
   "corridor_stray_unmovable": 0,
-  "interior_reseat_retry": 36,
-  "legalize_only_compaction": 1,
+  "interior_reseat_retry": 35,
+  "legalize_only_compaction": 0,
   "punch_free_plan_rejected": 1,
   "seat_node_budget": 0,
   "thermal_via_lattice": 0
@@ -158,11 +158,11 @@
   "ok": true,
   "regressions": []
  },
- "floorplan_composition": "FLOORPLAN COMPOSITION (T1): 3 hard / 1 soft terms; hard RED 0, soft RED 0 (advisory)\n  aggregate hard margin: sum 139.6 mm, min 37.53 mm (informational)\n  hard terms:\n    HARD facing power->power_som: 47.66 vs 90.00 (margin +42.34) ok [facing/output_roles [placement/v2]] dot=+394.23\n    HARD flow_hop power->power_som: 42.53 vs 102.26 (margin +59.73) ok [flow chain [placement/v2]]\n    HARD near_max uart_bridge->usb_uart_connector: 2.47 vs 40.00 (margin +37.53) ok [judgment:10.0 (D11 edge-gap) \u2014 CP2102N's USB DP/DM pair terminates at the UART USB-C; measured 365mm of cross-board airwire (avg 122mm) with the block anchored mid-board and a STALE floorplan near-intent pointing at rj45_connector]\n  soft terms (advisory ledger \u2014 repair triggers, never gates):\n    soft near_intent power_mon->power_som: 12.51 vs 0.00 (margin +0.00) ok [carrier/floorplan.json near-intent (advisory)] advisory\n  n/a terms (endpoint subsystem not instantiated by this project \u2014 project-scoped resolution):\n    n/a far_min power->ethernet.line_side [judgment:10.0 \u2014 buck switching node vs Ethernet MDI/magnetics analog line side; datasheet silent on inter-subsystem spacing (SNVSBD5D covers intra-stage only)]\n    n/a flow_hop usb_pd->power [flow chain [placement/v2]]\n  T2 escape corridors (D13 never-close): 6 loaded, 0 UNMANAGED part intrusion(s), 7 T2-coexistence-managed\n    managed C5001 (power_mon) in escape:J3:S [T2 STAY]\n    managed C5002 (power_mon) in escape:J3:S [T2 STAY]\n    managed C5003 (power_mon) in escape:J3:N [T2 STAY]\n    managed R6012 (power_som) in escape:J2:N [T2 STAY]\n    managed R6014 (power_som) in escape:J2:N [T2 STAY]\n    managed RS5003 (power_mon) in escape:J3:N [T2 STAY]\n    managed RS5004 (power_mon) in escape:J3:N [T2 STAY]\n  D13 channel hotspots (>= 6 cross-airwires; corridor = 2 + 0.2/net mm):\n    power | power_mon: 8 airwires (221.3 mm) -> corridor >= 3.6 mm",
- "n_bottom": 55,
- "n_top": 97,
+ "floorplan_composition": "FLOORPLAN COMPOSITION (T1): 3 hard / 1 soft terms; hard RED 0, soft RED 0 (advisory)\n  aggregate hard margin: sum 146.08 mm, min 37.53 mm (informational)\n  hard terms:\n    HARD facing power->power_som: 41.90 vs 90.00 (margin +48.09) ok [facing/output_roles [placement/v2]] dot=+429.59\n    HARD flow_hop power->power_som: 41.80 vs 102.26 (margin +60.45) ok [flow chain [placement/v2]]\n    HARD near_max uart_bridge->usb_uart_connector: 2.47 vs 40.00 (margin +37.53) ok [judgment:10.0 (D11 edge-gap) \u2014 CP2102N's USB DP/DM pair terminates at the UART USB-C; measured 365mm of cross-board airwire (avg 122mm) with the block anchored mid-board and a STALE floorplan near-intent pointing at rj45_connector]\n  soft terms (advisory ledger \u2014 repair triggers, never gates):\n    soft near_intent power_mon->power_som: 12.54 vs 0.00 (margin +0.00) ok [carrier/floorplan.json near-intent (advisory)] advisory\n  n/a terms (endpoint subsystem not instantiated by this project \u2014 project-scoped resolution):\n    n/a far_min power->ethernet.line_side [judgment:10.0 \u2014 buck switching node vs Ethernet MDI/magnetics analog line side; datasheet silent on inter-subsystem spacing (SNVSBD5D covers intra-stage only)]\n    n/a flow_hop usb_pd->power [flow chain [placement/v2]]\n  T2 escape corridors (D13 never-close): 6 loaded, 0 UNMANAGED part intrusion(s), 6 T2-coexistence-managed\n    managed C5001 (power_mon) in escape:J3:N [T2 STAY]\n    managed C5003 (power_mon) in escape:J3:N [T2 STAY]\n    managed R6014 (power_som) in escape:J2:N [T2 STAY]\n    managed R6015 (power_som) in escape:J2:N [T2 STAY]\n    managed RS5003 (power_mon) in escape:J3:N [T2 STAY]\n    managed RS5004 (power_mon) in escape:J3:S [T2 STAY]\n  D13 channel hotspots (>= 6 cross-airwires; corridor = 2 + 0.2/net mm):\n    power | power_mon: 8 airwires (202.8 mm) -> corridor >= 3.6 mm",
+ "n_bottom": 57,
+ "n_top": 106,
  "nets": 266,
- "placed": 152,
+ "placed": 163,
  "placement_contract": {
   "bias_fail": 0,
   "boot_fail": 0,
@@ -187,8 +187,8 @@
  "placement_flow": {
   "board_area": 10000.0,
   "detail": [
-   "flow power->power_som: 42.53mm / 102.3mm budget",
-   "facing power->power_som: dot=+394.23 angle=47.7deg (output@(62.3732, 99.28) zone@(59.184, 112.6693) down@(96.4012, 92.0906))",
+   "flow power->power_som: 41.80mm / 102.3mm budget",
+   "facing power->power_som: dot=+429.59 angle=41.9deg (output@(64.6178, 99.08) zone@(60.1333, 112.1389) down@(96.646, 91.7809))",
    "near_max uart_bridge to usb_uart_connector: 2.47mm gap / <= 40mm"
   ],
   "facing_checked": 1,
@@ -216,7 +216,7 @@
   "controls_under_som": [],
   "face_top_on_bottom": [],
   "n_connectors": 2,
-  "n_face_top": 15,
+  "n_face_top": 24,
   "ok": true,
   "top_under_som": [],
   "under_som": []
@@ -231,23 +231,23 @@
  "ratsnest": {
   "board_h": 100.0,
   "board_w": 100.0,
-  "cross_mm": 1324.3,
-  "n_bottom": 55,
-  "n_cross": 72,
-  "n_top": 97,
-  "total_mm": 3311.1
+  "cross_mm": 1481.2,
+  "n_bottom": 57,
+  "n_cross": 74,
+  "n_top": 106,
+  "total_mm": 3582.6
  },
  "ratsnest_gate": {
   "board_h": 100.0,
   "board_w": 100.0,
   "cross_budget_mm": 2400.0,
-  "cross_mm": 1324.3,
+  "cross_mm": 1481.2,
   "dispersed": [],
-  "n_cross": 72,
+  "n_cross": 74,
   "n_subsystems": 8,
   "off_board": [],
   "ok": true,
-  "total_mm": 3311.1
+  "total_mm": 3582.6
  },
  "refdes_silk": {
   "bottom_pairs": 0,
@@ -281,15 +281,15 @@
   "worst_mm": 1.4818991193735165
  },
  "stage_movement": {
-  "breathe": 0,
+  "breathe": 10,
   "corridor_eviction": 8,
   "edge_seat": 2,
   "escape_copper": 0,
   "instantiate": 0,
-  "l4_pull": 32,
-  "refit_facing": 51,
-  "reorder": 16
+  "l4_pull": 34,
+  "refit_facing": 54,
+  "reorder": 17
  },
- "total": 152,
+ "total": 163,
  "two_side": true
 }

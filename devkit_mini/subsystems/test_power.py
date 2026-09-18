@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+import json
+from pathlib import Path
+
 import pytest
 
-from schgen.core.model import NetClass
+from schgen.core.model import Circuit, NetClass
 
-from schgen.core.link import load_subsystem
 import subsystems.power.power as _lib
 from devkit_mini.subsystems.power import circuit as build, META
 
@@ -26,7 +28,9 @@ _CARRIER_BIND = {
 
 @pytest.fixture
 def discovered():
-    return load_subsystem("power").circuit
+    # This devkit-specific adapter must not discover the default carrier sheet.
+    path = Path(__file__).parent / "power" / "circuit.json"
+    return Circuit.from_ir(json.loads(path.read_text()))
 
 
 @pytest.fixture
@@ -42,8 +46,8 @@ def test_meta_bind_is_the_documented_map():
     assert META["bind"] == _CARRIER_BIND
 
 
-def test_exposed_circuit_matches_discovery():
-    assert list(build().nets) == list(load_subsystem("power").circuit.nets)
+def test_exposed_circuit_matches_discovery(discovered):
+    assert build().to_ir() == discovered.to_ir()
 
 
 def test_meta_defers_the_en_ports_to_bringup():
@@ -53,6 +57,9 @@ def test_meta_defers_the_en_ports_to_bringup():
 
 
 def test_adapter_equals_lib_bound_netlist(discovered, lib_bound):
+    # The devkit adapter adds three real enable probes to the reusable netlist.
+    for net in ("EN_5V0", "EN_3V3", "EN_1V8"):
+        lib_bound.testpoint(net)
     assert discovered.name == lib_bound.name
     assert list(discovered.nets) == list(lib_bound.nets)
     for net in discovered.nets:

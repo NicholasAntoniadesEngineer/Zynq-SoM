@@ -7,7 +7,7 @@ alias map (rails only, exact, enumerated):
   carrier '+5V_SOM' == SoM 'VIN'  (P0 REBIND, not a spelling alias — wave3_function_map.md P0)
   (identity rails +3V3 / +1V8 / GND need no entry; signals are never aliased)
 
-bound ports (230):
+bound ports (235):
   debug_boot:ZYNQ_TMS -> sheet som_j1:ZYNQ_TMS; SoM ZYNQ_TMS (J1.66)
   debug_boot:ZYNQ_TCK -> sheet som_j1:ZYNQ_TCK; SoM ZYNQ_TCK (J1.64)
   debug_boot:ZYNQ_TDO -> sheet som_j1:ZYNQ_TDO; SoM ZYNQ_TDO (J1.68)
@@ -18,12 +18,17 @@ bound ports (230):
   debug_boot:STM32_BOOT0 -> sheet som_j1:STM32_BOOT0; SoM STM32_BOOT0 (J1.57)
   debug_boot:STM32_GPIO7 -> sheet som_j1:STM32_GPIO7; SoM STM32_GPIO7 (J1.59)
   debug_boot:STM32_GPIO8 -> sheet som_j1:STM32_GPIO8; SoM STM32_GPIO8 (J1.54)
+  debug_boot:STM32_I2C2_SCL [i2c] -> sheet power_mon:STM32_I2C2_SCL; sheet som_j1:STM32_I2C2_SCL
+  debug_boot:STM32_I2C2_SDA [i2c] -> sheet power_mon:STM32_I2C2_SDA; sheet som_j1:STM32_I2C2_SDA
+  debug_boot:SDIO_CLK [sd_bus] -> sheet som_j1:SDIO_CLK; SoM SDIO_CLK (J1.67)
+  debug_boot:SDIO_CMD [sd_bus] -> sheet som_j1:SDIO_CMD; SoM SDIO_CMD (J1.69)
+  debug_boot:VBUS_OUT_EN -> sheet som_j1:VBUS_OUT_EN; SoM VBUS_OUT_EN (J1.38)
   pd_input:STM32_USB_CC1 -> sheet som_j1:STM32_USB_CC1; SoM STM32_USB_CC1 (J1.29)
   pd_input:STM32_USB_CC2 -> sheet som_j1:STM32_USB_CC2; SoM STM32_USB_CC2 (J1.31)
   pd_input:STM32_USB_D_P [usb_hs_pair] -> sheet som_j1:STM32_USB_D_P; SoM STM32_USB_D_P (J1.19)
   pd_input:STM32_USB_D_N [usb_hs_pair] -> sheet som_j1:STM32_USB_D_N; SoM STM32_USB_D_N (J1.21)
-  power_mon:STM32_I2C2_SDA [i2c] -> sheet som_j1:STM32_I2C2_SDA
-  power_mon:STM32_I2C2_SCL [i2c] -> sheet som_j1:STM32_I2C2_SCL
+  power_mon:STM32_I2C2_SDA [i2c] -> sheet debug_boot:STM32_I2C2_SDA; sheet som_j1:STM32_I2C2_SDA
+  power_mon:STM32_I2C2_SCL [i2c] -> sheet debug_boot:STM32_I2C2_SCL; sheet som_j1:STM32_I2C2_SCL
   som_j1:STM32_USB_D_P [usb_hs_pair] -> sheet pd_input:STM32_USB_D_P; SoM STM32_USB_D_P (J1.19)
   som_j1:USB_ID -> SoM USB_ID (J1.20)
   som_j1:STM32_USB_D_N [usb_hs_pair] -> sheet pd_input:STM32_USB_D_N; SoM STM32_USB_D_N (J1.21)
@@ -35,7 +40,7 @@ bound ports (230):
   som_j1:STM32_GPIO1 -> SoM STM32_GPIO1 (J1.33)
   som_j1:STM32_GPIO2 -> SoM STM32_GPIO2 (J1.35)
   som_j1:ZYNQ_PS_MIO8\VM1 -> SoM ZYNQ_PS_MIO8\VM1 (J1.36)
-  som_j1:VBUS_OUT_EN -> SoM VBUS_OUT_EN (J1.38)
+  som_j1:VBUS_OUT_EN -> sheet debug_boot:VBUS_OUT_EN; SoM VBUS_OUT_EN (J1.38)
   som_j1:ZYNQ_PS_MIO7/VM0 -> SoM ZYNQ_PS_MIO7/VM0 (J1.40)
   som_j1:STM32_GPIO4 -> SoM STM32_GPIO4 (J1.41)
   som_j1:ZYNQ_PS_UART0_RXD -> sheet uart_bridge:ZYNQ_PS_UART0_RXD
@@ -44,21 +49,21 @@ bound ports (230):
   som_j1:ZYNQ_PS_MIO12 -> SoM ZYNQ_PS_MIO12 (J1.46)
   som_j1:STM32_NRST -> sheet debug_boot:STM32_NRST; SoM STM32_NRST (J1.47)
   som_j1:ZYNQ_PS_UART0_TXD -> sheet uart_bridge:ZYNQ_PS_UART0_TXD
-  som_j1:STM32_I2C2_SDA -> sheet power_mon:STM32_I2C2_SDA
+  som_j1:STM32_I2C2_SDA -> sheet debug_boot:STM32_I2C2_SDA; sheet power_mon:STM32_I2C2_SDA
   som_j1:ZYNQ_PS_MIO0 -> SoM ZYNQ_PS_MIO0 (J1.50)
   som_j1:ZYNQ_PS_MIO9 -> SoM ZYNQ_PS_MIO9 (J1.52)
   som_j1:STM32_GPIO5 -> sheet debug_boot:STM32_GPIO5; SoM STM32_GPIO5 (J1.53)
   som_j1:STM32_GPIO8 -> sheet debug_boot:STM32_GPIO8; SoM STM32_GPIO8 (J1.54)
-  som_j1:STM32_I2C2_SCL -> sheet power_mon:STM32_I2C2_SCL
+  som_j1:STM32_I2C2_SCL -> sheet debug_boot:STM32_I2C2_SCL; sheet power_mon:STM32_I2C2_SCL
   som_j1:STM32_BOOT0 -> sheet debug_boot:STM32_BOOT0; SoM STM32_BOOT0 (J1.57)
   som_j1:STM32_GPIO7 -> sheet debug_boot:STM32_GPIO7; SoM STM32_GPIO7 (J1.59)
   som_j1:SDIO_D1 [sd_bus] -> SoM SDIO_D1 (J1.61)
   som_j1:ZYNQ_TCK -> sheet debug_boot:ZYNQ_TCK; SoM ZYNQ_TCK (J1.64)
   som_j1:SDIO_D0 [sd_bus] -> SoM SDIO_D0 (J1.65)
   som_j1:ZYNQ_TMS -> sheet debug_boot:ZYNQ_TMS; SoM ZYNQ_TMS (J1.66)
-  som_j1:SDIO_CLK [sd_bus] -> SoM SDIO_CLK (J1.67)
+  som_j1:SDIO_CLK [sd_bus] -> sheet debug_boot:SDIO_CLK; SoM SDIO_CLK (J1.67)
   som_j1:ZYNQ_TDO -> sheet debug_boot:ZYNQ_TDO; SoM ZYNQ_TDO (J1.68)
-  som_j1:SDIO_CMD [sd_bus] -> SoM SDIO_CMD (J1.69)
+  som_j1:SDIO_CMD [sd_bus] -> sheet debug_boot:SDIO_CMD; SoM SDIO_CMD (J1.69)
   som_j1:ZYNQ_TDI -> sheet debug_boot:ZYNQ_TDI; SoM ZYNQ_TDI (J1.70)
   som_j1:SDIO_D3 [sd_bus] -> SoM SDIO_D3 (J1.71)
   som_j1:SDIO_D2 [sd_bus] -> SoM SDIO_D2 (J1.73)

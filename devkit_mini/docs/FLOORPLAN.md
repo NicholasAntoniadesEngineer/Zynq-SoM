@@ -23,7 +23,7 @@ SoM outline: **50 x 42 mm**. The DF40 mezzanine connectors sit on the SoM's bott
 
 Derived board: **100 x 100 mm**; SoM origin at **(25, 29)** (centered). All coordinates below are board-frame mm, origin top-left, +y down (KiCad convention).
 
-Outline derivation: SoM 50x42 + 7mm halo + 11mm connector band/edge -> core 86x78; component area 1119mm2 / 0.6 fill -> area floor 78x70; + 3mm perimeter keepout -> 95x85 mm (rounded up to 5mm grid); then SMALLEST-AREA search over aspects 1, 1.1, 1.1176, 1.2, 1.3, 1.4 -> 100x100 mm (the smallest board holding the REAL 2-sided packed blocks with the estimated cross-subsystem airwire 1356 <= LAW-5 budget 2400 mm — honest routing headroom, the gate is not relaxed), SoM 50x42 centered.
+Outline derivation: SoM 50x42 + 7mm halo + 11mm connector band/edge -> core 86x78; component area 1141mm2 / 0.6 fill -> area floor 78x71; + 3mm perimeter keepout -> 95x85 mm (rounded up to 5mm grid); then SMALLEST-AREA search over aspects 1, 1.1, 1.1176, 1.2, 1.3, 1.4 -> 100x100 mm (the smallest board holding the REAL 2-sided packed blocks with the estimated cross-subsystem airwire 1553 <= LAW-5 budget 2400 mm — honest routing headroom, the gate is not relaxed), SoM 50x42 centered.
 
 ## Edge connectors (pinned to edges by their mating direction)
 
@@ -36,11 +36,11 @@ Outline derivation: SoM 50x42 + 7mm halo + 11mm connector band/edge -> core 86x7
 
 | sheet | anchor | block (x, y, w x h) | parts | est mm2 | notes |
 |---|---|---|---|---|---|
-| debug_boot | N | (78, 32, 17.75 x 34.594) | 10 | 614 | (3) |
-| mechanical | E | (78, 18, 13 x 13) | 4 | 169 |  |
-| power | E | (12, 73, 53.2104 x 23.9349) | 51 | 1273.6 | (4) |
-| power_mon | @power_som | (14, 54, 9.166 x 13.198) | 10 | 121 | (5) |
-| power_som | E | (67, 74, 28.98 x 9.1) | 23 | 263.7 |  |
+| debug_boot | N | (78, 30, 17.75 x 40.594) | 15 | 720.5 | (3) |
+| mechanical | E | (78, 16, 13 x 13) | 4 | 169 |  |
+| power | E | (12.4096, 72.8, 55.2904 x 23.9349) | 54 | 1323.4 | (4) |
+| power_mon | @power_som | (13, 55, 9.932 x 13.198) | 13 | 131.1 | (5) |
+| power_som | E | (68, 74, 28.98 x 9.1) | 23 | 263.7 |  |
 | uart_bridge | @usb_uart_connector | (59, 16, 16.78 x 10.805) | 10 | 181.3 | (6) |
 
 ## Routing constraint classes (JLC04161H-7628 — from constraints.py)
@@ -74,11 +74,11 @@ Numbers are the power-tree gate's worst-case declared draws (`carrier/reports/po
 - **(4) power**: Buck thermal (worst-case declared draws): LM61460AANRJRR +5V_REG ~0.03 W; LM61460AANRJRR +3V3_REG ~0.02 W. Pour copper on the SW/PGND side, stitch vias under the packages, keep each SW node loop minimal.
 - **(5) power_mon**: Power monitor: the shunt resistors are in series with the rails — the rails must physically route through this block; place it between the regulators and the loads, Kelvin-connect the sense pairs.
 - **(6) uart_bridge**: CP2102N UART bridge: its USB connector is an author-declared deferral (expect usb_uart_connector) — the block reserves edge space for it; TX/RX test points stay probe-able.
-- **(board)**: 9 test points board-wide (test-point gate): spread them with probe clearance as the blocks settle; none may end up under the SoM.
+- **(board)**: 18 test points board-wide (test-point gate): spread them with probe clearance as the blocks settle; none may end up under the SoM.
 
 ## Honest limits
 
 - Block rectangles are AREA estimates (courtyards + routing factor), not layouts; their order along an edge is alphabetical, not optimized — shuffle freely.
 - The outline is DERIVED (SoM body + connector bands + total component area + perimeter keepout), sized generously for routing headroom; the user still owns it (drawn dashed).
 - The mirror convention (bottom view) must be checked against the DF40 mating datasheet before any footprint is placed.
-- som_j1/j2/j3 sheets are not blocks: they ARE the three DF40 strips drawn inside the SoM footprint.
+- The som_j1/j2/j3 DF40 connectors are fixed inside the SoM footprint; any additional parts on those sheets form ordinary packed blocks.

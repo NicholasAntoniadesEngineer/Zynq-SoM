@@ -683,6 +683,39 @@
       },
       "pin_names": {},
       "pin_numbers": []
+    },
+    {
+      "ref": "TP5",
+      "lib_id": "Connector:TestPoint",
+      "value": "EN_5V0",
+      "footprint": "TestPoint:TestPoint_Pad_D1.5mm",
+      "fields": {
+        "BOM": "exclude"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "TP6",
+      "lib_id": "Connector:TestPoint",
+      "value": "EN_3V3",
+      "footprint": "TestPoint:TestPoint_Pad_D1.5mm",
+      "fields": {
+        "BOM": "exclude"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "TP7",
+      "lib_id": "Connector:TestPoint",
+      "value": "EN_1V8",
+      "footprint": "TestPoint:TestPoint_Pad_D1.5mm",
+      "fields": {
+        "BOM": "exclude"
+      },
+      "pin_names": {},
+      "pin_numbers": []
     }
   ],
   "nets": [
@@ -743,7 +776,8 @@
       "name": "EN_5V0",
       "net_class": "port",
       "pins": [
-        "U1.7"
+        "U1.7",
+        "TP5.1"
       ]
     },
     {
@@ -846,7 +880,8 @@
       "name": "EN_3V3",
       "net_class": "port",
       "pins": [
-        "U2.7"
+        "U2.7",
+        "TP6.1"
       ]
     },
     {
@@ -945,7 +980,8 @@
       "name": "EN_1V8",
       "net_class": "port",
       "pins": [
-        "U3.3"
+        "U3.3",
+        "TP7.1"
       ]
     },
     {

@@ -48,8 +48,8 @@ ALERT_PULLUP = register(
 
 I2C_SPEED_HZ = register(
     "power_mon.i2c_speed", 400_000, "Hz",
-    "Fast-mode I2C on the shared STM32_I2C2 trunk. Bus pull-ups live on "
-    "usb_pd/bringup, never duplicated here.",
+    "Fast-mode I2C on the shared STM32_I2C2 trunk. This devkit omits the "
+    "carrier's bringup_rails sheet, so debug_boot owns the bus pull-ups.",
     "datasheet")
 
 SUPPLY_DRAW_A = register(
@@ -113,6 +113,9 @@ def circuit() -> Circuit:
     c.nc("U1.WARNING", "U1.PV", "U1.TC", "U2.WARNING", "U2.PV", "U2.TC")
 
     c.draws("+3V3_SC", SUPPLY_DRAW_A, "2x INA3221 ~0.7 mA + ALERT pull-up")
+
+    for net in ("+3V3_SC", "STM32_I2C2_SCL", "STM32_I2C2_SDA"):
+        c.testpoint(net)
 
     for rail, shunt, board_tp in _TESTPOINT_WAIVERS:
         c.waive_tp(rail, f"reg-side of {shunt} — probe across the shunt "

@@ -20,6 +20,35 @@ def test_norm_strips_kicad_sheet_prefix():
     assert netlist_gate._norm("//x") == "x"
 
 
+@_needs_kicad
+@pytest.mark.parametrize("probe_count", [1, 2])
+def test_probe_only_port_connects_across_sheet_hierarchy(tmp_path, probe_count):
+    from schgen.core.link import SheetCircuit
+    from schgen.core.model import Circuit
+    from schgen.core.symbols import Library
+    from schgen.generate.board import build_board
+    from schgen.layout import place
+
+    source = Circuit("source")
+    source.part("R1", "Device:R", "10k", "Resistor_SMD:R_0603_1608Metric")
+    source.port("PROBE_BUS", "R1.1")
+    source.net("GND", "R1.2")
+    probes = Circuit("probes")
+    probes.part("TP1", Circuit.TP_LIB_ID, "PROBE_BUS", Circuit.TP_FOOTPRINT)
+    probes.port("PROBE_BUS", "TP1.1")
+    if probe_count == 2:
+        probes.testpoint("PROBE_BUS", ref="TP2")
+    lib = Library()
+    placement, _, geometry = place.place_and_route(probes, lib)
+    assert [h.name for h in placement.hlabels] == ["PROBE_BUS"]
+    from schgen.verify.visual_gate import check
+    assert check(geometry).ok
+    sheets = [SheetCircuit(c.name, c, tmp_path / c.name, None)
+              for c in (source, probes)]
+    assert build_board(sheets, lib, tmp_path,
+                       sheet_index={"source": 1, "probes": 2})
+
+
 def _build_and_check(mutate=None):
     from schgen.tests import m1_rc
     c, d, lib = m1_rc.build()

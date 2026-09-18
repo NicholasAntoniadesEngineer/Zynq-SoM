@@ -1,10 +1,10 @@
 CONTRACT COVERAGE LINT — every wired-sheet part in >=1 contract structure or explicitly free
-CONTRACT COVERAGE LINT (advisory): 4 sheets, 79 parts — 62 structured / 0 free / 17 UNGATED
+CONTRACT COVERAGE LINT (advisory): 4 sheets, 82 parts — 62 structured / 0 free / 20 UNGATED
 
 pd_input             parts= 13  structured= 11  free= 0  UNGATED=  2
     UNGATED TP1    -> TP3001   +VBUS_IN               nets: +VBUS_IN
     UNGATED TP2    -> TP3002   +VIN                   nets: +VIN
-power                parts= 51  structured= 38  free= 0  UNGATED= 13
+power                parts= 54  structured= 38  free= 0  UNGATED= 16
     UNGATED D1     -> D4001    red                    nets: +5V_REG, PG_5V0
     UNGATED D2     -> D4002    red                    nets: +3V3_REG, PG_3V3
     UNGATED D3     -> D4003    red                    nets: +3V3, PG_1V8_K
@@ -18,6 +18,9 @@ power                parts= 51  structured= 38  free= 0  UNGATED= 13
     UNGATED TP2    -> TP4002   +3V3                   nets: +3V3
     UNGATED TP3    -> TP4003   +1V8                   nets: +1V8
     UNGATED TP4    -> TP4004   GND                    nets: GND
+    UNGATED TP5    -> TP4005   EN_5V0                 nets: EN_5V0
+    UNGATED TP6    -> TP4006   EN_3V3                 nets: EN_3V3
+    UNGATED TP7    -> TP4007   EN_1V8                 nets: EN_1V8
 uart_bridge          parts= 10  structured=  8  free= 0  UNGATED=  2
     UNGATED TP1    -> TP11001  ZYNQ_PS_UART0_TXD      nets: ZYNQ_PS_UART0_TXD
     UNGATED TP2    -> TP11002  ZYNQ_PS_UART0_RXD      nets: ZYNQ_PS_UART0_RXD

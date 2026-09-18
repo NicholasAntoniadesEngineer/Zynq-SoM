@@ -77,4 +77,8 @@ META = {
 
 
 def circuit() -> Circuit:
-    return _lib.circuit(META)
+    c = _lib.circuit(META)
+    # The minimal devkit has no bringup_rails sheet to provide these probes.
+    for net in ("EN_5V0", "EN_3V3", "EN_1V8"):
+        c.testpoint(net)
+    return c

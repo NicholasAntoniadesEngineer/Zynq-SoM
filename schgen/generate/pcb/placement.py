@@ -849,7 +849,7 @@ def subsystem_zone_geometry(two_side: bool = True, spec=None) -> ZoneGeom:
                    if idx_path.exists() else {})
     sheets = [load_subsystem(p.stem) for p in all_subsystem_paths()]
 
-    from schgen.generate.floorplan import _EDGE_FAMILIES
+    from schgen.generate.floorplan import _EDGE_FAMILIES, _zone_parts
 
     refs_by_sheet: dict[str, list[str]] = {}
     bbox_of: dict[str, tuple[float, float, float, float]] = {}
@@ -873,8 +873,6 @@ def subsystem_zone_geometry(two_side: bool = True, spec=None) -> ZoneGeom:
     conn_class_of: dict[str, str] = {}
 
     for i, sc in enumerate(sheets, start=1):
-        if sc.name.startswith("som_j") or sc.name == "som_decoupling":
-            continue
         band = sheet_index.get(sc.name, i)
         c = sc.circuit
         snets: dict[str, list[PinRef]] = {}
@@ -884,7 +882,7 @@ def subsystem_zone_geometry(two_side: bool = True, spec=None) -> ZoneGeom:
                        if not p.ref.startswith("#") else p.ref, p.pin)
                 for p in net.pins]
         sdec = _decoupling_caps(snets)
-        for ref, part in c.parts.items():
+        for ref, part in _zone_parts(sc).items():
             bref = _renamed_ref(ref, band, sheet=sc.name)
             if part.value in _EDGE_FAMILIES:
                 edge_sheets.add(sc.name)
@@ -1778,516 +1776,515 @@ def build_model(two_side: bool = True, spec=None, *,
         # An input/spec edited during the solve is not a reusable result.
         if stage.inputs == plan_inputs:
             plan_sink(stage)
-    _led.open_step("pcb.placement")
-    _led.calc("edge_flush", EDGE_FLUSH_MM, edge_pad_clear=EDGE_PAD_CLEAR,
-              flush_relief=EDGE_FLUSH_RELIEF)
-    _led.calc("template_clear", TEMPLATE_CLEAR,
-              place_clear_baseline=PLACE_CLEAR_BASELINE)
-    from .stage_templates import _NONSW_RELIEF, _NONSW_STAGE_GAP
-    _led.calc("nonsw_stage_gap", _NONSW_STAGE_GAP,
-              template_clear=TEMPLATE_CLEAR, nonsw_relief=_NONSW_RELIEF)
-    _trk.checkpoint("plan_lattice", {})
-    zg = apply_chosen_shapes(zg, {b.name: b.shape_idx for b in plan.blocks})
-    _trk.checkpoint("shape_bind", {})
-    zone_box = zg.zone_box
-    top_off = zg.top_off
-    bot_off = zg.bot_off
-    side_of.update(zg.side_of)
-    resolvable.update(zg.resolvable)
-    bbox_of.update(zg.bbox_of)
-    classes, netclass_of = _net_classes(sheets)
-    board_w, board_h = fp.BOARD_W, fp.BOARD_H
+    with _led.step("pcb.placement"):
+        _led.calc("edge_flush", EDGE_FLUSH_MM, edge_pad_clear=EDGE_PAD_CLEAR,
+                  flush_relief=EDGE_FLUSH_RELIEF)
+        _led.calc("template_clear", TEMPLATE_CLEAR,
+                  place_clear_baseline=PLACE_CLEAR_BASELINE)
+        from .stage_templates import _NONSW_RELIEF, _NONSW_STAGE_GAP
+        _led.calc("nonsw_stage_gap", _NONSW_STAGE_GAP,
+                  template_clear=TEMPLATE_CLEAR, nonsw_relief=_NONSW_RELIEF)
+        _trk.checkpoint("plan_lattice", {})
+        zg = apply_chosen_shapes(zg, {b.name: b.shape_idx for b in plan.blocks})
+        _trk.checkpoint("shape_bind", {})
+        zone_box = zg.zone_box
+        top_off = zg.top_off
+        bot_off = zg.bot_off
+        side_of.update(zg.side_of)
+        resolvable.update(zg.resolvable)
+        bbox_of.update(zg.bbox_of)
+        classes, netclass_of = _net_classes(sheets)
+        board_w, board_h = fp.BOARD_W, fp.BOARD_H
 
-    som = plan.som
-    som_rot = {j.ref: (90.0 if j.w < j.h else 0.0) for j in som.js}
-    som_rel = {j.ref: (j.x, j.y) for j in som.js}
-    som_j_refs: dict[str, str] = {}
-    fixed_rot: dict[str, float] = {}
-    for ref, (sheet, _fp, _v, _lib) in parts.items():
-        if ref not in resolvable or not sheet.startswith("som_j"):
-            continue
-        m = re.match(r"som_j(\d)", sheet)
-        if m and ref.startswith("J"):
-            jname = f"J{m.group(1)}"
-            if jname in som_rel:
-                som_j_refs[ref] = jname
-                fixed_rot[ref] = som_rot[jname]
-
-    for ref, rot in zg.conn_rot.items():
-        if ref in resolvable:
-            fixed_rot[ref] = rot
-
-    for ref, extra in zg.zone_extra_rot.items():
-        if ref in resolvable:
-            fixed_rot[ref] = (fixed_rot.get(ref, 0.0) + extra) % 360.0
-
-    block_of = {b.name: b for b in plan.blocks}
-    zorigin: dict[str, tuple[float, float]] = {}
-    for sheet in zone_box:
-        b = block_of.get(sheet)
-        if b is None:
-            continue
-        zorigin[sheet] = (b.x, b.y)
-
-    halo = 1.0
-    keepout = (plan.som_x - halo, plan.som_y - halo,
-               plan.som_x + som.w + halo, plan.som_y + som.h + halo)
-    som_view = {jn: (plan.som_x + sx, plan.som_y + sy)
-                for jn, (sx, sy) in som_rel.items()}
-
-    pos: dict[str, tuple[float, float]] = {}
-    corners = [(MH_INSET, MH_INSET),
-               (board_w - MH_INSET, MH_INSET),
-               (board_w - MH_INSET, board_h - MH_INSET),
-               (MH_INSET, board_h - MH_INSET)]
-    for i, ref in enumerate(mh_refs):
-        pos[ref] = corners[i % 4]
-    for ref, jname in som_j_refs.items():
-        pos[ref] = som_view[jname]
-    grid_placed: set[str] = set()
-    for sheet in zorigin:
-        zx, zy = zorigin[sheet]
-        for r, (dx, dy) in top_off[sheet].items():
-            pos[r] = (zx + dx, zy + dy)
-            grid_placed.add(r)
-        for r, (dx, dy) in bot_off[sheet].items():
-            pos[r] = (zx + dx, zy + dy)
-            grid_placed.add(r)
-
-    udec = sorted(r for r, (sh, _f, _v, _l) in parts.items()
-                  if sh == "som_decoupling" and r in resolvable)
-    for ref, cell in zip(udec, som_decoupling_cells(
-            plan.som_x, plan.som_y, som.w, som.h, plan.dec_bank[0]),
-            strict=True):
-        pos[ref] = cell
-        side_of[ref] = "bottom"
-        grid_placed.add(ref)
-
-    def _pose_snap() -> dict[str, tuple]:
-        return {r: (p[0], p[1], fixed_rot.get(r, 0.0))
-                for r, p in pos.items()}
-
-    _trk.checkpoint("step3_emission", _pose_snap())
-
-    if two_side:
-        som_cx = plan.som_x + som.w / 2.0
-        som_cy = plan.som_y + som.h / 2.0
-
-        def _eff_box(ref: str, px: float, py: float
-                     ) -> tuple[float, float, float, float]:
-            ex0, ey0, ex1, ey1 = turn_box(bbox_of[ref],
-                                              fixed_rot.get(ref, 0.0))
-            return (px + ex0, py + ey0, px + ex1, py + ey1)
-
-        def _halo(b: tuple[float, float, float, float], m: float
-                  ) -> tuple[float, float, float, float]:
-            return (b[0] - m, b[1] - m, b[2] + m, b[3] + m)
-
-        def _hit(b: tuple[float, float, float, float],
-                 boxes: list[tuple[float, float, float, float]]) -> bool:
-            for o in boxes:
-                if (b[0] < o[2] and b[2] > o[0]
-                        and b[1] < o[3] and b[3] > o[1]):
-                    return True
-            return False
-
-        tht_boxes: list[tuple[float, float, float, float]] = [
-            _halo(_eff_box(r, pos[r][0], pos[r][1]), PLACE_CLEAR)
-            for r in pos
-            if side_of.get(r) == "top" and r in resolvable
-            and has_thru_pads(resolvable[r])]
-
-        bot_box: dict[str, tuple[float, float, float, float]] = {
-            r: _halo(_eff_box(r, pos[r][0], pos[r][1]), PLACE_CLEAR / 2)
-            for r in pos
-            if side_of.get(r) == "bottom" and r in bbox_of}
-
-        _escape_corridors: list[tuple[float, float, float, float]] = []
-        from schgen.generate import floorplan as _fp
-        from schgen.generate.pcb import constants as _const
-        if (_const.PLACE_CLEAR > _const.PLACE_CLEAR_BASELINE
-                or _fp.SOM_DX or _fp.SOM_DY):
-            from schgen.generate.pcb.escape import corridor_board_rect
-            _escape_corridors = [
-                corridor_board_rect(resolvable[r], pos[r][0], pos[r][1],
-                                    fixed_rot.get(r, 0.0))
-                for r in sorted(som_j_refs)
-                if r in resolvable and r in pos]
-
-        from schgen.verify.fanout_gate import (
-            MIN_SUBJECT_PINS,
-            intelligent_need,
-        )
-        d13_bot: dict[str, tuple[str, tuple[float, float, float, float]]] = {}
-        for r in sorted(pos):
-            if (side_of.get(r) == "bottom" and r in resolvable
-                    and r in bbox_of and r in parts):
-                npins = len(pad_names(resolvable[r]))
-                if npins < MIN_SUBJECT_PINS:
-                    continue
-                need = _q.quant_credit(intelligent_need(npins)[0])
-                d13_bot[r] = (parts[r][0], _halo(
-                    _eff_box(r, pos[r][0], pos[r][1]),
-                    max(0.0, need - PLACE_CLEAR / 2)))
-        from schgen.verify.placement_contract_gate import (
-            wired_term_participants,
-        )
-        _l4_exempt, _far_only = wired_term_participants()
-        for sheet in sorted(zorigin):
-            if sheet in _l4_exempt:
+        som = plan.som
+        som_rot = {j.ref: (90.0 if j.w < j.h else 0.0) for j in som.js}
+        som_rel = {j.ref: (j.x, j.y) for j in som.js}
+        som_j_refs: dict[str, str] = {}
+        fixed_rot: dict[str, float] = {}
+        for ref, (sheet, _fp, _v, _lib) in parts.items():
+            if ref not in resolvable or not sheet.startswith("som_j"):
                 continue
-            movers = [r for r in bot_off.get(sheet, {})
-                      if side_of.get(r) == "bottom" and r in pos
-                      and r[:1] in ("R", "C", "L")
-                      and not r.startswith(("RJ", "LED"))]
-            if len(movers) < 2:
+            m = re.match(r"som_j(\d)", sheet)
+            if m and ref.startswith("J"):
+                jname = f"J{m.group(1)}"
+                if jname in som_rel:
+                    som_j_refs[ref] = jname
+                    fixed_rot[ref] = som_rot[jname]
+
+        for ref, rot in zg.conn_rot.items():
+            if ref in resolvable:
+                fixed_rot[ref] = rot
+
+        for ref, extra in zg.zone_extra_rot.items():
+            if ref in resolvable:
+                fixed_rot[ref] = (fixed_rot.get(ref, 0.0) + extra) % 360.0
+
+        block_of = {b.name: b for b in plan.blocks}
+        zorigin: dict[str, tuple[float, float]] = {}
+        for sheet in zone_box:
+            b = block_of.get(sheet)
+            if b is None:
                 continue
-            gcx, gcy = _nat.module().points_centroid(
-                [pos[r] for r in movers])
-            vx, vy = som_cx - gcx, som_cy - gcy
-            dist = _nat.module().hypot_xy(0.0, 0.0, vx, vy)
-            if dist < 1.0:
-                continue
-            ux, uy = vx / dist, vy / dist
-            mset = set(movers)
-            others = ([bot_box[r] for r in bot_box if r not in mset]
-                      + _escape_corridors
-                      + [b for rr, (sh, b) in sorted(d13_bot.items())
-                         if sh != sheet and rr not in mset])
-            allr = [r for r in (list(top_off.get(sheet, {}))
-                                + list(bot_off.get(sheet, {})))
-                    if r in pos and r in bbox_of]
-            sum_area = sum((_eff_box(r, 0.0, 0.0)[2] - _eff_box(r, 0.0, 0.0)[0])
-                           * (_eff_box(r, 0.0, 0.0)[3] - _eff_box(r, 0.0, 0.0)[1])
-                           for r in allr) or 1.0
-            chosen = 0.0
-            for k in range(int(min(dist, L4_PULL_SPAN) / L4_PULL_STEP), 0, -1):
-                shift = k * L4_PULL_STEP
-                ok = True
-                shifted: dict[str, tuple[float, float]] = {}
-                for r in movers:
-                    nx, ny = pos[r][0] + ux * shift, pos[r][1] + uy * shift
-                    bb = _eff_box(r, nx, ny)
-                    if (bb[0] < BOARD_EDGE_MARGIN
-                            or bb[1] < BOARD_EDGE_MARGIN
-                            or bb[2] > board_w - BOARD_EDGE_MARGIN
-                            or bb[3] > board_h - BOARD_EDGE_MARGIN):
-                        ok = False
-                        break
-                    hb = _halo(bb, PLACE_CLEAR / 2)
-                    if _hit(hb, others) or _hit(hb, tht_boxes):
-                        ok = False
-                        break
-                    shifted[r] = (nx, ny)
-                if not ok:
-                    continue
-                xs0 = []
-                ys0 = []
-                xs1 = []
-                ys1 = []
-                for r in allr:
-                    px, py = shifted.get(r, pos[r])
-                    bb = _eff_box(r, px, py)
-                    xs0.append(bb[0])
-                    ys0.append(bb[1])
-                    xs1.append(bb[2])
-                    ys1.append(bb[3])
-                if ((max(xs1) - min(xs0)) * (max(ys1) - min(ys0))
-                        / sum_area) > DISP_CAP_L4:
-                    continue
-                chosen = shift
-                break
-            if chosen > 0.0:
-                for r in movers:
-                    nx, ny = (round(pos[r][0] + ux * chosen, 4),
-                              round(pos[r][1] + uy * chosen, 4))
-                    pos[r] = (nx, ny)
-                    bot_box[r] = _halo(_eff_box(r, nx, ny), PLACE_CLEAR / 2)
-                    if r in d13_bot:
-                        sh, b = d13_bot[r]
-                        grow = (b[2] - b[0]
-                                - (_eff_box(r, 0.0, 0.0)[2]
-                                   - _eff_box(r, 0.0, 0.0)[0])) / 2.0
-                        d13_bot[r] = (sh, _halo(_eff_box(r, nx, ny), grow))
+            zorigin[sheet] = (b.x, b.y)
 
-    _trk.checkpoint("l4_pull", _pose_snap())
+        halo = 1.0
+        keepout = (plan.som_x - halo, plan.som_y - halo,
+                   plan.som_x + som.w + halo, plan.som_y + som.h + halo)
+        som_view = {jn: (plan.som_x + sx, plan.som_y + sy)
+                    for jn, (sx, sy) in som_rel.items()}
 
-    for ref, edge in zg.conn_edge.items():
-        if ref not in resolvable or ref not in pos:
-            continue
-        pb = _rot_pad_bbox(resolvable[ref], fixed_rot.get(ref, 0.0))
-        if pb is None:
-            continue
-        px0, py0, px1, py1 = pb
-        x, y = pos[ref]
-        if edge == "N":
-            y = EDGE_PAD_CLEAR - py0
-        elif edge == "S":
-            y = board_h - EDGE_PAD_CLEAR - py1
-        elif edge == "W":
-            x = EDGE_PAD_CLEAR - px0
-        elif edge == "E":
-            x = board_w - EDGE_PAD_CLEAR - px1
-        pos[ref] = (round(x, 4), round(y, 4))
-        grid_placed.add(ref)
+        pos: dict[str, tuple[float, float]] = {}
+        corners = [(MH_INSET, MH_INSET),
+                   (board_w - MH_INSET, MH_INSET),
+                   (board_w - MH_INSET, board_h - MH_INSET),
+                   (MH_INSET, board_h - MH_INSET)]
+        for i, ref in enumerate(mh_refs):
+            pos[ref] = corners[i % 4]
+        for ref, jname in som_j_refs.items():
+            pos[ref] = som_view[jname]
+        grid_placed: set[str] = set()
+        for sheet in zorigin:
+            zx, zy = zorigin[sheet]
+            for r, (dx, dy) in top_off[sheet].items():
+                pos[r] = (zx + dx, zy + dy)
+                grid_placed.add(r)
+            for r, (dx, dy) in bot_off[sheet].items():
+                pos[r] = (zx + dx, zy + dy)
+                grid_placed.add(r)
 
-    _trk.checkpoint("edge_seat", _pose_snap())
+        udec = sorted(r for r, (sh, _f, _v, _l) in parts.items()
+                      if sh == "som_decoupling" and r in resolvable)
+        for ref, cell in zip(udec, som_decoupling_cells(
+                plan.som_x, plan.som_y, som.w, som.h, plan.dec_bank[0]),
+                strict=True):
+            pos[ref] = cell
+            side_of[ref] = "bottom"
+            grid_placed.add(ref)
 
-    fixed = set(mh_refs) | set(som_j_refs)
+        def _pose_snap() -> dict[str, tuple]:
+            return {r: (p[0], p[1], fixed_rot.get(r, 0.0))
+                    for r, p in pos.items()}
 
-    if two_side:
-        from schgen.generate.pcb.breathe import _eff_box as _bz_eff
-        from schgen.generate.pcb.breathe import _halo as _bz_halo
-        from schgen.generate.pcb.breathe import breathe_fanout
-        _page_keepout = (ORIGIN_X + keepout[0], ORIGIN_Y + keepout[1],
-                         ORIGIN_X + keepout[2], ORIGIN_Y + keepout[3])
-        _df40_bands = [
-            _bz_halo(_bz_eff(bbox_of[r], fixed_rot.get(r, 0.0),
-                             pos[r][0], pos[r][1]), 6.0)
-            for r in som_j_refs if r in bbox_of and r in pos]
-        for _ph in _BREATHE_PHASES:
-            breathe_fanout(
-                pos, resolvable=resolvable, parts=parts, bbox_of=bbox_of,
-                fixed_rot=fixed_rot, side_of=side_of, zorigin=zorigin,
-                board_w=board_w, board_h=board_h,
-                som_keepout=_page_keepout, conn_edge=zg.conn_edge,
-                mh_refs=set(mh_refs), som_j_refs=set(som_j_refs),
-                df40_pad_boxes=_df40_bands, phase=_ph)
+        _trk.checkpoint("step3_emission", _pose_snap())
 
-    _trk.checkpoint("breathe", _pose_snap())
+        if two_side:
+            som_cx = plan.som_x + som.w / 2.0
+            som_cy = plan.som_y + som.h / 2.0
 
-    from schgen.verify.placement_contract_gate import _pad_boxes as _gpb
-    from schgen.verify.placement_contract_gate import load_contract as _lc_refit
+            def _eff_box(ref: str, px: float, py: float
+                         ) -> tuple[float, float, float, float]:
+                ex0, ey0, ex1, ey1 = turn_box(bbox_of[ref],
+                                                  fixed_rot.get(ref, 0.0))
+                return (px + ex0, py + ey0, px + ex1, py + ey1)
 
-    from . import stage_templates as _st_refit
-    _net_pins_all: dict[str, list[tuple[str, str]]] = {}
-    for (_r, _p), (_num, _nm) in pin_net.items():
-        if _nm and not _nm.startswith("unconnected-"):
-            _net_pins_all.setdefault(_nm, []).append((_r, _p))
-    for _nm in _net_pins_all:
-        _net_pins_all[_nm].sort()
-    for sheet in sorted(zorigin):
-        _c = _lc_refit(sheet)
-        ds = ((_c or {}).get("external") or {}).get("downstream")
-        if not ds:
-            continue
-        srefs = sorted(r for r in zg.refs_by_sheet.get(sheet, []) if r in pos)
-        drefs = [r for r in zg.refs_by_sheet.get(ds, []) if r in pos]
-        if not srefs or not drefs or any(r in zg.conn_rot for r in srefs):
-            continue
-        cds = (sum(pos[r][0] for r in drefs) / len(drefs),
-               sum(pos[r][1] for r in drefs) / len(drefs))
-        _sset = set(srefs)
-        _npins: dict[str, list[tuple[str, str]]] = {}
-        _fpts: dict[str, list[tuple[float, float, str]]] = {}
-        for _nm, _pl in _net_pins_all.items():
-            own = [(r, p) for r, p in _pl if r in _sset]
-            if not own:
-                continue
-            _npins[_nm] = own
-            ext: list[tuple[float, float, str]] = []
-            for r, p in _pl:
-                if r in _sset or r not in pos or r not in resolvable:
-                    continue
-                bb = _gpb(resolvable[r], fixed_rot.get(r, 0.0) % 360.0).get(p)
-                if bb is None:
-                    continue
-                ext.append((round(pos[r][0] + (bb[0] + bb[2]) / 2.0, 3),
-                            round(pos[r][1] + (bb[1] + bb[3]) / 2.0, 3),
-                            parts[r][0]))
-            _fpts[_nm] = ext
-        _turn = _st_refit.refit_facing(sheet, _c, {r: pos[r] for r in srefs},
-                                       fixed_rot, resolvable, cds,
-                                       _npins, _fpts)
-        if _turn:
-            for r, (x, y, rot) in _turn.items():
-                pos[r] = (x, y)
-                fixed_rot[r] = rot
+            def _halo(b: tuple[float, float, float, float], m: float
+                      ) -> tuple[float, float, float, float]:
+                return (b[0] - m, b[1] - m, b[2] + m, b[3] + m)
 
-    _trk.checkpoint("refit_facing", _pose_snap())
+            def _hit(b: tuple[float, float, float, float],
+                     boxes: list[tuple[float, float, float, float]]) -> bool:
+                for o in boxes:
+                    if (b[0] < o[2] and b[2] > o[0]
+                            and b[1] < o[3] and b[3] > o[1]):
+                        return True
+                return False
 
-    _reorder_interchangeable(
-        pos, zg.refs_by_sheet, side_of, resolvable, fixed_rot, bbox_of,
-        nets, pin_net, set(zg.conn_rot),
-        {s for s in zorigin if _lc_refit(s) is not None})
-
-    _trk.checkpoint("reorder", _pose_snap())
-
-    if two_side:
-        from schgen.generate.pcb.escape import corridor_board_rect
-        _corr0 = [corridor_board_rect(
-                      resolvable[r],
-                      _q.evict_corridor_grid(ORIGIN_X, pos[r][0]),
-                      _q.evict_corridor_grid(ORIGIN_Y, pos[r][1]),
-                      fixed_rot.get(r, 0.0))
-                  for r in sorted(som_j_refs)
-                  if r in resolvable and r in pos]
-
-        def _ebox(ref: str, px: float, py: float
-                  ) -> tuple[float, float, float, float]:
-            eb = turn_box(bbox_of[ref], fixed_rot.get(ref, 0.0))
-            return (px + eb[0], py + eb[1], px + eb[2], py + eb[3])
-
-        def _collide(bb, boxes) -> bool:
-            return any(bb[0] < o[2] and bb[2] > o[0]
-                       and bb[1] < o[3] and bb[3] > o[1] for o in boxes)
-
-        _bot = {r: _ebox(r, pos[r][0], pos[r][1]) for r in pos
-                if side_of.get(r) == "bottom" and r in bbox_of}
-        _tht = [_ebox(r, pos[r][0], pos[r][1]) for r in pos
+            tht_boxes: list[tuple[float, float, float, float]] = [
+                _halo(_eff_box(r, pos[r][0], pos[r][1]), PLACE_CLEAR)
+                for r in pos
                 if side_of.get(r) == "top" and r in resolvable
-                and r in bbox_of and has_thru_pads(resolvable[r])]
-        from schgen.verify.fanout_gate import (
-            MIN_SUBJECT_PINS as _MSP,
-        )
-        from schgen.verify.fanout_gate import (
-            intelligent_need as _ineed,
-        )
-        _d13ev: dict[str, tuple[str, tuple[float, float, float, float]]] = {}
-        for r in sorted(_bot):
-            if r in resolvable and r in parts:
-                np_ = len(pad_names(resolvable[r]))
-                if np_ >= _MSP:
-                    g = max(0.0, _q.quant_credit(_ineed(np_)[0]) - PLACE_CLEAR)
-                    bb = _ebox(r, pos[r][0], pos[r][1])
-                    _d13ev[r] = (parts[r][0], (bb[0] - g, bb[1] - g,
-                                               bb[2] + g, bb[3] + g))
-        for ref in sorted(_bot):
-            b = _bot[ref]
-            if not _collide(b, _corr0):
-                continue
-            exits: list[tuple[float, float, float]] = []
-            m = PLACE_CLEAR / 2
-            for cr in _corr0:
-                if not _collide(b, [cr]):
+                and has_thru_pads(resolvable[r])]
+
+            bot_box: dict[str, tuple[float, float, float, float]] = {
+                r: _halo(_eff_box(r, pos[r][0], pos[r][1]), PLACE_CLEAR / 2)
+                for r in pos
+                if side_of.get(r) == "bottom" and r in bbox_of}
+
+            _escape_corridors: list[tuple[float, float, float, float]] = []
+            from schgen.generate import floorplan as _fp
+            from schgen.generate.pcb import constants as _const
+            if (_const.PLACE_CLEAR > _const.PLACE_CLEAR_BASELINE
+                    or _fp.SOM_DX or _fp.SOM_DY):
+                from schgen.generate.pcb.escape import corridor_board_rect
+                _escape_corridors = [
+                    corridor_board_rect(resolvable[r], pos[r][0], pos[r][1],
+                                        fixed_rot.get(r, 0.0))
+                    for r in sorted(som_j_refs)
+                    if r in resolvable and r in pos]
+
+            from schgen.verify.fanout_gate import (
+                MIN_SUBJECT_PINS,
+                intelligent_need,
+            )
+            d13_bot: dict[str, tuple[str, tuple[float, float, float, float]]] = {}
+            for r in sorted(pos):
+                if (side_of.get(r) == "bottom" and r in resolvable
+                        and r in bbox_of and r in parts):
+                    npins = len(pad_names(resolvable[r]))
+                    if npins < MIN_SUBJECT_PINS:
+                        continue
+                    need = _q.quant_credit(intelligent_need(npins)[0])
+                    d13_bot[r] = (parts[r][0], _halo(
+                        _eff_box(r, pos[r][0], pos[r][1]),
+                        max(0.0, need - PLACE_CLEAR / 2)))
+            from schgen.verify.placement_contract_gate import (
+                wired_term_participants,
+            )
+            _l4_exempt, _far_only = wired_term_participants()
+            for sheet in sorted(zorigin):
+                if sheet in _l4_exempt:
                     continue
-                exits += [(cr[2] - b[0] + m, cr[2] - b[0] + m, 0.0),
-                          (b[2] - cr[0] + m, -(b[2] - cr[0] + m), 0.0),
-                          (cr[3] - b[1] + m, 0.0, cr[3] - b[1] + m),
-                          (b[3] - cr[1] + m, 0.0, -(b[3] - cr[1] + m))]
-            moved = False
-            for _d, ex, ey in sorted(exits):
-                for k in range(0, 9):
-                    sx = ex + (k if ex > 0 else -k if ex < 0 else 0.0)
-                    sy = ey + (k if ey > 0 else -k if ey < 0 else 0.0)
-                    nx = round(pos[ref][0] + sx, 4)
-                    ny = round(pos[ref][1] + sy, 4)
-                    nb = _ebox(ref, nx, ny)
-                    if (nb[0] < BOARD_EDGE_MARGIN
-                            or nb[1] < BOARD_EDGE_MARGIN
-                            or nb[2] > board_w - BOARD_EDGE_MARGIN
-                            or nb[3] > board_h - BOARD_EDGE_MARGIN):
+                movers = [r for r in bot_off.get(sheet, {})
+                          if side_of.get(r) == "bottom" and r in pos
+                          and r[:1] in ("R", "C", "L")
+                          and not r.startswith(("RJ", "LED"))]
+                if len(movers) < 2:
+                    continue
+                gcx, gcy = _nat.module().points_centroid(
+                    [pos[r] for r in movers])
+                vx, vy = som_cx - gcx, som_cy - gcy
+                dist = _nat.module().hypot_xy(0.0, 0.0, vx, vy)
+                if dist < 1.0:
+                    continue
+                ux, uy = vx / dist, vy / dist
+                mset = set(movers)
+                others = ([bot_box[r] for r in bot_box if r not in mset]
+                          + _escape_corridors
+                          + [b for rr, (sh, b) in sorted(d13_bot.items())
+                             if sh != sheet and rr not in mset])
+                allr = [r for r in (list(top_off.get(sheet, {}))
+                                    + list(bot_off.get(sheet, {})))
+                        if r in pos and r in bbox_of]
+                sum_area = sum((_eff_box(r, 0.0, 0.0)[2] - _eff_box(r, 0.0, 0.0)[0])
+                               * (_eff_box(r, 0.0, 0.0)[3] - _eff_box(r, 0.0, 0.0)[1])
+                               for r in allr) or 1.0
+                chosen = 0.0
+                for k in range(int(min(dist, L4_PULL_SPAN) / L4_PULL_STEP), 0, -1):
+                    shift = k * L4_PULL_STEP
+                    ok = True
+                    shifted: dict[str, tuple[float, float]] = {}
+                    for r in movers:
+                        nx, ny = pos[r][0] + ux * shift, pos[r][1] + uy * shift
+                        bb = _eff_box(r, nx, ny)
+                        if (bb[0] < BOARD_EDGE_MARGIN
+                                or bb[1] < BOARD_EDGE_MARGIN
+                                or bb[2] > board_w - BOARD_EDGE_MARGIN
+                                or bb[3] > board_h - BOARD_EDGE_MARGIN):
+                            ok = False
+                            break
+                        hb = _halo(bb, PLACE_CLEAR / 2)
+                        if _hit(hb, others) or _hit(hb, tht_boxes):
+                            ok = False
+                            break
+                        shifted[r] = (nx, ny)
+                    if not ok:
                         continue
-                    if _collide(nb, _corr0):
+                    xs0 = []
+                    ys0 = []
+                    xs1 = []
+                    ys1 = []
+                    for r in allr:
+                        px, py = shifted.get(r, pos[r])
+                        bb = _eff_box(r, px, py)
+                        xs0.append(bb[0])
+                        ys0.append(bb[1])
+                        xs1.append(bb[2])
+                        ys1.append(bb[3])
+                    if ((max(xs1) - min(xs0)) * (max(ys1) - min(ys0))
+                            / sum_area) > DISP_CAP_L4:
                         continue
-                    grown = (nb[0] - PLACE_CLEAR, nb[1] - PLACE_CLEAR,
-                             nb[2] + PLACE_CLEAR, nb[3] + PLACE_CLEAR)
-                    if _collide(grown, [_bot[r] for r in _bot if r != ref]):
-                        continue
-                    if _collide(grown, _tht):
-                        continue
-                    if _collide(grown, [b for rr, (sh, b) in
-                                        sorted(_d13ev.items())
-                                        if rr != ref
-                                        and sh != parts[ref][0]]):
-                        continue
-                    pos[ref] = (nx, ny)
-                    _bot[ref] = nb
-                    moved = True
+                    chosen = shift
                     break
+                if chosen > 0.0:
+                    for r in movers:
+                        nx, ny = (round(pos[r][0] + ux * chosen, 4),
+                                  round(pos[r][1] + uy * chosen, 4))
+                        pos[r] = (nx, ny)
+                        bot_box[r] = _halo(_eff_box(r, nx, ny), PLACE_CLEAR / 2)
+                        if r in d13_bot:
+                            sh, b = d13_bot[r]
+                            grow = (b[2] - b[0]
+                                    - (_eff_box(r, 0.0, 0.0)[2]
+                                       - _eff_box(r, 0.0, 0.0)[0])) / 2.0
+                            d13_bot[r] = (sh, _halo(_eff_box(r, nx, ny), grow))
+
+        _trk.checkpoint("l4_pull", _pose_snap())
+
+        for ref, edge in zg.conn_edge.items():
+            if ref not in resolvable or ref not in pos:
+                continue
+            pb = _rot_pad_bbox(resolvable[ref], fixed_rot.get(ref, 0.0))
+            if pb is None:
+                continue
+            px0, py0, px1, py1 = pb
+            x, y = pos[ref]
+            if edge == "N":
+                y = EDGE_PAD_CLEAR - py0
+            elif edge == "S":
+                y = board_h - EDGE_PAD_CLEAR - py1
+            elif edge == "W":
+                x = EDGE_PAD_CLEAR - px0
+            elif edge == "E":
+                x = board_w - EDGE_PAD_CLEAR - px1
+            pos[ref] = (round(x, 4), round(y, 4))
+            grid_placed.add(ref)
+
+        _trk.checkpoint("edge_seat", _pose_snap())
+
+        fixed = set(mh_refs) | set(som_j_refs)
+
+        if two_side:
+            from schgen.generate.pcb.breathe import _eff_box as _bz_eff
+            from schgen.generate.pcb.breathe import _halo as _bz_halo
+            from schgen.generate.pcb.breathe import breathe_fanout
+            _page_keepout = (ORIGIN_X + keepout[0], ORIGIN_Y + keepout[1],
+                             ORIGIN_X + keepout[2], ORIGIN_Y + keepout[3])
+            _df40_bands = [
+                _bz_halo(_bz_eff(bbox_of[r], fixed_rot.get(r, 0.0),
+                                 pos[r][0], pos[r][1]), 6.0)
+                for r in som_j_refs if r in bbox_of and r in pos]
+            for _ph in _BREATHE_PHASES:
+                breathe_fanout(
+                    pos, resolvable=resolvable, parts=parts, bbox_of=bbox_of,
+                    fixed_rot=fixed_rot, side_of=side_of, zorigin=zorigin,
+                    board_w=board_w, board_h=board_h,
+                    som_keepout=_page_keepout, conn_edge=zg.conn_edge,
+                    mh_refs=set(mh_refs), som_j_refs=set(som_j_refs),
+                    df40_pad_boxes=_df40_bands, phase=_ph)
+
+        _trk.checkpoint("breathe", _pose_snap())
+
+        from schgen.verify.placement_contract_gate import _pad_boxes as _gpb
+        from schgen.verify.placement_contract_gate import load_contract as _lc_refit
+
+        from . import stage_templates as _st_refit
+        _net_pins_all: dict[str, list[tuple[str, str]]] = {}
+        for (_r, _p), (_num, _nm) in pin_net.items():
+            if _nm and not _nm.startswith("unconnected-"):
+                _net_pins_all.setdefault(_nm, []).append((_r, _p))
+        for _nm in _net_pins_all:
+            _net_pins_all[_nm].sort()
+        for sheet in sorted(zorigin):
+            _c = _lc_refit(sheet)
+            ds = ((_c or {}).get("external") or {}).get("downstream")
+            if not ds:
+                continue
+            srefs = sorted(r for r in zg.refs_by_sheet.get(sheet, []) if r in pos)
+            drefs = [r for r in zg.refs_by_sheet.get(ds, []) if r in pos]
+            if not srefs or not drefs or any(r in zg.conn_rot for r in srefs):
+                continue
+            cds = (sum(pos[r][0] for r in drefs) / len(drefs),
+                   sum(pos[r][1] for r in drefs) / len(drefs))
+            _sset = set(srefs)
+            _npins: dict[str, list[tuple[str, str]]] = {}
+            _fpts: dict[str, list[tuple[float, float, str]]] = {}
+            for _nm, _pl in _net_pins_all.items():
+                own = [(r, p) for r, p in _pl if r in _sset]
+                if not own:
+                    continue
+                _npins[_nm] = own
+                ext: list[tuple[float, float, str]] = []
+                for r, p in _pl:
+                    if r in _sset or r not in pos or r not in resolvable:
+                        continue
+                    bb = _gpb(resolvable[r], fixed_rot.get(r, 0.0) % 360.0).get(p)
+                    if bb is None:
+                        continue
+                    ext.append((round(pos[r][0] + (bb[0] + bb[2]) / 2.0, 3),
+                                round(pos[r][1] + (bb[1] + bb[3]) / 2.0, 3),
+                                parts[r][0]))
+                _fpts[_nm] = ext
+            _turn = _st_refit.refit_facing(sheet, _c, {r: pos[r] for r in srefs},
+                                           fixed_rot, resolvable, cds,
+                                           _npins, _fpts)
+            if _turn:
+                for r, (x, y, rot) in _turn.items():
+                    pos[r] = (x, y)
+                    fixed_rot[r] = rot
+
+        _trk.checkpoint("refit_facing", _pose_snap())
+
+        _reorder_interchangeable(
+            pos, zg.refs_by_sheet, side_of, resolvable, fixed_rot, bbox_of,
+            nets, pin_net, set(zg.conn_rot),
+            {s for s in zorigin if _lc_refit(s) is not None})
+
+        _trk.checkpoint("reorder", _pose_snap())
+
+        if two_side:
+            from schgen.generate.pcb.escape import corridor_board_rect
+            _corr0 = [corridor_board_rect(
+                          resolvable[r],
+                          _q.evict_corridor_grid(ORIGIN_X, pos[r][0]),
+                          _q.evict_corridor_grid(ORIGIN_Y, pos[r][1]),
+                          fixed_rot.get(r, 0.0))
+                      for r in sorted(som_j_refs)
+                      if r in resolvable and r in pos]
+
+            def _ebox(ref: str, px: float, py: float
+                      ) -> tuple[float, float, float, float]:
+                eb = turn_box(bbox_of[ref], fixed_rot.get(ref, 0.0))
+                return (px + eb[0], py + eb[1], px + eb[2], py + eb[3])
+
+            def _collide(bb, boxes) -> bool:
+                return any(bb[0] < o[2] and bb[2] > o[0]
+                           and bb[1] < o[3] and bb[3] > o[1] for o in boxes)
+
+            _bot = {r: _ebox(r, pos[r][0], pos[r][1]) for r in pos
+                    if side_of.get(r) == "bottom" and r in bbox_of}
+            _tht = [_ebox(r, pos[r][0], pos[r][1]) for r in pos
+                    if side_of.get(r) == "top" and r in resolvable
+                    and r in bbox_of and has_thru_pads(resolvable[r])]
+            from schgen.verify.fanout_gate import (
+                MIN_SUBJECT_PINS as _MSP,
+            )
+            from schgen.verify.fanout_gate import (
+                intelligent_need as _ineed,
+            )
+            _d13ev: dict[str, tuple[str, tuple[float, float, float, float]]] = {}
+            for r in sorted(_bot):
+                if r in resolvable and r in parts:
+                    np_ = len(pad_names(resolvable[r]))
+                    if np_ >= _MSP:
+                        g = max(0.0, _q.quant_credit(_ineed(np_)[0]) - PLACE_CLEAR)
+                        bb = _ebox(r, pos[r][0], pos[r][1])
+                        _d13ev[r] = (parts[r][0], (bb[0] - g, bb[1] - g,
+                                                   bb[2] + g, bb[3] + g))
+            for ref in sorted(_bot):
+                b = _bot[ref]
+                if not _collide(b, _corr0):
+                    continue
+                exits: list[tuple[float, float, float]] = []
+                m = PLACE_CLEAR / 2
+                for cr in _corr0:
+                    if not _collide(b, [cr]):
+                        continue
+                    exits += [(cr[2] - b[0] + m, cr[2] - b[0] + m, 0.0),
+                              (b[2] - cr[0] + m, -(b[2] - cr[0] + m), 0.0),
+                              (cr[3] - b[1] + m, 0.0, cr[3] - b[1] + m),
+                              (b[3] - cr[1] + m, 0.0, -(b[3] - cr[1] + m))]
+                moved = False
+                for _d, ex, ey in sorted(exits):
+                    for k in range(0, 9):
+                        sx = ex + (k if ex > 0 else -k if ex < 0 else 0.0)
+                        sy = ey + (k if ey > 0 else -k if ey < 0 else 0.0)
+                        nx = round(pos[ref][0] + sx, 4)
+                        ny = round(pos[ref][1] + sy, 4)
+                        nb = _ebox(ref, nx, ny)
+                        if (nb[0] < BOARD_EDGE_MARGIN
+                                or nb[1] < BOARD_EDGE_MARGIN
+                                or nb[2] > board_w - BOARD_EDGE_MARGIN
+                                or nb[3] > board_h - BOARD_EDGE_MARGIN):
+                            continue
+                        if _collide(nb, _corr0):
+                            continue
+                        grown = (nb[0] - PLACE_CLEAR, nb[1] - PLACE_CLEAR,
+                                 nb[2] + PLACE_CLEAR, nb[3] + PLACE_CLEAR)
+                        if _collide(grown, [_bot[r] for r in _bot if r != ref]):
+                            continue
+                        if _collide(grown, _tht):
+                            continue
+                        if _collide(grown, [b for rr, (sh, b) in
+                                            sorted(_d13ev.items())
+                                            if rr != ref
+                                            and sh != parts[ref][0]]):
+                            continue
+                        pos[ref] = (nx, ny)
+                        _bot[ref] = nb
+                        moved = True
+                        break
+                    if moved:
+                        break
                 if moved:
-                    break
-            if moved:
-                _fb.record("corridor_evict_moved")
+                    _fb.record("corridor_evict_moved")
+                else:
+                    _fb.record("corridor_stray_unmovable")
+
+        _trk.checkpoint("corridor_eviction", _pose_snap())
+        _led.calc("stage_movement", sum(_trk.moves.values()),
+                  l4_pull=_trk.moves.get("l4_pull", 0),
+                  edge_seat=_trk.moves.get("edge_seat", 0),
+                  breathe=_trk.moves.get("breathe", 0),
+                  refit_facing=_trk.moves.get("refit_facing", 0),
+                  reorder=_trk.moves.get("reorder", 0),
+                  corridor_eviction=_trk.moves.get("corridor_eviction", 0))
+
+        insts: list[FootprintInst] = []
+        placed = 0
+        n_top = n_bottom = 0
+        for ref in sorted(resolvable):
+            sheet, footprint, value, lib = parts[ref]
+            mod = resolvable[ref]
+            bx, by = pos[ref]
+            side = "top" if ref in fixed else side_of[ref]
+            if side == "bottom" and _is_face_top_part(ref, lib, footprint):
+                raise AssertionError(
+                    f"EMISSION: user-facing part {ref} ({sheet}, {footprint}) is "
+                    f"about to emit on B.Cu — a TP/LED/SW must present on the "
+                    f"board TOP face (the secondary pack of a bottom-assigned "
+                    f"block); a bottom shape leaked it into the primary pack")
+            pad_nets: dict[str, tuple[int, str]] = {}
+            for pad in pad_names(mod):
+                pad_nets[pad] = pin_net.get((ref, pad), (0, ""))
+            if ref in grid_placed:
+                fx, fy = round(ORIGIN_X + bx, 4), round(ORIGIN_Y + by, 4)
             else:
-                _fb.record("corridor_stray_unmovable")
+                fx, fy = (_q.fixed_part_grid(ORIGIN_X + bx),
+                          _q.fixed_part_grid(ORIGIN_Y + by))
+            insts.append(FootprintInst(
+                ref=ref, value=value, footprint=footprint,
+                x=fx, y=fy,
+                rotation=fixed_rot.get(ref, 0.0), pad_nets=pad_nets,
+                mod_path=mod, sheet=sheet, side=side,
+                mirror=ref in zg.mirror_refs))
+            placed += 1
+            if side == "bottom":
+                n_bottom += 1
+            else:
+                n_top += 1
 
-    _trk.checkpoint("corridor_eviction", _pose_snap())
-    _led.calc("stage_movement", sum(_trk.moves.values()),
-              l4_pull=_trk.moves.get("l4_pull", 0),
-              edge_seat=_trk.moves.get("edge_seat", 0),
-              breathe=_trk.moves.get("breathe", 0),
-              refit_facing=_trk.moves.get("refit_facing", 0),
-              reorder=_trk.moves.get("reorder", 0),
-              corridor_eviction=_trk.moves.get("corridor_eviction", 0))
+        fid_mod = resolve_mod(FIDUCIAL_FOOTPRINT)
+        fid_insts: list[FootprintInst] = []
+        if fid_mod is not None:
+            x0, y0 = ORIGIN_X, ORIGIN_Y
+            x1, y1 = ORIGIN_X + board_w, ORIGIN_Y + board_h
+            fid_pos: list[tuple[str, float, float]] = [
+                ("FID1", x0 + FID_INSET, y0 + FID_INSET),
+                ("FID2", x1 - FID_INSET, y0 + FID_INSET),
+                ("FID3", x0 + FID_INSET, y1 - FID_INSET),
+            ]
+            kx0, ky0, kx1, ky1 = keepout
+            ins = 3.0
+            fid_pos += [
+                ("FID4", ORIGIN_X + kx0 + ins, ORIGIN_Y + ky0 + ins),
+                ("FID5", ORIGIN_X + kx1 - ins, ORIGIN_Y + ky1 - ins),
+            ]
+            for ref, fx, fy in fid_pos:
+                fid_insts.append(FootprintInst(
+                    ref=ref, value="Fiducial", footprint=FIDUCIAL_FOOTPRINT,
+                    x=round(fx, 4), y=round(fy, 4), rotation=0.0,
+                    pad_nets={}, mod_path=fid_mod, sheet="mechanical", side="top"))
+            insts.extend(fid_insts)
+            placed += len(fid_insts)
+            n_top += len(fid_insts)
 
-    insts: list[FootprintInst] = []
-    placed = 0
-    n_top = n_bottom = 0
-    for ref in sorted(resolvable):
-        sheet, footprint, value, lib = parts[ref]
-        mod = resolvable[ref]
-        bx, by = pos[ref]
-        side = "top" if ref in fixed else side_of[ref]
-        if side == "bottom" and _is_face_top_part(ref, lib, footprint):
-            raise AssertionError(
-                f"EMISSION: user-facing part {ref} ({sheet}, {footprint}) is "
-                f"about to emit on B.Cu — a TP/LED/SW must present on the "
-                f"board TOP face (the secondary pack of a bottom-assigned "
-                f"block); a bottom shape leaked it into the primary pack")
-        pad_nets: dict[str, tuple[int, str]] = {}
-        for pad in pad_names(mod):
-            pad_nets[pad] = pin_net.get((ref, pad), (0, ""))
-        if ref in grid_placed:
-            fx, fy = round(ORIGIN_X + bx, 4), round(ORIGIN_Y + by, 4)
-        else:
-            fx, fy = (_q.fixed_part_grid(ORIGIN_X + bx),
-                      _q.fixed_part_grid(ORIGIN_Y + by))
-        insts.append(FootprintInst(
-            ref=ref, value=value, footprint=footprint,
-            x=fx, y=fy,
-            rotation=fixed_rot.get(ref, 0.0), pad_nets=pad_nets,
-            mod_path=mod, sheet=sheet, side=side,
-            mirror=ref in zg.mirror_refs))
-        placed += 1
-        if side == "bottom":
-            n_bottom += 1
-        else:
-            n_top += 1
+        _trk.checkpoint("instantiate", _pose_snap())
 
-    fid_mod = resolve_mod(FIDUCIAL_FOOTPRINT)
-    fid_insts: list[FootprintInst] = []
-    if fid_mod is not None:
-        x0, y0 = ORIGIN_X, ORIGIN_Y
-        x1, y1 = ORIGIN_X + board_w, ORIGIN_Y + board_h
-        fid_pos: list[tuple[str, float, float]] = [
-            ("FID1", x0 + FID_INSET, y0 + FID_INSET),
-            ("FID2", x1 - FID_INSET, y0 + FID_INSET),
-            ("FID3", x0 + FID_INSET, y1 - FID_INSET),
-        ]
+        def _page_snap() -> dict[str, tuple]:
+            return {i.ref: (i.x, i.y, i.rotation, i.side) for i in insts}
+
+        _trk.checkpoint("emission_frame", _page_snap())
+
         kx0, ky0, kx1, ky1 = keepout
-        ins = 3.0
-        fid_pos += [
-            ("FID4", ORIGIN_X + kx0 + ins, ORIGIN_Y + ky0 + ins),
-            ("FID5", ORIGIN_X + kx1 - ins, ORIGIN_Y + ky1 - ins),
-        ]
-        for ref, fx, fy in fid_pos:
-            fid_insts.append(FootprintInst(
-                ref=ref, value="Fiducial", footprint=FIDUCIAL_FOOTPRINT,
-                x=round(fx, 4), y=round(fy, 4), rotation=0.0,
-                pad_nets={}, mod_path=fid_mod, sheet="mechanical", side="top"))
-        insts.extend(fid_insts)
-        placed += len(fid_insts)
-        n_top += len(fid_insts)
-
-    _trk.checkpoint("instantiate", _pose_snap())
-
-    def _page_snap() -> dict[str, tuple]:
-        return {i.ref: (i.x, i.y, i.rotation, i.side) for i in insts}
-
-    _trk.checkpoint("emission_frame", _page_snap())
-
-    kx0, ky0, kx1, ky1 = keepout
-    som_core = som_core_rect(plan.som_x, plan.som_y, som.w, som.h)
-    model = PcbModel(
-        board_w=board_w, board_h=board_h, insts=insts,
-        net_numbers=net_numbers, netclass_of=netclass_of, classes=classes,
-        placed=placed, deferred=deferred,
-        som_keepout=(ORIGIN_X + kx0, ORIGIN_Y + ky0,
-                     ORIGIN_X + kx1, ORIGIN_Y + ky1),
-        n_top=n_top, n_bottom=n_bottom, two_side=two_side,
-        som_core=som_core)
-    _led.close_step("pcb.placement")
+        som_core = som_core_rect(plan.som_x, plan.som_y, som.w, som.h)
+        model = PcbModel(
+            board_w=board_w, board_h=board_h, insts=insts,
+            net_numbers=net_numbers, netclass_of=netclass_of, classes=classes,
+            placed=placed, deferred=deferred,
+            som_keepout=(ORIGIN_X + kx0, ORIGIN_Y + ky0,
+                         ORIGIN_X + kx1, ORIGIN_Y + ky1),
+            n_top=n_top, n_bottom=n_bottom, two_side=two_side,
+            som_core=som_core)
     from .escape import build_escape_copper, build_escape_plan
     with _led.step("pcb.escape"):
         from .escape import CLR_HOLE_HOLE, CLR_HOLE_HOLE_RELIEF

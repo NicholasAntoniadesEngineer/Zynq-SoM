@@ -462,8 +462,10 @@ void repository_contracts(Suite& suite, const fs::path& repo) {
                 require(record(s.circuit) == record(lookup_circuit_catalog(s.name)), "catalog data differs: " + s.name);
                 parts += s.circuit.parts.size(); nets += s.circuit.nets.size(); ports += s.circuit.port_types.size(); nc += s.circuit.nc.size();
             }
-            require(parts == (carrier ? 564u : 147u) && nets == (carrier ? 818u : 321u)
-                    && ports == (carrier ? 387u : 46u) && nc == (carrier ? 130u : 55u), "real IR totals changed");
+            // Devkit adds two bus terminations and nine probe pads; its debug
+            // sheet now owns five additional exported nets (two I2C, three probes).
+            require(parts == (carrier ? 564u : 158u) && nets == (carrier ? 818u : 326u)
+                    && ports == (carrier ? 387u : 51u) && nc == (carrier ? 130u : 55u), "real IR totals changed");
             const auto index = load_sheet_index(paths);
             require(index.size() == expected.size() && extend_sheet_index(index, expected).unseen.empty(), "stable sheet bands diverged");
             require(index.front() == std::make_pair(expected.front(), int32_t(1)), "first sheet band changed");

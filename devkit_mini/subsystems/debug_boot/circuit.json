@@ -264,6 +264,61 @@
       },
       "pin_names": {},
       "pin_numbers": []
+    },
+    {
+      "ref": "R7",
+      "lib_id": "Device:R",
+      "value": "4k7",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C23162"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "R8",
+      "lib_id": "Device:R",
+      "value": "4k7",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C23162"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "TP1",
+      "lib_id": "Connector:TestPoint",
+      "value": "SDIO_CLK",
+      "footprint": "TestPoint:TestPoint_Pad_D1.5mm",
+      "fields": {
+        "BOM": "exclude"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "TP2",
+      "lib_id": "Connector:TestPoint",
+      "value": "SDIO_CMD",
+      "footprint": "TestPoint:TestPoint_Pad_D1.5mm",
+      "fields": {
+        "BOM": "exclude"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "TP3",
+      "lib_id": "Connector:TestPoint",
+      "value": "VBUS_OUT_EN",
+      "footprint": "TestPoint:TestPoint_Pad_D1.5mm",
+      "fields": {
+        "BOM": "exclude"
+      },
+      "pin_names": {},
+      "pin_numbers": []
     }
   ],
   "nets": [
@@ -335,7 +390,9 @@
         "R3.1",
         "R4.1",
         "R5.1",
-        "R6.1"
+        "R6.1",
+        "R7.1",
+        "R8.1"
       ]
     },
     {
@@ -398,6 +455,41 @@
       "pins": [
         "SW1.4",
         "R6.2"
+      ]
+    },
+    {
+      "name": "STM32_I2C2_SCL",
+      "net_class": "port",
+      "pins": [
+        "R7.2"
+      ]
+    },
+    {
+      "name": "STM32_I2C2_SDA",
+      "net_class": "port",
+      "pins": [
+        "R8.2"
+      ]
+    },
+    {
+      "name": "SDIO_CLK",
+      "net_class": "port",
+      "pins": [
+        "TP1.1"
+      ]
+    },
+    {
+      "name": "SDIO_CMD",
+      "net_class": "port",
+      "pins": [
+        "TP2.1"
+      ]
+    },
+    {
+      "name": "VBUS_OUT_EN",
+      "net_class": "port",
+      "pins": [
+        "TP3.1"
       ]
     }
   ],
@@ -508,6 +600,56 @@
       "speed_hz": null,
       "level_v": null,
       "expect": "som_j1_connector"
+    },
+    "STM32_I2C2_SCL": {
+      "kind": "i2c",
+      "pair_with": null,
+      "impedance": null,
+      "role": "scl",
+      "bus": "STM32_I2C2",
+      "speed_hz": 400000,
+      "level_v": null,
+      "expect": "som_j1_connector"
+    },
+    "STM32_I2C2_SDA": {
+      "kind": "i2c",
+      "pair_with": null,
+      "impedance": null,
+      "role": "sda",
+      "bus": "STM32_I2C2",
+      "speed_hz": 400000,
+      "level_v": null,
+      "expect": "som_j1_connector"
+    },
+    "SDIO_CLK": {
+      "kind": "sd_bus",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": "SDIO",
+      "speed_hz": null,
+      "level_v": 1.8,
+      "expect": "som_j1_connector"
+    },
+    "SDIO_CMD": {
+      "kind": "sd_bus",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": "SDIO",
+      "speed_hz": null,
+      "level_v": 1.8,
+      "expect": "som_j1_connector"
+    },
+    "VBUS_OUT_EN": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "som_j1_connector"
     }
   },
   "hints": {},
@@ -516,6 +658,10 @@
       [
         0.004,
         "BOOT0 strap ~2 mA closed + BOOTSEL pulls"
+      ],
+      [
+        0.0015,
+        "2x4k7 STM32_I2C2 pull-ups"
       ]
     ],
     "+3V3": [

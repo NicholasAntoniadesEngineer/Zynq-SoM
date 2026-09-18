@@ -4,7 +4,7 @@
 * the strapped debug/boot signals), NOT abstract names. debug_boot has NO active
 * parts (it is headers + a DIP + a reset tact), so this subckt captures the
 * full PASSIVE network it adds: the JTAG insurance pull-ups, the BOOT0 series
-* strap, and the BOOTSEL/spare defined-high pull-ups. The DIP/reset switch
+* strap, BOOTSEL/spare defined-high pull-ups, and SC I2C bus pull-ups. The DIP/reset switch
 * contacts are open at DC (the operator closes them), so the pull-ups define
 * every strapped node's resting level.
 *
@@ -15,10 +15,12 @@
 *   R4 10k  BOOTSEL0 pull-up   (+3V3_SC -> STM32_GPIO7)
 *   R5 10k  BOOTSEL1 pull-up   (+3V3_SC -> STM32_GPIO8)
 *   R6 10k  spare    pull-up   (+3V3_SC -> BOOT_SPARE)
+*   R7 4k7  SC I2C SCL pull-up (+3V3_SC -> STM32_I2C2_SCL)
+*   R8 4k7  SC I2C SDA pull-up (+3V3_SC -> STM32_I2C2_SDA)
 *
 * Port order: the two rails, GND, then the strapped signals.
 
-.subckt debug_boot V3V3 V3V3SC GND TMS TDI BOOT0SET GPIO7 GPIO8 BOOTSPARE
+.subckt debug_boot V3V3 V3V3SC GND TMS TDI BOOT0SET GPIO7 GPIO8 BOOTSPARE SCL SDA
 
 * JTAG insurance pull-ups (Zynq dedicated JTAG pins float without a probe)
 R1 V3V3 TMS 4k7
@@ -32,6 +34,10 @@ R3 V3V3SC BOOT0SET 100R
 R4 V3V3SC GPIO7 10k
 R5 V3V3SC GPIO8 10k
 R6 V3V3SC BOOTSPARE 10k
+
+* One termination per management-bus line, powered even with carrier rails off.
+R7 V3V3SC SCL 4k7
+R8 V3V3SC SDA 4k7
 
 .ends debug_boot
 

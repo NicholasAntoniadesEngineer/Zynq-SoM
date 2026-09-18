@@ -1,5 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1668 702" width="1668" height="702" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="13">
-<rect width="1668" height="702" fill="#ffffff"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1668 710" width="1668" height="710" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="13">
+<rect width="1668" height="710" fill="#ffffff"/>
 <text x="30" y="38" font-size="26" font-weight="700" fill="#0f172a">Zynq carrier — linked port graph</text>
 <text x="30" y="62" font-size="15" fill="#64748b">12 sheets · 213 SoM contract nets · left-to-right by role; edges aggregated per sheet-pair (count · dominant kind); long cross-board links in the bottom channel</text>
 <rect x="1120" y="18" width="522" height="89" rx="8" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
@@ -32,18 +32,19 @@
 <text x="1042" y="250" font-size="14" font-weight="700" fill="#93c5fd">FMC / user IO</text>
 <rect x="1331" y="116" width="202" height="93" rx="12" fill="#ecfeff" stroke="#67e8f9" stroke-width="1.3"/>
 <text x="1342" y="132" font-size="14" font-weight="700" fill="#67e8f9">Storage &amp; USB</text>
-<rect x="135" y="490" width="1398" height="56" rx="12" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.2"/>
-<text x="147" y="504" font-size="12" font-weight="700" fill="#94a3b8">cross-board links (3 edges spanning &#8805;2 columns, routed clear of the centre)</text>
+<rect x="135" y="490" width="1398" height="64" rx="12" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.2"/>
+<text x="147" y="504" font-size="12" font-weight="700" fill="#94a3b8">cross-board links (4 edges spanning &#8805;2 columns, routed clear of the centre)</text>
 <path d="M322.0,175.0 H394.3 V448.0 H834.0" fill="none" stroke="#9ca3af" stroke-width="1.4" stroke-linejoin="round" stroke-opacity="0.72" stroke-dasharray="5,4"><title>pd_input ↔ later: PD_FLT_N</title></path>
 <path d="M322.0,350.0 H427.4 V448.0 H834.0" fill="none" stroke="#9ca3af" stroke-width="1.4" stroke-linejoin="round" stroke-opacity="0.72" stroke-dasharray="5,4"><title>power ↔ later: EN_1V8, EN_3V3, EN_5V0</title></path>
-<path d="M322.0,264.0 H410.9 V448.0 H834.0" fill="none" stroke="#9ca3af" stroke-width="1.4" stroke-linejoin="round" stroke-opacity="0.72" stroke-dasharray="5,4"><title>power_mon ↔ later: PMON_ALERT_N</title></path>
+<path d="M322.0,258.0 H410.9 V448.0 H834.0" fill="none" stroke="#9ca3af" stroke-width="1.4" stroke-linejoin="round" stroke-opacity="0.72" stroke-dasharray="5,4"><title>power_mon ↔ later: PMON_ALERT_N</title></path>
 <path d="M322.0,157.0 H361.1 V252.0 H450.0" fill="none" stroke="#0891b2" stroke-width="2.0" stroke-linejoin="round" stroke-opacity="0.72"><title>pd_input ↔ som_j1: STM32_USB_CC1, STM32_USB_CC2, STM32_USB_D_N, STM32_USB_D_P</title></path>
-<path d="M322.0,252.0 H377.7 V264.0 H450.0" fill="none" stroke="#16a34a" stroke-width="1.7" stroke-linejoin="round" stroke-opacity="0.72"><title>power_mon ↔ som_j1: STM32_I2C2_SCL, STM32_I2C2_SCL, STM32_I2C2_SDA, STM32_I2C2_SDA</title></path>
-<path d="M622.0,267.0 H715.0 V529.0 H1011.0 V278.0 H1046.0" fill="none" stroke="#2563eb" stroke-width="1.4" stroke-linejoin="round" stroke-opacity="0.72"><title>som_j1 ↔ debug_boot: STM32_BOOT0, STM32_GPIO5, STM32_GPIO6, STM32_GPIO7, STM32_GPIO8, STM32_NRST, ZYNQ_TCK, ZYNQ_TDI, ZYNQ_TDO, ZYNQ_TMS</title></path>
-<path d="M622.0,249.0 H686.0 V521.5 H982.0 V172.0 H1046.0" fill="none" stroke="#2563eb" stroke-width="1.4" stroke-linejoin="round" stroke-opacity="0.72"><title>som_j1 ↔ uart_bridge: ZYNQ_PS_UART0_RXD, ZYNQ_PS_UART0_TXD</title></path>
-<path d="M622.0,160.0 H657.0 V514.0 H953.0 V160.0 H1046.0" fill="none" stroke="#2563eb" stroke-width="1.4" stroke-linejoin="round" stroke-opacity="0.72"><title>som_j2 ↔ uart_bridge: ZYNQ_PS_UART0_CTS_N, ZYNQ_PS_UART0_RTS_N</title></path>
+<path d="M322.0,267.0 H386.0 V514.0 H947.2 V275.0 H1046.0" fill="none" stroke="#16a34a" stroke-width="1.7" stroke-linejoin="round" stroke-opacity="0.72"><title>power_mon ↔ debug_boot: STM32_I2C2_SCL, STM32_I2C2_SDA</title></path>
+<path d="M322.0,249.0 H377.7 V264.0 H450.0" fill="none" stroke="#16a34a" stroke-width="1.7" stroke-linejoin="round" stroke-opacity="0.72"><title>power_mon ↔ som_j1: STM32_I2C2_SCL, STM32_I2C2_SCL, STM32_I2C2_SDA, STM32_I2C2_SDA</title></path>
+<path d="M622.0,267.0 H715.0 V536.5 H1016.8 V284.0 H1046.0" fill="none" stroke="#16a34a" stroke-width="1.7" stroke-linejoin="round" stroke-opacity="0.72"><title>som_j1 ↔ debug_boot: SDIO_CLK, SDIO_CMD, STM32_BOOT0, STM32_GPIO5, STM32_GPIO6, STM32_GPIO7, STM32_GPIO8, STM32_I2C2_SCL, STM32_I2C2_SCL, STM32_I2C2_SDA, STM32_I2C2_SDA, STM32_NRST, VBUS_OUT_EN, ZYNQ_TCK, ZYNQ_TDI, ZYNQ_TDO, ZYNQ_TMS</title></path>
+<path d="M622.0,249.0 H686.0 V529.0 H993.6 V172.0 H1046.0" fill="none" stroke="#2563eb" stroke-width="1.4" stroke-linejoin="round" stroke-opacity="0.72"><title>som_j1 ↔ uart_bridge: ZYNQ_PS_UART0_RXD, ZYNQ_PS_UART0_TXD</title></path>
+<path d="M622.0,160.0 H657.0 V521.5 H970.4 V160.0 H1046.0" fill="none" stroke="#2563eb" stroke-width="1.4" stroke-linejoin="round" stroke-opacity="0.72"><title>som_j2 ↔ uart_bridge: ZYNQ_PS_UART0_CTS_N, ZYNQ_PS_UART0_RTS_N</title></path>
 <path d="M1218.0,166.0 H1282.0 V166.0 H1346.0" fill="none" stroke="#0891b2" stroke-width="2.0" stroke-linejoin="round" stroke-opacity="0.72"><title>uart_bridge ↔ usb_uart_connector: USB_UART_DM, USB_UART_DP, USB_UART_VBUS</title></path>
-<path d="M918.0,184.7 H982.0 V290.0 H1046.0" fill="none" stroke="#1d4ed8" stroke-width="2.0" stroke-linejoin="round" stroke-opacity="0.72"><title>SoM ↔ debug_boot: STM32_BOOT0, STM32_GPIO5, STM32_GPIO6, STM32_GPIO7, STM32_GPIO8, STM32_NRST, ZYNQ_TCK, ZYNQ_TDI, ZYNQ_TDO, ZYNQ_TMS</title></path>
+<path d="M918.0,184.7 H982.0 V293.0 H1046.0" fill="none" stroke="#1d4ed8" stroke-width="2.0" stroke-linejoin="round" stroke-opacity="0.72"><title>SoM ↔ debug_boot: SDIO_CLK, SDIO_CMD, STM32_BOOT0, STM32_GPIO5, STM32_GPIO6, STM32_GPIO7, STM32_GPIO8, STM32_NRST, VBUS_OUT_EN, ZYNQ_TCK, ZYNQ_TDI, ZYNQ_TDO, ZYNQ_TMS</title></path>
 <circle cx="918.0" cy="184.7" r="2.6" fill="#1d4ed8"/>
 <path d="M322.0,166.0 H344.6 V231.3 H750.0" fill="none" stroke="#1d4ed8" stroke-width="2.0" stroke-linejoin="round" stroke-opacity="0.72"><title>pd_input ↔ SoM: STM32_USB_CC1, STM32_USB_CC2, STM32_USB_D_N, STM32_USB_D_P</title></path>
 <circle cx="750.0" cy="231.3" r="2.6" fill="#1d4ed8"/>
@@ -55,12 +56,12 @@
 <circle cx="750.0" cy="371.3" r="2.6" fill="#1d4ed8"/>
 <rect x="330.0" y="165.5" width="105.8" height="17" rx="5" fill="#ffffff" fill-opacity="0.97" stroke="#9ca3af" stroke-opacity="0.5" stroke-width="0.8"/>
 <text x="330.0" y="178.5" font-size="13" font-weight="600" fill="#9ca3af">1 net deferred</text>
-<rect x="330.0" y="254.5" width="105.8" height="17" rx="5" fill="#ffffff" fill-opacity="0.97" stroke="#9ca3af" stroke-opacity="0.5" stroke-width="0.8"/>
-<text x="330.0" y="267.5" font-size="13" font-weight="600" fill="#9ca3af">1 net deferred</text>
+<rect x="330.0" y="248.5" width="105.8" height="17" rx="5" fill="#ffffff" fill-opacity="0.97" stroke="#9ca3af" stroke-opacity="0.5" stroke-width="0.8"/>
+<text x="330.0" y="261.5" font-size="13" font-weight="600" fill="#9ca3af">1 net deferred</text>
 <rect x="330.0" y="340.5" width="112.5" height="17" rx="5" fill="#ffffff" fill-opacity="0.97" stroke="#9ca3af" stroke-opacity="0.5" stroke-width="0.8"/>
 <text x="330.0" y="353.5" font-size="13" font-weight="600" fill="#9ca3af">3 nets deferred</text>
-<rect x="298.0" y="234.5" width="146.0" height="17" rx="5" fill="#ffffff" fill-opacity="0.97" stroke="#0891b2" stroke-opacity="0.5" stroke-width="0.8"/>
-<text x="444.0" y="247.5" text-anchor="end" font-size="13" font-weight="600" fill="#0891b2">4 nets · USB HS pair</text>
+<rect x="298.0" y="226.5" width="146.0" height="17" rx="5" fill="#ffffff" fill-opacity="0.97" stroke="#0891b2" stroke-opacity="0.5" stroke-width="0.8"/>
+<text x="444.0" y="239.5" text-anchor="end" font-size="13" font-weight="600" fill="#0891b2">4 nets · USB HS pair</text>
 <rect x="324.8" y="270.5" width="119.2" height="17" rx="5" fill="#ffffff" fill-opacity="0.97" stroke="#16a34a" stroke-opacity="0.5" stroke-width="0.8"/>
 <text x="444.0" y="283.5" text-anchor="end" font-size="13" font-weight="600" fill="#16a34a">4 nets · I2C bus</text>
 <rect x="598.0" y="221.8" width="146.0" height="17" rx="5" fill="#ffffff" fill-opacity="0.97" stroke="#1d4ed8" stroke-opacity="0.5" stroke-width="0.8"/>
@@ -72,13 +73,15 @@
 <rect x="624.8" y="361.8" width="119.2" height="17" rx="5" fill="#ffffff" fill-opacity="0.97" stroke="#1d4ed8" stroke-opacity="0.5" stroke-width="0.8"/>
 <text x="744.0" y="374.8" text-anchor="end" font-size="13" font-weight="600" fill="#1d4ed8">74 nets · signal</text>
 <rect x="924.0" y="175.2" width="119.2" height="17" rx="5" fill="#ffffff" fill-opacity="0.97" stroke="#1d4ed8" stroke-opacity="0.5" stroke-width="0.8"/>
-<text x="924.0" y="188.2" font-size="13" font-weight="600" fill="#1d4ed8">10 nets · signal</text>
+<text x="924.0" y="188.2" font-size="13" font-weight="600" fill="#1d4ed8">13 nets · SD bus</text>
 <rect x="927.5" y="150.5" width="112.5" height="17" rx="5" fill="#ffffff" fill-opacity="0.97" stroke="#2563eb" stroke-opacity="0.5" stroke-width="0.8"/>
 <text x="1040.0" y="163.5" text-anchor="end" font-size="13" font-weight="600" fill="#2563eb">2 nets · signal</text>
 <rect x="927.5" y="130.5" width="112.5" height="17" rx="5" fill="#ffffff" fill-opacity="0.97" stroke="#2563eb" stroke-opacity="0.5" stroke-width="0.8"/>
 <text x="1040.0" y="143.5" text-anchor="end" font-size="13" font-weight="600" fill="#2563eb">2 nets · signal</text>
-<rect x="920.8" y="268.5" width="119.2" height="17" rx="5" fill="#ffffff" fill-opacity="0.97" stroke="#2563eb" stroke-opacity="0.5" stroke-width="0.8"/>
-<text x="1040.0" y="281.5" text-anchor="end" font-size="13" font-weight="600" fill="#2563eb">10 nets · signal</text>
+<rect x="920.8" y="265.5" width="119.2" height="17" rx="5" fill="#ffffff" fill-opacity="0.97" stroke="#16a34a" stroke-opacity="0.5" stroke-width="0.8"/>
+<text x="1040.0" y="278.5" text-anchor="end" font-size="13" font-weight="600" fill="#16a34a">2 nets · I2C bus</text>
+<rect x="914.1" y="282.5" width="125.9" height="17" rx="5" fill="#ffffff" fill-opacity="0.97" stroke="#16a34a" stroke-opacity="0.5" stroke-width="0.8"/>
+<text x="1040.0" y="295.5" text-anchor="end" font-size="13" font-weight="600" fill="#16a34a">17 nets · I2C bus</text>
 <rect x="1194.0" y="156.5" width="146.0" height="17" rx="5" fill="#ffffff" fill-opacity="0.97" stroke="#0891b2" stroke-opacity="0.5" stroke-width="0.8"/>
 <text x="1340.0" y="169.5" text-anchor="end" font-size="13" font-weight="600" fill="#0891b2">3 nets · USB HS pair</text>
 <rect x="750" y="138" width="168" height="280" rx="12" fill="#fef3c7" stroke="#b45309" stroke-width="2.4"/>
@@ -96,7 +99,7 @@
 <text x="834" y="452" text-anchor="middle" font-size="11" fill="#6b7280">later waves · 5</text>
 <rect x="1046" y="256" width="172" height="56" rx="8" fill="#ffffff" stroke="#93c5fd" stroke-width="1.8"/>
 <text x="1057" y="279" font-size="15.5" font-weight="700" fill="#0f172a">debug_boot</text>
-<text x="1057" y="299" font-size="12.5" fill="#64748b">10 SoM · 10 peer</text>
+<text x="1057" y="299" font-size="12.5" fill="#64748b">13 SoM · 19 peer</text>
 <rect x="150" y="138" width="172" height="56" rx="8" fill="#ffffff" stroke="#fdba74" stroke-width="1.8"/>
 <text x="161" y="161" font-size="15.5" font-weight="700" fill="#0f172a">pd_input</text>
 <text x="161" y="181" font-size="12.5" fill="#64748b">4 SoM · 4 peer · 1 deferred</text>
@@ -105,10 +108,10 @@
 <text x="161" y="365" font-size="12.5" fill="#64748b">3 deferred</text>
 <rect x="150" y="230" width="172" height="56" rx="8" fill="#ffffff" stroke="#fdba74" stroke-width="1.8"/>
 <text x="161" y="253" font-size="15.5" font-weight="700" fill="#0f172a">power_mon</text>
-<text x="161" y="273" font-size="12.5" fill="#64748b">4 peer · 1 deferred</text>
+<text x="161" y="273" font-size="12.5" fill="#64748b">6 peer · 1 deferred</text>
 <rect x="450" y="230" width="172" height="56" rx="8" fill="#ffffff" stroke="#fcd34d" stroke-width="1.8"/>
 <text x="461" y="253" font-size="15.5" font-weight="700" fill="#0f172a">som_j1</text>
-<text x="461" y="273" font-size="12.5" fill="#64748b">54 SoM · 20 peer</text>
+<text x="461" y="273" font-size="12.5" fill="#64748b">54 SoM · 27 peer</text>
 <rect x="450" y="138" width="172" height="56" rx="8" fill="#ffffff" stroke="#fcd34d" stroke-width="1.8"/>
 <text x="461" y="161" font-size="15.5" font-weight="700" fill="#0f172a">som_j2</text>
 <text x="461" y="181" font-size="12.5" fill="#64748b">70 SoM · 2 peer</text>
@@ -121,14 +124,14 @@
 <rect x="1346" y="138" width="172" height="56" rx="8" fill="#ffffff" stroke="#67e8f9" stroke-width="1.8"/>
 <text x="1357" y="161" font-size="15.5" font-weight="700" fill="#0f172a">usb_uart_connector</text>
 <text x="1357" y="181" font-size="12.5" fill="#64748b">3 peer</text>
-<text x="150" y="582" font-size="13" font-weight="700" fill="#475569">unconnected sheets (no inter-sheet nets)</text>
-<rect x="150" y="600" width="172" height="56" rx="8" fill="#f8fafc" stroke="#93c5fd" stroke-width="1.6"/>
-<text x="161" y="624" font-size="15.5" font-weight="700" fill="#334155">mechanical</text>
-<text x="161" y="644" font-size="12.5" fill="#94a3b8">—</text>
-<rect x="350" y="600" width="172" height="56" rx="8" fill="#f8fafc" stroke="#93c5fd" stroke-width="1.6"/>
-<text x="361" y="624" font-size="15.5" font-weight="700" fill="#334155">power_som</text>
-<text x="361" y="644" font-size="12.5" fill="#94a3b8">—</text>
-<rect x="550" y="600" width="172" height="56" rx="8" fill="#f8fafc" stroke="#93c5fd" stroke-width="1.6"/>
-<text x="561" y="624" font-size="15.5" font-weight="700" fill="#334155">som_decoupling</text>
-<text x="561" y="644" font-size="12.5" fill="#94a3b8">—</text>
+<text x="150" y="590" font-size="13" font-weight="700" fill="#475569">unconnected sheets (no inter-sheet nets)</text>
+<rect x="150" y="608" width="172" height="56" rx="8" fill="#f8fafc" stroke="#93c5fd" stroke-width="1.6"/>
+<text x="161" y="631" font-size="15.5" font-weight="700" fill="#334155">mechanical</text>
+<text x="161" y="651" font-size="12.5" fill="#94a3b8">—</text>
+<rect x="350" y="608" width="172" height="56" rx="8" fill="#f8fafc" stroke="#93c5fd" stroke-width="1.6"/>
+<text x="361" y="631" font-size="15.5" font-weight="700" fill="#334155">power_som</text>
+<text x="361" y="651" font-size="12.5" fill="#94a3b8">—</text>
+<rect x="550" y="608" width="172" height="56" rx="8" fill="#f8fafc" stroke="#93c5fd" stroke-width="1.6"/>
+<text x="561" y="631" font-size="15.5" font-weight="700" fill="#334155">som_decoupling</text>
+<text x="561" y="651" font-size="12.5" fill="#94a3b8">—</text>
 </svg>

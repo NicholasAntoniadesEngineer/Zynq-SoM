@@ -16,12 +16,14 @@ add_library(schgen_core STATIC
     src/catalog.cpp src/json.cpp src/circuit.cpp src/reorder.cpp src/atomic_file.cpp
     src/ratsnest.cpp src/footprint_library.cpp src/xdc.cpp src/vivado.cpp
     src/bom.cpp src/project.cpp src/project_catalog.cpp src/project_outputs.cpp src/som_interface.cpp
-    src/link.cpp src/devicetree.cpp)
+    src/link.cpp src/devicetree.cpp src/symbols.cpp src/validation.cpp
+    src/schematic.cpp src/schematic_route.cpp)
 find_package(LibXml2 REQUIRED)
 target_link_libraries(schgen_core PUBLIC LibXml2::LibXml2)
 target_include_directories(schgen_core PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
 target_compile_options(schgen_core PRIVATE -Wall -Wextra -Wpedantic -Werror)
-set_source_files_properties(src/turn.cpp src/pack_anchor.cpp
+set_source_files_properties(src/turn.cpp src/pack_anchor.cpp src/symbols.cpp
+                            src/schematic_route.cpp
                             src/pack_edges.cpp PROPERTIES
     COMPILE_OPTIONS "-ffp-contract=off")
 
@@ -80,6 +82,23 @@ add_custom_target(schgen_catalogs ALL DEPENDS
 
 include(CTest)
 if(BUILD_TESTING)
+    add_executable(schgen_schematic_route_contracts tests/schematic_route_contracts.cpp)
+    target_link_libraries(schgen_schematic_route_contracts PRIVATE schgen_core)
+    target_compile_options(schgen_schematic_route_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror)
+    add_test(NAME native_schematic_route_contracts COMMAND schgen_schematic_route_contracts
+        "${CMAKE_CURRENT_SOURCE_DIR}/tests/data/schematic_route" "${CMAKE_CURRENT_SOURCE_DIR}/..")
+    add_executable(schgen_schematic_contracts tests/schematic_contracts.cpp)
+    target_link_libraries(schgen_schematic_contracts PRIVATE schgen_core)
+    target_compile_options(schgen_schematic_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror)
+    add_test(NAME native_schematic_contracts COMMAND schgen_schematic_contracts
+        "${CMAKE_CURRENT_SOURCE_DIR}/tests/data/schematic")
+    foreach(stage symbols validation devkit_design)
+        add_executable(schgen_${stage}_contracts tests/${stage}_contracts.cpp)
+        target_link_libraries(schgen_${stage}_contracts PRIVATE schgen_core)
+        target_compile_options(schgen_${stage}_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror)
+        add_test(NAME native_${stage}_contracts COMMAND schgen_${stage}_contracts
+            "${CMAKE_CURRENT_SOURCE_DIR}/..")
+    endforeach()
     add_executable(schgen_project_outputs_contracts tests/project_outputs_contracts.cpp)
     target_link_libraries(schgen_project_outputs_contracts PRIVATE schgen_core)
     target_compile_options(schgen_project_outputs_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror)
@@ -121,6 +140,8 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_SOURCE_DIR}/..")
     foreach(project carrier devkit_mini)
         add_test(NAME native_project_${project} COMMAND schgen project-check
+            --repo "${CMAKE_CURRENT_SOURCE_DIR}/.." --project ${project})
+        add_test(NAME native_electrical_${project} COMMAND schgen circuit-check
             --repo "${CMAKE_CURRENT_SOURCE_DIR}/.." --project ${project})
     endforeach()
     add_executable(schgen_circuit_semantic_contracts tests/circuit_semantic_contracts.cpp)

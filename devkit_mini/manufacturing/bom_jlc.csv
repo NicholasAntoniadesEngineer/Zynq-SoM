@@ -23,7 +23,7 @@ Comment,Designator,Footprint,LCSC
 47.5k,power_som:R14,Resistor_SMD:R_0603_1608Metric,C23061
 47k5,uart_bridge:R3,Resistor_SMD:R_0603_1608Metric,C23061
 47n,pd_input:C3,Capacitor_SMD:C_0603_1608Metric,C1622
-4k7,"debug_boot:R1,debug_boot:R2",Resistor_SMD:R_0603_1608Metric,C23162
+4k7,"debug_boot:R1,debug_boot:R2,debug_boot:R7,debug_boot:R8",Resistor_SMD:R_0603_1608Metric,C23162
 5.1k,"pd_input:R5,usb_uart_connector:R1,usb_uart_connector:R2",Resistor_SMD:R_0603_1608Metric,C23186
 5.49k,pd_input:R4,Resistor_SMD:R_0603_1608Metric,C188263
 878311420,debug_boot:J1,878311420:878311420,C240854

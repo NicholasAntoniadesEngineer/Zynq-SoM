@@ -7,6 +7,7 @@
 #include "schgen/project_outputs.hpp"
 #include "schgen/som_interface.hpp"
 #include "schgen/vivado.hpp"
+#include "schgen/validation.hpp"
 
 #include <algorithm>
 #include <filesystem>
@@ -27,7 +28,7 @@ struct Options {
     std::vector<std::string> subsystems;
     bool allow_missing = false, qualified_refs = false;
 };
-const std::set<std::string> commands{"project-check", "som-interface", "xdc", "vivado", "fpga", "bom", "link", "devicetree"};
+const std::set<std::string> commands{"project-check", "circuit-check", "som-interface", "xdc", "vivado", "fpga", "bom", "link", "devicetree"};
 Options parse(int argc, char** argv) {
     Options out;
     std::set<std::string> seen;
@@ -65,12 +66,13 @@ Options parse(int argc, char** argv) {
     }
     if (out.command.empty()) throw std::runtime_error("missing project command; use --help");
     std::set<std::string> allowed{"--repo", "--project"};
-    if (out.command != "project-check") allowed.insert("--output");
+    const bool check_only = out.command == "project-check" || out.command == "circuit-check";
+    if (!check_only) allowed.insert("--output");
     if (out.command == "bom") {
         allowed.insert("--allow-missing"); allowed.insert("--qualified-refs");
     } else if (out.command == "link") {
         allowed.insert("--contract");
-    } else if (out.command != "project-check") {
+    } else if (!check_only) {
         allowed.insert("--som"); allowed.insert("--refs"); allowed.insert("--kicad-cli");
         if (out.command != "som-interface") allowed.insert("--contract");
         if (out.command == "vivado" || out.command == "fpga") allowed.insert("--xdc");
@@ -134,7 +136,19 @@ std::optional<int> run_project_command(int argc, char** argv) {
     std::vector<CircuitSheetIr> sheets;
     sheets.reserve(circuits.size());
     for (const auto& circuit : circuits) sheets.push_back(circuit.circuit);
+    if (options.command == "circuit-check") {
+        SymbolLibrary library(paths.repository_root);
+        bool ok = true;
+        for (const auto& sheet : sheets) {
+            const auto result = check_circuit_electrical(sheet, library);
+            std::cout << sheet.name << ": " << result.summary() << '\n';
+            ok = result.ok() && ok;
+        }
+        return ok ? 0 : 1;
+    }
     if (options.command == "link") {
+        SymbolLibrary library(paths.repository_root);
+        for (const auto& sheet : sheets) validate_circuit(sheet, library);
         const auto contract = options.contract.empty() ? paths.som_interface_file : options.contract;
         const auto result = link_sheets(sheets, parse_json_file(contract.string()),
             parse_json_file((paths.project_root / "som_mapping.json").string()));

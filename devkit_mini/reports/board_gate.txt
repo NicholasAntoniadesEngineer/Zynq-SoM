@@ -1,8 +1,8 @@
 board netlist gate
 ============================================================
-  ok   port 'EN_1V8': 1 net, 1 pins across 1 sheet(s) [power]
-  ok   port 'EN_3V3': 1 net, 1 pins across 1 sheet(s) [power]
-  ok   port 'EN_5V0': 1 net, 1 pins across 1 sheet(s) [power]
+  ok   port 'EN_1V8': 1 net, 2 pins across 1 sheet(s) [power]
+  ok   port 'EN_3V3': 1 net, 2 pins across 1 sheet(s) [power]
+  ok   port 'EN_5V0': 1 net, 2 pins across 1 sheet(s) [power]
   ok   port 'ETH_LED1': 1 net, 1 pins across 1 sheet(s) [som_j1]
   ok   port 'ETH_LED2': 1 net, 1 pins across 1 sheet(s) [som_j1]
   ok   port 'ETH_PHY_MDI0_N': 1 net, 1 pins across 1 sheet(s) [som_j1]
@@ -169,8 +169,8 @@ board netlist gate
   ok   port 'IO_L9_DQS_P_34': 1 net, 1 pins across 1 sheet(s) [som_j3]
   ok   port 'PD_FLT_N': 1 net, 2 pins across 1 sheet(s) [pd_input]
   ok   port 'PMON_ALERT_N': 1 net, 3 pins across 1 sheet(s) [power_mon]
-  ok   port 'SDIO_CLK': 1 net, 1 pins across 1 sheet(s) [som_j1]
-  ok   port 'SDIO_CMD': 1 net, 1 pins across 1 sheet(s) [som_j1]
+  ok   port 'SDIO_CLK': 1 net, 2 pins across 2 sheet(s) [debug_boot, som_j1]
+  ok   port 'SDIO_CMD': 1 net, 2 pins across 2 sheet(s) [debug_boot, som_j1]
   ok   port 'SDIO_D0': 1 net, 1 pins across 1 sheet(s) [som_j1]
   ok   port 'SDIO_D1': 1 net, 1 pins across 1 sheet(s) [som_j1]
   ok   port 'SDIO_D2': 1 net, 1 pins across 1 sheet(s) [som_j1]
@@ -184,8 +184,8 @@ board netlist gate
   ok   port 'STM32_GPIO6': 1 net, 2 pins across 2 sheet(s) [debug_boot, som_j1]
   ok   port 'STM32_GPIO7': 1 net, 3 pins across 2 sheet(s) [debug_boot, som_j1]
   ok   port 'STM32_GPIO8': 1 net, 3 pins across 2 sheet(s) [debug_boot, som_j1]
-  ok   port 'STM32_I2C2_SCL': 1 net, 3 pins across 2 sheet(s) [power_mon, som_j1]
-  ok   port 'STM32_I2C2_SDA': 1 net, 3 pins across 2 sheet(s) [power_mon, som_j1]
+  ok   port 'STM32_I2C2_SCL': 1 net, 5 pins across 3 sheet(s) [debug_boot, power_mon, som_j1]
+  ok   port 'STM32_I2C2_SDA': 1 net, 5 pins across 3 sheet(s) [debug_boot, power_mon, som_j1]
   ok   port 'STM32_NRST': 1 net, 4 pins across 2 sheet(s) [debug_boot, som_j1]
   ok   port 'STM32_USB_CC1': 1 net, 2 pins across 2 sheet(s) [pd_input, som_j1]
   ok   port 'STM32_USB_CC2': 1 net, 2 pins across 2 sheet(s) [pd_input, som_j1]
@@ -198,7 +198,7 @@ board netlist gate
   ok   port 'USB_UART_DP': 1 net, 2 pins across 2 sheet(s) [uart_bridge, usb_uart_connector]
   ok   port 'USB_UART_VBUS': 1 net, 5 pins across 2 sheet(s) [uart_bridge, usb_uart_connector]
   ok   port 'USB_VBUS': 1 net, 1 pins across 1 sheet(s) [som_j1]
-  ok   port 'VBUS_OUT_EN': 1 net, 1 pins across 1 sheet(s) [som_j1]
+  ok   port 'VBUS_OUT_EN': 1 net, 2 pins across 2 sheet(s) [debug_boot, som_j1]
   ok   port 'ZYNQ_PS_MIO0': 1 net, 1 pins across 1 sheet(s) [som_j1]
   ok   port 'ZYNQ_PS_MIO12': 1 net, 1 pins across 1 sheet(s) [som_j1]
   ok   port 'ZYNQ_PS_MIO7/VM0': 1 net, 1 pins across 1 sheet(s) [som_j1]
@@ -216,7 +216,7 @@ board netlist gate
   ok   rail '+1V8_REG': 1 net, 4 pins across 2 sheet(s) [power, power_mon]
   ok   rail '+3V3': 1 net, 34 pins across 7 sheet(s) [debug_boot, power, power_mon, som_decoupling, som_j2, som_j3, uart_bridge]
   ok   rail '+3V3_REG': 1 net, 9 pins across 2 sheet(s) [power, power_mon]
-  ok   rail '+3V3_SC': 1 net, 23 pins across 5 sheet(s) [debug_boot, pd_input, power_mon, som_decoupling, som_j1]
+  ok   rail '+3V3_SC': 1 net, 26 pins across 5 sheet(s) [debug_boot, pd_input, power_mon, som_decoupling, som_j1]
   ok   rail '+5V': 1 net, 9 pins across 2 sheet(s) [power, power_mon]
   ok   rail '+5V_REG': 1 net, 10 pins across 2 sheet(s) [power, power_mon]
   ok   rail '+5V_SOM': 1 net, 28 pins across 3 sheet(s) [power_som, som_decoupling, som_j1]
@@ -225,6 +225,6 @@ board netlist gate
   ok   rail '+VIN_SYS': 1 net, 15 pins across 3 sheet(s) [power, power_mon, power_som]
   ok   rail 'CHASSIS_GND': 1 net, 12 pins across 3 sheet(s) [mechanical, pd_input, usb_uart_connector]
   ok   rail 'GND': 1 net, 185 pins across 11 sheet(s) [debug_boot, pd_input, power, power_mon, power_som, som_decoupling, som_j1, som_j2, som_j3, uart_bridge, usb_uart_connector]
-  (info) undriven-input PORT check: 1 input-bearing PORT nets examined (24 expect-deferred)
+  (info) undriven-input PORT check: 1 input-bearing PORT nets examined (27 expect-deferred)
 BOARD GATE: PASS — every linked net merged across sheets
   (info) root ERC errors: 0

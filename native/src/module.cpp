@@ -42,6 +42,10 @@
 #include "schgen/project_catalog.hpp"
 #include "schgen/link_bindings.hpp"
 #include "schgen/project_bindings.hpp"
+#include "schgen/validation_bindings.hpp"
+#include "schgen/schematic_bindings.hpp"
+#include "schgen/symbol_bindings.hpp"
+#include "schgen/schematic_route_bindings.hpp"
 
 namespace nb = nanobind;
 
@@ -197,6 +201,10 @@ NB_MODULE(_geom, m) {
     schgen::bind_som_interface(m);
     schgen::bind_link(m);
     schgen::bind_project_outputs(m);
+    schgen::bind_validation(m);
+    schgen::bind_schematic(m, sexpr_from_py);
+    schgen::bind_symbols(m, sexpr_from_py, sexpr_to_tagged);
+    schgen::bind_schematic_route(m);
     m.def("discover_project_subsystems", [](const std::string& directory) {
         std::vector<std::pair<std::string, std::string>> out;
         for (const auto& sheet : schgen::discover_project_subsystems(directory))

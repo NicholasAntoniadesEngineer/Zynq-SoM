@@ -65,11 +65,13 @@ def _pin_net(c: Circuit, pin: str) -> str | None:
 def test_jtag_insurance_pullups(c: Circuit):
     pulls = [(ref, p.value) for ref, p in c.parts.items()
              if p.lib_id == "Device:R" and p.value == "4k7"]
-    assert len(pulls) == 2, pulls
-    for rref, _ in pulls:
-        assert _pin_net(c, f"{rref}.1") == "+3V3"
-    bottoms = {_pin_net(c, f"{rref}.2") for rref, _ in pulls}
-    assert bottoms == {"ZYNQ_TMS", "ZYNQ_TDI"}, bottoms
+    assert {rref: (_pin_net(c, f"{rref}.1"), _pin_net(c, f"{rref}.2"))
+            for rref, _ in pulls} == {
+        "R1": ("+3V3", "ZYNQ_TMS"),
+        "R2": ("+3V3", "ZYNQ_TDI"),
+        "R7": ("+3V3_SC", "STM32_I2C2_SCL"),
+        "R8": ("+3V3_SC", "STM32_I2C2_SDA"),
+    }
 
 
 def test_boot0_series_strap_100R_to_sc_rail(c: Circuit):

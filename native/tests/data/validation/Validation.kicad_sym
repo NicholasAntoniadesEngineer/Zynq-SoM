@@ -1,0 +1,48 @@
+(kicad_symbol_lib (version 20231120) (generator "schgen-validation-contracts")
+  (symbol "Input"
+    (symbol "Input_1_1"
+      (pin input line (at 0 0 0) (length 2.54) (name "IN") (number "1"))))
+  (symbol "Drivers"
+    (symbol "Drivers_1_1"
+      (pin output line (at 0 0 0) (length 2.54) (name "OUT") (number "1"))
+      (pin bidirectional line (at 0 1.27 0) (length 2.54) (name "BIDIR") (number "2"))
+      (pin tri_state line (at 0 2.54 0) (length 2.54) (name "TRI") (number "3"))
+      (pin passive line (at 0 3.81 0) (length 2.54) (name "PASSIVE") (number "4"))
+      (pin power_out line (at 0 5.08 0) (length 2.54) (name "PWR") (number "5"))
+      (pin open_collector line (at 0 6.35 0) (length 2.54) (name "OC") (number "6"))
+      (pin open_emitter line (at 0 7.62 0) (length 2.54) (name "OE") (number "7"))))
+  (symbol "NonDrivers"
+    (symbol "NonDrivers_1_1"
+      (pin input line (at 0 0 0) (length 2.54) (name "IN") (number "1"))
+      (pin power_in line (at 0 1.27 0) (length 2.54) (name "PWR") (number "2"))
+      (pin unspecified line (at 0 2.54 0) (length 2.54) (name "UNSPEC") (number "3"))
+      (pin free line (at 0 3.81 0) (length 2.54) (name "FREE") (number "4"))
+      (pin no_connect line (at 0 5.08 0) (length 2.54) (name "NC") (number "5"))))
+  (symbol "Multi"
+    (symbol "Multi_0_1"
+      (pin power_in line (at 0 0 0) (length 2.54) hide (name "HIDDEN") (number "3")))
+    (symbol "Multi_1_1"
+      (pin input line (at 0 1.27 0) (length 2.54) (name "IN") (number "1"))
+      (pin output line (at 0 2.54 0) (length 2.54) (name "OUT") (number "2")))
+    (symbol "Multi_2_1"
+      (pin passive line (at 0 3.81 0) (length 2.54) (name "EXTRA") (number "10")))
+    (symbol "Multi_1_2"
+      (pin output line (at 0 2.54 0) (length 2.54) (name "OUT_ALT") (number "2"))))
+  (symbol "LastInput"
+    (symbol "LastInput_0_1"
+      (pin output line (at 0 0 0) (length 2.54) (name "COMMON") (number "1")))
+    (symbol "LastInput_1_1"
+      (pin input line (at 0 0 0) (length 2.54) (name "UNIT") (number "1"))))
+  (symbol "LastDriver"
+    (symbol "LastDriver_0_1"
+      (pin input line (at 0 0 0) (length 2.54) (name "COMMON") (number "1")))
+    (symbol "LastDriver_1_1"
+      (pin output line (at 0 0 0) (length 2.54) (name "UNIT") (number "1"))))
+  (symbol "NoPins"
+    (symbol "NoPins_0_1" (rectangle (start -1.27 -1.27) (end 1.27 1.27))))
+  (symbol "OffGrid"
+    (symbol "OffGrid_1_1"
+      (pin passive line (at 0.13 0 0) (length 2.54) (name "BAD") (number "1"))))
+  (symbol "EmptyPin"
+    (symbol "EmptyPin_1_1"
+      (pin passive line (at 0 0 0) (length 2.54) (name "BAD")))))

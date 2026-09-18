@@ -20,6 +20,7 @@ int main(int argc, char** argv) {
                          "  catalog-compile <parts_dir> <catalog.bin>\n"
                          "  circuit-compile <circuits_dir> <circuits.bin>\n"
                          "  project-check [--repo ROOT] [--project NAME] [SUBSYSTEM ...]\n"
+                         "  circuit-check [--repo ROOT] [--project NAME] [SUBSYSTEM ...]\n"
                          "  som-interface [--project NAME] [--som FILE] [--refs J1,J2,J3] [-o FILE]\n"
                          "  xdc|vivado [--project NAME] [--som FILE] [--contract FILE] [-o FILE]\n"
                          "  fpga [--project NAME] [-o DIRECTORY]  (XDC + Vivado, one live extraction)\n"

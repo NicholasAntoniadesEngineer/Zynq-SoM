@@ -292,6 +292,39 @@
       },
       "pin_names": {},
       "pin_numbers": []
+    },
+    {
+      "ref": "TP1",
+      "lib_id": "Connector:TestPoint",
+      "value": "+3V3_SC",
+      "footprint": "TestPoint:TestPoint_Pad_D1.5mm",
+      "fields": {
+        "BOM": "exclude"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "TP2",
+      "lib_id": "Connector:TestPoint",
+      "value": "STM32_I2C2_SCL",
+      "footprint": "TestPoint:TestPoint_Pad_D1.5mm",
+      "fields": {
+        "BOM": "exclude"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "TP3",
+      "lib_id": "Connector:TestPoint",
+      "value": "STM32_I2C2_SDA",
+      "footprint": "TestPoint:TestPoint_Pad_D1.5mm",
+      "fields": {
+        "BOM": "exclude"
+      },
+      "pin_names": {},
+      "pin_numbers": []
     }
   ],
   "nets": [
@@ -389,7 +422,8 @@
         "C1.1",
         "C2.1",
         "C3.1",
-        "R1.1"
+        "R1.1",
+        "TP1.1"
       ]
     },
     {
@@ -397,7 +431,8 @@
       "net_class": "port",
       "pins": [
         "U1.7",
-        "U2.7"
+        "U2.7",
+        "TP3.1"
       ]
     },
     {
@@ -405,7 +440,8 @@
       "net_class": "port",
       "pins": [
         "U1.6",
-        "U2.6"
+        "U2.6",
+        "TP2.1"
       ]
     },
     {

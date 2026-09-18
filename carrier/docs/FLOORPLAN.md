@@ -137,4 +137,4 @@ Numbers are the power-tree gate's worst-case declared draws (`carrier/reports/po
 - Block rectangles are AREA estimates (courtyards + routing factor), not layouts; their order along an edge is alphabetical, not optimized — shuffle freely.
 - The outline is DERIVED (SoM body + connector bands + total component area + perimeter keepout), sized generously for routing headroom; the user still owns it (drawn dashed).
 - The mirror convention (bottom view) must be checked against the DF40 mating datasheet before any footprint is placed.
-- som_j1/j2/j3 sheets are not blocks: they ARE the three DF40 strips drawn inside the SoM footprint.
+- The som_j1/j2/j3 DF40 connectors are fixed inside the SoM footprint; any additional parts on those sheets form ordinary packed blocks.

@@ -198,58 +198,11 @@ def _seg_box(s: Seg, half: float = 0.127) -> Box:
 def check(
     geo: SheetGeometry, clearance_mm: float = VISUAL_CLEARANCE_MM
 ) -> VisualResult:
-    res = VisualResult(ok=True)
-
-    bs = geo.boxes
-    for i in range(len(bs)):
-        for j in range(i + 1, len(bs)):
-            a, b = bs[i], bs[j]
-            if a.owner == b.owner and not (a.kind in _TEXT and b.kind in _TEXT):
-                continue
-            if a.owner == b.owner and a.kind in _TEXT and b.kind in _TEXT:
-                pass
-            if a.intersects(b, pad=clearance_mm):
-                res.ok = False
-                res.findings.append(
-                    f"{a.kind}({a.owner}) overlaps {b.kind}({b.owner})")
-
-    for s in geo.wires:
-        wb = _seg_box(s)
-        for b in geo.boxes:
-            if b.kind == "body" and "net:" in b.owner:
-                continue
-            pad = -0.14 if (b.kind == "label"
-                            and b.owner == f"label:{s.net}") else 0.0
-            if b.kind in _TEXT and wb.intersects(b, pad=pad):
-                res.ok = False
-                res.findings.append(f"wire({s.net}) over {b.kind}({b.owner})")
-
-    ws = geo.wires
-    for i in range(len(ws)):
-        for j in range(i + 1, len(ws)):
-            a, b = ws[i], ws[j]
-            if _cross(a, b):
-                res.ok = False
-                res.findings.append(
-                    f"wires CROSS: {a.net} x {b.net} "
-                    f"@({a.x0:.2f},{a.y0:.2f})-({b.x0:.2f},{b.y0:.2f})")
-            if _collinear_overlap(a, b):
-                res.ok = False
-                tag = ("same-net wire-over-wire" if a.net == b.net
-                       else "collinear overlap")
-                res.findings.append(f"{tag}: {a.net} ~ {b.net}")
-            tt = _foreign_t_touch(a, b)
-            if tt is not None:
-                res.ok = False
-                res.findings.append(
-                    f"different-net T-touch: {a.net} endpoint on {b.net} "
-                    f"@({tt[0]:.2f},{tt[1]:.2f})")
-
-    for jn in geo.junctions:
-        nets = {s.net for s in geo.wires
-                if _point_on_seg(jn.x, jn.y, s, interior_only=False)}
-        if len(nets) > 1:
-            res.ok = False
-            res.findings.append(
-                f"cross-net junction @({jn.x:.2f},{jn.y:.2f}): {sorted(nets)}")
-    return res
+    """Transport page geometry to the complete native validation stage."""
+    if not _nat.loaded():
+        raise RuntimeError("native check_visual_geometry required")
+    ok, findings = _nat.module().check_visual_geometry(
+        [(b.x0, b.y0, b.x1, b.y1, b.kind, b.owner) for b in geo.boxes],
+        [(s.x0, s.y0, s.x1, s.y1, s.net) for s in geo.wires],
+        [(j.x, j.y) for j in geo.junctions], clearance_mm)
+    return VisualResult(ok=ok, findings=findings)

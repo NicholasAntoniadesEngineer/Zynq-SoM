@@ -24,12 +24,13 @@ installing nanobind, or fetching dependencies. Live SoM extraction requires
 `kicad-cli` on PATH; it is invoked directly, never through a shell.
 
 The native CLI supports `self-check`, `catalog-compile`, `circuit-compile`,
-`project-check`, `som-interface`, `link`, `bom`, `xdc`, `vivado`, `fpga`, and
+`project-check`, `circuit-check`, `som-interface`, `link`, `bom`, `xdc`, `vivado`, `fpga`, and
 `devicetree`. It does not yet generate a board. Unsupported commands fail.
 
 ```sh
 native/bin/schgen project-check --project carrier
 native/bin/schgen project-check --project devkit_mini
+native/bin/schgen circuit-check --project devkit_mini
 native/bin/schgen fpga --project carrier --output /tmp/carrier-fpga
 native/bin/schgen devicetree --project carrier --output /tmp/carrier_pl.dtsi
 native/bin/schgen bom --project carrier --qualified-refs --output /tmp/carrier-bom.csv
@@ -42,14 +43,22 @@ running outside the repository root. Circuit discovery and loading require
 canonical `<project>/subsystems/<name>/circuit.json`, not authoring Python.
 Function/rail/strap policy is in each project's `som_mapping.json`.
 
+`circuit-check` resolves actual library symbols and checks every pin and internal
+input driver; JSON pin metadata is not a substitute for physical symbol pins.
+`link` also enforces symbol-backed completeness before linking. The native core
+now includes complete symbol loading, schematic emission, routing and visual
+validation stages, tested against frozen inputs and output bytes. Schematic
+placement and full board orchestration remain transitional.
+
 Carrier and devkit XDC/Tcl, and carrier BOM, match the established output bytes.
 Device-tree output changes only generator/source provenance comments. Native
 contract tests cover extraction, mapping, linking, project isolation, rendering
 and validation failures. Full board orchestration remains transitional.
-The full transitional carrier build passes. The devkit's 12 sheet netlist/ERC/
-visual gates pass, but its existing board-level failures remain: two missing
-I2C pull-ups and nine uncovered test-point requirements. Migration does not
-waive or hide those design findings.
+The full transitional carrier and devkit builds pass. The devkit's two missing
+I2C pull-ups and nine uncovered probe requirements are corrected with physical
+parts, without new waivers. Probe-only ports now export hierarchical sheet
+connections; regulator discovery excludes measurement pads, and PCB placement
+handles connector-sheet auxiliaries without moving the fixed mezzanines.
 
 `scripts/build_native.sh` still builds the transitional Python bindings. Both
 executables link the same `schgen_core` library; the engine sources compile

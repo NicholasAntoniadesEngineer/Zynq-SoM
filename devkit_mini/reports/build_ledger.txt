@@ -6,7 +6,7 @@ STEP   netlist
   ASSUME big_part_area                  = 40            mm^2       [policy] floorplan.BIG_PART_MM2 — footprint area above which route_factor no longer inflates
   CALC   sheet_census                   = 8             sheets     <- n_sheets=12 n_som_j=3 n_decoupling=1  ::  n_sheets - n_som_j - n_decoupling
 STEP   link
-  CALC   board_net_census               = 277           nets       <- n_sheet_nets=266 n_som_contract_nets=213 n_cross_sheet=35  ::  len(union(sheet nets, som contract nets))
+  CALC   board_net_census               = 277           nets       <- n_sheet_nets=266 n_som_contract_nets=213 n_cross_sheet=38  ::  len(union(sheet nets, som contract nets))
 STEP   floorplan.sizing
   ASSUME edge_margin                    = 10            mm         [policy] floorplan.EDGE_MARGIN — edge-run keep-in from each board corner
   ASSUME mh_corner_keepout              = 10            mm         [policy] floorplan.MH_CORNER_KO — M3 corner mounting-hole exclusion square
@@ -66,26 +66,26 @@ STEP   floorplan.sizing
   CALC   est_via_ordinary               = 2.2           mm         <- via_size=0.6 via_clearance=0.25  ::  2 * (via_size + 2 * via_clearance)
   CALC   est_via_impedance              = 7.6           mm         <- via_size=0.6 via_clearance=0.25 stack_thickness=1.6  ::  2 * 2 * (via_size + 2 * via_clearance) + 2 * stack_thickness
   CALC   subsystem_count                = 8             subsystems <- n_sheets=12 n_som_j=3 n_mechanical_only=1  ::  n_sheets - n_som_j - n_mechanical_only
-  CALC   seed_outline                   = 95x85         mm         <- som_w=50 som_h=42 som_halo=7 edge_band=11 component_area=1118.6 pack_efficiency=0.6 perimeter_keepout=3 seed_w=95 seed_h=85  ::  max(som+2*halo+2*band, sqrt(area/fill + keepout_area) * aspect) + 2 * perimeter_keepout, snapped up to outline_snap
+  CALC   seed_outline                   = 95x85         mm         <- som_w=50 som_h=42 som_halo=7 edge_band=11 component_area=1141.4 pack_efficiency=0.6 perimeter_keepout=3 seed_w=95 seed_h=85  ::  max(som+2*halo+2*band, sqrt(area/fill + keepout_area) * aspect) + 2 * perimeter_keepout, snapped up to outline_snap
   CALC   d13_tier_population            = 20            parts      <- n_subjects=20 tier_le2_0p20=0 tier_le8_1p50=6 tier_ge9_2p00=14  ::  intelligent_need(pins): pins<=2 -> 0.20, pins<=8 -> 1.50, else 2.00
   CALC   decoupling_grid                = 18            caps       <- n_caps=18 som_w=50 som_h=42 inset=6 grid_w=38 grid_h=30 cols=5 rows=4  ::  grid = som - 2*inset; cols = max(1, min(n, round(sqrt(n*gw/gh)))); rows = ceil(n / cols)
-  CALC   est_via_class_split            = 4             nets       <- n_cross_nets=35 n_impedance=4 n_ordinary=31 impedance_classes=DP90_USB  ::  n_impedance = count(net whose class carries a DiffGeometry)
+  CALC   est_via_class_split            = 4             nets       <- n_cross_nets=38 n_impedance=4 n_ordinary=34 impedance_classes=DP90_USB  ::  n_impedance = count(net whose class carries a DiffGeometry)
   STEP   sizing.pass  punch=conservative
-    CALC   outline_candidates             = 1705          candidates <- generated=1705 reject_aspect=465 reject_min_area=127 reject_not_smaller=7 reject_pack=1090 reject_law5_budget=0 accepted=16  ::  generated = reject_aspect + reject_min_area + reject_not_smaller + reject_pack + reject_law5_budget + accepted
+    CALC   outline_candidates             = 1705          candidates <- generated=1705 reject_aspect=465 reject_min_area=150 reject_not_smaller=8 reject_pack=1066 reject_law5_budget=0 accepted=16  ::  generated = reject_aspect + reject_min_area + reject_not_smaller + reject_pack + reject_law5_budget + accepted
     CALC   law5_airwire_budget            = 2400          mm         <- cross_k=3 board_w=100 board_h=100 n_subsystems=8  ::  cross_k * (board_w * board_h) ** 0.5 * n_subsystems
-    CALC   pass_winner                    = 100x100       mm         <- board_w=100 board_h=100 area=10000 est_cross=1355.6 budget=2400 headroom=1044.4  ::  headroom = budget - est_cross
+    CALC   pass_winner                    = 100x100       mm         <- board_w=100 board_h=100 area=10000 est_cross=1553.4 budget=2400 headroom=846.6  ::  headroom = budget - est_cross
   STEP   sizing.pass  punch=free
-    CALC   outline_candidates             = 1705          candidates <- generated=1705 reject_aspect=465 reject_min_area=127 reject_not_smaller=7 reject_pack=1090 reject_law5_budget=0 accepted=16  ::  generated = reject_aspect + reject_min_area + reject_not_smaller + reject_pack + reject_law5_budget + accepted
+    CALC   outline_candidates             = 1705          candidates <- generated=1705 reject_aspect=465 reject_min_area=150 reject_not_smaller=8 reject_pack=1066 reject_law5_budget=0 accepted=16  ::  generated = reject_aspect + reject_min_area + reject_not_smaller + reject_pack + reject_law5_budget + accepted
     CALC   law5_airwire_budget            = 2400          mm         <- cross_k=3 board_w=100 board_h=100 n_subsystems=8  ::  cross_k * (board_w * board_h) ** 0.5 * n_subsystems
-    CALC   pass_winner                    = 100x100       mm         <- board_w=100 board_h=100 area=10000 est_cross=1355.6 budget=2400 headroom=1044.4  ::  headroom = budget - est_cross
-  CALC   plan_choice                    = conservative  plan       <- conservative_area=10000 conservative_est=1355.6 free_area=10000 free_est=1355.6  ::  keep free iff free_area < conservative_area or (equal area and free_est < conservative_est)
+    CALC   pass_winner                    = 100x100       mm         <- board_w=100 board_h=100 area=10000 est_cross=1553.4 budget=2400 headroom=846.6  ::  headroom = budget - est_cross
+  CALC   plan_choice                    = conservative  plan       <- conservative_area=10000 conservative_est=1553.4 free_area=10000 free_est=1553.4  ::  keep free iff free_area < conservative_area or (equal area and free_est < conservative_est)
   CALC   side_fixed[debug_boot]         = top           side       <- offered=top shape_idx=2  ::  one face survived place_near, so no estimator judgement was made
   CALC   side_fixed[power]              = top           side       <- offered=top shape_idx=0  ::  one face survived place_near, so no estimator judgement was made
   CALC   side_fixed[power_mon]          = top           side       <- offered=top shape_idx=0  ::  one face survived place_near, so no estimator judgement was made
   CALC   side_fixed[power_som]          = top           side       <- offered=top shape_idx=1  ::  one face survived place_near, so no estimator judgement was made
   CALC   side_fixed[uart_bridge]        = top           side       <- offered=top shape_idx=3  ::  one face survived place_near, so no estimator judgement was made
   CALC   side_census                    = 5             blocks     <- n_blocks=5 n_two_face=0 n_chose_bottom=0 n_single_face=5  ::  n_blocks = n_two_face + n_single_face
-  CALC   sizing_winner                  = 100x100       mm         <- board_w=100 board_h=100 area=10000 est_cross=1355.6 budget=2400 headroom=1044.4 plan=conservative  ::  headroom = budget - est_cross
+  CALC   sizing_winner                  = 100x100       mm         <- board_w=100 board_h=100 area=10000 est_cross=1553.4 budget=2400 headroom=846.6 plan=conservative  ::  headroom = budget - est_cross
 STEP   pcb.placement
   ASSUME origin_x                       = 25            mm         [policy] pcbconst.ORIGIN_X — page-frame origin the board rectangle is drawn from
   ASSUME origin_y                       = 25            mm         [policy] pcbconst.ORIGIN_Y — page-frame origin the board rectangle is drawn from
@@ -132,7 +132,7 @@ STEP   pcb.placement
   CALC   edge_flush                     = 0.6           mm         <- edge_pad_clear=0.4 flush_relief=0.2  ::  edge_pad_clear + flush_relief
   CALC   template_clear                 = 0.5           mm         <- place_clear_baseline=0.5  ::  place_clear_baseline
   CALC   nonsw_stage_gap                = 1.2           mm         <- template_clear=0.5 nonsw_relief=0.7  ::  template_clear + nonsw_relief
-  CALC   stage_movement                 = 109           parts      <- l4_pull=32 edge_seat=2 breathe=0 refit_facing=51 reorder=16 corridor_eviction=8  ::  parts whose pose a stage changed, counted per stage
+  CALC   stage_movement                 = 125           parts      <- l4_pull=34 edge_seat=2 breathe=10 refit_facing=54 reorder=17 corridor_eviction=8  ::  parts whose pose a stage changed, counted per stage
 STEP   pcb.escape
   ASSUME obstacle_margin                = 6             mm         [policy] escape.OBSTACLE_MARGIN — how far past the DF40 contact row the solver reads obstacles
   ASSUME corridor_lip                   = 0.3           mm         [policy] escape.CORRIDOR_LIP — outer lip past the escape depth when the lane corridor is cut
@@ -176,9 +176,9 @@ STEP   pcb.emission
   ASSUME hole_to_samenet_pad            = 0.1           mm         [standard] pcbconst.CLR_HOLE_SAMENET_PAD — hole-to-same-net-pad clearance rule
   CALC   min_hole_to_hole               = 0.25          mm         <- fab_floor=0.15 drc_margin=0.1  ::  fab_floor + drc_margin
   CALC   thermal_via_h2h                = 0.45          mm         <- fab_floor=0.15 thermal_margin=0.3  ::  fab_floor + thermal_margin
-  CALC   board_emission                 = 152           footprints <- board_w=100 board_h=100 placed=152 n_top=97 n_bottom=55 nets=266  ::  placed = n_top + n_bottom
+  CALC   board_emission                 = 163           footprints <- board_w=100 board_h=100 placed=163 n_top=106 n_bottom=57 nets=266  ::  placed = n_top + n_bottom
 STEP   gates
-  CALC   law5_airwire_measured          = 1324.3        mm         <- cross_mm=1324.3 budget_mm=2400 headroom_mm=1075.7 n_cross=72 n_subsystems=8 board_w=100 board_h=100  ::  budget_mm = cross_k * (board_w * board_h) ** 0.5 * n_subsystems
+  CALC   law5_airwire_measured          = 1481.2        mm         <- cross_mm=1481.2 budget_mm=2400 headroom_mm=918.8 n_cross=74 n_subsystems=8 board_w=100 board_h=100  ::  budget_mm = cross_k * (board_w * board_h) ** 0.5 * n_subsystems
   CALC   fanout_d13_gate                = 17            subjects   <- n_subjects=17 n_starved=0 baseline=0  ::  starved = clearance < intelligent_need(pins) - touch_eps
 STEP   docs.floorplan
   ASSUME floorplan_svg_scale            = 6             px/mm      [policy] floorplan.SCALE — pixel scale of the FLOORPLAN.svg drawing
@@ -191,22 +191,21 @@ STEP   docs.floorplan
   ASSUME svg_legend_row                 = 22            px         [policy] floorplan.SVG_LEGEND_ROW — height of one legend row
   ASSUME svg_legend_tail                = 20            px         [policy] floorplan.SVG_LEGEND_TAIL — canvas padding below the last legend row
 STEP   census
-  CALC   quantize_engagement[breathe_anchor_grid] = 12            calls      <- klass=re-validated value=round(round(v / 1.27) * 1.27, 4)  ::  count of calls that ran this registered transform
-  CALC   quantize_engagement[est_via_cost] = 35            calls      <- klass=pre-proof value={impedance: 2 legs * 2 layers * (0.6 + 2 * 0.25) + 2 legs *   ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[breathe_anchor_grid] = 10            calls      <- klass=re-validated value=round(round(v / 1.27) * 1.27, 4)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[est_via_cost] = 38            calls      <- klass=pre-proof value={impedance: 2 legs * 2 layers * (0.6 + 2 * 0.25) + 2 legs *   ::  count of calls that ran this registered transform
   CALC   quantize_engagement[evict_corridor_grid] = 6             calls      <- klass=pre-proof value=round(round(round((origin + v) / 1.27) * 1.27, 4) - origin,   ::  count of calls that ran this registered transform
   CALC   quantize_engagement[fixed_part_grid] = 518           calls      <- klass=proof-preserving value=round(round(v / 1.27) * 1.27, 4)  ::  count of calls that ran this registered transform
   CALC   quantize_engagement[outline_fine_grid] = 164           calls      <- klass=pre-proof value=round(base - k * 1.0, 1) over a 40.0 mm window  ::  count of calls that ran this registered transform
   CALC   quantize_engagement[outline_grow_step] = 48            calls      <- klass=pre-proof value=k * 5.0  ::  count of calls that ran this registered transform
   CALC   quantize_engagement[outline_snap_up] = 96            calls      <- klass=pre-proof value=ceil(v / 5.0) * 5.0  ::  count of calls that ran this registered transform
   CALC   quantize_engagement[placeholder_zone_half_mm] = 2             calls      <- klass=pre-proof value=round(round(v * 2) / 2, 1)  ::  count of calls that ran this registered transform
-  CALC   quantize_engagement[quant_credit] = 80            calls      <- klass=proof-preserving value=v + 0.05  ::  count of calls that ran this registered transform
-  CALC   quantize_engagement[run_overflow_tol] = 2218          calls      <- klass=proof-preserving value=0.1  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[quant_credit] = 72            calls      <- klass=proof-preserving value=v + 0.05  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[run_overflow_tol] = 2170          calls      <- klass=proof-preserving value=0.1  ::  count of calls that ran this registered transform
   CALC   quantize_engagement[seat_slide] = 4             calls      <- klass=pre-proof value=1.2  ::  count of calls that ran this registered transform
   CALC   quantize_engagement[snap_erosion_bound] = 38            calls      <- klass=proof-preserving value=bound - 0.75 if bound >= 5.0 else bound  ::  count of calls that ran this registered transform
-  CALC   quantize_engagement[som_pose_half_mm] = 4430          calls      <- klass=pre-proof value=round(round(v * 2) / 2, 1)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[som_pose_half_mm] = 4334          calls      <- klass=pre-proof value=round(round(v * 2) / 2, 1)  ::  count of calls that ran this registered transform
   CALC   fallback_engagement[cand_cap_truncated] = 7             firings    <- stage=zone_pack ceiling=7  ::  count of times this registered degraded path bound
   CALC   fallback_engagement[corridor_evict_moved] = 8             firings    <- stage=corridor_eviction ceiling=8  ::  count of times this registered degraded path bound
-  CALC   fallback_engagement[interior_reseat_retry] = 36            firings    <- stage=plan_lattice ceiling=36  ::  count of times this registered degraded path bound
-  CALC   fallback_engagement[legalize_only_compaction] = 1             firings    <- stage=plan_lattice ceiling=1  ::  count of times this registered degraded path bound
+  CALC   fallback_engagement[interior_reseat_retry] = 35            firings    <- stage=plan_lattice ceiling=35  ::  count of times this registered degraded path bound
   CALC   fallback_engagement[punch_free_plan_rejected] = 1             firings    <- stage=plan_lattice ceiling=1  ::  count of times this registered degraded path bound
-  CALC   register_silence               = 7             registrations <- quantize_registered=15 quantize_engaged=13 fallback_registered=10 fallback_fired=5  ::  registered - engaged = declared machinery this build never used
+  CALC   register_silence               = 8             registrations <- quantize_registered=15 quantize_engaged=13 fallback_registered=10 fallback_fired=4  ::  registered - engaged = declared machinery this build never used

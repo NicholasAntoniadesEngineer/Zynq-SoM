@@ -95,9 +95,18 @@ def add_probe_row(eng, c: Circuit, tp_refs: list[str]) -> None:
             pl.plan(net.name, (fx, row_y), (fx, row_y + 2 * U))
             tp_xy, rot = (fx, row_y + 2 * U), 180
         else:
-            eng.llabel(net.name, fx, row_y, 0)
-            pl.plan(net.name, (fx, row_y), (fx, row_y + 2 * U))
-            tp_xy, rot = (fx, row_y + 2 * U), 180
+            # A probe-only PORT has no core component to emit its sheet pin.
+            # A local label looks correct in a standalone netlist but leaves
+            # the probe disconnected when this sheet joins the board hierarchy.
+            exported = any(h.name == net.name for h in pl.hlabels)
+            if net.net_class is NetClass.PORT and not exported:
+                eng.label(net.name, fx, row_y, 0)
+                stub = 4 * U  # Clear the hierarchical frame from probe text.
+            else:
+                eng.llabel(net.name, fx, row_y, 0)
+                stub = 2 * U
+            pl.plan(net.name, (fx, row_y), (fx, row_y + stub))
+            tp_xy, rot = (fx, row_y + stub), 180
 
         sdef = lib.get(part.lib_id)
         body = body_box_page(sdef, tp_xy[0], tp_xy[1], rot, "body", ref)
