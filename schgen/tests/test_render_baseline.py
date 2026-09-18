@@ -40,15 +40,22 @@ def _hamming(left: str, right: str) -> int:
 
 
 def _render_rels() -> list[str]:
-    render_dir = _REPO / "carrier" / "renders"
-    rels = ["carrier/Zynq_Carrier.kicad_pcb", "carrier/renders/golden.json"]
-    for png in sorted(render_dir.glob("*.png")):
-        rels.append(str(png.relative_to(_REPO)))
-    for png in sorted((render_dir / "ratsnest").glob("*.png")):
-        rels.append(str(png.relative_to(_REPO)))
-    for png in sorted((render_dir / "assembly").glob("*.png")):
-        rels.append(str(png.relative_to(_REPO)))
-    return rels
+    # The contract covers official artifacts, not ignored local/cloud-sync
+    # duplicates. Include baseline AND current tracked paths so deleting a
+    # required render cannot silently shrink the comparison set.
+    rels = {"carrier/Zynq_Carrier.kicad_pcb", "carrier/renders/golden.json"}
+    commands = (["ls-tree", "-r", "--name-only", "-z", _MASTER, "--", "carrier/renders"],
+                ["ls-files", "-z", "--", "carrier/renders"])
+    for args in commands:
+        paths = subprocess.run(["git", "-C", str(_REPO), *args],
+                               capture_output=True, check=True).stdout
+        for raw in paths.split(b"\0"):
+            path = Path(raw.decode("utf-8"))
+            if path.suffix == ".png" and path.parent.as_posix() in {
+                    "carrier/renders", "carrier/renders/ratsnest",
+                    "carrier/renders/assembly"}:
+                rels.add(path.as_posix())
+    return sorted(rels)
 
 
 def test_pcb_md5_matches_committed_baseline():

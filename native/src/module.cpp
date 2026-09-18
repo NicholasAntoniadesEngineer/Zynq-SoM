@@ -22,6 +22,7 @@
 #include "schgen/footprint_library.hpp"
 #include "schgen/mirror.hpp"
 #include "schgen/constraints_bindings.hpp"
+#include "schgen/model_checks_bindings.hpp"
 #include "schgen/emit.hpp"
 #include "schgen/legalize.hpp"
 #include "schgen/occupancy.hpp"
@@ -216,6 +217,7 @@ NB_MODULE(_geom, m) {
     schgen::bind_schematic_place(m, sexpr_from_py);
     schgen::bind_board_schematic(m, sexpr_from_py);
     schgen::bind_layout_constraints(m);
+    schgen::bind_model_checks(m);
     m.def("discover_project_subsystems", [](const std::string& directory) {
         std::vector<std::pair<std::string, std::string>> out;
         for (const auto& sheet : schgen::discover_project_subsystems(directory))

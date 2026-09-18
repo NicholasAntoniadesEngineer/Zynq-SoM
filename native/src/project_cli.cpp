@@ -3,6 +3,7 @@
 #include "schgen/bom.hpp"
 #include "schgen/board_schematic.hpp"
 #include "schgen/constraints.hpp"
+#include "schgen/part_checks.hpp"
 #include "schgen/devicetree.hpp"
 #include "schgen/design_rules.hpp"
 #include "schgen/link.hpp"
@@ -26,12 +27,12 @@ namespace {
 namespace fs = std::filesystem;
 struct Options {
     std::string command, refs = "J1,J2,J3", kicad_cli = "kicad-cli";
-    fs::path repository = fs::current_path(), som, contract, output, xdc;
+    fs::path repository = fs::current_path(), som, contract, output, xdc, pcb;
     std::optional<fs::path> project;
     std::vector<std::string> subsystems;
     bool allow_missing = false, qualified_refs = false;
 };
-const std::set<std::string> commands{"project-check", "circuit-check", "som-interface", "xdc", "vivado", "fpga", "bom", "link", "devicetree", "design-rules", "testpoints", "board-schematic", "constraints"};
+const std::set<std::string> commands{"project-check", "circuit-check", "som-interface", "xdc", "vivado", "fpga", "bom", "link", "devicetree", "design-rules", "testpoints", "board-schematic", "constraints", "powertree", "thermal", "part-rules"};
 Options parse(int argc, char** argv) {
     Options out;
     std::set<std::string> seen;
@@ -46,7 +47,7 @@ Options parse(int argc, char** argv) {
         }
         if (arg == "--repo" || arg == "--project" || arg == "--som" ||
             arg == "--contract" || arg == "--output" || arg == "-o" ||
-            arg == "--xdc" || arg == "--refs" || arg == "--kicad-cli" ||
+            arg == "--xdc" || arg == "--refs" || arg == "--kicad-cli" || arg == "--pcb" ||
             arg == "--subsystem") {
             if (++i == argc) throw std::runtime_error("missing value for " + arg);
             const std::string key = arg == "-o" ? "--output" : arg;
@@ -60,6 +61,7 @@ Options parse(int argc, char** argv) {
             else if (arg == "--contract") out.contract = value;
             else if (arg == "--output" || arg == "-o") out.output = value;
             else if (arg == "--xdc") out.xdc = value;
+            else if (arg == "--pcb") out.pcb = value;
             else if (arg == "--refs") out.refs = value;
             else if (arg == "--kicad-cli") out.kicad_cli = value;
             else out.subsystems.push_back(value);
@@ -77,6 +79,8 @@ Options parse(int argc, char** argv) {
         allowed.insert("--contract");
     } else if (out.command == "board-schematic") {
         allowed.insert("--kicad-cli");
+    } else if (out.command == "thermal" || out.command == "powertree" || out.command == "part-rules") {
+        if (out.command == "thermal") allowed.insert("--pcb");
     } else if (!check_only && out.command != "design-rules" && out.command != "testpoints" && out.command != "constraints") {
         allowed.insert("--som"); allowed.insert("--refs"); allowed.insert("--kicad-cli");
         if (out.command != "som-interface") allowed.insert("--contract");
@@ -141,6 +145,31 @@ std::optional<int> run_project_command(int argc, char** argv) {
     std::vector<CircuitSheetIr> sheets;
     sheets.reserve(circuits.size());
     for (const auto& circuit : circuits) sheets.push_back(circuit.circuit);
+    if (options.command == "powertree" || options.command == "thermal" || options.command == "part-rules") {
+        const auto power = analyze_power(circuits);
+        std::string report;
+        bool ok = false;
+        if (options.command == "powertree") {
+            report = power_report(power); ok = power.ok();
+        } else if (options.command == "part-rules") {
+            const auto result = analyze_part_rules(circuits,power);
+            report = part_rules_report(result); ok = result.ok();
+        } else {
+            const auto pcb = options.pcb.empty() ? paths.project_root / "Zynq_Carrier.kicad_pcb" : options.pcb;
+            std::optional<ThermalCopper> copper;
+            if (fs::exists(pcb)) copper = scan_thermal_copper(pcb);
+            std::string source;
+            if (copper) {
+                const auto relative = fs::weakly_canonical(pcb).lexically_relative(paths.repository_root);
+                source = !relative.empty() && *relative.begin() != ".." ? relative.string() : pcb.string();
+            }
+            const auto result = analyze_thermal(circuits,power,copper?&*copper:nullptr,source);
+            report = thermal_report(result); ok = result.ok();
+        }
+        if (!options.output.empty()) publish_text(options.output,report+"\n");
+        std::cout << report << '\n';
+        return ok ? 0 : 1;
+    }
     if (options.command == "constraints") {
         const auto directory = options.output.empty() ? paths.project_root / "manufacturing" : options.output;
         const auto result = write_layout_constraints(circuits, paths.project_root / "research/si_spec.json", directory);

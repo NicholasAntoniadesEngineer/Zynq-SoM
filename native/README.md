@@ -25,7 +25,8 @@ installing nanobind, or fetching dependencies. Live SoM extraction requires
 
 The native CLI supports `self-check`, `catalog-compile`, `circuit-compile`,
 `project-check`, `circuit-check`, `som-interface`, `link`, `bom`, `xdc`, `vivado`, `fpga`, and
-`devicetree`, `design-rules`, and `testpoints`. It does not yet generate a board.
+`devicetree`, `design-rules`, `testpoints`, `constraints`, `powertree`, `thermal`,
+and `part-rules`. It does not yet generate a complete board.
 Unsupported commands fail.
 
 ```sh
@@ -77,6 +78,11 @@ commands print diagnostics, return nonzero on findings, and write a report only
 when `--output` is supplied. They accept subsystem selection; board-wide pull-ups
 outside the selected sheets are intentionally absent from that check.
 Symbol-backed completeness remains a separate mandatory gate (`circuit-check`).
+Power-tree analysis and SVG, thermal analysis with emitted-copper evidence, and
+part-rating checks now execute in C++. Frozen report contracts cover both projects,
+policy mutations and supplied power results. Thermal credit requires real copper
+evidence; an absent PCB does not silently grant cooling credit. Transitional
+adapters preserve caller-owned policy tables and typed numeric fields.
 Connectivity and symbol metadata are indexed once per snapshot. Mutable caller
 inputs require a new snapshot; caches never silently reuse a previous board.
 

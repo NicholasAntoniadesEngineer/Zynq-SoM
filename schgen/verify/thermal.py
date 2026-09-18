@@ -54,28 +54,6 @@ POUR_EVIDENCE: dict[str, PourNeed] = {
 }
 
 
-def _pour_evidence(copper, need: PourNeed) -> tuple[bool, str]:
-    if copper is None:
-        return False, "no emitted-board scan (fail-closed: credit withheld)"
-    if not copper.gnd_plane():
-        return False, "In1.Cu GND plane NOT emitted"
-    insts = copper.instances(need.value_prefix)
-    if not insts:
-        return False, f"no {need.value_prefix}* footprint on the emitted board"
-    rows: list[str] = []
-    ok_all = True
-    for f in insts:
-        nv = copper.gnd_vias_within(f.x, f.y, need.radius_mm)
-        lays = pour_layers_for(need, f.layer)
-        pours = all(copper.pour_at(f.x, f.y, lay) for lay in lays)
-        ok = nv >= need.min_vias and pours
-        ok_all = ok_all and ok
-        rows.append(
-            f"{f.ref}: {nv}/{need.min_vias} GND vias<={need.radius_mm:g}mm, "
-            f"local {'+'.join(lay.split('.')[0] for lay in lays)} "
-            f"pour {'YES' if pours else 'MISSING'}"
-            + ("" if ok else " [INSUFFICIENT]"))
-    return ok_all, "In1 GND plane + " + "; ".join(rows)
 
 
 THERMAL_SPECS: dict[str, ThermalSpec] = {
@@ -135,25 +113,11 @@ FOOTPRINT_SPECS: dict[tuple[str, str], ThermalSpec] = {
 }
 
 
-def _spec_for(value: str, footprint: str) -> ThermalSpec | None:
-    for (vpfx, fpsub), spec in FOOTPRINT_SPECS.items():
-        if value.startswith(vpfx) and fpsub in footprint:
-            return spec
-    for pfx, spec in THERMAL_SPECS.items():
-        if value.startswith(pfx):
-            return spec
-    return None
-
-
 def dissipation(kind: str, v_in: float, v_out: float, i_out: float,
                 spec: ThermalSpec) -> float:
-    if kind == "ldo":
-        return max(0.0, (v_in - v_out)) * i_out
-    if kind == "buck":
-        return max(0.0, (1.0 / spec.eff - 1.0)) * v_out * i_out
-    if kind in ("load_switch", "efuse"):
-        return i_out * i_out * spec.rds_on
-    return 0.0
+    from dataclasses import asdict
+    from schgen.core import native
+    return native.module().thermal_dissipation(kind, v_in, v_out, i_out, asdict(spec))
 
 
 @dataclass
@@ -204,203 +168,68 @@ class Result:
         return not self.errors
 
 
-def _collect_waivers(sheets) -> dict[str, tuple[str, str]]:
-    out: dict[str, tuple[str, str]] = {}
-    for sc in sheets:
-        waivers = getattr(sc.circuit, "thermal_waivers", {})
-        for ref, reason in waivers.items():
-            out[f"{sc.name}:{ref}"] = (sc.name, reason)
-    return out
+def _native_policy():
+    from dataclasses import asdict
+    return dict(ambient_c=TA_AMBIENT, margin_c=TJ_MARGIN,
+                specs={key: asdict(value) for key, value in THERMAL_SPECS.items()},
+                footprint_specs=[(prefix, footprint, asdict(value))
+                                 for (prefix, footprint), value in FOOTPRINT_SPECS.items()],
+                pour_needs={key: asdict(value) for key, value in POUR_EVIDENCE.items()})
 
 
 def analyze(sheets, pt_res: powertree.Result | None = None,
             copper=None, copper_src: str = "") -> Result:
+    from dataclasses import asdict
+    from schgen.core import native
+    sheets = list(sheets)
     if pt_res is None:
         pt_res = powertree.analyze(sheets)
-    res = Result()
-    res.waived = _collect_waivers(sheets)
-    res.copper_src = copper_src if copper is not None else ""
-
-    ev: dict[str, tuple[bool, str]] = {
-        key: _pour_evidence(copper, need)
-        for key, need in POUR_EVIDENCE.items()}
-
-    fp_by: dict[tuple[str, str], str] = {}
-    for sc in sheets:
-        for ref, part in sc.circuit.parts.items():
-            fp_by[(sc.name, ref)] = part.footprint
-
-    for reg in sorted(pt_res.regs, key=lambda r: (r.sheet, r.ref)):
-        footprint = fp_by.get((reg.sheet, reg.ref), "")
-        spec = _spec_for(reg.value, footprint)
-        wkey = f"{reg.sheet}:{reg.ref}"
-        if spec is None:
-            res.findings.append(
-                f"UNSPECED: {reg.sheet}:{reg.ref} ({reg.value}, fp "
-                f"{footprint or '<none>'}) has no thermal spec — add a "
-                f"THERMAL_SPECS/FOOTPRINT_SPECS row with its datasheet RthJA "
-                f"+ Tj_max before its Tj can be proven")
-            continue
-        v_in = powertree.rail_volts(reg.vin) or 0.0
-        v_out = powertree.rail_volts(reg.vout) or 0.0
-        pd = dissipation(reg.kind, v_in, v_out, reg.i_out, spec)
-        granted, detail = (ev.get(spec.pour_evidence, (False, ""))
-                           if spec.rth_ja_pour is not None else (False, ""))
-        rth_eff = spec.rth_ja_pour if granted else spec.rth_ja
-        tj = res.ta + pd * rth_eff
-        limit = spec.tj_max - res.margin
-        margin = limit - tj
-        dev = Device(
-            sheet=reg.sheet, ref=reg.ref, value=reg.value,
-            package=spec.package, kind=reg.kind, vin=reg.vin, vout=reg.vout,
-            v_in=v_in, v_out=v_out, i_out=reg.i_out, pd=pd,
-            rth_ja=rth_eff, tj=tj, tj_max=spec.tj_max, margin=margin,
-            cite=spec.cite, rth_bare=spec.rth_ja, pour_cite=spec.pour_cite,
-            pour_granted=granted, evidence=detail)
-        res.devices.append(dev)
-        if spec.rth_ja_pour is not None and not granted:
-            res.notes.append(
-                f"POUR CREDIT WITHHELD: {wkey} ({reg.value}) judged at the "
-                f"bare {spec.rth_ja:g} C/W, not the credited "
-                f"{spec.rth_ja_pour:g} — required copper not verified: "
-                f"{detail}")
-        if dev.over:
-            withheld = (" — POUR CREDIT WITHHELD (required copper not "
-                        f"emitted: {detail})"
-                        if spec.rth_ja_pour is not None and not granted
-                        else "")
-            if wkey in res.waived:
-                res.notes.append(
-                    f"WAIVED over-limit: {wkey} ({reg.value}) Tj {tj:.1f} C > "
-                    f"limit {limit:.1f} C (Tj_max {spec.tj_max:.0f} - margin "
-                    f"{res.margin:.0f}) — author waiver: "
-                    f"{res.waived[wkey][1]}")
-            else:
-                res.errors.append(
-                    f"OVER Tj: {reg.sheet}:{reg.ref} ({reg.value}, "
-                    f"{spec.package}) {reg.vin}->{reg.vout}: Iout "
-                    f"{reg.i_out:.3f} A -> Pd {pd*1000:.0f} mW, "
-                    f"Tj = {res.ta:.0f} + {pd*1000:.0f}mW*{rth_eff:g} = "
-                    f"{tj:.1f} C > limit {limit:.1f} C "
-                    f"(Tj_max {spec.tj_max:.0f} - margin {res.margin:.0f}) "
-                    f"[{spec.cite}]{withheld}")
-    return res
+    scan = None
+    if copper is not None:
+        scan = asdict(copper)
+        scan["path"] = str(copper.path)
+        scan["net_names"] = sorted(copper.net_names)
+    raw = native.module().thermal_analyze(
+        powertree._native_sheets(sheets), asdict(pt_res), scan, copper_src,
+        _native_policy(), powertree._native_policy())
+    raw["devices"] = [powertree._native_record(Device, row) for row in raw["devices"]]
+    raw["ta"], raw["margin"] = float(raw["ta"]), float(raw["margin"])
+    raw["waived"] = {key: tuple(value) for key, value in raw["waived"].items()}
+    return Result(**raw)
 
 
 def report(res: Result) -> str:
-    lines = ["schgen per-device thermal (Tj) gate", "=" * 78, ""]
-    lines.append(f"model: Tj = Ta + Pd*RthJA ; Ta = {res.ta:.0f} C ; "
-                 f"FAIL when Tj > Tj_max - {res.margin:.0f} C margin")
-    lines.append("  Pd(LDO) = (Vin-Vout)*Iout ; "
-                 f"Pd(buck) = (1/eff-1)*Vout*Iout, eff={BUCK_EFF:g} ; "
-                 "Pd(switch/eFuse) = Iout^2*Rds_on")
-    lines.append("  RthJA = bare JEDEC, unless '*' = pour-aware effective RthJA "
-                 "(EP/power pads -> GND copper + vias; basis cited below)")
-    lines.append("  pour credits are granted ONLY against copper VERIFIED in "
-                 "the emitted board")
-    src = res.copper_src or \
-        "NONE — all pour credits withheld (fail-closed)"
-    lines.append(f"  emitted-copper evidence source: {src}")
-    lines.append("")
-    hdr = (f"  {'device':<22} {'package':<24} {'kind':<11} "
-           f"{'in->out':<20} {'Iout/A':>7} {'Pd/mW':>7} {'RthJA':>7} "
-           f"{'Tj/C':>7} {'limit':>7} {'mgn/C':>7}  verdict")
-    lines.append(hdr)
-    lines.append("  " + "-" * (len(hdr) - 2))
-    for d in sorted(res.devices, key=lambda x: (-x.tj, x.sheet, x.ref)):
-        verdict = "OVER" if d.over else "ok"
-        rth = f"{d.rth_ja:.1f}{'*' if d.poured else ' '}"
-        lines.append(
-            f"  {d.sheet+':'+d.ref:<22} {d.package:<24} {d.kind:<11} "
-            f"{d.vin+'->'+d.vout:<20} {d.i_out:>7.3f} {d.pd*1000:>7.0f} "
-            f"{rth:>7} {d.tj:>7.1f} {d.tj_max-res.margin:>7.1f} "
-            f"{d.margin:>7.1f}  {verdict}")
-    lines.append("")
-    lines.append("datasheet provenance (every RthJA / Tj_max / Rds_on cited):")
-    seen: set[str] = set()
-    for d in sorted(res.devices, key=lambda x: x.value):
-        key = d.value + d.package
-        if key in seen:
-            continue
-        seen.add(key)
-        lines.append(f"  {d.value:<16} {d.package:<26} {d.cite}")
-    poured = [d for d in sorted(res.devices, key=lambda x: x.value) if d.poured]
-    if poured:
-        lines.append("")
-        lines.append("pour-aware effective RthJA (* rows) — basis, per part "
-                     "(bare->credited, cited; conservative, bench-verify at "
-                     "bring-up):")
-        seenp: set[str] = set()
-        for d in poured:
-            if d.value in seenp:
-                continue
-            seenp.add(d.value)
-            lines.append(f"  {d.value:<16} bare {d.rth_bare:g} -> eff "
-                         f"{d.rth_ja:g} C/W ; {d.pour_cite}")
-            lines.append(f"  {'':<16} emitted-copper evidence (verified in "
-                         f"the board file): {d.evidence}")
-    if res.waived:
-        lines.append("")
-        lines.append(f"author thermal waivers, verbatim ({len(res.waived)}):")
-        for wkey in sorted(res.waived):
-            _sheet, reason = res.waived[wkey]
-            lines.append(f"  {wkey:<22} {reason}")
-    if res.notes:
-        lines.append("")
-        lines.append(f"notes ({len(res.notes)}):")
-        for n_ in res.notes:
-            lines.append(f"  + {n_}")
-    if res.findings:
-        lines.append("")
-        lines.append(f"FINDINGS — unspeced devices ({len(res.findings)}):")
-        for f_ in res.findings:
-            lines.append(f"  * {f_}")
-    lines.append("")
-    if res.errors:
-        lines.append(f"ERRORS ({len(res.errors)}):")
-        for e in res.errors:
-            lines.append(f"  ERROR: {e}")
-    else:
-        lines.append("errors: none")
-    lines.append("")
-    hot = max((d.tj for d in res.devices), default=res.ta)
-    hot_dev = max(res.devices, key=lambda d: d.tj, default=None)
-    hot_str = (f"; hottest {hot_dev.sheet}:{hot_dev.ref} "
-               f"({hot_dev.value}) Tj {hot:.1f} C" if hot_dev else "")
-    lines.append(f"THERMAL: {'PASS' if res.ok else 'FAIL'} "
-                 f"({len(res.devices)} devices speced, {len(res.errors)} "
-                 f"over-limit, {len(res.findings)} unspeced, "
-                 f"{len(res.waived)} waived){hot_str}")
-    return "\n".join(lines)
+    from dataclasses import asdict
+    from schgen.core import native
+    return native.module().thermal_report(asdict(res))
 
 
 def run(sheets, reports_dir: Path,
         pt_res: powertree.Result | None = None,
         pcb_path: Path | None = None) -> Result:
-    copper = None
-    copper_src = ""
-    if pcb_path is not None and Path(pcb_path).exists():
-        from schgen.verify import copper_debt
-        copper = copper_debt.scan_board(Path(pcb_path))
-        repo = Path(__file__).resolve().parents[2]
-        try:
-            copper_src = str(Path(pcb_path).resolve().relative_to(repo))
-        except ValueError:
-            copper_src = str(pcb_path)
-    res = analyze(sheets, pt_res=pt_res, copper=copper, copper_src=copper_src)
-    reports_dir.mkdir(parents=True, exist_ok=True)
-    (reports_dir / "thermal.txt").write_text(report(res) + "\n")
-    return res
+    from dataclasses import asdict
+    from schgen.core import native
+    sheets = list(sheets)
+    if pt_res is None:
+        pt_res = powertree.analyze(sheets)
+    raw = native.module().thermal_run(
+        powertree._native_sheets(sheets), asdict(pt_res),
+        str(pcb_path) if pcb_path is not None else "", str(reports_dir),
+        str(Path(__file__).resolve().parents[2]), _native_policy(), powertree._native_policy())
+    raw["devices"] = [powertree._native_record(Device, row) for row in raw["devices"]]
+    raw["ta"], raw["margin"] = float(raw["ta"]), float(raw["margin"])
+    raw["waived"] = {key: tuple(value) for key, value in raw["waived"].items()}
+    return Result(**raw)
 
 
 def cmd_thermal(args) -> int:
     from schgen.core.link import all_subsystem_paths, load_subsystem
+    from schgen.core.project import PROJECT_ROOT
     names = getattr(args, "subsystems", None) or \
         [p.stem for p in all_subsystem_paths()]
     sheets = [load_subsystem(n) for n in names]
-    repo = Path(__file__).resolve().parents[2]
-    res = run(sheets, repo / "carrier" / "reports",
-              pcb_path=repo / "carrier" / "Zynq_Carrier.kicad_pcb")
+    res = run(sheets, PROJECT_ROOT / "reports",
+              pcb_path=PROJECT_ROOT / "Zynq_Carrier.kicad_pcb")
     print(report(res))
-    print(f"\nreport: {repo / 'carrier' / 'reports' / 'thermal.txt'}")
+    print(f"\nreport: {PROJECT_ROOT / 'reports' / 'thermal.txt'}")
     return 0 if res.ok else 1

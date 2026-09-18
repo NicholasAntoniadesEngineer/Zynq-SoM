@@ -122,7 +122,7 @@
     },
     {
       "path": "reports/copper_debt.txt",
-      "sha256": "dcafe29ddd9c5e74f9dfdff8cb9c31cfd9e38a9dc88e3c7fd62ed4d195ebc45f"
+      "sha256": "190889ab7e230eca3f385d01f64bf1f4a1d35c67965f665e043b08f266bc6e0e"
     },
     {
       "path": "reports/design_rules.txt",
@@ -991,7 +991,7 @@
     {
       "draws": [],
       "limit_a": 0.523,
-      "load_a": 0,
+      "load_a": 0.0,
       "name": "+5V_MOTOR_IO",
       "source": "motor_pwm:U3 SY6280AAC [load_switch]",
       "volts": 5.0

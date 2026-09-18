@@ -20,7 +20,8 @@ add_library(schgen_core STATIC
     src/schematic.cpp src/schematic_route.cpp src/netlist_gate.cpp src/design_rules.cpp
     src/schematic_place_core.cpp src/schematic_place_fanout.cpp
     src/schematic_place_templates.cpp src/schematic_place_chain.cpp src/schematic_place_pages.cpp
-    src/selftest.cpp src/board_schematic.cpp src/mirror.cpp src/constraints.cpp)
+    src/selftest.cpp src/board_schematic.cpp src/mirror.cpp src/constraints.cpp
+    src/power_checks.cpp src/thermal_checks.cpp src/part_checks.cpp)
 find_package(Threads REQUIRED)
 find_package(LibXml2 REQUIRED)
 target_link_libraries(schgen_core PUBLIC LibXml2::LibXml2 Threads::Threads)
@@ -30,7 +31,7 @@ set_source_files_properties(src/turn.cpp src/pack_anchor.cpp src/symbols.cpp
                             src/schematic_route.cpp src/schematic_place_core.cpp
                             src/schematic_place_fanout.cpp src/schematic_place_templates.cpp
                             src/schematic_place_chain.cpp src/schematic_place_pages.cpp src/board_schematic.cpp
-                            src/pack_edges.cpp PROPERTIES
+                            src/pack_edges.cpp src/power_checks.cpp src/thermal_checks.cpp src/part_checks.cpp PROPERTIES
     COMPILE_OPTIONS "-ffp-contract=off")
 
 if(SCHGEN_BUILD_PYTHON)
@@ -88,6 +89,11 @@ add_custom_target(schgen_catalogs ALL DEPENDS
 
 include(CTest)
 if(BUILD_TESTING)
+    add_executable(schgen_model_checks_contracts tests/model_checks_contracts.cpp)
+    target_link_libraries(schgen_model_checks_contracts PRIVATE schgen_core)
+    target_compile_options(schgen_model_checks_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror -ffp-contract=off)
+    add_test(NAME native_model_checks_contracts COMMAND schgen_model_checks_contracts
+        "${CMAKE_CURRENT_SOURCE_DIR}/..")
     add_executable(schgen_constraints_contracts tests/constraints_contracts.cpp)
     target_link_libraries(schgen_constraints_contracts PRIVATE schgen_core)
     target_compile_options(schgen_constraints_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror)

@@ -23,6 +23,8 @@ int main(int argc, char** argv) {
                          "  circuit-check [--repo ROOT] [--project NAME] [SUBSYSTEM ...]\n"
                          "  board-schematic [--project NAME] [SUBSYSTEM ...] -o DIRECTORY\n"
                          "  constraints [--project NAME] [SUBSYSTEM ...] [-o DIRECTORY]\n"
+                         "  powertree|part-rules [--project NAME] [SUBSYSTEM ...] [-o REPORT]\n"
+                         "  thermal [--project NAME] [SUBSYSTEM ...] [--pcb FILE] [-o REPORT]\n"
                          "  design-rules|testpoints [--project NAME] [SUBSYSTEM ...] [-o REPORT]\n"
                          "  som-interface [--project NAME] [--som FILE] [--refs J1,J2,J3] [-o FILE]\n"
                          "  xdc|vivado [--project NAME] [--som FILE] [--contract FILE] [-o FILE]\n"
