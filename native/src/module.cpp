@@ -37,6 +37,7 @@
 #include "schgen/seat.hpp"
 #include "schgen/sexpr.hpp"
 #include "schgen/turn.hpp"
+#include "schgen/xdc_bindings.hpp"
 
 namespace nb = nanobind;
 
@@ -188,6 +189,7 @@ schgen::Sexpr sexpr_from_py(nb::handle handle) {
 
 NB_MODULE(_geom, m) {
     m.doc() = "schgen native kernels — occupancy, seat, sexpr, catalog";
+    schgen::bind_xdc(m);
     nb::class_<schgen::FootprintLibrary>(m, "FootprintLibrary")
         .def(nb::init<>())
         .def("pad_names", &schgen::FootprintLibrary::pad_names, nb::rv_policy::copy)
