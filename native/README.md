@@ -26,7 +26,8 @@ installing nanobind, or fetching dependencies. Live SoM extraction requires
 The native CLI supports `self-check`, `catalog-compile`, `circuit-compile`,
 `project-check`, `circuit-check`, `som-interface`, `link`, `bom`, `xdc`, `vivado`, `fpga`, and
 `devicetree`, `design-rules`, `testpoints`, `constraints`, `powertree`, `thermal`,
-and `part-rules`. It does not yet generate a complete board.
+`part-rules`, `bom-values`, `footprint-pads`, `pin-completeness`, `symbol-law`,
+and `spice`. It does not yet generate a complete board.
 Unsupported commands fail.
 
 ```sh
@@ -83,6 +84,11 @@ part-rating checks now execute in C++. Frozen report contracts cover both projec
 policy mutations and supplied power results. Thermal credit requires real copper
 evidence; an absent PCB does not silently grant cooling credit. Transitional
 adapters preserve caller-owned policy tables and typed numeric fields.
+BOM-value normalization, footprint-pad coverage, pin/NC completeness, symbol
+provenance and analytic/SPICE checks also run natively. Their frozen contracts
+include poisoned values, disconnected pins and malformed geometry. Optional
+ngspice cross-checks use a shell-free bounded process with private temporary
+decks and real measurements; absence of ngspice retains the analytic gate.
 Connectivity and symbol metadata are indexed once per snapshot. Mutable caller
 inputs require a new snapshot; caches never silently reuse a previous board.
 

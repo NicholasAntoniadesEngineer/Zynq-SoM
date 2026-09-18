@@ -1,0 +1,30 @@
+{
+  "cases": [
+    "001_carrier.json",
+    "002_carrier_poison_value.json",
+    "003_carrier_floating_pin.json",
+    "004_carrier_local_real_part.json",
+    "005_devkit_mini.json",
+    "006_devkit_mini_poison_value.json",
+    "007_devkit_mini_floating_pin.json",
+    "008_devkit_mini_local_real_part.json",
+    "009_bom_C25750.json",
+    "010_bom_C12447.json",
+    "011_bom_UNKNOWN.json",
+    "012_bom_ordering.json",
+    "013_pins_missing_unknown_nc.json",
+    "014_pins_accounted.json",
+    "015_law_pending.json",
+    "016_law_repeated.json",
+    "017_carrier_removed_pad.json",
+    "018_devkit_mini_removed_pad.json"
+  ],
+  "sources": {
+    "bom_values": "0125c63ebc131cab07f66b40390172a2dbb219d67f30cbf5a451e17ba3ea4775",
+    "footprint_pads": "8ca1910784a7b2b9918ced9780e5d5b0bb38105f670d54e7c3755163beb8120b",
+    "pin_completeness": "af9d751fa1403a4583a5661d6080dfa493fa9d374734e0616e3fe843cf5d220b",
+    "symbol_law": "00c452697be9ad87a4cdf5aaf9847718717e80acd0d9ed69d31f551f32fb4ecf",
+    "spice": "96057155fff4d76cda681e9ed75b6f6890c3164a79ee756aea13bcc3879896ba"
+  },
+  "symbols": 67
+}

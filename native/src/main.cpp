@@ -23,6 +23,8 @@ int main(int argc, char** argv) {
                          "  circuit-check [--repo ROOT] [--project NAME] [SUBSYSTEM ...]\n"
                          "  board-schematic [--project NAME] [SUBSYSTEM ...] -o DIRECTORY\n"
                          "  constraints [--project NAME] [SUBSYSTEM ...] [-o DIRECTORY]\n"
+                         "  bom-values | footprint-pads | pin-completeness | symbol-law [--project NAME] [-o FILE]\n"
+                         "  spice [--project NAME] [SUBSYSTEM ...] [--no-ngspice] [-o FILE]\n"
                          "  powertree|part-rules [--project NAME] [SUBSYSTEM ...] [-o REPORT]\n"
                          "  thermal [--project NAME] [SUBSYSTEM ...] [--pcb FILE] [-o REPORT]\n"
                          "  design-rules|testpoints [--project NAME] [SUBSYSTEM ...] [-o REPORT]\n"

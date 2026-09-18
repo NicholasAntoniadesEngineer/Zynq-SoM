@@ -4,6 +4,11 @@
 #include "schgen/board_schematic.hpp"
 #include "schgen/constraints.hpp"
 #include "schgen/part_checks.hpp"
+#include "schgen/bom_values.hpp"
+#include "schgen/footprint_pads.hpp"
+#include "schgen/pin_completeness.hpp"
+#include "schgen/symbol_law.hpp"
+#include "schgen/spice.hpp"
 #include "schgen/devicetree.hpp"
 #include "schgen/design_rules.hpp"
 #include "schgen/link.hpp"
@@ -30,19 +35,20 @@ struct Options {
     fs::path repository = fs::current_path(), som, contract, output, xdc, pcb;
     std::optional<fs::path> project;
     std::vector<std::string> subsystems;
-    bool allow_missing = false, qualified_refs = false;
+    bool allow_missing = false, qualified_refs = false, no_ngspice = false;
 };
-const std::set<std::string> commands{"project-check", "circuit-check", "som-interface", "xdc", "vivado", "fpga", "bom", "link", "devicetree", "design-rules", "testpoints", "board-schematic", "constraints", "powertree", "thermal", "part-rules"};
+const std::set<std::string> commands{"project-check", "circuit-check", "som-interface", "xdc", "vivado", "fpga", "bom", "link", "devicetree", "design-rules", "testpoints", "board-schematic", "constraints", "powertree", "thermal", "part-rules", "bom-values", "footprint-pads", "pin-completeness", "symbol-law", "spice"};
 Options parse(int argc, char** argv) {
     Options out;
     std::set<std::string> seen;
     for (int i = 1; i < argc; ++i) {
         const std::string arg = argv[i];
         if (commands.count(arg) && out.command.empty()) { out.command = arg; continue; }
-        if (arg == "--allow-missing" || arg == "--qualified-refs") {
+        if (arg == "--allow-missing" || arg == "--qualified-refs" || arg == "--no-ngspice") {
             if (!seen.insert(arg).second) throw std::runtime_error("duplicate option " + arg);
             if (arg == "--allow-missing") out.allow_missing = true;
-            else out.qualified_refs = true;
+            else if (arg == "--qualified-refs") out.qualified_refs = true;
+            else out.no_ngspice = true;
             continue;
         }
         if (arg == "--repo" || arg == "--project" || arg == "--som" ||
@@ -81,6 +87,11 @@ Options parse(int argc, char** argv) {
         allowed.insert("--kicad-cli");
     } else if (out.command == "thermal" || out.command == "powertree" || out.command == "part-rules") {
         if (out.command == "thermal") allowed.insert("--pcb");
+    } else if (out.command == "spice") {
+        allowed.insert("--no-ngspice");
+    } else if (out.command == "bom-values" || out.command == "footprint-pads" ||
+               out.command == "pin-completeness" || out.command == "symbol-law") {
+        // These checks consume the selected circuits, not a live SoM map.
     } else if (!check_only && out.command != "design-rules" && out.command != "testpoints" && out.command != "constraints") {
         allowed.insert("--som"); allowed.insert("--refs"); allowed.insert("--kicad-cli");
         if (out.command != "som-interface") allowed.insert("--contract");
@@ -145,6 +156,35 @@ std::optional<int> run_project_command(int argc, char** argv) {
     std::vector<CircuitSheetIr> sheets;
     sheets.reserve(circuits.size());
     for (const auto& circuit : circuits) sheets.push_back(circuit.circuit);
+    if (options.command == "bom-values" || options.command == "footprint-pads" ||
+        options.command == "pin-completeness" || options.command == "symbol-law" || options.command == "spice") {
+        std::string report;bool ok=false;
+        const auto data=paths.repository_root/"schgen/verify/data";
+        if(options.command=="bom-values") {
+            const auto r=check_bom_values(circuits,load_bom_value_catalog(data/"lcsc_values.json"));
+            report=r.report();ok=r.ok;
+        } else if(options.command=="spice") {
+            auto r=extract_spice_checks(circuits);SpiceRunOptions run;run.allow_ngspice=!options.no_ngspice;
+            run_ngspice_crosschecks(r,run);report=spice_report(r,ngspice_available().has_value());ok=r.ok();
+        } else {
+            SymbolLibrary library(paths.repository_root);
+            if(options.command=="pin-completeness") {
+                const auto r=check_pin_completeness(circuits,library,load_nc_allowlist(data/"nc_allowlist.json"));
+                report=r.report();ok=r.ok;
+            } else if(options.command=="symbol-law") {
+                const auto r=check_symbol_law(sheets,library);report=r.summary();ok=r.ok();
+            } else {
+                FootprintResolutionOptions fp;fp.parts_dir=paths.repository_root/"parts";
+                fp.library_tables={paths.repository_root/"som/fp-lib-table"};
+                fp.aliases={{"Capacitor_SMD:C_1206_3225Metric","Capacitor_SMD:C_1206_3216Metric"}};
+                for(const auto* root:{"/Applications/KiCad/KiCad.app/Contents/SharedSupport/footprints","/usr/share/kicad/footprints","/usr/local/share/kicad/footprints"})
+                    if(fs::is_directory(root)){fp.kicad_footprint_root=root;break;}
+                const auto r=check_footprint_pads(circuits,library,fp);report=r.report();ok=r.ok;
+            }
+        }
+        if(!options.output.empty())publish_text(options.output,report+"\n");
+        std::cout<<report<<'\n';return ok?0:1;
+    }
     if (options.command == "powertree" || options.command == "thermal" || options.command == "part-rules") {
         const auto power = analyze_power(circuits);
         std::string report;
