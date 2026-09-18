@@ -1309,6 +1309,12 @@ NB_MODULE(_geom, m) {
     m.def("rotate_origin", &schgen::rotate_origin);
     m.def("named_box_center_sigs", &schgen::named_box_center_sigs);
     m.def("cross_budget", &schgen::cross_budget);
+    m.def("relax_pad", &schgen::relax_pad);
+    m.def("template_clear_pad", &schgen::template_clear_pad);
+    m.def("gap_over_limit", &schgen::gap_over_limit);
+    m.def("gap_under_limit", &schgen::gap_under_limit);
+    m.def("min_present", &schgen::min_present);
+    m.def("nearest_named", &schgen::nearest_named);
     m.def("board_to_uv",
           [](double cx, double cy, double bx, double by, double rot) {
               return schgen::board_to_uv(cx, cy, bx, by, rot);

@@ -1,4 +1,6 @@
 #include "schgen/occupancy.hpp"
+#include "schgen/legalize.hpp"
+#include "schgen/pack.hpp"
 #include "schgen/route.hpp"
 #include "schgen/seat.hpp"
 #include "schgen/sexpr.hpp"
@@ -82,6 +84,27 @@ void seating() {
     require(!impossible.solved && !impossible.budget_hit,
             "overlapping seats were accepted");
 }
+
+void placement_limits() {
+    require(schgen::gap_over_limit(std::nullopt, 3.0), "missing gap must fail upper bound");
+    require(!schgen::gap_under_limit(std::nullopt, 3.0), "missing gap has no lower bound");
+    require(!schgen::gap_over_limit(3.0, 3.0), "upper bound must be strict");
+    require(!schgen::gap_under_limit(3.0, 3.0), "lower bound must be strict");
+    require(schgen::gap_over_limit(4.0, 3.0), "upper bound failed");
+    require(schgen::gap_under_limit(2.0, 3.0), "lower bound failed");
+    require(!schgen::min_present(std::nullopt, std::nullopt), "absent minimum fabricated");
+    require(schgen::min_present(std::nullopt, 2.0) == 2.0, "present minimum lost");
+    require(schgen::min_present(1.0, 2.0) == 1.0, "minimum changed");
+    require(!schgen::nearest_named({}), "empty nearest search fabricated a result");
+    const auto nearest = schgen::nearest_named({{"Z", 1.0}, {"A", 1.0}, {"B", 2.0}});
+    require(nearest && nearest->first == "Z", "nearest tie must preserve input order");
+    for (int scale = 0; scale < 20; ++scale) {
+        const double pad = scale * 0.1;
+        require(schgen::relax_pad(scale, 0.1) == pad, "relaxation changed");
+        require(schgen::template_clear_pad(0.3, 0.2, pad) == (0.3 + 0.2) + pad,
+                "clearance arithmetic changed");
+    }
+}
 }  // namespace
 
 int main(int argc, char** argv) {
@@ -92,6 +115,7 @@ int main(int argc, char** argv) {
         else if (name == "sexpr") sexpr();
         else if (name == "routing") routing();
         else if (name == "seating") seating();
+        else if (name == "placement_limits") placement_limits();
         else throw std::runtime_error("unknown test");
         return 0;
     } catch (const std::exception& exc) {

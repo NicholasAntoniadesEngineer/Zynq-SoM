@@ -149,7 +149,7 @@ def _rot_pad_bbox(mod_path: Path,
 
 
 def _inst_pad_geom(inst: FootprintInst) -> list[tuple[str, float, float, str]]:
-    rows = _nat.module().scan_pad_nodes(sexpr.loads(inst.mod_path.read_text()))
+    rows = _nat.module().scan_pad_nodes(inst.mod_path.read_text())
     local = [(name, x, y) for name, _ptype, x, y, _prot, _sw, _sh in rows]
     placed = _nat.module().inst_pad_xy(
         local, inst.x, inst.y, inst.rotation or 0.0, PAD_DECIMALS)
