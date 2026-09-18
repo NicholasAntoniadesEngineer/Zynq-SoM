@@ -318,6 +318,24 @@ std::optional<std::string> optional_text(const JsonNode& n, const std::string& k
 }
 }  // namespace
 
+std::string export_kicad_netlist_xml(const fs::path& schematic, const SomExtractOptions& options) {
+    return export_xml(schematic, options);
+}
+
+KicadNetlist parse_kicad_netlist_xml(std::string_view xml, const std::string& source) {
+    auto doc = parse_xml(xml, source);
+    auto* nets = child(xmlDocGetRootElement(doc.get()), "nets");
+    KicadNetlist result;
+    for (auto* net = nets ? nets->children : nullptr; net; net = net->next) {
+        if (net->type != XML_ELEMENT_NODE) continue;
+        std::vector<KicadNetlistPin> pins;
+        for (auto* node = net->children; node; node = node->next)
+            if (named(node, "node")) pins.push_back({attr(node, "ref"), attr(node, "pin")});
+        put(result, attr(net, "name"), std::move(pins));
+    }
+    return result;
+}
+
 SomInterface parse_som_interface_xml(std::string_view xml, const std::string& source,
                                      const std::vector<std::string>& refs) {
     auto doc = parse_xml(xml, source);
@@ -393,12 +411,12 @@ SomZynq parse_som_zynq_xml(std::string_view xml, const std::string& source,
 
 SomInterface extract_som_interface(const fs::path& som_sch, const std::vector<std::string>& refs,
                                    const SomExtractOptions& options) {
-    return parse_som_interface_xml(export_xml(som_sch, options), som_sch.string(), refs);
+    return parse_som_interface_xml(export_kicad_netlist_xml(som_sch, options), som_sch.string(), refs);
 }
 
 SomZynq extract_som_zynq(const fs::path& som_sch, const std::string& zynq_ref,
                         const std::vector<std::string>& jrefs, const SomExtractOptions& options) {
-    return parse_som_zynq_xml(export_xml(som_sch, options), som_sch.string(), zynq_ref, jrefs);
+    return parse_som_zynq_xml(export_kicad_netlist_xml(som_sch, options), som_sch.string(), zynq_ref, jrefs);
 }
 
 SomInterface load_som_interface(const fs::path& path) {

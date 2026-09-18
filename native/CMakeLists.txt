@@ -17,7 +17,7 @@ add_library(schgen_core STATIC
     src/ratsnest.cpp src/footprint_library.cpp src/xdc.cpp src/vivado.cpp
     src/bom.cpp src/project.cpp src/project_catalog.cpp src/project_outputs.cpp src/som_interface.cpp
     src/link.cpp src/devicetree.cpp src/symbols.cpp src/validation.cpp
-    src/schematic.cpp src/schematic_route.cpp)
+    src/schematic.cpp src/schematic_route.cpp src/netlist_gate.cpp)
 find_package(LibXml2 REQUIRED)
 target_link_libraries(schgen_core PUBLIC LibXml2::LibXml2)
 target_include_directories(schgen_core PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
@@ -82,6 +82,11 @@ add_custom_target(schgen_catalogs ALL DEPENDS
 
 include(CTest)
 if(BUILD_TESTING)
+    add_executable(schgen_netlist_gate_contracts tests/netlist_gate_contracts.cpp)
+    target_link_libraries(schgen_netlist_gate_contracts PRIVATE schgen_core)
+    target_compile_options(schgen_netlist_gate_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror)
+    add_test(NAME native_netlist_gate_contracts COMMAND schgen_netlist_gate_contracts
+        "${CMAKE_CURRENT_SOURCE_DIR}/tests/data/netlist_gate")
     add_executable(schgen_schematic_route_contracts tests/schematic_route_contracts.cpp)
     target_link_libraries(schgen_schematic_route_contracts PRIVATE schgen_core)
     target_compile_options(schgen_schematic_route_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror)

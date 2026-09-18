@@ -1,0 +1,5636 @@
+{
+ "schema": "schgen.netlist.contracts/1",
+ "circuits": {
+  "carrier_board_services": {
+   "file": "carrier_board_services.circuit.json"
+  },
+  "devkit_uart_bridge": {
+   "file": "devkit_uart_bridge.circuit.json"
+  },
+  "m1_rc": {
+   "file": "m1_rc.circuit.json"
+  },
+  "simple": {
+   "ir": {
+    "schema": "schgen.circuit/1",
+    "name": "simple",
+    "title": "single pin public net",
+    "parts": [
+     {
+      "ref": "U1",
+      "lib_id": "Fixture:U",
+      "value": "U",
+      "footprint": "",
+      "fields": {},
+      "pin_names": {},
+      "pin_numbers": []
+     }
+    ],
+    "nets": [
+     {
+      "name": "Z",
+      "net_class": "port",
+      "pins": [
+       "U1.1"
+      ]
+     }
+    ],
+    "nc": [
+     "U1.2"
+    ],
+    "port_types": {},
+    "hints": {},
+    "loads": {},
+    "tp_waivers": {},
+    "decap_waivers": {},
+    "pull_waivers": {},
+    "reset_waivers": {},
+    "strap_waivers": {},
+    "ep_waivers": {},
+    "thermal_waivers": {},
+    "part_rule_waivers": {}
+   }
+  },
+  "dead": {
+   "ir": {
+    "schema": "schgen.circuit/1",
+    "name": "dead",
+    "title": "two terminal checks",
+    "parts": [
+     {
+      "ref": "C1",
+      "lib_id": "Device:C",
+      "value": "part",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {},
+      "pin_names": {},
+      "pin_numbers": []
+     },
+     {
+      "ref": "C2",
+      "lib_id": "Device:C",
+      "value": "part",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {},
+      "pin_names": {},
+      "pin_numbers": []
+     },
+     {
+      "ref": "R9",
+      "lib_id": "Device:R",
+      "value": "part",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {},
+      "pin_names": {},
+      "pin_numbers": []
+     },
+     {
+      "ref": "L2",
+      "lib_id": "Device:L",
+      "value": "part",
+      "footprint": "",
+      "fields": {},
+      "pin_names": {},
+      "pin_numbers": []
+     },
+     {
+      "ref": "D1",
+      "lib_id": "Device:D",
+      "value": "part",
+      "footprint": "",
+      "fields": {},
+      "pin_names": {},
+      "pin_numbers": []
+     },
+     {
+      "ref": "RX",
+      "lib_id": "Device:R_Potentiometer",
+      "value": "part",
+      "footprint": "",
+      "fields": {},
+      "pin_names": {},
+      "pin_numbers": []
+     },
+     {
+      "ref": "X",
+      "lib_id": "Other:C",
+      "value": "part",
+      "footprint": "",
+      "fields": {},
+      "pin_names": {},
+      "pin_numbers": []
+     }
+    ],
+    "nets": [
+     {
+      "name": "+3V3",
+      "net_class": "power",
+      "pins": [
+       "C1.1"
+      ]
+     },
+     {
+      "name": "GND",
+      "net_class": "ground",
+      "pins": [
+       "C1.2",
+       "C2.1",
+       "C2.2",
+       "L2.1",
+       "L2.2",
+       "D1.1",
+       "D1.2",
+       "RX.1",
+       "RX.2",
+       "RX.3",
+       "X.1",
+       "X.2"
+      ]
+     },
+     {
+      "name": "NETA",
+      "net_class": "port",
+      "pins": [
+       "R9.1"
+      ]
+     },
+     {
+      "name": "NETB",
+      "net_class": "port",
+      "pins": [
+       "R9.2"
+      ]
+     }
+    ],
+    "nc": [],
+    "port_types": {},
+    "hints": {},
+    "loads": {},
+    "tp_waivers": {},
+    "decap_waivers": {},
+    "pull_waivers": {},
+    "reset_waivers": {},
+    "strap_waivers": {},
+    "ep_waivers": {},
+    "thermal_waivers": {},
+    "part_rule_waivers": {}
+   }
+  },
+  "quoted": {
+   "ir": {
+    "schema": "schgen.circuit/1",
+    "name": "quoted",
+    "title": "quoted reports",
+    "parts": [
+     {
+      "ref": "U1",
+      "lib_id": "Fixture:U",
+      "value": "U",
+      "footprint": "",
+      "fields": {},
+      "pin_names": {},
+      "pin_numbers": []
+     },
+     {
+      "ref": "U2",
+      "lib_id": "Fixture:U",
+      "value": "U",
+      "footprint": "",
+      "fields": {},
+      "pin_names": {},
+      "pin_numbers": []
+     }
+    ],
+    "nets": [
+     {
+      "name": "O'Hare",
+      "net_class": "port",
+      "pins": [
+       "U1.1"
+      ]
+     },
+     {
+      "name": "a\"b\\c\nΩ",
+      "net_class": "port",
+      "pins": [
+       "U2.1"
+      ]
+     }
+    ],
+    "nc": [],
+    "port_types": {},
+    "hints": {},
+    "loads": {},
+    "tp_waivers": {},
+    "decap_waivers": {},
+    "pull_waivers": {},
+    "reset_waivers": {},
+    "strap_waivers": {},
+    "ep_waivers": {},
+    "thermal_waivers": {},
+    "part_rule_waivers": {}
+   }
+  }
+ },
+ "xml_cases": [
+  {
+   "file": "carrier_board_services.xml",
+   "expected": [
+    [
+     "+3V3_AUX",
+     [
+      [
+       "C3001",
+       "1"
+      ],
+      [
+       "C3002",
+       "1"
+      ],
+      [
+       "C3003",
+       "1"
+      ],
+      [
+       "R3001",
+       "1"
+      ],
+      [
+       "U3001",
+       "5"
+      ],
+      [
+       "U3001",
+       "6"
+      ],
+      [
+       "U3002",
+       "7"
+      ],
+      [
+       "U3003",
+       "5"
+      ]
+     ]
+    ],
+    [
+     "/AUX_I2C_SCL",
+     [
+      [
+       "U3001",
+       "1"
+      ],
+      [
+       "U3002",
+       "3"
+      ]
+     ]
+    ],
+    [
+     "/AUX_I2C_SDA",
+     [
+      [
+       "U3001",
+       "3"
+      ],
+      [
+       "U3002",
+       "4"
+      ]
+     ]
+    ],
+    [
+     "/WATCHDOG_KICK",
+     [
+      [
+       "R3002",
+       "1"
+      ]
+     ]
+    ],
+    [
+     "/WATCHDOG_RST_N",
+     [
+      [
+       "U3003",
+       "1"
+      ]
+     ]
+    ],
+    [
+     "GND",
+     [
+      [
+       "BT3001",
+       "2"
+      ],
+      [
+       "C3001",
+       "2"
+      ],
+      [
+       "C3002",
+       "2"
+      ],
+      [
+       "C3003",
+       "2"
+      ],
+      [
+       "U3001",
+       "2"
+      ],
+      [
+       "U3001",
+       "4"
+      ],
+      [
+       "U3002",
+       "5"
+      ],
+      [
+       "U3002",
+       "8"
+      ],
+      [
+       "U3003",
+       "2"
+      ]
+     ]
+    ],
+    [
+     "Net-(U3002-INT#)",
+     [
+      [
+       "R3001",
+       "2"
+      ],
+      [
+       "U3002",
+       "2"
+      ]
+     ]
+    ],
+    [
+     "Net-(U3002-VBACKUP)",
+     [
+      [
+       "BT3001",
+       "1"
+      ],
+      [
+       "U3002",
+       "6"
+      ]
+     ]
+    ],
+    [
+     "Net-(U3003-WDI)",
+     [
+      [
+       "R3002",
+       "2"
+      ],
+      [
+       "U3003",
+       "4"
+      ]
+     ]
+    ],
+    [
+     "unconnected-(U3002-CLKOUT-Pad1)",
+     [
+      [
+       "U3002",
+       "1"
+      ]
+     ]
+    ],
+    [
+     "unconnected-(U3003-MR#-Pad3)",
+     [
+      [
+       "U3003",
+       "3"
+      ]
+     ]
+    ]
+   ]
+  },
+  {
+   "file": "devkit_uart_bridge.xml",
+   "expected": [
+    [
+     "+3V3",
+     [
+      [
+       "C11001",
+       "1"
+      ],
+      [
+       "C11002",
+       "1"
+      ],
+      [
+       "C11003",
+       "1"
+      ],
+      [
+       "C11004",
+       "1"
+      ],
+      [
+       "R11001",
+       "1"
+      ],
+      [
+       "U11001",
+       "5"
+      ],
+      [
+       "U11001",
+       "6"
+      ],
+      [
+       "U11001",
+       "7"
+      ]
+     ]
+    ],
+    [
+     "/CP2102N_VBUS_SNS",
+     [
+      [
+       "R11002",
+       "2"
+      ],
+      [
+       "R11003",
+       "1"
+      ],
+      [
+       "U11001",
+       "8"
+      ]
+     ]
+    ],
+    [
+     "/USB_UART_DM",
+     [
+      [
+       "U11001",
+       "4"
+      ]
+     ]
+    ],
+    [
+     "/USB_UART_DP",
+     [
+      [
+       "U11001",
+       "3"
+      ]
+     ]
+    ],
+    [
+     "/USB_UART_VBUS",
+     [
+      [
+       "R11002",
+       "1"
+      ]
+     ]
+    ],
+    [
+     "/ZYNQ_PS_UART0_CTS_N",
+     [
+      [
+       "U11001",
+       "19"
+      ]
+     ]
+    ],
+    [
+     "/ZYNQ_PS_UART0_RTS_N",
+     [
+      [
+       "U11001",
+       "18"
+      ]
+     ]
+    ],
+    [
+     "/ZYNQ_PS_UART0_RXD",
+     [
+      [
+       "TP11002",
+       "1"
+      ],
+      [
+       "U11001",
+       "21"
+      ]
+     ]
+    ],
+    [
+     "/ZYNQ_PS_UART0_TXD",
+     [
+      [
+       "TP11001",
+       "1"
+      ],
+      [
+       "U11001",
+       "20"
+      ]
+     ]
+    ],
+    [
+     "GND",
+     [
+      [
+       "C11001",
+       "2"
+      ],
+      [
+       "C11002",
+       "2"
+      ],
+      [
+       "C11003",
+       "2"
+      ],
+      [
+       "C11004",
+       "2"
+      ],
+      [
+       "R11003",
+       "2"
+      ],
+      [
+       "U11001",
+       "2"
+      ],
+      [
+       "U11001",
+       "25"
+      ]
+     ]
+    ],
+    [
+     "Net-(U11001-RSTb)",
+     [
+      [
+       "R11001",
+       "2"
+      ],
+      [
+       "U11001",
+       "9"
+      ]
+     ]
+    ],
+    [
+     "unconnected-(U11001-DCD-Pad24)",
+     [
+      [
+       "U11001",
+       "24"
+      ]
+     ]
+    ],
+    [
+     "unconnected-(U11001-DSR-Pad22)",
+     [
+      [
+       "U11001",
+       "22"
+      ]
+     ]
+    ],
+    [
+     "unconnected-(U11001-DTR-Pad23)",
+     [
+      [
+       "U11001",
+       "23"
+      ]
+     ]
+    ],
+    [
+     "unconnected-(U11001-GPIO.0/TXT-Pad14)",
+     [
+      [
+       "U11001",
+       "14"
+      ]
+     ]
+    ],
+    [
+     "unconnected-(U11001-GPIO.1/RXT-Pad13)",
+     [
+      [
+       "U11001",
+       "13"
+      ]
+     ]
+    ],
+    [
+     "unconnected-(U11001-GPIO.2/RS485-Pad12)",
+     [
+      [
+       "U11001",
+       "12"
+      ]
+     ]
+    ],
+    [
+     "unconnected-(U11001-GPIO.3/WAKEUP-Pad11)",
+     [
+      [
+       "U11001",
+       "11"
+      ]
+     ]
+    ],
+    [
+     "unconnected-(U11001-NC-Pad10)",
+     [
+      [
+       "U11001",
+       "10"
+      ]
+     ]
+    ],
+    [
+     "unconnected-(U11001-NC-Pad16)",
+     [
+      [
+       "U11001",
+       "16"
+      ]
+     ]
+    ],
+    [
+     "unconnected-(U11001-RI/CLK-Pad1)",
+     [
+      [
+       "U11001",
+       "1"
+      ]
+     ]
+    ],
+    [
+     "unconnected-(U11001-SUSPEND-Pad17)",
+     [
+      [
+       "U11001",
+       "17"
+      ]
+     ]
+    ],
+    [
+     "unconnected-(U11001-SUSPENDb-Pad15)",
+     [
+      [
+       "U11001",
+       "15"
+      ]
+     ]
+    ]
+   ]
+  },
+  {
+   "file": "m1_rc.xml",
+   "expected": [
+    [
+     "+3V3",
+     [
+      [
+       "R1",
+       "1"
+      ]
+     ]
+    ],
+    [
+     "GND",
+     [
+      [
+       "C1",
+       "2"
+      ],
+      [
+       "R2",
+       "2"
+      ]
+     ]
+    ],
+    [
+     "MID",
+     [
+      [
+       "C1",
+       "1"
+      ],
+      [
+       "R1",
+       "2"
+      ],
+      [
+       "R2",
+       "1"
+      ]
+     ]
+    ]
+   ]
+  },
+  {
+   "file": "m1_short.xml",
+   "expected": [
+    [
+     "GND",
+     [
+      [
+       "C1",
+       "2"
+      ],
+      [
+       "R2",
+       "2"
+      ]
+     ]
+    ],
+    [
+     "MID",
+     [
+      [
+       "C1",
+       "1"
+      ],
+      [
+       "R1",
+       "1"
+      ],
+      [
+       "R1",
+       "2"
+      ],
+      [
+       "R2",
+       "1"
+      ]
+     ]
+    ]
+   ]
+  },
+  {
+   "file": "m1_open.xml",
+   "expected": [
+    [
+     "+3V3",
+     [
+      [
+       "R1",
+       "1"
+      ]
+     ]
+    ],
+    [
+     "GND",
+     [
+      [
+       "C1",
+       "2"
+      ],
+      [
+       "R2",
+       "2"
+      ]
+     ]
+    ],
+    [
+     "MID",
+     [
+      [
+       "C1",
+       "1"
+      ],
+      [
+       "R1",
+       "2"
+      ]
+     ]
+    ],
+    [
+     "unconnected-(R2-Pad1)",
+     [
+      [
+       "R2",
+       "1"
+      ]
+     ]
+    ]
+   ]
+  },
+  {
+   "text": "<export xmlns:n=\"urn:x\"><nets><net name=\"Z\"><node ref=\"old\" pin=\"1\"/></net><anything name=\"A&amp;B\"><node ref=\"R1\" pin=\"2\"/><node/><n:node ref=\"ignored\"/><extra><node ref=\"nested\"/></extra></anything><net name=\"Z\"><node ref=\"new\" pin=\"3\"/></net><net/><n:net name=\"N\"><node ref=\"N1\" pin=\"4\"/></n:net></nets></export>",
+   "expected": [
+    [
+     "Z",
+     [
+      [
+       "new",
+       "3"
+      ]
+     ]
+    ],
+    [
+     "A&B",
+     [
+      [
+       "R1",
+       "2"
+      ],
+      [
+       "",
+       ""
+      ]
+     ]
+    ],
+    [
+     "",
+     []
+    ],
+    [
+     "N",
+     [
+      [
+       "N1",
+       "4"
+      ]
+     ]
+    ]
+   ]
+  },
+  {
+   "text": "<export/>",
+   "expected": []
+  },
+  {
+   "text": "<export><nets/></export>",
+   "expected": []
+  },
+  {
+   "text": "<export xmlns=\"urn:x\"><nets><net name=\"ignored\"/></nets></export>",
+   "expected": []
+  }
+ ],
+ "cases": [
+  {
+   "name": "carrier_board_services_clean",
+   "circuit": "carrier_board_services",
+   "extracted": [
+    [
+     "+3V3_AUX",
+     [
+      [
+       "C3001",
+       "1"
+      ],
+      [
+       "C3002",
+       "1"
+      ],
+      [
+       "C3003",
+       "1"
+      ],
+      [
+       "R3001",
+       "1"
+      ],
+      [
+       "U3001",
+       "5"
+      ],
+      [
+       "U3001",
+       "6"
+      ],
+      [
+       "U3002",
+       "7"
+      ],
+      [
+       "U3003",
+       "5"
+      ]
+     ]
+    ],
+    [
+     "/AUX_I2C_SCL",
+     [
+      [
+       "U3001",
+       "1"
+      ],
+      [
+       "U3002",
+       "3"
+      ]
+     ]
+    ],
+    [
+     "/AUX_I2C_SDA",
+     [
+      [
+       "U3001",
+       "3"
+      ],
+      [
+       "U3002",
+       "4"
+      ]
+     ]
+    ],
+    [
+     "/WATCHDOG_KICK",
+     [
+      [
+       "R3002",
+       "1"
+      ]
+     ]
+    ],
+    [
+     "/WATCHDOG_RST_N",
+     [
+      [
+       "U3003",
+       "1"
+      ]
+     ]
+    ],
+    [
+     "GND",
+     [
+      [
+       "BT3001",
+       "2"
+      ],
+      [
+       "C3001",
+       "2"
+      ],
+      [
+       "C3002",
+       "2"
+      ],
+      [
+       "C3003",
+       "2"
+      ],
+      [
+       "U3001",
+       "2"
+      ],
+      [
+       "U3001",
+       "4"
+      ],
+      [
+       "U3002",
+       "5"
+      ],
+      [
+       "U3002",
+       "8"
+      ],
+      [
+       "U3003",
+       "2"
+      ]
+     ]
+    ],
+    [
+     "Net-(U3002-INT#)",
+     [
+      [
+       "R3001",
+       "2"
+      ],
+      [
+       "U3002",
+       "2"
+      ]
+     ]
+    ],
+    [
+     "Net-(U3002-VBACKUP)",
+     [
+      [
+       "BT3001",
+       "1"
+      ],
+      [
+       "U3002",
+       "6"
+      ]
+     ]
+    ],
+    [
+     "Net-(U3003-WDI)",
+     [
+      [
+       "R3002",
+       "2"
+      ],
+      [
+       "U3003",
+       "4"
+      ]
+     ]
+    ],
+    [
+     "unconnected-(U3002-CLKOUT-Pad1)",
+     [
+      [
+       "U3002",
+       "1"
+      ]
+     ]
+    ],
+    [
+     "unconnected-(U3003-MR#-Pad3)",
+     [
+      [
+       "U3003",
+       "3"
+      ]
+     ]
+    ]
+   ],
+   "expected": {
+    "ok": true,
+    "shorts": [],
+    "opens": [],
+    "nc_cheats": [],
+    "part_mismatches": [],
+    "name_mismatches": [],
+    "summary": "NETLIST GATE: PASS (extracted == declared)"
+   },
+   "schematic_file": "carrier_board_services.kicad_sch"
+  },
+  {
+   "name": "carrier_board_services_short",
+   "circuit": "carrier_board_services",
+   "extracted": [
+    [
+     "+3V3_AUX",
+     [
+      [
+       "C3001",
+       "1"
+      ],
+      [
+       "C3002",
+       "1"
+      ],
+      [
+       "C3003",
+       "1"
+      ],
+      [
+       "R3001",
+       "1"
+      ],
+      [
+       "U3001",
+       "5"
+      ],
+      [
+       "U3001",
+       "6"
+      ],
+      [
+       "U3002",
+       "7"
+      ],
+      [
+       "U3003",
+       "5"
+      ],
+      [
+       "U3001",
+       "1"
+      ],
+      [
+       "U3002",
+       "3"
+      ]
+     ]
+    ],
+    [
+     "/AUX_I2C_SDA",
+     [
+      [
+       "U3001",
+       "3"
+      ],
+      [
+       "U3002",
+       "4"
+      ]
+     ]
+    ],
+    [
+     "/WATCHDOG_KICK",
+     [
+      [
+       "R3002",
+       "1"
+      ]
+     ]
+    ],
+    [
+     "/WATCHDOG_RST_N",
+     [
+      [
+       "U3003",
+       "1"
+      ]
+     ]
+    ],
+    [
+     "GND",
+     [
+      [
+       "BT3001",
+       "2"
+      ],
+      [
+       "C3001",
+       "2"
+      ],
+      [
+       "C3002",
+       "2"
+      ],
+      [
+       "C3003",
+       "2"
+      ],
+      [
+       "U3001",
+       "2"
+      ],
+      [
+       "U3001",
+       "4"
+      ],
+      [
+       "U3002",
+       "5"
+      ],
+      [
+       "U3002",
+       "8"
+      ],
+      [
+       "U3003",
+       "2"
+      ]
+     ]
+    ],
+    [
+     "Net-(U3002-INT#)",
+     [
+      [
+       "R3001",
+       "2"
+      ],
+      [
+       "U3002",
+       "2"
+      ]
+     ]
+    ],
+    [
+     "Net-(U3002-VBACKUP)",
+     [
+      [
+       "BT3001",
+       "1"
+      ],
+      [
+       "U3002",
+       "6"
+      ]
+     ]
+    ],
+    [
+     "Net-(U3003-WDI)",
+     [
+      [
+       "R3002",
+       "2"
+      ],
+      [
+       "U3003",
+       "4"
+      ]
+     ]
+    ],
+    [
+     "unconnected-(U3002-CLKOUT-Pad1)",
+     [
+      [
+       "U3002",
+       "1"
+      ]
+     ]
+    ],
+    [
+     "unconnected-(U3003-MR#-Pad3)",
+     [
+      [
+       "U3003",
+       "3"
+      ]
+     ]
+    ]
+   ],
+   "schematic_text": "(kicad_sch)",
+   "expected": {
+    "ok": false,
+    "shorts": [
+     "extracted '+3V3_AUX' merges ['+3V3_AUX', 'AUX_I2C_SCL'] [C3001.1=+3V3_AUX, C3002.1=+3V3_AUX, C3003.1=+3V3_AUX, R3001.1=+3V3_AUX, U3001.5=+3V3_AUX, U3001.6=+3V3_AUX, U3002.7=+3V3_AUX, U3003.5=+3V3_AUX, U3001.1=AUX_I2C_SCL, U3002.3=AUX_I2C_SCL]"
+    ],
+    "opens": [],
+    "nc_cheats": [],
+    "part_mismatches": [],
+    "name_mismatches": [
+     "U3001.1: declared 'AUX_I2C_SCL' but extracted '+3V3_AUX'",
+     "U3002.3: declared 'AUX_I2C_SCL' but extracted '+3V3_AUX'"
+    ],
+    "summary": "NETLIST GATE: FAIL\n  SHORT: extracted '+3V3_AUX' merges ['+3V3_AUX', 'AUX_I2C_SCL'] [C3001.1=+3V3_AUX, C3002.1=+3V3_AUX, C3003.1=+3V3_AUX, R3001.1=+3V3_AUX, U3001.5=+3V3_AUX, U3001.6=+3V3_AUX, U3002.7=+3V3_AUX, U3003.5=+3V3_AUX, U3001.1=AUX_I2C_SCL, U3002.3=AUX_I2C_SCL]\n  NAME: U3001.1: declared 'AUX_I2C_SCL' but extracted '+3V3_AUX'\n  NAME: U3002.3: declared 'AUX_I2C_SCL' but extracted '+3V3_AUX'"
+   }
+  },
+  {
+   "name": "carrier_board_services_open",
+   "circuit": "carrier_board_services",
+   "extracted": [
+    [
+     "+3V3_AUX",
+     [
+      [
+       "C3002",
+       "1"
+      ],
+      [
+       "C3003",
+       "1"
+      ],
+      [
+       "R3001",
+       "1"
+      ],
+      [
+       "U3001",
+       "5"
+      ],
+      [
+       "U3001",
+       "6"
+      ],
+      [
+       "U3002",
+       "7"
+      ],
+      [
+       "U3003",
+       "5"
+      ]
+     ]
+    ],
+    [
+     "/AUX_I2C_SCL",
+     [
+      [
+       "U3001",
+       "1"
+      ],
+      [
+       "U3002",
+       "3"
+      ]
+     ]
+    ],
+    [
+     "/AUX_I2C_SDA",
+     [
+      [
+       "U3001",
+       "3"
+      ],
+      [
+       "U3002",
+       "4"
+      ]
+     ]
+    ],
+    [
+     "/WATCHDOG_KICK",
+     [
+      [
+       "R3002",
+       "1"
+      ]
+     ]
+    ],
+    [
+     "/WATCHDOG_RST_N",
+     [
+      [
+       "U3003",
+       "1"
+      ]
+     ]
+    ],
+    [
+     "GND",
+     [
+      [
+       "BT3001",
+       "2"
+      ],
+      [
+       "C3001",
+       "2"
+      ],
+      [
+       "C3002",
+       "2"
+      ],
+      [
+       "C3003",
+       "2"
+      ],
+      [
+       "U3001",
+       "2"
+      ],
+      [
+       "U3001",
+       "4"
+      ],
+      [
+       "U3002",
+       "5"
+      ],
+      [
+       "U3002",
+       "8"
+      ],
+      [
+       "U3003",
+       "2"
+      ]
+     ]
+    ],
+    [
+     "Net-(U3002-INT#)",
+     [
+      [
+       "R3001",
+       "2"
+      ],
+      [
+       "U3002",
+       "2"
+      ]
+     ]
+    ],
+    [
+     "Net-(U3002-VBACKUP)",
+     [
+      [
+       "BT3001",
+       "1"
+      ],
+      [
+       "U3002",
+       "6"
+      ]
+     ]
+    ],
+    [
+     "Net-(U3003-WDI)",
+     [
+      [
+       "R3002",
+       "2"
+      ],
+      [
+       "U3003",
+       "4"
+      ]
+     ]
+    ],
+    [
+     "unconnected-(U3002-CLKOUT-Pad1)",
+     [
+      [
+       "U3002",
+       "1"
+      ]
+     ]
+    ],
+    [
+     "unconnected-(U3003-MR#-Pad3)",
+     [
+      [
+       "U3003",
+       "3"
+      ]
+     ]
+    ],
+    [
+     "unconnected-mutated",
+     [
+      [
+       "C3001",
+       "1"
+      ]
+     ]
+    ]
+   ],
+   "schematic_text": "(kicad_sch)",
+   "expected": {
+    "ok": false,
+    "shorts": [],
+    "opens": [
+     "declared '+3V3_AUX': extracted as ['+3V3_AUX', 'unconnected-mutated'], stranded: ['C3001.1']",
+     "POWER '+3V3_AUX': C3001.1 emitted bare ('unconnected-mutated')"
+    ],
+    "nc_cheats": [],
+    "part_mismatches": [],
+    "name_mismatches": [],
+    "summary": "NETLIST GATE: FAIL\n  OPEN: declared '+3V3_AUX': extracted as ['+3V3_AUX', 'unconnected-mutated'], stranded: ['C3001.1']\n  OPEN: POWER '+3V3_AUX': C3001.1 emitted bare ('unconnected-mutated')"
+   }
+  },
+  {
+   "name": "carrier_board_services_missing_part",
+   "circuit": "carrier_board_services",
+   "extracted": [
+    [
+     "+3V3_AUX",
+     [
+      [
+       "C3001",
+       "1"
+      ],
+      [
+       "C3002",
+       "1"
+      ],
+      [
+       "C3003",
+       "1"
+      ],
+      [
+       "R3001",
+       "1"
+      ],
+      [
+       "U3002",
+       "7"
+      ],
+      [
+       "U3003",
+       "5"
+      ]
+     ]
+    ],
+    [
+     "/AUX_I2C_SCL",
+     [
+      [
+       "U3002",
+       "3"
+      ]
+     ]
+    ],
+    [
+     "/AUX_I2C_SDA",
+     [
+      [
+       "U3002",
+       "4"
+      ]
+     ]
+    ],
+    [
+     "/WATCHDOG_KICK",
+     [
+      [
+       "R3002",
+       "1"
+      ]
+     ]
+    ],
+    [
+     "/WATCHDOG_RST_N",
+     [
+      [
+       "U3003",
+       "1"
+      ]
+     ]
+    ],
+    [
+     "GND",
+     [
+      [
+       "BT3001",
+       "2"
+      ],
+      [
+       "C3001",
+       "2"
+      ],
+      [
+       "C3002",
+       "2"
+      ],
+      [
+       "C3003",
+       "2"
+      ],
+      [
+       "U3002",
+       "5"
+      ],
+      [
+       "U3002",
+       "8"
+      ],
+      [
+       "U3003",
+       "2"
+      ]
+     ]
+    ],
+    [
+     "Net-(U3002-INT#)",
+     [
+      [
+       "R3001",
+       "2"
+      ],
+      [
+       "U3002",
+       "2"
+      ]
+     ]
+    ],
+    [
+     "Net-(U3002-VBACKUP)",
+     [
+      [
+       "BT3001",
+       "1"
+      ],
+      [
+       "U3002",
+       "6"
+      ]
+     ]
+    ],
+    [
+     "Net-(U3003-WDI)",
+     [
+      [
+       "R3002",
+       "2"
+      ],
+      [
+       "U3003",
+       "4"
+      ]
+     ]
+    ],
+    [
+     "unconnected-(U3002-CLKOUT-Pad1)",
+     [
+      [
+       "U3002",
+       "1"
+      ]
+     ]
+    ],
+    [
+     "unconnected-(U3003-MR#-Pad3)",
+     [
+      [
+       "U3003",
+       "3"
+      ]
+     ]
+    ]
+   ],
+   "schematic_text": "(kicad_sch)",
+   "expected": {
+    "ok": false,
+    "shorts": [],
+    "opens": [
+     "declared '+3V3_AUX': extracted as ['+3V3_AUX'], stranded: ['U3001.6', 'U3001.5']",
+     "POWER '+3V3_AUX': U3001.6 emitted bare ('')",
+     "POWER '+3V3_AUX': U3001.5 emitted bare ('')",
+     "declared 'GND': extracted as ['GND'], stranded: ['U3001.2', 'U3001.4']",
+     "GROUND 'GND': U3001.2 emitted bare ('')",
+     "GROUND 'GND': U3001.4 emitted bare ('')",
+     "declared 'AUX_I2C_SCL': extracted as ['/AUX_I2C_SCL'], stranded: ['U3001.1']",
+     "PORT 'AUX_I2C_SCL': U3001.1 emitted bare ('')",
+     "declared 'AUX_I2C_SDA': extracted as ['/AUX_I2C_SDA'], stranded: ['U3001.3']",
+     "PORT 'AUX_I2C_SDA': U3001.3 emitted bare ('')"
+    ],
+    "nc_cheats": [],
+    "part_mismatches": [
+     "U3001: missing from extracted netlist"
+    ],
+    "name_mismatches": [],
+    "summary": "NETLIST GATE: FAIL\n  OPEN: declared '+3V3_AUX': extracted as ['+3V3_AUX'], stranded: ['U3001.6', 'U3001.5']\n  OPEN: POWER '+3V3_AUX': U3001.6 emitted bare ('')\n  OPEN: POWER '+3V3_AUX': U3001.5 emitted bare ('')\n  OPEN: declared 'GND': extracted as ['GND'], stranded: ['U3001.2', 'U3001.4']\n  OPEN: GROUND 'GND': U3001.2 emitted bare ('')\n  OPEN: GROUND 'GND': U3001.4 emitted bare ('')\n  OPEN: declared 'AUX_I2C_SCL': extracted as ['/AUX_I2C_SCL'], stranded: ['U3001.1']\n  OPEN: PORT 'AUX_I2C_SCL': U3001.1 emitted bare ('')\n  OPEN: declared 'AUX_I2C_SDA': extracted as ['/AUX_I2C_SDA'], stranded: ['U3001.3']\n  OPEN: PORT 'AUX_I2C_SDA': U3001.3 emitted bare ('')\n  PART: U3001: missing from extracted netlist"
+   }
+  },
+  {
+   "name": "carrier_board_services_lost_name",
+   "circuit": "carrier_board_services",
+   "extracted": [
+    [
+     "Net-(LOST)",
+     [
+      [
+       "C3001",
+       "1"
+      ],
+      [
+       "C3002",
+       "1"
+      ],
+      [
+       "C3003",
+       "1"
+      ],
+      [
+       "R3001",
+       "1"
+      ],
+      [
+       "U3001",
+       "5"
+      ],
+      [
+       "U3001",
+       "6"
+      ],
+      [
+       "U3002",
+       "7"
+      ],
+      [
+       "U3003",
+       "5"
+      ]
+     ]
+    ],
+    [
+     "/AUX_I2C_SCL",
+     [
+      [
+       "U3001",
+       "1"
+      ],
+      [
+       "U3002",
+       "3"
+      ]
+     ]
+    ],
+    [
+     "/AUX_I2C_SDA",
+     [
+      [
+       "U3001",
+       "3"
+      ],
+      [
+       "U3002",
+       "4"
+      ]
+     ]
+    ],
+    [
+     "/WATCHDOG_KICK",
+     [
+      [
+       "R3002",
+       "1"
+      ]
+     ]
+    ],
+    [
+     "/WATCHDOG_RST_N",
+     [
+      [
+       "U3003",
+       "1"
+      ]
+     ]
+    ],
+    [
+     "GND",
+     [
+      [
+       "BT3001",
+       "2"
+      ],
+      [
+       "C3001",
+       "2"
+      ],
+      [
+       "C3002",
+       "2"
+      ],
+      [
+       "C3003",
+       "2"
+      ],
+      [
+       "U3001",
+       "2"
+      ],
+      [
+       "U3001",
+       "4"
+      ],
+      [
+       "U3002",
+       "5"
+      ],
+      [
+       "U3002",
+       "8"
+      ],
+      [
+       "U3003",
+       "2"
+      ]
+     ]
+    ],
+    [
+     "Net-(U3002-INT#)",
+     [
+      [
+       "R3001",
+       "2"
+      ],
+      [
+       "U3002",
+       "2"
+      ]
+     ]
+    ],
+    [
+     "Net-(U3002-VBACKUP)",
+     [
+      [
+       "BT3001",
+       "1"
+      ],
+      [
+       "U3002",
+       "6"
+      ]
+     ]
+    ],
+    [
+     "Net-(U3003-WDI)",
+     [
+      [
+       "R3002",
+       "2"
+      ],
+      [
+       "U3003",
+       "4"
+      ]
+     ]
+    ],
+    [
+     "unconnected-(U3002-CLKOUT-Pad1)",
+     [
+      [
+       "U3002",
+       "1"
+      ]
+     ]
+    ],
+    [
+     "unconnected-(U3003-MR#-Pad3)",
+     [
+      [
+       "U3003",
+       "3"
+      ]
+     ]
+    ]
+   ],
+   "schematic_text": "(kicad_sch)",
+   "expected": {
+    "ok": false,
+    "shorts": [],
+    "opens": [],
+    "nc_cheats": [],
+    "part_mismatches": [],
+    "name_mismatches": [
+     "U3001.6: declared '+3V3_AUX' but extracted 'Net-(LOST)' [LOST-NAME rail: power symbol/label did not attach]",
+     "U3001.5: declared '+3V3_AUX' but extracted 'Net-(LOST)' [LOST-NAME rail: power symbol/label did not attach]",
+     "C3001.1: declared '+3V3_AUX' but extracted 'Net-(LOST)' [LOST-NAME rail: power symbol/label did not attach]",
+     "U3002.7: declared '+3V3_AUX' but extracted 'Net-(LOST)' [LOST-NAME rail: power symbol/label did not attach]",
+     "R3001.1: declared '+3V3_AUX' but extracted 'Net-(LOST)' [LOST-NAME rail: power symbol/label did not attach]",
+     "C3002.1: declared '+3V3_AUX' but extracted 'Net-(LOST)' [LOST-NAME rail: power symbol/label did not attach]",
+     "U3003.5: declared '+3V3_AUX' but extracted 'Net-(LOST)' [LOST-NAME rail: power symbol/label did not attach]",
+     "C3003.1: declared '+3V3_AUX' but extracted 'Net-(LOST)' [LOST-NAME rail: power symbol/label did not attach]"
+    ],
+    "summary": "NETLIST GATE: FAIL\n  NAME: U3001.6: declared '+3V3_AUX' but extracted 'Net-(LOST)' [LOST-NAME rail: power symbol/label did not attach]\n  NAME: U3001.5: declared '+3V3_AUX' but extracted 'Net-(LOST)' [LOST-NAME rail: power symbol/label did not attach]\n  NAME: C3001.1: declared '+3V3_AUX' but extracted 'Net-(LOST)' [LOST-NAME rail: power symbol/label did not attach]\n  NAME: U3002.7: declared '+3V3_AUX' but extracted 'Net-(LOST)' [LOST-NAME rail: power symbol/label did not attach]\n  NAME: R3001.1: declared '+3V3_AUX' but extracted 'Net-(LOST)' [LOST-NAME rail: power symbol/label did not attach]\n  NAME: C3002.1: declared '+3V3_AUX' but extracted 'Net-(LOST)' [LOST-NAME rail: power symbol/label did not attach]\n  NAME: U3003.5: declared '+3V3_AUX' but extracted 'Net-(LOST)' [LOST-NAME rail: power symbol/label did not attach]\n  NAME: C3003.1: declared '+3V3_AUX' but extracted 'Net-(LOST)' [LOST-NAME rail: power symbol/label did not attach]"
+   }
+  },
+  {
+   "name": "carrier_board_services_nc_on_live_pin",
+   "circuit": "carrier_board_services",
+   "extracted": [
+    [
+     "+3V3_AUX",
+     [
+      [
+       "C3001",
+       "1"
+      ],
+      [
+       "C3002",
+       "1"
+      ],
+      [
+       "C3003",
+       "1"
+      ],
+      [
+       "R3001",
+       "1"
+      ],
+      [
+       "U3001",
+       "5"
+      ],
+      [
+       "U3001",
+       "6"
+      ],
+      [
+       "U3002",
+       "7"
+      ],
+      [
+       "U3003",
+       "5"
+      ]
+     ]
+    ],
+    [
+     "/AUX_I2C_SCL",
+     [
+      [
+       "U3001",
+       "1"
+      ],
+      [
+       "U3002",
+       "3"
+      ]
+     ]
+    ],
+    [
+     "/AUX_I2C_SDA",
+     [
+      [
+       "U3001",
+       "3"
+      ],
+      [
+       "U3002",
+       "4"
+      ]
+     ]
+    ],
+    [
+     "/WATCHDOG_KICK",
+     [
+      [
+       "R3002",
+       "1"
+      ]
+     ]
+    ],
+    [
+     "/WATCHDOG_RST_N",
+     [
+      [
+       "U3003",
+       "1"
+      ]
+     ]
+    ],
+    [
+     "GND",
+     [
+      [
+       "BT3001",
+       "2"
+      ],
+      [
+       "C3001",
+       "2"
+      ],
+      [
+       "C3002",
+       "2"
+      ],
+      [
+       "C3003",
+       "2"
+      ],
+      [
+       "U3001",
+       "2"
+      ],
+      [
+       "U3001",
+       "4"
+      ],
+      [
+       "U3002",
+       "5"
+      ],
+      [
+       "U3002",
+       "8"
+      ],
+      [
+       "U3003",
+       "2"
+      ]
+     ]
+    ],
+    [
+     "Net-(U3002-INT#)",
+     [
+      [
+       "R3001",
+       "2"
+      ],
+      [
+       "U3002",
+       "2"
+      ]
+     ]
+    ],
+    [
+     "Net-(U3002-VBACKUP)",
+     [
+      [
+       "BT3001",
+       "1"
+      ],
+      [
+       "U3002",
+       "6"
+      ]
+     ]
+    ],
+    [
+     "Net-(U3003-WDI)",
+     [
+      [
+       "R3002",
+       "2"
+      ],
+      [
+       "U3003",
+       "4"
+      ]
+     ]
+    ],
+    [
+     "unconnected-(U3002-CLKOUT-Pad1)",
+     [
+      [
+       "U3002",
+       "1"
+      ]
+     ]
+    ],
+    [
+     "unconnected-(U3003-MR#-Pad3)",
+     [
+      [
+       "U3003",
+       "3"
+      ]
+     ]
+    ]
+   ],
+   "expected": {
+    "ok": false,
+    "shorts": [],
+    "opens": [],
+    "nc_cheats": [
+     "no_connect at (83.82, 82.55) sits on U3001.1 which carries declared net 'AUX_I2C_SCL' — NC is never a layout fallback (forbidden)"
+    ],
+    "part_mismatches": [],
+    "name_mismatches": [],
+    "summary": "NETLIST GATE: FAIL\n  NC-CHEAT: no_connect at (83.82, 82.55) sits on U3001.1 which carries declared net 'AUX_I2C_SCL' — NC is never a layout fallback (forbidden)"
+   },
+   "append_nc": " (at 83.82 82.55))\n)\n",
+   "schematic_file": "carrier_board_services.kicad_sch"
+  },
+  {
+   "name": "carrier_board_services_stray_nc",
+   "circuit": "carrier_board_services",
+   "extracted": [
+    [
+     "+3V3_AUX",
+     [
+      [
+       "C3001",
+       "1"
+      ],
+      [
+       "C3002",
+       "1"
+      ],
+      [
+       "C3003",
+       "1"
+      ],
+      [
+       "R3001",
+       "1"
+      ],
+      [
+       "U3001",
+       "5"
+      ],
+      [
+       "U3001",
+       "6"
+      ],
+      [
+       "U3002",
+       "7"
+      ],
+      [
+       "U3003",
+       "5"
+      ]
+     ]
+    ],
+    [
+     "/AUX_I2C_SCL",
+     [
+      [
+       "U3001",
+       "1"
+      ],
+      [
+       "U3002",
+       "3"
+      ]
+     ]
+    ],
+    [
+     "/AUX_I2C_SDA",
+     [
+      [
+       "U3001",
+       "3"
+      ],
+      [
+       "U3002",
+       "4"
+      ]
+     ]
+    ],
+    [
+     "/WATCHDOG_KICK",
+     [
+      [
+       "R3002",
+       "1"
+      ]
+     ]
+    ],
+    [
+     "/WATCHDOG_RST_N",
+     [
+      [
+       "U3003",
+       "1"
+      ]
+     ]
+    ],
+    [
+     "GND",
+     [
+      [
+       "BT3001",
+       "2"
+      ],
+      [
+       "C3001",
+       "2"
+      ],
+      [
+       "C3002",
+       "2"
+      ],
+      [
+       "C3003",
+       "2"
+      ],
+      [
+       "U3001",
+       "2"
+      ],
+      [
+       "U3001",
+       "4"
+      ],
+      [
+       "U3002",
+       "5"
+      ],
+      [
+       "U3002",
+       "8"
+      ],
+      [
+       "U3003",
+       "2"
+      ]
+     ]
+    ],
+    [
+     "Net-(U3002-INT#)",
+     [
+      [
+       "R3001",
+       "2"
+      ],
+      [
+       "U3002",
+       "2"
+      ]
+     ]
+    ],
+    [
+     "Net-(U3002-VBACKUP)",
+     [
+      [
+       "BT3001",
+       "1"
+      ],
+      [
+       "U3002",
+       "6"
+      ]
+     ]
+    ],
+    [
+     "Net-(U3003-WDI)",
+     [
+      [
+       "R3002",
+       "2"
+      ],
+      [
+       "U3003",
+       "4"
+      ]
+     ]
+    ],
+    [
+     "unconnected-(U3002-CLKOUT-Pad1)",
+     [
+      [
+       "U3002",
+       "1"
+      ]
+     ]
+    ],
+    [
+     "unconnected-(U3003-MR#-Pad3)",
+     [
+      [
+       "U3003",
+       "3"
+      ]
+     ]
+    ]
+   ],
+   "expected": {
+    "ok": false,
+    "shorts": [],
+    "opens": [],
+    "nc_cheats": [
+     "no_connect at (999.25, 777.5) lands on no pin — stray marker"
+    ],
+    "part_mismatches": [],
+    "name_mismatches": [],
+    "summary": "NETLIST GATE: FAIL\n  NC-CHEAT: no_connect at (999.25, 777.5) lands on no pin — stray marker"
+   },
+   "append_nc": " (at 999.25 777.5))\n)\n",
+   "schematic_file": "carrier_board_services.kicad_sch"
+  },
+  {
+   "name": "devkit_uart_bridge_clean",
+   "circuit": "devkit_uart_bridge",
+   "extracted": [
+    [
+     "+3V3",
+     [
+      [
+       "C11001",
+       "1"
+      ],
+      [
+       "C11002",
+       "1"
+      ],
+      [
+       "C11003",
+       "1"
+      ],
+      [
+       "C11004",
+       "1"
+      ],
+      [
+       "R11001",
+       "1"
+      ],
+      [
+       "U11001",
+       "5"
+      ],
+      [
+       "U11001",
+       "6"
+      ],
+      [
+       "U11001",
+       "7"
+      ]
+     ]
+    ],
+    [
+     "/CP2102N_VBUS_SNS",
+     [
+      [
+       "R11002",
+       "2"
+      ],
+      [
+       "R11003",
+       "1"
+      ],
+      [
+       "U11001",
+       "8"
+      ]
+     ]
+    ],
+    [
+     "/USB_UART_DM",
+     [
+      [
+       "U11001",
+       "4"
+      ]
+     ]
+    ],
+    [
+     "/USB_UART_DP",
+     [
+      [
+       "U11001",
+       "3"
+      ]
+     ]
+    ],
+    [
+     "/USB_UART_VBUS",
+     [
+      [
+       "R11002",
+       "1"
+      ]
+     ]
+    ],
+    [
+     "/ZYNQ_PS_UART0_CTS_N",
+     [
+      [
+       "U11001",
+       "19"
+      ]
+     ]
+    ],
+    [
+     "/ZYNQ_PS_UART0_RTS_N",
+     [
+      [
+       "U11001",
+       "18"
+      ]
+     ]
+    ],
+    [
+     "/ZYNQ_PS_UART0_RXD",
+     [
+      [
+       "TP11002",
+       "1"
+      ],
+      [
+       "U11001",
+       "21"
+      ]
+     ]
+    ],
+    [
+     "/ZYNQ_PS_UART0_TXD",
+     [
+      [
+       "TP11001",
+       "1"
+      ],
+      [
+       "U11001",
+       "20"
+      ]
+     ]
+    ],
+    [
+     "GND",
+     [
+      [
+       "C11001",
+       "2"
+      ],
+      [
+       "C11002",
+       "2"
+      ],
+      [
+       "C11003",
+       "2"
+      ],
+      [
+       "C11004",
+       "2"
+      ],
+      [
+       "R11003",
+       "2"
+      ],
+      [
+       "U11001",
+       "2"
+      ],
+      [
+       "U11001",
+       "25"
+      ]
+     ]
+    ],
+    [
+     "Net-(U11001-RSTb)",
+     [
+      [
+       "R11001",
+       "2"
+      ],
+      [
+       "U11001",
+       "9"
+      ]
+     ]
+    ],
+    [
+     "unconnected-(U11001-DCD-Pad24)",
+     [
+      [
+       "U11001",
+       "24"
+      ]
+     ]
+    ],
+    [
+     "unconnected-(U11001-DSR-Pad22)",
+     [
+      [
+       "U11001",
+       "22"
+      ]
+     ]
+    ],
+    [
+     "unconnected-(U11001-DTR-Pad23)",
+     [
+      [
+       "U11001",
+       "23"
+      ]
+     ]
+    ],
+    [
+     "unconnected-(U11001-GPIO.0/TXT-Pad14)",
+     [
+      [
+       "U11001",
+       "14"
+      ]
+     ]
+    ],
+    [
+     "unconnected-(U11001-GPIO.1/RXT-Pad13)",
+     [
+      [
+       "U11001",
+       "13"
+      ]
+     ]
+    ],
+    [
+     "unconnected-(U11001-GPIO.2/RS485-Pad12)",
+     [
+      [
+       "U11001",
+       "12"
+      ]
+     ]
+    ],
+    [
+     "unconnected-(U11001-GPIO.3/WAKEUP-Pad11)",
+     [
+      [
+       "U11001",
+       "11"
+      ]
+     ]
+    ],
+    [
+     "unconnected-(U11001-NC-Pad10)",
+     [
+      [
+       "U11001",
+       "10"
+      ]
+     ]
+    ],
+    [
+     "unconnected-(U11001-NC-Pad16)",
+     [
+      [
+       "U11001",
+       "16"
+      ]
+     ]
+    ],
+    [
+     "unconnected-(U11001-RI/CLK-Pad1)",
+     [
+      [
+       "U11001",
+       "1"
+      ]
+     ]
+    ],
+    [
+     "unconnected-(U11001-SUSPEND-Pad17)",
+     [
+      [
+       "U11001",
+       "17"
+      ]
+     ]
+    ],
+    [
+     "unconnected-(U11001-SUSPENDb-Pad15)",
+     [
+      [
+       "U11001",
+       "15"
+      ]
+     ]
+    ]
+   ],
+   "expected": {
+    "ok": true,
+    "shorts": [],
+    "opens": [],
+    "nc_cheats": [],
+    "part_mismatches": [],
+    "name_mismatches": [],
+    "summary": "NETLIST GATE: PASS (extracted == declared)"
+   },
+   "schematic_file": "devkit_uart_bridge.kicad_sch"
+  },
+  {
+   "name": "devkit_uart_bridge_short",
+   "circuit": "devkit_uart_bridge",
+   "extracted": [
+    [
+     "+3V3",
+     [
+      [
+       "C11001",
+       "1"
+      ],
+      [
+       "C11002",
+       "1"
+      ],
+      [
+       "C11003",
+       "1"
+      ],
+      [
+       "C11004",
+       "1"
+      ],
+      [
+       "R11001",
+       "1"
+      ],
+      [
+       "U11001",
+       "5"
+      ],
+      [
+       "U11001",
+       "6"
+      ],
+      [
+       "U11001",
+       "7"
+      ],
+      [
+       "R11002",
+       "2"
+      ],
+      [
+       "R11003",
+       "1"
+      ],
+      [
+       "U11001",
+       "8"
+      ]
+     ]
+    ],
+    [
+     "/USB_UART_DM",
+     [
+      [
+       "U11001",
+       "4"
+      ]
+     ]
+    ],
+    [
+     "/USB_UART_DP",
+     [
+      [
+       "U11001",
+       "3"
+      ]
+     ]
+    ],
+    [
+     "/USB_UART_VBUS",
+     [
+      [
+       "R11002",
+       "1"
+      ]
+     ]
+    ],
+    [
+     "/ZYNQ_PS_UART0_CTS_N",
+     [
+      [
+       "U11001",
+       "19"
+      ]
+     ]
+    ],
+    [
+     "/ZYNQ_PS_UART0_RTS_N",
+     [
+      [
+       "U11001",
+       "18"
+      ]
+     ]
+    ],
+    [
+     "/ZYNQ_PS_UART0_RXD",
+     [
+      [
+       "TP11002",
+       "1"
+      ],
+      [
+       "U11001",
+       "21"
+      ]
+     ]
+    ],
+    [
+     "/ZYNQ_PS_UART0_TXD",
+     [
+      [
+       "TP11001",
+       "1"
+      ],
+      [
+       "U11001",
+       "20"
+      ]
+     ]
+    ],
+    [
+     "GND",
+     [
+      [
+       "C11001",
+       "2"
+      ],
+      [
+       "C11002",
+       "2"
+      ],
+      [
+       "C11003",
+       "2"
+      ],
+      [
+       "C11004",
+       "2"
+      ],
+      [
+       "R11003",
+       "2"
+      ],
+      [
+       "U11001",
+       "2"
+      ],
+      [
+       "U11001",
+       "25"
+      ]
+     ]
+    ],
+    [
+     "Net-(U11001-RSTb)",
+     [
+      [
+       "R11001",
+       "2"
+      ],
+      [
+       "U11001",
+       "9"
+      ]
+     ]
+    ],
+    [
+     "unconnected-(U11001-DCD-Pad24)",
+     [
+      [
+       "U11001",
+       "24"
+      ]
+     ]
+    ],
+    [
+     "unconnected-(U11001-DSR-Pad22)",
+     [
+      [
+       "U11001",
+       "22"
+      ]
+     ]
+    ],
+    [
+     "unconnected-(U11001-DTR-Pad23)",
+     [
+      [
+       "U11001",
+       "23"
+      ]
+     ]
+    ],
+    [
+     "unconnected-(U11001-GPIO.0/TXT-Pad14)",
+     [
+      [
+       "U11001",
+       "14"
+      ]
+     ]
+    ],
+    [
+     "unconnected-(U11001-GPIO.1/RXT-Pad13)",
+     [
+      [
+       "U11001",
+       "13"
+      ]
+     ]
+    ],
+    [
+     "unconnected-(U11001-GPIO.2/RS485-Pad12)",
+     [
+      [
+       "U11001",
+       "12"
+      ]
+     ]
+    ],
+    [
+     "unconnected-(U11001-GPIO.3/WAKEUP-Pad11)",
+     [
+      [
+       "U11001",
+       "11"
+      ]
+     ]
+    ],
+    [
+     "unconnected-(U11001-NC-Pad10)",
+     [
+      [
+       "U11001",
+       "10"
+      ]
+     ]
+    ],
+    [
+     "unconnected-(U11001-NC-Pad16)",
+     [
+      [
+       "U11001",
+       "16"
+      ]
+     ]
+    ],
+    [
+     "unconnected-(U11001-RI/CLK-Pad1)",
+     [
+      [
+       "U11001",
+       "1"
+      ]
+     ]
+    ],
+    [
+     "unconnected-(U11001-SUSPEND-Pad17)",
+     [
+      [
+       "U11001",
+       "17"
+      ]
+     ]
+    ],
+    [
+     "unconnected-(U11001-SUSPENDb-Pad15)",
+     [
+      [
+       "U11001",
+       "15"
+      ]
+     ]
+    ]
+   ],
+   "schematic_text": "(kicad_sch)",
+   "expected": {
+    "ok": false,
+    "shorts": [
+     "extracted '+3V3' merges ['+3V3', 'CP2102N_VBUS_SNS'] [C11001.1=+3V3, C11002.1=+3V3, C11003.1=+3V3, C11004.1=+3V3, R11001.1=+3V3, U11001.5=+3V3, U11001.6=+3V3, U11001.7=+3V3, R11002.2=CP2102N_VBUS_SNS, R11003.1=CP2102N_VBUS_SNS, U11001.8=CP2102N_VBUS_SNS]"
+    ],
+    "opens": [],
+    "nc_cheats": [],
+    "part_mismatches": [],
+    "name_mismatches": [],
+    "summary": "NETLIST GATE: FAIL\n  SHORT: extracted '+3V3' merges ['+3V3', 'CP2102N_VBUS_SNS'] [C11001.1=+3V3, C11002.1=+3V3, C11003.1=+3V3, C11004.1=+3V3, R11001.1=+3V3, U11001.5=+3V3, U11001.6=+3V3, U11001.7=+3V3, R11002.2=CP2102N_VBUS_SNS, R11003.1=CP2102N_VBUS_SNS, U11001.8=CP2102N_VBUS_SNS]"
+   }
+  },
+  {
+   "name": "devkit_uart_bridge_open",
+   "circuit": "devkit_uart_bridge",
+   "extracted": [
+    [
+     "+3V3",
+     [
+      [
+       "C11002",
+       "1"
+      ],
+      [
+       "C11003",
+       "1"
+      ],
+      [
+       "C11004",
+       "1"
+      ],
+      [
+       "R11001",
+       "1"
+      ],
+      [
+       "U11001",
+       "5"
+      ],
+      [
+       "U11001",
+       "6"
+      ],
+      [
+       "U11001",
+       "7"
+      ]
+     ]
+    ],
+    [
+     "/CP2102N_VBUS_SNS",
+     [
+      [
+       "R11002",
+       "2"
+      ],
+      [
+       "R11003",
+       "1"
+      ],
+      [
+       "U11001",
+       "8"
+      ]
+     ]
+    ],
+    [
+     "/USB_UART_DM",
+     [
+      [
+       "U11001",
+       "4"
+      ]
+     ]
+    ],
+    [
+     "/USB_UART_DP",
+     [
+      [
+       "U11001",
+       "3"
+      ]
+     ]
+    ],
+    [
+     "/USB_UART_VBUS",
+     [
+      [
+       "R11002",
+       "1"
+      ]
+     ]
+    ],
+    [
+     "/ZYNQ_PS_UART0_CTS_N",
+     [
+      [
+       "U11001",
+       "19"
+      ]
+     ]
+    ],
+    [
+     "/ZYNQ_PS_UART0_RTS_N",
+     [
+      [
+       "U11001",
+       "18"
+      ]
+     ]
+    ],
+    [
+     "/ZYNQ_PS_UART0_RXD",
+     [
+      [
+       "TP11002",
+       "1"
+      ],
+      [
+       "U11001",
+       "21"
+      ]
+     ]
+    ],
+    [
+     "/ZYNQ_PS_UART0_TXD",
+     [
+      [
+       "TP11001",
+       "1"
+      ],
+      [
+       "U11001",
+       "20"
+      ]
+     ]
+    ],
+    [
+     "GND",
+     [
+      [
+       "C11001",
+       "2"
+      ],
+      [
+       "C11002",
+       "2"
+      ],
+      [
+       "C11003",
+       "2"
+      ],
+      [
+       "C11004",
+       "2"
+      ],
+      [
+       "R11003",
+       "2"
+      ],
+      [
+       "U11001",
+       "2"
+      ],
+      [
+       "U11001",
+       "25"
+      ]
+     ]
+    ],
+    [
+     "Net-(U11001-RSTb)",
+     [
+      [
+       "R11001",
+       "2"
+      ],
+      [
+       "U11001",
+       "9"
+      ]
+     ]
+    ],
+    [
+     "unconnected-(U11001-DCD-Pad24)",
+     [
+      [
+       "U11001",
+       "24"
+      ]
+     ]
+    ],
+    [
+     "unconnected-(U11001-DSR-Pad22)",
+     [
+      [
+       "U11001",
+       "22"
+      ]
+     ]
+    ],
+    [
+     "unconnected-(U11001-DTR-Pad23)",
+     [
+      [
+       "U11001",
+       "23"
+      ]
+     ]
+    ],
+    [
+     "unconnected-(U11001-GPIO.0/TXT-Pad14)",
+     [
+      [
+       "U11001",
+       "14"
+      ]
+     ]
+    ],
+    [
+     "unconnected-(U11001-GPIO.1/RXT-Pad13)",
+     [
+      [
+       "U11001",
+       "13"
+      ]
+     ]
+    ],
+    [
+     "unconnected-(U11001-GPIO.2/RS485-Pad12)",
+     [
+      [
+       "U11001",
+       "12"
+      ]
+     ]
+    ],
+    [
+     "unconnected-(U11001-GPIO.3/WAKEUP-Pad11)",
+     [
+      [
+       "U11001",
+       "11"
+      ]
+     ]
+    ],
+    [
+     "unconnected-(U11001-NC-Pad10)",
+     [
+      [
+       "U11001",
+       "10"
+      ]
+     ]
+    ],
+    [
+     "unconnected-(U11001-NC-Pad16)",
+     [
+      [
+       "U11001",
+       "16"
+      ]
+     ]
+    ],
+    [
+     "unconnected-(U11001-RI/CLK-Pad1)",
+     [
+      [
+       "U11001",
+       "1"
+      ]
+     ]
+    ],
+    [
+     "unconnected-(U11001-SUSPEND-Pad17)",
+     [
+      [
+       "U11001",
+       "17"
+      ]
+     ]
+    ],
+    [
+     "unconnected-(U11001-SUSPENDb-Pad15)",
+     [
+      [
+       "U11001",
+       "15"
+      ]
+     ]
+    ],
+    [
+     "unconnected-mutated",
+     [
+      [
+       "C11001",
+       "1"
+      ]
+     ]
+    ]
+   ],
+   "schematic_text": "(kicad_sch)",
+   "expected": {
+    "ok": false,
+    "shorts": [],
+    "opens": [
+     "declared '+3V3': extracted as ['+3V3', 'unconnected-mutated'], stranded: ['C11001.1']",
+     "POWER '+3V3': C11001.1 emitted bare ('unconnected-mutated')"
+    ],
+    "nc_cheats": [],
+    "part_mismatches": [],
+    "name_mismatches": [],
+    "summary": "NETLIST GATE: FAIL\n  OPEN: declared '+3V3': extracted as ['+3V3', 'unconnected-mutated'], stranded: ['C11001.1']\n  OPEN: POWER '+3V3': C11001.1 emitted bare ('unconnected-mutated')"
+   }
+  },
+  {
+   "name": "devkit_uart_bridge_missing_part",
+   "circuit": "devkit_uart_bridge",
+   "extracted": [
+    [
+     "+3V3",
+     [
+      [
+       "C11002",
+       "1"
+      ],
+      [
+       "C11003",
+       "1"
+      ],
+      [
+       "C11004",
+       "1"
+      ],
+      [
+       "R11001",
+       "1"
+      ],
+      [
+       "U11001",
+       "5"
+      ],
+      [
+       "U11001",
+       "6"
+      ],
+      [
+       "U11001",
+       "7"
+      ]
+     ]
+    ],
+    [
+     "/CP2102N_VBUS_SNS",
+     [
+      [
+       "R11002",
+       "2"
+      ],
+      [
+       "R11003",
+       "1"
+      ],
+      [
+       "U11001",
+       "8"
+      ]
+     ]
+    ],
+    [
+     "/USB_UART_DM",
+     [
+      [
+       "U11001",
+       "4"
+      ]
+     ]
+    ],
+    [
+     "/USB_UART_DP",
+     [
+      [
+       "U11001",
+       "3"
+      ]
+     ]
+    ],
+    [
+     "/USB_UART_VBUS",
+     [
+      [
+       "R11002",
+       "1"
+      ]
+     ]
+    ],
+    [
+     "/ZYNQ_PS_UART0_CTS_N",
+     [
+      [
+       "U11001",
+       "19"
+      ]
+     ]
+    ],
+    [
+     "/ZYNQ_PS_UART0_RTS_N",
+     [
+      [
+       "U11001",
+       "18"
+      ]
+     ]
+    ],
+    [
+     "/ZYNQ_PS_UART0_RXD",
+     [
+      [
+       "TP11002",
+       "1"
+      ],
+      [
+       "U11001",
+       "21"
+      ]
+     ]
+    ],
+    [
+     "/ZYNQ_PS_UART0_TXD",
+     [
+      [
+       "TP11001",
+       "1"
+      ],
+      [
+       "U11001",
+       "20"
+      ]
+     ]
+    ],
+    [
+     "GND",
+     [
+      [
+       "C11002",
+       "2"
+      ],
+      [
+       "C11003",
+       "2"
+      ],
+      [
+       "C11004",
+       "2"
+      ],
+      [
+       "R11003",
+       "2"
+      ],
+      [
+       "U11001",
+       "2"
+      ],
+      [
+       "U11001",
+       "25"
+      ]
+     ]
+    ],
+    [
+     "Net-(U11001-RSTb)",
+     [
+      [
+       "R11001",
+       "2"
+      ],
+      [
+       "U11001",
+       "9"
+      ]
+     ]
+    ],
+    [
+     "unconnected-(U11001-DCD-Pad24)",
+     [
+      [
+       "U11001",
+       "24"
+      ]
+     ]
+    ],
+    [
+     "unconnected-(U11001-DSR-Pad22)",
+     [
+      [
+       "U11001",
+       "22"
+      ]
+     ]
+    ],
+    [
+     "unconnected-(U11001-DTR-Pad23)",
+     [
+      [
+       "U11001",
+       "23"
+      ]
+     ]
+    ],
+    [
+     "unconnected-(U11001-GPIO.0/TXT-Pad14)",
+     [
+      [
+       "U11001",
+       "14"
+      ]
+     ]
+    ],
+    [
+     "unconnected-(U11001-GPIO.1/RXT-Pad13)",
+     [
+      [
+       "U11001",
+       "13"
+      ]
+     ]
+    ],
+    [
+     "unconnected-(U11001-GPIO.2/RS485-Pad12)",
+     [
+      [
+       "U11001",
+       "12"
+      ]
+     ]
+    ],
+    [
+     "unconnected-(U11001-GPIO.3/WAKEUP-Pad11)",
+     [
+      [
+       "U11001",
+       "11"
+      ]
+     ]
+    ],
+    [
+     "unconnected-(U11001-NC-Pad10)",
+     [
+      [
+       "U11001",
+       "10"
+      ]
+     ]
+    ],
+    [
+     "unconnected-(U11001-NC-Pad16)",
+     [
+      [
+       "U11001",
+       "16"
+      ]
+     ]
+    ],
+    [
+     "unconnected-(U11001-RI/CLK-Pad1)",
+     [
+      [
+       "U11001",
+       "1"
+      ]
+     ]
+    ],
+    [
+     "unconnected-(U11001-SUSPEND-Pad17)",
+     [
+      [
+       "U11001",
+       "17"
+      ]
+     ]
+    ],
+    [
+     "unconnected-(U11001-SUSPENDb-Pad15)",
+     [
+      [
+       "U11001",
+       "15"
+      ]
+     ]
+    ]
+   ],
+   "schematic_text": "(kicad_sch)",
+   "expected": {
+    "ok": false,
+    "shorts": [],
+    "opens": [
+     "declared '+3V3': extracted as ['+3V3'], stranded: ['C11001.1']",
+     "POWER '+3V3': C11001.1 emitted bare ('')",
+     "declared 'GND': extracted as ['GND'], stranded: ['C11001.2']",
+     "GROUND 'GND': C11001.2 emitted bare ('')"
+    ],
+    "nc_cheats": [],
+    "part_mismatches": [
+     "C11001: missing from extracted netlist"
+    ],
+    "name_mismatches": [],
+    "summary": "NETLIST GATE: FAIL\n  OPEN: declared '+3V3': extracted as ['+3V3'], stranded: ['C11001.1']\n  OPEN: POWER '+3V3': C11001.1 emitted bare ('')\n  OPEN: declared 'GND': extracted as ['GND'], stranded: ['C11001.2']\n  OPEN: GROUND 'GND': C11001.2 emitted bare ('')\n  PART: C11001: missing from extracted netlist"
+   }
+  },
+  {
+   "name": "devkit_uart_bridge_lost_name",
+   "circuit": "devkit_uart_bridge",
+   "extracted": [
+    [
+     "Net-(LOST)",
+     [
+      [
+       "C11001",
+       "1"
+      ],
+      [
+       "C11002",
+       "1"
+      ],
+      [
+       "C11003",
+       "1"
+      ],
+      [
+       "C11004",
+       "1"
+      ],
+      [
+       "R11001",
+       "1"
+      ],
+      [
+       "U11001",
+       "5"
+      ],
+      [
+       "U11001",
+       "6"
+      ],
+      [
+       "U11001",
+       "7"
+      ]
+     ]
+    ],
+    [
+     "/CP2102N_VBUS_SNS",
+     [
+      [
+       "R11002",
+       "2"
+      ],
+      [
+       "R11003",
+       "1"
+      ],
+      [
+       "U11001",
+       "8"
+      ]
+     ]
+    ],
+    [
+     "/USB_UART_DM",
+     [
+      [
+       "U11001",
+       "4"
+      ]
+     ]
+    ],
+    [
+     "/USB_UART_DP",
+     [
+      [
+       "U11001",
+       "3"
+      ]
+     ]
+    ],
+    [
+     "/USB_UART_VBUS",
+     [
+      [
+       "R11002",
+       "1"
+      ]
+     ]
+    ],
+    [
+     "/ZYNQ_PS_UART0_CTS_N",
+     [
+      [
+       "U11001",
+       "19"
+      ]
+     ]
+    ],
+    [
+     "/ZYNQ_PS_UART0_RTS_N",
+     [
+      [
+       "U11001",
+       "18"
+      ]
+     ]
+    ],
+    [
+     "/ZYNQ_PS_UART0_RXD",
+     [
+      [
+       "TP11002",
+       "1"
+      ],
+      [
+       "U11001",
+       "21"
+      ]
+     ]
+    ],
+    [
+     "/ZYNQ_PS_UART0_TXD",
+     [
+      [
+       "TP11001",
+       "1"
+      ],
+      [
+       "U11001",
+       "20"
+      ]
+     ]
+    ],
+    [
+     "GND",
+     [
+      [
+       "C11001",
+       "2"
+      ],
+      [
+       "C11002",
+       "2"
+      ],
+      [
+       "C11003",
+       "2"
+      ],
+      [
+       "C11004",
+       "2"
+      ],
+      [
+       "R11003",
+       "2"
+      ],
+      [
+       "U11001",
+       "2"
+      ],
+      [
+       "U11001",
+       "25"
+      ]
+     ]
+    ],
+    [
+     "Net-(U11001-RSTb)",
+     [
+      [
+       "R11001",
+       "2"
+      ],
+      [
+       "U11001",
+       "9"
+      ]
+     ]
+    ],
+    [
+     "unconnected-(U11001-DCD-Pad24)",
+     [
+      [
+       "U11001",
+       "24"
+      ]
+     ]
+    ],
+    [
+     "unconnected-(U11001-DSR-Pad22)",
+     [
+      [
+       "U11001",
+       "22"
+      ]
+     ]
+    ],
+    [
+     "unconnected-(U11001-DTR-Pad23)",
+     [
+      [
+       "U11001",
+       "23"
+      ]
+     ]
+    ],
+    [
+     "unconnected-(U11001-GPIO.0/TXT-Pad14)",
+     [
+      [
+       "U11001",
+       "14"
+      ]
+     ]
+    ],
+    [
+     "unconnected-(U11001-GPIO.1/RXT-Pad13)",
+     [
+      [
+       "U11001",
+       "13"
+      ]
+     ]
+    ],
+    [
+     "unconnected-(U11001-GPIO.2/RS485-Pad12)",
+     [
+      [
+       "U11001",
+       "12"
+      ]
+     ]
+    ],
+    [
+     "unconnected-(U11001-GPIO.3/WAKEUP-Pad11)",
+     [
+      [
+       "U11001",
+       "11"
+      ]
+     ]
+    ],
+    [
+     "unconnected-(U11001-NC-Pad10)",
+     [
+      [
+       "U11001",
+       "10"
+      ]
+     ]
+    ],
+    [
+     "unconnected-(U11001-NC-Pad16)",
+     [
+      [
+       "U11001",
+       "16"
+      ]
+     ]
+    ],
+    [
+     "unconnected-(U11001-RI/CLK-Pad1)",
+     [
+      [
+       "U11001",
+       "1"
+      ]
+     ]
+    ],
+    [
+     "unconnected-(U11001-SUSPEND-Pad17)",
+     [
+      [
+       "U11001",
+       "17"
+      ]
+     ]
+    ],
+    [
+     "unconnected-(U11001-SUSPENDb-Pad15)",
+     [
+      [
+       "U11001",
+       "15"
+      ]
+     ]
+    ]
+   ],
+   "schematic_text": "(kicad_sch)",
+   "expected": {
+    "ok": false,
+    "shorts": [],
+    "opens": [],
+    "nc_cheats": [],
+    "part_mismatches": [],
+    "name_mismatches": [
+     "U11001.5: declared '+3V3' but extracted 'Net-(LOST)' [LOST-NAME rail: power symbol/label did not attach]",
+     "U11001.6: declared '+3V3' but extracted 'Net-(LOST)' [LOST-NAME rail: power symbol/label did not attach]",
+     "U11001.7: declared '+3V3' but extracted 'Net-(LOST)' [LOST-NAME rail: power symbol/label did not attach]",
+     "C11001.1: declared '+3V3' but extracted 'Net-(LOST)' [LOST-NAME rail: power symbol/label did not attach]",
+     "C11002.1: declared '+3V3' but extracted 'Net-(LOST)' [LOST-NAME rail: power symbol/label did not attach]",
+     "C11003.1: declared '+3V3' but extracted 'Net-(LOST)' [LOST-NAME rail: power symbol/label did not attach]",
+     "C11004.1: declared '+3V3' but extracted 'Net-(LOST)' [LOST-NAME rail: power symbol/label did not attach]",
+     "R11001.1: declared '+3V3' but extracted 'Net-(LOST)' [LOST-NAME rail: power symbol/label did not attach]"
+    ],
+    "summary": "NETLIST GATE: FAIL\n  NAME: U11001.5: declared '+3V3' but extracted 'Net-(LOST)' [LOST-NAME rail: power symbol/label did not attach]\n  NAME: U11001.6: declared '+3V3' but extracted 'Net-(LOST)' [LOST-NAME rail: power symbol/label did not attach]\n  NAME: U11001.7: declared '+3V3' but extracted 'Net-(LOST)' [LOST-NAME rail: power symbol/label did not attach]\n  NAME: C11001.1: declared '+3V3' but extracted 'Net-(LOST)' [LOST-NAME rail: power symbol/label did not attach]\n  NAME: C11002.1: declared '+3V3' but extracted 'Net-(LOST)' [LOST-NAME rail: power symbol/label did not attach]\n  NAME: C11003.1: declared '+3V3' but extracted 'Net-(LOST)' [LOST-NAME rail: power symbol/label did not attach]\n  NAME: C11004.1: declared '+3V3' but extracted 'Net-(LOST)' [LOST-NAME rail: power symbol/label did not attach]\n  NAME: R11001.1: declared '+3V3' but extracted 'Net-(LOST)' [LOST-NAME rail: power symbol/label did not attach]"
+   }
+  },
+  {
+   "name": "devkit_uart_bridge_nc_on_live_pin",
+   "circuit": "devkit_uart_bridge",
+   "extracted": [
+    [
+     "+3V3",
+     [
+      [
+       "C11001",
+       "1"
+      ],
+      [
+       "C11002",
+       "1"
+      ],
+      [
+       "C11003",
+       "1"
+      ],
+      [
+       "C11004",
+       "1"
+      ],
+      [
+       "R11001",
+       "1"
+      ],
+      [
+       "U11001",
+       "5"
+      ],
+      [
+       "U11001",
+       "6"
+      ],
+      [
+       "U11001",
+       "7"
+      ]
+     ]
+    ],
+    [
+     "/CP2102N_VBUS_SNS",
+     [
+      [
+       "R11002",
+       "2"
+      ],
+      [
+       "R11003",
+       "1"
+      ],
+      [
+       "U11001",
+       "8"
+      ]
+     ]
+    ],
+    [
+     "/USB_UART_DM",
+     [
+      [
+       "U11001",
+       "4"
+      ]
+     ]
+    ],
+    [
+     "/USB_UART_DP",
+     [
+      [
+       "U11001",
+       "3"
+      ]
+     ]
+    ],
+    [
+     "/USB_UART_VBUS",
+     [
+      [
+       "R11002",
+       "1"
+      ]
+     ]
+    ],
+    [
+     "/ZYNQ_PS_UART0_CTS_N",
+     [
+      [
+       "U11001",
+       "19"
+      ]
+     ]
+    ],
+    [
+     "/ZYNQ_PS_UART0_RTS_N",
+     [
+      [
+       "U11001",
+       "18"
+      ]
+     ]
+    ],
+    [
+     "/ZYNQ_PS_UART0_RXD",
+     [
+      [
+       "TP11002",
+       "1"
+      ],
+      [
+       "U11001",
+       "21"
+      ]
+     ]
+    ],
+    [
+     "/ZYNQ_PS_UART0_TXD",
+     [
+      [
+       "TP11001",
+       "1"
+      ],
+      [
+       "U11001",
+       "20"
+      ]
+     ]
+    ],
+    [
+     "GND",
+     [
+      [
+       "C11001",
+       "2"
+      ],
+      [
+       "C11002",
+       "2"
+      ],
+      [
+       "C11003",
+       "2"
+      ],
+      [
+       "C11004",
+       "2"
+      ],
+      [
+       "R11003",
+       "2"
+      ],
+      [
+       "U11001",
+       "2"
+      ],
+      [
+       "U11001",
+       "25"
+      ]
+     ]
+    ],
+    [
+     "Net-(U11001-RSTb)",
+     [
+      [
+       "R11001",
+       "2"
+      ],
+      [
+       "U11001",
+       "9"
+      ]
+     ]
+    ],
+    [
+     "unconnected-(U11001-DCD-Pad24)",
+     [
+      [
+       "U11001",
+       "24"
+      ]
+     ]
+    ],
+    [
+     "unconnected-(U11001-DSR-Pad22)",
+     [
+      [
+       "U11001",
+       "22"
+      ]
+     ]
+    ],
+    [
+     "unconnected-(U11001-DTR-Pad23)",
+     [
+      [
+       "U11001",
+       "23"
+      ]
+     ]
+    ],
+    [
+     "unconnected-(U11001-GPIO.0/TXT-Pad14)",
+     [
+      [
+       "U11001",
+       "14"
+      ]
+     ]
+    ],
+    [
+     "unconnected-(U11001-GPIO.1/RXT-Pad13)",
+     [
+      [
+       "U11001",
+       "13"
+      ]
+     ]
+    ],
+    [
+     "unconnected-(U11001-GPIO.2/RS485-Pad12)",
+     [
+      [
+       "U11001",
+       "12"
+      ]
+     ]
+    ],
+    [
+     "unconnected-(U11001-GPIO.3/WAKEUP-Pad11)",
+     [
+      [
+       "U11001",
+       "11"
+      ]
+     ]
+    ],
+    [
+     "unconnected-(U11001-NC-Pad10)",
+     [
+      [
+       "U11001",
+       "10"
+      ]
+     ]
+    ],
+    [
+     "unconnected-(U11001-NC-Pad16)",
+     [
+      [
+       "U11001",
+       "16"
+      ]
+     ]
+    ],
+    [
+     "unconnected-(U11001-RI/CLK-Pad1)",
+     [
+      [
+       "U11001",
+       "1"
+      ]
+     ]
+    ],
+    [
+     "unconnected-(U11001-SUSPEND-Pad17)",
+     [
+      [
+       "U11001",
+       "17"
+      ]
+     ]
+    ],
+    [
+     "unconnected-(U11001-SUSPENDb-Pad15)",
+     [
+      [
+       "U11001",
+       "15"
+      ]
+     ]
+    ]
+   ],
+   "expected": {
+    "ok": false,
+    "shorts": [],
+    "opens": [],
+    "nc_cheats": [
+     "no_connect at (156.21, 53.34) sits on U11001.3 which carries declared net 'USB_UART_DP' — NC is never a layout fallback (forbidden)"
+    ],
+    "part_mismatches": [],
+    "name_mismatches": [],
+    "summary": "NETLIST GATE: FAIL\n  NC-CHEAT: no_connect at (156.21, 53.34) sits on U11001.3 which carries declared net 'USB_UART_DP' — NC is never a layout fallback (forbidden)"
+   },
+   "append_nc": " (at 156.21 53.34))\n)\n",
+   "schematic_file": "devkit_uart_bridge.kicad_sch"
+  },
+  {
+   "name": "devkit_uart_bridge_stray_nc",
+   "circuit": "devkit_uart_bridge",
+   "extracted": [
+    [
+     "+3V3",
+     [
+      [
+       "C11001",
+       "1"
+      ],
+      [
+       "C11002",
+       "1"
+      ],
+      [
+       "C11003",
+       "1"
+      ],
+      [
+       "C11004",
+       "1"
+      ],
+      [
+       "R11001",
+       "1"
+      ],
+      [
+       "U11001",
+       "5"
+      ],
+      [
+       "U11001",
+       "6"
+      ],
+      [
+       "U11001",
+       "7"
+      ]
+     ]
+    ],
+    [
+     "/CP2102N_VBUS_SNS",
+     [
+      [
+       "R11002",
+       "2"
+      ],
+      [
+       "R11003",
+       "1"
+      ],
+      [
+       "U11001",
+       "8"
+      ]
+     ]
+    ],
+    [
+     "/USB_UART_DM",
+     [
+      [
+       "U11001",
+       "4"
+      ]
+     ]
+    ],
+    [
+     "/USB_UART_DP",
+     [
+      [
+       "U11001",
+       "3"
+      ]
+     ]
+    ],
+    [
+     "/USB_UART_VBUS",
+     [
+      [
+       "R11002",
+       "1"
+      ]
+     ]
+    ],
+    [
+     "/ZYNQ_PS_UART0_CTS_N",
+     [
+      [
+       "U11001",
+       "19"
+      ]
+     ]
+    ],
+    [
+     "/ZYNQ_PS_UART0_RTS_N",
+     [
+      [
+       "U11001",
+       "18"
+      ]
+     ]
+    ],
+    [
+     "/ZYNQ_PS_UART0_RXD",
+     [
+      [
+       "TP11002",
+       "1"
+      ],
+      [
+       "U11001",
+       "21"
+      ]
+     ]
+    ],
+    [
+     "/ZYNQ_PS_UART0_TXD",
+     [
+      [
+       "TP11001",
+       "1"
+      ],
+      [
+       "U11001",
+       "20"
+      ]
+     ]
+    ],
+    [
+     "GND",
+     [
+      [
+       "C11001",
+       "2"
+      ],
+      [
+       "C11002",
+       "2"
+      ],
+      [
+       "C11003",
+       "2"
+      ],
+      [
+       "C11004",
+       "2"
+      ],
+      [
+       "R11003",
+       "2"
+      ],
+      [
+       "U11001",
+       "2"
+      ],
+      [
+       "U11001",
+       "25"
+      ]
+     ]
+    ],
+    [
+     "Net-(U11001-RSTb)",
+     [
+      [
+       "R11001",
+       "2"
+      ],
+      [
+       "U11001",
+       "9"
+      ]
+     ]
+    ],
+    [
+     "unconnected-(U11001-DCD-Pad24)",
+     [
+      [
+       "U11001",
+       "24"
+      ]
+     ]
+    ],
+    [
+     "unconnected-(U11001-DSR-Pad22)",
+     [
+      [
+       "U11001",
+       "22"
+      ]
+     ]
+    ],
+    [
+     "unconnected-(U11001-DTR-Pad23)",
+     [
+      [
+       "U11001",
+       "23"
+      ]
+     ]
+    ],
+    [
+     "unconnected-(U11001-GPIO.0/TXT-Pad14)",
+     [
+      [
+       "U11001",
+       "14"
+      ]
+     ]
+    ],
+    [
+     "unconnected-(U11001-GPIO.1/RXT-Pad13)",
+     [
+      [
+       "U11001",
+       "13"
+      ]
+     ]
+    ],
+    [
+     "unconnected-(U11001-GPIO.2/RS485-Pad12)",
+     [
+      [
+       "U11001",
+       "12"
+      ]
+     ]
+    ],
+    [
+     "unconnected-(U11001-GPIO.3/WAKEUP-Pad11)",
+     [
+      [
+       "U11001",
+       "11"
+      ]
+     ]
+    ],
+    [
+     "unconnected-(U11001-NC-Pad10)",
+     [
+      [
+       "U11001",
+       "10"
+      ]
+     ]
+    ],
+    [
+     "unconnected-(U11001-NC-Pad16)",
+     [
+      [
+       "U11001",
+       "16"
+      ]
+     ]
+    ],
+    [
+     "unconnected-(U11001-RI/CLK-Pad1)",
+     [
+      [
+       "U11001",
+       "1"
+      ]
+     ]
+    ],
+    [
+     "unconnected-(U11001-SUSPEND-Pad17)",
+     [
+      [
+       "U11001",
+       "17"
+      ]
+     ]
+    ],
+    [
+     "unconnected-(U11001-SUSPENDb-Pad15)",
+     [
+      [
+       "U11001",
+       "15"
+      ]
+     ]
+    ]
+   ],
+   "expected": {
+    "ok": false,
+    "shorts": [],
+    "opens": [],
+    "nc_cheats": [
+     "no_connect at (999.25, 777.5) lands on no pin — stray marker"
+    ],
+    "part_mismatches": [],
+    "name_mismatches": [],
+    "summary": "NETLIST GATE: FAIL\n  NC-CHEAT: no_connect at (999.25, 777.5) lands on no pin — stray marker"
+   },
+   "append_nc": " (at 999.25 777.5))\n)\n",
+   "schematic_file": "devkit_uart_bridge.kicad_sch"
+  },
+  {
+   "name": "m1_rc_clean",
+   "circuit": "m1_rc",
+   "extracted": [
+    [
+     "+3V3",
+     [
+      [
+       "R1",
+       "1"
+      ]
+     ]
+    ],
+    [
+     "GND",
+     [
+      [
+       "C1",
+       "2"
+      ],
+      [
+       "R2",
+       "2"
+      ]
+     ]
+    ],
+    [
+     "MID",
+     [
+      [
+       "C1",
+       "1"
+      ],
+      [
+       "R1",
+       "2"
+      ],
+      [
+       "R2",
+       "1"
+      ]
+     ]
+    ]
+   ],
+   "expected": {
+    "ok": true,
+    "shorts": [],
+    "opens": [],
+    "nc_cheats": [],
+    "part_mismatches": [],
+    "name_mismatches": [],
+    "summary": "NETLIST GATE: PASS (extracted == declared)"
+   },
+   "schematic_file": "m1_rc.kicad_sch"
+  },
+  {
+   "name": "m1_rc_short",
+   "circuit": "m1_rc",
+   "extracted": [
+    [
+     "+3V3",
+     [
+      [
+       "R1",
+       "1"
+      ],
+      [
+       "C1",
+       "2"
+      ],
+      [
+       "R2",
+       "2"
+      ]
+     ]
+    ],
+    [
+     "MID",
+     [
+      [
+       "C1",
+       "1"
+      ],
+      [
+       "R1",
+       "2"
+      ],
+      [
+       "R2",
+       "1"
+      ]
+     ]
+    ]
+   ],
+   "schematic_text": "(kicad_sch)",
+   "expected": {
+    "ok": false,
+    "shorts": [
+     "extracted '+3V3' merges ['+3V3', 'GND'] [R1.1=+3V3, C1.2=GND, R2.2=GND]"
+    ],
+    "opens": [],
+    "nc_cheats": [],
+    "part_mismatches": [],
+    "name_mismatches": [
+     "R2.2: declared 'GND' but extracted '+3V3'",
+     "C1.2: declared 'GND' but extracted '+3V3'"
+    ],
+    "summary": "NETLIST GATE: FAIL\n  SHORT: extracted '+3V3' merges ['+3V3', 'GND'] [R1.1=+3V3, C1.2=GND, R2.2=GND]\n  NAME: R2.2: declared 'GND' but extracted '+3V3'\n  NAME: C1.2: declared 'GND' but extracted '+3V3'"
+   }
+  },
+  {
+   "name": "m1_rc_open",
+   "circuit": "m1_rc",
+   "extracted": [
+    [
+     "+3V3",
+     []
+    ],
+    [
+     "GND",
+     [
+      [
+       "C1",
+       "2"
+      ],
+      [
+       "R2",
+       "2"
+      ]
+     ]
+    ],
+    [
+     "MID",
+     [
+      [
+       "C1",
+       "1"
+      ],
+      [
+       "R1",
+       "2"
+      ],
+      [
+       "R2",
+       "1"
+      ]
+     ]
+    ],
+    [
+     "unconnected-mutated",
+     [
+      [
+       "R1",
+       "1"
+      ]
+     ]
+    ]
+   ],
+   "schematic_text": "(kicad_sch)",
+   "expected": {
+    "ok": false,
+    "shorts": [],
+    "opens": [
+     "POWER '+3V3': R1.1 emitted bare ('unconnected-mutated')"
+    ],
+    "nc_cheats": [],
+    "part_mismatches": [],
+    "name_mismatches": [],
+    "summary": "NETLIST GATE: FAIL\n  OPEN: POWER '+3V3': R1.1 emitted bare ('unconnected-mutated')"
+   }
+  },
+  {
+   "name": "m1_rc_missing_part",
+   "circuit": "m1_rc",
+   "extracted": [
+    [
+     "+3V3",
+     []
+    ],
+    [
+     "GND",
+     [
+      [
+       "C1",
+       "2"
+      ],
+      [
+       "R2",
+       "2"
+      ]
+     ]
+    ],
+    [
+     "MID",
+     [
+      [
+       "C1",
+       "1"
+      ],
+      [
+       "R2",
+       "1"
+      ]
+     ]
+    ]
+   ],
+   "schematic_text": "(kicad_sch)",
+   "expected": {
+    "ok": false,
+    "shorts": [],
+    "opens": [
+     "POWER '+3V3': R1.1 emitted bare ('')",
+     "declared 'MID': extracted as ['MID'], stranded: ['R1.2']",
+     "PORT 'MID': R1.2 emitted bare ('')"
+    ],
+    "nc_cheats": [],
+    "part_mismatches": [
+     "R1: missing from extracted netlist"
+    ],
+    "name_mismatches": [],
+    "summary": "NETLIST GATE: FAIL\n  OPEN: POWER '+3V3': R1.1 emitted bare ('')\n  OPEN: declared 'MID': extracted as ['MID'], stranded: ['R1.2']\n  OPEN: PORT 'MID': R1.2 emitted bare ('')\n  PART: R1: missing from extracted netlist"
+   }
+  },
+  {
+   "name": "m1_rc_lost_name",
+   "circuit": "m1_rc",
+   "extracted": [
+    [
+     "Net-(LOST)",
+     [
+      [
+       "R1",
+       "1"
+      ]
+     ]
+    ],
+    [
+     "GND",
+     [
+      [
+       "C1",
+       "2"
+      ],
+      [
+       "R2",
+       "2"
+      ]
+     ]
+    ],
+    [
+     "MID",
+     [
+      [
+       "C1",
+       "1"
+      ],
+      [
+       "R1",
+       "2"
+      ],
+      [
+       "R2",
+       "1"
+      ]
+     ]
+    ]
+   ],
+   "schematic_text": "(kicad_sch)",
+   "expected": {
+    "ok": false,
+    "shorts": [],
+    "opens": [],
+    "nc_cheats": [],
+    "part_mismatches": [],
+    "name_mismatches": [
+     "R1.1: declared '+3V3' but extracted 'Net-(LOST)' [LOST-NAME rail: power symbol/label did not attach]"
+    ],
+    "summary": "NETLIST GATE: FAIL\n  NAME: R1.1: declared '+3V3' but extracted 'Net-(LOST)' [LOST-NAME rail: power symbol/label did not attach]"
+   }
+  },
+  {
+   "name": "m1_rc_nc_on_live_pin",
+   "circuit": "m1_rc",
+   "extracted": [
+    [
+     "+3V3",
+     [
+      [
+       "R1",
+       "1"
+      ]
+     ]
+    ],
+    [
+     "GND",
+     [
+      [
+       "C1",
+       "2"
+      ],
+      [
+       "R2",
+       "2"
+      ]
+     ]
+    ],
+    [
+     "MID",
+     [
+      [
+       "C1",
+       "1"
+      ],
+      [
+       "R1",
+       "2"
+      ],
+      [
+       "R2",
+       "1"
+      ]
+     ]
+    ]
+   ],
+   "expected": {
+    "ok": false,
+    "shorts": [],
+    "opens": [],
+    "nc_cheats": [
+     "no_connect at (101.6, 77.47) sits on R1.1 which carries declared net '+3V3' — NC is never a layout fallback (forbidden)"
+    ],
+    "part_mismatches": [],
+    "name_mismatches": [],
+    "summary": "NETLIST GATE: FAIL\n  NC-CHEAT: no_connect at (101.6, 77.47) sits on R1.1 which carries declared net '+3V3' — NC is never a layout fallback (forbidden)"
+   },
+   "append_nc": " (at 101.6 77.47))\n)\n",
+   "schematic_file": "m1_rc.kicad_sch"
+  },
+  {
+   "name": "m1_rc_stray_nc",
+   "circuit": "m1_rc",
+   "extracted": [
+    [
+     "+3V3",
+     [
+      [
+       "R1",
+       "1"
+      ]
+     ]
+    ],
+    [
+     "GND",
+     [
+      [
+       "C1",
+       "2"
+      ],
+      [
+       "R2",
+       "2"
+      ]
+     ]
+    ],
+    [
+     "MID",
+     [
+      [
+       "C1",
+       "1"
+      ],
+      [
+       "R1",
+       "2"
+      ],
+      [
+       "R2",
+       "1"
+      ]
+     ]
+    ]
+   ],
+   "expected": {
+    "ok": false,
+    "shorts": [],
+    "opens": [],
+    "nc_cheats": [
+     "no_connect at (999.25, 777.5) lands on no pin — stray marker"
+    ],
+    "part_mismatches": [],
+    "name_mismatches": [],
+    "summary": "NETLIST GATE: FAIL\n  NC-CHEAT: no_connect at (999.25, 777.5) lands on no pin — stray marker"
+   },
+   "append_nc": " (at 999.25 777.5))\n)\n",
+   "schematic_file": "m1_rc.kicad_sch"
+  },
+  {
+   "name": "m1_short_physical_wire_mutation",
+   "circuit": "m1_rc",
+   "extracted": [
+    [
+     "GND",
+     [
+      [
+       "C1",
+       "2"
+      ],
+      [
+       "R2",
+       "2"
+      ]
+     ]
+    ],
+    [
+     "MID",
+     [
+      [
+       "C1",
+       "1"
+      ],
+      [
+       "R1",
+       "1"
+      ],
+      [
+       "R1",
+       "2"
+      ],
+      [
+       "R2",
+       "1"
+      ]
+     ]
+    ]
+   ],
+   "schematic_text": "(kicad_sch)",
+   "expected": {
+    "ok": false,
+    "shorts": [
+     "extracted 'MID' merges ['+3V3', 'MID'] [C1.1=MID, R1.1=+3V3, R1.2=MID, R2.1=MID]"
+    ],
+    "opens": [],
+    "nc_cheats": [],
+    "part_mismatches": [],
+    "name_mismatches": [
+     "R1.1: declared '+3V3' but extracted 'MID'"
+    ],
+    "summary": "NETLIST GATE: FAIL\n  SHORT: extracted 'MID' merges ['+3V3', 'MID'] [C1.1=MID, R1.1=+3V3, R1.2=MID, R2.1=MID]\n  NAME: R1.1: declared '+3V3' but extracted 'MID'"
+   }
+  },
+  {
+   "name": "m1_open_physical_wire_mutation",
+   "circuit": "m1_rc",
+   "extracted": [
+    [
+     "+3V3",
+     [
+      [
+       "R1",
+       "1"
+      ]
+     ]
+    ],
+    [
+     "GND",
+     [
+      [
+       "C1",
+       "2"
+      ],
+      [
+       "R2",
+       "2"
+      ]
+     ]
+    ],
+    [
+     "MID",
+     [
+      [
+       "C1",
+       "1"
+      ],
+      [
+       "R1",
+       "2"
+      ]
+     ]
+    ],
+    [
+     "unconnected-(R2-Pad1)",
+     [
+      [
+       "R2",
+       "1"
+      ]
+     ]
+    ]
+   ],
+   "schematic_text": "(kicad_sch)",
+   "expected": {
+    "ok": false,
+    "shorts": [],
+    "opens": [
+     "declared 'MID': extracted as ['MID', 'unconnected-(R2-Pad1)'], stranded: ['R2.1']",
+     "PORT 'MID': R2.1 emitted bare ('unconnected-(R2-Pad1)')"
+    ],
+    "nc_cheats": [],
+    "part_mismatches": [],
+    "name_mismatches": [],
+    "summary": "NETLIST GATE: FAIL\n  OPEN: declared 'MID': extracted as ['MID', 'unconnected-(R2-Pad1)'], stranded: ['R2.1']\n  OPEN: PORT 'MID': R2.1 emitted bare ('unconnected-(R2-Pad1)')"
+   }
+  },
+  {
+   "name": "empty_export",
+   "circuit": "simple",
+   "extracted": [],
+   "schematic_text": "(kicad_sch)",
+   "expected": {
+    "ok": false,
+    "shorts": [],
+    "opens": [
+     "PORT 'Z': U1.1 emitted bare ('')"
+    ],
+    "nc_cheats": [],
+    "part_mismatches": [],
+    "name_mismatches": [],
+    "summary": "NETLIST GATE: FAIL\n  OPEN: PORT 'Z': U1.1 emitted bare ('')"
+   }
+  },
+  {
+   "name": "unconnected",
+   "circuit": "simple",
+   "extracted": [
+    [
+     "unconnected-U1-Pad1",
+     [
+      [
+       "U1",
+       "1"
+      ]
+     ]
+    ]
+   ],
+   "schematic_text": "(kicad_sch)",
+   "expected": {
+    "ok": false,
+    "shorts": [],
+    "opens": [
+     "PORT 'Z': U1.1 emitted bare ('unconnected-U1-Pad1')"
+    ],
+    "nc_cheats": [],
+    "part_mismatches": [],
+    "name_mismatches": [],
+    "summary": "NETLIST GATE: FAIL\n  OPEN: PORT 'Z': U1.1 emitted bare ('unconnected-U1-Pad1')"
+   }
+  },
+  {
+   "name": "empty_name",
+   "circuit": "simple",
+   "extracted": [
+    [
+     "",
+     [
+      [
+       "U1",
+       "1"
+      ]
+     ]
+    ]
+   ],
+   "schematic_text": "(kicad_sch)",
+   "expected": {
+    "ok": false,
+    "shorts": [],
+    "opens": [
+     "PORT 'Z': U1.1 emitted bare ('')"
+    ],
+    "nc_cheats": [],
+    "part_mismatches": [],
+    "name_mismatches": [
+     "U1.1: declared 'Z' but extracted ''"
+    ],
+    "summary": "NETLIST GATE: FAIL\n  OPEN: PORT 'Z': U1.1 emitted bare ('')\n  NAME: U1.1: declared 'Z' but extracted ''"
+   }
+  },
+  {
+   "name": "normalized",
+   "circuit": "simple",
+   "extracted": [
+    [
+     "///Z",
+     [
+      [
+       "U1",
+       "1"
+      ]
+     ]
+    ]
+   ],
+   "schematic_text": "(kicad_sch)",
+   "expected": {
+    "ok": true,
+    "shorts": [],
+    "opens": [],
+    "nc_cheats": [],
+    "part_mismatches": [],
+    "name_mismatches": [],
+    "summary": "NETLIST GATE: PASS (extracted == declared)"
+   }
+  },
+  {
+   "name": "wrong_name",
+   "circuit": "simple",
+   "extracted": [
+    [
+     "/wrong",
+     [
+      [
+       "U1",
+       "1"
+      ]
+     ]
+    ]
+   ],
+   "schematic_text": "(kicad_sch)",
+   "expected": {
+    "ok": false,
+    "shorts": [],
+    "opens": [],
+    "nc_cheats": [],
+    "part_mismatches": [],
+    "name_mismatches": [
+     "U1.1: declared 'Z' but extracted '/wrong'"
+    ],
+    "summary": "NETLIST GATE: FAIL\n  NAME: U1.1: declared 'Z' but extracted '/wrong'"
+   }
+  },
+  {
+   "name": "power_pseudo_ref",
+   "circuit": "simple",
+   "extracted": [
+    [
+     "Z",
+     [
+      [
+       "#U1",
+       "1"
+      ]
+     ]
+    ]
+   ],
+   "schematic_text": "(kicad_sch)",
+   "expected": {
+    "ok": false,
+    "shorts": [],
+    "opens": [
+     "PORT 'Z': U1.1 emitted bare ('')"
+    ],
+    "nc_cheats": [],
+    "part_mismatches": [],
+    "name_mismatches": [],
+    "summary": "NETLIST GATE: FAIL\n  OPEN: PORT 'Z': U1.1 emitted bare ('')"
+   }
+  },
+  {
+   "name": "duplicate_pin_last_wins",
+   "circuit": "simple",
+   "extracted": [
+    [
+     "/Z",
+     [
+      [
+       "U1",
+       "1"
+      ]
+     ]
+    ],
+    [
+     "other",
+     [
+      [
+       "U1",
+       "1"
+      ]
+     ]
+    ]
+   ],
+   "schematic_text": "(kicad_sch)",
+   "expected": {
+    "ok": false,
+    "shorts": [],
+    "opens": [],
+    "nc_cheats": [],
+    "part_mismatches": [],
+    "name_mismatches": [
+     "U1.1: declared 'Z' but extracted 'other'"
+    ],
+    "summary": "NETLIST GATE: FAIL\n  NAME: U1.1: declared 'Z' but extracted 'other'"
+   }
+  },
+  {
+   "name": "only_nc_part",
+   "circuit": "simple",
+   "extracted": [
+    [
+     "unconnected-U1-Pad2",
+     [
+      [
+       "U1",
+       "2"
+      ]
+     ]
+    ]
+   ],
+   "schematic_text": "(kicad_sch)",
+   "expected": {
+    "ok": false,
+    "shorts": [],
+    "opens": [
+     "PORT 'Z': U1.1 emitted bare ('')"
+    ],
+    "nc_cheats": [],
+    "part_mismatches": [],
+    "name_mismatches": [],
+    "summary": "NETLIST GATE: FAIL\n  OPEN: PORT 'Z': U1.1 emitted bare ('')"
+   }
+  },
+  {
+   "name": "dead_two_terminal",
+   "circuit": "dead",
+   "extracted": [
+    [
+     "+3V3",
+     [
+      [
+       "C1",
+       "1"
+      ]
+     ]
+    ],
+    [
+     "GND",
+     [
+      [
+       "C1",
+       "2"
+      ],
+      [
+       "C2",
+       "1"
+      ],
+      [
+       "C2",
+       "2"
+      ],
+      [
+       "L2",
+       "1"
+      ],
+      [
+       "L2",
+       "2"
+      ],
+      [
+       "D1",
+       "1"
+      ],
+      [
+       "D1",
+       "2"
+      ],
+      [
+       "RX",
+       "1"
+      ],
+      [
+       "RX",
+       "2"
+      ],
+      [
+       "RX",
+       "3"
+      ],
+      [
+       "X",
+       "1"
+      ],
+      [
+       "X",
+       "2"
+      ]
+     ]
+    ],
+    [
+     "NETA",
+     [
+      [
+       "R9",
+       "1"
+      ]
+     ]
+    ],
+    [
+     "NETB",
+     [
+      [
+       "R9",
+       "2"
+      ]
+     ]
+    ]
+   ],
+   "schematic_text": "(kicad_sch)",
+   "expected": {
+    "ok": false,
+    "shorts": [
+     "C2 (Device:C): both terminals on one net 'GND' — electrically dead (capshort)",
+     "L2 (Device:L): both terminals on one net 'GND' — electrically dead (capshort)",
+     "RX (Device:R_Potentiometer): both terminals on one net 'GND' — electrically dead (capshort)"
+    ],
+    "opens": [],
+    "nc_cheats": [],
+    "part_mismatches": [],
+    "name_mismatches": [],
+    "summary": "NETLIST GATE: FAIL\n  SHORT: C2 (Device:C): both terminals on one net 'GND' — electrically dead (capshort)\n  SHORT: L2 (Device:L): both terminals on one net 'GND' — electrically dead (capshort)\n  SHORT: RX (Device:R_Potentiometer): both terminals on one net 'GND' — electrically dead (capshort)"
+   }
+  },
+  {
+   "name": "quoted_names",
+   "circuit": "quoted",
+   "extracted": [
+    [
+     "bad\tname",
+     [
+      [
+       "U2",
+       "1"
+      ],
+      [
+       "U1",
+       "1"
+      ],
+      [
+       "U2",
+       "1"
+      ]
+     ]
+    ]
+   ],
+   "schematic_text": "(kicad_sch)",
+   "expected": {
+    "ok": false,
+    "shorts": [
+     "extracted 'bad\\tname' merges [\"O'Hare\", 'a\"b\\\\c\\nΩ'] [U2.1=a\"b\\c\nΩ, U1.1=O'Hare, U2.1=a\"b\\c\nΩ]"
+    ],
+    "opens": [],
+    "nc_cheats": [],
+    "part_mismatches": [],
+    "name_mismatches": [
+     "U1.1: declared \"O'Hare\" but extracted 'bad\\tname'",
+     "U2.1: declared 'a\"b\\\\c\\nΩ' but extracted 'bad\\tname'"
+    ],
+    "summary": "NETLIST GATE: FAIL\n  SHORT: extracted 'bad\\tname' merges [\"O'Hare\", 'a\"b\\\\c\\nΩ'] [U2.1=a\"b\\c\nΩ, U1.1=O'Hare, U2.1=a\"b\\c\nΩ]\n  NAME: U1.1: declared \"O'Hare\" but extracted 'bad\\tname'\n  NAME: U2.1: declared 'a\"b\\\\c\\nΩ' but extracted 'bad\\tname'"
+   }
+  },
+  {
+   "name": "nc_rotation_0",
+   "circuit": "simple",
+   "extracted": [
+    [
+     "Z",
+     [
+      [
+       "U1",
+       "1"
+      ]
+     ]
+    ]
+   ],
+   "schematic_text": "(kicad_sch (lib_symbols (symbol \"Fixture:U\" (symbol \"U_1_1\" (pin passive line (at 2 3 90) (number \"1\")) (pin passive line (at 7 8 0) (number \"2\"))))) (symbol (lib_id \"Fixture:U\") (at 10 20 0) (property \"Reference\" \"U1\")) (no_connect (at 12 17)))",
+   "expected": {
+    "ok": false,
+    "shorts": [],
+    "opens": [],
+    "nc_cheats": [
+     "no_connect at (12.0, 17.0) sits on U1.1 which carries declared net 'Z' — NC is never a layout fallback (forbidden)"
+    ],
+    "part_mismatches": [],
+    "name_mismatches": [],
+    "summary": "NETLIST GATE: FAIL\n  NC-CHEAT: no_connect at (12.0, 17.0) sits on U1.1 which carries declared net 'Z' — NC is never a layout fallback (forbidden)"
+   }
+  },
+  {
+   "name": "nc_rotation_90",
+   "circuit": "simple",
+   "extracted": [
+    [
+     "Z",
+     [
+      [
+       "U1",
+       "1"
+      ]
+     ]
+    ]
+   ],
+   "schematic_text": "(kicad_sch (lib_symbols (symbol \"Fixture:U\" (symbol \"U_1_1\" (pin passive line (at 2 3 90) (number \"1\")) (pin passive line (at 7 8 0) (number \"2\"))))) (symbol (lib_id \"Fixture:U\") (at 10 20 90) (property \"Reference\" \"U1\")) (no_connect (at 7 18)))",
+   "expected": {
+    "ok": false,
+    "shorts": [],
+    "opens": [],
+    "nc_cheats": [
+     "no_connect at (7.0, 18.0) sits on U1.1 which carries declared net 'Z' — NC is never a layout fallback (forbidden)"
+    ],
+    "part_mismatches": [],
+    "name_mismatches": [],
+    "summary": "NETLIST GATE: FAIL\n  NC-CHEAT: no_connect at (7.0, 18.0) sits on U1.1 which carries declared net 'Z' — NC is never a layout fallback (forbidden)"
+   }
+  },
+  {
+   "name": "nc_rotation_180",
+   "circuit": "simple",
+   "extracted": [
+    [
+     "Z",
+     [
+      [
+       "U1",
+       "1"
+      ]
+     ]
+    ]
+   ],
+   "schematic_text": "(kicad_sch (lib_symbols (symbol \"Fixture:U\" (symbol \"U_1_1\" (pin passive line (at 2 3 90) (number \"1\")) (pin passive line (at 7 8 0) (number \"2\"))))) (symbol (lib_id \"Fixture:U\") (at 10 20 180) (property \"Reference\" \"U1\")) (no_connect (at 8 23)))",
+   "expected": {
+    "ok": false,
+    "shorts": [],
+    "opens": [],
+    "nc_cheats": [
+     "no_connect at (8.0, 23.0) sits on U1.1 which carries declared net 'Z' — NC is never a layout fallback (forbidden)"
+    ],
+    "part_mismatches": [],
+    "name_mismatches": [],
+    "summary": "NETLIST GATE: FAIL\n  NC-CHEAT: no_connect at (8.0, 23.0) sits on U1.1 which carries declared net 'Z' — NC is never a layout fallback (forbidden)"
+   }
+  },
+  {
+   "name": "nc_rotation_270",
+   "circuit": "simple",
+   "extracted": [
+    [
+     "Z",
+     [
+      [
+       "U1",
+       "1"
+      ]
+     ]
+    ]
+   ],
+   "schematic_text": "(kicad_sch (lib_symbols (symbol \"Fixture:U\" (symbol \"U_1_1\" (pin passive line (at 2 3 90) (number \"1\")) (pin passive line (at 7 8 0) (number \"2\"))))) (symbol (lib_id \"Fixture:U\") (at 10 20 270) (property \"Reference\" \"U1\")) (no_connect (at 13 22)))",
+   "expected": {
+    "ok": false,
+    "shorts": [],
+    "opens": [],
+    "nc_cheats": [
+     "no_connect at (13.0, 22.0) sits on U1.1 which carries declared net 'Z' — NC is never a layout fallback (forbidden)"
+    ],
+    "part_mismatches": [],
+    "name_mismatches": [],
+    "summary": "NETLIST GATE: FAIL\n  NC-CHEAT: no_connect at (13.0, 22.0) sits on U1.1 which carries declared net 'Z' — NC is never a layout fallback (forbidden)"
+   }
+  },
+  {
+   "name": "nc_rotation_-90",
+   "circuit": "simple",
+   "extracted": [
+    [
+     "Z",
+     [
+      [
+       "U1",
+       "1"
+      ]
+     ]
+    ]
+   ],
+   "schematic_text": "(kicad_sch (lib_symbols (symbol \"Fixture:U\" (symbol \"U_1_1\" (pin passive line (at 2 3 90) (number \"1\")) (pin passive line (at 7 8 0) (number \"2\"))))) (symbol (lib_id \"Fixture:U\") (at 10 20 -90) (property \"Reference\" \"U1\")) (no_connect (at 13 22)))",
+   "expected": {
+    "ok": false,
+    "shorts": [],
+    "opens": [],
+    "nc_cheats": [
+     "no_connect at (13.0, 22.0) sits on U1.1 which carries declared net 'Z' — NC is never a layout fallback (forbidden)"
+    ],
+    "part_mismatches": [],
+    "name_mismatches": [],
+    "summary": "NETLIST GATE: FAIL\n  NC-CHEAT: no_connect at (13.0, 22.0) sits on U1.1 which carries declared net 'Z' — NC is never a layout fallback (forbidden)"
+   }
+  },
+  {
+   "name": "nc_rotation_450",
+   "circuit": "simple",
+   "extracted": [
+    [
+     "Z",
+     [
+      [
+       "U1",
+       "1"
+      ]
+     ]
+    ]
+   ],
+   "schematic_text": "(kicad_sch (lib_symbols (symbol \"Fixture:U\" (symbol \"U_1_1\" (pin passive line (at 2 3 90) (number \"1\")) (pin passive line (at 7 8 0) (number \"2\"))))) (symbol (lib_id \"Fixture:U\") (at 10 20 450) (property \"Reference\" \"U1\")) (no_connect (at 7 18)))",
+   "expected": {
+    "ok": false,
+    "shorts": [],
+    "opens": [],
+    "nc_cheats": [
+     "no_connect at (7.0, 18.0) sits on U1.1 which carries declared net 'Z' — NC is never a layout fallback (forbidden)"
+    ],
+    "part_mismatches": [],
+    "name_mismatches": [],
+    "summary": "NETLIST GATE: FAIL\n  NC-CHEAT: no_connect at (7.0, 18.0) sits on U1.1 which carries declared net 'Z' — NC is never a layout fallback (forbidden)"
+   }
+  },
+  {
+   "name": "nc_permitted",
+   "circuit": "simple",
+   "extracted": [
+    [
+     "Z",
+     [
+      [
+       "U1",
+       "1"
+      ]
+     ]
+    ]
+   ],
+   "schematic_text": "(kicad_sch (lib_symbols (symbol \"Fixture:U\" (symbol \"U_1_1\" (pin passive line (at 2 3 90) (number \"1\")) (pin passive line (at 7 8 0) (number \"2\"))))) (symbol (lib_id \"Fixture:U\") (at 10 20) (property \"Reference\" \"U1\")) (no_connect (at 17 12)))",
+   "expected": {
+    "ok": true,
+    "shorts": [],
+    "opens": [],
+    "nc_cheats": [],
+    "part_mismatches": [],
+    "name_mismatches": [],
+    "summary": "NETLIST GATE: PASS (extracted == declared)"
+   }
+  },
+  {
+   "name": "nc_stray",
+   "circuit": "simple",
+   "extracted": [
+    [
+     "Z",
+     [
+      [
+       "U1",
+       "1"
+      ]
+     ]
+    ]
+   ],
+   "schematic_text": "(kicad_sch (no_connect (at -0.004 2.675)))",
+   "expected": {
+    "ok": false,
+    "shorts": [],
+    "opens": [],
+    "nc_cheats": [
+     "no_connect at (-0.0, 2.67) lands on no pin — stray marker"
+    ],
+    "part_mismatches": [],
+    "name_mismatches": [],
+    "summary": "NETLIST GATE: FAIL\n  NC-CHEAT: no_connect at (-0.0, 2.67) lands on no pin — stray marker"
+   }
+  },
+  {
+   "name": "nc_empty_library",
+   "circuit": "simple",
+   "extracted": [
+    [
+     "Z",
+     [
+      [
+       "U1",
+       "1"
+      ]
+     ]
+    ]
+   ],
+   "schematic_text": "(kicad_sch (lib_symbols) (symbol (lib_id \"missing\") (at 0 0)) (no_connect (at 0 0)))",
+   "expected": {
+    "ok": false,
+    "shorts": [],
+    "opens": [],
+    "nc_cheats": [
+     "no_connect at (0.0, 0.0) lands on no pin — stray marker"
+    ],
+    "part_mismatches": [],
+    "name_mismatches": [],
+    "summary": "NETLIST GATE: FAIL\n  NC-CHEAT: no_connect at (0.0, 0.0) lands on no pin — stray marker"
+   }
+  },
+  {
+   "name": "nc_nested_order",
+   "circuit": "simple",
+   "extracted": [
+    [
+     "Z",
+     [
+      [
+       "U1",
+       "1"
+      ]
+     ]
+    ]
+   ],
+   "schematic_text": "(kicad_sch (lib_symbols (symbol \"U\" (pin (at 0 0) (number \"1\")) (symbol \"child\" (pin (at 0 0) (number \"2\"))))) (symbol (lib_id \"U\") (at 0 0) (property \"Reference\" \"U1\")) (no_connect (at 0 0)))",
+   "expected": {
+    "ok": false,
+    "shorts": [],
+    "opens": [],
+    "nc_cheats": [
+     "no_connect at (0.0, 0.0) sits on U1.1 which carries declared net 'Z' — NC is never a layout fallback (forbidden)"
+    ],
+    "part_mismatches": [],
+    "name_mismatches": [],
+    "summary": "NETLIST GATE: FAIL\n  NC-CHEAT: no_connect at (0.0, 0.0) sits on U1.1 which carries declared net 'Z' — NC is never a layout fallback (forbidden)"
+   }
+  },
+  {
+   "name": "nc_defaults",
+   "circuit": "simple",
+   "extracted": [
+    [
+     "Z",
+     [
+      [
+       "U1",
+       "1"
+      ]
+     ]
+    ]
+   ],
+   "schematic_text": "(kicad_sch (lib_symbols (symbol \"U\" (pin (number \"1\")))) (symbol (lib_id \"U\") (at 0 0) (property \"Reference\" \"U1\")) (no_connect (at 0 0)))",
+   "expected": {
+    "ok": false,
+    "shorts": [],
+    "opens": [],
+    "nc_cheats": [
+     "no_connect at (0.0, 0.0) sits on U1.1 which carries declared net 'Z' — NC is never a layout fallback (forbidden)"
+    ],
+    "part_mismatches": [],
+    "name_mismatches": [],
+    "summary": "NETLIST GATE: FAIL\n  NC-CHEAT: no_connect at (0.0, 0.0) sits on U1.1 which carries declared net 'Z' — NC is never a layout fallback (forbidden)"
+   }
+  },
+  {
+   "name": "nc_duplicate_markers",
+   "circuit": "simple",
+   "extracted": [
+    [
+     "Z",
+     [
+      [
+       "U1",
+       "1"
+      ]
+     ]
+    ]
+   ],
+   "schematic_text": "(kicad_sch (no_connect (at 0 0)) (no_connect (at 0 0)))",
+   "expected": {
+    "ok": false,
+    "shorts": [],
+    "opens": [],
+    "nc_cheats": [
+     "no_connect at (0.0, 0.0) lands on no pin — stray marker",
+     "no_connect at (0.0, 0.0) lands on no pin — stray marker"
+    ],
+    "part_mismatches": [],
+    "name_mismatches": [],
+    "summary": "NETLIST GATE: FAIL\n  NC-CHEAT: no_connect at (0.0, 0.0) lands on no pin — stray marker\n  NC-CHEAT: no_connect at (0.0, 0.0) lands on no pin — stray marker"
+   }
+  },
+  {
+   "name": "nc_first_netted_coincident",
+   "circuit": "simple",
+   "extracted": [
+    [
+     "Z",
+     [
+      [
+       "U1",
+       "1"
+      ]
+     ]
+    ]
+   ],
+   "schematic_text": "(kicad_sch (lib_symbols (symbol \"U\" (pin (number \"2\")) (pin (number \"1\")))) (symbol (lib_id \"U\") (at 0 0) (property \"Reference\" \"U1\")) (no_connect (at 0 0)))",
+   "expected": {
+    "ok": false,
+    "shorts": [],
+    "opens": [],
+    "nc_cheats": [
+     "no_connect at (0.0, 0.0) sits on U1.1 which carries declared net 'Z' — NC is never a layout fallback (forbidden)"
+    ],
+    "part_mismatches": [],
+    "name_mismatches": [],
+    "summary": "NETLIST GATE: FAIL\n  NC-CHEAT: no_connect at (0.0, 0.0) sits on U1.1 which carries declared net 'Z' — NC is never a layout fallback (forbidden)"
+   }
+  },
+  {
+   "name": "all_categories_order",
+   "circuit": "dead",
+   "extracted": [
+    [
+     "WRONG",
+     [
+      [
+       "C1",
+       "1"
+      ],
+      [
+       "R9",
+       "2"
+      ]
+     ]
+    ],
+    [
+     "unconnected-C2",
+     [
+      [
+       "C2",
+       "1"
+      ]
+     ]
+    ]
+   ],
+   "schematic_text": "(kicad_sch (no_connect (at 4 5)))",
+   "expected": {
+    "ok": false,
+    "shorts": [
+     "extracted 'WRONG' merges ['+3V3', 'NETB'] [C1.1=+3V3, R9.2=NETB]",
+     "C2 (Device:C): both terminals on one net 'GND' — electrically dead (capshort)",
+     "L2 (Device:L): both terminals on one net 'GND' — electrically dead (capshort)",
+     "RX (Device:R_Potentiometer): both terminals on one net 'GND' — electrically dead (capshort)"
+    ],
+    "opens": [
+     "declared 'GND': extracted as ['unconnected-C2'], stranded: ['C1.2', 'C2.1', 'C2.2', 'L2.1', 'L2.2', 'D1.1', 'D1.2', 'RX.1', 'RX.2', 'RX.3', 'X.1', 'X.2']",
+     "GROUND 'GND': C1.2 emitted bare ('')",
+     "GROUND 'GND': C2.1 emitted bare ('unconnected-C2')",
+     "GROUND 'GND': C2.2 emitted bare ('')",
+     "GROUND 'GND': L2.1 emitted bare ('')",
+     "GROUND 'GND': L2.2 emitted bare ('')",
+     "GROUND 'GND': D1.1 emitted bare ('')",
+     "GROUND 'GND': D1.2 emitted bare ('')",
+     "GROUND 'GND': RX.1 emitted bare ('')",
+     "GROUND 'GND': RX.2 emitted bare ('')",
+     "GROUND 'GND': RX.3 emitted bare ('')",
+     "GROUND 'GND': X.1 emitted bare ('')",
+     "GROUND 'GND': X.2 emitted bare ('')",
+     "PORT 'NETA': R9.1 emitted bare ('')"
+    ],
+    "nc_cheats": [
+     "no_connect at (4.0, 5.0) lands on no pin — stray marker"
+    ],
+    "part_mismatches": [
+     "L2: missing from extracted netlist",
+     "D1: missing from extracted netlist",
+     "RX: missing from extracted netlist",
+     "X: missing from extracted netlist"
+    ],
+    "name_mismatches": [
+     "C1.1: declared '+3V3' but extracted 'WRONG'",
+     "R9.2: declared 'NETB' but extracted 'WRONG'"
+    ],
+    "summary": "NETLIST GATE: FAIL\n  SHORT: extracted 'WRONG' merges ['+3V3', 'NETB'] [C1.1=+3V3, R9.2=NETB]\n  SHORT: C2 (Device:C): both terminals on one net 'GND' — electrically dead (capshort)\n  SHORT: L2 (Device:L): both terminals on one net 'GND' — electrically dead (capshort)\n  SHORT: RX (Device:R_Potentiometer): both terminals on one net 'GND' — electrically dead (capshort)\n  OPEN: declared 'GND': extracted as ['unconnected-C2'], stranded: ['C1.2', 'C2.1', 'C2.2', 'L2.1', 'L2.2', 'D1.1', 'D1.2', 'RX.1', 'RX.2', 'RX.3', 'X.1', 'X.2']\n  OPEN: GROUND 'GND': C1.2 emitted bare ('')\n  OPEN: GROUND 'GND': C2.1 emitted bare ('unconnected-C2')\n  OPEN: GROUND 'GND': C2.2 emitted bare ('')\n  OPEN: GROUND 'GND': L2.1 emitted bare ('')\n  OPEN: GROUND 'GND': L2.2 emitted bare ('')\n  OPEN: GROUND 'GND': D1.1 emitted bare ('')\n  OPEN: GROUND 'GND': D1.2 emitted bare ('')\n  OPEN: GROUND 'GND': RX.1 emitted bare ('')\n  OPEN: GROUND 'GND': RX.2 emitted bare ('')\n  OPEN: GROUND 'GND': RX.3 emitted bare ('')\n  OPEN: GROUND 'GND': X.1 emitted bare ('')\n  OPEN: GROUND 'GND': X.2 emitted bare ('')\n  OPEN: PORT 'NETA': R9.1 emitted bare ('')\n  NC-CHEAT: no_connect at (4.0, 5.0) lands on no pin — stray marker\n  PART: L2: missing from extracted netlist\n  PART: D1: missing from extracted netlist\n  PART: RX: missing from extracted netlist\n  PART: X: missing from extracted netlist\n  NAME: C1.1: declared '+3V3' but extracted 'WRONG'\n  NAME: R9.2: declared 'NETB' but extracted 'WRONG'"
+   }
+  }
+ ]
+}

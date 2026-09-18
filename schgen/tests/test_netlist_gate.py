@@ -20,6 +20,33 @@ def test_norm_strips_kicad_sheet_prefix():
     assert netlist_gate._norm("//x") == "x"
 
 
+@pytest.mark.parametrize("name,kind", [("+3V3", "POWER"), ("GND", "GROUND"),
+                                      ("BUS", "PORT")])
+def test_native_adapter_preserves_public_net_classes(tmp_path, monkeypatch, name, kind):
+    from schgen.core.model import Circuit, NetClass, PinRef
+
+    circuit = Circuit("transport")
+    circuit.part("J1", "Connector_Generic:Conn_01x01", "probe", "")
+    circuit.net(name, "J1.1")
+    circuit.nets[name].net_class = NetClass[kind]
+    path = tmp_path / "empty.kicad_sch"
+    path.write_text("(kicad_sch)")
+    monkeypatch.setattr(netlist_gate, "extract_netlist", lambda _: {})
+    result = netlist_gate.check(circuit, path)
+    assert result.opens == [f"{kind} {name!r}: J1.1 emitted bare ('')"]
+    assert result.part_mismatches == ["J1: missing from extracted netlist"]
+    assert not result.ok
+
+    # The same caller-owned circuit must be re-read after an edit, not looked
+    # up in the project catalog or retained in a stale gate cache.
+    circuit.nets[name].net_class = NetClass.SIGNAL
+    result = netlist_gate.check(circuit, path)
+    assert result.opens == []
+    monkeypatch.setattr(netlist_gate, "extract_netlist",
+                        lambda _: {"local": [PinRef("J1", "1")]})
+    assert netlist_gate.check(circuit, path).ok
+
+
 @_needs_kicad
 @pytest.mark.parametrize("probe_count", [1, 2])
 def test_probe_only_port_connects_across_sheet_hierarchy(tmp_path, probe_count):

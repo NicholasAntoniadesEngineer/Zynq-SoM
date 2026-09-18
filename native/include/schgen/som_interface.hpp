@@ -37,6 +37,19 @@ struct SomExtractOptions {
     std::string kicad_cli = "kicad-cli";
 };
 
+// Shared KiCad extraction boundary, also used by the schematic netlist gate.
+// Duplicate net names replace their pins without moving the first occurrence.
+// Missing attributes remain empty; node and net source order is preserved.
+struct KicadNetlistPin { std::string ref, pin; };
+using KicadNetlist = std::vector<std::pair<std::string, std::vector<KicadNetlistPin>>>;
+
+// Uses the same shell-free argv, private RAII scratch directory, stderr capture
+// and hardened libxml2 parser as the SoM extractors. Throws SomInterfaceError.
+std::string export_kicad_netlist_xml(const std::filesystem::path& schematic,
+                                    const SomExtractOptions& options = {});
+KicadNetlist parse_kicad_netlist_xml(std::string_view xml,
+                                    const std::string& source = "<memory>");
+
 class SomInterfaceError : public std::runtime_error {
 public:
     using std::runtime_error::runtime_error;

@@ -46,8 +46,10 @@ Function/rail/strap policy is in each project's `som_mapping.json`.
 `circuit-check` resolves actual library symbols and checks every pin and internal
 input driver; JSON pin metadata is not a substitute for physical symbol pins.
 `link` also enforces symbol-backed completeness before linking. The native core
-now includes complete symbol loading, schematic emission, routing and visual
-validation stages, tested against frozen inputs and output bytes. Schematic
+now includes complete symbol loading, schematic emission, routing, netlist and visual
+validation stages, tested against frozen inputs and output bytes. Netlist verification
+shares the hardened KiCad process/XML boundary with SoM extraction, and checks
+connectivity plus NC markers against embedded symbol geometry. Schematic
 placement and full board orchestration remain transitional.
 
 Carrier and devkit XDC/Tcl, and carrier BOM, match the established output bytes.

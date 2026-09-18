@@ -46,6 +46,7 @@
 #include "schgen/schematic_bindings.hpp"
 #include "schgen/symbol_bindings.hpp"
 #include "schgen/schematic_route_bindings.hpp"
+#include "schgen/netlist_gate_bindings.hpp"
 
 namespace nb = nanobind;
 
@@ -205,6 +206,7 @@ NB_MODULE(_geom, m) {
     schgen::bind_schematic(m, sexpr_from_py);
     schgen::bind_symbols(m, sexpr_from_py, sexpr_to_tagged);
     schgen::bind_schematic_route(m);
+    schgen::bind_netlist_gate(m);
     m.def("discover_project_subsystems", [](const std::string& directory) {
         std::vector<std::pair<std::string, std::string>> out;
         for (const auto& sheet : schgen::discover_project_subsystems(directory))
