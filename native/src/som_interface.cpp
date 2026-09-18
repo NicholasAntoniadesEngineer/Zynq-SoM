@@ -171,15 +171,10 @@ struct SpawnActions {
     }
 };
 
-std::string export_xml(const fs::path& source, const SomExtractOptions& options) {
-    TempDir temp;
-    const auto output = temp.path / "som.net";
-    const auto errors = temp.path / "stderr";
-    std::vector<std::string> args{options.kicad_cli, "sch", "export", "netlist", "--format",
-                                 "kicadxml", "-o", output.string(), source.string()};
+int run_kicad(std::vector<std::string> args, const fs::path& errors) {
     for (const auto& arg : args)
         if (arg.find('\0') != std::string::npos) throw SomInterfaceError("embedded null byte in KiCad argument");
-    if (options.kicad_cli.empty()) throw SomInterfaceError("kicad-cli executable is empty");
+    if (args.empty() || args.front().empty()) throw SomInterfaceError("kicad-cli executable is empty");
     std::vector<char*> argv;
     for (auto& arg : args) argv.push_back(arg.data());
     argv.push_back(nullptr);
@@ -189,13 +184,22 @@ std::string export_xml(const fs::path& source, const SomExtractOptions& options)
     actions.open(STDERR_FILENO, errors, O_WRONLY | O_CREAT | O_TRUNC);
     pid_t pid = 0;
     const int error = ::posix_spawnp(&pid, argv[0], &actions.actions, nullptr, argv.data(), environ);
-    if (error) throw SomInterfaceError("cannot execute " + options.kicad_cli + ": " + std::strerror(error));
+    if (error) throw SomInterfaceError("cannot execute " + args.front() + ": " + std::strerror(error));
     int status = 0;
     while (::waitpid(pid, &status, 0) < 0) {
         if (errno == EINTR) continue;
         throw SomInterfaceError("cannot wait for kicad-cli: " + std::string(std::strerror(errno)));
     }
-    if (!WIFEXITED(status) || WEXITSTATUS(status) != 0)
+    return WIFEXITED(status) ? WEXITSTATUS(status) : -WTERMSIG(status);
+}
+
+std::string export_xml(const fs::path& source, const SomExtractOptions& options) {
+    TempDir temp;
+    const auto output = temp.path / "som.net";
+    const auto errors = temp.path / "stderr";
+    const int status = run_kicad({options.kicad_cli, "sch", "export", "netlist", "--format",
+                                 "kicadxml", "-o", output.string(), source.string()}, errors);
+    if (status != 0)
         throw SomInterfaceError("kicad-cli failed on " + source.string() + ": " + stderr_tail(read(errors)));
     return read(output);
 }
@@ -320,6 +324,19 @@ std::optional<std::string> optional_text(const JsonNode& n, const std::string& k
 
 std::string export_kicad_netlist_xml(const fs::path& schematic, const SomExtractOptions& options) {
     return export_xml(schematic, options);
+}
+
+KicadErcResult run_kicad_erc(const fs::path& schematic, const SomExtractOptions& options) {
+    TempDir temp;
+    const auto output = temp.path / "erc.rpt", errors = temp.path / "stderr";
+    KicadErcResult result;
+    result.exit_code = run_kicad({options.kicad_cli, "sch", "erc", "--severity-error",
+        "--exit-code-violations", "-o", output.string(), schematic.string()}, errors);
+    result.stderr_text = read(errors);
+    if (fs::exists(output)) result.report = read(output);
+    else if (result.exit_code == 0)
+        throw SomInterfaceError("kicad-cli ERC returned success without a report on " + schematic.string());
+    return result;
 }
 
 KicadNetlist parse_kicad_netlist_xml(std::string_view xml, const std::string& source) {

@@ -49,6 +49,7 @@
 #include "schgen/netlist_gate_bindings.hpp"
 #include "schgen/design_rules_bindings.hpp"
 #include "schgen/schematic_place_bindings.hpp"
+#include "schgen/board_schematic_bindings.hpp"
 
 namespace nb = nanobind;
 
@@ -211,6 +212,7 @@ NB_MODULE(_geom, m) {
     schgen::bind_netlist_gate(m);
     schgen::bind_design_rules(m);
     schgen::bind_schematic_place(m, sexpr_from_py);
+    schgen::bind_board_schematic(m, sexpr_from_py);
     m.def("discover_project_subsystems", [](const std::string& directory) {
         std::vector<std::pair<std::string, std::string>> out;
         for (const auto& sheet : schgen::discover_project_subsystems(directory))

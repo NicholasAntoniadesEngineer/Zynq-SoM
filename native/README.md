@@ -54,6 +54,13 @@ validation stages, tested against frozen inputs and output bytes. Netlist verifi
 shares the hardened KiCad process/XML boundary with SoM extraction, and checks
 connectivity plus NC markers against embedded symbol geometry. Full board
 orchestration remains transitional.
+The hierarchical schematic stage is independently available as
+`native/bin/schgen board-schematic --project NAME -o DIRECTORY`. It generates
+the real routed sheets and root hierarchy, preserves persistent reference bands,
+and runs live KiCad connectivity checks. Per-sheet exports use bounded workers
+with deterministic result collection. This command is not a substitute for the
+remaining PCB, manufacturing and complete-board verification stages. Both
+supported projects' native root and child schematics match the committed bytes.
 
 The complete schematic placer now runs natively: topology classification,
 fanout, regulator templates, chain layout, probe rows, retry expansion and

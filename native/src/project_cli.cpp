@@ -1,6 +1,7 @@
 #include "schgen/project_cli.hpp"
 
 #include "schgen/bom.hpp"
+#include "schgen/board_schematic.hpp"
 #include "schgen/devicetree.hpp"
 #include "schgen/design_rules.hpp"
 #include "schgen/link.hpp"
@@ -29,7 +30,7 @@ struct Options {
     std::vector<std::string> subsystems;
     bool allow_missing = false, qualified_refs = false;
 };
-const std::set<std::string> commands{"project-check", "circuit-check", "som-interface", "xdc", "vivado", "fpga", "bom", "link", "devicetree", "design-rules", "testpoints"};
+const std::set<std::string> commands{"project-check", "circuit-check", "som-interface", "xdc", "vivado", "fpga", "bom", "link", "devicetree", "design-rules", "testpoints", "board-schematic"};
 Options parse(int argc, char** argv) {
     Options out;
     std::set<std::string> seen;
@@ -73,6 +74,8 @@ Options parse(int argc, char** argv) {
         allowed.insert("--allow-missing"); allowed.insert("--qualified-refs");
     } else if (out.command == "link") {
         allowed.insert("--contract");
+    } else if (out.command == "board-schematic") {
+        allowed.insert("--kicad-cli");
     } else if (!check_only && out.command != "design-rules" && out.command != "testpoints") {
         allowed.insert("--som"); allowed.insert("--refs"); allowed.insert("--kicad-cli");
         if (out.command != "som-interface") allowed.insert("--contract");
@@ -137,6 +140,32 @@ std::optional<int> run_project_command(int argc, char** argv) {
     std::vector<CircuitSheetIr> sheets;
     sheets.reserve(circuits.size());
     for (const auto& circuit : circuits) sheets.push_back(circuit.circuit);
+    if (options.command == "board-schematic") {
+        // A schematic-stage command, not an alias for the complete board
+        // pipeline: PCB, manufacturing and model gates remain separate.
+        if (options.output.empty())
+            throw std::runtime_error("board-schematic requires --output DIRECTORY (schematic stage only)");
+        const auto index = load_sheet_index(paths);
+        std::vector<BoardSheetInput> input;
+        for (const auto& c : circuits) {
+            const auto band = std::find_if(index.begin(), index.end(),
+                [&](const auto& item) { return item.first == c.name; });
+            if (band == index.end())
+                throw std::runtime_error("missing persistent sheet-index band for " + c.name);
+            input.push_back({c.circuit, band->second, std::nullopt});
+        }
+        SymbolLibrary library(paths.repository_root);
+        BoardSchematicOptions build;
+        build.root_name = "Zynq_Carrier";
+        build.sheet_subdir = "schematic";
+        build.reports_dir = options.output / "reports";
+        build.extraction.kicad_cli = options.kicad_cli;
+        const auto result = build_board_schematic(input, library, options.output, build);
+        std::cout << result.report << '\n';
+        std::cout << "BOARD SCHEMATIC: " << (result.ok() ? "PASS" : "FAIL")
+                  << " (schematic stage only; " << input.size() << " sheets)\n";
+        return result.ok() ? 0 : 1;
+    }
     if (options.command == "design-rules" || options.command == "testpoints") {
         std::string report;
         bool ok;

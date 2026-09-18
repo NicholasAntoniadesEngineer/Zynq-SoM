@@ -50,6 +50,16 @@ std::string export_kicad_netlist_xml(const std::filesystem::path& schematic,
 KicadNetlist parse_kicad_netlist_xml(std::string_view xml,
                                     const std::string& source = "<memory>");
 
+struct KicadErcResult {
+    int exit_code = 0;  // Negative signal number if the process was signalled.
+    std::string report, stderr_text;
+};
+// Same private scratch directory and shell-free process boundary as export.
+// Runs --severity-error --exit-code-violations. Nonzero ERC status is returned,
+// not hidden; execution/I/O failures throw. Timestamp normalization is caller policy.
+KicadErcResult run_kicad_erc(const std::filesystem::path& schematic,
+                           const SomExtractOptions& options = {});
+
 class SomInterfaceError : public std::runtime_error {
 public:
     using std::runtime_error::runtime_error;
