@@ -192,8 +192,11 @@ def test_carrier_structure_all_complete():
     for p in res.packages:
         if p.adapter:
             assert p.has_meta, p.name
-            assert not (carrier_structure.CARRIER_SUBSYSTEMS_DIR / p.name).is_dir(), \
-                f"adapter {p.name} re-bloated into a folder"
+            companion = carrier_structure.CARRIER_SUBSYSTEMS_DIR / p.name
+            if companion.is_dir():
+                from schgen.core.artifacts import is_sync_duplicate
+                assert sorted(f.name for f in companion.iterdir()
+                              if not is_sync_duplicate(f)) == ["circuit.json"]
 
 
 def _local_libdir(tmp_path):
@@ -253,7 +256,8 @@ def test_carrier_structure_kills_adapter_left_foldered(tmp_path):
     rep = {p.name: p for p in res.packages}["widget"]
     assert rep.adapter
     assert not rep.ok and not res.ok
-    assert any("foldered" in m for m in rep.missing), rep.missing
+    assert any("companion must contain only circuit.json" in m
+               for m in rep.missing), rep.missing
     assert "widget.py" in rep.missing and "test_widget.py" in rep.missing
 
 

@@ -392,6 +392,13 @@ std::set<std::string> SymbolLibrary::pin_numbers(const std::string& lib_id) {
     return result;
 }
 
+SymbolLibrary SymbolLibrary::with_definitions(const std::vector<SymbolDef>& definitions) const {
+    auto copy = *this;
+    for (const auto& definition : definitions)
+        copy.defs_.insert_or_assign(definition.lib_id, definition);
+    return copy;
+}
+
 void SymbolLibrary::clear() {
     defs_.clear();
     files_.clear();

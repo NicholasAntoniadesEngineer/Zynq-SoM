@@ -101,12 +101,16 @@ def test_a_thru_pad_still_blocks_the_opposite_face():
 
 
 def test_mounting_hole_corner_keepouts_still_pierce():
-    src = inspect.getsource(fp._attempt_pack)
-    assert "occ.add(cx, cy, MH_CORNER_KO, MH_CORNER_KO)" in src
+    src = inspect.getsource(fp._attempt_pack_impl)
+    assert "legalize_mh_corners(" in src
+    assert "occ.add(*box_to_xywh(tuple(corner)))" in src
     occ = _Occupancy()
-    occ.add(0.0, 0.0, fp.MH_CORNER_KO, fp.MH_CORNER_KO)
-    for m in (OCC_TOP, OCC_BOTTOM):
-        assert not occ.fits(5.0, 5.0, 8.0, 8.0, mask=m)
+    corners = fp._nat.module().legalize_mh_corners(100.0, 80.0, fp.MH_CORNER_KO)
+    assert len(corners) == 4
+    for x0, y0, x1, y1 in corners:
+        occ.add(x0, y0, x1 - x0, y1 - y0)
+        for m in (OCC_TOP, OCC_BOTTOM):
+            assert not occ.fits(x0 + 1.0, y0 + 1.0, 8.0, 8.0, mask=m)
     mh = _mod(_MH)
     assert has_thru_pads(mh) and thru_pad_boxes(mh, 0.0)
 
@@ -180,7 +184,7 @@ def test_som_decoupling_cells_are_the_single_emission_oracle():
 def test_monotonicity_guard_is_wired_and_registered():
     assert "punch_free_plan_rejected" in fb.REGISTRY
     assert fb.REGISTRY["punch_free_plan_rejected"].stage == "plan_lattice"
-    src = inspect.getsource(fp.build_plan)
+    src = inspect.getsource(fp._build_plan_body)
     assert "_search(False)" in src and "_guarded(_search)" in src
     assert "_fixed_pack(False)" in src and "_guarded(_fixed_pack)" in src
     assert src.count('_fb.record("punch_free_plan_rejected")') == 2
@@ -198,7 +202,7 @@ def test_monotonicity_guard_is_wired_and_registered():
 
 
 def test_conservative_policy_reserves_the_superset():
-    src = inspect.getsource(fp._attempt_pack)
+    src = inspect.getsource(fp._attempt_pack_impl)
     assert "free = plan.punch_free" in src
     assert "som_mask = OCC_TOP if free else OCC_PUNCH" in src
     assert "edge_mask = OCC_TOP if free else OCC_PUNCH" in src

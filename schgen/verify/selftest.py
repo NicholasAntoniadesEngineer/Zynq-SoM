@@ -627,70 +627,16 @@ def _mg_port_rename(lib: Library, tmp: Path):
                              "no longer merges across the two sheets")
 
 
-def _validated(c: Circuit, lib: Library) -> Circuit:
-    c.validate({ref: set(lib.pin_numbers(p.lib_id))
-                for ref, p in c.parts.items()})
-    return c
-
-
 def _mg_rail_decoup_dropped(lib: Library):
-    base_ok = True
-    try:
-        place.build(_validated(_fixture_rail_cap(), lib), lib, place.Spacing())
-    except place.PlaceError:
-        base_ok = False
-    orig = place._Engine._rail_decoupling_columns
-    place._Engine._rail_decoupling_columns = lambda self: None
-    killed = False
-    by = "(no error)"
-    try:
-        place.build(_validated(_fixture_rail_cap(), lib), lib, place.Spacing())
-    except place.PlaceError as e:
-        killed = "unplaced" in str(e)
-        by = str(e).splitlines()[0]
-    finally:
-        place._Engine._rail_decoupling_columns = orig
-    return base_ok, killed, ("rail_decoup_dropped: stub _rail_decoupling_columns "
-                             "-> the +3V3->GND cap is never drained"
-                             f"\n            by placer missing-gate: {by[:90]}")
+    from schgen.core import native
+    return native.module().schematic_mutation_proof(
+        _fixture_rail_cap().to_ir(), lib._native, False)
 
 
 def _mg_clamp_thresh_strict(lib: Library):
-    base_ok = True
-    try:
-        place.place_and_route(_validated(_fixture_esd_clamp(), lib), lib)
-    except place.PlaceError:
-        base_ok = False
-    orig_run = place._Engine.run
-
-    def strict_run(self):
-        mset = set(self.multi)
-        strict = []
-        for ref in self.multi:
-            sig = [n for n in self.c.nets.values()
-                   if n.net_class in (NetClass.SIGNAL, NetClass.PORT)
-                   and any(pr.ref == ref for pr in n.pins)]
-            if sig and all(
-                    len({pr.ref for pr in n.pins
-                         if pr.ref in mset and pr.ref != ref}) >= 2
-                    for n in sig):
-                strict.append(ref)
-        self.shunts = strict
-        return orig_run(self)
-
-    place._Engine.run = strict_run
-    killed = False
-    by = "(no error)"
-    try:
-        place.place_and_route(_validated(_fixture_esd_clamp(), lib), lib)
-    except place.PlaceError as e:
-        killed = True
-        by = str(e).splitlines()[-1]
-    finally:
-        place._Engine.run = orig_run
-    return base_ok, killed, ("clamp_thresh_strict: revert the clamp shunt rule "
-                             "to >=2 -> the ESD array crosses lanes"
-                             f"\n            by placer route/visual: {by[:90]}")
+    from schgen.core import native
+    return native.module().schematic_mutation_proof(
+        _fixture_esd_clamp().to_ir(), lib._native, True)
 
 
 def _ratsnest_fixture():

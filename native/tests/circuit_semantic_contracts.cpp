@@ -327,6 +327,19 @@ void pair_contracts(Suite& suite) {
     }
     suite.rejects("missing reciprocal type", with_ports(base, first),
                   "expanded pair needs reciprocal port_type");
+    suite.run("intermediate page retains reciprocal metadata without weakening ingestion", [&] {
+        TempDir tmp;
+        const auto path = tmp.path / "page.json";
+        write(path, with_ports(base, first));
+        const auto raw = schgen::parse_json_file(path.string());
+        const auto page = schgen::decode_intermediate_circuit_ir(raw);
+        require(page.port_types.size() == 1 && page.port_types.front().pair_with == "N2",
+                "intermediate transport dropped mate metadata");
+        bool rejected = false;
+        try { (void)schgen::parse_circuit_ir(raw); }
+        catch (const std::runtime_error&) { rejected = true; }
+        require(rejected, "canonical ingestion no longer enforces reciprocal metadata");
+    });
 }
 
 void atomic_contracts(Suite& suite) {

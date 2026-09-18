@@ -5,6 +5,45 @@ import pytest
 from schgen.core.symbols import GRID
 from schgen.layout.place import Spacing, gceil, gfloor, gsnap
 
+
+def test_native_placement_preserves_caller_symbol_snapshot():
+    from schgen.core.model import Circuit
+    from schgen.core.symbols import Library
+    from schgen.layout import place
+
+    c = Circuit("snapshot")
+    c.part("R1", "Device:R", "10k", "")
+    c.net("+3V3", "R1.1")
+    c.net("GND", "R1.2")
+    lib = Library()
+    symbol = lib.get("Device:R")
+    original = tuple(symbol.body)
+    symbol.body = (original[0] - 1.27, *original[1:])
+    placed = place.build(c, lib, Spacing())
+    body = next(b for b in placed.boxes if b.owner == "R1" and b.kind == "body")
+    assert sorted((body.x1 - body.x0, body.y1 - body.y0)) == pytest.approx(
+        sorted((symbol.body[2] - symbol.body[0], symbol.body[3] - symbol.body[1])))
+    assert tuple(Library().get("Device:R").body) == original
+
+
+def test_native_placement_accepts_intermediate_page_pair_metadata():
+    from schgen.core.model import Circuit
+    from schgen.core.symbols import Library
+    from schgen.layout import place
+
+    c = Circuit("pair")
+    for ref, net in (("TP1", "P"), ("TP2", "N")):
+        c.part(ref, Circuit.TP_LIB_ID, net, Circuit.TP_FOOTPRINT)
+        c.port(net, f"{ref}.1")
+    c.port_type("P", "diff_pair", pair_with="N", impedance=100)
+    page = c.subset({"TP1"}, page=1)
+    assert page.port_types["P"].pair_with == "N"
+    placed, _, geometry = place.place_and_route(page, Library())
+    assert [label.name for label in placed.hlabels] == ["P"]
+    assert page.port_types["P"].pair_with == "N"
+    from schgen.verify.visual_gate import check
+    assert check(geometry).ok
+
 U = GRID
 
 

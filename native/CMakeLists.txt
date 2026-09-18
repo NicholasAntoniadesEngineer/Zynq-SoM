@@ -18,13 +18,17 @@ add_library(schgen_core STATIC
     src/bom.cpp src/project.cpp src/project_catalog.cpp src/project_outputs.cpp src/som_interface.cpp
     src/link.cpp src/devicetree.cpp src/symbols.cpp src/validation.cpp
     src/schematic.cpp src/schematic_route.cpp src/netlist_gate.cpp src/design_rules.cpp
-    src/schematic_place_core.cpp)
+    src/schematic_place_core.cpp src/schematic_place_fanout.cpp
+    src/schematic_place_templates.cpp src/schematic_place_chain.cpp src/schematic_place_pages.cpp
+    src/selftest.cpp)
 find_package(LibXml2 REQUIRED)
 target_link_libraries(schgen_core PUBLIC LibXml2::LibXml2)
 target_include_directories(schgen_core PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
 target_compile_options(schgen_core PRIVATE -Wall -Wextra -Wpedantic -Werror)
 set_source_files_properties(src/turn.cpp src/pack_anchor.cpp src/symbols.cpp
                             src/schematic_route.cpp src/schematic_place_core.cpp
+                            src/schematic_place_fanout.cpp src/schematic_place_templates.cpp
+                            src/schematic_place_chain.cpp src/schematic_place_pages.cpp
                             src/pack_edges.cpp PROPERTIES
     COMPILE_OPTIONS "-ffp-contract=off")
 
@@ -83,6 +87,25 @@ add_custom_target(schgen_catalogs ALL DEPENDS
 
 include(CTest)
 if(BUILD_TESTING)
+    add_executable(schgen_selftest_contracts tests/selftest_contracts.cpp)
+    target_link_libraries(schgen_selftest_contracts PRIVATE schgen_core)
+    target_compile_options(schgen_selftest_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror -ffp-contract=off)
+    add_test(NAME native_selftest_contracts COMMAND schgen_selftest_contracts
+        "${CMAKE_CURRENT_SOURCE_DIR}/tests/data/selftest")
+    foreach(stage fanout templates chain)
+        add_executable(schgen_schematic_place_${stage}_contracts tests/schematic_place_${stage}_contracts.cpp)
+        target_link_libraries(schgen_schematic_place_${stage}_contracts PRIVATE schgen_core)
+        target_compile_options(schgen_schematic_place_${stage}_contracts PRIVATE
+            -Wall -Wextra -Wpedantic -Werror -ffp-contract=off)
+        add_test(NAME native_schematic_place_${stage}_contracts COMMAND schgen_schematic_place_${stage}_contracts
+            "${CMAKE_CURRENT_SOURCE_DIR}/tests/data/schematic_place_${stage}")
+    endforeach()
+    add_executable(schgen_schematic_place_pages_contracts tests/schematic_place_pages_contracts.cpp)
+    target_link_libraries(schgen_schematic_place_pages_contracts PRIVATE schgen_core)
+    target_compile_options(schgen_schematic_place_pages_contracts PRIVATE
+        -Wall -Wextra -Wpedantic -Werror -ffp-contract=off)
+    add_test(NAME native_schematic_place_pages_contracts COMMAND schgen_schematic_place_pages_contracts
+        "${CMAKE_CURRENT_SOURCE_DIR}/..")
     add_executable(schgen_schematic_place_core_contracts tests/schematic_place_core_contracts.cpp)
     target_link_libraries(schgen_schematic_place_core_contracts PRIVATE schgen_core)
     target_compile_options(schgen_schematic_place_core_contracts PRIVATE

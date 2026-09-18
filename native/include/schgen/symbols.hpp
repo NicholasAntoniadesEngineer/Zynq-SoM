@@ -61,6 +61,9 @@ public:
     const SymbolDef& get(const std::string& lib_id);
     std::set<std::string> pin_numbers(const std::string& lib_id);
     void clear();  // Invalidates references returned by get().
+    // Independent snapshot with caller-owned in-memory definitions overlaid.
+    // Existing references and file snapshots in this library remain untouched.
+    SymbolLibrary with_definitions(const std::vector<SymbolDef>& definitions) const;
 
 private:
     const Sexpr& library(const std::string& libname);

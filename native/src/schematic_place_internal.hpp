@@ -322,4 +322,21 @@ void center_on_sheet(SchematicPlacement&);
 std::vector<std::set<std::string>> signal_blobs(const CircuitSheetIr&, SymbolLibrary&);
 std::vector<CircuitSheetIr> partition_pages(const CircuitSheetIr&, SymbolLibrary&);
 
+// Page orchestration dependencies are explicit so retry/pagination policy can
+// be tested without substituting a fake Engine::run or changing production
+// placement. Public entry points always supply the real native operations.
+struct PageOperations {
+    std::function<SchematicPlacement(const CircuitSheetIr&, SymbolLibrary&, const SchematicSpacing&)> build;
+    std::function<SchematicRoutedSheet(const CircuitSheetIr&, const SchematicPlacement&, SymbolLibrary&)> route;
+    std::function<VisualResult(const SheetGeometry&)> check_visual;
+};
+CircuitSheetIr subset_page(const CircuitSheetIr&, const std::set<std::string>& refs, int page);
+bool is_congestion(const std::string& message);
+std::vector<CircuitSheetIr> partition_pages_with_fit(const CircuitSheetIr&, SymbolLibrary&,
+    const std::function<bool(const CircuitSheetIr&)>& fits);
+SchematicPlacedPage place_and_route_with(const CircuitSheetIr&, SymbolLibrary&,
+    const SchematicSpacing&, int max_attempts, const PageOperations&);
+std::vector<SchematicPlacedPage> paginate_and_route_with(const CircuitSheetIr&, SymbolLibrary&,
+    const SchematicSpacing&, int max_attempts, const PageOperations&);
+
 }  // namespace schgen::schematic_place

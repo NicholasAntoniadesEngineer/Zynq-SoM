@@ -375,6 +375,17 @@ int main(int argc, char** argv) {
         power_contracts(library);
         golden_contracts(library, golden);
         circuit_contracts(library, repo);
+        {
+            auto changed = library.get("Device:R");
+            const auto original_body = changed.body;
+            changed.body[0] -= 1.27;
+            auto snapshot = library.with_definitions({changed});
+            require(snapshot.get("Device:R").body == changed.body, "snapshot lost explicit metadata overlay");
+            changed.body[0] -= 1.27;
+            require(snapshot.get("Device:R").body != changed.body, "snapshot aliases caller-owned metadata");
+            snapshot.clear();
+            require(library.get("Device:R").body == original_body, "snapshot changed source library");
+        }
         std::cout << "symbols contracts passed (" << checks << " checks; "
                   << (argc == 3 ? "installed KiCad" : "frozen KiCad fixtures") << ")\n";
         return 0;

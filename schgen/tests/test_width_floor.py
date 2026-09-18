@@ -127,7 +127,7 @@ def test_estimator_replicates_the_law6_edge_seat():
 
 
 def test_interior_pack_order_is_connectivity_first_then_area():
-    src = inspect.getsource(fp._attempt_pack)
+    src = inspect.getsource(fp._attempt_pack_impl)
     i_conn = src.index("-_conn(b),")
     i_area = src.index("-(zbox[b.name][0] * zbox[b.name][1])")
     assert i_conn < i_area

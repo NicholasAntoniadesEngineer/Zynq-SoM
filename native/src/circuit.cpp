@@ -621,7 +621,6 @@ CircuitSheetIr parse_sheet_ir(const JsonNode& root) {
     sheet.hints = parse_hints(root, "circuit");
     sheet.loads = parse_loads(root, "circuit");
     sheet.waivers = parse_waivers(root, "circuit");
-    validate_circuit_semantics(sheet);
     return sheet;
 }
 
@@ -734,6 +733,12 @@ std::vector<fs::path> find_circuit_json(const fs::path& root) {
 }  // namespace
 
 CircuitSheetIr parse_circuit_ir(const JsonNode& root) {
+    auto sheet = decode_intermediate_circuit_ir(root);
+    validate_circuit_semantics(sheet);
+    return sheet;
+}
+
+CircuitSheetIr decode_intermediate_circuit_ir(const JsonNode& root) {
     validate_ir_json(root, "circuit IR");
     return parse_sheet_ir(root);
 }

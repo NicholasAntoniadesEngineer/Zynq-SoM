@@ -52,13 +52,17 @@ input driver; JSON pin metadata is not a substitute for physical symbol pins.
 now includes complete symbol loading, schematic emission, routing, netlist and visual
 validation stages, tested against frozen inputs and output bytes. Netlist verification
 shares the hardened KiCad process/XML boundary with SoM extraction, and checks
-connectivity plus NC markers against embedded symbol geometry. Schematic
-placement and full board orchestration remain transitional.
+connectivity plus NC markers against embedded symbol geometry. Full board
+orchestration remains transitional.
 
-The placement foundation is now native and covered by 49 frozen circuit
-classifications plus primitive, geometry, ownership and chain contracts. This
-does not yet enable a native end-to-end placer: fanout, templates, chain layout
-and pagination must be integrated before switching production generation.
+The complete schematic placer now runs natively: topology classification,
+fanout, regulator templates, chain layout, probe rows, retry expansion and
+pagination all use the same typed engine and router. Frozen full-board and
+isolated topology contracts cover ordered geometry and page boundaries. The
+legacy Python engine is removed; remaining adapters preserve caller-owned
+symbol snapshots and intermediate page metadata without reloading sources.
+Native mutation proofs exercise missing-decoupler and incorrect clamp-layout
+failures through the real completeness, routing and visual gates.
 
 Design-rule verification (decoupling, I2C pull-ups, reset RC, configuration straps,
 exposed pads), test-point coverage and their reports also run in C++. The native
@@ -97,8 +101,8 @@ sequentially.
 ## Remaining migration
 
 Move complete pipeline stages into the native library and CLI. The remaining
-work includes board orchestration, schematic placement, full board/schematic
-emission, verification/reporting, system outputs, and authoring commands.
+work includes board orchestration, PCB generation and floorplanning,
+verification/reporting, system outputs, and authoring commands.
 Replace Python tests with native tests before removing their reference logic.
 
 Each stage must preserve electrical connectivity and its relevant gates, then

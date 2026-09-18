@@ -291,7 +291,7 @@ def test_placement_captures_stage_before_downstream_work(
         raise RuntimeError("stop before downstream placement")
 
     monkeypatch.setattr(placement, "apply_chosen_shapes", stop)
-    monkeypatch.setattr(placement._led, "open_step", lambda *args: None)
+    placement._led.reset()
     monkeypatch.setattr(placement._led, "calc", lambda *args, **kwargs: None)
 
     def sink(stage):

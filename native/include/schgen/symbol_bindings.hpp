@@ -3,6 +3,7 @@
 // Transitional Python transport only. Loading, lookup, parsing, inheritance,
 // synthesis, geometry and source caches all live in symbols.cpp.
 #include "schgen/symbols.hpp"
+#include <algorithm>
 #include <cstdint>
 #include <nanobind/nanobind.h>
 #include <nanobind/stl/pair.h>
@@ -75,6 +76,26 @@ public:
         return numbers;
     }
     void clear() { definitions_.clear(); native_.clear(); }
+
+    template <typename FromPython>
+    SymbolLibrary snapshot(const FromPython& from_python) const {
+        namespace nb = nanobind;
+        std::vector<SymbolDef> definitions;
+        for (const auto [key, source] : definitions_) {
+            SymbolDef symbol;
+            symbol.lib_id = nb::cast<std::string>(key);
+            symbol.raw = from_python(source.attr("raw"));
+            for (const auto pin : nb::cast<nb::iterable>(source.attr("pins")))
+                symbol.pins.push_back(symbol_pin_from_python(pin));
+            const auto body = nb::cast<std::vector<double>>(source.attr("body"));
+            if (body.size() != 4) throw nb::value_error("symbol body requires four coordinates");
+            std::copy(body.begin(), body.end(), symbol.body.begin());
+            symbol.pin_names_hidden = nb::cast<bool>(source.attr("pin_names_hidden"));
+            symbol.pin_numbers_hidden = nb::cast<bool>(source.attr("pin_numbers_hidden"));
+            definitions.push_back(std::move(symbol));
+        }
+        return native_.with_definitions(definitions);
+    }
 
     void deepcopy_metadata(nanobind::handle deepcopy, const nanobind::dict& memo) {
         definitions_ = nanobind::cast<nanobind::dict>(deepcopy(definitions_, memo));

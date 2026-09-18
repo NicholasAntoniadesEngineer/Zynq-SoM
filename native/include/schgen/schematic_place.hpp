@@ -38,15 +38,15 @@ struct SchematicPlacedPage {
     SheetGeometry geometry;
 };
 
-// FOUNDATION/WIP: declarations reserve the end-to-end typed interface. These
-// are intentionally NOT defined by schematic_place_core.cpp. Link them only
-// when the template, fanout/chain and probes/pagination slices are complete.
-// No placeholder success, fallback interpreter, board/CLI or manual geometry.
+// Complete native topology placement, routing and pagination. Every path runs
+// the ordinary completeness and visual gates; there is no interpreter fallback.
 SchematicPlacement build_schematic_placement(const CircuitSheetIr& circuit,
     SymbolLibrary& library, const SchematicSpacing& spacing = {});
 SchematicPlacedPage place_and_route_schematic(const CircuitSheetIr& circuit,
     SymbolLibrary& library, const SchematicSpacing& spacing = {}, int max_attempts = 8);
 std::vector<SchematicPlacedPage> paginate_and_route_schematic(const CircuitSheetIr& circuit,
     SymbolLibrary& library, const SchematicSpacing& spacing = {}, int max_attempts = 8);
+std::vector<CircuitSheetIr> partition_schematic_pages(const CircuitSheetIr& circuit,
+    SymbolLibrary& library);
 
 }  // namespace schgen

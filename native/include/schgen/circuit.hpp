@@ -101,6 +101,11 @@ CircuitSheetIr load_circuit_json(const std::filesystem::path& path);
 // Does not reload a file or consult a catalog; edits in root are authoritative.
 CircuitSheetIr parse_circuit_ir(const JsonNode& root);
 
+// Shape-checked transport of an intermediate in-memory sheet. Preserves page
+// metadata whose differential mate may live on another page; does NOT assert
+// electrical completeness. File/catalog/CLI ingestion must use parse_circuit_ir.
+CircuitSheetIr decode_intermediate_circuit_ir(const JsonNode& root);
+
 bool compile_circuit_catalog(const std::string& circuits_dir,
                              const std::string& catalog_path);
 bool open_circuit_catalog(const std::string& catalog_path);
