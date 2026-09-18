@@ -13,6 +13,14 @@
 
 int main(int argc, char** argv) {
     try {
+        if (argc == 1 || (argc == 2 && std::string(argv[1]) == "--help")) {
+            std::cout << "usage: schgen <command>\n"
+                         "  self-check\n"
+                         "  catalog-compile <parts_dir> <catalog.bin>\n"
+                         "  circuit-compile <circuits_dir> <circuits.bin>\n"
+                         "Full board generation still uses python -m schgen board.\n";
+            return 0;
+        }
         if (argc >= 2 && std::string(argv[1]) == "catalog-compile") {
             if (argc != 4) {
                 throw std::runtime_error(
@@ -34,6 +42,9 @@ int main(int argc, char** argv) {
             }
             std::cout << "circuits compiled " << argv[3] << "\n";
             return 0;
+        }
+        if (argc != 2 || std::string(argv[1]) != "self-check") {
+            throw std::runtime_error("unsupported command or arguments; use --help");
         }
         const schgen::Box4 a{0.0, 0.0, 10.0, 8.0};
         const schgen::Box4 b{12.0, 0.0, 16.0, 8.0};
