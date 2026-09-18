@@ -6,6 +6,7 @@
 #include "schgen/seat.hpp"
 #include "schgen/sexpr.hpp"
 #include "schgen/turn.hpp"
+#include "schgen/project_cli.hpp"
 
 #include <iostream>
 #include <stdexcept>
@@ -18,9 +19,17 @@ int main(int argc, char** argv) {
                          "  self-check\n"
                          "  catalog-compile <parts_dir> <catalog.bin>\n"
                          "  circuit-compile <circuits_dir> <circuits.bin>\n"
+                         "  project-check [--repo ROOT] [--project NAME] [SUBSYSTEM ...]\n"
+                         "  som-interface [--project NAME] [--som FILE] [--refs J1,J2,J3] [-o FILE]\n"
+                         "  xdc|vivado [--project NAME] [--som FILE] [--contract FILE] [-o FILE]\n"
+                         "  fpga [--project NAME] [-o DIRECTORY]  (XDC + Vivado, one live extraction)\n"
+                         "  bom [--project NAME] [SUBSYSTEM ...] [-o FILE] [--allow-missing] [--qualified-refs]\n"
+                         "  link [--project NAME] [SUBSYSTEM ...] [--contract FILE] [-o REPORT]\n"
+                         "  devicetree [--project NAME] [--som FILE] [--contract FILE] [-o FILE]\n"
                          "Full board generation still uses python -m schgen board.\n";
             return 0;
         }
+        if (const auto status = schgen::run_project_command(argc, argv)) return *status;
         if (argc >= 2 && std::string(argv[1]) == "catalog-compile") {
             if (argc != 4) {
                 throw std::runtime_error(

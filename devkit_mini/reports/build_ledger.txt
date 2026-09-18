@@ -190,25 +190,23 @@ STEP   docs.floorplan
   ASSUME svg_legend_top                 = 130           px         [policy] floorplan.SVG_LEGEND_TOP — y at which the legend rows start
   ASSUME svg_legend_row                 = 22            px         [policy] floorplan.SVG_LEGEND_ROW — height of one legend row
   ASSUME svg_legend_tail                = 20            px         [policy] floorplan.SVG_LEGEND_TAIL — canvas padding below the last legend row
-  REPLAY floorplan.sizing pass=2 identical=yes lines=78
 STEP   census
   CALC   quantize_engagement[breathe_anchor_grid] = 12            calls      <- klass=re-validated value=round(round(v / 1.27) * 1.27, 4)  ::  count of calls that ran this registered transform
-  CALC   quantize_engagement[est_via_cost] = 70            calls      <- klass=pre-proof value={impedance: 2 legs * 2 layers * (0.6 + 2 * 0.25) + 2 legs *   ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[est_via_cost] = 35            calls      <- klass=pre-proof value={impedance: 2 legs * 2 layers * (0.6 + 2 * 0.25) + 2 legs *   ::  count of calls that ran this registered transform
   CALC   quantize_engagement[evict_corridor_grid] = 6             calls      <- klass=pre-proof value=round(round(round((origin + v) / 1.27) * 1.27, 4) - origin,   ::  count of calls that ran this registered transform
-  CALC   quantize_engagement[fixed_part_grid] = 1028          calls      <- klass=proof-preserving value=round(round(v / 1.27) * 1.27, 4)  ::  count of calls that ran this registered transform
-  CALC   quantize_engagement[legalize_pose_quantum] = 992           calls      <- klass=re-validated value=round(round(v / 0.5) * 0.5, 4)  ::  count of calls that ran this registered transform
-  CALC   quantize_engagement[outline_fine_grid] = 328           calls      <- klass=pre-proof value=round(base - k * 1.0, 1) over a 40.0 mm window  ::  count of calls that ran this registered transform
-  CALC   quantize_engagement[outline_grow_step] = 96            calls      <- klass=pre-proof value=k * 5.0  ::  count of calls that ran this registered transform
-  CALC   quantize_engagement[outline_snap_up] = 196           calls      <- klass=pre-proof value=ceil(v / 5.0) * 5.0  ::  count of calls that ran this registered transform
-  CALC   quantize_engagement[placeholder_zone_half_mm] = 4             calls      <- klass=pre-proof value=round(round(v * 2) / 2, 1)  ::  count of calls that ran this registered transform
-  CALC   quantize_engagement[quant_credit] = 465           calls      <- klass=proof-preserving value=v + 0.05  ::  count of calls that ran this registered transform
-  CALC   quantize_engagement[run_overflow_tol] = 17744         calls      <- klass=proof-preserving value=0.1  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[fixed_part_grid] = 518           calls      <- klass=proof-preserving value=round(round(v / 1.27) * 1.27, 4)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[outline_fine_grid] = 164           calls      <- klass=pre-proof value=round(base - k * 1.0, 1) over a 40.0 mm window  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[outline_grow_step] = 48            calls      <- klass=pre-proof value=k * 5.0  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[outline_snap_up] = 96            calls      <- klass=pre-proof value=ceil(v / 5.0) * 5.0  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[placeholder_zone_half_mm] = 2             calls      <- klass=pre-proof value=round(round(v * 2) / 2, 1)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[quant_credit] = 80            calls      <- klass=proof-preserving value=v + 0.05  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[run_overflow_tol] = 2218          calls      <- klass=proof-preserving value=0.1  ::  count of calls that ran this registered transform
   CALC   quantize_engagement[seat_slide] = 4             calls      <- klass=pre-proof value=1.2  ::  count of calls that ran this registered transform
-  CALC   quantize_engagement[snap_erosion_bound] = 22563         calls      <- klass=proof-preserving value=bound - 0.75 if bound >= 5.0 else bound  ::  count of calls that ran this registered transform
-  CALC   quantize_engagement[som_pose_half_mm] = 8860          calls      <- klass=pre-proof value=round(round(v * 2) / 2, 1)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[snap_erosion_bound] = 38            calls      <- klass=proof-preserving value=bound - 0.75 if bound >= 5.0 else bound  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[som_pose_half_mm] = 4430          calls      <- klass=pre-proof value=round(round(v * 2) / 2, 1)  ::  count of calls that ran this registered transform
   CALC   fallback_engagement[cand_cap_truncated] = 7             firings    <- stage=zone_pack ceiling=7  ::  count of times this registered degraded path bound
   CALC   fallback_engagement[corridor_evict_moved] = 8             firings    <- stage=corridor_eviction ceiling=8  ::  count of times this registered degraded path bound
-  CALC   fallback_engagement[interior_reseat_retry] = 72            firings    <- stage=plan_lattice ceiling=72  ::  count of times this registered degraded path bound
-  CALC   fallback_engagement[legalize_only_compaction] = 2             firings    <- stage=plan_lattice ceiling=2  ::  count of times this registered degraded path bound
-  CALC   fallback_engagement[punch_free_plan_rejected] = 2             firings    <- stage=plan_lattice ceiling=2  ::  count of times this registered degraded path bound
-  CALC   register_silence               = 6             registrations <- quantize_registered=15 quantize_engaged=14 fallback_registered=10 fallback_fired=5  ::  registered - engaged = declared machinery this build never used
+  CALC   fallback_engagement[interior_reseat_retry] = 36            firings    <- stage=plan_lattice ceiling=36  ::  count of times this registered degraded path bound
+  CALC   fallback_engagement[legalize_only_compaction] = 1             firings    <- stage=plan_lattice ceiling=1  ::  count of times this registered degraded path bound
+  CALC   fallback_engagement[punch_free_plan_rejected] = 1             firings    <- stage=plan_lattice ceiling=1  ::  count of times this registered degraded path bound
+  CALC   register_silence               = 7             registrations <- quantize_registered=15 quantize_engaged=13 fallback_registered=10 fallback_fired=5  ::  registered - engaged = declared machinery this build never used

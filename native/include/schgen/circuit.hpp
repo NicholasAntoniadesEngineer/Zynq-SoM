@@ -1,7 +1,10 @@
 #pragma once
 
+#include "schgen/json.hpp"
+
 #include <cstdint>
 #include <cstddef>
+#include <filesystem>
 #include <string>
 #include <utility>
 #include <vector>
@@ -87,6 +90,16 @@ struct CircuitSheetIr {
     std::vector<CircuitLoadIr> loads;
     std::vector<CircuitWaiverIr> waivers;
 };
+
+// Authoritative canonical JSON loader, also used by catalog compilation.
+// Preserves source ordering and validates expanded IR electrical invariants.
+// Read-only: no catalog state, interpreter, or symbol-library dependency.
+// Throws std::runtime_error with the source path on malformed input.
+CircuitSheetIr load_circuit_json(const std::filesystem::path& path);
+
+// Same parser and semantic validation for caller-owned in-memory records.
+// Does not reload a file or consult a catalog; edits in root are authoritative.
+CircuitSheetIr parse_circuit_ir(const JsonNode& root);
 
 bool compile_circuit_catalog(const std::string& circuits_dir,
                              const std::string& catalog_path);

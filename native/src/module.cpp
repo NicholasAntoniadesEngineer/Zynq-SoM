@@ -38,6 +38,10 @@
 #include "schgen/sexpr.hpp"
 #include "schgen/turn.hpp"
 #include "schgen/xdc_bindings.hpp"
+#include "schgen/som_bindings.hpp"
+#include "schgen/project_catalog.hpp"
+#include "schgen/link_bindings.hpp"
+#include "schgen/project_bindings.hpp"
 
 namespace nb = nanobind;
 
@@ -190,6 +194,21 @@ schgen::Sexpr sexpr_from_py(nb::handle handle) {
 NB_MODULE(_geom, m) {
     m.doc() = "schgen native kernels — occupancy, seat, sexpr, catalog";
     schgen::bind_xdc(m);
+    schgen::bind_som_interface(m);
+    schgen::bind_link(m);
+    schgen::bind_project_outputs(m);
+    m.def("discover_project_subsystems", [](const std::string& directory) {
+        std::vector<std::pair<std::string, std::string>> out;
+        for (const auto& sheet : schgen::discover_project_subsystems(directory))
+            out.emplace_back(sheet.name, sheet.circuit_json.string());
+        return out;
+    });
+    m.def("project_circuit_compile", [](const std::string& source, const std::string& output) {
+        schgen::ProjectCatalogPaths paths;
+        paths.subsystems_dir = source;
+        paths.circuit_catalog = output;
+        return schgen::compile_project_circuit_catalog(paths);
+    });
     nb::class_<schgen::FootprintLibrary>(m, "FootprintLibrary")
         .def(nb::init<>())
         .def("pad_names", &schgen::FootprintLibrary::pad_names, nb::rv_policy::copy)

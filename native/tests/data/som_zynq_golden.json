@@ -1,0 +1,34 @@
+{
+ "ball_net": {
+  "": "",
+  "A1": "/Sheet/ZYNQ_PS_MIO1",
+  "B1": "ZYNQ_PL_P",
+  "B2": "ZYNQ_PL_N_FINAL",
+  "N1": "GND",
+  "NC": "unconnected-(J3-Pad10)",
+  "P1": "+VCCO_34"
+ },
+ "jpin_net": {
+  "J1.03": "GND",
+  "J1.1": "/Sheet/ZYNQ_PS_MIO1",
+  "J1.99": "+1V8",
+  "J2.1": "ZYNQ_PL_P",
+  "J2.10": "ZYNQ_PL_N_FINAL",
+  "J2.2": "+VCCO_34",
+  "J3.": "",
+  "J3.01": "special & \"quoted\" \u03a9\nline",
+  "J3.10": "unconnected-(J3-Pad10)",
+  "J3.None": ""
+ },
+ "pin_names": {
+  "A1": "PS_MIO1_500",
+  "B1": "IO_L1P_T0_MRCC_34",
+  "B2": "IO_L1N_T0_SRCC_34",
+  "N1": "GND",
+  "NC": "IO_L2P_35",
+  "P1": "VCCO_34"
+ },
+ "source": "som/Zynq_SoM.kicad_sch",
+ "value": "XC7Z020-CLG484",
+ "zynq_ref": "U2"
+}

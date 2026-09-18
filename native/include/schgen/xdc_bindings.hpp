@@ -3,8 +3,10 @@
 // Integration: include this header in module.cpp and call
 // schgen::bind_xdc(m) inside NB_MODULE. Add src/xdc.cpp to schgen_core.
 #include "schgen/xdc.hpp"
+#include "schgen/vivado.hpp"
 #include <nanobind/nanobind.h>
 #include <nanobind/stl/optional.h>
+#include <nanobind/stl/map.h>
 #include <nanobind/stl/pair.h>
 #include <nanobind/stl/string.h>
 #include <nanobind/stl/tuple.h>
@@ -19,6 +21,18 @@ inline void bind_xdc(nanobind::module_& m) {
         catch (const XdcError& e) { throw nb::value_error(e.what()); }
     });
     m.def("xdc_pin_traits", &xdc_pin_traits);
+    m.def("render_vivado", [](const std::vector<std::tuple<std::string, std::string, std::string>>& pins,
+            const std::string& device, const std::string& ref, const std::string& relative,
+            const std::vector<std::string>& refs, const std::map<std::string, double>& clocks) {
+        XdcOutput xdc;
+        for (const auto& [net, jpin, name] : pins) {
+            XdcPin pin;
+            pin.net = net; pin.jpin = jpin; pin.pin_name = name;
+            xdc.entries.push_back(std::move(pin));
+        }
+        nb::gil_scoped_release release;
+        return render_vivado(xdc, device, ref, relative, refs, clocks);
+    });
     m.def("generate_xdc", [](const nb::dict& raw) {
         XdcInput in;
         in.connectors = nb::cast<decltype(in.connectors)>(raw["connectors"]);

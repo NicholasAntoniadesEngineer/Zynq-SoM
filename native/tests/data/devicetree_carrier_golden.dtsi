@@ -1,0 +1,76 @@
+/*
+ * carrier_pl.dtsi -- Zynq-7000 PS device-tree fragment for the
+ * carrier.  GENERATED -- DO NOT EDIT.
+ *
+ * generated-by: schgen devicetree (schgen/devicetree.py)
+ * regenerate:   PYTHONPATH=. python -m schgen devicetree
+ * PS device:    XC7Z020-CLG484 (from the SoM netlist)
+ * sources:
+ *   contract : carrier/som_interface.json (net <- J pin, same walk as schgen firmware/xdc)
+ *   ball map : som/Zynq_SoM.kicad_sch (kicad-cli; PS = reaches no PL ball)
+ *   renames  : carrier/som_conn_gen FUNCTION_MAP (MIO -> carrier function net)
+ *
+ * This is the PS-side twin of carrier/fpga/Zynq_Carrier_pins.xdc:
+ * the XDC owns every carrier net that reaches a PL ball; THIS
+ * fragment documents the PS-side nets the XDC drops -- the
+ * microSD bus and the bare PS MIO pins routed out on J1.
+ *
+ * The overlay bodies below are COMMENTED templates: the MIO/EMIO
+ * routing is fixed on the SoM, so paste the relevant node(s)
+ * into your board .dts and uncomment.  The pinmux table is the
+ * authoritative carrier-signal <-> MIO-index map.
+ */
+
+/dts-v1/;
+/plugin/;
+
+/* ======================================================================== */
+/* PS pinmux table -- carrier signal <-> Zynq PS MIO index (J1 pins).      */
+/* (the MIO index is parsed from the contract net name; sorted by index)  */
+/* ------------------------------------------------------------------------ */
+/*   MIO  J1 pin   carrier net (function)       note */
+/* MIO0   J1.50    ZYNQ_PS_MIO0                 spare PS MIO (bare to J1) */
+/* MIO7   J1.40    ZYNQ_PS_MIO7/VM0             VMODE boot strap (on-SoM, carrier NC) */
+/* MIO8   J1.36    ZYNQ_PS_MIO8\VM1             VMODE boot strap (on-SoM, carrier NC) */
+/* MIO9   J1.52    ZYNQ_PS_MIO9                 spare PS MIO (bare to J1) */
+/* MIO10  J1.42    ZYNQ_PS_UART0_RXD            renamed from ZYNQ_PS_MIO10 */
+/* MIO11  J1.48    ZYNQ_PS_UART0_TXD            renamed from ZYNQ_PS_MIO11 */
+/* MIO12  J1.46    ZYNQ_PS_MIO12                spare PS MIO (bare to J1) */
+/* ======================================================================== */
+
+/* ---- PS UART0 console -- MIO console group (uart_bridge) ---------- */
+/* The carrier brings PS UART0 out on the SoM console MIO pair, routed   */
+/* to the FT232 USB-UART bridge (carrier uart_bridge sheet).            */
+/*
+ * &uart0 {   // PS UART0 = uart@e0000000 (UG585)
+ *     status = "okay";
+ *     // MIO10 = ZYNQ_PS_UART0_RXD (Zynq RX), MIO11 = ZYNQ_PS_UART0_TXD (Zynq TX)
+ * };
+ */
+
+/* ---- microSD -- PS SD-host controller (sdhci) ------------------------ */
+/* The carrier SDIO_* 4-bit bus runs at 1.8 V straight into the Zynq PS    */
+/* (carrier/PLAN.md round 2).  Card-detect is a PL/EMIO net (bank 13,        */
+/* J2.17) the XDC constrains as a get_ports pin -- noted here for the cd     */
+/* story but routed through the PL, not a PS MIO.                            */
+/* ------------------------------------------------------------------------ */
+/* role   J1 pin   carrier net */
+/* clk    J1.67    SDIO_CLK */
+/* cmd    J1.69    SDIO_CMD */
+/* dat0   J1.65    SDIO_D0 */
+/* dat1   J1.61    SDIO_D1 */
+/* dat2   J1.73    SDIO_D2 */
+/* dat3   J1.71    SDIO_D3 */
+/* cd     J2.17    SD_CARD_DETECT (PL/EMIO -- constrained by the XDC) */
+/*
+ * &sdhci0 {   // PS SDIO0 = sdhci@e0100000 (UG585)
+ *     status = "okay";
+ *     bus-width = <4>;          // SDIO_D0..D3
+ *     // 1.8 V signaling (carrier/PLAN.md round 2)
+ *     no-1-8-v;                 // delete if the SoM level-shifts
+ *     // card-detect: SD_CARD_DETECT is a PL/EMIO net (bank 13, J2.17),
+ *     // so cd is wired through the PL fabric, not a PS MIO --
+ *     // drive it from your EMIO gpio or use broken-cd/non-removable.
+ *     broken-cd;
+ * };
+ */

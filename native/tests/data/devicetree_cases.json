@@ -1,0 +1,2309 @@
+[
+ {
+  "name": "base",
+  "input": {
+   "contract": {
+    "source": "som/Zynq_SoM.kicad_sch",
+    "connectors": {
+     "J1": {
+      "value": "mezz",
+      "footprint": "",
+      "pins": {
+       "10": "SDIO_CLK",
+       "2": "SDIO_CLK",
+       "1": "ZYNQ_PS_MIO10",
+       "3": "SDIO_CMD",
+       "4": "SDIO_D0",
+       "5": "SDIO_D1",
+       "6": "SDIO_D2",
+       "7": "SDIO_D3",
+       "40": "/boot/ZYNQ_PS_MIO8\\VMODE",
+       "11": "ZYNQ_PS_MIO11",
+       "12": "ZYNQ_PS_MIO2",
+       "13": "unconnected-ZYNQ_PS_MIO999",
+       "22": "GND",
+       "23": "IO_PL"
+      }
+     },
+     "J2": {
+      "pins": {
+       "1": "SDIO_CLK"
+      }
+     },
+     "J3": {
+      "pins": {}
+     }
+    }
+   },
+   "live": {
+    "zynq_ref": "U2",
+    "source": "som/Zynq_SoM.kicad_sch",
+    "value": "XC7Z020-CLG484",
+    "pin_names": {
+     "B1": "IO_L1P_35",
+     "A1": "PS_MIO10_500"
+    },
+    "ball_net": {
+     "B1": "IO_PL",
+     "A1": "ZYNQ_PS_MIO10"
+    },
+    "jpin_net": {}
+   },
+   "function_map": {
+    "ZYNQ_PS_MIO10": "ZYNQ_PS_UART0_RXD",
+    "ZYNQ_PS_MIO11": "ZYNQ_PS_UART0_TXD"
+   },
+   "refs": [
+    "J1",
+    "J2",
+    "J3"
+   ],
+   "contract_path": "carrier/som_interface.json",
+   "contract_source": "carrier/som_interface.json",
+   "som_source": "som/Zynq_SoM.kicad_sch",
+   "mapping_source": "carrier/som_mapping.json"
+  },
+  "text": "/*\n * carrier_pl.dtsi -- Zynq-7000 PS device-tree fragment for the\n * carrier.  GENERATED -- DO NOT EDIT.\n *\n * generated-by: schgen devicetree (schgen/devicetree.py)\n * regenerate:   PYTHONPATH=. python -m schgen devicetree\n * PS device:    XC7Z020-CLG484 (from the SoM netlist)\n * sources:\n *   contract : carrier/som_interface.json (net <- J pin, same walk as schgen firmware/xdc)\n *   ball map : som/Zynq_SoM.kicad_sch (kicad-cli; PS = reaches no PL ball)\n *   renames  : carrier/som_conn_gen FUNCTION_MAP (MIO -> carrier function net)\n *\n * This is the PS-side twin of carrier/fpga/Zynq_Carrier_pins.xdc:\n * the XDC owns every carrier net that reaches a PL ball; THIS\n * fragment documents the PS-side nets the XDC drops -- the\n * microSD bus and the bare PS MIO pins routed out on J1.\n *\n * The overlay bodies below are COMMENTED templates: the MIO/EMIO\n * routing is fixed on the SoM, so paste the relevant node(s)\n * into your board .dts and uncomment.  The pinmux table is the\n * authoritative carrier-signal <-> MIO-index map.\n */\n\n/dts-v1/;\n/plugin/;\n\n/* ======================================================================== */\n/* PS pinmux table -- carrier signal <-> Zynq PS MIO index (J1 pins).      */\n/* (the MIO index is parsed from the contract net name; sorted by index)  */\n/* ------------------------------------------------------------------------ */\n/*   MIO  J1 pin   carrier net (function)       note */\n/* MIO2   J1.12    ZYNQ_PS_MIO2                 spare PS MIO (bare to J1) */\n/* MIO8   J1.40    /boot/ZYNQ_PS_MIO8\\VMODE     VMODE boot strap (on-SoM, carrier NC) */\n/* MIO10  J1.1     ZYNQ_PS_UART0_RXD            renamed from ZYNQ_PS_MIO10 */\n/* MIO11  J1.11    ZYNQ_PS_UART0_TXD            renamed from ZYNQ_PS_MIO11 */\n/* ======================================================================== */\n\n/* ---- PS UART0 console -- MIO console group (uart_bridge) ---------- */\n/* The carrier brings PS UART0 out on the SoM console MIO pair, routed   */\n/* to the FT232 USB-UART bridge (carrier uart_bridge sheet).            */\n/*\n * &uart0 {   // PS UART0 = uart@e0000000 (UG585)\n *     status = \"okay\";\n *     // MIO10 = ZYNQ_PS_UART0_RXD (Zynq RX), MIO11 = ZYNQ_PS_UART0_TXD (Zynq TX)\n * };\n */\n\n/* ---- microSD -- PS SD-host controller (sdhci) ------------------------ */\n/* The carrier SDIO_* 4-bit bus runs at 1.8 V straight into the Zynq PS    */\n/* (carrier/PLAN.md round 2).  Card-detect is a PL/EMIO net (bank 13,        */\n/* J2.17) the XDC constrains as a get_ports pin -- noted here for the cd     */\n/* story but routed through the PL, not a PS MIO.                            */\n/* ------------------------------------------------------------------------ */\n/* role   J1 pin   carrier net */\n/* clk    J1.2     SDIO_CLK */\n/* cmd    J1.3     SDIO_CMD */\n/* dat0   J1.4     SDIO_D0 */\n/* dat1   J1.5     SDIO_D1 */\n/* dat2   J1.6     SDIO_D2 */\n/* dat3   J1.7     SDIO_D3 */\n/* cd     J2.17    SD_CARD_DETECT (PL/EMIO -- constrained by the XDC) */\n/*\n * &sdhci0 {   // PS SDIO0 = sdhci@e0100000 (UG585)\n *     status = \"okay\";\n *     bus-width = <4>;          // SDIO_D0..D3\n *     // 1.8 V signaling (carrier/PLAN.md round 2)\n *     no-1-8-v;                 // delete if the SoM level-shifts\n *     // card-detect: SD_CARD_DETECT is a PL/EMIO net (bank 13, J2.17),\n *     // so cd is wired through the PL fabric, not a PS MIO --\n *     // drive it from your EMIO gpio or use broken-cd/non-removable.\n *     broken-cd;\n * };\n */\n"
+ },
+ {
+  "name": "missing SDIO_CLK",
+  "input": {
+   "contract": {
+    "source": "som/Zynq_SoM.kicad_sch",
+    "connectors": {
+     "J1": {
+      "value": "mezz",
+      "footprint": "",
+      "pins": {
+       "1": "ZYNQ_PS_MIO10",
+       "3": "SDIO_CMD",
+       "4": "SDIO_D0",
+       "5": "SDIO_D1",
+       "6": "SDIO_D2",
+       "7": "SDIO_D3",
+       "40": "/boot/ZYNQ_PS_MIO8\\VMODE",
+       "11": "ZYNQ_PS_MIO11",
+       "12": "ZYNQ_PS_MIO2",
+       "13": "unconnected-ZYNQ_PS_MIO999",
+       "22": "GND",
+       "23": "IO_PL"
+      }
+     },
+     "J2": {
+      "pins": {}
+     },
+     "J3": {
+      "pins": {}
+     }
+    }
+   },
+   "live": {
+    "zynq_ref": "U2",
+    "source": "som/Zynq_SoM.kicad_sch",
+    "value": "XC7Z020-CLG484",
+    "pin_names": {
+     "B1": "IO_L1P_35",
+     "A1": "PS_MIO10_500"
+    },
+    "ball_net": {
+     "B1": "IO_PL",
+     "A1": "ZYNQ_PS_MIO10"
+    },
+    "jpin_net": {}
+   },
+   "function_map": {
+    "ZYNQ_PS_MIO10": "ZYNQ_PS_UART0_RXD",
+    "ZYNQ_PS_MIO11": "ZYNQ_PS_UART0_TXD"
+   },
+   "refs": [
+    "J1",
+    "J2",
+    "J3"
+   ],
+   "contract_path": "carrier/som_interface.json",
+   "contract_source": "carrier/som_interface.json",
+   "som_source": "som/Zynq_SoM.kicad_sch",
+   "mapping_source": "carrier/som_mapping.json"
+  },
+  "error": "SDIO line 'SDIO_CLK' absent from the contract — the microSD bus is incomplete (expected all of ['SDIO_CLK', 'SDIO_CMD', 'SDIO_D0', 'SDIO_D1', 'SDIO_D2', 'SDIO_D3'])"
+ },
+ {
+  "name": "PL SDIO_CLK",
+  "input": {
+   "contract": {
+    "source": "som/Zynq_SoM.kicad_sch",
+    "connectors": {
+     "J1": {
+      "value": "mezz",
+      "footprint": "",
+      "pins": {
+       "10": "SDIO_CLK",
+       "2": "SDIO_CLK",
+       "1": "ZYNQ_PS_MIO10",
+       "3": "SDIO_CMD",
+       "4": "SDIO_D0",
+       "5": "SDIO_D1",
+       "6": "SDIO_D2",
+       "7": "SDIO_D3",
+       "40": "/boot/ZYNQ_PS_MIO8\\VMODE",
+       "11": "ZYNQ_PS_MIO11",
+       "12": "ZYNQ_PS_MIO2",
+       "13": "unconnected-ZYNQ_PS_MIO999",
+       "22": "GND",
+       "23": "IO_PL"
+      }
+     },
+     "J2": {
+      "pins": {
+       "1": "SDIO_CLK"
+      }
+     },
+     "J3": {
+      "pins": {}
+     }
+    }
+   },
+   "live": {
+    "zynq_ref": "U2",
+    "source": "som/Zynq_SoM.kicad_sch",
+    "value": "XC7Z020-CLG484",
+    "pin_names": {
+     "B1": "IO_L1P_35",
+     "A1": "PS_MIO10_500"
+    },
+    "ball_net": {
+     "B1": "SDIO_CLK",
+     "A1": "ZYNQ_PS_MIO10"
+    },
+    "jpin_net": {}
+   },
+   "function_map": {
+    "ZYNQ_PS_MIO10": "ZYNQ_PS_UART0_RXD",
+    "ZYNQ_PS_MIO11": "ZYNQ_PS_UART0_TXD"
+   },
+   "refs": [
+    "J1",
+    "J2",
+    "J3"
+   ],
+   "contract_path": "carrier/som_interface.json",
+   "contract_source": "carrier/som_interface.json",
+   "som_source": "som/Zynq_SoM.kicad_sch",
+   "mapping_source": "carrier/som_mapping.json"
+  },
+  "error": "SDIO line 'SDIO_CLK' reaches a PL ball — it is not a PS net; the XDC, not this fragment, owns it"
+ },
+ {
+  "name": "missing SDIO_CMD",
+  "input": {
+   "contract": {
+    "source": "som/Zynq_SoM.kicad_sch",
+    "connectors": {
+     "J1": {
+      "value": "mezz",
+      "footprint": "",
+      "pins": {
+       "10": "SDIO_CLK",
+       "2": "SDIO_CLK",
+       "1": "ZYNQ_PS_MIO10",
+       "4": "SDIO_D0",
+       "5": "SDIO_D1",
+       "6": "SDIO_D2",
+       "7": "SDIO_D3",
+       "40": "/boot/ZYNQ_PS_MIO8\\VMODE",
+       "11": "ZYNQ_PS_MIO11",
+       "12": "ZYNQ_PS_MIO2",
+       "13": "unconnected-ZYNQ_PS_MIO999",
+       "22": "GND",
+       "23": "IO_PL"
+      }
+     },
+     "J2": {
+      "pins": {
+       "1": "SDIO_CLK"
+      }
+     },
+     "J3": {
+      "pins": {}
+     }
+    }
+   },
+   "live": {
+    "zynq_ref": "U2",
+    "source": "som/Zynq_SoM.kicad_sch",
+    "value": "XC7Z020-CLG484",
+    "pin_names": {
+     "B1": "IO_L1P_35",
+     "A1": "PS_MIO10_500"
+    },
+    "ball_net": {
+     "B1": "IO_PL",
+     "A1": "ZYNQ_PS_MIO10"
+    },
+    "jpin_net": {}
+   },
+   "function_map": {
+    "ZYNQ_PS_MIO10": "ZYNQ_PS_UART0_RXD",
+    "ZYNQ_PS_MIO11": "ZYNQ_PS_UART0_TXD"
+   },
+   "refs": [
+    "J1",
+    "J2",
+    "J3"
+   ],
+   "contract_path": "carrier/som_interface.json",
+   "contract_source": "carrier/som_interface.json",
+   "som_source": "som/Zynq_SoM.kicad_sch",
+   "mapping_source": "carrier/som_mapping.json"
+  },
+  "error": "SDIO line 'SDIO_CMD' absent from the contract — the microSD bus is incomplete (expected all of ['SDIO_CLK', 'SDIO_CMD', 'SDIO_D0', 'SDIO_D1', 'SDIO_D2', 'SDIO_D3'])"
+ },
+ {
+  "name": "PL SDIO_CMD",
+  "input": {
+   "contract": {
+    "source": "som/Zynq_SoM.kicad_sch",
+    "connectors": {
+     "J1": {
+      "value": "mezz",
+      "footprint": "",
+      "pins": {
+       "10": "SDIO_CLK",
+       "2": "SDIO_CLK",
+       "1": "ZYNQ_PS_MIO10",
+       "3": "SDIO_CMD",
+       "4": "SDIO_D0",
+       "5": "SDIO_D1",
+       "6": "SDIO_D2",
+       "7": "SDIO_D3",
+       "40": "/boot/ZYNQ_PS_MIO8\\VMODE",
+       "11": "ZYNQ_PS_MIO11",
+       "12": "ZYNQ_PS_MIO2",
+       "13": "unconnected-ZYNQ_PS_MIO999",
+       "22": "GND",
+       "23": "IO_PL"
+      }
+     },
+     "J2": {
+      "pins": {
+       "1": "SDIO_CLK"
+      }
+     },
+     "J3": {
+      "pins": {}
+     }
+    }
+   },
+   "live": {
+    "zynq_ref": "U2",
+    "source": "som/Zynq_SoM.kicad_sch",
+    "value": "XC7Z020-CLG484",
+    "pin_names": {
+     "B1": "IO_L1P_35",
+     "A1": "PS_MIO10_500"
+    },
+    "ball_net": {
+     "B1": "SDIO_CMD",
+     "A1": "ZYNQ_PS_MIO10"
+    },
+    "jpin_net": {}
+   },
+   "function_map": {
+    "ZYNQ_PS_MIO10": "ZYNQ_PS_UART0_RXD",
+    "ZYNQ_PS_MIO11": "ZYNQ_PS_UART0_TXD"
+   },
+   "refs": [
+    "J1",
+    "J2",
+    "J3"
+   ],
+   "contract_path": "carrier/som_interface.json",
+   "contract_source": "carrier/som_interface.json",
+   "som_source": "som/Zynq_SoM.kicad_sch",
+   "mapping_source": "carrier/som_mapping.json"
+  },
+  "error": "SDIO line 'SDIO_CMD' reaches a PL ball — it is not a PS net; the XDC, not this fragment, owns it"
+ },
+ {
+  "name": "missing SDIO_D0",
+  "input": {
+   "contract": {
+    "source": "som/Zynq_SoM.kicad_sch",
+    "connectors": {
+     "J1": {
+      "value": "mezz",
+      "footprint": "",
+      "pins": {
+       "10": "SDIO_CLK",
+       "2": "SDIO_CLK",
+       "1": "ZYNQ_PS_MIO10",
+       "3": "SDIO_CMD",
+       "5": "SDIO_D1",
+       "6": "SDIO_D2",
+       "7": "SDIO_D3",
+       "40": "/boot/ZYNQ_PS_MIO8\\VMODE",
+       "11": "ZYNQ_PS_MIO11",
+       "12": "ZYNQ_PS_MIO2",
+       "13": "unconnected-ZYNQ_PS_MIO999",
+       "22": "GND",
+       "23": "IO_PL"
+      }
+     },
+     "J2": {
+      "pins": {
+       "1": "SDIO_CLK"
+      }
+     },
+     "J3": {
+      "pins": {}
+     }
+    }
+   },
+   "live": {
+    "zynq_ref": "U2",
+    "source": "som/Zynq_SoM.kicad_sch",
+    "value": "XC7Z020-CLG484",
+    "pin_names": {
+     "B1": "IO_L1P_35",
+     "A1": "PS_MIO10_500"
+    },
+    "ball_net": {
+     "B1": "IO_PL",
+     "A1": "ZYNQ_PS_MIO10"
+    },
+    "jpin_net": {}
+   },
+   "function_map": {
+    "ZYNQ_PS_MIO10": "ZYNQ_PS_UART0_RXD",
+    "ZYNQ_PS_MIO11": "ZYNQ_PS_UART0_TXD"
+   },
+   "refs": [
+    "J1",
+    "J2",
+    "J3"
+   ],
+   "contract_path": "carrier/som_interface.json",
+   "contract_source": "carrier/som_interface.json",
+   "som_source": "som/Zynq_SoM.kicad_sch",
+   "mapping_source": "carrier/som_mapping.json"
+  },
+  "error": "SDIO line 'SDIO_D0' absent from the contract — the microSD bus is incomplete (expected all of ['SDIO_CLK', 'SDIO_CMD', 'SDIO_D0', 'SDIO_D1', 'SDIO_D2', 'SDIO_D3'])"
+ },
+ {
+  "name": "PL SDIO_D0",
+  "input": {
+   "contract": {
+    "source": "som/Zynq_SoM.kicad_sch",
+    "connectors": {
+     "J1": {
+      "value": "mezz",
+      "footprint": "",
+      "pins": {
+       "10": "SDIO_CLK",
+       "2": "SDIO_CLK",
+       "1": "ZYNQ_PS_MIO10",
+       "3": "SDIO_CMD",
+       "4": "SDIO_D0",
+       "5": "SDIO_D1",
+       "6": "SDIO_D2",
+       "7": "SDIO_D3",
+       "40": "/boot/ZYNQ_PS_MIO8\\VMODE",
+       "11": "ZYNQ_PS_MIO11",
+       "12": "ZYNQ_PS_MIO2",
+       "13": "unconnected-ZYNQ_PS_MIO999",
+       "22": "GND",
+       "23": "IO_PL"
+      }
+     },
+     "J2": {
+      "pins": {
+       "1": "SDIO_CLK"
+      }
+     },
+     "J3": {
+      "pins": {}
+     }
+    }
+   },
+   "live": {
+    "zynq_ref": "U2",
+    "source": "som/Zynq_SoM.kicad_sch",
+    "value": "XC7Z020-CLG484",
+    "pin_names": {
+     "B1": "IO_L1P_35",
+     "A1": "PS_MIO10_500"
+    },
+    "ball_net": {
+     "B1": "SDIO_D0",
+     "A1": "ZYNQ_PS_MIO10"
+    },
+    "jpin_net": {}
+   },
+   "function_map": {
+    "ZYNQ_PS_MIO10": "ZYNQ_PS_UART0_RXD",
+    "ZYNQ_PS_MIO11": "ZYNQ_PS_UART0_TXD"
+   },
+   "refs": [
+    "J1",
+    "J2",
+    "J3"
+   ],
+   "contract_path": "carrier/som_interface.json",
+   "contract_source": "carrier/som_interface.json",
+   "som_source": "som/Zynq_SoM.kicad_sch",
+   "mapping_source": "carrier/som_mapping.json"
+  },
+  "error": "SDIO line 'SDIO_D0' reaches a PL ball — it is not a PS net; the XDC, not this fragment, owns it"
+ },
+ {
+  "name": "missing SDIO_D1",
+  "input": {
+   "contract": {
+    "source": "som/Zynq_SoM.kicad_sch",
+    "connectors": {
+     "J1": {
+      "value": "mezz",
+      "footprint": "",
+      "pins": {
+       "10": "SDIO_CLK",
+       "2": "SDIO_CLK",
+       "1": "ZYNQ_PS_MIO10",
+       "3": "SDIO_CMD",
+       "4": "SDIO_D0",
+       "6": "SDIO_D2",
+       "7": "SDIO_D3",
+       "40": "/boot/ZYNQ_PS_MIO8\\VMODE",
+       "11": "ZYNQ_PS_MIO11",
+       "12": "ZYNQ_PS_MIO2",
+       "13": "unconnected-ZYNQ_PS_MIO999",
+       "22": "GND",
+       "23": "IO_PL"
+      }
+     },
+     "J2": {
+      "pins": {
+       "1": "SDIO_CLK"
+      }
+     },
+     "J3": {
+      "pins": {}
+     }
+    }
+   },
+   "live": {
+    "zynq_ref": "U2",
+    "source": "som/Zynq_SoM.kicad_sch",
+    "value": "XC7Z020-CLG484",
+    "pin_names": {
+     "B1": "IO_L1P_35",
+     "A1": "PS_MIO10_500"
+    },
+    "ball_net": {
+     "B1": "IO_PL",
+     "A1": "ZYNQ_PS_MIO10"
+    },
+    "jpin_net": {}
+   },
+   "function_map": {
+    "ZYNQ_PS_MIO10": "ZYNQ_PS_UART0_RXD",
+    "ZYNQ_PS_MIO11": "ZYNQ_PS_UART0_TXD"
+   },
+   "refs": [
+    "J1",
+    "J2",
+    "J3"
+   ],
+   "contract_path": "carrier/som_interface.json",
+   "contract_source": "carrier/som_interface.json",
+   "som_source": "som/Zynq_SoM.kicad_sch",
+   "mapping_source": "carrier/som_mapping.json"
+  },
+  "error": "SDIO line 'SDIO_D1' absent from the contract — the microSD bus is incomplete (expected all of ['SDIO_CLK', 'SDIO_CMD', 'SDIO_D0', 'SDIO_D1', 'SDIO_D2', 'SDIO_D3'])"
+ },
+ {
+  "name": "PL SDIO_D1",
+  "input": {
+   "contract": {
+    "source": "som/Zynq_SoM.kicad_sch",
+    "connectors": {
+     "J1": {
+      "value": "mezz",
+      "footprint": "",
+      "pins": {
+       "10": "SDIO_CLK",
+       "2": "SDIO_CLK",
+       "1": "ZYNQ_PS_MIO10",
+       "3": "SDIO_CMD",
+       "4": "SDIO_D0",
+       "5": "SDIO_D1",
+       "6": "SDIO_D2",
+       "7": "SDIO_D3",
+       "40": "/boot/ZYNQ_PS_MIO8\\VMODE",
+       "11": "ZYNQ_PS_MIO11",
+       "12": "ZYNQ_PS_MIO2",
+       "13": "unconnected-ZYNQ_PS_MIO999",
+       "22": "GND",
+       "23": "IO_PL"
+      }
+     },
+     "J2": {
+      "pins": {
+       "1": "SDIO_CLK"
+      }
+     },
+     "J3": {
+      "pins": {}
+     }
+    }
+   },
+   "live": {
+    "zynq_ref": "U2",
+    "source": "som/Zynq_SoM.kicad_sch",
+    "value": "XC7Z020-CLG484",
+    "pin_names": {
+     "B1": "IO_L1P_35",
+     "A1": "PS_MIO10_500"
+    },
+    "ball_net": {
+     "B1": "SDIO_D1",
+     "A1": "ZYNQ_PS_MIO10"
+    },
+    "jpin_net": {}
+   },
+   "function_map": {
+    "ZYNQ_PS_MIO10": "ZYNQ_PS_UART0_RXD",
+    "ZYNQ_PS_MIO11": "ZYNQ_PS_UART0_TXD"
+   },
+   "refs": [
+    "J1",
+    "J2",
+    "J3"
+   ],
+   "contract_path": "carrier/som_interface.json",
+   "contract_source": "carrier/som_interface.json",
+   "som_source": "som/Zynq_SoM.kicad_sch",
+   "mapping_source": "carrier/som_mapping.json"
+  },
+  "error": "SDIO line 'SDIO_D1' reaches a PL ball — it is not a PS net; the XDC, not this fragment, owns it"
+ },
+ {
+  "name": "missing SDIO_D2",
+  "input": {
+   "contract": {
+    "source": "som/Zynq_SoM.kicad_sch",
+    "connectors": {
+     "J1": {
+      "value": "mezz",
+      "footprint": "",
+      "pins": {
+       "10": "SDIO_CLK",
+       "2": "SDIO_CLK",
+       "1": "ZYNQ_PS_MIO10",
+       "3": "SDIO_CMD",
+       "4": "SDIO_D0",
+       "5": "SDIO_D1",
+       "7": "SDIO_D3",
+       "40": "/boot/ZYNQ_PS_MIO8\\VMODE",
+       "11": "ZYNQ_PS_MIO11",
+       "12": "ZYNQ_PS_MIO2",
+       "13": "unconnected-ZYNQ_PS_MIO999",
+       "22": "GND",
+       "23": "IO_PL"
+      }
+     },
+     "J2": {
+      "pins": {
+       "1": "SDIO_CLK"
+      }
+     },
+     "J3": {
+      "pins": {}
+     }
+    }
+   },
+   "live": {
+    "zynq_ref": "U2",
+    "source": "som/Zynq_SoM.kicad_sch",
+    "value": "XC7Z020-CLG484",
+    "pin_names": {
+     "B1": "IO_L1P_35",
+     "A1": "PS_MIO10_500"
+    },
+    "ball_net": {
+     "B1": "IO_PL",
+     "A1": "ZYNQ_PS_MIO10"
+    },
+    "jpin_net": {}
+   },
+   "function_map": {
+    "ZYNQ_PS_MIO10": "ZYNQ_PS_UART0_RXD",
+    "ZYNQ_PS_MIO11": "ZYNQ_PS_UART0_TXD"
+   },
+   "refs": [
+    "J1",
+    "J2",
+    "J3"
+   ],
+   "contract_path": "carrier/som_interface.json",
+   "contract_source": "carrier/som_interface.json",
+   "som_source": "som/Zynq_SoM.kicad_sch",
+   "mapping_source": "carrier/som_mapping.json"
+  },
+  "error": "SDIO line 'SDIO_D2' absent from the contract — the microSD bus is incomplete (expected all of ['SDIO_CLK', 'SDIO_CMD', 'SDIO_D0', 'SDIO_D1', 'SDIO_D2', 'SDIO_D3'])"
+ },
+ {
+  "name": "PL SDIO_D2",
+  "input": {
+   "contract": {
+    "source": "som/Zynq_SoM.kicad_sch",
+    "connectors": {
+     "J1": {
+      "value": "mezz",
+      "footprint": "",
+      "pins": {
+       "10": "SDIO_CLK",
+       "2": "SDIO_CLK",
+       "1": "ZYNQ_PS_MIO10",
+       "3": "SDIO_CMD",
+       "4": "SDIO_D0",
+       "5": "SDIO_D1",
+       "6": "SDIO_D2",
+       "7": "SDIO_D3",
+       "40": "/boot/ZYNQ_PS_MIO8\\VMODE",
+       "11": "ZYNQ_PS_MIO11",
+       "12": "ZYNQ_PS_MIO2",
+       "13": "unconnected-ZYNQ_PS_MIO999",
+       "22": "GND",
+       "23": "IO_PL"
+      }
+     },
+     "J2": {
+      "pins": {
+       "1": "SDIO_CLK"
+      }
+     },
+     "J3": {
+      "pins": {}
+     }
+    }
+   },
+   "live": {
+    "zynq_ref": "U2",
+    "source": "som/Zynq_SoM.kicad_sch",
+    "value": "XC7Z020-CLG484",
+    "pin_names": {
+     "B1": "IO_L1P_35",
+     "A1": "PS_MIO10_500"
+    },
+    "ball_net": {
+     "B1": "SDIO_D2",
+     "A1": "ZYNQ_PS_MIO10"
+    },
+    "jpin_net": {}
+   },
+   "function_map": {
+    "ZYNQ_PS_MIO10": "ZYNQ_PS_UART0_RXD",
+    "ZYNQ_PS_MIO11": "ZYNQ_PS_UART0_TXD"
+   },
+   "refs": [
+    "J1",
+    "J2",
+    "J3"
+   ],
+   "contract_path": "carrier/som_interface.json",
+   "contract_source": "carrier/som_interface.json",
+   "som_source": "som/Zynq_SoM.kicad_sch",
+   "mapping_source": "carrier/som_mapping.json"
+  },
+  "error": "SDIO line 'SDIO_D2' reaches a PL ball — it is not a PS net; the XDC, not this fragment, owns it"
+ },
+ {
+  "name": "missing SDIO_D3",
+  "input": {
+   "contract": {
+    "source": "som/Zynq_SoM.kicad_sch",
+    "connectors": {
+     "J1": {
+      "value": "mezz",
+      "footprint": "",
+      "pins": {
+       "10": "SDIO_CLK",
+       "2": "SDIO_CLK",
+       "1": "ZYNQ_PS_MIO10",
+       "3": "SDIO_CMD",
+       "4": "SDIO_D0",
+       "5": "SDIO_D1",
+       "6": "SDIO_D2",
+       "40": "/boot/ZYNQ_PS_MIO8\\VMODE",
+       "11": "ZYNQ_PS_MIO11",
+       "12": "ZYNQ_PS_MIO2",
+       "13": "unconnected-ZYNQ_PS_MIO999",
+       "22": "GND",
+       "23": "IO_PL"
+      }
+     },
+     "J2": {
+      "pins": {
+       "1": "SDIO_CLK"
+      }
+     },
+     "J3": {
+      "pins": {}
+     }
+    }
+   },
+   "live": {
+    "zynq_ref": "U2",
+    "source": "som/Zynq_SoM.kicad_sch",
+    "value": "XC7Z020-CLG484",
+    "pin_names": {
+     "B1": "IO_L1P_35",
+     "A1": "PS_MIO10_500"
+    },
+    "ball_net": {
+     "B1": "IO_PL",
+     "A1": "ZYNQ_PS_MIO10"
+    },
+    "jpin_net": {}
+   },
+   "function_map": {
+    "ZYNQ_PS_MIO10": "ZYNQ_PS_UART0_RXD",
+    "ZYNQ_PS_MIO11": "ZYNQ_PS_UART0_TXD"
+   },
+   "refs": [
+    "J1",
+    "J2",
+    "J3"
+   ],
+   "contract_path": "carrier/som_interface.json",
+   "contract_source": "carrier/som_interface.json",
+   "som_source": "som/Zynq_SoM.kicad_sch",
+   "mapping_source": "carrier/som_mapping.json"
+  },
+  "error": "SDIO line 'SDIO_D3' absent from the contract — the microSD bus is incomplete (expected all of ['SDIO_CLK', 'SDIO_CMD', 'SDIO_D0', 'SDIO_D1', 'SDIO_D2', 'SDIO_D3'])"
+ },
+ {
+  "name": "PL SDIO_D3",
+  "input": {
+   "contract": {
+    "source": "som/Zynq_SoM.kicad_sch",
+    "connectors": {
+     "J1": {
+      "value": "mezz",
+      "footprint": "",
+      "pins": {
+       "10": "SDIO_CLK",
+       "2": "SDIO_CLK",
+       "1": "ZYNQ_PS_MIO10",
+       "3": "SDIO_CMD",
+       "4": "SDIO_D0",
+       "5": "SDIO_D1",
+       "6": "SDIO_D2",
+       "7": "SDIO_D3",
+       "40": "/boot/ZYNQ_PS_MIO8\\VMODE",
+       "11": "ZYNQ_PS_MIO11",
+       "12": "ZYNQ_PS_MIO2",
+       "13": "unconnected-ZYNQ_PS_MIO999",
+       "22": "GND",
+       "23": "IO_PL"
+      }
+     },
+     "J2": {
+      "pins": {
+       "1": "SDIO_CLK"
+      }
+     },
+     "J3": {
+      "pins": {}
+     }
+    }
+   },
+   "live": {
+    "zynq_ref": "U2",
+    "source": "som/Zynq_SoM.kicad_sch",
+    "value": "XC7Z020-CLG484",
+    "pin_names": {
+     "B1": "IO_L1P_35",
+     "A1": "PS_MIO10_500"
+    },
+    "ball_net": {
+     "B1": "SDIO_D3",
+     "A1": "ZYNQ_PS_MIO10"
+    },
+    "jpin_net": {}
+   },
+   "function_map": {
+    "ZYNQ_PS_MIO10": "ZYNQ_PS_UART0_RXD",
+    "ZYNQ_PS_MIO11": "ZYNQ_PS_UART0_TXD"
+   },
+   "refs": [
+    "J1",
+    "J2",
+    "J3"
+   ],
+   "contract_path": "carrier/som_interface.json",
+   "contract_source": "carrier/som_interface.json",
+   "som_source": "som/Zynq_SoM.kicad_sch",
+   "mapping_source": "carrier/som_mapping.json"
+  },
+  "error": "SDIO line 'SDIO_D3' reaches a PL ball — it is not a PS net; the XDC, not this fragment, owns it"
+ },
+ {
+  "name": "missing ref",
+  "input": {
+   "contract": {
+    "source": "som/Zynq_SoM.kicad_sch",
+    "connectors": {
+     "J1": {
+      "value": "mezz",
+      "footprint": "",
+      "pins": {
+       "10": "SDIO_CLK",
+       "2": "SDIO_CLK",
+       "1": "ZYNQ_PS_MIO10",
+       "3": "SDIO_CMD",
+       "4": "SDIO_D0",
+       "5": "SDIO_D1",
+       "6": "SDIO_D2",
+       "7": "SDIO_D3",
+       "40": "/boot/ZYNQ_PS_MIO8\\VMODE",
+       "11": "ZYNQ_PS_MIO11",
+       "12": "ZYNQ_PS_MIO2",
+       "13": "unconnected-ZYNQ_PS_MIO999",
+       "22": "GND",
+       "23": "IO_PL"
+      }
+     },
+     "J2": {
+      "pins": {
+       "1": "SDIO_CLK"
+      }
+     },
+     "J3": {
+      "pins": {}
+     }
+    }
+   },
+   "live": {
+    "zynq_ref": "U2",
+    "source": "som/Zynq_SoM.kicad_sch",
+    "value": "XC7Z020-CLG484",
+    "pin_names": {
+     "B1": "IO_L1P_35",
+     "A1": "PS_MIO10_500"
+    },
+    "ball_net": {
+     "B1": "IO_PL",
+     "A1": "ZYNQ_PS_MIO10"
+    },
+    "jpin_net": {}
+   },
+   "function_map": {
+    "ZYNQ_PS_MIO10": "ZYNQ_PS_UART0_RXD",
+    "ZYNQ_PS_MIO11": "ZYNQ_PS_UART0_TXD"
+   },
+   "refs": [
+    "J9"
+   ],
+   "contract_path": "carrier/som_interface.json",
+   "contract_source": "carrier/som_interface.json",
+   "som_source": "som/Zynq_SoM.kicad_sch",
+   "mapping_source": "carrier/som_mapping.json"
+  },
+  "error": "J9 missing from carrier/som_interface.json"
+ },
+ {
+  "name": "empty refs",
+  "input": {
+   "contract": {
+    "source": "som/Zynq_SoM.kicad_sch",
+    "connectors": {
+     "J1": {
+      "value": "mezz",
+      "footprint": "",
+      "pins": {
+       "10": "SDIO_CLK",
+       "2": "SDIO_CLK",
+       "1": "ZYNQ_PS_MIO10",
+       "3": "SDIO_CMD",
+       "4": "SDIO_D0",
+       "5": "SDIO_D1",
+       "6": "SDIO_D2",
+       "7": "SDIO_D3",
+       "40": "/boot/ZYNQ_PS_MIO8\\VMODE",
+       "11": "ZYNQ_PS_MIO11",
+       "12": "ZYNQ_PS_MIO2",
+       "13": "unconnected-ZYNQ_PS_MIO999",
+       "22": "GND",
+       "23": "IO_PL"
+      }
+     },
+     "J2": {
+      "pins": {
+       "1": "SDIO_CLK"
+      }
+     },
+     "J3": {
+      "pins": {}
+     }
+    }
+   },
+   "live": {
+    "zynq_ref": "U2",
+    "source": "som/Zynq_SoM.kicad_sch",
+    "value": "XC7Z020-CLG484",
+    "pin_names": {
+     "B1": "IO_L1P_35",
+     "A1": "PS_MIO10_500"
+    },
+    "ball_net": {
+     "B1": "IO_PL",
+     "A1": "ZYNQ_PS_MIO10"
+    },
+    "jpin_net": {}
+   },
+   "function_map": {
+    "ZYNQ_PS_MIO10": "ZYNQ_PS_UART0_RXD",
+    "ZYNQ_PS_MIO11": "ZYNQ_PS_UART0_TXD"
+   },
+   "refs": [],
+   "contract_path": "carrier/som_interface.json",
+   "contract_source": "carrier/som_interface.json",
+   "som_source": "som/Zynq_SoM.kicad_sch",
+   "mapping_source": "carrier/som_mapping.json"
+  },
+  "error": "SDIO line 'SDIO_CLK' absent from the contract — the microSD bus is incomplete (expected all of ['SDIO_CLK', 'SDIO_CMD', 'SDIO_D0', 'SDIO_D1', 'SDIO_D2', 'SDIO_D3'])"
+ },
+ {
+  "name": "MIO on PL",
+  "input": {
+   "contract": {
+    "source": "som/Zynq_SoM.kicad_sch",
+    "connectors": {
+     "J1": {
+      "value": "mezz",
+      "footprint": "",
+      "pins": {
+       "10": "SDIO_CLK",
+       "2": "SDIO_CLK",
+       "1": "ZYNQ_PS_MIO10",
+       "3": "SDIO_CMD",
+       "4": "SDIO_D0",
+       "5": "SDIO_D1",
+       "6": "SDIO_D2",
+       "7": "SDIO_D3",
+       "40": "/boot/ZYNQ_PS_MIO8\\VMODE",
+       "11": "ZYNQ_PS_MIO11",
+       "12": "ZYNQ_PS_MIO2",
+       "13": "unconnected-ZYNQ_PS_MIO999",
+       "22": "GND",
+       "23": "IO_PL"
+      }
+     },
+     "J2": {
+      "pins": {
+       "1": "SDIO_CLK"
+      }
+     },
+     "J3": {
+      "pins": {}
+     }
+    }
+   },
+   "live": {
+    "zynq_ref": "U2",
+    "source": "som/Zynq_SoM.kicad_sch",
+    "value": "XC7Z020-CLG484",
+    "pin_names": {
+     "B1": "IO_L1P_35",
+     "A1": "PS_MIO10_500"
+    },
+    "ball_net": {
+     "B1": "ZYNQ_PS_MIO10",
+     "A1": "ZYNQ_PS_MIO10"
+    },
+    "jpin_net": {}
+   },
+   "function_map": {
+    "ZYNQ_PS_MIO10": "ZYNQ_PS_UART0_RXD",
+    "ZYNQ_PS_MIO11": "ZYNQ_PS_UART0_TXD"
+   },
+   "refs": [
+    "J1",
+    "J2",
+    "J3"
+   ],
+   "contract_path": "carrier/som_interface.json",
+   "contract_source": "carrier/som_interface.json",
+   "som_source": "som/Zynq_SoM.kicad_sch",
+   "mapping_source": "carrier/som_mapping.json"
+  },
+  "error": "'ZYNQ_PS_MIO10' carries a PS MIO index but reaches a PL ball — contract/SoM disagree on PS vs PL"
+ },
+ {
+  "name": "no MIO",
+  "input": {
+   "contract": {
+    "source": "som/Zynq_SoM.kicad_sch",
+    "connectors": {
+     "J1": {
+      "value": "mezz",
+      "footprint": "",
+      "pins": {
+       "10": "SDIO_CLK",
+       "2": "SDIO_CLK",
+       "1": "SPARE10",
+       "3": "SDIO_CMD",
+       "4": "SDIO_D0",
+       "5": "SDIO_D1",
+       "6": "SDIO_D2",
+       "7": "SDIO_D3",
+       "40": "/boot/SPARE8\\VMODE",
+       "11": "SPARE11",
+       "12": "SPARE2",
+       "13": "unconnected-SPARE999",
+       "22": "GND",
+       "23": "IO_PL"
+      }
+     },
+     "J2": {
+      "pins": {
+       "1": "SDIO_CLK"
+      }
+     },
+     "J3": {
+      "pins": {}
+     }
+    }
+   },
+   "live": {
+    "zynq_ref": "U2",
+    "source": "som/Zynq_SoM.kicad_sch",
+    "value": "XC7Z020-CLG484",
+    "pin_names": {
+     "B1": "IO_L1P_35",
+     "A1": "PS_MIO10_500"
+    },
+    "ball_net": {
+     "B1": "IO_PL",
+     "A1": "ZYNQ_PS_MIO10"
+    },
+    "jpin_net": {}
+   },
+   "function_map": {
+    "ZYNQ_PS_MIO10": "ZYNQ_PS_UART0_RXD",
+    "ZYNQ_PS_MIO11": "ZYNQ_PS_UART0_TXD"
+   },
+   "refs": [
+    "J1",
+    "J2",
+    "J3"
+   ],
+   "contract_path": "carrier/som_interface.json",
+   "contract_source": "carrier/som_interface.json",
+   "som_source": "som/Zynq_SoM.kicad_sch",
+   "mapping_source": "carrier/som_mapping.json"
+  },
+  "error": "no ZYNQ_PS_MIO* net in the contract — the PS pinmux walk found nothing; the contract is stale or PS pins were renamed"
+ },
+ {
+  "name": "duplicate index",
+  "input": {
+   "contract": {
+    "source": "som/Zynq_SoM.kicad_sch",
+    "connectors": {
+     "J1": {
+      "value": "mezz",
+      "footprint": "",
+      "pins": {
+       "10": "SDIO_CLK",
+       "2": "SDIO_CLK",
+       "1": "ZYNQ_PS_MIO10",
+       "3": "SDIO_CMD",
+       "4": "SDIO_D0",
+       "5": "SDIO_D1",
+       "6": "SDIO_D2",
+       "7": "SDIO_D3",
+       "40": "/boot/ZYNQ_PS_MIO8\\VMODE",
+       "11": "ZYNQ_PS_MIO11",
+       "12": "ZYNQ_PS_MIO2",
+       "13": "unconnected-ZYNQ_PS_MIO999",
+       "22": "GND",
+       "23": "IO_PL"
+      }
+     },
+     "J2": {
+      "pins": {
+       "1": "SDIO_CLK",
+       "42": "/alias/ZYNQ_PS_MIO010"
+      }
+     },
+     "J3": {
+      "pins": {}
+     }
+    }
+   },
+   "live": {
+    "zynq_ref": "U2",
+    "source": "som/Zynq_SoM.kicad_sch",
+    "value": "XC7Z020-CLG484",
+    "pin_names": {
+     "B1": "IO_L1P_35",
+     "A1": "PS_MIO10_500"
+    },
+    "ball_net": {
+     "B1": "IO_PL",
+     "A1": "ZYNQ_PS_MIO10"
+    },
+    "jpin_net": {}
+   },
+   "function_map": {
+    "ZYNQ_PS_MIO10": "ZYNQ_PS_UART0_RXD",
+    "ZYNQ_PS_MIO11": "ZYNQ_PS_UART0_TXD"
+   },
+   "refs": [
+    "J1",
+    "J2",
+    "J3"
+   ],
+   "contract_path": "carrier/som_interface.json",
+   "contract_source": "carrier/som_interface.json",
+   "som_source": "som/Zynq_SoM.kicad_sch",
+   "mapping_source": "carrier/som_mapping.json"
+  },
+  "error": "MIO10 claimed twice: '/alias/ZYNQ_PS_MIO010' and 'ZYNQ_PS_MIO10'"
+ },
+ {
+  "name": "bad unused pin",
+  "input": {
+   "contract": {
+    "source": "som/Zynq_SoM.kicad_sch",
+    "connectors": {
+     "J1": {
+      "value": "mezz",
+      "footprint": "",
+      "pins": {
+       "10": "SDIO_CLK",
+       "2": "SDIO_CLK",
+       "1": "ZYNQ_PS_MIO10",
+       "3": "SDIO_CMD",
+       "4": "SDIO_D0",
+       "5": "SDIO_D1",
+       "6": "SDIO_D2",
+       "7": "SDIO_D3",
+       "40": "/boot/ZYNQ_PS_MIO8\\VMODE",
+       "11": "ZYNQ_PS_MIO11",
+       "12": "ZYNQ_PS_MIO2",
+       "13": "unconnected-ZYNQ_PS_MIO999",
+       "22": "GND",
+       "23": "IO_PL"
+      }
+     },
+     "J2": {
+      "pins": {
+       "1": "SDIO_CLK",
+       "bad": "GND"
+      }
+     },
+     "J3": {
+      "pins": {}
+     }
+    }
+   },
+   "live": {
+    "zynq_ref": "U2",
+    "source": "som/Zynq_SoM.kicad_sch",
+    "value": "XC7Z020-CLG484",
+    "pin_names": {
+     "B1": "IO_L1P_35",
+     "A1": "PS_MIO10_500"
+    },
+    "ball_net": {
+     "B1": "IO_PL",
+     "A1": "ZYNQ_PS_MIO10"
+    },
+    "jpin_net": {}
+   },
+   "function_map": {
+    "ZYNQ_PS_MIO10": "ZYNQ_PS_UART0_RXD",
+    "ZYNQ_PS_MIO11": "ZYNQ_PS_UART0_TXD"
+   },
+   "refs": [
+    "J1",
+    "J2",
+    "J3"
+   ],
+   "contract_path": "carrier/som_interface.json",
+   "contract_source": "carrier/som_interface.json",
+   "som_source": "som/Zynq_SoM.kicad_sch",
+   "mapping_source": "carrier/som_mapping.json"
+  },
+  "error": "invalid literal for int() with base 10: 'bad'"
+ },
+ {
+  "name": "bad numeric suffix",
+  "input": {
+   "contract": {
+    "source": "som/Zynq_SoM.kicad_sch",
+    "connectors": {
+     "J1": {
+      "value": "mezz",
+      "footprint": "",
+      "pins": {
+       "10": "SDIO_CLK",
+       "2": "SDIO_CLK",
+       "1": "ZYNQ_PS_MIO10",
+       "3": "SDIO_CMD",
+       "4": "SDIO_D0",
+       "5": "SDIO_D1",
+       "6": "SDIO_D2",
+       "7": "SDIO_D3",
+       "40": "/boot/ZYNQ_PS_MIO8\\VMODE",
+       "11": "ZYNQ_PS_MIO11",
+       "12": "ZYNQ_PS_MIO2",
+       "13": "unconnected-ZYNQ_PS_MIO999",
+       "22": "GND",
+       "23": "IO_PL"
+      }
+     },
+     "J2": {
+      "pins": {
+       "1": "SDIO_CLK",
+       "4tail": "GND"
+      }
+     },
+     "J3": {
+      "pins": {}
+     }
+    }
+   },
+   "live": {
+    "zynq_ref": "U2",
+    "source": "som/Zynq_SoM.kicad_sch",
+    "value": "XC7Z020-CLG484",
+    "pin_names": {
+     "B1": "IO_L1P_35",
+     "A1": "PS_MIO10_500"
+    },
+    "ball_net": {
+     "B1": "IO_PL",
+     "A1": "ZYNQ_PS_MIO10"
+    },
+    "jpin_net": {}
+   },
+   "function_map": {
+    "ZYNQ_PS_MIO10": "ZYNQ_PS_UART0_RXD",
+    "ZYNQ_PS_MIO11": "ZYNQ_PS_UART0_TXD"
+   },
+   "refs": [
+    "J1",
+    "J2",
+    "J3"
+   ],
+   "contract_path": "carrier/som_interface.json",
+   "contract_source": "carrier/som_interface.json",
+   "som_source": "som/Zynq_SoM.kicad_sch",
+   "mapping_source": "carrier/som_mapping.json"
+  },
+  "error": "invalid literal for int() with base 10: '4tail'"
+ },
+ {
+  "name": "empty pin",
+  "input": {
+   "contract": {
+    "source": "som/Zynq_SoM.kicad_sch",
+    "connectors": {
+     "J1": {
+      "value": "mezz",
+      "footprint": "",
+      "pins": {
+       "10": "SDIO_CLK",
+       "2": "SDIO_CLK",
+       "1": "ZYNQ_PS_MIO10",
+       "3": "SDIO_CMD",
+       "4": "SDIO_D0",
+       "5": "SDIO_D1",
+       "6": "SDIO_D2",
+       "7": "SDIO_D3",
+       "40": "/boot/ZYNQ_PS_MIO8\\VMODE",
+       "11": "ZYNQ_PS_MIO11",
+       "12": "ZYNQ_PS_MIO2",
+       "13": "unconnected-ZYNQ_PS_MIO999",
+       "22": "GND",
+       "23": "IO_PL"
+      }
+     },
+     "J2": {
+      "pins": {
+       "1": "SDIO_CLK",
+       "": "GND"
+      }
+     },
+     "J3": {
+      "pins": {}
+     }
+    }
+   },
+   "live": {
+    "zynq_ref": "U2",
+    "source": "som/Zynq_SoM.kicad_sch",
+    "value": "XC7Z020-CLG484",
+    "pin_names": {
+     "B1": "IO_L1P_35",
+     "A1": "PS_MIO10_500"
+    },
+    "ball_net": {
+     "B1": "IO_PL",
+     "A1": "ZYNQ_PS_MIO10"
+    },
+    "jpin_net": {}
+   },
+   "function_map": {
+    "ZYNQ_PS_MIO10": "ZYNQ_PS_UART0_RXD",
+    "ZYNQ_PS_MIO11": "ZYNQ_PS_UART0_TXD"
+   },
+   "refs": [
+    "J1",
+    "J2",
+    "J3"
+   ],
+   "contract_path": "carrier/som_interface.json",
+   "contract_source": "carrier/som_interface.json",
+   "som_source": "som/Zynq_SoM.kicad_sch",
+   "mapping_source": "carrier/som_mapping.json"
+  },
+  "error": "invalid literal for int() with base 10: ''"
+ },
+ {
+  "name": "all whitespace pin",
+  "input": {
+   "contract": {
+    "source": "som/Zynq_SoM.kicad_sch",
+    "connectors": {
+     "J1": {
+      "value": "mezz",
+      "footprint": "",
+      "pins": {
+       "10": "SDIO_CLK",
+       "2": "SDIO_CLK",
+       "1": "ZYNQ_PS_MIO10",
+       "3": "SDIO_CMD",
+       "4": "SDIO_D0",
+       "5": "SDIO_D1",
+       "6": "SDIO_D2",
+       "7": "SDIO_D3",
+       "40": "/boot/ZYNQ_PS_MIO8\\VMODE",
+       "11": "ZYNQ_PS_MIO11",
+       "12": "ZYNQ_PS_MIO2",
+       "13": "unconnected-ZYNQ_PS_MIO999",
+       "22": "GND",
+       "23": "IO_PL"
+      }
+     },
+     "J2": {
+      "pins": {
+       "1": "SDIO_CLK",
+       "   ": "GND"
+      }
+     },
+     "J3": {
+      "pins": {}
+     }
+    }
+   },
+   "live": {
+    "zynq_ref": "U2",
+    "source": "som/Zynq_SoM.kicad_sch",
+    "value": "XC7Z020-CLG484",
+    "pin_names": {
+     "B1": "IO_L1P_35",
+     "A1": "PS_MIO10_500"
+    },
+    "ball_net": {
+     "B1": "IO_PL",
+     "A1": "ZYNQ_PS_MIO10"
+    },
+    "jpin_net": {}
+   },
+   "function_map": {
+    "ZYNQ_PS_MIO10": "ZYNQ_PS_UART0_RXD",
+    "ZYNQ_PS_MIO11": "ZYNQ_PS_UART0_TXD"
+   },
+   "refs": [
+    "J1",
+    "J2",
+    "J3"
+   ],
+   "contract_path": "carrier/som_interface.json",
+   "contract_source": "carrier/som_interface.json",
+   "som_source": "som/Zynq_SoM.kicad_sch",
+   "mapping_source": "carrier/som_mapping.json"
+  },
+  "error": "invalid literal for int() with base 10: '   '"
+ },
+ {
+  "name": "no UART without both functions",
+  "input": {
+   "contract": {
+    "source": "som/Zynq_SoM.kicad_sch",
+    "connectors": {
+     "J1": {
+      "value": "mezz",
+      "footprint": "",
+      "pins": {
+       "10": "SDIO_CLK",
+       "2": "SDIO_CLK",
+       "1": "ZYNQ_PS_MIO10",
+       "3": "SDIO_CMD",
+       "4": "SDIO_D0",
+       "5": "SDIO_D1",
+       "6": "SDIO_D2",
+       "7": "SDIO_D3",
+       "40": "/boot/ZYNQ_PS_MIO8\\VMODE",
+       "11": "ZYNQ_PS_MIO11",
+       "12": "ZYNQ_PS_MIO2",
+       "13": "unconnected-ZYNQ_PS_MIO999",
+       "22": "GND",
+       "23": "IO_PL"
+      }
+     },
+     "J2": {
+      "pins": {
+       "1": "SDIO_CLK"
+      }
+     },
+     "J3": {
+      "pins": {}
+     }
+    }
+   },
+   "live": {
+    "zynq_ref": "U2",
+    "source": "som/Zynq_SoM.kicad_sch",
+    "value": "XC7Z020-CLG484",
+    "pin_names": {
+     "B1": "IO_L1P_35",
+     "A1": "PS_MIO10_500"
+    },
+    "ball_net": {
+     "B1": "IO_PL",
+     "A1": "ZYNQ_PS_MIO10"
+    },
+    "jpin_net": {}
+   },
+   "function_map": {
+    "ZYNQ_PS_MIO10": "ZYNQ_PS_UART0_RXD"
+   },
+   "refs": [
+    "J1",
+    "J2",
+    "J3"
+   ],
+   "contract_path": "carrier/som_interface.json",
+   "contract_source": "carrier/som_interface.json",
+   "som_source": "som/Zynq_SoM.kicad_sch",
+   "mapping_source": "carrier/som_mapping.json"
+  },
+  "text": "/*\n * carrier_pl.dtsi -- Zynq-7000 PS device-tree fragment for the\n * carrier.  GENERATED -- DO NOT EDIT.\n *\n * generated-by: schgen devicetree (schgen/devicetree.py)\n * regenerate:   PYTHONPATH=. python -m schgen devicetree\n * PS device:    XC7Z020-CLG484 (from the SoM netlist)\n * sources:\n *   contract : carrier/som_interface.json (net <- J pin, same walk as schgen firmware/xdc)\n *   ball map : som/Zynq_SoM.kicad_sch (kicad-cli; PS = reaches no PL ball)\n *   renames  : carrier/som_conn_gen FUNCTION_MAP (MIO -> carrier function net)\n *\n * This is the PS-side twin of carrier/fpga/Zynq_Carrier_pins.xdc:\n * the XDC owns every carrier net that reaches a PL ball; THIS\n * fragment documents the PS-side nets the XDC drops -- the\n * microSD bus and the bare PS MIO pins routed out on J1.\n *\n * The overlay bodies below are COMMENTED templates: the MIO/EMIO\n * routing is fixed on the SoM, so paste the relevant node(s)\n * into your board .dts and uncomment.  The pinmux table is the\n * authoritative carrier-signal <-> MIO-index map.\n */\n\n/dts-v1/;\n/plugin/;\n\n/* ======================================================================== */\n/* PS pinmux table -- carrier signal <-> Zynq PS MIO index (J1 pins).      */\n/* (the MIO index is parsed from the contract net name; sorted by index)  */\n/* ------------------------------------------------------------------------ */\n/*   MIO  J1 pin   carrier net (function)       note */\n/* MIO2   J1.12    ZYNQ_PS_MIO2                 spare PS MIO (bare to J1) */\n/* MIO8   J1.40    /boot/ZYNQ_PS_MIO8\\VMODE     VMODE boot strap (on-SoM, carrier NC) */\n/* MIO10  J1.1     ZYNQ_PS_UART0_RXD            renamed from ZYNQ_PS_MIO10 */\n/* MIO11  J1.11    ZYNQ_PS_MIO11                spare PS MIO (bare to J1) */\n/* ======================================================================== */\n\n/* ---- microSD -- PS SD-host controller (sdhci) ------------------------ */\n/* The carrier SDIO_* 4-bit bus runs at 1.8 V straight into the Zynq PS    */\n/* (carrier/PLAN.md round 2).  Card-detect is a PL/EMIO net (bank 13,        */\n/* J2.17) the XDC constrains as a get_ports pin -- noted here for the cd     */\n/* story but routed through the PL, not a PS MIO.                            */\n/* ------------------------------------------------------------------------ */\n/* role   J1 pin   carrier net */\n/* clk    J1.2     SDIO_CLK */\n/* cmd    J1.3     SDIO_CMD */\n/* dat0   J1.4     SDIO_D0 */\n/* dat1   J1.5     SDIO_D1 */\n/* dat2   J1.6     SDIO_D2 */\n/* dat3   J1.7     SDIO_D3 */\n/* cd     J2.17    SD_CARD_DETECT (PL/EMIO -- constrained by the XDC) */\n/*\n * &sdhci0 {   // PS SDIO0 = sdhci@e0100000 (UG585)\n *     status = \"okay\";\n *     bus-width = <4>;          // SDIO_D0..D3\n *     // 1.8 V signaling (carrier/PLAN.md round 2)\n *     no-1-8-v;                 // delete if the SoM level-shifts\n *     // card-detect: SD_CARD_DETECT is a PL/EMIO net (bank 13, J2.17),\n *     // so cd is wired through the PL fabric, not a PS MIO --\n *     // drive it from your EMIO gpio or use broken-cd/non-removable.\n *     broken-cd;\n * };\n */\n"
+ },
+ {
+  "name": "last UART function wins",
+  "input": {
+   "contract": {
+    "source": "som/Zynq_SoM.kicad_sch",
+    "connectors": {
+     "J1": {
+      "value": "mezz",
+      "footprint": "",
+      "pins": {
+       "10": "SDIO_CLK",
+       "2": "SDIO_CLK",
+       "1": "ZYNQ_PS_MIO10",
+       "3": "SDIO_CMD",
+       "4": "SDIO_D0",
+       "5": "SDIO_D1",
+       "6": "SDIO_D2",
+       "7": "SDIO_D3",
+       "40": "/boot/ZYNQ_PS_MIO8\\VMODE",
+       "11": "ZYNQ_PS_MIO11",
+       "12": "ZYNQ_PS_MIO2",
+       "13": "unconnected-ZYNQ_PS_MIO999",
+       "22": "GND",
+       "23": "IO_PL"
+      }
+     },
+     "J2": {
+      "pins": {
+       "1": "SDIO_CLK"
+      }
+     },
+     "J3": {
+      "pins": {}
+     }
+    }
+   },
+   "live": {
+    "zynq_ref": "U2",
+    "source": "som/Zynq_SoM.kicad_sch",
+    "value": "XC7Z020-CLG484",
+    "pin_names": {
+     "B1": "IO_L1P_35",
+     "A1": "PS_MIO10_500"
+    },
+    "ball_net": {
+     "B1": "IO_PL",
+     "A1": "ZYNQ_PS_MIO10"
+    },
+    "jpin_net": {}
+   },
+   "function_map": {
+    "ZYNQ_PS_MIO10": "ZYNQ_PS_UART0_RXD",
+    "ZYNQ_PS_MIO11": "ZYNQ_PS_UART0_TXD",
+    "ZYNQ_PS_MIO2": "ZYNQ_PS_UART0_RXD"
+   },
+   "refs": [
+    "J1",
+    "J2",
+    "J3"
+   ],
+   "contract_path": "carrier/som_interface.json",
+   "contract_source": "carrier/som_interface.json",
+   "som_source": "som/Zynq_SoM.kicad_sch",
+   "mapping_source": "carrier/som_mapping.json"
+  },
+  "text": "/*\n * carrier_pl.dtsi -- Zynq-7000 PS device-tree fragment for the\n * carrier.  GENERATED -- DO NOT EDIT.\n *\n * generated-by: schgen devicetree (schgen/devicetree.py)\n * regenerate:   PYTHONPATH=. python -m schgen devicetree\n * PS device:    XC7Z020-CLG484 (from the SoM netlist)\n * sources:\n *   contract : carrier/som_interface.json (net <- J pin, same walk as schgen firmware/xdc)\n *   ball map : som/Zynq_SoM.kicad_sch (kicad-cli; PS = reaches no PL ball)\n *   renames  : carrier/som_conn_gen FUNCTION_MAP (MIO -> carrier function net)\n *\n * This is the PS-side twin of carrier/fpga/Zynq_Carrier_pins.xdc:\n * the XDC owns every carrier net that reaches a PL ball; THIS\n * fragment documents the PS-side nets the XDC drops -- the\n * microSD bus and the bare PS MIO pins routed out on J1.\n *\n * The overlay bodies below are COMMENTED templates: the MIO/EMIO\n * routing is fixed on the SoM, so paste the relevant node(s)\n * into your board .dts and uncomment.  The pinmux table is the\n * authoritative carrier-signal <-> MIO-index map.\n */\n\n/dts-v1/;\n/plugin/;\n\n/* ======================================================================== */\n/* PS pinmux table -- carrier signal <-> Zynq PS MIO index (J1 pins).      */\n/* (the MIO index is parsed from the contract net name; sorted by index)  */\n/* ------------------------------------------------------------------------ */\n/*   MIO  J1 pin   carrier net (function)       note */\n/* MIO2   J1.12    ZYNQ_PS_UART0_RXD            renamed from ZYNQ_PS_MIO2 */\n/* MIO8   J1.40    /boot/ZYNQ_PS_MIO8\\VMODE     VMODE boot strap (on-SoM, carrier NC) */\n/* MIO10  J1.1     ZYNQ_PS_UART0_RXD            renamed from ZYNQ_PS_MIO10 */\n/* MIO11  J1.11    ZYNQ_PS_UART0_TXD            renamed from ZYNQ_PS_MIO11 */\n/* ======================================================================== */\n\n/* ---- PS UART0 console -- MIO console group (uart_bridge) ---------- */\n/* The carrier brings PS UART0 out on the SoM console MIO pair, routed   */\n/* to the FT232 USB-UART bridge (carrier uart_bridge sheet).            */\n/*\n * &uart0 {   // PS UART0 = uart@e0000000 (UG585)\n *     status = \"okay\";\n *     // MIO10 = ZYNQ_PS_UART0_RXD (Zynq RX), MIO11 = ZYNQ_PS_UART0_TXD (Zynq TX)\n * };\n */\n\n/* ---- microSD -- PS SD-host controller (sdhci) ------------------------ */\n/* The carrier SDIO_* 4-bit bus runs at 1.8 V straight into the Zynq PS    */\n/* (carrier/PLAN.md round 2).  Card-detect is a PL/EMIO net (bank 13,        */\n/* J2.17) the XDC constrains as a get_ports pin -- noted here for the cd     */\n/* story but routed through the PL, not a PS MIO.                            */\n/* ------------------------------------------------------------------------ */\n/* role   J1 pin   carrier net */\n/* clk    J1.2     SDIO_CLK */\n/* cmd    J1.3     SDIO_CMD */\n/* dat0   J1.4     SDIO_D0 */\n/* dat1   J1.5     SDIO_D1 */\n/* dat2   J1.6     SDIO_D2 */\n/* dat3   J1.7     SDIO_D3 */\n/* cd     J2.17    SD_CARD_DETECT (PL/EMIO -- constrained by the XDC) */\n/*\n * &sdhci0 {   // PS SDIO0 = sdhci@e0100000 (UG585)\n *     status = \"okay\";\n *     bus-width = <4>;          // SDIO_D0..D3\n *     // 1.8 V signaling (carrier/PLAN.md round 2)\n *     no-1-8-v;                 // delete if the SoM level-shifts\n *     // card-detect: SD_CARD_DETECT is a PL/EMIO net (bank 13, J2.17),\n *     // so cd is wired through the PL fabric, not a PS MIO --\n *     // drive it from your EMIO gpio or use broken-cd/non-removable.\n *     broken-cd;\n * };\n */\n"
+ },
+ {
+  "name": "no live PL table remains PS",
+  "input": {
+   "contract": {
+    "source": "som/Zynq_SoM.kicad_sch",
+    "connectors": {
+     "J1": {
+      "value": "mezz",
+      "footprint": "",
+      "pins": {
+       "10": "SDIO_CLK",
+       "2": "SDIO_CLK",
+       "1": "ZYNQ_PS_MIO10",
+       "3": "SDIO_CMD",
+       "4": "SDIO_D0",
+       "5": "SDIO_D1",
+       "6": "SDIO_D2",
+       "7": "SDIO_D3",
+       "40": "/boot/ZYNQ_PS_MIO8\\VMODE",
+       "11": "ZYNQ_PS_MIO11",
+       "12": "ZYNQ_PS_MIO2",
+       "13": "unconnected-ZYNQ_PS_MIO999",
+       "22": "GND",
+       "23": "IO_PL"
+      }
+     },
+     "J2": {
+      "pins": {
+       "1": "SDIO_CLK"
+      }
+     },
+     "J3": {
+      "pins": {}
+     }
+    }
+   },
+   "live": {
+    "zynq_ref": "U2",
+    "source": "som/Zynq_SoM.kicad_sch",
+    "value": "XC7Z020-CLG484",
+    "pin_names": {},
+    "ball_net": {
+     "B1": "IO_PL",
+     "A1": "ZYNQ_PS_MIO10"
+    },
+    "jpin_net": {}
+   },
+   "function_map": {
+    "ZYNQ_PS_MIO10": "ZYNQ_PS_UART0_RXD",
+    "ZYNQ_PS_MIO11": "ZYNQ_PS_UART0_TXD"
+   },
+   "refs": [
+    "J1",
+    "J2",
+    "J3"
+   ],
+   "contract_path": "carrier/som_interface.json",
+   "contract_source": "carrier/som_interface.json",
+   "som_source": "som/Zynq_SoM.kicad_sch",
+   "mapping_source": "carrier/som_mapping.json"
+  },
+  "text": "/*\n * carrier_pl.dtsi -- Zynq-7000 PS device-tree fragment for the\n * carrier.  GENERATED -- DO NOT EDIT.\n *\n * generated-by: schgen devicetree (schgen/devicetree.py)\n * regenerate:   PYTHONPATH=. python -m schgen devicetree\n * PS device:    XC7Z020-CLG484 (from the SoM netlist)\n * sources:\n *   contract : carrier/som_interface.json (net <- J pin, same walk as schgen firmware/xdc)\n *   ball map : som/Zynq_SoM.kicad_sch (kicad-cli; PS = reaches no PL ball)\n *   renames  : carrier/som_conn_gen FUNCTION_MAP (MIO -> carrier function net)\n *\n * This is the PS-side twin of carrier/fpga/Zynq_Carrier_pins.xdc:\n * the XDC owns every carrier net that reaches a PL ball; THIS\n * fragment documents the PS-side nets the XDC drops -- the\n * microSD bus and the bare PS MIO pins routed out on J1.\n *\n * The overlay bodies below are COMMENTED templates: the MIO/EMIO\n * routing is fixed on the SoM, so paste the relevant node(s)\n * into your board .dts and uncomment.  The pinmux table is the\n * authoritative carrier-signal <-> MIO-index map.\n */\n\n/dts-v1/;\n/plugin/;\n\n/* ======================================================================== */\n/* PS pinmux table -- carrier signal <-> Zynq PS MIO index (J1 pins).      */\n/* (the MIO index is parsed from the contract net name; sorted by index)  */\n/* ------------------------------------------------------------------------ */\n/*   MIO  J1 pin   carrier net (function)       note */\n/* MIO2   J1.12    ZYNQ_PS_MIO2                 spare PS MIO (bare to J1) */\n/* MIO8   J1.40    /boot/ZYNQ_PS_MIO8\\VMODE     VMODE boot strap (on-SoM, carrier NC) */\n/* MIO10  J1.1     ZYNQ_PS_UART0_RXD            renamed from ZYNQ_PS_MIO10 */\n/* MIO11  J1.11    ZYNQ_PS_UART0_TXD            renamed from ZYNQ_PS_MIO11 */\n/* ======================================================================== */\n\n/* ---- PS UART0 console -- MIO console group (uart_bridge) ---------- */\n/* The carrier brings PS UART0 out on the SoM console MIO pair, routed   */\n/* to the FT232 USB-UART bridge (carrier uart_bridge sheet).            */\n/*\n * &uart0 {   // PS UART0 = uart@e0000000 (UG585)\n *     status = \"okay\";\n *     // MIO10 = ZYNQ_PS_UART0_RXD (Zynq RX), MIO11 = ZYNQ_PS_UART0_TXD (Zynq TX)\n * };\n */\n\n/* ---- microSD -- PS SD-host controller (sdhci) ------------------------ */\n/* The carrier SDIO_* 4-bit bus runs at 1.8 V straight into the Zynq PS    */\n/* (carrier/PLAN.md round 2).  Card-detect is a PL/EMIO net (bank 13,        */\n/* J2.17) the XDC constrains as a get_ports pin -- noted here for the cd     */\n/* story but routed through the PL, not a PS MIO.                            */\n/* ------------------------------------------------------------------------ */\n/* role   J1 pin   carrier net */\n/* clk    J1.2     SDIO_CLK */\n/* cmd    J1.3     SDIO_CMD */\n/* dat0   J1.4     SDIO_D0 */\n/* dat1   J1.5     SDIO_D1 */\n/* dat2   J1.6     SDIO_D2 */\n/* dat3   J1.7     SDIO_D3 */\n/* cd     J2.17    SD_CARD_DETECT (PL/EMIO -- constrained by the XDC) */\n/*\n * &sdhci0 {   // PS SDIO0 = sdhci@e0100000 (UG585)\n *     status = \"okay\";\n *     bus-width = <4>;          // SDIO_D0..D3\n *     // 1.8 V signaling (carrier/PLAN.md round 2)\n *     no-1-8-v;                 // delete if the SoM level-shifts\n *     // card-detect: SD_CARD_DETECT is a PL/EMIO net (bank 13, J2.17),\n *     // so cd is wired through the PL fabric, not a PS MIO --\n *     // drive it from your EMIO gpio or use broken-cd/non-removable.\n *     broken-cd;\n * };\n */\n"
+ },
+ {
+  "name": "empty device value",
+  "input": {
+   "contract": {
+    "source": "som/Zynq_SoM.kicad_sch",
+    "connectors": {
+     "J1": {
+      "value": "mezz",
+      "footprint": "",
+      "pins": {
+       "10": "SDIO_CLK",
+       "2": "SDIO_CLK",
+       "1": "ZYNQ_PS_MIO10",
+       "3": "SDIO_CMD",
+       "4": "SDIO_D0",
+       "5": "SDIO_D1",
+       "6": "SDIO_D2",
+       "7": "SDIO_D3",
+       "40": "/boot/ZYNQ_PS_MIO8\\VMODE",
+       "11": "ZYNQ_PS_MIO11",
+       "12": "ZYNQ_PS_MIO2",
+       "13": "unconnected-ZYNQ_PS_MIO999",
+       "22": "GND",
+       "23": "IO_PL"
+      }
+     },
+     "J2": {
+      "pins": {
+       "1": "SDIO_CLK"
+      }
+     },
+     "J3": {
+      "pins": {}
+     }
+    }
+   },
+   "live": {
+    "zynq_ref": "U2",
+    "source": "som/Zynq_SoM.kicad_sch",
+    "value": "",
+    "pin_names": {
+     "B1": "IO_L1P_35",
+     "A1": "PS_MIO10_500"
+    },
+    "ball_net": {
+     "B1": "IO_PL",
+     "A1": "ZYNQ_PS_MIO10"
+    },
+    "jpin_net": {}
+   },
+   "function_map": {
+    "ZYNQ_PS_MIO10": "ZYNQ_PS_UART0_RXD",
+    "ZYNQ_PS_MIO11": "ZYNQ_PS_UART0_TXD"
+   },
+   "refs": [
+    "J1",
+    "J2",
+    "J3"
+   ],
+   "contract_path": "carrier/som_interface.json",
+   "contract_source": "carrier/som_interface.json",
+   "som_source": "som/Zynq_SoM.kicad_sch",
+   "mapping_source": "carrier/som_mapping.json"
+  },
+  "text": "/*\n * carrier_pl.dtsi -- Zynq-7000 PS device-tree fragment for the\n * carrier.  GENERATED -- DO NOT EDIT.\n *\n * generated-by: schgen devicetree (schgen/devicetree.py)\n * regenerate:   PYTHONPATH=. python -m schgen devicetree\n * PS device:     (from the SoM netlist)\n * sources:\n *   contract : carrier/som_interface.json (net <- J pin, same walk as schgen firmware/xdc)\n *   ball map : som/Zynq_SoM.kicad_sch (kicad-cli; PS = reaches no PL ball)\n *   renames  : carrier/som_conn_gen FUNCTION_MAP (MIO -> carrier function net)\n *\n * This is the PS-side twin of carrier/fpga/Zynq_Carrier_pins.xdc:\n * the XDC owns every carrier net that reaches a PL ball; THIS\n * fragment documents the PS-side nets the XDC drops -- the\n * microSD bus and the bare PS MIO pins routed out on J1.\n *\n * The overlay bodies below are COMMENTED templates: the MIO/EMIO\n * routing is fixed on the SoM, so paste the relevant node(s)\n * into your board .dts and uncomment.  The pinmux table is the\n * authoritative carrier-signal <-> MIO-index map.\n */\n\n/dts-v1/;\n/plugin/;\n\n/* ======================================================================== */\n/* PS pinmux table -- carrier signal <-> Zynq PS MIO index (J1 pins).      */\n/* (the MIO index is parsed from the contract net name; sorted by index)  */\n/* ------------------------------------------------------------------------ */\n/*   MIO  J1 pin   carrier net (function)       note */\n/* MIO2   J1.12    ZYNQ_PS_MIO2                 spare PS MIO (bare to J1) */\n/* MIO8   J1.40    /boot/ZYNQ_PS_MIO8\\VMODE     VMODE boot strap (on-SoM, carrier NC) */\n/* MIO10  J1.1     ZYNQ_PS_UART0_RXD            renamed from ZYNQ_PS_MIO10 */\n/* MIO11  J1.11    ZYNQ_PS_UART0_TXD            renamed from ZYNQ_PS_MIO11 */\n/* ======================================================================== */\n\n/* ---- PS UART0 console -- MIO console group (uart_bridge) ---------- */\n/* The carrier brings PS UART0 out on the SoM console MIO pair, routed   */\n/* to the FT232 USB-UART bridge (carrier uart_bridge sheet).            */\n/*\n * &uart0 {   // PS UART0 = uart@e0000000 (UG585)\n *     status = \"okay\";\n *     // MIO10 = ZYNQ_PS_UART0_RXD (Zynq RX), MIO11 = ZYNQ_PS_UART0_TXD (Zynq TX)\n * };\n */\n\n/* ---- microSD -- PS SD-host controller (sdhci) ------------------------ */\n/* The carrier SDIO_* 4-bit bus runs at 1.8 V straight into the Zynq PS    */\n/* (carrier/PLAN.md round 2).  Card-detect is a PL/EMIO net (bank 13,        */\n/* J2.17) the XDC constrains as a get_ports pin -- noted here for the cd     */\n/* story but routed through the PL, not a PS MIO.                            */\n/* ------------------------------------------------------------------------ */\n/* role   J1 pin   carrier net */\n/* clk    J1.2     SDIO_CLK */\n/* cmd    J1.3     SDIO_CMD */\n/* dat0   J1.4     SDIO_D0 */\n/* dat1   J1.5     SDIO_D1 */\n/* dat2   J1.6     SDIO_D2 */\n/* dat3   J1.7     SDIO_D3 */\n/* cd     J2.17    SD_CARD_DETECT (PL/EMIO -- constrained by the XDC) */\n/*\n * &sdhci0 {   // PS SDIO0 = sdhci@e0100000 (UG585)\n *     status = \"okay\";\n *     bus-width = <4>;          // SDIO_D0..D3\n *     // 1.8 V signaling (carrier/PLAN.md round 2)\n *     no-1-8-v;                 // delete if the SoM level-shifts\n *     // card-detect: SD_CARD_DETECT is a PL/EMIO net (bank 13, J2.17),\n *     // so cd is wired through the PL fabric, not a PS MIO --\n *     // drive it from your EMIO gpio or use broken-cd/non-removable.\n *     broken-cd;\n * };\n */\n"
+ },
+ {
+  "name": "null device value",
+  "input": {
+   "contract": {
+    "source": "som/Zynq_SoM.kicad_sch",
+    "connectors": {
+     "J1": {
+      "value": "mezz",
+      "footprint": "",
+      "pins": {
+       "10": "SDIO_CLK",
+       "2": "SDIO_CLK",
+       "1": "ZYNQ_PS_MIO10",
+       "3": "SDIO_CMD",
+       "4": "SDIO_D0",
+       "5": "SDIO_D1",
+       "6": "SDIO_D2",
+       "7": "SDIO_D3",
+       "40": "/boot/ZYNQ_PS_MIO8\\VMODE",
+       "11": "ZYNQ_PS_MIO11",
+       "12": "ZYNQ_PS_MIO2",
+       "13": "unconnected-ZYNQ_PS_MIO999",
+       "22": "GND",
+       "23": "IO_PL"
+      }
+     },
+     "J2": {
+      "pins": {
+       "1": "SDIO_CLK"
+      }
+     },
+     "J3": {
+      "pins": {}
+     }
+    }
+   },
+   "live": {
+    "zynq_ref": "U2",
+    "source": "som/Zynq_SoM.kicad_sch",
+    "value": null,
+    "pin_names": {
+     "B1": "IO_L1P_35",
+     "A1": "PS_MIO10_500"
+    },
+    "ball_net": {
+     "B1": "IO_PL",
+     "A1": "ZYNQ_PS_MIO10"
+    },
+    "jpin_net": {}
+   },
+   "function_map": {
+    "ZYNQ_PS_MIO10": "ZYNQ_PS_UART0_RXD",
+    "ZYNQ_PS_MIO11": "ZYNQ_PS_UART0_TXD"
+   },
+   "refs": [
+    "J1",
+    "J2",
+    "J3"
+   ],
+   "contract_path": "carrier/som_interface.json",
+   "contract_source": "carrier/som_interface.json",
+   "som_source": "som/Zynq_SoM.kicad_sch",
+   "mapping_source": "carrier/som_mapping.json"
+  },
+  "text": "/*\n * carrier_pl.dtsi -- Zynq-7000 PS device-tree fragment for the\n * carrier.  GENERATED -- DO NOT EDIT.\n *\n * generated-by: schgen devicetree (schgen/devicetree.py)\n * regenerate:   PYTHONPATH=. python -m schgen devicetree\n * PS device:    None (from the SoM netlist)\n * sources:\n *   contract : carrier/som_interface.json (net <- J pin, same walk as schgen firmware/xdc)\n *   ball map : som/Zynq_SoM.kicad_sch (kicad-cli; PS = reaches no PL ball)\n *   renames  : carrier/som_conn_gen FUNCTION_MAP (MIO -> carrier function net)\n *\n * This is the PS-side twin of carrier/fpga/Zynq_Carrier_pins.xdc:\n * the XDC owns every carrier net that reaches a PL ball; THIS\n * fragment documents the PS-side nets the XDC drops -- the\n * microSD bus and the bare PS MIO pins routed out on J1.\n *\n * The overlay bodies below are COMMENTED templates: the MIO/EMIO\n * routing is fixed on the SoM, so paste the relevant node(s)\n * into your board .dts and uncomment.  The pinmux table is the\n * authoritative carrier-signal <-> MIO-index map.\n */\n\n/dts-v1/;\n/plugin/;\n\n/* ======================================================================== */\n/* PS pinmux table -- carrier signal <-> Zynq PS MIO index (J1 pins).      */\n/* (the MIO index is parsed from the contract net name; sorted by index)  */\n/* ------------------------------------------------------------------------ */\n/*   MIO  J1 pin   carrier net (function)       note */\n/* MIO2   J1.12    ZYNQ_PS_MIO2                 spare PS MIO (bare to J1) */\n/* MIO8   J1.40    /boot/ZYNQ_PS_MIO8\\VMODE     VMODE boot strap (on-SoM, carrier NC) */\n/* MIO10  J1.1     ZYNQ_PS_UART0_RXD            renamed from ZYNQ_PS_MIO10 */\n/* MIO11  J1.11    ZYNQ_PS_UART0_TXD            renamed from ZYNQ_PS_MIO11 */\n/* ======================================================================== */\n\n/* ---- PS UART0 console -- MIO console group (uart_bridge) ---------- */\n/* The carrier brings PS UART0 out on the SoM console MIO pair, routed   */\n/* to the FT232 USB-UART bridge (carrier uart_bridge sheet).            */\n/*\n * &uart0 {   // PS UART0 = uart@e0000000 (UG585)\n *     status = \"okay\";\n *     // MIO10 = ZYNQ_PS_UART0_RXD (Zynq RX), MIO11 = ZYNQ_PS_UART0_TXD (Zynq TX)\n * };\n */\n\n/* ---- microSD -- PS SD-host controller (sdhci) ------------------------ */\n/* The carrier SDIO_* 4-bit bus runs at 1.8 V straight into the Zynq PS    */\n/* (carrier/PLAN.md round 2).  Card-detect is a PL/EMIO net (bank 13,        */\n/* J2.17) the XDC constrains as a get_ports pin -- noted here for the cd     */\n/* story but routed through the PL, not a PS MIO.                            */\n/* ------------------------------------------------------------------------ */\n/* role   J1 pin   carrier net */\n/* clk    J1.2     SDIO_CLK */\n/* cmd    J1.3     SDIO_CMD */\n/* dat0   J1.4     SDIO_D0 */\n/* dat1   J1.5     SDIO_D1 */\n/* dat2   J1.6     SDIO_D2 */\n/* dat3   J1.7     SDIO_D3 */\n/* cd     J2.17    SD_CARD_DETECT (PL/EMIO -- constrained by the XDC) */\n/*\n * &sdhci0 {   // PS SDIO0 = sdhci@e0100000 (UG585)\n *     status = \"okay\";\n *     bus-width = <4>;          // SDIO_D0..D3\n *     // 1.8 V signaling (carrier/PLAN.md round 2)\n *     no-1-8-v;                 // delete if the SoM level-shifts\n *     // card-detect: SD_CARD_DETECT is a PL/EMIO net (bank 13, J2.17),\n *     // so cd is wired through the PL fabric, not a PS MIO --\n *     // drive it from your EMIO gpio or use broken-cd/non-removable.\n *     broken-cd;\n * };\n */\n"
+ },
+ {
+  "name": "repeated refs and lexical ref order",
+  "input": {
+   "contract": {
+    "source": "som/Zynq_SoM.kicad_sch",
+    "connectors": {
+     "J1": {
+      "value": "mezz",
+      "footprint": "",
+      "pins": {
+       "10": "SDIO_CLK",
+       "2": "SDIO_CLK",
+       "1": "ZYNQ_PS_MIO10",
+       "3": "SDIO_CMD",
+       "4": "SDIO_D0",
+       "5": "SDIO_D1",
+       "6": "SDIO_D2",
+       "7": "SDIO_D3",
+       "40": "/boot/ZYNQ_PS_MIO8\\VMODE",
+       "11": "ZYNQ_PS_MIO11",
+       "12": "ZYNQ_PS_MIO2",
+       "13": "unconnected-ZYNQ_PS_MIO999",
+       "22": "GND",
+       "23": "IO_PL"
+      }
+     },
+     "J2": {
+      "pins": {
+       "1": "SDIO_CLK"
+      }
+     },
+     "J3": {
+      "pins": {}
+     }
+    }
+   },
+   "live": {
+    "zynq_ref": "U2",
+    "source": "som/Zynq_SoM.kicad_sch",
+    "value": "XC7Z020-CLG484",
+    "pin_names": {
+     "B1": "IO_L1P_35",
+     "A1": "PS_MIO10_500"
+    },
+    "ball_net": {
+     "B1": "IO_PL",
+     "A1": "ZYNQ_PS_MIO10"
+    },
+    "jpin_net": {}
+   },
+   "function_map": {
+    "ZYNQ_PS_MIO10": "ZYNQ_PS_UART0_RXD",
+    "ZYNQ_PS_MIO11": "ZYNQ_PS_UART0_TXD"
+   },
+   "refs": [
+    "J2",
+    "J1",
+    "J1",
+    "J3"
+   ],
+   "contract_path": "carrier/som_interface.json",
+   "contract_source": "carrier/som_interface.json",
+   "som_source": "som/Zynq_SoM.kicad_sch",
+   "mapping_source": "carrier/som_mapping.json"
+  },
+  "text": "/*\n * carrier_pl.dtsi -- Zynq-7000 PS device-tree fragment for the\n * carrier.  GENERATED -- DO NOT EDIT.\n *\n * generated-by: schgen devicetree (schgen/devicetree.py)\n * regenerate:   PYTHONPATH=. python -m schgen devicetree\n * PS device:    XC7Z020-CLG484 (from the SoM netlist)\n * sources:\n *   contract : carrier/som_interface.json (net <- J pin, same walk as schgen firmware/xdc)\n *   ball map : som/Zynq_SoM.kicad_sch (kicad-cli; PS = reaches no PL ball)\n *   renames  : carrier/som_conn_gen FUNCTION_MAP (MIO -> carrier function net)\n *\n * This is the PS-side twin of carrier/fpga/Zynq_Carrier_pins.xdc:\n * the XDC owns every carrier net that reaches a PL ball; THIS\n * fragment documents the PS-side nets the XDC drops -- the\n * microSD bus and the bare PS MIO pins routed out on J1.\n *\n * The overlay bodies below are COMMENTED templates: the MIO/EMIO\n * routing is fixed on the SoM, so paste the relevant node(s)\n * into your board .dts and uncomment.  The pinmux table is the\n * authoritative carrier-signal <-> MIO-index map.\n */\n\n/dts-v1/;\n/plugin/;\n\n/* ======================================================================== */\n/* PS pinmux table -- carrier signal <-> Zynq PS MIO index (J1 pins).      */\n/* (the MIO index is parsed from the contract net name; sorted by index)  */\n/* ------------------------------------------------------------------------ */\n/*   MIO  J1 pin   carrier net (function)       note */\n/* MIO2   J1.12    ZYNQ_PS_MIO2                 spare PS MIO (bare to J1) */\n/* MIO8   J1.40    /boot/ZYNQ_PS_MIO8\\VMODE     VMODE boot strap (on-SoM, carrier NC) */\n/* MIO10  J1.1     ZYNQ_PS_UART0_RXD            renamed from ZYNQ_PS_MIO10 */\n/* MIO11  J1.11    ZYNQ_PS_UART0_TXD            renamed from ZYNQ_PS_MIO11 */\n/* ======================================================================== */\n\n/* ---- PS UART0 console -- MIO console group (uart_bridge) ---------- */\n/* The carrier brings PS UART0 out on the SoM console MIO pair, routed   */\n/* to the FT232 USB-UART bridge (carrier uart_bridge sheet).            */\n/*\n * &uart0 {   // PS UART0 = uart@e0000000 (UG585)\n *     status = \"okay\";\n *     // MIO10 = ZYNQ_PS_UART0_RXD (Zynq RX), MIO11 = ZYNQ_PS_UART0_TXD (Zynq TX)\n * };\n */\n\n/* ---- microSD -- PS SD-host controller (sdhci) ------------------------ */\n/* The carrier SDIO_* 4-bit bus runs at 1.8 V straight into the Zynq PS    */\n/* (carrier/PLAN.md round 2).  Card-detect is a PL/EMIO net (bank 13,        */\n/* J2.17) the XDC constrains as a get_ports pin -- noted here for the cd     */\n/* story but routed through the PL, not a PS MIO.                            */\n/* ------------------------------------------------------------------------ */\n/* role   J1 pin   carrier net */\n/* clk    J1.2     SDIO_CLK */\n/* cmd    J1.3     SDIO_CMD */\n/* dat0   J1.4     SDIO_D0 */\n/* dat1   J1.5     SDIO_D1 */\n/* dat2   J1.6     SDIO_D2 */\n/* dat3   J1.7     SDIO_D3 */\n/* cd     J2.17    SD_CARD_DETECT (PL/EMIO -- constrained by the XDC) */\n/*\n * &sdhci0 {   // PS SDIO0 = sdhci@e0100000 (UG585)\n *     status = \"okay\";\n *     bus-width = <4>;          // SDIO_D0..D3\n *     // 1.8 V signaling (carrier/PLAN.md round 2)\n *     no-1-8-v;                 // delete if the SoM level-shifts\n *     // card-detect: SD_CARD_DETECT is a PL/EMIO net (bank 13, J2.17),\n *     // so cd is wired through the PL fabric, not a PS MIO --\n *     // drive it from your EMIO gpio or use broken-cd/non-removable.\n *     broken-cd;\n * };\n */\n"
+ },
+ {
+  "name": "huge MIO index",
+  "input": {
+   "contract": {
+    "source": "som/Zynq_SoM.kicad_sch",
+    "connectors": {
+     "J1": {
+      "value": "mezz",
+      "footprint": "",
+      "pins": {
+       "10": "SDIO_CLK",
+       "2": "SDIO_CLK",
+       "1": "ZYNQ_PS_MIO10",
+       "3": "SDIO_CMD",
+       "4": "SDIO_D0",
+       "5": "SDIO_D1",
+       "6": "SDIO_D2",
+       "7": "SDIO_D3",
+       "40": "/boot/ZYNQ_PS_MIO8\\VMODE",
+       "11": "ZYNQ_PS_MIO11",
+       "12": "ZYNQ_PS_MIO2",
+       "13": "unconnected-ZYNQ_PS_MIO999",
+       "22": "GND",
+       "23": "IO_PL"
+      }
+     },
+     "J2": {
+      "pins": {
+       "1": "SDIO_CLK",
+       "45": "ZYNQ_PS_MIO123456789012345678901234567890"
+      }
+     },
+     "J3": {
+      "pins": {}
+     }
+    }
+   },
+   "live": {
+    "zynq_ref": "U2",
+    "source": "som/Zynq_SoM.kicad_sch",
+    "value": "XC7Z020-CLG484",
+    "pin_names": {
+     "B1": "IO_L1P_35",
+     "A1": "PS_MIO10_500"
+    },
+    "ball_net": {
+     "B1": "IO_PL",
+     "A1": "ZYNQ_PS_MIO10"
+    },
+    "jpin_net": {}
+   },
+   "function_map": {
+    "ZYNQ_PS_MIO10": "ZYNQ_PS_UART0_RXD",
+    "ZYNQ_PS_MIO11": "ZYNQ_PS_UART0_TXD"
+   },
+   "refs": [
+    "J1",
+    "J2",
+    "J3"
+   ],
+   "contract_path": "carrier/som_interface.json",
+   "contract_source": "carrier/som_interface.json",
+   "som_source": "som/Zynq_SoM.kicad_sch",
+   "mapping_source": "carrier/som_mapping.json"
+  },
+  "text": "/*\n * carrier_pl.dtsi -- Zynq-7000 PS device-tree fragment for the\n * carrier.  GENERATED -- DO NOT EDIT.\n *\n * generated-by: schgen devicetree (schgen/devicetree.py)\n * regenerate:   PYTHONPATH=. python -m schgen devicetree\n * PS device:    XC7Z020-CLG484 (from the SoM netlist)\n * sources:\n *   contract : carrier/som_interface.json (net <- J pin, same walk as schgen firmware/xdc)\n *   ball map : som/Zynq_SoM.kicad_sch (kicad-cli; PS = reaches no PL ball)\n *   renames  : carrier/som_conn_gen FUNCTION_MAP (MIO -> carrier function net)\n *\n * This is the PS-side twin of carrier/fpga/Zynq_Carrier_pins.xdc:\n * the XDC owns every carrier net that reaches a PL ball; THIS\n * fragment documents the PS-side nets the XDC drops -- the\n * microSD bus and the bare PS MIO pins routed out on J1.\n *\n * The overlay bodies below are COMMENTED templates: the MIO/EMIO\n * routing is fixed on the SoM, so paste the relevant node(s)\n * into your board .dts and uncomment.  The pinmux table is the\n * authoritative carrier-signal <-> MIO-index map.\n */\n\n/dts-v1/;\n/plugin/;\n\n/* ======================================================================== */\n/* PS pinmux table -- carrier signal <-> Zynq PS MIO index (J1 pins).      */\n/* (the MIO index is parsed from the contract net name; sorted by index)  */\n/* ------------------------------------------------------------------------ */\n/*   MIO  J1 pin   carrier net (function)       note */\n/* MIO2   J1.12    ZYNQ_PS_MIO2                 spare PS MIO (bare to J1) */\n/* MIO8   J1.40    /boot/ZYNQ_PS_MIO8\\VMODE     VMODE boot strap (on-SoM, carrier NC) */\n/* MIO10  J1.1     ZYNQ_PS_UART0_RXD            renamed from ZYNQ_PS_MIO10 */\n/* MIO11  J1.11    ZYNQ_PS_UART0_TXD            renamed from ZYNQ_PS_MIO11 */\n/* MIO123456789012345678901234567890  J2.45    ZYNQ_PS_MIO123456789012345678901234567890 spare PS MIO (bare to J1) */\n/* ======================================================================== */\n\n/* ---- PS UART0 console -- MIO console group (uart_bridge) ---------- */\n/* The carrier brings PS UART0 out on the SoM console MIO pair, routed   */\n/* to the FT232 USB-UART bridge (carrier uart_bridge sheet).            */\n/*\n * &uart0 {   // PS UART0 = uart@e0000000 (UG585)\n *     status = \"okay\";\n *     // MIO10 = ZYNQ_PS_UART0_RXD (Zynq RX), MIO11 = ZYNQ_PS_UART0_TXD (Zynq TX)\n * };\n */\n\n/* ---- microSD -- PS SD-host controller (sdhci) ------------------------ */\n/* The carrier SDIO_* 4-bit bus runs at 1.8 V straight into the Zynq PS    */\n/* (carrier/PLAN.md round 2).  Card-detect is a PL/EMIO net (bank 13,        */\n/* J2.17) the XDC constrains as a get_ports pin -- noted here for the cd     */\n/* story but routed through the PL, not a PS MIO.                            */\n/* ------------------------------------------------------------------------ */\n/* role   J1 pin   carrier net */\n/* clk    J1.2     SDIO_CLK */\n/* cmd    J1.3     SDIO_CMD */\n/* dat0   J1.4     SDIO_D0 */\n/* dat1   J1.5     SDIO_D1 */\n/* dat2   J1.6     SDIO_D2 */\n/* dat3   J1.7     SDIO_D3 */\n/* cd     J2.17    SD_CARD_DETECT (PL/EMIO -- constrained by the XDC) */\n/*\n * &sdhci0 {   // PS SDIO0 = sdhci@e0100000 (UG585)\n *     status = \"okay\";\n *     bus-width = <4>;          // SDIO_D0..D3\n *     // 1.8 V signaling (carrier/PLAN.md round 2)\n *     no-1-8-v;                 // delete if the SoM level-shifts\n *     // card-detect: SD_CARD_DETECT is a PL/EMIO net (bank 13, J2.17),\n *     // so cd is wired through the PL fabric, not a PS MIO --\n *     // drive it from your EMIO gpio or use broken-cd/non-removable.\n *     broken-cd;\n * };\n */\n"
+ },
+ {
+  "name": "numeric pins and stable equal ties",
+  "input": {
+   "contract": {
+    "source": "som/Zynq_SoM.kicad_sch",
+    "connectors": {
+     "J1": {
+      "value": "mezz",
+      "footprint": "",
+      "pins": {
+       "02": "SDIO_CLK",
+       "2": "SDIO_CLK",
+       "99999999999999999999999999999": "SDIO_CLK",
+       "1": "ZYNQ_PS_MIO10",
+       "3": "SDIO_CMD",
+       "4": "SDIO_D0",
+       "5": "SDIO_D1",
+       "6": "SDIO_D2",
+       "7": "SDIO_D3",
+       "40": "/boot/ZYNQ_PS_MIO8\\VMODE",
+       "11": "ZYNQ_PS_MIO11",
+       "12": "ZYNQ_PS_MIO2",
+       "13": "unconnected-ZYNQ_PS_MIO999",
+       "22": "GND",
+       "23": "IO_PL",
+       "-2": "SDIO_D0",
+       "+0_1": "SDIO_D1"
+      }
+     },
+     "J2": {
+      "pins": {
+       "1": "SDIO_CLK"
+      }
+     },
+     "J3": {
+      "pins": {}
+     }
+    }
+   },
+   "live": {
+    "zynq_ref": "U2",
+    "source": "som/Zynq_SoM.kicad_sch",
+    "value": "XC7Z020-CLG484",
+    "pin_names": {
+     "B1": "IO_L1P_35",
+     "A1": "PS_MIO10_500"
+    },
+    "ball_net": {
+     "B1": "IO_PL",
+     "A1": "ZYNQ_PS_MIO10"
+    },
+    "jpin_net": {}
+   },
+   "function_map": {
+    "ZYNQ_PS_MIO10": "ZYNQ_PS_UART0_RXD",
+    "ZYNQ_PS_MIO11": "ZYNQ_PS_UART0_TXD"
+   },
+   "refs": [
+    "J1",
+    "J2",
+    "J3"
+   ],
+   "contract_path": "carrier/som_interface.json",
+   "contract_source": "carrier/som_interface.json",
+   "som_source": "som/Zynq_SoM.kicad_sch",
+   "mapping_source": "carrier/som_mapping.json"
+  },
+  "text": "/*\n * carrier_pl.dtsi -- Zynq-7000 PS device-tree fragment for the\n * carrier.  GENERATED -- DO NOT EDIT.\n *\n * generated-by: schgen devicetree (schgen/devicetree.py)\n * regenerate:   PYTHONPATH=. python -m schgen devicetree\n * PS device:    XC7Z020-CLG484 (from the SoM netlist)\n * sources:\n *   contract : carrier/som_interface.json (net <- J pin, same walk as schgen firmware/xdc)\n *   ball map : som/Zynq_SoM.kicad_sch (kicad-cli; PS = reaches no PL ball)\n *   renames  : carrier/som_conn_gen FUNCTION_MAP (MIO -> carrier function net)\n *\n * This is the PS-side twin of carrier/fpga/Zynq_Carrier_pins.xdc:\n * the XDC owns every carrier net that reaches a PL ball; THIS\n * fragment documents the PS-side nets the XDC drops -- the\n * microSD bus and the bare PS MIO pins routed out on J1.\n *\n * The overlay bodies below are COMMENTED templates: the MIO/EMIO\n * routing is fixed on the SoM, so paste the relevant node(s)\n * into your board .dts and uncomment.  The pinmux table is the\n * authoritative carrier-signal <-> MIO-index map.\n */\n\n/dts-v1/;\n/plugin/;\n\n/* ======================================================================== */\n/* PS pinmux table -- carrier signal <-> Zynq PS MIO index (J1 pins).      */\n/* (the MIO index is parsed from the contract net name; sorted by index)  */\n/* ------------------------------------------------------------------------ */\n/*   MIO  J1 pin   carrier net (function)       note */\n/* MIO2   J1.12    ZYNQ_PS_MIO2                 spare PS MIO (bare to J1) */\n/* MIO8   J1.40    /boot/ZYNQ_PS_MIO8\\VMODE     VMODE boot strap (on-SoM, carrier NC) */\n/* MIO10  J1.1     ZYNQ_PS_UART0_RXD            renamed from ZYNQ_PS_MIO10 */\n/* MIO11  J1.11    ZYNQ_PS_UART0_TXD            renamed from ZYNQ_PS_MIO11 */\n/* ======================================================================== */\n\n/* ---- PS UART0 console -- MIO console group (uart_bridge) ---------- */\n/* The carrier brings PS UART0 out on the SoM console MIO pair, routed   */\n/* to the FT232 USB-UART bridge (carrier uart_bridge sheet).            */\n/*\n * &uart0 {   // PS UART0 = uart@e0000000 (UG585)\n *     status = \"okay\";\n *     // MIO10 = ZYNQ_PS_UART0_RXD (Zynq RX), MIO11 = ZYNQ_PS_UART0_TXD (Zynq TX)\n * };\n */\n\n/* ---- microSD -- PS SD-host controller (sdhci) ------------------------ */\n/* The carrier SDIO_* 4-bit bus runs at 1.8 V straight into the Zynq PS    */\n/* (carrier/PLAN.md round 2).  Card-detect is a PL/EMIO net (bank 13,        */\n/* J2.17) the XDC constrains as a get_ports pin -- noted here for the cd     */\n/* story but routed through the PL, not a PS MIO.                            */\n/* ------------------------------------------------------------------------ */\n/* role   J1 pin   carrier net */\n/* clk    J1.02    SDIO_CLK */\n/* cmd    J1.3     SDIO_CMD */\n/* dat0   J1.-2    SDIO_D0 */\n/* dat1   J1.+0_1  SDIO_D1 */\n/* dat2   J1.6     SDIO_D2 */\n/* dat3   J1.7     SDIO_D3 */\n/* cd     J2.17    SD_CARD_DETECT (PL/EMIO -- constrained by the XDC) */\n/*\n * &sdhci0 {   // PS SDIO0 = sdhci@e0100000 (UG585)\n *     status = \"okay\";\n *     bus-width = <4>;          // SDIO_D0..D3\n *     // 1.8 V signaling (carrier/PLAN.md round 2)\n *     no-1-8-v;                 // delete if the SoM level-shifts\n *     // card-detect: SD_CARD_DETECT is a PL/EMIO net (bank 13, J2.17),\n *     // so cd is wired through the PL fabric, not a PS MIO --\n *     // drive it from your EMIO gpio or use broken-cd/non-removable.\n *     broken-cd;\n * };\n */\n"
+ },
+ {
+  "name": "Unicode alignment and substitutions",
+  "input": {
+   "contract": {
+    "source": "som/Zynq_SoM.kicad_sch",
+    "connectors": {
+     "J1": {
+      "value": "mezz",
+      "footprint": "",
+      "pins": {
+       "10": "SDIO_CLK",
+       "2": "SDIO_CLK",
+       "1": "ZYNQ_PS_MIO10",
+       "3": "SDIO_CMD",
+       "4": "SDIO_D0",
+       "5": "SDIO_D1",
+       "6": "SDIO_D2",
+       "7": "SDIO_D3",
+       "40": "/boot/ZYNQ_PS_MIO8\\VMODE",
+       "11": "ZYNQ_PS_MIO11",
+       "12": "ZYNQ_PS_MIO2",
+       "13": "unconnected-ZYNQ_PS_MIO999",
+       "22": "GND",
+       "23": "IO_PL"
+      }
+     },
+     "J2": {
+      "pins": {
+       "1": "SDIO_CLK"
+      }
+     },
+     "J3": {
+      "pins": {}
+     }
+    }
+   },
+   "live": {
+    "zynq_ref": "U2",
+    "source": "som/Zynq_SoM.kicad_sch",
+    "value": "XC7Z020-CLG484",
+    "pin_names": {
+     "B1": "IO_L1P_35",
+     "A1": "PS_MIO10_500"
+    },
+    "ball_net": {
+     "B1": "IO_PL",
+     "A1": "ZYNQ_PS_MIO10"
+    },
+    "jpin_net": {}
+   },
+   "function_map": {
+    "ZYNQ_PS_MIO10": "ZYNQ_PS_UART0_RXD",
+    "ZYNQ_PS_MIO11": "ZYNQ_PS_UART0_TXD",
+    "ZYNQ_PS_MIO2": "Ω—→"
+   },
+   "refs": [
+    "J1",
+    "J2",
+    "J3"
+   ],
+   "contract_path": "carrier/som_interface.json",
+   "contract_source": "carrier/som_interface.json",
+   "som_source": "som/Zynq_SoM.kicad_sch",
+   "mapping_source": "carrier/som_mapping.json"
+  },
+  "text": "/*\n * carrier_pl.dtsi -- Zynq-7000 PS device-tree fragment for the\n * carrier.  GENERATED -- DO NOT EDIT.\n *\n * generated-by: schgen devicetree (schgen/devicetree.py)\n * regenerate:   PYTHONPATH=. python -m schgen devicetree\n * PS device:    XC7Z020-CLG484 (from the SoM netlist)\n * sources:\n *   contract : carrier/som_interface.json (net <- J pin, same walk as schgen firmware/xdc)\n *   ball map : som/Zynq_SoM.kicad_sch (kicad-cli; PS = reaches no PL ball)\n *   renames  : carrier/som_conn_gen FUNCTION_MAP (MIO -> carrier function net)\n *\n * This is the PS-side twin of carrier/fpga/Zynq_Carrier_pins.xdc:\n * the XDC owns every carrier net that reaches a PL ball; THIS\n * fragment documents the PS-side nets the XDC drops -- the\n * microSD bus and the bare PS MIO pins routed out on J1.\n *\n * The overlay bodies below are COMMENTED templates: the MIO/EMIO\n * routing is fixed on the SoM, so paste the relevant node(s)\n * into your board .dts and uncomment.  The pinmux table is the\n * authoritative carrier-signal <-> MIO-index map.\n */\n\n/dts-v1/;\n/plugin/;\n\n/* ======================================================================== */\n/* PS pinmux table -- carrier signal <-> Zynq PS MIO index (J1 pins).      */\n/* (the MIO index is parsed from the contract net name; sorted by index)  */\n/* ------------------------------------------------------------------------ */\n/*   MIO  J1 pin   carrier net (function)       note */\n/* MIO2   J1.12    Ω--->                          renamed from ZYNQ_PS_MIO2 */\n/* MIO8   J1.40    /boot/ZYNQ_PS_MIO8\\VMODE     VMODE boot strap (on-SoM, carrier NC) */\n/* MIO10  J1.1     ZYNQ_PS_UART0_RXD            renamed from ZYNQ_PS_MIO10 */\n/* MIO11  J1.11    ZYNQ_PS_UART0_TXD            renamed from ZYNQ_PS_MIO11 */\n/* ======================================================================== */\n\n/* ---- PS UART0 console -- MIO console group (uart_bridge) ---------- */\n/* The carrier brings PS UART0 out on the SoM console MIO pair, routed   */\n/* to the FT232 USB-UART bridge (carrier uart_bridge sheet).            */\n/*\n * &uart0 {   // PS UART0 = uart@e0000000 (UG585)\n *     status = \"okay\";\n *     // MIO10 = ZYNQ_PS_UART0_RXD (Zynq RX), MIO11 = ZYNQ_PS_UART0_TXD (Zynq TX)\n * };\n */\n\n/* ---- microSD -- PS SD-host controller (sdhci) ------------------------ */\n/* The carrier SDIO_* 4-bit bus runs at 1.8 V straight into the Zynq PS    */\n/* (carrier/PLAN.md round 2).  Card-detect is a PL/EMIO net (bank 13,        */\n/* J2.17) the XDC constrains as a get_ports pin -- noted here for the cd     */\n/* story but routed through the PL, not a PS MIO.                            */\n/* ------------------------------------------------------------------------ */\n/* role   J1 pin   carrier net */\n/* clk    J1.2     SDIO_CLK */\n/* cmd    J1.3     SDIO_CMD */\n/* dat0   J1.4     SDIO_D0 */\n/* dat1   J1.5     SDIO_D1 */\n/* dat2   J1.6     SDIO_D2 */\n/* dat3   J1.7     SDIO_D3 */\n/* cd     J2.17    SD_CARD_DETECT (PL/EMIO -- constrained by the XDC) */\n/*\n * &sdhci0 {   // PS SDIO0 = sdhci@e0100000 (UG585)\n *     status = \"okay\";\n *     bus-width = <4>;          // SDIO_D0..D3\n *     // 1.8 V signaling (carrier/PLAN.md round 2)\n *     no-1-8-v;                 // delete if the SoM level-shifts\n *     // card-detect: SD_CARD_DETECT is a PL/EMIO net (bank 13, J2.17),\n *     // so cd is wired through the PL fabric, not a PS MIO --\n *     // drive it from your EMIO gpio or use broken-cd/non-removable.\n *     broken-cd;\n * };\n */\n"
+ },
+ {
+  "name": "substring MIO search",
+  "input": {
+   "contract": {
+    "source": "som/Zynq_SoM.kicad_sch",
+    "connectors": {
+     "J1": {
+      "value": "mezz",
+      "footprint": "",
+      "pins": {
+       "10": "SDIO_CLK",
+       "2": "SDIO_CLK",
+       "1": "ZYNQ_PS_MIO10",
+       "3": "SDIO_CMD",
+       "4": "SDIO_D0",
+       "5": "SDIO_D1",
+       "6": "SDIO_D2",
+       "7": "SDIO_D3",
+       "40": "/boot/ZYNQ_PS_MIO8\\VMODE",
+       "11": "ZYNQ_PS_MIO11",
+       "12": "ZYNQ_PS_MIO2",
+       "13": "unconnected-ZYNQ_PS_MIO999",
+       "22": "GND",
+       "23": "IO_PL"
+      }
+     },
+     "J2": {
+      "pins": {
+       "1": "SDIO_CLK",
+       "41": "prefixZYNQ_PS_MIO0042suffix"
+      }
+     },
+     "J3": {
+      "pins": {}
+     }
+    }
+   },
+   "live": {
+    "zynq_ref": "U2",
+    "source": "som/Zynq_SoM.kicad_sch",
+    "value": "XC7Z020-CLG484",
+    "pin_names": {
+     "B1": "IO_L1P_35",
+     "A1": "PS_MIO10_500"
+    },
+    "ball_net": {
+     "B1": "IO_PL",
+     "A1": "ZYNQ_PS_MIO10"
+    },
+    "jpin_net": {}
+   },
+   "function_map": {
+    "ZYNQ_PS_MIO10": "ZYNQ_PS_UART0_RXD",
+    "ZYNQ_PS_MIO11": "ZYNQ_PS_UART0_TXD"
+   },
+   "refs": [
+    "J1",
+    "J2",
+    "J3"
+   ],
+   "contract_path": "carrier/som_interface.json",
+   "contract_source": "carrier/som_interface.json",
+   "som_source": "som/Zynq_SoM.kicad_sch",
+   "mapping_source": "carrier/som_mapping.json"
+  },
+  "text": "/*\n * carrier_pl.dtsi -- Zynq-7000 PS device-tree fragment for the\n * carrier.  GENERATED -- DO NOT EDIT.\n *\n * generated-by: schgen devicetree (schgen/devicetree.py)\n * regenerate:   PYTHONPATH=. python -m schgen devicetree\n * PS device:    XC7Z020-CLG484 (from the SoM netlist)\n * sources:\n *   contract : carrier/som_interface.json (net <- J pin, same walk as schgen firmware/xdc)\n *   ball map : som/Zynq_SoM.kicad_sch (kicad-cli; PS = reaches no PL ball)\n *   renames  : carrier/som_conn_gen FUNCTION_MAP (MIO -> carrier function net)\n *\n * This is the PS-side twin of carrier/fpga/Zynq_Carrier_pins.xdc:\n * the XDC owns every carrier net that reaches a PL ball; THIS\n * fragment documents the PS-side nets the XDC drops -- the\n * microSD bus and the bare PS MIO pins routed out on J1.\n *\n * The overlay bodies below are COMMENTED templates: the MIO/EMIO\n * routing is fixed on the SoM, so paste the relevant node(s)\n * into your board .dts and uncomment.  The pinmux table is the\n * authoritative carrier-signal <-> MIO-index map.\n */\n\n/dts-v1/;\n/plugin/;\n\n/* ======================================================================== */\n/* PS pinmux table -- carrier signal <-> Zynq PS MIO index (J1 pins).      */\n/* (the MIO index is parsed from the contract net name; sorted by index)  */\n/* ------------------------------------------------------------------------ */\n/*   MIO  J1 pin   carrier net (function)       note */\n/* MIO2   J1.12    ZYNQ_PS_MIO2                 spare PS MIO (bare to J1) */\n/* MIO8   J1.40    /boot/ZYNQ_PS_MIO8\\VMODE     VMODE boot strap (on-SoM, carrier NC) */\n/* MIO10  J1.1     ZYNQ_PS_UART0_RXD            renamed from ZYNQ_PS_MIO10 */\n/* MIO11  J1.11    ZYNQ_PS_UART0_TXD            renamed from ZYNQ_PS_MIO11 */\n/* MIO42  J2.41    prefixZYNQ_PS_MIO0042suffix  spare PS MIO (bare to J1) */\n/* ======================================================================== */\n\n/* ---- PS UART0 console -- MIO console group (uart_bridge) ---------- */\n/* The carrier brings PS UART0 out on the SoM console MIO pair, routed   */\n/* to the FT232 USB-UART bridge (carrier uart_bridge sheet).            */\n/*\n * &uart0 {   // PS UART0 = uart@e0000000 (UG585)\n *     status = \"okay\";\n *     // MIO10 = ZYNQ_PS_UART0_RXD (Zynq RX), MIO11 = ZYNQ_PS_UART0_TXD (Zynq TX)\n * };\n */\n\n/* ---- microSD -- PS SD-host controller (sdhci) ------------------------ */\n/* The carrier SDIO_* 4-bit bus runs at 1.8 V straight into the Zynq PS    */\n/* (carrier/PLAN.md round 2).  Card-detect is a PL/EMIO net (bank 13,        */\n/* J2.17) the XDC constrains as a get_ports pin -- noted here for the cd     */\n/* story but routed through the PL, not a PS MIO.                            */\n/* ------------------------------------------------------------------------ */\n/* role   J1 pin   carrier net */\n/* clk    J1.2     SDIO_CLK */\n/* cmd    J1.3     SDIO_CMD */\n/* dat0   J1.4     SDIO_D0 */\n/* dat1   J1.5     SDIO_D1 */\n/* dat2   J1.6     SDIO_D2 */\n/* dat3   J1.7     SDIO_D3 */\n/* cd     J2.17    SD_CARD_DETECT (PL/EMIO -- constrained by the XDC) */\n/*\n * &sdhci0 {   // PS SDIO0 = sdhci@e0100000 (UG585)\n *     status = \"okay\";\n *     bus-width = <4>;          // SDIO_D0..D3\n *     // 1.8 V signaling (carrier/PLAN.md round 2)\n *     no-1-8-v;                 // delete if the SoM level-shifts\n *     // card-detect: SD_CARD_DETECT is a PL/EMIO net (bank 13, J2.17),\n *     // so cd is wired through the PL fabric, not a PS MIO --\n *     // drive it from your EMIO gpio or use broken-cd/non-removable.\n *     broken-cd;\n * };\n */\n"
+ },
+ {
+  "name": "Unicode MIO digits",
+  "input": {
+   "contract": {
+    "source": "som/Zynq_SoM.kicad_sch",
+    "connectors": {
+     "J1": {
+      "value": "mezz",
+      "footprint": "",
+      "pins": {
+       "10": "SDIO_CLK",
+       "2": "SDIO_CLK",
+       "1": "ZYNQ_PS_MIO10",
+       "3": "SDIO_CMD",
+       "4": "SDIO_D0",
+       "5": "SDIO_D1",
+       "6": "SDIO_D2",
+       "7": "SDIO_D3",
+       "40": "/boot/ZYNQ_PS_MIO8\\VMODE",
+       "11": "ZYNQ_PS_MIO11",
+       "12": "ZYNQ_PS_MIO2",
+       "13": "unconnected-ZYNQ_PS_MIO999",
+       "22": "GND",
+       "23": "IO_PL"
+      }
+     },
+     "J2": {
+      "pins": {
+       "1": "SDIO_CLK",
+       "41": "ZYNQ_PS_MIO٤٢"
+      }
+     },
+     "J3": {
+      "pins": {}
+     }
+    }
+   },
+   "live": {
+    "zynq_ref": "U2",
+    "source": "som/Zynq_SoM.kicad_sch",
+    "value": "XC7Z020-CLG484",
+    "pin_names": {
+     "B1": "IO_L1P_35",
+     "A1": "PS_MIO10_500"
+    },
+    "ball_net": {
+     "B1": "IO_PL",
+     "A1": "ZYNQ_PS_MIO10"
+    },
+    "jpin_net": {}
+   },
+   "function_map": {
+    "ZYNQ_PS_MIO10": "ZYNQ_PS_UART0_RXD",
+    "ZYNQ_PS_MIO11": "ZYNQ_PS_UART0_TXD"
+   },
+   "refs": [
+    "J1",
+    "J2",
+    "J3"
+   ],
+   "contract_path": "carrier/som_interface.json",
+   "contract_source": "carrier/som_interface.json",
+   "som_source": "som/Zynq_SoM.kicad_sch",
+   "mapping_source": "carrier/som_mapping.json"
+  },
+  "text": "/*\n * carrier_pl.dtsi -- Zynq-7000 PS device-tree fragment for the\n * carrier.  GENERATED -- DO NOT EDIT.\n *\n * generated-by: schgen devicetree (schgen/devicetree.py)\n * regenerate:   PYTHONPATH=. python -m schgen devicetree\n * PS device:    XC7Z020-CLG484 (from the SoM netlist)\n * sources:\n *   contract : carrier/som_interface.json (net <- J pin, same walk as schgen firmware/xdc)\n *   ball map : som/Zynq_SoM.kicad_sch (kicad-cli; PS = reaches no PL ball)\n *   renames  : carrier/som_conn_gen FUNCTION_MAP (MIO -> carrier function net)\n *\n * This is the PS-side twin of carrier/fpga/Zynq_Carrier_pins.xdc:\n * the XDC owns every carrier net that reaches a PL ball; THIS\n * fragment documents the PS-side nets the XDC drops -- the\n * microSD bus and the bare PS MIO pins routed out on J1.\n *\n * The overlay bodies below are COMMENTED templates: the MIO/EMIO\n * routing is fixed on the SoM, so paste the relevant node(s)\n * into your board .dts and uncomment.  The pinmux table is the\n * authoritative carrier-signal <-> MIO-index map.\n */\n\n/dts-v1/;\n/plugin/;\n\n/* ======================================================================== */\n/* PS pinmux table -- carrier signal <-> Zynq PS MIO index (J1 pins).      */\n/* (the MIO index is parsed from the contract net name; sorted by index)  */\n/* ------------------------------------------------------------------------ */\n/*   MIO  J1 pin   carrier net (function)       note */\n/* MIO2   J1.12    ZYNQ_PS_MIO2                 spare PS MIO (bare to J1) */\n/* MIO8   J1.40    /boot/ZYNQ_PS_MIO8\\VMODE     VMODE boot strap (on-SoM, carrier NC) */\n/* MIO10  J1.1     ZYNQ_PS_UART0_RXD            renamed from ZYNQ_PS_MIO10 */\n/* MIO11  J1.11    ZYNQ_PS_UART0_TXD            renamed from ZYNQ_PS_MIO11 */\n/* MIO42  J2.41    ZYNQ_PS_MIO٤٢                spare PS MIO (bare to J1) */\n/* ======================================================================== */\n\n/* ---- PS UART0 console -- MIO console group (uart_bridge) ---------- */\n/* The carrier brings PS UART0 out on the SoM console MIO pair, routed   */\n/* to the FT232 USB-UART bridge (carrier uart_bridge sheet).            */\n/*\n * &uart0 {   // PS UART0 = uart@e0000000 (UG585)\n *     status = \"okay\";\n *     // MIO10 = ZYNQ_PS_UART0_RXD (Zynq RX), MIO11 = ZYNQ_PS_UART0_TXD (Zynq TX)\n * };\n */\n\n/* ---- microSD -- PS SD-host controller (sdhci) ------------------------ */\n/* The carrier SDIO_* 4-bit bus runs at 1.8 V straight into the Zynq PS    */\n/* (carrier/PLAN.md round 2).  Card-detect is a PL/EMIO net (bank 13,        */\n/* J2.17) the XDC constrains as a get_ports pin -- noted here for the cd     */\n/* story but routed through the PL, not a PS MIO.                            */\n/* ------------------------------------------------------------------------ */\n/* role   J1 pin   carrier net */\n/* clk    J1.2     SDIO_CLK */\n/* cmd    J1.3     SDIO_CMD */\n/* dat0   J1.4     SDIO_D0 */\n/* dat1   J1.5     SDIO_D1 */\n/* dat2   J1.6     SDIO_D2 */\n/* dat3   J1.7     SDIO_D3 */\n/* cd     J2.17    SD_CARD_DETECT (PL/EMIO -- constrained by the XDC) */\n/*\n * &sdhci0 {   // PS SDIO0 = sdhci@e0100000 (UG585)\n *     status = \"okay\";\n *     bus-width = <4>;          // SDIO_D0..D3\n *     // 1.8 V signaling (carrier/PLAN.md round 2)\n *     no-1-8-v;                 // delete if the SoM level-shifts\n *     // card-detect: SD_CARD_DETECT is a PL/EMIO net (bank 13, J2.17),\n *     // so cd is wired through the PL fabric, not a PS MIO --\n *     // drive it from your EMIO gpio or use broken-cd/non-removable.\n *     broken-cd;\n * };\n */\n"
+ },
+ {
+  "name": "Unicode pin digits",
+  "input": {
+   "contract": {
+    "source": "som/Zynq_SoM.kicad_sch",
+    "connectors": {
+     "J1": {
+      "value": "mezz",
+      "footprint": "",
+      "pins": {
+       "10": "SDIO_CLK",
+       "2": "SDIO_CLK",
+       "1": "ZYNQ_PS_MIO10",
+       "3": "SDIO_CMD",
+       "4": "SDIO_D0",
+       "5": "SDIO_D1",
+       "6": "SDIO_D2",
+       "7": "SDIO_D3",
+       "40": "/boot/ZYNQ_PS_MIO8\\VMODE",
+       "11": "ZYNQ_PS_MIO11",
+       "12": "ZYNQ_PS_MIO2",
+       "13": "unconnected-ZYNQ_PS_MIO999",
+       "22": "GND",
+       "23": "IO_PL",
+       "١": "SDIO_CLK"
+      }
+     },
+     "J2": {
+      "pins": {
+       "1": "SDIO_CLK"
+      }
+     },
+     "J3": {
+      "pins": {}
+     }
+    }
+   },
+   "live": {
+    "zynq_ref": "U2",
+    "source": "som/Zynq_SoM.kicad_sch",
+    "value": "XC7Z020-CLG484",
+    "pin_names": {
+     "B1": "IO_L1P_35",
+     "A1": "PS_MIO10_500"
+    },
+    "ball_net": {
+     "B1": "IO_PL",
+     "A1": "ZYNQ_PS_MIO10"
+    },
+    "jpin_net": {}
+   },
+   "function_map": {
+    "ZYNQ_PS_MIO10": "ZYNQ_PS_UART0_RXD",
+    "ZYNQ_PS_MIO11": "ZYNQ_PS_UART0_TXD"
+   },
+   "refs": [
+    "J1",
+    "J2",
+    "J3"
+   ],
+   "contract_path": "carrier/som_interface.json",
+   "contract_source": "carrier/som_interface.json",
+   "som_source": "som/Zynq_SoM.kicad_sch",
+   "mapping_source": "carrier/som_mapping.json"
+  },
+  "text": "/*\n * carrier_pl.dtsi -- Zynq-7000 PS device-tree fragment for the\n * carrier.  GENERATED -- DO NOT EDIT.\n *\n * generated-by: schgen devicetree (schgen/devicetree.py)\n * regenerate:   PYTHONPATH=. python -m schgen devicetree\n * PS device:    XC7Z020-CLG484 (from the SoM netlist)\n * sources:\n *   contract : carrier/som_interface.json (net <- J pin, same walk as schgen firmware/xdc)\n *   ball map : som/Zynq_SoM.kicad_sch (kicad-cli; PS = reaches no PL ball)\n *   renames  : carrier/som_conn_gen FUNCTION_MAP (MIO -> carrier function net)\n *\n * This is the PS-side twin of carrier/fpga/Zynq_Carrier_pins.xdc:\n * the XDC owns every carrier net that reaches a PL ball; THIS\n * fragment documents the PS-side nets the XDC drops -- the\n * microSD bus and the bare PS MIO pins routed out on J1.\n *\n * The overlay bodies below are COMMENTED templates: the MIO/EMIO\n * routing is fixed on the SoM, so paste the relevant node(s)\n * into your board .dts and uncomment.  The pinmux table is the\n * authoritative carrier-signal <-> MIO-index map.\n */\n\n/dts-v1/;\n/plugin/;\n\n/* ======================================================================== */\n/* PS pinmux table -- carrier signal <-> Zynq PS MIO index (J1 pins).      */\n/* (the MIO index is parsed from the contract net name; sorted by index)  */\n/* ------------------------------------------------------------------------ */\n/*   MIO  J1 pin   carrier net (function)       note */\n/* MIO2   J1.12    ZYNQ_PS_MIO2                 spare PS MIO (bare to J1) */\n/* MIO8   J1.40    /boot/ZYNQ_PS_MIO8\\VMODE     VMODE boot strap (on-SoM, carrier NC) */\n/* MIO10  J1.1     ZYNQ_PS_UART0_RXD            renamed from ZYNQ_PS_MIO10 */\n/* MIO11  J1.11    ZYNQ_PS_UART0_TXD            renamed from ZYNQ_PS_MIO11 */\n/* ======================================================================== */\n\n/* ---- PS UART0 console -- MIO console group (uart_bridge) ---------- */\n/* The carrier brings PS UART0 out on the SoM console MIO pair, routed   */\n/* to the FT232 USB-UART bridge (carrier uart_bridge sheet).            */\n/*\n * &uart0 {   // PS UART0 = uart@e0000000 (UG585)\n *     status = \"okay\";\n *     // MIO10 = ZYNQ_PS_UART0_RXD (Zynq RX), MIO11 = ZYNQ_PS_UART0_TXD (Zynq TX)\n * };\n */\n\n/* ---- microSD -- PS SD-host controller (sdhci) ------------------------ */\n/* The carrier SDIO_* 4-bit bus runs at 1.8 V straight into the Zynq PS    */\n/* (carrier/PLAN.md round 2).  Card-detect is a PL/EMIO net (bank 13,        */\n/* J2.17) the XDC constrains as a get_ports pin -- noted here for the cd     */\n/* story but routed through the PL, not a PS MIO.                            */\n/* ------------------------------------------------------------------------ */\n/* role   J1 pin   carrier net */\n/* clk    J1.١     SDIO_CLK */\n/* cmd    J1.3     SDIO_CMD */\n/* dat0   J1.4     SDIO_D0 */\n/* dat1   J1.5     SDIO_D1 */\n/* dat2   J1.6     SDIO_D2 */\n/* dat3   J1.7     SDIO_D3 */\n/* cd     J2.17    SD_CARD_DETECT (PL/EMIO -- constrained by the XDC) */\n/*\n * &sdhci0 {   // PS SDIO0 = sdhci@e0100000 (UG585)\n *     status = \"okay\";\n *     bus-width = <4>;          // SDIO_D0..D3\n *     // 1.8 V signaling (carrier/PLAN.md round 2)\n *     no-1-8-v;                 // delete if the SoM level-shifts\n *     // card-detect: SD_CARD_DETECT is a PL/EMIO net (bank 13, J2.17),\n *     // so cd is wired through the PL fabric, not a PS MIO --\n *     // drive it from your EMIO gpio or use broken-cd/non-removable.\n *     broken-cd;\n * };\n */\n"
+ },
+ {
+  "name": "Unicode whitespace pin",
+  "input": {
+   "contract": {
+    "source": "som/Zynq_SoM.kicad_sch",
+    "connectors": {
+     "J1": {
+      "value": "mezz",
+      "footprint": "",
+      "pins": {
+       "10": "SDIO_CLK",
+       "2": "SDIO_CLK",
+       "1": "ZYNQ_PS_MIO10",
+       "3": "SDIO_CMD",
+       "4": "SDIO_D0",
+       "5": "SDIO_D1",
+       "6": "SDIO_D2",
+       "7": "SDIO_D3",
+       "40": "/boot/ZYNQ_PS_MIO8\\VMODE",
+       "11": "ZYNQ_PS_MIO11",
+       "12": "ZYNQ_PS_MIO2",
+       "13": "unconnected-ZYNQ_PS_MIO999",
+       "22": "GND",
+       "23": "IO_PL",
+       " +1 ": "SDIO_CLK"
+      }
+     },
+     "J2": {
+      "pins": {
+       "1": "SDIO_CLK"
+      }
+     },
+     "J3": {
+      "pins": {}
+     }
+    }
+   },
+   "live": {
+    "zynq_ref": "U2",
+    "source": "som/Zynq_SoM.kicad_sch",
+    "value": "XC7Z020-CLG484",
+    "pin_names": {
+     "B1": "IO_L1P_35",
+     "A1": "PS_MIO10_500"
+    },
+    "ball_net": {
+     "B1": "IO_PL",
+     "A1": "ZYNQ_PS_MIO10"
+    },
+    "jpin_net": {}
+   },
+   "function_map": {
+    "ZYNQ_PS_MIO10": "ZYNQ_PS_UART0_RXD",
+    "ZYNQ_PS_MIO11": "ZYNQ_PS_UART0_TXD"
+   },
+   "refs": [
+    "J1",
+    "J2",
+    "J3"
+   ],
+   "contract_path": "carrier/som_interface.json",
+   "contract_source": "carrier/som_interface.json",
+   "som_source": "som/Zynq_SoM.kicad_sch",
+   "mapping_source": "carrier/som_mapping.json"
+  },
+  "text": "/*\n * carrier_pl.dtsi -- Zynq-7000 PS device-tree fragment for the\n * carrier.  GENERATED -- DO NOT EDIT.\n *\n * generated-by: schgen devicetree (schgen/devicetree.py)\n * regenerate:   PYTHONPATH=. python -m schgen devicetree\n * PS device:    XC7Z020-CLG484 (from the SoM netlist)\n * sources:\n *   contract : carrier/som_interface.json (net <- J pin, same walk as schgen firmware/xdc)\n *   ball map : som/Zynq_SoM.kicad_sch (kicad-cli; PS = reaches no PL ball)\n *   renames  : carrier/som_conn_gen FUNCTION_MAP (MIO -> carrier function net)\n *\n * This is the PS-side twin of carrier/fpga/Zynq_Carrier_pins.xdc:\n * the XDC owns every carrier net that reaches a PL ball; THIS\n * fragment documents the PS-side nets the XDC drops -- the\n * microSD bus and the bare PS MIO pins routed out on J1.\n *\n * The overlay bodies below are COMMENTED templates: the MIO/EMIO\n * routing is fixed on the SoM, so paste the relevant node(s)\n * into your board .dts and uncomment.  The pinmux table is the\n * authoritative carrier-signal <-> MIO-index map.\n */\n\n/dts-v1/;\n/plugin/;\n\n/* ======================================================================== */\n/* PS pinmux table -- carrier signal <-> Zynq PS MIO index (J1 pins).      */\n/* (the MIO index is parsed from the contract net name; sorted by index)  */\n/* ------------------------------------------------------------------------ */\n/*   MIO  J1 pin   carrier net (function)       note */\n/* MIO2   J1.12    ZYNQ_PS_MIO2                 spare PS MIO (bare to J1) */\n/* MIO8   J1.40    /boot/ZYNQ_PS_MIO8\\VMODE     VMODE boot strap (on-SoM, carrier NC) */\n/* MIO10  J1.1     ZYNQ_PS_UART0_RXD            renamed from ZYNQ_PS_MIO10 */\n/* MIO11  J1.11    ZYNQ_PS_UART0_TXD            renamed from ZYNQ_PS_MIO11 */\n/* ======================================================================== */\n\n/* ---- PS UART0 console -- MIO console group (uart_bridge) ---------- */\n/* The carrier brings PS UART0 out on the SoM console MIO pair, routed   */\n/* to the FT232 USB-UART bridge (carrier uart_bridge sheet).            */\n/*\n * &uart0 {   // PS UART0 = uart@e0000000 (UG585)\n *     status = \"okay\";\n *     // MIO10 = ZYNQ_PS_UART0_RXD (Zynq RX), MIO11 = ZYNQ_PS_UART0_TXD (Zynq TX)\n * };\n */\n\n/* ---- microSD -- PS SD-host controller (sdhci) ------------------------ */\n/* The carrier SDIO_* 4-bit bus runs at 1.8 V straight into the Zynq PS    */\n/* (carrier/PLAN.md round 2).  Card-detect is a PL/EMIO net (bank 13,        */\n/* J2.17) the XDC constrains as a get_ports pin -- noted here for the cd     */\n/* story but routed through the PL, not a PS MIO.                            */\n/* ------------------------------------------------------------------------ */\n/* role   J1 pin   carrier net */\n/* clk    J1. +1   SDIO_CLK */\n/* cmd    J1.3     SDIO_CMD */\n/* dat0   J1.4     SDIO_D0 */\n/* dat1   J1.5     SDIO_D1 */\n/* dat2   J1.6     SDIO_D2 */\n/* dat3   J1.7     SDIO_D3 */\n/* cd     J2.17    SD_CARD_DETECT (PL/EMIO -- constrained by the XDC) */\n/*\n * &sdhci0 {   // PS SDIO0 = sdhci@e0100000 (UG585)\n *     status = \"okay\";\n *     bus-width = <4>;          // SDIO_D0..D3\n *     // 1.8 V signaling (carrier/PLAN.md round 2)\n *     no-1-8-v;                 // delete if the SoM level-shifts\n *     // card-detect: SD_CARD_DETECT is a PL/EMIO net (bank 13, J2.17),\n *     // so cd is wired through the PL fabric, not a PS MIO --\n *     // drive it from your EMIO gpio or use broken-cd/non-removable.\n *     broken-cd;\n * };\n */\n"
+ }
+]

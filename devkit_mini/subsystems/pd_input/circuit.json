@@ -1,0 +1,509 @@
+{
+  "schema": "schgen.circuit/1",
+  "name": "pd_input",
+  "title": "Power inlet: USB-C PD 20V/3A + TPS26631 eFuse",
+  "parts": [
+    {
+      "ref": "J1",
+      "lib_id": "TYPE-C-31-M-12:TYPE-C-31-M-12",
+      "value": "TYPE-C-31-M-12",
+      "footprint": "TYPE-C-31-M-12:TYPE-C-31-M-12",
+      "fields": {
+        "LCSC": "C165948"
+      },
+      "pin_names": {
+        "GND": [
+          "A1B12",
+          "B1A12"
+        ],
+        "VBUS": [
+          "A4B9",
+          "B4A9"
+        ],
+        "SBU2": [
+          "B8"
+        ],
+        "CC1": [
+          "A5"
+        ],
+        "DN2": [
+          "B7"
+        ],
+        "DP1": [
+          "A6"
+        ],
+        "DN1": [
+          "A7"
+        ],
+        "DP2": [
+          "B6"
+        ],
+        "SBU1": [
+          "A8"
+        ],
+        "CC2": [
+          "B5"
+        ],
+        "EH": [
+          "4",
+          "3",
+          "2",
+          "1"
+        ]
+      },
+      "pin_numbers": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "A1B12",
+        "A4B9",
+        "A5",
+        "A6",
+        "A7",
+        "A8",
+        "B1A12",
+        "B4A9",
+        "B5",
+        "B6",
+        "B7",
+        "B8"
+      ]
+    },
+    {
+      "ref": "U1",
+      "lib_id": "TPS26631PWPR:TPS26631PWPR",
+      "value": "TPS26631PWPR",
+      "footprint": "TPS26631PWPR:TPS26631PWPR",
+      "fields": {
+        "LCSC": "C2866319"
+      },
+      "pin_names": {
+        "IN": [
+          "1",
+          "2",
+          "3"
+        ],
+        "B_GATE": [
+          "4"
+        ],
+        "DRV": [
+          "5"
+        ],
+        "IN_SYS": [
+          "6"
+        ],
+        "UVLO": [
+          "7"
+        ],
+        "OVP": [
+          "8"
+        ],
+        "GND": [
+          "9"
+        ],
+        "dVdT": [
+          "10"
+        ],
+        "ILIM": [
+          "11"
+        ],
+        "MODE": [
+          "12"
+        ],
+        "SHDN#": [
+          "13"
+        ],
+        "IMON": [
+          "14"
+        ],
+        "FLT#": [
+          "15"
+        ],
+        "PGTH": [
+          "16"
+        ],
+        "PGOOD": [
+          "17"
+        ],
+        "OUT": [
+          "18",
+          "19",
+          "20"
+        ],
+        "EP": [
+          "21"
+        ]
+      },
+      "pin_numbers": [
+        "1",
+        "10",
+        "11",
+        "12",
+        "13",
+        "14",
+        "15",
+        "16",
+        "17",
+        "18",
+        "19",
+        "2",
+        "20",
+        "21",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9"
+      ]
+    },
+    {
+      "ref": "U2",
+      "lib_id": "USBLC6-2SC6:USBLC6-2SC6",
+      "value": "USBLC6-2SC6",
+      "footprint": "USBLC6-2SC6:USBLC6-2SC6",
+      "fields": {
+        "LCSC": "C7519"
+      },
+      "pin_names": {
+        "1": [
+          "1"
+        ],
+        "2": [
+          "2"
+        ],
+        "3": [
+          "3"
+        ],
+        "4": [
+          "4"
+        ],
+        "5": [
+          "5"
+        ],
+        "6": [
+          "6"
+        ]
+      },
+      "pin_numbers": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6"
+      ]
+    },
+    {
+      "ref": "C1",
+      "lib_id": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {
+        "LCSC": "C14663"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "D1",
+      "lib_id": "Device:D_Zener",
+      "value": "SMBJ22A",
+      "footprint": "Diode_SMD:D_SMB",
+      "fields": {
+        "LCSC": "C10214"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "R3",
+      "lib_id": "Device:R",
+      "value": "100k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C25803"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "R4",
+      "lib_id": "Device:R",
+      "value": "5.49k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C188263"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "R5",
+      "lib_id": "Device:R",
+      "value": "5.1k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C23186"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "C3",
+      "lib_id": "Device:C",
+      "value": "47n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {
+        "LCSC": "C1622"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "R6",
+      "lib_id": "Device:R",
+      "value": "100k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C25803"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "C2",
+      "lib_id": "Device:C",
+      "value": "10u",
+      "footprint": "Capacitor_SMD:C_1210_3225Metric",
+      "fields": {
+        "LCSC": "C596319"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "TP1",
+      "lib_id": "Connector:TestPoint",
+      "value": "+VBUS_IN",
+      "footprint": "TestPoint:TestPoint_Pad_D1.5mm",
+      "fields": {
+        "BOM": "exclude"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "TP2",
+      "lib_id": "Connector:TestPoint",
+      "value": "+VIN",
+      "footprint": "TestPoint:TestPoint_Pad_D1.5mm",
+      "fields": {
+        "BOM": "exclude"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    }
+  ],
+  "nets": [
+    {
+      "name": "+VBUS_IN",
+      "net_class": "power",
+      "pins": [
+        "J1.A4B9",
+        "J1.B4A9",
+        "C1.1",
+        "D1.1",
+        "U1.1",
+        "U1.2",
+        "U1.3",
+        "U1.6",
+        "U1.7",
+        "R3.1",
+        "TP1.1"
+      ]
+    },
+    {
+      "name": "GND",
+      "net_class": "ground",
+      "pins": [
+        "J1.A1B12",
+        "J1.B1A12",
+        "C1.2",
+        "D1.2",
+        "U1.9",
+        "U1.21",
+        "U1.12",
+        "U1.16",
+        "R4.2",
+        "R5.2",
+        "C3.2",
+        "C2.2",
+        "U2.2"
+      ]
+    },
+    {
+      "name": "PD_OVP_SET",
+      "net_class": "signal",
+      "pins": [
+        "U1.8",
+        "R3.2",
+        "R4.1"
+      ]
+    },
+    {
+      "name": "PD_ILIM_SET",
+      "net_class": "signal",
+      "pins": [
+        "U1.11",
+        "R5.1"
+      ]
+    },
+    {
+      "name": "PD_DVDT",
+      "net_class": "signal",
+      "pins": [
+        "U1.10",
+        "C3.1"
+      ]
+    },
+    {
+      "name": "PD_FLT_N",
+      "net_class": "port",
+      "pins": [
+        "U1.15",
+        "R6.2"
+      ]
+    },
+    {
+      "name": "+3V3_SC",
+      "net_class": "power",
+      "pins": [
+        "R6.1",
+        "U2.5"
+      ]
+    },
+    {
+      "name": "+VIN",
+      "net_class": "power",
+      "pins": [
+        "U1.18",
+        "U1.19",
+        "U1.20",
+        "C2.1",
+        "TP2.1"
+      ]
+    },
+    {
+      "name": "STM32_USB_CC1",
+      "net_class": "port",
+      "pins": [
+        "J1.A5"
+      ]
+    },
+    {
+      "name": "STM32_USB_CC2",
+      "net_class": "port",
+      "pins": [
+        "J1.B5"
+      ]
+    },
+    {
+      "name": "PD_USB_DP_CONN",
+      "net_class": "signal",
+      "pins": [
+        "J1.A6",
+        "J1.B6",
+        "U2.1"
+      ]
+    },
+    {
+      "name": "PD_USB_DN_CONN",
+      "net_class": "signal",
+      "pins": [
+        "J1.A7",
+        "J1.B7",
+        "U2.3"
+      ]
+    },
+    {
+      "name": "STM32_USB_D_P",
+      "net_class": "port",
+      "pins": [
+        "U2.6"
+      ]
+    },
+    {
+      "name": "STM32_USB_D_N",
+      "net_class": "port",
+      "pins": [
+        "U2.4"
+      ]
+    },
+    {
+      "name": "CHASSIS_GND",
+      "net_class": "ground",
+      "pins": [
+        "J1.4",
+        "J1.3",
+        "J1.2",
+        "J1.1"
+      ]
+    }
+  ],
+  "nc": [
+    "J1.A8",
+    "J1.B8",
+    "U1.13",
+    "U1.14",
+    "U1.17",
+    "U1.4",
+    "U1.5"
+  ],
+  "port_types": {
+    "PD_FLT_N": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "bringup (TCA9535 expander port P15)"
+    },
+    "STM32_USB_D_P": {
+      "kind": "usb_hs_pair",
+      "pair_with": "STM32_USB_D_N",
+      "impedance": 90,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": null
+    },
+    "STM32_USB_D_N": {
+      "kind": "usb_hs_pair",
+      "pair_with": "STM32_USB_D_P",
+      "impedance": 90,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": null
+    }
+  },
+  "hints": {},
+  "loads": {},
+  "tp_waivers": {
+    "CHASSIS_GND": "chassis island is probeable at every connector shell tab (USB-C/HDMI/magjack); no pad needed"
+  },
+  "decap_waivers": {},
+  "pull_waivers": {},
+  "reset_waivers": {},
+  "strap_waivers": {},
+  "ep_waivers": {},
+  "thermal_waivers": {},
+  "part_rule_waivers": {}
+}

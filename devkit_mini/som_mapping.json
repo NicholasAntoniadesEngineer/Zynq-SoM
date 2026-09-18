@@ -1,0 +1,29 @@
+{
+  "schema": "schgen.som_mapping.v1",
+  "function_map": {
+    "ZYNQ_PS_MIO10": "ZYNQ_PS_UART0_RXD",
+    "ZYNQ_PS_MIO11": "ZYNQ_PS_UART0_TXD",
+    "IO_L18_P_13": "ZYNQ_PS_UART0_CTS_N",
+    "IO_L18_N_13": "ZYNQ_PS_UART0_RTS_N",
+    "STM32_DAC1": "STM32_I2C2_SDA",
+    "STM32_DAC2": "STM32_I2C2_SCL"
+  },
+  "pudc_straps": {},
+  "vcco_rail_map": {
+    "+VCCO_13": "+3V3",
+    "+VCCO_33": "+3V3",
+    "+VCCO_34": "+3V3",
+    "+VCCO_35": "+3V3"
+  },
+  "rebound_som_rails": {
+    "VIN": "+5V_SOM"
+  },
+  "isolated_som_rails": {
+    "+3V3": "SoM MPM3834 3V3 output on J1.24-27 — carrier LM61460 (power:U2) is the only +3V3 source",
+    "+1V8": "SoM MPM3834 1V8 output on J1.56/58/60 — carrier AP2112K (power:U3) is the only +1V8 source"
+  },
+  "do_not_load_straps": [
+    "ZYNQ_PS_MIO7/VM0",
+    "ZYNQ_PS_MIO8\\VM1"
+  ]
+}

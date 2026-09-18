@@ -1,0 +1,11 @@
+{
+  "name": "fixture",
+  "placement": {
+    "wired_sheets": ["zeta", "alpha"],
+    "pilot_prox_sheets": [],
+    "module_offset": [-10, 6.25],
+    "module_face_anchors": {"zeta": "E", "alpha": "S"},
+    "reg_band_prefixes": ["power", "bringup"]
+  },
+  "extension": {"keep": [false, null, 7]}
+}

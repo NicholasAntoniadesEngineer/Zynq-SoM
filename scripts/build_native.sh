@@ -16,6 +16,7 @@ if ! "${PYTHON}" -c "import nanobind" >/dev/null 2>&1; then
     "${PYTHON}" -m pip install 'nanobind>=2.0'
 fi
 cmake -S "${REPO_ROOT}/native" -B "${REPO_ROOT}/native/build" \
+    -DSCHGEN_BUILD_PYTHON=ON \
     -DPython_EXECUTABLE="$(${PYTHON} -c 'import sys; print(sys.executable)')" \
     -DCMAKE_BUILD_TYPE=Release
 cmake --build "${REPO_ROOT}/native/build" --parallel

@@ -19,32 +19,16 @@ DEFAULT_OUT = PROJECT_ROOT / "fpga" / "Zynq_Carrier_pins.xdc"
 
 
 def _function_map() -> dict[str, str]:
-    import importlib.util
-    gen_path = PROJECT_ROOT / "som_conn_gen.py"
-    spec = importlib.util.spec_from_file_location("_xdc_som_conn_gen", gen_path)
-    mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(mod)
-    m = dict(mod.FUNCTION_MAP)
-    m.update(mod.PUDC_STRAPS)
-    return m
+    from schgen.core.link import _function_map as project_function_map
+    return project_function_map()
 
 
 def bank_rail_map() -> dict[str, str]:
     return dict(_project_spec().bank_rails)
 
 
-_IOSTD_SINGLE = {3.3: "LVCMOS33", 2.5: "LVCMOS25", 1.8: "LVCMOS18"}
-
-
 class XdcError(ValueError):
     pass
-
-
-def _rail_volts(rail: str) -> float:
-    try:
-        return _native.module().xdc_rail_volts(rail)
-    except ValueError as exc:
-        raise XdcError(str(exc)) from exc
 
 
 @dataclass

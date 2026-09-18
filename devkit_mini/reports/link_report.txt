@@ -242,7 +242,7 @@ bound ports (230):
 rails (13):
   +1V8 — ISOLATED from SoM '+1V8' pins (round-5 decision: SoM MPM3834 1V8 output on J1.56/58/60 — carrier AP2112K (power:U3) is the only +1V8 source; pins author-NC on the J1 sheet); carrier-local rail (sheets: power, power_mon)
   +1V8_REG — carrier-local rail (sheets: power, power_mon)
-  +3V3 — ISOLATED from SoM '+3V3' pins (round-5 decision: SoM MPM3834 3V3 output on J1.24-27 — carrier TPS54302 (power:U2) is the only +3V3 source; pins author-NC on the J1 sheet); carrier-local rail (sheets: debug_boot, power, power_mon, som_decoupling, som_j2, som_j3, uart_bridge)
+  +3V3 — ISOLATED from SoM '+3V3' pins (round-5 decision: SoM MPM3834 3V3 output on J1.24-27 — carrier LM61460 (power:U2) is the only +3V3 source; pins author-NC on the J1 sheet); carrier-local rail (sheets: debug_boot, power, power_mon, som_decoupling, som_j2, som_j3, uart_bridge)
   +3V3_REG — carrier-local rail (sheets: power, power_mon)
   +3V3_SC <- sheets: debug_boot, pd_input, power_mon, som_decoupling, som_j1 -> SoM 1 pins
   +5V — carrier-local rail (sheets: power, power_mon)

@@ -28,6 +28,7 @@ fp-info-cache
 
 # Exported BOM files (we ship our own carrier/manufacturing/bom_jlc.csv)
 *.xml
+!native/tests/data/som_interface.xml
 
 # OS / editor / IDE artefacts
 .DS_Store
@@ -66,6 +67,8 @@ native/build/
 native/bin/
 native/catalog.bin
 native/circuits.bin
+/carrier/native/*.bin
+/devkit_mini/native/*.bin
 schgen/_geom*.so
 schgen/_geom*.dylib
 schgen/*.so

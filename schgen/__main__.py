@@ -15,7 +15,6 @@ if "--project" in _sys.argv:
 
 import argparse
 import ast
-import csv
 import importlib.util
 import json
 import os
@@ -231,25 +230,15 @@ def _build_into(args: argparse.Namespace, outdir: Path) -> int:
 
 
 def cmd_bom(args: argparse.Namespace) -> int:
-    rows: dict[tuple[str, str, str], list[str]] = {}
-    missing: list[str] = []
-    for name in args.subsystems:
-        mod = _load_subsystem(name)
-        c = mod.circuit()
-        for ref, part in sorted(c.parts.items()):
-            if part.fields.get("BOM") == "exclude":
-                continue
-            lcsc = part.fields.get("LCSC", "")
-            if not lcsc:
-                missing.append(f"{c.name}:{ref} ({part.value})")
-            rows.setdefault((part.value, part.footprint, lcsc), []).append(ref)
+    from schgen.core import native
+    from schgen.core.link import load_subsystem
+
+    circuits = [load_subsystem(name).circuit.to_ir() for name in args.subsystems]
+    text, raw_rows, missing, _no_fp = native.module().generate_bom(circuits, False)
+    rows = {(value, fp, lcsc): refs for value, fp, lcsc, refs in raw_rows}
     out = args.output or (Path.cwd() / "bom_jlc.csv")
     out.parent.mkdir(parents=True, exist_ok=True)
-    with open(out, "w", newline="") as f:
-        w = csv.writer(f)
-        w.writerow(["Comment", "Designator", "Footprint", "LCSC"])
-        for (value, fp, lcsc), refs in sorted(rows.items()):
-            w.writerow([value, ",".join(refs), fp, lcsc])
+    out.write_bytes(text.encode("utf-8"))
     print(f"BOM written: {out} ({len(rows)} line items)")
     if missing:
         print(f"MISSING LCSC ({len(missing)}):")
@@ -558,22 +547,11 @@ def cmd_board(args: argparse.Namespace) -> int:
     _pcb_thread = _threading.Thread(target=_run_pcb, name="pcb+drc", daemon=True)
     _pcb_thread.start()
 
-    rows: dict[tuple[str, str, str], list[str]] = {}
-    missing: list[str] = []
-    for sc in sheets:
-        for ref, part in sorted(sc.circuit.parts.items()):
-            if part.fields.get("BOM") == "exclude":
-                continue
-            lcsc = part.fields.get("LCSC", "")
-            if not lcsc:
-                missing.append(f"{sc.name}:{ref} ({part.value})")
-            rows.setdefault((part.value, part.footprint, lcsc),
-                            []).append(f"{sc.name}:{ref}")
-    with open(man_dir / "bom_jlc.csv", "w", newline="") as f:
-        w = csv.writer(f)
-        w.writerow(["Comment", "Designator", "Footprint", "LCSC"])
-        for (value, fp, lcsc), refs in sorted(rows.items()):
-            w.writerow([value, ",".join(refs), fp, lcsc])
+    from schgen.core import native
+    text, raw_rows, missing, _no_fp = native.module().generate_bom(
+        [sc.circuit.to_ir() for sc in sheets], True)
+    rows = {(value, fp, lcsc): refs for value, fp, lcsc, refs in raw_rows}
+    (man_dir / "bom_jlc.csv").write_bytes(text.encode("utf-8"))
     print(f"BOM: {man_dir / 'bom_jlc.csv'} ({len(rows)} line items"
           f"{f', {len(missing)} missing LCSC' if missing else ''})")
 

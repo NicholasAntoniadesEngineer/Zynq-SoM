@@ -1,0 +1,68 @@
+{
+ "interface": {
+  "source": "som/Zynq_SoM.kicad_sch",
+  "connectors": {
+   "J2": {
+    "value": "Final value",
+    "footprint": null,
+    "pins": {
+     "10": "ZYNQ_PL_N_FINAL",
+     "2": "+VCCO_34",
+     "1": "ZYNQ_PL_P"
+    }
+   },
+   "J1": {
+    "value": "Mezz & \"quoted\" \u03a9",
+    "footprint": "Conn:\ud800\udc00",
+    "pins": {
+     "03": "GND",
+     "99": "+1V8",
+     "1": "/Sheet/ZYNQ_PS_MIO1"
+    }
+   },
+   "J3": {
+    "value": null,
+    "footprint": "",
+    "pins": {
+     "10": "unconnected-(J3-Pad10)",
+     "01": "special & \"quoted\" \u03a9\nline",
+     "": ""
+    }
+   }
+  }
+ },
+ "zynq": {
+  "zynq_ref": "U2",
+  "value": "XC7Z020-CLG484",
+  "source": "som/Zynq_SoM.kicad_sch",
+  "pin_names": {
+   "B2": "IO_L1N_T0_SRCC_34",
+   "B1": "IO_L1P_T0_MRCC_34",
+   "A1": "PS_MIO1_500",
+   "P1": "VCCO_34",
+   "N1": "GND",
+   "NC": "IO_L2P_35"
+  },
+  "ball_net": {
+   "B2": "ZYNQ_PL_N_FINAL",
+   "P1": "+VCCO_34",
+   "B1": "ZYNQ_PL_P",
+   "N1": "GND",
+   "A1": "/Sheet/ZYNQ_PS_MIO1",
+   "NC": "unconnected-(J3-Pad10)",
+   "": ""
+  },
+  "jpin_net": {
+   "J2.10": "ZYNQ_PL_N_FINAL",
+   "J2.2": "+VCCO_34",
+   "J2.1": "ZYNQ_PL_P",
+   "J1.03": "GND",
+   "J1.99": "+1V8",
+   "J1.1": "/Sheet/ZYNQ_PS_MIO1",
+   "J3.10": "unconnected-(J3-Pad10)",
+   "J3.01": "special & \"quoted\" \u03a9\nline",
+   "J3.None": "",
+   "J3.": ""
+  }
+ }
+}

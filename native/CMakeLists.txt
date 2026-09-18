@@ -5,7 +5,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
-option(SCHGEN_BUILD_PYTHON "Build transitional Python bindings" ON)
+option(SCHGEN_BUILD_PYTHON "Build transitional Python bindings" OFF)
 
 # Compile one engine shared by the standalone CLI and transitional bindings.
 add_library(schgen_core STATIC
@@ -14,7 +14,11 @@ add_library(schgen_core STATIC
     src/pack_anchor.cpp src/place_search.cpp src/cc.cpp src/embed_fp.cpp
     src/pack_edges.cpp src/pcb_scan.cpp src/pack_refine.cpp src/place_geom.cpp
     src/catalog.cpp src/json.cpp src/circuit.cpp src/reorder.cpp src/atomic_file.cpp
-    src/ratsnest.cpp src/footprint_library.cpp src/xdc.cpp)
+    src/ratsnest.cpp src/footprint_library.cpp src/xdc.cpp src/vivado.cpp
+    src/bom.cpp src/project.cpp src/project_catalog.cpp src/project_outputs.cpp src/som_interface.cpp
+    src/link.cpp src/devicetree.cpp)
+find_package(LibXml2 REQUIRED)
+target_link_libraries(schgen_core PUBLIC LibXml2::LibXml2)
 target_include_directories(schgen_core PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
 target_compile_options(schgen_core PRIVATE -Wall -Wextra -Wpedantic -Werror)
 set_source_files_properties(src/turn.cpp src/pack_anchor.cpp
@@ -47,7 +51,7 @@ if(SCHGEN_BUILD_PYTHON)
         RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/../schgen")
 endif()
 
-add_executable(schgen src/main.cpp)
+add_executable(schgen src/main.cpp src/project_cli.cpp)
 target_link_libraries(schgen PRIVATE schgen_core)
 target_compile_options(schgen PRIVATE -Wall -Wextra -Wpedantic -Werror)
 set_target_properties(schgen PROPERTIES
@@ -76,6 +80,49 @@ add_custom_target(schgen_catalogs ALL DEPENDS
 
 include(CTest)
 if(BUILD_TESTING)
+    add_executable(schgen_project_outputs_contracts tests/project_outputs_contracts.cpp)
+    target_link_libraries(schgen_project_outputs_contracts PRIVATE schgen_core)
+    target_compile_options(schgen_project_outputs_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror)
+    add_test(NAME native_project_outputs_contracts COMMAND schgen_project_outputs_contracts
+        "${CMAKE_CURRENT_SOURCE_DIR}/..")
+    add_executable(schgen_devicetree_contracts tests/devicetree_contracts.cpp)
+    target_link_libraries(schgen_devicetree_contracts PRIVATE schgen_core)
+    target_compile_options(schgen_devicetree_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror)
+    add_test(NAME native_devicetree_contracts COMMAND schgen_devicetree_contracts
+        "${CMAKE_CURRENT_SOURCE_DIR}/tests/data" "${CMAKE_CURRENT_SOURCE_DIR}/..")
+    add_executable(schgen_link_contracts tests/link_contracts.cpp)
+    target_link_libraries(schgen_link_contracts PRIVATE schgen_core)
+    target_compile_options(schgen_link_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror)
+    add_test(NAME native_link_contracts COMMAND schgen_link_contracts)
+    add_executable(schgen_project_contracts tests/project_contracts.cpp)
+    target_link_libraries(schgen_project_contracts PRIVATE schgen_core)
+    target_compile_options(schgen_project_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror)
+    add_test(NAME native_project_contracts COMMAND schgen_project_contracts
+        "${CMAKE_CURRENT_SOURCE_DIR}/..")
+    add_executable(schgen_som_interface_contracts tests/som_interface_contracts.cpp)
+    target_link_libraries(schgen_som_interface_contracts PRIVATE schgen_core)
+    target_compile_options(schgen_som_interface_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror)
+    add_test(NAME native_som_interface_contracts COMMAND schgen_som_interface_contracts
+        "${CMAKE_CURRENT_SOURCE_DIR}/tests/data")
+    add_executable(schgen_project_catalog_contracts tests/project_catalog_contracts.cpp)
+    target_link_libraries(schgen_project_catalog_contracts PRIVATE schgen_core)
+    target_compile_options(schgen_project_catalog_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror)
+    add_test(NAME native_project_catalog_contracts COMMAND schgen_project_catalog_contracts
+        "${CMAKE_CURRENT_SOURCE_DIR}/..")
+    add_executable(schgen_vivado_contracts tests/vivado_contracts.cpp)
+    target_link_libraries(schgen_vivado_contracts PRIVATE schgen_core)
+    target_compile_options(schgen_vivado_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror)
+    add_test(NAME native_vivado_contracts COMMAND schgen_vivado_contracts
+        "${CMAKE_CURRENT_SOURCE_DIR}/tests/data/vivado_golden.tcl")
+    add_executable(schgen_bom_contracts tests/bom_contracts.cpp)
+    target_link_libraries(schgen_bom_contracts PRIVATE schgen_core)
+    target_compile_options(schgen_bom_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror)
+    add_test(NAME native_bom_contracts COMMAND schgen_bom_contracts
+        "${CMAKE_CURRENT_SOURCE_DIR}/..")
+    foreach(project carrier devkit_mini)
+        add_test(NAME native_project_${project} COMMAND schgen project-check
+            --repo "${CMAKE_CURRENT_SOURCE_DIR}/.." --project ${project})
+    endforeach()
     add_executable(schgen_circuit_semantic_contracts tests/circuit_semantic_contracts.cpp)
     target_link_libraries(schgen_circuit_semantic_contracts PRIVATE schgen_core)
     target_compile_options(schgen_circuit_semantic_contracts PRIVATE

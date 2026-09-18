@@ -2,13 +2,13 @@
  * carrier_pl.dtsi -- Zynq-7000 PS device-tree fragment for the
  * carrier.  GENERATED -- DO NOT EDIT.
  *
- * generated-by: schgen devicetree (schgen/devicetree.py)
- * regenerate:   PYTHONPATH=. python -m schgen devicetree
+ * generated-by: schgen devicetree (native/src/devicetree.cpp)
+ * regenerate:   native/bin/schgen devicetree
  * PS device:    XC7Z020-CLG484 (from the SoM netlist)
  * sources:
  *   contract : devkit_mini/som_interface.json (net <- J pin, same walk as schgen firmware/xdc)
  *   ball map : som/Zynq_SoM.kicad_sch (kicad-cli; PS = reaches no PL ball)
- *   renames  : carrier/som_conn_gen FUNCTION_MAP (MIO -> carrier function net)
+ *   renames  : devkit_mini/som_mapping.json function_map + pudc_straps (MIO -> carrier function net)
  *
  * This is the PS-side twin of carrier/fpga/Zynq_Carrier_pins.xdc:
  * the XDC owns every carrier net that reaches a PL ball; THIS

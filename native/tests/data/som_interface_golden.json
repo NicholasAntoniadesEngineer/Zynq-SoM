@@ -1,0 +1,32 @@
+{
+ "connectors": {
+  "J1": {
+   "footprint": "Conn:\ud800\udc00",
+   "pins": {
+    "03": "GND",
+    "1": "/Sheet/ZYNQ_PS_MIO1",
+    "99": "+1V8"
+   },
+   "value": "Mezz & \"quoted\" \u03a9"
+  },
+  "J2": {
+   "footprint": null,
+   "pins": {
+    "1": "ZYNQ_PL_P",
+    "10": "ZYNQ_PL_N_FINAL",
+    "2": "+VCCO_34"
+   },
+   "value": "Final value"
+  },
+  "J3": {
+   "footprint": "",
+   "pins": {
+    "": "",
+    "01": "special & \"quoted\" \u03a9\nline",
+    "10": "unconnected-(J3-Pad10)"
+   },
+   "value": null
+  }
+ },
+ "source": "som/Zynq_SoM.kicad_sch"
+}

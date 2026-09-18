@@ -18,20 +18,51 @@ ctest --test-dir native/build/standalone --output-on-failure
 native/bin/schgen --help
 ```
 
-This builds the C++ engine, command-line program, and part/circuit catalogs
-without discovering Python, installing nanobind, or fetching dependencies.
-The current CLI supports `self-check`, `catalog-compile`, and `circuit-compile`.
-It does not yet generate a board. Unsupported commands fail.
+This is also the default configuration: Python bindings are opt-in. The build
+uses C++17 and libxml2 (for KiCad netlists), without discovering Python,
+installing nanobind, or fetching dependencies. Live SoM extraction requires
+`kicad-cli` on PATH; it is invoked directly, never through a shell.
+
+The native CLI supports `self-check`, `catalog-compile`, `circuit-compile`,
+`project-check`, `som-interface`, `link`, `bom`, `xdc`, `vivado`, `fpga`, and
+`devicetree`. It does not yet generate a board. Unsupported commands fail.
+
+```sh
+native/bin/schgen project-check --project carrier
+native/bin/schgen project-check --project devkit_mini
+native/bin/schgen fpga --project carrier --output /tmp/carrier-fpga
+native/bin/schgen devicetree --project carrier --output /tmp/carrier_pl.dtsi
+native/bin/schgen bom --project carrier --qualified-refs --output /tmp/carrier-bom.csv
+```
+
+`fpga` generates XDC and Vivado Tcl from one live extraction, validating both
+before publication. Each output is atomically replaced. Project selection is
+explicit (`--project`), then `SCHGEN_PROJECT`, then `carrier`; use `--repo` when
+running outside the repository root. Circuit discovery and loading require
+canonical `<project>/subsystems/<name>/circuit.json`, not authoring Python.
+Function/rail/strap policy is in each project's `som_mapping.json`.
+
+Carrier and devkit XDC/Tcl, and carrier BOM, match the established output bytes.
+Device-tree output changes only generator/source provenance comments. Native
+contract tests cover extraction, mapping, linking, project isolation, rendering
+and validation failures. Full board orchestration remains transitional.
+The full transitional carrier build passes. The devkit's 12 sheet netlist/ERC/
+visual gates pass, but its existing board-level failures remain: two missing
+I2C pull-ups and nine uncovered test-point requirements. Migration does not
+waive or hide those design findings.
 
 `scripts/build_native.sh` still builds the transitional Python bindings. Both
 executables link the same `schgen_core` library; the engine sources compile
 once per build directory. Preserve the per-source floating-point settings:
 these are part of the deterministic-output contract.
 
-Catalogs depend on their JSON inputs and regenerate when those inputs change.
+Build catalogs depend on their JSON inputs and regenerate when those inputs change.
 Compilers publish complete catalogs by atomic replacement, so existing mapped
 readers retain their snapshot during a rebuild. Close and reopen a catalog to
 read its new version. Failed publication leaves the previous file untouched.
+The transitional circuit adapter uses project-scoped `native/circuits.bin`
+outputs under each project, while the parts catalog is shared. Native project
+commands read validated JSON directly and do not depend on interpreter caches.
 Build directories share the in-tree binary and catalog outputs, so build them
 sequentially.
 

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<export version="E">
+  <components>
+    <comp ref="J2"><value>Old</value><footprint>OldFootprint</footprint></comp>
+    <comp ref="J1"><value>Mezz &amp; &quot;quoted&quot; Ω</value><footprint>Conn:𐀀</footprint></comp>
+    <comp ref="U2"><value>XC7Z020-CLG484</value><libsource lib="FPGA" part="Zynq"/></comp>
+    <comp ref="J3"><value/></comp>
+    <comp ref="U9"><libsource lib="MCU" part="STM32"/></comp>
+    <comp ref="J2"><value>Final<!-- ignored --> value</value><footprint/></comp>
+    <comp ref="J4"><value>unused</value></comp>
+  </components>
+  <libparts>
+    <libpart lib="other" part="Zynq"><pins><pin num="X" name="wrong"/></pins></libpart>
+    <libpart lib="FPGA" part="Zynq"><pins>
+      <pin num="B2" name="IO_L1N_T0_34"/>
+      <pin num="B1" name="IO_L1P_T0_MRCC_34"/>
+      <pin num="A1" name="PS_MIO1_500"/>
+      <pin num="P1" name="VCCO_34"/>
+      <pin num="N1" name="GND"/>
+      <pin num="NC" name="IO_L2P_35"/>
+    </pins></libpart>
+    <libpart lib="MCU" part="STM32"><pins><pin num="1" name="PA0"/></pins></libpart>
+    <libpart lib="FPGA" part="Zynq"><pins><pin num="B2" name="IO_L1N_T0_SRCC_34"/></pins></libpart>
+  </libparts>
+  <nets>
+    <net name="ZYNQ_PL_N"><node ref="J2" pin="10"/><node ref="U2" pin="B2"/></net>
+    <net name="+VCCO_34"><node ref="J2" pin="2"/><node ref="U2" pin="P1"/></net>
+    <net name="ZYNQ_PL_P"><node ref="U2" pin="B1"/><node ref="J2" pin="1"/></net>
+    <net name="GND"><node ref="J1" pin="03"/><node ref="U2" pin="N1"/></net>
+    <net name="+1V8"><node ref="J1" pin="99"/></net>
+    <net name="/Sheet/ZYNQ_PS_MIO1"><node ref="J1" pin="1"/><node ref="U2" pin="A1"/></net>
+    <net name="unconnected-(J3-Pad10)"><node ref="J3" pin="10"/><node ref="U2" pin="NC"/></net>
+    <net name="special &amp; &quot;quoted&quot; Ω&#xA;line"><node ref="J3" pin="01"/><node ref="U9" pin="1"/></net>
+    <net name="ZYNQ_PL_N_FINAL"><node ref="J2" pin="10"/><node ref="U2" pin="B2"/></net>
+    <net><node ref="J3"/><node ref="J3" pin=""/><node ref="U2"/></net>
+  </nets>
+</export>

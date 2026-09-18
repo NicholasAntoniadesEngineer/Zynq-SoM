@@ -1,0 +1,1059 @@
+{
+  "schema": "schgen.circuit/1",
+  "name": "power",
+  "title": "Power: +VIN->+5V->+3V3 bucks + +1V8 LDO, PG LEDs",
+  "parts": [
+    {
+      "ref": "U1",
+      "lib_id": "LM61460AANRJRR:LM61460AANRJRR",
+      "value": "LM61460AANRJRR",
+      "footprint": "LM61460AANRJRR:LM61460AANRJRR",
+      "fields": {
+        "LCSC": "C2864505"
+      },
+      "pin_names": {
+        "BIAS": [
+          "1"
+        ],
+        "VCC": [
+          "2"
+        ],
+        "AGND": [
+          "3"
+        ],
+        "FB": [
+          "4"
+        ],
+        "PGOOD": [
+          "5"
+        ],
+        "RT": [
+          "6"
+        ],
+        "EN/SYNC": [
+          "7"
+        ],
+        "VIN1": [
+          "8"
+        ],
+        "PGND1": [
+          "9"
+        ],
+        "SW": [
+          "10"
+        ],
+        "PGND2": [
+          "11"
+        ],
+        "VIN2": [
+          "12"
+        ],
+        "RBOOT": [
+          "13"
+        ],
+        "CBOOT": [
+          "14"
+        ]
+      },
+      "pin_numbers": [
+        "1",
+        "10",
+        "11",
+        "12",
+        "13",
+        "14",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9"
+      ]
+    },
+    {
+      "ref": "C1",
+      "lib_id": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {
+        "LCSC": "C14663"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "C25",
+      "lib_id": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {
+        "LCSC": "C14663"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "C2",
+      "lib_id": "Device:C",
+      "value": "10u",
+      "footprint": "Capacitor_SMD:C_1206_3216Metric",
+      "fields": {
+        "LCSC": "C13585"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "C3",
+      "lib_id": "Device:C",
+      "value": "10u",
+      "footprint": "Capacitor_SMD:C_1206_3216Metric",
+      "fields": {
+        "LCSC": "C13585"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "C24",
+      "lib_id": "Device:C",
+      "value": "1u",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {
+        "LCSC": "C15849"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "R11",
+      "lib_id": "Device:R",
+      "value": "10R",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C22859"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "C28",
+      "lib_id": "Device:C",
+      "value": "1u",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {
+        "LCSC": "C15849"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "R10",
+      "lib_id": "Device:R",
+      "value": "22k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C31850"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "C4",
+      "lib_id": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {
+        "LCSC": "C14663"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "L1",
+      "lib_id": "Device:L",
+      "value": "10uH",
+      "footprint": "SWPA8040S100MT:SWPA8040S100MT",
+      "fields": {
+        "LCSC": "C37429"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "C5",
+      "lib_id": "Device:C",
+      "value": "22u",
+      "footprint": "Capacitor_SMD:C_0805_2012Metric",
+      "fields": {
+        "LCSC": "C45783"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "C6",
+      "lib_id": "Device:C",
+      "value": "22u",
+      "footprint": "Capacitor_SMD:C_0805_2012Metric",
+      "fields": {
+        "LCSC": "C45783"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "C26",
+      "lib_id": "Device:C",
+      "value": "22u",
+      "footprint": "Capacitor_SMD:C_0805_2012Metric",
+      "fields": {
+        "LCSC": "C45783"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "R1",
+      "lib_id": "Device:R",
+      "value": "40.2k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C12447"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "R2",
+      "lib_id": "Device:R",
+      "value": "10k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C25804"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "C27",
+      "lib_id": "Device:C",
+      "value": "22p",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {
+        "LCSC": "C1653"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "R12",
+      "lib_id": "Device:R",
+      "value": "1k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C21190"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "D1",
+      "lib_id": "Device:LED",
+      "value": "red",
+      "footprint": "LED_SMD:LED_0603_1608Metric",
+      "fields": {
+        "LCSC": "C2286"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "R3",
+      "lib_id": "Device:R",
+      "value": "1k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C21190"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "U2",
+      "lib_id": "LM61460AANRJRR:LM61460AANRJRR",
+      "value": "LM61460AANRJRR",
+      "footprint": "LM61460AANRJRR:LM61460AANRJRR",
+      "fields": {
+        "LCSC": "C2864505"
+      },
+      "pin_names": {
+        "BIAS": [
+          "1"
+        ],
+        "VCC": [
+          "2"
+        ],
+        "AGND": [
+          "3"
+        ],
+        "FB": [
+          "4"
+        ],
+        "PGOOD": [
+          "5"
+        ],
+        "RT": [
+          "6"
+        ],
+        "EN/SYNC": [
+          "7"
+        ],
+        "VIN1": [
+          "8"
+        ],
+        "PGND1": [
+          "9"
+        ],
+        "SW": [
+          "10"
+        ],
+        "PGND2": [
+          "11"
+        ],
+        "VIN2": [
+          "12"
+        ],
+        "RBOOT": [
+          "13"
+        ],
+        "CBOOT": [
+          "14"
+        ]
+      },
+      "pin_numbers": [
+        "1",
+        "10",
+        "11",
+        "12",
+        "13",
+        "14",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9"
+      ]
+    },
+    {
+      "ref": "C7",
+      "lib_id": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {
+        "LCSC": "C14663"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "C29",
+      "lib_id": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {
+        "LCSC": "C14663"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "C8",
+      "lib_id": "Device:C",
+      "value": "22u",
+      "footprint": "Capacitor_SMD:C_0805_2012Metric",
+      "fields": {
+        "LCSC": "C45783"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "C30",
+      "lib_id": "Device:C",
+      "value": "22u",
+      "footprint": "Capacitor_SMD:C_0805_2012Metric",
+      "fields": {
+        "LCSC": "C45783"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "C31",
+      "lib_id": "Device:C",
+      "value": "1u",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {
+        "LCSC": "C15849"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "R13",
+      "lib_id": "Device:R",
+      "value": "10R",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C22859"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "C32",
+      "lib_id": "Device:C",
+      "value": "1u",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {
+        "LCSC": "C15849"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "R14",
+      "lib_id": "Device:R",
+      "value": "22k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C31850"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "C9",
+      "lib_id": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {
+        "LCSC": "C14663"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "L2",
+      "lib_id": "Device:L",
+      "value": "10uH",
+      "footprint": "SWPA8040S100MT:SWPA8040S100MT",
+      "fields": {
+        "LCSC": "C37429"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "C10",
+      "lib_id": "Device:C",
+      "value": "22u",
+      "footprint": "Capacitor_SMD:C_0805_2012Metric",
+      "fields": {
+        "LCSC": "C45783"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "C11",
+      "lib_id": "Device:C",
+      "value": "22u",
+      "footprint": "Capacitor_SMD:C_0805_2012Metric",
+      "fields": {
+        "LCSC": "C45783"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "R4",
+      "lib_id": "Device:R",
+      "value": "23.2k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C23346"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "R5",
+      "lib_id": "Device:R",
+      "value": "10k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C25804"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "C23",
+      "lib_id": "Device:C",
+      "value": "22p",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {
+        "LCSC": "C1653"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "R15",
+      "lib_id": "Device:R",
+      "value": "1k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C21190"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "D2",
+      "lib_id": "Device:LED",
+      "value": "red",
+      "footprint": "LED_SMD:LED_0603_1608Metric",
+      "fields": {
+        "LCSC": "C2286"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "R6",
+      "lib_id": "Device:R",
+      "value": "330R",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C23138"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "U3",
+      "lib_id": "Regulator_Linear:AP2204K-1.5",
+      "value": "AP2112K-1.8",
+      "footprint": "Package_TO_SOT_SMD:SOT-23-5",
+      "fields": {
+        "LCSC": "C176944",
+        "MPN": "AP2112K-1.8TRG1",
+        "Datasheet": "https://www.lcsc.com/datasheet/C176944.pdf"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "C12",
+      "lib_id": "Device:C",
+      "value": "1u",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {
+        "LCSC": "C15849"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "C13",
+      "lib_id": "Device:C",
+      "value": "1u",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {
+        "LCSC": "C15849"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "R7",
+      "lib_id": "Device:R",
+      "value": "1k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C21190"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "R8",
+      "lib_id": "Device:R",
+      "value": "100k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C25803"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "Q1",
+      "lib_id": "Transistor_FET:Q_NMOS_GSD",
+      "value": "AO3400A",
+      "footprint": "Package_TO_SOT_SMD:SOT-23",
+      "fields": {
+        "LCSC": "C20917",
+        "MPN": "AO3400A",
+        "Datasheet": "https://www.lcsc.com/datasheet/C20917.pdf"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "R9",
+      "lib_id": "Device:R",
+      "value": "330R",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C23138"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "D3",
+      "lib_id": "Device:LED",
+      "value": "red",
+      "footprint": "LED_SMD:LED_0603_1608Metric",
+      "fields": {
+        "LCSC": "C2286"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "TP1",
+      "lib_id": "Connector:TestPoint",
+      "value": "+5V",
+      "footprint": "TestPoint:TestPoint_Pad_D1.5mm",
+      "fields": {
+        "BOM": "exclude"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "TP2",
+      "lib_id": "Connector:TestPoint",
+      "value": "+3V3",
+      "footprint": "TestPoint:TestPoint_Pad_D1.5mm",
+      "fields": {
+        "BOM": "exclude"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "TP3",
+      "lib_id": "Connector:TestPoint",
+      "value": "+1V8",
+      "footprint": "TestPoint:TestPoint_Pad_D1.5mm",
+      "fields": {
+        "BOM": "exclude"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    },
+    {
+      "ref": "TP4",
+      "lib_id": "Connector:TestPoint",
+      "value": "GND",
+      "footprint": "TestPoint:TestPoint_Pad_D1.5mm",
+      "fields": {
+        "BOM": "exclude"
+      },
+      "pin_names": {},
+      "pin_numbers": []
+    }
+  ],
+  "nets": [
+    {
+      "name": "+VIN_SYS",
+      "net_class": "power",
+      "pins": [
+        "U1.8",
+        "U1.12",
+        "C1.1",
+        "C25.1",
+        "C2.1",
+        "C3.1"
+      ]
+    },
+    {
+      "name": "GND",
+      "net_class": "ground",
+      "pins": [
+        "U1.9",
+        "U1.11",
+        "U1.3",
+        "C1.2",
+        "C25.2",
+        "C2.2",
+        "C3.2",
+        "C24.2",
+        "C28.2",
+        "R10.2",
+        "C5.2",
+        "C6.2",
+        "C26.2",
+        "R2.2",
+        "R3.2",
+        "U2.9",
+        "U2.11",
+        "U2.3",
+        "C7.2",
+        "C29.2",
+        "C8.2",
+        "C30.2",
+        "C31.2",
+        "C32.2",
+        "R14.2",
+        "C10.2",
+        "C11.2",
+        "R5.2",
+        "R6.2",
+        "U3.2",
+        "C12.2",
+        "C13.2",
+        "R8.2",
+        "Q1.2",
+        "TP4.1"
+      ]
+    },
+    {
+      "name": "EN_5V0",
+      "net_class": "port",
+      "pins": [
+        "U1.7"
+      ]
+    },
+    {
+      "name": "U1_VCC",
+      "net_class": "signal",
+      "pins": [
+        "U1.2",
+        "C24.1"
+      ]
+    },
+    {
+      "name": "+5V_REG",
+      "net_class": "power",
+      "pins": [
+        "R11.1",
+        "L1.2",
+        "C5.1",
+        "C6.1",
+        "C26.1",
+        "R1.1",
+        "C27.1",
+        "D1.2"
+      ]
+    },
+    {
+      "name": "BIAS_5V0",
+      "net_class": "signal",
+      "pins": [
+        "U1.1",
+        "R11.2",
+        "C28.1"
+      ]
+    },
+    {
+      "name": "RT_5V0",
+      "net_class": "signal",
+      "pins": [
+        "U1.6",
+        "R10.1"
+      ]
+    },
+    {
+      "name": "BOOT_5V0",
+      "net_class": "signal",
+      "pins": [
+        "U1.14",
+        "U1.13",
+        "C4.1"
+      ]
+    },
+    {
+      "name": "SW_5V0",
+      "net_class": "signal",
+      "pins": [
+        "U1.10",
+        "C4.2",
+        "L1.1"
+      ]
+    },
+    {
+      "name": "FB_5V0",
+      "net_class": "signal",
+      "pins": [
+        "U1.4",
+        "R1.2",
+        "R2.1",
+        "R12.2"
+      ]
+    },
+    {
+      "name": "CFF_5V0",
+      "net_class": "signal",
+      "pins": [
+        "C27.2",
+        "R12.1"
+      ]
+    },
+    {
+      "name": "PG_5V0",
+      "net_class": "signal",
+      "pins": [
+        "D1.1",
+        "R3.1"
+      ]
+    },
+    {
+      "name": "+5V",
+      "net_class": "power",
+      "pins": [
+        "U2.8",
+        "U2.12",
+        "C7.1",
+        "C29.1",
+        "C8.1",
+        "C30.1",
+        "TP1.1"
+      ]
+    },
+    {
+      "name": "EN_3V3",
+      "net_class": "port",
+      "pins": [
+        "U2.7"
+      ]
+    },
+    {
+      "name": "U2_VCC",
+      "net_class": "signal",
+      "pins": [
+        "U2.2",
+        "C31.1"
+      ]
+    },
+    {
+      "name": "+3V3_REG",
+      "net_class": "power",
+      "pins": [
+        "R13.1",
+        "L2.2",
+        "C10.1",
+        "C11.1",
+        "R4.1",
+        "C23.1",
+        "D2.2"
+      ]
+    },
+    {
+      "name": "BIAS_3V3",
+      "net_class": "signal",
+      "pins": [
+        "U2.1",
+        "R13.2",
+        "C32.1"
+      ]
+    },
+    {
+      "name": "RT_3V3",
+      "net_class": "signal",
+      "pins": [
+        "U2.6",
+        "R14.1"
+      ]
+    },
+    {
+      "name": "BOOT_3V3",
+      "net_class": "signal",
+      "pins": [
+        "U2.14",
+        "U2.13",
+        "C9.1"
+      ]
+    },
+    {
+      "name": "SW_3V3",
+      "net_class": "signal",
+      "pins": [
+        "U2.10",
+        "C9.2",
+        "L2.1"
+      ]
+    },
+    {
+      "name": "FB_3V3",
+      "net_class": "signal",
+      "pins": [
+        "U2.4",
+        "R4.2",
+        "R5.1",
+        "R15.2"
+      ]
+    },
+    {
+      "name": "CFF_3V3",
+      "net_class": "signal",
+      "pins": [
+        "C23.2",
+        "R15.1"
+      ]
+    },
+    {
+      "name": "PG_3V3",
+      "net_class": "signal",
+      "pins": [
+        "D2.1",
+        "R6.1"
+      ]
+    },
+    {
+      "name": "+3V3",
+      "net_class": "power",
+      "pins": [
+        "U3.1",
+        "C12.1",
+        "D3.2",
+        "TP2.1"
+      ]
+    },
+    {
+      "name": "EN_1V8",
+      "net_class": "port",
+      "pins": [
+        "U3.3"
+      ]
+    },
+    {
+      "name": "+1V8_REG",
+      "net_class": "power",
+      "pins": [
+        "U3.5",
+        "C13.1"
+      ]
+    },
+    {
+      "name": "+1V8",
+      "net_class": "power",
+      "pins": [
+        "R7.1",
+        "TP3.1"
+      ]
+    },
+    {
+      "name": "PG_1V8_G",
+      "net_class": "signal",
+      "pins": [
+        "R7.2",
+        "R8.1",
+        "Q1.1"
+      ]
+    },
+    {
+      "name": "PG_1V8_D",
+      "net_class": "signal",
+      "pins": [
+        "Q1.3",
+        "R9.2"
+      ]
+    },
+    {
+      "name": "PG_1V8_K",
+      "net_class": "signal",
+      "pins": [
+        "R9.1",
+        "D3.1"
+      ]
+    }
+  ],
+  "nc": [
+    "U1.5",
+    "U2.5",
+    "U3.4"
+  ],
+  "port_types": {
+    "EN_5V0": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "bringup (wave 2 rail-enable cells, dossier section 3.1)"
+    },
+    "EN_3V3": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "bringup (wave 2 rail-enable cells, dossier section 3.1)"
+    },
+    "EN_1V8": {
+      "kind": "single",
+      "pair_with": null,
+      "impedance": null,
+      "role": null,
+      "bus": null,
+      "speed_hz": null,
+      "level_v": null,
+      "expect": "bringup (wave 2 rail-enable cells, dossier section 3.1)"
+    }
+  },
+  "hints": {},
+  "loads": {
+    "+5V": [
+      [
+        0.004,
+        "PG LED (KT-0603R + 1k, ~3 mA) + FB divider 60 uA"
+      ]
+    ],
+    "+3V3": [
+      [
+        0.009,
+        "PG LED (330R ~3.9 mA) + 1V8 PG sense LED chain (330R ~3.9 mA) + FB divider 27 uA"
+      ]
+    ],
+    "+1V8": [
+      [
+        0.001,
+        "PG FET gate divider 10k+100k (16 uA), rounded up"
+      ]
+    ]
+  },
+  "tp_waivers": {},
+  "decap_waivers": {},
+  "pull_waivers": {},
+  "reset_waivers": {},
+  "strap_waivers": {},
+  "ep_waivers": {},
+  "thermal_waivers": {},
+  "part_rule_waivers": {}
+}

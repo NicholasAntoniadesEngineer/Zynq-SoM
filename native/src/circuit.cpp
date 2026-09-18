@@ -11,6 +11,7 @@
 #include <fcntl.h>
 #include <filesystem>
 #include <fstream>
+#include <limits>
 #include <map>
 #include <set>
 #include <stdexcept>
@@ -210,8 +211,11 @@ int32_t opt_int32_field(const JsonNode& node, const std::string& key,
     if (field->kind != JsonKind::Number) {
         throw std::runtime_error(prefix + ": field '" + key + "' must be a number or null");
     }
-    if (std::trunc(field->number_value) != field->number_value) {
-        throw std::runtime_error(prefix + ": field '" + key + "' must be an integer or null");
+    if (!std::isfinite(field->number_value)
+        || std::trunc(field->number_value) != field->number_value
+        || field->number_value < std::numeric_limits<int32_t>::min()
+        || field->number_value > std::numeric_limits<int32_t>::max()) {
+        throw std::runtime_error(prefix + ": field '" + key + "' must be a signed 32-bit integer or null");
     }
     *present = true;
     return static_cast<int32_t>(field->number_value);
@@ -229,6 +233,9 @@ double opt_f64_field(const JsonNode& node, const std::string& key,
     }
     if (field->kind != JsonKind::Number) {
         throw std::runtime_error(prefix + ": field '" + key + "' must be a number or null");
+    }
+    if (!std::isfinite(field->number_value)) {
+        throw std::runtime_error(prefix + ": field '" + key + "' must be finite");
     }
     *present = true;
     return field->number_value;
@@ -363,6 +370,9 @@ std::vector<CircuitLoadIr> parse_loads(const JsonNode& node, const std::string& 
             }
             CircuitLoadIr rec;
             rec.rail = kv.first;
+            if (!std::isfinite(row.array_value[0].number_value)) {
+                throw std::runtime_error(prefix + ": loads amps must be finite");
+            }
             rec.amps = row.array_value[0].number_value;
             rec.note = row.array_value[1].string_value;
             out.push_back(std::move(rec));
@@ -518,19 +528,17 @@ void validate_circuit_semantics(const CircuitSheetIr& sheet) {
     }
 }
 
-CircuitSheetIr parse_circuit_json(const fs::path& path) {
-    const JsonNode root = parse_json_file(path.string());
+CircuitSheetIr parse_sheet_ir(const JsonNode& root) {
     static const std::set<std::string> allowed = {
         "schema", "name", "title", "parts", "nets", "nc", "port_types",
         "hints", "loads", "tp_waivers", "decap_waivers", "pull_waivers",
         "reset_waivers", "strap_waivers", "ep_waivers", "thermal_waivers",
         "part_rule_waivers"};
-    reject_unknown_keys(root, allowed, "circuit " + path.string());
+    reject_unknown_keys(root, allowed, "circuit");
     CircuitSheetIr sheet;
     sheet.schema = require_string(root, "schema", false, "circuit");
     if (sheet.schema != kCircuitSchema) {
-        throw std::runtime_error("circuit: " + path.string()
-                                 + " schema must be " + std::string(kCircuitSchema));
+        throw std::runtime_error("circuit: schema must be " + std::string(kCircuitSchema));
     }
     sheet.name = require_string(root, "name", false, "circuit");
     sheet.title = require_string(root, "title", true, "circuit");
@@ -615,6 +623,26 @@ CircuitSheetIr parse_circuit_json(const fs::path& path) {
     sheet.waivers = parse_waivers(root, "circuit");
     validate_circuit_semantics(sheet);
     return sheet;
+}
+
+// JsonNode can also be constructed by native callers or binding adapters,
+// bypassing the file parser's duplicate-key and finite-number checks.
+void validate_ir_json(const JsonNode& node, const std::string& where) {
+    if (node.kind == JsonKind::Object) {
+        std::set<std::string> keys;
+        for (const auto& item : node.object_value) {
+            if (!keys.insert(item.first).second) {
+                throw std::runtime_error(where + ": duplicate key '" + item.first + "'");
+            }
+            validate_ir_json(item.second, where + "." + item.first);
+        }
+    } else if (node.kind == JsonKind::Array) {
+        for (std::size_t i = 0; i < node.array_value.size(); ++i) {
+            validate_ir_json(node.array_value[i], where + "[" + std::to_string(i) + "]");
+        }
+    } else if (node.kind == JsonKind::Number && !std::isfinite(node.number_value)) {
+        throw std::runtime_error(where + ": number must be finite");
+    }
 }
 
 void validate_header(const uint8_t* data, std::size_t size) {
@@ -705,6 +733,22 @@ std::vector<fs::path> find_circuit_json(const fs::path& root) {
 
 }  // namespace
 
+CircuitSheetIr parse_circuit_ir(const JsonNode& root) {
+    validate_ir_json(root, "circuit IR");
+    return parse_sheet_ir(root);
+}
+
+CircuitSheetIr load_circuit_json(const fs::path& path) {
+    try {
+        if (!fs::is_regular_file(path)) {
+            throw std::runtime_error("canonical circuit.json missing or not a regular file");
+        }
+        return parse_circuit_ir(parse_json_file(path.string()));
+    } catch (const std::exception& error) {
+        throw std::runtime_error("circuit " + path.string() + ": " + error.what());
+    }
+}
+
 bool compile_circuit_catalog(const std::string& circuits_dir,
                              const std::string& catalog_path) {
     try {
@@ -713,7 +757,7 @@ bool compile_circuit_catalog(const std::string& circuits_dir,
         std::set<std::string> names;
         sheets.reserve(paths.size());
         for (const fs::path& path : paths) {
-            CircuitSheetIr sheet = parse_circuit_json(path);
+            CircuitSheetIr sheet = load_circuit_json(path);
             if (!names.insert(sheet.name).second) {
                 throw std::runtime_error("circuit: duplicate sheet name '" + sheet.name + "'");
             }
