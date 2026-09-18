@@ -86,6 +86,7 @@ void seating() {
 }
 
 void placement_limits() {
+    rejects([] { schgen::relax_pad(-1, 0.1); });
     require(schgen::gap_over_limit(std::nullopt, 3.0), "missing gap must fail upper bound");
     require(!schgen::gap_under_limit(std::nullopt, 3.0), "missing gap has no lower bound");
     require(!schgen::gap_over_limit(3.0, 3.0), "upper bound must be strict");

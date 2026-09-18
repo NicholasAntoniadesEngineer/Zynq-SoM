@@ -552,7 +552,7 @@ std::vector<std::tuple<double, double, std::string>> named_box_center_sigs(
         boxes,
     int digits);
 double cross_budget(double board_w, double board_h, double n_sub, double k);
-double relax_pad(double scale, double step);
+double relax_pad(int scale, double step);
 double template_clear_pad(double clearance, double margin, double pad);
 
 std::vector<std::vector<Seg2>> cluster_slot_segs(

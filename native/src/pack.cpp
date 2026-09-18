@@ -3183,7 +3183,10 @@ double cross_budget(double board_w, double board_h, double n_sub, double k) {
     return k * std::sqrt(area) * n_sub;
 }
 
-double relax_pad(double scale, double step) { return scale * step; }
+double relax_pad(int scale, double step) {
+    if (scale < 0) throw std::runtime_error("relax_pad: scale required");
+    return static_cast<double>(scale) * step;
+}
 
 double template_clear_pad(double clearance, double margin, double pad) {
     return (clearance + margin) + pad;

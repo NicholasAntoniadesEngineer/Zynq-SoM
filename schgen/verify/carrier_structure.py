@@ -1,9 +1,12 @@
 from __future__ import annotations
 
 import importlib.util
+import json
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from schgen.core.artifacts import is_sync_duplicate
+from schgen.core.model import Circuit
 from schgen.core.project import PROJECT_ROOT
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -73,6 +76,8 @@ class Result:
                      "<name>.py + test_<name>.py")
         lines.append("           (NOT foldered) with a callable circuit() + a "
                      "META dict.")
+        lines.append("           An IR-only <name>/circuit.json companion must "
+                     "match circuit() exactly.")
         lines.append("  LOCAL  (no generic library): foldered <name>/ with "
                      "<name>.py + __init__.py +")
         lines.append("           README.md + test_<name>.py + <name>.cir and a "
@@ -122,8 +127,13 @@ def check_package(name: str, base: Path = CARRIER_SUBSYSTEMS_DIR,
         rep.path = netlist
         rep.missing = [f for f in required_files(name, adapter=True)
                        if not (base / f).exists()]
-        if (base / name).is_dir():
-            rep.missing.append(f"{name}/ (adapter must be FLAT, not foldered)")
+        companion = base / name
+        if companion.is_dir():
+            entries = [p.name for p in companion.iterdir()
+                       if not is_sync_duplicate(p)]
+            if entries != ["circuit.json"]:
+                rep.missing.append(
+                    f"{name}/ (adapter companion must contain only circuit.json)")
     else:
         pkg = base / name
         rep.path = pkg
@@ -144,7 +154,11 @@ def check_package(name: str, base: Path = CARRIER_SUBSYSTEMS_DIR,
         rep.has_circuit = callable(fn)
         rep.has_meta = isinstance(getattr(mod, "META", None), dict)
         if rep.has_circuit:
-            fn()
+            circuit = fn()
+            if adapter and (base / name).is_dir():
+                payload = json.loads((base / name / "circuit.json").read_text())
+                if Circuit.from_ir(payload).to_ir() != circuit.to_ir():
+                    rep.errors.append("circuit.json differs from the adapter netlist")
     except Exception as exc:  # noqa: BLE001 — surface as a report line
         rep.errors.append(f"{type(exc).__name__}: {exc}")
     return rep

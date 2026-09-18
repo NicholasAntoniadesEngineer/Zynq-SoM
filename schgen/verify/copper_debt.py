@@ -459,7 +459,7 @@ def _dp_ref_entry(bc: BoardCopper | None) -> Entry:
 
 def _som_fanout_entry(bc: BoardCopper | None) -> Entry:
     where = [_where("CD-08", "schgen/generate/pcb/embed.py",
-                    '[Sym("name"), "SoM_body_keepout"]')]
+                    'corners, uid("som-keepout"), "SoM_body_keepout"')]
     assumes = ("the under-SoM bottom-side rail-entry decoupling "
                "(som_decoupling) reaches the rails/planes through fanout "
                "vias directly beneath the DF40 mezzanine")
