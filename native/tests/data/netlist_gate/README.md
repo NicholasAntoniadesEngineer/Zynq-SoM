@@ -55,8 +55,23 @@ add_test(NAME native_netlist_gate_live_contracts
 main or module is required by the standalone contracts. The transitional adapter
 now dispatches extraction and all netlist decisions to this same core. Call
 `validate_circuit(circuit, library)` separately: the netlist gate deliberately
-preserves the original explicit-NC missing-part exemption and is not a
+exempts only NC-only missing parts and is not a
 substitute for symbol-backed pin completeness, visual validation or ERC.
+
+## Intentional correction after the parity baseline
+
+The legacy gate exempted any missing part with at least one NC declaration,
+even when another pin carried a declared internal signal. That could return
+PASS for a completely absent component. The native gate now requires an exempt
+part to have no netted pins. A regression first reproduced the false PASS;
+another retains the legitimate NC-only exemption. NC and netted reference sets
+are indexed once, replacing the per-part scan through NC declarations.
+
+The frozen source reports remain untouched. `empty_export` and
+`power_pseudo_ref` now additionally require `U1: missing from extracted netlist`;
+tests assert that diagnostic separately and compare every original category.
+The 12,000-case parity result below records the pre-correction baseline, not a
+claim that this intentional behavior change matches the old implementation.
 
 ## Provenance
 

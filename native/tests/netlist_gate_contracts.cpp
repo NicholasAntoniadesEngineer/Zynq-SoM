@@ -158,7 +158,16 @@ void contracts(Suite& suite, const fs::path& fixtures, const fs::path& self, con
             auto text = path ? read(fixtures / path->string_value) : str(spec, "schematic_text");
             if (const auto* suffix = object_field(spec, "append_nc"))
                 text = text.substr(0, text.rfind(')')) + "(no_connect" + suffix->string_value;
-            compare(check_netlist(circuits.at(str(spec,"circuit")), netlist(field(spec,"extracted")), text), field(spec,"expected"));
+            auto actual = check_netlist(circuits.at(str(spec,"circuit")), netlist(field(spec,"extracted")), text);
+            if (name == "empty_export" || name == "power_pseudo_ref") {
+                // Deliberate correction to the frozen legacy reports: U1.2 is
+                // NC but U1.1 is netted, so U1 cannot be exempted as NC-only.
+                // Assert the new diagnostic, then compare all old categories.
+                require(actual.part_mismatches == std::vector<std::string>{"U1: missing from extracted netlist"},
+                        "missing netted component exemption regressed");
+                actual.part_mismatches.clear();
+            }
+            compare(actual, field(spec,"expected"));
         });
     }
     suite.run("normalization", [&] {
@@ -175,9 +184,16 @@ void contracts(Suite& suite, const fs::path& fixtures, const fs::path& self, con
         require(messages == strings(field(expected.at("dead_two_terminal"),"shorts")) && messages.size() == 3,
                 "cap/resistor/inductor detection changed");
     });
-    suite.run("single internal signal pin retains reference semantics", [&] {
+    suite.run("partial NC cannot exempt a missing netted component", [&] {
         auto c = circuits.at("simple"); c.nets[0].net_class = "signal";
-        require(check_netlist(c, ExtractedNetlist{}, "").ok, "netlist gate substituted for electrical completeness");
+        const auto result = check_netlist(c, ExtractedNetlist{}, "");
+        require(!result.ok && result.part_mismatches == std::vector<std::string>{"U1: missing from extracted netlist"},
+                "one NC declaration hid an absent component with a declared signal pin");
+    });
+    suite.run("NC-only component remains exempt", [&] {
+        auto c = circuits.at("simple"); c.nets.clear();
+        require(check_netlist(c, ExtractedNetlist{}, "").ok,
+                "NC-only part unexpectedly required an extracted net");
     });
     for (const auto& text : std::vector<std::string>{"", "<export>", "<export/><export/>", "<export a='&undefined;'/>",
             "<!DOCTYPE export [<!ENTITY e SYSTEM 'file:///etc/passwd'>]><export><nets>&e;</nets></export>",

@@ -44,6 +44,13 @@ Implementation decisions (autonomous, per full-autonomy directive):
   pads are observers, not regulator stages. Connector-sheet auxiliaries belong
   in the normal PCB packing path, while DF40 geometry remains fixed; placement
   exceptions must unwind the build ledger.
+- Move complete netlist verification into C++, sharing the hardened KiCad
+  process/XML boundary with SoM extraction. Preserve frozen reference reports
+  first, then independently correct the legacy missing-part exemption: a part
+  with any declared netted pin cannot be excused merely because another pin is
+  NC. A regression reproduced the false PASS before the correction; NC-only
+  components remain exempt. Index NC/netted references once instead of scanning
+  every NC declaration for every part.
 
 The complete devkit build now passes all 12 sheets and board-level checks.
 The complete carrier build passes all 37 sheets with the native schematic

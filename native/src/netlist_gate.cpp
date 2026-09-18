@@ -289,11 +289,19 @@ NetlistGateResult check_netlist(const CircuitSheetIr& circuit, const ExtractedNe
             out.name_mismatches.push_back(pin_text({pin.ref, pin.pin}) + ": declared " + repr(net.name) + " but extracted " + repr(it->second)
                 + (it->second.find("Net-(") != std::string::npos ? " [LOST-NAME rail: power symbol/label did not attach]" : ""));
     }
+    std::set<std::string> nc_refs, netted_refs;
+    for (const auto& pin : circuit.nc) nc_refs.insert(pin.ref);
+    for (const auto& [pin, net] : declared) {
+        (void)net;
+        netted_refs.insert(pin.first);
+    }
     for (const auto& part : circuit.parts) {
-        // The original gate exempts absent refs having explicit NC declarations.
-        // This is NOT pin completeness: callers still run validate_circuit.
-        const bool has_nc = std::any_of(circuit.nc.begin(), circuit.nc.end(), [&](const auto& pin) { return pin.ref == part.ref; });
-        if (!extracted_refs.count(part.ref) && !has_nc) out.part_mismatches.push_back(part.ref + ": missing from extracted netlist");
+        // Only an NC-only part can legitimately have no extracted net entry.
+        // A single NC pin must not exempt other, declared signal/rail pins.
+        // Index once rather than rescanning every NC declaration for each part.
+        const bool nc_only = nc_refs.count(part.ref) && !netted_refs.count(part.ref);
+        if (!extracted_refs.count(part.ref) && !nc_only)
+            out.part_mismatches.push_back(part.ref + ": missing from extracted netlist");
     }
     out.ok = out.shorts.empty() && out.opens.empty() && out.nc_cheats.empty() && out.part_mismatches.empty() && out.name_mismatches.empty();
     return out;

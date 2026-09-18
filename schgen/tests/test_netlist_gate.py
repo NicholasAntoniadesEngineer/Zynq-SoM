@@ -47,6 +47,21 @@ def test_native_adapter_preserves_public_net_classes(tmp_path, monkeypatch, name
     assert netlist_gate.check(circuit, path).ok
 
 
+def test_partial_nc_does_not_hide_missing_signal_component(tmp_path, monkeypatch):
+    from schgen.core.model import Circuit
+
+    circuit = Circuit("partial_nc")
+    circuit.part("J1", "Connector_Generic:Conn_01x02", "header", "")
+    circuit.net("LOCAL", "J1.1")
+    circuit.nc("J1.2")
+    path = tmp_path / "empty.kicad_sch"
+    path.write_text("(kicad_sch)")
+    monkeypatch.setattr(netlist_gate, "extract_netlist", lambda _: {})
+    result = netlist_gate.check(circuit, path)
+    assert not result.ok
+    assert result.part_mismatches == ["J1: missing from extracted netlist"]
+
+
 @_needs_kicad
 @pytest.mark.parametrize("probe_count", [1, 2])
 def test_probe_only_port_connects_across_sheet_hierarchy(tmp_path, probe_count):
