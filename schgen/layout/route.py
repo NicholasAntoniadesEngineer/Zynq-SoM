@@ -55,42 +55,26 @@ def cells_between(a: Point, b: Point) -> list[Cell]:
 
 class Grid:
     def __init__(self) -> None:
-        self.owner: dict[Cell, str] = {}
         if not _nat.loaded():
             raise RuntimeError("native RouteGrid required")
         self._cpp = _nat.module().RouteGrid()
 
+    @property
+    def owner(self) -> dict[Cell, str]:
+        """Read-only snapshot for diagnostics and the differential reference."""
+        return {(i, j): owner for i, j, owner in self._cpp.owners()}
+
     def claim(self, owner: str, cells: list[Cell], what: str = "") -> None:
-        if self._cpp is not None:
-            try:
-                self._cpp.claim(owner, [(int(c[0]), int(c[1])) for c in cells],
-                                what)
-            except RuntimeError as exc:
-                raise RouteError(str(exc)) from exc
-        for c in cells:
-            cur = self.owner.get(c)
-            if cur is not None and cur != owner:
-                raise RouteError(
-                    f"cell {point_of(c)} contested: {cur!r} vs {owner!r} ({what})")
-            self.owner[c] = owner
+        try:
+            self._cpp.claim(owner, [(int(c[0]), int(c[1])) for c in cells], what)
+        except RuntimeError as exc:
+            raise RouteError(str(exc)) from exc
 
     def block_box(self, box: tuple[float, float, float, float]) -> None:
-        if self._cpp is not None:
-            self._cpp.block_box(box[0], box[1], box[2], box[3], GRID)
-        x0, y0, x1, y1 = box
-        i0, i1 = int(x0 / GRID) - 1, int(x1 / GRID) + 2
-        j0, j1 = int(y0 / GRID) - 1, int(y1 / GRID) + 2
-        eps = 1e-6
-        for i in range(i0, i1):
-            for j in range(j0, j1):
-                x, y = i * GRID, j * GRID
-                if x0 + eps < x < x1 - eps and y0 + eps < y < y1 - eps:
-                    self.owner.setdefault((i, j), "#blocked")
+        self._cpp.block_box(box[0], box[1], box[2], box[3], GRID)
 
     def free_or(self, net: str, c: Cell) -> bool:
-        if self._cpp is not None:
-            return self._cpp.free_or(net, int(c[0]), int(c[1]))
-        return self.owner.get(c) in (None, net)
+        return self._cpp.free_or(net, int(c[0]), int(c[1]))
 
 
 @dataclass

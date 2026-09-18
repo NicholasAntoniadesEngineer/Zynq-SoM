@@ -74,6 +74,18 @@ def test_free_or_allows_own_and_unowned_only():
     assert not g.free_or("NETB", (0, 0))
 
 
+def test_rejected_claim_preserves_native_ownership():
+    g = Grid()
+    g.claim("NETA", [(1, 0)])
+    before = g.owner
+    with pytest.raises(RouteError, match="contested"):
+        g.claim("NETB", [(0, 0), (1, 0)])
+    assert g.owner == before
+    assert g.free_or("NETA", (0, 0))
+    before[(7, 7)] = "not a native claim"
+    assert (7, 7) not in g.owner
+
+
 def test_block_box_marks_interior_cells():
     g = Grid()
     g.block_box((0.0, 0.0, 3 * U, 3 * U))

@@ -75,6 +75,9 @@ void RouteGrid::claim(const std::string& owner,
                 "route: cell contested: " + it->second + " vs " + owner
                 + " (" + what + ")");
         }
+    }
+    // A conflict must not leave a partially claimed route behind.
+    for (const RouteCell& c : cells) {
         owner_[pack(c.first, c.second)] = owner;
     }
 }
@@ -110,6 +113,18 @@ std::vector<RouteCell> RouteGrid::occupied() const {
         const int j = static_cast<int>(static_cast<std::uint32_t>(k));
         out.emplace_back(i, j);
     }
+    return out;
+}
+
+std::vector<std::tuple<int, int, std::string>> RouteGrid::owners() const {
+    std::vector<std::tuple<int, int, std::string>> out;
+    out.reserve(owner_.size());
+    for (const auto& [key, owner] : owner_) {
+        const auto i = static_cast<int>(static_cast<std::uint32_t>(key >> 32));
+        const auto j = static_cast<int>(static_cast<std::uint32_t>(key));
+        out.emplace_back(i, j, owner);
+    }
+    std::sort(out.begin(), out.end());
     return out;
 }
 

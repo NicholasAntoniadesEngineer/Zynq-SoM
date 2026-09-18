@@ -55,7 +55,7 @@ set_target_properties(schgen PROPERTIES
 # JSON edits must regenerate catalogs even when the executable does not relink.
 file(GLOB_RECURSE part_inputs CONFIGURE_DEPENDS
     "${CMAKE_CURRENT_SOURCE_DIR}/../parts/*.json")
-file(GLOB circuit_inputs CONFIGURE_DEPENDS
+file(GLOB_RECURSE circuit_inputs CONFIGURE_DEPENDS
     "${CMAKE_CURRENT_SOURCE_DIR}/../carrier/subsystems/*.json")
 add_custom_command(OUTPUT "${CMAKE_CURRENT_SOURCE_DIR}/catalog.bin"
     COMMAND "$<TARGET_FILE:schgen>" catalog-compile
@@ -75,6 +75,12 @@ add_custom_target(schgen_catalogs ALL DEPENDS
 
 include(CTest)
 if(BUILD_TESTING)
+    add_executable(schgen_kernel_contracts tests/kernel_contracts.cpp)
+    target_link_libraries(schgen_kernel_contracts PRIVATE schgen_core)
+    target_compile_options(schgen_kernel_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror)
+    foreach(contract rounding sexpr routing seating)
+        add_test(NAME native_${contract} COMMAND schgen_kernel_contracts ${contract})
+    endforeach()
     add_test(NAME native_self_check COMMAND schgen self-check)
     add_test(NAME native_help COMMAND schgen --help)
     add_test(NAME native_reject_board COMMAND schgen board)

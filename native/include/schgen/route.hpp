@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <string>
+#include <tuple>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -24,6 +25,7 @@ public:
     void block_box(double x0, double y0, double x1, double y1, double grid);
     bool free_or(const std::string& net, RouteCell cell) const;
     std::vector<RouteCell> occupied() const;
+    std::vector<std::tuple<int, int, std::string>> owners() const;
 
 private:
     static std::uint64_t pack(int i, int j);

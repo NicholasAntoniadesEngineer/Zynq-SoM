@@ -3083,6 +3083,7 @@ NB_MODULE(_geom, m) {
                  self.claim(owner, cs, what);
              })
         .def("block_box", &schgen::RouteGrid::block_box)
+        .def("owners", &schgen::RouteGrid::owners)
         .def("free_or",
              [](const schgen::RouteGrid& self, const char* net, int i, int j) {
                  if (net == nullptr) {
