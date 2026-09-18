@@ -17,7 +17,7 @@ add_library(schgen_core STATIC
     src/ratsnest.cpp src/footprint_library.cpp src/xdc.cpp src/vivado.cpp
     src/bom.cpp src/project.cpp src/project_catalog.cpp src/project_outputs.cpp src/som_interface.cpp
     src/link.cpp src/devicetree.cpp src/symbols.cpp src/validation.cpp
-    src/schematic.cpp src/schematic_route.cpp src/netlist_gate.cpp)
+    src/schematic.cpp src/schematic_route.cpp src/netlist_gate.cpp src/design_rules.cpp)
 find_package(LibXml2 REQUIRED)
 target_link_libraries(schgen_core PUBLIC LibXml2::LibXml2)
 target_include_directories(schgen_core PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
@@ -82,6 +82,16 @@ add_custom_target(schgen_catalogs ALL DEPENDS
 
 include(CTest)
 if(BUILD_TESTING)
+    add_executable(schgen_design_rules_contracts tests/design_rules_contracts.cpp)
+    target_link_libraries(schgen_design_rules_contracts PRIVATE schgen_core)
+    target_compile_options(schgen_design_rules_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror)
+    add_test(NAME native_design_rules_contracts COMMAND schgen_design_rules_contracts
+        "${CMAKE_CURRENT_SOURCE_DIR}/tests/data/design_rules")
+    add_test(NAME native_design_rules_reject_missing_pullups COMMAND schgen design-rules
+        --repo "${CMAKE_CURRENT_SOURCE_DIR}/.." --project devkit_mini power_mon)
+    set_tests_properties(native_design_rules_reject_missing_pullups PROPERTIES WILL_FAIL TRUE)
+    add_test(NAME native_design_rules_reject_som_option COMMAND schgen design-rules --som ignored)
+    set_tests_properties(native_design_rules_reject_som_option PROPERTIES WILL_FAIL TRUE)
     add_executable(schgen_netlist_gate_contracts tests/netlist_gate_contracts.cpp)
     target_link_libraries(schgen_netlist_gate_contracts PRIVATE schgen_core)
     target_compile_options(schgen_netlist_gate_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror)
@@ -147,6 +157,10 @@ if(BUILD_TESTING)
         add_test(NAME native_project_${project} COMMAND schgen project-check
             --repo "${CMAKE_CURRENT_SOURCE_DIR}/.." --project ${project})
         add_test(NAME native_electrical_${project} COMMAND schgen circuit-check
+            --repo "${CMAKE_CURRENT_SOURCE_DIR}/.." --project ${project})
+        add_test(NAME native_design_rules_${project} COMMAND schgen design-rules
+            --repo "${CMAKE_CURRENT_SOURCE_DIR}/.." --project ${project})
+        add_test(NAME native_testpoints_${project} COMMAND schgen testpoints
             --repo "${CMAKE_CURRENT_SOURCE_DIR}/.." --project ${project})
     endforeach()
     add_executable(schgen_circuit_semantic_contracts tests/circuit_semantic_contracts.cpp)

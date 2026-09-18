@@ -25,12 +25,15 @@ installing nanobind, or fetching dependencies. Live SoM extraction requires
 
 The native CLI supports `self-check`, `catalog-compile`, `circuit-compile`,
 `project-check`, `circuit-check`, `som-interface`, `link`, `bom`, `xdc`, `vivado`, `fpga`, and
-`devicetree`. It does not yet generate a board. Unsupported commands fail.
+`devicetree`, `design-rules`, and `testpoints`. It does not yet generate a board.
+Unsupported commands fail.
 
 ```sh
 native/bin/schgen project-check --project carrier
 native/bin/schgen project-check --project devkit_mini
 native/bin/schgen circuit-check --project devkit_mini
+native/bin/schgen design-rules --project devkit_mini
+native/bin/schgen testpoints --project devkit_mini
 native/bin/schgen fpga --project carrier --output /tmp/carrier-fpga
 native/bin/schgen devicetree --project carrier --output /tmp/carrier_pl.dtsi
 native/bin/schgen bom --project carrier --qualified-refs --output /tmp/carrier-bom.csv
@@ -51,6 +54,15 @@ validation stages, tested against frozen inputs and output bytes. Netlist verifi
 shares the hardened KiCad process/XML boundary with SoM extraction, and checks
 connectivity plus NC markers against embedded symbol geometry. Schematic
 placement and full board orchestration remain transitional.
+
+Design-rule verification (decoupling, I2C pull-ups, reset RC, configuration straps,
+exposed pads), test-point coverage and their reports also run in C++. The native
+commands print diagnostics, return nonzero on findings, and write a report only
+when `--output` is supplied. They accept subsystem selection; board-wide pull-ups
+outside the selected sheets are intentionally absent from that check.
+Symbol-backed completeness remains a separate mandatory gate (`circuit-check`).
+Connectivity and symbol metadata are indexed once per snapshot. Mutable caller
+inputs require a new snapshot; caches never silently reuse a previous board.
 
 Carrier and devkit XDC/Tcl, and carrier BOM, match the established output bytes.
 Device-tree output changes only generator/source provenance comments. Native

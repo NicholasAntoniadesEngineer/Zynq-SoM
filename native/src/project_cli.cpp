@@ -2,6 +2,7 @@
 
 #include "schgen/bom.hpp"
 #include "schgen/devicetree.hpp"
+#include "schgen/design_rules.hpp"
 #include "schgen/link.hpp"
 #include "schgen/project.hpp"
 #include "schgen/project_outputs.hpp"
@@ -28,7 +29,7 @@ struct Options {
     std::vector<std::string> subsystems;
     bool allow_missing = false, qualified_refs = false;
 };
-const std::set<std::string> commands{"project-check", "circuit-check", "som-interface", "xdc", "vivado", "fpga", "bom", "link", "devicetree"};
+const std::set<std::string> commands{"project-check", "circuit-check", "som-interface", "xdc", "vivado", "fpga", "bom", "link", "devicetree", "design-rules", "testpoints"};
 Options parse(int argc, char** argv) {
     Options out;
     std::set<std::string> seen;
@@ -72,7 +73,7 @@ Options parse(int argc, char** argv) {
         allowed.insert("--allow-missing"); allowed.insert("--qualified-refs");
     } else if (out.command == "link") {
         allowed.insert("--contract");
-    } else if (!check_only) {
+    } else if (!check_only && out.command != "design-rules" && out.command != "testpoints") {
         allowed.insert("--som"); allowed.insert("--refs"); allowed.insert("--kicad-cli");
         if (out.command != "som-interface") allowed.insert("--contract");
         if (out.command == "vivado" || out.command == "fpga") allowed.insert("--xdc");
@@ -136,6 +137,24 @@ std::optional<int> run_project_command(int argc, char** argv) {
     std::vector<CircuitSheetIr> sheets;
     sheets.reserve(circuits.size());
     for (const auto& circuit : circuits) sheets.push_back(circuit.circuit);
+    if (options.command == "design-rules" || options.command == "testpoints") {
+        std::string report;
+        bool ok;
+        if (options.command == "design-rules") {
+            SymbolLibrary library(paths.repository_root);
+            const auto result = check_design_rules(sheets,
+                [&](const std::string& id) -> const SymbolDef& { return library.get(id); });
+            report = result.report();
+            ok = result.ok();
+        } else {
+            const auto result = check_testpoint_coverage(sheets);
+            report = result.report();
+            ok = result.ok();
+        }
+        if (!options.output.empty()) publish_text(options.output, report + "\n");
+        std::cout << report << '\n';
+        return ok ? 0 : 1;
+    }
     if (options.command == "circuit-check") {
         SymbolLibrary library(paths.repository_root);
         bool ok = true;

@@ -51,6 +51,14 @@ Implementation decisions (autonomous, per full-autonomy directive):
   NC. A regression reproduced the false PASS before the correction; NC-only
   components remain exempt. Index NC/netted references once instead of scanning
   every NC declaration for every part.
+- Move the five design-rule checks, probe coverage and report formatting into
+  C++, including standalone `design-rules` and `testpoints` commands. Index
+  connectivity and resolve each unique symbol once per immutable snapshot.
+  Retain finding/waiver order and byte-identical reports; use real pull-up/probe
+  removal mutations to prove failures remain failures. Propagate cancellation,
+  allocation and system failures instead of treating them as unresolved symbols.
+  The transitional report command now writes to the selected project, not always
+  to carrier. Both full board builds pass with unchanged generated artifacts.
 
 The complete devkit build now passes all 12 sheets and board-level checks.
 The complete carrier build passes all 37 sheets with the native schematic

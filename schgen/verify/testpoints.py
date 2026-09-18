@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-import re
 from dataclasses import dataclass, field
 
+from schgen.core import native as _nat
 from schgen.core.model import Circuit, Net, NetClass
 from schgen.output.emit import PlacedPart
 from schgen.verify.visual_gate import Box
@@ -135,10 +135,6 @@ def add_probe_row(eng, c: Circuit, tp_refs: list[str]) -> None:
             fx = gceil(right + max(sp.flag_pitch - 6 * U, 2 * U) + 2 * U)
 
 
-_UART_RE = re.compile(r"UART\d*_(TXD|RXD)$")
-_EN_RE = re.compile(r"(^EN_|_EN$)")
-
-
 @dataclass
 class Coverage:
     required: dict[str, str] = field(default_factory=dict)
@@ -156,78 +152,11 @@ class Coverage:
         return sum(1 for n in self.required if n in self.have)
 
     def report(self) -> str:
-        lines = ["schgen test-point coverage gate", "=" * 64, ""]
-        lines.append("rule: every POWER/GROUND rail + key single-ended bus "
-                     "(i2c ports, sd_bus CMD/CLK, UART RXD/TXD, EN lines) "
-                     "owns a probe point or an explicit waiver.")
-        lines.append("")
-        lines.append(f"required nets ({len(self.required)}):")
-        for net in sorted(self.required):
-            if net in self.have:
-                state = "TP @ " + ", ".join(self.have[net])
-            elif net in self.waived:
-                sheet, reason = self.waived[net]
-                state = f"WAIVED ({sheet}): {reason}"
-            else:
-                state = "UNCOVERED"
-            lines.append(f"  {net:<22} [{self.required[net]:<9}] {state}")
-        extra = {n: locs for n, locs in self.have.items()
-                 if n not in self.required}
-        if extra:
-            lines.append("")
-            lines.append(f"additional probe points ({len(extra)}):")
-            for net in sorted(extra):
-                lines.append(f"  {net:<22} TP @ {', '.join(extra[net])}")
-        if self.waived:
-            lines.append("")
-            lines.append(f"waivers — author-declared, verbatim "
-                         f"({len(self.waived)}):")
-            for net in sorted(self.waived):
-                sheet, reason = self.waived[net]
-                lines.append(f"  {net:<22} ({sheet}) {reason}")
-        lines.append("")
-        if self.errors:
-            lines.append(f"ERRORS ({len(self.errors)}):")
-            for e in self.errors:
-                lines.append(f"  ERROR: {e}")
-        else:
-            lines.append("errors: none")
-        lines.append("")
-        lines.append(f"TESTPOINTS: {'PASS' if self.ok else 'FAIL'} "
-                     f"({self.covered}/{len(self.required)} required nets "
-                     f"covered, {len(self.waived)} waived)")
-        return "\n".join(lines)
+        return _nat.module().testpoint_coverage_report(self)
 
 
 def check_coverage(sheets) -> Coverage:
-    cov = Coverage()
-    for sc in sheets:
-        c = sc.circuit
-        for net in c.nets.values():
-            if net.net_class in (NetClass.POWER, NetClass.GROUND):
-                cov.required.setdefault(net.name, "rail")
-            elif net.net_class is NetClass.PORT:
-                pt = c.port_type_of(net.name)
-                if pt.kind == "i2c":
-                    cov.required.setdefault(net.name, "i2c")
-                elif pt.kind == "sd_bus" and \
-                        net.name.endswith(("CMD", "CLK")):
-                    cov.required.setdefault(net.name, "sd_bus")
-                elif _UART_RE.search(net.name):
-                    cov.required.setdefault(net.name, "uart")
-                elif _EN_RE.search(net.name):
-                    cov.required.setdefault(net.name, "enable")
-        for ref, part in sorted(c.parts.items()):
-            if is_testpoint(part):
-                tp_net = next(n.name for n in c.nets.values()
-                              if any(pr.ref == ref for pr in n.pins))
-                cov.have.setdefault(tp_net, []).append(f"{sc.name}:{ref}")
-        for net, reason in c.tp_waivers.items():
-            cov.waived[net] = (sc.name, reason)
-    for net in sorted(cov.required):
-        if net not in cov.have and net not in cov.waived:
-            cov.errors.append(
-                f"{net} [{cov.required[net]}] has no test point and no "
-                f"waiver — add c.testpoint({net!r}) or "
-                f"c.waive_tp({net!r}, reason)")
-    return cov
+    raw = _nat.module().testpoint_coverage(sheets)
+    return Coverage(required=raw["required"], have=raw["have"],
+                    waived={net: tuple(value) for net, value in raw["waived"].items()},
+                    errors=raw["errors"], extras=raw["extras"])
