@@ -4204,7 +4204,15 @@ def render_md(plan: Plan, notes: list[Note], sheets, regs,
     return out
 
 
-def generate(sheets=None, link_result=None) -> list[Path]:
+def generate(sheets=None, link_result=None, *, plan=None) -> list[Path]:
+    """Render a suggestion, optionally reusing a PCB FloorplanStageResult.
+
+    Reuse is limited to equivalent inputs/default options. Standalone calls
+    and mismatched snapshots build a fresh plan, preserving their behavior.
+    Call after the PCB worker has joined: the legacy renderers use globals.
+    """
+    from copy import deepcopy
+
     from schgen.core.link import (
         all_subsystem_paths,
         link,
@@ -4217,11 +4225,25 @@ def generate(sheets=None, link_result=None) -> list[Path]:
     if link_result is None:
         link_result = link(sheets, load_som_contract())
     regs = powertree.analyze(sheets).regs
-    plan = build_plan(sheets, link_result, regs)
-    notes = build_notes(plan, sheets, regs)
-    svg = render_svg(plan, notes, OUT_SVG)
-    md = render_md(plan, notes, sheets, regs, OUT_MD)
-    return [svg, md]
+    global BOARD_W, BOARD_H, OUTLINE_NOTE
+    restore_context = None
+    if plan is not None and plan.matches(sheets, link_result, regs):
+        stage = plan
+        # Neither rendering nor later placement mutations may change the
+        # stage snapshot retained by this board invocation.
+        plan = deepcopy(stage.plan)
+        restore_context = (BOARD_W, BOARD_H, OUTLINE_NOTE)
+        BOARD_W, BOARD_H, OUTLINE_NOTE = stage.render_context
+    else:
+        plan = build_plan(sheets, link_result, regs)
+    try:
+        notes = build_notes(plan, sheets, regs)
+        svg = render_svg(plan, notes, OUT_SVG)
+        md = render_md(plan, notes, sheets, regs, OUT_MD)
+        return [svg, md]
+    finally:
+        if restore_context is not None:
+            BOARD_W, BOARD_H, OUTLINE_NOTE = restore_context
 
 
 def cmd_floorplan(args: argparse.Namespace) -> int:

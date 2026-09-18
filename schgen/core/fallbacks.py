@@ -96,8 +96,9 @@ _register(
     "freed pass raises the packer's own infeasibility RuntimeError — the "
     "greedy first-fit can fail on a strictly larger free set — so that "
     "outcome is a LOUD counted rejection, never a silent swallow. Fires at "
-    "most ONCE per build_plan; `schgen board` calls build_plan twice (the PCB "
-    "and the FLOORPLAN doc), so the carrier/devkit ceiling is 2.")
+    "most ONCE per build_plan. `schgen board` reuses the PCB plan for the "
+    "FLOORPLAN doc when inputs match; standalone docs or changed inputs "
+    "solve independently. Ceilings reflect each project's recorded census.")
 
 _register(
     "interior_reseat_retry", "plan_lattice",

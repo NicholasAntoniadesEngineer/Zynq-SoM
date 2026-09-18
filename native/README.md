@@ -3,6 +3,9 @@
 The target is a complete C++ generator, including design loading, placement,
 routing, emission, verification, CLI, and tests. The Python extension is a
 temporary migration interface. Native kernels alone do not complete the port.
+Final acceptance requires zero repository-owned Python sources, tests, helpers,
+bindings, or runtime dependencies. KiCad/design data, FPGA HDL, and generated
+XDC/Tcl remain in their required hardware formats; generator/tooling code is C++.
 
 ## Build without Python
 

@@ -547,10 +547,12 @@ def cmd_board(args: argparse.Namespace) -> int:
 
     from schgen.generate import pcb as pcb_mod
     _pcb_holder: dict[str, object] = {}
+    _floorplan_stage: list[pcb_mod.FloorplanStageResult] = []
 
     def _run_pcb() -> None:
         try:
-            _pcb_holder["res"] = pcb_mod.generate(run_drc=True)
+            _pcb_holder["res"] = pcb_mod.generate(
+                run_drc=True, plan_sink=_floorplan_stage.append)
         except Exception as exc:  # noqa: BLE001
             _pcb_holder["exc"] = exc
     _pcb_thread = _threading.Thread(target=_run_pcb, name="pcb+drc", daemon=True)
@@ -1084,7 +1086,9 @@ def cmd_board(args: argparse.Namespace) -> int:
     from schgen.generate import floorplan
     try:
         with _led.step("docs.floorplan"):
-            fp_paths = floorplan.generate(sheets, res)
+            fp_paths = floorplan.generate(
+                sheets, res,
+                plan=_floorplan_stage[0] if _floorplan_stage else None)
         print("FLOORPLAN: " + " + ".join(
             str(p.relative_to(REPO_ROOT)) for p in fp_paths)
             + " (suggestion, not constraint)")

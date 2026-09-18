@@ -1,7 +1,11 @@
 from __future__ import annotations
 
 import re
+from collections.abc import Callable
+from copy import deepcopy
+from dataclasses import dataclass
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from schgen.core import fallbacks as _fb
 from schgen.core import ledger as _led
@@ -59,7 +63,49 @@ from .mating_face import (
 from .stages import StageTracker
 from .turn import turn_box
 
+if TYPE_CHECKING:
+    from schgen.generate.floorplan import Plan
+
 _BREATHE_PHASES: tuple[str, ...] = ("A", "B")
+
+
+def _floorplan_inputs(sheets, link_result, regs) -> tuple:
+    from schgen.generate import floorplan as fp
+
+    # Compare values, not Circuit identities: PCB and board load separate
+    # instances. Only bindings from LinkResult are consumed by build_plan.
+    return (fp.PROJECT_ROOT, fp.FLOORPLAN_SPEC,
+            fp.FLOORPLAN_SPEC.read_bytes()
+            if fp.FLOORPLAN_SPEC.exists() else None,
+            fp.SOM_DX, fp.SOM_DY,
+            [(s.name, s.circuit.to_ir()) for s in sheets],
+            link_result.bindings, regs)
+
+
+@dataclass(frozen=True)
+class FloorplanStageResult:
+    """Explicit, per-invocation snapshot for rendering the placement suggestion.
+
+    Not a cache or a replacement for any PCB gate. The renderers still use
+    module-level outline state, so that state travels with the plan as well.
+    """
+
+    plan: Plan
+    render_context: tuple[float, float, str]
+    inputs: tuple
+    default_options: bool
+
+    @classmethod
+    def capture(cls, plan, sheets, link_result, regs, *, two_side, spec):
+        from schgen.generate import floorplan as fp
+
+        return cls(deepcopy(plan), (fp.BOARD_W, fp.BOARD_H, fp.OUTLINE_NOTE),
+                   deepcopy(_floorplan_inputs(sheets, link_result, regs)),
+                   two_side and spec is None)
+
+    def matches(self, sheets, link_result, regs) -> bool:
+        return (self.default_options
+                and self.inputs == _floorplan_inputs(sheets, link_result, regs))
 
 
 def _fanout_meta(refs: list[str], resolvable: dict[str, Path]
@@ -1659,7 +1705,9 @@ def som_decoupling_cells(som_x: float, som_y: float, som_w: float,
     return got
 
 
-def build_model(two_side: bool = True, spec=None) -> PcbModel:
+def build_model(two_side: bool = True, spec=None, *,
+                plan_sink: Callable[[FloorplanStageResult], None] | None = None
+                ) -> PcbModel:
     from schgen.core.link import (
         all_subsystem_paths,
         link,
@@ -1720,8 +1768,16 @@ def build_model(two_side: bool = True, spec=None) -> PcbModel:
     sheets = [load_subsystem(p.stem) for p in all_subsystem_paths()]
     link_result = link(sheets, load_som_contract())
     regs = powertree.analyze(sheets).regs
+    plan_inputs = (deepcopy(_floorplan_inputs(sheets, link_result, regs))
+                   if plan_sink is not None else None)
     with _tim.span("pcb.build_plan"):
         plan = fp.build_plan(sheets, link_result, regs, spec=spec)
+    if plan_sink is not None:
+        stage = FloorplanStageResult.capture(
+            plan, sheets, link_result, regs, two_side=two_side, spec=spec)
+        # An input/spec edited during the solve is not a reusable result.
+        if stage.inputs == plan_inputs:
+            plan_sink(stage)
     _led.open_step("pcb.placement")
     _led.calc("edge_flush", EDGE_FLUSH_MM, edge_pad_clear=EDGE_PAD_CLEAR,
               flush_relief=EDGE_FLUSH_RELIEF)

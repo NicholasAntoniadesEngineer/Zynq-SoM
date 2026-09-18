@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+from collections.abc import Callable
 from pathlib import Path
 
 from schgen.core import sexpr
@@ -41,7 +42,7 @@ from .embed import (
     _via_node,
 )
 from .footprint import board_parts
-from .placement import build_model
+from .placement import FloorplanStageResult, build_model
 from .silk import (
     _connector_descriptors,
     _declutter_refdes,
@@ -470,11 +471,16 @@ def write_dru(model: PcbModel, dru_path: Path) -> None:
 
 
 def generate(*, run_drc: bool = True, two_side: bool = True,
-             ratsnest: bool = True) -> dict:
+             ratsnest: bool = True,
+             plan_sink: Callable[[FloorplanStageResult], None] | None = None
+             ) -> dict:
     from schgen.core import ledger as _led
     from schgen.core import timing as _tim
     with _tim.span("pcb.build_model"):
-        model = build_model(two_side=two_side)
+        if plan_sink is None:
+            model = build_model(two_side=two_side)
+        else:
+            model = build_model(two_side=two_side, plan_sink=plan_sink)
 
     with _led.step("pcb.emission"):
         _led.calc("min_hole_to_hole", MIN_HOLE_TO_HOLE,
