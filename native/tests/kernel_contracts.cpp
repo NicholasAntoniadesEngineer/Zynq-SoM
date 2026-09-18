@@ -2,6 +2,7 @@
 #include "schgen/legalize.hpp"
 #include "schgen/pack.hpp"
 #include "schgen/route.hpp"
+#include "schgen/ratsnest.hpp"
 #include "schgen/seat.hpp"
 #include "schgen/sexpr.hpp"
 
@@ -74,6 +75,27 @@ void routing() {
     rejects([&] { schgen::route_cell_of(0.5, 0.0, grid_mm); });
 }
 
+void ratsnest() {
+    const schgen::RatsnestNets nets{
+        {"empty", {}},
+        {"net", {{0, 0, "A", "s1"}, {3, 0, "B", "s1"},
+                 {0, 4, "C", "s2"}, {3, 4, "D", "s2"}}}};
+    const auto edges = schgen::ratsnest_mst(nets);
+    require(edges.at("empty").empty(), "empty net gained edges");
+    require(edges.at("net") == std::vector<std::pair<int, int>>{{0, 1}, {0, 2}, {2, 3}},
+            "MST tie order changed");
+    require(schgen::ratsnest_lengths(nets, edges) == std::make_tuple(4.0, 10.0, 1),
+            "airwire summary changed");
+    require(schgen::ratsnest_lengths({}, {}) == std::make_tuple(0.0, 0.0, 0),
+            "empty summary changed");
+    rejects([&] { schgen::ratsnest_lengths(nets, {}); });
+    auto bad = edges;
+    bad["net"] = {{-1, 0}};
+    rejects([&] { schgen::ratsnest_lengths(nets, bad); });
+    bad["net"] = {{0, 4}};
+    rejects([&] { schgen::ratsnest_lengths(nets, bad); });
+}
+
 void seating() {
     const schgen::Box4 a{0, 0, 2, 2}, hit{0.5, 0.5, 2.5, 2.5}, free{4, 0, 6, 2};
     const auto result = schgen::seat_dfs({{a}, {hit, free}}, {}, 0.3, 1000);
@@ -115,6 +137,7 @@ int main(int argc, char** argv) {
         if (name == "rounding") rounding();
         else if (name == "sexpr") sexpr();
         else if (name == "routing") routing();
+        else if (name == "ratsnest") ratsnest();
         else if (name == "seating") seating();
         else if (name == "placement_limits") placement_limits();
         else throw std::runtime_error("unknown test");

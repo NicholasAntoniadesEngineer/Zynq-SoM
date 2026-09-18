@@ -8,6 +8,7 @@
 #include <utility>
 
 #include <nanobind/nanobind.h>
+#include <nanobind/stl/map.h>
 #include <nanobind/stl/optional.h>
 #include <nanobind/stl/pair.h>
 #include <nanobind/stl/string.h>
@@ -31,6 +32,7 @@
 #include "schgen/quantize.hpp"
 #include "schgen/reorder.hpp"
 #include "schgen/route.hpp"
+#include "schgen/ratsnest.hpp"
 #include "schgen/seat.hpp"
 #include "schgen/sexpr.hpp"
 #include "schgen/turn.hpp"
@@ -928,6 +930,8 @@ NB_MODULE(_geom, m) {
           });
     m.def("conn_flag_y", &schgen::conn_flag_y);
     m.def("conn_flag_x0", &schgen::conn_flag_x0);
+    m.def("ratsnest_mst", &schgen::ratsnest_mst);
+    m.def("ratsnest_lengths", &schgen::ratsnest_lengths);
     m.def("mst_manhattan",
           [](const std::vector<PtTup>& pts) {
               auto edges = schgen::mst_manhattan(as_pts(pts));

@@ -96,7 +96,12 @@ def net_mst_edges(model: PcbModel,
                   npp: dict | None = None) -> dict[str, list[tuple[int, int]]]:
     if npp is None:
         npp = net_pad_positions(model)
-    return {net: _mst_edges(pts) for net, pts in sorted(npp.items())}
+    got = _nat.module().ratsnest_mst(npp)
+    if _nat.trace():
+        ref = {net: _mst_edges_py(pts) for net, pts in sorted(npp.items())}
+        if got != ref:
+            raise AssertionError("native ratsnest_mst DIVERGENCE")
+    return got
 
 
 def _airwires(model: PcbModel, side: str | None, npp: dict, mst: dict):
@@ -115,23 +120,11 @@ def _airwires(model: PcbModel, side: str | None, npp: dict, mst: dict):
 
 def cross_airwire_length(model: PcbModel, npp: dict | None = None,
                          mst: dict | None = None) -> tuple[float, float, int]:
-    side_of_ref = {inst.ref: inst.side for inst in model.insts}  # noqa: F841
     if npp is None:
         npp = net_pad_positions(model)
     if mst is None:
         mst = net_mst_edges(model, npp)
-    cross = total = 0.0
-    n_cross = 0
-    for _net, pts in sorted(npp.items()):
-        for a, b in mst[_net]:
-            xa, ya, _ra, sa = pts[a]
-            xb, yb, _rb, sb = pts[b]
-            d = _nat.module().hypot_xy(xa, ya, xb, yb)
-            total += d
-            if sa != sb:
-                cross += d
-                n_cross += 1
-    return round(cross, 1), round(total, 1), n_cross
+    return _nat.module().ratsnest_lengths(npp, mst)
 
 
 def _svg(model: PcbModel, palette: dict, npp: dict, mst: dict) -> str:
