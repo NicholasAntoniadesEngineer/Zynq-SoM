@@ -55,6 +55,11 @@ shares the hardened KiCad process/XML boundary with SoM extraction, and checks
 connectivity plus NC markers against embedded symbol geometry. Schematic
 placement and full board orchestration remain transitional.
 
+The placement foundation is now native and covered by 49 frozen circuit
+classifications plus primitive, geometry, ownership and chain contracts. This
+does not yet enable a native end-to-end placer: fanout, templates, chain layout
+and pagination must be integrated before switching production generation.
+
 Design-rule verification (decoupling, I2C pull-ups, reset RC, configuration straps,
 exposed pads), test-point coverage and their reports also run in C++. The native
 commands print diagnostics, return nonzero on findings, and write a report only
