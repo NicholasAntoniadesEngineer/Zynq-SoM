@@ -27,7 +27,8 @@ The native CLI supports `self-check`, `catalog-compile`, `circuit-compile`,
 `project-check`, `circuit-check`, `som-interface`, `link`, `bom`, `xdc`, `vivado`, `fpga`, and
 `devicetree`, `design-rules`, `testpoints`, `constraints`, `powertree`, `thermal`,
 `part-rules`, `bom-values`, `footprint-pads`, `pin-completeness`, `symbol-law`,
-and `spice`. It does not yet generate a complete board.
+`spice`, `firmware`, `manual`, `scfw`, `testplan`, and `power-sequence`.
+It does not yet generate a complete board.
 Unsupported commands fail.
 
 ```sh
@@ -91,6 +92,14 @@ ngspice cross-checks use a shell-free bounded process with private temporary
 decks and real measurements; absence of ngspice retains the analytic gate.
 Connectivity and symbol metadata are indexed once per snapshot. Mutable caller
 inputs require a new snapshot; caches never silently reuse a previous board.
+
+Bring-up facts, firmware contracts, SC scaffolds, the manual, test plan and
+power-sequence SVG now use native typed inputs. Independent fixtures cover both
+projects and changes to GPIOs, feedback values, addresses and required sheets.
+Live U9 extraction remains authoritative. The sequence walker rejects reachable
+cycles instead of looping indefinitely. Generated SC code still has a known
+undefined FMC EEPROM macro, and RTC battery/charging guidance is inconsistent;
+these pre-existing output defects are not treated as successful compile checks.
 
 Carrier and devkit XDC/Tcl, and carrier BOM, match the established output bytes.
 Device-tree output changes only generator/source provenance comments. Native

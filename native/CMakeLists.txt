@@ -23,7 +23,9 @@ add_library(schgen_core STATIC
     src/selftest.cpp src/board_schematic.cpp src/mirror.cpp src/constraints.cpp
     src/power_checks.cpp src/thermal_checks.cpp src/part_checks.cpp
     src/bom_values.cpp src/footprint_pads.cpp src/pin_completeness.cpp src/symbol_law.cpp
-    src/spice.cpp src/spice_process.cpp src/process.cpp)
+    src/spice.cpp src/spice_process.cpp src/process.cpp
+    src/bringup_facts.cpp src/firmware_docs.cpp src/firmware_docs_manual.cpp
+    src/firmware_docs_testplan.cpp src/firmware_docs_scfw.cpp src/firmware_docs_power_sequence.cpp)
 find_package(Threads REQUIRED)
 find_package(LibXml2 REQUIRED)
 target_link_libraries(schgen_core PUBLIC LibXml2::LibXml2 Threads::Threads)
@@ -92,6 +94,11 @@ add_custom_target(schgen_catalogs ALL DEPENDS
 
 include(CTest)
 if(BUILD_TESTING)
+    add_executable(schgen_firmware_docs_contracts tests/firmware_docs_contracts.cpp)
+    target_link_libraries(schgen_firmware_docs_contracts PRIVATE schgen_core)
+    target_compile_options(schgen_firmware_docs_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror)
+    add_test(NAME native_firmware_docs_contracts COMMAND schgen_firmware_docs_contracts
+        "${CMAKE_CURRENT_SOURCE_DIR}/.." "${CMAKE_CURRENT_BINARY_DIR}/firmware-docs-contract-output")
     foreach(family verification spice)
         add_executable(schgen_${family}_contracts tests/${family}_contracts.cpp)
         target_link_libraries(schgen_${family}_contracts PRIVATE schgen_core)

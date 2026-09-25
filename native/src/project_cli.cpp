@@ -9,6 +9,7 @@
 #include "schgen/pin_completeness.hpp"
 #include "schgen/symbol_law.hpp"
 #include "schgen/spice.hpp"
+#include "schgen/firmware_docs.hpp"
 #include "schgen/devicetree.hpp"
 #include "schgen/design_rules.hpp"
 #include "schgen/link.hpp"
@@ -37,7 +38,7 @@ struct Options {
     std::vector<std::string> subsystems;
     bool allow_missing = false, qualified_refs = false, no_ngspice = false;
 };
-const std::set<std::string> commands{"project-check", "circuit-check", "som-interface", "xdc", "vivado", "fpga", "bom", "link", "devicetree", "design-rules", "testpoints", "board-schematic", "constraints", "powertree", "thermal", "part-rules", "bom-values", "footprint-pads", "pin-completeness", "symbol-law", "spice"};
+const std::set<std::string> commands{"project-check", "circuit-check", "som-interface", "xdc", "vivado", "fpga", "bom", "link", "devicetree", "design-rules", "testpoints", "board-schematic", "constraints", "powertree", "thermal", "part-rules", "bom-values", "footprint-pads", "pin-completeness", "symbol-law", "spice", "firmware", "manual", "scfw", "testplan", "power-sequence"};
 Options parse(int argc, char** argv) {
     Options out;
     std::set<std::string> seen;
@@ -89,6 +90,10 @@ Options parse(int argc, char** argv) {
         if (out.command == "thermal") allowed.insert("--pcb");
     } else if (out.command == "spice") {
         allowed.insert("--no-ngspice");
+    } else if (out.command == "firmware" || out.command == "manual" || out.command == "scfw") {
+        allowed.insert("--kicad-cli");
+    } else if (out.command == "testplan" || out.command == "power-sequence") {
+        // Pure document stages use the selected circuits.
     } else if (out.command == "bom-values" || out.command == "footprint-pads" ||
                out.command == "pin-completeness" || out.command == "symbol-law") {
         // These checks consume the selected circuits, not a live SoM map.
@@ -156,6 +161,43 @@ std::optional<int> run_project_command(int argc, char** argv) {
     std::vector<CircuitSheetIr> sheets;
     sheets.reserve(circuits.size());
     for (const auto& circuit : circuits) sheets.push_back(circuit.circuit);
+    if(options.command=="firmware" || options.command=="manual" || options.command=="scfw" ||
+       options.command=="testplan" || options.command=="power-sequence") {
+        FirmwareDocsInput in;in.sheets=circuits;in.firmware_sources=firmware_sources(paths);
+        std::vector<std::string> missing;
+        if(options.command=="manual")missing=manual_missing_requirements(in);
+        if(options.command=="scfw")missing=scfw_missing_requirements(in);
+        if(!missing.empty()) {
+            std::cout<<options.command<<": SKIP — project missing";
+            for(const auto& name:missing)std::cout<<' '<<name;
+            std::cout<<'\n';return 1;
+        }
+        if(options.command=="firmware" || options.command=="manual" || options.command=="scfw")
+            in.stm32=stm32_pin_map(extract_som_zynq(paths.som_schematic,"U9",{"J1","J2","J3"},{options.kicad_cli}),
+                                  load_som_interface(paths.som_interface_file));
+        if(options.command=="scfw") {
+            const auto artifacts=render_scfw(in);
+            const auto directory=options.output.empty()?paths.project_root/"firmware/sc":options.output;
+            for(const auto& artifact:artifacts)publish_text(directory/artifact.path,artifact.text);
+            std::cout<<"SCFW SCAFFOLD: "<<directory.string()<<" ("<<artifacts.size()<<" files)\n";return 0;
+        }
+        std::string text;fs::path default_path;
+        if(options.command=="firmware") {text=render_firmware_contract(in);default_path="firmware/zynq_carrier_contract.h";}
+        else if(options.command=="manual") {text=render_bringup_manual(in);default_path="docs/BRINGUP.md";}
+        else if(options.command=="power-sequence") {
+            const auto power=analyze_power(circuits);
+            text=render_power_sequence_svg(build_power_sequence(circuits,power),power.ok());default_path="docs/power_sequence.svg";
+        } else {
+            ProjectStrings probes;
+            for(const auto& [net,locations]:check_testpoint_coverage(sheets).have) {
+                std::string value;for(const auto& location:locations){if(!value.empty())value+=", ";value+=location;}
+                probes.emplace_back(net,value);
+            }
+            text=render_test_plan(in,extract_spice_checks(circuits),probes);default_path="docs/TEST_PLAN.md";
+        }
+        const auto output=options.output.empty()?paths.project_root/default_path:options.output;
+        publish_text(output,text);std::cout<<options.command<<": "<<output.string()<<'\n';return 0;
+    }
     if (options.command == "bom-values" || options.command == "footprint-pads" ||
         options.command == "pin-completeness" || options.command == "symbol-law" || options.command == "spice") {
         std::string report;bool ok=false;

@@ -24,6 +24,7 @@
 #include "schgen/constraints_bindings.hpp"
 #include "schgen/model_checks_bindings.hpp"
 #include "schgen/verification_bindings.hpp"
+#include "schgen/firmware_docs_bindings.hpp"
 #include "schgen/emit.hpp"
 #include "schgen/legalize.hpp"
 #include "schgen/occupancy.hpp"
@@ -220,6 +221,7 @@ NB_MODULE(_geom, m) {
     schgen::bind_layout_constraints(m);
     schgen::bind_model_checks(m);
     schgen::bind_verification(m, sexpr_from_py);
+    schgen::bind_firmware_docs(m);
     m.def("discover_project_subsystems", [](const std::string& directory) {
         std::vector<std::pair<std::string, std::string>> out;
         for (const auto& sheet : schgen::discover_project_subsystems(directory))

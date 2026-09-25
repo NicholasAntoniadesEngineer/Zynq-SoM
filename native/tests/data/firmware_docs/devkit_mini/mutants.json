@@ -1,0 +1,74 @@
+[
+  {
+    "name": "gpio",
+    "renderers": [
+      "firmware"
+    ],
+    "mutations": [
+      {
+        "op": "gpio_pin",
+        "net": "STM32_DAC1",
+        "value": 9
+      }
+    ],
+    "edits": {
+      "zynq_carrier_contract.h": [
+        [
+          1824,
+          1825,
+          "9"
+        ],
+        [
+          6407,
+          6408,
+          "9"
+        ]
+      ]
+    },
+    "errors": {}
+  },
+  {
+    "name": "swd",
+    "renderers": [
+      "firmware"
+    ],
+    "mutations": [
+      {
+        "op": "gpio_pin",
+        "net": "STM32_GPIO6",
+        "value": 12
+      }
+    ],
+    "edits": {},
+    "errors": {
+      "firmware": "SWD reservation drift: dossier says STM32_GPIO6 = PA13 (SWDIO), live SoM netlist says PA12"
+    }
+  },
+  {
+    "name": "missing_power",
+    "renderers": [
+      "firmware"
+    ],
+    "mutations": [
+      {
+        "op": "remove_sheet",
+        "sheet": "power"
+      }
+    ],
+    "edits": {
+      "zynq_carrier_contract.h": [
+        [
+          603,
+          603,
+          ", power"
+        ],
+        [
+          6542,
+          7451,
+          ""
+        ]
+      ]
+    },
+    "errors": {}
+  }
+]

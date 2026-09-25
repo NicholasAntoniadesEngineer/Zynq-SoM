@@ -1,0 +1,388 @@
+[
+  {
+    "name": "feedback",
+    "mutations": [
+      {
+        "op": "part_value",
+        "sheet": "power",
+        "ref": "R1",
+        "value": "30.1k"
+      }
+    ],
+    "edits": {
+      "zynq_carrier_contract.h": [
+        [
+          8309,
+          8310,
+          "4"
+        ],
+        [
+          8311,
+          8312,
+          "1"
+        ]
+      ],
+      "BRINGUP.md": [
+        [
+          5087,
+          5088,
+          "4"
+        ],
+        [
+          5090,
+          5091,
+          "1"
+        ]
+      ],
+      "sc/sc_hal.h": [],
+      "sc/sc_tables.h": [],
+      "sc/sc_tables.c": [
+        [
+          1229,
+          1230,
+          "4"
+        ],
+        [
+          1231,
+          1232,
+          "1"
+        ]
+      ],
+      "sc/sc_seq.h": [],
+      "sc/sc_seq.c": [],
+      "sc/sc_wdt.h": [],
+      "sc/sc_wdt.c": [],
+      "sc/sc_pd.h": [],
+      "sc/sc_pd.c": [],
+      "sc/sc_rtc.h": [],
+      "sc/sc_rtc.c": [],
+      "sc/sc_app.c": [],
+      "sc/sc_hal_zephyr.c.txt": [],
+      "sc/README.md": [
+        [
+          1643,
+          1644,
+          "4"
+        ],
+        [
+          1645,
+          1646,
+          "1"
+        ]
+      ]
+    },
+    "errors": {}
+  },
+  {
+    "name": "ilim",
+    "mutations": [
+      {
+        "op": "part_value",
+        "sheet": "bringup_modules",
+        "ref": "R1",
+        "value": "10k"
+      }
+    ],
+    "edits": {
+      "zynq_carrier_contract.h": [
+        [
+          9596,
+          9599,
+          "680"
+        ]
+      ],
+      "BRINGUP.md": [
+        [
+          7739,
+          7742,
+          "680"
+        ]
+      ],
+      "sc/sc_hal.h": [],
+      "sc/sc_tables.h": [],
+      "sc/sc_tables.c": [
+        [
+          2501,
+          2504,
+          "680"
+        ]
+      ],
+      "sc/sc_seq.h": [],
+      "sc/sc_seq.c": [],
+      "sc/sc_wdt.h": [],
+      "sc/sc_wdt.c": [],
+      "sc/sc_pd.h": [],
+      "sc/sc_pd.c": [],
+      "sc/sc_rtc.h": [],
+      "sc/sc_rtc.c": [],
+      "sc/sc_app.c": [],
+      "sc/sc_hal_zephyr.c.txt": [],
+      "sc/README.md": [
+        [
+          1928,
+          1931,
+          "680"
+        ]
+      ]
+    },
+    "errors": {}
+  },
+  {
+    "name": "shunt",
+    "mutations": [
+      {
+        "op": "part_value",
+        "sheet": "power_mon",
+        "ref": "RS1",
+        "value": "20mR"
+      }
+    ],
+    "edits": {
+      "zynq_carrier_contract.h": [
+        [
+          11301,
+          11302,
+          "2"
+        ]
+      ],
+      "BRINGUP.md": [],
+      "sc/sc_hal.h": [],
+      "sc/sc_tables.h": [],
+      "sc/sc_tables.c": [],
+      "sc/sc_seq.h": [],
+      "sc/sc_seq.c": [],
+      "sc/sc_wdt.h": [],
+      "sc/sc_wdt.c": [],
+      "sc/sc_pd.h": [],
+      "sc/sc_pd.c": [],
+      "sc/sc_rtc.h": [],
+      "sc/sc_rtc.c": [],
+      "sc/sc_app.c": [],
+      "sc/sc_hal_zephyr.c.txt": [],
+      "sc/README.md": []
+    },
+    "errors": {}
+  },
+  {
+    "name": "gpio",
+    "mutations": [
+      {
+        "op": "gpio_pin",
+        "net": "STM32_DAC1",
+        "value": 9
+      }
+    ],
+    "edits": {
+      "zynq_carrier_contract.h": [
+        [
+          2197,
+          2198,
+          "9"
+        ],
+        [
+          7642,
+          7643,
+          "9"
+        ]
+      ],
+      "BRINGUP.md": [],
+      "sc/sc_hal.h": [],
+      "sc/sc_tables.h": [],
+      "sc/sc_tables.c": [],
+      "sc/sc_seq.h": [],
+      "sc/sc_seq.c": [],
+      "sc/sc_wdt.h": [],
+      "sc/sc_wdt.c": [],
+      "sc/sc_pd.h": [],
+      "sc/sc_pd.c": [],
+      "sc/sc_rtc.h": [],
+      "sc/sc_rtc.c": [],
+      "sc/sc_app.c": [],
+      "sc/sc_hal_zephyr.c.txt": [],
+      "sc/README.md": []
+    },
+    "errors": {}
+  },
+  {
+    "name": "swd",
+    "mutations": [
+      {
+        "op": "gpio_pin",
+        "net": "STM32_GPIO6",
+        "value": 12
+      }
+    ],
+    "edits": {
+      "BRINGUP.md": [
+        [
+          10183,
+          10184,
+          "2"
+        ]
+      ],
+      "sc/sc_hal.h": [],
+      "sc/sc_tables.h": [],
+      "sc/sc_tables.c": [],
+      "sc/sc_seq.h": [],
+      "sc/sc_seq.c": [],
+      "sc/sc_wdt.h": [],
+      "sc/sc_wdt.c": [],
+      "sc/sc_pd.h": [],
+      "sc/sc_pd.c": [],
+      "sc/sc_rtc.h": [],
+      "sc/sc_rtc.c": [],
+      "sc/sc_app.c": [],
+      "sc/sc_hal_zephyr.c.txt": [],
+      "sc/README.md": []
+    },
+    "errors": {
+      "firmware": "SWD reservation drift: dossier says STM32_GPIO6 = PA13 (SWDIO), live SoM netlist says PA12"
+    }
+  },
+  {
+    "name": "missing_expander",
+    "mutations": [
+      {
+        "op": "remove_sheet",
+        "sheet": "bringup_rails"
+      }
+    ],
+    "edits": {
+      "zynq_carrier_contract.h": [
+        [
+          1017,
+          1017,
+          "\n * absent on this project (their sections are omitted):\n *   bringup_rails"
+        ],
+        [
+          6318,
+          6440,
+          ""
+        ],
+        [
+          8231,
+          8240,
+          "?"
+        ],
+        [
+          8528,
+          8537,
+          "?"
+        ],
+        [
+          8823,
+          8832,
+          "?"
+        ],
+        [
+          9059,
+          11102,
+          ""
+        ]
+      ]
+    },
+    "errors": {
+      "manual": "'bringup_rails'",
+      "scfw": "'bringup_rails'"
+    }
+  },
+  {
+    "name": "expander_address",
+    "mutations": [
+      {
+        "op": "rewire_named",
+        "sheet": "bringup_rails",
+        "ref": "U1",
+        "pin": "A0",
+        "net": "+3V3_SC"
+      }
+    ],
+    "edits": {
+      "zynq_carrier_contract.h": [
+        [
+          6329,
+          6330,
+          "1"
+        ]
+      ],
+      "BRINGUP.md": [
+        [
+          8763,
+          8764,
+          "1"
+        ]
+      ],
+      "sc/sc_hal.h": [],
+      "sc/sc_tables.h": [],
+      "sc/sc_tables.c": [],
+      "sc/sc_seq.h": [],
+      "sc/sc_seq.c": [],
+      "sc/sc_wdt.h": [],
+      "sc/sc_wdt.c": [],
+      "sc/sc_pd.h": [],
+      "sc/sc_pd.c": [],
+      "sc/sc_rtc.h": [],
+      "sc/sc_rtc.c": [],
+      "sc/sc_app.c": [],
+      "sc/sc_hal_zephyr.c.txt": [],
+      "sc/README.md": []
+    },
+    "errors": {}
+  },
+  {
+    "name": "expander_collision",
+    "mutations": [
+      {
+        "op": "rewire_named",
+        "sheet": "bringup_rails",
+        "ref": "U1",
+        "pin": "A1",
+        "net": "+3V3_SC"
+      }
+    ],
+    "edits": {
+      "BRINGUP.md": [
+        [
+          8763,
+          8764,
+          "2"
+        ]
+      ],
+      "sc/sc_hal.h": [],
+      "sc/sc_tables.h": [],
+      "sc/sc_tables.c": [],
+      "sc/sc_seq.h": [],
+      "sc/sc_seq.c": [],
+      "sc/sc_wdt.h": [],
+      "sc/sc_wdt.c": [],
+      "sc/sc_pd.h": [],
+      "sc/sc_pd.c": [],
+      "sc/sc_rtc.h": [],
+      "sc/sc_rtc.c": [],
+      "sc/sc_app.c": [],
+      "sc/sc_hal_zephyr.c.txt": [],
+      "sc/README.md": []
+    },
+    "errors": {
+      "firmware": "I2C address collision: ZC_I2C_ADDR_TCA9535=0x22, ZC_I2C_ADDR_FUSB302B=0x22, ZC_I2C_ADDR_INA3221_1=0x40, ZC_I2C_ADDR_INA3221_2=0x41, ZC_I2C_ADDR_ID_EEPROM=0x51, ZC_I2C_ADDR_RTC=0x52"
+    }
+  },
+  {
+    "name": "monitor_invalid",
+    "mutations": [
+      {
+        "op": "rewire_named",
+        "sheet": "power_mon",
+        "ref": "U1",
+        "pin": "A0",
+        "net": "BAD_STRAP"
+      }
+    ],
+    "edits": {},
+    "errors": {
+      "firmware": "power_mon: U1 A0 on 'BAD_STRAP' — unknown strap",
+      "manual": "power_mon: U1 A0 on 'BAD_STRAP' — unknown strap",
+      "scfw": "power_mon: U1 A0 on 'BAD_STRAP' — unknown strap"
+    }
+  }
+]
