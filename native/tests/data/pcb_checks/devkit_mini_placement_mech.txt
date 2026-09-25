@@ -1,0 +1,9 @@
+LAW-6 PLACEMENT (mechanical) GATE: PASS (board 100 x 100 mm)
+  SoM module-body core: (49.2,53.4)..(100.8,96.6) mm — bottom-passives-only, TOP keepout
+  off-board connectors: 2 (0 mis-placed)
+    OK  J12001    TYPE-C-31-M-12   edge=N rot=180 mouth->(0, -1) flush=-1.3mm
+    OK  J3001     TYPE-C-31-M-12   edge=N rot=180 mouth->(0, -1) flush=-1.3mm
+  non-passive parts under SoM core: 0
+  controls under SoM core: 0
+  carrier TOP parts under SoM core (keepout): 0
+  user-facing parts (TP/LED/SW): 24 (0 face-down)

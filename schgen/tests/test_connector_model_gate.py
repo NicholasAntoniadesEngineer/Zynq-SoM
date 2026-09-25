@@ -62,6 +62,17 @@ def test_zero_model_z_passes(tmp_path):
     assert not res.bad_z
 
 
+def test_explicit_snapshot_is_immutable_and_default_check_reads_fresh_source(tmp_path):
+    from schgen.verify._native_pcb import prepare
+    inst = _synth_inst(tmp_path, "TF-01A", 0.0)
+    model = _model_with(inst)
+    snapshot = prepare(model)
+    assert cmg.check(model, prepared=snapshot) == cmg.check(model)
+    inst.mod_path.write_text(_SYNTH_FP.format(z=90.0))
+    assert cmg.check(model, prepared=snapshot).ok
+    assert not cmg.check(model).ok
+
+
 @pytest.mark.parametrize("z", [90.0, -90.0, 270.0, 45.0])
 def test_mutant_perpendicular_or_garbage_model_z_fails(tmp_path, z):
     res = cmg.check(_model_with(_synth_inst(tmp_path, "TF-01A", z)))

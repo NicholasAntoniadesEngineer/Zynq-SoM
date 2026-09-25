@@ -18,9 +18,13 @@
 #include "schgen/som_interface.hpp"
 #include "schgen/vivado.hpp"
 #include "schgen/validation.hpp"
+#include "schgen/selftest_full.hpp"
+#include "schgen/process.hpp"
 
 #include <algorithm>
 #include <filesystem>
+#include <fstream>
+#include <iterator>
 #include <iostream>
 #include <optional>
 #include <set>
@@ -36,19 +40,20 @@ struct Options {
     fs::path repository = fs::current_path(), som, contract, output, xdc, pcb;
     std::optional<fs::path> project;
     std::vector<std::string> subsystems;
-    bool allow_missing = false, qualified_refs = false, no_ngspice = false;
+    bool allow_missing = false, qualified_refs = false, no_ngspice = false, keep = false;
 };
-const std::set<std::string> commands{"project-check", "circuit-check", "som-interface", "xdc", "vivado", "fpga", "bom", "link", "devicetree", "design-rules", "testpoints", "board-schematic", "constraints", "powertree", "thermal", "part-rules", "bom-values", "footprint-pads", "pin-completeness", "symbol-law", "spice", "firmware", "manual", "scfw", "testplan", "power-sequence"};
+const std::set<std::string> commands{"selftest", "project-check", "circuit-check", "som-interface", "xdc", "vivado", "fpga", "bom", "link", "devicetree", "design-rules", "testpoints", "board-schematic", "constraints", "powertree", "thermal", "part-rules", "bom-values", "footprint-pads", "pin-completeness", "symbol-law", "spice", "firmware", "manual", "scfw", "testplan", "power-sequence"};
 Options parse(int argc, char** argv) {
     Options out;
     std::set<std::string> seen;
     for (int i = 1; i < argc; ++i) {
         const std::string arg = argv[i];
         if (commands.count(arg) && out.command.empty()) { out.command = arg; continue; }
-        if (arg == "--allow-missing" || arg == "--qualified-refs" || arg == "--no-ngspice") {
+        if (arg == "--allow-missing" || arg == "--qualified-refs" || arg == "--no-ngspice" || arg == "--keep") {
             if (!seen.insert(arg).second) throw std::runtime_error("duplicate option " + arg);
             if (arg == "--allow-missing") out.allow_missing = true;
             else if (arg == "--qualified-refs") out.qualified_refs = true;
+            else if (arg == "--keep") out.keep = true;
             else out.no_ngspice = true;
             continue;
         }
@@ -84,8 +89,9 @@ Options parse(int argc, char** argv) {
         allowed.insert("--allow-missing"); allowed.insert("--qualified-refs");
     } else if (out.command == "link") {
         allowed.insert("--contract");
-    } else if (out.command == "board-schematic") {
+    } else if (out.command == "board-schematic" || out.command == "selftest") {
         allowed.insert("--kicad-cli");
+        if (out.command == "selftest") allowed.insert("--keep");
     } else if (out.command == "thermal" || out.command == "powertree" || out.command == "part-rules") {
         if (out.command == "thermal") allowed.insert("--pcb");
     } else if (out.command == "spice") {
@@ -155,6 +161,38 @@ std::optional<int> run_project_command(int argc, char** argv) {
         publish_text(output, result.text);
         std::cout << "DEVICETREE: " << output.string() << " (" << result.mio_rows.size() << " MIO rows)\n";
         return 0;
+    }
+    if (options.command == "selftest") {
+        std::vector<SelftestSheetInput> inputs;
+        if (options.subsystems.empty()) inputs.push_back({selftest_rc_fixture(), "m1_rc", "m1_rc"});
+        const auto selected = load_project_circuits(paths, options.subsystems.empty()
+            ? std::vector<std::string>{"uart_bridge"} : options.subsystems);
+        for (const auto& circuit : selected)
+            inputs.push_back({circuit.circuit, circuit.path.string(), circuit.name});
+        FootprintResolutionOptions fp;
+        fp.parts_dir = paths.parts_dir;
+        fp.library_tables = {paths.repository_root / "som/fp-lib-table"};
+        for (const auto* root : {"/Applications/KiCad/KiCad.app/Contents/SharedSupport/footprints",
+                                "/usr/share/kicad/footprints", "/usr/local/share/kicad/footprints"})
+            if (fs::is_directory(root)) { fp.kicad_footprint_root = root; break; }
+        const auto resistor = resolve_footprint("Resistor_SMD:R_0603_1608Metric",
+            load_footprint_library_tables(fp), fp);
+        if (!resistor) throw std::runtime_error("selftest requires the real R_0603_1608Metric footprint");
+        std::ifstream source(*resistor, std::ios::binary);
+        if (!source) throw std::runtime_error("cannot read selftest footprint " + resistor->string());
+        const std::string bytes((std::istreambuf_iterator<char>(source)), std::istreambuf_iterator<char>());
+        const auto executable = find_executable(argv[0]);
+        if (!executable) throw std::runtime_error("cannot resolve selftest worker executable");
+        SelftestFullOptions run;
+        run.keep = options.keep;
+        run.extraction.kicad_cli = options.kicad_cli;
+        run.worker_command = {fs::absolute(*executable).string(), "selftest-worker"};
+        run.progress = [](const std::string& text) { std::cout << text << std::flush; };
+        SymbolLibrary library(paths.repository_root);
+        const auto result = run_full_selftest(inputs,
+            selftest_model_fixtures(pcb_check_footprint(resistor->string(), bytes)), library, run);
+        if (!options.output.empty()) publish_text(options.output, result.report);
+        return result.exit_code();
     }
     const auto circuits = options.subsystems.empty() ? load_project_circuits(paths)
                         : load_project_circuits(paths, options.subsystems);

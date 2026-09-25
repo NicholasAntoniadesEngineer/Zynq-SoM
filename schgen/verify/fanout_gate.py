@@ -185,40 +185,8 @@ class FanoutResult:
         return [r for r in self.records if r.starved]
 
     def summary(self) -> str:
-        verdict = "PASS" if self.ok else "FAIL"
-        L = [
-            f"FAN-OUT CLEARANCE GATE (D13, report-first ratchet): {verdict}",
-            f"  multi-pin subjects: {self.n_subjects}  starved: {self.n_starved}"
-            + (f"  baseline(ratchet): {self.baseline}"
-               if self.baseline is not None else "  baseline(ratchet): unset"),
-            "  intelligent need = pin-count tier; clearance = min courtyard gap to "
-            "nearest FOREIGN part",
-            "  cluster-aware: own-sheet 2-pin R/C/L excluded; DF40 plugs (som_j*, "
-            ">=40-pin) excluded (no-inflate)",
-            "  OFFENDERS (starved, worst slack first):",
-        ]
-        starved = self.starved_records
-        if not starved:
-            L.append("    (none)")
-        for r in starved:
-            L.append(
-                f"    STARVED {r.ref:9s} {r.sheet:16s} {r.pins:>3d}pin "
-                f"[{r.side[:3]}] clr={r.clearance:.3f} need={r.need:.2f} "
-                f"slack={r.slack:+.3f} nearest={r.nearest_ref} "
-                f"({r.nearest_sheet})")
-        if self.regressions:
-            L.append(f"  RATCHET REGRESSION ({len(self.regressions)} — starved count "
-                     f"{self.n_starved} > baseline {self.baseline}):")
-            for g in self.regressions:
-                L.append(f"    REGRESSION: {g}")
-        spacious = [r for r in self.records if not r.starved][:5]
-        if spacious:
-            L.append("  (tightest PASSING subjects:)")
-            for r in spacious:
-                L.append(
-                    f"    ok      {r.ref:9s} {r.sheet:16s} {r.pins:>3d}pin "
-                    f"clr={r.clearance:.3f} need={r.need:.2f} slack={r.slack:+.3f}")
-        return "\n".join(L)
+        from schgen.verify._native_pcb import summary
+        return summary("fanout", self)
 
 
 def _subjects(model: PcbModel):
@@ -230,68 +198,13 @@ def _subjects(model: PcbModel):
         yield inst
 
 
-def check(model: PcbModel, baseline: int | None = None) -> FanoutResult:
-    res = FanoutResult()
-
-    boxes = [(inst, _inst_courtyard(inst)) for inst in model.insts]
-
-    for inst in _subjects(model):
-        pins = len(inst.pad_nets)
-        need, basis = intelligent_need(pins)
-        my_box = _inst_courtyard(inst)
-
-        crowders = [(other, obox) for other, obox in boxes
-                    if other is not inst
-                    and other.side == inst.side
-                    and counts_as_crowder(other.ref, other.sheet,
-                                          len(other.pad_nets), other.footprint,
-                                          inst.sheet)]
-        if not _nat.loaded():
-            raise RuntimeError("native nearest_rect_gap required")
-        others = [obox for _o, obox in crowders]
-        clearance, idx = _nat.module().nearest_rect_gap(
-            my_box, others, _TOUCH_EPS)
-        if _nat.trace():
-            best_gap = float("inf")
-            best_i = -1
-            for i, (_o, obox) in enumerate(crowders):
-                gap = _rect_gap_py(my_box, obox)
-                if gap < best_gap:
-                    best_gap = gap
-                    best_i = i
-            ref_clr = 0.0 if best_gap < _TOUCH_EPS else best_gap
-            if (clearance, idx) != (ref_clr, best_i):
-                raise AssertionError(
-                    "native nearest_rect_gap DIVERGENCE: "
-                    f"cpp={(clearance, idx)} python={(ref_clr, best_i)}")
-        if idx < 0:
-            best_ref, best_sheet = "", ""
-        else:
-            best_ref = crowders[idx][0].ref
-            best_sheet = crowders[idx][0].sheet
-        res.records.append(FanoutRec(
-            ref=inst.ref, sheet=inst.sheet, pins=pins, side=inst.side,
-            clearance=clearance, need=need,
-            nearest_ref=best_ref or "(none)",
-            nearest_sheet=best_sheet or "-", basis=basis))
-
-    res.records.sort(key=lambda r: (r.slack, r.ref))
-    res.n_subjects = len(res.records)
-    res.n_starved = sum(1 for r in res.records if r.starved)
-
+def check(model: PcbModel, baseline: int | None = None, *, prepared=None) -> FanoutResult:
+    from schgen.verify._native_pcb import prepare
     if baseline is None:
         baseline = _load_baseline()
-    if baseline is None:
-        baseline = res.n_starved
-    res.baseline = baseline
-
-    res.ok = res.n_starved <= baseline
-    if not res.ok:
-        for r in res.starved_records:
-            res.regressions.append(
-                f"{r.ref} ({r.sheet}) {r.pins}pin: clr={r.clearance:.3f} < "
-                f"need={r.need:.2f}")
-    return res
+    raw = _nat.module().pcb_fanout((prepare(model) if prepared is None else prepared), baseline)
+    raw["records"] = [FanoutRec(**row) for row in raw["records"]]
+    return FanoutResult(**raw)
 
 
 _BASELINE_PATH = (Path(__file__).resolve().parents[2]

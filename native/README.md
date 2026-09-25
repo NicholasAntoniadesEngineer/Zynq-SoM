@@ -27,9 +27,25 @@ The native CLI supports `self-check`, `catalog-compile`, `circuit-compile`,
 `project-check`, `circuit-check`, `som-interface`, `link`, `bom`, `xdc`, `vivado`, `fpga`, and
 `devicetree`, `design-rules`, `testpoints`, `constraints`, `powertree`, `thermal`,
 `part-rules`, `bom-values`, `footprint-pads`, `pin-completeness`, `symbol-law`,
-`spice`, `firmware`, `manual`, `scfw`, `testplan`, and `power-sequence`.
+`spice`, `firmware`, `manual`, `scfw`, `testplan`, `power-sequence`, and `selftest`.
 It does not yet generate a complete board.
 Unsupported commands fail.
+
+`selftest` runs the complete 63-mutation suite through real KiCad exports, ERC,
+native gates, geometry checks, and fresh native worker processes. It does not
+invoke Python. Worker failures and missing footprint libraries fail the run;
+they cannot count as mutation kills. The separate `self-check` remains only a
+small kernel smoke test. Live contract tests carry the `live-kicad` CTest label.
+
+The native core includes complete floorplan search/compose/export, immutable
+PCB-check snapshots, and board/project/design-rule emission. Frozen independent
+fixtures verify both projects' exact outputs and mutation/error cases. The
+transitional PCB pipeline now uses the native writers and shares one prepared
+snapshot across its PCB gates, avoiding repeated source parsing. Standalone gate
+calls still prepare fresh inputs; no global cache hides placement or file edits.
+The original return-path-v1 failures remain separate from return-stitch coverage;
+this migration does not waive them. Floorplan and placement orchestration still
+need their final native CLI integration before the full-board command is native.
 
 ```sh
 native/bin/schgen project-check --project carrier

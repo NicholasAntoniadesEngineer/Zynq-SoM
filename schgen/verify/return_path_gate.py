@@ -1,27 +1,17 @@
 from __future__ import annotations
 
 import json
-import re
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
 from pathlib import Path
-
+from schgen.core import native
 from schgen.core.project import PROJECT_ROOT
+from schgen.verify._native_pcb import summary
 
 K = 2
-
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 _PARTS_DIR = _REPO_ROOT / "parts"
 _INTERFACE_JSON = PROJECT_ROOT / "som_interface.json"
-
-_PAD_RE = re.compile(
-    r'\(pad\s+"([^"]*)"'
-    r'(?:(?!\(pad).)*?'
-    r'\(at\s+(-?[\d.]+)\s+(-?[\d.]+)',
-    re.DOTALL,
-)
-
 _ROW_TOL = 0.05
-
 
 @dataclass(frozen=True)
 class Contact:
@@ -47,8 +37,7 @@ class Violation:
         return "none-on-connector" if self.distance is None else str(self.distance)
 
     def as_line(self) -> str:
-        return (f"{self.ref} pad {self.pad} net {self.net} (pair {self.base}): "
-                f"nearest GND at {self._dist_str()} steps > K={K}")
+        return native.module().pcb_return_violation_line(asdict(self))
 
 
 @dataclass
@@ -69,72 +58,28 @@ class ReturnPathResult:
         return len(self.violations)
 
     def summary(self) -> str:
-        lines = [
-            f"RETURN-PATH GATE (HS pairs): {'PASS' if self.ok else 'FAIL'} "
-            f"(K={self.k} contact steps)",
-            f"  HS pairs crossing DF40s : {self.n_pairs}",
-            f"  HS-pair contacts        : {self.n_pair_contacts}",
-            f"  failing contacts        : {self.n_fail}",
-            f"  worst nearest-GND dist  : "
-            f"{'n/a' if self.worst_distance is None else self.worst_distance} "
-            f"(budget K={self.k})",
-        ]
-        lines.append("  nearest-GND distance distribution (dist: count):")
-        for dist in sorted(self.dist_hist):
-            lines.append(f"    {dist:>2d} steps : {self.dist_hist[dist]}")
-        lines.append("  per-connector (pairs, pair-contacts, failing):")
-        for ref in sorted(self.per_conn):
-            pc, fc = self.per_conn[ref]
-            npairs = self.pairs_per_conn.get(ref, 0)
-            lines.append(
-                f"    {ref}: {npairs} pairs, {pc} pair-contacts, {fc} failing")
-        if self.violations:
-            lines.append("  VIOLATIONS:")
-            for v in sorted(self.violations,
-                            key=lambda x: (x.ref, x.base, x.net, x.pad)):
-                lines.append(f"    {v.as_line()}")
-        return "\n".join(lines)
+        return summary("return-path", self)
 
 
 def classify_net(net: str) -> str:
-    up = net.upper()
-    if up in {"GND", "AGND", "DGND"} or up.endswith("GND"):
-        return "GND"
-    if net.startswith("+") or up.startswith("VCC") or up.startswith("VDD"):
-        return "POWER"
-    return "SIGNAL"
-
-
-def hs_pair_bases(nets: set[str]) -> list[str]:
-    p_bases = {n[:-2] for n in nets if n.endswith("_P")}
-    n_bases = {n[:-2] for n in nets if n.endswith("_N")}
-    return sorted(p_bases & n_bases)
+    return native.module().pcb_classify_net(net)
 
 
 def pair_partner(net: str) -> str | None:
-    toks = net.split("_")
-    pn_positions = [i for i, t in enumerate(toks) if t in ("P", "N")]
-    if len(pn_positions) != 1:
-        return None
-    i = pn_positions[0]
-    flipped = toks[:]
-    flipped[i] = "N" if toks[i] == "P" else "P"
-    return "_".join(flipped)
+    return native.module().pcb_pair_partner(net)
 
 
 def pair_base(net: str, partner: str) -> str:
-    a = net.split("_")
-    b = partner.split("_")
-    return "_".join("*" if x != y else x for x, y in zip(a, b, strict=False))
+    return native.module().pcb_pair_base(net, partner)
 
 
 def hs_pairs_in(nets: set[str]) -> dict[str, str]:
-    out: dict[str, str] = {}
-    for net in nets:
-        partner = pair_partner(net)
-        if partner is not None and partner in nets:
-            out[net] = pair_base(net, partner)
-    return out
+    return native.module().pcb_hs_pairs(nets)
+
+
+def hs_pair_bases(nets: set[str]) -> list[str]:
+    return sorted({n[:-2] for n in nets if n.endswith("_P")} &
+                  {n[:-2] for n in nets if n.endswith("_N")})
 
 
 def _resolve_footprint(value: str, footprint: str) -> Path | None:
@@ -152,155 +97,21 @@ def _resolve_footprint(value: str, footprint: str) -> Path | None:
     return None
 
 
+
 def _parse_pad_positions(mod_path: Path) -> dict[str, tuple[float, float]]:
-    text = mod_path.read_text()
-    out: dict[str, tuple[float, float]] = {}
-    for num, sx, sy in _PAD_RE.findall(text):
-        if num == "":
-            continue
-        out[num] = (float(sx), float(sy))
-    return out
+    return native.module().pcb_return_pad_positions(str(mod_path), mod_path.read_text())
 
 
-# DF40 pad numbering is not monotonic across rows: row/index come from XY only
-def _rows_from_positions(
-    positions: dict[str, tuple[float, float]],
-) -> dict[str, tuple[int, int]]:
-    ys = sorted({y for _, y in positions.values()}, reverse=True)
-    row_of_y: list[float] = []
-    for y in ys:
-        if not any(abs(y - ry) <= _ROW_TOL for ry in row_of_y):
-            row_of_y.append(y)
-
-    def row_index(y: float) -> int:
-        for i, ry in enumerate(row_of_y):
-            if abs(y - ry) <= _ROW_TOL:
-                return i
-        return len(row_of_y)
-
-    by_row: dict[int, list[tuple[float, str]]] = {}
-    for pad, (x, y) in positions.items():
-        by_row.setdefault(row_index(y), []).append((x, pad))
-    result: dict[str, tuple[int, int]] = {}
-    for r, entries in by_row.items():
-        for idx, (_x, pad) in enumerate(sorted(entries)):
-            result[pad] = (r, idx)
-    return result
-
-
-def build_contacts(
-    ref: str,
-    pins: dict[str, str],
-    positions: dict[str, tuple[float, float]],
-) -> list[Contact]:
-    rows = _rows_from_positions(positions)
-    contacts: list[Contact] = []
-    for pad, net in pins.items():
-        if pad not in positions or pad not in rows:
-            continue
-        r, idx = rows[pad]
-        x, y = positions[pad]
-        contacts.append(Contact(ref=ref, pad=pad, row=r, index=idx, x=x, y=y,
-                                 net=net, klass=classify_net(net)))
-    contacts.sort(key=lambda c: (c.row, c.index))
-    return contacts
-
-
-def _neighbourhood_gnd_distance(
-    contact: Contact,
-    contacts: list[Contact],
-    k: int,
-) -> int | None:
-    same_row = {c.index: c for c in contacts if c.row == contact.row}
-    other_rows = sorted({c.row for c in contacts if c.row != contact.row})
-    facing_row = None
-    if other_rows:
-        facing_row = min(
-            other_rows,
-            key=lambda r: abs(
-                contact.y
-                - next(c.y for c in contacts if c.row == r)
-            ),
-        )
-    facing = ([c for c in contacts if c.row == facing_row]
-              if facing_row is not None else [])
-
-    best: int | None = None
-
-    for di in range(-k, k + 1):
-        if di == 0:
-            continue
-        nb = same_row.get(contact.index + di)
-        if nb is not None and nb.klass == "GND":
-            dist = abs(di)
-            best = dist if best is None else min(best, dist)
-
-    for di in range(-k, k + 1):
-        target_index = contact.index + di
-        anchor = same_row.get(target_index)
-        anchor_x = anchor.x if anchor is not None else contact.x
-        cand = min(facing, key=lambda c: abs(c.x - anchor_x), default=None)
-        if cand is not None and cand.klass == "GND":
-            dist = max(1, abs(di))
-            best = dist if best is None else min(best, dist)
-
-    return best
-
-
-def _nearest_gnd_distance_any(
-    contact: Contact,
-    contacts: list[Contact],
-) -> int | None:
-    best: int | None = None
-    for c in contacts:
-        if c.klass != "GND":
-            continue
-        if c.row == contact.row:
-            dist = abs(c.index - contact.index)
-        else:
-            dist = max(1, abs(c.index - contact.index))
-        best = dist if best is None else min(best, dist)
-    return best
+def build_contacts(ref: str, pins: dict[str, str],
+                   positions: dict[str, tuple[float, float]]) -> list[Contact]:
+    return [Contact(**row) for row in native.module().pcb_return_contacts_positions(ref, pins, positions)]
 
 
 def check_map(contacts_by_ref: dict[str, list[Contact]], k: int = K):
-    res = ReturnPathResult(k=k)
-    res.connectors = sorted(contacts_by_ref)
-
-    all_bases: set[str] = set()
-
-    for ref in sorted(contacts_by_ref):
-        contacts = contacts_by_ref[ref]
-        conn_nets = {c.net for c in contacts}
-        net_to_base = hs_pairs_in(conn_nets)
-        all_bases.update(net_to_base.values())
-        pc_count = 0
-        fail_count = 0
-        for c in sorted(contacts, key=lambda x: (x.row, x.index)):
-            if c.net not in net_to_base:
-                continue
-            pc_count += 1
-            res.n_pair_contacts += 1
-            base = net_to_base[c.net]
-            within = _neighbourhood_gnd_distance(c, contacts, k)
-            report_dist = (within if within is not None
-                           else _nearest_gnd_distance_any(c, contacts))
-            if report_dist is not None:
-                res.dist_hist[report_dist] = res.dist_hist.get(report_dist, 0) + 1
-                if res.worst_distance is None or report_dist > res.worst_distance:
-                    res.worst_distance = report_dist
-            if within is None:
-                fail_count += 1
-                res.violations.append(
-                    Violation(ref=ref, base=base, net=c.net, pad=c.pad,
-                              distance=report_dist))
-        res.per_conn[ref] = (pc_count, fail_count)
-        res.pairs_per_conn[ref] = len(set(net_to_base.values()))
-
-    res.n_pairs = len(all_bases)
-    res.violations.sort(key=lambda v: (v.ref, v.base, v.net, v.pad))
-    res.ok = not res.violations
-    return res
+    raw = native.module().pcb_return_path_map(
+        {ref: [asdict(c) for c in contacts] for ref, contacts in contacts_by_ref.items()}, k)
+    raw["violations"] = [Violation(**v) for v in raw["violations"]]
+    return ReturnPathResult(**raw)
 
 
 def check(

@@ -7,6 +7,7 @@
 #include "schgen/sexpr.hpp"
 #include "schgen/turn.hpp"
 #include "schgen/project_cli.hpp"
+#include "schgen/selftest_full.hpp"
 
 #include <iostream>
 #include <stdexcept>
@@ -17,6 +18,7 @@ int main(int argc, char** argv) {
         if (argc == 1 || (argc == 2 && std::string(argv[1]) == "--help")) {
             std::cout << "usage: schgen <command>\n"
                          "  self-check\n"
+                         "  selftest [--project NAME] [SUBSYSTEM ...] [--kicad-cli PATH] [-o REPORT]\n"
                          "  catalog-compile <parts_dir> <catalog.bin>\n"
                          "  circuit-compile <circuits_dir> <circuits.bin>\n"
                          "  project-check [--repo ROOT] [--project NAME] [SUBSYSTEM ...]\n"
@@ -37,6 +39,11 @@ int main(int argc, char** argv) {
                          "  link [--project NAME] [SUBSYSTEM ...] [--contract FILE] [-o REPORT]\n"
                          "  devicetree [--project NAME] [--som FILE] [--contract FILE] [-o FILE]\n"
                          "Full board generation still uses python -m schgen board.\n";
+            return 0;
+        }
+        if (argc >= 2 && std::string(argv[1]) == "selftest-worker") {
+            if (argc != 4) throw std::runtime_error("selftest-worker requires request and output paths");
+            std::cout << schgen::selftest_worker_emit(schgen::parse_json_file(argv[2]), argv[3]);
             return 0;
         }
         if (const auto status = schgen::run_project_command(argc, argv)) return *status;

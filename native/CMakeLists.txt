@@ -25,7 +25,31 @@ add_library(schgen_core STATIC
     src/bom_values.cpp src/footprint_pads.cpp src/pin_completeness.cpp src/symbol_law.cpp
     src/spice.cpp src/spice_process.cpp src/process.cpp
     src/bringup_facts.cpp src/firmware_docs.cpp src/firmware_docs_manual.cpp
-    src/firmware_docs_testplan.cpp src/firmware_docs_scfw.cpp src/firmware_docs_power_sequence.cpp)
+    src/firmware_docs_testplan.cpp src/firmware_docs_scfw.cpp src/firmware_docs_power_sequence.cpp
+    src/pcb_checks_model.cpp src/pcb_checks_connectors.cpp src/pcb_checks_placement.cpp
+    src/pcb_checks_return_path.cpp src/pcb_checks_ampacity.cpp src/pcb_checks_escape.cpp src/pcb_checks_stitch.cpp)
+set(SCHGEN_FLOORPLAN_SOURCES
+    src/floorplan_spec.cpp src/floorplan_geometry.cpp src/floorplan_cross.cpp
+    src/floorplan_pack.cpp src/floorplan_compose.cpp src/floorplan_build.cpp
+    src/floorplan_ledger.cpp src/floorplan_json.cpp src/floorplan_notes.cpp
+    src/floorplan_svg.cpp src/floorplan_md.cpp src/floorplan_output.cpp src/floorplan_export.cpp)
+set(SCHGEN_PCB_EMIT_SOURCES
+    src/pcb_model.cpp src/pcb_embed.cpp src/pcb_emit.cpp src/pcb_project.cpp src/pcb_silk.cpp)
+target_sources(schgen_core PRIVATE ${SCHGEN_FLOORPLAN_SOURCES} ${SCHGEN_PCB_EMIT_SOURCES})
+set(SCHGEN_SELFTEST_SOURCES
+    src/selftest_full.cpp src/selftest_full_fixtures.cpp src/selftest_full_models.cpp
+    src/selftest_full_json.cpp src/selftest_full_worker.cpp src/ratsnest_gate.cpp
+    src/circuit_helpers.cpp)
+target_sources(schgen_core PRIVATE ${SCHGEN_SELFTEST_SOURCES})
+file(GLOB authoring_builders CONFIGURE_DEPENDS
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/subsystem_authoring*.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/project_authoring*.cpp")
+set(authoring_sources src/authoring.cpp src/authoring_ir.cpp src/authoring_gates.cpp ${authoring_builders})
+target_sources(schgen_core PRIVATE ${authoring_sources})
+set_source_files_properties(${authoring_sources} PROPERTIES COMPILE_OPTIONS "-ffp-contract=off")
+set_source_files_properties(${SCHGEN_SELFTEST_SOURCES} PROPERTIES COMPILE_OPTIONS "-ffp-contract=off")
+set_source_files_properties(${SCHGEN_FLOORPLAN_SOURCES} ${SCHGEN_PCB_EMIT_SOURCES}
+    PROPERTIES COMPILE_OPTIONS "-ffp-contract=off")
 find_package(Threads REQUIRED)
 find_package(LibXml2 REQUIRED)
 target_link_libraries(schgen_core PUBLIC LibXml2::LibXml2 Threads::Threads)
@@ -36,7 +60,9 @@ set_source_files_properties(src/turn.cpp src/pack_anchor.cpp src/symbols.cpp
                             src/schematic_place_fanout.cpp src/schematic_place_templates.cpp
                             src/schematic_place_chain.cpp src/schematic_place_pages.cpp src/board_schematic.cpp
                             src/pack_edges.cpp src/power_checks.cpp src/thermal_checks.cpp src/part_checks.cpp
-                            src/bom_values.cpp src/spice.cpp src/spice_process.cpp PROPERTIES
+                            src/bom_values.cpp src/spice.cpp src/spice_process.cpp
+                            src/pcb_checks_model.cpp src/pcb_checks_connectors.cpp src/pcb_checks_placement.cpp
+                            src/pcb_checks_return_path.cpp src/pcb_checks_ampacity.cpp src/pcb_checks_escape.cpp src/pcb_checks_stitch.cpp PROPERTIES
     COMPILE_OPTIONS "-ffp-contract=off")
 
 if(SCHGEN_BUILD_PYTHON)
@@ -94,6 +120,39 @@ add_custom_target(schgen_catalogs ALL DEPENDS
 
 include(CTest)
 if(BUILD_TESTING)
+    foreach(family subsystem_authoring authoring_gates)
+        add_executable(schgen_${family}_contracts tests/${family}_contracts.cpp)
+        target_link_libraries(schgen_${family}_contracts PRIVATE schgen_core)
+        target_compile_options(schgen_${family}_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror -ffp-contract=off)
+        add_test(NAME native_${family}_contracts COMMAND schgen_${family}_contracts "${CMAKE_CURRENT_SOURCE_DIR}/..")
+    endforeach()
+    add_executable(schgen_selftest_full_contracts tests/selftest_full_contracts.cpp)
+    target_link_libraries(schgen_selftest_full_contracts PRIVATE schgen_core)
+    target_include_directories(schgen_selftest_full_contracts PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
+    target_compile_options(schgen_selftest_full_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror -ffp-contract=off)
+    find_file(SCHGEN_TEST_RESISTOR_FOOTPRINT R_0603_1608Metric.kicad_mod
+        PATHS /Applications/KiCad/KiCad.app/Contents/SharedSupport/footprints
+              /usr/share/kicad/footprints /usr/local/share/kicad/footprints
+        PATH_SUFFIXES Resistor_SMD.pretty)
+    if(SCHGEN_TEST_RESISTOR_FOOTPRINT)
+        add_test(NAME native_selftest_full_contracts COMMAND schgen_selftest_full_contracts
+            "${CMAKE_CURRENT_SOURCE_DIR}/.." "${SCHGEN_TEST_RESISTOR_FOOTPRINT}")
+        set_tests_properties(native_selftest_full_contracts PROPERTIES LABELS "live-kicad")
+    endif()
+    add_executable(schgen_floorplan_contracts tests/floorplan_contracts.cpp)
+    target_link_libraries(schgen_floorplan_contracts PRIVATE schgen_core)
+    target_compile_options(schgen_floorplan_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror -ffp-contract=off)
+    add_test(NAME native_floorplan_contracts COMMAND schgen_floorplan_contracts
+        "${CMAKE_CURRENT_SOURCE_DIR}/tests/data/floorplan")
+    add_executable(schgen_pcb_emit_contracts tests/pcb_emit_contracts.cpp)
+    target_link_libraries(schgen_pcb_emit_contracts PRIVATE schgen_core)
+    target_compile_options(schgen_pcb_emit_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror -ffp-contract=off)
+    add_test(NAME native_pcb_emit_contracts COMMAND schgen_pcb_emit_contracts
+        "${CMAKE_CURRENT_SOURCE_DIR}/tests/data/pcb_emit" "${CMAKE_CURRENT_BINARY_DIR}/pcb-emit-contract-output")
+    add_executable(schgen_pcb_checks_contracts tests/pcb_checks_contracts.cpp)
+    target_link_libraries(schgen_pcb_checks_contracts PRIVATE schgen_core)
+    target_compile_options(schgen_pcb_checks_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror -ffp-contract=off)
+    add_test(NAME native_pcb_checks_contracts COMMAND schgen_pcb_checks_contracts "${CMAKE_CURRENT_SOURCE_DIR}/..")
     add_executable(schgen_firmware_docs_contracts tests/firmware_docs_contracts.cpp)
     target_link_libraries(schgen_firmware_docs_contracts PRIVATE schgen_core)
     target_compile_options(schgen_firmware_docs_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror)

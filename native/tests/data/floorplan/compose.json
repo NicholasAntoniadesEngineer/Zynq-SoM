@@ -1,0 +1,12 @@
+[
+  {"name":"near_repair","terms":[["near_max","b",20]],"compact":false,"block":false,"width":100,"demand":0,"ok":true,"poses":[["a",5.0,5.0],["b",31.0,5.0]],"log":["accept: all hard terms green"]},
+  {"name":"near_compact","terms":[["near_max","b",20],["flow_hop","b",null]],"compact":true,"block":false,"width":100,"demand":0,"ok":true,"poses":[["a",20.7,5.0],["b",31.0,5.0]],"log":["compacted (wired hop pulls applied)","accept: all hard terms green"]},
+  {"name":"infeasible_obstacle","terms":[["near_max","b",20]],"compact":false,"block":true,"width":100,"demand":0,"ok":false,"poses":[["a",5,5],["b",60,5]],"log":["repair: flip #obstacle|a off x","INFEASIBLE y: negative cycle"]},
+  {"name":"far_reject","terms":[["far_min","b",90]],"compact":false,"block":false,"width":100,"demand":0,"ok":false,"poses":[["a",5,5],["b",60,5]],"log":["REJECT: hard red after legalization: far_min a->b margin -35.0"]},
+  {"name":"unresolved","terms":[["near_max","missing",20]],"compact":false,"block":false,"width":100,"demand":0,"ok":false,"poses":[["a",5,5],["b",60,5]],"log":["REJECT: hard red after legalization: near_max a->missing margin -inf"]},
+  {"name":"flow_compact","terms":[["flow_hop","b",null]],"compact":true,"block":false,"width":100,"demand":0,"ok":true,"poses":[["a",49.7,5.0],["b",60.0,5.0]],"log":["compacted (wired hop pulls applied)","accept: all hard terms green"]},
+  {"name":"channel_repair","terms":[["flow_hop","b",null]],"compact":true,"block":false,"width":100,"demand":250,"ok":true,"poses":[["a",0.3,5.0],["b",62.3,5.0]],"log":["compacted (wired hop pulls applied)","accept: all hard terms green"]},
+  {"name":"facing_unresolved","terms":[["facing","missing",null]],"compact":false,"block":false,"width":100,"demand":0,"ok":false,"poses":[["a",5,5],["b",60,5]],"log":["REJECT: hard red after legalization: facing a->missing margin -90.0"]},
+  {"name":"compaction_reverts","terms":[["flow_hop","b",null],["far_min","b",30]],"compact":true,"block":false,"width":100,"demand":0,"ok":true,"poses":[["a",5,5],["b",60,5]],"log":["compaction REVERTED (would break a hard term or separation)","accept: all hard terms green"]},
+  {"name":"jack_near","terms":[["near_max","som_j1",20]],"compact":true,"block":false,"width":100,"demand":0,"jack":true,"ok":true,"poses":[["a",14.0,5.0],["b",60.0,5.0]],"log":["compacted (wired hop pulls applied)","accept: all hard terms green"]}
+]

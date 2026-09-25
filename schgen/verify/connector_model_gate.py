@@ -96,28 +96,8 @@ class ConnModelResult:
     n_connectors: int = 0
 
     def summary(self) -> str:
-        L = [f"LAW-6 CONNECTOR-MODEL ORIENTATION GATE: "
-             f"{'PASS' if self.ok else 'FAIL'}"]
-        L.append(f"  off-board connectors inspected: {self.n_connectors}")
-        for ref, mpn, _value, z, ok in self.models:
-            mark = "OK " if ok else "BAD"
-            zs = "none" if z is None else f"{z:g}"
-            L.append(f"    {mark} {ref:9s} {mpn:16s} model_z={zs}")
-        L.append(f"  non-zero model-Z (flipped opening): {len(self.bad_z)}")
-        for b in self.bad_z:
-            L.append(f"    BAD-Z {b}")
-        L.append(f"  geometry-cross-checked (through-shell): "
-                 f"{len(self.geom_checked)} -> {len(self.geom_conflicts)} "
-                 f"conflict(s)")
-        for g in self.geom_conflicts:
-            L.append(f"    GEOM-CONFLICT {g}")
-        L.append(f"  reviewed geometry exceptions: {len(_GEOM_EXCEPTIONS)}")
-        if self.missing_model:
-            L.append(f"  (info) connectors without a 3D model: "
-                     f"{len(self.missing_model)} — see the 3D-coverage gate")
-            for m in self.missing_model:
-                L.append(f"    NO-MODEL {m}")
-        return "\n".join(L)
+        from schgen.verify._native_pcb import summary
+        return summary("connector-model", self)
 
 
 def _mpn_of(inst) -> str | None:
@@ -129,53 +109,17 @@ def _mpn_of(inst) -> str | None:
     return None
 
 
-def check(model: PcbModel | None = None) -> ConnModelResult:
-    res = ConnModelResult()
-
-    if model is not None:
-        rows = []
-        for inst in model.insts:
-            mpn = _mpn_of(inst)
-            if mpn is None:
-                continue
-            rows.append((inst.ref, inst.value, mpn, inst.mod_path))
-    else:
-        rows = [(mpn, mpn, mpn, resolve_mod(f"parts:{mpn}") or
-                 (Path(__file__).resolve().parents[2] / "parts" / mpn /
-                  f"{mpn}.kicad_mod"))
-                for mpn in sorted(CONN_MATING_FACE)]
-
-    for ref, value, mpn, mod_path in rows:
-        res.n_connectors += 1
-        if mod_path is None or not Path(mod_path).exists():
-            res.missing_model.append(f"{ref} {mpn}: footprint not resolvable")
-            res.models.append((ref, mpn, value, None, True))
-            continue
-        mod_path = Path(mod_path)
-        z = _model_z(mod_path)
-
-        z_ok = True
-        if z is None:
-            res.missing_model.append(f"{ref} {mpn}: no (model ...rotate) node")
-        elif round(z) % 180 != 0:
-            z_ok = False
-            res.bad_z.append(
-                f"{ref} {mpn} (value={value}): model rotate Z={z:g} deg "
-                f"(must be 0 or 180 — axis-aligned with the footprint; 90/270 is "
-                f"perpendicular, non-orthogonal is garbage) — fix the "
-                f"(model ...(rotate (xyz 0 0 Z))) node")
-        res.models.append((ref, mpn, value, z, z_ok))
-
-        if mpn in _GEOM_SHELL:
-            res.geom_checked.append(f"{ref} {mpn}")
-            implied = _tail_row_mouth(mod_path)
-            declared = CONN_MATING_FACE[mpn]
-            if implied is not None and implied != declared:
-                res.geom_conflicts.append(
-                    f"{ref} {mpn}: pad geometry implies mouth {implied} "
-                    f"(opposite the dense contact tail row) but "
-                    f"CONN_MATING_FACE says {declared} — one is wrong; "
-                    f"the rendered mouth would face inward")
-
-    res.ok = (not res.bad_z and not res.geom_conflicts)
-    return res
+def check(model: PcbModel | None = None, *, prepared=None) -> ConnModelResult:
+    from types import SimpleNamespace
+    from schgen.core import native
+    from schgen.verify._native_pcb import prepare
+    if model is None:
+        insts = []
+        for mpn in sorted(CONN_MATING_FACE):
+            path = resolve_mod(f"parts:{mpn}") or (
+                Path(__file__).resolve().parents[2] / "parts" / mpn / f"{mpn}.kicad_mod")
+            insts.append(SimpleNamespace(
+                ref=mpn, value=mpn, footprint=f"parts:{mpn}", mod_path=path,
+                sheet="", side="top", x=0.0, y=0.0, rotation=0.0, pad_nets={}))
+        model = SimpleNamespace(board_w=0.0, board_h=0.0, insts=insts)
+    return ConnModelResult(**native.module().pcb_connector_models((prepare(model) if prepared is None else prepared), CONN_MATING_FACE))
