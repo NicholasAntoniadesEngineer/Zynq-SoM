@@ -215,6 +215,21 @@ def resolve_net(som_net: str) -> str:
 
 
 def connector_circuit(jref: str, name: str, title: str) -> Circuit:
+    from schgen.core.authoring import connector_circuit as _native_connector
+    _assert_straps_unloaded()
+    return _native_connector(
+        'carrier', jref, name, title, contract_pins(jref),
+        {"schema": "schgen.som_mapping.v1",
+         "function_map": FUNCTION_MAP, "pudc_straps": PUDC_STRAPS,
+         "vcco_rail_map": VCCO_RAIL_MAP, "rebound_som_rails": RAIL_SPELLING,
+         "isolated_som_rails": ISOLATED_SOM_RAILS,
+         "do_not_load_straps": sorted(DO_NOT_LOAD_STRAPS)},
+        {"part": MEZZANINE_PLUG, "module_draw_a": MODULE_DRAW_A,
+         "sdio_level_v": SDIO_LEVEL_V, "sd_bus": SD_BUS,
+         "pairs": PAIR_TYPES + FUNCTION_PAIR_TYPES})
+
+
+def _legacy_connector_circuit(jref: str, name: str, title: str) -> Circuit:
     c = Circuit(name, title)
     c.use_part(MEZZANINE_PLUG, ref=jref)
     seen_ports: set[str] = set()

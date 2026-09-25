@@ -22,7 +22,8 @@ LCSC_BULK = "C45783"
 
 RAILS = ("+VDD_HOST", "+VDD_CARD", "GND")
 PORTS = ("SD_CLK", "SD_CMD", "SD_D0", "SD_D1", "SD_D2", "SD_D3", "CD_N")
-INTERFACE = RAILS + PORTS
+from schgen.core.authoring import interface as _native_interface
+INTERFACE = _native_interface('microsd')
 
 HOST_LEVEL_V = 1.8
 RAIL_WORST_V = {"+VDD_HOST": 1.8, "+VDD_CARD": 3.3, "GND": 0.0}
@@ -44,6 +45,11 @@ PULLED = ("SD_CMD", "SD_D0", "SD_D1", "SD_D2", "SD_D3")
 
 
 def circuit(meta: Meta | dict | None = None) -> Circuit:
+    from schgen.core.authoring import circuit as _native_circuit
+    return _native_circuit('microsd', meta)
+
+
+def _legacy_circuit(meta: Meta | dict | None = None) -> Circuit:
     meta = Meta(meta)
     draws_card_note = meta.note("draws_card", DRAWS_CARD_NOTE)
     draws_host_note = meta.note("draws_host", DRAWS_HOST_NOTE)

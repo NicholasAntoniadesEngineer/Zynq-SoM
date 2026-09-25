@@ -73,6 +73,11 @@ SC_DRAW_A = register("motor_sense.sc_draw", 0.002, "A",
 
 
 def circuit() -> Circuit:
+    from schgen.core.authoring import project_circuit
+    return project_circuit('carrier', 'motor_sense', __file__)
+
+
+def _legacy_circuit() -> Circuit:
     c = Circuit("motor_sense",
                 "ESC motor-rail telemetry: INA3221 + 10mR shunt (I2C 0x42)")
 

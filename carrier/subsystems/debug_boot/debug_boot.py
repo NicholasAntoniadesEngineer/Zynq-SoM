@@ -53,6 +53,11 @@ JTAG_DRAW_A = register("debug_boot.jtag_draw", 0.002, "A",
 
 
 def circuit() -> Circuit:
+    from schgen.core.authoring import project_circuit
+    return project_circuit('carrier', 'debug_boot', __file__)
+
+
+def _legacy_circuit() -> Circuit:
     c = Circuit("debug_boot", "JTAG + SWD headers, boot-request DIP, reset")
     c.use_part(JTAG_HEADER, ref="J1")
     c.use_part(SWD_HEADER, ref="J2", value="HX_JN1.27-2x5")

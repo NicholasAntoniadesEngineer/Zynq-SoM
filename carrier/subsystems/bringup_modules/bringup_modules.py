@@ -78,6 +78,11 @@ MODULES = (
 
 
 def circuit() -> Circuit:
+    from schgen.core.authoring import project_circuit
+    return project_circuit('carrier', 'bringup_modules', __file__)
+
+
+def _legacy_circuit() -> Circuit:
     c = Circuit("bringup_modules",
                 "Bring-up module gates: 10x SY6280 + status/user LEDs")
     for k, (mod, in_rail, out_rail, rset, rset_id, led_r, led_r_id) \

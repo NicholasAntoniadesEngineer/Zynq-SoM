@@ -94,6 +94,11 @@ _ESD_VN_PIN = 2
 
 
 def circuit() -> Circuit:
+    from schgen.core.authoring import project_circuit
+    return project_circuit('carrier', 'motor_pwm', __file__)
+
+
+def _legacy_circuit() -> Circuit:
     c = Circuit("motor_pwm", "8-ch PWM/ESC output buffer (5V, PL-isolating)")
 
     c.use_part(BUFFER_PART, ref="U1")

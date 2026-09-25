@@ -12,7 +12,8 @@ LCSC_10U = "C15850"
 
 RAILS = ("+VBUS", "GND", "CHASSIS_GND")
 PORTS = ("USB_DP", "USB_DM")
-INTERFACE = RAILS + PORTS
+from schgen.core.authoring import interface as _native_interface
+INTERFACE = _native_interface('usb_jtag_connector')
 
 CONSUMER = "usb consumer (downstream device)"
 
@@ -22,6 +23,11 @@ CC_PINS = (("R1", "J1.CC1"), ("R2", "J1.CC2"))
 
 
 def circuit(meta: Meta | dict | None = None) -> Circuit:
+    from schgen.core.authoring import circuit as _native_circuit
+    return _native_circuit('usb_jtag_connector', meta)
+
+
+def _legacy_circuit(meta: Meta | dict | None = None) -> Circuit:
     meta = Meta(meta)
     c = Circuit("usb_jtag_connector",
                 "USB-C UFP debug port -> CH347T (protected)")

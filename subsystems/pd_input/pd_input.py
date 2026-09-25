@@ -27,7 +27,8 @@ LCSC_FUSED_BULK = "C596319"
 
 RAILS = ("+VBUS_CONN", "+VBUS_OUT", "+VDD_LOGIC", "GND", "CHASSIS_GND")
 PORTS = ("CC1", "CC2", "USB_D_P", "USB_D_N", "FLT_N")
-INTERFACE = RAILS + PORTS
+from schgen.core.authoring import interface as _native_interface
+INTERFACE = _native_interface('pd_input')
 
 DRAWS_NOTE = ("USB-C PD inlet: sources +VBUS_OUT through the eFuse; the FLT# "
               "pull-up + USBLC6 clamp draw is <0.5 mA off +VDD_LOGIC")
@@ -39,6 +40,11 @@ RAIL_WORST_V = {
 
 
 def circuit(meta: Meta | dict | None = None) -> Circuit:
+    from schgen.core.authoring import circuit as _native_circuit
+    return _native_circuit('pd_input', meta)
+
+
+def _legacy_circuit(meta: Meta | dict | None = None) -> Circuit:
     meta = Meta(meta)
     c = Circuit("pd_input", "Power inlet: USB-C PD 20V/3A + TPS26631 eFuse")
     c.use_part("TYPE-C-31-M-12", ref="J1")

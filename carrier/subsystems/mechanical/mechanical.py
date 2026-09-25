@@ -17,6 +17,11 @@ CHASSIS_BOND_POINTS = register(
 
 
 def circuit() -> Circuit:
+    from schgen.core.authoring import project_circuit
+    return project_circuit('carrier', 'mechanical', __file__)
+
+
+def _legacy_circuit() -> Circuit:
     c = Circuit("mechanical", "Mechanical: M3 mounts + chassis-GND bond "
                 "(fiducials are PCB-only, emitted by the placer)")
     c.net("CHASSIS_GND")

@@ -18,7 +18,8 @@ LCSC_CC_FILTER = "C113796"
 
 RAILS = ("+VDD_LOGIC", "+VBUS_SENSE", "GND")
 PORTS = ("CC1", "CC2", "I2C_SDA", "I2C_SCL", "INT_N")
-INTERFACE = RAILS + PORTS
+from schgen.core.authoring import interface as _native_interface
+INTERFACE = _native_interface('usb_pd')
 
 I2C_BUS = "USB_PD_I2C"
 I2C_SPEED_HZ = 400_000
@@ -32,6 +33,11 @@ VBUS_SENSE_PIN_ABSMAX_V = 28.0
 
 
 def circuit(meta: Meta | dict | None = None) -> Circuit:
+    from schgen.core.authoring import circuit as _native_circuit
+    return _native_circuit('usb_pd', meta)
+
+
+def _legacy_circuit(meta: Meta | dict | None = None) -> Circuit:
     meta = Meta(meta)
     i2c_bus = meta.bus("i2c", I2C_BUS)
     draws_note = meta.note("draws", DRAWS_NOTE)

@@ -16,7 +16,8 @@ MDI_PORTS = (
     "RJ45_MDI3_P", "RJ45_MDI3_N",
 )
 PORTS = MDI_PORTS
-INTERFACE = RAILS + PORTS
+from schgen.core.authoring import interface as _native_interface
+INTERFACE = _native_interface('rj45_connector')
 
 PAIR_IMPEDANCE = 100
 
@@ -32,6 +33,11 @@ DRAWS_A = 0.008
 
 
 def circuit(meta: Meta | dict | None = None) -> Circuit:
+    from schgen.core.authoring import circuit as _native_circuit
+    return _native_circuit('rj45_connector', meta)
+
+
+def _legacy_circuit(meta: Meta | dict | None = None) -> Circuit:
     meta = Meta(meta)
     draws_note = meta.note("draws", DRAWS_NOTE)
     c = Circuit("rj45_connector", "RJ45 8P8C jack (plain, ext. magnetics)")

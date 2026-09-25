@@ -12,7 +12,8 @@ LCSC_10U = "C15850"
 
 RAILS = ("GND", "CHASSIS_GND")
 PORTS = ("VBUS", "USB_DP", "USB_DM")
-INTERFACE = RAILS + PORTS
+from schgen.core.authoring import interface as _native_interface
+INTERFACE = _native_interface('usb_uart_connector')
 
 RAIL_WORST_V = {"GND": 0.0, "CHASSIS_GND": 0.0, "VBUS": 5.25}
 
@@ -20,6 +21,11 @@ CC_PINS = (("R1", "J1.CC1"), ("R2", "J1.CC2"))
 
 
 def circuit(meta: Meta | dict | None = None) -> Circuit:
+    from schgen.core.authoring import circuit as _native_circuit
+    return _native_circuit('usb_uart_connector', meta)
+
+
+def _legacy_circuit(meta: Meta | dict | None = None) -> Circuit:
     meta = Meta(meta)
     c = Circuit("usb_uart_connector", "USB-C UFP console port -> CP2102N")
     c.use_part("TYPE-C-31-M-12", ref="J1")

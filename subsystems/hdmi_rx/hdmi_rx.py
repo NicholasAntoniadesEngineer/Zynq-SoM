@@ -29,7 +29,8 @@ TMDS_PORTS = (
 )
 CTRL_PORTS = ("HDMI_5V_DET", "CEC")
 PORTS = TMDS_PORTS + CTRL_PORTS
-INTERFACE = RAILS + PORTS
+from schgen.core.authoring import interface as _native_interface
+INTERFACE = _native_interface('hdmi_rx')
 
 TMDS_LANES = (
     ("TMDS_RX_D2_P", 1, "U2", "IO1"), ("TMDS_RX_D2_N", 3, "U2", "IO2"),
@@ -49,6 +50,11 @@ DRAWS_A = 0.001
 
 
 def circuit(meta: Meta | dict | None = None) -> Circuit:
+    from schgen.core.authoring import circuit as _native_circuit
+    return _native_circuit('hdmi_rx', meta)
+
+
+def _legacy_circuit(meta: Meta | dict | None = None) -> Circuit:
     meta = Meta(meta)
     draws_note = meta.note("draws", DRAWS_NOTE)
 

@@ -74,6 +74,11 @@ _TESTPOINT_WAIVERS = (
 
 
 def circuit() -> Circuit:
+    from schgen.core.authoring import project_circuit
+    return project_circuit('devkit_mini', 'power_mon', __file__)
+
+
+def _legacy_circuit() -> Circuit:
     c = Circuit("power_mon", "Rail telemetry: 2x INA3221 + shunts (I2C 0x40/41)")
     c.use_part(MONITOR_PART, ref="U1")
     c.use_part(MONITOR_PART, ref="U2")

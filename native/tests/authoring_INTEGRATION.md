@@ -1,9 +1,9 @@
 Native subsystem authoring and package gates
 ============================================
 
-This work owns only `circuit_helpers` and the new authoring/gate sources, headers,
-and contracts. No shared build, CMake, module, CLI, Python adapter, catalog, or
-commit was changed. The parent owns integration and commits.
+This work owns `circuit_helpers`, authoring/gate sources and contracts, and the
+subsequently authorized Python authoring adapters. The parent owns shared builds,
+CMake/module/CLI wiring, catalogs, and commits; none are changed by this worker.
 
 Production coverage
 -------------------
@@ -39,9 +39,11 @@ accept null. Invalid shape/type, duplicate keys, and empty binding targets fail.
 CMake integration (parent only)
 ------------------------------
 
-`circuit_helpers.cpp` is already in `schgen_core` from the parent's selftest
-integration; do not add it again. Add only these remaining sources; the patterns
-match only this implementation:
+The parent has integrated these sources and both contract targets. The following
+is the source/target inventory, not an instruction to add duplicate entries.
+`circuit_helpers.cpp` is separately in `schgen_core` from the selftest integration;
+do not add it again. Native-package mode uses the existing `authoring_gates.cpp`
+and existing contract target, with no additional source or registration entry:
 
 ```cmake
 file(GLOB authoring_builders CONFIGURE_DEPENDS
@@ -92,6 +94,31 @@ with an explicit missing-native-factory diagnostic. An adapter's companion JSON
 is compared against an independent native constructor; never register a loader
 of that same companion as its own authoring factory.
 
+For standalone operation without Python package files, explicitly pass
+`AuthoringPackageMode::native_assets` as the final argument of both checks:
+
+```cpp
+const auto mode = schgen::AuthoringPackageMode::native_assets;
+auto libraries = schgen::check_subsystem_structure(
+    library_root, schgen::native_subsystem_factories(context), mode);
+auto project = schgen::check_carrier_structure(
+    subsystems, library_root, schgen::native_project_factories(project_kind, input), mode);
+```
+
+This is a real asset contract, not a waiver of the legacy gate. Discovery unions
+the registry with visible asset folders, catching both missing registered
+packages and unregistered packages. Libraries require regular `README.md` and
+`<name>.cir` files, a parameterized factory, semantically valid IR and matching
+nonduplicated interface. Optional library `circuit.json` is compared against the
+live factory. Every project package requires regular `circuit.json` matching its
+independent factory. Local project packages also require their own README/.cir;
+adapters require valid native metadata and those assets in the generic library.
+No `.py`, Python test, or `__init__.py` is required or evaluated. Both native-mode
+gates fail empty discovery and return a hard failure through `exit_code()`.
+Native summaries describe this contract, and JSON reports add
+`"package_mode": "native_assets"`. Omitting the mode retains the original Python
+shape, report-first library policy, and exact legacy summary/JSON bytes.
+
 Transitional bindings (parent only)
 ----------------------------------
 
@@ -101,16 +128,35 @@ Include `schgen/authoring_bindings.hpp` in module.cpp and call
 * `author_subsystem_interface(name)`
 * `author_subsystem(name, meta, repository)` — meta accepts None or a dictionary.
 * `author_project_subsystem(project_kind, name, repository, project_root, meta=None)`
+* `author_som_connector(project, ref, name, title, pins, mapping, policy, repository)`
 * `authoring_subsystem_structure(library_root, repository)`
 * `authoring_carrier_structure(base, library_root, project_kind, repository, project_root)`
 * `authoring_bind(current_ir, mapping)` and
   `authoring_mounting_hole(current_ir, net="CHASSIS_GND", ref=None)`.
 
-The gate bindings return all package fields, counts, status, and exact summary.
-Keep Python wrappers as transport only (`Circuit.from_ir(native_result)`), while
-preserving their public signatures and result dataclasses. No adapter edits were
-authorized in this worker, so those edits remain with the parent. Mounting-hole
-callers retaining Python authoring counters should pass their selected ref.
+The gate bindings retain legacy package mode for adapter compatibility. Standalone
+native callers select native-assets mode directly through the C++ API above.
+The connector binding carries live pins and a `schgen.som_mapping.v1` dictionary.
+Its policy supports `part`, `module_draw_a`, `sdio_level_v`, `sd_bus`, and `pairs`
+(four-element positive/negative/kind/optional-impedance rows). Unspecified policy
+fields retain the chosen project's declared defaults.
+
+Python adapters now use `schgen/core/authoring.py` for transport:
+all 17 library `circuit(meta)` functions and `INTERFACE`s, 43 non-SoM project
+constructors (34 carrier, nine devkit), and both `som_conn_gen.py` generators
+serving the remaining six project sheets. Module paths, constants, public
+signatures, `Meta` objects and mutable live `META` dictionaries are preserved.
+The connector adapters transport live module policies and `contract_pins()`
+results, including custom names/titles and edited maps/current budgets.
+`Circuit.bind` and `mounting_hole` use native edits while retaining borrowed
+`Part`/`Net` identity, pin lists, counter reservations and failed-edit rollback.
+
+Legacy constructor/helper bodies remain under explicit `_legacy_*` names for
+equivalence checks and the existing Python-source component-basis census. They
+are not production fallbacks. Do not delete them or their module-level basis
+declarations until that census has a native implementation and equivalence has
+been validated. The generic Python `Circuit` DSL outside bind/mount remains a
+compatibility surface; production library/project constructors execute C++.
 
 Verification and immutable fixtures
 -----------------------------------
@@ -148,3 +194,20 @@ pair reciprocity, metadata/testpoint renaming, subset/coverage checks, real
 companion drift in both directions, malformed IR, missing files/factories/meta,
 extra companion code, sync duplicates, callback failures, current-report
 mutation, and report publication bytes.
+
+Adapter validation passed 927 focused tests, plus independent checks of all 88
+library parameter/error fixtures (including `Meta` object transport), all 49
+project fixtures, eight dynamic connector fixtures and object-identity/counter
+mutations. Re-run the unchanged focused suite after the parent module rebuild:
+
+```sh
+.venv/bin/python -m pytest -o addopts= -q \
+    schgen/tests/test_model.py schgen/tests/test_subsystem_lib.py \
+    schgen/tests/test_circuit_ir.py subsystems carrier/subsystems devkit_mini/subsystems
+```
+
+The native gate contract additionally assembles a private tree of all 17 library
+and 49 project packages with no Python files, verifies both modes independently,
+and exercises missing/malformed assets, registry omissions/duplicates, metadata,
+interface drift, snapshot divergence and constructor errors. Fixtures in
+`data/authoring` remain unchanged; these package mutations exist only in scratch.

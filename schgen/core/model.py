@@ -436,6 +436,72 @@ class Circuit:
 
     def bind(self, mapping: dict[str, str]) -> Circuit:
         """Rename external POWER/GROUND/PORT nets in place, order-preserving."""
+        if not mapping:
+            return self
+        from schgen.core.authoring import _call
+        from schgen.core import native
+        raw = _call(native.module().authoring_bind, self.to_ir(), mapping)
+        self._apply_authoring_ir(raw)
+        return self
+
+    def _apply_authoring_ir(self, raw: dict) -> None:
+        """Apply a native in-place edit without invalidating borrowed objects.
+
+        The bind/mounting-hole kernels preserve part references and net order;
+        mirror their returned values, retaining Part/Net identity and counters.
+        This accepts intermediate page circuits (a pair mate may be off-page).
+        """
+        for record in raw["parts"]:
+            ref = record["ref"]
+            part = self.parts.get(ref)
+            if part is None:
+                part = Part(ref, record["lib_id"], record["value"])
+                self.parts[ref] = part
+            for field_name in ("lib_id", "value", "footprint"):
+                setattr(part, field_name, record[field_name])
+            if part.fields != record["fields"]:
+                part.fields.clear()
+                part.fields.update(record["fields"])
+            if part.pin_names != record["pin_names"]:
+                part.pin_names.clear()
+                part.pin_names.update(record["pin_names"])
+            if part.pin_numbers != frozenset(record["pin_numbers"]):
+                part.pin_numbers = frozenset(record["pin_numbers"])
+        nets = {}
+        previous_names = {}
+        for net, record in zip(self.nets.values(), raw["nets"], strict=True):
+            previous_names[record["name"]] = net.name
+            net.name = record["name"]
+            net.net_class = NetClass(record["net_class"])
+            net.pins[:] = [_split_pin_spec(pin, "native circuit")
+                           for pin in record["pins"]]
+            nets[net.name] = net
+        if list(self.nets) != list(nets):
+            self.nets = nets
+        self.nc_pins.clear()
+        self.nc_pins.update(_split_pin_spec(pin, "native circuit") for pin in raw["nc"])
+        port_types = {}
+        for name, value in raw["port_types"].items():
+            ptype = PortType(**value)
+            previous = self.port_types.get(previous_names.get(name, name))
+            port_types[name] = previous if previous == ptype else ptype
+        if self.port_types != port_types:
+            self.port_types = port_types
+        if self.hints != raw["hints"]:
+            self.hints = dict(raw["hints"])
+        loads = {}
+        for rail, rows in raw["loads"].items():
+            budget = [(float(amps), note) for amps, note in rows]
+            previous = self.loads.get(previous_names.get(rail, rail))
+            loads[rail] = previous if previous == budget else budget
+        if self.loads != loads:
+            self.loads = loads
+        for attr in WAIVER_IR_ATTRS:
+            if getattr(self, attr) != raw[attr]:
+                setattr(self, attr, dict(raw[attr]))
+
+    def _legacy_bind(self, mapping: dict[str, str]) -> Circuit:
+        """Retained parity reference; never selected as a native fallback."""
         for abstract, _real in mapping.items():
             net = self.nets.get(abstract)
             if net is None:
@@ -535,6 +601,23 @@ class Circuit:
 
     def mounting_hole(self, net: str = "CHASSIS_GND",
                       ref: str | None = None) -> Part:
+        from schgen.core.authoring import _call
+        from schgen.core import native
+        counters = dict(self._ref_counters)
+        if ref is None:
+            ref = self.auto_ref("H")
+        try:
+            raw = _call(native.module().authoring_mounting_hole,
+                        self.to_ir(), net, ref)
+        except Exception:
+            self._ref_counters.clear()
+            self._ref_counters.update(counters)
+            raise
+        self._apply_authoring_ir(raw)
+        return self.parts[ref]
+
+    def _legacy_mounting_hole(self, net: str = "CHASSIS_GND",
+                             ref: str | None = None) -> Part:
         n = self.nets.get(net)
         if n is None:
             raise CircuitError(f"mounting_hole({net!r}): not a declared net")

@@ -75,6 +75,11 @@ I2C_PULLUP_DRAW_A = register(
 
 
 def circuit() -> Circuit:
+    from schgen.core.authoring import project_circuit
+    return project_circuit('devkit_mini', 'debug_boot', __file__)
+
+
+def _legacy_circuit() -> Circuit:
     c = Circuit("debug_boot", "JTAG + SWD headers, boot-request DIP, reset")
     c.use_part(JTAG_HEADER, ref="J1")
     c.use_part(SWD_HEADER, ref="J2", value="HX_JN1.27-2x5")

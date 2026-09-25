@@ -67,6 +67,11 @@ AUX_DRAW_A = register(
 
 
 def circuit() -> Circuit:
+    from schgen.core.authoring import project_circuit
+    return project_circuit('carrier', 'board_aux', __file__)
+
+
+def _legacy_circuit() -> Circuit:
     c = Circuit("board_aux",
                 "Board services: gated +3V3_AUX rail + PCA9306 I2C isolator")
 

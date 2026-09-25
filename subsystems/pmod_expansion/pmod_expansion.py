@@ -28,7 +28,8 @@ LCSC_RED = "C2286"
 RAILS = ("+VDD_PMOD", "+VSW_PMOD", "GND")
 PORTS = ("PMOD_IO1", "PMOD_IO2", "PMOD_IO3", "PMOD_IO4",
          "PMOD_IO5", "PMOD_IO6", "PMOD_IO7", "PMOD_IO8")
-INTERFACE = RAILS + PORTS
+from schgen.core.authoring import interface as _native_interface
+INTERFACE = _native_interface('pmod_expansion')
 
 DRAWS_PMOD_A = 0.104
 DRAWS_PMOD_NOTE = ("1x Pmod module budget ~100 mA (Digilent spec) + status LED")
@@ -46,6 +47,11 @@ ESD_CH = ["1", "3", "6", "4"]
 
 
 def circuit(meta: Meta | dict | None = None) -> Circuit:
+    from schgen.core.authoring import circuit as _native_circuit
+    return _native_circuit('pmod_expansion', meta)
+
+
+def _legacy_circuit(meta: Meta | dict | None = None) -> Circuit:
     meta = Meta(meta)
     c = Circuit("pmod_expansion",
                 "Pmod expansion (2x6, bank 13, ESD, gated 3V3)")

@@ -26,7 +26,8 @@ RAILS = ("+VCC_PMOD", "GND")
 PORTS = tuple(f"{port}_SIG{io}"
               for _jref, port in PORTS_DEF
               for io in range(1, 9))
-INTERFACE = RAILS + PORTS
+from schgen.core.authoring import interface as _native_interface
+INTERFACE = _native_interface('pmod')
 
 DRAWS_NOTE = "2x Pmod module budget ~100 mA each"
 DRAWS_A = 0.200
@@ -40,6 +41,11 @@ BYPASS_REFS = (("C1", PMOD_RAIL_BYPASS, C0603, LCSC_BYPASS),
 
 
 def circuit(meta: Meta | dict | None = None) -> Circuit:
+    from schgen.core.authoring import circuit as _native_circuit
+    return _native_circuit('pmod', meta)
+
+
+def _legacy_circuit(meta: Meta | dict | None = None) -> Circuit:
     meta = Meta(meta)
     draws_note = meta.note("draws", DRAWS_NOTE)
     c = Circuit("pmod", "2x Pmod host ports (bank 13, 200R series, gated 3V3)")

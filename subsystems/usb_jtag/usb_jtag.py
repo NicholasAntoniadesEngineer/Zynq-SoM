@@ -28,7 +28,8 @@ RAILS = ("+VBUS_USB", "+3V3_ISLAND", "GND")
 PORTS = ("USB_DP", "USB_DM",
          "JTAG_TCK", "JTAG_TDI", "JTAG_TMS", "JTAG_TDO",
          "UART_RXD", "UART_TXD")
-INTERFACE = RAILS + PORTS
+from schgen.core.authoring import interface as _native_interface
+INTERFACE = _native_interface('usb_jtag')
 
 DRAWS_NOTE = ("CH347 ~38 mA typ (DS) + SN74LVC125 + RST/mode/OE pull network")
 DRAWS_A = 0.045
@@ -39,6 +40,11 @@ CRYSTAL_LEGS = ("DBG_XI", "DBG_XO")
 
 
 def circuit(meta: Meta | dict | None = None) -> Circuit:
+    from schgen.core.authoring import circuit as _native_circuit
+    return _native_circuit('usb_jtag', meta)
+
+
+def _legacy_circuit(meta: Meta | dict | None = None) -> Circuit:
     meta = Meta(meta)
     draws_note = meta.note("draws", DRAWS_NOTE)
     c = Circuit("usb_jtag",

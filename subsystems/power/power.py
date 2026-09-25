@@ -60,7 +60,8 @@ RAILS = ("+VIN",
          "+VOUT_1V8_REG", "+VOUT_1V8",
          "GND")
 PORTS = ("EN_VOUT_5V", "EN_VOUT_3V3", "EN_VOUT_1V8")
-INTERFACE = RAILS + PORTS
+from schgen.core.authoring import interface as _native_interface
+INTERFACE = _native_interface('power')
 
 EXPECT_EN = "rail-enable cells (off-subsystem)"
 
@@ -90,6 +91,11 @@ BUCK3V3_COUT = ("C10", "C11")
 
 
 def circuit(meta: Meta | dict | None = None) -> Circuit:
+    from schgen.core.authoring import circuit as _native_circuit
+    return _native_circuit('power', meta)
+
+
+def _legacy_circuit(meta: Meta | dict | None = None) -> Circuit:
     meta = Meta(meta)
     c = Circuit("power", "Power: +VIN->+5V->+3V3 bucks + +1V8 LDO, PG LEDs")
 

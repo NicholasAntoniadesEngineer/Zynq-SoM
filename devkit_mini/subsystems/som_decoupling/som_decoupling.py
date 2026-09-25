@@ -40,6 +40,11 @@ RAILS: tuple[str, ...] = ("+5V_SOM", "+3V3", "+3V3_SC")
 
 
 def circuit() -> Circuit:
+    from schgen.core.authoring import project_circuit
+    return project_circuit('devkit_mini', 'som_decoupling', __file__)
+
+
+def _legacy_circuit() -> Circuit:
     c = Circuit("som_decoupling",
                 "SoM power-entry decoupling under the DF40 mezzanine")
     n = 1

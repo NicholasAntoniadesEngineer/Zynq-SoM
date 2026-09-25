@@ -50,6 +50,11 @@ TERM_DRAW_A = register(
 
 
 def circuit() -> Circuit:
+    from schgen.core.authoring import project_circuit
+    return project_circuit('carrier', 'hdmi_rx_term', __file__)
+
+
+def _legacy_circuit() -> Circuit:
     c = Circuit("hdmi_rx_term",
                 "HDMI-RX TMDS sink termination (8x49.9R to AVCC=+3V3)")
 

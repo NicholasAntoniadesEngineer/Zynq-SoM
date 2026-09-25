@@ -39,6 +39,11 @@ MODULE_DRAW_A = register("board_qwiic.module_draw", 0.200, "A",
 
 
 def circuit() -> Circuit:
+    from schgen.core.authoring import project_circuit
+    return project_circuit('carrier', 'board_qwiic', __file__)
+
+
+def _legacy_circuit() -> Circuit:
     c = Circuit("board_qwiic",
                 "QWIIC / STEMMA-QT expansion connector + USBLC6 ESD array")
 

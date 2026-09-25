@@ -64,6 +64,11 @@ BUTTONS = [
 
 
 def circuit() -> Circuit:
+    from schgen.core.authoring import project_circuit
+    return project_circuit('carrier', 'user_io', __file__)
+
+
+def _legacy_circuit() -> Circuit:
     c = Circuit("user_io", "User IO: 4 LEDs (gated rail) + 4 buttons, bank 13")
 
     # LEDs are active-low sinks: anode on the gated rail, cathode through the

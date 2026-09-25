@@ -2,6 +2,7 @@
 #include "schgen/subsystem_authoring.hpp"
 
 namespace schgen {
+enum class AuthoringPackageMode { legacy_python, native_assets };
 // Factories are explicit frontend declarations, not inferred from source text
 // or from the existence of a cached JSON file. Missing factories fail closed.
 // A caller may supply a live native extension/plugin factory; the gate neither
@@ -31,10 +32,13 @@ struct SubsystemPackageReport {
 };
 struct SubsystemStructureResult {
     std::vector<SubsystemPackageReport> packages;
+    AuthoringPackageMode mode = AuthoringPackageMode::legacy_python;
     bool ok() const;
     std::size_t n_ok() const;
     std::string summary() const;
-    int exit_code(bool strict = false) const { return strict && !ok() ? 1 : 0; }
+    int exit_code(bool strict = false) const {
+        return (strict || mode == AuthoringPackageMode::native_assets) && !ok() ? 1 : 0;
+    }
 };
 struct CarrierPackageReport {
     std::string name;
@@ -48,6 +52,7 @@ struct CarrierPackageReport {
 };
 struct CarrierStructureResult {
     std::vector<CarrierPackageReport> packages;
+    AuthoringPackageMode mode = AuthoringPackageMode::legacy_python;
     bool ok() const;
     std::size_t n_ok() const;
     std::size_t n_adapters() const;
@@ -61,17 +66,32 @@ struct CarrierStructureResult {
 // metadata declarations come from the supplied registry. In particular, never
 // register a companion circuit.json loader as its own adapter factory: the gate
 // compares that companion against an independently authored circuit.
-std::vector<std::string> subsystem_required_files(const std::string& name);
-std::vector<std::string> carrier_required_files(const std::string& name, bool adapter);
+// native_assets uses the union of registry declarations and visible asset
+// folders, so a missing package or unregistered folder cannot disappear from
+// discovery. No .py or interpreter is required. Libraries require README/.cir
+// plus a parameterized native factory and matching declared interface; an
+// optional circuit.json is checked against that live factory. Every project
+// package requires independently checked circuit.json. Local packages own their
+// README/.cir; adapters reference those assets in their generic library and
+// must carry a valid native metadata declaration. Missing files must be regular
+// files, not directories. Empty native registries/package roots fail closed.
+std::vector<std::string> subsystem_required_files(const std::string& name,
+    AuthoringPackageMode mode = AuthoringPackageMode::legacy_python);
+std::vector<std::string> carrier_required_files(const std::string& name, bool adapter,
+    AuthoringPackageMode mode = AuthoringPackageMode::legacy_python);
 SubsystemPackageReport check_subsystem_package(const std::string& name,
-    const std::filesystem::path& library, const SubsystemPackageFactory* factory);
+    const std::filesystem::path& library, const SubsystemPackageFactory* factory,
+    AuthoringPackageMode mode = AuthoringPackageMode::legacy_python);
 SubsystemStructureResult check_subsystem_structure(const std::filesystem::path& library,
-    const std::vector<SubsystemPackageFactory>& factories);
+    const std::vector<SubsystemPackageFactory>& factories,
+    AuthoringPackageMode mode = AuthoringPackageMode::legacy_python);
 CarrierPackageReport check_carrier_package(const std::string& name,
     const std::filesystem::path& base, const std::filesystem::path& library,
-    const CarrierPackageFactory* factory);
+    const CarrierPackageFactory* factory,
+    AuthoringPackageMode mode = AuthoringPackageMode::legacy_python);
 CarrierStructureResult check_carrier_structure(const std::filesystem::path& base,
-    const std::filesystem::path& library, const std::vector<CarrierPackageFactory>& factories);
+    const std::filesystem::path& library, const std::vector<CarrierPackageFactory>& factories,
+    AuthoringPackageMode mode = AuthoringPackageMode::legacy_python);
 // Exact Python summaries have no final newline; publication adds one, atomically.
 void write_authoring_gate_report(const std::filesystem::path& path, const std::string& summary);
 JsonNode subsystem_structure_json(const SubsystemStructureResult& result);

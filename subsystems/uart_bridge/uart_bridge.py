@@ -19,7 +19,8 @@ LCSC_SENSE_BOTTOM = "C23061"
 RAILS = ("+VDD_IO", "GND")
 PORTS = ("USB_VBUS", "USB_DP", "USB_DM",
          "UART_TXD", "UART_RXD", "UART_RTS_N", "UART_CTS_N")
-INTERFACE = RAILS + PORTS
+from schgen.core.authoring import interface as _native_interface
+INTERFACE = _native_interface('uart_bridge')
 
 # TP creation order IS the placer's TP1/TP2 order: it must survive a project's
 # TXD<->RXD crossover bind, so the sequence is declared, never incidental.
@@ -31,6 +32,11 @@ RESET_WAIVER = "open-drain RST: 1k pull-up only, internal POR; no RC cap"
 
 
 def circuit(meta: Meta | dict | None = None) -> Circuit:
+    from schgen.core.authoring import circuit as _native_circuit
+    return _native_circuit('uart_bridge', meta)
+
+
+def _legacy_circuit(meta: Meta | dict | None = None) -> Circuit:
     meta = Meta(meta)
     draws_note = meta.note("draws", DRAWS_NOTE)
     c = Circuit("uart_bridge", "UART bridge: CP2102N USB-UART")

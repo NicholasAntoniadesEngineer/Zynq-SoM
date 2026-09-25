@@ -55,6 +55,11 @@ CELLS = (
 
 
 def circuit() -> Circuit:
+    from schgen.core.authoring import project_circuit
+    return project_circuit('carrier', 'bringup_en', __file__)
+
+
+def _legacy_circuit() -> Circuit:
     c = Circuit("bringup_en",
                 "Bring-up EN cells: 3x SN74LVC1G08 rail DIP-AND-override")
     for k, (name, a_net, b_net, y_net, b_pull, y_expect) in enumerate(CELLS):

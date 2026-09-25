@@ -79,6 +79,11 @@ GND_PINS = (7, 8, 15, 16, 23, 24, 31, 32, 39, 40)
 
 
 def circuit() -> Circuit:
+    from schgen.core.authoring import project_circuit
+    return project_circuit('carrier', 'fmc', __file__)
+
+
+def _legacy_circuit() -> Circuit:
     c = Circuit("fmc", "SoM bank-35 IO breakout (2x20 2.54mm header, VADJ 2.5V)")
 
     c.part("J1", HDR_SYM, "Header_2x20_2.54mm", HDR_FP)

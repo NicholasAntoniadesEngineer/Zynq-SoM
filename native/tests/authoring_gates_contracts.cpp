@@ -129,6 +129,92 @@ void connectors(const fs::path& root,const std::string& project) {
     bool failed=false;try{author_project_subsystem(project,"som_j1",input);}catch(const CircuitAuthoringError&){failed=true;}
     require(failed,"voltage-mode strap remapping accepted");
 }
+void native_packages(const fs::path& root) {
+    constexpr auto mode=AuthoringPackageMode::native_assets;
+    Scratch s;const auto library=s.path/"library";
+    auto libraries=native_subsystem_factories();
+    for(const auto& f:libraries)for(const auto& file:subsystem_required_files(f.name,mode))
+        write(library/f.name/file,read(root/"subsystems"/f.name/file));
+    auto lib_result=check_subsystem_structure(library,libraries,mode);
+    require(lib_result.ok()&&lib_result.n_ok()==17,"native library without any Python failed: "+lib_result.summary());
+    require(lib_result.exit_code()==0&&lib_result.summary().find(".py")==std::string::npos,"native summary describes Python package shape");
+    require(at(subsystem_structure_json(lib_result),"package_mode").string_value=="native_assets","native JSON report lacks mode");
+    require(check_subsystem_structure(library,libraries).packages.empty(),"legacy discovery contract changed");
+    auto empty=check_subsystem_structure(s.path/"empty",{},mode);
+    require(!empty.ok()&&empty.exit_code()==1,"empty native library must fail closed, not report-first");
+    require(!check_carrier_structure(s.path/"empty",library,{},mode).ok(),"empty native project accepted");
+    auto missing=check_subsystem_structure(s.path/"absent",libraries,mode);
+    require(missing.packages.size()==libraries.size()&&!missing.ok(),"missing registered asset folders disappeared");
+    // A directory named README.md is not a required file.
+    fs::remove(library/"camera/README.md");fs::create_directory(library/"camera/README.md");
+    require(!check_subsystem_structure(library,libraries,mode).ok(),"native required-file directory accepted");
+    fs::remove(library/"camera/README.md");write(library/"camera/README.md",read(root/"subsystems/camera/README.md"));
+    write(library/"ghost/README.md","unregistered");write(library/"ghost/ghost.cir","* fixture\n.end\n");
+    require(!check_subsystem_structure(library,libraries,mode).ok(),"unregistered native library folder accepted");
+    fs::remove_all(library/"ghost");
+    auto duplicates=libraries;duplicates.push_back(libraries.front());
+    bool rejected=false;try{(void)check_subsystem_structure(library,duplicates,mode);}catch(const CircuitAuthoringError&){rejected=true;}
+    require(rejected,"duplicate native registry accepted");
+    auto lib=libraries.front();lib.interface.push_back(lib.interface.front());
+    require(!check_subsystem_package(lib.name,library,&lib,mode).ok(),"duplicate native interface accepted");
+    lib=libraries.front();lib.circuit=[build=lib.circuit_meta]{return build(SubsystemMeta{});};lib.circuit_meta={};
+    require(!check_subsystem_package(lib.name,library,&lib,mode).ok(),"nonparameterized native library accepted");
+
+    for(const auto* project:{"carrier","devkit_mini"}) {
+        const auto project_root=s.path/project,base=project_root/"subsystems";
+        write(project_root/"som_interface.json",read(root/project/"som_interface.json"));
+        write(project_root/"som_mapping.json",read(root/project/"som_mapping.json"));
+        ProjectAuthoringInput input;input.project_root=project_root;
+        auto factories=native_project_factories(project,input);
+        for(const auto& f:factories)for(const auto& file:carrier_required_files(f.name,f.meta.has_value(),mode))
+            write(base/f.name/file,read(root/project/"subsystems"/f.name/file));
+        auto result=check_carrier_structure(base,library,factories,mode);
+        require(result.ok()&&result.packages.size()==factories.size(),"no-Python project assets rejected: "+result.summary());
+        require(result.summary().find(".py")==std::string::npos,"native project summary describes Python files");
+        require(at(carrier_structure_json(result),"package_mode").string_value=="native_assets","project report mode");
+        // Independent factory and JSON mutations must both invalidate the gate.
+        auto f=*std::find_if(factories.begin(),factories.end(),[](const auto& x){return x.name=="power";});
+        const auto path=base/"power/circuit.json";const auto bytes=read(path);
+        fs::remove(path);require(!check_carrier_package(f.name,base,library,&f,mode).ok(),"missing native JSON accepted");
+        write(path,"{");require(!check_carrier_package(f.name,base,library,&f,mode).errors.empty(),"malformed native JSON accepted");
+        write(path,bytes);
+        auto changed=f;changed.circuit=[build=f.circuit]{auto c=build();c.title+=" changed";return c;};
+        auto report=check_carrier_package(f.name,base,library,&changed,mode);
+        require(report.errors==std::vector<std::string>{"circuit.json differs from the native authoring factory"},"native snapshot compared against itself");
+        changed=f;changed.meta=JsonNode{};
+        require(!check_carrier_package(f.name,base,library,&changed,mode).ok(),"invalid native adapter metadata accepted");
+        changed=f;changed.meta->object_value.push_back({"bad_key",JsonNode{}});
+        require(!check_carrier_package(f.name,base,library,&changed,mode).errors.empty(),"metadata schema ignored");
+        changed=f;changed.circuit={};
+        require(!check_carrier_package(f.name,base,library,&changed,mode).ok(),"missing native project callable accepted");
+        changed=f;changed.circuit=[]()->CircuitSheetIr{throw CircuitAuthoringError("native throw");};
+        require(check_carrier_package(f.name,base,library,&changed,mode).errors==std::vector<std::string>{"CircuitError: native throw"},"native exception lost");
+        changed=f;changed.circuit=[build=f.circuit]{auto c=build();c.name="not_power";return c;};
+        require(!check_carrier_package(f.name,base,library,&changed,mode).ok(),"mismatched native circuit name accepted");
+        fs::rename(library/"power",s.path/"held_power");
+        report=check_carrier_package(f.name,base,library,&f,mode);
+        require(report.adapter&&!report.ok()&&!report.missing.empty(),"missing library reclassified adapter as local");
+        fs::rename(s.path/"held_power",library/"power");
+        require(!check_carrier_package(f.name,base,library,nullptr,mode).ok(),"native package without registry accepted");
+        fs::remove(base/"mechanical/mechanical.cir");
+        require(!check_carrier_structure(base,library,factories,mode).ok(),"missing local circuit contract accepted");
+        write(base/"mechanical/mechanical.cir",read(root/project/"subsystems/mechanical/mechanical.cir"));
+        require(check_carrier_structure(base,library,factories,mode).ok(),"restored native package failed");
+        write_authoring_gate_report(s.path/(std::string(project)+".txt"),result.summary());
+        require(read(s.path/(std::string(project)+".txt"))==result.summary()+"\n","native summary publication bytes");
+    }
+    // Optional library JSON gets the same independent comparison, not a bypass.
+    const auto widget=library/"widget";
+    write(widget/"README.md","fixture");write(widget/"widget.cir","* fixture\n.end\n");
+    const std::string widget_json=R"({"schema":"schgen.circuit/1","name":"widget","title":"widget","parts":[],"nets":[{"name":"GND","net_class":"ground","pins":[]}],"nc":[],"port_types":{},"hints":{},"loads":{},"tp_waivers":{},"decap_waivers":{},"pull_waivers":{},"reset_waivers":{},"strap_waivers":{},"ep_waivers":{},"thermal_waivers":{},"part_rule_waivers":{}})";
+    write(widget/"circuit.json",widget_json);
+    SubsystemPackageFactory factory{"widget",{"GND"},[](const SubsystemMeta& m){CircuitAuthor c("widget");c.net("GND");return m.finish(c);},{}};
+    require(check_subsystem_package("widget",library,&factory,mode).ok(),"valid optional native library JSON rejected");
+    factory.circuit_meta=[](const SubsystemMeta& m){CircuitAuthor c("widget","changed");c.net("GND");return m.finish(c);};
+    require(!check_subsystem_package("widget",library,&factory,mode).errors.empty(),"library companion drift ignored");
+    for(const auto& p:fs::recursive_directory_iterator(s.path))
+        require(p.path().extension()!=".py","no-Python proof accidentally retained Python assets");
+}
 }
 int main(int argc,char** argv) {
     try {
@@ -152,7 +238,8 @@ int main(int argc,char** argv) {
             if(std::string(project)=="carrier")mutations(root);
             connectors(root,project);
         }
+        native_packages(root);
         close_part_catalog();
-        std::cout<<"PASS: 17 library + 49 project package reports match Python; both report summaries and gate mutations verified\n";
+        std::cout<<"PASS: 17 library + 49 project package reports match Python; legacy report bytes and native no-Python asset contracts verified\n";
     }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}
 }

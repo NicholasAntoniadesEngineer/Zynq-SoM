@@ -26,7 +26,8 @@ PORTS = (
     "CAM_SCL", "CAM_SDA",
     "CAM_EN", "CAM_LED",
 )
-INTERFACE = RAILS + PORTS
+from schgen.core.authoring import interface as _native_interface
+INTERFACE = _native_interface('camera')
 
 I2C_BUS = "CAM_CCI"
 I2C_SPEED_HZ = 400_000
@@ -46,6 +47,11 @@ PAIRS = (
 
 
 def circuit(meta: Meta | dict | None = None) -> Circuit:
+    from schgen.core.authoring import circuit as _native_circuit
+    return _native_circuit('camera', meta)
+
+
+def _legacy_circuit(meta: Meta | dict | None = None) -> Circuit:
     meta = Meta(meta)
     i2c_bus = meta.bus("i2c", I2C_BUS)
     draws_note = meta.note("draws", DRAWS_NOTE)

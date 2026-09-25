@@ -23,7 +23,8 @@ MX_PORTS = (
     "MX3_P", "MX3_N",
 )
 PORTS = MDI_PORTS + MX_PORTS
-INTERFACE = RAILS + PORTS
+from schgen.core.authoring import interface as _native_interface
+INTERFACE = _native_interface('ethernet')
 
 PAIR_IMPEDANCE = 100
 
@@ -35,6 +36,11 @@ CHANNELS = [(0,   2,   3,   23,  22,  24,  1),
 
 
 def circuit(meta: Meta | dict | None = None) -> Circuit:
+    from schgen.core.authoring import circuit as _native_circuit
+    return _native_circuit('ethernet', meta)
+
+
+def _legacy_circuit(meta: Meta | dict | None = None) -> Circuit:
     meta = Meta(meta)
     c = Circuit("ethernet", "Ethernet: HX5008NL magnetics + Bob-Smith")
     t1 = c.use_part("HX5008NLT", ref="T1")

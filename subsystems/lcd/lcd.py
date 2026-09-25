@@ -42,7 +42,8 @@ PORTS = (
     "TP_SDA", "TP_SCL", "TP_RST", "TP_INT",
     "LCD_PCLK", "BL_PWM",
 )
-INTERFACE = RAILS + PORTS
+from schgen.core.authoring import interface as _native_interface
+INTERFACE = _native_interface('lcd')
 
 I2C_BUS = "LCD_CTP"
 I2C_SPEED_HZ = 400_000
@@ -58,6 +59,11 @@ SYNC_PINS = ((31, "LCD_DISP"), (32, "LCD_HSYNC"),
 
 
 def circuit(meta: Meta | dict | None = None) -> Circuit:
+    from schgen.core.authoring import circuit as _native_circuit
+    return _native_circuit('lcd', meta)
+
+
+def _legacy_circuit(meta: Meta | dict | None = None) -> Circuit:
     meta = Meta(meta)
     i2c_bus = meta.bus("i2c", I2C_BUS)
     draws_lcd_note = meta.note("draws_lcd", DRAWS_LCD_NOTE)

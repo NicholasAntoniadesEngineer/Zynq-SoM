@@ -24,7 +24,8 @@ LCSC_ID_STRAP = "C21190"
 
 RAILS = ("+VBUS_SUPPLY", "+VDD_LOGIC", "GND", "CHASSIS_GND")
 PORTS = ("USB_DP", "USB_DM", "VBUS", "VBUS_EN", "FLT_N", "USB_ID")
-INTERFACE = RAILS + PORTS
+from schgen.core.authoring import interface as _native_interface
+INTERFACE = _native_interface('usbc_otg')
 
 DRAWS_VBUS_A = 0.500
 DRAWS_VBUS_NOTE = ("downstream USB device budget, TPS2051C current-limited")
@@ -38,6 +39,11 @@ CC_PINS = (("R1", "J2.CC1"), ("R2", "J2.CC2"))
 
 
 def circuit(meta: Meta | dict | None = None) -> Circuit:
+    from schgen.core.authoring import circuit as _native_circuit
+    return _native_circuit('usbc_otg', meta)
+
+
+def _legacy_circuit(meta: Meta | dict | None = None) -> Circuit:
     meta = Meta(meta)
     c = Circuit("usbc_otg", "USB 2.0 HS OTG port (Type-C, host)")
     c.use_part("TYPE-C-31-M-12", ref="J2")

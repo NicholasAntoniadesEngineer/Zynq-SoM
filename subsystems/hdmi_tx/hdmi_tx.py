@@ -28,7 +28,8 @@ TMDS_PORTS = (
 )
 CTRL_PORTS = ("CEC", "DDC_SCL", "DDC_SDA", "HPD")
 PORTS = TMDS_PORTS + CTRL_PORTS
-INTERFACE = RAILS + PORTS
+from schgen.core.authoring import interface as _native_interface
+INTERFACE = _native_interface('hdmi_tx')
 
 DDC_BUS = "HDMI_TX_DDC"
 DDC_SPEED_HZ = 100_000
@@ -60,6 +61,11 @@ SHIFTED = (
 
 
 def circuit(meta: Meta | dict | None = None) -> Circuit:
+    from schgen.core.authoring import circuit as _native_circuit
+    return _native_circuit('hdmi_tx', meta)
+
+
+def _legacy_circuit(meta: Meta | dict | None = None) -> Circuit:
     meta = Meta(meta)
     ddc_bus = meta.bus("ddc", DDC_BUS)
     draws_vcca = meta.note("draws_vcca", DRAWS_VCCA_NOTE)

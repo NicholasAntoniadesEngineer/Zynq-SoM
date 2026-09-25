@@ -23,6 +23,36 @@ inline void bind_authoring(nanobind::module_& m) {
         if(!meta.is_none())input.metadata.emplace(name,json_from_python(meta));
         return json_to_python(authored_circuit_json(author_project_subsystem(project,name,input)));
     },nb::arg("project"),nb::arg("name"),nb::arg("repository"),nb::arg("project_root"),nb::arg("meta").none()=nb::none());
+    // Transport live connector inputs, including caller-edited pin/mapping and
+    // policy dictionaries. Never reduce the Python generator API to a frozen
+    // project/default connector lookup.
+    m.def("author_som_connector",[](const std::string& project,const std::string& ref,
+            const std::string& name,const std::string& title,const nb::dict& pins,
+            const nb::dict& mapping,const nb::dict& overrides,const std::string& repository){
+        SomInterface som;SomConnector connector;
+        for(auto [pin,net]:pins)connector.pins.emplace_back(nb::cast<std::string>(pin),nb::cast<std::string>(net));
+        som.connectors.emplace_back(ref,std::move(connector));
+        auto policy=project_connector_policy(project);
+        for(auto [key,value]:overrides) {
+            const auto field=nb::cast<std::string>(key);
+            if(field=="part")policy.part=nb::cast<std::string>(value);
+            else if(field=="module_draw_a")policy.module_draw_a=nb::cast<double>(value);
+            else if(field=="sdio_level_v")policy.sdio_level_v=nb::cast<double>(value);
+            else if(field=="sd_bus")policy.sd_bus=nb::cast<std::vector<std::string>>(value);
+            else if(field=="pairs") {
+                policy.pairs.clear();
+                for(auto row:nb::borrow<nb::iterable>(value)) {
+                    nb::tuple item(nb::borrow<nb::object>(row));
+                    if(item.size()!=4)throw nb::value_error("connector pairs must have four fields");
+                    policy.pairs.push_back({nb::cast<std::string>(item[0]),nb::cast<std::string>(item[1]),
+                        nb::cast<std::string>(item[2]),nb::cast<std::optional<int32_t>>(item[3])});
+                }
+            } else throw nb::value_error(("unknown connector policy field "+field).c_str());
+        }
+        return json_to_python(authored_circuit_json(author_som_connector(ref,name,title,som,
+            link_mapping_from_json(json_from_python(mapping)),policy,make_authoring_context(repository))));
+    },nb::arg("project"),nb::arg("ref"),nb::arg("name"),nb::arg("title"),nb::arg("pins"),
+      nb::arg("mapping"),nb::arg("policy"),nb::arg("repository"));
     m.def("authoring_subsystem_structure",[](const std::string& library,const std::string& repository){
         return json_to_python(subsystem_structure_json(check_subsystem_structure(library,native_subsystem_factories(make_authoring_context(repository)))));
     });

@@ -60,4 +60,9 @@ META = {
 
 
 def circuit() -> Circuit:
+    from schgen.core.authoring import project_circuit
+    return project_circuit('carrier', 'usbc_otg', __file__, META)
+
+
+def _legacy_circuit() -> Circuit:
     return _lib.circuit(META)

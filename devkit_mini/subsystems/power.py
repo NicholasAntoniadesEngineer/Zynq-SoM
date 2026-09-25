@@ -77,6 +77,11 @@ META = {
 
 
 def circuit() -> Circuit:
+    from schgen.core.authoring import project_circuit
+    return project_circuit('devkit_mini', 'power', __file__, META)
+
+
+def _legacy_circuit() -> Circuit:
     c = _lib.circuit(META)
     # The minimal devkit has no bringup_rails sheet to provide these probes.
     for net in ("EN_5V0", "EN_3V3", "EN_1V8"):

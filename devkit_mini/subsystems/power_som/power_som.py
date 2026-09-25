@@ -125,6 +125,11 @@ LOCAL_DRAW_A = register(
 
 
 def circuit() -> Circuit:
+    from schgen.core.authoring import project_circuit
+    return project_circuit('devkit_mini', 'power_som', __file__)
+
+
+def _legacy_circuit() -> Circuit:
     c = Circuit("power_som",
                 "Power: +VIN -> +5V_SOM always-on buck")
 

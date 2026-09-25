@@ -126,6 +126,11 @@ _FLAG_PORTS = (
 
 
 def circuit() -> Circuit:
+    from schgen.core.authoring import project_circuit
+    return project_circuit('carrier', 'bringup_rails', __file__)
+
+
+def _legacy_circuit() -> Circuit:
     c = Circuit("bringup_rails",
                 "Bring-up controls: rail/module DIPs + TCA9535 + buttons")
 
