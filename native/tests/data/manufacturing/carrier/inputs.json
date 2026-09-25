@@ -1,0 +1,931 @@
+{
+  "artifacts": [
+    {
+      "path": "reports/fixture.txt",
+      "sha256": "874a5443d83e074f3be349130ec16d1c2bbb1733b2d9205cfbbd46f88f4344cd"
+    }
+  ],
+  "coverage": {
+    "covered": 56,
+    "required": 61,
+    "waived": 5
+  },
+  "power": {
+    "bridges": [
+      [
+        "power_mon",
+        "RS1",
+        "+VIN",
+        "+VIN_SYS"
+      ],
+      [
+        "power_mon",
+        "RS2",
+        "+5V_REG",
+        "+5V"
+      ],
+      [
+        "power_mon",
+        "RS3",
+        "+3V3_REG",
+        "+3V3"
+      ],
+      [
+        "power_mon",
+        "RS4",
+        "+1V8_REG",
+        "+1V8"
+      ]
+    ],
+    "draws": {
+      "+1V8": [
+        [
+          "microsd",
+          0.005,
+          "TXS02612 VCCA (SoM-side level)"
+        ],
+        [
+          "power",
+          0.001,
+          "PG FET gate divider 10k+100k (16 uA), rounded up"
+        ]
+      ],
+      "+2V5_VADJ": [
+        [
+          "fmc",
+          0.35,
+          "VADJ bank-35 VCCO budget (TLV75725 DYD 0.40 A envelope less ~0.05 A bank-35 VCCO)"
+        ],
+        [
+          "som_j3",
+          0.05,
+          "Zynq bank 35 VCCO (LVDS_25 drivers, camera/FMC) \u2014 sec 3.1 re-budget"
+        ]
+      ],
+      "+3V3": [
+        [
+          "bringup_rails",
+          0.001,
+          "2x user-button 10k pull-ups when pressed"
+        ],
+        [
+          "debug_boot",
+          0.002,
+          "JTAG TMS/TDI 4k7 insurance pulls when driven"
+        ],
+        [
+          "fmc",
+          0.5,
+          "bank-35 IO header +3V3 add-on allowance"
+        ],
+        [
+          "hdmi_rx_term",
+          0.064,
+          "8x TMDS sink termination 49.9R to AVCC (~8 mA/line driven low)"
+        ],
+        [
+          "power",
+          0.009,
+          "PG LED (330R ~3.9 mA) + 1V8 PG sense LED chain (330R ~3.9 mA) + FB divider 27 uA"
+        ],
+        [
+          "rj45_connector",
+          0.008,
+          "RJ45 housing LEDs (2x 330R port-present indicator)"
+        ],
+        [
+          "som_j2",
+          0.02,
+          "Zynq banks 13+33 VCCO (LVCMOS33 static + PL output drive) + on-SoM BMI323 VDDIO rider"
+        ],
+        [
+          "som_j3",
+          0.01,
+          "Zynq bank 34 VCCO (LCD LVCMOS33 bus drive)"
+        ],
+        [
+          "uart_bridge",
+          0.015,
+          "CP2102N active ~14 mA typ + RST 1k pull-up"
+        ],
+        [
+          "user_io",
+          0.002,
+          "4x button 10k pull-ups when pressed"
+        ]
+      ],
+      "+3V3_AUX": [
+        [
+          "board_aux",
+          0.006,
+          "status LED 3.9mA + 2x4k7 AUX-bus pull-ups"
+        ],
+        [
+          "board_qwiic",
+          0.2,
+          "QWIIC external module budget (200 mA)"
+        ],
+        [
+          "board_services",
+          0.005,
+          "ID-EEPROM ~1mA + RV-3028 <0.1mA + TPS3823 15uA + INT# 10k pull"
+        ]
+      ],
+      "+3V3_CAM": [
+        [
+          "bringup_modules",
+          0.004,
+          "status LED (330R) on the gated output"
+        ],
+        [
+          "camera",
+          0.3,
+          "RPi camera module budget (camera_csi.md: V2 typ ~250 mA)"
+        ]
+      ],
+      "+3V3_DBG": [
+        [
+          "usb_jtag",
+          0.045,
+          "CH347 ~38 mA typ (DS) + SN74LVC125 + RST/mode/OE pull network"
+        ]
+      ],
+      "+3V3_HDMI_RX": [
+        [
+          "bringup_modules",
+          0.004,
+          "status LED (330R) on the gated output"
+        ],
+        [
+          "hdmi_rx",
+          0.001,
+          "CEC 27k pull-up (EEPROM + EDID WC# are cable-5V-fed)"
+        ]
+      ],
+      "+3V3_HDMI_TX": [
+        [
+          "bringup_modules",
+          0.004,
+          "status LED (330R) on the gated output"
+        ],
+        [
+          "hdmi_tx",
+          0.002,
+          "TPD12S016 ICCA + LS_OE/CT_HPD straps"
+        ]
+      ],
+      "+3V3_LCD": [
+        [
+          "bringup_modules",
+          0.004,
+          "status LED (330R) on the gated output"
+        ],
+        [
+          "lcd",
+          0.1,
+          "panel logic 25-75 mA + touch <= 25 mA (lcd_backlight.md)"
+        ]
+      ],
+      "+3V3_PMOD": [
+        [
+          "bringup_modules",
+          0.004,
+          "status LED (330R) on the gated output"
+        ],
+        [
+          "pmod",
+          0.2,
+          "2x Pmod module budget ~100 mA each"
+        ]
+      ],
+      "+3V3_PMODX": [
+        [
+          "pmod_expansion",
+          0.104,
+          "1x Pmod module budget ~100 mA (Digilent spec) + status LED"
+        ]
+      ],
+      "+3V3_SC": [
+        [
+          "bringup_en",
+          0.002,
+          "3x SN74LVC1G08 + 100k pull networks"
+        ],
+        [
+          "bringup_en_modules",
+          0.005,
+          "11x SN74LVC1G08 + 100k pull networks"
+        ],
+        [
+          "bringup_rails",
+          0.005,
+          "TCA9535 + DIP/I2C/INT pull networks (dossier R3 < 5 mA)"
+        ],
+        [
+          "debug_boot",
+          0.004,
+          "BOOT0 strap ~2 mA closed + BOOTSEL pulls"
+        ],
+        [
+          "motor_sense",
+          0.002,
+          "INA3221 ~0.35 mA + CRITICAL pull-up"
+        ],
+        [
+          "power_mon",
+          0.002,
+          "2x INA3221 ~0.7 mA + ALERT pull-up"
+        ],
+        [
+          "usb_pd",
+          0.002,
+          "FUSB302B VDD (<1 mA); SC_INT_N pulled on bringup_rails (G2 wire-OR, single 10k)"
+        ],
+        [
+          "usbc_otg",
+          0.0005,
+          "USBOTG_FLT# 100k pull-up (G4 re-rail)"
+        ]
+      ],
+      "+3V3_SD": [
+        [
+          "bringup_modules",
+          0.004,
+          "status LED (330R) on the gated output"
+        ],
+        [
+          "microsd",
+          0.25,
+          "SD card write burst ~200 mA + pull-ups + TXS02612 VCCB"
+        ]
+      ],
+      "+3V3_USER_LED": [
+        [
+          "bringup_modules",
+          0.004,
+          "status LED (330R) on the gated output"
+        ],
+        [
+          "user_io",
+          0.012,
+          "red ~1.3 mA (1k) + green/blue/white up to ~3.5 mA each (200R)"
+        ]
+      ],
+      "+5V": [
+        [
+          "motor_pwm",
+          0.08,
+          "HCT245 buffer + light servo allowance (ILIM 523mA)"
+        ],
+        [
+          "power",
+          0.004,
+          "PG LED (KT-0603R + 1k, ~3 mA) + FB divider 60 uA"
+        ]
+      ],
+      "+5V_HDMI_TX": [
+        [
+          "bringup_modules",
+          0.003,
+          "status LED (1k) on the gated output"
+        ],
+        [
+          "hdmi_tx",
+          0.055,
+          "HDMI source +5V to cable \u2014 TPD12S016 switch limit 55 mA (DS 7.3.10)"
+        ]
+      ],
+      "+5V_LCD": [
+        [
+          "bringup_modules",
+          0.003,
+          "status LED (1k) on the gated output"
+        ],
+        [
+          "lcd",
+          0.45,
+          "SY7201 boost input @133 mA LED string (lcd_backlight.md operating point + margin)"
+        ]
+      ],
+      "+5V_SOM": [
+        [
+          "power_som",
+          0.004,
+          "PG LED (KT-0603R + 1k, ~3 mA) + FB divider 60 uA (SoM module load declared on som_j1)"
+        ],
+        [
+          "som_j1",
+          2.15,
+          "SoM module (Zynq+DDR3L+PHYs) ~10 W class at the regulated 4.65 V (P0 rebind) \u2014 estimate, refine at bring-up"
+        ]
+      ],
+      "+5V_USB": [
+        [
+          "bringup_modules",
+          0.003,
+          "status LED (1k) on the gated output"
+        ],
+        [
+          "usbc_otg",
+          0.5,
+          "downstream USB device budget, TPS2051C current-limited"
+        ]
+      ]
+    },
+    "errors": [],
+    "findings": [],
+    "notes": [
+      "VBUS pre-contract audit (round-4 flag, RESOLVED round 5): source sees 0.20 uF at the receptacle (+VBUS_IN) \u2014 within the ~10 uF cSnkBulk guidance; 10.0 uF board bulk sits behind the pd_input:U1 TPS26631PWPR eFuse; dVdT 47n -> slew 1.02 V/ms, inrush into the bulk ~10 mA."
+    ],
+    "rails": {
+      "+1V8": 0.006,
+      "+1V8_REG": 0.006,
+      "+2V5_VADJ": 0.4,
+      "+3V3": 2.245,
+      "+3V3_AUX": 0.211,
+      "+3V3_CAM": 0.304,
+      "+3V3_DBG": 0.045,
+      "+3V3_HDMI_RX": 0.005,
+      "+3V3_HDMI_TX": 0.006,
+      "+3V3_LCD": 0.104,
+      "+3V3_PMOD": 0.204,
+      "+3V3_PMODX": 0.104,
+      "+3V3_REG": 2.245,
+      "+3V3_SC": 0.0225,
+      "+3V3_SD": 0.254,
+      "+3V3_USER_LED": 0.016,
+      "+5V": 2.7443,
+      "+5V_DBG": 0.045,
+      "+5V_HDMI_TX": 0.058,
+      "+5V_LCD": 0.453,
+      "+5V_MOTOR_IO": 0.0,
+      "+5V_REG": 2.7443,
+      "+5V_SOM": 2.154,
+      "+5V_USB": 0.503,
+      "+VBUS_IN": 1.3188,
+      "+VIN": 1.3188,
+      "+VIN_SYS": 1.3188
+    },
+    "regs": [
+      {
+        "eff": 1.0,
+        "i_in": 0.211,
+        "i_out": 0.211,
+        "kind": "load_switch",
+        "limit_a": 0.523,
+        "n": 1,
+        "note": "ILIM = 6800/13000R = 523 mA",
+        "ref": "U1",
+        "sheet": "board_aux",
+        "value": "SY6280AAC",
+        "vin": "+3V3",
+        "vout": "+3V3_AUX"
+      },
+      {
+        "eff": 1.0,
+        "i_in": 0.006,
+        "i_out": 0.006,
+        "kind": "load_switch",
+        "limit_a": 0.523,
+        "n": 2,
+        "note": "ILIM = 6800/13000R = 523 mA",
+        "ref": "U1",
+        "sheet": "bringup_modules",
+        "value": "SY6280AAC",
+        "vin": "+3V3",
+        "vout": "+3V3_HDMI_TX"
+      },
+      {
+        "eff": 1.0,
+        "i_in": 0.453,
+        "i_out": 0.453,
+        "kind": "load_switch",
+        "limit_a": 1.0,
+        "n": 3,
+        "note": "ILIM = 6800/6800R = 1000 mA",
+        "ref": "U10",
+        "sheet": "bringup_modules",
+        "value": "SY6280AAC",
+        "vin": "+5V",
+        "vout": "+5V_LCD"
+      },
+      {
+        "eff": 1.0,
+        "i_in": 0.005,
+        "i_out": 0.005,
+        "kind": "load_switch",
+        "limit_a": 0.523,
+        "n": 4,
+        "note": "ILIM = 6800/13000R = 523 mA",
+        "ref": "U2",
+        "sheet": "bringup_modules",
+        "value": "SY6280AAC",
+        "vin": "+3V3",
+        "vout": "+3V3_HDMI_RX"
+      },
+      {
+        "eff": 1.0,
+        "i_in": 0.104,
+        "i_out": 0.104,
+        "kind": "load_switch",
+        "limit_a": 1.0,
+        "n": 5,
+        "note": "ILIM = 6800/6800R = 1000 mA",
+        "ref": "U3",
+        "sheet": "bringup_modules",
+        "value": "SY6280AAC",
+        "vin": "+3V3",
+        "vout": "+3V3_LCD"
+      },
+      {
+        "eff": 1.0,
+        "i_in": 0.304,
+        "i_out": 0.304,
+        "kind": "load_switch",
+        "limit_a": 0.523,
+        "n": 6,
+        "note": "ILIM = 6800/13000R = 523 mA",
+        "ref": "U4",
+        "sheet": "bringup_modules",
+        "value": "SY6280AAC",
+        "vin": "+3V3",
+        "vout": "+3V3_CAM"
+      },
+      {
+        "eff": 1.0,
+        "i_in": 0.254,
+        "i_out": 0.254,
+        "kind": "load_switch",
+        "limit_a": 1.0,
+        "n": 7,
+        "note": "ILIM = 6800/6800R = 1000 mA",
+        "ref": "U5",
+        "sheet": "bringup_modules",
+        "value": "SY6280AAC",
+        "vin": "+3V3",
+        "vout": "+3V3_SD"
+      },
+      {
+        "eff": 1.0,
+        "i_in": 0.503,
+        "i_out": 0.503,
+        "kind": "load_switch",
+        "limit_a": 1.0,
+        "n": 8,
+        "note": "ILIM = 6800/6800R = 1000 mA",
+        "ref": "U6",
+        "sheet": "bringup_modules",
+        "value": "SY6280AAC",
+        "vin": "+5V",
+        "vout": "+5V_USB"
+      },
+      {
+        "eff": 1.0,
+        "i_in": 0.204,
+        "i_out": 0.204,
+        "kind": "load_switch",
+        "limit_a": 0.523,
+        "n": 9,
+        "note": "ILIM = 6800/13000R = 523 mA",
+        "ref": "U7",
+        "sheet": "bringup_modules",
+        "value": "SY6280AAC",
+        "vin": "+3V3",
+        "vout": "+3V3_PMOD"
+      },
+      {
+        "eff": 1.0,
+        "i_in": 0.016,
+        "i_out": 0.016,
+        "kind": "load_switch",
+        "limit_a": 0.523,
+        "n": 10,
+        "note": "ILIM = 6800/13000R = 523 mA",
+        "ref": "U8",
+        "sheet": "bringup_modules",
+        "value": "SY6280AAC",
+        "vin": "+3V3",
+        "vout": "+3V3_USER_LED"
+      },
+      {
+        "eff": 1.0,
+        "i_in": 0.058,
+        "i_out": 0.058,
+        "kind": "load_switch",
+        "limit_a": 0.523,
+        "n": 11,
+        "note": "ILIM = 6800/13000R = 523 mA",
+        "ref": "U9",
+        "sheet": "bringup_modules",
+        "value": "SY6280AAC",
+        "vin": "+5V",
+        "vout": "+5V_HDMI_TX"
+      },
+      {
+        "eff": 1.0,
+        "i_in": 0.4,
+        "i_out": 0.4,
+        "kind": "ldo",
+        "limit_a": 0.4,
+        "n": 12,
+        "note": "1 A LDO held to 0.4 A continuous (PWR-3: DYD thermal-pad, RthJA ~92.5 C/W EP-to-GND, Tj ~80 C at 0.32 W/Ta=50 C \u2014 fmc.md section 3)",
+        "ref": "U1",
+        "sheet": "fmc",
+        "value": "TLV75725PDYDR",
+        "vin": "+3V3",
+        "vout": "+2V5_VADJ"
+      },
+      {
+        "eff": 1.0,
+        "i_in": 0.0,
+        "i_out": 0.0,
+        "kind": "load_switch",
+        "limit_a": 0.523,
+        "n": 13,
+        "note": "ILIM = 6800/13000R = 523 mA",
+        "ref": "U3",
+        "sheet": "motor_pwm",
+        "value": "SY6280AAC",
+        "vin": "+5V",
+        "vout": "+5V_MOTOR_IO"
+      },
+      {
+        "eff": 1.0,
+        "i_in": 1.3188,
+        "i_out": 1.3188,
+        "kind": "efuse",
+        "limit_a": 3.529,
+        "n": 14,
+        "note": "ILIM = 18000/5100R = 3529 mA",
+        "ref": "U1",
+        "sheet": "pd_input",
+        "value": "TPS26631PWPR",
+        "vin": "+VBUS_IN",
+        "vout": "+VIN"
+      },
+      {
+        "eff": 1.0,
+        "i_in": 0.104,
+        "i_out": 0.104,
+        "kind": "load_switch",
+        "limit_a": 0.523,
+        "n": 15,
+        "note": "ILIM = 6800/13000R = 523 mA",
+        "ref": "U1",
+        "sheet": "pmod_expansion",
+        "value": "SY6280AAC",
+        "vin": "+3V3",
+        "vout": "+3V3_PMODX"
+      },
+      {
+        "eff": 0.9,
+        "i_in": 0.7623055555555555,
+        "i_out": 2.7443,
+        "kind": "buck",
+        "limit_a": 6.0,
+        "n": 16,
+        "note": "TI 6 A 3-36V synchronous buck (VIN1=8 ->L<-SW=10 ->rail)",
+        "ref": "U1",
+        "sheet": "power",
+        "value": "LM61460AANRJRR",
+        "vin": "+VIN_SYS",
+        "vout": "+5V_REG"
+      },
+      {
+        "eff": 0.9,
+        "i_in": 1.6463333333333334,
+        "i_out": 2.245,
+        "kind": "buck",
+        "limit_a": 6.0,
+        "n": 17,
+        "note": "TI 6 A 3-36V synchronous buck (VIN1=8 ->L<-SW=10 ->rail)",
+        "ref": "U2",
+        "sheet": "power",
+        "value": "LM61460AANRJRR",
+        "vin": "+5V",
+        "vout": "+3V3_REG"
+      },
+      {
+        "eff": 1.0,
+        "i_in": 0.006,
+        "i_out": 0.006,
+        "kind": "ldo",
+        "limit_a": 0.6,
+        "n": 18,
+        "note": "600 mA LDO",
+        "ref": "U3",
+        "sheet": "power",
+        "value": "AP2112K-1.8",
+        "vin": "+3V3",
+        "vout": "+1V8_REG"
+      },
+      {
+        "eff": 0.9,
+        "i_in": 0.55645,
+        "i_out": 2.154,
+        "kind": "buck",
+        "limit_a": 6.0,
+        "n": 19,
+        "note": "TI 6 A 3-36V synchronous buck (VIN1=8 ->L<-SW=10 ->rail)",
+        "ref": "U4",
+        "sheet": "power_som",
+        "value": "LM61460AANRJRR",
+        "vin": "+VIN_SYS",
+        "vout": "+5V_SOM"
+      },
+      {
+        "eff": 1.0,
+        "i_in": 0.045,
+        "i_out": 0.045,
+        "kind": "ldo",
+        "limit_a": 0.6,
+        "n": 20,
+        "note": "600 mA LDO",
+        "ref": "U4",
+        "sheet": "usb_jtag",
+        "value": "AP2112K-3.3TRG1",
+        "vin": "+5V_DBG",
+        "vout": "+3V3_DBG"
+      }
+    ],
+    "source_load": {
+      "+3V3_SC": 0.0225,
+      "+5V_DBG": 0.045,
+      "+VBUS_IN": 1.3188
+    },
+    "warnings": []
+  },
+  "stm32": {
+    "internal": {
+      "1V0_EN": {
+        "j_pins": [],
+        "net": "1V0_EN",
+        "pin": 0,
+        "port": "F"
+      },
+      "1V0_PG": {
+        "j_pins": [],
+        "net": "1V0_PG",
+        "pin": 13,
+        "port": "C"
+      },
+      "1V35_EN": {
+        "j_pins": [],
+        "net": "1V35_EN",
+        "pin": 1,
+        "port": "A"
+      },
+      "1V35_PG": {
+        "j_pins": [],
+        "net": "1V35_PG",
+        "pin": 1,
+        "port": "F"
+      },
+      "1V8_EN": {
+        "j_pins": [],
+        "net": "1V8_EN",
+        "pin": 9,
+        "port": "B"
+      },
+      "1V8_PG": {
+        "j_pins": [],
+        "net": "1V8_PG",
+        "pin": 15,
+        "port": "C"
+      },
+      "3V3_EN": {
+        "j_pins": [],
+        "net": "3V3_EN",
+        "pin": 14,
+        "port": "C"
+      },
+      "3V3_PG": {
+        "j_pins": [],
+        "net": "3V3_PG",
+        "pin": 2,
+        "port": "A"
+      },
+      "ETH_PHY_RST": {
+        "j_pins": [],
+        "net": "ETH_PHY_RST",
+        "pin": 10,
+        "port": "A"
+      },
+      "SENSE_1V0": {
+        "j_pins": [],
+        "net": "SENSE_1V0",
+        "pin": 3,
+        "port": "A"
+      },
+      "SENSE_1V35": {
+        "j_pins": [],
+        "net": "SENSE_1V35",
+        "pin": 0,
+        "port": "B"
+      },
+      "SENSE_1V8": {
+        "j_pins": [],
+        "net": "SENSE_1V8",
+        "pin": 1,
+        "port": "B"
+      },
+      "SENSE_3V3": {
+        "j_pins": [],
+        "net": "SENSE_3V3",
+        "pin": 0,
+        "port": "A"
+      },
+      "STM32_SCL": {
+        "j_pins": [],
+        "net": "STM32_SCL",
+        "pin": 9,
+        "port": "A"
+      },
+      "STM32_SDA": {
+        "j_pins": [],
+        "net": "STM32_SDA",
+        "pin": 8,
+        "port": "A"
+      },
+      "USB_PHY_RST": {
+        "j_pins": [],
+        "net": "USB_PHY_RST",
+        "pin": 6,
+        "port": "C"
+      },
+      "ZYNQ_BMODE_0": {
+        "j_pins": [],
+        "net": "ZYNQ_BMODE_0",
+        "pin": 2,
+        "port": "B"
+      },
+      "ZYNQ_BMODE_2": {
+        "j_pins": [],
+        "net": "ZYNQ_BMODE_2",
+        "pin": 7,
+        "port": "A"
+      },
+      "ZYNQ_PL_PROGB": {
+        "j_pins": [],
+        "net": "ZYNQ_PL_PROGB",
+        "pin": 6,
+        "port": "A"
+      },
+      "ZYNQ_PS_MIO13": {
+        "j_pins": [],
+        "net": "ZYNQ_PS_MIO13",
+        "pin": 14,
+        "port": "B"
+      },
+      "ZYNQ_PS_POR": {
+        "j_pins": [],
+        "net": "ZYNQ_PS_POR",
+        "pin": 12,
+        "port": "B"
+      },
+      "ZYNQ_PS_SRST": {
+        "j_pins": [],
+        "net": "ZYNQ_PS_SRST",
+        "pin": 13,
+        "port": "B"
+      },
+      "eMMC_~{RST}": {
+        "j_pins": [],
+        "net": "eMMC_~{RST}",
+        "pin": 4,
+        "port": "C"
+      }
+    },
+    "nets": {
+      "STM32_BOOT0": {
+        "j_pins": [
+          "J1.57"
+        ],
+        "net": "STM32_BOOT0",
+        "pin": 8,
+        "port": "B"
+      },
+      "STM32_DAC1": {
+        "j_pins": [
+          "J1.49"
+        ],
+        "net": "STM32_DAC1",
+        "pin": 4,
+        "port": "A"
+      },
+      "STM32_DAC2": {
+        "j_pins": [
+          "J1.55"
+        ],
+        "net": "STM32_DAC2",
+        "pin": 5,
+        "port": "A"
+      },
+      "STM32_GPIO1": {
+        "j_pins": [
+          "J1.33"
+        ],
+        "net": "STM32_GPIO1",
+        "pin": 11,
+        "port": "C"
+      },
+      "STM32_GPIO2": {
+        "j_pins": [
+          "J1.35"
+        ],
+        "net": "STM32_GPIO2",
+        "pin": 5,
+        "port": "B"
+      },
+      "STM32_GPIO3": {
+        "j_pins": [
+          "J1.43"
+        ],
+        "net": "STM32_GPIO3",
+        "pin": 10,
+        "port": "C"
+      },
+      "STM32_GPIO4": {
+        "j_pins": [
+          "J1.41"
+        ],
+        "net": "STM32_GPIO4",
+        "pin": 15,
+        "port": "A"
+      },
+      "STM32_GPIO5": {
+        "j_pins": [
+          "J1.53"
+        ],
+        "net": "STM32_GPIO5",
+        "pin": 14,
+        "port": "A"
+      },
+      "STM32_GPIO6": {
+        "j_pins": [
+          "J1.45"
+        ],
+        "net": "STM32_GPIO6",
+        "pin": 13,
+        "port": "A"
+      },
+      "STM32_GPIO7": {
+        "j_pins": [
+          "J1.59"
+        ],
+        "net": "STM32_GPIO7",
+        "pin": 10,
+        "port": "B"
+      },
+      "STM32_GPIO8": {
+        "j_pins": [
+          "J1.54"
+        ],
+        "net": "STM32_GPIO8",
+        "pin": 11,
+        "port": "B"
+      },
+      "STM32_NRST": {
+        "j_pins": [
+          "J1.47"
+        ],
+        "net": "STM32_NRST",
+        "pin": 10,
+        "port": "G"
+      },
+      "STM32_USB_CC1": {
+        "j_pins": [
+          "J1.29"
+        ],
+        "net": "STM32_USB_CC1",
+        "pin": 6,
+        "port": "B"
+      },
+      "STM32_USB_CC2": {
+        "j_pins": [
+          "J1.31"
+        ],
+        "net": "STM32_USB_CC2",
+        "pin": 4,
+        "port": "B"
+      },
+      "STM32_USB_D_N": {
+        "j_pins": [
+          "J1.21"
+        ],
+        "net": "STM32_USB_D_N",
+        "pin": 11,
+        "port": "A"
+      },
+      "STM32_USB_D_P": {
+        "j_pins": [
+          "J1.19"
+        ],
+        "net": "STM32_USB_D_P",
+        "pin": 12,
+        "port": "A"
+      }
+    },
+    "value": "STM32G431CBUx"
+  }
+}

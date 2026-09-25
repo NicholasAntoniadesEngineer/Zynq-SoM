@@ -1,0 +1,347 @@
+{
+  "artifacts": [
+    {
+      "path": "reports/fixture.txt",
+      "sha256": "874a5443d83e074f3be349130ec16d1c2bbb1733b2d9205cfbbd46f88f4344cd"
+    }
+  ],
+  "bom": {
+    "cost": 12.3456,
+    "extended": 7,
+    "lines": 43,
+    "missing": [],
+    "parts": 136
+  },
+  "device": "xc7z020clg400-1",
+  "gpio_map": [
+    {
+      "j_pins": [
+        "J1.57"
+      ],
+      "net": "STM32_BOOT0",
+      "pin": 8,
+      "port": "B"
+    },
+    {
+      "j_pins": [
+        "J1.49"
+      ],
+      "net": "STM32_DAC1",
+      "pin": 4,
+      "port": "A"
+    },
+    {
+      "j_pins": [
+        "J1.55"
+      ],
+      "net": "STM32_DAC2",
+      "pin": 5,
+      "port": "A"
+    },
+    {
+      "j_pins": [
+        "J1.33"
+      ],
+      "net": "STM32_GPIO1",
+      "pin": 11,
+      "port": "C"
+    },
+    {
+      "j_pins": [
+        "J1.35"
+      ],
+      "net": "STM32_GPIO2",
+      "pin": 5,
+      "port": "B"
+    },
+    {
+      "j_pins": [
+        "J1.43"
+      ],
+      "net": "STM32_GPIO3",
+      "pin": 10,
+      "port": "C"
+    },
+    {
+      "j_pins": [
+        "J1.41"
+      ],
+      "net": "STM32_GPIO4",
+      "pin": 15,
+      "port": "A"
+    },
+    {
+      "j_pins": [
+        "J1.53"
+      ],
+      "net": "STM32_GPIO5",
+      "pin": 14,
+      "port": "A"
+    },
+    {
+      "j_pins": [
+        "J1.45"
+      ],
+      "net": "STM32_GPIO6",
+      "pin": 13,
+      "port": "A"
+    },
+    {
+      "j_pins": [
+        "J1.59"
+      ],
+      "net": "STM32_GPIO7",
+      "pin": 10,
+      "port": "B"
+    },
+    {
+      "j_pins": [
+        "J1.54"
+      ],
+      "net": "STM32_GPIO8",
+      "pin": 11,
+      "port": "B"
+    },
+    {
+      "j_pins": [
+        "J1.47"
+      ],
+      "net": "STM32_NRST",
+      "pin": 10,
+      "port": "G"
+    },
+    {
+      "j_pins": [
+        "J1.29"
+      ],
+      "net": "STM32_USB_CC1",
+      "pin": 6,
+      "port": "B"
+    },
+    {
+      "j_pins": [
+        "J1.31"
+      ],
+      "net": "STM32_USB_CC2",
+      "pin": 4,
+      "port": "B"
+    },
+    {
+      "j_pins": [
+        "J1.21"
+      ],
+      "net": "STM32_USB_D_N",
+      "pin": 11,
+      "port": "A"
+    },
+    {
+      "j_pins": [
+        "J1.19"
+      ],
+      "net": "STM32_USB_D_P",
+      "pin": 12,
+      "port": "A"
+    }
+  ],
+  "i2c_map": [
+    {
+      "addr": 64,
+      "addr_hex": "0x40",
+      "bus": "STM32_I2C2",
+      "device": "INA3221",
+      "ref": "U1",
+      "sheet": "power_mon"
+    },
+    {
+      "addr": 65,
+      "addr_hex": "0x41",
+      "bus": "STM32_I2C2",
+      "device": "INA3221",
+      "ref": "U2",
+      "sheet": "power_mon"
+    }
+  ],
+  "rails": [
+    {
+      "draws": [
+        {
+          "amps": 0.001,
+          "note": "PG FET gate divider 10k+100k (16 uA), rounded up",
+          "sheet": "power"
+        }
+      ],
+      "limit_a": null,
+      "load_a": 0.001,
+      "name": "+1V8",
+      "source": null,
+      "volts": 1.8
+    },
+    {
+      "draws": [],
+      "limit_a": 0.6,
+      "load_a": 0.001,
+      "name": "+1V8_REG",
+      "source": "power:U3 AP2112K-1.8 [ldo]",
+      "volts": 1.8
+    },
+    {
+      "draws": [
+        {
+          "amps": 0.002,
+          "note": "JTAG TMS/TDI 4k7 insurance pulls when driven",
+          "sheet": "debug_boot"
+        },
+        {
+          "amps": 0.009,
+          "note": "PG LED (330R ~3.9 mA) + 1V8 PG sense LED chain (330R ~3.9 mA) + FB divider 27 uA",
+          "sheet": "power"
+        },
+        {
+          "amps": 0.02,
+          "note": "Zynq banks 13+33 VCCO (LVCMOS33 static + PL output drive) + on-SoM BMI323 VDDIO rider",
+          "sheet": "som_j2"
+        },
+        {
+          "amps": 0.02,
+          "note": "Zynq banks 34+35 VCCO static (both +3V3 on this board; bank 35 unused, no LVDS load)",
+          "sheet": "som_j3"
+        },
+        {
+          "amps": 0.015,
+          "note": "CP2102N active ~14 mA typ + RST 1k pull-up",
+          "sheet": "uart_bridge"
+        }
+      ],
+      "limit_a": null,
+      "load_a": 0.067,
+      "name": "+3V3",
+      "source": null,
+      "volts": 3.3
+    },
+    {
+      "draws": [],
+      "limit_a": 6.0,
+      "load_a": 0.067,
+      "name": "+3V3_REG",
+      "source": "power:U2 LM61460AANRJRR [buck]",
+      "volts": 3.3
+    },
+    {
+      "draws": [
+        {
+          "amps": 0.0015,
+          "note": "2x4k7 STM32_I2C2 pull-ups",
+          "sheet": "debug_boot"
+        },
+        {
+          "amps": 0.004,
+          "note": "BOOT0 strap ~2 mA closed + BOOTSEL pulls",
+          "sheet": "debug_boot"
+        },
+        {
+          "amps": 0.002,
+          "note": "2x INA3221 ~0.7 mA + ALERT pull-up",
+          "sheet": "power_mon"
+        }
+      ],
+      "limit_a": 0.3,
+      "load_a": 0.0075,
+      "name": "+3V3_SC",
+      "source": "source: SoM TPS7A20 always-on SC LDO U13 (J1.37); 300 mA class \u2014 the SoM power_architecture sheet says '3V3 (300mA)'. Envelope shared with the SoM-side SC (STM32G431 ~50 mA); carrier tally only here",
+      "volts": 3.3
+    },
+    {
+      "draws": [
+        {
+          "amps": 0.004,
+          "note": "PG LED (KT-0603R + 1k, ~3 mA) + FB divider 60 uA",
+          "sheet": "power"
+        }
+      ],
+      "limit_a": null,
+      "load_a": 0.0531,
+      "name": "+5V",
+      "source": null,
+      "volts": 5.0
+    },
+    {
+      "draws": [],
+      "limit_a": 6.0,
+      "load_a": 0.0531,
+      "name": "+5V_REG",
+      "source": "power:U1 LM61460AANRJRR [buck]",
+      "volts": 5.0
+    },
+    {
+      "draws": [
+        {
+          "amps": 0.004,
+          "note": "PG LED (KT-0603R + 1k, ~3 mA) + FB divider 60 uA (SoM module load declared on som_j1)",
+          "sheet": "power_som"
+        },
+        {
+          "amps": 2.15,
+          "note": "SoM module (Zynq+DDR3L+PHYs) ~10 W class at the regulated 4.65 V (P0 rebind) \u2014 estimate, refine at bring-up",
+          "sheet": "som_j1"
+        }
+      ],
+      "limit_a": 6.0,
+      "load_a": 2.154,
+      "name": "+5V_SOM",
+      "source": "power_som:U4 LM61460AANRJRR [buck]",
+      "volts": 4.65
+    },
+    {
+      "draws": [],
+      "limit_a": 3.0,
+      "load_a": 0.5712,
+      "name": "+VBUS_IN",
+      "source": "source: USB-C PD sink contract 20 V / 3 A at the receptacle (pd_input J1; +VIN sits behind the TPS26631 eFuse, round 5)",
+      "volts": 20.0
+    },
+    {
+      "draws": [],
+      "limit_a": 3.529,
+      "load_a": 0.5712,
+      "name": "+VIN",
+      "source": "pd_input:U1 TPS26631PWPR [efuse]",
+      "volts": 20.0
+    },
+    {
+      "draws": [],
+      "limit_a": null,
+      "load_a": 0.5712,
+      "name": "+VIN_SYS",
+      "source": null,
+      "volts": 20.0
+    },
+    {
+      "draws": [],
+      "limit_a": null,
+      "load_a": 0.0,
+      "name": "CHASSIS_GND",
+      "source": null,
+      "volts": null
+    },
+    {
+      "draws": [],
+      "limit_a": null,
+      "load_a": 0.0,
+      "name": "GND",
+      "source": null,
+      "volts": null
+    }
+  ],
+  "testpoints": {
+    "covered": 18,
+    "required": 23,
+    "waived": 5
+  },
+  "xdc": {
+    "banks": [
+      34,
+      35
+    ],
+    "pins": 5
+  }
+}

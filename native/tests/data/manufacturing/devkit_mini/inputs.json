@@ -1,0 +1,482 @@
+{
+  "artifacts": [
+    {
+      "path": "reports/fixture.txt",
+      "sha256": "874a5443d83e074f3be349130ec16d1c2bbb1733b2d9205cfbbd46f88f4344cd"
+    }
+  ],
+  "coverage": {
+    "covered": 18,
+    "required": 23,
+    "waived": 5
+  },
+  "power": {
+    "bridges": [
+      [
+        "power_mon",
+        "RS1",
+        "+VIN",
+        "+VIN_SYS"
+      ],
+      [
+        "power_mon",
+        "RS2",
+        "+5V_REG",
+        "+5V"
+      ],
+      [
+        "power_mon",
+        "RS3",
+        "+3V3_REG",
+        "+3V3"
+      ],
+      [
+        "power_mon",
+        "RS4",
+        "+1V8_REG",
+        "+1V8"
+      ]
+    ],
+    "draws": {
+      "+1V8": [
+        [
+          "power",
+          0.001,
+          "PG FET gate divider 10k+100k (16 uA), rounded up"
+        ]
+      ],
+      "+3V3": [
+        [
+          "debug_boot",
+          0.002,
+          "JTAG TMS/TDI 4k7 insurance pulls when driven"
+        ],
+        [
+          "power",
+          0.009,
+          "PG LED (330R ~3.9 mA) + 1V8 PG sense LED chain (330R ~3.9 mA) + FB divider 27 uA"
+        ],
+        [
+          "som_j2",
+          0.02,
+          "Zynq banks 13+33 VCCO (LVCMOS33 static + PL output drive) + on-SoM BMI323 VDDIO rider"
+        ],
+        [
+          "som_j3",
+          0.02,
+          "Zynq banks 34+35 VCCO static (both +3V3 on this board; bank 35 unused, no LVDS load)"
+        ],
+        [
+          "uart_bridge",
+          0.015,
+          "CP2102N active ~14 mA typ + RST 1k pull-up"
+        ]
+      ],
+      "+3V3_SC": [
+        [
+          "debug_boot",
+          0.004,
+          "BOOT0 strap ~2 mA closed + BOOTSEL pulls"
+        ],
+        [
+          "debug_boot",
+          0.0015,
+          "2x4k7 STM32_I2C2 pull-ups"
+        ],
+        [
+          "power_mon",
+          0.002,
+          "2x INA3221 ~0.7 mA + ALERT pull-up"
+        ]
+      ],
+      "+5V": [
+        [
+          "power",
+          0.004,
+          "PG LED (KT-0603R + 1k, ~3 mA) + FB divider 60 uA"
+        ]
+      ],
+      "+5V_SOM": [
+        [
+          "power_som",
+          0.004,
+          "PG LED (KT-0603R + 1k, ~3 mA) + FB divider 60 uA (SoM module load declared on som_j1)"
+        ],
+        [
+          "som_j1",
+          2.15,
+          "SoM module (Zynq+DDR3L+PHYs) ~10 W class at the regulated 4.65 V (P0 rebind) \u2014 estimate, refine at bring-up"
+        ]
+      ]
+    },
+    "errors": [],
+    "findings": [],
+    "notes": [
+      "VBUS pre-contract audit (round-4 flag, RESOLVED round 5): source sees 0.10 uF at the receptacle (+VBUS_IN) \u2014 within the ~10 uF cSnkBulk guidance; 10.0 uF board bulk sits behind the pd_input:U1 TPS26631PWPR eFuse; dVdT 47n -> slew 1.02 V/ms, inrush into the bulk ~10 mA."
+    ],
+    "rails": {
+      "+1V8": 0.001,
+      "+1V8_REG": 0.001,
+      "+3V3": 0.067,
+      "+3V3_REG": 0.067,
+      "+3V3_SC": 0.0075,
+      "+5V": 0.0531,
+      "+5V_REG": 0.0531,
+      "+5V_SOM": 2.154,
+      "+VBUS_IN": 0.5712,
+      "+VIN": 0.5712,
+      "+VIN_SYS": 0.5712
+    },
+    "regs": [
+      {
+        "eff": 1.0,
+        "i_in": 0.5712,
+        "i_out": 0.5712,
+        "kind": "efuse",
+        "limit_a": 3.529,
+        "n": 1,
+        "note": "ILIM = 18000/5100R = 3529 mA",
+        "ref": "U1",
+        "sheet": "pd_input",
+        "value": "TPS26631PWPR",
+        "vin": "+VBUS_IN",
+        "vout": "+VIN"
+      },
+      {
+        "eff": 0.9,
+        "i_in": 0.014750000000000001,
+        "i_out": 0.0531,
+        "kind": "buck",
+        "limit_a": 6.0,
+        "n": 2,
+        "note": "TI 6 A 3-36V synchronous buck (VIN1=8 ->L<-SW=10 ->rail)",
+        "ref": "U1",
+        "sheet": "power",
+        "value": "LM61460AANRJRR",
+        "vin": "+VIN_SYS",
+        "vout": "+5V_REG"
+      },
+      {
+        "eff": 0.9,
+        "i_in": 0.049133333333333334,
+        "i_out": 0.067,
+        "kind": "buck",
+        "limit_a": 6.0,
+        "n": 3,
+        "note": "TI 6 A 3-36V synchronous buck (VIN1=8 ->L<-SW=10 ->rail)",
+        "ref": "U2",
+        "sheet": "power",
+        "value": "LM61460AANRJRR",
+        "vin": "+5V",
+        "vout": "+3V3_REG"
+      },
+      {
+        "eff": 1.0,
+        "i_in": 0.001,
+        "i_out": 0.001,
+        "kind": "ldo",
+        "limit_a": 0.6,
+        "n": 4,
+        "note": "600 mA LDO",
+        "ref": "U3",
+        "sheet": "power",
+        "value": "AP2112K-1.8",
+        "vin": "+3V3",
+        "vout": "+1V8_REG"
+      },
+      {
+        "eff": 0.9,
+        "i_in": 0.55645,
+        "i_out": 2.154,
+        "kind": "buck",
+        "limit_a": 6.0,
+        "n": 5,
+        "note": "TI 6 A 3-36V synchronous buck (VIN1=8 ->L<-SW=10 ->rail)",
+        "ref": "U4",
+        "sheet": "power_som",
+        "value": "LM61460AANRJRR",
+        "vin": "+VIN_SYS",
+        "vout": "+5V_SOM"
+      }
+    ],
+    "source_load": {
+      "+3V3_SC": 0.0075,
+      "+5V_DBG": 0.0,
+      "+VBUS_IN": 0.5712
+    },
+    "warnings": []
+  },
+  "stm32": {
+    "internal": {
+      "1V0_EN": {
+        "j_pins": [],
+        "net": "1V0_EN",
+        "pin": 0,
+        "port": "F"
+      },
+      "1V0_PG": {
+        "j_pins": [],
+        "net": "1V0_PG",
+        "pin": 13,
+        "port": "C"
+      },
+      "1V35_EN": {
+        "j_pins": [],
+        "net": "1V35_EN",
+        "pin": 1,
+        "port": "A"
+      },
+      "1V35_PG": {
+        "j_pins": [],
+        "net": "1V35_PG",
+        "pin": 1,
+        "port": "F"
+      },
+      "1V8_EN": {
+        "j_pins": [],
+        "net": "1V8_EN",
+        "pin": 9,
+        "port": "B"
+      },
+      "1V8_PG": {
+        "j_pins": [],
+        "net": "1V8_PG",
+        "pin": 15,
+        "port": "C"
+      },
+      "3V3_EN": {
+        "j_pins": [],
+        "net": "3V3_EN",
+        "pin": 14,
+        "port": "C"
+      },
+      "3V3_PG": {
+        "j_pins": [],
+        "net": "3V3_PG",
+        "pin": 2,
+        "port": "A"
+      },
+      "ETH_PHY_RST": {
+        "j_pins": [],
+        "net": "ETH_PHY_RST",
+        "pin": 10,
+        "port": "A"
+      },
+      "SENSE_1V0": {
+        "j_pins": [],
+        "net": "SENSE_1V0",
+        "pin": 3,
+        "port": "A"
+      },
+      "SENSE_1V35": {
+        "j_pins": [],
+        "net": "SENSE_1V35",
+        "pin": 0,
+        "port": "B"
+      },
+      "SENSE_1V8": {
+        "j_pins": [],
+        "net": "SENSE_1V8",
+        "pin": 1,
+        "port": "B"
+      },
+      "SENSE_3V3": {
+        "j_pins": [],
+        "net": "SENSE_3V3",
+        "pin": 0,
+        "port": "A"
+      },
+      "STM32_SCL": {
+        "j_pins": [],
+        "net": "STM32_SCL",
+        "pin": 9,
+        "port": "A"
+      },
+      "STM32_SDA": {
+        "j_pins": [],
+        "net": "STM32_SDA",
+        "pin": 8,
+        "port": "A"
+      },
+      "USB_PHY_RST": {
+        "j_pins": [],
+        "net": "USB_PHY_RST",
+        "pin": 6,
+        "port": "C"
+      },
+      "ZYNQ_BMODE_0": {
+        "j_pins": [],
+        "net": "ZYNQ_BMODE_0",
+        "pin": 2,
+        "port": "B"
+      },
+      "ZYNQ_BMODE_2": {
+        "j_pins": [],
+        "net": "ZYNQ_BMODE_2",
+        "pin": 7,
+        "port": "A"
+      },
+      "ZYNQ_PL_PROGB": {
+        "j_pins": [],
+        "net": "ZYNQ_PL_PROGB",
+        "pin": 6,
+        "port": "A"
+      },
+      "ZYNQ_PS_MIO13": {
+        "j_pins": [],
+        "net": "ZYNQ_PS_MIO13",
+        "pin": 14,
+        "port": "B"
+      },
+      "ZYNQ_PS_POR": {
+        "j_pins": [],
+        "net": "ZYNQ_PS_POR",
+        "pin": 12,
+        "port": "B"
+      },
+      "ZYNQ_PS_SRST": {
+        "j_pins": [],
+        "net": "ZYNQ_PS_SRST",
+        "pin": 13,
+        "port": "B"
+      },
+      "eMMC_~{RST}": {
+        "j_pins": [],
+        "net": "eMMC_~{RST}",
+        "pin": 4,
+        "port": "C"
+      }
+    },
+    "nets": {
+      "STM32_BOOT0": {
+        "j_pins": [
+          "J1.57"
+        ],
+        "net": "STM32_BOOT0",
+        "pin": 8,
+        "port": "B"
+      },
+      "STM32_DAC1": {
+        "j_pins": [
+          "J1.49"
+        ],
+        "net": "STM32_DAC1",
+        "pin": 4,
+        "port": "A"
+      },
+      "STM32_DAC2": {
+        "j_pins": [
+          "J1.55"
+        ],
+        "net": "STM32_DAC2",
+        "pin": 5,
+        "port": "A"
+      },
+      "STM32_GPIO1": {
+        "j_pins": [
+          "J1.33"
+        ],
+        "net": "STM32_GPIO1",
+        "pin": 11,
+        "port": "C"
+      },
+      "STM32_GPIO2": {
+        "j_pins": [
+          "J1.35"
+        ],
+        "net": "STM32_GPIO2",
+        "pin": 5,
+        "port": "B"
+      },
+      "STM32_GPIO3": {
+        "j_pins": [
+          "J1.43"
+        ],
+        "net": "STM32_GPIO3",
+        "pin": 10,
+        "port": "C"
+      },
+      "STM32_GPIO4": {
+        "j_pins": [
+          "J1.41"
+        ],
+        "net": "STM32_GPIO4",
+        "pin": 15,
+        "port": "A"
+      },
+      "STM32_GPIO5": {
+        "j_pins": [
+          "J1.53"
+        ],
+        "net": "STM32_GPIO5",
+        "pin": 14,
+        "port": "A"
+      },
+      "STM32_GPIO6": {
+        "j_pins": [
+          "J1.45"
+        ],
+        "net": "STM32_GPIO6",
+        "pin": 13,
+        "port": "A"
+      },
+      "STM32_GPIO7": {
+        "j_pins": [
+          "J1.59"
+        ],
+        "net": "STM32_GPIO7",
+        "pin": 10,
+        "port": "B"
+      },
+      "STM32_GPIO8": {
+        "j_pins": [
+          "J1.54"
+        ],
+        "net": "STM32_GPIO8",
+        "pin": 11,
+        "port": "B"
+      },
+      "STM32_NRST": {
+        "j_pins": [
+          "J1.47"
+        ],
+        "net": "STM32_NRST",
+        "pin": 10,
+        "port": "G"
+      },
+      "STM32_USB_CC1": {
+        "j_pins": [
+          "J1.29"
+        ],
+        "net": "STM32_USB_CC1",
+        "pin": 6,
+        "port": "B"
+      },
+      "STM32_USB_CC2": {
+        "j_pins": [
+          "J1.31"
+        ],
+        "net": "STM32_USB_CC2",
+        "pin": 4,
+        "port": "B"
+      },
+      "STM32_USB_D_N": {
+        "j_pins": [
+          "J1.21"
+        ],
+        "net": "STM32_USB_D_N",
+        "pin": 11,
+        "port": "A"
+      },
+      "STM32_USB_D_P": {
+        "j_pins": [
+          "J1.19"
+        ],
+        "net": "STM32_USB_D_P",
+        "pin": 12,
+        "port": "A"
+      }
+    },
+    "value": "STM32G431CBUx"
+  }
+}

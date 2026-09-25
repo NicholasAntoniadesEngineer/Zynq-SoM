@@ -28,6 +28,7 @@
 #include "schgen/pcb_checks_bindings.hpp"
 #include "schgen/pcb_emit_bindings.hpp"
 #include "schgen/authoring_bindings.hpp"
+#include "schgen/assembly_bindings.hpp"
 #include "schgen/emit.hpp"
 #include "schgen/legalize.hpp"
 #include "schgen/occupancy.hpp"
@@ -228,6 +229,7 @@ NB_MODULE(_geom, m) {
     schgen::bind_pcb_checks(m);
     schgen::bind_pcb_emission(m);
     schgen::bind_authoring(m);
+    schgen::bind_assembly(m);
     m.def("discover_project_subsystems", [](const std::string& directory) {
         std::vector<std::pair<std::string, std::string>> out;
         for (const auto& sheet : schgen::discover_project_subsystems(directory))

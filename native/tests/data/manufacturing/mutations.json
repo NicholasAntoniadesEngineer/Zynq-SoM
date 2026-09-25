@@ -1,0 +1,2906 @@
+{
+  "footprints": {
+    "fixture/smd.kicad_mod": "(footprint \"fixture\" (fp_rect (start -1.0 -1.0) (end 1.0 1.0) (stroke (width 0.05) (type default)) (fill none) (layer \"F.CrtYd\")) (pad \"1\" smd rect (at -0.5 0) (size 0.4 0.6) (layers \"*.Cu\" \"*.Mask\")) (pad \"2\" smd rect (at 0.5 0) (size 0.4 0.6) (layers \"*.Cu\" \"*.Mask\")))",
+    "fixture/tht.kicad_mod": "(footprint \"fixture\" (fp_rect (start -1.0 -1.0) (end 1.0 1.0) (stroke (width 0.05) (type default)) (fill none) (layer \"F.CrtYd\")) (pad \"1\" thru_hole rect (at -0.5 0) (size 0.4 0.6) (layers \"*.Cu\" \"*.Mask\")) (pad \"2\" thru_hole rect (at 0.5 0) (size 0.4 0.6) (layers \"*.Cu\" \"*.Mask\")))",
+    "fixture/XT60PW-M.kicad_mod": "(footprint \"fixture\" (fp_rect (start -1.0 -1.0) (end 1.0 1.0) (stroke (width 0.05) (type default)) (fill none) (layer \"F.CrtYd\")) (pad \"1\" thru_hole rect (at -0.5 0) (size 0.4 0.6) (layers \"*.Cu\" \"*.Mask\")) (pad \"2\" thru_hole rect (at 0.5 0) (size 0.4 0.6) (layers \"*.Cu\" \"*.Mask\")))"
+  },
+  "assembly": [
+    {
+      "name": "base",
+      "model": {
+        "board_w": 60,
+        "board_h": 45,
+        "net_numbers": {
+          "+VIN": 1,
+          "+3V3": 2
+        },
+        "netclass_of": {
+          "+VIN": "POWER",
+          "+3V3": "POWER",
+          "+3V3_ALIAS": "POWER"
+        },
+        "classes": {},
+        "placed": 9,
+        "deferred": [],
+        "som_keepout": [
+          53,
+          43,
+          67,
+          57
+        ],
+        "som_core": [
+          54,
+          44,
+          66,
+          56
+        ],
+        "insts": [
+          {
+            "ref": "J1",
+            "value": "fixture J1",
+            "footprint": "Fixture:small",
+            "sheet": "entry",
+            "x": 29,
+            "y": 30,
+            "rotation": 0,
+            "pad_nets": {
+              "1": [
+                1,
+                "+VIN"
+              ]
+            },
+            "side": "top",
+            "mirror": false,
+            "mod_path": "fixture/XT60PW-M.kicad_mod"
+          },
+          {
+            "ref": "TP1",
+            "value": "fixture TP1",
+            "footprint": "Fixture:small",
+            "sheet": "entry",
+            "x": 33,
+            "y": 30,
+            "rotation": 0,
+            "pad_nets": {
+              "1": [
+                1,
+                "+VIN"
+              ]
+            },
+            "side": "top",
+            "mirror": false,
+            "mod_path": "fixture/smd.kicad_mod"
+          },
+          {
+            "ref": "U2",
+            "value": "fixture U2",
+            "footprint": "Fixture:small",
+            "sheet": "regulator",
+            "x": 42,
+            "y": 38,
+            "rotation": 0,
+            "pad_nets": {
+              "1": [
+                1,
+                "+3V3"
+              ]
+            },
+            "side": "top",
+            "mirror": false,
+            "mod_path": "fixture/smd.kicad_mod"
+          },
+          {
+            "ref": "TP2",
+            "value": "fixture TP2",
+            "footprint": "Fixture:small",
+            "sheet": "regulator",
+            "x": 47,
+            "y": 38,
+            "rotation": 0,
+            "pad_nets": {
+              "1": [
+                1,
+                "+3V3_ALIAS"
+              ]
+            },
+            "side": "top",
+            "mirror": false,
+            "mod_path": "fixture/smd.kicad_mod"
+          },
+          {
+            "ref": "J2",
+            "value": "fixture J2",
+            "footprint": "Fixture:small",
+            "sheet": "som_j1",
+            "x": 60,
+            "y": 47,
+            "rotation": 0,
+            "pad_nets": {
+              "1": [
+                1,
+                "+3V3"
+              ]
+            },
+            "side": "top",
+            "mirror": false,
+            "mod_path": "fixture/smd.kicad_mod"
+          },
+          {
+            "ref": "C2",
+            "value": "fixture C2",
+            "footprint": "Fixture:small",
+            "sheet": "som_decoupling",
+            "x": 61,
+            "y": 52,
+            "rotation": 0,
+            "pad_nets": {
+              "1": [
+                1,
+                "+3V3"
+              ]
+            },
+            "side": "bottom",
+            "mirror": false,
+            "mod_path": "fixture/smd.kicad_mod"
+          },
+          {
+            "ref": "D10",
+            "value": "fixture D10",
+            "footprint": "Fixture:small",
+            "sheet": "load",
+            "x": 71,
+            "y": 61,
+            "rotation": 0,
+            "pad_nets": {
+              "1": [
+                1,
+                ""
+              ]
+            },
+            "side": "top",
+            "mirror": false,
+            "mod_path": "fixture/tht.kicad_mod"
+          },
+          {
+            "ref": "H1",
+            "value": "fixture H1",
+            "footprint": "MountingHole:fixture",
+            "sheet": "mechanical",
+            "x": 80,
+            "y": 65,
+            "rotation": 0,
+            "pad_nets": {
+              "1": [
+                1,
+                ""
+              ]
+            },
+            "side": "top",
+            "mirror": false,
+            "mod_path": "fixture/smd.kicad_mod"
+          },
+          {
+            "ref": "FID1",
+            "value": "fixture FID1",
+            "footprint": "Fiducial:Fiducial_1mm_Mask2mm",
+            "sheet": "fiducial",
+            "x": 80,
+            "y": 30,
+            "rotation": 0,
+            "pad_nets": {
+              "1": [
+                1,
+                ""
+              ]
+            },
+            "side": "top",
+            "mirror": false,
+            "mod_path": "fixture/smd.kicad_mod"
+          }
+        ]
+      },
+      "power": {
+        "regs": [
+          {
+            "n": 1,
+            "sheet": "regulator",
+            "ref": "U2",
+            "value": "fixture",
+            "kind": "buck",
+            "vin": "+VIN",
+            "vout": "+3V3",
+            "limit_a": 1,
+            "eff": 1,
+            "note": "",
+            "i_out": 0,
+            "i_in": 0
+          }
+        ],
+        "bridges": [
+          [
+            "regulator",
+            "RS1",
+            "+3V3",
+            "+3V3_ALIAS"
+          ]
+        ],
+        "rails": {},
+        "draws": {},
+        "errors": [],
+        "warnings": [],
+        "findings": [],
+        "notes": [],
+        "source_load": {}
+      },
+      "plan": {
+        "steps": [
+          {
+            "n": 1,
+            "slug": "bottom_smd",
+            "title": "Bottom-side SMD (paste + reflow)",
+            "insts": [
+              5
+            ],
+            "notes": []
+          },
+          {
+            "n": 2,
+            "slug": "top_smd",
+            "title": "Top-side SMD (paste + reflow)",
+            "insts": [
+              1,
+              3,
+              2
+            ],
+            "notes": [
+              "pin-1 orientation (U2): dot per silkscreen"
+            ]
+          },
+          {
+            "n": 3,
+            "slug": "tht",
+            "title": "Through-hole (short-to-tall)",
+            "insts": [
+              6
+            ],
+            "notes": [
+              "diode polarity (D10): cathode per silkscreen"
+            ]
+          },
+          {
+            "n": 4,
+            "slug": "connectors_mech",
+            "title": "Connectors + mechanical hardware",
+            "insts": [
+              7,
+              0,
+              4
+            ],
+            "notes": [
+              "J1 fixture J1: mating face toward the E board edge",
+              "J2: DF40C SoM receptacles \u2014 the SoM module mates onto them (bring-up section, mate phase)"
+            ]
+          }
+        ],
+        "phases": [
+          {
+            "n": 1,
+            "slug": "power_entry",
+            "title": "power entry (entry)",
+            "sheets": [
+              "entry"
+            ],
+            "insts": [
+              0,
+              1
+            ],
+            "checkpoints": [
+              "verify +VIN at TP1"
+            ],
+            "lead": ""
+          },
+          {
+            "n": 2,
+            "slug": "regulator",
+            "title": "regulator",
+            "sheets": [
+              "regulator"
+            ],
+            "insts": [
+              3,
+              2
+            ],
+            "checkpoints": [
+              "verify +3V3_ALIAS at TP2"
+            ],
+            "lead": ""
+          },
+          {
+            "n": 3,
+            "slug": "som_interface",
+            "title": "SoM interface (som_decoupling, som_j1)",
+            "sheets": [
+              "som_decoupling",
+              "som_j1"
+            ],
+            "insts": [
+              5,
+              4
+            ],
+            "checkpoints": [],
+            "lead": ""
+          },
+          {
+            "n": 4,
+            "slug": "som_mate",
+            "title": "SoM module mate",
+            "sheets": [],
+            "insts": [],
+            "checkpoints": [],
+            "lead": "No solder parts. Mate the SoM module onto J2 after the rail checkpoints above."
+          },
+          {
+            "n": 5,
+            "slug": "load",
+            "title": "load",
+            "sheets": [
+              "load"
+            ],
+            "insts": [
+              6
+            ],
+            "checkpoints": [],
+            "lead": ""
+          },
+          {
+            "n": 6,
+            "slug": "mechanical",
+            "title": "mechanical hardware (mechanical)",
+            "sheets": [
+              "mechanical"
+            ],
+            "insts": [
+              7
+            ],
+            "checkpoints": [],
+            "lead": ""
+          }
+        ]
+      },
+      "markdown": "# Assembly order \u2014 base\n\nBoard 60 x 45 mm. 8 placed parts (7 top / 1 bottom); 1 fiducials are bare-copper marks, excluded from every phase and step.\nSection A is the staged hand-assembly + bring-up order; section B is the PCBA process order. Every part appears in exactly one phase and exactly one step.\n\n## A. Incremental bring-up order\n\n| phase | section | parts | checkpoint |\n|---|---|---|---|\n| 1 | power entry (entry) | 2 | verify +VIN at TP1 |\n| 2 | regulator | 2 | verify +3V3_ALIAS at TP2 |\n| 3 | SoM interface (som_decoupling, som_j1) | 2 | \u2014 |\n| 4 | SoM module mate | 0 | \u2014 |\n| 5 | load | 1 | \u2014 |\n| 6 | mechanical hardware (mechanical) | 1 | \u2014 |\n\n### Phase 1 \u2014 power entry (entry)\n\n![phase 1](../renders/assembly/phase_01_power_entry.png)\n\n2 parts (2 top / 0 bottom)\n\n| ref | value | package | sheet |\n|---|---|---|---|\n| J1 | fixture J1 | small | entry |\n| TP1 | fixture TP1 | small | entry |\n\nCHECKPOINT: verify +VIN at TP1\n\n### Phase 2 \u2014 regulator\n\n![phase 2](../renders/assembly/phase_02_regulator.png)\n\n2 parts (2 top / 0 bottom)\n\n| ref | value | package | sheet |\n|---|---|---|---|\n| TP2 | fixture TP2 | small | regulator |\n| U2 | fixture U2 | small | regulator |\n\nCHECKPOINT: verify +3V3_ALIAS at TP2\n\n### Phase 3 \u2014 SoM interface (som_decoupling, som_j1)\n\n![phase 3](../renders/assembly/phase_03_som_interface.png)\n\n2 parts (1 top / 1 bottom)\n\n| ref | value | package | sheet |\n|---|---|---|---|\n| C2 | fixture C2 | small | som_decoupling |\n| J2 | fixture J2 | small | som_j1 |\n\n### Phase 4 \u2014 SoM module mate\n\n![phase 4](../renders/assembly/phase_04_som_mate.png)\n\nNo solder parts. Mate the SoM module onto J2 after the rail checkpoints above.\n\n### Phase 5 \u2014 load\n\n![phase 5](../renders/assembly/phase_05_load.png)\n\n1 parts (1 top / 0 bottom)\n\n| ref | value | package | sheet |\n|---|---|---|---|\n| D10 | fixture D10 | small | load |\n\n### Phase 6 \u2014 mechanical hardware (mechanical)\n\n![phase 6](../renders/assembly/phase_06_mechanical.png)\n\n1 parts (1 top / 0 bottom)\n\n| ref | value | package | sheet |\n|---|---|---|---|\n| H1 | fixture H1 | fixture | mechanical |\n\n## B. Production process order\n\n### Step 1 \u2014 Bottom-side SMD (paste + reflow)\n\n![step 1](../renders/assembly/step_1_bottom_smd.png)\n\n1 parts (0 top / 1 bottom)\n\n| ref | value | package | sheet |\n|---|---|---|---|\n| C2 | fixture C2 | small | som_decoupling |\n\n### Step 2 \u2014 Top-side SMD (paste + reflow)\n\n![step 2](../renders/assembly/step_2_top_smd.png)\n\n3 parts (3 top / 0 bottom)\n\n| ref | value | package | sheet |\n|---|---|---|---|\n| TP1 | fixture TP1 | small | entry |\n| TP2 | fixture TP2 | small | regulator |\n| U2 | fixture U2 | small | regulator |\n\nNOTES: pin-1 orientation (U2): dot per silkscreen\n\n### Step 3 \u2014 Through-hole (short-to-tall)\n\n![step 3](../renders/assembly/step_3_tht.png)\n\nSorted short-to-tall by courtyard area (height proxy \u2014 no measured part heights in-tree).\n\n1 parts (1 top / 0 bottom)\n\n| ref | value | package | sheet |\n|---|---|---|---|\n| D10 | fixture D10 | small | load |\n\nNOTES: diode polarity (D10): cathode per silkscreen\n\n### Step 4 \u2014 Connectors + mechanical hardware\n\n![step 4](../renders/assembly/step_4_connectors_mech.png)\n\n3 parts (3 top / 0 bottom)\n\n| ref | value | package | sheet | joint |\n|---|---|---|---|---|\n| H1 | fixture H1 | fixture | mechanical | SMD |\n| J1 | fixture J1 | small | entry | THT |\n| J2 | fixture J2 | small | som_j1 | SMD |\n\nNOTES: J1 fixture J1: mating face toward the E board edge\nNOTES: J2: DF40C SoM receptacles \u2014 the SoM module mates onto them (bring-up section, mate phase)\n\n",
+      "images": [
+        {
+          "filename": "step_1_bottom_smd.png",
+          "png_sha256": "a1b05e61afaf3eacf05e03aeefdb8b86e670284842d732ec4d7b6fdf3e0de421",
+          "rgb_sha256": "3d1a6e44c7908794d76e15eb3ee6ba58ba63210b2140dcb4f4973ef7631385dd",
+          "width": 356,
+          "height": 281
+        },
+        {
+          "filename": "step_2_top_smd.png",
+          "png_sha256": "41832206000b66cd5cd947ac517767fd86ff0d760970d55c27dc3afe26639d6e",
+          "rgb_sha256": "a1e27f1cea86d49b9bd7940221c5c08f01a03e45e729e5c8f26cdb0eadf8f791",
+          "width": 356,
+          "height": 281
+        },
+        {
+          "filename": "step_3_tht.png",
+          "png_sha256": "2207ddd075aa69be49dcfbdea5bf769c32f0e3a7af5abd7b9183eae2d5409ba3",
+          "rgb_sha256": "724143a29d9b2f7996cd2f67c201a034240caf16ded526878705069a76141bc8",
+          "width": 356,
+          "height": 281
+        },
+        {
+          "filename": "step_4_connectors_mech.png",
+          "png_sha256": "0f869c452d0d631ba85fb4bdfd9876af2dfeee1d63c1a54ff8c8adbfeb472008",
+          "rgb_sha256": "81bcfcb2be93cd9d7d98752e6a7dc33467829f641be9e11d517c03ca75972135",
+          "width": 356,
+          "height": 281
+        },
+        {
+          "filename": "phase_01_power_entry.png",
+          "png_sha256": "c25bedacd0ccb8f79ed3b24f80a8ad35739da26f9006ad2796fb9cc81da052f3",
+          "rgb_sha256": "671921d4b3cc9437e95415d453e524dd39162a238054fac0e86aee04a812d84b",
+          "width": 356,
+          "height": 281
+        },
+        {
+          "filename": "phase_02_regulator.png",
+          "png_sha256": "ea728e87353fff31e98da2f57b9787e43bb44b29372aad91ad0df119952bfcce",
+          "rgb_sha256": "58bbc53d1db406d78dc22a4be72330a0d8dadbf0f5fb327c478b7fac59d732e8",
+          "width": 356,
+          "height": 281
+        },
+        {
+          "filename": "phase_03_som_interface.png",
+          "png_sha256": "6f8d55e3ae85430227662ad6ab8642d0e27b4a21c5484131cd8a260ced18de6f",
+          "rgb_sha256": "696b11c2f0d64ef58c8fff0da82a83990affb7efc2a9bb4cd90848f8d1e57c1e",
+          "width": 356,
+          "height": 281
+        },
+        {
+          "filename": "phase_04_som_mate.png",
+          "png_sha256": "ac7cfb1e8edc50979b658184e204e8892734e673e693a7b0884b3f85c693f9a0",
+          "rgb_sha256": "24c6671fd9b4812b977b39d44abe721ae0db7b0f22fc4578ae3f42f396205dff",
+          "width": 356,
+          "height": 281
+        },
+        {
+          "filename": "phase_05_load.png",
+          "png_sha256": "438057d1c01da8e28cf6f74851cb9354535d62a76a3e76a86c27c8f9d43c481c",
+          "rgb_sha256": "d122b309dc4f1a89e9da81ace49ce57d49aee892826c011fcd97cc9039ba301e",
+          "width": 356,
+          "height": 281
+        },
+        {
+          "filename": "phase_06_mechanical.png",
+          "png_sha256": "bf0449d1e4f52fd037a757960e6de971960f5fab953d27ea6e43f09129f7c1b7",
+          "rgb_sha256": "0aa0672b8c8ba369b129411d96e39f078fb2aff45d7a12ff3d5ec2b83c31269f",
+          "width": 356,
+          "height": 281
+        }
+      ]
+    },
+    {
+      "name": "no_module",
+      "model": {
+        "board_w": 60,
+        "board_h": 45,
+        "net_numbers": {
+          "+VIN": 1,
+          "+3V3": 2
+        },
+        "netclass_of": {
+          "+VIN": "POWER",
+          "+3V3": "POWER",
+          "+3V3_ALIAS": "POWER"
+        },
+        "classes": {},
+        "placed": 9,
+        "deferred": [],
+        "som_keepout": null,
+        "som_core": [
+          54,
+          44,
+          66,
+          56
+        ],
+        "insts": [
+          {
+            "ref": "J1",
+            "value": "fixture J1",
+            "footprint": "Fixture:small",
+            "sheet": "entry",
+            "x": 29,
+            "y": 30,
+            "rotation": 0,
+            "pad_nets": {
+              "1": [
+                1,
+                "+VIN"
+              ]
+            },
+            "side": "top",
+            "mirror": false,
+            "mod_path": "fixture/XT60PW-M.kicad_mod"
+          },
+          {
+            "ref": "TP1",
+            "value": "fixture TP1",
+            "footprint": "Fixture:small",
+            "sheet": "entry",
+            "x": 33,
+            "y": 30,
+            "rotation": 0,
+            "pad_nets": {
+              "1": [
+                1,
+                "+VIN"
+              ]
+            },
+            "side": "top",
+            "mirror": false,
+            "mod_path": "fixture/smd.kicad_mod"
+          },
+          {
+            "ref": "U2",
+            "value": "fixture U2",
+            "footprint": "Fixture:small",
+            "sheet": "regulator",
+            "x": 42,
+            "y": 38,
+            "rotation": 0,
+            "pad_nets": {
+              "1": [
+                1,
+                "+3V3"
+              ]
+            },
+            "side": "top",
+            "mirror": false,
+            "mod_path": "fixture/smd.kicad_mod"
+          },
+          {
+            "ref": "TP2",
+            "value": "fixture TP2",
+            "footprint": "Fixture:small",
+            "sheet": "regulator",
+            "x": 47,
+            "y": 38,
+            "rotation": 0,
+            "pad_nets": {
+              "1": [
+                1,
+                "+3V3_ALIAS"
+              ]
+            },
+            "side": "top",
+            "mirror": false,
+            "mod_path": "fixture/smd.kicad_mod"
+          },
+          {
+            "ref": "J2",
+            "value": "fixture J2",
+            "footprint": "Fixture:small",
+            "sheet": "som_j1",
+            "x": 60,
+            "y": 47,
+            "rotation": 0,
+            "pad_nets": {
+              "1": [
+                1,
+                "+3V3"
+              ]
+            },
+            "side": "top",
+            "mirror": false,
+            "mod_path": "fixture/smd.kicad_mod"
+          },
+          {
+            "ref": "C2",
+            "value": "fixture C2",
+            "footprint": "Fixture:small",
+            "sheet": "som_decoupling",
+            "x": 61,
+            "y": 52,
+            "rotation": 0,
+            "pad_nets": {
+              "1": [
+                1,
+                "+3V3"
+              ]
+            },
+            "side": "bottom",
+            "mirror": false,
+            "mod_path": "fixture/smd.kicad_mod"
+          },
+          {
+            "ref": "D10",
+            "value": "fixture D10",
+            "footprint": "Fixture:small",
+            "sheet": "load",
+            "x": 71,
+            "y": 61,
+            "rotation": 0,
+            "pad_nets": {
+              "1": [
+                1,
+                ""
+              ]
+            },
+            "side": "top",
+            "mirror": false,
+            "mod_path": "fixture/tht.kicad_mod"
+          },
+          {
+            "ref": "H1",
+            "value": "fixture H1",
+            "footprint": "MountingHole:fixture",
+            "sheet": "mechanical",
+            "x": 80,
+            "y": 65,
+            "rotation": 0,
+            "pad_nets": {
+              "1": [
+                1,
+                ""
+              ]
+            },
+            "side": "top",
+            "mirror": false,
+            "mod_path": "fixture/smd.kicad_mod"
+          },
+          {
+            "ref": "FID1",
+            "value": "fixture FID1",
+            "footprint": "Fiducial:Fiducial_1mm_Mask2mm",
+            "sheet": "fiducial",
+            "x": 80,
+            "y": 30,
+            "rotation": 0,
+            "pad_nets": {
+              "1": [
+                1,
+                ""
+              ]
+            },
+            "side": "top",
+            "mirror": false,
+            "mod_path": "fixture/smd.kicad_mod"
+          }
+        ]
+      },
+      "power": {
+        "regs": [
+          {
+            "n": 1,
+            "sheet": "regulator",
+            "ref": "U2",
+            "value": "fixture",
+            "kind": "buck",
+            "vin": "+VIN",
+            "vout": "+3V3",
+            "limit_a": 1,
+            "eff": 1,
+            "note": "",
+            "i_out": 0,
+            "i_in": 0
+          }
+        ],
+        "bridges": [
+          [
+            "regulator",
+            "RS1",
+            "+3V3",
+            "+3V3_ALIAS"
+          ]
+        ],
+        "rails": {},
+        "draws": {},
+        "errors": [],
+        "warnings": [],
+        "findings": [],
+        "notes": [],
+        "source_load": {}
+      },
+      "plan": {
+        "steps": [
+          {
+            "n": 1,
+            "slug": "bottom_smd",
+            "title": "Bottom-side SMD (paste + reflow)",
+            "insts": [
+              5
+            ],
+            "notes": []
+          },
+          {
+            "n": 2,
+            "slug": "top_smd",
+            "title": "Top-side SMD (paste + reflow)",
+            "insts": [
+              1,
+              3,
+              2
+            ],
+            "notes": [
+              "pin-1 orientation (U2): dot per silkscreen"
+            ]
+          },
+          {
+            "n": 3,
+            "slug": "tht",
+            "title": "Through-hole (short-to-tall)",
+            "insts": [
+              6
+            ],
+            "notes": [
+              "diode polarity (D10): cathode per silkscreen"
+            ]
+          },
+          {
+            "n": 4,
+            "slug": "connectors_mech",
+            "title": "Connectors + mechanical hardware",
+            "insts": [
+              7,
+              0,
+              4
+            ],
+            "notes": [
+              "J1 fixture J1: mating face toward the E board edge",
+              "J2: DF40C SoM receptacles \u2014 the SoM module mates onto them (bring-up section, mate phase)"
+            ]
+          }
+        ],
+        "phases": [
+          {
+            "n": 1,
+            "slug": "entry",
+            "title": "entry",
+            "sheets": [
+              "entry"
+            ],
+            "insts": [
+              0,
+              1
+            ],
+            "checkpoints": [
+              "verify +VIN at TP1"
+            ],
+            "lead": ""
+          },
+          {
+            "n": 2,
+            "slug": "load",
+            "title": "load",
+            "sheets": [
+              "load"
+            ],
+            "insts": [
+              6
+            ],
+            "checkpoints": [],
+            "lead": ""
+          },
+          {
+            "n": 3,
+            "slug": "regulator",
+            "title": "regulator",
+            "sheets": [
+              "regulator"
+            ],
+            "insts": [
+              3,
+              2
+            ],
+            "checkpoints": [
+              "verify +3V3_ALIAS at TP2"
+            ],
+            "lead": ""
+          },
+          {
+            "n": 4,
+            "slug": "som_decoupling",
+            "title": "som_decoupling",
+            "sheets": [
+              "som_decoupling"
+            ],
+            "insts": [
+              5
+            ],
+            "checkpoints": [],
+            "lead": ""
+          },
+          {
+            "n": 5,
+            "slug": "som_j1",
+            "title": "som_j1",
+            "sheets": [
+              "som_j1"
+            ],
+            "insts": [
+              4
+            ],
+            "checkpoints": [],
+            "lead": ""
+          },
+          {
+            "n": 6,
+            "slug": "mechanical",
+            "title": "mechanical hardware (mechanical)",
+            "sheets": [
+              "mechanical"
+            ],
+            "insts": [
+              7
+            ],
+            "checkpoints": [],
+            "lead": ""
+          }
+        ]
+      },
+      "markdown": "# Assembly order \u2014 no_module\n\nBoard 60 x 45 mm. 8 placed parts (7 top / 1 bottom); 1 fiducials are bare-copper marks, excluded from every phase and step.\nSection A is the staged hand-assembly + bring-up order; section B is the PCBA process order. Every part appears in exactly one phase and exactly one step.\n\n## A. Incremental bring-up order\n\n| phase | section | parts | checkpoint |\n|---|---|---|---|\n| 1 | entry | 2 | verify +VIN at TP1 |\n| 2 | load | 1 | \u2014 |\n| 3 | regulator | 2 | verify +3V3_ALIAS at TP2 |\n| 4 | som_decoupling | 1 | \u2014 |\n| 5 | som_j1 | 1 | \u2014 |\n| 6 | mechanical hardware (mechanical) | 1 | \u2014 |\n\n### Phase 1 \u2014 entry\n\n![phase 1](../renders/assembly/phase_01_entry.png)\n\n2 parts (2 top / 0 bottom)\n\n| ref | value | package | sheet |\n|---|---|---|---|\n| J1 | fixture J1 | small | entry |\n| TP1 | fixture TP1 | small | entry |\n\nCHECKPOINT: verify +VIN at TP1\n\n### Phase 2 \u2014 load\n\n![phase 2](../renders/assembly/phase_02_load.png)\n\n1 parts (1 top / 0 bottom)\n\n| ref | value | package | sheet |\n|---|---|---|---|\n| D10 | fixture D10 | small | load |\n\n### Phase 3 \u2014 regulator\n\n![phase 3](../renders/assembly/phase_03_regulator.png)\n\n2 parts (2 top / 0 bottom)\n\n| ref | value | package | sheet |\n|---|---|---|---|\n| TP2 | fixture TP2 | small | regulator |\n| U2 | fixture U2 | small | regulator |\n\nCHECKPOINT: verify +3V3_ALIAS at TP2\n\n### Phase 4 \u2014 som_decoupling\n\n![phase 4](../renders/assembly/phase_04_som_decoupling.png)\n\n1 parts (0 top / 1 bottom)\n\n| ref | value | package | sheet |\n|---|---|---|---|\n| C2 | fixture C2 | small | som_decoupling |\n\n### Phase 5 \u2014 som_j1\n\n![phase 5](../renders/assembly/phase_05_som_j1.png)\n\n1 parts (1 top / 0 bottom)\n\n| ref | value | package | sheet |\n|---|---|---|---|\n| J2 | fixture J2 | small | som_j1 |\n\n### Phase 6 \u2014 mechanical hardware (mechanical)\n\n![phase 6](../renders/assembly/phase_06_mechanical.png)\n\n1 parts (1 top / 0 bottom)\n\n| ref | value | package | sheet |\n|---|---|---|---|\n| H1 | fixture H1 | fixture | mechanical |\n\n## B. Production process order\n\n### Step 1 \u2014 Bottom-side SMD (paste + reflow)\n\n![step 1](../renders/assembly/step_1_bottom_smd.png)\n\n1 parts (0 top / 1 bottom)\n\n| ref | value | package | sheet |\n|---|---|---|---|\n| C2 | fixture C2 | small | som_decoupling |\n\n### Step 2 \u2014 Top-side SMD (paste + reflow)\n\n![step 2](../renders/assembly/step_2_top_smd.png)\n\n3 parts (3 top / 0 bottom)\n\n| ref | value | package | sheet |\n|---|---|---|---|\n| TP1 | fixture TP1 | small | entry |\n| TP2 | fixture TP2 | small | regulator |\n| U2 | fixture U2 | small | regulator |\n\nNOTES: pin-1 orientation (U2): dot per silkscreen\n\n### Step 3 \u2014 Through-hole (short-to-tall)\n\n![step 3](../renders/assembly/step_3_tht.png)\n\nSorted short-to-tall by courtyard area (height proxy \u2014 no measured part heights in-tree).\n\n1 parts (1 top / 0 bottom)\n\n| ref | value | package | sheet |\n|---|---|---|---|\n| D10 | fixture D10 | small | load |\n\nNOTES: diode polarity (D10): cathode per silkscreen\n\n### Step 4 \u2014 Connectors + mechanical hardware\n\n![step 4](../renders/assembly/step_4_connectors_mech.png)\n\n3 parts (3 top / 0 bottom)\n\n| ref | value | package | sheet | joint |\n|---|---|---|---|---|\n| H1 | fixture H1 | fixture | mechanical | SMD |\n| J1 | fixture J1 | small | entry | THT |\n| J2 | fixture J2 | small | som_j1 | SMD |\n\nNOTES: J1 fixture J1: mating face toward the E board edge\nNOTES: J2: DF40C SoM receptacles \u2014 the SoM module mates onto them (bring-up section, mate phase)\n\n",
+      "images": [
+        {
+          "filename": "step_1_bottom_smd.png",
+          "png_sha256": "09f615242994adb9e5fb3fcd5086d0dd18532fee05460f87a4e2521b0b19c7d0",
+          "rgb_sha256": "81e6d285719dacbc0cdd824487a10cd68ae77c0816832f6ee0ad313f807ef510",
+          "width": 356,
+          "height": 281
+        },
+        {
+          "filename": "step_2_top_smd.png",
+          "png_sha256": "16e5e6777e75479d95c02aed1bb90ac68cd48cd07a18aa1b1aac03401f8647e9",
+          "rgb_sha256": "dc4ec010b73b7a03744a631b78919d3c7b8d41c7113405a9861c1c67fccc854a",
+          "width": 356,
+          "height": 281
+        },
+        {
+          "filename": "step_3_tht.png",
+          "png_sha256": "094f2dd1d80db51c13c646cd066f9a5b31f746972303e0b650663b6de2636cf0",
+          "rgb_sha256": "0414b4a3edb1f26d892fd7452b80cf3ba0c3895b87be019d685be18225e1f050",
+          "width": 356,
+          "height": 281
+        },
+        {
+          "filename": "step_4_connectors_mech.png",
+          "png_sha256": "58e9255a28dd998046c83c2cd5cd4870391a4fc6eeac8a96deb49b8e4bda30a2",
+          "rgb_sha256": "3d7dddb08e03791be4da9aa4d5d359bb066113bdd17f81648fa0397b4c6909fd",
+          "width": 356,
+          "height": 281
+        },
+        {
+          "filename": "phase_01_entry.png",
+          "png_sha256": "bfb9adf5d59d2df2ab52bb3f01738753195685bcc59c0770acf39a6a8dca6d03",
+          "rgb_sha256": "d5a8576a743104ab7f076f8ba47534e54d704048d1a7a43d363450fc9387bdb8",
+          "width": 356,
+          "height": 281
+        },
+        {
+          "filename": "phase_02_load.png",
+          "png_sha256": "942f3dbfab1e96c7f602cbf6da5d3a89a07bb24d28124dae5bab9c62d4d9de24",
+          "rgb_sha256": "80edf2cab58d651da54e94bd6e6d4179e972a3024e427c4999ec0723cc889a6b",
+          "width": 356,
+          "height": 281
+        },
+        {
+          "filename": "phase_03_regulator.png",
+          "png_sha256": "91e554d6be374909e2ea3399d8666f49c85906cc2ce6e326675d833ced834a30",
+          "rgb_sha256": "bcd0a7d0f4f58dfca2ce5e76fac507b0d9550fb0bf7327ac4fc633114f805f21",
+          "width": 356,
+          "height": 281
+        },
+        {
+          "filename": "phase_04_som_decoupling.png",
+          "png_sha256": "5c167f78d5d16bebbd5615ff3070baa8c7912cb2e2b68b2b84269f9d63cdf952",
+          "rgb_sha256": "501c99bd5be536e3d18a7fe197d710012154ba3e13e03f07d905439a8920db99",
+          "width": 356,
+          "height": 281
+        },
+        {
+          "filename": "phase_05_som_j1.png",
+          "png_sha256": "66f1662c21f043743e2ccfbca973faaa67a83d28da9752cf4d7a96c1200dce01",
+          "rgb_sha256": "48612d39018292aed9fc1bfdb12555ba33686f2bde5d4e0c807b71d56bd3776f",
+          "width": 356,
+          "height": 281
+        },
+        {
+          "filename": "phase_06_mechanical.png",
+          "png_sha256": "965f7db1c2d820b269cb528b8664320b0fd9f4472e70fa5203911b0d453226b5",
+          "rgb_sha256": "24a3e62fa0355f691799278325b2b3d2f590f5dd2095847166a713ee7c0f769e",
+          "width": 356,
+          "height": 281
+        }
+      ]
+    },
+    {
+      "name": "side_rotation",
+      "model": {
+        "board_w": 60,
+        "board_h": 45,
+        "net_numbers": {
+          "+VIN": 1,
+          "+3V3": 2
+        },
+        "netclass_of": {
+          "+VIN": "POWER",
+          "+3V3": "POWER",
+          "+3V3_ALIAS": "POWER"
+        },
+        "classes": {},
+        "placed": 9,
+        "deferred": [],
+        "som_keepout": [
+          53,
+          43,
+          67,
+          57
+        ],
+        "som_core": [
+          54,
+          44,
+          66,
+          56
+        ],
+        "insts": [
+          {
+            "ref": "J1",
+            "value": "fixture J1",
+            "footprint": "Fixture:small",
+            "sheet": "entry",
+            "x": 29,
+            "y": 30,
+            "rotation": 270,
+            "pad_nets": {
+              "1": [
+                1,
+                "+VIN"
+              ]
+            },
+            "side": "top",
+            "mirror": false,
+            "mod_path": "fixture/XT60PW-M.kicad_mod"
+          },
+          {
+            "ref": "TP1",
+            "value": "fixture TP1",
+            "footprint": "Fixture:small",
+            "sheet": "entry",
+            "x": 33,
+            "y": 30,
+            "rotation": 0,
+            "pad_nets": {
+              "1": [
+                1,
+                "+VIN"
+              ]
+            },
+            "side": "top",
+            "mirror": false,
+            "mod_path": "fixture/smd.kicad_mod"
+          },
+          {
+            "ref": "U2",
+            "value": "fixture U2",
+            "footprint": "Fixture:small",
+            "sheet": "regulator",
+            "x": 42,
+            "y": 38,
+            "rotation": 0,
+            "pad_nets": {
+              "1": [
+                1,
+                "+3V3"
+              ]
+            },
+            "side": "bottom",
+            "mirror": false,
+            "mod_path": "fixture/smd.kicad_mod"
+          },
+          {
+            "ref": "TP2",
+            "value": "fixture TP2",
+            "footprint": "Fixture:small",
+            "sheet": "regulator",
+            "x": 47,
+            "y": 38,
+            "rotation": 0,
+            "pad_nets": {
+              "1": [
+                1,
+                "+3V3_ALIAS"
+              ]
+            },
+            "side": "top",
+            "mirror": false,
+            "mod_path": "fixture/smd.kicad_mod"
+          },
+          {
+            "ref": "J2",
+            "value": "fixture J2",
+            "footprint": "Fixture:small",
+            "sheet": "som_j1",
+            "x": 60,
+            "y": 47,
+            "rotation": 0,
+            "pad_nets": {
+              "1": [
+                1,
+                "+3V3"
+              ]
+            },
+            "side": "top",
+            "mirror": false,
+            "mod_path": "fixture/smd.kicad_mod"
+          },
+          {
+            "ref": "C2",
+            "value": "fixture C2",
+            "footprint": "Fixture:small",
+            "sheet": "som_decoupling",
+            "x": 61,
+            "y": 52,
+            "rotation": 0,
+            "pad_nets": {
+              "1": [
+                1,
+                "+3V3"
+              ]
+            },
+            "side": "bottom",
+            "mirror": false,
+            "mod_path": "fixture/smd.kicad_mod"
+          },
+          {
+            "ref": "C10",
+            "value": "fixture D10",
+            "footprint": "Device:CP_fixture",
+            "sheet": "load",
+            "x": 71,
+            "y": 61,
+            "rotation": 0,
+            "pad_nets": {
+              "1": [
+                1,
+                ""
+              ]
+            },
+            "side": "top",
+            "mirror": false,
+            "mod_path": "fixture/tht.kicad_mod"
+          },
+          {
+            "ref": "H1",
+            "value": "fixture H1",
+            "footprint": "MountingHole:fixture",
+            "sheet": "mechanical",
+            "x": 80,
+            "y": 65,
+            "rotation": 0,
+            "pad_nets": {
+              "1": [
+                1,
+                ""
+              ]
+            },
+            "side": "top",
+            "mirror": false,
+            "mod_path": "fixture/smd.kicad_mod"
+          },
+          {
+            "ref": "FID1",
+            "value": "fixture FID1",
+            "footprint": "Fiducial:Fiducial_1mm_Mask2mm",
+            "sheet": "fiducial",
+            "x": 80,
+            "y": 30,
+            "rotation": 0,
+            "pad_nets": {
+              "1": [
+                1,
+                ""
+              ]
+            },
+            "side": "top",
+            "mirror": false,
+            "mod_path": "fixture/smd.kicad_mod"
+          }
+        ]
+      },
+      "power": {
+        "regs": [
+          {
+            "n": 1,
+            "sheet": "regulator",
+            "ref": "U2",
+            "value": "fixture",
+            "kind": "buck",
+            "vin": "+VIN",
+            "vout": "+3V3",
+            "limit_a": 1,
+            "eff": 1,
+            "note": "",
+            "i_out": 0,
+            "i_in": 0
+          }
+        ],
+        "bridges": [
+          [
+            "regulator",
+            "RS1",
+            "+3V3",
+            "+3V3_ALIAS"
+          ]
+        ],
+        "rails": {},
+        "draws": {},
+        "errors": [],
+        "warnings": [],
+        "findings": [],
+        "notes": [],
+        "source_load": {}
+      },
+      "plan": {
+        "steps": [
+          {
+            "n": 1,
+            "slug": "bottom_smd",
+            "title": "Bottom-side SMD (paste + reflow)",
+            "insts": [
+              5,
+              2
+            ],
+            "notes": [
+              "pin-1 orientation (U2): dot per silkscreen"
+            ]
+          },
+          {
+            "n": 2,
+            "slug": "top_smd",
+            "title": "Top-side SMD (paste + reflow)",
+            "insts": [
+              1,
+              3
+            ],
+            "notes": []
+          },
+          {
+            "n": 3,
+            "slug": "tht",
+            "title": "Through-hole (short-to-tall)",
+            "insts": [
+              6
+            ],
+            "notes": [
+              "electrolytic polarity (C10): positive mark per silkscreen"
+            ]
+          },
+          {
+            "n": 4,
+            "slug": "connectors_mech",
+            "title": "Connectors + mechanical hardware",
+            "insts": [
+              7,
+              0,
+              4
+            ],
+            "notes": [
+              "J1 fixture J1: mating face toward the S board edge",
+              "J2: DF40C SoM receptacles \u2014 the SoM module mates onto them (bring-up section, mate phase)"
+            ]
+          }
+        ],
+        "phases": [
+          {
+            "n": 1,
+            "slug": "power_entry",
+            "title": "power entry (entry)",
+            "sheets": [
+              "entry"
+            ],
+            "insts": [
+              0,
+              1
+            ],
+            "checkpoints": [
+              "verify +VIN at TP1"
+            ],
+            "lead": ""
+          },
+          {
+            "n": 2,
+            "slug": "regulator",
+            "title": "regulator",
+            "sheets": [
+              "regulator"
+            ],
+            "insts": [
+              3,
+              2
+            ],
+            "checkpoints": [
+              "verify +3V3_ALIAS at TP2"
+            ],
+            "lead": ""
+          },
+          {
+            "n": 3,
+            "slug": "som_interface",
+            "title": "SoM interface (som_decoupling, som_j1)",
+            "sheets": [
+              "som_decoupling",
+              "som_j1"
+            ],
+            "insts": [
+              5,
+              4
+            ],
+            "checkpoints": [],
+            "lead": ""
+          },
+          {
+            "n": 4,
+            "slug": "som_mate",
+            "title": "SoM module mate",
+            "sheets": [],
+            "insts": [],
+            "checkpoints": [],
+            "lead": "No solder parts. Mate the SoM module onto J2 after the rail checkpoints above."
+          },
+          {
+            "n": 5,
+            "slug": "load",
+            "title": "load",
+            "sheets": [
+              "load"
+            ],
+            "insts": [
+              6
+            ],
+            "checkpoints": [],
+            "lead": ""
+          },
+          {
+            "n": 6,
+            "slug": "mechanical",
+            "title": "mechanical hardware (mechanical)",
+            "sheets": [
+              "mechanical"
+            ],
+            "insts": [
+              7
+            ],
+            "checkpoints": [],
+            "lead": ""
+          }
+        ]
+      },
+      "markdown": "# Assembly order \u2014 side_rotation\n\nBoard 60 x 45 mm. 8 placed parts (6 top / 2 bottom); 1 fiducials are bare-copper marks, excluded from every phase and step.\nSection A is the staged hand-assembly + bring-up order; section B is the PCBA process order. Every part appears in exactly one phase and exactly one step.\n\n## A. Incremental bring-up order\n\n| phase | section | parts | checkpoint |\n|---|---|---|---|\n| 1 | power entry (entry) | 2 | verify +VIN at TP1 |\n| 2 | regulator | 2 | verify +3V3_ALIAS at TP2 |\n| 3 | SoM interface (som_decoupling, som_j1) | 2 | \u2014 |\n| 4 | SoM module mate | 0 | \u2014 |\n| 5 | load | 1 | \u2014 |\n| 6 | mechanical hardware (mechanical) | 1 | \u2014 |\n\n### Phase 1 \u2014 power entry (entry)\n\n![phase 1](../renders/assembly/phase_01_power_entry.png)\n\n2 parts (2 top / 0 bottom)\n\n| ref | value | package | sheet |\n|---|---|---|---|\n| J1 | fixture J1 | small | entry |\n| TP1 | fixture TP1 | small | entry |\n\nCHECKPOINT: verify +VIN at TP1\n\n### Phase 2 \u2014 regulator\n\n![phase 2](../renders/assembly/phase_02_regulator.png)\n\n2 parts (1 top / 1 bottom)\n\n| ref | value | package | sheet |\n|---|---|---|---|\n| TP2 | fixture TP2 | small | regulator |\n| U2 | fixture U2 | small | regulator |\n\nCHECKPOINT: verify +3V3_ALIAS at TP2\n\n### Phase 3 \u2014 SoM interface (som_decoupling, som_j1)\n\n![phase 3](../renders/assembly/phase_03_som_interface.png)\n\n2 parts (1 top / 1 bottom)\n\n| ref | value | package | sheet |\n|---|---|---|---|\n| C2 | fixture C2 | small | som_decoupling |\n| J2 | fixture J2 | small | som_j1 |\n\n### Phase 4 \u2014 SoM module mate\n\n![phase 4](../renders/assembly/phase_04_som_mate.png)\n\nNo solder parts. Mate the SoM module onto J2 after the rail checkpoints above.\n\n### Phase 5 \u2014 load\n\n![phase 5](../renders/assembly/phase_05_load.png)\n\n1 parts (1 top / 0 bottom)\n\n| ref | value | package | sheet |\n|---|---|---|---|\n| C10 | fixture D10 | CP_fixture | load |\n\n### Phase 6 \u2014 mechanical hardware (mechanical)\n\n![phase 6](../renders/assembly/phase_06_mechanical.png)\n\n1 parts (1 top / 0 bottom)\n\n| ref | value | package | sheet |\n|---|---|---|---|\n| H1 | fixture H1 | fixture | mechanical |\n\n## B. Production process order\n\n### Step 1 \u2014 Bottom-side SMD (paste + reflow)\n\n![step 1](../renders/assembly/step_1_bottom_smd.png)\n\n2 parts (0 top / 2 bottom)\n\n| ref | value | package | sheet |\n|---|---|---|---|\n| C2 | fixture C2 | small | som_decoupling |\n| U2 | fixture U2 | small | regulator |\n\nNOTES: pin-1 orientation (U2): dot per silkscreen\n\n### Step 2 \u2014 Top-side SMD (paste + reflow)\n\n![step 2](../renders/assembly/step_2_top_smd.png)\n\n2 parts (2 top / 0 bottom)\n\n| ref | value | package | sheet |\n|---|---|---|---|\n| TP1 | fixture TP1 | small | entry |\n| TP2 | fixture TP2 | small | regulator |\n\n### Step 3 \u2014 Through-hole (short-to-tall)\n\n![step 3](../renders/assembly/step_3_tht.png)\n\nSorted short-to-tall by courtyard area (height proxy \u2014 no measured part heights in-tree).\n\n1 parts (1 top / 0 bottom)\n\n| ref | value | package | sheet |\n|---|---|---|---|\n| C10 | fixture D10 | CP_fixture | load |\n\nNOTES: electrolytic polarity (C10): positive mark per silkscreen\n\n### Step 4 \u2014 Connectors + mechanical hardware\n\n![step 4](../renders/assembly/step_4_connectors_mech.png)\n\n3 parts (3 top / 0 bottom)\n\n| ref | value | package | sheet | joint |\n|---|---|---|---|---|\n| H1 | fixture H1 | fixture | mechanical | SMD |\n| J1 | fixture J1 | small | entry | THT |\n| J2 | fixture J2 | small | som_j1 | SMD |\n\nNOTES: J1 fixture J1: mating face toward the S board edge\nNOTES: J2: DF40C SoM receptacles \u2014 the SoM module mates onto them (bring-up section, mate phase)\n\n",
+      "images": [
+        {
+          "filename": "step_1_bottom_smd.png",
+          "png_sha256": "443999bf43bffa4652ca396be9460de5850988090e940b877e43834e3df058ae",
+          "rgb_sha256": "6150c882c983727bd78fbec68302dadb24ac98c3bde9b5b8f8d2991432658d1c",
+          "width": 356,
+          "height": 281
+        },
+        {
+          "filename": "step_2_top_smd.png",
+          "png_sha256": "485b73a60ca9f4f6bb4f33fe4a88bfb72658df34f48424bf81d6304982ff638f",
+          "rgb_sha256": "b3c8088d7505712ece09af1d614b1bc4aefdab511a90cf4a6b3309082a74f889",
+          "width": 356,
+          "height": 281
+        },
+        {
+          "filename": "step_3_tht.png",
+          "png_sha256": "a09fc33772cd32fcffe1b4522570edf30e0cb19fbcbdb812166312ecfaed8528",
+          "rgb_sha256": "aef53fdb6ba36d87af9d22a4e268044f4448f0ea7688ee4aa133cfc397ab0cd6",
+          "width": 356,
+          "height": 281
+        },
+        {
+          "filename": "step_4_connectors_mech.png",
+          "png_sha256": "15372639a5b018d74d449a661e9962de1b69449221c862dd78d50f530e60b035",
+          "rgb_sha256": "f60c9103f1e8174b0eb6d1c3a3721743477ffab7d24bbb9204baf4ef48bfffb0",
+          "width": 356,
+          "height": 281
+        },
+        {
+          "filename": "phase_01_power_entry.png",
+          "png_sha256": "c25bedacd0ccb8f79ed3b24f80a8ad35739da26f9006ad2796fb9cc81da052f3",
+          "rgb_sha256": "671921d4b3cc9437e95415d453e524dd39162a238054fac0e86aee04a812d84b",
+          "width": 356,
+          "height": 281
+        },
+        {
+          "filename": "phase_02_regulator.png",
+          "png_sha256": "179fb5894cb19c98662f66d4781db4dfb771b389ed4c27288d754b42ab74142a",
+          "rgb_sha256": "91665eec761b7f3b065e96533746335e526f8606985412e569cab64675fe8da3",
+          "width": 356,
+          "height": 281
+        },
+        {
+          "filename": "phase_03_som_interface.png",
+          "png_sha256": "1c61e955474047c26d3049e5ae685463148ee7257f887ecce745e9ff0f0cc87a",
+          "rgb_sha256": "04fd5923c52b5dc3376cccec5071cabe5ac2138c2f551c05c0b38470559b7cb6",
+          "width": 356,
+          "height": 281
+        },
+        {
+          "filename": "phase_04_som_mate.png",
+          "png_sha256": "bb9b23e365fafb84090689ac9c225a89ce4a3f0181ae1da2f6ea52db2dbceac0",
+          "rgb_sha256": "e0d21235687b955d97628ad159d9bfeca169ee309154e54a97038410b25e4b36",
+          "width": 356,
+          "height": 281
+        },
+        {
+          "filename": "phase_05_load.png",
+          "png_sha256": "8542cd618b5ebc04f386bd897dade3c67ba22335dc9d7bff55e4e01070afffcd",
+          "rgb_sha256": "d800752b6e3b8e2dce4fb08fa393d2942d18ea5a29908931e3b5a32798932893",
+          "width": 356,
+          "height": 281
+        },
+        {
+          "filename": "phase_06_mechanical.png",
+          "png_sha256": "0ad936d747364aeb546581a461dd954d550e7a6d12b15217c89287c6795dc40d",
+          "rgb_sha256": "608188b0c7412d0f517399f21df7aaf043076141d6701411e07012bc6a9e9655",
+          "width": 356,
+          "height": 281
+        }
+      ]
+    },
+    {
+      "name": "upstream_change",
+      "model": {
+        "board_w": 60,
+        "board_h": 45,
+        "net_numbers": {
+          "+VIN": 1,
+          "+3V3": 2
+        },
+        "netclass_of": {
+          "+VIN": "POWER",
+          "+3V3": "POWER",
+          "+3V3_ALIAS": "POWER"
+        },
+        "classes": {},
+        "placed": 9,
+        "deferred": [],
+        "som_keepout": [
+          53,
+          43,
+          67,
+          57
+        ],
+        "som_core": [
+          54,
+          44,
+          66,
+          56
+        ],
+        "insts": [
+          {
+            "ref": "J1",
+            "value": "fixture J1",
+            "footprint": "Fixture:small",
+            "sheet": "entry",
+            "x": 29,
+            "y": 30,
+            "rotation": 0,
+            "pad_nets": {
+              "1": [
+                1,
+                "+VIN"
+              ]
+            },
+            "side": "top",
+            "mirror": false,
+            "mod_path": "fixture/XT60PW-M.kicad_mod"
+          },
+          {
+            "ref": "TP1",
+            "value": "fixture TP1",
+            "footprint": "Fixture:small",
+            "sheet": "entry",
+            "x": 33,
+            "y": 30,
+            "rotation": 0,
+            "pad_nets": {
+              "1": [
+                1,
+                "+VIN"
+              ]
+            },
+            "side": "top",
+            "mirror": false,
+            "mod_path": "fixture/smd.kicad_mod"
+          },
+          {
+            "ref": "U2",
+            "value": "fixture U2",
+            "footprint": "Fixture:small",
+            "sheet": "regulator",
+            "x": 42,
+            "y": 38,
+            "rotation": 0,
+            "pad_nets": {
+              "1": [
+                1,
+                "+3V3"
+              ]
+            },
+            "side": "top",
+            "mirror": false,
+            "mod_path": "fixture/smd.kicad_mod"
+          },
+          {
+            "ref": "TP2",
+            "value": "fixture TP2",
+            "footprint": "Fixture:small",
+            "sheet": "regulator",
+            "x": 47,
+            "y": 38,
+            "rotation": 0,
+            "pad_nets": {
+              "1": [
+                1,
+                "+3V3_ALIAS"
+              ]
+            },
+            "side": "top",
+            "mirror": false,
+            "mod_path": "fixture/smd.kicad_mod"
+          },
+          {
+            "ref": "J2",
+            "value": "fixture J2",
+            "footprint": "Fixture:small",
+            "sheet": "som_j1",
+            "x": 60,
+            "y": 47,
+            "rotation": 0,
+            "pad_nets": {
+              "1": [
+                1,
+                "+3V3"
+              ]
+            },
+            "side": "top",
+            "mirror": false,
+            "mod_path": "fixture/smd.kicad_mod"
+          },
+          {
+            "ref": "C2",
+            "value": "fixture C2",
+            "footprint": "Fixture:small",
+            "sheet": "som_decoupling",
+            "x": 61,
+            "y": 52,
+            "rotation": 0,
+            "pad_nets": {
+              "1": [
+                1,
+                "+3V3"
+              ]
+            },
+            "side": "bottom",
+            "mirror": false,
+            "mod_path": "fixture/smd.kicad_mod"
+          },
+          {
+            "ref": "D10",
+            "value": "fixture D10",
+            "footprint": "Fixture:small",
+            "sheet": "load",
+            "x": 71,
+            "y": 61,
+            "rotation": 0,
+            "pad_nets": {
+              "1": [
+                1,
+                ""
+              ]
+            },
+            "side": "top",
+            "mirror": false,
+            "mod_path": "fixture/tht.kicad_mod"
+          },
+          {
+            "ref": "H1",
+            "value": "fixture H1",
+            "footprint": "MountingHole:fixture",
+            "sheet": "mechanical",
+            "x": 80,
+            "y": 65,
+            "rotation": 0,
+            "pad_nets": {
+              "1": [
+                1,
+                ""
+              ]
+            },
+            "side": "top",
+            "mirror": false,
+            "mod_path": "fixture/smd.kicad_mod"
+          },
+          {
+            "ref": "FID1",
+            "value": "fixture FID1",
+            "footprint": "Fiducial:Fiducial_1mm_Mask2mm",
+            "sheet": "fiducial",
+            "x": 80,
+            "y": 30,
+            "rotation": 0,
+            "pad_nets": {
+              "1": [
+                1,
+                ""
+              ]
+            },
+            "side": "top",
+            "mirror": false,
+            "mod_path": "fixture/smd.kicad_mod"
+          }
+        ]
+      },
+      "power": {
+        "regs": [
+          {
+            "n": 1,
+            "sheet": "regulator",
+            "ref": "U2",
+            "value": "fixture",
+            "kind": "buck",
+            "vin": "+OTHER",
+            "vout": "+3V3",
+            "limit_a": 1,
+            "eff": 1,
+            "note": "",
+            "i_out": 0,
+            "i_in": 0
+          }
+        ],
+        "bridges": [],
+        "rails": {},
+        "draws": {},
+        "errors": [],
+        "warnings": [],
+        "findings": [],
+        "notes": [],
+        "source_load": {}
+      },
+      "plan": {
+        "steps": [
+          {
+            "n": 1,
+            "slug": "bottom_smd",
+            "title": "Bottom-side SMD (paste + reflow)",
+            "insts": [
+              5
+            ],
+            "notes": []
+          },
+          {
+            "n": 2,
+            "slug": "top_smd",
+            "title": "Top-side SMD (paste + reflow)",
+            "insts": [
+              1,
+              3,
+              2
+            ],
+            "notes": [
+              "pin-1 orientation (U2): dot per silkscreen"
+            ]
+          },
+          {
+            "n": 3,
+            "slug": "tht",
+            "title": "Through-hole (short-to-tall)",
+            "insts": [
+              6
+            ],
+            "notes": [
+              "diode polarity (D10): cathode per silkscreen"
+            ]
+          },
+          {
+            "n": 4,
+            "slug": "connectors_mech",
+            "title": "Connectors + mechanical hardware",
+            "insts": [
+              7,
+              0,
+              4
+            ],
+            "notes": [
+              "J1 fixture J1: mating face toward the E board edge",
+              "J2: DF40C SoM receptacles \u2014 the SoM module mates onto them (bring-up section, mate phase)"
+            ]
+          }
+        ],
+        "phases": [
+          {
+            "n": 1,
+            "slug": "regulator",
+            "title": "regulator",
+            "sheets": [
+              "regulator"
+            ],
+            "insts": [
+              3,
+              2
+            ],
+            "checkpoints": [],
+            "lead": ""
+          },
+          {
+            "n": 2,
+            "slug": "som_interface",
+            "title": "SoM interface (som_decoupling, som_j1)",
+            "sheets": [
+              "som_decoupling",
+              "som_j1"
+            ],
+            "insts": [
+              5,
+              4
+            ],
+            "checkpoints": [],
+            "lead": ""
+          },
+          {
+            "n": 3,
+            "slug": "som_mate",
+            "title": "SoM module mate",
+            "sheets": [],
+            "insts": [],
+            "checkpoints": [],
+            "lead": "No solder parts. Mate the SoM module onto J2 after the rail checkpoints above."
+          },
+          {
+            "n": 4,
+            "slug": "entry",
+            "title": "entry",
+            "sheets": [
+              "entry"
+            ],
+            "insts": [
+              0,
+              1
+            ],
+            "checkpoints": [
+              "verify +VIN at TP1"
+            ],
+            "lead": ""
+          },
+          {
+            "n": 5,
+            "slug": "load",
+            "title": "load",
+            "sheets": [
+              "load"
+            ],
+            "insts": [
+              6
+            ],
+            "checkpoints": [],
+            "lead": ""
+          },
+          {
+            "n": 6,
+            "slug": "mechanical",
+            "title": "mechanical hardware (mechanical)",
+            "sheets": [
+              "mechanical"
+            ],
+            "insts": [
+              7
+            ],
+            "checkpoints": [],
+            "lead": ""
+          }
+        ]
+      },
+      "markdown": "# Assembly order \u2014 upstream_change\n\nBoard 60 x 45 mm. 8 placed parts (7 top / 1 bottom); 1 fiducials are bare-copper marks, excluded from every phase and step.\nSection A is the staged hand-assembly + bring-up order; section B is the PCBA process order. Every part appears in exactly one phase and exactly one step.\n\n## A. Incremental bring-up order\n\n| phase | section | parts | checkpoint |\n|---|---|---|---|\n| 1 | regulator | 2 | \u2014 |\n| 2 | SoM interface (som_decoupling, som_j1) | 2 | \u2014 |\n| 3 | SoM module mate | 0 | \u2014 |\n| 4 | entry | 2 | verify +VIN at TP1 |\n| 5 | load | 1 | \u2014 |\n| 6 | mechanical hardware (mechanical) | 1 | \u2014 |\n\n### Phase 1 \u2014 regulator\n\n![phase 1](../renders/assembly/phase_01_regulator.png)\n\n2 parts (2 top / 0 bottom)\n\n| ref | value | package | sheet |\n|---|---|---|---|\n| TP2 | fixture TP2 | small | regulator |\n| U2 | fixture U2 | small | regulator |\n\n### Phase 2 \u2014 SoM interface (som_decoupling, som_j1)\n\n![phase 2](../renders/assembly/phase_02_som_interface.png)\n\n2 parts (1 top / 1 bottom)\n\n| ref | value | package | sheet |\n|---|---|---|---|\n| C2 | fixture C2 | small | som_decoupling |\n| J2 | fixture J2 | small | som_j1 |\n\n### Phase 3 \u2014 SoM module mate\n\n![phase 3](../renders/assembly/phase_03_som_mate.png)\n\nNo solder parts. Mate the SoM module onto J2 after the rail checkpoints above.\n\n### Phase 4 \u2014 entry\n\n![phase 4](../renders/assembly/phase_04_entry.png)\n\n2 parts (2 top / 0 bottom)\n\n| ref | value | package | sheet |\n|---|---|---|---|\n| J1 | fixture J1 | small | entry |\n| TP1 | fixture TP1 | small | entry |\n\nCHECKPOINT: verify +VIN at TP1\n\n### Phase 5 \u2014 load\n\n![phase 5](../renders/assembly/phase_05_load.png)\n\n1 parts (1 top / 0 bottom)\n\n| ref | value | package | sheet |\n|---|---|---|---|\n| D10 | fixture D10 | small | load |\n\n### Phase 6 \u2014 mechanical hardware (mechanical)\n\n![phase 6](../renders/assembly/phase_06_mechanical.png)\n\n1 parts (1 top / 0 bottom)\n\n| ref | value | package | sheet |\n|---|---|---|---|\n| H1 | fixture H1 | fixture | mechanical |\n\n## B. Production process order\n\n### Step 1 \u2014 Bottom-side SMD (paste + reflow)\n\n![step 1](../renders/assembly/step_1_bottom_smd.png)\n\n1 parts (0 top / 1 bottom)\n\n| ref | value | package | sheet |\n|---|---|---|---|\n| C2 | fixture C2 | small | som_decoupling |\n\n### Step 2 \u2014 Top-side SMD (paste + reflow)\n\n![step 2](../renders/assembly/step_2_top_smd.png)\n\n3 parts (3 top / 0 bottom)\n\n| ref | value | package | sheet |\n|---|---|---|---|\n| TP1 | fixture TP1 | small | entry |\n| TP2 | fixture TP2 | small | regulator |\n| U2 | fixture U2 | small | regulator |\n\nNOTES: pin-1 orientation (U2): dot per silkscreen\n\n### Step 3 \u2014 Through-hole (short-to-tall)\n\n![step 3](../renders/assembly/step_3_tht.png)\n\nSorted short-to-tall by courtyard area (height proxy \u2014 no measured part heights in-tree).\n\n1 parts (1 top / 0 bottom)\n\n| ref | value | package | sheet |\n|---|---|---|---|\n| D10 | fixture D10 | small | load |\n\nNOTES: diode polarity (D10): cathode per silkscreen\n\n### Step 4 \u2014 Connectors + mechanical hardware\n\n![step 4](../renders/assembly/step_4_connectors_mech.png)\n\n3 parts (3 top / 0 bottom)\n\n| ref | value | package | sheet | joint |\n|---|---|---|---|---|\n| H1 | fixture H1 | fixture | mechanical | SMD |\n| J1 | fixture J1 | small | entry | THT |\n| J2 | fixture J2 | small | som_j1 | SMD |\n\nNOTES: J1 fixture J1: mating face toward the E board edge\nNOTES: J2: DF40C SoM receptacles \u2014 the SoM module mates onto them (bring-up section, mate phase)\n\n",
+      "images": [
+        {
+          "filename": "step_1_bottom_smd.png",
+          "png_sha256": "a1b05e61afaf3eacf05e03aeefdb8b86e670284842d732ec4d7b6fdf3e0de421",
+          "rgb_sha256": "3d1a6e44c7908794d76e15eb3ee6ba58ba63210b2140dcb4f4973ef7631385dd",
+          "width": 356,
+          "height": 281
+        },
+        {
+          "filename": "step_2_top_smd.png",
+          "png_sha256": "41832206000b66cd5cd947ac517767fd86ff0d760970d55c27dc3afe26639d6e",
+          "rgb_sha256": "a1e27f1cea86d49b9bd7940221c5c08f01a03e45e729e5c8f26cdb0eadf8f791",
+          "width": 356,
+          "height": 281
+        },
+        {
+          "filename": "step_3_tht.png",
+          "png_sha256": "2207ddd075aa69be49dcfbdea5bf769c32f0e3a7af5abd7b9183eae2d5409ba3",
+          "rgb_sha256": "724143a29d9b2f7996cd2f67c201a034240caf16ded526878705069a76141bc8",
+          "width": 356,
+          "height": 281
+        },
+        {
+          "filename": "step_4_connectors_mech.png",
+          "png_sha256": "0f869c452d0d631ba85fb4bdfd9876af2dfeee1d63c1a54ff8c8adbfeb472008",
+          "rgb_sha256": "81bcfcb2be93cd9d7d98752e6a7dc33467829f641be9e11d517c03ca75972135",
+          "width": 356,
+          "height": 281
+        },
+        {
+          "filename": "phase_01_regulator.png",
+          "png_sha256": "941ed8b935f14319c23df2adcd5d2fb9911f733baa28515c480edaf06d852b79",
+          "rgb_sha256": "06586a5f75ce0103e3e28e21697e24757b8643959c645ff30781111ec99b384a",
+          "width": 356,
+          "height": 281
+        },
+        {
+          "filename": "phase_02_som_interface.png",
+          "png_sha256": "920db3b856358e16444d87f60cb5cc58d6e7601869e3fdb1e5f3660d595c5059",
+          "rgb_sha256": "e56ade833f7e1c7aa2892977af8cba0c7f89aa7d5cdf962f3b5c271fa70b3593",
+          "width": 356,
+          "height": 281
+        },
+        {
+          "filename": "phase_03_som_mate.png",
+          "png_sha256": "29140902576b1d776b6f3b12b92d0d55119f7c38518cf83d7ef395546fb48db1",
+          "rgb_sha256": "ba0f9e3ddea61721563eaa897d8d43f36964d0b5786194ecf6e4fb2620f723dd",
+          "width": 356,
+          "height": 281
+        },
+        {
+          "filename": "phase_04_entry.png",
+          "png_sha256": "86648316ac3a3b9140fe02c39c9b7cc473b6eab0746f777c1b581acd50db1b16",
+          "rgb_sha256": "bcef716acd047efd914a2968b6123c584999659437ecce5cb9e9cbbbd33d2250",
+          "width": 356,
+          "height": 281
+        },
+        {
+          "filename": "phase_05_load.png",
+          "png_sha256": "438057d1c01da8e28cf6f74851cb9354535d62a76a3e76a86c27c8f9d43c481c",
+          "rgb_sha256": "d122b309dc4f1a89e9da81ace49ce57d49aee892826c011fcd97cc9039ba301e",
+          "width": 356,
+          "height": 281
+        },
+        {
+          "filename": "phase_06_mechanical.png",
+          "png_sha256": "bf0449d1e4f52fd037a757960e6de971960f5fab953d27ea6e43f09129f7c1b7",
+          "rgb_sha256": "0aa0672b8c8ba369b129411d96e39f078fb2aff45d7a12ff3d5ec2b83c31269f",
+          "width": 356,
+          "height": 281
+        }
+      ]
+    },
+    {
+      "name": "duplicate_ref",
+      "model": {
+        "board_w": 60,
+        "board_h": 45,
+        "net_numbers": {
+          "+VIN": 1,
+          "+3V3": 2
+        },
+        "netclass_of": {
+          "+VIN": "POWER",
+          "+3V3": "POWER",
+          "+3V3_ALIAS": "POWER"
+        },
+        "classes": {},
+        "placed": 9,
+        "deferred": [],
+        "som_keepout": [
+          53,
+          43,
+          67,
+          57
+        ],
+        "som_core": [
+          54,
+          44,
+          66,
+          56
+        ],
+        "insts": [
+          {
+            "ref": "J1",
+            "value": "fixture J1",
+            "footprint": "Fixture:small",
+            "sheet": "entry",
+            "x": 29,
+            "y": 30,
+            "rotation": 0,
+            "pad_nets": {
+              "1": [
+                1,
+                "+VIN"
+              ]
+            },
+            "side": "top",
+            "mirror": false,
+            "mod_path": "fixture/XT60PW-M.kicad_mod"
+          },
+          {
+            "ref": "J1",
+            "value": "fixture TP1",
+            "footprint": "Fixture:small",
+            "sheet": "entry",
+            "x": 33,
+            "y": 30,
+            "rotation": 0,
+            "pad_nets": {
+              "1": [
+                1,
+                "+VIN"
+              ]
+            },
+            "side": "top",
+            "mirror": false,
+            "mod_path": "fixture/smd.kicad_mod"
+          },
+          {
+            "ref": "U2",
+            "value": "fixture U2",
+            "footprint": "Fixture:small",
+            "sheet": "regulator",
+            "x": 42,
+            "y": 38,
+            "rotation": 0,
+            "pad_nets": {
+              "1": [
+                1,
+                "+3V3"
+              ]
+            },
+            "side": "top",
+            "mirror": false,
+            "mod_path": "fixture/smd.kicad_mod"
+          },
+          {
+            "ref": "TP2",
+            "value": "fixture TP2",
+            "footprint": "Fixture:small",
+            "sheet": "regulator",
+            "x": 47,
+            "y": 38,
+            "rotation": 0,
+            "pad_nets": {
+              "1": [
+                1,
+                "+3V3_ALIAS"
+              ]
+            },
+            "side": "top",
+            "mirror": false,
+            "mod_path": "fixture/smd.kicad_mod"
+          },
+          {
+            "ref": "J2",
+            "value": "fixture J2",
+            "footprint": "Fixture:small",
+            "sheet": "som_j1",
+            "x": 60,
+            "y": 47,
+            "rotation": 0,
+            "pad_nets": {
+              "1": [
+                1,
+                "+3V3"
+              ]
+            },
+            "side": "top",
+            "mirror": false,
+            "mod_path": "fixture/smd.kicad_mod"
+          },
+          {
+            "ref": "C2",
+            "value": "fixture C2",
+            "footprint": "Fixture:small",
+            "sheet": "som_decoupling",
+            "x": 61,
+            "y": 52,
+            "rotation": 0,
+            "pad_nets": {
+              "1": [
+                1,
+                "+3V3"
+              ]
+            },
+            "side": "bottom",
+            "mirror": false,
+            "mod_path": "fixture/smd.kicad_mod"
+          },
+          {
+            "ref": "D10",
+            "value": "fixture D10",
+            "footprint": "Fixture:small",
+            "sheet": "load",
+            "x": 71,
+            "y": 61,
+            "rotation": 0,
+            "pad_nets": {
+              "1": [
+                1,
+                ""
+              ]
+            },
+            "side": "top",
+            "mirror": false,
+            "mod_path": "fixture/tht.kicad_mod"
+          },
+          {
+            "ref": "H1",
+            "value": "fixture H1",
+            "footprint": "MountingHole:fixture",
+            "sheet": "mechanical",
+            "x": 80,
+            "y": 65,
+            "rotation": 0,
+            "pad_nets": {
+              "1": [
+                1,
+                ""
+              ]
+            },
+            "side": "top",
+            "mirror": false,
+            "mod_path": "fixture/smd.kicad_mod"
+          },
+          {
+            "ref": "FID1",
+            "value": "fixture FID1",
+            "footprint": "Fiducial:Fiducial_1mm_Mask2mm",
+            "sheet": "fiducial",
+            "x": 80,
+            "y": 30,
+            "rotation": 0,
+            "pad_nets": {
+              "1": [
+                1,
+                ""
+              ]
+            },
+            "side": "top",
+            "mirror": false,
+            "mod_path": "fixture/smd.kicad_mod"
+          }
+        ]
+      },
+      "power": {
+        "regs": [
+          {
+            "n": 1,
+            "sheet": "regulator",
+            "ref": "U2",
+            "value": "fixture",
+            "kind": "buck",
+            "vin": "+VIN",
+            "vout": "+3V3",
+            "limit_a": 1,
+            "eff": 1,
+            "note": "",
+            "i_out": 0,
+            "i_in": 0
+          }
+        ],
+        "bridges": [
+          [
+            "regulator",
+            "RS1",
+            "+3V3",
+            "+3V3_ALIAS"
+          ]
+        ],
+        "rails": {},
+        "draws": {},
+        "errors": [],
+        "warnings": [],
+        "findings": [],
+        "notes": [],
+        "source_load": {}
+      },
+      "error": "step partition: J1 appears in steps 4 and 4"
+    },
+    {
+      "name": "empty",
+      "model": {
+        "board_w": 60,
+        "board_h": 45,
+        "net_numbers": {
+          "+VIN": 1,
+          "+3V3": 2
+        },
+        "netclass_of": {
+          "+VIN": "POWER",
+          "+3V3": "POWER",
+          "+3V3_ALIAS": "POWER"
+        },
+        "classes": {},
+        "placed": 0,
+        "deferred": [],
+        "som_keepout": null,
+        "som_core": [
+          54,
+          44,
+          66,
+          56
+        ],
+        "insts": []
+      },
+      "power": {
+        "regs": [
+          {
+            "n": 1,
+            "sheet": "regulator",
+            "ref": "U2",
+            "value": "fixture",
+            "kind": "buck",
+            "vin": "+VIN",
+            "vout": "+3V3",
+            "limit_a": 1,
+            "eff": 1,
+            "note": "",
+            "i_out": 0,
+            "i_in": 0
+          }
+        ],
+        "bridges": [
+          [
+            "regulator",
+            "RS1",
+            "+3V3",
+            "+3V3_ALIAS"
+          ]
+        ],
+        "rails": {},
+        "draws": {},
+        "errors": [],
+        "warnings": [],
+        "findings": [],
+        "notes": [],
+        "source_load": {}
+      },
+      "plan": {
+        "steps": [
+          {
+            "n": 1,
+            "slug": "bottom_smd",
+            "title": "Bottom-side SMD (paste + reflow)",
+            "insts": [],
+            "notes": []
+          },
+          {
+            "n": 2,
+            "slug": "top_smd",
+            "title": "Top-side SMD (paste + reflow)",
+            "insts": [],
+            "notes": []
+          },
+          {
+            "n": 3,
+            "slug": "tht",
+            "title": "Through-hole (short-to-tall)",
+            "insts": [],
+            "notes": []
+          },
+          {
+            "n": 4,
+            "slug": "connectors_mech",
+            "title": "Connectors + mechanical hardware",
+            "insts": [],
+            "notes": []
+          }
+        ],
+        "phases": []
+      },
+      "markdown": "# Assembly order \u2014 empty\n\nBoard 60 x 45 mm. 0 placed parts (0 top / 0 bottom); 0 fiducials are bare-copper marks, excluded from every phase and step.\nSection A is the staged hand-assembly + bring-up order; section B is the PCBA process order. Every part appears in exactly one phase and exactly one step.\n\n## A. Incremental bring-up order\n\n| phase | section | parts | checkpoint |\n|---|---|---|---|\n\n## B. Production process order\n\n### Step 1 \u2014 Bottom-side SMD (paste + reflow)\n\n![step 1](../renders/assembly/step_1_bottom_smd.png)\n\nNo parts in this step on this board.\n\n### Step 2 \u2014 Top-side SMD (paste + reflow)\n\n![step 2](../renders/assembly/step_2_top_smd.png)\n\nNo parts in this step on this board.\n\n### Step 3 \u2014 Through-hole (short-to-tall)\n\n![step 3](../renders/assembly/step_3_tht.png)\n\nNo parts in this step on this board.\n\n### Step 4 \u2014 Connectors + mechanical hardware\n\n![step 4](../renders/assembly/step_4_connectors_mech.png)\n\nNo parts in this step on this board.\n\n",
+      "images": [
+        {
+          "filename": "step_1_bottom_smd.png",
+          "png_sha256": "4679b9321a7c6ba3c83cb0b2ccbe13df45dfe4ffc2c8b95466cd5f22d269bfda",
+          "rgb_sha256": "86ed7e9e039ffd90008bcc56650846b3bd63d644aa82370e7dc3e3f47101018f",
+          "width": 356,
+          "height": 281
+        },
+        {
+          "filename": "step_2_top_smd.png",
+          "png_sha256": "c7d390a9e95e88dc5d12ec088ca6040c0c1295f5f606bf7602ccc8f472277170",
+          "rgb_sha256": "b6bb74c0e2a4cc258d7422a8a1c8942a171696ebd2e235eaa650ef0ada163e2a",
+          "width": 356,
+          "height": 281
+        },
+        {
+          "filename": "step_3_tht.png",
+          "png_sha256": "b8792e43bd06867fbe00372f969556073b5eca9af8c3fd7f182d6550242b50ec",
+          "rgb_sha256": "690241106bd2d4408bfe7f59f83e21d3497b2f3da4f97ae609fe58d72b258b65",
+          "width": 356,
+          "height": 281
+        },
+        {
+          "filename": "step_4_connectors_mech.png",
+          "png_sha256": "3b9e450f95655fc977635552e7beee4006f82d3e27df75617ccd88ce4cc532f7",
+          "rgb_sha256": "da0a17e86e2ba865b7c90a794e4d5ad3fff66a3a7f97db5ab16dcd8786a46cc4",
+          "width": 356,
+          "height": 281
+        }
+      ]
+    }
+  ],
+  "si": [
+    {
+      "name": "base",
+      "sheets": [
+        {
+          "name": "fixture",
+          "circuit": {
+            "schema": "schgen.circuit/1",
+            "name": "fixture",
+            "title": "fixture",
+            "parts": [],
+            "nets": [
+              {
+                "name": "D_P",
+                "net_class": "port",
+                "pins": []
+              },
+              {
+                "name": "D_N",
+                "net_class": "port",
+                "pins": []
+              },
+              {
+                "name": "E_P",
+                "net_class": "port",
+                "pins": []
+              },
+              {
+                "name": "E_N",
+                "net_class": "port",
+                "pins": []
+              }
+            ],
+            "nc": [],
+            "port_types": {
+              "D_P": {
+                "kind": "diff_pair",
+                "pair_with": "D_N",
+                "impedance": 100,
+                "role": null,
+                "bus": null,
+                "speed_hz": null,
+                "level_v": null,
+                "expect": null
+              },
+              "D_N": {
+                "kind": "diff_pair",
+                "pair_with": "D_P",
+                "impedance": 100,
+                "role": null,
+                "bus": null,
+                "speed_hz": null,
+                "level_v": null,
+                "expect": null
+              },
+              "E_P": {
+                "kind": "diff_pair",
+                "pair_with": "E_N",
+                "impedance": 100,
+                "role": null,
+                "bus": null,
+                "speed_hz": null,
+                "level_v": null,
+                "expect": null
+              },
+              "E_N": {
+                "kind": "diff_pair",
+                "pair_with": "E_P",
+                "impedance": 100,
+                "role": null,
+                "bus": null,
+                "speed_hz": null,
+                "level_v": null,
+                "expect": null
+              }
+            },
+            "hints": {},
+            "loads": {},
+            "tp_waivers": {},
+            "decap_waivers": {},
+            "pull_waivers": {},
+            "reset_waivers": {},
+            "strap_waivers": {},
+            "ep_waivers": {},
+            "thermal_waivers": {},
+            "part_rule_waivers": {}
+          }
+        }
+      ],
+      "spec": {
+        "pairs": [
+          {
+            "interface": "USB / bus",
+            "signal": "data",
+            "net_p": "D_P",
+            "net_n": "D_N",
+            "z_diff_ohm": 100,
+            "match_tol_mil": 10.25,
+            "intra_pair_skew_mil": 0.5,
+            "ac_coupled": false,
+            "spec_cite": "fixture cite",
+            "notes": ""
+          },
+          {
+            "interface": "USB / bus",
+            "signal": "data2",
+            "net_p": "E_P",
+            "net_n": "E_N",
+            "z_diff_ohm": 100,
+            "match_tol_mil": 5.125,
+            "intra_pair_skew_mil": 1.25,
+            "ac_coupled": true,
+            "spec_cite": "other cite",
+            "notes": ""
+          }
+        ]
+      },
+      "markdown": "# Signal-Integrity Constraints \u2014 Zynq Carrier\n\nGENERATED by `schgen/generate/si_constraints.py` (do not hand-edit).\nSource of targets: `carrier/research/si_spec.json` (researched, standard-cited); pairs are harvested from the schematic's typed ports (`c.port_type(kind=..., pair_with=..., impedance=...)`) so this table only lists pairs that actually exist on the board.\n\n**2 differential pairs** in **1 length-match groups**. These are CONSTRAINTS for the layout engineer / KiCad DRC \u2014 no routing is implied. The matching rules are also emitted into `Zynq_Carrier_pcb.kicad_dru` (KiCad design rules).\n\n## Stackup\n\nJLCPCB JLC04161H-7628, 4-layer 1.6 mm (Sig / GND / PWR / Sig). Diff-pair trace geometry (width/gap) per class lives in the `.kicad_pro` net_settings + `.kicad_dru`: 90R = 0.2611/0.2032 mm, 100R = 0.2052/0.2032 mm (JLCPCB impedance calculator, this stackup).\n\n## Differential pairs\n\n| Interface | Signal | net_p | net_n | Z_diff (ohm) | Intra-pair skew | Length-match group | Group tol | AC-coupled | Net class | Spec |\n|---|---|---|---|---|---|---|---|---|---|---|\n| USB / bus | data | `D_P` | `D_N` | 100 | +/-0.5 mil (0.0127 mm) | LM_USB_BUS | +/-5.125 mil (0.1302 mm) | no | DP100_DIFF | fixture cite |\n| USB / bus | data2 | `E_P` | `E_N` | 100 | +/-1.25 mil (0.0318 mm) | LM_USB_BUS | +/-5.125 mil (0.1302 mm) | yes | DP100_DIFF | other cite |\n\n## Length-match groups\n\nEach group's pairs must be length-matched **to each other** (inter-pair) to the group tolerance; within every pair, P and N match to the intra-pair skew above.\n\n| Group | Interface | Pairs | Group match tol | Members |\n|---|---|---|---|---|\n| LM_USB_BUS | USB / bus | 2 | +/-5.125 mil (0.1302 mm) | `D_P`/`D_N`, `E_P`/`E_N` |\n",
+      "rules": "(version 1)\n\n# ==== SI CONSTRAINTS (schgen/generate/si_constraints.py) ====\n# Differential-pair + matched-length rules harvested from the schematic's\n# typed ports and joined to carrier/research/si_spec.json (researched\n# targets, standard-cited). Intra-pair skew = P/N length match within a\n# pair; group length = inter-pair match across a port/bus. Enforced by\n# KiCad DRC once the pairs are routed. NOT routing \u2014 constraints only.\n\n(rule \"intra_skew_D_P\"\n  # USB / bus \u2014 data; Zdiff 100ohm; DC-coupled\n  # spec: fixture cite\n  (condition \"(A.NetName == 'D_P' && B.NetName == 'D_N') || (A.NetName == 'D_N' && B.NetName == 'D_P')\")\n  (constraint skew (max 0.0127mm))\n)\n\n(rule \"intra_skew_E_P\"\n  # USB / bus \u2014 data2; Zdiff 100ohm; AC-coupled\n  # spec: other cite\n  (condition \"(A.NetName == 'E_P' && B.NetName == 'E_N') || (A.NetName == 'E_N' && B.NetName == 'E_P')\")\n  (constraint skew (max 0.0318mm))\n)\n\n(rule \"lenmatch_LM_USB_BUS\"\n  # USB / bus: 2 pair(s) length-matched as a group (inter-pair), tol +/-5.125 mil\n  (condition \"A.NetName == 'D_P' || A.NetName == 'D_N' || A.NetName == 'E_P' || A.NetName == 'E_N'\")\n  (constraint skew (max 0.1302mm))\n)\n\n",
+      "summary": "SI constraints: 2 diff pairs, 1 length-match groups emitted \u2014 every declared pair covered.",
+      "ok": true
+    },
+    {
+      "name": "uncovered",
+      "sheets": [
+        {
+          "name": "fixture",
+          "circuit": {
+            "schema": "schgen.circuit/1",
+            "name": "fixture",
+            "title": "fixture",
+            "parts": [],
+            "nets": [
+              {
+                "name": "D_P",
+                "net_class": "port",
+                "pins": []
+              },
+              {
+                "name": "D_N",
+                "net_class": "port",
+                "pins": []
+              },
+              {
+                "name": "E_P",
+                "net_class": "port",
+                "pins": []
+              },
+              {
+                "name": "E_N",
+                "net_class": "port",
+                "pins": []
+              }
+            ],
+            "nc": [],
+            "port_types": {
+              "D_P": {
+                "kind": "diff_pair",
+                "pair_with": "D_N",
+                "impedance": 100,
+                "role": null,
+                "bus": null,
+                "speed_hz": null,
+                "level_v": null,
+                "expect": null
+              },
+              "D_N": {
+                "kind": "diff_pair",
+                "pair_with": "D_P",
+                "impedance": 100,
+                "role": null,
+                "bus": null,
+                "speed_hz": null,
+                "level_v": null,
+                "expect": null
+              },
+              "E_P": {
+                "kind": "diff_pair",
+                "pair_with": "E_N",
+                "impedance": 100,
+                "role": null,
+                "bus": null,
+                "speed_hz": null,
+                "level_v": null,
+                "expect": null
+              },
+              "E_N": {
+                "kind": "diff_pair",
+                "pair_with": "E_P",
+                "impedance": 100,
+                "role": null,
+                "bus": null,
+                "speed_hz": null,
+                "level_v": null,
+                "expect": null
+              }
+            },
+            "hints": {},
+            "loads": {},
+            "tp_waivers": {},
+            "decap_waivers": {},
+            "pull_waivers": {},
+            "reset_waivers": {},
+            "strap_waivers": {},
+            "ep_waivers": {},
+            "thermal_waivers": {},
+            "part_rule_waivers": {}
+          }
+        }
+      ],
+      "spec": {
+        "pairs": [
+          {
+            "interface": "USB / bus",
+            "signal": "data",
+            "net_p": "D_P",
+            "net_n": "D_N",
+            "z_diff_ohm": 100,
+            "match_tol_mil": 10.25,
+            "intra_pair_skew_mil": 0.5,
+            "ac_coupled": false,
+            "spec_cite": "fixture cite",
+            "notes": ""
+          }
+        ]
+      },
+      "markdown": "# Signal-Integrity Constraints \u2014 Zynq Carrier\n\nGENERATED by `schgen/generate/si_constraints.py` (do not hand-edit).\nSource of targets: `carrier/research/si_spec.json` (researched, standard-cited); pairs are harvested from the schematic's typed ports (`c.port_type(kind=..., pair_with=..., impedance=...)`) so this table only lists pairs that actually exist on the board.\n\n**1 differential pairs** in **1 length-match groups**. These are CONSTRAINTS for the layout engineer / KiCad DRC \u2014 no routing is implied. The matching rules are also emitted into `Zynq_Carrier_pcb.kicad_dru` (KiCad design rules).\n\n## Stackup\n\nJLCPCB JLC04161H-7628, 4-layer 1.6 mm (Sig / GND / PWR / Sig). Diff-pair trace geometry (width/gap) per class lives in the `.kicad_pro` net_settings + `.kicad_dru`: 90R = 0.2611/0.2032 mm, 100R = 0.2052/0.2032 mm (JLCPCB impedance calculator, this stackup).\n\n## Differential pairs\n\n| Interface | Signal | net_p | net_n | Z_diff (ohm) | Intra-pair skew | Length-match group | Group tol | AC-coupled | Net class | Spec |\n|---|---|---|---|---|---|---|---|---|---|---|\n| USB / bus | data | `D_P` | `D_N` | 100 | +/-0.5 mil (0.0127 mm) | LM_USB_BUS | +/-10.25 mil (0.2603 mm) | no | DP100_DIFF | fixture cite |\n\n## Length-match groups\n\nEach group's pairs must be length-matched **to each other** (inter-pair) to the group tolerance; within every pair, P and N match to the intra-pair skew above.\n\n| Group | Interface | Pairs | Group match tol | Members |\n|---|---|---|---|---|\n| LM_USB_BUS | USB / bus | 1 | +/-10.25 mil (0.2603 mm) | `D_P`/`D_N` |\n\n## Notes / coverage gaps\n\n- DECLARED in schematic but NO si_spec row: `E_N`/`E_P` (no SI target emitted)\n",
+      "rules": "(version 1)\n\n# ==== SI CONSTRAINTS (schgen/generate/si_constraints.py) ====\n# Differential-pair + matched-length rules harvested from the schematic's\n# typed ports and joined to carrier/research/si_spec.json (researched\n# targets, standard-cited). Intra-pair skew = P/N length match within a\n# pair; group length = inter-pair match across a port/bus. Enforced by\n# KiCad DRC once the pairs are routed. NOT routing \u2014 constraints only.\n\n(rule \"intra_skew_D_P\"\n  # USB / bus \u2014 data; Zdiff 100ohm; DC-coupled\n  # spec: fixture cite\n  (condition \"(A.NetName == 'D_P' && B.NetName == 'D_N') || (A.NetName == 'D_N' && B.NetName == 'D_P')\")\n  (constraint skew (max 0.0127mm))\n)\n\n(rule \"lenmatch_LM_USB_BUS\"\n  # USB / bus: 1 pair(s) length-matched as a group (inter-pair), tol +/-10.25 mil\n  (condition \"A.NetName == 'D_P' || A.NetName == 'D_N'\")\n  (constraint skew (max 0.2603mm))\n)\n\n",
+      "summary": "SI constraints: 1 diff pairs, 1 length-match groups emitted \u2014 UNCOVERED declared pair(s): E_N/E_P",
+      "ok": false
+    },
+    {
+      "name": "divergent",
+      "sheets": [
+        {
+          "name": "fixture",
+          "circuit": {
+            "schema": "schgen.circuit/1",
+            "name": "fixture",
+            "title": "fixture",
+            "parts": [],
+            "nets": [
+              {
+                "name": "D_P",
+                "net_class": "port",
+                "pins": []
+              },
+              {
+                "name": "D_N",
+                "net_class": "port",
+                "pins": []
+              },
+              {
+                "name": "E_P",
+                "net_class": "port",
+                "pins": []
+              },
+              {
+                "name": "E_N",
+                "net_class": "port",
+                "pins": []
+              }
+            ],
+            "nc": [],
+            "port_types": {
+              "D_P": {
+                "kind": "diff_pair",
+                "pair_with": "D_N",
+                "impedance": 100,
+                "role": null,
+                "bus": null,
+                "speed_hz": null,
+                "level_v": null,
+                "expect": null
+              },
+              "D_N": {
+                "kind": "diff_pair",
+                "pair_with": "D_P",
+                "impedance": 100,
+                "role": null,
+                "bus": null,
+                "speed_hz": null,
+                "level_v": null,
+                "expect": null
+              },
+              "E_P": {
+                "kind": "diff_pair",
+                "pair_with": "E_N",
+                "impedance": 100,
+                "role": null,
+                "bus": null,
+                "speed_hz": null,
+                "level_v": null,
+                "expect": null
+              },
+              "E_N": {
+                "kind": "diff_pair",
+                "pair_with": "E_P",
+                "impedance": 100,
+                "role": null,
+                "bus": null,
+                "speed_hz": null,
+                "level_v": null,
+                "expect": null
+              }
+            },
+            "hints": {},
+            "loads": {},
+            "tp_waivers": {},
+            "decap_waivers": {},
+            "pull_waivers": {},
+            "reset_waivers": {},
+            "strap_waivers": {},
+            "ep_waivers": {},
+            "thermal_waivers": {},
+            "part_rule_waivers": {}
+          }
+        }
+      ],
+      "spec": {
+        "pairs": [
+          {
+            "interface": "USB / bus",
+            "signal": "data",
+            "net_p": "D_P",
+            "net_n": "D_N",
+            "z_diff_ohm": 90,
+            "match_tol_mil": 10.25,
+            "intra_pair_skew_mil": 0.5,
+            "ac_coupled": false,
+            "spec_cite": "fixture cite",
+            "notes": ""
+          },
+          {
+            "interface": "USB / bus",
+            "signal": "data2",
+            "net_p": "E_P",
+            "net_n": "E_N",
+            "z_diff_ohm": 100,
+            "match_tol_mil": 5.125,
+            "intra_pair_skew_mil": 1.25,
+            "ac_coupled": true,
+            "spec_cite": "other cite",
+            "notes": ""
+          }
+        ]
+      },
+      "markdown": "# Signal-Integrity Constraints \u2014 Zynq Carrier\n\nGENERATED by `schgen/generate/si_constraints.py` (do not hand-edit).\nSource of targets: `carrier/research/si_spec.json` (researched, standard-cited); pairs are harvested from the schematic's typed ports (`c.port_type(kind=..., pair_with=..., impedance=...)`) so this table only lists pairs that actually exist on the board.\n\n**2 differential pairs** in **1 length-match groups**. These are CONSTRAINTS for the layout engineer / KiCad DRC \u2014 no routing is implied. The matching rules are also emitted into `Zynq_Carrier_pcb.kicad_dru` (KiCad design rules).\n\n## Stackup\n\nJLCPCB JLC04161H-7628, 4-layer 1.6 mm (Sig / GND / PWR / Sig). Diff-pair trace geometry (width/gap) per class lives in the `.kicad_pro` net_settings + `.kicad_dru`: 90R = 0.2611/0.2032 mm, 100R = 0.2052/0.2032 mm (JLCPCB impedance calculator, this stackup).\n\n## Differential pairs\n\n| Interface | Signal | net_p | net_n | Z_diff (ohm) | Intra-pair skew | Length-match group | Group tol | AC-coupled | Net class | Spec |\n|---|---|---|---|---|---|---|---|---|---|---|\n| USB / bus | data | `D_P` | `D_N` | 90 | +/-0.5 mil (0.0127 mm) | LM_USB_BUS | +/-5.125 mil (0.1302 mm) | no | DP100_DIFF | fixture cite |\n| USB / bus | data2 | `E_P` | `E_N` | 100 | +/-1.25 mil (0.0318 mm) | LM_USB_BUS | +/-5.125 mil (0.1302 mm) | yes | DP100_DIFF | other cite |\n\n## Length-match groups\n\nEach group's pairs must be length-matched **to each other** (inter-pair) to the group tolerance; within every pair, P and N match to the intra-pair skew above.\n\n| Group | Interface | Pairs | Group match tol | Members |\n|---|---|---|---|---|\n| LM_USB_BUS | USB / bus | 2 | +/-5.125 mil (0.1302 mm) | `D_P`/`D_N`, `E_P`/`E_N` |\n",
+      "rules": "(version 1)\n\n# ==== SI CONSTRAINTS (schgen/generate/si_constraints.py) ====\n# Differential-pair + matched-length rules harvested from the schematic's\n# typed ports and joined to carrier/research/si_spec.json (researched\n# targets, standard-cited). Intra-pair skew = P/N length match within a\n# pair; group length = inter-pair match across a port/bus. Enforced by\n# KiCad DRC once the pairs are routed. NOT routing \u2014 constraints only.\n\n(rule \"intra_skew_D_P\"\n  # USB / bus \u2014 data; Zdiff 90ohm; DC-coupled\n  # spec: fixture cite\n  (condition \"(A.NetName == 'D_P' && B.NetName == 'D_N') || (A.NetName == 'D_N' && B.NetName == 'D_P')\")\n  (constraint skew (max 0.0127mm))\n)\n\n(rule \"intra_skew_E_P\"\n  # USB / bus \u2014 data2; Zdiff 100ohm; AC-coupled\n  # spec: other cite\n  (condition \"(A.NetName == 'E_P' && B.NetName == 'E_N') || (A.NetName == 'E_N' && B.NetName == 'E_P')\")\n  (constraint skew (max 0.0318mm))\n)\n\n(rule \"lenmatch_LM_USB_BUS\"\n  # USB / bus: 2 pair(s) length-matched as a group (inter-pair), tol +/-5.125 mil\n  (condition \"A.NetName == 'D_P' || A.NetName == 'D_N' || A.NetName == 'E_P' || A.NetName == 'E_N'\")\n  (constraint skew (max 0.1302mm))\n)\n\n",
+      "summary": "SI constraints: 2 diff pairs, 1 length-match groups emitted \u2014 DECLARED impedance != researched z_diff_ohm: D_N 100R vs 90R",
+      "ok": false
+    },
+    {
+      "name": "orphan_unicode",
+      "sheets": [
+        {
+          "name": "fixture",
+          "circuit": {
+            "schema": "schgen.circuit/1",
+            "name": "fixture",
+            "title": "fixture",
+            "parts": [],
+            "nets": [
+              {
+                "name": "D_P",
+                "net_class": "port",
+                "pins": []
+              },
+              {
+                "name": "D_N",
+                "net_class": "port",
+                "pins": []
+              },
+              {
+                "name": "E_P",
+                "net_class": "port",
+                "pins": []
+              },
+              {
+                "name": "E_N",
+                "net_class": "port",
+                "pins": []
+              }
+            ],
+            "nc": [],
+            "port_types": {
+              "D_P": {
+                "kind": "diff_pair",
+                "pair_with": "D_N",
+                "impedance": 100,
+                "role": null,
+                "bus": null,
+                "speed_hz": null,
+                "level_v": null,
+                "expect": null
+              },
+              "D_N": {
+                "kind": "diff_pair",
+                "pair_with": "D_P",
+                "impedance": 100,
+                "role": null,
+                "bus": null,
+                "speed_hz": null,
+                "level_v": null,
+                "expect": null
+              },
+              "E_P": {
+                "kind": "diff_pair",
+                "pair_with": "E_N",
+                "impedance": 100,
+                "role": null,
+                "bus": null,
+                "speed_hz": null,
+                "level_v": null,
+                "expect": null
+              },
+              "E_N": {
+                "kind": "diff_pair",
+                "pair_with": "E_P",
+                "impedance": 100,
+                "role": null,
+                "bus": null,
+                "speed_hz": null,
+                "level_v": null,
+                "expect": null
+              }
+            },
+            "hints": {},
+            "loads": {},
+            "tp_waivers": {},
+            "decap_waivers": {},
+            "pull_waivers": {},
+            "reset_waivers": {},
+            "strap_waivers": {},
+            "ep_waivers": {},
+            "thermal_waivers": {},
+            "part_rule_waivers": {}
+          }
+        }
+      ],
+      "spec": {
+        "pairs": [
+          {
+            "interface": "USB / bus",
+            "signal": "data",
+            "net_p": "D_P",
+            "net_n": "D_N",
+            "z_diff_ohm": 100,
+            "match_tol_mil": 10.25,
+            "intra_pair_skew_mil": 0.5,
+            "ac_coupled": false,
+            "spec_cite": "fixture cite",
+            "notes": ""
+          },
+          {
+            "interface": "USB / bus",
+            "signal": "data2",
+            "net_p": "E_P",
+            "net_n": "E_N",
+            "z_diff_ohm": 100,
+            "match_tol_mil": 5.125,
+            "intra_pair_skew_mil": 1.25,
+            "ac_coupled": true,
+            "spec_cite": "other cite",
+            "notes": ""
+          },
+          {
+            "interface": "\u65b0 iface",
+            "signal": "orphan",
+            "net_p": "\u00d8_P",
+            "net_n": "\u00d8_N",
+            "z_diff_ohm": 90,
+            "match_tol_mil": 8.125,
+            "intra_pair_skew_mil": 0.625,
+            "ac_coupled": true,
+            "spec_cite": "\u03bc reference",
+            "notes": "𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀"
+          }
+        ]
+      },
+      "markdown": "# Signal-Integrity Constraints \u2014 Zynq Carrier\n\nGENERATED by `schgen/generate/si_constraints.py` (do not hand-edit).\nSource of targets: `carrier/research/si_spec.json` (researched, standard-cited); pairs are harvested from the schematic's typed ports (`c.port_type(kind=..., pair_with=..., impedance=...)`) so this table only lists pairs that actually exist on the board.\n\n**2 differential pairs** in **1 length-match groups**. These are CONSTRAINTS for the layout engineer / KiCad DRC \u2014 no routing is implied. The matching rules are also emitted into `Zynq_Carrier_pcb.kicad_dru` (KiCad design rules).\n\n## Stackup\n\nJLCPCB JLC04161H-7628, 4-layer 1.6 mm (Sig / GND / PWR / Sig). Diff-pair trace geometry (width/gap) per class lives in the `.kicad_pro` net_settings + `.kicad_dru`: 90R = 0.2611/0.2032 mm, 100R = 0.2052/0.2032 mm (JLCPCB impedance calculator, this stackup).\n\n## Differential pairs\n\n| Interface | Signal | net_p | net_n | Z_diff (ohm) | Intra-pair skew | Length-match group | Group tol | AC-coupled | Net class | Spec |\n|---|---|---|---|---|---|---|---|---|---|---|\n| USB / bus | data | `D_P` | `D_N` | 100 | +/-0.5 mil (0.0127 mm) | LM_USB_BUS | +/-5.125 mil (0.1302 mm) | no | DP100_DIFF | fixture cite |\n| USB / bus | data2 | `E_P` | `E_N` | 100 | +/-1.25 mil (0.0318 mm) | LM_USB_BUS | +/-5.125 mil (0.1302 mm) | yes | DP100_DIFF | other cite |\n\n## Length-match groups\n\nEach group's pairs must be length-matched **to each other** (inter-pair) to the group tolerance; within every pair, P and N match to the intra-pair skew above.\n\n| Group | Interface | Pairs | Group match tol | Members |\n|---|---|---|---|---|\n| LM_USB_BUS | USB / bus | 2 | +/-5.125 mil (0.1302 mm) | `D_P`/`D_N`, `E_P`/`E_N` |\n\n## Notes / coverage gaps\n\n- si_spec row not present in schematic: \u65b0 iface `\u00d8_P`/`\u00d8_N` (𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀𐀀)\n",
+      "rules": "(version 1)\n\n# ==== SI CONSTRAINTS (schgen/generate/si_constraints.py) ====\n# Differential-pair + matched-length rules harvested from the schematic's\n# typed ports and joined to carrier/research/si_spec.json (researched\n# targets, standard-cited). Intra-pair skew = P/N length match within a\n# pair; group length = inter-pair match across a port/bus. Enforced by\n# KiCad DRC once the pairs are routed. NOT routing \u2014 constraints only.\n\n(rule \"intra_skew_D_P\"\n  # USB / bus \u2014 data; Zdiff 100ohm; DC-coupled\n  # spec: fixture cite\n  (condition \"(A.NetName == 'D_P' && B.NetName == 'D_N') || (A.NetName == 'D_N' && B.NetName == 'D_P')\")\n  (constraint skew (max 0.0127mm))\n)\n\n(rule \"intra_skew_E_P\"\n  # USB / bus \u2014 data2; Zdiff 100ohm; AC-coupled\n  # spec: other cite\n  (condition \"(A.NetName == 'E_P' && B.NetName == 'E_N') || (A.NetName == 'E_N' && B.NetName == 'E_P')\")\n  (constraint skew (max 0.0318mm))\n)\n\n(rule \"lenmatch_LM_USB_BUS\"\n  # USB / bus: 2 pair(s) length-matched as a group (inter-pair), tol +/-5.125 mil\n  (condition \"A.NetName == 'D_P' || A.NetName == 'D_N' || A.NetName == 'E_P' || A.NetName == 'E_N'\")\n  (constraint skew (max 0.1302mm))\n)\n\n",
+      "summary": "SI constraints: 2 diff pairs, 1 length-match groups emitted \u2014 every declared pair covered.",
+      "ok": true
+    },
+    {
+      "name": "group_min",
+      "sheets": [
+        {
+          "name": "fixture",
+          "circuit": {
+            "schema": "schgen.circuit/1",
+            "name": "fixture",
+            "title": "fixture",
+            "parts": [],
+            "nets": [
+              {
+                "name": "D_P",
+                "net_class": "port",
+                "pins": []
+              },
+              {
+                "name": "D_N",
+                "net_class": "port",
+                "pins": []
+              },
+              {
+                "name": "E_P",
+                "net_class": "port",
+                "pins": []
+              },
+              {
+                "name": "E_N",
+                "net_class": "port",
+                "pins": []
+              }
+            ],
+            "nc": [],
+            "port_types": {
+              "D_P": {
+                "kind": "diff_pair",
+                "pair_with": "D_N",
+                "impedance": 100,
+                "role": null,
+                "bus": null,
+                "speed_hz": null,
+                "level_v": null,
+                "expect": null
+              },
+              "D_N": {
+                "kind": "diff_pair",
+                "pair_with": "D_P",
+                "impedance": 100,
+                "role": null,
+                "bus": null,
+                "speed_hz": null,
+                "level_v": null,
+                "expect": null
+              },
+              "E_P": {
+                "kind": "diff_pair",
+                "pair_with": "E_N",
+                "impedance": 100,
+                "role": null,
+                "bus": null,
+                "speed_hz": null,
+                "level_v": null,
+                "expect": null
+              },
+              "E_N": {
+                "kind": "diff_pair",
+                "pair_with": "E_P",
+                "impedance": 100,
+                "role": null,
+                "bus": null,
+                "speed_hz": null,
+                "level_v": null,
+                "expect": null
+              }
+            },
+            "hints": {},
+            "loads": {},
+            "tp_waivers": {},
+            "decap_waivers": {},
+            "pull_waivers": {},
+            "reset_waivers": {},
+            "strap_waivers": {},
+            "ep_waivers": {},
+            "thermal_waivers": {},
+            "part_rule_waivers": {}
+          }
+        }
+      ],
+      "spec": {
+        "pairs": [
+          {
+            "interface": "USB / bus",
+            "signal": "data",
+            "net_p": "D_P",
+            "net_n": "D_N",
+            "z_diff_ohm": 100,
+            "match_tol_mil": 10.25,
+            "intra_pair_skew_mil": 0.5,
+            "ac_coupled": false,
+            "spec_cite": "fixture cite",
+            "notes": ""
+          },
+          {
+            "interface": "USB / bus",
+            "signal": "data2",
+            "net_p": "E_P",
+            "net_n": "E_N",
+            "z_diff_ohm": 100,
+            "match_tol_mil": 0.0001,
+            "intra_pair_skew_mil": 1.25,
+            "ac_coupled": true,
+            "spec_cite": "other cite",
+            "notes": ""
+          }
+        ]
+      },
+      "markdown": "# Signal-Integrity Constraints \u2014 Zynq Carrier\n\nGENERATED by `schgen/generate/si_constraints.py` (do not hand-edit).\nSource of targets: `carrier/research/si_spec.json` (researched, standard-cited); pairs are harvested from the schematic's typed ports (`c.port_type(kind=..., pair_with=..., impedance=...)`) so this table only lists pairs that actually exist on the board.\n\n**2 differential pairs** in **1 length-match groups**. These are CONSTRAINTS for the layout engineer / KiCad DRC \u2014 no routing is implied. The matching rules are also emitted into `Zynq_Carrier_pcb.kicad_dru` (KiCad design rules).\n\n## Stackup\n\nJLCPCB JLC04161H-7628, 4-layer 1.6 mm (Sig / GND / PWR / Sig). Diff-pair trace geometry (width/gap) per class lives in the `.kicad_pro` net_settings + `.kicad_dru`: 90R = 0.2611/0.2032 mm, 100R = 0.2052/0.2032 mm (JLCPCB impedance calculator, this stackup).\n\n## Differential pairs\n\n| Interface | Signal | net_p | net_n | Z_diff (ohm) | Intra-pair skew | Length-match group | Group tol | AC-coupled | Net class | Spec |\n|---|---|---|---|---|---|---|---|---|---|---|\n| USB / bus | data | `D_P` | `D_N` | 100 | +/-0.5 mil (0.0127 mm) | LM_USB_BUS | +/-0.0001 mil (0.0 mm) | no | DP100_DIFF | fixture cite |\n| USB / bus | data2 | `E_P` | `E_N` | 100 | +/-1.25 mil (0.0318 mm) | LM_USB_BUS | +/-0.0001 mil (0.0 mm) | yes | DP100_DIFF | other cite |\n\n## Length-match groups\n\nEach group's pairs must be length-matched **to each other** (inter-pair) to the group tolerance; within every pair, P and N match to the intra-pair skew above.\n\n| Group | Interface | Pairs | Group match tol | Members |\n|---|---|---|---|---|\n| LM_USB_BUS | USB / bus | 2 | +/-0.0001 mil (0.0 mm) | `D_P`/`D_N`, `E_P`/`E_N` |\n",
+      "rules": "(version 1)\n\n# ==== SI CONSTRAINTS (schgen/generate/si_constraints.py) ====\n# Differential-pair + matched-length rules harvested from the schematic's\n# typed ports and joined to carrier/research/si_spec.json (researched\n# targets, standard-cited). Intra-pair skew = P/N length match within a\n# pair; group length = inter-pair match across a port/bus. Enforced by\n# KiCad DRC once the pairs are routed. NOT routing \u2014 constraints only.\n\n(rule \"intra_skew_D_P\"\n  # USB / bus \u2014 data; Zdiff 100ohm; DC-coupled\n  # spec: fixture cite\n  (condition \"(A.NetName == 'D_P' && B.NetName == 'D_N') || (A.NetName == 'D_N' && B.NetName == 'D_P')\")\n  (constraint skew (max 0.0127mm))\n)\n\n(rule \"intra_skew_E_P\"\n  # USB / bus \u2014 data2; Zdiff 100ohm; AC-coupled\n  # spec: other cite\n  (condition \"(A.NetName == 'E_P' && B.NetName == 'E_N') || (A.NetName == 'E_N' && B.NetName == 'E_P')\")\n  (constraint skew (max 0.0318mm))\n)\n\n(rule \"lenmatch_LM_USB_BUS\"\n  # USB / bus: 2 pair(s) length-matched as a group (inter-pair), tol +/-0.0001 mil\n  (condition \"A.NetName == 'D_P' || A.NetName == 'D_N' || A.NetName == 'E_P' || A.NetName == 'E_N'\")\n  (constraint skew (max 0.0mm))\n)\n\n",
+      "summary": "SI constraints: 2 diff pairs, 1 length-match groups emitted \u2014 every declared pair covered.",
+      "ok": true
+    },
+    {
+      "name": "first_declaration",
+      "sheets": [
+        {
+          "name": "fixture",
+          "circuit": {
+            "schema": "schgen.circuit/1",
+            "name": "fixture",
+            "title": "fixture",
+            "parts": [],
+            "nets": [
+              {
+                "name": "D_P",
+                "net_class": "port",
+                "pins": []
+              },
+              {
+                "name": "D_N",
+                "net_class": "port",
+                "pins": []
+              },
+              {
+                "name": "E_P",
+                "net_class": "port",
+                "pins": []
+              },
+              {
+                "name": "E_N",
+                "net_class": "port",
+                "pins": []
+              }
+            ],
+            "nc": [],
+            "port_types": {
+              "D_P": {
+                "kind": "diff_pair",
+                "pair_with": "D_N",
+                "impedance": 100,
+                "role": null,
+                "bus": null,
+                "speed_hz": null,
+                "level_v": null,
+                "expect": null
+              },
+              "D_N": {
+                "kind": "diff_pair",
+                "pair_with": "D_P",
+                "impedance": 100,
+                "role": null,
+                "bus": null,
+                "speed_hz": null,
+                "level_v": null,
+                "expect": null
+              },
+              "E_P": {
+                "kind": "diff_pair",
+                "pair_with": "E_N",
+                "impedance": 100,
+                "role": null,
+                "bus": null,
+                "speed_hz": null,
+                "level_v": null,
+                "expect": null
+              },
+              "E_N": {
+                "kind": "diff_pair",
+                "pair_with": "E_P",
+                "impedance": 100,
+                "role": null,
+                "bus": null,
+                "speed_hz": null,
+                "level_v": null,
+                "expect": null
+              }
+            },
+            "hints": {},
+            "loads": {},
+            "tp_waivers": {},
+            "decap_waivers": {},
+            "pull_waivers": {},
+            "reset_waivers": {},
+            "strap_waivers": {},
+            "ep_waivers": {},
+            "thermal_waivers": {},
+            "part_rule_waivers": {}
+          }
+        },
+        {
+          "name": "second",
+          "circuit": {
+            "schema": "schgen.circuit/1",
+            "name": "fixture",
+            "title": "fixture",
+            "parts": [],
+            "nets": [
+              {
+                "name": "D_P",
+                "net_class": "port",
+                "pins": []
+              },
+              {
+                "name": "D_N",
+                "net_class": "port",
+                "pins": []
+              },
+              {
+                "name": "E_P",
+                "net_class": "port",
+                "pins": []
+              },
+              {
+                "name": "E_N",
+                "net_class": "port",
+                "pins": []
+              }
+            ],
+            "nc": [],
+            "port_types": {
+              "D_P": {
+                "kind": "diff_pair",
+                "pair_with": "D_N",
+                "impedance": 80,
+                "role": null,
+                "bus": null,
+                "speed_hz": null,
+                "level_v": null,
+                "expect": null
+              },
+              "D_N": {
+                "kind": "diff_pair",
+                "pair_with": "D_P",
+                "impedance": 100,
+                "role": null,
+                "bus": null,
+                "speed_hz": null,
+                "level_v": null,
+                "expect": null
+              },
+              "E_P": {
+                "kind": "diff_pair",
+                "pair_with": "E_N",
+                "impedance": 100,
+                "role": null,
+                "bus": null,
+                "speed_hz": null,
+                "level_v": null,
+                "expect": null
+              },
+              "E_N": {
+                "kind": "diff_pair",
+                "pair_with": "E_P",
+                "impedance": 100,
+                "role": null,
+                "bus": null,
+                "speed_hz": null,
+                "level_v": null,
+                "expect": null
+              }
+            },
+            "hints": {},
+            "loads": {},
+            "tp_waivers": {},
+            "decap_waivers": {},
+            "pull_waivers": {},
+            "reset_waivers": {},
+            "strap_waivers": {},
+            "ep_waivers": {},
+            "thermal_waivers": {},
+            "part_rule_waivers": {}
+          }
+        }
+      ],
+      "spec": {
+        "pairs": [
+          {
+            "interface": "USB / bus",
+            "signal": "data",
+            "net_p": "D_P",
+            "net_n": "D_N",
+            "z_diff_ohm": 100,
+            "match_tol_mil": 10.25,
+            "intra_pair_skew_mil": 0.5,
+            "ac_coupled": false,
+            "spec_cite": "fixture cite",
+            "notes": ""
+          },
+          {
+            "interface": "USB / bus",
+            "signal": "data2",
+            "net_p": "E_P",
+            "net_n": "E_N",
+            "z_diff_ohm": 100,
+            "match_tol_mil": 5.125,
+            "intra_pair_skew_mil": 1.25,
+            "ac_coupled": true,
+            "spec_cite": "other cite",
+            "notes": ""
+          }
+        ]
+      },
+      "markdown": "# Signal-Integrity Constraints \u2014 Zynq Carrier\n\nGENERATED by `schgen/generate/si_constraints.py` (do not hand-edit).\nSource of targets: `carrier/research/si_spec.json` (researched, standard-cited); pairs are harvested from the schematic's typed ports (`c.port_type(kind=..., pair_with=..., impedance=...)`) so this table only lists pairs that actually exist on the board.\n\n**2 differential pairs** in **1 length-match groups**. These are CONSTRAINTS for the layout engineer / KiCad DRC \u2014 no routing is implied. The matching rules are also emitted into `Zynq_Carrier_pcb.kicad_dru` (KiCad design rules).\n\n## Stackup\n\nJLCPCB JLC04161H-7628, 4-layer 1.6 mm (Sig / GND / PWR / Sig). Diff-pair trace geometry (width/gap) per class lives in the `.kicad_pro` net_settings + `.kicad_dru`: 90R = 0.2611/0.2032 mm, 100R = 0.2052/0.2032 mm (JLCPCB impedance calculator, this stackup).\n\n## Differential pairs\n\n| Interface | Signal | net_p | net_n | Z_diff (ohm) | Intra-pair skew | Length-match group | Group tol | AC-coupled | Net class | Spec |\n|---|---|---|---|---|---|---|---|---|---|---|\n| USB / bus | data | `D_P` | `D_N` | 100 | +/-0.5 mil (0.0127 mm) | LM_USB_BUS | +/-5.125 mil (0.1302 mm) | no | DP100_DIFF | fixture cite |\n| USB / bus | data2 | `E_P` | `E_N` | 100 | +/-1.25 mil (0.0318 mm) | LM_USB_BUS | +/-5.125 mil (0.1302 mm) | yes | DP100_DIFF | other cite |\n\n## Length-match groups\n\nEach group's pairs must be length-matched **to each other** (inter-pair) to the group tolerance; within every pair, P and N match to the intra-pair skew above.\n\n| Group | Interface | Pairs | Group match tol | Members |\n|---|---|---|---|---|\n| LM_USB_BUS | USB / bus | 2 | +/-5.125 mil (0.1302 mm) | `D_P`/`D_N`, `E_P`/`E_N` |\n",
+      "rules": "(version 1)\n\n# ==== SI CONSTRAINTS (schgen/generate/si_constraints.py) ====\n# Differential-pair + matched-length rules harvested from the schematic's\n# typed ports and joined to carrier/research/si_spec.json (researched\n# targets, standard-cited). Intra-pair skew = P/N length match within a\n# pair; group length = inter-pair match across a port/bus. Enforced by\n# KiCad DRC once the pairs are routed. NOT routing \u2014 constraints only.\n\n(rule \"intra_skew_D_P\"\n  # USB / bus \u2014 data; Zdiff 100ohm; DC-coupled\n  # spec: fixture cite\n  (condition \"(A.NetName == 'D_P' && B.NetName == 'D_N') || (A.NetName == 'D_N' && B.NetName == 'D_P')\")\n  (constraint skew (max 0.0127mm))\n)\n\n(rule \"intra_skew_E_P\"\n  # USB / bus \u2014 data2; Zdiff 100ohm; AC-coupled\n  # spec: other cite\n  (condition \"(A.NetName == 'E_P' && B.NetName == 'E_N') || (A.NetName == 'E_N' && B.NetName == 'E_P')\")\n  (constraint skew (max 0.0318mm))\n)\n\n(rule \"lenmatch_LM_USB_BUS\"\n  # USB / bus: 2 pair(s) length-matched as a group (inter-pair), tol +/-5.125 mil\n  (condition \"A.NetName == 'D_P' || A.NetName == 'D_N' || A.NetName == 'E_P' || A.NetName == 'E_N'\")\n  (constraint skew (max 0.1302mm))\n)\n\n",
+      "summary": "SI constraints: 2 diff pairs, 1 length-match groups emitted \u2014 every declared pair covered.",
+      "ok": true
+    }
+  ]
+}

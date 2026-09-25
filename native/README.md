@@ -9,17 +9,24 @@ XDC/Tcl remain in their required hardware formats; generator/tooling code is C++
 
 ## Build without Python
 
-From the repository root:
+Install the pinned native zlib-ng compressor using the instructions in
+[the manufacturing handoff](tests/data/manufacturing/README.md#explicit-native-installation-and-parent-wiring).
+It must be the tested static/PIC compatibility build so existing PNG bytes remain
+identical. Supply its installed prefix explicitly; CMake verifies the version
+and a compression known-answer test rather than silently selecting system zlib.
+The example below uses the local dependency installation under the ignored build
+directory. From the repository root:
 
 ```sh
-cmake -S native -B native/build/standalone -DSCHGEN_BUILD_PYTHON=OFF -DCMAKE_BUILD_TYPE=Release
+cmake -S native -B native/build/standalone -DSCHGEN_BUILD_PYTHON=OFF -DCMAKE_BUILD_TYPE=Release \
+  -DSCHGEN_MANUFACTURING_ZLIB_PREFIX="$PWD/native/build/deps/zlib-ng"
 cmake --build native/build/standalone --parallel
 ctest --test-dir native/build/standalone --output-on-failure
 native/bin/schgen --help
 ```
 
 This is also the default configuration: Python bindings are opt-in. The build
-uses C++17 and libxml2 (for KiCad netlists), without discovering Python,
+uses C++17, libxml2 (for KiCad netlists), and native zlib-ng (for PNGs), without discovering Python,
 installing nanobind, or fetching dependencies. Live SoM extraction requires
 `kicad-cli` on PATH; it is invoked directly, never through a shell.
 
@@ -144,9 +151,20 @@ sequentially.
 
 ## Remaining migration
 
+The native `pcb-stage --project NAME -o DIRECTORY` command now performs live
+KiCad netlist extraction, immutable input loading, floorplanning, placement,
+escape planning and PCB/project/rules emission. It is a construction stage,
+not a replacement for the independent full-board gates. Live contracts compare
+both project PCBs byte-for-byte with their existing generated references.
+Native manufacturing contracts cover assembly planning, Markdown and all 52
+reference PNGs. Assembly rendering uses at most four workers with stable output
+ordering; a measured 38-image carrier run improved from approximately 0.97 s to
+0.39 s, including transitional transport and file publication. This is an image
+stage measurement, not an end-to-end board-build speedup claim.
+
 Move complete pipeline stages into the native library and CLI. The remaining
-work includes board orchestration, PCB generation and floorplanning,
-verification/reporting, system outputs, and authoring commands.
+work includes full-board orchestration, remaining independent verification and
+reporting, system outputs, authoring commands and removal of transitional adapters.
 Replace Python tests with native tests before removing their reference logic.
 
 Each stage must preserve electrical connectivity and its relevant gates, then

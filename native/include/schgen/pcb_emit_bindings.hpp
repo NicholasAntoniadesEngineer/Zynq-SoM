@@ -3,17 +3,8 @@
 #include "schgen/pcb_checks_bindings.hpp"
 
 namespace schgen {
-inline void bind_pcb_emission(nanobind::module_& m) {
+inline PcbEmitPolicy pcb_emission_policy(const nanobind::dict& policy) {
     namespace nb = nanobind;
-    nb::class_<PcbModel>(m, "PcbEmissionModel");
-    m.def("pcb_emission_prepare", [](const nb::dict& raw,
-            const std::map<std::string, std::string>& files) {
-        PcbFootprintPool pool;
-        for (const auto& [path, bytes] : files) pool.emplace(path, pcb_check_footprint(path, bytes));
-        return pcb_model_from_json(json_from_python(raw), pool);
-    });
-    m.def("pcb_emission_write", [](const PcbModel& model, const std::string& path,
-            const std::string& kind, const nb::dict& policy) {
         auto p = default_pcb_emit_policy();
         using model_binding::get;
         p.header_descriptions = get<ProjectStrings>(policy, "header_descriptions");
@@ -53,6 +44,20 @@ inline void bind_pcb_emission(nanobind::module_& m) {
             spec.cite = get<std::string>(v, "cite");
             p.thermal_copper.emplace_back(nb::cast<std::string>(key), std::move(spec));
         }
+    return p;
+}
+inline void bind_pcb_emission(nanobind::module_& m) {
+    namespace nb = nanobind;
+    nb::class_<PcbModel>(m, "PcbEmissionModel");
+    m.def("pcb_emission_prepare", [](const nb::dict& raw,
+            const std::map<std::string, std::string>& files) {
+        PcbFootprintPool pool;
+        for (const auto& [path, bytes] : files) pool.emplace(path, pcb_check_footprint(path, bytes));
+        return pcb_model_from_json(json_from_python(raw), pool);
+    });
+    m.def("pcb_emission_write", [](const PcbModel& model, const std::string& path,
+            const std::string& kind, const nb::dict& policy) {
+        const auto p = pcb_emission_policy(policy);
         std::vector<std::string> diagnostics, fallbacks;
         {
             nb::gil_scoped_release release;

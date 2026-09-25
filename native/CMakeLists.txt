@@ -41,6 +41,25 @@ set(SCHGEN_SELFTEST_SOURCES
     src/selftest_full_json.cpp src/selftest_full_worker.cpp src/ratsnest_gate.cpp
     src/circuit_helpers.cpp)
 target_sources(schgen_core PRIVATE ${SCHGEN_SELFTEST_SOURCES})
+set(SCHGEN_MANUFACTURING_SOURCES
+    src/manufacturing_assembly_plan.cpp src/manufacturing_assembly_documents.cpp
+    src/manufacturing_assembly_images.cpp src/manufacturing_checks.cpp
+    src/manufacturing_exports_manifest.cpp src/manufacturing_exports_si.cpp
+    src/manufacturing_pipeline.cpp src/manufacturing_runs.cpp)
+include(cmake/ManufacturingCompression.cmake)
+schgen_require_manufacturing_compression()
+target_sources(schgen_core PRIVATE ${SCHGEN_MANUFACTURING_SOURCES})
+target_link_libraries(schgen_core PUBLIC schgen::manufacturing_compression)
+set(SCHGEN_PCB_PLACEMENT_SOURCES
+    src/pcb_escape_model.cpp src/pcb_escape_triage.cpp src/pcb_escape_plan.cpp
+    src/pcb_escape_copper.cpp src/pcb_escape_json.cpp
+    src/pcb_stage_geometry.cpp src/pcb_stage_search.cpp src/pcb_stage_power.cpp src/pcb_stage_zone.cpp
+    src/pcb_placement_inputs.cpp src/pcb_placement_pack.cpp src/pcb_placement_variants.cpp
+    src/pcb_placement_zones.cpp src/pcb_placement_model.cpp src/pcb_placement_moves.cpp
+    src/pcb_placement_breathe.cpp src/pcb_placement_build.cpp src/board_inputs.cpp src/board_pcb.cpp)
+target_sources(schgen_core PRIVATE ${SCHGEN_PCB_PLACEMENT_SOURCES})
+set_source_files_properties(${SCHGEN_PCB_PLACEMENT_SOURCES} PROPERTIES COMPILE_OPTIONS "-ffp-contract=off")
+set_source_files_properties(${SCHGEN_MANUFACTURING_SOURCES} PROPERTIES COMPILE_OPTIONS "-ffp-contract=off")
 file(GLOB authoring_builders CONFIGURE_DEPENDS
     "${CMAKE_CURRENT_SOURCE_DIR}/src/subsystem_authoring*.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/project_authoring*.cpp")
@@ -120,6 +139,27 @@ add_custom_target(schgen_catalogs ALL DEPENDS
 
 include(CTest)
 if(BUILD_TESTING)
+    add_executable(schgen_manufacturing_contracts tests/manufacturing_contracts.cpp)
+    add_executable(schgen_pack_silk_contracts tests/pack_silk_contracts.cpp)
+    target_link_libraries(schgen_pack_silk_contracts PRIVATE schgen_core)
+    target_compile_options(schgen_pack_silk_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror -ffp-contract=off)
+    add_test(NAME native_pack_silk_contracts COMMAND schgen_pack_silk_contracts
+        "${CMAKE_CURRENT_SOURCE_DIR}/tests/data/pack_silk/cases.json")
+    add_executable(schgen_board_live_contracts tests/board_live_contracts.cpp)
+    target_link_libraries(schgen_board_live_contracts PRIVATE schgen_core)
+    target_compile_options(schgen_board_live_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror -ffp-contract=off)
+    add_test(NAME native_board_live_contracts COMMAND schgen_board_live_contracts "${CMAKE_CURRENT_SOURCE_DIR}/..")
+    set_tests_properties(native_board_live_contracts PROPERTIES LABELS "live-kicad")
+    foreach(family pcb_escape pcb_stage pcb_placement board_inputs)
+        add_executable(schgen_${family}_contracts tests/${family}_contracts.cpp)
+        target_link_libraries(schgen_${family}_contracts PRIVATE schgen_core)
+        target_compile_options(schgen_${family}_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror -ffp-contract=off)
+        add_test(NAME native_${family}_contracts COMMAND schgen_${family}_contracts "${CMAKE_CURRENT_SOURCE_DIR}/..")
+    endforeach()
+    target_link_libraries(schgen_manufacturing_contracts PRIVATE schgen_core)
+    target_compile_options(schgen_manufacturing_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror -ffp-contract=off)
+    add_test(NAME native_manufacturing_contracts COMMAND schgen_manufacturing_contracts
+        "${CMAKE_CURRENT_SOURCE_DIR}/.." "${CMAKE_CURRENT_BINARY_DIR}/manufacturing-contract-results")
     add_executable(schgen_json_unicode_contracts tests/json_unicode_contracts.cpp)
     target_link_libraries(schgen_json_unicode_contracts PRIVATE schgen_core)
     target_compile_options(schgen_json_unicode_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror)

@@ -2,6 +2,7 @@
 
 #include "schgen/bom.hpp"
 #include "schgen/board_schematic.hpp"
+#include "schgen/board_pcb.hpp"
 #include "schgen/constraints.hpp"
 #include "schgen/part_checks.hpp"
 #include "schgen/bom_values.hpp"
@@ -42,7 +43,7 @@ struct Options {
     std::vector<std::string> subsystems;
     bool allow_missing = false, qualified_refs = false, no_ngspice = false, keep = false;
 };
-const std::set<std::string> commands{"selftest", "project-check", "circuit-check", "som-interface", "xdc", "vivado", "fpga", "bom", "link", "devicetree", "design-rules", "testpoints", "board-schematic", "constraints", "powertree", "thermal", "part-rules", "bom-values", "footprint-pads", "pin-completeness", "symbol-law", "spice", "firmware", "manual", "scfw", "testplan", "power-sequence"};
+const std::set<std::string> commands{"selftest", "project-check", "circuit-check", "som-interface", "xdc", "vivado", "fpga", "bom", "link", "devicetree", "design-rules", "testpoints", "board-schematic", "pcb-stage", "constraints", "powertree", "thermal", "part-rules", "bom-values", "footprint-pads", "pin-completeness", "symbol-law", "spice", "firmware", "manual", "scfw", "testplan", "power-sequence"};
 Options parse(int argc, char** argv) {
     Options out;
     std::set<std::string> seen;
@@ -89,7 +90,7 @@ Options parse(int argc, char** argv) {
         allowed.insert("--allow-missing"); allowed.insert("--qualified-refs");
     } else if (out.command == "link") {
         allowed.insert("--contract");
-    } else if (out.command == "board-schematic" || out.command == "selftest") {
+    } else if (out.command == "board-schematic" || out.command == "selftest" || out.command == "pcb-stage") {
         allowed.insert("--kicad-cli");
         if (out.command == "selftest") allowed.insert("--keep");
     } else if (out.command == "thermal" || out.command == "powertree" || out.command == "part-rules") {
@@ -193,6 +194,17 @@ std::optional<int> run_project_command(int argc, char** argv) {
             selftest_model_fixtures(pcb_check_footprint(resistor->string(), bytes)), library, run);
         if (!options.output.empty()) publish_text(options.output, result.report);
         return result.exit_code();
+    }
+    if (options.command == "pcb-stage") {
+        if (options.output.empty()) throw ProjectError("pcb-stage requires --output DIRECTORY");
+        if (!options.subsystems.empty()) throw ProjectError("pcb-stage requires the complete project, not selected sheets");
+        const auto stage = prepare_board_pcb(paths, {options.kicad_cli});
+        publish_board_pcb(stage, options.output);
+        for (const auto& diagnostic : stage.emission.diagnostics) std::cout << diagnostic << '\n';
+        std::cout << "PCB STAGE: constructed " << stage.placement.model.insts.size()
+                  << " footprints -> " << options.output.string()
+                  << " (construction only; independent board gates must still run)\n";
+        return 0;
     }
     const auto circuits = options.subsystems.empty() ? load_project_circuits(paths)
                         : load_project_circuits(paths, options.subsystems);

@@ -24,6 +24,7 @@ int main(int argc, char** argv) {
                          "  project-check [--repo ROOT] [--project NAME] [SUBSYSTEM ...]\n"
                          "  circuit-check [--repo ROOT] [--project NAME] [SUBSYSTEM ...]\n"
                          "  board-schematic [--project NAME] [SUBSYSTEM ...] -o DIRECTORY\n"
+                         "  pcb-stage [--project NAME] [--kicad-cli PATH] -o DIRECTORY (construction only)\n"
                          "  constraints [--project NAME] [SUBSYSTEM ...] [-o DIRECTORY]\n"
                          "  bom-values | footprint-pads | pin-completeness | symbol-law [--project NAME] [-o FILE]\n"
                          "  spice [--project NAME] [SUBSYSTEM ...] [--no-ngspice] [-o FILE]\n"

@@ -1,0 +1,63 @@
+[
+  {
+    "demand": {
+      "min_clearance_mm": null,
+      "min_drill_mm": null,
+      "min_hole_to_hole_mm": null,
+      "min_trace_mm": null,
+      "min_via_annular_mm": null,
+      "min_via_dia_mm": null,
+      "n_drills": 0,
+      "n_segments": 0,
+      "n_vias": 0,
+      "pro_via_annular_mm": null
+    },
+    "errors": [],
+    "name": "empty",
+    "ok": true,
+    "report": "FAB PROFILE GATE  (JLCPCB standard 4-layer (1oz))\n  source: JLCPCB PCB Manufacturing & Assembly Capabilities (jlcpcb.com/capabilities/pcb-capabilities) + JLCPCB via/annular Q&A; retrieved 2026-07\n\n  metric              board demands    fab floor   verdict\n  ----------------------------------------------------------\n  min trace width               n/a    0.0900 mm   PASS\n  min clearance                 n/a    0.0900 mm   PASS\n  min drill                     n/a    0.1500 mm   PASS\n  min via diameter              n/a    0.2500 mm   PASS\n  min via annular               n/a    0.0750 mm   PASS\n  min hole-to-hole              n/a    0.1500 mm   PASS\n\n  segments 0, vias 0, drilled holes 0\n\n  VERDICT: PASS \u2014 every demanded feature is at or above the fab floor"
+  },
+  {
+    "demand": {
+      "min_clearance_mm": 0.09,
+      "min_drill_mm": 0.15,
+      "min_hole_to_hole_mm": 0.15,
+      "min_trace_mm": 0.09,
+      "min_via_annular_mm": 0.075,
+      "min_via_dia_mm": 0.3,
+      "n_drills": 5,
+      "n_segments": 3,
+      "n_vias": 4,
+      "pro_via_annular_mm": 0.01
+    },
+    "errors": [],
+    "name": "boundary",
+    "ok": true,
+    "report": "FAB PROFILE GATE  (JLCPCB standard 4-layer (1oz))\n  source: JLCPCB PCB Manufacturing & Assembly Capabilities (jlcpcb.com/capabilities/pcb-capabilities) + JLCPCB via/annular Q&A; retrieved 2026-07\n\n  metric              board demands    fab floor   verdict\n  ----------------------------------------------------------\n  min trace width         0.0900 mm    0.0900 mm   PASS\n  min clearance           0.0900 mm    0.0900 mm   PASS\n  min drill               0.1500 mm    0.1500 mm   PASS\n  min via diameter        0.3000 mm    0.2500 mm   PASS\n  min via annular         0.0750 mm    0.0750 mm   PASS\n  min hole-to-hole        0.1500 mm    0.1500 mm   PASS\n\n  segments 3, vias 4, drilled holes 5\n  (.kicad_pro min_via_annular_width DRC floor: 0.0100 mm \u2014 permissive rule, not what the board emits)\n\n  VERDICT: PASS \u2014 every demanded feature is at or above the fab floor"
+  },
+  {
+    "demand": {
+      "min_clearance_mm": 0.06,
+      "min_drill_mm": 0.08,
+      "min_hole_to_hole_mm": 0.1,
+      "min_trace_mm": 0.05,
+      "min_via_annular_mm": 0.04,
+      "min_via_dia_mm": 0.16,
+      "n_drills": 16,
+      "n_segments": 10,
+      "n_vias": 12,
+      "pro_via_annular_mm": 0.001
+    },
+    "errors": [
+      "min trace width: board demands 0.0500 mm but JLCPCB standard 4-layer (1oz) floor is 0.0900 mm (finer than the fab can produce)",
+      "min clearance: board demands 0.0600 mm but JLCPCB standard 4-layer (1oz) floor is 0.0900 mm (finer than the fab can produce)",
+      "min drill: board demands 0.0800 mm but JLCPCB standard 4-layer (1oz) floor is 0.1500 mm (finer than the fab can produce)",
+      "min via diameter: board demands 0.1600 mm but JLCPCB standard 4-layer (1oz) floor is 0.2500 mm (finer than the fab can produce)",
+      "min via annular: board demands 0.0400 mm but JLCPCB standard 4-layer (1oz) floor is 0.0750 mm (finer than the fab can produce)",
+      "min hole-to-hole: board demands 0.1000 mm but JLCPCB standard 4-layer (1oz) floor is 0.1500 mm (finer than the fab can produce)"
+    ],
+    "name": "fail",
+    "ok": false,
+    "report": "FAB PROFILE GATE  (JLCPCB standard 4-layer (1oz))\n  source: JLCPCB PCB Manufacturing & Assembly Capabilities (jlcpcb.com/capabilities/pcb-capabilities) + JLCPCB via/annular Q&A; retrieved 2026-07\n\n  metric              board demands    fab floor   verdict\n  ----------------------------------------------------------\n  min trace width         0.0500 mm    0.0900 mm   FAIL (finer than fab)\n  min clearance           0.0600 mm    0.0900 mm   FAIL (finer than fab)\n  min drill               0.0800 mm    0.1500 mm   FAIL (finer than fab)\n  min via diameter        0.1600 mm    0.2500 mm   FAIL (finer than fab)\n  min via annular         0.0400 mm    0.0750 mm   FAIL (finer than fab)\n  min hole-to-hole        0.1000 mm    0.1500 mm   FAIL (finer than fab)\n\n  segments 10, vias 12, drilled holes 16\n  (.kicad_pro min_via_annular_width DRC floor: 0.0010 mm \u2014 permissive rule, not what the board emits)\n\n  VERDICT: FAIL \u2014 the board demands geometry finer than the fab can produce\n\n  FAIL: min trace width: board demands 0.0500 mm but JLCPCB standard 4-layer (1oz) floor is 0.0900 mm (finer than the fab can produce)\n  FAIL: min clearance: board demands 0.0600 mm but JLCPCB standard 4-layer (1oz) floor is 0.0900 mm (finer than the fab can produce)\n  FAIL: min drill: board demands 0.0800 mm but JLCPCB standard 4-layer (1oz) floor is 0.1500 mm (finer than the fab can produce)\n  FAIL: min via diameter: board demands 0.1600 mm but JLCPCB standard 4-layer (1oz) floor is 0.2500 mm (finer than the fab can produce)\n  FAIL: min via annular: board demands 0.0400 mm but JLCPCB standard 4-layer (1oz) floor is 0.0750 mm (finer than the fab can produce)\n  FAIL: min hole-to-hole: board demands 0.1000 mm but JLCPCB standard 4-layer (1oz) floor is 0.1500 mm (finer than the fab can produce)"
+  }
+]

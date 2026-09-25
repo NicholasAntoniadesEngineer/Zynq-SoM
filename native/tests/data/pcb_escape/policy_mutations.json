@@ -1,0 +1,22 @@
+[
+ {"mutation":"gnd_absent","stage":"copper","error":"net 'GND' absent from the model net table — refusing to emit net-0 copper (LAW 0)"},
+ {"mutation":"gnd_zero","stage":"copper","error":"net 'GND' absent from the model net table — refusing to emit net-0 copper (LAW 0)"},
+ {"mutation":"missing_j3","stage":"copper","error":"expected the 3 DF40 receptacles (som_j1/2/3), found ['J1', 'J2']"},
+ {"mutation":"missing_keepout","stage":"copper","error":"model has no SoM keepout — escape region underivable"},
+ {"mutation":"plane_uncovered","stage":"copper","error":"does not cover the escape region"},
+ {"mutation":"isolation_intrusion","stage":"copper","error":"In1 plane VOID ethernet_isolation_void_MUT"},
+ {"mutation":"foreign_barrel","stage":"copper","error":"foreign thru/NPTH barrel(s) inside the ESCAPE REGION"},
+ {"mutation":"no_net_barrel","stage":"copper","error":"MUT.1 (no-net)"},
+ {"mutation":"npth_barrel","stage":"copper","error":"foreign thru/NPTH barrel(s) inside the ESCAPE REGION"},
+ {"mutation":"blocked_bottom","stage":"copper","error":"never a threshold relax"},
+ {"mutation":"blocked_front","stage":"copper","error":"never a threshold relax"},
+ {"mutation":"no_ground_attach","stage":"copper","error":"J1: no GND attach options on the connector"},
+ {"mutation":"missing_violation_pad","stage":"copper","error":"return-path pad missing from footprint"},
+ {"mutation":"missing_violation_connector","stage":"copper","error":"return-path connector missing from placed model"},
+ {"mutation":"missing_triage","stage":"copper","error":"uncurated DF40 signal net"},
+ {"mutation":"unknown_class","stage":"copper","error":"uncurated SI class"},
+ {"mutation":"off_region_connector","stage":"copper","error":"outside the escape region"},
+ {"mutation":"missing_dp_geometry","stage":"plan","error":"has no width geometry (fail loud)"},
+ {"mutation":"unknown_signal","stage":"plan","error":"uncurated DF40 signal net"},
+ {"mutation":"unresolved_connector","stage":"plan","error":"escape footprint unresolved"}
+]

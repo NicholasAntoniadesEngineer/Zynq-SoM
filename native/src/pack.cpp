@@ -21,6 +21,14 @@
 namespace schgen {
 namespace {
 
+double silk_product(double a, double b) {
+    // Python rounds each product before a following addition/subtraction. A
+    // contracted multiply-add can move a label across an exact board boundary.
+    // Keep that operation boundary even when this TU permits FP contraction.
+    const volatile double product = a * b;
+    return product;
+}
+
 double occ_gap(bool is_cp, double extra, bool r_cp, double r_extra) {
     const double a = is_cp ? 0.0 : r_extra;
     const double b = r_cp ? 0.0 : extra;
@@ -261,7 +269,7 @@ Box4 text_box(const std::string& txt, double x, double y, double size,
               double margin) {
     const double thick = std::max(0.12, size * 0.15);
     const double n = static_cast<double>(std::max<std::size_t>(txt.size(), 1));
-    const double w = n * size + thick;
+    const double w = silk_product(n, size) + thick;
     const double h = size + thick;
     return Box4{x - w / 2.0 - margin, y - h / 2.0 - margin,
                 x + w / 2.0 + margin, y + h / 2.0 + margin};
@@ -509,7 +517,7 @@ ClearLabel place_clear_label(double cx0, double cy0, double cx1, double cy1,
     const double midy = (cy0 + cy1) / 2.0;
     const double thick = std::max(0.12, size * 0.15);
     const double n = static_cast<double>(std::max<std::size_t>(label.size(), 1));
-    const double w = n * size + thick;
+    const double w = silk_product(n, size) + thick;
     const double h = size + thick;
     const double g = 0.9;
     bool have_best = false;
@@ -565,8 +573,8 @@ ClearLabel place_clear_label(double cx0, double cy0, double cx1, double cy1,
         const double ry = (cy1 - cy0) / 2.0 + g + extra + h / 2.0;
         for (int k = 0; k < 16; ++k) {
             const double a = kTau * static_cast<double>(k) / 16.0;
-            const double tx = midx + rx * std::cos(a);
-            const double ty = midy + ry * std::sin(a);
+            const double tx = midx + silk_product(rx, std::cos(a));
+            const double ty = midy + silk_product(ry, std::sin(a));
             const Box4 box = text_box(label, tx, ty, size, 0.15);
             if (!onboard_box(box, bounds)) {
                 continue;
@@ -1024,8 +1032,9 @@ RefdesMove place_refdes(
     }
     const double dx = tx - fx;
     const double dy = ty - fy;
-    return RefdesMove{true, py_round(dx * ca - dy * sa, 4),
-                      py_round(dx * sa + dy * ca, 4), new_size, nbox};
+    return RefdesMove{true, py_round(silk_product(dx, ca) - silk_product(dy, sa), 4),
+                      py_round(silk_product(dx, sa) + silk_product(dy, ca), 4),
+                      new_size, nbox};
 }
 
 std::vector<Box4> som_keepout_rects(
