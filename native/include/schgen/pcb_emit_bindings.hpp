@@ -34,6 +34,13 @@ inline void bind_pcb_emission(nanobind::module_& m) {
         PCB_NUMBER(power_clearance); PCB_NUMBER(minimum_hole_to_hole); PCB_NUMBER(stack_thickness);
 #undef PCB_NUMBER
         p.thermal_copper.clear();
+        p.thermal_credit_needs.clear();
+        for (auto raw : get<nb::list>(policy, "thermal_credit_needs")) {
+            const auto v = nb::cast<nb::dict>(raw);
+            p.thermal_credit_needs.push_back({get<std::string>(v, "value_prefix"),
+                get<int>(v, "min_vias"), get<double>(v, "radius_mm"),
+                get<std::vector<std::string>>(v, "pour_layers")});
+        }
         for (auto [key, value] : get<nb::dict>(policy, "thermal_copper")) {
             const auto v = nb::cast<nb::dict>(value);
             PcbThermalCopperSpec spec;

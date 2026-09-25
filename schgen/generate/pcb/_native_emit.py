@@ -18,6 +18,7 @@ def prepare(model):
 
 
 def policy():
+    from schgen.verify.thermal import POUR_EVIDENCE
     return dict(
         header_descriptions=list(c._INT_DESC.items()),
         switch_descriptions=list(c._SW_DESC.items()),
@@ -38,7 +39,8 @@ def policy():
         default_track=c.DEFAULT_TRACK_MM, default_clearance=c.DEFAULT_CLEARANCE_MM,
         power_track=c.POWER_TRACK_MM, power_clearance=c.POWER_CLEARANCE_MM,
         minimum_hole_to_hole=c.MIN_HOLE_TO_HOLE, stack_thickness=STACK_THICKNESS_MM,
-        thermal_copper=c.THERMAL_COPPER)
+        thermal_copper=c.THERMAL_COPPER,
+        thermal_credit_needs=[asdict(need) for need in POUR_EVIDENCE.values()])
 
 
 def write(model, path, kind, prepared=None):
