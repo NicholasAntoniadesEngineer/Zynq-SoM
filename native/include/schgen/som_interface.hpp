@@ -1,6 +1,7 @@
 #pragma once
 
 #include "schgen/xdc.hpp"
+#include "schgen/json.hpp"
 
 #include <filesystem>
 #include <optional>
@@ -89,6 +90,7 @@ SomZynq parse_som_zynq_xml(
 // Contract JSON uses Python json.dumps(indent=1, sort_keys=True) bytes, including
 // ASCII Unicode escapes and the final newline. Loading preserves file order.
 SomInterface load_som_interface(const std::filesystem::path& path);
+SomInterface som_interface_from_json(const JsonNode& root, const std::string& source = "<memory>");
 std::string som_interface_json(const SomInterface& data);
 std::string som_zynq_json(const SomZynq& data);
 

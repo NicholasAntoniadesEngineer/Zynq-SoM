@@ -437,8 +437,11 @@ SomZynq extract_som_zynq(const fs::path& som_sch, const std::string& zynq_ref,
 }
 
 SomInterface load_som_interface(const fs::path& path) {
-    const auto root = parse_json_file(path.string());
-    const auto where = "SoM contract " + path.string();
+    return som_interface_from_json(parse_json_file(path.string()), path.string());
+}
+
+SomInterface som_interface_from_json(const JsonNode& root, const std::string& source) {
+    const auto where = "SoM contract " + source;
     SomInterface result;
     result.source = join_surrogates(required(root, "source", JsonKind::String, where).string_value);
     const auto& connectors = required(root, "connectors", JsonKind::Object, where);

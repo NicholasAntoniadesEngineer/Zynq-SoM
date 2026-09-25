@@ -38,8 +38,10 @@ int main() {
             {R"("a\ud83d\ude80z")", "a\xf0\x9f\x9a\x80z"},
             {"\"\xf0\x9f\x9a\x80\"", "\xf0\x9f\x9a\x80"}
         };
-        for (const auto& [encoded, expected] : cases)
+        for (const auto& [encoded, expected] : cases) {
             if (parse(encoded).string_value != expected) throw std::runtime_error("Unicode scalar mismatch");
+            if (schgen::parse_json_text(encoded).string_value != expected) throw std::runtime_error("in-memory Unicode scalar mismatch");
+        }
         const std::vector<std::string> invalid = {
             R"("\ud800")", R"("\udc00")", R"("\udfff")", R"("\ud800x")",
             R"("\ud800\n")", R"("\ud800\u0041")", R"("\ud800\ud800")",
@@ -54,7 +56,7 @@ int main() {
         const auto object = parse(R"({"\ud83d\ude80":"payload"})");
         const auto* value = schgen::object_field(object, "🚀");
         if (!value || value->string_value != "payload") throw std::runtime_error("decoded Unicode key missing");
-        std::cout << "JSON Unicode: 24 contracts passed\n";
+        std::cout << "JSON Unicode: 36 contracts passed\n";
         return 0;
     } catch (const std::exception& error) {
         std::cerr << error.what() << '\n'; return 1;

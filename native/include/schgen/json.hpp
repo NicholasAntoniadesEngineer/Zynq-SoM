@@ -27,6 +27,7 @@ struct JsonNode {
 };
 
 JsonNode parse_json_file(const std::string& path);
+JsonNode parse_json_text(std::string_view text, const std::string& source = "<memory>");
 const JsonNode* object_field(const JsonNode& node, const std::string& key);
 std::string require_string(const JsonNode& node, const std::string& key,
                            bool allow_empty, const std::string& prefix);

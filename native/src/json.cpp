@@ -288,9 +288,14 @@ JsonNode parse_json_file(const std::string& path) {
     if (text.empty()) {
         throw std::runtime_error("json: empty file " + path);
     }
+    if (in.bad()) throw std::runtime_error("json: incomplete read " + path);
+    return parse_json_text(text, path);
+}
+
+JsonNode parse_json_text(std::string_view text, const std::string& source) {
     JsonParser parser;
     parser.text = text;
-    parser.source_name = path;
+    parser.source_name = source;
     JsonNode root = parser.parse_value();
     parser.skip_ws();
     if (!parser.at_end()) {
