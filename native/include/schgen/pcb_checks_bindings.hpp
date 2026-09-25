@@ -1,5 +1,6 @@
 #pragma once
 #include "schgen/pcb_checks.hpp"
+#include "schgen/ratsnest_gate.hpp"
 #include "schgen/model_checks_bindings.hpp"
 #include <nanobind/stl/map.h>
 #include <nanobind/stl/tuple.h>
@@ -155,6 +156,19 @@ inline void transfer(RailAmpacityResult& r, nb::dict& d, bool read) {
     if(read){for(auto raw:nb::cast<nb::list>(d["rails"])){PcbRailAmpacity rec;auto row=nb::cast<nb::dict>(raw);transfer(rec,row,true);r.rails.push_back(rec);}}
     else{nb::list rows;for(auto& rec:r.rails){nb::dict row;transfer(rec,row,false);rows.append(row);}d["rails"]=rows;}
 }
+inline void transfer(RatsnestGateResult& r, nb::dict& d, bool read) {
+    field(r.ok,d,"ok",read);
+    field(r.off_board,d,"off_board",read);
+    field(r.dispersed,d,"dispersed",read);
+    field(r.clusters,d,"clusters",read);
+    field(r.cross_mm,d,"cross_mm",read);
+    field(r.total_mm,d,"total_mm",read);
+    field(r.n_cross,d,"n_cross",read);
+    field(r.n_subsystems,d,"n_subsystems",read);
+    field(r.cross_budget_mm,d,"cross_budget_mm",read);
+    field(r.board_w,d,"board_w",read);
+    field(r.board_h,d,"board_h",read);
+}
 template<class T> nb::dict result(T value) {nb::dict out;transfer(value,out,false);return out;}
 template<class T> T result(nb::dict value) {T out;transfer(out,value,true);return out;}
 inline PcbCheckModel model(const nb::dict& d,const std::map<std::string,std::string>& files) {
@@ -192,6 +206,15 @@ inline PcbCheckModel model(const nb::dict& d,const std::map<std::string,std::str
 inline void bind_pcb_checks(nanobind::module_& m) {
     namespace nb=nanobind;using namespace pcb_check_binding;
     nb::class_<PcbCheckInput>(m,"PcbCheckInput");
+    m.def("pcb_ratsnest", [](const PcbCheckInput& input,
+            const std::optional<RatsnestNets>& nets,
+            const std::optional<RatsnestEdges>& edges, double cross_k) {
+        RatsnestGateResult value;
+        { nb::gil_scoped_release release;
+          value = check_ratsnest(input, nets ? &*nets : nullptr, edges ? &*edges : nullptr, cross_k); }
+        return result(value);
+    }, nb::arg("input"), nb::arg("nets").none(), nb::arg("edges").none(), nb::arg("cross_k"));
+    m.def("pcb_ratsnest_summary", [](nb::dict raw) { return result<RatsnestGateResult>(raw).summary(); });
     m.def("pcb_check_prepare",[](const nb::dict& raw,const std::map<std::string,std::string>& files){
         return PcbCheckInput(model(raw,files));
     });

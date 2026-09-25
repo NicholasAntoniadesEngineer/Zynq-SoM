@@ -150,7 +150,7 @@ def generate(*, run_drc: bool = True, two_side: bool = True,
         npp = net_pad_positions(model)
         mst = rn_mod.net_mst_edges(model, npp)
         result["ratsnest"] = rn_mod.generate(model, npp, mst)
-        result["ratsnest_gate"] = ratsnest_gate.check(model, npp, mst)
+        result["ratsnest_gate"] = ratsnest_gate.check(model, npp, mst, prepared=check_input)
         result["placement_mech"] = placement_mech.check(model, prepared=check_input)
         result["connector_model"] = connector_model_gate.check(model, prepared=check_input)
         result["connector_spacing"] = connector_spacing_gate.check(model, prepared=check_input)

@@ -45,6 +45,20 @@ struct JsonParser {
 
     JsonNode parse_value();
 
+    uint32_t unicode_unit() {
+        if (text.size() - index < 4) fail("truncated unicode escape");
+        uint32_t code = 0;
+        for (int digit = 0; digit < 4; ++digit) {
+            const char hex = text[index++];
+            code <<= 4;
+            if (hex >= '0' && hex <= '9') code |= static_cast<uint32_t>(hex - '0');
+            else if (hex >= 'a' && hex <= 'f') code |= static_cast<uint32_t>(hex - 'a' + 10);
+            else if (hex >= 'A' && hex <= 'F') code |= static_cast<uint32_t>(hex - 'A' + 10);
+            else fail("invalid unicode escape");
+        }
+        return code;
+    }
+
     JsonNode parse_string() {
         if (at_end() || text[index] != '"') {
             fail("expected string");
@@ -79,31 +93,29 @@ struct JsonParser {
                 } else if (esc == 't') {
                     out.push_back('\t');
                 } else if (esc == 'u') {
-                    if (index + 4 > text.size()) {
-                        fail("truncated unicode escape");
-                    }
-                    uint32_t code = 0;
-                    for (int digit_i = 0; digit_i < 4; ++digit_i) {
-                        const char hex = text[index];
-                        ++index;
-                        code <<= 4;
-                        if (hex >= '0' && hex <= '9') {
-                            code |= static_cast<uint32_t>(hex - '0');
-                        } else if (hex >= 'a' && hex <= 'f') {
-                            code |= static_cast<uint32_t>(hex - 'a' + 10);
-                        } else if (hex >= 'A' && hex <= 'F') {
-                            code |= static_cast<uint32_t>(hex - 'A' + 10);
-                        } else {
-                            fail("invalid unicode escape");
-                        }
+                    uint32_t code = unicode_unit();
+                    if (code >= 0xD800u && code <= 0xDBFFu) {
+                        if (text.size() - index < 2 || text[index] != '\\' || text[index + 1] != 'u')
+                            fail("high surrogate requires a low surrogate escape");
+                        index += 2;
+                        const uint32_t low = unicode_unit();
+                        if (low < 0xDC00u || low > 0xDFFFu) fail("invalid low surrogate");
+                        code = 0x10000u + ((code - 0xD800u) << 10) + low - 0xDC00u;
+                    } else if (code >= 0xDC00u && code <= 0xDFFFu) {
+                        fail("unpaired low surrogate");
                     }
                     if (code <= 0x7Fu) {
                         out.push_back(static_cast<char>(code));
                     } else if (code <= 0x7FFu) {
                         out.push_back(static_cast<char>(0xC0u | (code >> 6)));
                         out.push_back(static_cast<char>(0x80u | (code & 0x3Fu)));
-                    } else {
+                    } else if (code <= 0xFFFFu) {
                         out.push_back(static_cast<char>(0xE0u | (code >> 12)));
+                        out.push_back(static_cast<char>(0x80u | ((code >> 6) & 0x3Fu)));
+                        out.push_back(static_cast<char>(0x80u | (code & 0x3Fu)));
+                    } else {
+                        out.push_back(static_cast<char>(0xF0u | (code >> 18)));
+                        out.push_back(static_cast<char>(0x80u | ((code >> 12) & 0x3Fu)));
                         out.push_back(static_cast<char>(0x80u | ((code >> 6) & 0x3Fu)));
                         out.push_back(static_cast<char>(0x80u | (code & 0x3Fu)));
                     }

@@ -120,6 +120,10 @@ add_custom_target(schgen_catalogs ALL DEPENDS
 
 include(CTest)
 if(BUILD_TESTING)
+    add_executable(schgen_json_unicode_contracts tests/json_unicode_contracts.cpp)
+    target_link_libraries(schgen_json_unicode_contracts PRIVATE schgen_core)
+    target_compile_options(schgen_json_unicode_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror)
+    add_test(NAME native_json_unicode_contracts COMMAND schgen_json_unicode_contracts)
     foreach(family subsystem_authoring authoring_gates)
         add_executable(schgen_${family}_contracts tests/${family}_contracts.cpp)
         target_link_libraries(schgen_${family}_contracts PRIVATE schgen_core)
