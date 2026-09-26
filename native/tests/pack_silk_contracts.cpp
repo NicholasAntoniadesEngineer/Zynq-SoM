@@ -4,10 +4,52 @@
 #include <cmath>
 #include <iomanip>
 #include <iostream>
+#include <limits>
 #include <stdexcept>
 
 using namespace schgen;
 namespace {
+template<class F> void must_reject(F action) {
+    bool rejected = false;
+    try { action(); } catch (const std::exception&) { rejected = true; }
+    if (!rejected) throw std::runtime_error("invalid silk index input accepted");
+}
+void index_boundaries() {
+    const double nan = std::numeric_limits<double>::quiet_NaN();
+    const double inf = std::numeric_limits<double>::infinity();
+    for (double cell : {0.0, -0.0, -1.0, nan, inf, -inf})
+        must_reject([&] { SilkBoxIndex index(cell); });
+    SilkBoxIndex index(1.0);
+    const Box4 valid{0.0, 0.0, 1.0, 1.0};
+    index.add(valid);
+    for (const auto& invalid : std::vector<Box4>{
+        {nan, 0, 1, 1}, {0, 0, inf, 1}, {-inf, 0, 1, 1},
+        {2, 0, 1, 1}, {0, 2, 1, 1},
+        {1e100, 0, 1e100, 1}, {-1e100, 0, -1e100, 1}}) {
+        must_reject([&] { index.add(invalid); });
+        must_reject([&] { (void)index.hits(invalid); });
+        must_reject([&] { (void)index.pen(invalid); });
+        if (index.boxes().size() != 1 || index.pen(valid) != 1.0)
+            throw std::runtime_error("rejected box mutated silk index");
+    }
+    for (double cell : {static_cast<double>(std::numeric_limits<int>::min()),
+                        static_cast<double>(std::numeric_limits<int>::max())}) {
+        SilkBoxIndex boundary(1.0);
+        const Box4 box{cell, cell, cell + 0.5, cell + 0.5};
+        boundary.add(box);
+        if (!boundary.hits(box) || boundary.pen(box) != 0.25)
+            throw std::runtime_error("representable extreme silk cell lost");
+    }
+    SilkBoxIndex upper(1.0);
+    const double maximum = std::numeric_limits<int>::max();
+    const Box4 wide{maximum - 1, maximum - 1, maximum + 0.5, maximum + 0.5};
+    upper.add(wide);
+    if (upper.pen(wide) != 2.25)
+        throw std::runtime_error("multi-cell extreme query lost or duplicated box");
+    SilkBoxIndex tiny(std::numeric_limits<double>::denorm_min());
+    must_reject([&] { tiny.add(valid); });
+    if (!tiny.boxes().empty()) throw std::runtime_error("overflowed division inserted box");
+}
 const JsonNode &field(const JsonNode &n, const std::string &key) {
     const auto *v = object_field(n, key);
     if (!v)
@@ -67,6 +109,7 @@ int main(int argc, char **argv) {
     try {
         if (argc != 2)
             throw std::runtime_error("usage: pack_silk_contracts CASES_JSON");
+        index_boundaries();
         const auto data = parse_json_file(argv[1]);
         if (field(data, "schema").string_value != "schgen.pack_silk.python/1" ||
             field(data, "cases").array_value.size() != 34)

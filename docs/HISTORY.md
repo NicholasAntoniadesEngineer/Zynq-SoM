@@ -2,6 +2,21 @@
 
 ## 2026-09-26 — tracked Python retirement (acceptance in progress)
 
+Silk spatial-index correction (autonomous): reject nonfinite/nonpositive cell
+sizes and unordered/nonfinite/out-of-range boxes before insertion. Check the
+floating-to-integer cell conversion, use wide inclusive loop counters at
+INT_MAX, and remove the unused member default (the explicit constructor always
+owns the supplied cell size). The original implementation fails the new NaN
+constructor regression. Private strict and ASan/UBSan/float-cast-overflow runs
+pass the new boundary tests and all 181 unchanged silk-oracle fields. Sanitizer
+coverage here is the changed pack translation unit plus test, not every core
+archive object. Fresh devkit timing observations, including the still-failing
+mandatory source audits, are recorded in `native/benchmarks/2026-09-26-cutover.json`.
+Integrated verification: all five focused CTests passed (29.15 s): pack silk,
+live board, PCB placement, placement gates and PCB emission. The matched carrier
+run also passed its sheet, electrical and geometry gates; quantization/ledger
+audits still failed. This fix is not full migration acceptance.
+
 Native acceptance update: all 184 existing CTests passed after Python retirement
 (587.00 s), including live KiCad, source closure and complete source census.
 The added Python-free-tree CTest passed separately and its hidden-source

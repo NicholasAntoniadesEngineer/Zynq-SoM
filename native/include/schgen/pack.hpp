@@ -104,7 +104,7 @@ private:
     std::uint64_t key(int gx, int gy) const;
     std::vector<int> near(const Box4& box) const;
 
-    double cell_ = 8.0;
+    double cell_;
     std::vector<Box4> boxes_;
     std::unordered_map<std::uint64_t, std::vector<int>> cells_;
 };

@@ -335,13 +335,17 @@ std::pair<bool, double> coverage_ok(
 }
 
 SilkBoxIndex::SilkBoxIndex(double cell) : cell_(cell) {
-    if (cell <= 0.0) {
+    if (!std::isfinite(cell) || cell <= 0.0) {
         throw std::runtime_error("SilkBoxIndex: cell required");
     }
 }
 
 int SilkBoxIndex::cell_of(double value) const {
-    return static_cast<int>(std::floor(value / cell_));
+    const double cell = std::floor(value / cell_);
+    if (!std::isfinite(cell) || cell < std::numeric_limits<int>::min() ||
+        cell > std::numeric_limits<int>::max())
+        throw std::out_of_range("SilkBoxIndex: coordinate cell must fit int");
+    return static_cast<int>(cell);
 }
 
 std::uint64_t SilkBoxIndex::key(int gx, int gy) const {
@@ -350,20 +354,27 @@ std::uint64_t SilkBoxIndex::key(int gx, int gy) const {
 }
 
 void SilkBoxIndex::add(const Box4& box) {
-    const int i = static_cast<int>(boxes_.size());
-    boxes_.push_back(box);
+    if (!(box.x0 <= box.x1 && box.y0 <= box.y1))
+        throw std::invalid_argument("SilkBoxIndex: ordered box required");
     const int gx0 = cell_of(box.x0);
     const int gy0 = cell_of(box.y0);
     const int gx1 = cell_of(box.x1);
     const int gy1 = cell_of(box.y1);
-    for (int gx = gx0; gx <= gx1; ++gx) {
-        for (int gy = gy0; gy <= gy1; ++gy) {
-            cells_[key(gx, gy)].push_back(i);
+    if (boxes_.size() > static_cast<std::size_t>(std::numeric_limits<int>::max()))
+        throw std::overflow_error("SilkBoxIndex: box index must fit int");
+    const int i = static_cast<int>(boxes_.size());
+    boxes_.push_back(box);
+    // Inclusive INT_MAX endpoints must not overflow during loop increment.
+    for (std::int64_t gx = gx0; gx <= gx1; ++gx) {
+        for (std::int64_t gy = gy0; gy <= gy1; ++gy) {
+            cells_[key(static_cast<int>(gx), static_cast<int>(gy))].push_back(i);
         }
     }
 }
 
 std::vector<int> SilkBoxIndex::near(const Box4& box) const {
+    if (!(box.x0 <= box.x1 && box.y0 <= box.y1))
+        throw std::invalid_argument("SilkBoxIndex: ordered box required");
     const int gx0 = cell_of(box.x0);
     const int gy0 = cell_of(box.y0);
     const int gx1 = cell_of(box.x1);
@@ -376,9 +387,9 @@ std::vector<int> SilkBoxIndex::near(const Box4& box) const {
         return it->second;
     }
     std::set<int> uniq;
-    for (int gx = gx0; gx <= gx1; ++gx) {
-        for (int gy = gy0; gy <= gy1; ++gy) {
-            auto it = cells_.find(key(gx, gy));
+    for (std::int64_t gx = gx0; gx <= gx1; ++gx) {
+        for (std::int64_t gy = gy0; gy <= gy1; ++gy) {
+            auto it = cells_.find(key(static_cast<int>(gx), static_cast<int>(gy)));
             if (it == cells_.end()) {
                 continue;
             }
