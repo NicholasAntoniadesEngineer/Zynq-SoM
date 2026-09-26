@@ -2,6 +2,7 @@
 // No Python, installed footprint library, live board output, or source inspection.
 #include "../src/floorplan_internal.hpp"
 #include "board_policy_ledger_reference.hpp"
+#include "floorplan_precision_fixture.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -355,7 +356,10 @@ void pack_behavior() {
     require(passes==2&&!automatic.punch_free,"both reservation policies execute; tied free pass rejected");
     const std::map<std::string,std::size_t> quanta{{"outline_fine_grid",164},{"outline_grow_step",10},
         {"outline_snap_up",20},{"run_overflow_tol",696},{"som_pose_half_mm",1394},{"quant_credit",696}};
-    require(automatic.accounting.quantization_engagements==quanta,"all synthetic search quantization engagements accounted exactly");
+    require(floorplan_precision_fixture::select(automatic.accounting.quantization_engagements,false)==quanta,"all prior synthetic search quantization engagements accounted exactly");
+    const auto extra=floorplan_precision_fixture::select(automatic.accounting.quantization_engagements);
+    require(extra.at("floorplan_candidate_area_precision1dp")==110&&extra.at("floorplan_seed_aspect_precision4dp")==1,
+            "both passes count their 55 accepted candidates and only one seed aspect");
 }
 void cross_behavior() {
     FloorplanInput in;in.som.w=20;in.som.h=20;
@@ -482,6 +486,13 @@ void frozen(const std::filesystem::path& dir,const std::string& name,bool geomet
                 name+": explicit newly observed estimator precision operation");
         require(std::none_of(expected_quant.object_value.begin(),expected_quant.object_value.end(),
                 [wanted=key](const auto& entry){return entry.first==wanted;}),name+": additive precision cannot replace an old counter");
+        expected_quant.object_value.emplace_back(key,v);
+    }
+    const auto floorplan_counts=parse_json_file((dir.parent_path()/"floorplan_precision/additive_counts.json").string());
+    for(const auto& [key,v]:field(floorplan_counts,name).object_value){
+        require(floorplan_precision_fixture::added(key)&&v.number_value>0,name+": explicit independently observed floorplan precision operation");
+        require(std::none_of(expected_quant.object_value.begin(),expected_quant.object_value.end(),
+                [wanted=key](const auto& entry){return entry.first==wanted;}),name+": floorplan addition cannot replace a prior counter");
         expected_quant.object_value.emplace_back(key,v);
     }
     same(field(account,"quantization_engagements"),expected_quant,name+".quantization_engagements");

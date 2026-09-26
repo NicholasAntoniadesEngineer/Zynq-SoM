@@ -32,7 +32,7 @@ struct SubsystemPackageReport {
 };
 struct SubsystemStructureResult {
     std::vector<SubsystemPackageReport> packages;
-    AuthoringPackageMode mode = AuthoringPackageMode::legacy_python;
+    AuthoringPackageMode mode = AuthoringPackageMode::native_assets;
     bool ok() const;
     std::size_t n_ok() const;
     std::string summary() const;
@@ -52,7 +52,7 @@ struct CarrierPackageReport {
 };
 struct CarrierStructureResult {
     std::vector<CarrierPackageReport> packages;
-    AuthoringPackageMode mode = AuthoringPackageMode::legacy_python;
+    AuthoringPackageMode mode = AuthoringPackageMode::native_assets;
     bool ok() const;
     std::size_t n_ok() const;
     std::size_t n_adapters() const;
@@ -61,9 +61,9 @@ struct CarrierStructureResult {
     int exit_code() const { return ok() ? 0 : 1; }
 };
 
-// Preserve the repository's retained-authoring package-shape contract (.py,
-// README/test/.cir companions). No source is evaluated. Native callable and
-// metadata declarations come from the supplied registry. In particular, never
+// Native asset policy is the default. Explicit legacy_python mode preserves
+// inert package-shape/report fixtures only; no source is evaluated. Native
+// callable and metadata declarations come from the supplied registry. Never
 // register a companion circuit.json loader as its own adapter factory: the gate
 // compares that companion against an independently authored circuit.
 // native_assets uses the union of registry declarations and visible asset
@@ -76,22 +76,22 @@ struct CarrierStructureResult {
 // must carry a valid native metadata declaration. Missing files must be regular
 // files, not directories. Empty native registries/package roots fail closed.
 std::vector<std::string> subsystem_required_files(const std::string& name,
-    AuthoringPackageMode mode = AuthoringPackageMode::legacy_python);
+    AuthoringPackageMode mode = AuthoringPackageMode::native_assets);
 std::vector<std::string> carrier_required_files(const std::string& name, bool adapter,
-    AuthoringPackageMode mode = AuthoringPackageMode::legacy_python);
+    AuthoringPackageMode mode = AuthoringPackageMode::native_assets);
 SubsystemPackageReport check_subsystem_package(const std::string& name,
     const std::filesystem::path& library, const SubsystemPackageFactory* factory,
-    AuthoringPackageMode mode = AuthoringPackageMode::legacy_python);
+    AuthoringPackageMode mode = AuthoringPackageMode::native_assets);
 SubsystemStructureResult check_subsystem_structure(const std::filesystem::path& library,
     const std::vector<SubsystemPackageFactory>& factories,
-    AuthoringPackageMode mode = AuthoringPackageMode::legacy_python);
+    AuthoringPackageMode mode = AuthoringPackageMode::native_assets);
 CarrierPackageReport check_carrier_package(const std::string& name,
     const std::filesystem::path& base, const std::filesystem::path& library,
     const CarrierPackageFactory* factory,
-    AuthoringPackageMode mode = AuthoringPackageMode::legacy_python);
+    AuthoringPackageMode mode = AuthoringPackageMode::native_assets);
 CarrierStructureResult check_carrier_structure(const std::filesystem::path& base,
     const std::filesystem::path& library, const std::vector<CarrierPackageFactory>& factories,
-    AuthoringPackageMode mode = AuthoringPackageMode::legacy_python);
+    AuthoringPackageMode mode = AuthoringPackageMode::native_assets);
 // Exact Python summaries have no final newline; publication adds one, atomically.
 void write_authoring_gate_report(const std::filesystem::path& path, const std::string& summary);
 JsonNode subsystem_structure_json(const SubsystemStructureResult& result);

@@ -1,4 +1,5 @@
 #include "floorplan_internal.hpp"
+#include "schgen/precision_ops.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -7,12 +8,43 @@
 namespace schgen::floorplan_detail {
 namespace {
 const std::set<std::string> edge_families{"TYPE-C-31-M-12","HDMI-019S","AFC07-S40FCA-00","SFW15R-1STE1LF","TF-01A","DS1024-2x6R2","XT60PW-M"};
+// Each helper books only its immediately following real scalar call in the
+// current plan invocation; candidate restore already preserves all accounting.
+struct BuildPrecision {
+    QuantizationCounts& counts;
+    double area(double value) const {
+        static const std::string name="floorplan_candidate_area_precision1dp";
+        checked_quantization_add(counts,name);
+        return floorplan_candidate_area_precision1dp(value);
+    }
+    double aspect(double value) const {
+        static const std::string name="floorplan_seed_aspect_precision4dp";
+        checked_quantization_add(counts,name);
+        return floorplan_seed_aspect_precision4dp(value);
+    }
+    double value(double value) const {
+        static const std::string name="floorplan_ledger_value_precision1dp";
+        checked_quantization_add(counts,name);
+        return floorplan_ledger_value_precision1dp(value);
+    }
+    double margin(double value) const {
+        static const std::string name="floorplan_ledger_margin_precision3dp";
+        checked_quantization_add(counts,name);
+        return floorplan_ledger_margin_precision3dp(value);
+    }
+    double dimension(double value) const {
+        static const std::string name="floorplan_ledger_dimension_precision4dp";
+        checked_quantization_add(counts,name);
+        return floorplan_ledger_dimension_precision4dp(value);
+    }
+};
 using Inputs=std::vector<std::pair<std::string,JsonNode>>;
 using Winner=std::tuple<double,double,double,double,double>; // area,w,h,estimate,budget
-Inputs winner_inputs(const Winner& w) {
+Inputs winner_inputs(const Winner& w,QuantizationCounts& counts) {
+    const BuildPrecision precision{counts};
     return {{"board_w",jvalue(std::get<1>(w))},{"board_h",jvalue(std::get<2>(w))},
-        {"area",jvalue(std::get<0>(w))},{"est_cross",jvalue(py_round(std::get<3>(w),1))},
-        {"budget",jvalue(py_round(std::get<4>(w),1))},{"headroom",jvalue(py_round(std::get<4>(w)-std::get<3>(w),1))}};
+        {"area",jvalue(std::get<0>(w))},{"est_cross",jvalue(precision.value(std::get<3>(w)))},
+        {"budget",jvalue(precision.value(std::get<4>(w)))},{"headroom",jvalue(precision.value(std::get<4>(w)-std::get<3>(w)))}};
 }
 std::string outline_text(double w,double h) { return number(w)+"x"+number(h); }
 void add_weight(std::vector<std::pair<std::string,double>>& rows,const std::string& key,double w) {
@@ -129,6 +161,7 @@ void Engine::initialize() {
 }
 
 void Engine::ledger_initial(double sw,double sh) {
+    const BuildPrecision precision{plan.accounting.quantization_engagements};
     calc("overmold_side_gap",jvalue(overmold_gap),{{"plug_width",jvalue(overmold_plug_width)},{"copper_half_width",jvalue(overmold_copper_half_width)}});
     calc("edge_band",jvalue(edge_band),{{"edge_depth_cap",jvalue(edge_depth_cap)},{"edge_band_relief",jvalue(edge_band_relief)}});
     calc("occ_punch_mask",jvalue(occ_punch),{{"occ_top",jvalue(occ_top)},{"occ_bottom",jvalue(occ_bottom)}});
@@ -141,7 +174,7 @@ void Engine::ledger_initial(double sw,double sh) {
     calc("subsystem_count",jvalue(n_sub),{{"n_sheets",jvalue(static_cast<int>(in.sheets.size()))},{"n_som_j",jvalue(nj)},
         {"n_mechanical_only",jvalue(static_cast<int>(in.sheets.size())-n_sub-nj)}});
     calc("seed_outline",jvalue(outline_text(sw,sh)),{{"som_w",jvalue(plan.som.w)},{"som_h",jvalue(plan.som.h)},
-        {"som_halo",jvalue(som_halo)},{"edge_band",jvalue(edge_band)},{"component_area",jvalue(py_round(raw_area,1))},
+        {"som_halo",jvalue(som_halo)},{"edge_band",jvalue(edge_band)},{"component_area",jvalue(precision.value(raw_area))},
         {"pack_efficiency",jvalue(fill)},{"perimeter_keepout",jvalue(perimeter)},{"seed_w",jvalue(sw)},{"seed_h",jvalue(sh)}});
     int low=0,high=0;
     for (const auto& [sheet,wh]:in.geometry.zone_box) {
@@ -161,10 +194,11 @@ void Engine::ledger_initial(double sw,double sh) {
         {"tier_le8_1p50",jvalue(low)},{"tier_ge9_2p00",jvalue(high)}});
     const auto [gw,gh,cols,rows]=som_decoupling_grid(plan.som.w,plan.som.h,plan.dec_count,dec_inset);
     calc("decoupling_grid",jvalue(plan.dec_count),{{"n_caps",jvalue(plan.dec_count)},{"som_w",jvalue(plan.som.w)},
-        {"som_h",jvalue(plan.som.h)},{"inset",jvalue(dec_inset)},{"grid_w",jvalue(py_round(gw,4))},
-        {"grid_h",jvalue(py_round(gh,4))},{"cols",jvalue(cols)},{"rows",jvalue(rows)}});
+        {"som_h",jvalue(plan.som.h)},{"inset",jvalue(dec_inset)},{"grid_w",jvalue(precision.dimension(gw))},
+        {"grid_h",jvalue(precision.dimension(gh))},{"cols",jvalue(cols)},{"rows",jvalue(rows)}});
 }
 void Engine::ledger_sides() {
+    const BuildPrecision precision{plan.accounting.quantization_engagements};
     int two=0,bottom=0,single=0;
     for (const auto& [name,s]:side_offers) {
         if (!s.incumbent) {
@@ -172,8 +206,8 @@ void Engine::ledger_sides() {
         } else {
             ++two; if (s.chosen=="bottom") ++bottom;
             calc("side_choice",jvalue(s.chosen),{{"label",jvalue(name)},{"offered",jvalue(s.offered)},
-                {"est_incumbent",jvalue(py_round(*s.incumbent,1))},{"est_challenger",jvalue(py_round(*s.challenger,1))},
-                {"margin",jvalue(py_round(*s.incumbent-*s.challenger,3))}});
+                {"est_incumbent",jvalue(precision.value(*s.incumbent))},{"est_challenger",jvalue(precision.value(*s.challenger))},
+                {"margin",jvalue(precision.margin(*s.incumbent-*s.challenger))}});
         }
     }
     calc("side_census",jvalue(two+single),{{"n_blocks",jvalue(two+single)},{"n_two_face",jvalue(two)},
@@ -181,6 +215,7 @@ void Engine::ledger_sides() {
 }
 
 FloorplanPlan Engine::run() {
+    const BuildPrecision precision{plan.accounting.quantization_engagements};
     ledger_open();
     initialize();
     const auto outline=derive_outline_wh(plan.som.w,plan.som.h,som_halo,edge_band,perimeter,fill,raw_area);
@@ -219,18 +254,18 @@ FloorplanPlan Engine::run() {
         try { free_est=fixed(true); } catch (const FloorplanError&) {}
         if (free_est && *free_est<estimate_real-1e-6) estimate_real=*free_est;
         else { restore(conservative); side_offers=offers; plan.accounting.fallback_events=conservative.accounting.fallback_events; fallback("punch_free_plan_rejected"); }
-        const double area=py_round(plan.board_w*plan.board_h,1);
+        const double area=precision.area(plan.board_w*plan.board_h);
         const double budget=cross_budget(plan.board_w,plan.board_h,n_sub,in.cross_budget_k);
-        calc("plan_choice",jvalue("fixed"),{{"conservative_area",jvalue(area)},{"conservative_est",jvalue(py_round(estimate_real,1))},
-            {"free_area",jvalue(area)},{"free_est",jvalue(free_est ? py_round(*free_est,1):0.0)}});
+        calc("plan_choice",jvalue("fixed"),{{"conservative_area",jvalue(area)},{"conservative_est",jvalue(precision.value(estimate_real))},
+            {"free_area",jvalue(area)},{"free_est",jvalue(free_est ? precision.value(*free_est):0.0)}});
         ledger_sides();
-        auto inputs=winner_inputs({area,plan.board_w,plan.board_h,estimate_real,budget}); inputs.emplace_back("plan",jvalue("fixed"));
+        auto inputs=winner_inputs({area,plan.board_w,plan.board_h,estimate_real,budget},plan.accounting.quantization_engagements); inputs.emplace_back("plan",jvalue("fixed"));
         calc("sizing_winner",jvalue(outline_text(plan.board_w,plan.board_h)),std::move(inputs));
         plan.outline_note="FIXED outline "+outline_text(plan.board_w,plan.board_h)+" mm declared in carrier/floorplan.json; estimated cross-subsystem airwire "+
             number(estimate_real,0)+" mm (LAW-5 budget "+number(budget,0)+" mm — the REAL gate in `schgen board` is the arbiter)";
         return std::move(plan);
     }
-    const double seed_aspect=py_round(sw/sh,4);
+    const double seed_aspect=precision.aspect(sw/sh);
     const std::set<double> aspects{seed_aspect,1,1.1,1.2,1.3,1.4};
     auto search=[&](bool free) -> Winner {
         plan.punch_free=free;
@@ -254,7 +289,7 @@ FloorplanPlan Engine::run() {
             fit_seen=true;
             const double budget=cross_budget(w,h,n_sub,in.cross_budget_k), est=estimate();
             if (est>budget) { ++tally["reject_law5_budget"]; return std::nullopt; }
-            ++tally["accepted"]; return Winner{py_round(w*h,1),w,h,est,budget};
+            ++tally["accepted"]; return Winner{precision.area(w*h),w,h,est,budget};
         };
         for (double aspect:aspects) for (int k=0;k<80;++k) {
             checked_quantization_add(plan.accounting.quantization_engagements, "outline_grow_step");
@@ -288,9 +323,9 @@ FloorplanPlan Engine::run() {
         Inputs ti;
         for (const auto* key:{"generated","reject_aspect","reject_min_area","reject_not_smaller","reject_pack","reject_law5_budget","accepted"}) ti.emplace_back(key,jvalue(tally.at(key)));
         calc("outline_candidates",jvalue(tally.at("generated")),std::move(ti),"sizing.pass");
-        calc("law5_airwire_budget",jvalue(py_round(std::get<4>(*best),1)),{{"cross_k",jvalue(in.cross_budget_k)},
+        calc("law5_airwire_budget",jvalue(precision.value(std::get<4>(*best))),{{"cross_k",jvalue(in.cross_budget_k)},
             {"board_w",jvalue(plan.board_w)},{"board_h",jvalue(plan.board_h)},{"n_subsystems",jvalue(n_sub)}},"sizing.pass");
-        calc("pass_winner",jvalue(outline_text(plan.board_w,plan.board_h)),winner_inputs(*best),"sizing.pass");
+        calc("pass_winner",jvalue(outline_text(plan.board_w,plan.board_h)),winner_inputs(*best,plan.accounting.quantization_engagements),"sizing.pass");
         return *best;
     };
     reset_shapes(); const Winner conservative_best=search(false);
@@ -306,10 +341,10 @@ FloorplanPlan Engine::run() {
         restore(conservative); side_offers=offers; plan.accounting.fallback_events=conservative.accounting.fallback_events; fallback("punch_free_plan_rejected");
     }
     calc("plan_choice",jvalue(choice),{{"conservative_area",jvalue(std::get<0>(conservative_best))},
-        {"conservative_est",jvalue(py_round(std::get<3>(conservative_best),1))},
-        {"free_area",jvalue(free_best ? std::get<0>(*free_best):0.0)},{"free_est",jvalue(free_best ? py_round(std::get<3>(*free_best),1):0.0)}});
+        {"conservative_est",jvalue(precision.value(std::get<3>(conservative_best)))},
+        {"free_area",jvalue(free_best ? std::get<0>(*free_best):0.0)},{"free_est",jvalue(free_best ? precision.value(std::get<3>(*free_best)):0.0)}});
     ledger_sides();
-    auto wi=winner_inputs(best); wi.emplace_back("plan",jvalue(choice));
+    auto wi=winner_inputs(best,plan.accounting.quantization_engagements); wi.emplace_back("plan",jvalue(choice));
     calc("sizing_winner",jvalue(outline_text(plan.board_w,plan.board_h)),std::move(wi));
     std::string aspect_text;
     for (double a:aspects) { if (!aspect_text.empty()) aspect_text+=", "; aspect_text+=number(a); }

@@ -1,6 +1,7 @@
 #pragma once
 // Codec matching the independently captured pre-extraction native output bytes.
 #include "pcb_placement_fixture.hpp"
+#include "floorplan_precision_fixture.hpp"
 #include "pcb_stage_internal.hpp"
 #include <iomanip>
 #include <sstream>
@@ -10,9 +11,9 @@ namespace connector_fixture {
 using namespace schgen;
 inline void counts(std::ostream& stream, const char* owner, const QuantizationCounts& values) {
     stream << owner << '\n';
-    // Separate additive contracts prove these two counters independently.
+    // Separate additive contracts prove connector and floorplan additions.
     for (const auto& [name, count] : values)
-        if(name!="mechanical_direction_component" && name!="stage_direction_component")
+        if(name!="mechanical_direction_component" && name!="stage_direction_component" && !floorplan_precision_fixture::added(name))
         stream << std::quoted(name) << ' ' << count << '\n';
 }
 inline void mechanical(std::ostream& stream, const PlacementMechResult& result) {

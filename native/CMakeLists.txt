@@ -461,6 +461,14 @@ if(BUILD_TESTING)
         -Wall -Wextra -Wpedantic -Werror -ffp-contract=off)
     add_test(NAME native_connector_precision_contracts COMMAND schgen_connector_precision_contracts
         "${CMAKE_CURRENT_SOURCE_DIR}/..")
+    add_executable(schgen_floorplan_precision_contracts tests/floorplan_precision_contracts.cpp
+        $<TARGET_OBJECTS:schgen_precision_observed>)
+    target_include_directories(schgen_floorplan_precision_contracts PRIVATE src)
+    target_link_libraries(schgen_floorplan_precision_contracts PRIVATE schgen_core)
+    target_compile_options(schgen_floorplan_precision_contracts PRIVATE
+        -Wall -Wextra -Wpedantic -Werror -ffp-contract=off)
+    add_test(NAME native_floorplan_precision_contracts COMMAND schgen_floorplan_precision_contracts
+        "${CMAKE_CURRENT_SOURCE_DIR}/..")
     foreach(family regression_cli regression_rc_smoke)
         add_executable(schgen_${family}_contracts tests/${family}_contracts.cpp)
         target_link_libraries(schgen_${family}_contracts PRIVATE schgen_core)

@@ -35,6 +35,65 @@ std::vector<CarrierPackageFactory> project_factories(const fs::path& root,const 
     ProjectAuthoringInput input;input.project_root=root/project;
     return native_project_factories(project,input);
 }
+void default_mode_contracts(const fs::path& root) {
+    constexpr auto native=AuthoringPackageMode::native_assets;
+    SubsystemStructureResult library_default;
+    CarrierStructureResult carrier_default;
+    require(library_default.mode==native&&!library_default.ok()&&library_default.exit_code()==1,
+        "default empty library result must fail closed");
+    require(carrier_default.mode==native&&!carrier_default.ok()&&carrier_default.exit_code()==1,
+        "default empty carrier result must fail closed");
+    SubsystemPackageReport bad;bad.errors={"intentional failed package"};
+    SubsystemStructureResult failed{{bad}};
+    require(!failed.ok()&&failed.exit_code()==1&&failed.exit_code(true)==1,
+        "default failed library result must not use report-first exit status");
+    require(subsystem_required_files("widget")==std::vector<std::string>{"README.md","widget.cir"},
+        "default library requirements retained Python");
+    require(carrier_required_files("widget",true)==std::vector<std::string>{"circuit.json"},
+        "default adapter requirements retained Python");
+    require(carrier_required_files("widget",false)==std::vector<std::string>{"circuit.json","README.md","widget.cir"},
+        "default local requirements retained Python");
+
+    Scratch s;const auto empty=s.path/"empty",missing=s.path/"missing";
+    fs::create_directories(empty);
+    auto libraries=native_subsystem_factories();
+    for(const auto& path:{empty,missing}) {
+        const auto no_library=check_subsystem_structure(path,{});
+        const auto no_project=check_carrier_structure(path,root/"subsystems",{});
+        require(no_library.mode==native&&!no_library.ok()&&no_library.exit_code()==1,
+            "default empty/missing library accepted");
+        require(no_project.mode==native&&!no_project.ok()&&no_project.exit_code()==1,
+            "default empty/missing project accepted");
+        const auto absent=check_subsystem_structure(path,libraries);
+        require(absent.mode==native&&absent.packages.size()==libraries.size()&&!absent.ok()&&absent.exit_code()==1,
+            "default discovery lost registered missing library packages");
+        for(const auto& package:absent.packages)
+            require(!package.missing.empty(),"missing registered library lacks missing-asset diagnostic");
+    }
+    for(const auto& factory:libraries) {
+        require(check_subsystem_package(factory.name,root/"subsystems",&factory).ok(),
+            "default real library package failed: "+factory.name);
+        const auto absent=check_subsystem_package(factory.name,missing,&factory);
+        require(!absent.ok()&&!absent.missing.empty(),"default missing library package accepted");
+    }
+    for(const auto* project:{"carrier","devkit_mini"}) {
+        const auto factories=project_factories(root,project);
+        for(const auto& path:{empty,missing}) {
+            const auto absent=check_carrier_structure(path,root/"subsystems",factories);
+            require(absent.mode==native&&absent.packages.size()==factories.size()&&!absent.ok()&&absent.exit_code()==1,
+                "default discovery lost registered missing project packages");
+            for(const auto& package:absent.packages)
+                require(!package.missing.empty(),"missing registered project lacks missing-asset diagnostic");
+        }
+        for(const auto& factory:factories) {
+            require(check_carrier_package(factory.name,root/project/"subsystems",root/"subsystems",&factory).ok(),
+                std::string(project)+": default real project package failed: "+factory.name);
+            const auto absent=check_carrier_package(factory.name,missing,root/"subsystems",&factory);
+            require(!absent.ok()&&!absent.missing.empty(),"default missing project package accepted");
+        }
+    }
+    require(!fs::exists(missing),"default gate created its missing input directory");
+}
 // Legacy discovery/report compatibility is tested only in this inert layout.
 // No retained .py source is copied, imported, evaluated or required in ROOT.
 // The independent oracle selects the population/shape; live native factories
@@ -77,16 +136,17 @@ void legacy_reports(const fs::path& root,const JsonNode& library) {
         if(entry.path().extension()==".py")require(read(entry.path())==inert,"legacy fixture contains executable source");
 }
 void mutations(const fs::path& root) {
+    constexpr auto mode=AuthoringPackageMode::legacy_python;
     Scratch s;const auto base=s.path/"carrier",lib=s.path/"lib";
     fs::create_directories(lib/"usb_pd");fs::create_directories(base);
-    require(!check_carrier_structure(base,lib,{}).ok(),"empty carrier must fail");
-    require(check_subsystem_structure(lib,{}).ok(),"empty discoverable library is report-first PASS");
+    require(!check_carrier_structure(base,lib,{},mode).ok(),"empty carrier must fail");
+    require(check_subsystem_structure(lib,{},mode).ok(),"empty discoverable library is report-first PASS");
     auto factories=project_factories(root,"carrier");
     auto it=std::find_if(factories.begin(),factories.end(),[](const auto& x){return x.name=="usb_pd";});
     require(it!=factories.end(),"oracle usb_pd");
     auto f=*it;
-    for(const auto& name:carrier_required_files("usb_pd",true))write(base/name,"retained authoring artifact\n");
-    auto check=[&]{return check_carrier_package("usb_pd",base,lib,&f);};
+    for(const auto& name:carrier_required_files("usb_pd",true,mode))write(base/name,"retained authoring artifact\n");
+    auto check=[&]{return check_carrier_package("usb_pd",base,lib,&f,mode);};
     require(check().ok(),"flat adapter without companion must pass");
     fs::create_directories(base/"usb_pd");
     require(!check().ok()&&!check().missing.empty(),"empty companion must fail");
@@ -99,43 +159,43 @@ void mutations(const fs::path& root) {
     require(!check().ok()&&!check().missing.empty(),"extra companion code accepted");
     fs::remove(base/"usb_pd/hidden.py");
     auto changed=f;changed.circuit=[build=f.circuit]{auto c=build();c.title+=" edited";return c;};
-    auto r=check_carrier_package("usb_pd",base,lib,&changed);
+    auto r=check_carrier_package("usb_pd",base,lib,&changed,mode);
     require(r.errors==std::vector<std::string>{"circuit.json differs from the adapter netlist"},"authoring mutation was ignored");
     // A second direction catches gates that compare an IR companion to itself.
     auto bad=bytes;const auto pos=bad.find("USB-PD:");require(pos!=std::string::npos,"title mutation target");bad.insert(pos,"changed ");
     write(base/"usb_pd/circuit.json",bad);require(!check().ok()&&check().errors.size()==1,"companion mutation was ignored");
     write(base/"usb_pd/circuit.json","{");require(!check().errors.empty(),"malformed companion accepted");
     write(base/"usb_pd/circuit.json",bytes);
-    changed=f;changed.meta.reset();r=check_carrier_package("usb_pd",base,lib,&changed);
+    changed=f;changed.meta.reset();r=check_carrier_package("usb_pd",base,lib,&changed,mode);
     require(!r.ok()&&r.has_circuit&&!r.has_meta,"missing META accepted");
-    changed=f;changed.circuit={};r=check_carrier_package("usb_pd",base,lib,&changed);
+    changed=f;changed.circuit={};r=check_carrier_package("usb_pd",base,lib,&changed,mode);
     require(!r.ok()&&!r.has_circuit,"missing factory accepted");
     changed=f;changed.circuit=[]()->CircuitSheetIr{throw CircuitAuthoringError("intentional build failure");};
-    r=check_carrier_package("usb_pd",base,lib,&changed);require(r.errors==std::vector<std::string>{"CircuitError: intentional build failure"},"factory exception lost");
-    require(!check_carrier_package("usb_pd",base,lib,nullptr).ok(),"unregistered authoring accepted");
+    r=check_carrier_package("usb_pd",base,lib,&changed,mode);require(r.errors==std::vector<std::string>{"CircuitError: intentional build failure"},"factory exception lost");
+    require(!check_carrier_package("usb_pd",base,lib,nullptr,mode).ok(),"unregistered authoring accepted");
     fs::remove(base/"test_usb_pd.py");require(check().missing==std::vector<std::string>{"test_usb_pd.py"},"missing adapter test not detected");
     write(base/"widget.py","flat local");
     CarrierPackageFactory local{"widget",[]{CircuitAuthor c("widget");return c.finish();},std::nullopt};
-    require(!check_carrier_package("widget",base,lib,&local).ok(),"flat local accepted");
-    for(const auto& name:carrier_required_files("widget",false))write(base/"widget"/name,"");
-    require(check_carrier_package("widget",base,lib,&local).ok(),"complete foldered local rejected");
-    fs::remove(base/"widget/README.md");require(!check_carrier_package("widget",base,lib,&local).ok(),"missing local readme accepted");
+    require(!check_carrier_package("widget",base,lib,&local,mode).ok(),"flat local accepted");
+    for(const auto& name:carrier_required_files("widget",false,mode))write(base/"widget"/name,"");
+    require(check_carrier_package("widget",base,lib,&local,mode).ok(),"complete foldered local rejected");
+    fs::remove(base/"widget/README.md");require(!check_carrier_package("widget",base,lib,&local,mode).ok(),"missing local readme accepted");
     // Library gate uses actual constructor results and declared interfaces.
     const auto pkg=lib/"usb_pd";
-    for(const auto& name:subsystem_required_files("usb_pd"))write(pkg/name,"");
+    for(const auto& name:subsystem_required_files("usb_pd",mode))write(pkg/name,"");
     write(pkg/"__init__.py","");
     auto libs=native_subsystem_factories();
     auto l=*std::find_if(libs.begin(),libs.end(),[](const auto& x){return x.name=="usb_pd";});
-    auto lr=check_subsystem_package("usb_pd",lib,&l);require(lr.ok(),"valid library rejected");
-    l.interface.erase(l.interface.begin());l.interface.push_back("BOGUS");lr=check_subsystem_package("usb_pd",lib,&l);
+    auto lr=check_subsystem_package("usb_pd",lib,&l,mode);require(lr.ok(),"valid library rejected");
+    l.interface.erase(l.interface.begin());l.interface.push_back("BOGUS");lr=check_subsystem_package("usb_pd",lib,&l,mode);
     require(lr.interface_drift==std::vector<std::string>{"net '+VDD_LOGIC' is an external but not in the declared INTERFACE", "INTERFACE name 'BOGUS' is not an external net of the built circuit"},"interface drift not diagnosed");
-    SubsystemStructureResult fail{{lr}};require(fail.exit_code()==0&&fail.exit_code(true)==1,"report-first/strict policy");
-    l.interface.clear();require(!check_subsystem_package("usb_pd",lib,&l).ok(),"empty interface accepted");
+    SubsystemStructureResult fail{{lr},mode};require(fail.exit_code()==0&&fail.exit_code(true)==1,"report-first/strict policy");
+    l.interface.clear();require(!check_subsystem_package("usb_pd",lib,&l,mode).ok(),"empty interface accepted");
     l.circuit=[build=l.circuit_meta]{return build(SubsystemMeta{});};l.circuit_meta={};
-    lr=check_subsystem_package("usb_pd",lib,&l);require(lr.has_circuit&&!lr.accepts_meta&&!lr.ok(),"missing meta signature accepted");
+    lr=check_subsystem_package("usb_pd",lib,&l,mode);require(lr.has_circuit&&!lr.accepts_meta&&!lr.ok(),"missing meta signature accepted");
     l.circuit=[]()->CircuitSheetIr{throw CircuitAuthoringError("intentional failure");};
-    require(check_subsystem_package("usb_pd",lib,&l).errors==std::vector<std::string>{"circuit() build failed: CircuitError: intentional failure"},"library exception report");
-    l.circuit={};lr=check_subsystem_package("usb_pd",lib,&l);require(!lr.has_circuit&&!lr.ok(),"no top-level circuit accepted");
+    require(check_subsystem_package("usb_pd",lib,&l,mode).errors==std::vector<std::string>{"circuit() build failed: CircuitError: intentional failure"},"library exception report");
+    l.circuit={};lr=check_subsystem_package("usb_pd",lib,&l,mode);require(!lr.has_circuit&&!lr.ok(),"no top-level circuit accepted");
     write_authoring_gate_report(s.path/"reports/gate.txt",fail.summary());
     require(read(s.path/"reports/gate.txt")==fail.summary()+"\n","report publication bytes");
     auto rendered=fail.summary();fail.packages[0].errors.push_back("later mutation");
@@ -181,7 +241,7 @@ void native_packages(const fs::path& root) {
     require(lib_result.ok()&&lib_result.n_ok()==17,"native library without any Python failed: "+lib_result.summary());
     require(lib_result.exit_code()==0&&lib_result.summary().find(".py")==std::string::npos,"native summary describes Python package shape");
     require(at(subsystem_structure_json(lib_result),"package_mode").string_value=="native_assets","native JSON report lacks mode");
-    require(check_subsystem_structure(library,libraries).packages.empty(),"legacy discovery contract changed");
+    require(check_subsystem_structure(library,libraries,AuthoringPackageMode::legacy_python).packages.empty(),"legacy discovery contract changed");
     auto empty=check_subsystem_structure(s.path/"empty",{},mode);
     require(!empty.ok()&&empty.exit_code()==1,"empty native library must fail closed, not report-first");
     require(!check_carrier_structure(s.path/"empty",library,{},mode).ok(),"empty native project accepted");
@@ -262,9 +322,10 @@ int main(int argc,char** argv) {
     try {
         require(argc==2,"usage: authoring_gates_contracts REPOSITORY");const fs::path root=argv[1];
         require(open_part_catalog((root/"native/catalog.bin").string()),"open catalog");
+        default_mode_contracts(root);
         const auto library=parse_json_file((root/"native/tests/data/authoring/gate_library.json").string());
         constexpr auto mode=AuthoringPackageMode::native_assets;
-        auto result=check_subsystem_structure(root/"subsystems",native_subsystem_factories(),mode);
+        auto result=check_subsystem_structure(root/"subsystems",native_subsystem_factories());
         require(result.ok()&&result.n_ok()==17,"real library gate failed: "+result.summary());
         require(result.exit_code()==0&&result.mode==mode,"real repository must use the native hard gate");
         legacy_reports(root,library);
@@ -276,7 +337,7 @@ int main(int argc,char** argv) {
                 require(f!=factories.end(),"missing native project factory");
                 require(authoring_json_equal(authored_circuit_json(f->circuit()),at(p,"circuit")),std::string(project)+":"+f->name+" differs from independent Python circuit output");
             }
-            auto r=check_carrier_structure(root/project/"subsystems",root/"subsystems",factories,mode);
+            auto r=check_carrier_structure(root/project/"subsystems",root/"subsystems",factories);
             require(r.ok(),r.summary());
             require(r.mode==mode&&r.packages.size()==at(fixture,"packages").array_value.size(),"real native package census changed");
             require(r.exit_code()==0&&r.n_locals()+r.n_adapters()==r.packages.size(),"gate count/exit");

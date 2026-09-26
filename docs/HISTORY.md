@@ -2,6 +2,17 @@
 
 ## 2026-09-26 — tracked Python retirement (acceptance in progress)
 
+Native acceptance update: all 184 existing CTests passed after Python retirement
+(587.00 s), including live KiCad, source closure and complete source census.
+The added Python-free-tree CTest passed separately and its hidden-source
+negative fixture failed as intended. Public package gate/result defaults now
+select native assets, with explicit legacy-only fixture dispatch and new
+empty/missing/default-mode regressions. Six actual floorplan rounding operations
+now carry invocation-owned accounting; independent function-entry observation
+verifies new counts while preserving all 83 policy rows, complete plan/ledger
+bytes and prior counters. Seven affected integration tests passed. This does
+not waive the still-open complete board source-policy audit.
+
 Autonomous, per full-autonomy directive: removed all 393 inventoried tracked
 Python files after validating each original SHA-256 and accepting the remaining
 native SI-unit, downstream-I2C, repeated-build/thermal and committed-render

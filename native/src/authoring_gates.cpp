@@ -119,7 +119,7 @@ SubsystemStructureResult check_subsystem_structure(const fs::path& library,const
         return r;
     }
     for(const auto& p:children(library))if(fs::is_directory(p)&&fs::exists(p/"__init__.py")&&!model_checks::starts(p.filename().string(),"_")) {
-        const auto name=p.filename().string();r.packages.push_back(check_subsystem_package(name,library,factory_for(factories,name)));
+        const auto name=p.filename().string();r.packages.push_back(check_subsystem_package(name,library,factory_for(factories,name),mode));
     }
     return r;
 }
@@ -150,7 +150,7 @@ CarrierPackageReport check_carrier_package(const std::string& name,const fs::pat
     auto netlist=r.adapter?base/(name+".py"):base/name/(name+".py");
     if(r.adapter) {
         r.path=netlist;
-        for(const auto& file:carrier_required_files(name,true))if(!fs::exists(base/file))r.missing.push_back(file);
+        for(const auto& file:carrier_required_files(name,true,mode))if(!fs::exists(base/file))r.missing.push_back(file);
         if(fs::is_directory(base/name)) {
             std::vector<std::string> entries;
             for(const auto& p:children(base/name))if(!sync_duplicate(p))entries.push_back(p.filename().string());
@@ -158,7 +158,7 @@ CarrierPackageReport check_carrier_package(const std::string& name,const fs::pat
         }
     } else {
         if(!fs::is_directory(r.path))r.missing.push_back(name+"/ (local must be a foldered package)");
-        for(const auto& file:carrier_required_files(name,false))if(!fs::exists(r.path/file))r.missing.push_back(file);
+        for(const auto& file:carrier_required_files(name,false,mode))if(!fs::exists(r.path/file))r.missing.push_back(file);
     }
     if(!fs::exists(netlist))return r;
     if(!factory){r.errors.push_back("native authoring factory unavailable: "+name);return r;}
@@ -190,8 +190,8 @@ CarrierStructureResult check_carrier_structure(const fs::path& base,const fs::pa
         if(fs::is_directory(p))names.insert(name);
         else if(p.extension()==".py"&&!model_checks::starts(name,"test_")&&p.stem()!="__init__")names.insert(p.stem().string());
     }
-    CarrierStructureResult r;
-    for(const auto& name:names)r.packages.push_back(check_carrier_package(name,base,library,factory_for(factories,name)));
+    CarrierStructureResult r;r.mode=mode;
+    for(const auto& name:names)r.packages.push_back(check_carrier_package(name,base,library,factory_for(factories,name),mode));
     return r;
 }
 std::string SubsystemStructureResult::summary() const {

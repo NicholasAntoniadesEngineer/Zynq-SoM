@@ -1,4 +1,5 @@
 #include "floorplan_internal.hpp"
+#include "schgen/precision_ops.hpp"
 #include "schgen/floorplan_ledger_policy.hpp"
 #include "pcb_stage_internal.hpp"
 #include "schgen/ratsnest_gate.hpp"
@@ -104,11 +105,15 @@ const std::vector<Declaration> declarations{
 std::string pad(const std::string& value,std::size_t width) {
     return value+std::string(value.size()<width ? width-value.size():0,' ');
 }
-std::string shown(const JsonNode& value) {
+std::string shown(const JsonNode& value,QuantizationCounts& counts) {
     if (value.kind==JsonKind::String) return value.string_value;
     if (value.kind==JsonKind::Bool) return value.bool_value ? "yes":"no";
     if (value.kind!=JsonKind::Number) throw std::logic_error("floorplan ledger: non-scalar value");
-    auto text=number(py_round(value.number_value,4),4);
+    // Numeric decision construction owns the actual work. Cached ledger
+    // rendering below simply reads stored text and never revisits this call.
+    static const std::string name="floorplan_ledger_display_precision4dp";
+    checked_quantization_add(counts,name);
+    auto text=number(floorplan_ledger_display_precision4dp(value.number_value),4);
     while (!text.empty() && text.back()=='0') text.pop_back();
     if (!text.empty() && text.back()=='.') text.pop_back();
     return text.empty() || text=="-0" ? "0":text;
@@ -122,7 +127,7 @@ void Engine::ledger_open() {
         const auto value=schgen::floorplan_live_assumption(d.name,in);
         if(!value)throw std::logic_error("floorplan ledger: missing live assumption "+d.name);
         const auto v=jvalue(*value);
-        const auto text="  ASSUME "+pad(d.name,30)+" = "+pad(shown(v),13)+" "+pad(d.unit,10)+
+        const auto text="  ASSUME "+pad(d.name,30)+" = "+pad(shown(v,plan.accounting.quantization_engagements),13)+" "+pad(d.unit,10)+
             " ["+d.source+"] "+d.cover+" — "+d.basis;
         plan.accounting.decisions.push_back({d.step,d.kind,d.name,v,{},1,text});
     }
@@ -143,15 +148,15 @@ void Engine::calc(const std::string& name,JsonNode value,
     std::vector<std::string> keys;
     std::string ins;
     for (const auto& [key,v]:inputs) {
-        if (key=="label") { label=shown(v); continue; }
+        if (key=="label") { label=shown(v,plan.accounting.quantization_engagements); continue; }
         keys.push_back(key);
         if (!ins.empty()) ins+=" ";
-        ins+=key+"="+shown(v);
+        ins+=key+"="+shown(v,plan.accounting.quantization_engagements);
     }
     if (keys!=d.inputs) throw std::logic_error("floorplan ledger: calculation inputs drifted for "+repr(name));
     const int depth=step=="sizing.pass" ? 2:1;
     const auto display=name+(label.empty() ? "":"["+label+"]");
-    const auto text=std::string(depth*2,' ')+"CALC   "+pad(display,30)+" = "+pad(shown(value),13)+" "+
+    const auto text=std::string(depth*2,' ')+"CALC   "+pad(display,30)+" = "+pad(shown(value,plan.accounting.quantization_engagements),13)+" "+
         pad(d.unit,10)+" <- "+ins+"  ::  "+d.expression;
     plan.accounting.decisions.push_back({step,"CALC",name,std::move(value),std::move(inputs),depth,text});
 }

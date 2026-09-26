@@ -21,4 +21,13 @@ int breathe_retreat_steps(double distance, double step);
 int mechanical_direction_component(double value);
 double stage_direction_component(double value);
 
+// Floorplan candidate decisions and ledger construction keep distinct scalar
+// boundaries. Cached ledger rendering does not execute these operations.
+double floorplan_candidate_area_precision1dp(double value);
+double floorplan_seed_aspect_precision4dp(double value);
+double floorplan_ledger_value_precision1dp(double value);
+double floorplan_ledger_margin_precision3dp(double value);
+double floorplan_ledger_dimension_precision4dp(double value);
+double floorplan_ledger_display_precision4dp(double value);
+
 } // namespace schgen
