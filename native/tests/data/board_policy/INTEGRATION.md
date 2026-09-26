@@ -1,7 +1,10 @@
 # Native board policy: completed producer checkpoint
 
-The 31 provider gaps are closed. The factory supplies **64 declarations:
-46 live assumptions and 18 authored calculations**, with no missing providers.
+The 31 provider gaps are closed. With the subsequent explicit breathe-policy
+exposure, the factory supplies **66 declarations: 48 live assumptions and 18
+authored calculations**, with no missing providers. See
+`../precision_ops/README.md` for the new precision source/manifest integration,
+independent accounting evidence, and two separately authored ledger additions.
 This is provider/import completeness, not permission to skip the independent
 full C++ source audit.
 
@@ -54,7 +57,8 @@ are inferred from compiler output or observed ledger rows.
   The half-grid expression retains multiplication followed by division.
 - `native/include/schgen/board_decision_policy.hpp::schgen::board_decision_policy::`
   owns `zone_pack_fill`, `edge_zone_aspect`, `interior_zone_aspect`,
-  `interior_band_target`, `df40_min_pins`. Actual pack/zones/breathe code uses
+  `interior_band_target`, `df40_min_pins`, and now `breathe_epsilon_mm` and
+  `breathe_step_mm`. Actual pack/zones/breathe code uses
   these constants; `pcb_checks_placement.cpp` shares the DF40 threshold.
 - Existing stage/ratsnest providers and actual `FloorplanInput` cross-budget/
   clearance parameters remain covered as before.
@@ -93,6 +97,9 @@ ledger rows still compare exactly; the eight old rows disappear, two honest
 assumptions appear, and the two via calculations change their input provenance.
 
 ## Tests and build checkpoint
+
+The following counts describe the original provider checkpoint. Current
+post-precision/post-exposure proof counts are in `../precision_ops/README.md`.
 
 Add a separate executable `tests/board_policy_migration_contracts.cpp` linked
 to core and run it with the repository root. No second TU is required for

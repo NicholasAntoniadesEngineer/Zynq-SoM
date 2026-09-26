@@ -29,10 +29,15 @@ void provenance(const std::filesystem::path& root){
     const std::set<std::string> retired{"placeholder_aspect","placeholder_min","placeholder_max","zone_step","som_side_band"};
     const std::set<std::string> replaced{"via_size","via_clearance","stack_thickness"};
     std::set<std::string> seen;
-    const auto rows=floorplan_ledger_migrations();require(rows.size()==8,"five retirements plus three truthful via replacements");
+    const auto rows=floorplan_ledger_migrations();require(rows.size()==10,"five retirements, three truthful via replacements and two exposed breathe policies");
     FloorplanInput in;ProjectPaths paths;paths.repository_root=root;const auto p=make_native_board_policy(paths,in);
     for(const auto& row:rows){
         require(seen.insert(row.name).second&&!row.reason.empty(),"unique documented provenance");
+        if(row.name=="breathe_epsilon"||row.name=="breathe_search_step"){
+            require(row.disposition=="exposed"&&row.replacements.empty(),"existing hidden policy is exposed, not redefined");
+            require(floorplan_live_assumption(row.name,in).has_value()&&declaration(p,row.name).resolve().number_value==*floorplan_live_assumption(row.name,in),"exposed policy resolves actual producer storage");
+            continue;
+        }
         if(retired.count(row.name))require(row.disposition=="retired"&&row.replacements.empty(),"unused assumptions truly retire");
         else{require(replaced.count(row.name)&&row.disposition=="replaced","no extra provenance exceptions");
             const auto expected=row.name=="stack_thickness"?std::vector<std::string>{"via_impedance_cost"}:std::vector<std::string>{"via_ordinary_cost","via_impedance_cost"};
@@ -40,12 +45,12 @@ void provenance(const std::filesystem::path& root){
         require(!floorplan_live_assumption(row.name,in),"retired operand has no fabricated provider");
         rejects([&]{declaration(p,row.name);},"retired operand not declared");
     }
-    require(p.providers_complete()&&p.ledger_declarations.size()==64,"current complete provider census");
+    require(p.providers_complete()&&p.ledger_declarations.size()==66,"current complete provider census");
     for(const auto* board:{"carrier","devkit_mini"}){
         const auto file=root/"native/tests/data/floorplan"/(std::string(board)+".json");
         const auto original=parse_json_file(file.string());const auto& expected=board_policy_reference::field(original,"expected");
         const auto migrated=board_policy_reference::migrate(expected,root/"native/tests/data");
-        require(board_policy_reference::field(expected,"ledger").array_value.size()==board_policy_reference::field(migrated,"ledger").array_value.size()+6,"only reviewed ledger population changes");
+        require(board_policy_reference::field(expected,"ledger").array_value.size()==board_policy_reference::field(migrated,"ledger").array_value.size()+4,"only reviewed replacement and additive ledger population changes");
         // Byte-level geometry/count comparisons live in floorplan_contracts and
         // pcb_placement_contracts; this helper may alter ONLY these two fields.
         for(std::size_t i=0;i<expected.object_value.size();++i){

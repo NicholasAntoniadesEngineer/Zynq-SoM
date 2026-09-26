@@ -82,6 +82,11 @@ void source_contracts(){
     write(tmp.path/"policy.hpp","namespace policy { struct Engine {double estimate();double estimate(int);}; }\n");
     c=scan("#include \"policy.hpp\"\nnamespace policy {double Engine::estimate(){return 0;}double Engine::estimate(int n){return n;} }\n");
     require(c.functions.count("policy.cpp::policy::Engine::estimate [double ()]")&&c.functions.count("policy.cpp::policy::Engine::estimate [double (int)]"),"included class declaration supplies out-of-line semantic identity");
+    c=scan("#include \"policy.hpp\"\nnamespace policy {double Engine::estimate(){return estimate(1);}double Engine::estimate(int n){auto position=[](double x){return x;};auto pad=[](double x){return __builtin_round(x);};return position(n)+pad(n);} }\n");
+    require(c.functions.size()==4&&c.functions.count("policy.cpp::policy::Engine::estimate [double ()]")&&c.functions.count("policy.cpp::policy::Engine::estimate [double (int)]"),"two exact overloads stay addressable alongside their nested wrappers");
+    require(std::count_if(c.functions.begin(),c.functions.end(),[](const auto& name){return name.find("policy.cpp::policy::Engine::estimate [double (int)]::<lambda@")==0;})==2,"both nested wrapper identities remain in the census");
+    r=check_native_audits(c,empty,none);
+    require(!r.unregistered_quantization.empty()&&std::all_of(r.unregistered_quantization.begin(),r.unregistered_quantization.end(),[](const auto& finding){return finding.find("Engine::estimate [double (int)]::<lambda@")!=finding.npos;}),"nested wrapper precision remains independently unregistered");
     c=scan("namespace policy { struct A {double f(double) & {return 1;}double f(double) const & {return 2;}double f(double) && {return 3;}}; }\n");
     require(c.functions.size()==3&&c.functions.count("policy.cpp::policy::A::f [double (double) const &]"),"cv/ref-qualified overloads retain separate identities");
     c=scan("namespace policy { using Distance=double; struct State {Distance area=0;Distance hidden=.4;const Distance frozen=0;}; double f(){return 0;} }\n");
@@ -98,12 +103,15 @@ void source_contracts(){
 }
 void production_contracts(const fs::path& root){
     CppAuditOptions options;options.flags={"-I"+(root/"native/include").string(),"-I"+(root/"native/src").string()};
-    const auto census=scan_cpp_audit_sources(root,{{"native/src/floorplan_internal.hpp"},{"native/src/floorplan_cross.cpp"},{"native/src/pcb_placement_breathe.cpp"}},options);
-    require(std::count_if(census.functions.begin(),census.functions.end(),[](const auto& name){return name.find("native/src/floorplan_cross.cpp::schgen::floorplan_detail::Engine::estimate [")==0;})==2,"both actual Engine::estimate implementations scan without abort");
+    const auto census=scan_cpp_audit_sources(root,{{"native/src/floorplan_internal.hpp"},{"native/src/floorplan_cross.cpp"},{"native/src/pcb_placement_breathe.cpp"},{"native/src/precision_ops.cpp"},{"native/include/schgen/board_decision_policy.hpp"}},options);
+    // Prefix counting also counts the two accounting-wrapper lambdas inside
+    // the vector overload. Assert the actual overloads without hiding lambdas.
+    require(census.functions.count("native/src/floorplan_cross.cpp::schgen::floorplan_detail::Engine::estimate [double ()]")&&census.functions.count("native/src/floorplan_cross.cpp::schgen::floorplan_detail::Engine::estimate [double (const std::vector<const FloorplanBlock *> &, const std::string &)]"),"both actual Engine::estimate implementations scan without abort");
     require(std::none_of(census.constants.begin(),census.constants.end(),[](const auto& c){return c.symbol=="native/src/floorplan_internal.hpp::schgen::floorplan_detail::Engine::raw_area";}),"actual mutable Engine state is not policy");
-    require(std::any_of(census.constants.begin(),census.constants.end(),[](const auto& c){return c.buried&&c.symbol=="native/src/pcb_placement_breathe.cpp::schgen::pcb_placement::Placer::breathe::eps";}),"actual hidden breathe epsilon stays visible");
+    require(std::any_of(census.constants.begin(),census.constants.end(),[](const auto& c){return c.symbol=="native/include/schgen/board_decision_policy.hpp::schgen::board_decision_policy::breathe_epsilon_mm";}),"actual lifted breathe epsilon stays visible at its storage owner");
     NativeLedger none;NativeQuantizations unregistered;const auto report=check_native_audits(census,none,unregistered);
-    require(!report.ok&&!report.buried.empty()&&!report.unregistered_quantization.empty(),"actual engineering constants and raw precision still fail without truthful policy");
+    require(!report.ok&&!report.undeclared.empty()&&!report.unregistered_quantization.empty(),"actual engineering constants and raw precision still fail without truthful policy");
+    require(std::all_of(census.quantization.begin(),census.quantization.end(),[](const auto& q){return q.function.find("native/src/precision_ops.cpp::schgen::")==0;}),"all sixteen original raw-site lines are now owned by real scalar precision implementations");
     std::cout<<report.summary()<<'\n';
 }
 }

@@ -41,6 +41,11 @@ const std::set<std::string> required_tests{
     "native_board_live_contracts", "native_board_pipeline_live_contracts",
     "native_render_models_live_contracts", "native_example_devkit_live_contracts",
     "native_single_sheet_live"};
+const std::set<std::string> required_ci_tests{
+    "native_ci_cache", "native_ci_environment", "native_ci_cli",
+    "native_ci_smoke_contracts", "native_ci_bootstrap_rejections",
+    "native_ci_smoke_reject_arguments"};
+enum class BuildKind { Direct, CiWrapper };
 
 const char help[] =
     "usage: schgen check --tests-dir BUILD [--repo ROOT] [--project NAME_OR_PATH]\n"
@@ -51,6 +56,8 @@ const char help[] =
     "Stop at the first failure. No rendering/gate skips, test filters, Python,\n"
     "shell command strings, builds, or success-by-empty/disabled/skipped tests.\n\n"
     "--tests-dir  Required configured and built native CTest directory for ROOT.\n"
+    "             Source must be ROOT/native or ROOT/native/ci, with\n"
+    "             BUILD_TESTING enabled and SCHGEN_BUILD_PYTHON explicitly OFF.\n"
     "--repo       Repository root (default: current working directory).\n"
     "--project    Forwarded unchanged to board and selftest (native default if absent).\n"
     "--output, -o Parent for a NEW regression-XXXXXX run directory (default: system temp).\n"
@@ -134,7 +141,7 @@ Options parse(int argc, char** argv) {
     if (!o.help && o.tests.empty()) fail("check requires explicit --tests-dir BUILD; use check --help");
     return o;
 }
-void validate_build(Options& o) {
+BuildKind validate_build(Options& o) {
     o.repo = fs::canonical(o.repo); o.tests = fs::canonical(o.tests);
     if (!fs::is_directory(o.repo) || !fs::is_directory(o.tests) ||
         !fs::is_regular_file(o.tests / "CTestTestfile.cmake"))
@@ -146,14 +153,24 @@ void validate_build(Options& o) {
         if (!line.empty() && line.back() == '\r') line.pop_back();
         if (line.empty() || line[0] == '#' || line.rfind("//", 0) == 0) continue;
         const auto colon = line.find(':'); const auto equals = line.find('=', colon);
-        if (colon != std::string::npos && equals != std::string::npos)
-            cache[line.substr(0, colon)] = line.substr(equals + 1);
+        if (colon != std::string::npos && equals != std::string::npos &&
+            !cache.emplace(line.substr(0, colon), line.substr(equals + 1)).second)
+            fail("duplicate CMake cache key: " + line.substr(0, colon));
     }
-    if (cache["CMAKE_HOME_DIRECTORY"].empty() ||
-        fs::canonical(cache["CMAKE_HOME_DIRECTORY"]) != fs::canonical(o.repo / "native"))
-        fail("CTest build source must be --repo ROOT/native");
+    if (cache["CMAKE_HOME_DIRECTORY"].empty())
+        fail("CTest build source must be --repo ROOT/native or ROOT/native/ci");
+    const auto source = fs::canonical(cache["CMAKE_HOME_DIRECTORY"]);
+    BuildKind kind = BuildKind::Direct;
+    if (source != fs::canonical(o.repo / "native")) {
+        if (!fs::is_directory(o.repo / "native/ci") || source != fs::canonical(o.repo / "native/ci"))
+            fail("CTest build source must be --repo ROOT/native or ROOT/native/ci");
+        kind = BuildKind::CiWrapper;
+    }
     if (cache["BUILD_TESTING"] != "ON" && cache["BUILD_TESTING"] != "TRUE" && cache["BUILD_TESTING"] != "1")
         fail("CTest build must enable BUILD_TESTING");
+    if (cache["SCHGEN_BUILD_PYTHON"] != "OFF")
+        fail("CTest build must set SCHGEN_BUILD_PYTHON explicitly OFF");
+    return kind;
 }
 
 struct Descriptor {
@@ -272,7 +289,7 @@ const JsonNode& field(const JsonNode& node, const std::string& key, JsonKind kin
     if (!value || value->kind != kind) fail("invalid CTest inventory: " + key);
     return *value;
 }
-std::set<std::string> inventory(const fs::path& path) {
+std::set<std::string> inventory(const fs::path& path, BuildKind kind) {
     const auto root = parse_json_file(path.string());
     if (field(root, "kind", JsonKind::String).string_value != "ctestInfo") fail("not a CTest inventory");
     if (field(field(root, "version", JsonKind::Object), "major", JsonKind::Number).number_value != 1)
@@ -299,6 +316,9 @@ std::set<std::string> inventory(const fs::path& path) {
     if (names.empty()) fail("CTest inventory is empty");
     for (const auto& name : required_tests)
         if (!names.count(name)) fail("missing required live/RC CTest contract: " + name);
+    if (kind == BuildKind::CiWrapper)
+        for (const auto& name : required_ci_tests)
+            if (!names.count(name)) fail("missing required native CI CTest contract: " + name);
     return names;
 }
 std::string attribute(xmlNode* node, const char* name) {
@@ -341,7 +361,7 @@ std::optional<int> run_regression_command(int argc, char** argv) {
     try {
         auto o = parse(argc, argv);
         if (o.help) { std::cout << help; return 0; }
-        validate_build(o);
+        const auto build_kind = validate_build(o);
         if (!argv[0] || !*argv[0]) fail("missing invoking executable argv[0]");
         const auto self = executable(argv[0]);
         const auto ctest = executable(o.ctest);
@@ -357,7 +377,7 @@ std::optional<int> run_regression_command(int argc, char** argv) {
         auto listing = ctest_args; listing.push_back("--show-only=json-v1");
         int code = spawn(listing, o.repo, logs, "00-inventory", std::min(o.timeout, Seconds{30}), false);
         if (code) { std::cerr << "REGRESSION FAIL at CTest inventory\n"; return code; }
-        const auto tests = inventory(logs / "00-inventory.stdout");
+        const auto tests = inventory(logs / "00-inventory.stdout", build_kind);
         std::vector<std::string> common{"--repo", o.repo.string()};
         if (!o.project.empty()) common.insert(common.end(), {"--project", o.project});
         if (!o.kicad.empty()) common.insert(common.end(), {"--kicad-cli", o.kicad});

@@ -25,6 +25,7 @@ void metadata(const fs::path& root){
     const std::set<std::string> retired{"placeholder_aspect","placeholder_min","placeholder_max","zone_step","som_side_band","via_size","via_clearance","stack_thickness"};
     std::vector<std::string> migrated_assumptions;
     for(const auto& name:expected_assumptions){if(name=="via_size"){migrated_assumptions.push_back("via_ordinary_cost");migrated_assumptions.push_back("via_impedance_cost");}if(!retired.count(name))migrated_assumptions.push_back(name);}
+    migrated_assumptions.push_back("breathe_epsilon");migrated_assumptions.push_back("breathe_search_step");
     require(assumptions==migrated_assumptions,"independent historical assumption order plus reviewed native migration");
     const auto& expected=field(reference,"calculations").array_value;require(calcs.size()==expected.size(),"independent calculation census");
     for(std::size_t k=0;k<expected.size();++k){require(calcs[k].name==field(expected[k],"name").string_value,"calculation name");const auto inputs=(calcs[k].name=="est_via_ordinary"||calcs[k].name=="est_via_impedance")?std::vector<std::string>{"via_cost"}:strings(field(expected[k],"inputs"));require(calcs[k].inputs==inputs,"ordered input contract including truthful native via policy");require(calcs[k].repeated==field(expected[k],"repeated").bool_value,"conditional/repeated semantics");}
@@ -42,14 +43,14 @@ void providers(const fs::path& root){
     ProjectPaths paths;paths.repository_root=root;
     FloorplanInput in;in.cross_budget_k=4.25;in.place_clear=.73;
     auto policy=make_native_board_policy(paths,in);require(policy.providers_complete(),"all reviewed producer providers complete");
-    require(policy.ledger_declarations.size()==64&&policy.missing_providers.empty(),"reviewed current coverage (46 assumes,18 calcs; no gaps)");
+    require(policy.ledger_declarations.size()==66&&policy.missing_providers.empty(),"reviewed current coverage (48 assumes,18 calcs; no gaps)");
     require(declaration(policy,"cross_k").resolve().number_value==4.25,"actual caller cross coefficient");
     require(declaration(policy,"place_clear").resolve().number_value==.73,"actual caller clearance");
     in.cross_budget_k=9;in.place_clear=.1;
     require(declaration(policy,"cross_k").resolve().number_value==4.25,"provider owns invocation scalar, not caller lifetime");
     require(declaration(make_native_board_policy(paths,in),"cross_k").resolve().number_value==9,"next invocation reads fresh caller value");
     NativeLedger ledger;for(const auto& d:policy.ledger_declarations)ledger.declare(d);
-    ledger.open_step("floorplan.sizing");ledger.close_step("floorplan.sizing");require(ledger.audit_state().recorded.size()==46,"every real assumption resolves at step entry");
+    ledger.open_step("floorplan.sizing");ledger.close_step("floorplan.sizing");require(ledger.audit_state().recorded.size()==48,"every real assumption resolves at step entry");
     for(const auto& gap:policy.missing_providers){require(!gap.decision_source.empty()&&!gap.action.empty(),"missing provider actionable");require(std::none_of(policy.ledger_declarations.begin(),policy.ledger_declarations.end(),[&](const auto& d){return d.name==gap.name;}),"missing policy never fabricated");}
     // Known C++ storage is independent from the producer's historical display
     // defaults and current observed rows. Poisoning observations grants nothing.
@@ -79,10 +80,10 @@ void providers(const fs::path& root){
     for(const auto& d:policy.ledger_declarations)for(const auto& cover:d.covers)require(names.count(cover.substr(0,cover.find("::"))),"covered symbol owner included");
     auto bad=in;bad.place_clear=-1;rejects([&]{make_native_board_policy(paths,bad);},"negative clearance rejects");bad=in;bad.cross_budget_k=std::numeric_limits<double>::infinity();rejects([&]{make_native_board_policy(paths,bad);},"nonfinite cross coefficient rejects");
     BoardPipelineOptions options;options.output_root="keep-output";options.fallback_baseline="keep-fallback";options.fanout_baseline="keep-fanout";options.no_render=true;options.pcb.place_clear=.73;options.audit.compiler="keep-clang";options.audit.flags={"-DKEEP_CALLER=1"};options.audit.timeout=std::chrono::milliseconds{321};
-    const auto installed=configure_native_board_policy(options,paths,in);require(options.ledger_declarations.size()==64&&installed.providers_complete(),"factory installs complete independently reviewed declarations");
+    const auto installed=configure_native_board_policy(options,paths,in);require(options.ledger_declarations.size()==66&&installed.providers_complete(),"factory installs complete independently reviewed declarations");
     require(options.output_root=="keep-output"&&options.fallback_baseline=="keep-fallback"&&options.fanout_baseline=="keep-fanout"&&options.no_render&&options.pcb.place_clear==.73,"caller execution settings preserved");
     require(options.audit.compiler=="keep-clang"&&options.audit.flags.front()=="-DKEEP_CALLER=1"&&options.audit.timeout.count()==321,"compiler settings preserved");
-    rejects([&]{configure_native_board_policy(options,paths,in);},"never silently replace existing policy");require(options.ledger_declarations.size()==64,"failed installation atomic");
+    rejects([&]{configure_native_board_policy(options,paths,in);},"never silently replace existing policy");require(options.ledger_declarations.size()==66,"failed installation atomic");
 }
 void defects(){
     // Mutation contract for the existing auditor: our policy is never a waiver
@@ -105,9 +106,10 @@ void compiler_contract(const fs::path& root){
     // One real problematic required file proves metadata cannot greenwash the
     // existing raw/buried sites. Do not assert fragile diagnostic counts.
     CppAuditOptions opts;opts.flags={"-I"+(root/"native/include").string(),"-I"+(root/"native/src").string()};
-    const auto source=scan_cpp_audit_sources(root,{{"native/src/pcb_placement_breathe.cpp"}},opts);
-    require(std::any_of(source.constants.begin(),source.constants.end(),[](const auto& x){return x.buried&&x.symbol.find("::eps")!=x.symbol.npos;}),"actual buried breathe epsilon remains visible");
-    require(!source.quantization.empty(),"actual unregistered precision sites remain visible");
+    const auto source=scan_cpp_audit_sources(root,{{"native/src/pcb_placement_breathe.cpp"},{"native/src/precision_ops.cpp"},{"native/include/schgen/board_decision_policy.hpp"}},opts);
+    require(std::any_of(source.constants.begin(),source.constants.end(),[](const auto& x){return x.symbol=="native/include/schgen/board_decision_policy.hpp::schgen::board_decision_policy::breathe_epsilon_mm";}),"actual lifted breathe epsilon remains visible in its defining header");
+    require(!source.quantization.empty(),"actual precision implementation sites remain visible, not exempted");
+    require(std::all_of(source.quantization.begin(),source.quantization.end(),[](const auto& q){return q.function.find("native/src/precision_ops.cpp::schgen::")==0;}),"breathe raw sites are extracted into actual scalar operations");
 }
 }
 int main(int argc,char** argv){try{if(argc<2||argc>3)throw std::runtime_error("usage: board_policy_contracts REPO [--compiler]");const fs::path root=fs::absolute(argv[1]);metadata(root);providers(root);defects();if(argc==3){if(std::string(argv[2])!="--compiler")throw std::runtime_error("unknown mode");compiler_contract(root);}std::cout<<"Native board policy: "<<checks<<" contracts passed\n";return 0;}catch(const std::exception& e){std::cerr<<"Native board policy: "<<e.what()<<'\n';return 1;}}

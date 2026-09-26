@@ -17,6 +17,7 @@ struct FloorplanLedgerMigration {
 // Explicit reviewed provenance changes, never inferred from observed rows.
 // Five unused board assumptions retire; three claimed physical via operands
 // are replaced by the two estimator costs the native algorithm really uses.
+// Existing breathe epsilon/search-step policy is now explicitly exposed.
 std::vector<FloorplanLedgerMigration> floorplan_ledger_migrations();
 // Only providers with actual C++ storage/parameters are exposed here. nullopt
 // means the old reporting table has no independently accessible native policy

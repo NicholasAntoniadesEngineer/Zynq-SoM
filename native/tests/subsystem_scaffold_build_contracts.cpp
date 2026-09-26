@@ -2,6 +2,7 @@
 #include "schgen/subsystem_scaffold.hpp"
 
 #include <fstream>
+#include <exception>
 #include <iostream>
 #include <iterator>
 #include <unistd.h>
@@ -21,7 +22,13 @@ struct Scratch {
         const auto created = ::mkdtemp(pattern.data());
         require(created != nullptr, "allocate isolated build"); path = created;
     }
-    ~Scratch() { std::error_code ignored; fs::remove_all(path, ignored); }
+    ~Scratch() {
+        if (std::uncaught_exceptions()) {
+            std::cerr << "Failed scaffold build evidence retained: " << path << '\n';
+            return;
+        }
+        std::error_code ignored; fs::remove_all(path, ignored);
+    }
 };
 std::string read(const fs::path& path) {
     std::ifstream in(path, std::ios::binary);
@@ -110,7 +117,10 @@ void exercise(const fs::path& repo, const fs::path& archive, const fs::path& cma
     const auto ctest = cmake.parent_path() / "ctest";
     require(fs::is_regular_file(ctest), "ctest alongside selected cmake is required");
     auto compile = [&] {
-        run({cmake.string(), "--build", build.string(), "--parallel", "2", "--target",
+        // This fixture rewrites and restores the same sources repeatedly.
+        // Each mutation must actually compile, even with a coarse-timestamp
+        // backend; an incremental no-op cannot prove a negative control.
+        run({cmake.string(), "--build", build.string(), "--clean-first", "--parallel", "2", "--target",
             "schgen_subsystem_widget_test", "schgen_subsystem_class_test"}, true);
     };
     auto test = [&](bool success, const std::string& message) {

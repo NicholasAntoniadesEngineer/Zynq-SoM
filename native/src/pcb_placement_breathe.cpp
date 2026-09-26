@@ -1,10 +1,26 @@
 #include "pcb_placement_internal.hpp"
 #include "schgen/board_decision_policy.hpp"
 #include "schgen/legalize.hpp"
+#include "schgen/precision_ops.hpp"
 
 namespace schgen::pcb_placement {
 void Placer::breathe(const std::string &phase) {
-    constexpr double eps = 1e-4, step = .25;
+    using board_decision_policy::breathe_epsilon_mm;
+    using board_decision_policy::breathe_step_mm;
+    static const std::string delta_label="breathe_delta_precision",commit_label="breathe_commit_precision",
+        forward_label="breathe_forward_steps",retreat_label="breathe_retreat_steps";
+    const auto delta_precision=[&](double value){
+        checked_quantization_add(ctx.quantization,delta_label);return breathe_delta_precision(value);
+    };
+    const auto commit_precision=[&](double value){
+        checked_quantization_add(ctx.quantization,commit_label);return breathe_commit_precision(value);
+    };
+    const auto forward_steps=[&](double distance){
+        checked_quantization_add(ctx.quantization,forward_label);return breathe_forward_steps(distance,breathe_step_mm);
+    };
+    const auto retreat_steps=[&](double distance){
+        checked_quantization_add(ctx.quantization,retreat_label);return breathe_retreat_steps(distance,breathe_step_mm);
+    };
     double pc = ctx.clearance;
     std::vector<std::string> movable, fixed_parts;
     std::set<std::string> contracted;
@@ -133,7 +149,7 @@ void Placer::breathe(const std::string &phase) {
                 ? std::min(11., std::max(2., .5 * diag.at(g.sheet)))
                 : std::min(40., std::max(11., std::sqrt(8 * area.at(g.sheet) / 3.141592653589793) -
                                                   diag.at(g.sheet)));
-        return std::hypot(c.first - s.first, c.second - s.second) <= radius + eps;
+        return std::hypot(c.first - s.first, c.second - s.second) <= radius + breathe_epsilon_mm;
     };
     auto foreign = [&](const std::string &anchor, const std::set<std::string> &members) {
         std::vector<Box4> out;
@@ -186,13 +202,13 @@ void Placer::breathe(const std::string &phase) {
                 if ((cp(r) && ctx.by_ref.at(r).sheet == ctx.by_ref.at(s).sheet) ||
                     is_testpoint_ref(r))
                     continue;
-                if (rect_gap(b, box(s, pos.at(s))) < need(pins(s)) - eps)
+                if (rect_gap(b, box(s, pos.at(s))) < need(pins(s)) - breathe_epsilon_mm)
                     return false;
             }
             if (pins(r) >= 3 && need(pins(r)) > pc + 1e-9) {
                 auto fb = foreign(r, g.members);
                 double old_clear = clearance(box(r, old), fb), new_clear = clearance(b, fb);
-                if (new_clear < std::min(need(pins(r)), old_clear) - eps)
+                if (new_clear < std::min(need(pins(r)), old_clear) - breathe_epsilon_mm)
                     return false;
             }
         }
@@ -201,14 +217,14 @@ void Placer::breathe(const std::string &phase) {
     auto snap = [&](const Group &g, FloorplanPoint delta) {
         auto p = pos.at(g.anchor);
         return FloorplanPoint{
-            py_round(ctx.fixed_grid(25 + p.first + delta.first, "breathe_anchor_grid") - 25 - p.first, 4),
-            py_round(ctx.fixed_grid(25 + p.second + delta.second, "breathe_anchor_grid") - 25 - p.second, 4)};
+            delta_precision(ctx.fixed_grid(25 + p.first + delta.first, "breathe_anchor_grid") - 25 - p.first),
+            delta_precision(ctx.fixed_grid(25 + p.second + delta.second, "breathe_anchor_grid") - 25 - p.second)};
     };
     for (const auto &g : groups) {
         auto fb = foreign(g.anchor, g.members);
         auto mb = box(g.anchor, pos.at(g.anchor));
         double cur = clearance(mb, fb);
-        if (cur >= g.target - eps)
+        if (cur >= g.target - breathe_epsilon_mm)
             continue;
         double reach = g.target - cur + 2;
         std::vector<FloorplanPoint> directions;
@@ -233,18 +249,18 @@ void Placer::breathe(const std::string &phase) {
         double best_clear = cur;
         bool won = false;
         for (auto d : directions) {
-            for (int k = 1; k <= static_cast<int>(reach / step) + 1; ++k) {
-                FloorplanPoint delta{d.first * k * step, d.second * k * step};
+            for (int k = 1; k <= forward_steps(reach); ++k) {
+                FloorplanPoint delta{d.first * k * breathe_step_mm, d.second * k * breathe_step_mm};
                 if (!leash(g, delta) || !free(g, delta))
                     break;
                 auto p = pos.at(g.anchor);
                 double trial =
                     clearance(box(g.anchor, {p.first + delta.first, p.second + delta.second}), fb);
-                if (trial > best_clear + eps) {
+                if (trial > best_clear + breathe_epsilon_mm) {
                     best_clear = trial;
                     best = delta;
                 }
-                if (trial >= g.target - eps) {
+                if (trial >= g.target - breathe_epsilon_mm) {
                     best = delta;
                     won = true;
                     break;
@@ -261,8 +277,8 @@ void Placer::breathe(const std::string &phase) {
             else {
                 double n = std::hypot(best.first, best.second);
                 if (n > 1e-6)
-                    for (int k = static_cast<int>(n / step); k > 0; --k) {
-                        FloorplanPoint d{best.first / n * k * step, best.second / n * k * step};
+                    for (int k = retreat_steps(n); k > 0; --k) {
+                        FloorplanPoint d{best.first / n * k * breathe_step_mm, best.second / n * k * breathe_step_mm};
                         d = snap(g, d);
                         if (free(g, d) && leash(g, d)) {
                             commit = d;
@@ -273,8 +289,8 @@ void Placer::breathe(const std::string &phase) {
             if (commit && *commit != FloorplanPoint{0, 0})
                 for (const auto &r : g.members) {
                     auto p = pos.at(r);
-                    pos[r] = {py_round(p.first + commit->first, 4),
-                              py_round(p.second + commit->second, 4)};
+                    pos[r] = {commit_precision(p.first + commit->first),
+                              commit_precision(p.second + commit->second)};
                 }
         }
         for (const auto &r : g.members)
@@ -288,7 +304,7 @@ void Placer::breathe(const std::string &phase) {
             boxes.push_back(box(r, pos.at(r)));
         auto b = *boxes_union(boxes);
         double d = (b.x1 - b.x0) * (b.y1 - b.y0) / area.at(sheet);
-        if (d > std::max(8., disp.at(sheet)) + eps)
+        if (d > std::max(8., disp.at(sheet)) + breathe_epsilon_mm)
             for (const auto &r : refs)
                 pos[r] = seed.at(r);
     }

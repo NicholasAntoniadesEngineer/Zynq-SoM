@@ -40,7 +40,7 @@ std::vector<CppAuditSource> native_board_policy_audit_sources(){
     // registration, directory allowlist or baseline suppression is used here.
     std::vector<CppAuditSource> out;
     for(const auto* name:{
-        "quantize.cpp","native_audit_quantize.cpp",
+        "quantize.cpp","native_audit_quantize.cpp","precision_ops.cpp",
         "floorplan_internal.hpp","floorplan_geometry.cpp","floorplan_cross.cpp",
         "floorplan_pack.cpp","floorplan_compose.cpp","floorplan_build.cpp",
         "floorplan_notes.cpp","floorplan_svg.cpp","floorplan_md.cpp","floorplan_ledger.cpp",

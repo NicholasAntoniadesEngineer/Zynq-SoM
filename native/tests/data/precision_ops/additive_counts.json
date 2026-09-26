@@ -1,0 +1,5 @@
+{
+"devkit_mini":{"aggregate":{"breathe_commit_precision":20,"breathe_delta_precision":10,"breathe_forward_steps":107,"breathe_retreat_steps":1,"estimate_pad_precision":33120,"estimate_position_precision":20520},"floorplan":{"estimate_pad_precision":33120,"estimate_position_precision":20520},"placement":{"breathe_commit_precision":20,"breathe_delta_precision":10,"breathe_forward_steps":107,"breathe_retreat_steps":1}},
+"carrier":{"aggregate":{"breathe_commit_precision":60,"breathe_delta_precision":68,"breathe_forward_steps":600,"breathe_retreat_steps":5,"estimate_pad_precision":906674,"estimate_position_precision":1062016},"floorplan":{"estimate_pad_precision":906674,"estimate_position_precision":1062016},"placement":{"breathe_commit_precision":60,"breathe_delta_precision":68,"breathe_forward_steps":600,"breathe_retreat_steps":5}},
+"devkit_mini_single":{"aggregate":{"estimate_pad_precision":33120,"estimate_position_precision":20520},"floorplan":{"estimate_pad_precision":33120,"estimate_position_precision":20520},"placement":{}}
+}

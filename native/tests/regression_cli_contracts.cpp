@@ -28,6 +28,10 @@ const std::vector<std::string> live_names{
     "native_board_live_contracts", "native_board_pipeline_live_contracts",
     "native_render_models_live_contracts", "native_example_devkit_live_contracts",
     "native_single_sheet_live"};
+const std::vector<std::string> ci_names{
+    "native_ci_cache", "native_ci_environment", "native_ci_cli",
+    "native_ci_smoke_contracts", "native_ci_bootstrap_rejections",
+    "native_ci_smoke_reject_arguments"};
 void require(bool ok, const std::string& why) { ++checks; if (!ok) throw std::runtime_error(why); }
 std::string read(const fs::path& path) {
     std::ifstream input(path, std::ios::binary);
@@ -119,8 +123,8 @@ std::string cmake_quote(const std::string& s) {
     return out + '"';
 }
 void configure(const fs::path& repo, const fs::path& self, const std::string& cmake,
-               const std::string& variant = {}) {
-    fs::create_directories(repo / "native");
+               const std::string& variant = {}, const fs::path& source = "native") {
+    fs::create_directories(repo / source);
     write(repo / "REGRESSION_CLI_TEST_FIXTURE", "TEST PROCESS DOUBLES ONLY\n");
     write(repo / "mode", "pass");
     std::string file = "cmake_minimum_required(VERSION 3.21)\nproject(RegressionProcessFixture NONE)\ninclude(CTest)\n";
@@ -137,8 +141,29 @@ void configure(const fs::path& repo, const fs::path& self, const std::string& cm
         if (variant == "unbuilt") file += "add_test(NAME unbuilt_native_contract COMMAND /no-such-native-contract-binary)\n";
         if (variant == "shell") file += "add_test(NAME invalid_shell_contract COMMAND /bin/sh -c exit)\n";
     }
-    write(repo / "native/CMakeLists.txt", file);
-    const auto result = run_process({cmake, "-S", (repo / "native").string(), "-B", (repo / "build").string(), "-DBUILD_TESTING=ON"});
+    if (source == "native/ci") {
+        write(repo / "native/CMakeLists.txt", file);
+        file = "cmake_minimum_required(VERSION 3.21)\nproject(RegressionCIProcessFixture NONE)\ninclude(CTest)\nadd_subdirectory(.. engine)\n";
+        for (const auto& name : ci_names) {
+            if (variant == "missing:" + name) continue;
+            file += "add_test(NAME " + name + " COMMAND " +
+                (variant == "unbuilt:" + name ? cmake_quote("/no-such-native-contract-binary") : cmake_quote(self.string())) +
+                " --regression-contract-test " + cmake_quote(repo.string()) + " " + name + ")\n";
+            if (variant == "disabled:" + name)
+                file += "set_tests_properties(" + name + " PROPERTIES DISABLED TRUE)\n";
+            if (name == "native_ci_smoke_reject_arguments")
+                file += "set_tests_properties(" + name + " PROPERTIES WILL_FAIL TRUE)\n";
+            if (name == "native_ci_cache" || name == "native_ci_environment")
+                file += "set_tests_properties(" + name + " PROPERTIES FIXTURES_SETUP native_ci_ready)\n";
+            if (name == "native_ci_cli")
+                file += "set_tests_properties(" + name + " PROPERTIES FIXTURES_REQUIRED native_ci_ready)\n";
+        }
+        file += "get_property(engine_tests DIRECTORY \"${CMAKE_CURRENT_SOURCE_DIR}/..\" PROPERTY TESTS)\n"
+                "if(engine_tests)\nset_property(TEST ${engine_tests} DIRECTORY \"${CMAKE_CURRENT_SOURCE_DIR}/..\" APPEND PROPERTY FIXTURES_REQUIRED native_ci_ready)\nendif()\n";
+    }
+    write(repo / source / "CMakeLists.txt", file);
+    const auto result = run_process({cmake, "-S", (repo / source).string(), "-B", (repo / "build").string(),
+        "-DBUILD_TESTING=ON", "-DSCHGEN_BUILD_PYTHON:BOOL=OFF"});
     require(result.exit_code == 0, "actual CMake fixture configuration failed: " + result.stderr_text);
 }
 fs::path logs(const Result& result) {
@@ -155,6 +180,8 @@ void contracts(const fs::path& scratch, const fs::path& self, const std::string&
         "--output", (scratch / "logs ; $(never)").string(), "--timeout", "10"};
     auto result = invoke({"cannot-exist", "check", "--help"});
     require(result.code == 0 && result.out.find("--tests-dir") != std::string::npos && result.out.find("RC smoke") != std::string::npos, "specific help without validation/spawn");
+    require(result.out.find("ROOT/native/ci") != std::string::npos &&
+        result.out.find("SCHGEN_BUILD_PYTHON explicitly OFF") != std::string::npos, "help omits exact build policy");
     require(!invoke({self.string(), "board"}).code, "foreign command claimed");
     require(!invoke({self.string(), "--project", "check", "board"}).code, "option value claimed as command");
     require(!run_regression_command(0, nullptr), "empty invocation claimed");
@@ -251,6 +278,135 @@ void contracts(const fs::path& scratch, const fs::path& self, const std::string&
     args = base; args[9] = not_directory.string(); result = invoke(args);
     require(result.code == 2 && read(not_directory) == "preserve", "invalid output path overwritten");
 }
+
+// Mutate only real CMake-generated caches in private marked test repositories.
+// The production driver still reads actual CTest evidence and spawns processes.
+std::string cache_value(const std::string& cache, const std::string& key,
+                        const std::optional<std::string>& value) {
+    std::istringstream input(cache); std::string result; bool found = false;
+    for (std::string line; std::getline(input, line);) {
+        if (line.rfind(key + ':', 0) == 0) {
+            require(!found, "duplicate key in original CMake fixture cache"); found = true;
+            if (!value) continue;
+            line = line.substr(0, line.find('=') + 1) + *value;
+        }
+        result += line + '\n';
+    }
+    require(found, "fixture cache has no " + key); return result;
+}
+void build_roots_contracts(const fs::path& scratch, const fs::path& self,
+                           const std::string& cmake, const std::string& ctest) {
+    const auto arguments = [&](const fs::path& repo) {
+        return std::vector<std::string>{self.string(), "check", "--repo", repo.string(),
+            "--tests-dir", (repo / "build").string(), "--ctest", ctest,
+            "--output", (repo / "evidence").string(), "--timeout", "10"};
+    };
+    const auto rejected_before_board = [&](const fs::path& repo, const std::string& diagnostic) {
+        write(repo / "calls", "");
+        const auto result = invoke(arguments(repo));
+        // CTest releases either omit an unbuilt command from JSON or retain
+        // its unresolved path. Both must fail before board/selftest execution.
+        const bool matches = diagnostic == "unbuilt" ?
+            result.err.find("invalid CTest inventory: command") != std::string::npos ||
+            result.err.find("CTest target not built") != std::string::npos ||
+            result.err.find("cannot resolve executable") != std::string::npos :
+            result.err.find(diagnostic) != std::string::npos;
+        require(result.code == 2 && matches,
+            "expected preflight rejection: " + diagnostic + ": " + result.err);
+        require(read(repo / "calls").empty(), "preflight rejection launched board/selftest");
+        require(result.out.find("REGRESSION PASS") == std::string::npos, "preflight false PASS");
+        if (result.out.find("REGRESSION LOGS:") != std::string::npos) {
+            const auto run = logs(result);
+            require(!fs::exists(run / "01-board.argv") && !fs::exists(run / "result.txt"),
+                "rejected inventory published board or success evidence");
+        }
+        return result;
+    };
+    for (const bool wrapper : {false, true}) {
+        const auto repo = scratch / (wrapper ? "wrapper-build" : "direct-build");
+        configure(repo, self, cmake, {}, wrapper ? "native/ci" : "native");
+        const auto args = arguments(repo);
+        const auto result = invoke(args);
+        require(result.code == 0, "valid source root failed: " + result.err + result.out);
+        require(read(repo / "calls") == "board\nselftest\n", "valid source root changed stages");
+        require(read(logs(result) / "result.txt") == std::string("PASS\ncontracts=") + (wrapper ? "14\n" : "8\n"),
+            "valid source root did not run every nested test");
+        if (wrapper) {
+            const auto xml = read(logs(result) / "ctest-results.xml");
+            for (const auto& name : ci_names)
+                require(xml.find("name=\"" + name + "\"") != std::string::npos, "wrapper result omitted " + name);
+        }
+        const auto cache_path = repo / "build/CMakeCache.txt";
+        const auto cache = read(cache_path);
+        for (const auto& value : std::vector<std::optional<std::string>>{
+                "ON", "TRUE", "1", "YES", "OFF ", "FALSE", "0", "", "garbage", std::nullopt}) {
+            write(cache_path, cache_value(cache, "SCHGEN_BUILD_PYTHON", value));
+            const auto failure = rejected_before_board(repo, "SCHGEN_BUILD_PYTHON explicitly OFF");
+            require(failure.out.find("REGRESSION LOGS:") == std::string::npos, "cache rejection wrote a run or spawned CTest");
+        }
+        for (const auto& value : std::vector<std::optional<std::string>>{"OFF", "", std::nullopt}) {
+            write(cache_path, cache_value(cache, "BUILD_TESTING", value));
+            rejected_before_board(repo, "enable BUILD_TESTING");
+        }
+        for (const auto& key : {"SCHGEN_BUILD_PYTHON", "BUILD_TESTING", "CMAKE_HOME_DIRECTORY"}) {
+            write(cache_path, cache + key + ":STRING=OFF\n");
+            rejected_before_board(repo, "duplicate CMake cache key");
+        }
+        write(cache_path, cache_value(cache, "CMAKE_HOME_DIRECTORY", std::nullopt));
+        rejected_before_board(repo, "ROOT/native or ROOT/native/ci");
+        write(cache_path, cache);
+        // Canonical aliases must be equivalent; spelling/prefix checks are not sufficient.
+        const auto alias = scratch / (wrapper ? "wrapper-alias" : "direct-alias");
+        fs::create_directory_symlink(repo, alias);
+        require(invoke(arguments(alias)).code == 0, "canonical repository/build alias rejected");
+        const auto source_alias = scratch / (wrapper ? "wrapper-source-alias" : "direct-source-alias");
+        fs::create_directory_symlink(repo / (wrapper ? "native/ci" : "native"), source_alias);
+        write(cache_path, cache_value(cache, "CMAKE_HOME_DIRECTORY", source_alias.string()));
+        require(invoke(args).code == 0, "canonical cache source alias rejected");
+        write(cache_path, cache);
+        if (!wrapper) continue;
+        auto engine_args = args; engine_args[5] = (repo / "build/engine").string();
+        const auto engine = invoke(engine_args);
+        require(engine.code == 2 && engine.err.find("no CMakeCache.txt") != std::string::npos,
+            "wrapper engine-only subdirectory bypassed top-level cache");
+        for (const auto& mode : {"ci-cache-fail", "ci-environment-fail", "ctest-skip"}) {
+            write(repo / "mode", mode); write(repo / "calls", "");
+            const auto failed = invoke(args);
+            require(failed.code == (std::string(mode) == "ctest-skip" ? 2 : 8), "wrapper failure status lost: " + failed.err);
+            require(read(repo / "calls") == "board\nselftest\n", "wrapper altered documented stage order");
+            require(fs::exists(logs(failed) / "03-ctest.stdout") && !fs::exists(logs(failed) / "result.txt"),
+                "wrapper failure lost diagnostics or published PASS");
+            if (std::string(mode) != "ctest-skip")
+                require(read(logs(failed) / "03-ctest.stdout").find("extra_native_contract") == std::string::npos,
+                    "CTest executed dependent engine test after failed CI fixture");
+        }
+    }
+    for (const auto& name : ci_names) {
+        const auto repo = scratch / ("missing-" + name);
+        configure(repo, self, cmake, "missing:" + name, "native/ci");
+        rejected_before_board(repo, "missing required native CI CTest contract: " + name);
+    }
+    for (const auto& variant : {"missing", "empty", "disabled", "unbuilt", "shell",
+             "disabled:native_ci_environment", "unbuilt:native_ci_cli"}) {
+        const auto repo = scratch / ("wrapper-negative-" + std::string(variant));
+        configure(repo, self, cmake, variant, "native/ci");
+        rejected_before_board(repo, variant == std::string("missing") || variant == std::string("empty") ?
+            "missing required live/RC" : variant == std::string("shell") ? "not a native contract" :
+            std::string(variant).find("disabled") == 0 ? "disabled CTest contract" : "unbuilt");
+    }
+    // These contain a full fixture test inventory: failure must be the source
+    // boundary, not just absent anchors in an ordinary smoke-only build.
+    for (const auto& source : {"native/ci/smoke", "native/other", "native/ci-copy", "native/ci/nested"}) {
+        const auto repo = scratch / ("wrong-source-" + fs::path(source).filename().string());
+        configure(repo, self, cmake, {}, source);
+        rejected_before_board(repo, "ROOT/native or ROOT/native/ci");
+    }
+    auto wrong_repo = arguments(scratch / "wrapper-build");
+    wrong_repo[3] = (scratch / "direct-build").string();
+    const auto wrong = invoke(wrong_repo);
+    require(wrong.code == 2 && wrong.err.find("ROOT/native or ROOT/native/ci") != std::string::npos,
+        "wrapper from another repository accepted");
+}
 }  // namespace
 
 int main(int argc, char** argv) {
@@ -260,6 +416,10 @@ int main(int argc, char** argv) {
         if (argc == 4 && std::string(argv[1]) == "--regression-contract-test") {
             fixture_only(argv[2]); const auto mode = read(fs::path(argv[2]) / "mode");
             std::cout << "TEST-ONLY subprocess boundary fixture: " << argv[3] << '\n';
+            const std::string test = argv[3];
+            if (test == "native_ci_smoke_reject_arguments") return 7; // Real CTest WILL_FAIL contract.
+            if ((mode == "ci-cache-fail" && test == "native_ci_cache") ||
+                (mode == "ci-environment-fail" && test == "native_ci_environment")) return 32;
             if (mode == "ctest-fail") return 31;
             if (mode == "ctest-skip" && std::string(argv[3]) == "extra_native_contract") return 77;
             if (mode == "ctest-timeout" && std::string(argv[3]) == "extra_native_contract") {
@@ -282,6 +442,7 @@ int main(int argc, char** argv) {
         const fs::path scratch = pattern;
         std::cout << "REGRESSION CONTRACT EVIDENCE: " << scratch << '\n';
         contracts(scratch, self, cmake, ctest);
+        build_roots_contracts(scratch, self, cmake, ctest);
         std::cout << "Regression CLI: " << checks << " assertions PASS (TEST-ONLY child fixtures; not board acceptance)\n";
         return 0;
     } catch (const std::exception& error) { std::cerr << "Regression CLI contract FAIL: " << error.what() << '\n'; return 1; }

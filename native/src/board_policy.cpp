@@ -36,7 +36,8 @@ const std::vector<Binding> quantization_bindings{
 const std::vector<Binding> placement_bindings{
     {"zone_pack_fill","zone_pack_fill"},{"edge_zone_aspect","edge_zone_aspect"},
     {"interior_zone_aspect","interior_zone_aspect"},{"interior_band_target","interior_band_target"},
-    {"d13_df40_min_pins","df40_min_pins"}};
+    {"d13_df40_min_pins","df40_min_pins"},
+    {"breathe_epsilon","breathe_epsilon_mm"},{"breathe_search_step","breathe_step_mm"}};
 }
 NativeBoardPolicy make_native_board_policy(const ProjectPaths& paths,const FloorplanInput& in){
     if(paths.repository_root.empty())throw ProjectError("native board policy requires repository_root");

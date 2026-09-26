@@ -8,6 +8,7 @@
 #include "schgen/turn.hpp"
 #include "schgen/project_cli.hpp"
 #include "schgen/regression_cli.hpp"
+#include "schgen/geometry_cli.hpp"
 #include "schgen/part_import.hpp"
 #include "schgen/selftest_full.hpp"
 
@@ -21,6 +22,8 @@ int main(int argc, char** argv) {
             std::cout << "usage: schgen <command>\n"
                          "  self-check\n"
                          "  check --tests-dir BUILD [--repo ROOT] [--project NAME_OR_PATH] [-o DIRECTORY]\n"
+                         "  floorplan [--project NAME] [--export] [-o DIRECTORY]\n"
+                         "  compose [--project NAME] [--measure | --repair [--dry-run]] [--allow-intent NAME:FROM->TO]\n"
                          "  selftest [--project NAME] [SUBSYSTEM ...] [--kicad-cli PATH] [-o REPORT]\n"
                          "  catalog-compile <parts_dir> <catalog.bin>\n"
                          "  circuit-compile <circuits_dir> <circuits.bin>\n"
@@ -70,6 +73,7 @@ int main(int argc, char** argv) {
         }
         if (const auto status = schgen::run_part_import_command(argc, argv)) return *status;
         if (const auto status = schgen::run_regression_command(argc, argv)) return *status;
+        if (const auto status = schgen::run_geometry_command(argc, argv)) return *status;
         if (const auto status = schgen::run_project_command(argc, argv)) return *status;
         if (argc >= 2 && std::string(argv[1]) == "catalog-compile") {
             if (argc != 4) {

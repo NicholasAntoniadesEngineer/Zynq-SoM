@@ -473,6 +473,17 @@ void frozen(const std::filesystem::path& dir,const std::string& name,bool geomet
         if(found==expected_quant.object_value.end())expected_quant.object_value.emplace_back(key,v);
         else found->second.number_value+=v.number_value;
     }
+    // Separate additive precision provenance: no historical count is replaced.
+    // Values were independently observed at compiled operation entry, with all
+    // original twenty counters separately checked against the pre-change solve.
+    const auto precision_counts=parse_json_file((dir.parent_path()/"precision_ops/additive_counts.json").string());
+    for(const auto& [key,v]:field(field(precision_counts,name),"floorplan").object_value){
+        require((key=="estimate_position_precision"||key=="estimate_pad_precision")&&v.number_value>0,
+                name+": explicit newly observed estimator precision operation");
+        require(std::none_of(expected_quant.object_value.begin(),expected_quant.object_value.end(),
+                [wanted=key](const auto& entry){return entry.first==wanted;}),name+": additive precision cannot replace an old counter");
+        expected_quant.object_value.emplace_back(key,v);
+    }
     same(field(account,"quantization_engagements"),expected_quant,name+".quantization_engagements");
     std::vector<J> calculations;
     std::string ledger;

@@ -1,5 +1,6 @@
 #include "schgen/native_audit_state.hpp"
 #include "schgen/process.hpp"
+#include "schgen/audit_ast_projection.hpp"
 #include "verification_internal.hpp"
 #include "verification_audits_unicode.hpp"
 #include <cctype>
@@ -142,7 +143,7 @@ struct Visitor {
         const auto offset=std::size_t(off.number_value);if(offset>source.size())throw AuditSyntaxError(path+": invalid compiler source offset");
         return std::size_t(std::count(source.begin(),source.begin()+static_cast<std::ptrdiff_t>(offset),'\n'))+1;
     }
-    void visit(const JsonNode& n,std::string scope={},std::string function={},bool in_main=false,bool in_class=false){
+    void visit(const JsonNode& n,std::string scope={},std::string function={},bool in_main=false,bool in_class=false,bool ordinal_enum=false){
         const auto kind=text(n,"kind"),name=text(n,"name");
         if(get(n,"isImplicit").bool_value&&kind!="ImplicitCastExpr")return;
         const auto& loc=location(get(n,"loc"));
@@ -154,7 +155,18 @@ struct Visitor {
             scope=found->second;
         }
         if(kind=="NamespaceDecl"&&!name.empty())scope+=name+"::";
-        if(kind=="EnumDecl"&&!text(n,"scopedEnumTag").empty())scope+=name+"::";
+        if(kind=="EnumDecl"){
+            if(!text(n,"scopedEnumTag").empty())scope+=name+"::";
+            // An entirely unseeded enum supplies language identity ordinals.
+            // Any authored initializer makes the whole enum numeric policy,
+            // including members whose values follow that initializer implicitly.
+            ordinal_enum=std::none_of(children(n).begin(),children(n).end(),[](const auto& member){
+                if(text(member,"kind")!="EnumConstantDecl")return false;
+                return std::any_of(children(member).begin(),children(member).end(),[](const auto& value){
+                    const auto k=text(value,"kind");return k.size()<4||k.compare(k.size()-4,4,"Attr")!=0;
+                });
+            });
+        }
         if(record_kind(kind)){scope=contexts.at(text(n,"id"));in_class=true;}
         if(kind=="LambdaExpr"){
             // Captures execute in the enclosing body; the lambda's implementation
@@ -188,7 +200,10 @@ struct Visitor {
             const bool state_field=kind=="FieldDecl"&&!immutable&&!upper_policy_name(name)&&
                 std::all_of(children(n).begin(),children(n).end(),zero_initialization);
             const bool policy_storage=immutable||upper_policy_name(name)||text(n,"storageClass")=="static"||(kind=="FieldDecl"&&!state_field);
-            if(enumeration||(variable&&initialized&&numeric_type(n)&&(!local||(policy_storage&&literal_init)))){
+            // Ordinals remain compile-time values for detecting independently
+            // authored engineering arithmetic derived from a category label.
+            if(enumeration)constant_ids.insert(text(n,"id"));
+            if((enumeration&&!ordinal_enum)||(variable&&initialized&&numeric_type(n)&&(!local||(policy_storage&&literal_init)))){
                 if(enumeration||immutable)constant_ids.insert(text(n,"id"));
                 const auto site=path+":"+std::to_string(line(n));const auto symbol=path+"::"+scope+name;
                 const auto id=text(n,"id");auto& entities=constant_entities[symbol];
@@ -212,7 +227,7 @@ struct Visitor {
             if(kind=="BinaryOperator"&&(text(n,"opcode")=="+"||text(n,"opcode")=="-")&&children(n).size()==2){const auto& cs=children(n);
                 if((credit(cs[0])&&geometry(cs[1]))||(credit(cs[1])&&geometry(cs[0])))hit("credit-0.05");}
         }
-        for(const auto& c:children(n))visit(c,scope,function,in_main,in_class);
+        for(const auto& c:children(n))visit(c,scope,function,in_main,in_class,ordinal_enum);
     }
 };
 }
@@ -230,7 +245,7 @@ CppSourceCensus scan_cpp_audit_sources(const std::filesystem::path& root,const s
         command.insert(command.end(),{"-std=c++17","-ffp-contract=off","-x","c++","-fsyntax-only","-Xclang","-ast-dump=json",path.string()});
         const auto compiled=run_process(command,options.timeout);
         if(compiled.exit_code!=0)throw AuditSyntaxError(path.string()+": C++ compiler failed ("+std::to_string(compiled.exit_code)+")\n"+compiled.stderr_text);
-        const auto ast=parse_json_text(compiled.stdout_text,path.string()+" compiler AST");
+        const auto ast=parse_audit_ast_projection(compiled.stdout_text,path.string()+" compiler AST");
         if(text(ast,"kind")!="TranslationUnitDecl")throw AuditSyntaxError(path.string()+": compiler did not return a translation-unit AST");
         CppSourceCensus local;
         Visitor visitor{relative.generic_string(),path.string(),model_checks::read(path),local,{},{},{},{}};

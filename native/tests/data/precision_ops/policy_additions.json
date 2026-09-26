@@ -1,0 +1,18 @@
+{
+  "provenance": "Explicit additive native ledger provenance: expose the existing breathe comparison tolerance and displacement search step from actual shared producer storage. No geometry, expression order, historical row, event or counter is changed by these assumptions.",
+  "after": "d13_df40_min_pins",
+  "assumption_rows": [
+    {
+      "kind": "ASSUME",
+      "depth": 1,
+      "name": "breathe_epsilon",
+      "text": "  ASSUME breathe_epsilon                = 0.0001        mm         [policy] board_decision_policy.breathe_epsilon_mm — comparison tolerance in existing breathe clearance, progress and dispersion checks"
+    },
+    {
+      "kind": "ASSUME",
+      "depth": 1,
+      "name": "breathe_search_step",
+      "text": "  ASSUME breathe_search_step            = 0.25          mm         [policy] board_decision_policy.breathe_step_mm — increment and retreat step in existing breathe displacement search"
+    }
+  ]
+}

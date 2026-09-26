@@ -13,7 +13,7 @@ option(SCHGEN_BUILD_PYTHON "Build transitional Python bindings" OFF)
 # Compile one engine shared by the standalone CLI and transitional bindings.
 add_library(schgen_core STATIC
     src/occupancy.cpp src/seat.cpp src/sexpr.cpp src/route.cpp src/emit.cpp
-    src/legalize.cpp src/quantize.cpp src/turn.cpp src/pack.cpp
+    src/legalize.cpp src/quantize.cpp src/precision_ops.cpp src/turn.cpp src/pack.cpp
     src/pack_anchor.cpp src/place_search.cpp src/cc.cpp src/embed_fp.cpp
     src/pack_edges.cpp src/pcb_scan.cpp src/pack_refine.cpp src/place_geom.cpp
     src/catalog.cpp src/json.cpp src/circuit.cpp src/reorder.cpp src/atomic_file.cpp
@@ -64,7 +64,12 @@ target_sources(schgen_core PRIVATE src/example_devkit.cpp)
 target_sources(schgen_core PRIVATE src/net_contract.cpp)
 target_sources(schgen_core PRIVATE src/doc_consistency.cpp)
 target_sources(schgen_core PRIVATE src/regression_cli.cpp)
+target_sources(schgen_core PRIVATE src/geometry_cli.cpp src/audit_ast_projection.cpp)
+set_source_files_properties(src/geometry_cli.cpp src/audit_ast_projection.cpp
+    PROPERTIES COMPILE_OPTIONS "-Wall;-Wextra;-Wpedantic;-Werror;-ffp-contract=off")
 set_source_files_properties(src/regression_cli.cpp
+    PROPERTIES COMPILE_OPTIONS "-Wall;-Wextra;-Wpedantic;-Werror;-ffp-contract=off")
+set_source_files_properties(src/precision_ops.cpp
     PROPERTIES COMPILE_OPTIONS "-Wall;-Wextra;-Wpedantic;-Werror;-ffp-contract=off")
 set_source_files_properties(src/doc_consistency.cpp
     PROPERTIES COMPILE_OPTIONS "-Wall;-Wextra;-Wpedantic;-Werror;-ffp-contract=off")
@@ -358,6 +363,52 @@ if(BUILD_TESTING)
     add_executable(schgen_board_pipeline_contracts tests/board_pipeline_contracts.cpp)
     add_executable(schgen_net_contract_contracts tests/net_contract_contracts.cpp)
     add_executable(schgen_doc_consistency_contracts tests/doc_consistency_contracts.cpp)
+    add_executable(schgen_geometry_cli_contracts tests/geometry_cli_contracts.cpp)
+    target_link_libraries(schgen_geometry_cli_contracts PRIVATE schgen_core)
+    target_compile_options(schgen_geometry_cli_contracts PRIVATE
+        -Wall -Wextra -Wpedantic -Werror -ffp-contract=off)
+    add_test(NAME native_geometry_cli_contracts COMMAND schgen_geometry_cli_contracts
+        "${CMAKE_CURRENT_SOURCE_DIR}/.." --system-temp)
+    add_test(NAME native_geometry_cli_live_contracts COMMAND schgen_geometry_cli_contracts
+        "${CMAKE_CURRENT_SOURCE_DIR}/.." --system-temp --live-kicad)
+    add_test(NAME native_geometry_cli_apply_contracts COMMAND schgen_geometry_cli_contracts
+        "${CMAKE_CURRENT_SOURCE_DIR}/.." --system-temp --live-apply)
+    set_tests_properties(native_geometry_cli_live_contracts native_geometry_cli_apply_contracts
+        PROPERTIES LABELS "live-kicad" TIMEOUT 1200)
+    add_executable(schgen_audit_ast_projection_contracts tests/audit_ast_projection_contracts.cpp)
+    target_link_libraries(schgen_audit_ast_projection_contracts PRIVATE schgen_core)
+    target_compile_options(schgen_audit_ast_projection_contracts PRIVATE
+        -Wall -Wextra -Wpedantic -Werror -ffp-contract=off)
+    add_test(NAME native_audit_ast_projection_contracts COMMAND schgen_audit_ast_projection_contracts)
+    # Includes the actual visitor once; the ordinary archive is not force-loaded.
+    add_executable(schgen_audit_ast_projection_census tests/audit_ast_projection_census.cpp)
+    target_include_directories(schgen_audit_ast_projection_census PRIVATE src)
+    target_link_libraries(schgen_audit_ast_projection_census PRIVATE schgen_core)
+    target_compile_options(schgen_audit_ast_projection_census PRIVATE
+        -Wall -Wextra -Wpedantic -Werror -ffp-contract=off)
+    add_test(NAME native_audit_ast_projection_census COMMAND schgen_audit_ast_projection_census
+        --selftest "${CMAKE_CURRENT_SOURCE_DIR}/..")
+    foreach(family precision_ops native_cpp_enum)
+        add_executable(schgen_${family}_contracts tests/${family}_contracts.cpp)
+        target_link_libraries(schgen_${family}_contracts PRIVATE schgen_core)
+        target_compile_options(schgen_${family}_contracts PRIVATE
+            -Wall -Wextra -Wpedantic -Werror -ffp-contract=off)
+        add_test(NAME native_${family}_contracts COMMAND schgen_${family}_contracts)
+    endforeach()
+    # Only the private operation object is instrumented. Its actual function
+    # entries independently verify producer counters; production stays untouched.
+    add_library(schgen_precision_observed OBJECT src/precision_ops.cpp)
+    target_include_directories(schgen_precision_observed PRIVATE include)
+    target_compile_options(schgen_precision_observed PRIVATE
+        -Wall -Wextra -Wpedantic -Werror -ffp-contract=off -finstrument-functions -fno-inline)
+    add_executable(schgen_precision_accounting_contracts tests/precision_accounting_contracts.cpp
+        $<TARGET_OBJECTS:schgen_precision_observed>)
+    target_include_directories(schgen_precision_accounting_contracts PRIVATE src)
+    target_link_libraries(schgen_precision_accounting_contracts PRIVATE schgen_core)
+    target_compile_options(schgen_precision_accounting_contracts PRIVATE
+        -Wall -Wextra -Wpedantic -Werror -ffp-contract=off)
+    add_test(NAME native_precision_accounting_contracts COMMAND schgen_precision_accounting_contracts
+        "${CMAKE_CURRENT_SOURCE_DIR}/..")
     foreach(family regression_cli regression_rc_smoke)
         add_executable(schgen_${family}_contracts tests/${family}_contracts.cpp)
         target_link_libraries(schgen_${family}_contracts PRIVATE schgen_core)
@@ -599,7 +650,7 @@ if(BUILD_TESTING)
             design-rules testpoints board-schematic pcb-stage pcb-drc subsystem-new render3d board-step
             model3d-check assembly ratsnest gallery diagram si-constraints fab-profile manifest preflight
             constraints powertree thermal part-rules bom-values footprint-pads pin-completeness symbol-law
-            spice firmware manual scfw testplan power-sequence subsystem-check carrier-check check)
+            spice firmware manual scfw testplan power-sequence subsystem-check carrier-check check floorplan compose)
         add_test(NAME native_${command}_help COMMAND schgen ${command} --help --repo /nonexistent/schgen-help-must-not-read)
     endforeach()
     add_test(NAME native_part_import_help COMMAND schgen part-import --help

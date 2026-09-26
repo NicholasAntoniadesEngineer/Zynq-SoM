@@ -1,6 +1,8 @@
 # Native regression command handoff
 
-Only the new regression header, source and tests are owned by this change.
+The original regression family is integrated by the parent at `ae8a3978`.
+This follow-up owns only `src/regression_cli.cpp`, its CLI contracts and this
+handoff. The header and RC smoke are unchanged.
 No CMake/main/project CLI changes, shared builds, commits, or full-board runs
 were performed. Complete board-command acceptance remains pending the parent's
 board audit being green; the process-double tests are not that acceptance.
@@ -78,7 +80,8 @@ or any audit/gate bypass. CTest uses its own configured KiCad paths; a supplied
 `--kicad-cli` is forwarded to board and selftest only, as the help states.
 
 Before board publication, CTest's real `--show-only=json-v1` inventory must be
-nonempty, its cache must name `ROOT/native` with `BUILD_TESTING` enabled, every
+nonempty, its cache must name exactly canonical `ROOT/native` or `ROOT/native/ci`
+with `BUILD_TESTING` enabled and `SCHGEN_BUILD_PYTHON=OFF`, every
 entry must have a built executable, and no entry may be disabled or directly
 invoke a shell/Python interpreter. All configured tests run serially, with
 `--stop-on-failure --output-on-failure --no-tests=error`, no regex/label filters,
@@ -86,6 +89,38 @@ and an explicit JUnit path. A zero CTest exit alone is insufficient: the JUnit
 must contain every inventoried name exactly once, all actually run and passing,
 with no skipped/disabled/errors/failures. Missing/malformed/DTD/incorrect result
 documents fail. The command does not parse human `PASS` tokens as evidence.
+
+### Direct and local wrapper build policy
+
+Both entry points are supported; the wrapper is a **local-only** CTest workflow,
+not authorization for repository CI automation. No configure/build is performed
+by `check`, and no new dependency or shared integration change is needed here.
+Both roots require the literal explicit cache value `SCHGEN_BUILD_PYTHON=OFF`:
+missing, empty, `ON`, `TRUE`, `1`, and alternative false spellings such as `FALSE`
+or `0` reject. Duplicate cache keys reject instead of silently choosing a value.
+Canonical source/repository/build aliases work. Other repositories, sibling or
+nested source roots (including `native/ci/smoke`) are not accepted.
+
+Wrapper builds require these six additional minimum inventory anchors:
+
+- `native_ci_cache`
+- `native_ci_environment`
+- `native_ci_cli`
+- `native_ci_smoke_contracts`
+- `native_ci_bootstrap_rejections`
+- `native_ci_smoke_reject_arguments`
+
+All ordinary live/RC anchors remain mandatory. Every wrapper and engine test
+runs, including extras beyond the anchors; nothing is filtered. Point
+`--tests-dir` at the wrapper's **top-level build directory**, not its `engine/`
+subdirectory, which lacks the top-level cache and wrapper checks.
+
+Stage order remains board, selftest, then full CTest. Wrapper fixture setup
+checks run during that final CTest stage, before dependent engine tests, **not**
+before the standalone board/selftest commands. Their failures and skips cannot
+produce a successful regression result. The cache policy checks build settings;
+it is not a claim to intercept arbitrary child behavior or inspect every linked
+library for Python symbols.
 
 Stage order is board, selftest, then all CTest contracts (including RC smoke).
 Child nonzero exits stop immediately and propagate. Signals return `128+signal`,
@@ -106,7 +141,58 @@ CTest's own build-directory logs and the unique run's `ctest-results.xml` remain
 
 Strict flags: C++17, `-Wall -Wextra -Wpedantic -Werror -ffp-contract=off`.
 ASan/UBSan also use `-fsanitize=address,undefined -fno-omit-frame-pointer`.
-Private executables are in `/private/tmp/native-regression.2Daxfx`:
+
+### Two-root follow-up: 734 strict + 734 ASan/UBSan assertions PASS
+
+Private executables: `/private/tmp/native-regression-ci.w4SZ13/driver-strict`
+and `driver-asan`. All four translation units (`regression_cli.cpp`, `json.cpp`,
+`process.cpp`, `regression_cli_contracts.cpp`) were compiled afresh for each mode;
+the sanitizer proof does not link an uninstrumented repository archive.
+System LibXml2 and OS libraries remain system binaries. Runtime options were
+`ASAN_OPTIONS=abort_on_error=1 UBSAN_OPTIONS=halt_on_error=1` (no leak-check claim).
+
+Retained real CMake/CTest fixtures and regression logs:
+
+- Strict: `/var/folders/74/z4l11d890nj5130446rwtbq80000gn/T/schgen-regression-contracts-6zhJf4`
+- ASan/UBSan: `/var/folders/74/z4l11d890nj5130446rwtbq80000gn/T/schgen-regression-contracts-A35mct`
+
+The explicitly test-only fixture wrapper uses a real nested `add_subdirectory`
+engine graph, real CTest fixture dependencies and a real `WILL_FAIL` negative.
+Its success JUnit includes all 14 entries (seven live/RC names, six wrapper names,
+one extra). Coverage includes direct builds without a wrapper directory, each
+individually missing wrapper anchor, missing ordinary live/RC coverage, disabled
+or unbuilt entries, shell rejection, setup failure propagation, skipped-test
+rejection, all non-OFF/missing binding states, testing-disabled/missing states,
+duplicate cache keys, missing source identity, canonical symlink aliases,
+wrong-repository/smoke/sibling/nested roots and engine-subdirectory rejection.
+All earlier fail-fast, timeout, process-group, binary-log and evidence-forgery
+contracts still run. CTest may omit an unbuilt command from JSON or retain the
+unresolved path: both diagnostics are accepted only with exit 2 and zero
+board/selftest invocations. No production policy was loosened for that difference.
+
+Reproduce from the repository root (outputs only to an existing private scratch
+directory; substitute a fresh directory for a separate run):
+
+```sh
+clang++ -std=c++17 -O1 -g -mmacosx-version-min=26.6 \
+  -Wall -Wextra -Wpedantic -Werror -ffp-contract=off \
+  -I native/include \
+  -I /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/libxml2 \
+  native/src/regression_cli.cpp native/src/json.cpp native/src/process.cpp \
+  native/tests/regression_cli_contracts.cpp -lxml2 -pthread \
+  -o /private/tmp/native-regression-ci.w4SZ13/driver-strict
+/private/tmp/native-regression-ci.w4SZ13/driver-strict \
+  /opt/homebrew/bin/cmake /opt/homebrew/bin/ctest
+```
+
+For the sanitizer executable, add `-fsanitize=address,undefined
+-fno-omit-frame-pointer`, change the output to `driver-asan`, and invoke with the
+runtime options above. These remain **process-boundary proofs, not full-board
+acceptance**. No shared build, CMake change, CI workflow or board run was made.
+
+### Original accepted proof (unchanged RC smoke)
+
+Original private executables are in `/private/tmp/native-regression.2Daxfx`:
 
 - `driver-strict`, `driver-asan`: **184 assertions**. The test-only executable
   simulates board/selftest only under a private, explicitly marked fixture repo;

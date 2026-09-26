@@ -1,5 +1,6 @@
 #include "floorplan_internal.hpp"
 #include "schgen/board_schematic.hpp"
+#include "schgen/precision_ops.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -138,6 +139,17 @@ void Engine::prepare_cross() {
 }
 
 double Engine::estimate(const std::vector<const FloorplanBlock*>& blocks, const std::string& only_sheet) {
+    // Immutable labels avoid allocating a temporary string at every coordinate.
+    // Counters belong to this solve; observational probes use their private Engine.
+    static const std::string position_label="estimate_position_precision",pad_label="estimate_pad_precision";
+    const auto position_precision=[&](double value){
+        checked_quantization_add(plan.accounting.quantization_engagements,position_label);
+        return estimate_position_precision(value);
+    };
+    const auto pad_precision=[&](double value){
+        checked_quantization_add(plan.accounting.quantization_engagements,pad_label);
+        return estimate_pad_precision(value);
+    };
     std::map<std::string,const FloorplanBlock*> by_name;
     std::map<std::string,int> selected, bottom;
     for (const auto* b:blocks) {
@@ -161,14 +173,14 @@ double Engine::estimate(const std::vector<const FloorplanBlock*>& blocks, const 
             if (block==by_name.end()) continue;
             const int k=get(selected,part.key);
             const auto d=k ? part.shape_offsets.at(k) : part.offset;
-            x=py_round(py_round(in.origin.first+block->second->x,4)+d.first,4);
-            y=py_round(py_round(in.origin.second+block->second->y,4)+d.second,4);
+            x=position_precision(position_precision(in.origin.first+block->second->x)+d.first);
+            y=position_precision(position_precision(in.origin.second+block->second->y)+d.second);
         } else if (part.owner==CrossPart::Owner::SomJack) {
             x=quantize("fixed_part_grid",in.origin.first+plan.som_x+part.offset.first);
             y=quantize("fixed_part_grid",in.origin.second+plan.som_y+part.offset.second);
         } else if (part.owner==CrossPart::Owner::Decoupling) {
-            x=py_round(in.origin.first+plan.som_x+dec_inset+rw*(part.owner_index%cols+.5)/cols,4);
-            y=py_round(in.origin.second+plan.som_y+dec_inset+rh*(part.owner_index/cols+.5)/rows,4);
+            x=position_precision(in.origin.first+plan.som_x+dec_inset+rw*(part.owner_index%cols+.5)/cols);
+            y=position_precision(in.origin.second+plan.som_y+dec_inset+rh*(part.owner_index/cols+.5)/rows);
         } else {
             x=quantize("fixed_part_grid",in.origin.first+corners[part.owner_index].first);
             y=quantize("fixed_part_grid",in.origin.second+corners[part.owner_index].second);
@@ -176,10 +188,10 @@ double Engine::estimate(const std::vector<const FloorplanBlock*>& blocks, const 
         const auto pb=connector_pad_boxes.find(part.ref);
         if (pb!=connector_pad_boxes.end()) {
             const auto& e=in.geometry.conn_edge.at(part.ref);
-            if (e=="N") y=py_round(in.origin.second+edge_pad_clear-pb->second.y0,4);
-            else if (e=="S") y=py_round(in.origin.second+plan.board_h-edge_pad_clear-pb->second.y1,4);
-            else if (e=="W") x=py_round(in.origin.first+edge_pad_clear-pb->second.x0,4);
-            else if (e=="E") x=py_round(in.origin.first+plan.board_w-edge_pad_clear-pb->second.x1,4);
+            if (e=="N") y=position_precision(in.origin.second+edge_pad_clear-pb->second.y0);
+            else if (e=="S") y=position_precision(in.origin.second+plan.board_h-edge_pad_clear-pb->second.y1);
+            else if (e=="W") x=position_precision(in.origin.first+edge_pad_clear-pb->second.x0);
+            else if (e=="E") x=position_precision(in.origin.first+plan.board_w-edge_pad_clear-pb->second.x1);
         }
         positions[i]={{x,y}};
     }
@@ -202,8 +214,8 @@ double Engine::estimate(const std::vector<const FloorplanBlock*>& blocks, const 
             if (added.second) flags.push_back(bottom.count(p.sheet) ? 1:0);
             int side=p.base_side=="top" ? 0:1;
             if (bottom.count(p.sheet)) side=in.geometry.shapes.at(p.sheet)[bottom.at(p.sheet)].top_off.count(p.ref) ? 1:0;
-            for (const auto& [rx,ry]:pad->second) points.emplace_back(py_round(positions[pin.part]->first+rx,3),
-                py_round(positions[pin.part]->second+ry,3),added.first->second,side);
+            for (const auto& [rx,ry]:pad->second) points.emplace_back(pad_precision(positions[pin.part]->first+rx),
+                pad_precision(positions[pin.part]->second+ry),added.first->second,side);
         }
         cross+=cross_net_cost(points,net.via_cost,flags);
     }

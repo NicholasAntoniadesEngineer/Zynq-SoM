@@ -63,6 +63,8 @@ const std::vector<Declaration> declarations{
     {"som_decoupling_inset","ASSUME","floorplan.sizing","mm","inset of the bottom-side decoupling grid inside the SoM shadow","policy","placement.SOM_DECOUPLING_INSET","", {}},
     {"d13_min_subject_pins","ASSUME","floorplan.sizing","pins","pin count below which a part gets no D13 reach","policy","fanout.MIN_SUBJECT_PINS","", {}},
     {"d13_df40_min_pins","ASSUME","floorplan.sizing","pins","pin count that identifies a DF40 receptacle","physical","fanout.DF40_MIN_PINS","", {}},
+    {"breathe_epsilon","ASSUME","floorplan.sizing","mm","comparison tolerance in existing breathe clearance, progress and dispersion checks","policy","board_decision_policy.breathe_epsilon_mm","", {}},
+    {"breathe_search_step","ASSUME","floorplan.sizing","mm","increment and retreat step in existing breathe displacement search","policy","board_decision_policy.breathe_step_mm","", {}},
     {"overmold_side_gap","CALC","floorplan.sizing","mm","shell overhang beside a single receptacle","","floorplan.OVERMOLD_SIDE_GAP","plug_width / 2 - copper_half_width", {"plug_width","copper_half_width"}},
     {"edge_band","CALC","floorplan.sizing","mm","connector band width used by the seed outline","","floorplan.EDGE_BAND","edge_depth_cap - edge_band_relief", {"edge_depth_cap","edge_band_relief"}},
     {"occ_punch_mask","CALC","floorplan.sizing","bitmask","occupancy bits of geometry that pierces both faces","","floorplan.OCC_PUNCH","occ_top | occ_bottom", {"occ_top","occ_bottom"}},
@@ -148,7 +150,9 @@ std::vector<FloorplanLedgerMigration> floorplan_ledger_migrations() {
         {"som_side_band","retired","Unused historical SoM-side band; native packing has no consumer",{}},
         {"via_size","replaced","Estimator uses compiled costs, not a barrel-diameter calculation",{"via_ordinary_cost","via_impedance_cost"}},
         {"via_clearance","replaced","Estimator uses compiled costs, not an annulus calculation",{"via_ordinary_cost","via_impedance_cost"}},
-        {"stack_thickness","replaced","Estimator uses a compiled impedance cost, not the emitter stack thickness",{"via_impedance_cost"}}};
+        {"stack_thickness","replaced","Estimator uses a compiled impedance cost, not the emitter stack thickness",{"via_impedance_cost"}},
+        {"breathe_epsilon","exposed","Existing local 1e-4 comparison tolerance moved to shared live producer policy",{}},
+        {"breathe_search_step","exposed","Existing local .25 search increment moved to shared live producer policy",{}}};
 }
 std::vector<FloorplanLedgerPolicy> floorplan_ledger_policy() {
     std::vector<FloorplanLedgerPolicy> out;
@@ -200,6 +204,8 @@ std::optional<double> floorplan_live_assumption(const std::string& name,const Fl
     if(name=="interior_zone_aspect")return board_decision_policy::interior_zone_aspect;
     if(name=="interior_band_target")return board_decision_policy::interior_band_target;
     if(name=="d13_df40_min_pins")return board_decision_policy::df40_min_pins;
+    if(name=="breathe_epsilon")return board_decision_policy::breathe_epsilon_mm;
+    if(name=="breathe_search_step")return board_decision_policy::breathe_step_mm;
     if(name=="zone_pad")return pcb_stage::zone_pad;
     if(name=="place_clear_baseline")return pcb_stage::clear;
     if(name=="seat_slide")return pcb_stage::slide;

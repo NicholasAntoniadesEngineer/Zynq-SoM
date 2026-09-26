@@ -1,0 +1,144 @@
+{
+  "provenance": "Unmodified AST of original compose argparse registration; no native extension or implementation invoked. Existing compose_repair fixtures independently cover driver math, gates and rollback. Floorplan terminal notices are literal original source strings.",
+  "parser_sha256": "cd8a0a05184c2e4855f9f299005bc09a0cb74548702e7f0524ca27faa15af531",
+  "floorplan_function_sha256": "0696d653add30a8a05d71c6ec85ee21345fb2aeb454ca177b8f00d25cc2d5c3a",
+  "cases": [
+    {
+      "args": [
+        "compose"
+      ],
+      "repair": false,
+      "dry_run": false,
+      "measure": false,
+      "allow_intent": [],
+      "max_steps": 4
+    },
+    {
+      "args": [
+        "compose",
+        "--measure"
+      ],
+      "repair": false,
+      "dry_run": false,
+      "measure": true,
+      "allow_intent": [],
+      "max_steps": 4
+    },
+    {
+      "args": [
+        "compose",
+        "--repair"
+      ],
+      "repair": true,
+      "dry_run": false,
+      "measure": false,
+      "allow_intent": [],
+      "max_steps": 4
+    },
+    {
+      "args": [
+        "compose",
+        "--repair",
+        "--dry-run"
+      ],
+      "repair": true,
+      "dry_run": true,
+      "measure": false,
+      "allow_intent": [],
+      "max_steps": 4
+    },
+    {
+      "args": [
+        "compose",
+        "--measure",
+        "--repair"
+      ],
+      "repair": true,
+      "dry_run": false,
+      "measure": true,
+      "allow_intent": [],
+      "max_steps": 4
+    },
+    {
+      "args": [
+        "compose",
+        "--dry-run"
+      ],
+      "repair": false,
+      "dry_run": true,
+      "measure": false,
+      "allow_intent": [],
+      "max_steps": 4
+    },
+    {
+      "args": [
+        "compose",
+        "--allow-intent",
+        "bad"
+      ],
+      "repair": false,
+      "dry_run": false,
+      "measure": false,
+      "allow_intent": [
+        "bad"
+      ],
+      "max_steps": 4
+    },
+    {
+      "args": [
+        "compose",
+        "--repair",
+        "--allow-intent",
+        "pd_input:N->S",
+        "--allow-intent",
+        "usb_uart_connector:N->E"
+      ],
+      "repair": true,
+      "dry_run": false,
+      "measure": false,
+      "allow_intent": [
+        "pd_input:N->S",
+        "usb_uart_connector:N->E"
+      ],
+      "max_steps": 4
+    },
+    {
+      "args": [
+        "compose",
+        "--max-steps",
+        "-2"
+      ],
+      "repair": false,
+      "dry_run": false,
+      "measure": false,
+      "allow_intent": [],
+      "max_steps": -2
+    },
+    {
+      "args": [
+        "compose",
+        "--max-steps",
+        " +9 "
+      ],
+      "repair": false,
+      "dry_run": false,
+      "measure": false,
+      "allow_intent": [],
+      "max_steps": 9
+    },
+    {
+      "args": [
+        "compose",
+        "--max-steps",
+        "0"
+      ],
+      "repair": false,
+      "dry_run": false,
+      "measure": false,
+      "allow_intent": [],
+      "max_steps": 0
+    }
+  ],
+  "floorplan_notice": "FLOORPLAN: suggestion written (derived from netlists — see the honest-limits section)",
+  "export_notice": "FLOORPLAN: declarative spec exported — edit it then re-run `schgen board` to drive the placement"
+}
