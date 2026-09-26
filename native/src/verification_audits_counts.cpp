@@ -143,14 +143,19 @@ std::string fallback_baseline_text(const AuditCounts& counts){
     out+="},\n \"note\": "+json_quote("fallback ratchet ceilings — a build whose count EXCEEDS its ceiling FAILS; ceilings only ever DECREASE (pinned from a measured build, reviewed in git). A name absent here is allowed zero firings.")+"\n}\n";return out;
 }
 FallbackAuditResult check_fallback_ratchet(const AuditCounts& census,const std::filesystem::path& path){
+    return check_fallback_ratchet(census,path,path);
+}
+FallbackAuditResult check_fallback_ratchet(const AuditCounts& census,const std::filesystem::path& path,
+                                         const std::filesystem::path& output){
     const auto baseline=load_fallback_baseline(path);FallbackAuditResult r;r.n_names=census.size();
     for(const auto& [name,v]:census){(void)name;if(v.nonzero())++r.n_fired;}
-    if(!baseline){model_checks::publish(path,fallback_baseline_text(census));r.pinned=true;return r;}
+    if(!baseline){model_checks::publish(output,fallback_baseline_text(census));r.pinned=true;return r;}
     for(const auto& [name,count]:census){const auto found=baseline->find(name);const AuditInteger ceiling=found==baseline->end()?AuditInteger{}:found->second;
         if(ceiling<count)r.regressions.push_back(name+": fired "+count.str()+" > baseline "+ceiling.str()+" — a degraded path bound more often than the committed ceiling");}
     r.ok=r.regressions.empty();if(r.ok){auto lowered=*baseline;
         for(auto& [name,count]:lowered){const auto p=census.find(name);count=std::min(count,p==census.end()?AuditInteger{}:p->second);}
-        if(lowered!=*baseline)model_checks::publish(path,fallback_baseline_text(lowered));
+        if(lowered!=*baseline||output.lexically_normal()!=path.lexically_normal())
+            model_checks::publish(output,fallback_baseline_text(lowered));
     }return r;
 }
 std::string FallbackAuditResult::summary()const{

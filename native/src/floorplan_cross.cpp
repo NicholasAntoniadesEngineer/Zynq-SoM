@@ -124,7 +124,8 @@ void Engine::prepare_cross() {
         if (impedance) { ++n_impedance; classes.insert(cls->second); }
         checked_quantization_add(plan.accounting.quantization_engagements, "est_via_cost");
         for (const auto& sheet:members) nets_by_sheet[sheet].push_back(cross_nets.size());
-        cross_nets.push_back({name,std::move(pins),est_via_cost(impedance)});
+        cross_nets.push_back({name,std::move(pins),floorplan_experiment_via_cost(
+            in.experiment.get(), impedance, est_via_cost(impedance))});
     }
     for (const auto& cls:classes) { if (!impedance_classes.empty()) impedance_classes+=","; impedance_classes+=cls; }
     for (const auto& [ref,edge]:zg.conn_edge) {
@@ -206,6 +207,7 @@ double Engine::estimate(const std::vector<const FloorplanBlock*>& blocks, const 
         }
         cross+=cross_net_cost(points,net.via_cost,flags);
     }
+    observe_floorplan_experiment_estimate(in.experiment.get(), cross, only_sheet.empty());
     return cross;
 }
 double Engine::estimate() {

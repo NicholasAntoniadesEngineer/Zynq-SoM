@@ -1,0 +1,1149 @@
+{
+  "provenance": {
+    "scripts/w12_bound.py": "a97d84d4e46cd5af2ec4d8dc62f815c8ee06f75565f1bc3da6f2fcb17cf81aea",
+    "scripts/w12_stageprobe.py": "5534a871a9b99ddf347dcdfc5e98307e76a935d1695ea06316b5d8177af8f51a",
+    "scripts/w11_sweep.py": "75d1a80e151b3d9a0f04ab82e17063c53a7f57eabcbf41fbce93d16cfb1742f0",
+    "schgen/core/quantize.py": "17a2ef2d994d911f3fceba6df988a86d2bed4beb3132a43b776553b07db4a6f2",
+    "schgen/generate/pcb/footprint.py": "71b558eec9e1f5ea189dffada96d17014ac8a65119c92abb33b7b326e200ee6a",
+    "schgen/generate/pcb/mating_face.py": "745307443e6689205ec0285dc846b21f32a4e05070a0c52c0223bebeac072478",
+    "schgen/generate/ratsnest.py": "17885a226cd2f06d0b55b468be5e67a15a5eda0fbad8779db3dc66f36b45cada"
+  },
+  "bound": {
+    "events": [
+      {
+        "kind": "estimate",
+        "value": 111.15
+      },
+      {
+        "kind": "attempt",
+        "w": 20.0,
+        "h": 10.0,
+        "free": false,
+        "packed": false
+      },
+      {
+        "kind": "estimate",
+        "value": 1.25,
+        "sheet": "local"
+      },
+      {
+        "kind": "attempt",
+        "w": 10.0,
+        "h": 20.0,
+        "free": false,
+        "packed": true,
+        "during": 9.25
+      },
+      {
+        "kind": "attempt",
+        "w": 20.0,
+        "h": 10.0,
+        "free": false,
+        "packed": true
+      },
+      {
+        "kind": "estimate",
+        "value": 4.15
+      },
+      {
+        "kind": "attempt",
+        "w": 10.0,
+        "h": 20.0,
+        "free": false,
+        "packed": false
+      },
+      {
+        "kind": "estimate",
+        "value": 6.35
+      },
+      {
+        "kind": "attempt",
+        "w": 10.0,
+        "h": 20.0,
+        "free": false,
+        "packed": true
+      },
+      {
+        "kind": "estimate",
+        "value": 8.85
+      },
+      {
+        "kind": "attempt",
+        "w": 5.0,
+        "h": 5.0,
+        "free": true,
+        "packed": true
+      },
+      {
+        "kind": "estimate",
+        "value": -0.01
+      },
+      {
+        "kind": "attempt",
+        "w": 40.0,
+        "h": 20.0,
+        "free": false,
+        "packed": true,
+        "throw": true,
+        "during": 22.25
+      },
+      {
+        "kind": "attempt",
+        "w": 2.0,
+        "h": 3.0,
+        "free": false,
+        "packed": false
+      },
+      {
+        "kind": "attempt",
+        "w": 20.0,
+        "h": 10.0,
+        "free": true,
+        "packed": true
+      },
+      {
+        "kind": "estimate",
+        "value": 123.45
+      },
+      {
+        "kind": "attempt",
+        "w": 10.0,
+        "h": 20.0,
+        "free": true,
+        "packed": false
+      },
+      {
+        "kind": "estimate",
+        "value": 987.65
+      }
+    ],
+    "states": [
+      [],
+      [
+        {
+          "w": 20.0,
+          "h": 10.0,
+          "packed": false,
+          "free": false,
+          "est": null
+        }
+      ],
+      [
+        {
+          "w": 20.0,
+          "h": 10.0,
+          "packed": false,
+          "free": false,
+          "est": null
+        }
+      ],
+      [
+        {
+          "w": 20.0,
+          "h": 10.0,
+          "packed": false,
+          "free": false,
+          "est": 9.2
+        },
+        {
+          "w": 10.0,
+          "h": 20.0,
+          "packed": true,
+          "free": false,
+          "est": null
+        }
+      ],
+      [
+        {
+          "w": 20.0,
+          "h": 10.0,
+          "packed": false,
+          "free": false,
+          "est": 9.2
+        },
+        {
+          "w": 10.0,
+          "h": 20.0,
+          "packed": true,
+          "free": false,
+          "est": null
+        },
+        {
+          "w": 20.0,
+          "h": 10.0,
+          "packed": true,
+          "free": false,
+          "est": null
+        }
+      ],
+      [
+        {
+          "w": 20.0,
+          "h": 10.0,
+          "packed": false,
+          "free": false,
+          "est": 9.2
+        },
+        {
+          "w": 10.0,
+          "h": 20.0,
+          "packed": true,
+          "free": false,
+          "est": null
+        },
+        {
+          "w": 20.0,
+          "h": 10.0,
+          "packed": true,
+          "free": false,
+          "est": 4.2
+        }
+      ],
+      [
+        {
+          "w": 20.0,
+          "h": 10.0,
+          "packed": false,
+          "free": false,
+          "est": 9.2
+        },
+        {
+          "w": 10.0,
+          "h": 20.0,
+          "packed": true,
+          "free": false,
+          "est": null
+        },
+        {
+          "w": 20.0,
+          "h": 10.0,
+          "packed": true,
+          "free": false,
+          "est": 4.2
+        },
+        {
+          "w": 10.0,
+          "h": 20.0,
+          "packed": false,
+          "free": false,
+          "est": null
+        }
+      ],
+      [
+        {
+          "w": 20.0,
+          "h": 10.0,
+          "packed": false,
+          "free": false,
+          "est": 9.2
+        },
+        {
+          "w": 10.0,
+          "h": 20.0,
+          "packed": true,
+          "free": false,
+          "est": null
+        },
+        {
+          "w": 20.0,
+          "h": 10.0,
+          "packed": true,
+          "free": false,
+          "est": 4.2
+        },
+        {
+          "w": 10.0,
+          "h": 20.0,
+          "packed": false,
+          "free": false,
+          "est": 6.3
+        }
+      ],
+      [
+        {
+          "w": 20.0,
+          "h": 10.0,
+          "packed": false,
+          "free": false,
+          "est": 9.2
+        },
+        {
+          "w": 10.0,
+          "h": 20.0,
+          "packed": true,
+          "free": false,
+          "est": null
+        },
+        {
+          "w": 20.0,
+          "h": 10.0,
+          "packed": true,
+          "free": false,
+          "est": 4.2
+        },
+        {
+          "w": 10.0,
+          "h": 20.0,
+          "packed": false,
+          "free": false,
+          "est": 6.3
+        },
+        {
+          "w": 10.0,
+          "h": 20.0,
+          "packed": true,
+          "free": false,
+          "est": null
+        }
+      ],
+      [
+        {
+          "w": 20.0,
+          "h": 10.0,
+          "packed": false,
+          "free": false,
+          "est": 9.2
+        },
+        {
+          "w": 10.0,
+          "h": 20.0,
+          "packed": true,
+          "free": false,
+          "est": null
+        },
+        {
+          "w": 20.0,
+          "h": 10.0,
+          "packed": true,
+          "free": false,
+          "est": 4.2
+        },
+        {
+          "w": 10.0,
+          "h": 20.0,
+          "packed": false,
+          "free": false,
+          "est": 6.3
+        },
+        {
+          "w": 10.0,
+          "h": 20.0,
+          "packed": true,
+          "free": false,
+          "est": 8.8
+        }
+      ],
+      [
+        {
+          "w": 20.0,
+          "h": 10.0,
+          "packed": false,
+          "free": false,
+          "est": 9.2
+        },
+        {
+          "w": 10.0,
+          "h": 20.0,
+          "packed": true,
+          "free": false,
+          "est": null
+        },
+        {
+          "w": 20.0,
+          "h": 10.0,
+          "packed": true,
+          "free": false,
+          "est": 4.2
+        },
+        {
+          "w": 10.0,
+          "h": 20.0,
+          "packed": false,
+          "free": false,
+          "est": 6.3
+        },
+        {
+          "w": 10.0,
+          "h": 20.0,
+          "packed": true,
+          "free": false,
+          "est": 8.8
+        },
+        {
+          "w": 5.0,
+          "h": 5.0,
+          "packed": true,
+          "free": true,
+          "est": null
+        }
+      ],
+      [
+        {
+          "w": 20.0,
+          "h": 10.0,
+          "packed": false,
+          "free": false,
+          "est": 9.2
+        },
+        {
+          "w": 10.0,
+          "h": 20.0,
+          "packed": true,
+          "free": false,
+          "est": null
+        },
+        {
+          "w": 20.0,
+          "h": 10.0,
+          "packed": true,
+          "free": false,
+          "est": 4.2
+        },
+        {
+          "w": 10.0,
+          "h": 20.0,
+          "packed": false,
+          "free": false,
+          "est": 6.3
+        },
+        {
+          "w": 10.0,
+          "h": 20.0,
+          "packed": true,
+          "free": false,
+          "est": 8.8
+        },
+        {
+          "w": 5.0,
+          "h": 5.0,
+          "packed": true,
+          "free": true,
+          "est": -0.0
+        }
+      ],
+      [
+        {
+          "w": 20.0,
+          "h": 10.0,
+          "packed": false,
+          "free": false,
+          "est": 9.2
+        },
+        {
+          "w": 10.0,
+          "h": 20.0,
+          "packed": true,
+          "free": false,
+          "est": null
+        },
+        {
+          "w": 20.0,
+          "h": 10.0,
+          "packed": true,
+          "free": false,
+          "est": 4.2
+        },
+        {
+          "w": 10.0,
+          "h": 20.0,
+          "packed": false,
+          "free": false,
+          "est": 6.3
+        },
+        {
+          "w": 10.0,
+          "h": 20.0,
+          "packed": true,
+          "free": false,
+          "est": 8.8
+        },
+        {
+          "w": 5.0,
+          "h": 5.0,
+          "packed": true,
+          "free": true,
+          "est": 22.2
+        }
+      ],
+      [
+        {
+          "w": 20.0,
+          "h": 10.0,
+          "packed": false,
+          "free": false,
+          "est": 9.2
+        },
+        {
+          "w": 10.0,
+          "h": 20.0,
+          "packed": true,
+          "free": false,
+          "est": null
+        },
+        {
+          "w": 20.0,
+          "h": 10.0,
+          "packed": true,
+          "free": false,
+          "est": 4.2
+        },
+        {
+          "w": 10.0,
+          "h": 20.0,
+          "packed": false,
+          "free": false,
+          "est": 6.3
+        },
+        {
+          "w": 10.0,
+          "h": 20.0,
+          "packed": true,
+          "free": false,
+          "est": 8.8
+        },
+        {
+          "w": 5.0,
+          "h": 5.0,
+          "packed": true,
+          "free": true,
+          "est": 22.2
+        },
+        {
+          "w": 2.0,
+          "h": 3.0,
+          "packed": false,
+          "free": false,
+          "est": null
+        }
+      ],
+      [
+        {
+          "w": 20.0,
+          "h": 10.0,
+          "packed": false,
+          "free": false,
+          "est": 9.2
+        },
+        {
+          "w": 10.0,
+          "h": 20.0,
+          "packed": true,
+          "free": false,
+          "est": null
+        },
+        {
+          "w": 20.0,
+          "h": 10.0,
+          "packed": true,
+          "free": false,
+          "est": 4.2
+        },
+        {
+          "w": 10.0,
+          "h": 20.0,
+          "packed": false,
+          "free": false,
+          "est": 6.3
+        },
+        {
+          "w": 10.0,
+          "h": 20.0,
+          "packed": true,
+          "free": false,
+          "est": 8.8
+        },
+        {
+          "w": 5.0,
+          "h": 5.0,
+          "packed": true,
+          "free": true,
+          "est": 22.2
+        },
+        {
+          "w": 2.0,
+          "h": 3.0,
+          "packed": false,
+          "free": false,
+          "est": null
+        },
+        {
+          "w": 20.0,
+          "h": 10.0,
+          "packed": true,
+          "free": true,
+          "est": null
+        }
+      ],
+      [
+        {
+          "w": 20.0,
+          "h": 10.0,
+          "packed": false,
+          "free": false,
+          "est": 9.2
+        },
+        {
+          "w": 10.0,
+          "h": 20.0,
+          "packed": true,
+          "free": false,
+          "est": null
+        },
+        {
+          "w": 20.0,
+          "h": 10.0,
+          "packed": true,
+          "free": false,
+          "est": 4.2
+        },
+        {
+          "w": 10.0,
+          "h": 20.0,
+          "packed": false,
+          "free": false,
+          "est": 6.3
+        },
+        {
+          "w": 10.0,
+          "h": 20.0,
+          "packed": true,
+          "free": false,
+          "est": 8.8
+        },
+        {
+          "w": 5.0,
+          "h": 5.0,
+          "packed": true,
+          "free": true,
+          "est": 22.2
+        },
+        {
+          "w": 2.0,
+          "h": 3.0,
+          "packed": false,
+          "free": false,
+          "est": null
+        },
+        {
+          "w": 20.0,
+          "h": 10.0,
+          "packed": true,
+          "free": true,
+          "est": 123.5
+        }
+      ],
+      [
+        {
+          "w": 20.0,
+          "h": 10.0,
+          "packed": false,
+          "free": false,
+          "est": 9.2
+        },
+        {
+          "w": 10.0,
+          "h": 20.0,
+          "packed": true,
+          "free": false,
+          "est": null
+        },
+        {
+          "w": 20.0,
+          "h": 10.0,
+          "packed": true,
+          "free": false,
+          "est": 4.2
+        },
+        {
+          "w": 10.0,
+          "h": 20.0,
+          "packed": false,
+          "free": false,
+          "est": 6.3
+        },
+        {
+          "w": 10.0,
+          "h": 20.0,
+          "packed": true,
+          "free": false,
+          "est": 8.8
+        },
+        {
+          "w": 5.0,
+          "h": 5.0,
+          "packed": true,
+          "free": true,
+          "est": 22.2
+        },
+        {
+          "w": 2.0,
+          "h": 3.0,
+          "packed": false,
+          "free": false,
+          "est": null
+        },
+        {
+          "w": 20.0,
+          "h": 10.0,
+          "packed": true,
+          "free": true,
+          "est": 123.5
+        },
+        {
+          "w": 10.0,
+          "h": 20.0,
+          "packed": false,
+          "free": true,
+          "est": null
+        }
+      ],
+      [
+        {
+          "w": 20.0,
+          "h": 10.0,
+          "packed": false,
+          "free": false,
+          "est": 9.2
+        },
+        {
+          "w": 10.0,
+          "h": 20.0,
+          "packed": true,
+          "free": false,
+          "est": null
+        },
+        {
+          "w": 20.0,
+          "h": 10.0,
+          "packed": true,
+          "free": false,
+          "est": 4.2
+        },
+        {
+          "w": 10.0,
+          "h": 20.0,
+          "packed": false,
+          "free": false,
+          "est": 6.3
+        },
+        {
+          "w": 10.0,
+          "h": 20.0,
+          "packed": true,
+          "free": false,
+          "est": 8.8
+        },
+        {
+          "w": 5.0,
+          "h": 5.0,
+          "packed": true,
+          "free": true,
+          "est": 22.2
+        },
+        {
+          "w": 2.0,
+          "h": 3.0,
+          "packed": false,
+          "free": false,
+          "est": null
+        },
+        {
+          "w": 20.0,
+          "h": 10.0,
+          "packed": true,
+          "free": true,
+          "est": 123.5
+        },
+        {
+          "w": 10.0,
+          "h": 20.0,
+          "packed": false,
+          "free": true,
+          "est": 987.6
+        }
+      ]
+    ],
+    "distinct": [
+      {
+        "w": 2.0,
+        "h": 3.0,
+        "packed": false,
+        "free": false,
+        "est": null
+      },
+      {
+        "w": 20.0,
+        "h": 10.0,
+        "packed": false,
+        "free": false,
+        "est": 9.2
+      },
+      {
+        "w": 10.0,
+        "h": 20.0,
+        "packed": false,
+        "free": false,
+        "est": 6.3
+      },
+      {
+        "w": 5.0,
+        "h": 5.0,
+        "packed": true,
+        "free": true,
+        "est": 22.2
+      },
+      {
+        "w": 20.0,
+        "h": 10.0,
+        "packed": true,
+        "free": true,
+        "est": 123.5
+      },
+      {
+        "w": 10.0,
+        "h": 20.0,
+        "packed": false,
+        "free": true,
+        "est": 987.6
+      }
+    ]
+  },
+  "snapshots": {
+    "parts": {
+      "R2": [
+        "alpha",
+        "library:part",
+        "R2 value",
+        "lib"
+      ],
+      "J1": [
+        "som_j1",
+        "library:part",
+        "J1 value",
+        "lib"
+      ],
+      "R9": [
+        "beta",
+        "library:part",
+        "R9 value",
+        "lib"
+      ]
+    },
+    "footprints": {
+      "A": "(footprint \"A\" (layer \"F.Cu\") (pad \"1\" smd rect (at 0.125 -0.25) (size 0.5 1) (layers \"F.Cu\")) (pad \"2\" smd rect (at 2 1) (size 1 1) (layers \"F.Cu\")))",
+      "B": "(footprint \"B\" (layer \"F.Cu\") (pad \"1\" smd rect (at -1.125 2.5) (size 1 1) (layers \"F.Cu\")) (pad \"3\" smd rect (at 0 0) (size 1 1) (layers \"F.Cu\")))"
+    },
+    "pin_net": [
+      [
+        "R2",
+        "1",
+        [
+          1,
+          "N"
+        ]
+      ],
+      [
+        "J1",
+        "1",
+        [
+          1,
+          "N"
+        ]
+      ],
+      [
+        "R9",
+        "1",
+        [
+          1,
+          "N"
+        ]
+      ],
+      [
+        "R2",
+        "2",
+        [
+          2,
+          "LOCAL"
+        ]
+      ],
+      [
+        "R2",
+        "3",
+        [
+          2,
+          "LOCAL"
+        ]
+      ]
+    ],
+    "frames": [
+      {
+        "pos": {
+          "R2": [
+            1.234567,
+            2.345678
+          ],
+          "J1": [
+            3.123456,
+            4.987654
+          ],
+          "X3": [
+            10.0,
+            10.0
+          ]
+        },
+        "resolvable": {
+          "R2": "A",
+          "J1": "A",
+          "R9": "A"
+        },
+        "side_of": {
+          "R2": "bottom",
+          "J1": "bottom",
+          "R9": "top"
+        },
+        "fixed_rot": {
+          "R2": 90.0,
+          "J1": 180.0
+        },
+        "grid_placed": [
+          "R2"
+        ],
+        "fixed": [],
+        "mh_refs": [
+          "J1"
+        ],
+        "som_j_refs": [],
+        "mirror_refs": [],
+        "expected": [
+          {
+            "ref": "J1",
+            "value": "J1 value",
+            "footprint": "library:part",
+            "x": 27.94,
+            "y": 30.48,
+            "rotation": 180.0,
+            "pad_nets": {
+              "1": [
+                1,
+                "N"
+              ],
+              "2": [
+                0,
+                ""
+              ]
+            },
+            "mod_path": "/private/tmp/native-experiments.LfDTUF/A.kicad_mod",
+            "sheet": "som_j1",
+            "side": "top",
+            "mirror": false
+          },
+          {
+            "ref": "R2",
+            "value": "R2 value",
+            "footprint": "library:part",
+            "x": 26.2346,
+            "y": 27.3457,
+            "rotation": 90.0,
+            "pad_nets": {
+              "1": [
+                1,
+                "N"
+              ],
+              "2": [
+                2,
+                "LOCAL"
+              ]
+            },
+            "mod_path": "/private/tmp/native-experiments.LfDTUF/A.kicad_mod",
+            "sheet": "alpha",
+            "side": "bottom",
+            "mirror": false
+          }
+        ],
+        "cross": [
+          4.0,
+          4.0,
+          1
+        ]
+      },
+      {
+        "pos": {
+          "R2": [
+            9.543219,
+            8.123456
+          ],
+          "J1": [
+            3.123456,
+            4.987654
+          ],
+          "R9": [
+            8.7654321,
+            7.654321
+          ]
+        },
+        "resolvable": {
+          "R2": "B",
+          "J1": "A",
+          "R9": "A"
+        },
+        "side_of": {
+          "R2": "top",
+          "J1": "bottom",
+          "R9": "bottom"
+        },
+        "fixed_rot": {
+          "R2": 270.0,
+          "J1": 180.0,
+          "R9": 45.0
+        },
+        "grid_placed": [
+          "R2",
+          "R9"
+        ],
+        "fixed": [
+          "J1"
+        ],
+        "mh_refs": [],
+        "som_j_refs": [],
+        "mirror_refs": [
+          "R2"
+        ],
+        "expected": [
+          {
+            "ref": "J1",
+            "value": "J1 value",
+            "footprint": "library:part",
+            "x": 27.94,
+            "y": 30.48,
+            "rotation": 180.0,
+            "pad_nets": {
+              "1": [
+                1,
+                "N"
+              ],
+              "2": [
+                0,
+                ""
+              ]
+            },
+            "mod_path": "/private/tmp/native-experiments.LfDTUF/A.kicad_mod",
+            "sheet": "som_j1",
+            "side": "top",
+            "mirror": false
+          },
+          {
+            "ref": "R2",
+            "value": "R2 value",
+            "footprint": "library:part",
+            "x": 34.5432,
+            "y": 33.1235,
+            "rotation": 270.0,
+            "pad_nets": {
+              "1": [
+                1,
+                "N"
+              ],
+              "3": [
+                2,
+                "LOCAL"
+              ]
+            },
+            "mod_path": "/private/tmp/native-experiments.LfDTUF/B.kicad_mod",
+            "sheet": "alpha",
+            "side": "top",
+            "mirror": true
+          },
+          {
+            "ref": "R9",
+            "value": "R9 value",
+            "footprint": "library:part",
+            "x": 33.7654,
+            "y": 32.6543,
+            "rotation": 45.0,
+            "pad_nets": {
+              "1": [
+                1,
+                "N"
+              ],
+              "2": [
+                0,
+                ""
+              ]
+            },
+            "mod_path": "/private/tmp/native-experiments.LfDTUF/A.kicad_mod",
+            "sheet": "beta",
+            "side": "bottom",
+            "mirror": false
+          }
+        ],
+        "cross": [
+          6.1,
+          6.1,
+          2
+        ]
+      },
+      {
+        "pos": {
+          "R2": [
+            -25.00001,
+            -24.99995
+          ]
+        },
+        "resolvable": {
+          "R2": "A"
+        },
+        "side_of": {
+          "R2": "bottom"
+        },
+        "fixed_rot": {},
+        "grid_placed": [
+          "R2"
+        ],
+        "fixed": [
+          "R2"
+        ],
+        "mh_refs": [],
+        "som_j_refs": [],
+        "mirror_refs": [],
+        "expected": [
+          {
+            "ref": "R2",
+            "value": "R2 value",
+            "footprint": "library:part",
+            "x": -0.0,
+            "y": 0.0001,
+            "rotation": 0.0,
+            "pad_nets": {
+              "1": [
+                1,
+                "N"
+              ],
+              "2": [
+                2,
+                "LOCAL"
+              ]
+            },
+            "mod_path": "/private/tmp/native-experiments.LfDTUF/A.kicad_mod",
+            "sheet": "alpha",
+            "side": "top",
+            "mirror": false
+          }
+        ],
+        "cross": [
+          0.0,
+          0.0,
+          0
+        ]
+      }
+    ]
+  },
+  "conservative_only": {
+    "error": "w12 probe: conservative-only forced",
+    "conservative_result": "called"
+  },
+  "w11_existing": {
+    "original": 2.2,
+    "changed_python_constant": 987.25,
+    "observed": 2.2
+  }
+}

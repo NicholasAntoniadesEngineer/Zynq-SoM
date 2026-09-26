@@ -5,18 +5,7 @@
 #include <cmath>
 
 namespace schgen {
-namespace {
-
-constexpr double kGridMm = 1.27;
-constexpr double kHalfMm = 0.5;
-constexpr double kCreditMm = 0.05;
-constexpr double kSnapErosionMm = 0.75;
-constexpr double kOutlineSnapMm = 5.0;
-constexpr double kFineSnapMm = 1.0;
-constexpr double kViaOrdinaryMm = 2.2;
-constexpr double kViaImpedanceMm = 7.6;
-
-}  // namespace
+using namespace quantization_policy;
 
 double fixed_part_grid(double value) {
     return py_round(py_round(value / kGridMm, 0) * kGridMm, 4);
@@ -27,7 +16,7 @@ double evict_corridor_grid(double origin, double value) {
 }
 
 double som_pose_half_mm(double value) {
-    return py_round(py_round(value * 2.0, 0) / 2.0, 1);
+    return py_round(py_round(value * (1.0 / kHalfMm), 0) / (1.0 / kHalfMm), 1);
 }
 
 double placeholder_zone_half_mm(double value) {

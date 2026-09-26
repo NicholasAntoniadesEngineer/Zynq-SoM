@@ -12,6 +12,31 @@ _MASTER = "origin/master"
 _PCB_MD5 = "06308484dd95ffb65b09ef456bd64547"
 _GOLDEN_DIST_MAX = 0
 
+# Approved physical-model repair only. Keep the original board digest and
+# compare every other byte; do not bless a newly generated PCB wholesale.
+_OLD_MODEL = b'''(model
+			"${KICAD10_3DMODEL_DIR}/Package_DFN_QFN.3dshapes/WQFN-14-1EP_2.5x2.5mm_P0.5mm_EP1.45x1.45mm.step"
+			(offset
+				(xyz 0 0 0)
+			)
+			(scale
+				(xyz 1 1 1)
+			)
+			(rotate
+				(xyz 0 0 0)
+			)
+		)'''
+_REPAIRED_MODEL = _OLD_MODEL.replace(
+    b"${KICAD10_3DMODEL_DIR}/Package_DFN_QFN.3dshapes/WQFN-14-1EP_2.5x2.5mm_P0.5mm_EP1.45x1.45mm.step",
+    b"${KIPRJMOD}/../parts/FUSB302BMPX/FUSB302BMPX.wrl",
+).replace(b"(rotate\n\t\t\t\t(xyz 0 0 0)", b"(rotate\n\t\t\t\t(xyz 0 0 90)")
+
+
+def _before_model_repair(data: bytes) -> bytes:
+    assert data.count(_REPAIRED_MODEL) == 1, "required FUSB302 model repair drifted"
+    assert _OLD_MODEL not in data, "obsolete missing model is still referenced"
+    return data.replace(_REPAIRED_MODEL, _OLD_MODEL, 1)
+
 
 def _md5_bytes(data: bytes) -> str:
     return hashlib.md5(data).hexdigest()
@@ -60,7 +85,7 @@ def _render_rels() -> list[str]:
 
 def test_pcb_md5_matches_committed_baseline():
     pcb = _REPO / "carrier" / "Zynq_Carrier.kicad_pcb"
-    got = _md5_bytes(pcb.read_bytes())
+    got = _md5_bytes(_before_model_repair(pcb.read_bytes()))
     assert got == _PCB_MD5, f"PCB md5 drifted {got} != {_PCB_MD5}"
 
 
@@ -71,6 +96,8 @@ def test_official_renders_are_byte_identical_to_master():
     for rel in rels:
         ours = (_REPO / rel).read_bytes()
         theirs = _git_bytes(rel)
+        if rel == "carrier/Zynq_Carrier.kicad_pcb":
+            ours = _before_model_repair(ours)
         if ours != theirs:
             drifted.append(
                 f"{rel}: branch={_md5_bytes(ours)} master={_md5_bytes(theirs)}")

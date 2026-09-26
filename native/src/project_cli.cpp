@@ -3,6 +3,11 @@
 #include "schgen/bom.hpp"
 #include "schgen/board_schematic.hpp"
 #include "schgen/board_pcb.hpp"
+#include "schgen/board_pipeline.hpp"
+#include "schgen/subsystem_build.hpp"
+#include "schgen/example_devkit.hpp"
+#include "schgen/experiment_tools.hpp"
+#include "schgen/net_contract.hpp"
 #include "schgen/pcb_drc.hpp"
 #include "schgen/subsystem_scaffold.hpp"
 #include "schgen/native_render.hpp"
@@ -42,6 +47,7 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
+#include <unistd.h>
 
 namespace schgen {
 namespace {
@@ -52,15 +58,35 @@ struct Options {
     std::optional<fs::path> project;
     std::vector<std::string> subsystems;
     bool allow_missing = false, qualified_refs = false, no_ngspice = false, keep = false;
+    bool no_render = false, timing = false, conservative_only = false;
+    bool help = false;
+    std::set<std::string> help_options;
     long long quantity = 1, minimum_stock = 50;
 };
 const std::set<std::string> commands{"selftest", "project-check", "circuit-check", "som-interface", "xdc", "vivado", "fpga", "bom", "link", "devicetree", "design-rules", "testpoints", "board-schematic", "pcb-stage", "pcb-drc", "subsystem-new", "render3d", "board-step", "model3d-check", "assembly", "ratsnest", "gallery", "diagram", "si-constraints", "fab-profile", "manifest", "preflight", "constraints", "powertree", "thermal", "part-rules", "bom-values", "footprint-pads", "pin-completeness", "symbol-law", "spice", "firmware", "manual", "scfw", "testplan", "power-sequence"};
+bool experiment_command(const std::string& name){
+    return name=="chir-rung"||name=="w11-sweep"||name=="w12-bound"||name=="w12-stageprobe"||name=="dump-circuits";
+}
+bool project_command(const std::string& name){
+    return commands.count(name)||experiment_command(name)||name=="board"||name=="build"||name=="devkit"||name=="nets"||name=="subsystem-check"||name=="carrier-check";
+}
 Options parse(int argc, char** argv) {
     Options out;
     std::set<std::string> seen;
     for (int i = 1; i < argc; ++i) {
         const std::string arg = argv[i];
-        if (commands.count(arg) && out.command.empty()) { out.command = arg; continue; }
+        if (project_command(arg) && out.command.empty()) { out.command = arg; continue; }
+        if(arg=="--help"||arg=="-h"){out.help=true;continue;}
+        if(arg=="--cons-only"){
+            if(!seen.insert(arg).second)throw ProjectError("duplicate option "+arg);
+            out.conservative_only=true;continue;
+        }
+        if (arg == "--no-render" || arg == "--timing") {
+            if (!seen.insert(arg).second) throw std::runtime_error("duplicate option " + arg);
+            if (arg == "--no-render") out.no_render = true;
+            else out.timing = true;
+            continue;
+        }
         if (arg == "--allow-missing" || arg == "--qualified-refs" || arg == "--no-ngspice" || arg == "--keep") {
             if (!seen.insert(arg).second) throw std::runtime_error("duplicate option " + arg);
             if (arg == "--allow-missing") out.allow_missing = true;
@@ -104,7 +130,19 @@ Options parse(int argc, char** argv) {
     std::set<std::string> allowed{"--repo", "--project"};
     const bool check_only = out.command == "project-check" || out.command == "circuit-check";
     if (!check_only) allowed.insert("--output");
-    if (out.command == "preflight") {
+    if(experiment_command(out.command)){
+        allowed.erase("--output");allowed.insert("--kicad-cli");
+        if(out.command=="w12-stageprobe")allowed.insert("--cons-only");
+    } else if (out.command == "board") {
+        allowed.insert("--no-render"); allowed.insert("--timing"); allowed.insert("--kicad-cli");
+    } else if (out.command == "build" || out.command == "devkit") {
+        allowed.insert("--no-render"); allowed.insert("--kicad-cli");
+        if(out.command=="devkit")allowed.erase("--project");
+    } else if (out.command == "subsystem-check" || out.command == "carrier-check") {
+        allowed.erase("--output");
+    } else if (out.command == "nets") {
+        // Explicit selected-project net header; no SoM extraction overrides.
+    } else if (out.command == "preflight") {
         allowed.insert("--qty"); allowed.insert("--min-stock"); allowed.insert("--allow-missing");
     } else if (out.command == "bom") {
         allowed.insert("--allow-missing"); allowed.insert("--qualified-refs");
@@ -142,6 +180,7 @@ Options parse(int argc, char** argv) {
     for (const auto& key : seen) {
         if (!allowed.count(key)) throw std::runtime_error(key + " is not valid for " + out.command);
     }
+    out.help_options=std::move(allowed);
     return out;
 }
 std::vector<std::string> refs(const std::string& text) {
@@ -168,17 +207,144 @@ std::vector<std::string> refs(const std::string& text) {
 std::optional<int> run_project_command(int argc, char** argv) {
     if (argc < 2) return std::nullopt;
     const std::string first = argv[1];
-    if (!commands.count(first) && first != "--repo" && first != "--project") return std::nullopt;
+    if (!project_command(first) && first != "--repo" && first != "--project") return std::nullopt;
     const auto options = parse(argc, argv);
+    if(options.help){
+        std::cout<<"usage: schgen "<<options.command;
+        if(options.command=="build"||options.command=="subsystem-new")std::cout<<" NAME";
+        else if(experiment_command(options.command)&&options.command!="dump-circuits")std::cout<<(options.command=="w11-sweep"?" MM":" TAG")<<" [SHEET ...]";
+        std::cout<<" [options]\nOptions:\n  --help, -h\n";
+        const std::set<std::string> flags={"--no-render","--timing","--cons-only","--allow-missing","--qualified-refs","--no-ngspice","--keep"};
+        for(const auto& option:options.help_options)std::cout<<"  "<<option<<(flags.count(option)?"":" VALUE")<<(option=="--output"?" (alias -o)":"")<<'\n';
+        if(options.command=="nets"||options.command=="devkit"||options.command=="board-schematic"||options.command=="pcb-stage")std::cout<<"--output is required.\n";
+        if(options.command=="devkit")std::cout<<"Builds the four-sheet example, not the twelve-sheet devkit_mini project.\n";
+        if(options.command=="chir-rung"||options.command=="w11-sweep")std::cout<<"Publishes board artifacts; restores input spec and fallback baseline. Diagnostic pass=False is not a successful board gate.\n";
+        return 0;
+    }
     if (options.command == "subsystem-new") {
         if (options.subsystems.size() != 1) throw ProjectError("subsystem-new requires exactly one package name");
         const auto result = scaffold_subsystem(fs::absolute(options.repository) / "subsystems", options.subsystems.front());
         std::cout << subsystem_scaffold_summary(result);
         return 0;
     }
+    if(options.command=="devkit"){
+        if(!options.subsystems.empty()||options.output.empty())throw ProjectError("devkit requires --output DIRECTORY and no subsystem selection");
+        const auto repository=fs::absolute(options.repository);
+        if(!open_part_catalog((repository/"native/catalog.bin").string()))throw ProjectError("cannot open native part catalog");
+        const auto sheets=author_example_devkit(make_authoring_context(repository));
+        SymbolLibrary library(repository);ExampleDevkitOptions build;
+        build.no_render=options.no_render;build.extraction.kicad_cli=options.kicad_cli;
+        const auto result=build_example_devkit(sheets,library,options.output,build);
+        std::cout<<result.report;return result.ok()?0:1;
+    }
     const auto paths = resolve_project_paths(options.repository, options.project);
     const auto config = load_project_config(paths);
+    if(options.command=="subsystem-check"||options.command=="carrier-check"){
+        if(!options.subsystems.empty())throw ProjectError(options.command+" takes no subsystem selection");
+        if(!open_part_catalog((paths.repository_root/"native/catalog.bin").string()))throw ProjectError("cannot open native part catalog");
+        if(options.command=="subsystem-check"){
+            const auto result=check_subsystem_structure(paths.repository_root/"subsystems",
+                native_subsystem_factories(make_authoring_context(paths.repository_root)),AuthoringPackageMode::native_assets);
+            std::cout<<result.summary()<<'\n';return result.exit_code(true);
+        }
+        const auto authored=author_board_pipeline_inputs(paths);
+        const auto result=check_carrier_structure(paths.subsystems_dir,paths.repository_root/"subsystems",
+            authored.factories,AuthoringPackageMode::native_assets);
+        std::cout<<result.summary()<<'\n';return result.exit_code();
+    }
+    if(options.command=="nets"){
+        if(options.output.empty()||!options.subsystems.empty())throw ProjectError("nets requires --output HEADER and no subsystem selection");
+        const auto result=write_net_contract_header(load_net_contract_input(paths),options.output);
+        std::cout<<"NET CONTRACT: "<<result.som.size()<<" SoM nets, "<<result.rails.size()<<" rails -> "<<options.output.string()<<'\n';
+        return 0;
+    }
+    if(experiment_command(options.command)){
+        if(!open_part_catalog((paths.repository_root/"native/catalog.bin").string()))throw ProjectError("cannot open native part catalog");
+        if(options.command=="dump-circuits"){
+            if(!options.subsystems.empty())throw ProjectError("dump-circuits takes no subsystem selection");
+            std::cout<<run_dump_circuits(paths,paths.project_root.filename().string());return 0;
+        }
+        if(options.subsystems.empty())throw ProjectError(options.command+" requires a tag or ordinary-via cost");
+        const auto argument=options.subsystems.front();
+        const std::vector<std::string> selected(options.subsystems.begin()+1,options.subsystems.end());
+        if(options.command=="chir-rung"||options.command=="w11-sweep"){
+            ExperimentBoardPaths files{paths.project_root/"floorplan.json",paths.reports_dir/"fallback_baseline.json",
+                paths.project_root/"Zynq_Carrier.kicad_pcb",paths.reports_dir/"experiment_verdicts.json"};
+            ExperimentBoardHost host;
+            host.run_board=[&](const ExperimentBoardRequest& request){
+                BoardPipelineOptions build;build.native_policy=true;build.no_render=request.no_render;
+                build.extraction.kicad_cli=options.kicad_cli;
+                if(request.ordinary_via_mm){auto experiment=std::make_shared<FloorplanExperiment>();
+                    experiment->ordinary_via_mm=request.ordinary_via_mm;build.pcb.experiment=std::move(experiment);}
+                const auto result=run_board_pipeline(paths,build);
+                return ExperimentBoardRun{result.exit_code(),result.report(),{}};
+            };
+            const auto result=options.command=="chir-rung"?run_chir_rung(files,host,argument,selected):
+                run_w11_sweep(files,host,argument,selected);
+            std::cout<<result.output;return 0;
+        }
+        // Probes author and extract fresh connectivity in private scratch; the
+        // source project's circuit snapshots, board and baselines stay intact.
+        struct ProbeScratch{fs::path path;~ProbeScratch(){std::error_code ignored;fs::remove_all(path,ignored);}};
+        auto pattern=(fs::temp_directory_path()/"schgen-probe-XXXXXX").string();
+        const auto created=::mkdtemp(pattern.data());if(!created)throw ProjectError("cannot create probe scratch");
+        ProbeScratch scratch{created};
+        const auto authored=author_board_pipeline_inputs(paths);
+        std::vector<CircuitSheetIr> sheets;std::vector<std::string> names;
+        for(const auto& circuit:authored.circuits){sheets.push_back(circuit.circuit);names.push_back(circuit.name);}
+        const auto index=extend_sheet_index(load_sheet_index(paths),names).index;
+        const auto link=link_sheets(sheets,parse_json_file(paths.som_interface_file.string()),
+            parse_json_file((paths.project_root/"som_mapping.json").string()));
+        if(!link.ok())throw ProjectError("probe link failed: "+link.report());
+        std::vector<BoardSheetInput> inputs;
+        for(const auto& sheet:sheets){const auto band=std::find_if(index.begin(),index.end(),[&](const auto& entry){return entry.first==sheet.name;});
+            if(band==index.end())throw ProjectError("probe sheet index missing "+sheet.name);
+            inputs.push_back({sheet,band->second,std::nullopt});}
+        SymbolLibrary library(paths.repository_root);BoardSchematicOptions schematic;
+        schematic.root_name="Zynq_Carrier";schematic.extraction.kicad_cli=options.kicad_cli;
+        schematic.reports_dir=scratch.path/"reports";
+        const auto board=build_board_schematic(inputs,library,scratch.path,schematic);
+        if(!board.ok())throw ProjectError("probe schematic gate failed: "+board.report);
+        auto input=load_board_inputs(paths,authored.circuits,link,extract_netlist(board.root_path,schematic.extraction));
+        input.floorplan.sheet_index=index;
+        const auto result=options.command=="w12-bound"?run_w12_bound(std::move(input),argument,selected):
+            run_w12_stageprobe(std::move(input),argument,selected,options.conservative_only);
+        std::cout<<result.output;return 0;
+    }
     const auto som = options.som.empty() ? paths.som_schematic : options.som;
+    if (options.command == "build") {
+        if (options.subsystems.size()!=1) throw ProjectError("build requires exactly one registered subsystem name");
+        if (!open_part_catalog((paths.repository_root/"native/catalog.bin").string()))
+            throw ProjectError("cannot open native part catalog");
+        ProjectAuthoringInput input;input.project_root=paths.project_root;
+        input.context=make_authoring_context(paths.repository_root);
+        const auto circuit=author_project_subsystem(paths.project_root.filename().string(),options.subsystems.front(),input);
+        struct Scratch {fs::path path;~Scratch(){if(!path.empty()){std::error_code ignored;fs::remove_all(path,ignored);}}} scratch;
+        auto output=options.output;
+        if(output.empty()){
+            auto pattern=(fs::temp_directory_path()/"schgen-build-XXXXXX").string();
+            const auto created=::mkdtemp(pattern.data());if(!created)throw ProjectError("cannot create subsystem build scratch");
+            scratch.path=created;output=scratch.path;
+        }
+        SymbolLibrary library(paths.repository_root);SubsystemBuildOptions build;
+        build.no_render=options.no_render;build.extraction.kicad_cli=options.kicad_cli;
+        const auto result=build_subsystem_sheet(circuit,library,output,build);
+        std::cout<<result.report;return result.ok()?0:1;
+    }
+    if (options.command == "board") {
+        if (!options.subsystems.empty()) throw ProjectError("board requires the complete project; subsystem selection is not supported");
+        if (!open_part_catalog((paths.repository_root / "native/catalog.bin").string()))
+            throw ProjectError("cannot open native part catalog");
+        BoardPipelineOptions build;
+        build.output_root = options.output;
+        build.no_render = options.no_render;
+        build.timing = options.timing;
+        build.native_policy = true;
+        build.extraction.kicad_cli = options.kicad_cli;
+        const auto result = run_board_pipeline(paths, build);
+        std::cout << result.report();
+        return result.exit_code();
+    }
     if (options.command == "model3d-check") {
         if (!options.subsystems.empty()) throw ProjectError("model3d-check takes no subsystem names");
         const auto directory = options.output.empty() ? paths.reports_dir : options.output;

@@ -1,5 +1,6 @@
 #include "pcb_placement_fixture.hpp"
 #include "schgen/pcb_emit.hpp"
+#include "board_policy_ledger_reference.hpp"
 #include <iostream>
 
 namespace {
@@ -128,8 +129,9 @@ void run(const std::filesystem::path &root, const std::string &name, const std::
         require(docs.markdown == read(fixtures / (name + ".md")),
                 name + " live-solved floorplan Markdown exact bytes");
         auto fp = parse_json_file((fixtures / (name + ".json")).string());
+        const auto migrated = board_policy_reference::migrate(field(fp, "expected"), fixtures.parent_path());
         std::string ledger;
-        for (const auto &entry : field(field(fp, "expected"), "ledger").array_value)
+        for (const auto &entry : field(migrated, "ledger").array_value)
             ledger += string(entry, "text") + "\n";
         require(render_floorplan_ledger(result.floorplan.plan) == ledger,
                 name + " live-solved floorplan ledger exact bytes");

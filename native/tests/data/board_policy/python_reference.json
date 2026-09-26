@@ -1,0 +1,26 @@
+{
+ "ledger_sha256":"59d42d778e2410bf421c4afbcb00b42e6aea1b25737e34024102dc7d669bf7f4",
+ "provenance":"Original Python ledger.REGISTRY and PLACEMENT_STAGES captured before writing native board policy metadata. No computed native output used.",
+ "assumptions":["edge_margin","mh_corner_keepout","edge_depth_cap","edge_band_relief","edge_inset","cable_neighbor_gap","overmold_plug_width","overmold_copper_half_width","block_clearance","perimeter_keepout","som_halo","pack_efficiency","occ_top_mask","occ_bottom_mask","occ_step","frontier_half","som_seat_band","som_occ_pad","anchor_zone_weight","anchor_som_weight","anchor_affinity_power","reseat_evict_budget","affinity_floor","placeholder_aspect","placeholder_min","placeholder_max","cross_k","dispersion_max","dispersion_small_n","place_grid","half_grid","quant_credit","snap_erosion","seat_slide","outline_snap","refine_span","fine_snap","via_size","via_clearance","stack_thickness","zone_pad","place_clear_baseline","place_clear","zone_pack_fill","zone_step","edge_zone_aspect","interior_zone_aspect","interior_band_target","som_side_band","som_decoupling_inset","d13_min_subject_pins","d13_df40_min_pins"],
+ "calculations":[
+  {"name":"overmold_side_gap","inputs":["plug_width","copper_half_width"],"repeated":false},
+  {"name":"edge_band","inputs":["edge_depth_cap","edge_band_relief"],"repeated":false},
+  {"name":"occ_punch_mask","inputs":["occ_top","occ_bottom"],"repeated":false},
+  {"name":"est_via_ordinary","inputs":["via_size","via_clearance"],"repeated":false},
+  {"name":"est_via_impedance","inputs":["via_size","via_clearance","stack_thickness"],"repeated":false},
+  {"name":"est_via_class_split","inputs":["n_cross_nets","n_impedance","n_ordinary","impedance_classes"],"repeated":false},
+  {"name":"subsystem_count","inputs":["n_sheets","n_som_j","n_mechanical_only"],"repeated":false},
+  {"name":"seed_outline","inputs":["som_w","som_h","som_halo","edge_band","component_area","pack_efficiency","perimeter_keepout","seed_w","seed_h"],"repeated":false},
+  {"name":"d13_tier_population","inputs":["n_subjects","tier_le2_0p20","tier_le8_1p50","tier_ge9_2p00"],"repeated":false},
+  {"name":"decoupling_grid","inputs":["n_caps","som_w","som_h","inset","grid_w","grid_h","cols","rows"],"repeated":false},
+  {"name":"outline_candidates","inputs":["generated","reject_aspect","reject_min_area","reject_not_smaller","reject_pack","reject_law5_budget","accepted"],"repeated":true},
+  {"name":"law5_airwire_budget","inputs":["cross_k","board_w","board_h","n_subsystems"],"repeated":true},
+  {"name":"pass_winner","inputs":["board_w","board_h","area","est_cross","budget","headroom"],"repeated":true},
+  {"name":"side_choice","inputs":["offered","est_incumbent","est_challenger","margin"],"repeated":true},
+  {"name":"side_fixed","inputs":["offered","shape_idx"],"repeated":true},
+  {"name":"side_census","inputs":["n_blocks","n_two_face","n_chose_bottom","n_single_face"],"repeated":false},
+  {"name":"plan_choice","inputs":["conservative_area","conservative_est","free_area","free_est"],"repeated":false},
+  {"name":"sizing_winner","inputs":["board_w","board_h","area","est_cross","budget","headroom","plan"],"repeated":false}
+ ],
+ "stages":[["zone_pack","board",true,false],["plan_lattice","board",true,false],["shape_bind","board",false,false],["step3_emission","board",true,true],["l4_pull","board",true,true],["edge_seat","board",true,true],["breathe","board",true,true],["refit_facing","board",true,true],["reorder","board",true,true],["corridor_eviction","board",true,true],["instantiate","board",false,true],["emission_frame","page",true,true],["escape_copper","page",false,true]]
+}

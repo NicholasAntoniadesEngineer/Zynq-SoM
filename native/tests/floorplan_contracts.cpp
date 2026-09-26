@@ -1,6 +1,7 @@
 // Frozen Python orchestration outputs plus independent numeric/mutation tests.
 // No Python, installed footprint library, live board output, or source inspection.
 #include "../src/floorplan_internal.hpp"
+#include "board_policy_ledger_reference.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -393,7 +394,8 @@ void cross_behavior() {
 }
 void frozen(const std::filesystem::path& dir,const std::string& name,bool geometry_only) {
     const auto fixture=parse_json_file((dir/(name+".json")).string());
-    const auto in=input(field(fixture,"input")); const auto& expected=field(fixture,"expected");
+    const auto in=input(field(fixture,"input"));
+    const auto expected=board_policy_reference::migrate(field(fixture,"expected"),dir.parent_path());
     // Exercise native registry and formatting independently of the solver:
     // the values/order here come from the frozen Python decision stream.
     Engine replay(in);replay.ledger_open();std::size_t calculation=0;

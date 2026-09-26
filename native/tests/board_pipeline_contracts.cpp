@@ -1,5 +1,6 @@
 #include "board_pipeline_internal.hpp"
 #include "schgen/selftest_full.hpp"
+#include "schgen/subsystem_build.hpp"
 #include "schgen/process.hpp"
 #include <iostream>
 #include <png.h>
@@ -66,6 +67,15 @@ void policy(const JsonNode& reference){
     for(const auto* name:{"cc","sheet_gates","pcb_drc","assembly","fanout","return_stitch","escape_lanes","quantize_census","fallbacks","stage_movement","ledger","manifest","si"})require(board_pipeline_gate_mandatory(name),"mandatory policy "+std::string(name));
     empty.quantization["large"]=AuditInteger::decimal("18446744073709551615");
     const auto rendered=board_pipeline_verdict_json(empty);require(rendered.find("18446744073709551615")!=std::string::npos,"machine report retains exact uint64 decimal");require(rendered.find("\"board_ok\": false")!=std::string::npos,"machine report derives final verdict");
+    require(!object_field(parse_json_text(board_pipeline_experiment_json(empty)),"board_w"),"missing measurements never synthesized");
+    empty.measurements=BoardPipelineResult::Measurements{160,140,123.125,42,9};
+    empty.gates.push_back({"ratsnest",true,BoardGateStatus::failed,"do not parse this report"});
+    const auto measurement=parse_json_text(board_pipeline_experiment_json(empty));
+    require(field(measurement,"board_w").number_value==160&&field(measurement,"board_h").number_value==140,"typed board dimensions retained");
+    const auto& ratsnest=field(measurement,"ratsnest");
+    require(!field(field(measurement,"ratsnest_gate"),"ok").bool_value&&field(ratsnest,"cross_mm").number_value==123.125,"measured failed gate never waived");
+    require(!object_field(ratsnest,"ok"),"measurement document does not invent a gate");
+    require(field(ratsnest,"n_top").number_value==42&&field(ratsnest,"n_bottom").number_value==9,"typed placement counts retained");
 }
 void coverage(){
     CircuitSheetIr sheet;sheet.name="coverage";
@@ -103,6 +113,12 @@ void golden(const fs::path& root){
     require(result.current.size()==1&&!fs::exists(tmp.path/"golden.json"),"no implicit golden blessing");
     result=check_board_golden(tmp.path,true);require(result.match&&result.blessed&&result.current.size()==1,"explicit bless writes only real sheets");
     const auto pinned=read(tmp.path/"golden.json");require(check_board_golden(tmp.path).match,"native golden comparison matches");
+    const auto external=tmp.path/"committed-golden.json";
+    fs::rename(tmp.path/"golden.json",external);
+    require(check_board_golden(tmp.path,false,external).match,"isolated render checks committed baseline");
+    require(!fs::exists(tmp.path/"golden.json")&&read(external)==pinned,"comparison never republishes or alters baseline");
+    require(check_board_golden(tmp.path,true,external).blessed,"explicit isolated blessing writes output baseline");
+    require(read(external)==pinned&&read(tmp.path/"golden.json")==pinned,"isolated blessing never changes committed baseline");
     auto hash=result.current.at("sheet");for(std::size_t i=0;i<12;++i)hash[i]=hash[i]=='0'?'1':'0';
     publish_text(tmp.path/"golden.json","{\"sheet\":\""+hash+"\"}\n");require(check_board_golden(tmp.path).match,"exactly twelve bits tolerated");
     hash[12]=hash[12]=='0'?'1':'0';const auto drift="{\"sheet\":\""+hash+"\"}\n";
@@ -113,8 +129,30 @@ void golden(const fs::path& root){
     require(check_board_golden(tmp.path,true).blessed,"explicit bless may replace invalid baseline");
     publish_text(tmp.path/"broken.png","not PNG");rejects([&]{check_board_golden(tmp.path,true);},"corrupt current render cannot be blessed");
 }
+void isolated_ratchet(){
+    Temp tmp;const auto source=tmp.path/"committed.json",output=tmp.path/"isolated.json";
+    const AuditCounts committed{{"fallback",AuditInteger(3)}};
+    publish_text(source,fallback_baseline_text(committed));
+    const auto original=read(source);
+    auto result=check_fallback_ratchet({{"fallback",AuditInteger(4)}},source,output);
+    require(!result.ok&&!result.pinned&&!fs::exists(output),"isolated build cannot pin over committed failure");
+    require(read(source)==original,"failed isolated check modified authoritative ceiling");
+    result=check_fallback_ratchet({{"fallback",AuditInteger(2)}},source,output);
+    require(result.ok&&!result.pinned,"isolated ratchet lowered existing ceiling");
+    require(load_fallback_baseline(output)->at("fallback")==AuditInteger(2),"isolated result retains lower ceiling");
+    require(read(source)==original,"successful isolated check modified source ceiling");
+    const auto published=read(output);
+    result=check_fallback_ratchet({{"fallback",AuditInteger(4)}},source,output);
+    require(!result.ok&&read(output)==published,"failed isolated rerun rewrote previous evidence");
+}
 void failed_inputs(const fs::path& root){
     Temp tmp;ProjectPaths p;p.repository_root=root;p.project_root=tmp.path/"source";p.subsystems_dir=p.project_root/"subsystems";p.sheet_index_file=p.project_root/"sheet_index.json";
+    SymbolLibrary library(root);auto broken=selftest_rc_fixture();broken.nets.clear();
+    const auto single=build_subsystem_sheet(broken,library,tmp.path/"invalid-sheet");
+    require(!single.ok()&&!single.electrical_ok&&!fs::exists(tmp.path/"invalid-sheet"),
+            "electrically incomplete single-sheet build must fail before publication");
+    broken.name="../outside";
+    rejects([&]{build_subsystem_sheet(broken,library,tmp.path/"invalid-sheet");},"unsafe single-sheet path rejected");
     BoardPipelineOptions o;o.output_root=tmp.path/"out";o.no_render=true;
     const auto r=run_board_pipeline(p,o);require(!r.ok(),"missing project cannot claim board success");require(r.gates.size()>=40,"all mandatory downstream stages explicitly fail");
     const auto report=parse_json_file((o.output_root/"reports/board_verdicts.json").string());require(!field(report,"board_ok").bool_value,"published verdict includes final failure");
@@ -135,11 +173,31 @@ void live_schematic(const fs::path& root){
     Temp tmp;auto paths=resolve_project_paths(root,fs::path("devkit_mini"));paths.project_root=tmp.path/"synthetic";paths.subsystems_dir=paths.project_root/"subsystems";
     BoardPipelineOptions o;o.output_root=tmp.path/"out";o.no_render=true;o.spice.allow_ngspice=false;
     // Real KiCad, never a success script. The contract is explicit opt-in below.
-    Context c(paths,o);auto circuit=selftest_rc_fixture();c.circuits={{circuit.name,tmp.path/"circuit.json",circuit}};c.sheets={circuit};c.index={{circuit.name,1}};
+    o.netlist_workers=1;
+    Context c(paths,o);auto circuit=selftest_rc_fixture();auto second=circuit;second.name="parallel_rc";
+    c.circuits={{circuit.name,tmp.path/"circuit.json",circuit},{second.name,tmp.path/"second.json",second}};
+    c.sheets={circuit,second};c.index={{circuit.name,1},{second.name,2}};
     schematic_stage(c);
     for(const auto* name:{"sheet_gates","cc","board_schematic"}){const auto p=std::find_if(c.result.gates.begin(),c.result.gates.end(),[&](const auto& g){return g.name==name;});require(p!=c.result.gates.end()&&p->status==BoardGateStatus::passed,"live native stage "+std::string(name)+(p==c.result.gates.end()?" missing":": "+p->report));}
     require(fs::is_regular_file(o.output_root/"Zynq_Carrier.kicad_sch"),"actual hierarchy emitted in temporary tree");
     require(fs::is_regular_file(o.output_root/"reports/board.erc.rpt"),"actual root ERC report");
+    SubsystemBuildOptions single_options;single_options.no_render=true;
+    const auto single=build_subsystem_sheet(circuit,c.library,tmp.path/"single",single_options);
+    require(single.ok()&&!single.rendered,"native single-sheet build executes all five mandatory checks");
+    require(fs::is_regular_file(single.schematic)&&fs::is_regular_file(tmp.path/"single"/(circuit.name+".gates.txt")),
+            "single-sheet build publishes independently checked artifacts");
+    auto parallel_options=o;parallel_options.output_root=tmp.path/"parallel";parallel_options.netlist_workers=4;
+    Context parallel(paths,parallel_options);parallel.circuits=c.circuits;parallel.sheets=c.sheets;parallel.index=c.index;
+    schematic_stage(parallel);
+    for(const auto* name:{"sheet_gates","cc"}){
+        const auto gate=[&](const Context& context)->const BoardPipelineGate&{
+            const auto found=std::find_if(context.result.gates.begin(),context.result.gates.end(),
+                [&](const auto& g){return g.name==name;});
+            require(found!=context.result.gates.end(),"missing deterministic sheet gate");return *found;
+        };
+        require(gate(c).status==gate(parallel).status&&gate(c).report==gate(parallel).report,
+                "parallel sheet checks changed verdicts or ordered reports");
+    }
 }
 void live_electrical(const fs::path& root){
     Temp tmp;const auto paths=resolve_project_paths(root,fs::path("devkit_mini"));
@@ -180,7 +238,7 @@ int main(int argc,char** argv){
         if(argc<2||argc>3)throw std::runtime_error("usage: board_pipeline_contracts REPOSITORY [--live-kicad]");
         const fs::path root=argv[1];
         const auto reference=parse_json_file((root/"native/tests/data/board_pipeline/python_reference.json").string());
-        cc(field(reference,"cc"));ledger();policy(reference);coverage();golden(root);
+        cc(field(reference,"cc"));ledger();policy(reference);coverage();golden(root);isolated_ratchet();
         failed_inputs(root);live_electrical(root);authored_inputs(root);
         if(argc==3){
             if(std::string(argv[2])!="--live-kicad")throw std::runtime_error("unknown mode");

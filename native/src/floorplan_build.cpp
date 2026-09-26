@@ -129,11 +129,13 @@ void Engine::initialize() {
 }
 
 void Engine::ledger_initial(double sw,double sh) {
-    calc("overmold_side_gap",jvalue(overmold_gap),{{"plug_width",jvalue(22.0)},{"copper_half_width",jvalue(8.0)}});
-    calc("edge_band",jvalue(edge_band),{{"edge_depth_cap",jvalue(15.0)},{"edge_band_relief",jvalue(4.0)}});
+    calc("overmold_side_gap",jvalue(overmold_gap),{{"plug_width",jvalue(overmold_plug_width)},{"copper_half_width",jvalue(overmold_copper_half_width)}});
+    calc("edge_band",jvalue(edge_band),{{"edge_depth_cap",jvalue(edge_depth_cap)},{"edge_band_relief",jvalue(edge_band_relief)}});
     calc("occ_punch_mask",jvalue(occ_punch),{{"occ_top",jvalue(occ_top)},{"occ_bottom",jvalue(occ_bottom)}});
-    calc("est_via_ordinary",jvalue(est_via_cost(false)),{{"via_size",jvalue(.6)},{"via_clearance",jvalue(.25)}});
-    calc("est_via_impedance",jvalue(est_via_cost(true)),{{"via_size",jvalue(.6)},{"via_clearance",jvalue(.25)},{"stack_thickness",jvalue(1.6)}});
+    const double ordinary=floorplan_experiment_via_cost(in.experiment.get(),false,est_via_cost(false));
+    const double impedance=floorplan_experiment_via_cost(in.experiment.get(),true,est_via_cost(true));
+    calc("est_via_ordinary",jvalue(ordinary),{{"via_cost",jvalue(ordinary)}});
+    calc("est_via_impedance",jvalue(impedance),{{"via_cost",jvalue(impedance)}});
     int nj=0;
     for (const auto& sc:in.sheets) if (starts(sc.name,"som_j")) ++nj;
     calc("subsystem_count",jvalue(n_sub),{{"n_sheets",jvalue(static_cast<int>(in.sheets.size()))},{"n_som_j",jvalue(nj)},
@@ -267,7 +269,7 @@ FloorplanPlan Engine::run() {
         if (!best) throw FloorplanError(std::string("floorplan: could not fit all REAL packed blocks under the LAW-5 airwire budget on any searched outline (blocks ")+(fit_seen ? "did":"never")+" fit)");
         const double w0=std::get<1>(*best),h0=std::get<2>(*best);
         std::vector<double> ws,hs;
-        for (int k=0;k<41;++k) {
+        for (int k=0;k<=refine_span;++k) {
             checked_quantization_add(plan.accounting.quantization_engagements, "outline_fine_grid");
             ws.push_back(fine_shrink(w0,k));
             checked_quantization_add(plan.accounting.quantization_engagements, "outline_fine_grid");

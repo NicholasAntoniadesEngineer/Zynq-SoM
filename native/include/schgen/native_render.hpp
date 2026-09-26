@@ -30,6 +30,10 @@ struct Render3dOptions : NativeRenderOptions {
     std::string quality="high";
     int width=1600,height=1200;
     std::optional<std::filesystem::path> model_directory;
+    // Explicit model-reference base for a PCB emitted outside its source project.
+    // Used for KIPRJMOD and plain relative models in validation and private staging.
+    // Unset preserves resolution relative to the PCB's original project directory.
+    std::optional<std::filesystem::path> source_project_directory;
 };
 struct Render3dFailure { std::string view,diagnostic; };
 struct Render3dView { std::string view; std::filesystem::path path; int width=0,height=0; };

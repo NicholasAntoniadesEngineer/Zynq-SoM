@@ -1,5 +1,6 @@
 #include "pcb_checks_internal.hpp"
 #include "schgen/place_search.hpp"
+#include "schgen/board_decision_policy.hpp"
 
 namespace schgen {
 using namespace pcb_checks;
@@ -34,7 +35,7 @@ std::string PlacementMechResult::summary()const{
     l.push_back("  carrier TOP parts under SoM core (keepout): "+std::to_string(top_under_som.size()));for(const auto& s:top_under_som)l.push_back("    TOP-UNDER-SoM "+s);
     l.push_back("  user-facing parts (TP/LED/SW): "+std::to_string(n_face_top)+" ("+std::to_string(face_top_on_bottom.size())+" face-down)");for(const auto& s:face_top_on_bottom)l.push_back("    FACE-DOWN "+s);return join(l);
 }
-bool pcb_is_df40_part(const std::string& sheet,int pins){static const std::regex rx("^som_j[0-9]+$");return pins>=40||std::regex_match(sheet,rx);}
+bool pcb_is_df40_part(const std::string& sheet,int pins){static const std::regex rx("^som_j[0-9]+$");return pins>=board_decision_policy::df40_min_pins||std::regex_match(sheet,rx);}
 bool pcb_counts_as_crowder(const std::string& ref,const std::string& sheet,int pins,const std::string& footprint,const std::string& subject_sheet){return !(pcb_is_df40_part(sheet,pins)||footprint.find("Fiducial")!=std::string::npos||is_testpoint_ref(ref)||(sheet==subject_sheet&&is_cluster_passive(ref,pins,{"RS","RJ","RN","LED"},{"R","C","L"})));}
 std::pair<double,std::string> pcb_fanout_need(int pins){return intelligent_need(pins,{{2,0.2,"2-pin passive — escapes on its own pads"},{8,1.5,"<=8-pin non-passive — 1.5 mm absolute floor (user law 2026-07-29)"}},2,">=9-pin package — 2.0 mm floor (user law 2026-07-29)");}
 PcbFanoutResult check_fanout(const PcbCheckInput& input,std::optional<int> baseline){

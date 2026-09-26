@@ -7,6 +7,7 @@
 #include <cstdlib>
 #include <fcntl.h>
 #include <fstream>
+#include <limits>
 #include <spawn.h>
 #include <signal.h>
 #include <sys/wait.h>
@@ -50,8 +51,17 @@ struct Child {
     ~Child(){if(pid>0){::kill(-pid,SIGKILL);int status=0;while(::waitpid(pid,&status,0)<0&&errno==EINTR){}}}
 };
 std::string captured(const std::filesystem::path& path,bool binary) {
-    std::ifstream in(path,std::ios::binary);if(!in)throw ProcessError("cannot read process output");
-    const std::string raw{std::istreambuf_iterator<char>(in),{}};if(in.bad())throw ProcessError("cannot read process output");
+    // The child has exited and this private capture file is complete. Size it
+    // once and read in bulk: compiler ASTs can exceed a gigabyte, for which
+    // iterator growth plus a second normalized copy is prohibitively costly.
+    std::ifstream in(path,std::ios::binary|std::ios::ate);if(!in)throw ProcessError("cannot read process output");
+    const std::streamoff length=in.tellg();
+    std::string raw;
+    if(length<0||static_cast<std::uintmax_t>(length)>raw.max_size()||
+       static_cast<std::uintmax_t>(length)>static_cast<std::uintmax_t>(std::numeric_limits<std::streamsize>::max()))
+        throw ProcessError("process output size cannot be represented");
+    raw.resize(static_cast<std::size_t>(length));in.seekg(0);
+    if(!in||(length&&!in.read(raw.data(),static_cast<std::streamsize>(length))))throw ProcessError("cannot read process output");
     if(binary)return raw;
     // Match subprocess text=True's strict UTF-8 decoding. Invalid output must
     // not be silently searched for a measurement and credited as a cross-check.
@@ -63,7 +73,14 @@ std::string captured(const std::filesystem::path& path,bool binary) {
             if(j==1&&((a==0xe0&&b<0xa0)||(a==0xed&&b>=0xa0)||(a==0xf0&&b<0x90)||(a==0xf4&&b>=0x90)))valid=false;}
         if(!valid)throw ProcessError("process output is not valid UTF-8");i+=n;
     }
-    std::string text;for(std::size_t i=0;i<raw.size();++i){if(raw[i]=='\r'){text+='\n';if(i+1<raw.size()&&raw[i+1]=='\n')++i;}else text+=raw[i];}return text;
+    const auto first=raw.find('\r');
+    if(first==std::string::npos)return raw;
+    std::size_t written=first;
+    for(std::size_t i=first;i<raw.size();++i){
+        if(raw[i]=='\r'){raw[written++]='\n';if(i+1<raw.size()&&raw[i+1]=='\n')++i;}
+        else raw[written++]=raw[i];
+    }
+    raw.resize(written);return raw;
 }
 }
 std::optional<std::filesystem::path> find_executable(const std::string& command) {

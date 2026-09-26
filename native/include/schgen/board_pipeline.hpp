@@ -15,6 +15,11 @@ struct BoardPipelineGate {
     std::string report;
 };
 struct BoardPipelineResult {
+    struct Measurements {
+        double board_w=0, board_h=0, cross_mm=0;
+        int n_top=0, n_bottom=0;
+    };
+    std::optional<Measurements> measurements;
     std::vector<BoardPipelineGate> gates;
     AuditCounts quantization, fallbacks;
     std::string ledger;
@@ -29,6 +34,9 @@ struct BoardPipelineResult {
     std::string report() const;
 };
 std::string board_pipeline_verdict_json(const BoardPipelineResult&);
+// Experiment compatibility document from typed invocation measurements only.
+// Missing geometry omits measurements, never supplies fabricated zeroes.
+std::string board_pipeline_experiment_json(const BoardPipelineResult&);
 // Never approves missing mandatory stages or unauthorized conditional skips.
 bool board_pipeline_gate_mandatory(const std::string& name);
 // Minimum decision scope for a final board audit. Callers may add files, never
@@ -58,6 +66,9 @@ struct BoardPipelineOptions {
     BoardInputOptions pcb;
     SpiceRunOptions spice;
     bool no_render = false, bless = false, timing = false;
+    // Configure the built-in reviewed policy from this invocation's real inputs.
+    // Explicit caller declarations remain supported when this is false.
+    bool native_policy = false;
     bool enforce_coverage_lint = false;
     std::size_t netlist_workers = 0;
     // Empty paths select the original project/repository locations.
@@ -103,7 +114,9 @@ struct BoardGoldenResult {
 std::string board_png_average_hash(const std::filesystem::path&);
 // Advisory comparison. Only explicit bless writes golden.json, including when
 // the baseline is absent. Corrupt baselines/PNGs throw; no discrepancy waiver.
-BoardGoldenResult check_board_golden(const std::filesystem::path& renders,bool bless=false);
+// An external baseline is read-only; explicit blessing always writes to renders.
+BoardGoldenResult check_board_golden(const std::filesystem::path& renders,bool bless=false,
+    const std::filesystem::path& baseline={});
 struct BoardCoverageLintResult {
     std::size_t sheets=0,parts=0,structured=0,free=0,ungated=0;
     std::string report;

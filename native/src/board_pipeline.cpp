@@ -87,6 +87,35 @@ std::string board_pipeline_verdict_json(const BoardPipelineResult& r){
     s+="},\n \"fallbacks\": {";first=true;for(const auto& [k,v]:r.fallbacks){if(!first)s+=',';first=false;s+=quote(k)+':'+v.str();}
     return s+"}\n}\n";
 }
+std::string board_pipeline_experiment_json(const BoardPipelineResult& r){
+    using namespace board_pipeline_detail;
+    std::map<std::string,std::string> fields;
+    const auto floating=[](double value){auto text=json(number(value));
+        if(text.find_first_of(".eE")==std::string::npos)text+=".0";return text;};
+    if(r.measurements){
+        const auto& m=*r.measurements;
+        fields.emplace("board_w",floating(m.board_w));fields.emplace("board_h",floating(m.board_h));
+        fields.emplace("ratsnest","{\"cross_mm\":"+floating(m.cross_mm)+",\"n_bottom\":"+
+            std::to_string(m.n_bottom)+",\"n_top\":"+std::to_string(m.n_top)+"}");
+    }
+    std::string fallbacks="{";
+    for(const auto& [name,count]:r.fallbacks){if(fallbacks.size()>1)fallbacks+=',';fallbacks+=quote(name)+':'+count.str();}
+    fields.emplace("fallbacks",fallbacks+'}');
+    // Historical diagnostic scope; the complete native gate map remains in
+    // board_verdicts.json. Do not turn optional render skips into new reds.
+    const std::set<std::string> diagnostic_gates={"assembly","connector_model","connector_spacing",
+        "escape_lanes","fallbacks","fanout","placement_contract","placement_flow","placement_mech",
+        "quantize_census","ratsnest","refdes_silk","return_path","return_stitch"};
+    for(const auto& gate:r.gates){
+        if(!diagnostic_gates.count(gate.name))continue;
+        const auto name=gate.name=="ratsnest"?"ratsnest_gate":gate.name=="fallbacks"?"fallback_gate":gate.name;
+        if(!fields.emplace(name,std::string("{\"ok\":")+(gate.status==BoardGateStatus::passed?"true}":"false}")).second)
+            throw ProjectError("duplicate experiment measurement key "+name);
+    }
+    std::string document="{";
+    for(const auto& [name,value]:fields){if(document.size()>1)document+=',';document+=quote(name)+':'+value;}
+    return document+"}\n";
+}
 BoardPipelineResult run_board_pipeline(const ProjectPaths& p,const BoardPipelineOptions& o){
     using namespace board_pipeline_detail;
     Context c(p,o);
@@ -96,7 +125,12 @@ BoardPipelineResult run_board_pipeline(const ProjectPaths& p,const BoardPipeline
     if(c.loaded){schematic_stage(c);electrical_stages(c);pcb_stages(c);document_stages(c);audit_stages(c);}
     for(const auto& name:required)if(std::none_of(c.result.gates.begin(),c.result.gates.end(),[&](const auto& g){return g.name==name;}))c.gate(name,false,"stage did not run; prerequisite unavailable");
     c.result.quantization=c.quantizations.engagements();c.result.fallbacks=c.fallbacks.census();c.result.ledger=c.ledger.render();
+    if(c.pcb&&c.geometry){const auto& model=c.pcb->placement.model;
+        c.result.measurements=BoardPipelineResult::Measurements{model.board_w,model.board_h,
+            c.geometry->ratsnest.cross_mm,model.n_top,model.n_bottom};}
     c.report("build_ledger.txt",c.result.ledger);publish_text(c.reports/"gates.txt",c.result.report());
-    publish_text(c.reports/"board_verdicts.json",board_pipeline_verdict_json(c.result));return std::move(c.result);
+    publish_text(c.reports/"board_verdicts.json",board_pipeline_verdict_json(c.result));
+    publish_text(c.reports/"experiment_verdicts.json",board_pipeline_experiment_json(c.result));
+    return std::move(c.result);
 }
 }

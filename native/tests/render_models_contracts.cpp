@@ -112,20 +112,25 @@ void live(const JsonNode& fixture,const fs::path& repo,const fs::path& scratch) 
     require(pcb_sha256(read(tiles_path))=="93b0bd80feb38dc6d6d5218832cba80270d9e852a161c25102c260a94751971e","immutable independent raster tiles"); const auto tiles=parse_json_file(tiles_path.string());
     require(pcb_sha256(read(repo/"native/tests/data/render_models/render_reference.json"))=="92c8f067a7937462b4235ee2dcb88c5ceaa7eda4b22caf2f5932f29b393c6ff8","immutable render baseline");
     for (const auto& b:field(ref,"boards").array_value) {
-        const auto source=repo/str(b,"source"); require(pcb_sha256(read(source))==str(b,"input_sha256"),"live PCB baseline unchanged");
+        const auto source=repo/str(b,"source");
+        auto original=read(source);
+        if(str(b,"name")=="carrier"){
+            // Preserve the original independent board hash: the only approved
+            // migration is a real local model plus its package orientation.
+            const std::string old_model="(model\n\t\t\t\"${KICAD10_3DMODEL_DIR}/Package_DFN_QFN.3dshapes/WQFN-14-1EP_2.5x2.5mm_P0.5mm_EP1.45x1.45mm.step\"\n\t\t\t(offset\n\t\t\t\t(xyz 0 0 0)\n\t\t\t)\n\t\t\t(scale\n\t\t\t\t(xyz 1 1 1)\n\t\t\t)\n\t\t\t(rotate\n\t\t\t\t(xyz 0 0 0)\n\t\t\t)\n\t\t)";
+            auto repaired=old_model;
+            replace(repaired,"${KICAD10_3DMODEL_DIR}/Package_DFN_QFN.3dshapes/WQFN-14-1EP_2.5x2.5mm_P0.5mm_EP1.45x1.45mm.step","${KIPRJMOD}/../parts/FUSB302BMPX/FUSB302BMPX.wrl");
+            replace(repaired,"(rotate\n\t\t\t\t(xyz 0 0 0)","(rotate\n\t\t\t\t(xyz 0 0 90)");
+            const auto pos=original.find(repaired);
+            require(pos!=std::string::npos&&original.find(repaired,pos+1)==std::string::npos,"exactly one approved FUSB302 model repair");
+            original.replace(pos,repaired.size(),old_model);
+        }
+        require(pcb_sha256(original)==str(b,"input_sha256"),"all PCB bytes outside approved model repair unchanged");
         const auto input=scratch/str(b,"name")/source.filename(); auto text=read(source); replace(text,"${KIPRJMOD}",source.parent_path().string()); write(input,text);
         auto source_pro=source; source_pro.replace_extension(".kicad_pro"); auto input_pro=input; input_pro.replace_extension(".kicad_pro"); if (fs::exists(source_pro)) write(input_pro,read(source_pro));
         const auto before=fs::exists(input_pro)?read(input_pro):std::string{};
         Render3dOptions o; o.width=240; o.height=180; o.quality="basic";
-        Render3dResult r;
-        try { r=render_board_3d(input,input.parent_path()/"renders",o); }
-        catch (const RenderError& e) {
-            const auto known=default_model3d_directory()/"Package_DFN_QFN.3dshapes/WQFN-14-1EP_2.5x2.5mm_P0.5mm_EP1.45x1.45mm.step";
-            require(str(b,"name")=="carrier"&&std::string(e.what())=="required 3D asset missing or empty: "+known.string(),"unexpected full-board blocker: "+std::string(e.what()));
-            std::cout<<"FULL BOARD RENDER BLOCKED (not a render pass): "<<str(b,"name")<<'\n'<<e.what()<<'\n';
-            require(read(input_pro)==before,"blocked board project immutable");
-            continue;
-        }
+        const auto r=render_board_3d(input,input.parent_path()/"renders",o);
         for (const auto& e:r.failures) std::cerr<<e.view<<": "<<e.diagnostic<<'\n';
         require(r.ok(),"actual native KiCad must render all eight views"); require(read(input_pro)==before,"live source project immutable");
         for (std::size_t i=0;i<r.written.size();++i) {

@@ -1,4 +1,5 @@
 #include "pcb_placement_internal.hpp"
+#include "schgen/board_decision_policy.hpp"
 
 namespace schgen {
 PcbZoneResult build_pcb_zone_geometry(const PcbPlacementInput &in) {
@@ -131,7 +132,7 @@ PcbZoneResult build_pcb_zone_geometry(const PcbPlacementInput &in) {
             tn.tag = "turned";
             t2.tag = "t180";
             t3.tag = "t270";
-            bool turn_now = !edge && p.h > 32 && p.w <= 32 && p.w < p.h;
+            bool turn_now = !edge && p.h > board_decision_policy::interior_band_target && p.w <= board_decision_policy::interior_band_target && p.w < p.h;
             if (turn_now) {
                 p.top = tn.top_off;
                 p.bottom = tn.bot_off;
@@ -162,14 +163,14 @@ PcbZoneResult build_pcb_zone_geometry(const PcbPlacementInput &in) {
                     g.shapes[sheet] = {shape(p, "asbuilt"), *mirror};
             }
         } else {
-            p = pack_zone(ctx, g, refs, edge ? 2.2 : 1.,
+            p = pack_zone(ctx, g, refs, edge ? board_decision_policy::edge_zone_aspect : 1.,
                           conn_rot.count(sheet) ? conn_rot.at(sheet) : Rotations{},
                           sheet_outer.count(sheet) ? sheet_outer.at(sheet) : "");
-            if (!edge && p.h > 32) {
-                auto alternative = pack_zone(ctx, g, refs, 2.);
-                if (alternative.h <= 32 && alternative.h < p.h)
+            if (!edge && p.h > board_decision_policy::interior_band_target) {
+                auto alternative = pack_zone(ctx, g, refs, board_decision_policy::interior_zone_aspect);
+                if (alternative.h <= board_decision_policy::interior_band_target && alternative.h < p.h)
                     p = alternative;
-                else if (p.w <= 32 && p.w < p.h) {
+                else if (p.w <= board_decision_policy::interior_band_target && p.w < p.h) {
                     auto t = turned(shape(p, ""));
                     p.top = t.top_off;
                     p.bottom = t.bot_off;

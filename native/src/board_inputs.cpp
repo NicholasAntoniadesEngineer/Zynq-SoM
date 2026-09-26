@@ -31,6 +31,7 @@ PcbPlacementInput load_board_inputs(const ProjectPaths& paths,
     floor.regulators = analyze_power(circuits).regs;
     floor.module_offset = options.module_offset;
     floor.place_clear = options.place_clear;
+    floor.experiment = options.experiment;
     result.two_side = options.two_side;
     result.netlist = netlist;
     const auto prior_escape = paths.project_root / "escape_block.json";

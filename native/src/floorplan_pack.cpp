@@ -37,7 +37,7 @@ PackAnchorIn Engine::anchor_row(const FloorplanBlock& b,
         const auto pt=centers.find(b.pull->to);
         if (!a.exclusive && pt!=centers.end()) { a.has_soft_pull=true; a.pull_x=pt->second.first; a.pull_y=pt->second.second; }
     }
-    a.zone_w=.25; a.som_w_scale=7; a.som_pull=get(som_pull,b.name); a.aff_pow=1.6;
+    a.zone_w=anchor_zone_weight; a.som_w_scale=anchor_som_weight; a.som_pull=get(som_pull,b.name); a.aff_pow=anchor_affinity_power;
     a.som_cx=plan.som_x+plan.som.w/2; a.som_cy=plan.som_y+plan.som.h/2;
     for (const auto& [name,weight]:get(affinity,b.name)) {
         const auto pt=centers.find(name);
@@ -47,6 +47,13 @@ PackAnchorIn Engine::anchor_row(const FloorplanBlock& b,
 }
 
 bool Engine::attempt_pack(bool compact) {
+    return run_floorplan_experiment_attempt(in.experiment.get(), plan.punch_free,
+        [&] { return attempt_pack_impl(compact); }, [&](bool packed) {
+            return FloorplanAttemptObservation{plan.board_w, plan.board_h, packed,
+                                               plan.punch_free, std::nullopt};
+        });
+}
+bool Engine::attempt_pack_impl(bool compact) {
     const double bw=plan.board_w,bh=plan.board_h;
     const int policy=plan.punch_free ? 1:0;
     const auto& shapes=shape_sets[policy];
@@ -65,7 +72,7 @@ bool Engine::attempt_pack(bool compact) {
     }
     std::vector<PackEdgeJack> jacks;
     for (const auto& j:plan.som.js) jacks.push_back({j.ref,plan.som_x+j.x,plan.som_y+j.y});
-    const auto packed=pack_edges(edge_rows,jacks,{bw,bh,edge_margin,edge_inset,clear,cable_gap,overmold_gap,.05,
+    const auto packed=pack_edges(edge_rows,jacks,{bw,bh,edge_margin,edge_inset,clear,cable_gap,overmold_gap,affinity_floor,
                                                 plan.som_x,plan.som_y,plan.som.w,plan.som.h});
     for (auto& b:plan.edge_blocks) for (const auto& p:packed.poses) if (p.name==b.name) { b.edge=p.edge; b.x=p.x; b.y=p.y; break; }
     plan.spilled=packed.spilled;
@@ -93,7 +100,7 @@ bool Engine::attempt_pack(bool compact) {
     const auto [reach_bound,envelope]=spatial_bounds_accounted(far_ceil,max_reach,clear,in.place_clear,cable_gap,2.0,
         &plan.accounting.quantization_engagements);
     if (std::max(clear,2*reach_bound)>envelope+1e-9) throw std::logic_error("floorplan: spatial interaction envelope underbounds fan-out reach");
-    Occupancy occ(bw,bh,clear,envelope,reach_bound,1.0,.05+1e-9);
+    Occupancy occ(bw,bh,clear,envelope,reach_bound,occ_step,frontier_half);
     occ.add(som_occ.x,som_occ.y,som_occ.w,som_occ.h,{},{},som_mask,som_comps);
     const auto corners=legalize_mh_corners(bw,bh,mh_corner);
     for (const auto& c:corners) occ.add(c.x0,c.y0,c.x1-c.x0,c.y1-c.y0,{},{},occ_punch,{});
@@ -167,7 +174,7 @@ bool Engine::attempt_pack(bool compact) {
         b.fanout_reach=best.reach; b.fanout_inset=best.inset; b.area=block_area(b.w,b.h); chosen[b.name]=best.comps;
         return true;
     };
-    int evict_budget=3;
+    int evict_budget=reseat_evict_budget;
     auto retry=[&](FloorplanBlock& b,FloorplanPoint a) {
         if (evict_budget<1) return false;
         std::vector<std::tuple<double,double,double,double,std::string>> ranks;

@@ -3,6 +3,7 @@
 #include "schgen/board_schematic.hpp"
 #include "schgen/mirror.hpp"
 #include "schgen/pcb_placement.hpp"
+#include "schgen/experiment_observers.hpp"
 #include "schgen/reorder.hpp"
 
 namespace schgen::pcb_placement {
@@ -80,6 +81,7 @@ struct Placer {
     Box4 box(const std::string &, FloorplanPoint) const;
     int pins(const std::string &) const;
     void checkpoint(const std::string &, bool = false);
+    void observe_checkpoint(const std::string &) const;
     void seed();
     void l4_pull();
     void edge_seat();

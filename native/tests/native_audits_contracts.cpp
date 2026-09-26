@@ -146,20 +146,21 @@ void source_contracts(const fs::path& root,const fs::path& scratch){
     // Real production C++ translation unit: no Python input, grammar or fixture
     // source. All raw operations must be inside an explicitly registered body.
     CppAuditOptions live;live.flags={"-I"+(root/"native/include").string()};
-    const auto census=scan_cpp_audit_sources(root,{{"native/src/quantize.cpp"},{"native/src/native_audit_quantize.cpp"}},live);
+    const auto census=scan_cpp_audit_sources(root,{{"native/include/schgen/quantize.hpp"},{"native/src/quantize.cpp"},{"native/src/native_audit_quantize.cpp"}},live);
     require(census.constants.size()==8&&census.functions.size()==20,"actual native quantize declarations are scanned");
     NativeQuantizations all;register_native_quantizations(all);
     NativeLedger live_ledger;
     const std::vector<std::pair<std::string,double>> constants={{"kGridMm",fixed_part_grid(1.3)},{"kHalfMm",som_pose_half_mm(0.7)},{"kCreditMm",quant_credit(0)},
         {"kSnapErosionMm",snap_erosion_pad(5)-5},{"kOutlineSnapMm",outline_grow(1)},{"kFineSnapMm",fine_shrink(2,1)},{"kViaOrdinaryMm",est_via_cost(false)},{"kViaImpedanceMm",est_via_cost(true)}};
-    for(const auto& [name,value]:constants)live_ledger.declare(assumption(name,"native/src/quantize.cpp::schgen::"+name,value));
+    for(const auto& [name,value]:constants)live_ledger.declare(assumption(name,"native/include/schgen/quantize.hpp::schgen::quantization_policy::"+name,value));
     live_ledger.open_step("floorplan.sizing");live_ledger.close_step("floorplan.sizing");
     const auto audited=check_native_audits(census,live_ledger,all);require(audited.ok,"production quantize C++ policy audit: "+audited.summary());
     model_checks::publish(path,"");rejects([&]{check_native_audits(scratch,{{"geometry.cpp"}},NativeLedger{},NativeQuantizations{});},"empty translation unit cannot fake a gate pass");
 }
 }
 int main(int argc,char** argv){try{
-    require(argc==2,"usage: native_audits_contracts <repo-root>");const fs::path root=fs::absolute(argv[1]);Scratch tmp;
+    require(argc==2||(argc==3&&std::string(argv[2])=="--sources-only"),"usage: native_audits_contracts <repo-root> [--sources-only]");const fs::path root=fs::absolute(argv[1]);Scratch tmp;
+    if(argc==3){source_contracts(root,tmp.path);std::cout<<"Native C++ source audits: "<<checks<<" contracts passed\n";return 0;}
     const auto reference=parse_json_file((root/"native/tests/data/verification_audits/python_state.json").string());
     ledger_contracts(reference);registry_contracts(reference);
     ratchet_contracts(parse_json_file((root/"native/tests/data/verification_audits/fallback_reference.json").string()),tmp.path);

@@ -89,8 +89,8 @@ void record_pipeline_after(Context& c,const fs::path& baseline){
 }
 }
 void audit_stages(Context& c){
-    const auto fb=c.options.fallback_baseline.empty()?c.reports/"fallback_baseline.json":c.options.fallback_baseline;
-    c.attempt("fallbacks",[&]{if(!c.pcb)throw ProjectError("census producer did not finish");const auto r=check_fallback_ratchet(c.fallbacks.census(),fb);c.report("fallbacks.txt",r.summary());c.gate("fallbacks",r.ok,r.summary());});
+    const auto fb=c.options.fallback_baseline.empty()?c.paths.reports_dir/"fallback_baseline.json":c.options.fallback_baseline;
+    c.attempt("fallbacks",[&]{if(!c.pcb)throw ProjectError("census producer did not finish");const auto r=check_fallback_ratchet(c.fallbacks.census(),fb,c.reports/"fallback_baseline.json");c.report("fallbacks.txt",r.summary());c.gate("fallbacks",r.ok,r.summary());});
     bool imported=false;
     c.attempt("ledger_import",[&]{
         if(c.options.ledger_declarations.empty())throw ProjectError("reviewed native ledger declarations are required; scanner output cannot supply them");

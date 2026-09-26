@@ -56,7 +56,14 @@ std::string diagnostic(const ProcessResult& r) {
     const auto& s=r.stderr_text.empty()?r.stdout_text:r.stderr_text;
     return "exit="+std::to_string(r.exit_code)+": "+s.substr(s.size()>200?s.size()-200:0);
 }
-fs::path stage_board(const fs::path& input,const fs::path& dir) {
+fs::path source_project(const fs::path& pcb,const Render3dOptions& o) {
+    if (!fs::is_regular_file(pcb)) throw RenderError("PCB not found: "+pcb.string());
+    if (!o.source_project_directory) return fs::canonical(pcb).parent_path();
+    if (!fs::is_directory(*o.source_project_directory))
+        throw RenderError("source project directory not found: "+o.source_project_directory->string());
+    return fs::canonical(*o.source_project_directory);
+}
+fs::path stage_board(const fs::path& input,const fs::path& dir,const fs::path& project) {
     if (!fs::is_regular_file(input)) throw RenderError("PCB not found: "+input.string());
     const auto source=fs::absolute(input); const auto copy=dir/source.filename();
     auto text=read(source);
@@ -68,7 +75,7 @@ fs::path stage_board(const fs::path& input,const fs::path& dir) {
         const auto& m=*it; const auto raw=m[1].str(); const auto pos=static_cast<std::size_t>(m.position(1));
         rewritten+=text.substr(last,pos-last);
         if (!raw.empty()&&raw.find('$')==raw.npos&&!fs::path(raw).is_absolute()) {
-            auto absolute=(source.parent_path()/raw).lexically_normal().string(); replace(absolute,"\\","\\\\"); replace(absolute,"\"","\\\""); rewritten+=absolute;
+            auto absolute=(project/raw).lexically_normal().string(); replace(absolute,"\\","\\\\"); replace(absolute,"\"","\\\""); rewritten+=absolute;
         } else rewritten+=raw;
         last=pos+raw.size();
     }
@@ -82,14 +89,14 @@ fs::path model_directory(const Render3dOptions& o) {
     if (!md || !fs::is_directory(*md)) throw RenderError("KiCad 3D-model library not found; supply an installed model_directory");
     return fs::absolute(*md);
 }
-void required_models(const fs::path& pcb,const fs::path& md,int version,bool step) {
+void required_models(const fs::path& pcb,const fs::path& project,const fs::path& md,int version,bool step) {
     const auto text=read(pcb); static const std::regex model(R"rx(\(model\s+"([^"]*)")rx");
     std::vector<std::string> problems; std::set<fs::path> checked;
     for (std::sregex_iterator it(text.begin(),text.end(),model),end;it!=end;++it) {
-        auto raw=(*it)[1].str(); replace(raw,"${KIPRJMOD}",fs::canonical(pcb).parent_path().string());
+        auto raw=(*it)[1].str(); replace(raw,"${KIPRJMOD}",project.string());
         replace(raw,"${KICAD"+std::to_string(version)+"_3DMODEL_DIR}",md.string()); replace(raw,"${KISYS3DMOD}",md.string());
         if (raw.find('$')!=raw.npos) { problems.push_back("unresolved required 3D asset variable: "+raw); continue; }
-        auto p=fs::path(raw); if (!p.is_absolute()) p=fs::absolute(pcb).parent_path()/p;
+        auto p=fs::path(raw); if (!p.is_absolute()) p=project/p;
         if (!checked.insert(p.lexically_normal()).second) continue;
         if (!fs::is_regular_file(p)||fs::file_size(p)==0) { problems.push_back("required 3D asset missing or empty: "+p.string()); continue; }
         auto ext=p.extension().string(); std::transform(ext.begin(),ext.end(),ext.begin(),[](unsigned char c){return static_cast<char>(std::tolower(c));});
@@ -108,8 +115,8 @@ void required_models(const fs::path& pcb,const fs::path& md,int version,bool ste
     std::sort(problems.begin(),problems.end()); problems.erase(std::unique(problems.begin(),problems.end()),problems.end());
     if (!problems.empty()) throw RenderError(join(problems,"\n"));
 }
-std::vector<std::string> variables(const fs::path& pcb,const fs::path& md,int version) {
-    return {"-D","KICAD"+std::to_string(version)+"_3DMODEL_DIR="+md.string(),"-D","KIPRJMOD="+fs::canonical(pcb).parent_path().string()};
+std::vector<std::string> variables(const fs::path& project,const fs::path& md,int version) {
+    return {"-D","KICAD"+std::to_string(version)+"_3DMODEL_DIR="+md.string(),"-D","KIPRJMOD="+project.string()};
 }
 }
 std::pair<double,double> PageRaster::mm_to_px(double x,double y) const {
@@ -155,8 +162,9 @@ std::string Render3dResult::summary() const {
 Render3dResult render_board_3d(const fs::path& pcb,const fs::path& output,const Render3dOptions& o) {
     dimensions(o.width,o.height);
     if (o.quality!="high"&&o.quality!="basic"&&o.quality!="user"&&o.quality!="job_settings") throw RenderError("invalid KiCad render quality");
-    const auto exe=cli(o); const auto md=model_directory(o); const int version=major(exe,o); required_models(pcb,md,version,false);
-    Temp temp; const auto input=stage_board(pcb,temp.path); const auto vars=variables(pcb,md,version);
+    const auto project=source_project(pcb,o);
+    const auto exe=cli(o); const auto md=model_directory(o); const int version=major(exe,o); required_models(pcb,project,md,version,false);
+    Temp temp; const auto input=stage_board(pcb,temp.path,project); const auto vars=variables(project,md,version);
     Render3dResult result;
     const std::vector<std::pair<std::string,std::vector<std::string>>> views{
         {"top",{"--side","top"}},{"bottom",{"--side","bottom"}},{"left",{"--side","left"}},{"right",{"--side","right"}},
@@ -174,8 +182,9 @@ Render3dResult render_board_3d(const fs::path& pcb,const fs::path& output,const 
     return result;
 }
 void export_board_step(const fs::path& pcb,const fs::path& output,const Render3dOptions& o) {
-    const auto exe=cli(o); const auto md=model_directory(o); const int version=major(exe,o); required_models(pcb,md,version,true); Temp temp;
-    const auto input=stage_board(pcb,temp.path),step=temp.path/"board.step"; const auto vars=variables(pcb,md,version);
+    const auto project=source_project(pcb,o);
+    const auto exe=cli(o); const auto md=model_directory(o); const int version=major(exe,o); required_models(pcb,project,md,version,true); Temp temp;
+    const auto input=stage_board(pcb,temp.path,project),step=temp.path/"board.step"; const auto vars=variables(project,md,version);
     std::vector<std::string> command{exe,"pcb","export","step"}; command.insert(command.end(),vars.begin(),vars.end());
     // KiCad's macOS writer attempts to retain output attributes. Provide the
     // private destination first so a new export does not emit an OS error.

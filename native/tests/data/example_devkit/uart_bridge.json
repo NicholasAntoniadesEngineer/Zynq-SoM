@@ -1,0 +1,1278 @@
+{
+  "name": "uart_bridge",
+  "meta": {
+    "bind": {
+      "+VDD_IO": "+3V3_MINI",
+      "GND": "GND",
+      "USB_VBUS": "USB2_UART_VBUS",
+      "USB_DP": "USB2_UART_DP",
+      "USB_DM": "USB2_UART_DM",
+      "UART_TXD": "FPGA_UART0_RXD",
+      "UART_RXD": "FPGA_UART0_TXD",
+      "UART_RTS_N": "FPGA_UART0_CTS_N",
+      "UART_CTS_N": "FPGA_UART0_RTS_N"
+    },
+    "expects": {
+      "USB_VBUS": "devkit_usb_receptacles (USB2 connector sheet)",
+      "USB_DP": "devkit_usb_receptacles (USB2 connector sheet)",
+      "UART_TXD": "devkit_uart_header (FPGA UART0 pin map)",
+      "UART_RXD": "devkit_uart_header (FPGA UART0 pin map)",
+      "UART_RTS_N": "devkit_uart_header (FPGA UART0 pin map)",
+      "UART_CTS_N": "devkit_uart_header (FPGA UART0 pin map)"
+    },
+    "notes": {
+      "draws": "CP2102N active ~14 mA typ + RST 1k pull-up on +3V3_MINI"
+    }
+  },
+  "interface": [
+    "+VDD_IO",
+    "GND",
+    "USB_VBUS",
+    "USB_DP",
+    "USB_DM",
+    "UART_TXD",
+    "UART_RXD",
+    "UART_RTS_N",
+    "UART_CTS_N"
+  ],
+  "rails": [
+    "+VDD_IO",
+    "GND"
+  ],
+  "ports": [
+    "USB_VBUS",
+    "USB_DP",
+    "USB_DM",
+    "UART_TXD",
+    "UART_RXD",
+    "UART_RTS_N",
+    "UART_CTS_N"
+  ],
+  "base": {
+    "schema": "schgen.circuit/1",
+    "name": "uart_bridge",
+    "title": "UART bridge: CP2102N USB-UART",
+    "parts": [
+      {
+        "ref": "U1",
+        "lib_id": "CP2102N-A02-GQFN24R:CP2102N-A02-GQFN24R",
+        "value": "CP2102N-A02",
+        "footprint": "CP2102N-A02-GQFN24R:CP2102N-A02-GQFN24R",
+        "fields": {
+          "LCSC": "C969151"
+        },
+        "pin_names": {
+          "RI/CLK": [
+            "1"
+          ],
+          "GND": [
+            "2",
+            "25"
+          ],
+          "D+": [
+            "3"
+          ],
+          "D-": [
+            "4"
+          ],
+          "VIO": [
+            "5"
+          ],
+          "VDD": [
+            "6"
+          ],
+          "VREGIN": [
+            "7"
+          ],
+          "VBUS": [
+            "8"
+          ],
+          "RSTb": [
+            "9"
+          ],
+          "NC": [
+            "10",
+            "16"
+          ],
+          "GPIO.3/WAKEUP": [
+            "11"
+          ],
+          "GPIO.2/RS485": [
+            "12"
+          ],
+          "GPIO.1/RXT": [
+            "13"
+          ],
+          "GPIO.0/TXT": [
+            "14"
+          ],
+          "SUSPENDb": [
+            "15"
+          ],
+          "SUSPEND": [
+            "17"
+          ],
+          "CTS": [
+            "18"
+          ],
+          "RTS": [
+            "19"
+          ],
+          "RXD": [
+            "20"
+          ],
+          "TXD": [
+            "21"
+          ],
+          "DSR": [
+            "22"
+          ],
+          "DTR": [
+            "23"
+          ],
+          "DCD": [
+            "24"
+          ]
+        },
+        "pin_numbers": [
+          "1",
+          "10",
+          "11",
+          "12",
+          "13",
+          "14",
+          "15",
+          "16",
+          "17",
+          "18",
+          "19",
+          "2",
+          "20",
+          "21",
+          "22",
+          "23",
+          "24",
+          "25",
+          "3",
+          "4",
+          "5",
+          "6",
+          "7",
+          "8",
+          "9"
+        ]
+      },
+      {
+        "ref": "C1",
+        "lib_id": "Device:C",
+        "value": "100n",
+        "footprint": "Capacitor_SMD:C_0603_1608Metric",
+        "fields": {
+          "LCSC": "C14663"
+        },
+        "pin_names": {},
+        "pin_numbers": []
+      },
+      {
+        "ref": "C2",
+        "lib_id": "Device:C",
+        "value": "10u",
+        "footprint": "Capacitor_SMD:C_0805_2012Metric",
+        "fields": {
+          "LCSC": "C15850"
+        },
+        "pin_names": {},
+        "pin_numbers": []
+      },
+      {
+        "ref": "C3",
+        "lib_id": "Device:C",
+        "value": "100n",
+        "footprint": "Capacitor_SMD:C_0603_1608Metric",
+        "fields": {
+          "LCSC": "C14663"
+        },
+        "pin_names": {},
+        "pin_numbers": []
+      },
+      {
+        "ref": "C4",
+        "lib_id": "Device:C",
+        "value": "100n",
+        "footprint": "Capacitor_SMD:C_0603_1608Metric",
+        "fields": {
+          "LCSC": "C14663"
+        },
+        "pin_names": {},
+        "pin_numbers": []
+      },
+      {
+        "ref": "R1",
+        "lib_id": "Device:R",
+        "value": "1k",
+        "footprint": "Resistor_SMD:R_0603_1608Metric",
+        "fields": {
+          "LCSC": "C21190"
+        },
+        "pin_names": {},
+        "pin_numbers": []
+      },
+      {
+        "ref": "R2",
+        "lib_id": "Device:R",
+        "value": "22k1",
+        "footprint": "Resistor_SMD:R_0603_1608Metric",
+        "fields": {
+          "LCSC": "C25961"
+        },
+        "pin_names": {},
+        "pin_numbers": []
+      },
+      {
+        "ref": "R3",
+        "lib_id": "Device:R",
+        "value": "47k5",
+        "footprint": "Resistor_SMD:R_0603_1608Metric",
+        "fields": {
+          "LCSC": "C23061"
+        },
+        "pin_names": {},
+        "pin_numbers": []
+      },
+      {
+        "ref": "TP1",
+        "lib_id": "Connector:TestPoint",
+        "value": "UART_RXD",
+        "footprint": "TestPoint:TestPoint_Pad_D1.5mm",
+        "fields": {
+          "BOM": "exclude"
+        },
+        "pin_names": {},
+        "pin_numbers": []
+      },
+      {
+        "ref": "TP2",
+        "lib_id": "Connector:TestPoint",
+        "value": "UART_TXD",
+        "footprint": "TestPoint:TestPoint_Pad_D1.5mm",
+        "fields": {
+          "BOM": "exclude"
+        },
+        "pin_names": {},
+        "pin_numbers": []
+      }
+    ],
+    "nets": [
+      {
+        "name": "+VDD_IO",
+        "net_class": "power",
+        "pins": [
+          "U1.5",
+          "U1.6",
+          "U1.7",
+          "C1.1",
+          "C2.1",
+          "C3.1",
+          "C4.1",
+          "R1.1"
+        ]
+      },
+      {
+        "name": "GND",
+        "net_class": "ground",
+        "pins": [
+          "U1.2",
+          "U1.25",
+          "C1.2",
+          "C2.2",
+          "C3.2",
+          "C4.2",
+          "R3.2"
+        ]
+      },
+      {
+        "name": "CP2102N_RST_N",
+        "net_class": "signal",
+        "pins": [
+          "U1.9",
+          "R1.2"
+        ]
+      },
+      {
+        "name": "USB_VBUS",
+        "net_class": "port",
+        "pins": [
+          "R2.1"
+        ]
+      },
+      {
+        "name": "CP2102N_VBUS_SNS",
+        "net_class": "signal",
+        "pins": [
+          "U1.8",
+          "R2.2",
+          "R3.1"
+        ]
+      },
+      {
+        "name": "USB_DP",
+        "net_class": "port",
+        "pins": [
+          "U1.3"
+        ]
+      },
+      {
+        "name": "USB_DM",
+        "net_class": "port",
+        "pins": [
+          "U1.4"
+        ]
+      },
+      {
+        "name": "UART_TXD",
+        "net_class": "port",
+        "pins": [
+          "U1.21",
+          "TP2.1"
+        ]
+      },
+      {
+        "name": "UART_RXD",
+        "net_class": "port",
+        "pins": [
+          "U1.20",
+          "TP1.1"
+        ]
+      },
+      {
+        "name": "UART_RTS_N",
+        "net_class": "port",
+        "pins": [
+          "U1.19"
+        ]
+      },
+      {
+        "name": "UART_CTS_N",
+        "net_class": "port",
+        "pins": [
+          "U1.18"
+        ]
+      }
+    ],
+    "nc": [
+      "U1.1",
+      "U1.10",
+      "U1.11",
+      "U1.12",
+      "U1.13",
+      "U1.14",
+      "U1.15",
+      "U1.16",
+      "U1.17",
+      "U1.22",
+      "U1.23",
+      "U1.24"
+    ],
+    "port_types": {
+      "USB_DP": {
+        "kind": "usb_hs_pair",
+        "pair_with": "USB_DM",
+        "impedance": 90,
+        "role": null,
+        "bus": null,
+        "speed_hz": null,
+        "level_v": null,
+        "expect": null
+      },
+      "USB_DM": {
+        "kind": "usb_hs_pair",
+        "pair_with": "USB_DP",
+        "impedance": 90,
+        "role": null,
+        "bus": null,
+        "speed_hz": null,
+        "level_v": null,
+        "expect": null
+      }
+    },
+    "hints": {},
+    "loads": {
+      "+VDD_IO": [
+        [
+          0.015,
+          "CP2102N active ~14 mA typ + RST 1k pull-up"
+        ]
+      ]
+    },
+    "tp_waivers": {},
+    "decap_waivers": {},
+    "pull_waivers": {},
+    "reset_waivers": {
+      "CP2102N_RST_N": "open-drain RST: 1k pull-up only, internal POR; no RC cap"
+    },
+    "strap_waivers": {},
+    "ep_waivers": {},
+    "thermal_waivers": {},
+    "part_rule_waivers": {}
+  },
+  "bound": {
+    "schema": "schgen.circuit/1",
+    "name": "uart_bridge",
+    "title": "UART bridge: CP2102N USB-UART",
+    "parts": [
+      {
+        "ref": "U1",
+        "lib_id": "CP2102N-A02-GQFN24R:CP2102N-A02-GQFN24R",
+        "value": "CP2102N-A02",
+        "footprint": "CP2102N-A02-GQFN24R:CP2102N-A02-GQFN24R",
+        "fields": {
+          "LCSC": "C969151"
+        },
+        "pin_names": {
+          "RI/CLK": [
+            "1"
+          ],
+          "GND": [
+            "2",
+            "25"
+          ],
+          "D+": [
+            "3"
+          ],
+          "D-": [
+            "4"
+          ],
+          "VIO": [
+            "5"
+          ],
+          "VDD": [
+            "6"
+          ],
+          "VREGIN": [
+            "7"
+          ],
+          "VBUS": [
+            "8"
+          ],
+          "RSTb": [
+            "9"
+          ],
+          "NC": [
+            "10",
+            "16"
+          ],
+          "GPIO.3/WAKEUP": [
+            "11"
+          ],
+          "GPIO.2/RS485": [
+            "12"
+          ],
+          "GPIO.1/RXT": [
+            "13"
+          ],
+          "GPIO.0/TXT": [
+            "14"
+          ],
+          "SUSPENDb": [
+            "15"
+          ],
+          "SUSPEND": [
+            "17"
+          ],
+          "CTS": [
+            "18"
+          ],
+          "RTS": [
+            "19"
+          ],
+          "RXD": [
+            "20"
+          ],
+          "TXD": [
+            "21"
+          ],
+          "DSR": [
+            "22"
+          ],
+          "DTR": [
+            "23"
+          ],
+          "DCD": [
+            "24"
+          ]
+        },
+        "pin_numbers": [
+          "1",
+          "10",
+          "11",
+          "12",
+          "13",
+          "14",
+          "15",
+          "16",
+          "17",
+          "18",
+          "19",
+          "2",
+          "20",
+          "21",
+          "22",
+          "23",
+          "24",
+          "25",
+          "3",
+          "4",
+          "5",
+          "6",
+          "7",
+          "8",
+          "9"
+        ]
+      },
+      {
+        "ref": "C1",
+        "lib_id": "Device:C",
+        "value": "100n",
+        "footprint": "Capacitor_SMD:C_0603_1608Metric",
+        "fields": {
+          "LCSC": "C14663"
+        },
+        "pin_names": {},
+        "pin_numbers": []
+      },
+      {
+        "ref": "C2",
+        "lib_id": "Device:C",
+        "value": "10u",
+        "footprint": "Capacitor_SMD:C_0805_2012Metric",
+        "fields": {
+          "LCSC": "C15850"
+        },
+        "pin_names": {},
+        "pin_numbers": []
+      },
+      {
+        "ref": "C3",
+        "lib_id": "Device:C",
+        "value": "100n",
+        "footprint": "Capacitor_SMD:C_0603_1608Metric",
+        "fields": {
+          "LCSC": "C14663"
+        },
+        "pin_names": {},
+        "pin_numbers": []
+      },
+      {
+        "ref": "C4",
+        "lib_id": "Device:C",
+        "value": "100n",
+        "footprint": "Capacitor_SMD:C_0603_1608Metric",
+        "fields": {
+          "LCSC": "C14663"
+        },
+        "pin_names": {},
+        "pin_numbers": []
+      },
+      {
+        "ref": "R1",
+        "lib_id": "Device:R",
+        "value": "1k",
+        "footprint": "Resistor_SMD:R_0603_1608Metric",
+        "fields": {
+          "LCSC": "C21190"
+        },
+        "pin_names": {},
+        "pin_numbers": []
+      },
+      {
+        "ref": "R2",
+        "lib_id": "Device:R",
+        "value": "22k1",
+        "footprint": "Resistor_SMD:R_0603_1608Metric",
+        "fields": {
+          "LCSC": "C25961"
+        },
+        "pin_names": {},
+        "pin_numbers": []
+      },
+      {
+        "ref": "R3",
+        "lib_id": "Device:R",
+        "value": "47k5",
+        "footprint": "Resistor_SMD:R_0603_1608Metric",
+        "fields": {
+          "LCSC": "C23061"
+        },
+        "pin_names": {},
+        "pin_numbers": []
+      },
+      {
+        "ref": "TP1",
+        "lib_id": "Connector:TestPoint",
+        "value": "FPGA_UART0_TXD",
+        "footprint": "TestPoint:TestPoint_Pad_D1.5mm",
+        "fields": {
+          "BOM": "exclude"
+        },
+        "pin_names": {},
+        "pin_numbers": []
+      },
+      {
+        "ref": "TP2",
+        "lib_id": "Connector:TestPoint",
+        "value": "FPGA_UART0_RXD",
+        "footprint": "TestPoint:TestPoint_Pad_D1.5mm",
+        "fields": {
+          "BOM": "exclude"
+        },
+        "pin_names": {},
+        "pin_numbers": []
+      }
+    ],
+    "nets": [
+      {
+        "name": "+3V3_MINI",
+        "net_class": "power",
+        "pins": [
+          "U1.5",
+          "U1.6",
+          "U1.7",
+          "C1.1",
+          "C2.1",
+          "C3.1",
+          "C4.1",
+          "R1.1"
+        ]
+      },
+      {
+        "name": "GND",
+        "net_class": "ground",
+        "pins": [
+          "U1.2",
+          "U1.25",
+          "C1.2",
+          "C2.2",
+          "C3.2",
+          "C4.2",
+          "R3.2"
+        ]
+      },
+      {
+        "name": "CP2102N_RST_N",
+        "net_class": "signal",
+        "pins": [
+          "U1.9",
+          "R1.2"
+        ]
+      },
+      {
+        "name": "USB2_UART_VBUS",
+        "net_class": "port",
+        "pins": [
+          "R2.1"
+        ]
+      },
+      {
+        "name": "CP2102N_VBUS_SNS",
+        "net_class": "signal",
+        "pins": [
+          "U1.8",
+          "R2.2",
+          "R3.1"
+        ]
+      },
+      {
+        "name": "USB2_UART_DP",
+        "net_class": "port",
+        "pins": [
+          "U1.3"
+        ]
+      },
+      {
+        "name": "USB2_UART_DM",
+        "net_class": "port",
+        "pins": [
+          "U1.4"
+        ]
+      },
+      {
+        "name": "FPGA_UART0_RXD",
+        "net_class": "port",
+        "pins": [
+          "U1.21",
+          "TP2.1"
+        ]
+      },
+      {
+        "name": "FPGA_UART0_TXD",
+        "net_class": "port",
+        "pins": [
+          "U1.20",
+          "TP1.1"
+        ]
+      },
+      {
+        "name": "FPGA_UART0_CTS_N",
+        "net_class": "port",
+        "pins": [
+          "U1.19"
+        ]
+      },
+      {
+        "name": "FPGA_UART0_RTS_N",
+        "net_class": "port",
+        "pins": [
+          "U1.18"
+        ]
+      }
+    ],
+    "nc": [
+      "U1.1",
+      "U1.10",
+      "U1.11",
+      "U1.12",
+      "U1.13",
+      "U1.14",
+      "U1.15",
+      "U1.16",
+      "U1.17",
+      "U1.22",
+      "U1.23",
+      "U1.24"
+    ],
+    "port_types": {
+      "USB2_UART_VBUS": {
+        "kind": "single",
+        "pair_with": null,
+        "impedance": null,
+        "role": null,
+        "bus": null,
+        "speed_hz": null,
+        "level_v": null,
+        "expect": "devkit_usb_receptacles (USB2 connector sheet)"
+      },
+      "USB2_UART_DP": {
+        "kind": "usb_hs_pair",
+        "pair_with": "USB2_UART_DM",
+        "impedance": 90,
+        "role": null,
+        "bus": null,
+        "speed_hz": null,
+        "level_v": null,
+        "expect": "devkit_usb_receptacles (USB2 connector sheet)"
+      },
+      "USB2_UART_DM": {
+        "kind": "usb_hs_pair",
+        "pair_with": "USB2_UART_DP",
+        "impedance": 90,
+        "role": null,
+        "bus": null,
+        "speed_hz": null,
+        "level_v": null,
+        "expect": "devkit_usb_receptacles (USB2 connector sheet)"
+      },
+      "FPGA_UART0_RXD": {
+        "kind": "single",
+        "pair_with": null,
+        "impedance": null,
+        "role": null,
+        "bus": null,
+        "speed_hz": null,
+        "level_v": null,
+        "expect": "devkit_uart_header (FPGA UART0 pin map)"
+      },
+      "FPGA_UART0_TXD": {
+        "kind": "single",
+        "pair_with": null,
+        "impedance": null,
+        "role": null,
+        "bus": null,
+        "speed_hz": null,
+        "level_v": null,
+        "expect": "devkit_uart_header (FPGA UART0 pin map)"
+      },
+      "FPGA_UART0_CTS_N": {
+        "kind": "single",
+        "pair_with": null,
+        "impedance": null,
+        "role": null,
+        "bus": null,
+        "speed_hz": null,
+        "level_v": null,
+        "expect": "devkit_uart_header (FPGA UART0 pin map)"
+      },
+      "FPGA_UART0_RTS_N": {
+        "kind": "single",
+        "pair_with": null,
+        "impedance": null,
+        "role": null,
+        "bus": null,
+        "speed_hz": null,
+        "level_v": null,
+        "expect": "devkit_uart_header (FPGA UART0 pin map)"
+      }
+    },
+    "hints": {},
+    "loads": {
+      "+3V3_MINI": [
+        [
+          0.015,
+          "CP2102N active ~14 mA typ + RST 1k pull-up on +3V3_MINI"
+        ]
+      ]
+    },
+    "tp_waivers": {},
+    "decap_waivers": {},
+    "pull_waivers": {},
+    "reset_waivers": {
+      "CP2102N_RST_N": "open-drain RST: 1k pull-up only, internal POR; no RC cap"
+    },
+    "strap_waivers": {},
+    "ep_waivers": {},
+    "thermal_waivers": {},
+    "part_rule_waivers": {}
+  },
+  "variant": {
+    "meta": {
+      "bind": {
+        "+VDD_IO": "EXAMPLE_VARIANT_+3V3_MINI",
+        "GND": "GND",
+        "USB_VBUS": "EXAMPLE_VARIANT_USB2_UART_VBUS",
+        "USB_DP": "EXAMPLE_VARIANT_USB2_UART_DP",
+        "USB_DM": "EXAMPLE_VARIANT_USB2_UART_DM",
+        "UART_TXD": "EXAMPLE_VARIANT_FPGA_UART0_RXD",
+        "UART_RXD": "EXAMPLE_VARIANT_FPGA_UART0_TXD",
+        "UART_RTS_N": "EXAMPLE_VARIANT_FPGA_UART0_CTS_N",
+        "UART_CTS_N": "EXAMPLE_VARIANT_FPGA_UART0_RTS_N"
+      },
+      "expects": {
+        "USB_VBUS": "variant connector",
+        "USB_DP": "variant connector",
+        "UART_TXD": "variant connector",
+        "UART_RXD": "variant connector",
+        "UART_RTS_N": "variant connector",
+        "UART_CTS_N": "variant connector"
+      },
+      "notes": {
+        "draws": "variant budget draws"
+      }
+    },
+    "circuit": {
+      "schema": "schgen.circuit/1",
+      "name": "uart_bridge",
+      "title": "UART bridge: CP2102N USB-UART",
+      "parts": [
+        {
+          "ref": "U1",
+          "lib_id": "CP2102N-A02-GQFN24R:CP2102N-A02-GQFN24R",
+          "value": "CP2102N-A02",
+          "footprint": "CP2102N-A02-GQFN24R:CP2102N-A02-GQFN24R",
+          "fields": {
+            "LCSC": "C969151"
+          },
+          "pin_names": {
+            "RI/CLK": [
+              "1"
+            ],
+            "GND": [
+              "2",
+              "25"
+            ],
+            "D+": [
+              "3"
+            ],
+            "D-": [
+              "4"
+            ],
+            "VIO": [
+              "5"
+            ],
+            "VDD": [
+              "6"
+            ],
+            "VREGIN": [
+              "7"
+            ],
+            "VBUS": [
+              "8"
+            ],
+            "RSTb": [
+              "9"
+            ],
+            "NC": [
+              "10",
+              "16"
+            ],
+            "GPIO.3/WAKEUP": [
+              "11"
+            ],
+            "GPIO.2/RS485": [
+              "12"
+            ],
+            "GPIO.1/RXT": [
+              "13"
+            ],
+            "GPIO.0/TXT": [
+              "14"
+            ],
+            "SUSPENDb": [
+              "15"
+            ],
+            "SUSPEND": [
+              "17"
+            ],
+            "CTS": [
+              "18"
+            ],
+            "RTS": [
+              "19"
+            ],
+            "RXD": [
+              "20"
+            ],
+            "TXD": [
+              "21"
+            ],
+            "DSR": [
+              "22"
+            ],
+            "DTR": [
+              "23"
+            ],
+            "DCD": [
+              "24"
+            ]
+          },
+          "pin_numbers": [
+            "1",
+            "10",
+            "11",
+            "12",
+            "13",
+            "14",
+            "15",
+            "16",
+            "17",
+            "18",
+            "19",
+            "2",
+            "20",
+            "21",
+            "22",
+            "23",
+            "24",
+            "25",
+            "3",
+            "4",
+            "5",
+            "6",
+            "7",
+            "8",
+            "9"
+          ]
+        },
+        {
+          "ref": "C1",
+          "lib_id": "Device:C",
+          "value": "100n",
+          "footprint": "Capacitor_SMD:C_0603_1608Metric",
+          "fields": {
+            "LCSC": "C14663"
+          },
+          "pin_names": {},
+          "pin_numbers": []
+        },
+        {
+          "ref": "C2",
+          "lib_id": "Device:C",
+          "value": "10u",
+          "footprint": "Capacitor_SMD:C_0805_2012Metric",
+          "fields": {
+            "LCSC": "C15850"
+          },
+          "pin_names": {},
+          "pin_numbers": []
+        },
+        {
+          "ref": "C3",
+          "lib_id": "Device:C",
+          "value": "100n",
+          "footprint": "Capacitor_SMD:C_0603_1608Metric",
+          "fields": {
+            "LCSC": "C14663"
+          },
+          "pin_names": {},
+          "pin_numbers": []
+        },
+        {
+          "ref": "C4",
+          "lib_id": "Device:C",
+          "value": "100n",
+          "footprint": "Capacitor_SMD:C_0603_1608Metric",
+          "fields": {
+            "LCSC": "C14663"
+          },
+          "pin_names": {},
+          "pin_numbers": []
+        },
+        {
+          "ref": "R1",
+          "lib_id": "Device:R",
+          "value": "1k",
+          "footprint": "Resistor_SMD:R_0603_1608Metric",
+          "fields": {
+            "LCSC": "C21190"
+          },
+          "pin_names": {},
+          "pin_numbers": []
+        },
+        {
+          "ref": "R2",
+          "lib_id": "Device:R",
+          "value": "22k1",
+          "footprint": "Resistor_SMD:R_0603_1608Metric",
+          "fields": {
+            "LCSC": "C25961"
+          },
+          "pin_names": {},
+          "pin_numbers": []
+        },
+        {
+          "ref": "R3",
+          "lib_id": "Device:R",
+          "value": "47k5",
+          "footprint": "Resistor_SMD:R_0603_1608Metric",
+          "fields": {
+            "LCSC": "C23061"
+          },
+          "pin_names": {},
+          "pin_numbers": []
+        },
+        {
+          "ref": "TP1",
+          "lib_id": "Connector:TestPoint",
+          "value": "EXAMPLE_VARIANT_FPGA_UART0_TXD",
+          "footprint": "TestPoint:TestPoint_Pad_D1.5mm",
+          "fields": {
+            "BOM": "exclude"
+          },
+          "pin_names": {},
+          "pin_numbers": []
+        },
+        {
+          "ref": "TP2",
+          "lib_id": "Connector:TestPoint",
+          "value": "EXAMPLE_VARIANT_FPGA_UART0_RXD",
+          "footprint": "TestPoint:TestPoint_Pad_D1.5mm",
+          "fields": {
+            "BOM": "exclude"
+          },
+          "pin_names": {},
+          "pin_numbers": []
+        }
+      ],
+      "nets": [
+        {
+          "name": "EXAMPLE_VARIANT_+3V3_MINI",
+          "net_class": "power",
+          "pins": [
+            "U1.5",
+            "U1.6",
+            "U1.7",
+            "C1.1",
+            "C2.1",
+            "C3.1",
+            "C4.1",
+            "R1.1"
+          ]
+        },
+        {
+          "name": "GND",
+          "net_class": "ground",
+          "pins": [
+            "U1.2",
+            "U1.25",
+            "C1.2",
+            "C2.2",
+            "C3.2",
+            "C4.2",
+            "R3.2"
+          ]
+        },
+        {
+          "name": "CP2102N_RST_N",
+          "net_class": "signal",
+          "pins": [
+            "U1.9",
+            "R1.2"
+          ]
+        },
+        {
+          "name": "EXAMPLE_VARIANT_USB2_UART_VBUS",
+          "net_class": "port",
+          "pins": [
+            "R2.1"
+          ]
+        },
+        {
+          "name": "CP2102N_VBUS_SNS",
+          "net_class": "signal",
+          "pins": [
+            "U1.8",
+            "R2.2",
+            "R3.1"
+          ]
+        },
+        {
+          "name": "EXAMPLE_VARIANT_USB2_UART_DP",
+          "net_class": "port",
+          "pins": [
+            "U1.3"
+          ]
+        },
+        {
+          "name": "EXAMPLE_VARIANT_USB2_UART_DM",
+          "net_class": "port",
+          "pins": [
+            "U1.4"
+          ]
+        },
+        {
+          "name": "EXAMPLE_VARIANT_FPGA_UART0_RXD",
+          "net_class": "port",
+          "pins": [
+            "U1.21",
+            "TP2.1"
+          ]
+        },
+        {
+          "name": "EXAMPLE_VARIANT_FPGA_UART0_TXD",
+          "net_class": "port",
+          "pins": [
+            "U1.20",
+            "TP1.1"
+          ]
+        },
+        {
+          "name": "EXAMPLE_VARIANT_FPGA_UART0_CTS_N",
+          "net_class": "port",
+          "pins": [
+            "U1.19"
+          ]
+        },
+        {
+          "name": "EXAMPLE_VARIANT_FPGA_UART0_RTS_N",
+          "net_class": "port",
+          "pins": [
+            "U1.18"
+          ]
+        }
+      ],
+      "nc": [
+        "U1.1",
+        "U1.10",
+        "U1.11",
+        "U1.12",
+        "U1.13",
+        "U1.14",
+        "U1.15",
+        "U1.16",
+        "U1.17",
+        "U1.22",
+        "U1.23",
+        "U1.24"
+      ],
+      "port_types": {
+        "EXAMPLE_VARIANT_USB2_UART_VBUS": {
+          "kind": "single",
+          "pair_with": null,
+          "impedance": null,
+          "role": null,
+          "bus": null,
+          "speed_hz": null,
+          "level_v": null,
+          "expect": "variant connector"
+        },
+        "EXAMPLE_VARIANT_USB2_UART_DP": {
+          "kind": "usb_hs_pair",
+          "pair_with": "EXAMPLE_VARIANT_USB2_UART_DM",
+          "impedance": 90,
+          "role": null,
+          "bus": null,
+          "speed_hz": null,
+          "level_v": null,
+          "expect": "variant connector"
+        },
+        "EXAMPLE_VARIANT_USB2_UART_DM": {
+          "kind": "usb_hs_pair",
+          "pair_with": "EXAMPLE_VARIANT_USB2_UART_DP",
+          "impedance": 90,
+          "role": null,
+          "bus": null,
+          "speed_hz": null,
+          "level_v": null,
+          "expect": "variant connector"
+        },
+        "EXAMPLE_VARIANT_FPGA_UART0_RXD": {
+          "kind": "single",
+          "pair_with": null,
+          "impedance": null,
+          "role": null,
+          "bus": null,
+          "speed_hz": null,
+          "level_v": null,
+          "expect": "variant connector"
+        },
+        "EXAMPLE_VARIANT_FPGA_UART0_TXD": {
+          "kind": "single",
+          "pair_with": null,
+          "impedance": null,
+          "role": null,
+          "bus": null,
+          "speed_hz": null,
+          "level_v": null,
+          "expect": "variant connector"
+        },
+        "EXAMPLE_VARIANT_FPGA_UART0_CTS_N": {
+          "kind": "single",
+          "pair_with": null,
+          "impedance": null,
+          "role": null,
+          "bus": null,
+          "speed_hz": null,
+          "level_v": null,
+          "expect": "variant connector"
+        },
+        "EXAMPLE_VARIANT_FPGA_UART0_RTS_N": {
+          "kind": "single",
+          "pair_with": null,
+          "impedance": null,
+          "role": null,
+          "bus": null,
+          "speed_hz": null,
+          "level_v": null,
+          "expect": "variant connector"
+        }
+      },
+      "hints": {},
+      "loads": {
+        "EXAMPLE_VARIANT_+3V3_MINI": [
+          [
+            0.015,
+            "variant budget draws"
+          ]
+        ]
+      },
+      "tp_waivers": {},
+      "decap_waivers": {},
+      "pull_waivers": {},
+      "reset_waivers": {
+        "CP2102N_RST_N": "open-drain RST: 1k pull-up only, internal POR; no RC cap"
+      },
+      "strap_waivers": {},
+      "ep_waivers": {},
+      "thermal_waivers": {},
+      "part_rule_waivers": {}
+    }
+  }
+}

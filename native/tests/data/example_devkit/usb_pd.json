@@ -1,0 +1,666 @@
+{
+  "name": "usb_pd",
+  "meta": {
+    "bind": {
+      "+VDD_LOGIC": "+3V3_MINI",
+      "+VBUS_SENSE": "+VBUS_RAW",
+      "GND": "GND",
+      "CC1": "PD_CC1",
+      "CC2": "PD_CC2",
+      "I2C_SDA": "MINI_I2C0_SDA",
+      "I2C_SCL": "MINI_I2C0_SCL",
+      "INT_N": "MINI_PD_INT_N"
+    },
+    "expects": {
+      "I2C_SDA": "devkit_conn (mini header J5 GPIO map)",
+      "I2C_SCL": "devkit_conn (mini header J5 GPIO map)",
+      "INT_N": "devkit_conn (mini header J5 GPIO map)"
+    },
+    "buses": {
+      "i2c": "MINI_I2C0"
+    },
+    "notes": {
+      "draws": "FUSB302B VDD (<1 mA) on the shared +3V3_MINI logic rail; MINI_I2C0 + INT pull-ups are board-shared, off-subsystem"
+    }
+  },
+  "interface": [
+    "+VDD_LOGIC",
+    "+VBUS_SENSE",
+    "GND",
+    "CC1",
+    "CC2",
+    "I2C_SDA",
+    "I2C_SCL",
+    "INT_N"
+  ],
+  "rails": [
+    "+VDD_LOGIC",
+    "+VBUS_SENSE",
+    "GND"
+  ],
+  "ports": [
+    "CC1",
+    "CC2",
+    "I2C_SDA",
+    "I2C_SCL",
+    "INT_N"
+  ],
+  "base": {
+    "schema": "schgen.circuit/1",
+    "name": "usb_pd",
+    "title": "USB-PD: FUSB302B Type-C controller",
+    "parts": [
+      {
+        "ref": "U1",
+        "lib_id": "Interface_USB:FUSB302BMPX",
+        "value": "FUSB302BMPX",
+        "footprint": "Package_DFN_QFN:WQFN-14-1EP_2.5x2.5mm_P0.5mm_EP1.45x1.45mm",
+        "fields": {
+          "LCSC": "C132291",
+          "MPN": "FUSB302BMPX",
+          "Datasheet": "https://www.lcsc.com/datasheet/C132291.pdf"
+        },
+        "pin_names": {},
+        "pin_numbers": []
+      },
+      {
+        "ref": "C1",
+        "lib_id": "Device:C",
+        "value": "100n",
+        "footprint": "Capacitor_SMD:C_0603_1608Metric",
+        "fields": {
+          "LCSC": "C14663"
+        },
+        "pin_names": {},
+        "pin_numbers": []
+      },
+      {
+        "ref": "C2",
+        "lib_id": "Device:C",
+        "value": "10u",
+        "footprint": "Capacitor_SMD:C_0805_2012Metric",
+        "fields": {
+          "LCSC": "C15850"
+        },
+        "pin_names": {},
+        "pin_numbers": []
+      },
+      {
+        "ref": "C3",
+        "lib_id": "Device:C",
+        "value": "100n",
+        "footprint": "Capacitor_SMD:C_0603_1608Metric",
+        "fields": {
+          "LCSC": "C14663"
+        },
+        "pin_names": {},
+        "pin_numbers": []
+      },
+      {
+        "ref": "C4",
+        "lib_id": "Device:C",
+        "value": "200p",
+        "footprint": "Capacitor_SMD:C_0603_1608Metric",
+        "fields": {
+          "LCSC": "C113796"
+        },
+        "pin_names": {},
+        "pin_numbers": []
+      },
+      {
+        "ref": "C5",
+        "lib_id": "Device:C",
+        "value": "200p",
+        "footprint": "Capacitor_SMD:C_0603_1608Metric",
+        "fields": {
+          "LCSC": "C113796"
+        },
+        "pin_names": {},
+        "pin_numbers": []
+      }
+    ],
+    "nets": [
+      {
+        "name": "+VDD_LOGIC",
+        "net_class": "power",
+        "pins": [
+          "U1.3",
+          "U1.4",
+          "C1.1",
+          "C2.1"
+        ]
+      },
+      {
+        "name": "+VBUS_SENSE",
+        "net_class": "power",
+        "pins": [
+          "U1.2",
+          "C3.1"
+        ]
+      },
+      {
+        "name": "GND",
+        "net_class": "ground",
+        "pins": [
+          "U1.8",
+          "U1.9",
+          "U1.15",
+          "C1.2",
+          "C2.2",
+          "C3.2",
+          "C4.2",
+          "C5.2"
+        ]
+      },
+      {
+        "name": "CC1",
+        "net_class": "port",
+        "pins": [
+          "U1.10",
+          "U1.11",
+          "C4.1"
+        ]
+      },
+      {
+        "name": "CC2",
+        "net_class": "port",
+        "pins": [
+          "U1.1",
+          "U1.14",
+          "C5.1"
+        ]
+      },
+      {
+        "name": "I2C_SDA",
+        "net_class": "port",
+        "pins": [
+          "U1.7"
+        ]
+      },
+      {
+        "name": "I2C_SCL",
+        "net_class": "port",
+        "pins": [
+          "U1.6"
+        ]
+      },
+      {
+        "name": "INT_N",
+        "net_class": "port",
+        "pins": [
+          "U1.5"
+        ]
+      }
+    ],
+    "nc": [
+      "U1.12",
+      "U1.13"
+    ],
+    "port_types": {
+      "I2C_SDA": {
+        "kind": "i2c",
+        "pair_with": null,
+        "impedance": null,
+        "role": "sda",
+        "bus": "USB_PD_I2C",
+        "speed_hz": 400000,
+        "level_v": null,
+        "expect": null
+      },
+      "I2C_SCL": {
+        "kind": "i2c",
+        "pair_with": null,
+        "impedance": null,
+        "role": "scl",
+        "bus": "USB_PD_I2C",
+        "speed_hz": 400000,
+        "level_v": null,
+        "expect": null
+      }
+    },
+    "hints": {},
+    "loads": {
+      "+VDD_LOGIC": [
+        [
+          0.002,
+          "FUSB302B VDD (<1 mA); INT_N/I2C pull-ups are shared and live off-subsystem"
+        ]
+      ]
+    },
+    "tp_waivers": {},
+    "decap_waivers": {},
+    "pull_waivers": {},
+    "reset_waivers": {},
+    "strap_waivers": {},
+    "ep_waivers": {},
+    "thermal_waivers": {},
+    "part_rule_waivers": {}
+  },
+  "bound": {
+    "schema": "schgen.circuit/1",
+    "name": "usb_pd",
+    "title": "USB-PD: FUSB302B Type-C controller",
+    "parts": [
+      {
+        "ref": "U1",
+        "lib_id": "Interface_USB:FUSB302BMPX",
+        "value": "FUSB302BMPX",
+        "footprint": "Package_DFN_QFN:WQFN-14-1EP_2.5x2.5mm_P0.5mm_EP1.45x1.45mm",
+        "fields": {
+          "LCSC": "C132291",
+          "MPN": "FUSB302BMPX",
+          "Datasheet": "https://www.lcsc.com/datasheet/C132291.pdf"
+        },
+        "pin_names": {},
+        "pin_numbers": []
+      },
+      {
+        "ref": "C1",
+        "lib_id": "Device:C",
+        "value": "100n",
+        "footprint": "Capacitor_SMD:C_0603_1608Metric",
+        "fields": {
+          "LCSC": "C14663"
+        },
+        "pin_names": {},
+        "pin_numbers": []
+      },
+      {
+        "ref": "C2",
+        "lib_id": "Device:C",
+        "value": "10u",
+        "footprint": "Capacitor_SMD:C_0805_2012Metric",
+        "fields": {
+          "LCSC": "C15850"
+        },
+        "pin_names": {},
+        "pin_numbers": []
+      },
+      {
+        "ref": "C3",
+        "lib_id": "Device:C",
+        "value": "100n",
+        "footprint": "Capacitor_SMD:C_0603_1608Metric",
+        "fields": {
+          "LCSC": "C14663"
+        },
+        "pin_names": {},
+        "pin_numbers": []
+      },
+      {
+        "ref": "C4",
+        "lib_id": "Device:C",
+        "value": "200p",
+        "footprint": "Capacitor_SMD:C_0603_1608Metric",
+        "fields": {
+          "LCSC": "C113796"
+        },
+        "pin_names": {},
+        "pin_numbers": []
+      },
+      {
+        "ref": "C5",
+        "lib_id": "Device:C",
+        "value": "200p",
+        "footprint": "Capacitor_SMD:C_0603_1608Metric",
+        "fields": {
+          "LCSC": "C113796"
+        },
+        "pin_names": {},
+        "pin_numbers": []
+      }
+    ],
+    "nets": [
+      {
+        "name": "+3V3_MINI",
+        "net_class": "power",
+        "pins": [
+          "U1.3",
+          "U1.4",
+          "C1.1",
+          "C2.1"
+        ]
+      },
+      {
+        "name": "+VBUS_RAW",
+        "net_class": "power",
+        "pins": [
+          "U1.2",
+          "C3.1"
+        ]
+      },
+      {
+        "name": "GND",
+        "net_class": "ground",
+        "pins": [
+          "U1.8",
+          "U1.9",
+          "U1.15",
+          "C1.2",
+          "C2.2",
+          "C3.2",
+          "C4.2",
+          "C5.2"
+        ]
+      },
+      {
+        "name": "PD_CC1",
+        "net_class": "port",
+        "pins": [
+          "U1.10",
+          "U1.11",
+          "C4.1"
+        ]
+      },
+      {
+        "name": "PD_CC2",
+        "net_class": "port",
+        "pins": [
+          "U1.1",
+          "U1.14",
+          "C5.1"
+        ]
+      },
+      {
+        "name": "MINI_I2C0_SDA",
+        "net_class": "port",
+        "pins": [
+          "U1.7"
+        ]
+      },
+      {
+        "name": "MINI_I2C0_SCL",
+        "net_class": "port",
+        "pins": [
+          "U1.6"
+        ]
+      },
+      {
+        "name": "MINI_PD_INT_N",
+        "net_class": "port",
+        "pins": [
+          "U1.5"
+        ]
+      }
+    ],
+    "nc": [
+      "U1.12",
+      "U1.13"
+    ],
+    "port_types": {
+      "MINI_I2C0_SDA": {
+        "kind": "i2c",
+        "pair_with": null,
+        "impedance": null,
+        "role": "sda",
+        "bus": "MINI_I2C0",
+        "speed_hz": 400000,
+        "level_v": null,
+        "expect": "devkit_conn (mini header J5 GPIO map)"
+      },
+      "MINI_I2C0_SCL": {
+        "kind": "i2c",
+        "pair_with": null,
+        "impedance": null,
+        "role": "scl",
+        "bus": "MINI_I2C0",
+        "speed_hz": 400000,
+        "level_v": null,
+        "expect": "devkit_conn (mini header J5 GPIO map)"
+      },
+      "MINI_PD_INT_N": {
+        "kind": "single",
+        "pair_with": null,
+        "impedance": null,
+        "role": null,
+        "bus": null,
+        "speed_hz": null,
+        "level_v": null,
+        "expect": "devkit_conn (mini header J5 GPIO map)"
+      }
+    },
+    "hints": {},
+    "loads": {
+      "+3V3_MINI": [
+        [
+          0.002,
+          "FUSB302B VDD (<1 mA) on the shared +3V3_MINI logic rail; MINI_I2C0 + INT pull-ups are board-shared, off-subsystem"
+        ]
+      ]
+    },
+    "tp_waivers": {},
+    "decap_waivers": {},
+    "pull_waivers": {},
+    "reset_waivers": {},
+    "strap_waivers": {},
+    "ep_waivers": {},
+    "thermal_waivers": {},
+    "part_rule_waivers": {}
+  },
+  "variant": {
+    "meta": {
+      "bind": {
+        "+VDD_LOGIC": "EXAMPLE_VARIANT_+3V3_MINI",
+        "+VBUS_SENSE": "EXAMPLE_VARIANT_+VBUS_RAW",
+        "GND": "GND",
+        "CC1": "EXAMPLE_VARIANT_PD_CC1",
+        "CC2": "EXAMPLE_VARIANT_PD_CC2",
+        "I2C_SDA": "EXAMPLE_VARIANT_MINI_I2C0_SDA",
+        "I2C_SCL": "EXAMPLE_VARIANT_MINI_I2C0_SCL",
+        "INT_N": "EXAMPLE_VARIANT_MINI_PD_INT_N"
+      },
+      "expects": {
+        "I2C_SDA": "variant connector",
+        "I2C_SCL": "variant connector",
+        "INT_N": "variant connector"
+      },
+      "buses": {
+        "i2c": "VARIANT_BUS"
+      },
+      "notes": {
+        "draws": "variant budget draws"
+      }
+    },
+    "circuit": {
+      "schema": "schgen.circuit/1",
+      "name": "usb_pd",
+      "title": "USB-PD: FUSB302B Type-C controller",
+      "parts": [
+        {
+          "ref": "U1",
+          "lib_id": "Interface_USB:FUSB302BMPX",
+          "value": "FUSB302BMPX",
+          "footprint": "Package_DFN_QFN:WQFN-14-1EP_2.5x2.5mm_P0.5mm_EP1.45x1.45mm",
+          "fields": {
+            "LCSC": "C132291",
+            "MPN": "FUSB302BMPX",
+            "Datasheet": "https://www.lcsc.com/datasheet/C132291.pdf"
+          },
+          "pin_names": {},
+          "pin_numbers": []
+        },
+        {
+          "ref": "C1",
+          "lib_id": "Device:C",
+          "value": "100n",
+          "footprint": "Capacitor_SMD:C_0603_1608Metric",
+          "fields": {
+            "LCSC": "C14663"
+          },
+          "pin_names": {},
+          "pin_numbers": []
+        },
+        {
+          "ref": "C2",
+          "lib_id": "Device:C",
+          "value": "10u",
+          "footprint": "Capacitor_SMD:C_0805_2012Metric",
+          "fields": {
+            "LCSC": "C15850"
+          },
+          "pin_names": {},
+          "pin_numbers": []
+        },
+        {
+          "ref": "C3",
+          "lib_id": "Device:C",
+          "value": "100n",
+          "footprint": "Capacitor_SMD:C_0603_1608Metric",
+          "fields": {
+            "LCSC": "C14663"
+          },
+          "pin_names": {},
+          "pin_numbers": []
+        },
+        {
+          "ref": "C4",
+          "lib_id": "Device:C",
+          "value": "200p",
+          "footprint": "Capacitor_SMD:C_0603_1608Metric",
+          "fields": {
+            "LCSC": "C113796"
+          },
+          "pin_names": {},
+          "pin_numbers": []
+        },
+        {
+          "ref": "C5",
+          "lib_id": "Device:C",
+          "value": "200p",
+          "footprint": "Capacitor_SMD:C_0603_1608Metric",
+          "fields": {
+            "LCSC": "C113796"
+          },
+          "pin_names": {},
+          "pin_numbers": []
+        }
+      ],
+      "nets": [
+        {
+          "name": "EXAMPLE_VARIANT_+3V3_MINI",
+          "net_class": "power",
+          "pins": [
+            "U1.3",
+            "U1.4",
+            "C1.1",
+            "C2.1"
+          ]
+        },
+        {
+          "name": "EXAMPLE_VARIANT_+VBUS_RAW",
+          "net_class": "power",
+          "pins": [
+            "U1.2",
+            "C3.1"
+          ]
+        },
+        {
+          "name": "GND",
+          "net_class": "ground",
+          "pins": [
+            "U1.8",
+            "U1.9",
+            "U1.15",
+            "C1.2",
+            "C2.2",
+            "C3.2",
+            "C4.2",
+            "C5.2"
+          ]
+        },
+        {
+          "name": "EXAMPLE_VARIANT_PD_CC1",
+          "net_class": "port",
+          "pins": [
+            "U1.10",
+            "U1.11",
+            "C4.1"
+          ]
+        },
+        {
+          "name": "EXAMPLE_VARIANT_PD_CC2",
+          "net_class": "port",
+          "pins": [
+            "U1.1",
+            "U1.14",
+            "C5.1"
+          ]
+        },
+        {
+          "name": "EXAMPLE_VARIANT_MINI_I2C0_SDA",
+          "net_class": "port",
+          "pins": [
+            "U1.7"
+          ]
+        },
+        {
+          "name": "EXAMPLE_VARIANT_MINI_I2C0_SCL",
+          "net_class": "port",
+          "pins": [
+            "U1.6"
+          ]
+        },
+        {
+          "name": "EXAMPLE_VARIANT_MINI_PD_INT_N",
+          "net_class": "port",
+          "pins": [
+            "U1.5"
+          ]
+        }
+      ],
+      "nc": [
+        "U1.12",
+        "U1.13"
+      ],
+      "port_types": {
+        "EXAMPLE_VARIANT_MINI_I2C0_SDA": {
+          "kind": "i2c",
+          "pair_with": null,
+          "impedance": null,
+          "role": "sda",
+          "bus": "VARIANT_BUS",
+          "speed_hz": 400000,
+          "level_v": null,
+          "expect": "variant connector"
+        },
+        "EXAMPLE_VARIANT_MINI_I2C0_SCL": {
+          "kind": "i2c",
+          "pair_with": null,
+          "impedance": null,
+          "role": "scl",
+          "bus": "VARIANT_BUS",
+          "speed_hz": 400000,
+          "level_v": null,
+          "expect": "variant connector"
+        },
+        "EXAMPLE_VARIANT_MINI_PD_INT_N": {
+          "kind": "single",
+          "pair_with": null,
+          "impedance": null,
+          "role": null,
+          "bus": null,
+          "speed_hz": null,
+          "level_v": null,
+          "expect": "variant connector"
+        }
+      },
+      "hints": {},
+      "loads": {
+        "EXAMPLE_VARIANT_+3V3_MINI": [
+          [
+            0.002,
+            "variant budget draws"
+          ]
+        ]
+      },
+      "tp_waivers": {},
+      "decap_waivers": {},
+      "pull_waivers": {},
+      "reset_waivers": {},
+      "strap_waivers": {},
+      "ep_waivers": {},
+      "thermal_waivers": {},
+      "part_rule_waivers": {}
+    }
+  }
+}

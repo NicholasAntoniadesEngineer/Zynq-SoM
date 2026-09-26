@@ -3,6 +3,7 @@
 #include "schgen/pcb_stage_templates.hpp"
 
 namespace schgen {
+struct PcbPlacementExperiment;
 struct PcbPlacementInput {
     FloorplanInput floorplan;
     // Opaque footprint keys agree with floorplan.footprint_of. These are exact
@@ -16,6 +17,7 @@ struct PcbPlacementInput {
     ProjectStrings function_map;
     JsonNode prior_escape_sidecar; // same snapshot supplies corridors and T2 coexistence
     bool two_side = true;
+    std::shared_ptr<const PcbPlacementExperiment> experiment;
 };
 struct PcbZoneResult {
     FloorplanZoneGeometry geometry;

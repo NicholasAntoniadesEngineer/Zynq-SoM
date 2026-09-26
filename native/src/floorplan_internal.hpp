@@ -1,6 +1,7 @@
 #pragma once
 
 #include "schgen/floorplan.hpp"
+#include "schgen/experiment_observers.hpp"
 #include "schgen/legalize.hpp"
 #include "schgen/pack.hpp"
 #include "schgen/pack_anchor.hpp"
@@ -15,12 +16,19 @@
 namespace schgen::floorplan_detail {
 
 inline constexpr double clear = .3, edge_margin = 10, mh_corner = 10;
-inline constexpr double edge_inset = 1.5, cable_gap = 20, overmold_gap = 3;
-inline constexpr double som_halo = 7, edge_band = 11, perimeter = 3, fill = .60;
+inline constexpr double edge_depth_cap = 15, edge_band_relief = 4;
+inline constexpr double overmold_plug_width = 22, overmold_copper_half_width = 8;
+inline constexpr double edge_inset = 1.5, cable_gap = 20;
+inline constexpr double overmold_gap = overmold_plug_width / 2 - overmold_copper_half_width;
+inline constexpr double som_halo = 7, edge_band = edge_depth_cap - edge_band_relief, perimeter = 3, fill = .60;
 inline constexpr double som_pad = 1.5, som_seat_band = 6, dec_inset = 6;
 inline constexpr double mh_inset = 5, edge_pad_clear = .4;
 inline constexpr int occ_top = 1, occ_bottom = 2, occ_punch = 3;
 inline constexpr int min_subject_pins = 3;
+inline constexpr double occ_step = 1.0, frontier_half = .05 + 1e-9;
+inline constexpr double anchor_zone_weight = .25, anchor_som_weight = 7, anchor_affinity_power = 1.6;
+inline constexpr double affinity_floor = .05;
+inline constexpr int reseat_evict_budget = 3, refine_span = 40;
 
 bool starts(const std::string& value, const std::string& prefix);
 std::string number(double value, int precision = -1);
@@ -118,6 +126,7 @@ public:
                                 bool thru_only = false) const;
     void board_size(double w, double h);
     bool attempt_pack(bool compact);
+    bool attempt_pack_impl(bool compact);
     void choose_connector_shapes();
     PackAnchorIn anchor_row(const FloorplanBlock& b,
                             const std::map<std::string, FloorplanPoint>& centers) const;

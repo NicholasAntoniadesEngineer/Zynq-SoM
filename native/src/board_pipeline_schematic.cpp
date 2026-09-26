@@ -6,6 +6,9 @@
 #include "schgen/authoring_gates.hpp"
 #include "schgen/project_authoring.hpp"
 #include <cstdlib>
+#include <atomic>
+#include <future>
+#include <thread>
 #include <unistd.h>
 
 namespace schgen::board_pipeline_detail {
@@ -25,6 +28,15 @@ void schematic_stage(Context& c){
     std::vector<BoardSheetInput> inputs;std::vector<std::string> cc_reports,sheet_reports;
     bool cc_ok=true,sheet_ok=true,render_ok=true;
     Scratch scratch;
+    struct SheetCheck {
+        const CircuitSheetIr* circuit=nullptr;
+        fs::path schematic;
+        std::string paper,visual;
+        std::size_t report_index=0;
+        bool visual_ok=false,ok=false,render_ok=true;
+    };
+    std::vector<SheetCheck> checks;
+    const auto sheets_started=std::chrono::steady_clock::now();
     for(const auto& sc:c.circuits){
         try {
             const auto electrical=check_circuit_electrical(sc.circuit,c.library);
@@ -37,18 +49,49 @@ void schematic_stage(Context& c){
             const auto sch=scratch.path/(sc.name+".kicad_sch");
             publish_text(sch,emit_schematic(d,[&](const std::string& id)->const SymbolDef&{return c.library.get(id);}).text);
             publish_text(sch.parent_path()/(sc.name+".kicad_pro"),board_project_json(parse_json_text("{}"),sc.name));
-            const auto net=check_netlist(sc.circuit,sch,c.options.extraction);
-            const auto erc=run_kicad_erc(sch,c.options.extraction);
-            c.report(sc.name+".erc.rpt",strip_board_report_timestamp(erc.report.empty()?erc.stderr_text:erc.report));
             const auto vis=check_visual_geometry(page.geometry);
-            const bool ok=net.ok&&erc.exit_code==0&&vis.ok;sheet_ok=sheet_ok&&ok;
-            sheet_reports.push_back(sc.name+": netlist="+(net.ok?"PASS":"FAIL")+" erc="+(erc.exit_code==0?"PASS":"FAIL")+" visual="+(vis.ok?"PASS":"FAIL")+" paper="+p.paper+"\n"+net.summary()+"\n"+vis.summary());
-            if(!c.options.no_render)try{NativeRenderOptions ro;ro.kicad_cli=c.options.extraction.kicad_cli;render_sheet_to_png(sch,c.renders/(sc.name+".png"),300,ro);}catch(const std::exception& e){render_ok=false;sheet_reports.push_back(sc.name+": render FAILED: "+e.what());}
             const auto band=std::find_if(c.index.begin(),c.index.end(),[&](const auto& x){return x.first==sc.name;});
             if(band==c.index.end())throw ProjectError("missing stable reference band "+sc.name);
+            checks.push_back({&sc.circuit,sch,p.paper,vis.summary(),sheet_reports.size(),vis.ok});
+            sheet_reports.emplace_back();
             inputs.push_back({sc.circuit,band->second,BoardPreparedSheet{std::move(page.placement),std::move(page.routed)}});
         }catch(const std::bad_alloc&){throw;}catch(const std::exception& e){sheet_ok=false;cc_ok=false;sheet_reports.push_back(sc.name+": place/route/gate FAIL: "+e.what());}
     }
+    // Only external checks/rasterization run concurrently. Authoring, mutable
+    // symbol caches, placement and emission above retain their ordered owner.
+    // Each job owns its report slot and unique files; reductions remain ordered.
+    std::atomic<std::size_t> next{0};
+    const auto requested=c.options.netlist_workers?c.options.netlist_workers:
+        std::min<std::size_t>(4,std::max(1u,std::thread::hardware_concurrency()));
+    std::vector<std::future<void>> workers;
+    for(std::size_t worker=0;worker<std::min(requested,checks.size());++worker)
+        workers.push_back(std::async(std::launch::async,[&]{
+            for(;;){
+                const auto index=next.fetch_add(1);if(index>=checks.size())return;
+                auto& job=checks[index];const auto& name=job.circuit->name;
+                auto& report=sheet_reports[job.report_index];
+                try{
+                    const auto net=check_netlist(*job.circuit,job.schematic,c.options.extraction);
+                    const auto erc=run_kicad_erc(job.schematic,c.options.extraction);
+                    c.report(name+".erc.rpt",strip_board_report_timestamp(erc.report.empty()?erc.stderr_text:erc.report));
+                    job.ok=net.ok&&erc.exit_code==0&&job.visual_ok;
+                    report=name+": netlist="+(net.ok?"PASS":"FAIL")+" erc="+(erc.exit_code==0?"PASS":"FAIL")+
+                        " visual="+(job.visual_ok?"PASS":"FAIL")+" paper="+job.paper+"\n"+net.summary()+"\n"+job.visual;
+                    if(!c.options.no_render)try{
+                        NativeRenderOptions ro;ro.kicad_cli=c.options.extraction.kicad_cli;
+                        render_sheet_to_png(job.schematic,c.renders/(name+".png"),300,ro);
+                    }catch(const std::bad_alloc&){throw;}catch(const std::exception& e){
+                        job.render_ok=false;report+="\n"+name+": render FAILED: "+e.what();
+                    }
+                }catch(const std::bad_alloc&){throw;}catch(const std::exception& e){
+                    job.ok=false;report=name+": emitted sheet checks FAIL: "+e.what();
+                }
+            }
+        }));
+    for(auto& worker:workers)worker.get();
+    for(const auto& job:checks){sheet_ok=sheet_ok&&job.ok;render_ok=render_ok&&job.render_ok;}
+    if(c.options.timing)c.result.timing_seconds.emplace_back("sheet_prepare_and_checks",
+        std::chrono::duration<double>(std::chrono::steady_clock::now()-sheets_started).count());
     c.gate("sheet_gates",sheet_ok&&inputs.size()==c.circuits.size(),join(sheet_reports,"\n"));
     c.status("sheet_render",c.options.no_render?BoardGateStatus::skipped:render_ok?BoardGateStatus::passed:BoardGateStatus::failed,c.options.no_render?"--no-render":"per-sheet native PDF rasterization");
     c.report("cc_gate.txt",join(cc_reports,"\n"));c.gate("cc",cc_ok&&inputs.size()==c.circuits.size(),join(cc_reports,"\n"));

@@ -1,0 +1,259 @@
+{
+  "carrier": {
+    "source": "native/tests/data/authoring/gate_carrier.json",
+    "source_sha256": "8690dccb5809506c3e7b9ebe5948635e90bf57fc5867c662da2f47907fe3a57a",
+    "sheets": [
+      {
+        "name": "board_aux",
+        "sha256": "e6db4990ce69f8a3fea4ea45d0c80e2b7041cdb821e8f87493e5cf8233dd42f2",
+        "bytes": 8992
+      },
+      {
+        "name": "board_qwiic",
+        "sha256": "b2a93eec46497c00cfe927d78e030c3d7d47b3c62fab5f6046d17561d673b0ec",
+        "bytes": 3038
+      },
+      {
+        "name": "board_services",
+        "sha256": "ee28d77873b5d315d20744f0107b8f5fc03815339345aa619fe0cc0f4dce1680",
+        "bytes": 6950
+      },
+      {
+        "name": "bringup_en",
+        "sha256": "f15c69b458719a59c724b63b37b2b6ef976174f264b779231e52ef06b42ddd1f",
+        "bytes": 7983
+      },
+      {
+        "name": "bringup_en_modules",
+        "sha256": "6faf9743e0a70bf3982ce1124d9cc69ae52f9945d8589c3a13313ed72d42bb21",
+        "bytes": 27221
+      },
+      {
+        "name": "bringup_modules",
+        "sha256": "c7e284c6e143bb4f87383d931b17d114f3ab3c9e772ec09d4bdaee50d0d8f10a",
+        "bytes": 30412
+      },
+      {
+        "name": "bringup_rails",
+        "sha256": "214ca54e1ceeea7bc98bd95c09edac4ae018e5877eb46dc108ddb3597e947d0c",
+        "bytes": 24252
+      },
+      {
+        "name": "camera",
+        "sha256": "fb9f03ec75e70b44d4d70c75edfda268467feb0a8aaee0a1b0f52101b33bf395",
+        "bytes": 10057
+      },
+      {
+        "name": "debug_boot",
+        "sha256": "6752d4e47a31180e62950f0b341917244fdc2cf0f38513e288102345047e3bae",
+        "bytes": 9370
+      },
+      {
+        "name": "ethernet",
+        "sha256": "18985f546fa660c86e60d5e1132bf34bfe59143f00a900d7d8c42387052e88c9",
+        "bytes": 10708
+      },
+      {
+        "name": "fmc",
+        "sha256": "fe5df86ff485b9a21c5a55dbb0cd0ac99e9e7e77bd2aff1efebd9a0b3e532f17",
+        "bytes": 14604
+      },
+      {
+        "name": "hdmi_rx",
+        "sha256": "ab7d0693ae7ecc11813317be115aac83edd50b84c67c64f43a9c2cd3586749ee",
+        "bytes": 11080
+      },
+      {
+        "name": "hdmi_rx_term",
+        "sha256": "0c384d60aa053f100558fc8800a8dfeb941c6659192ed9859f5a440e2a9811e4",
+        "bytes": 6277
+      },
+      {
+        "name": "hdmi_tx",
+        "sha256": "c4b39a8aaf7fe754a6b1bd0b1538e1f05451cefc9719931c0572936b70176499",
+        "bytes": 12913
+      },
+      {
+        "name": "lcd",
+        "sha256": "808df69fbf49a84b4d20f9fd8f6ba01d3b15560cdcb05abf59711eca981edcc8",
+        "bytes": 22630
+      },
+      {
+        "name": "mechanical",
+        "sha256": "e162a1657ac191f24a95ccb391aaeb4702c4e947d22fb52fcfe74307a82c693b",
+        "bytes": 1690
+      },
+      {
+        "name": "microsd",
+        "sha256": "b594fbe0a4577d6b0eccb0909bd753e189213cfc9cefd50524aff19d081bdee2",
+        "bytes": 10902
+      },
+      {
+        "name": "motor_pwm",
+        "sha256": "682895feacd2850e810a77e476155cdf78844a306a5bd8359b83d47fbe932089",
+        "bytes": 13767
+      },
+      {
+        "name": "motor_sense",
+        "sha256": "ac0bb116c6e92b90986d243de4b9abbe560ad9f488d7b1a62fe5f5d8b6df5619",
+        "bytes": 6631
+      },
+      {
+        "name": "pd_input",
+        "sha256": "44553cdf1dd0056faedf293c23c4f3c38001efe36e9e0a7e9261103f331e1577",
+        "bytes": 8948
+      },
+      {
+        "name": "pmod",
+        "sha256": "ebe438109cc9b57221332953ea9e6f4ec9f89461081b32013ad47696a21aea3d",
+        "bytes": 17506
+      },
+      {
+        "name": "pmod_expansion",
+        "sha256": "15fbe1735686c2db382dcae92ed9fc4e31c4b34dd3acc4b9f005517911afd3e4",
+        "bytes": 10452
+      },
+      {
+        "name": "power",
+        "sha256": "54e49a601a9a4e544512df2ffc875dcac2f995596a23c07b3a051e2dd79c1496",
+        "bytes": 20201
+      },
+      {
+        "name": "power_mon",
+        "sha256": "ede683c30cd63f5d184fe0034a9db0bd89ebb294a84b69baf4f5eb1bd5e5922b",
+        "bytes": 8496
+      },
+      {
+        "name": "power_som",
+        "sha256": "67dc94d9d7877f3f1dde5d1758d537ccf4b835a53c3a19c30668db4c7d19a4d7",
+        "bytes": 8855
+      },
+      {
+        "name": "rj45_connector",
+        "sha256": "644a7e3eff4595be711c3bb0a4b18a071bb3102d5b7f2de13d2ce5e0b10d3b43",
+        "bytes": 5325
+      },
+      {
+        "name": "som_decoupling",
+        "sha256": "19a6dd2bc6caf9964afd9051fe76368ece8a572047720f5bee961f0b5193c3b9",
+        "bytes": 5602
+      },
+      {
+        "name": "som_j1",
+        "sha256": "ecaac259af91e68a26a38971a5fee00c8afb988600a51e26f147d7cf08a05af9",
+        "bytes": 19685
+      },
+      {
+        "name": "som_j2",
+        "sha256": "cf4d46ddd0b1851e0fbfcf5c873cbf075739fb06ddd483a3412c901a4f7825e6",
+        "bytes": 19011
+      },
+      {
+        "name": "som_j3",
+        "sha256": "2f06ef4d99253596228027785d1f182b1c86e714feacc1c5c5676d1cf1eac81b",
+        "bytes": 21115
+      },
+      {
+        "name": "uart_bridge",
+        "sha256": "88c0fe87c9e82a18d919effa8259253f8e73acf68734d147a27879a665015070",
+        "bytes": 7856
+      },
+      {
+        "name": "usb_jtag",
+        "sha256": "1cfe4976c2ec6b1fe5299425be76f48317de51356c42ccbc96da53e75ef94479",
+        "bytes": 13500
+      },
+      {
+        "name": "usb_jtag_connector",
+        "sha256": "ed87e3306542dbc32e317003068a91abc8b9cdc9abe881a95cacef73095d9b3e",
+        "bytes": 4801
+      },
+      {
+        "name": "usb_pd",
+        "sha256": "f961964dff7ae5d23e0e680d82b6d591bcec1c2262bce319e5ca623e9f2e8faa",
+        "bytes": 4016
+      },
+      {
+        "name": "usb_uart_connector",
+        "sha256": "fbd8491fe2dd44b0de71baafe4bb4ab040e2402000cea31c860f3dc414d8c8d0",
+        "bytes": 4504
+      },
+      {
+        "name": "usbc_otg",
+        "sha256": "4e8c1e4271784dbf1a01352fe8eba3a7114a1fe4ae594e505c887088f76bfb94",
+        "bytes": 8259
+      },
+      {
+        "name": "user_io",
+        "sha256": "9c7d8c7fedff3208e98d11beefbd1c45240029c1ea91ad0bbf6624d63bfc107a",
+        "bytes": 9441
+      }
+    ]
+  },
+  "devkit_mini": {
+    "source": "native/tests/data/authoring/gate_devkit_mini.json",
+    "source_sha256": "56c12f2515b40d63e3a67adac60734b8c679bbcebbc9c9a7ee5aa8b33976ed75",
+    "sheets": [
+      {
+        "name": "debug_boot",
+        "sha256": "88ba1274cab7ac8b078cb348137b437ee8e2139a19b4a9f4a8b1662bbbe275f2",
+        "bytes": 12371
+      },
+      {
+        "name": "mechanical",
+        "sha256": "e162a1657ac191f24a95ccb391aaeb4702c4e947d22fb52fcfe74307a82c693b",
+        "bytes": 1690
+      },
+      {
+        "name": "pd_input",
+        "sha256": "44553cdf1dd0056faedf293c23c4f3c38001efe36e9e0a7e9261103f331e1577",
+        "bytes": 8948
+      },
+      {
+        "name": "power",
+        "sha256": "27c8af406cf7704c1e43f2296895c8f4484855360e36785e55726f4070a88572",
+        "bytes": 20999
+      },
+      {
+        "name": "power_mon",
+        "sha256": "2d63f91c52d235a31aecd7c0406d9257faaaf6959549ecc5e7be4311c90efd9f",
+        "bytes": 9311
+      },
+      {
+        "name": "power_som",
+        "sha256": "67dc94d9d7877f3f1dde5d1758d537ccf4b835a53c3a19c30668db4c7d19a4d7",
+        "bytes": 8855
+      },
+      {
+        "name": "som_decoupling",
+        "sha256": "19a6dd2bc6caf9964afd9051fe76368ece8a572047720f5bee961f0b5193c3b9",
+        "bytes": 5602
+      },
+      {
+        "name": "som_j1",
+        "sha256": "db20513b9464370a49cb630469b862b169fbc92802e5a20198175c6e172482fe",
+        "bytes": 17931
+      },
+      {
+        "name": "som_j2",
+        "sha256": "34afd5c7b240299d4f29f4fafd164dbe64fd2f37492ef30adda47d6d5d6e68b6",
+        "bytes": 15283
+      },
+      {
+        "name": "som_j3",
+        "sha256": "7b06631c0d7def22d97ef6e6d05f762964ff98cef9604d116075cd09c24f1440",
+        "bytes": 15497
+      },
+      {
+        "name": "uart_bridge",
+        "sha256": "88c0fe87c9e82a18d919effa8259253f8e73acf68734d147a27879a665015070",
+        "bytes": 7856
+      },
+      {
+        "name": "usb_uart_connector",
+        "sha256": "fbd8491fe2dd44b0de71baafe4bb4ab040e2402000cea31c860f3dc414d8c8d0",
+        "bytes": 4504
+      }
+    ]
+  }
+}

@@ -1,4 +1,5 @@
 #include "board_pipeline_internal.hpp"
+#include "schgen/board_policy.hpp"
 #include "schgen/pcb_drc.hpp"
 #include "schgen/assembly_documents.hpp"
 #include "schgen/ratsnest_documents.hpp"
@@ -25,10 +26,16 @@ PcbDrcResult drc(const fs::path& pcb,const std::string& executable,bool warnings
 }
 void pcb_stages(Context& c){
     const auto pcb_path=c.out/"Zynq_Carrier.kicad_pcb";
+    const auto report_root=c.out==c.paths.project_root?c.paths.repository_root:c.out;
     c.attempt("pcb",[&]{if(!c.schematic||!c.link||!c.link->ok())throw ProjectError("current schematic/valid link required; refusing stale board inputs");
         BoardPcbStage stage;stage.circuits=c.circuits;
         stage.inputs=load_board_inputs(c.paths,c.circuits,*c.link,extract_netlist(c.schematic->root_path,c.options.extraction),c.options.pcb);
         stage.inputs.floorplan.sheet_index=c.index;
+        if(c.options.native_policy){
+            const auto policy=configure_native_board_policy(c.options,c.paths,stage.inputs.floorplan);
+            c.report("native_policy.txt",policy.report());
+            c.gate("native_policy",policy.providers_complete(),policy.report());
+        }
         stage.placement=build_pcb_model(stage.inputs);
         // One receipt owns all actual plan/zone/placement work, not the legacy
         // fallback prefix. Import before emission so failures retain work done.
@@ -45,7 +52,7 @@ void pcb_stages(Context& c){
         const auto report=std::to_string(errors)+" non-unrouted errors; "+std::to_string(r.n_unconnected)+" unrouted (expected); "+r.stderr_tail;
         c.report("pcb_drc.txt",report);c.gate("pcb_drc",errors==0,report);});
     c.attempt("pcb_geometry",[&]{if(!c.pcb_published)throw ProjectError("no board emitted this invocation");
-        const auto bp=c.options.fanout_baseline.empty()?(c.out==c.paths.project_root?c.paths.repository_root/"carrier/reports/fanout_baseline.json":c.reports/"fanout_baseline.json"):c.options.fanout_baseline;
+        const auto bp=c.options.fanout_baseline.empty()?c.paths.repository_root/"carrier/reports/fanout_baseline.json":c.options.fanout_baseline;
         PcbEmittedBoard emitted{pcb_path.string(),sexpr_loads(read(pcb_path)),true};
         c.geometry=verify_pcb_geometry(*c.pcb,emitted,baseline(bp));const auto& r=*c.geometry;
         const auto gate=[&](const std::string& name,bool ok,const std::string& report){c.report(name+".txt",report);c.gate(name,ok,report);};
@@ -60,13 +67,14 @@ void pcb_stages(Context& c){
         gate("return_path",r.return_path.ok,"REPORT-ONLY: fixed SoM interface; remediation judged by return_stitch.\n"+r.return_path.summary());
         gate("fanout",r.fanout.ok,r.fanout.summary());
         if(r.fanout.ok){const auto old=baseline(bp);const auto n=old?std::min(*old,r.fanout.n_starved):r.fanout.n_starved;
-            publish_text(bp,"{\n \"starved_baseline\": "+std::to_string(n)+",\n \"note\": \"fan-out ratchet ceiling — may only DECREASE; a build whose starved count exceeds this FAILS. Reach 0 to promote the gate to HARD.\"\n}\n");}
+            const auto destination=c.out==c.paths.project_root?bp:c.reports/"fanout_baseline.json";
+            publish_text(destination,"{\n \"starved_baseline\": "+std::to_string(n)+",\n \"note\": \"fan-out ratchet ceiling — may only DECREASE; a build whose starved count exceeds this FAILS. Reach 0 to promote the gate to HARD.\"\n}\n");}
         c.gate("pcb_geometry",r.ok(),"independent final-board gates complete");});
     c.attempt("assembly",[&]{if(!c.pcb||!c.power)throw ProjectError("PCB/power result unavailable");
         JsonNode result;try{result=run_assembly_documents(c.pcb->placement.model,*c.power,load_project_config(c.paths).name,c.manufacturing/"ASSEMBLY.md",c.renders/"assembly",pcb_emit_policy(c.pcb->inputs.floorplan.project));}
         catch(...){c.fallbacks.record("assembly_generation_failed");throw;}
-        const auto v=assembly_verdict(result,c.paths.repository_root);c.gate("assembly",v.first,v.second);});
-    c.attempt("ratsnest_images",[&]{if(!c.pcb||!c.geometry)throw ProjectError("PCB/geometry unavailable");const auto r=run_ratsnest_documents(c.pcb->placement.model,c.out,&c.geometry->nets,&c.geometry->edges);c.gate("ratsnest_images",true,ratsnest_document_summary(r,c.paths.repository_root));});
+        const auto v=assembly_verdict(result,report_root);c.gate("assembly",v.first,v.second);});
+    c.attempt("ratsnest_images",[&]{if(!c.pcb||!c.geometry)throw ProjectError("PCB/geometry unavailable");const auto r=run_ratsnest_documents(c.pcb->placement.model,c.out,&c.geometry->nets,&c.geometry->edges);c.gate("ratsnest_images",true,ratsnest_document_summary(r,report_root));});
     c.attempt("thermal",[&]{if(!c.power)throw ProjectError("power result unavailable");const auto r=run_thermal_checks(c.circuits,c.reports,&*c.power,c.pcb_published?std::optional<fs::path>{pcb_path}:std::nullopt,c.paths.repository_root);c.gate("thermal",r.ok(),thermal_report(r));});
     c.attempt("copper_debt",[&]{auto sources=author_copper_debt_sources(c.paths.repository_root);
         const auto scope=c.paths.project_root.filename().string();for(auto& x:sources.circuits)if(x.scope==scope){const auto it=std::find_if(c.circuits.begin(),c.circuits.end(),[&](const auto& s){return s.name==x.sheet;});if(it!=c.circuits.end())x.circuit=it->circuit;}

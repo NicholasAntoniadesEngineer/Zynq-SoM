@@ -1,0 +1,122 @@
+{
+  "provenance": {
+    "scripts/w12_stageprobe.py": "5534a871a9b99ddf347dcdfc5e98307e76a935d1695ea06316b5d8177af8f51a",
+    "schgen/generate/pcb/placement.py": "472fb6ae85c1201d1371f80a6e66992dea5c0016ef7faeeb47ef2354c57d903e",
+    "schgen/generate/floorplan.py": "c040a304cfab66cc995709d4446bcd185a2887ea18d3a2369270adb254bf5a04"
+  },
+  "result": {
+    "rows": [
+      {
+        "stage": "zone_pack"
+      },
+      {
+        "stage": "plan_lattice",
+        "est_cross": 16193.4,
+        "board": "168x163",
+        "area": 27384.0,
+        "punch_free": false,
+        "bottom_blocks": [
+          "board_aux",
+          "bringup_rails",
+          "power"
+        ],
+        "shapes": {
+          "rj45_connector": 1,
+          "board_aux": 5,
+          "bringup_en": 1,
+          "bringup_en_modules": 1,
+          "bringup_rails": 8,
+          "debug_boot": 1,
+          "ethernet": 1,
+          "fmc": 2,
+          "power": 4,
+          "uart_bridge": 2,
+          "usb_jtag": 1,
+          "usb_pd": 1,
+          "user_io": 2
+        }
+      },
+      {
+        "stage": "shape_bind"
+      },
+      {
+        "stage": "step3_emission",
+        "cross": 16038.4,
+        "total": 22930.9,
+        "n_cross": 385,
+        "moved": null
+      },
+      {
+        "stage": "l4_pull",
+        "cross": 15935.3,
+        "total": 24004.1,
+        "n_cross": 432,
+        "moved": 102
+      },
+      {
+        "stage": "edge_seat",
+        "cross": 16014.1,
+        "total": 24248.0,
+        "n_cross": 431,
+        "moved": 16
+      },
+      {
+        "stage": "breathe",
+        "cross": 16030.8,
+        "total": 24285.1,
+        "n_cross": 431,
+        "moved": 30
+      },
+      {
+        "stage": "refit_facing",
+        "cross": 15899.1,
+        "total": 24135.1,
+        "n_cross": 433,
+        "moved": 51
+      },
+      {
+        "stage": "reorder",
+        "cross": 15946.3,
+        "total": 23967.0,
+        "n_cross": 435,
+        "moved": 107
+      },
+      {
+        "stage": "corridor_eviction",
+        "cross": 15946.3,
+        "total": 23967.0,
+        "n_cross": 435,
+        "moved": 0
+      },
+      {
+        "stage": "instantiate",
+        "cross": 15946.3,
+        "total": 23967.0,
+        "n_cross": 435,
+        "moved": 0
+      },
+      {
+        "stage": "emission_frame",
+        "cross": 15946.3,
+        "total": 23967.0,
+        "n_cross": 435,
+        "moved": null
+      },
+      {
+        "stage": "escape_copper",
+        "cross": 15946.3,
+        "total": 23967.0,
+        "n_cross": 435,
+        "moved": 0
+      },
+      {
+        "stage": "FINAL_MODEL",
+        "cross": 15946.3,
+        "total": 23967.0,
+        "n_bottom": 176,
+        "n_top": 393,
+        "board": "168x163"
+      }
+    ]
+  }
+}

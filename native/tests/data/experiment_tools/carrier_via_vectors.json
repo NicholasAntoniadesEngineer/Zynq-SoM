@@ -1,0 +1,190 @@
+{
+  "provenance": {
+    "schgen/generate/floorplan.py": "c040a304cfab66cc995709d4446bcd185a2887ea18d3a2369270adb254bf5a04",
+    "schgen/core/quantize.py": "17a2ef2d994d911f3fceba6df988a86d2bed4beb3132a43b776553b07db4a6f2"
+  },
+  "cases": [
+    {
+      "sheet": "board_aux",
+      "shape": 3,
+      "costs": [
+        0.0,
+        2.2,
+        5.0
+      ],
+      "expected": [
+        16075.1,
+        16152.1,
+        16250.1
+      ]
+    },
+    {
+      "sheet": "board_aux",
+      "shape": 4,
+      "costs": [
+        0.0,
+        2.2,
+        5.0
+      ],
+      "expected": [
+        16078.9,
+        16160.3,
+        16263.9
+      ]
+    },
+    {
+      "sheet": "board_aux",
+      "shape": 5,
+      "costs": [
+        0.0,
+        2.2,
+        5.0
+      ],
+      "expected": [
+        16118.6,
+        16193.4,
+        16288.6
+      ]
+    },
+    {
+      "sheet": "board_aux",
+      "shape": 6,
+      "costs": [
+        0.0,
+        2.2,
+        5.0
+      ],
+      "expected": [
+        16072.4,
+        16147.2,
+        16242.4
+      ]
+    },
+    {
+      "sheet": "board_aux",
+      "shape": 7,
+      "costs": [
+        0.0,
+        2.2,
+        5.0
+      ],
+      "expected": [
+        16087.6,
+        16162.4,
+        16257.6
+      ]
+    },
+    {
+      "sheet": "board_aux",
+      "shape": 8,
+      "costs": [
+        0.0,
+        2.2,
+        5.0
+      ],
+      "expected": [
+        16113.3,
+        16185.9,
+        16278.3
+      ]
+    },
+    {
+      "sheet": "bringup_rails",
+      "shape": 4,
+      "costs": [
+        0.0,
+        2.2,
+        5.0
+      ],
+      "expected": [
+        16025.3,
+        16139.7,
+        16285.3
+      ]
+    },
+    {
+      "sheet": "bringup_rails",
+      "shape": 5,
+      "costs": [
+        0.0,
+        2.2,
+        5.0
+      ],
+      "expected": [
+        16152.1,
+        16240.1,
+        16352.1
+      ]
+    },
+    {
+      "sheet": "bringup_rails",
+      "shape": 6,
+      "costs": [
+        0.0,
+        2.2,
+        5.0
+      ],
+      "expected": [
+        16004.0,
+        16142.6,
+        16319.0
+      ]
+    },
+    {
+      "sheet": "bringup_rails",
+      "shape": 7,
+      "costs": [
+        0.0,
+        2.2,
+        5.0
+      ],
+      "expected": [
+        15978.3,
+        16097.1,
+        16248.3
+      ]
+    },
+    {
+      "sheet": "bringup_rails",
+      "shape": 8,
+      "costs": [
+        0.0,
+        2.2,
+        5.0
+      ],
+      "expected": [
+        16118.6,
+        16193.4,
+        16288.6
+      ]
+    },
+    {
+      "sheet": "bringup_rails",
+      "shape": 9,
+      "costs": [
+        0.0,
+        2.2,
+        5.0
+      ],
+      "expected": [
+        16083.3,
+        16219.7,
+        16393.3
+      ]
+    },
+    {
+      "sheet": "power",
+      "shape": 4,
+      "costs": [
+        0.0,
+        2.2,
+        5.0
+      ],
+      "expected": [
+        16118.6,
+        16193.4,
+        16288.6
+      ]
+    }
+  ]
+}

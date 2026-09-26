@@ -22,6 +22,7 @@ bool tagged(const SexprList& node, const std::string& tag) {
 }  // namespace
 
 Engine::Engine(const FloorplanInput& input) : in(input) {
+    if (in.experiment) validate_floorplan_experiment(*in.experiment);
     plan.som = in.som;
     plan.som_source = in.som_source;
     plan.accounting = in.accounting;

@@ -25,6 +25,13 @@ int main(int argc, char** argv) {
                          "  project-check [--repo ROOT] [--project NAME] [SUBSYSTEM ...]\n"
                          "  circuit-check [--repo ROOT] [--project NAME] [SUBSYSTEM ...]\n"
                          "  board-schematic [--project NAME] [SUBSYSTEM ...] -o DIRECTORY\n"
+                         "  build NAME [--project NAME] [-o DIRECTORY] [--no-render]\n"
+                         "  devkit --output DIRECTORY [--repo ROOT] [--no-render] (four-sheet example)\n"
+                         "  dump-circuits [--project NAME] (publish live native-authored IR)\n"
+                         "  nets [--project NAME] --output HEADER (C++ net-name contract)\n"
+                         "  subsystem-check | carrier-check [--project NAME] (strict native package gates)\n"
+                         "  chir-rung TAG | w11-sweep MM [SHEET ...] [--project NAME] (writes board; restores inputs)\n"
+                         "  w12-bound TAG | w12-stageprobe TAG [SHEET ...] [--project NAME] [--cons-only] (private probes)\n"
                          "  pcb-stage [--project NAME] [--kicad-cli PATH] -o DIRECTORY (construction only)\n"
                          "  pcb-drc [--project NAME] [--pcb FILE] [-o REPORT]\n"
                          "  subsystem-new NAME [--repo DIRECTORY] (new C++ package; never overwrites)\n"
@@ -51,7 +58,7 @@ int main(int argc, char** argv) {
                          "  bom [--project NAME] [SUBSYSTEM ...] [-o FILE] [--allow-missing] [--qualified-refs]\n"
                          "  link [--project NAME] [SUBSYSTEM ...] [--contract FILE] [-o REPORT]\n"
                          "  devicetree [--project NAME] [--som FILE] [--contract FILE] [-o FILE]\n"
-                         "Full board generation still uses python -m schgen board.\n";
+                         "  board [--project NAME] [-o DIRECTORY] [--no-render] [--timing] (native; incomplete audit integration fails explicitly)\n";
             return 0;
         }
         if (argc >= 2 && std::string(argv[1]) == "selftest-worker") {

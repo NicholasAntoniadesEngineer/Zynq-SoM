@@ -33,6 +33,7 @@ Placer::Placer(const PcbPlacementInput &in, const PcbZoneResult &zones, const Fl
         for (const auto &b : *blocks)
             selected[b.name] = b.shape_idx;
     geometry = bind_pcb_zone_shapes(augmented, selected);
+    observe_checkpoint("shape_bind");
     std::set<std::string> names;
     for (const auto &[name, pins] : ctx.in.netlist) {
         (void)pins;
@@ -97,6 +98,7 @@ void Placer::checkpoint(const std::string &name, bool page) {
     }
     previous = std::move(snap);
     previous_domain = domain;
+    observe_checkpoint(name);
 }
 void Placer::seed() {
     out.stages["zone_pack"] = {};

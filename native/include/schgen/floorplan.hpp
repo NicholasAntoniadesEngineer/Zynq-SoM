@@ -11,6 +11,7 @@
 #include "schgen/project.hpp"
 
 #include <map>
+#include <memory>
 #include <filesystem>
 #include <optional>
 #include <set>
@@ -21,6 +22,7 @@
 #include <vector>
 
 namespace schgen {
+struct FloorplanExperiment;
 
 // Millimetres throughout. Box4 is x0,y0,x1,y1; Pose is x,y,width,height.
 // Zone offsets are board-local until translated by the selected block pose.
@@ -238,6 +240,8 @@ struct FloorplanInput {
     double place_clear = 0.5;  // explicit SCHGEN_PLACE_CLEAR equivalent
     // Prior native zone-stage accounting is retained, not reset by sizing.
     FloorplanAccounting accounting;
+    // Null by default: no observation snapshots or experiment parameter changes.
+    std::shared_ptr<const FloorplanExperiment> experiment;
 };
 
 FloorplanSpec floorplan_spec_from_json(

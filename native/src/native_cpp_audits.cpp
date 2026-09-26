@@ -12,8 +12,9 @@ const JsonNode& get(const JsonNode& n,const std::string& key){if(n.kind!=JsonKin
 std::string text(const JsonNode& n,const std::string& key){return get(n,key).string_value;}
 const std::vector<JsonNode>& children(const JsonNode& n){return get(n,"inner").array_value;}
 const JsonNode& location(const JsonNode& n){const auto& expansion=get(n,"expansionLoc");return expansion.kind==JsonKind::Object?expansion:n;}
+std::string type_name(const JsonNode& n){const auto& t=get(n,"type");auto name=text(t,"desugaredQualType");return name.empty()?text(t,"qualType"):name;}
 bool numeric_type(const JsonNode& n){
-    const auto& t=get(n,"type");auto type=text(t,"desugaredQualType");if(type.empty())type=text(t,"qualType");
+    auto type=type_name(n);
     for(const auto* qualifier:{"const ","volatile "})for(auto i=type.find(qualifier);i!=type.npos;i=type.find(qualifier))type.erase(i,std::strlen(qualifier));
     static const std::set<std::string> types={"char","signed char","unsigned char","short","unsigned short","int","unsigned int","long","unsigned long","long long","unsigned long long","float","double","long double","__int128","unsigned __int128"};
     return types.count(type);
@@ -39,6 +40,21 @@ bool static_number(const JsonNode& n,const std::set<std::string>& known){
     if(!operators.count(kind)||children(n).empty())return false;
     return std::all_of(children(n).begin(),children(n).end(),[&](const auto& c){return static_number(c,known);});
 }
+bool zero_initialization(const JsonNode& n){
+    const auto kind=text(n,"kind");
+    if(kind=="ImplicitValueInitExpr")return true;
+    if(kind=="IntegerLiteral"||kind=="FloatingLiteral"||kind=="CharacterLiteral"){
+        const auto value=text(n,"value");char* end=nullptr;const auto number=std::strtod(value.c_str(),&end);
+        return !value.empty()&&end==value.c_str()+value.size()&&number==0;
+    }
+    if(kind=="UnaryOperator"&&text(n,"opcode")!="+"&&text(n,"opcode")!="-")return false;
+    static const std::set<std::string> wrappers={"UnaryOperator","ParenExpr","ImplicitCastExpr","ConstantExpr","InitListExpr"};
+    if(!wrappers.count(kind))return false;
+    return std::all_of(children(n).begin(),children(n).end(),zero_initialization);
+}
+bool function_kind(const std::string& kind){return kind=="FunctionDecl"||kind=="CXXMethodDecl"||kind=="CXXConstructorDecl"||kind=="CXXConversionDecl"||kind=="CXXDestructorDecl";}
+bool record_kind(const std::string& kind){return kind=="CXXRecordDecl"||kind=="RecordDecl"||kind=="ClassTemplateSpecializationDecl"||kind=="ClassTemplatePartialSpecializationDecl";}
+std::string identity(const JsonNode& n){auto key=text(n,"mangledName");return key.empty()?type_name(n):key;}
 std::string callee(const JsonNode& n){
     const auto& ref=get(n,"referencedDecl");if(text(ref,"kind")=="FunctionDecl")return text(ref,"name");
     if(text(n,"kind")=="MemberExpr")return text(n,"name");
@@ -80,8 +96,45 @@ void macros(const std::string& preprocessed,const std::filesystem::path& absolut
 struct Visitor {
     std::string path,absolute,source;
     CppSourceCensus& out;
-    std::map<std::string,std::string> definitions;
+    // Provisional keys retain the compiler's entity identity. A second pass
+    // preserves old short names only for genuinely unambiguous implementations.
+    std::map<std::string,std::map<std::string,std::string>> definitions;
+    std::map<std::string,std::string> contexts;
     std::set<std::string> constant_ids;
+    std::map<std::string,std::map<std::string,std::pair<std::size_t,std::size_t>>> constant_entities;
+    void index(const JsonNode& n,std::string scope={}){
+        const auto kind=text(n,"kind"),name=text(n,"name");
+        if(get(n,"isImplicit").bool_value)return;
+        const auto parent=text(n,"parentDeclContextId");
+        if(!parent.empty()&&contexts.count(parent))scope=contexts.at(parent);
+        if(kind=="NamespaceDecl"&&!name.empty())scope+=name+"::";
+        if(record_kind(kind))scope+=(name.empty()?"<anonymous@"+text(location(get(n,"loc")),"file")+":"+std::to_string(get(location(get(n,"loc")),"offset").number_value)+">":name)+"::";
+        if(function_kind(kind))scope+=name+"{"+identity(n)+"}::";
+        if(kind=="NamespaceDecl"||record_kind(kind)||function_kind(kind)||kind=="TranslationUnitDecl")contexts[text(n,"id")]=scope;
+        for(const auto& c:children(n))index(c,scope);
+    }
+    void finish(){
+        // Block-local declarations can have the same spelling and function.
+        // Keep their exact covers distinct rather than letting one cover bless
+        // an unrelated shadow. Compiler IDs are process-local, so use source
+        // offsets in the public spelling, never the AST pointer-like IDs.
+        for(const auto& [symbol,entities]:constant_entities)if(entities.size()>1)
+            for(const auto& [id,entry]:entities){(void)id;out.constants.at(entry.first).symbol=symbol+" [at "+std::to_string(entry.second)+"]";}
+        std::vector<std::pair<std::string,std::string>> names;
+        for(const auto& [base,overloads]:definitions){
+            std::map<std::string,std::size_t> types;for(const auto& [key,type]:overloads){(void)key;++types[type];}
+            for(const auto& [key,type]:overloads){
+                auto shown=base;
+                if(overloads.size()>1){shown+=" ["+type+"]";if(types[type]>1)shown+=key.substr(base.size());}
+                names.emplace_back(key,shown);
+            }
+        }
+        std::sort(names.begin(),names.end(),[](const auto& a,const auto& b){return a.first.size()>b.first.size();});
+        const auto normalize=[&](std::string value){for(const auto& [key,shown]:names)if(value==key||value.compare(0,key.size()+2,key+"::")==0)value.replace(0,key.size(),shown);return value;};
+        std::set<std::string> functions;for(const auto& f:out.functions)functions.insert(normalize(f));out.functions=std::move(functions);
+        for(auto& c:out.constants)c.symbol=normalize(c.symbol);
+        for(auto& q:out.quantization)q.function=normalize(q.function);
+    }
     std::size_t line(const JsonNode& n)const{
         const auto& loc=location(get(n,"loc"));const auto& begin=location(get(get(n,"range"),"begin"));
         const auto& chosen=get(loc,"offset").kind==JsonKind::Number?loc:begin;
@@ -94,31 +147,55 @@ struct Visitor {
         if(get(n,"isImplicit").bool_value&&kind!="ImplicitCastExpr")return;
         const auto& loc=location(get(n,"loc"));
         if(get(loc,"offset").kind==JsonKind::Number){const auto file=text(loc,"file");in_main=get(loc,"includedFrom").kind==JsonKind::Null&&(file.empty()||std::filesystem::path(file).lexically_normal()==absolute);}
+        const auto parent=text(n,"parentDeclContextId");
+        if(!parent.empty()){
+            const auto found=contexts.find(parent);
+            if(found==contexts.end())throw AuditSyntaxError(path+": compiler omitted semantic declaration context");
+            scope=found->second;
+        }
         if(kind=="NamespaceDecl"&&!name.empty())scope+=name+"::";
         if(kind=="EnumDecl"&&!text(n,"scopedEnumTag").empty())scope+=name+"::";
-        if(kind=="CXXRecordDecl"||kind=="RecordDecl"){scope+=name+"::";in_class=true;}
-        const bool fn=kind=="FunctionDecl"||kind=="CXXMethodDecl"||kind=="CXXConstructorDecl"||kind=="CXXConversionDecl";
+        if(record_kind(kind)){scope=contexts.at(text(n,"id"));in_class=true;}
+        if(kind=="LambdaExpr"){
+            // Captures execute in the enclosing body; the lambda's implementation
+            // is a distinct operation and must not inherit a scalar registration.
+            const auto offset=get(location(get(get(n,"range"),"begin")),"offset").number_value;
+            const auto lambda=(function.empty()?path:function)+"::<lambda@"+std::to_string(std::size_t(offset))+">";
+            if(in_main)out.functions.insert(lambda);
+            for(const auto& c:children(n))if(text(c,"kind")!="CXXRecordDecl"){
+                const bool body=text(c,"kind")=="CompoundStmt";
+                visit(c,body?lambda.substr(path.size()+2)+"::":scope,body?lambda:function,in_main,in_class);
+            }
+            return;
+        }
+        const bool fn=function_kind(kind);
         if(fn){
-            function=path+"::"+scope+name;
+            const auto base=path+"::"+scope+name;function=base+"{"+identity(n)+"}";
             bool body=false;for(const auto& c:children(n))body|=text(c,"kind")=="CompoundStmt"||text(c,"kind")=="CXXTryStmt";
+            if(in_main)definitions[base][function]=type_name(n);
             if(in_main&&body){
-                const auto signature=text(n,"mangledName");const auto [p,inserted]=definitions.emplace(function,signature);
-                if(!inserted&&p->second!=signature)throw AuditSyntaxError(path+": overloaded audit implementation needs distinct registered names: "+function);
                 out.functions.insert(function);
             }
-            scope+=name+"::";
+            scope=function.substr(path.size()+2)+"::";
         }
         if(in_main){
             const bool enumeration=kind=="EnumConstantDecl";
             const bool variable=kind=="VarDecl"||kind=="FieldDecl";
             const bool local=!function.empty()||in_class;
-            const auto typ=text(get(n,"type"),"qualType");
+            const auto typ=type_name(n);const bool immutable=typ.find("const")!=typ.npos||get(n,"constexpr").bool_value;
             const bool initialized=get(n,"init").kind!=JsonKind::Null||get(n,"hasInClassInitializer").bool_value;
             const bool literal_init=std::any_of(children(n).begin(),children(n).end(),[&](const auto& c){return static_number(c,constant_ids);});
-            if(enumeration||(variable&&initialized&&numeric_type(n)&&(!local||((kind=="FieldDecl"||typ.find("const")!=typ.npos||get(n,"constexpr").bool_value||upper_policy_name(name))&&literal_init)))){
-                if(!local||enumeration||typ.find("const")!=typ.npos)constant_ids.insert(text(n,"id"));
+            const bool state_field=kind=="FieldDecl"&&!immutable&&!upper_policy_name(name)&&
+                std::all_of(children(n).begin(),children(n).end(),zero_initialization);
+            const bool policy_storage=immutable||upper_policy_name(name)||text(n,"storageClass")=="static"||(kind=="FieldDecl"&&!state_field);
+            if(enumeration||(variable&&initialized&&numeric_type(n)&&(!local||(policy_storage&&literal_init)))){
+                if(enumeration||immutable)constant_ids.insert(text(n,"id"));
                 const auto site=path+":"+std::to_string(line(n));const auto symbol=path+"::"+scope+name;
-                out.constants.push_back({symbol,site,local});
+                const auto id=text(n,"id");auto& entities=constant_entities[symbol];
+                if(!entities.count(id)){
+                    entities[id]={out.constants.size(),std::size_t(get(loc,"offset").number_value)};
+                    out.constants.push_back({symbol,site,local});
+                }
                 static const std::set<std::string> banned={"_SNAP_EROSION","_SEAT_SLIDE","OUTLINE_SNAP","OUTLINE_SNAP_PCB","FINE_SNAP","REFINE_SPAN","GRID"};
                 if(banned.count(name))out.quantization.push_back({site,function,"banned-constant"});
             }
@@ -155,7 +232,12 @@ CppSourceCensus scan_cpp_audit_sources(const std::filesystem::path& root,const s
         if(compiled.exit_code!=0)throw AuditSyntaxError(path.string()+": C++ compiler failed ("+std::to_string(compiled.exit_code)+")\n"+compiled.stderr_text);
         const auto ast=parse_json_text(compiled.stdout_text,path.string()+" compiler AST");
         if(text(ast,"kind")!="TranslationUnitDecl")throw AuditSyntaxError(path.string()+": compiler did not return a translation-unit AST");
-        Visitor{relative.generic_string(),path.string(),model_checks::read(path),result,{},{}}.visit(ast);++result.n_files;
+        CppSourceCensus local;
+        Visitor visitor{relative.generic_string(),path.string(),model_checks::read(path),local,{},{},{},{}};
+        visitor.index(ast);visitor.visit(ast);visitor.finish();
+        result.constants.insert(result.constants.end(),local.constants.begin(),local.constants.end());
+        result.functions.insert(local.functions.begin(),local.functions.end());
+        result.quantization.insert(result.quantization.end(),local.quantization.begin(),local.quantization.end());++result.n_files;
         // Clang's JSON AST contains macro *expansions*, not definitions. Keep
         // object-like numeric policy macros visible using its preprocessor,
         // with the same target/defines/includes and compiler line markers.
@@ -170,9 +252,10 @@ CppSourceCensus scan_cpp_audit_sources(const std::filesystem::path& root,const s
 NativeAuditResult check_native_audits(const CppSourceCensus& census,const NativeLedger& ledger,const NativeQuantizations& quantize){
     if(!census.n_files||(census.constants.empty()&&census.functions.empty()))throw std::invalid_argument("native audit cannot pass an empty source census");
     NativeAuditResult r;r.n_files=census.n_files;r.n_constants=census.constants.size();const auto state=ledger.audit_state();r.problems=state.problems;
-    std::set<std::string> covered,constants,transforms;
+    std::set<std::string> covered,constants,transforms;std::map<std::string,std::size_t> constant_counts;
     for(const auto& d:state.declarations){covered.insert(d.covers.begin(),d.covers.end());if(!d.repeated&&!state.recorded.count(d.name))r.absent.push_back(d.name);}
-    for(const auto& c:census.constants){constants.insert(c.symbol);if(c.buried)r.buried.push_back(c.site+" "+c.symbol);else if(!covered.count(c.symbol))r.undeclared.push_back(c.symbol);}
+    for(const auto& c:census.constants){constants.insert(c.symbol);++constant_counts[c.symbol];if(!covered.count(c.symbol)){if(c.buried)r.buried.push_back(c.site+" "+c.symbol);else r.undeclared.push_back(c.symbol);}}
+    for(const auto& [symbol,count]:constant_counts)if(count>1&&covered.count(symbol))r.problems.push_back("ambiguous constant cover "+symbol);
     for(const auto& cover:covered)if(!constants.count(cover))r.stale.push_back("constant "+cover);
     for(const auto& d:quantize.declarations()){++r.n_transforms;transforms.insert(d.symbol);if(!census.functions.count(d.symbol))r.stale.push_back("transform "+d.symbol);}
     for(const auto& site:census.quantization)if(!transforms.count(site.function)||site.detector=="banned-constant"||site.detector=="banned-call")r.unregistered_quantization.push_back(site.site+" ["+site.detector+"] "+site.function);

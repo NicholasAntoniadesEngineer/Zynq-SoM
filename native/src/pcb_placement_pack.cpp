@@ -1,4 +1,5 @@
 #include "pcb_placement_internal.hpp"
+#include "schgen/board_decision_policy.hpp"
 
 namespace schgen::pcb_placement {
 PcbStageResult pack_zone(const Context &ctx, const Geometry &g,
@@ -80,7 +81,7 @@ PcbStageResult pack_zone(const Context &ctx, const Geometry &g,
                 auto b = g.bbox_of.at(r);
                 area += (b.x1 - b.x0 + pc) * (b.y1 - b.y0 + pc);
             }
-        double target = connector_target_w(std::max(cursor, 8.), zone_pad, area, .62, aspect);
+        double target = connector_target_w(std::max(cursor, 8.), zone_pad, area, board_decision_policy::zone_pack_fill, aspect);
         auto t = shelf_pack(items(rt, false), target, {}, zone_pad);
         std::vector<ShelfOcc> blockers;
         for (const auto &[r, x, y] : t.placed)
@@ -121,7 +122,7 @@ PcbStageResult pack_zone(const Context &ctx, const Geometry &g,
         auto b = g.bbox_of.at(r);
         area += (b.x1 - b.x0 + pc) * (b.y1 - b.y0 + pc);
     }
-    double target = zone_target_w(area, .62, aspect, 8.);
+    double target = zone_target_w(area, board_decision_policy::zone_pack_fill, aspect, 8.);
     std::vector<std::string> buttons;
     for (const auto &r : top)
         if (std::filesystem::path(ctx.pool.at(g.resolvable.at(r))->source)

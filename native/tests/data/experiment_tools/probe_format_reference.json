@@ -1,0 +1,22 @@
+{
+  "carrier_stageprobe": {
+    "source_sha256": "dbbb671365a2aae38c5eed9f0d76edb0b63a641413970bbcac58acca130ece1c",
+    "output_sha256": "628ec76083b54610e97f428cc47fdea4430f94d370e4d107727da2e8899ff5fc",
+    "output_bytes": 1508
+  },
+  "devkit_mini_stageprobe": {
+    "source_sha256": "91e024c321ab25fbb38a4c757aca2d70032f2955f15e2f01beb93ed3949f1673",
+    "output_sha256": "b26611c414e7e3d1974e806fc70a988417055aa21c2923fc979a964ad62dc4f7",
+    "output_bytes": 1272
+  },
+  "devkit_mini_conservative": {
+    "source_sha256": "91e024c321ab25fbb38a4c757aca2d70032f2955f15e2f01beb93ed3949f1673",
+    "output_sha256": "1e54ef34bac5379522f4e3243db05c646dc0892675b5ae8077d8e335112436b5",
+    "output_bytes": 1273
+  },
+  "devkit_mini_bound": {
+    "source_sha256": "cd91ad48d6adc5283fe5d7b2508fd9eaee3785983bb33d401c648a2473612722",
+    "output_sha256": "7a111b2eda2083c14dd244595f76fb630132eaac8ea9beec8f000e3e96557271",
+    "output_bytes": 146213
+  }
+}

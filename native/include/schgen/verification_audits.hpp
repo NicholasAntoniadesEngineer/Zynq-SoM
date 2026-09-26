@@ -41,6 +41,10 @@ struct FallbackAuditResult {
 std::optional<AuditCounts> load_fallback_baseline(const std::filesystem::path&);
 std::string fallback_baseline_text(const AuditCounts&);
 FallbackAuditResult check_fallback_ratchet(const AuditCounts&, const std::filesystem::path& baseline);
+// Separate the authoritative input ceiling from an isolated build's output.
+// Failed checks never publish; successful runs cannot relax the source ceiling.
+FallbackAuditResult check_fallback_ratchet(const AuditCounts&, const std::filesystem::path& baseline,
+                                         const std::filesystem::path& output);
 
 struct LedgerAuditDeclaration {
     std::string name;

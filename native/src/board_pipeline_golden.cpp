@@ -46,17 +46,18 @@ std::string board_png_average_hash(const std::filesystem::path& path){
         for(std::size_t j=0;j<t.weights.size();++j)sum+=t.weights[j]*intermediate[(t.first+j)*16+x];output[y*16+x]=byte(sum);}
     const auto sum=std::accumulate(output.begin(),output.end(),std::uint64_t{});std::string hash;for(auto v:output)hash+=static_cast<std::uint64_t>(v)*256>sum?'1':'0';return hash;
 }
-BoardGoldenResult check_board_golden(const std::filesystem::path& renders,bool bless){
+BoardGoldenResult check_board_golden(const std::filesystem::path& renders,bool bless,const std::filesystem::path& source){
     using namespace board_pipeline_detail;BoardGoldenResult out;
     if(fs::is_directory(renders))for(const auto& entry:fs::directory_iterator(renders)){
         const auto name=entry.path().filename().string(),stem=entry.path().stem().string();
         if(!entry.is_regular_file()||name.size()<4||name.substr(name.size()-4)!=".png"||stem.rfind("ratsnest",0)==0||duplicate(stem))continue;
         out.current.emplace(stem,board_png_average_hash(entry.path()));}
-    const auto path=renders/"golden.json";out.have_baseline=fs::exists(path);
+    const auto path=renders/"golden.json";
+    const auto baseline_path=source.empty()?path:source;out.have_baseline=fs::exists(baseline_path);
     if(bless){JsonNode value;value.kind=JsonKind::Object;for(const auto& [name,hash]:out.current)value.object_value.emplace_back(name,text(hash));
         publish_text(path,json(value)+"\n");out.match=true;out.blessed=true;return out;}
     if(!out.have_baseline){out.drift.push_back("no golden baseline; explicit --bless required");return out;}
-    const auto baseline=parse_json_file(path.string());if(baseline.kind!=JsonKind::Object)throw ProjectError("golden baseline must be an object");
+    const auto baseline=parse_json_file(baseline_path.string());if(baseline.kind!=JsonKind::Object)throw ProjectError("golden baseline must be an object");
     std::map<std::string,std::string> old;for(const auto& [name,value]:baseline.object_value){if(value.kind!=JsonKind::String||value.string_value.size()!=256||value.string_value.find_first_not_of("01")!=std::string::npos)throw ProjectError("invalid golden hash: "+name);if(!old.emplace(name,value.string_value).second)throw ProjectError("duplicate golden sheet: "+name);}
     for(const auto& [name,hash]:out.current){const auto it=old.find(name);if(it==old.end())out.drift.push_back(name+": NEW sheet (no golden)");else{int distance=0;for(std::size_t i=0;i<hash.size();++i)distance+=hash[i]!=it->second[i];if(distance>12)out.drift.push_back(name+": drift "+std::to_string(distance)+"/256 bits");}}
     for(const auto& [name,hash]:old){(void)hash;if(!out.current.count(name))out.drift.push_back(name+": golden exists but no render");}

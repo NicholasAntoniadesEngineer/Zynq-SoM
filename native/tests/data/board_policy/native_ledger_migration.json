@@ -1,0 +1,65 @@
+{
+  "provenance": "Reviewed native-only ledger provenance migration. Expected text authored from the declared policy, not captured from native runtime. Historical Python ledger and all geometry/count fixtures remain immutable.",
+  "retired": [
+    "placeholder_aspect",
+    "placeholder_min",
+    "placeholder_max",
+    "zone_step",
+    "som_side_band"
+  ],
+  "replaced": [
+    "via_size",
+    "via_clearance",
+    "stack_thickness"
+  ],
+  "replacements": [
+    "via_ordinary_cost",
+    "via_impedance_cost"
+  ],
+  "assumption_rows": [
+    {
+      "kind": "ASSUME",
+      "depth": 1,
+      "name": "via_ordinary_cost",
+      "text": "  ASSUME via_ordinary_cost              = 2.2           mm         [policy] quantization_policy.kViaOrdinaryMm — compiled ordinary-net estimator cost; actual ordinary_via_mm override takes precedence"
+    },
+    {
+      "kind": "ASSUME",
+      "depth": 1,
+      "name": "via_impedance_cost",
+      "text": "  ASSUME via_impedance_cost             = 7.6           mm         [policy] quantization_policy.kViaImpedanceMm — compiled impedance-net estimator cost; no physical operand reconstruction"
+    }
+  ],
+  "calculation_rows": [
+    {
+      "kind": "CALC",
+      "depth": 1,
+      "name": "est_via_ordinary",
+      "text": "  CALC   est_via_ordinary               = 2.2           mm         <- via_cost=2.2  ::  resolved ordinary estimator cost (caller override when supplied)"
+    },
+    {
+      "kind": "CALC",
+      "depth": 1,
+      "name": "est_via_impedance",
+      "text": "  CALC   est_via_impedance              = 7.6           mm         <- via_cost=7.6  ::  compiled impedance estimator cost"
+    }
+  ],
+  "calculations": [
+    {
+      "name": "est_via_ordinary",
+      "value": 2.2,
+      "inputs": {
+        "via_cost": 2.2
+      },
+      "step": "floorplan.sizing"
+    },
+    {
+      "name": "est_via_impedance",
+      "value": 7.6,
+      "inputs": {
+        "via_cost": 7.6
+      },
+      "step": "floorplan.sizing"
+    }
+  ]
+}

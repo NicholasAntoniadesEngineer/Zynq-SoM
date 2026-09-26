@@ -207,6 +207,11 @@ FloorplanInput prepare_pcb_floorplan(const PcbPlacementInput &input, const PcbZo
 }
 PcbPlacementResult build_pcb_model(const PcbPlacementInput &input) {
     auto zones = build_pcb_zone_geometry(input);
+    observe_pcb_experiment_checkpoint(input.experiment.get(), [] {
+        PcbPlacementObservation row;
+        row.stage = "zone_pack";
+        return row;
+    });
     // The authored floorplan sizes against the normal two-face offers even
     // when the caller requests the legacy top-preferred emission option.
     // Placement then binds that solve to its independently constructed zones.
@@ -215,6 +220,14 @@ PcbPlacementResult build_pcb_model(const PcbPlacementInput &input) {
     planning.two_side = true;
     auto planning_zones = input.two_side ? zones : build_pcb_zone_geometry(planning);
     auto floorplan = generate_floorplan(prepare_pcb_floorplan(planning, planning_zones));
+    observe_pcb_experiment_checkpoint(input.experiment.get(), [&] {
+        PcbPlacementObservation row;
+        row.stage = "plan_lattice";
+        // The original probe measures the placement zones before shape binding,
+        // including the distinct top-preferred zones when two_side is false.
+        row.plan = measure_floorplan_experiment_plan(prepare_pcb_floorplan(input, zones), floorplan.plan);
+        return row;
+    });
     return place_pcb_model_accounted(input, zones, floorplan, input.two_side
         ? PcbZoneAccountingOwnership::IncludedInFloorplan
         : PcbZoneAccountingOwnership::SeparateFromFloorplan);

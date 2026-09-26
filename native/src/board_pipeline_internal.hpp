@@ -19,7 +19,7 @@ JsonNode text(std::string);
 std::string join(const std::vector<std::string>&, const std::string& = ", ");
 struct Context {
     const ProjectPaths& paths;
-    const BoardPipelineOptions& options;
+    BoardPipelineOptions options;
     fs::path out, reports, docs, renders, manufacturing;
     SymbolLibrary library;
     BoardPipelineResult result;

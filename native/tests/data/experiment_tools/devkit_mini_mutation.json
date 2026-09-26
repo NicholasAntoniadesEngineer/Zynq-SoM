@@ -1,0 +1,108 @@
+{
+  "provenance": {
+    "scripts/w12_stageprobe.py": "5534a871a9b99ddf347dcdfc5e98307e76a935d1695ea06316b5d8177af8f51a",
+    "schgen/generate/pcb/placement.py": "472fb6ae85c1201d1371f80a6e66992dea5c0016ef7faeeb47ef2354c57d903e",
+    "schgen/generate/floorplan.py": "c040a304cfab66cc995709d4446bcd185a2887ea18d3a2369270adb254bf5a04"
+  },
+  "result": {
+    "rows": [
+      {
+        "stage": "zone_pack"
+      },
+      {
+        "stage": "plan_lattice",
+        "est_cross": 1551.5,
+        "board": "100x100",
+        "area": 10000.0,
+        "punch_free": false,
+        "bottom_blocks": [],
+        "shapes": {
+          "debug_boot": 2,
+          "power_som": 1,
+          "uart_bridge": 3
+        }
+      },
+      {
+        "stage": "shape_bind"
+      },
+      {
+        "stage": "step3_emission",
+        "cross": 1548.6,
+        "total": 3456.0,
+        "n_cross": 69,
+        "moved": null
+      },
+      {
+        "stage": "l4_pull",
+        "cross": 1425.5,
+        "total": 3562.4,
+        "n_cross": 74,
+        "moved": 34
+      },
+      {
+        "stage": "edge_seat",
+        "cross": 1428.3,
+        "total": 3583.2,
+        "n_cross": 74,
+        "moved": 2
+      },
+      {
+        "stage": "breathe",
+        "cross": 1423.5,
+        "total": 3579.4,
+        "n_cross": 74,
+        "moved": 10
+      },
+      {
+        "stage": "refit_facing",
+        "cross": 1455.5,
+        "total": 3611.2,
+        "n_cross": 74,
+        "moved": 54
+      },
+      {
+        "stage": "reorder",
+        "cross": 1460.4,
+        "total": 3600.3,
+        "n_cross": 73,
+        "moved": 17
+      },
+      {
+        "stage": "corridor_eviction",
+        "cross": 1481.2,
+        "total": 3582.6,
+        "n_cross": 74,
+        "moved": 8
+      },
+      {
+        "stage": "instantiate",
+        "cross": 1481.2,
+        "total": 3582.6,
+        "n_cross": 74,
+        "moved": 0
+      },
+      {
+        "stage": "emission_frame",
+        "cross": 1481.2,
+        "total": 3582.6,
+        "n_cross": 74,
+        "moved": null
+      },
+      {
+        "stage": "escape_copper",
+        "cross": 1481.2,
+        "total": 3582.6,
+        "n_cross": 74,
+        "moved": 0
+      },
+      {
+        "stage": "FINAL_MODEL",
+        "cross": 1481.2,
+        "total": 3582.6,
+        "n_bottom": 57,
+        "n_top": 106,
+        "board": "100x100"
+      }
+    ]
+  }
+}
