@@ -3,10 +3,13 @@
 // the double-only Sexpr representation or the bounded decimal rounding kernel.
 #include "schgen/occupancy.hpp"
 #include "schgen/sexpr.hpp"
+#include "schgen/quantize.hpp"
+#include "../src/accurate_norm.hpp"
 
 #include <cmath>
 #include <iostream>
 #include <limits>
+#include <random>
 #include <stdexcept>
 #include <string>
 
@@ -149,6 +152,134 @@ void rounding_contracts() {
             "negative value above quantized boundary accepted");
 }
 
+void norm_contracts() {
+    // Independently rounded MPFR 256-bit hypot results for exact binary64
+    // inputs. All failed by one subnormal ULP before the single-round fix.
+    struct Case { double x, y, expected; };
+    for (const auto& c : {
+        Case{0x1.edc9cd02eb226p-1023, 0x1.40e6a86941c2p-1027, 0x1.ee3207de7814ep-1023},
+        {0x1.33819717c742cp-1023, 0x1.3c1fb462b4e86p-1023, 0x1.b903e06a5fa02p-1023},
+        {0x1.5f326a1ea3982p-1023, 0x1.65175d028c49ap-1023, 0x1.f4da4c5ed4f06p-1023},
+        {0x1.971df44f6d24p-1026, 0x1.b273a287f56ep-1026, 0x1.29b245eedc4b8p-1025},
+        {0x1.7c93bed016d44p-1024, 0x1.c0edcddf4e96p-1025, 0x1.b9d73b414c824p-1024}}) {
+        for (double sign : {-1.0, 1.0}) {
+            require(schgen::accurate_hypot2(sign*c.x, c.y) == c.expected,
+                    "subnormal norm incorrectly rounded");
+            require(schgen::accurate_hypot2(c.y, sign*c.x) == c.expected,
+                    "subnormal norm changed under permutation");
+        }
+    }
+    for (int exponent = -1074; exponent <= 1020; ++exponent) {
+        const double unit = std::ldexp(1.0, exponent);
+        require(schgen::accurate_hypot2(3*unit, 4*unit) == 5*unit,
+                "exact Pythagorean norm failed");
+        require(schgen::accurate_hypot2(unit, 0) == unit, "axis norm changed");
+    }
+    for (double x : {std::numeric_limits<double>::denorm_min(),
+                     std::nextafter(std::numeric_limits<double>::min(), 0.0),
+                     std::numeric_limits<double>::min(),
+                     std::nextafter(std::numeric_limits<double>::min(), 1.0),
+                     std::numeric_limits<double>::max()}) {
+        require(schgen::accurate_hypot2(x, 0) == x, "norm endpoint changed");
+    }
+    const double inf = std::numeric_limits<double>::infinity();
+    const double nan = std::numeric_limits<double>::quiet_NaN();
+    require(schgen::accurate_hypot2(inf, nan) == inf, "norm infinity precedence");
+    require(std::isnan(schgen::accurate_hypot2(1, nan)), "norm NaN propagation");
+    require(!std::signbit(schgen::accurate_hypot2(-0.0, -0.0)), "norm signed zero");
+    require(schgen::accurate_hypot2(std::numeric_limits<double>::max(),
+                                  std::numeric_limits<double>::max()) == inf,
+            "norm overflow classification");
+}
+
+void outline_contracts() {
+    struct Case { double value, expected; };
+    for (const auto& c : {Case{0, 0}, {-0.0, 0}, {1, 5}, {5, 5},
+                          {5+1e-7, 5}, {5+2e-6, 10}, {-5, 0}, {-6, 0}, {-10, -5},
+                          // Preserve the floating expression's existing bias
+                          // and operation order even when 1e-6 is below an ULP.
+                          {1e12, 1000000000005.0}, {-1e12, -999999999995.0}}) {
+        require(schgen::outline_snap_up(c.value) == c.expected,
+                "outline mathematical boundary failed");
+    }
+    require(!std::signbit(schgen::outline_snap_up(-1)), "outline negative zero changed");
+    const double inf = std::numeric_limits<double>::infinity();
+    for (double value : {inf, -inf, std::numeric_limits<double>::quiet_NaN()})
+        rejects([&] { schgen::outline_snap_up(value); }, "outline nonfinite accepted");
+    // Historical parity is distinct from mathematical accuracy. Restrict the
+    // old expression to its defined int-conversion domain before comparing.
+    std::mt19937_64 random(615827);
+    for (int i = 0; i < 100000; ++i) {
+        const double value = (static_cast<double>(random() % 20000000000000ULL)
+                              - 10000000000000.0) / 1000;
+        const int old_units = static_cast<int>((value + 5.0 - 1e-6) / 5.0);
+        require(schgen::outline_snap_up(value) == static_cast<double>(old_units)*5.0,
+                "defined historical outline output changed");
+    }
+    for (double units : {static_cast<double>(std::numeric_limits<int>::min()),
+                         static_cast<double>(std::numeric_limits<int>::max())}) {
+        for (double delta : {-10.0, -5.0, 0.0, 5.0, 10.0}) {
+            const double value = units*5.0 + delta;
+            const auto reference = static_cast<std::int64_t>((value+5.0-1e-6)/5.0);
+            require(schgen::outline_snap_up(value) == static_cast<double>(reference)*5.0,
+                    "outline int boundary corrupted");
+        }
+    }
+}
+
+void facing_contracts() {
+    const double large = 1e200, maximum = std::numeric_limits<double>::max();
+    for (double magnitude : {1e155, large, maximum}) {
+        const auto perpendicular = schgen::accurate_facing_dot(0,0,magnitude,magnitude,-magnitude,magnitude);
+        require(perpendicular.first == 0 && perpendicular.second == 90,
+                "overflowing perpendicular facing vectors");
+        require(schgen::accurate_facing_dot(0,0,magnitude,magnitude,magnitude,magnitude).second == 0,
+                "overflowing parallel facing vectors");
+        require(schgen::accurate_facing_dot(0,0,magnitude,magnitude,-magnitude,-magnitude).second == 180,
+                "overflowing antiparallel facing vectors");
+    }
+    const double power = 0x1p520;
+    require(schgen::accurate_facing_dot(0,0,power,power,power,std::nextafter(-power,0)).first == 0x1p987,
+            "finite dot lost in overflowing product cancellation");
+    require(schgen::accurate_facing_dot(0,0,power,power,power,std::nextafter(-power,-INFINITY)).first == -0x1p988,
+            "negative dot lost in overflowing product cancellation");
+    const auto unbalanced = schgen::accurate_facing_dot(0,0,maximum,maximum,1e-8,0);
+    require(std::isfinite(unbalanced.first) && unbalanced.second == 45,
+            "overflowed norm corrupts finite high/low-magnitude angle");
+    const auto thin = schgen::accurate_facing_dot(0,0,1e308,2e-308,1e-308,-1e308);
+    require(std::fabs(thin.first + 1) < 1e-15 && thin.second == 90,
+            "vector scaling erased small component products");
+    require(schgen::accurate_facing_dot(-maximum,0,maximum,maximum,-maximum,maximum).second > 63 &&
+            schgen::accurate_facing_dot(-maximum,0,maximum,maximum,-maximum,maximum).second < 64,
+            "finite coordinate subtraction overflow");
+    const auto zero = schgen::accurate_facing_dot(-maximum,-maximum,maximum,maximum,-maximum,-maximum);
+    require(zero.first == 0 && zero.second == 180, "degenerate overflowing displacement");
+    for (double tiny : {0.0, std::numeric_limits<double>::denorm_min(), 1e-200, 1e-9}) {
+        require(schgen::accurate_facing_dot(0,0,maximum,maximum,tiny,0).second == 180,
+                "existing degenerate vector threshold changed");
+    }
+    for (double invalid : {std::numeric_limits<double>::infinity(), -std::numeric_limits<double>::infinity(),
+                           std::numeric_limits<double>::quiet_NaN()}) {
+        for (int index = 0; index < 6; ++index) {
+            double values[] = {0,0,1,0,0,1}; values[index] = invalid;
+            const auto face = schgen::accurate_facing_dot(values[0],values[1],values[2],values[3],values[4],values[5]);
+            require(std::isnan(face.first) && std::isnan(face.second), "invalid geometry silently accepted");
+        }
+    }
+    // Historical parity on finite, nonoverflowing intermediate arithmetic.
+    std::mt19937_64 random(54938);
+    for (int i = 0; i < 100000; ++i) {
+        const auto sample = [&] { return (static_cast<double>(random()%2000000)-1000000)/1000; };
+        const double zx=sample(), zy=sample(), ox=sample(), oy=sample(), dx=sample(), dy=sample();
+        const double x=ox-zx, y=oy-zy, u=dx-zx, v=dy-zy;
+        const double dot=x*u+y*v, n1=schgen::accurate_hypot2(x,y), n2=schgen::accurate_hypot2(u,v);
+        const double angle = n1<=1e-9 || n2<=1e-9 ? 180 :
+            std::acos(std::max(-1.0,std::min(1.0,dot/(n1*n2))))*(180.0/3.141592653589793);
+        const auto actual=schgen::accurate_facing_dot(zx,zy,ox,oy,dx,dy);
+        require(actual.first==dot && actual.second==angle, "ordinary facing arithmetic changed");
+    }
+}
+
 }  // namespace
 
 int main() {
@@ -156,6 +287,9 @@ int main() {
         parser_contracts();
         formatter_contracts();
         rounding_contracts();
+        norm_contracts();
+        outline_contracts();
+        facing_contracts();
         std::cout << "native numeric contracts passed\n";
         return 0;
     } catch (const std::exception& e) {

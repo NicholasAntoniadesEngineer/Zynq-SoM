@@ -24,6 +24,7 @@ double legalize_pose_quantum(double value);
 double quant_credit(double value);
 double snap_erosion_bound(double bound);
 double snap_erosion_pad(double mm);
+// Historical biased truncation formula; throws for nonfinite input/result.
 double outline_snap_up(double value);
 double outline_grow(int step);
 double fine_shrink(double base, int step);

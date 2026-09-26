@@ -3,6 +3,7 @@
 #include "schgen/occupancy.hpp"
 
 #include <cmath>
+#include <stdexcept>
 
 namespace schgen {
 using namespace quantization_policy;
@@ -40,9 +41,18 @@ double snap_erosion_pad(double mm) {
 }
 
 double outline_snap_up(double value) {
-    const int n = static_cast<int>((value + kOutlineSnapMm - 1e-6)
-                                   / kOutlineSnapMm);
-    return py_round(static_cast<double>(n) * kOutlineSnapMm, 1);
+    if (!std::isfinite(value)) {
+        throw std::runtime_error("outline_snap_up: finite dimension required");
+    }
+    // Preserve the established truncation-toward-zero formula (including
+    // negative inputs and its 1e-6 bias), without an out-of-range int cast.
+    const double n = std::trunc((value + kOutlineSnapMm - 1e-6) / kOutlineSnapMm);
+    const double snapped = n * kOutlineSnapMm;
+    if (!std::isfinite(snapped)) {
+        throw std::runtime_error("outline_snap_up: snapped dimension overflow");
+    }
+    // The former integer intermediate canonicalized both signs of zero.
+    return py_round(snapped == 0.0 ? 0.0 : snapped, 1);
 }
 
 double outline_grow(int step) {
