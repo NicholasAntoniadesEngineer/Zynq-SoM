@@ -13,7 +13,7 @@ inline void counts(std::ostream& stream, const char* owner, const QuantizationCo
     stream << owner << '\n';
     // Separate additive contracts prove connector, floorplan, occupancy and legalizer additions.
     for (const auto& [name, count] : values)
-        if(name!="mechanical_direction_component" && name!="stage_direction_component" && !floorplan_precision_fixture::added(name) && !occupancy_precision_fixture::added(name) && !legalize_precision_fixture::added(name)&&!stage_precision_fixture::added(name))
+        if(name!="mechanical_direction_component" && name!="stage_direction_component" && !floorplan_precision_fixture::added(name) && !occupancy_precision_fixture::added(name) && !legalize_precision_fixture::added(name)&&!stage_precision_fixture::added(name)&&!placement_precision_fixture::added(name))
         stream << std::quoted(name) << ' ' << count << '\n';
 }
 inline void mechanical(std::ostream& stream, const PlacementMechResult& result) {

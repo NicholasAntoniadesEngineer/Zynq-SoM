@@ -19,6 +19,7 @@ add_library(schgen_core STATIC
     src/occupancy.cpp src/occupancy_precision.cpp src/seat.cpp src/sexpr.cpp src/route.cpp src/emit.cpp
     src/legalize.cpp src/quantize.cpp src/precision_ops.cpp src/turn.cpp src/pack.cpp
     src/legalize_precision.cpp src/stage_precision.cpp
+    src/placement_precision.cpp
     src/pack_anchor.cpp src/place_search.cpp src/cc.cpp src/embed_fp.cpp
     src/pack_edges.cpp src/pcb_scan.cpp src/pack_refine.cpp src/place_geom.cpp
     src/catalog.cpp src/json.cpp src/circuit.cpp src/reorder.cpp src/atomic_file.cpp
@@ -468,6 +469,34 @@ if(BUILD_TESTING)
         add_test(NAME native_${family}_contracts COMMAND schgen_${family}_contracts
             "${CMAKE_CURRENT_SOURCE_DIR}/..")
     endforeach()
+
+    add_library(schgen_placement_precision_observed OBJECT src/placement_precision.cpp)
+    target_include_directories(schgen_placement_precision_observed PRIVATE include)
+    target_compile_options(schgen_placement_precision_observed PRIVATE
+        -Wall -Wextra -Wpedantic -Werror -ffp-contract=off)
+    set_property(TARGET schgen_placement_precision_observed PROPERTY INTERPROCEDURAL_OPTIMIZATION FALSE)
+    if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+        target_compile_options(schgen_placement_precision_observed PRIVATE -finstrument-functions-after-inlining)
+    else()
+        target_compile_options(schgen_placement_precision_observed PRIVATE -finstrument-functions -fno-inline)
+    endif()
+    foreach(family placement_precision placement_precision_registry)
+        add_executable(schgen_${family}_contracts tests/${family}_contracts.cpp
+            $<TARGET_OBJECTS:schgen_placement_precision_observed>)
+        target_include_directories(schgen_${family}_contracts PRIVATE src)
+        target_link_libraries(schgen_${family}_contracts PRIVATE schgen_core)
+        target_compile_options(schgen_${family}_contracts PRIVATE
+            -Wall -Wextra -Wpedantic -Werror -ffp-contract=off)
+        set_property(TARGET schgen_${family}_contracts PROPERTY INTERPROCEDURAL_OPTIMIZATION FALSE)
+        add_test(NAME native_${family}_contracts COMMAND schgen_${family}_contracts
+            "${CMAKE_CURRENT_SOURCE_DIR}/..")
+    endforeach()
+    add_executable(schgen_placement_precision_source_contracts tests/placement_precision_audit_contracts.cpp)
+    target_link_libraries(schgen_placement_precision_source_contracts PRIVATE schgen_core)
+    target_compile_options(schgen_placement_precision_source_contracts PRIVATE
+        -Wall -Wextra -Wpedantic -Werror -ffp-contract=off)
+    add_test(NAME native_placement_precision_source_contracts COMMAND schgen_placement_precision_source_contracts
+        "${CMAKE_CURRENT_SOURCE_DIR}/..")
     add_library(schgen_stage_precision_observed OBJECT src/stage_precision.cpp)
     target_include_directories(schgen_stage_precision_observed PRIVATE include)
     target_compile_options(schgen_stage_precision_observed PRIVATE

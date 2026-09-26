@@ -682,6 +682,7 @@ std::optional<Pose> Occupancy::place_near(
     heap.push(HeapNode{xs[0].first + ys[0].first, 0, 0});
     std::unordered_map<double, std::vector<std::pair<double, double>>> buckets;
     std::priority_queue<double, std::vector<double>, std::greater<double>> bkeys;
+    std::vector<std::pair<double, double>> spare;
 
     auto flush = [&](double thresh) -> std::optional<Pose> {
         while (!bkeys.empty() && bkeys.top() <= thresh) {
@@ -699,6 +700,10 @@ std::optional<Pose> Occupancy::place_near(
                     return Pose{x, y, w, h};
                 }
             }
+            // Retain capacity only after every candidate in this bucket fails.
+            // No coordinates or legality results survive into the next bucket.
+            cell.clear();
+            spare.swap(cell);
         }
         return std::nullopt;
     };
@@ -714,7 +719,10 @@ std::optional<Pose> Occupancy::place_near(
         const double key = occupancy_frontier_key1dp(xcost + ycost, frontier_count);
         auto bit = buckets.find(key);
         if (bit == buckets.end()) {
-            buckets.emplace(key, std::vector<std::pair<double, double>>{{x, y}});
+            std::vector<std::pair<double, double>> cell;
+            cell.swap(spare);
+            cell.emplace_back(x, y);
+            buckets.emplace(key, std::move(cell));
             bkeys.push(key);
         } else {
             bit->second.emplace_back(x, y);

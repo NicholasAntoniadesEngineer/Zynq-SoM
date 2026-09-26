@@ -16,10 +16,10 @@ inline bool added(const std::string& name) {
 }
 inline schgen::QuantizationCounts select(const schgen::QuantizationCounts& values,bool new_only=true) {
     schgen::QuantizationCounts out;
-    // A newer, independently proven legalizer family is absent from the old
-    // occupancy-era snapshot. Every other prior/unknown name stays visible.
+    // Independently proven legalizer, stage and placement additions are absent
+    // from this historical snapshot. Every other prior/unknown name stays visible.
     for(const auto& [name,count]:values)
-        if(added(name)==new_only&&!legalize_precision_fixture::added(name)&&!stage_precision_fixture::added(name))out[name]=count;
+        if(added(name)==new_only&&!legalize_precision_fixture::added(name)&&!stage_precision_fixture::added(name)&&!placement_precision_fixture::added(name))out[name]=count;
     return out;
 }
 }

@@ -5,6 +5,7 @@
 #include "schgen/pcb_placement.hpp"
 #include "schgen/experiment_observers.hpp"
 #include "schgen/reorder.hpp"
+#include "schgen/placement_precision.hpp"
 
 namespace schgen::pcb_placement {
 using namespace pcb_stage;
@@ -57,7 +58,7 @@ std::vector<Shape> bottom_shapes(Context &, const Geometry &, const std::string 
                                  const std::set<std::string> &,
                                  const std::optional<PcbStageResult> &,
                                  const std::set<std::string> &, std::vector<std::string> &);
-Shape turned(const Shape &);
+Shape turned(const Shape &, QuantizationCounts* counts = nullptr);
 
 struct Placer {
     Placer(const PcbPlacementInput &, const PcbZoneResult &, const FloorplanStage &);

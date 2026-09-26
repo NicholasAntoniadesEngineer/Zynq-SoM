@@ -60,8 +60,8 @@ bool mirror_holds(const Context &ctx, const Geometry &g, const std::string &shee
 std::optional<Shape> member_mirror(const Context &ctx, const Geometry &g, const std::string &sheet,
                                    const PcbStageResult &p, const Rotations &connectors) {
     Shape s;
-    s.w = py_round(p.w, 4);
-    s.h = py_round(p.h, 4);
+    s.w = placement_variant_dimension_precision4dp(p.w, &ctx.quantization);
+    s.h = placement_variant_dimension_precision4dp(p.h, &ctx.quantization);
     s.top_off = p.top;
     s.bot_off = p.bottom;
     s.tag = "mirror";
@@ -85,15 +85,15 @@ std::optional<Shape> member_mirror(const Context &ctx, const Geometry &g, const 
         return {};
     auto center = rect_center(*boxes_union(boxes));
     for (const auto &[r, b] : members) {
-        Box4 next{py_round(2 * center.first - b.x1, 4), py_round(2 * center.second - b.y1, 4),
-                  py_round(2 * center.first - b.x0, 4), py_round(2 * center.second - b.y0, 4)};
+        Box4 next{placement_member_box_precision4dp(2 * center.first - b.x1, &ctx.quantization), placement_member_box_precision4dp(2 * center.second - b.y1, &ctx.quantization),
+                  placement_member_box_precision4dp(2 * center.first - b.x0, &ctx.quantization), placement_member_box_precision4dp(2 * center.second - b.y0, &ctx.quantization)};
         if (next.x0 < -1e-6 || next.y0 < -1e-6 || next.x1 > p.w + 1e-6 || next.y1 > p.h + 1e-6)
             return {};
         for (const auto &c : conn_boxes)
             if (boxes_overlap(next, c, ctx.clearance))
                 return {};
         auto &xy = s.top_off.count(r) ? s.top_off.at(r) : s.bot_off.at(r);
-        xy = {py_round(2 * center.first - xy.first, 4), py_round(2 * center.second - xy.second, 4)};
+        xy = {placement_member_pose_precision4dp(2 * center.first - xy.first, &ctx.quantization), placement_member_pose_precision4dp(2 * center.second - xy.second, &ctx.quantization)};
         auto rot = p.rotations.find(r);
         s.extra_rot[r] = normalize((rot == p.rotations.end() ? 0 : rot->second) + 180);
     }
@@ -116,7 +116,7 @@ std::vector<Shape> bottom_shapes(Context &ctx, const Geometry &g, const std::str
             if (face.count(r))
                 throw PcbZoneInfeasible(
                     "bottom eligibility retained a face-top part in its primary pack: " + r);
-            s.top_off[r] = {py_round(p.w - xy.first, 4), xy.second};
+            s.top_off[r] = {placement_bottom_pose_precision4dp(p.w - xy.first, &ctx.quantization), xy.second};
             double rot = p.rotations.count(r) ? p.rotations.at(r) : 0;
             s.extra_rot[r] = normalize(180 - rot);
             auto key = g.resolvable.at(r), mk = "@mirror/" + key;
@@ -193,8 +193,8 @@ std::vector<Shape> bottom_shapes(Context &ctx, const Geometry &g, const std::str
                 mx = std::max(mx, b.x1);
                 my = std::max(my, b.y1);
             }
-            p.w = py_round(std::max(p.w, mx + zone_pad), 4);
-            p.h = py_round(std::max(p.h, my + zone_pad), 4);
+            p.w = placement_lift_extent_precision4dp(std::max(p.w, mx + zone_pad), &ctx.quantization);
+            p.h = placement_lift_extent_precision4dp(std::max(p.h, my + zone_pad), &ctx.quantization);
         }
         auto shape = mirror(p, "bottom");
         if (mirror_holds(ctx, g, sheet, shape))
@@ -211,7 +211,7 @@ std::vector<Shape> bottom_shapes(Context &ctx, const Geometry &g, const std::str
         for (double aspect : {1., 2.2, 1., .45}) {
             auto p = pack_zone(ctx, g, g.refs_by_sheet.at(sheet), aspect, {}, "", face,
                                split ? nullptr : &all_top);
-            if (!seen.insert({py_round(p.w, 4), py_round(p.h, 4)}).second)
+            if (!seen.insert({placement_shape_key_precision4dp(p.w, &ctx.quantization), placement_shape_key_precision4dp(p.h, &ctx.quantization)}).second)
                 continue;
             std::string a = aspect == 1 ? "1" : aspect == 2.2 ? "2.2" : "0.45";
             result.push_back(mirror(p, (split ? "bottom-split-a" : "bottom-a") + a));

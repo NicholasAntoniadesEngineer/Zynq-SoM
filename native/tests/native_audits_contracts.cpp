@@ -52,7 +52,7 @@ void registry_contracts(const JsonNode& reference){
     rejects([&]{f.record("not-registered");},"unknown fallback is an error");rejects([&]{register_native_fallbacks(f);},"duplicate fallback registration fails");
     rejects([&]{f.restore({"not-registered"});},"bad restore fails before state mutation");require(f.snapshot()==snap,"failed restore preserves events");
     f.reset();require(f.census().at("seat_node_budget")==AuditInteger{},"fallback reset keeps zero registrations");
-    NativeQuantizations q;register_native_quantizations(q);require(q.declarations().size()==64,"40 prior plus seven legalizer and seventeen stage operations");
+    NativeQuantizations q;register_native_quantizations(q);require(q.declarations().size()==83,"64 prior plus nineteen placement operations");
     rejects([&]{register_native_quantizations(q);},"duplicate transform registration fails");
     const std::vector<double> values={-100.13,-2.5,-0.635,-0.25,0,0.05,0.635,1.2345,83.15};
     for(double value:values){
@@ -146,8 +146,8 @@ void source_contracts(const fs::path& root,const fs::path& scratch){
     // Real production C++ translation unit: no Python input, grammar or fixture
     // source. All raw operations must be inside an explicitly registered body.
     CppAuditOptions live;live.flags={"-I"+(root/"native/include").string()};
-    const auto census=scan_cpp_audit_sources(root,{{"native/include/schgen/quantize.hpp"},{"native/src/quantize.cpp"},{"native/src/native_audit_quantize.cpp"},{"native/src/precision_ops.cpp"},{"native/src/occupancy_precision.cpp"},{"native/src/legalize_precision.cpp"},{"native/src/stage_precision.cpp"}},live);
-    require(census.constants.size()==8&&census.functions.size()==64,"actual native quantize/precision declarations are scanned");
+    const auto census=scan_cpp_audit_sources(root,{{"native/include/schgen/quantize.hpp"},{"native/src/quantize.cpp"},{"native/src/native_audit_quantize.cpp"},{"native/src/precision_ops.cpp"},{"native/src/occupancy_precision.cpp"},{"native/src/legalize_precision.cpp"},{"native/src/stage_precision.cpp"},{"native/src/placement_precision.cpp"}},live);
+    require(census.constants.size()==8&&census.functions.size()==83,"actual native quantize/precision declarations are scanned");
     NativeQuantizations all;register_native_quantizations(all);
     NativeLedger live_ledger;
     const std::vector<std::pair<std::string,double>> constants={{"kGridMm",fixed_part_grid(1.3)},{"kHalfMm",som_pose_half_mm(0.7)},{"kCreditMm",quant_credit(0)},

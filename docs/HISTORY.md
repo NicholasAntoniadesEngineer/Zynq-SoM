@@ -2,6 +2,22 @@
 
 ## 2026-09-26 — tracked Python retirement (acceptance in progress)
 
+Placement and allocation batch (autonomous, per full-autonomy directive):
+nineteen placement scalar boundaries now have explicit invocation-owned
+accounting and exact registry entries (64 -> 83). Original geometry, legacy
+counts and output fixtures are retained; rejected eviction and duplicate shape
+work is independently counted. Scalar keys reuse immutable strings rather than
+allocating a temporary string on every recorded call. The full shared build,
+fourteen placement/compatibility contracts and two real-source audit contracts
+pass on the integrated snapshot. This is not whole-board acceptance.
+
+Occupancy now reuses one empty failed-bucket vector's capacity per search,
+without retaining coordinates/results or changing traversal, sorting or checks.
+Private allocation instrumentation measured carrier calls to allocation falling
+from 32,422,620 to 8,295,528 (74.41% fewer); four variant outputs and ordered
+traversal remain identical. Current integrated occupancy and full placement
+contracts also pass. This allocation result is not a measured runtime speedup.
+
 Owner baseline correction: the sole performance comparison baseline is now
 `0e9bbc913bab77f9cd228940db2a332d25d6bfa1`. Previous `4bd47c33` measurements
 are historical observations only, not the requested comparison. The exact

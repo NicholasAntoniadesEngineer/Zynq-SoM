@@ -81,7 +81,7 @@ void Placer::l4_pull() {
         if (!area)
             area = 1;
         double chosen = 0;
-        for (int k = static_cast<int>(std::min(dist, 40.)); k > 0; --k) {
+        for (int k = placement_l4_distance_trunc(std::min(dist, 40.), &ctx.quantization); k > 0; --k) {
             double shift = k;
             Offsets shifted;
             bool okay = true;
@@ -112,7 +112,7 @@ void Placer::l4_pull() {
         if (chosen > 0)
             for (const auto &r : movers) {
                 auto p = pos.at(r);
-                p = {py_round(p.first + ux * chosen, 4), py_round(p.second + uy * chosen, 4)};
+                p = {placement_l4_pose_precision4dp(p.first + ux * chosen, &ctx.quantization), placement_l4_pose_precision4dp(p.second + uy * chosen, &ctx.quantization)};
                 pos[r] = p;
                 bottom[r] = grow_rect(box(r, p), pc / 2);
                 auto s = subjects.find(r);
@@ -150,7 +150,7 @@ void Placer::edge_seat() {
             p.first = .4 - b->x0;
         else if (edge == "E")
             p.first = width - .4 - b->x1;
-        pos[r] = {py_round(p.first, 4), py_round(p.second, 4)};
+        pos[r] = {placement_edge_seat_precision4dp(p.first, &ctx.quantization), placement_edge_seat_precision4dp(p.second, &ctx.quantization)};
         grid_placed.insert(r);
     }
 }
@@ -212,8 +212,8 @@ void Placer::refit() {
                 if (b == pb.end())
                     continue;
                 auto p = pos.at(r);
-                ext.emplace_back(py_round(p.first + (b->second.x0 + b->second.x1) / 2, 3),
-                                 py_round(p.second + (b->second.y0 + b->second.y1) / 2, 3),
+                ext.emplace_back(placement_foreign_pad_precision3dp(p.first + (b->second.x0 + b->second.x1) / 2, &ctx.quantization),
+                                 placement_foreign_pad_precision3dp(p.second + (b->second.y0 + b->second.y1) / 2, &ctx.quantization),
                                  ctx.by_ref.at(r).sheet);
             }
         }
@@ -354,7 +354,7 @@ void Placer::evict() {
                                   : ey < 0 ? -k
                                            : 0);
                 auto old = pos.at(ref);
-                FloorplanPoint p{py_round(old.first + sx, 4), py_round(old.second + sy, 4)};
+                FloorplanPoint p{placement_evict_trial_precision4dp(old.first + sx, &ctx.quantization), placement_evict_trial_precision4dp(old.second + sy, &ctx.quantization)};
                 auto next = box(ref, p);
                 if (next.x0 < .6 || next.y0 < .6 || next.x1 > width - .6 || next.y1 > height - .6 ||
                     hit(next, corridors))

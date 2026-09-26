@@ -155,14 +155,14 @@ bool edge_family(const std::string &value) {
                                               "XT60PW-M"};
     return values.count(value) != 0;
 }
-Shape turned(const Shape &s) {
+Shape turned(const Shape &s, QuantizationCounts* counts) {
     Shape out = s;
-    out.w = py_round(s.h, 4);
-    out.h = py_round(s.w, 4);
+    out.w = placement_turn_dimension_precision4dp(s.h, counts);
+    out.h = placement_turn_dimension_precision4dp(s.w, counts);
     out.extra_rot.clear();
     for (auto *offsets : {&out.top_off, &out.bot_off})
         for (auto &[r, p] : *offsets) {
-            p = {py_round(p.second, 4), py_round(s.w - p.first, 4)};
+            p = {placement_turn_offset_precision4dp(p.second, counts), placement_turn_offset_precision4dp(s.w - p.first, counts)};
             auto rot = s.extra_rot.find(r);
             out.extra_rot[r] = normalize((rot == s.extra_rot.end() ? 0 : rot->second) + 90);
         }

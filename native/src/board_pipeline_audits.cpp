@@ -8,6 +8,7 @@ std::vector<CppAuditSource> board_pipeline_audit_sources(){
     for(const auto* name:{"quantize.cpp","native_audit_quantize.cpp","floorplan_internal.hpp","floorplan_geometry.cpp","floorplan_cross.cpp","floorplan_pack.cpp","floorplan_compose.cpp","floorplan_build.cpp","floorplan_notes.cpp","floorplan_svg.cpp","floorplan_md.cpp","pcb_stage_internal.hpp","pcb_stage_geometry.cpp","pcb_stage_search.cpp","pcb_stage_power.cpp","pcb_stage_zone.cpp","pcb_placement_internal.hpp","pcb_placement_inputs.cpp","pcb_placement_pack.cpp","pcb_placement_variants.cpp","pcb_placement_zones.cpp","pcb_placement_model.cpp","pcb_placement_moves.cpp","pcb_placement_breathe.cpp","pcb_placement_build.cpp","pcb_escape_internal.hpp","pcb_escape_copper.cpp","pcb_escape_plan.cpp","pcb_escape_model.cpp","pcb_escape_triage.cpp","pcb_embed.cpp","pcb_emit.cpp","pcb_project.cpp","pcb_silk.cpp","legalize.cpp","occupancy.cpp","pack.cpp","ratsnest_gate.cpp"})out.push_back({std::string("native/src/")+name});
     out.push_back({"native/src/legalize_precision.cpp"});
     out.push_back({"native/src/stage_precision.cpp"});
+    out.push_back({"native/src/placement_precision.cpp"});
     return out;
 }
 void import_board_floorplan_ledger(NativeLedger& ledger,const FloorplanAccounting& accounting,

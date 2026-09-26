@@ -197,9 +197,9 @@ void Placer::instantiate() {
             inst.pad_nets[pad] =
                 n == pin_net.end() ? std::pair<int, std::string>{0, ""} : n->second;
         }
-        inst.x = grid_placed.count(r) ? py_round(25 + xy->second.first, 4)
+        inst.x = grid_placed.count(r) ? placement_emission_pose_precision4dp(25 + xy->second.first, &ctx.quantization)
                                       : ctx.fixed_grid(25 + xy->second.first);
-        inst.y = grid_placed.count(r) ? py_round(25 + xy->second.second, 4)
+        inst.y = grid_placed.count(r) ? placement_emission_pose_precision4dp(25 + xy->second.second, &ctx.quantization)
                                       : ctx.fixed_grid(25 + xy->second.second);
         m.insts.push_back(inst);
         ++m.placed;
@@ -221,8 +221,8 @@ void Placer::instantiate() {
             i.ref = "FID" + std::to_string(index++);
             i.value = "Fiducial";
             i.footprint = "Fiducial:Fiducial_1mm_Mask2mm";
-            i.x = py_round(xy.first, 4);
-            i.y = py_round(xy.second, 4);
+            i.x = placement_fiducial_precision4dp(xy.first, &ctx.quantization);
+            i.y = placement_fiducial_precision4dp(xy.second, &ctx.quantization);
             i.mod = fid;
             i.sheet = "mechanical";
             m.insts.push_back(i);

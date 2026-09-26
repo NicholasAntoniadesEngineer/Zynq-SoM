@@ -128,7 +128,7 @@ PcbZoneResult build_pcb_zone_geometry(const PcbPlacementInput &in) {
             out.fallback_events.insert(out.fallback_events.end(), p.fallback_events.begin(),
                                        p.fallback_events.end());
             checked_quantization_merge(out.quantization_engagements, p.quantization_engagements);
-            auto ab = shape(p, "asbuilt"), tn = turned(ab), t2 = turned(tn), t3 = turned(t2);
+            auto ab = shape(p, "asbuilt"), tn = turned(ab, &ctx.quantization), t2 = turned(tn, &ctx.quantization), t3 = turned(t2, &ctx.quantization);
             tn.tag = "turned";
             t2.tag = "t180";
             t3.tag = "t270";
@@ -171,7 +171,7 @@ PcbZoneResult build_pcb_zone_geometry(const PcbPlacementInput &in) {
                 if (alternative.h <= board_decision_policy::interior_band_target && alternative.h < p.h)
                     p = alternative;
                 else if (p.w <= board_decision_policy::interior_band_target && p.w < p.h) {
-                    auto t = turned(shape(p, ""));
+                    auto t = turned(shape(p, ""), &ctx.quantization);
                     p.top = t.top_off;
                     p.bottom = t.bot_off;
                     p.w = t.w;
@@ -180,11 +180,11 @@ PcbZoneResult build_pcb_zone_geometry(const PcbPlacementInput &in) {
                 }
             }
             if (!edge && !conn_rot.count(sheet)) {
-                std::set<FloorplanPoint> seen{{py_round(p.w, 4), py_round(p.h, 4)}};
+                std::set<FloorplanPoint> seen{{placement_shape_key_precision4dp(p.w, &ctx.quantization), placement_shape_key_precision4dp(p.h, &ctx.quantization)}};
                 std::vector<Shape> variants;
                 for (double aspect : {2.2, 1., .45}) {
                     auto v = pack_zone(ctx, g, refs, aspect);
-                    if (seen.insert({py_round(v.w, 4), py_round(v.h, 4)}).second)
+                    if (seen.insert({placement_shape_key_precision4dp(v.w, &ctx.quantization), placement_shape_key_precision4dp(v.h, &ctx.quantization)}).second)
                         variants.push_back(shape(v, aspect == 2.2 ? "a2.2"
                                                     : aspect == 1 ? "a1"
                                                                   : "a0.45"));

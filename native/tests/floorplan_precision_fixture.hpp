@@ -18,7 +18,7 @@ inline bool added(const std::string& name) {
 }
 inline QuantizationCounts select(const QuantizationCounts& values,bool new_only=true) {
     QuantizationCounts out;for(const auto& [name,count]:values)
-        if(added(name)==new_only&&!occupancy_precision_fixture::added(name)&&!legalize_precision_fixture::added(name)&&!stage_precision_fixture::added(name))out[name]=count;
+        if(added(name)==new_only&&!occupancy_precision_fixture::added(name)&&!legalize_precision_fixture::added(name)&&!stage_precision_fixture::added(name)&&!placement_precision_fixture::added(name))out[name]=count;
     return out;
 }
 // Lossless typed snapshot: exact binary-double round trip, insertion order,

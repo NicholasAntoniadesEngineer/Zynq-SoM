@@ -1,4 +1,5 @@
 #pragma once
+#include "placement_precision_fixture.hpp"
 #include "schgen/execution_accounting.hpp"
 #include <array>
 #include <algorithm>
@@ -22,6 +23,6 @@ inline const std::array<std::string,17> names{{"stage_shift_precision4dp",
     "stage_seat_radius_trunc"}};
 inline bool added(const std::string& n){return std::find(names.begin(),names.end(),n)!=names.end();}
 inline schgen::QuantizationCounts select(const schgen::QuantizationCounts& all,bool additions=true){
-    schgen::QuantizationCounts out;for(const auto& [n,c]:all)if(added(n)==additions)out[n]=c;return out;
+    schgen::QuantizationCounts out;for(const auto& [n,c]:all)if(added(n)==additions&&!placement_precision_fixture::added(n))out[n]=c;return out;
 }
 }

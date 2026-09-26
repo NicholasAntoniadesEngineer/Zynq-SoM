@@ -54,7 +54,7 @@ void scalar_contracts(){
         require(std::min(narrow_ops[i](60.9,nullptr),60)==60,"cap stays after conversion");
     }
     NativeQuantizations registry;register_native_quantizations(registry);
-    require(registry.declarations().size()==64,"40 prior plus seven legalizer and seventeen stage operations");
+    require(registry.declarations().size()==83,"64 prior plus nineteen placement operations");
     const auto declarations=registry.declarations();
     for(std::size_t i=0;i<names.size();++i){
         const auto d=std::find_if(declarations.begin(),declarations.end(),[&](const auto& x){return x.name==names[i];});

@@ -1,4 +1,5 @@
 #pragma once
+#include "placement_precision_fixture.hpp"
 #include "schgen/execution_accounting.hpp"
 #include <algorithm>
 #include <array>
@@ -17,7 +18,7 @@ inline bool added(const std::string& name) {
 }
 inline schgen::QuantizationCounts select(const schgen::QuantizationCounts& values,bool new_only=true) {
     schgen::QuantizationCounts out;
-    for(const auto& [name,count]:values)if(added(name)==new_only)out[name]=count;
+    for(const auto& [name,count]:values)if(added(name)==new_only&&!placement_precision_fixture::added(name))out[name]=count;
     return out;
 }
 } // namespace legalize_precision_fixture

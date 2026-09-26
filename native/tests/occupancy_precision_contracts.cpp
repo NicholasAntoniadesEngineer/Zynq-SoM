@@ -250,7 +250,7 @@ void ownership_and_rejections(){
 }
 void registry_and_boards(const std::filesystem::path& root){
     NativeQuantizations registry;register_native_quantizations(registry);
-    require(registry.declarations().size()==64,"40 prior plus seven legalizer and seventeen stage operations");
+    require(registry.declarations().size()==83,"64 prior plus nineteen placement operations");
     for(int i=0;i<6;++i){
         const auto declarations=registry.declarations();
         const auto d=std::find_if(declarations.begin(),declarations.end(),[&](const auto& row){return row.name==names[i];});

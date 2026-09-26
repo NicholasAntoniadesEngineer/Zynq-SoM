@@ -70,8 +70,8 @@ PcbStageResult pack_zone(const Context &ctx, const Geometry &g,
             auto h = halo(r);
             double w = h.x1 - h.x0, height = h.y1 - h.y0;
             auto &dst = bot ? result.bottom : result.top;
-            dst[r] = {py_round((horizontal ? cursor : zone_pad) - h.x0, 4),
-                      py_round((horizontal ? zone_pad : cursor) - h.y0, 4)};
+            dst[r] = {placement_connector_pose_precision4dp((horizontal ? cursor : zone_pad) - h.x0, &ctx.quantization),
+                      placement_connector_pose_precision4dp((horizontal ? zone_pad : cursor) - h.y0, &ctx.quantization)};
             cursor += (horizontal ? w : height) + pc;
             depth = std::max(depth, zone_pad + (horizontal ? height : w));
         }
@@ -92,11 +92,11 @@ PcbStageResult pack_zone(const Context &ctx, const Geometry &g,
                      0, false});
         auto b = shelf_pack(items(rb, false), target, blockers, zone_pad);
         for (const auto &[r, x, y] : t.placed)
-            result.top[r] = {py_round(x + (horizontal ? 0 : behind), 4),
-                             py_round(y + (horizontal ? behind : 0), 4)};
+            result.top[r] = {placement_behind_pose_precision4dp(x + (horizontal ? 0 : behind), &ctx.quantization),
+                             placement_behind_pose_precision4dp(y + (horizontal ? behind : 0), &ctx.quantization)};
         for (const auto &[r, x, y] : b.placed)
-            result.bottom[r] = {py_round(x + (horizontal ? 0 : behind), 4),
-                                py_round(y + (horizontal ? behind : 0), 4)};
+            result.bottom[r] = {placement_behind_pose_precision4dp(x + (horizontal ? 0 : behind), &ctx.quantization),
+                                placement_behind_pose_precision4dp(y + (horizontal ? behind : 0), &ctx.quantization)};
         result.w = result.h = zone_pad;
         for (const auto *map : {&result.top, &result.bottom})
             for (const auto &[r, p] : *map) {
@@ -104,16 +104,16 @@ PcbStageResult pack_zone(const Context &ctx, const Geometry &g,
                 result.w = std::max(result.w, p.first + b.x1 + pc / 2);
                 result.h = std::max(result.h, p.second + b.y1 + pc / 2);
             }
-        result.w = py_round(result.w + zone_pad, 4);
-        result.h = py_round(result.h + zone_pad, 4);
+        result.w = placement_pack_extent_precision4dp(result.w + zone_pad, &ctx.quantization);
+        result.h = placement_pack_extent_precision4dp(result.h + zone_pad, &ctx.quantization);
         if (outer == "S" || outer == "E")
             for (auto *map : {&result.top, &result.bottom})
                 for (auto &[r, p] : *map) {
                     auto b = turn_box(g.bbox_of.at(r), rotation(r));
                     if (outer == "S")
-                        p.second = py_round(result.h - (p.second + b.y1) - b.y0, 4);
+                        p.second = placement_edge_mirror_pose_precision4dp(result.h - (p.second + b.y1) - b.y0, &ctx.quantization);
                     else
-                        p.first = py_round(result.w - (p.first + b.x1) - b.x0, 4);
+                        p.first = placement_edge_mirror_pose_precision4dp(result.w - (p.first + b.x1) - b.x0, &ctx.quantization);
                 }
         return result;
     }
@@ -173,8 +173,8 @@ PcbStageResult pack_zone(const Context &ctx, const Geometry &g,
         }
     auto pack = shelf_pack(items(bottom), target, blockers, zone_pad);
     result.bottom = offsets(pack);
-    result.w = py_round(std::max(tw, pack.packed_w), 4);
-    result.h = py_round(std::max(th, pack.packed_h), 4);
+    result.w = placement_pack_extent_precision4dp(std::max(tw, pack.packed_w), &ctx.quantization);
+    result.h = placement_pack_extent_precision4dp(std::max(th, pack.packed_h), &ctx.quantization);
     return result;
 }
 } // namespace schgen::pcb_placement
