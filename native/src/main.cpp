@@ -7,6 +7,7 @@
 #include "schgen/sexpr.hpp"
 #include "schgen/turn.hpp"
 #include "schgen/project_cli.hpp"
+#include "schgen/part_import.hpp"
 #include "schgen/selftest_full.hpp"
 
 #include <iostream>
@@ -27,6 +28,7 @@ int main(int argc, char** argv) {
                          "  pcb-stage [--project NAME] [--kicad-cli PATH] -o DIRECTORY (construction only)\n"
                          "  pcb-drc [--project NAME] [--pcb FILE] [-o REPORT]\n"
                          "  subsystem-new NAME [--repo DIRECTORY] (new C++ package; never overwrites)\n"
+                         "  part-import --parts-root DIRECTORY (--from-json FILE | --lcsc ID) [--name NAME] [--overwrite] [--catalog FILE]\n"
                          "  render3d | model3d-check [--project NAME] [-o DIRECTORY]\n"
                          "  board-step [--project NAME] [--pcb FILE] --output FILE\n"
                          "  assembly | ratsnest | si-constraints [--project NAME] [-o DIRECTORY]\n"
@@ -57,6 +59,7 @@ int main(int argc, char** argv) {
             std::cout << schgen::selftest_worker_emit(schgen::parse_json_file(argv[2]), argv[3]);
             return 0;
         }
+        if (const auto status = schgen::run_part_import_command(argc, argv)) return *status;
         if (const auto status = schgen::run_project_command(argc, argv)) return *status;
         if (argc >= 2 && std::string(argv[1]) == "catalog-compile") {
             if (argc != 4) {

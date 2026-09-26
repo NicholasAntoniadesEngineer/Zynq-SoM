@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.18)
 project(schgen_native LANGUAGES CXX)
 set_source_files_properties(src/legalize.cpp PROPERTIES COMPILE_OPTIONS "-ffp-contract=off")
+set_source_files_properties(src/part_import_symbol.cpp src/part_import_footprint.cpp
+    PROPERTIES COMPILE_OPTIONS "-ffp-contract=off")
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -57,6 +59,8 @@ target_sources(schgen_core PRIVATE src/procurement.cpp)
 target_sources(schgen_core PRIVATE src/gallery.cpp src/diagram.cpp)
 target_sources(schgen_core PRIVATE src/pcb_verification.cpp)
 target_sources(schgen_core PRIVATE src/pcb_drc.cpp)
+target_sources(schgen_core PRIVATE src/part_import.cpp src/part_import_symbol.cpp
+    src/part_import_footprint.cpp src/part_import_io.cpp src/part_import_cli.cpp)
 target_sources(schgen_core PRIVATE
     src/board_pipeline.cpp src/board_pipeline_authoring.cpp src/board_pipeline_audits.cpp
     src/board_pipeline_cc.cpp src/board_pipeline_checks.cpp src/board_pipeline_coverage.cpp
@@ -316,6 +320,11 @@ if(BUILD_TESTING)
     target_compile_options(schgen_pcb_checks_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror -ffp-contract=off)
     add_test(NAME native_pcb_checks_contracts COMMAND schgen_pcb_checks_contracts "${CMAKE_CURRENT_SOURCE_DIR}/..")
     add_executable(schgen_firmware_docs_contracts tests/firmware_docs_contracts.cpp)
+    add_executable(schgen_part_import_contracts tests/part_import_contracts.cpp)
+    target_link_libraries(schgen_part_import_contracts PRIVATE schgen_core)
+    target_compile_options(schgen_part_import_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror)
+    add_test(NAME native_part_import_contracts COMMAND schgen_part_import_contracts
+        "${CMAKE_CURRENT_SOURCE_DIR}/tests/data/part_gen" "$<TARGET_FILE:schgen>")
     add_executable(schgen_board_pipeline_contracts tests/board_pipeline_contracts.cpp)
     target_include_directories(schgen_board_pipeline_contracts PRIVATE src)
     target_link_libraries(schgen_board_pipeline_contracts PRIVATE schgen_core PNG::PNG)

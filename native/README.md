@@ -195,6 +195,16 @@ inventories cover both projects, reject damaged/missing registered inputs, and
 remain identical in a Python-free fixture tree. Live contracts separately check
 the new provenance and unchanged generated hardware logic.
 
+`part-import --parts-root DIRECTORY --from-json FILE` converts recorded EasyEDA
+responses entirely in C++; offline mode never calls a transport. Use `--lcsc ID`
+instead for an explicitly online import, `--name NAME` to override the part name,
+and `--overwrite` only when replacing existing files is intended. Catalog refresh
+is separate and opt-in via `--catalog FILE`. Publication validates all targets
+first and replaces each file atomically, but is not a multi-file transaction.
+The native tests compare 62 recorded parts (three model variants each) byte for
+byte, exercise the real offline CLI and reject malformed input, HTTP failures,
+oversized/truncated responses, duplicate models and symlink output targets.
+
 The native `pcb-stage --project NAME -o DIRECTORY` command now performs live
 KiCad netlist extraction, immutable input loading, floorplanning, placement,
 escape planning and PCB/project/rules emission. It is a construction stage,
