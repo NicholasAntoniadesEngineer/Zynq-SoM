@@ -15,6 +15,6 @@
   "removed_python_configuration": ["requirements.txt", "pyproject.toml", ".pre-commit-config.yaml"],
   "ignored_runtime_backup": "/private/tmp/zynq-retired-python.iyilwa",
   "tree_python_census": "No .py found by rg --files --hidden --no-ignore after moving ignored Python environment and duplicate tests outside the repository; .git excluded.",
-  "whole_native_suite": "IN PROGRESS: /private/tmp/schgen-python-retired-ctest.log",
+  "whole_native_suite": "PASS: 184/184 CTests, 587.00 seconds, including live KiCad, repeated-build, committed-render, native authoring closure and complete source census. Run against retired Python tree at commit 0ea2dab5; native/build/fast/Testing/Temporary/LastTest.log.",
   "clean_full_board_acceptance": "NOT YET PROVEN; source-policy and all design gates remain mandatory"
 }

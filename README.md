@@ -14,27 +14,26 @@ and its build script are retired. Native `schgen check --tests-dir BUILD` runs
 the full board, mutation/determinism selftest and complete CTest inventory.
 All 393 inventoried tracked Python sources and tests are retired, along with
 their dependency and lint configuration. Clean-tree acceptance is still in
-progress; legacy examples below are historical context, not working commands.
+progress; the commands below use the native executable.
 All verification remains local, as required by the repository's no-CI policy.
 No hosted workflow or gate bypass is introduced.
 
 ## The layers
 
 1. **`parts/`** — one folder per physical part, named by MPN, GENERATED from
-   LCSC/EasyEDA (`schgen part add C…`): pin table, symbol, footprint, 3D.
+   LCSC/EasyEDA (`native/bin/schgen part-import --parts-root parts --lcsc C…`):
+   pin table, symbol, footprint, 3D.
    See `parts/README.md`.
-2. **`subsystems/`** — a project-agnostic **reusable subsystem library**: one
-   self-contained package per portable subsystem (netlist with ABSTRACT
-   port/rail names + README + SPICE subckt + offline local test). A project
-   consumes one via a thin adapter that supplies a `META` dict (the
-   `bind`/`expects`/`buses`/`notes` contract in `schgen/core/subsystem.py`).
-   Scaffold a new one with `schgen subsystem <name>`. See
+2. **`subsystems/`** — project-agnostic subsystem assets: interface contracts,
+   READMEs, SPICE subcircuits and independent reference data. C++ netlist
+   factories live in `native/src/authoring_*.cpp`; project adapters supply
+   `bind`/`expects`/`buses`/`notes` metadata through the native registry.
+   Scaffold a new one with `native/bin/schgen subsystem-new <name>`. See
    `subsystems/README.md`.
-3. **`carrier/subsystems/`** — the board layer: one Python netlist per sheet,
-   the only hand-written design layer. Sheets are either **thin META adapters**
-   over the `subsystems/` library or **carrier-specific glue** (the J1/J2/J3
-   connector, power, bring-up and board-services sheets) composed directly from
-   `parts/` (`use_part`, named pins, the `carrier/nets.py` net contract). See
+3. **`carrier/subsystems/`** — board subsystem assets and generated circuit
+   projections. C++ project factories and adapters in `native/src/project_*.cpp`
+   define the netlists; the J1/J2/J3 connector contract is extracted live from
+   the SoM. Parts are resolved by library identity and named pins. See
    `carrier/README.md` and `carrier/subsystems/README.md`.
 4. **The board** — `schgen` derives ALL geometry from netlist topology,
    proves it (netlist-equivalence + ERC + zero-overlap visual gates) and
@@ -45,25 +44,23 @@ Plus `som/` — the hand-authored Zynq SoM KiCad project (open
 The SoM↔carrier contract `carrier/som_interface.json` is extracted
 programmatically (`schgen som-interface`), never hand-edited.
 
-## Legacy Python regeneration/parity
+## Native regeneration
 
 ```bash
-pip install pymupdf pillow                    # kicad-cli must be on PATH
-PYTHONPATH=. python -m schgen board           # EVERY sheet + link + project + all images (~300s)
-PYTHONPATH=. python -m schgen board --no-render   # every gate, skip the 3D raytrace (~260s)
+native/bin/schgen board --project carrier --timing
+native/bin/schgen board --project devkit_mini --timing
+# Diagnostic generation without output renders:
+native/bin/schgen board --project carrier --no-render --timing
 ```
 
-`--no-render` runs every gate on the same emitted board but skips the output renders (the 37
-per-sheet schematic PNGs + the multi-angle 3D raytrace) — the emitted `.kicad_sch`/`.kicad_pcb`
-are byte-identical either way. The per-sheet PNGs draw concurrently with ERC so they cost little
-wall-time; the real saving is the serial ~28 s 3D raytrace (≈15 % off a ~300 s build). Drop the
-flag for the committed renders. The bulk of build time is gate computation (DRC / ERC / ratsnest
-MST / escape lanes), not rendering.
+`--no-render` is diagnostic: it skips output renders, not mandatory electrical,
+geometry or source-policy gates. Omit it for rendered acceptance. Use `--timing`
+to measure this native implementation; historical Python timings do not apply.
 
 `schgen build <name>` gates a single sheet (preview into a tempdir, nothing
 committed). `schgen board` regenerates the committed outputs in place:
 `carrier/Zynq_Carrier.kicad_pro` (open in KiCad), `schematic/`, `renders/`
-(golden-snapshot drift detection, `--bless` to accept), `reports/`,
+(golden-snapshot drift detection), `reports/`,
 `manufacturing/` (JLC BOM + layout constraints), and
 `fpga/Zynq_Carrier_pins.xdc` — Vivado PACKAGE_PIN + IOSTANDARD for every
 carrier port on a Zynq PL ball, ball map live-extracted from the SoM and
@@ -87,7 +84,7 @@ no-connect, foreign-net junction short) and proves a gate kills each, then
 builds twice and byte-compares for determinism.
 
 ```bash
-PYTHONPATH=. python -m schgen selftest
+native/bin/schgen selftest
 ```
 
 ## Process + where to read more

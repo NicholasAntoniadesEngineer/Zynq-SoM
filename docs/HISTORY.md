@@ -15,6 +15,14 @@ repository to `/private/tmp/zynq-retired-python.iyilwa`; the subsequent tree sca
 found no `.py` files (including ignored/hidden files, excluding Git internals).
 Fixed pipeline exception classification: a child gate verdict is not proof
 that its parent stage completed. Both ordinary and live pipeline tests pass.
+Follow-up cleanup deleted generated Python bytecode directories, pytest/Ruff
+caches, the unused Python-enabled Make/CMake build metadata and nanobind archive.
+These ignored caches are not recoverable from Git; they contained no source
+of truth. Active `native/build/fast`, compiler cache and native dependencies
+were retained. A C++ working-tree test now rejects reintroduced Python source,
+bytecode and retired dependency configuration, including hidden/ignored paths.
+The root README now documents native commands rather than retired Python entry
+points; historical independent parity fixtures remain as regression evidence.
 
 This is the **archive** of the hand-written planning / decision / run logs that
 drove the carrier rebuild. The content below is preserved verbatim under dated

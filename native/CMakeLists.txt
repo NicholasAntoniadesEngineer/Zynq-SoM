@@ -193,6 +193,12 @@ include(CTest)
 include(cmake/SubsystemPackages.cmake)
 schgen_configure_subsystem_packages(schgen_core "${CMAKE_CURRENT_SOURCE_DIR}/..")
 if(BUILD_TESTING)
+    add_executable(schgen_python_free_tree_contracts tests/python_free_tree_contracts.cpp)
+    target_compile_options(schgen_python_free_tree_contracts PRIVATE
+        -Wall -Wextra -Wpedantic -Werror)
+    add_test(NAME native_python_free_tree_contracts COMMAND schgen_python_free_tree_contracts
+        "${CMAKE_CURRENT_SOURCE_DIR}/..")
+    set_tests_properties(native_python_free_tree_contracts PROPERTIES TIMEOUT 120)
     foreach(compose_test compose_repair compose_kernel)
         add_executable(schgen_${compose_test}_contracts tests/${compose_test}_contracts.cpp)
         target_include_directories(schgen_${compose_test}_contracts PRIVATE src)
