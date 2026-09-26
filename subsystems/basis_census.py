@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import ast
 import re
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
 from pathlib import Path
 
 from subsystems import basis
@@ -35,14 +35,21 @@ class CensusResult:
     undeclared: list[str] = field(default_factory=list)
     unused: list[str] = field(default_factory=list)
     broken: list[str] = field(default_factory=list)
+    n_consumers: int = 0
+    native: bool = False
 
     def summary(self) -> str:
+        domain = "live subsystem circuits" if self.native else "subsystem netlists scanned"
+        consumers = (f" + {self.n_consumers} live project consumers"
+                     if self.native else "")
         lines = [
             f"BASIS CENSUS: {'PASS' if self.ok else 'FAIL'} — "
             f"{self.n_registered} registered component values, "
-            f"{self.n_files} subsystem netlists scanned, "
+            f"{self.n_files} {domain}{consumers}, "
             f"{self.n_sites} value site(s), {len(self.raw)} RAW"]
-        lines += [f"  RAW LITERAL (declare it in subsystems/basis.py): {s}"
+        raw_label = ("RAW COMPONENT (declare native component basis)"
+                     if self.native else "RAW LITERAL (declare it in subsystems/basis.py)")
+        lines += [f"  {raw_label}: {s}"
                   for s in self.raw]
         lines += [f"  UNREGISTERED constant: {s}" for s in self.undeclared]
         lines += [f"  DEAD registration (no site uses it): {s}"
@@ -209,7 +216,11 @@ def _sites(path: Path) -> list[tuple[str, ast.expr]]:
     return out
 
 
-def check() -> CensusResult:
+def check_python_sources() -> CensusResult:
+    """Compatibility audit for explicitly supplied Python package directories.
+
+    Native project builds never use this source scanner as evidence.
+    """
     res = CensusResult(n_registered=len(basis.REGISTRY))
     used: set[str] = set()
     files = _netlist_files()
@@ -244,3 +255,28 @@ def check() -> CensusResult:
 
     res.ok = not (res.raw or res.undeclared or res.unused or res.broken)
     return res
+
+
+def check_native(circuits=None) -> CensusResult:
+    """Audit live IR against independent native engineering declarations."""
+    from schgen.core.authoring import _engine, audit_inputs
+    rows = audit_inputs() if circuits is None else list(circuits)
+    raw = _engine().component_basis_audit(
+        rows,
+        declarations={key: asdict(value) for key, value in basis.REGISTRY.items()},
+        constants={key: getattr(basis, key, None) for key in basis.REGISTRY})
+    # Keep n_files' historical library-only meaning; explicitly report the
+    # additional project consumers now checked by the native audit.
+    library_count = len({row["sheet"] for row in rows if row["scope"] == "library"})
+    raw["n_consumers"] = raw["n_files"] - library_count
+    raw["n_files"] = library_count
+    return CensusResult(**raw, native=True)
+
+
+def check() -> CensusResult:
+    # Redirecting SUBSYSTEMS_DIR explicitly requests the retained Python-source
+    # API. Default repository checking is always native; a native failure is
+    # never retried through the source scanner.
+    if SUBSYSTEMS_DIR.resolve() != Path(__file__).resolve().parent:
+        return check_python_sources()
+    return check_native()

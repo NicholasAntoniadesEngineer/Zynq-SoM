@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from carrier.basis import bind, register
+from carrier.basis import PROJECT, bind, register
 from schgen.core.model import Circuit
 from subsystems.power import power as _lib
 
@@ -78,8 +78,4 @@ META = {
 
 def circuit() -> Circuit:
     from schgen.core.authoring import project_circuit
-    return project_circuit('carrier', 'power', __file__, META)
-
-
-def _legacy_circuit() -> Circuit:
-    return _lib.circuit(META)
+    return project_circuit(PROJECT, 'power', __file__, META)

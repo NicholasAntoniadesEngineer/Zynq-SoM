@@ -73,7 +73,16 @@ PcbEmitPolicy pcb_emit_policy(const ProjectConfig &c) {
     auto p = default_pcb_emit_policy();
     p.header_descriptions = c.header_desc;
     p.switch_descriptions = c.switch_desc;
+    p.model_overrides = project_pcb_model_overrides();
     return p;
+}
+const std::vector<PcbModelOverride>& project_pcb_model_overrides() {
+    // Genuine part-linked CAD, quarter-turn aligned to the unchanged stock pads.
+    // Provenance and orientation proof: tests/data/render_models/FUSB302B_REPAIR.md.
+    static const std::vector<PcbModelOverride> overrides{{"FUSB302BMPX",
+        "Package_DFN_QFN:WQFN-14-1EP_2.5x2.5mm_P0.5mm_EP1.45x1.45mm",
+        "${KIPRJMOD}/../parts/FUSB302BMPX/FUSB302BMPX.wrl", 90}};
+    return overrides;
 }
 PcbEmissionResult render_pcb(const PcbModel &m, const PcbEmitPolicy &p) {
     if (!std::isfinite(m.board_w) || !std::isfinite(m.board_h) || m.board_w <= 0 || m.board_h <= 0)

@@ -200,8 +200,8 @@ void Placer::breathe(const std::string &phase) {
     auto snap = [&](const Group &g, FloorplanPoint delta) {
         auto p = pos.at(g.anchor);
         return FloorplanPoint{
-            py_round(fixed_part_grid(25 + p.first + delta.first) - 25 - p.first, 4),
-            py_round(fixed_part_grid(25 + p.second + delta.second) - 25 - p.second, 4)};
+            py_round(ctx.fixed_grid(25 + p.first + delta.first, "breathe_anchor_grid") - 25 - p.first, 4),
+            py_round(ctx.fixed_grid(25 + p.second + delta.second, "breathe_anchor_grid") - 25 - p.second, 4)};
     };
     for (const auto &g : groups) {
         auto fb = foreign(g.anchor, g.members);

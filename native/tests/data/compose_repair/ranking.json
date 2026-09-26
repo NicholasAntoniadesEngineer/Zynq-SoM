@@ -1,0 +1,1291 @@
+{
+ "candidates": [
+  {
+   "edit": {
+    "intent": false,
+    "target_key": null,
+    "block": "b00",
+    "to": "target",
+    "weight": 10.0,
+    "face": "center",
+    "exclusive": false,
+    "basis": "independent rank oracle"
+   },
+   "evaluations": [
+    {
+     "term": {
+      "kind": "flow_hop",
+      "sheet": "a",
+      "subject": "a",
+      "target_raw": "b",
+      "bound": null,
+      "basis": "rank",
+      "enforced": true,
+      "output_roles": [],
+      "out_refs": []
+     },
+     "measured": 0.0,
+     "bound": 0.0,
+     "margin": 0.0,
+     "ok": true,
+     "note": ""
+    },
+    {
+     "term": {
+      "kind": "near_max",
+      "sheet": "b",
+      "subject": "b",
+      "target_raw": "a",
+      "bound": null,
+      "basis": "soft",
+      "enforced": false,
+      "output_roles": [],
+      "out_refs": []
+     },
+     "measured": 0.0,
+     "bound": 0.0,
+     "margin": -1.0,
+     "ok": false,
+     "note": ""
+    },
+    {
+     "term": {
+      "kind": "near_intent",
+      "sheet": "b",
+      "subject": "b",
+      "target_raw": "a",
+      "bound": null,
+      "basis": "advisory",
+      "enforced": false,
+      "output_roles": [],
+      "out_refs": []
+     },
+     "measured": 0.0,
+     "bound": 0.0,
+     "margin": -999.0,
+     "ok": false,
+     "note": ""
+    }
+   ],
+   "area": 100.0,
+   "spilled": [],
+   "error": "independent invalid"
+  },
+  {
+   "edit": {
+    "intent": false,
+    "target_key": null,
+    "block": "b01",
+    "to": "target",
+    "weight": 10.0,
+    "face": "center",
+    "exclusive": false,
+    "basis": "independent rank oracle"
+   },
+   "evaluations": [
+    {
+     "term": {
+      "kind": "flow_hop",
+      "sheet": "a",
+      "subject": "a",
+      "target_raw": "b",
+      "bound": null,
+      "basis": "rank",
+      "enforced": true,
+      "output_roles": [],
+      "out_refs": []
+     },
+     "measured": 0.0,
+     "bound": 0.0,
+     "margin": 1.0,
+     "ok": false,
+     "note": ""
+    },
+    {
+     "term": {
+      "kind": "near_max",
+      "sheet": "b",
+      "subject": "b",
+      "target_raw": "a",
+      "bound": null,
+      "basis": "soft",
+      "enforced": false,
+      "output_roles": [],
+      "out_refs": []
+     },
+     "measured": 0.0,
+     "bound": 0.0,
+     "margin": -1.0,
+     "ok": true,
+     "note": ""
+    },
+    {
+     "term": {
+      "kind": "near_intent",
+      "sheet": "b",
+      "subject": "b",
+      "target_raw": "a",
+      "bound": null,
+      "basis": "advisory",
+      "enforced": false,
+      "output_roles": [],
+      "out_refs": []
+     },
+     "measured": 0.0,
+     "bound": 0.0,
+     "margin": -999.0,
+     "ok": false,
+     "note": ""
+    }
+   ],
+   "area": 101.0,
+   "spilled": [],
+   "error": ""
+  },
+  {
+   "edit": {
+    "intent": false,
+    "target_key": null,
+    "block": "b02",
+    "to": "target",
+    "weight": 10.0,
+    "face": "center",
+    "exclusive": false,
+    "basis": "independent rank oracle"
+   },
+   "evaluations": [
+    {
+     "term": {
+      "kind": "flow_hop",
+      "sheet": "a",
+      "subject": "a",
+      "target_raw": "b",
+      "bound": null,
+      "basis": "rank",
+      "enforced": true,
+      "output_roles": [],
+      "out_refs": []
+     },
+     "measured": 0.0,
+     "bound": 0.0,
+     "margin": 2.0,
+     "ok": true,
+     "note": ""
+    },
+    {
+     "term": {
+      "kind": "near_max",
+      "sheet": "b",
+      "subject": "b",
+      "target_raw": "a",
+      "bound": null,
+      "basis": "soft",
+      "enforced": false,
+      "output_roles": [],
+      "out_refs": []
+     },
+     "measured": 0.0,
+     "bound": 0.0,
+     "margin": -1.0,
+     "ok": true,
+     "note": ""
+    },
+    {
+     "term": {
+      "kind": "near_intent",
+      "sheet": "b",
+      "subject": "b",
+      "target_raw": "a",
+      "bound": null,
+      "basis": "advisory",
+      "enforced": false,
+      "output_roles": [],
+      "out_refs": []
+     },
+     "measured": 0.0,
+     "bound": 0.0,
+     "margin": -999.0,
+     "ok": false,
+     "note": ""
+    }
+   ],
+   "area": 100.0,
+   "spilled": [
+    "spilled \u00b5"
+   ],
+   "error": ""
+  },
+  {
+   "edit": {
+    "intent": false,
+    "target_key": null,
+    "block": "b03",
+    "to": "target",
+    "weight": 10.0,
+    "face": "center",
+    "exclusive": false,
+    "basis": "independent rank oracle"
+   },
+   "evaluations": [
+    {
+     "term": {
+      "kind": "flow_hop",
+      "sheet": "a",
+      "subject": "a",
+      "target_raw": "b",
+      "bound": null,
+      "basis": "rank",
+      "enforced": true,
+      "output_roles": [],
+      "out_refs": []
+     },
+     "measured": 0.0,
+     "bound": 0.0,
+     "margin": 3.0,
+     "ok": true,
+     "note": ""
+    },
+    {
+     "term": {
+      "kind": "near_max",
+      "sheet": "b",
+      "subject": "b",
+      "target_raw": "a",
+      "bound": null,
+      "basis": "soft",
+      "enforced": false,
+      "output_roles": [],
+      "out_refs": []
+     },
+     "measured": 0.0,
+     "bound": 0.0,
+     "margin": -1.0,
+     "ok": false,
+     "note": ""
+    },
+    {
+     "term": {
+      "kind": "near_intent",
+      "sheet": "b",
+      "subject": "b",
+      "target_raw": "a",
+      "bound": null,
+      "basis": "advisory",
+      "enforced": false,
+      "output_roles": [],
+      "out_refs": []
+     },
+     "measured": 0.0,
+     "bound": 0.0,
+     "margin": -999.0,
+     "ok": false,
+     "note": ""
+    }
+   ],
+   "area": 101.0,
+   "spilled": [],
+   "error": ""
+  },
+  {
+   "edit": {
+    "intent": false,
+    "target_key": null,
+    "block": "b04",
+    "to": "target",
+    "weight": 10.0,
+    "face": "center",
+    "exclusive": false,
+    "basis": "independent rank oracle"
+   },
+   "evaluations": [
+    {
+     "term": {
+      "kind": "flow_hop",
+      "sheet": "a",
+      "subject": "a",
+      "target_raw": "b",
+      "bound": null,
+      "basis": "rank",
+      "enforced": true,
+      "output_roles": [],
+      "out_refs": []
+     },
+     "measured": 0.0,
+     "bound": 0.0,
+     "margin": 0.0,
+     "ok": true,
+     "note": ""
+    },
+    {
+     "term": {
+      "kind": "near_max",
+      "sheet": "b",
+      "subject": "b",
+      "target_raw": "a",
+      "bound": null,
+      "basis": "soft",
+      "enforced": false,
+      "output_roles": [],
+      "out_refs": []
+     },
+     "measured": 0.0,
+     "bound": 0.0,
+     "margin": -1.0,
+     "ok": true,
+     "note": ""
+    },
+    {
+     "term": {
+      "kind": "near_intent",
+      "sheet": "b",
+      "subject": "b",
+      "target_raw": "a",
+      "bound": null,
+      "basis": "advisory",
+      "enforced": false,
+      "output_roles": [],
+      "out_refs": []
+     },
+     "measured": 0.0,
+     "bound": 0.0,
+     "margin": -999.0,
+     "ok": false,
+     "note": ""
+    }
+   ],
+   "area": 100.0,
+   "spilled": [],
+   "error": ""
+  },
+  {
+   "edit": {
+    "intent": false,
+    "target_key": null,
+    "block": "b05",
+    "to": "target",
+    "weight": 10.0,
+    "face": "center",
+    "exclusive": false,
+    "basis": "independent rank oracle"
+   },
+   "evaluations": [
+    {
+     "term": {
+      "kind": "flow_hop",
+      "sheet": "a",
+      "subject": "a",
+      "target_raw": "b",
+      "bound": null,
+      "basis": "rank",
+      "enforced": true,
+      "output_roles": [],
+      "out_refs": []
+     },
+     "measured": 0.0,
+     "bound": 0.0,
+     "margin": 1.0,
+     "ok": true,
+     "note": ""
+    },
+    {
+     "term": {
+      "kind": "near_max",
+      "sheet": "b",
+      "subject": "b",
+      "target_raw": "a",
+      "bound": null,
+      "basis": "soft",
+      "enforced": false,
+      "output_roles": [],
+      "out_refs": []
+     },
+     "measured": 0.0,
+     "bound": 0.0,
+     "margin": -1.0,
+     "ok": true,
+     "note": ""
+    },
+    {
+     "term": {
+      "kind": "near_intent",
+      "sheet": "b",
+      "subject": "b",
+      "target_raw": "a",
+      "bound": null,
+      "basis": "advisory",
+      "enforced": false,
+      "output_roles": [],
+      "out_refs": []
+     },
+     "measured": 0.0,
+     "bound": 0.0,
+     "margin": -999.0,
+     "ok": false,
+     "note": ""
+    }
+   ],
+   "area": 101.0,
+   "spilled": [],
+   "error": ""
+  },
+  {
+   "edit": {
+    "intent": false,
+    "target_key": null,
+    "block": "b06",
+    "to": "target",
+    "weight": 10.0,
+    "face": "center",
+    "exclusive": false,
+    "basis": "independent rank oracle"
+   },
+   "evaluations": [
+    {
+     "term": {
+      "kind": "flow_hop",
+      "sheet": "a",
+      "subject": "a",
+      "target_raw": "b",
+      "bound": null,
+      "basis": "rank",
+      "enforced": true,
+      "output_roles": [],
+      "out_refs": []
+     },
+     "measured": 0.0,
+     "bound": 0.0,
+     "margin": 2.0,
+     "ok": true,
+     "note": ""
+    },
+    {
+     "term": {
+      "kind": "near_max",
+      "sheet": "b",
+      "subject": "b",
+      "target_raw": "a",
+      "bound": null,
+      "basis": "soft",
+      "enforced": false,
+      "output_roles": [],
+      "out_refs": []
+     },
+     "measured": 0.0,
+     "bound": 0.0,
+     "margin": -1.0,
+     "ok": false,
+     "note": ""
+    },
+    {
+     "term": {
+      "kind": "near_intent",
+      "sheet": "b",
+      "subject": "b",
+      "target_raw": "a",
+      "bound": null,
+      "basis": "advisory",
+      "enforced": false,
+      "output_roles": [],
+      "out_refs": []
+     },
+     "measured": 0.0,
+     "bound": 0.0,
+     "margin": -999.0,
+     "ok": false,
+     "note": ""
+    }
+   ],
+   "area": 100.0,
+   "spilled": [],
+   "error": ""
+  },
+  {
+   "edit": {
+    "intent": false,
+    "target_key": null,
+    "block": "b07",
+    "to": "target",
+    "weight": 10.0,
+    "face": "center",
+    "exclusive": false,
+    "basis": "independent rank oracle"
+   },
+   "evaluations": [
+    {
+     "term": {
+      "kind": "flow_hop",
+      "sheet": "a",
+      "subject": "a",
+      "target_raw": "b",
+      "bound": null,
+      "basis": "rank",
+      "enforced": true,
+      "output_roles": [],
+      "out_refs": []
+     },
+     "measured": 0.0,
+     "bound": 0.0,
+     "margin": 3.0,
+     "ok": true,
+     "note": ""
+    },
+    {
+     "term": {
+      "kind": "near_max",
+      "sheet": "b",
+      "subject": "b",
+      "target_raw": "a",
+      "bound": null,
+      "basis": "soft",
+      "enforced": false,
+      "output_roles": [],
+      "out_refs": []
+     },
+     "measured": 0.0,
+     "bound": 0.0,
+     "margin": -1.0,
+     "ok": true,
+     "note": ""
+    },
+    {
+     "term": {
+      "kind": "near_intent",
+      "sheet": "b",
+      "subject": "b",
+      "target_raw": "a",
+      "bound": null,
+      "basis": "advisory",
+      "enforced": false,
+      "output_roles": [],
+      "out_refs": []
+     },
+     "measured": 0.0,
+     "bound": 0.0,
+     "margin": -999.0,
+     "ok": false,
+     "note": ""
+    }
+   ],
+   "area": 101.0,
+   "spilled": [],
+   "error": ""
+  },
+  {
+   "edit": {
+    "intent": false,
+    "target_key": null,
+    "block": "b08",
+    "to": "target",
+    "weight": 10.0,
+    "face": "center",
+    "exclusive": false,
+    "basis": "independent rank oracle"
+   },
+   "evaluations": [
+    {
+     "term": {
+      "kind": "flow_hop",
+      "sheet": "a",
+      "subject": "a",
+      "target_raw": "b",
+      "bound": null,
+      "basis": "rank",
+      "enforced": true,
+      "output_roles": [],
+      "out_refs": []
+     },
+     "measured": 0.0,
+     "bound": 0.0,
+     "margin": 0.0,
+     "ok": true,
+     "note": ""
+    },
+    {
+     "term": {
+      "kind": "near_max",
+      "sheet": "b",
+      "subject": "b",
+      "target_raw": "a",
+      "bound": null,
+      "basis": "soft",
+      "enforced": false,
+      "output_roles": [],
+      "out_refs": []
+     },
+     "measured": 0.0,
+     "bound": 0.0,
+     "margin": -1.0,
+     "ok": true,
+     "note": ""
+    },
+    {
+     "term": {
+      "kind": "near_intent",
+      "sheet": "b",
+      "subject": "b",
+      "target_raw": "a",
+      "bound": null,
+      "basis": "advisory",
+      "enforced": false,
+      "output_roles": [],
+      "out_refs": []
+     },
+     "measured": 0.0,
+     "bound": 0.0,
+     "margin": -999.0,
+     "ok": false,
+     "note": ""
+    }
+   ],
+   "area": 100.0,
+   "spilled": [],
+   "error": ""
+  },
+  {
+   "edit": {
+    "intent": false,
+    "target_key": null,
+    "block": "b09",
+    "to": "target",
+    "weight": 10.0,
+    "face": "center",
+    "exclusive": false,
+    "basis": "independent rank oracle"
+   },
+   "evaluations": [
+    {
+     "term": {
+      "kind": "flow_hop",
+      "sheet": "a",
+      "subject": "a",
+      "target_raw": "b",
+      "bound": null,
+      "basis": "rank",
+      "enforced": true,
+      "output_roles": [],
+      "out_refs": []
+     },
+     "measured": 0.0,
+     "bound": 0.0,
+     "margin": 1.0,
+     "ok": true,
+     "note": ""
+    },
+    {
+     "term": {
+      "kind": "near_max",
+      "sheet": "b",
+      "subject": "b",
+      "target_raw": "a",
+      "bound": null,
+      "basis": "soft",
+      "enforced": false,
+      "output_roles": [],
+      "out_refs": []
+     },
+     "measured": 0.0,
+     "bound": 0.0,
+     "margin": -1.0,
+     "ok": false,
+     "note": ""
+    },
+    {
+     "term": {
+      "kind": "near_intent",
+      "sheet": "b",
+      "subject": "b",
+      "target_raw": "a",
+      "bound": null,
+      "basis": "advisory",
+      "enforced": false,
+      "output_roles": [],
+      "out_refs": []
+     },
+     "measured": 0.0,
+     "bound": 0.0,
+     "margin": -999.0,
+     "ok": false,
+     "note": ""
+    }
+   ],
+   "area": 101.0,
+   "spilled": [],
+   "error": ""
+  },
+  {
+   "edit": {
+    "intent": false,
+    "target_key": null,
+    "block": "b10",
+    "to": "target",
+    "weight": 10.0,
+    "face": "center",
+    "exclusive": false,
+    "basis": "independent rank oracle"
+   },
+   "evaluations": [
+    {
+     "term": {
+      "kind": "flow_hop",
+      "sheet": "a",
+      "subject": "a",
+      "target_raw": "b",
+      "bound": null,
+      "basis": "rank",
+      "enforced": true,
+      "output_roles": [],
+      "out_refs": []
+     },
+     "measured": 0.0,
+     "bound": 0.0,
+     "margin": 2.0,
+     "ok": true,
+     "note": ""
+    },
+    {
+     "term": {
+      "kind": "near_max",
+      "sheet": "b",
+      "subject": "b",
+      "target_raw": "a",
+      "bound": null,
+      "basis": "soft",
+      "enforced": false,
+      "output_roles": [],
+      "out_refs": []
+     },
+     "measured": 0.0,
+     "bound": 0.0,
+     "margin": -1.0,
+     "ok": true,
+     "note": ""
+    },
+    {
+     "term": {
+      "kind": "near_intent",
+      "sheet": "b",
+      "subject": "b",
+      "target_raw": "a",
+      "bound": null,
+      "basis": "advisory",
+      "enforced": false,
+      "output_roles": [],
+      "out_refs": []
+     },
+     "measured": 0.0,
+     "bound": 0.0,
+     "margin": -999.0,
+     "ok": false,
+     "note": ""
+    }
+   ],
+   "area": 100.0,
+   "spilled": [],
+   "error": ""
+  },
+  {
+   "edit": {
+    "intent": false,
+    "target_key": null,
+    "block": "b11",
+    "to": "target",
+    "weight": 10.0,
+    "face": "center",
+    "exclusive": false,
+    "basis": "independent rank oracle"
+   },
+   "evaluations": [
+    {
+     "term": {
+      "kind": "flow_hop",
+      "sheet": "a",
+      "subject": "a",
+      "target_raw": "b",
+      "bound": null,
+      "basis": "rank",
+      "enforced": true,
+      "output_roles": [],
+      "out_refs": []
+     },
+     "measured": 0.0,
+     "bound": 0.0,
+     "margin": 3.0,
+     "ok": true,
+     "note": ""
+    },
+    {
+     "term": {
+      "kind": "near_max",
+      "sheet": "b",
+      "subject": "b",
+      "target_raw": "a",
+      "bound": null,
+      "basis": "soft",
+      "enforced": false,
+      "output_roles": [],
+      "out_refs": []
+     },
+     "measured": 0.0,
+     "bound": 0.0,
+     "margin": -1.0,
+     "ok": true,
+     "note": ""
+    },
+    {
+     "term": {
+      "kind": "near_intent",
+      "sheet": "b",
+      "subject": "b",
+      "target_raw": "a",
+      "bound": null,
+      "basis": "advisory",
+      "enforced": false,
+      "output_roles": [],
+      "out_refs": []
+     },
+     "measured": 0.0,
+     "bound": 0.0,
+     "margin": -999.0,
+     "ok": false,
+     "note": ""
+    }
+   ],
+   "area": 101.0,
+   "spilled": [],
+   "error": ""
+  },
+  {
+   "edit": {
+    "intent": false,
+    "target_key": null,
+    "block": "b12",
+    "to": "target",
+    "weight": 10.0,
+    "face": "center",
+    "exclusive": false,
+    "basis": "independent rank oracle"
+   },
+   "evaluations": [
+    {
+     "term": {
+      "kind": "flow_hop",
+      "sheet": "a",
+      "subject": "a",
+      "target_raw": "b",
+      "bound": null,
+      "basis": "rank",
+      "enforced": true,
+      "output_roles": [],
+      "out_refs": []
+     },
+     "measured": 0.0,
+     "bound": 0.0,
+     "margin": 0.0,
+     "ok": true,
+     "note": ""
+    },
+    {
+     "term": {
+      "kind": "near_max",
+      "sheet": "b",
+      "subject": "b",
+      "target_raw": "a",
+      "bound": null,
+      "basis": "soft",
+      "enforced": false,
+      "output_roles": [],
+      "out_refs": []
+     },
+     "measured": 0.0,
+     "bound": 0.0,
+     "margin": -1.0,
+     "ok": false,
+     "note": ""
+    },
+    {
+     "term": {
+      "kind": "near_intent",
+      "sheet": "b",
+      "subject": "b",
+      "target_raw": "a",
+      "bound": null,
+      "basis": "advisory",
+      "enforced": false,
+      "output_roles": [],
+      "out_refs": []
+     },
+     "measured": 0.0,
+     "bound": 0.0,
+     "margin": -999.0,
+     "ok": false,
+     "note": ""
+    }
+   ],
+   "area": 100.0,
+   "spilled": [],
+   "error": ""
+  },
+  {
+   "edit": {
+    "intent": false,
+    "target_key": null,
+    "block": "b13",
+    "to": "target",
+    "weight": 10.0,
+    "face": "center",
+    "exclusive": false,
+    "basis": "independent rank oracle"
+   },
+   "evaluations": [
+    {
+     "term": {
+      "kind": "flow_hop",
+      "sheet": "a",
+      "subject": "a",
+      "target_raw": "b",
+      "bound": null,
+      "basis": "rank",
+      "enforced": true,
+      "output_roles": [],
+      "out_refs": []
+     },
+     "measured": 0.0,
+     "bound": 0.0,
+     "margin": 1.0,
+     "ok": true,
+     "note": ""
+    },
+    {
+     "term": {
+      "kind": "near_max",
+      "sheet": "b",
+      "subject": "b",
+      "target_raw": "a",
+      "bound": null,
+      "basis": "soft",
+      "enforced": false,
+      "output_roles": [],
+      "out_refs": []
+     },
+     "measured": 0.0,
+     "bound": 0.0,
+     "margin": -1.0,
+     "ok": true,
+     "note": ""
+    },
+    {
+     "term": {
+      "kind": "near_intent",
+      "sheet": "b",
+      "subject": "b",
+      "target_raw": "a",
+      "bound": null,
+      "basis": "advisory",
+      "enforced": false,
+      "output_roles": [],
+      "out_refs": []
+     },
+     "measured": 0.0,
+     "bound": 0.0,
+     "margin": -999.0,
+     "ok": false,
+     "note": ""
+    }
+   ],
+   "area": 101.0,
+   "spilled": [],
+   "error": ""
+  },
+  {
+   "edit": {
+    "intent": false,
+    "target_key": null,
+    "block": "b14",
+    "to": "target",
+    "weight": 10.0,
+    "face": "center",
+    "exclusive": false,
+    "basis": "independent rank oracle"
+   },
+   "evaluations": [
+    {
+     "term": {
+      "kind": "flow_hop",
+      "sheet": "a",
+      "subject": "a",
+      "target_raw": "b",
+      "bound": null,
+      "basis": "rank",
+      "enforced": true,
+      "output_roles": [],
+      "out_refs": []
+     },
+     "measured": 0.0,
+     "bound": 0.0,
+     "margin": 2.0,
+     "ok": true,
+     "note": ""
+    },
+    {
+     "term": {
+      "kind": "near_max",
+      "sheet": "b",
+      "subject": "b",
+      "target_raw": "a",
+      "bound": null,
+      "basis": "soft",
+      "enforced": false,
+      "output_roles": [],
+      "out_refs": []
+     },
+     "measured": 0.0,
+     "bound": 0.0,
+     "margin": -1.0,
+     "ok": true,
+     "note": ""
+    },
+    {
+     "term": {
+      "kind": "near_intent",
+      "sheet": "b",
+      "subject": "b",
+      "target_raw": "a",
+      "bound": null,
+      "basis": "advisory",
+      "enforced": false,
+      "output_roles": [],
+      "out_refs": []
+     },
+     "measured": 0.0,
+     "bound": 0.0,
+     "margin": -999.0,
+     "ok": false,
+     "note": ""
+    }
+   ],
+   "area": 100.0,
+   "spilled": [],
+   "error": ""
+  },
+  {
+   "edit": {
+    "intent": false,
+    "target_key": null,
+    "block": "b15",
+    "to": "target",
+    "weight": 10.0,
+    "face": "center",
+    "exclusive": false,
+    "basis": "independent rank oracle"
+   },
+   "evaluations": [
+    {
+     "term": {
+      "kind": "flow_hop",
+      "sheet": "a",
+      "subject": "a",
+      "target_raw": "b",
+      "bound": null,
+      "basis": "rank",
+      "enforced": true,
+      "output_roles": [],
+      "out_refs": []
+     },
+     "measured": 0.0,
+     "bound": 0.0,
+     "margin": 3.0,
+     "ok": true,
+     "note": ""
+    },
+    {
+     "term": {
+      "kind": "near_max",
+      "sheet": "b",
+      "subject": "b",
+      "target_raw": "a",
+      "bound": null,
+      "basis": "soft",
+      "enforced": false,
+      "output_roles": [],
+      "out_refs": []
+     },
+     "measured": 0.0,
+     "bound": 0.0,
+     "margin": -1.0,
+     "ok": false,
+     "note": ""
+    },
+    {
+     "term": {
+      "kind": "near_intent",
+      "sheet": "b",
+      "subject": "b",
+      "target_raw": "a",
+      "bound": null,
+      "basis": "advisory",
+      "enforced": false,
+      "output_roles": [],
+      "out_refs": []
+     },
+     "measured": 0.0,
+     "bound": 0.0,
+     "margin": -999.0,
+     "ok": false,
+     "note": ""
+    }
+   ],
+   "area": 101.0,
+   "spilled": [],
+   "error": ""
+  },
+  {
+   "edit": {
+    "intent": false,
+    "target_key": null,
+    "block": "b16",
+    "to": "target",
+    "weight": 10.0,
+    "face": "center",
+    "exclusive": false,
+    "basis": "independent rank oracle"
+   },
+   "evaluations": [
+    {
+     "term": {
+      "kind": "flow_hop",
+      "sheet": "a",
+      "subject": "a",
+      "target_raw": "b",
+      "bound": null,
+      "basis": "rank",
+      "enforced": true,
+      "output_roles": [],
+      "out_refs": []
+     },
+     "measured": 0.0,
+     "bound": 0.0,
+     "margin": 0.0,
+     "ok": true,
+     "note": ""
+    },
+    {
+     "term": {
+      "kind": "near_max",
+      "sheet": "b",
+      "subject": "b",
+      "target_raw": "a",
+      "bound": null,
+      "basis": "soft",
+      "enforced": false,
+      "output_roles": [],
+      "out_refs": []
+     },
+     "measured": 0.0,
+     "bound": 0.0,
+     "margin": -1.0,
+     "ok": true,
+     "note": ""
+    },
+    {
+     "term": {
+      "kind": "near_intent",
+      "sheet": "b",
+      "subject": "b",
+      "target_raw": "a",
+      "bound": null,
+      "basis": "advisory",
+      "enforced": false,
+      "output_roles": [],
+      "out_refs": []
+     },
+     "measured": 0.0,
+     "bound": 0.0,
+     "margin": -999.0,
+     "ok": false,
+     "note": ""
+    }
+   ],
+   "area": 100.0,
+   "spilled": [],
+   "error": ""
+  },
+  {
+   "edit": {
+    "intent": false,
+    "target_key": null,
+    "block": "b17",
+    "to": "target",
+    "weight": 10.0,
+    "face": "center",
+    "exclusive": false,
+    "basis": "independent rank oracle"
+   },
+   "evaluations": [
+    {
+     "term": {
+      "kind": "flow_hop",
+      "sheet": "a",
+      "subject": "a",
+      "target_raw": "b",
+      "bound": null,
+      "basis": "rank",
+      "enforced": true,
+      "output_roles": [],
+      "out_refs": []
+     },
+     "measured": 0.0,
+     "bound": 0.0,
+     "margin": 1.0,
+     "ok": true,
+     "note": ""
+    },
+    {
+     "term": {
+      "kind": "near_max",
+      "sheet": "b",
+      "subject": "b",
+      "target_raw": "a",
+      "bound": null,
+      "basis": "soft",
+      "enforced": false,
+      "output_roles": [],
+      "out_refs": []
+     },
+     "measured": 0.0,
+     "bound": 0.0,
+     "margin": -1.0,
+     "ok": true,
+     "note": ""
+    },
+    {
+     "term": {
+      "kind": "near_intent",
+      "sheet": "b",
+      "subject": "b",
+      "target_raw": "a",
+      "bound": null,
+      "basis": "advisory",
+      "enforced": false,
+      "output_roles": [],
+      "out_refs": []
+     },
+     "measured": 0.0,
+     "bound": 0.0,
+     "margin": -999.0,
+     "ok": false,
+     "note": ""
+    }
+   ],
+   "area": 101.0,
+   "spilled": [],
+   "error": ""
+  }
+ ],
+ "ranking_output": "  candidate AddPull b00 -> target w=10 face=center exclusive=False: INVALID (independent invalid)\n  candidate AddPull b01 -> target w=10 face=center exclusive=False: REJECT (predicts hard RED: [('flow_hop', 'a', 'b')])\n  candidate AddPull b02 -> target w=10 face=center exclusive=False: REJECT (spilled: ['spilled \u00b5'])\ncompose: ranked candidates (replica ORDER only \u2014 emitted board is the arbiter):\n  AddPull b07 -> target w=10 face=center exclusive=False: predicted agg-hard-margin 3.0, area 101.0\n  AddPull b11 -> target w=10 face=center exclusive=False: predicted agg-hard-margin 3.0, area 101.0\n  AddPull b10 -> target w=10 face=center exclusive=False: predicted agg-hard-margin 2.0, area 100.0\n  AddPull b14 -> target w=10 face=center exclusive=False: predicted agg-hard-margin 2.0, area 100.0\n  AddPull b05 -> target w=10 face=center exclusive=False: predicted agg-hard-margin 1.0, area 101.0\n  AddPull b13 -> target w=10 face=center exclusive=False: predicted agg-hard-margin 1.0, area 101.0\n  AddPull b17 -> target w=10 face=center exclusive=False: predicted agg-hard-margin 1.0, area 101.0\n  AddPull b04 -> target w=10 face=center exclusive=False: predicted agg-hard-margin 0.0, area 100.0\n  AddPull b08 -> target w=10 face=center exclusive=False: predicted agg-hard-margin 0.0, area 100.0\n  AddPull b16 -> target w=10 face=center exclusive=False: predicted agg-hard-margin 0.0, area 100.0\n",
+ "code": 0,
+ "steps": [
+  "measure/dry-run"
+ ],
+ "eligible_count": 15,
+ "provenance": "b731d643c2aba92063bd2118238a73e4d1e08dea382eb35b3774c0ec5369a87b"
+}

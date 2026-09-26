@@ -27,6 +27,22 @@ Sexpr embed(const PcbFootprintInst &i, const PcbEmitPolicy &p, const Uid &uid) {
     auto &root = std::get<SexprList>(doc.v);
     if (root.size() < 2)
         throw PcbEmissionError(i.ref + ": footprint name required");
+    for (const auto& override : p.model_overrides) {
+        if (i.value != override.value || i.footprint != override.footprint) continue;
+        if (i.mirror) throw PcbEmissionError(i.ref + ": model override requires unmirrored source geometry");
+        if (override.path.empty() || !std::isfinite(override.rotation_z))
+            throw PcbEmissionError(i.ref + ": invalid model override");
+        auto replacement = node("model", {str(override.path), node("offset", {node("xyz", {num(0),num(0),num(0)})}),
+            node("scale", {node("xyz", {num(1),num(1),num(1)})}),
+            node("rotate", {node("xyz", {num(0),num(0),num(override.rotation_z)})})});
+        auto first = std::find_if(root.begin(), root.end(), [](const auto& n) { return tag(n,"model"); });
+        if (first == root.end()) root.push_back(std::move(replacement));
+        else {
+            *first = std::move(replacement);
+            root.erase(std::remove_if(first + 1, root.end(), [](const auto& n) { return tag(n,"model"); }), root.end());
+        }
+        break;
+    }
     root[1] = str(footprint_alias(i.footprint, p.footprint_aliases));
     doc = embed_footprint_body(std::move(doc), i.x, i.y, i.rotation, i.side, uid("fp:" + i.ref));
     std::unordered_map<std::string, std::pair<int, std::string>> nets(i.pad_nets.begin(),

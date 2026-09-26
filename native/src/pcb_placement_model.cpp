@@ -7,6 +7,7 @@ Placer::Placer(const PcbPlacementInput &in, const PcbZoneResult &zones, const Fl
     ctx.pool = zones.footprints;
     out.floorplan = stage;
     out.fallback_events = zones.fallback_events;
+    out.zone_accounting = {zones.quantization_engagements, zones.fallback_events};
     if (!std::isfinite(width) || !std::isfinite(height) || width <= 0 || height <= 0)
         throw PcbZoneInfeasible("invalid board dimensions");
     for (const auto &p : ctx.parts)
@@ -195,9 +196,9 @@ void Placer::instantiate() {
                 n == pin_net.end() ? std::pair<int, std::string>{0, ""} : n->second;
         }
         inst.x = grid_placed.count(r) ? py_round(25 + xy->second.first, 4)
-                                      : fixed_part_grid(25 + xy->second.first);
+                                      : ctx.fixed_grid(25 + xy->second.first);
         inst.y = grid_placed.count(r) ? py_round(25 + xy->second.second, 4)
-                                      : fixed_part_grid(25 + xy->second.second);
+                                      : ctx.fixed_grid(25 + xy->second.second);
         m.insts.push_back(inst);
         ++m.placed;
         if (face == "bottom")
@@ -259,7 +260,12 @@ void Placer::escape() {
 namespace schgen {
 PcbPlacementResult place_pcb_model(const PcbPlacementInput &in, const PcbZoneResult &zones,
                                    const FloorplanStage &stage) {
+    return place_pcb_model_accounted(in, zones, stage, PcbZoneAccountingOwnership::Unspecified);
+}
+PcbPlacementResult place_pcb_model_accounted(const PcbPlacementInput &in, const PcbZoneResult &zones,
+    const FloorplanStage &stage, PcbZoneAccountingOwnership ownership) {
     pcb_placement::Placer p(in, zones, stage);
+    p.out.zone_accounting_ownership = ownership;
     p.seed();
     if (in.two_side)
         p.l4_pull();
@@ -280,6 +286,24 @@ PcbPlacementResult place_pcb_model(const PcbPlacementInput &in, const PcbZoneRes
     p.checkpoint("corridor_eviction");
     p.instantiate();
     p.escape();
+    p.out.placement_accounting.quantization_engagements = std::move(p.ctx.quantization);
     return std::move(p.out);
+}
+ExecutionAccounting pcb_placement_accounting(const PcbPlacementResult &result) {
+    const auto ownership = result.zone_accounting_ownership;
+    if (ownership != PcbZoneAccountingOwnership::IncludedInFloorplan &&
+        ownership != PcbZoneAccountingOwnership::SeparateFromFloorplan)
+        throw std::logic_error("PCB accounting: supplied floorplan/zone ownership is unspecified");
+    const auto &plan = result.floorplan.plan.accounting;
+    ExecutionAccounting total;
+    auto append = [&](const auto &delta) {
+        checked_quantization_merge(total.quantization_engagements, delta.quantization_engagements);
+        total.fallback_events.insert(total.fallback_events.end(), delta.fallback_events.begin(), delta.fallback_events.end());
+    };
+    // A distinct placement-zone solve ran before the planning-zone/floorplan solve.
+    if (ownership == PcbZoneAccountingOwnership::SeparateFromFloorplan) append(result.zone_accounting);
+    append(plan);
+    append(result.placement_accounting);
+    return total;
 }
 } // namespace schgen

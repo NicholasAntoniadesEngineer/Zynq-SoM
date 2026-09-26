@@ -1,4 +1,5 @@
 #include "pcb_stage_internal.hpp"
+#include "native_audit_quantize_internal.hpp"
 
 namespace schgen::pcb_stage {
 const JsonNode &field(const JsonNode &n, const std::string &k) {
@@ -184,7 +185,7 @@ Part Engine::beside(const std::string &ref, double rot, Box4 target, const std::
     p.y = xy.second;
     return p;
 }
-Parts Engine::turn(const Parts &parts, double deg, bool renormalize, bool exact_half) {
+Parts Engine::turn(const Parts &parts, double deg, bool renormalize, bool exact_half, bool account_refit) {
     if (std::abs(normalize(deg)) < 1e-6)
         return parts;
     std::vector<Box4> all;
@@ -198,10 +199,17 @@ Parts Engine::turn(const Parts &parts, double deg, bool renormalize, bool exact_
         auto old = boxes_span_center(values(pads(p.mod, p.rot)));
         auto nr = normalize(p.rot + deg);
         auto next = boxes_span_center(values(pads(p.mod, nr)));
-        auto xy = exact_half ? turn_origin_180(cx, cy, old.first + p.x, old.second + p.y,
-                                               next.first, next.second, 4)
-                             : rotate_origin(cx, cy, old.first + p.x, old.second + p.y, next.first,
-                                             next.second, deg, 4);
+        // Same expression and evaluation order as turn_origin_180(..., 4).
+        // Count trial coordinates here, before the facing/airwire acceptance gate.
+        FloorplanPoint xy;
+        if (exact_half && account_refit) {
+            checked_quantization_add(quantization, "refit_pose_precision");
+            xy.first = native_refit_pose_precision(2.0 * cx - (old.first + p.x) - next.first);
+            checked_quantization_add(quantization, "refit_pose_precision");
+            xy.second = native_refit_pose_precision(2.0 * cy - (old.second + p.y) - next.second);
+        } else xy = exact_half
+            ? turn_origin_180(cx, cy, old.first + p.x, old.second + p.y, next.first, next.second, 4)
+            : rotate_origin(cx, cy, old.first + p.x, old.second + p.y, next.first, next.second, deg, 4);
         p.rot = nr;
         p.x = xy.first;
         p.y = xy.second;

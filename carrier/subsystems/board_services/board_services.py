@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from carrier.basis import register
+from carrier.basis import PROJECT, register
 from schgen.core.model import Circuit
 
 R_FP = "Resistor_SMD:R_0603_1608Metric"
@@ -85,65 +85,4 @@ AUX_DRAW_A = register(
 
 def circuit() -> Circuit:
     from schgen.core.authoring import project_circuit
-    return project_circuit('carrier', 'board_services', __file__)
-
-
-def _legacy_circuit() -> Circuit:
-    c = Circuit("board_services",
-                "Board services: ID-EEPROM, RTC, watchdog, QWIIC")
-
-    c.use_part(EEPROM_PART, ref="U1")
-    c.net("+3V3_AUX", "U1.VCC")
-    c.net("GND", "U1.VSS")
-    c.port("AUX_I2C_SCL", "U1.SCL", kind="i2c", role="scl", bus="AUX_I2C",
-           speed_hz=I2C_SPEED_HZ, expect=AUX_BUS)
-    c.port("AUX_I2C_SDA", "U1.SDA", kind="i2c", role="sda", bus="AUX_I2C",
-           speed_hz=I2C_SPEED_HZ, expect=AUX_BUS)
-    c.net("+3V3_AUX", "U1.A0")
-    c.net("GND", "U1.A1")
-    for cap in c.decouple("U1.VCC", DECAP, footprint=C_FP):
-        cap.fields["LCSC"] = LCSC_100N
-
-    c.use_part(RTC_PART, ref="U2")
-    c.net("+3V3_AUX", "U2.VDD")
-    c.net("GND", "U2.VSS")
-    c.port("AUX_I2C_SCL", "U2.SCL", kind="i2c", role="scl", bus="AUX_I2C",
-           speed_hz=I2C_SPEED_HZ, expect=AUX_BUS)
-    c.port("AUX_I2C_SDA", "U2.SDA", kind="i2c", role="sda", bus="AUX_I2C",
-           speed_hz=I2C_SPEED_HZ, expect=AUX_BUS)
-    c.net("GND", "U2.EVI")
-    c.nc("U2.CLKOUT")
-    c.net("RTC_INT_N", "U2.INT#")
-    c.pullup("U2.INT#", INT_PULLUP, "+3V3_AUX",
-             footprint=R_FP).fields["LCSC"] = LCSC_10K
-    for cap in c.decouple("U2.VDD", DECAP, footprint=C_FP):
-        cap.fields["LCSC"] = LCSC_100N
-    c.use_part(BACKUP_CELL_HOLDER, ref="BT1")
-    c.net("V_RTC_BAT", "U2.VBACKUP", "BT1.1")
-    c.net("GND", "BT1.2")
-    # Key the waiver on V_RTC_BAT, NOT the bare ref "U2": a ref-level waiver
-    # would also silently waive U2.VDD, the real switching supply.
-    c.waive_decap("V_RTC_BAT", "VBACKUP is the RV-3028 coin-cell backup input "
-                  "(a rechargeable ML1220, not a switching rail); the RTC "
-                  "regulates internally and a cap on the cell net is optional "
-                  "— no bypass fitted by design")
-
-    c.use_part(SUPERVISOR_PART, ref="U3")
-    c.net("+3V3_AUX", "U3.VDD")
-    c.net("GND", "U3.GND")
-    for cap in c.decouple("U3.VDD", DECAP, footprint=C_FP):
-        cap.fields["LCSC"] = LCSC_100N
-    c.nc("U3.MR#")
-    rk = c.part(c.auto_ref("R"), "Device:R", WDI_SERIES_R, R_FP, LCSC=LCSC_1K)
-    c.net("WDI_AUX", "U3.WDI", f"{rk.ref}.2")
-    c.port("WATCHDOG_KICK", f"{rk.ref}.1", expect=J3_MAP)
-    c.port("WATCHDOG_RST_N", "U3.RESET#", expect=J3_MAP)
-    c.waive_reset("WATCHDOG_RST_N",
-                  "TPS3823 RESET# is a push-pull supervisor OUTPUT driving a PL "
-                  "bank-33 input as a firmware-mediated event (not a POR line): "
-                  "no pull needed (push-pull; PL internal pull holds it when "
-                  "+3V3_AUX is OFF), no cap by design (logic-event edge)")
-
-    c.draws("+3V3_AUX", AUX_DRAW_A,
-            "ID-EEPROM ~1mA + RV-3028 <0.1mA + TPS3823 15uA + INT# 10k pull")
-    return c
+    return project_circuit(PROJECT, 'board_services', __file__)

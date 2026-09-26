@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from carrier.basis import register
+from carrier.basis import PROJECT, register
 from schgen.core.model import Circuit
 
 R_FP = "Resistor_SMD:R_0603_1608Metric"
@@ -127,92 +127,4 @@ _FLAG_PORTS = (
 
 def circuit() -> Circuit:
     from schgen.core.authoring import project_circuit
-    return project_circuit('carrier', 'bringup_rails', __file__)
-
-
-def _legacy_circuit() -> Circuit:
-    c = Circuit("bringup_rails",
-                "Bring-up controls: rail/module DIPs + TCA9535 + buttons")
-
-    c.use_part("DSHP04TSGER", ref="SW1")
-    c.net("+3V3_SC", "SW1.1", "SW1.3", "SW1.5", "SW1.7")
-    for pin, net in SW1_MAP:
-        c.port(net, f"SW1.{pin}", expect=EXPECT_EN)
-    c.use_part("DSHP08TSGER", ref="SW2")
-    c.net("+3V3_SC", "SW2.1", "SW2.2", "SW2.3", "SW2.4",
-          "SW2.5", "SW2.6", "SW2.7", "SW2.8")
-    for pin, net in SW2_MAP:
-        c.port(net, f"SW2.{pin}", expect=EXPECT_EN)
-    c.use_part("DSHP04TSGER", ref="SW6")
-    c.net("+3V3_SC", "SW6.1", "SW6.3", "SW6.5", "SW6.7")
-    for pin, net in SW6_MAP:
-        c.port(net, f"SW6.{pin}", expect=EXPECT_EN)
-    c.nc("SW6.4", "SW6.6")
-
-    c.use_part("TCA9535PWR", ref="U1")
-    c.net("+3V3_SC", "U1.VCC")
-    for cap in c.decouple("U1.VCC", EXPANDER_DECAP, footprint=C_FP):
-        cap.fields["LCSC"] = LCSC_100N
-    c.net("GND", "U1.GND", "U1.A1", "U1.A2", "U1.A0")
-    for k, net in enumerate(P0_MAP):
-        c.port(net, f"U1.P0{k}", expect=EXPECT_EN)
-    c.port("BU_OVR_LCD_BL", "U1.P10", expect=EXPECT_EN)
-    r = c.part(c.auto_ref("R"), "Device:R", SPARE_PULLDOWN, R_FP,
-               LCSC=LCSC_100K)
-    c.net("BU_OVR_LCD_BL", f"{r.ref}.1")
-    c.net("GND", f"{r.ref}.2")
-    for pname, net in P1_MAP:
-        c.port(net, f"U1.{pname}", expect=EXPECT_EN)
-    for net, pin, owner in _FLAG_PORTS:
-        c.port(net, f"U1.{pin}", expect=owner)
-    for k in (6, 7):
-        net = f"BU_P1{k}"
-        rr = c.part(c.auto_ref("R"), "Device:R", SPARE_PULLDOWN, R_FP,
-                    LCSC=LCSC_100K)
-        c.net(net, f"U1.P1{k}", f"{rr.ref}.1")
-        c.net("GND", f"{rr.ref}.2")
-    c.port("STM32_I2C2_SCL", "U1.SCL",
-           kind="i2c", role="scl", bus="STM32_I2C2", speed_hz=I2C_SPEED_HZ,
-           expect=J3_MAP)
-    c.port("STM32_I2C2_SDA", "U1.SDA",
-           kind="i2c", role="sda", bus="STM32_I2C2", speed_hz=I2C_SPEED_HZ,
-           expect=J3_MAP)
-    c.pullup("U1.SCL", BUS_PULLUP, "+3V3_SC",
-             footprint=R_FP).fields["LCSC"] = LCSC_4K7
-    c.pullup("U1.SDA", BUS_PULLUP, "+3V3_SC",
-             footprint=R_FP).fields["LCSC"] = LCSC_4K7
-    c.port("SC_INT_N", "U1.INT#", expect=J3_MAP)
-    c.pullup("U1.INT#", INT_PULLUP, "+3V3_SC",
-             footprint=R_FP).fields["LCSC"] = LCSC_10K
-
-    for k in range(N_PL_BUTTONS):
-        sw = c.use_part("TS-1187A-B-A-B", ref=f"SW{FIRST_BUTTON_REF + k}")
-        net = f"PL_BTN{k}"
-        cd = c.part(c.auto_ref("C"), "Device:C", DEBOUNCE_CAP, C_FP,
-                    LCSC=LCSC_100N)
-        c.port(net, f"{sw.ref}.1", f"{sw.ref}.2", f"{cd.ref}.1",
-               expect=J12_MAP)
-        c.net("GND", f"{sw.ref}.3", f"{sw.ref}.4", f"{cd.ref}.2")
-        c.pullup(f"{sw.ref}.1", BUTTON_PULLUP, "+3V3",
-                 footprint=R_FP).fields["LCSC"] = LCSC_10K
-
-    # The reset button resets the SC = whole-system reset; the SoM provides its
-    # own RC, so only the 100n across the contacts is fitted here.
-    c.use_part("TS-1187A-B-A-B", ref="SW5")
-    cr = c.part(c.auto_ref("C"), "Device:C", DEBOUNCE_CAP, C_FP,
-                LCSC=LCSC_100N)
-    c.port("STM32_NRST", "SW5.1", "SW5.2", f"{cr.ref}.1")
-    c.net("GND", "SW5.3", "SW5.4", f"{cr.ref}.2")
-
-    rp = c.part(c.auto_ref("R"), "Device:R", PUDC_STRAP, R_FP, LCSC=LCSC_10K)
-    c.port("PUDC_34", f"{rp.ref}.2", expect=J3_MAP)
-    c.net("GND", f"{rp.ref}.1")
-
-    c.testpoint("+3V3_SC")
-    c.testpoint("STM32_I2C2_SDA")
-    c.testpoint("STM32_I2C2_SCL")
-
-    c.draws("+3V3_SC", SC_DRAW_A, "TCA9535 + DIP/I2C/INT pull networks "
-                                  "(dossier R3 < 5 mA)")
-    c.draws("+3V3", BUTTON_DRAW_A, "2x user-button 10k pull-ups when pressed")
-    return c
+    return project_circuit(PROJECT, 'bringup_rails', __file__)

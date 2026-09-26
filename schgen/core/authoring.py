@@ -1,8 +1,4 @@
-"""Transport-only adapters for native parameterized circuit authoring.
-
-Legacy constructors remain in their original modules for parity verification
-and the source-based component-basis audit. They are never runtime fallbacks.
-"""
+"""Transport-only adapters for native parameterized circuit authoring."""
 from __future__ import annotations
 
 from pathlib import Path
@@ -62,3 +58,20 @@ def connector_circuit(project: str, jref: str, name: str, title: str,
                       pins: dict[str, str], mapping: dict, policy: dict) -> Circuit:
     return Circuit.from_ir(_call(_engine().author_som_connector, project, jref,
                                  name, title, pins, mapping, policy, str(REPO_ROOT)))
+
+
+def audit_inputs(sheets=None, *, project: str | None = None) -> list[dict]:
+    """Live native circuits, with an optional complete caller-owned project.
+
+    A pipeline must pass the sheets it actually netlisted. Replacing the whole
+    project scope (not just matching names) lets the audit catch omitted/extra
+    sheets as well as changed components. No companion IR files are loaded.
+    """
+    rows = _engine().component_basis_inputs(str(REPO_ROOT))
+    if sheets is not None:
+        from schgen.core.project import PROJECT_ROOT
+        owner = project if project is not None else PROJECT_ROOT.name
+        rows = [row for row in rows if row["scope"] != owner]
+        rows.extend({"scope": owner, "sheet": sheet.name,
+                     "circuit": sheet.circuit.to_ir()} for sheet in sheets)
+    return rows

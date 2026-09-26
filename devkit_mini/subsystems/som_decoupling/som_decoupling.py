@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from devkit_mini.basis import register
+from devkit_mini.basis import PROJECT, register
 from schgen.core.model import Circuit
 
 C0805 = "Capacitor_SMD:C_0805_2012Metric"
@@ -41,22 +41,4 @@ RAILS: tuple[str, ...] = ("+5V_SOM", "+3V3", "+3V3_SC")
 
 def circuit() -> Circuit:
     from schgen.core.authoring import project_circuit
-    return project_circuit('devkit_mini', 'som_decoupling', __file__)
-
-
-def _legacy_circuit() -> Circuit:
-    c = Circuit("som_decoupling",
-                "SoM power-entry decoupling under the DF40 mezzanine")
-    n = 1
-    for rail in RAILS:
-        for _ in range(N_BULK_PER_RAIL):
-            c.part(f"C{n}", "Device:C", BULK_VAL, C0805, LCSC=BULK_LCSC)
-            c.net(rail, f"C{n}.1")
-            c.net("GND", f"C{n}.2")
-            n += 1
-        for _ in range(N_HF_PER_RAIL):
-            c.part(f"C{n}", "Device:C", HF_VAL, C0603, LCSC=HF_LCSC)
-            c.net(rail, f"C{n}.1")
-            c.net("GND", f"C{n}.2")
-            n += 1
-    return c
+    return project_circuit(PROJECT, 'som_decoupling', __file__)

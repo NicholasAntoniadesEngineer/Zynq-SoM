@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from devkit_mini.basis import register
+from devkit_mini.basis import PROJECT, register
 from schgen.core.model import Circuit
 
 R0603 = "Resistor_SMD:R_0603_1608Metric"
@@ -75,54 +75,4 @@ _TESTPOINT_WAIVERS = (
 
 def circuit() -> Circuit:
     from schgen.core.authoring import project_circuit
-    return project_circuit('devkit_mini', 'power_mon', __file__)
-
-
-def _legacy_circuit() -> Circuit:
-    c = Circuit("power_mon", "Rail telemetry: 2x INA3221 + shunts (I2C 0x40/41)")
-    c.use_part(MONITOR_PART, ref="U1")
-    c.use_part(MONITOR_PART, ref="U2")
-
-    # The rail nets SPLIT at the shunts (DEF-D): each channel therefore reads
-    # only its own rail's loads, not the chain's.
-    for ref, mpn, val, reg_net, board_net, mon, ch in _SHUNTS:
-        c.use_part(mpn, ref=ref, value=val)
-        c.net(reg_net, f"{ref}.1", f"{mon}.IN+{ch}")
-        c.net(board_net, f"{ref}.2", f"{mon}.IN-{ch}")
-
-    c.net("GND", "U2.IN+2", "U2.IN-2", "U2.IN+3", "U2.IN-3")
-
-    c.net("+3V3_SC", "U1.VS", "U1.VPU", "U2.VS", "U2.VPU")
-    c.net("GND", "U1.GND", "U1.PAD", "U2.GND", "U2.PAD")
-    c.net("GND", "U1.A0")
-    c.net("+3V3_SC", "U2.A0")
-    for u in ("U1", "U2"):
-        for cap in c.decouple(f"{u}.VS", SUPPLY_HF, footprint=C0603):
-            cap.fields["LCSC"] = "C14663"
-    c.part("C3", "Device:C", SUPPLY_BULK, C0805, LCSC="C15850")
-    c.net("+3V3_SC", "C3.1")
-    c.net("GND", "C3.2")
-
-    c.port("STM32_I2C2_SDA", "U1.SDA", "U2.SDA",
-           kind="i2c", role="sda", bus="STM32_I2C2", speed_hz=I2C_SPEED_HZ,
-           expect=J1_MAP)
-    c.port("STM32_I2C2_SCL", "U1.SCL", "U2.SCL",
-           kind="i2c", role="scl", bus="STM32_I2C2", speed_hz=I2C_SPEED_HZ,
-           expect=J1_MAP)
-
-    c.part("R1", "Device:R", ALERT_PULLUP, R0603, LCSC="C25804")
-    c.port("PMON_ALERT_N", "U1.CRITICAL", "U2.CRITICAL", "R1.2",
-           expect=BRINGUP_INT)
-    c.net("+3V3_SC", "R1.1")
-
-    c.nc("U1.WARNING", "U1.PV", "U1.TC", "U2.WARNING", "U2.PV", "U2.TC")
-
-    c.draws("+3V3_SC", SUPPLY_DRAW_A, "2x INA3221 ~0.7 mA + ALERT pull-up")
-
-    for net in ("+3V3_SC", "STM32_I2C2_SCL", "STM32_I2C2_SDA"):
-        c.testpoint(net)
-
-    for rail, shunt, board_tp in _TESTPOINT_WAIVERS:
-        c.waive_tp(rail, f"reg-side of {shunt} — probe across the shunt "
-                         f"(the {board_tp} TP is the post-shunt/load side)")
-    return c
+    return project_circuit(PROJECT, 'power_mon', __file__)

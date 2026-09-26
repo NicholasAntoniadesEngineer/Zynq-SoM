@@ -110,7 +110,7 @@ typedef struct {
     uint8_t     addr7;
 } sc_i2c_dev_t;
 
-#define SC_I2C_DEV_COUNT 7
+#define SC_I2C_DEV_COUNT 6
 extern const sc_i2c_dev_t sc_i2c_devices[SC_I2C_DEV_COUNT];
 
 #endif /* SC_TABLES_H */

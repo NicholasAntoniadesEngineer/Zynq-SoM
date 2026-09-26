@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from carrier.basis import register
+from carrier.basis import PROJECT, register
 from schgen.core.model import Circuit
 
 R_FP = "Resistor_SMD:R_0603_1608Metric"
@@ -95,58 +95,4 @@ _ESD_VN_PIN = 2
 
 def circuit() -> Circuit:
     from schgen.core.authoring import project_circuit
-    return project_circuit('carrier', 'motor_pwm', __file__)
-
-
-def _legacy_circuit() -> Circuit:
-    c = Circuit("motor_pwm", "8-ch PWM/ESC output buffer (5V, PL-isolating)")
-
-    c.use_part(BUFFER_PART, ref="U1")
-    c.net("+5V", "U1.VCC", "U1.DIR")
-    c.net("GND", "U1.GND")
-    for cap in c.decouple("U1.VCC", SWITCH_DECAP, footprint=C_FP):
-        cap.fields["LCSC"] = LCSC_100N
-    c.port("ESC_BUF_OE_N", "U1.#OE", expect=J2_MAP)
-    c.pullup("U1.#OE", OE_PULLUP, "+5V",
-             footprint=R_FP).fields["LCSC"] = LCSC_10K
-
-    c.use_part(DAMPING_ARRAY, ref="RN1")
-    c.use_part(DAMPING_ARRAY, ref="RN2")
-    c.use_part(OUTPUT_HEADER, ref="J1")
-    for i, (apin, bpin, src) in enumerate(_CH):
-        rn = "RN1" if i < _CHANNELS_PER_ARRAY else "RN2"
-        j = i % _CHANNELS_PER_ARRAY
-        c.port(f"ESC_PWM_IN{i}", f"U1.{apin}", expect=src)
-        c.net(f"ESC_SIG{i}", f"U1.{bpin}", f"{rn}.{j + _ARRAY_TOP_PIN}")
-        c.net(f"ESC_OUT{i}", f"{rn}.{_ARRAY_SPAN - j}",
-              f"J1.{_SIG_FIRST_PIN + i}")
-    c.net("+5V_MOTOR_IO", *[f"J1.{p}" for p in _RAIL_ROW])
-    c.net("GND", *[f"J1.{p}" for p in _GND_ROW])
-
-    for arr in range(_ESD_ARRAYS):
-        ed = c.part(c.auto_ref("D"), "Power_Protection:SRV05-4", ESD_ARRAY,
-                    SOT23_6, LCSC=LCSC_SRV05)
-        b = arr * _CHANNELS_PER_ARRAY
-        for k, pad in enumerate(_ESD_IO_PINS):
-            c.net(f"ESC_OUT{b + k}", f"{ed.ref}.{pad}")
-        c.net("+5V", f"{ed.ref}.{_ESD_VP_PIN}")
-        c.net("GND", f"{ed.ref}.{_ESD_VN_PIN}")
-
-    c.use_part("SY6280AAC", ref="U3")
-    c.net("+5V", "U3.IN", "U3.EN")
-    c.net("+5V_MOTOR_IO", "U3.OUT")
-    c.net("GND", "U3.GND")
-    rset = c.part(c.auto_ref("R"), "Device:R", SERVO_ISET, R_FP, LCSC=LCSC_13K)
-    c.net("MIO_ISET", "U3.ISET", f"{rset.ref}.1")
-    c.net("GND", f"{rset.ref}.2")
-    for cap in c.decouple("U3.IN", SWITCH_DECAP, footprint=C_FP):
-        cap.fields["LCSC"] = LCSC_100N
-    cblk = c.part(c.auto_ref("C"), "Device:C", SERVO_HOLDUP, C0805,
-                  LCSC=LCSC_10U)
-    c.net("+5V_MOTOR_IO", f"{cblk.ref}.1")
-    c.net("GND", f"{cblk.ref}.2")
-
-    c.draws("+5V", BUFFER_DRAW_A,
-            "HCT245 buffer + light servo allowance (ILIM 523mA)")
-    c.testpoint("+5V_MOTOR_IO")
-    return c
+    return project_circuit(PROJECT, 'motor_pwm', __file__)

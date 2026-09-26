@@ -253,22 +253,11 @@ CARRIER = PROJECT_ROOT
 
 
 def _pcb_error_count(pcb_path: Path) -> int:
-    import tempfile as _tf
-    with _tf.TemporaryDirectory(prefix="schgen_pcbdrc_") as td:
-        rpt = Path(td) / "drc.json"
-        # Zones are unfilled on disk; --refill-zones makes DRC judge the real fill.
-        subprocess.run(
-            ["kicad-cli", "pcb", "drc", "--format", "json",
-             "--severity-error", "--refill-zones",
-             "-o", str(rpt), str(pcb_path)],
-            capture_output=True, text=True)
-        if not rpt.exists():
-            return -1
-        try:
-            data = json.loads(rpt.read_text())
-        except Exception:  # noqa: BLE001
-            return -1
-    return len(data.get("violations", []))
+    from schgen import _geom
+    try:
+        return _geom.pcb_drc(str(pcb_path), include_warnings=False)["n_violations"]
+    except (RuntimeError, ValueError):
+        return -1
 
 
 def _ahash(png: Path) -> str:
@@ -769,7 +758,9 @@ def cmd_board(args: argparse.Namespace) -> int:
         pcb_res = _pcb_holder["res"]
         drc = pcb_res["drc"]
         derr = (drc or {}).get("n_violations", 0)
-        pcb_errs = _pcb_error_count(pcb_res["pcb"])
+        pcb_errs = (drc or {}).get("n_errors")
+        if pcb_errs is None:
+            pcb_errs = _pcb_error_count(pcb_res["pcb"])
         print(f"PCB: {pcb_res['pcb'].relative_to(REPO_ROOT)} "
               f"({pcb_res['board_w']:g} x {pcb_res['board_h']:g} mm, 4L "
               f"Sig/GND/PWR/Sig, {pcb_res['placed']}/{pcb_res['total']} "
@@ -1008,7 +999,7 @@ def cmd_board(args: argparse.Namespace) -> int:
 
     from schgen.verify import copper_debt
     try:
-        cd_res = copper_debt.run(rep_dir, _pcb_file)
+        cd_res = copper_debt.run(rep_dir, _pcb_file, sheets=sheets)
         print(f"COPPER DEBT: {cd_res.n_entries} copper-predicated claims "
               f"({cd_res.n_status('EMITTED')} emitted, "
               f"{cd_res.n_status('PARTIAL')} partial, "

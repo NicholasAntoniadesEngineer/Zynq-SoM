@@ -1,0 +1,110 @@
+{
+  "kicad": "10.0.2",
+  "boards": [
+    {
+      "name": "carrier",
+      "source": "carrier/Zynq_Carrier.kicad_pcb",
+      "input_sha256": "4b45325d224e6376dc43b871484357fad50b1705b37b0389e2c746683c4022f7",
+      "images": [
+        {
+          "name": "3d_top.png",
+          "png_sha256": "a1feb8a4b4b0dc2ff2a693957714fe0caf8d76fed0b9fa51112f767b8771d0fd",
+          "rgb_sha256": "9ff5a84c0f0f0c90fc350d751416b17e1e4f6c191976b09af7b363ab304631eb"
+        },
+        {
+          "name": "3d_bottom.png",
+          "png_sha256": "9f100d43f93921bd732eef8704d2f51c4be3c25b607c79e5727f5dabd8d2124b",
+          "rgb_sha256": "488fb634baa6525b51de11f76a7f5cdaea1cb114dc5d4a5e43955e0bcb48c384"
+        },
+        {
+          "name": "3d_left.png",
+          "png_sha256": "a323b208c6c52825c172f7a4b4b4125c11665ee4cb05c405848e61c30f011459",
+          "rgb_sha256": "6f22f05ab99202dc945a1bc07359d5f3f713ab4b78ecefbf313f263969a2393f"
+        },
+        {
+          "name": "3d_right.png",
+          "png_sha256": "c8717e4094b213d65d0e514bfcb75f0a31fa0426a6b019f82ef6a3aef183c276",
+          "rgb_sha256": "079054009538785c424fcf1302bceba2b353bde392bd697c09c5de9234bb3755"
+        },
+        {
+          "name": "3d_front.png",
+          "png_sha256": "8126e05353ea840547796b6b6aa30023ab2eae2d640b42bb1a43e70628bdf72a",
+          "rgb_sha256": "2756dade1c4d52dea936b997d570ea498d8ab77d5cfa3f9f700ff7443c890b47"
+        },
+        {
+          "name": "3d_back.png",
+          "png_sha256": "271678b1daf7a442cf635ce171508e776655a1da015e8fbe91b2d75314e75e99",
+          "rgb_sha256": "2c13eedf1fdcb88ee823c57984ae9b20ace062cc4ee3ebf977ce54a883b27cfe"
+        },
+        {
+          "name": "3d_persp.png",
+          "png_sha256": "6fb0bc718990cb900bc7816735a71a2be1b7b190d4fda123f65b5dfe714d3a46",
+          "rgb_sha256": "c32aafc67955e76dcec6bf57636ae2ac1f828d5ea6b99e2de9e5032ab32a57bc"
+        },
+        {
+          "name": "3d_persp_rear.png",
+          "png_sha256": "f36b828098c5894323d3e5f53857b7abd1687ca39267e44798a6e792f78bb758",
+          "rgb_sha256": "d6b95ef4e7f5995524922fd8e606522d479b987da68a9692ca41a3705052ab36"
+        }
+      ]
+    },
+    {
+      "name": "devkit_mini",
+      "source": "devkit_mini/Zynq_Carrier.kicad_pcb",
+      "input_sha256": "c55c085789a3d262a6bb9233bd73cb2d4e7f5b0bba425c5ddebf4f9ced2314c2",
+      "images": [
+        {
+          "name": "3d_top.png",
+          "png_sha256": "e73869c0dc12db4013d8f4712cf557fcc495af7523a5849c36cf778c28c3ebe8",
+          "rgb_sha256": "8503a39b8c4a239ac9beb90161c112b9baccb69ea74177fb36b36c249fa1488d"
+        },
+        {
+          "name": "3d_bottom.png",
+          "png_sha256": "b85e1e0c475979f5f680c6aff2cdbc240b72b1835c63bf8cb52e05c47c04120f",
+          "rgb_sha256": "2647dc9d658f795c0d0dc855fc4bf35341af3759a545c3633a9b9ecea47908b9"
+        },
+        {
+          "name": "3d_left.png",
+          "png_sha256": "f3ef11109b23163a05559a0149266206f2cf8f6df05eed67c20779b9dfb6b816",
+          "rgb_sha256": "f98746656caaf4fa6fc25d223fe58d1a52b57a5fa86c9915fc6d517ad03e7353"
+        },
+        {
+          "name": "3d_right.png",
+          "png_sha256": "da0f9ba5943e0a8060399e48c1eea3e8fd080ca24b4b9c30284f376e76b0b425",
+          "rgb_sha256": "b78153b72eb55c8ad20af3ec33fca4b7901c87aa299a268890906e92740c4585"
+        },
+        {
+          "name": "3d_front.png",
+          "png_sha256": "6f1eb9fabab4f9f1bec00b6a47f8790382cf7f3c7cb32fcbd0705c981f7d3e11",
+          "rgb_sha256": "3bc382a4962de8c65e8d70a74a87d9a054b62dae26d622abbfff89ae47773e7d"
+        },
+        {
+          "name": "3d_back.png",
+          "png_sha256": "8d06339b54e932aac657d7a031c21e56bba12f8dbf81292e0fe30cff27e77616",
+          "rgb_sha256": "741a1ee0cb5faadf386e37ddb7e2b575ec034adcd145592facf277dae2c396f9"
+        },
+        {
+          "name": "3d_persp.png",
+          "png_sha256": "deda31d19eef118a5ed05a2a3aaca17a8f54a0135010bc68a48f9288d64d4c95",
+          "rgb_sha256": "c4caad836c7dffa5cd77f52d208bee3974aac05bbdd4da0794d7bc4b4802bf04"
+        },
+        {
+          "name": "3d_persp_rear.png",
+          "png_sha256": "19ca8da5ee9498eea384390661e59a3c33107e92129a0d17a6ecb2f456968911",
+          "rgb_sha256": "c8a9125d6c471dfd1b99baf75865770cb3c1bed2cce56d47ca2fe6a38bceff21"
+        }
+      ]
+    }
+  ],
+  "sheet": {
+    "png_path": "sheet.png",
+    "width_px": 842,
+    "height_px": 596,
+    "page_w_mm": 297.0021986219618,
+    "page_h_mm": 210.0072072347005,
+    "dpi": 72.0,
+    "source": "carrier/schematic/board_qwiic.kicad_sch",
+    "input_sha256": "b34f9f8720caa24795d7a9dbc85b0440328eb2c9d41224619a945c6d7e26b9a4",
+    "rgb_sha256": "5d84932612485b58b6bf88422b52fcefca7dda2291356cb33a884d549448f710"
+  }
+}

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from carrier.basis import register
+from carrier.basis import PROJECT, register
 from schgen.core.model import Circuit
 
 R_FP = "Resistor_SMD:R_0603_1608Metric"
@@ -74,55 +74,4 @@ SC_DRAW_A = register("motor_sense.sc_draw", 0.002, "A",
 
 def circuit() -> Circuit:
     from schgen.core.authoring import project_circuit
-    return project_circuit('carrier', 'motor_sense', __file__)
-
-
-def _legacy_circuit() -> Circuit:
-    c = Circuit("motor_sense",
-                "ESC motor-rail telemetry: INA3221 + 10mR shunt (I2C 0x42)")
-
-    c.use_part(RAIL_CONNECTOR, ref="J2")
-    c.net("ESC_VRAIL_IN", "J2.+")
-    c.net("GND", "J2.-", "J2.3", "J2.4")
-    c.use_part(RAIL_TVS, ref="D1")
-    c.net("ESC_VRAIL_IN", "D1.K")
-    c.net("GND", "D1.A")
-    chf = c.part(c.auto_ref("C"), "Device:C", RAIL_HF, C_FP, LCSC=LCSC_100N)
-    c.net("ESC_VRAIL_IN", f"{chf.ref}.1")
-    c.net("GND", f"{chf.ref}.2")
-    c.use_part("RLM12FTCMR010", ref="RS1", value=SHUNT)
-    c.net("ESC_VRAIL_IN", "RS1.1")
-    c.net("ESC_VRAIL", "RS1.2")
-    c.use_part(RAIL_CONNECTOR, ref="J3")
-    c.net("ESC_VRAIL", "J3.+")
-    c.net("GND", "J3.-", "J3.3", "J3.4")
-
-    c.use_part("INA3221AIRGVR", ref="U2")
-    c.net("ESC_VRAIL_IN", "U2.IN+1")
-    c.net("ESC_VRAIL", "U2.IN-1")
-    c.net("GND", "U2.IN+2", "U2.IN-2", "U2.IN+3", "U2.IN-3")
-    c.net("+3V3_SC", "U2.VS", "U2.VPU")
-    c.net("GND", "U2.GND", "U2.PAD")
-    for cap in c.decouple("U2.VS", SUPPLY_HF, footprint=C_FP):
-        cap.fields["LCSC"] = LCSC_100N
-    c2 = c.part(c.auto_ref("C"), "Device:C", SUPPLY_BULK, C0805, LCSC=LCSC_10U)
-    c.net("+3V3_SC", f"{c2.ref}.1")
-    c.net("GND", f"{c2.ref}.2")
-    c.port("STM32_I2C2_SDA", "U2.SDA", "U2.A0", kind="i2c", role="sda",
-           bus="STM32_I2C2", speed_hz=I2C_SPEED_HZ, expect=J1_MAP)
-    c.port("STM32_I2C2_SCL", "U2.SCL", kind="i2c", role="scl",
-           bus="STM32_I2C2", speed_hz=I2C_SPEED_HZ, expect=J1_MAP)
-    c.port("ESC_FAULT_N", "U2.CRITICAL", expect=J2_MAP)
-    c.pullup("U2.CRITICAL", FAULT_PULLUP, "+3V3_SC",
-             footprint=R_FP).fields["LCSC"] = LCSC_10K
-    c.nc("U2.WARNING", "U2.PV", "U2.TC")
-
-    cb = c.part(c.auto_ref("C"), "Device:C_Polarized", RAIL_BULK, CP_ELEC_D10,
-                LCSC=LCSC_470U)
-    c.net("ESC_VRAIL", f"{cb.ref}.1")
-    c.net("GND", f"{cb.ref}.2")
-
-    c.draws("+3V3_SC", SC_DRAW_A, "INA3221 ~0.35 mA + CRITICAL pull-up")
-    # ESC_VRAIL is externally sourced and metered over I2C — probe it at the
-    # XT60 terminals; there is deliberately no on-board TP pad.
-    return c
+    return project_circuit(PROJECT, 'motor_sense', __file__)

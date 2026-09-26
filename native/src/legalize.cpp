@@ -1,6 +1,7 @@
 #include "schgen/legalize.hpp"
 
 #include "schgen/occupancy.hpp"
+#include "accurate_norm.hpp"
 #include "schgen/quantize.hpp"
 
 #include <algorithm>
@@ -112,7 +113,7 @@ double flow_budget(double board_w, double board_h,
 double bbox_gap(const Box4& a, const Box4& b) {
     const double dx = std::max(std::max(a.x0 - b.x1, b.x0 - a.x1), 0.0);
     const double dy = std::max(std::max(a.y0 - b.y1, b.y0 - a.y1), 0.0);
-    return std::hypot(dx, dy);
+    return accurate_hypot2(dx, dy);
 }
 
 double rect_gap(const Box4& a, const Box4& b) {
@@ -842,8 +843,7 @@ std::vector<EvalTermOut> evaluate_terms(
                                           false, "UNRESOLVED"});
                 continue;
             }
-            const double d = std::hypot(ca->first - cb->first,
-                                        ca->second - cb->second);
+            const double d = accurate_hypot2(ca->first - cb->first, ca->second - cb->second);
             const double g = guard_at(t.subject) + guard_at(t.target);
             const double eff = budget - g;
             std::string note;
@@ -883,8 +883,7 @@ std::vector<EvalTermOut> evaluate_terms(
                     "UNRESOLVED"});
                 continue;
             }
-            const double d = std::hypot(ca->first - cb->first,
-                                        ca->second - cb->second);
+            const double d = accurate_hypot2(ca->first - cb->first, ca->second - cb->second);
             std::string note;
             if (guard != 0.0) {
                 note = "incl FAR_L4_GUARD " + format_g(guard) + "mm";
@@ -907,7 +906,7 @@ std::vector<EvalTermOut> evaluate_terms(
                                           "UNRESOLVED"});
                 continue;
             }
-            const auto face = facing_dot(czone->first, czone->second,
+            const auto face = accurate_facing_dot(czone->first, czone->second,
                                          cout->first, cout->second,
                                          cdown->first, cdown->second);
             const std::string dot_note = "dot=" + format_dot(face.first);
@@ -983,6 +982,21 @@ std::pair<std::vector<double>, std::vector<double>> legalize_descend_passes(
         fixed_poses,
     double som_mid_x, double som_mid_y, bool has_som, bool seed_only,
     double hop_weight, double seed_weight, int median_passes) {
+    return legalize_descend_passes_accounted(names, pos_x, pos_y, seed_x, seed_y,
+        edges_x, edges_y, hops, cent_off, fixed_poses, som_mid_x, som_mid_y, has_som,
+        seed_only, hop_weight, seed_weight, median_passes, nullptr);
+}
+
+std::pair<std::vector<double>, std::vector<double>> legalize_descend_passes_accounted(
+    const std::vector<std::string>& names,
+    const std::vector<double>& pos_x, const std::vector<double>& pos_y,
+    const std::vector<double>& seed_x, const std::vector<double>& seed_y,
+    const std::vector<NamedEdge>& edges_x, const std::vector<NamedEdge>& edges_y,
+    const std::vector<std::pair<std::string, std::string>>& hops,
+    const std::vector<std::pair<std::string, std::pair<double, double>>>& cent_off,
+    const std::vector<std::pair<std::string, std::pair<double, double>>>& fixed_poses,
+    double som_mid_x, double som_mid_y, bool has_som, bool seed_only,
+    double hop_weight, double seed_weight, int median_passes, QuantizationCounts* counts) {
     if (names.size() != pos_x.size() || names.size() != pos_y.size()
         || names.size() != seed_x.size() || names.size() != seed_y.size()) {
         throw std::runtime_error(
@@ -1097,6 +1111,7 @@ std::pair<std::vector<double>, std::vector<double>> legalize_descend_passes(
                 pulls.emplace_back(seed_only ? 1.0 : seed_weight,
                                    axis_x ? seed_x[ni] : seed_y[ni]);
                 const double best = weighted_median(pulls);
+                if (counts) checked_quantization_add(*counts, "legalize_pose_quantum");
                 double q = legalize_pose_quantum(best);
                 q = std::max(lo, std::min(q, hi));
                 const double old = pos[ni];

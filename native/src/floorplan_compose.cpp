@@ -105,7 +105,8 @@ class Composer {
 public:
     Composer(const FloorplanLegalizeInput& input,
              const std::vector<FloorplanLegalizeVar>& variables,
-             std::vector<std::string>& output_log) : in(input), log(output_log), fixed(input.fixed_poses) {
+             std::vector<std::string>& output_log, QuantizationCounts* counts = nullptr)
+        : in(input), log(output_log), counts(counts), fixed(input.fixed_poses) {
         for (const auto& v : variables) {
             if (v.name.empty() || v.name.front() == '#' || !by_name.emplace(v.name, &v).second)
                 throw FloorplanError("floorplan compose: invalid or duplicate movable name " + v.name);
@@ -193,6 +194,7 @@ public:
 private:
     const FloorplanLegalizeInput& in;
     std::vector<std::string>& log;
+    QuantizationCounts* counts;
     FloorplanOffsets fixed;
     std::map<std::string, const FloorplanLegalizeVar*> by_name;
     std::map<std::string, Box4> seed_rect, frect;
@@ -303,9 +305,9 @@ private:
         if (!seed_only) for (const auto& t : in.index.hard)
             if (t.kind == "flow_hop") hops.emplace_back(t.subject, t.target());
         const auto& core = in.som_core_page;
-        auto result = legalize_descend_passes(names, pos_x, pos_y, sx, sy, ex, ey, hops, centers,
+        auto result = legalize_descend_passes_accounted(names, pos_x, pos_y, sx, sy, ex, ey, hops, centers,
             {fixed.begin(), fixed.end()}, (core.x0 + core.x1) / 2 - in.origin.first,
-            (core.y0 + core.y1) / 2 - in.origin.second, true, seed_only, hop_weight, seed_weight, median_passes);
+            (core.y0 + core.y1) / 2 - in.origin.second, true, seed_only, hop_weight, seed_weight, median_passes, counts);
         pos_x = std::move(result.first); pos_y = std::move(result.second);
     }
     std::vector<FloorplanTermEval> reds() const {
@@ -330,5 +332,11 @@ bool floorplan_legalize_compact(const FloorplanLegalizeInput& input,
         std::vector<FloorplanLegalizeVar>& movable, std::vector<std::string>& log) {
     validate(input);
     return Composer(input, movable, log).run(movable);
+}
+bool floorplan_legalize_compact_accounted(const FloorplanLegalizeInput& input,
+        std::vector<FloorplanLegalizeVar>& movable, std::vector<std::string>& log,
+        QuantizationCounts& counts) {
+    validate(input);
+    return Composer(input, movable, log, &counts).run(movable);
 }
 }  // namespace schgen

@@ -353,7 +353,7 @@ void pack_behavior() {
     }
     require(passes==2&&!automatic.punch_free,"both reservation policies execute; tied free pass rejected");
     const std::map<std::string,std::size_t> quanta{{"outline_fine_grid",164},{"outline_grow_step",10},
-        {"outline_snap_up",20},{"run_overflow_tol",696},{"som_pose_half_mm",1394}};
+        {"outline_snap_up",20},{"run_overflow_tol",696},{"som_pose_half_mm",1394},{"quant_credit",696}};
     require(automatic.accounting.quantization_engagements==quanta,"all synthetic search quantization engagements accounted exactly");
 }
 void cross_behavior() {
@@ -460,6 +460,17 @@ void frozen(const std::filesystem::path& dir,const std::string& name,bool geomet
     auto expected_quant=jobject({});
     for(const auto& [key,v]:field(expected,"quantization").object_value)
         if(v.number_value!=0)expected_quant.object_value.emplace_back(key,v);
+    // The original capture missed native legalizer/spatial/fanout calls because
+    // its Python census never observed those kernels. A separate function-entry
+    // observer ran the committed, pre-instrumentation kernel (not these counters).
+    const auto native_counts=parse_json_file((dir.parent_path()/"verification_audits/native_producer_counts.json").string());
+    for(const auto& [key,v]:field(field(native_counts,"counts"),name).object_value) {
+        require(v.number_value>0,name+": independently observed native instrumentation gap");
+        auto found=std::find_if(expected_quant.object_value.begin(),expected_quant.object_value.end(),
+            [wanted=key](const auto& item){return item.first==wanted;});
+        if(found==expected_quant.object_value.end())expected_quant.object_value.emplace_back(key,v);
+        else found->second.number_value+=v.number_value;
+    }
     same(field(account,"quantization_engagements"),expected_quant,name+".quantization_engagements");
     std::vector<J> calculations;
     std::string ledger;

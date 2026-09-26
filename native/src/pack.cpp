@@ -1237,6 +1237,13 @@ zone_fanout_members_rows(
                                  double, int>>& rows,
     int min_subject_pins,
     const std::vector<std::tuple<int, double>>& need_tiers, double top_need) {
+    return zone_fanout_members_rows_accounted(rows, min_subject_pins, need_tiers, top_need, nullptr);
+}
+std::vector<std::tuple<double, double, double, double, int, double>>
+zone_fanout_members_rows_accounted(
+    const std::vector<std::tuple<double, double, double, double, double, double, double, int>>& rows,
+    int min_subject_pins, const std::vector<std::tuple<int, double>>& need_tiers,
+    double top_need, QuantizationCounts* counts) {
     std::vector<std::tuple<double, double, double, double, int, double>> out;
     out.reserve(rows.size());
     for (const auto& row : rows) {
@@ -1246,6 +1253,7 @@ zone_fanout_members_rows(
                                       std::get<4>(row), std::get<5>(row)},
                                  std::get<6>(row));
         const int pins = std::get<7>(row);
+        if (counts && pins >= min_subject_pins) checked_quantization_add(*counts, "quant_credit");
         const double lim = pins >= min_subject_pins
             ? quant_credit(intelligent_need_mm(pins, need_tiers, top_need))
             : 0.0;

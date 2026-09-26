@@ -17,6 +17,7 @@ BoardPcbStage prepare_board_pcb(const ProjectPaths& paths,
     if (!link.ok()) throw ProjectError(link.report());
     const auto nets = extract_netlist(paths.project_root / "Zynq_Carrier.kicad_sch", extraction);
     BoardPcbStage out;
+    out.circuits = circuits;
     out.inputs = load_board_inputs(paths, circuits, link, nets, options);
     out.placement = build_pcb_model(out.inputs);
     out.emission = render_pcb(out.placement.model, pcb_emit_policy(out.inputs.floorplan.project));
@@ -36,7 +37,7 @@ void publish_board_pcb(const BoardPcbStage& stage, const std::filesystem::path& 
     };
     publish("Zynq_Carrier.kicad_pcb", stage.emission.pcb);
     publish("Zynq_Carrier.kicad_pro", project);
-    publish("Zynq_Carrier.kicad_dru", rules);
-    write_floorplan_documents(stage.placement.floorplan.documents, directory / "manufacturing");
+    publish("manufacturing/Zynq_Carrier_pcb.kicad_dru", rules);
+    write_floorplan_documents(stage.placement.floorplan.documents, directory / "docs");
 }
 }

@@ -250,6 +250,11 @@ zone_fanout_members_rows(
                                  double, int>>& rows,
     int min_subject_pins,
     const std::vector<std::tuple<int, double>>& need_tiers, double top_need);
+std::vector<std::tuple<double, double, double, double, int, double>>
+zone_fanout_members_rows_accounted(
+    const std::vector<std::tuple<double, double, double, double, double, double, double, int>>& rows,
+    int min_subject_pins, const std::vector<std::tuple<int, double>>& need_tiers,
+    double top_need, QuantizationCounts* counts);
 
 struct ReorderAssign {
     int before = 0;

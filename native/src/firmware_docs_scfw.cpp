@@ -36,7 +36,10 @@ std::vector<FirmwareDocArtifact> render_scfw(const FirmwareDocsInput& in) {
     }
     ProjectStrings addresses{{"ZC_I2C_ADDR_TCA9535","bring-up override expander (TCA9535)"},{"ZC_I2C_ADDR_FUSB302B","USB-PD PHY (FUSB302B)"}};
     for(std::size_t k=0;k<monitors.size();++k)addresses.emplace_back("ZC_I2C_ADDR_INA3221_"+std::to_string(k+1),"rail monitor #"+std::to_string(k+1)+" (INA3221)");
-    addresses.emplace_back("ZC_I2C_ADDR_FMC_EEPROM","FMC mezzanine ID EEPROM");
+    // Scan only devices declared by the generated hardware contract. The FMC
+    // connector does not establish a fitted EEPROM or its address; do not
+    // invent a mezzanine address. All values below resolve from the real
+    // zynq_carrier_contract.h included by sc_tables.c.
     addresses.emplace_back("ZC_I2C_ADDR_ID_EEPROM","board-ID EEPROM (EUI-48 MAC; AUX bus)");addresses.emplace_back("ZC_I2C_ADDR_RTC","RTC RV-3028 (AUX bus)");
     std::vector<FirmwareDocArtifact> out;
     const auto add=[&](const std::string& name,const std::string& what,const std::string& body){out.push_back({name,ascii(file_header(name,what,in.stm32.value)+body)});};

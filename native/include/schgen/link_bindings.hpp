@@ -30,6 +30,29 @@ inline CircuitPortIr link_port_from_python(const nanobind::dict& value, const st
     if (out.has_level_v) out.level_v = nb::cast<double>(value["level_v"]);
     return out;
 }
+inline LinkResult link_result_from_python(const nanobind::dict& raw) {
+    namespace nb = nanobind;
+    LinkResult result;
+    for (const auto& name : nb::cast<std::vector<std::string>>(raw["sheets"])) {
+        CircuitSheetIr sheet; sheet.name = name; result.sheets.push_back(std::move(sheet));
+    }
+    for (auto value : nb::cast<nb::list>(raw["bindings"])) {
+        const auto item = nb::cast<nb::dict>(value);
+        LinkPortBinding binding;
+        binding.sheet = nb::cast<std::string>(item["sheet"]);
+        binding.net = nb::cast<std::string>(item["net"]);
+        binding.ptype = link_port_from_python(nb::cast<nb::dict>(item["ptype"]), binding.net);
+        binding.targets = nb::cast<std::vector<std::string>>(item["targets"]);
+        binding.status = nb::cast<std::string>(item["status"]);
+        result.bindings.push_back(std::move(binding));
+    }
+    result.rail_bindings = nb::cast<std::vector<std::string>>(raw["rail_bindings"]);
+    result.errors = nb::cast<std::vector<std::string>>(raw["errors"]);
+    result.warnings = nb::cast<std::vector<std::string>>(raw["warnings"]);
+    result.unbound_som = nb::cast<std::vector<std::string>>(raw["unbound_som"]);
+    result.deferred = nb::cast<std::vector<std::string>>(raw["deferred"]);
+    return result;
+}
 inline void bind_link(nanobind::module_& m) {
     namespace nb = nanobind;
     m.def("link_drift_candidates", &link_drift_candidates);
@@ -54,26 +77,8 @@ inline void bind_link(nanobind::module_& m) {
         return json_to_python(link_result_json(result));
     });
     m.def("link_report", [](const nb::dict& raw, const nb::dict& mapping) {
-        LinkResult result;
+        auto result = link_result_from_python(raw);
         result.mapping = link_mapping_from_json(json_from_python(mapping));
-        for (const auto& name : nb::cast<std::vector<std::string>>(raw["sheets"])) {
-            CircuitSheetIr sheet; sheet.name = name; result.sheets.push_back(std::move(sheet));
-        }
-        for (auto value : nb::cast<nb::list>(raw["bindings"])) {
-            const auto item = nb::cast<nb::dict>(value);
-            LinkPortBinding binding;
-            binding.sheet = nb::cast<std::string>(item["sheet"]);
-            binding.net = nb::cast<std::string>(item["net"]);
-            binding.ptype = link_port_from_python(nb::cast<nb::dict>(item["ptype"]), binding.net);
-            binding.targets = nb::cast<std::vector<std::string>>(item["targets"]);
-            binding.status = nb::cast<std::string>(item["status"]);
-            result.bindings.push_back(std::move(binding));
-        }
-        result.rail_bindings = nb::cast<std::vector<std::string>>(raw["rail_bindings"]);
-        result.errors = nb::cast<std::vector<std::string>>(raw["errors"]);
-        result.warnings = nb::cast<std::vector<std::string>>(raw["warnings"]);
-        result.unbound_som = nb::cast<std::vector<std::string>>(raw["unbound_som"]);
-        result.deferred = nb::cast<std::vector<std::string>>(raw["deferred"]);
         nb::gil_scoped_release release;
         return result.report();
     });

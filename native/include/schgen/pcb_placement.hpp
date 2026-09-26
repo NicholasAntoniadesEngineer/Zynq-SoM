@@ -24,11 +24,17 @@ struct PcbZoneResult {
     std::map<std::string, std::size_t> quantization_engagements;
 };
 using PcbPlacementPose = std::tuple<double, double, double, std::string>;
+enum class PcbZoneAccountingOwnership { Unspecified, IncludedInFloorplan, SeparateFromFloorplan };
 struct PcbPlacementResult {
     PcbModel model;
     FloorplanStage floorplan;
     std::map<std::string, std::map<std::string, PcbPlacementPose>> stages;
     std::vector<std::string> fallback_events;
+    // Legacy fallback_events above remains zone prefix + placement events.
+    // Import these disjoint observations, never that legacy vector as a delta.
+    ExecutionAccounting placement_accounting; // only post-floorplan placement/refit
+    ExecutionAccounting zone_accounting;      // actual placement-zone invocation
+    PcbZoneAccountingOwnership zone_accounting_ownership = PcbZoneAccountingOwnership::Unspecified;
 };
 PcbZoneResult build_pcb_zone_geometry(const PcbPlacementInput &);
 FloorplanZoneGeometry bind_pcb_zone_shapes(const PcbZoneResult &,
@@ -41,6 +47,12 @@ FloorplanInput prepare_pcb_floorplan(const PcbPlacementInput &, const PcbZoneRes
 // Useful when board generation already owns the physical floorplan result.
 PcbPlacementResult place_pcb_model(const PcbPlacementInput &, const PcbZoneResult &,
                                    const FloorplanStage &);
+// Explicit ownership for an externally supplied solve; no ancestry guessing.
+PcbPlacementResult place_pcb_model_accounted(const PcbPlacementInput &, const PcbZoneResult &,
+    const FloorplanStage &, PcbZoneAccountingOwnership);
+// Complete build-owned aggregate: plan + separate zones (if any) + placement.
+// Unknown ownership rejects. Counts are added with overflow checks; no math runs.
+ExecutionAccounting pcb_placement_accounting(const PcbPlacementResult &);
 // Production path: derive zones -> native floorplan -> all placement stages ->
 // return-path remediation and escape plan. No fixture/model deserialization.
 // This constructs a model, not a verification verdict: independent final-model

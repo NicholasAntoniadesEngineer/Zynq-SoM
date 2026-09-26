@@ -60,19 +60,19 @@ class Engine {
     std::vector<std::string> events;
     std::map<std::string, std::size_t> quantization;
     double credit(double v) {
-        ++quantization["quant_credit"];
+        checked_quantization_add(quantization, "quant_credit");
         return quant_credit(v);
     }
     double tight_bound(double v) {
-        ++quantization["snap_erosion_bound"];
+        checked_quantization_add(quantization, "snap_erosion_bound");
         return snap_erosion_bound(v);
     }
     double tight_pad(double v) {
-        ++quantization["snap_erosion_pad"];
+        checked_quantization_add(quantization, "snap_erosion_pad");
         return snap_erosion_pad(v);
     }
     double seat_slide() {
-        ++quantization["seat_slide"];
+        checked_quantization_add(quantization, "seat_slide");
         return slide;
     }
     std::map<std::pair<const PcbCheckFootprint *, double>, NamedBoxes> pad_cache;
@@ -103,7 +103,8 @@ class Engine {
     Parts solve_contract();
     double flip_rotation(const std::string &);
     Parts compose(const std::vector<Parts> &, const std::set<std::string> &);
-    Parts turn(const Parts &, double, bool renormalize = true, bool exact_half = false);
+    Parts turn(const Parts &, double, bool renormalize = true, bool exact_half = false,
+               bool account_refit = false);
     Parts face(const Parts &, const std::set<std::string> &, bool media);
     PcbStageResult proximity_zone();
     PcbStageResult hot_zone();

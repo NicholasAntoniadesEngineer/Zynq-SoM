@@ -1,0 +1,2297 @@
+{
+  "footprints": {
+    "fixture/XT60PW-M.kicad_mod": "(footprint \"fixture\" (fp_rect (start -1.0 -1.0) (end 1.0 1.0) (stroke (width 0.05) (type default)) (fill none) (layer \"F.CrtYd\")) (pad \"1\" thru_hole rect (at -0.5 0) (size 0.4 0.6) (layers \"*.Cu\" \"*.Mask\")) (pad \"2\" thru_hole rect (at 0.5 0) (size 0.4 0.6) (layers \"*.Cu\" \"*.Mask\")))",
+    "fixture/smd.kicad_mod": "(footprint \"fixture\" (fp_rect (start -1.0 -1.0) (end 1.0 1.0) (stroke (width 0.05) (type default)) (fill none) (layer \"F.CrtYd\")) (pad \"1\" smd rect (at -0.5 0) (size 0.4 0.6) (layers \"*.Cu\" \"*.Mask\")) (pad \"2\" smd rect (at 0.5 0) (size 0.4 0.6) (layers \"*.Cu\" \"*.Mask\")))",
+    "fixture/tht.kicad_mod": "(footprint \"fixture\" (fp_rect (start -1.0 -1.0) (end 1.0 1.0) (stroke (width 0.05) (type default)) (fill none) (layer \"F.CrtYd\")) (pad \"1\" thru_hole rect (at -0.5 0) (size 0.4 0.6) (layers \"*.Cu\" \"*.Mask\")) (pad \"2\" thru_hole rect (at 0.5 0) (size 0.4 0.6) (layers \"*.Cu\" \"*.Mask\")))"
+  },
+  "mutations": [
+    {
+      "cross_mm": 25.2,
+      "images": [
+        {
+          "filename": "ratsnest_top.png",
+          "height": 236,
+          "png_sha256": "78d3cd9a6ced70459f0dbc8f2fdbde10fdb79017d6ee6ef65083ec0285fc4d96",
+          "rgb_sha256": "a67698c8b3776e6f19e0cf29dacd957754b2e7718ba37bcdef8639005e5f4913",
+          "width": 296
+        },
+        {
+          "filename": "ratsnest_bottom.png",
+          "height": 236,
+          "png_sha256": "a350183f37df89446930e32c66f9f96e466e7dca3cec69784587a4ad9250d70d",
+          "rgb_sha256": "ab65f2fd5e4625ca47a458dfcb4134f6b3e5032387b8f26c3709c141e97f1f41",
+          "width": 296
+        },
+        {
+          "filename": "ratsnest/entry.png",
+          "height": 576,
+          "png_sha256": "14b63f0710180977aa482b514ea3cee66efcef5f48db4ca5288e2fde86110ee9",
+          "rgb_sha256": "9819653e842b6fc6058fb0b147243587a51d25bcea7a1330f8454dcfce15c4d3",
+          "width": 708
+        },
+        {
+          "filename": "ratsnest/fiducial.png",
+          "height": 576,
+          "png_sha256": "f36d6d1ea0f49f9b2880faf91ae1ff7d74efcf8d10d90faf15d22a90792f5e95",
+          "rgb_sha256": "667d3c83164677851d28f86a0abe2bde1a61a2953838ff6cf33aff4a141a214d",
+          "width": 576
+        },
+        {
+          "filename": "ratsnest/load.png",
+          "height": 468,
+          "png_sha256": "196fc50ada986d8408d0c7ff7e646a6d2864cff2a216cba8fa2e0e3ed905297b",
+          "rgb_sha256": "112e3b52fb7e7ebac3044c3941ad68fbcafd08ebe50c3f28044b11a7599eb99e",
+          "width": 468
+        },
+        {
+          "filename": "ratsnest/mechanical.png",
+          "height": 516,
+          "png_sha256": "908fda75c3446a026168be2f5989e8704f070909fd905dd11f64ba84f7618325",
+          "rgb_sha256": "f3723c0ea965cdb15ca4c2f4132cfd6206f9e5a81509b03ed52a88ca8297e6dc",
+          "width": 576
+        },
+        {
+          "filename": "ratsnest/regulator.png",
+          "height": 480,
+          "png_sha256": "e0df87bba2b9d063fc3bb8997a631b3f9651d9b83a789a72a28733dfdf8b2e87",
+          "rgb_sha256": "3ae36538401d884b32e00d9d10405905473c1ef3cb780e73e4ef3c14d8901ab6",
+          "width": 552
+        },
+        {
+          "filename": "ratsnest/som.png",
+          "height": 324,
+          "png_sha256": "01de5c522a6091a9dfcf621ae1d4c32d1d6e39c6f032934ac7b2599e4c3cb92f",
+          "rgb_sha256": "242df334734021e700dd15a93b693b2ad18f0baba4983b447c590204817d5213",
+          "width": 276
+        }
+      ],
+      "model": {
+        "board_h": 45,
+        "board_w": 60,
+        "classes": {},
+        "deferred": [],
+        "insts": [
+          {
+            "footprint": "Fixture:small",
+            "mirror": false,
+            "mod_path": "fixture/XT60PW-M.kicad_mod",
+            "pad_nets": {
+              "1": [
+                1,
+                "+VIN"
+              ]
+            },
+            "ref": "J1",
+            "rotation": 0,
+            "sheet": "entry",
+            "side": "top",
+            "value": "fixture J1",
+            "x": 29,
+            "y": 30
+          },
+          {
+            "footprint": "Fixture:small",
+            "mirror": false,
+            "mod_path": "fixture/smd.kicad_mod",
+            "pad_nets": {
+              "1": [
+                1,
+                "+VIN"
+              ]
+            },
+            "ref": "TP1",
+            "rotation": 0,
+            "sheet": "entry",
+            "side": "top",
+            "value": "fixture TP1",
+            "x": 33,
+            "y": 30
+          },
+          {
+            "footprint": "Fixture:small",
+            "mirror": false,
+            "mod_path": "fixture/smd.kicad_mod",
+            "pad_nets": {
+              "1": [
+                1,
+                "+3V3"
+              ]
+            },
+            "ref": "U2",
+            "rotation": 0,
+            "sheet": "regulator",
+            "side": "top",
+            "value": "fixture U2",
+            "x": 42,
+            "y": 38
+          },
+          {
+            "footprint": "Fixture:small",
+            "mirror": false,
+            "mod_path": "fixture/smd.kicad_mod",
+            "pad_nets": {
+              "1": [
+                1,
+                "+3V3_ALIAS"
+              ]
+            },
+            "ref": "TP2",
+            "rotation": 0,
+            "sheet": "regulator",
+            "side": "top",
+            "value": "fixture TP2",
+            "x": 47,
+            "y": 38
+          },
+          {
+            "footprint": "Fixture:small",
+            "mirror": false,
+            "mod_path": "fixture/smd.kicad_mod",
+            "pad_nets": {
+              "1": [
+                1,
+                "+3V3"
+              ]
+            },
+            "ref": "J2",
+            "rotation": 0,
+            "sheet": "som_j1",
+            "side": "top",
+            "value": "fixture J2",
+            "x": 60,
+            "y": 47
+          },
+          {
+            "footprint": "Fixture:small",
+            "mirror": false,
+            "mod_path": "fixture/smd.kicad_mod",
+            "pad_nets": {
+              "1": [
+                1,
+                "+3V3"
+              ]
+            },
+            "ref": "C2",
+            "rotation": 0,
+            "sheet": "som_decoupling",
+            "side": "bottom",
+            "value": "fixture C2",
+            "x": 61,
+            "y": 52
+          },
+          {
+            "footprint": "Fixture:small",
+            "mirror": false,
+            "mod_path": "fixture/tht.kicad_mod",
+            "pad_nets": {
+              "1": [
+                1,
+                ""
+              ]
+            },
+            "ref": "D10",
+            "rotation": 0,
+            "sheet": "load",
+            "side": "top",
+            "value": "fixture D10",
+            "x": 71,
+            "y": 61
+          },
+          {
+            "footprint": "MountingHole:fixture",
+            "mirror": false,
+            "mod_path": "fixture/smd.kicad_mod",
+            "pad_nets": {
+              "1": [
+                1,
+                ""
+              ]
+            },
+            "ref": "H1",
+            "rotation": 0,
+            "sheet": "mechanical",
+            "side": "top",
+            "value": "fixture H1",
+            "x": 80,
+            "y": 65
+          },
+          {
+            "footprint": "Fiducial:Fiducial_1mm_Mask2mm",
+            "mirror": false,
+            "mod_path": "fixture/smd.kicad_mod",
+            "pad_nets": {
+              "1": [
+                1,
+                ""
+              ]
+            },
+            "ref": "FID1",
+            "rotation": 0,
+            "sheet": "fiducial",
+            "side": "top",
+            "value": "fixture FID1",
+            "x": 80,
+            "y": 30
+          }
+        ],
+        "net_numbers": {
+          "+3V3": 2,
+          "+VIN": 1
+        },
+        "netclass_of": {
+          "+3V3": "POWER",
+          "+3V3_ALIAS": "POWER",
+          "+VIN": "POWER"
+        },
+        "placed": 9,
+        "som_core": [
+          54,
+          44,
+          66,
+          56
+        ],
+        "som_keepout": [
+          53,
+          43,
+          67,
+          57
+        ]
+      },
+      "n_cross": 2,
+      "name": "base",
+      "palette": {
+        "entry": [
+          188,
+          84,
+          84
+        ],
+        "fiducial": [
+          234,
+          234,
+          51
+        ],
+        "load": [
+          105,
+          234,
+          105
+        ],
+        "mechanical": [
+          41,
+          188,
+          188
+        ],
+        "regulator": [
+          105,
+          105,
+          234
+        ],
+        "som_decoupling": [
+          234,
+          51,
+          234
+        ],
+        "som_j1": [
+          201,
+          148,
+          32
+        ]
+      },
+      "svg_sha256": "132bb66eec609030625a00327e7d6fa578d270d6aad4783094399df9df4f434d",
+      "total_mm": 29.2
+    },
+    {
+      "cross_mm": 25.2,
+      "images": [
+        {
+          "filename": "ratsnest_top.png",
+          "height": 236,
+          "png_sha256": "ec15c51b1af5560e30385714e1425be19ac89f1d4505a7c00c5e03ba1863b8c8",
+          "rgb_sha256": "f611299ef11815bc4dd254ffcd9b67053fd09d801030778b4492d53892758f59",
+          "width": 296
+        },
+        {
+          "filename": "ratsnest_bottom.png",
+          "height": 236,
+          "png_sha256": "77e2604c8f33bc4ec4e29b5313fb23f2a415fa203ae8ff9d9ab745001c3c539f",
+          "rgb_sha256": "8acb4a563901c2a29d1a82c07bb63a599d32eddb7e66c0782960308f9a209308",
+          "width": 296
+        },
+        {
+          "filename": "ratsnest/entry.png",
+          "height": 528,
+          "png_sha256": "f08d350ed07977354e3c9c51992d17144a093f6ca29335bef380e0ed99418e50",
+          "rgb_sha256": "f58da541c9913a4a342ad1f04562c5716a813a4df762def591fd41f1bfa675db",
+          "width": 648
+        },
+        {
+          "filename": "ratsnest/fiducial.png",
+          "height": 528,
+          "png_sha256": "2d1ff0309a1dbf2d4a692c55e11e2537697729e61a2ffd6708df0c30b434cd6a",
+          "rgb_sha256": "984a5a27b294ef68228f6fe0edef94dcb218f35ce3d340ae50cc1d680ddadb5e",
+          "width": 504
+        },
+        {
+          "filename": "ratsnest/load.png",
+          "height": 432,
+          "png_sha256": "0d47e43ecd379c6b6542a875e1bd9d2ef3dd00d1efa588698086c4094562770c",
+          "rgb_sha256": "711b0e0aa23aed424e82ad01a7bac55b25660c605277feeb27a1f2cf6086f233",
+          "width": 396
+        },
+        {
+          "filename": "ratsnest/mechanical.png",
+          "height": 480,
+          "png_sha256": "aba7b2b25d906570ae9b7d88f8b77327e9c76c27f96a7a1542f1a44af1f81293",
+          "rgb_sha256": "caca1bfaa75cc8b6888cf0ae09f64fe756c43a3ba817d016f8ca6529cc752f28",
+          "width": 504
+        },
+        {
+          "filename": "ratsnest/regulator.png",
+          "height": 432,
+          "png_sha256": "e7b166df5cf4d7d73dded1b14cf709708c05613bf3d3fa927dfb0d376f0d88c9",
+          "rgb_sha256": "3b93f5eece4271c5d07a57e5c67b31286beb0a74b96f3e6f8bd243eb69239050",
+          "width": 492
+        },
+        {
+          "filename": "ratsnest/som.png",
+          "height": 324,
+          "png_sha256": "214f3e8a8de33057490f176a0d7f6e448db65aa6492558b2bc458f765ef00eb3",
+          "rgb_sha256": "04290823a6d102bd945be536a6da2c2af103a2d40745efbce0b9744a720558a3",
+          "width": 276
+        }
+      ],
+      "model": {
+        "board_h": 45,
+        "board_w": 60,
+        "classes": {},
+        "deferred": [],
+        "insts": [
+          {
+            "footprint": "Fixture:small",
+            "mirror": false,
+            "mod_path": "fixture/XT60PW-M.kicad_mod",
+            "pad_nets": {
+              "1": [
+                1,
+                "+VIN"
+              ]
+            },
+            "ref": "J1",
+            "rotation": 0,
+            "sheet": "entry",
+            "side": "top",
+            "value": "fixture J1",
+            "x": 29,
+            "y": 30
+          },
+          {
+            "footprint": "Fixture:small",
+            "mirror": false,
+            "mod_path": "fixture/smd.kicad_mod",
+            "pad_nets": {
+              "1": [
+                1,
+                "+VIN"
+              ]
+            },
+            "ref": "TP1",
+            "rotation": 0,
+            "sheet": "entry",
+            "side": "top",
+            "value": "fixture TP1",
+            "x": 33,
+            "y": 30
+          },
+          {
+            "footprint": "Fixture:small",
+            "mirror": false,
+            "mod_path": "fixture/smd.kicad_mod",
+            "pad_nets": {
+              "1": [
+                1,
+                "+3V3"
+              ]
+            },
+            "ref": "U2",
+            "rotation": 0,
+            "sheet": "regulator",
+            "side": "top",
+            "value": "fixture U2",
+            "x": 42,
+            "y": 38
+          },
+          {
+            "footprint": "Fixture:small",
+            "mirror": false,
+            "mod_path": "fixture/smd.kicad_mod",
+            "pad_nets": {
+              "1": [
+                1,
+                "+3V3_ALIAS"
+              ]
+            },
+            "ref": "TP2",
+            "rotation": 0,
+            "sheet": "regulator",
+            "side": "top",
+            "value": "fixture TP2",
+            "x": 47,
+            "y": 38
+          },
+          {
+            "footprint": "Fixture:small",
+            "mirror": false,
+            "mod_path": "fixture/smd.kicad_mod",
+            "pad_nets": {
+              "1": [
+                1,
+                "+3V3"
+              ]
+            },
+            "ref": "J2",
+            "rotation": 0,
+            "sheet": "som_j1",
+            "side": "top",
+            "value": "fixture J2",
+            "x": 60,
+            "y": 47
+          },
+          {
+            "footprint": "Fixture:small",
+            "mirror": false,
+            "mod_path": "fixture/smd.kicad_mod",
+            "pad_nets": {
+              "1": [
+                1,
+                "+3V3"
+              ]
+            },
+            "ref": "C2",
+            "rotation": 0,
+            "sheet": "som_decoupling",
+            "side": "bottom",
+            "value": "fixture C2",
+            "x": 61,
+            "y": 52
+          },
+          {
+            "footprint": "Fixture:small",
+            "mirror": false,
+            "mod_path": "fixture/tht.kicad_mod",
+            "pad_nets": {
+              "1": [
+                1,
+                ""
+              ]
+            },
+            "ref": "D10",
+            "rotation": 0,
+            "sheet": "load",
+            "side": "top",
+            "value": "fixture D10",
+            "x": 71,
+            "y": 61
+          },
+          {
+            "footprint": "MountingHole:fixture",
+            "mirror": false,
+            "mod_path": "fixture/smd.kicad_mod",
+            "pad_nets": {
+              "1": [
+                1,
+                ""
+              ]
+            },
+            "ref": "H1",
+            "rotation": 0,
+            "sheet": "mechanical",
+            "side": "top",
+            "value": "fixture H1",
+            "x": 80,
+            "y": 65
+          },
+          {
+            "footprint": "Fiducial:Fiducial_1mm_Mask2mm",
+            "mirror": false,
+            "mod_path": "fixture/smd.kicad_mod",
+            "pad_nets": {
+              "1": [
+                1,
+                ""
+              ]
+            },
+            "ref": "FID1",
+            "rotation": 0,
+            "sheet": "fiducial",
+            "side": "top",
+            "value": "fixture FID1",
+            "x": 80,
+            "y": 30
+          }
+        ],
+        "net_numbers": {
+          "+3V3": 2,
+          "+VIN": 1
+        },
+        "netclass_of": {
+          "+3V3": "POWER",
+          "+3V3_ALIAS": "POWER",
+          "+VIN": "POWER"
+        },
+        "placed": 9,
+        "som_core": [
+          54,
+          44,
+          66,
+          56
+        ],
+        "som_keepout": null
+      },
+      "n_cross": 2,
+      "name": "no_module",
+      "palette": {
+        "entry": [
+          188,
+          84,
+          84
+        ],
+        "fiducial": [
+          234,
+          234,
+          51
+        ],
+        "load": [
+          105,
+          234,
+          105
+        ],
+        "mechanical": [
+          41,
+          188,
+          188
+        ],
+        "regulator": [
+          105,
+          105,
+          234
+        ],
+        "som_decoupling": [
+          234,
+          51,
+          234
+        ],
+        "som_j1": [
+          201,
+          148,
+          32
+        ]
+      },
+      "svg_sha256": "f2af0d47be75311fe79b19eb148a350b8f1460ca7b4e00316f9f68146000a0be",
+      "total_mm": 29.2
+    },
+    {
+      "cross_mm": 25.2,
+      "images": [
+        {
+          "filename": "ratsnest_top.png",
+          "height": 236,
+          "png_sha256": "b0f5e89d439d327341f63b29baaf4da69cd85278748ca0d9b22e2971fd12c6ec",
+          "rgb_sha256": "31fc107c6f20007c80617ee650e7f78c272765e87c823bacae0a880b56d03bdd",
+          "width": 296
+        },
+        {
+          "filename": "ratsnest_bottom.png",
+          "height": 236,
+          "png_sha256": "14d5983bc2d7aca5f24c6ba202fdbeebb0c92010a35302c4913dae7fbc78ef65",
+          "rgb_sha256": "0a3e8cc22419a1dff3ee50fbce23b92db29c3fe1cf43caf26f542e1f703cb989",
+          "width": 296
+        },
+        {
+          "filename": "ratsnest/entry.png",
+          "height": 576,
+          "png_sha256": "02a90ea8190a6a969a8cfd22f9dd21731059822a8d55dc84632b0c37c5c4ef40",
+          "rgb_sha256": "0b9b22ec296210b218c41441d7544292f7cca85f906b9377d02c690751574ae4",
+          "width": 708
+        },
+        {
+          "filename": "ratsnest/fiducial.png",
+          "height": 576,
+          "png_sha256": "f36d6d1ea0f49f9b2880faf91ae1ff7d74efcf8d10d90faf15d22a90792f5e95",
+          "rgb_sha256": "667d3c83164677851d28f86a0abe2bde1a61a2953838ff6cf33aff4a141a214d",
+          "width": 576
+        },
+        {
+          "filename": "ratsnest/load.png",
+          "height": 468,
+          "png_sha256": "91961605bbf79dca749592dc5ce0b9f534418cd49141b39ee86b1c3ed2e9d7b8",
+          "rgb_sha256": "1416bffa35e9612c0609ace48d517b78c10a30c3bc7cae34e1687ad09a931518",
+          "width": 468
+        },
+        {
+          "filename": "ratsnest/mechanical.png",
+          "height": 516,
+          "png_sha256": "908fda75c3446a026168be2f5989e8704f070909fd905dd11f64ba84f7618325",
+          "rgb_sha256": "f3723c0ea965cdb15ca4c2f4132cfd6206f9e5a81509b03ed52a88ca8297e6dc",
+          "width": 576
+        },
+        {
+          "filename": "ratsnest/regulator.png",
+          "height": 480,
+          "png_sha256": "2ff5875381c9f28800a2ad339804fcecbcfcf1d74d3bdea659c7ea2ea96db6cd",
+          "rgb_sha256": "0bd858e033fc978675189648de131db549b3070f040e4b3539f233b521315afe",
+          "width": 552
+        },
+        {
+          "filename": "ratsnest/som.png",
+          "height": 324,
+          "png_sha256": "01de5c522a6091a9dfcf621ae1d4c32d1d6e39c6f032934ac7b2599e4c3cb92f",
+          "rgb_sha256": "242df334734021e700dd15a93b693b2ad18f0baba4983b447c590204817d5213",
+          "width": 276
+        }
+      ],
+      "model": {
+        "board_h": 45,
+        "board_w": 60,
+        "classes": {},
+        "deferred": [],
+        "insts": [
+          {
+            "footprint": "Fixture:small",
+            "mirror": false,
+            "mod_path": "fixture/XT60PW-M.kicad_mod",
+            "pad_nets": {
+              "1": [
+                1,
+                "+VIN"
+              ]
+            },
+            "ref": "J1",
+            "rotation": 270,
+            "sheet": "entry",
+            "side": "top",
+            "value": "fixture J1",
+            "x": 29,
+            "y": 30
+          },
+          {
+            "footprint": "Fixture:small",
+            "mirror": false,
+            "mod_path": "fixture/smd.kicad_mod",
+            "pad_nets": {
+              "1": [
+                1,
+                "+VIN"
+              ]
+            },
+            "ref": "TP1",
+            "rotation": 0,
+            "sheet": "entry",
+            "side": "top",
+            "value": "fixture TP1",
+            "x": 33,
+            "y": 30
+          },
+          {
+            "footprint": "Fixture:small",
+            "mirror": false,
+            "mod_path": "fixture/smd.kicad_mod",
+            "pad_nets": {
+              "1": [
+                1,
+                "+3V3"
+              ]
+            },
+            "ref": "U2",
+            "rotation": 0,
+            "sheet": "regulator",
+            "side": "bottom",
+            "value": "fixture U2",
+            "x": 42,
+            "y": 38
+          },
+          {
+            "footprint": "Fixture:small",
+            "mirror": false,
+            "mod_path": "fixture/smd.kicad_mod",
+            "pad_nets": {
+              "1": [
+                1,
+                "+3V3_ALIAS"
+              ]
+            },
+            "ref": "TP2",
+            "rotation": 0,
+            "sheet": "regulator",
+            "side": "top",
+            "value": "fixture TP2",
+            "x": 47,
+            "y": 38
+          },
+          {
+            "footprint": "Fixture:small",
+            "mirror": false,
+            "mod_path": "fixture/smd.kicad_mod",
+            "pad_nets": {
+              "1": [
+                1,
+                "+3V3"
+              ]
+            },
+            "ref": "J2",
+            "rotation": 0,
+            "sheet": "som_j1",
+            "side": "top",
+            "value": "fixture J2",
+            "x": 60,
+            "y": 47
+          },
+          {
+            "footprint": "Fixture:small",
+            "mirror": false,
+            "mod_path": "fixture/smd.kicad_mod",
+            "pad_nets": {
+              "1": [
+                1,
+                "+3V3"
+              ]
+            },
+            "ref": "C2",
+            "rotation": 0,
+            "sheet": "som_decoupling",
+            "side": "bottom",
+            "value": "fixture C2",
+            "x": 61,
+            "y": 52
+          },
+          {
+            "footprint": "Device:CP_fixture",
+            "mirror": false,
+            "mod_path": "fixture/tht.kicad_mod",
+            "pad_nets": {
+              "1": [
+                1,
+                ""
+              ]
+            },
+            "ref": "C10",
+            "rotation": 0,
+            "sheet": "load",
+            "side": "top",
+            "value": "fixture D10",
+            "x": 71,
+            "y": 61
+          },
+          {
+            "footprint": "MountingHole:fixture",
+            "mirror": false,
+            "mod_path": "fixture/smd.kicad_mod",
+            "pad_nets": {
+              "1": [
+                1,
+                ""
+              ]
+            },
+            "ref": "H1",
+            "rotation": 0,
+            "sheet": "mechanical",
+            "side": "top",
+            "value": "fixture H1",
+            "x": 80,
+            "y": 65
+          },
+          {
+            "footprint": "Fiducial:Fiducial_1mm_Mask2mm",
+            "mirror": false,
+            "mod_path": "fixture/smd.kicad_mod",
+            "pad_nets": {
+              "1": [
+                1,
+                ""
+              ]
+            },
+            "ref": "FID1",
+            "rotation": 0,
+            "sheet": "fiducial",
+            "side": "top",
+            "value": "fixture FID1",
+            "x": 80,
+            "y": 30
+          }
+        ],
+        "net_numbers": {
+          "+3V3": 2,
+          "+VIN": 1
+        },
+        "netclass_of": {
+          "+3V3": "POWER",
+          "+3V3_ALIAS": "POWER",
+          "+VIN": "POWER"
+        },
+        "placed": 9,
+        "som_core": [
+          54,
+          44,
+          66,
+          56
+        ],
+        "som_keepout": [
+          53,
+          43,
+          67,
+          57
+        ]
+      },
+      "n_cross": 2,
+      "name": "side_rotation",
+      "palette": {
+        "entry": [
+          188,
+          84,
+          84
+        ],
+        "fiducial": [
+          234,
+          234,
+          51
+        ],
+        "load": [
+          105,
+          234,
+          105
+        ],
+        "mechanical": [
+          41,
+          188,
+          188
+        ],
+        "regulator": [
+          105,
+          105,
+          234
+        ],
+        "som_decoupling": [
+          234,
+          51,
+          234
+        ],
+        "som_j1": [
+          201,
+          148,
+          32
+        ]
+      },
+      "svg_sha256": "094c258e9ee703fc47c7674fbd0744ab6ed8abcf63b928bc81dde6fc7668d600",
+      "total_mm": 28.8
+    },
+    {
+      "cross_mm": 25.2,
+      "images": [
+        {
+          "filename": "ratsnest_top.png",
+          "height": 236,
+          "png_sha256": "78d3cd9a6ced70459f0dbc8f2fdbde10fdb79017d6ee6ef65083ec0285fc4d96",
+          "rgb_sha256": "a67698c8b3776e6f19e0cf29dacd957754b2e7718ba37bcdef8639005e5f4913",
+          "width": 296
+        },
+        {
+          "filename": "ratsnest_bottom.png",
+          "height": 236,
+          "png_sha256": "a350183f37df89446930e32c66f9f96e466e7dca3cec69784587a4ad9250d70d",
+          "rgb_sha256": "ab65f2fd5e4625ca47a458dfcb4134f6b3e5032387b8f26c3709c141e97f1f41",
+          "width": 296
+        },
+        {
+          "filename": "ratsnest/entry.png",
+          "height": 576,
+          "png_sha256": "14b63f0710180977aa482b514ea3cee66efcef5f48db4ca5288e2fde86110ee9",
+          "rgb_sha256": "9819653e842b6fc6058fb0b147243587a51d25bcea7a1330f8454dcfce15c4d3",
+          "width": 708
+        },
+        {
+          "filename": "ratsnest/fiducial.png",
+          "height": 576,
+          "png_sha256": "f36d6d1ea0f49f9b2880faf91ae1ff7d74efcf8d10d90faf15d22a90792f5e95",
+          "rgb_sha256": "667d3c83164677851d28f86a0abe2bde1a61a2953838ff6cf33aff4a141a214d",
+          "width": 576
+        },
+        {
+          "filename": "ratsnest/load.png",
+          "height": 468,
+          "png_sha256": "196fc50ada986d8408d0c7ff7e646a6d2864cff2a216cba8fa2e0e3ed905297b",
+          "rgb_sha256": "112e3b52fb7e7ebac3044c3941ad68fbcafd08ebe50c3f28044b11a7599eb99e",
+          "width": 468
+        },
+        {
+          "filename": "ratsnest/mechanical.png",
+          "height": 516,
+          "png_sha256": "908fda75c3446a026168be2f5989e8704f070909fd905dd11f64ba84f7618325",
+          "rgb_sha256": "f3723c0ea965cdb15ca4c2f4132cfd6206f9e5a81509b03ed52a88ca8297e6dc",
+          "width": 576
+        },
+        {
+          "filename": "ratsnest/regulator.png",
+          "height": 480,
+          "png_sha256": "e0df87bba2b9d063fc3bb8997a631b3f9651d9b83a789a72a28733dfdf8b2e87",
+          "rgb_sha256": "3ae36538401d884b32e00d9d10405905473c1ef3cb780e73e4ef3c14d8901ab6",
+          "width": 552
+        },
+        {
+          "filename": "ratsnest/som.png",
+          "height": 324,
+          "png_sha256": "01de5c522a6091a9dfcf621ae1d4c32d1d6e39c6f032934ac7b2599e4c3cb92f",
+          "rgb_sha256": "242df334734021e700dd15a93b693b2ad18f0baba4983b447c590204817d5213",
+          "width": 276
+        }
+      ],
+      "model": {
+        "board_h": 45,
+        "board_w": 60,
+        "classes": {},
+        "deferred": [],
+        "insts": [
+          {
+            "footprint": "Fixture:small",
+            "mirror": false,
+            "mod_path": "fixture/XT60PW-M.kicad_mod",
+            "pad_nets": {
+              "1": [
+                1,
+                "+VIN"
+              ]
+            },
+            "ref": "J1",
+            "rotation": 0,
+            "sheet": "entry",
+            "side": "top",
+            "value": "fixture J1",
+            "x": 29,
+            "y": 30
+          },
+          {
+            "footprint": "Fixture:small",
+            "mirror": false,
+            "mod_path": "fixture/smd.kicad_mod",
+            "pad_nets": {
+              "1": [
+                1,
+                "+VIN"
+              ]
+            },
+            "ref": "TP1",
+            "rotation": 0,
+            "sheet": "entry",
+            "side": "top",
+            "value": "fixture TP1",
+            "x": 33,
+            "y": 30
+          },
+          {
+            "footprint": "Fixture:small",
+            "mirror": false,
+            "mod_path": "fixture/smd.kicad_mod",
+            "pad_nets": {
+              "1": [
+                1,
+                "+3V3"
+              ]
+            },
+            "ref": "U2",
+            "rotation": 0,
+            "sheet": "regulator",
+            "side": "top",
+            "value": "fixture U2",
+            "x": 42,
+            "y": 38
+          },
+          {
+            "footprint": "Fixture:small",
+            "mirror": false,
+            "mod_path": "fixture/smd.kicad_mod",
+            "pad_nets": {
+              "1": [
+                1,
+                "+3V3_ALIAS"
+              ]
+            },
+            "ref": "TP2",
+            "rotation": 0,
+            "sheet": "regulator",
+            "side": "top",
+            "value": "fixture TP2",
+            "x": 47,
+            "y": 38
+          },
+          {
+            "footprint": "Fixture:small",
+            "mirror": false,
+            "mod_path": "fixture/smd.kicad_mod",
+            "pad_nets": {
+              "1": [
+                1,
+                "+3V3"
+              ]
+            },
+            "ref": "J2",
+            "rotation": 0,
+            "sheet": "som_j1",
+            "side": "top",
+            "value": "fixture J2",
+            "x": 60,
+            "y": 47
+          },
+          {
+            "footprint": "Fixture:small",
+            "mirror": false,
+            "mod_path": "fixture/smd.kicad_mod",
+            "pad_nets": {
+              "1": [
+                1,
+                "+3V3"
+              ]
+            },
+            "ref": "C2",
+            "rotation": 0,
+            "sheet": "som_decoupling",
+            "side": "bottom",
+            "value": "fixture C2",
+            "x": 61,
+            "y": 52
+          },
+          {
+            "footprint": "Fixture:small",
+            "mirror": false,
+            "mod_path": "fixture/tht.kicad_mod",
+            "pad_nets": {
+              "1": [
+                1,
+                ""
+              ]
+            },
+            "ref": "D10",
+            "rotation": 0,
+            "sheet": "load",
+            "side": "top",
+            "value": "fixture D10",
+            "x": 71,
+            "y": 61
+          },
+          {
+            "footprint": "MountingHole:fixture",
+            "mirror": false,
+            "mod_path": "fixture/smd.kicad_mod",
+            "pad_nets": {
+              "1": [
+                1,
+                ""
+              ]
+            },
+            "ref": "H1",
+            "rotation": 0,
+            "sheet": "mechanical",
+            "side": "top",
+            "value": "fixture H1",
+            "x": 80,
+            "y": 65
+          },
+          {
+            "footprint": "Fiducial:Fiducial_1mm_Mask2mm",
+            "mirror": false,
+            "mod_path": "fixture/smd.kicad_mod",
+            "pad_nets": {
+              "1": [
+                1,
+                ""
+              ]
+            },
+            "ref": "FID1",
+            "rotation": 0,
+            "sheet": "fiducial",
+            "side": "top",
+            "value": "fixture FID1",
+            "x": 80,
+            "y": 30
+          }
+        ],
+        "net_numbers": {
+          "+3V3": 2,
+          "+VIN": 1
+        },
+        "netclass_of": {
+          "+3V3": "POWER",
+          "+3V3_ALIAS": "POWER",
+          "+VIN": "POWER"
+        },
+        "placed": 9,
+        "som_core": [
+          54,
+          44,
+          66,
+          56
+        ],
+        "som_keepout": [
+          53,
+          43,
+          67,
+          57
+        ]
+      },
+      "n_cross": 2,
+      "name": "upstream_change",
+      "palette": {
+        "entry": [
+          188,
+          84,
+          84
+        ],
+        "fiducial": [
+          234,
+          234,
+          51
+        ],
+        "load": [
+          105,
+          234,
+          105
+        ],
+        "mechanical": [
+          41,
+          188,
+          188
+        ],
+        "regulator": [
+          105,
+          105,
+          234
+        ],
+        "som_decoupling": [
+          234,
+          51,
+          234
+        ],
+        "som_j1": [
+          201,
+          148,
+          32
+        ]
+      },
+      "svg_sha256": "132bb66eec609030625a00327e7d6fa578d270d6aad4783094399df9df4f434d",
+      "total_mm": 29.2
+    },
+    {
+      "cross_mm": 0.0,
+      "images": [
+        {
+          "filename": "ratsnest_top.png",
+          "height": 236,
+          "png_sha256": "c3b3fe885d1192c257197fa7d82816c9a7f9bff0a1f94fbb428aa84c9bd8291f",
+          "rgb_sha256": "ab649b851f1adfe66ff1e1f480507d754d906686db66f18815788c990bfeef7d",
+          "width": 296
+        },
+        {
+          "filename": "ratsnest_bottom.png",
+          "height": 236,
+          "png_sha256": "c3b3fe885d1192c257197fa7d82816c9a7f9bff0a1f94fbb428aa84c9bd8291f",
+          "rgb_sha256": "ab649b851f1adfe66ff1e1f480507d754d906686db66f18815788c990bfeef7d",
+          "width": 296
+        }
+      ],
+      "model": {
+        "board_h": 45,
+        "board_w": 60,
+        "classes": {},
+        "deferred": [],
+        "insts": [],
+        "net_numbers": {
+          "+3V3": 2,
+          "+VIN": 1
+        },
+        "netclass_of": {
+          "+3V3": "POWER",
+          "+3V3_ALIAS": "POWER",
+          "+VIN": "POWER"
+        },
+        "placed": 0,
+        "som_core": [
+          54,
+          44,
+          66,
+          56
+        ],
+        "som_keepout": null
+      },
+      "n_cross": 0,
+      "name": "empty",
+      "palette": {},
+      "svg_sha256": "4d6633900b5a20bd02bbe8cba6b002e0b4a1af749085747d9d715093136398c6",
+      "total_mm": 0.0
+    }
+  ],
+  "projects": [
+    {
+      "cross_mm": 15946.3,
+      "images": [
+        {
+          "filename": "ratsnest_top.png",
+          "height": 708,
+          "png_sha256": "690ab6ef0890e0049424d37294b5defc0d9fc665b431c9555f98b8f4049bc3ef",
+          "rgb_sha256": "7ea9d3b0f53635164587ad4245106b070c974dda33f5d13b8b10f6666c7629c7",
+          "width": 728
+        },
+        {
+          "filename": "ratsnest_bottom.png",
+          "height": 708,
+          "png_sha256": "4cb4bfba5df0a2fbb8392edaba68281603c7feb38b75f889f9e5d1a7584127e7",
+          "rgb_sha256": "6d4b0148f476608c89535e400954f2576fea25376f39243d071ae35ce3ff79f1",
+          "width": 728
+        },
+        {
+          "filename": "ratsnest/board_aux.png",
+          "height": 930,
+          "png_sha256": "754a980e9818eea6737c5650ae885579a6818210b79113f71f9a53c533025212",
+          "rgb_sha256": "7b9fa383140f8610e153416b5afda9a04604b83e562c16938ce6777c4a60a521",
+          "width": 1350
+        },
+        {
+          "filename": "ratsnest/board_qwiic.png",
+          "height": 1239,
+          "png_sha256": "5e039cd3c34ee3ec266c33c56d2ed089cb6e5c84e5b11687797f4c2d063a01a3",
+          "rgb_sha256": "e93836667b8926b8bad5f22a49491cc7490775e5f27e1fac954f5de25ec37af0",
+          "width": 1675
+        },
+        {
+          "filename": "ratsnest/board_services.png",
+          "height": 1403,
+          "png_sha256": "4e58a6b4a9cbad881281df9eeb6dc538ef6d2a96623f6072b34e4b8ac5c8acc0",
+          "rgb_sha256": "bd72188ccb240aa23d2f7a668a97c04cf5124b8d565a30ab29cc98674e16069c",
+          "width": 1265
+        },
+        {
+          "filename": "ratsnest/bringup_en.png",
+          "height": 869,
+          "png_sha256": "b87ddbd575086bada19a195ede1dfa3d3dd281719fc4b193604ba7dc1219febd",
+          "rgb_sha256": "c7e8d892a7f2e6aad540dd342792ce2209d40254ce36192c20ff657809606a63",
+          "width": 864
+        },
+        {
+          "filename": "ratsnest/bringup_en_modules.png",
+          "height": 1158,
+          "png_sha256": "ccbfb42e21eafd6052260b63df4d91d033cb387eeb38ecdc82878ec27ea38e85",
+          "rgb_sha256": "e4b4984d7b53e8b824cd982f259539fe39e431d951bff31e75e8dc0b7cd9bbd3",
+          "width": 866
+        },
+        {
+          "filename": "ratsnest/bringup_modules.png",
+          "height": 1415,
+          "png_sha256": "fa4702f87b1c019b0a698badb520f782c43345c976f5c3135d72e4149b288024",
+          "rgb_sha256": "e9e0d4557f7186f49641064693d5c4c5789898e30504a9f113479f77cfc444d8",
+          "width": 1492
+        },
+        {
+          "filename": "ratsnest/bringup_rails.png",
+          "height": 985,
+          "png_sha256": "de2d405a1a6c84aba2989c994470b08bf79bb1af1a285cadeb515358514c707d",
+          "rgb_sha256": "6a5077f048d5baf5161c9c9999d20696658c85d837bab0c4056c8d4ef7c3f2bd",
+          "width": 864
+        },
+        {
+          "filename": "ratsnest/camera.png",
+          "height": 1032,
+          "png_sha256": "d1e83cb2ad246df6da585026b773d27d95813e37d46d0090faf6f5f42915250a",
+          "rgb_sha256": "f0a9d5f35ea0bb93d114de469566814b334a78213a9454d88057f35e669574c9",
+          "width": 1455
+        },
+        {
+          "filename": "ratsnest/debug_boot.png",
+          "height": 1142,
+          "png_sha256": "1f4a1c530b8bd4501faf0e58c880e4ae5704fbd5b6c3e58e25660154eff5e2ba",
+          "rgb_sha256": "da047ed80a3e328ad68f3087e49735bf791abb9bf3a2aaf43b45f687b90d0496",
+          "width": 864
+        },
+        {
+          "filename": "ratsnest/ethernet.png",
+          "height": 1130,
+          "png_sha256": "d07c96540c5c40cd9e9777bd6ec81f1c1ef9f314fda661c54fcce521f1259c93",
+          "rgb_sha256": "d32acd75b8f296c02cfad0cec6127d5039457b1da17385faf797ca0e70758003",
+          "width": 1091
+        },
+        {
+          "filename": "ratsnest/fmc.png",
+          "height": 965,
+          "png_sha256": "50d33e7406ce2e0861584fbf4d3002f06966877696b541f83424c0faccd11d87",
+          "rgb_sha256": "1d194ac5de7f91d33f7cef4fdf7ebaa55a4b3ebf0f2a1f6a01bfc7eb45e4145f",
+          "width": 1100
+        },
+        {
+          "filename": "ratsnest/hdmi_rx.png",
+          "height": 1444,
+          "png_sha256": "290a633eec26f065f4eac44577264f82e67b30d71db6c4b5bd5131a7073829e1",
+          "rgb_sha256": "07e8ad7d33a36fdeda979ec2f5fa49933f1a80657523878eadea76b0dde2ad90",
+          "width": 864
+        },
+        {
+          "filename": "ratsnest/hdmi_rx_term.png",
+          "height": 895,
+          "png_sha256": "8034d17005a41f1c578add54e44ce6a94da42943767c006108695b86e2beef74",
+          "rgb_sha256": "634d146be0ecefb7a33a6281729e40ba671e314ed97d6549227e235144136fdd",
+          "width": 864
+        },
+        {
+          "filename": "ratsnest/hdmi_tx.png",
+          "height": 1444,
+          "png_sha256": "9751982b93bf514966a3d12a3cabd45f513666815aaeceb6ff60f6917dd9d454",
+          "rgb_sha256": "a5dec4292d7fdc6eb4ba2f5f149d9328e30de10a7e880e3546fc7f8892507be1",
+          "width": 1295
+        },
+        {
+          "filename": "ratsnest/lcd.png",
+          "height": 853,
+          "png_sha256": "510e25a49bd484bd69ea4473985a91d5056bbc0091fafc98664b9e9c02c7b7df",
+          "rgb_sha256": "87d435790b8916537155bbe47464de0b289b4c7e680259031b36975fe4d5a47c",
+          "width": 1448
+        },
+        {
+          "filename": "ratsnest/mechanical.png",
+          "height": 2151,
+          "png_sha256": "4b940531f3f7c08b4bd0619b9547301d73e49afdb6a97207178ba2d6859e17ec",
+          "rgb_sha256": "d705891db3c2ecaca85cb183932f1b9f3882573b177bfd592fd582bfdd44e543",
+          "width": 2212
+        },
+        {
+          "filename": "ratsnest/microsd.png",
+          "height": 1588,
+          "png_sha256": "0546fda11f7dc1815315a5fc971c7213ba74a7d53994f3928a66ba488f0d545b",
+          "rgb_sha256": "a1361b548f05ab566b979fee8b770165764403e73a5c4d17c9ab3a1a57df20de",
+          "width": 971
+        },
+        {
+          "filename": "ratsnest/motor_pwm.png",
+          "height": 806,
+          "png_sha256": "25860e0723d997c9562ddf5ab6b49114a2db39277001e0272ab7d2d3df8977a1",
+          "rgb_sha256": "6ca9907edff5e516818da2f6e59a7b7196c7f8f6ca7a95001f546adea6da1231",
+          "width": 1658
+        },
+        {
+          "filename": "ratsnest/motor_sense.png",
+          "height": 1143,
+          "png_sha256": "0ade9535b6ccce03a49e420f85bbd5ba8f264c6a8f43dc348a6dc4fe3e4cf168",
+          "rgb_sha256": "c3f45ff908ddb54efc8863adc01cb189b91d3ae2f92eda3f396a94603c6a2e97",
+          "width": 1675
+        },
+        {
+          "filename": "ratsnest/pd_input.png",
+          "height": 1569,
+          "png_sha256": "7908825f4bbd3d30d957f2948bd914b5fe551a77543360c7f2b9651ae510a183",
+          "rgb_sha256": "4aac1cede3364d3e908820f46d0372a254e37c13a250f16bc7874200b0f93d89",
+          "width": 864
+        },
+        {
+          "filename": "ratsnest/pmod.png",
+          "height": 1518,
+          "png_sha256": "6f3da652864b3ebadac48ac41e61ea14fd0dd6477664a3cf4bf06dddcb68057f",
+          "rgb_sha256": "d5b96a54c16dc42cae4bd54df92d76e7f3cf5d8aaa12a239c3e78d1fd5c02e13",
+          "width": 1072
+        },
+        {
+          "filename": "ratsnest/pmod_expansion.png",
+          "height": 1518,
+          "png_sha256": "5cefd52472d870f540f45ba66f32ad3b76d08eff25d609ad4b3ab6c33790ec73",
+          "rgb_sha256": "2099c5d7b4bb9af1bfc285ceedae0b25a4b525e99e8d90fa58aaf0523f015f7e",
+          "width": 1553
+        },
+        {
+          "filename": "ratsnest/power.png",
+          "height": 1108,
+          "png_sha256": "5a460839101e8fbcffd65662a49fb0789bca28d3569dfe816883d7e74e9e4300",
+          "rgb_sha256": "8dd6f3cc6de27e1829c8be81e369e2554697747c1c0b2f7d993cdc307c7dd1e1",
+          "width": 1676
+        },
+        {
+          "filename": "ratsnest/power_mon.png",
+          "height": 1096,
+          "png_sha256": "00f17fc90e840915f4d68018b71ae36120172c156a0072a1e8ab59b18b4dee7c",
+          "rgb_sha256": "f2c73a10881613694eec75b8c6c21f1c3f74545244f749c1338c48fe3c4a2d18",
+          "width": 1040
+        },
+        {
+          "filename": "ratsnest/power_som.png",
+          "height": 768,
+          "png_sha256": "0ab09e9be90a8032173b05ac226793a0c760e01b6830f1a32cd28ddf33a4cbd0",
+          "rgb_sha256": "ab997392341011822685df8d8f0018fbb007b29bb0e3d412357f676b1bbb7b79",
+          "width": 1219
+        },
+        {
+          "filename": "ratsnest/rj45_connector.png",
+          "height": 1097,
+          "png_sha256": "2cee8c4d2b8f62407856536b6675f31b24446c63e08ef72cb9589128c0bc4676",
+          "rgb_sha256": "0b091bf7aa3fff983ea8c122033a21c7c4c7871f3df2813f06ed9b9ae696492f",
+          "width": 1454
+        },
+        {
+          "filename": "ratsnest/uart_bridge.png",
+          "height": 1363,
+          "png_sha256": "4c4c3bd7371285c4877a8af244a2687d1dd09335ec8f6dfd10b068db1955faa4",
+          "rgb_sha256": "f32ecd5955fe9228e9eb445c72ad4cb9385b8775d15df6323cbc3b88ecacaa3a",
+          "width": 1269
+        },
+        {
+          "filename": "ratsnest/usb_jtag.png",
+          "height": 1118,
+          "png_sha256": "abe965c5d38053b204b89c4065728b1fcaa18f437ba780654103679a68a7ad40",
+          "rgb_sha256": "8f10cb4da5356cd67e709ec9cf093105b575d265f5d4b2b98705cc3645dc2489",
+          "width": 1234
+        },
+        {
+          "filename": "ratsnest/usb_jtag_connector.png",
+          "height": 1569,
+          "png_sha256": "3b62b6f1c8b73d847012da83520c34e6b9e1d0d73e012626b42faab195421c15",
+          "rgb_sha256": "9537e66cd6caa47d1f27915b3047e03e0f6f5e640c310dd4ccf4fdcff6f0bbe2",
+          "width": 1116
+        },
+        {
+          "filename": "ratsnest/usb_pd.png",
+          "height": 1262,
+          "png_sha256": "00ab0543c6abf563159ee79e65f1f2da81ba0349d9206c8b3a5e229c68285bf5",
+          "rgb_sha256": "be9fac05413604d34b005156162d3694993fca0527de19230dd138418b4121ac",
+          "width": 864
+        },
+        {
+          "filename": "ratsnest/usb_uart_connector.png",
+          "height": 1569,
+          "png_sha256": "ef6aa8d19e32f6d185922fd5f12294b934d1fe05f6605c87b0241aa463f8eff9",
+          "rgb_sha256": "26a316b29f0e7d459f728fbfbb965f436af298bb95e930b550a5b00da73c00d9",
+          "width": 1265
+        },
+        {
+          "filename": "ratsnest/usbc_otg.png",
+          "height": 1569,
+          "png_sha256": "22b5037589644ba2fa994a82758c2ca6c4a10ea2db9c04a2af94a823dd8db00b",
+          "rgb_sha256": "1120505438649c616440ea14dafe2d4b06ed39135affb4d655cae314dc350abf",
+          "width": 966
+        },
+        {
+          "filename": "ratsnest/user_io.png",
+          "height": 1053,
+          "png_sha256": "c2717f43a0c0f12682dc2571f91891753bb7093616d0601bfb7c7dd571fbacab",
+          "rgb_sha256": "da2e08feaf3c7c9fd663b3ab69f7737554ba8589518eec6d9a82c39ade8b62ee",
+          "width": 1026
+        },
+        {
+          "filename": "ratsnest/som.png",
+          "height": 691,
+          "png_sha256": "3bfa5a403a590fc003053fac4121a7cd7f011ef708bdf20f9b45ffc3bfdd879b",
+          "rgb_sha256": "c561bf917a6d59cf3579998b19eddcd1840adcb591f6e19de5f10b07d68b801d",
+          "width": 718
+        }
+      ],
+      "n_cross": 435,
+      "name": "carrier",
+      "palette": {
+        "board_aux": [
+          188,
+          84,
+          84
+        ],
+        "board_qwiic": [
+          234,
+          83,
+          51
+        ],
+        "board_services": [
+          234,
+          151,
+          105
+        ],
+        "bringup_en": [
+          188,
+          119,
+          41
+        ],
+        "bringup_en_modules": [
+          234,
+          196,
+          105
+        ],
+        "bringup_modules": [
+          234,
+          213,
+          51
+        ],
+        "bringup_rails": [
+          182,
+          188,
+          84
+        ],
+        "camera": [
+          191,
+          234,
+          51
+        ],
+        "debug_boot": [
+          181,
+          234,
+          105
+        ],
+        "ethernet": [
+          102,
+          188,
+          41
+        ],
+        "fmc": [
+          135,
+          234,
+          105
+        ],
+        "hdmi_rx": [
+          62,
+          234,
+          51
+        ],
+        "hdmi_rx_term": [
+          84,
+          188,
+          97
+        ],
+        "hdmi_tx": [
+          51,
+          234,
+          105
+        ],
+        "lcd": [
+          105,
+          234,
+          166
+        ],
+        "mechanical": [
+          41,
+          188,
+          136
+        ],
+        "microsd": [
+          105,
+          234,
+          211
+        ],
+        "motor_pwm": [
+          51,
+          234,
+          234
+        ],
+        "motor_sense": [
+          84,
+          170,
+          188
+        ],
+        "pd_input": [
+          51,
+          170,
+          234
+        ],
+        "pmod": [
+          105,
+          166,
+          234
+        ],
+        "pmod_expansion": [
+          41,
+          84,
+          188
+        ],
+        "power": [
+          105,
+          120,
+          234
+        ],
+        "power_mon": [
+          62,
+          51,
+          234
+        ],
+        "power_som": [
+          109,
+          84,
+          188
+        ],
+        "rj45_connector": [
+          126,
+          51,
+          234
+        ],
+        "som_decoupling": [
+          181,
+          105,
+          234
+        ],
+        "som_j1": [
+          201,
+          148,
+          32
+        ],
+        "som_j2": [
+          201,
+          148,
+          32
+        ],
+        "som_j3": [
+          201,
+          148,
+          32
+        ],
+        "uart_bridge": [
+          154,
+          41,
+          188
+        ],
+        "usb_jtag": [
+          227,
+          105,
+          234
+        ],
+        "usb_jtag_connector": [
+          234,
+          51,
+          213
+        ],
+        "usb_pd": [
+          188,
+          84,
+          158
+        ],
+        "usb_uart_connector": [
+          234,
+          51,
+          148
+        ],
+        "usbc_otg": [
+          234,
+          105,
+          151
+        ],
+        "user_io": [
+          188,
+          41,
+          67
+        ]
+      },
+      "svg_sha256": "c60a0a4bc5234e158508604e4cdda8bb786a371a7e54b1fd2ee20487c357ede1",
+      "total_mm": 23967.0
+    },
+    {
+      "cross_mm": 1481.2,
+      "images": [
+        {
+          "filename": "ratsnest_top.png",
+          "height": 456,
+          "png_sha256": "244465e01647b83030138db9812351fa31331ce418a8ebfdc66ee52bd4c16f7a",
+          "rgb_sha256": "8010636143b931d83cf2646f58f4e782098b0675402e366341d48fabc6cb4b15",
+          "width": 456
+        },
+        {
+          "filename": "ratsnest_bottom.png",
+          "height": 456,
+          "png_sha256": "d8bed059f87b0bfb85a2fd01d645ded639d76e29d497ebe425c6d144a1d5b198",
+          "rgb_sha256": "b46adc7396cb0a5bf0ae278097cc89712e1497a5d4b6cfb89cefac24405f3bfa",
+          "width": 456
+        },
+        {
+          "filename": "ratsnest/debug_boot.png",
+          "height": 768,
+          "png_sha256": "c092299a3c4f70a271e4ec7fc192656fff7a47961c12489296145ebfe17972a4",
+          "rgb_sha256": "4426b2ffff93d1cb9d8cc70c996647e69d24a9e798366c937642ef4f0a2f50b5",
+          "width": 1094
+        },
+        {
+          "filename": "ratsnest/mechanical.png",
+          "height": 1389,
+          "png_sha256": "33efcccd9f0a193e33c1aa968d2b3ef321e5e0b3a7dc4e646167f6f5651aaec8",
+          "rgb_sha256": "8aa0d5a00a6b2aac78321378cafe5a3c65038aa97dd038d4c9029bc2ea3cd91b",
+          "width": 1389
+        },
+        {
+          "filename": "ratsnest/pd_input.png",
+          "height": 1119,
+          "png_sha256": "5f9c34e9a3688037660bd3ea3a05cc1aa713fa2e13470a7f02d7848b165d4bfe",
+          "rgb_sha256": "84fb042960d42f4f39c4e12cf309791c08d6abef052b1bb9f1f2ceb8c605e5d5",
+          "width": 864
+        },
+        {
+          "filename": "ratsnest/power.png",
+          "height": 1064,
+          "png_sha256": "2f6d61d4df4e767e6a079d21ecb5aa9d7ee8b42b2c6382b2d0d417d2659a279b",
+          "rgb_sha256": "b4f7fae1e6a49996a161975f58fbc1d5c1653745eac4fdec15c56e9d52fcc984",
+          "width": 1005
+        },
+        {
+          "filename": "ratsnest/power_mon.png",
+          "height": 768,
+          "png_sha256": "7ce264eabc17bc85b4b217636f0a54a5634a864b2215515f263819889327e1ec",
+          "rgb_sha256": "154db25394d4a2cab3a3822b82a773615aa4e4c1525544dc5cbc7d4f546ea43a",
+          "width": 989
+        },
+        {
+          "filename": "ratsnest/power_som.png",
+          "height": 894,
+          "png_sha256": "48b22f5f3b09c2a94305989e2c4881d12359f0d25a328c7a7ba028d965842c63",
+          "rgb_sha256": "8a307d040b815e79580eb6d82395076297273d64f85cc9cb0ca5a0d013cf60e9",
+          "width": 1107
+        },
+        {
+          "filename": "ratsnest/uart_bridge.png",
+          "height": 911,
+          "png_sha256": "a521ac011eeaebdbd9479ad1b016b8cf5623b4b26ed1e9d220098ed6ee8cf250",
+          "rgb_sha256": "bd273f82ad72fb27f0cb529601ce7dc5972fc21a2c54360082993a198e2cec81",
+          "width": 864
+        },
+        {
+          "filename": "ratsnest/usb_uart_connector.png",
+          "height": 1119,
+          "png_sha256": "8e1a386872d1be4ad921d343d5baa6d6bcf9e69a3239af46335774bb8ce6c8c0",
+          "rgb_sha256": "b2e48d75f189b45e0e30090c667ae15917f5b2c4c0f229501c87fc4cee27ae7b",
+          "width": 864
+        },
+        {
+          "filename": "ratsnest/som.png",
+          "height": 707,
+          "png_sha256": "12b7f737bada217056c8ad5863fbbf8becb08b32f7127ee3900e8365ec83f225",
+          "rgb_sha256": "acdf50646e31c574721542c56de7ec08ac454ead65dcf9bb691721d36bdaa611",
+          "width": 720
+        }
+      ],
+      "n_cross": 74,
+      "name": "devkit_mini",
+      "palette": {
+        "debug_boot": [
+          188,
+          84,
+          84
+        ],
+        "mechanical": [
+          234,
+          173,
+          51
+        ],
+        "pd_input": [
+          191,
+          234,
+          105
+        ],
+        "power": [
+          41,
+          188,
+          41
+        ],
+        "power_mon": [
+          105,
+          234,
+          191
+        ],
+        "power_som": [
+          51,
+          173,
+          234
+        ],
+        "som_decoupling": [
+          84,
+          84,
+          188
+        ],
+        "som_j1": [
+          201,
+          148,
+          32
+        ],
+        "som_j2": [
+          201,
+          148,
+          32
+        ],
+        "som_j3": [
+          201,
+          148,
+          32
+        ],
+        "uart_bridge": [
+          173,
+          51,
+          234
+        ],
+        "usb_uart_connector": [
+          234,
+          105,
+          191
+        ]
+      },
+      "svg_sha256": "0bc875b98ef28e59e3a13332958ff11cbaf416aa62777b1a14c53c6224bc9ec8",
+      "total_mm": 3582.6
+    }
+  ],
+  "provenance": {
+    "capture_before_native_ratsnest_rendering": true,
+    "pillow": "12.2.0",
+    "sources": {
+      "schgen/generate/pcb/footprint.py": "71b558eec9e1f5ea189dffada96d17014ac8a65119c92abb33b7b326e200ee6a",
+      "schgen/generate/pcb/mating_face.py": "745307443e6689205ec0285dc846b21f32a4e05070a0c52c0223bebeac072478",
+      "schgen/generate/pcb/turn.py": "481594009a513b072485df7cb4c6a01353f15da0f1b4c97bcb413b17150ce928",
+      "schgen/generate/ratsnest.py": "ab11438b976efbca53168bf988dde6cb01237361a18644eb193549148beb9ac8"
+    }
+  },
+  "raster": {
+    "image": {
+      "filename": "raster.png",
+      "height": 79,
+      "png_sha256": "4a09c786b712d7ff5d20c55afc84e898a592df5dcfc6a99de15492f39214fb5c",
+      "rgb_sha256": "e2d0f61bf6295f80a20ce621d9257893976699f77118f1064e3efc0aa0c47ab4",
+      "width": 91
+    },
+    "lines": [
+      {
+        "color": [
+          120,
+          220,
+          160,
+          175
+        ],
+        "points": [
+          45.75,
+          39.25,
+          45.75,
+          39.25
+        ],
+        "width": 1
+      },
+      {
+        "color": [
+          120,
+          220,
+          160,
+          220
+        ],
+        "points": [
+          45.75,
+          39.25,
+          45.75,
+          39.25
+        ],
+        "width": 2
+      },
+      {
+        "color": [
+          120,
+          220,
+          160,
+          175
+        ],
+        "points": [
+          45.75,
+          39.25,
+          45.75,
+          74.25
+        ],
+        "width": 1
+      },
+      {
+        "color": [
+          120,
+          220,
+          160,
+          220
+        ],
+        "points": [
+          45.75,
+          39.25,
+          45.75,
+          74.25
+        ],
+        "width": 2
+      },
+      {
+        "color": [
+          120,
+          220,
+          160,
+          175
+        ],
+        "points": [
+          45.75,
+          39.25,
+          65.75,
+          39.25
+        ],
+        "width": 1
+      },
+      {
+        "color": [
+          120,
+          220,
+          160,
+          220
+        ],
+        "points": [
+          45.75,
+          39.25,
+          65.75,
+          39.25
+        ],
+        "width": 2
+      },
+      {
+        "color": [
+          120,
+          220,
+          160,
+          175
+        ],
+        "points": [
+          45.75,
+          39.25,
+          65.75,
+          50.25
+        ],
+        "width": 1
+      },
+      {
+        "color": [
+          120,
+          220,
+          160,
+          220
+        ],
+        "points": [
+          45.75,
+          39.25,
+          65.75,
+          50.25
+        ],
+        "width": 2
+      },
+      {
+        "color": [
+          120,
+          220,
+          160,
+          175
+        ],
+        "points": [
+          45.75,
+          39.25,
+          65.75,
+          59.25
+        ],
+        "width": 1
+      },
+      {
+        "color": [
+          120,
+          220,
+          160,
+          220
+        ],
+        "points": [
+          45.75,
+          39.25,
+          65.75,
+          59.25
+        ],
+        "width": 2
+      },
+      {
+        "color": [
+          120,
+          220,
+          160,
+          175
+        ],
+        "points": [
+          45.75,
+          39.25,
+          56.75,
+          59.25
+        ],
+        "width": 1
+      },
+      {
+        "color": [
+          120,
+          220,
+          160,
+          220
+        ],
+        "points": [
+          45.75,
+          39.25,
+          56.75,
+          59.25
+        ],
+        "width": 2
+      },
+      {
+        "color": [
+          120,
+          220,
+          160,
+          175
+        ],
+        "points": [
+          45.75,
+          39.25,
+          25.75,
+          50.25
+        ],
+        "width": 1
+      },
+      {
+        "color": [
+          120,
+          220,
+          160,
+          220
+        ],
+        "points": [
+          45.75,
+          39.25,
+          25.75,
+          50.25
+        ],
+        "width": 2
+      },
+      {
+        "color": [
+          120,
+          220,
+          160,
+          175
+        ],
+        "points": [
+          45.75,
+          39.25,
+          34.75,
+          19.25
+        ],
+        "width": 1
+      },
+      {
+        "color": [
+          120,
+          220,
+          160,
+          220
+        ],
+        "points": [
+          45.75,
+          39.25,
+          34.75,
+          19.25
+        ],
+        "width": 2
+      },
+      {
+        "color": [
+          120,
+          220,
+          160,
+          175
+        ],
+        "points": [
+          45.75,
+          39.25,
+          65.75,
+          28.25
+        ],
+        "width": 1
+      },
+      {
+        "color": [
+          120,
+          220,
+          160,
+          220
+        ],
+        "points": [
+          45.75,
+          39.25,
+          65.75,
+          28.25
+        ],
+        "width": 2
+      },
+      {
+        "color": [
+          120,
+          220,
+          160,
+          175
+        ],
+        "points": [
+          45.75,
+          39.25,
+          56.75,
+          19.25
+        ],
+        "width": 1
+      },
+      {
+        "color": [
+          120,
+          220,
+          160,
+          220
+        ],
+        "points": [
+          45.75,
+          39.25,
+          56.75,
+          19.25
+        ],
+        "width": 2
+      },
+      {
+        "color": [
+          120,
+          220,
+          160,
+          175
+        ],
+        "points": [
+          45.75,
+          39.25,
+          45.75,
+          4.25
+        ],
+        "width": 1
+      },
+      {
+        "color": [
+          120,
+          220,
+          160,
+          220
+        ],
+        "points": [
+          45.75,
+          39.25,
+          45.75,
+          4.25
+        ],
+        "width": 2
+      },
+      {
+        "color": [
+          120,
+          220,
+          160,
+          175
+        ],
+        "points": [
+          45.75,
+          39.25,
+          25.75,
+          39.25
+        ],
+        "width": 1
+      },
+      {
+        "color": [
+          120,
+          220,
+          160,
+          220
+        ],
+        "points": [
+          45.75,
+          39.25,
+          25.75,
+          39.25
+        ],
+        "width": 2
+      },
+      {
+        "color": [
+          120,
+          220,
+          160,
+          175
+        ],
+        "points": [
+          45.75,
+          39.25,
+          80.75,
+          74.25
+        ],
+        "width": 1
+      },
+      {
+        "color": [
+          120,
+          220,
+          160,
+          220
+        ],
+        "points": [
+          45.75,
+          39.25,
+          80.75,
+          74.25
+        ],
+        "width": 2
+      },
+      {
+        "color": [
+          120,
+          220,
+          160,
+          175
+        ],
+        "points": [
+          45.75,
+          39.25,
+          -24.25,
+          -10.75
+        ],
+        "width": 1
+      },
+      {
+        "color": [
+          120,
+          220,
+          160,
+          220
+        ],
+        "points": [
+          45.75,
+          39.25,
+          -24.25,
+          -10.75
+        ],
+        "width": 2
+      },
+      {
+        "color": [
+          120,
+          220,
+          160,
+          175
+        ],
+        "points": [
+          45.75,
+          39.25,
+          165.75,
+          139.25
+        ],
+        "width": 1
+      },
+      {
+        "color": [
+          120,
+          220,
+          160,
+          220
+        ],
+        "points": [
+          45.75,
+          39.25,
+          165.75,
+          139.25
+        ],
+        "width": 2
+      }
+    ]
+  }
+}

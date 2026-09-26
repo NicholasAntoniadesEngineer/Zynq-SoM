@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from carrier.basis import register
+from carrier.basis import PROJECT, register
 from schgen.core.model import Circuit
 
 AUX_BUS = "board_aux / board_services (the isolated AUX I2C bus)"
@@ -40,27 +40,4 @@ MODULE_DRAW_A = register("board_qwiic.module_draw", 0.200, "A",
 
 def circuit() -> Circuit:
     from schgen.core.authoring import project_circuit
-    return project_circuit('carrier', 'board_qwiic', __file__)
-
-
-def _legacy_circuit() -> Circuit:
-    c = Circuit("board_qwiic",
-                "QWIIC / STEMMA-QT expansion connector + USBLC6 ESD array")
-
-    c.use_part(RECEPTACLE, ref="J1")
-    c.net("GND", "J1.1")
-    c.net("+3V3_AUX", "J1.2")
-    c.net("GND", "J1.5", "J1.6")
-
-    c.use_part(ESD_ARRAY, ref="U1")
-    c.net("QWIIC_SDA", "J1.3", "U1.1")
-    c.net("QWIIC_SCL", "J1.4", "U1.3")
-    c.port("AUX_I2C_SDA", "U1.6", kind="i2c", role="sda", bus="AUX_I2C",
-           speed_hz=I2C_SPEED_HZ, expect=AUX_BUS)
-    c.port("AUX_I2C_SCL", "U1.4", kind="i2c", role="scl", bus="AUX_I2C",
-           speed_hz=I2C_SPEED_HZ, expect=AUX_BUS)
-    c.net(CLAMP_RAIL, "U1.5")
-    c.net("GND", "U1.2")
-
-    c.draws("+3V3_AUX", MODULE_DRAW_A, "QWIIC external module budget (200 mA)")
-    return c
+    return project_circuit(PROJECT, 'board_qwiic', __file__)

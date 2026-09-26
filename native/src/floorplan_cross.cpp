@@ -122,7 +122,7 @@ void Engine::prepare_cross() {
         const auto cls=in.impedance_net_classes.find(name);
         const bool impedance=cls!=in.impedance_net_classes.end();
         if (impedance) { ++n_impedance; classes.insert(cls->second); }
-        ++plan.accounting.quantization_engagements["est_via_cost"];
+        checked_quantization_add(plan.accounting.quantization_engagements, "est_via_cost");
         for (const auto& sheet:members) nets_by_sheet[sheet].push_back(cross_nets.size());
         cross_nets.push_back({name,std::move(pins),est_via_cost(impedance)});
     }

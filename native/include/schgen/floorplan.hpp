@@ -1,6 +1,7 @@
 #pragma once
 
 #include "schgen/circuit.hpp"
+#include "schgen/execution_accounting.hpp"
 #include "schgen/constraints.hpp"
 #include "schgen/json.hpp"
 #include "schgen/link.hpp"
@@ -146,6 +147,9 @@ struct FloorplanLegalizeInput {
 // typed input throws; it must never be interpreted as a feasible candidate.
 bool floorplan_legalize_compact(const FloorplanLegalizeInput& input,
     std::vector<FloorplanLegalizeVar>& movable, std::vector<std::string>& log);
+bool floorplan_legalize_compact_accounted(const FloorplanLegalizeInput& input,
+    std::vector<FloorplanLegalizeVar>& movable, std::vector<std::string>& log,
+    QuantizationCounts& counts);
 std::vector<FloorplanTermEval> floorplan_evaluate_terms(
     const FloorplanLegalizeInput& input, const FloorplanOffsets& poses);
 

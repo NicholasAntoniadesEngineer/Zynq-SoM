@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from carrier.basis import register
+from carrier.basis import PROJECT, register
 from schgen.core.model import Circuit
 
 R_FP = "Resistor_SMD:R_0603_1608Metric"
@@ -79,44 +79,4 @@ MODULES = (
 
 def circuit() -> Circuit:
     from schgen.core.authoring import project_circuit
-    return project_circuit('carrier', 'bringup_modules', __file__)
-
-
-def _legacy_circuit() -> Circuit:
-    c = Circuit("bringup_modules",
-                "Bring-up module gates: 10x SY6280 + status/user LEDs")
-    for k, (mod, in_rail, out_rail, rset, rset_id, led_r, led_r_id) \
-            in enumerate(MODULES):
-        u = c.use_part("SY6280AAC", ref=f"U{k + 1}")
-        c.net(in_rail, f"{u.ref}.IN")
-        c.net(out_rail, f"{u.ref}.OUT")
-        c.net("GND", f"{u.ref}.GND")
-        c.port(f"EN_{mod}", f"{u.ref}.EN", expect=EXPECT_EN)
-        rs = c.part(c.auto_ref("R"), "Device:R", rset, R_FP, LCSC=rset_id)
-        c.net(f"BU_ISET_{mod}", f"{u.ref}.ISET", f"{rs.ref}.1")
-        c.net("GND", f"{rs.ref}.2")
-        for cap in c.decouple(f"{u.ref}.IN", SWITCH_DECAP, footprint=C_FP):
-            cap.fields["LCSC"] = LCSC_100N
-        for cap in c.decouple(f"{u.ref}.OUT", SWITCH_DECAP, footprint=C_FP):
-            cap.fields["LCSC"] = LCSC_100N
-        d = c.part(c.auto_ref("D"), "Device:LED", "red", LED_FP,
-                   LCSC=LCSC_RED)
-        rl = c.part(c.auto_ref("R"), "Device:R", led_r, R_FP, LCSC=led_r_id)
-        c.net(out_rail, f"{d.ref}.2")
-        c.net(f"BU_PG_{mod}", f"{d.ref}.1", f"{rl.ref}.1")
-        c.net("GND", f"{rl.ref}.2")
-
-    rbleed = c.part(c.auto_ref("R"), "Device:R", SD_BLEED_R, R_FP,
-                    LCSC="C25804")
-    c.net("+3V3_SD", f"{rbleed.ref}.1")
-    c.net("GND", f"{rbleed.ref}.2")
-
-    # Probe each gated rail at its SOURCE: rail-by-rail bring-up needs the meter
-    # on this side of the module connector.
-    for _mod, _in, out_rail, _rs, _ri, _lr, _li in MODULES:
-        c.testpoint(out_rail)
-
-    for _mod, _in, out_rail, _rs, _ri, led_r, _li in MODULES:
-        amps = LED_DRAW_3V3_A if led_r == LED_R_3V3 else LED_DRAW_5V_A
-        c.draws(out_rail, amps, f"status LED ({led_r}) on the gated output")
-    return c
+    return project_circuit(PROJECT, 'bringup_modules', __file__)

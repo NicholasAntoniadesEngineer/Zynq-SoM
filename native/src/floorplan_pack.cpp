@@ -77,7 +77,7 @@ bool Engine::attempt_pack(bool compact) {
         edge_boxes.push_back({b.x,b.y,b.x+b.w,b.y+b.h});
         fanout_rows.push_back({b.x,b.y,b.w,b.h,b.fanout_reach,b.fanout_inset,edge_char(b.edge)});
     }
-    ++plan.accounting.quantization_engagements["run_overflow_tol"];
+    checked_quantization_add(plan.accounting.quantization_engagements, "run_overflow_tol");
     if (!edge_runs_margin_ok(run_rows,bw,bh,edge_margin,.1)) return false;
     const auto som_rects=som_keepouts();
     if (rects_overlap_any(edge_boxes,som_rects,1e-6) || !cross_edge_fanout_hold(fanout_rows,clear)) return false;
@@ -90,7 +90,8 @@ bool Engine::attempt_pack(bool compact) {
     std::map<std::string,std::vector<Comp>> edge_comps;
     for (const auto& b:plan.edge_blocks) if (plan.punch_free)
         edge_comps[b.name]=edge_components(edge_char(b.edge),b.x,b.y,bw,bh,occ_punch,get(co,{b.name,b.shape_idx}));
-    const auto [reach_bound,envelope]=spatial_bounds(far_ceil,max_reach,clear,in.place_clear,cable_gap,2.0);
+    const auto [reach_bound,envelope]=spatial_bounds_accounted(far_ceil,max_reach,clear,in.place_clear,cable_gap,2.0,
+        &plan.accounting.quantization_engagements);
     if (std::max(clear,2*reach_bound)>envelope+1e-9) throw std::logic_error("floorplan: spatial interaction envelope underbounds fan-out reach");
     Occupancy occ(bw,bh,clear,envelope,reach_bound,1.0,.05+1e-9);
     occ.add(som_occ.x,som_occ.y,som_occ.w,som_occ.h,{},{},som_mask,som_comps);
@@ -241,7 +242,7 @@ bool Engine::attempt_pack(bool compact) {
                 std::vector<FloorplanLegalizeVar> vars;
                 for (const auto& b:plan.interior_blocks) if (movable.count(b.name)) vars.push_back({b.name,b.w,b.h,{b.x,b.y},b.x,b.y});
                 std::vector<std::string> log; li.compact=do_compact;
-                if (!floorplan_legalize_compact(li,vars,log)) return false;
+                if (!floorplan_legalize_compact_accounted(li,vars,log,plan.accounting.quantization_engagements)) return false;
                 for (auto& b:plan.interior_blocks) for (const auto& v:vars) if (v.name==b.name) { b.x=v.x; b.y=v.y; break; }
                 std::vector<PairsBlock> ints,edges;
                 for (const auto& b:plan.interior_blocks) ints.push_back({b.x,b.y,b.w,b.h,b.fanout_reach,b.fanout_inset,side_mask(b.side),get(chosen,b.name)});

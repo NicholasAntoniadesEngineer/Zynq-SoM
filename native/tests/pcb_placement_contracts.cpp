@@ -181,7 +181,12 @@ void run(const std::filesystem::path &root, const std::string &name, const std::
                         inst.object_value.end());
     same(actual_json, expected_json, name + "/complete model");
     if (!single) {
-        auto emitted = render_pcb(actual, pcb_emit_policy(f.input.floorplan.project));
+        auto fixture_policy = pcb_emit_policy(f.input.floorplan.project);
+        // This immutable fixture predates the genuine part-model repair.
+        // Current-policy model-only equivalence is checked independently by
+        // pcb_emit_contracts; retain full historical geometry/byte checks here.
+        fixture_policy.model_overrides.clear();
+        auto emitted = render_pcb(actual, fixture_policy);
         require(emitted.pcb == read(root / "native/tests/data/pcb_emit" / (name + ".kicad_pcb")),
                 name + " recomputed placement to rendered PCB exact bytes");
         require(render_pcb_design_rules(actual) ==

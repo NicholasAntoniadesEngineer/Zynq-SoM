@@ -25,8 +25,18 @@ ctest --test-dir native/build/standalone --output-on-failure
 native/bin/schgen --help
 ```
 
+For repeated local C++ development with Ninja and ccache installed, run these
+from `native/` (CMake 3.20+ for presets): `cmake --preset native-fast`, then
+`cmake --build --preset native-fast` and `ctest --preset native-fast-offline`.
+The preset keeps compiler caches under ignored `native/build/`; it neither
+downloads dependencies nor enables Python. Ninja avoids Make's broad object
+rebuilds when unrelated per-source compilation options change. Do not build
+different build directories concurrently: they currently publish the same CLI
+and catalogs in the source tree.
+
 This is also the default configuration: Python bindings are opt-in. The build
-uses C++17, libxml2 (for KiCad netlists), and native zlib-ng (for PNGs), without discovering Python,
+uses C++17, libxml2 (for KiCad netlists), native zlib-ng (for exact manufacturing PNGs),
+and Poppler C++/libpng (for schematic rasterization), without discovering Python,
 installing nanobind, or fetching dependencies. Live SoM extraction requires
 `kicad-cli` on PATH; it is invoked directly, never through a shell.
 
@@ -37,6 +47,24 @@ The native CLI supports `self-check`, `catalog-compile`, `circuit-compile`,
 `spice`, `firmware`, `manual`, `scfw`, `testplan`, `power-sequence`, and `selftest`.
 It does not yet generate a complete board.
 Unsupported commands fail.
+
+`subsystem-new NAME` creates a C++ source/header/test package with retained
+README, SPICE and JSON metadata. It never overwrites an existing destination.
+New packages are opt-in with `-DSCHGEN_SUBSYSTEM_PACKAGES='name;another'`;
+the generated CMake registration connects real factories to the immutable
+native registry. The initial unimplemented builder deliberately fails its test.
+
+The PCB verification aggregate now shares one geometry snapshot and MST across
+the real placement, connector, ratsnest, fanout, return-stitch and escape gates.
+Both live projects are checked against independent committed reports. This is
+not yet the full-board verdict: external DRC and non-PCB gates remain separate.
+The native DRC runner invokes KiCad directly with a bounded timeout and private
+report directory. Missing/malformed reports and nonzero tool exits are errors,
+not empty successful findings. Its transitional adapter contains no DRC logic.
+Use `native/bin/schgen pcb-drc --project NAME` to check an existing board. The
+full build reuses validated severity counts from its first DRC report instead
+of refilling and checking the same board twice. Reports lacking severity retain
+an explicit errors-only fallback; warning and unrouted findings remain visible.
 
 `selftest` runs the complete 63-mutation suite through real KiCad exports, ERC,
 native gates, geometry checks, and fresh native worker processes. It does not
@@ -161,6 +189,17 @@ reference PNGs. Assembly rendering uses at most four workers with stable output
 ordering; a measured 38-image carrier run improved from approximately 0.97 s to
 0.39 s, including transitional transport and file publication. This is an image
 stage measurement, not an end-to-end board-build speedup claim.
+The equivalent ratsnest run (36 PNGs plus SVG) measured approximately 1.79 s
+through the previous renderer and 0.68 s through the bounded parallel C++
+renderer, with all output bytes unchanged.
+
+Standalone `assembly`, `ratsnest`, `si-constraints`, `fab-profile` and `manifest`
+commands now use native implementations. Explicit output directories retain the
+project layout (`docs/`, `renders/`, `manufacturing/`). `preflight` uses native
+stock/price/alternate analysis and a shell-free HTTPS-only `curl` subprocess;
+it requires network access only when that optional command is invoked. Transport
+errors fail explicitly instead of being reported as a confirmed missing part.
+Its offline contracts use injected provider responses and never contact vendors.
 
 Move complete pipeline stages into the native library and CLI. The remaining
 work includes full-board orchestration, remaining independent verification and

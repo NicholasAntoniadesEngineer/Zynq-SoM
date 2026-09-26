@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from devkit_mini.basis import register
+from devkit_mini.basis import PROJECT, register
 from schgen.core.model import Circuit
 
 R_FP = "Resistor_SMD:R_0603_1608Metric"
@@ -126,70 +126,4 @@ LOCAL_DRAW_A = register(
 
 def circuit() -> Circuit:
     from schgen.core.authoring import project_circuit
-    return project_circuit('devkit_mini', 'power_som', __file__)
-
-
-def _legacy_circuit() -> Circuit:
-    c = Circuit("power_som",
-                "Power: +VIN -> +5V_SOM always-on buck")
-
-    # EN/SYNC is strapped on by the PWR-1 series-R + zener clamp, NOT a bring-up
-    # port: +5V_SOM must be alive pre-DIP or the SC cannot negotiate PD at all.
-    c.use_part(BUCK_PART, ref="U4")
-    c.net("+VIN_SYS", "U4.8", "U4.12")
-    c.net("GND", "U4.9", "U4.11", "U4.3")
-    c.part("R12", "Device:R", EN_SERIES_R, R_FP, LCSC="C25804")
-    c.part("D5", "Device:D_Zener", EN_ZENER, DZ_FP, LCSC="C85181")
-    c.part("C20", "Device:C", EN_BYPASS, C0603, LCSC="C14663")
-    c.net("+VIN_SYS", "R12.1")
-    c.net("EN_5V_SOM", "U4.7", "R12.2", "D5.1", "C20.1")
-    c.net("GND", "D5.2", "C20.2")
-    for ref, val, fp, lcsc in (("C14", INPUT_HF, C0603, "C14663"),
-                               ("C25", INPUT_HF, C0603, "C14663"),
-                               ("C15", INPUT_BULK, C1206, "C13585"),
-                               ("C16", INPUT_BULK, C1206, "C13585")):
-        c.part(ref, "Device:C", val, fp, LCSC=lcsc)
-        c.net("+VIN_SYS", f"{ref}.1")
-        c.net("GND", f"{ref}.2")
-    c.part("C22", "Device:C", VCC_BYPASS, C0603, LCSC="C15849")
-    c.net("U4_VCC", "U4.2", "C22.1")
-    c.net("GND", "C22.2")
-    c.part("R17", "Device:R", BIAS_SERIES_R, R_FP, LCSC="C22859")
-    c.net("+5V_SOM", "R17.1")
-    c.part("C23", "Device:C", BIAS_BYPASS, C0603, LCSC="C15849")
-    c.net("BIAS_5V_SOM", "U4.1", "R17.2", "C23.1")
-    c.net("GND", "C23.2")
-    c.part("R18", "Device:R", RT_R, R_FP, LCSC="C31850")
-    c.net("RT_5V_SOM", "U4.6", "R18.1")
-    c.net("GND", "R18.2")
-    c.part("C17", "Device:C", BOOT_CAP, C0603, LCSC="C14663")
-    c.net("BOOT_5V_SOM", "U4.14", "U4.13", "C17.1")
-    c.part("L3", "Device:L", INDUCTOR, L_FP, LCSC="C37429")
-    c.net("SW_5V_SOM", "U4.10", "C17.2", "L3.1")
-    c.net("+5V_SOM", "L3.2")
-    for ref in ("C18", "C19"):
-        c.part(ref, "Device:C", OUTPUT_BULK, C0805, LCSC="C45783")
-        c.net("+5V_SOM", f"{ref}.1")
-        c.net("GND", f"{ref}.2")
-    c.part("R14", "Device:R", FB_TOP, R_FP, LCSC="C23061")
-    c.part("R15", "Device:R", FB_BOTTOM, R_FP, LCSC="C22797")
-    c.net("+5V_SOM", "R14.1")
-    c.net("FB_5V_SOM", "U4.4", "R14.2", "R15.1")
-    c.net("GND", "R15.2")
-    c.part("C21", "Device:C", FF_CAP, C0603, LCSC="C1653")
-    c.part("R19", "Device:R", FF_SERIES_R, R_FP, LCSC="C21190")
-    c.net("+5V_SOM", "C21.1")
-    c.net("CFF_5V_SOM", "C21.2", "R19.1")
-    c.net("FB_5V_SOM", "R19.2")
-    c.part("D4", "Device:LED", "red", LED_FP, LCSC="C2286")
-    c.part("R16", "Device:R", PG_LED_R, R_FP, LCSC="C21190")
-    c.net("+5V_SOM", "D4.2")
-    c.net("PG_5V_SOM", "D4.1", "R16.1")
-    c.net("GND", "R16.2")
-    c.nc("U4.5")
-
-    c.testpoint("+5V_SOM")
-    c.draws("+5V_SOM", LOCAL_DRAW_A,
-            "PG LED (KT-0603R + 1k, ~3 mA) + FB divider 60 uA "
-            "(SoM module load declared on som_j1)")
-    return c
+    return project_circuit(PROJECT, 'power_som', __file__)

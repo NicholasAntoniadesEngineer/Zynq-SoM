@@ -42,6 +42,18 @@ struct PcbStageResult {
 };
 std::set<std::string> pcb_contract_members(const PcbStageInput &);
 PcbStageResult build_pcb_stage_zone(const PcbStageInput &);
+using PcbStageRefitPoses = std::map<std::string, std::tuple<double, double, double>>;
+struct PcbStageRefitResult {
+    std::optional<PcbStageRefitPoses> poses;
+    QuantizationCounts quantization_engagements;
+    std::vector<std::string> fallback_events;
+};
+// Includes attempted candidate work even when poses is nullopt (incumbent wins).
+PcbStageRefitResult refit_pcb_stage_facing_accounted(
+    const PcbStageInput &, const FloorplanOffsets &, const FloorplanRotations &,
+    FloorplanPoint downstream,
+    const std::map<std::string, std::vector<std::pair<std::string, std::string>>> &net_pins,
+    const std::map<std::string, std::vector<std::tuple<double, double, std::string>>> &foreign);
 // Board-frame downstream-facing refit: returns nullopt when the original pose
 // wins. Existing native MST ties and the strict facing gate are retained.
 std::optional<std::map<std::string, std::tuple<double, double, double>>> refit_pcb_stage_facing(

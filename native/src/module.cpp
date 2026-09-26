@@ -29,6 +29,11 @@
 #include "schgen/pcb_emit_bindings.hpp"
 #include "schgen/authoring_bindings.hpp"
 #include "schgen/assembly_bindings.hpp"
+#include "schgen/ratsnest_documents_bindings.hpp"
+#include "schgen/gallery_diagram_bindings.hpp"
+#include "schgen/pcb_drc_bindings.hpp"
+#include "schgen/authoring_audit_bindings.hpp"
+#include "schgen/native_render_bindings.hpp"
 #include "schgen/emit.hpp"
 #include "schgen/legalize.hpp"
 #include "schgen/occupancy.hpp"
@@ -230,6 +235,11 @@ NB_MODULE(_geom, m) {
     schgen::bind_pcb_emission(m);
     schgen::bind_authoring(m);
     schgen::bind_assembly(m);
+    schgen::bind_ratsnest_documents(m);
+    schgen::bind_gallery_diagram(m);
+    schgen::bind_pcb_drc(m);
+    schgen::bind_authoring_audits(m);
+    schgen::bind_native_render(m);
     m.def("discover_project_subsystems", [](const std::string& directory) {
         std::vector<std::pair<std::string, std::string>> out;
         for (const auto& sheet : schgen::discover_project_subsystems(directory))

@@ -1,4 +1,5 @@
 #pragma once
+#include "schgen/execution_accounting.hpp"
 
 #include <cstddef>
 #include <cstdint>
@@ -112,6 +113,9 @@ bool occ_pair_active(int a_mask, int a_pmask, bool a_main,
 std::pair<double, double> spatial_bounds(double far_ceil, double max_reach,
                                          double clear, double place_clear,
                                          double cable_gap, double need_ceil);
+std::pair<double, double> spatial_bounds_accounted(double far_ceil, double max_reach,
+    double clear, double place_clear, double cable_gap, double need_ceil,
+    QuantizationCounts* counts);
 double py_round(double value, int digits);
 bool boxes_separated(double ax, double ay, double aw, double ah,
                      double bx, double by, double bw, double bh,

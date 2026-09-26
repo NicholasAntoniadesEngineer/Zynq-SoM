@@ -161,7 +161,6 @@ const sc_i2c_dev_t sc_i2c_devices[SC_I2C_DEV_COUNT] = {
     { "USB-PD PHY (FUSB302B)", ZC_I2C_ADDR_FUSB302B },
     { "rail monitor #1 (INA3221)", ZC_I2C_ADDR_INA3221_1 },
     { "rail monitor #2 (INA3221)", ZC_I2C_ADDR_INA3221_2 },
-    { "FMC mezzanine ID EEPROM", ZC_I2C_ADDR_FMC_EEPROM },
     { "board-ID EEPROM (EUI-48 MAC; AUX bus)", ZC_I2C_ADDR_ID_EEPROM },
     { "RTC RV-3028 (AUX bus)", ZC_I2C_ADDR_RTC },
 };

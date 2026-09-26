@@ -116,6 +116,36 @@ void project(const fs::path &fixtures, const fs::path &output, const std::string
     auto p = policy(raw);
     auto result = render_pcb(m, p);
     equal(result.pcb, read(fixtures / (name + ".kicad_pcb")), name + " exact board", output);
+    auto repaired_policy = p;
+    repaired_policy.model_overrides = project_pcb_model_overrides();
+    const auto repaired = render_pcb(m, repaired_policy);
+    if (name == "carrier") {
+        auto expected = result.document;
+        int replaced = 0;
+        const auto replace_model = [&](const auto& self, Sexpr& node) -> void {
+            auto* list = std::get_if<SexprList>(&node.v);
+            if (!list) return;
+            if (list->size() > 1 && std::holds_alternative<Sexpr::Sym>((*list)[0].v) &&
+                std::get<Sexpr::Sym>((*list)[0].v).name == "model" &&
+                std::holds_alternative<std::string>((*list)[1].v) &&
+                std::get<std::string>((*list)[1].v) == "${KICAD10_3DMODEL_DIR}/Package_DFN_QFN.3dshapes/WQFN-14-1EP_2.5x2.5mm_P0.5mm_EP1.45x1.45mm.step") {
+                node = sexpr_loads(R"((model "${KIPRJMOD}/../parts/FUSB302BMPX/FUSB302BMPX.wrl" (offset (xyz 0 0 0)) (scale (xyz 1 1 1)) (rotate (xyz 0 0 90))))");
+                ++replaced;
+                return;
+            }
+            for (auto& child : *list) self(self, child);
+        };
+        replace_model(replace_model, expected);
+        require(replaced == 1, "independent model-only correction has exactly one target");
+        equal(sexpr_dumps(repaired.document), sexpr_dumps(expected), name + " repair preserves all copper and other models", output);
+        repaired_policy.model_overrides.front().value = "different-part";
+        equal(render_pcb(m, repaired_policy).pcb, result.pcb, name + " model repair is part-specific", output);
+        repaired_policy.model_overrides = project_pcb_model_overrides();
+        repaired_policy.model_overrides.front().footprint = "different-footprint";
+        equal(render_pcb(m, repaired_policy).pcb, result.pcb, name + " model repair is footprint-specific", output);
+    } else {
+        equal(repaired.pcb, result.pcb, name + " no irrelevant model repair", output);
+    }
     auto restored = pcb_model_from_json(pcb_model_json(m), pool);
     equal(render_pcb(restored, p).pcb, result.pcb, name + " transport preserves emission", output);
     const auto transported = pcb_model_json(m);

@@ -202,8 +202,7 @@ FloorplanInput prepare_pcb_floorplan(const PcbPlacementInput &input, const PcbZo
     result.accounting.fallback_events.insert(result.accounting.fallback_events.end(),
                                              zones.fallback_events.begin(),
                                              zones.fallback_events.end());
-    for (const auto &[name, count] : zones.quantization_engagements)
-        result.accounting.quantization_engagements[name] += count;
+    checked_quantization_merge(result.accounting.quantization_engagements, zones.quantization_engagements);
     return result;
 }
 PcbPlacementResult build_pcb_model(const PcbPlacementInput &input) {
@@ -216,6 +215,8 @@ PcbPlacementResult build_pcb_model(const PcbPlacementInput &input) {
     planning.two_side = true;
     auto planning_zones = input.two_side ? zones : build_pcb_zone_geometry(planning);
     auto floorplan = generate_floorplan(prepare_pcb_floorplan(planning, planning_zones));
-    return place_pcb_model(input, zones, floorplan);
+    return place_pcb_model_accounted(input, zones, floorplan, input.two_side
+        ? PcbZoneAccountingOwnership::IncludedInFloorplan
+        : PcbZoneAccountingOwnership::SeparateFromFloorplan);
 }
 } // namespace schgen

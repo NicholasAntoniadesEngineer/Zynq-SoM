@@ -1,4 +1,5 @@
 #include "schgen/subsystem_authoring.hpp"
+#include "schgen/subsystem_registration.hpp"
 
 namespace schgen {
 namespace subsystem_builders {
@@ -21,7 +22,7 @@ CircuitSheetIr usb_uart_connector(const SubsystemMeta&, const AuthoringContext&)
 CircuitSheetIr usbc_otg(const SubsystemMeta&, const AuthoringContext&);
 }
 const std::vector<SubsystemDefinition>& subsystem_definitions() {
-    static const std::vector<SubsystemDefinition> definitions = {
+    static const std::vector<SubsystemDefinition> definitions = append_configured_subsystem_definitions({
         {"camera", {"+VDD_CAM", "GND", "CSI_D0_P", "CSI_D0_N", "CSI_D1_P", "CSI_D1_N", "CSI_CLK_P", "CSI_CLK_N", "CAM_SCL", "CAM_SDA", "CAM_EN", "CAM_LED"}, subsystem_builders::camera},
         {"ethernet", {"CHASSIS_GND", "MDI0_P", "MDI0_N", "MDI1_P", "MDI1_N", "MDI2_P", "MDI2_N", "MDI3_P", "MDI3_N", "MX0_P", "MX0_N", "MX1_P", "MX1_N", "MX2_P", "MX2_N", "MX3_P", "MX3_N"}, subsystem_builders::ethernet},
         {"hdmi_rx", {"+VDD_LOGIC", "GND", "CHASSIS_GND", "TMDS_RX_D2_P", "TMDS_RX_D2_N", "TMDS_RX_D1_P", "TMDS_RX_D1_N", "TMDS_RX_D0_P", "TMDS_RX_D0_N", "TMDS_RX_CLK_P", "TMDS_RX_CLK_N", "HDMI_5V_DET", "CEC"}, subsystem_builders::hdmi_rx},
@@ -39,7 +40,7 @@ const std::vector<SubsystemDefinition>& subsystem_definitions() {
         {"usb_pd", {"+VDD_LOGIC", "+VBUS_SENSE", "GND", "CC1", "CC2", "I2C_SDA", "I2C_SCL", "INT_N"}, subsystem_builders::usb_pd},
         {"usb_uart_connector", {"GND", "CHASSIS_GND", "VBUS", "USB_DP", "USB_DM"}, subsystem_builders::usb_uart_connector},
         {"usbc_otg", {"+VBUS_SUPPLY", "+VDD_LOGIC", "GND", "CHASSIS_GND", "USB_DP", "USB_DM", "VBUS", "VBUS_EN", "FLT_N", "USB_ID"}, subsystem_builders::usbc_otg},
-    };
+    });
     return definitions;
 }
 const SubsystemDefinition& subsystem_definition(const std::string& name) {

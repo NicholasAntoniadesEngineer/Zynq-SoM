@@ -1,0 +1,9 @@
+{
+  "source_commit": "59a8aa3a93aa21bba5e471bb5d08c71812b74ad8",
+  "method": "Independent Clang -finstrument-functions -fno-inline function-entry observer on quantize.cpp, linking committed pre-instrumentation legalize.cpp and floorplan_compose/pack/build/geometry/cross.cpp plus their original private header. Original floorplan JSON inputs are unchanged. Deltas count actual legalize_pose_quantum and quant_credit calls inside the solve, not producer-reported counts; the original report missed all of these calls, retaining only input zone credits.",
+  "counts": {
+    "devkit_mini": {"legalize_pose_quantum": 480, "quant_credit": 172},
+    "carrier": {"legalize_pose_quantum": 2250, "quant_credit": 786}
+  },
+  "synthetic_auto_quant_credit": 696
+}

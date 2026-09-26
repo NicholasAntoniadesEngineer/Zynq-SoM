@@ -1,16 +1,21 @@
 #include "schgen/firmware_docs.hpp"
 #include "schgen/design_rules.hpp"
+#include "schgen/process.hpp"
 #include <algorithm>
 #include <cmath>
 #include <fstream>
 #include <iostream>
 #include <iterator>
 #include <map>
+#include <regex>
+#include <sstream>
 #include <stdexcept>
+#include <utility>
 
 namespace {
 using namespace schgen;
 std::size_t assertions=0;
+std::size_t generated_c_units=0, generated_c_maps=0;
 void require(bool ok,const std::string& why) {++assertions;if(!ok)throw std::runtime_error(why);}
 const JsonNode& field(const JsonNode& n,const std::string& k) {auto p=object_field(n,k);if(!p)throw std::runtime_error("missing fixture field "+k);return *p;}
 std::string str(const JsonNode& n,const std::string& k) {return field(n,k).string_value;}
@@ -20,13 +25,100 @@ std::optional<std::string> optstr(const JsonNode& n,const std::string& k) {const
 std::vector<std::string> strings(const JsonNode& n) {std::vector<std::string> out;for(const auto& v:n.array_value)out.push_back(v.string_value);return out;}
 ProjectStrings pairs(const JsonNode& n) {ProjectStrings out;for(const auto& [k,v]:n.object_value)out.emplace_back(k,v.string_value);return out;}
 std::string read(const std::filesystem::path& p) {std::ifstream f(p,std::ios::binary);if(!f)throw std::runtime_error("cannot read "+p.string());return {std::istreambuf_iterator<char>(f),{}};}
+void replace_once(std::string& text,const std::string& old,const std::string& replacement) {
+    const auto pos=text.find(old);
+    require(pos!=std::string::npos&&text.find(old,pos+old.size())==std::string::npos,
+            "known legacy correction must match exactly once");
+    text.replace(pos,old.size(),replacement);
+}
+std::string corrected_legacy_output(std::string expected,const std::string& artifact) {
+    // The immutable Python baselines/mutants intentionally record two known
+    // defects. Correct ONLY these three complete literal spans in EXPECTED
+    // output, after frozen mutant byte edits have been applied. Never normalize
+    // actual output or replace whole artifacts with freshly generated text.
+    if(artifact=="BRINGUP.md")replace_once(expected,
+        "   `0x52` **RTC** (`board_services.U2` RV-3028-C7), `BT1` CR1220 backup. **Keep\n"
+        "   the trickle charger OFF** — `BT1` is a PRIMARY cell (see the firmware contract).\n",
+        "   `0x52` **RTC** (`board_services.U2` RV-3028-C7), `BT1` rechargeable ML1220 backup.\n"
+        "   **Enable the RV-3028 trickle charger** (TCE + ~3k series resistance) so the\n"
+        "   cell tops up whenever powered. Do **not** fit a primary CR1220 or a LIR Li-ion\n"
+        "   cell (see the firmware contract).\n");
+    else if(artifact=="sc_tables.c")replace_once(expected,
+        "    { \"FMC mezzanine ID EEPROM\", ZC_I2C_ADDR_FMC_EEPROM },\n", "");
+    else if(artifact=="sc_tables.h")replace_once(expected,
+        "#define SC_I2C_DEV_COUNT 7\n", "#define SC_I2C_DEV_COUNT 6\n");
+    return expected;
+}
 void exact(const std::string& actual,const std::filesystem::path& expected,const std::filesystem::path& scratch) {
-    const auto wanted=read(expected);
+    const auto wanted=corrected_legacy_output(read(expected),expected.filename().string());
     std::filesystem::create_directories(scratch.parent_path());std::ofstream f(scratch,std::ios::binary);f<<actual;f.close();
     if(actual!=wanted) {
         const auto pos=std::mismatch(actual.begin(),actual.end(),wanted.begin(),wanted.end()).first-actual.begin();
         throw std::runtime_error("byte parity failed: "+expected.string()+" at byte "+std::to_string(pos)+"; actual saved to "+scratch.string());
     }++assertions;
+}
+void write_private(const std::filesystem::path& path,const std::string& text) {
+    std::filesystem::create_directories(path.parent_path());
+    std::ofstream out(path,std::ios::binary);out<<text;out.close();
+    require(bool(out),"write isolated generated C input "+path.string());
+}
+void strict_generated_c(const std::map<std::string,std::string>& artifacts,
+                        const std::filesystem::path& scratch) {
+    // The contract is the ACTUAL render for this same live/mutated input, not
+    // a copied baseline or a synthetic missing-macro/compiler workaround.
+    const auto& contract=artifacts.at("zynq_carrier_contract.h");
+    std::vector<std::pair<std::string,unsigned>> addresses;
+    const std::regex definition(R"(^#define (ZC_I2C_ADDR_[A-Z0-9_]+) (0x[0-9A-Fa-f]+) .*$)");
+    std::istringstream lines(contract);std::string line;std::smatch match;
+    while(std::getline(lines,line))if(std::regex_match(line,match,definition)) {
+        const auto address=static_cast<unsigned>(std::stoul(match[2].str(),nullptr,16));
+        require(address<=0x7f,"contract must define 7-bit I2C addresses");
+        addresses.emplace_back(match[1].str(),address);
+    }
+    require(!addresses.empty(),"real generated contract has no I2C devices");
+    require(contract.find("#define ZC_I2C_ADDR_FMC_EEPROM")==std::string::npos,
+            "fixture hardware must not invent an FMC EEPROM address");
+    const auto& table=artifacts.at("sc/sc_tables.c");
+    const auto table_start=table.find("const sc_i2c_dev_t sc_i2c_devices[SC_I2C_DEV_COUNT] = {");
+    require(table_start!=std::string::npos,"SC scan table missing");
+    std::istringstream rows(table.substr(table_start));std::vector<std::string> macros;
+    const std::regex row(R"SC(^    \{ "[^"]+", (ZC_I2C_ADDR_[A-Z0-9_]+) \},$)SC");
+    while(std::getline(rows,line))if(std::regex_match(line,match,row))macros.push_back(match[1].str());
+    require(macros.size()==addresses.size(),"scan count differs from real contract device count");
+    for(std::size_t i=0;i<addresses.size();++i)
+        require(macros[i]==addresses[i].first,"SC scan entry does not come from the hardware contract");
+    require(table.find("ZC_I2C_ADDR_FMC_EEPROM")==std::string::npos,"unsupported FMC scan entry retained");
+    require(artifacts.at("sc/sc_tables.h").find("#define SC_I2C_DEV_COUNT "+std::to_string(addresses.size())+"\n")!=std::string::npos,
+            "SC header count differs from actual contract");
+    const auto compiler=find_executable("cc");require(compiler.has_value(),"strict generated-C proof requires a C compiler");
+    for(const auto& [path,text]:artifacts)write_private(scratch/path,text);
+    const auto compile=[&](std::vector<std::string> arguments) {
+        std::vector<std::string> argv{compiler->string(),"-std=c11","-Wall","-Wextra","-Wpedantic","-Werror",
+            "-I",scratch.string(),"-I",(scratch/"sc").string()};
+        argv.insert(argv.end(),arguments.begin(),arguments.end());
+        const auto result=run_process(argv);
+        require(result.exit_code==0,"strict generated C compilation failed:\n"+result.stdout_text+result.stderr_text);
+    };
+    std::size_t units=0;
+    for(const auto& [path,text]:artifacts) {
+        (void)text;
+        if(std::filesystem::path(path).extension()==".c") {
+            compile({"-fsyntax-only",(scratch/path).string()});++units;++generated_c_units;
+        }
+    }
+    require(units==6,"all six portable SC C translation units must be compiled");
+    std::ostringstream probe;
+    probe<<"#include \"zynq_carrier_contract.h\"\n#include \"sc_tables.h\"\n"
+         <<"_Static_assert(SC_I2C_DEV_COUNT == "<<addresses.size()<<", \"contract scan size\");\n"
+         <<"int main(void) {\n";
+    for(std::size_t i=0;i<addresses.size();++i)
+        probe<<"    if (sc_i2c_devices["<<i<<"].addr7 != "<<addresses[i].second<<"U || "
+             <<"sc_i2c_devices["<<i<<"].addr7 != "<<addresses[i].first<<") return 1;\n";
+    probe<<"    return 0;\n}\n";
+    write_private(scratch/"contract_probe.c",probe.str());
+    compile({(scratch/"contract_probe.c").string(),(scratch/"sc/sc_tables.c").string(),"-o",(scratch/"contract_probe").string()});
+    const auto executed=run_process({(scratch/"contract_probe").string()});
+    require(executed.exit_code==0,"compiled SC device addresses disagree with live contract");++generated_c_maps;
 }
 template<class F> void throws(F fn,const std::string& fragment) {
     bool caught=false;try{fn();}catch(const std::exception& e){caught=true;require(std::string(e.what()).find(fragment)!=std::string::npos,"unexpected exception: "+std::string(e.what()));}
@@ -86,7 +178,7 @@ void rewire(CircuitSheetIr& c,const std::string& ref,const std::string& pin,cons
     for(auto& n:c.nets)if(n.name==net){n.pins.push_back({ref,pin});return;}
     c.nets.push_back({net,"signal",{{ref,pin}}});
 }
-void frozen_mutants(const FirmwareDocsInput& original,const std::filesystem::path& dir) {
+void frozen_mutants(const FirmwareDocsInput& original,const std::filesystem::path& dir,const std::filesystem::path& scratch) {
     const auto cases=parse_json_file((dir/"mutants.json").string());
     for(const auto& test:cases.array_value) {
         auto in=original;const auto name=str(test,"name");
@@ -126,8 +218,44 @@ void frozen_mutants(const FirmwareDocsInput& original,const std::filesystem::pat
                 const auto& a=i->array_value;const auto first=static_cast<std::size_t>(a[0].number_value),last=static_cast<std::size_t>(a[1].number_value);
                 wanted.replace(first,last-first,a[2].string_value);
             }
+            wanted=corrected_legacy_output(std::move(wanted),std::filesystem::path(path).filename().string());
             require(rendered.at(path)==wanted,name+": frozen mutant byte parity failed: "+path);
         }
+        // SWD/collision mutants intentionally fail contract generation; do not
+        // substitute a good baseline header to pretend those inputs compile.
+        // Their complete surviving outputs and exact errors were checked above.
+        if(rendered.count("zynq_carrier_contract.h")&&rendered.count("sc/sc_tables.c"))
+            strict_generated_c(rendered,scratch/name);
+    }
+}
+void live_i2c_contract_mutations(const FirmwareDocsInput& original,const std::filesystem::path& scratch) {
+    for(const std::string name:{"id_eeprom_strap","monitor_strap","monitor_removed"}) {
+        auto in=original;
+        if(name=="id_eeprom_strap") {
+            auto& services=sheet(in,"board_services");std::string ref;
+            for(const auto& p:services.parts)if(p.lib_id.find("24AA025E48")!=std::string::npos)ref=p.ref;
+            require(!ref.empty(),"live ID EEPROM required for strap mutation");
+            rewire(services,ref,"5","GND");
+            require(bringup_id_eeprom_addr(services)==0x50,"real ID EEPROM strap was not changed");
+        } else {
+            auto& monitors=sheet(in,"power_mon");const auto before=ina3221_monitors(monitors);
+            require(before.size()==2,"monitor mutation baseline");const auto ref=before.back().ref;
+            if(name=="monitor_strap") {
+                const auto& device=part(monitors,ref);const auto sda=named_pin(device,"SDA");std::string net;
+                for(const auto& n:monitors.nets)for(const auto& p:n.pins)if(p.ref==ref&&p.pin==sda)net=n.name;
+                require(!net.empty(),"live monitor SDA net required");
+                rewire(monitors,ref,named_pin(device,"A0"),net);
+                require(ina3221_monitors(monitors).back().addr==0x42,"real monitor strap was not changed");
+            } else {
+                monitors.parts.erase(std::remove_if(monitors.parts.begin(),monitors.parts.end(),[&](const auto& p){return p.ref==ref;}),monitors.parts.end());
+                for(auto& net:monitors.nets)net.pins.erase(std::remove_if(net.pins.begin(),net.pins.end(),[&](const auto& p){return p.ref==ref;}),net.pins.end());
+                monitors.nc.erase(std::remove_if(monitors.nc.begin(),monitors.nc.end(),[&](const auto& p){return p.ref==ref;}),monitors.nc.end());
+                require(ina3221_monitors(monitors).size()==1,"monitor removal must affect device count");
+            }
+        }
+        std::map<std::string,std::string> artifacts{{"zynq_carrier_contract.h",render_firmware_contract(in)}};
+        for(const auto& artifact:render_scfw(in))artifacts["sc/"+artifact.path]=artifact.text;
+        strict_generated_c(artifacts,scratch/name);
     }
 }
 void mutants(const FirmwareDocsInput& original,const SpiceResult& sp,const ProjectStrings& probes,const PowerCheckResult& pr) {
@@ -215,13 +343,27 @@ int main(int argc,char** argv) {
             if(name=="carrier") {
                 exact(render_bringup_manual(in),dir/"BRINGUP.md",scratch/name/"BRINGUP.md");
                 const auto docs=render_scfw(in);require(docs.size()==14,"SC file count");for(const auto& f:docs)exact(f.text,dir/"sc"/f.path,scratch/name/"sc"/f.path);
+                std::map<std::string,std::string> generated{{"zynq_carrier_contract.h",render_firmware_contract(in)}};
+                for(const auto& f:docs)generated["sc/"+f.path]=f.text;
+                strict_generated_c(generated,scratch/name/"compiled-baseline");
+                live_i2c_contract_mutations(in,scratch/name/"compiled-live-mutations");
+                const auto manual=render_bringup_manual(in);
+                require(manual.find("rechargeable ML1220 backup")!=std::string::npos&&
+                        manual.find("**Enable the RV-3028 trickle charger**")!=std::string::npos&&
+                        manual.find("BT1` is a PRIMARY cell")==std::string::npos,"manual contradicts rechargeable hardware policy");
+                require(manual.find("Do **not** fit a primary CR1220 or a LIR Li-ion")!=std::string::npos,
+                        "unsafe replacement-cell warning missing");
+                require(generated.at("zynq_carrier_contract.h").find("RECHARGEABLE ML1220")!=std::string::npos&&
+                        generated.at("sc/sc_rtc.c").find("bk |= (uint8_t)(SC_RTC_TCE |")!=std::string::npos,
+                        "manual correction must preserve real contract and existing charger enable code");
                 mutants(in,sp,probes,pr);
             }else {
                 throws([&]{render_bringup_manual(in);},"missing required");throws([&]{render_scfw(in);},"missing required");
             }
-            frozen_mutants(in,dir);
+            frozen_mutants(in,dir,scratch/name/"compiled-frozen-mutations");
             std::cout<<name<<": typed facts, exact generated outputs, missing-input contracts passed\n";
         }
-        std::cout<<assertions<<" assertions passed\n";return 0;
+        std::cout<<assertions<<" assertions passed; "<<generated_c_units<<" generated C11 units compiled, "
+                 <<generated_c_maps<<" compiled contract address maps executed\n";return 0;
     }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}
 }

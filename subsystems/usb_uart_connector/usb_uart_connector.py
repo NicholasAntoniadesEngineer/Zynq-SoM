@@ -23,32 +23,3 @@ CC_PINS = (("R1", "J1.CC1"), ("R2", "J1.CC2"))
 def circuit(meta: Meta | dict | None = None) -> Circuit:
     from schgen.core.authoring import circuit as _native_circuit
     return _native_circuit('usb_uart_connector', meta)
-
-
-def _legacy_circuit(meta: Meta | dict | None = None) -> Circuit:
-    meta = Meta(meta)
-    c = Circuit("usb_uart_connector", "USB-C UFP console port -> CP2102N")
-    c.use_part("TYPE-C-31-M-12", ref="J1")
-    c.use_part("USBLC6-2SC6", ref="U1")
-
-    c.part("C1", "Device:C", UART_CONN_VBUS_BULK, C0805, LCSC=LCSC_10U)
-    c.port("VBUS", "J1.VBUS", "U1.5", "C1.1", **meta.expect_kw("VBUS"))
-    c.net("GND", "C1.2")
-
-    c.net("USB_UART_DP_CONN", "J1.DP1", "J1.DP2", "U1.1")
-    c.net("USB_UART_DM_CONN", "J1.DN1", "J1.DN2", "U1.3")
-    c.port("USB_DP", "U1.6", **meta.expect_kw("USB_DP"))
-    c.port("USB_DM", "U1.4", **meta.expect_kw("USB_DM"))
-    c.port_type("USB_DP", kind="usb_hs_pair", pair_with="USB_DM")
-    c.net("GND", "U1.2")
-
-    for ref, cc in CC_PINS:
-        c.part(ref, "Device:R", UART_CONN_CC_RD, R0603, LCSC=LCSC_RD)
-        c.net(f"USB_UART_{ref}_CC", f"{ref}.1", cc)
-        c.net("GND", f"{ref}.2")
-
-    c.net("CHASSIS_GND", "J1.EH")
-    c.net("GND", "J1.GND")
-    c.nc("J1.SBU1", "J1.SBU2")
-
-    return meta.finish(c)

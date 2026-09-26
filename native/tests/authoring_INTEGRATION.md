@@ -151,12 +151,13 @@ results, including custom names/titles and edited maps/current budgets.
 `Circuit.bind` and `mounting_hole` use native edits while retaining borrowed
 `Part`/`Net` identity, pin lists, counter reservations and failed-edit rollback.
 
-Legacy constructor/helper bodies remain under explicit `_legacy_*` names for
-equivalence checks and the existing Python-source component-basis census. They
-are not production fallbacks. Do not delete them or their module-level basis
-declarations until that census has a native implementation and equivalence has
-been validated. The generic Python `Circuit` DSL outside bind/mount remains a
-compatibility surface; production library/project constructors execute C++.
+The 64 inactive `_legacy_*` constructor/helper bodies have now been removed
+after native component-basis/provenance integration and fixture equivalence
+validation. Module-level public constants and basis declarations remain intact.
+The default census checks live C++ IR against independent native engineering
+declarations; see `component_basis_INTEGRATION.md`. The generic Python `Circuit`
+DSL outside bind/mount remains a compatibility surface; production
+library/project constructors execute C++.
 
 Verification and immutable fixtures
 -----------------------------------

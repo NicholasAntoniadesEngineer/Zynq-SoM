@@ -38,38 +38,3 @@ CHANNELS = [(0,   2,   3,   23,  22,  24,  1),
 def circuit(meta: Meta | dict | None = None) -> Circuit:
     from schgen.core.authoring import circuit as _native_circuit
     return _native_circuit('ethernet', meta)
-
-
-def _legacy_circuit(meta: Meta | dict | None = None) -> Circuit:
-    meta = Meta(meta)
-    c = Circuit("ethernet", "Ethernet: HX5008NL magnetics + Bob-Smith")
-    t1 = c.use_part("HX5008NLT", ref="T1")
-    t1.fields["ALT_LCSC"] = "C47575004"
-
-    for ch, td_p, td_n, mx_p, mx_n, _mct, tct in CHANNELS:
-        c.port(f"MDI{ch}_P", f"T1.{td_p}")
-        c.port(f"MDI{ch}_N", f"T1.{td_n}")
-        c.port(f"MX{ch}_P", f"T1.{mx_p}")
-        c.port(f"MX{ch}_N", f"T1.{mx_n}")
-        c.nc(f"T1.{tct}")
-
-    for n in range(4):
-        c.port_type(f"MDI{n}_P", kind="diff_pair",
-                    pair_with=f"MDI{n}_N", impedance=PAIR_IMPEDANCE)
-        c.port_type(f"MX{n}_P", kind="diff_pair",
-                    pair_with=f"MX{n}_N", impedance=PAIR_IMPEDANCE,
-                    **meta.expect_kw(f"MX{n}_P"))
-
-    for ch, _td_p, _td_n, _mx_p, _mx_n, mct, _tct in CHANNELS:
-        c.part(f"R{ch + 1}", "Device:R", ETHERNET_BOB_SMITH_R, R_FP,
-               LCSC=LCSC_BOB_SMITH_R)
-        c.part(f"C{ch + 1}", "Device:C", ETHERNET_BOB_SMITH_C, C_FP,
-               LCSC=LCSC_BOB_SMITH_C)
-        c.net(f"MCT{ch + 1}", f"T1.{mct}", f"R{ch + 1}.1", f"C{ch + 1}.1")
-        c.net("BS_COMMON", f"R{ch + 1}.2", f"C{ch + 1}.2")
-
-    c.part("C5", "Device:C", ETHERNET_BOB_SMITH_C, C_FP,
-           LCSC=LCSC_BOB_SMITH_C)
-    c.net("BS_COMMON", "C5.1")
-    c.net("CHASSIS_GND", "C5.2")
-    return meta.finish(c)

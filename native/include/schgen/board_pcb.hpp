@@ -5,6 +5,7 @@
 
 namespace schgen {
 struct BoardPcbStage {
+    std::vector<ProjectCircuit> circuits;
     PcbPlacementInput inputs;
     PcbPlacementResult placement;
     PcbEmissionResult emission;

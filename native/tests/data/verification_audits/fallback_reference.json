@@ -1,0 +1,958 @@
+{
+  "fallback": [
+    {
+      "baseline": null,
+      "census": {
+        "a": 2,
+        "b": 0
+      },
+      "result": {
+        "ok": true,
+        "pinned": true,
+        "n_names": 2,
+        "n_fired": 1,
+        "regressions": []
+      },
+      "summary": "FALLBACK RATCHET: PASS — 2 registered paths, 1 firing (baseline PINNED this build)",
+      "after": "{\n \"counts\": {\n  \"a\": 2,\n  \"b\": 0\n },\n \"note\": \"fallback ratchet ceilings \\u2014 a build whose count EXCEEDS its ceiling FAILS; ceilings only ever DECREASE (pinned from a measured build, reviewed in git). A name absent here is allowed zero firings.\"\n}\n"
+    },
+    {
+      "baseline": null,
+      "census": {
+        "a": 4,
+        "b": 0,
+        "new": 1
+      },
+      "result": {
+        "ok": true,
+        "pinned": true,
+        "n_names": 3,
+        "n_fired": 2,
+        "regressions": []
+      },
+      "summary": "FALLBACK RATCHET: PASS — 3 registered paths, 2 firing (baseline PINNED this build)",
+      "after": "{\n \"counts\": {\n  \"a\": 4,\n  \"b\": 0,\n  \"new\": 1\n },\n \"note\": \"fallback ratchet ceilings \\u2014 a build whose count EXCEEDS its ceiling FAILS; ceilings only ever DECREASE (pinned from a measured build, reviewed in git). A name absent here is allowed zero firings.\"\n}\n"
+    },
+    {
+      "baseline": null,
+      "census": {
+        "a": 0
+      },
+      "result": {
+        "ok": true,
+        "pinned": true,
+        "n_names": 1,
+        "n_fired": 0,
+        "regressions": []
+      },
+      "summary": "FALLBACK RATCHET: PASS — 1 registered paths, 0 firing (baseline PINNED this build)",
+      "after": "{\n \"counts\": {\n  \"a\": 0\n },\n \"note\": \"fallback ratchet ceilings \\u2014 a build whose count EXCEEDS its ceiling FAILS; ceilings only ever DECREASE (pinned from a measured build, reviewed in git). A name absent here is allowed zero firings.\"\n}\n"
+    },
+    {
+      "baseline": null,
+      "census": {},
+      "result": {
+        "ok": true,
+        "pinned": true,
+        "n_names": 0,
+        "n_fired": 0,
+        "regressions": []
+      },
+      "summary": "FALLBACK RATCHET: PASS — 0 registered paths, 0 firing (baseline PINNED this build)",
+      "after": "{\n \"counts\": {},\n \"note\": \"fallback ratchet ceilings \\u2014 a build whose count EXCEEDS its ceiling FAILS; ceilings only ever DECREASE (pinned from a measured build, reviewed in git). A name absent here is allowed zero firings.\"\n}\n"
+    },
+    {
+      "baseline": null,
+      "census": {
+        "é": 2,
+        "a": 3
+      },
+      "result": {
+        "ok": true,
+        "pinned": true,
+        "n_names": 2,
+        "n_fired": 2,
+        "regressions": []
+      },
+      "summary": "FALLBACK RATCHET: PASS — 2 registered paths, 2 firing (baseline PINNED this build)",
+      "after": "{\n \"counts\": {\n  \"a\": 3,\n  \"\\u00e9\": 2\n },\n \"note\": \"fallback ratchet ceilings \\u2014 a build whose count EXCEEDS its ceiling FAILS; ceilings only ever DECREASE (pinned from a measured build, reviewed in git). A name absent here is allowed zero firings.\"\n}\n"
+    },
+    {
+      "baseline": "{broken",
+      "census": {
+        "a": 2,
+        "b": 0
+      },
+      "result": {
+        "ok": true,
+        "pinned": true,
+        "n_names": 2,
+        "n_fired": 1,
+        "regressions": []
+      },
+      "summary": "FALLBACK RATCHET: PASS — 2 registered paths, 1 firing (baseline PINNED this build)",
+      "after": "{\n \"counts\": {\n  \"a\": 2,\n  \"b\": 0\n },\n \"note\": \"fallback ratchet ceilings \\u2014 a build whose count EXCEEDS its ceiling FAILS; ceilings only ever DECREASE (pinned from a measured build, reviewed in git). A name absent here is allowed zero firings.\"\n}\n"
+    },
+    {
+      "baseline": "{broken",
+      "census": {
+        "a": 4,
+        "b": 0,
+        "new": 1
+      },
+      "result": {
+        "ok": true,
+        "pinned": true,
+        "n_names": 3,
+        "n_fired": 2,
+        "regressions": []
+      },
+      "summary": "FALLBACK RATCHET: PASS — 3 registered paths, 2 firing (baseline PINNED this build)",
+      "after": "{\n \"counts\": {\n  \"a\": 4,\n  \"b\": 0,\n  \"new\": 1\n },\n \"note\": \"fallback ratchet ceilings \\u2014 a build whose count EXCEEDS its ceiling FAILS; ceilings only ever DECREASE (pinned from a measured build, reviewed in git). A name absent here is allowed zero firings.\"\n}\n"
+    },
+    {
+      "baseline": "{broken",
+      "census": {
+        "a": 0
+      },
+      "result": {
+        "ok": true,
+        "pinned": true,
+        "n_names": 1,
+        "n_fired": 0,
+        "regressions": []
+      },
+      "summary": "FALLBACK RATCHET: PASS — 1 registered paths, 0 firing (baseline PINNED this build)",
+      "after": "{\n \"counts\": {\n  \"a\": 0\n },\n \"note\": \"fallback ratchet ceilings \\u2014 a build whose count EXCEEDS its ceiling FAILS; ceilings only ever DECREASE (pinned from a measured build, reviewed in git). A name absent here is allowed zero firings.\"\n}\n"
+    },
+    {
+      "baseline": "{broken",
+      "census": {},
+      "result": {
+        "ok": true,
+        "pinned": true,
+        "n_names": 0,
+        "n_fired": 0,
+        "regressions": []
+      },
+      "summary": "FALLBACK RATCHET: PASS — 0 registered paths, 0 firing (baseline PINNED this build)",
+      "after": "{\n \"counts\": {},\n \"note\": \"fallback ratchet ceilings \\u2014 a build whose count EXCEEDS its ceiling FAILS; ceilings only ever DECREASE (pinned from a measured build, reviewed in git). A name absent here is allowed zero firings.\"\n}\n"
+    },
+    {
+      "baseline": "{broken",
+      "census": {
+        "é": 2,
+        "a": 3
+      },
+      "result": {
+        "ok": true,
+        "pinned": true,
+        "n_names": 2,
+        "n_fired": 2,
+        "regressions": []
+      },
+      "summary": "FALLBACK RATCHET: PASS — 2 registered paths, 2 firing (baseline PINNED this build)",
+      "after": "{\n \"counts\": {\n  \"a\": 3,\n  \"\\u00e9\": 2\n },\n \"note\": \"fallback ratchet ceilings \\u2014 a build whose count EXCEEDS its ceiling FAILS; ceilings only ever DECREASE (pinned from a measured build, reviewed in git). A name absent here is allowed zero firings.\"\n}\n"
+    },
+    {
+      "baseline": "{}",
+      "census": {
+        "a": 2,
+        "b": 0
+      },
+      "result": {
+        "ok": true,
+        "pinned": true,
+        "n_names": 2,
+        "n_fired": 1,
+        "regressions": []
+      },
+      "summary": "FALLBACK RATCHET: PASS — 2 registered paths, 1 firing (baseline PINNED this build)",
+      "after": "{\n \"counts\": {\n  \"a\": 2,\n  \"b\": 0\n },\n \"note\": \"fallback ratchet ceilings \\u2014 a build whose count EXCEEDS its ceiling FAILS; ceilings only ever DECREASE (pinned from a measured build, reviewed in git). A name absent here is allowed zero firings.\"\n}\n"
+    },
+    {
+      "baseline": "{}",
+      "census": {
+        "a": 4,
+        "b": 0,
+        "new": 1
+      },
+      "result": {
+        "ok": true,
+        "pinned": true,
+        "n_names": 3,
+        "n_fired": 2,
+        "regressions": []
+      },
+      "summary": "FALLBACK RATCHET: PASS — 3 registered paths, 2 firing (baseline PINNED this build)",
+      "after": "{\n \"counts\": {\n  \"a\": 4,\n  \"b\": 0,\n  \"new\": 1\n },\n \"note\": \"fallback ratchet ceilings \\u2014 a build whose count EXCEEDS its ceiling FAILS; ceilings only ever DECREASE (pinned from a measured build, reviewed in git). A name absent here is allowed zero firings.\"\n}\n"
+    },
+    {
+      "baseline": "{}",
+      "census": {
+        "a": 0
+      },
+      "result": {
+        "ok": true,
+        "pinned": true,
+        "n_names": 1,
+        "n_fired": 0,
+        "regressions": []
+      },
+      "summary": "FALLBACK RATCHET: PASS — 1 registered paths, 0 firing (baseline PINNED this build)",
+      "after": "{\n \"counts\": {\n  \"a\": 0\n },\n \"note\": \"fallback ratchet ceilings \\u2014 a build whose count EXCEEDS its ceiling FAILS; ceilings only ever DECREASE (pinned from a measured build, reviewed in git). A name absent here is allowed zero firings.\"\n}\n"
+    },
+    {
+      "baseline": "{}",
+      "census": {},
+      "result": {
+        "ok": true,
+        "pinned": true,
+        "n_names": 0,
+        "n_fired": 0,
+        "regressions": []
+      },
+      "summary": "FALLBACK RATCHET: PASS — 0 registered paths, 0 firing (baseline PINNED this build)",
+      "after": "{\n \"counts\": {},\n \"note\": \"fallback ratchet ceilings \\u2014 a build whose count EXCEEDS its ceiling FAILS; ceilings only ever DECREASE (pinned from a measured build, reviewed in git). A name absent here is allowed zero firings.\"\n}\n"
+    },
+    {
+      "baseline": "{}",
+      "census": {
+        "é": 2,
+        "a": 3
+      },
+      "result": {
+        "ok": true,
+        "pinned": true,
+        "n_names": 2,
+        "n_fired": 2,
+        "regressions": []
+      },
+      "summary": "FALLBACK RATCHET: PASS — 2 registered paths, 2 firing (baseline PINNED this build)",
+      "after": "{\n \"counts\": {\n  \"a\": 3,\n  \"\\u00e9\": 2\n },\n \"note\": \"fallback ratchet ceilings \\u2014 a build whose count EXCEEDS its ceiling FAILS; ceilings only ever DECREASE (pinned from a measured build, reviewed in git). A name absent here is allowed zero firings.\"\n}\n"
+    },
+    {
+      "baseline": "{\"counts\": {\"a\": 3, \"b\": 1}}",
+      "census": {
+        "a": 2,
+        "b": 0
+      },
+      "result": {
+        "ok": true,
+        "pinned": false,
+        "n_names": 2,
+        "n_fired": 1,
+        "regressions": []
+      },
+      "summary": "FALLBACK RATCHET: PASS — 2 registered paths, 1 firing",
+      "after": "{\n \"counts\": {\n  \"a\": 2,\n  \"b\": 0\n },\n \"note\": \"fallback ratchet ceilings \\u2014 a build whose count EXCEEDS its ceiling FAILS; ceilings only ever DECREASE (pinned from a measured build, reviewed in git). A name absent here is allowed zero firings.\"\n}\n"
+    },
+    {
+      "baseline": "{\"counts\": {\"a\": 3, \"b\": 1}}",
+      "census": {
+        "a": 4,
+        "b": 0,
+        "new": 1
+      },
+      "result": {
+        "ok": false,
+        "pinned": false,
+        "n_names": 3,
+        "n_fired": 2,
+        "regressions": [
+          "a: fired 4 > baseline 3 — a degraded path bound more often than the committed ceiling",
+          "new: fired 1 > baseline 0 — a degraded path bound more often than the committed ceiling"
+        ]
+      },
+      "summary": "FALLBACK RATCHET: FAIL — 3 registered paths, 2 firing\n  REGRESSION: a: fired 4 > baseline 3 — a degraded path bound more often than the committed ceiling\n  REGRESSION: new: fired 1 > baseline 0 — a degraded path bound more often than the committed ceiling",
+      "after": "{\"counts\": {\"a\": 3, \"b\": 1}}"
+    },
+    {
+      "baseline": "{\"counts\": {\"a\": 3, \"b\": 1}}",
+      "census": {
+        "a": 0
+      },
+      "result": {
+        "ok": true,
+        "pinned": false,
+        "n_names": 1,
+        "n_fired": 0,
+        "regressions": []
+      },
+      "summary": "FALLBACK RATCHET: PASS — 1 registered paths, 0 firing",
+      "after": "{\n \"counts\": {\n  \"a\": 0,\n  \"b\": 0\n },\n \"note\": \"fallback ratchet ceilings \\u2014 a build whose count EXCEEDS its ceiling FAILS; ceilings only ever DECREASE (pinned from a measured build, reviewed in git). A name absent here is allowed zero firings.\"\n}\n"
+    },
+    {
+      "baseline": "{\"counts\": {\"a\": 3, \"b\": 1}}",
+      "census": {},
+      "result": {
+        "ok": true,
+        "pinned": false,
+        "n_names": 0,
+        "n_fired": 0,
+        "regressions": []
+      },
+      "summary": "FALLBACK RATCHET: PASS — 0 registered paths, 0 firing",
+      "after": "{\n \"counts\": {\n  \"a\": 0,\n  \"b\": 0\n },\n \"note\": \"fallback ratchet ceilings \\u2014 a build whose count EXCEEDS its ceiling FAILS; ceilings only ever DECREASE (pinned from a measured build, reviewed in git). A name absent here is allowed zero firings.\"\n}\n"
+    },
+    {
+      "baseline": "{\"counts\": {\"a\": 3, \"b\": 1}}",
+      "census": {
+        "é": 2,
+        "a": 3
+      },
+      "result": {
+        "ok": false,
+        "pinned": false,
+        "n_names": 2,
+        "n_fired": 2,
+        "regressions": [
+          "é: fired 2 > baseline 0 — a degraded path bound more often than the committed ceiling"
+        ]
+      },
+      "summary": "FALLBACK RATCHET: FAIL — 2 registered paths, 2 firing\n  REGRESSION: é: fired 2 > baseline 0 — a degraded path bound more often than the committed ceiling",
+      "after": "{\"counts\": {\"a\": 3, \"b\": 1}}"
+    },
+    {
+      "baseline": "{\"counts\": {\"a\": \"  +3_0 \", \"b\": true, \"c\": 2.9}}",
+      "census": {
+        "a": 2,
+        "b": 0
+      },
+      "result": {
+        "ok": true,
+        "pinned": false,
+        "n_names": 2,
+        "n_fired": 1,
+        "regressions": []
+      },
+      "summary": "FALLBACK RATCHET: PASS — 2 registered paths, 1 firing",
+      "after": "{\n \"counts\": {\n  \"a\": 2,\n  \"b\": 0,\n  \"c\": 0\n },\n \"note\": \"fallback ratchet ceilings \\u2014 a build whose count EXCEEDS its ceiling FAILS; ceilings only ever DECREASE (pinned from a measured build, reviewed in git). A name absent here is allowed zero firings.\"\n}\n"
+    },
+    {
+      "baseline": "{\"counts\": {\"a\": \"  +3_0 \", \"b\": true, \"c\": 2.9}}",
+      "census": {
+        "a": 4,
+        "b": 0,
+        "new": 1
+      },
+      "result": {
+        "ok": false,
+        "pinned": false,
+        "n_names": 3,
+        "n_fired": 2,
+        "regressions": [
+          "new: fired 1 > baseline 0 — a degraded path bound more often than the committed ceiling"
+        ]
+      },
+      "summary": "FALLBACK RATCHET: FAIL — 3 registered paths, 2 firing\n  REGRESSION: new: fired 1 > baseline 0 — a degraded path bound more often than the committed ceiling",
+      "after": "{\"counts\": {\"a\": \"  +3_0 \", \"b\": true, \"c\": 2.9}}"
+    },
+    {
+      "baseline": "{\"counts\": {\"a\": \"  +3_0 \", \"b\": true, \"c\": 2.9}}",
+      "census": {
+        "a": 0
+      },
+      "result": {
+        "ok": true,
+        "pinned": false,
+        "n_names": 1,
+        "n_fired": 0,
+        "regressions": []
+      },
+      "summary": "FALLBACK RATCHET: PASS — 1 registered paths, 0 firing",
+      "after": "{\n \"counts\": {\n  \"a\": 0,\n  \"b\": 0,\n  \"c\": 0\n },\n \"note\": \"fallback ratchet ceilings \\u2014 a build whose count EXCEEDS its ceiling FAILS; ceilings only ever DECREASE (pinned from a measured build, reviewed in git). A name absent here is allowed zero firings.\"\n}\n"
+    },
+    {
+      "baseline": "{\"counts\": {\"a\": \"  +3_0 \", \"b\": true, \"c\": 2.9}}",
+      "census": {},
+      "result": {
+        "ok": true,
+        "pinned": false,
+        "n_names": 0,
+        "n_fired": 0,
+        "regressions": []
+      },
+      "summary": "FALLBACK RATCHET: PASS — 0 registered paths, 0 firing",
+      "after": "{\n \"counts\": {\n  \"a\": 0,\n  \"b\": 0,\n  \"c\": 0\n },\n \"note\": \"fallback ratchet ceilings \\u2014 a build whose count EXCEEDS its ceiling FAILS; ceilings only ever DECREASE (pinned from a measured build, reviewed in git). A name absent here is allowed zero firings.\"\n}\n"
+    },
+    {
+      "baseline": "{\"counts\": {\"a\": \"  +3_0 \", \"b\": true, \"c\": 2.9}}",
+      "census": {
+        "é": 2,
+        "a": 3
+      },
+      "result": {
+        "ok": false,
+        "pinned": false,
+        "n_names": 2,
+        "n_fired": 2,
+        "regressions": [
+          "é: fired 2 > baseline 0 — a degraded path bound more often than the committed ceiling"
+        ]
+      },
+      "summary": "FALLBACK RATCHET: FAIL — 2 registered paths, 2 firing\n  REGRESSION: é: fired 2 > baseline 0 — a degraded path bound more often than the committed ceiling",
+      "after": "{\"counts\": {\"a\": \"  +3_0 \", \"b\": true, \"c\": 2.9}}"
+    },
+    {
+      "baseline": "{\"counts\": {\"a\": null}}",
+      "census": {
+        "a": 2,
+        "b": 0
+      },
+      "result": {
+        "ok": true,
+        "pinned": true,
+        "n_names": 2,
+        "n_fired": 1,
+        "regressions": []
+      },
+      "summary": "FALLBACK RATCHET: PASS — 2 registered paths, 1 firing (baseline PINNED this build)",
+      "after": "{\n \"counts\": {\n  \"a\": 2,\n  \"b\": 0\n },\n \"note\": \"fallback ratchet ceilings \\u2014 a build whose count EXCEEDS its ceiling FAILS; ceilings only ever DECREASE (pinned from a measured build, reviewed in git). A name absent here is allowed zero firings.\"\n}\n"
+    },
+    {
+      "baseline": "{\"counts\": {\"a\": null}}",
+      "census": {
+        "a": 4,
+        "b": 0,
+        "new": 1
+      },
+      "result": {
+        "ok": true,
+        "pinned": true,
+        "n_names": 3,
+        "n_fired": 2,
+        "regressions": []
+      },
+      "summary": "FALLBACK RATCHET: PASS — 3 registered paths, 2 firing (baseline PINNED this build)",
+      "after": "{\n \"counts\": {\n  \"a\": 4,\n  \"b\": 0,\n  \"new\": 1\n },\n \"note\": \"fallback ratchet ceilings \\u2014 a build whose count EXCEEDS its ceiling FAILS; ceilings only ever DECREASE (pinned from a measured build, reviewed in git). A name absent here is allowed zero firings.\"\n}\n"
+    },
+    {
+      "baseline": "{\"counts\": {\"a\": null}}",
+      "census": {
+        "a": 0
+      },
+      "result": {
+        "ok": true,
+        "pinned": true,
+        "n_names": 1,
+        "n_fired": 0,
+        "regressions": []
+      },
+      "summary": "FALLBACK RATCHET: PASS — 1 registered paths, 0 firing (baseline PINNED this build)",
+      "after": "{\n \"counts\": {\n  \"a\": 0\n },\n \"note\": \"fallback ratchet ceilings \\u2014 a build whose count EXCEEDS its ceiling FAILS; ceilings only ever DECREASE (pinned from a measured build, reviewed in git). A name absent here is allowed zero firings.\"\n}\n"
+    },
+    {
+      "baseline": "{\"counts\": {\"a\": null}}",
+      "census": {},
+      "result": {
+        "ok": true,
+        "pinned": true,
+        "n_names": 0,
+        "n_fired": 0,
+        "regressions": []
+      },
+      "summary": "FALLBACK RATCHET: PASS — 0 registered paths, 0 firing (baseline PINNED this build)",
+      "after": "{\n \"counts\": {},\n \"note\": \"fallback ratchet ceilings \\u2014 a build whose count EXCEEDS its ceiling FAILS; ceilings only ever DECREASE (pinned from a measured build, reviewed in git). A name absent here is allowed zero firings.\"\n}\n"
+    },
+    {
+      "baseline": "{\"counts\": {\"a\": null}}",
+      "census": {
+        "é": 2,
+        "a": 3
+      },
+      "result": {
+        "ok": true,
+        "pinned": true,
+        "n_names": 2,
+        "n_fired": 2,
+        "regressions": []
+      },
+      "summary": "FALLBACK RATCHET: PASS — 2 registered paths, 2 firing (baseline PINNED this build)",
+      "after": "{\n \"counts\": {\n  \"a\": 3,\n  \"\\u00e9\": 2\n },\n \"note\": \"fallback ratchet ceilings \\u2014 a build whose count EXCEEDS its ceiling FAILS; ceilings only ever DECREASE (pinned from a measured build, reviewed in git). A name absent here is allowed zero firings.\"\n}\n"
+    },
+    {
+      "baseline": "{\"counts\": []}",
+      "census": {
+        "a": 2,
+        "b": 0
+      },
+      "result": {
+        "ok": true,
+        "pinned": true,
+        "n_names": 2,
+        "n_fired": 1,
+        "regressions": []
+      },
+      "summary": "FALLBACK RATCHET: PASS — 2 registered paths, 1 firing (baseline PINNED this build)",
+      "after": "{\n \"counts\": {\n  \"a\": 2,\n  \"b\": 0\n },\n \"note\": \"fallback ratchet ceilings \\u2014 a build whose count EXCEEDS its ceiling FAILS; ceilings only ever DECREASE (pinned from a measured build, reviewed in git). A name absent here is allowed zero firings.\"\n}\n"
+    },
+    {
+      "baseline": "{\"counts\": []}",
+      "census": {
+        "a": 4,
+        "b": 0,
+        "new": 1
+      },
+      "result": {
+        "ok": true,
+        "pinned": true,
+        "n_names": 3,
+        "n_fired": 2,
+        "regressions": []
+      },
+      "summary": "FALLBACK RATCHET: PASS — 3 registered paths, 2 firing (baseline PINNED this build)",
+      "after": "{\n \"counts\": {\n  \"a\": 4,\n  \"b\": 0,\n  \"new\": 1\n },\n \"note\": \"fallback ratchet ceilings \\u2014 a build whose count EXCEEDS its ceiling FAILS; ceilings only ever DECREASE (pinned from a measured build, reviewed in git). A name absent here is allowed zero firings.\"\n}\n"
+    },
+    {
+      "baseline": "{\"counts\": []}",
+      "census": {
+        "a": 0
+      },
+      "result": {
+        "ok": true,
+        "pinned": true,
+        "n_names": 1,
+        "n_fired": 0,
+        "regressions": []
+      },
+      "summary": "FALLBACK RATCHET: PASS — 1 registered paths, 0 firing (baseline PINNED this build)",
+      "after": "{\n \"counts\": {\n  \"a\": 0\n },\n \"note\": \"fallback ratchet ceilings \\u2014 a build whose count EXCEEDS its ceiling FAILS; ceilings only ever DECREASE (pinned from a measured build, reviewed in git). A name absent here is allowed zero firings.\"\n}\n"
+    },
+    {
+      "baseline": "{\"counts\": []}",
+      "census": {},
+      "result": {
+        "ok": true,
+        "pinned": true,
+        "n_names": 0,
+        "n_fired": 0,
+        "regressions": []
+      },
+      "summary": "FALLBACK RATCHET: PASS — 0 registered paths, 0 firing (baseline PINNED this build)",
+      "after": "{\n \"counts\": {},\n \"note\": \"fallback ratchet ceilings \\u2014 a build whose count EXCEEDS its ceiling FAILS; ceilings only ever DECREASE (pinned from a measured build, reviewed in git). A name absent here is allowed zero firings.\"\n}\n"
+    },
+    {
+      "baseline": "{\"counts\": []}",
+      "census": {
+        "é": 2,
+        "a": 3
+      },
+      "result": {
+        "ok": true,
+        "pinned": true,
+        "n_names": 2,
+        "n_fired": 2,
+        "regressions": []
+      },
+      "summary": "FALLBACK RATCHET: PASS — 2 registered paths, 2 firing (baseline PINNED this build)",
+      "after": "{\n \"counts\": {\n  \"a\": 3,\n  \"\\u00e9\": 2\n },\n \"note\": \"fallback ratchet ceilings \\u2014 a build whose count EXCEEDS its ceiling FAILS; ceilings only ever DECREASE (pinned from a measured build, reviewed in git). A name absent here is allowed zero firings.\"\n}\n"
+    },
+    {
+      "baseline": "{\"counts\": {\"a\": -2}}",
+      "census": {
+        "a": 2,
+        "b": 0
+      },
+      "result": {
+        "ok": false,
+        "pinned": false,
+        "n_names": 2,
+        "n_fired": 1,
+        "regressions": [
+          "a: fired 2 > baseline -2 — a degraded path bound more often than the committed ceiling"
+        ]
+      },
+      "summary": "FALLBACK RATCHET: FAIL — 2 registered paths, 1 firing\n  REGRESSION: a: fired 2 > baseline -2 — a degraded path bound more often than the committed ceiling",
+      "after": "{\"counts\": {\"a\": -2}}"
+    },
+    {
+      "baseline": "{\"counts\": {\"a\": -2}}",
+      "census": {
+        "a": 4,
+        "b": 0,
+        "new": 1
+      },
+      "result": {
+        "ok": false,
+        "pinned": false,
+        "n_names": 3,
+        "n_fired": 2,
+        "regressions": [
+          "a: fired 4 > baseline -2 — a degraded path bound more often than the committed ceiling",
+          "new: fired 1 > baseline 0 — a degraded path bound more often than the committed ceiling"
+        ]
+      },
+      "summary": "FALLBACK RATCHET: FAIL — 3 registered paths, 2 firing\n  REGRESSION: a: fired 4 > baseline -2 — a degraded path bound more often than the committed ceiling\n  REGRESSION: new: fired 1 > baseline 0 — a degraded path bound more often than the committed ceiling",
+      "after": "{\"counts\": {\"a\": -2}}"
+    },
+    {
+      "baseline": "{\"counts\": {\"a\": -2}}",
+      "census": {
+        "a": 0
+      },
+      "result": {
+        "ok": false,
+        "pinned": false,
+        "n_names": 1,
+        "n_fired": 0,
+        "regressions": [
+          "a: fired 0 > baseline -2 — a degraded path bound more often than the committed ceiling"
+        ]
+      },
+      "summary": "FALLBACK RATCHET: FAIL — 1 registered paths, 0 firing\n  REGRESSION: a: fired 0 > baseline -2 — a degraded path bound more often than the committed ceiling",
+      "after": "{\"counts\": {\"a\": -2}}"
+    },
+    {
+      "baseline": "{\"counts\": {\"a\": -2}}",
+      "census": {},
+      "result": {
+        "ok": true,
+        "pinned": false,
+        "n_names": 0,
+        "n_fired": 0,
+        "regressions": []
+      },
+      "summary": "FALLBACK RATCHET: PASS — 0 registered paths, 0 firing",
+      "after": "{\"counts\": {\"a\": -2}}"
+    },
+    {
+      "baseline": "{\"counts\": {\"a\": -2}}",
+      "census": {
+        "é": 2,
+        "a": 3
+      },
+      "result": {
+        "ok": false,
+        "pinned": false,
+        "n_names": 2,
+        "n_fired": 2,
+        "regressions": [
+          "a: fired 3 > baseline -2 — a degraded path bound more often than the committed ceiling",
+          "é: fired 2 > baseline 0 — a degraded path bound more often than the committed ceiling"
+        ]
+      },
+      "summary": "FALLBACK RATCHET: FAIL — 2 registered paths, 2 firing\n  REGRESSION: a: fired 3 > baseline -2 — a degraded path bound more often than the committed ceiling\n  REGRESSION: é: fired 2 > baseline 0 — a degraded path bound more often than the committed ceiling",
+      "after": "{\"counts\": {\"a\": -2}}"
+    },
+    {
+      "baseline": "{\"counts\": {\"é\": \"٣\", \"a\": 3}}",
+      "census": {
+        "a": 2,
+        "b": 0
+      },
+      "result": {
+        "ok": true,
+        "pinned": false,
+        "n_names": 2,
+        "n_fired": 1,
+        "regressions": []
+      },
+      "summary": "FALLBACK RATCHET: PASS — 2 registered paths, 1 firing",
+      "after": "{\n \"counts\": {\n  \"a\": 2,\n  \"\\u00e9\": 0\n },\n \"note\": \"fallback ratchet ceilings \\u2014 a build whose count EXCEEDS its ceiling FAILS; ceilings only ever DECREASE (pinned from a measured build, reviewed in git). A name absent here is allowed zero firings.\"\n}\n"
+    },
+    {
+      "baseline": "{\"counts\": {\"é\": \"٣\", \"a\": 3}}",
+      "census": {
+        "a": 4,
+        "b": 0,
+        "new": 1
+      },
+      "result": {
+        "ok": false,
+        "pinned": false,
+        "n_names": 3,
+        "n_fired": 2,
+        "regressions": [
+          "a: fired 4 > baseline 3 — a degraded path bound more often than the committed ceiling",
+          "new: fired 1 > baseline 0 — a degraded path bound more often than the committed ceiling"
+        ]
+      },
+      "summary": "FALLBACK RATCHET: FAIL — 3 registered paths, 2 firing\n  REGRESSION: a: fired 4 > baseline 3 — a degraded path bound more often than the committed ceiling\n  REGRESSION: new: fired 1 > baseline 0 — a degraded path bound more often than the committed ceiling",
+      "after": "{\"counts\": {\"é\": \"٣\", \"a\": 3}}"
+    },
+    {
+      "baseline": "{\"counts\": {\"é\": \"٣\", \"a\": 3}}",
+      "census": {
+        "a": 0
+      },
+      "result": {
+        "ok": true,
+        "pinned": false,
+        "n_names": 1,
+        "n_fired": 0,
+        "regressions": []
+      },
+      "summary": "FALLBACK RATCHET: PASS — 1 registered paths, 0 firing",
+      "after": "{\n \"counts\": {\n  \"a\": 0,\n  \"\\u00e9\": 0\n },\n \"note\": \"fallback ratchet ceilings \\u2014 a build whose count EXCEEDS its ceiling FAILS; ceilings only ever DECREASE (pinned from a measured build, reviewed in git). A name absent here is allowed zero firings.\"\n}\n"
+    },
+    {
+      "baseline": "{\"counts\": {\"é\": \"٣\", \"a\": 3}}",
+      "census": {},
+      "result": {
+        "ok": true,
+        "pinned": false,
+        "n_names": 0,
+        "n_fired": 0,
+        "regressions": []
+      },
+      "summary": "FALLBACK RATCHET: PASS — 0 registered paths, 0 firing",
+      "after": "{\n \"counts\": {\n  \"a\": 0,\n  \"\\u00e9\": 0\n },\n \"note\": \"fallback ratchet ceilings \\u2014 a build whose count EXCEEDS its ceiling FAILS; ceilings only ever DECREASE (pinned from a measured build, reviewed in git). A name absent here is allowed zero firings.\"\n}\n"
+    },
+    {
+      "baseline": "{\"counts\": {\"é\": \"٣\", \"a\": 3}}",
+      "census": {
+        "é": 2,
+        "a": 3
+      },
+      "result": {
+        "ok": true,
+        "pinned": false,
+        "n_names": 2,
+        "n_fired": 2,
+        "regressions": []
+      },
+      "summary": "FALLBACK RATCHET: PASS — 2 registered paths, 2 firing",
+      "after": "{\n \"counts\": {\n  \"a\": 3,\n  \"\\u00e9\": 2\n },\n \"note\": \"fallback ratchet ceilings \\u2014 a build whose count EXCEEDS its ceiling FAILS; ceilings only ever DECREASE (pinned from a measured build, reviewed in git). A name absent here is allowed zero firings.\"\n}\n"
+    },
+    {
+      "baseline": "{\"counts\": {\"a\": 9223372036854775808}}",
+      "census": {
+        "a": 2,
+        "b": 0
+      },
+      "result": {
+        "ok": true,
+        "pinned": false,
+        "n_names": 2,
+        "n_fired": 1,
+        "regressions": []
+      },
+      "summary": "FALLBACK RATCHET: PASS — 2 registered paths, 1 firing",
+      "after": "{\n \"counts\": {\n  \"a\": 2\n },\n \"note\": \"fallback ratchet ceilings \\u2014 a build whose count EXCEEDS its ceiling FAILS; ceilings only ever DECREASE (pinned from a measured build, reviewed in git). A name absent here is allowed zero firings.\"\n}\n"
+    },
+    {
+      "baseline": "{\"counts\": {\"a\": 9223372036854775808}}",
+      "census": {
+        "a": 4,
+        "b": 0,
+        "new": 1
+      },
+      "result": {
+        "ok": false,
+        "pinned": false,
+        "n_names": 3,
+        "n_fired": 2,
+        "regressions": [
+          "new: fired 1 > baseline 0 — a degraded path bound more often than the committed ceiling"
+        ]
+      },
+      "summary": "FALLBACK RATCHET: FAIL — 3 registered paths, 2 firing\n  REGRESSION: new: fired 1 > baseline 0 — a degraded path bound more often than the committed ceiling",
+      "after": "{\"counts\": {\"a\": 9223372036854775808}}"
+    },
+    {
+      "baseline": "{\"counts\": {\"a\": 9223372036854775808}}",
+      "census": {
+        "a": 0
+      },
+      "result": {
+        "ok": true,
+        "pinned": false,
+        "n_names": 1,
+        "n_fired": 0,
+        "regressions": []
+      },
+      "summary": "FALLBACK RATCHET: PASS — 1 registered paths, 0 firing",
+      "after": "{\n \"counts\": {\n  \"a\": 0\n },\n \"note\": \"fallback ratchet ceilings \\u2014 a build whose count EXCEEDS its ceiling FAILS; ceilings only ever DECREASE (pinned from a measured build, reviewed in git). A name absent here is allowed zero firings.\"\n}\n"
+    },
+    {
+      "baseline": "{\"counts\": {\"a\": 9223372036854775808}}",
+      "census": {},
+      "result": {
+        "ok": true,
+        "pinned": false,
+        "n_names": 0,
+        "n_fired": 0,
+        "regressions": []
+      },
+      "summary": "FALLBACK RATCHET: PASS — 0 registered paths, 0 firing",
+      "after": "{\n \"counts\": {\n  \"a\": 0\n },\n \"note\": \"fallback ratchet ceilings \\u2014 a build whose count EXCEEDS its ceiling FAILS; ceilings only ever DECREASE (pinned from a measured build, reviewed in git). A name absent here is allowed zero firings.\"\n}\n"
+    },
+    {
+      "baseline": "{\"counts\": {\"a\": 9223372036854775808}}",
+      "census": {
+        "é": 2,
+        "a": 3
+      },
+      "result": {
+        "ok": false,
+        "pinned": false,
+        "n_names": 2,
+        "n_fired": 2,
+        "regressions": [
+          "é: fired 2 > baseline 0 — a degraded path bound more often than the committed ceiling"
+        ]
+      },
+      "summary": "FALLBACK RATCHET: FAIL — 2 registered paths, 2 firing\n  REGRESSION: é: fired 2 > baseline 0 — a degraded path bound more often than the committed ceiling",
+      "after": "{\"counts\": {\"a\": 9223372036854775808}}"
+    },
+    {
+      "baseline": "{\"counts\": {\"a\": 1e100}}",
+      "census": {
+        "a": 2,
+        "b": 0
+      },
+      "result": {
+        "ok": true,
+        "pinned": false,
+        "n_names": 2,
+        "n_fired": 1,
+        "regressions": []
+      },
+      "summary": "FALLBACK RATCHET: PASS — 2 registered paths, 1 firing",
+      "after": "{\n \"counts\": {\n  \"a\": 2\n },\n \"note\": \"fallback ratchet ceilings \\u2014 a build whose count EXCEEDS its ceiling FAILS; ceilings only ever DECREASE (pinned from a measured build, reviewed in git). A name absent here is allowed zero firings.\"\n}\n"
+    },
+    {
+      "baseline": "{\"counts\": {\"a\": 1e100}}",
+      "census": {
+        "a": 4,
+        "b": 0,
+        "new": 1
+      },
+      "result": {
+        "ok": false,
+        "pinned": false,
+        "n_names": 3,
+        "n_fired": 2,
+        "regressions": [
+          "new: fired 1 > baseline 0 — a degraded path bound more often than the committed ceiling"
+        ]
+      },
+      "summary": "FALLBACK RATCHET: FAIL — 3 registered paths, 2 firing\n  REGRESSION: new: fired 1 > baseline 0 — a degraded path bound more often than the committed ceiling",
+      "after": "{\"counts\": {\"a\": 1e100}}"
+    },
+    {
+      "baseline": "{\"counts\": {\"a\": 1e100}}",
+      "census": {
+        "a": 0
+      },
+      "result": {
+        "ok": true,
+        "pinned": false,
+        "n_names": 1,
+        "n_fired": 0,
+        "regressions": []
+      },
+      "summary": "FALLBACK RATCHET: PASS — 1 registered paths, 0 firing",
+      "after": "{\n \"counts\": {\n  \"a\": 0\n },\n \"note\": \"fallback ratchet ceilings \\u2014 a build whose count EXCEEDS its ceiling FAILS; ceilings only ever DECREASE (pinned from a measured build, reviewed in git). A name absent here is allowed zero firings.\"\n}\n"
+    },
+    {
+      "baseline": "{\"counts\": {\"a\": 1e100}}",
+      "census": {},
+      "result": {
+        "ok": true,
+        "pinned": false,
+        "n_names": 0,
+        "n_fired": 0,
+        "regressions": []
+      },
+      "summary": "FALLBACK RATCHET: PASS — 0 registered paths, 0 firing",
+      "after": "{\n \"counts\": {\n  \"a\": 0\n },\n \"note\": \"fallback ratchet ceilings \\u2014 a build whose count EXCEEDS its ceiling FAILS; ceilings only ever DECREASE (pinned from a measured build, reviewed in git). A name absent here is allowed zero firings.\"\n}\n"
+    },
+    {
+      "baseline": "{\"counts\": {\"a\": 1e100}}",
+      "census": {
+        "é": 2,
+        "a": 3
+      },
+      "result": {
+        "ok": false,
+        "pinned": false,
+        "n_names": 2,
+        "n_fired": 2,
+        "regressions": [
+          "é: fired 2 > baseline 0 — a degraded path bound more often than the committed ceiling"
+        ]
+      },
+      "summary": "FALLBACK RATCHET: FAIL — 2 registered paths, 2 firing\n  REGRESSION: é: fired 2 > baseline 0 — a degraded path bound more often than the committed ceiling",
+      "after": "{\"counts\": {\"a\": 1e100}}"
+    },
+    {
+      "baseline": "{\"counts\": {\"a\": \"NaN\"}}",
+      "census": {
+        "a": 2,
+        "b": 0
+      },
+      "result": {
+        "ok": true,
+        "pinned": true,
+        "n_names": 2,
+        "n_fired": 1,
+        "regressions": []
+      },
+      "summary": "FALLBACK RATCHET: PASS — 2 registered paths, 1 firing (baseline PINNED this build)",
+      "after": "{\n \"counts\": {\n  \"a\": 2,\n  \"b\": 0\n },\n \"note\": \"fallback ratchet ceilings \\u2014 a build whose count EXCEEDS its ceiling FAILS; ceilings only ever DECREASE (pinned from a measured build, reviewed in git). A name absent here is allowed zero firings.\"\n}\n"
+    },
+    {
+      "baseline": "{\"counts\": {\"a\": \"NaN\"}}",
+      "census": {
+        "a": 4,
+        "b": 0,
+        "new": 1
+      },
+      "result": {
+        "ok": true,
+        "pinned": true,
+        "n_names": 3,
+        "n_fired": 2,
+        "regressions": []
+      },
+      "summary": "FALLBACK RATCHET: PASS — 3 registered paths, 2 firing (baseline PINNED this build)",
+      "after": "{\n \"counts\": {\n  \"a\": 4,\n  \"b\": 0,\n  \"new\": 1\n },\n \"note\": \"fallback ratchet ceilings \\u2014 a build whose count EXCEEDS its ceiling FAILS; ceilings only ever DECREASE (pinned from a measured build, reviewed in git). A name absent here is allowed zero firings.\"\n}\n"
+    },
+    {
+      "baseline": "{\"counts\": {\"a\": \"NaN\"}}",
+      "census": {
+        "a": 0
+      },
+      "result": {
+        "ok": true,
+        "pinned": true,
+        "n_names": 1,
+        "n_fired": 0,
+        "regressions": []
+      },
+      "summary": "FALLBACK RATCHET: PASS — 1 registered paths, 0 firing (baseline PINNED this build)",
+      "after": "{\n \"counts\": {\n  \"a\": 0\n },\n \"note\": \"fallback ratchet ceilings \\u2014 a build whose count EXCEEDS its ceiling FAILS; ceilings only ever DECREASE (pinned from a measured build, reviewed in git). A name absent here is allowed zero firings.\"\n}\n"
+    },
+    {
+      "baseline": "{\"counts\": {\"a\": \"NaN\"}}",
+      "census": {},
+      "result": {
+        "ok": true,
+        "pinned": true,
+        "n_names": 0,
+        "n_fired": 0,
+        "regressions": []
+      },
+      "summary": "FALLBACK RATCHET: PASS — 0 registered paths, 0 firing (baseline PINNED this build)",
+      "after": "{\n \"counts\": {},\n \"note\": \"fallback ratchet ceilings \\u2014 a build whose count EXCEEDS its ceiling FAILS; ceilings only ever DECREASE (pinned from a measured build, reviewed in git). A name absent here is allowed zero firings.\"\n}\n"
+    },
+    {
+      "baseline": "{\"counts\": {\"a\": \"NaN\"}}",
+      "census": {
+        "é": 2,
+        "a": 3
+      },
+      "result": {
+        "ok": true,
+        "pinned": true,
+        "n_names": 2,
+        "n_fired": 2,
+        "regressions": []
+      },
+      "summary": "FALLBACK RATCHET: PASS — 2 registered paths, 2 firing (baseline PINNED this build)",
+      "after": "{\n \"counts\": {\n  \"a\": 3,\n  \"\\u00e9\": 2\n },\n \"note\": \"fallback ratchet ceilings \\u2014 a build whose count EXCEEDS its ceiling FAILS; ceilings only ever DECREASE (pinned from a measured build, reviewed in git). A name absent here is allowed zero firings.\"\n}\n"
+    }
+  ]
+}

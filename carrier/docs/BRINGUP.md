@@ -202,8 +202,10 @@ Leave it OFF unless you need the board services below.
    AUX devices are cut off from `STM32_I2C2` until this rail is up (no
    back-powering). On the AUX segment: `0x51` **ID-EEPROM** (`board_services.U1`
    24AA025E48, A0 strapped high) with a factory **EUI-48 MAC** for the RJ45;
-   `0x52` **RTC** (`board_services.U2` RV-3028-C7), `BT1` CR1220 backup. **Keep
-   the trickle charger OFF** — `BT1` is a PRIMARY cell (see the firmware contract).
+   `0x52` **RTC** (`board_services.U2` RV-3028-C7), `BT1` rechargeable ML1220 backup.
+   **Enable the RV-3028 trickle charger** (TCE + ~3k series resistance) so the
+   cell tops up whenever powered. Do **not** fit a primary CR1220 or a LIR Li-ion
+   cell (see the firmware contract).
 3. **Watchdog** (`board_services.U3` TPS3823): unpowered until this rail is on,
    and WDI floats (watchdog disabled) until the PL drives `WATCHDOG_KICK` (J3.96, bank 33).
    Its reset is a PL EVENT on `WATCHDOG_RST_N` (J3.98, bank 33) — never a hard board

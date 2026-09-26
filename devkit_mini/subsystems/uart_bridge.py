@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from devkit_mini.basis import bind
+from devkit_mini.basis import PROJECT, bind
 from schgen.core.model import Circuit
 from subsystems.uart_bridge import uart_bridge as _lib
 
@@ -58,8 +58,4 @@ META = {
 
 def circuit() -> Circuit:
     from schgen.core.authoring import project_circuit
-    return project_circuit('devkit_mini', 'uart_bridge', __file__, META)
-
-
-def _legacy_circuit() -> Circuit:
-    return _lib.circuit(META)
+    return project_circuit(PROJECT, 'uart_bridge', __file__, META)

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import enum
 import re
-from dataclasses import dataclass, field, replace
+from dataclasses import dataclass, field
 
 CIRCUIT_SCHEMA = "schgen.circuit/1"
 CIRCUIT_IR_KEYS = (
@@ -500,55 +500,6 @@ class Circuit:
             if getattr(self, attr) != raw[attr]:
                 setattr(self, attr, dict(raw[attr]))
 
-    def _legacy_bind(self, mapping: dict[str, str]) -> Circuit:
-        """Retained parity reference; never selected as a native fallback."""
-        for abstract, _real in mapping.items():
-            net = self.nets.get(abstract)
-            if net is None:
-                raise CircuitError(
-                    f"bind: {abstract!r} is not a net on circuit "
-                    f"{self.name!r} (externals: "
-                    f"{sorted(self._bindable_names())})")
-            if net.net_class is NetClass.SIGNAL:
-                raise CircuitError(
-                    f"bind: {abstract!r} is a private SIGNAL net — only "
-                    f"POWER/GROUND/PORT (rail/port) externals are bindable; a "
-                    f"subsystem's internal wiring is never rebound")
-        for target in set(mapping.values()):
-            srcs = [a for a, r in mapping.items() if r == target]
-            if len(srcs) > 1:
-                raise CircuitError(
-                    f"bind: {sorted(srcs)} all bind to {target!r} — distinct "
-                    f"externals cannot merge onto one net (LAW-0 short)")
-            if target in self.nets and target not in mapping and \
-                    target != srcs[0]:
-                raise CircuitError(
-                    f"bind: {srcs[0]!r} -> {target!r} collides with the "
-                    f"existing net {target!r} on this circuit")
-        rename = {a: r for a, r in mapping.items() if a != r}
-        if not rename:
-            return self
-        new_nets: dict[str, Net] = {}
-        for name, net in self.nets.items():
-            nn = rename.get(name, name)
-            net.name = nn
-            new_nets[nn] = net
-        self.nets = new_nets
-        self.port_types = {
-            rename.get(k, k): (replace(v, pair_with=rename[v.pair_with])
-                               if v.pair_with in rename else v)
-            for k, v in self.port_types.items()}
-        self.loads = {rename.get(k, k): v for k, v in self.loads.items()}
-        self.hints = {rename.get(k, k): v for k, v in self.hints.items()}
-        for attr in ("tp_waivers", "decap_waivers", "pull_waivers",
-                     "reset_waivers", "strap_waivers", "ep_waivers"):
-            d = getattr(self, attr)
-            setattr(self, attr, {rename.get(k, k): v for k, v in d.items()})
-        for p in self.parts.values():
-            if p.lib_id in (self.TP_LIB_ID, self.MH_LIB_ID) \
-                    and p.value in rename:
-                p.value = rename[p.value]
-        return self
 
     def _bindable_names(self) -> list[str]:
         return [n.name for n in self.nets.values()
@@ -616,22 +567,6 @@ class Circuit:
         self._apply_authoring_ir(raw)
         return self.parts[ref]
 
-    def _legacy_mounting_hole(self, net: str = "CHASSIS_GND",
-                             ref: str | None = None) -> Part:
-        n = self.nets.get(net)
-        if n is None:
-            raise CircuitError(f"mounting_hole({net!r}): not a declared net")
-        if n.net_class is not NetClass.GROUND:
-            raise CircuitError(
-                f"mounting_hole({net!r}): only GROUND nets — a mounting hole "
-                f"is a chassis/earth bond, never a signal/rail "
-                f"({n.net_class.value})")
-        if ref is None:
-            ref = self.auto_ref("H")
-        p = self.part(ref, self.MH_LIB_ID, "MountingHole_M3",
-                      self.MH_FOOTPRINT, BOM="exclude")
-        self.net(net, f"{ref}.1")
-        return p
 
     def waive_tp(self, net: str, reason: str) -> None:
         if net not in self.nets:

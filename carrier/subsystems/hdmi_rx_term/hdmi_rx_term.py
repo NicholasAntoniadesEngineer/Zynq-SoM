@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from carrier.basis import register
+from carrier.basis import PROJECT, register
 from schgen.core.model import Circuit
 
 R_FP = "Resistor_SMD:R_0603_1608Metric"
@@ -51,23 +51,4 @@ TERM_DRAW_A = register(
 
 def circuit() -> Circuit:
     from schgen.core.authoring import project_circuit
-    return project_circuit('carrier', 'hdmi_rx_term', __file__)
-
-
-def _legacy_circuit() -> Circuit:
-    c = Circuit("hdmi_rx_term",
-                "HDMI-RX TMDS sink termination (8x49.9R to AVCC=+3V3)")
-
-    for i, net in enumerate(TMDS_LINES, start=1):
-        c.part(f"R{i}", "Device:R", TERM_R, R_FP, LCSC="C114625")
-        c.port(net, f"R{i}.1", expect=J23_MAP)
-        c.net(AVCC_RAIL, f"R{i}.2")
-
-    c.part("C1", "Device:C", AVCC_HF, C_FP, LCSC="C14663")
-    c.part("C2", "Device:C", AVCC_RESERVOIR, C_FP, LCSC="C15849")
-    c.net(AVCC_RAIL, "C1.1", "C2.1")
-    c.net("GND", "C1.2", "C2.2")
-
-    c.draws(AVCC_RAIL, TERM_DRAW_A,
-            "8x TMDS sink termination 49.9R to AVCC (~8 mA/line driven low)")
-    return c
+    return project_circuit(PROJECT, 'hdmi_rx_term', __file__)

@@ -152,7 +152,7 @@ std::vector<Box4> Engine::pad_boxes(const std::string& key, double rot, bool thr
     return boxes;
 }
 
-std::pair<Halo, Halo> Engine::fanout(const FloorplanZoneShape& shape, bool base) const {
+std::pair<Halo, Halo> Engine::fanout(const FloorplanZoneShape& shape, bool base) {
     auto rotations = in.geometry.conn_rot;
     // Legacy base-zone path overwrites extra rotations; variants add them.
     // This asymmetry is intentional for byte-exact migration.
@@ -172,7 +172,8 @@ std::pair<Halo, Halo> Engine::fanout(const FloorplanZoneShape& shape, bool base)
         }
     }
     return zone_fanout_reach(shape.w, shape.h,
-        zone_fanout_members_rows(rows, min_subject_pins, {{2,.20},{8,1.50}},2.0), min_subject_pins);
+        zone_fanout_members_rows_accounted(rows, min_subject_pins, {{2,.20},{8,1.50}},2.0,
+            &plan.accounting.quantization_engagements), min_subject_pins);
 }
 std::vector<Comp> Engine::zone_components(const FloorplanZoneShape& shape, bool pad_punch) const {
     auto rotations = in.geometry.conn_rot;
@@ -273,7 +274,7 @@ void Engine::fallback(const std::string& name) {
     plan.accounting.fallback_events.push_back(name);
 }
 double Engine::quantize(const std::string& name, double value) {
-    ++plan.accounting.quantization_engagements[name];
+    checked_quantization_add(plan.accounting.quantization_engagements, name);
     if (name == "som_pose_half_mm") return som_pose_half_mm(value);
     if (name == "placeholder_zone_half_mm") return placeholder_zone_half_mm(value);
     if (name == "fixed_part_grid") return fixed_part_grid(value);

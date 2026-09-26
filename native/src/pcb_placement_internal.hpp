@@ -28,8 +28,16 @@ struct Context {
     double clearance;
     mutable std::map<std::string, std::size_t> quantization;
     double credit(double v) const {
-        ++quantization["quant_credit"];
+        checked_quantization_add(quantization, "quant_credit");
         return quant_credit(v);
+    }
+    double fixed_grid(double value, const std::string& label = "fixed_part_grid") const {
+        checked_quantization_add(quantization, label);
+        return fixed_part_grid(value);
+    }
+    double corridor_grid(double origin, double value) const {
+        checked_quantization_add(quantization, "evict_corridor_grid");
+        return evict_corridor_grid(origin, value);
     }
     PcbCheckFootprintPtr resolve(const std::string &) const;
     std::string key(const std::string &) const;

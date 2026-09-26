@@ -1,0 +1,32 @@
+{
+  "version": 2,
+  "configurePresets": [
+    {
+      "name": "native-fast",
+      "displayName": "Native Release (Ninja and ccache)",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/fast",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "SCHGEN_BUILD_PYTHON": "OFF",
+        "CMAKE_CXX_COMPILER_LAUNCHER": "ccache",
+        "SCHGEN_MANUFACTURING_ZLIB_PREFIX": "${sourceDir}/build/deps/zlib-ng"
+      },
+      "environment": {
+        "CCACHE_DIR": "${sourceDir}/build/compiler-cache",
+        "CCACHE_BASEDIR": "${sourceDir}/.."
+      }
+    }
+  ],
+  "buildPresets": [
+    { "name": "native-fast", "configurePreset": "native-fast", "jobs": 6 }
+  ],
+  "testPresets": [
+    {
+      "name": "native-fast-offline",
+      "configurePreset": "native-fast",
+      "filter": { "exclude": { "label": "live-kicad" } },
+      "output": { "outputOnFailure": true }
+    }
+  ]
+}

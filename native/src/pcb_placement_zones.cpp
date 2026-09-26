@@ -126,8 +126,7 @@ PcbZoneResult build_pcb_zone_geometry(const PcbPlacementInput &in) {
             p = build_pcb_stage_zone(st);
             out.fallback_events.insert(out.fallback_events.end(), p.fallback_events.begin(),
                                        p.fallback_events.end());
-            for (const auto &[name, count] : p.quantization_engagements)
-                out.quantization_engagements[name] += count;
+            checked_quantization_merge(out.quantization_engagements, p.quantization_engagements);
             auto ab = shape(p, "asbuilt"), tn = turned(ab), t2 = turned(tn), t3 = turned(t2);
             tn.tag = "turned";
             t2.tag = "t180";
@@ -209,8 +208,7 @@ PcbZoneResult build_pcb_zone_geometry(const PcbPlacementInput &in) {
         g.zone_box[sheet] = {p.w, p.h};
         g.zone_extra_rot.insert(p.rotations.begin(), p.rotations.end());
     }
-    for (const auto &[name, count] : ctx.quantization)
-        out.quantization_engagements[name] += count;
+    checked_quantization_merge(out.quantization_engagements, ctx.quantization);
     out.footprints = std::move(ctx.pool);
     return out;
 }

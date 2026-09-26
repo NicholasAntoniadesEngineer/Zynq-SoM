@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from devkit_mini.basis import register
+from devkit_mini.basis import PROJECT, register
 from devkit_mini.som_conn_gen import SDIO_LEVEL_V
 from schgen.core.model import Circuit
 
@@ -76,74 +76,4 @@ I2C_PULLUP_DRAW_A = register(
 
 def circuit() -> Circuit:
     from schgen.core.authoring import project_circuit
-    return project_circuit('devkit_mini', 'debug_boot', __file__)
-
-
-def _legacy_circuit() -> Circuit:
-    c = Circuit("debug_boot", "JTAG + SWD headers, boot-request DIP, reset")
-    c.use_part(JTAG_HEADER, ref="J1")
-    c.use_part(SWD_HEADER, ref="J2", value="HX_JN1.27-2x5")
-    c.use_part("DSHP04TSGER", ref="SW1", value="DIP-4")
-    c.use_part("TS-1187A-B-A-B", ref="SW2", value="RESET")
-
-    c.net("GND", "J1.1", "J1.3", "J1.5", "J1.7", "J1.9", "J1.11", "J1.13")
-    c.net("+3V3", "J1.2")
-    c.part("R1", "Device:R", JTAG_PULLUP, R0603, LCSC="C23162")
-    c.part("R2", "Device:R", JTAG_PULLUP, R0603, LCSC="C23162")
-    c.port("ZYNQ_TMS", "J1.4", "R1.2", expect=J1_MAP)
-    c.port("ZYNQ_TCK", "J1.6", expect=J1_MAP)
-    c.port("ZYNQ_TDO", "J1.8", expect=J1_MAP)
-    c.port("ZYNQ_TDI", "J1.10", "R2.2", expect=J1_MAP)
-    c.net("+3V3", "R1.1", "R2.1")
-    c.nc("J1.12", "J1.14")
-
-    c.net("+3V3_SC", "J2.1")
-    c.net("GND", "J2.3", "J2.5", "J2.9")
-    c.port("STM32_GPIO6", "J2.2", expect=J1_MAP)
-    c.port("STM32_GPIO5", "J2.4", expect=J1_MAP)
-    c.port("STM32_NRST", "J2.10", "SW2.1", "SW2.2", expect=J1_MAP)
-    c.nc("J2.6", "J2.7", "J2.8")
-
-    # The reset tact resets the SC = a whole-system reset; the RC debounce for
-    # it lives on the SoM, not here.
-    c.net("GND", "SW2.3", "SW2.4")
-
-    c.part("R3", "Device:R", BOOT0_SERIES_R, R0603, LCSC="C22775")
-    c.port("STM32_BOOT0", "SW1.1", expect=J1_MAP)
-    c.net("BOOT0_SET", "SW1.8", "R3.2")
-    c.net("+3V3_SC", "R3.1")
-    c.part("R4", "Device:R", BOOTSEL_PULLUP, R0603, LCSC="C25804")
-    c.part("R5", "Device:R", BOOTSEL_PULLUP, R0603, LCSC="C25804")
-    c.port("STM32_GPIO7", "SW1.2", "R4.2", expect=J1_MAP)
-    c.port("STM32_GPIO8", "SW1.3", "R5.2", expect=J1_MAP)
-    c.net("GND", "SW1.7", "SW1.6")
-    c.part("R6", "Device:R", BOOTSEL_PULLUP, R0603, LCSC="C25804")
-    c.net("BOOT_SPARE", "SW1.4", "R6.2")
-    c.net("GND", "SW1.5")
-    c.net("+3V3_SC", "R4.1", "R5.1", "R6.1")
-
-    # The SC debug sheet provides the management bus termination even while
-    # switched carrier rails are off. Keep the monitor sheet's shared bus bare.
-    for net, role in (("STM32_I2C2_SCL", "scl"), ("STM32_I2C2_SDA", "sda")):
-        r = c.part(c.auto_ref("R"), "Device:R", I2C_PULLUP, R0603, LCSC="C23162")
-        c.net("+3V3_SC", f"{r.ref}.1")
-        c.port(net, f"{r.ref}.2", kind="i2c", role=role, bus="STM32_I2C2",
-               speed_hz=I2C_SPEED_HZ, expect=J1_MAP)
-
-    # The devkit omits the SD/OTG peripheral sheets. Put their bare probe pads
-    # with the other debug interfaces rather than under the SoM mezzanine.
-    # These are the local endpoints, so declare each physical pad before its
-    # port. SDIO keeps the SoM's 1.8 V level and gains no bias or level shift.
-    for net in ("SDIO_CLK", "SDIO_CMD", "VBUS_OUT_EN"):
-        tp = c.part(c.auto_ref("TP"), Circuit.TP_LIB_ID, net,
-                    Circuit.TP_FOOTPRINT, BOM="exclude")
-        if net.startswith("SDIO_"):
-            c.port(net, f"{tp.ref}.1", kind="sd_bus", bus="SDIO",
-                   level_v=SDIO_LEVEL_V, expect=J1_MAP)
-        else:
-            c.port(net, f"{tp.ref}.1", expect=J1_MAP)
-
-    c.draws("+3V3_SC", SC_DRAW_A, "BOOT0 strap ~2 mA closed + BOOTSEL pulls")
-    c.draws("+3V3_SC", I2C_PULLUP_DRAW_A, "2x4k7 STM32_I2C2 pull-ups")
-    c.draws("+3V3", JTAG_DRAW_A, "JTAG TMS/TDI 4k7 insurance pulls when driven")
-    return c
+    return project_circuit(PROJECT, 'debug_boot', __file__)

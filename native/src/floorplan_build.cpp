@@ -255,7 +255,7 @@ FloorplanPlan Engine::run() {
             ++tally["accepted"]; return Winner{py_round(w*h,1),w,h,est,budget};
         };
         for (double aspect:aspects) for (int k=0;k<80;++k) {
-            ++plan.accounting.quantization_engagements["outline_grow_step"];
+            checked_quantization_add(plan.accounting.quantization_engagements, "outline_grow_step");
             const double grow=outline_grow(k);
             const double w=quantize("outline_snap_up",sw+grow*(aspect/seed_aspect));
             const double h=quantize("outline_snap_up",sh+grow);
@@ -267,8 +267,12 @@ FloorplanPlan Engine::run() {
         if (!best) throw FloorplanError(std::string("floorplan: could not fit all REAL packed blocks under the LAW-5 airwire budget on any searched outline (blocks ")+(fit_seen ? "did":"never")+" fit)");
         const double w0=std::get<1>(*best),h0=std::get<2>(*best);
         std::vector<double> ws,hs;
-        for (int k=0;k<41;++k) { ws.push_back(fine_shrink(w0,k)); hs.push_back(fine_shrink(h0,k)); }
-        plan.accounting.quantization_engagements["outline_fine_grid"]+=82;
+        for (int k=0;k<41;++k) {
+            checked_quantization_add(plan.accounting.quantization_engagements, "outline_fine_grid");
+            ws.push_back(fine_shrink(w0,k));
+            checked_quantization_add(plan.accounting.quantization_engagements, "outline_fine_grid");
+            hs.push_back(fine_shrink(h0,k));
+        }
         for (double w:ws) for (double h:hs) {
             ++tally["generated"];
             if (w<=0 || h<=0 || w<h) { ++tally["reject_aspect"]; continue; }

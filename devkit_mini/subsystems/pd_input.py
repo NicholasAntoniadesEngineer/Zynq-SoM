@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from devkit_mini.basis import bind
+from devkit_mini.basis import PROJECT, bind
 from schgen.core.model import Circuit
 from subsystems.pd_input import pd_input as _lib
 
@@ -73,8 +73,4 @@ META = {
 
 def circuit() -> Circuit:
     from schgen.core.authoring import project_circuit
-    return project_circuit('devkit_mini', 'pd_input', __file__, META)
-
-
-def _legacy_circuit() -> Circuit:
-    return _lib.circuit(META)
+    return project_circuit(PROJECT, 'pd_input', __file__, META)

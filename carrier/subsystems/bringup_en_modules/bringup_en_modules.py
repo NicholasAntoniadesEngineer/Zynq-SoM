@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from carrier.basis import register
+from carrier.basis import PROJECT, register
 from schgen.core.model import Circuit
 
 GATE_LIB = "74xGxx:74LVC1G08"
@@ -69,32 +69,4 @@ CELLS = (
 
 def circuit() -> Circuit:
     from schgen.core.authoring import project_circuit
-    return project_circuit('carrier', 'bringup_en_modules', __file__)
-
-
-def _legacy_circuit() -> Circuit:
-    c = Circuit("bringup_en_modules",
-                "Bring-up EN cells: 11x SN74LVC1G08 module DIP-AND-override")
-    for k, (name, a_net, b_net, y_net, b_pull, y_expect) in enumerate(CELLS):
-        u = c.part(f"U{k + 1}", GATE_LIB, GATE_PART, GATE_FP, LCSC=LCSC_GATE)
-        c.port(a_net, f"{u.ref}.1", expect=EXPECT_RAILS)
-        rd = c.part(c.auto_ref("R"), "Device:R", DIP_PULLDOWN, R_FP,
-                    LCSC=LCSC_100K)
-        c.net(a_net, f"{rd.ref}.1")
-        c.net("GND", f"{rd.ref}.2")
-        c.port(b_net, f"{u.ref}.2",
-               expect=J3_MAP if b_net.startswith("STM32") else EXPECT_RAILS)
-        if b_pull:
-            c.pullup(f"{u.ref}.2", OVERRIDE_PULLUP, "+3V3_SC",
-                     footprint=R_FP).fields["LCSC"] = LCSC_100K
-        c.port(y_net, f"{u.ref}.4", expect=y_expect)
-        c.net("+3V3_SC", f"{u.ref}.5")
-        c.net("GND", f"{u.ref}.3")
-        for cap in c.decouple(f"{u.ref}.5", GATE_DECAP, footprint=C_FP):
-            cap.fields["LCSC"] = LCSC_100N
-
-    for _name, _a, _b, y_net, _p, _e in CELLS:
-        c.testpoint(y_net)
-
-    c.draws("+3V3_SC", SC_DRAW_A, "11x SN74LVC1G08 + 100k pull networks")
-    return c
+    return project_circuit(PROJECT, 'bringup_en_modules', __file__)

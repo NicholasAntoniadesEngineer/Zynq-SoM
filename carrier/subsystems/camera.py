@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from carrier.basis import bind
+from carrier.basis import PROJECT, bind
 from schgen.core.model import Circuit
 from subsystems.camera import camera as _lib
 
@@ -60,8 +60,4 @@ META = {
 
 def circuit() -> Circuit:
     from schgen.core.authoring import project_circuit
-    return project_circuit('carrier', 'camera', __file__, META)
-
-
-def _legacy_circuit() -> Circuit:
-    return _lib.circuit(META)
+    return project_circuit(PROJECT, 'camera', __file__, META)

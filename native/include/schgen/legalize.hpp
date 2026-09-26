@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "schgen/seat.hpp"
+#include "schgen/execution_accounting.hpp"
 
 namespace schgen {
 
@@ -123,6 +124,18 @@ std::pair<std::vector<double>, std::vector<double>> legalize_descend_passes(
         fixed_poses,
     double som_mid_x, double som_mid_y, bool has_som, bool seed_only,
     double hop_weight, double seed_weight, int median_passes);
+// Same solve, adding actual attempted snaps to the supplied invocation sink,
+// including unchanged/clamped/rejected trial coordinates. No replay of math.
+std::pair<std::vector<double>, std::vector<double>> legalize_descend_passes_accounted(
+    const std::vector<std::string>& names,
+    const std::vector<double>& pos_x, const std::vector<double>& pos_y,
+    const std::vector<double>& seed_x, const std::vector<double>& seed_y,
+    const std::vector<NamedEdge>& edges_x, const std::vector<NamedEdge>& edges_y,
+    const std::vector<std::pair<std::string, std::string>>& hops,
+    const std::vector<std::pair<std::string, std::pair<double, double>>>& cent_off,
+    const std::vector<std::pair<std::string, std::pair<double, double>>>& fixed_poses,
+    double som_mid_x, double som_mid_y, bool has_som, bool seed_only,
+    double hop_weight, double seed_weight, int median_passes, QuantizationCounts* counts);
 std::vector<std::pair<int, int>> mst_manhattan(
     const std::vector<std::pair<double, double>>& pts);
 double cross_net_cost(

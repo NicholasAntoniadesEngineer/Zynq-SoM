@@ -161,6 +161,11 @@ bool occ_pair_active(int a_mask, int a_pmask, bool a_main,
 std::pair<double, double> spatial_bounds(double far_ceil, double max_reach,
                                          double clear, double place_clear,
                                          double cable_gap, double need_ceil) {
+    return spatial_bounds_accounted(far_ceil, max_reach, clear, place_clear, cable_gap, need_ceil, nullptr);
+}
+std::pair<double, double> spatial_bounds_accounted(double far_ceil, double max_reach,
+    double clear, double place_clear, double cable_gap, double need_ceil, QuantizationCounts* counts) {
+    if (counts) checked_quantization_add(*counts, "quant_credit");
     const double reach_floor = py_round(quant_credit(need_ceil), 4);
     const double reach_bound = std::max(reach_floor, max_reach);
     const double envelope = std::max({clear, place_clear, 2.0 * reach_bound,

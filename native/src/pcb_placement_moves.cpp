@@ -23,7 +23,7 @@ void Placer::l4_pull() {
             if (geometry.resolvable.count(r) && ctx.by_ref.count(r) && pins(r) >= 3)
                 subjects[r] = {
                     ctx.by_ref.at(r).sheet,
-                    grow_rect(box(r, p), std::max(0., quant_credit(need(pins(r))) - pc / 2))};
+                    grow_rect(box(r, p), std::max(0., ctx.credit(need(pins(r))) - pc / 2))};
         }
     }
     auto offset = ctx.in.floorplan.module_offset.value_or(FloorplanPoint{
@@ -220,10 +220,14 @@ void Placer::refit() {
         Offsets xy;
         for (const auto &r : refs)
             xy[r] = pos.at(r);
-        auto result = refit_pcb_stage_facing(ctx.stage_input(sheet, geometry), xy, rotations,
+        auto result = refit_pcb_stage_facing_accounted(ctx.stage_input(sheet, geometry), xy, rotations,
                                              centroid, own_pins, foreign);
-        if (result)
-            for (const auto &[r, p] : *result) {
+        checked_quantization_merge(ctx.quantization, result.quantization_engagements);
+        out.placement_accounting.fallback_events.insert(out.placement_accounting.fallback_events.end(),
+            result.fallback_events.begin(), result.fallback_events.end());
+        out.fallback_events.insert(out.fallback_events.end(), result.fallback_events.begin(), result.fallback_events.end());
+        if (result.poses)
+            for (const auto &[r, p] : *result.poses) {
                 pos[r] = {std::get<0>(p), std::get<1>(p)};
                 rotations[r] = std::get<2>(p);
             }
@@ -311,8 +315,8 @@ void Placer::evict() {
         (void)j;
         if (pos.count(r) && geometry.resolvable.count(r))
             corridors.push_back(
-                pcb_escape_corridor_board(*mod(r), evict_corridor_grid(25, pos.at(r).first),
-                                          evict_corridor_grid(25, pos.at(r).second), rot(r)));
+                pcb_escape_corridor_board(*mod(r), ctx.corridor_grid(25, pos.at(r).first),
+                                          ctx.corridor_grid(25, pos.at(r).second), rot(r)));
     }
     for (const auto &[r, p] : pos) {
         if (!geometry.bbox_of.count(r))
@@ -325,7 +329,7 @@ void Placer::evict() {
     for (const auto &[r, b] : bottom)
         if (geometry.resolvable.count(r) && ctx.by_ref.count(r) && pins(r) >= 3)
             subjects[r] = {ctx.by_ref.at(r).sheet,
-                           grow_rect(b, std::max(0., quant_credit(need(pins(r))) - pc))};
+                           grow_rect(b, std::max(0., ctx.credit(need(pins(r))) - pc))};
     for (auto &[ref, b] : bottom) {
         if (!hit(b, corridors))
             continue;
@@ -375,6 +379,7 @@ void Placer::evict() {
                 break;
         }
         out.fallback_events.push_back(moved ? "corridor_evict_moved" : "corridor_stray_unmovable");
+        out.placement_accounting.fallback_events.push_back(out.fallback_events.back());
     }
 }
 } // namespace schgen::pcb_placement

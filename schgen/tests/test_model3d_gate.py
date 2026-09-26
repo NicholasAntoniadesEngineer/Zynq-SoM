@@ -27,7 +27,7 @@ def _patch(monkeypatch, parts_dir, known=None):
         monkeypatch.setattr(g, "_KNOWN_UNMATCHED", known)
 
 
-def test_resolving_model_is_covered(monkeypatch):
+def test_resolving_garbage_is_covered_but_invalid(monkeypatch):
     with tempfile.TemporaryDirectory() as td:
         root = pathlib.Path(td)
         md = root / "3dmodels"
@@ -43,7 +43,8 @@ def test_resolving_model_is_covered(monkeypatch):
         res = g.check(model_dir=md)
         assert res.total == 1
         assert res.covered == 1
-        assert res.ok is True
+        assert res.ok is False
+        assert res.invalid == {"R1": "no finite STEP/WRL coordinate envelope"}
         assert not res.unmatched and not res.broken and not res.missing
 
 
@@ -72,16 +73,17 @@ def test_missing_model_clause_fails(monkeypatch):
         assert res.ok is False
 
 
-def test_documented_unmatched_stays_green(monkeypatch):
+def test_registry_cannot_waive_missing_hardware(monkeypatch):
     with tempfile.TemporaryDirectory() as td:
         root = pathlib.Path(td)
         parts = root / "parts"
         _make_parts(parts, {"BESPOKE": None})
         _patch(monkeypatch, parts, known={"BESPOKE": "no stock body"})
         res = g.check(model_dir=root / "3dmodels")
-        assert res.ok is True
-        assert res.unmatched == {"BESPOKE": "no stock body"}
-        assert not res.broken and not res.missing
+        assert res.ok is False
+        assert res.unmatched == {"BESPOKE": "no (model ...) clause"}
+        assert not res.broken
+        assert res.missing == ["BESPOKE"]
 
 
 def test_line_and_report_deterministic(monkeypatch):

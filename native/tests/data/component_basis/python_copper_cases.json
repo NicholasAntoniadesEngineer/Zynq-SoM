@@ -1,0 +1,2330 @@
+[
+  {
+    "name": "0",
+    "copper": {
+      "path": "<synthetic>",
+      "zones": [],
+      "vias": [],
+      "segments": 0,
+      "footprints": [],
+      "net_names": []
+    },
+    "entries": [
+      {
+        "eid": "CD-01",
+        "title": "LM61460 pour-aware effective RthJA (58.7 -> 35 C/W)",
+        "assumes": "full-board In1.Cu GND plane + per-buck thermal-via field (>=6 x 0.6/0.3) at PGND1/PGND2 + local F.Cu/B.Cu GND pours (TI SNVSBD5D 7.3 bare 58.7 C/W vs 25 C/W on a 4-layer board; 11.1.1 layout)",
+        "where": [
+          "schgen/verify/thermal.py:66",
+          "carrier/subsystems/power.py:13"
+        ],
+        "emits": "In1.Cu GND plane: NO; ",
+        "status": "NOTHING",
+        "risk": "without this copper Tj(power:U1, 2.42 W) backs out to ~192 C at the bare 58.7 C/W against the 140 C guard — a board-dead thermal PASS-on-fiction (the GAP1 CRITICAL). The thermal gate now HARD-verifies this copper per build."
+      },
+      {
+        "eid": "CD-02",
+        "title": "TLV75725 DYD EP thermal-pad RthJA (92.5 C/W)",
+        "assumes": "DYD thermal pad soldered to GND copper + JESD51-5 pad-adjacent thermal vias into the buried plane (the DS DYD RthJA ~92.5 C/W is DEFINED on that stackup; without it the gate falls back to the DBV bare 231 C/W)",
+        "where": [
+          "schgen/verify/thermal.py:99"
+        ],
+        "emits": "In1.Cu GND plane: NO; ",
+        "status": "NOTHING",
+        "risk": "at the no-copper fallback 231 C/W the VADJ LDO (fmc:U1, 320 mW) lands Tj ~124 C over its 115 C guard — the PWR-3 package swap's entire benefit rides on this copper"
+      },
+      {
+        "eid": "CD-03",
+        "title": "TPS26631 PWP 2s2p RthJA (33.6 C/W)",
+        "assumes": "HTSSOP-20 PowerPAD EP soldered to copper with thermal vias into a buried plane (TI SLVSE94 RthJA ~33.6 C/W is the JEDEC 2s2p figure — it presumes internal planes)",
+        "where": [
+          "schgen/verify/thermal.py:92"
+        ],
+        "emits": "In1.Cu GND plane: NO; ",
+        "status": "NOTHING",
+        "risk": "low today (Pd ~54 mW -> huge margin even at several times the 2s2p figure), but the basis string was still plane-predicated while no plane existed"
+      },
+      {
+        "eid": "CD-04",
+        "title": "CHASSIS_GND island + single-point GND bond",
+        "assumes": "a CHASSIS_GND copper island (connector shells + mounting ring) joined to signal GND at EXACTLY ONE point (bonding pad / 0R / via stitch near power entry)",
+        "where": [
+          "carrier/subsystems/mechanical/mechanical.py:9"
+        ],
+        "emits": "CHASSIS_GND board-level copper: 0 zones, 0 vias (pads only otherwise); no bond stitch emitted",
+        "status": "NOTHING",
+        "risk": "fab'd as-is the shields/mounting ring have NO DC reference (ESD return path open) — ERC/DRC cannot see it because the single-point bond is deliberately not netlisted"
+      },
+      {
+        "eid": "CD-05",
+        "title": "Bob-Smith trunk copper (BS_COMMON island)",
+        "assumes": "a Bob-Smith common trunk (4 x 75R || 1n/2kV into BS_COMMON) laid in copper on the chassis-side island, spaced for the 2kV surge rating (IEEE 802.3 40.7.1)",
+        "where": [
+          "subsystems/ethernet/ethernet.py:69"
+        ],
+        "emits": "BS_COMMON board-level copper: 0 zones, 0 vias (pads only)",
+        "status": "NOTHING",
+        "risk": "without trunk copper + spacing the 2kV HF termination exists only as parts; surge creepage and return-path behaviour are unproven until the routing wave draws the island"
+      },
+      {
+        "eid": "CD-06",
+        "title": "Ethernet isolation moat (In1 plane voids)",
+        "assumes": "NO GND plane under the ethernet magnetics line side / RJ45 media pins (Pulse HX5008 layout guidance; the 2kV isolation moat) — the full-board In1 plane must be VOIDED there",
+        "where": [
+          "subsystems/ethernet/ethernet.py:12",
+          "schgen/generate/pcb/constants.py:179"
+        ],
+        "emits": "In1 rule-area voids: none; corridor between them: NOT voided (debt)",
+        "status": "NOTHING",
+        "risk": "a continuous plane under the magnetics bridges the isolation barrier capacitively and violates the 2kV creepage intent; the RJ45<->magnetics media CORRIDOR void remains routing-wave debt"
+      },
+      {
+        "eid": "CD-07",
+        "title": "DP90/DP100 L2 reference plane",
+        "assumes": "the DP90_USB / DP100_TMDS trace geometry (widths/gaps in the .kicad_dru + net classes) is an OUTER-layer microstrip referenced to a CONTINUOUS L2 GND plane through one 7628 prepreg sheet",
+        "where": [
+          "schgen/generate/constraints.py:22"
+        ],
+        "emits": "no GND fill zone on In1.Cu",
+        "status": "NOTHING",
+        "risk": "without the L2 plane every impedance number in the dru is unmoored (return path undefined, impedance wrong by design); with the plane emitted the residual risk is fill VOIDS/splits under a future route path (checked at the routing wave)"
+      },
+      {
+        "eid": "CD-08",
+        "title": "Under-SoM decoupling fanout vias",
+        "assumes": "the under-SoM bottom-side rail-entry decoupling (som_decoupling) reaches the rails/planes through fanout vias directly beneath the DF40 mezzanine",
+        "where": [
+          "schgen/generate/pcb/embed.py:510"
+        ],
+        "emits": "GND vias inside the SoM body zone: 0 (SoM zone NOT found); rail fanout vias: none emitted",
+        "status": "NOTHING",
+        "risk": "until those vias land the 18 bottom caps decouple nothing (no path from B.Cu pads to the rails) — a routing-wave item, but the prose reads as if the path exists"
+      }
+    ]
+  },
+  {
+    "name": "1",
+    "copper": {
+      "path": "<synthetic>",
+      "zones": [],
+      "vias": [],
+      "segments": 0,
+      "footprints": [
+        {
+          "ref": "U1",
+          "value": "LM61460",
+          "x": 10,
+          "y": 10,
+          "layer": "F.Cu",
+          "pads": []
+        },
+        {
+          "ref": "U2",
+          "value": "TLV75725",
+          "x": 20,
+          "y": 20,
+          "layer": "F.Cu",
+          "pads": []
+        },
+        {
+          "ref": "U3",
+          "value": "TPS26631",
+          "x": 30,
+          "y": 30,
+          "layer": "F.Cu",
+          "pads": [
+            {
+              "name": "0",
+              "dx": 0,
+              "dy": 0,
+              "drill": 0.3,
+              "net_name": "GND"
+            }
+          ]
+        }
+      ],
+      "net_names": []
+    },
+    "entries": [
+      {
+        "eid": "CD-01",
+        "title": "LM61460 pour-aware effective RthJA (58.7 -> 35 C/W)",
+        "assumes": "full-board In1.Cu GND plane + per-buck thermal-via field (>=6 x 0.6/0.3) at PGND1/PGND2 + local F.Cu/B.Cu GND pours (TI SNVSBD5D 7.3 bare 58.7 C/W vs 25 C/W on a 4-layer board; 11.1.1 layout)",
+        "where": [
+          "schgen/verify/thermal.py:66",
+          "carrier/subsystems/power.py:13"
+        ],
+        "emits": "In1.Cu GND plane: NO; U1: 0 GND vias<=5.2mm, F.Cu pour NO, B.Cu pour NO",
+        "status": "NOTHING",
+        "risk": "without this copper Tj(power:U1, 2.42 W) backs out to ~192 C at the bare 58.7 C/W against the 140 C guard — a board-dead thermal PASS-on-fiction (the GAP1 CRITICAL). The thermal gate now HARD-verifies this copper per build."
+      },
+      {
+        "eid": "CD-02",
+        "title": "TLV75725 DYD EP thermal-pad RthJA (92.5 C/W)",
+        "assumes": "DYD thermal pad soldered to GND copper + JESD51-5 pad-adjacent thermal vias into the buried plane (the DS DYD RthJA ~92.5 C/W is DEFINED on that stackup; without it the gate falls back to the DBV bare 231 C/W)",
+        "where": [
+          "schgen/verify/thermal.py:99"
+        ],
+        "emits": "In1.Cu GND plane: NO; U2: 0 GND vias<=3.0mm, F.Cu pour NO",
+        "status": "NOTHING",
+        "risk": "at the no-copper fallback 231 C/W the VADJ LDO (fmc:U1, 320 mW) lands Tj ~124 C over its 115 C guard — the PWR-3 package swap's entire benefit rides on this copper"
+      },
+      {
+        "eid": "CD-03",
+        "title": "TPS26631 PWP 2s2p RthJA (33.6 C/W)",
+        "assumes": "HTSSOP-20 PowerPAD EP soldered to copper with thermal vias into a buried plane (TI SLVSE94 RthJA ~33.6 C/W is the JEDEC 2s2p figure — it presumes internal planes)",
+        "where": [
+          "schgen/verify/thermal.py:92"
+        ],
+        "emits": "In1.Cu GND plane: NO; U3: 1 in-footprint EP via-pads (GND, PTH)",
+        "status": "PARTIAL",
+        "risk": "low today (Pd ~54 mW -> huge margin even at several times the 2s2p figure), but the basis string was still plane-predicated while no plane existed"
+      },
+      {
+        "eid": "CD-04",
+        "title": "CHASSIS_GND island + single-point GND bond",
+        "assumes": "a CHASSIS_GND copper island (connector shells + mounting ring) joined to signal GND at EXACTLY ONE point (bonding pad / 0R / via stitch near power entry)",
+        "where": [
+          "carrier/subsystems/mechanical/mechanical.py:9"
+        ],
+        "emits": "CHASSIS_GND board-level copper: 0 zones, 0 vias (pads only otherwise); no bond stitch emitted",
+        "status": "NOTHING",
+        "risk": "fab'd as-is the shields/mounting ring have NO DC reference (ESD return path open) — ERC/DRC cannot see it because the single-point bond is deliberately not netlisted"
+      },
+      {
+        "eid": "CD-05",
+        "title": "Bob-Smith trunk copper (BS_COMMON island)",
+        "assumes": "a Bob-Smith common trunk (4 x 75R || 1n/2kV into BS_COMMON) laid in copper on the chassis-side island, spaced for the 2kV surge rating (IEEE 802.3 40.7.1)",
+        "where": [
+          "subsystems/ethernet/ethernet.py:69"
+        ],
+        "emits": "BS_COMMON board-level copper: 0 zones, 0 vias (pads only)",
+        "status": "NOTHING",
+        "risk": "without trunk copper + spacing the 2kV HF termination exists only as parts; surge creepage and return-path behaviour are unproven until the routing wave draws the island"
+      },
+      {
+        "eid": "CD-06",
+        "title": "Ethernet isolation moat (In1 plane voids)",
+        "assumes": "NO GND plane under the ethernet magnetics line side / RJ45 media pins (Pulse HX5008 layout guidance; the 2kV isolation moat) — the full-board In1 plane must be VOIDED there",
+        "where": [
+          "subsystems/ethernet/ethernet.py:12",
+          "schgen/generate/pcb/constants.py:179"
+        ],
+        "emits": "In1 rule-area voids: none; corridor between them: NOT voided (debt)",
+        "status": "NOTHING",
+        "risk": "a continuous plane under the magnetics bridges the isolation barrier capacitively and violates the 2kV creepage intent; the RJ45<->magnetics media CORRIDOR void remains routing-wave debt"
+      },
+      {
+        "eid": "CD-07",
+        "title": "DP90/DP100 L2 reference plane",
+        "assumes": "the DP90_USB / DP100_TMDS trace geometry (widths/gaps in the .kicad_dru + net classes) is an OUTER-layer microstrip referenced to a CONTINUOUS L2 GND plane through one 7628 prepreg sheet",
+        "where": [
+          "schgen/generate/constraints.py:22"
+        ],
+        "emits": "no GND fill zone on In1.Cu",
+        "status": "NOTHING",
+        "risk": "without the L2 plane every impedance number in the dru is unmoored (return path undefined, impedance wrong by design); with the plane emitted the residual risk is fill VOIDS/splits under a future route path (checked at the routing wave)"
+      },
+      {
+        "eid": "CD-08",
+        "title": "Under-SoM decoupling fanout vias",
+        "assumes": "the under-SoM bottom-side rail-entry decoupling (som_decoupling) reaches the rails/planes through fanout vias directly beneath the DF40 mezzanine",
+        "where": [
+          "schgen/generate/pcb/embed.py:510"
+        ],
+        "emits": "GND vias inside the SoM body zone: 0 (SoM zone NOT found); rail fanout vias: none emitted",
+        "status": "NOTHING",
+        "risk": "until those vias land the 18 bottom caps decouple nothing (no path from B.Cu pads to the rails) — a routing-wave item, but the prose reads as if the path exists"
+      }
+    ]
+  },
+  {
+    "name": "2",
+    "copper": {
+      "path": "<synthetic>",
+      "zones": [
+        {
+          "name": "plane",
+          "net_name": "GND",
+          "layers": [
+            "In1.Cu"
+          ],
+          "keepout": false,
+          "filled": true,
+          "bbox": [
+            0,
+            0,
+            100,
+            100
+          ]
+        }
+      ],
+      "vias": [],
+      "segments": 0,
+      "footprints": [
+        {
+          "ref": "U1",
+          "value": "LM61460",
+          "x": 10,
+          "y": 10,
+          "layer": "F.Cu",
+          "pads": []
+        },
+        {
+          "ref": "U2",
+          "value": "TLV75725",
+          "x": 20,
+          "y": 20,
+          "layer": "F.Cu",
+          "pads": []
+        },
+        {
+          "ref": "U3",
+          "value": "TPS26631",
+          "x": 30,
+          "y": 30,
+          "layer": "F.Cu",
+          "pads": [
+            {
+              "name": "0",
+              "dx": 0,
+              "dy": 0,
+              "drill": 0.3,
+              "net_name": "GND"
+            }
+          ]
+        }
+      ],
+      "net_names": []
+    },
+    "entries": [
+      {
+        "eid": "CD-01",
+        "title": "LM61460 pour-aware effective RthJA (58.7 -> 35 C/W)",
+        "assumes": "full-board In1.Cu GND plane + per-buck thermal-via field (>=6 x 0.6/0.3) at PGND1/PGND2 + local F.Cu/B.Cu GND pours (TI SNVSBD5D 7.3 bare 58.7 C/W vs 25 C/W on a 4-layer board; 11.1.1 layout)",
+        "where": [
+          "schgen/verify/thermal.py:66",
+          "carrier/subsystems/power.py:13"
+        ],
+        "emits": "In1.Cu GND plane: YES; U1: 0 GND vias<=5.2mm, F.Cu pour NO, B.Cu pour NO",
+        "status": "PARTIAL",
+        "risk": "without this copper Tj(power:U1, 2.42 W) backs out to ~192 C at the bare 58.7 C/W against the 140 C guard — a board-dead thermal PASS-on-fiction (the GAP1 CRITICAL). The thermal gate now HARD-verifies this copper per build."
+      },
+      {
+        "eid": "CD-02",
+        "title": "TLV75725 DYD EP thermal-pad RthJA (92.5 C/W)",
+        "assumes": "DYD thermal pad soldered to GND copper + JESD51-5 pad-adjacent thermal vias into the buried plane (the DS DYD RthJA ~92.5 C/W is DEFINED on that stackup; without it the gate falls back to the DBV bare 231 C/W)",
+        "where": [
+          "schgen/verify/thermal.py:99"
+        ],
+        "emits": "In1.Cu GND plane: YES; U2: 0 GND vias<=3.0mm, F.Cu pour NO",
+        "status": "PARTIAL",
+        "risk": "at the no-copper fallback 231 C/W the VADJ LDO (fmc:U1, 320 mW) lands Tj ~124 C over its 115 C guard — the PWR-3 package swap's entire benefit rides on this copper"
+      },
+      {
+        "eid": "CD-03",
+        "title": "TPS26631 PWP 2s2p RthJA (33.6 C/W)",
+        "assumes": "HTSSOP-20 PowerPAD EP soldered to copper with thermal vias into a buried plane (TI SLVSE94 RthJA ~33.6 C/W is the JEDEC 2s2p figure — it presumes internal planes)",
+        "where": [
+          "schgen/verify/thermal.py:92"
+        ],
+        "emits": "In1.Cu GND plane: YES; U3: 1 in-footprint EP via-pads (GND, PTH)",
+        "status": "PARTIAL",
+        "risk": "low today (Pd ~54 mW -> huge margin even at several times the 2s2p figure), but the basis string was still plane-predicated while no plane existed"
+      },
+      {
+        "eid": "CD-04",
+        "title": "CHASSIS_GND island + single-point GND bond",
+        "assumes": "a CHASSIS_GND copper island (connector shells + mounting ring) joined to signal GND at EXACTLY ONE point (bonding pad / 0R / via stitch near power entry)",
+        "where": [
+          "carrier/subsystems/mechanical/mechanical.py:9"
+        ],
+        "emits": "CHASSIS_GND board-level copper: 0 zones, 0 vias (pads only otherwise); no bond stitch emitted",
+        "status": "NOTHING",
+        "risk": "fab'd as-is the shields/mounting ring have NO DC reference (ESD return path open) — ERC/DRC cannot see it because the single-point bond is deliberately not netlisted"
+      },
+      {
+        "eid": "CD-05",
+        "title": "Bob-Smith trunk copper (BS_COMMON island)",
+        "assumes": "a Bob-Smith common trunk (4 x 75R || 1n/2kV into BS_COMMON) laid in copper on the chassis-side island, spaced for the 2kV surge rating (IEEE 802.3 40.7.1)",
+        "where": [
+          "subsystems/ethernet/ethernet.py:69"
+        ],
+        "emits": "BS_COMMON board-level copper: 0 zones, 0 vias (pads only)",
+        "status": "NOTHING",
+        "risk": "without trunk copper + spacing the 2kV HF termination exists only as parts; surge creepage and return-path behaviour are unproven until the routing wave draws the island"
+      },
+      {
+        "eid": "CD-06",
+        "title": "Ethernet isolation moat (In1 plane voids)",
+        "assumes": "NO GND plane under the ethernet magnetics line side / RJ45 media pins (Pulse HX5008 layout guidance; the 2kV isolation moat) — the full-board In1 plane must be VOIDED there",
+        "where": [
+          "subsystems/ethernet/ethernet.py:12",
+          "schgen/generate/pcb/constants.py:179"
+        ],
+        "emits": "In1 rule-area voids: none; corridor between them: NOT voided (debt)",
+        "status": "NOTHING",
+        "risk": "a continuous plane under the magnetics bridges the isolation barrier capacitively and violates the 2kV creepage intent; the RJ45<->magnetics media CORRIDOR void remains routing-wave debt"
+      },
+      {
+        "eid": "CD-07",
+        "title": "DP90/DP100 L2 reference plane",
+        "assumes": "the DP90_USB / DP100_TMDS trace geometry (widths/gaps in the .kicad_dru + net classes) is an OUTER-layer microstrip referenced to a CONTINUOUS L2 GND plane through one 7628 prepreg sheet",
+        "where": [
+          "schgen/generate/constraints.py:22"
+        ],
+        "emits": "In1.Cu GND plane zone 0,0 -> 100,100 mm (unfilled-on-disk, DRC-refilled); ethernet voids punch it locally (CD-06)",
+        "status": "EMITTED",
+        "risk": "without the L2 plane every impedance number in the dru is unmoored (return path undefined, impedance wrong by design); with the plane emitted the residual risk is fill VOIDS/splits under a future route path (checked at the routing wave)"
+      },
+      {
+        "eid": "CD-08",
+        "title": "Under-SoM decoupling fanout vias",
+        "assumes": "the under-SoM bottom-side rail-entry decoupling (som_decoupling) reaches the rails/planes through fanout vias directly beneath the DF40 mezzanine",
+        "where": [
+          "schgen/generate/pcb/embed.py:510"
+        ],
+        "emits": "GND vias inside the SoM body zone: 0 (SoM zone NOT found); rail fanout vias: none emitted",
+        "status": "NOTHING",
+        "risk": "until those vias land the 18 bottom caps decouple nothing (no path from B.Cu pads to the rails) — a routing-wave item, but the prose reads as if the path exists"
+      }
+    ]
+  },
+  {
+    "name": "3",
+    "copper": {
+      "path": "<synthetic>",
+      "zones": [
+        {
+          "name": "plane",
+          "net_name": "GND",
+          "layers": [
+            "In1.Cu"
+          ],
+          "keepout": false,
+          "filled": true,
+          "bbox": [
+            0,
+            0,
+            100,
+            100
+          ]
+        }
+      ],
+      "vias": [
+        {
+          "x": 10,
+          "y": 10,
+          "net_name": "GND"
+        },
+        {
+          "x": 11,
+          "y": 10,
+          "net_name": "GND"
+        },
+        {
+          "x": 12,
+          "y": 10,
+          "net_name": "GND"
+        },
+        {
+          "x": 13,
+          "y": 10,
+          "net_name": "GND"
+        },
+        {
+          "x": 14,
+          "y": 10,
+          "net_name": "GND"
+        },
+        {
+          "x": 15,
+          "y": 10,
+          "net_name": "GND"
+        },
+        {
+          "x": 20,
+          "y": 20,
+          "net_name": "GND"
+        },
+        {
+          "x": 21,
+          "y": 20,
+          "net_name": "GND"
+        }
+      ],
+      "segments": 0,
+      "footprints": [
+        {
+          "ref": "U1",
+          "value": "LM61460",
+          "x": 10,
+          "y": 10,
+          "layer": "F.Cu",
+          "pads": []
+        },
+        {
+          "ref": "U2",
+          "value": "TLV75725",
+          "x": 20,
+          "y": 20,
+          "layer": "F.Cu",
+          "pads": []
+        },
+        {
+          "ref": "U3",
+          "value": "TPS26631",
+          "x": 30,
+          "y": 30,
+          "layer": "F.Cu",
+          "pads": [
+            {
+              "name": "0",
+              "dx": 0,
+              "dy": 0,
+              "drill": 0.3,
+              "net_name": "GND"
+            }
+          ]
+        }
+      ],
+      "net_names": []
+    },
+    "entries": [
+      {
+        "eid": "CD-01",
+        "title": "LM61460 pour-aware effective RthJA (58.7 -> 35 C/W)",
+        "assumes": "full-board In1.Cu GND plane + per-buck thermal-via field (>=6 x 0.6/0.3) at PGND1/PGND2 + local F.Cu/B.Cu GND pours (TI SNVSBD5D 7.3 bare 58.7 C/W vs 25 C/W on a 4-layer board; 11.1.1 layout)",
+        "where": [
+          "schgen/verify/thermal.py:66",
+          "carrier/subsystems/power.py:13"
+        ],
+        "emits": "In1.Cu GND plane: YES; U1: 6 GND vias<=5.2mm, F.Cu pour NO, B.Cu pour NO",
+        "status": "PARTIAL",
+        "risk": "without this copper Tj(power:U1, 2.42 W) backs out to ~192 C at the bare 58.7 C/W against the 140 C guard — a board-dead thermal PASS-on-fiction (the GAP1 CRITICAL). The thermal gate now HARD-verifies this copper per build."
+      },
+      {
+        "eid": "CD-02",
+        "title": "TLV75725 DYD EP thermal-pad RthJA (92.5 C/W)",
+        "assumes": "DYD thermal pad soldered to GND copper + JESD51-5 pad-adjacent thermal vias into the buried plane (the DS DYD RthJA ~92.5 C/W is DEFINED on that stackup; without it the gate falls back to the DBV bare 231 C/W)",
+        "where": [
+          "schgen/verify/thermal.py:99"
+        ],
+        "emits": "In1.Cu GND plane: YES; U2: 2 GND vias<=3.0mm, F.Cu pour NO",
+        "status": "PARTIAL",
+        "risk": "at the no-copper fallback 231 C/W the VADJ LDO (fmc:U1, 320 mW) lands Tj ~124 C over its 115 C guard — the PWR-3 package swap's entire benefit rides on this copper"
+      },
+      {
+        "eid": "CD-03",
+        "title": "TPS26631 PWP 2s2p RthJA (33.6 C/W)",
+        "assumes": "HTSSOP-20 PowerPAD EP soldered to copper with thermal vias into a buried plane (TI SLVSE94 RthJA ~33.6 C/W is the JEDEC 2s2p figure — it presumes internal planes)",
+        "where": [
+          "schgen/verify/thermal.py:92"
+        ],
+        "emits": "In1.Cu GND plane: YES; U3: 1 in-footprint EP via-pads (GND, PTH)",
+        "status": "PARTIAL",
+        "risk": "low today (Pd ~54 mW -> huge margin even at several times the 2s2p figure), but the basis string was still plane-predicated while no plane existed"
+      },
+      {
+        "eid": "CD-04",
+        "title": "CHASSIS_GND island + single-point GND bond",
+        "assumes": "a CHASSIS_GND copper island (connector shells + mounting ring) joined to signal GND at EXACTLY ONE point (bonding pad / 0R / via stitch near power entry)",
+        "where": [
+          "carrier/subsystems/mechanical/mechanical.py:9"
+        ],
+        "emits": "CHASSIS_GND board-level copper: 0 zones, 0 vias (pads only otherwise); no bond stitch emitted",
+        "status": "NOTHING",
+        "risk": "fab'd as-is the shields/mounting ring have NO DC reference (ESD return path open) — ERC/DRC cannot see it because the single-point bond is deliberately not netlisted"
+      },
+      {
+        "eid": "CD-05",
+        "title": "Bob-Smith trunk copper (BS_COMMON island)",
+        "assumes": "a Bob-Smith common trunk (4 x 75R || 1n/2kV into BS_COMMON) laid in copper on the chassis-side island, spaced for the 2kV surge rating (IEEE 802.3 40.7.1)",
+        "where": [
+          "subsystems/ethernet/ethernet.py:69"
+        ],
+        "emits": "BS_COMMON board-level copper: 0 zones, 0 vias (pads only)",
+        "status": "NOTHING",
+        "risk": "without trunk copper + spacing the 2kV HF termination exists only as parts; surge creepage and return-path behaviour are unproven until the routing wave draws the island"
+      },
+      {
+        "eid": "CD-06",
+        "title": "Ethernet isolation moat (In1 plane voids)",
+        "assumes": "NO GND plane under the ethernet magnetics line side / RJ45 media pins (Pulse HX5008 layout guidance; the 2kV isolation moat) — the full-board In1 plane must be VOIDED there",
+        "where": [
+          "subsystems/ethernet/ethernet.py:12",
+          "schgen/generate/pcb/constants.py:179"
+        ],
+        "emits": "In1 rule-area voids: none; corridor between them: NOT voided (debt)",
+        "status": "NOTHING",
+        "risk": "a continuous plane under the magnetics bridges the isolation barrier capacitively and violates the 2kV creepage intent; the RJ45<->magnetics media CORRIDOR void remains routing-wave debt"
+      },
+      {
+        "eid": "CD-07",
+        "title": "DP90/DP100 L2 reference plane",
+        "assumes": "the DP90_USB / DP100_TMDS trace geometry (widths/gaps in the .kicad_dru + net classes) is an OUTER-layer microstrip referenced to a CONTINUOUS L2 GND plane through one 7628 prepreg sheet",
+        "where": [
+          "schgen/generate/constraints.py:22"
+        ],
+        "emits": "In1.Cu GND plane zone 0,0 -> 100,100 mm (unfilled-on-disk, DRC-refilled); ethernet voids punch it locally (CD-06)",
+        "status": "EMITTED",
+        "risk": "without the L2 plane every impedance number in the dru is unmoored (return path undefined, impedance wrong by design); with the plane emitted the residual risk is fill VOIDS/splits under a future route path (checked at the routing wave)"
+      },
+      {
+        "eid": "CD-08",
+        "title": "Under-SoM decoupling fanout vias",
+        "assumes": "the under-SoM bottom-side rail-entry decoupling (som_decoupling) reaches the rails/planes through fanout vias directly beneath the DF40 mezzanine",
+        "where": [
+          "schgen/generate/pcb/embed.py:510"
+        ],
+        "emits": "GND vias inside the SoM body zone: 0 (SoM zone NOT found); rail fanout vias: none emitted",
+        "status": "NOTHING",
+        "risk": "until those vias land the 18 bottom caps decouple nothing (no path from B.Cu pads to the rails) — a routing-wave item, but the prose reads as if the path exists"
+      }
+    ]
+  },
+  {
+    "name": "4",
+    "copper": {
+      "path": "<synthetic>",
+      "zones": [
+        {
+          "name": "plane",
+          "net_name": "GND",
+          "layers": [
+            "In1.Cu"
+          ],
+          "keepout": false,
+          "filled": true,
+          "bbox": [
+            0,
+            0,
+            100,
+            100
+          ]
+        },
+        {
+          "name": "pourF.Cu",
+          "net_name": "GND",
+          "layers": [
+            "F.Cu"
+          ],
+          "keepout": false,
+          "filled": true,
+          "bbox": [
+            0,
+            0,
+            100,
+            100
+          ]
+        },
+        {
+          "name": "pourB.Cu",
+          "net_name": "GND",
+          "layers": [
+            "B.Cu"
+          ],
+          "keepout": false,
+          "filled": true,
+          "bbox": [
+            0,
+            0,
+            100,
+            100
+          ]
+        }
+      ],
+      "vias": [
+        {
+          "x": 10,
+          "y": 10,
+          "net_name": "GND"
+        },
+        {
+          "x": 11,
+          "y": 10,
+          "net_name": "GND"
+        },
+        {
+          "x": 12,
+          "y": 10,
+          "net_name": "GND"
+        },
+        {
+          "x": 13,
+          "y": 10,
+          "net_name": "GND"
+        },
+        {
+          "x": 14,
+          "y": 10,
+          "net_name": "GND"
+        },
+        {
+          "x": 15,
+          "y": 10,
+          "net_name": "GND"
+        },
+        {
+          "x": 20,
+          "y": 20,
+          "net_name": "GND"
+        },
+        {
+          "x": 21,
+          "y": 20,
+          "net_name": "GND"
+        }
+      ],
+      "segments": 0,
+      "footprints": [
+        {
+          "ref": "U1",
+          "value": "LM61460",
+          "x": 10,
+          "y": 10,
+          "layer": "F.Cu",
+          "pads": []
+        },
+        {
+          "ref": "U2",
+          "value": "TLV75725",
+          "x": 20,
+          "y": 20,
+          "layer": "F.Cu",
+          "pads": []
+        },
+        {
+          "ref": "U3",
+          "value": "TPS26631",
+          "x": 30,
+          "y": 30,
+          "layer": "F.Cu",
+          "pads": [
+            {
+              "name": "0",
+              "dx": 0,
+              "dy": 0,
+              "drill": 0.3,
+              "net_name": "GND"
+            },
+            {
+              "name": "1",
+              "dx": 0,
+              "dy": 0,
+              "drill": 0.3,
+              "net_name": "GND"
+            },
+            {
+              "name": "2",
+              "dx": 0,
+              "dy": 0,
+              "drill": 0.3,
+              "net_name": "GND"
+            },
+            {
+              "name": "3",
+              "dx": 0,
+              "dy": 0,
+              "drill": 0.3,
+              "net_name": "GND"
+            }
+          ]
+        }
+      ],
+      "net_names": []
+    },
+    "entries": [
+      {
+        "eid": "CD-01",
+        "title": "LM61460 pour-aware effective RthJA (58.7 -> 35 C/W)",
+        "assumes": "full-board In1.Cu GND plane + per-buck thermal-via field (>=6 x 0.6/0.3) at PGND1/PGND2 + local F.Cu/B.Cu GND pours (TI SNVSBD5D 7.3 bare 58.7 C/W vs 25 C/W on a 4-layer board; 11.1.1 layout)",
+        "where": [
+          "schgen/verify/thermal.py:66",
+          "carrier/subsystems/power.py:13"
+        ],
+        "emits": "In1.Cu GND plane: YES; U1: 6 GND vias<=5.2mm, F.Cu pour YES, B.Cu pour YES",
+        "status": "EMITTED",
+        "risk": "without this copper Tj(power:U1, 2.42 W) backs out to ~192 C at the bare 58.7 C/W against the 140 C guard — a board-dead thermal PASS-on-fiction (the GAP1 CRITICAL). The thermal gate now HARD-verifies this copper per build."
+      },
+      {
+        "eid": "CD-02",
+        "title": "TLV75725 DYD EP thermal-pad RthJA (92.5 C/W)",
+        "assumes": "DYD thermal pad soldered to GND copper + JESD51-5 pad-adjacent thermal vias into the buried plane (the DS DYD RthJA ~92.5 C/W is DEFINED on that stackup; without it the gate falls back to the DBV bare 231 C/W)",
+        "where": [
+          "schgen/verify/thermal.py:99"
+        ],
+        "emits": "In1.Cu GND plane: YES; U2: 2 GND vias<=3.0mm, F.Cu pour YES",
+        "status": "EMITTED",
+        "risk": "at the no-copper fallback 231 C/W the VADJ LDO (fmc:U1, 320 mW) lands Tj ~124 C over its 115 C guard — the PWR-3 package swap's entire benefit rides on this copper"
+      },
+      {
+        "eid": "CD-03",
+        "title": "TPS26631 PWP 2s2p RthJA (33.6 C/W)",
+        "assumes": "HTSSOP-20 PowerPAD EP soldered to copper with thermal vias into a buried plane (TI SLVSE94 RthJA ~33.6 C/W is the JEDEC 2s2p figure — it presumes internal planes)",
+        "where": [
+          "schgen/verify/thermal.py:92"
+        ],
+        "emits": "In1.Cu GND plane: YES; U3: 4 in-footprint EP via-pads (GND, PTH)",
+        "status": "EMITTED",
+        "risk": "low today (Pd ~54 mW -> huge margin even at several times the 2s2p figure), but the basis string was still plane-predicated while no plane existed"
+      },
+      {
+        "eid": "CD-04",
+        "title": "CHASSIS_GND island + single-point GND bond",
+        "assumes": "a CHASSIS_GND copper island (connector shells + mounting ring) joined to signal GND at EXACTLY ONE point (bonding pad / 0R / via stitch near power entry)",
+        "where": [
+          "carrier/subsystems/mechanical/mechanical.py:9"
+        ],
+        "emits": "CHASSIS_GND board-level copper: 0 zones, 0 vias (pads only otherwise); no bond stitch emitted",
+        "status": "NOTHING",
+        "risk": "fab'd as-is the shields/mounting ring have NO DC reference (ESD return path open) — ERC/DRC cannot see it because the single-point bond is deliberately not netlisted"
+      },
+      {
+        "eid": "CD-05",
+        "title": "Bob-Smith trunk copper (BS_COMMON island)",
+        "assumes": "a Bob-Smith common trunk (4 x 75R || 1n/2kV into BS_COMMON) laid in copper on the chassis-side island, spaced for the 2kV surge rating (IEEE 802.3 40.7.1)",
+        "where": [
+          "subsystems/ethernet/ethernet.py:69"
+        ],
+        "emits": "BS_COMMON board-level copper: 0 zones, 0 vias (pads only)",
+        "status": "NOTHING",
+        "risk": "without trunk copper + spacing the 2kV HF termination exists only as parts; surge creepage and return-path behaviour are unproven until the routing wave draws the island"
+      },
+      {
+        "eid": "CD-06",
+        "title": "Ethernet isolation moat (In1 plane voids)",
+        "assumes": "NO GND plane under the ethernet magnetics line side / RJ45 media pins (Pulse HX5008 layout guidance; the 2kV isolation moat) — the full-board In1 plane must be VOIDED there",
+        "where": [
+          "subsystems/ethernet/ethernet.py:12",
+          "schgen/generate/pcb/constants.py:179"
+        ],
+        "emits": "In1 rule-area voids: none; corridor between them: NOT voided (debt)",
+        "status": "NOTHING",
+        "risk": "a continuous plane under the magnetics bridges the isolation barrier capacitively and violates the 2kV creepage intent; the RJ45<->magnetics media CORRIDOR void remains routing-wave debt"
+      },
+      {
+        "eid": "CD-07",
+        "title": "DP90/DP100 L2 reference plane",
+        "assumes": "the DP90_USB / DP100_TMDS trace geometry (widths/gaps in the .kicad_dru + net classes) is an OUTER-layer microstrip referenced to a CONTINUOUS L2 GND plane through one 7628 prepreg sheet",
+        "where": [
+          "schgen/generate/constraints.py:22"
+        ],
+        "emits": "In1.Cu GND plane zone 0,0 -> 100,100 mm (unfilled-on-disk, DRC-refilled); ethernet voids punch it locally (CD-06)",
+        "status": "EMITTED",
+        "risk": "without the L2 plane every impedance number in the dru is unmoored (return path undefined, impedance wrong by design); with the plane emitted the residual risk is fill VOIDS/splits under a future route path (checked at the routing wave)"
+      },
+      {
+        "eid": "CD-08",
+        "title": "Under-SoM decoupling fanout vias",
+        "assumes": "the under-SoM bottom-side rail-entry decoupling (som_decoupling) reaches the rails/planes through fanout vias directly beneath the DF40 mezzanine",
+        "where": [
+          "schgen/generate/pcb/embed.py:510"
+        ],
+        "emits": "GND vias inside the SoM body zone: 0 (SoM zone NOT found); rail fanout vias: none emitted",
+        "status": "NOTHING",
+        "risk": "until those vias land the 18 bottom caps decouple nothing (no path from B.Cu pads to the rails) — a routing-wave item, but the prose reads as if the path exists"
+      }
+    ]
+  },
+  {
+    "name": "5",
+    "copper": {
+      "path": "<synthetic>",
+      "zones": [
+        {
+          "name": "plane",
+          "net_name": "GND",
+          "layers": [
+            "In1.Cu"
+          ],
+          "keepout": false,
+          "filled": true,
+          "bbox": [
+            0,
+            0,
+            100,
+            100
+          ]
+        },
+        {
+          "name": "pourF.Cu",
+          "net_name": "GND",
+          "layers": [
+            "F.Cu"
+          ],
+          "keepout": false,
+          "filled": true,
+          "bbox": [
+            0,
+            0,
+            100,
+            100
+          ]
+        },
+        {
+          "name": "pourB.Cu",
+          "net_name": "GND",
+          "layers": [
+            "B.Cu"
+          ],
+          "keepout": false,
+          "filled": true,
+          "bbox": [
+            0,
+            0,
+            100,
+            100
+          ]
+        },
+        {
+          "name": "islandCHASSIS_GND",
+          "net_name": "CHASSIS_GND",
+          "layers": [
+            "F.Cu"
+          ],
+          "keepout": false,
+          "filled": true,
+          "bbox": [
+            0,
+            0,
+            1,
+            1
+          ]
+        },
+        {
+          "name": "islandethernet_BS_COMMON",
+          "net_name": "ethernet_BS_COMMON",
+          "layers": [
+            "F.Cu"
+          ],
+          "keepout": false,
+          "filled": true,
+          "bbox": [
+            0,
+            0,
+            1,
+            1
+          ]
+        }
+      ],
+      "vias": [
+        {
+          "x": 10,
+          "y": 10,
+          "net_name": "GND"
+        },
+        {
+          "x": 11,
+          "y": 10,
+          "net_name": "GND"
+        },
+        {
+          "x": 12,
+          "y": 10,
+          "net_name": "GND"
+        },
+        {
+          "x": 13,
+          "y": 10,
+          "net_name": "GND"
+        },
+        {
+          "x": 14,
+          "y": 10,
+          "net_name": "GND"
+        },
+        {
+          "x": 15,
+          "y": 10,
+          "net_name": "GND"
+        },
+        {
+          "x": 20,
+          "y": 20,
+          "net_name": "GND"
+        },
+        {
+          "x": 21,
+          "y": 20,
+          "net_name": "GND"
+        }
+      ],
+      "segments": 0,
+      "footprints": [
+        {
+          "ref": "U1",
+          "value": "LM61460",
+          "x": 10,
+          "y": 10,
+          "layer": "F.Cu",
+          "pads": []
+        },
+        {
+          "ref": "U2",
+          "value": "TLV75725",
+          "x": 20,
+          "y": 20,
+          "layer": "F.Cu",
+          "pads": []
+        },
+        {
+          "ref": "U3",
+          "value": "TPS26631",
+          "x": 30,
+          "y": 30,
+          "layer": "F.Cu",
+          "pads": [
+            {
+              "name": "0",
+              "dx": 0,
+              "dy": 0,
+              "drill": 0.3,
+              "net_name": "GND"
+            },
+            {
+              "name": "1",
+              "dx": 0,
+              "dy": 0,
+              "drill": 0.3,
+              "net_name": "GND"
+            },
+            {
+              "name": "2",
+              "dx": 0,
+              "dy": 0,
+              "drill": 0.3,
+              "net_name": "GND"
+            },
+            {
+              "name": "3",
+              "dx": 0,
+              "dy": 0,
+              "drill": 0.3,
+              "net_name": "GND"
+            }
+          ]
+        }
+      ],
+      "net_names": []
+    },
+    "entries": [
+      {
+        "eid": "CD-01",
+        "title": "LM61460 pour-aware effective RthJA (58.7 -> 35 C/W)",
+        "assumes": "full-board In1.Cu GND plane + per-buck thermal-via field (>=6 x 0.6/0.3) at PGND1/PGND2 + local F.Cu/B.Cu GND pours (TI SNVSBD5D 7.3 bare 58.7 C/W vs 25 C/W on a 4-layer board; 11.1.1 layout)",
+        "where": [
+          "schgen/verify/thermal.py:66",
+          "carrier/subsystems/power.py:13"
+        ],
+        "emits": "In1.Cu GND plane: YES; U1: 6 GND vias<=5.2mm, F.Cu pour YES, B.Cu pour YES",
+        "status": "EMITTED",
+        "risk": "without this copper Tj(power:U1, 2.42 W) backs out to ~192 C at the bare 58.7 C/W against the 140 C guard — a board-dead thermal PASS-on-fiction (the GAP1 CRITICAL). The thermal gate now HARD-verifies this copper per build."
+      },
+      {
+        "eid": "CD-02",
+        "title": "TLV75725 DYD EP thermal-pad RthJA (92.5 C/W)",
+        "assumes": "DYD thermal pad soldered to GND copper + JESD51-5 pad-adjacent thermal vias into the buried plane (the DS DYD RthJA ~92.5 C/W is DEFINED on that stackup; without it the gate falls back to the DBV bare 231 C/W)",
+        "where": [
+          "schgen/verify/thermal.py:99"
+        ],
+        "emits": "In1.Cu GND plane: YES; U2: 2 GND vias<=3.0mm, F.Cu pour YES",
+        "status": "EMITTED",
+        "risk": "at the no-copper fallback 231 C/W the VADJ LDO (fmc:U1, 320 mW) lands Tj ~124 C over its 115 C guard — the PWR-3 package swap's entire benefit rides on this copper"
+      },
+      {
+        "eid": "CD-03",
+        "title": "TPS26631 PWP 2s2p RthJA (33.6 C/W)",
+        "assumes": "HTSSOP-20 PowerPAD EP soldered to copper with thermal vias into a buried plane (TI SLVSE94 RthJA ~33.6 C/W is the JEDEC 2s2p figure — it presumes internal planes)",
+        "where": [
+          "schgen/verify/thermal.py:92"
+        ],
+        "emits": "In1.Cu GND plane: YES; U3: 4 in-footprint EP via-pads (GND, PTH)",
+        "status": "EMITTED",
+        "risk": "low today (Pd ~54 mW -> huge margin even at several times the 2s2p figure), but the basis string was still plane-predicated while no plane existed"
+      },
+      {
+        "eid": "CD-04",
+        "title": "CHASSIS_GND island + single-point GND bond",
+        "assumes": "a CHASSIS_GND copper island (connector shells + mounting ring) joined to signal GND at EXACTLY ONE point (bonding pad / 0R / via stitch near power entry)",
+        "where": [
+          "carrier/subsystems/mechanical/mechanical.py:9"
+        ],
+        "emits": "CHASSIS_GND board-level copper: 1 zones, 0 vias (pads only otherwise); no bond stitch emitted",
+        "status": "PARTIAL",
+        "risk": "fab'd as-is the shields/mounting ring have NO DC reference (ESD return path open) — ERC/DRC cannot see it because the single-point bond is deliberately not netlisted"
+      },
+      {
+        "eid": "CD-05",
+        "title": "Bob-Smith trunk copper (BS_COMMON island)",
+        "assumes": "a Bob-Smith common trunk (4 x 75R || 1n/2kV into BS_COMMON) laid in copper on the chassis-side island, spaced for the 2kV surge rating (IEEE 802.3 40.7.1)",
+        "where": [
+          "subsystems/ethernet/ethernet.py:69"
+        ],
+        "emits": "BS_COMMON board-level copper: 1 zones, 0 vias (pads only)",
+        "status": "PARTIAL",
+        "risk": "without trunk copper + spacing the 2kV HF termination exists only as parts; surge creepage and return-path behaviour are unproven until the routing wave draws the island"
+      },
+      {
+        "eid": "CD-06",
+        "title": "Ethernet isolation moat (In1 plane voids)",
+        "assumes": "NO GND plane under the ethernet magnetics line side / RJ45 media pins (Pulse HX5008 layout guidance; the 2kV isolation moat) — the full-board In1 plane must be VOIDED there",
+        "where": [
+          "subsystems/ethernet/ethernet.py:12",
+          "schgen/generate/pcb/constants.py:179"
+        ],
+        "emits": "In1 rule-area voids: none; corridor between them: NOT voided (debt)",
+        "status": "NOTHING",
+        "risk": "a continuous plane under the magnetics bridges the isolation barrier capacitively and violates the 2kV creepage intent; the RJ45<->magnetics media CORRIDOR void remains routing-wave debt"
+      },
+      {
+        "eid": "CD-07",
+        "title": "DP90/DP100 L2 reference plane",
+        "assumes": "the DP90_USB / DP100_TMDS trace geometry (widths/gaps in the .kicad_dru + net classes) is an OUTER-layer microstrip referenced to a CONTINUOUS L2 GND plane through one 7628 prepreg sheet",
+        "where": [
+          "schgen/generate/constraints.py:22"
+        ],
+        "emits": "In1.Cu GND plane zone 0,0 -> 100,100 mm (unfilled-on-disk, DRC-refilled); ethernet voids punch it locally (CD-06)",
+        "status": "EMITTED",
+        "risk": "without the L2 plane every impedance number in the dru is unmoored (return path undefined, impedance wrong by design); with the plane emitted the residual risk is fill VOIDS/splits under a future route path (checked at the routing wave)"
+      },
+      {
+        "eid": "CD-08",
+        "title": "Under-SoM decoupling fanout vias",
+        "assumes": "the under-SoM bottom-side rail-entry decoupling (som_decoupling) reaches the rails/planes through fanout vias directly beneath the DF40 mezzanine",
+        "where": [
+          "schgen/generate/pcb/embed.py:510"
+        ],
+        "emits": "GND vias inside the SoM body zone: 0 (SoM zone NOT found); rail fanout vias: none emitted",
+        "status": "NOTHING",
+        "risk": "until those vias land the 18 bottom caps decouple nothing (no path from B.Cu pads to the rails) — a routing-wave item, but the prose reads as if the path exists"
+      }
+    ]
+  },
+  {
+    "name": "6",
+    "copper": {
+      "path": "<synthetic>",
+      "zones": [
+        {
+          "name": "plane",
+          "net_name": "GND",
+          "layers": [
+            "In1.Cu"
+          ],
+          "keepout": false,
+          "filled": true,
+          "bbox": [
+            0,
+            0,
+            100,
+            100
+          ]
+        },
+        {
+          "name": "pourF.Cu",
+          "net_name": "GND",
+          "layers": [
+            "F.Cu"
+          ],
+          "keepout": false,
+          "filled": true,
+          "bbox": [
+            0,
+            0,
+            100,
+            100
+          ]
+        },
+        {
+          "name": "pourB.Cu",
+          "net_name": "GND",
+          "layers": [
+            "B.Cu"
+          ],
+          "keepout": false,
+          "filled": true,
+          "bbox": [
+            0,
+            0,
+            100,
+            100
+          ]
+        },
+        {
+          "name": "islandCHASSIS_GND",
+          "net_name": "CHASSIS_GND",
+          "layers": [
+            "F.Cu"
+          ],
+          "keepout": false,
+          "filled": true,
+          "bbox": [
+            0,
+            0,
+            1,
+            1
+          ]
+        },
+        {
+          "name": "islandethernet_BS_COMMON",
+          "net_name": "ethernet_BS_COMMON",
+          "layers": [
+            "F.Cu"
+          ],
+          "keepout": false,
+          "filled": true,
+          "bbox": [
+            0,
+            0,
+            1,
+            1
+          ]
+        }
+      ],
+      "vias": [
+        {
+          "x": 10,
+          "y": 10,
+          "net_name": "GND"
+        },
+        {
+          "x": 11,
+          "y": 10,
+          "net_name": "GND"
+        },
+        {
+          "x": 12,
+          "y": 10,
+          "net_name": "GND"
+        },
+        {
+          "x": 13,
+          "y": 10,
+          "net_name": "GND"
+        },
+        {
+          "x": 14,
+          "y": 10,
+          "net_name": "GND"
+        },
+        {
+          "x": 15,
+          "y": 10,
+          "net_name": "GND"
+        },
+        {
+          "x": 20,
+          "y": 20,
+          "net_name": "GND"
+        },
+        {
+          "x": 21,
+          "y": 20,
+          "net_name": "GND"
+        },
+        {
+          "x": 0,
+          "y": 0,
+          "net_name": "CHASSIS_GND"
+        },
+        {
+          "x": 0,
+          "y": 0,
+          "net_name": "ethernet_BS_COMMON"
+        }
+      ],
+      "segments": 0,
+      "footprints": [
+        {
+          "ref": "U1",
+          "value": "LM61460",
+          "x": 10,
+          "y": 10,
+          "layer": "F.Cu",
+          "pads": []
+        },
+        {
+          "ref": "U2",
+          "value": "TLV75725",
+          "x": 20,
+          "y": 20,
+          "layer": "F.Cu",
+          "pads": []
+        },
+        {
+          "ref": "U3",
+          "value": "TPS26631",
+          "x": 30,
+          "y": 30,
+          "layer": "F.Cu",
+          "pads": [
+            {
+              "name": "0",
+              "dx": 0,
+              "dy": 0,
+              "drill": 0.3,
+              "net_name": "GND"
+            },
+            {
+              "name": "1",
+              "dx": 0,
+              "dy": 0,
+              "drill": 0.3,
+              "net_name": "GND"
+            },
+            {
+              "name": "2",
+              "dx": 0,
+              "dy": 0,
+              "drill": 0.3,
+              "net_name": "GND"
+            },
+            {
+              "name": "3",
+              "dx": 0,
+              "dy": 0,
+              "drill": 0.3,
+              "net_name": "GND"
+            }
+          ]
+        }
+      ],
+      "net_names": []
+    },
+    "entries": [
+      {
+        "eid": "CD-01",
+        "title": "LM61460 pour-aware effective RthJA (58.7 -> 35 C/W)",
+        "assumes": "full-board In1.Cu GND plane + per-buck thermal-via field (>=6 x 0.6/0.3) at PGND1/PGND2 + local F.Cu/B.Cu GND pours (TI SNVSBD5D 7.3 bare 58.7 C/W vs 25 C/W on a 4-layer board; 11.1.1 layout)",
+        "where": [
+          "schgen/verify/thermal.py:66",
+          "carrier/subsystems/power.py:13"
+        ],
+        "emits": "In1.Cu GND plane: YES; U1: 6 GND vias<=5.2mm, F.Cu pour YES, B.Cu pour YES",
+        "status": "EMITTED",
+        "risk": "without this copper Tj(power:U1, 2.42 W) backs out to ~192 C at the bare 58.7 C/W against the 140 C guard — a board-dead thermal PASS-on-fiction (the GAP1 CRITICAL). The thermal gate now HARD-verifies this copper per build."
+      },
+      {
+        "eid": "CD-02",
+        "title": "TLV75725 DYD EP thermal-pad RthJA (92.5 C/W)",
+        "assumes": "DYD thermal pad soldered to GND copper + JESD51-5 pad-adjacent thermal vias into the buried plane (the DS DYD RthJA ~92.5 C/W is DEFINED on that stackup; without it the gate falls back to the DBV bare 231 C/W)",
+        "where": [
+          "schgen/verify/thermal.py:99"
+        ],
+        "emits": "In1.Cu GND plane: YES; U2: 2 GND vias<=3.0mm, F.Cu pour YES",
+        "status": "EMITTED",
+        "risk": "at the no-copper fallback 231 C/W the VADJ LDO (fmc:U1, 320 mW) lands Tj ~124 C over its 115 C guard — the PWR-3 package swap's entire benefit rides on this copper"
+      },
+      {
+        "eid": "CD-03",
+        "title": "TPS26631 PWP 2s2p RthJA (33.6 C/W)",
+        "assumes": "HTSSOP-20 PowerPAD EP soldered to copper with thermal vias into a buried plane (TI SLVSE94 RthJA ~33.6 C/W is the JEDEC 2s2p figure — it presumes internal planes)",
+        "where": [
+          "schgen/verify/thermal.py:92"
+        ],
+        "emits": "In1.Cu GND plane: YES; U3: 4 in-footprint EP via-pads (GND, PTH)",
+        "status": "EMITTED",
+        "risk": "low today (Pd ~54 mW -> huge margin even at several times the 2s2p figure), but the basis string was still plane-predicated while no plane existed"
+      },
+      {
+        "eid": "CD-04",
+        "title": "CHASSIS_GND island + single-point GND bond",
+        "assumes": "a CHASSIS_GND copper island (connector shells + mounting ring) joined to signal GND at EXACTLY ONE point (bonding pad / 0R / via stitch near power entry)",
+        "where": [
+          "carrier/subsystems/mechanical/mechanical.py:9"
+        ],
+        "emits": "CHASSIS_GND board-level copper: 1 zones, 1 vias (pads only otherwise); no bond stitch emitted",
+        "status": "EMITTED",
+        "risk": "fab'd as-is the shields/mounting ring have NO DC reference (ESD return path open) — ERC/DRC cannot see it because the single-point bond is deliberately not netlisted"
+      },
+      {
+        "eid": "CD-05",
+        "title": "Bob-Smith trunk copper (BS_COMMON island)",
+        "assumes": "a Bob-Smith common trunk (4 x 75R || 1n/2kV into BS_COMMON) laid in copper on the chassis-side island, spaced for the 2kV surge rating (IEEE 802.3 40.7.1)",
+        "where": [
+          "subsystems/ethernet/ethernet.py:69"
+        ],
+        "emits": "BS_COMMON board-level copper: 1 zones, 1 vias (pads only)",
+        "status": "EMITTED",
+        "risk": "without trunk copper + spacing the 2kV HF termination exists only as parts; surge creepage and return-path behaviour are unproven until the routing wave draws the island"
+      },
+      {
+        "eid": "CD-06",
+        "title": "Ethernet isolation moat (In1 plane voids)",
+        "assumes": "NO GND plane under the ethernet magnetics line side / RJ45 media pins (Pulse HX5008 layout guidance; the 2kV isolation moat) — the full-board In1 plane must be VOIDED there",
+        "where": [
+          "subsystems/ethernet/ethernet.py:12",
+          "schgen/generate/pcb/constants.py:179"
+        ],
+        "emits": "In1 rule-area voids: none; corridor between them: NOT voided (debt)",
+        "status": "NOTHING",
+        "risk": "a continuous plane under the magnetics bridges the isolation barrier capacitively and violates the 2kV creepage intent; the RJ45<->magnetics media CORRIDOR void remains routing-wave debt"
+      },
+      {
+        "eid": "CD-07",
+        "title": "DP90/DP100 L2 reference plane",
+        "assumes": "the DP90_USB / DP100_TMDS trace geometry (widths/gaps in the .kicad_dru + net classes) is an OUTER-layer microstrip referenced to a CONTINUOUS L2 GND plane through one 7628 prepreg sheet",
+        "where": [
+          "schgen/generate/constraints.py:22"
+        ],
+        "emits": "In1.Cu GND plane zone 0,0 -> 100,100 mm (unfilled-on-disk, DRC-refilled); ethernet voids punch it locally (CD-06)",
+        "status": "EMITTED",
+        "risk": "without the L2 plane every impedance number in the dru is unmoored (return path undefined, impedance wrong by design); with the plane emitted the residual risk is fill VOIDS/splits under a future route path (checked at the routing wave)"
+      },
+      {
+        "eid": "CD-08",
+        "title": "Under-SoM decoupling fanout vias",
+        "assumes": "the under-SoM bottom-side rail-entry decoupling (som_decoupling) reaches the rails/planes through fanout vias directly beneath the DF40 mezzanine",
+        "where": [
+          "schgen/generate/pcb/embed.py:510"
+        ],
+        "emits": "GND vias inside the SoM body zone: 0 (SoM zone NOT found); rail fanout vias: none emitted",
+        "status": "NOTHING",
+        "risk": "until those vias land the 18 bottom caps decouple nothing (no path from B.Cu pads to the rails) — a routing-wave item, but the prose reads as if the path exists"
+      }
+    ]
+  },
+  {
+    "name": "7",
+    "copper": {
+      "path": "<synthetic>",
+      "zones": [
+        {
+          "name": "plane",
+          "net_name": "GND",
+          "layers": [
+            "In1.Cu"
+          ],
+          "keepout": false,
+          "filled": true,
+          "bbox": [
+            0,
+            0,
+            100,
+            100
+          ]
+        },
+        {
+          "name": "pourF.Cu",
+          "net_name": "GND",
+          "layers": [
+            "F.Cu"
+          ],
+          "keepout": false,
+          "filled": true,
+          "bbox": [
+            0,
+            0,
+            100,
+            100
+          ]
+        },
+        {
+          "name": "pourB.Cu",
+          "net_name": "GND",
+          "layers": [
+            "B.Cu"
+          ],
+          "keepout": false,
+          "filled": true,
+          "bbox": [
+            0,
+            0,
+            100,
+            100
+          ]
+        },
+        {
+          "name": "islandCHASSIS_GND",
+          "net_name": "CHASSIS_GND",
+          "layers": [
+            "F.Cu"
+          ],
+          "keepout": false,
+          "filled": true,
+          "bbox": [
+            0,
+            0,
+            1,
+            1
+          ]
+        },
+        {
+          "name": "islandethernet_BS_COMMON",
+          "net_name": "ethernet_BS_COMMON",
+          "layers": [
+            "F.Cu"
+          ],
+          "keepout": false,
+          "filled": true,
+          "bbox": [
+            0,
+            0,
+            1,
+            1
+          ]
+        },
+        {
+          "name": "ethernet_isolation_void_1",
+          "net_name": "",
+          "layers": [
+            "In1.Cu"
+          ],
+          "keepout": true,
+          "filled": false,
+          "bbox": [
+            0,
+            0,
+            1,
+            1
+          ]
+        }
+      ],
+      "vias": [
+        {
+          "x": 10,
+          "y": 10,
+          "net_name": "GND"
+        },
+        {
+          "x": 11,
+          "y": 10,
+          "net_name": "GND"
+        },
+        {
+          "x": 12,
+          "y": 10,
+          "net_name": "GND"
+        },
+        {
+          "x": 13,
+          "y": 10,
+          "net_name": "GND"
+        },
+        {
+          "x": 14,
+          "y": 10,
+          "net_name": "GND"
+        },
+        {
+          "x": 15,
+          "y": 10,
+          "net_name": "GND"
+        },
+        {
+          "x": 20,
+          "y": 20,
+          "net_name": "GND"
+        },
+        {
+          "x": 21,
+          "y": 20,
+          "net_name": "GND"
+        },
+        {
+          "x": 0,
+          "y": 0,
+          "net_name": "CHASSIS_GND"
+        },
+        {
+          "x": 0,
+          "y": 0,
+          "net_name": "ethernet_BS_COMMON"
+        }
+      ],
+      "segments": 0,
+      "footprints": [
+        {
+          "ref": "U1",
+          "value": "LM61460",
+          "x": 10,
+          "y": 10,
+          "layer": "F.Cu",
+          "pads": []
+        },
+        {
+          "ref": "U2",
+          "value": "TLV75725",
+          "x": 20,
+          "y": 20,
+          "layer": "F.Cu",
+          "pads": []
+        },
+        {
+          "ref": "U3",
+          "value": "TPS26631",
+          "x": 30,
+          "y": 30,
+          "layer": "F.Cu",
+          "pads": [
+            {
+              "name": "0",
+              "dx": 0,
+              "dy": 0,
+              "drill": 0.3,
+              "net_name": "GND"
+            },
+            {
+              "name": "1",
+              "dx": 0,
+              "dy": 0,
+              "drill": 0.3,
+              "net_name": "GND"
+            },
+            {
+              "name": "2",
+              "dx": 0,
+              "dy": 0,
+              "drill": 0.3,
+              "net_name": "GND"
+            },
+            {
+              "name": "3",
+              "dx": 0,
+              "dy": 0,
+              "drill": 0.3,
+              "net_name": "GND"
+            }
+          ]
+        }
+      ],
+      "net_names": []
+    },
+    "entries": [
+      {
+        "eid": "CD-01",
+        "title": "LM61460 pour-aware effective RthJA (58.7 -> 35 C/W)",
+        "assumes": "full-board In1.Cu GND plane + per-buck thermal-via field (>=6 x 0.6/0.3) at PGND1/PGND2 + local F.Cu/B.Cu GND pours (TI SNVSBD5D 7.3 bare 58.7 C/W vs 25 C/W on a 4-layer board; 11.1.1 layout)",
+        "where": [
+          "schgen/verify/thermal.py:66",
+          "carrier/subsystems/power.py:13"
+        ],
+        "emits": "In1.Cu GND plane: YES; U1: 6 GND vias<=5.2mm, F.Cu pour YES, B.Cu pour YES",
+        "status": "EMITTED",
+        "risk": "without this copper Tj(power:U1, 2.42 W) backs out to ~192 C at the bare 58.7 C/W against the 140 C guard — a board-dead thermal PASS-on-fiction (the GAP1 CRITICAL). The thermal gate now HARD-verifies this copper per build."
+      },
+      {
+        "eid": "CD-02",
+        "title": "TLV75725 DYD EP thermal-pad RthJA (92.5 C/W)",
+        "assumes": "DYD thermal pad soldered to GND copper + JESD51-5 pad-adjacent thermal vias into the buried plane (the DS DYD RthJA ~92.5 C/W is DEFINED on that stackup; without it the gate falls back to the DBV bare 231 C/W)",
+        "where": [
+          "schgen/verify/thermal.py:99"
+        ],
+        "emits": "In1.Cu GND plane: YES; U2: 2 GND vias<=3.0mm, F.Cu pour YES",
+        "status": "EMITTED",
+        "risk": "at the no-copper fallback 231 C/W the VADJ LDO (fmc:U1, 320 mW) lands Tj ~124 C over its 115 C guard — the PWR-3 package swap's entire benefit rides on this copper"
+      },
+      {
+        "eid": "CD-03",
+        "title": "TPS26631 PWP 2s2p RthJA (33.6 C/W)",
+        "assumes": "HTSSOP-20 PowerPAD EP soldered to copper with thermal vias into a buried plane (TI SLVSE94 RthJA ~33.6 C/W is the JEDEC 2s2p figure — it presumes internal planes)",
+        "where": [
+          "schgen/verify/thermal.py:92"
+        ],
+        "emits": "In1.Cu GND plane: YES; U3: 4 in-footprint EP via-pads (GND, PTH)",
+        "status": "EMITTED",
+        "risk": "low today (Pd ~54 mW -> huge margin even at several times the 2s2p figure), but the basis string was still plane-predicated while no plane existed"
+      },
+      {
+        "eid": "CD-04",
+        "title": "CHASSIS_GND island + single-point GND bond",
+        "assumes": "a CHASSIS_GND copper island (connector shells + mounting ring) joined to signal GND at EXACTLY ONE point (bonding pad / 0R / via stitch near power entry)",
+        "where": [
+          "carrier/subsystems/mechanical/mechanical.py:9"
+        ],
+        "emits": "CHASSIS_GND board-level copper: 1 zones, 1 vias (pads only otherwise); no bond stitch emitted",
+        "status": "EMITTED",
+        "risk": "fab'd as-is the shields/mounting ring have NO DC reference (ESD return path open) — ERC/DRC cannot see it because the single-point bond is deliberately not netlisted"
+      },
+      {
+        "eid": "CD-05",
+        "title": "Bob-Smith trunk copper (BS_COMMON island)",
+        "assumes": "a Bob-Smith common trunk (4 x 75R || 1n/2kV into BS_COMMON) laid in copper on the chassis-side island, spaced for the 2kV surge rating (IEEE 802.3 40.7.1)",
+        "where": [
+          "subsystems/ethernet/ethernet.py:69"
+        ],
+        "emits": "BS_COMMON board-level copper: 1 zones, 1 vias (pads only)",
+        "status": "EMITTED",
+        "risk": "without trunk copper + spacing the 2kV HF termination exists only as parts; surge creepage and return-path behaviour are unproven until the routing wave draws the island"
+      },
+      {
+        "eid": "CD-06",
+        "title": "Ethernet isolation moat (In1 plane voids)",
+        "assumes": "NO GND plane under the ethernet magnetics line side / RJ45 media pins (Pulse HX5008 layout guidance; the 2kV isolation moat) — the full-board In1 plane must be VOIDED there",
+        "where": [
+          "subsystems/ethernet/ethernet.py:12",
+          "schgen/generate/pcb/constants.py:179"
+        ],
+        "emits": "In1 rule-area voids: ethernet_isolation_void_1; corridor between them: NOT voided (debt)",
+        "status": "NOTHING",
+        "risk": "a continuous plane under the magnetics bridges the isolation barrier capacitively and violates the 2kV creepage intent; the RJ45<->magnetics media CORRIDOR void remains routing-wave debt"
+      },
+      {
+        "eid": "CD-07",
+        "title": "DP90/DP100 L2 reference plane",
+        "assumes": "the DP90_USB / DP100_TMDS trace geometry (widths/gaps in the .kicad_dru + net classes) is an OUTER-layer microstrip referenced to a CONTINUOUS L2 GND plane through one 7628 prepreg sheet",
+        "where": [
+          "schgen/generate/constraints.py:22"
+        ],
+        "emits": "In1.Cu GND plane zone 0,0 -> 100,100 mm (unfilled-on-disk, DRC-refilled); ethernet voids punch it locally (CD-06)",
+        "status": "EMITTED",
+        "risk": "without the L2 plane every impedance number in the dru is unmoored (return path undefined, impedance wrong by design); with the plane emitted the residual risk is fill VOIDS/splits under a future route path (checked at the routing wave)"
+      },
+      {
+        "eid": "CD-08",
+        "title": "Under-SoM decoupling fanout vias",
+        "assumes": "the under-SoM bottom-side rail-entry decoupling (som_decoupling) reaches the rails/planes through fanout vias directly beneath the DF40 mezzanine",
+        "where": [
+          "schgen/generate/pcb/embed.py:510"
+        ],
+        "emits": "GND vias inside the SoM body zone: 0 (SoM zone NOT found); rail fanout vias: none emitted",
+        "status": "NOTHING",
+        "risk": "until those vias land the 18 bottom caps decouple nothing (no path from B.Cu pads to the rails) — a routing-wave item, but the prose reads as if the path exists"
+      }
+    ]
+  },
+  {
+    "name": "8",
+    "copper": {
+      "path": "<synthetic>",
+      "zones": [
+        {
+          "name": "plane",
+          "net_name": "GND",
+          "layers": [
+            "In1.Cu"
+          ],
+          "keepout": false,
+          "filled": true,
+          "bbox": [
+            0,
+            0,
+            100,
+            100
+          ]
+        },
+        {
+          "name": "pourF.Cu",
+          "net_name": "GND",
+          "layers": [
+            "F.Cu"
+          ],
+          "keepout": false,
+          "filled": true,
+          "bbox": [
+            0,
+            0,
+            100,
+            100
+          ]
+        },
+        {
+          "name": "pourB.Cu",
+          "net_name": "GND",
+          "layers": [
+            "B.Cu"
+          ],
+          "keepout": false,
+          "filled": true,
+          "bbox": [
+            0,
+            0,
+            100,
+            100
+          ]
+        },
+        {
+          "name": "islandCHASSIS_GND",
+          "net_name": "CHASSIS_GND",
+          "layers": [
+            "F.Cu"
+          ],
+          "keepout": false,
+          "filled": true,
+          "bbox": [
+            0,
+            0,
+            1,
+            1
+          ]
+        },
+        {
+          "name": "islandethernet_BS_COMMON",
+          "net_name": "ethernet_BS_COMMON",
+          "layers": [
+            "F.Cu"
+          ],
+          "keepout": false,
+          "filled": true,
+          "bbox": [
+            0,
+            0,
+            1,
+            1
+          ]
+        },
+        {
+          "name": "ethernet_isolation_void_1",
+          "net_name": "",
+          "layers": [
+            "In1.Cu"
+          ],
+          "keepout": true,
+          "filled": false,
+          "bbox": [
+            0,
+            0,
+            1,
+            1
+          ]
+        },
+        {
+          "name": "ethernet_isolation_void_2",
+          "net_name": "",
+          "layers": [
+            "In1.Cu"
+          ],
+          "keepout": true,
+          "filled": false,
+          "bbox": [
+            0,
+            0,
+            1,
+            1
+          ]
+        },
+        {
+          "name": "SoM_body_keepout",
+          "net_name": "",
+          "layers": [
+            "F.Cu"
+          ],
+          "keepout": true,
+          "filled": false,
+          "bbox": [
+            0,
+            0,
+            50,
+            50
+          ]
+        }
+      ],
+      "vias": [
+        {
+          "x": 10,
+          "y": 10,
+          "net_name": "GND"
+        },
+        {
+          "x": 11,
+          "y": 10,
+          "net_name": "GND"
+        },
+        {
+          "x": 12,
+          "y": 10,
+          "net_name": "GND"
+        },
+        {
+          "x": 13,
+          "y": 10,
+          "net_name": "GND"
+        },
+        {
+          "x": 14,
+          "y": 10,
+          "net_name": "GND"
+        },
+        {
+          "x": 15,
+          "y": 10,
+          "net_name": "GND"
+        },
+        {
+          "x": 20,
+          "y": 20,
+          "net_name": "GND"
+        },
+        {
+          "x": 21,
+          "y": 20,
+          "net_name": "GND"
+        },
+        {
+          "x": 0,
+          "y": 0,
+          "net_name": "CHASSIS_GND"
+        },
+        {
+          "x": 0,
+          "y": 0,
+          "net_name": "ethernet_BS_COMMON"
+        }
+      ],
+      "segments": 0,
+      "footprints": [
+        {
+          "ref": "U1",
+          "value": "LM61460",
+          "x": 10,
+          "y": 10,
+          "layer": "F.Cu",
+          "pads": []
+        },
+        {
+          "ref": "U2",
+          "value": "TLV75725",
+          "x": 20,
+          "y": 20,
+          "layer": "F.Cu",
+          "pads": []
+        },
+        {
+          "ref": "U3",
+          "value": "TPS26631",
+          "x": 30,
+          "y": 30,
+          "layer": "F.Cu",
+          "pads": [
+            {
+              "name": "0",
+              "dx": 0,
+              "dy": 0,
+              "drill": 0.3,
+              "net_name": "GND"
+            },
+            {
+              "name": "1",
+              "dx": 0,
+              "dy": 0,
+              "drill": 0.3,
+              "net_name": "GND"
+            },
+            {
+              "name": "2",
+              "dx": 0,
+              "dy": 0,
+              "drill": 0.3,
+              "net_name": "GND"
+            },
+            {
+              "name": "3",
+              "dx": 0,
+              "dy": 0,
+              "drill": 0.3,
+              "net_name": "GND"
+            }
+          ]
+        }
+      ],
+      "net_names": []
+    },
+    "entries": [
+      {
+        "eid": "CD-01",
+        "title": "LM61460 pour-aware effective RthJA (58.7 -> 35 C/W)",
+        "assumes": "full-board In1.Cu GND plane + per-buck thermal-via field (>=6 x 0.6/0.3) at PGND1/PGND2 + local F.Cu/B.Cu GND pours (TI SNVSBD5D 7.3 bare 58.7 C/W vs 25 C/W on a 4-layer board; 11.1.1 layout)",
+        "where": [
+          "schgen/verify/thermal.py:66",
+          "carrier/subsystems/power.py:13"
+        ],
+        "emits": "In1.Cu GND plane: YES; U1: 6 GND vias<=5.2mm, F.Cu pour YES, B.Cu pour YES",
+        "status": "EMITTED",
+        "risk": "without this copper Tj(power:U1, 2.42 W) backs out to ~192 C at the bare 58.7 C/W against the 140 C guard — a board-dead thermal PASS-on-fiction (the GAP1 CRITICAL). The thermal gate now HARD-verifies this copper per build."
+      },
+      {
+        "eid": "CD-02",
+        "title": "TLV75725 DYD EP thermal-pad RthJA (92.5 C/W)",
+        "assumes": "DYD thermal pad soldered to GND copper + JESD51-5 pad-adjacent thermal vias into the buried plane (the DS DYD RthJA ~92.5 C/W is DEFINED on that stackup; without it the gate falls back to the DBV bare 231 C/W)",
+        "where": [
+          "schgen/verify/thermal.py:99"
+        ],
+        "emits": "In1.Cu GND plane: YES; U2: 2 GND vias<=3.0mm, F.Cu pour YES",
+        "status": "EMITTED",
+        "risk": "at the no-copper fallback 231 C/W the VADJ LDO (fmc:U1, 320 mW) lands Tj ~124 C over its 115 C guard — the PWR-3 package swap's entire benefit rides on this copper"
+      },
+      {
+        "eid": "CD-03",
+        "title": "TPS26631 PWP 2s2p RthJA (33.6 C/W)",
+        "assumes": "HTSSOP-20 PowerPAD EP soldered to copper with thermal vias into a buried plane (TI SLVSE94 RthJA ~33.6 C/W is the JEDEC 2s2p figure — it presumes internal planes)",
+        "where": [
+          "schgen/verify/thermal.py:92"
+        ],
+        "emits": "In1.Cu GND plane: YES; U3: 4 in-footprint EP via-pads (GND, PTH)",
+        "status": "EMITTED",
+        "risk": "low today (Pd ~54 mW -> huge margin even at several times the 2s2p figure), but the basis string was still plane-predicated while no plane existed"
+      },
+      {
+        "eid": "CD-04",
+        "title": "CHASSIS_GND island + single-point GND bond",
+        "assumes": "a CHASSIS_GND copper island (connector shells + mounting ring) joined to signal GND at EXACTLY ONE point (bonding pad / 0R / via stitch near power entry)",
+        "where": [
+          "carrier/subsystems/mechanical/mechanical.py:9"
+        ],
+        "emits": "CHASSIS_GND board-level copper: 1 zones, 1 vias (pads only otherwise); no bond stitch emitted",
+        "status": "EMITTED",
+        "risk": "fab'd as-is the shields/mounting ring have NO DC reference (ESD return path open) — ERC/DRC cannot see it because the single-point bond is deliberately not netlisted"
+      },
+      {
+        "eid": "CD-05",
+        "title": "Bob-Smith trunk copper (BS_COMMON island)",
+        "assumes": "a Bob-Smith common trunk (4 x 75R || 1n/2kV into BS_COMMON) laid in copper on the chassis-side island, spaced for the 2kV surge rating (IEEE 802.3 40.7.1)",
+        "where": [
+          "subsystems/ethernet/ethernet.py:69"
+        ],
+        "emits": "BS_COMMON board-level copper: 1 zones, 1 vias (pads only)",
+        "status": "EMITTED",
+        "risk": "without trunk copper + spacing the 2kV HF termination exists only as parts; surge creepage and return-path behaviour are unproven until the routing wave draws the island"
+      },
+      {
+        "eid": "CD-06",
+        "title": "Ethernet isolation moat (In1 plane voids)",
+        "assumes": "NO GND plane under the ethernet magnetics line side / RJ45 media pins (Pulse HX5008 layout guidance; the 2kV isolation moat) — the full-board In1 plane must be VOIDED there",
+        "where": [
+          "subsystems/ethernet/ethernet.py:12",
+          "schgen/generate/pcb/constants.py:179"
+        ],
+        "emits": "In1 rule-area voids: ethernet_isolation_void_1, ethernet_isolation_void_2; corridor between them: NOT voided (debt)",
+        "status": "PARTIAL",
+        "risk": "a continuous plane under the magnetics bridges the isolation barrier capacitively and violates the 2kV creepage intent; the RJ45<->magnetics media CORRIDOR void remains routing-wave debt"
+      },
+      {
+        "eid": "CD-07",
+        "title": "DP90/DP100 L2 reference plane",
+        "assumes": "the DP90_USB / DP100_TMDS trace geometry (widths/gaps in the .kicad_dru + net classes) is an OUTER-layer microstrip referenced to a CONTINUOUS L2 GND plane through one 7628 prepreg sheet",
+        "where": [
+          "schgen/generate/constraints.py:22"
+        ],
+        "emits": "In1.Cu GND plane zone 0,0 -> 100,100 mm (unfilled-on-disk, DRC-refilled); ethernet voids punch it locally (CD-06)",
+        "status": "EMITTED",
+        "risk": "without the L2 plane every impedance number in the dru is unmoored (return path undefined, impedance wrong by design); with the plane emitted the residual risk is fill VOIDS/splits under a future route path (checked at the routing wave)"
+      },
+      {
+        "eid": "CD-08",
+        "title": "Under-SoM decoupling fanout vias",
+        "assumes": "the under-SoM bottom-side rail-entry decoupling (som_decoupling) reaches the rails/planes through fanout vias directly beneath the DF40 mezzanine",
+        "where": [
+          "schgen/generate/pcb/embed.py:510"
+        ],
+        "emits": "GND vias inside the SoM body zone: 8 (SoM zone found); rail fanout vias: none emitted",
+        "status": "PARTIAL",
+        "risk": "until those vias land the 18 bottom caps decouple nothing (no path from B.Cu pads to the rails) — a routing-wave item, but the prose reads as if the path exists"
+      }
+    ]
+  },
+  {
+    "name": "9",
+    "copper": {
+      "path": "<synthetic>",
+      "zones": [
+        {
+          "name": "pourF.Cu",
+          "net_name": "GND",
+          "layers": [
+            "F.Cu"
+          ],
+          "keepout": false,
+          "filled": true,
+          "bbox": [
+            0,
+            0,
+            100,
+            100
+          ]
+        },
+        {
+          "name": "pourB.Cu",
+          "net_name": "GND",
+          "layers": [
+            "B.Cu"
+          ],
+          "keepout": false,
+          "filled": true,
+          "bbox": [
+            0,
+            0,
+            100,
+            100
+          ]
+        },
+        {
+          "name": "islandCHASSIS_GND",
+          "net_name": "CHASSIS_GND",
+          "layers": [
+            "F.Cu"
+          ],
+          "keepout": false,
+          "filled": true,
+          "bbox": [
+            0,
+            0,
+            1,
+            1
+          ]
+        },
+        {
+          "name": "islandethernet_BS_COMMON",
+          "net_name": "ethernet_BS_COMMON",
+          "layers": [
+            "F.Cu"
+          ],
+          "keepout": false,
+          "filled": true,
+          "bbox": [
+            0,
+            0,
+            1,
+            1
+          ]
+        },
+        {
+          "name": "ethernet_isolation_void_1",
+          "net_name": "",
+          "layers": [
+            "In1.Cu"
+          ],
+          "keepout": true,
+          "filled": false,
+          "bbox": [
+            0,
+            0,
+            1,
+            1
+          ]
+        },
+        {
+          "name": "ethernet_isolation_void_2",
+          "net_name": "",
+          "layers": [
+            "In1.Cu"
+          ],
+          "keepout": true,
+          "filled": false,
+          "bbox": [
+            0,
+            0,
+            1,
+            1
+          ]
+        },
+        {
+          "name": "SoM_body_keepout",
+          "net_name": "",
+          "layers": [
+            "F.Cu"
+          ],
+          "keepout": true,
+          "filled": false,
+          "bbox": [
+            0,
+            0,
+            50,
+            50
+          ]
+        }
+      ],
+      "vias": [
+        {
+          "x": 10,
+          "y": 10,
+          "net_name": "GND"
+        },
+        {
+          "x": 11,
+          "y": 10,
+          "net_name": "GND"
+        },
+        {
+          "x": 12,
+          "y": 10,
+          "net_name": "GND"
+        },
+        {
+          "x": 13,
+          "y": 10,
+          "net_name": "GND"
+        },
+        {
+          "x": 14,
+          "y": 10,
+          "net_name": "GND"
+        },
+        {
+          "x": 15,
+          "y": 10,
+          "net_name": "GND"
+        },
+        {
+          "x": 20,
+          "y": 20,
+          "net_name": "GND"
+        },
+        {
+          "x": 21,
+          "y": 20,
+          "net_name": "GND"
+        },
+        {
+          "x": 0,
+          "y": 0,
+          "net_name": "CHASSIS_GND"
+        },
+        {
+          "x": 0,
+          "y": 0,
+          "net_name": "ethernet_BS_COMMON"
+        }
+      ],
+      "segments": 0,
+      "footprints": [
+        {
+          "ref": "U1",
+          "value": "LM61460",
+          "x": 10,
+          "y": 10,
+          "layer": "F.Cu",
+          "pads": []
+        },
+        {
+          "ref": "U2",
+          "value": "TLV75725",
+          "x": 20,
+          "y": 20,
+          "layer": "F.Cu",
+          "pads": []
+        },
+        {
+          "ref": "U3",
+          "value": "TPS26631",
+          "x": 30,
+          "y": 30,
+          "layer": "F.Cu",
+          "pads": [
+            {
+              "name": "0",
+              "dx": 0,
+              "dy": 0,
+              "drill": 0.3,
+              "net_name": "GND"
+            },
+            {
+              "name": "1",
+              "dx": 0,
+              "dy": 0,
+              "drill": 0.3,
+              "net_name": "GND"
+            },
+            {
+              "name": "2",
+              "dx": 0,
+              "dy": 0,
+              "drill": 0.3,
+              "net_name": "GND"
+            },
+            {
+              "name": "3",
+              "dx": 0,
+              "dy": 0,
+              "drill": 0.3,
+              "net_name": "GND"
+            }
+          ]
+        }
+      ],
+      "net_names": []
+    },
+    "entries": [
+      {
+        "eid": "CD-01",
+        "title": "LM61460 pour-aware effective RthJA (58.7 -> 35 C/W)",
+        "assumes": "full-board In1.Cu GND plane + per-buck thermal-via field (>=6 x 0.6/0.3) at PGND1/PGND2 + local F.Cu/B.Cu GND pours (TI SNVSBD5D 7.3 bare 58.7 C/W vs 25 C/W on a 4-layer board; 11.1.1 layout)",
+        "where": [
+          "schgen/verify/thermal.py:66",
+          "carrier/subsystems/power.py:13"
+        ],
+        "emits": "In1.Cu GND plane: NO; U1: 6 GND vias<=5.2mm, F.Cu pour YES, B.Cu pour YES",
+        "status": "PARTIAL",
+        "risk": "without this copper Tj(power:U1, 2.42 W) backs out to ~192 C at the bare 58.7 C/W against the 140 C guard — a board-dead thermal PASS-on-fiction (the GAP1 CRITICAL). The thermal gate now HARD-verifies this copper per build."
+      },
+      {
+        "eid": "CD-02",
+        "title": "TLV75725 DYD EP thermal-pad RthJA (92.5 C/W)",
+        "assumes": "DYD thermal pad soldered to GND copper + JESD51-5 pad-adjacent thermal vias into the buried plane (the DS DYD RthJA ~92.5 C/W is DEFINED on that stackup; without it the gate falls back to the DBV bare 231 C/W)",
+        "where": [
+          "schgen/verify/thermal.py:99"
+        ],
+        "emits": "In1.Cu GND plane: NO; U2: 2 GND vias<=3.0mm, F.Cu pour YES",
+        "status": "PARTIAL",
+        "risk": "at the no-copper fallback 231 C/W the VADJ LDO (fmc:U1, 320 mW) lands Tj ~124 C over its 115 C guard — the PWR-3 package swap's entire benefit rides on this copper"
+      },
+      {
+        "eid": "CD-03",
+        "title": "TPS26631 PWP 2s2p RthJA (33.6 C/W)",
+        "assumes": "HTSSOP-20 PowerPAD EP soldered to copper with thermal vias into a buried plane (TI SLVSE94 RthJA ~33.6 C/W is the JEDEC 2s2p figure — it presumes internal planes)",
+        "where": [
+          "schgen/verify/thermal.py:92"
+        ],
+        "emits": "In1.Cu GND plane: NO; U3: 4 in-footprint EP via-pads (GND, PTH)",
+        "status": "PARTIAL",
+        "risk": "low today (Pd ~54 mW -> huge margin even at several times the 2s2p figure), but the basis string was still plane-predicated while no plane existed"
+      },
+      {
+        "eid": "CD-04",
+        "title": "CHASSIS_GND island + single-point GND bond",
+        "assumes": "a CHASSIS_GND copper island (connector shells + mounting ring) joined to signal GND at EXACTLY ONE point (bonding pad / 0R / via stitch near power entry)",
+        "where": [
+          "carrier/subsystems/mechanical/mechanical.py:9"
+        ],
+        "emits": "CHASSIS_GND board-level copper: 1 zones, 1 vias (pads only otherwise); no bond stitch emitted",
+        "status": "EMITTED",
+        "risk": "fab'd as-is the shields/mounting ring have NO DC reference (ESD return path open) — ERC/DRC cannot see it because the single-point bond is deliberately not netlisted"
+      },
+      {
+        "eid": "CD-05",
+        "title": "Bob-Smith trunk copper (BS_COMMON island)",
+        "assumes": "a Bob-Smith common trunk (4 x 75R || 1n/2kV into BS_COMMON) laid in copper on the chassis-side island, spaced for the 2kV surge rating (IEEE 802.3 40.7.1)",
+        "where": [
+          "subsystems/ethernet/ethernet.py:69"
+        ],
+        "emits": "BS_COMMON board-level copper: 1 zones, 1 vias (pads only)",
+        "status": "EMITTED",
+        "risk": "without trunk copper + spacing the 2kV HF termination exists only as parts; surge creepage and return-path behaviour are unproven until the routing wave draws the island"
+      },
+      {
+        "eid": "CD-06",
+        "title": "Ethernet isolation moat (In1 plane voids)",
+        "assumes": "NO GND plane under the ethernet magnetics line side / RJ45 media pins (Pulse HX5008 layout guidance; the 2kV isolation moat) — the full-board In1 plane must be VOIDED there",
+        "where": [
+          "subsystems/ethernet/ethernet.py:12",
+          "schgen/generate/pcb/constants.py:179"
+        ],
+        "emits": "In1 rule-area voids: ethernet_isolation_void_1, ethernet_isolation_void_2; corridor between them: NOT voided (debt)",
+        "status": "PARTIAL",
+        "risk": "a continuous plane under the magnetics bridges the isolation barrier capacitively and violates the 2kV creepage intent; the RJ45<->magnetics media CORRIDOR void remains routing-wave debt"
+      },
+      {
+        "eid": "CD-07",
+        "title": "DP90/DP100 L2 reference plane",
+        "assumes": "the DP90_USB / DP100_TMDS trace geometry (widths/gaps in the .kicad_dru + net classes) is an OUTER-layer microstrip referenced to a CONTINUOUS L2 GND plane through one 7628 prepreg sheet",
+        "where": [
+          "schgen/generate/constraints.py:22"
+        ],
+        "emits": "no GND fill zone on In1.Cu",
+        "status": "NOTHING",
+        "risk": "without the L2 plane every impedance number in the dru is unmoored (return path undefined, impedance wrong by design); with the plane emitted the residual risk is fill VOIDS/splits under a future route path (checked at the routing wave)"
+      },
+      {
+        "eid": "CD-08",
+        "title": "Under-SoM decoupling fanout vias",
+        "assumes": "the under-SoM bottom-side rail-entry decoupling (som_decoupling) reaches the rails/planes through fanout vias directly beneath the DF40 mezzanine",
+        "where": [
+          "schgen/generate/pcb/embed.py:510"
+        ],
+        "emits": "GND vias inside the SoM body zone: 8 (SoM zone found); rail fanout vias: none emitted",
+        "status": "PARTIAL",
+        "risk": "until those vias land the 18 bottom caps decouple nothing (no path from B.Cu pads to the rails) — a routing-wave item, but the prose reads as if the path exists"
+      }
+    ]
+  }
+]

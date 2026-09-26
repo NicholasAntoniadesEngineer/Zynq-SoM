@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from devkit_mini.basis import bind, register
+from devkit_mini.basis import PROJECT, bind, register
 from schgen.core.model import Circuit
 from subsystems.power import power as _lib
 
@@ -78,12 +78,4 @@ META = {
 
 def circuit() -> Circuit:
     from schgen.core.authoring import project_circuit
-    return project_circuit('devkit_mini', 'power', __file__, META)
-
-
-def _legacy_circuit() -> Circuit:
-    c = _lib.circuit(META)
-    # The minimal devkit has no bringup_rails sheet to provide these probes.
-    for net in ("EN_5V0", "EN_3V3", "EN_1V8"):
-        c.testpoint(net)
-    return c
+    return project_circuit(PROJECT, 'power', __file__, META)

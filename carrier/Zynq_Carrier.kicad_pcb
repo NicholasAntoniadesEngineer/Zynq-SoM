@@ -104138,7 +104138,7 @@
 		)
 		(embedded_fonts no)
 		(model
-			"${KICAD10_3DMODEL_DIR}/Package_DFN_QFN.3dshapes/WQFN-14-1EP_2.5x2.5mm_P0.5mm_EP1.45x1.45mm.step"
+			"${KIPRJMOD}/../parts/FUSB302BMPX/FUSB302BMPX.wrl"
 			(offset
 				(xyz 0 0 0)
 			)
@@ -104146,7 +104146,7 @@
 				(xyz 1 1 1)
 			)
 			(rotate
-				(xyz 0 0 0)
+				(xyz 0 0 90)
 			)
 		)
 		(uuid "3c05496c-0217-5292-8a14-a93c60deb036")

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from carrier.basis import register
+from carrier.basis import PROJECT, register
 from schgen.core.model import Circuit
 
 R0603 = "Resistor_SMD:R_0603_1608Metric"
@@ -65,36 +65,4 @@ BUTTONS = [
 
 def circuit() -> Circuit:
     from schgen.core.authoring import project_circuit
-    return project_circuit('carrier', 'user_io', __file__)
-
-
-def _legacy_circuit() -> Circuit:
-    c = Circuit("user_io", "User IO: 4 LEDs (gated rail) + 4 buttons, bank 13")
-
-    # LEDs are active-low sinks: anode on the gated rail, cathode through the
-    # ballast to the PL pin, so the gate kills all four whatever the fabric does.
-    led_anodes: list[str] = []
-    for i, (dref, color, lcsc, net, (rval, rlcsc)) in enumerate(LEDS, start=1):
-        rref = f"R{i}"
-        c.part(dref, "Device:LED", color, LED_FP, LCSC=lcsc)
-        c.part(rref, "Device:R", rval, R0603, LCSC=rlcsc)
-        c.net(f"USER_LED{i}_K", f"{dref}.1", f"{rref}.1")
-        c.port(net, f"{rref}.2", expect=J2_MAP)
-        led_anodes.append(f"{dref}.2")
-
-    c.part("C1", "Device:C", LED_RAIL_HF, C0603, LCSC="C14663")
-    c.net("+3V3_USER_LED", *led_anodes, "C1.1")
-    c.net("GND", "C1.2")
-
-    for i, (sref, net) in enumerate(BUTTONS, start=5):
-        rref = f"R{i}"
-        c.use_part("TS-1187A-B-A-B", ref=sref, value="USER")
-        c.part(rref, "Device:R", BUTTON_PULLUP, R0603, LCSC="C25804")
-        c.port(net, f"{sref}.1", f"{sref}.2", f"{rref}.2", expect=J2_MAP)
-        c.net("+3V3", f"{rref}.1")
-        c.net("GND", f"{sref}.3", f"{sref}.4")
-
-    c.draws("+3V3_USER_LED", LED_DRAW_A,
-            "red ~1.3 mA (1k) + green/blue/white up to ~3.5 mA each (200R)")
-    c.draws("+3V3", BUTTON_DRAW_A, "4x button 10k pull-ups when pressed")
-    return c
+    return project_circuit(PROJECT, 'user_io', __file__)

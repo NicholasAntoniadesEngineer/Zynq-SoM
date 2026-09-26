@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from carrier.basis import register
+from carrier.basis import PROJECT, register
 from schgen.core.model import Circuit
 
 R0603 = "Resistor_SMD:R_0603_1608Metric"
@@ -80,40 +80,4 @@ GND_PINS = (7, 8, 15, 16, 23, 24, 31, 32, 39, 40)
 
 def circuit() -> Circuit:
     from schgen.core.authoring import project_circuit
-    return project_circuit('carrier', 'fmc', __file__)
-
-
-def _legacy_circuit() -> Circuit:
-    c = Circuit("fmc", "SoM bank-35 IO breakout (2x20 2.54mm header, VADJ 2.5V)")
-
-    c.part("J1", HDR_SYM, "Header_2x20_2.54mm", HDR_FP)
-
-    # P on the odd pin, N on the following even pin, so each pair sits
-    # side-by-side on one physical row of the stock footprint.
-    for stem, p_pin, n_pin in HEADER_PAIRS:
-        c.port(f"{stem}_P", f"J1.{p_pin}")
-        c.port(f"{stem}_N", f"J1.{n_pin}")
-        c.port_type(f"{stem}_P", kind="diff_pair", pair_with=f"{stem}_N",
-                    impedance=PAIR_IMPEDANCE, expect=J35_MAP)
-
-    c.use_part(VADJ_LDO, ref="U1",
-               footprint="TLV75725PDYDR:TLV75725PDYDR")
-    c.part("C1", "Device:C", RAIL_BULK, C0805, LCSC="C15850")
-    c.part("C2", "Device:C", RAIL_HF, C0603, LCSC="C14663")
-    c.part("C3", "Device:C", LDO_IN, C0603, LCSC="C15849")
-    c.part("C4", "Device:C", LDO_OUT, C0805, LCSC="C15850")
-    c.part("C5", "Device:C", HEADER_VADJ_HF, C0603, LCSC="C14663")
-
-    c.net("+3V3", "J1.1", "U1.1", "U1.3", "C1.1", "C2.1", "C3.1")
-    c.net("+2V5_VADJ", "J1.2", "U1.5", "C4.1", "C5.1")
-    c.net("GND", *[f"J1.{p}" for p in GND_PINS],
-          "U1.2", "U1.6", "C1.2", "C2.2", "C3.2", "C4.2", "C5.2")
-    c.nc("U1.4")
-
-    c.testpoint("+2V5_VADJ")
-
-    c.draws("+3V3", HDR_3V3_DRAW_A, "bank-35 IO header +3V3 add-on allowance")
-    c.draws("+2V5_VADJ", VADJ_DRAW_A,
-            "VADJ bank-35 VCCO budget (TLV75725 DYD 0.40 A "
-            "envelope less ~0.05 A bank-35 VCCO)")
-    return c
+    return project_circuit(PROJECT, 'fmc', __file__)

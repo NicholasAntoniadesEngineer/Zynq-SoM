@@ -179,40 +179,8 @@ def generate(*, run_drc: bool = True, two_side: bool = True,
 
 
 def run_pcb_drc(pcb_path: Path) -> dict:
-    import subprocess
-    import tempfile
-    with tempfile.TemporaryDirectory(prefix="schgen_drc_") as td:
-        rpt = Path(td) / "drc.json"
-        proc = subprocess.run(
-            ["kicad-cli", "pcb", "drc", "--format", "json",
-             "--severity-error", "--severity-warning", "--refill-zones",
-             "-o", str(rpt), str(pcb_path)],
-            capture_output=True, text=True)
-        data = {}
-        if rpt.exists():
-            try:
-                data = json.loads(rpt.read_text())
-            except Exception:  # noqa: BLE001
-                data = {}
-    viols = data.get("violations", [])
-    unconnected = data.get("unconnected_items", [])
-    by_type: dict[str, int] = {}
-    other: list[str] = []
-    for v in viols:
-        t = v.get("type", "?")
-        by_type[t] = by_type.get(t, 0) + 1
-        if t not in ("silk_overlap", "silk_over_copper",
-                     "courtyards_overlap", "footprint_type_mismatch"):
-            if len(other) < 12:
-                other.append(t)
-    return {
-        "returncode": proc.returncode,
-        "n_violations": len(viols),
-        "n_unconnected": len(unconnected),
-        "by_type": by_type,
-        "other_sample": other,
-        "stderr": proc.stderr[-400:],
-    }
+    from schgen import _geom
+    return _geom.pcb_drc(str(pcb_path))
 
 
 def cmd_pcb(args: argparse.Namespace) -> int:

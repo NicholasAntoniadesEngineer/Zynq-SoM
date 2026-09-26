@@ -6,6 +6,7 @@ namespace schgen {
 inline PcbEmitPolicy pcb_emission_policy(const nanobind::dict& policy) {
     namespace nb = nanobind;
         auto p = default_pcb_emit_policy();
+        p.model_overrides = project_pcb_model_overrides();
         using model_binding::get;
         p.header_descriptions = get<ProjectStrings>(policy, "header_descriptions");
         p.switch_descriptions = get<ProjectStrings>(policy, "switch_descriptions");

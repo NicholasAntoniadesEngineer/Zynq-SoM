@@ -161,29 +161,32 @@ PcbStageResult Engine::proximity_zone() {
 } // namespace schgen::pcb_stage
 
 namespace schgen {
-std::optional<std::map<std::string, std::tuple<double, double, double>>> refit_pcb_stage_facing(
+PcbStageRefitResult refit_pcb_stage_facing_accounted(
     const PcbStageInput &in, const FloorplanOffsets &xy, const FloorplanRotations &rotations,
     FloorplanPoint downstream,
     const std::map<std::string, std::vector<std::pair<std::string, std::string>>> &nets,
     const std::map<std::string, std::vector<std::tuple<double, double, std::string>>> &foreign) {
     using namespace pcb_stage;
     Engine e(in);
+    auto finish = [&](std::optional<PcbStageRefitPoses> poses = std::nullopt) {
+        return PcbStageRefitResult{std::move(poses), std::move(e.quantization), std::move(e.events)};
+    };
     auto output = e.output_refs();
     std::vector<std::string> present;
     for (const auto &r : output)
         if (xy.count(r))
             present.push_back(r);
     if (present.empty())
-        return {};
+        return finish();
     Parts parts;
     for (const auto &[r, p] : xy) {
         if (!in.footprints.count(r))
-            return {};
+            return finish();
         auto it = rotations.find(r);
         parts.push_back(
             e.part(r, it == rotations.end() ? 0 : normalize(it->second), p.first, p.second));
     }
-    auto turned = e.turn(parts, 180, false, true);
+    auto turned = e.turn(parts, 180, false, true, true);
     auto gate = [&](const Parts &ps) {
         std::vector<FloorplanPoint> all, own;
         for (const auto &p : ps) {
@@ -197,7 +200,7 @@ std::optional<std::map<std::string, std::tuple<double, double, double>>> refit_p
     };
     bool now = gate(parts), next = gate(turned);
     if (now && !next)
-        return {};
+        return finish();
     auto air = [&](const Parts &ps) {
         double total = 0;
         for (const auto &[net, pts] : foreign) {
@@ -230,10 +233,17 @@ std::optional<std::map<std::string, std::tuple<double, double, double>>> refit_p
         return total;
     };
     if (!(!now && next) && !(air(turned) < air(parts) - 1e-6))
-        return {};
+        return finish();
     std::map<std::string, std::tuple<double, double, double>> out;
     for (const auto &p : turned)
         out[p.ref] = {p.x, p.y, p.rot};
-    return out;
+    return finish(std::move(out));
+}
+std::optional<std::map<std::string, std::tuple<double, double, double>>> refit_pcb_stage_facing(
+    const PcbStageInput &in, const FloorplanOffsets &xy, const FloorplanRotations &rotations,
+    FloorplanPoint downstream,
+    const std::map<std::string, std::vector<std::pair<std::string, std::string>>> &nets,
+    const std::map<std::string, std::vector<std::tuple<double, double, std::string>>> &foreign) {
+    return refit_pcb_stage_facing_accounted(in, xy, rotations, downstream, nets, foreign).poses;
 }
 } // namespace schgen

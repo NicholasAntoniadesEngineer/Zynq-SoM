@@ -318,13 +318,16 @@ def test_in1_gnd_plane_emits_with_no_filled_polygon_nodes(board):
     assert "filled_polygon" not in text[zone_at:]
 
 
-def test_refill_zones_at_exactly_two_drc_sites():
+def test_drc_sites_delegate_to_native_refill_runner():
     from pathlib import Path
     root = Path(escape.__file__).resolve().parents[3]
     emit_src = (root / "schgen" / "generate" / "pcb" / "emit.py").read_text()
     main_src = (root / "schgen" / "__main__.py").read_text()
-    assert emit_src.count('"--refill-zones"') == 1
-    assert main_src.count('"--refill-zones"') == 1
+    native_src = (root / "native" / "src" / "pcb_drc.cpp").read_text()
+    assert native_src.count('"--refill-zones"') == 1
+    assert "_geom.pcb_drc(str(pcb_path))" in emit_src
+    assert "_geom.pcb_drc(str(pcb_path), include_warnings=False)" in main_src
+    # Both actual argument vectors are independently checked in native_pcb_drc_contracts.
 
 
 def test_backstop_kicad_drc_kills_via_at_tmds_pad(model, tmp_path):

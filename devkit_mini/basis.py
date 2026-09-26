@@ -2,7 +2,11 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 from schgen.core.basis import Registry
+
+PROJECT = Path(__file__).resolve().parent.name
 
 UNITS = ("A", "C/W", "F", "H", "Hz", "V", "count", "i2c-addr", "net", "ohm",
          "part", "pin-map")
