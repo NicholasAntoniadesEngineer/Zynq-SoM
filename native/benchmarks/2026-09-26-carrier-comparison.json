@@ -1,0 +1,45 @@
+{
+  "schema": "schgen.matched-board-timing-observation.v1",
+  "date": "2026-09-26",
+  "project": "carrier",
+  "sheets": 37,
+  "rendering": false,
+  "execution": "sequential, Python then C++, same machine, one observation each",
+  "design_inputs": "No non-Python changes between 4bd47c33 and ba3ae07e in parts, carrier, devkit_mini, subsystems, som, schgen/lib and schgen/verify/data",
+  "python": {
+    "source_commit": "4bd47c33",
+    "runtime": "Python 3.14.3 with prebuilt historical native _geom extension; hybrid, not pure Python",
+    "command": "PYTHONDONTWRITEBYTECODE=1 /private/tmp/zynq-retired-python.iyilwa/venv/bin/python -m schgen board --no-render --timing",
+    "cwd": "/Users/nicholasantoniades/.codex/worktrees/python-timing-baseline/Zynq-SoM",
+    "wall_seconds": 43.01,
+    "exit_code": 0,
+    "verdict": "PASS",
+    "log": "/private/tmp/schgen-carrier-comparison.oclhx1/python.log"
+  },
+  "cpp": {
+    "source_commit": "ba3ae07e",
+    "uncommitted_source_changes": "SilkBoxIndex validation and overflow-safe loops in native/include/schgen/pack.hpp and native/src/pack.cpp",
+    "command": "native/bin/schgen board --project carrier --output /private/tmp/schgen-carrier-comparison.oclhx1/cpp-output --no-render --timing",
+    "wall_seconds": 404.43,
+    "exit_code": 1,
+    "verdict": "FAIL",
+    "mandatory_failed_gates": ["quantize_census", "ledger"],
+    "other_mandatory_gates": "PASS",
+    "quantization_ledger_source_audit_seconds": 341.973858,
+    "inputs_including_authoring_purity_audit_seconds": 18.656337,
+    "remaining_measured_phases_seconds": 43.647737,
+    "unattributed_wall_overhead_seconds": 0.152068,
+    "log": "/private/tmp/schgen-carrier-comparison.oclhx1/cpp.log",
+    "verdict_file": "/private/tmp/schgen-carrier-comparison.oclhx1/cpp-output/reports/board_verdicts.json"
+  },
+  "end_to_end_difference_seconds": 361.42,
+  "end_to_end_percentage_change": 840.3162055335969,
+  "percentage_formula": "(cpp - python) / python * 100; positive means longer",
+  "limitations": [
+    "Same board inputs, different source-audit scope; not a language-only performance comparison",
+    "No separate comparable audit-free totals: C++ inputs include both setup and an authoring source audit",
+    "Historical Python phase spans overlap; do not sum them as independent elapsed time",
+    "No statistical repetition or cold-cache normalization",
+    "C++ mandatory source audits failed; timing is not successful full-board acceptance"
+  ]
+}

@@ -1,0 +1,38 @@
+{
+  "schema": "schgen.native-timing-observation.v1",
+  "date": "2026-09-26",
+  "source_commit": "ba3ae07e",
+  "compiler": "AppleClang 21.0.0.21000334",
+  "configuration": "Release",
+  "compile_jobs": 4,
+  "observations_not_performance_thresholds": true,
+  "clean_cli_compile_link": {
+    "wall_seconds": 67.22,
+    "compiler_cache": false,
+    "fresh_build_directory": "/private/tmp/schgen-clean-compile.KxwTCD",
+    "target": "schgen",
+    "excludes": ["CMake configure", "dependency installation", "test executable compilation", "catalog generation"]
+  },
+  "incremental_compile_link": {
+    "wall_seconds": 7.03,
+    "compiler_cache": "warm",
+    "scope": "changed engine/test objects and CLI/test relinks, not a clean build"
+  },
+  "devkit_mini_generation": {
+    "sheets": 12,
+    "rendering": false,
+    "wall_seconds": 395.91,
+    "quantization_ledger_source_audit_seconds": 360.304973,
+    "inputs_including_authoring_purity_audit_seconds": 18.560555,
+    "remaining_measured_phases_seconds": 16.995974,
+    "unattributed_wall_overhead_seconds": 0.048498,
+    "pcb_construction_seconds": 1.417910,
+    "sheet_preparation_and_checks_seconds": 6.647394,
+    "hierarchical_schematic_seconds": 2.718986,
+    "pcb_drc_seconds": 1.335820,
+    "verdict": "FAIL: quantize_census and ledger; other mandatory gates passed",
+    "remaining_audit_findings": {"buried_constants": 12, "unregistered_quantization_sites": 220},
+    "log": "/private/tmp/schgen-clean-devkit-timing.eYWVL8/run.log",
+    "caveat": "Input timing includes authoring source verification and setup; this run does not separately measure audit-free input construction. No rendered or full-board acceptance claim."
+  }
+}
