@@ -63,36 +63,38 @@ public:
     Occupancy(double board_w, double board_h, double clear, double bucket,
               double reach_bound, double step, double frontier_half);
 
+    // Geometry owns no sink. Each operation borrows its invocation's counts;
+    // copies, failed trials and refinement never copy or roll back accounting.
     void set_board(double board_w, double board_h);
     void add(double x, double y, double w, double h, const Halo& reach,
-             const Halo& inset, int mask, const std::vector<Comp>& comps);
+             const Halo& inset, int mask, const std::vector<Comp>& comps, QuantizationCounts* counts = nullptr);
     void remove(double x, double y, double w, double h, const Halo& reach,
-                const Halo& inset, int mask, const std::vector<Comp>& comps);
+                const Halo& inset, int mask, const std::vector<Comp>& comps, QuantizationCounts* counts = nullptr);
     bool fits_exhaustive(double x, double y, double w, double h,
                          const Halo& reach, const Halo& inset, int mask,
                          const std::vector<Comp>& comps) const;
     bool fits_hashed(double x, double y, double w, double h,
                      const Halo& reach, const Halo& inset, int mask,
-                     const std::vector<Comp>& comps) const;
+                     const std::vector<Comp>& comps, QuantizationCounts* counts = nullptr) const;
     std::optional<Pose> place_near(double ax, double ay, double w, double h,
                                    const Halo& reach, const Halo& inset,
                                    int mask, const std::vector<Comp>& comps,
                                    double win_x0, double win_x1,
-                                   double win_y0, double win_y1) const;
+                                   double win_y0, double win_y1, QuantizationCounts* counts = nullptr) const;
     std::size_t rect_count() const { return rects_.size(); }
 
 private:
     void add_one(double x, double y, double w, double h, const Halo& reach,
-                 const Halo& inset, int mask, int pmask, bool main);
+                 const Halo& inset, int mask, int pmask, bool main, QuantizationCounts* counts);
     void remove_one(double x, double y, double w, double h, const Halo& reach,
-                    const Halo& inset, int mask, int pmask, bool main);
+                    const Halo& inset, int mask, int pmask, bool main, QuantizationCounts* counts);
     bool body_clear(double x, double y, double w, double h, const Halo& reach,
                     const Halo& inset, int qmask, int qpmask, bool qmain,
-                    bool hashed) const;
+                    bool hashed, QuantizationCounts* counts) const;
     bool query_hashed_cells(double x, double y, double w, double h,
                             const Halo& qh, const Halo& reach,
                             const Halo& inset, int qmask, int qpmask,
-                            bool qmain) const;
+                            bool qmain, QuantizationCounts* counts) const;
 
     double board_w_;
     double board_h_;
@@ -136,19 +138,19 @@ struct PairsBlock {
 
 std::vector<Rect> pairs_entity(double x, double y, double w, double h,
                                const Halo& reach, const Halo& inset, int mask,
-                               const std::vector<Comp>& comps);
+                               const std::vector<Comp>& comps, QuantizationCounts* counts = nullptr);
 std::vector<std::vector<Rect>> pairs_hold_groups(
     const std::vector<PairsBlock>& interior,
     const std::vector<PairsBlock>& edges, double som_x, double som_y,
     double som_w, double som_h, int som_mask,
     const std::vector<Comp>& som_comps, double board_w, double board_h,
-    double mh_corner_ko, int punch_mask);
+    double mh_corner_ko, int punch_mask, QuantizationCounts* counts = nullptr);
 bool pairs_hold_from_layout(const std::vector<PairsBlock>& interior,
                             const std::vector<PairsBlock>& edges, double som_x,
                             double som_y, double som_w, double som_h,
                             int som_mask, const std::vector<Comp>& som_comps,
                             double board_w, double board_h,
-                            double mh_corner_ko, int punch_mask, double clear);
+                            double mh_corner_ko, int punch_mask, double clear, QuantizationCounts* counts = nullptr);
 
 struct EdgeFanoutBlock {
     double x = 0.0;

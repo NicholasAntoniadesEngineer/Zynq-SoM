@@ -54,6 +54,9 @@ bool Engine::attempt_pack(bool compact) {
         });
 }
 bool Engine::attempt_pack_impl(bool compact) {
+    // Borrow only for this synchronous invocation; never attach a sink to
+    // occupancy geometry or candidate copies. Rejected trials remain counted.
+    auto* const counts=&plan.accounting.quantization_engagements;
     const double bw=plan.board_w,bh=plan.board_h;
     const int policy=plan.punch_free ? 1:0;
     const auto& shapes=shape_sets[policy];
@@ -98,15 +101,15 @@ bool Engine::attempt_pack_impl(bool compact) {
     for (const auto& b:plan.edge_blocks) if (plan.punch_free)
         edge_comps[b.name]=edge_components(edge_char(b.edge),b.x,b.y,bw,bh,occ_punch,get(co,{b.name,b.shape_idx}));
     const auto [reach_bound,envelope]=spatial_bounds_accounted(far_ceil,max_reach,clear,in.place_clear,cable_gap,2.0,
-        &plan.accounting.quantization_engagements);
+        counts);
     if (std::max(clear,2*reach_bound)>envelope+1e-9) throw std::logic_error("floorplan: spatial interaction envelope underbounds fan-out reach");
     Occupancy occ(bw,bh,clear,envelope,reach_bound,occ_step,frontier_half);
-    occ.add(som_occ.x,som_occ.y,som_occ.w,som_occ.h,{},{},som_mask,som_comps);
+    occ.add(som_occ.x,som_occ.y,som_occ.w,som_occ.h,{},{},som_mask,som_comps,counts);
     const auto corners=legalize_mh_corners(bw,bh,mh_corner);
-    for (const auto& c:corners) occ.add(c.x0,c.y0,c.x1-c.x0,c.y1-c.y0,{},{},occ_punch,{});
+    for (const auto& c:corners) occ.add(c.x0,c.y0,c.x1-c.x0,c.y1-c.y0,{},{},occ_punch,{},counts);
     std::map<std::string,FloorplanPoint> centers;
     for (const auto& b:plan.edge_blocks) {
-        occ.add(b.x,b.y,b.w,b.h,b.fanout_reach,b.fanout_inset,edge_mask,get(edge_comps,b.name));
+        occ.add(b.x,b.y,b.w,b.h,b.fanout_reach,b.fanout_inset,edge_mask,get(edge_comps,b.name),counts);
         centers[b.name]={b.cx(),b.cy()};
     }
     std::vector<std::string> names;
@@ -124,14 +127,14 @@ bool Engine::attempt_pack_impl(bool compact) {
     std::vector<FloorplanBlock*> order,placed;
     for (int i:pack_interior_order(names,tiers,connections,areas)) order.push_back(&plan.interior_blocks[i]);
     std::map<std::string,std::vector<Comp>> chosen;
-    auto occ_put=[&](const FloorplanBlock& b){occ.add(b.x,b.y,b.w,b.h,b.fanout_reach,b.fanout_inset,side_mask(b.side),get(chosen,b.name));};
-    auto occ_pull=[&](const FloorplanBlock& b){occ.remove(b.x,b.y,b.w,b.h,b.fanout_reach,b.fanout_inset,side_mask(b.side),get(chosen,b.name));};
+    auto occ_put=[&](const FloorplanBlock& b){occ.add(b.x,b.y,b.w,b.h,b.fanout_reach,b.fanout_inset,side_mask(b.side),get(chosen,b.name),counts);};
+    auto occ_pull=[&](const FloorplanBlock& b){occ.remove(b.x,b.y,b.w,b.h,b.fanout_reach,b.fanout_inset,side_mask(b.side),get(chosen,b.name),counts);};
     auto near=[&](FloorplanPoint a,double w,double h,Halo reach,Halo inset,int mask,const std::vector<Comp>& comps,
                   const FloorplanBlock* evicted) {
         std::tuple<double,double,double,double> win{-bw,2*bw,-bh,2*bh};
         if (evicted) win=evict_window(evicted->x,evicted->y,evicted->w,evicted->h,evicted->fanout_reach,evicted->fanout_inset,
                                      get(chosen,evicted->name),w,h,reach,inset,comps,clear);
-        return occ.place_near(a.first,a.second,w,h,reach,inset,mask,comps,std::get<0>(win),std::get<1>(win),std::get<2>(win),std::get<3>(win));
+        return occ.place_near(a.first,a.second,w,h,reach,inset,mask,comps,std::get<0>(win),std::get<1>(win),std::get<2>(win),std::get<3>(win),counts);
     };
     auto seat=[&](FloorplanBlock& b,FloorplanPoint a,const FloorplanBlock* evicted) {
         const auto variants=shapes.find(b.name);
@@ -150,7 +153,7 @@ bool Engine::attempt_pack_impl(bool compact) {
             cands.push_back({static_cast<int>(k),s.w,s.h,s.reach,s.inset,side_mask(s.side),s.side,s.comps,
                 std::get<0>(win),std::get<1>(win),std::get<2>(win),std::get<3>(win)});
         }
-        auto hits=seat_shape_sides(occ,a.first,a.second,cands,bw,bh,clear);
+        auto hits=seat_shape_sides(occ,a.first,a.second,cands,bw,bh,clear,counts);
         if (hits.empty()) return false;
         std::sort(hits.begin(),hits.end(),[](const auto& a,const auto& b){return std::tie(a.dist_key,a.index)<std::tie(b.dist_key,b.index);});
         auto best=hits.front();
@@ -214,7 +217,7 @@ bool Engine::attempt_pack_impl(bool compact) {
         refine.push_back(std::move(row));
     }
     const auto refined=refine_pack_passes(occ,std::move(refine),
-        std::unordered_map<std::string,FloorplanPoint>(centers.begin(),centers.end()),16,bw,bh);
+        std::unordered_map<std::string,FloorplanPoint>(centers.begin(),centers.end()),16,bw,bh,counts);
     for (std::size_t i=0;i<order.size();++i) { order[i]->x=refined.poses[i].first; order[i]->y=refined.poses[i].second; }
 
     if (!in.compose.index.hard.empty()) {
@@ -254,7 +257,7 @@ bool Engine::attempt_pack_impl(bool compact) {
                 std::vector<PairsBlock> ints,edges;
                 for (const auto& b:plan.interior_blocks) ints.push_back({b.x,b.y,b.w,b.h,b.fanout_reach,b.fanout_inset,side_mask(b.side),get(chosen,b.name)});
                 for (const auto& b:plan.edge_blocks) edges.push_back({b.x,b.y,b.w,b.h,b.fanout_reach,b.fanout_inset,edge_mask,get(edge_comps,b.name)});
-                if (!pairs_hold_from_layout(ints,edges,som_occ.x,som_occ.y,som_occ.w,som_occ.h,som_mask,som_comps,bw,bh,mh_corner,occ_punch,clear)) return false;
+                if (!pairs_hold_from_layout(ints,edges,som_occ.x,som_occ.y,som_occ.w,som_occ.h,som_mask,som_comps,bw,bh,mh_corner,occ_punch,clear,counts)) return false;
                 plan.composition=std::move(log); return true;
             };
             if (!legalize(compact)) {

@@ -1,6 +1,7 @@
 #include "schgen/occupancy.hpp"
 
 #include "schgen/quantize.hpp"
+#include "schgen/occupancy_precision.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -48,10 +49,6 @@ double halo_at(const Halo& h, int i) {
         default:
             throw std::runtime_error("occupancy: halo index");
     }
-}
-
-int cell_div(double v, double b) {
-    return static_cast<int>(std::floor(v / b));
 }
 
 bool rect_eq(const Rect& a, const Rect& b) {
@@ -166,7 +163,7 @@ std::pair<double, double> spatial_bounds(double far_ceil, double max_reach,
 std::pair<double, double> spatial_bounds_accounted(double far_ceil, double max_reach,
     double clear, double place_clear, double cable_gap, double need_ceil, QuantizationCounts* counts) {
     if (counts) checked_quantization_add(*counts, "quant_credit");
-    const double reach_floor = py_round(quant_credit(need_ceil), 4);
+    const double reach_floor = occupancy_reach_precision4dp(quant_credit(need_ceil), counts);
     const double reach_bound = std::max(reach_floor, max_reach);
     const double envelope = std::max({clear, place_clear, 2.0 * reach_bound,
                                       cable_gap, far_ceil});
@@ -287,7 +284,7 @@ bool pairs_hold(const std::vector<std::vector<Rect>>& groups,
 
 std::vector<Rect> pairs_entity(double x, double y, double w, double h,
                                const Halo& reach, const Halo& inset, int mask,
-                               const std::vector<Comp>& comps) {
+                               const std::vector<Comp>& comps, QuantizationCounts* counts) {
     std::vector<Rect> entity;
     entity.reserve(1 + comps.size());
     Rect main;
@@ -304,8 +301,8 @@ std::vector<Rect> pairs_entity(double x, double y, double w, double h,
     const Halo zero{};
     for (const Comp& comp : comps) {
         Rect child;
-        child.x = py_round(x + comp.dx, 4);
-        child.y = py_round(y + comp.dy, 4);
+        child.x = occupancy_component_precision4dp(x + comp.dx, counts);
+        child.y = occupancy_component_precision4dp(y + comp.dy, counts);
         child.w = comp.w;
         child.h = comp.h;
         child.reach = zero;
@@ -323,7 +320,7 @@ std::vector<std::vector<Rect>> pairs_hold_groups(
     const std::vector<PairsBlock>& edges, double som_x, double som_y,
     double som_w, double som_h, int som_mask,
     const std::vector<Comp>& som_comps, double board_w, double board_h,
-    double mh_corner_ko, int punch_mask) {
+    double mh_corner_ko, int punch_mask, QuantizationCounts* counts) {
     if (mh_corner_ko < 0.0) {
         throw std::runtime_error("pairs_hold_groups: mh_corner_ko required");
     }
@@ -332,16 +329,16 @@ std::vector<std::vector<Rect>> pairs_hold_groups(
     for (const PairsBlock& block : interior) {
         groups.push_back(pairs_entity(block.x, block.y, block.w, block.h,
                                       block.reach, block.inset, block.mask,
-                                      block.comps));
+                                      block.comps, counts));
     }
     for (const PairsBlock& block : edges) {
         groups.push_back(pairs_entity(block.x, block.y, block.w, block.h,
                                       block.reach, block.inset, block.mask,
-                                      block.comps));
+                                      block.comps, counts));
     }
     const Halo zero{};
     groups.push_back(pairs_entity(som_x, som_y, som_w, som_h, zero, zero,
-                                  som_mask, som_comps));
+                                  som_mask, som_comps, counts));
     const std::pair<double, double> corners[4] = {
         {0.0, 0.0},
         {board_w - mh_corner_ko, 0.0},
@@ -351,7 +348,7 @@ std::vector<std::vector<Rect>> pairs_hold_groups(
     for (const auto& corner : corners) {
         groups.push_back(pairs_entity(corner.first, corner.second,
                                       mh_corner_ko, mh_corner_ko, zero, zero,
-                                      punch_mask, {}));
+                                      punch_mask, {}, counts));
     }
     return groups;
 }
@@ -362,10 +359,10 @@ bool pairs_hold_from_layout(const std::vector<PairsBlock>& interior,
                             int som_mask, const std::vector<Comp>& som_comps,
                             double board_w, double board_h,
                             double mh_corner_ko, int punch_mask,
-                            double clear) {
+                            double clear, QuantizationCounts* counts) {
     return pairs_hold(pairs_hold_groups(interior, edges, som_x, som_y, som_w,
                                         som_h, som_mask, som_comps, board_w,
-                                        board_h, mh_corner_ko, punch_mask),
+                                        board_h, mh_corner_ko, punch_mask, counts),
                       interior.size(), clear);
 }
 
@@ -470,7 +467,7 @@ void Occupancy::set_board(double board_w, double board_h) {
 
 void Occupancy::add_one(double x, double y, double w, double h,
                         const Halo& reach, const Halo& inset, int mask,
-                        int pmask, bool main) {
+                        int pmask, bool main, QuantizationCounts* counts) {
     const Halo h4 = halo4(reach, inset);
     for (const double c : {h4.w, h4.e, h4.n, h4.s}) {
         if (c > reach_bound_) {
@@ -480,38 +477,38 @@ void Occupancy::add_one(double x, double y, double w, double h,
         }
     }
     const Rect rect{x, y, w, h, reach, inset, mask, pmask, main};
-    rects_.push_back(rect);
     const double b = bucket_;
-    const int iy0 = cell_div(y - h4.n - clear_, b);
-    const int iy1 = cell_div(y + h + h4.s + clear_, b);
-    const int ix0 = cell_div(x - h4.w - clear_, b);
-    const int ix1 = cell_div(x + w + h4.e + clear_, b);
-    for (int ix = ix0; ix <= ix1; ++ix) {
-        for (int iy = iy0; iy <= iy1; ++iy) {
-            cells_[CellKey{ix, iy}].push_back(rect);
+    const int iy0 = occupancy_cell_index(y - h4.n - clear_, b, counts);
+    const int iy1 = occupancy_cell_index(y + h + h4.s + clear_, b, counts);
+    const int ix0 = occupancy_cell_index(x - h4.w - clear_, b, counts);
+    const int ix1 = occupancy_cell_index(x + w + h4.e + clear_, b, counts);
+    rects_.push_back(rect);
+    for (std::int64_t ix = ix0; ix <= ix1; ++ix) {
+        for (std::int64_t iy = iy0; iy <= iy1; ++iy) {
+            cells_[CellKey{static_cast<int>(ix), static_cast<int>(iy)}].push_back(rect);
         }
     }
 }
 
 void Occupancy::remove_one(double x, double y, double w, double h,
                            const Halo& reach, const Halo& inset, int mask,
-                           int pmask, bool main) {
+                           int pmask, bool main, QuantizationCounts* counts) {
     const Rect want{x, y, w, h, reach, inset, mask, pmask, main};
     auto it = std::find_if(rects_.begin(), rects_.end(),
                            [&](const Rect& r) { return rect_eq(r, want); });
     if (it == rects_.end()) {
         return;
     }
-    rects_.erase(it);
     const Halo h4 = halo4(reach, inset);
     const double b = bucket_;
-    const int iy0 = cell_div(y - h4.n - clear_, b);
-    const int iy1 = cell_div(y + h + h4.s + clear_, b);
-    const int ix0 = cell_div(x - h4.w - clear_, b);
-    const int ix1 = cell_div(x + w + h4.e + clear_, b);
-    for (int ix = ix0; ix <= ix1; ++ix) {
-        for (int iy = iy0; iy <= iy1; ++iy) {
-            auto cit = cells_.find(CellKey{ix, iy});
+    const int iy0 = occupancy_cell_index(y - h4.n - clear_, b, counts);
+    const int iy1 = occupancy_cell_index(y + h + h4.s + clear_, b, counts);
+    const int ix0 = occupancy_cell_index(x - h4.w - clear_, b, counts);
+    const int ix1 = occupancy_cell_index(x + w + h4.e + clear_, b, counts);
+    rects_.erase(it);
+    for (std::int64_t ix = ix0; ix <= ix1; ++ix) {
+        for (std::int64_t iy = iy0; iy <= iy1; ++iy) {
+            auto cit = cells_.find(CellKey{static_cast<int>(ix), static_cast<int>(iy)});
             if (cit == cells_.end()) {
                 continue;
             }
@@ -526,33 +523,33 @@ void Occupancy::remove_one(double x, double y, double w, double h,
 }
 
 void Occupancy::add(double x, double y, double w, double h, const Halo& reach,
-                    const Halo& inset, int mask, const std::vector<Comp>& comps) {
-    add_one(x, y, w, h, reach, inset, mask, mask, true);
+                    const Halo& inset, int mask, const std::vector<Comp>& comps, QuantizationCounts* counts) {
+    add_one(x, y, w, h, reach, inset, mask, mask, true, counts);
     const Halo zero{};
     for (const Comp& c : comps) {
-        add_one(py_round(x + c.dx, 4), py_round(y + c.dy, 4), c.w, c.h,
-                zero, zero, c.mask, mask, false);
+        add_one(occupancy_component_precision4dp(x + c.dx, counts), occupancy_component_precision4dp(y + c.dy, counts), c.w, c.h,
+                zero, zero, c.mask, mask, false, counts);
     }
 }
 
 void Occupancy::remove(double x, double y, double w, double h,
                        const Halo& reach, const Halo& inset, int mask,
-                       const std::vector<Comp>& comps) {
-    remove_one(x, y, w, h, reach, inset, mask, mask, true);
+                       const std::vector<Comp>& comps, QuantizationCounts* counts) {
+    remove_one(x, y, w, h, reach, inset, mask, mask, true, counts);
     const Halo zero{};
     for (const Comp& c : comps) {
-        remove_one(py_round(x + c.dx, 4), py_round(y + c.dy, 4), c.w, c.h,
-                   zero, zero, c.mask, mask, false);
+        remove_one(occupancy_component_precision4dp(x + c.dx, counts), occupancy_component_precision4dp(y + c.dy, counts), c.w, c.h,
+                   zero, zero, c.mask, mask, false, counts);
     }
 }
 
 bool Occupancy::body_clear(double x, double y, double w, double h,
                            const Halo& reach, const Halo& inset, int qmask,
-                           int qpmask, bool qmain, bool hashed) const {
+                           int qpmask, bool qmain, bool hashed, QuantizationCounts* counts) const {
     if (hashed) {
         const Halo qh = halo4(reach, inset);
         return query_hashed_cells(x, y, w, h, qh, reach, inset, qmask, qpmask,
-                                  qmain);
+                                  qmain, counts);
     }
     for (const Rect& r : rects_) {
         if (!occ_pair_active(qmask, qpmask, qmain, r.mask, r.pmask, r.main)) {
@@ -574,15 +571,15 @@ bool Occupancy::body_clear(double x, double y, double w, double h,
 bool Occupancy::query_hashed_cells(double x, double y, double w, double h,
                                    const Halo& qh, const Halo& reach,
                                    const Halo& inset, int qmask, int qpmask,
-                                   bool qmain) const {
+                                   bool qmain, QuantizationCounts* counts) const {
     const double b = bucket_;
-    const int iy0 = cell_div(y - qh.n, b);
-    const int iy1 = cell_div(y + h + qh.s, b);
-    const int ix0 = cell_div(x - qh.w, b);
-    const int ix1 = cell_div(x + w + qh.e, b);
-    for (int ix = ix0; ix <= ix1; ++ix) {
-        for (int iy = iy0; iy <= iy1; ++iy) {
-            auto it = cells_.find(CellKey{ix, iy});
+    const int iy0 = occupancy_cell_index(y - qh.n, b, counts);
+    const int iy1 = occupancy_cell_index(y + h + qh.s, b, counts);
+    const int ix0 = occupancy_cell_index(x - qh.w, b, counts);
+    const int ix1 = occupancy_cell_index(x + w + qh.e, b, counts);
+    for (std::int64_t ix = ix0; ix <= ix1; ++ix) {
+        for (std::int64_t iy = iy0; iy <= iy1; ++iy) {
+            auto it = cells_.find(CellKey{static_cast<int>(ix), static_cast<int>(iy)});
             if (it == cells_.end()) {
                 continue;
             }
@@ -613,7 +610,7 @@ bool Occupancy::fits_exhaustive(double x, double y, double w, double h,
         || y + h > board_h_ - clear_) {
         return false;
     }
-    if (!body_clear(x, y, w, h, reach, inset, mask, mask, true, false)) {
+    if (!body_clear(x, y, w, h, reach, inset, mask, mask, true, false, nullptr)) {
         return false;
     }
     const Halo zero{};
@@ -621,7 +618,7 @@ bool Occupancy::fits_exhaustive(double x, double y, double w, double h,
         const double cx0 = x + c.dx;
         const double cy0 = y + c.dy;
         if (!body_clear(cx0, cy0, c.w, c.h, zero, zero, c.mask, mask, false,
-                        false)) {
+                        false, nullptr)) {
             return false;
         }
     }
@@ -630,12 +627,12 @@ bool Occupancy::fits_exhaustive(double x, double y, double w, double h,
 
 bool Occupancy::fits_hashed(double x, double y, double w, double h,
                             const Halo& reach, const Halo& inset, int mask,
-                            const std::vector<Comp>& comps) const {
+                            const std::vector<Comp>& comps, QuantizationCounts* counts) const {
     if (x < clear_ || y < clear_ || x + w > board_w_ - clear_
         || y + h > board_h_ - clear_) {
         return false;
     }
-    if (!body_clear(x, y, w, h, reach, inset, mask, mask, true, true)) {
+    if (!body_clear(x, y, w, h, reach, inset, mask, mask, true, true, counts)) {
         return false;
     }
     const Halo zero{};
@@ -644,7 +641,7 @@ bool Occupancy::fits_hashed(double x, double y, double w, double h,
         const double cx0 = x + c.dx;
         const double cy0 = y + c.dy;
         if (!query_hashed_cells(cx0, cy0, c.w, c.h, z4, zero, zero, c.mask,
-                                mask, false)) {
+                                mask, false, counts)) {
             return false;
         }
     }
@@ -654,10 +651,10 @@ bool Occupancy::fits_hashed(double x, double y, double w, double h,
 std::optional<Pose> Occupancy::place_near(
     double ax, double ay, double w, double h, const Halo& reach,
     const Halo& inset, int mask, const std::vector<Comp>& comps,
-    double win_x0, double win_x1, double win_y0, double win_y1) const {
+    double win_x0, double win_x1, double win_y0, double win_y1, QuantizationCounts* counts) const {
     const double s = step_;
-    const int nx = static_cast<int>(board_w_ / s) + 1;
-    const int ny = static_cast<int>(board_h_ / s) + 1;
+    const int nx = occupancy_axis_count(board_w_, s, counts);
+    const int ny = occupancy_axis_count(board_h_, s, counts);
     const double hw = w / 2.0;
     const double hh = h / 2.0;
     std::vector<std::pair<double, double>> xs;
@@ -698,7 +695,7 @@ std::optional<Pose> Occupancy::place_near(
             buckets.erase(it);
             std::sort(cell.begin(), cell.end());
             for (const auto& [x, y] : cell) {
-                if (fits_hashed(x, y, w, h, reach, inset, mask, comps)) {
+                if (fits_hashed(x, y, w, h, reach, inset, mask, comps, counts)) {
                     return Pose{x, y, w, h};
                 }
             }
@@ -713,7 +710,7 @@ std::optional<Pose> Occupancy::place_near(
         const double ycost = ys[static_cast<std::size_t>(node.j)].first;
         const double x = xs[static_cast<std::size_t>(node.i)].second;
         const double y = ys[static_cast<std::size_t>(node.j)].second;
-        const double key = py_round(xcost + ycost, 1);
+        const double key = occupancy_frontier_key1dp(xcost + ycost, counts);
         auto bit = buckets.find(key);
         if (bit == buckets.end()) {
             buckets.emplace(key, std::vector<std::pair<double, double>>{{x, y}});

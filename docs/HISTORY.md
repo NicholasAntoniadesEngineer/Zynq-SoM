@@ -2,6 +2,23 @@
 
 ## 2026-09-26 — tracked Python retirement (acceptance in progress)
 
+Occupancy precision accounting (autonomous): six actual scalar operations now
+own component/reach precision, frontier/shape ranking and bucket/axis narrowing.
+Invocation-owned counters flow explicitly through copies, rejected searches,
+refinement and every floorplan packing trial; geometry stores no accounting
+sink. The registry now has 40 operations, and the reviewed source manifest adds
+the real implementation file. Invalid cell conversion precedes single-rectangle
+mutation; inclusive bucket loops use wide counters to avoid INT_MAX overflow.
+Ten focused CTests passed (383.79 s), including independent function-entry counts
+on carrier, devkit, single-side and fixed-outline paths, immutable prior output
+and counter fixtures, source audits, replay and ownership checks. Historical
+fixture files were not regenerated. This is not whole-board gate closure: the
+remaining source-policy findings and full native acceptance are still pending.
+Clang's test-only post-inlining instrumentation reduced the same independent
+occupancy proof from 284.41 s to 23.96 s; all assertions passed again. External
+operation calls remain in separate translation units. This measures test
+instrumentation overhead, not a production board-generation speed-up.
+
 Silk spatial-index correction (autonomous): reject nonfinite/nonpositive cell
 sizes and unordered/nonfinite/out-of-range boxes before insertion. Check the
 floating-to-integer cell conversion, use wide inclusive loop counters at

@@ -34,7 +34,7 @@ RefineResult refine_pack_passes(
     const Occupancy& occupancy, std::vector<RefineBlock> blocks,
     const std::unordered_map<std::string, std::pair<double, double>>&
         start_centers,
-    int max_passes, double board_w, double board_h);
+    int max_passes, double board_w, double board_h, QuantizationCounts* counts = nullptr);
 
 struct SeatShapeCand {
     int index = 0;
@@ -67,6 +67,6 @@ struct SeatShapeHit {
 std::vector<SeatShapeHit> seat_shape_sides(
     const Occupancy& occupancy, double anchor_x, double anchor_y,
     const std::vector<SeatShapeCand>& cands, double board_w, double board_h,
-    double clear);
+    double clear, QuantizationCounts* counts = nullptr);
 
 }  // namespace schgen

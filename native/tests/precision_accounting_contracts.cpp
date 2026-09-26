@@ -23,13 +23,13 @@ void begin(){for(auto& n:observations)n=0;enabled=true;}
 QuantizationCounts end(){enabled=false;QuantizationCounts out;for(std::size_t i=0;i<names.size();++i)if(observations[i])out[names[i]]=observations[i].load();return out;}
 QuantizationCounts decoded(const JsonNode& node){QuantizationCounts out;for(const auto& [name,n]:node.object_value)out[name]=static_cast<std::size_t>(n.number_value);return out;}
 bool added(const std::string& name){return std::find(names.begin(),names.end(),name)!=names.end();}
-// Connector and floorplan additions are independently entry-instrumented,
+// Connector, floorplan and occupancy additions are independently entry-instrumented,
 // fixture-compared and replay-tested by their dedicated contracts. Keep the
 // original twenty and first six additions as immutable migrations here.
-QuantizationCounts select(const QuantizationCounts& counts,bool new_only){QuantizationCounts out;for(const auto& [name,n]:counts)if(added(name)==new_only&&name!="mechanical_direction_component"&&name!="stage_direction_component"&&!floorplan_precision_fixture::added(name))out[name]=n;return out;}
+QuantizationCounts select(const QuantizationCounts& counts,bool new_only){QuantizationCounts out;for(const auto& [name,n]:counts)if(added(name)==new_only&&name!="mechanical_direction_component"&&name!="stage_direction_component"&&!floorplan_precision_fixture::added(name)&&!occupancy_precision_fixture::added(name))out[name]=n;return out;}
 void show(const QuantizationCounts& counts){std::cout<<'{';bool first=true;for(const auto& [name,n]:counts){if(!first)std::cout<<',';first=false;std::cout<<std::quoted(name)<<':'<<n;}std::cout<<'}';}
 void registry(){
-    NativeQuantizations q;register_native_quantizations(q);require(q.declarations().size()==34,"twenty original plus six precision, two connector and six floorplan operations");
+    NativeQuantizations q;register_native_quantizations(q);require(q.declarations().size()==40,"34 prior operations plus six occupancy operations");
     const std::array<std::vector<double>,6> arguments{{{11.24955},{11.24955},{11.24955},{11.24955},{1.7,.25},{1.7,.25}}};
     const std::array<double,6> expected{{estimate_position_precision(11.24955),estimate_pad_precision(11.24955),
         breathe_delta_precision(11.24955),breathe_commit_precision(11.24955),7,6}};

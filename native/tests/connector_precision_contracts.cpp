@@ -37,7 +37,7 @@ void scalars(){
     require(bits(stage_direction_component(-0.0))==bits(-0.0)&&std::isinf(stage_direction_component(INFINITY))&&std::isnan(stage_direction_component(NAN)),"stage IEEE behavior remains unchanged");
 }
 void registry(){
-    NativeQuantizations q;register_native_quantizations(q);require(q.declarations().size()==34,"28 existing plus six actual floorplan scalar functions");
+    NativeQuantizations q;register_native_quantizations(q);require(q.declarations().size()==40,"34 prior operations plus six occupancy operations");
     for(const auto& name:{mech,stage}){
         const auto ds=q.declarations();const auto it=std::find_if(ds.begin(),ds.end(),[&](const auto& d){return d.name==name;});
         require(it!=ds.end()&&it->arity==1&&it->symbol=="native/src/precision_ops.cpp::schgen::"+name,"exact scalar implementation and arity");

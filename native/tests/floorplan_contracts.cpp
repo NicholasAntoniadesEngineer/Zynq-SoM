@@ -495,7 +495,12 @@ void frozen(const std::filesystem::path& dir,const std::string& name,bool geomet
                 [wanted=key](const auto& entry){return entry.first==wanted;}),name+": floorplan addition cannot replace a prior counter");
         expected_quant.object_value.emplace_back(key,v);
     }
-    same(field(account,"quantization_engagements"),expected_quant,name+".quantization_engagements");
+    // Occupancy additions are independently entry-counted through both boards
+    // by native_occupancy_precision_contracts. Keep every prior expectation.
+    auto prior_quant=field(account,"quantization_engagements");
+    prior_quant.object_value.erase(std::remove_if(prior_quant.object_value.begin(),prior_quant.object_value.end(),
+        [](const auto& row){return occupancy_precision_fixture::added(row.first);}),prior_quant.object_value.end());
+    same(prior_quant,expected_quant,name+".quantization_engagements");
     std::vector<J> calculations;
     std::string ledger;
     for (const auto& d:result.accounting.decisions) {

@@ -1,6 +1,7 @@
 #include "schgen/pack_refine.hpp"
 
 #include "schgen/occupancy.hpp"
+#include "schgen/occupancy_precision.hpp"
 
 #include <cmath>
 #include <stdexcept>
@@ -50,7 +51,7 @@ RefineResult refine_pack_passes(
     const Occupancy& occupancy, std::vector<RefineBlock> blocks,
     const std::unordered_map<std::string, std::pair<double, double>>&
         start_centers,
-    int max_passes, double board_w, double board_h) {
+    int max_passes, double board_w, double board_h, QuantizationCounts* counts) {
     if (max_passes < 1) {
         throw std::runtime_error("refine_pack_passes: max_passes required");
     }
@@ -66,16 +67,16 @@ RefineResult refine_pack_passes(
         bool moved = false;
         for (RefineBlock& block : blocks) {
             working.remove(block.x, block.y, block.w, block.h, block.reach,
-                           block.inset, block.mask, block.comps);
+                           block.inset, block.mask, block.comps, counts);
             rebuild_anchor(block.anchor, block, centers);
             const auto anchor = pack_anchor(block.anchor);
             auto hit = working.place_near(anchor.first, anchor.second, block.w,
                                           block.h, block.reach, block.inset,
                                           block.mask, block.comps, wx0, wx1,
-                                          wy0, wy1);
+                                          wy0, wy1, counts);
             if (!hit.has_value()) {
                 working.add(block.x, block.y, block.w, block.h, block.reach,
-                            block.inset, block.mask, block.comps);
+                            block.inset, block.mask, block.comps, counts);
                 continue;
             }
             if (hit->x != block.x || hit->y != block.y) {
@@ -84,7 +85,7 @@ RefineResult refine_pack_passes(
             block.x = hit->x;
             block.y = hit->y;
             working.add(block.x, block.y, block.w, block.h, block.reach,
-                        block.inset, block.mask, block.comps);
+                        block.inset, block.mask, block.comps, counts);
             centers[block.name] = {block.x + block.w / 2.0,
                                    block.y + block.h / 2.0};
         }
@@ -105,7 +106,7 @@ RefineResult refine_pack_passes(
 std::vector<SeatShapeHit> seat_shape_sides(
     const Occupancy& occupancy, double anchor_x, double anchor_y,
     const std::vector<SeatShapeCand>& cands, double board_w, double board_h,
-    double clear) {
+    double clear, QuantizationCounts* counts) {
     Occupancy working = occupancy;
     working.set_board(board_w, board_h);
     std::vector<std::string> side_order;
@@ -117,13 +118,13 @@ std::vector<SeatShapeHit> seat_shape_sides(
         auto pos = working.place_near(anchor_x, anchor_y, cand.w, cand.h,
                                       cand.reach, cand.inset, cand.mask,
                                       cand.comps, cand.win_x0, cand.win_x1,
-                                      cand.win_y0, cand.win_y1);
+                                      cand.win_y0, cand.win_y1, counts);
         if (!pos.has_value()) {
             continue;
         }
         const double dist = std::fabs(pos->x + cand.w / 2.0 - anchor_x)
             + std::fabs(pos->y + cand.h / 2.0 - anchor_y);
-        const double dist_key = py_round(dist, 4);
+        const double dist_key = occupancy_shape_key4dp(dist, counts);
         auto found = best.find(cand.side);
         if (found != best.end()) {
             if (dist_key > found->second.dist_key) {

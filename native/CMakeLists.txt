@@ -439,6 +439,25 @@ if(BUILD_TESTING)
             -Wall -Wextra -Wpedantic -Werror -ffp-contract=off)
         add_test(NAME native_${family}_contracts COMMAND schgen_${family}_contracts)
     endforeach()
+    add_library(schgen_occupancy_precision_observed OBJECT src/occupancy_precision.cpp)
+    target_include_directories(schgen_occupancy_precision_observed PRIVATE include)
+    target_compile_options(schgen_occupancy_precision_observed PRIVATE
+        -Wall -Wextra -Wpedantic -Werror -ffp-contract=off)
+    # Callers are separate translation units, without LTO: all six external
+    # operation entries remain visible. Do not instrument every inlined map
+    # helper; that can dominate the real-board independent-count proof.
+    if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+        target_compile_options(schgen_occupancy_precision_observed PRIVATE -finstrument-functions-after-inlining)
+    else()
+        target_compile_options(schgen_occupancy_precision_observed PRIVATE -finstrument-functions -fno-inline)
+    endif()
+    add_executable(schgen_occupancy_precision_contracts tests/occupancy_precision_contracts.cpp
+        $<TARGET_OBJECTS:schgen_occupancy_precision_observed>)
+    target_link_libraries(schgen_occupancy_precision_contracts PRIVATE schgen_core)
+    target_compile_options(schgen_occupancy_precision_contracts PRIVATE
+        -Wall -Wextra -Wpedantic -Werror -ffp-contract=off)
+    add_test(NAME native_occupancy_precision_contracts COMMAND schgen_occupancy_precision_contracts
+        "${CMAKE_CURRENT_SOURCE_DIR}/..")
     # Only the private operation object is instrumented. Its actual function
     # entries independently verify producer counters; production stays untouched.
     add_library(schgen_precision_observed OBJECT src/precision_ops.cpp)

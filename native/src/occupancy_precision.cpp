@@ -7,23 +7,23 @@
 
 namespace schgen {
 
-double occupancy_component_precision(double value, QuantizationCounts* counts) {
-    if (counts) checked_quantization_add(*counts, "occupancy_component_precision");
+double occupancy_component_precision4dp(double value, QuantizationCounts* counts) {
+    if (counts) checked_quantization_add(*counts, "occupancy_component_precision4dp");
     return py_round(value, 4);
 }
 
-double occupancy_reach_precision(double value, QuantizationCounts* counts) {
-    if (counts) checked_quantization_add(*counts, "occupancy_reach_precision");
+double occupancy_reach_precision4dp(double value, QuantizationCounts* counts) {
+    if (counts) checked_quantization_add(*counts, "occupancy_reach_precision4dp");
     return py_round(value, 4);
 }
 
-double occupancy_frontier_key(double distance, QuantizationCounts* counts) {
-    if (counts) checked_quantization_add(*counts, "occupancy_frontier_key");
+double occupancy_frontier_key1dp(double distance, QuantizationCounts* counts) {
+    if (counts) checked_quantization_add(*counts, "occupancy_frontier_key1dp");
     return py_round(distance, 1);
 }
 
-double occupancy_shape_key(double distance, QuantizationCounts* counts) {
-    if (counts) checked_quantization_add(*counts, "occupancy_shape_key");
+double occupancy_shape_key4dp(double distance, QuantizationCounts* counts) {
+    if (counts) checked_quantization_add(*counts, "occupancy_shape_key4dp");
     return py_round(distance, 4);
 }
 

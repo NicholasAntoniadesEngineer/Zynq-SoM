@@ -1,5 +1,6 @@
 #pragma once
 #include "pcb_placement_fixture.hpp"
+#include "occupancy_precision_fixture.hpp"
 #include "schgen/floorplan_ledger_policy.hpp"
 #include <array>
 #include <iomanip>
@@ -16,11 +17,11 @@ inline bool added(const std::string& name) {
 }
 inline QuantizationCounts select(const QuantizationCounts& values,bool new_only=true) {
     QuantizationCounts out;for(const auto& [name,count]:values)
-        if(added(name)==new_only)out[name]=count;
+        if(added(name)==new_only&&!occupancy_precision_fixture::added(name))out[name]=count;
     return out;
 }
 // Lossless typed snapshot: exact binary-double round trip, insertion order,
-// strings and all decision fields. Only the separately proved six additive
+// strings and all decision fields. Only the independently proved additive
 // counts are removed; every prior counter remains in the byte comparison.
 inline void node(std::ostream& out,const JsonNode& value) {
     out<<static_cast<int>(value.kind)<<' ';
