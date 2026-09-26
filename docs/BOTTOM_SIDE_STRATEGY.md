@@ -239,9 +239,11 @@ Sequencing: P1 starts after the wave-8 engine unit lands (same files).
 
 The wave-10/11 hypothesis (the sizing estimate misleads the search, so bottom
 opt-ins price well and emit badly) was measured at every stage boundary and is
-**wrong**. Instruments: `scripts/w12_stageprobe.py` (LAW-5 ratsnest kernel at
+**wrong**. Instruments (now migrated to native commands):
+`native/bin/schgen w12-stageprobe TAG --project carrier` (LAW-5 ratsnest kernel at
 every `StageTracker` boundary — its FINAL row reads the pinned 15,319.0),
-`w12_bound.py` (every outline candidate: packed? est? budget?),
+`native/bin/schgen w12-bound TAG --project carrier`
+(every outline candidate: packed? est? budget?). Historical investigative tools:
 `w12_chain.py` (every `_attempt_pack` call classified by rejecter),
 `w12_order.py` (all edge-run orderings), `w12_why.py` (line-traced rejection
 site), `w12_shapes.py` (registered shape sets), `w12_patchrun.py`

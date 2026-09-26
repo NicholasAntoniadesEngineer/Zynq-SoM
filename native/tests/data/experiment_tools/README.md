@@ -166,8 +166,26 @@ the experiment fail explicitly while restoring its input files.
 - Dump publication authors, validates roundtrip and writes each sheet in sorted
   registry order. Later failures leave earlier writes, matching the script.
   Preparation is pure; no stored `circuit.json` becomes a production generator.
-- The original five scripts remain unchanged. `dump_circuits 2.py` was inspected
-  only and is byte-identical to `dump_circuits.py`; it has not been deleted.
+- The original five Python scripts and the byte-identical local sync duplicate
+  have been retired after native contract and CLI proof. Use the native commands
+  below; the independent captured fixtures remain unchanged.
+
+## Native CLI cutover
+
+```sh
+native/bin/schgen chir-rung TAG [SHEET ...] --project carrier
+native/bin/schgen w11-sweep MM [SHEET ...] --project carrier
+native/bin/schgen w12-bound TAG [SHEET ...] --project devkit_mini
+native/bin/schgen w12-stageprobe TAG [SHEET ...] --project devkit_mini [--cons-only]
+native/bin/schgen dump-circuits --project carrier
+```
+
+The actual devkit W12 stage-probe and bound CLI invocations passed using fresh
+native authoring and real KiCad extraction. Actual dump publication for carrier
+and devkit wrote all 49 canonical circuit files with no Git content changes.
+CHIR/W11 restoration, candidate handling, explicit cost overrides and formatting
+are covered by the independent native contracts below. Full board-host audit
+acceptance is still required; removal of scripts is not a board-gate waiver.
 
 ## Independent evidence
 

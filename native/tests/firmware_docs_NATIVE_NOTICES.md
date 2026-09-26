@@ -96,9 +96,9 @@ Concrete remaining edges found by tracing Python entry points and native code:
 - `cmd_check` is still a Python subprocess driver for board, selftest, M1 RC,
   and pytest. Native board/selftest/M1 and CTest contracts exist; remaining work
   is orchestration, already reserved to parent/Zeno, not a missing core.
-- `scripts/dump_circuits.py` still explicitly publishes canonical JSON using
-  Python constructors. Native authors and `authored_circuit_json` already exist;
-  publication policy/CLI is an authoring integration edge for Copernicus/parent.
+- Canonical JSON publication is now `native/bin/schgen dump-circuits --project
+  NAME`, using live C++ constructors. Both projects' 49 published files were
+  byte-identical; the old Python script and its local sync duplicate are retired.
 
 Do not duplicate active experiment-observer, verification-audit, part-import,
 compose, rendering, or board-pipeline work. This is a bounded inventory, not a
