@@ -52,7 +52,7 @@ void registry_contracts(const JsonNode& reference){
     rejects([&]{f.record("not-registered");},"unknown fallback is an error");rejects([&]{register_native_fallbacks(f);},"duplicate fallback registration fails");
     rejects([&]{f.restore({"not-registered"});},"bad restore fails before state mutation");require(f.snapshot()==snap,"failed restore preserves events");
     f.reset();require(f.census().at("seat_node_budget")==AuditInteger{},"fallback reset keeps zero registrations");
-    NativeQuantizations q;register_native_quantizations(q);require(q.declarations().size()==26,"twenty original registrations plus six actual estimate/breathe precision operations");
+    NativeQuantizations q;register_native_quantizations(q);require(q.declarations().size()==28,"twenty original registrations plus six estimate/breathe and two connector direction operations");
     rejects([&]{register_native_quantizations(q);},"duplicate transform registration fails");
     const std::vector<double> values={-100.13,-2.5,-0.635,-0.25,0,0.05,0.635,1.2345,83.15};
     for(double value:values){
@@ -147,7 +147,7 @@ void source_contracts(const fs::path& root,const fs::path& scratch){
     // source. All raw operations must be inside an explicitly registered body.
     CppAuditOptions live;live.flags={"-I"+(root/"native/include").string()};
     const auto census=scan_cpp_audit_sources(root,{{"native/include/schgen/quantize.hpp"},{"native/src/quantize.cpp"},{"native/src/native_audit_quantize.cpp"},{"native/src/precision_ops.cpp"}},live);
-    require(census.constants.size()==8&&census.functions.size()==26,"actual native quantize/precision declarations are scanned");
+    require(census.constants.size()==8&&census.functions.size()==28,"actual native quantize/precision declarations are scanned");
     NativeQuantizations all;register_native_quantizations(all);
     NativeLedger live_ledger;
     const std::vector<std::pair<std::string,double>> constants={{"kGridMm",fixed_part_grid(1.3)},{"kHalfMm",som_pose_half_mm(0.7)},{"kCreditMm",quant_credit(0)},
@@ -155,6 +155,8 @@ void source_contracts(const fs::path& root,const fs::path& scratch){
     for(const auto& [name,value]:constants)live_ledger.declare(assumption(name,"native/include/schgen/quantize.hpp::schgen::quantization_policy::"+name,value));
     live_ledger.open_step("floorplan.sizing");live_ledger.close_step("floorplan.sizing");
     const auto audited=check_native_audits(census,live_ledger,all);require(audited.ok,"production quantize C++ policy audit: "+audited.summary());
+    const auto consumers=scan_cpp_audit_sources(root,{{"native/src/pcb_checks_placement.cpp"},{"native/src/pcb_stage_geometry.cpp"}},live);
+    require(consumers.quantization.empty(),"actual mechanical/stage callers contain no remaining raw quantization after scalar extraction");
     model_checks::publish(path,"");rejects([&]{check_native_audits(scratch,{{"geometry.cpp"}},NativeLedger{},NativeQuantizations{});},"empty translation unit cannot fake a gate pass");
 }
 }

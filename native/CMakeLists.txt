@@ -8,11 +8,15 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
-option(SCHGEN_BUILD_PYTHON "Build transitional Python bindings" OFF)
+option(SCHGEN_BUILD_PYTHON "Retired compatibility option; must remain OFF" OFF)
+if(SCHGEN_BUILD_PYTHON)
+    message(FATAL_ERROR "Python bindings have been retired; use the native schgen executable (SCHGEN_BUILD_PYTHON=OFF)")
+endif()
 
-# Compile one engine shared by the standalone CLI and transitional bindings.
+# Compile one engine shared by the standalone CLI and native contracts.
+include(cmake/AuthoringPurity.cmake)
 add_library(schgen_core STATIC
-    src/occupancy.cpp src/seat.cpp src/sexpr.cpp src/route.cpp src/emit.cpp
+    src/occupancy.cpp src/occupancy_precision.cpp src/seat.cpp src/sexpr.cpp src/route.cpp src/emit.cpp
     src/legalize.cpp src/quantize.cpp src/precision_ops.cpp src/turn.cpp src/pack.cpp
     src/pack_anchor.cpp src/place_search.cpp src/cc.cpp src/embed_fp.cpp
     src/pack_edges.cpp src/pcb_scan.cpp src/pack_refine.cpp src/place_geom.cpp
@@ -60,11 +64,17 @@ target_sources(schgen_core PRIVATE src/gallery.cpp src/diagram.cpp)
 target_sources(schgen_core PRIVATE src/pcb_verification.cpp)
 target_sources(schgen_core PRIVATE src/pcb_drc.cpp)
 target_sources(schgen_core PRIVATE src/subsystem_build.cpp)
-target_sources(schgen_core PRIVATE src/example_devkit.cpp)
+target_sources(schgen_core PRIVATE src/example_devkit.cpp src/example_devkit_build.cpp)
 target_sources(schgen_core PRIVATE src/net_contract.cpp)
 target_sources(schgen_core PRIVATE src/doc_consistency.cpp)
 target_sources(schgen_core PRIVATE src/regression_cli.cpp)
 target_sources(schgen_core PRIVATE src/geometry_cli.cpp src/audit_ast_projection.cpp)
+target_sources(schgen_core PRIVATE src/authoring_purity.cpp src/authoring_purity_scope.cpp src/authoring_purity_config.cpp src/native_authoring_guard.cpp)
+target_link_libraries(schgen_core PUBLIC ${CMAKE_DL_LIBS})
+set_source_files_properties(src/authoring_purity.cpp src/authoring_purity_scope.cpp src/authoring_purity_config.cpp
+    PROPERTIES COMPILE_OPTIONS "-Wall;-Wextra;-Wpedantic;-Werror;-ffp-contract=off")
+set_source_files_properties(src/native_authoring_guard.cpp PROPERTIES
+    COMPILE_DEFINITIONS "SCHGEN_AUTHORING_PURITY_CONFIGURATION=\"${SCHGEN_AUTHORING_PURITY_CONFIGURATION}\"")
 set_source_files_properties(src/geometry_cli.cpp src/audit_ast_projection.cpp
     PROPERTIES COMPILE_OPTIONS "-Wall;-Wextra;-Wpedantic;-Werror;-ffp-contract=off")
 set_source_files_properties(src/regression_cli.cpp
@@ -73,7 +83,7 @@ set_source_files_properties(src/precision_ops.cpp
     PROPERTIES COMPILE_OPTIONS "-Wall;-Wextra;-Wpedantic;-Werror;-ffp-contract=off")
 set_source_files_properties(src/doc_consistency.cpp
     PROPERTIES COMPILE_OPTIONS "-Wall;-Wextra;-Wpedantic;-Werror;-ffp-contract=off")
-set_source_files_properties(src/net_contract.cpp src/example_devkit.cpp
+set_source_files_properties(src/net_contract.cpp src/example_devkit.cpp src/example_devkit_build.cpp
     PROPERTIES COMPILE_OPTIONS "-Wall;-Wextra;-Wpedantic;-Werror;-ffp-contract=off")
 target_sources(schgen_core PRIVATE src/experiment_tools_json.cpp src/experiment_tools_board.cpp
     src/experiment_tools_probe.cpp src/experiment_tools_catalog.cpp)
@@ -131,7 +141,7 @@ set_source_files_properties(${SCHGEN_MANUFACTURING_SOURCES} PROPERTIES COMPILE_O
 file(GLOB authoring_builders CONFIGURE_DEPENDS
     "${CMAKE_CURRENT_SOURCE_DIR}/src/subsystem_authoring*.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/project_authoring*.cpp")
-set(authoring_sources src/authoring.cpp src/authoring_ir.cpp src/authoring_gates.cpp ${authoring_builders})
+set(authoring_sources src/authoring.cpp src/authoring_context.cpp src/authoring_ir.cpp src/authoring_gates.cpp ${authoring_builders})
 target_sources(schgen_core PRIVATE ${authoring_sources})
 set_source_files_properties(${authoring_sources} PROPERTIES COMPILE_OPTIONS "-ffp-contract=off")
 set_source_files_properties(${SCHGEN_SELFTEST_SOURCES} PROPERTIES COMPILE_OPTIONS "-ffp-contract=off")
@@ -151,32 +161,6 @@ set_source_files_properties(src/turn.cpp src/pack_anchor.cpp src/symbols.cpp
                             src/pcb_checks_model.cpp src/pcb_checks_connectors.cpp src/pcb_checks_placement.cpp
                             src/pcb_checks_return_path.cpp src/pcb_checks_ampacity.cpp src/pcb_checks_escape.cpp src/pcb_checks_stitch.cpp PROPERTIES
     COMPILE_OPTIONS "-ffp-contract=off")
-
-if(SCHGEN_BUILD_PYTHON)
-    find_package(Python REQUIRED COMPONENTS Interpreter Development.Module)
-    execute_process(
-        COMMAND "${Python_EXECUTABLE}" -m nanobind --cmake_dir
-        OUTPUT_VARIABLE nanobind_ROOT
-        OUTPUT_STRIP_TRAILING_WHITESPACE
-        RESULT_VARIABLE nanobind_rv)
-    if(nanobind_rv EQUAL 0 AND NOT nanobind_ROOT STREQUAL "")
-        list(APPEND CMAKE_PREFIX_PATH "${nanobind_ROOT}")
-        find_package(nanobind CONFIG REQUIRED)
-    else()
-        include(FetchContent)
-        FetchContent_Declare(
-            nanobind
-            GIT_REPOSITORY https://github.com/wjakob/nanobind.git
-            GIT_TAG v2.9.2)
-        FetchContent_MakeAvailable(nanobind)
-    endif()
-    nanobind_add_module(_geom src/module.cpp)
-    target_link_libraries(_geom PRIVATE schgen_core)
-    target_compile_options(_geom PRIVATE -Wall -Wextra -Wpedantic -Werror)
-    set_target_properties(_geom PROPERTIES
-        LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/../schgen"
-        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/../schgen")
-endif()
 
 add_executable(schgen src/main.cpp src/project_cli.cpp)
 target_link_libraries(schgen PRIVATE schgen_core)
@@ -311,6 +295,60 @@ if(BUILD_TESTING)
     target_link_libraries(schgen_json_unicode_contracts PRIVATE schgen_core)
     target_compile_options(schgen_json_unicode_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror)
     add_test(NAME native_json_unicode_contracts COMMAND schgen_json_unicode_contracts)
+    add_executable(schgen_authoring_values_contracts tests/authoring_values_contracts.cpp)
+    target_include_directories(schgen_authoring_values_contracts PRIVATE include)
+    target_compile_features(schgen_authoring_values_contracts PRIVATE cxx_std_17)
+    target_compile_options(schgen_authoring_values_contracts PRIVATE
+        -Wall -Wextra -Wpedantic -Werror -ffp-contract=off)
+    add_test(NAME native_authoring_values_contracts COMMAND schgen_authoring_values_contracts)
+    add_executable(schgen_render_baseline_contracts tests/render_baseline_contracts.cpp)
+    target_link_libraries(schgen_render_baseline_contracts PRIVATE schgen_core)
+    target_compile_options(schgen_render_baseline_contracts PRIVATE
+        -Wall -Wextra -Wpedantic -Werror -ffp-contract=off)
+    add_test(NAME native_render_baseline_contracts COMMAND schgen_render_baseline_contracts "${CMAKE_CURRENT_SOURCE_DIR}/..")
+    add_executable(schgen_si_units_contracts tests/si_units_contracts.cpp)
+    target_link_libraries(schgen_si_units_contracts PRIVATE schgen_core)
+    target_compile_options(schgen_si_units_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror -ffp-contract=off)
+    add_test(NAME native_si_units_contracts COMMAND schgen_si_units_contracts "${CMAKE_CURRENT_SOURCE_DIR}/..")
+    set_tests_properties(native_si_units_contracts PROPERTIES TIMEOUT 120)
+    add_executable(schgen_downstream_i2c_contracts tests/downstream_i2c_contracts.cpp)
+    target_link_libraries(schgen_downstream_i2c_contracts PRIVATE schgen_core)
+    target_compile_options(schgen_downstream_i2c_contracts PRIVATE
+        -Wall -Wextra -Wpedantic -Werror -ffp-contract=off)
+    add_test(NAME native_downstream_i2c_contracts
+        COMMAND schgen_downstream_i2c_contracts "${CMAKE_CURRENT_SOURCE_DIR}/..")
+    set_tests_properties(native_downstream_i2c_contracts PROPERTIES TIMEOUT 120)
+    foreach(family authoring_context authoring_purity authoring_purity_config authoring_purity_repository authoring_purity_dispatch)
+        add_executable(schgen_${family}_contracts tests/${family}_contracts.cpp)
+        target_link_libraries(schgen_${family}_contracts PRIVATE schgen_core)
+        target_compile_options(schgen_${family}_contracts PRIVATE
+            -Wall -Wextra -Wpedantic -Werror -ffp-contract=off)
+    endforeach()
+    add_test(NAME native_authoring_context_contracts COMMAND schgen_authoring_context_contracts "${CMAKE_CURRENT_SOURCE_DIR}/..")
+    add_executable(schgen_native_authoring_guard_contracts tests/native_authoring_guard_contracts.cpp)
+    target_link_libraries(schgen_native_authoring_guard_contracts PRIVATE schgen_core)
+    target_compile_options(schgen_native_authoring_guard_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror -ffp-contract=off)
+    add_test(NAME native_authoring_guard_contracts COMMAND schgen_native_authoring_guard_contracts "${CMAKE_CURRENT_SOURCE_DIR}/..")
+    add_test(NAME native_authoring_guard_live_contracts COMMAND schgen_native_authoring_guard_contracts
+        "${CMAKE_CURRENT_SOURCE_DIR}/.." --live "${SCHGEN_AUTHORING_PURITY_CONFIGURATION}")
+    set_tests_properties(native_authoring_guard_live_contracts PROPERTIES TIMEOUT 180 RUN_SERIAL TRUE)
+    add_test(NAME native_authoring_purity_dispatch_contracts COMMAND schgen_authoring_purity_dispatch_contracts)
+    add_test(NAME native_authoring_purity_contracts COMMAND schgen_authoring_purity_contracts
+        "${CMAKE_CURRENT_SOURCE_DIR}/.." "${SCHGEN_LIBCLANG}" ${SCHGEN_PURITY_TEST_SYSTEM_ARGUMENTS})
+    add_test(NAME native_authoring_purity_config_contracts COMMAND schgen_authoring_purity_config_contracts
+        "${CMAKE_CURRENT_SOURCE_DIR}/.." "${CMAKE_CXX_COMPILER}" "${SCHGEN_LIBCLANG}" ${SCHGEN_PURITY_SYSTEM_DIRECTORIES})
+    foreach(mode closure census)
+        add_test(NAME native_authoring_purity_${mode} COMMAND schgen_authoring_purity_repository_contracts
+            "${CMAKE_CURRENT_SOURCE_DIR}/.." "${SCHGEN_AUTHORING_PURITY_CONFIGURATION}" "${mode}")
+        set_tests_properties(native_authoring_purity_${mode} PROPERTIES TIMEOUT 600 RUN_SERIAL TRUE)
+    endforeach()
+    add_executable(schgen_placement_metadata_contracts tests/placement_metadata_contracts.cpp)
+    target_link_libraries(schgen_placement_metadata_contracts PRIVATE schgen_core)
+    target_compile_options(schgen_placement_metadata_contracts PRIVATE
+        -Wall -Wextra -Wpedantic -Werror -ffp-contract=off)
+    add_test(NAME native_placement_metadata_contracts
+        COMMAND schgen_placement_metadata_contracts "${CMAKE_CURRENT_SOURCE_DIR}/..")
+    set_tests_properties(native_placement_metadata_contracts PROPERTIES TIMEOUT 120)
     foreach(family subsystem_authoring authoring_gates)
         add_executable(schgen_${family}_contracts tests/${family}_contracts.cpp)
         target_link_libraries(schgen_${family}_contracts PRIVATE schgen_core)
@@ -408,6 +446,14 @@ if(BUILD_TESTING)
     target_compile_options(schgen_precision_accounting_contracts PRIVATE
         -Wall -Wextra -Wpedantic -Werror -ffp-contract=off)
     add_test(NAME native_precision_accounting_contracts COMMAND schgen_precision_accounting_contracts
+        "${CMAKE_CURRENT_SOURCE_DIR}/..")
+    add_executable(schgen_connector_precision_contracts tests/connector_precision_contracts.cpp
+        $<TARGET_OBJECTS:schgen_precision_observed>)
+    target_include_directories(schgen_connector_precision_contracts PRIVATE src)
+    target_link_libraries(schgen_connector_precision_contracts PRIVATE schgen_core)
+    target_compile_options(schgen_connector_precision_contracts PRIVATE
+        -Wall -Wextra -Wpedantic -Werror -ffp-contract=off)
+    add_test(NAME native_connector_precision_contracts COMMAND schgen_connector_precision_contracts
         "${CMAKE_CURRENT_SOURCE_DIR}/..")
     foreach(family regression_cli regression_rc_smoke)
         add_executable(schgen_${family}_contracts tests/${family}_contracts.cpp)

@@ -134,7 +134,6 @@ std::string json_quote(const std::string& text){
 
 namespace schgen {
 std::optional<AuditCounts> load_fallback_baseline(const std::filesystem::path& p){return audit_detail::load_counts(p,"counts",false);}
-AuditCounts load_quantize_baseline(const std::filesystem::path& p){return audit_detail::load_counts(p,"allowed",true).value_or(AuditCounts{});}
 std::string fallback_baseline_text(const AuditCounts& counts){
     using audit_detail::json_quote;
     std::string out="{\n \"counts\": {";bool first=true;

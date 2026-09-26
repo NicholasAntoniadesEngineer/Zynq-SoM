@@ -1,8 +1,8 @@
 # Native migration
 
 The target is a complete C++ generator, including design loading, placement,
-routing, emission, verification, CLI, and tests. The Python extension is a
-temporary migration interface. Native kernels alone do not complete the port.
+routing, emission, verification, CLI, and tests. The Python extension and the
+393 inventoried Python sources/tests are retired. Native kernels alone do not complete the port.
 Final acceptance requires zero repository-owned Python sources, tests, helpers,
 bindings, or runtime dependencies. KiCad/design data, FPGA HDL, and generated
 XDC/Tcl remain in their required hardware formats; generator/tooling code is C++.
@@ -11,8 +11,8 @@ XDC/Tcl remain in their required hardware formats; generator/tooling code is C++
 
 For the native-only full CTest workflow and offline dependency bootstrap, see
 [`ci/README.md`](ci/README.md). That additive entry point needs CMake 3.28+ and
-explicitly checks installed KiCad libraries; it does not remove Python parity
-tests or change this engine's standalone/parity build options.
+explicitly checks installed KiCad libraries. Native contracts retain independent
+parity fixtures; no Python test runtime is required.
 
 Install the pinned native zlib-ng compressor using the instructions in
 [the manufacturing handoff](tests/data/manufacturing/README.md#explicit-native-installation-and-parent-wiring).
@@ -39,7 +39,7 @@ rebuilds when unrelated per-source compilation options change. Do not build
 different build directories concurrently: they currently publish the same CLI
 and catalogs in the source tree.
 
-This is also the default configuration: Python bindings are opt-in. The build
+This is also the default configuration: enabling retired Python bindings is an error. The build
 uses C++17, libxml2 (for KiCad netlists), native zlib-ng (for exact manufacturing PNGs),
 and Poppler C++/libpng (for schematic rasterization), without discovering Python,
 installing nanobind, or fetching dependencies. Live SoM extraction requires
@@ -173,8 +173,8 @@ parts, without new waivers. Probe-only ports now export hierarchical sheet
 connections; regulator discovery excludes measurement pads, and PCB placement
 handles connector-sheet auxiliaries without moving the fixed mezzanines.
 
-`scripts/build_native.sh` still builds the transitional Python bindings. Both
-executables link the same `schgen_core` library; the engine sources compile
+The transitional Python bindings and build script are retired. The standalone
+CLI and native tests link the same `schgen_core` library; engine sources compile
 once per build directory. Preserve the per-source floating-point settings:
 these are part of the deterministic-output contract.
 

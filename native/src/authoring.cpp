@@ -1,12 +1,13 @@
 #include "schgen/authoring.hpp"
-#include "schgen/symbols.hpp"
-#include "model_checks_internal.hpp"
+#include "authoring_values.hpp"
 #include <cctype>
+#include <limits>
+#include <regex>
 
 namespace schgen {
 namespace {
-using model_checks::repr;
-using model_checks::trim;
+using authoring_values::repr;
+using authoring_values::trim;
 bool same(const CircuitPinRefIr& a, const CircuitPinRefIr& b) { return a.ref == b.ref && a.pin == b.pin; }
 bool same(const CircuitPortIr& a, const CircuitPortIr& b) {
     return a.kind==b.kind && a.has_pair_with==b.has_pair_with && a.pair_with==b.pair_with &&
@@ -31,12 +32,21 @@ std::string footprint(const std::string& lib, const std::string& value) {
     }
     return uf>=1 ? "Capacitor_SMD:C_0805_2012Metric" : "Capacitor_SMD:C_0603_1608Metric";
 }
-template<class T> auto by_net(T& entries, const std::string& net) {
-    return std::find_if(entries.begin(),entries.end(),[&](const auto& x){return x.net==net;});
+std::vector<CircuitPortIr>::iterator by_net(std::vector<CircuitPortIr>& entries, const std::string& net) {
+    return std::find_if(entries.begin(),entries.end(),[&](const CircuitPortIr& x){return x.net==net;});
+}
+std::vector<CircuitPortIr>::const_iterator by_net(const std::vector<CircuitPortIr>& entries, const std::string& net) {
+    return std::find_if(entries.begin(),entries.end(),[&](const CircuitPortIr& x){return x.net==net;});
+}
+std::vector<CircuitHintIr>::iterator by_net(std::vector<CircuitHintIr>& entries, const std::string& net) {
+    return std::find_if(entries.begin(),entries.end(),[&](const CircuitHintIr& x){return x.net==net;});
+}
+std::vector<CircuitHintIr>::const_iterator by_net(const std::vector<CircuitHintIr>& entries, const std::string& net) {
+    return std::find_if(entries.begin(),entries.end(),[&](const CircuitHintIr& x){return x.net==net;});
 }
 std::string repr_type(const CircuitPortIr& p) {
     const auto opt=[](bool has,const std::string& s){return has?repr(s):"None";};
-    auto level=model_checks::fmt(p.level_v,17);
+    auto level=authoring_values::number17(p.level_v);
     if(level.find_first_of(".eE")==std::string::npos) level+=".0";
     return "PortType(kind="+repr(p.kind)+", pair_with="+opt(p.has_pair_with,p.pair_with)+
         ", impedance="+(p.has_impedance?std::to_string(p.impedance):"None")+
@@ -44,14 +54,6 @@ std::string repr_type(const CircuitPortIr& p) {
         ", speed_hz="+(p.has_speed_hz?std::to_string(p.speed_hz):"None")+
         ", level_v="+(p.has_level_v?level:"None")+", expect="+opt(p.has_expect,p.expect)+")";
 }
-}
-AuthoringContext make_authoring_context(const std::filesystem::path& repository) {
-    auto library=std::make_shared<SymbolLibrary>(repository);
-    AuthoringContext context;
-    context.pins=[library](const std::string& lib)->std::optional<std::set<std::string>> {
-        try{return library->pin_numbers(lib);}catch(const SymbolError&){return std::nullopt;}
-    };
-    return context;
 }
 CircuitAuthor::CircuitAuthor(std::string name, std::string title, AuthoringContext context)
     :context_(std::move(context)) {
@@ -90,9 +92,9 @@ std::string CircuitAuthor::auto_ref(const std::string& prefix) {
 }
 std::string CircuitAuthor::classify(const std::string& name) {
     for(const auto* p:{"GND","GNDA","GNDD","GNDPWR","AGND","DGND","PGND","VSS","CHASSIS_GND"})
-        if(model_checks::starts(name,p)) return "ground";
-    if(model_checks::starts(name,"+") || name=="VBUS" || model_checks::starts(name,"VDD") ||
-       model_checks::starts(name,"VCC")) return "power";
+        if(authoring_values::starts(name,p)) return "ground";
+    if(authoring_values::starts(name,"+") || name=="VBUS" || authoring_values::starts(name,"VDD") ||
+       authoring_values::starts(name,"VCC")) return "power";
     return "signal";
 }
 std::string CircuitAuthor::part(const std::string& ref,const std::string& lib,const std::string& value,
@@ -163,7 +165,7 @@ void CircuitAuthor::net(const std::string& name,const std::vector<std::string>& 
     if(i==circuit_.nets.end()){circuit_.nets.push_back({name,cls.value_or(classify(name)),{}});i=std::prev(circuit_.nets.end());}
     else if(cls && i->net_class!=*cls)throw CircuitAuthoringError("net "+repr(name)+" reclassified "+i->net_class+"->"+*cls);
     for(const auto& pin:pins)for(const auto& p:expand_pin(pin)) {
-        if(std::any_of(circuit_.nc.begin(),circuit_.nc.end(),[&](const auto& x){return same(x,p);}))throw CircuitAuthoringError(spec(p)+" is declared NC but assigned to "+repr(name));
+        if(std::any_of(circuit_.nc.begin(),circuit_.nc.end(),[&](const CircuitPinRefIr& x){return same(x,p);}))throw CircuitAuthoringError(spec(p)+" is declared NC but assigned to "+repr(name));
         const auto owner=net_of(p);
         if(owner&&*owner!=name)throw CircuitAuthoringError(spec(p)+" already on net "+repr(*owner)+", cannot also join "+repr(name));
         if(!owner)i->pins.push_back(p);
@@ -215,7 +217,7 @@ void CircuitAuthor::port_type(const std::string& name,const AuthoringPort& type)
 void CircuitAuthor::nc(const std::vector<std::string>& pins) {
     for(const auto& pin:pins)for(const auto& p:expand_pin(pin)) {
         if(net_of(p))throw CircuitAuthoringError(spec(p)+" carries a net, cannot be NC");
-        if(std::none_of(circuit_.nc.begin(),circuit_.nc.end(),[&](const auto& x){return same(x,p);}))circuit_.nc.push_back(p);
+        if(std::none_of(circuit_.nc.begin(),circuit_.nc.end(),[&](const CircuitPinRefIr& x){return same(x,p);}))circuit_.nc.push_back(p);
     }
 }
 CircuitPortIr CircuitAuthor::port_type_of(const std::string& net) const {
@@ -256,7 +258,7 @@ void CircuitAuthor::validate(const std::vector<std::pair<std::string,std::vector
         if(n.net_class=="signal"&&n.pins.size()<2)errors.push_back("net "+repr(n.name)+": single-pin internal signal net");
         for(const auto& p:n.pins) {
             assigned.emplace(p.ref,p.pin);
-            const auto have=model_checks::find(pins,p.ref);
+            const auto have=authoring_values::find(pins,p.ref);
             if(have&&std::find(have->begin(),have->end(),p.pin)==have->end())errors.push_back(spec(p)+": pin does not exist on "+p.ref);
         }
     }
@@ -359,9 +361,9 @@ SubsystemMeta::SubsystemMeta(const JsonNode& value) {
         }
     }
 }
-std::string SubsystemMeta::bus(const std::string& role,const std::string& fallback) const {auto v=model_checks::find(buses_,role);return v?*v:fallback;}
-std::string SubsystemMeta::note(const std::string& key,const std::string& fallback) const {auto v=model_checks::find(notes_,key);return v?*v:fallback;}
-std::optional<std::string> SubsystemMeta::expect(const std::string& port,std::optional<std::string> fallback) const {auto v=model_checks::find(expects_,port);return v?*v:fallback;}
+std::string SubsystemMeta::bus(const std::string& role,const std::string& fallback) const {auto v=authoring_values::find(buses_,role);return v?*v:fallback;}
+std::string SubsystemMeta::note(const std::string& key,const std::string& fallback) const {auto v=authoring_values::find(notes_,key);return v?*v:fallback;}
+std::optional<std::string> SubsystemMeta::expect(const std::string& port,std::optional<std::string> fallback) const {auto v=authoring_values::find(expects_,port);return v?*v:fallback;}
 std::optional<std::string> SubsystemMeta::expect_kw(const std::string& port) const {auto v=expect(port);return v&&!v->empty()?v:std::nullopt;}
 CircuitSheetIr SubsystemMeta::finish(CircuitAuthor& c) const {c.bind(bind_);return c.finish();}
 } // namespace schgen

@@ -15,4 +15,10 @@ double breathe_commit_precision(double value);
 int breathe_forward_steps(double distance, double step);
 int breathe_retreat_steps(double distance, double step);
 
+// Different historical rounding laws: do not combine these operations.
+// Mechanical rounds ties-even, then rejects nonfinite/out-of-int-range
+// results before narrowing. Stage retains std::round's ties-away/IEEE result.
+int mechanical_direction_component(double value);
+double stage_direction_component(double value);
+
 } // namespace schgen

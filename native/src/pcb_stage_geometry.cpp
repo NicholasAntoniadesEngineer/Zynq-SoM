@@ -1,4 +1,5 @@
 #include "pcb_stage_internal.hpp"
+#include "schgen/precision_ops.hpp"
 #include "native_audit_quantize_internal.hpp"
 
 namespace schgen::pcb_stage {
@@ -92,17 +93,36 @@ bool connector_value(const std::string &value) {
 bool connector(const PcbCheckFootprint &fp) {
     return connector_value(std::filesystem::path(fp.source).stem().string());
 }
-double connector_rotation(const std::string &value, const std::string &edge) {
+namespace {
+double connector_rotation_impl(const std::string &value, const std::string &edge,
+                               QuantizationCounts* counts) {
     auto d = direction(edge);
     if (!d)
         return 0;
+    const auto component = [&](double value) {
+        static const std::string name = "stage_direction_component";
+        if (counts) checked_quantization_add(*counts, name);
+        return stage_direction_component(value);
+    };
     bool x = value == "XT60PW-M";
     for (double rot : {0., 90., 180., 270.}) {
         auto v = turn_point(x ? 1 : 0, x ? 0 : 1, rot);
-        if (std::round(v.first) == d->first && std::round(v.second) == d->second)
+        if (component(v.first) == d->first && component(v.second) == d->second)
             return rot;
     }
     return 0;
+}
+} // namespace
+double connector_rotation(const std::string &value, const std::string &edge) {
+    return connector_rotation_impl(value, edge, nullptr);
+}
+double connector_rotation(const std::string &value, const std::string &edge,
+                          QuantizationCounts& counts) {
+    return connector_rotation_impl(value, edge, &counts);
+}
+double connector_rotation(const PcbCheckFootprint &fp, const std::string &edge,
+                          QuantizationCounts& counts) {
+    return connector_rotation(std::filesystem::path(fp.source).stem().string(), edge, counts);
 }
 double connector_rotation(const PcbCheckFootprint &fp, const std::string &edge) {
     return connector_rotation(std::filesystem::path(fp.source).stem().string(), edge);

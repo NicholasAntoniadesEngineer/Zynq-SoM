@@ -24,6 +24,22 @@ int main(int argc, char** argv) {
         for (const auto* project : {"carrier", "devkit_mini"}) {
             const auto paths = resolve_project_paths(root, std::filesystem::path(project));
             const auto stage = prepare_board_pcb(paths);
+            const auto repeated = prepare_board_pcb(paths);
+            if(stage.placement.model.board_w!=repeated.placement.model.board_w ||
+               stage.placement.model.board_h!=repeated.placement.model.board_h ||
+               stage.emission.pcb!=repeated.emission.pcb)
+                throw std::runtime_error(std::string(project)+": two fresh in-process builds differ");
+            if(std::string(project)=="carrier"){
+                auto strict=pcb_emit_policy(stage.inputs.floorplan.project);
+                strict.thermal_credit_needs={{"LM61460",1000,10.0,{"F.Cu","B.Cu"}}};
+                const auto changed=render_pcb(stage.placement.model,strict);
+                if(changed.pcb!=stage.emission.pcb)
+                    throw std::runtime_error("thermal evidence reporting must not change emitted copper");
+                bool warning=false;
+                for(const auto& message:changed.diagnostics)
+                    if(message.find("THERMAL VIA SHORTFALL")!=std::string::npos && message.find("/1000 GND vias")!=std::string::npos)warning=true;
+                if(!warning)throw std::runtime_error("stricter thermal evidence must report its actual via shortfall");
+            }
             std::ifstream expected(paths.project_root / "Zynq_Carrier.kicad_pcb", std::ios::binary);
             if (!expected) throw std::runtime_error("missing committed board reference");
             const std::string bytes((std::istreambuf_iterator<char>(expected)), std::istreambuf_iterator<char>());

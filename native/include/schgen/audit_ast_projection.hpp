@@ -1,6 +1,7 @@
 #pragma once
 #include "schgen/json.hpp"
 #include <cstddef>
+#include <iosfwd>
 #include <string>
 #include <string_view>
 
@@ -20,6 +21,11 @@ struct AuditAstProjectionStats {
 // Malformed/truncated JSON, nonrepresentable numbers, invalid Unicode and
 // nesting beyond 1024 levels throw; output/stats commit only after a full parse.
 JsonNode parse_audit_ast_projection(std::string_view json,
+    const std::string& source = "<compiler AST>", AuditAstProjectionStats* = nullptr);
+// Same grammar/schema/validation, with a 64 KiB input window and no whole-input
+// string. Consumes through EOF; I/O failures are not EOF/success. The result
+// still retains the complete field-projected inner tree, including all headers.
+JsonNode parse_audit_ast_projection(std::istream& json,
     const std::string& source = "<compiler AST>", AuditAstProjectionStats* = nullptr);
 // Exposed for the independent schema/equivalence contracts, not as a mutable
 // allowlist or an audit waiver. Changing the visitor requires checking this set.

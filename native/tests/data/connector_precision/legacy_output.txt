@@ -1,0 +1,333 @@
+ROTATION "TYPE-C-31-M-12" "N" 180
+ROTATION "TYPE-C-31-M-12" "E" 90
+ROTATION "TYPE-C-31-M-12" "S" 0
+ROTATION "TYPE-C-31-M-12" "W" 270
+ROTATION "TYPE-C-31-M-12" "n" 180
+ROTATION "TYPE-C-31-M-12" "e" 90
+ROTATION "TYPE-C-31-M-12" "s" 0
+ROTATION "TYPE-C-31-M-12" "w" 270
+ROTATION "TYPE-C-31-M-12" "" 0
+ROTATION "TYPE-C-31-M-12" "bad" 0
+ROTATION "HDMI-019S" "N" 180
+ROTATION "HDMI-019S" "E" 90
+ROTATION "HDMI-019S" "S" 0
+ROTATION "HDMI-019S" "W" 270
+ROTATION "HDMI-019S" "n" 180
+ROTATION "HDMI-019S" "e" 90
+ROTATION "HDMI-019S" "s" 0
+ROTATION "HDMI-019S" "w" 270
+ROTATION "HDMI-019S" "" 0
+ROTATION "HDMI-019S" "bad" 0
+ROTATION "AFC07-S40FCA-00" "N" 180
+ROTATION "AFC07-S40FCA-00" "E" 90
+ROTATION "AFC07-S40FCA-00" "S" 0
+ROTATION "AFC07-S40FCA-00" "W" 270
+ROTATION "AFC07-S40FCA-00" "n" 180
+ROTATION "AFC07-S40FCA-00" "e" 90
+ROTATION "AFC07-S40FCA-00" "s" 0
+ROTATION "AFC07-S40FCA-00" "w" 270
+ROTATION "AFC07-S40FCA-00" "" 0
+ROTATION "AFC07-S40FCA-00" "bad" 0
+ROTATION "KH-5224-8P8C-D" "N" 180
+ROTATION "KH-5224-8P8C-D" "E" 90
+ROTATION "KH-5224-8P8C-D" "S" 0
+ROTATION "KH-5224-8P8C-D" "W" 270
+ROTATION "KH-5224-8P8C-D" "n" 180
+ROTATION "KH-5224-8P8C-D" "e" 90
+ROTATION "KH-5224-8P8C-D" "s" 0
+ROTATION "KH-5224-8P8C-D" "w" 270
+ROTATION "KH-5224-8P8C-D" "" 0
+ROTATION "KH-5224-8P8C-D" "bad" 0
+ROTATION "TF-01A" "N" 180
+ROTATION "TF-01A" "E" 90
+ROTATION "TF-01A" "S" 0
+ROTATION "TF-01A" "W" 270
+ROTATION "TF-01A" "n" 180
+ROTATION "TF-01A" "e" 90
+ROTATION "TF-01A" "s" 0
+ROTATION "TF-01A" "w" 270
+ROTATION "TF-01A" "" 0
+ROTATION "TF-01A" "bad" 0
+ROTATION "SFW15R-1STE1LF" "N" 180
+ROTATION "SFW15R-1STE1LF" "E" 90
+ROTATION "SFW15R-1STE1LF" "S" 0
+ROTATION "SFW15R-1STE1LF" "W" 270
+ROTATION "SFW15R-1STE1LF" "n" 180
+ROTATION "SFW15R-1STE1LF" "e" 90
+ROTATION "SFW15R-1STE1LF" "s" 0
+ROTATION "SFW15R-1STE1LF" "w" 270
+ROTATION "SFW15R-1STE1LF" "" 0
+ROTATION "SFW15R-1STE1LF" "bad" 0
+ROTATION "ZX-SH1.0-4PWT" "N" 180
+ROTATION "ZX-SH1.0-4PWT" "E" 90
+ROTATION "ZX-SH1.0-4PWT" "S" 0
+ROTATION "ZX-SH1.0-4PWT" "W" 270
+ROTATION "ZX-SH1.0-4PWT" "n" 180
+ROTATION "ZX-SH1.0-4PWT" "e" 90
+ROTATION "ZX-SH1.0-4PWT" "s" 0
+ROTATION "ZX-SH1.0-4PWT" "w" 270
+ROTATION "ZX-SH1.0-4PWT" "" 0
+ROTATION "ZX-SH1.0-4PWT" "bad" 0
+ROTATION "DS1024-2x6R2" "N" 180
+ROTATION "DS1024-2x6R2" "E" 90
+ROTATION "DS1024-2x6R2" "S" 0
+ROTATION "DS1024-2x6R2" "W" 270
+ROTATION "DS1024-2x6R2" "n" 180
+ROTATION "DS1024-2x6R2" "e" 90
+ROTATION "DS1024-2x6R2" "s" 0
+ROTATION "DS1024-2x6R2" "w" 270
+ROTATION "DS1024-2x6R2" "" 0
+ROTATION "DS1024-2x6R2" "bad" 0
+ROTATION "XT60PW-M" "N" 90
+ROTATION "XT60PW-M" "E" 0
+ROTATION "XT60PW-M" "S" 270
+ROTATION "XT60PW-M" "W" 180
+ROTATION "XT60PW-M" "n" 90
+ROTATION "XT60PW-M" "e" 0
+ROTATION "XT60PW-M" "s" 270
+ROTATION "XT60PW-M" "w" 180
+ROTATION "XT60PW-M" "" 0
+ROTATION "XT60PW-M" "bad" 0
+ROTATION "unknown" "N" 180
+ROTATION "unknown" "E" 90
+ROTATION "unknown" "S" 0
+ROTATION "unknown" "W" 270
+ROTATION "unknown" "n" 180
+ROTATION "unknown" "e" 90
+ROTATION "unknown" "s" 0
+ROTATION "unknown" "w" 270
+ROTATION "unknown" "" 0
+ROTATION "unknown" "bad" 0
+BOARD devkit_mini
+MECHANICAL 1 100 100 2 24
+CORE 49.25 53.369999999999997 100.75 96.629999999999995
+CONNECTOR "J12001" "TYPE-C-31-M-12" "N" 180 -1.3199000000000005 0 -1 1
+CONNECTOR "J3001" "TYPE-C-31-M-12" "N" 180 -1.3199000000000005 0 -1 1
+FINDINGS 0
+FINDINGS 0
+FINDINGS 0
+FINDINGS 0
+FINDINGS 0
+SUMMARY
+LAW-6 PLACEMENT (mechanical) GATE: PASS (board 100 x 100 mm)
+  SoM module-body core: (49.2,53.4)..(100.8,96.6) mm — bottom-passives-only, TOP keepout
+  off-board connectors: 2 (0 mis-placed)
+    OK  J12001    TYPE-C-31-M-12   edge=N rot=180 mouth->(0, -1) flush=-1.3mm
+    OK  J3001     TYPE-C-31-M-12   edge=N rot=180 mouth->(0, -1) flush=-1.3mm
+  non-passive parts under SoM core: 0
+  controls under SoM core: 0
+  carrier TOP parts under SoM core (keepout): 0
+  user-facing parts (TP/LED/SW): 24 (0 face-down)
+END SUMMARY
+FLOORPLAN
+"est_via_cost" 38
+"estimate_pad_precision" 33120
+"estimate_position_precision" 20520
+"fixed_part_grid" 504
+"legalize_pose_quantum" 480
+"outline_fine_grid" 164
+"outline_grow_step" 48
+"outline_snap_up" 96
+"placeholder_zone_half_mm" 2
+"quant_credit" 211
+"run_overflow_tol" 2170
+"seat_slide" 4
+"snap_erosion_bound" 38
+"som_pose_half_mm" 4334
+ZONE
+"quant_credit" 39
+"seat_slide" 4
+"snap_erosion_bound" 38
+PLACEMENT
+"breathe_anchor_grid" 10
+"breathe_commit_precision" 20
+"breathe_delta_precision" 10
+"breathe_forward_steps" 107
+"breathe_retreat_steps" 1
+"evict_corridor_grid" 6
+"fixed_part_grid" 14
+"refit_pose_precision" 108
+AGGREGATE
+"breathe_anchor_grid" 10
+"breathe_commit_precision" 20
+"breathe_delta_precision" 10
+"breathe_forward_steps" 107
+"breathe_retreat_steps" 1
+"est_via_cost" 38
+"estimate_pad_precision" 33120
+"estimate_position_precision" 20520
+"evict_corridor_grid" 6
+"fixed_part_grid" 518
+"legalize_pose_quantum" 480
+"outline_fine_grid" 164
+"outline_grow_step" 48
+"outline_snap_up" 96
+"placeholder_zone_half_mm" 2
+"quant_credit" 211
+"refit_pose_precision" 108
+"run_overflow_tol" 2170
+"seat_slide" 4
+"snap_erosion_bound" 38
+"som_pose_half_mm" 4334
+BOARD carrier
+MECHANICAL 1 168 163 16 93
+CORE 73.25 90.870000000000005 124.75 134.13
+CONNECTOR "J12001" "HDMI-019S" "S" 0 -2.8497000000000128 0 1 1
+CONNECTOR "J14001" "HDMI-019S" "S" 0 -2.8497000000000128 0 1 1
+CONNECTOR "J15001" "AFC07-S40FCA-00" "W" 270 -0.70720000000000027 -1 0 1
+CONNECTOR "J16001" "TF-01A" "N" 180 -2.8989000000000011 0 -1 1
+CONNECTOR "J17001" "TYPE-C-31-M-12" "N" 180 -1.3199000000000005 0 -1 1
+CONNECTOR "J18001" "DS1024-2x6R2" "S" 0 -9.0109999999999957 0 1 1
+CONNECTOR "J18002" "DS1024-2x6R2" "S" 0 -9.0109999999999957 0 1 1
+CONNECTOR "J19001" "DS1024-2x6R2" "S" 0 -9.0109999999999957 0 1 1
+CONNECTOR "J2001" "ZX-SH1.0-4PWT" "E" 90 0.40000000000000568 1 0 1
+CONNECTOR "J23001" "KH-5224-8P8C-D" "W" 270 -1.1999999999999993 -1 0 1
+CONNECTOR "J29001" "TYPE-C-31-M-12" "N" 180 -1.3199000000000005 0 -1 1
+CONNECTOR "J31001" "TYPE-C-31-M-12" "N" 180 -1.3199000000000005 0 -1 1
+CONNECTOR "J32002" "TYPE-C-31-M-12" "N" 180 -1.3199000000000005 0 -1 1
+CONNECTOR "J37002" "XT60PW-M" "E" 0 0.34700000000000841 1 0 1
+CONNECTOR "J37003" "XT60PW-M" "E" 0 0.34700000000000841 1 0 1
+CONNECTOR "J8001" "SFW15R-1STE1LF" "W" 270 -1.2999000000000009 -1 0 1
+FINDINGS 0
+FINDINGS 0
+FINDINGS 0
+FINDINGS 0
+FINDINGS 0
+SUMMARY
+LAW-6 PLACEMENT (mechanical) GATE: PASS (board 168 x 163 mm)
+  SoM module-body core: (73.2,90.9)..(124.8,134.1) mm — bottom-passives-only, TOP keepout
+  off-board connectors: 16 (0 mis-placed)
+    OK  J12001    HDMI-019S        edge=S rot=  0 mouth->(0, 1) flush=-2.8mm
+    OK  J14001    HDMI-019S        edge=S rot=  0 mouth->(0, 1) flush=-2.8mm
+    OK  J15001    AFC07-S40FCA-00  edge=W rot=270 mouth->(-1, 0) flush=-0.7mm
+    OK  J16001    TF-01A           edge=N rot=180 mouth->(0, -1) flush=-2.9mm
+    OK  J17001    TYPE-C-31-M-12   edge=N rot=180 mouth->(0, -1) flush=-1.3mm
+    OK  J18001    DS1024-2x6R2     edge=S rot=  0 mouth->(0, 1) flush=-9.0mm
+    OK  J18002    DS1024-2x6R2     edge=S rot=  0 mouth->(0, 1) flush=-9.0mm
+    OK  J19001    DS1024-2x6R2     edge=S rot=  0 mouth->(0, 1) flush=-9.0mm
+    OK  J2001     ZX-SH1.0-4PWT    edge=E rot= 90 mouth->(1, 0) flush=0.4mm
+    OK  J23001    KH-5224-8P8C-D   edge=W rot=270 mouth->(-1, 0) flush=-1.2mm
+    OK  J29001    TYPE-C-31-M-12   edge=N rot=180 mouth->(0, -1) flush=-1.3mm
+    OK  J31001    TYPE-C-31-M-12   edge=N rot=180 mouth->(0, -1) flush=-1.3mm
+    OK  J32002    TYPE-C-31-M-12   edge=N rot=180 mouth->(0, -1) flush=-1.3mm
+    OK  J37002    XT60PW-M         edge=E rot=  0 mouth->(1, 0) flush=0.3mm
+    OK  J37003    XT60PW-M         edge=E rot=  0 mouth->(1, 0) flush=0.3mm
+    OK  J8001     SFW15R-1STE1LF   edge=W rot=270 mouth->(-1, 0) flush=-1.3mm
+  non-passive parts under SoM core: 0
+  controls under SoM core: 0
+  carrier TOP parts under SoM core (keepout): 0
+  user-facing parts (TP/LED/SW): 93 (0 face-down)
+END SUMMARY
+FLOORPLAN
+"est_via_cost" 269
+"estimate_pad_precision" 906674
+"estimate_position_precision" 1062016
+"fixed_part_grid" 9702
+"legalize_pose_quantum" 2250
+"outline_fine_grid" 164
+"outline_grow_step" 122
+"outline_snap_up" 244
+"placeholder_zone_half_mm" 2
+"quant_credit" 1169
+"run_overflow_tol" 2196
+"seat_slide" 29
+"snap_erosion_bound" 235
+"snap_erosion_pad" 3
+"som_pose_half_mm" 4366
+ZONE
+"quant_credit" 383
+"seat_slide" 29
+"snap_erosion_bound" 235
+"snap_erosion_pad" 3
+PLACEMENT
+"breathe_anchor_grid" 68
+"breathe_commit_precision" 60
+"breathe_delta_precision" 68
+"breathe_forward_steps" 600
+"breathe_retreat_steps" 5
+"evict_corridor_grid" 6
+"fixed_part_grid" 14
+"quant_credit" 18
+"refit_pose_precision" 102
+AGGREGATE
+"breathe_anchor_grid" 68
+"breathe_commit_precision" 60
+"breathe_delta_precision" 68
+"breathe_forward_steps" 600
+"breathe_retreat_steps" 5
+"est_via_cost" 269
+"estimate_pad_precision" 906674
+"estimate_position_precision" 1062016
+"evict_corridor_grid" 6
+"fixed_part_grid" 9716
+"legalize_pose_quantum" 2250
+"outline_fine_grid" 164
+"outline_grow_step" 122
+"outline_snap_up" 244
+"placeholder_zone_half_mm" 2
+"quant_credit" 1187
+"refit_pose_precision" 102
+"run_overflow_tol" 2196
+"seat_slide" 29
+"snap_erosion_bound" 235
+"snap_erosion_pad" 3
+"som_pose_half_mm" 4366
+BOARD devkit_mini_single
+MECHANICAL 1 100 100 2 24
+CORE 49.25 53.369999999999997 100.75 96.629999999999995
+CONNECTOR "J12001" "TYPE-C-31-M-12" "N" 180 -1.3199000000000005 0 -1 1
+CONNECTOR "J3001" "TYPE-C-31-M-12" "N" 180 -1.3199000000000005 0 -1 1
+FINDINGS 0
+FINDINGS 0
+FINDINGS 0
+FINDINGS 0
+FINDINGS 0
+SUMMARY
+LAW-6 PLACEMENT (mechanical) GATE: PASS (board 100 x 100 mm)
+  SoM module-body core: (49.2,53.4)..(100.8,96.6) mm — bottom-passives-only, TOP keepout
+  off-board connectors: 2 (0 mis-placed)
+    OK  J12001    TYPE-C-31-M-12   edge=N rot=180 mouth->(0, -1) flush=-1.3mm
+    OK  J3001     TYPE-C-31-M-12   edge=N rot=180 mouth->(0, -1) flush=-1.3mm
+  non-passive parts under SoM core: 0
+  controls under SoM core: 0
+  carrier TOP parts under SoM core (keepout): 0
+  user-facing parts (TP/LED/SW): 24 (0 face-down)
+END SUMMARY
+FLOORPLAN
+"est_via_cost" 38
+"estimate_pad_precision" 33120
+"estimate_position_precision" 20520
+"fixed_part_grid" 504
+"legalize_pose_quantum" 480
+"outline_fine_grid" 164
+"outline_grow_step" 48
+"outline_snap_up" 96
+"placeholder_zone_half_mm" 2
+"quant_credit" 211
+"run_overflow_tol" 2170
+"seat_slide" 4
+"snap_erosion_bound" 38
+"som_pose_half_mm" 4334
+ZONE
+"quant_credit" 39
+"seat_slide" 4
+"snap_erosion_bound" 38
+PLACEMENT
+"fixed_part_grid" 14
+"refit_pose_precision" 108
+AGGREGATE
+"est_via_cost" 38
+"estimate_pad_precision" 33120
+"estimate_position_precision" 20520
+"fixed_part_grid" 518
+"legalize_pose_quantum" 480
+"outline_fine_grid" 164
+"outline_grow_step" 48
+"outline_snap_up" 96
+"placeholder_zone_half_mm" 2
+"quant_credit" 250
+"refit_pose_precision" 108
+"run_overflow_tol" 2170
+"seat_slide" 8
+"snap_erosion_bound" 76
+"som_pose_half_mm" 4334

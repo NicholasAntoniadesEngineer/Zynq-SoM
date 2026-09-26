@@ -148,26 +148,25 @@ was applied. Its latest run took 188.99 seconds. That sanitizer run predates the
 final spatial/fanout producer-counter additions; the final producer stage has
 the separate strict release proof recorded in its handoff.
 
-## Optional frozen transitional parity (not the final pipeline)
+## Retired transitional parity (historical evidence, not a build path)
 
-`verification_audits.hpp` also retains the Python-source audit compatibility
-APIs. They preserve caller file lists (omitted versus explicitly empty), source
-errors, imported numeric symbols, declaration state, registered counts, baseline
-paths and ordering. They are **not** the final C++ audit entry point.
+The Python-source parser, its compatibility APIs and opt-in build helper are
+retired. The C++ compiler-backed audit is the production source gate. The
+unbounded integer, ledger-state and fallback-ratchet implementations remain.
+The original compatibility fixture bytes below remain historical evidence.
 
-The separate opt-in helper `native/cmake/verification_audits.cmake` builds the
-native parser against externally supplied pinned MIT-licensed source checkouts:
+The retired helper previously built its parser against pinned source checkouts:
 
 - tree-sitter `da6fe9beb4f7f67beb75914ca8e0d48ae48d6406` (v0.25.10).
 - tree-sitter-python `293fdc02038ee2bf0e2e206711b69c90ac0d413f` (v0.25.0).
 
-No grammar generation, Python subprocess, or runtime downloads are used.
-Supply `SCHGEN_TREE_SITTER_SOURCE_DIR` and `SCHGEN_PYTHON_GRAMMAR_SOURCE_DIR`,
-and set `SCHGEN_AUDIT_TRANSITIONAL=ON` in the isolated test project to run its
-**867 passing contracts**. The supplied checkouts used here are respectively
+Its **867 passing contracts** are historical transitional proof. The checkouts
+used for that proof were respectively
 `/private/tmp/schgen-audits-native.a2hr42/tree-sitter` and `tree-sitter-python`.
-This path is deliberately bounded to the frozen compatibility corpus rather
-than presented as a replacement for the whole Python compiler.
+That path was bounded to the frozen compatibility corpus, not a replacement
+for the whole Python compiler. The five staged-only parser/build/test files
+were backed up under `/private/tmp/schgen-retired-python-audit-parser` before
+retirement; final native checks have no tree-sitter or Python grammar dependency.
 
 ## Fixture provenance (immutable bytes)
 

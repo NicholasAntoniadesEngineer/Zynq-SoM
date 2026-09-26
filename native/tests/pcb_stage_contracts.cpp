@@ -17,6 +17,20 @@ const JsonNode &field(const JsonNode &n, const std::string &k) {
         throw std::runtime_error("missing fixture " + k);
     return *p;
 }
+std::size_t direction_counts(const std::filesystem::path& root,
+                             const PcbStageResult& result, const std::string& context) {
+    // Separate additive data captured through actual scalar function entries;
+    // the independent Python geometry and old count fixtures stay unchanged.
+    const auto additions = parse_json_file(
+        (root / "native/tests/data/connector_precision/stage_additive_counts.json").string());
+    const auto expected = static_cast<std::size_t>(field(additions, context).number_value);
+    const auto it = result.quantization_engagements.find("stage_direction_component");
+    require((it == result.quantization_engagements.end() ? 0 : it->second) == expected,
+            context + " independently captured direction call count");
+    require((it != result.quantization_engagements.end()) == (expected != 0),
+            context + " no fabricated zero-count engagement");
+    return expected != 0 ? 1 : 0;
+}
 Box4 box(const JsonNode &n) {
     const auto &a = n.array_value;
     return {a.at(0).number_value, a.at(1).number_value, a.at(2).number_value, a.at(3).number_value};
@@ -220,7 +234,8 @@ void mutations(const std::filesystem::path &root, const JsonNode &fixture,
             require(result.fallback_events == strings(field(test, "fallback_events")),
                     context + " ordered diagnostics");
             const auto &expected = field(test, "quantization");
-            require(result.quantization_engagements.size() == expected.object_value.size(),
+            const auto added = direction_counts(root, result, context);
+            require(result.quantization_engagements.size() == expected.object_value.size() + added,
                     context + " diagnostic count size");
             for (const auto &[name, n] : expected.object_value)
                 require(result.quantization_engagements.at(name) == n.number_value,
@@ -248,6 +263,7 @@ void baseline(const std::filesystem::path &root, const std::string &name) {
         auto in = input(fixture, row, pool);
         auto result = build_pcb_stage_zone(in);
         auto context = name + "/" + in.sheet;
+        direction_counts(root, result, context);
         const auto &expected = field(row, "expected").array_value;
         offsets(result.top, expected[0], context + "/top");
         offsets(result.bottom, expected[1], context + "/bottom");

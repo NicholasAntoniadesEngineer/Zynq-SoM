@@ -348,7 +348,7 @@ Parts Engine::solve_contract() {
             if (connector(*in.footprints.at(r))) {
                 conn_roots.insert(r);
                 if (!in.outer_dir.empty())
-                    rotations[r] = connector_rotation(*in.footprints.at(r), in.outer_dir);
+                    rotations[r] = connector_rotation(*in.footprints.at(r), in.outer_dir, quantization);
             } else
                 rotations[r] = flip_rotation(r);
         }

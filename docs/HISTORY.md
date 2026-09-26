@@ -1,5 +1,21 @@
 # carrier — project HISTORY (archived planning logs)
 
+## 2026-09-26 — tracked Python retirement (acceptance in progress)
+
+Autonomous, per full-autonomy directive: removed all 393 inventoried tracked
+Python files after validating each original SHA-256 and accepting the remaining
+native SI-unit, downstream-I2C, repeated-build/thermal and committed-render
+regression replacements. Removed Python requirements, pytest/lint configuration
+and pre-commit Python hooks. Hardware assets and independent fixtures remain.
+Deleted tracked content is recoverable from Git. The complete native suite is
+being rerun against the retired tree; this is not full-board acceptance or a
+claim of complete migration. The unused ignored virtual environment, compiled
+Python extension and two sync-copy tests were moved recoverably outside the
+repository to `/private/tmp/zynq-retired-python.iyilwa`; the subsequent tree scan
+found no `.py` files (including ignored/hidden files, excluding Git internals).
+Fixed pipeline exception classification: a child gate verdict is not proof
+that its parent stage completed. Both ordinary and live pipeline tests pass.
+
 This is the **archive** of the hand-written planning / decision / run logs that
 drove the carrier rebuild. The content below is preserved verbatim under dated
 section headers; it is no longer the living source of truth, but it is the
@@ -26,6 +42,20 @@ full original log for audit.
 
 Implementation decisions (autonomous, per full-autonomy directive):
 
+- Expose existing composition, drawing and escape constants through their
+  actual shared C++ storage and additive ledger provenance, preserving literal
+  values and output. Correct the compiler auditor's numeric JSON character-zero
+  handling; nonzero and immutable character policies remain audited.
+- Retire the unused Python extension source, 27 binding headers and two
+  binding-only compile probes after native replacement contracts. Remove the
+  CMake Python/nanobind discovery/download path; the old option now rejects ON
+  explicitly. Preserve Git history and independent reference fixtures.
+- Retire the obsolete staged Python-source audit parser and its build/test
+  helper only after reference inspection, retaining a recoverable external
+  backup of all five files. Preserve native integer/fallback/ledger-state code
+  and immutable fixtures. Move the uncompiled, ignored old `circuit 2.cpp`
+  sync copy outside the source tree with its SHA-256 verified; do not hide it
+  from the compiler census through an exemption.
 - Retire the five tracked Python experiment scripts only after native contracts
   and actual CLI checks. W12 probes use fresh native authoring and real KiCad
   extraction in private scratch; native dump publication reproduces all 49

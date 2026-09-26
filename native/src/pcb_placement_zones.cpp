@@ -69,7 +69,7 @@ PcbZoneResult build_pcb_zone_geometry(const PcbPlacementInput &in) {
                 connector_class[p.sheet] = p.ref;
         }
         if (connector_value(p.value) && sheet_edges.count(p.sheet)) {
-            double rot = connector_rotation(p.value, sheet_edges.at(p.sheet));
+            double rot = connector_rotation(p.value, sheet_edges.at(p.sheet), ctx.quantization);
             g.conn_rot[p.ref] = rot;
             g.conn_edge[p.ref] = sheet_edges.at(p.sheet);
             conn_rot[p.sheet][p.ref] = rot;

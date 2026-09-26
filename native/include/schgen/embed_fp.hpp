@@ -27,11 +27,7 @@ struct PadGeom {
 // `flip_to_bottom`. `footprint_uuid` is the already-computed
 // `uid("fp:{ref}")` string.
 //
-// Bind (do not edit module.cpp from this kernel):
-//   tree = sexpr_from_py(mod)
-//   return sexpr_to_tagged(embed_footprint_body(move(tree), x, y, rot,
-//                                               side, uuid))
-// Python recovers a native list via `_from_tagged`.
+// Native callers pass and receive the owned Sexpr tree directly.
 Sexpr embed_footprint_body(Sexpr footprint_tree, double instance_x,
                            double instance_y, double instance_rotation,
                            const std::string& instance_side,

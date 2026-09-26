@@ -5,6 +5,7 @@
 #include "schgen/spice.hpp"
 #include "schgen/manufacturing_exports.hpp"
 #include "schgen/project_authoring.hpp"
+#include "schgen/authoring_purity.hpp"
 
 namespace schgen {
 enum class BoardGateStatus { passed, failed, skipped, unavailable };
@@ -52,7 +53,9 @@ struct BoardAuthoredProject {
 // canonical snapshots or artifacts are published until the explicit call below.
 // As with AuthoringContext, the caller must open and retain the repository's
 // part catalog before authoring (and before run_board_pipeline).
-BoardAuthoredProject author_board_pipeline_inputs(const ProjectPaths&);
+BoardAuthoredProject author_board_pipeline_inputs(const ProjectPaths&,
+    const std::filesystem::path& purity_configuration = {},
+    const std::function<void(const AuthoringPurityResult&)>& purity_report = {});
 // Writes canonical snapshots and required native package assets under output.
 // An isolated output never rewrites the source project's stored circuit.json.
 void publish_board_pipeline_inputs(BoardAuthoredProject&,const ProjectPaths&,
@@ -62,6 +65,8 @@ struct BoardPipelineOptions {
     // Explicit output tree. Empty means paths.project_root, as cmd_board.
     // Inputs remain rooted at ProjectPaths; no chdir/environment modification.
     std::filesystem::path output_root;
+    // Empty selects this native build's configured compiler evidence. No bypass.
+    std::filesystem::path authoring_purity_configuration;
     NetlistExtractOptions extraction;
     BoardInputOptions pcb;
     SpiceRunOptions spice;

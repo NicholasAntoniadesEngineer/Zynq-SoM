@@ -48,14 +48,16 @@ struct Context {
     void report(const std::string& filename, const std::string& value);
     template<class F> void attempt(const std::string& name, F action) {
         const auto began = std::chrono::steady_clock::now();
-        const auto start = result.gates.size();
         try { action(); }
         catch(const std::bad_alloc&) { throw; }
         catch(const std::exception& e) {
             report(name + ".txt", std::string("FAIL: ") + e.what());
             // Do not overwrite a gate that succeeded before a later operation
             // threw; publication failure is separately fatal for this stage.
-            if(result.gates.size() == start) gate(name, false, e.what());
+            // Child checks may publish their own verdict before this parent
+            // stage fails. Only a verdict for THIS stage makes the exception
+            // a late completion failure; a child verdict is not parent success.
+            if(std::none_of(result.gates.begin(),result.gates.end(),[&](const auto& g){return g.name==name;})) gate(name, false, e.what());
             else gate(name + ".completion", false, e.what());
         }
         if(options.timing)result.timing_seconds.emplace_back(name,

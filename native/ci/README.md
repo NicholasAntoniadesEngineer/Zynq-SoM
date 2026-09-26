@@ -3,13 +3,18 @@
 This path configures the existing C++ engine and **all** its CTest contracts,
 plus native bootstrap/CLI smoke checks. It never discovers Python, invokes pip,
 builds nanobind, runs pytest, downloads a dependency or blesses golden output.
-It is additive: the independent Python parity suite remains required during
-migration and is not removed or represented as completed by a CTest pass.
+Independent original-output fixtures remain required during migration; a CTest
+pass alone does not represent complete migration or full-board acceptance.
 
 ## Local/native runner prerequisites
 
 - CMake **3.28+** for the CI wrapper (cross-directory CTest fixture properties),
-  Ninja or Make, a C++17 Clang/GCC compiler, and a C compiler for upstream zlib-ng.
+  Ninja or Make, a C++17 compiler, and a C compiler for upstream zlib-ng.
+- Matching Clang/libclang for mandatory source verification. Configure
+  `SCHGEN_LIBCLANG` if discovery cannot find it. The currently reviewed semantic
+  identities use Apple Clang/libc++; other toolchains need a reviewed manifest.
+  Each build exports its production compile commands and generates
+  `native-authoring-toolchain.json`; missing evidence fails before construction.
 - libxml2 development headers/library; native Poppler C++ headers/library;
   libpng 1.6+ with its simplified API. No Python wheel libraries.
 - Installed static/PIC **zlib-ng 2.3.3**, `ZLIB_COMPAT=ON`; provide its absolute
@@ -91,33 +96,23 @@ acceptance and Python parity remain separate until the migration is complete.
 ## Removal-ready infrastructure map
 
 There was no hosted pipeline, Makefile, setup.py, setup.cfg or installable Python
-package at inventory time. `pyproject.toml` contains tooling configuration, not
-packaging metadata. This local wrapper does not add a hosted pipeline.
+package at inventory time. The retired `pyproject.toml` contained only tooling
+configuration, not packaging metadata. This local wrapper does not add a hosted pipeline.
 
-- `scripts/build_native.sh`: currently bootstraps nanobind and builds `_geom`.
-  Native production replacement is the CMake path above. Retain this script for
-  Python parity until the parent removes all adapter consumers. No automatic pip
-  install is carried into the native path.
-- `scripts/check.sh`: retains the Python/Ruff/board/selftest/m1_rc/root-pytest
-  migration regression path. Native CTest covers its ported C++ contracts;
-  parent full-board CLI and mutation/determinism acceptance must additionally
-  replace the whole command before deletion. A smoke pass is not that acceptance.
-- `requirements.txt`: retain all entries during parity, including Pillow tests,
-  pytest/xdist and nanobind. PyMuPDF no longer implements the native renderer;
-  determine remaining oracle/reference consumers before deleting it.
-- `pyproject.toml` and `.pre-commit-config.yaml`: keep Python lint/type/test
-  configuration while `.py` remains. Native compiler flags are C++17 plus
+- `scripts/build_native.sh` and `scripts/check.sh`: retired. Use the CMake path
+  above and native `schgen check --tests-dir BUILD`, which runs complete board
+  generation, mutation/determinism selftest and all CTests. This command retains
+  mandatory audit failures; retirement is not a claim of full-board acceptance.
+- `requirements.txt`, `pyproject.toml`, and `.pre-commit-config.yaml`: retired
+  with the 393 inventoried Python files. Native compiler flags are C++17 plus
   `-Wall -Wextra -Wpedantic -Werror`; numeric smoke uses `-ffp-contract=off`.
   Do not replace checks with hooks that swallow failures.
-- Root `conftest.py`: keep its first-result sync-duplicate collection guard while
-  pytest runs. Explicit CMake source/test registration replaces collection on
-  the native path; fixture JSON still stays tracked and immutable.
-- `schgen/tests/conftest.py`: keep deep-copied board model fixtures and xdist
-  grouping while Python tests consume them. Native tests own their C++ fixtures
-  and private output directories; no Python fixture initialization is needed.
-- `native/CMakeLists.txt` optional Python/nanobind branch and binding headers:
-  parent-owned removal only after parity sign-off. The CI wrapper rejects enabling
-  the branch now, but does not delete it or alter normal parity builds.
+- Both `conftest.py` files are retired. Explicit CMake source/test registration
+  replaces collection. Native tests own isolated C++ fixtures and output
+  directories; independent reference JSON stays tracked and immutable.
+- `native/CMakeLists.txt`: Python/nanobind discovery and extension targets are
+  removed, along with the binding-only sources/headers. The compatibility cache
+  option remains explicitly OFF; attempting ON fails before dependency discovery.
 - `native/CMakePresets.json`: existing fast/offline presets remain unchanged.
   Its offline label exclusion does not prove a library-free host. The new wrapper
   registers full CI preflight without changing developer build preferences.

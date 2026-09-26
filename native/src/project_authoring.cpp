@@ -1,5 +1,5 @@
 #include "schgen/project_authoring.hpp"
-#include "model_checks_internal.hpp"
+#include "authoring_values.hpp"
 
 namespace schgen {
 namespace {
@@ -13,8 +13,8 @@ JsonNode metadata(const ProjectSubsystemDefinition& d,const ProjectAuthoringInpu
 }
 CircuitSheetIr author_som_connector(const std::string& ref,const std::string& name,const std::string& title,
     const SomInterface& som,const LinkMapping& mapping,const ConnectorAuthoringPolicy& policy,const AuthoringContext& context) {
-    using model_checks::repr;
-    const auto conn=std::find_if(som.connectors.begin(),som.connectors.end(),[&](const auto& c){return c.first==ref;});
+    using authoring_values::repr;
+    const auto conn=std::find_if(som.connectors.begin(),som.connectors.end(),[&](const std::pair<std::string,SomConnector>& c){return c.first==ref;});
     if(conn==som.connectors.end())throw CircuitAuthoringError("missing SoM connector "+ref);
     for(const auto& strap:mapping.do_not_load_straps)
         if(mapping.function_map.count(strap)||mapping.pudc_straps.count(strap)||mapping.vcco_rail_map.count(strap)||mapping.rebound_som_rails.count(strap))
@@ -22,7 +22,7 @@ CircuitSheetIr author_som_connector(const std::string& ref,const std::string& na
     auto pins=conn->second.pins;
     auto numeric=[](const std::string& pin){std::size_t used=0;auto n=std::stoll(pin,&used);if(used!=pin.size())throw CircuitAuthoringError("noninteger connector pin "+pin);return n;};
     for(const auto& p:pins)(void)numeric(p.first);
-    std::stable_sort(pins.begin(),pins.end(),[&](const auto& a,const auto& b){return numeric(a.first)<numeric(b.first);});
+    std::stable_sort(pins.begin(),pins.end(),[&](const std::pair<std::string,std::string>& a,const std::pair<std::string,std::string>& b){return numeric(a.first)<numeric(b.first);});
     CircuitAuthor c(name,title,context);AuthoringPartSelection selection;selection.ref=ref;c.use_part(policy.part,selection);
     for(const auto* pin:{"101","102","103","104"})c.nc({ref+"."+pin});
     std::set<std::string> seen;
@@ -39,7 +39,7 @@ CircuitSheetIr author_som_connector(const std::string& ref,const std::string& na
             c.port(net,{ref+"."+pin});
         }
     }
-    const auto has=[&](const std::string& net){return std::any_of(c.view().nets.begin(),c.view().nets.end(),[&](const auto& n){return n.name==net;});};
+    const auto has=[&](const std::string& net){return std::any_of(c.view().nets.begin(),c.view().nets.end(),[&](const CircuitNetIr& n){return n.name==net;});};
     for(const auto& p:policy.pairs)if(has(p.positive)&&has(p.negative)) {
         AuthoringPort t;t.kind=p.kind;t.pair_with=p.negative;t.impedance=p.impedance;c.port_type(p.positive,t);
     }
@@ -48,7 +48,7 @@ CircuitSheetIr author_som_connector(const std::string& ref,const std::string& na
     }
     if(ref=="J1")c.draws("+5V_SOM",policy.module_draw_a,"SoM module (Zynq+DDR3L+PHYs) ~10 W class at the regulated 4.65 V (P0 rebind) — estimate, refine at bring-up");
     auto loads=policy.loads;
-    std::stable_sort(loads.begin(),loads.end(),[](const auto& a,const auto& b){return a.rail<b.rail;});
+    std::stable_sort(loads.begin(),loads.end(),[](const ConnectorAuthoringLoad& a,const ConnectorAuthoringLoad& b){return a.rail<b.rail;});
     for(const auto& l:loads)if(l.connector==ref&&has(l.rail))c.draws(l.rail,l.amps,l.note);
     return c.finish();
 }
@@ -63,7 +63,7 @@ CircuitSheetIr author_project_subsystem(const std::string& project,const std::st
         CircuitAuthor c(author_som_connector(d.connector_ref,d.name,d.connector_title,som,map,policy,input.context),input.context);
         return meta.finish(c);
     }
-    auto c=d.adapter?author_subsystem(name,meta,input.context):d.circuit(meta,input.context);
+    auto c=d.adapter?author_subsystem(name,meta,input.context):author_registered_project_definition(d,meta,input.context);
     if(project=="devkit_mini"&&name=="power") {
         CircuitAuthor add(std::move(c),input.context);
         for(const auto* net:{"EN_5V0","EN_3V3","EN_1V8"})add.testpoint(net);

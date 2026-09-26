@@ -10,7 +10,8 @@
 namespace {
 namespace fs=std::filesystem;
 using namespace schgen;
-void require(bool ok,const std::string& why){if(!ok)throw std::runtime_error(why);}
+std::size_t checks=0;
+void require(bool ok,const std::string& why){++checks;if(!ok)throw std::runtime_error(why);}
 const JsonNode& at(const JsonNode& n,const std::string& key){auto p=object_field(n,key);require(p!=nullptr,"missing fixture "+key);return *p;}
 void write(const fs::path& p,const std::string& text){fs::create_directories(p.parent_path());std::ofstream out(p,std::ios::binary);out<<text;out.close();require(bool(out),"write fixture "+p.string());}
 std::string read(const fs::path& p){std::ifstream in(p,std::ios::binary);require(bool(in),"read "+p.string());return {std::istreambuf_iterator<char>(in),{}};}
@@ -33,6 +34,47 @@ void check_report(const JsonNode& actual,const JsonNode& expected,const fs::path
 std::vector<CarrierPackageFactory> project_factories(const fs::path& root,const std::string& project) {
     ProjectAuthoringInput input;input.project_root=root/project;
     return native_project_factories(project,input);
+}
+// Legacy discovery/report compatibility is tested only in this inert layout.
+// No retained .py source is copied, imported, evaluated or required in ROOT.
+// The independent oracle selects the population/shape; live native factories
+// still construct every circuit. Companion bytes remain independent inputs.
+void legacy_reports(const fs::path& root,const JsonNode& library) {
+    constexpr auto mode=AuthoringPackageMode::legacy_python;
+    const std::string inert="INERT LEGACY LAYOUT MARKER - NOT EXECUTABLE SOURCE\n";
+    Scratch s;
+    for(const auto& row:at(library,"packages").array_value) {
+        const auto name=at(row,"name").string_value;
+        const auto base=s.path/"subsystems"/name;
+        for(const auto& file:std::vector<std::string>{"__init__.py",name+".py","test_"+name+".py","README.md",name+".cir"})
+            write(base/file,inert);
+    }
+    auto report=check_subsystem_structure(s.path/"subsystems",native_subsystem_factories(),mode);
+    require(report.ok()&&report.n_ok()==17,"inert legacy library gate failed: "+report.summary());
+    check_report(subsystem_structure_json(report),library,s.path);
+    write_authoring_gate_report(s.path/"library-report.txt",report.summary());
+    require(read(s.path/"library-report.txt")==at(library,"summary").string_value+"\n","legacy library publication bytes changed");
+    for(const auto* project:{"carrier","devkit_mini"}) {
+        const auto fixture=parse_json_file((root/"native/tests/data/authoring"/(std::string("gate_")+project+".json")).string());
+        const auto base=s.path/project/"subsystems";
+        for(const auto& row:at(fixture,"packages").array_value) {
+            const auto name=at(row,"name").string_value;
+            if(at(row,"adapter").bool_value) {
+                write(base/(name+".py"),inert);write(base/("test_"+name+".py"),inert);
+                write(base/name/"circuit.json",read(root/project/"subsystems"/name/"circuit.json"));
+            } else {
+                for(const auto& file:std::vector<std::string>{"__init__.py",name+".py","test_"+name+".py","README.md",name+".cir"})
+                    write(base/name/file,inert);
+            }
+        }
+        const auto r=check_carrier_structure(base,s.path/"subsystems",project_factories(root,project),mode);
+        require(r.ok(),"inert legacy project gate failed: "+r.summary());
+        check_report(carrier_structure_json(r),fixture,s.path);
+        write_authoring_gate_report(s.path/(std::string(project)+"-report.txt"),r.summary());
+        require(read(s.path/(std::string(project)+"-report.txt"))==at(fixture,"summary").string_value+"\n","legacy project publication bytes changed");
+    }
+    for(const auto& entry:fs::recursive_directory_iterator(s.path))
+        if(entry.path().extension()==".py")require(read(entry.path())==inert,"legacy fixture contains executable source");
 }
 void mutations(const fs::path& root) {
     Scratch s;const auto base=s.path/"carrier",lib=s.path/"lib";
@@ -221,9 +263,11 @@ int main(int argc,char** argv) {
         require(argc==2,"usage: authoring_gates_contracts REPOSITORY");const fs::path root=argv[1];
         require(open_part_catalog((root/"native/catalog.bin").string()),"open catalog");
         const auto library=parse_json_file((root/"native/tests/data/authoring/gate_library.json").string());
-        auto result=check_subsystem_structure(root/"subsystems",native_subsystem_factories());
+        constexpr auto mode=AuthoringPackageMode::native_assets;
+        auto result=check_subsystem_structure(root/"subsystems",native_subsystem_factories(),mode);
         require(result.ok()&&result.n_ok()==17,"real library gate failed: "+result.summary());
-        check_report(subsystem_structure_json(result),library,root);
+        require(result.exit_code()==0&&result.mode==mode,"real repository must use the native hard gate");
+        legacy_reports(root,library);
         for(const auto* project:{"carrier","devkit_mini"}) {
             const auto fixture=parse_json_file((root/"native/tests/data/authoring"/(std::string("gate_")+project+".json")).string());
             auto factories=project_factories(root,project);
@@ -232,14 +276,15 @@ int main(int argc,char** argv) {
                 require(f!=factories.end(),"missing native project factory");
                 require(authoring_json_equal(authored_circuit_json(f->circuit()),at(p,"circuit")),std::string(project)+":"+f->name+" differs from independent Python circuit output");
             }
-            auto r=check_carrier_structure(root/project/"subsystems",root/"subsystems",factories);
-            require(r.ok(),r.summary());check_report(carrier_structure_json(r),fixture,root);
+            auto r=check_carrier_structure(root/project/"subsystems",root/"subsystems",factories,mode);
+            require(r.ok(),r.summary());
+            require(r.mode==mode&&r.packages.size()==at(fixture,"packages").array_value.size(),"real native package census changed");
             require(r.exit_code()==0&&r.n_locals()+r.n_adapters()==r.packages.size(),"gate count/exit");
             if(std::string(project)=="carrier")mutations(root);
             connectors(root,project);
         }
         native_packages(root);
         close_part_catalog();
-        std::cout<<"PASS: 17 library + 49 project package reports match Python; legacy report bytes and native no-Python asset contracts verified\n";
+        std::cout<<"PASS: "<<checks<<" assertions; 17 library + 49 project native packages, independent circuit oracles, inert legacy report bytes and no-Python asset contracts verified\n";
     }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}
 }

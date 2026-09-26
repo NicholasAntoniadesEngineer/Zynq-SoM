@@ -1,9 +1,10 @@
 #include "schgen/authoring.hpp"
-#include "model_checks_internal.hpp"
+#include "authoring_values.hpp"
+#include <tuple>
 
 namespace schgen {
 JsonNode authored_circuit_json(const CircuitSheetIr& c) {
-    using namespace model_checks;
+    using namespace authoring_values;
     auto parts=arr(),nets=arr(),nc=arr(),types=obj(),hints=obj(),loads=obj();
     for(const auto& p:c.parts) {
         auto fields=obj(),names=obj();
@@ -18,7 +19,7 @@ JsonNode authored_circuit_json(const CircuitSheetIr& c) {
         nets.array_value.push_back(obj({{"name",j(n.name)},{"net_class",j(n.net_class)},{"pins",pins}}));
     }
     auto nc_pins=c.nc;
-    std::sort(nc_pins.begin(),nc_pins.end(),[](const auto& a,const auto& b){return std::tie(a.ref,a.pin)<std::tie(b.ref,b.pin);});
+    std::sort(nc_pins.begin(),nc_pins.end(),[](const CircuitPinRefIr& a,const CircuitPinRefIr& b){return std::tie(a.ref,a.pin)<std::tie(b.ref,b.pin);});
     for(const auto& p:nc_pins)nc.array_value.push_back(j(p.ref+"."+p.pin));
     for(const auto& p:c.port_types)types.object_value.emplace_back(p.net,obj({
         {"kind",j(p.kind)},{"pair_with",p.has_pair_with?j(p.pair_with):JsonNode{}},

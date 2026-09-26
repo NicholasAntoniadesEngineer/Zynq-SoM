@@ -1,5 +1,5 @@
 #include "schgen/project_authoring.hpp"
-#include "model_checks_internal.hpp"
+#include "authoring_values.hpp"
 namespace schgen {
 namespace project_builders {
 CircuitSheetIr carrier_board_aux(const SubsystemMeta&, const AuthoringContext&);
@@ -25,8 +25,62 @@ CircuitSheetIr devkit_mini_power_mon(const SubsystemMeta&, const AuthoringContex
 CircuitSheetIr devkit_mini_power_som(const SubsystemMeta&, const AuthoringContext&);
 CircuitSheetIr devkit_mini_som_decoupling(const SubsystemMeta&, const AuthoringContext&);
 }
+CircuitSheetIr author_registered_project_definition(const ProjectSubsystemDefinition& definition,
+    const SubsystemMeta& meta, const AuthoringContext& context) {
+    using Target = CircuitSheetIr (*)(const SubsystemMeta&, const AuthoringContext&);
+    const auto* target = definition.circuit.target<Target>();
+    // Preserve the public std::function registry while making every production
+    // target explicit to the compiler. Do not invoke a caller-supplied callable.
+    if (definition.adapter || !definition.connector_ref.empty() || !target)
+        throw CircuitAuthoringError("invalid native project constructor target "+definition.project+":"+definition.name);
+    if (definition.project=="carrier" && definition.name=="board_aux" && *target==&project_builders::carrier_board_aux)
+        return project_builders::carrier_board_aux(meta,context);
+    if (definition.project=="carrier" && definition.name=="board_qwiic" && *target==&project_builders::carrier_board_qwiic)
+        return project_builders::carrier_board_qwiic(meta,context);
+    if (definition.project=="carrier" && definition.name=="board_services" && *target==&project_builders::carrier_board_services)
+        return project_builders::carrier_board_services(meta,context);
+    if (definition.project=="carrier" && definition.name=="bringup_en" && *target==&project_builders::carrier_bringup_en)
+        return project_builders::carrier_bringup_en(meta,context);
+    if (definition.project=="carrier" && definition.name=="bringup_en_modules" && *target==&project_builders::carrier_bringup_en_modules)
+        return project_builders::carrier_bringup_en_modules(meta,context);
+    if (definition.project=="carrier" && definition.name=="bringup_modules" && *target==&project_builders::carrier_bringup_modules)
+        return project_builders::carrier_bringup_modules(meta,context);
+    if (definition.project=="carrier" && definition.name=="bringup_rails" && *target==&project_builders::carrier_bringup_rails)
+        return project_builders::carrier_bringup_rails(meta,context);
+    if (definition.project=="carrier" && definition.name=="debug_boot" && *target==&project_builders::carrier_debug_boot)
+        return project_builders::carrier_debug_boot(meta,context);
+    if (definition.project=="carrier" && definition.name=="fmc" && *target==&project_builders::carrier_fmc)
+        return project_builders::carrier_fmc(meta,context);
+    if (definition.project=="carrier" && definition.name=="hdmi_rx_term" && *target==&project_builders::carrier_hdmi_rx_term)
+        return project_builders::carrier_hdmi_rx_term(meta,context);
+    if (definition.project=="carrier" && definition.name=="mechanical" && *target==&project_builders::carrier_mechanical)
+        return project_builders::carrier_mechanical(meta,context);
+    if (definition.project=="carrier" && definition.name=="motor_pwm" && *target==&project_builders::carrier_motor_pwm)
+        return project_builders::carrier_motor_pwm(meta,context);
+    if (definition.project=="carrier" && definition.name=="motor_sense" && *target==&project_builders::carrier_motor_sense)
+        return project_builders::carrier_motor_sense(meta,context);
+    if (definition.project=="carrier" && definition.name=="power_mon" && *target==&project_builders::carrier_power_mon)
+        return project_builders::carrier_power_mon(meta,context);
+    if (definition.project=="carrier" && definition.name=="power_som" && *target==&project_builders::carrier_power_som)
+        return project_builders::carrier_power_som(meta,context);
+    if (definition.project=="carrier" && definition.name=="som_decoupling" && *target==&project_builders::carrier_som_decoupling)
+        return project_builders::carrier_som_decoupling(meta,context);
+    if (definition.project=="carrier" && definition.name=="user_io" && *target==&project_builders::carrier_user_io)
+        return project_builders::carrier_user_io(meta,context);
+    if (definition.project=="devkit_mini" && definition.name=="debug_boot" && *target==&project_builders::devkit_mini_debug_boot)
+        return project_builders::devkit_mini_debug_boot(meta,context);
+    if (definition.project=="devkit_mini" && definition.name=="mechanical" && *target==&project_builders::devkit_mini_mechanical)
+        return project_builders::devkit_mini_mechanical(meta,context);
+    if (definition.project=="devkit_mini" && definition.name=="power_mon" && *target==&project_builders::devkit_mini_power_mon)
+        return project_builders::devkit_mini_power_mon(meta,context);
+    if (definition.project=="devkit_mini" && definition.name=="power_som" && *target==&project_builders::devkit_mini_power_som)
+        return project_builders::devkit_mini_power_som(meta,context);
+    if (definition.project=="devkit_mini" && definition.name=="som_decoupling" && *target==&project_builders::devkit_mini_som_decoupling)
+        return project_builders::devkit_mini_som_decoupling(meta,context);
+    throw CircuitAuthoringError("unregistered native project constructor target "+definition.project+":"+definition.name);
+}
 const std::vector<ProjectSubsystemDefinition>& project_subsystem_definitions() {
-    using namespace model_checks;
+    using namespace authoring_values;
     static const std::vector<ProjectSubsystemDefinition> definitions = {
         {"carrier", "board_aux", false, {}, project_builders::carrier_board_aux, {}, {}},
         {"carrier", "board_qwiic", false, {}, project_builders::carrier_board_qwiic, {}, {}},

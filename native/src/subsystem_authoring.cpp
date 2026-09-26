@@ -48,6 +48,52 @@ const SubsystemDefinition& subsystem_definition(const std::string& name) {
     throw CircuitAuthoringError("unknown subsystem " + name);
 }
 CircuitSheetIr author_subsystem(const std::string& name, const SubsystemMeta& meta, const AuthoringContext& context) {
-    return subsystem_definition(name).circuit(meta, context);
+    const auto& definition = subsystem_definition(name);
+    using Target = CircuitSheetIr (*)(const SubsystemMeta&, const AuthoringContext&);
+    const auto* target = definition.circuit.target<Target>();
+    // Registry API stays std::function; production builtins never invoke an
+    // erased callable. Verify the exact target and make a direct checked call.
+    if (name=="camera" && target && *target==&subsystem_builders::camera)
+        return subsystem_builders::camera(meta,context);
+    if (name=="ethernet" && target && *target==&subsystem_builders::ethernet)
+        return subsystem_builders::ethernet(meta,context);
+    if (name=="hdmi_rx" && target && *target==&subsystem_builders::hdmi_rx)
+        return subsystem_builders::hdmi_rx(meta,context);
+    if (name=="hdmi_tx" && target && *target==&subsystem_builders::hdmi_tx)
+        return subsystem_builders::hdmi_tx(meta,context);
+    if (name=="lcd" && target && *target==&subsystem_builders::lcd)
+        return subsystem_builders::lcd(meta,context);
+    if (name=="microsd" && target && *target==&subsystem_builders::microsd)
+        return subsystem_builders::microsd(meta,context);
+    if (name=="pd_input" && target && *target==&subsystem_builders::pd_input)
+        return subsystem_builders::pd_input(meta,context);
+    if (name=="pmod" && target && *target==&subsystem_builders::pmod)
+        return subsystem_builders::pmod(meta,context);
+    if (name=="pmod_expansion" && target && *target==&subsystem_builders::pmod_expansion)
+        return subsystem_builders::pmod_expansion(meta,context);
+    if (name=="power" && target && *target==&subsystem_builders::power)
+        return subsystem_builders::power(meta,context);
+    if (name=="rj45_connector" && target && *target==&subsystem_builders::rj45_connector)
+        return subsystem_builders::rj45_connector(meta,context);
+    if (name=="uart_bridge" && target && *target==&subsystem_builders::uart_bridge)
+        return subsystem_builders::uart_bridge(meta,context);
+    if (name=="usb_jtag" && target && *target==&subsystem_builders::usb_jtag)
+        return subsystem_builders::usb_jtag(meta,context);
+    if (name=="usb_jtag_connector" && target && *target==&subsystem_builders::usb_jtag_connector)
+        return subsystem_builders::usb_jtag_connector(meta,context);
+    if (name=="usb_pd" && target && *target==&subsystem_builders::usb_pd)
+        return subsystem_builders::usb_pd(meta,context);
+    if (name=="usb_uart_connector" && target && *target==&subsystem_builders::usb_uart_connector)
+        return subsystem_builders::usb_uart_connector(meta,context);
+    if (name=="usbc_otg" && target && *target==&subsystem_builders::usbc_otg)
+        return subsystem_builders::usbc_otg(meta,context);
+#ifdef SCHGEN_CONFIGURED_SUBSYSTEMS
+    // Existing extension API remains usable. A configured build's source-purity
+    // check FAILS CLOSED on this erased dispatch until that build supplies named
+    // checked dispatch and a reviewed constructor scope; this is not a waiver.
+    return definition.circuit(meta,context);
+#else
+    throw CircuitAuthoringError("unregistered native subsystem constructor target "+name);
+#endif
 }
 } // namespace schgen

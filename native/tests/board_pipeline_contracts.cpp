@@ -154,9 +154,18 @@ void failed_inputs(const fs::path& root){
     broken.name="../outside";
     rejects([&]{build_subsystem_sheet(broken,library,tmp.path/"invalid-sheet");},"unsafe single-sheet path rejected");
     BoardPipelineOptions o;o.output_root=tmp.path/"out";o.no_render=true;
+    o.authoring_purity_configuration=tmp.path/"missing-toolchain.json";
     const auto r=run_board_pipeline(p,o);require(!r.ok(),"missing project cannot claim board success");require(r.gates.size()>=40,"all mandatory downstream stages explicitly fail");
     const auto report=parse_json_file((o.output_root/"reports/board_verdicts.json").string());require(!field(report,"board_ok").bool_value,"published verdict includes final failure");
     for(const auto& g:r.gates)require(g.status==BoardGateStatus::failed,"missing prerequisite never implicit skip");
+    Context child_failure(p,o);
+    child_failure.attempt("inputs",[&]{child_failure.gate("authoring_purity",false,"rejected before construction");throw ProjectError("source precondition failed");});
+    require(child_failure.result.gates.size()==2&&child_failure.result.gates.back().name=="inputs"&&child_failure.result.gates.back().status==BoardGateStatus::failed,
+            "child verdict is not a completed parent stage");
+    Context late_failure(p,o);
+    late_failure.attempt("inputs",[&]{late_failure.gate("inputs",true,"constructed");throw ProjectError("publication failed");});
+    require(late_failure.result.gates.size()==2&&late_failure.result.gates.front().status==BoardGateStatus::passed&&late_failure.result.gates.back().name=="inputs.completion"&&late_failure.result.gates.back().status==BoardGateStatus::failed,
+            "late publication failure retains prior result and a fatal completion verdict");
     // Test aggregation policy explicitly, not a simulated production build.
     auto policy_result=r;policy_result.sheets=1;for(auto& g:policy_result.gates)g.status=BoardGateStatus::passed;
     require(policy_result.ok(),"all required passed policy rows aggregate");
@@ -232,6 +241,22 @@ void authored_inputs(const fs::path& root){
         }
     }
 }
+void purity_precondition(const fs::path& root){
+    Temp tmp;
+    const auto paths=resolve_project_paths(root,fs::path("devkit_mini"));
+    for(bool native_policy:{false,true}){
+        BoardPipelineOptions options;options.output_root=tmp.path/(native_policy?"native-policy":"explicit-policy");
+        options.authoring_purity_configuration=tmp.path/"missing-toolchain.json";
+        options.native_policy=native_policy;
+        const auto result=run_board_pipeline(paths,options);
+        require(!result.ok()&&result.sheets==0,"missing compiler evidence rejects before any circuit is authored");
+        const auto gate=std::find_if(result.gates.begin(),result.gates.end(),[](const auto& g){return g.name=="authoring_purity";});
+        require(gate!=result.gates.end()&&gate->mandatory&&gate->status==BoardGateStatus::failed,"native policy switch cannot bypass mandatory authoring purity");
+        require(fs::is_regular_file(options.output_root/"reports/authoring_purity.txt"),"failed purity report is published");
+        require(!fs::exists(options.output_root/"subsystems"),"source failure publishes no canonical circuit snapshots");
+        for(const auto& [name,count]:result.quantization){(void)name;require(!count.nonzero(),"source rejection performs no placement work");}
+    }
+}
 }
 int main(int argc,char** argv){
     try{
@@ -239,7 +264,7 @@ int main(int argc,char** argv){
         const fs::path root=argv[1];
         const auto reference=parse_json_file((root/"native/tests/data/board_pipeline/python_reference.json").string());
         cc(field(reference,"cc"));ledger();policy(reference);coverage();golden(root);isolated_ratchet();
-        failed_inputs(root);live_electrical(root);authored_inputs(root);
+        failed_inputs(root);purity_precondition(root);live_electrical(root);authored_inputs(root);
         if(argc==3){
             if(std::string(argv[2])!="--live-kicad")throw std::runtime_error("unknown mode");
             live_schematic(root);

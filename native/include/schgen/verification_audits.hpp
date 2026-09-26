@@ -57,43 +57,4 @@ struct LedgerAuditState {
     std::size_t n_lines = 0;
     std::vector<std::string> problems;
 };
-struct LedgerModuleSymbols {
-    // Live native providers supply these; source declarations alone cannot
-    // establish that a symbol exists or has a numeric runtime value.
-    std::set<std::string> numeric_names, attributes;
-};
-using LedgerModuleResolver = std::function<LedgerModuleSymbols(const std::string& alias)>;
-struct LedgerAuditFile { std::string alias, path; };
-const std::vector<LedgerAuditFile>& ledger_audit_files();
-struct LedgerSourceCensus { std::vector<std::string> constants, buried; };
-// Parses exact caller bytes with a native syntax parser. No code is evaluated.
-// known includes imported numeric names, including lowercase names; booleans
-// must be omitted by the provider. Display paths are independent of disk paths.
-LedgerSourceCensus scan_ledger_source(std::string_view source, const std::string& alias,
-    const std::string& display_path, const std::set<std::string>& known);
-struct LedgerAuditResult {
-    bool ok = true;
-    std::size_t n_declared = 0, n_recorded = 0, n_lines = 0, n_constants = 0, n_files = 0;
-    std::vector<std::string> absent, undeclared, buried, stale, divergences;
-    std::string summary() const;
-};
-LedgerAuditResult check_build_ledger(const std::filesystem::path& root, const LedgerAuditState&,
-    const LedgerModuleResolver&, const std::vector<LedgerAuditFile>& files = ledger_audit_files());
-
-const std::vector<std::string>& quantize_audit_files();
-std::vector<std::string> scan_quantize_source(std::string_view source, const std::string& display_path);
-struct QuantizeSourceCensus { std::vector<std::string> sites; std::size_t n_files = 0; };
-// nullopt selects the normal file list; an explicitly empty list scans nothing.
-QuantizeSourceCensus scan_quantize_sources(const std::filesystem::path& root,
-    const std::optional<std::vector<std::string>>& files = std::nullopt);
-AuditCounts load_quantize_baseline(const std::filesystem::path&);
-struct QuantizeAuditResult {
-    bool ok = true;
-    std::size_t n_registered = 0, n_files = 0, n_sites = 0, n_new = 0;
-    std::vector<std::string> sites, new_sites;
-    std::string summary() const;
-};
-QuantizeAuditResult check_quantize_census(const std::filesystem::path& root,
-    const std::optional<std::vector<std::string>>& files,
-    const std::filesystem::path& baseline, std::size_t n_registered);
 } // namespace schgen

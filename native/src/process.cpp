@@ -3,6 +3,8 @@
 #endif
 #include "schgen/process.hpp"
 #include <cerrno>
+#include <array>
+#include <cstdint>
 #include <cstring>
 #include <cstdlib>
 #include <fcntl.h>
@@ -10,6 +12,7 @@
 #include <limits>
 #include <spawn.h>
 #include <signal.h>
+#include <streambuf>
 #include <sys/wait.h>
 #include <thread>
 #include <unistd.h>
@@ -49,6 +52,64 @@ struct Attributes {
 struct Child {
     pid_t pid=-1;
     ~Child(){if(pid>0){::kill(-pid,SIGKILL);int status=0;while(::waitpid(pid,&status,0)<0&&errno==EINTR){}}}
+};
+// Validate complete text without retaining it or trusting how much a consumer
+// chooses to read. UTF-8 scalars may cross any capture-buffer boundary.
+void validate_capture_utf8(const std::filesystem::path& path){
+    std::ifstream in(path,std::ios::binary);if(!in)throw ProcessError("cannot read process output");
+    std::array<char,65536> bytes{};unsigned need=0;std::uint32_t cp=0,minimum=0;
+    const auto invalid=[](){throw ProcessError("process output is not valid UTF-8");};
+    for(;;){
+        in.read(bytes.data(),static_cast<std::streamsize>(bytes.size()));const auto size=static_cast<std::size_t>(in.gcount());
+        if(in.bad()||(in.fail()&&!in.eof()))throw ProcessError("cannot read process output");
+        for(std::size_t i=0;i<size;){
+            if(!need&&size-i>=sizeof(std::uint64_t)){
+                std::uint64_t word=0;std::memcpy(&word,bytes.data()+i,sizeof word);
+                if(!(word&UINT64_C(0x8080808080808080))){i+=sizeof word;continue;}
+            }
+            const auto c=static_cast<unsigned char>(bytes[i++]);
+            if(need){if((c&0xc0)!=0x80)invalid();cp=(cp<<6)|(c&0x3f);
+                if(!--need&&(cp<minimum||cp>0x10ffffu||(cp>=0xd800u&&cp<=0xdfffu)))invalid();
+            }else if(c<0x80)continue;
+            else if(c>=0xc2&&c<=0xdf){need=1;cp=c&0x1f;minimum=0x80;}
+            else if(c>=0xe0&&c<=0xef){need=2;cp=c&0x0f;minimum=0x800;}
+            else if(c>=0xf0&&c<=0xf4){need=3;cp=c&7;minimum=0x10000;}
+            else invalid();
+        }
+        if(in.eof())break;
+    }
+    if(need)invalid();
+}
+class NormalizedCapture final:public std::streambuf {
+public:
+    explicit NormalizedCapture(const std::filesystem::path& path):input_(path,std::ios::binary){
+        if(!input_)throw ProcessError("cannot read process output");
+    }
+protected:
+    int_type underflow()override{
+        if(gptr()!=egptr())return traits_type::to_int_type(*gptr());
+        for(;;){
+            input_.read(bytes_.data(),static_cast<std::streamsize>(bytes_.size()));const auto size=static_cast<std::size_t>(input_.gcount());
+            if(input_.bad()||(input_.fail()&&!input_.eof()))throw ProcessError("cannot read process output");
+            if(!size)return traits_type::eof();
+            std::size_t written=size;
+            if(skip_lf_||std::memchr(bytes_.data(),'\r',size)){
+                const std::size_t first=skip_lf_&&bytes_[0]=='\n'?1:0;skip_lf_=false;written=0;
+                for(std::size_t i=first;i<size;++i){
+                    if(bytes_[i]=='\r'){
+                        bytes_[written++]='\n';
+                        if(i+1<size&&bytes_[i+1]=='\n')++i;
+                        else if(i+1==size)skip_lf_=true;
+                    }else bytes_[written++]=bytes_[i];
+                }
+            }
+            if(written){setg(bytes_.data(),bytes_.data(),bytes_.data()+written);return traits_type::to_int_type(*gptr());}
+        }
+    }
+private:
+    std::ifstream input_;
+    std::array<char,65536> bytes_{};
+    bool skip_lf_=false;
 };
 std::string captured(const std::filesystem::path& path,bool binary) {
     // The child has exited and this private capture file is complete. Size it
@@ -93,7 +154,8 @@ std::optional<std::filesystem::path> find_executable(const std::string& command)
         if(end==std::string::npos)break;begin=end+1;
     }return std::nullopt;
 }
-static ProcessResult run_process_impl(const std::vector<std::string>& args,std::chrono::milliseconds timeout,bool binary) {
+static ProcessResult run_process_impl(const std::vector<std::string>& args,std::chrono::milliseconds timeout,bool binary,
+    const ProcessStdoutConsumer* consumer=nullptr) {
     if(args.empty()||args.front().empty())throw ProcessError("process executable is empty");
     for(const auto& arg:args)if(arg.find('\0')!=std::string::npos)throw ProcessError("embedded null byte in process argument");
     if(timeout.count()<0)throw ProcessError("process timeout must not be negative");
@@ -109,8 +171,23 @@ static ProcessResult run_process_impl(const std::vector<std::string>& args,std::
         if(std::chrono::steady_clock::now()>=deadline)throw ProcessTimeout("process timed out after "+std::to_string(timeout.count())+" ms: "+args.front());
         std::this_thread::sleep_for(std::chrono::milliseconds{2});
     }
-    return {WIFEXITED(status)?WEXITSTATUS(status):-WTERMSIG(status),captured(scratch.path/"stdout",binary),captured(scratch.path/"stderr",binary)};
+    const auto code=WIFEXITED(status)?WEXITSTATUS(status):-WTERMSIG(status);
+    if(consumer){
+        validate_capture_utf8(scratch.path/"stdout");
+        auto errors=captured(scratch.path/"stderr",false);
+        if(code==0){
+            NormalizedCapture buffer(scratch.path/"stdout");std::istream input(&buffer);
+            input.exceptions(std::ios::badbit);(*consumer)(input);
+            if(input.bad())throw ProcessError("cannot read process output");
+        }
+        return {code,{},std::move(errors)};
+    }
+    return {code,captured(scratch.path/"stdout",binary),captured(scratch.path/"stderr",binary)};
 }
 ProcessResult run_process(const std::vector<std::string>& args,std::chrono::milliseconds timeout){return run_process_impl(args,timeout,false);}
 ProcessResult run_process_bytes(const std::vector<std::string>& args,std::chrono::milliseconds timeout){return run_process_impl(args,timeout,true);}
+ProcessConsumedResult run_process_consume_stdout(const std::vector<std::string>& args,const ProcessStdoutConsumer& consumer,std::chrono::milliseconds timeout){
+    if(!consumer)throw ProcessError("process stdout consumer is empty");
+    auto result=run_process_impl(args,timeout,false,&consumer);return {result.exit_code,std::move(result.stderr_text)};
+}
 }  // namespace schgen

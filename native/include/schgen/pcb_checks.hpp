@@ -1,6 +1,7 @@
 #pragma once
 
 #include "schgen/link.hpp"
+#include "schgen/execution_accounting.hpp"
 #include "schgen/pcb_scan.hpp"
 #include "schgen/project.hpp"
 #include "schgen/som_interface.hpp"
@@ -135,6 +136,9 @@ struct PlacementMechResult {
     std::vector<PlacementMechRow> connectors;
     std::vector<std::string> bad_connectors, under_som, controls_under_som,
         top_under_som, face_top_on_bottom;
+    // Completed invocation's actual scalar calls, including failed verdicts.
+    // Parent imports once; rendering/rechecking does not alter solver receipts.
+    QuantizationCounts quantization_engagements;
     std::string summary() const;
 };
 PlacementMechResult check_placement_mech(const PcbCheckInput&);

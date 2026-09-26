@@ -57,7 +57,7 @@ void Context::report(const std::string& name,const std::string& value){publish_t
 namespace schgen {
 namespace {
 const char* status_name(BoardGateStatus s){switch(s){case BoardGateStatus::passed:return "PASS";case BoardGateStatus::failed:return "FAIL";case BoardGateStatus::skipped:return "SKIP";case BoardGateStatus::unavailable:return "UNAVAILABLE";}throw ProjectError("invalid board gate status");}
-const std::vector<std::string> required={"inputs","subsystem_structure","carrier_structure","sheet_gates","cc","symbol_law","link","board_schematic","constraints","diagram","bom_footprints","power_tree","rail_ampacity","testpoints","design_rules","part_rules","bom_values","footprint_pads","spice","pcb","pcb_drc","pcb_geometry","assembly","thermal","copper_debt","fab_profile","xdc","vivado","firmware","manual","testplan","gallery","devicetree","scfw","power_sequence","floorplan","quantize_census","fallbacks","stage_movement","pipeline_doc","model3d","si","manifest","ledger"};
+const std::vector<std::string> required={"inputs","authoring_purity","subsystem_structure","carrier_structure","sheet_gates","cc","symbol_law","link","board_schematic","constraints","diagram","bom_footprints","power_tree","rail_ampacity","testpoints","design_rules","part_rules","bom_values","footprint_pads","spice","pcb","pcb_drc","pcb_geometry","assembly","thermal","copper_debt","fab_profile","xdc","vivado","firmware","manual","testplan","gallery","devicetree","scfw","power_sequence","floorplan","quantize_census","fallbacks","stage_movement","pipeline_doc","model3d","si","manifest","ledger"};
 }
 bool board_pipeline_gate_mandatory(const std::string& name){
     static const std::set<std::string> advisory={"pin_completeness","contract_coverage","contract_coverage_lint","floorplan_composition","return_path","cpl","render3d","golden","sheet_render","root_erc","ratsnest_images"};
@@ -119,7 +119,9 @@ std::string board_pipeline_experiment_json(const BoardPipelineResult& r){
 BoardPipelineResult run_board_pipeline(const ProjectPaths& p,const BoardPipelineOptions& o){
     using namespace board_pipeline_detail;
     Context c(p,o);
-    c.attempt("inputs",[&]{c.authored=author_board_pipeline_inputs(p);publish_board_pipeline_inputs(*c.authored,p,c.out);c.circuits=c.authored->circuits;
+    c.attempt("inputs",[&]{c.authored=author_board_pipeline_inputs(p,o.authoring_purity_configuration,[&](const AuthoringPurityResult& purity){
+            c.report("authoring_purity.txt",purity.report());c.gate("authoring_purity",purity.ok(),purity.report());
+        });publish_board_pipeline_inputs(*c.authored,p,c.out);c.circuits=c.authored->circuits;
         std::vector<std::string> names;for(const auto& sc:c.circuits){c.sheets.push_back(sc.circuit);names.push_back(sc.name);}
         c.index=extend_sheet_index(load_sheet_index(p),names).index;c.result.sheets=c.sheets.size();c.loaded=true;c.gate("inputs",true,"live C++ factories authored once; canonical snapshots published; actual IR retained");});
     if(c.loaded){schematic_stage(c);electrical_stages(c);pcb_stages(c);document_stages(c);audit_stages(c);}

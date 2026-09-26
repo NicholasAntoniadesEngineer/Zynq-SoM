@@ -29,6 +29,8 @@ bool connector(const PcbCheckFootprint &);
 bool connector_value(const std::string &);
 double connector_rotation(const PcbCheckFootprint &, const std::string &);
 double connector_rotation(const std::string &, const std::string &);
+double connector_rotation(const PcbCheckFootprint &, const std::string &, QuantizationCounts &);
+double connector_rotation(const std::string &, const std::string &, QuantizationCounts &);
 double need(int pins);
 bool passive(const std::string &, int);
 double normalize(double);

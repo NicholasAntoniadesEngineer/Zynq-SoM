@@ -1,0 +1,4283 @@
+{
+  "schema": "native-python-retirement-inventory/v1",
+  "date": "2026-09-26",
+  "base_head": "567621c9e75522a30e88a10e48537d6c29365f2d",
+  "scope": "git ls-files '*.py' at the recorded snapshot; includes working-tree file SHA-256. Mapping is family-level evidence, not a claim that every historical Python assertion has a literal C++ twin or that pending live acceptance passed.",
+  "counts": {
+    "tracked_python": 393,
+    "test_modules": 151,
+    "by_role": {
+      "package-entrypoint": 61,
+      "production-module": 173,
+      "generation-tool": 2,
+      "test-module": 151,
+      "test-infrastructure": 2,
+      "cli-tool": 1,
+      "smoke-test-tool": 2,
+      "audit-tool": 1
+    },
+    "by_top_directory": {
+      "carrier": 100,
+      "root": 1,
+      "devkit_mini": 37,
+      "examples": 4,
+      "schgen": 196,
+      "subsystems": 55
+    },
+    "test_status": {
+      "native-family-evidenced": 146,
+      "full-board-acceptance-pending": 1,
+      "bounded-join-gap": 1,
+      "python-adapter-only": 1,
+      "historical-baseline-policy-decision": 1,
+      "gap-closed-new-registration": 1
+    }
+  },
+  "tracked_script_note": "No scripts/*.py or tools/*.py among these 393 tracked files. Native experiment_tools/observer cover the earlier chir_rung, w11_sweep, w12_bound, w12_stageprobe and dump_circuits batch; ignored/cloud duplicate scripts are outside this tracked retirement set and are not deletion targets.",
+  "method": "Reuse prior port handoffs/immutable fixtures/native contract registrations; enumerate all tracked modules; inspect original test names and only ambiguous family joins/source-only tests. No Python executed, files deleted or shared builds run.",
+  "families": {
+    "authoring": {
+      "scope": "Fresh 17 library / 49 project factory IR compared with immutable original oracles; parameter/bind/error mutations; native_assets package checks.",
+      "evidence": [
+        "native/tests/subsystem_authoring_contracts.cpp",
+        "native/tests/authoring_gates_contracts.cpp",
+        "native/tests/authoring_INTEGRATION.md"
+      ]
+    },
+    "authoring_boundary": {
+      "scope": "Native authoring capability boundary, purity and real-registry configuration (other owner; integration pending).",
+      "evidence": [
+        "native/tests/authoring_purity_contracts.cpp",
+        "native/tests/authoring_context_contracts.cpp",
+        "native/tests/authoring_values_contracts.cpp",
+        "native/tests/authoring_purity_config_contracts.cpp",
+        "native/tests/authoring_boundary_INTEGRATION.md"
+      ]
+    },
+    "basis": {
+      "scope": "Native component-basis registry, closure and mutated semantic audit.",
+      "evidence": [
+        "native/tests/component_basis_contracts.cpp",
+        "native/tests/component_basis_INTEGRATION.md"
+      ]
+    },
+    "circuit": {
+      "scope": "IR validation, circuit laws, typed ports and original mutation fixtures.",
+      "evidence": [
+        "native/tests/circuit_semantic_contracts.cpp",
+        "native/tests/model_checks_contracts.cpp",
+        "native/tests/validation_contracts.cpp",
+        "native/tests/data/model_checks/README.md"
+      ]
+    },
+    "project": {
+      "scope": "Explicit project identity, canonical input/output discovery and native assets.",
+      "evidence": [
+        "native/tests/project_contracts.cpp",
+        "native/tests/project_catalog_contracts.cpp",
+        "native/tests/project_outputs_contracts.cpp"
+      ]
+    },
+    "som": {
+      "scope": "SoM connector generation, mapping, contract ownership and pin guards.",
+      "evidence": [
+        "native/tests/som_interface_contracts.cpp",
+        "native/tests/link_contracts.cpp",
+        "native/tests/net_contract_contracts.cpp",
+        "native/tests/net_contract_INTEGRATION.md"
+      ]
+    },
+    "example": {
+      "scope": "Fresh authored minimal board, native design and optional live KiCad export.",
+      "evidence": [
+        "native/tests/example_devkit_contracts.cpp",
+        "native/tests/devkit_design_contracts.cpp",
+        "native/tests/example_devkit_INTEGRATION.md"
+      ]
+    },
+    "cli": {
+      "scope": "Native command rejection/help, no-Python regression/RC/CTest driver, private scaffold builds.",
+      "evidence": [
+        "native/tests/regression_cli_contracts.cpp",
+        "native/tests/regression_rc_smoke_contracts.cpp",
+        "native/tests/geometry_cli_contracts.cpp",
+        "native/tests/subsystem_scaffold_contracts.cpp",
+        "native/tests/subsystem_scaffold_build_contracts.cpp",
+        "native/tests/regression_cli_INTEGRATION.md",
+        "native/CMakeLists.txt"
+      ]
+    },
+    "model": {
+      "scope": "Native model/helper semantics and copied-input/invalid-input mutations.",
+      "evidence": [
+        "native/tests/model_checks_contracts.cpp",
+        "native/tests/subsystem_authoring_contracts.cpp",
+        "native/tests/circuit_semantic_contracts.cpp"
+      ]
+    },
+    "symbols": {
+      "scope": "Native parser/cache/lifetime, changed-file, ordered paths, copy/move and transform contracts.",
+      "evidence": [
+        "native/tests/symbols_contracts.cpp",
+        "native/tests/data/symbols/README.md"
+      ]
+    },
+    "part_import": {
+      "scope": "Recorded EasyEDA conversions, exact symbol/footprint/metadata, EP and file boundaries.",
+      "evidence": [
+        "native/tests/part_import_contracts.cpp",
+        "native/tests/data/part_import_utilities/README.md"
+      ]
+    },
+    "verification": {
+      "scope": "Native ratings, pin completeness, connector return paths, rail ampacity, SI triage, contract coverage, thermal and electrical mutations.",
+      "evidence": [
+        "native/tests/verification_contracts.cpp",
+        "native/tests/data/verification/README.md"
+      ]
+    },
+    "procurement": {
+      "scope": "BOM values/rules/preflight, offline LCSC price/value provenance and mutations.",
+      "evidence": [
+        "native/tests/procurement_contracts.cpp",
+        "native/tests/bom_contracts.cpp"
+      ]
+    },
+    "design_rules": {
+      "scope": "Fresh/canonical circuit laws and independent bad-input verdict fixtures.",
+      "evidence": [
+        "native/tests/design_rules_contracts.cpp",
+        "native/tests/data/design_rules/README.md"
+      ]
+    },
+    "spice": {
+      "scope": "Native analytic electronics and SPICE exporter contracts.",
+      "evidence": [
+        "native/tests/spice_contracts.cpp",
+        "native/tests/data/spice/README.md"
+      ]
+    },
+    "selftest": {
+      "scope": "Complete native selftest publication/error/real-tool boundaries plus independent RC smoke.",
+      "evidence": [
+        "native/tests/selftest_contracts.cpp",
+        "native/tests/selftest_full_contracts.cpp",
+        "native/tests/regression_rc_smoke_contracts.cpp",
+        "native/tests/data/selftest_full/README.md"
+      ]
+    },
+    "firmware": {
+      "scope": "Actual C compilation/scan coherence, address derivation/collision mutations and docs/provenance.",
+      "evidence": [
+        "native/tests/firmware_docs_contracts.cpp",
+        "native/tests/firmware_provenance_contracts.cpp",
+        "native/tests/data/firmware_docs/README.md"
+      ]
+    },
+    "manufacturing": {
+      "scope": "Exact manifest/assembly/SI output, live-analysis joins, publication and error mutations.",
+      "evidence": [
+        "native/tests/manufacturing_contracts.cpp",
+        "native/tests/data/manufacturing/README.md"
+      ]
+    },
+    "constraints": {
+      "scope": "Independent exact CSV/rules/Markdown; missing research and impedance mismatch mutants.",
+      "evidence": [
+        "native/tests/constraints_contracts.cpp",
+        "native/tests/manufacturing_contracts.cpp",
+        "native/tests/data/constraints/README.md"
+      ]
+    },
+    "si_policy": {
+      "scope": "NEW: independent cited-length/citation/unit policies on fresh authoring and per-consumer output; mutation controls.",
+      "evidence": [
+        "native/tests/si_units_contracts.cpp"
+      ]
+    },
+    "pcb_emit": {
+      "scope": "Independent full real-project PCB bytes and mutation/emission/silkscreen fixture suites.",
+      "evidence": [
+        "native/tests/pcb_emit_contracts.cpp",
+        "native/tests/pack_silk_contracts.cpp",
+        "native/tests/data/pcb_emit/README.md",
+        "native/tests/data/pack_silk/README.md"
+      ]
+    },
+    "pcb_checks": {
+      "scope": "Native model/refdes/fanout/ratsnest/connector/return-stitch/visual checks with independent mutations.",
+      "evidence": [
+        "native/tests/pcb_checks_contracts.cpp",
+        "native/tests/data/pcb_checks/README.md"
+      ]
+    },
+    "drc": {
+      "scope": "Actual KiCad DRC and parsed-report mutation/failure contracts.",
+      "evidence": [
+        "native/tests/pcb_drc_contracts.cpp"
+      ]
+    },
+    "placement_gates": {
+      "scope": "55k+ exact independent gate/flow/pin/coverage/discovery mutations; no duplicated geometry.",
+      "evidence": [
+        "native/tests/pcb_placement_gates_contracts.cpp",
+        "native/tests/pcb_placement_gates_INTEGRATION.md"
+      ]
+    },
+    "placement_metadata": {
+      "scope": "Fresh native metadata policy: lightweight/critical/citations/threshold basis and exact USB-JTAG crystal; pending parent registration.",
+      "evidence": [
+        "native/tests/placement_metadata_contracts.cpp",
+        "native/tests/placement_metadata_INTEGRATION.md"
+      ]
+    },
+    "placement": {
+      "scope": "Placement/stage/fanout/escape/seat/sizing contracts; real assets plus original independent fixtures.",
+      "evidence": [
+        "native/tests/pcb_placement_contracts.cpp",
+        "native/tests/pcb_stage_contracts.cpp",
+        "native/tests/pcb_escape_contracts.cpp",
+        "native/tests/board_inputs_contracts.cpp",
+        "native/tests/pcb_placement_INTEGRATION.md"
+      ]
+    },
+    "geometry": {
+      "scope": "Native primitive/kernel rounding, transforms, packing/routing/ratsnest and deterministic differential fixtures.",
+      "evidence": [
+        "native/tests/numeric_contracts.cpp",
+        "native/tests/kernel_contracts.cpp"
+      ]
+    },
+    "geometry_cli": {
+      "scope": "Native geometry audit and explicit repair command; offline/live/apply contracts.",
+      "evidence": [
+        "native/tests/geometry_cli_contracts.cpp",
+        "native/tests/geometry_cli_INTEGRATION.md"
+      ]
+    },
+    "mirror": {
+      "scope": "Independent footprint mirror/turn/bottom conventions and real emitted layout evidence.",
+      "evidence": [
+        "native/tests/mirror_contracts.cpp",
+        "native/tests/data/mirror/README.md"
+      ]
+    },
+    "floorplan": {
+      "scope": "Sizing/width/punch/connectivity/quantization decisions; immutable Python baseline plus declared native policy.",
+      "evidence": [
+        "native/tests/floorplan_contracts.cpp",
+        "native/tests/board_policy_migration_contracts.cpp",
+        "native/tests/board_policy_contracts.cpp",
+        "native/tests/data/floorplan/README.md"
+      ]
+    },
+    "compose": {
+      "scope": "Native repair-driver budgets/write boundaries, exact predictor and independent precision regressions.",
+      "evidence": [
+        "native/tests/compose_repair_contracts.cpp",
+        "native/tests/compose_kernel_contracts.cpp",
+        "native/tests/legalize_precision_contracts.cpp",
+        "native/tests/data/compose_repair/README.md"
+      ]
+    },
+    "schematic": {
+      "scope": "Native netlist/schematic/project emission and joined real-board schematics.",
+      "evidence": [
+        "native/tests/schematic_contracts.cpp",
+        "native/tests/board_schematic_contracts.cpp",
+        "native/tests/data/schematic/README.md"
+      ]
+    },
+    "netlist": {
+      "scope": "Native connectivity parser/report and actual exported-netlist mutations.",
+      "evidence": [
+        "native/tests/netlist_gate_contracts.cpp",
+        "native/tests/data/netlist_gate/README.md"
+      ]
+    },
+    "schematic_place": {
+      "scope": "Native schematic placement, pagination, templates and wire ownership contracts.",
+      "evidence": [
+        "native/tests/schematic_place_core_contracts.cpp",
+        "native/tests/schematic_place_pages_contracts.cpp",
+        "native/tests/schematic_place_chain_contracts.cpp",
+        "native/tests/schematic_place_fanout_contracts.cpp",
+        "native/tests/schematic_place_templates_contracts.cpp",
+        "native/tests/data/schematic_place/README.md"
+      ]
+    },
+    "route": {
+      "scope": "Native occupancy/wire routing and independent route fixtures.",
+      "evidence": [
+        "native/tests/schematic_route_contracts.cpp"
+      ]
+    },
+    "render": {
+      "scope": "Native render models/fit/STEP ingestion, live project-relative external models and renderer process/error boundaries.",
+      "evidence": [
+        "native/tests/render_models_contracts.cpp",
+        "native/tests/render_project_base_contracts.cpp",
+        "native/tests/data/render_models/README.md"
+      ]
+    },
+    "audits": {
+      "scope": "Native source/AST/enum/census policy and fail-closed standalone projection.",
+      "evidence": [
+        "native/tests/native_audits_contracts.cpp",
+        "native/tests/native_cpp_auditor_contracts.cpp",
+        "native/tests/native_cpp_enum_contracts.cpp",
+        "native/tests/audit_ast_projection_contracts.cpp",
+        "native/tests/verification_audits_contracts.cpp",
+        "native/tests/audit_ast_projection_INTEGRATION.md",
+        "native/tests/verification_audits_INTEGRATION.md"
+      ]
+    },
+    "accounting": {
+      "scope": "Real producer ledger/quantization/fallback/stage accounting and precision semantics.",
+      "evidence": [
+        "native/tests/native_accounting_contracts.cpp",
+        "native/tests/producer_accounting_contracts.cpp",
+        "native/tests/precision_ops_contracts.cpp",
+        "native/tests/precision_accounting_contracts.cpp",
+        "native/tests/board_policy_contracts.cpp",
+        "native/tests/producer_accounting_INTEGRATION.md",
+        "native/tests/native_accounting_INTEGRATION.md"
+      ]
+    },
+    "doc": {
+      "scope": "Real native artifact paths, provenance and documentation consistency policy.",
+      "evidence": [
+        "native/tests/doc_consistency_contracts.cpp",
+        "native/tests/doc_consistency_INTEGRATION.md"
+      ]
+    },
+    "board": {
+      "scope": "board_live: live extraction -> placement -> exact PCB and independent reports for both projects. board_pipeline: stage graph/failure and live schematic integration. Same-project in-process double-build acceptance remains separate.",
+      "evidence": [
+        "native/tests/board_pipeline_contracts.cpp",
+        "native/tests/board_live_contracts.cpp"
+      ]
+    },
+    "copper": {
+      "scope": "Copper/topology/thermal via emission and explicit evidence report contracts.",
+      "evidence": [
+        "native/tests/copper_debt_contracts.cpp",
+        "native/tests/pcb_emit_contracts.cpp"
+      ]
+    },
+    "ratsnest": {
+      "scope": "Independent MST/lengths/report/SVG fixture and board-check contracts.",
+      "evidence": [
+        "native/tests/ratsnest_documents_contracts.cpp",
+        "native/tests/kernel_contracts.cpp",
+        "native/tests/pcb_checks_contracts.cpp",
+        "native/tests/data/ratsnest_documents/README.md"
+      ]
+    },
+    "gallery": {
+      "scope": "Exact SVG/Markdown both boards and fresh/synthetic mutations.",
+      "evidence": [
+        "native/tests/gallery_diagram_contracts.cpp",
+        "native/tests/data/gallery_diagram/README.md"
+      ]
+    },
+    "experiments": {
+      "scope": "Native chir/w11/w12/dump utilities; actual event checkpoints and default-off observer proof.",
+      "evidence": [
+        "native/tests/experiment_tools_contracts.cpp",
+        "native/tests/experiment_observer_contracts.cpp",
+        "native/tests/data/experiment_tools/README.md"
+      ]
+    },
+    "xdc": {
+      "scope": "Xilinx constraints and ports/contract mutations.",
+      "evidence": [
+        "native/tests/xdc_contracts.cpp"
+      ]
+    },
+    "devicetree": {
+      "scope": "Native devicetree byte contracts.",
+      "evidence": [
+        "native/tests/devicetree_contracts.cpp"
+      ]
+    },
+    "vivado": {
+      "scope": "Native Vivado generation byte contracts.",
+      "evidence": [
+        "native/tests/vivado_contracts.cpp"
+      ]
+    },
+    "bom": {
+      "scope": "Native BOM/position/parts publication contracts.",
+      "evidence": [
+        "native/tests/bom_contracts.cpp"
+      ]
+    }
+  },
+  "files": [
+    {
+      "path": "carrier/__init__.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "role": "package-entrypoint",
+      "status": "python-package-scaffolding",
+      "families": [
+        "project"
+      ]
+    },
+    {
+      "path": "carrier/basis.py",
+      "sha256": "93f10cab7b0b053eb53492f731c1d1d8d464a97e3783a98f3825e82d6b378475",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "model",
+        "basis",
+        "project"
+      ]
+    },
+    {
+      "path": "carrier/nets.py",
+      "sha256": "d2b6ca5524c0695266cc5efa373f041300ed1a4914ea170439fa7dd22bbcd37d",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "som"
+      ]
+    },
+    {
+      "path": "carrier/som_conn_gen.py",
+      "sha256": "80534b865a9506fae371f2e1152286d3149677c5b26ff48a09114cb94fd07829",
+      "role": "generation-tool",
+      "status": "native-family-evidenced",
+      "families": [
+        "som"
+      ]
+    },
+    {
+      "path": "carrier/subsystems/__init__.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "role": "package-entrypoint",
+      "status": "python-package-scaffolding",
+      "families": [
+        "authoring"
+      ]
+    },
+    {
+      "path": "carrier/subsystems/board_aux/__init__.py",
+      "sha256": "b439b23515067abf909c86ba9209660f29b189a101eb3c8413b69966743f37e3",
+      "role": "package-entrypoint",
+      "status": "python-package-scaffolding",
+      "families": [
+        "authoring"
+      ]
+    },
+    {
+      "path": "carrier/subsystems/board_aux/board_aux.py",
+      "sha256": "1c6e6622ef0a6ea9f0b95677870cc23e84282306bddb0f875b3866873c5d150a",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "som"
+      ]
+    },
+    {
+      "path": "carrier/subsystems/board_aux/test_board_aux.py",
+      "sha256": "3bb1148eac10992c7aac8bdfc81d31a1a932018a7c761f7fa8b96a60751c4870",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "circuit"
+      ],
+      "note": "Baseline circuit structural assertions are subsumed by complete fresh project IR vs independent gate_project.json; library adapters also use parameterized original library fixtures. Python package/adapter syntax itself is retired."
+    },
+    {
+      "path": "carrier/subsystems/board_qwiic/__init__.py",
+      "sha256": "b5812702ecf340d1783aa3ee2a488b81aa5c58e1063e4d4382cb487dc497ea13",
+      "role": "package-entrypoint",
+      "status": "python-package-scaffolding",
+      "families": [
+        "authoring"
+      ]
+    },
+    {
+      "path": "carrier/subsystems/board_qwiic/board_qwiic.py",
+      "sha256": "192b553ccf2bb25a1934e39acd42ae31dfa876d2569aee27d6d7a08de5a0188f",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "som"
+      ]
+    },
+    {
+      "path": "carrier/subsystems/board_qwiic/test_board_qwiic.py",
+      "sha256": "732423d20aab85ba4053f74252f172eaa0a42a6ce0f5ffa8a77a41b0e20bfe53",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "circuit"
+      ],
+      "note": "Baseline circuit structural assertions are subsumed by complete fresh project IR vs independent gate_project.json; library adapters also use parameterized original library fixtures. Python package/adapter syntax itself is retired."
+    },
+    {
+      "path": "carrier/subsystems/board_services/__init__.py",
+      "sha256": "b5739076a1ff54212f2b2a1f3e827948c69a5e73eb8ff5d5a5b8df6682f5e629",
+      "role": "package-entrypoint",
+      "status": "python-package-scaffolding",
+      "families": [
+        "authoring"
+      ]
+    },
+    {
+      "path": "carrier/subsystems/board_services/board_services.py",
+      "sha256": "3d980b1d3de937bb074a0d5d1e4640cbe168a21b7405bd6ea4871c2506e3f5be",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "som"
+      ]
+    },
+    {
+      "path": "carrier/subsystems/board_services/test_board_services.py",
+      "sha256": "ec2cd0f5382a5a04f8fc24b0e154b8ce2296b5fe3a72367c133492e195d3c752",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "circuit"
+      ],
+      "note": "Baseline circuit structural assertions are subsumed by complete fresh project IR vs independent gate_project.json; library adapters also use parameterized original library fixtures. Python package/adapter syntax itself is retired."
+    },
+    {
+      "path": "carrier/subsystems/bringup_en/__init__.py",
+      "sha256": "dd3a4c732f37210e22586d088d20bb61a77f2a8218173b9e32d409f2394a99d3",
+      "role": "package-entrypoint",
+      "status": "python-package-scaffolding",
+      "families": [
+        "authoring"
+      ]
+    },
+    {
+      "path": "carrier/subsystems/bringup_en/bringup_en.py",
+      "sha256": "26f0f433f90892049af8025d4577698e31f86303c9ed84453c12acd502d3b153",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "som"
+      ]
+    },
+    {
+      "path": "carrier/subsystems/bringup_en/test_bringup_en.py",
+      "sha256": "e07d0acf8d1486fb3b2e4d7173ef4efc6fb8693adffb8f9fd0ac8b0e3daa6d97",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "circuit"
+      ],
+      "note": "Baseline circuit structural assertions are subsumed by complete fresh project IR vs independent gate_project.json; library adapters also use parameterized original library fixtures. Python package/adapter syntax itself is retired."
+    },
+    {
+      "path": "carrier/subsystems/bringup_en_modules/__init__.py",
+      "sha256": "ba72f8bd6e9fd558a946ce03c5eb974891a8645f67680b31630f2acdbbcc8ae9",
+      "role": "package-entrypoint",
+      "status": "python-package-scaffolding",
+      "families": [
+        "authoring"
+      ]
+    },
+    {
+      "path": "carrier/subsystems/bringup_en_modules/bringup_en_modules.py",
+      "sha256": "467c645757b67999f03d70c1f65713612e3214eb717899b4d325f962531b5777",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "som"
+      ]
+    },
+    {
+      "path": "carrier/subsystems/bringup_en_modules/test_bringup_en_modules.py",
+      "sha256": "1e9925bd5f7e5809d24582152ccc1e0a85a62548149fd7f64294e0e3bcd96aff",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "circuit"
+      ],
+      "note": "Baseline circuit structural assertions are subsumed by complete fresh project IR vs independent gate_project.json; library adapters also use parameterized original library fixtures. Python package/adapter syntax itself is retired."
+    },
+    {
+      "path": "carrier/subsystems/bringup_modules/__init__.py",
+      "sha256": "5b4c384e9deaed183fed018f31460642d2b878c7687b3ad169e9e83536592438",
+      "role": "package-entrypoint",
+      "status": "python-package-scaffolding",
+      "families": [
+        "authoring"
+      ]
+    },
+    {
+      "path": "carrier/subsystems/bringup_modules/bringup_modules.py",
+      "sha256": "dfdeaf47de4201bb0c183dde75d9d244d6674158ac31851aeb9122138f01c32a",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "som"
+      ]
+    },
+    {
+      "path": "carrier/subsystems/bringup_modules/test_bringup_modules.py",
+      "sha256": "e28279ce5fa815f5cc92eec2d876950ba1e5c5a41c4369695d041b11f9eeb325",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "circuit"
+      ],
+      "note": "Baseline circuit structural assertions are subsumed by complete fresh project IR vs independent gate_project.json; library adapters also use parameterized original library fixtures. Python package/adapter syntax itself is retired."
+    },
+    {
+      "path": "carrier/subsystems/bringup_rails/__init__.py",
+      "sha256": "7fc5d36b2ae4764600a7a37a5974e009dc380b03591408f52626cc5fb4f91abb",
+      "role": "package-entrypoint",
+      "status": "python-package-scaffolding",
+      "families": [
+        "authoring"
+      ]
+    },
+    {
+      "path": "carrier/subsystems/bringup_rails/bringup_rails.py",
+      "sha256": "068d2f8a51dfff9c4d846b73396f59dd7822b31f850d382540b599f9cfc00769",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "som"
+      ]
+    },
+    {
+      "path": "carrier/subsystems/bringup_rails/test_bringup_rails.py",
+      "sha256": "c4d5c37dc48e552e74ef7075d70871dbfab1df381ce333de9544567ab56c5360",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "circuit"
+      ],
+      "note": "Baseline circuit structural assertions are subsumed by complete fresh project IR vs independent gate_project.json; library adapters also use parameterized original library fixtures. Python package/adapter syntax itself is retired."
+    },
+    {
+      "path": "carrier/subsystems/camera.py",
+      "sha256": "344fd5cf5d133dd8048b041d17c2a2739e88528e0fd6d928ef6512dfc831a564",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "som"
+      ]
+    },
+    {
+      "path": "carrier/subsystems/debug_boot/__init__.py",
+      "sha256": "a557da0e0d3bd4905990ee1652c71a802f1e48869f84782d2e1b93a3439bf880",
+      "role": "package-entrypoint",
+      "status": "python-package-scaffolding",
+      "families": [
+        "authoring"
+      ]
+    },
+    {
+      "path": "carrier/subsystems/debug_boot/debug_boot.py",
+      "sha256": "912b936cbe0c45c105e2c128e18e6ff72a91f40d8949feab78f785cf67131a64",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "som"
+      ]
+    },
+    {
+      "path": "carrier/subsystems/debug_boot/test_debug_boot.py",
+      "sha256": "81d668ac2b74e8e667931ae94c86f823bea987859a82562d77f4169f1384348e",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "circuit"
+      ],
+      "note": "Baseline circuit structural assertions are subsumed by complete fresh project IR vs independent gate_project.json; library adapters also use parameterized original library fixtures. Python package/adapter syntax itself is retired."
+    },
+    {
+      "path": "carrier/subsystems/ethernet.py",
+      "sha256": "c5d6b0cedeb6363f072862e1251e92dce8c511a654879ee4e5eafc043875884d",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "som"
+      ]
+    },
+    {
+      "path": "carrier/subsystems/fmc/__init__.py",
+      "sha256": "77060dcced4452d586cc7e6c9621933cd01ec02d8fda6bb926c91052d159de35",
+      "role": "package-entrypoint",
+      "status": "python-package-scaffolding",
+      "families": [
+        "authoring"
+      ]
+    },
+    {
+      "path": "carrier/subsystems/fmc/fmc.py",
+      "sha256": "cbbb5528f89c5c56b56652b18f6edce0fd7e1a56797c52a81fbaed01e6f9ace3",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "som"
+      ]
+    },
+    {
+      "path": "carrier/subsystems/fmc/test_fmc.py",
+      "sha256": "766d1acdfaab9fa1c3feaa7521964dd120c923f4d12cbfd52f3eaf2d8e869c45",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "circuit"
+      ],
+      "note": "Baseline circuit structural assertions are subsumed by complete fresh project IR vs independent gate_project.json; library adapters also use parameterized original library fixtures. Python package/adapter syntax itself is retired."
+    },
+    {
+      "path": "carrier/subsystems/hdmi_rx.py",
+      "sha256": "a917deb9281c60bf96e5ce2291be7e9087eba6898354600a5e77766a3cc3461a",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "som"
+      ]
+    },
+    {
+      "path": "carrier/subsystems/hdmi_rx_term/__init__.py",
+      "sha256": "b7fe62b11260ff2589fff4361b94a38d1f34a0e551b04fa538c0a0bb392859da",
+      "role": "package-entrypoint",
+      "status": "python-package-scaffolding",
+      "families": [
+        "authoring"
+      ]
+    },
+    {
+      "path": "carrier/subsystems/hdmi_rx_term/hdmi_rx_term.py",
+      "sha256": "a81ed4f403c43723f262ac695b7602332a3be80566dd2d8d8b16e54b87efed24",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "som"
+      ]
+    },
+    {
+      "path": "carrier/subsystems/hdmi_rx_term/test_hdmi_rx_term.py",
+      "sha256": "b43180fd9491455250655534d31c281101098a802fbacc73c1ecef96034a7aa0",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "circuit"
+      ],
+      "note": "Baseline circuit structural assertions are subsumed by complete fresh project IR vs independent gate_project.json; library adapters also use parameterized original library fixtures. Python package/adapter syntax itself is retired."
+    },
+    {
+      "path": "carrier/subsystems/hdmi_tx.py",
+      "sha256": "6ba6340c4d313916ee4ab0a215f750cde093c9e9968eeb9e953deda400433304",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "som"
+      ]
+    },
+    {
+      "path": "carrier/subsystems/lcd.py",
+      "sha256": "605e39766b57d37d8b497b4f7aa063570d461b96d7438946af27c8e61699c985",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "som"
+      ]
+    },
+    {
+      "path": "carrier/subsystems/mechanical/__init__.py",
+      "sha256": "8c59d9a63eac4ff039dcfeb0c7eb62884be7e5c5ece3e442e963d2cf693fbdfc",
+      "role": "package-entrypoint",
+      "status": "python-package-scaffolding",
+      "families": [
+        "authoring"
+      ]
+    },
+    {
+      "path": "carrier/subsystems/mechanical/mechanical.py",
+      "sha256": "db2226d91d32f6193be5c819076e53fa40aad01400a36201a84e49c5d98b82b9",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "som"
+      ]
+    },
+    {
+      "path": "carrier/subsystems/mechanical/test_mechanical.py",
+      "sha256": "6a61edfd335c301ebf4e4fec6f62335d9af3f1a69bed8af47ca848d8ce2933ff",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "circuit"
+      ],
+      "note": "Baseline circuit structural assertions are subsumed by complete fresh project IR vs independent gate_project.json; library adapters also use parameterized original library fixtures. Python package/adapter syntax itself is retired."
+    },
+    {
+      "path": "carrier/subsystems/microsd.py",
+      "sha256": "bf260e77e08042fc9cfe4d172fa8b1c5267b280e96af5dcd4e144aa0ae0a2f12",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "som"
+      ]
+    },
+    {
+      "path": "carrier/subsystems/motor_pwm/__init__.py",
+      "sha256": "8e98390e55f0865385db0d4f54d155982d1280f9c21d5ed97ff3bf96d1fec1d2",
+      "role": "package-entrypoint",
+      "status": "python-package-scaffolding",
+      "families": [
+        "authoring"
+      ]
+    },
+    {
+      "path": "carrier/subsystems/motor_pwm/motor_pwm.py",
+      "sha256": "e477692fdf25ac547017f72fa75a632c079da79c266af407b5e8002adb53778b",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "som"
+      ]
+    },
+    {
+      "path": "carrier/subsystems/motor_pwm/test_motor_pwm.py",
+      "sha256": "642ae5733727ba922a5ac95ce9cad46080af0a362ad7dd8b5df71e46ef1dc255",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "circuit"
+      ],
+      "note": "Baseline circuit structural assertions are subsumed by complete fresh project IR vs independent gate_project.json; library adapters also use parameterized original library fixtures. Python package/adapter syntax itself is retired."
+    },
+    {
+      "path": "carrier/subsystems/motor_sense/__init__.py",
+      "sha256": "2ecfdcd3620da60eb3af5c5f4b3213ec882b49e577ddd5436e6d529eabb5ed51",
+      "role": "package-entrypoint",
+      "status": "python-package-scaffolding",
+      "families": [
+        "authoring"
+      ]
+    },
+    {
+      "path": "carrier/subsystems/motor_sense/motor_sense.py",
+      "sha256": "8f74ea5b15b0676961b79189b5239feafef169dadfb1324591a849832b1c55b0",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "som"
+      ]
+    },
+    {
+      "path": "carrier/subsystems/motor_sense/test_motor_sense.py",
+      "sha256": "4526d61870353773abaf764057d4e82ec5f4353396c2c49d5d743a8204dc6b99",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "circuit"
+      ],
+      "note": "Baseline circuit structural assertions are subsumed by complete fresh project IR vs independent gate_project.json; library adapters also use parameterized original library fixtures. Python package/adapter syntax itself is retired."
+    },
+    {
+      "path": "carrier/subsystems/pd_input.py",
+      "sha256": "f404a092a0e7481861bacfd4b80948ed4dfcabb9a04f4f416a7a10dd816fa8f5",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "som"
+      ]
+    },
+    {
+      "path": "carrier/subsystems/pmod.py",
+      "sha256": "7bb48730810b2c5cacb8587188069c4ec2da858a47222758335fecf9c4d8fe0a",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "som"
+      ]
+    },
+    {
+      "path": "carrier/subsystems/pmod_expansion.py",
+      "sha256": "69160db8de7dd0392e8cde5b89fc94f3b93c27c478e6592599a4e04c0c28c301",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "som"
+      ]
+    },
+    {
+      "path": "carrier/subsystems/power.py",
+      "sha256": "b7e0749c558088dbb7e0ffa4201907c592face0cd445ae3a8ec5b5fc69875d2f",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "som"
+      ]
+    },
+    {
+      "path": "carrier/subsystems/power_mon/__init__.py",
+      "sha256": "a33637ab679f9f9e79b77e481967dedf2d5fa304182425f38df9dc0da4fe8428",
+      "role": "package-entrypoint",
+      "status": "python-package-scaffolding",
+      "families": [
+        "authoring"
+      ]
+    },
+    {
+      "path": "carrier/subsystems/power_mon/power_mon.py",
+      "sha256": "0cc662c295dc7cacfc413faf568d8d154c3c89032e74ec31f298ffffc4e72795",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "som"
+      ]
+    },
+    {
+      "path": "carrier/subsystems/power_mon/test_power_mon.py",
+      "sha256": "621f537bb62ec5375316c45e61305e3026ecd8c699a4b2f1c115b8f5ca369ab6",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "circuit"
+      ],
+      "note": "Baseline circuit structural assertions are subsumed by complete fresh project IR vs independent gate_project.json; library adapters also use parameterized original library fixtures. Python package/adapter syntax itself is retired."
+    },
+    {
+      "path": "carrier/subsystems/power_som/__init__.py",
+      "sha256": "a4e0ca5a9742a4941f62878a1dc8e384a28269a5dba9dccf73d73da5a029036d",
+      "role": "package-entrypoint",
+      "status": "python-package-scaffolding",
+      "families": [
+        "authoring"
+      ]
+    },
+    {
+      "path": "carrier/subsystems/power_som/power_som.py",
+      "sha256": "ea60cc76525f041cc2f02f670c89fea1374102b8ede144306991fe6ef576b66d",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "som"
+      ]
+    },
+    {
+      "path": "carrier/subsystems/power_som/test_power_som.py",
+      "sha256": "81b6b9895fd3511c6a7e25b00b3894d35b871e68d6ba4613a898b2bcb6d336de",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "circuit"
+      ],
+      "note": "Baseline circuit structural assertions are subsumed by complete fresh project IR vs independent gate_project.json; library adapters also use parameterized original library fixtures. Python package/adapter syntax itself is retired."
+    },
+    {
+      "path": "carrier/subsystems/rj45_connector.py",
+      "sha256": "088062b285afef66c6e1e09563313daf88de727e948bedbf7391f4518afa64a2",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "som"
+      ]
+    },
+    {
+      "path": "carrier/subsystems/som_decoupling/__init__.py",
+      "sha256": "2b7b9d3e4d75144d224ae3e61f70f9ca084b30c3456b463c7ba5b12d2a5ab7d6",
+      "role": "package-entrypoint",
+      "status": "python-package-scaffolding",
+      "families": [
+        "authoring"
+      ]
+    },
+    {
+      "path": "carrier/subsystems/som_decoupling/som_decoupling.py",
+      "sha256": "0f3129d0da943c3307b0da3821589f8dd59d6a5247bdba6e0dbea3d8d184eea8",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "som"
+      ]
+    },
+    {
+      "path": "carrier/subsystems/som_decoupling/test_som_decoupling.py",
+      "sha256": "40b83f837a12131ceff037de52fdc4ad247bd612d659834f93dbcd7d0f088dc0",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "circuit"
+      ],
+      "note": "Baseline circuit structural assertions are subsumed by complete fresh project IR vs independent gate_project.json; library adapters also use parameterized original library fixtures. Python package/adapter syntax itself is retired."
+    },
+    {
+      "path": "carrier/subsystems/som_j1/__init__.py",
+      "sha256": "c89934fe3ffe77177c03bc54628dc0ba7822986b292e4ecf58c8a04b25ba5979",
+      "role": "package-entrypoint",
+      "status": "python-package-scaffolding",
+      "families": [
+        "authoring"
+      ]
+    },
+    {
+      "path": "carrier/subsystems/som_j1/som_j1.py",
+      "sha256": "96d1239cfd76015fe5192b49d58baf3b05257573e58238befc45c21cf718389e",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "som"
+      ]
+    },
+    {
+      "path": "carrier/subsystems/som_j1/test_som_j1.py",
+      "sha256": "3b6c3258cac65a613e881b27a48eef31d52ece0b2aa0e027af05e6ff2cb6a96d",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "circuit"
+      ],
+      "note": "Baseline circuit structural assertions are subsumed by complete fresh project IR vs independent gate_project.json; library adapters also use parameterized original library fixtures. Python package/adapter syntax itself is retired."
+    },
+    {
+      "path": "carrier/subsystems/som_j2/__init__.py",
+      "sha256": "18f56de41bc47d7576bf31ec0374bedc42ccdee23c865395a40319437432fb41",
+      "role": "package-entrypoint",
+      "status": "python-package-scaffolding",
+      "families": [
+        "authoring"
+      ]
+    },
+    {
+      "path": "carrier/subsystems/som_j2/som_j2.py",
+      "sha256": "38b469094c210af03f49fd8e6223917ebfdcf4cab9ba8ba3bb77c800c4ca2fb0",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "som"
+      ]
+    },
+    {
+      "path": "carrier/subsystems/som_j2/test_som_j2.py",
+      "sha256": "5699bc1b686539fa153f1f2315c972875cf24377ada0bde6044815ad83400eb8",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "circuit"
+      ],
+      "note": "Baseline circuit structural assertions are subsumed by complete fresh project IR vs independent gate_project.json; library adapters also use parameterized original library fixtures. Python package/adapter syntax itself is retired."
+    },
+    {
+      "path": "carrier/subsystems/som_j3/__init__.py",
+      "sha256": "3a0fb43ab5fbe11716e0fab9291d8a03c8e077f25a97a0b621325d87d06f7ccd",
+      "role": "package-entrypoint",
+      "status": "python-package-scaffolding",
+      "families": [
+        "authoring"
+      ]
+    },
+    {
+      "path": "carrier/subsystems/som_j3/som_j3.py",
+      "sha256": "21297aec4cf354ab83f1b9583c48a7c519931c7bd364242fc1476fa300ebff28",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "som"
+      ]
+    },
+    {
+      "path": "carrier/subsystems/som_j3/test_som_j3.py",
+      "sha256": "d46c929f419f5916d7b418f59c7ac7a4f71f9c4ff634720d1afbfa6542a674d5",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "circuit"
+      ],
+      "note": "Baseline circuit structural assertions are subsumed by complete fresh project IR vs independent gate_project.json; library adapters also use parameterized original library fixtures. Python package/adapter syntax itself is retired."
+    },
+    {
+      "path": "carrier/subsystems/test_camera.py",
+      "sha256": "9937c4b4f577c0a4e312bbd17713c3aa439c173e6441c83da4bb10db711ee626",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "circuit"
+      ],
+      "note": "Baseline circuit structural assertions are subsumed by complete fresh project IR vs independent gate_project.json; library adapters also use parameterized original library fixtures. Python package/adapter syntax itself is retired."
+    },
+    {
+      "path": "carrier/subsystems/test_ethernet.py",
+      "sha256": "576041298c29765109ff0563f4bdcb4803af47ba5c11f82bfbe1a63c669b01b3",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "circuit"
+      ],
+      "note": "Baseline circuit structural assertions are subsumed by complete fresh project IR vs independent gate_project.json; library adapters also use parameterized original library fixtures. Python package/adapter syntax itself is retired."
+    },
+    {
+      "path": "carrier/subsystems/test_hdmi_rx.py",
+      "sha256": "99d99b06fa7e171bcfda1f42cdcae224d39d5f1a3a77d4ce2c80bed3d476cc1e",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "circuit"
+      ],
+      "note": "Baseline circuit structural assertions are subsumed by complete fresh project IR vs independent gate_project.json; library adapters also use parameterized original library fixtures. Python package/adapter syntax itself is retired."
+    },
+    {
+      "path": "carrier/subsystems/test_hdmi_tx.py",
+      "sha256": "737a78dfea6e7f89e6ff819ad3cd3ecfc94f2259429f82184dd742102f744194",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "circuit"
+      ],
+      "note": "Baseline circuit structural assertions are subsumed by complete fresh project IR vs independent gate_project.json; library adapters also use parameterized original library fixtures. Python package/adapter syntax itself is retired."
+    },
+    {
+      "path": "carrier/subsystems/test_lcd.py",
+      "sha256": "bef5094bb3177772af27f22153419b292d5e6ddcd375c10eba807aaeadee8af7",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "circuit"
+      ],
+      "note": "Baseline circuit structural assertions are subsumed by complete fresh project IR vs independent gate_project.json; library adapters also use parameterized original library fixtures. Python package/adapter syntax itself is retired."
+    },
+    {
+      "path": "carrier/subsystems/test_microsd.py",
+      "sha256": "e26c2c0fef5ae1373954b360cb9467f920ea6f29a2d6eaa4b735d2c68e7db6cb",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "circuit"
+      ],
+      "note": "Baseline circuit structural assertions are subsumed by complete fresh project IR vs independent gate_project.json; library adapters also use parameterized original library fixtures. Python package/adapter syntax itself is retired."
+    },
+    {
+      "path": "carrier/subsystems/test_pd_input.py",
+      "sha256": "c4ff3724601d5420af171e7741bdd88acd9b854a2b3345061bfed65c671a5cd1",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "circuit"
+      ],
+      "note": "Baseline circuit structural assertions are subsumed by complete fresh project IR vs independent gate_project.json; library adapters also use parameterized original library fixtures. Python package/adapter syntax itself is retired."
+    },
+    {
+      "path": "carrier/subsystems/test_pmod.py",
+      "sha256": "0d20d10d371b7a159da4c81122db3b38f4ed69d5ca56ac40ac2fa599c8c0952e",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "circuit"
+      ],
+      "note": "Baseline circuit structural assertions are subsumed by complete fresh project IR vs independent gate_project.json; library adapters also use parameterized original library fixtures. Python package/adapter syntax itself is retired."
+    },
+    {
+      "path": "carrier/subsystems/test_pmod_expansion.py",
+      "sha256": "d7326fb505046c49655e28cf77eede60d9c7c66c0a4f507b50f63ec3f1bdbb61",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "circuit"
+      ],
+      "note": "Baseline circuit structural assertions are subsumed by complete fresh project IR vs independent gate_project.json; library adapters also use parameterized original library fixtures. Python package/adapter syntax itself is retired."
+    },
+    {
+      "path": "carrier/subsystems/test_power.py",
+      "sha256": "7323dbd7fb9aa153ec542b4570fa84c01dfb8b28e696bb03dc43100f9742e212",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "circuit"
+      ],
+      "note": "Baseline circuit structural assertions are subsumed by complete fresh project IR vs independent gate_project.json; library adapters also use parameterized original library fixtures. Python package/adapter syntax itself is retired."
+    },
+    {
+      "path": "carrier/subsystems/test_rj45_connector.py",
+      "sha256": "57f73a9ffbe32922783af2e2320ef9777d98ac2f628fc5f05e73f2d33baff918",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "circuit"
+      ],
+      "note": "Baseline circuit structural assertions are subsumed by complete fresh project IR vs independent gate_project.json; library adapters also use parameterized original library fixtures. Python package/adapter syntax itself is retired."
+    },
+    {
+      "path": "carrier/subsystems/test_uart_bridge.py",
+      "sha256": "d7ff0d8e994b2b334fbb3b1aef077d26f625e8ed343bd9adf117110074f07466",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "circuit"
+      ],
+      "note": "Baseline circuit structural assertions are subsumed by complete fresh project IR vs independent gate_project.json; library adapters also use parameterized original library fixtures. Python package/adapter syntax itself is retired."
+    },
+    {
+      "path": "carrier/subsystems/test_usb_jtag.py",
+      "sha256": "2d415d7ae9faf6ece9e7f8f9f45962ec7da68aa1a6bc1bdbab26f49d9797f07c",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "circuit"
+      ],
+      "note": "Baseline circuit structural assertions are subsumed by complete fresh project IR vs independent gate_project.json; library adapters also use parameterized original library fixtures. Python package/adapter syntax itself is retired."
+    },
+    {
+      "path": "carrier/subsystems/test_usb_jtag_connector.py",
+      "sha256": "c792c2fc099c59f2f18f490db6ede81dd5a67004e054c5cf724e4d2632f6b6d5",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "circuit"
+      ],
+      "note": "Baseline circuit structural assertions are subsumed by complete fresh project IR vs independent gate_project.json; library adapters also use parameterized original library fixtures. Python package/adapter syntax itself is retired."
+    },
+    {
+      "path": "carrier/subsystems/test_usb_pd.py",
+      "sha256": "347017ed192a6e986624061505bc7fe6c74f95e10ac4164e20b82199a321cb3c",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "circuit"
+      ],
+      "note": "Baseline circuit structural assertions are subsumed by complete fresh project IR vs independent gate_project.json; library adapters also use parameterized original library fixtures. Python package/adapter syntax itself is retired."
+    },
+    {
+      "path": "carrier/subsystems/test_usb_uart_connector.py",
+      "sha256": "b9aeca031acf59742d9afd3d5d57b1fa3627689712dd3a8fe18606e67289e435",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "circuit"
+      ],
+      "note": "Baseline circuit structural assertions are subsumed by complete fresh project IR vs independent gate_project.json; library adapters also use parameterized original library fixtures. Python package/adapter syntax itself is retired."
+    },
+    {
+      "path": "carrier/subsystems/test_usbc_otg.py",
+      "sha256": "729126b11aa50e97b5e5db1013b039b4a28590afd2c3eb19c99d424401b96f99",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "circuit"
+      ],
+      "note": "Baseline circuit structural assertions are subsumed by complete fresh project IR vs independent gate_project.json; library adapters also use parameterized original library fixtures. Python package/adapter syntax itself is retired."
+    },
+    {
+      "path": "carrier/subsystems/uart_bridge.py",
+      "sha256": "197970f830c86ffabcdcbe25b35e55832b5438160328b41175e9639c486bd82e",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "som"
+      ]
+    },
+    {
+      "path": "carrier/subsystems/usb_jtag.py",
+      "sha256": "63720b7179d65d967bd0c98543b8377fd21fd01efc6b5c208753b11894846e03",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "som"
+      ]
+    },
+    {
+      "path": "carrier/subsystems/usb_jtag_connector.py",
+      "sha256": "283baffecb992c5b15f73eb918b5d30e6c9ed0163695043ff339a11aad58b88c",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "som"
+      ]
+    },
+    {
+      "path": "carrier/subsystems/usb_pd.py",
+      "sha256": "058fe26006b73c8ea4542e717c2cfd5fa320082f20b96826c301400e58ef04ef",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "som"
+      ]
+    },
+    {
+      "path": "carrier/subsystems/usb_uart_connector.py",
+      "sha256": "c12b16018cd5f03a314c64a4fd25ba91c55420a9eee5ced3071290f8d4daf948",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "som"
+      ]
+    },
+    {
+      "path": "carrier/subsystems/usbc_otg.py",
+      "sha256": "449cd6ab5360da1153c5235f2cd336597ac5d3bcc07f6f87260188380e21e8bc",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "som"
+      ]
+    },
+    {
+      "path": "carrier/subsystems/user_io/__init__.py",
+      "sha256": "b7816aa1cf257f123808fd00fd527cf558886f1df461938064ac1ba2b3da7b68",
+      "role": "package-entrypoint",
+      "status": "python-package-scaffolding",
+      "families": [
+        "authoring"
+      ]
+    },
+    {
+      "path": "carrier/subsystems/user_io/test_user_io.py",
+      "sha256": "37c2ddd556f112e6d736ccde2a4c8e3de58ad67bdc7ca51a7914c0066baf20d1",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "circuit"
+      ],
+      "note": "Baseline circuit structural assertions are subsumed by complete fresh project IR vs independent gate_project.json; library adapters also use parameterized original library fixtures. Python package/adapter syntax itself is retired."
+    },
+    {
+      "path": "carrier/subsystems/user_io/user_io.py",
+      "sha256": "acfca1e7879045a358546063ddb31d02888f3868f297c8350d986bca74d90912",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "som"
+      ]
+    },
+    {
+      "path": "carrier/test_project_twin_parity.py",
+      "sha256": "94e4191c9c0134b2df2194f61ac95dcc73ac347f883c4750e1a7fe338e3bc4ef",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "project"
+      ],
+      "note": "Project IR/identity retained; Python source-neutralized textual twin equality and detached Python adapter discovery retire with those adapters."
+    },
+    {
+      "path": "conftest.py",
+      "sha256": "11ff3ca621e1633cb695042bed657179c398a6a0db6904e91510dd607200da4b",
+      "role": "test-infrastructure",
+      "status": "python-test-harness-retired",
+      "families": [
+        "cli",
+        "authoring",
+        "board"
+      ],
+      "note": "pytest fixtures/options/import hooks replaced by explicit native test arguments, part catalogs and CTest; not runtime Python."
+    },
+    {
+      "path": "devkit_mini/__init__.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "role": "package-entrypoint",
+      "status": "python-package-scaffolding",
+      "families": [
+        "project"
+      ]
+    },
+    {
+      "path": "devkit_mini/basis.py",
+      "sha256": "93f10cab7b0b053eb53492f731c1d1d8d464a97e3783a98f3825e82d6b378475",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "model",
+        "basis",
+        "project"
+      ]
+    },
+    {
+      "path": "devkit_mini/nets.py",
+      "sha256": "f036382c000abb3255307597aac1a6ad2830c814c6ae9fa27388a6dd37c33dc6",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "som"
+      ]
+    },
+    {
+      "path": "devkit_mini/som_conn_gen.py",
+      "sha256": "cbc5c69f5117f964da45db88f0cfc0751150170eb3f6b46b343fc1dddb4e1d94",
+      "role": "generation-tool",
+      "status": "native-family-evidenced",
+      "families": [
+        "som"
+      ]
+    },
+    {
+      "path": "devkit_mini/subsystems/__init__.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "role": "package-entrypoint",
+      "status": "python-package-scaffolding",
+      "families": [
+        "authoring"
+      ]
+    },
+    {
+      "path": "devkit_mini/subsystems/debug_boot/__init__.py",
+      "sha256": "6398c6a9bdfb7c3ea534fafb5c3b989f5185af5c31f48efee7dc66c81d43f0b3",
+      "role": "package-entrypoint",
+      "status": "python-package-scaffolding",
+      "families": [
+        "authoring"
+      ]
+    },
+    {
+      "path": "devkit_mini/subsystems/debug_boot/debug_boot.py",
+      "sha256": "6df76ef4c9ce3f53a5df075034ef58a0c4cb3847c8e420c2e389040c736923f0",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "som"
+      ]
+    },
+    {
+      "path": "devkit_mini/subsystems/debug_boot/test_debug_boot.py",
+      "sha256": "5c6e24892df7b79bbcca6b470bea403a1d1e32684c8d48e56e18aefda410007a",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "circuit"
+      ],
+      "note": "Baseline circuit structural assertions are subsumed by complete fresh project IR vs independent gate_project.json; library adapters also use parameterized original library fixtures. Python package/adapter syntax itself is retired."
+    },
+    {
+      "path": "devkit_mini/subsystems/mechanical/__init__.py",
+      "sha256": "64d6f22abc99532a8fc84432a33cf19fb3e76fa44e31a7b00b93f13ba1a50d9a",
+      "role": "package-entrypoint",
+      "status": "python-package-scaffolding",
+      "families": [
+        "authoring"
+      ]
+    },
+    {
+      "path": "devkit_mini/subsystems/mechanical/mechanical.py",
+      "sha256": "0abeb4304a0fbfe08cf060ee6eefbfd1a02c45480c59ab66e06235442785de0e",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "som"
+      ]
+    },
+    {
+      "path": "devkit_mini/subsystems/mechanical/test_mechanical.py",
+      "sha256": "6974d5191a81226cc23407b358851e0e32ab68a924c28df0c5ee05112ac2be6c",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "circuit"
+      ],
+      "note": "Baseline circuit structural assertions are subsumed by complete fresh project IR vs independent gate_project.json; library adapters also use parameterized original library fixtures. Python package/adapter syntax itself is retired."
+    },
+    {
+      "path": "devkit_mini/subsystems/pd_input.py",
+      "sha256": "15f0011cfa609feabbab3bd3be9040ef717228c42fcd034f0cd61f346b346277",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "som"
+      ]
+    },
+    {
+      "path": "devkit_mini/subsystems/power.py",
+      "sha256": "886ed89bca6fa16a6ae94f5015c611ace215745c955a20bce5b12479d2d085e9",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "som"
+      ]
+    },
+    {
+      "path": "devkit_mini/subsystems/power_mon/__init__.py",
+      "sha256": "db126b2940f5805940e9f64be475672d94c35b2e8f62c55613c4e629350da174",
+      "role": "package-entrypoint",
+      "status": "python-package-scaffolding",
+      "families": [
+        "authoring"
+      ]
+    },
+    {
+      "path": "devkit_mini/subsystems/power_mon/power_mon.py",
+      "sha256": "097d4915b5be37b263f4e0362a104176debb1ca8fd05d5aeeb75b11630375ad1",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "som"
+      ]
+    },
+    {
+      "path": "devkit_mini/subsystems/power_mon/test_power_mon.py",
+      "sha256": "a80073f8cd4f602890a1a0aee4689db7a4874f4f654401e88c818a670c70acbc",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "circuit"
+      ],
+      "note": "Baseline circuit structural assertions are subsumed by complete fresh project IR vs independent gate_project.json; library adapters also use parameterized original library fixtures. Python package/adapter syntax itself is retired."
+    },
+    {
+      "path": "devkit_mini/subsystems/power_som/__init__.py",
+      "sha256": "4155ce35cd134c2bd59248f04a03dfef97ac7b5b1badab8c95d55110f8cb5329",
+      "role": "package-entrypoint",
+      "status": "python-package-scaffolding",
+      "families": [
+        "authoring"
+      ]
+    },
+    {
+      "path": "devkit_mini/subsystems/power_som/power_som.py",
+      "sha256": "c27bdc7b9cc74b60bbe7dac097e5336f9def32f08a77e8a4e7d986e7c7a8297a",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "som"
+      ]
+    },
+    {
+      "path": "devkit_mini/subsystems/power_som/test_power_som.py",
+      "sha256": "3bbe7adac0e34202d092431d92b34f400be274c8a5823e408a32386c6822f828",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "circuit"
+      ],
+      "note": "Baseline circuit structural assertions are subsumed by complete fresh project IR vs independent gate_project.json; library adapters also use parameterized original library fixtures. Python package/adapter syntax itself is retired."
+    },
+    {
+      "path": "devkit_mini/subsystems/som_decoupling/__init__.py",
+      "sha256": "b55d452a7ba45c08ea08997866b4cda0003eee6fa3e8fec19d0d576f51fefb13",
+      "role": "package-entrypoint",
+      "status": "python-package-scaffolding",
+      "families": [
+        "authoring"
+      ]
+    },
+    {
+      "path": "devkit_mini/subsystems/som_decoupling/som_decoupling.py",
+      "sha256": "13ec923b123dbd59ed281011dba0ee18e71264674e92c87a8afb414be511a0b2",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "som"
+      ]
+    },
+    {
+      "path": "devkit_mini/subsystems/som_decoupling/test_som_decoupling.py",
+      "sha256": "dd7bea0fcb55be389ccf670476fcecf1ccd94ab86465549581ac2eda3c8bae04",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "circuit"
+      ],
+      "note": "Baseline circuit structural assertions are subsumed by complete fresh project IR vs independent gate_project.json; library adapters also use parameterized original library fixtures. Python package/adapter syntax itself is retired."
+    },
+    {
+      "path": "devkit_mini/subsystems/som_j1/__init__.py",
+      "sha256": "c1a53f67e1c3147a8e8f497ec6a6144d6c1663c30600f1550fd13995142e94e3",
+      "role": "package-entrypoint",
+      "status": "python-package-scaffolding",
+      "families": [
+        "authoring"
+      ]
+    },
+    {
+      "path": "devkit_mini/subsystems/som_j1/som_j1.py",
+      "sha256": "96d1239cfd76015fe5192b49d58baf3b05257573e58238befc45c21cf718389e",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "som"
+      ]
+    },
+    {
+      "path": "devkit_mini/subsystems/som_j1/test_som_j1.py",
+      "sha256": "994b0ccd732fb9077a849e7f90de7a7802b869c23438c126a3ffcd488af5ca24",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "circuit"
+      ],
+      "note": "Baseline circuit structural assertions are subsumed by complete fresh project IR vs independent gate_project.json; library adapters also use parameterized original library fixtures. Python package/adapter syntax itself is retired."
+    },
+    {
+      "path": "devkit_mini/subsystems/som_j2/__init__.py",
+      "sha256": "91850a9895e00acdc3600356acc828dab09cf9c5a0139d2d3b41c5983683354f",
+      "role": "package-entrypoint",
+      "status": "python-package-scaffolding",
+      "families": [
+        "authoring"
+      ]
+    },
+    {
+      "path": "devkit_mini/subsystems/som_j2/som_j2.py",
+      "sha256": "38b469094c210af03f49fd8e6223917ebfdcf4cab9ba8ba3bb77c800c4ca2fb0",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "som"
+      ]
+    },
+    {
+      "path": "devkit_mini/subsystems/som_j2/test_som_j2.py",
+      "sha256": "9e21dc9cd5cbd565a83cefaa6db5ef2743845a0f0d40008389b2b3c52cc0a131",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "circuit"
+      ],
+      "note": "Baseline circuit structural assertions are subsumed by complete fresh project IR vs independent gate_project.json; library adapters also use parameterized original library fixtures. Python package/adapter syntax itself is retired."
+    },
+    {
+      "path": "devkit_mini/subsystems/som_j3/__init__.py",
+      "sha256": "6c0791f48e3d3941249881f44e8aace4aa0abbfc75570d010372df7c6a52bdf0",
+      "role": "package-entrypoint",
+      "status": "python-package-scaffolding",
+      "families": [
+        "authoring"
+      ]
+    },
+    {
+      "path": "devkit_mini/subsystems/som_j3/som_j3.py",
+      "sha256": "21297aec4cf354ab83f1b9583c48a7c519931c7bd364242fc1476fa300ebff28",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "som"
+      ]
+    },
+    {
+      "path": "devkit_mini/subsystems/som_j3/test_som_j3.py",
+      "sha256": "3178d254d7696d5f2f08ee33a5eedb791316d9ae9c2cca1949900d893961df5b",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "circuit"
+      ],
+      "note": "Baseline circuit structural assertions are subsumed by complete fresh project IR vs independent gate_project.json; library adapters also use parameterized original library fixtures. Python package/adapter syntax itself is retired."
+    },
+    {
+      "path": "devkit_mini/subsystems/test_pd_input.py",
+      "sha256": "c4ff3724601d5420af171e7741bdd88acd9b854a2b3345061bfed65c671a5cd1",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "circuit"
+      ],
+      "note": "Baseline circuit structural assertions are subsumed by complete fresh project IR vs independent gate_project.json; library adapters also use parameterized original library fixtures. Python package/adapter syntax itself is retired."
+    },
+    {
+      "path": "devkit_mini/subsystems/test_power.py",
+      "sha256": "0600d8a562378356c6f78e23901c6476286eac97ad971a01acf41462ea0ad82b",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "circuit"
+      ],
+      "note": "Baseline circuit structural assertions are subsumed by complete fresh project IR vs independent gate_project.json; library adapters also use parameterized original library fixtures. Python package/adapter syntax itself is retired."
+    },
+    {
+      "path": "devkit_mini/subsystems/test_uart_bridge.py",
+      "sha256": "b530d46a759013c17e1eb7bf928a96334f46bd7182db52ab9adb2cfb8b998a55",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "circuit"
+      ],
+      "note": "Baseline circuit structural assertions are subsumed by complete fresh project IR vs independent gate_project.json; library adapters also use parameterized original library fixtures. Python package/adapter syntax itself is retired."
+    },
+    {
+      "path": "devkit_mini/subsystems/test_usb_uart_connector.py",
+      "sha256": "6002a4fcc3aef9be4a0c9b11adf132b22dded390d4a02695aff03c946e5881af",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "circuit"
+      ],
+      "note": "Baseline circuit structural assertions are subsumed by complete fresh project IR vs independent gate_project.json; library adapters also use parameterized original library fixtures. Python package/adapter syntax itself is retired."
+    },
+    {
+      "path": "devkit_mini/subsystems/uart_bridge.py",
+      "sha256": "82311a4ba71c55f8d2165b158a8feb9a5f760cdac498f3f82166b473f53d881d",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "som"
+      ]
+    },
+    {
+      "path": "devkit_mini/subsystems/usb_uart_connector.py",
+      "sha256": "ce5f9edafd32e1283f68a457b0fca9d31cbf683a12d438b36243beb01e7cb8bb",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "som"
+      ]
+    },
+    {
+      "path": "examples/__init__.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "role": "package-entrypoint",
+      "status": "python-package-scaffolding",
+      "families": [
+        "project"
+      ]
+    },
+    {
+      "path": "examples/devkit_mini/__init__.py",
+      "sha256": "7af43c0898e3b916e0f23879e8c4e9ce40940416a1eec37ff3f601f09972eaf5",
+      "role": "package-entrypoint",
+      "status": "python-package-scaffolding",
+      "families": [
+        "project"
+      ]
+    },
+    {
+      "path": "examples/devkit_mini/devkit_mini.py",
+      "sha256": "d188e3d6de221cc25791a00c1094634a5fa4330b0cf4d6f30a32efd1d3f336ca",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "example"
+      ]
+    },
+    {
+      "path": "examples/devkit_mini/test_devkit_mini.py",
+      "sha256": "8f88cf58f0e0184c8900d1dc941a2c19f8aae3220e82542face454546c31f5d7",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "example"
+      ]
+    },
+    {
+      "path": "schgen/__init__.py",
+      "sha256": "a3ae000078763617e4842adf006ed4ed1345429465a78699cb958433c54f950f",
+      "role": "package-entrypoint",
+      "status": "python-package-scaffolding",
+      "families": [
+        "project"
+      ]
+    },
+    {
+      "path": "schgen/__main__.py",
+      "sha256": "3e96733b0c9895c79152b45a9ce784a5a369f56a6a213843915b3acd80df1bd6",
+      "role": "cli-tool",
+      "status": "native-family-evidenced",
+      "families": [
+        "cli",
+        "board",
+        "project"
+      ],
+      "note": "Native main/project command driver, explicit --tests-dir and no Python subprocess; full live acceptance still required."
+    },
+    {
+      "path": "schgen/core/__init__.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "role": "package-entrypoint",
+      "status": "python-package-scaffolding",
+      "families": [
+        "project"
+      ]
+    },
+    {
+      "path": "schgen/core/artifacts.py",
+      "sha256": "1704d19cce83fc328f9325e9fe06165722c632bbc54b3c43e35d1718456f8771",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "project",
+        "gallery",
+        "render"
+      ]
+    },
+    {
+      "path": "schgen/core/authoring.py",
+      "sha256": "a08f6bd9cefd7b939609b6641c3d2cea5751c81fe024f087ed3037ca489b1bfc",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "authoring_boundary"
+      ]
+    },
+    {
+      "path": "schgen/core/basis.py",
+      "sha256": "0e7b4303cf06e76334acaf4f0cc67cee2e7f0a4fa3a37ee413ed174f529333db",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "basis"
+      ]
+    },
+    {
+      "path": "schgen/core/config.py",
+      "sha256": "aaa357f9aa0bd3e736bf07bd79b0cf3f841c3997f78e4830159627bdf222bf83",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "project",
+        "floorplan"
+      ]
+    },
+    {
+      "path": "schgen/core/fallbacks.py",
+      "sha256": "c3f4a47865e18d94e5e981c35b51df347023ca78c0a3cb7ecc844d225036abf6",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "accounting",
+        "manufacturing"
+      ]
+    },
+    {
+      "path": "schgen/core/ledger.py",
+      "sha256": "59d42d778e2410bf421c4afbcb00b42e6aea1b25737e34024102dc7d669bf7f4",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "accounting"
+      ]
+    },
+    {
+      "path": "schgen/core/link.py",
+      "sha256": "4233c9f784f86919e850d2457b258be3eee45bbf735cda2cb9ce3b999a99cb22",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "som",
+        "project"
+      ]
+    },
+    {
+      "path": "schgen/core/model.py",
+      "sha256": "a713a3512b7958a03ff1d8d39d784729addc92bcf6ff54b429d3c6d2433fedea",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "model"
+      ]
+    },
+    {
+      "path": "schgen/core/native.py",
+      "sha256": "8a6ee2983b582260d00305dbbed553a7aba11438d02154b3bc78d9b23fa40335",
+      "role": "production-module",
+      "status": "python-adapter-only",
+      "families": [
+        "cli"
+      ],
+      "note": "Python extension loader deliberately retired; native executable links core directly."
+    },
+    {
+      "path": "schgen/core/project.py",
+      "sha256": "4e9f48688662cee1c7db2e7e02e77c47280d6b7a7b789f3e0842ae3f7ab01393",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "project"
+      ]
+    },
+    {
+      "path": "schgen/core/quantize.py",
+      "sha256": "17a2ef2d994d911f3fceba6df988a86d2bed4beb3132a43b776553b07db4a6f2",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "accounting",
+        "floorplan"
+      ]
+    },
+    {
+      "path": "schgen/core/sexpr.py",
+      "sha256": "65252af1a2ed63173b1eb90b1c652821363a3c43d168a658b732e4a1b2d4e34e",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "geometry",
+        "schematic"
+      ]
+    },
+    {
+      "path": "schgen/core/si_spec.py",
+      "sha256": "75f66524f39b04b6acbf1c1d76cae5fd1952602674ad97d56e4dca6897410113",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "constraints",
+        "si_policy"
+      ]
+    },
+    {
+      "path": "schgen/core/som_interface.py",
+      "sha256": "2db1355d5b03a66f156e31c31b66a8062a0dbacaeb9b619bafa2ab86031d310e",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "som"
+      ]
+    },
+    {
+      "path": "schgen/core/subsystem.py",
+      "sha256": "d69e332738c0a99cc06e26173fd6e0a1725a319caf53fd7546acff41577525bc",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring"
+      ]
+    },
+    {
+      "path": "schgen/core/symbols.py",
+      "sha256": "48d7de27b6cef18df16a482b035b6a7f1fcc351122003e831468a3eab4f14298",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "symbols"
+      ]
+    },
+    {
+      "path": "schgen/core/timing.py",
+      "sha256": "f2266381f764247e7aed032a4b19c88ca427b7c9432315d4099404b07d760a42",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "board"
+      ],
+      "note": "Native board options/timing_seconds use steady_clock; legacy Python global span/report formatting is not a production dependency. No dedicated original timing test was tracked."
+    },
+    {
+      "path": "schgen/generate/__init__.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "role": "package-entrypoint",
+      "status": "python-package-scaffolding",
+      "families": [
+        "project"
+      ]
+    },
+    {
+      "path": "schgen/generate/_native_docs.py",
+      "sha256": "fff2758e789b72feddbb5b2668619e62327195383791a2b1eadaad34cc67b6b8",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "manufacturing",
+        "firmware"
+      ]
+    },
+    {
+      "path": "schgen/generate/assembly.py",
+      "sha256": "e389acd73928cbe3983e222121fd3c48c9d703f73211a0da1ac3ecb0ba3456d6",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "manufacturing"
+      ]
+    },
+    {
+      "path": "schgen/generate/board.py",
+      "sha256": "f2f462dd11601d54221b6b31a083da7b1f462405f03e2349303315dca836df9b",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "board"
+      ]
+    },
+    {
+      "path": "schgen/generate/bringup_facts.py",
+      "sha256": "c5ce26a34a08fc14d9f5278ccb67e4d07c19d590b03a7c41d0de690ebe738a7e",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "firmware"
+      ]
+    },
+    {
+      "path": "schgen/generate/compose_repair.py",
+      "sha256": "b731d643c2aba92063bd2118238a73e4d1e08dea382eb35b3774c0ec5369a87b",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "compose"
+      ]
+    },
+    {
+      "path": "schgen/generate/constraints.py",
+      "sha256": "baaac788a125984e62958ac5e65d96e0607fec4f5c30a1fda32ff6468ac4c014",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "constraints",
+        "si_policy"
+      ]
+    },
+    {
+      "path": "schgen/generate/devicetree.py",
+      "sha256": "b26fc828005b88de590d0fc20c410fee722802b1a12b922c4beff8c61437b748",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "devicetree"
+      ]
+    },
+    {
+      "path": "schgen/generate/devkit.py",
+      "sha256": "82c626455465c71c6cc61906c9329ef0d7944316e4270c4999c27b5c144a2727",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "example"
+      ]
+    },
+    {
+      "path": "schgen/generate/firmware.py",
+      "sha256": "91b45d7fc9bfc92242cf23076ca99cc9f306701965ac65e1f25459372e079ac3",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "firmware"
+      ]
+    },
+    {
+      "path": "schgen/generate/floorplan.py",
+      "sha256": "c040a304cfab66cc995709d4446bcd185a2887ea18d3a2369270adb254bf5a04",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "floorplan"
+      ]
+    },
+    {
+      "path": "schgen/generate/floorplan_compose.py",
+      "sha256": "37527bfa3343730bb96381959760b2bc025bd7502648f266a05b9d58009699a3",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "compose",
+        "placement_gates"
+      ]
+    },
+    {
+      "path": "schgen/generate/gallery.py",
+      "sha256": "32c5a8346a316f261309c3529059ce89f5c6f67f99b52a5734ee945d03848aca",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "gallery"
+      ]
+    },
+    {
+      "path": "schgen/generate/manifest.py",
+      "sha256": "7f009ed84ea4607a7340565592ee421788490485de7f42cad70a76073080363f",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "manufacturing"
+      ]
+    },
+    {
+      "path": "schgen/generate/manual.py",
+      "sha256": "3da1d9d71325b0584bcaf50dbfc4b65f50169d92781ef11ee57c481ca66a018a",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "firmware"
+      ]
+    },
+    {
+      "path": "schgen/generate/pcb/__init__.py",
+      "sha256": "4ef37a00e0407c70f4b0cb3c9ec8099aa798dd4a4bd74d70cb78ae4066562cf5",
+      "role": "package-entrypoint",
+      "status": "python-package-scaffolding",
+      "families": [
+        "project"
+      ]
+    },
+    {
+      "path": "schgen/generate/pcb/_native_emit.py",
+      "sha256": "b7a00f37a71e80826f66ad46c2c4851dea7ec783fd888eaebd6dc49dda433bfe",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "pcb_emit"
+      ]
+    },
+    {
+      "path": "schgen/generate/pcb/breathe.py",
+      "sha256": "25647e30b20161d9230793361aa1e5a57a1365c60297ae4146cef114f9a7fc62",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "placement",
+        "geometry"
+      ]
+    },
+    {
+      "path": "schgen/generate/pcb/constants.py",
+      "sha256": "caf8271838b38753bf99ba95d44dc30c37aa05a63c7a2b4f3e61d6f167b38704",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "pcb_emit"
+      ]
+    },
+    {
+      "path": "schgen/generate/pcb/embed.py",
+      "sha256": "b3c9c75bb756af3a089acdf3ad7c68a6b1871cca266542f45d296fc31503fd2b",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "pcb_emit"
+      ]
+    },
+    {
+      "path": "schgen/generate/pcb/emit.py",
+      "sha256": "2ba78b98a724101490f9231d7e1ce6175b9efbbea5c41e772217dbf2f101771f",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "pcb_emit"
+      ]
+    },
+    {
+      "path": "schgen/generate/pcb/escape.py",
+      "sha256": "ace054033547eb3ee18de640cb27c3f1a2285f1cd9ae29cf78e90b229d1b9661",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "placement"
+      ]
+    },
+    {
+      "path": "schgen/generate/pcb/footprint.py",
+      "sha256": "71b558eec9e1f5ea189dffada96d17014ac8a65119c92abb33b7b326e200ee6a",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "pcb_checks",
+        "pcb_emit"
+      ]
+    },
+    {
+      "path": "schgen/generate/pcb/mating_face.py",
+      "sha256": "745307443e6689205ec0285dc846b21f32a4e05070a0c52c0223bebeac072478",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "placement",
+        "mirror"
+      ]
+    },
+    {
+      "path": "schgen/generate/pcb/mirror.py",
+      "sha256": "53f9f5dd848cb3e3dae472d9a91090957d2ec786e098b418373f2f9a833fcc20",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "mirror"
+      ]
+    },
+    {
+      "path": "schgen/generate/pcb/placement.py",
+      "sha256": "472fb6ae85c1201d1371f80a6e66992dea5c0016ef7faeeb47ef2354c57d903e",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "placement"
+      ]
+    },
+    {
+      "path": "schgen/generate/pcb/silk.py",
+      "sha256": "66a038dd348efed819d0d650a123f16d4a6c6694cd8483d3eae83a4333db5b63",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "pcb_emit"
+      ]
+    },
+    {
+      "path": "schgen/generate/pcb/stage_templates.py",
+      "sha256": "87607e7b9f303a4afc723fa4df0e669c3c27069a2c18f9a9adf5a3309548aeec",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "placement"
+      ]
+    },
+    {
+      "path": "schgen/generate/pcb/stages.py",
+      "sha256": "c86acba5ca810ab713cec25536b46e1a3bb6f1f92731ce6dae85f996039f95d3",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "accounting",
+        "placement"
+      ]
+    },
+    {
+      "path": "schgen/generate/pcb/turn.py",
+      "sha256": "481594009a513b072485df7cb4c6a01353f15da0f1b4c97bcb413b17150ce928",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "mirror",
+        "geometry"
+      ]
+    },
+    {
+      "path": "schgen/generate/pipeline_doc.py",
+      "sha256": "cfe5fd91c72e5de128ef884c9fec92fd4c4af5eab2bc0a29dd24c017bda128e5",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "manufacturing",
+        "accounting"
+      ]
+    },
+    {
+      "path": "schgen/generate/power_sequence.py",
+      "sha256": "fed4859a1828aa3bce983fceca5f05b958c43fed70d6aee75ffb23f59685bbb2",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "firmware"
+      ]
+    },
+    {
+      "path": "schgen/generate/ratsnest.py",
+      "sha256": "17885a226cd2f06d0b55b468be5e67a15a5eda0fbad8779db3dc66f36b45cada",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "ratsnest"
+      ]
+    },
+    {
+      "path": "schgen/generate/scfw.py",
+      "sha256": "7268c82a5b1292ba0e958ce9e224e3f3d9a63c9d6fb4be6dd0e2bd99490f7cd1",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "firmware"
+      ]
+    },
+    {
+      "path": "schgen/generate/si_constraints.py",
+      "sha256": "a66999211753fec4d710ca4c4868051bc69928374f43d8066eb3ae7c1735765b",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "constraints",
+        "si_policy"
+      ]
+    },
+    {
+      "path": "schgen/generate/subsystem_scaffold.py",
+      "sha256": "43de2a9dbf50a106a73166ecb88123267628d3d54ebe7614798f0bb7391fb5ce",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "cli"
+      ]
+    },
+    {
+      "path": "schgen/generate/testplan.py",
+      "sha256": "e87b9d79ac21c8183098fda4be7157694cf65573fa0702c900b2d091a27725b7",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "firmware"
+      ]
+    },
+    {
+      "path": "schgen/generate/vivado.py",
+      "sha256": "90daf94c510b0fbe011986b9dcde96ead0f39c514322ef19efb8c353e8b2f65f",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "vivado"
+      ]
+    },
+    {
+      "path": "schgen/generate/xdc.py",
+      "sha256": "0e7c81f4a1a8ff0cbe2ba7b0bc1d918b8be8cb58ad0b13a12beb5af923f29ca7",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "xdc"
+      ]
+    },
+    {
+      "path": "schgen/layout/__init__.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "role": "package-entrypoint",
+      "status": "python-package-scaffolding",
+      "families": [
+        "project"
+      ]
+    },
+    {
+      "path": "schgen/layout/place.py",
+      "sha256": "67783cdb6bb46fd4115eb5409e62d2725ba49cda18f2674397219da83bdb2f89",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "schematic_place"
+      ]
+    },
+    {
+      "path": "schgen/layout/route.py",
+      "sha256": "6617e02670ed4eb06a31743244154be3e37e17b631b31619ba48c1bdda87e02c",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "route"
+      ]
+    },
+    {
+      "path": "schgen/layout/textmetrics.py",
+      "sha256": "83b4fa161ef72a63d69307a51e79a8deb12a3b8bcc5ab15233c5b1fd1f874d6d",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "geometry",
+        "schematic_place"
+      ]
+    },
+    {
+      "path": "schgen/output/__init__.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "role": "package-entrypoint",
+      "status": "python-package-scaffolding",
+      "families": [
+        "project"
+      ]
+    },
+    {
+      "path": "schgen/output/diagram.py",
+      "sha256": "a1c92a57a26b0e7c83e3a85310cf276b46e0e1cac3a8969759e71d8307a89cc7",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "gallery"
+      ]
+    },
+    {
+      "path": "schgen/output/emit.py",
+      "sha256": "f2585f8675e1981be674b5abe542a8b66f0db2a99dd0d3654539b471be8c072e",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "schematic"
+      ]
+    },
+    {
+      "path": "schgen/output/render.py",
+      "sha256": "1c6b95c7c7d3389ca53719bd22ef94d021e4c30cc391351a8f71de4318383731",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "schematic",
+        "render"
+      ]
+    },
+    {
+      "path": "schgen/output/render3d.py",
+      "sha256": "622dabae5baa4a6f04e899a69b34619e38b26e7b1474cf88e835bf1746fe7de0",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "render"
+      ]
+    },
+    {
+      "path": "schgen/partlib/__init__.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "role": "package-entrypoint",
+      "status": "python-package-scaffolding",
+      "families": [
+        "project"
+      ]
+    },
+    {
+      "path": "schgen/partlib/part_gen.py",
+      "sha256": "92c07dbc66b33db9b34fe5bf1b1bf83393146e28eb261619d274078e04a80144",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "part_import"
+      ]
+    },
+    {
+      "path": "schgen/tests/__init__.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "role": "package-entrypoint",
+      "status": "python-package-scaffolding",
+      "families": [
+        "project"
+      ]
+    },
+    {
+      "path": "schgen/tests/conftest.py",
+      "sha256": "5303bf846b11e0aa58b749442c9125d1a09822680be6990eaffd6ea88eb40348",
+      "role": "test-infrastructure",
+      "status": "python-test-harness-retired",
+      "families": [
+        "cli",
+        "authoring",
+        "board"
+      ],
+      "note": "pytest fixtures/options/import hooks replaced by explicit native test arguments, part catalogs and CTest; not runtime Python."
+    },
+    {
+      "path": "schgen/tests/m1_rc.py",
+      "sha256": "84e6fd728f6e87670e8a13df8c7bfd885ce7ae1ceddf3b8e153112af6a921d6d",
+      "role": "smoke-test-tool",
+      "status": "native-family-evidenced",
+      "families": [
+        "selftest",
+        "cli"
+      ],
+      "note": "Native regression_rc_smoke constructs the RC circuit and runs the real native circuit/schematic path; no pytest child."
+    },
+    {
+      "path": "schgen/tests/m1_rc_sheet.py",
+      "sha256": "5c8bba31a76d83d77bbc69ba845add4840290e929b8b6c45e66e7b78bd1d8247",
+      "role": "smoke-test-tool",
+      "status": "native-family-evidenced",
+      "families": [
+        "selftest",
+        "cli"
+      ],
+      "note": "Native regression_rc_smoke constructs the RC circuit and runs the real native circuit/schematic path; no pytest child."
+    },
+    {
+      "path": "schgen/tests/test_assembly.py",
+      "sha256": "843d8eb0b2d90586ceceaa706e56246fadd914a761d1f25b388295076aa2ba58",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "manufacturing"
+      ]
+    },
+    {
+      "path": "schgen/tests/test_authoring_native_audits.py",
+      "sha256": "3e91a366b8800802a8fdc15f9fee3bfd957cb0bea6083e35fb5a451cb9dc60d4",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring_boundary",
+        "audits"
+      ]
+    },
+    {
+      "path": "schgen/tests/test_board_services.py",
+      "sha256": "3bda2aeaca58e0c0f558456d9ca1b2b735e2473dfab1c5f436707e5a37705d63",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "circuit",
+        "firmware"
+      ]
+    },
+    {
+      "path": "schgen/tests/test_bom_values.py",
+      "sha256": "6630a8991533fd9564e57b89c5c466266597644a0e14204673203f05ee3a25d2",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "procurement"
+      ]
+    },
+    {
+      "path": "schgen/tests/test_bottom_convention.py",
+      "sha256": "ae951f1139dd9bd8711bd7a826c0b6bf8d94a8b39667a42c4902c36c07c9f9c3",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "mirror",
+        "placement",
+        "pcb_emit"
+      ]
+    },
+    {
+      "path": "schgen/tests/test_bottom_side_p1.py",
+      "sha256": "b7bc815ee79d23f124e1c5c71785c38ad61b91d28be5e56588dd8f68850911d9",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "mirror",
+        "placement",
+        "pcb_emit"
+      ]
+    },
+    {
+      "path": "schgen/tests/test_bottom_side_p2.py",
+      "sha256": "775ead471c4a6be0fd37901e12729f7204356949cf3a918bd716f1e5d3b907fa",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "mirror",
+        "placement",
+        "pcb_emit"
+      ]
+    },
+    {
+      "path": "schgen/tests/test_breathe.py",
+      "sha256": "50fcd1375abbace635e0c1a8987e7614385176c7110b55e19bd8c991768f2bea",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "placement",
+        "geometry",
+        "floorplan",
+        "compose"
+      ]
+    },
+    {
+      "path": "schgen/tests/test_build_ledger.py",
+      "sha256": "9631531eb40a60295a264ebc7798865f14b4a49d679ef76608f828a69330e863",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "accounting",
+        "audits"
+      ]
+    },
+    {
+      "path": "schgen/tests/test_build_twice.py",
+      "sha256": "7445b83fadfb7ad2268d30554356381fda47a9794d2b0ef2eb5b24879f3c4131",
+      "role": "test-module",
+      "status": "full-board-acceptance-pending",
+      "families": [
+        "board",
+        "pcb_emit"
+      ],
+      "remaining": "Existing board_live builds one PCB per project and compares bytes/reports. It does not build the same project twice in one process (original race/determinism contract). Also recheck explicit thermal-evidence policy warning-only mutation; fixed-model emit byte parity alone does not prove it."
+    },
+    {
+      "path": "schgen/tests/test_carrier_structure_ir.py",
+      "sha256": "682dcfa720f771294476d0e5471b1e3be148f4b3f4b44ca737b39f28411f580d",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "cli"
+      ]
+    },
+    {
+      "path": "schgen/tests/test_cc_gate.py",
+      "sha256": "7424c4751132734d3c6ec393fb298d2f65cd1c27a0367a87fee1c2084335d1eb",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "verification"
+      ]
+    },
+    {
+      "path": "schgen/tests/test_chirality.py",
+      "sha256": "7ef12b2071a6261e313eed5379f2ce56f7683642467fdfa9b20f2843f59b0b7f",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "placement",
+        "geometry",
+        "floorplan",
+        "compose"
+      ]
+    },
+    {
+      "path": "schgen/tests/test_circuit_ir.py",
+      "sha256": "83cbb37e31fe5cecaa2febd950e5fca6b0014f48459d8b268fca288f3460508c",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "circuit",
+        "model"
+      ]
+    },
+    {
+      "path": "schgen/tests/test_cli_help.py",
+      "sha256": "5967046fa9061a891efa43a7dfbb3004644349ff0d361ccde84cb3115604f902",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "cli"
+      ],
+      "note": "Per-command native help is registered directly in native/CMakeLists.txt; Python argparse exception shape retires."
+    },
+    {
+      "path": "schgen/tests/test_compose_repair.py",
+      "sha256": "1c7a5e1a241faf2b5c582f03ea895f28e3ed176727c59ab79691d2abad241045",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "compose",
+        "floorplan"
+      ]
+    },
+    {
+      "path": "schgen/tests/test_connector_descriptors.py",
+      "sha256": "9848e39d79efeec0550543777961c16bfb3b118c568095173de687db27fb8e00",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "pcb_emit",
+        "placement"
+      ]
+    },
+    {
+      "path": "schgen/tests/test_connector_model_gate.py",
+      "sha256": "377a445465f4b7a1e75ef60ed59d29e8023b0c8da2bbfe3d1851c82cf1b8261c",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "pcb_checks",
+        "render",
+        "drc"
+      ]
+    },
+    {
+      "path": "schgen/tests/test_connector_spacing_gate.py",
+      "sha256": "a054bb1a9d85bba97515b1eefd0dcb90ed7a9ec86272630fb6df313e769b0fee",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "placement_gates"
+      ]
+    },
+    {
+      "path": "schgen/tests/test_contract_coverage_lint.py",
+      "sha256": "e73f714aae54a4ffc547e346e0f83c7e3d802db0faba1314c951b606c49d32d4",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "verification"
+      ]
+    },
+    {
+      "path": "schgen/tests/test_contract_pin_guard.py",
+      "sha256": "b011629b0329c2be3256b883bf771f4fd66aedc6948508a4d43bbefa00531aaa",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "placement_gates"
+      ]
+    },
+    {
+      "path": "schgen/tests/test_copper_emission.py",
+      "sha256": "3312421e766f1e72f70cd2175c889b1e3985f152ccf85744041cc60a4173e042",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "copper",
+        "pcb_emit"
+      ]
+    },
+    {
+      "path": "schgen/tests/test_defect_corpus.py",
+      "sha256": "31f4fcc1260e1d0f9d7b3f0cbc5190e689cf442b4c5dc5b9375975d2700a8986",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "placement_gates",
+        "pcb_checks",
+        "placement"
+      ]
+    },
+    {
+      "path": "schgen/tests/test_design_rules.py",
+      "sha256": "d3bbe9ece4d0ba07237d3cc282149e809fb2423393c278edfa2a1218d66e8efb",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "design_rules"
+      ]
+    },
+    {
+      "path": "schgen/tests/test_doc_consistency.py",
+      "sha256": "c015994261c811d807f068b27ecf85d864f17849b3b03046844cac5d9af84556",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "doc"
+      ]
+    },
+    {
+      "path": "schgen/tests/test_downstream_i2c.py",
+      "sha256": "4c19aeb6018f7c097d105bd55cc6eedc6200e335ad1f571efcf5ff4c94152e98",
+      "role": "test-module",
+      "status": "bounded-join-gap",
+      "families": [
+        "firmware",
+        "manufacturing"
+      ],
+      "remaining": "Firmware/testplan address mutations exist and manifest baseline bytes exist; no dedicated fresh board_services-only three-way manifest/testplan/firmware join assertion found. Add address + AUX flag mutations through all three real consumers."
+    },
+    {
+      "path": "schgen/tests/test_expansion_contracts.py",
+      "sha256": "53868a902c3c38d598d9129eebe32187cbdd50547c63904f7023233ab101609d",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "placement_gates"
+      ]
+    },
+    {
+      "path": "schgen/tests/test_fab_profile_gate.py",
+      "sha256": "1cd9678cf2eccdd9d77a72869642df645564a66d07f0f1bb56d0067a4f88c4ba",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "manufacturing"
+      ]
+    },
+    {
+      "path": "schgen/tests/test_face_top_lift.py",
+      "sha256": "78c75faa1b8b02c9928e2ad122fa4c02e127d09b7515cf558633372859ebb260",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "mirror",
+        "placement",
+        "pcb_emit"
+      ]
+    },
+    {
+      "path": "schgen/tests/test_fanout_crowder.py",
+      "sha256": "36b26380ba087a5eb4f2acd4ba490349ff5a5127c108fb728ea281503b330d47",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "placement",
+        "geometry",
+        "floorplan",
+        "compose"
+      ]
+    },
+    {
+      "path": "schgen/tests/test_fanout_gate.py",
+      "sha256": "8cfbba47344d812ddc3424306e3b019e85e5756c6d897833b846e2d38b6c4ea7",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "pcb_checks"
+      ]
+    },
+    {
+      "path": "schgen/tests/test_firmware_i2c.py",
+      "sha256": "8a7be834a1efdbbfa31a08e31ae0e24c4cc025f6f8185d58ae31e8b5b093f56d",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "firmware"
+      ]
+    },
+    {
+      "path": "schgen/tests/test_floorplan_compose.py",
+      "sha256": "252d4ba81eac9e87e626fff57ec456f0eee2d13906f3bc44ccf0148e9cb7a9cf",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "compose",
+        "floorplan"
+      ]
+    },
+    {
+      "path": "schgen/tests/test_floorplan_pull.py",
+      "sha256": "f2bcded29adc6fce65ff0137769e9968fe9cb4850cf6b6e00abd87dfe7f42f29",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "floorplan",
+        "placement"
+      ]
+    },
+    {
+      "path": "schgen/tests/test_footprint_pads.py",
+      "sha256": "822661f6ce6c787cc9d174573d26cd8546f5d0c43c835ab3576a3364e9974b92",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "pcb_checks"
+      ]
+    },
+    {
+      "path": "schgen/tests/test_geometry.py",
+      "sha256": "d955bc68b134e73288ccf024ecf449b4702fcd9a0352d0a5c8afffa36cad23f7",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "geometry",
+        "mirror"
+      ]
+    },
+    {
+      "path": "schgen/tests/test_governance.py",
+      "sha256": "bab7bf904a63976f3b83daad1aeccd811ab355cf91243a0a074042a2b07c2865",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "accounting",
+        "audits",
+        "manufacturing",
+        "placement"
+      ]
+    },
+    {
+      "path": "schgen/tests/test_hs_family_contracts.py",
+      "sha256": "3d2eeb47434f384cb99706fd6ee2e0ac5ab366b126168bee9b78517889c48239",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "placement_metadata",
+        "placement_gates"
+      ]
+    },
+    {
+      "path": "schgen/tests/test_lightweight_contracts.py",
+      "sha256": "d30bd37ed723b8e1979159de88b548b700887096f543095368a56628d3695beb",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "placement_metadata",
+        "placement_gates"
+      ]
+    },
+    {
+      "path": "schgen/tests/test_model.py",
+      "sha256": "9f5d2a3330fc9d35c92f88444ad372757b34e08482763dfb3623c332a023ee41",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "circuit",
+        "model"
+      ]
+    },
+    {
+      "path": "schgen/tests/test_model3d_gate.py",
+      "sha256": "59d5888a38f093948e37dd4eca72f8fbbbd3f36c6f9ab98674f4213a8db0ac9d",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "pcb_checks",
+        "render",
+        "drc"
+      ]
+    },
+    {
+      "path": "schgen/tests/test_native_api.py",
+      "sha256": "14f9b1defe510f309d886c2920569514ef31de243c35436cbeabd9d8753e0535",
+      "role": "test-module",
+      "status": "python-adapter-only",
+      "families": [
+        "cli"
+      ],
+      "note": "nanobind export/import/disabled-extension cache checks vanish with removed Python extension. Native linker/CLI rejection contracts remain; do not recreate an import layer."
+    },
+    {
+      "path": "schgen/tests/test_native_geom.py",
+      "sha256": "4d7e184ea3214a6dd3831d6c5627d1488564eb05300d8795ba306edcdcaa54fc",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "geometry",
+        "mirror"
+      ]
+    },
+    {
+      "path": "schgen/tests/test_native_model_checks.py",
+      "sha256": "97906f9bfe82bef5eabe13890155ad53e6a30c62d207835084a95e06236bfe3b",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "circuit",
+        "model"
+      ]
+    },
+    {
+      "path": "schgen/tests/test_native_render_models.py",
+      "sha256": "ee3e79a07ad4941ce008a5402fe6370cb983ddddbe48e4011c605a3ccdefd7dd",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "render"
+      ]
+    },
+    {
+      "path": "schgen/tests/test_netlist_gate.py",
+      "sha256": "295d13ff8c829958daccc2b84179c0e484b971acaeaf8390cb524076a8a4d0c7",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "netlist"
+      ]
+    },
+    {
+      "path": "schgen/tests/test_p6_legalizer.py",
+      "sha256": "a21e0f881b427b841a22c76fd698a5d9ab124254e4cf94e82aafb0ce002a43b9",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "placement",
+        "geometry",
+        "floorplan",
+        "compose"
+      ]
+    },
+    {
+      "path": "schgen/tests/test_pagination.py",
+      "sha256": "d82abfb610ec90389fa981eb606e7ddffb571b9aeda540b334d0c2fee479cad8",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "schematic_place"
+      ]
+    },
+    {
+      "path": "schgen/tests/test_part_gen_ep.py",
+      "sha256": "84dea2d4c86e5f102220d9a69019704acf28e3df4a3a521b8f7c4e9c4425e94b",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "part_import"
+      ]
+    },
+    {
+      "path": "schgen/tests/test_part_import_native.py",
+      "sha256": "47a951a7be566e7a571b6bd1bc0356ceb90fcca1aa2c837de609b72507129104",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "part_import"
+      ]
+    },
+    {
+      "path": "schgen/tests/test_part_rules.py",
+      "sha256": "5ae03bea43e4a7dd4622511fa2997c649369f53cf13a32140cdb979a335bd604",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "procurement"
+      ]
+    },
+    {
+      "path": "schgen/tests/test_pcb.py",
+      "sha256": "0d7b1ff1aee81f0b88d39f85a4fd8e200ecdfeb4056d2c22242c13e21cee4a99",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "pcb_emit",
+        "placement",
+        "pcb_checks"
+      ]
+    },
+    {
+      "path": "schgen/tests/test_pcb_gate_mutation.py",
+      "sha256": "9b5410ba16934398b10efea71989d069cb08c2c1f5b4c05d1df6b9dd0fa296cf",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "pcb_checks",
+        "render",
+        "drc"
+      ]
+    },
+    {
+      "path": "schgen/tests/test_pin_completeness.py",
+      "sha256": "67b4e69f1f61ee11090e369eee51fec3d9535aa1ab67ea80fe41c7f294c5a8ff",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "verification"
+      ]
+    },
+    {
+      "path": "schgen/tests/test_placement_contract_gate.py",
+      "sha256": "60e0db507730d5a350220f7009d35134c927682334f61d5f5b2fd0e59a42c51e",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "placement_gates"
+      ]
+    },
+    {
+      "path": "schgen/tests/test_placement_flow_gate.py",
+      "sha256": "593b01300e3eb753e524c12a44f5b8f56784b2c9877f544649c68ae8a7c40478",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "placement_gates"
+      ]
+    },
+    {
+      "path": "schgen/tests/test_placement_mech.py",
+      "sha256": "83360e0853a64e3b4968420e7ec0e52f275cf5c197d8cf487a2f1cb46053750b",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "pcb_checks"
+      ]
+    },
+    {
+      "path": "schgen/tests/test_powertree_gate.py",
+      "sha256": "a7da1f015c4b905dd5b8032e277a0b9c4ffdd2f7ce3aee17100154e36d1f2602",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "verification"
+      ]
+    },
+    {
+      "path": "schgen/tests/test_preflight.py",
+      "sha256": "cd6e5df212fb522b99efa6fbfdd0d8653da67157ea4a0273cf089d1ba4d6422a",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "procurement"
+      ]
+    },
+    {
+      "path": "schgen/tests/test_punch_model.py",
+      "sha256": "f039f7953e8b3f834f0c1a70ed5ba91ae4d0900045a4457bde1d6ef80d2df786",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "placement",
+        "geometry",
+        "floorplan",
+        "compose"
+      ]
+    },
+    {
+      "path": "schgen/tests/test_rail_ampacity.py",
+      "sha256": "664a2b0bb8f341a038257e59513e2943a74befb3466841e3c48d73a8104836f5",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "verification"
+      ]
+    },
+    {
+      "path": "schgen/tests/test_ratsnest_native.py",
+      "sha256": "3992666c0177f195e0009bfb3d0bc3057bba48e0b42ce66c1a64526442d6ed0e",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "ratsnest"
+      ]
+    },
+    {
+      "path": "schgen/tests/test_refdes_overlap_gate.py",
+      "sha256": "6d18f71195456f2676429588fdb98f3b34f6e976a66fe3ee8cf5dcbfd7b878b4",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "pcb_checks"
+      ]
+    },
+    {
+      "path": "schgen/tests/test_render_baseline.py",
+      "sha256": "71770090d8392617425c0b9d6806e8034adb95c95cf0c87ca04d6bcd97591fa0",
+      "role": "test-module",
+      "status": "historical-baseline-policy-decision",
+      "families": [
+        "render",
+        "pcb_emit"
+      ],
+      "remaining": "Old committed carrier render/master MD5/ahash policy is not equivalent to newer native render fixture contracts. Parent must execute a native live-board render acceptance against the approved board baseline or explicitly supersede obsolete master policy; no invented pass."
+    },
+    {
+      "path": "schgen/tests/test_reseat_retry.py",
+      "sha256": "5e2a62f43f9fff97541f26395e9bd9d64126647f5a90236d356e834895ed60fb",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "placement",
+        "geometry",
+        "floorplan",
+        "compose"
+      ]
+    },
+    {
+      "path": "schgen/tests/test_return_path_gate.py",
+      "sha256": "8a650f521d1b05b26652df794cbe2ab424bd219e26e4abb0a06de4be662463b0",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "verification"
+      ]
+    },
+    {
+      "path": "schgen/tests/test_return_stitch_gate.py",
+      "sha256": "3a2b88889f7f99d61b729ff99ff34022cdcb316f8dd4fe0c843685e4ea4d7183",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "pcb_checks"
+      ]
+    },
+    {
+      "path": "schgen/tests/test_route.py",
+      "sha256": "44c12a57c5fd70e4a08d1b5689fc543c410920829426a5ec7857f880afd6a3b9",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "route"
+      ]
+    },
+    {
+      "path": "schgen/tests/test_scfw.py",
+      "sha256": "7fa72c7d76c2f154a3ae0202005f0e111090421457200af92a3a310621ee2f0b",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "firmware"
+      ]
+    },
+    {
+      "path": "schgen/tests/test_seat_solver_equivalence.py",
+      "sha256": "49ae715d0c5a7df3eb90ce05a129342882753552c3a863aba0e5f7b065715637",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "placement",
+        "geometry",
+        "floorplan",
+        "compose"
+      ]
+    },
+    {
+      "path": "schgen/tests/test_si_constraints.py",
+      "sha256": "0d1f60e021963ece5f2cf800e97e8491a36c1208f61b74573f10ea993c96dcbd",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "constraints"
+      ]
+    },
+    {
+      "path": "schgen/tests/test_si_triage.py",
+      "sha256": "b8316fc9a05ec8df7d8e6acbea8b007eaef7b1ca8261121f81b5758bba070524",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "verification"
+      ]
+    },
+    {
+      "path": "schgen/tests/test_si_units.py",
+      "sha256": "2b66c0a7cf0abc6c26b706d9a2bda8dcb4903341691de618fd58de7b0a974aff",
+      "role": "test-module",
+      "status": "gap-closed-new-registration",
+      "families": [
+        "constraints",
+        "si_policy",
+        "floorplan"
+      ],
+      "note": "New SI units contract closes live research/cross-consumer policy. Python AST literal spellings retire; via-cost literal bits/physical provenance already covered by board_policy_migration/native_audits."
+    },
+    {
+      "path": "schgen/tests/test_spatial_hash.py",
+      "sha256": "7478358a73f38645ba4764c245dd4693baea0985d288cb8291a12c00f961cdaf",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "placement",
+        "geometry",
+        "floorplan",
+        "compose"
+      ]
+    },
+    {
+      "path": "schgen/tests/test_spice_gate.py",
+      "sha256": "7f8868ff54fba0581f149a75b8b3095b8dfbf8717ac39a51cfdf58254f9687e2",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "spice"
+      ]
+    },
+    {
+      "path": "schgen/tests/test_stage_templates.py",
+      "sha256": "86bc9b5f646730477d21fbb89f096b0af05c948bf44da6f9ef87255cbd5aef88",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "placement",
+        "geometry",
+        "floorplan",
+        "compose"
+      ]
+    },
+    {
+      "path": "schgen/tests/test_subsystem_lib.py",
+      "sha256": "0dae61ff6f313cbe90f10a875a530af56ab02989547fb22b3503ac581e405385",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "cli"
+      ]
+    },
+    {
+      "path": "schgen/tests/test_symbol_cache.py",
+      "sha256": "5e6b1b9fd2e99f9a91f60f98498f292805fce0a23013e65974475e2f2dee1854",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "symbols"
+      ],
+      "note": "Python dataclass/shallow-copy transport identity retires; native immutable loaded snapshot/cache/error/path/transform semantics retained."
+    },
+    {
+      "path": "schgen/tests/test_thermal_gate.py",
+      "sha256": "3a26c4995cdf2fcbd9d63330f543df707aefad66758708d5e9bacb737f3ef0ea",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "verification"
+      ]
+    },
+    {
+      "path": "schgen/tests/test_turn.py",
+      "sha256": "63534a3660e6148626aa08c052a61ed14bb361fa8d9a686e25c9f6672a9b13e7",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "geometry",
+        "mirror"
+      ]
+    },
+    {
+      "path": "schgen/tests/test_visual_gate.py",
+      "sha256": "5f287c781a00cec8755e4d759e77531d4387b15bb0d62a70aae40f19b8d5cc92",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "pcb_checks"
+      ]
+    },
+    {
+      "path": "schgen/tests/test_width_floor.py",
+      "sha256": "5f11f1f41f953cdce7093073fef4a1608583794a6121d9988590701675c231a1",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "floorplan",
+        "placement"
+      ]
+    },
+    {
+      "path": "schgen/verify/__init__.py",
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+      "role": "package-entrypoint",
+      "status": "python-package-scaffolding",
+      "families": [
+        "project"
+      ]
+    },
+    {
+      "path": "schgen/verify/_native_pcb.py",
+      "sha256": "91bcea3414bdb01d85bd8c7737880e23d62e6cd9fd408f6bd0130d0d588e6d69",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "pcb_checks"
+      ]
+    },
+    {
+      "path": "schgen/verify/bom_values.py",
+      "sha256": "00855767052fc6fad335cbd645d7166ebaedb6d7356b5221205ec189ba581858",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "procurement"
+      ]
+    },
+    {
+      "path": "schgen/verify/carrier_structure.py",
+      "sha256": "0d7ed0b6fc406758e3a874dab84476ec8d9b4fbe00ec40a857866f2305c29ec6",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring"
+      ]
+    },
+    {
+      "path": "schgen/verify/cc_gate.py",
+      "sha256": "0813a9ca4c3a1c19356d05bc2cd4cb54d473ec790646bfce660053e998fc698f",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "verification"
+      ]
+    },
+    {
+      "path": "schgen/verify/connector_model_gate.py",
+      "sha256": "26cc1db085b4cc879b8b418ee6dfd855619f0470c2ed322e561854295e1fe9e3",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "pcb_checks",
+        "render"
+      ]
+    },
+    {
+      "path": "schgen/verify/connector_spacing_gate.py",
+      "sha256": "966e752931b850a440aae5f328c1d1f4c59f0e7d20a59ffc78bc213330acd418",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "placement_gates"
+      ]
+    },
+    {
+      "path": "schgen/verify/contract_coverage_lint.py",
+      "sha256": "8d5731ed4b4b6f2a0866d75ab8939825611094810fa5f77059ba127a9f5313ba",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "verification"
+      ]
+    },
+    {
+      "path": "schgen/verify/copper_debt.py",
+      "sha256": "52b12ca15f7b9ad0ba8a47506d4c8be0b723f0f411fb229cd2e4989ab623bdc9",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "copper"
+      ]
+    },
+    {
+      "path": "schgen/verify/design_rules.py",
+      "sha256": "21145b18c788f236ff9c54e2c3529abc5b93f633f95b12a071a7c3afab8d313d",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "design_rules"
+      ]
+    },
+    {
+      "path": "schgen/verify/escape_lane_gate.py",
+      "sha256": "b1f0b43c68b560d80d3cdac1ea23425ccbf0001d525c33a695c6d4ed382389c6",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "pcb_checks"
+      ]
+    },
+    {
+      "path": "schgen/verify/fab_profile.py",
+      "sha256": "d10a5ebd3608a5de3f0afa959031c919932e0c02664d4b31c62c3418ca8df37a",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "manufacturing"
+      ]
+    },
+    {
+      "path": "schgen/verify/fallback_gate.py",
+      "sha256": "c5672ebaa587c84df3c575521feb43b7702510de7566164b7cfce77647749813",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "accounting",
+        "manufacturing"
+      ]
+    },
+    {
+      "path": "schgen/verify/fanout_gate.py",
+      "sha256": "b054568eb99c8d7ade5d1001a47e12752eb8cf1487d4de4bf213300ae87ab012",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "pcb_checks"
+      ]
+    },
+    {
+      "path": "schgen/verify/footprint_pads.py",
+      "sha256": "3b998b147ae89da617e86bf7a633af7aa27255d60f9a427e54341004c66ad28f",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "pcb_checks"
+      ]
+    },
+    {
+      "path": "schgen/verify/ledger_gate.py",
+      "sha256": "35b35bae541391e2394088b3d3c8af629b9daf99bcfdbc8fc55124a6c85726f9",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "accounting"
+      ]
+    },
+    {
+      "path": "schgen/verify/model3d_gate.py",
+      "sha256": "4bf19d615c22951bfc30cba53aec81e550fbeaecdca7b0f7caab989e2aed0f6c",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "pcb_checks",
+        "render"
+      ]
+    },
+    {
+      "path": "schgen/verify/netlist_gate.py",
+      "sha256": "afa06771713eb30e488a3022644b245e07333cd2d8f9d1149a1cd1069a473b45",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "netlist"
+      ]
+    },
+    {
+      "path": "schgen/verify/part_rules.py",
+      "sha256": "abba0681581ae09c5f255d4e4095aaa4af4a820df377709b960ecdd421ddc66f",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "procurement"
+      ]
+    },
+    {
+      "path": "schgen/verify/pin_completeness.py",
+      "sha256": "2a1fe3c0c6834b024e3f3edce9b632c584abff66c30af11c7c8108f67ff3420c",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "verification"
+      ]
+    },
+    {
+      "path": "schgen/verify/placement_contract_gate.py",
+      "sha256": "691b5ac8805ff730f6b3d47b598b8da675e7ed065d88ff4348240d11cb14345e",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "placement_gates"
+      ]
+    },
+    {
+      "path": "schgen/verify/placement_flow_gate.py",
+      "sha256": "64437e8b9041a5207d64e0ed4e5b881147d4dc22ce98b19aa66a89d045bc60f0",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "placement_gates"
+      ]
+    },
+    {
+      "path": "schgen/verify/placement_mech.py",
+      "sha256": "b8825105d88233efc88f1fc3d91cc5e753976d1c99ae710a55ac92a94bb33f64",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "pcb_checks"
+      ]
+    },
+    {
+      "path": "schgen/verify/powertree.py",
+      "sha256": "612ff8d467c7af72bdf1b95ba334fb41ca4b86ad4fb2a6c8108402f624d58ce8",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "verification"
+      ]
+    },
+    {
+      "path": "schgen/verify/preflight.py",
+      "sha256": "14b257f3c89181eb497b814c7da658785b814fe01d7f99dbf71e18851e05652f",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "procurement"
+      ]
+    },
+    {
+      "path": "schgen/verify/quantize_census.py",
+      "sha256": "8c5980db76c994628c4522f9f5a09fbf1f99609a909d36f5543ba6aa61b96724",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "accounting",
+        "audits"
+      ]
+    },
+    {
+      "path": "schgen/verify/rail_ampacity.py",
+      "sha256": "d3aa6051c20cb165f087f3999d3f26d69663f6c670a538321a645f6c638ef337",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "verification"
+      ]
+    },
+    {
+      "path": "schgen/verify/ratings.py",
+      "sha256": "82a19036664ca27c2f9666d7c0965b960a336c6da919f1353691bd8e830f7eed",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "verification"
+      ]
+    },
+    {
+      "path": "schgen/verify/ratsnest_gate.py",
+      "sha256": "e69c4a00a0cc559fa262bee2d3e8f7b435b7eeb7803df14f1397e363bd3d2e70",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "pcb_checks",
+        "ratsnest"
+      ]
+    },
+    {
+      "path": "schgen/verify/refdes_overlap_gate.py",
+      "sha256": "244750e456e896884c7dd54030fbc83858534ff3c1b2eeca34034794d4da54f6",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "pcb_checks"
+      ]
+    },
+    {
+      "path": "schgen/verify/return_path_gate.py",
+      "sha256": "b69a2af2de3eefaf2de1136e078637aab6ad39c2abd7d1243b69d2ab6f3e2db6",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "verification"
+      ]
+    },
+    {
+      "path": "schgen/verify/return_stitch_gate.py",
+      "sha256": "1029254fa0262cb19925b4d1b03960bf8f642bb8f5ae5c1a0d04fe9aeb64f932",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "pcb_checks"
+      ]
+    },
+    {
+      "path": "schgen/verify/selftest.py",
+      "sha256": "e8186ef940667f9349a71f89d0fcffc6e35e89342c89c1d99ee20ca959989fc8",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "selftest"
+      ]
+    },
+    {
+      "path": "schgen/verify/si_triage.py",
+      "sha256": "3109c75b2aebe255cd8265b82a49d2521e3b7a3618b033f22448f7bb46493f7d",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "verification"
+      ]
+    },
+    {
+      "path": "schgen/verify/spice.py",
+      "sha256": "721539cbb907f51d31d68aa8b9a3ccb1b2f7e1bf31a1914db6a8fbc462d688eb",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "spice"
+      ]
+    },
+    {
+      "path": "schgen/verify/subsystem_structure.py",
+      "sha256": "0de45d2efd55eb6f47eaa016f1559ecefa0ec8b3a38d9253cfeb56d21335842d",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring"
+      ]
+    },
+    {
+      "path": "schgen/verify/symbol_law.py",
+      "sha256": "1deb8b0fe54f5b0877a316a195b9eaa20241f3a79f5045b8b215dc13824a1910",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "verification",
+        "symbols"
+      ]
+    },
+    {
+      "path": "schgen/verify/testpoints.py",
+      "sha256": "505c536d68fe73c7e9d17c361157599e64646b3b7e765450f88d32c71e8dbc3c",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "verification"
+      ]
+    },
+    {
+      "path": "schgen/verify/thermal.py",
+      "sha256": "c3476604d82a0a98e17723af4d03220488e2ca84a6d550ac3e4159c36da47ebf",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "verification",
+        "copper"
+      ]
+    },
+    {
+      "path": "schgen/verify/visual_gate.py",
+      "sha256": "87f81713f23388ef164621fc4a0c623b44bb8f8c3938fb167e1a36c84d020f92",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "pcb_checks"
+      ]
+    },
+    {
+      "path": "subsystems/__init__.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "role": "package-entrypoint",
+      "status": "python-package-scaffolding",
+      "families": [
+        "authoring"
+      ]
+    },
+    {
+      "path": "subsystems/basis.py",
+      "sha256": "a273b5155fa6c8acc686046ee54bed293e792708f8fba0aaea8c8eaad638b70a",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "basis"
+      ]
+    },
+    {
+      "path": "subsystems/basis_census.py",
+      "sha256": "d44688428b3912d7f6e9a81c859db5ed92c82eb0ea503fa921ba84537a432a8a",
+      "role": "audit-tool",
+      "status": "native-family-evidenced",
+      "families": [
+        "basis"
+      ]
+    },
+    {
+      "path": "subsystems/camera/__init__.py",
+      "sha256": "1fff9b65469e793d28a9037ccdec4d2e00d1fec6fec49c2043d11b6dff566dad",
+      "role": "package-entrypoint",
+      "status": "python-package-scaffolding",
+      "families": [
+        "authoring"
+      ]
+    },
+    {
+      "path": "subsystems/camera/camera.py",
+      "sha256": "b6953c41a23078a2d50cb848167f3dcad35b177e71fadb59e2e9c16ad4723f0b",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "basis"
+      ]
+    },
+    {
+      "path": "subsystems/camera/test_camera.py",
+      "sha256": "235089b50b662aa5f1675e049255517bc2f3d008681a9aa98a7e249845ef90de",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "basis"
+      ],
+      "note": "Package-specific original circuit/meta cases are in native/tests/data/authoring/camera.json; constructor/invalid-meta cases run through real library factory."
+    },
+    {
+      "path": "subsystems/ethernet/__init__.py",
+      "sha256": "0cab681ba0be790064755e64266c8ea4f58c8b768a609a4aecef3935f046ee78",
+      "role": "package-entrypoint",
+      "status": "python-package-scaffolding",
+      "families": [
+        "authoring"
+      ]
+    },
+    {
+      "path": "subsystems/ethernet/ethernet.py",
+      "sha256": "ae3c9518c36b196c46720dc567cd7e454eaaf55fa7f551c378f317854b275972",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "basis"
+      ]
+    },
+    {
+      "path": "subsystems/ethernet/test_ethernet.py",
+      "sha256": "77dc0c4ebf8f99eccbb683a6c19a232b3acadfb14a872d44162b2492a8bc7b96",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "basis"
+      ],
+      "note": "Package-specific original circuit/meta cases are in native/tests/data/authoring/ethernet.json; constructor/invalid-meta cases run through real library factory."
+    },
+    {
+      "path": "subsystems/hdmi_rx/__init__.py",
+      "sha256": "a6c7307ef66673d1e6b76ad2cf4c477ad5a00961109603f27c0c2fda96e2389c",
+      "role": "package-entrypoint",
+      "status": "python-package-scaffolding",
+      "families": [
+        "authoring"
+      ]
+    },
+    {
+      "path": "subsystems/hdmi_rx/hdmi_rx.py",
+      "sha256": "984f4bf5ba2529810db203a42c9c5e851d910cba14047613510213692e5251f0",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "basis"
+      ]
+    },
+    {
+      "path": "subsystems/hdmi_rx/test_hdmi_rx.py",
+      "sha256": "37f1a37c43010ab71a6ccd9be2642e09e2cd966e3008e6227c178853ec70b48e",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "basis"
+      ],
+      "note": "Package-specific original circuit/meta cases are in native/tests/data/authoring/hdmi_rx.json; constructor/invalid-meta cases run through real library factory."
+    },
+    {
+      "path": "subsystems/hdmi_tx/__init__.py",
+      "sha256": "e83599ea90a57d626df064691f6e8d2e6ff291da2f4ebaa16956f388c5ff10f1",
+      "role": "package-entrypoint",
+      "status": "python-package-scaffolding",
+      "families": [
+        "authoring"
+      ]
+    },
+    {
+      "path": "subsystems/hdmi_tx/hdmi_tx.py",
+      "sha256": "d7a0421c062cd8801e5daec4df153bae97de659769b46a17892636c27f3a5012",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "basis"
+      ]
+    },
+    {
+      "path": "subsystems/hdmi_tx/test_hdmi_tx.py",
+      "sha256": "a68fb09233f8eee5023cf86f36fb5622bf224f0337ea78aacf5fa5dbe5255580",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "basis"
+      ],
+      "note": "Package-specific original circuit/meta cases are in native/tests/data/authoring/hdmi_tx.json; constructor/invalid-meta cases run through real library factory."
+    },
+    {
+      "path": "subsystems/lcd/__init__.py",
+      "sha256": "55279bd250ce452b14334e5aa0f44d65b9a62eb6a9b88aa90e48b3f0c52284e8",
+      "role": "package-entrypoint",
+      "status": "python-package-scaffolding",
+      "families": [
+        "authoring"
+      ]
+    },
+    {
+      "path": "subsystems/lcd/lcd.py",
+      "sha256": "e8326146d2cbb6f54b29d5c049064cafcb6ab456c4995cb9fe5f889c8a4abedc",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "basis"
+      ]
+    },
+    {
+      "path": "subsystems/lcd/test_lcd.py",
+      "sha256": "9987139d084b793e7bc3259a95b20b701a589b5a8918bdaba252b47dee538d6c",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "basis"
+      ],
+      "note": "Package-specific original circuit/meta cases are in native/tests/data/authoring/lcd.json; constructor/invalid-meta cases run through real library factory."
+    },
+    {
+      "path": "subsystems/microsd/__init__.py",
+      "sha256": "4f749fae77640e053749d562972caad27a4ce226aec89921f02a422a618d7dc9",
+      "role": "package-entrypoint",
+      "status": "python-package-scaffolding",
+      "families": [
+        "authoring"
+      ]
+    },
+    {
+      "path": "subsystems/microsd/microsd.py",
+      "sha256": "52b9ee10a0137f5ea7e8167e4dc0d53692b24dbdbc3b7e0139782556e5d96b22",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "basis"
+      ]
+    },
+    {
+      "path": "subsystems/microsd/test_microsd.py",
+      "sha256": "5930b0c91cf784e047c3623765fe702682cf1b630c9420d6d6c060609608837a",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "basis"
+      ],
+      "note": "Package-specific original circuit/meta cases are in native/tests/data/authoring/microsd.json; constructor/invalid-meta cases run through real library factory."
+    },
+    {
+      "path": "subsystems/pd_input/__init__.py",
+      "sha256": "f36cf8f2eacde98b57dabcb1c9ad556b30abfc77fcf72e91dc2de829e387d44a",
+      "role": "package-entrypoint",
+      "status": "python-package-scaffolding",
+      "families": [
+        "authoring"
+      ]
+    },
+    {
+      "path": "subsystems/pd_input/pd_input.py",
+      "sha256": "6184ec2f68d1abf7a65a834bbbf35218371ee961f3a54923b97febf22c12f84b",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "basis"
+      ]
+    },
+    {
+      "path": "subsystems/pd_input/test_pd_input.py",
+      "sha256": "0fff8819d0011f4b8bb6a955cda7be6b934b603080a4c7c03cdcbdafa785a808",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "basis"
+      ],
+      "note": "Package-specific original circuit/meta cases are in native/tests/data/authoring/pd_input.json; constructor/invalid-meta cases run through real library factory."
+    },
+    {
+      "path": "subsystems/pmod/__init__.py",
+      "sha256": "9654963a6327abf9b400b73385462e1a18dca57373ad3bebc03b56a1838d3185",
+      "role": "package-entrypoint",
+      "status": "python-package-scaffolding",
+      "families": [
+        "authoring"
+      ]
+    },
+    {
+      "path": "subsystems/pmod/pmod.py",
+      "sha256": "0a40f858485d4f1bdf6989c2d36fc9e448367c280fcd6164d248530256751348",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "basis"
+      ]
+    },
+    {
+      "path": "subsystems/pmod/test_pmod.py",
+      "sha256": "5b3bc6723790cb5976c0058d6f8f36b8378bcdd9d296a1e37f51db709fd6929e",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "basis"
+      ],
+      "note": "Package-specific original circuit/meta cases are in native/tests/data/authoring/pmod.json; constructor/invalid-meta cases run through real library factory."
+    },
+    {
+      "path": "subsystems/pmod_expansion/__init__.py",
+      "sha256": "39b7ee93960a0a1baf0b8e097b8056d244178879ff9239823872307ace2fad08",
+      "role": "package-entrypoint",
+      "status": "python-package-scaffolding",
+      "families": [
+        "authoring"
+      ]
+    },
+    {
+      "path": "subsystems/pmod_expansion/pmod_expansion.py",
+      "sha256": "308dcfae75a3dcc99ed7b535540bedda813b40284b551d9bb2c9275d8a7b7ffa",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "basis"
+      ]
+    },
+    {
+      "path": "subsystems/pmod_expansion/test_pmod_expansion.py",
+      "sha256": "690961a5f1351a961881c100d17bf0607d3c6fb5c09ec353a24b561ac773d34c",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "basis"
+      ],
+      "note": "Package-specific original circuit/meta cases are in native/tests/data/authoring/pmod_expansion.json; constructor/invalid-meta cases run through real library factory."
+    },
+    {
+      "path": "subsystems/power/__init__.py",
+      "sha256": "8df1953360a3dfff7a18b6975981aa9d3ccfc522bb3ed3717e61d70d2479d361",
+      "role": "package-entrypoint",
+      "status": "python-package-scaffolding",
+      "families": [
+        "authoring"
+      ]
+    },
+    {
+      "path": "subsystems/power/power.py",
+      "sha256": "eb13fefef5f41756684c08ef7bec880a25cfdca5b23b969a5ac60c6b62af29f0",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "basis"
+      ]
+    },
+    {
+      "path": "subsystems/power/test_power.py",
+      "sha256": "7d97b46f5f65854b19c76704262f2ea07a39012e423b07847102b4329f8d88a6",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "basis"
+      ],
+      "note": "Package-specific original circuit/meta cases are in native/tests/data/authoring/power.json; constructor/invalid-meta cases run through real library factory."
+    },
+    {
+      "path": "subsystems/rj45_connector/__init__.py",
+      "sha256": "7154657124156193c54e90b546c35dbc8a10ba10bec7d7d36c73334804f9a110",
+      "role": "package-entrypoint",
+      "status": "python-package-scaffolding",
+      "families": [
+        "authoring"
+      ]
+    },
+    {
+      "path": "subsystems/rj45_connector/rj45_connector.py",
+      "sha256": "eab660ca5e0be1cd317f9a15a21e62cf768a22b9a2a6a151972ebb82911c9084",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "basis"
+      ]
+    },
+    {
+      "path": "subsystems/rj45_connector/test_rj45_connector.py",
+      "sha256": "e1ee8e0a43bfc86665e4d7e139f87bbd1a6a8806381fa762c7ff6c9b8dfdcb08",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "basis"
+      ],
+      "note": "Package-specific original circuit/meta cases are in native/tests/data/authoring/rj45_connector.json; constructor/invalid-meta cases run through real library factory."
+    },
+    {
+      "path": "subsystems/test_basis.py",
+      "sha256": "50a46191088529670521e941f8521aa61082bcee42b53ce6587c41326105807f",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "basis"
+      ]
+    },
+    {
+      "path": "subsystems/uart_bridge/__init__.py",
+      "sha256": "8f962042d5437b65f92b0669430e7f6e255b5e4169498736023b080a762b5bd5",
+      "role": "package-entrypoint",
+      "status": "python-package-scaffolding",
+      "families": [
+        "authoring"
+      ]
+    },
+    {
+      "path": "subsystems/uart_bridge/test_uart_bridge.py",
+      "sha256": "a338e2dcee6bc30eb400231b434bb8b84acd4cd7f6420c1bd434a07757fea2c8",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "basis"
+      ],
+      "note": "Package-specific original circuit/meta cases are in native/tests/data/authoring/uart_bridge.json; constructor/invalid-meta cases run through real library factory."
+    },
+    {
+      "path": "subsystems/uart_bridge/uart_bridge.py",
+      "sha256": "9cfd8f0558b1eb4b492e24c3f8fc2a6a6c18f95d13f38dfea1be727a64134ad8",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "basis"
+      ]
+    },
+    {
+      "path": "subsystems/usb_jtag/__init__.py",
+      "sha256": "acb49ee9e70b336c5cb08c41e60f635da41114a4ceabf08ee420964e2129d0dd",
+      "role": "package-entrypoint",
+      "status": "python-package-scaffolding",
+      "families": [
+        "authoring"
+      ]
+    },
+    {
+      "path": "subsystems/usb_jtag/test_usb_jtag.py",
+      "sha256": "5a5699de2a910dccd05b35e26fedbd523089f8ca794b70bf3bc92169f079a05c",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "basis"
+      ],
+      "note": "Package-specific original circuit/meta cases are in native/tests/data/authoring/usb_jtag.json; constructor/invalid-meta cases run through real library factory."
+    },
+    {
+      "path": "subsystems/usb_jtag/usb_jtag.py",
+      "sha256": "7370541be9108ab5cfad2af97edcdea0459b0b8fbda6b78873fe8d36e0e4fa80",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "basis"
+      ]
+    },
+    {
+      "path": "subsystems/usb_jtag_connector/__init__.py",
+      "sha256": "d9d1c0da775c7bf35a5e386a2e5a203648b5a53889962ad08717f528ccb033b2",
+      "role": "package-entrypoint",
+      "status": "python-package-scaffolding",
+      "families": [
+        "authoring"
+      ]
+    },
+    {
+      "path": "subsystems/usb_jtag_connector/test_usb_jtag_connector.py",
+      "sha256": "95eacca22d1b00ba731cd4741d18b406b4c0ecf9794fb8254825c28796930cb1",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "basis"
+      ],
+      "note": "Package-specific original circuit/meta cases are in native/tests/data/authoring/usb_jtag_connector.json; constructor/invalid-meta cases run through real library factory."
+    },
+    {
+      "path": "subsystems/usb_jtag_connector/usb_jtag_connector.py",
+      "sha256": "b547cb56c6af5a492fb084dbc94eb40a4edea46173d64490d4b376325e13a858",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "basis"
+      ]
+    },
+    {
+      "path": "subsystems/usb_pd/__init__.py",
+      "sha256": "f01a18c546b0dd6f41dcfabca5f58336f4fa3269ae7ab0e87772ca9c17c6f6f4",
+      "role": "package-entrypoint",
+      "status": "python-package-scaffolding",
+      "families": [
+        "authoring"
+      ]
+    },
+    {
+      "path": "subsystems/usb_pd/test_usb_pd.py",
+      "sha256": "47729f9aa93e743116a4b08af1a1a74501bbbaf44f86e3d62322c2124653877d",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "basis"
+      ],
+      "note": "Package-specific original circuit/meta cases are in native/tests/data/authoring/usb_pd.json; constructor/invalid-meta cases run through real library factory."
+    },
+    {
+      "path": "subsystems/usb_pd/usb_pd.py",
+      "sha256": "becc838c7ebfba01e481a4249ef229ff5661d92d8dd41f605fcb5da3bbac4d47",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "basis"
+      ]
+    },
+    {
+      "path": "subsystems/usb_uart_connector/__init__.py",
+      "sha256": "6487ab99578074315521c748cd4e6a881830fed22e0746d24dab9308d39e6142",
+      "role": "package-entrypoint",
+      "status": "python-package-scaffolding",
+      "families": [
+        "authoring"
+      ]
+    },
+    {
+      "path": "subsystems/usb_uart_connector/test_usb_uart_connector.py",
+      "sha256": "a50d31fdf6953ea7ba1ac238d502937026ebe00fd6dc2244bf8a1d1539ca8e61",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "basis"
+      ],
+      "note": "Package-specific original circuit/meta cases are in native/tests/data/authoring/usb_uart_connector.json; constructor/invalid-meta cases run through real library factory."
+    },
+    {
+      "path": "subsystems/usb_uart_connector/usb_uart_connector.py",
+      "sha256": "8bd15d270d2ea78bec44ab0935f48777f2399196954705c93afc4d36d2125124",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "basis"
+      ]
+    },
+    {
+      "path": "subsystems/usbc_otg/__init__.py",
+      "sha256": "7d91653fef4dc59f975244285f527870ed5195430a0bac3b8e385b7b5582f2b3",
+      "role": "package-entrypoint",
+      "status": "python-package-scaffolding",
+      "families": [
+        "authoring"
+      ]
+    },
+    {
+      "path": "subsystems/usbc_otg/test_usbc_otg.py",
+      "sha256": "2ffac5e159c7a2cacd4b26266fe52492ca080ca7cd503414829765870beeca18",
+      "role": "test-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "basis"
+      ],
+      "note": "Package-specific original circuit/meta cases are in native/tests/data/authoring/usbc_otg.json; constructor/invalid-meta cases run through real library factory."
+    },
+    {
+      "path": "subsystems/usbc_otg/usbc_otg.py",
+      "sha256": "a1c91e55238ac51fbd1674b9d81078acbc846c21c69a36036ca0f7c096389d46",
+      "role": "production-module",
+      "status": "native-family-evidenced",
+      "families": [
+        "authoring",
+        "basis"
+      ]
+    }
+  ]
+}

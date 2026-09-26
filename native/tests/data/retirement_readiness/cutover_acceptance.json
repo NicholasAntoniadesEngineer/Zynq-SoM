@@ -1,0 +1,20 @@
+{
+  "schema": "native-python-retirement-acceptance/v1",
+  "date": "2026-09-26",
+  "inventory": "tracked_python.json",
+  "inventory_sha256": "86679c056141c5e2899184036652fe2d9586ece0a6e4c79459453cacd5241b38",
+  "retired_tracked_python_count": 393,
+  "original_file_hashes_verified_before_deletion": true,
+  "supersedes_plan": "approved_batch.json",
+  "formerly_held_tests": {
+    "schgen/tests/test_build_twice.py": "native_board_live_contracts: PASS, same-project repeated PCB output and thermal-warning separation",
+    "schgen/tests/test_render_baseline.py": "native_render_baseline_contracts: PASS, 509 exact baseline contracts",
+    "schgen/tests/test_si_units.py": "native_si_units_contracts: PASS after integrated rebuild",
+    "schgen/tests/test_downstream_i2c.py": "native_downstream_i2c_contracts: PASS after integrated rebuild"
+  },
+  "removed_python_configuration": ["requirements.txt", "pyproject.toml", ".pre-commit-config.yaml"],
+  "ignored_runtime_backup": "/private/tmp/zynq-retired-python.iyilwa",
+  "tree_python_census": "No .py found by rg --files --hidden --no-ignore after moving ignored Python environment and duplicate tests outside the repository; .git excluded.",
+  "whole_native_suite": "IN PROGRESS: /private/tmp/schgen-python-retired-ctest.log",
+  "clean_full_board_acceptance": "NOT YET PROVEN; source-policy and all design gates remain mandatory"
+}

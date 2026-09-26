@@ -9,9 +9,12 @@ DRC-clean board (component placement, 3D models, multi-angle renders).
 
 The C++ migration's Python-free build, dependency bootstrap and complete native
 CTest entry point are documented in [`native/ci/README.md`](native/ci/README.md).
-Use that path for native production builds; `scripts/build_native.sh` still
-builds transitional Python bindings for independent parity tests. Python setup,
-tests and the legacy authoring examples below remain until parity sign-off.
+Use that path for native production builds. The transitional Python extension
+and its build script are retired. Native `schgen check --tests-dir BUILD` runs
+the full board, mutation/determinism selftest and complete CTest inventory.
+All 393 inventoried tracked Python sources and tests are retired, along with
+their dependency and lint configuration. Clean-tree acceptance is still in
+progress; legacy examples below are historical context, not working commands.
 All verification remains local, as required by the repository's no-CI policy.
 No hosted workflow or gate bypass is introduced.
 

@@ -33,4 +33,16 @@ int breathe_retreat_steps(double distance, double step) {
     return static_cast<int>(quotient);
 }
 
+int mechanical_direction_component(double value) {
+    const double rounded = py_round(value, 0);
+    if (!std::isfinite(rounded))
+        throw std::invalid_argument("mechanical_direction_component: finite direction required");
+    if (rounded < std::numeric_limits<int>::min() ||
+        rounded > std::numeric_limits<int>::max())
+        throw std::out_of_range("mechanical_direction_component: rounded direction must fit int");
+    return static_cast<int>(rounded);
+}
+
+double stage_direction_component(double value) { return std::round(value); }
+
 } // namespace schgen

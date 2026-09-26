@@ -55,6 +55,9 @@ void pcb_stages(Context& c){
         const auto bp=c.options.fanout_baseline.empty()?c.paths.repository_root/"carrier/reports/fanout_baseline.json":c.options.fanout_baseline;
         PcbEmittedBoard emitted{pcb_path.string(),sexpr_loads(read(pcb_path)),true};
         c.geometry=verify_pcb_geometry(*c.pcb,emitted,baseline(bp));const auto& r=*c.geometry;
+        NativeAccountingBatch mechanical;
+        mechanical.quantization_engagements.insert(r.mechanical.quantization_engagements.begin(),r.mechanical.quantization_engagements.end());
+        c.inbox.merge_once("pcb/geometry/mechanical",mechanical);
         const auto gate=[&](const std::string& name,bool ok,const std::string& report){c.report(name+".txt",report);c.gate(name,ok,report);};
         gate("ratsnest",r.ratsnest.ok,r.ratsnest.summary());gate("placement_mech",r.mechanical.ok,r.mechanical.summary());
         gate("connector_model",r.connector_models.ok,r.connector_models.summary());gate("connector_spacing",r.connector_spacing.ok,r.connector_spacing.summary());

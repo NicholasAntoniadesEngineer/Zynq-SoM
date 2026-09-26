@@ -143,10 +143,11 @@ Measured proof results are recorded below only after their runs finish.
   precision unit contributes six function bodies and fourteen precision-site
   tuples identically on both sides. Log:
   `/private/tmp/schgen-ast-projection.BgjhEZ/current-precision-proof.log`.
-- The optional full **current 56-file** replay uses a separate private source
-  snapshot and the current enum-aware visitor on both ASTs. It is still running
-  at the commit handoff, with the new precision unit and changed floorplan/breathe
-  units already exact. It is not claimed as a completed 56-file proof. Live log:
+- The complete **56-file enum-aware replay PASS** uses a separate private source
+  snapshot and the same visitor on both ASTs: 52,856,766 nodes, 83 constants,
+  713 functions, 602 quantization tuples, all exact. This is before the parent's
+  later character-zero semantic correction. Aggregate parse+visitor times were
+  158.009867s / 112.056110s; peak RSS 6,985,285,632 / 4,901,797,888 bytes. Log:
   `/private/tmp/schgen-ast-projection.BgjhEZ/current-manifest-proof.log`.
 - Across that sweep, summed parse time was **140.53s raw / 95.01s projected**;
   summed parse+visitor/report time was **160.64s / 106.80s**. These exclude Clang,

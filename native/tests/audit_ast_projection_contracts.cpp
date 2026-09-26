@@ -3,6 +3,8 @@
 #include <cmath>
 #include <iostream>
 #include <set>
+#include <sstream>
+#include <streambuf>
 #include <stdexcept>
 
 namespace {
@@ -36,17 +38,30 @@ void same(const JsonNode& a,const JsonNode& b){
     for(std::size_t i=0;i<a.object_value.size();++i){require(a.object_value[i].first==b.object_value[i].first,"object key/order preserved");same(a.object_value[i].second,b.object_value[i].second);}
 }
 void rejected(const std::string& input){
-    AuditAstProjectionStats stats;stats.input_bytes=918;stats.json_values=117;
-    bool threw=false;try{(void)parse_audit_ast_projection(input,"negative",&stats);}catch(const std::runtime_error&){threw=true;}
-    require(threw,"must reject malformed JSON: "+input.substr(0,100));
-    require(stats.input_bytes==918&&stats.json_values==117,"failed parse must not publish partial stats");
+    for(bool streaming:{false,true}){
+        AuditAstProjectionStats stats;stats.input_bytes=918;stats.json_values=117;
+        bool threw=false;try{std::istringstream stream(input);
+            (void)(streaming?parse_audit_ast_projection(stream,"negative",&stats):parse_audit_ast_projection(input,"negative",&stats));
+        }catch(const std::runtime_error&){threw=true;}
+        require(threw,"must reject malformed JSON: "+input.substr(0,100));
+        require(stats.input_bytes==918&&stats.json_values==117,"failed parse must not publish partial stats");
+    }
+}
+JsonNode projected(const std::string& input,const std::string& source="fixture",AuditAstProjectionStats* stats=nullptr){
+    AuditAstProjectionStats memory_stats,stream_stats;std::istringstream stream(input);
+    const auto memory=parse_audit_ast_projection(input,source,&memory_stats);
+    const auto streamed=parse_audit_ast_projection(stream,source,&stream_stats);same(memory,streamed);
+    require(memory_stats.input_bytes==stream_stats.input_bytes&&memory_stats.json_values==stream_stats.json_values&&
+        memory_stats.retained_values==stream_stats.retained_values&&memory_stats.retained_fields==stream_stats.retained_fields&&
+        memory_stats.discarded_fields==stream_stats.discarded_fields,"memory/stream complete accounting agrees");
+    if(stats)*stats=memory_stats;return memory;
 }
 void contracts(){
     for(const auto& field:schema)require(audit_ast_projection_keeps_field(field),"schema field missing: "+field);
     for(const auto* field:{"line","col","end","spellingLoc","tokLen","isUsed","valueCategory","definitionData","unknown"})require(!audit_ast_projection_keeps_field(field),"unused field retained");
     const std::string ast=R"JSON({"unused":{"deep":[1,true,null,{"inner":["ignored"]}]},"inner":[{"parentDeclContextId":"0xparent","kind":"CXXMethodDecl","id":"0xmethod","mangledName":"_Zmethod","loc":{"offset":12,"line":2,"col":1,"includedFrom":{"file":"header.hpp"}},"type":{"qualType":"double (double)","desugaredQualType":"double (double)","typeAliasDeclId":"unused"},"isImplicit":false,"inner":[{"range":{"end":{"offset":99},"begin":{"offset":14,"expansionLoc":{"offset":18,"file":"main.cpp"},"spellingLoc":{"offset":999}}},"kind":"DeclRefExpr","referencedDecl":{"kind":"VarDecl","id":"0xvar","name":"α😀","type":{"qualType":"const double"}}}]},{"name":"","kind":"NamespaceDecl","id":"0xanon"}],"kind":"TranslationUnitDecl","id":"0xroot"})JSON";
     AuditAstProjectionStats stats;
-    same(strip(parse_json_text(ast)),parse_audit_ast_projection(ast,"fixture",&stats));
+    same(strip(parse_json_text(ast)),projected(ast,"fixture",&stats));
     require(stats.input_bytes==ast.size()&&stats.discarded_fields==10,"projection accounts discarded fields");
     require(stats.json_values>stats.retained_values,"skipped values were parsed without materializing");
     // Field order is not constrained to Clang's usual kind/id/inner order.
@@ -54,11 +69,11 @@ void contracts(){
             R"({"value":"\uD83D\uDE00\n\u0000","loc":{"offset":-0},"id":"é"})",
             R"({"value":-12345.6789e-3,"unknown":{"value":"\uD834\uDD1E"}})",
             R"([null,false,true,1,0,-0,1e25,1.25e-25,"",{},[]])"})
-        same(strip(parse_json_text(input)),parse_audit_ast_projection(input));
+        same(strip(parse_json_text(input)),projected(input));
     for(const auto* input:{R"({"name":"\u007f\u0080\u07ff\u0800\ud7ff\ue000\uffff\ud800\udc00\udbff\udfff"})",
             R"({"id":"\"\\\/\b\f\n\r\t","name":"","\u006bind":"TranslationUnitDecl"})",
             R"({"offset":9007199254740991,"inner":[0.1,1.2345678901234567,2.2250738585072014e-308,1.7976931348623157e308]})"})
-        same(strip(parse_json_text(input)),parse_audit_ast_projection(input));
+        same(strip(parse_json_text(input)),projected(input));
     // Independent generated trees put whitelisted names beneath discarded
     // objects and discarded names beside real nodes. No field may leak back
     // out of a skipped parent merely because its spelling is retained elsewhere.
@@ -66,7 +81,7 @@ void contracts(){
         const auto n=std::to_string(i);
         const auto input=std::string("{\"unknown\":{\"inner\":[{\"kind\":\"VarDecl\",\"value\":")+n+
             "}]},\"inner\":[{\"value\":"+n+",\"kind\":\"IntegerLiteral\",\"ignored\":[{\"name\":\"hidden\"}]}],\"offset\":"+n+"}";
-        same(strip(parse_json_text(input)),parse_audit_ast_projection(input));
+        same(strip(parse_json_text(input)),projected(input));
     }
     // Every incomplete non-whitespace prefix of a complete nested document.
     for(std::size_t i=0;i<ast.size();++i)rejected(ast.substr(0,i));
@@ -80,10 +95,32 @@ void contracts(){
         for(const auto* key:{"unknown","name"})rejected(std::string("{\"")+key+"\":\""+bytes+"\"}");
     rejected(std::string(1026,'[')+"0"+std::string(1026,']'));
     same(strip(parse_json_text(std::string(1024,'[')+"0"+std::string(1024,']'))),
-        parse_audit_ast_projection(std::string(1024,'[')+"0"+std::string(1024,']')));
+        projected(std::string(1024,'[')+"0"+std::string(1024,']')));
     const auto wide=std::string("{\"unused\":\"")+std::string(8*1024*1024,'a')+"\",\"kind\":\"TranslationUnitDecl\"}";
-    const auto projected=parse_audit_ast_projection(wide,"large skipped string",&stats);
-    require(projected.object_value.size()==1&&stats.retained_values==2&&stats.json_values==3,"large unknown string has no DOM payload");
+    const auto wide_node=projected(wide,"large skipped string",&stats);
+    require(wide_node.object_value.size()==1&&stats.retained_values==2&&stats.json_values==3,"large unknown string has no DOM payload");
+}
+void streaming_boundaries(){
+    const std::vector<std::string> valid={
+        R"({"name":"\uD83D\uDE00α😀\\\"","unknown":"\uD834\uDD1E","loc":{"offset":-123.45678e+12}})",
+        R"({"inner":[true,false,null,1.7976931348623157e308],"kind":"TranslationUnitDecl"})",
+        R"({"unknown":{"inner":[0,{},[],{"deep":"escaped\ntext"}]},"referencedDecl":{"id":"0xabcdef","kind":"VarDecl"}})"};
+    for(std::size_t pad=65400;pad<=65560;++pad)for(const auto& tail:valid){
+        const auto input=std::string(pad,' ')+tail;same(strip(parse_json_text(input)),projected(input));
+    }
+    for(std::size_t pad=65500;pad<=65540;++pad)for(const auto* tail:{
+            R"({"unknown":"\uD800\u0041"})",R"({"unknown":{"x":1,"\u0078":2}})",
+            R"({"unknown":1e+})",R"({"kind":"TranslationUnitDecl"} trailing)",
+            "{\"unknown\":\"\xf0\x9f\x98\"}","{\"name\":\"\xed\xa0\x80\"}"})
+        rejected(std::string(pad,' ')+tail);
+    // Long retained and discarded strings span several input buffers.
+    const auto long_value=std::string("{\"name\":\"")+std::string(200000,'x')+"😀\",\"unknown\":\""+std::string(200000,'y')+"\"}";
+    same(strip(parse_json_text(long_value)),projected(long_value));
+    struct Broken final:std::streambuf {int_type underflow()override{throw std::runtime_error("injected read failure");}} broken;
+    std::istream input(&broken);bool rejected_io=false;try{(void)parse_audit_ast_projection(input);}catch(const std::runtime_error&){rejected_io=true;}
+    require(rejected_io,"I/O failure is not successful EOF");
+    std::istringstream exception_eof("{\"kind\":\"TranslationUnitDecl\"}");exception_eof.exceptions(std::ios::badbit|std::ios::failbit);
+    require(parse_audit_ast_projection(exception_eof).kind==JsonKind::Object,"ordinary EOF with caller exception mask works");
 }
 }
-int main(){try{contracts();std::cout<<checks<<" AST projection parser contracts PASS\n";return 0;}catch(const std::exception& e){std::cerr<<"AST projection FAILED after "<<checks<<": "<<e.what()<<'\n';return 1;}}
+int main(){try{contracts();streaming_boundaries();std::cout<<checks<<" AST projection parser contracts PASS\n";return 0;}catch(const std::exception& e){std::cerr<<"AST projection FAILED after "<<checks<<": "<<e.what()<<'\n';return 1;}}

@@ -1,5 +1,6 @@
 #include "board_pipeline_internal.hpp"
 #include "schgen/validation.hpp"
+#include "schgen/native_authoring_guard.hpp"
 #include "bringup_unicode.hpp"
 #include "gallery_diagram_internal.hpp"
 
@@ -15,12 +16,14 @@ void package_name(const std::string& name){
         throw ProjectError("invalid native board factory name: "+name);
 }
 }
-BoardAuthoredProject author_board_pipeline_inputs(const ProjectPaths& paths){
+BoardAuthoredProject author_board_pipeline_inputs(const ProjectPaths& paths,
+        const std::filesystem::path& purity_configuration,
+        const std::function<void(const AuthoringPurityResult&)>& purity_report){
     namespace fs=std::filesystem;
     // The registered project identity is its project directory, matching the
     // native author-project frontend. ProjectConfig.name is a human title.
     ProjectAuthoringInput input;input.project_root=paths.project_root;
-    input.context=make_authoring_context(paths.repository_root);
+    input.context=make_guarded_native_authoring_context(paths.repository_root,purity_configuration,purity_report);
     input.som=load_som_interface(paths.som_interface_file);
     input.mapping=link_mapping_from_json(parse_json_file((paths.project_root/"som_mapping.json").string()));
     BoardAuthoredProject out;out.factories=native_project_factories(paths.project_root.filename().string(),input);

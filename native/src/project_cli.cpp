@@ -1,4 +1,5 @@
 #include "schgen/project_cli.hpp"
+#include "schgen/native_authoring_guard.hpp"
 
 #include "schgen/bom.hpp"
 #include "schgen/board_schematic.hpp"
@@ -231,7 +232,7 @@ std::optional<int> run_project_command(int argc, char** argv) {
         if(!options.subsystems.empty()||options.output.empty())throw ProjectError("devkit requires --output DIRECTORY and no subsystem selection");
         const auto repository=fs::absolute(options.repository);
         if(!open_part_catalog((repository/"native/catalog.bin").string()))throw ProjectError("cannot open native part catalog");
-        const auto sheets=author_example_devkit(make_authoring_context(repository));
+        const auto sheets=author_example_devkit(make_guarded_native_authoring_context(repository));
         SymbolLibrary library(repository);ExampleDevkitOptions build;
         build.no_render=options.no_render;build.extraction.kicad_cli=options.kicad_cli;
         const auto result=build_example_devkit(sheets,library,options.output,build);
@@ -244,7 +245,7 @@ std::optional<int> run_project_command(int argc, char** argv) {
         if(!open_part_catalog((paths.repository_root/"native/catalog.bin").string()))throw ProjectError("cannot open native part catalog");
         if(options.command=="subsystem-check"){
             const auto result=check_subsystem_structure(paths.repository_root/"subsystems",
-                native_subsystem_factories(make_authoring_context(paths.repository_root)),AuthoringPackageMode::native_assets);
+                native_subsystem_factories(make_guarded_native_authoring_context(paths.repository_root)),AuthoringPackageMode::native_assets);
             std::cout<<result.summary()<<'\n';return result.exit_code(true);
         }
         const auto authored=author_board_pipeline_inputs(paths);
@@ -317,7 +318,7 @@ std::optional<int> run_project_command(int argc, char** argv) {
         if (!open_part_catalog((paths.repository_root/"native/catalog.bin").string()))
             throw ProjectError("cannot open native part catalog");
         ProjectAuthoringInput input;input.project_root=paths.project_root;
-        input.context=make_authoring_context(paths.repository_root);
+        input.context=make_guarded_native_authoring_context(paths.repository_root);
         const auto circuit=author_project_subsystem(paths.project_root.filename().string(),options.subsystems.front(),input);
         struct Scratch {fs::path path;~Scratch(){if(!path.empty()){std::error_code ignored;fs::remove_all(path,ignored);}}} scratch;
         auto output=options.output;

@@ -247,9 +247,11 @@ CppSourceCensus scan_cpp_audit_sources(const std::filesystem::path& root,const s
         if(!std::filesystem::is_regular_file(path))throw std::runtime_error("native audit source is missing/not a file: "+path.string());
         std::vector<std::string> command{options.compiler};command.insert(command.end(),options.flags.begin(),options.flags.end());
         command.insert(command.end(),{"-std=c++17","-ffp-contract=off","-x","c++","-fsyntax-only","-Xclang","-ast-dump=json",path.string()});
-        const auto compiled=run_process(command,options.timeout);
+        JsonNode ast;
+        const auto compiled=run_process_consume_stdout(command,[&](std::istream& input){
+            ast=parse_audit_ast_projection(input,path.string()+" compiler AST");
+        },options.timeout);
         if(compiled.exit_code!=0)throw AuditSyntaxError(path.string()+": C++ compiler failed ("+std::to_string(compiled.exit_code)+")\n"+compiled.stderr_text);
-        const auto ast=parse_audit_ast_projection(compiled.stdout_text,path.string()+" compiler AST");
         if(text(ast,"kind")!="TranslationUnitDecl")throw AuditSyntaxError(path.string()+": compiler did not return a translation-unit AST");
         CppSourceCensus local;
         Visitor visitor{relative.generic_string(),path.string(),model_checks::read(path),local,{},{},{},{}};
