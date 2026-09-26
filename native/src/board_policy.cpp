@@ -16,6 +16,7 @@ JsonNode number(double value){
 struct Binding {const char* name;const char* symbol;};
 // Explicit semantic review, never populated from a compiler census.
 const std::vector<Binding> floor_bindings{
+    {"mounting_hole_inset","mh_inset"},{"edge_pad_clearance","edge_pad_clear"},
     {"edge_margin","edge_margin"},{"mh_corner_keepout","mh_corner"},
     {"edge_inset","edge_inset"},{"cable_neighbor_gap","cable_gap"},
     {"block_clearance","clear"},{"perimeter_keepout","perimeter"},

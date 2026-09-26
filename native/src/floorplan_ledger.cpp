@@ -65,6 +65,8 @@ const std::vector<Declaration> declarations{
     {"d13_df40_min_pins","ASSUME","floorplan.sizing","pins","pin count that identifies a DF40 receptacle","physical","fanout.DF40_MIN_PINS","", {}},
     {"breathe_epsilon","ASSUME","floorplan.sizing","mm","comparison tolerance in existing breathe clearance, progress and dispersion checks","policy","board_decision_policy.breathe_epsilon_mm","", {}},
     {"breathe_search_step","ASSUME","floorplan.sizing","mm","increment and retreat step in existing breathe displacement search","policy","board_decision_policy.breathe_step_mm","", {}},
+    {"mounting_hole_inset","ASSUME","floorplan.sizing","mm","mounting-hole center inset used by the cross-net geometry estimator","policy","floorplan.mh_inset","", {}},
+    {"edge_pad_clearance","ASSUME","floorplan.sizing","mm","connector pad clearance from the outline used by the cross-net geometry estimator","policy","floorplan.edge_pad_clear","", {}},
     {"overmold_side_gap","CALC","floorplan.sizing","mm","shell overhang beside a single receptacle","","floorplan.OVERMOLD_SIDE_GAP","plug_width / 2 - copper_half_width", {"plug_width","copper_half_width"}},
     {"edge_band","CALC","floorplan.sizing","mm","connector band width used by the seed outline","","floorplan.EDGE_BAND","edge_depth_cap - edge_band_relief", {"edge_depth_cap","edge_band_relief"}},
     {"occ_punch_mask","CALC","floorplan.sizing","bitmask","occupancy bits of geometry that pierces both faces","","floorplan.OCC_PUNCH","occ_top | occ_bottom", {"occ_top","occ_bottom"}},
@@ -166,6 +168,8 @@ std::vector<FloorplanLedgerPolicy> floorplan_ledger_policy() {
 std::optional<double> floorplan_live_assumption(const std::string& name,const FloorplanInput& in) {
     using namespace floorplan_detail;
     if(name=="edge_margin")return edge_margin;
+    if(name=="mounting_hole_inset")return mh_inset;
+    if(name=="edge_pad_clearance")return edge_pad_clear;
     if(name=="mh_corner_keepout")return mh_corner;
     if(name=="edge_inset")return edge_inset;
     if(name=="cable_neighbor_gap")return cable_gap;

@@ -1,0 +1,17 @@
+{
+  "provenance": "Independently authored additive ledger rows for existing floorplan_cross geometry constants. Values remain 5 mm mounting-hole inset and 0.4 mm edge pad clearance; no placement calculation changes.",
+  "assumption_rows": [
+    {
+      "kind": "ASSUME",
+      "depth": 1,
+      "name": "mounting_hole_inset",
+      "text": "  ASSUME mounting_hole_inset            = 5             mm         [policy] floorplan.mh_inset — mounting-hole center inset used by the cross-net geometry estimator"
+    },
+    {
+      "kind": "ASSUME",
+      "depth": 1,
+      "name": "edge_pad_clearance",
+      "text": "  ASSUME edge_pad_clearance             = 0.4           mm         [policy] floorplan.edge_pad_clear — connector pad clearance from the outline used by the cross-net geometry estimator"
+    }
+  ]
+}
