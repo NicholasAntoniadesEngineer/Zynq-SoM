@@ -425,6 +425,12 @@ if(BUILD_TESTING)
         -Wall -Wextra -Wpedantic -Werror -ffp-contract=off)
     add_test(NAME native_audit_ast_projection_contracts COMMAND schgen_audit_ast_projection_contracts)
     # Includes the actual visitor once; the ordinary archive is not force-loaded.
+    add_executable(schgen_parallel_audit_contracts tests/parallel_audit_contracts.cpp)
+    target_link_libraries(schgen_parallel_audit_contracts PRIVATE schgen_core)
+    target_compile_options(schgen_parallel_audit_contracts PRIVATE
+        -Wall -Wextra -Wpedantic -Werror -ffp-contract=off)
+    add_test(NAME native_parallel_audit_contracts COMMAND schgen_parallel_audit_contracts
+        "${CMAKE_CURRENT_SOURCE_DIR}/..")
     add_executable(schgen_audit_ast_projection_census tests/audit_ast_projection_census.cpp)
     target_include_directories(schgen_audit_ast_projection_census PRIVATE src)
     target_link_libraries(schgen_audit_ast_projection_census PRIVATE schgen_core)

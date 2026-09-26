@@ -5,6 +5,7 @@
 #include "verification_audits_unicode.hpp"
 #include <cctype>
 #include <cstring>
+#include <future>
 
 namespace schgen {
 namespace {
@@ -238,13 +239,21 @@ struct Visitor {
 CppSourceCensus scan_cpp_audit_sources(const std::filesystem::path& root,const std::vector<CppAuditSource>& files,const CppAuditOptions& options){
     if(files.empty())throw std::invalid_argument("native source audit requires a nonempty decision-file manifest");
     if(options.compiler.empty())throw std::invalid_argument("native source audit requires a compiler");
+    if(options.workers<1||options.workers>4)throw std::invalid_argument("native source audit workers must be between 1 and 4");
     CppSourceCensus result;std::set<std::string> unique;
+    // Validate the whole explicit manifest before launching compiler work.
+    std::vector<std::filesystem::path> relative_paths;
     for(const auto& file:files){
         const auto relative=std::filesystem::path(file.path).lexically_normal();
         if(relative.is_absolute()||relative.empty()||*relative.begin()=="..")throw std::invalid_argument("native audit manifest paths must be root-relative");
         if(!unique.insert(relative.generic_string()).second)throw std::invalid_argument("duplicate native audit manifest file: "+file.path);
         const auto path=std::filesystem::absolute(root/relative).lexically_normal();
         if(!std::filesystem::is_regular_file(path))throw std::runtime_error("native audit source is missing/not a file: "+path.string());
+        relative_paths.push_back(relative);
+    }
+    const auto scan_one=[&](std::size_t index){
+        const auto& relative=relative_paths[index];
+        const auto path=std::filesystem::absolute(root/relative).lexically_normal();
         std::vector<std::string> command{options.compiler};command.insert(command.end(),options.flags.begin(),options.flags.end());
         command.insert(command.end(),{"-std=c++17","-ffp-contract=off","-x","c++","-fsyntax-only","-Xclang","-ast-dump=json",path.string()});
         JsonNode ast;
@@ -256,9 +265,6 @@ CppSourceCensus scan_cpp_audit_sources(const std::filesystem::path& root,const s
         CppSourceCensus local;
         Visitor visitor{relative.generic_string(),path.string(),model_checks::read(path),local,{},{},{},{}};
         visitor.index(ast);visitor.visit(ast);visitor.finish();
-        result.constants.insert(result.constants.end(),local.constants.begin(),local.constants.end());
-        result.functions.insert(local.functions.begin(),local.functions.end());
-        result.quantization.insert(result.quantization.end(),local.quantization.begin(),local.quantization.end());++result.n_files;
         // Clang's JSON AST contains macro *expansions*, not definitions. Keep
         // object-like numeric policy macros visible using its preprocessor,
         // with the same target/defines/includes and compiler line markers.
@@ -266,7 +272,25 @@ CppSourceCensus scan_cpp_audit_sources(const std::filesystem::path& root,const s
         command.insert(command.end(),{"-std=c++17","-ffp-contract=off","-x","c++","-E","-dD",path.string()});
         const auto expanded=run_process(command,options.timeout);
         if(expanded.exit_code!=0)throw AuditSyntaxError(path.string()+": C++ preprocessing failed\n"+expanded.stderr_text);
-        macros(expanded.stdout_text,path,relative.generic_string(),result);
+        macros(expanded.stdout_text,path,relative.generic_string(),local);
+        local.n_files=1;
+        return local;
+    };
+    const auto merge=[&](CppSourceCensus local){
+        result.constants.insert(result.constants.end(),local.constants.begin(),local.constants.end());
+        result.functions.insert(local.functions.begin(),local.functions.end());
+        result.quantization.insert(result.quantization.end(),local.quantization.begin(),local.quantization.end());
+        result.n_files+=local.n_files;
+    };
+    if(options.workers==1||files.size()==1){
+        for(std::size_t i=0;i<files.size();++i)merge(scan_one(i));
+    }else for(std::size_t begin=0;begin<files.size();begin+=options.workers){
+        std::vector<std::future<CppSourceCensus>> pending;
+        for(std::size_t i=begin;i<std::min(files.size(),begin+options.workers);++i)
+            pending.push_back(std::async(std::launch::async,scan_one,i));
+        // get() propagates compiler/parser/timeout failures. Future destruction
+        // joins other workers before captured inputs leave scope; no detached work.
+        for(auto& worker:pending)merge(worker.get());
     }
     return result;
 }

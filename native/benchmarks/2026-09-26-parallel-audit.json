@@ -1,0 +1,22 @@
+{
+  "schema": "schgen.audit-parallel-observation.v1",
+  "date": "2026-09-26",
+  "source_base": "6a580efe",
+  "reference_scanner_blob": "1ab1d268a00717c01e8dbac1d4a477d1024d031b",
+  "scope": "complete 57-file native board policy source manifest, identical root and compiler flags",
+  "comparison": "frozen pre-change serial implementation versus bounded parallel candidate",
+  "serial_workers": 1,
+  "parallel_workers": 2,
+  "serial_wall_seconds": 417.81,
+  "parallel_wall_seconds": 330.50,
+  "serial_user_seconds": 297.07,
+  "parallel_user_seconds": 320.18,
+  "serial_system_seconds": 87.20,
+  "parallel_system_seconds": 163.16,
+  "ordered_census_equal": true,
+  "ordered_census_sha256": "28754f2224f442b374033d9665a30039aecd6a56882f9d1523d68ef6ffb02780",
+  "comparison_fields": ["file count", "ordered constants: symbol/site/buried", "complete function set", "ordered quantization sites: site/function/detector", "duplicate multiplicities"],
+  "proof_directory": "/private/tmp/schgen-parallel-audit.odMd7P",
+  "validation": "four integrated CTests passed in 37.70 seconds; full manifest compared separately with cmp",
+  "limitations": ["one run per implementation", "other agent work active; not an isolated benchmark", "higher observed aggregate CPU cost", "not board-generation or whole-goal acceptance"]
+}

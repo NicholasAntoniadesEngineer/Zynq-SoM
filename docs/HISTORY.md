@@ -2,6 +2,18 @@
 
 ## 2026-09-26 — tracked Python retirement (acceptance in progress)
 
+Bounded audit parallelism (autonomous): the source audit now defaults to two
+independent translation-unit workers, with an explicit supported range of one
+to four. It validates the manifest first, preserves manifest ordering and all
+duplicate census tuples, and propagates compiler/parser/timeout failures without
+returning a partial census. Futures are joined before captured inputs expire.
+The full 57-file ordered census matched the frozen pre-change serial scanner
+byte-for-byte. Observed wall time was 417.81 s serial versus 330.50 s parallel;
+other agent work was active, so this is not an isolated performance benchmark.
+Four integrated audit/policy tests passed (37.70 s), including macro ordering,
+partial final batches, error precedence and worker timeout. No detector, source
+scope, policy cover, required gate or cache validity rule was relaxed.
+
 Occupancy precision accounting (autonomous): six actual scalar operations now
 own component/reach precision, frontier/shape ranking and bucket/axis narrowing.
 Invocation-owned counters flow explicitly through copies, rejected searches,

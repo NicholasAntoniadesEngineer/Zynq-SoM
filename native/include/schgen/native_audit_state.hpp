@@ -141,6 +141,9 @@ struct CppAuditOptions {
     std::string compiler="clang++";
     std::vector<std::string> flags; // same include paths/defines/target as build
     std::chrono::milliseconds timeout{30000};
+    // Bound concurrent full translation-unit scans. Census order is always
+    // manifest order, independent of worker completion. One is the serial path.
+    std::size_t workers=2;
 };
 struct CppAuditSource { std::string path; }; // repo-relative .cpp OR header
 struct CppAuditConstant { std::string symbol, site; bool buried=false; };
