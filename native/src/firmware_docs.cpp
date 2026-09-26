@@ -1,4 +1,5 @@
 #include "schgen/firmware_docs.hpp"
+#include "schgen/firmware_provenance.hpp"
 #include "bringup_internal.hpp"
 #include "firmware_docs_templates.hpp"
 #include <tuple>
@@ -32,19 +33,7 @@ std::vector<std::string> scfw_missing_requirements(const FirmwareDocsInput& in) 
     return missing(in,{"power","power_mon","bringup_en","bringup_modules","bringup_rails","usb_pd","board_services","bringup_en_modules"});
 }
 std::vector<std::string> firmware_sources(const ProjectPaths& paths) {
-    const auto proj=paths.project_root.filename().string();
-    std::vector<std::string> out{proj+"/som_interface.json","som/Zynq_SoM.kicad_sch (U9 pin map, live kicad-cli extraction)"};
-    for(const std::string name:{"power","power_mon","bringup_rails","bringup_en","bringup_en_modules","bringup_modules","debug_boot","board_aux","board_services"}) {
-        auto path=paths.subsystems_dir/name/(name+".py");
-        if(!std::filesystem::exists(path))path=paths.subsystems_dir/(name+".py");
-        if(!std::filesystem::exists(path))continue;
-        const auto resolved=std::filesystem::canonical(path), root=std::filesystem::canonical(paths.repository_root);
-        const auto relative=resolved.lexically_relative(root);
-        out.push_back(relative.empty()||starts(relative.string(),"../")?path.string():relative.string());
-    }
-    for(const auto& [rel,what]:ProjectStrings{{"research/debug_boot_pmod.md","BOOTSEL decode, SWD reservation"},{"research/power_mon.md","I2C address map"},{"research/bringup_power_gating.md","EN-cell semantics, GPIO plan"}})
-        if(std::filesystem::exists(paths.project_root/rel))out.push_back(proj+"/"+rel+" ("+what+")");
-    return out;
+    return native_firmware_sources(paths);
 }
 FirmwareDocsInput load_firmware_docs_input(const ProjectPaths& paths,const SomExtractOptions& options) {
     FirmwareDocsInput in;in.sheets=load_project_circuits(paths);

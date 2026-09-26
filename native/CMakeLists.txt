@@ -25,7 +25,7 @@ add_library(schgen_core STATIC
     src/power_checks.cpp src/thermal_checks.cpp src/part_checks.cpp
     src/bom_values.cpp src/footprint_pads.cpp src/pin_completeness.cpp src/symbol_law.cpp
     src/spice.cpp src/spice_process.cpp src/process.cpp
-    src/bringup_facts.cpp src/firmware_docs.cpp src/firmware_docs_manual.cpp
+    src/bringup_facts.cpp src/firmware_docs.cpp src/firmware_docs_manual.cpp src/firmware_provenance.cpp
     src/firmware_docs_testplan.cpp src/firmware_docs_scfw.cpp src/firmware_docs_power_sequence.cpp
     src/pcb_checks_model.cpp src/pcb_checks_connectors.cpp src/pcb_checks_placement.cpp
     src/pcb_checks_return_path.cpp src/pcb_checks_ampacity.cpp src/pcb_checks_escape.cpp src/pcb_checks_stitch.cpp)
@@ -57,6 +57,11 @@ target_sources(schgen_core PRIVATE src/procurement.cpp)
 target_sources(schgen_core PRIVATE src/gallery.cpp src/diagram.cpp)
 target_sources(schgen_core PRIVATE src/pcb_verification.cpp)
 target_sources(schgen_core PRIVATE src/pcb_drc.cpp)
+target_sources(schgen_core PRIVATE
+    src/board_pipeline.cpp src/board_pipeline_authoring.cpp src/board_pipeline_audits.cpp
+    src/board_pipeline_cc.cpp src/board_pipeline_checks.cpp src/board_pipeline_coverage.cpp
+    src/board_pipeline_documents.cpp src/board_pipeline_golden.cpp
+    src/board_pipeline_pcb.cpp src/board_pipeline_schematic.cpp)
 target_sources(schgen_core PRIVATE src/compose_repair_json.cpp src/compose_repair_edits.cpp
     src/compose_repair_measure.cpp src/compose_repair_driver.cpp)
 set_source_files_properties(src/compose_repair_json.cpp src/compose_repair_edits.cpp
@@ -311,6 +316,17 @@ if(BUILD_TESTING)
     target_compile_options(schgen_pcb_checks_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror -ffp-contract=off)
     add_test(NAME native_pcb_checks_contracts COMMAND schgen_pcb_checks_contracts "${CMAKE_CURRENT_SOURCE_DIR}/..")
     add_executable(schgen_firmware_docs_contracts tests/firmware_docs_contracts.cpp)
+    add_executable(schgen_board_pipeline_contracts tests/board_pipeline_contracts.cpp)
+    target_include_directories(schgen_board_pipeline_contracts PRIVATE src)
+    target_link_libraries(schgen_board_pipeline_contracts PRIVATE schgen_core PNG::PNG)
+    target_compile_options(schgen_board_pipeline_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror)
+    add_test(NAME native_board_pipeline_contracts COMMAND schgen_board_pipeline_contracts
+        "${CMAKE_CURRENT_SOURCE_DIR}/..")
+    add_executable(schgen_firmware_provenance_contracts tests/firmware_provenance_contracts.cpp)
+    target_link_libraries(schgen_firmware_provenance_contracts PRIVATE schgen_core)
+    target_compile_options(schgen_firmware_provenance_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror)
+    add_test(NAME native_firmware_provenance_contracts COMMAND schgen_firmware_provenance_contracts
+        "${CMAKE_CURRENT_SOURCE_DIR}/..")
     target_link_libraries(schgen_firmware_docs_contracts PRIVATE schgen_core)
     target_compile_options(schgen_firmware_docs_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror)
     add_test(NAME native_firmware_docs_contracts COMMAND schgen_firmware_docs_contracts

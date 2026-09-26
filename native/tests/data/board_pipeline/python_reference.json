@@ -1,0 +1,13 @@
+{
+  "source_sha256": "7ee3b264028417f6394781567ce581a046ac40670a76883b3b8d84d76681be7a",
+  "provenance": "Before native pipeline implementation: original cmd_board AST policy and actual cc_gate.check calls on independently supplied three-terminal geometry; no native expected counters used.",
+  "advisory": ["pin_completeness", "contract_coverage", "floorplan_composition", "return_path", "cpl", "render3d", "golden"],
+  "conditional_document_skips": ["manual", "scfw"],
+  "cc": {
+    "good": {"ok": true, "sheet": "fixture", "shorts": [], "opens": [], "n_components": 2, "n_declared": 2},
+    "open": {"ok": false, "sheet": "fixture", "shorts": [], "opens": ["declared net 'A' (signal) split across 2 components: comp(0, 0): ['P1.1'] | comp(10000, 0): ['P2.1']"], "n_components": 3, "n_declared": 2},
+    "short": {"ok": false, "sheet": "fixture", "shorts": ["component @grid(0, 0) merges declared nets ['A', 'B'] [P1.1=A, P2.1=A, P3.1=B]"], "opens": [], "n_components": 1, "n_declared": 2},
+    "labels": {"ok": true, "sheet": "fixture", "shorts": [], "opens": [], "n_components": 2, "n_declared": 2},
+    "missing": {"ok": false, "sheet": "fixture", "shorts": [], "opens": ["declared net 'A': pin(s) ['P2.1'] have no geometry node (un-placed terminal)"], "n_components": 2, "n_declared": 2}
+  }
+}

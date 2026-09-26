@@ -339,7 +339,18 @@ int main(int argc,char** argv) {
             exact(render_test_plan(in,extract_spice_checks(in.sheets),native_probes),dir/"TEST_PLAN.md",scratch/name/"native-TEST_PLAN.md");
             const auto native_power=analyze_power(in.sheets);
             exact(render_power_sequence_svg(build_power_sequence(in.sheets,native_power),native_power.ok()),dir/"power_sequence.svg",scratch/name/"native-power_sequence.svg");
-            if(argc==4){require(std::string(argv[3])=="--live","unknown test option");const auto loaded=load_firmware_docs_input(paths);check_stm32(loaded.stm32,field(snapshot,"stm32"));require(render_firmware_contract(loaded)==render_firmware_contract(in),"live loader parity");}
+            if(argc==4){
+                require(std::string(argv[3])=="--live","unknown test option");
+                const auto loaded=load_firmware_docs_input(paths);
+                check_stm32(loaded.stm32,field(snapshot,"stm32"));
+                // Source comments intentionally migrate to independently frozen
+                // native provenance; every hardware byte still matches the old IR.
+                const auto reviewed=read(root/"native/tests/data/firmware_provenance"/(name+"_sources.txt"));
+                std::string actual;for(const auto& source:loaded.firmware_sources)actual+=source+'\n';
+                require(actual==reviewed,"live native provenance differs from reviewed inventory");
+                auto native_expected=in;native_expected.firmware_sources=loaded.firmware_sources;
+                require(render_firmware_contract(loaded)==render_firmware_contract(native_expected),"live hardware loader parity");
+            }
             if(name=="carrier") {
                 exact(render_bringup_manual(in),dir/"BRINGUP.md",scratch/name/"BRINGUP.md");
                 const auto docs=render_scfw(in);require(docs.size()==14,"SC file count");for(const auto& f:docs)exact(f.text,dir/"sc"/f.path,scratch/name/"sc"/f.path);

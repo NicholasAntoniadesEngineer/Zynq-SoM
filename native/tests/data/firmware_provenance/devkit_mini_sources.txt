@@ -1,0 +1,13 @@
+devkit_mini/som_interface.json
+som/Zynq_SoM.kicad_sch (U9 pin map, live kicad-cli extraction)
+devkit_mini/subsystems/power/circuit.json (canonical circuit IR)
+native/src/project_authoring_registry.cpp (native factory declarations and project metadata)
+native/src/project_authoring.cpp (native project dispatch and adapter post-processing)
+native/src/subsystem_authoring.cpp (native library registry)
+native/src/subsystem_authoring_power.cpp (native reusable builder: power)
+devkit_mini/subsystems/power_mon/circuit.json (canonical circuit IR)
+native/src/project_authoring_devkit_mini_power_mon.cpp (native project builder: devkit_mini:power_mon)
+devkit_mini/subsystems/debug_boot/circuit.json (canonical circuit IR)
+native/src/project_authoring_devkit_mini_debug_boot.cpp (native project builder: devkit_mini:debug_boot)
+devkit_mini/subsystems/pd_input/circuit.json (canonical circuit IR)
+native/src/subsystem_authoring_pd_input.cpp (native reusable builder: pd_input)

@@ -179,6 +179,22 @@ sequentially.
 
 ## Remaining migration
 
+`run_board_pipeline` is now compiled into the native library, with composed
+schematic, electrical, PCB, document and audit stages. Its contracts compare
+all 49 live-authored carrier/devkit circuit snapshots with canonical hardware IR,
+exercise real KiCad connectivity/ERC, and reject missing mandatory stages.
+The caller must open the part catalog before authoring. The full-board CLI is
+not yet switched: reviewed ledger declarations and the native pipeline metadata
+manifest still need integration and end-to-end validation. An absent manifest
+fails explicitly; this library integration is not a claim of a complete native
+board build. Coverage lint uses every wired-sheet part, including unplaced parts.
+
+Firmware source provenance now reads canonical circuit JSON and compiled factory
+registrations rather than checking for Python constructors. Independent source
+inventories cover both projects, reject damaged/missing registered inputs, and
+remain identical in a Python-free fixture tree. Live contracts separately check
+the new provenance and unchanged generated hardware logic.
+
 The native `pcb-stage --project NAME -o DIRECTORY` command now performs live
 KiCad netlist extraction, immutable input loading, floorplanning, placement,
 escape planning and PCB/project/rules emission. It is a construction stage,
