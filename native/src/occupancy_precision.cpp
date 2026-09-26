@@ -8,17 +8,27 @@
 namespace schgen {
 
 double occupancy_component_precision4dp(double value, QuantizationCounts* counts) {
-    if (counts) checked_quantization_add(*counts, "occupancy_component_precision4dp");
+    if (counts) {
+        // Own the long lookup key once; the invocation still owns every count.
+        static const std::string key = "occupancy_component_precision4dp";
+        checked_quantization_add(*counts, key);
+    }
     return py_round(value, 4);
 }
 
 double occupancy_reach_precision4dp(double value, QuantizationCounts* counts) {
-    if (counts) checked_quantization_add(*counts, "occupancy_reach_precision4dp");
+    if (counts) {
+        static const std::string key = "occupancy_reach_precision4dp";
+        checked_quantization_add(*counts, key);
+    }
     return py_round(value, 4);
 }
 
 double occupancy_frontier_key1dp(double distance, QuantizationCounts* counts) {
-    if (counts) checked_quantization_add(*counts, "occupancy_frontier_key1dp");
+    if (counts) {
+        static const std::string key = "occupancy_frontier_key1dp";
+        checked_quantization_add(*counts, key);
+    }
     return py_round(distance, 1);
 }
 

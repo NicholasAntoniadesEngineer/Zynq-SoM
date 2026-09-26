@@ -6,12 +6,15 @@
 #ifndef OCCUPANCY_LEGACY_PROBE
 #include "schgen/occupancy_precision.hpp"
 #endif
+#include <array>
+#include <atomic>
 #include <cmath>
 #include <cstdint>
 #include <cstring>
 #include <iostream>
 #include <limits>
 #include <stdexcept>
+#include <thread>
 
 namespace {
 using namespace schgen;
@@ -110,6 +113,37 @@ void scalars(){
     require(actual==spatial_bounds(1,1,.1,.2,.3,2),"spatial bounds changed");
     require(entries[1]==1&&reach==QuantizationCounts{{"quant_credit",1},{names[1],1}},"reach must preserve original quant_credit separately");
 }
+void concurrent_keys_and_overflow(){
+    // First-use initialization races share only immutable names. Receipts
+    // remain independent, including equal-length names in different routines.
+    const auto operations=[](QuantizationCounts& counts){
+        occupancy_component_precision4dp(1.23455,&counts);
+        occupancy_reach_precision4dp(1.23455,&counts);
+        occupancy_frontier_key1dp(1.25,&counts);
+        occupancy_shape_key4dp(1.23455,&counts);
+        occupancy_cell_index(1.25,.5,&counts);
+        occupancy_axis_count(1.25,.5,&counts);
+    };
+    std::array<QuantizationCounts,4> receipts;
+    std::array<std::thread,4> workers;
+    std::atomic<std::size_t> ready{0};
+    for(std::size_t i=0;i<workers.size();++i)workers[i]=std::thread([&,i]{
+        ++ready;while(ready.load()<workers.size())std::this_thread::yield();
+        for(int n=0;n<100;++n)operations(receipts[i]);
+    });
+    for(auto& worker:workers)worker.join();
+    QuantizationCounts expected;for(const auto* name:names)expected[name]=100;
+    for(const auto& receipt:receipts)require(receipt==expected,"concurrent operation keys or invocation receipts drift");
+    for(int i=0;i<6;++i){
+        QuantizationCounts counts;for(const auto* name:names)counts[name]=0;
+        counts[names[i]]=std::numeric_limits<std::size_t>::max();
+        bool failed=false;try{operations(counts);}catch(const std::overflow_error& e){
+            failed=true;require(e.what()==std::string("quantization counter overflow: ")+names[i],"exact overflow diagnostic");
+        }
+        require(failed,"each operation must reject counter overflow");
+        for(int j=0;j<6;++j)require(counts.at(names[j])==(j==i?std::numeric_limits<std::size_t>::max():j<i?1u:0u),"overflow must retain preceding counts and leave failed/later operations untouched");
+    }
+}
 void ownership_and_rejections(){
     Occupancy invalid(6,6,0,1,0,1,.05);
     rejects([&]{invalid.add(1e100,0,1,1,{},{},1,{});});
@@ -200,6 +234,9 @@ extern "C" void __cyg_profile_func_exit(void*,void*){}
 #endif
 int main(int argc,char** argv){try{
     if(argc>2)throw std::runtime_error("usage: occupancy_precision_contracts [repo]");
+#ifndef OCCUPANCY_LEGACY_PROBE
+    concurrent_keys_and_overflow();
+#endif
     const auto pure=geometry();
     // Captured by the independent pre-extraction executable, not recomputed
     // from the candidate: /private/tmp/occupancy-agent1.5BMaTe/proof/before.digest.

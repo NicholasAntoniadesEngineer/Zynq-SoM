@@ -1,0 +1,36 @@
+{
+  "schema": "schgen.matched-board-timing-observation.v1",
+  "date": "2026-09-26",
+  "project": "devkit_mini",
+  "sheets": 12,
+  "rendering": false,
+  "python": {
+    "source_commit": "4bd47c33",
+    "runtime": "Python 3.14.3 with prebuilt historical native _geom extension; hybrid",
+    "wall_seconds": 20.78,
+    "exit_code": 0,
+    "verdict": "PASS",
+    "command": "PYTHONDONTWRITEBYTECODE=1 /private/tmp/zynq-retired-python.iyilwa/venv/bin/python -m schgen --project devkit_mini board --no-render --timing",
+    "log": "/private/tmp/schgen-devkit-python-timing.E2R9B1/python.log"
+  },
+  "cpp": {
+    "source_commit": "ba3ae07e",
+    "wall_seconds": 395.91,
+    "verdict": "FAIL",
+    "mandatory_failed_gates": ["quantize_census", "ledger"],
+    "quantization_ledger_source_audit_seconds": 360.304973,
+    "inputs_including_authoring_purity_audit_seconds": 18.560555,
+    "remaining_measured_phases_seconds": 16.995974,
+    "log": "/private/tmp/schgen-clean-devkit-timing.eYWVL8/run.log"
+  },
+  "end_to_end_difference_seconds": 375.13,
+  "end_to_end_percentage_change": 1805.2454282964386,
+  "percentage_formula": "(cpp - python) / python * 100; positive means longer",
+  "limitations": [
+    "Pre-optimization C++ baseline, not current HEAD",
+    "Single observations on a shared machine, different source-audit workloads",
+    "Not a language-only comparison or successful C++ full-board acceptance",
+    "No separately measured comparable audit-free totals; inputs combine preparation and authoring audit",
+    "Historical Python native extension was prebuilt; compilation excluded"
+  ]
+}

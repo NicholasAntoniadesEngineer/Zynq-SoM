@@ -2,6 +2,21 @@
 
 ## 2026-09-26 — tracked Python retirement (acceptance in progress)
 
+Allocation reduction (autonomous, per full-autonomy directive): retain three
+immutable occupancy counter key strings instead of allocating them per call;
+counts remain invocation-owned with unchanged overflow behavior. The AST parser
+stores the first eight decoded duplicate-check keys inline and spills wider
+objects without dropping checks or fields. Private exact four-board output and
+counter comparisons and complete real-AST projection/census comparisons pass.
+Private profiling removed 142,503,424 carrier allocations and 56.52% of parser
+allocations; wall observations were shared-machine, not isolated speed claims.
+The integrated full build and five focused CTests passed (33.42 s), covering
+placement, occupancy accounting, parser validation, census and parallel audits.
+The devkit Python baseline completed at 20.78 s (PASS, 12 sheets), versus the
+earlier C++ 395.91 s source-audit-failing baseline. Both-board comparisons now
+have measured Python observations, not approximate README estimates. The C++
+baseline predates current optimization work; no end-to-end speed-up is claimed.
+
 Bounded audit parallelism (autonomous): the source audit now defaults to two
 independent translation-unit workers, with an explicit supported range of one
 to four. It validates the manifest first, preserves manifest ordering and all

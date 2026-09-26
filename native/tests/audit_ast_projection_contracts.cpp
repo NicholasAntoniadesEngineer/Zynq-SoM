@@ -122,5 +122,28 @@ void streaming_boundaries(){
     std::istringstream exception_eof("{\"kind\":\"TranslationUnitDecl\"}");exception_eof.exceptions(std::ios::badbit|std::ios::failbit);
     require(parse_audit_ast_projection(exception_eof).kind==JsonKind::Object,"ordinary EOF with caller exception mask works");
 }
+void wide_object_keys(){
+    // Cross the inline/spill boundary in both retained and skipped objects.
+    // The independent schema and generic JSON parser remain the oracle.
+    for(const std::size_t width:{7u,8u,9u,16u,65u}){
+        std::string fields="\"kind\":\"TranslationUnitDecl\"";
+        for(std::size_t i=1;i<width;++i)fields+=",\"unknown_"+std::to_string(i)+"\":{}";
+        for(const bool skipped:{false,true}){
+            const auto prefix=skipped?"{\"unknown\":{" : "{";
+            const auto suffix=skipped?"}}":"}";
+            const auto valid=prefix+fields+suffix;
+            same(strip(parse_json_text(valid)),projected(valid));
+            // First, last inline, and spilled keys; escaped spellings must
+            // compare by decoded bytes. Padding also exercises stream refill.
+            for(const auto& duplicate:{std::string("kind"),"unknown_"+std::to_string(width-1)}){
+                auto escaped=duplicate;escaped.replace(0,1,duplicate.front()=='k'?"\\u006b":"\\u0075");
+                for(const auto& key:{duplicate,escaped}){
+                    const auto bad=prefix+fields+",\""+key+"\":null"+suffix;
+                    rejected(bad);rejected(std::string(65525,' ')+bad);
+                }
+            }
+        }
+    }
 }
-int main(){try{contracts();streaming_boundaries();std::cout<<checks<<" AST projection parser contracts PASS\n";return 0;}catch(const std::exception& e){std::cerr<<"AST projection FAILED after "<<checks<<": "<<e.what()<<'\n';return 1;}}
+}
+int main(){try{contracts();streaming_boundaries();wide_object_keys();std::cout<<checks<<" AST projection parser contracts PASS\n";return 0;}catch(const std::exception& e){std::cerr<<"AST projection FAILED after "<<checks<<": "<<e.what()<<'\n';return 1;}}

@@ -20,6 +20,23 @@ bool audit_ast_projection_keeps_field(std::string_view key) {
     return std::find(fields.begin(),fields.end(),key)!=fields.end();
 }
 namespace {
+// Most Clang objects have only a handful of fields. Keep their decoded keys
+// inline; wide objects spill without a schema limit or weaker duplicate checks.
+class SeenKeys {
+public:
+    bool insert(const std::string& key){
+        const auto end=local_.begin()+used_;
+        if(std::find(local_.begin(),end,key)!=end ||
+            std::find(overflow_.begin(),overflow_.end(),key)!=overflow_.end())return false;
+        if(used_<local_.size())local_[used_++]=key;
+        else overflow_.push_back(key);
+        return true;
+    }
+private:
+    std::array<std::string,8> local_;
+    std::size_t used_=0;
+    std::vector<std::string> overflow_;
+};
 struct StringInput {
     std::string_view remaining;
     std::size_t at=0;
@@ -144,11 +161,11 @@ private:
         if(c=='"'){out.kind=JsonKind::String;out.string_value=string(keep);return out;}
         if(c=='{'||c=='['){
             (void)take();const bool object=c=='{';out.kind=object?JsonKind::Object:JsonKind::Array;
-            const char close=object?'}':']';space();if(consume(close))return out;std::vector<std::string> seen;
+            const char close=object?'}':']';space();if(consume(close))return out;SeenKeys seen;
             while(true){
                 if(object){
-                    space();auto key=string(true);if(std::find(seen.begin(),seen.end(),key)!=seen.end())fail("duplicate key '"+key+"'");
-                    seen.push_back(key);expect(':');const bool retain=keep&&audit_ast_projection_keeps_field(key);
+                    space();auto key=string(true);if(!seen.insert(key))fail("duplicate key '"+key+"'");
+                    expect(':');const bool retain=keep&&audit_ast_projection_keeps_field(key);
                     if(retain)++stats.retained_fields;else ++stats.discarded_fields;
                     auto child=value(retain,depth+1);if(retain)out.object_value.emplace_back(std::move(key),std::move(child));
                 }else{auto child=value(keep,depth+1);if(keep)out.array_value.push_back(std::move(child));}
