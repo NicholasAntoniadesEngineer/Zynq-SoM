@@ -1,0 +1,42 @@
+{
+  "baseline_commit": "0e9bbc913bab77f9cd228940db2a332d25d6bfa1",
+  "scope": "complete command, including mandatory checks; no-render; compilation excluded",
+  "worktree": "/Users/nicholasantoniades/.codex/worktrees/timing-0e9bbc91/Zynq-SoM",
+  "python": "/private/tmp/zynq-retired-python.iyilwa/venv/bin/python",
+  "environment": {"PYTHONDONTWRITEBYTECODE": "1"},
+  "samples": [
+    {
+      "project": "carrier",
+      "arguments": ["-m", "schgen", "board", "--no-render", "--timing"],
+      "wall_seconds": 694.30,
+      "user_seconds": 845.79,
+      "system_seconds": 33.16,
+      "exit_code": 0,
+      "board_verdict": "PASS",
+      "sheets": 37,
+      "internal_lap_total_seconds": 692.31,
+      "log": "/private/tmp/schgen-baseline-0e9bbc.hGkODR/carrier.log",
+      "log_sha256": "9a874f13598df1e6729c8ec113d972a7a23f8283347cbfddadb32af4f295848e"
+    },
+    {
+      "project": "devkit_mini",
+      "arguments": ["-m", "schgen", "--project", "devkit_mini", "board", "--no-render", "--timing"],
+      "wall_seconds": 57.10,
+      "user_seconds": 116.44,
+      "system_seconds": 12.80,
+      "exit_code": 1,
+      "board_verdict": "FAIL",
+      "blocking_gates": ["testpoints", "design_rules"],
+      "sheets": 12,
+      "internal_lap_total_seconds": 56.05,
+      "log": "/private/tmp/schgen-baseline-0e9bbc.hGkODR/devkit.log",
+      "log_sha256": "28bca18399b17dfdb889886f72753ecc9e7f3abd29833086cd5cb5fd5ca78ee3"
+    }
+  ],
+  "limitations": [
+    "One sample per board, sequentially; agents' heavy validation paused.",
+    "Original revision workloads differ from current designs; not a same-input language-only comparison.",
+    "Internal lap totals exclude final validation and overlap PCB work with other stages; do not treat lap labels as pure generation measurements.",
+    "Fresh current C++ samples are pending; no comparative percentage is claimed."
+  ]
+}
