@@ -2,6 +2,48 @@
 
 ## 2026-09-26 — tracked Python retirement (acceptance in progress)
 
+Owner baseline correction: the sole performance comparison baseline is now
+`0e9bbc913bab77f9cd228940db2a332d25d6bfa1`. Previous `4bd47c33` measurements
+are historical observations only, not the requested comparison. The exact
+baseline is run unchanged in a separate managed worktree, without later native
+extensions or copied design inputs. See native/benchmarks/BASELINE.md.
+
+Combined integration (autonomous, per full-autonomy directive): seven legalizer and seventeen PCB
+stage scalar boundaries now retain their actual invocation accounting, including
+rejected trials, with immutable prior geometry/output evidence. Eleven supplied
+buried-constant findings are addressed by nine real policy owners and removal
+of two unused aggregate defaults; existing physical values are retained. The
+source registry contains 64 exact scalar declarations. Numerical corrections
+remove undefined outline narrowing and fix subnormal norm double-rounding and
+finite-overflow facing angles. The integrated numeric tests, sanitizers and
+MPFR oracle pass; the first combined production build and seven focused
+math/policy tests passed. The final combined build and eleven serial contracts
+now pass, including full authoring closure/census, C++ auditor, board policy,
+independently observed legalizer/stage/occupancy counters, pipeline timing and
+Python-free tree. Wider placement/floorplan/producer/migration/numeric checks
+also passed. An initial census correctly rejected a concurrent source edit;
+two compiler subprocesses timed out under concurrent load. All three checks
+passed on the final frozen source with serial execution and unchanged limits.
+Whole-board acceptance remains outstanding.
+No whole-migration acceptance or runtime speedup is inferred from those checks.
+
+Frontier accounting optimization (autonomous): bind the actual map node lazily
+within one place_near invocation, retaining one real scalar function and exact
+overflow/error/counter semantics. This removes repeated map lookups from the
+carrier's 142,413,444 frontier operations without changing candidate traversal.
+Four private placement variants retain byte-exact output and prior accounting;
+the integrated occupancy contracts pass. Seven legalizer and seventeen stage
+counter keys use immutable strings; stage vectors reserve known capacities.
+No isolated speedup is claimed for these changes yet.
+
+Timing reliability (autonomous): exclusive nested scopes now separate actual
+source/authoring audits from generation and mixed validation stages. Timers
+cannot be copied/moved; early closure or destruction of a parent safely unlinks
+it without interrupting its child or resuming a dead scope. Fake-clock contracts
+cover nesting, repeated closure, exceptions, disabled timing and early parent
+destruction; the standalone suite passes ASan/UBSan. Full process time remains
+distinct from the reported pipeline scope, which excludes final summary writes.
+
 Allocation reduction (autonomous, per full-autonomy directive): retain three
 immutable occupancy counter key strings instead of allocating them per call;
 counts remain invocation-owned with unchanged overflow behavior. The AST parser

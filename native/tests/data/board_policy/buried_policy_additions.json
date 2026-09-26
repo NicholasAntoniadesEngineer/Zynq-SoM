@@ -1,0 +1,47 @@
+{
+  "provenance": "Independently authored expectations for seven preserved policies exposed from defaults and pack consumers. Original immutable fixtures are unchanged. Small tolerances retain exact numeric values; the existing four-decimal ledger text formatter displays zero.",
+  "assumption_rows": [
+    {
+      "kind": "ASSUME",
+      "depth": 1,
+      "name": "small_part_routing_factor",
+      "text": "  ASSUME small_part_routing_factor      = 3.5           ratio      [policy] board_decision_policy.floorplan.small_part_routing_factor — area multiplier for small-part routing reserve; also reported by the plan"
+    },
+    {
+      "kind": "ASSUME",
+      "depth": 1,
+      "name": "point_segment_tolerance",
+      "text": "  ASSUME point_segment_tolerance        = 0             mm         [policy] board_decision_policy.pack.point_segment_tolerance_mm — axis recognition and endpoint tolerance in point-on-segment tests"
+    },
+    {
+      "kind": "ASSUME",
+      "depth": 1,
+      "name": "visual_axis_tolerance",
+      "text": "  ASSUME visual_axis_tolerance          = 0             mm         [policy] board_decision_policy.pack.visual_axis_tolerance_mm — axis recognition and strict interior tolerance in visual crossing tests"
+    },
+    {
+      "kind": "ASSUME",
+      "depth": 1,
+      "name": "collinear_overlap_tolerance",
+      "text": "  ASSUME collinear_overlap_tolerance    = 0             mm         [policy] board_decision_policy.pack.collinear_overlap_tolerance_mm — axis recognition and minimum strict collinear overlap"
+    },
+    {
+      "kind": "ASSUME",
+      "depth": 1,
+      "name": "segment_cross_tolerance",
+      "text": "  ASSUME segment_cross_tolerance        = 0             mm^2       [policy] board_decision_policy.pack.segment_cross_tolerance_mm2 — signed cross-product threshold for strict segment intersection"
+    },
+    {
+      "kind": "ASSUME",
+      "depth": 1,
+      "name": "label_courtyard_gap",
+      "text": "  ASSUME label_courtyard_gap            = 0.9           mm         [policy] board_decision_policy.pack.label_courtyard_gap_mm — clear-label search offset outside the footprint courtyard"
+    },
+    {
+      "kind": "ASSUME",
+      "depth": 1,
+      "name": "label_orbit_tau",
+      "text": "  ASSUME label_orbit_tau                = 6.2832        radian     [policy] board_decision_policy.pack.label_orbit_tau — established full-turn double used by the sixteen-angle label orbit"
+    }
+  ]
+}

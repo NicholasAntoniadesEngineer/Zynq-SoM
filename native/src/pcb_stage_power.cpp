@@ -78,7 +78,8 @@ Parts Engine::ldo(const std::string &ic, const std::string &cin, const std::stri
             double hx = (first.x1 - first.x0) / 2;
             const auto &b = at(ib, pin);
             double x = sgn < 0 ? b.x0 - .6 - scale * .25 - hx : b.x1 + .6 + scale * .25 + hx;
-            out.push_back(part(ref, 0, py_round(x, 4), py_round((b.y0 + b.y1) / 2, 4)));
+            out.push_back(part(ref, 0, stage_ldo_pose_precision4dp(x, &quantization),
+                               stage_ldo_pose_precision4dp((b.y0 + b.y1) / 2, &quantization)));
         }
         if (!overlap(out))
             return out;
@@ -297,8 +298,10 @@ PcbStageResult Engine::hot_zone() {
             auto old = boxes_span_center(values(pads(p.mod, p.rot)));
             auto nr = normalize(p.rot + 180);
             auto next = boxes_span_center(values(pads(p.mod, nr)));
-            p.x = py_round(2 * c.first - (p.x + old.first) - next.first, 4);
-            p.y = py_round(2 * c.second - (p.y + old.second) - next.second, 4);
+            p.x = stage_power_mirror_pose_precision4dp(
+                2 * c.first - (p.x + old.first) - next.first, &quantization);
+            p.y = stage_power_mirror_pose_precision4dp(
+                2 * c.second - (p.y + old.second) - next.second, &quantization);
             p.rot = nr;
         }
         return ps;
@@ -348,7 +351,7 @@ PcbStageResult Engine::hot_zone() {
                 auto i = row[k];
                 auto b = extent(frames[i]);
                 double dx = x - b.x0;
-                auto ps = shifted(frames[i], dx, dy);
+                auto ps = shifted(frames[i], dx, dy, quantization);
                 out.insert(out.end(), ps.begin(), ps.end());
                 bottom = std::max(bottom, b.y1 + dy);
                 if (k + 1 < row.size())
@@ -401,7 +404,8 @@ PcbStageResult Engine::hot_zone() {
         if (ok)
             valid.push_back(i);
         if (w <= 46 && ok)
-            scored.emplace_back(py_round(w, 4), choices[i].rows.size(), i);
+            scored.emplace_back(stage_layout_width_precision4dp(w, &quantization),
+                                choices[i].rows.size(), i);
         candidates_layout.push_back(std::move(ps));
     }
     std::size_t chosen = 0;
@@ -433,12 +437,15 @@ PcbStageResult Engine::hot_zone() {
         auto bands = leftover(leftovers, std::max(result.w - 2 * zone_pad, 8.));
         double dy = bottom + 2 - zone_pad;
         for (const auto &[r, x, y] : bands.first.placed)
-            result.top[r] = {py_round(x, 4), py_round(y + dy, 4)};
+            result.top[r] = {stage_hot_leftover_pose_precision4dp(x, &quantization),
+                             stage_hot_leftover_pose_precision4dp(y + dy, &quantization)};
         for (const auto &[r, x, y] : bands.second.placed)
-            result.bottom[r] = {py_round(x, 4), py_round(y + dy, 4)};
-        result.w = py_round(std::max({result.w, bands.first.packed_w, bands.second.packed_w}), 4);
-        result.h = py_round(
-            std::max({result.h, dy + bands.first.packed_h, dy + bands.second.packed_h}), 4);
+            result.bottom[r] = {stage_hot_leftover_pose_precision4dp(x, &quantization),
+                                stage_hot_leftover_pose_precision4dp(y + dy, &quantization)};
+        result.w = stage_hot_extent_precision4dp(
+            std::max({result.w, bands.first.packed_w, bands.second.packed_w}), &quantization);
+        result.h = stage_hot_extent_precision4dp(
+            std::max({result.h, dy + bands.first.packed_h, dy + bands.second.packed_h}), &quantization);
     }
     return result;
 }

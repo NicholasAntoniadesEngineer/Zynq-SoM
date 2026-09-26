@@ -76,7 +76,13 @@ bool BoardPipelineResult::ok() const {
 }
 std::string BoardPipelineResult::report() const {
     std::string s;for(const auto& g:gates)s+=g.name+": "+status_name(g.status)+(g.mandatory?"":" (advisory)")+" — "+g.report+"\n";
-    if(!timing_seconds.empty()){s+="\n=== board native phase timing (wall s) ===\n";for(const auto& [name,seconds]:timing_seconds)s+=name+": "+std::to_string(seconds)+"\n";}
+    if(!timing_seconds.empty()){
+        s+="\n=== board native exclusive timing (wall s; audits included) ===\n";
+        s+="Nested scopes pause parents; parallel batches use launch/join wall time, never summed worker spans.\n";
+        s+="Scope: pipeline entry through build-ledger publication; excludes final summary publications and caller/process setup. Mixed stages remain mixed; not a generation-only total.\n";
+        double measured=0;for(const auto& [name,seconds]:timing_seconds){s+=name+": "+std::to_string(seconds)+"\n";measured+=seconds;}
+        s+="MEASURED SCOPE TOTAL (not process wall): "+std::to_string(measured)+"\n";
+    }
     return s+"BOARD: "+(ok()?"PASS":"FAIL")+" ("+std::to_string(sheets)+" sheets)\n";
 }
 std::string board_pipeline_verdict_json(const BoardPipelineResult& r){
@@ -118,10 +124,14 @@ std::string board_pipeline_experiment_json(const BoardPipelineResult& r){
 }
 BoardPipelineResult run_board_pipeline(const ProjectPaths& p,const BoardPipelineOptions& o){
     using namespace board_pipeline_detail;
+    ExecutionTimings::Rows timing_rows;
+    ExecutionTimings timing(o.timing,timing_rows);
+    ExecutionTimings::Scope pipeline(&timing,"pipeline_setup_and_other");
     Context c(p,o);
+    c.timing=&timing;
     c.attempt("inputs",[&]{c.authored=author_board_pipeline_inputs(p,o.authoring_purity_configuration,[&](const AuthoringPurityResult& purity){
             c.report("authoring_purity.txt",purity.report());c.gate("authoring_purity",purity.ok(),purity.report());
-        });publish_board_pipeline_inputs(*c.authored,p,c.out);c.circuits=c.authored->circuits;
+        },c.timing);c.measure("input_publication",[&]{publish_board_pipeline_inputs(*c.authored,p,c.out);});c.circuits=c.authored->circuits;
         std::vector<std::string> names;for(const auto& sc:c.circuits){c.sheets.push_back(sc.circuit);names.push_back(sc.name);}
         c.index=extend_sheet_index(load_sheet_index(p),names).index;c.result.sheets=c.sheets.size();c.loaded=true;c.gate("inputs",true,"live C++ factories authored once; canonical snapshots published; actual IR retained");});
     if(c.loaded){schematic_stage(c);electrical_stages(c);pcb_stages(c);document_stages(c);audit_stages(c);}
@@ -130,7 +140,9 @@ BoardPipelineResult run_board_pipeline(const ProjectPaths& p,const BoardPipeline
     if(c.pcb&&c.geometry){const auto& model=c.pcb->placement.model;
         c.result.measurements=BoardPipelineResult::Measurements{model.board_w,model.board_h,
             c.geometry->ratsnest.cross_mm,model.n_top,model.n_bottom};}
-    c.report("build_ledger.txt",c.result.ledger);publish_text(c.reports/"gates.txt",c.result.report());
+    c.report("build_ledger.txt",c.result.ledger);
+    pipeline.finish();c.result.timing_seconds=std::move(timing_rows);
+    publish_text(c.reports/"gates.txt",c.result.report());
     publish_text(c.reports/"board_verdicts.json",board_pipeline_verdict_json(c.result));
     publish_text(c.reports/"experiment_verdicts.json",board_pipeline_experiment_json(c.result));
     return std::move(c.result);

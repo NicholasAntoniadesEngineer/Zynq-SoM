@@ -19,7 +19,7 @@ const std::vector<Binding> floor_bindings{
     {"mounting_hole_inset","mh_inset"},{"edge_pad_clearance","edge_pad_clear"},
     {"edge_margin","edge_margin"},{"mh_corner_keepout","mh_corner"},
     {"edge_inset","edge_inset"},{"cable_neighbor_gap","cable_gap"},
-    {"block_clearance","clear"},{"perimeter_keepout","perimeter"},
+    {"perimeter_keepout","perimeter"},
     {"som_halo","som_halo"},{"pack_efficiency","fill"},
     {"occ_top_mask","occ_top"},{"occ_bottom_mask","occ_bottom"},
     {"som_seat_band","som_seat_band"},{"som_occ_pad","som_pad"},
@@ -35,6 +35,14 @@ const std::vector<Binding> quantization_bindings{
     {"snap_erosion","kSnapErosionMm"},{"outline_snap","kOutlineSnapMm"},
     {"fine_snap","kFineSnapMm"},{"via_impedance_cost","kViaImpedanceMm"}};
 const std::vector<Binding> placement_bindings{
+    {"block_clearance","floorplan::clear"},
+    {"small_part_routing_factor","floorplan::small_part_routing_factor"},
+    {"point_segment_tolerance","pack::point_segment_tolerance_mm"},
+    {"visual_axis_tolerance","pack::visual_axis_tolerance_mm"},
+    {"collinear_overlap_tolerance","pack::collinear_overlap_tolerance_mm"},
+    {"segment_cross_tolerance","pack::segment_cross_tolerance_mm2"},
+    {"label_courtyard_gap","pack::label_courtyard_gap_mm"},
+    {"label_orbit_tau","pack::label_orbit_tau"},
     {"compose_guard","compose::guard_mm"},
     {"compose_repair_max","compose::repair_max"},
     {"compose_median_passes","compose::median_passes"},
@@ -84,7 +92,7 @@ NativeBoardPolicy make_native_board_policy(const ProjectPaths& paths,const Floor
     providers.emplace("via_ordinary_cost",std::make_pair("native/include/schgen/quantize.hpp::schgen::quantization_policy::kViaOrdinaryMm",
         [ordinary_override]{return number(ordinary_override.value_or(quantization_policy::kViaOrdinaryMm));}));
     providers.emplace("zone_pad",std::make_pair("native/src/pcb_stage_internal.hpp::schgen::pcb_stage::zone_pad",[]{return number(pcb_stage::zone_pad);}));
-    providers.emplace("place_clear_baseline",std::make_pair("native/src/pcb_stage_internal.hpp::schgen::pcb_stage::clear",[]{return number(pcb_stage::clear);}));
+    providers.emplace("place_clear_baseline",std::make_pair("native/include/schgen/board_decision_policy.hpp::schgen::board_decision_policy::placement::clear",[]{return number(pcb_stage::clear);}));
     providers.emplace("seat_slide",std::make_pair("native/src/pcb_stage_internal.hpp::schgen::pcb_stage::slide",[]{return number(pcb_stage::slide);}));
     providers.emplace("dispersion_max",std::make_pair("native/include/schgen/ratsnest_gate.hpp::schgen::ratsnest_dispersion_max",[]{return number(ratsnest_dispersion_max);}));
     providers.emplace("dispersion_small_n",std::make_pair("native/include/schgen/ratsnest_gate.hpp::schgen::ratsnest_small_n",[]{return number(ratsnest_small_n);}));

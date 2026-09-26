@@ -24,10 +24,25 @@ double occupancy_reach_precision4dp(double value, QuantizationCounts* counts) {
     return py_round(value, 4);
 }
 
-double occupancy_frontier_key1dp(double distance, QuantizationCounts* counts) {
-    if (counts) {
+double occupancy_frontier_key1dp(double distance, OccupancyFrontierCounter counts) {
+    if (counts.counts_) {
         static const std::string key = "occupancy_frontier_key1dp";
-        checked_quantization_add(*counts, key);
+        auto* value = counts.slot_ ? counts.slot_->value_ : nullptr;
+        if (!value) {
+            const auto found = counts.counts_->find(key);
+            if (found == counts.counts_->end()) {
+                const auto inserted = counts.counts_->emplace(key, 1);
+                if (counts.slot_) counts.slot_->value_ = &inserted.first->second;
+            } else {
+                value = &found->second;
+                if (counts.slot_) counts.slot_->value_ = value;
+            }
+        }
+        if (value) {
+            if (*value == std::numeric_limits<std::size_t>::max())
+                throw std::overflow_error("quantization counter overflow: " + key);
+            ++*value;
+        }
     }
     return py_round(distance, 1);
 }

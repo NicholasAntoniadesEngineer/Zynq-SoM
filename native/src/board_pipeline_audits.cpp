@@ -6,6 +6,8 @@ namespace schgen {
 std::vector<CppAuditSource> board_pipeline_audit_sources(){
     std::vector<CppAuditSource> out;
     for(const auto* name:{"quantize.cpp","native_audit_quantize.cpp","floorplan_internal.hpp","floorplan_geometry.cpp","floorplan_cross.cpp","floorplan_pack.cpp","floorplan_compose.cpp","floorplan_build.cpp","floorplan_notes.cpp","floorplan_svg.cpp","floorplan_md.cpp","pcb_stage_internal.hpp","pcb_stage_geometry.cpp","pcb_stage_search.cpp","pcb_stage_power.cpp","pcb_stage_zone.cpp","pcb_placement_internal.hpp","pcb_placement_inputs.cpp","pcb_placement_pack.cpp","pcb_placement_variants.cpp","pcb_placement_zones.cpp","pcb_placement_model.cpp","pcb_placement_moves.cpp","pcb_placement_breathe.cpp","pcb_placement_build.cpp","pcb_escape_internal.hpp","pcb_escape_copper.cpp","pcb_escape_plan.cpp","pcb_escape_model.cpp","pcb_escape_triage.cpp","pcb_embed.cpp","pcb_emit.cpp","pcb_project.cpp","pcb_silk.cpp","legalize.cpp","occupancy.cpp","pack.cpp","ratsnest_gate.cpp"})out.push_back({std::string("native/src/")+name});
+    out.push_back({"native/src/legalize_precision.cpp"});
+    out.push_back({"native/src/stage_precision.cpp"});
     return out;
 }
 void import_board_floorplan_ledger(NativeLedger& ledger,const FloorplanAccounting& accounting,
@@ -106,7 +108,7 @@ void audit_stages(Context& c){
         if(c.options.audit_sources.empty())throw ProjectError("reviewed C++ decision manifest required; no Python audit fallback");
         std::set<std::string> files;for(const auto& f:c.options.audit_sources)files.insert(f.path);
         for(const auto& f:board_pipeline_audit_sources())if(!files.count(f.path))throw ProjectError("board audit manifest omits decision source: "+f.path);
-        const auto r=check_native_audits(c.paths.repository_root,c.options.audit_sources,c.ledger,c.quantizations,c.options.audit);
+        const auto r=c.measure("source_audit",[&]{return check_native_audits(c.paths.repository_root,c.options.audit_sources,c.ledger,c.quantizations,c.options.audit);});
         c.report("quantize_census.txt",r.summary());c.gate("quantize_census",r.ok,r.summary());c.gate("ledger",r.ok,r.summary());});
     c.attempt("pipeline_doc",[&]{auto meta=c.options.pipeline_metadata;
         if(meta.stages.empty()||meta.fallbacks.empty())throw ProjectError("native stage/fallback metadata manifest is required for pipeline documentation");

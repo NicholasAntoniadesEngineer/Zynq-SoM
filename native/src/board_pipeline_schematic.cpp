@@ -36,20 +36,20 @@ void schematic_stage(Context& c){
         bool visual_ok=false,ok=false,render_ok=true;
     };
     std::vector<SheetCheck> checks;
-    const auto sheets_started=std::chrono::steady_clock::now();
+    auto sheets_timing=c.timed("sheet_prepare_other");
     for(const auto& sc:c.circuits){
         try {
-            const auto electrical=check_circuit_electrical(sc.circuit,c.library);
+            const auto electrical=c.measure("sheet_electrical_validation",[&]{return check_circuit_electrical(sc.circuit,c.library);});
             if(!electrical.ok()){sheet_ok=false;sheet_reports.push_back(sc.name+": "+electrical.summary());continue;}
-            auto page=place_and_route_schematic(sc.circuit,c.library);
-            const auto cc=check_board_sheet_cc(sc.circuit,page.placement,page.routed,[&](const std::string& id)->const SymbolDef&{return c.library.get(id);});
+            auto page=c.measure("sheet_place_route_with_internal_checks",[&]{return place_and_route_schematic(sc.circuit,c.library);});
+            const auto cc=c.measure("sheet_cc_validation",[&]{return check_board_sheet_cc(sc.circuit,page.placement,page.routed,[&](const std::string& id)->const SymbolDef&{return c.library.get(id);});});
             cc_ok=cc_ok&&cc.ok();cc_reports.push_back(cc.summary());
             SchematicDesign d;d.circuit=sc.circuit;const auto& p=page.placement;
             d.parts=p.parts;d.powers=p.powers;d.hlabels=p.hlabels;d.llabels=p.llabels;d.no_connects=p.no_connects;d.paper=p.paper;apply_schematic_route(d,page.routed);
             const auto sch=scratch.path/(sc.name+".kicad_sch");
-            publish_text(sch,emit_schematic(d,[&](const std::string& id)->const SymbolDef&{return c.library.get(id);}).text);
+            c.measure("sheet_emit_and_publish",[&]{publish_text(sch,emit_schematic(d,[&](const std::string& id)->const SymbolDef&{return c.library.get(id);}).text);});
             publish_text(sch.parent_path()/(sc.name+".kicad_pro"),board_project_json(parse_json_text("{}"),sc.name));
-            const auto vis=check_visual_geometry(page.geometry);
+            const auto vis=c.measure("sheet_visual_validation",[&]{return check_visual_geometry(page.geometry);});
             const auto band=std::find_if(c.index.begin(),c.index.end(),[&](const auto& x){return x.first==sc.name;});
             if(band==c.index.end())throw ProjectError("missing stable reference band "+sc.name);
             checks.push_back({&sc.circuit,sch,p.paper,vis.summary(),sheet_reports.size(),vis.ok});
@@ -60,6 +60,7 @@ void schematic_stage(Context& c){
     // Only external checks/rasterization run concurrently. Authoring, mutable
     // symbol caches, placement and emission above retain their ordered owner.
     // Each job owns its report slot and unique files; reductions remain ordered.
+    auto external_timing=c.timed("sheet_parallel_checks_and_render_wall");
     std::atomic<std::size_t> next{0};
     const auto requested=c.options.netlist_workers?c.options.netlist_workers:
         std::min<std::size_t>(4,std::max(1u,std::thread::hardware_concurrency()));
@@ -89,9 +90,9 @@ void schematic_stage(Context& c){
             }
         }));
     for(auto& worker:workers)worker.get();
+    external_timing.finish();
     for(const auto& job:checks){sheet_ok=sheet_ok&&job.ok;render_ok=render_ok&&job.render_ok;}
-    if(c.options.timing)c.result.timing_seconds.emplace_back("sheet_prepare_and_checks",
-        std::chrono::duration<double>(std::chrono::steady_clock::now()-sheets_started).count());
+    sheets_timing.finish();
     c.gate("sheet_gates",sheet_ok&&inputs.size()==c.circuits.size(),join(sheet_reports,"\n"));
     c.status("sheet_render",c.options.no_render?BoardGateStatus::skipped:render_ok?BoardGateStatus::passed:BoardGateStatus::failed,c.options.no_render?"--no-render":"per-sheet native PDF rasterization");
     c.report("cc_gate.txt",join(cc_reports,"\n"));c.gate("cc",cc_ok&&inputs.size()==c.circuits.size(),join(cc_reports,"\n"));

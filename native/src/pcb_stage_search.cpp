@@ -100,8 +100,9 @@ Parts Engine::candidates(const std::string &ref, const std::vector<Attract> &att
     }
     auto center = rect_center(target);
     int n = std::min(
-        static_cast<int>(
-            (std::max(target.x1 - target.x0, target.y1 - target.y0) / 2 + bound + 9 + pad) / .5),
+        stage_candidate_radius_trunc(
+            (std::max(target.x1 - target.x0, target.y1 - target.y0) / 2 + bound + 9 + pad) / .5,
+            &quantization),
         60);
     auto result =
         seat_scan(center.first, center.second, n, .5, clear + pad, .1, 400, bodies(placed), forbid,
@@ -136,7 +137,8 @@ Parts Engine::seat_all(const std::vector<Demand> &demands, const NamedBoxes &ib,
             rel.push_back(values(pads(p.mod, rot)));
         }
         auto got =
-            seat_candidates(c.first, c.second, static_cast<int>((9 + pad) / .5), .5, clear + pad,
+            seat_candidates(c.first, c.second,
+                            stage_seat_radius_trunc((9 + pad) / .5, &quantization), .5, clear + pad,
                             tight_bound(d.bound), d.minimum, forbid_right, 400, icb,
                             bodies(skeleton), {90, 0}, b, rel, target_boxes, keep_boxes);
         if (got.truncated)
@@ -389,9 +391,9 @@ Parts Engine::solve_contract() {
                     auto p = part(r, rotations[r]);
                     auto b = body(p);
                     if (along_y)
-                        p.y = py_round(cursor - b.y0, 4);
+                        p.y = stage_root_pose_precision4dp(cursor - b.y0, &quantization);
                     else
-                        p.x = py_round(cursor - b.x0, 4);
+                        p.x = stage_root_pose_precision4dp(cursor - b.x0, &quantization);
                     b = body(p);
                     cursor = (along_y ? b.y1 : b.x1) + clear + pad + gap;
                     placed.push_back(p);
@@ -456,8 +458,8 @@ Parts Engine::compose(const std::vector<Parts> &clusters, const std::set<std::st
             std::any_of(cl.begin(), cl.end(), [&](const auto &p) { return conns.count(p.ref); });
         double gap = prev && has ? 20 : 2;
         auto b = extent(cl);
-        frames.push_back(
-            shifted(cl, -b.x0 + (along_y ? 0 : cursor), -b.y0 + (along_y ? cursor : 0)));
+        frames.push_back(shifted(cl, -b.x0 + (along_y ? 0 : cursor),
+                                 -b.y0 + (along_y ? cursor : 0), quantization));
         cursor += (along_y ? b.y1 - b.y0 : b.x1 - b.x0) + clear + gap;
         prev = has;
     }
@@ -486,20 +488,25 @@ Parts Engine::compose(const std::vector<Parts> &clusters, const std::set<std::st
             for (auto &cl : frames) {
                 auto f = face(cl);
                 if (f) {
-                    double d = py_round(target - *f, 4);
+                    double d = stage_connector_alignment_delta_precision4dp(
+                        target - *f, &quantization);
                     if (d)
-                        cl = shifted(cl, vx ? d : 0, vy ? d : 0);
+                        cl = shifted(cl, vx ? d : 0, vy ? d : 0, quantization);
                 }
             }
-            double line = py_round(target + (vx < 0 || vy < 0 ? seat_slide() : -seat_slide()), 4);
+            double line = stage_connector_clearance_line_precision4dp(
+                target + (vx < 0 || vy < 0 ? seat_slide() : -seat_slide()), &quantization);
             for (auto &cl : frames)
                 if (!face(cl)) {
                     auto b = extent(cl);
                     double edge = vx > 0 ? b.x1 : vx < 0 ? b.x0 : vy > 0 ? b.y1 : b.y0;
-                    double d = vx > 0 || vy > 0 ? std::min(0., py_round(line - edge, 4))
-                                                : std::max(0., py_round(line - edge, 4));
+                    double d = vx > 0 || vy > 0
+                                   ? std::min(0., stage_connector_clearance_delta_precision4dp(
+                                                      line - edge, &quantization))
+                                   : std::max(0., stage_connector_clearance_delta_precision4dp(
+                                                      line - edge, &quantization));
                     if (d)
-                        cl = shifted(cl, vx ? d : 0, vy ? d : 0);
+                        cl = shifted(cl, vx ? d : 0, vy ? d : 0, quantization);
                 }
         }
     }

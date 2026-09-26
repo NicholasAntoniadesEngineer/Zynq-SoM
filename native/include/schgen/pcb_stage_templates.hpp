@@ -1,4 +1,5 @@
 #pragma once
+#include "schgen/board_decision_policy.hpp"
 
 #include "schgen/floorplan.hpp"
 #include "schgen/pcb_model.hpp"
@@ -31,7 +32,7 @@ struct PcbStageInput {
     std::map<std::string, PcbStagePartner> partners;
     bool pilot = false;
     std::string facing, outer_dir;
-    double place_clear = .5;
+    double place_clear = board_decision_policy::placement::clear;
 };
 struct PcbStageResult {
     FloorplanOffsets top, bottom;

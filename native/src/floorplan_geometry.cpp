@@ -214,7 +214,7 @@ void Engine::prepare_geometry() {
             throw FloorplanError("floorplan: invalid zone dimensions for " + repr(name));
     for (auto* b : blocks()) {
         if (!zbox.count(b->name)) {
-            const double root = std::sqrt(sheet_area(*sheets.at(b->name), 3.5));
+            const double root = std::sqrt(sheet_area(*sheets.at(b->name), board_decision_policy::floorplan::small_part_routing_factor));
             zbox[b->name] = {quantize("placeholder_zone_half_mm", std::max(12.0,root)),
                              quantize("placeholder_zone_half_mm", std::max(8.0,root))};
         }

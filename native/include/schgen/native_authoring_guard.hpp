@@ -5,6 +5,7 @@
 #include <functional>
 
 namespace schgen {
+class ExecutionTimings;
 using NativeAuthoringReport = std::function<void(const AuthoringPurityResult&)>;
 
 // An explicit evidence configuration takes precedence over this binary's CMake
@@ -30,4 +31,8 @@ AuthoringPurityResult require_native_authoring_guard(
 AuthoringContext make_guarded_native_authoring_context(
     const std::filesystem::path& repository, const std::filesystem::path& configuration = {},
     const NativeAuthoringReport& report = {});
+// Observational overload; exactly the same mandatory guard and reporting.
+AuthoringContext make_guarded_native_authoring_context(
+    const std::filesystem::path& repository, const std::filesystem::path& configuration,
+    const NativeAuthoringReport& report, ExecutionTimings* timing);
 } // namespace schgen

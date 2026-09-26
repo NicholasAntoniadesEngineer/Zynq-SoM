@@ -4,6 +4,7 @@
 #include "schgen/pack_edges.hpp"
 #include "schgen/pcb_stage_templates.hpp"
 #include "schgen/quantize.hpp"
+#include "schgen/stage_precision.hpp"
 #include "schgen/turn.hpp"
 #include <algorithm>
 #include <cmath>
@@ -11,7 +12,8 @@
 #include <numeric>
 
 namespace schgen::pcb_stage {
-inline constexpr double clear = .5, zone_pad = .3, slide = 1.2;
+using board_decision_policy::placement::clear;
+inline constexpr double zone_pad = .3, slide = 1.2;
 using NamedBoxes = std::vector<std::pair<std::string, Box4>>;
 using Parts = std::vector<struct Part>;
 const JsonNode &field(const JsonNode &, const std::string &);
@@ -117,10 +119,10 @@ inline const Part *find(const Parts &parts, const std::string &ref) {
     auto i = std::find_if(parts.begin(), parts.end(), [&](const Part &p) { return p.ref == ref; });
     return i == parts.end() ? nullptr : &*i;
 }
-inline Parts shifted(Parts parts, double x, double y) {
+inline Parts shifted(Parts parts, double x, double y, QuantizationCounts& counts) {
     for (auto &p : parts) {
-        p.x = py_round(p.x + x, 4);
-        p.y = py_round(p.y + y, 4);
+        p.x = stage_shift_precision4dp(p.x + x, &counts);
+        p.y = stage_shift_precision4dp(p.y + y, &counts);
     }
     return parts;
 }

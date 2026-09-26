@@ -1,4 +1,5 @@
 #pragma once
+#include "schgen/board_decision_policy.hpp"
 
 #include "schgen/circuit.hpp"
 #include "schgen/execution_accounting.hpp"
@@ -139,7 +140,7 @@ struct FloorplanLegalizeInput {
     std::map<std::string, FloorplanPoint> fixed_poses;
     std::map<std::pair<std::string, std::string>, int> channel_demand;
     std::map<std::string, Box4> som_j_rects;
-    double clear = 0.3;
+    double clear = board_decision_policy::floorplan::clear;
     bool compact = false;
     FloorplanPoint origin{25.0, 25.0};
 };
@@ -191,7 +192,7 @@ struct FloorplanDecision {
     std::vector<std::pair<std::string, JsonNode>> inputs;
     // Registered explanatory text, including formula/source and indentation.
     // Kept with the value so a replay never needs a process-global registry.
-    int depth = 1;
+    int depth;  // Every decision construction supplies its nesting depth.
     std::string text;
 };
 struct FloorplanAccounting {
@@ -205,7 +206,7 @@ struct FloorplanPlan {
     double board_w = 0.0, board_h = 0.0, som_x = 0.0, som_y = 0.0;
     std::string outline_note;
     std::vector<FloorplanBlock> edge_blocks, interior_blocks;
-    double factor = 3.5;
+    double factor = board_decision_policy::floorplan::small_part_routing_factor;
     std::vector<std::string> spilled, composition;
     int dec_count = 0;
     double dec_radius = 0.0;

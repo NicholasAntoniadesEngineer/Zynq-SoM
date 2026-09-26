@@ -1,6 +1,7 @@
 #pragma once
 #include "pcb_placement_fixture.hpp"
 #include "occupancy_precision_fixture.hpp"
+#include "buried_policy_fixture.hpp"
 #include "schgen/floorplan_ledger_policy.hpp"
 #include <array>
 #include <iomanip>
@@ -17,7 +18,7 @@ inline bool added(const std::string& name) {
 }
 inline QuantizationCounts select(const QuantizationCounts& values,bool new_only=true) {
     QuantizationCounts out;for(const auto& [name,count]:values)
-        if(added(name)==new_only&&!occupancy_precision_fixture::added(name))out[name]=count;
+        if(added(name)==new_only&&!occupancy_precision_fixture::added(name)&&!legalize_precision_fixture::added(name)&&!stage_precision_fixture::added(name))out[name]=count;
     return out;
 }
 // Lossless typed snapshot: exact binary-double round trip, insertion order,
@@ -36,13 +37,14 @@ inline void node(std::ostream& out,const JsonNode& value) {
     out<<'\n';
 }
 inline void policy(std::ostream& out) {
-    const auto rows=floorplan_ledger_policy();out<<"POLICY "<<rows.size()<<'\n';
+    const auto rows=buried_policy_fixture::prior_policy(floorplan_ledger_policy());out<<"POLICY "<<rows.size()<<'\n';
     for(const auto& row:rows) {
         for(const auto* text:{&row.name,&row.kind,&row.step,&row.unit,&row.basis,&row.source,&row.legacy_cover,&row.expression})out<<std::quoted(*text)<<' ';
         out<<row.repeated<<' '<<row.inputs.size();for(const auto& key:row.inputs)out<<' '<<std::quoted(key);out<<'\n';
     }
 }
 inline void plan(std::ostream& out,const std::string& name,FloorplanPlan value) {
+    value=buried_policy_fixture::prior_plan(std::move(value));
     value.accounting.quantization_engagements=select(value.accounting.quantization_engagements,false);
     out<<"PLAN "<<name<<'\n';node(out,floorplan_plan_json(value));
     out<<"LEDGER\n"<<render_floorplan_ledger(value)<<"END LEDGER\n";

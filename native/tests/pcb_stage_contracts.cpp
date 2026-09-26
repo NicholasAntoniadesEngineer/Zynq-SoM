@@ -1,4 +1,5 @@
 #include "schgen/pcb_stage_templates.hpp"
+#include "stage_precision_fixture.hpp"
 #include <iostream>
 #include <limits>
 #include <stdexcept>
@@ -235,7 +236,8 @@ void mutations(const std::filesystem::path &root, const JsonNode &fixture,
                     context + " ordered diagnostics");
             const auto &expected = field(test, "quantization");
             const auto added = direction_counts(root, result, context);
-            require(result.quantization_engagements.size() == expected.object_value.size() + added,
+            // Exact stage additions have their independent entry-count fixture.
+            require(stage_precision_fixture::select(result.quantization_engagements, false).size() == expected.object_value.size() + added,
                     context + " diagnostic count size");
             for (const auto &[name, n] : expected.object_value)
                 require(result.quantization_engagements.at(name) == n.number_value,

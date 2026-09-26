@@ -15,7 +15,8 @@
 
 namespace schgen::floorplan_detail {
 
-inline constexpr double clear = .3, edge_margin = 10, mh_corner = 10;
+using board_decision_policy::floorplan::clear;
+inline constexpr double edge_margin = 10, mh_corner = 10;
 inline constexpr double edge_depth_cap = 15, edge_band_relief = 4;
 inline constexpr double overmold_plug_width = 22, overmold_copper_half_width = 8;
 inline constexpr double edge_inset = 1.5, cable_gap = 20;

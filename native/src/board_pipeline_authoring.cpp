@@ -19,11 +19,16 @@ void package_name(const std::string& name){
 BoardAuthoredProject author_board_pipeline_inputs(const ProjectPaths& paths,
         const std::filesystem::path& purity_configuration,
         const std::function<void(const AuthoringPurityResult&)>& purity_report){
+    return author_board_pipeline_inputs(paths,purity_configuration,purity_report,nullptr);
+}
+BoardAuthoredProject author_board_pipeline_inputs(const ProjectPaths& paths,
+        const std::filesystem::path& purity_configuration,
+        const std::function<void(const AuthoringPurityResult&)>& purity_report,ExecutionTimings* timing){
     namespace fs=std::filesystem;
     // The registered project identity is its project directory, matching the
     // native author-project frontend. ProjectConfig.name is a human title.
     ProjectAuthoringInput input;input.project_root=paths.project_root;
-    input.context=make_guarded_native_authoring_context(paths.repository_root,purity_configuration,purity_report);
+    input.context=make_guarded_native_authoring_context(paths.repository_root,purity_configuration,purity_report,timing);
     input.som=load_som_interface(paths.som_interface_file);
     input.mapping=link_mapping_from_json(parse_json_file((paths.project_root/"som_mapping.json").string()));
     BoardAuthoredProject out;out.factories=native_project_factories(paths.project_root.filename().string(),input);
@@ -39,9 +44,10 @@ BoardAuthoredProject author_board_pipeline_inputs(const ProjectPaths& paths,
     SymbolLibrary library(paths.repository_root);
     for(auto& f:out.factories){
         if(!f.circuit)throw ProjectError("missing native board factory: "+f.name);
-        auto ir=parse_circuit_ir(authored_circuit_json(f.circuit()));
+        auto ir=[&]{ExecutionTimings::Scope generate(timing,"input_factory_generation_and_ir_conversion");
+            return parse_circuit_ir(authored_circuit_json(f.circuit()));}();
         if(ir.name!=f.name)throw ProjectError("native board factory name mismatch: "+f.name);
-        validate_circuit(ir,library);
+        {ExecutionTimings::Scope validate(timing,"input_circuit_validation");validate_circuit(ir,library);}
         out.circuits.push_back({f.name,paths.subsystems_dir/f.name/"circuit.json",ir});
         f.circuit=[ir=std::move(ir)]{return ir;};
     }

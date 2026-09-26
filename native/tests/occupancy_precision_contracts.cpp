@@ -72,8 +72,8 @@ std::uint64_t geometry(QuantizationCounts* counts=nullptr){
 #ifndef OCCUPANCY_LEGACY_PROBE
 // Only occupancy_precision.cpp is compiled with function instrumentation.
 // Test-only independent observations; production has no globals or callbacks.
-bool observing=false;
-std::uint64_t entries[6]{};
+thread_local bool observing=false;
+thread_local std::uint64_t entries[6]{};
 const char* names[6]={"occupancy_component_precision4dp","occupancy_reach_precision4dp",
     "occupancy_frontier_key1dp","occupancy_shape_key4dp","occupancy_cell_index","occupancy_axis_count"};
 template<class F> QuantizationCounts measured(QuantizationCounts& counts,F action){
@@ -84,6 +84,75 @@ template<class F> QuantizationCounts measured(QuantizationCounts& counts,F actio
     require(counts==expected,"exported counter delta differs from independent function entries");return delta;
 }
 template<class F> void rejects(F action){bool failed=false;try{action();}catch(const std::exception&){failed=true;}require(failed,"invalid scalar accepted");}
+void frontier_slots(){
+    QuantizationCounts direct,slotted;
+    OccupancyFrontierSlot slot(&slotted);
+    require(slotted.empty(),"slot construction inserted an eager counter");
+    const auto attempt=[](double input,auto counter){
+        for(auto& n:entries)n=0;observing=true;
+        std::string error;std::uint64_t value=0;
+        try{value=bits(occupancy_frontier_key1dp(input,counter));}
+        catch(const std::exception& e){error=e.what();}
+        observing=false;
+        require(entries[2]==1,"slot/pointer must enter actual scalar exactly once, even on failure");
+        for(int i=0;i<6;++i)if(i!=2)require(entries[i]==0,"frontier executed unrelated scalar");
+        return std::make_pair(value,error);
+    };
+    // Explicit view copying is harmless; the noncopyable slot stays local.
+    OccupancyFrontierCounter view(slot);
+    for(const double input:{-0.0,0.0,-1.25,1.25,1.35,-11.24955,1e100,
+            std::numeric_limits<double>::infinity(),std::numeric_limits<double>::quiet_NaN()}){
+        const auto old=attempt(input,&direct),fresh=attempt(input,view);
+        require(old==fresh&&direct==slotted,"slot changed result bits, arithmetic errors or counts");
+    }
+    // Interleaved map insertions and ordinary pointer calls cannot invalidate
+    // the node binding or make it retain a stale copy of the numeric value.
+    for(int i=0;i<100;++i){
+        const auto key="unrelated_"+std::to_string(i);
+        direct.emplace(key,i);slotted.emplace(key,i);
+    }
+    occupancy_frontier_key1dp(1.25,&direct);occupancy_frontier_key1dp(1.25,&slotted);
+    require(attempt(1.25,&direct)==attempt(1.25,view)&&direct==slotted,"insertions invalidated slot");
+    for(bool prebound:{false,true}){
+        QuantizationCounts a{{names[2],std::numeric_limits<std::size_t>::max()-1}},b=a;
+        OccupancyFrontierSlot binding(&b);OccupancyFrontierCounter borrowed(binding);
+        if(prebound){
+            require(attempt(1.25,&a)==attempt(1.25,borrowed),"MAX-1 result differs");
+        }else{a[names[2]]=std::numeric_limits<std::size_t>::max();b=a;}
+        a["prefix"]=7;b["prefix"]=7;
+        const auto before=b;
+        const auto old=attempt(std::numeric_limits<double>::quiet_NaN(),&a);
+        const auto fresh=attempt(std::numeric_limits<double>::quiet_NaN(),borrowed);
+        require(old==fresh&&a==b&&b==before,"overflow changed prefix or failed counter");
+        require(fresh.second==std::string("quantization counter overflow: ")+names[2],"overflow must precede arithmetic");
+    }
+    OccupancyFrontierSlot disabled(nullptr);
+    require(attempt(-0.0,OccupancyFrontierCounter(disabled))==attempt(-0.0,static_cast<QuantizationCounts*>(nullptr)),"null slot differs");
+    // Reconstruct at precisely the same address after the old slot has died.
+    std::optional<QuantizationCounts> reused;
+    for(int i=0;i<3;++i){
+        reused.emplace();
+        {OccupancyFrontierSlot local(&*reused);occupancy_frontier_key1dp(1.25,local);}
+        require(*reused==QuantizationCounts{{names[2],1}},"map-address reuse inherited stale binding");
+        reused.reset();
+    }
+    Occupancy empty(6,6,0,2,1,1,.05);QuantizationCounts no_frontier;
+    measured(no_frontier,[&]{require(!empty.place_near(3,3,1,1,{},{},1,{},10,11,10,11,&no_frontier),"empty window produced pose");});
+    require(no_frontier==QuantizationCounts{{names[5],2}},"empty search inserted frontier counter");
+    std::array<QuantizationCounts,4> receipts;
+    std::array<std::uint64_t,4> observed{};std::array<std::thread,4> workers;
+    std::atomic<std::size_t> ready{0};
+    for(std::size_t i=0;i<workers.size();++i)workers[i]=std::thread([&,i]{
+        OccupancyFrontierSlot local(&receipts[i]);
+        ++ready;while(ready.load()<workers.size())std::this_thread::yield();
+        for(auto& n:entries)n=0;observing=true;
+        for(int n=0;n<100;++n)occupancy_frontier_key1dp(1.25,local);
+        observing=false;observed[i]=entries[2];
+    });
+    for(auto& worker:workers)worker.join();
+    for(std::size_t i=0;i<workers.size();++i)
+        require(observed[i]==100&&receipts[i]==QuantizationCounts{{names[2],100}},"thread-local entry proof or separate slot receipts drift");
+}
 void scalars(){
     QuantizationCounts counts;
     measured(counts,[&]{for(double x:{-0.0,0.0,11.24955,-11.24955,.00005,-.00005,1.25,1.35}){
@@ -181,7 +250,7 @@ void ownership_and_rejections(){
 }
 void registry_and_boards(const std::filesystem::path& root){
     NativeQuantizations registry;register_native_quantizations(registry);
-    require(registry.declarations().size()==40,"34 prior plus six occupancy operations");
+    require(registry.declarations().size()==64,"40 prior plus seven legalizer and seventeen stage operations");
     for(int i=0;i<6;++i){
         const auto declarations=registry.declarations();
         const auto d=std::find_if(declarations.begin(),declarations.end(),[&](const auto& row){return row.name==names[i];});
@@ -242,7 +311,7 @@ int main(int argc,char** argv){try{
     // from the candidate: /private/tmp/occupancy-agent1.5BMaTe/proof/before.digest.
     require(pure==0xfee57f87ab3a0aa5ULL,"pre-extraction geometry digest drift");
 #ifndef OCCUPANCY_LEGACY_PROBE
-    scalars();ownership_and_rejections();QuantizationCounts counts;
+    frontier_slots();scalars();ownership_and_rejections();QuantizationCounts counts;
     measured(counts,[&]{require(geometry(&counts)==pure,"accounting changed geometry bits");});
     require(counts.at(names[0])>0&&counts.at(names[2])>0&&counts.at(names[3])>0&&counts.at(names[4])>0&&counts.at(names[5])>0,"live geometry path omitted precision family");
     if(argc==2)registry_and_boards(argv[1]);

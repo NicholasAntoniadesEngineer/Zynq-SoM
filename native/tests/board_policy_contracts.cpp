@@ -42,6 +42,13 @@ void metadata(const fs::path& root){
     migrated_assumptions.push_back("escape_lattice");
     migrated_assumptions.push_back("escape_lane_handle");
     migrated_assumptions.push_back("escape_hole_clearance");
+    migrated_assumptions.push_back("small_part_routing_factor");
+    migrated_assumptions.push_back("point_segment_tolerance");
+    migrated_assumptions.push_back("visual_axis_tolerance");
+    migrated_assumptions.push_back("collinear_overlap_tolerance");
+    migrated_assumptions.push_back("segment_cross_tolerance");
+    migrated_assumptions.push_back("label_courtyard_gap");
+    migrated_assumptions.push_back("label_orbit_tau");
     require(assumptions==migrated_assumptions,"independent historical assumption order plus reviewed native migration");
     const auto& expected=field(reference,"calculations").array_value;require(calcs.size()==expected.size(),"independent calculation census");
     for(std::size_t k=0;k<expected.size();++k){require(calcs[k].name==field(expected[k],"name").string_value,"calculation name");const auto inputs=(calcs[k].name=="est_via_ordinary"||calcs[k].name=="est_via_impedance")?std::vector<std::string>{"via_cost"}:strings(field(expected[k],"inputs"));require(calcs[k].inputs==inputs,"ordered input contract including truthful native via policy");require(calcs[k].repeated==field(expected[k],"repeated").bool_value,"conditional/repeated semantics");}
@@ -59,7 +66,7 @@ void providers(const fs::path& root){
     ProjectPaths paths;paths.repository_root=root;
     FloorplanInput in;in.cross_budget_k=4.25;in.place_clear=.73;
     auto policy=make_native_board_policy(paths,in);require(policy.providers_complete(),"all reviewed producer providers complete");
-    require(policy.ledger_declarations.size()==83&&policy.missing_providers.empty(),"reviewed current coverage (65 assumes,18 calcs; no gaps)");
+    require(policy.ledger_declarations.size()==90&&policy.missing_providers.empty(),"reviewed current coverage (72 assumes,18 calcs; no gaps)");
     require(declaration(policy,"compose_guard").resolve().number_value==4.0,"preserved compose_guard value");
     require(declaration(policy,"compose_repair_max").resolve().number_value==16.0,"preserved compose_repair_max value");
     require(declaration(policy,"compose_median_passes").resolve().number_value==8.0,"preserved compose_median_passes value");
@@ -83,7 +90,7 @@ void providers(const fs::path& root){
     require(declaration(policy,"cross_k").resolve().number_value==4.25,"provider owns invocation scalar, not caller lifetime");
     require(declaration(make_native_board_policy(paths,in),"cross_k").resolve().number_value==9,"next invocation reads fresh caller value");
     NativeLedger ledger;for(const auto& d:policy.ledger_declarations)ledger.declare(d);
-    ledger.open_step("floorplan.sizing");ledger.close_step("floorplan.sizing");require(ledger.audit_state().recorded.size()==65,"every real assumption resolves at step entry");
+    ledger.open_step("floorplan.sizing");ledger.close_step("floorplan.sizing");require(ledger.audit_state().recorded.size()==72,"every real assumption resolves at step entry");
     for(const auto& gap:policy.missing_providers){require(!gap.decision_source.empty()&&!gap.action.empty(),"missing provider actionable");require(std::none_of(policy.ledger_declarations.begin(),policy.ledger_declarations.end(),[&](const auto& d){return d.name==gap.name;}),"missing policy never fabricated");}
     // Known C++ storage is independent from the producer's historical display
     // defaults and current observed rows. Poisoning observations grants nothing.
@@ -113,10 +120,10 @@ void providers(const fs::path& root){
     for(const auto& d:policy.ledger_declarations)for(const auto& cover:d.covers)require(names.count(cover.substr(0,cover.find("::"))),"covered symbol owner included");
     auto bad=in;bad.place_clear=-1;rejects([&]{make_native_board_policy(paths,bad);},"negative clearance rejects");bad=in;bad.cross_budget_k=std::numeric_limits<double>::infinity();rejects([&]{make_native_board_policy(paths,bad);},"nonfinite cross coefficient rejects");
     BoardPipelineOptions options;options.output_root="keep-output";options.fallback_baseline="keep-fallback";options.fanout_baseline="keep-fanout";options.no_render=true;options.pcb.place_clear=.73;options.audit.compiler="keep-clang";options.audit.flags={"-DKEEP_CALLER=1"};options.audit.timeout=std::chrono::milliseconds{321};
-    const auto installed=configure_native_board_policy(options,paths,in);require(options.ledger_declarations.size()==83&&installed.providers_complete(),"factory installs complete independently reviewed declarations");
+    const auto installed=configure_native_board_policy(options,paths,in);require(options.ledger_declarations.size()==90&&installed.providers_complete(),"factory installs complete independently reviewed declarations");
     require(options.output_root=="keep-output"&&options.fallback_baseline=="keep-fallback"&&options.fanout_baseline=="keep-fanout"&&options.no_render&&options.pcb.place_clear==.73,"caller execution settings preserved");
     require(options.audit.compiler=="keep-clang"&&options.audit.flags.front()=="-DKEEP_CALLER=1"&&options.audit.timeout.count()==321,"compiler settings preserved");
-    rejects([&]{configure_native_board_policy(options,paths,in);},"never silently replace existing policy");require(options.ledger_declarations.size()==83,"failed installation atomic");
+    rejects([&]{configure_native_board_policy(options,paths,in);},"never silently replace existing policy");require(options.ledger_declarations.size()==90,"failed installation atomic");
 }
 void defects(){
     // Mutation contract for the existing auditor: our policy is never a waiver

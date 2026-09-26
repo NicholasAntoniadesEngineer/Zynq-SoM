@@ -3,6 +3,7 @@
 #include "schgen/pcb_verification.hpp"
 #include "schgen/firmware_docs.hpp"
 #include "schgen/design_rules.hpp"
+#include "schgen/execution_timing.hpp"
 #include "schgen/project_outputs.hpp"
 #include <fstream>
 #include <iterator>
@@ -42,12 +43,17 @@ struct Context {
     NativeFallbacks fallbacks;
     NativeAccountingInbox inbox;
     bool loaded = false, pcb_published = false;
+    ExecutionTimings* timing = nullptr;
     Context(const ProjectPaths&, const BoardPipelineOptions&);
     void gate(const std::string&, bool, const std::string&);
     void status(const std::string&, BoardGateStatus, const std::string&);
     void report(const std::string& filename, const std::string& value);
+    ExecutionTimings::Scope timed(const std::string& name) { return {timing,name}; }
+    template<class F> decltype(auto) measure(const std::string& name, F action) {
+        auto scope = timed(name); return action();
+    }
     template<class F> void attempt(const std::string& name, F action) {
-        const auto began = std::chrono::steady_clock::now();
+        auto scope = timed(name);
         try { action(); }
         catch(const std::bad_alloc&) { throw; }
         catch(const std::exception& e) {
@@ -60,8 +66,6 @@ struct Context {
             if(std::none_of(result.gates.begin(),result.gates.end(),[&](const auto& g){return g.name==name;})) gate(name, false, e.what());
             else gate(name + ".completion", false, e.what());
         }
-        if(options.timing)result.timing_seconds.emplace_back(name,
-            std::chrono::duration<double>(std::chrono::steady_clock::now()-began).count());
     }
 };
 void schematic_stage(Context&);

@@ -703,6 +703,7 @@ std::optional<Pose> Occupancy::place_near(
         return std::nullopt;
     };
 
+    OccupancyFrontierSlot frontier_count(counts);
     while (!heap.empty()) {
         const HeapNode node = heap.top();
         heap.pop();
@@ -710,7 +711,7 @@ std::optional<Pose> Occupancy::place_near(
         const double ycost = ys[static_cast<std::size_t>(node.j)].first;
         const double x = xs[static_cast<std::size_t>(node.i)].second;
         const double y = ys[static_cast<std::size_t>(node.j)].second;
-        const double key = occupancy_frontier_key1dp(xcost + ycost, counts);
+        const double key = occupancy_frontier_key1dp(xcost + ycost, frontier_count);
         auto bit = buckets.find(key);
         if (bit == buckets.end()) {
             buckets.emplace(key, std::vector<std::pair<double, double>>{{x, y}});

@@ -10,6 +10,24 @@ inline constexpr double interior_band_target = 32.0;
 inline constexpr int df40_min_pins = 40;
 inline constexpr double breathe_epsilon_mm = 1e-4;
 inline constexpr double breathe_step_mm = .25;
+// Default and live consumers share the same reviewed policy storage.
+namespace floorplan {
+inline constexpr double clear = .3;
+inline constexpr double small_part_routing_factor = 3.5;
+}
+namespace placement {
+inline constexpr double clear = .5;
+}
+namespace pack {
+inline constexpr double point_segment_tolerance_mm = 1e-6;
+inline constexpr double visual_axis_tolerance_mm = 1e-6;
+inline constexpr double collinear_overlap_tolerance_mm = 1e-6;
+// Cross products have squared-coordinate units, not a linear clearance.
+inline constexpr double segment_cross_tolerance_mm2 = 1e-9;
+inline constexpr double label_courtyard_gap_mm = .9;
+// Preserve the established double literal; do not recompute from pi.
+inline constexpr double label_orbit_tau = 6.283185307179586;
+}
 namespace compose {
 inline constexpr double guard_mm = 4.0;
 inline constexpr int repair_max = 16, median_passes = 8, channel_min_nets = 6;

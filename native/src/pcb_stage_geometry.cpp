@@ -28,6 +28,7 @@ std::vector<std::string> strings(const JsonNode &n) {
     if (n.kind == JsonKind::String)
         return {n.string_value};
     std::vector<std::string> v;
+    v.reserve(n.array_value.size());
     for (const auto &x : n.array_value)
         v.push_back(x.string_value);
     return v;
@@ -37,6 +38,7 @@ std::vector<std::string> strings(const JsonNode &n, const std::string &k) {
 }
 std::vector<Box4> values(const NamedBoxes &n) {
     std::vector<Box4> v;
+    v.reserve(n.size());
     for (const auto &[k, b] : n) {
         (void)k;
         v.push_back(b);
@@ -144,11 +146,13 @@ const NamedBoxes &Engine::pads(const PcbCheckFootprintPtr &fp, double rot) {
     if (i != pad_cache.end())
         return i->second;
     std::vector<std::tuple<std::string, double, double, double, double, double>> rows;
+    rows.reserve(fp->pads.size());
     for (const auto &[name, type, x, y, r, w, h] : fp->pads) {
         (void)type;
         rows.emplace_back(name, x, y, r, w, h);
     }
     NamedBoxes result;
+    result.reserve(rows.size());
     for (const auto &[name, x0, y0, x1, y1] : pad_boxes_named(rows, rot))
         result.push_back({name, {x0, y0, x1, y1}});
     return pad_cache.emplace(key, std::move(result)).first->second;
@@ -174,6 +178,7 @@ Box4 Engine::body(const Part &p) const {
 }
 std::vector<Box4> Engine::bodies(const Parts &parts) const {
     std::vector<Box4> v;
+    v.reserve(parts.size());
     for (const auto &p : parts)
         v.push_back(body(p));
     return v;
@@ -215,6 +220,7 @@ Parts Engine::turn(const Parts &parts, double deg, bool renormalize, bool exact_
     }
     auto [cx, cy] = boxes_span_center(all);
     Parts out;
+    out.reserve(parts.size());
     for (auto p : parts) {
         auto old = boxes_span_center(values(pads(p.mod, p.rot)));
         auto nr = normalize(p.rot + deg);
@@ -242,7 +248,7 @@ Parts Engine::turn(const Parts &parts, double deg, bool renormalize, bool exact_
             all.insert(all.end(), v.begin(), v.end());
         }
         auto b = boxes_union(all);
-        out = shifted(out, zone_pad - b->x0, zone_pad - b->y0);
+        out = shifted(out, zone_pad - b->x0, zone_pad - b->y0, quantization);
     }
     return out;
 }

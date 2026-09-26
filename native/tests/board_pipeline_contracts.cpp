@@ -1,4 +1,5 @@
 #include "board_pipeline_internal.hpp"
+#include "execution_timing_contracts.hpp"
 #include "schgen/selftest_full.hpp"
 #include "schgen/subsystem_build.hpp"
 #include "schgen/process.hpp"
@@ -156,6 +157,13 @@ void failed_inputs(const fs::path& root){
     BoardPipelineOptions o;o.output_root=tmp.path/"out";o.no_render=true;
     o.authoring_purity_configuration=tmp.path/"missing-toolchain.json";
     const auto r=run_board_pipeline(p,o);require(!r.ok(),"missing project cannot claim board success");require(r.gates.size()>=40,"all mandatory downstream stages explicitly fail");
+    o.timing=true;
+    const auto timed=run_board_pipeline(p,o);
+    require(board_pipeline_verdict_json(timed)==board_pipeline_verdict_json(r),"timing never changes gates, counters or failure semantics");
+    require(r.timing_seconds.empty()&&!timed.timing_seconds.empty(),"timing flag controls observations only");
+    std::set<std::string> labels;
+    for(const auto& [name,seconds]:timed.timing_seconds){require(seconds>=0&&labels.insert(name).second,"exclusive rows aggregate once without negative residuals");}
+    require(labels.count("authoring_audit")&&labels.count("inputs")&&!labels.count("source_audit"),"failed authoring audit measured separately; unexecuted source audit never invented");
     const auto report=parse_json_file((o.output_root/"reports/board_verdicts.json").string());require(!field(report,"board_ok").bool_value,"published verdict includes final failure");
     for(const auto& g:r.gates)require(g.status==BoardGateStatus::failed,"missing prerequisite never implicit skip");
     Context child_failure(p,o);
@@ -260,6 +268,7 @@ void purity_precondition(const fs::path& root){
 }
 int main(int argc,char** argv){
     try{
+        execution_timing_contracts::run();
         if(argc<2||argc>3)throw std::runtime_error("usage: board_pipeline_contracts REPOSITORY [--live-kicad]");
         const fs::path root=argv[1];
         const auto reference=parse_json_file((root/"native/tests/data/board_pipeline/python_reference.json").string());

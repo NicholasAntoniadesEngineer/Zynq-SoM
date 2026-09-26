@@ -39,10 +39,12 @@ std::pair<double, double> facing_dot(double zone_x, double zone_y,
                                      double out_x, double out_y,
                                      double down_x, double down_y);
 
+// Optional explicit invocation sinks count actual scalar boundaries, including
+// work preceding a rejected term or exception. Null is the pure diagnostic path.
 std::optional<std::pair<double, double>> predicted_centroid(
     double pose_x, double pose_y, double origin_x, double origin_y,
     const std::vector<std::tuple<std::string, double, double>>& offsets,
-    const std::vector<std::string>* refs);
+    const std::vector<std::string>* refs, QuantizationCounts* counts = nullptr);
 
 double channel_demand_mm(int n_airwires, int min_nets, double floor_mm,
                          double per_net_mm);
@@ -103,7 +105,7 @@ std::vector<EvalTermOut> evaluate_terms(
     const std::vector<EvalMetric>& metrics, const std::vector<EvalTermIn>& terms,
     const std::vector<std::pair<std::string, double>>& far_guard,
     const std::vector<std::pair<std::string, Box4>>& som_j_rects,
-    double origin_x, double origin_y);
+    double origin_x, double origin_y, QuantizationCounts* counts = nullptr);
 
 struct NamedEdge {
     std::string src;
@@ -182,7 +184,7 @@ struct WallSepEdge {
     std::string dst;
     double cost = 0.0;
     std::string kind;
-    int sep_index = -1;
+    int sep_index;  // Explicit -1 for walls; explicit input index for separations.
     std::string wall_name;
 };
 
@@ -210,7 +212,7 @@ std::optional<Box4> predicted_bbox(
     double pose_x, double pose_y, double origin_x, double origin_y,
     const std::vector<std::tuple<std::string, double, double>>& offsets,
     const std::vector<std::tuple<std::string, double, double, double, double>>&
-        pad_union);
+        pad_union, QuantizationCounts* counts = nullptr);
 
 std::pair<double, double> interior_dims(double area, double aspect,
                                         double min_mm, double max_mm);

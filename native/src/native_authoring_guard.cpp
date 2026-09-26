@@ -2,6 +2,7 @@
 #include "schgen/authoring_context.hpp"
 #include "schgen/authoring_purity_config.hpp"
 #include "schgen/project.hpp"
+#include "schgen/execution_timing.hpp"
 
 namespace schgen {
 std::filesystem::path native_authoring_configuration(const std::filesystem::path& explicit_configuration) {
@@ -13,9 +14,15 @@ std::filesystem::path native_authoring_configuration(const std::filesystem::path
 #endif
 }
 
-AuthoringPurityResult require_native_authoring_guard(const std::filesystem::path& repository,
-        const AuthoringContext& context,const std::filesystem::path& configuration,const NativeAuthoringReport& report) {
-    const auto result=check_native_authoring_purity(repository,native_authoring_configuration(configuration),context);
+namespace {
+AuthoringPurityResult guarded(const std::filesystem::path& repository,
+        const AuthoringContext& context,const std::filesystem::path& configuration,const NativeAuthoringReport& report,
+        ExecutionTimings* timing) {
+    const auto result=[&]{
+        ExecutionTimings::Scope audit(timing,"authoring_audit");
+        return check_native_authoring_purity(repository,native_authoring_configuration(configuration),context);
+    }();
+    ExecutionTimings::Scope reporting(timing,"authoring_guard_reporting_and_recheck");
     const bool accepted=result.ok() && result.native_context_verified;
     const auto diagnostic=result.report();
     if(report)report(result);
@@ -28,11 +35,20 @@ AuthoringPurityResult require_native_authoring_guard(const std::filesystem::path
     }
     return result;
 }
+}
+AuthoringPurityResult require_native_authoring_guard(const std::filesystem::path& repository,
+        const AuthoringContext& context,const std::filesystem::path& configuration,const NativeAuthoringReport& report) {
+    return guarded(repository,context,configuration,report,nullptr);
+}
 
 AuthoringContext make_guarded_native_authoring_context(const std::filesystem::path& repository,
         const std::filesystem::path& configuration,const NativeAuthoringReport& report) {
+    return make_guarded_native_authoring_context(repository,configuration,report,nullptr);
+}
+AuthoringContext make_guarded_native_authoring_context(const std::filesystem::path& repository,
+        const std::filesystem::path& configuration,const NativeAuthoringReport& report,ExecutionTimings* timing) {
     auto context=make_authoring_context(repository);
-    require_native_authoring_guard(repository,context,configuration,report);
+    guarded(repository,context,configuration,report,timing);
     return context;
 }
 } // namespace schgen

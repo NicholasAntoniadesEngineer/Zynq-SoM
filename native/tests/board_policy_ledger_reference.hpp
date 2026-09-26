@@ -19,6 +19,7 @@ inline schgen::JsonNode migrate(schgen::JsonNode expected,const std::filesystem:
     const auto additions=parse_json_file((data/"precision_ops/policy_additions.json").string());
     const auto geometry_additions=parse_json_file((data/"board_policy/geometry_policy_additions.json").string());
     const auto remaining_additions=parse_json_file((data/"board_policy/composition_escape_policy_additions.json").string());
+    const auto buried_additions=parse_json_file((data/"board_policy/buried_policy_additions.json").string());
     std::set<std::string> remove,removed;for(const auto* key:{"retired","replaced"})
         for(const auto& n:field(ref,key).array_value)remove.insert(n.string_value);
     std::map<std::string,JsonNode> texts,calculations;
@@ -38,6 +39,7 @@ inline schgen::JsonNode migrate(schgen::JsonNode expected,const std::filesystem:
                     for(const auto& added:field(additions,"assumption_rows").array_value){rows.push_back(added);++exposed;}
                     for(const auto& added:field(geometry_additions,"assumption_rows").array_value){rows.push_back(added);++exposed;}
                     for(const auto& added:field(remaining_additions,"assumption_rows").array_value){rows.push_back(added);++exposed;}
+                    for(const auto& added:field(buried_additions,"assumption_rows").array_value){rows.push_back(added);++exposed;}
                 }
             }
             value.array_value=std::move(rows);
@@ -45,7 +47,7 @@ inline schgen::JsonNode migrate(schgen::JsonNode expected,const std::filesystem:
             for(auto& n:value.array_value)if(calculations.count(name(n)))n=calculations.at(name(n));
         }
     }
-    if(removed!=remove||inserted!=2||changed!=2||exposed!=19)throw std::runtime_error("historical ledger provenance precondition changed");
+    if(removed!=remove||inserted!=2||changed!=2||exposed!=26)throw std::runtime_error("historical ledger provenance precondition changed");
     return expected;
 }
 }

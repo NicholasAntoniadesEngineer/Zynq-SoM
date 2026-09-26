@@ -29,18 +29,18 @@ void pcb_stages(Context& c){
     const auto report_root=c.out==c.paths.project_root?c.paths.repository_root:c.out;
     c.attempt("pcb",[&]{if(!c.schematic||!c.link||!c.link->ok())throw ProjectError("current schematic/valid link required; refusing stale board inputs");
         BoardPcbStage stage;stage.circuits=c.circuits;
-        stage.inputs=load_board_inputs(c.paths,c.circuits,*c.link,extract_netlist(c.schematic->root_path,c.options.extraction),c.options.pcb);
+        stage.inputs=c.measure("pcb_input_loading_and_netlist_validation",[&]{return load_board_inputs(c.paths,c.circuits,*c.link,extract_netlist(c.schematic->root_path,c.options.extraction),c.options.pcb);});
         stage.inputs.floorplan.sheet_index=c.index;
         if(c.options.native_policy){
             const auto policy=configure_native_board_policy(c.options,c.paths,stage.inputs.floorplan);
             c.report("native_policy.txt",policy.report());
             c.gate("native_policy",policy.providers_complete(),policy.report());
         }
-        stage.placement=build_pcb_model(stage.inputs);
+        stage.placement=c.measure("pcb_build_model_with_internal_checks",[&]{return build_pcb_model(stage.inputs);});
         // One receipt owns all actual plan/zone/placement work, not the legacy
         // fallback prefix. Import before emission so failures retain work done.
         c.inbox.merge_once("pcb/placement",pcb_placement_accounting(stage.placement));
-        stage.emission=render_pcb(stage.placement.model,pcb_emit_policy(stage.inputs.floorplan.project));
+        stage.emission=c.measure("pcb_render",[&]{return render_pcb(stage.placement.model,pcb_emit_policy(stage.inputs.floorplan.project));});
         c.inbox.merge_once("pcb/emission",NativeAccountingBatch{{},stage.emission.fallback_events});
         c.pcb=std::move(stage);publish_board_pcb(*c.pcb,c.out);c.pcb_published=true;
         if(c.pcb->placement.model.escape_plan_record){auto sidecar=*c.pcb->placement.model.escape_plan_record;

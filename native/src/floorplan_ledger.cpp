@@ -83,6 +83,13 @@ const std::vector<Declaration> declarations{
     {"escape_lattice","ASSUME","floorplan.sizing","mm","escape via search lattice spacing","policy","board_decision_policy.escape.lattice","", {}},
     {"escape_lane_handle","ASSUME","floorplan.sizing","mm","escape lane extent beyond the connector contact row","policy","board_decision_policy.escape.lane_handle","", {}},
     {"escape_hole_clearance","ASSUME","floorplan.sizing","mm","minimum hole-to-hole separation in escape search","policy","board_decision_policy.escape.hole_hole","", {}},
+    {"small_part_routing_factor","ASSUME","floorplan.sizing","ratio","area multiplier for small-part routing reserve; also reported by the plan","policy","board_decision_policy.floorplan.small_part_routing_factor","", {}},
+    {"point_segment_tolerance","ASSUME","floorplan.sizing","mm","axis recognition and endpoint tolerance in point-on-segment tests","policy","board_decision_policy.pack.point_segment_tolerance_mm","", {}},
+    {"visual_axis_tolerance","ASSUME","floorplan.sizing","mm","axis recognition and strict interior tolerance in visual crossing tests","policy","board_decision_policy.pack.visual_axis_tolerance_mm","", {}},
+    {"collinear_overlap_tolerance","ASSUME","floorplan.sizing","mm","axis recognition and minimum strict collinear overlap","policy","board_decision_policy.pack.collinear_overlap_tolerance_mm","", {}},
+    {"segment_cross_tolerance","ASSUME","floorplan.sizing","mm^2","signed cross-product threshold for strict segment intersection","policy","board_decision_policy.pack.segment_cross_tolerance_mm2","", {}},
+    {"label_courtyard_gap","ASSUME","floorplan.sizing","mm","clear-label search offset outside the footprint courtyard","policy","board_decision_policy.pack.label_courtyard_gap_mm","", {}},
+    {"label_orbit_tau","ASSUME","floorplan.sizing","radian","established full-turn double used by the sixteen-angle label orbit","policy","board_decision_policy.pack.label_orbit_tau","", {}},
     {"overmold_side_gap","CALC","floorplan.sizing","mm","shell overhang beside a single receptacle","","floorplan.OVERMOLD_SIDE_GAP","plug_width / 2 - copper_half_width", {"plug_width","copper_half_width"}},
     {"edge_band","CALC","floorplan.sizing","mm","connector band width used by the seed outline","","floorplan.EDGE_BAND","edge_depth_cap - edge_band_relief", {"edge_depth_cap","edge_band_relief"}},
     {"occ_punch_mask","CALC","floorplan.sizing","bitmask","occupancy bits of geometry that pierces both faces","","floorplan.OCC_PUNCH","occ_top | occ_bottom", {"occ_top","occ_bottom"}},
@@ -208,6 +215,13 @@ std::optional<double> floorplan_live_assumption(const std::string& name,const Fl
     if(name=="mh_corner_keepout")return mh_corner;
     if(name=="edge_inset")return edge_inset;
     if(name=="cable_neighbor_gap")return cable_gap;
+    if(name=="small_part_routing_factor")return board_decision_policy::floorplan::small_part_routing_factor;
+    if(name=="point_segment_tolerance")return board_decision_policy::pack::point_segment_tolerance_mm;
+    if(name=="visual_axis_tolerance")return board_decision_policy::pack::visual_axis_tolerance_mm;
+    if(name=="collinear_overlap_tolerance")return board_decision_policy::pack::collinear_overlap_tolerance_mm;
+    if(name=="segment_cross_tolerance")return board_decision_policy::pack::segment_cross_tolerance_mm2;
+    if(name=="label_courtyard_gap")return board_decision_policy::pack::label_courtyard_gap_mm;
+    if(name=="label_orbit_tau")return board_decision_policy::pack::label_orbit_tau;
     if(name=="block_clearance")return clear;
     if(name=="perimeter_keepout")return perimeter;
     if(name=="som_halo")return som_halo;

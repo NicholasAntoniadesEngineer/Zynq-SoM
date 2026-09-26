@@ -1,4 +1,5 @@
 #include "schgen/pack.hpp"
+#include "schgen/board_decision_policy.hpp"
 
 #include "schgen/quantize.hpp"
 #include "schgen/turn.hpp"
@@ -478,21 +479,20 @@ bool BreatheGrid::free(const Box4& box) const {
 
 bool point_on_seg(double px, double py, double x0, double y0, double x1,
                   double y1, bool interior_only) {
-    const double eps = 1e-6;
-    const bool horizontal = std::fabs(y0 - y1) < eps;
-    const bool vertical = std::fabs(x0 - x1) < eps;
+    const bool horizontal = std::fabs(y0 - y1) < board_decision_policy::pack::point_segment_tolerance_mm;
+    const bool vertical = std::fabs(x0 - x1) < board_decision_policy::pack::point_segment_tolerance_mm;
     double lo = 0.0;
     double hi = 0.0;
     double coord = 0.0;
     if (horizontal) {
-        if (std::fabs(py - y0) > eps) {
+        if (std::fabs(py - y0) > board_decision_policy::pack::point_segment_tolerance_mm) {
             return false;
         }
         lo = std::min(x0, x1);
         hi = std::max(x0, x1);
         coord = px;
     } else if (vertical) {
-        if (std::fabs(px - x0) > eps) {
+        if (std::fabs(px - x0) > board_decision_policy::pack::point_segment_tolerance_mm) {
             return false;
         }
         lo = std::min(y0, y1);
@@ -502,9 +502,9 @@ bool point_on_seg(double px, double py, double x0, double y0, double x1,
         return false;
     }
     if (interior_only) {
-        return lo + eps < coord && coord < hi - eps;
+        return lo + board_decision_policy::pack::point_segment_tolerance_mm < coord && coord < hi - board_decision_policy::pack::point_segment_tolerance_mm;
     }
-    return lo - eps <= coord && coord <= hi + eps;
+    return lo - board_decision_policy::pack::point_segment_tolerance_mm <= coord && coord <= hi + board_decision_policy::pack::point_segment_tolerance_mm;
 }
 
 namespace {
@@ -530,7 +530,6 @@ ClearLabel place_clear_label(double cx0, double cy0, double cx1, double cy1,
     const double n = static_cast<double>(std::max<std::size_t>(label.size(), 1));
     const double w = silk_product(n, size) + thick;
     const double h = size + thick;
-    const double g = 0.9;
     bool have_best = false;
     bool have_any = false;
     double best_pen = 0.0;
@@ -539,8 +538,8 @@ ClearLabel place_clear_label(double cx0, double cy0, double cx1, double cy1,
     ClearLabel best_any;
     static const double kRing[] = {0.0, 2.2, 4.4, 6.6, 9.0, 12.0, 15.0, 18.0};
     for (double extra : kRing) {
-        const double dy = g + extra + h / 2.0;
-        const double dx = g + extra + w / 2.0;
+        const double dy = board_decision_policy::pack::label_courtyard_gap_mm + extra + h / 2.0;
+        const double dx = board_decision_policy::pack::label_courtyard_gap_mm + extra + w / 2.0;
         const double cands[8][2] = {
             {midx, cy1 + dy},
             {midx, cy0 - dy},
@@ -578,12 +577,11 @@ ClearLabel place_clear_label(double cx0, double cy0, double cx1, double cy1,
     }
     static const double kOrbit[] = {2.2, 4.4, 6.6, 9.0, 12.0, 15.0, 18.0, 21.0,
                                     24.0, 28.0, 32.0};
-    static const double kTau = 6.283185307179586;
     for (double extra : kOrbit) {
-        const double rx = (cx1 - cx0) / 2.0 + g + extra + w / 2.0;
-        const double ry = (cy1 - cy0) / 2.0 + g + extra + h / 2.0;
+        const double rx = (cx1 - cx0) / 2.0 + board_decision_policy::pack::label_courtyard_gap_mm + extra + w / 2.0;
+        const double ry = (cy1 - cy0) / 2.0 + board_decision_policy::pack::label_courtyard_gap_mm + extra + h / 2.0;
         for (int k = 0; k < 16; ++k) {
-            const double a = kTau * static_cast<double>(k) / 16.0;
+            const double a = board_decision_policy::pack::label_orbit_tau * static_cast<double>(k) / 16.0;
             const double tx = midx + silk_product(rx, std::cos(a));
             const double ty = midy + silk_product(ry, std::sin(a));
             const Box4 box = text_box(label, tx, ty, size, 0.15);
@@ -610,7 +608,6 @@ ClearLabel place_clear_label(double cx0, double cy0, double cx1, double cy1,
 
 bool segments_cross(double ax0, double ay0, double ax1, double ay1,
                     double bx0, double by0, double bx1, double by1) {
-    const double eps = 1e-9;
     if ((ax0 == bx0 && ay0 == by0) || (ax0 == bx1 && ay0 == by1)
         || (ax1 == bx0 && ay1 == by0) || (ax1 == bx1 && ay1 == by1)) {
         return false;
@@ -623,8 +620,8 @@ bool segments_cross(double ax0, double ay0, double ax1, double ay1,
     const double d2 = cross(bx0, by0, bx1, by1, ax1, ay1);
     const double d3 = cross(ax0, ay0, ax1, ay1, bx0, by0);
     const double d4 = cross(ax0, ay0, ax1, ay1, bx1, by1);
-    return (((d1 > eps && d2 < -eps) || (d1 < -eps && d2 > eps))
-            && ((d3 > eps && d4 < -eps) || (d3 < -eps && d4 > eps)));
+    return (((d1 > board_decision_policy::pack::segment_cross_tolerance_mm2 && d2 < -board_decision_policy::pack::segment_cross_tolerance_mm2) || (d1 < -board_decision_policy::pack::segment_cross_tolerance_mm2 && d2 > board_decision_policy::pack::segment_cross_tolerance_mm2))
+            && ((d3 > board_decision_policy::pack::segment_cross_tolerance_mm2 && d4 < -board_decision_policy::pack::segment_cross_tolerance_mm2) || (d3 < -board_decision_policy::pack::segment_cross_tolerance_mm2 && d4 > board_decision_policy::pack::segment_cross_tolerance_mm2)));
 }
 
 namespace {
@@ -1345,11 +1342,10 @@ ReorderAssign reorder_cluster_assign(
 
 bool visual_hv_cross(double ax0, double ay0, double ax1, double ay1,
                      double bx0, double by0, double bx1, double by1) {
-    const double eps = 1e-6;
-    const bool a_h = std::fabs(ay0 - ay1) < eps;
-    const bool a_v = std::fabs(ax0 - ax1) < eps;
-    const bool b_h = std::fabs(by0 - by1) < eps;
-    const bool b_v = std::fabs(bx0 - bx1) < eps;
+    const bool a_h = std::fabs(ay0 - ay1) < board_decision_policy::pack::visual_axis_tolerance_mm;
+    const bool a_v = std::fabs(ax0 - ax1) < board_decision_policy::pack::visual_axis_tolerance_mm;
+    const bool b_h = std::fabs(by0 - by1) < board_decision_policy::pack::visual_axis_tolerance_mm;
+    const bool b_v = std::fabs(bx0 - bx1) < board_decision_policy::pack::visual_axis_tolerance_mm;
     double hx0 = 0.0;
     double hx1 = 0.0;
     double hy = 0.0;
@@ -1379,18 +1375,17 @@ bool visual_hv_cross(double ax0, double ay0, double ax1, double ay1,
     if (vy0 > vy1) {
         std::swap(vy0, vy1);
     }
-    return (hx0 + eps < vx && vx < hx1 - eps)
-        && (vy0 + eps < hy && hy < vy1 - eps);
+    return (hx0 + board_decision_policy::pack::visual_axis_tolerance_mm < vx && vx < hx1 - board_decision_policy::pack::visual_axis_tolerance_mm)
+        && (vy0 + board_decision_policy::pack::visual_axis_tolerance_mm < hy && hy < vy1 - board_decision_policy::pack::visual_axis_tolerance_mm);
 }
 
 bool collinear_overlap(double ax0, double ay0, double ax1, double ay1,
                        double bx0, double by0, double bx1, double by1) {
-    const double eps = 1e-6;
-    const bool a_h = std::fabs(ay0 - ay1) < eps;
-    const bool b_h = std::fabs(by0 - by1) < eps;
-    const bool a_v = std::fabs(ax0 - ax1) < eps;
-    const bool b_v = std::fabs(bx0 - bx1) < eps;
-    if (a_h && b_h && std::fabs(ay0 - by0) < eps) {
+    const bool a_h = std::fabs(ay0 - ay1) < board_decision_policy::pack::collinear_overlap_tolerance_mm;
+    const bool b_h = std::fabs(by0 - by1) < board_decision_policy::pack::collinear_overlap_tolerance_mm;
+    const bool a_v = std::fabs(ax0 - ax1) < board_decision_policy::pack::collinear_overlap_tolerance_mm;
+    const bool b_v = std::fabs(bx0 - bx1) < board_decision_policy::pack::collinear_overlap_tolerance_mm;
+    if (a_h && b_h && std::fabs(ay0 - by0) < board_decision_policy::pack::collinear_overlap_tolerance_mm) {
         double a0 = ax0;
         double a1 = ax1;
         double b0 = bx0;
@@ -1401,9 +1396,9 @@ bool collinear_overlap(double ax0, double ay0, double ax1, double ay1,
         if (b0 > b1) {
             std::swap(b0, b1);
         }
-        return std::min(a1, b1) - std::max(a0, b0) > eps;
+        return std::min(a1, b1) - std::max(a0, b0) > board_decision_policy::pack::collinear_overlap_tolerance_mm;
     }
-    if (a_v && b_v && std::fabs(ax0 - bx0) < eps) {
+    if (a_v && b_v && std::fabs(ax0 - bx0) < board_decision_policy::pack::collinear_overlap_tolerance_mm) {
         double a0 = ay0;
         double a1 = ay1;
         double b0 = by0;
@@ -1414,7 +1409,7 @@ bool collinear_overlap(double ax0, double ay0, double ax1, double ay1,
         if (b0 > b1) {
             std::swap(b0, b1);
         }
-        return std::min(a1, b1) - std::max(a0, b0) > eps;
+        return std::min(a1, b1) - std::max(a0, b0) > board_decision_policy::pack::collinear_overlap_tolerance_mm;
     }
     return false;
 }

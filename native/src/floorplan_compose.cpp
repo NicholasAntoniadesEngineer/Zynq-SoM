@@ -1,4 +1,5 @@
 #include "floorplan_internal.hpp"
+#include "schgen/legalize_precision.hpp"
 #include "schgen/board_decision_policy.hpp"
 
 #include <algorithm>
@@ -64,7 +65,7 @@ void validate(const FloorplanLegalizeInput& in) {
 }
 
 std::vector<FloorplanTermEval> evaluate(const FloorplanLegalizeInput& in,
-                                       const FloorplanOffsets& poses) {
+                                       const FloorplanOffsets& poses, QuantizationCounts* counts = nullptr) {
     std::vector<const FloorplanTerm*> terms;
     std::vector<EvalTermIn> rows;
     for (const auto* group : {&in.index.hard, &in.index.soft}) for (const auto& t : *group) {
@@ -75,7 +76,7 @@ std::vector<FloorplanTermEval> evaluate(const FloorplanLegalizeInput& in,
     for (const auto& [name, m] : in.metrics) metrics.push_back({name, m.offsets, m.pad_union});
     const auto values = evaluate_terms(in.board_w, in.board_h, in.som_core_page,
         {poses.begin(), poses.end()}, metrics, rows, {{"ethernet", 14}, {"power_som", 25}},
-        {in.som_j_rects.begin(), in.som_j_rects.end()}, in.origin.first, in.origin.second);
+        {in.som_j_rects.begin(), in.som_j_rects.end()}, in.origin.first, in.origin.second, counts);
     std::vector<FloorplanTermEval> out;
     for (std::size_t i = 0; i < values.size(); ++i) {
         const auto& e = values[i];
@@ -171,7 +172,7 @@ public:
         }
         std::vector<Box4> boxes;
         for (std::size_t i = 0; i < names.size(); ++i) {
-            const double x = py_round(pos_x[i], 4), y = py_round(pos_y[i], 4);
+            const double x = legalize_trial_pose_precision4dp(pos_x[i], counts), y = legalize_trial_pose_precision4dp(pos_y[i], counts);
             const auto& v = *by_name.at(names[i]);
             boxes.push_back({x, y, x + v.w, y + v.h});
         }
@@ -311,8 +312,8 @@ private:
     std::vector<FloorplanTermEval> reds() const {
         auto poses = fixed;
         for (std::size_t i = 0; i < names.size(); ++i)
-            poses[names[i]] = {py_round(pos_x[i], 4), py_round(pos_y[i], 4)};
-        auto out = evaluate(in, poses);
+            poses[names[i]] = {legalize_trial_pose_precision4dp(pos_x[i], counts), legalize_trial_pose_precision4dp(pos_y[i], counts)};
+        auto out = evaluate(in, poses, counts);
         out.erase(std::remove_if(out.begin(), out.end(), [](const auto& e) { return !e.term.enforced || e.ok; }), out.end());
         return out;
     }

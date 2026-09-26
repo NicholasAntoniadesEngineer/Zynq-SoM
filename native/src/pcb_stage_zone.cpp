@@ -43,7 +43,7 @@ PcbStageResult Engine::proximity_zone() {
     auto ext = boxes_union(all);
     if (!ext)
         throw PcbZoneInfeasible("proximity contract has no pad geometry");
-    auto placed = shifted(parts, zone_pad - ext->x0, zone_pad - ext->y0);
+    auto placed = shifted(parts, zone_pad - ext->x0, zone_pad - ext->y0, quantization);
     std::set<std::string> media;
     for (const auto &s : structures)
         if (text(s, "type") == "proximity" && !strings(s, "anchor_pins").empty() &&
@@ -93,9 +93,11 @@ PcbStageResult Engine::proximity_zone() {
                 bx = *std::min_element(faces.begin(), faces.end()) + seat_slide();
         }
         for (const auto &[r, x, y] : bands.first.placed)
-            result.top[r] = {py_round(x + bx, 4), py_round(y + by, 4)};
+            result.top[r] = {stage_proximity_leftover_pose_precision4dp(x + bx, &quantization),
+                             stage_proximity_leftover_pose_precision4dp(y + by, &quantization)};
         for (const auto &[r, x, y] : bands.second.placed)
-            result.bottom[r] = {py_round(x + bx, 4), py_round(y + by, 4)};
+            result.bottom[r] = {stage_proximity_leftover_pose_precision4dp(x + bx, &quantization),
+                                stage_proximity_leftover_pose_precision4dp(y + by, &quantization)};
         double minx = std::numeric_limits<double>::infinity(), miny = minx;
         for (const auto *offsets : {&result.top, &result.bottom})
             for (const auto &[r, p] : *offsets) {
@@ -109,7 +111,8 @@ PcbStageResult Engine::proximity_zone() {
             for (auto *offsets : {&result.top, &result.bottom})
                 for (auto &[r, p] : *offsets) {
                     (void)r;
-                    p = {py_round(p.first + gx, 4), py_round(p.second + gy, 4)};
+                    p = {stage_proximity_rebase_precision4dp(p.first + gx, &quantization),
+                         stage_proximity_rebase_precision4dp(p.second + gy, &quantization)};
                 }
         double maxx = extent(placed).x1 + gx, maxy = extent(placed).y1 + gy;
         if (!bands.first.placed.empty() || !bands.second.placed.empty()) {
@@ -118,8 +121,8 @@ PcbStageResult Engine::proximity_zone() {
             maxy =
                 std::max({maxy, by + gy + bands.first.packed_h, by + gy + bands.second.packed_h});
         }
-        result.w = py_round(maxx + zone_pad, 4);
-        result.h = py_round(maxy + zone_pad, 4);
+        result.w = stage_proximity_extent_precision4dp(maxx + zone_pad, &quantization);
+        result.h = stage_proximity_extent_precision4dp(maxy + zone_pad, &quantization);
     }
     if (auto ov = direction(in.outer_dir)) {
         auto [vx, vy] = *ov;
@@ -143,9 +146,9 @@ PcbStageResult Engine::proximity_zone() {
                     for (auto &[r, p] : *offsets) {
                         (void)r;
                         if (vx < 0)
-                            p.first = py_round(p.first + d, 4);
+                            p.first = stage_proximity_face_shift_precision4dp(p.first + d, &quantization);
                         else
-                            p.second = py_round(p.second + d, 4);
+                            p.second = stage_proximity_face_shift_precision4dp(p.second + d, &quantization);
                     }
                 if (vx < 0)
                     result.w += d;
@@ -154,8 +157,8 @@ PcbStageResult Engine::proximity_zone() {
             }
         }
     }
-    result.w = py_round(result.w, 4);
-    result.h = py_round(result.h, 4);
+    result.w = stage_proximity_extent_precision4dp(result.w, &quantization);
+    result.h = stage_proximity_extent_precision4dp(result.h, &quantization);
     return result;
 }
 } // namespace schgen::pcb_stage
@@ -220,8 +223,10 @@ PcbStageRefitResult refit_pcb_stage_facing_accounted(
                         continue;
                     // Match Python's center-then-translate arithmetic exactly.
                     const auto &rel = at(e.pads(part->mod, part->rot), pn);
-                    points.emplace_back(py_round(part->x + (rel.x0 + rel.x1) / 2, 3),
-                                        py_round(part->y + (rel.y0 + rel.y1) / 2, 3), r, in.sheet);
+                    points.emplace_back(
+                        stage_refit_pad_precision3dp(part->x + (rel.x0 + rel.x1) / 2, &e.quantization),
+                        stage_refit_pad_precision3dp(part->y + (rel.y0 + rel.y1) / 2, &e.quantization),
+                        r, in.sheet);
                 }
             RatsnestNets nn{{net, points}};
             auto edges = ratsnest_mst(nn);

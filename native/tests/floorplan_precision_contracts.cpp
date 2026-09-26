@@ -39,7 +39,7 @@ void scalars(){
         for(double value:{0.,-0.,double(INFINITY),double(-INFINITY),double(NAN),std::numeric_limits<double>::max(),std::numeric_limits<double>::denorm_min()})compare(value);
     }
     NativeQuantizations registry;register_native_quantizations(registry);
-    require(registry.declarations().size()==40,"34 prior operations plus six occupancy operations");
+    require(registry.declarations().size()==64,"40 prior plus seven legalizer and seventeen stage operations");
     const auto declarations=registry.declarations();
     for(std::size_t i=0;i<names.size();++i){
         const auto found=std::find_if(declarations.begin(),declarations.end(),[&](const auto& d){return d.name==names[i];});
@@ -56,7 +56,7 @@ void ledger_boundaries(){
     begin();engine.ledger_open();const auto opened=end();
     const auto policy_rows=floorplan_ledger_policy();
     const auto assumptions=static_cast<std::size_t>(std::count_if(policy_rows.begin(),policy_rows.end(),[](const auto& d){return d.kind=="ASSUME";}));
-    require(policy_rows.size()==83&&opened==QuantizationCounts{{names[5],assumptions}}&&select(engine.plan.accounting.quantization_engagements)==opened,"83 unchanged policy rows; each real numeric assumption displayed once");
+    require(policy_rows.size()==90&&assumptions==72&&opened==QuantizationCounts{{names[5],assumptions}}&&select(engine.plan.accounting.quantization_engagements)==opened,"83 prior plus seven new policy rows; each real numeric assumption displayed once");
     for(double value:{-0.,-.00001,-.00005,.00005,.00015,1.23445,1.23455,-1.23455,10.,1e-12}){
         begin();const auto before=engine.plan.accounting.quantization_engagements.at(names[5]);
         engine.calc("overmold_side_gap",jvalue(value),{{"plug_width",jvalue(value)},{"copper_half_width",jvalue(value)}});
@@ -114,7 +114,8 @@ void boards(const std::filesystem::path& root,const std::filesystem::path& data,
         require(select(result.zone_accounting.quantization_engagements).empty()&&select(result.placement_accounting.quantization_engagements).empty(),"no downstream double import "+name);
         require(observed.at(names[0])>0&&observed.at(names[2])>0&&observed.at(names[4])==2&&observed.at(names[5])>0,"real build and ledger primitives engaged");
         require(variant==3?!observed.count(names[1]):observed.at(names[1])==1,"only auto sizing executes the aspect operation");
-        if(!capture)require(observed==decoded(field(additions,name)),"explicit independent additive fixture "+name);
+        if(!capture){auto expected=decoded(field(additions,name));expected.at(names[5])+=7;
+            require(observed==expected,"independent prior fixture plus seven observed assumption display calls "+name);}
         if(capture){if(!first)std::cout<<",\n";first=false;std::cout<<std::quoted(name)<<':';show(observed);}
         auto& output=variant==3?fixed:baseline;plan(output,name,result.floorplan.plan);
         counts(output,"ZONE",result.zone_accounting.quantization_engagements);counts(output,"PLACEMENT",result.placement_accounting.quantization_engagements);counts(output,"AGGREGATE",total.quantization_engagements);

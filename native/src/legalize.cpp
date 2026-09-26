@@ -1,4 +1,5 @@
 #include "schgen/legalize.hpp"
+#include "schgen/legalize_precision.hpp"
 
 #include "schgen/occupancy.hpp"
 #include "accurate_norm.hpp"
@@ -152,7 +153,7 @@ std::pair<double, double> facing_dot(double zone_x, double zone_y,
 std::optional<std::pair<double, double>> predicted_centroid(
     double pose_x, double pose_y, double origin_x, double origin_y,
     const std::vector<std::tuple<std::string, double, double>>& offsets,
-    const std::vector<std::string>* refs) {
+    const std::vector<std::string>* refs, QuantizationCounts* counts) {
     std::unordered_set<std::string> allow;
     if (refs != nullptr) {
         allow.insert(refs->begin(), refs->end());
@@ -165,22 +166,22 @@ std::optional<std::pair<double, double>> predicted_centroid(
         if (refs != nullptr && allow.find(ref) == allow.end()) {
             continue;
         }
-        xs += py_round(origin_x + pose_x + std::get<1>(off), 4);
-        ys += py_round(origin_y + pose_y + std::get<2>(off), 4);
+        xs += legalize_position_precision4dp(origin_x + pose_x + std::get<1>(off), counts);
+        ys += legalize_position_precision4dp(origin_y + pose_y + std::get<2>(off), counts);
         ++n;
     }
     if (n == 0) {
         return std::nullopt;
     }
-    return std::make_pair(py_round(xs / static_cast<double>(n), 4),
-                          py_round(ys / static_cast<double>(n), 4));
+    return std::make_pair(legalize_centroid_precision4dp(xs / static_cast<double>(n), counts),
+                          legalize_centroid_precision4dp(ys / static_cast<double>(n), counts));
 }
 
 std::optional<Box4> predicted_bbox(
     double pose_x, double pose_y, double origin_x, double origin_y,
     const std::vector<std::tuple<std::string, double, double>>& offsets,
     const std::vector<std::tuple<std::string, double, double, double, double>>&
-        pad_union) {
+        pad_union, QuantizationCounts* counts) {
     std::unordered_map<std::string, std::pair<double, double>> off;
     off.reserve(offsets.size());
     for (const auto& row : offsets) {
@@ -195,8 +196,8 @@ std::optional<Box4> predicted_bbox(
         }
         const double dx = it->second.first;
         const double dy = it->second.second;
-        const double px = py_round(origin_x + pose_x + dx, 4);
-        const double py = py_round(origin_y + pose_y + dy, 4);
+        const double px = legalize_position_precision4dp(origin_x + pose_x + dx, counts);
+        const double py = legalize_position_precision4dp(origin_y + pose_y + dy, counts);
         const double x0 = px + (std::get<1>(pad) - dx);
         const double y0 = py + (std::get<2>(pad) - dy);
         const double x1 = px + (std::get<3>(pad) - dx);
@@ -214,8 +215,8 @@ std::optional<Box4> predicted_bbox(
     if (!any) {
         return std::nullopt;
     }
-    return Box4{py_round(acc.x0, 4), py_round(acc.y0, 4),
-                py_round(acc.x1, 4), py_round(acc.y1, 4)};
+    return Box4{legalize_bbox_precision4dp(acc.x0, counts), legalize_bbox_precision4dp(acc.y0, counts),
+                legalize_bbox_precision4dp(acc.x1, counts), legalize_bbox_precision4dp(acc.y1, counts)};
 }
 
 std::optional<Box4> pad_union_hull(
@@ -753,7 +754,7 @@ std::vector<EvalTermOut> evaluate_terms(
     const std::vector<EvalMetric>& metrics, const std::vector<EvalTermIn>& terms,
     const std::vector<std::pair<std::string, double>>& far_guard,
     const std::vector<std::pair<std::string, Box4>>& som_j_rects,
-    double origin_x, double origin_y) {
+    double origin_x, double origin_y, QuantizationCounts* counts) {
     std::unordered_map<std::string, std::pair<double, double>> pose_of;
     for (const auto& p : poses) {
         pose_of[p.first] = p.second;
@@ -779,8 +780,8 @@ std::vector<EvalTermOut> evaluate_terms(
                 return std::nullopt;
             }
             const Box4& s = *som_core;
-            return std::make_pair(py_round((s.x0 + s.x1) / 2.0, 4),
-                                  py_round((s.y0 + s.y1) / 2.0, 4));
+            return std::make_pair(legalize_anchor_precision4dp((s.x0 + s.x1) / 2.0, counts),
+                                  legalize_anchor_precision4dp((s.y0 + s.y1) / 2.0, counts));
         }
         if (name.rfind("som_j", 0) == 0) {
             const auto it = jack_of.find(name);
@@ -789,8 +790,8 @@ std::vector<EvalTermOut> evaluate_terms(
             }
             const Box4& r = it->second;
             return std::make_pair(
-                py_round((r.x0 + r.x1) / 2.0 + origin_x, 4),
-                py_round((r.y0 + r.y1) / 2.0 + origin_y, 4));
+                legalize_anchor_precision4dp((r.x0 + r.x1) / 2.0 + origin_x, counts),
+                legalize_anchor_precision4dp((r.y0 + r.y1) / 2.0 + origin_y, counts));
         }
         const auto pose_it = pose_of.find(name);
         const auto met_it = metric_of.find(name);
@@ -799,7 +800,7 @@ std::vector<EvalTermOut> evaluate_terms(
         }
         return predicted_centroid(pose_it->second.first, pose_it->second.second,
                                   origin_x, origin_y, met_it->second->offsets,
-                                  nullptr);
+                                  nullptr, counts);
     };
 
     auto bbox_of = [&](const std::string& name) -> std::optional<Box4> {
@@ -822,7 +823,7 @@ std::vector<EvalTermOut> evaluate_terms(
         }
         return predicted_bbox(pose_it->second.first, pose_it->second.second,
                               origin_x, origin_y, met_it->second->offsets,
-                              met_it->second->pad_union);
+                              met_it->second->pad_union, counts);
     };
 
     auto guard_at = [&](const std::string& name) {
@@ -838,7 +839,7 @@ std::vector<EvalTermOut> evaluate_terms(
             const auto cb = centroid_of(t.target);
             if (!ca.has_value() || !cb.has_value()) {
                 out.push_back(EvalTermOut{std::numeric_limits<double>::infinity(),
-                                          py_round(budget, 4),
+                                          legalize_bound_precision4dp(budget, counts),
                                           -std::numeric_limits<double>::infinity(),
                                           false, "UNRESOLVED"});
                 continue;
@@ -850,8 +851,8 @@ std::vector<EvalTermOut> evaluate_terms(
             if (g != 0.0) {
                 note = "incl L4 guard " + format_g(g) + "mm";
             }
-            out.push_back(EvalTermOut{d, py_round(eff, 4),
-                                      py_round(eff - d, 4), d <= eff, note});
+            out.push_back(EvalTermOut{d, legalize_bound_precision4dp(eff, counts),
+                                      legalize_margin_precision4dp(eff - d, counts), d <= eff, note});
         } else if (t.kind == "near_max" || t.kind == "near_intent") {
             const auto ba = bbox_of(t.subject);
             const auto bb = bbox_of(t.target);
@@ -867,7 +868,7 @@ std::vector<EvalTermOut> evaluate_terms(
             if (t.kind == "near_intent") {
                 out.push_back(EvalTermOut{g, 0.0, 0.0, true, "advisory"});
             } else {
-                out.push_back(EvalTermOut{g, bound, py_round(bound - g, 4),
+                out.push_back(EvalTermOut{g, bound, legalize_margin_precision4dp(bound - g, counts),
                                           g <= bound, ""});
             }
         } else if (t.kind == "far_min") {
@@ -888,7 +889,7 @@ std::vector<EvalTermOut> evaluate_terms(
             if (guard != 0.0) {
                 note = "incl FAR_L4_GUARD " + format_g(guard) + "mm";
             }
-            out.push_back(EvalTermOut{d, bound, py_round(d - bound, 4),
+            out.push_back(EvalTermOut{d, bound, legalize_margin_precision4dp(d - bound, counts),
                                       d >= bound, note});
         } else if (t.kind == "facing") {
             const auto czone = centroid_of(t.subject);
@@ -898,7 +899,7 @@ std::vector<EvalTermOut> evaluate_terms(
             if (pose_it != pose_of.end() && met_it != metric_of.end()) {
                 cout = predicted_centroid(
                     pose_it->second.first, pose_it->second.second, origin_x,
-                    origin_y, met_it->second->offsets, &t.out_refs);
+                    origin_y, met_it->second->offsets, &t.out_refs, counts);
             }
             const auto cdown = centroid_of(t.target);
             if (!czone.has_value() || !cout.has_value() || !cdown.has_value()) {
@@ -912,11 +913,11 @@ std::vector<EvalTermOut> evaluate_terms(
             const std::string dot_note = "dot=" + format_dot(face.first);
             if (guard_at(t.subject) != 0.0 || guard_at(t.target) != 0.0) {
                 out.push_back(EvalTermOut{
-                    face.second, 90.0, py_round(90.0 - face.second, 4), true,
+                    face.second, 90.0, legalize_margin_precision4dp(90.0 - face.second, counts), true,
                     dot_note + " L4-guarded participant - gate-arbitrated"});
             } else {
                 out.push_back(EvalTermOut{
-                    face.second, 90.0, py_round(90.0 - face.second, 4),
+                    face.second, 90.0, legalize_margin_precision4dp(90.0 - face.second, counts),
                     face.first > 0.0, dot_note});
             }
         } else {

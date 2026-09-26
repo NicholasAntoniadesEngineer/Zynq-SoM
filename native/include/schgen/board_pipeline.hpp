@@ -8,6 +8,7 @@
 #include "schgen/authoring_purity.hpp"
 
 namespace schgen {
+class ExecutionTimings;
 enum class BoardGateStatus { passed, failed, skipped, unavailable };
 struct BoardPipelineGate {
     std::string name;
@@ -27,6 +28,9 @@ struct BoardPipelineResult {
     std::filesystem::path output_root;
     std::size_t sheets = 0;
     std::vector<std::pair<std::string,double>> timing_seconds;
+    // Exclusive owner-thread wall intervals, including both mandatory audits.
+    // Covers pipeline entry through build-ledger publication; final summary
+    // publications, caller setup and process startup/shutdown are outside it.
     // complete distinguishes explicitly reported missing native capabilities
     // from successful coverage. Advisory failures do not fail the board.
     bool complete() const;
@@ -56,6 +60,10 @@ struct BoardAuthoredProject {
 BoardAuthoredProject author_board_pipeline_inputs(const ProjectPaths&,
     const std::filesystem::path& purity_configuration = {},
     const std::function<void(const AuthoringPurityResult&)>& purity_report = {});
+BoardAuthoredProject author_board_pipeline_inputs(const ProjectPaths&,
+    const std::filesystem::path& purity_configuration,
+    const std::function<void(const AuthoringPurityResult&)>& purity_report,
+    ExecutionTimings* timing);
 // Writes canonical snapshots and required native package assets under output.
 // An isolated output never rewrites the source project's stored circuit.json.
 void publish_board_pipeline_inputs(BoardAuthoredProject&,const ProjectPaths&,
