@@ -1,13 +1,15 @@
-# schgen runtime dependencies (Python 3.11+; 3.14 verified)
+# Transitional Python parity/reference dependencies (Python 3.12+; 3.14 verified).
+# Native build/CTest/bootstrap does not consume this file: native/ci/README.md.
+# Retain during migration; removing a runtime dependency is a separate parity audit.
 # Install:  pip install -r requirements.txt
-pymupdf        # PDF rasterization for render.py (imported as `fitz`)
+pymupdf        # legacy PDF reference/oracle tooling; native renderer uses Poppler C++
 pillow         # PNG handling / golden-render comparison
 
 # Test tooling (dev only — not needed to generate the board):
 pytest>=8      # fast unit suite: `python -m pytest schgen/tests/`
 pytest-xdist>=3  # default-parallel suite (pyproject addopts); serial: pytest -n 0
 
-# Native kernels (`scripts/build_native.sh`; SCHGEN_NATIVE=0 forces Python):
+# Transitional bindings only (`scripts/build_native.sh`), not native production:
 nanobind>=2.0  # C++ bindings for schgen._geom
 
 # External tools (not pip-installable):

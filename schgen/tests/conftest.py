@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+# Python parity fixtures remain independent of native/ci's CTest entry point.
+
 import copy
 import sys
 from pathlib import Path

@@ -22,6 +22,34 @@ full original log for audit.
 
 ---
 
+# 2026-09-26 — Native CLI cutover and strict local regression
+
+Implementation decisions (autonomous, per full-autonomy directive):
+
+- Retire the five tracked Python experiment scripts only after native contracts
+  and actual CLI checks. W12 probes use fresh native authoring and real KiCad
+  extraction in private scratch; native dump publication reproduces all 49
+  carrier/devkit circuit files without content changes. The local sync duplicate
+  was byte-identical and backed up outside the repository before removal.
+- Native `check` runs complete board generation, mutation/determinism selftest,
+  and every configured CTest. Require nonempty enabled/built inventories and
+  matching JUnit results, rejecting skips and fabricated PASS text. Retain logs
+  and propagate failures/timeouts. Independent driver tests are not substitutes
+  for final full-board acceptance.
+- Add native authored-document validation with independent mutation fixtures,
+  and a real KiCad RC smoke test that distinguishes open/short faults from an
+  ERC-only undriven fault. Keep the source-audit and Python-removal goal open
+  until the clean native path passes all required checks.
+- Keep all checks local under the standing no-hosted-CI directive. Discard an
+  uncommitted agent-proposed manual GitHub workflow; retain only the local
+  native build/preflight wrapper. No hosted workflow was installed or run.
+- The owner's current instructions supersede the old Python-only design-source
+  convention and three-agent ceiling: tooling and tests migrate to C++, required
+  hardware formats remain, and at most five agents work concurrently. Verified
+  commits stay on the existing `perf-native` branch; no history rewrite.
+
+---
+
 # 2026-09-18 — Native schematic stages and devkit electrical corrections
 
 Implementation decisions (autonomous, per full-autonomy directive):

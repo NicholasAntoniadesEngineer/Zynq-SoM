@@ -1,4 +1,6 @@
 # pyproject.toml — tooling config for the schgen netlist-first KiCad generator.
+# Transitional Python parity configuration: native CMake/CTest does not read it.
+# Keep test/lint behavior intact until native parity acceptance; native/ci/README.md.
 #
 # This file intentionally carries ONLY tool config (lint / type-check), not
 # packaging metadata: schgen is run in-tree (`python -m schgen ...`), not pip

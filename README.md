@@ -1,9 +1,19 @@
 # Zynq-SoM
 
 A Zynq-7000 system-on-module + carrier board, with `schgen` — a netlist-first
-KiCad schematic **and PCB** generator that turns Python subsystem definitions
+KiCad schematic **and PCB** generator migrating to C++ netlist definitions
 into electrically-proven, hand-drawn-quality schematics and a placed,
 DRC-clean board (component placement, 3D models, multi-angle renders).
+
+## Native build and test entry point
+
+The C++ migration's Python-free build, dependency bootstrap and complete native
+CTest entry point are documented in [`native/ci/README.md`](native/ci/README.md).
+Use that path for native production builds; `scripts/build_native.sh` still
+builds transitional Python bindings for independent parity tests. Python setup,
+tests and the legacy authoring examples below remain until parity sign-off.
+All verification remains local, as required by the repository's no-CI policy.
+No hosted workflow or gate bypass is introduced.
 
 ## The layers
 
@@ -32,7 +42,7 @@ Plus `som/` — the hand-authored Zynq SoM KiCad project (open
 The SoM↔carrier contract `carrier/som_interface.json` is extracted
 programmatically (`schgen som-interface`), never hand-edited.
 
-## Generate everything
+## Legacy Python regeneration/parity
 
 ```bash
 pip install pymupdf pillow                    # kicad-cli must be on PATH
@@ -67,7 +77,8 @@ short detection, fits the page). PCB gates: **DRC** (zero KiCad errors),
 **connector** mating-face / spacing (off-board mouths, edge-flush). Architecture
 + gate definitions: `schgen/DESIGN.md`.
 
-There is no CI, so `schgen selftest` mutation-tests the gates themselves:
+Local generation always runs its gates; native CTest is an additional check,
+not a replacement. `schgen selftest` mutation-tests the gates themselves:
 it injects one defect per class (pin swap, deleted wire, relabel, stray
 no-connect, foreign-net junction short) and proves a gate kills each, then
 builds twice and byte-compares for determinism.

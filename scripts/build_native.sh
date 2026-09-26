@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Build schgen._geom (C++ occupancy kernel) into schgen/.
+# Transitional parity build: schgen._geom into schgen/ (requires Python).
+# Python-free production/bootstrap/CTest: native/ci/README.md.
 set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"

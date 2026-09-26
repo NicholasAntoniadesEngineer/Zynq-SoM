@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
-# scripts/check.sh — the local regression bar (no online CI by project policy).
+# scripts/check.sh — retained local Python parity regression bar.
+# Native-only local build/CTest: native/ci/README.md (no hosted CI).
+# Do not delete this independent parity path while Python tests remain in use.
 #
 # Stages, stopping at the first failure:
 #   0. ruff   — lint gate (schgen/), BLOCKING. Green on the current tree by

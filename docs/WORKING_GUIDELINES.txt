@@ -11,6 +11,19 @@ instruction here ever conflicts with a newer explicit instruction from the repo
 owner, the newer explicit instruction wins — but it should then be recorded here
 and in the archived decision log (HISTORY.md, formerly carrier/PLAN.md).
 
+CURRENT OWNER AMENDMENTS (2026-09 migration):
+  - Replace all repository Python tooling, generators, tests and runtime
+    dependencies with C++; retain required hardware/design formats, HDL,
+    XDC/Tcl and generated firmware. Historical .py authoring references below
+    describe the old implementation, not permission to retain it indefinitely.
+  - Work on the existing perf-native migration branch; commit proven changes
+    in reasonably large coherent batches. Preserve unrelated uncommitted work.
+  - At most FIVE active subagents going forward (supersedes the historical
+    three-agent ceiling). Existing idle agents need not be closed.
+  - Electrical, visual and source-policy gates remain mandatory; never claim
+    completion from a partial test run or remove reference coverage unproven.
+  - The no-hosted-CI directive remains in force. CMake/CTest aggregation is local.
+
 
 --------------------------------------------------------------------------------
 0. WHAT THIS PROJECT IS

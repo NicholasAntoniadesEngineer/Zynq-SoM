@@ -1,5 +1,11 @@
 # schgen — netlist-first KiCad schematic + PCB generator
 
+> Migration note: the Python interfaces/examples here are retained for parity.
+> Current Python-free build/CTest instructions and the infrastructure retirement
+> checklist live in [`native/ci/README.md`](../native/ci/README.md). Do not remove
+> the Python tests or their dependencies until their independent coverage has
+> been accepted in native contracts.
+
 `schgen` turns hand-authored Python **netlists** into electrically-correct,
 visually-clean KiCad schematics **and a placed PCB** for the Zynq-7000 SoM
 **carrier** board. You author one subsystem (an active part + all its passives)

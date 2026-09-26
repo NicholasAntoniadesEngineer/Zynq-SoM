@@ -9,6 +9,11 @@ XDC/Tcl remain in their required hardware formats; generator/tooling code is C++
 
 ## Build without Python
 
+For the native-only full CTest workflow and offline dependency bootstrap, see
+[`ci/README.md`](ci/README.md). That additive entry point needs CMake 3.28+ and
+explicitly checks installed KiCad libraries; it does not remove Python parity
+tests or change this engine's standalone/parity build options.
+
 Install the pinned native zlib-ng compressor using the instructions in
 [the manufacturing handoff](tests/data/manufacturing/README.md#explicit-native-installation-and-parent-wiring).
 It must be the tested static/PIC compatibility build so existing PNG bytes remain
@@ -45,7 +50,13 @@ The native CLI supports `self-check`, `catalog-compile`, `circuit-compile`,
 `devicetree`, `design-rules`, `testpoints`, `constraints`, `powertree`, `thermal`,
 `part-rules`, `bom-values`, `footprint-pads`, `pin-completeness`, `symbol-law`,
 `spice`, `firmware`, `manual`, `scfw`, `testplan`, `power-sequence`, and `selftest`.
-It does not yet generate a complete board.
+The native `board` command performs full generation with mandatory native audit
+providers; its complete source-audit acceptance is still in progress. Other
+integrated commands include `build`, the four-sheet `devkit` example, `nets`,
+`subsystem-check`, `carrier-check`, and the native experiment commands.
+`check --tests-dir BUILD` runs full board generation, mutation/determinism
+selftest and every configured native CTest, requiring complete passing JUnit
+evidence. It does not build its selected test directory or waive failing gates.
 Unsupported commands fail.
 
 `subsystem-new NAME` creates a C++ source/header/test package with retained
@@ -79,8 +90,8 @@ transitional PCB pipeline now uses the native writers and shares one prepared
 snapshot across its PCB gates, avoiding repeated source parsing. Standalone gate
 calls still prepare fresh inputs; no global cache hides placement or file edits.
 The original return-path-v1 failures remain separate from return-stitch coverage;
-this migration does not waive them. Floorplan and placement orchestration still
-need their final native CLI integration before the full-board command is native.
+this migration does not waive them. Standalone `floorplan`/`compose` CLI
+integration and complete source-audit acceptance remain migration work.
 
 ```sh
 native/bin/schgen project-check --project carrier
@@ -107,7 +118,7 @@ now includes complete symbol loading, schematic emission, routing, netlist and v
 validation stages, tested against frozen inputs and output bytes. Netlist verification
 shares the hardened KiCad process/XML boundary with SoM extraction, and checks
 connectivity plus NC markers against embedded symbol geometry. Full board
-orchestration remains transitional.
+orchestration is native; complete acceptance is tracked below.
 The hierarchical schematic stage is independently available as
 `native/bin/schgen board-schematic --project NAME -o DIRECTORY`. It generates
 the real routed sheets and root hierarchy, preserves persistent reference bands,
@@ -155,7 +166,7 @@ these pre-existing output defects are not treated as successful compile checks.
 Carrier and devkit XDC/Tcl, and carrier BOM, match the established output bytes.
 Device-tree output changes only generator/source provenance comments. Native
 contract tests cover extraction, mapping, linking, project isolation, rendering
-and validation failures. Full board orchestration remains transitional.
+and validation failures. Full native source-audit acceptance remains pending.
 The full transitional carrier and devkit builds pass. The devkit's two missing
 I2C pull-ups and nine uncovered probe requirements are corrected with physical
 parts, without new waivers. Probe-only ports now export hierarchical sheet
@@ -183,11 +194,12 @@ sequentially.
 schematic, electrical, PCB, document and audit stages. Its contracts compare
 all 49 live-authored carrier/devkit circuit snapshots with canonical hardware IR,
 exercise real KiCad connectivity/ERC, and reject missing mandatory stages.
-The caller must open the part catalog before authoring. The full-board CLI is
-not yet switched: reviewed ledger declarations and the native pipeline metadata
-manifest still need integration and end-to-end validation. An absent manifest
-fails explicitly; this library integration is not a claim of a complete native
-board build. Coverage lint uses every wired-sheet part, including unplaced parts.
+The caller must open the part catalog before authoring. The native full-board
+CLI installs reviewed ledger providers after loading actual board inputs.
+Missing declarations or manifests fail explicitly. Source-audit correctness,
+performance and final clean-tree acceptance remain in progress; native board
+construction alone is not a complete acceptance result. Coverage lint uses
+every wired-sheet part, including unplaced parts.
 
 Firmware source provenance now reads canonical circuit JSON and compiled factory
 registrations rather than checking for Python constructors. Independent source
@@ -227,10 +239,11 @@ it requires network access only when that optional command is invoked. Transport
 errors fail explicitly instead of being reported as a confirmed missing part.
 Its offline contracts use injected provider responses and never contact vendors.
 
-Move complete pipeline stages into the native library and CLI. The remaining
-work includes full-board orchestration, remaining independent verification and
-reporting, system outputs, authoring commands and removal of transitional adapters.
-Replace Python tests with native tests before removing their reference logic.
+Remaining work is native source-purity/audit integration, standalone geometry
+commands, final Python consumer removal and clean-tree full-board acceptance.
+The standalone Python experiment scripts are retired; use `chir-rung`,
+`w11-sweep`, `w12-bound`, `w12-stageprobe` and `dump-circuits` on the native CLI.
+Independent native contracts retain captured reference logic and negative cases.
 
 Each stage must preserve electrical connectivity and its relevant gates, then
 compare generated artifacts against the established reference. Record measured
