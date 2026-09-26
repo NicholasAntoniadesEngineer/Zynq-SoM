@@ -16,4 +16,9 @@ std::optional<std::filesystem::path> find_executable(const std::string& command)
 // kills the child's isolated process group and throws; no success fallback.
 ProcessResult run_process(const std::vector<std::string>& argv,
     std::chrono::milliseconds timeout=std::chrono::milliseconds{30000});
+// Same isolation, timeout and exit semantics, but result strings contain exact
+// bytes: no UTF-8 validation or newline conversion. Required for compressed CAD
+// downloads and other binary subprocess protocols. Never use text mode for them.
+ProcessResult run_process_bytes(const std::vector<std::string>& argv,
+    std::chrono::milliseconds timeout=std::chrono::milliseconds{30000});
 }  // namespace schgen

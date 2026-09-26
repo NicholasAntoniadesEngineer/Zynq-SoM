@@ -56,8 +56,11 @@ std::vector<CatalogPin> part_normalize_pin_types(std::vector<CatalogPin> pins,
                                                const std::string& prefix);
 PartPinGroups part_group_pins(const std::vector<CatalogPin>& pins);
 std::string part_safe_name(const std::string& name);
+std::string part_next_pin_number(const std::vector<CatalogPin>& pins);
 std::optional<CatalogPin> part_synthesize_ep(const std::string& lcsc,
                                           const std::vector<CatalogPin>& pins);
+std::vector<Sexpr> part_ep_pad_nodes(const std::string& number, const std::string& lcsc);
+std::vector<Sexpr> part_silk_plus_nodes(const std::string& lcsc);
 Sexpr part_generate_symbol(const std::string& name, const std::vector<CatalogPin>& pins,
                           const PartImportInfo& info);
 PartFootprint part_convert_footprint(const JsonNode& result, const std::string& name,
@@ -88,7 +91,8 @@ using PartProcessRunner = std::function<ProcessResult(const std::vector<std::str
                                                      std::chrono::milliseconds)>;
 // Explicit live transport factory; shell-free curl, HTTPS only, bounded timeout.
 // Construction does not execute anything. Optional injection is for recorded tests.
-PartTransport part_curl_transport(PartProcessRunner runner = {});
+PartTransport part_curl_transport(PartProcessRunner runner = {},
+                                 const std::string& executable = "curl");
 // HTTP status, transport failures, truncated gzip and size limits are checked here.
 std::string part_http_body(const PartHttpRequest& request, const PartHttpResponse& response);
 std::string fetch_part_cad(const std::string& lcsc, const PartTransport& transport);
@@ -98,6 +102,12 @@ struct PartModelDownload {
 };
 PartModelDownload fetch_part_models(const std::string& uuid, const std::string& base,
                                    const PartTransport& transport);
+// Optional model-only publication for callers that already own an output directory.
+// Empty download is a no-op; no catalog writes or implicit overwrite.
+std::vector<std::string> publish_part_models(const PartModelDownload& models,
+                                            const std::filesystem::path& outdir,
+                                            const std::string& base,
+                                            bool overwrite = false);
 
 // Read-only cache discovery. Checks only NAME.wrl / NAME.step, in that order.
 std::vector<std::string> existing_part_models(const std::filesystem::path& parts_root,

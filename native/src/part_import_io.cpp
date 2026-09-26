@@ -92,15 +92,16 @@ std::string read_file(const std::filesystem::path& path) {
 }
 }
 
-PartTransport part_curl_transport(PartProcessRunner runner) {
-    if(!runner)runner=[](const auto& argv,auto timeout){return run_process(argv,timeout);};
-    return [runner=std::move(runner)](const PartHttpRequest& request) -> PartHttpResponse {
+PartTransport part_curl_transport(PartProcessRunner runner,const std::string& executable) {
+    if(executable.empty() || executable.find('\0')!=executable.npos)throw PartImportError("invalid curl executable");
+    if(!runner)runner=[](const auto& argv,auto timeout){return run_process_bytes(argv,timeout);};
+    return [runner=std::move(runner),executable](const PartHttpRequest& request) -> PartHttpResponse {
         if(request.url.compare(0,8,"https://")!=0 || request.url.find('\0')!=request.url.npos)
             return {0,{},"only HTTPS URLs are permitted"};
         if(request.timeout.count()<=0 || request.max_bytes==0)return {0,{},"invalid HTTP timeout or byte limit"};
         constexpr const char* marker="\nSCHGEN_HTTP_STATUS:";
         std::ostringstream seconds;seconds.imbue(std::locale::classic());seconds<<request.timeout.count()/1000.0;
-        const std::vector<std::string> argv{"curl","--disable","--silent","--show-error","--location","--max-redirs","10",
+        const std::vector<std::string> argv{executable,"--disable","--silent","--show-error","--location","--max-redirs","10",
             "--proto","=https","--proto-redir","=https","--max-time",seconds.str(),"--max-filesize",std::to_string(request.max_bytes),
             "--user-agent",agent,"--write-out",std::string(marker)+"%{http_code}","--url",request.url};
         ProcessResult result;
@@ -173,6 +174,29 @@ std::vector<std::string> existing_part_models(const std::filesystem::path& parts
             if(!std::filesystem::is_regular_file(status))throw PartImportError("model cache is not a regular file: "+path.string());
             out.push_back(name);
         }
+    }
+    return out;
+}
+
+std::vector<std::string> publish_part_models(const PartModelDownload& models,const std::filesystem::path& outdir,
+                                            const std::string& base,bool overwrite) {
+    validate_component(base);
+    const auto dir=root_path(outdir);
+    std::set<std::string> names;
+    for(const auto& f:models.files) {
+        if((f.name!=base+".wrl" && f.name!=base+".step") || !names.insert(f.name).second || f.bytes.empty())
+            throw PartImportError("invalid downloaded model asset: "+f.name);
+        const auto path=dir/f.name;const auto status=std::filesystem::symlink_status(path);
+        if(std::filesystem::is_symlink(status) || (std::filesystem::exists(status) && !std::filesystem::is_regular_file(status)))
+            throw PartImportError("refusing non-regular model output: "+path.string());
+        if(std::filesystem::exists(status) && !overwrite)throw PartImportError("model output already exists (overwrite not enabled): "+path.string());
+    }
+    if(models.files.empty())return {};
+    std::filesystem::create_directories(dir);std::vector<std::string> out;
+    for(const auto& f:models.files) {
+        try {write_atomic_file((dir/f.name).string(),{f.bytes.begin(),f.bytes.end()});}
+        catch(const std::exception& e){throw PartImportError("model publication failed at "+(dir/f.name).string()+"; earlier files may have been published: "+e.what());}
+        out.push_back(f.name);
     }
     return out;
 }

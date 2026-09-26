@@ -63,7 +63,7 @@ std::string render_bringup_manual(const FirmwareDocsInput& in) {
         o<<"- EN cell: `"<<cell.sheet<<'.'<<cell.gate<<"` — `"<<cell.dip_net<<"` AND `"<<cell.override_net<<"` -> `"<<st.enable<<"`. A blank SC leaves the override pulled high (veto inactive).\n";
         const auto vref=fb_vref(st.value);const auto source=vref?"FB divider vs the "+st.value+" "+general(*vref)+" V reference":"fixed-output LDO";
         o<<"- Expect **"<<(st.vout?fixed(*st.vout,2)+" V":"?")<<"** on `"<<st.rail_out<<"` (setpoint derived from the netlist: "<<source<<"). Probe: "<<probe(st.rail_out)<<".\n";
-        o<<"- PG LED `power."<<py(st.pg_led)<<"` lights"<<(st.rail_out=="+1V8"?" (FET-sensed: a red LED cannot run from 1.8 V, so Q1 senses the rail — power.py)":"")<<".\n";
+        o<<"- PG LED `power."<<py(st.pg_led)<<"` lights"<<(st.rail_out=="+1V8"?" (FET-sensed: a red LED cannot run from 1.8 V, so Q1 senses the rail — power/circuit.json)":"")<<".\n";
         if(budgets.count(st.rail_out))o<<"- Current-limit context: rail budget "<<general(budgets.at(st.rail_out)/1000.0)<<" A (power_mon dossier table 1; the regulator is the limit — no rail fuse).\n";
         if(mon_of.count(st.rail_out))o<<"- Telemetry: "<<mon_of.at(st.rail_out)<<".\n";
         o<<'\n';

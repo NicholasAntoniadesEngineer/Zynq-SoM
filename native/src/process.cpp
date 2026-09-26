@@ -49,9 +49,10 @@ struct Child {
     pid_t pid=-1;
     ~Child(){if(pid>0){::kill(-pid,SIGKILL);int status=0;while(::waitpid(pid,&status,0)<0&&errno==EINTR){}}}
 };
-std::string captured(const std::filesystem::path& path) {
+std::string captured(const std::filesystem::path& path,bool binary) {
     std::ifstream in(path,std::ios::binary);if(!in)throw ProcessError("cannot read process output");
     const std::string raw{std::istreambuf_iterator<char>(in),{}};if(in.bad())throw ProcessError("cannot read process output");
+    if(binary)return raw;
     // Match subprocess text=True's strict UTF-8 decoding. Invalid output must
     // not be silently searched for a measurement and credited as a cross-check.
     for(std::size_t i=0;i<raw.size();) {
@@ -75,7 +76,7 @@ std::optional<std::filesystem::path> find_executable(const std::string& command)
         if(end==std::string::npos)break;begin=end+1;
     }return std::nullopt;
 }
-ProcessResult run_process(const std::vector<std::string>& args,std::chrono::milliseconds timeout) {
+static ProcessResult run_process_impl(const std::vector<std::string>& args,std::chrono::milliseconds timeout,bool binary) {
     if(args.empty()||args.front().empty())throw ProcessError("process executable is empty");
     for(const auto& arg:args)if(arg.find('\0')!=std::string::npos)throw ProcessError("embedded null byte in process argument");
     if(timeout.count()<0)throw ProcessError("process timeout must not be negative");
@@ -91,6 +92,8 @@ ProcessResult run_process(const std::vector<std::string>& args,std::chrono::mill
         if(std::chrono::steady_clock::now()>=deadline)throw ProcessTimeout("process timed out after "+std::to_string(timeout.count())+" ms: "+args.front());
         std::this_thread::sleep_for(std::chrono::milliseconds{2});
     }
-    return {WIFEXITED(status)?WEXITSTATUS(status):-WTERMSIG(status),captured(scratch.path/"stdout"),captured(scratch.path/"stderr")};
+    return {WIFEXITED(status)?WEXITSTATUS(status):-WTERMSIG(status),captured(scratch.path/"stdout",binary),captured(scratch.path/"stderr",binary)};
 }
+ProcessResult run_process(const std::vector<std::string>& args,std::chrono::milliseconds timeout){return run_process_impl(args,timeout,false);}
+ProcessResult run_process_bytes(const std::vector<std::string>& args,std::chrono::milliseconds timeout){return run_process_impl(args,timeout,true);}
 }  // namespace schgen

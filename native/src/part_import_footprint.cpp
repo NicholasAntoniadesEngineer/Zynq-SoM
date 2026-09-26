@@ -156,6 +156,20 @@ std::vector<S> paste_grid(const std::string& pn,double x,double y,double w,doubl
 }
 }
 
+std::vector<Sexpr> part_ep_pad_nodes(const std::string& number,const std::string& lcsc) {
+    if(lcsc!="C3192119")throw PartImportError("no exposed-pad specification for "+lcsc);
+    // MPS MPQ4423H Rev1.11 QFN-8 bottom D2xE2 nominal, 1.0 x 1.1 mm.
+    return {list({sym("pad"),str(number),sym("smd"),sym("rect"),list({sym("at"),num(0),num(0)}),
+        list({sym("size"),num(1),num(1.1)}),list({sym("layers"),str("F.Cu"),str("F.Paste"),str("F.Mask")})})};
+}
+
+std::vector<Sexpr> part_silk_plus_nodes(const std::string& lcsc) {
+    if(lcsc!="C5365933")return {};
+    // EasyEDA layer-12 SOLIDREGION cross at pad 1, V_RTC_BAT; pad 2 is ground.
+    return {fp_line({rounded(-5.6-0.6),0},{rounded(-5.6+0.6),0},0.15,"F.SilkS"),
+            fp_line({-5.6,-0.6},{-5.6,0.6},0.15,"F.SilkS")};
+}
+
 PartFootprint part_convert_footprint(const JsonNode& result,const std::string& name,const PartImportInfo& info,
                                     const std::vector<std::string>& model_files,const std::optional<CatalogPin>& ep) {
     const auto& pkg=field(result,"packageDetail");const auto& data=field(pkg,"dataStr");
@@ -219,12 +233,8 @@ PartFootprint part_convert_footprint(const JsonNode& result,const std::string& n
                 rotation(360-number(rot[0])),rotation(360-(rot.size()>1?number(rot[1]):0)),rotation(360-(rot.size()>2?number(rot[2]):0))};
         }
     }
-    if(ep && p.lcsc=="C3192119")pads.push_back(list({sym("pad"),str(ep->number),sym("smd"),sym("rect"),list({sym("at"),num(0),num(0)}),
-        list({sym("size"),num(1),num(1.1)}),list({sym("layers"),str("F.Cu"),str("F.Paste"),str("F.Mask")})}));
-    if(p.lcsc=="C5365933") {
-        graphics.push_back(fp_line({rounded(-5.6-0.6),0},{rounded(-5.6+0.6),0},0.15,"F.SilkS"));
-        graphics.push_back(fp_line({-5.6,-0.6},{-5.6,0.6},0.15,"F.SilkS"));
-    }
+    if(ep)extend(pads,part_ep_pad_nodes(ep->number,p.lcsc));
+    extend(graphics,part_silk_plus_nodes(p.lcsc));
     append(fp,list({sym("attr"),sym(smd?"smd":"through_hole")}));
     double low=0,high=0;bool first=true;
     for(const auto& pad:pads) {

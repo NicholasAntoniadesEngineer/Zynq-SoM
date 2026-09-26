@@ -1,0 +1,1857 @@
+{
+  "source_sha256": "d48ed2c389222f230a667489be5f61b5cb33bbbad55ec87af5ab48d5bbab5898",
+  "safe_names": [
+    {
+      "input": "A / B",
+      "output": "A_B"
+    },
+    {
+      "input": "A_ B",
+      "output": "A__B"
+    },
+    {
+      "input": "A _B",
+      "output": "A__B"
+    },
+    {
+      "input": "__A__",
+      "output": "A"
+    },
+    {
+      "input": "A__B",
+      "output": "A__B"
+    },
+    {
+      "input": "Åµ",
+      "output": ""
+    },
+    {
+      "input": "a/../b",
+      "output": "a_.._b"
+    },
+    {
+      "input": ".",
+      "output": "."
+    },
+    {
+      "input": "..",
+      "output": ".."
+    },
+    {
+      "input": " USB-C  ",
+      "output": "USB-C"
+    },
+    {
+      "input": "A\\B",
+      "output": "A_B"
+    }
+  ],
+  "info": {
+    "mpn": "Synthetic Å board",
+    "lcsc": "C123",
+    "prefix": "U",
+    "package": "X",
+    "manufacturer": "Test",
+    "jlc_class": "",
+    "description": "µΩ line\nnext",
+    "datasheet": "https://example.invalid/a",
+    "product_url": "",
+    "tags": [
+      "a",
+      "b"
+    ]
+  },
+  "groups": [
+    {
+      "pins": [],
+      "groups": {
+        "left": [],
+        "right": [],
+        "top": [],
+        "bottom": []
+      },
+      "next": "EP",
+      "normalized": {
+        "U": [],
+        "R": [],
+        "C": [],
+        "L": [],
+        "FB": [],
+        "F": []
+      },
+      "ep": {
+        "number": "EP",
+        "name": "EP",
+        "etype": "passive"
+      },
+      "symbol": "(kicad_symbol_lib\n\t(version 20241209)\n\t(generator \"schgen_part_gen\")\n\t(generator_version \"1.0\")\n\t(symbol\n\t\t\"test\"\n\t\t(pin_names\n\t\t\t(offset 0.508)\n\t\t\t(hide yes)\n\t\t)\n\t\t(exclude_from_sim no)\n\t\t(in_bom yes)\n\t\t(on_board yes)\n\t\t(property\n\t\t\t\"Reference\"\n\t\t\t\"U\"\n\t\t\t(at 0 6.35 0)\n\t\t\t(effects\n\t\t\t\t(font\n\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t)\n\t\t\t)\n\t\t)\n\t\t(property\n\t\t\t\"Value\"\n\t\t\t\"Synthetic Å board\"\n\t\t\t(at 0 -6.35 0)\n\t\t\t(effects\n\t\t\t\t(font\n\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t)\n\t\t\t)\n\t\t)\n\t\t(property\n\t\t\t\"Footprint\"\n\t\t\t\"test:test\"\n\t\t\t(at 0 0 0)\n\t\t\t(effects\n\t\t\t\t(font\n\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t)\n\t\t\t\t(hide yes)\n\t\t\t)\n\t\t)\n\t\t(property\n\t\t\t\"Datasheet\"\n\t\t\t\"https://example.invalid/a\"\n\t\t\t(at 0 0 0)\n\t\t\t(effects\n\t\t\t\t(font\n\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t)\n\t\t\t\t(hide yes)\n\t\t\t)\n\t\t)\n\t\t(property\n\t\t\t\"Description\"\n\t\t\t\"µΩ line\nnext\"\n\t\t\t(at 0 0 0)\n\t\t\t(effects\n\t\t\t\t(font\n\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t)\n\t\t\t\t(hide yes)\n\t\t\t)\n\t\t)\n\t\t(property\n\t\t\t\"LCSC\"\n\t\t\t\"C123\"\n\t\t\t(at 0 0 0)\n\t\t\t(effects\n\t\t\t\t(font\n\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t)\n\t\t\t\t(hide yes)\n\t\t\t)\n\t\t)\n\t\t(symbol\n\t\t\t\"test_0_1\"\n\t\t\t(rectangle\n\t\t\t\t(start -2.54 2.54)\n\t\t\t\t(end 2.54 -2.54)\n\t\t\t\t(stroke\n\t\t\t\t\t(width 0.254)\n\t\t\t\t\t(type default)\n\t\t\t\t)\n\t\t\t\t(fill\n\t\t\t\t\t(type background)\n\t\t\t\t)\n\t\t\t)\n\t\t)\n\t\t(symbol \"test_1_1\")\n\t)\n)"
+    },
+    {
+      "pins": [
+        {
+          "number": "1",
+          "name": "P1",
+          "etype": "passive"
+        },
+        {
+          "number": "2",
+          "name": "P2",
+          "etype": "passive"
+        },
+        {
+          "number": "3",
+          "name": "P3",
+          "etype": "passive"
+        },
+        {
+          "number": "4",
+          "name": "P4",
+          "etype": "passive"
+        },
+        {
+          "number": "5",
+          "name": "P5",
+          "etype": "passive"
+        },
+        {
+          "number": "6",
+          "name": "P6",
+          "etype": "passive"
+        },
+        {
+          "number": "7",
+          "name": "P7",
+          "etype": "passive"
+        },
+        {
+          "number": "8",
+          "name": "P8",
+          "etype": "passive"
+        }
+      ],
+      "groups": {
+        "left": [
+          {
+            "number": "1",
+            "name": "P1",
+            "etype": "passive"
+          },
+          {
+            "number": "3",
+            "name": "P3",
+            "etype": "passive"
+          },
+          {
+            "number": "5",
+            "name": "P5",
+            "etype": "passive"
+          },
+          {
+            "number": "7",
+            "name": "P7",
+            "etype": "passive"
+          }
+        ],
+        "right": [
+          {
+            "number": "2",
+            "name": "P2",
+            "etype": "passive"
+          },
+          {
+            "number": "4",
+            "name": "P4",
+            "etype": "passive"
+          },
+          {
+            "number": "6",
+            "name": "P6",
+            "etype": "passive"
+          },
+          {
+            "number": "8",
+            "name": "P8",
+            "etype": "passive"
+          }
+        ],
+        "top": [],
+        "bottom": []
+      },
+      "next": "9",
+      "normalized": {
+        "U": [
+          {
+            "number": "1",
+            "name": "P1",
+            "etype": "passive"
+          },
+          {
+            "number": "2",
+            "name": "P2",
+            "etype": "passive"
+          },
+          {
+            "number": "3",
+            "name": "P3",
+            "etype": "passive"
+          },
+          {
+            "number": "4",
+            "name": "P4",
+            "etype": "passive"
+          },
+          {
+            "number": "5",
+            "name": "P5",
+            "etype": "passive"
+          },
+          {
+            "number": "6",
+            "name": "P6",
+            "etype": "passive"
+          },
+          {
+            "number": "7",
+            "name": "P7",
+            "etype": "passive"
+          },
+          {
+            "number": "8",
+            "name": "P8",
+            "etype": "passive"
+          }
+        ],
+        "R": [
+          {
+            "number": "1",
+            "name": "P1",
+            "etype": "passive"
+          },
+          {
+            "number": "2",
+            "name": "P2",
+            "etype": "passive"
+          },
+          {
+            "number": "3",
+            "name": "P3",
+            "etype": "passive"
+          },
+          {
+            "number": "4",
+            "name": "P4",
+            "etype": "passive"
+          },
+          {
+            "number": "5",
+            "name": "P5",
+            "etype": "passive"
+          },
+          {
+            "number": "6",
+            "name": "P6",
+            "etype": "passive"
+          },
+          {
+            "number": "7",
+            "name": "P7",
+            "etype": "passive"
+          },
+          {
+            "number": "8",
+            "name": "P8",
+            "etype": "passive"
+          }
+        ],
+        "C": [
+          {
+            "number": "1",
+            "name": "P1",
+            "etype": "passive"
+          },
+          {
+            "number": "2",
+            "name": "P2",
+            "etype": "passive"
+          },
+          {
+            "number": "3",
+            "name": "P3",
+            "etype": "passive"
+          },
+          {
+            "number": "4",
+            "name": "P4",
+            "etype": "passive"
+          },
+          {
+            "number": "5",
+            "name": "P5",
+            "etype": "passive"
+          },
+          {
+            "number": "6",
+            "name": "P6",
+            "etype": "passive"
+          },
+          {
+            "number": "7",
+            "name": "P7",
+            "etype": "passive"
+          },
+          {
+            "number": "8",
+            "name": "P8",
+            "etype": "passive"
+          }
+        ],
+        "L": [
+          {
+            "number": "1",
+            "name": "P1",
+            "etype": "passive"
+          },
+          {
+            "number": "2",
+            "name": "P2",
+            "etype": "passive"
+          },
+          {
+            "number": "3",
+            "name": "P3",
+            "etype": "passive"
+          },
+          {
+            "number": "4",
+            "name": "P4",
+            "etype": "passive"
+          },
+          {
+            "number": "5",
+            "name": "P5",
+            "etype": "passive"
+          },
+          {
+            "number": "6",
+            "name": "P6",
+            "etype": "passive"
+          },
+          {
+            "number": "7",
+            "name": "P7",
+            "etype": "passive"
+          },
+          {
+            "number": "8",
+            "name": "P8",
+            "etype": "passive"
+          }
+        ],
+        "FB": [
+          {
+            "number": "1",
+            "name": "P1",
+            "etype": "passive"
+          },
+          {
+            "number": "2",
+            "name": "P2",
+            "etype": "passive"
+          },
+          {
+            "number": "3",
+            "name": "P3",
+            "etype": "passive"
+          },
+          {
+            "number": "4",
+            "name": "P4",
+            "etype": "passive"
+          },
+          {
+            "number": "5",
+            "name": "P5",
+            "etype": "passive"
+          },
+          {
+            "number": "6",
+            "name": "P6",
+            "etype": "passive"
+          },
+          {
+            "number": "7",
+            "name": "P7",
+            "etype": "passive"
+          },
+          {
+            "number": "8",
+            "name": "P8",
+            "etype": "passive"
+          }
+        ],
+        "F": [
+          {
+            "number": "1",
+            "name": "P1",
+            "etype": "passive"
+          },
+          {
+            "number": "2",
+            "name": "P2",
+            "etype": "passive"
+          },
+          {
+            "number": "3",
+            "name": "P3",
+            "etype": "passive"
+          },
+          {
+            "number": "4",
+            "name": "P4",
+            "etype": "passive"
+          },
+          {
+            "number": "5",
+            "name": "P5",
+            "etype": "passive"
+          },
+          {
+            "number": "6",
+            "name": "P6",
+            "etype": "passive"
+          },
+          {
+            "number": "7",
+            "name": "P7",
+            "etype": "passive"
+          },
+          {
+            "number": "8",
+            "name": "P8",
+            "etype": "passive"
+          }
+        ]
+      },
+      "ep": {
+        "number": "9",
+        "name": "EP",
+        "etype": "passive"
+      },
+      "symbol": "(kicad_symbol_lib\n\t(version 20241209)\n\t(generator \"schgen_part_gen\")\n\t(generator_version \"1.0\")\n\t(symbol\n\t\t\"test\"\n\t\t(pin_names\n\t\t\t(offset 0.508)\n\t\t)\n\t\t(exclude_from_sim no)\n\t\t(in_bom yes)\n\t\t(on_board yes)\n\t\t(property\n\t\t\t\"Reference\"\n\t\t\t\"U\"\n\t\t\t(at 0 10.16 0)\n\t\t\t(effects\n\t\t\t\t(font\n\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t)\n\t\t\t)\n\t\t)\n\t\t(property\n\t\t\t\"Value\"\n\t\t\t\"Synthetic Å board\"\n\t\t\t(at 0 -10.16 0)\n\t\t\t(effects\n\t\t\t\t(font\n\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t)\n\t\t\t)\n\t\t)\n\t\t(property\n\t\t\t\"Footprint\"\n\t\t\t\"test:test\"\n\t\t\t(at 0 0 0)\n\t\t\t(effects\n\t\t\t\t(font\n\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t)\n\t\t\t\t(hide yes)\n\t\t\t)\n\t\t)\n\t\t(property\n\t\t\t\"Datasheet\"\n\t\t\t\"https://example.invalid/a\"\n\t\t\t(at 0 0 0)\n\t\t\t(effects\n\t\t\t\t(font\n\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t)\n\t\t\t\t(hide yes)\n\t\t\t)\n\t\t)\n\t\t(property\n\t\t\t\"Description\"\n\t\t\t\"µΩ line\nnext\"\n\t\t\t(at 0 0 0)\n\t\t\t(effects\n\t\t\t\t(font\n\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t)\n\t\t\t\t(hide yes)\n\t\t\t)\n\t\t)\n\t\t(property\n\t\t\t\"LCSC\"\n\t\t\t\"C123\"\n\t\t\t(at 0 0 0)\n\t\t\t(effects\n\t\t\t\t(font\n\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t)\n\t\t\t\t(hide yes)\n\t\t\t)\n\t\t)\n\t\t(symbol\n\t\t\t\"test_0_1\"\n\t\t\t(rectangle\n\t\t\t\t(start -5.08 6.35)\n\t\t\t\t(end 5.08 -6.35)\n\t\t\t\t(stroke\n\t\t\t\t\t(width 0.254)\n\t\t\t\t\t(type default)\n\t\t\t\t)\n\t\t\t\t(fill\n\t\t\t\t\t(type background)\n\t\t\t\t)\n\t\t\t)\n\t\t)\n\t\t(symbol\n\t\t\t\"test_1_1\"\n\t\t\t(pin\n\t\t\t\tpassive\n\t\t\t\tline\n\t\t\t\t(at -7.62 3.81 0)\n\t\t\t\t(length 2.54)\n\t\t\t\t(name\n\t\t\t\t\t\"P1\"\n\t\t\t\t\t(effects\n\t\t\t\t\t\t(font\n\t\t\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t\t\t)\n\t\t\t\t\t)\n\t\t\t\t)\n\t\t\t\t(number\n\t\t\t\t\t\"1\"\n\t\t\t\t\t(effects\n\t\t\t\t\t\t(font\n\t\t\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t\t\t)\n\t\t\t\t\t)\n\t\t\t\t)\n\t\t\t)\n\t\t\t(pin\n\t\t\t\tpassive\n\t\t\t\tline\n\t\t\t\t(at -7.62 1.27 0)\n\t\t\t\t(length 2.54)\n\t\t\t\t(name\n\t\t\t\t\t\"P3\"\n\t\t\t\t\t(effects\n\t\t\t\t\t\t(font\n\t\t\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t\t\t)\n\t\t\t\t\t)\n\t\t\t\t)\n\t\t\t\t(number\n\t\t\t\t\t\"3\"\n\t\t\t\t\t(effects\n\t\t\t\t\t\t(font\n\t\t\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t\t\t)\n\t\t\t\t\t)\n\t\t\t\t)\n\t\t\t)\n\t\t\t(pin\n\t\t\t\tpassive\n\t\t\t\tline\n\t\t\t\t(at -7.62 -1.27 0)\n\t\t\t\t(length 2.54)\n\t\t\t\t(name\n\t\t\t\t\t\"P5\"\n\t\t\t\t\t(effects\n\t\t\t\t\t\t(font\n\t\t\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t\t\t)\n\t\t\t\t\t)\n\t\t\t\t)\n\t\t\t\t(number\n\t\t\t\t\t\"5\"\n\t\t\t\t\t(effects\n\t\t\t\t\t\t(font\n\t\t\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t\t\t)\n\t\t\t\t\t)\n\t\t\t\t)\n\t\t\t)\n\t\t\t(pin\n\t\t\t\tpassive\n\t\t\t\tline\n\t\t\t\t(at -7.62 -3.81 0)\n\t\t\t\t(length 2.54)\n\t\t\t\t(name\n\t\t\t\t\t\"P7\"\n\t\t\t\t\t(effects\n\t\t\t\t\t\t(font\n\t\t\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t\t\t)\n\t\t\t\t\t)\n\t\t\t\t)\n\t\t\t\t(number\n\t\t\t\t\t\"7\"\n\t\t\t\t\t(effects\n\t\t\t\t\t\t(font\n\t\t\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t\t\t)\n\t\t\t\t\t)\n\t\t\t\t)\n\t\t\t)\n\t\t\t(pin\n\t\t\t\tpassive\n\t\t\t\tline\n\t\t\t\t(at 7.62 3.81 180)\n\t\t\t\t(length 2.54)\n\t\t\t\t(name\n\t\t\t\t\t\"P2\"\n\t\t\t\t\t(effects\n\t\t\t\t\t\t(font\n\t\t\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t\t\t)\n\t\t\t\t\t)\n\t\t\t\t)\n\t\t\t\t(number\n\t\t\t\t\t\"2\"\n\t\t\t\t\t(effects\n\t\t\t\t\t\t(font\n\t\t\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t\t\t)\n\t\t\t\t\t)\n\t\t\t\t)\n\t\t\t)\n\t\t\t(pin\n\t\t\t\tpassive\n\t\t\t\tline\n\t\t\t\t(at 7.62 1.27 180)\n\t\t\t\t(length 2.54)\n\t\t\t\t(name\n\t\t\t\t\t\"P4\"\n\t\t\t\t\t(effects\n\t\t\t\t\t\t(font\n\t\t\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t\t\t)\n\t\t\t\t\t)\n\t\t\t\t)\n\t\t\t\t(number\n\t\t\t\t\t\"4\"\n\t\t\t\t\t(effects\n\t\t\t\t\t\t(font\n\t\t\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t\t\t)\n\t\t\t\t\t)\n\t\t\t\t)\n\t\t\t)\n\t\t\t(pin\n\t\t\t\tpassive\n\t\t\t\tline\n\t\t\t\t(at 7.62 -1.27 180)\n\t\t\t\t(length 2.54)\n\t\t\t\t(name\n\t\t\t\t\t\"P6\"\n\t\t\t\t\t(effects\n\t\t\t\t\t\t(font\n\t\t\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t\t\t)\n\t\t\t\t\t)\n\t\t\t\t)\n\t\t\t\t(number\n\t\t\t\t\t\"6\"\n\t\t\t\t\t(effects\n\t\t\t\t\t\t(font\n\t\t\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t\t\t)\n\t\t\t\t\t)\n\t\t\t\t)\n\t\t\t)\n\t\t\t(pin\n\t\t\t\tpassive\n\t\t\t\tline\n\t\t\t\t(at 7.62 -3.81 180)\n\t\t\t\t(length 2.54)\n\t\t\t\t(name\n\t\t\t\t\t\"P8\"\n\t\t\t\t\t(effects\n\t\t\t\t\t\t(font\n\t\t\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t\t\t)\n\t\t\t\t\t)\n\t\t\t\t)\n\t\t\t\t(number\n\t\t\t\t\t\"8\"\n\t\t\t\t\t(effects\n\t\t\t\t\t\t(font\n\t\t\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t\t\t)\n\t\t\t\t\t)\n\t\t\t\t)\n\t\t\t)\n\t\t)\n\t)\n)"
+    },
+    {
+      "pins": [
+        {
+          "number": "99",
+          "name": "signal",
+          "etype": "output"
+        },
+        {
+          "number": "A1",
+          "name": "GND",
+          "etype": "power_in"
+        }
+      ],
+      "groups": {
+        "left": [],
+        "right": [
+          {
+            "number": "99",
+            "name": "signal",
+            "etype": "output"
+          }
+        ],
+        "top": [],
+        "bottom": [
+          {
+            "number": "A1",
+            "name": "GND",
+            "etype": "power_in"
+          }
+        ]
+      },
+      "next": "100",
+      "normalized": {
+        "U": [
+          {
+            "number": "99",
+            "name": "signal",
+            "etype": "passive"
+          },
+          {
+            "number": "A1",
+            "name": "GND",
+            "etype": "passive"
+          }
+        ],
+        "R": [
+          {
+            "number": "99",
+            "name": "signal",
+            "etype": "passive"
+          },
+          {
+            "number": "A1",
+            "name": "GND",
+            "etype": "passive"
+          }
+        ],
+        "C": [
+          {
+            "number": "99",
+            "name": "signal",
+            "etype": "passive"
+          },
+          {
+            "number": "A1",
+            "name": "GND",
+            "etype": "passive"
+          }
+        ],
+        "L": [
+          {
+            "number": "99",
+            "name": "signal",
+            "etype": "passive"
+          },
+          {
+            "number": "A1",
+            "name": "GND",
+            "etype": "passive"
+          }
+        ],
+        "FB": [
+          {
+            "number": "99",
+            "name": "signal",
+            "etype": "passive"
+          },
+          {
+            "number": "A1",
+            "name": "GND",
+            "etype": "passive"
+          }
+        ],
+        "F": [
+          {
+            "number": "99",
+            "name": "signal",
+            "etype": "passive"
+          },
+          {
+            "number": "A1",
+            "name": "GND",
+            "etype": "passive"
+          }
+        ]
+      },
+      "ep": {
+        "number": "100",
+        "name": "EP",
+        "etype": "passive"
+      },
+      "symbol": "(kicad_symbol_lib\n\t(version 20241209)\n\t(generator \"schgen_part_gen\")\n\t(generator_version \"1.0\")\n\t(symbol\n\t\t\"test\"\n\t\t(pin_names\n\t\t\t(offset 0.508)\n\t\t)\n\t\t(exclude_from_sim no)\n\t\t(in_bom yes)\n\t\t(on_board yes)\n\t\t(property\n\t\t\t\"Reference\"\n\t\t\t\"U\"\n\t\t\t(at 0 10.16 0)\n\t\t\t(effects\n\t\t\t\t(font\n\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t)\n\t\t\t)\n\t\t)\n\t\t(property\n\t\t\t\"Value\"\n\t\t\t\"Synthetic Å board\"\n\t\t\t(at 0 -11.43 0)\n\t\t\t(effects\n\t\t\t\t(font\n\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t)\n\t\t\t)\n\t\t)\n\t\t(property\n\t\t\t\"Footprint\"\n\t\t\t\"test:test\"\n\t\t\t(at 0 0 0)\n\t\t\t(effects\n\t\t\t\t(font\n\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t)\n\t\t\t\t(hide yes)\n\t\t\t)\n\t\t)\n\t\t(property\n\t\t\t\"Datasheet\"\n\t\t\t\"https://example.invalid/a\"\n\t\t\t(at 0 0 0)\n\t\t\t(effects\n\t\t\t\t(font\n\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t)\n\t\t\t\t(hide yes)\n\t\t\t)\n\t\t)\n\t\t(property\n\t\t\t\"Description\"\n\t\t\t\"µΩ line\nnext\"\n\t\t\t(at 0 0 0)\n\t\t\t(effects\n\t\t\t\t(font\n\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t)\n\t\t\t\t(hide yes)\n\t\t\t)\n\t\t)\n\t\t(property\n\t\t\t\"LCSC\"\n\t\t\t\"C123\"\n\t\t\t(at 0 0 0)\n\t\t\t(effects\n\t\t\t\t(font\n\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t)\n\t\t\t\t(hide yes)\n\t\t\t)\n\t\t)\n\t\t(symbol\n\t\t\t\"test_0_1\"\n\t\t\t(rectangle\n\t\t\t\t(start -6.35 6.35)\n\t\t\t\t(end 6.35 -6.35)\n\t\t\t\t(stroke\n\t\t\t\t\t(width 0.254)\n\t\t\t\t\t(type default)\n\t\t\t\t)\n\t\t\t\t(fill\n\t\t\t\t\t(type background)\n\t\t\t\t)\n\t\t\t)\n\t\t)\n\t\t(symbol\n\t\t\t\"test_1_1\"\n\t\t\t(pin\n\t\t\t\toutput\n\t\t\t\tline\n\t\t\t\t(at 10.16 3.81 180)\n\t\t\t\t(length 3.81)\n\t\t\t\t(name\n\t\t\t\t\t\"signal\"\n\t\t\t\t\t(effects\n\t\t\t\t\t\t(font\n\t\t\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t\t\t)\n\t\t\t\t\t)\n\t\t\t\t)\n\t\t\t\t(number\n\t\t\t\t\t\"99\"\n\t\t\t\t\t(effects\n\t\t\t\t\t\t(font\n\t\t\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t\t\t)\n\t\t\t\t\t)\n\t\t\t\t)\n\t\t\t)\n\t\t\t(pin\n\t\t\t\tpower_in\n\t\t\t\tline\n\t\t\t\t(at 0 -10.16 90)\n\t\t\t\t(length 3.81)\n\t\t\t\t(name\n\t\t\t\t\t\"GND\"\n\t\t\t\t\t(effects\n\t\t\t\t\t\t(font\n\t\t\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t\t\t)\n\t\t\t\t\t)\n\t\t\t\t)\n\t\t\t\t(number\n\t\t\t\t\t\"A1\"\n\t\t\t\t\t(effects\n\t\t\t\t\t\t(font\n\t\t\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t\t\t)\n\t\t\t\t\t)\n\t\t\t\t)\n\t\t\t)\n\t\t)\n\t)\n)"
+    },
+    {
+      "pins": [
+        {
+          "number": "1",
+          "name": "PAD",
+          "etype": "passive"
+        }
+      ],
+      "groups": {
+        "left": [],
+        "right": [],
+        "top": [],
+        "bottom": [
+          {
+            "number": "1",
+            "name": "PAD",
+            "etype": "passive"
+          }
+        ]
+      },
+      "next": "2",
+      "normalized": {
+        "U": [
+          {
+            "number": "1",
+            "name": "PAD",
+            "etype": "passive"
+          }
+        ],
+        "R": [
+          {
+            "number": "1",
+            "name": "PAD",
+            "etype": "passive"
+          }
+        ],
+        "C": [
+          {
+            "number": "1",
+            "name": "PAD",
+            "etype": "passive"
+          }
+        ],
+        "L": [
+          {
+            "number": "1",
+            "name": "PAD",
+            "etype": "passive"
+          }
+        ],
+        "FB": [
+          {
+            "number": "1",
+            "name": "PAD",
+            "etype": "passive"
+          }
+        ],
+        "F": [
+          {
+            "number": "1",
+            "name": "PAD",
+            "etype": "passive"
+          }
+        ]
+      },
+      "ep": null,
+      "symbol": "(kicad_symbol_lib\n\t(version 20241209)\n\t(generator \"schgen_part_gen\")\n\t(generator_version \"1.0\")\n\t(symbol\n\t\t\"test\"\n\t\t(pin_names\n\t\t\t(offset 0.508)\n\t\t)\n\t\t(exclude_from_sim no)\n\t\t(in_bom yes)\n\t\t(on_board yes)\n\t\t(property\n\t\t\t\"Reference\"\n\t\t\t\"U\"\n\t\t\t(at 0 8.89 0)\n\t\t\t(effects\n\t\t\t\t(font\n\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t)\n\t\t\t)\n\t\t)\n\t\t(property\n\t\t\t\"Value\"\n\t\t\t\"Synthetic Å board\"\n\t\t\t(at 0 -8.89 0)\n\t\t\t(effects\n\t\t\t\t(font\n\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t)\n\t\t\t)\n\t\t)\n\t\t(property\n\t\t\t\"Footprint\"\n\t\t\t\"test:test\"\n\t\t\t(at 0 0 0)\n\t\t\t(effects\n\t\t\t\t(font\n\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t)\n\t\t\t\t(hide yes)\n\t\t\t)\n\t\t)\n\t\t(property\n\t\t\t\"Datasheet\"\n\t\t\t\"https://example.invalid/a\"\n\t\t\t(at 0 0 0)\n\t\t\t(effects\n\t\t\t\t(font\n\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t)\n\t\t\t\t(hide yes)\n\t\t\t)\n\t\t)\n\t\t(property\n\t\t\t\"Description\"\n\t\t\t\"µΩ line\nnext\"\n\t\t\t(at 0 0 0)\n\t\t\t(effects\n\t\t\t\t(font\n\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t)\n\t\t\t\t(hide yes)\n\t\t\t)\n\t\t)\n\t\t(property\n\t\t\t\"LCSC\"\n\t\t\t\"C123\"\n\t\t\t(at 0 0 0)\n\t\t\t(effects\n\t\t\t\t(font\n\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t)\n\t\t\t\t(hide yes)\n\t\t\t)\n\t\t)\n\t\t(symbol\n\t\t\t\"test_0_1\"\n\t\t\t(rectangle\n\t\t\t\t(start -2.54 5.08)\n\t\t\t\t(end 2.54 -5.08)\n\t\t\t\t(stroke\n\t\t\t\t\t(width 0.254)\n\t\t\t\t\t(type default)\n\t\t\t\t)\n\t\t\t\t(fill\n\t\t\t\t\t(type background)\n\t\t\t\t)\n\t\t\t)\n\t\t)\n\t\t(symbol\n\t\t\t\"test_1_1\"\n\t\t\t(pin\n\t\t\t\tpassive\n\t\t\t\tline\n\t\t\t\t(at 0 -7.62 90)\n\t\t\t\t(length 2.54)\n\t\t\t\t(name\n\t\t\t\t\t\"PAD\"\n\t\t\t\t\t(effects\n\t\t\t\t\t\t(font\n\t\t\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t\t\t)\n\t\t\t\t\t)\n\t\t\t\t)\n\t\t\t\t(number\n\t\t\t\t\t\"1\"\n\t\t\t\t\t(effects\n\t\t\t\t\t\t(font\n\t\t\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t\t\t)\n\t\t\t\t\t)\n\t\t\t\t)\n\t\t\t)\n\t\t)\n\t)\n)"
+    },
+    {
+      "pins": [
+        {
+          "number": "999999999999999999999999999999999999999",
+          "name": "x",
+          "etype": "passive"
+        }
+      ],
+      "groups": {
+        "left": [
+          {
+            "number": "999999999999999999999999999999999999999",
+            "name": "x",
+            "etype": "passive"
+          }
+        ],
+        "right": [],
+        "top": [],
+        "bottom": []
+      },
+      "next": "1000000000000000000000000000000000000000",
+      "normalized": {
+        "U": [
+          {
+            "number": "999999999999999999999999999999999999999",
+            "name": "x",
+            "etype": "passive"
+          }
+        ],
+        "R": [
+          {
+            "number": "999999999999999999999999999999999999999",
+            "name": "x",
+            "etype": "passive"
+          }
+        ],
+        "C": [
+          {
+            "number": "999999999999999999999999999999999999999",
+            "name": "x",
+            "etype": "passive"
+          }
+        ],
+        "L": [
+          {
+            "number": "999999999999999999999999999999999999999",
+            "name": "x",
+            "etype": "passive"
+          }
+        ],
+        "FB": [
+          {
+            "number": "999999999999999999999999999999999999999",
+            "name": "x",
+            "etype": "passive"
+          }
+        ],
+        "F": [
+          {
+            "number": "999999999999999999999999999999999999999",
+            "name": "x",
+            "etype": "passive"
+          }
+        ]
+      },
+      "ep": {
+        "number": "1000000000000000000000000000000000000000",
+        "name": "EP",
+        "etype": "passive"
+      },
+      "symbol": "(kicad_symbol_lib\n\t(version 20241209)\n\t(generator \"schgen_part_gen\")\n\t(generator_version \"1.0\")\n\t(symbol\n\t\t\"test\"\n\t\t(pin_names\n\t\t\t(offset 0.508)\n\t\t)\n\t\t(exclude_from_sim no)\n\t\t(in_bom yes)\n\t\t(on_board yes)\n\t\t(property\n\t\t\t\"Reference\"\n\t\t\t\"U\"\n\t\t\t(at 0 6.35 0)\n\t\t\t(effects\n\t\t\t\t(font\n\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t)\n\t\t\t)\n\t\t)\n\t\t(property\n\t\t\t\"Value\"\n\t\t\t\"Synthetic Å board\"\n\t\t\t(at 0 -6.35 0)\n\t\t\t(effects\n\t\t\t\t(font\n\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t)\n\t\t\t)\n\t\t)\n\t\t(property\n\t\t\t\"Footprint\"\n\t\t\t\"test:test\"\n\t\t\t(at 0 0 0)\n\t\t\t(effects\n\t\t\t\t(font\n\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t)\n\t\t\t\t(hide yes)\n\t\t\t)\n\t\t)\n\t\t(property\n\t\t\t\"Datasheet\"\n\t\t\t\"https://example.invalid/a\"\n\t\t\t(at 0 0 0)\n\t\t\t(effects\n\t\t\t\t(font\n\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t)\n\t\t\t\t(hide yes)\n\t\t\t)\n\t\t)\n\t\t(property\n\t\t\t\"Description\"\n\t\t\t\"µΩ line\nnext\"\n\t\t\t(at 0 0 0)\n\t\t\t(effects\n\t\t\t\t(font\n\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t)\n\t\t\t\t(hide yes)\n\t\t\t)\n\t\t)\n\t\t(property\n\t\t\t\"LCSC\"\n\t\t\t\"C123\"\n\t\t\t(at 0 0 0)\n\t\t\t(effects\n\t\t\t\t(font\n\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t)\n\t\t\t\t(hide yes)\n\t\t\t)\n\t\t)\n\t\t(symbol\n\t\t\t\"test_0_1\"\n\t\t\t(rectangle\n\t\t\t\t(start -2.54 2.54)\n\t\t\t\t(end 2.54 -2.54)\n\t\t\t\t(stroke\n\t\t\t\t\t(width 0.254)\n\t\t\t\t\t(type default)\n\t\t\t\t)\n\t\t\t\t(fill\n\t\t\t\t\t(type background)\n\t\t\t\t)\n\t\t\t)\n\t\t)\n\t\t(symbol\n\t\t\t\"test_1_1\"\n\t\t\t(pin\n\t\t\t\tpassive\n\t\t\t\tline\n\t\t\t\t(at -50.8 0 0)\n\t\t\t\t(length 48.26)\n\t\t\t\t(name\n\t\t\t\t\t\"x\"\n\t\t\t\t\t(effects\n\t\t\t\t\t\t(font\n\t\t\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t\t\t)\n\t\t\t\t\t)\n\t\t\t\t)\n\t\t\t\t(number\n\t\t\t\t\t\"999999999999999999999999999999999999999\"\n\t\t\t\t\t(effects\n\t\t\t\t\t\t(font\n\t\t\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t\t\t)\n\t\t\t\t\t)\n\t\t\t\t)\n\t\t\t)\n\t\t)\n\t)\n)"
+    },
+    {
+      "pins": [
+        {
+          "number": "2",
+          "name": "2",
+          "etype": "input"
+        },
+        {
+          "number": "10",
+          "name": "10",
+          "etype": "input"
+        }
+      ],
+      "groups": {
+        "left": [
+          {
+            "number": "2",
+            "name": "2",
+            "etype": "input"
+          },
+          {
+            "number": "10",
+            "name": "10",
+            "etype": "input"
+          }
+        ],
+        "right": [],
+        "top": [],
+        "bottom": []
+      },
+      "next": "11",
+      "normalized": {
+        "U": [
+          {
+            "number": "2",
+            "name": "2",
+            "etype": "passive"
+          },
+          {
+            "number": "10",
+            "name": "10",
+            "etype": "passive"
+          }
+        ],
+        "R": [
+          {
+            "number": "2",
+            "name": "2",
+            "etype": "passive"
+          },
+          {
+            "number": "10",
+            "name": "10",
+            "etype": "passive"
+          }
+        ],
+        "C": [
+          {
+            "number": "2",
+            "name": "2",
+            "etype": "passive"
+          },
+          {
+            "number": "10",
+            "name": "10",
+            "etype": "passive"
+          }
+        ],
+        "L": [
+          {
+            "number": "2",
+            "name": "2",
+            "etype": "passive"
+          },
+          {
+            "number": "10",
+            "name": "10",
+            "etype": "passive"
+          }
+        ],
+        "FB": [
+          {
+            "number": "2",
+            "name": "2",
+            "etype": "passive"
+          },
+          {
+            "number": "10",
+            "name": "10",
+            "etype": "passive"
+          }
+        ],
+        "F": [
+          {
+            "number": "2",
+            "name": "2",
+            "etype": "passive"
+          },
+          {
+            "number": "10",
+            "name": "10",
+            "etype": "passive"
+          }
+        ]
+      },
+      "ep": {
+        "number": "11",
+        "name": "EP",
+        "etype": "passive"
+      },
+      "symbol": "(kicad_symbol_lib\n\t(version 20241209)\n\t(generator \"schgen_part_gen\")\n\t(generator_version \"1.0\")\n\t(symbol\n\t\t\"test\"\n\t\t(pin_names\n\t\t\t(offset 0.508)\n\t\t\t(hide yes)\n\t\t)\n\t\t(exclude_from_sim no)\n\t\t(in_bom yes)\n\t\t(on_board yes)\n\t\t(property\n\t\t\t\"Reference\"\n\t\t\t\"U\"\n\t\t\t(at 0 7.62 0)\n\t\t\t(effects\n\t\t\t\t(font\n\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t)\n\t\t\t)\n\t\t)\n\t\t(property\n\t\t\t\"Value\"\n\t\t\t\"Synthetic Å board\"\n\t\t\t(at 0 -7.62 0)\n\t\t\t(effects\n\t\t\t\t(font\n\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t)\n\t\t\t)\n\t\t)\n\t\t(property\n\t\t\t\"Footprint\"\n\t\t\t\"test:test\"\n\t\t\t(at 0 0 0)\n\t\t\t(effects\n\t\t\t\t(font\n\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t)\n\t\t\t\t(hide yes)\n\t\t\t)\n\t\t)\n\t\t(property\n\t\t\t\"Datasheet\"\n\t\t\t\"https://example.invalid/a\"\n\t\t\t(at 0 0 0)\n\t\t\t(effects\n\t\t\t\t(font\n\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t)\n\t\t\t\t(hide yes)\n\t\t\t)\n\t\t)\n\t\t(property\n\t\t\t\"Description\"\n\t\t\t\"µΩ line\nnext\"\n\t\t\t(at 0 0 0)\n\t\t\t(effects\n\t\t\t\t(font\n\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t)\n\t\t\t\t(hide yes)\n\t\t\t)\n\t\t)\n\t\t(property\n\t\t\t\"LCSC\"\n\t\t\t\"C123\"\n\t\t\t(at 0 0 0)\n\t\t\t(effects\n\t\t\t\t(font\n\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t)\n\t\t\t\t(hide yes)\n\t\t\t)\n\t\t)\n\t\t(symbol\n\t\t\t\"test_0_1\"\n\t\t\t(rectangle\n\t\t\t\t(start -2.54 3.81)\n\t\t\t\t(end 2.54 -3.81)\n\t\t\t\t(stroke\n\t\t\t\t\t(width 0.254)\n\t\t\t\t\t(type default)\n\t\t\t\t)\n\t\t\t\t(fill\n\t\t\t\t\t(type background)\n\t\t\t\t)\n\t\t\t)\n\t\t)\n\t\t(symbol\n\t\t\t\"test_1_1\"\n\t\t\t(pin\n\t\t\t\tinput\n\t\t\t\tline\n\t\t\t\t(at -6.35 1.27 0)\n\t\t\t\t(length 3.81)\n\t\t\t\t(name\n\t\t\t\t\t\"2\"\n\t\t\t\t\t(effects\n\t\t\t\t\t\t(font\n\t\t\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t\t\t)\n\t\t\t\t\t)\n\t\t\t\t)\n\t\t\t\t(number\n\t\t\t\t\t\"2\"\n\t\t\t\t\t(effects\n\t\t\t\t\t\t(font\n\t\t\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t\t\t)\n\t\t\t\t\t)\n\t\t\t\t)\n\t\t\t)\n\t\t\t(pin\n\t\t\t\tinput\n\t\t\t\tline\n\t\t\t\t(at -6.35 -1.27 0)\n\t\t\t\t(length 3.81)\n\t\t\t\t(name\n\t\t\t\t\t\"10\"\n\t\t\t\t\t(effects\n\t\t\t\t\t\t(font\n\t\t\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t\t\t)\n\t\t\t\t\t)\n\t\t\t\t)\n\t\t\t\t(number\n\t\t\t\t\t\"10\"\n\t\t\t\t\t(effects\n\t\t\t\t\t\t(font\n\t\t\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t\t\t)\n\t\t\t\t\t)\n\t\t\t\t)\n\t\t\t)\n\t\t)\n\t)\n)"
+    },
+    {
+      "pins": [
+        {
+          "number": "A2",
+          "name": "GND",
+          "etype": "power_in"
+        },
+        {
+          "number": "A1",
+          "name": "VCC",
+          "etype": "power_in"
+        }
+      ],
+      "groups": {
+        "left": [],
+        "right": [],
+        "top": [
+          {
+            "number": "A1",
+            "name": "VCC",
+            "etype": "power_in"
+          }
+        ],
+        "bottom": [
+          {
+            "number": "A2",
+            "name": "GND",
+            "etype": "power_in"
+          }
+        ]
+      },
+      "next": "EP",
+      "normalized": {
+        "U": [
+          {
+            "number": "A2",
+            "name": "GND",
+            "etype": "passive"
+          },
+          {
+            "number": "A1",
+            "name": "VCC",
+            "etype": "passive"
+          }
+        ],
+        "R": [
+          {
+            "number": "A2",
+            "name": "GND",
+            "etype": "passive"
+          },
+          {
+            "number": "A1",
+            "name": "VCC",
+            "etype": "passive"
+          }
+        ],
+        "C": [
+          {
+            "number": "A2",
+            "name": "GND",
+            "etype": "passive"
+          },
+          {
+            "number": "A1",
+            "name": "VCC",
+            "etype": "passive"
+          }
+        ],
+        "L": [
+          {
+            "number": "A2",
+            "name": "GND",
+            "etype": "passive"
+          },
+          {
+            "number": "A1",
+            "name": "VCC",
+            "etype": "passive"
+          }
+        ],
+        "FB": [
+          {
+            "number": "A2",
+            "name": "GND",
+            "etype": "passive"
+          },
+          {
+            "number": "A1",
+            "name": "VCC",
+            "etype": "passive"
+          }
+        ],
+        "F": [
+          {
+            "number": "A2",
+            "name": "GND",
+            "etype": "passive"
+          },
+          {
+            "number": "A1",
+            "name": "VCC",
+            "etype": "passive"
+          }
+        ]
+      },
+      "ep": {
+        "number": "EP",
+        "name": "EP",
+        "etype": "passive"
+      },
+      "symbol": "(kicad_symbol_lib\n\t(version 20241209)\n\t(generator \"schgen_part_gen\")\n\t(generator_version \"1.0\")\n\t(symbol\n\t\t\"test\"\n\t\t(pin_names\n\t\t\t(offset 0.508)\n\t\t)\n\t\t(exclude_from_sim no)\n\t\t(in_bom yes)\n\t\t(on_board yes)\n\t\t(property\n\t\t\t\"Reference\"\n\t\t\t\"U\"\n\t\t\t(at 0 13.97 0)\n\t\t\t(effects\n\t\t\t\t(font\n\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t)\n\t\t\t)\n\t\t)\n\t\t(property\n\t\t\t\"Value\"\n\t\t\t\"Synthetic Å board\"\n\t\t\t(at 0 -13.97 0)\n\t\t\t(effects\n\t\t\t\t(font\n\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t)\n\t\t\t)\n\t\t)\n\t\t(property\n\t\t\t\"Footprint\"\n\t\t\t\"test:test\"\n\t\t\t(at 0 0 0)\n\t\t\t(effects\n\t\t\t\t(font\n\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t)\n\t\t\t\t(hide yes)\n\t\t\t)\n\t\t)\n\t\t(property\n\t\t\t\"Datasheet\"\n\t\t\t\"https://example.invalid/a\"\n\t\t\t(at 0 0 0)\n\t\t\t(effects\n\t\t\t\t(font\n\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t)\n\t\t\t\t(hide yes)\n\t\t\t)\n\t\t)\n\t\t(property\n\t\t\t\"Description\"\n\t\t\t\"µΩ line\nnext\"\n\t\t\t(at 0 0 0)\n\t\t\t(effects\n\t\t\t\t(font\n\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t)\n\t\t\t\t(hide yes)\n\t\t\t)\n\t\t)\n\t\t(property\n\t\t\t\"LCSC\"\n\t\t\t\"C123\"\n\t\t\t(at 0 0 0)\n\t\t\t(effects\n\t\t\t\t(font\n\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t)\n\t\t\t\t(hide yes)\n\t\t\t)\n\t\t)\n\t\t(symbol\n\t\t\t\"test_0_1\"\n\t\t\t(rectangle\n\t\t\t\t(start -2.54 8.89)\n\t\t\t\t(end 2.54 -8.89)\n\t\t\t\t(stroke\n\t\t\t\t\t(width 0.254)\n\t\t\t\t\t(type default)\n\t\t\t\t)\n\t\t\t\t(fill\n\t\t\t\t\t(type background)\n\t\t\t\t)\n\t\t\t)\n\t\t)\n\t\t(symbol\n\t\t\t\"test_1_1\"\n\t\t\t(pin\n\t\t\t\tpower_in\n\t\t\t\tline\n\t\t\t\t(at 0 12.7 270)\n\t\t\t\t(length 3.81)\n\t\t\t\t(name\n\t\t\t\t\t\"VCC\"\n\t\t\t\t\t(effects\n\t\t\t\t\t\t(font\n\t\t\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t\t\t)\n\t\t\t\t\t)\n\t\t\t\t)\n\t\t\t\t(number\n\t\t\t\t\t\"A1\"\n\t\t\t\t\t(effects\n\t\t\t\t\t\t(font\n\t\t\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t\t\t)\n\t\t\t\t\t)\n\t\t\t\t)\n\t\t\t)\n\t\t\t(pin\n\t\t\t\tpower_in\n\t\t\t\tline\n\t\t\t\t(at 0 -12.7 90)\n\t\t\t\t(length 3.81)\n\t\t\t\t(name\n\t\t\t\t\t\"GND\"\n\t\t\t\t\t(effects\n\t\t\t\t\t\t(font\n\t\t\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t\t\t)\n\t\t\t\t\t)\n\t\t\t\t)\n\t\t\t\t(number\n\t\t\t\t\t\"A2\"\n\t\t\t\t\t(effects\n\t\t\t\t\t\t(font\n\t\t\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t\t\t)\n\t\t\t\t\t)\n\t\t\t\t)\n\t\t\t)\n\t\t)\n\t)\n)"
+    },
+    {
+      "pins": [
+        {
+          "number": "1",
+          "name": "GND",
+          "etype": "output"
+        },
+        {
+          "number": "2",
+          "name": "VCC",
+          "etype": "output"
+        },
+        {
+          "number": "3",
+          "name": "X",
+          "etype": "output"
+        },
+        {
+          "number": "4",
+          "name": "X",
+          "etype": "output"
+        },
+        {
+          "number": "5",
+          "name": "Y",
+          "etype": "output"
+        },
+        {
+          "number": "6",
+          "name": "Z",
+          "etype": "output"
+        },
+        {
+          "number": "7",
+          "name": "Y",
+          "etype": "output"
+        },
+        {
+          "number": "8",
+          "name": "W",
+          "etype": "output"
+        },
+        {
+          "number": "9",
+          "name": "NC",
+          "etype": "output"
+        }
+      ],
+      "groups": {
+        "left": [
+          {
+            "number": "3",
+            "name": "X",
+            "etype": "output"
+          },
+          {
+            "number": "4",
+            "name": "X",
+            "etype": "output"
+          },
+          {
+            "number": "5",
+            "name": "Y",
+            "etype": "output"
+          },
+          {
+            "number": "7",
+            "name": "Y",
+            "etype": "output"
+          }
+        ],
+        "right": [
+          {
+            "number": "6",
+            "name": "Z",
+            "etype": "output"
+          },
+          {
+            "number": "8",
+            "name": "W",
+            "etype": "output"
+          }
+        ],
+        "top": [
+          {
+            "number": "2",
+            "name": "VCC",
+            "etype": "output"
+          }
+        ],
+        "bottom": [
+          {
+            "number": "1",
+            "name": "GND",
+            "etype": "output"
+          },
+          {
+            "number": "9",
+            "name": "NC",
+            "etype": "output"
+          }
+        ]
+      },
+      "next": "10",
+      "normalized": {
+        "U": [
+          {
+            "number": "1",
+            "name": "GND",
+            "etype": "output"
+          },
+          {
+            "number": "2",
+            "name": "VCC",
+            "etype": "output"
+          },
+          {
+            "number": "3",
+            "name": "X",
+            "etype": "output"
+          },
+          {
+            "number": "4",
+            "name": "X",
+            "etype": "output"
+          },
+          {
+            "number": "5",
+            "name": "Y",
+            "etype": "output"
+          },
+          {
+            "number": "6",
+            "name": "Z",
+            "etype": "output"
+          },
+          {
+            "number": "7",
+            "name": "Y",
+            "etype": "output"
+          },
+          {
+            "number": "8",
+            "name": "W",
+            "etype": "output"
+          },
+          {
+            "number": "9",
+            "name": "NC",
+            "etype": "output"
+          }
+        ],
+        "R": [
+          {
+            "number": "1",
+            "name": "GND",
+            "etype": "passive"
+          },
+          {
+            "number": "2",
+            "name": "VCC",
+            "etype": "passive"
+          },
+          {
+            "number": "3",
+            "name": "X",
+            "etype": "passive"
+          },
+          {
+            "number": "4",
+            "name": "X",
+            "etype": "passive"
+          },
+          {
+            "number": "5",
+            "name": "Y",
+            "etype": "passive"
+          },
+          {
+            "number": "6",
+            "name": "Z",
+            "etype": "passive"
+          },
+          {
+            "number": "7",
+            "name": "Y",
+            "etype": "passive"
+          },
+          {
+            "number": "8",
+            "name": "W",
+            "etype": "passive"
+          },
+          {
+            "number": "9",
+            "name": "NC",
+            "etype": "passive"
+          }
+        ],
+        "C": [
+          {
+            "number": "1",
+            "name": "GND",
+            "etype": "passive"
+          },
+          {
+            "number": "2",
+            "name": "VCC",
+            "etype": "passive"
+          },
+          {
+            "number": "3",
+            "name": "X",
+            "etype": "passive"
+          },
+          {
+            "number": "4",
+            "name": "X",
+            "etype": "passive"
+          },
+          {
+            "number": "5",
+            "name": "Y",
+            "etype": "passive"
+          },
+          {
+            "number": "6",
+            "name": "Z",
+            "etype": "passive"
+          },
+          {
+            "number": "7",
+            "name": "Y",
+            "etype": "passive"
+          },
+          {
+            "number": "8",
+            "name": "W",
+            "etype": "passive"
+          },
+          {
+            "number": "9",
+            "name": "NC",
+            "etype": "passive"
+          }
+        ],
+        "L": [
+          {
+            "number": "1",
+            "name": "GND",
+            "etype": "passive"
+          },
+          {
+            "number": "2",
+            "name": "VCC",
+            "etype": "passive"
+          },
+          {
+            "number": "3",
+            "name": "X",
+            "etype": "passive"
+          },
+          {
+            "number": "4",
+            "name": "X",
+            "etype": "passive"
+          },
+          {
+            "number": "5",
+            "name": "Y",
+            "etype": "passive"
+          },
+          {
+            "number": "6",
+            "name": "Z",
+            "etype": "passive"
+          },
+          {
+            "number": "7",
+            "name": "Y",
+            "etype": "passive"
+          },
+          {
+            "number": "8",
+            "name": "W",
+            "etype": "passive"
+          },
+          {
+            "number": "9",
+            "name": "NC",
+            "etype": "passive"
+          }
+        ],
+        "FB": [
+          {
+            "number": "1",
+            "name": "GND",
+            "etype": "passive"
+          },
+          {
+            "number": "2",
+            "name": "VCC",
+            "etype": "passive"
+          },
+          {
+            "number": "3",
+            "name": "X",
+            "etype": "passive"
+          },
+          {
+            "number": "4",
+            "name": "X",
+            "etype": "passive"
+          },
+          {
+            "number": "5",
+            "name": "Y",
+            "etype": "passive"
+          },
+          {
+            "number": "6",
+            "name": "Z",
+            "etype": "passive"
+          },
+          {
+            "number": "7",
+            "name": "Y",
+            "etype": "passive"
+          },
+          {
+            "number": "8",
+            "name": "W",
+            "etype": "passive"
+          },
+          {
+            "number": "9",
+            "name": "NC",
+            "etype": "passive"
+          }
+        ],
+        "F": [
+          {
+            "number": "1",
+            "name": "GND",
+            "etype": "passive"
+          },
+          {
+            "number": "2",
+            "name": "VCC",
+            "etype": "passive"
+          },
+          {
+            "number": "3",
+            "name": "X",
+            "etype": "passive"
+          },
+          {
+            "number": "4",
+            "name": "X",
+            "etype": "passive"
+          },
+          {
+            "number": "5",
+            "name": "Y",
+            "etype": "passive"
+          },
+          {
+            "number": "6",
+            "name": "Z",
+            "etype": "passive"
+          },
+          {
+            "number": "7",
+            "name": "Y",
+            "etype": "passive"
+          },
+          {
+            "number": "8",
+            "name": "W",
+            "etype": "passive"
+          },
+          {
+            "number": "9",
+            "name": "NC",
+            "etype": "passive"
+          }
+        ]
+      },
+      "ep": {
+        "number": "10",
+        "name": "EP",
+        "etype": "passive"
+      },
+      "symbol": "(kicad_symbol_lib\n\t(version 20241209)\n\t(generator \"schgen_part_gen\")\n\t(generator_version \"1.0\")\n\t(symbol\n\t\t\"test\"\n\t\t(pin_names\n\t\t\t(offset 0.508)\n\t\t)\n\t\t(exclude_from_sim no)\n\t\t(in_bom yes)\n\t\t(on_board yes)\n\t\t(property\n\t\t\t\"Reference\"\n\t\t\t\"U\"\n\t\t\t(at 0 17.78 0)\n\t\t\t(effects\n\t\t\t\t(font\n\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t)\n\t\t\t)\n\t\t)\n\t\t(property\n\t\t\t\"Value\"\n\t\t\t\"Synthetic Å board\"\n\t\t\t(at 0 -17.78 0)\n\t\t\t(effects\n\t\t\t\t(font\n\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t)\n\t\t\t)\n\t\t)\n\t\t(property\n\t\t\t\"Footprint\"\n\t\t\t\"test:test\"\n\t\t\t(at 0 0 0)\n\t\t\t(effects\n\t\t\t\t(font\n\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t)\n\t\t\t\t(hide yes)\n\t\t\t)\n\t\t)\n\t\t(property\n\t\t\t\"Datasheet\"\n\t\t\t\"https://example.invalid/a\"\n\t\t\t(at 0 0 0)\n\t\t\t(effects\n\t\t\t\t(font\n\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t)\n\t\t\t\t(hide yes)\n\t\t\t)\n\t\t)\n\t\t(property\n\t\t\t\"Description\"\n\t\t\t\"µΩ line\nnext\"\n\t\t\t(at 0 0 0)\n\t\t\t(effects\n\t\t\t\t(font\n\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t)\n\t\t\t\t(hide yes)\n\t\t\t)\n\t\t)\n\t\t(property\n\t\t\t\"LCSC\"\n\t\t\t\"C123\"\n\t\t\t(at 0 0 0)\n\t\t\t(effects\n\t\t\t\t(font\n\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t)\n\t\t\t\t(hide yes)\n\t\t\t)\n\t\t)\n\t\t(symbol\n\t\t\t\"test_0_1\"\n\t\t\t(rectangle\n\t\t\t\t(start -3.81 13.97)\n\t\t\t\t(end 3.81 -13.97)\n\t\t\t\t(stroke\n\t\t\t\t\t(width 0.254)\n\t\t\t\t\t(type default)\n\t\t\t\t)\n\t\t\t\t(fill\n\t\t\t\t\t(type background)\n\t\t\t\t)\n\t\t\t)\n\t\t)\n\t\t(symbol\n\t\t\t\"test_1_1\"\n\t\t\t(pin\n\t\t\t\toutput\n\t\t\t\tline\n\t\t\t\t(at -6.35 3.81 0)\n\t\t\t\t(length 2.54)\n\t\t\t\t(name\n\t\t\t\t\t\"X\"\n\t\t\t\t\t(effects\n\t\t\t\t\t\t(font\n\t\t\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t\t\t)\n\t\t\t\t\t)\n\t\t\t\t)\n\t\t\t\t(number\n\t\t\t\t\t\"3\"\n\t\t\t\t\t(effects\n\t\t\t\t\t\t(font\n\t\t\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t\t\t)\n\t\t\t\t\t)\n\t\t\t\t)\n\t\t\t)\n\t\t\t(pin\n\t\t\t\toutput\n\t\t\t\tline\n\t\t\t\t(at -6.35 1.27 0)\n\t\t\t\t(length 2.54)\n\t\t\t\t(name\n\t\t\t\t\t\"X\"\n\t\t\t\t\t(effects\n\t\t\t\t\t\t(font\n\t\t\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t\t\t)\n\t\t\t\t\t)\n\t\t\t\t)\n\t\t\t\t(number\n\t\t\t\t\t\"4\"\n\t\t\t\t\t(effects\n\t\t\t\t\t\t(font\n\t\t\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t\t\t)\n\t\t\t\t\t)\n\t\t\t\t)\n\t\t\t)\n\t\t\t(pin\n\t\t\t\toutput\n\t\t\t\tline\n\t\t\t\t(at -6.35 -1.27 0)\n\t\t\t\t(length 2.54)\n\t\t\t\t(name\n\t\t\t\t\t\"Y\"\n\t\t\t\t\t(effects\n\t\t\t\t\t\t(font\n\t\t\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t\t\t)\n\t\t\t\t\t)\n\t\t\t\t)\n\t\t\t\t(number\n\t\t\t\t\t\"5\"\n\t\t\t\t\t(effects\n\t\t\t\t\t\t(font\n\t\t\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t\t\t)\n\t\t\t\t\t)\n\t\t\t\t)\n\t\t\t)\n\t\t\t(pin\n\t\t\t\toutput\n\t\t\t\tline\n\t\t\t\t(at -6.35 -3.81 0)\n\t\t\t\t(length 2.54)\n\t\t\t\t(name\n\t\t\t\t\t\"Y\"\n\t\t\t\t\t(effects\n\t\t\t\t\t\t(font\n\t\t\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t\t\t)\n\t\t\t\t\t)\n\t\t\t\t)\n\t\t\t\t(number\n\t\t\t\t\t\"7\"\n\t\t\t\t\t(effects\n\t\t\t\t\t\t(font\n\t\t\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t\t\t)\n\t\t\t\t\t)\n\t\t\t\t)\n\t\t\t)\n\t\t\t(pin\n\t\t\t\toutput\n\t\t\t\tline\n\t\t\t\t(at 6.35 3.81 180)\n\t\t\t\t(length 2.54)\n\t\t\t\t(name\n\t\t\t\t\t\"Z\"\n\t\t\t\t\t(effects\n\t\t\t\t\t\t(font\n\t\t\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t\t\t)\n\t\t\t\t\t)\n\t\t\t\t)\n\t\t\t\t(number\n\t\t\t\t\t\"6\"\n\t\t\t\t\t(effects\n\t\t\t\t\t\t(font\n\t\t\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t\t\t)\n\t\t\t\t\t)\n\t\t\t\t)\n\t\t\t)\n\t\t\t(pin\n\t\t\t\toutput\n\t\t\t\tline\n\t\t\t\t(at 6.35 1.27 180)\n\t\t\t\t(length 2.54)\n\t\t\t\t(name\n\t\t\t\t\t\"W\"\n\t\t\t\t\t(effects\n\t\t\t\t\t\t(font\n\t\t\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t\t\t)\n\t\t\t\t\t)\n\t\t\t\t)\n\t\t\t\t(number\n\t\t\t\t\t\"8\"\n\t\t\t\t\t(effects\n\t\t\t\t\t\t(font\n\t\t\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t\t\t)\n\t\t\t\t\t)\n\t\t\t\t)\n\t\t\t)\n\t\t\t(pin\n\t\t\t\toutput\n\t\t\t\tline\n\t\t\t\t(at 0 16.51 270)\n\t\t\t\t(length 2.54)\n\t\t\t\t(name\n\t\t\t\t\t\"VCC\"\n\t\t\t\t\t(effects\n\t\t\t\t\t\t(font\n\t\t\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t\t\t)\n\t\t\t\t\t)\n\t\t\t\t)\n\t\t\t\t(number\n\t\t\t\t\t\"2\"\n\t\t\t\t\t(effects\n\t\t\t\t\t\t(font\n\t\t\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t\t\t)\n\t\t\t\t\t)\n\t\t\t\t)\n\t\t\t)\n\t\t\t(pin\n\t\t\t\toutput\n\t\t\t\tline\n\t\t\t\t(at -1.27 -16.51 90)\n\t\t\t\t(length 2.54)\n\t\t\t\t(name\n\t\t\t\t\t\"GND\"\n\t\t\t\t\t(effects\n\t\t\t\t\t\t(font\n\t\t\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t\t\t)\n\t\t\t\t\t)\n\t\t\t\t)\n\t\t\t\t(number\n\t\t\t\t\t\"1\"\n\t\t\t\t\t(effects\n\t\t\t\t\t\t(font\n\t\t\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t\t\t)\n\t\t\t\t\t)\n\t\t\t\t)\n\t\t\t)\n\t\t\t(pin\n\t\t\t\toutput\n\t\t\t\tline\n\t\t\t\t(at 1.27 -16.51 90)\n\t\t\t\t(length 2.54)\n\t\t\t\t(name\n\t\t\t\t\t\"NC\"\n\t\t\t\t\t(effects\n\t\t\t\t\t\t(font\n\t\t\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t\t\t)\n\t\t\t\t\t)\n\t\t\t\t)\n\t\t\t\t(number\n\t\t\t\t\t\"9\"\n\t\t\t\t\t(effects\n\t\t\t\t\t\t(font\n\t\t\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t\t\t)\n\t\t\t\t\t)\n\t\t\t\t)\n\t\t\t)\n\t\t)\n\t)\n)"
+    },
+    {
+      "pins": [
+        {
+          "number": "007",
+          "name": "~{RESET}",
+          "etype": "input"
+        },
+        {
+          "number": "08",
+          "name": "μΩ",
+          "etype": "output"
+        },
+        {
+          "number": "9",
+          "name": "EP",
+          "etype": "passive"
+        }
+      ],
+      "groups": {
+        "left": [
+          {
+            "number": "007",
+            "name": "~{RESET}",
+            "etype": "input"
+          }
+        ],
+        "right": [
+          {
+            "number": "08",
+            "name": "μΩ",
+            "etype": "output"
+          }
+        ],
+        "top": [],
+        "bottom": [
+          {
+            "number": "9",
+            "name": "EP",
+            "etype": "passive"
+          }
+        ]
+      },
+      "next": "10",
+      "normalized": {
+        "U": [
+          {
+            "number": "007",
+            "name": "~{RESET}",
+            "etype": "input"
+          },
+          {
+            "number": "08",
+            "name": "μΩ",
+            "etype": "output"
+          },
+          {
+            "number": "9",
+            "name": "EP",
+            "etype": "passive"
+          }
+        ],
+        "R": [
+          {
+            "number": "007",
+            "name": "~{RESET}",
+            "etype": "passive"
+          },
+          {
+            "number": "08",
+            "name": "μΩ",
+            "etype": "passive"
+          },
+          {
+            "number": "9",
+            "name": "EP",
+            "etype": "passive"
+          }
+        ],
+        "C": [
+          {
+            "number": "007",
+            "name": "~{RESET}",
+            "etype": "passive"
+          },
+          {
+            "number": "08",
+            "name": "μΩ",
+            "etype": "passive"
+          },
+          {
+            "number": "9",
+            "name": "EP",
+            "etype": "passive"
+          }
+        ],
+        "L": [
+          {
+            "number": "007",
+            "name": "~{RESET}",
+            "etype": "passive"
+          },
+          {
+            "number": "08",
+            "name": "μΩ",
+            "etype": "passive"
+          },
+          {
+            "number": "9",
+            "name": "EP",
+            "etype": "passive"
+          }
+        ],
+        "FB": [
+          {
+            "number": "007",
+            "name": "~{RESET}",
+            "etype": "passive"
+          },
+          {
+            "number": "08",
+            "name": "μΩ",
+            "etype": "passive"
+          },
+          {
+            "number": "9",
+            "name": "EP",
+            "etype": "passive"
+          }
+        ],
+        "F": [
+          {
+            "number": "007",
+            "name": "~{RESET}",
+            "etype": "passive"
+          },
+          {
+            "number": "08",
+            "name": "μΩ",
+            "etype": "passive"
+          },
+          {
+            "number": "9",
+            "name": "EP",
+            "etype": "passive"
+          }
+        ]
+      },
+      "ep": null,
+      "symbol": "(kicad_symbol_lib\n\t(version 20241209)\n\t(generator \"schgen_part_gen\")\n\t(generator_version \"1.0\")\n\t(symbol\n\t\t\"test\"\n\t\t(pin_names\n\t\t\t(offset 0.508)\n\t\t)\n\t\t(exclude_from_sim no)\n\t\t(in_bom yes)\n\t\t(on_board yes)\n\t\t(property\n\t\t\t\"Reference\"\n\t\t\t\"U\"\n\t\t\t(at 0 8.89 0)\n\t\t\t(effects\n\t\t\t\t(font\n\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t)\n\t\t\t)\n\t\t)\n\t\t(property\n\t\t\t\"Value\"\n\t\t\t\"Synthetic Å board\"\n\t\t\t(at 0 -8.89 0)\n\t\t\t(effects\n\t\t\t\t(font\n\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t)\n\t\t\t)\n\t\t)\n\t\t(property\n\t\t\t\"Footprint\"\n\t\t\t\"test:test\"\n\t\t\t(at 0 0 0)\n\t\t\t(effects\n\t\t\t\t(font\n\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t)\n\t\t\t\t(hide yes)\n\t\t\t)\n\t\t)\n\t\t(property\n\t\t\t\"Datasheet\"\n\t\t\t\"https://example.invalid/a\"\n\t\t\t(at 0 0 0)\n\t\t\t(effects\n\t\t\t\t(font\n\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t)\n\t\t\t\t(hide yes)\n\t\t\t)\n\t\t)\n\t\t(property\n\t\t\t\"Description\"\n\t\t\t\"µΩ line\nnext\"\n\t\t\t(at 0 0 0)\n\t\t\t(effects\n\t\t\t\t(font\n\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t)\n\t\t\t\t(hide yes)\n\t\t\t)\n\t\t)\n\t\t(property\n\t\t\t\"LCSC\"\n\t\t\t\"C123\"\n\t\t\t(at 0 0 0)\n\t\t\t(effects\n\t\t\t\t(font\n\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t)\n\t\t\t\t(hide yes)\n\t\t\t)\n\t\t)\n\t\t(symbol\n\t\t\t\"test_0_1\"\n\t\t\t(rectangle\n\t\t\t\t(start -6.35 5.08)\n\t\t\t\t(end 6.35 -5.08)\n\t\t\t\t(stroke\n\t\t\t\t\t(width 0.254)\n\t\t\t\t\t(type default)\n\t\t\t\t)\n\t\t\t\t(fill\n\t\t\t\t\t(type background)\n\t\t\t\t)\n\t\t\t)\n\t\t)\n\t\t(symbol\n\t\t\t\"test_1_1\"\n\t\t\t(pin\n\t\t\t\tinput\n\t\t\t\tline\n\t\t\t\t(at -11.43 2.54 0)\n\t\t\t\t(length 5.08)\n\t\t\t\t(name\n\t\t\t\t\t\"~{RESET}\"\n\t\t\t\t\t(effects\n\t\t\t\t\t\t(font\n\t\t\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t\t\t)\n\t\t\t\t\t)\n\t\t\t\t)\n\t\t\t\t(number\n\t\t\t\t\t\"007\"\n\t\t\t\t\t(effects\n\t\t\t\t\t\t(font\n\t\t\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t\t\t)\n\t\t\t\t\t)\n\t\t\t\t)\n\t\t\t)\n\t\t\t(pin\n\t\t\t\toutput\n\t\t\t\tline\n\t\t\t\t(at 10.16 2.54 180)\n\t\t\t\t(length 3.81)\n\t\t\t\t(name\n\t\t\t\t\t\"μΩ\"\n\t\t\t\t\t(effects\n\t\t\t\t\t\t(font\n\t\t\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t\t\t)\n\t\t\t\t\t)\n\t\t\t\t)\n\t\t\t\t(number\n\t\t\t\t\t\"08\"\n\t\t\t\t\t(effects\n\t\t\t\t\t\t(font\n\t\t\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t\t\t)\n\t\t\t\t\t)\n\t\t\t\t)\n\t\t\t)\n\t\t\t(pin\n\t\t\t\tpassive\n\t\t\t\tline\n\t\t\t\t(at 0 -7.62 90)\n\t\t\t\t(length 2.54)\n\t\t\t\t(name\n\t\t\t\t\t\"EP\"\n\t\t\t\t\t(effects\n\t\t\t\t\t\t(font\n\t\t\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t\t\t)\n\t\t\t\t\t)\n\t\t\t\t)\n\t\t\t\t(number\n\t\t\t\t\t\"9\"\n\t\t\t\t\t(effects\n\t\t\t\t\t\t(font\n\t\t\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t\t\t)\n\t\t\t\t\t)\n\t\t\t\t)\n\t\t\t)\n\t\t)\n\t)\n)"
+    },
+    {
+      "pins": [
+        {
+          "number": "B",
+          "name": "B",
+          "etype": "passive"
+        },
+        {
+          "number": "A",
+          "name": "A",
+          "etype": "passive"
+        }
+      ],
+      "groups": {
+        "left": [
+          {
+            "number": "A",
+            "name": "A",
+            "etype": "passive"
+          }
+        ],
+        "right": [
+          {
+            "number": "B",
+            "name": "B",
+            "etype": "passive"
+          }
+        ],
+        "top": [],
+        "bottom": []
+      },
+      "next": "EP",
+      "normalized": {
+        "U": [
+          {
+            "number": "B",
+            "name": "B",
+            "etype": "passive"
+          },
+          {
+            "number": "A",
+            "name": "A",
+            "etype": "passive"
+          }
+        ],
+        "R": [
+          {
+            "number": "B",
+            "name": "B",
+            "etype": "passive"
+          },
+          {
+            "number": "A",
+            "name": "A",
+            "etype": "passive"
+          }
+        ],
+        "C": [
+          {
+            "number": "B",
+            "name": "B",
+            "etype": "passive"
+          },
+          {
+            "number": "A",
+            "name": "A",
+            "etype": "passive"
+          }
+        ],
+        "L": [
+          {
+            "number": "B",
+            "name": "B",
+            "etype": "passive"
+          },
+          {
+            "number": "A",
+            "name": "A",
+            "etype": "passive"
+          }
+        ],
+        "FB": [
+          {
+            "number": "B",
+            "name": "B",
+            "etype": "passive"
+          },
+          {
+            "number": "A",
+            "name": "A",
+            "etype": "passive"
+          }
+        ],
+        "F": [
+          {
+            "number": "B",
+            "name": "B",
+            "etype": "passive"
+          },
+          {
+            "number": "A",
+            "name": "A",
+            "etype": "passive"
+          }
+        ]
+      },
+      "ep": {
+        "number": "EP",
+        "name": "EP",
+        "etype": "passive"
+      },
+      "symbol": "(kicad_symbol_lib\n\t(version 20241209)\n\t(generator \"schgen_part_gen\")\n\t(generator_version \"1.0\")\n\t(symbol\n\t\t\"test\"\n\t\t(pin_names\n\t\t\t(offset 0.508)\n\t\t\t(hide yes)\n\t\t)\n\t\t(exclude_from_sim no)\n\t\t(in_bom yes)\n\t\t(on_board yes)\n\t\t(property\n\t\t\t\"Reference\"\n\t\t\t\"U\"\n\t\t\t(at 0 6.35 0)\n\t\t\t(effects\n\t\t\t\t(font\n\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t)\n\t\t\t)\n\t\t)\n\t\t(property\n\t\t\t\"Value\"\n\t\t\t\"Synthetic Å board\"\n\t\t\t(at 0 -6.35 0)\n\t\t\t(effects\n\t\t\t\t(font\n\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t)\n\t\t\t)\n\t\t)\n\t\t(property\n\t\t\t\"Footprint\"\n\t\t\t\"test:test\"\n\t\t\t(at 0 0 0)\n\t\t\t(effects\n\t\t\t\t(font\n\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t)\n\t\t\t\t(hide yes)\n\t\t\t)\n\t\t)\n\t\t(property\n\t\t\t\"Datasheet\"\n\t\t\t\"https://example.invalid/a\"\n\t\t\t(at 0 0 0)\n\t\t\t(effects\n\t\t\t\t(font\n\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t)\n\t\t\t\t(hide yes)\n\t\t\t)\n\t\t)\n\t\t(property\n\t\t\t\"Description\"\n\t\t\t\"µΩ line\nnext\"\n\t\t\t(at 0 0 0)\n\t\t\t(effects\n\t\t\t\t(font\n\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t)\n\t\t\t\t(hide yes)\n\t\t\t)\n\t\t)\n\t\t(property\n\t\t\t\"LCSC\"\n\t\t\t\"C123\"\n\t\t\t(at 0 0 0)\n\t\t\t(effects\n\t\t\t\t(font\n\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t)\n\t\t\t\t(hide yes)\n\t\t\t)\n\t\t)\n\t\t(symbol\n\t\t\t\"test_0_1\"\n\t\t\t(rectangle\n\t\t\t\t(start -2.54 2.54)\n\t\t\t\t(end 2.54 -2.54)\n\t\t\t\t(stroke\n\t\t\t\t\t(width 0.254)\n\t\t\t\t\t(type default)\n\t\t\t\t)\n\t\t\t\t(fill\n\t\t\t\t\t(type background)\n\t\t\t\t)\n\t\t\t)\n\t\t)\n\t\t(symbol\n\t\t\t\"test_1_1\"\n\t\t\t(pin\n\t\t\t\tpassive\n\t\t\t\tline\n\t\t\t\t(at -5.08 0 0)\n\t\t\t\t(length 2.54)\n\t\t\t\t(name\n\t\t\t\t\t\"A\"\n\t\t\t\t\t(effects\n\t\t\t\t\t\t(font\n\t\t\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t\t\t)\n\t\t\t\t\t)\n\t\t\t\t)\n\t\t\t\t(number\n\t\t\t\t\t\"A\"\n\t\t\t\t\t(effects\n\t\t\t\t\t\t(font\n\t\t\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t\t\t)\n\t\t\t\t\t)\n\t\t\t\t)\n\t\t\t)\n\t\t\t(pin\n\t\t\t\tpassive\n\t\t\t\tline\n\t\t\t\t(at 5.08 0 180)\n\t\t\t\t(length 2.54)\n\t\t\t\t(name\n\t\t\t\t\t\"B\"\n\t\t\t\t\t(effects\n\t\t\t\t\t\t(font\n\t\t\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t\t\t)\n\t\t\t\t\t)\n\t\t\t\t)\n\t\t\t\t(number\n\t\t\t\t\t\"B\"\n\t\t\t\t\t(effects\n\t\t\t\t\t\t(font\n\t\t\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t\t\t)\n\t\t\t\t\t)\n\t\t\t\t)\n\t\t\t)\n\t\t)\n\t)\n)"
+    },
+    {
+      "pins": [
+        {
+          "number": "1",
+          "name": "1",
+          "etype": "passive"
+        },
+        {
+          "number": "2",
+          "name": "2",
+          "etype": "passive"
+        },
+        {
+          "number": "3",
+          "name": "3",
+          "etype": "passive"
+        },
+        {
+          "number": "4",
+          "name": "4",
+          "etype": "passive"
+        },
+        {
+          "number": "5",
+          "name": "5",
+          "etype": "passive"
+        }
+      ],
+      "groups": {
+        "left": [
+          {
+            "number": "1",
+            "name": "1",
+            "etype": "passive"
+          },
+          {
+            "number": "2",
+            "name": "2",
+            "etype": "passive"
+          },
+          {
+            "number": "3",
+            "name": "3",
+            "etype": "passive"
+          }
+        ],
+        "right": [
+          {
+            "number": "4",
+            "name": "4",
+            "etype": "passive"
+          },
+          {
+            "number": "5",
+            "name": "5",
+            "etype": "passive"
+          }
+        ],
+        "top": [],
+        "bottom": []
+      },
+      "next": "6",
+      "normalized": {
+        "U": [
+          {
+            "number": "1",
+            "name": "1",
+            "etype": "passive"
+          },
+          {
+            "number": "2",
+            "name": "2",
+            "etype": "passive"
+          },
+          {
+            "number": "3",
+            "name": "3",
+            "etype": "passive"
+          },
+          {
+            "number": "4",
+            "name": "4",
+            "etype": "passive"
+          },
+          {
+            "number": "5",
+            "name": "5",
+            "etype": "passive"
+          }
+        ],
+        "R": [
+          {
+            "number": "1",
+            "name": "1",
+            "etype": "passive"
+          },
+          {
+            "number": "2",
+            "name": "2",
+            "etype": "passive"
+          },
+          {
+            "number": "3",
+            "name": "3",
+            "etype": "passive"
+          },
+          {
+            "number": "4",
+            "name": "4",
+            "etype": "passive"
+          },
+          {
+            "number": "5",
+            "name": "5",
+            "etype": "passive"
+          }
+        ],
+        "C": [
+          {
+            "number": "1",
+            "name": "1",
+            "etype": "passive"
+          },
+          {
+            "number": "2",
+            "name": "2",
+            "etype": "passive"
+          },
+          {
+            "number": "3",
+            "name": "3",
+            "etype": "passive"
+          },
+          {
+            "number": "4",
+            "name": "4",
+            "etype": "passive"
+          },
+          {
+            "number": "5",
+            "name": "5",
+            "etype": "passive"
+          }
+        ],
+        "L": [
+          {
+            "number": "1",
+            "name": "1",
+            "etype": "passive"
+          },
+          {
+            "number": "2",
+            "name": "2",
+            "etype": "passive"
+          },
+          {
+            "number": "3",
+            "name": "3",
+            "etype": "passive"
+          },
+          {
+            "number": "4",
+            "name": "4",
+            "etype": "passive"
+          },
+          {
+            "number": "5",
+            "name": "5",
+            "etype": "passive"
+          }
+        ],
+        "FB": [
+          {
+            "number": "1",
+            "name": "1",
+            "etype": "passive"
+          },
+          {
+            "number": "2",
+            "name": "2",
+            "etype": "passive"
+          },
+          {
+            "number": "3",
+            "name": "3",
+            "etype": "passive"
+          },
+          {
+            "number": "4",
+            "name": "4",
+            "etype": "passive"
+          },
+          {
+            "number": "5",
+            "name": "5",
+            "etype": "passive"
+          }
+        ],
+        "F": [
+          {
+            "number": "1",
+            "name": "1",
+            "etype": "passive"
+          },
+          {
+            "number": "2",
+            "name": "2",
+            "etype": "passive"
+          },
+          {
+            "number": "3",
+            "name": "3",
+            "etype": "passive"
+          },
+          {
+            "number": "4",
+            "name": "4",
+            "etype": "passive"
+          },
+          {
+            "number": "5",
+            "name": "5",
+            "etype": "passive"
+          }
+        ]
+      },
+      "ep": {
+        "number": "6",
+        "name": "EP",
+        "etype": "passive"
+      },
+      "symbol": "(kicad_symbol_lib\n\t(version 20241209)\n\t(generator \"schgen_part_gen\")\n\t(generator_version \"1.0\")\n\t(symbol\n\t\t\"test\"\n\t\t(pin_names\n\t\t\t(offset 0.508)\n\t\t\t(hide yes)\n\t\t)\n\t\t(exclude_from_sim no)\n\t\t(in_bom yes)\n\t\t(on_board yes)\n\t\t(property\n\t\t\t\"Reference\"\n\t\t\t\"U\"\n\t\t\t(at 0 8.89 0)\n\t\t\t(effects\n\t\t\t\t(font\n\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t)\n\t\t\t)\n\t\t)\n\t\t(property\n\t\t\t\"Value\"\n\t\t\t\"Synthetic Å board\"\n\t\t\t(at 0 -8.89 0)\n\t\t\t(effects\n\t\t\t\t(font\n\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t)\n\t\t\t)\n\t\t)\n\t\t(property\n\t\t\t\"Footprint\"\n\t\t\t\"test:test\"\n\t\t\t(at 0 0 0)\n\t\t\t(effects\n\t\t\t\t(font\n\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t)\n\t\t\t\t(hide yes)\n\t\t\t)\n\t\t)\n\t\t(property\n\t\t\t\"Datasheet\"\n\t\t\t\"https://example.invalid/a\"\n\t\t\t(at 0 0 0)\n\t\t\t(effects\n\t\t\t\t(font\n\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t)\n\t\t\t\t(hide yes)\n\t\t\t)\n\t\t)\n\t\t(property\n\t\t\t\"Description\"\n\t\t\t\"µΩ line\nnext\"\n\t\t\t(at 0 0 0)\n\t\t\t(effects\n\t\t\t\t(font\n\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t)\n\t\t\t\t(hide yes)\n\t\t\t)\n\t\t)\n\t\t(property\n\t\t\t\"LCSC\"\n\t\t\t\"C123\"\n\t\t\t(at 0 0 0)\n\t\t\t(effects\n\t\t\t\t(font\n\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t)\n\t\t\t\t(hide yes)\n\t\t\t)\n\t\t)\n\t\t(symbol\n\t\t\t\"test_0_1\"\n\t\t\t(rectangle\n\t\t\t\t(start -2.54 5.08)\n\t\t\t\t(end 2.54 -5.08)\n\t\t\t\t(stroke\n\t\t\t\t\t(width 0.254)\n\t\t\t\t\t(type default)\n\t\t\t\t)\n\t\t\t\t(fill\n\t\t\t\t\t(type background)\n\t\t\t\t)\n\t\t\t)\n\t\t)\n\t\t(symbol\n\t\t\t\"test_1_1\"\n\t\t\t(pin\n\t\t\t\tpassive\n\t\t\t\tline\n\t\t\t\t(at -5.08 2.54 0)\n\t\t\t\t(length 2.54)\n\t\t\t\t(name\n\t\t\t\t\t\"1\"\n\t\t\t\t\t(effects\n\t\t\t\t\t\t(font\n\t\t\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t\t\t)\n\t\t\t\t\t)\n\t\t\t\t)\n\t\t\t\t(number\n\t\t\t\t\t\"1\"\n\t\t\t\t\t(effects\n\t\t\t\t\t\t(font\n\t\t\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t\t\t)\n\t\t\t\t\t)\n\t\t\t\t)\n\t\t\t)\n\t\t\t(pin\n\t\t\t\tpassive\n\t\t\t\tline\n\t\t\t\t(at -5.08 0 0)\n\t\t\t\t(length 2.54)\n\t\t\t\t(name\n\t\t\t\t\t\"2\"\n\t\t\t\t\t(effects\n\t\t\t\t\t\t(font\n\t\t\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t\t\t)\n\t\t\t\t\t)\n\t\t\t\t)\n\t\t\t\t(number\n\t\t\t\t\t\"2\"\n\t\t\t\t\t(effects\n\t\t\t\t\t\t(font\n\t\t\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t\t\t)\n\t\t\t\t\t)\n\t\t\t\t)\n\t\t\t)\n\t\t\t(pin\n\t\t\t\tpassive\n\t\t\t\tline\n\t\t\t\t(at -5.08 -2.54 0)\n\t\t\t\t(length 2.54)\n\t\t\t\t(name\n\t\t\t\t\t\"3\"\n\t\t\t\t\t(effects\n\t\t\t\t\t\t(font\n\t\t\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t\t\t)\n\t\t\t\t\t)\n\t\t\t\t)\n\t\t\t\t(number\n\t\t\t\t\t\"3\"\n\t\t\t\t\t(effects\n\t\t\t\t\t\t(font\n\t\t\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t\t\t)\n\t\t\t\t\t)\n\t\t\t\t)\n\t\t\t)\n\t\t\t(pin\n\t\t\t\tpassive\n\t\t\t\tline\n\t\t\t\t(at 5.08 2.54 180)\n\t\t\t\t(length 2.54)\n\t\t\t\t(name\n\t\t\t\t\t\"4\"\n\t\t\t\t\t(effects\n\t\t\t\t\t\t(font\n\t\t\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t\t\t)\n\t\t\t\t\t)\n\t\t\t\t)\n\t\t\t\t(number\n\t\t\t\t\t\"4\"\n\t\t\t\t\t(effects\n\t\t\t\t\t\t(font\n\t\t\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t\t\t)\n\t\t\t\t\t)\n\t\t\t\t)\n\t\t\t)\n\t\t\t(pin\n\t\t\t\tpassive\n\t\t\t\tline\n\t\t\t\t(at 5.08 0 180)\n\t\t\t\t(length 2.54)\n\t\t\t\t(name\n\t\t\t\t\t\"5\"\n\t\t\t\t\t(effects\n\t\t\t\t\t\t(font\n\t\t\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t\t\t)\n\t\t\t\t\t)\n\t\t\t\t)\n\t\t\t\t(number\n\t\t\t\t\t\"5\"\n\t\t\t\t\t(effects\n\t\t\t\t\t\t(font\n\t\t\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t\t\t)\n\t\t\t\t\t)\n\t\t\t\t)\n\t\t\t)\n\t\t)\n\t)\n)"
+    }
+  ],
+  "parse": {
+    "input": {
+      "dataStr": {
+        "shape": [
+          "P~show~1~x^^^^^^0~0~0~0~A^^0~0~0~0~1",
+          "P~show~junk~3",
+          "P~show~9~4",
+          "P~show~4~7"
+        ]
+      }
+    },
+    "pins": [
+      {
+        "number": "1",
+        "name": "A",
+        "etype": "input"
+      },
+      {
+        "number": "3",
+        "name": "3",
+        "etype": "passive"
+      },
+      {
+        "number": "4",
+        "name": "4",
+        "etype": "passive"
+      },
+      {
+        "number": "7",
+        "name": "7",
+        "etype": "power_in"
+      }
+    ]
+  },
+  "ep_pad": [
+    "(pad\n\t\"99\"\n\tsmd\n\trect\n\t(at 0 0)\n\t(size 1 1.1)\n\t(layers \"F.Cu\" \"F.Paste\" \"F.Mask\")\n)"
+  ],
+  "silk": [
+    "(fp_line\n\t(start -6.2 0)\n\t(end -5 0)\n\t(stroke\n\t\t(width 0.15)\n\t\t(type solid)\n\t)\n\t(layer \"F.SilkS\")\n)",
+    "(fp_line\n\t(start -5.6 -0.6)\n\t(end -5.6 0.6)\n\t(stroke\n\t\t(width 0.15)\n\t\t(type solid)\n\t)\n\t(layer \"F.SilkS\")\n)"
+  ],
+  "gzip": {
+    "plain": "µΩ hello\n",
+    "hex": "1f8b08000000000002ff3bb4f5dc4a858cd49c9c7c2e0042e8df770b000000"
+  }
+}

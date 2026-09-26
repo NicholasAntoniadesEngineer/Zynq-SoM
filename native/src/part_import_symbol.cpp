@@ -12,7 +12,18 @@ const std::regex nc("^(NC|N\\.C\\.?|DNC)$",std::regex::icase);
 bool matches(const std::string& s,const std::regex& re) { return std::regex_search(s,re); }
 double ceil_grid(double v,double step=2.54) { return rounded(std::ceil(v/step-1e-9)*step); }
 double max_width(const std::vector<CatalogPin>& pins,bool names) {
-    double w=0; for(const auto& p:pins) w=std::max(w,text_wh(names?p.name:p.number,1.27,0.95,1.6).first);
+    double w=0;
+    for(const auto& p:pins) {
+        // text_wh's legacy byte-oriented primitive expects one byte per glyph.
+        // Preserve ASCII markup, but count each UTF-8 codepoint once as Python
+        // len(text) did. The emitted label retains its original Unicode bytes.
+        std::string glyphs;
+        for(const unsigned char c:names?p.name:p.number) {
+            if(c<0x80)glyphs+=static_cast<char>(c);
+            else if((c&0xc0)!=0x80)glyphs+='x';
+        }
+        w=std::max(w,text_wh(glyphs,1.27,0.95,1.6).first);
+    }
     return w;
 }
 double pin_length(const std::vector<CatalogPin>& pins) { return std::max(2.54,ceil_grid(max_width(pins,false)+0.6,1.27)); }
@@ -81,27 +92,35 @@ std::vector<CatalogPin> part_normalize_pin_types(std::vector<CatalogPin> pins,co
 
 std::string part_safe_name(const std::string& name) {
     std::string out;
+    bool replacing=false;
     for(const unsigned char c:name) {
         const bool safe=(c>='a' && c<='z') || (c>='A' && c<='Z') || (c>='0' && c<='9') || c=='.' || c=='_' || c=='-';
-        if(safe)out+=static_cast<char>(c);else if(out.empty() || out.back()!='_')out+='_';
+        if(safe)out+=static_cast<char>(c);else if(!replacing)out+='_';
+        replacing=!safe;
     }
     const auto first=out.find_first_not_of('_');if(first==out.npos)return {};
     return out.substr(first,out.find_last_not_of('_')-first+1);
 }
 
-std::optional<CatalogPin> part_synthesize_ep(const std::string& lcsc,const std::vector<CatalogPin>& pins) {
-    if(lcsc!="C3192119")return std::nullopt;
+std::string part_next_pin_number(const std::vector<CatalogPin>& pins) {
     std::string maximum;
     for(const auto& p:pins) {
-        const auto name=upper(p.name);if(name=="EP" || name=="PAD" || name=="EPAD")return std::nullopt;
         if(digits(p.number)) { const auto n=numeric_key(p.number);
             if(n.size()>maximum.size() || (n.size()==maximum.size() && n>maximum))maximum=n;
         }
     }
-    if(maximum.empty())return CatalogPin{"EP","EP","passive"};
+    if(maximum.empty())return "EP";
     std::size_t i=maximum.size();while(i && maximum[i-1]=='9'){maximum[--i]='0';}
     if(i)++maximum[i-1];else maximum.insert(0,"1");
-    return CatalogPin{maximum,"EP","passive"};
+    return maximum;
+}
+
+std::optional<CatalogPin> part_synthesize_ep(const std::string& lcsc,const std::vector<CatalogPin>& pins) {
+    if(lcsc!="C3192119")return std::nullopt;
+    for(const auto& p:pins) {
+        const auto name=upper(p.name);if(name=="EP" || name=="PAD" || name=="EPAD")return std::nullopt;
+    }
+    return CatalogPin{part_next_pin_number(pins),"EP","passive"};
 }
 
 PartPinGroups part_group_pins(const std::vector<CatalogPin>& pins) {

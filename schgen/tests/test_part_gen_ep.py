@@ -46,8 +46,7 @@ def test_synth_ep_pad_small_is_single_full_stack_pad():
 
 def test_add_part_synthesizes_ep_end_to_end(tmp_path):
     cached = _REPO / "parts" / "MPQ4423HGQ-Z" / "MPQ4423HGQ-Z.easyeda.json"
-    if not cached.exists():
-        return
+    assert cached.is_file(), "required recorded CAD fixture is missing"
     out = part_gen.add_part("C3192119", parts_dir=tmp_path, from_json=cached)
     sym = (out / "MPQ4423HGQ-Z.kicad_sym").read_text()
     mod = (out / "MPQ4423HGQ-Z.kicad_mod").read_text()

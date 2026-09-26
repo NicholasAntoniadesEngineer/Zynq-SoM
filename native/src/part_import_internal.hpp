@@ -27,6 +27,7 @@ inline bool tag(const S& s, const std::string& t) {
 }
 inline const JsonNode& field(const JsonNode& v, const std::string& k) {
     static const JsonNode empty;
+    if(v.kind==JsonKind::Null)return empty;
     const auto* p = object_field(v, k); return p ? *p : empty;
 }
 inline std::string string(const JsonNode& v, const std::string& fallback = {}) {
