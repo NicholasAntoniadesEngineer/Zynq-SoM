@@ -1,0 +1,291 @@
+{
+  "capture": "Unmodified original nine Python test functions; live authored documents/canonical sheet names; independently frozen legacy power/sequence/SVG inputs, no native implementation",
+  "source_sha256": "c015994261c811d807f068b27ecf85d864f17849b3b03046844cac5d9af84556",
+  "families": [
+    "test_packet_files_present",
+    "test_design_spec_rail_table_rails_are_real",
+    "test_design_spec_core_rails_documented",
+    "test_compliance_cited_sheets_exist",
+    "test_compliance_covers_every_required_interface",
+    "test_power_sequence_partitions_every_regulator",
+    "test_power_sequence_build_is_deterministic",
+    "test_power_sequence_svg_byte_deterministic",
+    "test_design_spec_references_the_three_diagrams"
+  ],
+  "known_rails": [
+    "+1V8",
+    "+1V8_REG",
+    "+2V5_VADJ",
+    "+3V3",
+    "+3V3_AUX",
+    "+3V3_CAM",
+    "+3V3_DBG",
+    "+3V3_HDMI_RX",
+    "+3V3_HDMI_TX",
+    "+3V3_LCD",
+    "+3V3_PMOD",
+    "+3V3_PMODX",
+    "+3V3_REG",
+    "+3V3_SC",
+    "+3V3_SD",
+    "+3V3_USER_LED",
+    "+5V",
+    "+5V_DBG",
+    "+5V_HDMI_TX",
+    "+5V_LCD",
+    "+5V_MOTOR_IO",
+    "+5V_REG",
+    "+5V_SOM",
+    "+5V_USB",
+    "+VBUS_IN",
+    "+VIN",
+    "+VIN_SYS"
+  ],
+  "table_rails": [
+    "+1V8",
+    "+1V8_REG",
+    "+2V5_VADJ",
+    "+3V3",
+    "+3V3_REG",
+    "+3V3_SC",
+    "+5V",
+    "+5V_REG",
+    "+5V_SOM",
+    "+VBUS_IN",
+    "+VIN",
+    "+VIN_SYS"
+  ],
+  "cited_sheets": [
+    "camera",
+    "ethernet",
+    "fmc",
+    "hdmi_rx",
+    "hdmi_rx_term",
+    "hdmi_tx",
+    "pd_input",
+    "rj45_connector",
+    "usb_jtag_connector",
+    "usb_pd",
+    "usb_uart_connector",
+    "usbc_otg"
+  ],
+  "cases": [
+    {
+      "op": "baseline",
+      "failures": {}
+    },
+    {
+      "op": "missing_design",
+      "failures": {
+        "test_packet_files_present": {
+          "type": "AssertionError",
+          "message": "DESIGN_SPEC.md missing"
+        },
+        "test_design_spec_rail_table_rails_are_real": {
+          "type": "FileNotFoundError",
+          "message": "missing test asset"
+        },
+        "test_design_spec_core_rails_documented": {
+          "type": "FileNotFoundError",
+          "message": "missing test asset"
+        },
+        "test_design_spec_references_the_three_diagrams": {
+          "type": "FileNotFoundError",
+          "message": "missing test asset"
+        }
+      }
+    },
+    {
+      "op": "missing_compliance",
+      "failures": {
+        "test_packet_files_present": {
+          "type": "AssertionError",
+          "message": "COMPLIANCE.md missing"
+        },
+        "test_compliance_cited_sheets_exist": {
+          "type": "FileNotFoundError",
+          "message": "missing test asset"
+        },
+        "test_compliance_covers_every_required_interface": {
+          "type": "FileNotFoundError",
+          "message": "missing test asset"
+        }
+      }
+    },
+    {
+      "op": "design_no_tables",
+      "failures": {
+        "test_design_spec_rail_table_rails_are_real": {
+          "type": "AssertionError",
+          "message": "no rail tokens found in DESIGN_SPEC tables"
+        },
+        "test_design_spec_references_the_three_diagrams": {
+          "type": "AssertionError",
+          "message": "DESIGN_SPEC does not reference block_diagram.svg"
+        }
+      }
+    },
+    {
+      "op": "unknown_rail",
+      "failures": {
+        "test_design_spec_rail_table_rails_are_real": {
+          "type": "AssertionError",
+          "message": "DESIGN_SPEC names rails the netlist does not have: ['+FICTITIOUS']"
+        }
+      }
+    },
+    {
+      "op": "remove_core",
+      "failures": {
+        "test_design_spec_core_rails_documented": {
+          "type": "AssertionError",
+          "message": "DESIGN_SPEC does not mention core rail +2V5_VADJ"
+        }
+      }
+    },
+    {
+      "op": "unknown_sheet",
+      "failures": {
+        "test_compliance_cited_sheets_exist": {
+          "type": "AssertionError",
+          "message": "COMPLIANCE cites sheets that do not exist: ['nonexistent_sheet']"
+        }
+      }
+    },
+    {
+      "op": "remove_citations",
+      "failures": {
+        "test_compliance_cited_sheets_exist": {
+          "type": "AssertionError",
+          "message": "no sheet citations found in COMPLIANCE headers"
+        }
+      }
+    },
+    {
+      "op": "remove_interface",
+      "failures": {
+        "test_compliance_covers_every_required_interface": {
+          "type": "AssertionError",
+          "message": "COMPLIANCE missing the USB 2.0 section"
+        }
+      }
+    },
+    {
+      "op": "remove_diagram",
+      "failures": {
+        "test_design_spec_references_the_three_diagrams": {
+          "type": "AssertionError",
+          "message": "DESIGN_SPEC does not reference power_sequence.svg"
+        }
+      }
+    },
+    {
+      "op": "lost_output",
+      "rail": "+3V3_AUX",
+      "failures": {
+        "test_power_sequence_partitions_every_regulator": {
+          "type": "AssertionError",
+          "message": "power-sequence drops regulator output +3V3_AUX"
+        }
+      }
+    },
+    {
+      "op": "load_switch_stage0",
+      "failures": {
+        "test_power_sequence_partitions_every_regulator": {
+          "type": "AssertionError",
+          "message": "+3V3_AUX is a load switch but sits in stage-0"
+        }
+      }
+    },
+    {
+      "op": "load_switch_chain",
+      "failures": {
+        "test_power_sequence_partitions_every_regulator": {
+          "type": "AssertionError",
+          "message": "+3V3_AUX is a load switch but sits in the rail chain"
+        }
+      }
+    },
+    {
+      "op": "missing_source",
+      "rail": "+VBUS_IN",
+      "failures": {
+        "test_power_sequence_partitions_every_regulator": {
+          "type": "AssertionError",
+          "message": "source +VBUS_IN not in stage-0"
+        }
+      }
+    },
+    {
+      "op": "stage0_nondeterminism",
+      "failures": {
+        "test_power_sequence_build_is_deterministic": {
+          "type": "AssertionError",
+          "message": ""
+        }
+      }
+    },
+    {
+      "op": "chain_nondeterminism",
+      "failures": {
+        "test_power_sequence_build_is_deterministic": {
+          "type": "AssertionError",
+          "message": ""
+        }
+      }
+    },
+    {
+      "op": "modules_nondeterminism",
+      "failures": {
+        "test_power_sequence_build_is_deterministic": {
+          "type": "AssertionError",
+          "message": ""
+        }
+      }
+    },
+    {
+      "op": "svg_nondeterminism",
+      "failures": {
+        "test_power_sequence_svg_byte_deterministic": {
+          "type": "AssertionError",
+          "message": ""
+        }
+      }
+    },
+    {
+      "op": "invalid_svg",
+      "failures": {
+        "test_power_sequence_svg_byte_deterministic": {
+          "type": "ExpatError",
+          "message": "unclosed token: line 1, column 0"
+        }
+      }
+    },
+    {
+      "op": "few_rects",
+      "failures": {
+        "test_power_sequence_svg_byte_deterministic": {
+          "type": "AssertionError",
+          "message": ""
+        }
+      }
+    },
+    {
+      "op": "unicode_lines",
+      "failures": {}
+    },
+    {
+      "op": "ignored_citations",
+      "failures": {}
+    },
+    {
+      "op": "rail_second_column",
+      "failures": {}
+    },
+    {
+      "op": "new_known_rail",
+      "failures": {}
+    }
+  ]
+}

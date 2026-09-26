@@ -62,6 +62,12 @@ target_sources(schgen_core PRIVATE src/pcb_drc.cpp)
 target_sources(schgen_core PRIVATE src/subsystem_build.cpp)
 target_sources(schgen_core PRIVATE src/example_devkit.cpp)
 target_sources(schgen_core PRIVATE src/net_contract.cpp)
+target_sources(schgen_core PRIVATE src/doc_consistency.cpp)
+target_sources(schgen_core PRIVATE src/regression_cli.cpp)
+set_source_files_properties(src/regression_cli.cpp
+    PROPERTIES COMPILE_OPTIONS "-Wall;-Wextra;-Wpedantic;-Werror;-ffp-contract=off")
+set_source_files_properties(src/doc_consistency.cpp
+    PROPERTIES COMPILE_OPTIONS "-Wall;-Wextra;-Wpedantic;-Werror;-ffp-contract=off")
 set_source_files_properties(src/net_contract.cpp src/example_devkit.cpp
     PROPERTIES COMPILE_OPTIONS "-Wall;-Wextra;-Wpedantic;-Werror;-ffp-contract=off")
 target_sources(schgen_core PRIVATE src/experiment_tools_json.cpp src/experiment_tools_board.cpp
@@ -351,6 +357,22 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_SOURCE_DIR}/tests/data/part_gen" "$<TARGET_FILE:schgen>")
     add_executable(schgen_board_pipeline_contracts tests/board_pipeline_contracts.cpp)
     add_executable(schgen_net_contract_contracts tests/net_contract_contracts.cpp)
+    add_executable(schgen_doc_consistency_contracts tests/doc_consistency_contracts.cpp)
+    foreach(family regression_cli regression_rc_smoke)
+        add_executable(schgen_${family}_contracts tests/${family}_contracts.cpp)
+        target_link_libraries(schgen_${family}_contracts PRIVATE schgen_core)
+        target_compile_options(schgen_${family}_contracts PRIVATE
+            -Wall -Wextra -Wpedantic -Werror -ffp-contract=off)
+    endforeach()
+    add_test(NAME native_regression_cli_contracts
+        COMMAND schgen_regression_cli_contracts "${CMAKE_COMMAND}" "${CMAKE_CTEST_COMMAND}")
+    set_tests_properties(native_regression_cli_contracts PROPERTIES TIMEOUT 120)
+    add_test(NAME native_regression_rc_smoke
+        COMMAND schgen_regression_rc_smoke_contracts "${CMAKE_CURRENT_SOURCE_DIR}/..")
+    set_tests_properties(native_regression_rc_smoke PROPERTIES TIMEOUT 120 LABELS "live-kicad")
+    target_link_libraries(schgen_doc_consistency_contracts PRIVATE schgen_core)
+    target_compile_options(schgen_doc_consistency_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror -ffp-contract=off)
+    add_test(NAME native_doc_consistency_contracts COMMAND schgen_doc_consistency_contracts "${CMAKE_CURRENT_SOURCE_DIR}/.." "${CMAKE_CURRENT_BINARY_DIR}/doc-consistency-contract-output")
     target_link_libraries(schgen_net_contract_contracts PRIVATE schgen_core)
     target_compile_options(schgen_net_contract_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror -ffp-contract=off)
     add_test(NAME native_net_contract_contracts COMMAND schgen_net_contract_contracts "${CMAKE_CURRENT_SOURCE_DIR}/.." "${CMAKE_CURRENT_BINARY_DIR}/net-contract-contract-output")
@@ -572,9 +594,16 @@ if(BUILD_TESTING)
     add_test(NAME native_subsystem_check_cli COMMAND schgen subsystem-check --repo "${CMAKE_CURRENT_SOURCE_DIR}/..")
     add_test(NAME native_carrier_check_cli COMMAND schgen carrier-check --repo "${CMAKE_CURRENT_SOURCE_DIR}/..")
     add_test(NAME native_devkit_check_cli COMMAND schgen carrier-check --project devkit_mini --repo "${CMAKE_CURRENT_SOURCE_DIR}/..")
-    foreach(command board build devkit nets chir-rung w11-sweep w12-bound w12-stageprobe dump-circuits)
+    foreach(command board build devkit nets chir-rung w11-sweep w12-bound w12-stageprobe dump-circuits
+            selftest project-check circuit-check som-interface xdc vivado fpga bom link devicetree
+            design-rules testpoints board-schematic pcb-stage pcb-drc subsystem-new render3d board-step
+            model3d-check assembly ratsnest gallery diagram si-constraints fab-profile manifest preflight
+            constraints powertree thermal part-rules bom-values footprint-pads pin-completeness symbol-law
+            spice firmware manual scfw testplan power-sequence subsystem-check carrier-check check)
         add_test(NAME native_${command}_help COMMAND schgen ${command} --help --repo /nonexistent/schgen-help-must-not-read)
     endforeach()
+    add_test(NAME native_part_import_help COMMAND schgen part-import --help
+        --parts-root /nonexistent/schgen-help-must-not-write --from-json /nonexistent/schgen-help-must-not-read)
     add_test(NAME native_reject_board COMMAND schgen board --skip-audits)
     add_test(NAME native_reject_self_check_args COMMAND schgen self-check extra)
     add_test(NAME native_reject_missing_catalog_args COMMAND schgen catalog-compile)

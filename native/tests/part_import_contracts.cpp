@@ -211,6 +211,13 @@ void boundaries(const std::filesystem::path& reference_path,const std::string& e
     rejects([&]{publish_part_import(plan,offline.parts_root,true);},"symlink target rejected even with overwrite");
     exact(read(source),input,"symlink destination was modified");
     const auto cli_root=scratch.path/"cli-parts";
+    for(const auto* flag:{"--help","-h"}){
+        const auto help=run_process({executable,"part-import",flag,"--parts-root",cli_root.string(),
+            "--from-json",(scratch.path/"nonexistent.json").string()});
+        require(help.exit_code==0 && help.stdout_text.find("usage: schgen part-import")!=std::string::npos,
+            "import help must succeed without reading inputs");
+        require(!std::filesystem::exists(cli_root),"help published files");
+    }
     std::vector<std::string> command{executable,"part-import","--parts-root",cli_root.string(),"--from-json",source.string()};
     auto result=run_process(command);
     require(result.exit_code==0,"standalone offline importer failed: "+result.stderr_text);

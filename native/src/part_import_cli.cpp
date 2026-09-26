@@ -7,11 +7,12 @@ std::optional<int> run_part_import_command(int argc,char** argv){
     if(argc<2||std::string(argv[1])!="part-import")return std::nullopt;
     PartImportRequest request;
     std::filesystem::path catalog;
-    bool overwrite=false;
+    bool overwrite=false, help=false;
     std::set<std::string> seen;
     for(int i=2;i<argc;++i){
         const std::string option=argv[i];
         if(!seen.insert(option).second)throw PartImportError("duplicate option "+option);
+        if(option=="--help"||option=="-h"){help=true;continue;}
         if(option=="--overwrite"){overwrite=true;continue;}
         if(option!="--lcsc"&&option!="--name"&&option!="--parts-root"&&option!="--from-json"&&option!="--catalog")
             throw PartImportError("unknown part-import option "+option);
@@ -22,6 +23,14 @@ std::optional<int> run_part_import_command(int argc,char** argv){
         else if(option=="--parts-root")request.parts_root=value;
         else if(option=="--from-json")request.from_json=value;
         else catalog=value;
+    }
+    if(help){
+        std::cout<<"usage: schgen part-import --parts-root DIRECTORY\n"
+                     "                         (--from-json FILE | --lcsc ID)\n"
+                     "                         [--name NAME] [--overwrite] [--catalog FILE]\n"
+                     "Convert and publish a native part package. Offline JSON needs no network.\n"
+                     "Existing packages require explicit --overwrite. --help/-h performs no IO.\n";
+        return 0;
     }
     if(request.parts_root.empty())throw PartImportError("part-import requires --parts-root DIRECTORY");
     if(!request.from_json&&request.lcsc.empty())throw PartImportError("part-import requires --from-json FILE or --lcsc ID");
