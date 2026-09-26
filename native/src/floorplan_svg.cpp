@@ -1,4 +1,5 @@
 #include "floorplan_internal.hpp"
+#include "schgen/board_decision_policy.hpp"
 
 #include <algorithm>
 #include <charconv>
@@ -19,7 +20,7 @@ std::string f(double v) {
     if (r.ec!=std::errc{}) throw FloorplanError("floorplan SVG: invalid coordinate");
     std::string s(buf,r.ptr); if (s.find_first_of(".eE")==std::string::npos) s+=".0"; return s;
 }
-constexpr double ox=46,oy=64,scale=6;
+using namespace board_decision_policy::svg;
 double px(double x) { return svg_map(x,ox,scale); }
 double py(double y) { return svg_map(y,oy,scale); }
 std::string gx(double x) { return f(px(x)); }

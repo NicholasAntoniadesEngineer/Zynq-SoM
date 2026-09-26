@@ -67,6 +67,21 @@ const std::vector<Declaration> declarations{
     {"breathe_search_step","ASSUME","floorplan.sizing","mm","increment and retreat step in existing breathe displacement search","policy","board_decision_policy.breathe_step_mm","", {}},
     {"mounting_hole_inset","ASSUME","floorplan.sizing","mm","mounting-hole center inset used by the cross-net geometry estimator","policy","floorplan.mh_inset","", {}},
     {"edge_pad_clearance","ASSUME","floorplan.sizing","mm","connector pad clearance from the outline used by the cross-net geometry estimator","policy","floorplan.edge_pad_clear","", {}},
+    {"compose_guard","ASSUME","floorplan.sizing","mm","margin subtracted from near bounds during composition","policy","board_decision_policy.compose.guard_mm","", {}},
+    {"compose_repair_max","ASSUME","floorplan.sizing","iterations","maximum iterations of composition constraint repair","policy","board_decision_policy.compose.repair_max","", {}},
+    {"compose_median_passes","ASSUME","floorplan.sizing","passes","weighted median passes for composition refinement","policy","board_decision_policy.compose.median_passes","", {}},
+    {"compose_channel_min_nets","ASSUME","floorplan.sizing","nets","minimum channel demand that receives a separation constraint","policy","board_decision_policy.compose.channel_min_nets","", {}},
+    {"compose_channel_floor","ASSUME","floorplan.sizing","mm","minimum reserved channel separation","policy","board_decision_policy.compose.channel_floor","", {}},
+    {"compose_channel_per_net","ASSUME","floorplan.sizing","mm/net","additional channel separation per demanded net","policy","board_decision_policy.compose.channel_per_net","", {}},
+    {"compose_hop_weight","ASSUME","floorplan.sizing","weight","flow-hop attraction weight in composition refinement","policy","board_decision_policy.compose.hop_weight","", {}},
+    {"compose_seed_weight","ASSUME","floorplan.sizing","weight","seed-position retention weight in composition refinement","policy","board_decision_policy.compose.seed_weight","", {}},
+    {"floorplan_svg_origin_x","ASSUME","floorplan.sizing","px","horizontal drawing origin of the floorplan SVG","policy","board_decision_policy.svg.ox","", {}},
+    {"floorplan_svg_origin_y","ASSUME","floorplan.sizing","px","vertical drawing origin of the floorplan SVG","policy","board_decision_policy.svg.oy","", {}},
+    {"floorplan_svg_scale","ASSUME","floorplan.sizing","px/mm","floorplan SVG drawing scale","policy","board_decision_policy.svg.scale","", {}},
+    {"escape_construct_radius","ASSUME","floorplan.sizing","mm","escape corridor construction reach","policy","board_decision_policy.escape.radius","", {}},
+    {"escape_lattice","ASSUME","floorplan.sizing","mm","escape via search lattice spacing","policy","board_decision_policy.escape.lattice","", {}},
+    {"escape_lane_handle","ASSUME","floorplan.sizing","mm","escape lane extent beyond the connector contact row","policy","board_decision_policy.escape.lane_handle","", {}},
+    {"escape_hole_clearance","ASSUME","floorplan.sizing","mm","minimum hole-to-hole separation in escape search","policy","board_decision_policy.escape.hole_hole","", {}},
     {"overmold_side_gap","CALC","floorplan.sizing","mm","shell overhang beside a single receptacle","","floorplan.OVERMOLD_SIDE_GAP","plug_width / 2 - copper_half_width", {"plug_width","copper_half_width"}},
     {"edge_band","CALC","floorplan.sizing","mm","connector band width used by the seed outline","","floorplan.EDGE_BAND","edge_depth_cap - edge_band_relief", {"edge_depth_cap","edge_band_relief"}},
     {"occ_punch_mask","CALC","floorplan.sizing","bitmask","occupancy bits of geometry that pierces both faces","","floorplan.OCC_PUNCH","occ_top | occ_bottom", {"occ_top","occ_bottom"}},
@@ -170,6 +185,21 @@ std::optional<double> floorplan_live_assumption(const std::string& name,const Fl
     if(name=="edge_margin")return edge_margin;
     if(name=="mounting_hole_inset")return mh_inset;
     if(name=="edge_pad_clearance")return edge_pad_clear;
+    if(name=="compose_guard")return board_decision_policy::compose::guard_mm;
+    if(name=="compose_repair_max")return board_decision_policy::compose::repair_max;
+    if(name=="compose_median_passes")return board_decision_policy::compose::median_passes;
+    if(name=="compose_channel_min_nets")return board_decision_policy::compose::channel_min_nets;
+    if(name=="compose_channel_floor")return board_decision_policy::compose::channel_floor;
+    if(name=="compose_channel_per_net")return board_decision_policy::compose::channel_per_net;
+    if(name=="compose_hop_weight")return board_decision_policy::compose::hop_weight;
+    if(name=="compose_seed_weight")return board_decision_policy::compose::seed_weight;
+    if(name=="floorplan_svg_origin_x")return board_decision_policy::svg::ox;
+    if(name=="floorplan_svg_origin_y")return board_decision_policy::svg::oy;
+    if(name=="floorplan_svg_scale")return board_decision_policy::svg::scale;
+    if(name=="escape_construct_radius")return board_decision_policy::escape::radius;
+    if(name=="escape_lattice")return board_decision_policy::escape::lattice;
+    if(name=="escape_lane_handle")return board_decision_policy::escape::lane_handle;
+    if(name=="escape_hole_clearance")return board_decision_policy::escape::hole_hole;
     if(name=="mh_corner_keepout")return mh_corner;
     if(name=="edge_inset")return edge_inset;
     if(name=="cable_neighbor_gap")return cable_gap;

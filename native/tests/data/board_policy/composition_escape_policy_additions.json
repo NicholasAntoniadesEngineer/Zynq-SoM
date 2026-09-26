@@ -1,0 +1,95 @@
+{
+  "provenance": "Independently authored ledger additions exposing existing composition, SVG and escape policy. Literal values and operation order are unchanged; original reference fixtures are not rewritten.",
+  "assumption_rows": [
+    {
+      "kind": "ASSUME",
+      "depth": 1,
+      "name": "compose_guard",
+      "text": "  ASSUME compose_guard                  = 4             mm         [policy] board_decision_policy.compose.guard_mm — margin subtracted from near bounds during composition"
+    },
+    {
+      "kind": "ASSUME",
+      "depth": 1,
+      "name": "compose_repair_max",
+      "text": "  ASSUME compose_repair_max             = 16            iterations [policy] board_decision_policy.compose.repair_max — maximum iterations of composition constraint repair"
+    },
+    {
+      "kind": "ASSUME",
+      "depth": 1,
+      "name": "compose_median_passes",
+      "text": "  ASSUME compose_median_passes          = 8             passes     [policy] board_decision_policy.compose.median_passes — weighted median passes for composition refinement"
+    },
+    {
+      "kind": "ASSUME",
+      "depth": 1,
+      "name": "compose_channel_min_nets",
+      "text": "  ASSUME compose_channel_min_nets       = 6             nets       [policy] board_decision_policy.compose.channel_min_nets — minimum channel demand that receives a separation constraint"
+    },
+    {
+      "kind": "ASSUME",
+      "depth": 1,
+      "name": "compose_channel_floor",
+      "text": "  ASSUME compose_channel_floor          = 2             mm         [policy] board_decision_policy.compose.channel_floor — minimum reserved channel separation"
+    },
+    {
+      "kind": "ASSUME",
+      "depth": 1,
+      "name": "compose_channel_per_net",
+      "text": "  ASSUME compose_channel_per_net        = 0.2           mm/net     [policy] board_decision_policy.compose.channel_per_net — additional channel separation per demanded net"
+    },
+    {
+      "kind": "ASSUME",
+      "depth": 1,
+      "name": "compose_hop_weight",
+      "text": "  ASSUME compose_hop_weight             = 1             weight     [policy] board_decision_policy.compose.hop_weight — flow-hop attraction weight in composition refinement"
+    },
+    {
+      "kind": "ASSUME",
+      "depth": 1,
+      "name": "compose_seed_weight",
+      "text": "  ASSUME compose_seed_weight            = 0.05          weight     [policy] board_decision_policy.compose.seed_weight — seed-position retention weight in composition refinement"
+    },
+    {
+      "kind": "ASSUME",
+      "depth": 1,
+      "name": "floorplan_svg_origin_x",
+      "text": "  ASSUME floorplan_svg_origin_x         = 46            px         [policy] board_decision_policy.svg.ox — horizontal drawing origin of the floorplan SVG"
+    },
+    {
+      "kind": "ASSUME",
+      "depth": 1,
+      "name": "floorplan_svg_origin_y",
+      "text": "  ASSUME floorplan_svg_origin_y         = 64            px         [policy] board_decision_policy.svg.oy — vertical drawing origin of the floorplan SVG"
+    },
+    {
+      "kind": "ASSUME",
+      "depth": 1,
+      "name": "floorplan_svg_scale",
+      "text": "  ASSUME floorplan_svg_scale            = 6             px/mm      [policy] board_decision_policy.svg.scale — floorplan SVG drawing scale"
+    },
+    {
+      "kind": "ASSUME",
+      "depth": 1,
+      "name": "escape_construct_radius",
+      "text": "  ASSUME escape_construct_radius        = 1.8           mm         [policy] board_decision_policy.escape.radius — escape corridor construction reach"
+    },
+    {
+      "kind": "ASSUME",
+      "depth": 1,
+      "name": "escape_lattice",
+      "text": "  ASSUME escape_lattice                 = 0.05          mm         [policy] board_decision_policy.escape.lattice — escape via search lattice spacing"
+    },
+    {
+      "kind": "ASSUME",
+      "depth": 1,
+      "name": "escape_lane_handle",
+      "text": "  ASSUME escape_lane_handle             = 1             mm         [policy] board_decision_policy.escape.lane_handle — escape lane extent beyond the connector contact row"
+    },
+    {
+      "kind": "ASSUME",
+      "depth": 1,
+      "name": "escape_hole_clearance",
+      "text": "  ASSUME escape_hole_clearance          = 0.5           mm         [policy] board_decision_policy.escape.hole_hole — minimum hole-to-hole separation in escape search"
+    }
+  ]
+}

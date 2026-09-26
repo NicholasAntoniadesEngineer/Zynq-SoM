@@ -1,4 +1,5 @@
 #include "floorplan_internal.hpp"
+#include "schgen/board_decision_policy.hpp"
 
 #include <algorithm>
 #include <charconv>
@@ -6,10 +7,7 @@
 
 namespace schgen {
 namespace {
-constexpr double guard_mm = 4.0;
-constexpr int repair_max = 16, median_passes = 8, channel_min_nets = 6;
-constexpr double channel_floor = 2.0, channel_per_net = .2;
-constexpr double hop_weight = 1.0, seed_weight = .05;
+using namespace board_decision_policy::compose;
 
 void finite(double value, const std::string& where) {
     if (!std::isfinite(value))

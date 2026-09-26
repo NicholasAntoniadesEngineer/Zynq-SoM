@@ -1,10 +1,14 @@
 #pragma once
 #include "pcb_checks_internal.hpp"
 #include "schgen/pcb_escape.hpp"
+#include "schgen/board_decision_policy.hpp"
 
 namespace schgen::pcb_escape {
 using namespace pcb_checks;
-inline constexpr double radius = 1.8, lattice = .05, lane_handle = 1., hole_hole = .5;
+using board_decision_policy::escape::radius;
+using board_decision_policy::escape::lattice;
+using board_decision_policy::escape::lane_handle;
+using board_decision_policy::escape::hole_hole;
 inline const std::vector<std::pair<double, double>> &ladder() {
     static const std::vector<std::pair<double, double>> v{{.45, .3}, {.4, .25}, {.35, .2}};
     return v;

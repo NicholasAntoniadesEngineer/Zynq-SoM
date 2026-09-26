@@ -45,6 +45,10 @@ bool zero_initialization(const JsonNode& n){
     const auto kind=text(n,"kind");
     if(kind=="ImplicitValueInitExpr")return true;
     if(kind=="IntegerLiteral"||kind=="FloatingLiteral"||kind=="CharacterLiteral"){
+        // Clang emits character values as JSON numbers, whereas ordinary
+        // integer/floating literals use strings. Both represent zero state.
+        const auto& literal=get(n,"value");
+        if(literal.kind==JsonKind::Number)return literal.number_value==0;
         const auto value=text(n,"value");char* end=nullptr;const auto number=std::strtod(value.c_str(),&end);
         return !value.empty()&&end==value.c_str()+value.size()&&number==0;
     }

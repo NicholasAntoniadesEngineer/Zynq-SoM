@@ -38,6 +38,12 @@ void source_contracts(){
     c=scan("namespace policy { struct State { double area=0; int count{}; double margin=0.0; double offset=-0.0; }; double use(State s){return s.area;} }\n");
     require(c.constants.empty(),"mutable zero/value-initialized instance state is not policy storage");
     require(check_native_audits(c,empty,none).ok,"ordinary instance state passes");
+    c=scan("namespace policy { struct State { char edge='\\0'; signed char face=0; unsigned char side{}; }; }\n");
+    require(c.constants.empty(),"Clang numeric character zero is ordinary mutable state");
+    c=scan("namespace policy { struct State {char edge='N'; char width='\\4'; const char frozen='\\0'; static constexpr char pitch='\\0';}; }\n");
+    for(const auto& s:{"State::edge","State::width","State::frozen","State::pitch"})
+        require(symbol(c,s),std::string("nonzero or immutable character storage remains policy: ")+s);
+    require(check_native_audits(c,empty,none).buried.size()==4,"character zero correction does not waive nonzero or immutable policy");
     c=scan("namespace policy { struct Limits { double margin=4.2; const double frozen=0; static constexpr double pitch=1.25; }; double f(){static double clearance=.3;constexpr double eps=1e-9;double HIDDEN_GAP=4.2;return eps+HIDDEN_GAP+clearance;} }\n");
     for(const auto& s:{"Limits::margin","Limits::frozen","Limits::pitch","f::clearance","f::eps","f::HIDDEN_GAP"})
         require(symbol(c,s),std::string("hidden engineering storage remains visible: ")+s);
