@@ -282,12 +282,47 @@ void facing_contracts() {
 
 }  // namespace
 
+namespace {
+void exact_representation_boundaries() {
+    // Independent libm rounding oracle for the digits=0 subset, sweeping every
+    // binary64 power-of-two boundary and both neighboring representable values.
+    for (int exponent=-1074;exponent<=1023;++exponent) {
+        const double power=std::ldexp(1.0,exponent);
+        for(double value:{std::nextafter(power,0.0),power,
+                std::nextafter(power,std::numeric_limits<double>::infinity())}) {
+            for(double sign:{-1.0,1.0}) {
+                const double input=sign*value;
+                const double expected=std::nearbyint(input);
+                const double actual=schgen::py_round(input,0);
+                require(actual==expected && (actual!=0 || std::signbit(actual)==std::signbit(expected)),
+                    "binary exponent/integrality transition changed rounding");
+            }
+        }
+    }
+    // Independent bisection integer oracle for a dense subnormal grid. Product
+    // and midpoint comparisons stay exact in uint64; production uses restoring
+    // base-four root extraction, not this bisection algorithm.
+    for(std::uint64_t x=0;x<=128;++x)for(std::uint64_t y=0;y<=128;++y) {
+        const auto squared=x*x+y*y;
+        std::uint64_t low=0,high=x+y+1;
+        while(high-low>1){const auto mid=low+(high-low)/2;
+            if(mid*mid<=squared)low=mid;else high=mid;}
+        if(squared-low*low>low)++low;
+        const double expected=std::ldexp(static_cast<double>(low),-1074);
+        const double actual=schgen::accurate_hypot2(std::ldexp(static_cast<double>(x),-1074),
+                                                   std::ldexp(static_cast<double>(y),-1074));
+        require(actual==expected && !std::signbit(actual),"exact subnormal root differs from bisection");
+    }
+}
+}
+
 int main() {
     try {
         parser_contracts();
         formatter_contracts();
         rounding_contracts();
         norm_contracts();
+        exact_representation_boundaries();
         outline_contracts();
         facing_contracts();
         std::cout << "native numeric contracts passed\n";

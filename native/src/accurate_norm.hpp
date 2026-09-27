@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
+#include <cstring>
 #include <limits>
 #include <utility>
 
@@ -12,6 +13,11 @@ namespace schgen {
 // https://github.com/python/cpython/blob/3.14/Modules/mathmodule.c
 // This is native arithmetic, not an interpreter/runtime dependency.
 inline double accurate_hypot2(double first, double second) {
+    static_assert(sizeof(double) == sizeof(std::uint64_t) &&
+        std::numeric_limits<double>::is_iec559 &&
+        std::numeric_limits<double>::digits == 53 &&
+        std::numeric_limits<double>::max_exponent == 1024,
+        "accurate_hypot2 requires IEEE binary64");
     const double a = std::fabs(first), b = std::fabs(second);
     if (std::isinf(a) || std::isinf(b)) return std::numeric_limits<double>::infinity();
     if (std::isnan(a) || std::isnan(b)) return std::numeric_limits<double>::quiet_NaN();
@@ -24,16 +30,30 @@ inline double accurate_hypot2(double first, double second) {
         // Here both components have at most 53 bits and the squared sum fits
         // in 106 bits. Round the exact integer square root directly to units
         // of 2^-1074. The result has at most 53 bits, so rescaling is exact.
-        const auto x = static_cast<std::uint64_t>(std::ldexp(a, 1074));
-        const auto y = static_cast<std::uint64_t>(std::ldexp(b, 1074));
+        // For positive binary64 values through the smallest normal, the raw
+        // encoding IS the exact integer coefficient of 2^-1074, including
+        // the endpoint 0x0010000000000000. No floating conversion is needed.
+        std::uint64_t x = 0, y = 0;
+        std::memcpy(&x, &a, sizeof x);
+        std::memcpy(&y, &b, sizeof y);
         using Wide = __uint128_t;
         const Wide squared = Wide{x} * x + Wide{y} * y;
-        auto root = static_cast<std::uint64_t>(std::sqrt(static_cast<double>(squared)));
-        while (Wide{root} * root > squared) --root;
-        while (Wide{root + 1} * (root + 1) <= squared) ++root;
+        // Restoring base-four integer square root: at termination root is
+        // floor(sqrt(squared)) and remainder == squared - root*root. At most
+        // 2^105 is squared; 2^104 is its highest possible power-of-four digit.
+        Wide remainder = squared, root = 0, bit = Wide{1} << 104;
+        while (bit != 0) {
+            if (remainder >= root + bit) {
+                remainder -= root + bit;
+                root = (root >> 1) + bit;
+            } else {
+                root >>= 1;
+            }
+            bit >>= 2;
+        }
         // (root + 1/2)^2 = root^2 + root + 1/4. The squared sum is
         // integral, so an exact halfway case is impossible.
-        if (squared - Wide{root} * root > root) ++root;
+        if (remainder > root) ++root;
         return std::ldexp(static_cast<double>(root), -1074);
     }
     int exponent = 0;

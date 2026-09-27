@@ -6,6 +6,8 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
+#include <cstring>
+#include <limits>
 #include <functional>
 #include <queue>
 #include <stdexcept>
@@ -74,6 +76,11 @@ struct HeapNode {
 }  // namespace
 
 double py_round(double value, int digits) {
+    static_assert(sizeof(double) == sizeof(std::uint64_t) &&
+        std::numeric_limits<double>::is_iec559 &&
+        std::numeric_limits<double>::digits == 53 &&
+        std::numeric_limits<double>::max_exponent == 1024,
+        "py_round requires IEEE binary64");
     // CPython 3.11+ round(x, ndigits) uses dtoa mode-3 then strtod:
     // quantize the exact binary value onto 10**-ndigits, half toward even.
     // Binary `value * 10**n` is not that — 11.24955 * 10000 looks like a
@@ -86,16 +93,25 @@ double py_round(double value, int digits) {
     if (digits < 0 || digits > 15) {
         throw std::runtime_error("py_round: digits must be in [0, 15]");
     }
-    if (!std::isfinite(value) || value == std::floor(value)) {
+    if (!std::isfinite(value) || value == 0) {
         return value;
     }
     const bool negative = std::signbit(value);
     const double magnitude = std::fabs(value);
-    int exp2 = 0;
-    const double frac = std::frexp(magnitude, &exp2);
-    const int64_t mantissa =
-        static_cast<int64_t>(std::llrint(std::ldexp(frac, 53)));
-    const int binary_exp = exp2 - 53;
+    // Decode the exact binary rational instead of rounding to test integrality
+    // or converting a normalized floating significand to an integer. For a
+    // normal value, magnitude = mantissa * 2^(biased_exp-1075); subnormals use
+    // their unnormalized fraction coefficient times 2^-1074.
+    std::uint64_t encoding = 0;
+    std::memcpy(&encoding, &magnitude, sizeof encoding);
+    const int biased_exp = static_cast<int>(encoding >> 52);
+    std::uint64_t mantissa = encoding & ((std::uint64_t{1} << 52) - 1);
+    if (biased_exp >= 1075) return value; // all fraction bits are integral
+    if (biased_exp >= 1023 &&
+        (mantissa & ((std::uint64_t{1} << (1075 - biased_exp)) - 1)) == 0)
+        return value;
+    if (biased_exp != 0) mantissa |= std::uint64_t{1} << 52;
+    const int binary_exp = biased_exp == 0 ? -1074 : biased_exp - 1075;
 
     __int128 scaled = mantissa;
     // At most 53 + ceil(log2(5^15)) = 88 bits; no product can overflow.
@@ -105,7 +121,7 @@ double py_round(double value, int digits) {
     const int two_exp = binary_exp + digits;
     __int128 quantized = 0;
     if (two_exp >= 0) {
-        // Nonintegral doubles have exp2 <= 52, hence two_exp <= 14.
+        // Nonintegral doubles have binary_exp <= -1, hence two_exp <= 14.
         // With the bound above, this left shift stays below 102 bits.
         quantized = scaled << two_exp;
     } else {

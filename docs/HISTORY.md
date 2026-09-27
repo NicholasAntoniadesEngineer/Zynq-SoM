@@ -2,6 +2,18 @@
 
 ## 2026-09-27 — rendered verification and truthful DRC process diagnostics
 
+Exact numeric kernel correction (autonomous, per full-autonomy directive):
+binary64 significands are decoded exactly rather than recovered with floating
+rounding/conversion, and the tiny-input norm uses a restoring integer square
+root. This removes internal audit findings through exact arithmetic, not new
+registry exemptions. Decimal ties-to-even, supported digit range/cap, errors,
+signed zero, nonfinite behavior and existing corrected norm values are retained.
+Private proof passed 4.5 million rounding parity cases, 250,000 norm parity
+cases, independent MPFR oracles and sanitizers. The integrated CLI build plus
+numeric, occupancy-precision, placement-search and full placement contracts all
+pass (four tests, 53.18 seconds). Whole-board/source-manifest acceptance remains
+pending; the earlier rendered images are still explicitly from 372f9563.
+
 Autonomous, per full-autonomy directive: rendered both boards from 372f9563
 without overwriting tracked generated artifacts. Carrier took 321.72 seconds
 and devkit 273.85 seconds, with rendering enabled; these are not comparable to
