@@ -1,5 +1,29 @@
 # carrier — project HISTORY (archived planning logs)
 
+## 2026-09-27 — rendered verification and truthful DRC process diagnostics
+
+Autonomous, per full-autonomy directive: rendered both boards from 372f9563
+without overwriting tracked generated artifacts. Carrier took 321.72 seconds
+and devkit 273.85 seconds, with rendering enabled; these are not comparable to
+the earlier no-render timing rows. Both full runs failed source accounting and
+ledger acceptance, plus a sandbox-only KiCad DRC crash. All 49 sheets passed
+automated netlist/ERC/visual checks and all sixteen 3D views were produced.
+Manual image inspection nevertheless found title-block overflow and a visual
+supply-bus/ground-symbol contact; these remain open, not blessed golden changes.
+
+The same independent KiCad checks outside the sandbox returned zero
+non-unrouted errors for both boards, but carrier has 197 warnings and 499
+unrouted connections; devkit has 59 warnings and 413 unrouted connections.
+These are layout starting points, not fabrication-ready routed boards.
+
+DRC report loading now checks the child exit status before opening its output,
+preserving crash status/stdout/stderr instead of hiding them behind a missing
+report error. Pipeline and standalone CLI use the same loader. Regression
+contracts cover failed children, absent/malformed reports, successful reads and
+stale reports after failure. Native build and DRC contracts pass; both actual
+generated boards were checked through the rebuilt CLI outside the sandbox.
+No DRC severity, acceptance predicate, or source-audit requirement was weakened.
+
 ## 2026-09-26 — tracked Python retirement (acceptance in progress)
 
 Placement and allocation batch (autonomous, per full-autonomy directive):

@@ -21,7 +21,7 @@ PcbDrcResult drc(const fs::path& pcb,const std::string& executable,bool warnings
     auto pattern=(fs::temp_directory_path()/"schgen_pipeline_drc_XXXXXX").string();if(!::mkdtemp(pattern.data()))throw ProjectError("cannot create DRC scratch");
     struct Cleanup{fs::path p;~Cleanup(){std::error_code e;fs::remove_all(p,e);}}cleanup{pattern};
     const auto report=cleanup.p/"drc.json";auto args=pcb_drc_arguments(pcb,report,warnings);args[0]=executable;
-    const auto process=run_process(args,std::chrono::minutes{5});return parse_pcb_drc_report(read(report),process);
+    const auto process=run_process(args,std::chrono::minutes{5});return read_pcb_drc_report(report,process);
 }
 }
 void pcb_stages(Context& c){

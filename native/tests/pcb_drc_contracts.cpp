@@ -1,6 +1,9 @@
 #include "schgen/pcb_drc.hpp"
 #include <iostream>
 #include <algorithm>
+#include <cstdlib>
+#include <fstream>
+#include <unistd.h>
 
 namespace {
 void require(bool value) { if (!value) throw std::runtime_error("DRC contract failed"); }
@@ -37,6 +40,34 @@ int main() {
         for (const auto* invalid : {"", "{", "[]", "{}", R"({"violations":[],"unconnected_items":null})", R"({"violations":[1],"unconnected_items":[]})", R"({"violations":[{"type":2}],"unconnected_items":[]})"})
             rejects([&] { parse_pcb_drc_report(invalid, {}); });
         for (int code : {-9, 1, 5}) rejects([&] { parse_pcb_drc_report(clean, {code, "", "failed"}); });
+        // The child failure must survive even when no report was produced.
+        // This also rejects a failed child before trusting any stale report.
+        for (int code : {-5, 1, 133}) {
+            bool diagnosed = false;
+            try {
+                read_pcb_drc_report("/nonexistent/schgen-drc-report.json",
+                                    {code, "child stdout", "Swift runtime failure"});
+            } catch (const ProcessError& error) {
+                const std::string message = error.what();
+                diagnosed = message.find("KiCad DRC failed (" + std::to_string(code) + ")") != std::string::npos &&
+                            message.find("Swift runtime failure") != std::string::npos &&
+                            message.find("child stdout") != std::string::npos;
+            }
+            require(diagnosed);
+        }
+        rejects([] { read_pcb_drc_report("/nonexistent/schgen-drc-report.json", {}); });
+        auto scratch_pattern = (std::filesystem::temp_directory_path() / "schgen_drc_contract_XXXXXX").string();
+        require(::mkdtemp(scratch_pattern.data()) != nullptr);
+        struct Cleanup {
+            std::filesystem::path path;
+            ~Cleanup() { std::error_code error; std::filesystem::remove_all(path, error); }
+        } cleanup{scratch_pattern};
+        const auto report_path = cleanup.path / "drc.json";
+        { std::ofstream output(report_path); output << clean; require(bool(output)); }
+        require(read_pcb_drc_report(report_path, {}).n_errors == 0);
+        rejects([&] { read_pcb_drc_report(report_path, {-5, "", "crashed with stale report"}); });
+        { std::ofstream output(report_path); output << "{"; require(bool(output)); }
+        rejects([&] { read_pcb_drc_report(report_path, {}); });
         std::string many = "{\"violations\":[";
         for (int i = 0; i < 20; ++i) { if (i) many += ','; many += "{\"type\":\"clearance\"}"; }
         many += "],\"unconnected_items\":[]}";

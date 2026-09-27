@@ -8,6 +8,11 @@
 
 namespace schgen {
 namespace {
+void require_drc_success(const ProcessResult& process) {
+    if (process.exit_code != 0)
+        throw ProcessError("KiCad DRC failed (" + std::to_string(process.exit_code) + "): " +
+                           process.stderr_text + "\n" + process.stdout_text);
+}
 struct DrcScratch {
     std::filesystem::path path;
     DrcScratch() {
@@ -26,8 +31,7 @@ const JsonNode& required_array(const JsonNode& document, const std::string& name
 }
 PcbDrcResult parse_pcb_drc_report(const std::string& report, const ProcessResult& process) {
     // No --exit-code-violations is requested: every nonzero status is a tool failure.
-    if (process.exit_code != 0)
-        throw ProcessError("KiCad DRC failed (" + std::to_string(process.exit_code) + "): " + process.stderr_text);
+    require_drc_success(process);
     const auto document = parse_json_text(report, "KiCad DRC report");
     if (document.kind != JsonKind::Object) throw ProcessError("invalid KiCad DRC report root");
     const auto& violations = required_array(document, "violations");
@@ -63,15 +67,19 @@ std::vector<std::string> pcb_drc_arguments(const std::filesystem::path& board,
     args.insert(args.end(), {"--refill-zones", "-o", report.string(), std::filesystem::absolute(board).string()});
     return args;
 }
-PcbDrcResult run_pcb_drc(const std::filesystem::path& board, std::chrono::milliseconds timeout, bool include_warnings) {
-    if (!std::filesystem::is_regular_file(board)) throw ProcessError("DRC board file does not exist: " + board.string());
-    DrcScratch scratch;
-    const auto report = scratch.path / "drc.json";
-    const auto process = run_process(pcb_drc_arguments(board, report, include_warnings), timeout);
+PcbDrcResult read_pcb_drc_report(const std::filesystem::path& report, const ProcessResult& process) {
+    require_drc_success(process);
     std::ifstream input(report, std::ios::binary);
     if (!input) throw ProcessError("KiCad DRC produced no readable report: " + process.stderr_text);
     const std::string bytes{std::istreambuf_iterator<char>(input), std::istreambuf_iterator<char>()};
     if (input.bad()) throw ProcessError("cannot read KiCad DRC report");
     return parse_pcb_drc_report(bytes, process);
+}
+PcbDrcResult run_pcb_drc(const std::filesystem::path& board, std::chrono::milliseconds timeout, bool include_warnings) {
+    if (!std::filesystem::is_regular_file(board)) throw ProcessError("DRC board file does not exist: " + board.string());
+    DrcScratch scratch;
+    const auto report = scratch.path / "drc.json";
+    const auto process = run_process(pcb_drc_arguments(board, report, include_warnings), timeout);
+    return read_pcb_drc_report(report, process);
 }
 }

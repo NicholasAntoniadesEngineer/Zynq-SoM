@@ -14,6 +14,9 @@ struct PcbDrcResult {
 };
 // Missing/malformed reports and tool errors throw, never imply zero violations.
 PcbDrcResult parse_pcb_drc_report(const std::string& report, const ProcessResult& process);
+// Check the child status before opening its report so a crash is not masked
+// by the expected absence of an output file. Used by both CLI and pipeline.
+PcbDrcResult read_pcb_drc_report(const std::filesystem::path& report, const ProcessResult& process);
 std::vector<std::string> pcb_drc_arguments(const std::filesystem::path& board,
     const std::filesystem::path& report, bool include_warnings);
 PcbDrcResult run_pcb_drc(const std::filesystem::path& board,
