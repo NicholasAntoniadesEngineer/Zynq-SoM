@@ -1,4 +1,5 @@
 #include "schgen/pack_edges.hpp"
+#include "schgen/pack_precision.hpp"
 
 #if defined(__clang__)
 #pragma clang fp contract(off)
@@ -62,7 +63,7 @@ double aff_sum(const std::vector<std::pair<std::string, double>>& j_aff) {
 }
 
 double block_pair_gap(const PackEdgeBlock& a, const PackEdgeBlock& b,
-                      const PackEdgesSpec& spec) {
+                      const PackEdgesSpec& spec, QuantizationCounts* counts) {
     if (a.overmold && b.overmold) {
         return spec.cable_neighbor_gap;
     }
@@ -71,7 +72,7 @@ double block_pair_gap(const PackEdgeBlock& a, const PackEdgeBlock& b,
     const char axis = (use == "N" || use == "S") ? 'E' : 'S';
     const double floor = (a.overmold || b.overmold) ? spec.overmold_side_gap
                                                     : spec.clear;
-    return pair_gap(a.reach, a.inset, b.reach, b.inset, axis, floor);
+    return pair_gap(a.reach, a.inset, b.reach, b.inset, axis, floor, counts);
 }
 
 }  // namespace
@@ -128,13 +129,13 @@ std::vector<int> reseat_rank(
 }
 
 std::pair<double, double> hf_cap_pose(double beside_oy, double inductor_left,
-                                      double template_clear, double hx) {
-    return {py_round(inductor_left - template_clear - hx, 4), beside_oy};
+                                      double template_clear, double hx, QuantizationCounts* counts) {
+    return {pack_hf_cap_pose_precision4dp(inductor_left - template_clear - hx, counts), beside_oy};
 }
 
 PackEdgesResult pack_edges(const std::vector<PackEdgeBlock>& blocks,
                            const std::vector<PackEdgeJack>& jacks,
-                           const PackEdgesSpec& spec) {
+                           const PackEdgesSpec& spec, QuantizationCounts* counts) {
     std::vector<int> pending[4];
     auto slot = [](char edge) -> int {
         switch (edge) {
@@ -251,7 +252,7 @@ PackEdgesResult pack_edges(const std::vector<PackEdgeBlock>& blocks,
         for (std::size_t i = 0; i + 1 < order.size(); ++i) {
             gaps.push_back(block_pair_gap(
                 blocks[static_cast<std::size_t>(order[i])],
-                blocks[static_cast<std::size_t>(order[i + 1])], spec));
+                blocks[static_cast<std::size_t>(order[i + 1])], spec, counts));
         }
         double total = 0.0;
         for (int idx : order) {
@@ -299,17 +300,17 @@ PackEdgesResult pack_edges(const std::vector<PackEdgeBlock>& blocks,
             pose.name = block.name;
             pose.edge = std::string(1, edge);
             if (edge == 'N') {
-                pose.x = py_round(pos, 4);
+                pose.x = pack_edge_pose_precision4dp(pos, counts);
                 pose.y = spec.edge_inset;
             } else if (edge == 'S') {
-                pose.x = py_round(pos, 4);
-                pose.y = py_round(spec.board_h - dp - spec.edge_inset, 4);
+                pose.x = pack_edge_pose_precision4dp(pos, counts);
+                pose.y = pack_edge_pose_precision4dp(spec.board_h - dp - spec.edge_inset, counts);
             } else if (edge == 'W') {
                 pose.x = spec.edge_inset;
-                pose.y = py_round(pos, 4);
+                pose.y = pack_edge_pose_precision4dp(pos, counts);
             } else {
-                pose.x = py_round(spec.board_w - dp - spec.edge_inset, 4);
-                pose.y = py_round(pos, 4);
+                pose.x = pack_edge_pose_precision4dp(spec.board_w - dp - spec.edge_inset, counts);
+                pose.y = pack_edge_pose_precision4dp(pos, counts);
             }
             out.poses.push_back(pose);
             pos += sp + (i < gaps.size() ? gaps[i] : 0.0);

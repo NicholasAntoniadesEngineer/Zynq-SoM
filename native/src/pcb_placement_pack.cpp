@@ -82,7 +82,7 @@ PcbStageResult pack_zone(const Context &ctx, const Geometry &g,
                 area += (b.x1 - b.x0 + pc) * (b.y1 - b.y0 + pc);
             }
         double target = connector_target_w(std::max(cursor, 8.), zone_pad, area, board_decision_policy::zone_pack_fill, aspect);
-        auto t = shelf_pack(items(rt, false), target, {}, zone_pad);
+        auto t = shelf_pack(items(rt, false), target, {}, zone_pad, &ctx.quantization);
         std::vector<ShelfOcc> blockers;
         for (const auto &[r, x, y] : t.placed)
             if (thru(r))
@@ -90,7 +90,7 @@ PcbStageResult pack_zone(const Context &ctx, const Geometry &g,
                     {offset_rect(grow_rect(g.bbox_of.at(r), pc / 2), x + (horizontal ? 0 : behind),
                                  y + (horizontal ? behind : 0)),
                      0, false});
-        auto b = shelf_pack(items(rb, false), target, blockers, zone_pad);
+        auto b = shelf_pack(items(rb, false), target, blockers, zone_pad, &ctx.quantization);
         for (const auto &[r, x, y] : t.placed)
             result.top[r] = {placement_behind_pose_precision4dp(x + (horizontal ? 0 : behind), &ctx.quantization),
                              placement_behind_pose_precision4dp(y + (horizontal ? behind : 0), &ctx.quantization)};
@@ -137,7 +137,7 @@ PcbStageResult pack_zone(const Context &ctx, const Geometry &g,
             auto b = g.bbox_of.at(r);
             rows.emplace_back(r, b.x0, b.y0, b.x1, b.y1);
         }
-        auto grid = grid_controls(rows, target, 2, zone_pad, pc);
+        auto grid = grid_controls(rows, target, 2, zone_pad, pc, &ctx.quantization);
         std::vector<ShelfOcc> blockers;
         for (auto b : grid.occ)
             blockers.push_back({b, 0, false});
@@ -153,13 +153,13 @@ PcbStageResult pack_zone(const Context &ctx, const Geometry &g,
         for (const auto &r : top)
             if (std::find(buttons.begin(), buttons.end(), r) == buttons.end())
                 rest.push_back(r);
-        auto pack = shelf_pack(items(rest), target, blockers, zone_pad);
+        auto pack = shelf_pack(items(rest), target, blockers, zone_pad, &ctx.quantization);
         for (const auto &[r, p] : offsets(pack))
             result.top[r] = p;
         tw = std::max(grid.packed_w, pack.packed_w);
         th = std::max(grid.packed_h, pack.packed_h);
     } else {
-        auto pack = shelf_pack(items(top), target, {}, zone_pad);
+        auto pack = shelf_pack(items(top), target, {}, zone_pad, &ctx.quantization);
         result.top = offsets(pack);
         tw = pack.packed_w;
         th = pack.packed_h;
@@ -171,7 +171,7 @@ PcbStageResult pack_zone(const Context &ctx, const Geometry &g,
             blockers.push_back(
                 {offset_rect(grow_rect(g.bbox_of.at(r), pc / 2), p.first, p.second), 0, false});
         }
-    auto pack = shelf_pack(items(bottom), target, blockers, zone_pad);
+    auto pack = shelf_pack(items(bottom), target, blockers, zone_pad, &ctx.quantization);
     result.bottom = offsets(pack);
     result.w = placement_pack_extent_precision4dp(std::max(tw, pack.packed_w), &ctx.quantization);
     result.h = placement_pack_extent_precision4dp(std::max(th, pack.packed_h), &ctx.quantization);

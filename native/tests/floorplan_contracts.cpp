@@ -234,12 +234,13 @@ void mutations() {
     in.footprints["dip"]={"dip",sexpr_loads(R"((footprint "dip" (fp_rect (start -4 -2) (end 4 2) (layer "F.CrtYd") (width 0.05)) (pad "1" thru_hole circle (at -3 0) (size 0.8 0.8)) (pad "2" thru_hole circle (at 3 0) (size 0.8 0.8))))")};
     in.geometry.resolvable["U1"]="dip"; in.geometry.bbox_of["U1"]={-4,-2,4,2};
     Engine e(in); FloorplanZoneShape s; s.w=12;s.h=8;s.top_off["U1"]={5,4};
-    const auto pads=e.zone_components(s,true),body=e.zone_components(s,false);
+    QuantizationCounts zone_counts;
+    const auto pads=e.zone_components(s,true,&zone_counts),body=e.zone_components(s,false,&zone_counts);
     require(pads.size()==2 && body.size()==1,"pad-only and whole-body punch paths differ");
     require(std::abs(pads[0].dx-1.6)<1e-9 && std::abs(pads[0].w-.8)<1e-9 && pads[0].mask==3,"THT pad exact punch");
     require(body[0].dx==1 && body[0].dy==2 && body[0].w==8 && body[0].h==4 && body[0].mask==3,"conservative body punch");
     s.bot_off=s.top_off;s.top_off.clear();s.side="bottom";
-    require(e.zone_components(s,true).front().mask==1,"secondary face is opposite bottom primary");
+    require(e.zone_components(s,true,&zone_counts).front().mask==1,"secondary face is opposite bottom primary");
     auto broken=in; broken.footprints.clear(); throws([&]{Engine bad(broken);},"missing resolved footprint");
     broken=in; broken.som.w=std::numeric_limits<double>::infinity(); throws([&]{Engine bad(broken);},"finite");
     const auto pull=jobject({{"to",jvalue("jack")},{"weight",jvalue(60.0)},{"basis",jvalue("test edge seat")},{"face",jvalue("inboard")},{"exclusive",jvalue(true)}});
@@ -265,7 +266,7 @@ void mutations() {
     broken=in;
     broken.footprints["dip"].document=sexpr_loads(R"((footprint "broken" (fp_rect (start -4 -2) (end 4 2) (layer "F.CrtYd") (width 0.05)) (pad "1" thru_hole circle (size 1 1))))");
     Engine no_pad_at(broken);
-    throws([&]{no_pad_at.zone_components(s,true);},"pad kernel found none");
+    throws([&]{no_pad_at.zone_components(s,true,&zone_counts);},"pad kernel found none");
     broken=in;broken.footprints["dip"].source="opaque-provider/Fiducial_1mm.kicad_mod";
     Engine fiducial(broken);const auto fid_halo=fiducial.fanout(s,true);
     require(fid_halo.first.w==0&&fid_halo.first.e==0&&fid_halo.second.w==0&&fid_halo.second.e==0,
@@ -503,7 +504,7 @@ void frozen(const std::filesystem::path& dir,const std::string& name,bool geomet
     // by native_occupancy_precision_contracts. Keep every prior expectation.
     auto prior_quant=field(account,"quantization_engagements");
     prior_quant.object_value.erase(std::remove_if(prior_quant.object_value.begin(),prior_quant.object_value.end(),
-        [](const auto& row){return occupancy_precision_fixture::added(row.first)||legalize_precision_fixture::added(row.first)||stage_precision_fixture::added(row.first);}),prior_quant.object_value.end());
+        [](const auto& row){return occupancy_precision_fixture::added(row.first)||legalize_precision_fixture::added(row.first)||stage_precision_fixture::added(row.first)||placement_precision_fixture::added(row.first)||output_precision_fixture::added(row.first)||pack_precision_fixture::added(row.first)||pack_geometry_precision_fixture::added(row.first);}),prior_quant.object_value.end());
     same(prior_quant,expected_quant,name+".quantization_engagements");
     std::vector<J> calculations;
     std::string ledger;
@@ -531,7 +532,7 @@ void frozen(const std::filesystem::path& dir,const std::string& name,bool geomet
     require(write_floorplan_spec(result,seed_path)==seed_path&&read_bytes(seed_path)==seed,name+": published seed exact bytes");
     require(load_floorplan_spec(seed_path.string())->names().size()==result.edge_blocks.size()+result.interior_blocks.size(),
             name+": exported spec reloads every subsystem");
-    const FloorplanDocuments replacement{{},"replacement SVG\n","replacement Markdown\n"};
+    const FloorplanDocuments replacement{{},"replacement SVG\n","replacement Markdown\n",{}};
     write_floorplan_documents(replacement,publication.directory);
     require(read_bytes(paths[0])==replacement.svg&&read_bytes(paths[1])==replacement.markdown,name+": replaces existing documents");
     throws([&]{write_floorplan_documents(documents,paths[0]);},"filesystem");

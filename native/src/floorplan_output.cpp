@@ -6,7 +6,7 @@ FloorplanDocuments render_floorplan_documents(const FloorplanPlan& plan,
                                                const FloorplanInput& input) {
     FloorplanDocuments out;
     out.notes=build_floorplan_notes(plan,input);
-    out.svg=render_floorplan_svg(plan,out.notes);
+    out.svg=render_floorplan_svg(plan,out.notes,&out.accounting.quantization_engagements);
     out.markdown=render_floorplan_md(plan,out.notes,input);
     return out;
 }

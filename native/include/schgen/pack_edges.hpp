@@ -62,7 +62,7 @@ double edge_target(char edge, const PackEdgesSpec& spec,
 
 PackEdgesResult pack_edges(const std::vector<PackEdgeBlock>& blocks,
                            const std::vector<PackEdgeJack>& jacks,
-                           const PackEdgesSpec& spec);
+                           const PackEdgesSpec& spec, QuantizationCounts* counts = nullptr);
 
 bool pick_sided_challenger(double est_inc, double est_chal, double eps);
 
@@ -72,6 +72,7 @@ std::vector<int> reseat_rank(
         placed);
 
 std::pair<double, double> hf_cap_pose(double beside_oy, double inductor_left,
-                                      double template_clear, double hx);
+                                      double template_clear, double hx,
+                                      QuantizationCounts* counts = nullptr);
 
 }  // namespace schgen

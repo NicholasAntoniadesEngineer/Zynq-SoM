@@ -297,7 +297,7 @@ std::set<std::string> Engine::output_refs() const {
     return out;
 }
 std::pair<ShelfPacked, ShelfPacked> Engine::leftover(const std::vector<std::string> &refs,
-                                                     double width) const {
+                                                     double width) {
     std::vector<ShelfItem> top, bottom;
     for (const auto &r : refs) {
         auto side = in.side_of.find(r);
@@ -305,13 +305,13 @@ std::pair<ShelfPacked, ShelfPacked> Engine::leftover(const std::vector<std::stri
         ShelfItem s{r, grow_rect(b, in.place_clear / 2), 0, false};
         (side != in.side_of.end() && side->second == "bottom" ? bottom : top).push_back(s);
     }
-    auto t = shelf_pack(top, width, {}, zone_pad);
+    auto t = shelf_pack(top, width, {}, zone_pad, &quantization);
     std::vector<ShelfOcc> blockers;
     for (const auto &[r, x, y] : t.placed)
         if (has_thru_pads_from_text(in.footprints.at(r)->bytes))
             blockers.push_back(
                 {grow_rect(offset_rect(in.bbox_of.at(r), x, y), clear / 2), 0, false});
-    return {t, shelf_pack(bottom, width, blockers, zone_pad)};
+    return {t, shelf_pack(bottom, width, blockers, zone_pad, &quantization)};
 }
 } // namespace schgen::pcb_stage
 

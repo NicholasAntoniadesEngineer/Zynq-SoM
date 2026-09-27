@@ -1,4 +1,5 @@
 #pragma once
+#include "schgen/execution_accounting.hpp"
 
 #include <cstdint>
 #include <optional>
@@ -33,7 +34,8 @@ struct ShelfPacked {
 };
 
 ShelfPacked shelf_pack(const std::vector<ShelfItem>& items, double target_w,
-                       const std::vector<ShelfOcc>& blockers, double zone_pad);
+                       const std::vector<ShelfOcc>& blockers, double zone_pad,
+                       QuantizationCounts* counts = nullptr);
 
 struct ViaObstacle {
     double cx = 0.0;
@@ -151,7 +153,7 @@ std::optional<Box4> silk_gfx_extent(
     const std::vector<std::pair<double, double>>& pts, double fx, double fy,
     double ca, double sa, double hw);
 double pair_gap(const Halo& a_reach, const Halo& a_inset, const Halo& b_reach,
-                const Halo& b_inset, char axis, double floor);
+                const Halo& b_inset, char axis, double floor, QuantizationCounts* counts = nullptr);
 
 Box4 glabel_box(const std::string& text, double x, double y, int rotation,
                 double size, double char_w, double line_h, double pad_len,
@@ -166,17 +168,17 @@ std::pair<Halo, Halo> zone_fanout_reach(
 std::vector<Comp> edge_components(char edge, double block_x, double block_y,
                                   double board_w, double board_h,
                                   int punch_mask,
-                                  const std::vector<Comp>& comps);
+                                  const std::vector<Comp>& comps, QuantizationCounts* counts = nullptr);
 std::tuple<double, double, int, int> som_decoupling_grid(double som_w,
                                                          double som_h, int n,
-                                                         double inset);
+                                                         double inset, QuantizationCounts* counts = nullptr);
 std::vector<std::pair<double, double>> som_decoupling_cells(
     double som_x, double som_y, double som_w, double som_h, int n,
-    double inset);
+    double inset, QuantizationCounts* counts = nullptr);
 std::vector<Comp> som_components(
     double origin_x, double origin_y, double radius,
     const std::vector<std::pair<double, double>>& cells,
-    const std::vector<Box4>& bands, int bottom_mask, int punch_mask);
+    const std::vector<Box4>& bands, int bottom_mask, int punch_mask, QuantizationCounts* counts = nullptr);
 bool any_boxes_overlap(const std::vector<Box4>& boxes, double halo);
 std::vector<int> pack_interior_order(const std::vector<std::string>& names,
                                      const std::vector<int>& tiers,
@@ -196,10 +198,10 @@ std::tuple<double, double, double> obstacle_hole(double box_u0, double box_v0,
 double net_clearance_rule(bool power);
 std::vector<std::pair<double, double>> cout_column_centers(
     const Box4& inductor_out, double pad, double cout_gap,
-    double template_clear, const std::vector<std::pair<double, double>>& halves);
+    double template_clear, const std::vector<std::pair<double, double>>& halves, QuantizationCounts* counts = nullptr);
 std::pair<double, double> bulk_cap_pose(
     double hf_ox, const Box4& hf_box, const std::string& direction, double gap,
-    double hx, double hy, double inductor_left, double template_clear);
+    double hx, double hy, double inductor_left, double template_clear, QuantizationCounts* counts = nullptr);
 
 struct RefdesMove {
     bool moved = false;
@@ -223,7 +225,7 @@ std::vector<Box4> som_keepout_rects(
 
 std::vector<Comp> zone_components_assemble(
     const std::vector<Box4>& minor_boxes, const std::vector<Box4>& punch_boxes,
-    int minor_mask, int punch_mask);
+    int minor_mask, int punch_mask, QuantizationCounts* counts = nullptr);
 
 std::pair<double, double> part_dims_from_name(
     const std::string& name,
@@ -276,7 +278,7 @@ Box4 som_core_rect(double som_x, double som_y, double som_w, double som_h,
 
 std::vector<std::tuple<std::string, double, double>> rotate_offsets_90(
     const std::vector<std::tuple<std::string, double, double>>& offs,
-    double zone_w);
+    double zone_w, QuantizationCounts* counts = nullptr);
 
 std::vector<std::tuple<std::string, std::vector<std::string>>>
 cluster_interchangeable_rows(
@@ -308,10 +310,10 @@ Box4 corridor_local_from_uv(
     const std::vector<std::pair<double, double>>& pads, double r_construct,
     double v_margin);
 
-Box4 corridor_board_rect(const Box4& local, double cx, double cy, double rot);
+Box4 corridor_board_rect(const Box4& local, double cx, double cy, double rot, QuantizationCounts* counts = nullptr);
 
 std::pair<double, double> mirror_offset_x(double ox, double oy, const Box4& cb,
-                                          double zone_w);
+                                          double zone_w, QuantizationCounts* counts = nullptr);
 
 Box4 offset_turned_box(const Box4& bbox, double rot, double ox, double oy);
 std::vector<Box4> offset_boxes(const std::vector<Box4>& boxes, double ox,
@@ -327,7 +329,8 @@ struct GridControls {
 GridControls grid_controls(
     const std::vector<std::tuple<std::string, double, double, double, double>>&
         items,
-    double target_w, double button_gap, double zone_pad, double place_clear);
+    double target_w, double button_gap, double zone_pad, double place_clear,
+    QuantizationCounts* counts = nullptr);
 
 struct ContactGeom {
     double row_v = 0.0;

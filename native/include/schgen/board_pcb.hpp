@@ -16,5 +16,6 @@ BoardPcbStage prepare_board_pcb(const ProjectPaths&,
     const NetlistExtractOptions& = {}, const BoardInputOptions& = {});
 // Explicit destination; project configuration is read from the destination to
 // preserve caller settings. Files are individually atomically replaced.
-void publish_board_pcb(const BoardPcbStage&, const std::filesystem::path&);
+void publish_board_pcb(const BoardPcbStage&, const std::filesystem::path&,
+                       QuantizationCounts* = nullptr);
 }

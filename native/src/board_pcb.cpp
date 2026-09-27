@@ -23,14 +23,15 @@ BoardPcbStage prepare_board_pcb(const ProjectPaths& paths,
     out.emission = render_pcb(out.placement.model, pcb_emit_policy(out.inputs.floorplan.project));
     return out;
 }
-void publish_board_pcb(const BoardPcbStage& stage, const std::filesystem::path& directory) {
+void publish_board_pcb(const BoardPcbStage& stage, const std::filesystem::path& directory,
+                       QuantizationCounts* counts) {
     if (directory.empty()) throw ProjectError("PCB stage requires an output directory");
     const auto policy = pcb_emit_policy(stage.inputs.floorplan.project);
     const auto project_path = directory / "Zynq_Carrier.kicad_pro";
     std::optional<PcbProjectDocument> existing;
     if (std::filesystem::exists(project_path)) existing = read_pcb_project(project_path);
     const auto project = render_pcb_project(stage.placement.model, project_path.filename().string(),
-        existing ? &*existing : nullptr, policy);
+        existing ? &*existing : nullptr, policy, counts);
     const auto rules = render_pcb_design_rules(stage.placement.model, policy);
     const auto publish = [&](const std::string& name, const std::string& text) {
         write_atomic_file((directory / name).string(), {text.begin(), text.end()});

@@ -112,7 +112,7 @@ class Engine {
     Parts face(const Parts &, const std::set<std::string> &, bool media);
     PcbStageResult proximity_zone();
     PcbStageResult hot_zone();
-    std::pair<ShelfPacked, ShelfPacked> leftover(const std::vector<std::string> &, double) const;
+    std::pair<ShelfPacked, ShelfPacked> leftover(const std::vector<std::string> &, double);
     std::set<std::string> output_refs() const;
 };
 inline const Part *find(const Parts &parts, const std::string &ref) {

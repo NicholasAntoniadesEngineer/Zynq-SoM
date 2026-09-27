@@ -1,10 +1,11 @@
 #include "schgen/ratsnest_gate.hpp"
+#include "schgen/output_precision.hpp"
 #include "pcb_checks_internal.hpp"
 #include "schgen/turn.hpp"
 
 namespace schgen {
 using namespace pcb_checks;
-RatsnestNets ratsnest_net_pad_positions(const PcbCheckModel& model) {
+RatsnestNets ratsnest_net_pad_positions(const PcbCheckModel& model, QuantizationCounts* counts) {
     RatsnestNets out;
     for (const auto& inst : model.insts) {
         if (!inst.mod) throw std::runtime_error(inst.ref + ": footprint geometry unresolved");
@@ -13,13 +14,13 @@ RatsnestNets ratsnest_net_pad_positions(const PcbCheckModel& model) {
             auto net = inst.pad_nets.find(name);
             if (net == inst.pad_nets.end() || net->second.second.empty() || starts(net->second.second,"unconnected-")) continue;
             auto p = turn_point(x, y, inst.rotation);
-            out[net->second.second].emplace_back(py_round(inst.x+p.first,3), py_round(inst.y+p.second,3),inst.ref,inst.sheet);
+            out[net->second.second].emplace_back(ratsnest_pad_precision3dp(inst.x+p.first,counts), ratsnest_pad_precision3dp(inst.y+p.second,counts),inst.ref,inst.sheet);
         }
     }
     return out;
 }
 RatsnestGateResult check_ratsnest(const PcbCheckInput& input, const RatsnestNets* supplied_nets,
-        const RatsnestEdges* supplied_edges, double cross_k) {
+        const RatsnestEdges* supplied_edges, double cross_k, QuantizationCounts* counts) {
     const auto& m=input.model(); RatsnestGateResult res;
     if(!std::isfinite(m.board_w)||!std::isfinite(m.board_h)||m.board_w<=0||m.board_h<=0||
        !std::isfinite(m.origin_x)||!std::isfinite(m.origin_y)||!std::isfinite(cross_k)||cross_k<0)
@@ -41,16 +42,16 @@ RatsnestGateResult check_ratsnest(const PcbCheckInput& input, const RatsnestNets
         ++res.n_subsystems;auto hull=boxes.front();double total=0;
         for(auto b:boxes){hull=united(hull,b);total+=(b.x1-b.x0)*(b.y1-b.y0);}
         const double area=(hull.x1-hull.x0)*(hull.y1-hull.y0),disp=area/(total?total:1);
-        res.clusters.emplace_back(name,static_cast<int>(boxes.size()),py_round(area,1),py_round(disp,2));
+        res.clusters.emplace_back(name,static_cast<int>(boxes.size()),ratsnest_area_precision1dp(area,counts),ratsnest_dispersion_precision2dp(disp,counts));
         if(boxes.size()>ratsnest_small_n&&disp>ratsnest_dispersion_max)
             res.dispersed.push_back(name+": dispersion "+f(disp,1)+"x > "+g(ratsnest_dispersion_max)+"x (bbox "+
                 f(hull.x1-hull.x0,0)+"x"+f(hull.y1-hull.y0,0)+" mm for "+std::to_string(boxes.size())+" parts)");
     }
     std::stable_sort(res.clusters.begin(),res.clusters.end(),[](const auto& a,const auto& b){return std::get<3>(a)>std::get<3>(b);});
-    auto nets=supplied_nets?RatsnestNets{}:ratsnest_net_pad_positions(m);const auto& np=supplied_nets?*supplied_nets:nets;
+    auto nets=supplied_nets?RatsnestNets{}:ratsnest_net_pad_positions(m,counts);const auto& np=supplied_nets?*supplied_nets:nets;
     auto edges=supplied_edges?RatsnestEdges{}:ratsnest_mst(np);
     std::tie(res.cross_mm,res.total_mm,res.n_cross)=ratsnest_lengths(np,supplied_edges?*supplied_edges:edges);
-    res.cross_budget_mm=py_round(cross_k*std::sqrt(m.board_w*m.board_h)*res.n_subsystems,1);
+    res.cross_budget_mm=ratsnest_budget_precision1dp(cross_k*std::sqrt(m.board_w*m.board_h)*res.n_subsystems,counts);
     res.ok=res.off_board.empty()&&res.dispersed.empty()&&res.cross_ok();return res;
 }
 std::map<std::string,double> ratsnest_dispersion_by_sheet(const RatsnestGateResult& r){

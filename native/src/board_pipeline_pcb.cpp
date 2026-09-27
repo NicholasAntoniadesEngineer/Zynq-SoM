@@ -1,4 +1,5 @@
 #include "board_pipeline_internal.hpp"
+#include "precision_receipt.hpp"
 #include "schgen/board_policy.hpp"
 #include "schgen/pcb_drc.hpp"
 #include "schgen/assembly_documents.hpp"
@@ -14,6 +15,13 @@
 
 namespace schgen::board_pipeline_detail {
 namespace {
+// Import only observations produced by this invocation, even if rendering or
+// checking throws. This helper never evaluates a registered operation itself.
+template<class F> auto precision_receipt(Context& c,const std::string& id,F&& run) {
+    return with_precision_receipt(std::forward<F>(run),[&](const QuantizationCounts& counts){
+        c.inbox.merge_once(id,NativeAccountingBatch{native_counter_batch(counts),{}});
+    });
+}
 std::optional<int> baseline(const fs::path& p){try{const auto j=parse_json_file(p.string());const auto* n=object_field(j,"starved_baseline");
     if(!n||n->kind!=JsonKind::Number||!std::isfinite(n->number_value)||n->number_value<0||n->number_value>INT_MAX||std::floor(n->number_value)!=n->number_value)return {};
     return static_cast<int>(n->number_value);}catch(const std::bad_alloc&){throw;}catch(const std::exception&){return {};}}
@@ -40,9 +48,12 @@ void pcb_stages(Context& c){
         // One receipt owns all actual plan/zone/placement work, not the legacy
         // fallback prefix. Import before emission so failures retain work done.
         c.inbox.merge_once("pcb/placement",pcb_placement_accounting(stage.placement));
-        stage.emission=c.measure("pcb_render",[&]{return render_pcb(stage.placement.model,pcb_emit_policy(stage.inputs.floorplan.project));});
+        stage.emission=precision_receipt(c,"pcb/emission/precision",[&](auto& counts){
+            return c.measure("pcb_render",[&]{return render_pcb(stage.placement.model,pcb_emit_policy(stage.inputs.floorplan.project),&counts);});});
         c.inbox.merge_once("pcb/emission",NativeAccountingBatch{{},stage.emission.fallback_events});
-        c.pcb=std::move(stage);publish_board_pcb(*c.pcb,c.out);c.pcb_published=true;
+        c.pcb=std::move(stage);
+        precision_receipt(c,"pcb/publication/precision",[&](auto& counts){publish_board_pcb(*c.pcb,c.out,&counts);return true;});
+        c.pcb_published=true;
         if(c.pcb->placement.model.escape_plan_record){auto sidecar=*c.pcb->placement.model.escape_plan_record;
             JsonNode meta;meta.kind=JsonKind::Object;for(const auto* key:{"worst_cover_mm","vias","coverage_mm","escape_region","plane","coexistence","som_interface_sha256","constants"})if(const auto* value=object_field(c.pcb->placement.model.escape_meta,key))meta.object_value.emplace_back(key,*value);
             sidecar.object_value.emplace_back("escape_meta",meta);publish_text(c.out/"escape_block.json",json(sidecar)+"\n");}
@@ -54,7 +65,8 @@ void pcb_stages(Context& c){
     c.attempt("pcb_geometry",[&]{if(!c.pcb_published)throw ProjectError("no board emitted this invocation");
         const auto bp=c.options.fanout_baseline.empty()?c.paths.repository_root/"carrier/reports/fanout_baseline.json":c.options.fanout_baseline;
         PcbEmittedBoard emitted{pcb_path.string(),sexpr_loads(read(pcb_path)),true};
-        c.geometry=verify_pcb_geometry(*c.pcb,emitted,baseline(bp));const auto& r=*c.geometry;
+        c.geometry=precision_receipt(c,"pcb/geometry/ratsnest_precision",[&](auto& counts){
+            return verify_pcb_geometry(*c.pcb,emitted,baseline(bp),&counts);});const auto& r=*c.geometry;
         NativeAccountingBatch mechanical;
         mechanical.quantization_engagements.insert(r.mechanical.quantization_engagements.begin(),r.mechanical.quantization_engagements.end());
         c.inbox.merge_once("pcb/geometry/mechanical",mechanical);

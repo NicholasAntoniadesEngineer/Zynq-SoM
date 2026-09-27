@@ -1,4 +1,5 @@
 #include "pcb_project_defaults.hpp"
+#include "schgen/output_precision.hpp"
 #include <fstream>
 #include <iterator>
 
@@ -63,7 +64,7 @@ std::string quote(const std::string &s) {
     return r + '"';
 }
 std::string dump(const JsonNode &n, const PcbProjectDocument &document,
-                 const std::string &path = "", int level = 0) {
+                 QuantizationCounts* counts, const std::string &path = "", int level = 0) {
     switch (n.kind) {
     case JsonKind::Null:
         return "null";
@@ -73,7 +74,7 @@ std::string dump(const JsonNode &n, const PcbProjectDocument &document,
         return quote(n.string_value);
     case JsonKind::Number: {
         double x = jnum(n);
-        if (document.float_paths.count(path) || std::trunc(x) != x)
+        if (document.float_paths.count(path) || pcb_project_integer_trunc(x, counts) != x)
             return pyfloat(x);
         auto original = document.integer_tokens.find(path);
         if (original != document.integer_tokens.end() && std::stod(original->second) == x)
@@ -88,7 +89,7 @@ std::string dump(const JsonNode &n, const PcbProjectDocument &document,
             if (i)
                 s += ",\n";
             s += std::string((level + 1) * 2, ' ') +
-                 dump(n.array_value[i], document, path + "/" + std::to_string(i), level + 1);
+                 dump(n.array_value[i], document, counts, path + "/" + std::to_string(i), level + 1);
         }
         return s + "\n" + std::string(level * 2, ' ') + "]";
     }
@@ -101,7 +102,7 @@ std::string dump(const JsonNode &n, const PcbProjectDocument &document,
                 s += ",\n";
             const auto &[key, val] = n.object_value[i];
             s += std::string((level + 1) * 2, ' ') + quote(key) + ": " +
-                 dump(val, document, path + "/" + pointer_token(key), level + 1);
+                 dump(val, document, counts, path + "/" + pointer_token(key), level + 1);
         }
         return s + "\n" + std::string(level * 2, ' ') + "}";
     }
@@ -128,7 +129,7 @@ void add_paths(std::set<std::string> &paths, const std::set<std::string> &source
         paths.insert(prefix + p);
 }
 JsonNode class_dict(const std::string &name, const std::optional<DifferentialGeometry> &geo,
-                    bool power, bool def, const PcbEmitPolicy &p) {
+                    bool power, bool def, const PcbEmitPolicy &p, QuantizationCounts* counts) {
     double track = p.default_track, clear = p.default_clearance, width = .2, gap = .2;
     if (power) {
         track = p.power_track;
@@ -138,10 +139,10 @@ JsonNode class_dict(const std::string &name, const std::optional<DifferentialGeo
         gap = geo->gap_mm;
     }
     return jo({{"bus_width", j(12)},
-               {"clearance", j(py_round(clear, 4))},
-               {"diff_pair_gap", j(py_round(gap, 4))},
+               {"clearance", j(pcb_project_class_precision4dp(clear, counts))},
+               {"diff_pair_gap", j(pcb_project_class_precision4dp(gap, counts))},
                {"diff_pair_via_gap", j(.25)},
-               {"diff_pair_width", j(py_round(width, 4))},
+               {"diff_pair_width", j(pcb_project_class_precision4dp(width, counts))},
                {"line_style", j(0)},
                {"microvia_diameter", j(.3)},
                {"microvia_drill", j(.1)},
@@ -151,7 +152,7 @@ JsonNode class_dict(const std::string &name, const std::optional<DifferentialGeo
                               : power ? 10
                                       : 5)},
                {"schematic_color", j(std::string("rgba(0, 0, 0, 0.000)"))},
-               {"track_width", j(py_round(track, 4))},
+               {"track_width", j(pcb_project_class_precision4dp(track, counts))},
                {"tuning_profile", j(std::string())},
                {"via_diameter", j(.6)},
                {"via_drill", j(.3)},
@@ -218,7 +219,8 @@ PcbProjectDocument read_pcb_project(const std::filesystem::path &path) {
     return out;
 }
 std::string render_pcb_project(const PcbModel &m, const std::string &filename,
-                               const PcbProjectDocument *existing, const PcbEmitPolicy &p) {
+                               const PcbProjectDocument *existing, const PcbEmitPolicy &p,
+                               QuantizationCounts* counts) {
     PcbProjectDocument doc = existing ? *existing : PcbProjectDocument{jo(), {}, {}};
     kind(doc.data, JsonKind::Object);
     auto &d = doc.data;
@@ -235,9 +237,9 @@ std::string render_pcb_project(const PcbModel &m, const std::string &filename,
     set(d, "board", std::move(board));
     erase_paths(doc, "/board/design_settings");
     add_paths(doc.float_paths, settings.float_paths, "/board/design_settings");
-    JsonNode classes = ja({class_dict("Default", std::nullopt, false, true, p)});
+    JsonNode classes = ja({class_dict("Default", std::nullopt, false, true, p, counts)});
     for (const auto &[name, geo] : m.classes)
-        classes.array_value.push_back(class_dict(name, geo, name == p.power_class, false, p));
+        classes.array_value.push_back(class_dict(name, geo, name == p.power_class, false, p, counts));
     JsonNode patterns = ja();
     for (const auto &[net, cls] : m.netclass_of)
         patterns.array_value.push_back(jo({{"netclass", j(cls)}, {"pattern", j(net)}}));
@@ -255,14 +257,14 @@ std::string render_pcb_project(const PcbModel &m, const std::string &filename,
             doc.float_paths.insert("/net_settings/classes/" + std::to_string(i) + "/" + key);
     if (!object_field(d, "pcbnew"))
         set(d, "pcbnew", jo({{"last_paths", jo()}, {"page_layout_descr_file", j(std::string())}}));
-    return dump(d, doc) + "\n";
+    return dump(d, doc, counts) + "\n";
 }
 void write_pcb_project(const PcbModel &m, const std::filesystem::path &path,
-                       const PcbEmitPolicy &p) {
+                       const PcbEmitPolicy &p, QuantizationCounts* counts) {
     std::optional<PcbProjectDocument> prior;
     if (std::filesystem::exists(path))
         prior = read_pcb_project(path);
-    publish(path, render_pcb_project(m, path.filename().string(), prior ? &*prior : nullptr, p));
+    publish(path, render_pcb_project(m, path.filename().string(), prior ? &*prior : nullptr, p, counts));
 }
 std::string render_pcb_design_rules(const PcbModel &m, const PcbEmitPolicy &p) {
     std::string s =

@@ -154,7 +154,7 @@ void Placer::seed() {
         if (p.sheet == "som_decoupling" && geometry.resolvable.count(r))
             dec.push_back(r);
     auto cells =
-        som_decoupling_cells(plan.som_x, plan.som_y, plan.som.w, plan.som.h, plan.dec_count, 6);
+        som_decoupling_cells(plan.som_x, plan.som_y, plan.som.w, plan.som.h, plan.dec_count, 6, &ctx.quantization);
     if (dec.size() != cells.size())
         throw PcbZoneInfeasible("decoupling bank count disagrees with resolved parts");
     for (std::size_t i = 0; i < dec.size(); ++i) {
@@ -248,8 +248,8 @@ void Placer::escape() {
     for (const auto &v : v1.violations)
         triage[v.net] = classify_pcb_escape_signal(v.net, ctx.in.function_map);
     PcbEscapeInput input(out.model, v1, triage, ctx.in.interface_bytes);
-    auto copper = build_pcb_escape_copper(input);
-    auto lanes = build_pcb_escape_plan(input);
+    auto copper = build_pcb_escape_copper(input, &ctx.quantization);
+    auto lanes = build_pcb_escape_plan(input, &ctx.quantization);
     out.model.copper = std::move(copper.copper);
     out.model.escape_meta = copper.meta.json();
     out.model.escape_interface_sha256 = copper.meta.som_interface_sha256;
@@ -305,6 +305,7 @@ ExecutionAccounting pcb_placement_accounting(const PcbPlacementResult &result) {
     // A distinct placement-zone solve ran before the planning-zone/floorplan solve.
     if (ownership == PcbZoneAccountingOwnership::SeparateFromFloorplan) append(result.zone_accounting);
     append(plan);
+    append(result.floorplan.documents.accounting);
     append(result.placement_accounting);
     return total;
 }

@@ -33,7 +33,7 @@ void Placer::l4_pull() {
             (void)j;
             if (geometry.resolvable.count(r) && pos.count(r))
                 corridors.push_back(
-                    pcb_escape_corridor_board(*mod(r), pos.at(r).first, pos.at(r).second, rot(r)));
+                    pcb_escape_corridor_board(*mod(r), pos.at(r).first, pos.at(r).second, rot(r), &ctx.quantization));
         }
     for (const auto &[sheet, origin] : origins) {
         (void)origin;
@@ -316,7 +316,7 @@ void Placer::evict() {
         if (pos.count(r) && geometry.resolvable.count(r))
             corridors.push_back(
                 pcb_escape_corridor_board(*mod(r), ctx.corridor_grid(25, pos.at(r).first),
-                                          ctx.corridor_grid(25, pos.at(r).second), rot(r)));
+                                          ctx.corridor_grid(25, pos.at(r).second), rot(r), &ctx.quantization));
     }
     for (const auto &[r, p] : pos) {
         if (!geometry.bbox_of.count(r))

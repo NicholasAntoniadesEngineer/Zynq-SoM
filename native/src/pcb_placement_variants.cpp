@@ -135,7 +135,7 @@ std::vector<Shape> bottom_shapes(Context &ctx, const Geometry &g, const std::str
         for (const auto &[r, xy] : p.bottom) {
             double rot = p.rotations.count(r) ? p.rotations.at(r) : 0;
             auto cb = turn_box(g.bbox_of.at(r), rot);
-            s.bot_off[r] = mirror_offset_x(xy.first, xy.second, cb, p.w);
+            s.bot_off[r] = mirror_offset_x(xy.first, xy.second, cb, p.w, &ctx.quantization);
             if (p.rotations.count(r))
                 s.extra_rot[r] = rot;
         }
@@ -184,7 +184,8 @@ std::vector<Shape> bottom_shapes(Context &ctx, const Geometry &g, const std::str
                 auto [extra, cp] = meta(r);
                 items.push_back({r, halo(r, {0, 0}), extra, cp});
             }
-            auto pack = shelf_pack(items, std::max(0., p.w - 2 * zone_pad), blockers, zone_pad);
+            auto pack = shelf_pack(items, std::max(0., p.w - 2 * zone_pad), blockers, zone_pad,
+                                   &ctx.quantization);
             for (const auto &[r, x, y] : pack.placed)
                 p.bottom[r] = {x, y};
             double mx = 0, my = 0;

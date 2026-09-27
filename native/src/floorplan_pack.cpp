@@ -76,7 +76,7 @@ bool Engine::attempt_pack_impl(bool compact) {
     std::vector<PackEdgeJack> jacks;
     for (const auto& j:plan.som.js) jacks.push_back({j.ref,plan.som_x+j.x,plan.som_y+j.y});
     const auto packed=pack_edges(edge_rows,jacks,{bw,bh,edge_margin,edge_inset,clear,cable_gap,overmold_gap,affinity_floor,
-                                                plan.som_x,plan.som_y,plan.som.w,plan.som.h});
+                                                plan.som_x,plan.som_y,plan.som.w,plan.som.h}, counts);
     for (auto& b:plan.edge_blocks) for (const auto& p:packed.poses) if (p.name==b.name) { b.edge=p.edge; b.x=p.x; b.y=p.y; break; }
     plan.spilled=packed.spilled;
     std::vector<std::tuple<char,double,double,double,double>> run_rows;
@@ -95,11 +95,11 @@ bool Engine::attempt_pack_impl(bool compact) {
     const Pose som_occ{plan.som_x-som_pad,plan.som_y-som_pad,plan.som.w+2*som_pad,plan.som.h+2*som_pad};
     std::vector<Comp> som_comps;
     if (plan.punch_free) som_comps=som_components(som_occ.x,som_occ.y,plan.dec_radius,
-        som_decoupling_cells(plan.som_x,plan.som_y,plan.som.w,plan.som.h,plan.dec_count,dec_inset),
-        {som_rects.begin()+1,som_rects.end()},occ_bottom,occ_punch);
+        som_decoupling_cells(plan.som_x,plan.som_y,plan.som.w,plan.som.h,plan.dec_count,dec_inset,counts),
+        {som_rects.begin()+1,som_rects.end()},occ_bottom,occ_punch,counts);
     std::map<std::string,std::vector<Comp>> edge_comps;
     for (const auto& b:plan.edge_blocks) if (plan.punch_free)
-        edge_comps[b.name]=edge_components(edge_char(b.edge),b.x,b.y,bw,bh,occ_punch,get(co,{b.name,b.shape_idx}));
+        edge_comps[b.name]=edge_components(edge_char(b.edge),b.x,b.y,bw,bh,occ_punch,get(co,{b.name,b.shape_idx}),counts);
     const auto [reach_bound,envelope]=spatial_bounds_accounted(far_ceil,max_reach,clear,in.place_clear,cable_gap,2.0,
         counts);
     if (std::max(clear,2*reach_bound)>envelope+1e-9) throw std::logic_error("floorplan: spatial interaction envelope underbounds fan-out reach");

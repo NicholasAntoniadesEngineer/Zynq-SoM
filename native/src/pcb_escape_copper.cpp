@@ -1,4 +1,5 @@
 #include "pcb_escape_internal.hpp"
+#include "schgen/output_precision.hpp"
 #include <numeric>
 
 namespace schgen {
@@ -72,20 +73,22 @@ Obstacles collect_obstacles(const PcbEscapeInput &input, const PcbCheckInstance 
     return obs;
 }
 std::vector<std::tuple<double, double, std::string>> ground_pads(const PcbCheckInstance &inst,
-                                                                 const Connector &c) {
+                                                                 const Connector &c, QuantizationCounts* counts) {
     std::vector<std::tuple<double, double, std::string>> out;
     for (const auto &[pad, n] : inst.pad_nets)
         if (n.first > 0 && n.second == "GND") {
             auto p = c.pads.find(pad);
             if (p != c.pads.end())
-                out.emplace_back(py_round(p->second.first, 4), py_round(p->second.second, 4), pad);
+                out.emplace_back(escape_ground_precision4dp(p->second.first, counts),
+                                 escape_ground_precision4dp(p->second.second, counts), pad);
         }
     std::sort(out.begin(), out.end());
     return out;
 }
 void self_check(const PcbCheckModel &m, const std::map<std::string, Connector> &conns,
                 const std::map<std::string, std::vector<Via>> &by_conn,
-                const std::map<std::string, std::vector<EscapeLadderSeg>> &ladders, Box4 zone) {
+                const std::map<std::string, std::vector<EscapeLadderSeg>> &ladders, Box4 zone,
+                QuantizationCounts* counts) {
     for (const auto &[ref, vias] : by_conn) {
         const auto &c = conns.at(ref);
         const auto &inst = m.insts[c.index];
@@ -96,7 +99,7 @@ void self_check(const PcbCheckModel &m, const std::map<std::string, Connector> &
         for (const auto &s : ladders.at(ref))
             sr.emplace_back(s.ax, s.ay, s.bx, s.by, s.w, s.role);
         std::vector<std::pair<double, double>> pr;
-        for (const auto &[u, v, pad] : ground_pads(inst, c)) {
+        for (const auto &[u, v, pad] : ground_pads(inst, c, counts)) {
             (void)pad;
             pr.emplace_back(u, v);
         }
@@ -165,7 +168,7 @@ std::vector<PcbEscapeCoexistence> coexistence(const PcbEscapeInput &input,
 }
 } // namespace
 
-PcbEscapeCopperResult build_pcb_escape_copper(const PcbEscapeInput &input) {
+PcbEscapeCopperResult build_pcb_escape_copper(const PcbEscapeInput &input, QuantizationCounts* counts) {
     using namespace pcb_escape;
     const auto &m = input.model();
     auto gn = m.net_numbers.find("GND");
@@ -262,7 +265,9 @@ PcbEscapeCopperResult build_pcb_escape_copper(const PcbEscapeInput &input) {
             us.push_back(u);
             meta.triage[ref + "." + v.pad] = cl;
         }
-        auto region = obstacle_scan_region(rounded_unique_sorted(us, 3), 6.);
+        std::set<double> rounded_us;
+        for (double u : us) rounded_us.insert(escape_scan_precision3dp(u, counts));
+        auto region = obstacle_scan_region({rounded_us.begin(), rounded_us.end()}, 6.);
         obstacles.emplace(ref, collect_obstacles(input, m.insts[c.index], region, sorted, through));
         for (const auto &band : band_cover(pts, construct_reach(radius, c.contacts.row_v))) {
             Job j{2, ref, band.front().first, {}};
@@ -347,7 +352,7 @@ PcbEscapeCopperResult build_pcb_escape_copper(const PcbEscapeInput &input) {
         for (const auto &v : vias)
             uv.emplace_back(v.u, v.v);
         std::vector<EscapeLadderSeg> segs;
-        const auto grounds = ground_pads(inst, c);
+        const auto grounds = ground_pads(inst, c, counts);
         if (grounds.empty())
             throw PcbEscapeError(ref + ": no GND attach options on the connector");
         try {
@@ -367,7 +372,7 @@ PcbEscapeCopperResult build_pcb_escape_copper(const PcbEscapeInput &input) {
             }
         ladders[ref] = std::move(segs);
     }
-    self_check(m, conns, by_conn, ladders, zone);
+    self_check(m, conns, by_conn, ladders, zone, counts);
     for (auto &[ref, vias] : by_conn) {
         const auto &inst = m.insts[conns.at(ref).index];
         std::stable_sort(vias.begin(), vias.end(), [](const auto &a, const auto &b) {
@@ -377,7 +382,8 @@ PcbEscapeCopperResult build_pcb_escape_copper(const PcbEscapeInput &input) {
             PcbCheckCopper cu;
             cu.kind = "via";
             auto [x, y] = board(inst, v.u, v.v);
-            std::tie(cu.x, cu.y) = round_xy(x, y, 4);
+            std::tie(cu.x, cu.y) = std::pair{escape_copper_precision4dp(x, counts),
+                                          escape_copper_precision4dp(y, counts)};
             cu.size = v.dia;
             cu.drill = v.drill;
             cu.net = gn->second;
@@ -399,8 +405,10 @@ PcbEscapeCopperResult build_pcb_escape_copper(const PcbEscapeInput &input) {
             PcbCheckCopper cu;
             cu.kind = "segment";
             auto a = board(inst, s.ax, s.ay), b = board(inst, s.bx, s.by);
-            std::tie(cu.x1, cu.y1) = round_xy(a.first, a.second, 4);
-            std::tie(cu.x2, cu.y2) = round_xy(b.first, b.second, 4);
+            std::tie(cu.x1, cu.y1) = std::pair{escape_copper_precision4dp(a.first, counts),
+                                            escape_copper_precision4dp(a.second, counts)};
+            std::tie(cu.x2, cu.y2) = std::pair{escape_copper_precision4dp(b.first, counts),
+                                            escape_copper_precision4dp(b.second, counts)};
             cu.width = s.w;
             cu.net = gn->second;
             cu.net_name = "GND";
@@ -416,10 +424,13 @@ PcbEscapeCopperResult build_pcb_escape_copper(const PcbEscapeInput &input) {
             (void)ref;
             (void)pad;
             meta.worst_cover_mm = std::max(meta.worst_cover_mm, d);
-            d = py_round(d, 4);
+            d = escape_coverage_precision4dp(d, counts);
         }
-    meta.worst_cover_mm = py_round(meta.worst_cover_mm, 4);
-    meta.escape_region = round_box(zone, 4);
+    meta.worst_cover_mm = escape_coverage_precision4dp(meta.worst_cover_mm, counts);
+    meta.escape_region = {escape_region_precision4dp(zone.x0, counts),
+                          escape_region_precision4dp(zone.y0, counts),
+                          escape_region_precision4dp(zone.x1, counts),
+                          escape_region_precision4dp(zone.y1, counts)};
     meta.som_interface_sha256 = pcb_sha256(input.interface_bytes());
     return out;
 }

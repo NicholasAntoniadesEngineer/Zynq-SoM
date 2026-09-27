@@ -122,7 +122,7 @@ public:
     double estimate();
     std::pair<Halo, Halo> fanout(const FloorplanZoneShape& shape, bool base);
     std::vector<Comp> zone_components(const FloorplanZoneShape& shape,
-                                      bool pad_punch) const;
+                                      bool pad_punch, QuantizationCounts* counts) const;
     std::vector<Box4> pad_boxes(const std::string& key, double rotation,
                                 bool thru_only = false) const;
     void board_size(double w, double h);

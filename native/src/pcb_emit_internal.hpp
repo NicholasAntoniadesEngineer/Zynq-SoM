@@ -161,6 +161,7 @@ struct ThermalNodes {
 };
 ThermalNodes thermal_nodes(const PcbModel &, const PcbEmitPolicy &, const Uid &,
                            PcbEmissionResult &);
-std::vector<Sexpr> descriptors(const PcbModel &, const PcbEmitPolicy &, const Uid &, const Sexpr &);
+std::vector<Sexpr> descriptors(const PcbModel &, const PcbEmitPolicy &, const Uid &, const Sexpr &,
+                               QuantizationCounts* = nullptr);
 int declutter(const PcbModel &, Sexpr &);
 } // namespace schgen::pcb_emission

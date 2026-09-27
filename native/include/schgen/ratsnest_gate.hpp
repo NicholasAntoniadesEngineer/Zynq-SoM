@@ -1,6 +1,7 @@
 #pragma once
 #include "schgen/pcb_checks.hpp"
 #include "schgen/ratsnest.hpp"
+#include "schgen/execution_accounting.hpp"
 
 namespace schgen {
 inline constexpr double ratsnest_dispersion_max = 9.0;
@@ -15,8 +16,9 @@ struct RatsnestGateResult {
     bool cross_ok() const { return cross_mm <= cross_budget_mm; }
     std::string summary() const;
 };
-RatsnestNets ratsnest_net_pad_positions(const PcbCheckModel&);
+RatsnestNets ratsnest_net_pad_positions(const PcbCheckModel&, QuantizationCounts* = nullptr);
 RatsnestGateResult check_ratsnest(const PcbCheckInput&, const RatsnestNets* = nullptr,
-    const RatsnestEdges* = nullptr, double cross_k = default_engine_config.cross_k);
+    const RatsnestEdges* = nullptr, double cross_k = default_engine_config.cross_k,
+    QuantizationCounts* = nullptr);
 std::map<std::string, double> ratsnest_dispersion_by_sheet(const RatsnestGateResult&);
 } // namespace schgen

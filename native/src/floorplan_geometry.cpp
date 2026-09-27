@@ -176,7 +176,7 @@ std::pair<Halo, Halo> Engine::fanout(const FloorplanZoneShape& shape, bool base)
         zone_fanout_members_rows_accounted(rows, min_subject_pins, {{2,.20},{8,1.50}},2.0,
             &plan.accounting.quantization_engagements), min_subject_pins);
 }
-std::vector<Comp> Engine::zone_components(const FloorplanZoneShape& shape, bool pad_punch) const {
+std::vector<Comp> Engine::zone_components(const FloorplanZoneShape& shape, bool pad_punch, QuantizationCounts* counts) const {
     auto rotations = in.geometry.conn_rot;
     for (const auto& [r, extra] : shape.extra_rot) rotations[r] = rotation(rotations[r] + extra);
     auto courtyard = [&](const std::string& r, FloorplanPoint xy) -> std::optional<Box4> {
@@ -203,7 +203,7 @@ std::vector<Comp> Engine::zone_components(const FloorplanZoneShape& shape, bool 
             }
         }
     }
-    return zone_components_assemble(minor, punches, shape.side == "bottom" ? occ_top : occ_bottom, occ_punch);
+    return zone_components_assemble(minor, punches, shape.side == "bottom" ? occ_top : occ_bottom, occ_punch, counts);
 }
 
 void Engine::prepare_geometry() {
@@ -225,11 +225,11 @@ void Engine::prepare_geometry() {
         if (zg.zone_box.count(b->name)) std::tie(b->fanout_reach,b->fanout_inset) = fanout(base, true);
         for (int policy : {1,0}) {
             auto& co = components[policy];
-            if (zg.zone_box.count(b->name)) co[{b->name,0}] = zone_components(base, policy != 0);
+            if (zg.zone_box.count(b->name)) co[{b->name,0}] = zone_components(base, policy != 0, &plan.accounting.quantization_engagements);
             const auto variants = zg.shapes.find(b->name);
             if (variants == zg.shapes.end()) continue;
             for (std::size_t k=1; k<variants->second.size(); ++k)
-                co[{b->name,static_cast<int>(k)}] = zone_components(variants->second[k], policy != 0);
+                co[{b->name,static_cast<int>(k)}] = zone_components(variants->second[k], policy != 0, &plan.accounting.quantization_engagements);
             if (b->kind == "edge" || variants->second.size() < 2) continue;
             auto& sets = shape_sets[policy][b->name];
             sets.push_back({base.w,base.h,b->fanout_reach,b->fanout_inset,"top",get(co,{b->name,0})});

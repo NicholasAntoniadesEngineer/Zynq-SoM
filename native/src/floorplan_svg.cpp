@@ -1,4 +1,5 @@
 #include "floorplan_internal.hpp"
+#include "schgen/output_precision.hpp"
 #include "schgen/board_decision_policy.hpp"
 
 #include <algorithm>
@@ -21,16 +22,17 @@ std::string f(double v) {
     std::string s(buf,r.ptr); if (s.find_first_of(".eE")==std::string::npos) s+=".0"; return s;
 }
 using namespace board_decision_policy::svg;
-double px(double x) { return svg_map(x,ox,scale); }
-double py(double y) { return svg_map(y,oy,scale); }
-std::string gx(double x) { return f(px(x)); }
-std::string gy(double y) { return f(py(y)); }
 std::size_t text_length(const std::string& s) {
     return static_cast<std::size_t>(std::count_if(s.begin(),s.end(),[](unsigned char c){return (c&0xc0)!=0x80;}));
 }
 }  // namespace
 
-std::string render_floorplan_svg(const FloorplanPlan& plan,const std::vector<FloorplanNote>& notes) {
+std::string render_floorplan_svg(const FloorplanPlan& plan,const std::vector<FloorplanNote>& notes,
+                                QuantizationCounts* counts) {
+    const auto px=[&](double x){return floorplan_svg_coordinate_precision1dp(x,ox,scale,counts);};
+    const auto py=[&](double y){return floorplan_svg_coordinate_precision1dp(y,oy,scale,counts);};
+    const auto gx=[&](double x){return f(px(x));};
+    const auto gy=[&](double y){return f(py(y));};
     std::map<std::string,std::vector<int>> note_of;
     std::vector<const FloorplanNote*> legend;
     for (const auto& n:notes) { if (!n.block.empty()) note_of[n.block].push_back(n.n); if (n.n) legend.push_back(&n); }
@@ -39,7 +41,7 @@ std::string render_floorplan_svg(const FloorplanPlan& plan,const std::vector<Flo
     if(!std::isfinite(view_w)||!std::isfinite(view_h)||plan.board_w<=0||plan.board_h<=0||
        view_w>std::numeric_limits<int>::max()||view_h>std::numeric_limits<int>::max())
         throw FloorplanError("floorplan SVG: invalid or unrepresentable board dimensions");
-    const int width=static_cast<int>(view_w),height=static_cast<int>(view_h);
+    const int width=floorplan_svg_extent_trunc(view_w,counts),height=floorplan_svg_extent_trunc(view_h,counts);
     std::string out;
     auto emit=[&](const std::string& s){out+=s+"\n";};
     emit("<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 "+std::to_string(width)+" "+std::to_string(height)+"\" font-family=\"ui-monospace, SFMono-Regular, Menlo, monospace\" font-size=\"11\">");
@@ -49,11 +51,11 @@ std::string render_floorplan_svg(const FloorplanPlan& plan,const std::vector<Flo
     emit("<text x=\"46.0\" y=\"44\" fill=\"#6b7280\">to scale; derived from the netlists + "+esc(plan.som_source)+" — regenerate with `schgen floorplan`; the user owns the outline (PLAN.md round 2)</text>");
     const double bx=px(0),by=py(0),bw=plan.board_w*scale,bh=plan.board_h*scale;
     emit("<rect x=\""+f(bx)+"\" y=\""+f(by)+"\" width=\""+number(bw)+"\" height=\""+number(bh)+"\" fill=\"#fcfcfd\" stroke=\"#111827\" stroke-width=\"2\" stroke-dasharray=\"9,5\"/>");
-    for (int x=10;x<static_cast<int>(plan.board_w);x+=10) {
+    for (int x=10;x<floorplan_svg_grid_trunc(plan.board_w,counts);x+=10) {
         emit("<line x1=\""+gx(x)+"\" y1=\""+f(by)+"\" x2=\""+gx(x)+"\" y2=\""+gy(plan.board_h)+"\" stroke=\"#eceef1\" stroke-width=\"1\"/>");
         emit("<text x=\""+gx(x)+"\" y=\""+f(by-4)+"\" fill=\"#9ca3af\" font-size=\"8\" text-anchor=\"middle\">"+std::to_string(x)+"</text>");
     }
-    for (int y=10;y<static_cast<int>(plan.board_h);y+=10) {
+    for (int y=10;y<floorplan_svg_grid_trunc(plan.board_h,counts);y+=10) {
         emit("<line x1=\""+f(bx)+"\" y1=\""+gy(y)+"\" x2=\""+gx(plan.board_w)+"\" y2=\""+gy(y)+"\" stroke=\"#eceef1\" stroke-width=\"1\"/>");
         emit("<text x=\""+f(bx-6)+"\" y=\""+f(py(y)+3)+"\" fill=\"#9ca3af\" font-size=\"8\" text-anchor=\"end\">"+std::to_string(y)+"</text>");
     }

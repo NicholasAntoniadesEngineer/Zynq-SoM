@@ -1,5 +1,6 @@
 #include "board_pipeline_internal.hpp"
 #include "execution_timing_contracts.hpp"
+#include "precision_receipt_contracts.hpp"
 #include "schgen/selftest_full.hpp"
 #include "schgen/subsystem_build.hpp"
 #include "schgen/process.hpp"
@@ -269,6 +270,7 @@ void purity_precondition(const fs::path& root){
 int main(int argc,char** argv){
     try{
         execution_timing_contracts::run();
+        precision_receipt_contracts::run();
         if(argc<2||argc>3)throw std::runtime_error("usage: board_pipeline_contracts REPOSITORY [--live-kicad]");
         const fs::path root=argv[1];
         const auto reference=parse_json_file((root/"native/tests/data/board_pipeline/python_reference.json").string());

@@ -6,15 +6,17 @@ bool PcbVerificationResult::ok() const {
         refdes.ok && placement.ok() && fanout.ok && return_stitch.ok && escape_lanes.ok;
 }
 PcbVerificationResult verify_pcb_geometry(const BoardPcbStage& stage,
-        const PcbEmittedBoard& emitted, std::optional<int> baseline) {
+        const PcbEmittedBoard& emitted, std::optional<int> baseline, QuantizationCounts* counts) {
     if (!emitted.exists) throw ProjectError("PCB verification requires the emitted board");
     const auto& model = stage.placement.model;
     const auto& input = stage.inputs;
     const PcbCheckInput prepared(model);
     PcbVerificationResult out;
-    out.nets = ratsnest_net_pad_positions(model);
+    if (!counts) counts = &out.quantization_engagements;
+    out.nets = ratsnest_net_pad_positions(model, counts);
     out.edges = ratsnest_mst(out.nets);
-    out.ratsnest = check_ratsnest(prepared, &out.nets, &out.edges);
+    out.ratsnest = check_ratsnest(prepared, &out.nets, &out.edges,
+        default_engine_config.cross_k, counts);
     out.mechanical = check_placement_mech(prepared);
     const auto policy = pcb_emit_policy(input.floorplan.project);
     const std::map<std::string,std::string> faces(policy.connector_mating_faces.begin(), policy.connector_mating_faces.end());

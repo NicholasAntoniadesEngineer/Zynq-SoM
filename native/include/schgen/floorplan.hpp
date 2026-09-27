@@ -261,7 +261,8 @@ FloorplanPlan build_floorplan(const FloorplanInput& input);
 std::vector<FloorplanNote> build_floorplan_notes(
     const FloorplanPlan& plan, const FloorplanInput& input);
 std::string render_floorplan_svg(const FloorplanPlan& plan,
-                                 const std::vector<FloorplanNote>& notes);
+                                 const std::vector<FloorplanNote>& notes,
+                                 QuantizationCounts* counts = nullptr);
 std::string render_floorplan_md(const FloorplanPlan& plan,
                                 const std::vector<FloorplanNote>& notes,
                                 const FloorplanInput& input);
@@ -274,6 +275,7 @@ JsonNode floorplan_plan_json(const FloorplanPlan& plan);
 struct FloorplanDocuments {
     std::vector<FloorplanNote> notes;
     std::string svg, markdown;
+    ExecutionAccounting accounting;
 };
 struct FloorplanStage {
     FloorplanPlan plan;

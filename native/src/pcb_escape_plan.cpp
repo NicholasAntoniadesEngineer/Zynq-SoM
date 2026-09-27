@@ -1,8 +1,9 @@
 #include "pcb_escape_internal.hpp"
+#include "schgen/output_precision.hpp"
 
 namespace schgen {
 using namespace pcb_escape;
-PcbEscapePlanResult build_pcb_escape_plan(const PcbEscapeInput &input) {
+PcbEscapePlanResult build_pcb_escape_plan(const PcbEscapeInput &input, QuantizationCounts* counts) {
     const auto &m = input.model();
     const auto conns = prepare_connectors(m);
     PcbEscapePlanResult plan;
@@ -60,8 +61,9 @@ PcbEscapePlanResult build_pcb_escape_plan(const PcbEscapeInput &input) {
                     ln.si_class = input.classify(name).klass;
                 }
                 auto [px, py] = board(inst, u, port_v);
-                std::tie(ln.port_x, ln.port_y) = round_xy(px, py, 4);
-                ln.width = py_round(ln.width, 4);
+                std::tie(ln.port_x, ln.port_y) = std::pair{
+                    escape_port_precision4dp(px, counts), escape_port_precision4dp(py, counts)};
+                ln.width = escape_width_precision4dp(ln.width, counts);
                 lanes.push_back(std::move(ln));
             }
         }
@@ -83,7 +85,10 @@ PcbEscapePlanResult build_pcb_escape_plan(const PcbEscapeInput &input) {
             auto a = board(inst, lo - .5, signed_mag(tip, sign));
             auto b = board(inst, hi + .5, signed_mag(escape_v + .3, sign));
             plan.corridors[ref + (sign > 0 ? ":S" : ":N")] = {
-                aabb_from_corners(a.first, a.second, b.first, b.second, 4),
+                {escape_corridor_precision4dp(std::min(a.first, b.first), counts),
+                 escape_corridor_precision4dp(std::min(a.second, b.second), counts),
+                 escape_corridor_precision4dp(std::max(a.first, b.first), counts),
+                 escape_corridor_precision4dp(std::max(a.second, b.second), counts)},
                 "DF40 escape-lane corridor (T2) — composition legalizer must keep parts + zones "
                 "out"};
         }

@@ -1,4 +1,6 @@
 #pragma once
+#include "output_precision_fixture.hpp"
+#include "pack_precision_fixture.hpp"
 #include "schgen/execution_accounting.hpp"
 #include <algorithm>
 #include <array>
@@ -24,7 +26,6 @@ inline const std::array<std::string,19> names{{"placement_turn_dimension_precisi
     "placement_l4_distance_trunc"}};
 inline bool added(const std::string& name){return std::find(names.begin(),names.end(),name)!=names.end();}
 inline schgen::QuantizationCounts select(const schgen::QuantizationCounts& counts,bool additions=true){
-    schgen::QuantizationCounts out;for(const auto& [name,count]:counts)if(added(name)==additions)out[name]=count;return out;
+    schgen::QuantizationCounts out;for(const auto& [name,count]:counts)if(added(name)==additions&&!output_precision_fixture::added(name)&&!pack_precision_fixture::added(name)&&!pack_geometry_precision_fixture::added(name))out[name]=count;return out;
 }
 }
-

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "schgen/pack.hpp"
+#include "schgen/execution_accounting.hpp"
 #include "schgen/pcb_model.hpp"
 
 namespace schgen {
@@ -94,9 +95,9 @@ struct PcbEscapeCopperResult {
 // APIs are the existing native pack.hpp functions.
 ContactGeom pcb_escape_contact_geometry(const PcbCheckFootprint &);
 Box4 pcb_escape_corridor_local(const PcbCheckFootprint &);
-Box4 pcb_escape_corridor_board(const PcbCheckFootprint &, double x, double y, double rotation);
-PcbEscapeCopperResult build_pcb_escape_copper(const PcbEscapeInput &);
-PcbEscapePlanResult build_pcb_escape_plan(const PcbEscapeInput &);
+Box4 pcb_escape_corridor_board(const PcbCheckFootprint &, double x, double y, double rotation, QuantizationCounts* counts = nullptr);
+PcbEscapeCopperResult build_pcb_escape_copper(const PcbEscapeInput &, QuantizationCounts* = nullptr);
+PcbEscapePlanResult build_pcb_escape_plan(const PcbEscapeInput &, QuantizationCounts* = nullptr);
 // Exact emitted escape_block.json (indent=1, sorted keys, ASCII escapes, LF).
 // Renders the supplied results without recomputing caller state.
 std::string render_pcb_escape_block(const PcbEscapePlanResult &, const PcbEscapeMetadata &);

@@ -192,7 +192,7 @@ void Engine::ledger_initial(double sw,double sh) {
     }
     calc("d13_tier_population",jvalue(low+high),{{"n_subjects",jvalue(low+high)},{"tier_le2_0p20",jvalue(0)},
         {"tier_le8_1p50",jvalue(low)},{"tier_ge9_2p00",jvalue(high)}});
-    const auto [gw,gh,cols,rows]=som_decoupling_grid(plan.som.w,plan.som.h,plan.dec_count,dec_inset);
+    const auto [gw,gh,cols,rows]=som_decoupling_grid(plan.som.w,plan.som.h,plan.dec_count,dec_inset,&plan.accounting.quantization_engagements);
     calc("decoupling_grid",jvalue(plan.dec_count),{{"n_caps",jvalue(plan.dec_count)},{"som_w",jvalue(plan.som.w)},
         {"som_h",jvalue(plan.som.h)},{"inset",jvalue(dec_inset)},{"grid_w",jvalue(precision.dimension(gw))},
         {"grid_h",jvalue(precision.dimension(gh))},{"cols",jvalue(cols)},{"rows",jvalue(rows)}});

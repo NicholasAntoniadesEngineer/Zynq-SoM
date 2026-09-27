@@ -1,6 +1,7 @@
 #pragma once
 
 #include "schgen/pcb_model.hpp"
+#include "schgen/execution_accounting.hpp"
 #include "schgen/thermal_checks.hpp"
 
 namespace schgen {
@@ -52,13 +53,18 @@ struct PcbEmissionResult {
     // merge these into its explicit ledger/census; no process-global counters.
     std::vector<std::string> fallback_events;
     int hidden_bottom_references = 0, moved_references = 0;
+    QuantizationCounts quantization_engagements;
 };
 // Complete board assembly: outline/stackup, thermal/isolation copper, embedded
 // footprints, descriptors/refdes placement and actual model escape copper.
 // Reuses native emit/embed_fp/pcb_scan/turn/pack/UUID kernels throughout.
-PcbEmissionResult render_pcb(const PcbModel &, const PcbEmitPolicy & = default_pcb_emit_policy());
+// With an external sink, it owns precision observations (including a throwing
+// prefix); the returned precision receipt is empty to prevent double imports.
+PcbEmissionResult render_pcb(const PcbModel &, const PcbEmitPolicy & = default_pcb_emit_policy(),
+                            QuantizationCounts* = nullptr);
 PcbEmissionResult write_pcb(const PcbModel &, const std::filesystem::path &,
-                            const PcbEmitPolicy & = default_pcb_emit_policy());
+                            const PcbEmitPolicy & = default_pcb_emit_policy(),
+                            QuantizationCounts* = nullptr);
 
 // JsonNode stores all numbers as doubles. Preserve number-token metadata so
 // unrelated project fields retain Python's integer/float spelling, including
@@ -72,9 +78,11 @@ struct PcbProjectDocument {
 PcbProjectDocument read_pcb_project(const std::filesystem::path &);
 std::string render_pcb_project(const PcbModel &, const std::string &filename,
                                const PcbProjectDocument *existing = nullptr,
-                               const PcbEmitPolicy & = default_pcb_emit_policy());
+                               const PcbEmitPolicy & = default_pcb_emit_policy(),
+                               QuantizationCounts* = nullptr);
 void write_pcb_project(const PcbModel &, const std::filesystem::path &,
-                       const PcbEmitPolicy & = default_pcb_emit_policy());
+                       const PcbEmitPolicy & = default_pcb_emit_policy(),
+                       QuantizationCounts* = nullptr);
 std::string render_pcb_design_rules(const PcbModel &,
                                     const PcbEmitPolicy & = default_pcb_emit_policy());
 void write_pcb_design_rules(const PcbModel &, const std::filesystem::path &,

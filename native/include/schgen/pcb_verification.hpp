@@ -18,6 +18,7 @@ struct PcbVerificationResult {
     ReturnPathResult return_path;
     ReturnStitchResult return_stitch;
     EscapeLaneResult escape_lanes;
+    QuantizationCounts quantization_engagements;
     // Fixed SoM contact-level v1 findings and placement coverage/composition
     // stay visible but advisory. Actual carrier return-stitch coverage is hard.
     // This verdict excludes external KiCad DRC and non-PCB board gates.
@@ -26,5 +27,6 @@ struct PcbVerificationResult {
 // Caller supplies the independently read emitted board and the persisted
 // fanout ceiling. No hidden reads, implicit baseline update or reused verdict.
 PcbVerificationResult verify_pcb_geometry(const BoardPcbStage&,
-    const PcbEmittedBoard&, std::optional<int> fanout_baseline);
+    const PcbEmittedBoard&, std::optional<int> fanout_baseline,
+    QuantizationCounts* = nullptr);
 }

@@ -163,7 +163,7 @@ double Engine::estimate(const std::vector<const FloorplanBlock*>& blocks, const 
     }
     const std::array<FloorplanPoint,4> corners{{{mh_inset,mh_inset},{plan.board_w-mh_inset,mh_inset},
         {plan.board_w-mh_inset,plan.board_h-mh_inset},{mh_inset,plan.board_h-mh_inset}}};
-    const auto [rw,rh,cols,rows]=som_decoupling_grid(plan.som.w,plan.som.h,plan.dec_count,dec_inset);
+    const auto [rw,rh,cols,rows]=som_decoupling_grid(plan.som.w,plan.som.h,plan.dec_count,dec_inset,&plan.accounting.quantization_engagements);
     std::vector<std::optional<FloorplanPoint>> positions(cross_parts.size());
     for (std::size_t i=0;i<cross_parts.size();++i) {
         const auto& part=cross_parts[i];

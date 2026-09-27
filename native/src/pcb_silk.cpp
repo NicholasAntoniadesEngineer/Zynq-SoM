@@ -1,10 +1,13 @@
 #include "pcb_emit_internal.hpp"
+#include "schgen/output_precision.hpp"
 
 namespace schgen::pcb_emission {
 namespace {
-Sexpr silk_text(const std::string &s, double x, double y, double size, const std::string &id) {
-    return emit_gr_text(s, py_round(x, 3), py_round(y, 3), 0, "F.SilkS", id, size,
-                        py_round(std::max(.12, size * .16), 3), "");
+Sexpr silk_text(const std::string &s, double x, double y, double size, const std::string &id,
+                QuantizationCounts* counts) {
+    return emit_gr_text(s, pcb_silk_position_precision3dp(x, counts),
+                        pcb_silk_position_precision3dp(y, counts), 0, "F.SilkS", id, size,
+                        pcb_silk_stroke_precision3dp(std::max(.12, size * .16), counts), "");
 }
 double label_size(const std::string &s) {
     std::size_t n = 0;
@@ -68,7 +71,7 @@ std::string trim(std::string s) {
 }
 } // namespace
 std::vector<Sexpr> descriptors(const PcbModel &m, const PcbEmitPolicy &p, const Uid &uid,
-                               const Sexpr &doc) {
+                               const Sexpr &doc, QuantizationCounts* counts) {
     std::vector<Sexpr> out;
     Box4 bounds{m.origin_x, m.origin_y, m.origin_x + m.board_w, m.origin_y + m.board_h};
     SilkBoxIndex occupied(8);
@@ -127,7 +130,7 @@ std::vector<Sexpr> descriptors(const PcbModel &m, const PcbEmitPolicy &p, const 
             x = seat.x;
             y = seat.y;
         }
-        out.push_back(silk_text(desc, x, y, size, uid("conn-desc:" + i.ref)));
+        out.push_back(silk_text(desc, x, y, size, uid("conn-desc:" + i.ref), counts));
         occupied.add(text_box(desc, x, y, size, .15));
     }
     for (const auto &i : m.insts) {
@@ -156,7 +159,7 @@ std::vector<Sexpr> descriptors(const PcbModel &m, const PcbEmitPolicy &p, const 
             }
         }
         occupied.add(seat.box);
-        out.push_back(silk_text(text, seat.x, seat.y, size, uid(prefix + ":" + i.ref)));
+        out.push_back(silk_text(text, seat.x, seat.y, size, uid(prefix + ":" + i.ref), counts));
     }
     return out;
 }

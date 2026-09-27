@@ -84,7 +84,7 @@ const std::vector<PcbModelOverride>& project_pcb_model_overrides() {
         "${KIPRJMOD}/../parts/FUSB302BMPX/FUSB302BMPX.wrl", 90}};
     return overrides;
 }
-PcbEmissionResult render_pcb(const PcbModel &m, const PcbEmitPolicy &p) {
+PcbEmissionResult render_pcb(const PcbModel &m, const PcbEmitPolicy &p, QuantizationCounts* counts) {
     if (!std::isfinite(m.board_w) || !std::isfinite(m.board_h) || m.board_w <= 0 || m.board_h <= 0)
         throw PcbEmissionError("PCB outline dimensions must be finite and positive");
     // Typed callers bypass the JSON boundary. Reject nonfinite geometry before
@@ -117,6 +117,7 @@ PcbEmissionResult render_pcb(const PcbModel &m, const PcbEmitPolicy &p) {
     if (!std::isfinite(p.thermal_lattice_pitch) || p.thermal_lattice_pitch <= 0)
         throw PcbEmissionError("PCB thermal lattice pitch must be finite and positive");
     PcbEmissionResult result;
+    if (!counts) counts = &result.quantization_engagements;
     std::map<std::string, std::size_t> seqs;
     const auto board = schematic_stable_uuid({"Zynq_Carrier", "pcb"});
     Uid uid = [&](const std::string &key) {
@@ -203,7 +204,7 @@ PcbEmissionResult render_pcb(const PcbModel &m, const PcbEmitPolicy &p) {
         result.hidden_bottom_references = hidden.second;
     }
     // Reacquire the list after the value-returning hide transform.
-    auto labels = descriptors(m, p, uid, doc);
+    auto labels = descriptors(m, p, uid, doc, counts);
     auto &final = std::get<SexprList>(doc.v);
     final.insert(final.end(), labels.begin(), labels.end());
     result.moved_references = declutter(m, doc);
@@ -224,8 +225,8 @@ PcbEmissionResult render_pcb(const PcbModel &m, const PcbEmitPolicy &p) {
     return result;
 }
 PcbEmissionResult write_pcb(const PcbModel &m, const std::filesystem::path &path,
-                            const PcbEmitPolicy &p) {
-    auto r = render_pcb(m, p);
+                            const PcbEmitPolicy &p, QuantizationCounts* counts) {
+    auto r = render_pcb(m, p, counts);
     publish(path, r.pcb);
     return r;
 }

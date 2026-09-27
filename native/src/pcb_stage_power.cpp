@@ -26,7 +26,7 @@ Parts Engine::buck(const std::string &ic, const std::vector<std::string> &hf,
         }
         if (!cout.empty()) {
             auto centers =
-                cout_column_centers(at(pads(inductor), pins.at("ind_out")), pad, 1, clear, halves);
+                cout_column_centers(at(pads(inductor), pins.at("ind_out")), pad, 1, clear, halves, &quantization);
             for (std::size_t i = 0; i < cout.size(); ++i)
                 out.push_back(part(cout[i], 90, centers[i].first, centers[i].second));
         }
@@ -36,7 +36,7 @@ Parts Engine::buck(const std::string &ic, const std::vector<std::string> &hf,
                 pinbox(ib, {pins.at(i ? "vin2" : "vin1"), pins.at(i ? "pgnd2" : "pgnd1")});
             auto p = beside(hf[i], 0, target, i ? "U" : "D", clr);
             auto b = body(part(hf[i]));
-            auto xy = hf_cap_pose(p.y, il, clear, (b.x1 - b.x0) / 2);
+            auto xy = hf_cap_pose(p.y, il, clear, (b.x1 - b.x0) / 2, &quantization);
             p.x = xy.first;
             p.y = xy.second;
             hfs.push_back(p);
@@ -45,7 +45,7 @@ Parts Engine::buck(const std::string &ic, const std::vector<std::string> &hf,
         for (std::size_t i = 0; i < std::min<std::size_t>(2, bulk.size()); ++i) {
             auto b = body(part(bulk[i], 90));
             auto xy = bulk_cap_pose(hfs[i].x, body(hfs[i]), i ? "U" : "D", clr, (b.x1 - b.x0) / 2,
-                                    (b.y1 - b.y0) / 2, il, clear);
+                                    (b.y1 - b.y0) / 2, il, clear, &quantization);
             out.push_back(part(bulk[i], 90, xy.first, xy.second));
         }
         std::vector<Demand> demands;

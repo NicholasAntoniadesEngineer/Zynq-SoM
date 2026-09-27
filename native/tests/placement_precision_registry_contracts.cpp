@@ -44,7 +44,7 @@ QuantizationCounts end(){
 void declarations(){
     NativeQuantizations q;register_native_quantizations(q);
     const auto ds=q.declarations();
-    require(ds.size()==83,"64 prior plus nineteen placement declarations");
+    require(ds.size()==122,"108 prior plus fourteen geometry declarations");
     for(const auto& name:{"placement_unknown_future_precision","placement_turn_offset_precision4dp_typo"}){
         const auto before=q.engagements();bool rejected=false;begin();
         try{q.invoke(name,{1.});}catch(const std::logic_error&){rejected=true;}

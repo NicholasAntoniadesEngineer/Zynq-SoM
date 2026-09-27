@@ -1,4 +1,6 @@
+#include "schgen/pack_geometry_precision.hpp"
 #include "schgen/pack.hpp"
+#include "schgen/pack_precision.hpp"
 #include "schgen/board_decision_policy.hpp"
 
 #include "schgen/quantize.hpp"
@@ -55,7 +57,8 @@ bool shelf_free(double x0, double y0, double x1, double y1, double w_lim,
 }  // namespace
 
 ShelfPacked shelf_pack(const std::vector<ShelfItem>& items, double target_w,
-                       const std::vector<ShelfOcc>& blockers, double zone_pad) {
+                       const std::vector<ShelfOcc>& blockers, double zone_pad,
+                       QuantizationCounts* counts) {
     std::vector<ShelfItem> order = items;
     std::stable_sort(order.begin(), order.end(),
                      [](const ShelfItem& a, const ShelfItem& b) {
@@ -122,15 +125,15 @@ ShelfPacked shelf_pack(const std::vector<ShelfItem>& items, double target_w,
         }
         occ.push_back(ShelfOcc{
             Box4{sx, sy, sx + hw, sy + hh}, it.extra, it.is_cp});
-        placed.emplace_back(it.ref, py_round(sx - it.halo.x0, 4),
-                            py_round(sy - it.halo.y0, 4));
+        placed.emplace_back(it.ref, pack_shelf_pose_precision4dp(sx - it.halo.x0, counts),
+                            pack_shelf_pose_precision4dp(sy - it.halo.y0, counts));
         used_w = std::max(used_w, sx + hw);
         used_h = std::max(used_h, sy + hh);
     }
     return ShelfPacked{
         std::move(placed),
-        py_round(std::max(used_w, zone_pad) + zone_pad, 4),
-        py_round(std::max(used_h, zone_pad) + zone_pad, 4)};
+        pack_shelf_extent_precision4dp(std::max(used_w, zone_pad) + zone_pad, counts),
+        pack_shelf_extent_precision4dp(std::max(used_h, zone_pad) + zone_pad, counts)};
 }
 
 ViaBlockHit via_site_blocker(
@@ -752,16 +755,15 @@ std::optional<Box4> silk_gfx_extent(
 }
 
 double pair_gap(const Halo& a_reach, const Halo& a_inset, const Halo& b_reach,
-                const Halo& b_inset, char axis, double floor) {
-    return py_round(std::max(floor, fanout_sep(a_reach, a_inset, b_reach,
-                                               b_inset, axis)),
-                    4);
+                const Halo& b_inset, char axis, double floor, QuantizationCounts* counts) {
+    return pack_pair_gap_precision4dp(std::max(floor, fanout_sep(a_reach, a_inset, b_reach,
+                                               b_inset, axis)), counts);
 }
 
 std::vector<Comp> edge_components(char edge, double block_x, double block_y,
                                   double board_w, double board_h,
                                   int punch_mask,
-                                  const std::vector<Comp>& comps) {
+                                  const std::vector<Comp>& comps, QuantizationCounts* counts) {
     std::vector<Comp> out;
     out.reserve(comps.size());
     for (Comp c : comps) {
@@ -778,38 +780,38 @@ std::vector<Comp> edge_components(char edge, double block_x, double block_y,
                 c.w = board_w - block_x - c.dx;
             }
         }
-        out.push_back(Comp{py_round(c.dx, 4), py_round(c.dy, 4),
-                           py_round(c.w, 4), py_round(c.h, 4), c.mask});
+        out.push_back(Comp{pack_edge_component_precision4dp(c.dx, counts), pack_edge_component_precision4dp(c.dy, counts),
+                           pack_edge_component_precision4dp(c.w, counts), pack_edge_component_precision4dp(c.h, counts), c.mask});
     }
     return out;
 }
 
 std::tuple<double, double, int, int> som_decoupling_grid(double som_w,
                                                          double som_h, int n,
-                                                         double inset) {
+                                                         double inset, QuantizationCounts* counts) {
     const double rw = std::max(1.0, som_w - 2.0 * inset);
     const double rh = std::max(1.0, som_h - 2.0 * inset);
     int cols = 1;
     int rows = 1;
     if (n != 0) {
         const double raw =
-            py_round(std::sqrt(static_cast<double>(n) * rw / rh), 0);
-        cols = std::max(1, static_cast<int>(
-                               std::min(static_cast<double>(n), raw)));
-        rows = std::max(1, (n + cols - 1) / cols);
+            pack_som_grid_precision0dp(std::sqrt(static_cast<double>(n) * rw / rh), counts);
+        cols = std::max(1, pack_som_grid_trunc(
+                               std::min(static_cast<double>(n), raw), counts));
+        rows = std::max(1, n / cols + (n > 0 && n % cols != 0));
     }
     return {rw, rh, cols, rows};
 }
 
 std::vector<std::pair<double, double>> som_decoupling_cells(
     double som_x, double som_y, double som_w, double som_h, int n,
-    double inset) {
+    double inset, QuantizationCounts* counts) {
     if (n <= 0) {
         return {};
     }
     const double rx0 = som_x + inset;
     const double ry0 = som_y + inset;
-    const auto grid = som_decoupling_grid(som_w, som_h, n, inset);
+    const auto grid = som_decoupling_grid(som_w, som_h, n, inset, counts);
     const double rw = std::get<0>(grid);
     const double rh = std::get<1>(grid);
     const int cols = std::get<2>(grid);
@@ -818,12 +820,10 @@ std::vector<std::pair<double, double>> som_decoupling_cells(
     out.reserve(static_cast<std::size_t>(n));
     for (int i = 0; i < n; ++i) {
         out.emplace_back(
-            py_round(rx0 + rw * (static_cast<double>(i % cols) + 0.5)
-                         / static_cast<double>(cols),
-                     4),
-            py_round(ry0 + rh * (static_cast<double>(i / cols) + 0.5)
-                         / static_cast<double>(rows),
-                     4));
+            pack_som_cell_precision4dp(rx0 + rw * (static_cast<double>(i % cols) + 0.5)
+                         / static_cast<double>(cols), counts),
+            pack_som_cell_precision4dp(ry0 + rh * (static_cast<double>(i / cols) + 0.5)
+                         / static_cast<double>(rows), counts));
     }
     return out;
 }
@@ -831,20 +831,20 @@ std::vector<std::pair<double, double>> som_decoupling_cells(
 std::vector<Comp> som_components(
     double origin_x, double origin_y, double radius,
     const std::vector<std::pair<double, double>>& cells,
-    const std::vector<Box4>& bands, int bottom_mask, int punch_mask) {
+    const std::vector<Box4>& bands, int bottom_mask, int punch_mask, QuantizationCounts* counts) {
     std::vector<Comp> out;
     out.reserve(cells.size() + bands.size());
-    const double diam = py_round(2.0 * radius, 4);
+    const double diam = pack_som_diameter_precision4dp(2.0 * radius, counts);
     for (const auto& cell : cells) {
-        out.push_back(Comp{py_round(cell.first - radius - origin_x, 4),
-                           py_round(cell.second - radius - origin_y, 4), diam,
+        out.push_back(Comp{pack_som_component_pose_precision4dp(cell.first - radius - origin_x, counts),
+                           pack_som_component_pose_precision4dp(cell.second - radius - origin_y, counts), diam,
                            diam, bottom_mask});
     }
     for (const Box4& band : bands) {
-        out.push_back(Comp{py_round(band.x0 - origin_x, 4),
-                           py_round(band.y0 - origin_y, 4),
-                           py_round(band.x1 - band.x0, 4),
-                           py_round(band.y1 - band.y0, 4), punch_mask});
+        out.push_back(Comp{pack_som_band_component_precision4dp(band.x0 - origin_x, counts),
+                           pack_som_band_component_precision4dp(band.y0 - origin_y, counts),
+                           pack_som_band_component_precision4dp(band.x1 - band.x0, counts),
+                           pack_som_band_component_precision4dp(band.y1 - band.y0, counts), punch_mask});
     }
     return out;
 }
@@ -954,7 +954,7 @@ double net_clearance_rule(bool power) {
 
 std::vector<std::pair<double, double>> cout_column_centers(
     const Box4& inductor_out, double pad, double cout_gap,
-    double template_clear, const std::vector<std::pair<double, double>>& halves) {
+    double template_clear, const std::vector<std::pair<double, double>>& halves, QuantizationCounts* counts) {
     std::vector<std::pair<double, double>> out;
     if (halves.empty()) {
         return out;
@@ -963,7 +963,7 @@ std::vector<std::pair<double, double>> cout_column_centers(
     for (const auto& half : halves) {
         hx = std::max(hx, half.first);
     }
-    const double col_x = py_round(inductor_out.x1 + cout_gap + pad + hx, 4);
+    const double col_x = pack_cout_pose_precision4dp(inductor_out.x1 + cout_gap + pad + hx, counts);
     const double pad_cy = (inductor_out.y0 + inductor_out.y1) / 2.0;
     const double step = template_clear + pad;
     double total = 0.0;
@@ -975,7 +975,7 @@ std::vector<std::pair<double, double>> cout_column_centers(
     out.reserve(halves.size());
     for (const auto& half : halves) {
         const double cy = y + half.second;
-        out.emplace_back(col_x, py_round(cy, 4));
+        out.emplace_back(col_x, pack_cout_pose_precision4dp(cy, counts));
         y += 2.0 * half.second + step;
     }
     return out;
@@ -983,11 +983,11 @@ std::vector<std::pair<double, double>> cout_column_centers(
 
 std::pair<double, double> bulk_cap_pose(
     double hf_ox, const Box4& hf_box, const std::string& direction, double gap,
-    double hx, double hy, double inductor_left, double template_clear) {
+    double hx, double hy, double inductor_left, double template_clear, QuantizationCounts* counts) {
     const double cy = direction == "D" ? (hf_box.y1 + gap + hy)
                                        : (hf_box.y0 - gap - hy);
     const double ox = std::min(hf_ox, inductor_left - template_clear - hx);
-    return {py_round(ox, 4), py_round(cy, 4)};
+    return {pack_bulk_pose_precision4dp(ox, counts), pack_bulk_pose_precision4dp(cy, counts)};
 }
 
 RefdesMove place_refdes(
@@ -1067,7 +1067,7 @@ std::vector<Box4> som_keepout_rects(
 
 std::vector<Comp> zone_components_assemble(
     const std::vector<Box4>& minor_boxes, const std::vector<Box4>& punch_boxes,
-    int minor_mask, int punch_mask) {
+    int minor_mask, int punch_mask, QuantizationCounts* counts) {
     std::vector<Comp> out;
     if (!minor_boxes.empty()) {
         double x0 = minor_boxes[0].x0;
@@ -1080,14 +1080,14 @@ std::vector<Comp> zone_components_assemble(
             x1 = std::max(x1, box.x1);
             y1 = std::max(y1, box.y1);
         }
-        out.push_back(Comp{py_round(x0, 4), py_round(y0, 4),
-                           py_round(x1 - x0, 4), py_round(y1 - y0, 4),
+        out.push_back(Comp{pack_zone_component_precision4dp(x0, counts), pack_zone_component_precision4dp(y0, counts),
+                           pack_zone_component_precision4dp(x1 - x0, counts), pack_zone_component_precision4dp(y1 - y0, counts),
                            minor_mask});
     }
     for (const auto& box : punch_boxes) {
-        out.push_back(Comp{py_round(box.x0, 4), py_round(box.y0, 4),
-                           py_round(box.x1 - box.x0, 4),
-                           py_round(box.y1 - box.y0, 4), punch_mask});
+        out.push_back(Comp{pack_zone_component_precision4dp(box.x0, counts), pack_zone_component_precision4dp(box.y0, counts),
+                           pack_zone_component_precision4dp(box.x1 - box.x0, counts),
+                           pack_zone_component_precision4dp(box.y1 - box.y0, counts), punch_mask});
     }
     return out;
 }
@@ -1425,12 +1425,12 @@ Box4 som_core_rect(double som_x, double som_y, double som_w, double som_h,
 
 std::vector<std::tuple<std::string, double, double>> rotate_offsets_90(
     const std::vector<std::tuple<std::string, double, double>>& offs,
-    double zone_w) {
+    double zone_w, QuantizationCounts* counts) {
     std::vector<std::tuple<std::string, double, double>> out;
     out.reserve(offs.size());
     for (const auto& row : offs) {
-        out.emplace_back(std::get<0>(row), py_round(std::get<2>(row), 4),
-                         py_round(zone_w - std::get<1>(row), 4));
+        out.emplace_back(std::get<0>(row), pack_rotated_offset_precision4dp(std::get<2>(row), counts),
+                         pack_rotated_offset_precision4dp(zone_w - std::get<1>(row), counts));
     }
     return out;
 }
@@ -1638,7 +1638,7 @@ Box4 corridor_local_from_uv(
     return Box4{-u_half, -v_half, u_half, v_half};
 }
 
-Box4 corridor_board_rect(const Box4& local, double cx, double cy, double rot) {
+Box4 corridor_board_rect(const Box4& local, double cx, double cy, double rot, QuantizationCounts* counts) {
     const double us[2] = {local.x0, local.x1};
     const double vs[2] = {local.y0, local.y1};
     bool any = false;
@@ -1661,13 +1661,13 @@ Box4 corridor_board_rect(const Box4& local, double cx, double cy, double rot) {
             }
         }
     }
-    return Box4{py_round(min_x, 4), py_round(min_y, 4), py_round(max_x, 4),
-                py_round(max_y, 4)};
+    return Box4{pack_corridor_bound_precision4dp(min_x, counts), pack_corridor_bound_precision4dp(min_y, counts), pack_corridor_bound_precision4dp(max_x, counts),
+                pack_corridor_bound_precision4dp(max_y, counts)};
 }
 
 std::pair<double, double> mirror_offset_x(double ox, double oy, const Box4& cb,
-                                          double zone_w) {
-    return {py_round(zone_w - ox - cb.x0 - cb.x1, 4), oy};
+                                          double zone_w, QuantizationCounts* counts) {
+    return {pack_mirror_offset_precision4dp(zone_w - ox - cb.x0 - cb.x1, counts), oy};
 }
 
 Box4 offset_turned_box(const Box4& bbox, double rot, double ox, double oy) {
@@ -1690,7 +1690,8 @@ std::vector<Box4> offset_boxes(const std::vector<Box4>& boxes, double ox,
 GridControls grid_controls(
     const std::vector<std::tuple<std::string, double, double, double, double>>&
         items,
-    double target_w, double button_gap, double zone_pad, double place_clear) {
+    double target_w, double button_gap, double zone_pad, double place_clear,
+    QuantizationCounts* counts) {
     if (items.empty()) {
         throw std::runtime_error("grid_controls: refs required");
     }
@@ -1703,8 +1704,10 @@ GridControls grid_controls(
     if (cell == 0.0) {
         throw std::runtime_error("grid_controls: cell required");
     }
+    if (items.size() > static_cast<std::size_t>(std::numeric_limits<int>::max()))
+        throw std::out_of_range("grid_controls: item count must fit int");
     const int n = static_cast<int>(items.size());
-    const int fit = static_cast<int>(target_w / cell);
+    const int fit = pack_control_fit_trunc(target_w / cell, counts);
     const int cols = std::max(1, std::min(n, fit == 0 ? 1 : fit));
     std::vector<std::tuple<std::string, double, double, double, double>>
         order = items;
@@ -1727,11 +1730,12 @@ GridControls grid_controls(
         const double fh = (std::get<4>(row) - by0) + place_clear;
         const double ox = x0 + (cell - fw) / 2.0 - bx0 + place_clear / 2.0;
         const double oy = y0 + (cell - fh) / 2.0 - by0 + place_clear / 2.0;
-        out.offs.emplace_back(std::get<0>(row), py_round(ox, 4),
-                              py_round(oy, 4));
+        out.offs.emplace_back(std::get<0>(row), pack_control_pose_precision4dp(ox, counts),
+                              pack_control_pose_precision4dp(oy, counts));
         out.occ.push_back(Box4{x0, y0, x0 + cell, y0 + cell});
     }
-    const int rows = (n + cols - 1) / cols;
+    // Same positive ceiling division without overflowing n + cols - 1.
+    const int rows = n / cols + (n % cols != 0);
     out.packed_w = zone_pad + static_cast<double>(cols) * cell;
     out.packed_h = zone_pad + static_cast<double>(rows) * cell;
     return out;

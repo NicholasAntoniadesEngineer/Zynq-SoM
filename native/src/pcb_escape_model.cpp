@@ -53,8 +53,8 @@ Box4 pcb_escape_corridor_local(const PcbCheckFootprint &fp) {
     }
     return corridor_local_from_uv(uv, radius, .15);
 }
-Box4 pcb_escape_corridor_board(const PcbCheckFootprint &fp, double x, double y, double rotation) {
-    return corridor_board_rect(pcb_escape_corridor_local(fp), x, y, rotation == 0 ? 0.0 : rotation);
+Box4 pcb_escape_corridor_board(const PcbCheckFootprint &fp, double x, double y, double rotation, QuantizationCounts* counts) {
+    return corridor_board_rect(pcb_escape_corridor_local(fp), x, y, rotation == 0 ? 0.0 : rotation, counts);
 }
 PcbEscapePlan PcbEscapePlanResult::for_checks() const {
     PcbEscapePlan p;

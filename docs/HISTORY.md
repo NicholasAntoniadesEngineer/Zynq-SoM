@@ -2,6 +2,24 @@
 
 ## 2026-09-27 — rendered verification and truthful DRC process diagnostics
 
+Output/packing/geometry integration (autonomous, per full-autonomy directive):
+39 additional exact scalar boundaries and invocation-owned receipts advance
+the registry from 83 to 122. Emission, publication, ratsnest, packing and geometry
+consumers preserve independently captured output/board fixtures and old counts;
+new actual-entry observers verify the additional work, including failure prefixes.
+No broad source exemption or unknown-counter filtering is introduced. Four new
+reference files are copied verbatim from independently captured pre-change runs.
+
+Review also corrected valid fractional integer endpoints in SVG narrowing and
+prevented an import failure from being retried and masking its original error.
+The full integrated build exposed four old test calls missing the explicit
+geometry accounting sink; those now pass a local sink without changing assertions.
+The rebuilt combined implementation passed all 25 selected runtime, source-audit,
+registry, pipeline and numeric checks (412.44 seconds, serial). An earlier
+108-operation integration separately passed 18 runtime checks (226.78 seconds).
+These are bounded integration proofs, not a claim that every remaining live
+board audit finding or reported visual/manufacturing defect is closed.
+
 Exact numeric kernel correction (autonomous, per full-autonomy directive):
 binary64 significands are decoded exactly rather than recovered with floating
 rounding/conversion, and the tiny-input norm uses a restoring integer square
