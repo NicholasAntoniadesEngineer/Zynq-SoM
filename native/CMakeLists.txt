@@ -792,6 +792,14 @@ if(BUILD_TESTING)
     target_compile_options(schgen_schematic_route_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror)
     add_test(NAME native_schematic_route_contracts COMMAND schgen_schematic_route_contracts
         "${CMAKE_CURRENT_SOURCE_DIR}/tests/data/schematic_route" "${CMAKE_CURRENT_SOURCE_DIR}/..")
+    add_executable(schgen_schematic_visual_corrections tests/schematic_visual_corrections.cpp)
+    target_link_libraries(schgen_schematic_visual_corrections PRIVATE schgen_core)
+    target_compile_options(schgen_schematic_visual_corrections PRIVATE -Wall -Wextra -Wpedantic -Werror -ffp-contract=off)
+    add_test(NAME native_schematic_visual_corrections COMMAND schgen_schematic_visual_corrections
+        "${CMAKE_CURRENT_SOURCE_DIR}/tests/data/schematic_place_templates")
+    add_test(NAME native_schematic_visual_render_corrections COMMAND schgen_schematic_visual_corrections
+        "${CMAKE_CURRENT_SOURCE_DIR}/tests/data/schematic_place_templates"
+        "${CMAKE_CURRENT_BINARY_DIR}/schematic-visual-correction-renders")
     add_executable(schgen_schematic_contracts tests/schematic_contracts.cpp)
     target_link_libraries(schgen_schematic_contracts PRIVATE schgen_core)
     target_compile_options(schgen_schematic_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror)

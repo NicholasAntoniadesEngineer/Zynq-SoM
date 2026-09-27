@@ -6,15 +6,24 @@
 
 namespace schgen {
 double pack_shelf_pose_precision4dp(double value, QuantizationCounts* counts) {
-    if (counts) checked_quantization_add(*counts, "pack_shelf_pose_precision4dp");
+    if (counts) {
+        static const std::string name = "pack_shelf_pose_precision4dp";
+        checked_quantization_add(*counts, name);
+    }
     return py_round(value, 4);
 }
 double pack_shelf_extent_precision4dp(double value, QuantizationCounts* counts) {
-    if (counts) checked_quantization_add(*counts, "pack_shelf_extent_precision4dp");
+    if (counts) {
+        static const std::string name = "pack_shelf_extent_precision4dp";
+        checked_quantization_add(*counts, name);
+    }
     return py_round(value, 4);
 }
 int pack_control_fit_trunc(double value, QuantizationCounts* counts) {
-    if (counts) checked_quantization_add(*counts, "pack_control_fit_trunc");
+    if (counts) {
+        static const std::string name = "pack_control_fit_trunc";
+        checked_quantization_add(*counts, name);
+    }
     if (!std::isfinite(value))
         throw std::invalid_argument("pack_control_fit_trunc: finite quotient required");
     const double truncated = std::trunc(value);
@@ -23,15 +32,24 @@ int pack_control_fit_trunc(double value, QuantizationCounts* counts) {
     return static_cast<int>(value);
 }
 double pack_control_pose_precision4dp(double value, QuantizationCounts* counts) {
-    if (counts) checked_quantization_add(*counts, "pack_control_pose_precision4dp");
+    if (counts) {
+        static const std::string name = "pack_control_pose_precision4dp";
+        checked_quantization_add(*counts, name);
+    }
     return py_round(value, 4);
 }
 double pack_edge_pose_precision4dp(double value, QuantizationCounts* counts) {
-    if (counts) checked_quantization_add(*counts, "pack_edge_pose_precision4dp");
+    if (counts) {
+        static const std::string name = "pack_edge_pose_precision4dp";
+        checked_quantization_add(*counts, name);
+    }
     return py_round(value, 4);
 }
 double pack_hf_cap_pose_precision4dp(double value, QuantizationCounts* counts) {
-    if (counts) checked_quantization_add(*counts, "pack_hf_cap_pose_precision4dp");
+    if (counts) {
+        static const std::string name = "pack_hf_cap_pose_precision4dp";
+        checked_quantization_add(*counts, name);
+    }
     return py_round(value, 4);
 }
 }

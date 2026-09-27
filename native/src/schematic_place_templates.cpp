@@ -157,7 +157,12 @@ void Engine::_decoupling_cluster(double ax, double ay, const VisualBox& body) {
             const auto wrap = farm_wrap_advance(col_x, max_right, !current.empty(), farm_left, cy, row_step, U);
             if (wrap.wrapped) {
                 runs.emplace_back(cy, std::move(current)); current.clear();
-                col_x = wrap.col_x; cy = wrap.cy;
+                col_x = wrap.col_x;
+                // The next bus is at cy - 3.81. Clear the preceding row's
+                // actual ground artwork/value extent by a grid unit, rather
+                // than using capacitor-body pitch alone. The supply symbol
+                // between columns still undergoes ordinary visual validation.
+                cy = std::max(wrap.cy, gceil(_extent().y1 + 3.81 + U));
             }
             _cluster_cap(ref, col_x, cy);
             current.push_back(col_x); col_x += sp.cap_pitch;

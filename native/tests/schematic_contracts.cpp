@@ -1,4 +1,5 @@
 #include "schgen/schematic.hpp"
+#include "schematic_title_correction_fixture.hpp"
 
 #include <algorithm>
 #include <filesystem>
@@ -216,6 +217,7 @@ void structural_contracts(const SchematicDesign& design, const std::vector<Symbo
     }
 }
 
+
 void fixture_contracts(const std::filesystem::path& fixture_dir,
                        const std::filesystem::path& output_dir) {
     const auto data = parse_json_file((fixture_dir / "cases.json").string());
@@ -252,7 +254,8 @@ void fixture_contracts(const std::filesystem::path& fixture_dir,
         const auto result = emit_schematic(design, symbols, options);
         const auto filename = std::filesystem::path(string_field(row, "golden"));
         require(filename == filename.filename(), "golden fixture name must be a basename");
-        equal_text(result.text, read(fixture_dir / filename), name + " Python schematic golden");
+        equal_text(result.text, schgen_test::worksheet_corrected_v1(name, read(fixture_dir / filename)),
+                   name + " immutable schematic / named worksheet_corrected_v1 expectation");
         const auto& expected = field(row, "expected");
         equal_text(result.root_uuid, string_field(expected, "root_uuid"), name + " root UUID");
         equal_text(result.project, string_field(expected, "project"), name + " project");
@@ -268,7 +271,7 @@ void fixture_contracts(const std::filesystem::path& fixture_dir,
     }
     for (std::size_t i = 0; i < symbols.size(); ++i)
         equal_text(sexpr_dumps(symbols[i].raw), original_raw[i], "emitter mutated caller/library symbol tree");
-    std::cout << "Python schematic parity: " << count << " files, " << bytes << " bytes, "
+    std::cout << "Immutable schematic + named worksheet correction contracts: " << count << " files, " << bytes << " bytes, "
               << field(data, "uuids").array_value.size() << " UUID vectors\n";
 }
 }  // namespace

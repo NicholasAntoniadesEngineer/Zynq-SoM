@@ -10,6 +10,8 @@
 #include <functional>
 #include <iomanip>
 #include <iostream>
+#include <limits>
+#include <map>
 #include <sstream>
 
 namespace {
@@ -150,7 +152,128 @@ SchematicSpacing spacing(const J& s) {
         num(s,"cluster_dx"),num(s,"cluster_dy"),num(s,"flags_dy"),num(s,"flag_pitch")};
 }
 
-void compare(const J& fixture,SymbolLibrary& lib) {
+J& editable(J& n,const std::string& key) {
+    for(auto& [k,v]:n.object_value)if(k==key)return v;
+    throw std::runtime_error("missing editable field "+key);
+}
+bool near_translation(double a,double b) {
+    // Oracle arithmetic only: tolerate roundoff in old + independently derived
+    // row translation. The complete corrected snapshot is still compared EXACTLY.
+    return std::abs(static_cast<long double>(a)-b) <=
+        32*std::numeric_limits<double>::epsilon()*std::max({1.0,std::abs(a),std::abs(b)});
+}
+void translated_number(J& old,const J& now,double dy) {
+    require(old.kind==JsonKind::Number && now.kind==JsonKind::Number,"translation type");
+    if(dy==0) same(now,old,"unmoved coordinate");
+    else require(near_translation(now.number_value-old.number_value,dy),"incorrect row displacement");
+    old=now;
+}
+void translated_text(J& old,const J& now,double dy) {
+    if(old.kind==JsonKind::Null){same(now,old,"absent text position");return;}
+    require(old.array_value.size()==3 && now.array_value.size()==3,"text position shape");
+    translated_number(old.array_value[1],now.array_value[1],dy);
+}
+// Independent oracle for THESE three immutable inputs, not a second placer:
+// each historical wrap is short by three 1.27 mm cells. Rigidly translate each
+// entire row by row_index*3.81; prohibit every non-y/identity/topology change.
+void row_translation_v1(const J& historical,const J& corrected) {
+    auto allowed=historical;
+    auto& old=editable(allowed,"placement");const auto& now=field(corrected,"placement");
+    std::set<double> rows;for(const auto& p:field(old,"parts").array_value)rows.insert(num(p,"y"));
+    require(rows.size()>=2 && rows.size()<=4,"named wrapped fixture row count");
+    const auto shift=[&](double y) {
+        std::size_t i=0;for(double row:rows){if(near_translation(y,row))return i*3.81;++i;}
+        throw std::runtime_error("coordinate is not attached to a historical row");
+    };
+    std::map<std::string,double> owner_shift;
+    for(const auto* family:{"parts","powers"}) {
+        auto& a=editable(old,family).array_value;const auto& b=field(now,family).array_value;
+        require(a.size()==b.size(),"row translation changed primitive count");
+        for(std::size_t i=0;i<a.size();++i) {
+            double dy=0;
+            if(std::string(family)=="parts")dy=shift(num(a[i],"y"));
+            else if(str(a[i],"net")=="GND")dy=shift(num(a[i],"y")-3.81);
+            else {
+                // A one-cap run puts the supply pin directly on the bus;
+                // a multi-cap run has the pre-existing 2.54 mm supply stub.
+                bool matched=false;
+                for(double stub:{3.81,6.35})for(double row:rows)
+                    if(near_translation(num(a[i],"y")+stub,row)) {
+                        require(!matched,"ambiguous supply row");dy=shift(row);matched=true;
+                    }
+                require(matched,"supply unattached to row");
+            }
+            require(owner_shift.emplace(str(a[i],"ref"),dy).second,"duplicate primitive identity");
+            translated_number(editable(a[i],"y"),field(b[i],"y"),dy);
+            translated_text(editable(a[i],"val_pos"),field(b[i],"val_pos"),dy);
+            if(std::string(family)=="parts")translated_text(editable(a[i],"ref_pos"),field(b[i],"ref_pos"),dy);
+        }
+    }
+    auto& boxes=editable(old,"boxes").array_value;const auto& new_boxes=field(now,"boxes").array_value;
+    require(boxes.size()==new_boxes.size(),"translation changed box count");
+    for(std::size_t i=0;i<boxes.size();++i) {
+        const auto it=owner_shift.find(str(boxes[i],"owner"));
+        const double dy=it==owner_shift.end()?0:it->second;
+        for(const auto* key:{"y0","y1"})translated_number(editable(boxes[i],key),field(new_boxes[i],key),dy);
+    }
+    auto& plans=editable(old,"plans");const auto& new_plans=field(now,"plans");
+    for(auto& [net,paths]:plans.object_value) {
+        const auto& new_paths=field(new_plans,net).array_value;
+        require(paths.array_value.size()==new_paths.size(),"translation changed wire paths");
+        for(std::size_t i=0;i<paths.array_value.size();++i) {
+            auto& points=paths.array_value[i].array_value;const auto& new_points=new_paths[i].array_value;
+            require(!points.empty() && points.size()==new_points.size(),"translation changed wire points");
+            const auto dy=shift(points[0].array_value.at(1).number_value+3.81);
+            for(std::size_t j=0;j<points.size();++j) {
+                require(points[j].array_value.size()==2 && new_points[j].array_value.size()==2,"wire point shape");
+                translated_number(points[j].array_value[1],new_points[j].array_value[1],dy);
+            }
+        }
+    }
+    same(corrected,allowed,"only prescribed rigid-row y translations permitted");
+}
+bool foreign_bus_ground_contact(const J& state_value) {
+    const auto& p=field(state_value,"placement");
+    for(const auto& power:field(p,"powers").array_value)if(str(power,"net")=="GND")
+        for(const auto& box:field(p,"boxes").array_value)if(str(box,"owner")==str(power,"ref")) {
+            const auto touches=[&](double x0,double x1,double y) {
+                return y>=num(box,"y0") && y<=num(box,"y1") &&
+                    std::max(x0,x1)>=num(box,"x0") && std::min(x0,x1)<=num(box,"x1");
+            };
+            // A single-cap run has no horizontal wire: its bus is the supply
+            // pin at the capacitor top. Upward supply stubs are NOT bus rows;
+            // their artwork remains subject to normal whole-sheet validation.
+            for(const auto& other:field(p,"powers").array_value)if(str(other,"net")!="GND")
+                for(const auto& cap:field(p,"parts").array_value)
+                    if(num(other,"x")==num(cap,"x") && near_translation(num(other,"y"),num(cap,"y")-3.81) &&
+                       touches(num(other,"x"),num(other,"x"),num(other,"y")))return true;
+            for(const auto& [net,paths]:field(p,"plans").object_value)if(net!="GND")
+                for(const auto& path:paths.array_value)for(std::size_t i=1;i<path.array_value.size();++i) {
+                    const auto a=parse_point(path.array_value[i-1]),b=parse_point(path.array_value[i]);
+                    if(a.second==b.second && a.first!=b.first && touches(a.first,b.first,a.second))return true;
+                }
+        }
+    return false;
+}
+void corrected_row_contract(const J& old,const J& corrected) {
+    require(foreign_bus_ground_contact(old),"historical named fixture no longer proves bus/ground contact");
+    require(!foreign_bus_ground_contact(corrected),"corrected expectation bus still touches ground");
+    row_translation_v1(old,corrected);
+    // Kill mutations in identity, x, y, artwork, and wire geometry; none may
+    // be excused by a correction fixture. Production is compared exactly below.
+    for(int mutation=0;mutation<5;++mutation) {
+        auto bad=corrected;auto& p=editable(bad,"placement");
+        if(mutation==0)editable(editable(p,"powers").array_value[0],"net")=text("WRONG_NET");
+        if(mutation==1)editable(editable(p,"parts").array_value.back(),"x").number_value+=1.27;
+        if(mutation==2)editable(editable(p,"parts").array_value.back(),"y").number_value+=1.27;
+        if(mutation==3)editable(editable(p,"boxes").array_value.back(),"y1").number_value+=1.27;
+        if(mutation==4)editable(p,"plans").object_value[0].second.array_value[0].array_value[0].array_value[0].number_value+=1.27;
+        bool rejected=false;try{row_translation_v1(old,bad);}catch(const std::exception&){rejected=true;}
+        require(rejected,"row correction concealed unrelated mutation");
+    }
+}
+
+void compare(const J& fixture,SymbolLibrary& lib,const J* corrected=nullptr) {
     const auto c=parse_circuit_ir(field(fixture,"circuit"));
     Engine e(c,lib,spacing(field(fixture,"spacing")));
     const auto& initial=field(fixture,"initial");
@@ -204,7 +327,8 @@ void compare(const J& fixture,SymbolLibrary& lib) {
     const auto* expected_error=object_field(fixture,"error");
     require(error.has_value()==(expected_error!=nullptr),"error status differs: "+error.value_or("successful"));
     if(error)require(*error==expected_error->string_value,"error text: "+*error+" != "+expected_error->string_value);
-    same(state(e),field(fixture,"expected"),"after");
+    if(corrected)corrected_row_contract(field(fixture,"expected"),*corrected);
+    same(state(e),corrected?*corrected:field(fixture,"expected"),"after (complete exact state)");
     same(args,field(fixture,"after_args"),"mutated arguments");
     if(const auto* expected=object_field(fixture,"result"))same(result,*expected,"result");
 }
@@ -274,12 +398,16 @@ int main(int argc,char** argv) {
         std::vector<J> fixtures;std::size_t count=0;
         for(const auto& file:files) {
             fixtures.push_back(parse_json_file(file.string()));
-            try { compare(fixtures.back(),library);++count; }
+            std::optional<J> corrected;
+            const auto name=str(fixtures.back(),"name");
+            if(name=="cluster_wrapped_6" || name=="cluster_18" || name=="cluster_wrapped_18")
+                corrected=parse_json_file((dir.parent_path()/"schematic_visual_corrections"/(name+"_row_clearance_v1.json")).string());
+            try { compare(fixtures.back(),library,corrected?&*corrected:nullptr);++count; }
             catch(const std::exception& ex){throw std::runtime_error(str(fixtures.back(),"name")+": "+ex.what());}
         }
         mutations(fixtures,library,count);
         std::cout<<count<<" schematic placement template contracts passed ("<<files.size()
-                 <<" independent frozen outputs/state snapshots, mutation and invalid-input checks)\n";
+                 <<" immutable originals; 3 named row corrections checked exactly and by independent rigid-translation/contact oracles; mutation and invalid-input checks)\n";
         return 0;
     } catch(const std::exception& ex) { std::cerr<<ex.what()<<'\n';return 1; }
 }

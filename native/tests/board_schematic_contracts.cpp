@@ -1,4 +1,5 @@
 #include "schgen/board_schematic.hpp"
+#include "schematic_title_correction_fixture.hpp"
 #include "schgen/atomic_file.hpp"
 
 #include <algorithm>
@@ -168,7 +169,8 @@ void contracts(const fs::path& fixtures,const std::string& cli,const fs::path& s
         for(std::size_t i=0;i<h.sheets.size();++i){const auto& s=h.sheets[i];ir_renaming(inputs[i].design,s.design,inputs[i].reference_band);
             equal_text(s.symbol_uuid,str(expected[i],"uuid"),"sheet-symbol UUID");
             equal_text(emit_schematic(s.design,resolver(lib),{"/"+h.root_uuid+"/"+s.symbol_uuid,str(row,"root_name"),schematic_stable_uuid({str(row,"root_name"),"sheet",s.name})}).text,
-                read(fixtures/str(expected[i],"golden")),str(row,"name")+" child "+s.name);
+                schgen_test::worksheet_corrected_v1("carrier-"+s.name,read(fixtures/str(expected[i],"golden"))),
+                str(row,"name")+" child "+s.name+" immutable/named worksheet expectation");
         }
         auto reversed=inputs;std::reverse(reversed.begin(),reversed.end());const auto reordered=make_board_hierarchy(reversed,lib,str(row,"root_name"),str(row,"subdir"));
         for(const auto& child:reordered.sheets){const auto old=std::find_if(h.sheets.begin(),h.sheets.end(),[&](const auto& x){return x.name==child.name;});equal_text(child.symbol_uuid,old->symbol_uuid,"UUID stable under page reorder");}

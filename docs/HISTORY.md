@@ -2,6 +2,23 @@
 
 ## 2026-09-27 — rendered verification and truthful DRC process diagnostics
 
+Applied improvements (autonomous, per full-autonomy directive): the 39 output,
+pack and geometry scalar counter keys now reuse immutable strings inside the
+counted branch. Private warmed-call measurement fell from 37,000 allocations
+to zero while exact results and observed receipts matched; this is not a board
+wall-time speedup claim. Integrated CLI/target builds and nine runtime/source
+contracts passed (122.18 seconds).
+
+Schematic generation now wraps long worksheet titles without altering circuit
+intent and separates wrapped capacitor buses from preceding ground artwork.
+Original historical fixtures remain unchanged; three named corrected states
+are checked in full against independent rigid-row/contact invariants and
+mutation rejection. Eleven integrated schematic tests passed (8.80 seconds),
+including actual title rendering. Fresh shared-executable carrier builds for
+bringup_en_modules, fmc and mechanical passed connectivity, netlist, ERC and
+visual gates; their PNGs were inspected. Private nine-sheet proof is additional
+coverage, not whole-board acceptance. No golden-render baselines were blessed.
+
 Output/packing/geometry integration (autonomous, per full-autonomy directive):
 39 additional exact scalar boundaries and invocation-owned receipts advance
 the registry from 83 to 122. Emission, publication, ratsnest, packing and geometry
