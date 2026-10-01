@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <fstream>
 #include <iostream>
+#include <map>
 #include <tuple>
 #include <unistd.h>
 
@@ -26,6 +27,65 @@ const std::string& file(const PartImportPlan& plan,const std::string& name){
     const auto found=std::find_if(plan.files.begin(),plan.files.end(),[&](const auto& f){return f.name==name;});
     require(found!=plan.files.end(),"missing generated file "+name);return found->bytes;
 }
+std::size_t courtyard_correction_count(const std::string& name){
+    return name=="RV-3028-C7-32.768kHz-1ppm-TA-QC"?3:name=="HDMI-019S"?4:0;
+}
+std::string corrected_courtyard_reference(const std::string& name,const std::string& frozen){
+    auto tree=sexpr_loads(frozen);
+    auto& nodes=std::get<SexprList>(tree.v);
+    const auto tag=[](const Sexpr& node,const std::string& key){
+        const auto* list=std::get_if<SexprList>(&node.v);
+        if(!list || list->empty())return false;
+        const auto* symbol=std::get_if<Sexpr::Sym>(&list->front().v);
+        return symbol && symbol->name==key;
+    };
+    std::size_t removed=0;
+    nodes.erase(std::remove_if(nodes.begin(),nodes.end(),[&](const auto& node){
+        if(!tag(node,"fp_line"))return false;
+        const SexprList *start=nullptr,*end=nullptr,*layer=nullptr;
+        for(const auto& child:std::get<SexprList>(node.v)){
+            if(tag(child,"start"))start=&std::get<SexprList>(child.v);
+            if(tag(child,"end"))end=&std::get<SexprList>(child.v);
+            if(tag(child,"layer"))layer=&std::get<SexprList>(child.v);
+        }
+        if(!layer)return false;
+        const auto& side=std::get<std::string>(layer->at(1).v);
+        if(side!="F.CrtYd" && side!="B.CrtYd")return false;
+        require(start && end,name+": malformed frozen courtyard line");
+        if(std::get<double>(start->at(1).v)!=std::get<double>(end->at(1).v) ||
+           std::get<double>(start->at(2).v)!=std::get<double>(end->at(2).v))return false;
+        require(side=="F.CrtYd",name+": unexpected bottom courtyard degeneracy");
+        ++removed;return true;
+    }),nodes.end());
+    require(removed==courtyard_correction_count(name),name+": unexpected frozen courtyard correction count");
+    if(!removed)return frozen; // All other parts retain the literal byte oracle.
+    // Verify the serializer introduces no incidental formatting correction.
+    exact(sexpr_dumps(sexpr_loads(frozen))+"\n",frozen,name+": frozen footprint roundtrip changed bytes");
+    return sexpr_dumps(tree)+"\n";
+}
+std::map<std::string,std::vector<std::size_t>> corrected_variants;
+void courtyard_comparator_boundaries(){
+    const std::string rv="RV-3028-C7-32.768kHz-1ppm-TA-QC";
+    const std::string zero="(fp_line (start 1 2) (end 1 2) (layer \"F.CrtYd\"))";
+    const std::string tiny="(fp_line (start 1 2) (end 1.0001 2) (layer \"F.CrtYd\"))";
+    const std::string silk="(fp_line (start 1 2) (end 1 2) (layer \"F.SilkS\"))";
+    const auto frozen=[](const std::string& body){return sexpr_dumps(sexpr_loads("(footprint \"probe\" "+body+")"))+"\n";};
+    const auto must_reject=[&](const std::string& name,const std::string& body){
+        bool rejected=false;
+        try{(void)corrected_courtyard_reference(name,frozen(body));}
+        catch(const std::runtime_error&){rejected=true;}
+        require(rejected,"courtyard comparator must reject unexpected name/count/layer");
+    };
+    must_reject("unlisted-part",zero);
+    must_reject(rv,zero+zero);
+    must_reject(rv,zero+zero+zero+zero);
+    must_reject("HDMI-019S",zero+zero+zero);
+    must_reject(rv,zero+zero+"(fp_line (start 1 2) (end 1 2) (layer \"B.CrtYd\"))");
+    exact(corrected_courtyard_reference(rv,frozen(zero+zero+zero+tiny+silk)),
+          frozen(tiny+silk),"retain tiny nonzero courtyard and zero-length non-courtyard nodes");
+    exact(corrected_courtyard_reference("unlisted-part",frozen(tiny+silk)),
+          frozen(tiny+silk),"unlisted nondegenerate footprint bytes unchanged");
+}
 void fixture(const std::filesystem::path& path){
     const auto reference=parse_json_file(path.string());
     const auto name=field(reference,"name").string_value;
@@ -37,8 +97,9 @@ void fixture(const std::filesystem::path& path){
         const auto plan=prepare_part_import(input,lcsc,name,models);
         exact(file(plan,name+".kicad_sym"),field(reference,"symbol").string_value,
                 name+": independent symbol bytes differ");
-        exact(file(plan,name+".kicad_mod"),field(variant,"footprint").string_value,
+        exact(file(plan,name+".kicad_mod"),corrected_courtyard_reference(name,field(variant,"footprint").string_value),
                 name+": independent footprint bytes differ");
+        if(courtyard_correction_count(name))corrected_variants[name].push_back(models.size());
         exact(file(plan,"part.json"),field(variant,"part_json").string_value,
                 name+": independent metadata bytes differ");
         require(file(plan,name+".easyeda.json")==input,name+": raw provider response changed");
@@ -244,7 +305,13 @@ int main(int argc,char** argv){
             if(item.path().extension()==".json")cases.push_back(item.path());
         std::sort(cases.begin(),cases.end());
         require(cases.size()==62,"all 62 recorded parts must be covered");
+        courtyard_comparator_boundaries();
         for(const auto& path:cases)fixture(path);
+        require(corrected_variants.size()==2,"exactly two named courtyard corrections required");
+        for(auto& [name,models]:corrected_variants){
+            std::sort(models.begin(),models.end());
+            require(models==std::vector<std::size_t>{0,1,2},name+": exactly three historical model variants required");
+        }
         boundaries(cases.front(),argv[2]);
         utilities(argv[1],std::filesystem::absolute(argv[0]).string());
         std::cout<<checks<<" exact native part conversion contracts passed\n";

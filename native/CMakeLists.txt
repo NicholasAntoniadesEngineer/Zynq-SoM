@@ -200,6 +200,13 @@ include(CTest)
 include(cmake/SubsystemPackages.cmake)
 schgen_configure_subsystem_packages(schgen_core "${CMAKE_CURRENT_SOURCE_DIR}/..")
 if(BUILD_TESTING)
+    add_executable(schgen_part_courtyard_contracts tests/part_courtyard_contracts.cpp)
+    target_link_libraries(schgen_part_courtyard_contracts PRIVATE schgen_core)
+    target_compile_options(schgen_part_courtyard_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror -ffp-contract=off)
+    add_test(NAME native_part_courtyard_contracts COMMAND schgen_part_courtyard_contracts
+        "${CMAKE_CURRENT_SOURCE_DIR}/.."
+        "${CMAKE_CURRENT_SOURCE_DIR}/../parts/RV-3028-C7-32.768kHz-1ppm-TA-QC/RV-3028-C7-32.768kHz-1ppm-TA-QC.kicad_mod"
+        "${CMAKE_CURRENT_BINARY_DIR}/part-courtyard-contract-output")
     add_executable(schgen_carrier_surface_requirements_contracts tests/carrier_surface_requirements_contracts.cpp)
     target_link_libraries(schgen_carrier_surface_requirements_contracts PRIVATE schgen_core)
     target_compile_options(schgen_carrier_surface_requirements_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror -ffp-contract=off)

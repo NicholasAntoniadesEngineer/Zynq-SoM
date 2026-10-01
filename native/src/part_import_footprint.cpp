@@ -218,7 +218,13 @@ PartFootprint part_convert_footprint(const JsonNode& result,const std::string& n
             need(3);const int id=integer(number(f[0],3));const auto type=f.size()>3?f[3]:"solid";
             if(!std::set<int>{3,4,13,14,99}.count(id) || (type!="solid" && type!="npth"))continue;
             const auto points=path_points(f[2],ctx);if(points.size()<3)continue;
-            if(id==99) {for(std::size_t i=0;i+1<points.size();++i)graphics.push_back(fp_line(points[i],points[i+1],0.05,"F.CrtYd"));}
+            if(id==99) {
+                // Provider paths may repeat corners, including points that
+                // become identical after conversion. They are not edges.
+                for(std::size_t i=0;i+1<points.size();++i)
+                    if(points[i]!=points[i+1])
+                        graphics.push_back(fp_line(points[i],points[i+1],0.05,"F.CrtYd"));
+            }
             else {auto pts=list({sym("pts")});for(const auto& q:points)append(pts,xy("xy",q));
                 graphics.push_back(list({sym("fp_poly"),std::move(pts),list({sym("stroke"),list({sym("width"),num(0)}),list({sym("type"),sym("solid")})}),
                     list({sym("fill"),sym("yes")}),list({sym("layer"),str(layers.at(id))})}));}
