@@ -2,6 +2,18 @@
 
 ## 2026-10-01 — complete rendered baseline comparison
 
+Optimized cold source auditing (autonomous, per full-autonomy directive): a
+bounded dynamic queue replaces fixed worker batches, and each source file's
+newline offsets are indexed once. All manifest entries are still scanned;
+census publication and error selection retain manifest order, with workers
+joined before return. There is no cache, skipped validation or changed detector.
+An immutable copy of the prior auditor provides independent exact serial and
+parallel comparisons, including malformed input, timeouts, source mutations,
+line boundaries and a scheduling regression that rejects the old batch barrier.
+The integrated queue proof passed (13.96 seconds), followed by the existing
+parallel/auditor contracts (2/2, 29.13 seconds). Full-board speedup is not yet
+measured; these tests do not establish whole-board migration acceptance.
+
 After the pinned benchmark, corrected two accounting defects (autonomous,
 per full-autonomy directive): `ledger_initial` now records its two actual
 via-cost scalar executions, and packing executes the registered tolerance

@@ -197,6 +197,7 @@ include(CTest)
 include(cmake/SubsystemPackages.cmake)
 schgen_configure_subsystem_packages(schgen_core "${CMAKE_CURRENT_SOURCE_DIR}/..")
 if(BUILD_TESTING)
+    include(tests/native_audit_queue.cmake)
     include(tests/floorplan_receipt_contracts.cmake)
     add_executable(schgen_python_free_tree_contracts tests/python_free_tree_contracts.cpp)
     target_compile_options(schgen_python_free_tree_contracts PRIVATE

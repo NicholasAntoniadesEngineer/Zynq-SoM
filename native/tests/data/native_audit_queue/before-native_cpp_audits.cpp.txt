@@ -6,8 +6,6 @@
 #include <cctype>
 #include <cstring>
 #include <future>
-#include <atomic>
-#include <exception>
 
 namespace schgen {
 namespace {
@@ -110,10 +108,6 @@ struct Visitor {
     std::map<std::string,std::string> contexts;
     std::set<std::string> constant_ids;
     std::map<std::string,std::map<std::string,std::pair<std::size_t,std::size_t>>> constant_entities;
-    std::vector<std::size_t> newline_offsets;
-    void index_lines(){
-        for(std::size_t i=0;i<source.size();++i)if(source[i]=='\n')newline_offsets.push_back(i);
-    }
     void index(const JsonNode& n,std::string scope={}){
         const auto kind=text(n,"kind"),name=text(n,"name");
         if(get(n,"isImplicit").bool_value)return;
@@ -152,9 +146,7 @@ struct Visitor {
         const auto& chosen=get(loc,"offset").kind==JsonKind::Number?loc:begin;
         const auto& off=get(chosen,"offset");if(off.kind!=JsonKind::Number)throw AuditSyntaxError(path+": compiler omitted source location");
         const auto offset=std::size_t(off.number_value);if(offset>source.size())throw AuditSyntaxError(path+": invalid compiler source offset");
-        // Match the original half-open prefix [0, offset): a newline AT the
-        // offset still belongs to the preceding line, including EOF boundaries.
-        return std::size_t(std::lower_bound(newline_offsets.begin(),newline_offsets.end(),offset)-newline_offsets.begin())+1;
+        return std::size_t(std::count(source.begin(),source.begin()+static_cast<std::ptrdiff_t>(offset),'\n'))+1;
     }
     void visit(const JsonNode& n,std::string scope={},std::string function={},bool in_main=false,bool in_class=false,bool ordinal_enum=false){
         const auto kind=text(n,"kind"),name=text(n,"name");
@@ -271,8 +263,8 @@ CppSourceCensus scan_cpp_audit_sources(const std::filesystem::path& root,const s
         if(compiled.exit_code!=0)throw AuditSyntaxError(path.string()+": C++ compiler failed ("+std::to_string(compiled.exit_code)+")\n"+compiled.stderr_text);
         if(text(ast,"kind")!="TranslationUnitDecl")throw AuditSyntaxError(path.string()+": compiler did not return a translation-unit AST");
         CppSourceCensus local;
-        Visitor visitor{relative.generic_string(),path.string(),model_checks::read(path),local,{},{},{},{},{}};
-        visitor.index_lines();visitor.index(ast);visitor.visit(ast);visitor.finish();
+        Visitor visitor{relative.generic_string(),path.string(),model_checks::read(path),local,{},{},{},{}};
+        visitor.index(ast);visitor.visit(ast);visitor.finish();
         // Clang's JSON AST contains macro *expansions*, not definitions. Keep
         // object-like numeric policy macros visible using its preprocessor,
         // with the same target/defines/includes and compiler line markers.
@@ -292,28 +284,13 @@ CppSourceCensus scan_cpp_audit_sources(const std::filesystem::path& root,const s
     };
     if(options.workers==1||files.size()==1){
         for(std::size_t i=0;i<files.size();++i)merge(scan_one(i));
-    }else{
-        std::atomic<std::size_t> next{0};
-        std::vector<CppSourceCensus> completed(files.size());
-        std::vector<std::exception_ptr> failed(files.size());
-        std::vector<std::future<void>> workers;
-        for(std::size_t w=0;w<std::min(files.size(),options.workers);++w)
-            workers.push_back(std::async(std::launch::async,[&]{
-                for(;;){
-                    const auto i=next.fetch_add(1,std::memory_order_relaxed);
-                    if(i>=files.size())return;
-                    try{completed[i]=scan_one(i);}
-                    catch(...){failed[i]=std::current_exception();}
-                }
-            }));
-        // All work remains joined and bounded. A slow TU no longer prevents an
-        // idle worker from taking the next TU. Publish in manifest order only,
-        // and rethrow the earliest manifest-index error, not the fastest error.
-        for(auto& worker:workers)worker.get();
-        for(std::size_t i=0;i<files.size();++i){
-            if(failed[i])std::rethrow_exception(failed[i]);
-            merge(std::move(completed[i]));
-        }
+    }else for(std::size_t begin=0;begin<files.size();begin+=options.workers){
+        std::vector<std::future<CppSourceCensus>> pending;
+        for(std::size_t i=begin;i<std::min(files.size(),begin+options.workers);++i)
+            pending.push_back(std::async(std::launch::async,scan_one,i));
+        // get() propagates compiler/parser/timeout failures. Future destruction
+        // joins other workers before captured inputs leave scope; no detached work.
+        for(auto& worker:pending)merge(worker.get());
     }
     return result;
 }
