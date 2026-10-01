@@ -9,6 +9,7 @@ struct BoardInputOptions {
     std::optional<FloorplanPoint> module_offset;
     double place_clear = 0.5;
     bool two_side = true;
+    bool compact_search = false;
     std::shared_ptr<const FloorplanExperiment> experiment;
 };
 // Read current project/design/library inputs once. The caller supplies a real

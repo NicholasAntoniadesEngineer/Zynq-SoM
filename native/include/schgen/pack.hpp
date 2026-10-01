@@ -113,8 +113,13 @@ private:
 
 class BreatheGrid {
 public:
+    enum class Mode { Assignment, Counted };
     BreatheGrid(double board_w, double board_h, double cell, double origin_x,
-                double origin_y, QuantizationCounts* counts = nullptr);
+                double origin_y, QuantizationCounts* counts = nullptr,
+                Mode mode = Mode::Assignment);
+    // Assignment retains the historical Boolean raster API. In Counted mode,
+    // 1 adds one owner and 0 removes one owner; overlapping reservations remain.
+    // A removal underflow or addition overflow rejects the whole stamp.
     void stamp(const Box4& box, int val, QuantizationCounts* counts = nullptr);
     bool free(const Box4& box, QuantizationCounts* counts = nullptr) const;
 
@@ -124,7 +129,8 @@ private:
     double cell_ = 0.0;
     double origin_x_ = 0.0;
     double origin_y_ = 0.0;
-    std::vector<std::uint8_t> cells_;
+    Mode mode_ = Mode::Assignment;
+    std::vector<std::uint32_t> cells_;
 };
 
 struct ClearLabel {

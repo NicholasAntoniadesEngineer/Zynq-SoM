@@ -4,6 +4,8 @@
 #include "schgen/occupancy_precision.hpp"
 
 #include <cmath>
+#include <algorithm>
+#include <limits>
 #include <stdexcept>
 #include <unordered_map>
 #include <utility>
@@ -103,14 +105,15 @@ RefineResult refine_pack_passes(
     return out;
 }
 
-std::vector<SeatShapeHit> seat_shape_sides(
+static std::vector<SeatShapeHit> seat_shapes(
     const Occupancy& occupancy, double anchor_x, double anchor_y,
     const std::vector<SeatShapeCand>& cands, double board_w, double board_h,
-    double clear, QuantizationCounts* counts) {
+    double clear, QuantizationCounts* counts, bool keep_all) {
     Occupancy working = occupancy;
     working.set_board(board_w, board_h);
     std::vector<std::string> side_order;
     std::unordered_map<std::string, SeatShapeHit> best;
+    std::vector<SeatShapeHit> all;
     for (const auto& cand : cands) {
         if (cand.w > board_w - 2.0 * clear || cand.h > board_h - 2.0 * clear) {
             continue;
@@ -125,8 +128,8 @@ std::vector<SeatShapeHit> seat_shape_sides(
         const double dist = std::fabs(pos->x + cand.w / 2.0 - anchor_x)
             + std::fabs(pos->y + cand.h / 2.0 - anchor_y);
         const double dist_key = occupancy_shape_key4dp(dist, counts);
-        auto found = best.find(cand.side);
-        if (found != best.end()) {
+        auto found = keep_all ? best.end() : best.find(cand.side);
+        if (!keep_all && found != best.end()) {
             if (dist_key > found->second.dist_key) {
                 continue;
             }
@@ -134,7 +137,7 @@ std::vector<SeatShapeHit> seat_shape_sides(
                 && cand.index >= found->second.index) {
                 continue;
             }
-        } else {
+        } else if (!keep_all && found == best.end()) {
             side_order.push_back(cand.side);
         }
         SeatShapeHit hit;
@@ -148,14 +151,52 @@ std::vector<SeatShapeHit> seat_shape_sides(
         hit.inset = cand.inset;
         hit.comps = cand.comps;
         hit.dist_key = dist_key;
-        best[cand.side] = std::move(hit);
+        if (keep_all) all.push_back(std::move(hit));
+        else best[cand.side] = std::move(hit);
     }
+    if (keep_all) return all;
     std::vector<SeatShapeHit> out;
     out.reserve(side_order.size());
     for (const auto& side : side_order) {
         out.push_back(best[side]);
     }
     return out;
+}
+
+std::vector<SeatShapeHit> seat_shape_sides(const Occupancy& occupancy,
+    double anchor_x, double anchor_y, const std::vector<SeatShapeCand>& cands,
+    double board_w, double board_h, double clear, QuantizationCounts* counts) {
+    return seat_shapes(occupancy,anchor_x,anchor_y,cands,board_w,board_h,clear,counts,false);
+}
+std::vector<SeatShapeHit> seat_shape_candidates(const Occupancy& occupancy,
+    double anchor_x, double anchor_y, const std::vector<SeatShapeCand>& cands,
+    double board_w, double board_h, double clear, QuantizationCounts* counts) {
+    return seat_shapes(occupancy,anchor_x,anchor_y,cands,board_w,board_h,clear,counts,true);
+}
+
+double packing_area_lower_bound(const std::vector<std::vector<PackingAreaOption>>& bodies,
+                               int top_mask, int bottom_mask) {
+    if (top_mask<=0 || bottom_mask<=0 || (top_mask&bottom_mask))
+        throw std::invalid_argument("packing area requires disjoint face masks");
+    double top=0, bottom=0, combined=0;
+    for (const auto& body:bodies) {
+        if (body.empty()) throw std::invalid_argument("packing body has no variants");
+        double t=std::numeric_limits<double>::infinity(),b=t,total=t;
+        for (const auto& option:body) {
+            if (!std::isfinite(option.area) || option.area<0 || option.mask<=0 ||
+                (option.mask&~(top_mask|bottom_mask)))
+                throw std::invalid_argument("invalid packing area variant");
+            const double ta=(option.mask&top_mask) ? option.area:0;
+            const double ba=(option.mask&bottom_mask) ? option.area:0;
+            t=std::min(t,ta); b=std::min(b,ba); total=std::min(total,ta+ba);
+        }
+        top+=t; bottom+=b; combined+=total;
+    }
+    // The minimum load of each individual face and half the minimum total
+    // load are necessary bounds, never a claim that rectangles can be packed.
+    const double result=std::max({top,bottom,combined/2});
+    if (!std::isfinite(result)) throw std::overflow_error("packing area overflow");
+    return result;
 }
 
 }  // namespace schgen

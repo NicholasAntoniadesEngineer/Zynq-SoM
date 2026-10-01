@@ -1,6 +1,111 @@
 #include "pcb_placement_internal.hpp"
+#include "pcb_placement_orientations.hpp"
+#include "schgen/pcb_placement_gates.hpp"
 
 namespace schgen::pcb_placement {
+namespace {
+bool same_orientation(const Shape& a, const Shape& b) {
+    if (a.w != b.w || a.h != b.h || a.top_off != b.top_off ||
+        a.bot_off != b.bot_off || a.side != b.side || a.mirror != b.mirror) return false;
+    // Missing rotations already mean zero to the consumer. Compare their
+    // meaning without filling/rewriting either original rotation map.
+    const auto agrees = [](const Rotations& x, const Rotations& y) {
+        for (const auto& [ref, angle] : x) {
+            const auto found = y.find(ref);
+            if (angle != (found == y.end() ? 0 : found->second)) return false;
+        }
+        return true;
+    };
+    return agrees(a.extra_rot, b.extra_rot) && agrees(b.extra_rot, a.extra_rot);
+}
+bool orientation_eligible(const Context& ctx, const Geometry& g, const std::string& sheet) {
+    if (!ctx.in.floorplan.compact_search) return false;
+    if (ctx.in.floorplan.spec && ctx.in.floorplan.spec->edge_of().count(sheet)) return false;
+    // External direction/near/flow targets require board-level reasoning.
+    // Do not invent a local proxy or weaken those authored constraints.
+    auto contract = ctx.in.contracts.find(sheet);
+    if (contract != ctx.in.contracts.end()) {
+        const auto& external = optional(contract->second, "external");
+        if (external.kind != JsonKind::Null &&
+            !(external.kind == JsonKind::Object && external.object_value.empty())) return false;
+    }
+    for (const auto& ref : g.refs_by_sheet.at(sheet)) {
+        const auto& part = ctx.by_ref.at(ref);
+        // This exact authored stock pad is a probe target, not a mating
+        // connector. Keep all other connector tests and top-access checks.
+        const bool probe_pad = part.lib_id == "Connector:TestPoint" &&
+            part.footprint == "TestPoint:TestPoint_Pad_D1.5mm";
+        if (g.conn_rot.count(ref) || g.conn_edge.count(ref) ||
+            edge_family(part.value) || connector_value(part.value) || ref_prefix(ref) == "J" ||
+            (part.lib_id.find("Connector") != std::string::npos && !probe_pad) ||
+            part.footprint.find("PinHeader") != std::string::npos ||
+            part.footprint.find("PinSocket") != std::string::npos ||
+            part.footprint.find("DF40") != std::string::npos) return false;
+    }
+    return true;
+}
+bool orientation_holds(const Context& ctx, const Geometry& g, const std::string& sheet,
+                       const Shape& shape) {
+    if (!std::isfinite(shape.w) || !std::isfinite(shape.h) || shape.w <= 0 || shape.h <= 0 ||
+        (shape.side != "top" && shape.side != "bottom")) return false;
+    PcbCheckModel model; model.board_w = shape.w; model.board_h = shape.h;
+    model.origin_x = 0; model.origin_y = 0;
+    std::set<std::string> seen;
+    for (const auto* offsets : {&shape.top_off, &shape.bot_off})
+        for (const auto& [ref, xy] : *offsets) {
+            if (!seen.insert(ref).second || !g.resolvable.count(ref)) return false;
+            const auto& part = ctx.by_ref.at(ref);
+            PcbCheckInstance inst; inst.ref = ref; inst.sheet = sheet;
+            inst.value = part.value; inst.footprint = part.footprint;
+            const bool primary = offsets == &shape.top_off;
+            inst.side = primary ? shape.side : (shape.side == "top" ? "bottom" : "top");
+            if (face_top(part) && inst.side != "top") return false;
+            auto mirrored = shape.mirror.find(ref);
+            inst.mod = ctx.pool.at(mirrored == shape.mirror.end()
+                ? g.resolvable.at(ref) : mirrored->second);
+            inst.mirror = mirrored != shape.mirror.end();
+            inst.x = xy.first; inst.y = xy.second;
+            auto rotation = shape.extra_rot.find(ref);
+            inst.rotation = rotation == shape.extra_rot.end() ? 0 : rotation->second;
+            model.insts.push_back(std::move(inst));
+        }
+    if (seen != std::set<std::string>(g.refs_by_sheet.at(sheet).begin(),
+                                      g.refs_by_sheet.at(sheet).end())) return false;
+    const PcbCheckInput checked(std::move(model));
+    for (std::size_t i = 0; i < checked.model().insts.size(); ++i) {
+        const auto b = checked.courtyard_at(i);
+        if (b.x0 < 0 || b.y0 < 0 || b.x1 > shape.w || b.y1 > shape.h) return false;
+    }
+    auto contract = ctx.in.contracts.find(sheet);
+    if (contract != ctx.in.contracts.end() &&
+        !check_pcb_placement_contract(checked, sheet, &contract->second,
+                                      ctx.board_refs.at(sheet)).ok) return false;
+    return true;
+}
+}
+void append_rigid_zone_orientations(Context& ctx, Geometry& g, const std::string& sheet,
+                                    const Shape& incumbent) {
+    if (!orientation_eligible(ctx, g, sheet)) return;
+    const auto found = g.shapes.find(sheet);
+    const std::vector<Shape> originals = found == g.shapes.end()
+        ? std::vector<Shape>{incumbent} : found->second;
+    auto variants = originals;
+    for (const auto& original : originals) {
+        if (!orientation_holds(ctx, g, sheet, original)) continue;
+        auto next = original;
+        for (const auto* suffix : {"/r90", "/r180", "/r270"}) {
+            // Existing registered scalars account for each actual trial,
+            // including rejected or duplicate alternatives.
+            next = turned(next, &ctx.quantization);
+            next.tag = original.tag + suffix;
+            if (orientation_holds(ctx, g, sheet, next) &&
+                std::none_of(variants.begin(), variants.end(),
+                    [&](const auto& prior) { return same_orientation(prior, next); }))
+                variants.push_back(next);
+        }
+    }
+    if (variants.size() > originals.size()) g.shapes[sheet] = std::move(variants);
+}
 bool mirror_holds(const Context &ctx, const Geometry &g, const std::string &sheet,
                   const Shape &shape) {
     if (!ctx.in.contracts.count(sheet))

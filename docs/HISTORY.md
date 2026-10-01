@@ -1,5 +1,110 @@
 # carrier — project HISTORY (archived planning logs)
 
+## 2026-10-01 — two-sided placement sprint started
+
+Owner requested execution on `codex/two-sided-layout`, explicitly including
+placement/orientation algorithms and excluding routing. Autonomous decision:
+introduce `--compact-placement` as a controlled board/pcb-stage experiment,
+retaining the verified default solver as the comparison. New search work must
+pass independent emitted-board gates before any smaller result is accepted.
+The first candidate-retention/face-area-bound experiment constructed all 569
+carrier footprints in 18.68 s at the unchanged 168 x 163 mm outline; this is
+construction evidence only, not a size improvement or complete board verdict.
+Orientation, hardware requirements and independent verification are separate
+workstreams. No electrical requirements or mechanical gates are relaxed.
+
+Integrated opt-in rigid group turns and independently observed retry contracts
+(autonomous, per full-autonomy directive). Existing shape indices and default
+geometry remain intact. The carrier gains 22 legal orientation alternatives;
+connector-locked/external-direction groups remain excluded. Four integrated
+CTest contracts pass: orientation/chirality, bounded retry/rollback accounting,
+frozen placement precision, and frozen floorplan. Removing the unused per-face
+shortlist from all-shape mode avoids redundant member-vector copies; focused
+retention/rejection contracts pass. The combined construction experiment still
+produces 569 footprints on 168 x 163 mm. These are not whole-board acceptance or
+performance-improvement claims; full independent gates and rendered review are
+still required before publishing a replacement layout.
+
+Integration correction: the early `pcb-stage --compact-placement` runs above
+accepted but did not forward the flag. Their 168 x 163 mm outputs and timings
+are default-construction observations, NOT compact-algorithm experiments.
+Forwarding is now corrected. The actual compact full pipeline constructs
+169 x 162 mm but FAILS acceptance: power_som facing, fanout, and reseat fallback
+ratchet regress. Sandboxed KiCad DRC crashed; an unsandboxed rerun completed and
+identified seven malformed-courtyard errors on U3002. This candidate is rejected;
+the 168 x 163 mm accepted baseline remains the incumbent. Source/ledger checks
+completed; this run deliberately omitted final image rendering.
+Independent exception injection also exposed partially retained layout/offers
+after a throw. Compact attempts now restore entry state while preserving exact
+failed-prefix accounting and the original exception, without retrying it.
+
+The corrected standalone CLI now emits the same PCB SHA-256 as the full compact
+pipeline (`8cfe52cd653ad3faf6f4646d09d341e17f5e1d3ebd05c221f084374bd416544f`).
+Subsequent eligibility corrections distinguish the exact stock probe pad from
+mating connectors and deduplicate absent/zero effective rotations without
+rewriting incumbents. Orientation and frozen-regression tests pass. The broader
+105-orientation candidate constructs 168 x 163 mm in 108.00 s (construction-only,
+concurrent engineering workload, not a controlled performance comparison); its
+PCB differs from baseline and has not passed full acceptance. More alternatives
+alone have not improved area or speed, so profiling and constraint-aware search
+remain required.
+
+Added explicit supply-pin/capacitor ownership and top-switch requirements for
+board_aux/bringup_rails, with an integrated mandatory pipeline hook and
+missing-gate closure. Focused checker, real-hook synthetic integration and
+aggregation closure tests pass. Qualitative proximity and access envelopes
+remain UNVERIFIED in a separate report, never new movement permissions.
+Whole-board no-render validation of this hook passed for carrier (37 sheets)
+and devkit (12 sheets). Measured pipeline scopes were 272.38 s and 271.38 s,
+including source audit 203.52 s and 235.01 s respectively; these are not process
+wall timings or controlled benchmark comparisons. Existing advisory return-path,
+golden and coverage findings remain. Hard ownership checks are not a proximity
+approval: bringup U1.24 to C1.1 measures 39.76 mm on opposite faces; the five
+board_aux owned pad gaps range from 4.13 to 15.74 mm.
+
+Integrated narrowly tested corrections (autonomous, per full-autonomy directive):
+reject ambiguous physical catalog pin numbers; omit exactly zero-length imported
+courtyard edges; resolve the compact refit's virtual @som target and preserve
+the asymmetric courtyard reservation during its turn. Independent KiCad tests
+of the courtyard correction cover eight face/quarter-turn combinations. A matched
+copy of the rejected candidate changes from seven malformed-courtyard errors to
+zero, with all other violations and 499 unconnected items identical. This does
+not resolve its other placement failures or make it an accepted candidate.
+
+Added a reproducible construction-only profiler. Two prepared-input runs measured
+baseline model construction at 15.90/15.63 s and compact at 111.41/110.75 s, both
+168 x 163 mm. Occupancy cell-index calls rose from approximately 470 million to
+2.961 billion; search optimisation is necessary, not an optional polish.
+Added counted occupancy in the compact spacing pass: removing a group's raster
+halo must retain overlapping keepouts and other component reservations. The
+legacy assignment API/default placement remains available for baseline comparison.
+Focused overlap/multiplicity/atomic-removal tests accompany this change; combined
+validation and complete compact acceptance are still pending. An early whole
+CTest run was deliberately interrupted for integration after six successful tests;
+it is not recorded as a complete suite pass.
+
+Committed/pushed hard requirement integration as `558f99c6` and the courtyard
+repair as `529c196a`. Parent correction tests passed 6/6, requirement pipeline
+and closure tests 2/2, importer tests 2/2, and changed packing/placement source
+contracts 2/2. Counted-grid copy isolation and observed quantizer accounting also
+pass. Fresh combined compact reports now show zero non-unrouted DRC errors and
+placement-flow PASS at 168 x 163 mm. The candidate remains rejected: U28002 has
+1.870 mm foreign-part gap against a 2 mm requirement, and interior_reseat_retry
+fires 139 times against the existing ceiling of 18. The complete no-render run
+finished with BOARD FAIL for these fanout/aggregate-geometry/fallback gates;
+source/ledger and quantization census pass. Its measured scope was 364.78 s,
+including 202.66 s source audit (not process wall or a controlled benchmark).
+The four search/retry/orientation/frozen-floorplan contracts also pass after
+integration. Experimental opt-in code is retained as an explicitly unaccepted
+search workbench, not a promoted default or an area/performance improvement.
+
+Retired three staged-only migration worker leftovers after matching their
+documented provenance: verification-audit Python sample JSONs and the private
+component-basis shell runner. They were not part of the merged migration.
+Exact backups remain in `/private/tmp/schgen-sprint-retired.YTkF4n`; the two JSON
+hashes match `verification_audits_INTEGRATION.md`. Native component-basis,
+copper-debt, policy-audit and Python-free-tree tests pass after removal (4/4).
+
 ## 2026-10-01 — clean C++ migration acceptance
 
 Completed isolated fresh Release compilation and sequential full-render board

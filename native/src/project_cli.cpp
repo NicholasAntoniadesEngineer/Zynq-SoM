@@ -60,6 +60,7 @@ struct Options {
     std::vector<std::string> subsystems;
     bool allow_missing = false, qualified_refs = false, no_ngspice = false, keep = false;
     bool no_render = false, timing = false, conservative_only = false;
+    bool compact_search = false;
     bool help = false;
     std::set<std::string> help_options;
     long long quantity = 1, minimum_stock = 50;
@@ -78,6 +79,10 @@ Options parse(int argc, char** argv) {
         const std::string arg = argv[i];
         if (project_command(arg) && out.command.empty()) { out.command = arg; continue; }
         if(arg=="--help"||arg=="-h"){out.help=true;continue;}
+        if(arg=="--compact-placement"){
+            if(!seen.insert(arg).second)throw ProjectError("duplicate option "+arg);
+            out.compact_search=true;continue;
+        }
         if(arg=="--cons-only"){
             if(!seen.insert(arg).second)throw ProjectError("duplicate option "+arg);
             out.conservative_only=true;continue;
@@ -135,6 +140,7 @@ Options parse(int argc, char** argv) {
         allowed.erase("--output");allowed.insert("--kicad-cli");
         if(out.command=="w12-stageprobe")allowed.insert("--cons-only");
     } else if (out.command == "board") {
+        allowed.insert("--compact-placement");
         allowed.insert("--no-render"); allowed.insert("--timing"); allowed.insert("--kicad-cli");
     } else if (out.command == "build" || out.command == "devkit") {
         allowed.insert("--no-render"); allowed.insert("--kicad-cli");
@@ -160,6 +166,7 @@ Options parse(int argc, char** argv) {
     } else if (out.command == "model3d-check") {
         // Checks the selected project's real model inventory.
     } else if (out.command == "board-schematic" || out.command == "selftest" || out.command == "pcb-stage" || out.command == "assembly" || out.command == "ratsnest") {
+        if(out.command=="pcb-stage")allowed.insert("--compact-placement");
         allowed.insert("--kicad-cli");
         if (out.command == "selftest") allowed.insert("--keep");
     } else if (out.command == "thermal" || out.command == "powertree" || out.command == "part-rules") {
@@ -215,7 +222,7 @@ std::optional<int> run_project_command(int argc, char** argv) {
         if(options.command=="build"||options.command=="subsystem-new")std::cout<<" NAME";
         else if(experiment_command(options.command)&&options.command!="dump-circuits")std::cout<<(options.command=="w11-sweep"?" MM":" TAG")<<" [SHEET ...]";
         std::cout<<" [options]\nOptions:\n  --help, -h\n";
-        const std::set<std::string> flags={"--no-render","--timing","--cons-only","--allow-missing","--qualified-refs","--no-ngspice","--keep"};
+        const std::set<std::string> flags={"--no-render","--timing","--cons-only","--allow-missing","--qualified-refs","--no-ngspice","--keep","--compact-placement"};
         for(const auto& option:options.help_options)std::cout<<"  "<<option<<(flags.count(option)?"":" VALUE")<<(option=="--output"?" (alias -o)":"")<<'\n';
         if(options.command=="nets"||options.command=="devkit"||options.command=="board-schematic"||options.command=="pcb-stage")std::cout<<"--output is required.\n";
         if(options.command=="devkit")std::cout<<"Builds the four-sheet example, not the twelve-sheet devkit_mini project.\n";
@@ -342,6 +349,7 @@ std::optional<int> run_project_command(int argc, char** argv) {
         build.no_render = options.no_render;
         build.timing = options.timing;
         build.native_policy = true;
+        build.pcb.compact_search = options.compact_search;
         build.extraction.kicad_cli = options.kicad_cli;
         const auto result = run_board_pipeline(paths, build);
         std::cout << result.report();
@@ -441,7 +449,9 @@ std::optional<int> run_project_command(int argc, char** argv) {
     }
     if (options.command == "assembly" || options.command == "ratsnest") {
         if (!options.subsystems.empty()) throw ProjectError(options.command + " requires the complete project");
-        const auto stage = prepare_board_pcb(paths, {options.kicad_cli});
+        BoardInputOptions pcb_options;
+        pcb_options.compact_search=options.compact_search;
+        const auto stage = prepare_board_pcb(paths, {options.kicad_cli}, pcb_options);
         const auto directory = options.output.empty() ? paths.project_root : options.output;
         if (options.command == "ratsnest") {
             const auto result = run_ratsnest_documents(stage.placement.model, directory);
@@ -467,7 +477,9 @@ std::optional<int> run_project_command(int argc, char** argv) {
     if (options.command == "pcb-stage") {
         if (options.output.empty()) throw ProjectError("pcb-stage requires --output DIRECTORY");
         if (!options.subsystems.empty()) throw ProjectError("pcb-stage requires the complete project, not selected sheets");
-        const auto stage = prepare_board_pcb(paths, {options.kicad_cli});
+        BoardInputOptions pcb_options;
+        pcb_options.compact_search=options.compact_search;
+        const auto stage = prepare_board_pcb(paths, {options.kicad_cli},pcb_options);
         publish_board_pcb(stage, options.output);
         for (const auto& diagnostic : stage.emission.diagnostics) std::cout << diagnostic << '\n';
         std::cout << "PCB STAGE: constructed " << stage.placement.model.insts.size()

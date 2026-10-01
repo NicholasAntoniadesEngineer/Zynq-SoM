@@ -69,4 +69,17 @@ std::vector<SeatShapeHit> seat_shape_sides(
     const std::vector<SeatShapeCand>& cands, double board_w, double board_h,
     double clear, QuantizationCounts* counts = nullptr);
 
+// Keep every legal offered shape, rather than prematurely reducing each face
+// to the nearest anchor. Caller ranks full hardware/cross-net consequences.
+std::vector<SeatShapeHit> seat_shape_candidates(
+    const Occupancy& occupancy, double anchor_x, double anchor_y,
+    const std::vector<SeatShapeCand>& cands, double board_w, double board_h,
+    double clear, QuantizationCounts* counts = nullptr);
+
+struct PackingAreaOption { double area; int mask; };
+// Each row is one required body with mutually exclusive variants. These are
+// primary non-overlapping rectangles, not child reservations counted again.
+double packing_area_lower_bound(const std::vector<std::vector<PackingAreaOption>>& bodies,
+                               int top_mask, int bottom_mask);
+
 }  // namespace schgen

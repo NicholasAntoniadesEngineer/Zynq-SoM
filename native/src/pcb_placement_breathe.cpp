@@ -47,7 +47,13 @@ void Placer::breathe(const std::string &phase) {
     }
     if (movable.empty())
         return;
-    BreatheGrid top(width, height, .25, 25, 25, &ctx.quantization), bottom(width, height, .25, 25, 25, &ctx.quantization);
+    // Trial search must not clear a fixed reservation or another component's
+    // raster halo when temporarily removing the group being considered.
+    // Retain the accepted default layout until this path has full-board proof.
+    const auto grid_mode = ctx.in.floorplan.compact_search
+        ? BreatheGrid::Mode::Counted : BreatheGrid::Mode::Assignment;
+    BreatheGrid top(width, height, .25, 25, 25, &ctx.quantization, grid_mode),
+        bottom(width, height, .25, 25, 25, &ctx.quantization, grid_mode);
     auto grid = [&](const std::string &r) -> BreatheGrid & {
         return side(r) == "bottom" ? bottom : top;
     };

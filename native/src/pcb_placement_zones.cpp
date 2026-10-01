@@ -1,4 +1,5 @@
 #include "pcb_placement_internal.hpp"
+#include "pcb_placement_orientations.hpp"
 #include "schgen/board_decision_policy.hpp"
 
 namespace schgen {
@@ -206,6 +207,9 @@ PcbZoneResult build_pcb_zone_geometry(const PcbPlacementInput &in, ExecutionFail
                     g.shapes[sheet] = {shape(p, "asbuilt"), *mirror};
             }
         }
+        if (in.floorplan.compact_search && !edge && !conn_rot.count(sheet) &&
+            !sheet_edges.count(sheet) && !connector_class.count(sheet))
+            append_rigid_zone_orientations(ctx, g, sheet, shape(p, "base"));
         g.top_off[sheet] = p.top;
         g.bot_off[sheet] = p.bottom;
         g.zone_box[sheet] = {p.w, p.h};

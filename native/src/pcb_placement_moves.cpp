@@ -183,14 +183,20 @@ void Placer::refit(ExecutionFailureReceipt* failure) {
         for (const auto &r : geometry.refs_by_sheet[downstream])
             if (pos.count(r))
                 down.push_back(r);
-        if (refs.empty() || down.empty() ||
+        // @som is a virtual target, not a sheet with component members.
+        // Keep the frozen default pipeline unchanged; compact trials must use
+        // the same physical target as the final facing gate.
+        const bool som_target = ctx.in.floorplan.compact_search && downstream == "@som";
+        if (refs.empty() || (!som_target && down.empty()) ||
             std::any_of(refs.begin(), refs.end(),
                         [&](const auto &r) { return geometry.conn_rot.count(r); }))
             continue;
         std::vector<FloorplanPoint> dp;
         for (const auto &r : down)
             dp.push_back(pos.at(r));
-        auto centroid = points_centroid(dp);
+        auto centroid = som_target
+            ? FloorplanPoint{plan.som_x + plan.som.w / 2, plan.som_y + plan.som.h / 2}
+            : points_centroid(dp);
         std::set<std::string> own(refs.begin(), refs.end());
         std::map<std::string, std::vector<std::pair<std::string, std::string>>> own_pins;
         std::map<std::string, std::vector<std::tuple<double, double, std::string>>> foreign;
@@ -226,6 +232,54 @@ void Placer::refit(ExecutionFailureReceipt* failure) {
         out.placement_accounting.fallback_events.insert(out.placement_accounting.fallback_events.end(),
             result.fallback_events.begin(), result.fallback_events.end());
         out.fallback_events.insert(out.fallback_events.end(), result.fallback_events.begin(), result.fallback_events.end());
+        if (som_target && result.poses) {
+            // The legacy refit pivots about the pad span. With asymmetric
+            // courtyards that can move the reservation even for a half turn.
+            // Translate this new compact trial rigidly back onto its original
+            // courtyard envelope; do not move or resize the allocated zone.
+            auto courtyard_center = [&](bool trial) {
+                PcbCheckModel model;
+                model.origin_x = 0;
+                model.origin_y = 0;
+                for (const auto &r : refs) {
+                    PcbCheckInstance part;
+                    part.ref = r;
+                    part.mod = mod(r);
+                    part.side = side(r);
+                    const auto pose = trial ? result.poses->at(r)
+                        : std::make_tuple(pos.at(r).first, pos.at(r).second, rot(r));
+                    part.x = std::get<0>(pose);
+                    part.y = std::get<1>(pose);
+                    part.rotation = std::get<2>(pose);
+                    model.insts.push_back(std::move(part));
+                }
+                PcbCheckInput checked(std::move(model));
+                std::vector<Box4> boxes;
+                for (std::size_t k = 0; k < refs.size(); ++k)
+                    boxes.push_back(checked.courtyard_at(k));
+                return boxes_span_center(boxes);
+            };
+            const auto before = courtyard_center(false), after = courtyard_center(true);
+            for (auto &[r, pose] : *result.poses) {
+                (void)r;
+                std::get<0>(pose) += before.first - after.first;
+                std::get<1>(pose) += before.second - after.second;
+            }
+            const auto input = ctx.stage_input(sheet, geometry);
+            const Engine engine(input);
+            const auto outputs = engine.output_refs();
+            std::vector<FloorplanPoint> all_points, output_points;
+            for (const auto &[r, pose] : *result.poses) {
+                const FloorplanPoint point{std::get<0>(pose), std::get<1>(pose)};
+                all_points.push_back(point);
+                if (outputs.count(r)) output_points.push_back(point);
+            }
+            if (output_points.empty()) continue;
+            const auto zone = points_centroid(all_points), output = points_centroid(output_points);
+            if (!(facing_align_dot(zone.first, zone.second, output.first, output.second,
+                                  centroid.first - zone.first, centroid.second - zone.second) > 0))
+                continue;
+        }
         if (result.poses)
             for (const auto &[r, p] : *result.poses) {
                 pos[r] = {std::get<0>(p), std::get<1>(p)};

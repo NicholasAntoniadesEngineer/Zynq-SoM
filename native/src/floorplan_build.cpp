@@ -286,6 +286,24 @@ FloorplanPlan Engine::run() {
             }
             min_area+=area;
         }
+        if (in.compact_search) {
+            const int reserved=free ? occ_top:occ_punch;
+            std::vector<std::vector<PackingAreaOption>> bodies{
+                {{plan.som.w*plan.som.h,reserved}}};
+            for (const auto* b:blocks()) {
+                const auto variants=sets.find(b->name);
+                std::vector<PackingAreaOption> options;
+                if (b->kind=="interior" && variants!=sets.end()) {
+                    for (const auto& s:variants->second)
+                        options.push_back({s.w*s.h,side_mask(s.side)});
+                } else {
+                    const auto wh=zbox.at(b->name);
+                    options.push_back({wh.first*wh.second,b->kind=="edge" ? reserved:occ_top});
+                }
+                bodies.push_back(std::move(options));
+            }
+            min_area=packing_area_lower_bound(bodies,occ_top,occ_bottom);
+        }
         auto evaluate=[&](double w,double h) -> std::optional<Winner> {
             board_size(w,h);
             if (!attempt_pack(false)) { ++tally["reject_pack"]; return std::nullopt; }

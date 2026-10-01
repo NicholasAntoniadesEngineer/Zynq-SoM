@@ -240,6 +240,8 @@ struct FloorplanInput {
     std::optional<FloorplanPoint> module_offset;  // explicit env/CLI override
     double cross_budget_k = 3.0;
     double place_clear = 0.5;  // explicit SCHGEN_PLACE_CLEAR equivalent
+    // Opt-in compact-placement search; independent final board gates unchanged.
+    bool compact_search = false;
     // Prior native zone-stage accounting is retained, not reset by sizing.
     FloorplanAccounting accounting;
     // Null by default: no observation snapshots or experiment parameter changes.

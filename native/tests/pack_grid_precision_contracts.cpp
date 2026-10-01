@@ -155,6 +155,17 @@ void grids() {
     }
     rejects([&]{BreatheGrid bad(1,1,1,INFINITY,0);});
     rejects([&]{BreatheGrid bad(1e100,1,1,0,0);});
+    q.clear();begin();
+    BreatheGrid counted(4,4,1,0,0,&q,BreatheGrid::Mode::Counted);
+    counted.stamp({0,0,2,2},1,&q);
+    counted.stamp({1,1,3,3},1,&q);
+    counted.stamp({0,0,2,2},0,&q);
+    demand(!counted.free({1,1,2,2},&q),"counted removal erased another owner");
+    counted.stamp({1,1,3,3},0,&q);
+    demand(counted.free({0,0,3,3},&q),"counted removal retained ghost occupancy");
+    receipt(q,end());
+    demand(q==QuantizationCounts{{names[1],2},{names[2],16},{names[3],8}},
+           "counted occupancy changed scalar engagement ownership");
     q.clear();begin();SilkBoxIndex occupied(8),placed(8);
     occupied.add({-100,-100,100,100},&q);
     auto moved=place_refdes({0,0,2,2},"U1",1,{0,0,2,2},occupied,placed,

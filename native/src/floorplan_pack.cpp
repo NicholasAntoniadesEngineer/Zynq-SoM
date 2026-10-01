@@ -49,7 +49,31 @@ PackAnchorIn Engine::anchor_row(const FloorplanBlock& b,
 
 bool Engine::attempt_pack(bool compact) {
     return run_floorplan_experiment_attempt(in.experiment.get(), plan.punch_free,
-        [&] { return attempt_pack_impl(compact); }, [&](bool packed) {
+        [&] {
+            if (!in.compact_search) return attempt_pack_impl(compact);
+            const auto start=plan;
+            const auto offers=side_offers;
+            // Keep the existing order as incumbent. Reconsider earlier greedy
+            // choices only when it fails; each alternative starts identically.
+            for (int order : {0,1,2}) {
+                auto accounting=std::move(plan.accounting);
+                plan=start; plan.accounting=std::move(accounting);
+                side_offers=offers; compact_order=order;
+                try {
+                    if (attempt_pack_impl(compact)) {compact_order=0;return true;}
+                } catch (...) {
+                    compact_order=0;
+                    auto failed_accounting=std::move(plan.accounting);
+                    plan=start;plan.accounting=std::move(failed_accounting);
+                    side_offers=offers;
+                    throw;
+                }
+            }
+            compact_order=0;
+            auto accounting=std::move(plan.accounting);
+            plan=start;plan.accounting=std::move(accounting);side_offers=offers;
+            return false;
+        }, [&](bool packed) {
             return FloorplanAttemptObservation{plan.board_w, plan.board_h, packed,
                                                plan.punch_free, std::nullopt};
         });
@@ -127,6 +151,20 @@ bool Engine::attempt_pack_impl(bool compact) {
     }
     std::vector<FloorplanBlock*> order,placed;
     for (int i:pack_interior_order(names,tiers,connections,areas)) order.push_back(&plan.interior_blocks[i]);
+    if (in.compact_search && compact_order) {
+        // Stable ties retain the established connectivity/priority ordering.
+        std::stable_sort(order.begin(),order.end(),[&](const auto* a,const auto* b) {
+            if (compact_order==2) {
+                auto count=[&](const auto* block) {
+                    const auto it=shapes.find(block->name);
+                    return it==shapes.end() ? std::size_t{1}:it->second.size();
+                };
+                if (count(a)!=count(b)) return count(a)<count(b);
+            }
+            const auto awh=zbox.at(a->name),bwh=zbox.at(b->name);
+            return awh.first*awh.second>bwh.first*bwh.second;
+        });
+    }
     std::map<std::string,std::vector<Comp>> chosen;
     auto occ_put=[&](const FloorplanBlock& b){occ.add(b.x,b.y,b.w,b.h,b.fanout_reach,b.fanout_inset,side_mask(b.side),get(chosen,b.name),counts);};
     auto occ_pull=[&](const FloorplanBlock& b){occ.remove(b.x,b.y,b.w,b.h,b.fanout_reach,b.fanout_inset,side_mask(b.side),get(chosen,b.name),counts);};
@@ -154,7 +192,9 @@ bool Engine::attempt_pack_impl(bool compact) {
             cands.push_back({static_cast<int>(k),s.w,s.h,s.reach,s.inset,side_mask(s.side),s.side,s.comps,
                 std::get<0>(win),std::get<1>(win),std::get<2>(win),std::get<3>(win)});
         }
-        auto hits=seat_shape_sides(occ,a.first,a.second,cands,bw,bh,clear,counts);
+        auto hits=in.compact_search
+            ? seat_shape_candidates(occ,a.first,a.second,cands,bw,bh,clear,counts)
+            : seat_shape_sides(occ,a.first,a.second,cands,bw,bh,clear,counts);
         if (hits.empty()) return false;
         std::sort(hits.begin(),hits.end(),[](const auto& a,const auto& b){return std::tie(a.dist_key,a.index)<std::tie(b.dist_key,b.index);});
         auto best=hits.front();
@@ -172,7 +212,16 @@ bool Engine::attempt_pack_impl(bool compact) {
             };
             const double incumbent=judge(hits[0]),challenger=judge(hits[1]);
             if (pick_sided_challenger(incumbent,challenger,1e-6)) best=hits[1];
-            side_offers[b.name]={hits[0].side+"(incumbent)/"+hits[1].side,best.side,best.index,incumbent,challenger};
+            double selected=best.index==hits[1].index ? challenger:incumbent;
+            if (in.compact_search) for (std::size_t i=2;i<hits.size();++i) {
+                const double value=judge(hits[i]);
+                if (pick_sided_challenger(selected,value,1e-6)) {best=hits[i]; selected=value;}
+            }
+            side_offers[b.name]={hits[0].side+"(incumbent)/"+
+                (in.compact_search ? "all-shapes":hits[1].side),best.side,best.index,incumbent,
+                in.compact_search ? selected:challenger};
+            if (in.compact_search && std::all_of(hits.begin(),hits.end(),[&](const auto& h){return h.side==hits[0].side;}))
+                side_offers[b.name]={best.side,best.side,best.index,std::nullopt,std::nullopt};
         }
         pose(b,{best.x,best.y,best.w,best.h}); b.shape_idx=best.index; b.side=best.side;
         b.fanout_reach=best.reach; b.fanout_inset=best.inset; b.area=block_area(b.w,b.h, counts); chosen[b.name]=best.comps;

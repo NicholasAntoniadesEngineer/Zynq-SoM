@@ -37,7 +37,7 @@ int main(int argc, char** argv) {
                          "  subsystem-check | carrier-check [--project NAME] (strict native package gates)\n"
                          "  chir-rung TAG | w11-sweep MM [SHEET ...] [--project NAME] (writes board; restores inputs)\n"
                          "  w12-bound TAG | w12-stageprobe TAG [SHEET ...] [--project NAME] [--cons-only] (private probes)\n"
-                         "  pcb-stage [--project NAME] [--kicad-cli PATH] -o DIRECTORY (construction only)\n"
+                         "  pcb-stage [--project NAME] [--kicad-cli PATH] [--compact-placement] -o DIRECTORY (construction only)\n"
                          "  pcb-drc [--project NAME] [--pcb FILE] [-o REPORT]\n"
                          "  subsystem-new NAME [--repo DIRECTORY] (new C++ package; never overwrites)\n"
                          "  part-import --parts-root DIRECTORY (--from-json FILE | --lcsc ID) [--name NAME] [--overwrite] [--catalog FILE]\n"
@@ -63,7 +63,8 @@ int main(int argc, char** argv) {
                          "  bom [--project NAME] [SUBSYSTEM ...] [-o FILE] [--allow-missing] [--qualified-refs]\n"
                          "  link [--project NAME] [SUBSYSTEM ...] [--contract FILE] [-o REPORT]\n"
                          "  devicetree [--project NAME] [--som FILE] [--contract FILE] [-o FILE]\n"
-                         "  board [--project NAME] [-o DIRECTORY] [--no-render] [--timing] (native; incomplete audit integration fails explicitly)\n";
+                         "  board [--project NAME] [-o DIRECTORY] [--no-render] [--timing] [--compact-placement]\n"
+                         "    --compact-placement: experimental search; not an accepted layout or speedup. All board gates remain mandatory.\n";
             return 0;
         }
         if (argc >= 2 && std::string(argv[1]) == "selftest-worker") {

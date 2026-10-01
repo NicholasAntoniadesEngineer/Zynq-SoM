@@ -422,8 +422,10 @@ bool SilkBoxIndex::hits(const Box4& gb, QuantizationCounts* counts) const {
 }
 
 BreatheGrid::BreatheGrid(double board_w, double board_h, double cell,
-                         double origin_x, double origin_y, QuantizationCounts* counts)
-    : cell_(cell), origin_x_(origin_x), origin_y_(origin_y) {
+                         double origin_x, double origin_y, QuantizationCounts* counts, Mode mode)
+    : cell_(cell), origin_x_(origin_x), origin_y_(origin_y), mode_(mode) {
+    if (mode != Mode::Assignment && mode != Mode::Counted)
+        throw std::invalid_argument("BreatheGrid: invalid occupancy mode");
     if (!std::isfinite(cell) || cell <= 0.0 ||
         !std::isfinite(origin_x) || !std::isfinite(origin_y)) {
         throw std::runtime_error("BreatheGrid: cell required");
@@ -441,6 +443,8 @@ BreatheGrid::BreatheGrid(double board_w, double board_h, double cell,
 }
 
 void BreatheGrid::stamp(const Box4& box, int val, QuantizationCounts* counts) {
+    if (mode_ == Mode::Counted && val != 0 && val != 1)
+        throw std::invalid_argument("BreatheGrid: counted stamp requires add/remove");
     if (!(box.x0 <= box.x1 && box.y0 <= box.y1))
         throw std::invalid_argument("BreatheGrid: ordered box required");
     const int c0 = breathe_stamp_index((box.x0 - origin_x_) / cell_, counts);
@@ -454,14 +458,30 @@ void BreatheGrid::stamp(const Box4& box, int val, QuantizationCounts* counts) {
     const int rr0 = std::max(0, r0);
     const int cc1 = std::min(nx_ - 1, c1);
     const int rr1 = std::min(ny_ - 1, r1);
-    const std::uint8_t v = val ? 1 : 0;
+    const std::uint32_t v = val ? 1 : 0;
+    // Validate every touched cell before mutation. Otherwise a late underflow
+    // could erase earlier owners and leave a partially changed occupancy map.
+    if (mode_ == Mode::Counted)
+        for (int r = rr0; r <= rr1; ++r) {
+            const auto base = static_cast<std::size_t>(r) * static_cast<std::size_t>(nx_);
+            for (int c = cc0; c <= cc1; ++c) {
+                const auto current = cells_.at(base + static_cast<std::size_t>(c));
+                if (!v && current == 0)
+                    throw std::underflow_error("BreatheGrid: removing unoccupied cell");
+                if (v && current == std::numeric_limits<std::uint32_t>::max())
+                    throw std::overflow_error("BreatheGrid: occupancy count overflow");
+            }
+        }
     // Clipped indices are nonnegative and strictly less than the checked
     // extents. Their size_t product/sum is below the allocated nx*ny; using
     // size_t here also avoids the old signed-int row-product overflow.
     for (int r = rr0; r <= rr1; ++r) {
         const auto base = static_cast<std::size_t>(r) * static_cast<std::size_t>(nx_);
         for (int c = cc0; c <= cc1; ++c) {
-            cells_.at(base + static_cast<std::size_t>(c)) = v;
+            auto& current = cells_.at(base + static_cast<std::size_t>(c));
+            if (mode_ == Mode::Assignment) current = v;
+            else if (v) ++current;
+            else --current;
         }
     }
 }

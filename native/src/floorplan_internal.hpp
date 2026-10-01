@@ -107,6 +107,8 @@ public:
     int n_sub = 0, n_impedance = 0;
     std::string impedance_classes;
     FloorplanPoint offset{};
+    // Per-attempt search state, never persisted into project policy.
+    int compact_order = 0;
 
     std::vector<FloorplanBlock*> blocks();
     const CachedFootprint& footprint(const std::string& key) const;
