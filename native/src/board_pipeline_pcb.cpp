@@ -8,6 +8,7 @@
 #include "schgen/copper_debt.hpp"
 #include "schgen/manufacturing_checks.hpp"
 #include "schgen/process.hpp"
+#include "schgen/placement_requirements.hpp"
 #include <cmath>
 #include <climits>
 #include <cstdlib>
@@ -31,6 +32,77 @@ PcbDrcResult drc(const fs::path& pcb,const std::string& executable,bool warnings
     const auto report=cleanup.p/"drc.json";auto args=pcb_drc_arguments(pcb,report,warnings);args[0]=executable;
     const auto process=run_process(args,std::chrono::minutes{5});return read_pcb_drc_report(report,process);
 }
+}
+// Internal stage entry is shared by production orchestration and its focused
+// integration contract. No caller-supplied verdict or candidate-derived mapping.
+void carrier_surface_requirements_stage(Context& c) {
+    const std::string gate_name="placement_requirements";
+    c.attempt(gate_name,[&]{
+        c.report("placement_requirements_unverified.txt","UNVERIFIED: current invocation requirement checks have not completed; no prior measurements may be reused.");
+        const auto project=load_project_config(c.paths).name;
+        if(project=="devkit_mini") {
+            const std::string applicability="NOT APPLICABLE: reviewed ownership declarations cover carrier board_aux/bringup_rails only; devkit_mini has neither requirement set. No qualitative placement approval implied.";
+            c.report("placement_requirements_unverified.txt",applicability);
+            c.report(gate_name+".txt",applicability);c.gate(gate_name,true,applicability);return;
+        }
+        if(project!="carrier")throw ProjectError("placement requirement applicability is not reviewed for project "+project);
+        if(!c.pcb||!c.pcb_published||!c.schematic||!c.schematic->ok())
+            throw ProjectError("current PCB and successfully gated hierarchy required");
+        if(c.index!=c.pcb->inputs.floorplan.sheet_index)
+            throw ProjectError("placement/hierarchy reference-band drift");
+        std::map<std::string,int> bands;
+        for(const auto& band:c.index)
+            if(!bands.emplace(band).second)throw ProjectError("duplicate hierarchy sheet band");
+        // This is the independently extracted schematic netlist used to build
+        // board inputs, NOT the placed model's pin map or footprint geometry.
+        std::map<std::pair<std::string,std::string>,std::string> extracted;
+        for(const auto& net:c.pcb->inputs.netlist)for(const auto& pin:net.second)
+            if(!extracted.emplace(std::make_pair(pin.ref,pin.pin),net.first).second)
+                throw ProjectError("duplicate pin in independent hierarchy extraction");
+        const PcbCheckInput model(c.pcb->placement.model);
+        bool hard_ok=true;std::string reports,hard_report;
+        for(const auto* sheet:{"board_aux","bringup_rails"}) {
+            const std::string sheet_name=sheet;
+            const auto live=std::find_if(c.circuits.begin(),c.circuits.end(),[&](const auto& s){return s.name==sheet_name;});
+            if(live==c.circuits.end()||std::count_if(c.circuits.begin(),c.circuits.end(),[&](const auto& s){return s.name==sheet_name;})!=1)
+                throw ProjectError("required live carrier sheet missing/duplicated: "+sheet_name);
+            const auto band=bands.find(sheet_name);
+            if(band==bands.end())throw ProjectError("required hierarchy band missing: "+sheet_name);
+            const auto requirements=parse_placement_requirements(parse_json_file(
+                (c.paths.subsystems_dir/sheet_name/"placement_requirements.json").string()));
+            const auto declaration=carrier_surface_requirement_declaration(sheet_name);
+            std::map<std::string,CatalogPart> catalog;
+            // The caller holds the same native catalog open for the complete
+            // board invocation, as required by author_board_pipeline_inputs.
+            for(const auto& owner:declaration.owner_mpn)
+                catalog.emplace(owner.second,lookup_part_catalog(owner.second));
+            std::map<std::string,std::string> refs,nets;
+            for(const auto& part:live->circuit.parts)
+                if(!refs.emplace(part.ref,board_renamed_ref(part.ref,band->second,sheet_name)).second)
+                    throw ProjectError("duplicate live part: "+sheet_name+":"+part.ref);
+            for(const auto& net:live->circuit.nets) {
+                std::optional<std::string> name;
+                for(const auto& pin:net.pins) {
+                    const auto found=extracted.find({refs.at(pin.ref),pin.pin});
+                    if(found==extracted.end())throw ProjectError("required pin missing from hierarchy extraction: "+sheet_name+":"+pin.ref+"."+pin.pin);
+                    if(name&&*name!=found->second)throw ProjectError("live net split in hierarchy extraction: "+sheet_name+":"+net.name);
+                    name=found->second;
+                }
+                if(!name||!nets.emplace(net.name,*name).second)throw ProjectError("empty/duplicate live net: "+sheet_name+":"+net.name);
+            }
+            const auto checked=check_placement_requirements(requirements,declaration,live->circuit,catalog,model,refs,nets);
+            hard_ok=hard_ok&&checked.hard_requirements_met();reports+=checked.summary();
+            hard_report+=sheet_name+(checked.hard_requirements_met()?": hard ownership/identity/top-switch requirements met\n":": hard requirement FAIL\n");
+            for(const auto& violation:checked.violations)hard_report+="FAIL "+violation+"\n";
+        }
+        c.report("placement_requirements_unverified.txt",reports);
+        // Only hard ownership/identity/top-face facts receive a Boolean gate.
+        // Qualitative requirements are explicitly UNVERIFIED in a separate
+        // report, never a PASS gate or permission to move components farther.
+        hard_report+="Scope: hard ownership/pin-net/top-switch checks only. Qualitative evidence is separately UNVERIFIED in placement_requirements_unverified.txt; no movement permission added.";
+        c.report(gate_name+".txt",hard_report);
+        c.gate(gate_name,hard_ok,hard_report);
+    });
 }
 void pcb_stages(Context& c){
     const auto pcb_path=c.out/"Zynq_Carrier.kicad_pcb";
@@ -66,6 +138,7 @@ void pcb_stages(Context& c){
             JsonNode meta;meta.kind=JsonKind::Object;for(const auto* key:{"worst_cover_mm","vias","coverage_mm","escape_region","plane","coexistence","som_interface_sha256","constants"})if(const auto* value=object_field(c.pcb->placement.model.escape_meta,key))meta.object_value.emplace_back(key,*value);
             sidecar.object_value.emplace_back("escape_meta",meta);publish_text(c.out/"escape_block.json",json(sidecar)+"\n");}
         c.gate("pcb",true,std::to_string(c.pcb->placement.model.placed)+" footprints; deferred: "+join(c.pcb->placement.model.deferred));});
+    carrier_surface_requirements_stage(c);
     c.attempt("pcb_drc",[&]{if(!c.pcb_published)throw ProjectError("no board emitted this invocation");
         auto r=drc(pcb_path,c.options.extraction.kicad_cli,true);const auto errors=r.n_errors?*r.n_errors:drc(pcb_path,c.options.extraction.kicad_cli,false).n_violations;
         const auto report=std::to_string(errors)+" non-unrouted errors; "+std::to_string(r.n_unconnected)+" unrouted (expected); "+r.stderr_tail;
