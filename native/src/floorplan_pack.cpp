@@ -1,4 +1,5 @@
 #include "floorplan_internal.hpp"
+#include "native_audit_quantize_internal.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -88,7 +89,7 @@ bool Engine::attempt_pack_impl(bool compact) {
         fanout_rows.push_back({b.x,b.y,b.w,b.h,b.fanout_reach,b.fanout_inset,edge_char(b.edge)});
     }
     checked_quantization_add(plan.accounting.quantization_engagements, "run_overflow_tol");
-    if (!edge_runs_margin_ok(run_rows,bw,bh,edge_margin,.1)) return false;
+    if (!edge_runs_margin_ok(run_rows,bw,bh,edge_margin,native_run_overflow_tol())) return false;
     const auto som_rects=som_keepouts();
     if (rects_overlap_any(edge_boxes,som_rects,1e-6) || !cross_edge_fanout_hold(fanout_rows,clear)) return false;
     const int som_mask=plan.punch_free ? occ_top:occ_punch, edge_mask=som_mask;

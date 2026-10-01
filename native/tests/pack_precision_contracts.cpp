@@ -5,6 +5,7 @@
 #include "schgen/pack_edges.hpp"
 #include "schgen/native_audit_state.hpp"
 #include "pcb_placement_fixture.hpp"
+#include "ledger_accounting_fixture.hpp"
 #include "pack_precision_fixture.hpp"
 #ifndef PACK_PRECISION_BASELINE
 #include "schgen/pack_precision.hpp"
@@ -178,9 +179,15 @@ void board_contracts(const std::filesystem::path& root) {
         auto fixture=placement_fixture::load(root,project);
         begin();const auto result=build_pcb_model(fixture.input);const auto entries=end();
         const auto totals=pcb_placement_accounting(result);receipt(totals.quantization_engagements,entries);
-        auto plan=result.floorplan.plan;plan.accounting.quantization_engagements=placement_precision_fixture::select(select(plan.accounting.quantization_engagements,false),false);
+        auto plan=result.floorplan.plan;
+        auto old_counts=totals.quantization_engagements;
+#ifndef PACK_PRECISION_BASELINE
+        plan.accounting.quantization_engagements=ledger_accounting_fixture::before_initial_receipt_fix(plan.accounting.quantization_engagements);
+        old_counts=ledger_accounting_fixture::before_initial_receipt_fix(old_counts);
+#endif
+        plan.accounting.quantization_engagements=placement_precision_fixture::select(select(plan.accounting.quantization_engagements,false),false);
         legacy<<project<<'\n';node(pcb_model_json(result.model));node(floorplan_plan_json(plan));
-        prior_counts(totals.quantization_engagements);
+        prior_counts(old_counts);
         begin();const auto again=pcb_placement_accounting(result);const auto replay=end();
         require(replay.empty()&&again.quantization_engagements==totals.quantization_engagements,"receipt replay manufactures work");
     }

@@ -2,6 +2,17 @@
 
 ## 2026-10-01 — complete rendered baseline comparison
 
+After the pinned benchmark, corrected two accounting defects (autonomous,
+per full-autonomy directive): `ledger_initial` now records its two actual
+via-cost scalar executions, and packing executes the registered tolerance
+function rather than counting an event while passing a copied literal.
+Independent function-entry instrumentation verifies both, including counter
+overflow and retained prefixes. Five integrated accounting/floorplan/packing/
+geometry/output tests passed in 78.71 seconds. Historical fixture files are
+unchanged; full-output comparisons adjust only the independently verified
+two-entry receipt correction and reject missing/typo entries. This is not
+closure of the remaining source-policy findings or full-board acceptance.
+
 Measured pinned C++ `1ad3a40a85e98d481e22f00bdeacac86582c4356` against the
 owner's sole Python baseline `0e9bbc913bab77f9cd228940db2a332d25d6bfa1`,
 in isolated source checkouts (autonomous, per full-autonomy directive).

@@ -356,7 +356,7 @@ void pack_behavior() {
     }
     require(passes==2&&!automatic.punch_free,"both reservation policies execute; tied free pass rejected");
     const std::map<std::string,std::size_t> quanta{{"outline_fine_grid",164},{"outline_grow_step",10},
-        {"outline_snap_up",20},{"run_overflow_tol",696},{"som_pose_half_mm",1394},{"quant_credit",696}};
+        {"outline_snap_up",20},{"run_overflow_tol",696},{"som_pose_half_mm",1394},{"quant_credit",696},{"est_via_cost",2}};
     require(floorplan_precision_fixture::select(automatic.accounting.quantization_engagements,false)==quanta,"all prior synthetic search quantization engagements accounted exactly");
     const auto extra=floorplan_precision_fixture::select(automatic.accounting.quantization_engagements);
     require(extra.at("floorplan_candidate_area_precision1dp")==110&&extra.at("floorplan_seed_aspect_precision4dp")==1,
@@ -500,6 +500,12 @@ void frozen(const std::filesystem::path& dir,const std::string& name,bool geomet
     // operation once. The independent function-entry observer checks this delta.
     for(auto& [key,value]:expected_quant.object_value)
         if(key=="floorplan_ledger_display_precision4dp")value.number_value+=7;
+    // Exactly two formerly unbooked entries per completed Engine::run;
+    // independent instrumentation is in native_floorplan_receipt_contracts.
+    auto via=std::find_if(expected_quant.object_value.begin(),expected_quant.object_value.end(),
+        [](const auto& row){return row.first=="est_via_cost";});
+    if(via==expected_quant.object_value.end())expected_quant.object_value.emplace_back("est_via_cost",jvalue(2));
+    else via->second.number_value+=2;
     // Occupancy additions are independently entry-counted through both boards
     // by native_occupancy_precision_contracts. Keep every prior expectation.
     auto prior_quant=field(account,"quantization_engagements");

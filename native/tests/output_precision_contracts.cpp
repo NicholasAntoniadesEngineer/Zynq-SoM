@@ -1,4 +1,5 @@
 #include "pcb_placement_fixture.hpp"
+#include "ledger_accounting_fixture.hpp"
 #include "floorplan_precision_fixture.hpp"
 #include "output_precision_fixture.hpp"
 #include "schgen/pcb_emit.hpp"
@@ -176,7 +177,11 @@ void full_board(std::ostream& out,const std::filesystem::path& root,const std::s
     floorplan_precision_fixture::node(out,pcb_model_json(result.model));
     bytes(out,"full svg",result.floorplan.documents.svg);
     bytes(out,"full markdown",result.floorplan.documents.markdown);
-    for(const auto& [key,count]:placement_precision_fixture::select(output_precision_fixture::select(receipt.quantization_engagements,false),false))
+    auto old_counts=receipt.quantization_engagements;
+#ifndef OUTPUT_PRECISION_LEGACY
+    old_counts=ledger_accounting_fixture::before_initial_receipt_fix(old_counts);
+#endif
+    for(const auto& [key,count]:placement_precision_fixture::select(output_precision_fixture::select(old_counts,false),false))
         out<<std::quoted(key)<<' '<<count<<'\n';
 #ifndef OUTPUT_PRECISION_LEGACY
     const auto svg=output_precision_fixture::select(result.floorplan.documents.accounting.quantization_engagements);

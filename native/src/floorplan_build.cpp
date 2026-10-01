@@ -165,7 +165,10 @@ void Engine::ledger_initial(double sw,double sh) {
     calc("overmold_side_gap",jvalue(overmold_gap),{{"plug_width",jvalue(overmold_plug_width)},{"copper_half_width",jvalue(overmold_copper_half_width)}});
     calc("edge_band",jvalue(edge_band),{{"edge_depth_cap",jvalue(edge_depth_cap)},{"edge_band_relief",jvalue(edge_band_relief)}});
     calc("occ_punch_mask",jvalue(occ_punch),{{"occ_top",jvalue(occ_top)},{"occ_bottom",jvalue(occ_bottom)}});
+    static const std::string via_cost_name="est_via_cost";
+    checked_quantization_add(plan.accounting.quantization_engagements,via_cost_name);
     const double ordinary=floorplan_experiment_via_cost(in.experiment.get(),false,est_via_cost(false));
+    checked_quantization_add(plan.accounting.quantization_engagements,via_cost_name);
     const double impedance=floorplan_experiment_via_cost(in.experiment.get(),true,est_via_cost(true));
     calc("est_via_ordinary",jvalue(ordinary),{{"via_cost",jvalue(ordinary)}});
     calc("est_via_impedance",jvalue(impedance),{{"via_cost",jvalue(impedance)}});

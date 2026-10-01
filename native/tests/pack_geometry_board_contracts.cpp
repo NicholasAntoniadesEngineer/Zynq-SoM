@@ -2,6 +2,7 @@
 #include "pack_geometry_adapter_contracts.hpp"
 #include "placement_precision_fixture.hpp"
 #include "pcb_placement_fixture.hpp"
+#include "ledger_accounting_fixture.hpp"
 #include "schgen/native_audit_state.hpp"
 #include <cmath>
 #include <cstring>
@@ -92,9 +93,14 @@ int main(int argc,char** argv){try{
   const auto q=pcb_placement_accounting(result);
   receipt(q.quantization_engagements,entries);
   auto plan=result.floorplan.plan;
+  auto old_counts=q.quantization_engagements;
+#ifdef PACK_GEOMETRY_CANDIDATE
+  old_counts=ledger_accounting_fixture::before_initial_receipt_fix(old_counts);
+  plan.accounting.quantization_engagements=ledger_accounting_fixture::before_initial_receipt_fix(plan.accounting.quantization_engagements);
+#endif
   plan.accounting.quantization_engagements=placement_precision_fixture::select(select(plan.accounting.quantization_engagements,false),false);
   legacy<<project<<'\n';node(pcb_model_json(result.model));node(floorplan_plan_json(plan));
-  for(const auto& [n,v]:placement_precision_fixture::select(select(q.quantization_engagements,false),false))legacy<<std::quoted(n)<<' '<<v<<'\n';
+  for(const auto& [n,v]:placement_precision_fixture::select(select(old_counts,false),false))legacy<<std::quoted(n)<<' '<<v<<'\n';
   for(const auto& [n,v]:entries)std::cerr<<project<<" entry "<<n<<' '<<v<<'\n';
   begin();auto again=pcb_placement_accounting(result);
   require(end().empty()&&again.quantization_engagements==q.quantization_engagements,"replay created work");
