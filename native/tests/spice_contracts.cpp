@@ -1,9 +1,11 @@
 #include "schgen/spice.hpp"
 #include "schgen/process.hpp"
 #include <chrono>
+#include <cmath>
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
+#include <limits>
 #include <stdexcept>
 #include <sys/stat.h>
 #include <thread>
@@ -27,6 +29,28 @@ void same(const JsonNode& a,const JsonNode& b,const std::string& path) {
 }
 std::optional<double> number(const JsonNode& n,const std::string& key){const auto& v=field(n,key);return v.kind==JsonKind::Null?std::nullopt:std::optional<double>(v.number_value);}
 SpiceResult runnable(){SpiceResult out;out.checks.push_back({"divider TEST","sheet","divider","+3V3 -[R1=10000R]- TEST -[R2=10000R]- GND @ 3.3 V",1.65,"V",0.0,3.3,"analytic",{}});return out;}
+void numeric_safety() {
+    for (const auto bad : {std::numeric_limits<double>::quiet_NaN(),
+                           std::numeric_limits<double>::infinity(),
+                           -std::numeric_limits<double>::infinity()}) {
+        for (int field = 0; field < 4; ++field) {
+            auto check = runnable().checks.front();
+            if (field == 0) check.value = bad;
+            else if (field == 1) check.lo = bad;
+            else if (field == 2) check.hi = bad;
+            else check.spice_value = bad;
+            require(!check.ok(), "non-finite calculation/limit/measurement accepted");
+        }
+    }
+    SpiceCheck zero;
+    zero.value = 0; zero.spice_value = 99;
+    require(!zero.ok(), "zero analytic prediction accepted unrelated simulated voltage");
+    zero.spice_value = std::numeric_limits<double>::denorm_min();
+    require(!zero.ok(), "zero prediction silently acquired an absolute error tolerance");
+    zero.spice_value = -0.; require(zero.ok(), "signed-zero agreement rejected");
+    zero.spice_value.reset(); zero.value = 1; zero.lo = 1 + 1e-10; zero.hi = 1;
+    require(!zero.ok(), "reversed limits hidden by comparison tolerance");
+}
 }
 int main(int argc,char** argv) {
     if(argc==3&&std::string(argv[1])=="-b") {
@@ -37,12 +61,21 @@ int main(int argc,char** argv) {
         if(test=="invalid_utf8"){std::cout<<char(0xff)<<"mid = 1.65\n";return 0;}
         if(test=="unicode_measurement"){std::cout<<"mid\u00a0=\u2003١.٦٥\n";return 0;}
         if(test=="malformed_measurement"){std::cout<<"mid = 1-2\n";return 0;}
+        if(test=="nan_measurement"){std::cout<<"mid = nan\n";return 0;}
+        if(test=="overflow_measurement"){std::cout<<"mid = 1e999\n";return 0;}
+        if(test=="duplicate_measurement"){std::cout<<"mid = 1.65\nmid = 1.65\n";return 0;}
+        if(test=="substring_measurement"){std::cout<<"not_mid = 1.65\n";return 0;}
+        if(test=="trailing_measurement"){std::cout<<"mid = 1.65\nmid = malformed value\n";return 0;}
+        if(test=="missing_success"){std::cout<<"no measurement\n";return 0;}
+        if(test=="precise_measurement"){std::cout<<"mid = 1.65004\n";return 0;}
+        if(test=="small_measurement"){std::cout<<"mid = 0.00001\n";return 0;}
         if(test=="sleep"){std::this_thread::sleep_for(std::chrono::seconds(5));return 0;}
         if(test=="argv"){std::cout<<argv[2];return 0;}
         std::cout<<"no measurement\n";return 3;
     }
     try {
         require(argc==2,"usage: spice_contracts <fixture-directory>");const std::filesystem::path dir(argv[1]);
+        numeric_safety();
         const auto manifest=parse_json_file((dir/"manifest.json").string());std::size_t passed=0,live=0;
         const auto ngspice=ngspice_available();
         for(const auto& file:field(manifest,"cases").array_value) {
@@ -53,22 +86,63 @@ int main(int argc,char** argv) {
             catch(const ModelCheckError& e){require(error!=nullptr,file.string_value+": unexpected error "+e.what());require(field(*error,"message").string_value==e.what(),file.string_value+": diagnostic differs "+e.what());}
             require(bool(result)==!bool(error),file.string_value+": expected error presence differs");
             if(result){same(spice_result_json(*result),field(row,"expected"),file.string_value);require(spice_report(*result,false)==field(row,"report_absent").string_value,file.string_value+": absent report differs");require(spice_report(*result,true)==field(row,"report_present").string_value,file.string_value+": present report differs");
-                if(const auto* expected=object_field(row,"ngspice");expected&&ngspice){SpiceRunOptions opts;opts.executable=ngspice;run_ngspice_crosschecks(*result,opts);same(spice_result_json(*result),*expected,file.string_value+".ngspice");require(spice_report(*result,true)==field(row,"ngspice_report").string_value,file.string_value+": live ngspice report differs");++live;}
+                if(const auto* expected=object_field(row,"ngspice");expected&&ngspice){
+                    SpiceRunOptions opts;opts.executable=ngspice;run_ngspice_crosschecks(*result,opts);
+                    auto historical_view=*result;
+                    const auto& old_checks=field(*expected,"checks").array_value;
+                    require(old_checks.size()==result->checks.size(),"historical simulation check count");
+                    for(std::size_t i=0;i<old_checks.size();++i) {
+                        require(result->checks[i].ok()==field(old_checks[i],"ok").bool_value,
+                                "raw measurement changed historical check verdict");
+                        const auto old=number(old_checks[i],"spice_value");
+                        if(old) {
+                            require(result->checks[i].spice_value &&
+                                    std::abs(*result->checks[i].spice_value-*old)<=0.00005000001,
+                                    "raw measurement differs beyond frozen four-decimal precision");
+                            // Only the historical presentation lost this precision.
+                            // Production values and verdicts remain unmodified.
+                            historical_view.checks[i].spice_value=old;
+                        }
+                    }
+                    same(spice_result_json(historical_view),*expected,file.string_value+".ngspice");
+                    require(spice_report(historical_view,true)==field(row,"ngspice_report").string_value,file.string_value+": historical ngspice report differs");++live;
+                }
             }
             ++passed;
         }
         const auto boundaries=parse_json_file((dir/"boundaries.json").string());
+        std::size_t corrected_zero_cases = 0;
         for(const auto& row:boundaries.array_value) {
             const auto& c=field(row,"check");SpiceCheck value;
             value.value=field(c,"value").number_value;value.lo=number(c,"lo");value.hi=number(c,"hi");value.spice_value=number(c,"spice_value");
-            require(value.ok()==field(row,"ok").bool_value,"comparison tolerance boundary differs");
+            if(value.value==0 && value.spice_value && *value.spice_value!=0) {
+                require(*value.spice_value==99 && !value.lo && !value.hi && field(row,"ok").bool_value,
+                        "unexpected frozen zero-check correction");
+                require(!value.ok(),"historical zero-vs-99V false pass retained");
+                ++corrected_zero_cases;
+            } else require(value.ok()==field(row,"ok").bool_value,"comparison tolerance boundary differs");
         }
+        require(corrected_zero_cases==1,"exact historical zero-check correction required");
         const auto executable=std::filesystem::absolute(argv[0]);SpiceRunOptions opts;opts.executable=executable;
-        for(const auto* mode:{"value","nonzero_value","disagreement","no_measurement","unicode_measurement"}) {
+        for(const auto* mode:{"value","disagreement","unicode_measurement"}) {
             ::setenv("SCHGEN_SELFTEST_PROCESS_MODE",mode,1);auto result=runnable();run_ngspice_crosschecks(result,opts);
-            if(std::string(mode)=="no_measurement"){require(!result.checks[0].spice_value,"no-output run fabricated a value");require(result.notes.size()==1,"no-runnable note missing");}
-            else {require(result.checks[0].spice_value.has_value(),"executable output was ignored");require(result.ok()==(std::string(mode)!="disagreement"),"1% agreement gate altered");}
+            require(result.checks[0].spice_value.has_value(),"executable output was ignored");require(result.ok()==(std::string(mode)!="disagreement"),"1% agreement gate altered");
         }
+        for(const auto* mode:{"nonzero_value","no_measurement","missing_success","nan_measurement",
+                              "overflow_measurement","duplicate_measurement","substring_measurement","trailing_measurement"}) {
+            ::setenv("SCHGEN_SELFTEST_PROCESS_MODE",mode,1);
+            bool rejected=false;
+            try{auto result=runnable();run_ngspice_crosschecks(result,opts);}
+            catch(const ModelCheckError&){rejected=true;}
+            catch(const ProcessError&){rejected=true;}
+            require(rejected,std::string("untrustworthy simulator result accepted: ")+mode);
+        }
+        ::setenv("SCHGEN_SELFTEST_PROCESS_MODE","precise_measurement",1);
+        auto precise=runnable();run_ngspice_crosschecks(precise,opts);
+        require(precise.checks.front().spice_value==1.65004,"measurement precision discarded before validation");
+        ::setenv("SCHGEN_SELFTEST_PROCESS_MODE","small_measurement",1);
+        auto small=runnable();small.checks.front().value=0;run_ngspice_crosschecks(small,opts);
+        require(small.checks.front().spice_value==0.00001&&!small.ok(),"rounded simulation falsely agrees with zero");
         ::setenv("SCHGEN_SELFTEST_PROCESS_MODE","argv",1);const auto command=run_process({executable.string(),"-b","literal ; $HOME $(false) `false`"});require(command.stdout_text=="literal ; $HOME $(false) `false`","process arguments passed through shell");
         ::setenv("SCHGEN_SELFTEST_PROCESS_MODE","sleep",1);opts.timeout=std::chrono::milliseconds(20);bool timed_out=false;
         try{auto result=runnable();run_ngspice_crosschecks(result,opts);}catch(const ProcessTimeout&){timed_out=true;}

@@ -166,8 +166,10 @@ void boot0(const std::string& sheet,const SpiceIndex& idx,SpiceResult& out) {
 }  // namespace
 
 bool SpiceCheck::ok() const {
+    if(!std::isfinite(value)||(lo&&!std::isfinite(*lo))||(hi&&!std::isfinite(*hi))||
+       (spice_value&&!std::isfinite(*spice_value))||(lo&&hi&&*lo>*hi))return false;
     if(lo&&value<*lo-1e-9)return false;if(hi&&value>*hi+1e-9)return false;
-    if(spice_value&&value!=0&&std::abs(*spice_value-value)>0.01*std::abs(value))return false;return true;
+    if(spice_value&&std::abs(*spice_value-value)>0.01*std::abs(value))return false;return true;
 }
 std::vector<std::string> SpiceResult::errors() const {
     std::vector<std::string> out;for(const auto& c:checks)if(!c.ok())out.push_back(c.sheet+":"+c.name+" = "+g(c.value)+" "+c.unit+" outside ["+(c.lo?g(*c.lo):"")+" .. "+(c.hi?g(*c.hi):"")+"] "+c.unit+" — "+c.detail+(c.spice_value?"; ngspice="+g(*c.spice_value):""));return out;

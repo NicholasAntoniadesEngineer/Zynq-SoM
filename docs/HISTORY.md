@@ -1,5 +1,32 @@
 # carrier — project HISTORY (archived planning logs)
 
+## 2026-10-01 — calculation and model-identity corrections
+
+Found and reproduced inherited SPICE validation false passes (autonomous, per
+full-autonomy directive): non-finite numbers could satisfy comparisons; a zero
+analytic prediction accepted a 99 V simulator result; nonzero process exits or
+missing measurements could leave apparently successful analytic checks. The new
+regression failed against the prior implementation before correction.
+
+The gate now rejects non-finite values/limits and reversed intervals, enforces
+agreement at zero, requires successful simulator execution and exactly one valid
+node-voltage row, and retains simulator precision rather than rounding it before
+validation. Missing, ambiguous, malformed, overflowed and substring-only readings
+are rejected. Frozen fixtures remain unchanged: the one historical zero-vs-99 V
+false pass is explicitly rejected, and live simulator comparisons distinguish
+old four-decimal presentation from the full-precision validation result.
+Fifty frozen cases, nine tolerance vectors and seven live ngspice cases pass.
+Live carrier/devkit SPICE gates pass 17/11 checks with 7/5 simulated dividers.
+This is focused calculation validation, not a new complete board/render acceptance.
+
+Also corrected board_aux.cir's stale C3/C4/C5 identities to match the live C++
+factory: C3 is 10u AUX bulk, C4 is 100n VREF1 bypass and C5 is 100n VREF2 bypass.
+The eleven-resistor/capacitor identity test first rejected the old model at C3,
+then passed the correction and ownership mutations. Its independent aggregate
+comparison confirms the passive network is electrically unchanged by relabeling.
+The board's analytic gate uses live C++ circuits, not this passive reference deck;
+the identity test does not claim full active-device simulation coverage.
+
 ## 2026-10-01 — two-sided placement sprint started
 
 Owner requested execution on `codex/two-sided-layout`, explicitly including
