@@ -1,5 +1,31 @@
 # carrier — project HISTORY (archived planning logs)
 
+## 2026-10-01 — complete rendered baseline comparison
+
+Measured pinned C++ `1ad3a40a85e98d481e22f00bdeacac86582c4356` against the
+owner's sole Python baseline `0e9bbc913bab77f9cd228940db2a332d25d6bfa1`,
+in isolated source checkouts (autonomous, per full-autonomy directive).
+All four commands ran sequentially with full renders and mandatory checks;
+agent builds/tests were paused. C++ carrier/devkit took 323.79/273.73 seconds;
+Python carrier/devkit took 757.53/77.29 seconds. Changes are -57.26%/+254.16%,
+respectively. Fresh Release CLI compilation was 115.80 seconds separately,
+with two jobs and an existing zlib-ng dependency, not included per board.
+
+These are revision/workload comparisons, not same-input language speedups.
+Python carrier passed; Python devkit retained its test-point/design failures.
+Both C++ commands completed their renders but failed quantize_census/ledger:
+the same 64 unregistered sites, with 122 registered transforms. Their source
+audits took 215.354667/217.499183 seconds. No checks were bypassed or goldens
+blessed. All 65 expected PNGs per implementation were freshly regenerated;
+49 native schematic pages were visually inspected at whole-page scale.
+Native DRC reported zero non-unrouted errors, but 499/413 unrouted connections
+remain; this is not fabrication-ready PCB approval. Devkit title-block
+branding was flagged for correction, not silently accepted.
+
+Full provenance, raw-log hashes, paths and limitations are recorded in
+`native/benchmarks/2026-10-01-full-render.json`. Later migration fixes are not
+represented by this pinned benchmark.
+
 ## 2026-09-27 — rendered verification and truthful DRC process diagnostics
 
 Applied improvements (autonomous, per full-autonomy directive): the 39 output,
