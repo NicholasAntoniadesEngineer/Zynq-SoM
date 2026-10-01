@@ -29,7 +29,7 @@ int main(int argc,char** argv){try{
  if(argc==3&&other_before!=other_after)throw std::runtime_error("out-of-scope pack operation-family counts changed");
  auto scalars=scan(argv[argc-1],{{"native/src/pack_geometry_precision.cpp"}});
  NativeQuantizations all,r;register_native_quantizations(all);
- if(all.declarations().size()!=131)throw std::runtime_error("expected131 production declarations");
+ if(all.declarations().size()!=155)throw std::runtime_error("expected155 production declarations");
  for(const auto& d:all.declarations())if(geometry_fixture::added(d.name))r.declare(d);
  if(r.declarations().size()!=14)throw std::runtime_error("expected14 exact geometry declarations");
  NativeLedger ledger;

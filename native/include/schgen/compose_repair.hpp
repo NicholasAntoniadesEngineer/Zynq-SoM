@@ -34,7 +34,10 @@ ComposeAcceptance accept_compose_repair(const ComposeDocument &before, const Com
     const std::set<ComposeTermKey> &targets = {}, bool allow_area_growth = false);
 
 // Reuses the independent final-model gates; never accepts predicted verdicts.
-ComposeDocument measure_compose_ledger(const PcbPlacementInput &, const PcbModel &);
+// Optional caller-owned accounting for the three final-model measurement calls
+// only. Accumulates into existing counts; never retains the borrowed sink.
+ComposeDocument measure_compose_ledger(const PcbPlacementInput &, const PcbModel &,
+    QuantizationCounts* measurement_counts = nullptr);
 struct ComposeReplica {
     FloorplanPlan plan;
     FloorplanOffsets poses;
@@ -97,6 +100,9 @@ struct ComposeCommandResult { int exit_code = 0; std::string output; bool applie
 // Rebuild/measurement exceptions restore the tentative spec, then propagate.
 // After acceptance, ledger publication errors propagate without undoing the
 // accepted spec; JSON and Markdown publication are not a multi-file transaction.
+// Counts only initial/rebuilt ledger measurements, not candidate planning,
+// host builds, publication, or a complete CLI/board-audit receipt.
 ComposeCommandResult run_compose_command(const ComposeCommandOptions &,
-    const ComposeCommandPaths &, const ComposeCommandHost &);
+    const ComposeCommandPaths &, const ComposeCommandHost &,
+    QuantizationCounts* measurement_counts = nullptr);
 } // namespace schgen

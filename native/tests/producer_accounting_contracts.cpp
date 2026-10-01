@@ -2,6 +2,8 @@
 // Compile quantize.cpp and native_audit_quantize.cpp with -finstrument-functions
 // -fno-inline for this executable ONLY. Do not instrument this test TU.
 #include "pcb_placement_fixture.hpp"
+#include "floorplan_precision_fixture.hpp"
+#include <sstream>
 #include "pcb_placement_internal.hpp"
 #include "native_audit_quantize_internal.hpp"
 #include "schgen/legalize.hpp"
@@ -108,15 +110,23 @@ void live(const std::filesystem::path& root,const std::string& name){
         auto delta=p.ctx.quantization;for(const auto& [k,v]:before)delta[k]-=v;
         measured(delta,observed,name+"/"+label);
     };
-    step("l4",[&]{p.l4_pull();});step("edge",[&]{p.edge_seat();});
-    step("breathe-A",[&]{p.breathe("A");});step("breathe-B",[&]{p.breathe("B");});
-    step("refit",[&]{p.refit();});step("reorder",[&]{p.reorder();});step("evict",[&]{p.evict();});
+    step("l4",[&]{p.l4_pull();});p.checkpoint("l4_pull");
+    step("edge",[&]{p.edge_seat();});p.checkpoint("edge_seat");
+    step("breathe-A",[&]{p.breathe("A");});step("breathe-B",[&]{p.breathe("B");});p.checkpoint("breathe");
+    step("refit",[&]{p.refit();});p.checkpoint("refit_facing");
+    step("reorder",[&]{p.reorder();});p.checkpoint("reorder");step("evict",[&]{p.evict();});
     p.checkpoint("corridor_eviction"); // same freeze boundary as production
     std::size_t fixed_coordinates=0;for(const auto& [r,key]:p.geometry.resolvable){(void)key;if(!p.grid_placed.count(r))fixed_coordinates+=2;}
     step("instantiate",[&]{p.instantiate();});
     require(count(p.ctx.quantization,"fixed_part_grid")==fixed_coordinates,name+" exactly two coordinate snaps per non-grid-placed instance");
     require(count(p.ctx.quantization,"breathe_anchor_grid")>0,name+" actual breathing trials occurred");
+    // Production exports after escape(), so the manual receipt must include it.
+    step("escape",[&]{p.escape();});
     calls={};const auto result=build_pcb_model(f.input);const auto observed=calls;
+    std::ostringstream manual_model,production_model;
+    floorplan_precision_fixture::node(manual_model,pcb_model_json(p.out.model));
+    floorplan_precision_fixture::node(production_model,pcb_model_json(result.model));
+    require(manual_model.str()==production_model.str(),name+" frozen-stage manual geometry matches production");
     require(result.zone_accounting_ownership==PcbZoneAccountingOwnership::IncludedInFloorplan,name+" production normal ownership explicit");
     require(result.placement_accounting.quantization_engagements==p.ctx.quantization,name+" every placement-local engagement exported");
     auto legacy=result.zone_accounting.fallback_events;legacy.insert(legacy.end(),result.placement_accounting.fallback_events.begin(),result.placement_accounting.fallback_events.end());

@@ -65,7 +65,7 @@ bool Engine::attempt_pack_impl(bool compact) {
     plan.spilled.clear();
     std::vector<PackEdgeBlock> edge_rows;
     for (auto& b:plan.edge_blocks) {
-        std::tie(b.w,b.h)=zbox.at(b.name); b.area=block_area(b.w,b.h);
+        std::tie(b.w,b.h)=zbox.at(b.name); b.area=block_area(b.w,b.h, counts);
         PackEdgeBlock row;
         row.name=b.name; row.w=b.w; row.h=b.h;
         if (b.order_hint) row.order_hint=*b.order_hint;
@@ -175,7 +175,7 @@ bool Engine::attempt_pack_impl(bool compact) {
             side_offers[b.name]={hits[0].side+"(incumbent)/"+hits[1].side,best.side,best.index,incumbent,challenger};
         }
         pose(b,{best.x,best.y,best.w,best.h}); b.shape_idx=best.index; b.side=best.side;
-        b.fanout_reach=best.reach; b.fanout_inset=best.inset; b.area=block_area(b.w,b.h); chosen[b.name]=best.comps;
+        b.fanout_reach=best.reach; b.fanout_inset=best.inset; b.area=block_area(b.w,b.h, counts); chosen[b.name]=best.comps;
         return true;
     };
     int evict_budget=reseat_evict_budget;
@@ -202,7 +202,7 @@ bool Engine::attempt_pack_impl(bool compact) {
         return false;
     };
     for (auto* b:order) {
-        std::tie(b->w,b->h)=zbox.at(b->name); b->area=block_area(b->w,b->h);
+        std::tie(b->w,b->h)=zbox.at(b->name); b->area=block_area(b->w,b->h, counts);
         const auto a=pack_anchor(anchor_row(*b,centers));
         if (seat(*b,a,nullptr)) { occ_put(*b); centers[b->name]={b->cx(),b->cy()}; }
         else if (!retry(*b,a)) return false;

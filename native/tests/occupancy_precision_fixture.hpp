@@ -1,4 +1,6 @@
 #include "pack_search_precision_fixture.hpp"
+#include "pack_plain_precision_fixture.hpp"
+#include "pack_grid_precision_fixture.hpp"
 #pragma once
 #include "schgen/quantize.hpp"
 #include "legalize_precision_fixture.hpp"
@@ -20,7 +22,7 @@ inline schgen::QuantizationCounts select(const schgen::QuantizationCounts& value
     // Independently proven legalizer, stage and placement additions are absent
     // from this historical snapshot. Every other prior/unknown name stays visible.
     for(const auto& [name,count]:values)
-        if(added(name)==new_only&&!legalize_precision_fixture::added(name)&&!stage_precision_fixture::added(name)&&!placement_precision_fixture::added(name)&&!output_precision_fixture::added(name)&&!pack_precision_fixture::added(name)&&!pack_geometry_precision_fixture::added(name)&&!pack_search_precision_fixture::added(name))out[name]=count;
+        if(added(name)==new_only&&!legalize_precision_fixture::added(name)&&!stage_precision_fixture::added(name)&&!placement_precision_fixture::added(name)&&!output_precision_fixture::added(name)&&!pack_precision_fixture::added(name)&&!pack_geometry_precision_fixture::added(name)&&!pack_search_precision_fixture::added(name)&&!pack_plain_precision_fixture::added(name)&&!pack_grid_precision_fixture::added(name))out[name]=count;
     return out;
 }
 }

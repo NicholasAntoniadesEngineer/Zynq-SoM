@@ -37,11 +37,11 @@ struct Connector {
     std::map<std::string, std::pair<double, double>> pads;
     ContactGeom contacts;
 };
-inline std::map<std::string, Connector> prepare_connectors(const PcbCheckModel &m) {
+inline std::map<std::string, Connector> prepare_connectors(const PcbCheckModel &m, QuantizationCounts* counts) {
     std::map<std::string, Connector> out;
     for (const auto &[ref, i] : connectors(m)) {
         const auto &fp = footprint(m.insts[i]);
-        out.emplace(ref, Connector{i, positions(fp), pcb_escape_contact_geometry(fp)});
+        out.emplace(ref, Connector{i, positions(fp), pcb_escape_contact_geometry(fp, counts)});
     }
     return out;
 }

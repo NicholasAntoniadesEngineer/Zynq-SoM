@@ -3,6 +3,7 @@
 #include "stage_precision_fixture.hpp"
 #ifndef LEGALIZE_LEGACY_PROBE
 #include "buried_policy_fixture.hpp"
+#include "ledger_accounting_fixture.hpp"
 #endif
 #include "schgen/legalize.hpp"
 #include "schgen/quantize.hpp"
@@ -162,6 +163,11 @@ void boards(std::ostream& out,const std::filesystem::path& root){
         // Validate all seven exact additions before projecting immutable old bytes.
         prior_plan=buried_policy_fixture::prior_accounted_plan(std::move(prior_plan));
         prior_total=buried_policy_fixture::prior_display_counts(std::move(prior_total));
+        // build_pcb_model returned one completed Engine::run plan. Project its
+        // independently proven two ledger_initial calls only in these complete
+        // plan/aggregate fixture views; helper, zone and placement counts stay raw.
+        prior_plan.accounting.quantization_engagements=ledger_accounting_fixture::before_initial_receipt_fix(prior_plan.accounting.quantization_engagements);
+        prior_total=ledger_accounting_fixture::before_initial_receipt_fix(prior_total);
 #endif
         out<<"BOARD "<<v<<'\n';prior_plan.accounting.quantization_engagements=legacy(prior_plan.accounting.quantization_engagements);
         floorplan_precision_fixture::node(out,floorplan_plan_json(prior_plan));

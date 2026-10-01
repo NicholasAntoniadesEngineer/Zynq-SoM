@@ -75,7 +75,7 @@ struct PcbPlacementFlowResult {
 // A supplied selection is explicit and may include inert or unplaced sheets.
 PcbPlacementFlowResult
 check_pcb_placement_flow(const PcbCheckInput &, const PcbPlacementGatePolicy &,
-                         const std::map<std::string, JsonNode> *selected_contracts = nullptr);
+                         const std::map<std::string, JsonNode> *selected_contracts = nullptr, QuantizationCounts* counts = nullptr);
 
 struct PcbComposeCoexistence {
     std::string ref, sheet, verdict;
@@ -93,7 +93,7 @@ PcbComposeEvidence pcb_compose_evidence(const JsonNode &sidecar, FloorplanPoint 
 PcbComposeEvidence pcb_compose_evidence(const PcbModel &);
 std::vector<FloorplanTermEval> measure_pcb_compose_terms(const PcbCheckInput &,
                                                          const FloorplanTermIndex &,
-                                                         const PcbPlacementGatePolicy &);
+                                                         const PcbPlacementGatePolicy &, QuantizationCounts* counts = nullptr);
 using PcbCrossAirwires = std::map<std::pair<std::string, std::string>, std::pair<int, double>>;
 PcbCrossAirwires pcb_cross_airwires_by_pair(const PcbCheckModel &, const RatsnestNets * = nullptr,
                                             const RatsnestEdges * = nullptr);
@@ -110,7 +110,7 @@ struct PcbComposeReport {
 PcbComposeReport report_pcb_composition(const PcbCheckInput &, const FloorplanTermIndex &,
                                         const PcbPlacementGatePolicy &, const PcbComposeEvidence &,
                                         const RatsnestNets * = nullptr,
-                                        const RatsnestEdges * = nullptr);
+                                        const RatsnestEdges * = nullptr, QuantizationCounts* counts = nullptr);
 struct PcbPlacementGatesResult {
     PcbPlacementContractResult placement_contract;
     PcbPlacementFlowResult placement_flow;
@@ -125,8 +125,8 @@ struct PcbPlacementGatesResult {
 PcbPlacementGatesResult
 check_pcb_placement_gates(const PcbCheckInput &, const PcbPlacementGatePolicy &,
                           const FloorplanTermIndex &, const PcbComposeEvidence &,
-                          const RatsnestNets * = nullptr, const RatsnestEdges * = nullptr);
+                          const RatsnestNets * = nullptr, const RatsnestEdges * = nullptr, QuantizationCounts* counts = nullptr);
 // Production convenience: live policy + final placed-sheet term scope + current
 // model T2 evidence. No fixtures, filesystem reads, Python or second solve.
-PcbPlacementGatesResult check_pcb_placement_gates(const PcbPlacementInput &, const PcbModel &);
+PcbPlacementGatesResult check_pcb_placement_gates(const PcbPlacementInput &, const PcbModel &, QuantizationCounts* counts = nullptr);
 } // namespace schgen

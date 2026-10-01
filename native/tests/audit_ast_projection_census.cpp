@@ -1,8 +1,10 @@
 // This is deliberately a separate executable/TU. It uses the REAL visitor,
 // unchanged, for both full and projected trees; it is not a second scanner.
 // Private proof builds can point at a frozen pre-optimization source snapshot.
+// Indexed modern overrides also define SCHGEN_AUDIT_VISITOR_INDEXED_LINES.
 #ifndef SCHGEN_AUDIT_VISITOR_SOURCE
 #define SCHGEN_AUDIT_VISITOR_SOURCE "../src/native_cpp_audits.cpp"
+#define SCHGEN_AUDIT_VISITOR_INDEXED_LINES
 #endif
 #include SCHGEN_AUDIT_VISITOR_SOURCE
 #include "schgen/audit_ast_projection.hpp"
@@ -17,7 +19,14 @@ CppSourceCensus projection_test_visit(const JsonNode& ast,const std::string& abs
     const std::string& relative,const std::string& source){
     if(text(ast,"kind")!="TranslationUnitDecl")throw std::runtime_error("not a Clang translation unit");
     CppSourceCensus out;
-    Visitor visitor{relative,absolute,source,out,{},{},{},{}};
+    Visitor visitor{relative,absolute,source,out,{},{},{},{}
+#ifdef SCHGEN_AUDIT_VISITOR_INDEXED_LINES
+        ,{}
+#endif
+    };
+#ifdef SCHGEN_AUDIT_VISITOR_INDEXED_LINES
+    visitor.index_lines();
+#endif
     visitor.index(ast);visitor.visit(ast);visitor.finish();out.n_files=1;return out;
 }
 }

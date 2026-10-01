@@ -110,9 +110,15 @@ void via(const std::filesystem::path& root){
         require(bits(declaration(policy,"via_ordinary_cost").resolve().number_value)==bits(ordinary),"actual optional override (including zero) reaches provider");
         require(bits(declaration(policy,"via_impedance_cost").resolve().number_value)==bits(7.6),"ordinary override never changes impedance provider");
         require(observations==0&&in.accounting.quantization_engagements.empty(),"policy reads do not execute solver or counters");
-        floorplan_detail::Engine e(in);e.ledger_open();e.ledger_initial(50,50);e.prepare_cross();
+        floorplan_detail::Engine e(in);e.ledger_open();e.ledger_initial(50,50);
+        // Both ledger prices execute est_via_cost, even with an ordinary override.
+        require(e.plan.accounting.quantization_engagements.at("est_via_cost")==2,"exactly two actual ledger pricing engagements");
+        auto expected_cross_counts=e.plan.accounting.quantization_engagements;
+        expected_cross_counts.at("est_via_cost")=3;
+        e.prepare_cross();
         require(e.cross_nets.size()==1&&bits(e.cross_nets.front().via_cost)==bits(cost),"actual net estimator uses identical resolved policy");
-        require(e.plan.accounting.quantization_engagements.at("est_via_cost")==1,"exactly one actual per-net pricing engagement");
+        require(e.plan.accounting.quantization_engagements.at("est_via_cost")==3,"exactly one additional actual per-net pricing engagement");
+        require(e.plan.accounting.quantization_engagements==expected_cross_counts,"cross preparation changes only the single per-net pricing entry");
         for(const auto& row:e.plan.accounting.decisions)if(row.name=="via_ordinary_cost"||row.name=="est_via_ordinary")
             require(bits(row.value.number_value)==bits(ordinary),"assumption and calculation record actual ordinary override");
         require(observations==0,"ledger policy does not invoke estimate observer");

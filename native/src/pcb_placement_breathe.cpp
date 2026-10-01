@@ -47,34 +47,34 @@ void Placer::breathe(const std::string &phase) {
     }
     if (movable.empty())
         return;
-    BreatheGrid top(width, height, .25, 25, 25), bottom(width, height, .25, 25, 25);
+    BreatheGrid top(width, height, .25, 25, 25, &ctx.quantization), bottom(width, height, .25, 25, 25, &ctx.quantization);
     auto grid = [&](const std::string &r) -> BreatheGrid & {
         return side(r) == "bottom" ? bottom : top;
     };
     auto page_keepout = offset_rect(keepout, 25, 25);
     for (auto *g : {&top, &bottom}) {
-        g->stamp({25, 25, 25 + width, 25 + .6}, 1);
-        g->stamp({25, 25 + height - .6, 25 + width, 25 + height}, 1);
-        g->stamp({25, 25, 25 + .6, 25 + height}, 1);
-        g->stamp({25 + width - .6, 25, 25 + width, 25 + height}, 1);
-        g->stamp(page_keepout, 1);
-        g->stamp(grow_rect(page_keepout, 2), 1);
+        g->stamp({25, 25, 25 + width, 25 + .6}, 1, &ctx.quantization);
+        g->stamp({25, 25 + height - .6, 25 + width, 25 + height}, 1, &ctx.quantization);
+        g->stamp({25, 25, 25 + .6, 25 + height}, 1, &ctx.quantization);
+        g->stamp({25 + width - .6, 25, 25 + width, 25 + height}, 1, &ctx.quantization);
+        g->stamp(page_keepout, 1, &ctx.quantization);
+        g->stamp(grow_rect(page_keepout, 2), 1, &ctx.quantization);
         for (const auto &[r, j] : som_refs) {
             (void)j;
             if (geometry.bbox_of.count(r) && pos.count(r))
-                g->stamp(grow_rect(box(r, pos.at(r)), 6), 1);
+                g->stamp(grow_rect(box(r, pos.at(r)), 6), 1, &ctx.quantization);
         }
     }
     for (const auto &r : fixed_parts)
         if (geometry.bbox_of.count(r) && geometry.resolvable.count(r))
-            grid(r).stamp(grow_rect(box(r, pos.at(r)), pc), 1);
+            grid(r).stamp(grow_rect(box(r, pos.at(r)), pc), 1, &ctx.quantization);
     for (const auto &[r, p] : pos)
         if (side(r) == "top" && geometry.resolvable.count(r) && geometry.bbox_of.count(r) &&
             has_thru_pads_from_text(mod(r)->bytes))
-            bottom.stamp(grow_rect(box(r, p), pc), 1);
+            bottom.stamp(grow_rect(box(r, p), pc), 1, &ctx.quantization);
     std::map<std::string, std::vector<std::string>> by_sheet;
     for (const auto &r : movable) {
-        grid(r).stamp(grow_rect(box(r, pos.at(r)), pc / 2), 1);
+        grid(r).stamp(grow_rect(box(r, pos.at(r)), pc / 2), 1, &ctx.quantization);
         by_sheet[ctx.by_ref.at(r).sheet].push_back(r);
     }
     auto cp = [&](const std::string &r) {
@@ -194,7 +194,7 @@ void Placer::breathe(const std::string &phase) {
         for (const auto &r : g.members) {
             auto old = pos.at(r);
             auto b = box(r, {old.first + delta.first, old.second + delta.second});
-            if (!grid(r).free(grow_rect(b, pc / 2)))
+            if (!grid(r).free(grow_rect(b, pc / 2), &ctx.quantization))
                 return false;
             for (const auto &s : guards) {
                 if (g.members.count(s) || side(r) != side(s))
@@ -244,7 +244,7 @@ void Placer::breathe(const std::string &phase) {
                 directions.push_back(d);
         }
         for (const auto &r : g.members)
-            grid(r).stamp(grow_rect(box(r, pos.at(r)), pc / 2), 0);
+            grid(r).stamp(grow_rect(box(r, pos.at(r)), pc / 2), 0, &ctx.quantization);
         FloorplanPoint best{0, 0};
         double best_clear = cur;
         bool won = false;
@@ -294,7 +294,7 @@ void Placer::breathe(const std::string &phase) {
                 }
         }
         for (const auto &r : g.members)
-            grid(r).stamp(grow_rect(box(r, pos.at(r)), pc / 2), 1);
+            grid(r).stamp(grow_rect(box(r, pos.at(r)), pc / 2), 1, &ctx.quantization);
     }
     for (const auto &[sheet, refs] : by_sheet) {
         if (refs.size() <= 3)

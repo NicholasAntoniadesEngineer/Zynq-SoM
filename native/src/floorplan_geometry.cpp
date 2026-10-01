@@ -174,7 +174,7 @@ std::pair<Halo, Halo> Engine::fanout(const FloorplanZoneShape& shape, bool base)
     }
     return zone_fanout_reach(shape.w, shape.h,
         zone_fanout_members_rows_accounted(rows, min_subject_pins, {{2,.20},{8,1.50}},2.0,
-            &plan.accounting.quantization_engagements), min_subject_pins);
+            &plan.accounting.quantization_engagements), min_subject_pins, &plan.accounting.quantization_engagements);
 }
 std::vector<Comp> Engine::zone_components(const FloorplanZoneShape& shape, bool pad_punch, QuantizationCounts* counts) const {
     auto rotations = in.geometry.conn_rot;

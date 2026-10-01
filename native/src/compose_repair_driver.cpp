@@ -2,14 +2,14 @@
 
 namespace schgen {
 using namespace compose_detail;
-ComposeCommandResult run_compose_command(const ComposeCommandOptions &options,const ComposeCommandPaths &paths,const ComposeCommandHost &host) {
+ComposeCommandResult run_compose_command(const ComposeCommandOptions &options,const ComposeCommandPaths &paths,const ComposeCommandHost &host,QuantizationCounts* measurement_counts) {
     if(!host.build_model)throw std::invalid_argument("compose: native build_model host is required");
     ComposeCommandResult result;
     auto emit=[&](const std::string &s){result.output+=s;if(host.output)host.output(s);};
     // A malformed intent fails before measuring, even in dry-run mode.
     const auto moves=options.repair?parse_compose_allow_intent(options.allow_intent):std::vector<ComposeSpecEdit>{};
     emit(options.repair?"compose: measuring the emitted board (build_model + gates) ...\n":"compose: measuring the emitted board (build_model + gates)...\n");
-    const auto initial=host.build_model();auto before=measure_compose_ledger(initial.input,initial.model);
+    const auto initial=host.build_model();auto before=measure_compose_ledger(initial.input,initial.model,measurement_counts);
     if(!options.repair) {
         write_compose_ledger(before,"measure",paths.ledger_json,paths.ledger_markdown);
         const auto &b=required(before.data,"board"),&agg=required(before.data,"aggregate_hard_margin");
@@ -52,7 +52,7 @@ ComposeCommandResult run_compose_command(const ComposeCommandOptions &options,co
     try {
         const auto run=host.run_board();bool ok=run.exit_code==0;ComposeDocument after;
         if(ok) {
-            const auto rebuilt=host.build_model();after=measure_compose_ledger(rebuilt.input,rebuilt.model);
+            const auto rebuilt=host.build_model();after=measure_compose_ledger(rebuilt.input,rebuilt.model,measurement_counts);
             const auto decision=accept_compose_repair(before,after,best.target_key?std::set<ComposeTermKey>{*best.target_key}:std::set<ComposeTermKey>{});
             ok=decision.ok;
             if(best.intent()&&!ok&&std::all_of(decision.reasons.begin(),decision.reasons.end(),[](const auto &s){return s.find("area grew")!=s.npos;})) {

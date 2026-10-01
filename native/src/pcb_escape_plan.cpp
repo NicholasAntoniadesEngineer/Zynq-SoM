@@ -5,7 +5,7 @@ namespace schgen {
 using namespace pcb_escape;
 PcbEscapePlanResult build_pcb_escape_plan(const PcbEscapeInput &input, QuantizationCounts* counts) {
     const auto &m = input.model();
-    const auto conns = prepare_connectors(m);
+    const auto conns = prepare_connectors(m, counts);
     PcbEscapePlanResult plan;
     plan.consumer = "T1 composition legalizer (D13): treat every corridor rect + the som_escape "
                     "via sites as placement constraints";

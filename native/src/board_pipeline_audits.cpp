@@ -13,6 +13,8 @@ std::vector<CppAuditSource> board_pipeline_audit_sources(){
     out.push_back({"native/src/pack_precision.cpp"});
     out.push_back({"native/src/pack_geometry_precision.cpp"});
     out.push_back({"native/src/pack_search_precision.cpp"});
+    out.push_back({"native/src/pack_plain_precision.cpp"});
+    out.push_back({"native/src/pack_grid_precision.cpp"});
     return out;
 }
 void import_board_floorplan_ledger(NativeLedger& ledger,const FloorplanAccounting& accounting,

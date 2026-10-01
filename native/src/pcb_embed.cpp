@@ -134,7 +134,7 @@ ThermalNodes thermal_nodes(const PcbModel &m, const PcbEmitPolicy &p, const Uid 
             }
         for (const auto &c : m.copper)
             if (c.kind == "via" && within_reach(c.x, c.y, i.x, i.y, reach)) {
-                auto [x, y] = round_xy(c.x, c.y, 4);
+                auto [x, y] = round_xy(c.x, c.y, 4, counts);
                 double radius = c.size / 2;
                 obstacles.push_back(
                     {x, y, radius, radius, net_names[c.net], c.drill,

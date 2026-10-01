@@ -61,7 +61,11 @@ ProcessResult run(const std::vector<std::string>& argv, bool success, const std:
     if (!expected.empty()) require(output.find(expected) != std::string::npos, "missing diagnostic " + expected + "\n" + output);
     return result;
 }
-void exercise(const fs::path& repo, const fs::path& archive, const fs::path& cmake) {
+void exercise(const fs::path& repo, const fs::path& archive, const fs::path& cmake,
+              const fs::path& owning_cache) {
+    // Passed by the configuring top-level build, including native/ci wrappers.
+    // Never guess from the source tree or from the archive's subdirectory.
+    const auto cache = read(owning_cache);
     Scratch scratch;
     const bool had_widget = fs::exists(repo / "subsystems/widget");
     const bool had_class = fs::exists(repo / "subsystems/class");
@@ -104,7 +108,6 @@ void exercise(const fs::path& repo, const fs::path& archive, const fs::path& cma
             "-DSCHGEN_SUBSYSTEM_PACKAGES=" + packages};
 #ifdef __APPLE__
         // The archive deployment target comes from its owning build, read-only.
-        const auto cache = read(repo / "native/build/CMakeCache.txt");
         const auto target_key = std::string("CMAKE_OSX_DEPLOYMENT_TARGET:STRING=");
         const auto at = cache.find(target_key);
         if (at != std::string::npos) {
@@ -166,8 +169,8 @@ void exercise(const fs::path& repo, const fs::path& archive, const fs::path& cma
 } // namespace
 int main(int argc, char** argv) {
     try {
-        require(argc == 4, "usage: subsystem_scaffold_build_contracts REPOSITORY CORE_ARCHIVE CMAKE_EXECUTABLE");
-        exercise(fs::absolute(argv[1]), fs::absolute(argv[2]), fs::absolute(argv[3]));
+        require(argc == 5, "usage: subsystem_scaffold_build_contracts REPOSITORY CORE_ARCHIVE CMAKE_EXECUTABLE BUILD_CACHE");
+        exercise(fs::absolute(argv[1]), fs::absolute(argv[2]), fs::absolute(argv[3]), fs::absolute(argv[4]));
         std::cout << "PASS: " << assertions << " isolated generated C++ / registry / CMake / CTest contracts\n";
     } catch (const std::exception& error) { std::cerr << error.what() << '\n'; return 1; }
 }

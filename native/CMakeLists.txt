@@ -22,6 +22,8 @@ add_library(schgen_core STATIC
     src/placement_precision.cpp src/output_precision.cpp src/pack_precision.cpp
     src/pack_geometry_precision.cpp
     src/pack_search_precision.cpp
+    src/pack_plain_precision.cpp
+    src/pack_grid_precision.cpp
     src/pack_anchor.cpp src/place_search.cpp src/cc.cpp src/embed_fp.cpp
     src/pack_edges.cpp src/pcb_scan.cpp src/pack_refine.cpp src/place_geom.cpp
     src/catalog.cpp src/json.cpp src/circuit.cpp src/reorder.cpp src/atomic_file.cpp
@@ -197,6 +199,7 @@ include(CTest)
 include(cmake/SubsystemPackages.cmake)
 schgen_configure_subsystem_packages(schgen_core "${CMAKE_CURRENT_SOURCE_DIR}/..")
 if(BUILD_TESTING)
+    include(tests/compose_measure_accounting.cmake)
     include(tests/native_audit_queue.cmake)
     include(tests/model_failure_receipt_contracts.cmake)
     include(tests/floorplan_receipt_contracts.cmake)
@@ -227,7 +230,8 @@ if(BUILD_TESTING)
     target_link_libraries(schgen_subsystem_scaffold_build_contracts PRIVATE schgen_core)
     target_compile_options(schgen_subsystem_scaffold_build_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror -ffp-contract=off)
     add_test(NAME native_subsystem_scaffold_build_contracts COMMAND schgen_subsystem_scaffold_build_contracts
-        "${CMAKE_CURRENT_SOURCE_DIR}/.." "$<TARGET_FILE:schgen_core>" "${CMAKE_COMMAND}")
+        "${CMAKE_CURRENT_SOURCE_DIR}/.." "$<TARGET_FILE:schgen_core>" "${CMAKE_COMMAND}"
+        "${CMAKE_BINARY_DIR}/CMakeCache.txt")
     add_executable(schgen_render_models_contracts tests/render_models_contracts.cpp)
     target_include_directories(schgen_render_models_contracts PRIVATE src)
     target_link_libraries(schgen_render_models_contracts PRIVATE schgen_core)
@@ -478,6 +482,60 @@ if(BUILD_TESTING)
 
 
     include(tests/pack_search/integration.cmake)
+
+
+    # Plain pack precision: actual scalar entries, never inferred engagements.
+    add_library(schgen_pack_plain_observed OBJECT src/pack_plain_precision.cpp)
+    target_include_directories(schgen_pack_plain_observed PRIVATE include)
+    target_compile_options(schgen_pack_plain_observed PRIVATE -Wall -Wextra -Wpedantic -Werror)
+    set_property(TARGET schgen_pack_plain_observed PROPERTY INTERPROCEDURAL_OPTIMIZATION FALSE)
+    if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+        target_compile_options(schgen_pack_plain_observed PRIVATE -finstrument-functions-after-inlining)
+    else()
+        target_compile_options(schgen_pack_plain_observed PRIVATE -finstrument-functions -fno-inline)
+    endif()
+    foreach(family pack_plain pack_plain_board)
+        add_executable(schgen_${family}_contracts tests/${family}_contracts.cpp
+            $<TARGET_OBJECTS:schgen_pack_plain_observed>)
+        target_include_directories(schgen_${family}_contracts PRIVATE src)
+        target_link_libraries(schgen_${family}_contracts PRIVATE schgen_core)
+        target_compile_options(schgen_${family}_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror)
+        set_property(TARGET schgen_${family}_contracts PROPERTY INTERPROCEDURAL_OPTIMIZATION FALSE)
+    endforeach()
+    add_test(NAME native_pack_plain_contracts COMMAND schgen_pack_plain_contracts)
+    add_test(NAME native_pack_plain_board_contracts COMMAND schgen_pack_plain_board_contracts
+        "${CMAKE_CURRENT_SOURCE_DIR}/..")
+    add_executable(schgen_pack_plain_source_contracts tests/pack_plain_source_contracts.cpp)
+    target_link_libraries(schgen_pack_plain_source_contracts PRIVATE schgen_core)
+    target_compile_options(schgen_pack_plain_source_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror)
+    add_test(NAME native_pack_plain_source_contracts COMMAND schgen_pack_plain_source_contracts
+        "${CMAKE_CURRENT_SOURCE_DIR}/..")
+    add_library(schgen_pack_grid_precision_observed OBJECT src/pack_grid_precision.cpp)
+    target_include_directories(schgen_pack_grid_precision_observed PRIVATE include)
+    target_compile_options(schgen_pack_grid_precision_observed PRIVATE -Wall -Wextra -Wpedantic -Werror)
+    set_property(TARGET schgen_pack_grid_precision_observed PROPERTY INTERPROCEDURAL_OPTIMIZATION FALSE)
+    if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+        target_compile_options(schgen_pack_grid_precision_observed PRIVATE -finstrument-functions-after-inlining)
+    else()
+        target_compile_options(schgen_pack_grid_precision_observed PRIVATE -finstrument-functions -fno-inline)
+    endif()
+    add_executable(schgen_pack_grid_precision_contracts tests/pack_grid_precision_contracts.cpp
+        $<TARGET_OBJECTS:schgen_pack_grid_precision_observed>)
+    target_include_directories(schgen_pack_grid_precision_contracts PRIVATE src)
+    target_link_libraries(schgen_pack_grid_precision_contracts PRIVATE schgen_core)
+    target_compile_options(schgen_pack_grid_precision_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror)
+    set_property(TARGET schgen_pack_grid_precision_contracts PROPERTY INTERPROCEDURAL_OPTIMIZATION FALSE)
+    add_test(NAME native_pack_grid_precision_contracts COMMAND schgen_pack_grid_precision_contracts "${CMAKE_CURRENT_SOURCE_DIR}/..")
+    add_test(NAME native_pack_grid_precision_boards COMMAND schgen_pack_grid_precision_contracts "${CMAKE_CURRENT_SOURCE_DIR}/.." --boards)
+    add_executable(schgen_pack_grid_precision_source_contracts tests/pack_grid_precision_audit_contracts.cpp)
+    target_link_libraries(schgen_pack_grid_precision_source_contracts PRIVATE schgen_core)
+    target_compile_options(schgen_pack_grid_precision_source_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror)
+    add_test(NAME native_pack_grid_precision_source_contracts COMMAND schgen_pack_grid_precision_source_contracts "${CMAKE_CURRENT_SOURCE_DIR}/..")
+    add_executable(schgen_pack_grid_precision_baseline tests/pack_grid_precision_baseline.cpp)
+    target_include_directories(schgen_pack_grid_precision_baseline PRIVATE src)
+    target_link_libraries(schgen_pack_grid_precision_baseline PRIVATE schgen_core)
+    target_compile_definitions(schgen_pack_grid_precision_baseline PRIVATE PACK_GRID_CANDIDATE=1)
+    target_compile_options(schgen_pack_grid_precision_baseline PRIVATE -Wall -Wextra -Wpedantic -Werror)
 
     add_library(schgen_pack_geometry_observed OBJECT src/pack_geometry_precision.cpp)
     target_include_directories(schgen_pack_geometry_observed PRIVATE include)

@@ -73,7 +73,7 @@ Parts Engine::candidates(const std::string &ref, const std::vector<Attract> &att
             if (i != mem_nets.end())
                 rows.emplace_back(i->second, b.x0, b.y0, b.x1, b.y1);
         }
-        return named_box_center_sigs(rows, 2);
+        return named_box_center_sigs(rows, 2, &quantization);
     };
     std::vector<double> rotations{90, 0};
     if (!net_pts.empty() && sig(0) != sig(180))

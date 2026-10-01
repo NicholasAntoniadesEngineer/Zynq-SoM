@@ -24,7 +24,7 @@ const PcbEscapeSignalClass &PcbEscapeInput::classify(const std::string &net) con
     it->second.rank();
     return it->second;
 }
-ContactGeom pcb_escape_contact_geometry(const PcbCheckFootprint &fp) {
+ContactGeom pcb_escape_contact_geometry(const PcbCheckFootprint &fp, QuantizationCounts* counts) {
     std::vector<std::tuple<double, double, double, double>> pads;
     const auto name = std::filesystem::path(fp.source).filename().string();
     // Strict validation is deliberately separate from scan_pad_nodes, whose
@@ -40,7 +40,7 @@ ContactGeom pcb_escape_contact_geometry(const PcbCheckFootprint &fp) {
     if (pads.empty())
         throw PcbEscapeError(name + ": no pads — contact geometry underivable");
     try {
-        return contact_geometry(pads);
+        return contact_geometry(pads, counts);
     } catch (const std::runtime_error &e) {
         throw PcbEscapeError(name + ": " + e.what());
     }

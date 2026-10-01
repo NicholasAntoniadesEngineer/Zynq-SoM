@@ -194,7 +194,7 @@ PcbEscapeCopperResult build_pcb_escape_copper(const PcbEscapeInput &input, Quant
         throw PcbEscapeError("model has no SoM keepout — escape region underivable");
     const auto zone = grow_rect(*input.keepout(), 2.);
     // Source escape uses ORIGIN_X/Y, not a caller's metadata override.
-    meta.plane = canonical_plane_rect(25., 25., m.board_w, m.board_h, .5);
+    meta.plane = canonical_plane_rect(25., 25., m.board_w, m.board_h, .5, counts);
     if (!rect_covers(meta.plane, zone))
         throw PcbEscapeError("the canonical In1 GND plane " + box_repr(meta.plane) +
                              " does not cover the escape region " + box_repr(zone) +
@@ -204,7 +204,7 @@ PcbEscapeCopperResult build_pcb_escape_copper(const PcbEscapeInput &input, Quant
         const auto &oi = m.insts[i];
         if (!starts(oi.value, "HX5008") && !starts(oi.value, "KH-5224"))
             continue;
-        auto vr = isolation_void_rect(input.geometry().courtyard_at(i), .6);
+        auto vr = isolation_void_rect(input.geometry().courtyard_at(i), .6, counts);
         auto label = "ethernet_isolation_void_" + oi.ref;
         meta.voids_checked.push_back(label);
         if (rects_intersect_open(vr, zone))
@@ -242,7 +242,7 @@ PcbEscapeCopperResult build_pcb_escape_copper(const PcbEscapeInput &input, Quant
             " — the documented future path is an octagonal carve-out (r = hole/2 + 0.2 + 0.1); it "
             "is NOT implemented because the precondition holds on every measured build; fail loud "
             "instead of silently emitting an unproven fill");
-    const auto conns = prepare_connectors(m);
+    const auto conns = prepare_connectors(m, counts);
     std::map<std::string, Obstacles> obstacles;
     std::map<std::string, std::vector<Via>> by_conn;
     std::vector<Job> jobs;
@@ -269,7 +269,7 @@ PcbEscapeCopperResult build_pcb_escape_copper(const PcbEscapeInput &input, Quant
         for (double u : us) rounded_us.insert(escape_scan_precision3dp(u, counts));
         auto region = obstacle_scan_region({rounded_us.begin(), rounded_us.end()}, 6.);
         obstacles.emplace(ref, collect_obstacles(input, m.insts[c.index], region, sorted, through));
-        for (const auto &band : band_cover(pts, construct_reach(radius, c.contacts.row_v))) {
+        for (const auto &band : band_cover(pts, construct_reach(radius, c.contacts.row_v), counts)) {
             Job j{2, ref, band.front().first, {}};
             for (const auto &[u, pad] : band) {
                 (void)u;
@@ -324,7 +324,7 @@ PcbEscapeCopperResult build_pcb_escape_copper(const PcbEscapeInput &input, Quant
         const auto base = vias.front();
         auto &obs = obstacles.at(ref);
         auto u = escape_redundancy_u(base.u, base.v, base.dia, base.drill, obs.front, obs.back,
-                                     obs.same, obs.holes, clear(), 1., lattice, 21);
+                                     obs.same, obs.holes, clear(), 1., lattice, 21, counts);
         if (!u)
             throw PcbEscapeError(
                 ref +
@@ -357,7 +357,7 @@ PcbEscapeCopperResult build_pcb_escape_copper(const PcbEscapeInput &input, Quant
             throw PcbEscapeError(ref + ": no GND attach options on the connector");
         try {
             segs = escape_ladder_plan(grounds, uv, c.contacts.pitch, .001, c.contacts.row_v, .30,
-                                      .25, .30);
+                                      .25, .30, counts);
         } catch (const std::runtime_error &e) {
             throw PcbEscapeError(ref + ": " + e.what());
         }

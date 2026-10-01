@@ -3,6 +3,8 @@
 #include "floorplan_precision_fixture.hpp"
 #include "schgen/pcb_emit.hpp"
 #include "search_proof.hpp"
+#include "pack_plain_precision_fixture.hpp"
+#include "pack_grid_precision_fixture.hpp"
 #include <iostream>
 #include <iomanip>
 using namespace schgen;
@@ -18,7 +20,7 @@ void finish(const QuantizationCounts& q,const std::string& label){
  if(actual!=expected)throw std::runtime_error(label+" frozen independently observed scalar entry totals changed");
 #endif
  for(const auto& [n,v]:actual)std::cerr<<label<<' '<<n<<' '<<v<<'\n';
- auto prior=search_proof::select(q,false);
+ auto prior=pack_grid_precision_fixture::select(pack_plain_precision_fixture::select(search_proof::select(q,false),false),false);
  if(label.find("placement")!=std::string::npos)prior=ledger_accounting_fixture::before_initial_receipt_fix(prior);
  for(const auto& [n,v]:prior)std::cout<<std::quoted(n)<<' '<<v<<'\n';
 }
@@ -31,7 +33,7 @@ int main(int argc,char** argv){try{
   std::cout<<name<<'\n';finish(accounting.quantization_engagements,name+" placement");
   floorplan_precision_fixture::node(std::cout,pcb_model_json(result.model));
   auto plan=result.floorplan.plan;
-  plan.accounting.quantization_engagements=search_proof::select(plan.accounting.quantization_engagements,false);
+  plan.accounting.quantization_engagements=pack_grid_precision_fixture::select(pack_plain_precision_fixture::select(search_proof::select(plan.accounting.quantization_engagements,false),false),false);
   plan.accounting.quantization_engagements=ledger_accounting_fixture::before_initial_receipt_fix(plan.accounting.quantization_engagements);
   floorplan_precision_fixture::node(std::cout,floorplan_plan_json(plan));
   auto policy=pcb_emit_policy(f.input.floorplan.project);

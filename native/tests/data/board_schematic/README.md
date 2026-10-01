@@ -71,6 +71,18 @@ are byte-for-byte expected emitter outputs. Three `board.xml` files are actual
 KiCad 10.0.2 exports of those frozen hierarchies; timestamps/source paths are
 retained as capture evidence but are not used as connectivity semantics.
 
+The three XML files were previously excluded by the global XML ignore rule.
+They are now tracked unchanged so fresh checkouts retain the documented test
+inputs. Packaging fingerprints (2026-10-01) are:
+
+- `carrier_slice/board.xml`: `a15dcbfa2b595ad66490d797a8f0061c31e670cc2789b081eec54fe758ed774f`
+- `rc_pair/board.xml`: `80af0a6530f724c77fe84bf289fb74064aea7cac574b6b17232dd10da63debe8`
+- `devkit_slice/board.xml`: `c19930b32ad13578b5aa3f8ae4f7acc7a1bd5202e9799e0726ac80f69891b181`
+
+These fingerprint the preserved local fixtures, not independently authenticated
+historical captures: the original capture directory and historical XML hashes
+are unavailable. No export was regenerated and no reference result was changed.
+
 - Eleven reference-renaming cases cover zero-padding, pseudo references,
   underscore prefixes, stride boundaries, invalid names and exact errors.
 - Eight hierarchies cover the original M1 RC example as two connected sheets;

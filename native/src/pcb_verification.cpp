@@ -24,7 +24,7 @@ PcbVerificationResult verify_pcb_geometry(const BoardPcbStage& stage,
     out.connector_spacing = check_connector_spacing(prepared);
     out.refdes = check_refdes_overlap(emitted.document, true);
     out.placement = check_pcb_placement_gates(prepared, pcb_placement_gate_policy(input),
-        pcb_final_compose_index(input, model), pcb_compose_evidence(model), &out.nets, &out.edges);
+        pcb_final_compose_index(input, model), pcb_compose_evidence(model), &out.nets, &out.edges, counts);
     out.fanout = check_fanout(prepared, baseline);
     out.return_path = check_return_path(input.som_interface, input.return_path_footprints);
     std::map<std::string,ReturnStitchClass> triage;

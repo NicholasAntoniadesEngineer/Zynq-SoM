@@ -84,7 +84,7 @@ int main(){try{
  search_proof::begin();(void)fallback_axis_count(1,nullptr);
  rejects([&]{search_proof::receipt({});});
  NativeQuantizations all,r;register_native_quantizations(all);
- require(all.declarations().size()==131);
+ require(all.declarations().size()==155);
  for(const auto& d:all.declarations())if(search_proof::added(d.name))r.declare(d);
  require(r.declarations().size()==9);
  for(const auto& d:r.declarations()){

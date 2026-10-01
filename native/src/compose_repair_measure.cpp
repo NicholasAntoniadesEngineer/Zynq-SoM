@@ -24,15 +24,15 @@ std::vector<std::string> seats(const FloorplanTermIndex &index,const std::option
     }std::sort(out.begin(),out.end());return out;
 }
 }
-ComposeDocument measure_compose_ledger(const PcbPlacementInput &input,const PcbModel &model) {
+ComposeDocument measure_compose_ledger(const PcbPlacementInput &input,const PcbModel &model,QuantizationCounts* measurement_counts) {
     PcbCheckInput checked(model);const auto policy=pcb_placement_gate_policy(input);
     const auto index=pcb_final_compose_index(input,model);
-    const auto evaluations=measure_pcb_compose_terms(checked,index,policy);
+    const auto evaluations=measure_pcb_compose_terms(checked,index,policy,measurement_counts);
     ComposeDocument d;d.data=jo({{"board",jo({{"w",j(model.board_w)},{"h",j(model.board_h)},{"area_mm2",j(py_round(model.board_w*model.board_h,1))}})}});
-    set(d.data,"flow_gate",flow(check_pcb_placement_flow(checked,policy),true));
+    set(d.data,"flow_gate",flow(check_pcb_placement_flow(checked,policy,nullptr,measurement_counts),true));
     std::map<std::string,JsonNode> advisory;
     for(const auto &i:model.insts){auto p=policy.contracts.find(i.sheet);if(p!=policy.contracts.end())advisory[p->first]=p->second;}
-    set(d.data,"advisory_gate",flow(check_pcb_placement_flow(checked,policy,&advisory),false));
+    set(d.data,"advisory_gate",flow(check_pcb_placement_flow(checked,policy,&advisory,measurement_counts),false));
     auto terms=ja();std::vector<double> finite;std::vector<std::string> triggers;
     const auto floor=floors();
     for(const auto &e:evaluations) {

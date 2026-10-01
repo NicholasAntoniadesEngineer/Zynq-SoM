@@ -2,6 +2,33 @@
 
 ## 2026-10-01 — complete rendered baseline comparison
 
+Integrated the remaining Plain18/Grid6 precision boundaries (autonomous, per
+full-autonomy directive). Combined source proof closes all original 14/34/16
+reported sites, checks 155 registrations and rejects all 33 missing-registration
+mutations. Independent board output remains byte-identical to its immutable
+3,450,788-byte reference. The private combined batch passed 28 contracts; parent
+all-target compilation also passed. An older projection test now initializes the
+new line index while retaining explicit frozen-visitor compatibility. Two exact
+partitioner identities were updated for their new accounting parameter, without
+changing authoring roles or weakening closure checks. Compose ledger measurement
+can now expose invocation-owned counts for its three final-model measurement
+calls, including initial/rebuilt driver measurements; this is not an assertion
+that those counts include candidate planning or the entire CLI.
+
+Parent full validation ran all 226 CTests, including ten live-KiCad tests:
+222 passed, four failed (1019.07 seconds, two workers). The failures were traced
+to three older accounting harnesses and a hardcoded scaffold build-cache path.
+Corrections preserve complete map/output comparisons: assert two ledger calls
+then one per-net call; replay the actual final escape stage; apply only the
+independently proven two-entry correction to complete legalization plan/aggregate
+fixture views; pass the owning build cache explicitly. All four corrected tests
+then passed in 49.76 seconds with no production-engine changes between runs.
+Thus all 226 tests have successful final coverage, not one claimed 226/226 run.
+Existing reference files remain unchanged. Three documented XML fixtures omitted
+by the blanket ignore rule are now included unchanged; their README distinguishes
+current packaging fingerprints from unavailable historical capture hashes.
+Complete rendered board acceptance and new timings remain the next gate.
+
 Integrated invocation-owned schematic and failed-model accounting (autonomous,
 per full-autonomy directive). Schematic retries and shared geometry helpers now
 record actual grid calls; independent traces and complete schematic bytes match

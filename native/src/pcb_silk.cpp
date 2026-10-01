@@ -76,9 +76,9 @@ std::vector<Sexpr> descriptors(const PcbModel &m, const PcbEmitPolicy &p, const 
     Box4 bounds{m.origin_x, m.origin_y, m.origin_x + m.board_w, m.origin_y + m.board_h};
     SilkBoxIndex occupied(8);
     for (const auto &i : m.insts)
-        occupied.add(courtyard(i));
+        occupied.add(courtyard(i), counts);
     for (auto b : collect_emitted_text_boxes(doc, true, 1))
-        occupied.add(b);
+        occupied.add(b, counts);
     std::vector<std::string> pmods;
     for (const auto &i : m.insts)
         if (i.value == "DS1024-2x6R2")
@@ -119,19 +119,19 @@ std::vector<Sexpr> descriptors(const PcbModel &m, const PcbEmitPolicy &p, const 
                 x = b.x0 - gap;
                 y = my;
             }
-            if (!occupied.hits(text_box(desc, x, y, size, .15))) {
+            if (!occupied.hits(text_box(desc, x, y, size, .15), counts)) {
                 clear = true;
                 break;
             }
         }
         if (!clear) {
             auto seat =
-                place_clear_label(b.x0, b.y0, b.x1, b.y1, desc, size, occupied, nullptr, bounds);
+                place_clear_label(b.x0, b.y0, b.x1, b.y1, desc, size, occupied, nullptr, bounds, counts);
             x = seat.x;
             y = seat.y;
         }
         out.push_back(silk_text(desc, x, y, size, uid("conn-desc:" + i.ref), counts));
-        occupied.add(text_box(desc, x, y, size, .15));
+        occupied.add(text_box(desc, x, y, size, .15), counts);
     }
     for (const auto &i : m.insts) {
         auto label = lookup(p.header_descriptions, i.ref);
@@ -146,44 +146,44 @@ std::vector<Sexpr> descriptors(const PcbModel &m, const PcbEmitPolicy &p, const 
         std::string text = *label;
         double size = label_size(text);
         auto seat =
-            place_clear_label(b.x0, b.y0, b.x1, b.y1, text, size, occupied, nullptr, bounds);
+            place_clear_label(b.x0, b.y0, b.x1, b.y1, text, size, occupied, nullptr, bounds, counts);
         if (seat.extra > 8 && text.find(':') != text.npos) {
             auto short_text = trim(text.substr(0, text.find(':')));
             double ss = label_size(short_text);
             auto short_seat = place_clear_label(b.x0, b.y0, b.x1, b.y1, short_text, ss, occupied,
-                                                nullptr, bounds);
+                                                nullptr, bounds, counts);
             if (short_seat.extra < seat.extra) {
                 text = short_text;
                 size = ss;
                 seat = short_seat;
             }
         }
-        occupied.add(seat.box);
+        occupied.add(seat.box, counts);
         out.push_back(silk_text(text, seat.x, seat.y, size, uid(prefix + ":" + i.ref), counts));
     }
     return out;
 }
-int declutter(const PcbModel &m, Sexpr &doc) {
+int declutter(const PcbModel &m, Sexpr &doc, QuantizationCounts* counts) {
     Box4 bounds{m.origin_x, m.origin_y, m.origin_x + m.board_w, m.origin_y + m.board_h};
     SilkBoxIndex top(8), bottom(8), placed_top(8), placed_bottom(8);
     std::unordered_map<std::string, Box4> courts;
     for (const auto &i : m.insts) {
         auto b = courtyard(i);
-        top.add(b);
+        top.add(b, counts);
         if (i.side == "bottom")
-            bottom.add(b);
+            bottom.add(b, counts);
         courts[i.ref] = b;
     }
     for (auto b : collect_gr_text_boxes(doc, 1))
-        top.add(b);
+        top.add(b, counts);
     auto &root = std::get<SexprList>(doc.v);
     for (const auto &n : root)
         if (tag(n, "footprint")) {
             auto [a, b] = collect_fp_silk_gfx(n);
             for (auto r : a)
-                top.add(r);
+                top.add(r, counts);
             for (auto r : b)
-                bottom.add(r);
+                bottom.add(r, counts);
         }
     int moved = 0;
     for (const auto &row : collect_refdes_rows(doc, courts, 1)) {
@@ -191,8 +191,8 @@ int declutter(const PcbModel &m, Sexpr &doc) {
         auto &placed = row.bottom ? placed_bottom : placed_top;
         auto move =
             place_refdes(row.court, row.ref, row.size, row.text_box, occ, placed, bounds, row.fp_x,
-                         row.fp_y, row.cos_a, row.sin_a, .8, .02, 8, 1e-9, .5, {.78, .62});
-        placed.add(move.add_box);
+                         row.fp_y, row.cos_a, row.sin_a, .8, .02, 8, 1e-9, .5, {.78, .62}, counts);
+        placed.add(move.add_box, counts);
         if (move.moved) {
             auto &prop = std::get<SexprList>(root.at(row.footprint_index).v).at(row.property_index);
             auto at = child(prop, "at");

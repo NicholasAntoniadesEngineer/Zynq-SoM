@@ -1,4 +1,6 @@
 #include "pack_search_precision_fixture.hpp"
+#include "pack_plain_precision_fixture.hpp"
+#include "pack_grid_precision_fixture.hpp"
 #pragma once
 #include "pack_geometry_precision_fixture.hpp"
 #include "schgen/execution_accounting.hpp"
@@ -32,7 +34,7 @@ inline bool added(const std::string& name) {
 }
 inline schgen::QuantizationCounts select(const schgen::QuantizationCounts& values,bool new_only=true) {
     schgen::QuantizationCounts out;
-    for(const auto& [name,count]:values)if(added(name)==new_only&&!pack_geometry_precision_fixture::added(name)&&!pack_search_precision_fixture::added(name))out[name]=count;
+    for(const auto& [name,count]:values)if(added(name)==new_only&&!pack_geometry_precision_fixture::added(name)&&!pack_search_precision_fixture::added(name)&&!pack_plain_precision_fixture::added(name)&&!pack_grid_precision_fixture::added(name))out[name]=count;
     return out;
 }
 }

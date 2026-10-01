@@ -89,9 +89,10 @@ inline std::string point_repr(Point p) {
 }
 struct FinalGeometry {
     const PcbCheckInput &input;
+    QuantizationCounts* counts;
     std::map<std::string, Point> centroids;
     std::map<std::string, Box4> bboxes;
-    explicit FinalGeometry(const PcbCheckInput &);
+    explicit FinalGeometry(const PcbCheckInput &, QuantizationCounts* = nullptr);
     std::optional<Point> centroid(const std::string &) const;
     std::optional<Box4> bbox(const std::string &) const;
     std::optional<Point> members(const std::string &, const std::set<std::string> &) const;

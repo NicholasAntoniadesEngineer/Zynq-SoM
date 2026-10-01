@@ -80,8 +80,8 @@ PcbComposeEvidence pcb_compose_evidence(const PcbModel &model) {
 }
 std::vector<FloorplanTermEval> measure_pcb_compose_terms(const PcbCheckInput &in,
                                                          const FloorplanTermIndex &index,
-                                                         const PcbPlacementGatePolicy &policy) {
-    FinalGeometry geom(in);
+                                                         const PcbPlacementGatePolicy &policy, QuantizationCounts* counts) {
+    FinalGeometry geom(in, counts);
     const auto &model = in.model();
     auto budget = flow_budget(model.board_w, model.board_h, model.som_core);
     const double inf = std::numeric_limits<double>::infinity();
@@ -180,10 +180,10 @@ PcbCrossAirwires pcb_cross_airwires_by_pair(const PcbCheckModel &model,
 PcbComposeReport report_pcb_composition(const PcbCheckInput &in, const FloorplanTermIndex &index,
                                         const PcbPlacementGatePolicy &policy,
                                         const PcbComposeEvidence &evidence,
-                                        const RatsnestNets *nets, const RatsnestEdges *edges) {
+                                        const RatsnestNets *nets, const RatsnestEdges *edges, QuantizationCounts* counts) {
     PcbComposeReport out;
     out.index = index;
-    out.evaluations = measure_pcb_compose_terms(in, index, policy);
+    out.evaluations = measure_pcb_compose_terms(in, index, policy, counts);
     out.n_corridors = evidence.corridors.size();
     std::optional<double> minimum;
     double sum = 0;
@@ -310,20 +310,20 @@ std::string PcbComposeReport::text() const {
 PcbPlacementGatesResult
 check_pcb_placement_gates(const PcbCheckInput &input, const PcbPlacementGatePolicy &policy,
                           const FloorplanTermIndex &index, const PcbComposeEvidence &evidence,
-                          const RatsnestNets *nets, const RatsnestEdges *edges) {
+                          const RatsnestNets *nets, const RatsnestEdges *edges, QuantizationCounts* counts) {
     validate_pcb_contract_pins(policy);
     PcbPlacementGatesResult out;
     out.placement_contract = check_pcb_wired_contracts(input, policy);
-    out.placement_flow = check_pcb_placement_flow(input, policy);
+    out.placement_flow = check_pcb_placement_flow(input, policy, nullptr, counts);
     out.coverage = pcb_contract_coverage(input, policy);
     out.coverage_report = render_pcb_contract_coverage(out.coverage, policy.wired_sheets);
-    out.composition = report_pcb_composition(input, index, policy, evidence, nets, edges);
+    out.composition = report_pcb_composition(input, index, policy, evidence, nets, edges, counts);
     return out;
 }
 PcbPlacementGatesResult check_pcb_placement_gates(const PcbPlacementInput &authored,
-                                                  const PcbModel &model) {
+                                                  const PcbModel &model, QuantizationCounts* counts) {
     return check_pcb_placement_gates(PcbCheckInput(model), pcb_placement_gate_policy(authored),
                                      pcb_final_compose_index(authored, model),
-                                     pcb_compose_evidence(model));
+                                     pcb_compose_evidence(model), nullptr, nullptr, counts);
 }
 } // namespace schgen

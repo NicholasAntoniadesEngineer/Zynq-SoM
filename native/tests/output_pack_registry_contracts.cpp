@@ -75,7 +75,7 @@ QuantizationCounts end(){
 }
 void registry(){
     NativeQuantizations q;register_native_quantizations(q);
-    const auto ds=q.declarations();require(ds.size()==131,"122 prior plus nine search");
+    const auto ds=q.declarations();require(ds.size()==155,"122 prior plus9 search plus18 plain plus6 grid");
     for(const auto& path:{"native/src/output_precision.cpp","native/src/pack_precision.cpp"}){
         for(const auto& sources:{native_board_policy_audit_sources(),board_pipeline_audit_sources()})
             require(std::count_if(sources.begin(),sources.end(),[&](const auto& source){return source.path==path;})==1,

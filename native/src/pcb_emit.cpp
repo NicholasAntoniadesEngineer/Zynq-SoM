@@ -158,7 +158,7 @@ PcbEmissionResult render_pcb(const PcbModel &m, const PcbEmitPolicy &p, Quantiza
         root.push_back(emit_edge_line(edges[n].first, edges[n].second, edges[n + 1].first,
                                       edges[n + 1].second, uid("edge:" + std::to_string(n))));
     if (m.som_keepout) {
-        auto pts = closed_rect_pts(*m.som_keepout, 3);
+        auto pts = closed_rect_pts(*m.som_keepout, 3, counts);
         pts.pop_back();
         root.push_back(emit_keepout_zone(pts, uid("som-keepout"), "SoM_body_keepout"));
     }
@@ -167,7 +167,7 @@ PcbEmissionResult render_pcb(const PcbModel &m, const PcbEmitPolicy &p, Quantiza
         double b = p.gnd_plane_edge_back;
         auto box = round_box({m.origin_x + b, m.origin_y + b, m.origin_x + m.board_w - b,
                               m.origin_y + m.board_h - b},
-                             3);
+                             3, counts);
         root.push_back(emit_fill_zone(g->second, "GND", "GND_plane_In1", p.ground_layer,
                                       rect_corners_ccw(box), uid("gnd-plane"),
                                       p.gnd_plane_clearance, false, p.zone_min_thickness));
@@ -176,22 +176,22 @@ PcbEmissionResult render_pcb(const PcbModel &m, const PcbEmitPolicy &p, Quantiza
         if (std::any_of(p.isolation_prefixes.begin(), p.isolation_prefixes.end(),
                         [&](const auto &prefix) { return starts(i.value, prefix); }))
             root.push_back(emit_iso_void_zone(
-                rect_corners_ccw(isolation_void_rect(courtyard(i), p.isolation_margin)),
+                rect_corners_ccw(isolation_void_rect(courtyard(i), p.isolation_margin, counts)),
                 uid("iso-void:" + i.ref), "ethernet_isolation_void_" + i.ref, p.ground_layer,
                 p.zone_min_thickness));
     auto thermal = thermal_nodes(m, p, uid, result, counts);
     root.insert(root.end(), thermal.zones.begin(), thermal.zones.end());
     if (m.som_core) {
         auto b = *m.som_core;
-        auto pts = closed_rect_pts(b, 3);
+        auto pts = closed_rect_pts(b, 3, counts);
         for (std::size_t n = 0; n < 4; ++n)
             root.push_back(emit_gr_line(pts[n].first, pts[n].second, pts[n + 1].first,
                                         pts[n + 1].second, .15, "F.SilkS",
                                         uid("som-silk:" + std::to_string(n))));
-        auto [ax, ay] = round_xy(b.x0, b.y0 + 3, 3);
-        auto [bx, by] = round_xy(b.x0 + 3, b.y0, 3);
+        auto [ax, ay] = round_xy(b.x0, b.y0 + 3, 3, counts);
+        auto [bx, by] = round_xy(b.x0 + 3, b.y0, 3, counts);
         root.push_back(emit_gr_line(ax, ay, bx, by, .15, "F.SilkS", uid("som-silk:ch")));
-        auto [x, y] = round_xy(b.x0 + 1, b.y0 - 1.2, 3);
+        auto [x, y] = round_xy(b.x0 + 1, b.y0 - 1.2, 3, counts);
         root.push_back(emit_gr_text("Zynq SoM", x, y, 0, "F.SilkS", uid("som-silk:label"), 1.4, .25,
                                     "left bottom"));
     }
@@ -207,7 +207,7 @@ PcbEmissionResult render_pcb(const PcbModel &m, const PcbEmitPolicy &p, Quantiza
     auto labels = descriptors(m, p, uid, doc, counts);
     auto &final = std::get<SexprList>(doc.v);
     final.insert(final.end(), labels.begin(), labels.end());
-    result.moved_references = declutter(m, doc);
+    result.moved_references = declutter(m, doc, counts);
     final.insert(final.end(), thermal.vias.begin(), thermal.vias.end());
     for (std::size_t index = 0; index < m.copper.size(); ++index) {
         const auto &c = m.copper[index];

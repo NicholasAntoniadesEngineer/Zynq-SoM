@@ -1,7 +1,9 @@
+#include "schgen/pack_plain_precision.hpp"
 #include "schgen/pack_geometry_precision.hpp"
 #include "schgen/pack.hpp"
 #include "schgen/pack_search_precision.hpp"
 #include "schgen/pack_precision.hpp"
+#include "schgen/pack_grid_precision.hpp"
 #include "schgen/board_decision_policy.hpp"
 
 #include "schgen/quantize.hpp"
@@ -210,7 +212,7 @@ std::pair<Halo, Halo> zone_fanout_reach(
     double zw, double zh,
     const std::vector<std::tuple<double, double, double, double, int, double>>&
         members,
-    int min_subject_pins) {
+    int min_subject_pins, QuantizationCounts* counts) {
     double rw = 0.0;
     double re = 0.0;
     double rn = 0.0;
@@ -257,10 +259,10 @@ std::pair<Halo, Halo> zone_fanout_reach(
         is_s = 0.0;
     }
     return {
-        Halo{py_round(rw, 4), py_round(re, 4), py_round(rn, 4),
-             py_round(rs, 4)},
-        Halo{py_round(iw, 4), py_round(ie, 4), py_round(in_n, 4),
-             py_round(is_s, 4)}};
+        Halo{pack_fanout_reach_precision4dp(rw, counts), pack_fanout_reach_precision4dp(re, counts), pack_fanout_reach_precision4dp(rn, counts),
+             pack_fanout_reach_precision4dp(rs, counts)},
+        Halo{pack_fanout_reach_precision4dp(iw, counts), pack_fanout_reach_precision4dp(ie, counts), pack_fanout_reach_precision4dp(in_n, counts),
+             pack_fanout_reach_precision4dp(is_s, counts)}};
 }
 
 double overlap_area(const Box4& a, const Box4& b) {
@@ -300,13 +302,13 @@ double seg_box_dist(double x1, double y1, double x2, double y2,
 }
 
 std::vector<std::vector<std::pair<double, std::string>>> band_cover(
-    const std::vector<std::pair<double, std::string>>& points, double reach) {
+    const std::vector<std::pair<double, std::string>>& points, double reach, QuantizationCounts* counts) {
     std::vector<std::pair<double, std::string>> pts = points;
     std::stable_sort(pts.begin(), pts.end(),
-                     [](const std::pair<double, std::string>& a,
+                     [counts](const std::pair<double, std::string>& a,
                         const std::pair<double, std::string>& b) {
-                         const double au = py_round(a.first, 4);
-                         const double bu = py_round(b.first, 4);
+                         const double au = pack_band_sort_precision4dp(a.first, counts);
+                         const double bu = pack_band_sort_precision4dp(b.first, counts);
                          if (au != bu) {
                              return au < bu;
                          }
@@ -347,12 +349,8 @@ SilkBoxIndex::SilkBoxIndex(double cell) : cell_(cell) {
     }
 }
 
-int SilkBoxIndex::cell_of(double value) const {
-    const double cell = std::floor(value / cell_);
-    if (!std::isfinite(cell) || cell < std::numeric_limits<int>::min() ||
-        cell > std::numeric_limits<int>::max())
-        throw std::out_of_range("SilkBoxIndex: coordinate cell must fit int");
-    return static_cast<int>(cell);
+int SilkBoxIndex::cell_of(double value, QuantizationCounts* counts) const {
+    return silk_cell_floor(value, cell_, counts);
 }
 
 std::uint64_t SilkBoxIndex::key(int gx, int gy) const {
@@ -360,13 +358,13 @@ std::uint64_t SilkBoxIndex::key(int gx, int gy) const {
         | static_cast<std::uint32_t>(gy);
 }
 
-void SilkBoxIndex::add(const Box4& box) {
+void SilkBoxIndex::add(const Box4& box, QuantizationCounts* counts) {
     if (!(box.x0 <= box.x1 && box.y0 <= box.y1))
         throw std::invalid_argument("SilkBoxIndex: ordered box required");
-    const int gx0 = cell_of(box.x0);
-    const int gy0 = cell_of(box.y0);
-    const int gx1 = cell_of(box.x1);
-    const int gy1 = cell_of(box.y1);
+    const int gx0 = cell_of(box.x0, counts);
+    const int gy0 = cell_of(box.y0, counts);
+    const int gx1 = cell_of(box.x1, counts);
+    const int gy1 = cell_of(box.y1, counts);
     if (boxes_.size() > static_cast<std::size_t>(std::numeric_limits<int>::max()))
         throw std::overflow_error("SilkBoxIndex: box index must fit int");
     const int i = static_cast<int>(boxes_.size());
@@ -379,13 +377,13 @@ void SilkBoxIndex::add(const Box4& box) {
     }
 }
 
-std::vector<int> SilkBoxIndex::near(const Box4& box) const {
+std::vector<int> SilkBoxIndex::near(const Box4& box, QuantizationCounts* counts) const {
     if (!(box.x0 <= box.x1 && box.y0 <= box.y1))
         throw std::invalid_argument("SilkBoxIndex: ordered box required");
-    const int gx0 = cell_of(box.x0);
-    const int gy0 = cell_of(box.y0);
-    const int gx1 = cell_of(box.x1);
-    const int gy1 = cell_of(box.y1);
+    const int gx0 = cell_of(box.x0, counts);
+    const int gy0 = cell_of(box.y0, counts);
+    const int gx1 = cell_of(box.x1, counts);
+    const int gy1 = cell_of(box.y1, counts);
     if (gx0 == gx1 && gy0 == gy1) {
         auto it = cells_.find(key(gx0, gy0));
         if (it == cells_.end()) {
@@ -406,16 +404,16 @@ std::vector<int> SilkBoxIndex::near(const Box4& box) const {
     return {uniq.begin(), uniq.end()};
 }
 
-double SilkBoxIndex::pen(const Box4& gb) const {
+double SilkBoxIndex::pen(const Box4& gb, QuantizationCounts* counts) const {
     double acc = 0.0;
-    for (int i : near(gb)) {
+    for (int i : near(gb, counts)) {
         acc += overlap_area(gb, boxes_[static_cast<std::size_t>(i)]);
     }
     return acc;
 }
 
-bool SilkBoxIndex::hits(const Box4& gb) const {
-    for (int i : near(gb)) {
+bool SilkBoxIndex::hits(const Box4& gb, QuantizationCounts* counts) const {
+    for (int i : near(gb, counts)) {
         if (overlap_area(gb, boxes_[static_cast<std::size_t>(i)]) > 0.0) {
             return true;
         }
@@ -424,25 +422,31 @@ bool SilkBoxIndex::hits(const Box4& gb) const {
 }
 
 BreatheGrid::BreatheGrid(double board_w, double board_h, double cell,
-                         double origin_x, double origin_y)
+                         double origin_x, double origin_y, QuantizationCounts* counts)
     : cell_(cell), origin_x_(origin_x), origin_y_(origin_y) {
-    if (cell <= 0.0) {
+    if (!std::isfinite(cell) || cell <= 0.0 ||
+        !std::isfinite(origin_x) || !std::isfinite(origin_y)) {
         throw std::runtime_error("BreatheGrid: cell required");
     }
-    nx_ = static_cast<int>(board_w / cell) + 2;
-    ny_ = static_cast<int>(board_h / cell) + 2;
+    nx_ = breathe_grid_extent(board_w, cell, counts);
+    ny_ = breathe_grid_extent(board_h, cell, counts);
     if (nx_ <= 0 || ny_ <= 0) {
         throw std::runtime_error("BreatheGrid: board extent required");
     }
-    cells_.assign(static_cast<std::size_t>(nx_) * static_cast<std::size_t>(ny_),
-                  0);
+    const auto nx = static_cast<std::size_t>(nx_);
+    const auto ny = static_cast<std::size_t>(ny_);
+    if (nx > cells_.max_size() / ny)
+        throw std::overflow_error("BreatheGrid: allocation product exceeds vector capacity");
+    cells_.assign(nx * ny, 0);
 }
 
-void BreatheGrid::stamp(const Box4& box, int val) {
-    const int c0 = static_cast<int>((box.x0 - origin_x_) / cell_);
-    const int r0 = static_cast<int>((box.y0 - origin_y_) / cell_);
-    const int c1 = static_cast<int>((box.x1 - origin_x_) / cell_);
-    const int r1 = static_cast<int>((box.y1 - origin_y_) / cell_);
+void BreatheGrid::stamp(const Box4& box, int val, QuantizationCounts* counts) {
+    if (!(box.x0 <= box.x1 && box.y0 <= box.y1))
+        throw std::invalid_argument("BreatheGrid: ordered box required");
+    const int c0 = breathe_stamp_index((box.x0 - origin_x_) / cell_, counts);
+    const int r0 = breathe_stamp_index((box.y0 - origin_y_) / cell_, counts);
+    const int c1 = breathe_stamp_index((box.x1 - origin_x_) / cell_, counts);
+    const int r1 = breathe_stamp_index((box.y1 - origin_y_) / cell_, counts);
     if (c1 < 0 || r1 < 0 || c0 >= nx_ || r0 >= ny_) {
         return;
     }
@@ -451,31 +455,41 @@ void BreatheGrid::stamp(const Box4& box, int val) {
     const int cc1 = std::min(nx_ - 1, c1);
     const int rr1 = std::min(ny_ - 1, r1);
     const std::uint8_t v = val ? 1 : 0;
+    // Clipped indices are nonnegative and strictly less than the checked
+    // extents. Their size_t product/sum is below the allocated nx*ny; using
+    // size_t here also avoids the old signed-int row-product overflow.
     for (int r = rr0; r <= rr1; ++r) {
-        const int base = r * nx_;
+        const auto base = static_cast<std::size_t>(r) * static_cast<std::size_t>(nx_);
         for (int c = cc0; c <= cc1; ++c) {
-            cells_[static_cast<std::size_t>(base + c)] = v;
+            cells_.at(base + static_cast<std::size_t>(c)) = v;
         }
     }
 }
 
-bool BreatheGrid::free(const Box4& box) const {
+bool BreatheGrid::free(const Box4& box, QuantizationCounts* counts) const {
+    if (!(box.x0 <= box.x1 && box.y0 <= box.y1))
+        throw std::invalid_argument("BreatheGrid: ordered box required");
     const double c0f = (box.x0 - origin_x_) / cell_;
     const double r0f = (box.y0 - origin_y_) / cell_;
     const double c1f = (box.x1 - origin_x_) / cell_;
     const double r1f = (box.y1 - origin_y_) / cell_;
+    if (!std::isfinite(c0f) || !std::isfinite(r0f) ||
+        !std::isfinite(c1f) || !std::isfinite(r1f))
+        throw std::invalid_argument("BreatheGrid: finite coordinate quotient required");
     if (c0f < 0.0 || r0f < 0.0 || c1f >= static_cast<double>(nx_)
         || r1f >= static_cast<double>(ny_)) {
         return false;
     }
-    const int c0 = static_cast<int>(c0f);
-    const int r0 = static_cast<int>(r0f);
-    const int c1 = static_cast<int>(c1f);
-    const int r1 = static_cast<int>(r1f);
+    const int c0 = breathe_free_index(c0f, counts);
+    const int r0 = breathe_free_index(r0f, counts);
+    const int c1 = breathe_free_index(c1f, counts);
+    const int r1 = breathe_free_index(r1f, counts);
+    // The floating bounds check and ordered box establish 0 <= indices <
+    // extents; the checked allocation product bounds every row offset/sum.
     for (int r = r0; r <= r1; ++r) {
-        const int base = r * nx_;
+        const auto base = static_cast<std::size_t>(r) * static_cast<std::size_t>(nx_);
         for (int c = c0; c <= c1; ++c) {
-            if (cells_[static_cast<std::size_t>(base + c)]) {
+            if (cells_.at(base + static_cast<std::size_t>(c))) {
                 return false;
             }
         }
@@ -529,7 +543,7 @@ ClearLabel place_clear_label(double cx0, double cy0, double cx1, double cy1,
                              const std::string& label, double size,
                              const SilkBoxIndex& occupied,
                              const SilkBoxIndex* placed,
-                             const std::optional<Box4>& bounds) {
+                             const std::optional<Box4>& bounds, QuantizationCounts* counts) {
     const double midx = (cx0 + cx1) / 2.0;
     const double midy = (cy0 + cy1) / 2.0;
     const double thick = std::max(0.12, size * 0.15);
@@ -560,8 +574,8 @@ ClearLabel place_clear_label(double cx0, double cy0, double cx1, double cy1,
             const Box4 box = text_box(label, cand[0], cand[1], size, 0.15);
             const Box4 gb{box.x0 - 0.02, box.y0 - 0.02, box.x1 + 0.02,
                           box.y1 + 0.02};
-            const double pen = occupied.pen(gb)
-                + (placed == nullptr ? 0.0 : placed->pen(gb));
+            const double pen = occupied.pen(gb, counts)
+                + (placed == nullptr ? 0.0 : placed->pen(gb, counts));
             const bool onboard = onboard_box(box, bounds);
             const ClearLabel hit{cand[0], cand[1], box, extra};
             if (onboard) {
@@ -596,8 +610,8 @@ ClearLabel place_clear_label(double cx0, double cy0, double cx1, double cy1,
             }
             const Box4 gb{box.x0 - 0.02, box.y0 - 0.02, box.x1 + 0.02,
                           box.y1 + 0.02};
-            const double pen = occupied.pen(gb)
-                + (placed == nullptr ? 0.0 : placed->pen(gb));
+            const double pen = occupied.pen(gb, counts)
+                + (placed == nullptr ? 0.0 : placed->pen(gb, counts));
             const ClearLabel hit{tx, ty, box, extra};
             if (pen == 0.0) {
                 return hit;
@@ -998,35 +1012,35 @@ RefdesMove place_refdes(
     const SilkBoxIndex& occupied, const SilkBoxIndex& placed,
     const Box4& bounds, double fx, double fy, double ca, double sa,
     double min_size, double box_pad, double far_off, double pen_eps,
-    double off_improve, const std::vector<double>& shrinks) {
+    double off_improve, const std::vector<double>& shrinks, QuantizationCounts* counts) {
     const Box4 padded{box.x0 - box_pad, box.y0 - box_pad, box.x1 + box_pad,
                       box.y1 + box_pad};
-    if (!occupied.hits(padded) && !placed.hits(padded)) {
+    if (!occupied.hits(padded, counts) && !placed.hits(padded, counts)) {
         return RefdesMove{false, 0.0, 0.0, size, box};
     }
     const std::optional<Box4> bound_opt{bounds};
     ClearLabel hit = place_clear_label(court.x0, court.y0, court.x1, court.y1,
                                        ref, size, occupied, &placed,
-                                       bound_opt);
+                                       bound_opt, counts);
     double tx = hit.x;
     double ty = hit.y;
     Box4 nbox = hit.box;
     double off = hit.extra;
     double new_size = size;
-    double cur_pen = occupied.pen(nbox) + placed.pen(nbox);
+    double cur_pen = occupied.pen(nbox, counts) + placed.pen(nbox, counts);
     if (off > far_off || cur_pen > 0.0) {
         std::set<double> tried;
-        tried.insert(py_round(size, 3));
+        tried.insert(refdes_size_precision3dp(size, counts));
         for (double shrink : shrinks) {
-            const double s2 = std::max(py_round(size * shrink, 3), min_size);
+            const double s2 = std::max(refdes_size_precision3dp(size * shrink, counts), min_size);
             if (tried.count(s2) != 0 || s2 >= size) {
                 continue;
             }
             tried.insert(s2);
             ClearLabel alt = place_clear_label(
                 court.x0, court.y0, court.x1, court.y1, ref, s2, occupied,
-                &placed, bound_opt);
-            const double pen2 = occupied.pen(alt.box) + placed.pen(alt.box);
+                &placed, bound_opt, counts);
+            const double pen2 = occupied.pen(alt.box, counts) + placed.pen(alt.box, counts);
             if ((pen2 < cur_pen - pen_eps)
                 || (cur_pen <= 0.0 && alt.extra < off - off_improve)) {
                 tx = alt.x;
@@ -1043,8 +1057,8 @@ RefdesMove place_refdes(
     }
     const double dx = tx - fx;
     const double dy = ty - fy;
-    return RefdesMove{true, py_round(silk_product(dx, ca) - silk_product(dy, sa), 4),
-                      py_round(silk_product(dx, sa) + silk_product(dy, ca), 4),
+    return RefdesMove{true, refdes_pose_precision4dp(silk_product(dx, ca) - silk_product(dy, sa), counts),
+                      refdes_pose_precision4dp(silk_product(dx, sa) + silk_product(dy, ca), counts),
                       new_size, nbox};
 }
 
@@ -1758,7 +1772,7 @@ using Hole = std::tuple<double, double, double, std::string>;
 }  // namespace
 
 ContactGeom contact_geometry(
-    const std::vector<std::tuple<double, double, double, double>>& pads) {
+    const std::vector<std::tuple<double, double, double, double>>& pads, QuantizationCounts* counts) {
     if (pads.empty()) {
         throw std::runtime_error("no pads — contact geometry underivable");
     }
@@ -1790,7 +1804,7 @@ ContactGeom contact_geometry(
     std::set<double> col_set;
     double row_v = 0.0;
     for (const auto& c : contacts) {
-        col_set.insert(py_round(c.first, 4));
+        col_set.insert(pack_contact_column_precision4dp(c.first, counts));
         row_v = std::max(row_v, std::fabs(c.second));
     }
     std::vector<double> cols(col_set.begin(), col_set.end());
@@ -2166,16 +2180,16 @@ double connector_target_w(double row_span, double zone_pad, double tot_area,
 }
 
 Box4 canonical_plane_rect(double origin_x, double origin_y, double board_w,
-                          double board_h, double edge_back) {
-    return Box4{py_round(origin_x + edge_back, 3),
-                py_round(origin_y + edge_back, 3),
-                py_round(origin_x + board_w - edge_back, 3),
-                py_round(origin_y + board_h - edge_back, 3)};
+                          double board_h, double edge_back, QuantizationCounts* counts) {
+    return Box4{pack_plane_bound_precision3dp(origin_x + edge_back, counts),
+                pack_plane_bound_precision3dp(origin_y + edge_back, counts),
+                pack_plane_bound_precision3dp(origin_x + board_w - edge_back, counts),
+                pack_plane_bound_precision3dp(origin_y + board_h - edge_back, counts)};
 }
 
-Box4 isolation_void_rect(const Box4& court, double margin) {
-    return Box4{py_round(court.x0 - margin, 3), py_round(court.y0 - margin, 3),
-                py_round(court.x1 + margin, 3), py_round(court.y1 + margin, 3)};
+Box4 isolation_void_rect(const Box4& court, double margin, QuantizationCounts* counts) {
+    return Box4{pack_isolation_bound_precision3dp(court.x0 - margin, counts), pack_isolation_bound_precision3dp(court.y0 - margin, counts),
+                pack_isolation_bound_precision3dp(court.x1 + margin, counts), pack_isolation_bound_precision3dp(court.y1 + margin, counts)};
 }
 
 Box4 board_box_to_uv(double cx, double cy, double rot, const Box4& box) {
@@ -2297,7 +2311,7 @@ std::vector<EscapeLadderSeg> escape_ladder_plan(
     const std::vector<std::tuple<double, double, std::string>>& gnd_pads,
     const std::vector<std::pair<double, double>>& vias, double pitch,
     double pitch_tol, double row_v, double stub_w_pair,
-    double stub_w_single, double spine_w) {
+    double stub_w_single, double spine_w, QuantizationCounts* counts) {
     if (gnd_pads.empty()) {
         throw std::runtime_error("escape_ladder_plan: GND pads required");
     }
@@ -2309,8 +2323,8 @@ std::vector<EscapeLadderSeg> escape_ladder_plan(
     }
     std::vector<std::tuple<double, double, std::string>> pads = gnd_pads;
     for (auto& pad : pads) {
-        std::get<0>(pad) = py_round(std::get<0>(pad), 4);
-        std::get<1>(pad) = py_round(std::get<1>(pad), 4);
+        std::get<0>(pad) = pack_ladder_coordinate_precision4dp(std::get<0>(pad), counts);
+        std::get<1>(pad) = pack_ladder_coordinate_precision4dp(std::get<1>(pad), counts);
     }
     std::sort(pads.begin(), pads.end());
     std::map<double, std::set<double>> cols;
@@ -2330,7 +2344,7 @@ std::vector<EscapeLadderSeg> escape_ladder_plan(
         const double right_u = both_rows[i + 1];
         if (std::abs(right_u - left_u - pitch) < pitch_tol) {
             EscapeAttach attach;
-            attach.u = py_round((left_u + right_u) / 2.0, 4);
+            attach.u = pack_ladder_coordinate_precision4dp((left_u + right_u) / 2.0, counts);
             attach.kind = "pair";
             attach.a = left_u;
             attach.b = right_u;
@@ -2645,7 +2659,7 @@ std::optional<double> escape_redundancy_u(
                                  std::string>>& samenet,
     const std::vector<std::tuple<double, double, double, std::string>>& holes,
     const ViaClear& clear, double redundancy_offset, double lattice,
-    int max_steps) {
+    int max_steps, QuantizationCounts* counts) {
     if (max_steps < 0) {
         throw std::runtime_error("escape_redundancy_u: max_steps required");
     }
@@ -2657,10 +2671,9 @@ std::optional<double> escape_redundancy_u(
     for (double offset : offsets) {
         for (int step = 0; step < max_steps; ++step) {
             for (int sign : signs) {
-                const double candidate = py_round(
+                const double candidate = pack_redundancy_candidate_precision6dp(
                     base_u + offset
-                        + static_cast<double>(sign * step) * lattice,
-                    6);
+                        + static_cast<double>(sign * step) * lattice, counts);
                 if (via_feasible(candidate, base_v, dia, drill, front_cu,
                                  back_cu, samenet, holes, clear, false)
                         .first) {
@@ -2807,11 +2820,11 @@ std::pair<double, double> escape_lane_extents(double row_v, double half_h,
     return {pad_outer_tip, pad_outer_tip + lane_handle};
 }
 
-Box4 aabb_from_corners(double x0, double y0, double x1, double y1, int digits) {
-    return {py_round(std::min(x0, x1), digits),
-            py_round(std::min(y0, y1), digits),
-            py_round(std::max(x0, x1), digits),
-            py_round(std::max(y0, y1), digits)};
+Box4 aabb_from_corners(double x0, double y0, double x1, double y1, int digits, QuantizationCounts* counts) {
+    return {pack_aabb_coordinate_precision(std::min(x0, x1), digits, counts),
+            pack_aabb_coordinate_precision(std::min(y0, y1), digits, counts),
+            pack_aabb_coordinate_precision(std::max(x0, x1), digits, counts),
+            pack_aabb_coordinate_precision(std::max(y0, y1), digits, counts)};
 }
 
 double min_hypot_to_points(
@@ -2902,39 +2915,39 @@ std::vector<std::pair<double, double>> rect_corners_ccw(const Box4& box) {
             {box.x0, box.y1}};
 }
 
-double block_area(double w, double h) {
-    return py_round(w * h, 1);
+double block_area(double w, double h, QuantizationCounts* counts) {
+    return pack_block_area_precision1dp(w * h, counts);
 }
 
 bool genuine_pair_ok(bool same_row, int delta_lane) {
     return same_row && delta_lane <= 2;
 }
 
-std::pair<double, double> round_xy(double x, double y, int digits) {
-    return {py_round(x, digits), py_round(y, digits)};
+std::pair<double, double> round_xy(double x, double y, int digits, QuantizationCounts* counts) {
+    return {pack_xy_coordinate_precision(x, digits, counts), pack_xy_coordinate_precision(y, digits, counts)};
 }
 
-Box4 round_box(const Box4& box, int digits) {
-    return {py_round(box.x0, digits), py_round(box.y0, digits),
-            py_round(box.x1, digits), py_round(box.y1, digits)};
+Box4 round_box(const Box4& box, int digits, QuantizationCounts* counts) {
+    return {pack_box_coordinate_precision(box.x0, digits, counts), pack_box_coordinate_precision(box.y0, digits, counts),
+            pack_box_coordinate_precision(box.x1, digits, counts), pack_box_coordinate_precision(box.y1, digits, counts)};
 }
 
-double svg_map(double value, double origin, double scale) {
-    return py_round(origin + value * scale, 1);
+double svg_map(double value, double origin, double scale, QuantizationCounts* counts) {
+    return pack_svg_map_precision1dp(origin + value * scale, counts);
 }
 
 std::vector<double> rounded_unique_sorted(const std::vector<double>& vs,
-                                          int digits) {
+                                          int digits, QuantizationCounts* counts) {
     std::set<double> uniq;
     for (double v : vs) {
-        uniq.insert(py_round(v, digits));
+        uniq.insert(pack_unique_coordinate_precision(v, digits, counts));
     }
     return {uniq.begin(), uniq.end()};
 }
 
 std::vector<std::pair<double, double>> closed_rect_pts(const Box4& box,
-                                                       int digits) {
-    const auto corners = rect_corners_ccw(round_box(box, digits));
+                                                       int digits, QuantizationCounts* counts) {
+    const auto corners = rect_corners_ccw(round_box(box, digits, counts));
     std::vector<std::pair<double, double>> out = corners;
     if (!out.empty()) {
         out.push_back(out.front());
@@ -3001,9 +3014,9 @@ std::pair<double, double> points_centroid(
 }
 
 std::pair<double, double> rounded_centroid(
-    const std::vector<std::pair<double, double>>& pts, int digits) {
+    const std::vector<std::pair<double, double>>& pts, int digits, QuantizationCounts* counts) {
     const auto center = points_centroid(pts);
-    return {py_round(center.first, digits), py_round(center.second, digits)};
+    return {pack_centroid_coordinate_precision(center.first, digits, counts), pack_centroid_coordinate_precision(center.second, digits, counts)};
 }
 
 double hypot_xy(double ax, double ay, double bx, double by) {
@@ -3028,7 +3041,7 @@ std::pair<double, double> boxes_center(const std::vector<Box4>& boxes) {
 }
 
 std::pair<double, double> row_extent(const std::vector<Box4>& boxes,
-                                     double zone_pad) {
+                                     double zone_pad, QuantizationCounts* counts) {
     if (boxes.empty()) {
         throw std::runtime_error("row_extent: boxes required");
     }
@@ -3038,7 +3051,7 @@ std::pair<double, double> row_extent(const std::vector<Box4>& boxes,
         max_x1 = std::max(max_x1, box.x1);
         max_y1 = std::max(max_y1, box.y1);
     }
-    return {py_round(max_x1 + zone_pad, 4), py_round(max_y1 + zone_pad, 4)};
+    return {pack_row_extent_precision4dp(max_x1 + zone_pad, counts), pack_row_extent_precision4dp(max_y1 + zone_pad, counts)};
 }
 
 std::vector<std::pair<std::string, double>> long_axis_coords(
@@ -3177,14 +3190,14 @@ double facing_align_dot(double zone_x, double zone_y, double out_x,
 
 std::pair<double, double> turn_origin_180(double ecx, double ecy, double ocx,
                                           double ocy, double nhx, double nhy,
-                                          int digits) {
-    return {py_round(2.0 * ecx - ocx - nhx, digits),
-            py_round(2.0 * ecy - ocy - nhy, digits)};
+                                          int digits, QuantizationCounts* counts) {
+    return {pack_halfturn_origin_precision(2.0 * ecx - ocx - nhx, digits, counts),
+            pack_halfturn_origin_precision(2.0 * ecy - ocy - nhy, digits, counts)};
 }
 
 std::pair<double, double> rotate_origin(double ecx, double ecy, double ocx,
                                         double ocy, double nhx, double nhy,
-                                        double deg, int digits) {
+                                        double deg, int digits, QuantizationCounts* counts) {
     const double rad = deg * (M_PI / 180.0);
     const double cs = std::cos(rad);
     const double sn = std::sin(rad);
@@ -3192,19 +3205,19 @@ std::pair<double, double> rotate_origin(double ecx, double ecy, double ocx,
     const double ry = ocy - ecy;
     const double ncx = ecx + (rx * cs + ry * sn);
     const double ncy = ecy + (-rx * sn + ry * cs);
-    return {py_round(ncx - nhx, digits), py_round(ncy - nhy, digits)};
+    return {pack_rotated_origin_precision(ncx - nhx, digits, counts), pack_rotated_origin_precision(ncy - nhy, digits, counts)};
 }
 
 std::vector<std::tuple<double, double, std::string>> named_box_center_sigs(
     const std::vector<std::tuple<std::string, double, double, double, double>>&
         boxes,
-    int digits) {
+    int digits, QuantizationCounts* counts) {
     std::vector<std::tuple<double, double, std::string>> out;
     out.reserve(boxes.size());
     for (const auto& row : boxes) {
         out.emplace_back(
-            py_round((std::get<1>(row) + std::get<3>(row)) / 2.0, digits),
-            py_round((std::get<2>(row) + std::get<4>(row)) / 2.0, digits),
+            pack_named_center_precision((std::get<1>(row) + std::get<3>(row)) / 2.0, digits, counts),
+            pack_named_center_precision((std::get<2>(row) + std::get<4>(row)) / 2.0, digits, counts),
             std::get<0>(row));
     }
     std::sort(out.begin(), out.end());

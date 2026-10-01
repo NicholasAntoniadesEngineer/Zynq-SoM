@@ -29,6 +29,9 @@ fp-info-cache
 # Exported BOM files (we ship our own carrier/manufacturing/bom_jlc.csv)
 *.xml
 !native/tests/data/som_interface.xml
+!native/tests/data/board_schematic/carrier_slice/board.xml
+!native/tests/data/board_schematic/rc_pair/board.xml
+!native/tests/data/board_schematic/devkit_slice/board.xml
 
 # OS / editor / IDE artefacts
 .DS_Store

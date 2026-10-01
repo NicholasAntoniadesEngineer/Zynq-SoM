@@ -1,7 +1,7 @@
 #include "pcb_placement_gates_internal.hpp"
 
 namespace schgen::placement_gates {
-FinalGeometry::FinalGeometry(const PcbCheckInput &in) : input(in) {
+FinalGeometry::FinalGeometry(const PcbCheckInput &in, QuantizationCounts* receipt) : input(in), counts(receipt) {
     std::map<std::string, std::tuple<double, double, double>> sums;
     for (std::size_t k = 0; k < in.model().insts.size(); ++k) {
         const auto &i = in.model().insts[k];
@@ -25,7 +25,7 @@ FinalGeometry::FinalGeometry(const PcbCheckInput &in) : input(in) {
     }
     for (auto &[s, b] : bboxes) {
         (void)s;
-        b = round_box(b, 4);
+        b = round_box(b, 4, counts);
     }
 }
 std::optional<Point> FinalGeometry::centroid(const std::string &name) const {
@@ -50,7 +50,7 @@ std::optional<Point> FinalGeometry::members(const std::string &sheet,
     for (const auto &i : input.model().insts)
         if (i.sheet == sheet && refs.count(i.ref))
             points.emplace_back(i.x, i.y);
-    return points.empty() ? std::nullopt : std::optional<Point>(rounded_centroid(points, 4));
+    return points.empty() ? std::nullopt : std::optional<Point>(rounded_centroid(points, 4, counts));
 }
 } // namespace schgen::placement_gates
 
@@ -58,10 +58,10 @@ namespace schgen {
 using namespace placement_gates;
 PcbPlacementFlowResult check_pcb_placement_flow(const PcbCheckInput &in,
                                                 const PcbPlacementGatePolicy &policy,
-                                                const std::map<std::string, JsonNode> *selected) {
+                                                const std::map<std::string, JsonNode> *selected, QuantizationCounts* counts) {
     PcbPlacementFlowResult res;
     const auto &model = in.model();
-    FinalGeometry geom(in);
+    FinalGeometry geom(in, counts);
     res.board_area = std::max(model.board_w * model.board_h, 1.);
     const double budget = flow_budget(model.board_w, model.board_h, model.som_core);
     res.flow_budget_mm = py_round(budget, 4);

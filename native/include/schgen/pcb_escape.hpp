@@ -93,7 +93,7 @@ struct PcbEscapeCopperResult {
 // Public policy orchestration for escape.py. Fixed researched thresholds are
 // retained, not caller-overridable relaxations. Primitive geometry/ladder/seat
 // APIs are the existing native pack.hpp functions.
-ContactGeom pcb_escape_contact_geometry(const PcbCheckFootprint &);
+ContactGeom pcb_escape_contact_geometry(const PcbCheckFootprint &, QuantizationCounts* counts = nullptr);
 Box4 pcb_escape_corridor_local(const PcbCheckFootprint &);
 Box4 pcb_escape_corridor_board(const PcbCheckFootprint &, double x, double y, double rotation, QuantizationCounts* counts = nullptr);
 PcbEscapeCopperResult build_pcb_escape_copper(const PcbEscapeInput &, QuantizationCounts* = nullptr);

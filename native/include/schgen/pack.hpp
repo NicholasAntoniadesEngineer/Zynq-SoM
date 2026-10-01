@@ -86,7 +86,7 @@ double point_box_dist(double x, double y, const Box4& box);
 double seg_box_dist(double x1, double y1, double x2, double y2,
                     const Box4& box);
 std::vector<std::vector<std::pair<double, std::string>>> band_cover(
-    const std::vector<std::pair<double, std::string>>& points, double reach);
+    const std::vector<std::pair<double, std::string>>& points, double reach, QuantizationCounts* counts = nullptr);
 std::pair<bool, double> coverage_ok(
     double u, double v, const std::vector<std::pair<double, double>>& members,
     double bound);
@@ -96,15 +96,15 @@ bool point_on_seg(double px, double py, double x0, double y0, double x1,
 class SilkBoxIndex {
 public:
     explicit SilkBoxIndex(double cell);
-    void add(const Box4& box);
-    double pen(const Box4& gb) const;
-    bool hits(const Box4& gb) const;
+    void add(const Box4& box, QuantizationCounts* counts = nullptr);
+    double pen(const Box4& gb, QuantizationCounts* counts = nullptr) const;
+    bool hits(const Box4& gb, QuantizationCounts* counts = nullptr) const;
     const std::vector<Box4>& boxes() const { return boxes_; }
 
 private:
-    int cell_of(double value) const;
+    int cell_of(double value, QuantizationCounts* counts) const;
     std::uint64_t key(int gx, int gy) const;
-    std::vector<int> near(const Box4& box) const;
+    std::vector<int> near(const Box4& box, QuantizationCounts* counts) const;
 
     double cell_;
     std::vector<Box4> boxes_;
@@ -114,9 +114,9 @@ private:
 class BreatheGrid {
 public:
     BreatheGrid(double board_w, double board_h, double cell, double origin_x,
-                double origin_y);
-    void stamp(const Box4& box, int val);
-    bool free(const Box4& box) const;
+                double origin_y, QuantizationCounts* counts = nullptr);
+    void stamp(const Box4& box, int val, QuantizationCounts* counts = nullptr);
+    bool free(const Box4& box, QuantizationCounts* counts = nullptr) const;
 
 private:
     int nx_ = 0;
@@ -138,7 +138,7 @@ ClearLabel place_clear_label(double cx0, double cy0, double cx1, double cy1,
                              const std::string& label, double size,
                              const SilkBoxIndex& occupied,
                              const SilkBoxIndex* placed,
-                             const std::optional<Box4>& bounds);
+                             const std::optional<Box4>& bounds, QuantizationCounts* counts = nullptr);
 bool segments_cross(double ax0, double ay0, double ax1, double ay1,
                     double bx0, double by0, double bx1, double by1);
 std::optional<Box4> boxes_union(const std::vector<Box4>& boxes);
@@ -163,7 +163,7 @@ std::pair<Halo, Halo> zone_fanout_reach(
     double zw, double zh,
     const std::vector<std::tuple<double, double, double, double, int, double>>&
         members,
-    int min_subject_pins);
+    int min_subject_pins, QuantizationCounts* counts = nullptr);
 
 std::vector<Comp> edge_components(char edge, double block_x, double block_y,
                                   double board_w, double board_h,
@@ -216,7 +216,7 @@ RefdesMove place_refdes(
     const SilkBoxIndex& occupied, const SilkBoxIndex& placed,
     const Box4& bounds, double fx, double fy, double ca, double sa,
     double min_size, double box_pad, double far_off, double pen_eps,
-    double off_improve, const std::vector<double>& shrinks);
+    double off_improve, const std::vector<double>& shrinks, QuantizationCounts* counts = nullptr);
 
 std::vector<Box4> som_keepout_rects(
     double som_x, double som_y, double som_w, double som_h, double occ_pad,
@@ -341,7 +341,7 @@ struct ContactGeom {
 };
 
 ContactGeom contact_geometry(
-    const std::vector<std::tuple<double, double, double, double>>& pads);
+    const std::vector<std::tuple<double, double, double, double>>& pads, QuantizationCounts* counts = nullptr);
 
 struct ViaClear {
     double margin = 0.0;
@@ -421,9 +421,9 @@ double connector_target_w(double row_span, double zone_pad, double tot_area,
                           double fill, double aspect);
 
 Box4 canonical_plane_rect(double origin_x, double origin_y, double board_w,
-                          double board_h, double edge_back);
+                          double board_h, double edge_back, QuantizationCounts* counts = nullptr);
 
-Box4 isolation_void_rect(const Box4& court, double margin);
+Box4 isolation_void_rect(const Box4& court, double margin, QuantizationCounts* counts = nullptr);
 
 Box4 board_box_to_uv(double cx, double cy, double rot, const Box4& box);
 
@@ -458,13 +458,13 @@ std::optional<double> escape_redundancy_u(
                                  std::string>>& samenet,
     const std::vector<std::tuple<double, double, double, std::string>>& holes,
     const ViaClear& clear, double redundancy_offset, double lattice,
-    int max_steps);
+    int max_steps, QuantizationCounts* counts = nullptr);
 
 std::vector<EscapeLadderSeg> escape_ladder_plan(
     const std::vector<std::tuple<double, double, std::string>>& gnd_pads,
     const std::vector<std::pair<double, double>>& vias, double pitch,
     double pitch_tol, double row_v, double stub_w_pair,
-    double stub_w_single, double spine_w);
+    double stub_w_single, double spine_w, QuantizationCounts* counts = nullptr);
 
 bool via_in_escape_region(double bx, double by, const Box4& zone,
                           double margin);
@@ -492,7 +492,7 @@ double construct_reach(double r_construct, double row_v);
 Box4 obstacle_scan_region(const std::vector<double>& us, double margin);
 std::pair<double, double> escape_lane_extents(double row_v, double half_h,
                                               double lane_handle);
-Box4 aabb_from_corners(double x0, double y0, double x1, double y1, int digits);
+Box4 aabb_from_corners(double x0, double y0, double x1, double y1, int digits, QuantizationCounts* counts = nullptr);
 double min_hypot_to_points(
     double u, double v,
     const std::vector<std::pair<double, double>>& pts);
@@ -512,15 +512,15 @@ std::tuple<double, double, double, double> padded_xywh(
     double x, double y, double w, double h, double pad);
 std::tuple<double, double, double, double> box_to_xywh(const Box4& box);
 std::vector<std::pair<double, double>> rect_corners_ccw(const Box4& box);
-double block_area(double w, double h);
+double block_area(double w, double h, QuantizationCounts* counts = nullptr);
 bool genuine_pair_ok(bool same_row, int delta_lane);
-std::pair<double, double> round_xy(double x, double y, int digits);
-Box4 round_box(const Box4& box, int digits);
-double svg_map(double value, double origin, double scale);
+std::pair<double, double> round_xy(double x, double y, int digits, QuantizationCounts* counts = nullptr);
+Box4 round_box(const Box4& box, int digits, QuantizationCounts* counts = nullptr);
+double svg_map(double value, double origin, double scale, QuantizationCounts* counts = nullptr);
 std::vector<double> rounded_unique_sorted(const std::vector<double>& vs,
-                                          int digits);
+                                          int digits, QuantizationCounts* counts = nullptr);
 std::vector<std::pair<double, double>> closed_rect_pts(const Box4& box,
-                                                       int digits);
+                                                       int digits, QuantizationCounts* counts = nullptr);
 std::vector<std::tuple<std::string, double, double, double, double>>
 offset_named_boxes(
     const std::vector<std::tuple<std::string, double, double, double, double>>&
@@ -532,11 +532,11 @@ int inversion_count(
 std::pair<double, double> points_centroid(
     const std::vector<std::pair<double, double>>& pts);
 std::pair<double, double> rounded_centroid(
-    const std::vector<std::pair<double, double>>& pts, int digits);
+    const std::vector<std::pair<double, double>>& pts, int digits, QuantizationCounts* counts = nullptr);
 double hypot_xy(double ax, double ay, double bx, double by);
 std::pair<double, double> boxes_center(const std::vector<Box4>& boxes);
 std::pair<double, double> row_extent(const std::vector<Box4>& boxes,
-                                     double zone_pad);
+                                     double zone_pad, QuantizationCounts* counts = nullptr);
 std::vector<std::pair<std::string, double>> long_axis_coords(
     const std::vector<std::tuple<std::string, double, double>>& centers);
 std::optional<std::vector<std::string>> topo_order(
@@ -551,14 +551,14 @@ double facing_align_dot(double zone_x, double zone_y, double out_x,
                         double out_y, double face_x, double face_y);
 std::pair<double, double> turn_origin_180(double ecx, double ecy, double ocx,
                                           double ocy, double nhx, double nhy,
-                                          int digits);
+                                          int digits, QuantizationCounts* counts = nullptr);
 std::pair<double, double> rotate_origin(double ecx, double ecy, double ocx,
                                         double ocy, double nhx, double nhy,
-                                        double deg, int digits);
+                                        double deg, int digits, QuantizationCounts* counts = nullptr);
 std::vector<std::tuple<double, double, std::string>> named_box_center_sigs(
     const std::vector<std::tuple<std::string, double, double, double, double>>&
         boxes,
-    int digits);
+    int digits, QuantizationCounts* counts = nullptr);
 double cross_budget(double board_w, double board_h, double n_sub, double k);
 double relax_pad(int scale, double step);
 double template_clear_pad(double clearance, double margin, double pad);

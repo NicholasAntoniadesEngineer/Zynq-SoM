@@ -87,7 +87,7 @@ class Engine {
     Part part(const std::string &, double = 0, double = 0, double = 0) const;
     bool overlap(const Parts &) const;
     Box4 extent(const Parts &) const;
-    FloorplanPoint row_extent(const Parts &) const;
+    FloorplanPoint row_extent(const Parts &);
     std::string bref(const std::string &) const;
     Part beside(const std::string &, double, Box4, const std::string &, double,
                 std::optional<double> = {});

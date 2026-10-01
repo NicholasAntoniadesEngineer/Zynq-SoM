@@ -190,8 +190,8 @@ Box4 Engine::extent(const Parts &parts) const {
         throw PcbZoneInfeasible("empty stage extent");
     return *x;
 }
-FloorplanPoint Engine::row_extent(const Parts &parts) const {
-    return schgen::row_extent(bodies(parts), zone_pad);
+FloorplanPoint Engine::row_extent(const Parts &parts) {
+    return schgen::row_extent(bodies(parts), zone_pad, &quantization);
 }
 std::string Engine::bref(const std::string &lib) const {
     auto b = in.board_refs.find(lib);
@@ -234,8 +234,8 @@ Parts Engine::turn(const Parts &parts, double deg, bool renormalize, bool exact_
             checked_quantization_add(quantization, "refit_pose_precision");
             xy.second = native_refit_pose_precision(2.0 * cy - (old.second + p.y) - next.second);
         } else xy = exact_half
-            ? turn_origin_180(cx, cy, old.first + p.x, old.second + p.y, next.first, next.second, 4)
-            : rotate_origin(cx, cy, old.first + p.x, old.second + p.y, next.first, next.second, deg, 4);
+            ? turn_origin_180(cx, cy, old.first + p.x, old.second + p.y, next.first, next.second, 4, &quantization)
+            : rotate_origin(cx, cy, old.first + p.x, old.second + p.y, next.first, next.second, deg, 4, &quantization);
         p.rot = nr;
         p.x = xy.first;
         p.y = xy.second;
