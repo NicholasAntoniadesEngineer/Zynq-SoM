@@ -26,7 +26,7 @@ QuantizationCounts end(){observing=false;QuantizationCounts q;
     for(std::size_t i=0;i<names.size();++i)if(entries[i])q[names[i]]=entries[i];return q;}
 void declarations(){
     NativeQuantizations q;register_native_quantizations(q);
-    const auto ds=q.declarations();require(ds.size()==122,"108 prior plus fourteen geometry declarations");
+    const auto ds=q.declarations();require(ds.size()==131,"122 prior plus nine search declarations");
     const auto manifest=native_board_policy_audit_sources();
     require(std::count_if(manifest.begin(),manifest.end(),[](const auto& s){
         return s.path=="native/src/legalize_precision.cpp";})==1,"exact scalar source is in production manifest once");

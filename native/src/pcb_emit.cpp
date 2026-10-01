@@ -179,7 +179,7 @@ PcbEmissionResult render_pcb(const PcbModel &m, const PcbEmitPolicy &p, Quantiza
                 rect_corners_ccw(isolation_void_rect(courtyard(i), p.isolation_margin)),
                 uid("iso-void:" + i.ref), "ethernet_isolation_void_" + i.ref, p.ground_layer,
                 p.zone_min_thickness));
-    auto thermal = thermal_nodes(m, p, uid, result);
+    auto thermal = thermal_nodes(m, p, uid, result, counts);
     root.insert(root.end(), thermal.zones.begin(), thermal.zones.end());
     if (m.som_core) {
         auto b = *m.som_core;

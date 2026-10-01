@@ -160,7 +160,7 @@ struct ThermalNodes {
     std::vector<Sexpr> zones, vias;
 };
 ThermalNodes thermal_nodes(const PcbModel &, const PcbEmitPolicy &, const Uid &,
-                           PcbEmissionResult &);
+                           PcbEmissionResult &, QuantizationCounts*);
 std::vector<Sexpr> descriptors(const PcbModel &, const PcbEmitPolicy &, const Uid &, const Sexpr &,
                                QuantizationCounts* = nullptr);
 int declutter(const PcbModel &, Sexpr &);

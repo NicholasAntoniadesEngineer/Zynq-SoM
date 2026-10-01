@@ -21,6 +21,7 @@ add_library(schgen_core STATIC
     src/legalize_precision.cpp src/stage_precision.cpp
     src/placement_precision.cpp src/output_precision.cpp src/pack_precision.cpp
     src/pack_geometry_precision.cpp
+    src/pack_search_precision.cpp
     src/pack_anchor.cpp src/place_search.cpp src/cc.cpp src/embed_fp.cpp
     src/pack_edges.cpp src/pcb_scan.cpp src/pack_refine.cpp src/place_geom.cpp
     src/catalog.cpp src/json.cpp src/circuit.cpp src/reorder.cpp src/atomic_file.cpp
@@ -473,6 +474,8 @@ if(BUILD_TESTING)
     endforeach()
 
 
+
+    include(tests/pack_search/integration.cmake)
 
     add_library(schgen_pack_geometry_observed OBJECT src/pack_geometry_precision.cpp)
     target_include_directories(schgen_pack_geometry_observed PRIVATE include)

@@ -58,7 +58,7 @@ Sexpr embed(const PcbFootprintInst &i, const PcbEmitPolicy &p, const Uid &uid) {
 }
 
 ThermalNodes thermal_nodes(const PcbModel &m, const PcbEmitPolicy &p, const Uid &uid,
-                           PcbEmissionResult &result) {
+                           PcbEmissionResult &result, QuantizationCounts* counts) {
     ThermalNodes out;
     auto g = m.net_numbers.find("GND");
     if (g == m.net_numbers.end() || !g->second)
@@ -142,7 +142,7 @@ ThermalNodes thermal_nodes(const PcbModel &m, const PcbEmitPolicy &p, const Uid 
             }
         Points chosen, candidates = spec.via_sites;
         auto lattice = fallback_via_sites(spec.pour.x0, spec.pour.y0, spec.pour.x1, spec.pour.y1,
-                                          p.thermal_via_size, p.thermal_lattice_pitch);
+                                          p.thermal_via_size, p.thermal_lattice_pitch, counts);
         candidates.insert(candidates.end(), lattice.begin(), lattice.end());
         int n_lattice = 0;
         std::map<std::string, int> vetoes;

@@ -16,6 +16,18 @@ The same bounded receipt correction was then applied to the older placement,
 stage, precision-accounting, connector and floorplan comparison harnesses;
 all five passed (95.21 seconds), with every historical data file preserved.
 
+Integrated Search9 (autonomous, per full-autonomy directive): nine genuine
+scalar boundaries close the fourteen fallback-via/seat-band source findings,
+with checked narrowing, allocation products, inclusive endpoints and recursion
+depth. Invocation receipts include rejected trials and recursive work. The
+private exact-base integration passed 25 tests, including source mutations,
+UBSan and frozen compatibility. Parent full two-board output/negative contracts
+passed in 18.91 seconds with the separate two-entry ledger correction retained.
+The three newly imported independent fixture hashes match their original proof
+artifacts; no existing fixture was changed. Registry cardinality is now 131.
+Fifty other reported sites remain assigned to the next two integration batches;
+this is not a claim of combined whole-board acceptance.
+
 Measured pinned C++ `1ad3a40a85e98d481e22f00bdeacac86582c4356` against the
 owner's sole Python baseline `0e9bbc913bab77f9cd228940db2a332d25d6bfa1`,
 in isolated source checkouts (autonomous, per full-autonomy directive).

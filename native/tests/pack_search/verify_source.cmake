@@ -1,0 +1,11 @@
+file(SHA256 "${FIXTURES}/before-pack.cpp.txt" source_hash)
+file(SHA256 "${FIXTURES}/before-pack.hpp.txt" header_hash)
+if(NOT source_hash STREQUAL "e6656c2b5022471c6e59d8ad1ecf3c40e2ae62476ed5ec4e7a3364c9d0e6cb2d" OR
+   NOT header_hash STREQUAL "17b1119a8fc4b0ac9078ce92c238970d64febe15a2a0cb73636e8b8e9645704d")
+    message(FATAL_ERROR "Search9 immutable prechange source hash mismatch")
+endif()
+string(RANDOM LENGTH 16 suffix)
+execute_process(COMMAND "${PROGRAM}" "${ROOT}" "${OUTPUT_DIR}/source-${suffix}" RESULT_VARIABLE status)
+if(NOT status STREQUAL "0")
+    message(FATAL_ERROR "Search9 exact-family source proof failed: ${status}")
+endif()

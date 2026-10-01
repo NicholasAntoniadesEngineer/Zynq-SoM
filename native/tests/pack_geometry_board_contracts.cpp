@@ -55,7 +55,7 @@ void scalars(){
  }
  // Registry proof uses explicit reviewed declarations, never scanner-derived symbols.
  NativeQuantizations all,r;register_native_quantizations(all);
- require(all.declarations().size()==122,"108 prior plus fourteen geometry");
+ require(all.declarations().size()==131,"122 prior plus nine search");
  for(const auto& d:all.declarations())if(geometry_fixture::added(d.name))r.declare(d);
  require(r.declarations().size()==14,"declaration count");
  for(const auto& d:r.declarations()){

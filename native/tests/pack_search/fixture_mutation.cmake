@@ -1,0 +1,10 @@
+string(RANDOM LENGTH 16 suffix)
+set(scratch "${OUTPUT_DIR}/mutation-${suffix}")
+file(MAKE_DIRECTORY "${scratch}")
+file(READ "${FIXTURES}/legacy-helper.txt" original)
+file(WRITE "${scratch}/legacy-helper.txt" "mutated:${original}")
+execute_process(COMMAND "${CMAKE_COMMAND}" "-DPROBE=helper" "-DFIXTURES=${scratch}"
+    -P "${RUNNER}" RESULT_VARIABLE status OUTPUT_VARIABLE out ERROR_VARIABLE err)
+if(status STREQUAL "0" OR NOT err MATCHES "Search9 immutable fixture hash mismatch")
+    message(FATAL_ERROR "fixture mutation escaped exact immutable hash check: ${out}${err}")
+endif()

@@ -1,6 +1,5 @@
 #include "schgen/pack_geometry_precision.hpp"
 #include "schgen/pack.hpp"
-#include "schgen/pack_search_precision.hpp"
 #include "schgen/pack_precision.hpp"
 #include "schgen/board_decision_policy.hpp"
 
@@ -175,8 +174,8 @@ ViaBlockHit via_site_blocker(
 
 std::vector<std::pair<double, double>> fallback_via_sites(
     double x0, double y0, double x1, double y1, double via_size,
-    double pitch, QuantizationCounts* counts) {
-    if (!std::isfinite(pitch) || pitch <= 0.0) {
+    double pitch) {
+    if (pitch <= 0.0) {
         throw std::runtime_error("fallback_via_sites: pitch required");
     }
     const double m = via_size / 2.0;
@@ -184,17 +183,15 @@ std::vector<std::pair<double, double>> fallback_via_sites(
     y0 += m;
     x1 -= m;
     y1 -= m;
-    const int ni = fallback_axis_count((x1 - x0) / pitch, counts);
-    const int nj = fallback_axis_count((y1 - y0) / pitch, counts);
+    const int ni = static_cast<int>((x1 - x0) / pitch) + 1;
+    const int nj = static_cast<int>((y1 - y0) / pitch) + 1;
     std::vector<std::tuple<double, double, double>> ranked;
-    ranked.reserve(pack_search_detail::checked_product(
-        static_cast<std::size_t>(std::max(0, ni)),
-        static_cast<std::size_t>(std::max(0, nj)), ranked.max_size()));
+    ranked.reserve(static_cast<std::size_t>(std::max(0, ni) * std::max(0, nj)));
     for (int i = 0; i < ni; ++i) {
         for (int j = 0; j < nj; ++j) {
-            const double sx = fallback_coordinate_precision3dp(x0 + static_cast<double>(i) * pitch, counts);
-            const double sy = fallback_coordinate_precision3dp(y0 + static_cast<double>(j) * pitch, counts);
-            ranked.emplace_back(fallback_rank_precision4dp(std::hypot(sx, sy), counts), sy, sx);
+            const double sx = py_round(x0 + static_cast<double>(i) * pitch, 3);
+            const double sy = py_round(y0 + static_cast<double>(j) * pitch, 3);
+            ranked.emplace_back(py_round(std::hypot(sx, sy), 4), sy, sx);
         }
     }
     std::stable_sort(ranked.begin(), ranked.end());
@@ -1880,13 +1877,10 @@ SeatBandResult seat_band(
     double row_v, double half_h,
     const std::vector<std::pair<double, double>>& ladder, const ViaClear& clear,
     double via_row, double r_construct, double lattice, const std::string& conn,
-    int depth, QuantizationCounts* counts) {
+    int depth) {
     if (members.empty()) {
         throw std::runtime_error("seat_band: members required");
     }
-    for (const auto& m : members)
-        if (!std::isfinite(std::get<1>(m)) || !std::isfinite(std::get<2>(m)))
-            throw std::invalid_argument("seat_band: finite member coordinates required");
     SeatBandResult out;
     std::vector<double> us;
     us.reserve(members.size());
@@ -1918,15 +1912,14 @@ SeatBandResult seat_band(
         const double lo = u_last - reach;
         const double hi = u_first + reach;
         const long i0 =
-            seat_lower_index(lo / lattice - 1e-9, counts);
+            static_cast<long>(std::ceil(lo / lattice - 1e-9));
         const long i1 =
-            seat_upper_index(hi / lattice + 1e-9, counts);
+            static_cast<long>(std::floor(hi / lattice + 1e-9));
         std::vector<double> u_cands;
-        const auto u_count = pack_search_detail::inclusive_count(i0, i1, u_cands.max_size());
-        u_cands.reserve(u_count);
-        pack_search_detail::for_each_index(i0, u_count, [&](long i) {
-            u_cands.push_back(seat_coordinate_precision6dp(static_cast<double>(i) * lattice, counts));
-        });
+        for (long i = i0; i <= i1; ++i) {
+            u_cands.push_back(
+                py_round(static_cast<double>(i) * lattice, 6));
+        }
         std::sort(u_cands.begin(), u_cands.end(),
                   [center](double a, double b) {
                       const double da = std::fabs(a - center);
@@ -1936,14 +1929,12 @@ SeatBandResult seat_band(
                       }
                       return -a < -b;
                   });
-        const int vmax_n = seat_vertical_extent(v_max / lattice, counts);
+        const int vmax_n = static_cast<int>(v_max / lattice);
         std::vector<double> v_cands;
-        const long k0 = -vmax_n;
-        const auto v_count = pack_search_detail::inclusive_count(k0, vmax_n, v_cands.max_size());
-        v_cands.reserve(v_count);
-        pack_search_detail::for_each_index(k0, v_count, [&](long k) {
-            v_cands.push_back(seat_coordinate_precision6dp(static_cast<double>(k) * lattice, counts));
-        });
+        for (int k = -vmax_n; k <= vmax_n; ++k) {
+            v_cands.push_back(
+                py_round(static_cast<double>(k) * lattice, 6));
+        }
         std::sort(v_cands.begin(), v_cands.end(), [](double a, double b) {
             const double da = std::fabs(a);
             const double db = std::fabs(b);
@@ -1974,7 +1965,7 @@ SeatBandResult seat_band(
                 led.v = vv;
                 led.dia = dia;
                 led.drill = drill;
-                led.worst = seat_coverage_precision4dp(cov.second, counts);
+                led.worst = py_round(cov.second, 4);
                 led.depth = depth;
                 led.members = names;
                 out.ledger.push_back(std::move(led));
@@ -2008,7 +1999,7 @@ SeatBandResult seat_band(
         SeatLedger led;
         led.kind = "split_u";
         led.conn = conn;
-        led.at = seat_split_precision4dp(cut, counts);
+        led.at = py_round(cut, 4);
         led.depth = depth;
         led.members = names;
         out.ledger.push_back(std::move(led));
@@ -2023,7 +2014,7 @@ SeatBandResult seat_band(
         }
         auto lhit = seat_band(left, front_cu, back_cu, samenet, holes, row_v,
                               half_h, ladder, clear, via_row, r_construct,
-                              lattice, conn, pack_search_detail::next_depth(depth), counts);
+                              lattice, conn, depth + 1);
         out.ledger.insert(out.ledger.end(), lhit.ledger.begin(),
                           lhit.ledger.end());
         out.audit.insert(out.audit.end(), lhit.audit.begin(), lhit.audit.end());
@@ -2032,7 +2023,7 @@ SeatBandResult seat_band(
         }
         auto rhit = seat_band(right, front_cu, back_cu, samenet, holes, row_v,
                               half_h, ladder, clear, via_row, r_construct,
-                              lattice, conn, pack_search_detail::next_depth(depth), counts);
+                              lattice, conn, depth + 1);
         out.ledger.insert(out.ledger.end(), rhit.ledger.begin(),
                           rhit.ledger.end());
         out.audit.insert(out.audit.end(), rhit.audit.begin(), rhit.audit.end());
@@ -2065,7 +2056,7 @@ SeatBandResult seat_band(
             }
             auto hit = seat_band(sub, front_cu, back_cu, samenet, holes, row_v,
                                  half_h, ladder, clear, via_row, r_construct,
-                                 lattice, conn, pack_search_detail::next_depth(depth), counts);
+                                 lattice, conn, depth + 1);
             out.ledger.insert(out.ledger.end(), hit.ledger.begin(),
                               hit.ledger.end());
             out.audit.insert(out.audit.end(), hit.audit.begin(),

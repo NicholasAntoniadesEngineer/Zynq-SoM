@@ -294,7 +294,7 @@ PcbEscapeCopperResult build_pcb_escape_copper(const PcbEscapeInput &input, Quant
             nets.push_back(v.net);
         }
         auto result = seat_band(members, obs.front, obs.back, obs.same, obs.holes, g.row_v,
-                                g.half_h, ladder(), clear(), .15, radius, lattice, ref, 0);
+                                g.half_h, ladder(), clear(), .15, radius, lattice, ref, 0, counts);
         meta.ledger.insert(meta.ledger.end(), result.ledger.begin(), result.ledger.end());
         if (result.vias.empty()) {
             auto audit = result.audit;

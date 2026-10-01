@@ -1,3 +1,4 @@
+#include "pack_search_precision_fixture.hpp"
 #pragma once
 #include "schgen/execution_accounting.hpp"
 #include <array>
@@ -7,7 +8,7 @@ inline const std::array<std::string,14> names{{"pack_pair_gap_precision4dp","pac
 inline bool added(const std::string& name){return std::find(names.begin(),names.end(),name)!=names.end();}
 inline schgen::QuantizationCounts select(const schgen::QuantizationCounts& counts,bool additions=true){
     schgen::QuantizationCounts out;
-    for(const auto& [name,count]:counts)if(added(name)==additions)out[name]=count;
+    for(const auto& [name,count]:counts)if(added(name)==additions&&!pack_search_precision_fixture::added(name))out[name]=count;
     return out;
 }
 }

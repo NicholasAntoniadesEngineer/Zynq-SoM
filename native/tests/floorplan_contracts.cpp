@@ -1,3 +1,4 @@
+#include "pack_search_precision_fixture.hpp"
 // Frozen Python orchestration outputs plus independent numeric/mutation tests.
 // No Python, installed footprint library, live board output, or source inspection.
 #include "../src/floorplan_internal.hpp"
@@ -510,7 +511,7 @@ void frozen(const std::filesystem::path& dir,const std::string& name,bool geomet
     // by native_occupancy_precision_contracts. Keep every prior expectation.
     auto prior_quant=field(account,"quantization_engagements");
     prior_quant.object_value.erase(std::remove_if(prior_quant.object_value.begin(),prior_quant.object_value.end(),
-        [](const auto& row){return occupancy_precision_fixture::added(row.first)||legalize_precision_fixture::added(row.first)||stage_precision_fixture::added(row.first)||placement_precision_fixture::added(row.first)||output_precision_fixture::added(row.first)||pack_precision_fixture::added(row.first)||pack_geometry_precision_fixture::added(row.first);}),prior_quant.object_value.end());
+        [](const auto& row){return occupancy_precision_fixture::added(row.first)||legalize_precision_fixture::added(row.first)||stage_precision_fixture::added(row.first)||placement_precision_fixture::added(row.first)||output_precision_fixture::added(row.first)||pack_precision_fixture::added(row.first)||pack_geometry_precision_fixture::added(row.first)||pack_search_precision_fixture::added(row.first);}),prior_quant.object_value.end());
     same(prior_quant,expected_quant,name+".quantization_engagements");
     std::vector<J> calculations;
     std::string ledger;
