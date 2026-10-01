@@ -12,6 +12,9 @@ geometry/output tests passed in 78.71 seconds. Historical fixture files are
 unchanged; full-output comparisons adjust only the independently verified
 two-entry receipt correction and reject missing/typo entries. This is not
 closure of the remaining source-policy findings or full-board acceptance.
+The same bounded receipt correction was then applied to the older placement,
+stage, precision-accounting, connector and floorplan comparison harnesses;
+all five passed (95.21 seconds), with every historical data file preserved.
 
 Measured pinned C++ `1ad3a40a85e98d481e22f00bdeacac86582c4356` against the
 owner's sole Python baseline `0e9bbc913bab77f9cd228940db2a332d25d6bfa1`,

@@ -1,6 +1,7 @@
 // Instrument ONLY precision_ops.cpp with -finstrument-functions -fno-inline.
 // The independent observer below is never production accounting.
 #include "floorplan_precision_fixture.hpp"
+#include "ledger_accounting_fixture.hpp"
 #include "floorplan_internal.hpp"
 #include "schgen/precision_ops.hpp"
 #include "schgen/native_audit_state.hpp"
@@ -117,8 +118,10 @@ void boards(const std::filesystem::path& root,const std::filesystem::path& data,
         if(!capture){auto expected=decoded(field(additions,name));expected.at(names[5])+=7;
             require(observed==expected,"independent prior fixture plus seven observed assumption display calls "+name);}
         if(capture){if(!first)std::cout<<",\n";first=false;std::cout<<std::quoted(name)<<':';show(observed);}
-        auto& output=variant==3?fixed:baseline;plan(output,name,result.floorplan.plan);
-        counts(output,"ZONE",result.zone_accounting.quantization_engagements);counts(output,"PLACEMENT",result.placement_accounting.quantization_engagements);counts(output,"AGGREGATE",total.quantization_engagements);
+        auto old_plan=result.floorplan.plan;
+        old_plan.accounting.quantization_engagements=ledger_accounting_fixture::before_initial_receipt_fix(old_plan.accounting.quantization_engagements);
+        auto& output=variant==3?fixed:baseline;plan(output,name,old_plan);
+        counts(output,"ZONE",result.zone_accounting.quantization_engagements);counts(output,"PLACEMENT",result.placement_accounting.quantization_engagements);counts(output,"AGGREGATE",ledger_accounting_fixture::before_initial_receipt_fix(total.quantization_engagements));
         NativeQuantizations q;NativeFallbacks f;register_native_quantizations(q);register_native_fallbacks(f);NativeAccountingInbox inbox(q,f);
         begin();require(inbox.merge_once("pcb/placement",total)&&!inbox.merge_once("pcb/placement",total),"one production receipt with replay rejection");require(end().empty(),"import performs no math");
         for(const auto& op:names){const auto entry=observed.find(op);require(q.engagements().at(op)==AuditInteger::decimal(std::to_string(entry==observed.end()?0:entry->second)),"exact imported new count");}

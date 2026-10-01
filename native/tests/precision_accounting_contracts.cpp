@@ -1,6 +1,7 @@
 // Only precision_ops.cpp is compiled with -finstrument-functions -fno-inline.
 // This test observer is never linked into production or used as solver census.
 #include "pcb_placement_fixture.hpp"
+#include "ledger_accounting_fixture.hpp"
 #include "schgen/precision_ops.hpp"
 #include "floorplan_precision_fixture.hpp"
 #include "schgen/native_audit_state.hpp"
@@ -55,10 +56,10 @@ void live(const std::filesystem::path& root,const std::string& board,bool single
     const auto total=pcb_placement_accounting(result);
     const auto& expected=field(baseline,name);
     for(const auto& [label,counts]:std::vector<std::pair<std::string,QuantizationCounts>>{
-            {"floorplan",result.floorplan.plan.accounting.quantization_engagements},
+            {"floorplan",ledger_accounting_fixture::before_initial_receipt_fix(result.floorplan.plan.accounting.quantization_engagements)},
             {"placement",result.placement_accounting.quantization_engagements},
             {"zone",result.zone_accounting.quantization_engagements},
-            {"aggregate",total.quantization_engagements}})
+            {"aggregate",ledger_accounting_fixture::before_initial_receipt_fix(total.quantization_engagements)}})
         require(select(counts,false)==decoded(field(expected,label)),name+" original twenty counters exactly unchanged: "+label);
     require(select(total.quantization_engagements,true)==measured,name+" exported new counters equal independent compiled function entries");
     require(measured.count("estimate_position_precision")&&measured.count("estimate_pad_precision"),name+" actual estimate work observed");

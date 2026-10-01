@@ -1,4 +1,5 @@
 #include "pcb_placement_fixture.hpp"
+#include "ledger_accounting_fixture.hpp"
 #include "floorplan_precision_fixture.hpp"
 #include "placement_precision_fixture.hpp"
 #include "pcb_placement_internal.hpp"
@@ -205,15 +206,22 @@ void boards(const std::filesystem::path& root){
         begin();const auto result=build_pcb_model(f.input);const auto calls=end();const auto total=pcb_placement_accounting(result);
         account("board/"+label,total.quantization_engagements,calls);
         legacy<<"BOARD "<<label<<'\n';floorplan_precision_fixture::node(legacy,pcb_model_json(result.model));
-        auto plan=result.floorplan.plan;plan.accounting.quantization_engagements=select(plan.accounting.quantization_engagements,false);
+        auto plan=result.floorplan.plan;
+        auto prior_total=total.quantization_engagements;
+#ifndef PLACEMENT_PRECISION_BASELINE
+        plan.accounting.quantization_engagements=ledger_accounting_fixture::before_initial_receipt_fix(plan.accounting.quantization_engagements);
+        prior_total=ledger_accounting_fixture::before_initial_receipt_fix(prior_total);
+#endif
+        const auto prior_floorplan=plan.accounting.quantization_engagements;
+        plan.accounting.quantization_engagements=select(plan.accounting.quantization_engagements,false);
         floorplan_precision_fixture::node(legacy,floorplan_plan_json(plan));
         legacy<<render_floorplan_ledger(plan);floorplan_precision_fixture::node(legacy,export_floorplan_spec(plan));
         for(const auto& [name,rows]:result.stages){legacy<<"STAGE "<<std::quoted(name)<<'\n';for(const auto& [r,p]:rows)
             legacy<<std::quoted(r)<<' '<<bits(std::get<0>(p))<<' '<<bits(std::get<1>(p))<<' '<<bits(std::get<2>(p))<<' '<<std::quoted(std::get<3>(p))<<'\n';}
         for(const auto& event:result.fallback_events)legacy<<"FALLBACK "<<std::quoted(event)<<'\n';
-        counts("floorplan",result.floorplan.plan.accounting.quantization_engagements);
+        counts("floorplan",prior_floorplan);
         counts("zone",result.zone_accounting.quantization_engagements);
-        counts("placement",result.placement_accounting.quantization_engagements);counts("total",total.quantization_engagements);
+        counts("placement",result.placement_accounting.quantization_engagements);counts("total",prior_total);
         auto expected=select(result.floorplan.plan.accounting.quantization_engagements);
         if(result.zone_accounting_ownership==PcbZoneAccountingOwnership::SeparateFromFloorplan)checked_quantization_merge(expected,select(result.zone_accounting.quantization_engagements));
         checked_quantization_merge(expected,select(result.placement_accounting.quantization_engagements));

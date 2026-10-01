@@ -1,6 +1,7 @@
 // Instrument ONLY precision_ops.cpp with -finstrument-functions -fno-inline.
 // The observer is test-only and never supplies production accounting.
 #include "connector_precision_fixture.hpp"
+#include "ledger_accounting_fixture.hpp"
 #include "schgen/native_audit_state.hpp"
 #include "schgen/precision_ops.hpp"
 #include <array>
@@ -96,10 +97,10 @@ void boards(const std::filesystem::path& root,bool capture){
         if(!capture)require(complete==decoded(field(additive,name)),"separate additive fixture "+name);
         if(capture){if(!first)std::cout<<",\n";first=false;std::cout<<std::quoted(name)<<':';show(complete);}
         output<<"BOARD "<<name<<'\n';connector_fixture::mechanical(output,mechanical);
-        connector_fixture::counts(output,"FLOORPLAN",result.floorplan.plan.accounting.quantization_engagements);
+        connector_fixture::counts(output,"FLOORPLAN",ledger_accounting_fixture::before_initial_receipt_fix(result.floorplan.plan.accounting.quantization_engagements));
         connector_fixture::counts(output,"ZONE",result.zone_accounting.quantization_engagements);
         connector_fixture::counts(output,"PLACEMENT",result.placement_accounting.quantization_engagements);
-        connector_fixture::counts(output,"AGGREGATE",total.quantization_engagements);
+        connector_fixture::counts(output,"AGGREGATE",ledger_accounting_fixture::before_initial_receipt_fix(total.quantization_engagements));
         NativeQuantizations q;NativeFallbacks f;register_native_quantizations(q);register_native_fallbacks(f);NativeAccountingInbox inbox(q,f);
         begin();require(inbox.merge_once("pcb/placement",total),"actual placement receipt imports once");
         const NativeAccountingBatch mb{native_counter_batch(mechanical.quantization_engagements),{}};

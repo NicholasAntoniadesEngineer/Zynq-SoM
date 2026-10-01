@@ -9,6 +9,7 @@ namespace schgen { PcbStageResult stage_precision_fixture_build(const PcbStageIn
 #include "stage_precision_fixture.hpp"
 #include "legalize_precision_fixture.hpp"
 #include "pcb_placement_fixture.hpp"
+#include "ledger_accounting_fixture.hpp"
 #include "pcb_stage_internal.hpp"
 #include "schgen/native_audit_state.hpp"
 #ifndef STAGE_PRECISION_BASELINE
@@ -138,6 +139,8 @@ void boards(const std::filesystem::path& root){
         // Validate all seven exact additions before projecting immutable old bytes.
         plan=buried_policy_fixture::prior_accounted_plan(std::move(plan));
         prior_total=buried_policy_fixture::prior_display_counts(std::move(prior_total));
+        plan.accounting.quantization_engagements=ledger_accounting_fixture::before_initial_receipt_fix(plan.accounting.quantization_engagements);
+        prior_total=ledger_accounting_fixture::before_initial_receipt_fix(prior_total);
 #endif
         plan.accounting.quantization_engagements=legalize_precision_fixture::select(select(plan.accounting.quantization_engagements,false),false);
         legacy<<"BOARD "<<label<<'\n';node(legacy,pcb_model_json(result.model));node(legacy,floorplan_plan_json(plan));
