@@ -89,8 +89,8 @@ void add_probe_row(Engine& eng, const CircuitSheetIr& c, const Refs& refs) {
     auto& pl = eng.pl;
     const auto ex = eng._extent();
     const bool vertical = ex.y1 - ex.y0 > TALL_SHEET_MM;
-    double fx = vertical ? gceil(ex.x1 + 8 * U) : gsnap(ex.x0 + 4 * U);
-    double row_y = vertical ? gsnap(ex.y0 + 4 * U) : gceil(ex.y1 + 6 * U);
+    double fx = vertical ? eng.gceil(ex.x1 + 8 * U) : eng.gsnap(ex.x0 + 4 * U);
+    double row_y = vertical ? eng.gsnap(ex.y0 + 4 * U) : eng.gceil(ex.y1 + 6 * U);
     const double row_x0 = fx;
     const double wrap_at = std::min(ex.x0 + std::max(140.0, 0.5 * (ex.x1 - ex.x0)),
                                     (ex.x0 + ex.x1) / 2 + 20.0);
@@ -115,7 +115,7 @@ void add_probe_row(Engine& eng, const CircuitSheetIr& c, const Refs& refs) {
         const auto rw = text_wh(ref).first, vw = text_wh(p.value).first;
         if (!vertical) {
             const auto cell_right = std::max(0.76 + 0.42 + std::max(rw, vw), text_wh(n.name).first + 1.0);
-            if (fx > row_x0 && fx + cell_right > wrap_at) { fx = row_x0; row_y = gceil(row_y + 13 * U); }
+            if (fx > row_x0 && fx + cell_right > wrap_at) { fx = row_x0; row_y = eng.gceil(row_y + 13 * U); }
         }
         Point tp;
         int rotation;
@@ -148,10 +148,10 @@ void add_probe_row(Engine& eng, const CircuitSheetIr& c, const Refs& refs) {
         pl.boxes.push_back(visual(centered_box(ref, rp.x, rp.y), "reference", ref));
         pl.boxes.push_back(visual(centered_box(p.value, vp.x, vp.y), "value", ref));
         eng._done.insert(ref);
-        if (vertical) row_y = gceil(row_y + 2 * U + 4.064 + 4 * U + (ground_after_high ? GROUND_CELL_LIFT : 0.0));
+        if (vertical) row_y = eng.gceil(row_y + 2 * U + 4.064 + 4 * U + (ground_after_high ? GROUND_CELL_LIFT : 0.0));
         else {
             const double right = std::max({body.x1 + 0.42 + rw, body.x1 + 0.42 + vw, fx + text_wh(n.name).first + 1.0});
-            fx = gceil(right + std::max(eng.sp.flag_pitch - 6 * U, 2 * U) + 2 * U);
+            fx = eng.gceil(right + std::max(eng.sp.flag_pitch - 6 * U, 2 * U) + 2 * U);
         }
     }
 }
@@ -167,12 +167,14 @@ void translate(SchematicPlacement& pl, double dx, double dy) {
     for (auto& entry : pl.plans) for (auto& path : entry.second) for (auto& p : path) move(p.first, p.second);
     for (auto& b : pl.boxes) { move(b.x0, b.y0); move(b.x1, b.y1); }
 }
-void center_on_sheet(SchematicPlacement& pl) {
+void center_on_sheet(SchematicPlacement& pl, QuantizationCounts* counts) {
+    QuantizationCounts owned_counts;
+    if (!counts) counts = &owned_counts;
     Bounds b; b.boxes(pl.boxes);
     for (const auto& entry : pl.plans) for (const auto& path : entry.second) for (const auto& p : path) b.add(p.first, p.second);
     if (!b.present) throw SchematicPlaceError("cannot center placement without boxes or planned points");
     const double cx = (b.x0 + b.x1) / 2, cy = (b.y0 + b.y1) / 2;
-    translate(pl, gsnap(A4_CENTER.first - cx), gsnap(A4_CENTER.second - cy));
+    translate(pl, gsnap(A4_CENTER.first - cx, counts), gsnap(A4_CENTER.second - cy, counts));
 }
 
 bool is_congestion(const std::string& message) {
@@ -297,15 +299,17 @@ std::vector<CircuitSheetIr> partition_pages_with_fit(const CircuitSheetIr& c, Sy
 }
 
 SchematicPlacedPage place_and_route_with(const CircuitSheetIr& c, SymbolLibrary& lib,
-        const SchematicSpacing& initial, int max_attempts, const PageOperations& ops) {
+        const SchematicSpacing& initial, int max_attempts, const PageOperations& ops, QuantizationCounts* counts) {
+    QuantizationCounts owned_counts;
+    if (!counts) counts = &owned_counts;
     auto spacing = initial;
     std::string last = "?";
     for (int attempt = 0; attempt < max_attempts; ++attempt) {
         SchematicPlacement pl;
         SchematicRoutedSheet routed;
         try { pl = ops.build(c, lib, spacing); routed = ops.route(c, pl, lib); }
-        catch (const SchematicRouteError& e) { last = "route: " + std::string(e.what()); spacing = spacing.expanded(); continue; }
-        catch (const SchematicPlaceError& e) { last = "route: " + std::string(e.what()); spacing = spacing.expanded(); continue; }
+        catch (const SchematicRouteError& e) { last = "route: " + std::string(e.what()); spacing = spacing.expanded(counts); continue; }
+        catch (const SchematicPlaceError& e) { last = "route: " + std::string(e.what()); spacing = spacing.expanded(counts); continue; }
         auto geometry = schematic_route_geometry(pl, routed);
         const auto result = ops.check_visual(geometry);
         if (result.ok) {
@@ -315,66 +319,74 @@ SchematicPlacedPage place_and_route_with(const CircuitSheetIr& c, SymbolLibrary&
             const double w = b.x1 - b.x0, h = b.y1 - b.y0;
             if (w <= 272.0 && h <= 180.0) return {c, std::move(pl), std::move(routed), std::move(geometry)};
             if (w <= 390.0 && h <= 265.0) {
-                const double dx = gsnap(A3_CENTER.first - A4_CENTER.first), dy = gsnap(A3_CENTER.second - A4_CENTER.second);
+                const double dx = gsnap(A3_CENTER.first - A4_CENTER.first, counts), dy = gsnap(A3_CENTER.second - A4_CENTER.second, counts);
                 translate(pl, dx, dy); translate_route(routed, dx, dy);
                 geometry = schematic_route_geometry(pl, routed); pl.paper = "A3";
                 return {c, std::move(pl), std::move(routed), std::move(geometry)};
             }
             last = oversized(w, h);
         } else last = result.summary();
-        spacing = spacing.expanded();
+        spacing = spacing.expanded(counts);
     }
     throw SchematicPlaceError("placement infeasible after " + std::to_string(max_attempts) + " expansions; last failure:\n" + last);
 }
 
 std::vector<SchematicPlacedPage> paginate_and_route_with(const CircuitSheetIr& c, SymbolLibrary& lib,
-        const SchematicSpacing& initial, int attempts, const PageOperations& ops) {
-    try { return {place_and_route_with(c, lib, initial, attempts, ops)}; }
+        const SchematicSpacing& initial, int attempts, const PageOperations& ops, QuantizationCounts* counts) {
+    QuantizationCounts owned_counts;
+    if (!counts) counts = &owned_counts;
+    try { return {place_and_route_with(c, lib, initial, attempts, ops, counts)}; }
     catch (const SchematicPlaceError& e) {
         if (!is_congestion(e.what())) throw;
         const auto pages = partition_pages_with_fit(c, lib, [&](const auto& candidate) {
-            try { place_and_route_with(candidate, lib, initial, 2, ops); return true; }
+            try { place_and_route_with(candidate, lib, initial, 2, ops, counts); return true; }
             catch (const SchematicPlaceError&) { return false; }
         });
         if (pages.size() < 2) throw;
         std::vector<SchematicPlacedPage> out;
-        for (const auto& page : pages) out.push_back(place_and_route_with(page, lib, initial, attempts, ops));
+        for (const auto& page : pages) out.push_back(place_and_route_with(page, lib, initial, attempts, ops, counts));
         return out;
     }
 }
-std::vector<CircuitSheetIr> partition_pages(const CircuitSheetIr& c, SymbolLibrary& lib) {
+std::vector<CircuitSheetIr> partition_pages(const CircuitSheetIr& c, SymbolLibrary& lib, QuantizationCounts* counts) {
     return partition_pages_with_fit(c, lib, [&](const auto& candidate) {
-        try { place_and_route_schematic(candidate, lib, {}, 2); return true; }
+        try { place_and_route_schematic(candidate, lib, {}, 2, counts); return true; }
         catch (const SchematicPlaceError&) { return false; }
     });
 }
 }  // namespace schgen::schematic_place
 
 namespace schgen {
-std::vector<CircuitSheetIr> partition_schematic_pages(const CircuitSheetIr& c, SymbolLibrary& lib) {
-    return schematic_place::partition_pages(c, lib);
+std::vector<CircuitSheetIr> partition_schematic_pages(const CircuitSheetIr& c, SymbolLibrary& lib, QuantizationCounts* counts) {
+    return schematic_place::partition_pages(c, lib, counts);
 }
 namespace {
-schematic_place::PageOperations native_page_operations() {
-    return {build_schematic_placement,
+schematic_place::PageOperations native_page_operations(QuantizationCounts* counts) {
+    return {[counts](const auto& c, auto& lib, const auto& spacing) {
+            return build_schematic_placement(c, lib, spacing, counts);
+        },
         [](const auto& c, const auto& pl, auto& lib) { return route_schematic(c, pl, lib); },
         [](const auto& geometry) { return check_visual_geometry(geometry); }};
 }
 }  // namespace
-SchematicPlacement build_schematic_placement(const CircuitSheetIr& c, SymbolLibrary& lib, const SchematicSpacing& spacing) {
+SchematicPlacement build_schematic_placement(const CircuitSheetIr& c, SymbolLibrary& lib, const SchematicSpacing& spacing, QuantizationCounts* counts) {
     auto split = schematic_place::split_auxiliary(c);
-    schematic_place::Engine engine(split.first, lib, spacing);
+    schematic_place::Engine engine(split.first, lib, spacing, counts);
     engine.pl = engine.run();
     schematic_place::add_probe_row(engine, c, split.second);
-    schematic_place::center_on_sheet(engine.pl);
+    schematic_place::center_on_sheet(engine.pl, engine.counts);
     return std::move(engine.pl);
 }
 SchematicPlacedPage place_and_route_schematic(const CircuitSheetIr& c, SymbolLibrary& lib,
-        const SchematicSpacing& spacing, int attempts) {
-    return schematic_place::place_and_route_with(c, lib, spacing, attempts, native_page_operations());
+        const SchematicSpacing& spacing, int attempts, QuantizationCounts* counts) {
+    QuantizationCounts owned_counts;
+    if (!counts) counts = &owned_counts;
+    return schematic_place::place_and_route_with(c, lib, spacing, attempts, native_page_operations(counts), counts);
 }
 std::vector<SchematicPlacedPage> paginate_and_route_schematic(const CircuitSheetIr& c, SymbolLibrary& lib,
-        const SchematicSpacing& spacing, int attempts) {
-    return schematic_place::paginate_and_route_with(c, lib, spacing, attempts, native_page_operations());
+        const SchematicSpacing& spacing, int attempts, QuantizationCounts* counts) {
+    QuantizationCounts owned_counts;
+    if (!counts) counts = &owned_counts;
+    return schematic_place::paginate_and_route_with(c, lib, spacing, attempts, native_page_operations(counts), counts);
 }
 }  // namespace schgen

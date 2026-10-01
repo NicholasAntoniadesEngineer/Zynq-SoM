@@ -90,8 +90,12 @@ transitional PCB pipeline now uses the native writers and shares one prepared
 snapshot across its PCB gates, avoiding repeated source parsing. Standalone gate
 calls still prepare fresh inputs; no global cache hides placement or file edits.
 The original return-path-v1 failures remain separate from return-stitch coverage;
-this migration does not waive them. Standalone `floorplan`/`compose` CLI
-integration and complete source-audit acceptance remain migration work.
+this migration does not waive them. Standalone `floorplan` and `compose` are
+registered native commands: floorplan writes documents or exports a spec;
+compose measures, ranks repairs with `--repair --dry-run`, or applies a repair
+subject to full board gates and rollback on failure. Their ordinary, live-KiCad
+and apply contracts are registered in CTest. This is not a claim of complete
+source-audit or whole-board acceptance.
 
 ```sh
 native/bin/schgen project-check --project carrier

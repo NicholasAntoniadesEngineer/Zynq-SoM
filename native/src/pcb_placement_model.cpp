@@ -265,8 +265,10 @@ PcbPlacementResult place_pcb_model(const PcbPlacementInput &in, const PcbZoneRes
     return place_pcb_model_accounted(in, zones, stage, PcbZoneAccountingOwnership::Unspecified);
 }
 PcbPlacementResult place_pcb_model_accounted(const PcbPlacementInput &in, const PcbZoneResult &zones,
-    const FloorplanStage &stage, PcbZoneAccountingOwnership ownership) {
+    const FloorplanStage &stage, PcbZoneAccountingOwnership ownership, ExecutionFailureReceipt* failure) {
     pcb_placement::Placer p(in, zones, stage);
+    ExecutionFailureReceipt child;
+    try {
     p.out.zone_accounting_ownership = ownership;
     p.seed();
     if (in.two_side)
@@ -279,7 +281,7 @@ PcbPlacementResult place_pcb_model_accounted(const PcbPlacementInput &in, const 
         p.breathe("B");
     }
     p.checkpoint("breathe");
-    p.refit();
+    p.refit(&child);
     p.checkpoint("refit_facing");
     p.reorder();
     p.checkpoint("reorder");
@@ -290,6 +292,10 @@ PcbPlacementResult place_pcb_model_accounted(const PcbPlacementInput &in, const 
     p.escape();
     p.out.placement_accounting.quantization_engagements = std::move(p.ctx.quantization);
     return std::move(p.out);
+    } catch (...) {
+        capture_execution_failure(failure,{p.ctx.quantization,p.out.placement_accounting.fallback_events},&child);
+        throw;
+    }
 }
 ExecutionAccounting pcb_placement_accounting(const PcbPlacementResult &result) {
     const auto ownership = result.zone_accounting_ownership;

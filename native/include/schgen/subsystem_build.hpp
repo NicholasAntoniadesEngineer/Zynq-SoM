@@ -5,6 +5,7 @@ namespace schgen {
 struct SubsystemBuildOptions {
     NetlistExtractOptions extraction;
     bool no_render=false;
+    std::string project_name = {};
 };
 struct SubsystemBuildResult {
     bool electrical_ok=false,cc_ok=false,netlist_ok=false,erc_ok=false,visual_ok=false;

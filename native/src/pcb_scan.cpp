@@ -5,6 +5,7 @@
 #include "schgen/occupancy.hpp"
 #include "schgen/pack.hpp"
 #include "schgen/quantize.hpp"
+#include "schgen/schematic_grid.hpp"
 #include "schgen/sexpr.hpp"
 #include "schgen/turn.hpp"
 
@@ -569,19 +570,19 @@ bool needs_flag(const std::vector<std::string>& pin_etypes,
 }
 
 std::tuple<double, double, double, double> farm_cluster_origin(
-    double extent_x0, double extent_y1, double unit, int n_box_bucks) {
-    const double col_x = gsnap(extent_x0 + 4.0 * unit, unit);
-    const double row_step = gceil(8.0 * unit, unit);
+    double extent_x0, double extent_y1, double unit, int n_box_bucks, QuantizationCounts* counts) {
+    const double col_x = schematic_grid::gsnap(extent_x0 + 4.0 * unit, unit, counts);
+    const double row_step = schematic_grid::gceil(8.0 * unit, unit, counts);
     const double rise = (n_box_bucks >= 2 ? 12.0 : 8.0) * unit;
-    const double cy = gceil(extent_y1 + rise, unit);
+    const double cy = schematic_grid::gceil(extent_y1 + rise, unit, counts);
     return {col_x, col_x, row_step, cy};
 }
 
 double next_rail_col(double col_x, double cap_pitch, double prev_rail_w,
-                     double rail_w, double unit, double extra) {
+                     double rail_w, double unit, double extra, QuantizationCounts* counts) {
     const double need = std::max(cap_pitch, prev_rail_w / 2.0 + rail_w / 2.0
                                               + extra);
-    return gceil(col_x - cap_pitch + need, unit);
+    return schematic_grid::gceil(col_x - cap_pitch + need, unit, counts);
 }
 
 Sexpr set_font_size(Sexpr prop, double size) {

@@ -44,7 +44,15 @@ void pcb_stages(Context& c){
             c.report("native_policy.txt",policy.report());
             c.gate("native_policy",policy.providers_complete(),policy.report());
         }
-        stage.placement=c.measure("pcb_build_model_with_internal_checks",[&]{return build_pcb_model(stage.inputs);});
+        ExecutionFailureReceipt model_failure;
+        try {
+            stage.placement=c.measure("pcb_build_model_with_internal_checks",[&]{return build_pcb_model(stage.inputs,&model_failure);});
+        } catch (...) {
+            // Import only the real failed invocation prefix, once. Successful
+            // results retain the ordinary aggregate receipt below.
+            if(model_failure.captured)c.inbox.merge_once("pcb/placement",model_failure.accounting);
+            throw;
+        }
         // One receipt owns all actual plan/zone/placement work, not the legacy
         // fallback prefix. Import before emission so failures retain work done.
         c.inbox.merge_once("pcb/placement",pcb_placement_accounting(stage.placement));

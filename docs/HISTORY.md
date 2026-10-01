@@ -2,6 +2,21 @@
 
 ## 2026-10-01 — complete rendered baseline comparison
 
+Integrated invocation-owned schematic and failed-model accounting (autonomous,
+per full-autonomy directive). Schematic retries and shared geometry helpers now
+record actual grid calls; independent traces and complete schematic bytes match
+for all 49 sheets (3,442 sheet-placement entries, not the whole-board total).
+Model failures retain executed prefixes through stage, floorplan and placement
+ownership boundaries. Independent review found and corrected constructor-seed
+loss and partial publication after merge overflow; unavailable receipts now
+propagate explicitly instead of appearing complete. Parent failure, schematic
+and board-pipeline contracts passed 3/3 in 58.17 seconds. No reference fixtures
+were regenerated. Project-aware title blocks correct devkit branding while
+preserving carrier output; the private title/render proof covers all 12 devkit
+sheets and two carrier sheets. Broader combined acceptance remains pending.
+Current build/import/scaffold documentation now uses implemented native commands;
+historical examples are distinguished from current instructions.
+
 Optimized cold source auditing (autonomous, per full-autonomy directive): a
 bounded dynamic queue replaces fixed worker batches, and each source file's
 newline offsets are indexed once. All manifest entries are still scanned;

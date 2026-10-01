@@ -37,7 +37,24 @@ static void margin_clear(const PageRaster& raster) {
         }
     png_image_free(&png);require(!ink,"title/comment ink beyond worksheet right frame");
 }
+static void project_titles() {
+    SchematicDesign d; d.circuit.name="same_sheet";
+    d.circuit.title="Long project-independent sheet title that must retain its existing wrapping exactly";
+    const auto before=emit_schematic(d,SchematicSymbolResolver{}).text;
+    for (const auto& [name,label] : std::vector<std::pair<std::string,std::string>>{
+            {"carrier","Zynq SoM Carrier"},{"devkit_mini","Zynq SoM Devkit Mini"},
+            {"unrelated_test_board","Zynq SoM Unrelated Test Board"}}) {
+        const auto emitted=emit_schematic(d,SchematicSymbolResolver{},{"","","",name}).text;
+        auto expected=before;
+        const std::string old_company="(company \"Zynq SoM Carrier\")";
+        const auto position=expected.find(old_company);
+        require(position!=std::string::npos,"company field absent");
+        expected.replace(position,old_company.size(),"(company \""+label+"\")");
+        require(emitted==expected,"project title changed wrapping/geometry/UUIDs or ignored metadata");
+    }
+}
 static void titles(const fs::path& renders) {
+    project_titles();
     const std::vector<std::string> cases={"", "Short title", std::string(40,'W'), std::string(41,'W'),
         "SoM bank-35 IO breakout (2x20 2.54mm header, VADJ 2.5V)",
         "Mechanical: M3 mounts + chassis-GND bond (fiducials are PCB-only)",

@@ -1,4 +1,5 @@
 #pragma once
+#include "schgen/execution_accounting.hpp"
 
 #include "schgen/seat.hpp"
 #include "schgen/sexpr.hpp"
@@ -92,10 +93,10 @@ bool needs_flag(const std::vector<std::string>& pin_etypes,
                 const std::vector<std::string>& driver_etypes);
 
 std::tuple<double, double, double, double> farm_cluster_origin(
-    double extent_x0, double extent_y1, double unit, int n_box_bucks);
+    double extent_x0, double extent_y1, double unit, int n_box_bucks, QuantizationCounts* counts = nullptr);
 
 double next_rail_col(double col_x, double cap_pitch, double prev_rail_w,
-                     double rail_w, double unit, double extra);
+                     double rail_w, double unit, double extra, QuantizationCounts* counts = nullptr);
 
 Sexpr set_font_size(Sexpr prop, double size);
 

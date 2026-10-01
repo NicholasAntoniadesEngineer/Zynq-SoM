@@ -87,7 +87,7 @@ struct Placer {
     void l4_pull();
     void edge_seat();
     void breathe(const std::string &);
-    void refit();
+    void refit(ExecutionFailureReceipt* failure = nullptr);
     void reorder();
     void evict();
     void instantiate();

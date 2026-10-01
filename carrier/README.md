@@ -1,8 +1,9 @@
 # carrier — the generated carrier board
 
-Open `Zynq_Carrier.kicad_pro` in KiCad (9+). EVERYTHING here except
-`subsystems/*.py` and the research dossiers is generated — regenerate in place
-with `PYTHONPATH=. python -m schgen board` (the schematics, the placed
+Open `Zynq_Carrier.kicad_pro` with the KiCad version specified in
+[`native/ci/README.md`](../native/ci/README.md). From the repository root,
+regenerate the board outputs with `native/bin/schgen board --project carrier`
+(the schematics, the placed
 `Zynq_Carrier.kicad_pcb`, 3D renders, BOM, FPGA constraints, firmware contract,
 and docs).
 

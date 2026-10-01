@@ -84,12 +84,18 @@ override declared in the library file). Cross-board gates (link, full SI
 constraints, board ERC, board netlist merge, power-tree headroom) stay
 aggregated at board level and are not duplicated in the package tests.
 
-Scaffold a new package (writes all four stubs), then run the gate:
+Scaffold a new native C++ package, then run the package gate from the repository root:
 
 ```bash
-PYTHONPATH=. python3 -m schgen subsystem <name>
-PYTHONPATH=. python3 -m schgen subsystem-check
+native/bin/schgen subsystem-new <name>
+native/bin/schgen subsystem-check
 ```
+
+The scaffold writes C++ source/header/test, SPICE, metadata, CMake and README
+files, never overwriting an existing package. Follow its generated README to
+select and build the package; its initial unimplemented builder intentionally
+fails acceptance. The Python package shape above describes the former model,
+not the current scaffold output.
 
 ## The library
 

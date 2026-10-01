@@ -2,10 +2,12 @@
 #include "schgen/board_decision_policy.hpp"
 
 namespace schgen {
-PcbZoneResult build_pcb_zone_geometry(const PcbPlacementInput &in) {
+PcbZoneResult build_pcb_zone_geometry(const PcbPlacementInput &in, ExecutionFailureReceipt* failure) {
     using namespace pcb_placement;
     Context ctx(in);
     PcbZoneResult out;
+    ExecutionFailureReceipt child;
+    try {
     auto &g = out.geometry;
     std::set<std::string> edges;
     std::map<std::string, std::set<std::string>> faces;
@@ -124,10 +126,10 @@ PcbZoneResult build_pcb_zone_geometry(const PcbPlacementInput &in) {
                 st.side_of[r] = "top";
             }
             st.outer_dir = sheet_outer.count(sheet) ? sheet_outer.at(sheet) : "";
-            p = build_pcb_stage_zone(st);
+            p = build_pcb_stage_zone(st,&child);
             out.fallback_events.insert(out.fallback_events.end(), p.fallback_events.begin(),
                                        p.fallback_events.end());
-            checked_quantization_merge(out.quantization_engagements, p.quantization_engagements);
+            merge_execution_counts(out.quantization_engagements, p.quantization_engagements,&child);
             auto ab = shape(p, "asbuilt"), tn = turned(ab, &ctx.quantization), t2 = turned(tn, &ctx.quantization), t3 = turned(t2, &ctx.quantization);
             tn.tag = "turned";
             t2.tag = "t180";
@@ -209,9 +211,15 @@ PcbZoneResult build_pcb_zone_geometry(const PcbPlacementInput &in) {
         g.zone_box[sheet] = {p.w, p.h};
         g.zone_extra_rot.insert(p.rotations.begin(), p.rotations.end());
     }
-    checked_quantization_merge(out.quantization_engagements, ctx.quantization);
+    merge_execution_counts(out.quantization_engagements, ctx.quantization,&child);
     out.footprints = std::move(ctx.pool);
     return out;
+    } catch (...) {
+        ExecutionAccounting prefix{out.quantization_engagements,out.fallback_events};
+        append_execution_accounting(prefix,{ctx.quantization,{}},failure);
+        capture_execution_failure(failure,std::move(prefix),&child);
+        throw;
+    }
 }
 FloorplanZoneGeometry bind_pcb_zone_shapes(const PcbZoneResult &zones,
                                            const std::map<std::string, int> &chosen) {

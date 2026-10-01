@@ -1,4 +1,5 @@
 #pragma once
+#include "schgen/execution_failure.hpp"
 #include "schgen/board_decision_policy.hpp"
 
 #include "schgen/circuit.hpp"
@@ -257,7 +258,7 @@ JsonNode export_floorplan_spec(const FloorplanPlan& plan);
 std::string render_floorplan_spec_json(const FloorplanPlan& plan);
 std::filesystem::path write_floorplan_spec(const FloorplanPlan& plan,
                                          const std::filesystem::path& path);
-FloorplanPlan build_floorplan(const FloorplanInput& input);
+FloorplanPlan build_floorplan(const FloorplanInput& input, ExecutionFailureReceipt* failure = nullptr);
 std::vector<FloorplanNote> build_floorplan_notes(
     const FloorplanPlan& plan, const FloorplanInput& input);
 std::string render_floorplan_svg(const FloorplanPlan& plan,
@@ -282,8 +283,8 @@ struct FloorplanStage {
     FloorplanDocuments documents;
 };
 FloorplanDocuments render_floorplan_documents(const FloorplanPlan& plan,
-                                               const FloorplanInput& input);
-FloorplanStage generate_floorplan(const FloorplanInput& input);
+                                               const FloorplanInput& input, ExecutionFailureReceipt* failure = nullptr);
+FloorplanStage generate_floorplan(const FloorplanInput& input, ExecutionFailureReceipt* failure = nullptr);
 // Explicit publication boundary; render all documents before calling it.
 // Each file is replaced atomically, not a multi-file filesystem transaction.
 std::vector<std::filesystem::path> write_floorplan_documents(

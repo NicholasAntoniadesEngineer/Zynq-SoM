@@ -136,7 +136,7 @@ void Engine::_decoupling_cluster(double ax, double ay, const VisualBox& body) {
     if (count > 5) {
         const auto extent = _extent();
         std::tie(col_x, farm_left, row_step, cy) = farm_cluster_origin(extent.x0, extent.y1, U,
-            static_cast<int>(_n_box_bucks));
+            static_cast<int>(_n_box_bucks), counts);
         max_right = farm_row_right_bound(extent.x0, extent.x1, A3_CENTER.first,
             A3_TITLEBLOCK_LEFT, TITLEBLOCK_MARGIN, sp.cap_pitch);
     } else {
@@ -149,12 +149,12 @@ void Engine::_decoupling_cluster(double ax, double ay, const VisualBox& body) {
     std::optional<double> previous_width;
     for (const auto& [name, caps] : cluster) {
         const auto width = text_wh(name).first;
-        if (previous_width) col_x = next_rail_col(col_x, sp.cap_pitch, *previous_width, width, U, 1.27);
+        if (previous_width) col_x = next_rail_col(col_x, sp.cap_pitch, *previous_width, width, U, 1.27, counts);
         previous_width = width;
         std::vector<std::pair<double, std::vector<double>>> runs;
         std::vector<double> current;
         for (const auto& ref : caps) {
-            const auto wrap = farm_wrap_advance(col_x, max_right, !current.empty(), farm_left, cy, row_step, U);
+            const auto wrap = farm_wrap_advance(col_x, max_right, !current.empty(), farm_left, cy, row_step, U, counts);
             if (wrap.wrapped) {
                 runs.emplace_back(cy, std::move(current)); current.clear();
                 col_x = wrap.col_x;
@@ -212,11 +212,11 @@ void Engine::_flags_row() {
     }
     if (rails.empty()) return;
     const auto extent = _extent();
-    auto [x, y] = flags_row_origin(extent.x0, extent.y1, U);
+    auto [x, y] = flags_row_origin(extent.x0, extent.y1, U, counts);
     std::optional<double> previous_width;
     for (const auto* n : rails) {
         const auto width = text_wh(n->name).first;
-        if (previous_width) x = next_flag_x(x, sp.flag_pitch, *previous_width, width, U, 2.54);
+        if (previous_width) x = next_flag_x(x, sp.flag_pitch, *previous_width, width, U, 2.54, counts);
         power(n->name, x, y);
         const auto end = y + (n->net_class == "ground" ? -2.54 : 2.54);
         pl.plan(n->name, {{x, y}, {x, end}});
@@ -282,7 +282,7 @@ SchematicPlacement Engine::_connector_template(const std::string& ref) {
             auto& length = columns[i] == "inner" ? inner_length : outer_length;
             length = std::max(length, _glabel_len(std::get<2>(ports[i])));
         }
-        const double outer = conn_signed_ceil(sign, std::abs(inner) + inner_length + CONN_COL_GAP, U);
+        const double outer = conn_signed_ceil(sign, std::abs(inner) + inner_length + CONN_COL_GAP, U, counts);
         for (std::size_t i = 0; i < ports.size(); ++i) {
             const auto& [y, x, name] = ports[i];
             const double end = columns[i] == "inner" ? inner : outer;
@@ -291,7 +291,7 @@ SchematicPlacement Engine::_connector_template(const std::string& ref) {
         const double label_edge = std::max(std::abs(outer) + outer_length, std::abs(inner) + inner_length);
         const double ylo = ys.empty() ? std::numeric_limits<double>::infinity() : *std::min_element(ys.begin(), ys.end());
         const double yhi = ys.empty() ? -std::numeric_limits<double>::infinity() : *std::max_element(ys.begin(), ys.end());
-        const double mid = conn_signed_ceil(sign, label_edge + CONN_MID_GAP, U);
+        const double mid = conn_signed_ceil(sign, label_edge + CONN_MID_GAP, U, counts);
         double strip_reach = 0;
         OrderedMap<std::vector<Tap>> grounds;
         const auto trunk = [&](const std::string& name, const std::vector<Tap>& taps, double x) {
@@ -329,7 +329,7 @@ SchematicPlacement Engine::_connector_template(const std::string& ref) {
                 }
             }
         }
-        const double ground_x = conn_gnd_x(sign, label_edge, mid, strip_reach, 5.08, U);
+        const double ground_x = conn_gnd_x(sign, label_edge, mid, strip_reach, 5.08, U, counts);
         for (const auto& [name, taps] : grounds) {
             trunk(name, taps, ground_x);
             const double bottom = taps.back().first;
@@ -340,8 +340,8 @@ SchematicPlacement Engine::_connector_template(const std::string& ref) {
     Refs rails;
     for (const auto& n : c.nets) if (rail(n)) rails.push_back(n.name);
     std::sort(rails.begin(), rails.end());
-    const double y = conn_flag_y(_extent().y1, U);
-    double x = conn_flag_x0(sp.flag_pitch, static_cast<int>(rails.size()), U);
+    const double y = conn_flag_y(_extent().y1, U, counts);
+    double x = conn_flag_x0(sp.flag_pitch, static_cast<int>(rails.size()), U, counts);
     for (const auto& name : rails) {
         power(name, x, y);
         const bool ground = net(name).net_class == "ground";
@@ -434,7 +434,7 @@ void box_right_pin_islet(Engine& e, const std::string& name, Point pt) {
             e._corridor_free(pt.second, pt.first + 0.01, x, {name})) {
             e.pl.plan(name, {pt, {x, pt.second}}); e.llabel(name, x, pt.second, 0); e._bridge(name); return;
         }
-        x = gceil(x + 2 * U);
+        x = e.gceil(x + 2 * U);
     }
     throw SchematicPlaceError("box-buck right pin " + name + ": no clear islet escape");
 }
@@ -446,7 +446,7 @@ void box_left_pin_islet(Engine& e, const std::string& name, Point pt, const Visu
             e._corridor_free(pt.second, pt.first - 0.01, x, {name})) {
             e.pl.plan(name, {pt, {x, pt.second}}); e.llabel(name, x, pt.second, 180); e._bridge(name); return;
         }
-        x = gfloor(x - 2 * U);
+        x = e.gfloor(x - 2 * U);
     }
     x = pt.first;
     const auto try_label = [&](double xv, double y, bool jog) {
@@ -461,24 +461,24 @@ void box_left_pin_islet(Engine& e, const std::string& name, Point pt, const Visu
     };
     for (const bool down : {true, false}) {
         const auto edge = down ? body.y1 : body.y0;
-        const auto far = down ? gceil(edge + 28 * U) : gfloor(edge - 28 * U);
+        const auto far = down ? e.gceil(edge + 28 * U) : e.gfloor(edge - 28 * U);
         const auto step = down ? 2 * U : -2 * U;
         if (!e._vband_stem_free(x, std::min(pt.second, far), std::max(pt.second, far), {name})) continue;
-        double y = down ? gceil(edge + 4 * U) : gfloor(edge - 4 * U);
+        double y = down ? e.gceil(edge + 4 * U) : e.gfloor(edge - 4 * U);
         for (int k = 0; k < 28; ++k) { if (try_label(x, y, false)) return; y = r3(y + step); }
     }
     const bool prefer_up = pt.second < (body.y0 + body.y1) / 2;
     for (const bool up : {prefer_up, !prefer_up}) {
-        x = gfloor(pt.first - 2 * U);
+        x = e.gfloor(pt.first - 2 * U);
         const double edge = up ? body.y0 : body.y1;
         const double low = up ? edge - 24 * U : edge + U;
         const double high = up ? edge - U : edge + 24 * U;
         for (int k = 0; k < 8; ++k) {
             if (e._vband_stem_free(x, low, high, {name}) && e._corridor_free(pt.second, pt.first - 0.01, x, {name})) break;
-            x = gfloor(x - 2 * U);
+            x = e.gfloor(x - 2 * U);
         }
         const auto step = up ? -2 * U : 2 * U;
-        double y = up ? gfloor(edge - 4 * U) : gceil(edge + 4 * U);
+        double y = up ? e.gfloor(edge - 4 * U) : e.gceil(edge + 4 * U);
         for (int k = 0; k < 24; ++k) { if (try_label(x, y, true)) return; y = r3(y + step); }
     }
     throw SchematicPlaceError("box-buck left pin " + name + ": no clear islet escape");
@@ -493,7 +493,7 @@ std::vector<ChainPtr> feedback_chains(const Engine& e, const std::string& feedba
 }
 
 void fb_left_network(Engine& e, Point p_fb, const std::string& fb_net, const std::string& out) {
-    const double x = gfloor(p_fb.first - e.sp.port_run - 4 * U), top = r3(p_fb.second - 4 * U);
+    const double x = e.gfloor(p_fb.first - e.sp.port_run - 4 * U), top = r3(p_fb.second - 4 * U);
     e.power(out, x, top, e._power_rot(out, false));
     const auto pulls = take(e.pull, fb_net);
     const auto rt = first(pulls, "feedback " + fb_net).first;
@@ -503,12 +503,12 @@ void fb_left_network(Engine& e, Point p_fb, const std::string& fb_net, const std
     e.power(far, foot.first, foot.second, e._power_rot(far, true));
     const double xv = r3(p_fb.first - 2 * U);
     e.pl.plan(fb_net, {p_fb, {xv, p_fb.second}, {xv, mid}, {x, mid}});
-    double column = gfloor(x - e.sp.cap_pitch);
+    double column = e.gfloor(x - e.sp.cap_pitch);
     for (std::size_t i = 1; i < pulls.size(); ++i) {
         e.power(out, column, top, e._power_rot(out, false));
         const auto ff = e._vertical_2pin(pulls[i].first, column, top, out, true).first;
         e.pl.plan(fb_net, {{x, mid}, {column, mid}, {column, ff.second}});
-        column = gfloor(column - e.sp.cap_pitch);
+        column = e.gfloor(column - e.sp.cap_pitch);
     }
     for (const auto& ch : feedback_chains(e, fb_net, out)) {
         const auto& rff = ch->legs[0]; const auto& cff = ch->legs[1];
@@ -516,12 +516,12 @@ void fb_left_network(Engine& e, Point p_fb, const std::string& fb_net, const std
         const double xr = column;
         e._horizontal_2pin(rff.ref, xr, mid, rff.b);
         e.pl.plan(fb_net, {{x, mid}, {xr + half, mid}});
-        const double xf = gfloor(xr - e.sp.cap_pitch);
+        const double xf = e.gfloor(xr - e.sp.cap_pitch);
         e.power(out, xf, top, e._power_rot(out, false));
         const auto ff = e._vertical_2pin(cff.ref, xf, top, out, true).first;
-        const double jog = gsnap((xr - half + xf) / 2);
+        const double jog = e.gsnap((xr - half + xf) / 2);
         e.pl.plan(rff.b, {{xr - half, mid}, {jog, mid}, {jog, ff.second}, {xf, ff.second}});
-        erase_chain(e, ch); column = gfloor(xf - e.sp.cap_pitch);
+        erase_chain(e, ch); column = e.gfloor(xf - e.sp.cap_pitch);
     }
 }
 

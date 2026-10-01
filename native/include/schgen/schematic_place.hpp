@@ -1,6 +1,7 @@
 #pragma once
 
 #include "schgen/schematic_route.hpp"
+#include "schgen/execution_accounting.hpp"
 
 #include <stdexcept>
 
@@ -21,7 +22,7 @@ struct SchematicSpacing {
     double cluster_dy = 20.32;
     double flags_dy = 16.51;
     double flag_pitch = 10.16;
-    SchematicSpacing expanded() const;
+    SchematicSpacing expanded(QuantizationCounts* counts = nullptr) const;
 };
 
 // Same ordered primitive/plan records consumed by route_schematic; no parallel
@@ -41,12 +42,12 @@ struct SchematicPlacedPage {
 // Complete native topology placement, routing and pagination. Every path runs
 // the ordinary completeness and visual gates; there is no interpreter fallback.
 SchematicPlacement build_schematic_placement(const CircuitSheetIr& circuit,
-    SymbolLibrary& library, const SchematicSpacing& spacing = {});
+    SymbolLibrary& library, const SchematicSpacing& spacing = {}, QuantizationCounts* counts = nullptr);
 SchematicPlacedPage place_and_route_schematic(const CircuitSheetIr& circuit,
-    SymbolLibrary& library, const SchematicSpacing& spacing = {}, int max_attempts = 8);
+    SymbolLibrary& library, const SchematicSpacing& spacing = {}, int max_attempts = 8, QuantizationCounts* counts = nullptr);
 std::vector<SchematicPlacedPage> paginate_and_route_schematic(const CircuitSheetIr& circuit,
-    SymbolLibrary& library, const SchematicSpacing& spacing = {}, int max_attempts = 8);
+    SymbolLibrary& library, const SchematicSpacing& spacing = {}, int max_attempts = 8, QuantizationCounts* counts = nullptr);
 std::vector<CircuitSheetIr> partition_schematic_pages(const CircuitSheetIr& circuit,
-    SymbolLibrary& library);
+    SymbolLibrary& library, QuantizationCounts* counts = nullptr);
 
 }  // namespace schgen

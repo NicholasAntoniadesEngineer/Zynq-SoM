@@ -91,7 +91,10 @@ struct Scratch {
     Scratch& operator=(const Scratch&) = delete;
 };
 double width(const std::string& s) { return text_wh(s, 1.27, default_engine_config.char_w, 1.6).first; }
-double up(double v) { return gceil(v, symbol_grid); }
+double up(double v, QuantizationCounts* counts) {
+    if (counts) checked_quantization_add(*counts, "gceil");
+    return gceil(v, symbol_grid);
+}
 SchematicSymbolResolver resolver(SymbolLibrary& lib) {
     return [&lib](const std::string& id) -> const SymbolDef& { return lib.get(id); };
 }
@@ -263,7 +266,8 @@ void strip_duplicate_board_flags(std::vector<SchematicDesign>& designs, SymbolLi
 }
 
 BoardHierarchy make_board_hierarchy(const std::vector<BoardSheetDesign>& inputs, SymbolLibrary& lib,
-                                   const std::string& root_name, const std::string& subdir) {
+                                   const std::string& root_name, const std::string& subdir,
+                                   QuantizationCounts* counts) {
     safe_leaf(root_name, "board root"); safe_subdir(subdir);
     if (inputs.empty()) throw BoardSchematicError("cannot build an empty board hierarchy");
     BoardHierarchy out; out.root_uuid = schematic_stable_uuid({root_name, "root"});
@@ -291,7 +295,7 @@ BoardHierarchy make_board_hierarchy(const std::vector<BoardSheetDesign>& inputs,
         for (const auto& h : d.hlabels) e.shapes[h.name] = h.shape;
         double max_width = e.ports.empty() ? 10.0 : 0.0;
         for (const auto& p : e.ports) max_width = std::max(max_width, width(p));
-        e.w = up(max_width + 12.7); e.h = pitch * (e.ports.size() + 1);
+        e.w = up(max_width + 12.7, counts); e.h = pitch * (e.ports.size() + 1);
         out.sheets.push_back({e.name, std::move(d), e.uuid}); entries.push_back(std::move(e));
     }
     struct Paper { const char* name; double w, h; };
@@ -312,7 +316,7 @@ BoardHierarchy make_board_hierarchy(const std::vector<BoardSheetDesign>& inputs,
             for (const auto i : c) { sheet_width = std::max(sheet_width, entries[i].w);
                 for (const auto& p : entries[i].ports) { label_width = std::max(label_width, width(p)); any_port = true; } }
             if (!any_port) label_width = 10.0;
-            const double x = up(right + label_width + stub);
+            const double x = up(right + label_width + stub, counts);
             geometry.emplace_back(x, c); right = x + sheet_width + gap;
         }
         if (right <= page.w - 10.16) { out.root.paper = page.name; fits = true; break; }
@@ -442,25 +446,25 @@ BoardSchematicResult build_board_schematic(const std::vector<BoardSheetInput>& i
         if (!gate.electrical.completeness_errors.empty()) throw BoardSchematicError(gate.electrical.completeness_summary());
         BoardPreparedSheet prepared;
         if (in.prepared) prepared = *in.prepared;
-        else { auto page = place_and_route_schematic(in.circuit, library); prepared.placement = std::move(page.placement); prepared.routed = std::move(page.routed); }
+        else { auto page = place_and_route_schematic(in.circuit, library, {}, 8, options.counts); prepared.placement = std::move(page.placement); prepared.routed = std::move(page.routed); }
         gate.visual = check_visual_geometry(schematic_route_geometry(prepared.placement, prepared.routed));
         const auto& p = prepared.placement; SchematicDesign d; d.circuit = in.circuit;
         d.parts = p.parts; d.powers = p.powers; d.hlabels = p.hlabels; d.llabels = p.llabels;
         d.no_connects = p.no_connects; d.paper = p.paper; apply_schematic_route(d, prepared.routed);
         designs.push_back({std::move(d), in.reference_band}); out.per_sheet.push_back(std::move(gate));
     }
-    auto hierarchy = make_board_hierarchy(designs, library, options.root_name, options.sheet_subdir);
+    auto hierarchy = make_board_hierarchy(designs, library, options.root_name, options.sheet_subdir, options.counts);
     const auto sheet_dir = outdir / options.sheet_subdir;
     fs::create_directories(sheet_dir); Scratch scratch;
     std::vector<fs::path> checks;
     for (std::size_t i = 0; i < hierarchy.sheets.size(); ++i) {
         const auto& sheet = hierarchy.sheets[i];
         const SchematicOptions child_options{"/" + hierarchy.root_uuid + "/" + sheet.symbol_uuid, options.root_name,
-            schematic_stable_uuid({options.root_name, "sheet", sheet.name})};
+            schematic_stable_uuid({options.root_name, "sheet", sheet.name}), options.project_name};
         write(sheet_dir / (sheet.name + ".kicad_sch"), emit_schematic(sheet.design, resolver(library), child_options).text);
         auto verify = sheet.design; verify.standalone = true;
         const auto vpath = scratch.path / (sheet.name + ".uniqcheck.kicad_sch");
-        write(vpath, emit_schematic(verify, resolver(library)).text);
+        write(vpath, emit_schematic(verify, resolver(library), {"","","",options.project_name}).text);
         checks.push_back(vpath);
     }
     // All symbol resolution and emission above is sequential. Each worker only
@@ -494,7 +498,7 @@ BoardSchematicResult build_board_schematic(const std::vector<BoardSheetInput>& i
     }
     out.root_path = outdir / (options.root_name + ".kicad_sch");
     out.project_path = outdir / (options.root_name + ".kicad_pro");
-    write(out.root_path, emit_schematic(hierarchy.root, resolver(library), {"",options.root_name,hierarchy.root_uuid}).text);
+    write(out.root_path, emit_schematic(hierarchy.root, resolver(library), {"",options.root_name,hierarchy.root_uuid,options.project_name}).text);
     const auto existing = fs::exists(out.project_path) ? parse_json_file(out.project_path.string()) : object();
     write(out.project_path, board_project_json(existing, options.root_name));
     out.board = check_board_netlist(hierarchy.sheets, out.root_path,

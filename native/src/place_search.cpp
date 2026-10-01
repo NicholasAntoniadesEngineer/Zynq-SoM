@@ -4,6 +4,7 @@
 #include "schgen/occupancy.hpp"
 #include "schgen/pack.hpp"
 #include "schgen/quantize.hpp"
+#include "schgen/schematic_grid.hpp"
 #include "schgen/turn.hpp"
 
 #include <algorithm>
@@ -83,8 +84,8 @@ std::optional<double> lane_x(int sgn, double y0, double y1, double start,
                              double unit, double half_w, double y_pad,
                              double spot_pad, const std::vector<Box4>& parts,
                              const std::vector<Box4>& segs,
-                             const std::vector<Box4>& ncs) {
-    double x = sgn < 0 ? gfloor(start, unit) : gceil(start, unit);
+                             const std::vector<Box4>& ncs, QuantizationCounts* counts) {
+    double x = sgn < 0 ? schematic_grid::gfloor(start, unit, counts) : schematic_grid::gceil(start, unit, counts);
     for (int try_index = 0; try_index < 120; ++try_index) {
         const Box4 band{x - half_w, y0 - y_pad, x + half_w, y1 + y_pad};
         if (spot_free(band, spot_pad, parts, segs, ncs)) {
@@ -213,11 +214,11 @@ std::optional<double> lane_in_dir(
     double y_pad, double spot_pad, double corridor_pad, double x_nudge,
     const std::vector<Box4>& parts, const std::vector<Box4>& spot_segs,
     const std::vector<Box4>& ncs, const std::vector<Box4>& corridor_boxes,
-    const std::vector<Seg2>& corridor_segs) {
+    const std::vector<Seg2>& corridor_segs, QuantizationCounts* counts) {
     const double y0 = std::min(pt_y, ty);
     const double y1 = std::max(pt_y, ty);
     const double start = pt_x + static_cast<double>(sgn) * 3.0 * unit;
-    double x = sgn < 0 ? gfloor(start, unit) : gceil(start, unit);
+    double x = sgn < 0 ? schematic_grid::gfloor(start, unit, counts) : schematic_grid::gceil(start, unit, counts);
     for (int try_index = 0; try_index < 120; ++try_index) {
         const Box4 band{x - half_w, y0 - y_pad, x + half_w, y1 + y_pad};
         if (spot_free(band, spot_pad, parts, spot_segs, ncs)
@@ -237,7 +238,7 @@ std::vector<EscapeLeg> escape_run_legs(
     const std::vector<Box4>& spot_segs, const std::vector<Box4>& ncs,
     const std::vector<Box4>& corridor_boxes,
     const std::vector<Seg2>& corridor_segs, const std::vector<Box4>& stem_segs,
-    double spot_pad, double corridor_pad, double stem_pad) {
+    double spot_pad, double corridor_pad, double stem_pad, QuantizationCounts* counts) {
     const double sgn = tx >= px ? 1.0 : -1.0;
     const double span_x0 = std::min(px, tx);
     const double span_x1 = std::max(px, tx);
@@ -308,16 +309,16 @@ std::vector<EscapeLeg> escape_run_legs(
         const double cx1 = std::get<1>(cluster);
         const double cy0 = std::get<2>(cluster);
         const double cy1 = std::get<3>(cluster);
-        const double enter = sgn > 0.0 ? gfloor(cx0 - unit, unit)
-                                       : gceil(cx1 + unit, unit);
-        const double exitx = sgn > 0.0 ? gceil(cx1 + unit, unit)
-                                       : gfloor(cx0 - unit, unit);
+        const double enter = sgn > 0.0 ? schematic_grid::gfloor(cx0 - unit, unit, counts)
+                                       : schematic_grid::gceil(cx1 + unit, unit, counts);
+        const double exitx = sgn > 0.0 ? schematic_grid::gceil(cx1 + unit, unit, counts)
+                                       : schematic_grid::gfloor(cx0 - unit, unit, counts);
         const double lo = std::min(enter, exitx);
         const double hi = std::max(enter, exitx);
         std::optional<double> dy;
         for (int direction : {1, -1}) {
-            const double base = direction > 0 ? gceil(cy1 + 2.0 * unit, unit)
-                                              : gfloor(cy0 - 2.0 * unit, unit);
+            const double base = direction > 0 ? schematic_grid::gceil(cy1 + 2.0 * unit, unit, counts)
+                                              : schematic_grid::gfloor(cy0 - 2.0 * unit, unit, counts);
             for (int step = 0; step < 14; ++step) {
                 const double cand = py_round(
                     base + static_cast<double>(direction * step) * unit, 3);
@@ -416,16 +417,16 @@ std::optional<std::vector<std::pair<double, double>>> bfs_escape(
     double pt_x, double pt_y, double ty, double unit, double extent_x0,
     double extent_y0, double extent_x1, double extent_y1, double margin_cells,
     const std::vector<Box4>& boxes, const std::vector<Seg2>& segs,
-    double cell_pad) {
+    double cell_pad, QuantizationCounts* counts) {
     const double margin = margin_cells * unit;
     const int i0 = static_cast<int>(
-        gfloor(std::min(extent_x0, pt_x) - margin, unit) / unit);
+        schematic_grid::gfloor(std::min(extent_x0, pt_x) - margin, unit, counts) / unit);
     const int i1 = static_cast<int>(
-        gceil(std::max(extent_x1, pt_x) + margin, unit) / unit);
+        schematic_grid::gceil(std::max(extent_x1, pt_x) + margin, unit, counts) / unit);
     const int j0 = static_cast<int>(
-        gfloor(std::min(std::min(extent_y0, pt_y), ty) - margin, unit) / unit);
+        schematic_grid::gfloor(std::min(std::min(extent_y0, pt_y), ty) - margin, unit, counts) / unit);
     const int j1 = static_cast<int>(
-        gceil(std::max(std::max(extent_y1, pt_y), ty) + margin, unit) / unit);
+        schematic_grid::gceil(std::max(std::max(extent_y1, pt_y), ty) + margin, unit, counts) / unit);
     const int start_i = static_cast<int>(py_round(pt_x / unit, 0));
     const int start_j = static_cast<int>(py_round(pt_y / unit, 0));
     const int jty = static_cast<int>(py_round(ty / unit, 0));

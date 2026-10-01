@@ -24,7 +24,7 @@ SubsystemBuildResult build_subsystem_sheet(const CircuitSheetIr& circuit,SymbolL
     design.parts=p.parts;design.powers=p.powers;design.hlabels=p.hlabels;design.llabels=p.llabels;
     design.no_connects=p.no_connects;design.paper=p.paper;apply_schematic_route(design,page.routed);
     fs::create_directories(output);result.schematic=output/(circuit.name+".kicad_sch");
-    publish_text(result.schematic,emit_schematic(design,resolve).text);
+    publish_text(result.schematic,emit_schematic(design,resolve,{"","","",options.project_name}).text);
     publish_text(output/(circuit.name+".kicad_pro"),board_project_json(parse_json_text("{}"),circuit.name));
     const auto net=check_netlist(circuit,result.schematic,options.extraction);
     result.netlist_ok=net.ok;result.report+=net.summary()+"\n";

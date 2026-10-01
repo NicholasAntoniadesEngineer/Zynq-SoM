@@ -154,7 +154,7 @@ void Placer::edge_seat() {
         grid_placed.insert(r);
     }
 }
-void Placer::refit() {
+void Placer::refit(ExecutionFailureReceipt* failure) {
     std::map<std::string, std::vector<std::pair<std::string, std::string>>> net_pins;
     for (const auto &[key, n] : pin_net)
         if (!n.second.empty() && n.second.rfind("unconnected-", 0) != 0)
@@ -221,8 +221,8 @@ void Placer::refit() {
         for (const auto &r : refs)
             xy[r] = pos.at(r);
         auto result = refit_pcb_stage_facing_accounted(ctx.stage_input(sheet, geometry), xy, rotations,
-                                             centroid, own_pins, foreign);
-        checked_quantization_merge(ctx.quantization, result.quantization_engagements);
+                                             centroid, own_pins, foreign, failure);
+        merge_execution_counts(ctx.quantization, result.quantization_engagements,failure);
         out.placement_accounting.fallback_events.insert(out.placement_accounting.fallback_events.end(),
             result.fallback_events.begin(), result.fallback_events.end());
         out.fallback_events.insert(out.fallback_events.end(), result.fallback_events.begin(), result.fallback_events.end());

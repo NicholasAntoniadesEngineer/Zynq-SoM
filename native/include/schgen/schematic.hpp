@@ -80,6 +80,8 @@ struct SchematicOptions {
     // Empty means Python's None/empty-string fallback. An explicitly supplied
     // "/" instance path is preserved, although KiCad callers should use /UUID.
     std::string instance_path, project, sheet_uuid;
+    // Human project identity from project.json, distinct from KiCad instance scope.
+    std::string project_name = {};
 };
 struct SchematicOutput {
     Sexpr document;

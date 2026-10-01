@@ -44,7 +44,7 @@ struct BoardHierarchy {
 // hierarchy instead of silently omitting sheets. All input values are copied.
 BoardHierarchy make_board_hierarchy(const std::vector<BoardSheetDesign>& sheets,
     SymbolLibrary& library, const std::string& root_name = "board",
-    const std::string& sheet_subdir = {});
+    const std::string& sheet_subdir = {}, QuantizationCounts* counts = nullptr);
 
 struct BoardNetlistResult {
     std::size_t failures = 0;
@@ -87,6 +87,8 @@ struct BoardSchematicOptions {
     // Zero selects min(8, hardware concurrency); never exceeds sheet count.
     // Emission/library access stays sequential. Results/errors retain input order.
     std::size_t netlist_workers = 0;
+    std::string project_name = {};
+    QuantizationCounts* counts = nullptr;
 };
 struct BoardSheetGateResult {
     std::string name;

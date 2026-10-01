@@ -1,4 +1,5 @@
 #pragma once
+#include "schgen/execution_accounting.hpp"
 
 #include <optional>
 #include <string>
@@ -26,7 +27,7 @@ std::optional<double> lane_x(int sgn, double y0, double y1, double start,
                              double unit, double half_w, double y_pad,
                              double spot_pad, const std::vector<Box4>& parts,
                              const std::vector<Box4>& segs,
-                             const std::vector<Box4>& ncs);
+                             const std::vector<Box4>& ncs, QuantizationCounts* counts = nullptr);
 
 bool foreign_rows_clear(const Box4& box,
                         const std::vector<double>& foreign_ys, double eps);
@@ -50,7 +51,7 @@ std::optional<double> lane_in_dir(
     double y_pad, double spot_pad, double corridor_pad, double x_nudge,
     const std::vector<Box4>& parts, const std::vector<Box4>& spot_segs,
     const std::vector<Box4>& ncs, const std::vector<Box4>& corridor_boxes,
-    const std::vector<Seg2>& corridor_segs);
+    const std::vector<Seg2>& corridor_segs, QuantizationCounts* counts = nullptr);
 
 struct OwnedBox {
     Box4 box;
@@ -81,7 +82,7 @@ std::vector<EscapeLeg> escape_run_legs(
     const std::vector<Box4>& spot_segs, const std::vector<Box4>& ncs,
     const std::vector<Box4>& corridor_boxes,
     const std::vector<Seg2>& corridor_segs, const std::vector<Box4>& stem_segs,
-    double spot_pad, double corridor_pad, double stem_pad);
+    double spot_pad, double corridor_pad, double stem_pad, QuantizationCounts* counts = nullptr);
 
 std::vector<LabeledBox> pin_text_boxes(
     const std::vector<PinTextIn>& pins, double part_x, double part_y,
@@ -92,6 +93,6 @@ std::optional<std::vector<std::pair<double, double>>> bfs_escape(
     double pt_x, double pt_y, double ty, double unit, double extent_x0,
     double extent_y0, double extent_x1, double extent_y1, double margin_cells,
     const std::vector<Box4>& boxes, const std::vector<Seg2>& segs,
-    double cell_pad);
+    double cell_pad, QuantizationCounts* counts = nullptr);
 
 }  // namespace schgen

@@ -38,7 +38,7 @@ struct PcbPlacementResult {
     ExecutionAccounting zone_accounting;      // actual placement-zone invocation
     PcbZoneAccountingOwnership zone_accounting_ownership = PcbZoneAccountingOwnership::Unspecified;
 };
-PcbZoneResult build_pcb_zone_geometry(const PcbPlacementInput &);
+PcbZoneResult build_pcb_zone_geometry(const PcbPlacementInput &, ExecutionFailureReceipt* failure = nullptr);
 FloorplanZoneGeometry bind_pcb_zone_shapes(const PcbZoneResult &,
                                            const std::map<std::string, int> &chosen);
 // Rebuilds compose terms, metrics, side offers and impedance classes from live
@@ -51,7 +51,7 @@ PcbPlacementResult place_pcb_model(const PcbPlacementInput &, const PcbZoneResul
                                    const FloorplanStage &);
 // Explicit ownership for an externally supplied solve; no ancestry guessing.
 PcbPlacementResult place_pcb_model_accounted(const PcbPlacementInput &, const PcbZoneResult &,
-    const FloorplanStage &, PcbZoneAccountingOwnership);
+    const FloorplanStage &, PcbZoneAccountingOwnership, ExecutionFailureReceipt* failure = nullptr);
 // Complete build-owned aggregate: plan + separate zones (if any) + placement.
 // Unknown ownership rejects. Counts are added with overflow checks; no math runs.
 ExecutionAccounting pcb_placement_accounting(const PcbPlacementResult &);
@@ -60,5 +60,5 @@ ExecutionAccounting pcb_placement_accounting(const PcbPlacementResult &);
 // This constructs a model, not a verification verdict: independent final-model
 // placement-contract, placement-flow, compose/coverage and PCB checks remain
 // mandatory orchestration steps. Solver feasibility does not replace them.
-PcbPlacementResult build_pcb_model(const PcbPlacementInput &);
+PcbPlacementResult build_pcb_model(const PcbPlacementInput &, ExecutionFailureReceipt* failure = nullptr);
 } // namespace schgen

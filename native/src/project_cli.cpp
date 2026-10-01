@@ -329,6 +329,7 @@ std::optional<int> run_project_command(int argc, char** argv) {
         }
         SymbolLibrary library(paths.repository_root);SubsystemBuildOptions build;
         build.no_render=options.no_render;build.extraction.kicad_cli=options.kicad_cli;
+        build.project_name=load_project_config(paths).name;
         const auto result=build_subsystem_sheet(circuit,library,output,build);
         std::cout<<result.report;return result.ok()?0:1;
     }

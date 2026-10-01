@@ -16,7 +16,8 @@ parts/FUSB302BMPX/
 ```
 
 `part.json` is the authored electrical contract (`schema: schgen.part/1`).
-`scripts/build_native.sh` compiles every `parts/*/part.json` into
+The native CMake build described in [the build guide](../native/ci/README.md)
+compiles every `parts/*/part.json` into
 `native/catalog.bin` (interned strings, pin tables, mmap). Runtime `use_part`
 looks up that binary — it does not parse JSON or exec Python. Required fields:
 `mpn`, `safe_name`, `lcsc`, `description`, `manufacturer`, `package`,
@@ -29,19 +30,30 @@ compile. Footprint copper stays in `.kicad_mod` (sexpr).
 Find the part on lcsc.com / jlcpcb.com/parts, note its `C`-number, and run:
 
 ```bash
-PYTHONPATH=. python -m schgen part add C132291
+native/bin/schgen part-import --parts-root parts --lcsc C132291 --catalog native/catalog.bin
 ```
 
-This is the whole pipeline (`schgen/partlib/part_gen.py`): fetch the CAD
+This is the native part-import pipeline: fetch the CAD
 payload from the public EasyEDA component API, parse it, and write the
 `parts/<MPN>/` folder. It either produces a complete folder or fails — no
-partial output.
+partial package output. Existing packages require explicit `--overwrite`.
+The optional `--catalog` refresh happens after package publication; a catalog
+refresh failure returns an error but does not undo the published package.
 
 For a network-free, byte-stable regeneration, point it at the cached payload:
 
 ```bash
-PYTHONPATH=. python -m schgen part add C132291 \
-  --from-json parts/FUSB302BMPX/FUSB302BMPX.easyeda.json
+native/bin/schgen part-import --parts-root parts \
+  --from-json parts/FUSB302BMPX/FUSB302BMPX.easyeda.json \
+  --overwrite --catalog native/catalog.bin
+```
+
+Run these commands from the repository root. The cached-payload command explicitly
+replaces an existing package; omit `--overwrite` when replacement is not intended.
+To refresh only the catalog after changing part metadata:
+
+```sh
+native/bin/schgen catalog-compile parts native/catalog.bin
 ```
 
 ## What the generator produces
@@ -92,7 +104,7 @@ self.use_part("FUSB302BMPX", "U1")
 `lib_id`, `footprint`, reference prefix, LCSC code, and the **named** pin table
 from the compiled record. Inline part metadata is rejected. A missing
 `part.json` or a stale/absent catalog is a build error that names
-`schgen part add` / `scripts/build_native.sh`. Because the pin table is named,
+the native import/catalog workflow above. Because the pin table is named,
 sheets wire pins by name and the build validates them against the symbol. The
 `LCSC` code carried on every part keys the BOM and the datasheet ratings
 checks, so a part's orderable identity can never drift from its library folder.

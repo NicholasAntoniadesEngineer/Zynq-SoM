@@ -887,7 +887,7 @@ double Engine::_free_drop_col(int sign, double start, double attach_y, double ty
     throw SchematicPlaceError(name + ": no free ladder column from " + number_text(start));
 }
 double Engine::_lane_x(int sign, double y0, double y1, double start) const {
-    const auto result = lane_x(sign, y0, y1, start, U, 0.7, 0.3, 0.0, _boxes(), _plan_seg_boxes(), _nc_boxes());
+    const auto result = lane_x(sign, y0, y1, start, U, 0.7, 0.3, 0.0, _boxes(), _plan_seg_boxes(), _nc_boxes(), counts);
     if (!result) throw SchematicPlaceError("no free lane found");
     return *result;
 }
@@ -936,13 +936,13 @@ std::vector<std::pair<Point, Point>> Engine::_escape_run_legs(const std::string&
     std::vector<Box4> stem_boxes;
     for (const auto& s : stems) stem_boxes.push_back({s.x0, s.y0, s.x1, s.y1});
     return escape_run_legs(px, py, tx, U, 0.127, owned, parts, _plan_seg_boxes(), _nc_boxes(),
-                           parts, corridor, stem_boxes, 0.0, 0.3, 0.3);
+                           parts, corridor, stem_boxes, 0.0, 0.3, 0.3, counts);
 }
 std::optional<double> Engine::_lane_in_dir(int sign, Point pt, double ty, const std::string& name) {
     const auto parts = _boxes(); auto corridor = _plan_raw_segs({name}); const auto stems = _stem_segs({name});
     corridor.insert(corridor.end(), stems.begin(), stems.end());
     return lane_in_dir(sign, pt.first, pt.second, ty, U, 0.7, 0.3, 0.0, 0.3, 0.01,
-                        parts, _plan_seg_boxes(), _nc_boxes(), parts, corridor);
+                        parts, _plan_seg_boxes(), _nc_boxes(), parts, corridor, counts);
 }
 double Engine::_escape_lane(int sign, Point pt, double ty, const std::string& name) {
     for (const int direction : {sign, -sign}) if (const auto result = _lane_in_dir(direction, pt, ty, name)) return *result;
@@ -956,7 +956,7 @@ std::vector<Point> Engine::_escape_path(int sign, Point pt, double ty, const std
 std::vector<Point> Engine::_bfs_escape(Point pt, double ty, const std::string& name) {
     const auto extent = _extent(); auto segments = _plan_raw_segs({name}); const auto stems = _stem_segs({name});
     segments.insert(segments.end(), stems.begin(), stems.end());
-    const auto result = bfs_escape(pt.first, pt.second, ty, U, extent.x0, extent.y0, extent.x1, extent.y1, 16.0, _boxes(), segments, 0.3);
+    const auto result = bfs_escape(pt.first, pt.second, ty, U, extent.x0, extent.y0, extent.x1, extent.y1, 16.0, _boxes(), segments, 0.3, counts);
     if (!result) throw SchematicPlaceError(name + ": no free escape lane from " + point_text(pt));
     return *result;
 }

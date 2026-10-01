@@ -1,4 +1,5 @@
 #include "board_pipeline_internal.hpp"
+#include "precision_receipt.hpp"
 #include "schgen/native_render.hpp"
 #include "schgen/symbol_law.hpp"
 #include "schgen/diagram.hpp"
@@ -25,6 +26,7 @@ void schematic_stage(Context& c){
     c.attempt("carrier_structure",[&]{if(!c.authored)throw ProjectError("actual native authoring snapshot unavailable");
         const auto r=check_carrier_structure(c.out/"subsystems",c.paths.repository_root/"subsystems",c.authored->factories,AuthoringPackageMode::native_assets);
         c.report("carrier_structure.txt",r.summary());c.gate("carrier_structure",r.ok(),r.summary());});
+    const auto project_name=load_project_config(c.paths).name;
     std::vector<BoardSheetInput> inputs;std::vector<std::string> cc_reports,sheet_reports;
     bool cc_ok=true,sheet_ok=true,render_ok=true;
     Scratch scratch;
@@ -41,13 +43,20 @@ void schematic_stage(Context& c){
         try {
             const auto electrical=c.measure("sheet_electrical_validation",[&]{return check_circuit_electrical(sc.circuit,c.library);});
             if(!electrical.ok()){sheet_ok=false;sheet_reports.push_back(sc.name+": "+electrical.summary());continue;}
-            auto page=c.measure("sheet_place_route_with_internal_checks",[&]{return place_and_route_schematic(sc.circuit,c.library);});
+            auto page=with_precision_receipt([&](QuantizationCounts& counts){
+                return c.measure("sheet_place_route_with_internal_checks",[&]{
+                    return place_and_route_schematic(sc.circuit,c.library,{},8,&counts);
+                });
+            },[&](const QuantizationCounts& counts){
+                // One sheet invocation includes all attempts and retains a throwing prefix.
+                c.inbox.merge_once("schematic/"+sc.name+"/grid",NativeAccountingBatch{native_counter_batch(counts),{}});
+            });
             const auto cc=c.measure("sheet_cc_validation",[&]{return check_board_sheet_cc(sc.circuit,page.placement,page.routed,[&](const std::string& id)->const SymbolDef&{return c.library.get(id);});});
             cc_ok=cc_ok&&cc.ok();cc_reports.push_back(cc.summary());
             SchematicDesign d;d.circuit=sc.circuit;const auto& p=page.placement;
             d.parts=p.parts;d.powers=p.powers;d.hlabels=p.hlabels;d.llabels=p.llabels;d.no_connects=p.no_connects;d.paper=p.paper;apply_schematic_route(d,page.routed);
             const auto sch=scratch.path/(sc.name+".kicad_sch");
-            c.measure("sheet_emit_and_publish",[&]{publish_text(sch,emit_schematic(d,[&](const std::string& id)->const SymbolDef&{return c.library.get(id);}).text);});
+            c.measure("sheet_emit_and_publish",[&]{publish_text(sch,emit_schematic(d,[&](const std::string& id)->const SymbolDef&{return c.library.get(id);},{"","","",project_name}).text);});
             publish_text(sch.parent_path()/(sc.name+".kicad_pro"),board_project_json(parse_json_text("{}"),sc.name));
             const auto vis=c.measure("sheet_visual_validation",[&]{return check_visual_geometry(page.geometry);});
             const auto band=std::find_if(c.index.begin(),c.index.end(),[&](const auto& x){return x.first==sc.name;});
@@ -102,8 +111,13 @@ void schematic_stage(Context& c){
     c.attempt("constraints",[&]{write_layout_constraints(c.circuits,c.paths.project_root/"research/si_spec.json",c.manufacturing);c.gate("constraints",true,"layout rules and net-class CSV published");});
     c.attempt("diagram",[&]{if(!c.link)throw ProjectError("link result unavailable");write_block_diagram(*c.link,link_som_nets_from_json(parse_json_file(c.paths.som_interface_file.string())),c.docs/"block_diagram.svg");c.gate("diagram",true,"block diagram published");});
     c.attempt("board_schematic",[&]{if(inputs.empty())throw ProjectError("no prepared sheets");
-        BoardSchematicOptions o;o.root_name="Zynq_Carrier";o.sheet_subdir="schematic";o.reports_dir=c.reports;o.extraction=c.options.extraction;o.netlist_workers=c.options.netlist_workers;
-        c.schematic=build_board_schematic(inputs,c.library,c.out,o);
+        BoardSchematicOptions o;o.project_name=project_name;o.root_name="Zynq_Carrier";o.sheet_subdir="schematic";o.reports_dir=c.reports;o.extraction=c.options.extraction;o.netlist_workers=c.options.netlist_workers;
+        c.schematic=with_precision_receipt([&](QuantizationCounts& counts){
+            o.counts=&counts;
+            return build_board_schematic(inputs,c.library,c.out,o);
+        },[&](const QuantizationCounts& counts){
+            c.inbox.merge_once("schematic/hierarchy/grid",NativeAccountingBatch{native_counter_batch(counts),{}});
+        });
         c.gate("board_schematic",c.schematic->ok()&&inputs.size()==c.circuits.size(),c.schematic->report);
         c.gate("root_erc",c.schematic->board.erc_ran&&c.schematic->board.erc_exit_code==0,"root ERC informational; see board.erc.rpt");
         JsonNode bands;bands.kind=JsonKind::Object;for(const auto& [name,band]:c.index)bands.object_value.emplace_back(name,number(band));

@@ -198,6 +198,7 @@ include(cmake/SubsystemPackages.cmake)
 schgen_configure_subsystem_packages(schgen_core "${CMAKE_CURRENT_SOURCE_DIR}/..")
 if(BUILD_TESTING)
     include(tests/native_audit_queue.cmake)
+    include(tests/model_failure_receipt_contracts.cmake)
     include(tests/floorplan_receipt_contracts.cmake)
     add_executable(schgen_python_free_tree_contracts tests/python_free_tree_contracts.cpp)
     target_compile_options(schgen_python_free_tree_contracts PRIVATE
@@ -765,6 +766,16 @@ if(BUILD_TESTING)
         add_test(NAME native_schematic_place_${stage}_contracts COMMAND schgen_schematic_place_${stage}_contracts
             "${CMAKE_CURRENT_SOURCE_DIR}/tests/data/schematic_place_${stage}")
     endforeach()
+    add_library(schgen_schematic_grid_observed OBJECT src/quantize.cpp)
+    target_include_directories(schgen_schematic_grid_observed PRIVATE include)
+    target_compile_options(schgen_schematic_grid_observed PRIVATE
+        -Wall -Wextra -Wpedantic -Werror -ffp-contract=off -finstrument-functions -fno-inline)
+    add_executable(schgen_schematic_grid_receipts tests/schematic_grid_receipts.cpp
+        tests/schematic_grid_entry_observer.cpp $<TARGET_OBJECTS:schgen_schematic_grid_observed>)
+    target_link_libraries(schgen_schematic_grid_receipts PRIVATE schgen_core)
+    target_compile_options(schgen_schematic_grid_receipts PRIVATE -Wall -Wextra -Wpedantic -Werror -ffp-contract=off)
+    add_test(NAME native_schematic_grid_receipts COMMAND schgen_schematic_grid_receipts
+        "${CMAKE_CURRENT_SOURCE_DIR}/..")
     add_executable(schgen_schematic_place_pages_contracts tests/schematic_place_pages_contracts.cpp)
     target_link_libraries(schgen_schematic_place_pages_contracts PRIVATE schgen_core)
     target_compile_options(schgen_schematic_place_pages_contracts PRIVATE

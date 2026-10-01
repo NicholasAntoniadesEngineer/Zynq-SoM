@@ -205,8 +205,14 @@ FloorplanInput prepare_pcb_floorplan(const PcbPlacementInput &input, const PcbZo
     checked_quantization_merge(result.accounting.quantization_engagements, zones.quantization_engagements);
     return result;
 }
-PcbPlacementResult build_pcb_model(const PcbPlacementInput &input) {
-    auto zones = build_pcb_zone_geometry(input);
+PcbPlacementResult build_pcb_model(const PcbPlacementInput &input, ExecutionFailureReceipt* failure) {
+    // Each child failure owns only its operation, except floorplan which
+    // explicitly inherits planning-zone accounting. Keep that transfer visible.
+    ExecutionFailureReceipt child;
+    ExecutionAccounting completed;
+    try {
+    auto zones = build_pcb_zone_geometry(input,&child);
+    completed={zones.quantization_engagements,zones.fallback_events};
     observe_pcb_experiment_checkpoint(input.experiment.get(), [] {
         PcbPlacementObservation row;
         row.stage = "zone_pack";
@@ -218,8 +224,18 @@ PcbPlacementResult build_pcb_model(const PcbPlacementInput &input) {
     // Keeping these inputs distinct preserves build_model(two_side=False).
     auto planning = input;
     planning.two_side = true;
-    auto planning_zones = input.two_side ? zones : build_pcb_zone_geometry(planning);
-    auto floorplan = generate_floorplan(prepare_pcb_floorplan(planning, planning_zones));
+    auto planning_zones = input.two_side ? zones : build_pcb_zone_geometry(planning,&child);
+    if(!input.two_side)append_execution_accounting(completed,{planning_zones.quantization_engagements,planning_zones.fallback_events},&child);
+    FloorplanInput prepared;
+    try { prepared=prepare_pcb_floorplan(planning, planning_zones); }
+    catch (const std::overflow_error&) { invalidate_execution_failure(&child);throw; }
+    // generate_floorplan guarantees its failure receipt includes prepared's
+    // seed even if the engine rejects during construction. Do not count that
+    // same planning zone again at the parent boundary.
+    completed=input.two_side ? ExecutionAccounting{} : ExecutionAccounting{zones.quantization_engagements,zones.fallback_events};
+    auto floorplan = generate_floorplan(prepared,&child);
+    append_execution_accounting(completed,{floorplan.plan.accounting.quantization_engagements,floorplan.plan.accounting.fallback_events},&child);
+    append_execution_accounting(completed,floorplan.documents.accounting,&child);
     observe_pcb_experiment_checkpoint(input.experiment.get(), [&] {
         PcbPlacementObservation row;
         row.stage = "plan_lattice";
@@ -230,6 +246,10 @@ PcbPlacementResult build_pcb_model(const PcbPlacementInput &input) {
     });
     return place_pcb_model_accounted(input, zones, floorplan, input.two_side
         ? PcbZoneAccountingOwnership::IncludedInFloorplan
-        : PcbZoneAccountingOwnership::SeparateFromFloorplan);
+        : PcbZoneAccountingOwnership::SeparateFromFloorplan,&child);
+    } catch (...) {
+        capture_execution_failure(failure,std::move(completed),&child);
+        throw;
+    }
 }
 } // namespace schgen

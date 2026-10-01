@@ -360,5 +360,13 @@ FloorplanPlan Engine::run() {
 }  // namespace schgen::floorplan_detail
 
 namespace schgen {
-FloorplanPlan build_floorplan(const FloorplanInput& input) { return floorplan_detail::Engine(input).run(); }
+FloorplanPlan build_floorplan(const FloorplanInput& input, ExecutionFailureReceipt* failure) {
+    std::optional<floorplan_detail::Engine> engine;
+    try { engine.emplace(input);return engine->run(); }
+    catch (...) {
+        const auto& prefix=engine ? engine->plan.accounting : input.accounting;
+        capture_execution_failure(failure,{prefix.quantization_engagements,prefix.fallback_events});
+        throw;
+    }
+}
 }  // namespace schgen

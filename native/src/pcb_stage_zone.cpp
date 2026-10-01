@@ -168,9 +168,11 @@ PcbStageRefitResult refit_pcb_stage_facing_accounted(
     const PcbStageInput &in, const FloorplanOffsets &xy, const FloorplanRotations &rotations,
     FloorplanPoint downstream,
     const std::map<std::string, std::vector<std::pair<std::string, std::string>>> &nets,
-    const std::map<std::string, std::vector<std::tuple<double, double, std::string>>> &foreign) {
+    const std::map<std::string, std::vector<std::tuple<double, double, std::string>>> &foreign,
+    ExecutionFailureReceipt* failure) {
     using namespace pcb_stage;
     Engine e(in);
+    try {
     auto finish = [&](std::optional<PcbStageRefitPoses> poses = std::nullopt) {
         return PcbStageRefitResult{std::move(poses), std::move(e.quantization), std::move(e.events)};
     };
@@ -243,6 +245,7 @@ PcbStageRefitResult refit_pcb_stage_facing_accounted(
     for (const auto &p : turned)
         out[p.ref] = {p.x, p.y, p.rot};
     return finish(std::move(out));
+    } catch (...) { capture_execution_failure(failure,{e.quantization,e.events});throw; }
 }
 std::optional<std::map<std::string, std::tuple<double, double, double>>> refit_pcb_stage_facing(
     const PcbStageInput &in, const FloorplanOffsets &xy, const FloorplanRotations &rotations,

@@ -112,7 +112,7 @@ exists, else local — and proves:
 Run it standalone:
 
 ```bash
-python -m schgen carrier-check
+native/bin/schgen carrier-check --project carrier
 ```
 
 The generic library packages under `../../subsystems/` are policed by the mirror
@@ -120,13 +120,18 @@ gate `schgen/verify/subsystem_structure.py`.
 
 ## Adding a sheet
 
-There is no registration list. A sheet is discovered purely by its file: every
+The following describes the historical Python adapter layout, not native
+registration. For a new native library package, run
+`native/bin/schgen subsystem-new <name>` from the repository root and follow
+its generated README for explicit CMake selection and builder registration.
+
+In the former implementation there was no registration list: every
 non-test `.py` module and every folder here is a subsystem. Expose a top-level
 `def circuit() -> Circuit:` and name the circuit to match
 (`Circuit("<name>", "…")`); the circuit name becomes the sheet and render name.
 
 - A new **adapter**: scaffold the portable circuit into the library
-  (`schgen subsystem <name>`), then add the flat `<name>.py` bind plus
+  (the former `schgen subsystem <name>` command), then add the flat `<name>.py` bind plus
   `test_<name>.py` here.
 - A new **local**: create the `<name>/` folder with all four artifacts and
   compose the netlist from `parts/`.
@@ -134,6 +139,6 @@ non-test `.py` module and every folder here is a subsystem. Expose a top-level
 Build one sheet (all gates) or the whole board:
 
 ```bash
-PYTHONPATH=. python -m schgen build <name>
-PYTHONPATH=. python -m schgen board
+native/bin/schgen build <name> --project carrier
+native/bin/schgen board --project carrier
 ```

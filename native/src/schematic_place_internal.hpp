@@ -2,6 +2,7 @@
 
 #include "schgen/schematic_place.hpp"
 #include "schgen/quantize.hpp"
+#include "schgen/schematic_grid.hpp"
 
 #include <algorithm>
 #include <array>
@@ -19,9 +20,18 @@ inline constexpr double A3_TITLEBLOCK_LEFT = 300.0, A3_TITLEBLOCK_TOP = 252.9;
 inline constexpr double TITLEBLOCK_MARGIN = 4.0, PAPER_H_BUDGET = 240.0, PAPER_W_BUDGET = 330.0;
 inline constexpr double CHAR_W = 0.95, TEXT_SIZE = 1.27, LINE_H = 1.6;
 inline constexpr double GLABEL_PAD_LEN = 2.0, GLABEL_H = 2.2, GLABEL_INSET = 0.254;
-inline double gsnap(double v) { return schgen::gsnap(v, U); }
-inline double gfloor(double v) { return schgen::gfloor(v, U); }
-inline double gceil(double v) { return schgen::gceil(v, U); }
+// Count attempted scalar entry, including a throwing quantizer; no arithmetic replay.
+inline double gsnap(double v, QuantizationCounts* counts) {
+    return schematic_grid::gsnap(v, U, counts);
+}
+// Count attempted scalar entry, including a throwing quantizer; no arithmetic replay.
+inline double gfloor(double v, QuantizationCounts* counts) {
+    return schematic_grid::gfloor(v, U, counts);
+}
+// Count attempted scalar entry, including a throwing quantizer; no arithmetic replay.
+inline double gceil(double v, QuantizationCounts* counts) {
+    return schematic_grid::gceil(v, U, counts);
+}
 
 // Python dictionaries iterate in insertion order, including after erasing and
 // reinserting a key. References/iterators invalidate on insertion or erasure;
@@ -143,9 +153,15 @@ public:
     // Own an immutable circuit snapshot; SymbolLibrary must outlive this Engine
     // and must not be cleared while future template methods retain symbol pins.
     // Input is the core circuit AFTER probes/mounting holes have been split.
-    Engine(const CircuitSheetIr&, SymbolLibrary&, const SchematicSpacing& = {});
+    Engine(const CircuitSheetIr&, SymbolLibrary&, const SchematicSpacing& = {},
+           QuantizationCounts* counts = nullptr);
     Engine(const Engine&) = delete;
     Engine& operator=(const Engine&) = delete;
+    QuantizationCounts owned_counts;
+    QuantizationCounts* const counts;
+    double gsnap(double v) const { return schematic_place::gsnap(v, counts); }
+    double gfloor(double v) const { return schematic_place::gfloor(v, counts); }
+    double gceil(double v) const { return schematic_place::gceil(v, counts); }
     const CircuitSheetIr c;
     SymbolLibrary& lib;
     SchematicSpacing sp;
@@ -318,9 +334,9 @@ private:
 std::pair<CircuitSheetIr, Refs> split_auxiliary(const CircuitSheetIr&);
 void add_probe_row(Engine&, const CircuitSheetIr& original, const Refs&);
 void translate(SchematicPlacement&, double dx, double dy);
-void center_on_sheet(SchematicPlacement&);
+void center_on_sheet(SchematicPlacement&, QuantizationCounts* counts = nullptr);
 std::vector<std::set<std::string>> signal_blobs(const CircuitSheetIr&, SymbolLibrary&);
-std::vector<CircuitSheetIr> partition_pages(const CircuitSheetIr&, SymbolLibrary&);
+std::vector<CircuitSheetIr> partition_pages(const CircuitSheetIr&, SymbolLibrary&, QuantizationCounts* counts = nullptr);
 
 // Page orchestration dependencies are explicit so retry/pagination policy can
 // be tested without substituting a fake Engine::run or changing production
@@ -335,8 +351,8 @@ bool is_congestion(const std::string& message);
 std::vector<CircuitSheetIr> partition_pages_with_fit(const CircuitSheetIr&, SymbolLibrary&,
     const std::function<bool(const CircuitSheetIr&)>& fits);
 SchematicPlacedPage place_and_route_with(const CircuitSheetIr&, SymbolLibrary&,
-    const SchematicSpacing&, int max_attempts, const PageOperations&);
+    const SchematicSpacing&, int max_attempts, const PageOperations&, QuantizationCounts* counts = nullptr);
 std::vector<SchematicPlacedPage> paginate_and_route_with(const CircuitSheetIr&, SymbolLibrary&,
-    const SchematicSpacing&, int max_attempts, const PageOperations&);
+    const SchematicSpacing&, int max_attempts, const PageOperations&, QuantizationCounts* counts = nullptr);
 
 }  // namespace schgen::schematic_place

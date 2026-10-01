@@ -335,7 +335,7 @@ std::set<std::string> pcb_contract_members(const PcbStageInput &in) {
     }
     return out;
 }
-PcbStageResult build_pcb_stage_zone(const PcbStageInput &in) {
+PcbStageResult build_pcb_stage_zone(const PcbStageInput &in, ExecutionFailureReceipt* failure) {
     using namespace pcb_stage;
     if (in.contract.kind != JsonKind::Object)
         throw PcbZoneInfeasible(in.sheet + ": build_zone called without a contract");
@@ -346,6 +346,7 @@ PcbStageResult build_pcb_stage_zone(const PcbStageInput &in) {
             !std::isfinite(b.y1) || b.x1 < b.x0 || b.y1 < b.y0)
             throw PcbZoneInfeasible("invalid stage bounds: " + ref);
     Engine e(in);
+    try {
     bool hot = false, prox = false;
     for (const auto &s : optional(in.contract, "structures").array_value) {
         hot |= text(s, "type") == "hot_loop";
@@ -357,5 +358,6 @@ PcbStageResult build_pcb_stage_zone(const PcbStageInput &in) {
     result.fallback_events = std::move(e.events);
     result.quantization_engagements = std::move(e.quantization);
     return result;
+    } catch (...) { capture_execution_failure(failure,{e.quantization,e.events});throw; }
 }
 } // namespace schgen

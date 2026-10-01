@@ -15,8 +15,10 @@
 
 namespace schgen {
 
-SchematicSpacing SchematicSpacing::expanded() const {
-    auto up = [](double v) { return gceil(v * 1.25, symbol_grid); };
+SchematicSpacing SchematicSpacing::expanded(QuantizationCounts* counts) const {
+    QuantizationCounts owned_counts;
+    if (!counts) counts = &owned_counts;
+    auto up = [counts](double v) { return schematic_place::gceil(v * 1.25, counts); };
     return {up(port_run), label_tap_gap, hang_stub, up(stagger_extra), up(cap_pitch),
             up(cluster_dx), up(cluster_dy), up(flags_dy), up(flag_pitch)};
 }
@@ -158,8 +160,9 @@ std::string side_of_rotation(int rotation) {
     }
 }
 
-Engine::Engine(const CircuitSheetIr& circuit, SymbolLibrary& library, const SchematicSpacing& spacing)
-    : c(circuit), lib(library), sp(spacing) {
+Engine::Engine(const CircuitSheetIr& circuit, SymbolLibrary& library, const SchematicSpacing& spacing,
+        QuantizationCounts* invocation_counts)
+    : counts(invocation_counts ? invocation_counts : &owned_counts), c(circuit), lib(library), sp(spacing) {
     for (std::size_t i = 0; i < c.parts.size(); ++i) {
         if (!parts_.emplace(c.parts[i].ref, i).second)
             throw SchematicPlaceError("duplicate part reference " + c.parts[i].ref);

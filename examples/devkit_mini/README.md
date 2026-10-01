@@ -81,23 +81,24 @@ in the carrier's. Host-side wiring is a consumer decision, not part of the libra
 ## Build it
 
 ```sh
-python -m schgen devkit          # add --no-render to skip the PNGs
+native/bin/schgen devkit --output /absolute/private/devkit-example
+# Add --no-render to skip the PNGs; run from the repository root.
 ```
 
-`schgen devkit` (`schgen/generate/devkit.py`) builds the four bound library
-subsystems with the same generic machinery the carrier uses —
-`place.place_and_route`, `output.emit.emit`, `generate.board.build_board`,
-`verify.cc_gate`, and `output.render.render_sheet_to_png` — without copying any
-carrier code. The carrier-specific steps (SoM DF40 contract, `sheet_index.json`,
+The native `devkit` command builds the four bound library subsystems through
+`native/src/example_devkit_build.cpp`, using shared schematic placement,
+emission, hierarchy, gate and rendering machinery. This example is distinct from
+the full 12-sheet `board --project devkit_mini` project. The carrier-specific
+steps (SoM DF40 contract, `sheet_index.json`,
 carrier-structure gate, SoM-centered floorplan) do not apply because the devkit has
 no SoM.
 
-It writes:
+It writes under the required `--output` directory:
 
 - `schematic/<name>.kicad_sch` — one schematic per subsystem,
 - the `devkit_mini.kicad_pro` hierarchy root that opens them together,
 - `renders/<name>.png` — per-sheet renders (best-effort; skipped with `--no-render`),
-- `reports/cc_gate.txt` and `reports/board_gate.txt` — the gate results.
+- `reports/cc_gate.txt`, `reports/board_gate.txt` and `reports/example_devkit.txt` — gate/build results.
 
 The build passes only if every gate passes:
 
@@ -111,11 +112,18 @@ The build passes only if every gate passes:
 ## Test it
 
 ```sh
-PYTHONPATH=. python3 -m pytest examples/devkit_mini/test_devkit_mini.py -q
+ctest --test-dir native/build/ci --output-on-failure --no-tests=error \
+  -R '^native_example_devkit(_live)?_contracts$'
 ```
 
-`test_devkit_mini.py` runs offline and asserts, parametrized over all four
-subsystems unless noted:
+Configure and build first using [the native build guide](../../native/ci/README.md).
+The native contracts are in `native/tests/example_devkit_contracts.cpp`; the live
+contract requires KiCad and checks the hierarchy and mutations with rendering
+disabled. These focused tests are not a
+substitute for whole-board acceptance.
+
+The retired `test_devkit_mini.py` supplied the historical offline coverage below,
+parametrized over all four subsystems unless noted:
 
 1. each library subsystem builds under the devkit `META` with no library edit;
 2. every external net is a devkit name — no abstract interface name leaks (except
