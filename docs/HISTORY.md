@@ -1,5 +1,27 @@
 # carrier — project HISTORY (archived planning logs)
 
+## 2026-10-01 — clean C++ migration acceptance
+
+Completed isolated fresh Release compilation and sequential full-render board
+acceptance at `29d43472`, without bypassing mandatory gates or blessing golden
+drift. Compilation took 132.17 s (two workers, no compiler/object cache, existing
+zlib-ng dependency). Carrier passed all mandatory gates in 326.69 s and devkit
+in 275.11 s; source/ledger audits both pass with 155 registered transforms.
+All 226 tests have successful final coverage as detailed below. No tracked
+Python source remains. Required hardware formats and historical reference data
+are retained. See the new migration-acceptance benchmark receipt; the older
+failed-build receipt is preserved without relabeling its results.
+
+Against the requested Python revision `0e9bbc913bab77f9cd228940db2a332d25d6bfa1`,
+carrier wall time decreases 56.87%; devkit increases 255.95%. These are complete
+revision workloads, not isolated language speedups: the Python devkit fails its
+design gates and native runs stronger mandatory source audits. Native auditing
+alone takes 218.84/206.34 s. No claim is made that the queue change reduced
+whole-board wall time. Both boards retain advisory return-path, golden-render
+drift and contract-coverage findings, plus 499/413 unrouted connections. They
+are not fabrication-ready. Generated evidence is preserved in the managed
+`migration-acceptance` worktree; private raw logs are not published.
+
 ## 2026-10-01 — complete rendered baseline comparison
 
 Integrated the remaining Plain18/Grid6 precision boundaries (autonomous, per

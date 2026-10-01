@@ -170,8 +170,9 @@ these pre-existing output defects are not treated as successful compile checks.
 Carrier and devkit XDC/Tcl, and carrier BOM, match the established output bytes.
 Device-tree output changes only generator/source provenance comments. Native
 contract tests cover extraction, mapping, linking, project isolation, rendering
-and validation failures. Full native source-audit acceptance remains pending.
-The full transitional carrier and devkit builds pass. The devkit's two missing
+and validation failures. Clean native full-render acceptance passed for both
+boards at `29d43472` on October 1, including the source and ledger audits
+(66 C++ files, 155 registered transforms). The devkit's two missing
 I2C pull-ups and nine uncovered probe requirements are corrected with physical
 parts, without new waivers. Probe-only ports now export hierarchical sheet
 connections; regulator discovery excludes measurement pads, and PCB placement
@@ -192,7 +193,7 @@ commands read validated JSON directly and do not depend on interpreter caches.
 Build directories share the in-tree binary and catalog outputs, so build them
 sequentially.
 
-## Remaining migration
+## Migration acceptance and remaining design work
 
 `run_board_pipeline` is now compiled into the native library, with composed
 schematic, electrical, PCB, document and audit stages. Its contracts compare
@@ -200,10 +201,15 @@ all 49 live-authored carrier/devkit circuit snapshots with canonical hardware IR
 exercise real KiCad connectivity/ERC, and reject missing mandatory stages.
 The caller must open the part catalog before authoring. The native full-board
 CLI installs reviewed ledger providers after loading actual board inputs.
-Missing declarations or manifests fail explicitly. Source-audit correctness,
-performance and final clean-tree acceptance remain in progress; native board
-construction alone is not a complete acceptance result. Coverage lint uses
-every wired-sheet part, including unplaced parts.
+Missing declarations or manifests fail explicitly. Clean full-render acceptance
+now passes, with all 226 CTests having successful final coverage (222 from the
+full run plus four corrected harness reruns, not a single 226/226 run).
+See `benchmarks/2026-10-01-migration-acceptance.json` for pinned timings and scope.
+Source auditing remains the dominant runtime cost. Advisory return-path,
+golden-drift and coverage findings remain visible; neither board is fully routed
+or claimed fabrication-ready. Coverage lint uses every wired-sheet part,
+including unplaced parts. Successful migration does not certify every historical
+hardware or generated-firmware design decision.
 
 Firmware source provenance now reads canonical circuit JSON and compiled factory
 registrations rather than checking for Python constructors. Independent source

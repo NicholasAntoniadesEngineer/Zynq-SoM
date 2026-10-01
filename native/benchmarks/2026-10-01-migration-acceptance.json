@@ -1,0 +1,65 @@
+{
+  "baseline_commit": "0e9bbc913bab77f9cd228940db2a332d25d6bfa1",
+  "native_commit": "29d43472d1decd568a72620f7cd39dc44149e083",
+  "scope": "Complete default-output board command with full renders and all mandatory gates; compilation excluded",
+  "baseline_receipt": "2026-10-01-full-render.json",
+  "native_worktree": "/Users/nicholasantoniades/.codex/worktrees/migration-acceptance/Zynq-SoM",
+  "private_receipt_directory": "/private/tmp/schgen-acceptance-29d4.Wid4xE",
+  "compile": {
+    "result": "PASS",
+    "wall_seconds": 132.17,
+    "user_seconds": 249.18,
+    "system_seconds": 10.95,
+    "configuration": "Fresh Release schgen target, two workers, no compiler/object cache; existing zlib-ng reused; configure/catalog preparation excluded",
+    "binary_sha256": "8767f766c5228849d1ff4d7470d85d9ca7aa3e2d56f78ef49a172fd7d7e53185"
+  },
+  "tests": {
+    "total": 226,
+    "full_run_passed": 222,
+    "full_run_failed": 4,
+    "full_run_wall_seconds": 1019.07,
+    "corrected_harness_rerun_passed": 4,
+    "corrected_harness_rerun_wall_seconds": 49.76,
+    "production_changes_between_runs": false,
+    "claim": "All 226 have successful final coverage, not a single 226/226 run"
+  },
+  "renders": {
+    "fresh_expected_pngs": 65,
+    "fresh_schematic_pngs": 49,
+    "fresh_board_views": 16,
+    "verification": "Every expected PNG newer than its corresponding run-start marker; 37 carrier sheet hashes identical to prior full-render-timing proof, 12 devkit sheet hashes identical to reviewed title-verified proofs",
+    "board_view_pixels": [1568, 1176],
+    "visual_scope": "Prior whole-page reviews apply to all 49 byte-identical schematic PNGs; current top and bottom views inspected for both boards. Remaining board angles checked for freshness/dimensions, not visual equivalence"
+  },
+  "samples": [
+    {
+      "board": "carrier", "verdict": "PASS", "exit_code": 0,
+      "wall_seconds": 326.69, "user_seconds": 789.08, "system_seconds": 134.44,
+      "source_audit_seconds": 218.841234, "sheets": 37,
+      "registered_transforms": 155, "audited_cpp_files": 66,
+      "python_baseline_wall_seconds": 757.53, "python_baseline_verdict": "PASS",
+      "time_change_percent": -56.87431520863859,
+      "non_unrouted_drc_errors": 0, "unrouted_connections": 499,
+      "log_sha256": "d90d12c2b48fc2cb6760ff4e73da477f8606ad0f8b382f08a2348ccaebffc9be"
+    },
+    {
+      "board": "devkit_mini", "verdict": "PASS", "exit_code": 0,
+      "wall_seconds": 275.11, "user_seconds": 609.31, "system_seconds": 106.20,
+      "source_audit_seconds": 206.342904, "sheets": 12,
+      "registered_transforms": 155, "audited_cpp_files": 66,
+      "python_baseline_wall_seconds": 77.29, "python_baseline_verdict": "FAIL",
+      "time_change_percent": 255.945141674214,
+      "non_unrouted_drc_errors": 0, "unrouted_connections": 413,
+      "log_sha256": "0f8f40a5bd694396883c0ef47060d518d2812c94de2dba921da33aae4b06ec8a"
+    }
+  ],
+  "limitations": [
+    "One observation per native board, sequentially October 1; no OS cache flush; agents paused heavy jobs.",
+    "Python measurements are reused from the exact pinned historical receipt, not rerun or substituted.",
+    "Revision workloads differ; this is not a same-input language-only speedup. Python devkit fails two design gates and has fewer physical parts.",
+    "Native compiler-backed source audits dominate wall time; their time is included, not subtracted to invent a generation-only baseline.",
+    "Both native boards retain advisory return-path, golden-drift and contract-coverage findings; no golden blessing or new waiver was applied.",
+    "Successful mandatory gates do not mean fully routed, fabrication-ready hardware or successful compilation of all generated firmware.",
+    "Raw logs remain local; only concise timing/provenance metadata is published."
+  ]
+}
