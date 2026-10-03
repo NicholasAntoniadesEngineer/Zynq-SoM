@@ -1,5 +1,44 @@
 # carrier — project HISTORY (archived planning logs)
 
+## 2026-10-03 — production owned-group alternatives and bounded copy removal
+
+Wired the validated pilot ownership into compact board inputs and zone generation
+(autonomous, per full-autonomy directive). Missing manifests or disagreement
+with independent compiled requirements, live circuits, catalog pins or extracted
+hierarchy connectivity reject the input. Opaque immutable evidence grants no
+new side or movement permission. Every original shape/index is retained; local
+owned alternatives are appended without recursively searching their outputs.
+
+Integrated adapter tests pass 2,702 checks: 76 original pilot shapes retained,
+56 alternatives appended, all 132 shapes measured, and exactly 160,480 additional
+registered pose operations counted, including rejected searches. Shape metadata
+distinguishes measured/rejected/not-applicable evidence and retains named-terminal
+roles and sides. Same-size quality selection remains a separate integration.
+
+A new real-input/synthetic-pose regression first proved that breathing attached
+a declared bypass capacitor to a nearer wrong owner. Compact breathing now
+preserves declared membership across faces and propagates existing fixed-member
+constraints through the group. Twelve movement/fixed-face cases pass, together
+with default pose/count parity and partial/null evidence rejection. Other stages
+must still be reviewed for independent capacitor movement or slot exchange;
+this change alone does not guarantee final near-pin placement.
+
+Removed redundant occupancy-grid copies from compact shape seating. The public
+resizing adapters retain their copies; the internal synchronous read-only path
+borrows the grid already constructed with the current board dimensions. A shared
+internal declaration prevents signature drift. Isolated paired profiling on
+base `4df6db6e` removed 11,619 copies / 1,423,407 rectangle-record copies while
+retaining identical PCB bytes, receipts, candidate outcomes and fallback sequence.
+This is operation-count evidence, not a latency claim under concurrent workload.
+The 2.961 billion cell-index operations and 139-versus-18 reseat failure remain;
+the newer owned-alternative workload has not yet been profiled end to end.
+
+Nine integrated CTests passed after rebuilding affected consumers: owned adapter,
+adapter compiler census, owned breathing, through-hole/rounding breathing,
+borrowed-grid differential contracts, retry receipts, frozen default placement,
+policy closure and placement precision census. No full compact build acceptance,
+rendered-board improvement, new hardware limit or routing completion is claimed.
+
 ## 2026-10-03 — compact placement clearance and owned-group foundations
 
 Follow-up: the committed foundation at `8509df14` passed a complete default

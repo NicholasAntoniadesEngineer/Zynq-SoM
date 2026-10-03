@@ -1,4 +1,5 @@
 #include "schgen/pack_refine.hpp"
+#include "pack_refine_internal.hpp"
 
 #include "schgen/occupancy.hpp"
 #include "schgen/occupancy_precision.hpp"
@@ -108,9 +109,16 @@ RefineResult refine_pack_passes(
 static std::vector<SeatShapeHit> seat_shapes(
     const Occupancy& occupancy, double anchor_x, double anchor_y,
     const std::vector<SeatShapeCand>& cands, double board_w, double board_h,
-    double clear, QuantizationCounts* counts, bool keep_all) {
-    Occupancy working = occupancy;
-    working.set_board(board_w, board_h);
+    double clear, QuantizationCounts* counts, bool keep_all, bool board_is_current=false) {
+    // The public adapters permit a board-size override and must retain their
+    // private resized copy. Floorplan packing already constructed this exact
+    // board: its synchronous, read-only search can borrow the occupancy grid.
+    std::optional<Occupancy> resized;
+    if (!board_is_current) {
+        resized.emplace(occupancy);
+        resized->set_board(board_w, board_h);
+    }
+    const Occupancy& working=resized ? *resized:occupancy;
     std::vector<std::string> side_order;
     std::unordered_map<std::string, SeatShapeHit> best;
     std::vector<SeatShapeHit> all;
@@ -173,6 +181,16 @@ std::vector<SeatShapeHit> seat_shape_candidates(const Occupancy& occupancy,
     double board_w, double board_h, double clear, QuantizationCounts* counts) {
     return seat_shapes(occupancy,anchor_x,anchor_y,cands,board_w,board_h,clear,counts,true);
 }
+
+namespace floorplan_detail {
+// Internal bridge used only with the board dimensions of the supplied grid.
+// No reference or search result cache survives this call or an occupancy edit.
+std::vector<SeatShapeHit> seat_shape_candidates_on_current_board(const Occupancy& occupancy,
+    double anchor_x, double anchor_y, const std::vector<SeatShapeCand>& cands,
+    double board_w, double board_h, double clear, QuantizationCounts* counts) {
+    return seat_shapes(occupancy,anchor_x,anchor_y,cands,board_w,board_h,clear,counts,true,true);
+}
+} // namespace floorplan_detail
 
 double packing_area_lower_bound(const std::vector<std::vector<PackingAreaOption>>& bodies,
                                int top_mask, int bottom_mask) {

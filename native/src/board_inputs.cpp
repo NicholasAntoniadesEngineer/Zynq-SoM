@@ -140,6 +140,8 @@ PcbPlacementInput load_board_inputs(const ProjectPaths& paths,
         if (!fs::is_regular_file(dossier)) throw std::runtime_error(ref + ": cannot resolve return-path footprint dossier");
         result.return_path_footprints.emplace(ref, snapshot(dossier));
     }
+    if (options.compact_search)
+        result.owned_groups = resolve_owned_group_inputs(paths, circuits, result);
     return result;
 }
 }

@@ -22,6 +22,21 @@ void Placer::breathe(const std::string &phase) {
         checked_quantization_add(ctx.quantization,retreat_label);return breathe_retreat_steps(distance,breathe_step_mm);
     };
     double pc = ctx.clearance;
+    const bool compact = ctx.in.floorplan.compact_search;
+    std::map<std::string, std::string> declared_owner;
+    if (compact)
+        for (const auto &[sheet, evidence] : ctx.in.owned_groups) {
+            if (!evidence)
+                throw std::runtime_error("breathe: null trusted ownership for " + sheet);
+            for (const auto &row : owned_group_placements(*evidence)) {
+                if (!pos.count(row.owner) && !pos.count(row.cap))
+                    continue;
+                if (!pos.count(row.owner) || !pos.count(row.cap) ||
+                    ctx.by_ref.at(row.owner).sheet != sheet || ctx.by_ref.at(row.cap).sheet != sheet ||
+                    row.owner == row.cap || !declared_owner.emplace(row.cap, row.owner).second)
+                    throw std::runtime_error("breathe: incomplete or inconsistent owned group in " + sheet);
+            }
+        }
     std::vector<std::string> movable, fixed_parts;
     std::set<std::string> contracted;
     for (const auto &[sheet, p] : origins) {
@@ -45,6 +60,30 @@ void Placer::breathe(const std::string &phase) {
                          ctx.l4_exempt.count(r);
         (immovable ? fixed_parts : movable).push_back(r);
     }
+    if (compact && !declared_owner.empty()) {
+        std::set<std::string> locked(fixed_parts.begin(), fixed_parts.end());
+        // A relationship grants no extra movement permission. If either end
+        // is fixed, freeze its connected group rather than moving it indirectly
+        // or detaching its capacitor and assigning it to a nearer subject.
+        for (const auto &[cap, owner] : declared_owner) {
+            (void)cap;
+            if (!locked.count(owner) && pins(owner) < 3) locked.insert(owner);
+        }
+        bool changed;
+        do {
+            changed = false;
+            for (const auto &[cap, owner] : declared_owner)
+                if (locked.count(cap) || locked.count(owner)) {
+                    changed |= locked.insert(cap).second;
+                    changed |= locked.insert(owner).second;
+                }
+        } while (changed);
+        movable.erase(std::remove_if(movable.begin(), movable.end(), [&](const auto &r) {
+            if (!locked.count(r)) return false;
+            fixed_parts.push_back(r);
+            return true;
+        }), movable.end());
+    }
     if (movable.empty())
         return;
     // Trial search must not clear a fixed reservation or another component's
@@ -57,7 +96,6 @@ void Placer::breathe(const std::string &phase) {
     auto grid = [&](const std::string &r) -> BreatheGrid & {
         return side(r) == "bottom" ? bottom : top;
     };
-    const bool compact = ctx.in.floorplan.compact_search;
     auto opposite_grid = [&](const std::string &r) -> BreatheGrid & {
         return side(r) == "bottom" ? top : bottom;
     };
@@ -118,13 +156,19 @@ void Placer::breathe(const std::string &phase) {
     for (const auto &[sheet, refs] : by_sheet) {
         std::vector<std::string> subjects;
         for (const auto &r : refs)
-            if (pins(r) >= 3)
+            if (pins(r) >= 3 && !declared_owner.count(r))
                 subjects.push_back(r);
         if (subjects.empty())
             continue;
         std::map<std::string, std::set<std::string>> assigned;
         for (const auto &r : refs)
-            if (pins(r) < 3) {
+            if (pins(r) < 3 || declared_owner.count(r)) {
+                if (const auto owner = declared_owner.find(r); owner != declared_owner.end()) {
+                    if (std::find(subjects.begin(), subjects.end(), owner->second) == subjects.end())
+                        throw std::runtime_error("breathe: owned member lacks an eligible anchor: " + r);
+                    assigned[owner->second].insert(r);
+                    continue;
+                }
                 auto best = *std::min_element(
                     subjects.begin(), subjects.end(), [&](const auto &a, const auto &b) {
                         auto p = pos.at(r), pa = pos.at(a), pb = pos.at(b);

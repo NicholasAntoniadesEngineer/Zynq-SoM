@@ -210,6 +210,10 @@ PcbZoneResult build_pcb_zone_geometry(const PcbPlacementInput &in, ExecutionFail
         if (in.floorplan.compact_search && !edge && !conn_rot.count(sheet) &&
             !sheet_edges.count(sheet) && !connector_class.count(sheet))
             append_rigid_zone_orientations(ctx, g, sheet, shape(p, "base"));
+        if (in.floorplan.compact_search)
+            append_owned_group_zone_shapes(ctx, out, sheet, shape(p, "base"),
+                !templated && !edge && !conn_rot.count(sheet) &&
+                !sheet_edges.count(sheet) && !connector_class.count(sheet), &child);
         g.top_off[sheet] = p.top;
         g.bot_off[sheet] = p.bottom;
         g.zone_box[sheet] = {p.w, p.h};

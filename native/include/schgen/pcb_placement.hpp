@@ -1,6 +1,7 @@
 #pragma once
 #include "schgen/pcb_escape.hpp"
 #include "schgen/pcb_stage_templates.hpp"
+#include "schgen/pcb_owned_groups_adapter.hpp"
 
 namespace schgen {
 struct PcbPlacementExperiment;
@@ -18,12 +19,16 @@ struct PcbPlacementInput {
     JsonNode prior_escape_sidecar; // same snapshot supplies corridors and T2 coexistence
     bool two_side = true;
     std::shared_ptr<const PcbPlacementExperiment> experiment;
+    TrustedOwnedGroupInputs owned_groups; // compact-only, validated board inputs
 };
 struct PcbZoneResult {
     FloorplanZoneGeometry geometry;
     PcbFootprintPool footprints;
     std::vector<std::string> fallback_events;
     std::map<std::string, std::size_t> quantization_engagements;
+    // Sheet + stable shape index (zero also covers the implicit incumbent).
+    // Selector transport is a separate integration; no geometry is replaced.
+    std::map<FloorplanShapeKey, OwnedShapeQuality> owned_shape_quality;
 };
 using PcbPlacementPose = std::tuple<double, double, double, std::string>;
 enum class PcbZoneAccountingOwnership { Unspecified, IncludedInFloorplan, SeparateFromFloorplan };
