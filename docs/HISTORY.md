@@ -39,6 +39,16 @@ rollback correction; no claim of complete executed-event counts is made.
 Both runs, hashes, timings and scope limits are recorded in
 native/benchmarks/2026-10-03-child-halo-board-validation.json.
 
+The permanent SW7002 regression now loads an immutable, SHA-pinned projection
+of the archived shapes, member boxes and complete footprint pad nodes. It calls
+the real geometry producers rather than supplying a preconstructed child halo.
+Its 94 checks cover the actual bad gap, both punch policies, safe control,
+rotations, zero-halo mutation and default receipts without relying on today's
+hardware. This permits intentional hardware changes without rewriting historical
+goldens. The full archived-board replay executable, source, plan and original PCB
+hash remain unchanged as an explicit historical-input diagnostic. Both permanent
+child-halo test groups pass after integration.
+
 ## 2026-10-03 — ownership-safe compact corridor repair
 
 Compact final-frame corridor eviction now tries an independently legal move,

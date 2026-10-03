@@ -256,8 +256,14 @@ if(BUILD_TESTING)
     target_include_directories(schgen_pcb_child_halo_seed_contracts PRIVATE src)
     target_link_libraries(schgen_pcb_child_halo_seed_contracts PRIVATE schgen_core)
     target_compile_options(schgen_pcb_child_halo_seed_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror -ffp-contract=off)
-    add_test(NAME native_pcb_child_halo_seed_contracts COMMAND schgen_pcb_child_halo_seed_contracts
-        "${CMAKE_CURRENT_SOURCE_DIR}/.." "${CMAKE_CURRENT_SOURCE_DIR}/tests/data/compact_sw7002_seed_8212.txt")
+    # Full archived-board diagnostic: supply an unchanged historical board root
+    # explicitly. Deliberate hardware edits must not silently refresh its golden.
+    add_executable(schgen_pcb_child_halo_frozen_contracts tests/pcb_child_halo_frozen_contracts.cpp)
+    target_include_directories(schgen_pcb_child_halo_frozen_contracts PRIVATE src)
+    target_link_libraries(schgen_pcb_child_halo_frozen_contracts PRIVATE schgen_core)
+    target_compile_options(schgen_pcb_child_halo_frozen_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror -ffp-contract=off)
+    add_test(NAME native_pcb_child_halo_frozen_contracts COMMAND schgen_pcb_child_halo_frozen_contracts
+        "${CMAKE_CURRENT_SOURCE_DIR}/tests/data/compact_sw7002_geometry_8212.txt")
     add_executable(schgen_pcb_breathe_owned_groups_contracts tests/pcb_breathe_owned_groups_contracts.cpp)
     add_executable(schgen_pcb_breathe_sheet_exemption_contracts tests/pcb_breathe_sheet_exemption_contracts.cpp)
     target_include_directories(schgen_pcb_breathe_sheet_exemption_contracts PRIVATE src)

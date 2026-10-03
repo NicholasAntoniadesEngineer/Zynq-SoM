@@ -1,0 +1,78 @@
+FROZEN SW7002 CHILD-HALO REGRESSION
+
+Purpose
+The new pcb_child_halo_frozen_contracts.cpp is the durable correctness test.
+It does not load a project root, catalog, circuits, current footprints, current
+owned-alternative generator, or whole-board golden. Unrelated C1 hardware edits
+therefore cannot alter its inputs. It calls the production Engine constructor,
+Engine::fanout, Engine::zone_components, pcb_placement::turned and occupancy
+hashed/exhaustive paths. No Comp child or halo is manufactured as test input.
+
+Provenance (do not refresh this historical fixture from a newer design)
+The archived carrier candidate from 821226b5 has PCB SHA256
+3e2856ebb4807a4d3470b33780c40cc660c8c7c762cfd5ea2e90e0b2f6a1a98f.
+An isolated checkout of 51ba61d85cab6cf333c7b4137bf7cee0e89c6185 plus the
+child-halo correctness patch replayed the saved exact plan and matched that
+entire PCB hash, with compact-capable input loading: 2 owned groups/56 appended.
+The two selected resolved shapes were projected from that same input:
+  bringup_rails 56, bottom-a1/r270/owned-pins-forward, at board-local (3,16)
+  ethernet 0, asbuilt, at board-local (29,36)
+Board bounds 170x165; page origin (25,25). All 33 part offsets, extra/base
+rotations, mirror flags, and resolved per-part courtyard boxes are retained.
+The 10 referenced footprints retain their parsed courtyard bounds and ALL
+original pad nodes (including names, geometry, types/layers). Each FP row also
+records its original basename and SHA256 of sexpr_dumps(original document),
+before projection. These source hashes are provenance, not file lookup paths.
+Unneeded graphics/properties/models are omitted. The reader reconstructs a
+courtyard rectangle plus those pad nodes and asserts that Engine parsing yields
+the independently captured bounds, pin count and through-hole status.
+
+The projection file is frozen by SHA256:
+3feda34442f1ce747668443cdc56f4261df7f37ab06d1a05036004fae2d3d296
+The fixture format uses max_digits10-equivalent decimal output for shape/box
+values; quoted pad nodes use the existing sexpr_dumps serialization. The file
+is data, never executed. SHAPE/PART and FP/PAD records end in ENDSHAPE/ENDFP.
+
+Coverage
+Both punch policies use real Engine::zone_components. The archived SW7002 and
+C10005 courtyard poses independently assert gap 1.320 < 2 mm. The producer's
+top-face minority union (.55,.99,33.724,17.74) carries reach
+(1.55,2.05,0,2.05), and rejects the bad archived seat. Clearing only produced
+child reach/inset admits it again. Moving the switch block 2 mm away admits a
+safe control. All four production shape quarter-turns preserve child geometry,
+face and directional reach/inset. Compact-off produces zero child halos and
+the unchanged four pack_zone_component_precision4dp entries.
+
+Integration
+Register the new frozen test as the durable mandatory regression, passing the
+absolute fixture path. Keep pcb_child_halo_seed_contracts.cpp and
+compact_sw7002_seed_8212.txt as the full archived-board diagnostic. Their bytes
+and PCB golden are unchanged. That diagnostic is intentionally tied to the
+historical board input and should not be silently re-goldened or used as a
+current-hardware invariant after deliberate design changes.
+No CMake or production edits are included in this test-only supplement.
+
+Build/run (from the isolated checkout, with ABI-rebuilt schgen_core)
+c++ -std=c++17 -O2 -mmacosx-version-min=26.6 -Wall -Wextra -Wpedantic -Werror -ffp-contract=off -Inative/include -Inative/src native/tests/pcb_child_halo_frozen_contracts.cpp build/libschgen_core.a -lxml2 -o child_halo_frozen
+./child_halo_frozen native/tests/data/compact_sw7002_geometry_8212.txt
+
+Sanitizer run (include footprint/sexpr parsing in the instrumented path)
+c++ -std=c++17 -O1 -g -mmacosx-version-min=26.6 -fsanitize=address,undefined -fno-omit-frame-pointer -ffp-contract=off -Inative/include -Inative/src native/tests/pcb_child_halo_frozen_contracts.cpp native/src/floorplan_geometry.cpp native/src/occupancy.cpp native/src/pack.cpp native/src/pcb_placement_inputs.cpp native/src/pcb_scan.cpp native/src/sexpr.cpp build/libschgen_core.a -lxml2 -o child_halo_frozen_sanitized
+./child_halo_frozen_sanitized native/tests/data/compact_sw7002_geometry_8212.txt
+
+Scope limitation
+This is a historical geometry correctness regression, not a full new-board
+validation, constructor-quality proof, performance measurement or source audit.
+
+Verification receipt
+94 checks PASS under strict compilation, and from an empty working directory
+using only the absolute fixture path. ASan+UBSan PASS with the command above.
+An initial partial-instrumentation link omitted pcb_scan/sexpr and reported a
+libc++ vector container annotation mismatch in footprint_bbox_walk; including
+those parsing units resolves it without disabling any sanitizer checks.
+Negative control: link this same test against floorplan_geometry.cpp extracted
+from 51ba61d85cab6cf333c7b4137bf7cee0e89c6185 (before child-halo production).
+It exits 1 with "minority halo production regressed" as required.
+The full archived replay source and plan fixture retained SHA256 respectively:
+86f5e04994406f639dd667d0ba0ff866d4035037f8dc45d50c525a315c0b44d8
+cc110d031704eb71ad1201602d0ebcb36ba53d602f25e21ab70e3e80a85542ef
