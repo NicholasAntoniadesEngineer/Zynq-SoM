@@ -1,6 +1,7 @@
 #include "schgen/assembly_documents.hpp"
 #include "schgen/manufacturing_checks.hpp"
 #include "schgen/atomic_file.hpp"
+#include "schgen/board_policy.hpp"
 #include <algorithm>
 #include <cstdlib>
 #include <fstream>
@@ -96,6 +97,16 @@ void mutations(const fs::path& root,const fs::path& scratch){
     std::cout<<"frozen assembly/SI mutants and publication/error contracts passed\n";
 }
 void misc(const fs::path& root,const fs::path& scratch){
+    const auto native_pipeline=render_manufacturing_pipeline(native_board_pipeline_metadata());
+    require(native_pipeline.find(".py")==std::string::npos,"live native pipeline documentation has no obsolete Python source paths");
+    for(const auto* source:{"native/src/board_policy_metadata.cpp","native/src/native_audit_registry.cpp",
+                           "native/src/native_cpp_audits.cpp","native/src/manufacturing_pipeline.cpp"}) {
+        require(native_pipeline.find(source)!=std::string::npos,"live pipeline cites native authority: "+std::string(source));
+        require(fs::is_regular_file(root/source),"cited native authority exists: "+std::string(source));
+    }
+    auto native_output=scratch/"native-GEOMETRY_PIPELINE.md";
+    require(run_manufacturing_pipeline(native_board_pipeline_metadata(),native_output).second &&
+            read(native_output)==native_pipeline,"live native pipeline publication exact");
     const auto fixtures=root/"native/tests/data/manufacturing";auto pipeline=manufacturing_pipeline_from_json(parse_json_file((fixtures/"pipeline.json").string()));exact(render_manufacturing_pipeline(pipeline),fixtures/"pipeline.md",scratch/"pipeline.md");
     for(const auto& row:parse_json_file((fixtures/"fab.json").string()).array_value){const auto& n=field(row,"demand");ManufacturingBoardDemand d;auto get=[&](const std::string& k)->std::optional<double>{const auto& v=field(n,k);return v.kind==JsonKind::Null?std::nullopt:std::optional<double>(v.number_value);};d.min_trace_mm=get("min_trace_mm");d.min_clearance_mm=get("min_clearance_mm");d.min_drill_mm=get("min_drill_mm");d.min_via_dia_mm=get("min_via_dia_mm");d.min_via_annular_mm=get("min_via_annular_mm");d.min_hole_to_hole_mm=get("min_hole_to_hole_mm");d.pro_via_annular_mm=get("pro_via_annular_mm");d.n_segments=static_cast<std::size_t>(num(n,"n_segments"));d.n_vias=static_cast<std::size_t>(num(n,"n_vias"));d.n_drills=static_cast<std::size_t>(num(n,"n_drills"));const auto r=check_manufacturing_fab(d);require(r.ok==field(row,"ok").bool_value,"fab verdict");require(r.report()==str(row,"report"),"fab exact report: "+str(row,"name"));require(r.errors==strings(field(row,"errors")),"fab errors");}
     require(!assembly_verdict(JsonNode{},root).first,"absent assembly must fail");

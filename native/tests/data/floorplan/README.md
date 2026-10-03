@@ -1,5 +1,10 @@
 # Frozen floorplan contracts
 
+Documentation-only refresh (2026-10-03): the Markdown electrical source paths
+and the two carrier HDMI note citations now name the current native C++ producers.
+Only those expected text fields were updated; captured geometry, inputs, historical
+Python provenance, and timings remain unchanged.
+
 Captured on 2026-09-18 by temporary, inline execution of the original
 `schgen/generate/floorplan.py` orchestration (last changed in `44b76af6`). Its existing native kernels were
 enabled. No new Python source was added, and the native floorplan implementation

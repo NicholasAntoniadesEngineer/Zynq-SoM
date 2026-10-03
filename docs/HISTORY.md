@@ -1,5 +1,52 @@
 # carrier — project HISTORY (archived planning logs)
 
+## 2026-10-03 — compact query reuse and complete post-pipe validation
+
+(Autonomous, per full-autonomy directive.) Reuse exact duplicate occupancy
+queries only inside a single compact seat-search invocation. The occupancy,
+anchor and board are invariant there; the key preserves every varying geometry
+field, ordered children and scalar bits. All estimator alternatives and their
+shape-key operations remain. Malformed inputs bypass reuse, exceptions are not
+cached, and counter-overflow risk re-executes the real query. No saved-work counts
+are injected into the ledger. Public/default searches retain their old behavior.
+Seven integrated contract groups passed, including both-board exact output,
+frozen floorplan/occupancy precision and independent query-accounting oracles.
+The private pre-strict-facing carrier census removed 288,715,276 actual cell
+checks with byte-identical PCB output; a fresh latest-state profile is separate
+evidence, not implied by that older run. Raw cell-counter microbenchmark pairs
+and their slower null-sink cases are preserved in native/benchmarks.
+
+Complete no-render board runs at 821226b5 prove the transactional AST auditor
+passes both 68-file source audits. Devkit passes all mandatory gates. The compact
+carrier remains rejected: SW7002 has 1.320 mm fanout clearance against 2 mm, and
+154 interior reseats exceed the ceiling of 18. Its experimental 170x165 mm board
+does not replace the accepted 168x163 mm incumbent. Power-facing and non-unrouted
+DRC pass; advisory findings and skipped rendering remain explicitly reported.
+The receipt in native/benchmarks/2026-10-03-ast-pipe-board-validation.json records
+hashes and timings. Concurrent validation timings are not a controlled speed
+comparison; no historical Python result was relabeled or remeasured.
+
+Latest-state follow-up at 51ba61d8 reproduced the exact experimental PCB hash
+and 170x165 mm outline. Actual cell calls fell from 10,312,518,948 to
+9,502,591,256 (809,927,692 fewer; 7.85%), while every successful shape-key call
+remained (410,359). The recorded model times, 362.07 and 341.50 seconds, used
+different harnesses under concurrent load and are not a controlled speedup.
+See native/benchmarks/2026-10-03-compact-seat-memo-latest.json for full scope.
+
+The SW7002 failure was independently reproduced from the exact saved plan and
+final PCB hash. Its 1.32 mm gap to C10005 exists at initial emission and is
+unchanged through every subsequent movement stage. The bottom-primary mixed
+shape carries the top minority face as a child reservation with zero fanout
+reach/inset; the actual occupancy predicate therefore accepts this illegal
+pair. Correcting child geometry transport, rather than a hand-tuned component
+translation or disabling the owned alternative, is the next implementation.
+
+Documentation provenance is also corrected at its C++ producers: fresh output
+cites native sources and describes the outline as the smallest feasible result
+found by the bounded aspect/grid search and greedy order, not a global minimum.
+Only exact prose and embedded Markdown length fields changed in reference
+fixtures; geometry, operation receipts and historical timing provenance remain.
+
 ## 2026-10-03 — overlap compiler output with transactional AST parsing
 
 The source auditor now parses through a bounded stdout pipe while Clang emits

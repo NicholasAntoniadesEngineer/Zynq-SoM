@@ -25,7 +25,7 @@ std::string render_floorplan_md(const FloorplanPlan& plan,const std::vector<Floo
     line("- SoM outline + DF40 positions: `"+plan.som_source+"` (Edge.Cuts bbox + J1/J2/J3 footprints, parsed live)");
     line("- block sizes: per-part courtyards (`parts/<MPN>/<MPN>.kicad_mod` F.CrtYd; KiCad-standard footprints from the dims in their names), big parts raw + small parts x"+number(plan.factor)+" routing factor");
     line("- edge pinning + zones: connector parts in each sheet netlist + linker J1/J2/J3 bindings (incl. `expect=` deferrals)");
-    line("- electrical notes: `schgen/constraints.py` (JLC04161H-7628), `schgen/powertree.py` analysis, typed ports (1.8V SDIO)");
+    line("- electrical notes: `native/src/constraints.cpp` (JLC04161H-7628), `native/src/power_checks.cpp` analysis, typed ports (1.8V SDIO)");
     line();line("## Extracted SoM geometry");line();
     line("SoM outline: **"+number(plan.som.w)+" x "+number(plan.som.h)+" mm**. The DF40 mezzanine connectors sit on the SoM's bottom copper; the carrier-top view below mirrors their X coordinate (bottom view). Verify mate orientation against the DF40 datasheet before committing footprints.");
     line();line("| conn | SoM PCB `(at)` | carrier-top view (SoM-rel) | pad extent |");line("|---|---|---|---|");
@@ -54,7 +54,7 @@ std::string render_floorplan_md(const FloorplanPlan& plan,const std::vector<Floo
     line();line("## Interior blocks (zone = dominant SoM connector side, or the power cluster)");line();
     line("| sheet | anchor | block (x, y, w x h) | parts | est mm2 | notes |");line("|---|---|---|---|---|---|");
     for(const auto* p:interior){const auto& b=*p;line("| "+b.name+" | "+b.zone+" | ("+number(b.x)+", "+number(b.y)+", "+number(b.w)+" x "+number(b.h)+") | "+std::to_string(b.n_parts)+" | "+number(b.area)+" | "+join(note_of[b.name]," ")+" |");}
-    line();line("## Routing constraint classes (JLC04161H-7628 — from constraints.py)");line();
+    line();line("## Routing constraint classes (JLC04161H-7628 — from native/src/constraints.cpp)");line();
     struct Class{std::set<std::string> nets;std::string kind;int impedance=0;bool paired=false;};
     std::map<std::string,Class> classes;
     std::vector<const CircuitSheetIr*> sheets;

@@ -451,6 +451,13 @@ void frozen(const std::filesystem::path& dir,const std::string& name,bool geomet
     require(true,name+": byte exact SVG");
     std::ifstream mdfile(dir/(name+".md"));const std::string md((std::istreambuf_iterator<char>(mdfile)),{});
     const auto markdown=render_floorplan_md(e.plan,notes,in);
+    require(markdown.find(".py")==std::string::npos,name+": current floorplan Markdown has no obsolete Python source paths");
+    require(markdown.find("native/src/constraints.cpp")!=std::string::npos &&
+            markdown.find("native/src/power_checks.cpp")!=std::string::npos,
+            name+": current floorplan cites native electrical producers");
+    for(const auto& note:notes)
+        require(note.short_text.find(".py")==std::string::npos && note.long_text.find(".py")==std::string::npos,
+                name+": current placement notes have no obsolete Python source paths");
     if(markdown!=md) {
         std::size_t k=0;while(k<std::min(markdown.size(),md.size())&&markdown[k]==md[k])++k;
         throw std::runtime_error(name+": Markdown bytes at "+std::to_string(k)+": "+markdown.substr(k,100)+" expected "+md.substr(k,100));

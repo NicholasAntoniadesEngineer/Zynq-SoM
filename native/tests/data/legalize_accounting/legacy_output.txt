@@ -414,7 +414,7 @@ BOARD 0
 "punch_free" 1 0
 "board_w" 2 0x1.9p+6
 "board_h" 2 0x1.9p+6
-"outline_note" 3 "SoM 50x42 + 7mm halo + 11mm connector band/edge -> core 86x78; component area 1141mm2 / 0.6 fill -> area floor 78x71; + 3mm perimeter keepout -> 95x85 mm (rounded up to 5mm grid); then SMALLEST-AREA search over aspects 1, 1.1, 1.1176, 1.2, 1.3, 1.4 -> 100x100 mm (the smallest board holding the REAL 2-sided packed blocks with the estimated cross-subsystem airwire 1553 <= LAW-5 budget 2400 mm — honest routing headroom, the gate is not relaxed), SoM 50x42 centered"
+"outline_note" 3 "SoM 50x42 + 7mm halo + 11mm connector band/edge -> core 86x78; component area 1141mm2 / 0.6 fill -> area floor 78x71; + 3mm perimeter keepout -> 95x85 mm (rounded up to 5mm grid); then bounded search over aspects 1, 1.1, 1.1176, 1.2, 1.3, 1.4 -> 100x100 mm (the smallest feasible board FOUND by this bounded aspect/grid search and greedy packing order, not a global minimum; holding the REAL 2-sided packed blocks with the estimated cross-subsystem airwire 1553 <= LAW-5 budget 2400 mm — honest routing headroom, the gate is not relaxed), SoM 50x42 centered"
 "accounting" 5 3 "decisions" 4 92 5 7 "step" 3 "floorplan.sizing"
 "kind" 3 "STEP"
 "name" 3 "floorplan.sizing"
@@ -2678,7 +2678,7 @@ BOARD 1
 "punch_free" 1 0
 "board_w" 2 0x1.5p+7
 "board_h" 2 0x1.46p+7
-"outline_note" 3 "SoM 50x42 + 7mm halo + 11mm connector band/edge -> core 86x78; component area 6062mm2 / 0.6 fill -> area floor 123x111; + 3mm perimeter keepout -> 130x120 mm (rounded up to 5mm grid); then SMALLEST-AREA search over aspects 1, 1.0833, 1.1, 1.2, 1.3, 1.4 -> 168x163 mm (the smallest board holding the REAL 2-sided packed blocks with the estimated cross-subsystem airwire 16194 <= LAW-5 budget 16383 mm — honest routing headroom, the gate is not relaxed), SoM 50x42 centered"
+"outline_note" 3 "SoM 50x42 + 7mm halo + 11mm connector band/edge -> core 86x78; component area 6062mm2 / 0.6 fill -> area floor 123x111; + 3mm perimeter keepout -> 130x120 mm (rounded up to 5mm grid); then bounded search over aspects 1, 1.0833, 1.1, 1.2, 1.3, 1.4 -> 168x163 mm (the smallest feasible board FOUND by this bounded aspect/grid search and greedy packing order, not a global minimum; holding the REAL 2-sided packed blocks with the estimated cross-subsystem airwire 16194 <= LAW-5 budget 16383 mm — honest routing headroom, the gate is not relaxed), SoM 50x42 centered"
 "accounting" 5 3 "decisions" 4 104 5 7 "step" 3 "floorplan.sizing"
 "kind" 3 "STEP"
 "name" 3 "floorplan.sizing"
@@ -4372,7 +4372,7 @@ BOARD 2
 "punch_free" 1 0
 "board_w" 2 0x1.9p+6
 "board_h" 2 0x1.9p+6
-"outline_note" 3 "SoM 50x42 + 7mm halo + 11mm connector band/edge -> core 86x78; component area 1141mm2 / 0.6 fill -> area floor 78x71; + 3mm perimeter keepout -> 95x85 mm (rounded up to 5mm grid); then SMALLEST-AREA search over aspects 1, 1.1, 1.1176, 1.2, 1.3, 1.4 -> 100x100 mm (the smallest board holding the REAL 2-sided packed blocks with the estimated cross-subsystem airwire 1553 <= LAW-5 budget 2400 mm — honest routing headroom, the gate is not relaxed), SoM 50x42 centered"
+"outline_note" 3 "SoM 50x42 + 7mm halo + 11mm connector band/edge -> core 86x78; component area 1141mm2 / 0.6 fill -> area floor 78x71; + 3mm perimeter keepout -> 95x85 mm (rounded up to 5mm grid); then bounded search over aspects 1, 1.1, 1.1176, 1.2, 1.3, 1.4 -> 100x100 mm (the smallest feasible board FOUND by this bounded aspect/grid search and greedy packing order, not a global minimum; holding the REAL 2-sided packed blocks with the estimated cross-subsystem airwire 1553 <= LAW-5 budget 2400 mm — honest routing headroom, the gate is not relaxed), SoM 50x42 centered"
 "accounting" 5 3 "decisions" 4 92 5 7 "step" 3 "floorplan.sizing"
 "kind" 3 "STEP"
 "name" 3 "floorplan.sizing"

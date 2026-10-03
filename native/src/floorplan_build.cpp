@@ -369,8 +369,8 @@ FloorplanPlan Engine::run() {
     calc("sizing_winner",jvalue(outline_text(plan.board_w,plan.board_h)),std::move(wi));
     std::string aspect_text;
     for (double a:aspects) { if (!aspect_text.empty()) aspect_text+=", "; aspect_text+=number(a); }
-    plan.outline_note=seed_note+"; then SMALLEST-AREA search over aspects "+aspect_text+" -> "+outline_text(plan.board_w,plan.board_h)+
-        " mm (the smallest board holding the REAL 2-sided packed blocks with the estimated cross-subsystem airwire "+number(std::get<3>(best),0)+
+    plan.outline_note=seed_note+"; then bounded search over aspects "+aspect_text+" -> "+outline_text(plan.board_w,plan.board_h)+
+        " mm (the smallest feasible board FOUND by this bounded aspect/grid search and greedy packing order, not a global minimum; holding the REAL 2-sided packed blocks with the estimated cross-subsystem airwire "+number(std::get<3>(best),0)+
         " <= LAW-5 budget "+number(std::get<4>(best),0)+" mm — honest routing headroom, the gate is not relaxed), SoM "+
         outline_text(plan.som.w,plan.som.h)+" centered";
     return std::move(plan);
