@@ -11,6 +11,7 @@
 #include <unordered_map>
 #include <utility>
 #include <vector>
+#include <array>
 
 namespace schgen {
 namespace {
@@ -122,14 +123,67 @@ static std::vector<SeatShapeHit> seat_shapes(
     std::vector<std::string> side_order;
     std::unordered_map<std::string, SeatShapeHit> best;
     std::vector<SeatShapeHit> all;
+    struct QueryResult {
+        const SeatShapeCand* cand;
+        std::optional<Pose> pose;
+        std::array<std::size_t,4> executed;
+    };
+    // These are observations of the three scalars executed by place_near,
+    // never receipt writes. Re-execute a hit if it could mask a current counter
+    // overflow; the original scalar then throws with its actual failed prefix.
+    const auto query_counts=[&] {
+        std::array<std::size_t,4> out{};
+        if (counts) {
+            std::size_t i=0;
+            for (const auto* name:{"occupancy_axis_count","occupancy_frontier_key1dp","occupancy_cell_index","occupancy_shape_key4dp"}) {
+                const auto p=counts->find(name);
+                if (p!=counts->end()) out[i]=p->second;
+                ++i;
+            }
+        }
+        return out;
+    };
+    const bool cache_scope=board_is_current&&std::isfinite(anchor_x)&&std::isfinite(anchor_y)
+        &&std::isfinite(board_w)&&std::isfinite(board_h)&&std::isfinite(clear)
+        &&board_w>0&&board_h>0&&clear>=0;
+    // The remaining complete-key inputs (anchor, board and occupancy including
+    // reservations/grid settings) are invariant during THIS synchronous call.
+    // Never share results across calls, occupancy edits, maps or threads. Side
+    // and index label estimator alternatives, not occupancy queries: keep them.
+    std::vector<QueryResult> queries;
     for (const auto& cand : cands) {
         if (cand.w > board_w - 2.0 * clear || cand.h > board_h - 2.0 * clear) {
             continue;
         }
-        auto pos = working.place_near(anchor_x, anchor_y, cand.w, cand.h,
-                                      cand.reach, cand.inset, cand.mask,
-                                      cand.comps, cand.win_x0, cand.win_x1,
-                                      cand.win_y0, cand.win_y1, counts);
+        auto prior=queries.end();
+        const bool cacheable=cache_scope&&floorplan_detail::cacheable_query_geometry(cand);
+        const auto before=cacheable ? query_counts():std::array<std::size_t,4>{};
+        if (cacheable) prior=std::find_if(queries.begin(),queries.end(),[&](const auto& q) {
+            return floorplan_detail::same_query_geometry(cand,*q.cand);
+        });
+        if (prior!=queries.end()) for (std::size_t i=0;i<before.size();++i)
+            if (prior->executed[i]>std::numeric_limits<std::size_t>::max()-before[i]) {
+                prior=queries.end(); break;
+            }
+        // A successful hit still calls the shape scalar below. Preserve the
+        // original query prefix if that mandatory scalar is already exhausted.
+        if (prior!=queries.end()&&prior->pose&&before[3]==std::numeric_limits<std::size_t>::max())
+            prior=queries.end();
+        std::optional<Pose> pos;
+        if (prior!=queries.end()) pos=prior->pose;
+        else {
+            pos=working.place_near(anchor_x, anchor_y, cand.w, cand.h,
+                                  cand.reach, cand.inset, cand.mask,
+                                  cand.comps, cand.win_x0, cand.win_x1,
+                                  cand.win_y0, cand.win_y1, counts);
+            // Store completed successes AND misses. Exceptions propagate with
+            // their actual executed prefix; no saved-work receipts are added.
+            if (cacheable) {
+                auto executed=query_counts();
+                for (std::size_t i=0;i<executed.size();++i) executed[i]-=before[i];
+                queries.push_back({&cand,pos,executed});
+            }
+        }
         if (!pos.has_value()) {
             continue;
         }

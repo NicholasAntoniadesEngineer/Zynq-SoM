@@ -1,0 +1,111 @@
+{
+  "source_commit": "821226b5fcae6744c6af1e0a0d837a3e37c5abae",
+  "branch": "codex/two-sided-layout",
+  "mode": "board --no-render --timing; carrier additionally --compact-search",
+  "validated_at": "2026-10-03",
+  "source_audit_both": {
+    "status": "PASS",
+    "files": 68,
+    "constants": 75,
+    "registered_transforms": 155
+  },
+  "runs": [
+    {
+      "project": "devkit_mini",
+      "output_directory": "/private/tmp/devkit-8212-gates.9hB8Mj",
+      "board_ok": true,
+      "complete": true,
+      "sheets": 12,
+      "non_unrouted_drc_errors": 0,
+      "unrouted_connections": 413,
+      "mandatory_failures": [],
+      "advisory_failures": [
+        "return_path",
+        "contract_coverage_lint"
+      ],
+      "skipped": [
+        "sheet_render",
+        "render3d",
+        "manual",
+        "scfw"
+      ],
+      "seconds": {
+        "process_wall": 205.01,
+        "pcb_input_loading_and_netlist_validation": 1.550236,
+        "pcb_build_model_with_internal_checks": 0.896216,
+        "pcb_render_text": 0.014471,
+        "source_audit": 162.263578,
+        "sum_of_measured_scopes_not_process_wall": 204.40447
+      },
+      "sha256": {
+        "log": "6c172c42b7e6e04c80fa5a45b199cc6a4a7eff7649ef6bca23c785169e19a9f4",
+        "board_verdicts": "1a6713ddce1b9f21aa8ac25b84900130c3496b7940330de471e1ffb52c536014",
+        "pcb": "c55c085789a3d262a6bb9233bd73cb2d4e7f5b0bba425c5ddebf4f9ced2314c2"
+      }
+    },
+    {
+      "project": "carrier",
+      "output_directory": "/private/tmp/carrier-8212-compact-gates.bhqoJl",
+      "board_ok": false,
+      "complete": true,
+      "sheets": 37,
+      "experimental_dimensions_mm": [
+        170,
+        165
+      ],
+      "accepted_incumbent_dimensions_mm": [
+        168,
+        163
+      ],
+      "non_unrouted_drc_errors": 0,
+      "unrouted_connections": 499,
+      "mandatory_failures": [
+        "fanout",
+        "pcb_geometry",
+        "fallbacks"
+      ],
+      "advisory_failures": [
+        "return_path",
+        "golden",
+        "contract_coverage_lint"
+      ],
+      "skipped": [
+        "sheet_render",
+        "render3d"
+      ],
+      "failures": {
+        "fanout": {
+          "reference": "SW7002",
+          "sheet": "bringup_rails",
+          "nearest": "C10005",
+          "nearest_sheet": "ethernet",
+          "clearance_mm": 1.32,
+          "required_mm": 2
+        },
+        "fallbacks": {
+          "interior_reseat_retry": 154,
+          "ceiling": 18
+        }
+      },
+      "seconds": {
+        "process_wall": 578.35,
+        "pcb_input_loading_and_netlist_validation": 1.616564,
+        "pcb_build_model_with_internal_checks": 362.068517,
+        "pcb_render_text": 0.033326,
+        "source_audit": 157.382143,
+        "sum_of_measured_scopes_not_process_wall": 578.293524
+      },
+      "sha256": {
+        "log": "0201d02c2934eb41face3c6cd3152a68816b637378479643fbf545f453905b0c",
+        "board_verdicts": "ddf0b05b4700b5c4669cd339742aadfc6300d73308bdd8a07d51da9c79523ec2",
+        "pcb": "3e2856ebb4807a4d3470b33780c40cc660c8c7c762cfd5ea2e90e0b2f6a1a98f"
+      }
+    }
+  ],
+  "limitations": [
+    "Concurrent host workload: these validation runs are not controlled before/after timing comparisons.",
+    "No new images reviewed; no full-render acceptance. Carrier is rejected, larger than the retained 168x163 mm incumbent, and is not a space improvement.",
+    "Source audit PASS does not clear advisory findings, skipped outputs, unrouted connections, or physical-board failures.",
+    "Historical Python comparisons remain pinned exclusively to 0e9bbc913bab77f9cd228940db2a332d25d6bfa1. No new Python run or language speedup is claimed."
+  ]
+}

@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <cmath>
 #include <unordered_map>
+#include <map>
 
 // Independent prechange search from HEAD 4df6db6e, including board overrides.
 namespace schgen {
@@ -97,6 +98,51 @@ std::string signature(const std::vector<SeatShapeHit>& hits) {
     return s.str();
 }
 SeatShapeCand shape(int i) { return {i,3,2,{},{},1,i%2 ? "label-B":"label-A",{},-30,60,-30,60}; }
+// Independent oracle: serialized scalar bytes, not the production comparator.
+// The grid/reservations are immutable and this table dies within one seat call.
+// Cold counters here cannot overflow; seeded overflow prefixes are tested below
+// and duplicate near-MAX guards are covered by compact_seat_memo_contracts.
+QuantizationCounts unique_query_counts(const Occupancy& occ,
+    const std::vector<SeatShapeCand>& cands,double ax,double ay) {
+    QuantizationCounts counts;
+    std::map<std::string,std::optional<Pose>> seen;
+    for(const auto& c:cands) {
+        if(c.w>19 || c.h>17) continue; // Same existing 20x18 / .5 filter.
+        std::vector<double> values{ax,ay,20,18,.5,c.w,c.h,
+            c.reach.w,c.reach.e,c.reach.n,c.reach.s,
+            c.inset.w,c.inset.e,c.inset.n,c.inset.s,
+            c.win_x0,c.win_x1,c.win_y0,c.win_y1};
+        std::vector<int> masks{c.mask};
+        bool eligible=c.w>0 && c.h>0 && c.mask>0
+            && c.win_x0<=c.win_x1 && c.win_y0<=c.win_y1;
+        for(const auto& p:c.comps) {
+            values.insert(values.end(),{p.dx,p.dy,p.w,p.h});
+            masks.push_back(p.mask);
+            eligible=eligible && p.w>0 && p.h>0 && p.mask>0;
+        }
+        for(double v:values) if(!std::isfinite(v)) eligible=false;
+        std::string key;
+        if(eligible) {
+            const auto append=[&](const auto& v) {
+                key.append(reinterpret_cast<const char*>(&v),sizeof(v));
+            };
+            append(c.comps.size());
+            for(double v:values) append(v); // Exact bits, including signed zero.
+            for(int mask:masks) append(mask); // Ordered child masks, not a set.
+        }
+        auto prior=eligible ? seen.find(key):seen.end();
+        std::optional<Pose> pos;
+        if(prior!=seen.end()) pos=prior->second;
+        else {
+            pos=occ.place_near(ax,ay,c.w,c.h,c.reach,c.inset,c.mask,c.comps,
+                c.win_x0,c.win_x1,c.win_y0,c.win_y1,&counts);
+            if(eligible) seen.emplace(std::move(key),pos);
+        }
+        if(pos) (void)occupancy_shape_key4dp(
+            std::fabs(pos->x+c.w/2.0-ax)+std::fabs(pos->y+c.h/2.0-ay),&counts);
+    }
+    return counts;
+}
 void equal(const Occupancy& occ,const std::vector<SeatShapeCand>& c,double ax=8,double ay=8) {
     const auto before=occ.rect_count();
     QuantizationCounts baseline,candidate,again;
@@ -106,7 +152,11 @@ void equal(const Occupancy& occ,const std::vector<SeatShapeCand>& c,double ax=8,
     require(occ.rect_count()==before,"occupancy mutated");
     require(signature(seat_shape_candidates_on_current_board(occ,ax,ay,c,20,18,.5,&again))==signature(got),"repeat poses changed");
     require(again==candidate,"repeat counts changed");
-    require(candidate==baseline,"borrowed search must preserve every operation receipt");
+    require(candidate==unique_query_counts(occ,c,ax,ay),"borrowed receipts must count unique actual queries and every successful shape scalar");
+    QuantizationCounts public_counts;
+    require(signature(seat_shape_candidates(occ,ax,ay,c,20,18,.5,&public_counts))==signature(expected),
+            "public full hits differ from frozen reference");
+    require(public_counts==baseline,"public full-candidate receipts changed");
     QuantizationCounts old_sides,new_sides;
     require(signature(reference_seat_shape_sides(occ,ax,ay,c,20,18,.5,&old_sides))==
             signature(seat_shape_sides(occ,ax,ay,c,20,18,.5,&new_sides)),"legacy side output changed");
@@ -150,6 +200,22 @@ void children() {
     occ.add(0,0,20,18,{},{},1,{}); equal(occ,{a,b,c});
     occ.remove(0,0,20,18,{},{},1,{}); equal(occ,{a,b,c});
 }
+void malformed_bypass() {
+    Occupancy occ(20,18,.5,8,0,1,.05);
+    std::vector<SeatShapeCand> malformed;
+    auto c=shape(0); c.w=-1; malformed.push_back(c);
+    c=shape(0); c.comps={{0,0,0,1,2}}; malformed.push_back(c);
+    c=shape(0); c.win_x0=10; c.win_x1=5; malformed.push_back(c);
+    c=shape(0); c.win_x0=std::numeric_limits<double>::quiet_NaN(); malformed.push_back(c);
+    c=shape(0); c.win_x1=std::numeric_limits<double>::infinity(); malformed.push_back(c);
+    for(const auto& bad:malformed) {
+        equal(occ,{bad,bad});
+        QuantizationCounts expected,actual;
+        (void)reference_seat_shape_candidates(occ,8,8,{bad,bad},20,18,.5,&expected);
+        (void)seat_shape_candidates_on_current_board(occ,8,8,{bad,bad},20,18,.5,&actual);
+        require(expected==actual,"malformed/nonfinite duplicate must execute both original queries");
+    }
+}
 void halo_relaxation() {
     for(double clearance:{-.25,0.,.5}) for(int mask:{1,2,3}) {
         Occupancy occ(20,18,clearance,12,4,1,.05);
@@ -187,7 +253,7 @@ void matrix() {
 }
 int main() {
     try {
-        board_override();overflow();children();halo_relaxation();matrix();
+        board_override();overflow();children();malformed_bypass();halo_relaxation();matrix();
         std::cout << "compact borrowed-occupancy search contracts PASS\n";
         return 0;
     } catch(const std::exception& e) { std::cerr << e.what() << '\n';return 1; }
