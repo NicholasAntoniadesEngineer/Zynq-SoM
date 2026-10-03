@@ -12,13 +12,23 @@ are not distributed with these fixtures. Reproducible contracts and pinned
 hashes below provide the repository evidence. No original repository expected
 fixture changes.
 
-Pinned SHA256:
+Original capture SHA256 (historical provenance):
 
 - legacy-helper.txt (49,699 bytes): 1ee7af1cd0ef4f10d62b7853ec778e9af657130ecdce1ab40fd4fb174bad47d4
 - legacy-board.txt (3,447,332 bytes): 4a8ccddf3370c06ae41d7ce3106b21dafa21107a821532b56c86275acdf756d2
 - legacy-edge.txt (187 bytes): 45754f69f5aca49c8661a7e60454064dcd3144b752f3b6318434c6e5389c4912
 - before-pack.cpp.txt: e6656c2b5022471c6e59d8ad1ecf3c40e2ae62476ed5ec4e7a3364c9d0e6cb2d
 - before-pack.hpp.txt: 17b1119a8fc4b0ac9078ce92c238970d64febe15a2a0cb73636e8b8e9645704d
+
+The reviewed 2026-10-03 documentation refresh changed only two outline-search
+prose strings in `legacy-board.txt`, clarifying that bounded search finds a
+feasible outline rather than proving a global minimum. Geometry, numbers,
+accounting and other output are unchanged. The current board fixture is
+3,447,516 bytes, SHA256
+`8b6e524085a49780b42a623f29c35acccb2f8fb52089c992e736cd7713b58e09`.
+The executable guard pins this current hash; all three output guards have
+mutation checks and retain full-file comparisons. Other hashes above remain
+current. Tests do not regenerate fixtures.
 
 Helper output encodes complete IEEE bits, seat records, ledger, members and
 audit ordering. Board output covers both carrier and devkit_mini complete model,

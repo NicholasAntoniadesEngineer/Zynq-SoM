@@ -19,6 +19,12 @@ Original source Git blobs:
 Baseline SHA-256:
 `f490998fde2b49b0ee9b14f879b7654dcdbf11c2edd489aaa41e35391b805f74`.
 
+The reviewed 2026-10-03 documentation refresh changed only outline-search prose,
+not geometry, numeric output or accounting. The current `legacy_output.txt`
+SHA-256 is
+`97f009060816aff6f0efe4f39cefd2e9279342fd3b519f771dadfbc359675389`.
+The original capture hash above remains historical provenance.
+
 The contracts compare binary-round-trip geometry, term outputs, decision order,
 rejection/rollback logs, all previous counts, board plans, ledger bytes and
 exported specs. Scenarios include filtered/empty centroids, empty hulls, missing

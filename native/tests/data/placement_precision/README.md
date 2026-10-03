@@ -1,6 +1,6 @@
 # Placement precision provenance
 
-This is new additive evidence; no earlier fixture has been rewritten.
+This was new additive evidence when captured; the original provenance follows.
 
 The baseline executable was compiled against the frozen pre-extraction six placement
 consumers and captured successfully BEFORE the production draft was applied to the
@@ -11,6 +11,12 @@ The exact existing combined core archive was copied privately:
 
 legacy_output.txt SHA-256:
 8f5db9a4cd9691b42c65cde083bd0e3d0818e85db07393fc01caa26414aa9c50
+
+The reviewed 2026-10-03 documentation refresh changed only outline-search prose,
+not geometry, numeric output or accounting. The current `legacy_output.txt`
+SHA-256 is
+`e849a9c3448b40220ef8156f34d152a812e116a8036c70ff443589c7f0c97ca5`.
+The original capture hash above remains historical provenance.
 
 additive_counts.json SHA-256:
 0ae66b0d03f6b31b7c6ac73c26e51d4464b2e080264c871636797673431128a8
@@ -44,4 +50,3 @@ stage/occupancy observed-object conventions). Do not define PLACEMENT_PRECISION_
 or PLACEMENT_PRECISION_PLAIN in the instrumented integrated test. Pass repository root.
 The source contract takes [before-root] after-root and performs a real compiler census.
 Production registry, registry-size assertions and CMake remain parent-owned.
-
