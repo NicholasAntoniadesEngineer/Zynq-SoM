@@ -546,6 +546,33 @@ if(BUILD_TESTING)
     add_test(NAME native_pcb_checks_contracts COMMAND schgen_pcb_checks_contracts "${CMAKE_CURRENT_SOURCE_DIR}/..")
     add_executable(schgen_firmware_docs_contracts tests/firmware_docs_contracts.cpp)
     add_executable(schgen_process_contracts tests/process_contracts.cpp)
+    # Frozen pre-pipe implementation is a local, independent parity oracle;
+    # never fetch repository history or compile the candidate twice as baseline.
+    file(SHA256 "${CMAKE_CURRENT_SOURCE_DIR}/tests/data/audit_ast_pipe/native_cpp_audits_reference.cpp" audit_pipe_reference_sha256)
+    if(NOT audit_pipe_reference_sha256 STREQUAL "b7aa4e0af628895093ffb1b2294088a227ef9833ce67aff3511cb61d214bd9d6")
+        message(FATAL_ERROR "Frozen AST pipe reference changed")
+    endif()
+    add_library(schgen_audit_ast_pipe_reference OBJECT tests/data/audit_ast_pipe/native_cpp_audits_reference.cpp)
+    target_include_directories(schgen_audit_ast_pipe_reference PRIVATE include src)
+    target_compile_definitions(schgen_audit_ast_pipe_reference PRIVATE
+        scan_cpp_audit_sources=scan_cpp_audit_sources_reference
+        check_native_audits=check_native_audits_reference
+        NativeAuditResult=NativeAuditResultReference)
+    target_compile_options(schgen_audit_ast_pipe_reference PRIVATE -Wall -Wextra -Wpedantic -Werror -ffp-contract=off)
+    add_executable(schgen_audit_ast_pipe_contracts tests/audit_ast_pipe_contracts.cpp)
+    target_link_libraries(schgen_audit_ast_pipe_contracts PRIVATE schgen_core)
+    target_compile_options(schgen_audit_ast_pipe_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror -ffp-contract=off)
+    add_test(NAME native_audit_ast_pipe_contracts COMMAND schgen_audit_ast_pipe_contracts)
+    add_executable(schgen_audit_ast_pipe_census_contracts tests/audit_ast_pipe_census_contracts.cpp
+        $<TARGET_OBJECTS:schgen_audit_ast_pipe_reference>)
+    target_link_libraries(schgen_audit_ast_pipe_census_contracts PRIVATE schgen_core)
+    target_compile_options(schgen_audit_ast_pipe_census_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror -ffp-contract=off)
+    add_test(NAME native_audit_ast_pipe_census_contracts COMMAND schgen_audit_ast_pipe_census_contracts
+        "${CMAKE_CURRENT_BINARY_DIR}/audit-ast-pipe-contract-output")
+    add_executable(schgen_audit_ast_pipe_census tests/audit_ast_pipe_census.cpp
+        $<TARGET_OBJECTS:schgen_audit_ast_pipe_reference>)
+    target_link_libraries(schgen_audit_ast_pipe_census PRIVATE schgen_core)
+    target_compile_options(schgen_audit_ast_pipe_census PRIVATE -Wall -Wextra -Wpedantic -Werror -ffp-contract=off)
     add_executable(schgen_render_project_base_contracts tests/render_project_base_contracts.cpp)
     target_include_directories(schgen_render_project_base_contracts PRIVATE src)
     target_link_libraries(schgen_render_project_base_contracts PRIVATE schgen_core)

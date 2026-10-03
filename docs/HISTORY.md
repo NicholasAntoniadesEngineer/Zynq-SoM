@@ -1,5 +1,35 @@
 # carrier — project HISTORY (archived planning logs)
 
+## 2026-10-03 — overlap compiler output with transactional AST parsing
+
+The source auditor now parses through a bounded stdout pipe while Clang emits
+its AST. The existing generic post-exit stdout consumer is unchanged. Parsed
+state stays private until complete output validation and successful child exit;
+parser errors cannot mask later invalid UTF-8, compiler failure or timeout.
+Early parser return/failure still drains output and joins the child reaper.
+The compiler worker count remains two. One per-scan projection slot limits
+simultaneously retained ASTs through semantic visitation; waiting compilers use
+pipe backpressure. No AST fields, semantic checks, macro preprocessing, manifest
+coverage, registry checks or ledger checks were removed or cached.
+
+Parent integration repeated three alternating-order pairs on four actual source
+files. All six full ordered censuses are byte-identical (4 files, 218 function
+identities, 32 quantization sites). Median elapsed time was 20.845902 s before
+and 13.539726 s after, a 35.05% reduction; the largest paired sampled aggregate
+RSS increase was 171.86 MiB. Raw rows, census hash, baseline hash, reproduction
+target and limitations are recorded in
+`native/benchmarks/2026-10-03-ast-pipe-subset.json`. The independent pre-pipe C++
+auditor is vendored and hash-checked at configure time, with no build-time Git
+or network dependency. These are subset measurements under a concurrent host,
+not full-audit/board or historical-Python speed claims.
+
+Transport proofs cover error precedence, malformed/partial output, child/parser
+overlap, draining, timeout, reaping, closed stdio and concurrent descriptor
+inheritance. Linux uses atomic close-on-exec pipe creation to close a potential
+older-glibc inheritance race; its runtime branch remains unverified on this Mac.
+The isolated transport suite also passed ASan/UBSan. Whole-board validation and
+timings remain separate from these focused source/transport contracts.
+
 ## 2026-10-03 — owned-quality selection, inter-stage protection and strict facing
 
 Compact packing now transports actual zone-quality evidence and considers the

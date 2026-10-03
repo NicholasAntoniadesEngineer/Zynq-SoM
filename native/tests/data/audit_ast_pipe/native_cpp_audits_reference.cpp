@@ -1,7 +1,6 @@
 #include "schgen/native_audit_state.hpp"
 #include "schgen/process.hpp"
 #include "schgen/audit_ast_projection.hpp"
-#include "schgen/audit_ast_process.hpp"
 #include "verification_internal.hpp"
 #include "verification_audits_unicode.hpp"
 #include <cctype>
@@ -260,23 +259,20 @@ CppSourceCensus scan_cpp_audit_sources(const std::filesystem::path& root,const s
         if(!std::filesystem::is_regular_file(path))throw std::runtime_error("native audit source is missing/not a file: "+path.string());
         relative_paths.push_back(relative);
     }
-    // Keep the compiler worker cap unchanged, but retain at most one full AST
-    // per scan. Waiting compilers use bounded pipe backpressure, not a DOM queue.
-    std::mutex projection_slot;
     const auto scan_one=[&](std::size_t index){
         const auto& relative=relative_paths[index];
         const auto path=std::filesystem::absolute(root/relative).lexically_normal();
         std::vector<std::string> command{options.compiler};command.insert(command.end(),options.flags.begin(),options.flags.end());
         command.insert(command.end(),{"-std=c++17","-ffp-contract=off","-x","c++","-fsyntax-only","-Xclang","-ast-dump=json",path.string()});
-        std::unique_lock<std::mutex> projection_lock(projection_slot,std::defer_lock);
-        auto compiled=run_audit_ast_process(command,path.string()+" compiler AST",options.timeout,projection_lock);
-        if(compiled.process.exit_code!=0)throw AuditSyntaxError(path.string()+": C++ compiler failed ("+std::to_string(compiled.process.exit_code)+")\n"+compiled.process.stderr_text);
-        JsonNode ast=std::move(*compiled.ast);
+        JsonNode ast;
+        const auto compiled=run_process_consume_stdout(command,[&](std::istream& input){
+            ast=parse_audit_ast_projection(input,path.string()+" compiler AST");
+        },options.timeout);
+        if(compiled.exit_code!=0)throw AuditSyntaxError(path.string()+": C++ compiler failed ("+std::to_string(compiled.exit_code)+")\n"+compiled.stderr_text);
         if(text(ast,"kind")!="TranslationUnitDecl")throw AuditSyntaxError(path.string()+": compiler did not return a translation-unit AST");
         CppSourceCensus local;
         Visitor visitor{relative.generic_string(),path.string(),model_checks::read(path),local,{},{},{},{},{}};
         visitor.index_lines();visitor.index(ast);visitor.visit(ast);visitor.finish();
-        ast=JsonNode{};projection_lock.unlock();
         // Clang's JSON AST contains macro *expansions*, not definitions. Keep
         // object-like numeric policy macros visible using its preprocessor,
         // with the same target/defines/includes and compiler line markers.

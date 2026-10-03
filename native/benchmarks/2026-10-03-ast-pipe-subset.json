@@ -1,0 +1,58 @@
+{
+  "date": "2026-10-03",
+  "scope": "Four-TU source-audit benchmark only; not a full board or Python comparison",
+  "integration_base": "226bfb8346eadf0d59e59d4e6b1f3ef99fec279d",
+  "baseline_source_sha256": "b7aa4e0af628895093ffb1b2294088a227ef9833ce67aff3511cb61d214bd9d6",
+  "baseline_source": "native/tests/data/audit_ast_pipe/native_cpp_audits_reference.cpp",
+  "benchmark_target": "schgen_audit_ast_pipe_census",
+  "manifest": [
+    "native/src/quantize.cpp",
+    "native/src/pack.cpp",
+    "native/src/floorplan_build.cpp",
+    "native/src/pcb_placement_build.cpp"
+  ],
+  "workers": 2,
+  "pairs": [
+    {
+      "order": "baseline-pipe",
+      "baseline_seconds": 20.5725227,
+      "pipe_seconds": 13.7598076,
+      "baseline_aggregate_rss_bytes": 2375106560,
+      "pipe_aggregate_rss_bytes": 2551840768
+    },
+    {
+      "order": "pipe-baseline",
+      "baseline_seconds": 20.8678791,
+      "pipe_seconds": 13.5397261,
+      "baseline_aggregate_rss_bytes": 2374664192,
+      "pipe_aggregate_rss_bytes": 2554773504
+    },
+    {
+      "order": "baseline-pipe",
+      "baseline_seconds": 20.8459016,
+      "pipe_seconds": 13.4724941,
+      "baseline_aggregate_rss_bytes": 2373156864,
+      "pipe_aggregate_rss_bytes": 2553364480
+    }
+  ],
+  "median_seconds": {
+    "baseline": 20.8459016,
+    "pipe": 13.5397261
+  },
+  "median_percentage_change": -35.04849845400787,
+  "maximum_paired_sampled_rss_increase_MiB": 171.859375,
+  "census": {
+    "files": 4,
+    "constants": 0,
+    "functions": 218,
+    "quantization_sites": 32,
+    "all_six_outputs_sha256": "9f31df234204a1f25dda944d1d91b0e83c5e5fc3286cf5b4b2a6e8f00b9cd26b"
+  },
+  "limitations": [
+    "Concurrent engineering host; no exclusive CPU reservation and filesystem/compiler caches may be warm.",
+    "Aggregate parent and recursive-child RSS sampled every 20 ms; not a hard peak guarantee or total-system memory including page cache.",
+    "Four observed child processes are two Clang drivers and two cc1 children, not four source-audit workers.",
+    "No detector, manifest coverage, registry, macro preprocessing or verdict was removed or cached.",
+    "Full-audit and full-board timings must be measured independently. Historical Python baseline remains exclusively 0e9bbc913bab77f9cd228940db2a332d25d6bfa1."
+  ]
+}
