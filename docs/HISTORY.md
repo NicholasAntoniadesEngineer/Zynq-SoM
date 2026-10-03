@@ -1,5 +1,31 @@
 # carrier — project HISTORY (archived planning logs)
 
+## 2026-10-03 — retain rejected-attempt work and the true conservative estimate
+
+(Autonomous, per full-autonomy directive.) Fallback receipts now retain every
+executed event across conservative/free-pass selection, rejected connector-shape
+trials and incumbent repacks. Only layout rolls back. An independent compiled
+function-entry/exit observer checks ordered identities, duplicate/upstream
+prefixes, both winning policies, fixed/automatic outlines and failure transport.
+The fixed-outline choice ledger also retains the actual conservative estimate
+instead of reporting the free winner's estimate twice. No geometry, selection
+predicate, retry limit, event name or runtime ceiling changes in this correction.
+
+Eleven targeted regression groups pass (72.69 s), including both permanent new
+contracts and nine strict historical consumers. Ten fixture payloads received
+an exact preimage-checked event-array-only update, including array lengths;
+independent reparse verifies every non-event byte is unchanged. SHA guards and
+mutation tests remain enforced. Historical hashes remain documented beside
+explicit current hashes. Private preimages are backed up at
+/private/tmp/fallback-parent-preimages-20261003 and recoverable from Git.
+
+This exposes existing ratchet debt rather than waiving it: frozen carrier now
+counts 37 retries/14 compactions against ceilings 18/2, frozen devkit counts 74
+retries against 35. These are expectations for accurate reporting, not raised
+ceilings or accepted board results. Fresh live counts and reduction experiments
+are separate work. C1 hardware/compact rotation work remains a separate pending
+change; no whole-goal completion or new accepted smaller outline is claimed.
+
 ## 2026-10-03 — preserve minority-face fanout through compound occupancy
 
 (Autonomous, per full-autonomy directive.) Compact zone construction now measures

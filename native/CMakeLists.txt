@@ -362,6 +362,7 @@ if(BUILD_TESTING)
     include(tests/native_audit_queue.cmake)
     include(tests/model_failure_receipt_contracts.cmake)
     include(tests/floorplan_receipt_contracts.cmake)
+    include(tests/floorplan_fallback_scope_contracts.cmake)
     add_executable(schgen_python_free_tree_contracts tests/python_free_tree_contracts.cpp)
     target_compile_options(schgen_python_free_tree_contracts PRIVATE
         -Wall -Wextra -Wpedantic -Werror)

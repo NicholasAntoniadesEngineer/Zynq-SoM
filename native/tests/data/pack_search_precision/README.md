@@ -23,12 +23,16 @@ Original capture SHA256 (historical provenance):
 The reviewed 2026-10-03 documentation refresh changed only two outline-search
 prose strings in `legacy-board.txt`, clarifying that bounded search finds a
 feasible outline rather than proving a global minimum. Geometry, numbers,
-accounting and other output are unchanged. The current board fixture is
+accounting and other output were unchanged. That intermediate board fixture was
 3,447,516 bytes, SHA256
 `8b6e524085a49780b42a623f29c35acccb2f8fb52089c992e736cd7713b58e09`.
-The executable guard pins this current hash; all three output guards have
-mutation checks and retain full-file comparisons. Other hashes above remain
-current. Tests do not regenerate fixtures.
+The later reviewed actual-work fallback correction changes only the two event
+arrays and their lengths; the current board SHA256 is
+`9d93612d51cd54982a42eaacc9b5299e93a110de52cf32462b0cd11cbc13d2f1`.
+The executable guard pins that current hash; all three output guards retain
+mutation checks and full-file comparisons. Other hashes above remain current.
+See `../floorplan/README.md` and `fallback_event_refresh.sha256` there for scope
+and exact provenance. Tests do not regenerate fixtures or ignore fallback arrays.
 
 Helper output encodes complete IEEE bits, seat records, ledger, members and
 audit ordering. Board output covers both carrier and devkit_mini complete model,

@@ -353,12 +353,12 @@ void Engine::choose_connector_shapes() {
         auto& b=*std::find_if(plan.edge_blocks.begin(),plan.edge_blocks.end(),[&](const auto& x){return x.name==name;});
         const double base=estimate();
         const auto reach=b.fanout_reach,inset=b.fanout_inset;
-        const auto events=plan.accounting.fallback_events;
         std::tie(b.fanout_reach,b.fanout_inset)=fanout(shapes->second[1],false); b.shape_idx=1;
         if (attempt_pack(true) && estimate()<base-1e-6) continue;
         b.fanout_reach=reach; b.fanout_inset=inset; b.shape_idx=0;
         if (!attempt_pack(true)) throw FloorplanError("floorplan: restoring the incumbent pack after rejecting "+name+"'s mirror shape failed — the deterministic re-pack must reproduce the accepted board");
-        plan.accounting.fallback_events=events;
+        // Both the rejected trial and incumbent repack executed real work.
+        // Keep their fallback events, just as we keep quantization engagements.
     }
 }
 }  // namespace schgen::floorplan_detail

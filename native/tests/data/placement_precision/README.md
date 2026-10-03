@@ -13,10 +13,16 @@ legacy_output.txt SHA-256:
 8f5db9a4cd9691b42c65cde083bd0e3d0818e85db07393fc01caa26414aa9c50
 
 The reviewed 2026-10-03 documentation refresh changed only outline-search prose,
-not geometry, numeric output or accounting. The current `legacy_output.txt`
-SHA-256 is
+not geometry, numeric output or accounting. Its intermediate `legacy_output.txt`
+SHA-256 was
 `e849a9c3448b40220ef8156f34d152a812e116a8036c70ff443589c7f0c97ca5`.
 The original capture hash above remains historical provenance.
+
+The subsequent actual-work fallback correction changes only four event arrays
+and their lengths. The current SHA-256 is
+`b86eafec3c7285a886f4a2bbf0fa6a49b2277745bae69847ccc9c1dcff24c085`.
+All other bytes, scalar counts and geometry remain exact; event arrays stay in
+the strict comparison. See `../floorplan/README.md` for correction provenance.
 
 additive_counts.json SHA-256:
 0ae66b0d03f6b31b7c6ac73c26e51d4464b2e080264c871636797673431128a8

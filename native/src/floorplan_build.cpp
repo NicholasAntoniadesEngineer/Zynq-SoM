@@ -237,11 +237,10 @@ FloorplanPlan Engine::run() {
     for (auto* b:blocks()) pristine[b->name]={b->shape_idx,b->fanout_reach,b->fanout_inset};
     auto reset_shapes=[&] { for (auto* b:blocks()) std::tie(b->shape_idx,b->fanout_reach,b->fanout_inset)=pristine.at(b->name); };
     auto restore=[&](const FloorplanPlan& saved) {
-        // Candidate decisions and quantization engagements describe ALL work;
-        // only layout and the caller-managed fallback event snapshot roll back.
+        // Decisions, quantization engagements and fallback events describe ALL
+        // executed work, including rejected candidates. Restore only layout.
         auto accounting=std::move(plan.accounting); plan=saved; plan.accounting=std::move(accounting);
     };
-    const auto entry_events=plan.accounting.fallback_events;
     if (in.spec && in.spec->outline) {
         board_size(in.spec->outline->first,in.spec->outline->second);
         auto fixed=[&](bool free) {
@@ -251,15 +250,16 @@ FloorplanPlan Engine::run() {
             choose_connector_shapes(); return estimate();
         };
         reset_shapes(); double estimate_real=fixed(false);
+        const double conservative_estimate=estimate_real;
         const auto conservative=plan; const auto offers=side_offers;
-        plan.accounting.fallback_events=entry_events; reset_shapes();
+        reset_shapes();
         std::optional<double> free_est;
         try { free_est=fixed(true); } catch (const FloorplanError&) {}
         if (free_est && *free_est<estimate_real-1e-6) estimate_real=*free_est;
-        else { restore(conservative); side_offers=offers; plan.accounting.fallback_events=conservative.accounting.fallback_events; fallback("punch_free_plan_rejected"); }
+        else { restore(conservative); side_offers=offers; fallback("punch_free_plan_rejected"); }
         const double area=precision.area(plan.board_w*plan.board_h);
         const double budget=cross_budget(plan.board_w,plan.board_h,n_sub,in.cross_budget_k);
-        calc("plan_choice",jvalue("fixed"),{{"conservative_area",jvalue(area)},{"conservative_est",jvalue(precision.value(estimate_real))},
+        calc("plan_choice",jvalue("fixed"),{{"conservative_area",jvalue(area)},{"conservative_est",jvalue(precision.value(conservative_estimate))},
             {"free_area",jvalue(area)},{"free_est",jvalue(free_est ? precision.value(*free_est):0.0)}});
         ledger_sides();
         auto inputs=winner_inputs({area,plan.board_w,plan.board_h,estimate_real,budget},plan.accounting.quantization_engagements); inputs.emplace_back("plan",jvalue("fixed"));
@@ -351,7 +351,7 @@ FloorplanPlan Engine::run() {
     };
     reset_shapes(); const Winner conservative_best=search(false);
     const auto conservative=plan; const auto offers=side_offers;
-    plan.accounting.fallback_events=entry_events; reset_shapes();
+    reset_shapes();
     std::optional<Winner> free_best;
     try { free_best=search(true); } catch (const FloorplanError&) {}
     Winner best=conservative_best; std::string choice="conservative";
@@ -359,7 +359,7 @@ FloorplanPlan Engine::run() {
         (std::get<0>(*free_best)<=std::get<0>(best)+1e-6 && std::get<3>(*free_best)<std::get<3>(best)-1e-6))) {
         best=*free_best; choice="free";
     } else {
-        restore(conservative); side_offers=offers; plan.accounting.fallback_events=conservative.accounting.fallback_events; fallback("punch_free_plan_rejected");
+        restore(conservative); side_offers=offers; fallback("punch_free_plan_rejected");
     }
     calc("plan_choice",jvalue(choice),{{"conservative_area",jvalue(std::get<0>(conservative_best))},
         {"conservative_est",jvalue(precision.value(std::get<3>(conservative_best)))},

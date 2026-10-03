@@ -20,10 +20,16 @@ Baseline SHA-256:
 `f490998fde2b49b0ee9b14f879b7654dcdbf11c2edd489aaa41e35391b805f74`.
 
 The reviewed 2026-10-03 documentation refresh changed only outline-search prose,
-not geometry, numeric output or accounting. The current `legacy_output.txt`
-SHA-256 is
+not geometry, numeric output or accounting. Its intermediate `legacy_output.txt`
+SHA-256 was
 `97f009060816aff6f0efe4f39cefd2e9279342fd3b519f771dadfbc359675389`.
 The original capture hash above remains historical provenance.
+
+The subsequent actual-work fallback correction changes only four event arrays
+and their lengths. The current SHA-256 is
+`99f12e1968c5be5687ddb5c6d4fb052600ad408712d0f45e975ae9ab3b502d07`.
+All other bytes, scalar counts and geometry remain exact; event arrays stay in
+the strict comparison. See `../floorplan/README.md` for correction provenance.
 
 The contracts compare binary-round-trip geometry, term outputs, decision order,
 rejection/rollback logs, all previous counts, board plans, ledger bytes and
