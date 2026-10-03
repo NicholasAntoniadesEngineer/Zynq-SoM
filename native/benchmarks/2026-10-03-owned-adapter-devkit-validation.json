@@ -1,0 +1,36 @@
+{
+  "source_commit": "a14031a1fac9bc9929a3b8a838d8933eab44426c",
+  "branch": "codex/two-sided-layout",
+  "project": "devkit_mini",
+  "mode": "default placement, board --no-render --timing",
+  "output_directory": "/private/tmp/devkit-a140-gates.b24mHh",
+  "exit_code": 0,
+  "board_ok": true,
+  "complete": true,
+  "sheets": 12,
+  "non_unrouted_drc_errors": 0,
+  "unrouted_connections": 413,
+  "fallback_ratchet": "PASS",
+  "source_audit": {"verdict": "PASS", "files": 68, "constants": 75, "registered_transforms": 155},
+  "measured_scopes_seconds": {
+    "pcb_input_loading_and_netlist_validation": 0.701756,
+    "pcb_build_model_with_internal_checks": 0.851035,
+    "pcb_render_text": 0.009128,
+    "spice": 0.143759,
+    "source_audit": 207.001048,
+    "sum_of_measured_scopes_not_process_wall": 242.181061
+  },
+  "advisory_failures": ["return_path", "contract_coverage_lint"],
+  "skipped": ["sheet_render", "render3d", "manual", "scfw"],
+  "sha256": {
+    "log": "94dd624d0f8019cb0ec1cffdf12711136dc7273e5b3320da28ec3821ebbdfa59",
+    "board_verdicts_json": "c967f313b659cee91cc86cc4adc12639746c5fe670c1795b332b3a52f827f4c7",
+    "pcb": "c55c085789a3d262a6bb9233bd73cb2d4e7f5b0bba425c5ddebf4f9ced2314c2"
+  },
+  "limitations": [
+    "Concurrent engineering workload; validation scopes are not a controlled timing comparison or process-wall measurements.",
+    "No new images reviewed; this is not full-render acceptance or evidence of a compact carrier improvement.",
+    "Historical Python comparisons remain pinned exclusively to 0e9bbc913bab77f9cd228940db2a332d25d6bfa1; no new baseline was measured.",
+    "Successful board aggregation does not clear advisory findings, skipped outputs, or unrouted connections."
+  ]
+}

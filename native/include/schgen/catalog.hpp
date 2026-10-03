@@ -34,6 +34,10 @@ bool compile_part_catalog(const std::string& parts_dir,
 bool open_part_catalog(const std::string& catalog_path);
 bool close_part_catalog();
 CatalogPart lookup_part_catalog(const std::string& mpn);
+// Independent read-only snapshot; never opens, closes or replaces the legacy
+// process-wide catalog used by circuit authoring. Results own all their data.
+std::vector<CatalogPart> read_part_catalog(const std::string& catalog_path,
+                                         const std::vector<std::string>& mpns);
 std::size_t part_catalog_count();
 
 }  // namespace schgen

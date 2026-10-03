@@ -88,9 +88,13 @@ TrustedOwnedGroupInputs resolve_owned_group_inputs(const ProjectPaths& paths,
         for (const auto& [local, ref] : t->refs) { (void)local; board_refs.insert(ref); }
         for (const auto& [pin, net] : extracted) if (board_refs.count(pin.first))
             t->pin_nets.emplace(pin, std::make_pair(numbers.at(net), net));
+        std::vector<std::string> owner_mpns;
         for (const auto& [ref, mpn] : t->declaration.owner_mpn) {
-            (void)ref; t->catalog.emplace(mpn, lookup_part_catalog(mpn));
+            (void)ref; owner_mpns.push_back(mpn);
         }
+        const auto owners = read_part_catalog(paths.part_catalog_file.string(), owner_mpns);
+        for (std::size_t i = 0; i < owners.size(); ++i)
+            t->catalog.emplace(owner_mpns[i], owners[i]);
         // Validate before accepting typed rows. This identity-only probe uses
         // real source footprints; its neutral top poses grant no movement.
         PcbCheckModel probe; probe.net_numbers = numbers;

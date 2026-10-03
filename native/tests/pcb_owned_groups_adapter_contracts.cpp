@@ -84,8 +84,9 @@ void check_quality(const PcbPlacementInput& in, const PcbZoneResult& zones,
 int main(int argc, char** argv) {
     using namespace schgen;
     try {
-        if (argc != 4 || !open_part_catalog(argv[2]))
+        if (argc != 4)
             throw std::runtime_error("usage: adapter-contracts REPOSITORY CATALOG PRIVATE-SCRATCH");
+        close_part_catalog();
         const auto paths = resolve_project_paths(argv[1], "carrier");
         const auto circuits = load_project_circuits(paths);
         std::vector<CircuitSheetIr> sheets;
@@ -97,6 +98,11 @@ int main(int argc, char** argv) {
         BoardInputOptions options; options.compact_search = true;
         auto in = load_board_inputs(paths, circuits, link, nets, options);
         require(in.owned_groups.size() == 2, "production loader did not resolve both mandatory sheets");
+        rejects([&] { (void)part_catalog_count(); }, "production loader leaked global catalog");
+        auto missing_catalog = paths;
+        missing_catalog.part_catalog_file = std::filesystem::path(argv[3]) / "absent-catalog.bin";
+        rejects([&] { load_board_inputs(missing_catalog, circuits, link, nets, options); },
+                "production loader accepted missing independent catalog");
         std::size_t rows = 0, bulk = 0;
         for (const auto& [sheet, trusted] : in.owned_groups) {
             (void)sheet; for (const auto& r : owned_group_placements(*trusted)) {

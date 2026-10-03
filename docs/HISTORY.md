@@ -1,5 +1,24 @@
 # carrier — project HISTORY (archived planning logs)
 
+## 2026-10-03 — standalone compact input catalog isolation
+
+The first integrated standalone compact `pcb-stage` invocation exposed a hidden
+global-catalog precondition in the ownership adapter: circuit JSON loading does
+not open the authoring catalog. Unit tests had inadvertently satisfied that
+precondition. The adapter now reads independently scoped, owned catalog snapshots
+from the project paths; it neither depends on nor replaces the caller's global
+authoring session. The existing mapped-file reader and decoder are shared, not
+duplicated. Closed-session loader regression and catalog lifecycle tests pass,
+including missing/malformed files, failed partial batches, preserved existing
+mapped readers and fresh reads after atomic replacement. No board geometry or
+hardware requirement was changed by this correction.
+
+The earlier default devkit validation at `a14031a1` is recorded separately in
+`native/benchmarks/2026-10-03-owned-adapter-devkit-validation.json`: 12 sheets,
+successful no-render board aggregation, zero non-unrouted DRC errors and a passing
+68-file source audit. Advisory failures and skipped outputs remain explicit;
+this is not compact-carrier acceptance or a controlled performance comparison.
+
 ## 2026-10-03 — production owned-group alternatives and bounded copy removal
 
 Wired the validated pilot ownership into compact board inputs and zone generation
