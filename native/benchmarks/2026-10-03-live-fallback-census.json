@@ -1,0 +1,72 @@
+{
+  "scope": "Cold construction plus in-memory PCB emission; accurate executed-work receipts after a9eef5e7 accounting correction, with pending C1 and compact base-rotation changes captured independently",
+  "private_snapshot": "/private/tmp/fallback-live.wuCrjw/repo",
+  "provenance": "/private/tmp/fallback-live.wuCrjw/COORDINATION.txt",
+  "core_sha256": "f81419bc6a6be1b22f75eacbe963c6afd740a55fb48fc1a8a4d0d98c991997c3",
+  "harness_sha256": "1b55ebd57c9a94d1460922aee809d3df423c679aa38fbf68a7a4d2c29105e29e",
+  "resolved_inputs_sha256": "83fcf91b676e7dc3a5a8151d6898288daba39f55e6e9e75b7f8c6c011ec4568f",
+  "limits": "No full source audit, DRC, renders or board acceptance in these profiles. Timings include diagnostic observers and uncontrolled concurrent work, not statistically controlled speed measurements. Ceilings are unchanged. Floorplan receipts are a subset of model receipts and must not be added twice.",
+  "runs": [
+    {
+      "project": "carrier",
+      "compact": false,
+      "construction_complete": true,
+      "dimensions_mm": [168, 163],
+      "actual_retries": 37,
+      "retry_ceiling": 18,
+      "actual_compactions": 14,
+      "compaction_ceiling": 2,
+      "count_vs_ceiling": "FAIL",
+      "pcb_sha256": "c173669ef17404a63c6c5473c0ebfb040ce02e402b1398e4de2a6005db1b2d74",
+      "model_and_pcb_text_seconds": 11.428547459,
+      "log_sha256": "32dca727b71b0e4d33e0d8845d3bcadb7db03a36d99e16ed6027271cdad7a9c8"
+    },
+    {
+      "project": "carrier",
+      "compact": true,
+      "construction_complete": true,
+      "dimensions_mm": [170, 165],
+      "actual_retries": 284,
+      "retry_ceiling": 18,
+      "actual_compactions": 14,
+      "compaction_ceiling": 2,
+      "count_vs_ceiling": "FAIL",
+      "pcb_sha256": "271344f8e3f6cfe4143ca2c8392f31f459114f758b91ae37ed49541052f7a255",
+      "model_and_pcb_text_seconds": 365.787006209,
+      "plan_lattice_seconds": 364.809672584,
+      "completed_outer_attempts_not_retries": 3148,
+      "packed_outer_attempts": 44,
+      "log_sha256": "6c423e7b37aefd9dc413f6f4f97d3973525d97949aac3606b08f6d25c11551a0"
+    },
+    {
+      "project": "devkit_mini",
+      "compact": false,
+      "construction_complete": true,
+      "dimensions_mm": [100, 100],
+      "actual_retries": 74,
+      "retry_ceiling": 35,
+      "actual_compactions": 0,
+      "compaction_ceiling": 0,
+      "count_vs_ceiling": "FAIL",
+      "pcb_sha256": "c55c085789a3d262a6bb9233bd73cb2d4e7f5b0bba425c5ddebf4f9ced2314c2",
+      "model_and_pcb_text_seconds": 0.687284125,
+      "log_sha256": "c6a141745972aa06e93b3a529f57828d3c729a9cbbcbd3ad90ed24c44b2eb289"
+    },
+    {
+      "project": "devkit_mini",
+      "compact": true,
+      "construction_complete": false,
+      "error": "compact eviction: no legal ownership-preserving corridor exit for C5003",
+      "failure_receipt_captured": true,
+      "actual_retries_through_failure": 44,
+      "retry_ceiling": 35,
+      "actual_compactions_through_failure": 4,
+      "compaction_ceiling": 0,
+      "corridor_stray_unmovable_through_failure": 1,
+      "count_vs_ceiling": "FAIL",
+      "failure_elapsed_seconds": 1.346844625,
+      "log_sha256": "eb82fcb9f1945b857839b91a8d2380778eb117408027fc8adf19cdefd3d2c0bd"
+    }
+  ],
+  "historical_input_warning": "The earlier 283-retry compact trace used the old C1=100n/0603 snapshot. This independently frozen C1=10u/0805 snapshot actually executes 284 retries. Neither is interchangeable with the old restored receipt of 151. Later ordering/geometry changes need fresh same-input comparisons."
+}

@@ -26,6 +26,15 @@ ceilings or accepted board results. Fresh live counts and reduction experiments
 are separate work. C1 hardware/compact rotation work remains a separate pending
 change; no whole-goal completion or new accepted smaller outline is claimed.
 
+Private current-input construction profiles now confirm actual carrier default
+counts 37/14, compact 284/14, and devkit default 74/0 (retry/compaction).
+Default emitted PCB hashes are unchanged by the accounting correction. Compact
+devkit fails at C5003's corridor exit, preserving 44 retries/4 compactions in
+its failure prefix; it does not produce a completed PCB. Input/core/harness
+identities, timing scope and limits are recorded in
+native/benchmarks/2026-10-03-live-fallback-census.json. The earlier 283-call
+compact trace used the old capacitor and is not a same-input baseline.
+
 ## 2026-10-03 — preserve minority-face fanout through compound occupancy
 
 (Autonomous, per full-autonomy directive.) Compact zone construction now measures
