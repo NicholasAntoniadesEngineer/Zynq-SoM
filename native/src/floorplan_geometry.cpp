@@ -155,10 +155,10 @@ std::vector<Box4> Engine::pad_boxes(const std::string& key, double rot, bool thr
 
 std::pair<Halo, Halo> Engine::fanout(const FloorplanZoneShape& shape, bool base) {
     auto rotations = in.geometry.conn_rot;
-    // Legacy base-zone path overwrites extra rotations; variants add them.
-    // This asymmetry is intentional for byte-exact migration.
+    // Preserve the legacy default base receipt/geometry. Compact base zones
+    // must match emitted members and children: connector + extra rotation.
     for (const auto& [ref, extra] : shape.extra_rot)
-        rotations[ref] = base ? extra : rotation(rotations[ref] + extra);
+        rotations[ref] = base && !in.compact_search ? extra : rotation(rotations[ref] + extra);
     std::vector<std::tuple<double,double,double,double,double,double,double,int>> rows;
     for (const auto* offsets : {&shape.top_off, &shape.bot_off}) {
         for (const auto& [ref, offset_xy] : *offsets) {

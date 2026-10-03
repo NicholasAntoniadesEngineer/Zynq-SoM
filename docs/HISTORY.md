@@ -1,5 +1,24 @@
 # carrier — project HISTORY (archived planning logs)
 
+## 2026-10-03 — use actual connector rotation for compact base envelopes
+
+(Autonomous, per full-autonomy directive.) Compact base-zone fanout now adds
+the connector and extra rotations, matching emitted members and compound
+children. It previously replaced the connector rotation with the extra angle,
+including replacing 90 degrees with zero. The non-compact legacy branch remains
+unchanged; no reach, inset, face-mask exemption or clearance is relaxed.
+
+An independent corner-transform oracle exercises both faces, asymmetric mirrored
+footprints, SMT/through-hole bodies, both punch policies and non-orthogonal
+rotations. Eight physical witnesses show the old code admitting a 1.5 mm member
+gap against 2 mm while the correction rejects it; the 2.5 mm safe control stays
+legal. The implicit shape-zero construction path is also covered. All 3,316
+checks pass, and the corrected default/frozen regression consumers remain exact.
+Full source auditing passed in the pending-C1 rendered carrier run. This fixes
+a compact geometry defect, not the outstanding retry ceilings or whole-board
+acceptance of a smaller candidate. Hardware and current-render refreshes remain
+separate work.
+
 ## 2026-10-03 — retain rejected-attempt work and the true conservative estimate
 
 (Autonomous, per full-autonomy directive.) Fallback receipts now retain every
