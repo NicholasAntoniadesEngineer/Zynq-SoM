@@ -104527,7 +104527,7 @@
 		)
 		(fp_line
 			(start 1.6 -0.75)
-			(end 1.6 -0.75)
+			(end -1.6 -0.75)
 			(stroke
 				(width 0.05)
 				(type solid)
@@ -104536,44 +104536,14 @@
 			(uuid "895c5e7c-b5f7-5b2c-9cda-90c4c921f9eb")
 		)
 		(fp_line
-			(start 1.6 -0.75)
-			(end -1.6 -0.75)
+			(start -1.6 -0.75)
+			(end -1.6 0.75)
 			(stroke
 				(width 0.05)
 				(type solid)
 			)
 			(layer "F.CrtYd")
 			(uuid "f786cb1b-0135-56ab-8f75-30c593ca9777")
-		)
-		(fp_line
-			(start -1.6 -0.75)
-			(end -1.6 -0.75)
-			(stroke
-				(width 0.05)
-				(type solid)
-			)
-			(layer "F.CrtYd")
-			(uuid "31b6b155-cd9b-5d70-b540-df48ad2801d8")
-		)
-		(fp_line
-			(start -1.6 -0.75)
-			(end -1.6 0.75)
-			(stroke
-				(width 0.05)
-				(type solid)
-			)
-			(layer "F.CrtYd")
-			(uuid "14271a81-4d47-5455-8da1-60502a86ae98")
-		)
-		(fp_line
-			(start -1.6 0.75)
-			(end -1.6 0.75)
-			(stroke
-				(width 0.05)
-				(type solid)
-			)
-			(layer "F.CrtYd")
-			(uuid "9bf595f1-2023-53c5-83e5-bf38e2f6dbcf")
 		)
 		(fp_line
 			(start -1.6 0.75)
@@ -104583,7 +104553,7 @@
 				(type solid)
 			)
 			(layer "F.CrtYd")
-			(uuid "820805f5-8474-5929-bd7c-3f74f23fbd63")
+			(uuid "31b6b155-cd9b-5d70-b540-df48ad2801d8")
 		)
 		(fp_line
 			(start 1.778 0.762)
@@ -104593,7 +104563,7 @@
 				(type solid)
 			)
 			(layer "F.SilkS")
-			(uuid "895c75da-4005-5525-9d2b-b1fc04337950")
+			(uuid "14271a81-4d47-5455-8da1-60502a86ae98")
 		)
 		(fp_line
 			(start -1.778 0.762)
@@ -104603,7 +104573,7 @@
 				(type solid)
 			)
 			(layer "F.SilkS")
-			(uuid "e74060c4-6895-5c4f-9e60-a8008daa5e93")
+			(uuid "9bf595f1-2023-53c5-83e5-bf38e2f6dbcf")
 		)
 		(fp_circle
 			(center -2.032 1.27)
@@ -104614,7 +104584,7 @@
 			)
 			(fill none)
 			(layer "F.SilkS")
-			(uuid "5e6681f0-ddac-5dbf-8a0e-31c60c1d171b")
+			(uuid "820805f5-8474-5929-bd7c-3f74f23fbd63")
 		)
 		(fp_circle
 			(center -1.778 1.016)
@@ -104625,7 +104595,7 @@
 			)
 			(fill none)
 			(layer "Cmts.User")
-			(uuid "f36963c5-65dc-56a8-b1da-f72f0beac272")
+			(uuid "895c75da-4005-5525-9d2b-b1fc04337950")
 		)
 		(pad
 			"1"

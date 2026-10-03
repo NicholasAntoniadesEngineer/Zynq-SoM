@@ -30,7 +30,8 @@ void help() {
         "  [--runs N] [--input-mode cold|prepared] [--kicad-cli PATH]\n"
         "cold: reload/validate circuits, relink, re-extract netlist and resolve inputs per repetition.\n"
         "prepared: load once; reuse only parsed PcbPlacementInput across repetitions.\n"
-        "both: off then on on the same input object each repetition (fixed order; not randomized).\n"
+        "both: off then on using the same compact-capable input each repetition (fixed order; not randomized).\n"
+        "on/both resolve ownership inputs before trials; off alone uses default-only input preparation.\n"
         "Neither mode reuses zones, floorplans or placed models; OS/catalog caches are not flushed.\n"
         "Construction only, NO ACCEPTANCE: no board gates, source audit, DRC or KiCad/3D renders.\n"
         "Normal in-memory floorplan documents and PCB text emission are included.\n";
@@ -64,7 +65,7 @@ struct LoadResult {
     std::vector<std::pair<std::string, double>> times;
     std::size_t circuits = 0;
 };
-LoadResult load(const ProjectPaths& paths, const NetlistExtractOptions& extraction) {
+LoadResult load(const ProjectPaths& paths, const NetlistExtractOptions& extraction, bool compact_capable) {
     // Same sequence and providers as prepare_board_pcb / pcb-stage. In particular
     // use the real project schematic extraction, not synthetic/fixture connectivity.
     LoadResult out;
@@ -89,7 +90,9 @@ LoadResult load(const ProjectPaths& paths, const NetlistExtractOptions& extracti
     const auto nets = extract_netlist(paths.project_root / "Zynq_Carrier.kicad_sch", extraction);
     tick("netlist_extract");
     BoardInputOptions options;
-    options.compact_search = false; // Set explicitly again on each trial copy.
+    // Compact mode has real input requirements, not just a solver toggle.
+    // Resolve them here so profiling cannot silently omit owned alternatives.
+    options.compact_search = compact_capable;
     out.input = load_board_inputs(paths, circuits, link, nets, options);
     tick("board_input_resolve");
     return out;
@@ -226,7 +229,12 @@ int main(int argc, char** argv) {
         std::optional<LoadResult> prepared;
         std::map<bool, std::string> first_hash;
         for (int run = 1; run <= options.runs; ++run) {
-            if (!prepared || options.inputs == "cold") { prepared = load(paths, extraction); print_load(*prepared, run); }
+            if (!prepared || options.inputs == "cold") {
+                prepared = load(paths, extraction, options.compact != "off");
+                print_load(*prepared, run);
+                std::cout << "input compact_capable=" << (options.compact != "off")
+                    << " owned_groups=" << prepared->input.owned_groups.size() << '\n';
+            }
             const int generation = options.inputs == "prepared" ? 1 : run;
             for (const bool compact : {false, true}) {
                 if ((compact && options.compact == "off") || (!compact && options.compact == "on")) continue;

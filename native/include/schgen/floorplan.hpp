@@ -1,6 +1,7 @@
 #pragma once
 #include "schgen/execution_failure.hpp"
 #include "schgen/board_decision_policy.hpp"
+#include "schgen/owned_shape_quality.hpp"
 
 #include "schgen/circuit.hpp"
 #include "schgen/execution_accounting.hpp"
@@ -102,6 +103,9 @@ struct FloorplanTerm {
     std::string basis;
     bool enforced = false;
     std::vector<std::string> output_roles, out_refs;
+    // Compact hard-facing terms cannot defer their sign check to a later gate.
+    // Transport with the term so legalize(false) fallback retains enforcement.
+    bool require_positive_facing = false;
     std::string target() const;
 };
 struct FloorplanTermIndex {
@@ -246,6 +250,7 @@ struct FloorplanInput {
     FloorplanAccounting accounting;
     // Null by default: no observation snapshots or experiment parameter changes.
     std::shared_ptr<const FloorplanExperiment> experiment;
+    OwnedShapeQualityTable owned_shape_quality; // compact zone snapshot, stable sheet/index keys
 };
 
 FloorplanSpec floorplan_spec_from_json(

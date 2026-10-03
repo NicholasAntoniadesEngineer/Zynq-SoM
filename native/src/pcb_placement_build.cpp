@@ -13,6 +13,7 @@ FloorplanTermIndex term_index(const Context &ctx) {
         if (t.bound && (!old.bound || *t.bound < *old.bound))
             old.bound = t.bound;
         old.enforced = old.enforced || t.enforced;
+        old.require_positive_facing = old.require_positive_facing || t.require_positive_facing;
         if (old.output_roles.empty())
             old.output_roles = t.output_roles;
         if (old.out_refs.empty())
@@ -44,6 +45,7 @@ FloorplanTermIndex term_index(const Context &ctx) {
             t.target_raw = target;
             t.basis = basis;
             t.enforced = ctx.wired.count(sheet);
+            t.require_positive_facing = ctx.in.floorplan.compact_search && t.enforced && kind == "facing";
             return t;
         };
         const auto basis = text(contract, "contract", "?");
@@ -149,6 +151,11 @@ FloorplanInput prepare_pcb_floorplan(const PcbPlacementInput &input, const PcbZo
     Context ctx(input);
     FloorplanInput result = input.floorplan;
     result.geometry = zones.geometry;
+    // Replace caller seed with the matching zone invocation; never carry stale
+    // quality across shape indices or enable it in the default path.
+    result.owned_shape_quality.clear();
+    if (input.floorplan.compact_search)
+        result.owned_shape_quality = zones.owned_shape_quality;
     for (const auto &[key, fp] : zones.footprints) {
         if (!fp)
             throw PcbZoneInfeasible("null footprint: " + key);

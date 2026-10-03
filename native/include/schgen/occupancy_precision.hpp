@@ -4,6 +4,36 @@
 
 namespace schgen {
 
+class OccupancyCellCounter;
+// Borrow for one synchronous caller scope only. Construction is lazy; map
+// insertions are safe, but end the binding before erase/clear, assignment,
+// swap, merge, copying ownership to another invocation, or changing threads.
+// Never attach a binding to occupancy geometry or persist it between queries.
+class OccupancyCellSlot {
+public:
+    explicit OccupancyCellSlot(QuantizationCounts* counts) noexcept : counts_(counts) {}
+    OccupancyCellSlot(const OccupancyCellSlot&) = delete;
+    OccupancyCellSlot& operator=(const OccupancyCellSlot&) = delete;
+private:
+    QuantizationCounts* counts_;
+    std::size_t* value_ = nullptr;
+    friend class OccupancyCellCounter;
+    friend int occupancy_cell_index(double, double, OccupancyCellCounter);
+};
+
+// One scalar definition/source identity, with pointer/null/default syntax
+// preserved. The function-pointer/ABI signature changes: rebuild all callers.
+class OccupancyCellCounter {
+public:
+    OccupancyCellCounter(QuantizationCounts* counts = nullptr) noexcept : counts_(counts) {}
+    OccupancyCellCounter(OccupancyCellSlot& slot) noexcept
+        : counts_(slot.counts_), slot_(&slot) {}
+private:
+    QuantizationCounts* counts_;
+    OccupancyCellSlot* slot_ = nullptr;
+    friend int occupancy_cell_index(double, double, OccupancyCellCounter);
+};
+
 class OccupancyFrontierCounter;
 // A borrowed, invocation-local binding for ONE named operation. Construction
 // does not touch the map. Insertions preserve its reference, but erase/clear,
@@ -50,7 +80,7 @@ double occupancy_shape_key4dp(double distance, QuantizationCounts* counts = null
 // Caller bucket/step is NOT replaced. All formerly defined scalar results are
 // retained (including signed nonzero divisors); nonfinite inputs, zero divisor,
 // unrepresentable conversion and inclusive-count overflow fail before UB.
-int occupancy_cell_index(double coordinate, double bucket, QuantizationCounts* counts = nullptr);
+int occupancy_cell_index(double coordinate, double bucket, OccupancyCellCounter counts = {});
 int occupancy_axis_count(double extent, double step, QuantizationCounts* counts = nullptr);
 
 } // namespace schgen

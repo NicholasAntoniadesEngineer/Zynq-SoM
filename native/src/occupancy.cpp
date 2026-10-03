@@ -494,10 +494,11 @@ void Occupancy::add_one(double x, double y, double w, double h,
     }
     const Rect rect{x, y, w, h, reach, inset, mask, pmask, main};
     const double b = bucket_;
-    const int iy0 = occupancy_cell_index(y - h4.n - clear_, b, counts);
-    const int iy1 = occupancy_cell_index(y + h + h4.s + clear_, b, counts);
-    const int ix0 = occupancy_cell_index(x - h4.w - clear_, b, counts);
-    const int ix1 = occupancy_cell_index(x + w + h4.e + clear_, b, counts);
+    OccupancyCellSlot cell_count(counts);
+    const int iy0 = occupancy_cell_index(y - h4.n - clear_, b, cell_count);
+    const int iy1 = occupancy_cell_index(y + h + h4.s + clear_, b, cell_count);
+    const int ix0 = occupancy_cell_index(x - h4.w - clear_, b, cell_count);
+    const int ix1 = occupancy_cell_index(x + w + h4.e + clear_, b, cell_count);
     rects_.push_back(rect);
     for (std::int64_t ix = ix0; ix <= ix1; ++ix) {
         for (std::int64_t iy = iy0; iy <= iy1; ++iy) {
@@ -517,10 +518,11 @@ void Occupancy::remove_one(double x, double y, double w, double h,
     }
     const Halo h4 = halo4(reach, inset);
     const double b = bucket_;
-    const int iy0 = occupancy_cell_index(y - h4.n - clear_, b, counts);
-    const int iy1 = occupancy_cell_index(y + h + h4.s + clear_, b, counts);
-    const int ix0 = occupancy_cell_index(x - h4.w - clear_, b, counts);
-    const int ix1 = occupancy_cell_index(x + w + h4.e + clear_, b, counts);
+    OccupancyCellSlot cell_count(counts);
+    const int iy0 = occupancy_cell_index(y - h4.n - clear_, b, cell_count);
+    const int iy1 = occupancy_cell_index(y + h + h4.s + clear_, b, cell_count);
+    const int ix0 = occupancy_cell_index(x - h4.w - clear_, b, cell_count);
+    const int ix1 = occupancy_cell_index(x + w + h4.e + clear_, b, cell_count);
     rects_.erase(it);
     for (std::int64_t ix = ix0; ix <= ix1; ++ix) {
         for (std::int64_t iy = iy0; iy <= iy1; ++iy) {
@@ -589,10 +591,11 @@ bool Occupancy::query_hashed_cells(double x, double y, double w, double h,
                                    const Halo& inset, int qmask, int qpmask,
                                    bool qmain, QuantizationCounts* counts) const {
     const double b = bucket_;
-    const int iy0 = occupancy_cell_index(y - qh.n, b, counts);
-    const int iy1 = occupancy_cell_index(y + h + qh.s, b, counts);
-    const int ix0 = occupancy_cell_index(x - qh.w, b, counts);
-    const int ix1 = occupancy_cell_index(x + w + qh.e, b, counts);
+    OccupancyCellSlot cell_count(counts);
+    const int iy0 = occupancy_cell_index(y - qh.n, b, cell_count);
+    const int iy1 = occupancy_cell_index(y + h + qh.s, b, cell_count);
+    const int ix0 = occupancy_cell_index(x - qh.w, b, cell_count);
+    const int ix1 = occupancy_cell_index(x + w + qh.e, b, cell_count);
     for (std::int64_t ix = ix0; ix <= ix1; ++ix) {
         for (std::int64_t iy = iy0; iy <= iy1; ++iy) {
             auto it = cells_.find(CellKey{static_cast<int>(ix), static_cast<int>(iy)});

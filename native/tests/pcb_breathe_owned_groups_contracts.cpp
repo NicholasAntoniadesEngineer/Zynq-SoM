@@ -1,4 +1,5 @@
 #include "schgen/board_inputs.hpp"
+#include "schgen/catalog.hpp"
 #include "schgen/netlist_gate.hpp"
 #include "pcb_placement_internal.hpp"
 #include <iostream>

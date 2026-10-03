@@ -212,11 +212,34 @@ bool Engine::attempt_pack_impl(bool compact) {
                 b=saved; return value;
             };
             const double incumbent=judge(hits[0]),challenger=judge(hits[1]);
+            const auto quality=in.owned_shape_quality.lower_bound({b.name,0});
+            const bool has_quality=in.compact_search && quality!=in.owned_shape_quality.end() &&
+                quality->first.first==b.name;
+            std::vector<double> evaluated;
+            if (has_quality) { evaluated.reserve(hits.size()); evaluated={incumbent,challenger}; }
             if (pick_sided_challenger(incumbent,challenger,1e-6)) best=hits[1];
             double selected=best.index==hits[1].index ? challenger:incumbent;
             if (in.compact_search) for (std::size_t i=2;i<hits.size();++i) {
                 const double value=judge(hits[i]);
+                if (has_quality) evaluated.push_back(value);
                 if (pick_sided_challenger(selected,value,1e-6)) {best=hits[i]; selected=value;}
+            }
+            if (has_quality) {
+                // Preserve the primary estimator decision, then compare the
+                // complete exact-rank bucket. Pareto dominance is NOT a sort
+                // comparator and a running incumbent can discard a survivor.
+                const OwnedShapeTieRank primary{best.index,true,best.w,best.h,
+                                               selected,best.dist_key,best.side};
+                std::vector<OwnedShapeTieRank> bucket;
+                for (std::size_t i=0;i<hits.size();++i) {
+                    const auto& h=hits[i];
+                    OwnedShapeTieRank rank{h.index,true,h.w,h.h,evaluated.at(i),h.dist_key,h.side};
+                    if (owned_shape_same_primary_rank(rank,primary)) bucket.push_back(rank);
+                }
+                const auto winner=owned_shape_select_tied_bucket(true,in.owned_shape_quality,b.name,bucket);
+                if (winner) for (std::size_t i=0;i<hits.size();++i) if (hits[i].index==*winner) {
+                    best=hits[i]; selected=evaluated.at(i); break;
+                }
             }
             side_offers[b.name]={hits[0].side+"(incumbent)/"+
                 (in.compact_search ? "all-shapes":hits[1].side),best.side,best.index,incumbent,

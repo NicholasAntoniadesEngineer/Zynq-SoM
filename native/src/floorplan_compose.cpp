@@ -74,9 +74,37 @@ std::vector<FloorplanTermEval> evaluate(const FloorplanLegalizeInput& in,
     }
     std::vector<EvalMetric> metrics;
     for (const auto& [name, m] : in.metrics) metrics.push_back({name, m.offsets, m.pad_union});
-    const auto values = evaluate_terms(in.board_w, in.board_h, in.som_core_page,
-        {poses.begin(), poses.end()}, metrics, rows, {{"ethernet", 14}, {"power_som", 25}},
-        {in.som_j_rects.begin(), in.som_j_rects.end()}, in.origin.first, in.origin.second, counts);
+    std::vector<EvalTermIn> strict_rows, guarded_rows;
+    std::vector<std::size_t> strict_indices, guarded_indices;
+    for (std::size_t i = 0; i < terms.size(); ++i) {
+        const auto& t = *terms[i];
+        const bool strict = t.kind == "facing" && t.enforced && t.require_positive_facing;
+        (strict ? strict_rows : guarded_rows).push_back(rows[i]);
+        (strict ? strict_indices : guarded_indices).push_back(i);
+    }
+    std::vector<EvalTermOut> values;
+    if (strict_rows.empty()) {
+        // Preserve the legacy call, guards, row order and exact work receipts.
+        values = evaluate_terms(in.board_w, in.board_h, in.som_core_page,
+            {poses.begin(), poses.end()}, metrics, rows, {{"ethernet", 14}, {"power_som", 25}},
+            {in.som_j_rects.begin(), in.som_j_rects.end()}, in.origin.first, in.origin.second, counts);
+    } else {
+        values.resize(rows.size());
+        if (!guarded_rows.empty()) {
+            const auto evaluated = evaluate_terms(in.board_w, in.board_h, in.som_core_page,
+                {poses.begin(), poses.end()}, metrics, guarded_rows, {{"ethernet", 14}, {"power_som", 25}},
+                {in.som_j_rects.begin(), in.som_j_rects.end()}, in.origin.first, in.origin.second, counts);
+            for (std::size_t i = 0; i < guarded_indices.size(); ++i)
+                values[guarded_indices[i]] = evaluated[i];
+        }
+        // Only strict facing loses L4 deferral. Far/flow guards remain intact.
+        // Evaluate each row once and import actual work even on rejection.
+        const auto evaluated = evaluate_terms(in.board_w, in.board_h, in.som_core_page,
+            {poses.begin(), poses.end()}, metrics, strict_rows, {},
+            {in.som_j_rects.begin(), in.som_j_rects.end()}, in.origin.first, in.origin.second, counts);
+        for (std::size_t i = 0; i < strict_indices.size(); ++i)
+            values[strict_indices[i]] = evaluated[i];
+    }
     std::vector<FloorplanTermEval> out;
     for (std::size_t i = 0; i < values.size(); ++i) {
         const auto& e = values[i];

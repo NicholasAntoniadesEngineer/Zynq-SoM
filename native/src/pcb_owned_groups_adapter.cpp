@@ -1,4 +1,5 @@
 #include "schgen/pcb_owned_groups_adapter.hpp"
+#include "schgen/placement_requirements.hpp"
 #include "pcb_placement_internal.hpp"
 #include "schgen/pcb_placement_gates.hpp"
 
@@ -158,10 +159,15 @@ OwnedShapeQuality quality(const Context& ctx, const TrustedOwnedGroups& t,
     const auto report = identity(t, checked);
     q.diagnostics = report.violations;
     if (!report.hard_requirements_met()) return q;
-    q.measurements = report.measurements;
     for (const auto& m : report.measurements) {
         const auto cap = t.refs.at(m.member);
         const auto row = std::find_if(t.rows.begin(), t.rows.end(), [&](const auto& r) { return r.cap == cap; });
+        demand(row != t.rows.end(), "measurement lacks declared ownership");
+        q.measurements.push_back({m.owner, m.owner_pin, m.member, m.member_pin,
+            m.owner_side, m.member_side, m.planar_pad_box_gap_mm});
+        q.subjects.emplace(cap, OwnedShapeSubject{row->owner, row->owner_pin, row->cap_pin,
+            row->return_pin, row->rail, row->return_net, m.owner_side, m.member_side,
+            row->role == OwnedCapRole::Bypass ? OwnedShapeRole::Bypass : OwnedShapeRole::OutputBulk});
         (row->role == OwnedCapRole::Bypass ? q.bypass_pad_gaps : q.bulk_pad_gaps)
             .emplace(cap, m.planar_pad_box_gap_mm);
     }

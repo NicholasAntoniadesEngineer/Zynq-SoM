@@ -7,6 +7,29 @@ bool hit(Box4 b, const std::vector<Box4> &boxes) {
                        [&](Box4 other) { return rects_intersect_open(b, other); });
 }
 using SubjectMap = std::map<std::string, std::pair<std::string, Box4>>;
+std::set<std::string> independently_locked_owned_members(const Placer &placer) {
+    std::set<std::string> members, caps;
+    if (!placer.ctx.in.floorplan.compact_search) return members;
+    for (const auto &[sheet, evidence] : placer.ctx.in.owned_groups) {
+        if (!evidence)
+            throw std::runtime_error("placement moves: null trusted ownership for " + sheet);
+        for (const auto &row : owned_group_placements(*evidence)) {
+            if (!placer.pos.count(row.owner) && !placer.pos.count(row.cap)) continue;
+            if (!placer.pos.count(row.owner) || !placer.pos.count(row.cap) ||
+                placer.ctx.by_ref.at(row.owner).sheet != sheet ||
+                placer.ctx.by_ref.at(row.cap).sheet != sheet ||
+                row.owner == row.cap || !caps.insert(row.cap).second)
+                throw std::runtime_error("placement moves: incomplete or inconsistent owned group in " + sheet);
+            // Both bypass and output bulk retain their declared relationship.
+            // These independent move/swap stages offer neither a rigid owned
+            // group trial nor a named-pad nonincrease proof, so grant no new
+            // movement permission to either endpoint. Other parts stay eligible.
+            members.insert(row.owner);
+            members.insert(row.cap);
+        }
+    }
+    return members;
+}
 PcbCheckInput refit_fanout_geometry(const Placer &placer, const PcbStageRefitPoses *trial) {
     PcbCheckModel model;
     model.origin_x = model.origin_y = 25;
@@ -69,6 +92,7 @@ bool refit_preserves_fanout(const PcbCheckInput &incumbent, const PcbCheckInput 
 }
 } // namespace
 void Placer::l4_pull() {
+    const auto owned = independently_locked_owned_members(*this);
     double pc = ctx.clearance;
     auto center = FloorplanPoint{plan.som_x + plan.som.w / 2, plan.som_y + plan.som.h / 2};
     std::vector<Box4> through, corridors;
@@ -102,7 +126,7 @@ void Placer::l4_pull() {
         std::vector<std::string> movers;
         for (const auto &[r, p] : geometry.bot_off[sheet]) {
             (void)p;
-            if (side(r) == "bottom" && pos.count(r) && !r.empty() &&
+            if (!owned.count(r) && side(r) == "bottom" && pos.count(r) && !r.empty() &&
                 (r[0] == 'R' || r[0] == 'C' || r[0] == 'L') && r.rfind("RJ", 0) != 0 &&
                 r.rfind("LED", 0) != 0)
                 movers.push_back(r);
@@ -355,6 +379,7 @@ void Placer::refit(ExecutionFailureReceipt* failure) {
     }
 }
 void Placer::reorder() {
+    const auto owned = independently_locked_owned_members(*this);
     std::vector<ReorderPos> poses;
     std::vector<std::tuple<std::string, std::vector<std::string>>> sheets, pad_names;
     std::vector<std::tuple<std::string, std::vector<std::tuple<std::string, double, double>>>>
@@ -394,7 +419,7 @@ void Placer::reorder() {
     for (const auto &[sheet, refs] : geometry.refs_by_sheet) {
         sheets.emplace_back(sheet, refs);
         for (const auto &r : refs)
-            if (pos.count(r) && geometry.resolvable.count(r))
+            if (!owned.count(r) && pos.count(r) && geometry.resolvable.count(r))
                 members.emplace_back(
                     r, side(r), mod(r)->source, rot(r),
                     is_cluster_passive(r, pins(r), {"RS", "RJ", "RN", "LED"}, {"R", "C", "L"}));

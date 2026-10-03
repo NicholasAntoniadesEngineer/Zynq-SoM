@@ -1,5 +1,68 @@
 # carrier — project HISTORY (archived planning logs)
 
+## 2026-10-03 — owned-quality selection, inter-stage protection and strict facing
+
+Compact packing now transports actual zone-quality evidence and considers the
+complete set of equally ranked feasible shapes. It removes strictly dominated
+per-capacitor gap vectors, then selects the lowest surviving stable shape index.
+Primary dimensions, estimator, anchor distance and face must match exactly;
+ownership identities, pin/net roles, sides, bulk gap and fanout evidence must
+remain compatible. Missing/rejected evidence is not a zero score. Dominance is
+not used as a sort comparator or a running-incumbent fold, both of which can
+give inconsistent three-way results. Sheets without quality evidence skip the
+additional ranking work. No hardware distance limit or movement permission is
+inferred from these optimization measurements.
+
+Actual-engine regressions cover dominated originals, invalid/missing evidence,
+default parity and the three-way frontier. The two-pilot complete pack proof
+elects a bringup_rails owned alternative (34 -> 60) with unchanged dimensions;
+board_aux retains shape 11. This is not a smaller accepted carrier. Compact L4
+pull and reorder now exclude declared ownership endpoints from independent
+movement or interchangeable-capacitor swaps; unrelated parts in the same sheet
+remain eligible. Corridor eviction still needs a separate ownership correction.
+
+An archived failing carrier proved the selected power shape's metrics exactly
+match the actual seed, breathed and guarded-refit poses. Its negative facing
+dot was nevertheless accepted by the composer's L4-deferral rule. Compact
+compiled hard-facing terms now explicitly require the normal facing check,
+including legalize(false) fallback. Other guard semantics and default behavior
+remain unchanged. The reproduced term rejects with unchanged geometry; this
+does not assert that the full search has found a legal replacement.
+
+Occupancy cell-index accounting now borrows a lazy counter slot for one four-call
+query/update scope. Every actual scalar entry still performs its checked increment
+before validation. No query, count, geometry or candidate is fabricated or cached.
+Independent entry, overflow-prefix, map-lifetime and threaded tests pass, as do
+the 3,381 frozen occupancy contracts and geometry digest. Six interleaved counted
+query microbenchmark pairs measured 0.250–0.261 s before and 0.109–0.111 s after,
+with identical geometry and 10,006,324 entries each; the null-sink control was
+1–5% slower. These concurrent-host microbenchmarks are not board-build speedups.
+
+The stage profiler previously loaded default-only inputs before toggling compact
+search, which would omit the new owned alternatives. It now resolves compact
+inputs for on/both mode, labels that preparation, and has a loader regression
+requiring both ownership groups and all 56 alternatives. Earlier profiles from
+before owned-group integration must not be used as measurements of that workload.
+
+The current default carrier PCB independently matches the previously validated
+8509 build byte-for-byte (SHA-256 8437ddd4fbcf012c800bed70a1b6968c0d09444b00c9e816390dfc5946360633).
+The live-reference mismatch was traced completely to the earlier `529c196a`
+RV-3028 footprint fix: restoring only that old footprint reproduces every byte
+of the old board. The reference now removes its three zero-length courtyard
+segments and updates seven consequent graphic UUIDs. No placement, electrical,
+outline or valid graphical geometry changed; devkit and all sixteen strict
+report references already matched. The unchanged two-board live test passed
+against this isolated artifact correction. No new
+whole-board compact acceptance, audited timing comparison or rendered finalist
+is claimed by this implementation batch.
+
+Integrated validation: a full ABI rebuild completed; all 22 selected ownership,
+quality, profile-input, strict-facing, compose, occupancy, precision-source and
+frozen-placement CTests passed (168.60 s concurrent wall time, not a benchmark).
+The unchanged two-board live-reference test then passed in the shared checkout
+(32.03 s). The archived actual-carrier strict-facing replay also passed. The
+complete compact search remains a separate construction/acceptance exercise.
+
 ## 2026-10-03 — standalone compact input catalog isolation
 
 The first integrated standalone compact `pcb-stage` invocation exposed a hidden
