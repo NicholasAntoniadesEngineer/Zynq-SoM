@@ -1,5 +1,42 @@
 # carrier — project HISTORY (archived planning logs)
 
+## 2026-10-03 — compact placement clearance and owned-group foundations
+
+Continued the existing optimisation goal (autonomous, per full-autonomy
+directive). The accepted default remains unchanged; these compact-mode fixes
+are not a new whole-board acceptance or a board-area improvement.
+
+Through-hole reservations now occupy the opposite face symmetrically, including
+bottom-mounted parts. Moving groups remove and restore both reservations with
+counted ownership. Dispersion rejection restores the entire compact breathing
+pass: restoring only one sheet could place it into space another sheet had
+legitimately entered. Real Placer tests cover both directions, fixed/moving THT,
+vacated/new shadows, mixed-side groups, rejection and atomic rollback.
+
+An additional reproduced defect showed a legal 0.500001 mm internal gap becoming
+0.499960 mm after final per-member rounding. Compact commits now stage the actual
+rounded poses and recheck occupancy, fanout protection, leash and internal
+same-face/THT separation before accepting any member. Rejected commits retain
+all actual-work counts. Opposite-face SMD pairs do not gain a false coupling.
+Frozen default placement still matches its independent reference exactly.
+
+Integrated a bounded, explicitly owned capacitor-group constructor and its unit
+and live-footprint contracts. It preserves owners, fixed members, output bulk,
+existing sides/rotations and nets; only explicitly permitted bypass capacitors
+move. Final geometry, not translated cached boxes, determines acceptance and
+reported pad gaps. Six live pilot declarations yield three local alternatives;
+mechanical and fanout nonregression checks pass in the original board context.
+The local extents do not shrink. This constructor is not yet selected by the
+production zone search, and qualitative proximity/access remain UNVERIFIED.
+
+Added the constructor to both independently declared source-audit manifests;
+the policy contract first exposed the missing second entry and then passed.
+Compiler census confirms no unregistered precision or policy storage in the
+new constructor. Six focused CTests passed (clearance, occupancy, constructor,
+live pilots, frozen placement and precision census); policy and strengthened
+rounding regressions are separately checked. Full board gates/renders must be
+rerun on the integrated search changes before replacing the incumbent.
+
 ## 2026-10-01 — calculation and model-identity corrections
 
 Found and reproduced inherited SPICE validation false passes (autonomous, per
