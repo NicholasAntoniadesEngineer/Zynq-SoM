@@ -28,6 +28,17 @@ and contract-coverage advisories remain; renders were skipped. Model time is
 load: validation timings, not a controlled speed comparison. The fresh compact
 carrier run is separate and not yet acceptance evidence at this commit.
 
+Follow-up full carrier validation at cd907481 now passes fanout (110 subjects,
+zero starved), final PCB geometry, ownership requirements and the complete source
+audit; non-unrouted DRC errors remain zero. The generated PCB changes to SHA256
+58e93145df3e04cd4cb3ebcc59ee5f531286ffb76eb55c7da6e8e83ea2eb190e.
+Its outline remains 170x165 mm and the mandatory fallback gate still rejects
+151 reported reseats against 18. Thus it does not replace the 168x163 incumbent.
+The reported receipts still precede the independently identified fallback-event
+rollback correction; no claim of complete executed-event counts is made.
+Both runs, hashes, timings and scope limits are recorded in
+native/benchmarks/2026-10-03-child-halo-board-validation.json.
+
 ## 2026-10-03 — ownership-safe compact corridor repair
 
 Compact final-frame corridor eviction now tries an independently legal move,
