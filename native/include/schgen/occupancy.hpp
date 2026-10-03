@@ -24,6 +24,10 @@ struct Comp {
     double w = 0.0;
     double h = 0.0;
     int mask = 0;
+    // Physical child-face fanout, in the same W/E/N/S frame as this rectangle.
+    // Legacy/punch producers retain zero fields and their existing receipts.
+    Halo reach{};
+    Halo inset{};
 };
 
 struct Pose {

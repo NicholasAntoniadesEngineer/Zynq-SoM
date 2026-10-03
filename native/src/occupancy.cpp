@@ -314,15 +314,14 @@ std::vector<Rect> pairs_entity(double x, double y, double w, double h,
     main.pmask = mask;
     main.main = true;
     entity.push_back(main);
-    const Halo zero{};
     for (const Comp& comp : comps) {
         Rect child;
         child.x = occupancy_component_precision4dp(x + comp.dx, counts);
         child.y = occupancy_component_precision4dp(y + comp.dy, counts);
         child.w = comp.w;
         child.h = comp.h;
-        child.reach = zero;
-        child.inset = zero;
+        child.reach = comp.reach;
+        child.inset = comp.inset;
         child.mask = comp.mask;
         child.pmask = mask;
         child.main = false;
@@ -543,10 +542,9 @@ void Occupancy::remove_one(double x, double y, double w, double h,
 void Occupancy::add(double x, double y, double w, double h, const Halo& reach,
                     const Halo& inset, int mask, const std::vector<Comp>& comps, QuantizationCounts* counts) {
     add_one(x, y, w, h, reach, inset, mask, mask, true, counts);
-    const Halo zero{};
     for (const Comp& c : comps) {
         add_one(occupancy_component_precision4dp(x + c.dx, counts), occupancy_component_precision4dp(y + c.dy, counts), c.w, c.h,
-                zero, zero, c.mask, mask, false, counts);
+                c.reach, c.inset, c.mask, mask, false, counts);
     }
 }
 
@@ -554,10 +552,9 @@ void Occupancy::remove(double x, double y, double w, double h,
                        const Halo& reach, const Halo& inset, int mask,
                        const std::vector<Comp>& comps, QuantizationCounts* counts) {
     remove_one(x, y, w, h, reach, inset, mask, mask, true, counts);
-    const Halo zero{};
     for (const Comp& c : comps) {
         remove_one(occupancy_component_precision4dp(x + c.dx, counts), occupancy_component_precision4dp(y + c.dy, counts), c.w, c.h,
-                   zero, zero, c.mask, mask, false, counts);
+                   c.reach, c.inset, c.mask, mask, false, counts);
     }
 }
 
@@ -632,11 +629,10 @@ bool Occupancy::fits_exhaustive(double x, double y, double w, double h,
     if (!body_clear(x, y, w, h, reach, inset, mask, mask, true, false, nullptr)) {
         return false;
     }
-    const Halo zero{};
     for (const Comp& c : comps) {
         const double cx0 = x + c.dx;
         const double cy0 = y + c.dy;
-        if (!body_clear(cx0, cy0, c.w, c.h, zero, zero, c.mask, mask, false,
+        if (!body_clear(cx0, cy0, c.w, c.h, c.reach, c.inset, c.mask, mask, false,
                         false, nullptr)) {
             return false;
         }
@@ -654,12 +650,10 @@ bool Occupancy::fits_hashed(double x, double y, double w, double h,
     if (!body_clear(x, y, w, h, reach, inset, mask, mask, true, true, counts)) {
         return false;
     }
-    const Halo zero{};
-    const Halo z4{};
     for (const Comp& c : comps) {
         const double cx0 = x + c.dx;
         const double cy0 = y + c.dy;
-        if (!query_hashed_cells(cx0, cy0, c.w, c.h, z4, zero, zero, c.mask,
+        if (!query_hashed_cells(cx0, cy0, c.w, c.h, halo4(c.reach,c.inset), c.reach, c.inset, c.mask,
                                 mask, false, counts)) {
             return false;
         }
@@ -788,7 +782,7 @@ std::tuple<double, double, double, double> evict_window(
     erects.push_back(ERect{ex, ey, ew, eh, e_reach, e_inset});
     const Halo zero{};
     for (const Comp& c : e_comps) {
-        erects.push_back(ERect{ex + c.dx, ey + c.dy, c.w, c.h, zero, zero});
+        erects.push_back(ERect{ex + c.dx, ey + c.dy, c.w, c.h, c.reach, c.inset});
     }
     double g = clear;
     const Halo reaches[2] = {rch, zero};
@@ -801,6 +795,9 @@ std::tuple<double, double, double, double> evict_window(
                                            r.inset, axis));
             }
         }
+        for (const Comp& c : cc)
+            for (char axis : axes)
+                g = std::max(g, fanout_sep(c.reach,c.inset,r.reach,r.inset,axis));
     }
     double ex_lo = w;
     double ex_hi = 0.0;

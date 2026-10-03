@@ -203,7 +203,28 @@ std::vector<Comp> Engine::zone_components(const FloorplanZoneShape& shape, bool 
             }
         }
     }
-    return zone_components_assemble(minor, punches, shape.side == "bottom" ? occ_top : occ_bottom, occ_punch, counts);
+    auto children=zone_components_assemble(minor, punches, shape.side == "bottom" ? occ_top : occ_bottom, occ_punch, counts);
+    if (in.compact_search && !minor.empty()) {
+        // The first assembled child is the minority-face courtyard union.
+        // Its halo must be measured in that rectangle's frame, not attached
+        // solely to the opposite-face primary body. Rotations/mirroring are
+        // already resolved by courtyard(); no pre-rotation halo is copied.
+        auto& child=children.front();
+        std::vector<std::tuple<double,double,double,double,double,double,double,int>> rows;
+        for (const auto& [r,xy]:shape.bot_off) {
+            auto key=get(shape.mirror,r);
+            if (key.empty()) key=get(in.geometry.resolvable,r);
+            if (key.empty() || is_testpoint_ref(r) ||
+                std::filesystem::path(in.footprints.at(key).source).stem().string().find("Fiducial")!=std::string::npos) continue;
+            if (const auto box=courtyard(r,xy))
+                rows.emplace_back(box->x0-child.dx,box->y0-child.dy,0,0,
+                    box->x1-box->x0,box->y1-box->y0,0,footprint(key).pins);
+        }
+        const auto members=zone_fanout_members_rows_accounted(rows,min_subject_pins,
+            {{2,.20},{8,1.50}},2.0,counts);
+        std::tie(child.reach,child.inset)=zone_fanout_reach(child.w,child.h,members,min_subject_pins,counts);
+    }
+    return children;
 }
 
 void Engine::prepare_geometry() {
@@ -245,6 +266,13 @@ void Engine::prepare_geometry() {
     for (const auto& [name, variants] : shape_sets[1]) {
         (void)name; for (const auto& s : variants) bound(s.reach,s.inset);
     }
+    // Cover both courtyard-punch and pad-punch policies, including shapes not
+    // present in the interior variant table. No new numeric work on defaults.
+    if (in.compact_search)
+        for (const auto& policy:components) for (const auto& [key,children]:policy) {
+            (void)key;
+            for (const auto& child:children) bound(child.reach,child.inset);
+        }
     const auto dec = sheets.find("som_decoupling");
     if (dec != sheets.end()) {
         for (const auto& p : dec->second->parts) if (const auto key = resolved(p)) {

@@ -13,9 +13,12 @@ inline bool cacheable_query_geometry(const SeatShapeCand& c) {
                    c.win_x0,c.win_x1,c.win_y0,c.win_y1})
         if (!std::isfinite(v)) return false;
     if (c.w<=0||c.h<=0||c.mask<=0||c.win_x0>c.win_x1||c.win_y0>c.win_y1) return false;
-    for (const auto& p:c.comps)
+    for (const auto& p:c.comps) {
+        for (double v:{p.reach.w,p.reach.e,p.reach.n,p.reach.s,p.inset.w,p.inset.e,p.inset.n,p.inset.s})
+            if (!std::isfinite(v)) return false;
         if (!std::isfinite(p.dx)||!std::isfinite(p.dy)||!std::isfinite(p.w)||!std::isfinite(p.h)
             ||p.w<=0||p.h<=0||p.mask<=0) return false;
+    }
     return true;
 }
 // Exact scalar bits, including signed zero. No rounding or primary-box-only
@@ -36,7 +39,8 @@ inline bool same_query_geometry(const SeatShapeCand& a, const SeatShapeCand& b) 
         ||!eq(a.win_y0,b.win_y0)||!eq(a.win_y1,b.win_y1)||a.comps.size()!=b.comps.size()) return false;
     for (std::size_t i=0;i<a.comps.size();++i) {
         const auto& x=a.comps[i]; const auto& y=b.comps[i];
-        if (!eq(x.dx,y.dx)||!eq(x.dy,y.dy)||!eq(x.w,y.w)||!eq(x.h,y.h)||x.mask!=y.mask) return false;
+        if (!eq(x.dx,y.dx)||!eq(x.dy,y.dy)||!eq(x.w,y.w)||!eq(x.h,y.h)||x.mask!=y.mask
+            ||!halo(x.reach,y.reach)||!halo(x.inset,y.inset)) return false;
     }
     return true;
 }

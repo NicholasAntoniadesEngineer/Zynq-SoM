@@ -92,7 +92,10 @@ std::string signature(const std::vector<SeatShapeHit>& hits) {
     for(const auto& h:hits) {
         s << h.side << ':' << h.index << ':' << h.x << ':' << h.y << ':' << h.w << ':' << h.h << ':' << h.dist_key;
         for(const auto& halo:{h.reach,h.inset}) s << ':' << halo.w << ':' << halo.e << ':' << halo.n << ':' << halo.s;
-        for(const auto& c:h.comps) s << '/' << c.dx << ':' << c.dy << ':' << c.w << ':' << c.h << ':' << c.mask;
+        for(const auto& c:h.comps) {
+            s << '/' << c.dx << ':' << c.dy << ':' << c.w << ':' << c.h << ':' << c.mask;
+            for(const auto& v:{c.reach,c.inset})s<<':'<<v.w<<':'<<v.e<<':'<<v.n<<':'<<v.s;
+        }
         s << '\n';
     }
     return s.str();
@@ -117,6 +120,7 @@ QuantizationCounts unique_query_counts(const Occupancy& occ,
             && c.win_x0<=c.win_x1 && c.win_y0<=c.win_y1;
         for(const auto& p:c.comps) {
             values.insert(values.end(),{p.dx,p.dy,p.w,p.h});
+            for(const auto& h:{p.reach,p.inset})values.insert(values.end(),{h.w,h.e,h.n,h.s});
             masks.push_back(p.mask);
             eligible=eligible && p.w>0 && p.h>0 && p.mask>0;
         }

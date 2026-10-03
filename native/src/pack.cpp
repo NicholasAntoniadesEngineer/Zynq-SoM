@@ -818,7 +818,8 @@ std::vector<Comp> edge_components(char edge, double block_x, double block_y,
             }
         }
         out.push_back(Comp{pack_edge_component_precision4dp(c.dx, counts), pack_edge_component_precision4dp(c.dy, counts),
-                           pack_edge_component_precision4dp(c.w, counts), pack_edge_component_precision4dp(c.h, counts), c.mask});
+                           pack_edge_component_precision4dp(c.w, counts), pack_edge_component_precision4dp(c.h, counts), c.mask,
+                           c.reach, c.inset});
     }
     return out;
 }

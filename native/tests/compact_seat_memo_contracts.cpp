@@ -22,7 +22,10 @@ std::string key(const SeatShapeCand& c) {
     for(double v:{c.w,c.h,c.reach.w,c.reach.e,c.reach.n,c.reach.s,
         c.inset.w,c.inset.e,c.inset.n,c.inset.s,c.win_x0,c.win_x1,c.win_y0,c.win_y1}) append(s,v);
     append(s,c.mask); append(s,c.comps.size());
-    for(const auto& p:c.comps) {append(s,p.dx);append(s,p.dy);append(s,p.w);append(s,p.h);append(s,p.mask);}
+    for(const auto& p:c.comps) {
+        append(s,p.dx);append(s,p.dy);append(s,p.w);append(s,p.h);append(s,p.mask);
+        for(const auto& h:{p.reach,p.inset})for(double v:{h.w,h.e,h.n,h.s})append(s,v);
+    }
     return s;
 }
 std::string signature(const std::vector<SeatShapeHit>& hits) {
@@ -30,7 +33,10 @@ std::string signature(const std::vector<SeatShapeHit>& hits) {
     for(const auto& h:hits) {
         s<<h.side<<':'<<h.index<<':'<<h.x<<':'<<h.y<<':'<<h.w<<':'<<h.h<<':'<<h.dist_key;
         for(const auto& v:{h.reach,h.inset}) s<<':'<<v.w<<':'<<v.e<<':'<<v.n<<':'<<v.s;
-        for(const auto& c:h.comps) s<<'/'<<c.dx<<':'<<c.dy<<':'<<c.w<<':'<<c.h<<':'<<c.mask;
+        for(const auto& c:h.comps) {
+            s<<'/'<<c.dx<<':'<<c.dy<<':'<<c.w<<':'<<c.h<<':'<<c.mask;
+            for(const auto& v:{c.reach,c.inset})s<<':'<<v.w<<':'<<v.e<<':'<<v.n<<':'<<v.s;
+        }
         s<<'\n';
     }
     return s.str();
@@ -81,6 +87,10 @@ void fields() {
     for(auto f:{&SeatShapeCand::w,&SeatShapeCand::h,&SeatShapeCand::win_x0,&SeatShapeCand::win_x1,&SeatShapeCand::win_y0,&SeatShapeCand::win_y1}) {b=a;b.*f+=1;different(b);}
     for(auto f:{&Halo::w,&Halo::e,&Halo::n,&Halo::s}) {b=a;b.reach.*f+=1;different(b);b=a;b.inset.*f+=1;different(b);}
     for(std::size_t i=0;i<a.comps.size();++i) {
+        for(auto f:{&Halo::w,&Halo::e,&Halo::n,&Halo::s}) {
+            b=a;b.comps[i].reach.*f+=1;different(b);
+            b=a;b.comps[i].inset.*f+=1;different(b);
+        }
         for(auto f:{&Comp::dx,&Comp::dy,&Comp::w,&Comp::h}) {b=a;b.comps[i].*f+=1;different(b);}
         b=a;++b.comps[i].mask;different(b);
     }
@@ -99,6 +109,10 @@ void fields() {
         }
         for(auto f:{&Comp::dx,&Comp::dy,&Comp::w,&Comp::h}) {
             b=a;b.comps[1].*f=bad;require(!cacheable_query_geometry(b),"nonfinite child cacheable");
+        }
+        for(auto f:{&Halo::w,&Halo::e,&Halo::n,&Halo::s}) {
+            b=a;b.comps[1].reach.*f=bad;require(!cacheable_query_geometry(b),"nonfinite child reach cacheable");
+            b=a;b.comps[1].inset.*f=bad;require(!cacheable_query_geometry(b),"nonfinite child inset cacheable");
         }
     }
     b=a;b.w=-1;require(!cacheable_query_geometry(b),"negative width cacheable");
@@ -123,6 +137,7 @@ void run() {
         for(int j=0;j<8;++j) {
             auto v=shape(j);v.w+=j%3;v.mask=1+j%3;
             v.comps={{-.25,double(n%3),.5,1,2}};
+            v.comps[0].reach={.25,.5,.75,1};v.comps[0].inset={0,.1,0,.2};
             c.push_back(v);v.index+=20;v.side="alias";c.push_back(v);
         }
         check(occ,c,3+n%20,4+n%19);

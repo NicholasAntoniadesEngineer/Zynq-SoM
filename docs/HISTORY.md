@@ -1,5 +1,33 @@
 # carrier — project HISTORY (archived planning logs)
 
+## 2026-10-03 — preserve minority-face fanout through compound occupancy
+
+(Autonomous, per full-autonomy directive.) Compact zone construction now measures
+the minority-face clearance envelope from actual rotated/mirrored member boxes
+in the child rectangle's frame. Compound children carry reach/inset through
+insertion, removal, hashed/exhaustive predicates, decomposition, edge copies,
+eviction windows and exact memo keys. Spatial reach bounds include both punch
+policies. Zero defaults preserve existing default/punch producers. Main envelopes
+and parent-face exemptions are retained, not relaxed to obtain a smaller board.
+
+After a complete ABI rebuild, 28 selected regression groups passed, including
+both-board exact default outputs and the frozen 170x165 mm SW7002 seed. The old
+seed still reproduces its original PCB when explicitly forced, but the corrected
+occupancy rejects it; zeroing the child's halos admits it again. Expanded
+fractional/nextafter, signed-inset and face-mask properties pass 47,959 checks in
+both the strict optimized and AddressSanitizer/UndefinedBehaviorSanitizer builds.
+These predicates share semantics; their agreement alone is not a universal
+physical-member proof. The targeted archived seed provides independent physical
+failure evidence, and broader mixed-face/rotation qualification continues.
+
+A fresh devkit no-render run passes all applicable mandatory gates and retains
+PCB SHA256 c55c085789a3d262a6bb9233bd73cb2d4e7f5b0bba425c5ddebf4f9ced2314c2.
+It reports zero non-unrouted DRC errors and 413 unrouted connections. Return-path
+and contract-coverage advisories remain; renders were skipped. Model time is
+0.713364 s, source audit 157.956189 s, whole process 192.19 s under concurrent
+load: validation timings, not a controlled speed comparison. The fresh compact
+carrier run is separate and not yet acceptance evidence at this commit.
+
 ## 2026-10-03 — ownership-safe compact corridor repair
 
 Compact final-frame corridor eviction now tries an independently legal move,
