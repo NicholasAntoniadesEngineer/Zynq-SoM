@@ -26,8 +26,8 @@ ManufacturingPipelineInput native_board_pipeline_metadata(){
         {"cand_cap_truncated","zone_pack","Ranked candidate list exceeded its cap; discard the tail and count this truncating generation call."},
         {"thermal_via_lattice","emission","A preferred thermal via site was blocked; a checked lattice candidate supplied the via. Count each such via."},
         {"bottom_variant_contract_reject","zone_pack","An eligible bottom variant failed its mirrored contract or required lifting a load-bearing contract member; do not offer that shape."},
-        {"corridor_evict_moved","corridor_eviction","A stray was moved to a legal exit from a final-frame DF40 corridor. Count moved parts."},
-        {"corridor_stray_unmovable","corridor_eviction","A corridor stray had no legal exit and remained; the escape solver must prove coexistence or fail."},
+        {"corridor_evict_moved","corridor_eviction","One event per part whose pose changes in an accepted final-frame DF40 corridor repair, including members of a rigid owned group. Executed relocations remain counted if a later failure rolls the invocation back."},
+        {"corridor_stray_unmovable","corridor_eviction","A final-frame DF40 corridor obstruction has no permitted legal exit or remains after repair. Default retains the stray for escape coexistence proof or failure; compact rejects explicitly and rolls geometry back. Malformed input and accounting errors are not this fallback."},
         {"punch_free_plan_rejected","plan_lattice","The free-punch candidate was infeasible or failed strict area/estimate improvement; retain the conservative plan and its fallback snapshot."},
         {"interior_reseat_retry","plan_lattice","Bounded eviction and reseating found a legal interior placement after greedy seating failed. Count successful retry episodes across all candidates."},
         {"assembly_generation_failed","assembly_docs","Current-board assembly generation threw; the pipeline must fail and must not treat an older document as current evidence."}};

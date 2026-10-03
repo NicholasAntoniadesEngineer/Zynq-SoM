@@ -159,8 +159,8 @@ void tests(const PcbPlacementInput& source) {
         }
     }
 }
-// Diagnostic only: eviction is deliberately unchanged. Demonstrate that its
-// mandatory corridor correction can increase an explicit owner's named-pad gap.
+// Regression: without a sheet allocation, ownership-preserving corridor repair
+// cannot establish its leash and must fail explicitly, without geometry loss.
 void eviction_risk(const PcbPlacementInput& source) {
     Fixture f(source,"bringup_rails",true);
     const auto row=f.rows().front();
@@ -185,13 +185,20 @@ void eviction_risk(const PcbPlacementInput& source) {
                           std::max({0.,a.y0-b.y1,b.y0-a.y1}));
     };
     const double before=gap();
-    f.p->evict();
-    const double after=gap();
-    require(after>before,"eviction risk witness did not increase owned gap");
-    require(!rects_intersect_open(f.p->box(row.cap,f.p->pos.at(row.cap)),corridor),
-            "eviction risk witness did not clear corridor");
-    std::cout<<"EVICTION_RISK owned_gap "<<before<<" -> "<<after
-             <<"; corridor cleared; unchanged evict needs separate ownership-aware resolution\n";
+    const auto entry=f.p->pos;
+    const auto counts=f.p->ctx.quantization;
+    bool rejected=false;
+    try { f.p->evict(); }
+    catch(const PcbZoneInfeasible&) { rejected=true; }
+    // This fixture deliberately has no allocated sheet block, so neither an
+    // independent exit nor a full-group exit has a provable legal leash.
+    require(rejected,"unallocated owned eviction did not fail explicitly");
+    require(f.p->pos==entry && gap()==before,"failed eviction changed ownership geometry");
+    require(f.p->ctx.quantization!=counts,"failed eviction lost actual trial work");
+    require(!f.p->out.placement_accounting.fallback_events.empty() &&
+            f.p->out.placement_accounting.fallback_events.back()=="corridor_stray_unmovable",
+            "failed eviction missing terminal rejection receipt");
+    std::cout<<"EVICTION_REJECTED unallocated witness; geometry retained; actual work retained\n";
 }
 }
 int main(int argc,char** argv) {

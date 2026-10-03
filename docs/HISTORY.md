@@ -1,5 +1,27 @@
 # carrier — project HISTORY (archived planning logs)
 
+## 2026-10-03 — ownership-safe compact corridor repair
+
+Compact final-frame corridor eviction now tries an independently legal move,
+then a rigid connected ownership-group translation when every member is movable.
+Trials use emitted coordinates and actual courtyard/pad extents; they preserve
+named owner/cap gaps, allocated blocks, hardware exclusions, same-face/THT
+clearance and fanout. Top-side through-hole parts participate in both obstruction
+scans. An unresolved obstruction rejects the invocation with atomic pose rollback;
+executed work and registered per-part movement/rejection events remain counted.
+No new fallback names or increased ceilings were introduced. Compact breathing
+also checks L4 exemptions by sheet, matching their actual Context representation.
+
+Seven integrated movement/placement/manufacturing contract groups passed, plus
+the board-policy contracts. Archived-plan replay still produces the exact
+experimental PCB hash: this movement change does not repair the SW7002 failure
+already present at seed emission. Full-board acceptance remains unproven.
+
+The prior documentation refresh's Search9 board hash guard is now pinned to its
+reviewed prose-only bytes; helper, edge and board hash-mutation tests and the
+full two-board output comparison pass. Historical capture hashes are retained
+alongside explicit current fixture provenance.
+
 ## 2026-10-03 — compact query reuse and complete post-pipe validation
 
 (Autonomous, per full-autonomy directive.) Reuse exact duplicate occupancy

@@ -61,7 +61,7 @@ PcbCheckInput refit_fanout_geometry(const Placer &placer, const PcbStageRefitPos
                 ? std::pair<int, std::string>{0, ""} : net->second;
         }
         // Evaluate the coordinates that instantiate() will actually emit.
-        // Count these real trial projections even if this refit is rejected.
+        // Count these real trial projections even if the move is rejected.
         if (placer.grid_placed.count(ref)) {
             part.x = placement_emission_pose_precision4dp(25 + part.x, &placer.ctx.quantization);
             part.y = placement_emission_pose_precision4dp(25 + part.y, &placer.ctx.quantization);
@@ -89,6 +89,207 @@ bool refit_preserves_fanout(const PcbCheckInput &incumbent, const PcbCheckInput 
             return false;
     }
     return true;
+}
+
+using EvictRows = std::vector<OwnedCapPlacement>;
+using EvictIndex = std::map<std::string, std::size_t>;
+EvictIndex evict_index(const PcbCheckInput &input) {
+    EvictIndex index;
+    for (std::size_t i = 0; i < input.model().insts.size(); ++i)
+        index.emplace(input.model().insts[i].ref, i);
+    return index;
+}
+Box4 evict_box(const PcbCheckInput &input, std::size_t i) {
+    const auto &part=input.model().insts.at(i);
+    if (!part.mod || !part.mod->bbox)
+        throw PcbZoneInfeasible("compact eviction: missing actual footprint bbox");
+    const auto &g = input.geometry_at(i);
+    if (!g.courtyard || !g.pad_bbox)
+        throw PcbZoneInfeasible("compact eviction: missing actual courtyard/pads");
+    const auto a = *g.courtyard, b = *g.pad_bbox;
+    Box4 result{std::min(a.x0,b.x0), std::min(a.y0,b.y0),
+                std::max(a.x1,b.x1), std::max(a.y1,b.y1)};
+    const auto unite=[&](Box4 other) {
+        result={std::min(result.x0,other.x0),std::min(result.y0,other.y0),
+                std::max(result.x1,other.x1),std::max(result.y1,other.y1)};
+    };
+    // Gate reporting boxes round extents too. Keep the unrounded transformed
+    // courtyard/named-pad extents at the emitted pose as well: a rounded box
+    // must not hide an internal or THT separation loss.
+    unite(offset_turned_box(*part.mod->bbox,part.rotation,part.x,part.y));
+    for (const auto &[name,pad] : g.pad_boxes) { (void)name; unite(pad); }
+    return {result.x0-25,result.y0-25,result.x1-25,result.y1-25};
+}
+double evict_gap(const PcbCheckInput &input, const EvictIndex &index, const OwnedCapPlacement &row) {
+    const auto a = input.geometry_at(index.at(row.owner)).pad_boxes.at(row.owner_pin);
+    const auto b = input.geometry_at(index.at(row.cap)).pad_boxes.at(row.cap_pin);
+    return std::hypot(std::max({0.,a.x0-b.x1,b.x0-a.x1}),
+                      std::max({0.,a.y0-b.y1,b.y0-a.y1}));
+}
+bool evict_movable(const Placer &p, const std::string &r) {
+    if (!p.grid_placed.count(r) || p.fixed.count(r) || p.som_refs.count(r) ||
+        !p.geometry.resolvable.count(r) || !p.geometry.bbox_of.count(r) ||
+        p.geometry.conn_edge.count(r) || p.contract_members.count(r) ||
+        std::find(p.geometry.mh_refs.begin(),p.geometry.mh_refs.end(),r)!=p.geometry.mh_refs.end())
+        return false;
+    const auto &part = p.ctx.by_ref.at(r);
+    // Context builds l4_exempt from wired sheets and external zone targets,
+    // not board references. Match l4_pull's sheet-keyed eligibility.
+    return !p.ctx.l4_exempt.count(part.sheet) &&
+        part.sheet.rfind("som_j",0)!=0 && part.sheet!="som_decoupling" &&
+        part.footprint.find("Fiducial")==std::string::npos &&
+        !(p.ctx.wired.count(part.sheet) && p.ctx.in.contracts.count(part.sheet));
+}
+bool evict_allocated(const Placer &p, const std::string &ref, Box4 b) {
+    // No new leash radius: the existing allocated block is the authority.
+    const auto &sheet = p.ctx.by_ref.at(ref).sheet;
+    for (const auto *blocks : {&p.plan.edge_blocks,&p.plan.interior_blocks})
+        for (const auto &block : *blocks) if (block.name==sheet)
+            return b.x0>=block.x && b.y0>=block.y &&
+                   b.x1<=block.x+block.w && b.y1<=block.y+block.h;
+    return false; // Cannot prove an absent allocation.
+}
+bool evict_legal(const Placer &p, const PcbCheckInput &before, const PcbCheckInput &after,
+                 const std::set<std::string> &members, const EvictRows &rows,
+                 const std::vector<Box4> &corridors, bool rigid) {
+    const auto prior=evict_index(before), next=evict_index(after);
+    if (next.size()!=p.pos.size()) return false; // No invisible external obstacles.
+    for (const auto &row : rows)
+        if ((members.count(row.owner)||members.count(row.cap)) &&
+            evict_gap(after,next,row)>evict_gap(before,prior,row))
+            return false;
+    const auto separation=[](Box4 a,Box4 b) {
+        return std::max({a.x0-b.x1,b.x0-a.x1,a.y0-b.y1,b.y0-a.y1});
+    };
+    for (const auto &r : members) {
+        if (!evict_movable(p,r)) return false;
+        const auto &part=after.model().insts.at(next.at(r));
+        const auto b=evict_box(after,next.at(r));
+        const bool tht=has_thru_pads_from_text(part.mod->bytes);
+        if (b.x0<.6 || b.y0<.6 || b.x1>p.width-.6 || b.y1>p.height-.6 ||
+            !evict_allocated(p,r,b) || ((part.side=="bottom" || tht) && hit(b,corridors)) ||
+            (part.side=="top" && rects_intersect_open(b,p.keepout)))
+            return false;
+        for (const auto &[s,i] : next) {
+            if (r==s) continue;
+            const auto &other=after.model().insts[i];
+            if (part.side!=other.side && !tht && !has_thru_pads_from_text(other.mod->bytes))
+                continue;
+            if (separation(b,evict_box(after,i))<p.ctx.clearance) return false;
+        }
+    }
+    if (!refit_preserves_fanout(before,after)) return false;
+    if (rigid)
+        for (const auto &record : check_fanout(after,0).records)
+            if (record.starved()) return false;
+    return true;
+}
+bool evict_bottom_shadow(const Placer &p, const std::string &ref) {
+    return p.side(ref)=="bottom" || (p.geometry.resolvable.count(ref) &&
+        has_thru_pads_from_text(p.mod(ref)->bytes));
+}
+void compact_evict(Placer &p) {
+    // Validate trusted rows before any movement. Ownership does not grant
+    // permission to move a fixed/contracted member.
+    independently_locked_owned_members(p);
+    EvictRows rows;
+    for (const auto &[sheet,evidence] : p.ctx.in.owned_groups) {
+        (void)sheet;
+        for (const auto &row : owned_group_placements(*evidence))
+            if (p.pos.count(row.owner)) rows.push_back(row);
+    }
+    std::vector<Box4> corridors;
+    for (const auto &[r,j] : p.som_refs) {
+        (void)j;
+        if (p.pos.count(r) && p.geometry.resolvable.count(r))
+            corridors.push_back(pcb_escape_corridor_board(*p.mod(r),
+                p.ctx.corridor_grid(25,p.pos.at(r).first),
+                p.ctx.corridor_grid(25,p.pos.at(r).second),p.rot(r),&p.ctx.quantization));
+    }
+    if (corridors.empty()) return;
+    const auto entry=p.pos;
+    auto event=[&](const std::string &s) {
+        p.out.fallback_events.push_back(s);
+        p.out.placement_accounting.fallback_events.push_back(s);
+    };
+    try {
+        for (const auto &[ref,xy] : entry) {
+            (void)xy;
+            if (!evict_bottom_shadow(p,ref)) continue;
+            const auto before=refit_fanout_geometry(p,nullptr);
+            const auto index=evict_index(before);
+            if (!index.count(ref))
+                throw PcbZoneInfeasible("compact eviction: unresolved bottom-shadow member "+ref);
+            const auto b=evict_box(before,index.at(ref));
+            if (!hit(b,corridors)) continue;
+            std::vector<std::tuple<double,double,double>> exits;
+            for (const auto &c : corridors) if (rects_intersect_open(b,c)) {
+                const double m=p.ctx.clearance/2;
+                exits.emplace_back(c.x1-b.x0+m,c.x1-b.x0+m,0);
+                exits.emplace_back(b.x1-c.x0+m,-(b.x1-c.x0+m),0);
+                exits.emplace_back(c.y1-b.y0+m,0,c.y1-b.y0+m);
+                exits.emplace_back(b.y1-c.y0+m,0,-(b.y1-c.y0+m));
+            }
+            std::sort(exits.begin(),exits.end());
+            std::set<std::string> group{ref};
+            bool added;
+            do {
+                added=false;
+                for (const auto &row : rows) if (group.count(row.owner)||group.count(row.cap)) {
+                    added|=group.insert(row.owner).second;
+                    added|=group.insert(row.cap).second;
+                }
+            } while (added);
+            bool moved=false;
+            // Same finite exits/steps as the existing eviction; no extra
+            // hardware limit or unbounded repair search. Independent first.
+            for (bool rigid : {false,true}) {
+                if (rigid && group.size()==1) break;
+                const std::set<std::string> members=rigid?group:std::set<std::string>{ref};
+                if (!std::all_of(members.begin(),members.end(),
+                    [&](const auto &r){return evict_movable(p,r);})) continue;
+                for (const auto &[distance,ex,ey] : exits) {
+                    (void)distance;
+                    for (int k=0;k<9;++k) {
+                        const double dx=ex+(ex>0?k:ex<0?-k:0);
+                        const double dy=ey+(ey>0?k:ey<0?-k:0);
+                        PcbStageRefitPoses trial;
+                        for (const auto &r : members) {
+                            const auto old=p.pos.at(r);
+                            trial[r]={placement_evict_trial_precision4dp(old.first+dx,&p.ctx.quantization),
+                                      placement_evict_trial_precision4dp(old.second+dy,&p.ctx.quantization),p.rot(r)};
+                        }
+                        const auto after=refit_fanout_geometry(p,&trial);
+                        if (!evict_legal(p,before,after,members,rows,corridors,rigid)) continue;
+                        for (const auto &[r,pose] : trial) {
+                            const FloorplanPoint next{std::get<0>(pose),std::get<1>(pose)};
+                            if (p.pos.at(r)!=next) event("corridor_evict_moved");
+                            p.pos[r]=next;
+                        }
+                        moved=true;
+                        break;
+                    }
+                    if (moved) break;
+                }
+                if (moved) break;
+            }
+            if (!moved) {
+                event("corridor_stray_unmovable");
+                throw PcbZoneInfeasible("compact eviction: no legal ownership-preserving corridor exit for "+ref);
+            }
+        }
+        // Do not silently accept another obstruction, including after a group
+        // moved a member already visited by the loop.
+        const auto final=refit_fanout_geometry(p,nullptr);
+        for (const auto &[r,i] : evict_index(final))
+            if (evict_bottom_shadow(p,r) && hit(evict_box(final,i),corridors)) {
+                event("corridor_stray_unmovable");
+                throw PcbZoneInfeasible("compact eviction: corridor remains obstructed by "+r);
+            }
+    } catch (...) {
+        p.pos=entry; // Atomic geometry rollback, never rollback actual work.
+        throw;
+    }
 }
 } // namespace
 void Placer::l4_pull() {
@@ -453,6 +654,10 @@ void Placer::reorder() {
         pos[r] = {x, y};
 }
 void Placer::evict() {
+    if (ctx.in.floorplan.compact_search) {
+        compact_evict(*this);
+        return;
+    }
     std::vector<Box4> corridors, through;
     std::map<std::string, Box4> bottom;
     SubjectMap subjects;

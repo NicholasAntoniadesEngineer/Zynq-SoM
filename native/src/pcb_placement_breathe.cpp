@@ -57,7 +57,10 @@ void Placer::breathe(const std::string &phase) {
                          geometry.conn_edge.count(r) || b.sheet == "som_decoupling" ||
                          b.footprint.find("Fiducial") != std::string::npos ||
                          contracted.count(b.sheet) || contract_members.count(r) ||
-                         ctx.l4_exempt.count(r);
+                         // Context stores wired/near-target SHEET names. Keep
+                         // the frozen default path; compact ownership-aware
+                         // breathing must not move an exempt sheet indirectly.
+                         ctx.l4_exempt.count(compact ? b.sheet : r);
         (immovable ? fixed_parts : movable).push_back(r);
     }
     if (compact && !declared_owner.empty()) {
