@@ -7,6 +7,66 @@ bool hit(Box4 b, const std::vector<Box4> &boxes) {
                        [&](Box4 other) { return rects_intersect_open(b, other); });
 }
 using SubjectMap = std::map<std::string, std::pair<std::string, Box4>>;
+PcbCheckInput refit_fanout_geometry(const Placer &placer, const PcbStageRefitPoses *trial) {
+    PcbCheckModel model;
+    model.origin_x = model.origin_y = 25;
+    model.board_w = placer.width;
+    model.board_h = placer.height;
+    for (const auto &[ref, xy] : placer.pos) {
+        if (!placer.geometry.resolvable.count(ref)) continue;
+        const auto &source = placer.ctx.by_ref.at(ref);
+        PcbCheckInstance part;
+        part.ref = ref;
+        part.sheet = source.sheet;
+        part.footprint = source.footprint;
+        part.value = source.value;
+        part.side = placer.fixed.count(ref) ? "top" : placer.side(ref);
+        part.mod = placer.mod(ref);
+        part.mirror = placer.geometry.mirror_refs.count(ref);
+        part.x = xy.first;
+        part.y = xy.second;
+        part.rotation = placer.rot(ref);
+        if (trial && trial->count(ref)) {
+            const auto &pose = trial->at(ref);
+            part.x = std::get<0>(pose);
+            part.y = std::get<1>(pose);
+            part.rotation = std::get<2>(pose);
+        }
+        for (const auto &pad : pad_names_from_text(part.mod->bytes)) {
+            const auto net = placer.pin_net.find({ref, pad});
+            part.pad_nets[pad] = net == placer.pin_net.end()
+                ? std::pair<int, std::string>{0, ""} : net->second;
+        }
+        // Evaluate the coordinates that instantiate() will actually emit.
+        // Count these real trial projections even if this refit is rejected.
+        if (placer.grid_placed.count(ref)) {
+            part.x = placement_emission_pose_precision4dp(25 + part.x, &placer.ctx.quantization);
+            part.y = placement_emission_pose_precision4dp(25 + part.y, &placer.ctx.quantization);
+        } else {
+            part.x = placer.ctx.fixed_grid(25 + part.x);
+            part.y = placer.ctx.fixed_grid(25 + part.y);
+        }
+        model.insts.push_back(std::move(part));
+    }
+    return PcbCheckInput(std::move(model));
+}
+bool refit_preserves_fanout(const PcbCheckInput &incumbent, const PcbCheckInput &trial) {
+    const auto before = check_fanout(incumbent, 0);
+    const auto after = check_fanout(trial, 0);
+    if (before.records.size() != after.records.size()) return false;
+    std::map<std::string, PcbFanoutRecord> prior;
+    for (const auto &record : before.records) prior.emplace(record.ref, record);
+    // Compare subjects, not the total ratchet count: one repaired subject may
+    // not pay for newly starving another. Existing starvation may not worsen.
+    for (const auto &record : after.records) {
+        const auto found = prior.find(record.ref);
+        if (found == prior.end()) return false;
+        const auto &old = found->second;
+        if (record.starved() && (!old.starved() || record.clearance < old.clearance))
+            return false;
+    }
+    return true;
+}
 } // namespace
 void Placer::l4_pull() {
     double pc = ctx.clearance;
@@ -280,6 +340,13 @@ void Placer::refit(ExecutionFailureReceipt* failure) {
                                   centroid.first - zone.first, centroid.second - zone.second) > 0))
                 continue;
         }
+        // The compact refit must not buy a facing/airwire improvement by
+        // starving another group. Preserve all trial receipts above, and
+        // leave the incumbent poses intact when the trial fails this check.
+        if (ctx.in.floorplan.compact_search && result.poses &&
+            !refit_preserves_fanout(refit_fanout_geometry(*this, nullptr),
+                                   refit_fanout_geometry(*this, &*result.poses)))
+            continue;
         if (result.poses)
             for (const auto &[r, p] : *result.poses) {
                 pos[r] = {std::get<0>(p), std::get<1>(p)};

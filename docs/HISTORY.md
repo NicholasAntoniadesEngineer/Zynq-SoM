@@ -2,6 +2,25 @@
 
 ## 2026-10-03 — compact placement clearance and owned-group foundations
 
+Follow-up: the committed foundation at `8509df14` passed a complete default
+carrier build with `--no-render`: 37 sheets, all mandatory gates PASS, zero
+non-unrouted DRC errors, zero starved fanout subjects, fallback ratchet PASS,
+and the expanded 67-file source audit PASS. Its separate validation receipt is
+`native/benchmarks/2026-10-03-placement-foundation-validation.json`. Existing
+advisory return-path/golden/coverage findings remain, and images were skipped.
+Measured scopes under concurrent work are not a controlled speed comparison.
+
+Traced the compact USB JTAG regression to `refit_facing`, not breathing: rotating
+power moves D20001 near U28002, changing its gap from 2.9263347 to 1.8700 mm
+against a 2.0 mm requirement. Compact refits now compare each subject using the
+unchanged final fanout checker on actual emitted/rounded coordinates. A repaired
+subject cannot compensate for newly starving another. Failed trials preserve
+all incumbent poses and actual work counts. Four integrated CTests pass (fanout
+policy/projection, existing facing tests, frozen placement and compiler precision
+census), and the archived candidate replay passes on the combined breathe fixes.
+Rejecting this turn leaves the candidate's power-facing requirement unresolved;
+the candidate is still rejected until a compatible seat/shape is found.
+
 Continued the existing optimisation goal (autonomous, per full-autonomy
 directive). The accepted default remains unchanged; these compact-mode fixes
 are not a new whole-board acceptance or a board-area improvement.
