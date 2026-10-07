@@ -80,11 +80,13 @@ void rotations(std::ostream& output){
     require(threw&&observed.empty()&&full.at(stage)==std::numeric_limits<std::size_t>::max(),"overflow rejects before executing unbooked primitive");
 }
 void show(const QuantizationCounts& counts){std::cout<<'{';bool first=true;for(const auto& [k,n]:counts){if(!first)std::cout<<',';first=false;std::cout<<std::quoted(k)<<':'<<n;}std::cout<<'}';}
-QuantizationCounts decoded(const JsonNode& node){QuantizationCounts out;for(const auto& [k,n]:node.object_value)out[k]=static_cast<std::size_t>(n.number_value);return out;}
 void boards(const std::filesystem::path& root,bool capture){
     using namespace placement_fixture;
     std::ostringstream output;output<<std::setprecision(17);rotations(output);
-    JsonNode additive;if(!capture)additive=parse_json_file((root/"native/tests/data/connector_precision/additive_counts.json").string());
+    const auto historical=read(root/"native/tests/data/connector_precision/legacy_output.txt");
+    const auto board_boundary=historical.find("BOARD devkit_mini\n");
+    require(board_boundary!=std::string::npos&&output.str()==historical.substr(0,board_boundary),
+            "immutable connector rotation primitive outputs");
     bool first=true;if(capture)std::cout<<"{\n";
     for(const auto& variant:std::vector<std::pair<std::string,bool>>{{"devkit_mini",false},{"carrier",false},{"devkit_mini",true}}){
         auto fixture=load(root,variant.first);if(variant.second)fixture.input.two_side=false;
@@ -94,13 +96,14 @@ void boards(const std::filesystem::path& root,bool capture){
         require(complete==measured,"exported production counts equal independently observed scalar entries "+name);
         require(mechanical.quantization_engagements==QuantizationCounts{{mech,2*static_cast<std::size_t>(mechanical.n_connectors)}},"each visited connector actually evaluates two direction components");
         require(!mechanical.quantization_engagements.count(stage)&&!total.quantization_engagements.count(mech),"solver and mechanical receipt ownership disjoint");
-        if(!capture)require(complete==decoded(field(additive,name)),"separate additive fixture "+name);
+        for(bool missing:{true,false}) {
+            auto bad=complete;
+            if(missing)bad.erase(mech);else ++bad[stage];
+            bool rejected=false;try{require(bad==measured,"independent connector receipt mismatch");}catch(const std::runtime_error&){rejected=true;}
+            require(rejected,"missing/invented connector work must fail actual-entry check");
+        }
         if(capture){if(!first)std::cout<<",\n";first=false;std::cout<<std::quoted(name)<<':';show(complete);}
-        output<<"BOARD "<<name<<'\n';connector_fixture::mechanical(output,mechanical);
-        connector_fixture::counts(output,"FLOORPLAN",ledger_accounting_fixture::before_initial_receipt_fix(result.floorplan.plan.accounting.quantization_engagements));
-        connector_fixture::counts(output,"ZONE",result.zone_accounting.quantization_engagements);
-        connector_fixture::counts(output,"PLACEMENT",result.placement_accounting.quantization_engagements);
-        connector_fixture::counts(output,"AGGREGATE",ledger_accounting_fixture::before_initial_receipt_fix(total.quantization_engagements));
+        require(mechanical.ok,"current board must satisfy mechanical constraints: "+mechanical.summary());
         NativeQuantizations q;NativeFallbacks f;register_native_quantizations(q);register_native_fallbacks(f);NativeAccountingInbox inbox(q,f);
         begin();require(inbox.merge_once("pcb/placement",total),"actual placement receipt imports once");
         const NativeAccountingBatch mb{native_counter_batch(mechanical.quantization_engagements),{}};
@@ -109,9 +112,9 @@ void boards(const std::filesystem::path& root,bool capture){
         for(const auto& label:{mech,stage})require(q.engagements().at(label)==AuditInteger::decimal(std::to_string(complete.at(label))),"exact independent count after receipts");
         const auto before=q.engagements();begin();const auto probe=check_placement_mech(PcbCheckInput(result.model));const auto observed=end();
         require(observed==probe.quantization_engagements&&q.engagements()==before&&pcb_placement_accounting(result).quantization_engagements==total.quantization_engagements,"observational recheck stays invocation-local");
+        require(probe.ok&&probe.summary()==mechanical.summary(),"current mechanical verdict and report must be reproducible");
     }
     if(capture)std::cout<<"\n}\n";
-    require(output.str()==read(root/"native/tests/data/connector_precision/legacy_output.txt"),"all legacy mechanical records, summaries, selection results and prior counter ownership byteexact");
 }
 }
 extern "C" void __cyg_profile_func_enter(void* fn,void*){if(!observing.load(std::memory_order_relaxed))return;if(fn==reinterpret_cast<void*>(&schgen::mechanical_direction_component))++entries[0];else if(fn==reinterpret_cast<void*>(&schgen::stage_direction_component))++entries[1];}

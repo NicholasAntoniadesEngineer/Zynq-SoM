@@ -127,22 +127,26 @@ void overflow(){
 }
 void owning_overflow(const std::filesystem::path& root){
     auto fixture=placement_fixture::load(root,"devkit_mini");
+    fixture.input.two_side=false;
     const auto planning_zones=build_pcb_zone_geometry(fixture.input);
     const std::string key="stage_root_pose_precision4dp";
     const auto n=planning_zones.quantization_engagements.at(key);
     require(n>0,"owning overflow requires actual completed stage work");
-    fixture.input.two_side=false;
-    // Planning zones merge safely up to MAX. The subsequent successful-child
-    // merge with the independent top-preferred zones is unrepresentable.
+    // A single shared planning/emission zone is counted once, including in
+    // top-preferred mode. Exact MAX is valid; MAX+1 must never yield a receipt.
     fixture.input.floorplan.accounting.quantization_engagements[key]=std::numeric_limits<std::size_t>::max()-n;
-    auto planning=fixture.input;planning.two_side=true;
-    const auto prepared=prepare_pcb_floorplan(planning,planning_zones);
+    const auto prepared=prepare_pcb_floorplan(fixture.input,planning_zones);
     require(prepared.accounting.quantization_engagements.at(key)==std::numeric_limits<std::size_t>::max(),"prepare succeeds at exact maximum");
     const auto stage=generate_floorplan(prepared);
     require(stage.plan.accounting.quantization_engagements.at(key)==std::numeric_limits<std::size_t>::max(),"successful child retains exact maximum");
+    ExecutionFailureReceipt exact_failure;
+    const auto exact=build_pcb_model(fixture.input,&exact_failure);
+    require(pcb_placement_accounting(exact).quantization_engagements.at(key)==std::numeric_limits<std::size_t>::max()&&
+            !exact_failure.captured&&!exact_failure.unavailable,"shared zone at MAX is counted once without phantom overflow");
+    ++fixture.input.floorplan.accounting.quantization_engagements[key];
     ExecutionFailureReceipt failure;bool rejected=false;
     try{(void)build_pcb_model(fixture.input,&failure);}catch(const std::overflow_error&){rejected=true;}
-    require(rejected&&failure.unavailable&&!failure.captured&&failure.accounting.quantization_engagements.empty(),"owning model rejects successful-child merge overflow without a partial receipt");
+    require(rejected&&failure.unavailable&&!failure.captured&&failure.accounting.quantization_engagements.empty(),"owning model rejects zone merge overflow without a partial receipt");
     NativeQuantizations q;NativeFallbacks f;register_native_quantizations(q);register_native_fallbacks(f);
     NativeAccountingInbox in(q,f);const auto before=q.engagements();
     if(failure.captured)in.merge_once("pcb/placement",failure.accounting);

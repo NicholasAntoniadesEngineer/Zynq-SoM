@@ -104,7 +104,8 @@ void ownership(){
 }
 void live(const std::filesystem::path& root,const std::string& name){
     auto f=placement_fixture::load(root,name);const auto zones=build_pcb_zone_geometry(f.input);
-    pcb_placement::Placer p(f.input,zones,f.stage);p.seed();
+    const auto stage=generate_floorplan(prepare_pcb_floorplan(f.input,zones));
+    pcb_placement::Placer p(f.input,zones,stage);p.seed();
     auto step=[&](const std::string& label,auto action){
         const auto before=p.ctx.quantization;calls={};action();const auto observed=calls;
         auto delta=p.ctx.quantization;for(const auto& [k,v]:before)delta[k]-=v;
@@ -126,7 +127,7 @@ void live(const std::filesystem::path& root,const std::string& name){
     std::ostringstream manual_model,production_model;
     floorplan_precision_fixture::node(manual_model,pcb_model_json(p.out.model));
     floorplan_precision_fixture::node(production_model,pcb_model_json(result.model));
-    require(manual_model.str()==production_model.str(),name+" frozen-stage manual geometry matches production");
+    require(manual_model.str()==production_model.str(),name+" current-plan manual stage geometry matches production");
     require(result.zone_accounting_ownership==PcbZoneAccountingOwnership::IncludedInFloorplan,name+" production normal ownership explicit");
     require(result.placement_accounting.quantization_engagements==p.ctx.quantization,name+" every placement-local engagement exported");
     auto legacy=result.zone_accounting.fallback_events;legacy.insert(legacy.end(),result.placement_accounting.fallback_events.begin(),result.placement_accounting.fallback_events.end());
@@ -135,9 +136,9 @@ void live(const std::filesystem::path& root,const std::string& name){
     NativeQuantizations q;NativeFallbacks fallbacks;register_native_quantizations(q);register_native_fallbacks(fallbacks);NativeAccountingInbox inbox(q,fallbacks);
     require(inbox.merge_once("actual-build",total)&&!inbox.merge_once("actual-build",total),name+" final aggregate imports once with no replay math");
     if(name=="devkit_mini"){
-        f.input.two_side=false;calls={};const auto single=build_pcb_model(f.input);const auto separate=calls;
-        require(single.zone_accounting_ownership==PcbZoneAccountingOwnership::SeparateFromFloorplan,"top-preferred build exposes separate actual zone solve");
-        const auto all=pcb_placement_accounting(single);measured(all.quantization_engagements,separate,"top-preferred two-zone aggregate");
+        f.input.two_side=false;calls={};const auto single=build_pcb_model(f.input);const auto single_calls=calls;
+        require(single.zone_accounting_ownership==PcbZoneAccountingOwnership::IncludedInFloorplan,"top-preferred build plans and emits the same owned zone solve");
+        const auto all=pcb_placement_accounting(single);measured(all.quantization_engagements,single_calls,"top-preferred shared-zone aggregate");
     }
 }
 } // namespace

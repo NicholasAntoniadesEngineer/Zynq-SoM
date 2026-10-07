@@ -4,6 +4,7 @@
 #include "schgen/quantize.hpp"
 #include "floorplan_precision_fixture.hpp"
 #include "connector_precision_fixture.hpp"
+#include "pcb_placement_requirements.hpp"
 #include <array>
 #include <cstring>
 #include <iostream>
@@ -66,25 +67,43 @@ void adapters(){
     std::ostringstream expected,actual;connector_fixture::counts(expected,"TEST",prior);connector_fixture::counts(actual,"TEST",input);
     require(actual.str()==expected.str(),"connector historical adapter preserves all prior and unknown names");
 }
-void board_receipt(const std::filesystem::path& root){
-    auto fixture=placement_fixture::load(root,"carrier");
+void exact_receipt(const QuantizationCounts& owned,const QuantizationCounts& observed,std::size_t poses){
+    auto actual=legalize_precision_fixture::select(owned),expected=observed;
+    if(const auto it=owned.find("legalize_pose_quantum");it!=owned.end())actual.insert(*it);
+    if(poses)expected["legalize_pose_quantum"]=poses;
+    require(actual==expected,"legalizer receipt differs from independent function entries");
+}
+void board_receipt(const std::filesystem::path& root,const std::string& project){
+    auto fixture=placement_fixture::load(root,project);
     begin();const auto result=build_pcb_model(fixture.input);const auto observed=end();
+    const auto poses=pose_entries;
     const auto total=pcb_placement_accounting(result);
-    require(legalize_precision_fixture::select(total.quantization_engagements)==observed,"actual aggregate matches independent scalar entries");
-    require(legalize_precision_fixture::select(result.floorplan.plan.accounting.quantization_engagements)==observed,
-        "floorplan owns all executed legalizer operations");
-    require(total.quantization_engagements.at("legalize_pose_quantum")==pose_entries&&pose_entries==2250,
-        "legacy carrier pose quantum remains independently pinned");
-    for(const auto& n:names)require(observed.count(n)&&observed.at(n)>0,"carrier exercises each registered legalizer family");
+    exact_receipt(total.quantization_engagements,observed,poses);
+    exact_receipt(result.floorplan.plan.accounting.quantization_engagements,observed,poses);
+    // Each scalar is exercised above. A valid current board may need fewer or
+    // no legalization operations; actual entries, not a 2250-call historical
+    // search trace, are authoritative. Missing AND invented work must fail.
+    auto corrupted=total.quantization_engagements;
+    ++corrupted["legalize_pose_quantum"];
+    bool rejected=false;try{exact_receipt(corrupted,observed,poses);}catch(const std::runtime_error&){rejected=true;}
+    require(rejected,"invented pose work escaped independent receipt check");
+    if(poses||!observed.empty()) {
+        corrupted=total.quantization_engagements;
+        corrupted.erase(poses?"legalize_pose_quantum":observed.begin()->first);
+        rejected=false;try{exact_receipt(corrupted,observed,poses);}catch(const std::runtime_error&){rejected=true;}
+        require(rejected,"missing legalizer work escaped independent receipt check");
+    }
+    placement_requirements_test::physical(fixture.input,result.model,require);
     NativeQuantizations q;NativeFallbacks f;register_native_quantizations(q);register_native_fallbacks(f);NativeAccountingInbox inbox(q,f);
     begin();require(inbox.merge_once("pcb/placement",total)&&!inbox.merge_once("pcb/placement",total),"receipt imported once, replay rejected");
     require(end().empty()&&pose_entries==0,"registry import cannot replay scalar math");
     const auto imported=q.engagements();
-    for(const auto& n:names)require(imported.at(n)==AuditInteger::decimal(std::to_string(observed.at(n))),"exact imported scalar engagement");
+    for(const auto& [n,count]:observed)require(imported.at(n)==AuditInteger::decimal(std::to_string(count)),"exact imported scalar engagement");
     const auto saved=total.quantization_engagements;begin();
     const auto a=render_floorplan_ledger(result.floorplan.plan),b=render_floorplan_ledger(result.floorplan.plan);
     require(end().empty()&&pose_entries==0&&a==b&&q.engagements()==imported
         &&pcb_placement_accounting(result).quantization_engagements==saved,"cached replay preserves registry and producer counts");
+    std::cout<<project<<" independently observed pose calls="<<poses<<'\n';
 }
 }
 extern "C" void __cyg_profile_func_enter(void* fn,void*){
@@ -94,6 +113,7 @@ extern "C" void __cyg_profile_func_enter(void* fn,void*){
 }
 extern "C" void __cyg_profile_func_exit(void*,void*){}
 int main(int argc,char** argv){try{
-    require(argc==2,"repo root required");declarations();adapters();board_receipt(argv[1]);
-    std::cout<<"Legalizer registry, exact-family adapters and independent carrier receipt PASS\n";return 0;
+    require(argc==2,"repo root required");declarations();adapters();
+    for(const auto* project:{"carrier","devkit_mini"})board_receipt(argv[1],project);
+    std::cout<<"Legalizer registry, exact-family adapters, both-board physical and independent receipts PASS\n";return 0;
 }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}

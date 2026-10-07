@@ -225,35 +225,28 @@ PcbPlacementResult build_pcb_model(const PcbPlacementInput &input, ExecutionFail
         row.stage = "zone_pack";
         return row;
     });
-    // The authored floorplan sizes against the normal two-face offers even
-    // when the caller requests the legacy top-preferred emission option.
-    // Placement then binds that solve to its independently constructed zones.
-    // Keeping these inputs distinct preserves build_model(two_side=False).
-    auto planning = input;
-    planning.two_side = true;
-    auto planning_zones = input.two_side ? zones : build_pcb_zone_geometry(planning,&child);
-    if(!input.two_side)append_execution_accounting(completed,{planning_zones.quantization_engagements,planning_zones.fallback_events},&child);
+    // Solve the same face assignment and shape offers that placement consumes.
+    // Sizing a top-preferred request with smaller two-face zones can publish
+    // overlapping parts when the plan is rebound to the larger emitted zones.
     FloorplanInput prepared;
-    try { prepared=prepare_pcb_floorplan(planning, planning_zones); }
+    try { prepared=prepare_pcb_floorplan(input, zones); }
     catch (const std::overflow_error&) { invalidate_execution_failure(&child);throw; }
     // generate_floorplan guarantees its failure receipt includes prepared's
     // seed even if the engine rejects during construction. Do not count that
     // same planning zone again at the parent boundary.
-    completed=input.two_side ? ExecutionAccounting{} : ExecutionAccounting{zones.quantization_engagements,zones.fallback_events};
+    completed=ExecutionAccounting{};
     auto floorplan = generate_floorplan(prepared,&child);
     append_execution_accounting(completed,{floorplan.plan.accounting.quantization_engagements,floorplan.plan.accounting.fallback_events},&child);
     append_execution_accounting(completed,floorplan.documents.accounting,&child);
     observe_pcb_experiment_checkpoint(input.experiment.get(), [&] {
         PcbPlacementObservation row;
         row.stage = "plan_lattice";
-        // The original probe measures the placement zones before shape binding,
-        // including the distinct top-preferred zones when two_side is false.
+        // Measure the same placement zones before shape binding.
         row.plan = measure_floorplan_experiment_plan(prepare_pcb_floorplan(input, zones), floorplan.plan);
         return row;
     });
-    return place_pcb_model_accounted(input, zones, floorplan, input.two_side
-        ? PcbZoneAccountingOwnership::IncludedInFloorplan
-        : PcbZoneAccountingOwnership::SeparateFromFloorplan,&child);
+    return place_pcb_model_accounted(input, zones, floorplan,
+        PcbZoneAccountingOwnership::IncludedInFloorplan,&child);
     } catch (...) {
         capture_execution_failure(failure,std::move(completed),&child);
         throw;

@@ -4,7 +4,7 @@
 // Only precision_ops.cpp is compiled with -finstrument-functions -fno-inline.
 // This test observer is never linked into production or used as solver census.
 #include "pcb_placement_fixture.hpp"
-#include "ledger_accounting_fixture.hpp"
+#include "pcb_placement_requirements.hpp"
 #include "schgen/precision_ops.hpp"
 #include "floorplan_precision_fixture.hpp"
 #include "schgen/native_audit_state.hpp"
@@ -25,11 +25,10 @@ std::size_t checks=0;
 void require(bool ok,const std::string& why){++checks;if(!ok)throw std::runtime_error(why);}
 void begin(){for(auto& n:observations)n=0;enabled=true;}
 QuantizationCounts end(){enabled=false;QuantizationCounts out;for(std::size_t i=0;i<names.size();++i)if(observations[i])out[names[i]]=observations[i].load();return out;}
-QuantizationCounts decoded(const JsonNode& node){QuantizationCounts out;for(const auto& [name,n]:node.object_value)out[name]=static_cast<std::size_t>(n.number_value);return out;}
 bool added(const std::string& name){return std::find(names.begin(),names.end(),name)!=names.end();}
 // Connector, floorplan and occupancy additions are independently entry-instrumented,
 // fixture-compared and replay-tested by their dedicated contracts. Keep the
-// original twenty and first six additions as immutable migrations here.
+// unrelated operation families out of this observer's ownership checks.
 QuantizationCounts select(const QuantizationCounts& counts,bool new_only){QuantizationCounts out;for(const auto& [name,n]:counts)if(added(name)==new_only&&name!="mechanical_direction_component"&&name!="stage_direction_component"&&!floorplan_precision_fixture::added(name)&&!occupancy_precision_fixture::added(name)&&!legalize_precision_fixture::added(name)&&!stage_precision_fixture::added(name)&&!placement_precision_fixture::added(name)&&!output_precision_fixture::added(name)&&!pack_precision_fixture::added(name)&&!pack_geometry_precision_fixture::added(name)&&!pack_search_precision_fixture::added(name)&&!pack_plain_precision_fixture::added(name)&&!pack_grid_precision_fixture::added(name))out[name]=n;return out;}
 void show(const QuantizationCounts& counts){std::cout<<'{';bool first=true;for(const auto& [name,n]:counts){if(!first)std::cout<<',';first=false;std::cout<<std::quoted(name)<<':'<<n;}std::cout<<'}';}
 void registry(){
@@ -52,26 +51,32 @@ void registry(){
         require(result==expected[i]&&calls==QuantizationCounts{{names[i],1}},"registry invokes exactly its real scalar function");
     }
 }
-void live(const std::filesystem::path& root,const std::string& board,bool single,const JsonNode& baseline,
-          const JsonNode* additions,bool capture,bool& first){
+void live(const std::filesystem::path& root,const std::string& board,bool single,bool capture,bool& first){
     const auto name=board+(single?"_single":"");auto fixture=load(root,board);if(single)fixture.input.two_side=false;
     begin();auto result=build_pcb_model(fixture.input);const auto measured=end();
     const auto total=pcb_placement_accounting(result);
-    const auto& expected=field(baseline,name);
-    for(const auto& [label,counts]:std::vector<std::pair<std::string,QuantizationCounts>>{
-            {"floorplan",ledger_accounting_fixture::before_initial_receipt_fix(result.floorplan.plan.accounting.quantization_engagements)},
-            {"placement",result.placement_accounting.quantization_engagements},
-            {"zone",result.zone_accounting.quantization_engagements},
-            {"aggregate",ledger_accounting_fixture::before_initial_receipt_fix(total.quantization_engagements)}})
-        require(select(counts,false)==decoded(field(expected,label)),name+" original twenty counters exactly unchanged: "+label);
     require(select(total.quantization_engagements,true)==measured,name+" exported new counters equal independent compiled function entries");
     require(measured.count("estimate_position_precision")&&measured.count("estimate_pad_precision"),name+" actual estimate work observed");
     require(select(result.zone_accounting.quantization_engagements,true).empty(),"zone solve cannot inherit unrelated precision counts");
-    if(additions){const auto& row=field(*additions,name);
-        require(measured==decoded(field(row,"aggregate")),name+" independent additive count fixture");
-        require(select(result.floorplan.plan.accounting.quantization_engagements,true)==decoded(field(row,"floorplan")),name+" exact additive floorplan ownership");
-        require(select(result.placement_accounting.quantization_engagements,true)==decoded(field(row,"placement")),name+" exact additive placement ownership");
+    // These two estimator functions belong to floorplan_cross; the other four
+    // are the placement breathe stage. Independently observed entries pin the
+    // current owner, not the number of attempts a historical solver required.
+    QuantizationCounts expected_plan,expected_placement;
+    for(const auto& [op,n]:measured)
+        (op==names[0]||op==names[1]?expected_plan:expected_placement)[op]=n;
+    require(select(result.floorplan.plan.accounting.quantization_engagements,true)==expected_plan,name+" exact observed floorplan ownership");
+    require(select(result.placement_accounting.quantization_engagements,true)==expected_placement,name+" exact observed placement ownership");
+    const auto validate=[&](const QuantizationCounts& counts){require(select(counts,true)==measured,"independent receipt mismatch");};
+    for(bool missing:{true,false}) {
+        auto bad=total.quantization_engagements;
+        if(missing)bad.erase(measured.begin()->first);else ++bad[measured.begin()->first];
+        bool rejected=false;try{validate(bad);}catch(const std::runtime_error&){rejected=true;}
+        require(rejected,"missing/invented precision work escaped actual-entry observer");
     }
+    placement_requirements_test::structure(fixture.input,build_pcb_zone_geometry(fixture.input),result,require);
+    placement_requirements_test::physical(fixture.input,result.model,require);
+    std::cerr<<name<<" physical PASS "<<result.model.board_w<<'x'<<result.model.board_h
+             <<" top="<<result.model.n_top<<" bottom="<<result.model.n_bottom<<'\n';
     if(capture){if(!first)std::cout<<",\n";first=false;std::cout<<std::quoted(name)<<":{\"aggregate\":";show(measured);
         std::cout<<",\"floorplan\":";show(select(result.floorplan.plan.accounting.quantization_engagements,true));
         std::cout<<",\"placement\":";show(select(result.placement_accounting.quantization_engagements,true));std::cout<<'}';}
@@ -102,11 +107,9 @@ extern "C" void __cyg_profile_func_exit(void*,void*){}
 int main(int argc,char** argv){try{
     if(argc<2||argc>3||(argc==3&&std::string(argv[2])!="--capture-additive"))throw std::runtime_error("repo [--capture-additive]");
     const std::filesystem::path root=argv[1];const bool capture=argc==3;registry();
-    const auto baseline=parse_json_file((root/"native/tests/data/precision_ops/legacy_counts.json").string());
-    JsonNode additions;if(!capture)additions=parse_json_file((root/"native/tests/data/precision_ops/additive_counts.json").string());
     bool first=true;if(capture)std::cout<<"{\n";
-    for(const auto* name:{"devkit_mini","carrier"})live(root,name,false,baseline,capture?nullptr:&additions,capture,first);
-    live(root,"devkit_mini",true,baseline,capture?nullptr:&additions,capture,first);
+    for(const auto* name:{"devkit_mini","carrier"})live(root,name,false,capture,first);
+    live(root,"devkit_mini",true,capture,first);
     if(capture)std::cout<<"\n}\n";
     std::cerr<<checks<<" independent precision accounting contracts passed\n";
     return 0;

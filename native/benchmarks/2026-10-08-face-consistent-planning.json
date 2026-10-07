@@ -1,0 +1,37 @@
+{
+  "base_commit": "b1289e95",
+  "change": "Plan and emit the same face-specific zone geometry; qualify board regressions against physical requirements and independently observed work",
+  "defect": {
+    "mode": "devkit_mini top-preferred (two_side=false; not a strict single-face guarantee)",
+    "cause": "Production sized against two-face zones, then rebound that plan to independently generated top-preferred zones with different dimensions/shape offers",
+    "negative_control": "Before the production correction, the strengthened precision_accounting contract failed check_fanout with baseline zero",
+    "violations": [
+      {"subject": "U6004", "sheet": "power_som", "nearest": "R1005", "nearest_sheet": "debug_boot", "clearance_mm": 0, "need_mm": 2},
+      {"subject": "Q4001", "sheet": "power", "nearest": "C5002", "nearest_sheet": "power_mon", "clearance_mm": 0, "need_mm": 1.5}
+    ]
+  },
+  "current_fixture_results": [
+    {"project": "carrier", "mode": "two-sided", "dimensions_mm": [168,163], "top": 393, "bottom": 176, "physical": "PASS", "independently_observed_legalize_pose_calls": 1381},
+    {"project": "devkit_mini", "mode": "two-sided", "dimensions_mm": [98,98], "top": 106, "bottom": 57, "physical": "PASS", "independently_observed_legalize_pose_calls": 400},
+    {"project": "devkit_mini", "mode": "top-preferred", "dimensions_mm": [104,98], "top": 145, "bottom": 18, "physical": "PASS", "fanout_starved": 0}
+  ],
+  "accounting": {
+    "production_zone_ownership": "IncludedInFloorplan for both modes: one zone solve actually executed and imported once",
+    "separate_external_zone_api": "retained and exercised by explicit-owner/failure tests",
+    "overflow": "Exact MAX on shared zone counter accepted once; MAX+1 rejects with unavailable receipt, not a publishable partial prefix"
+  },
+  "verification": {
+    "passing_suites": ["model_failure_receipt", "producer_accounting", "legalize_registry", "pack_geometry_board", "precision_accounting", "connector_precision", "floorplan_precision"],
+    "independent_receipts": "Function-entry instrumentation, exact per-family/phase ownership, missing/invented count negatives, import-once and replay checks",
+    "physical": "Source identity and shape consistency, current placement/composition, mechanical, connector-spacing, fanout, ratsnest, escape-lane and return-stitch checks; both boards and top-preferred/fixed devkit variants",
+    "reproducibility": "Current-input repeated model/plan/ledger bytes and executed operation/fallback receipts; no historical optimizer-coordinate requirement",
+    "preserved_frozen_contracts": ["connector rotation primitive prefix", "83-row floorplan policy prefix", "scalar exact rounding and registry semantics"],
+    "golden_files_regenerated": false
+  },
+  "limitations": [
+    "Fixture-driven regression qualification, not new full board/ERC/DRC/render qualification",
+    "No matched Python timing claim",
+    "Carrier compact candidate retry ceilings and broader goal qualifications remain open",
+    "Not fabrication readiness; routing remains deferred"
+  ]
+}

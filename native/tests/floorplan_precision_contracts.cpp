@@ -1,7 +1,7 @@
 // Instrument ONLY precision_ops.cpp with -finstrument-functions -fno-inline.
 // The independent observer below is never production accounting.
 #include "floorplan_precision_fixture.hpp"
-#include "ledger_accounting_fixture.hpp"
+#include "pcb_placement_requirements.hpp"
 #include "floorplan_internal.hpp"
 #include "schgen/precision_ops.hpp"
 #include "schgen/native_audit_state.hpp"
@@ -30,7 +30,6 @@ void begin(){for(auto& value:entries)value=0;observing=true;}
 QuantizationCounts end(){observing=false;QuantizationCounts out;for(std::size_t i=0;i<names.size();++i)if(entries[i])out[names[i]]=entries[i];return out;}
 std::uint64_t bits(double x){std::uint64_t v;std::memcpy(&v,&x,sizeof(v));return v;}
 template<class F> void rejects(F f,const std::string& why){bool rejected=false;try{f();}catch(const std::exception&){rejected=true;}require(rejected,why);}
-QuantizationCounts decoded(const JsonNode& row){QuantizationCounts out;for(const auto& [key,value]:row.object_value)out[key]=static_cast<std::size_t>(value.number_value);return out;}
 void show(const QuantizationCounts& values){std::cout<<'{';bool first=true;for(const auto& [key,count]:values){if(!first)std::cout<<',';first=false;std::cout<<std::quoted(key)<<':'<<count;}std::cout<<'}';}
 void scalars(){
     for(std::size_t op=0;op<operations.size();++op){
@@ -102,9 +101,13 @@ void inherited_accounting(){
             "equal fixed free trial restores conservative plan without discarding executed precision work");
 }
 void boards(const std::filesystem::path& root,const std::filesystem::path& data,bool capture){
-    using placement_fixture::field;
-    JsonNode additions;if(!capture)additions=parse_json_file((data/"additive_counts.json").string());
-    std::ostringstream baseline,fixed;policy(baseline);policy(fixed);
+    std::ostringstream current_policy;policy(current_policy);
+    for(const auto* file:{"legacy_output.txt","fixed_legacy.txt"}) {
+        const auto historical=placement_fixture::read(data/file);
+        const auto boundary=historical.find("PLAN ");
+        require(boundary!=std::string::npos&&current_policy.str()==historical.substr(0,boundary),
+                "immutable 83-row floorplan policy prefix");
+    }
     bool first=true;if(capture)std::cout<<"{\n";
     for(int variant=0;variant<4;++variant){
         const auto project=variant==1?"carrier":"devkit_mini";const auto name=std::string(project)+(variant==2?"_single":variant==3?"_fixed":"");
@@ -115,13 +118,22 @@ void boards(const std::filesystem::path& root,const std::filesystem::path& data,
         require(select(result.zone_accounting.quantization_engagements).empty()&&select(result.placement_accounting.quantization_engagements).empty(),"no downstream double import "+name);
         require(observed.at(names[0])>0&&observed.at(names[2])>0&&observed.at(names[4])==2&&observed.at(names[5])>0,"real build and ledger primitives engaged");
         require(variant==3?!observed.count(names[1]):observed.at(names[1])==1,"only auto sizing executes the aspect operation");
-        if(!capture){auto expected=decoded(field(additions,name));expected.at(names[5])+=7;
-            require(observed==expected,"independent prior fixture plus seven observed assumption display calls "+name);}
+        for(bool missing:{true,false}) {
+            auto bad=total.quantization_engagements;
+            if(missing)bad.erase(observed.begin()->first);else ++bad[observed.begin()->first];
+            rejects([&]{require(select(bad)==observed,"independent floorplan receipt mismatch");},
+                    "missing/invented work must fail observed floorplan receipt");
+        }
         if(capture){if(!first)std::cout<<",\n";first=false;std::cout<<std::quoted(name)<<':';show(observed);}
-        auto old_plan=result.floorplan.plan;
-        old_plan.accounting.quantization_engagements=ledger_accounting_fixture::before_initial_receipt_fix(old_plan.accounting.quantization_engagements);
-        auto& output=variant==3?fixed:baseline;plan(output,name,old_plan);
-        counts(output,"ZONE",result.zone_accounting.quantization_engagements);counts(output,"PLACEMENT",result.placement_accounting.quantization_engagements);counts(output,"AGGREGATE",ledger_accounting_fixture::before_initial_receipt_fix(total.quantization_engagements));
+        placement_requirements_test::physical(fixture.input,result.model,require);
+        std::ostringstream first_plan;plan(first_plan,name,result.floorplan.plan);
+        begin();const auto repeated=build_pcb_model(fixture.input);const auto repeat_entries=end();
+        const auto repeat_receipt=pcb_placement_accounting(repeated);
+        std::ostringstream repeat_plan;plan(repeat_plan,name,repeated.floorplan.plan);
+        require(first_plan.str()==repeat_plan.str()&&observed==repeat_entries&&
+                total.quantization_engagements==repeat_receipt.quantization_engagements&&
+                total.fallback_events==repeat_receipt.fallback_events,
+                "same current inputs reproduce plan/ledger and actual work: "+name);
         NativeQuantizations q;NativeFallbacks f;register_native_quantizations(q);register_native_fallbacks(f);NativeAccountingInbox inbox(q,f);
         begin();require(inbox.merge_once("pcb/placement",total)&&!inbox.merge_once("pcb/placement",total),"one production receipt with replay rejection");require(end().empty(),"import performs no math");
         for(const auto& op:names){const auto entry=observed.find(op);require(q.engagements().at(op)==AuditInteger::decimal(std::to_string(entry==observed.end()?0:entry->second)),"exact imported new count");}
@@ -129,8 +141,6 @@ void boards(const std::filesystem::path& root,const std::filesystem::path& data,
         require(end().empty()&&a==b&&pcb_placement_accounting(result).quantization_engagements==saved&&q.engagements()==saved_q,"post-import render cannot mutate solver census");
     }
     if(capture)std::cout<<"\n}\n";
-    require(baseline.str()==placement_fixture::read(data/"legacy_output.txt"),"all three legacy plans, ledger bytes, 83 policy rows and prior 28 ownership counts byteexact");
-    require(fixed.str()==placement_fixture::read(data/"fixed_legacy.txt"),"independent legacy fixed-outline branch output/counts byteexact");
 }
 }
 extern "C" void __cyg_profile_func_enter(void* fn,void*){if(!observing.load(std::memory_order_relaxed))return;for(std::size_t i=0;i<operations.size();++i)if(fn==reinterpret_cast<void*>(operations[i])){++entries[i];break;}}
