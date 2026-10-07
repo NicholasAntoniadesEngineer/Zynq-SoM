@@ -1,5 +1,29 @@
 # carrier — project HISTORY (archived planning logs)
 
+## 2026-10-08 — automatic edge-translation search and invariant rejection pruning
+
+The opt-in automatic search finds the same 168×159 carrier as the fixed-outline
+screen, including PCB hash `ccaa5061f105825b678b090e27e467fca710da871a7bd112ac17dab27cd7d3f1`.
+Its first sample took 134.8906 s construction-only, with 2390 outer attempts,
+220136 edge candidates, 424 applied edge repairs and 476 reseats. This expensive
+result is not qualified; existing retry ceilings remain unchanged.
+
+The packer now distinguishes edge-phase rejection from interior-order-dependent
+failure. Reordering interior blocks cannot alter edge placement, translation or
+edge/SoM feasibility when every retry starts from the same snapshot. Such a
+failure ends the current order loop after its first real attempt; no skipped
+work is counted. Independent direct-attempt tests verify exact accounting,
+single observed edge evaluation, callback counts and complete state restoration,
+with and without constraint-first ordering and edge translation. Existing
+interior failures still exercise all intended orders. Three targeted integration,
+retry and ordering suites passed in 9.44 s.
+The matched-command rerun retained identical PCB bytes, all 2390 outer outcomes,
+424 applied repairs and 476 reseats, while edge candidates fell to 64616
+(70.65% fewer). Wall time was 142.2229 s versus 134.8906 s in single uncontrolled
+samples: no wall-time speedup is established. The expensive interior/reseat work
+is unchanged. Logs: `native/build/carrier-auto-edge-translation.log` and
+`native/build/carrier-auto-edge-shortcircuit.log`.
+
 ## 2026-10-08 — opt-in edge translation integrated into native placement
 
 The invocation-owned `compact_edge_translation` option now calls the tested

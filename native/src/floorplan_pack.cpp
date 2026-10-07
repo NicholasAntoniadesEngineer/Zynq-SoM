@@ -65,7 +65,12 @@ bool Engine::attempt_pack(bool compact) {
                 plan=start; plan.accounting=std::move(accounting);
                 side_offers=offers; compact_order=order;
                 try {
-                    if (attempt_pack_impl(compact)) {compact_order=0;return true;}
+                    bool order_independent_failure=false;
+                    if (attempt_pack_impl(compact,&order_independent_failure)) {compact_order=0;return true;}
+                    // Interior ordering cannot change edge placement, its
+                    // bounded translations or edge/SoM feasibility. All orders
+                    // start from the same snapshot; do not repeat that failure.
+                    if(order_independent_failure)break;
                 } catch (...) {
                     compact_order=0;
                     auto failed_accounting=std::move(plan.accounting);
@@ -83,7 +88,8 @@ bool Engine::attempt_pack(bool compact) {
                                                plan.punch_free, std::nullopt};
         });
 }
-bool Engine::attempt_pack_impl(bool compact) {
+bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure) {
+    if(order_independent_failure)*order_independent_failure=true;
     // Borrow only for this synchronous invocation; never attach a sink to
     // occupancy geometry or candidate copies. Rejected trials remain counted.
     auto* const counts=&plan.accounting.quantization_engagements;
@@ -140,6 +146,7 @@ bool Engine::attempt_pack_impl(bool compact) {
     if (!edge_runs_margin_ok(run_rows,bw,bh,edge_margin,native_run_overflow_tol())) return false;
     const auto som_rects=som_keepouts();
     if (rects_overlap_any(edge_boxes,som_rects,1e-6) || !cross_edge_fanout_hold(fanout_rows,clear)) return false;
+    if(order_independent_failure)*order_independent_failure=false;
     const int som_mask=plan.punch_free ? occ_top:occ_punch, edge_mask=som_mask;
     const Pose som_occ{plan.som_x-som_pad,plan.som_y-som_pad,plan.som.w+2*som_pad,plan.som.h+2*som_pad};
     std::vector<Comp> som_comps;

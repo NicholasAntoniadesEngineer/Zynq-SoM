@@ -103,6 +103,27 @@ void exception_contract(bool constraint_first=false){
     require(offers(wrapped)==start_offers,"exception must restore entry side offers");
     std::cout<<"exception rollback PASS\n";
 }
+void invariant_edge_failure(bool constraint_first,bool translate) {
+    auto in=input();auto experiment=std::make_shared<FloorplanExperiment>();
+    experiment->compact_constraint_first=constraint_first;
+    experiment->compact_edge_translation=translate;in.experiment=experiment;
+    const auto seed=[](Engine& e) {
+        setup(e,{40,40,{}});
+        FloorplanBlock b;b.name="edge";b.kind="edge";
+        e.plan.edge_blocks.push_back(b);e.zbox[b.name]={12,20};e.edge_of[b.name]="N";
+    };
+    Engine direct(in);seed(direct);bool invariant=false;
+    require(!direct.attempt_pack_impl(false,&invariant)&&invariant,"edge/SoM conflict is independent of interior order");
+    Engine wrapped(in);seed(wrapped);const auto start=layout(wrapped.plan);const auto side=offers(wrapped);
+    std::size_t searches=0;
+    experiment->edge_translation_completed=[&](std::size_t,char,double){++searches;};
+    entries=0;observing=true;const bool ok=wrapped.attempt_pack(false);observing=false;
+    require(!ok&&entries==(translate?0u:1u),"invariant edge failure executes once, not once per order");
+    require(searches==(translate?1u:0u),"bounded edge search is not repeated for interior alternatives");
+    require(wrapped.plan.accounting.quantization_engagements==direct.plan.accounting.quantization_engagements&&
+            wrapped.plan.accounting.fallback_events==direct.plan.accounting.fallback_events,"only executed single-trial work retained");
+    require(equal(layout(wrapped.plan),start)&&offers(wrapped)==side&&wrapped.compact_order==0,"early stop restores caller candidate state");
+}
 }
 extern "C" void __cyg_profile_func_enter(void* fn,void*){if(observing&&fn==reinterpret_cast<void*>(&native_run_overflow_tol))++entries;}
 extern "C" void __cyg_profile_func_exit(void*,void*){}
@@ -120,5 +141,6 @@ int main(){try{
     }
     std::cout<<"four receipt/layout/offer mutations rejected\n";
     exception_contract();
+    for(bool first:{false,true})for(bool translate:{false,true})invariant_edge_failure(first,translate);
     std::cout<<"compact retry contracts PASS\n";return 0;
 }catch(const std::exception& e){observing=false;std::cerr<<e.what()<<'\n';return 1;}}
