@@ -352,13 +352,17 @@ void Engine::choose_connector_shapes() {
         if (shapes==in.geometry.shapes.end() || shapes->second.size()<2) continue;
         auto& b=*std::find_if(plan.edge_blocks.begin(),plan.edge_blocks.end(),[&](const auto& x){return x.name==name;});
         const double base=estimate();
-        const auto reach=b.fanout_reach,inset=b.fanout_inset;
+        auto incumbent=plan;
+        auto offers=side_offers;
         std::tie(b.fanout_reach,b.fanout_inset)=fanout(shapes->second[1],false); b.shape_idx=1;
         if (attempt_pack(true) && estimate()<base-1e-6) continue;
-        b.fanout_reach=reach; b.fanout_inset=inset; b.shape_idx=0;
-        if (!attempt_pack(true)) throw FloorplanError("floorplan: restoring the incumbent pack after rejecting "+name+"'s mirror shape failed — the deterministic re-pack must reproduce the accepted board");
-        // Both the rejected trial and incumbent repack executed real work.
-        // Keep their fallback events, just as we keep quantization engagements.
+        // attempt_pack mutates plan and side_offers; its compact_order is reset
+        // before returning. Occupancy/placement/legalizer scratch is local.
+        // Restore the complete accepted state, retaining ALL executed trial
+        // accounting. No restoration pack ran, so none is counted or observed.
+        auto accounting=std::move(plan.accounting);
+        plan=std::move(incumbent); plan.accounting=std::move(accounting);
+        side_offers=std::move(offers);
     }
 }
 }  // namespace schgen::floorplan_detail

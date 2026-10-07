@@ -1,5 +1,27 @@
 # carrier — project HISTORY (archived planning logs)
 
+## 2026-10-07 — restore accepted connector state without redundant packing
+
+(Autonomous, per full-autonomy directive.) Rejected connector mirror trials now
+restore the complete saved plan and side offers instead of packing the accepted
+orientation again. All actual trial accounting survives restoration; no executed
+fallback is removed or replayed. Accepted trials and exception transport retain
+their existing paths. Invocation-local packing scratch needs no restoration.
+
+Seven focused CTest groups pass (17.02 s), covering independent instrumentation,
+default/compact rejection, full persistent state, duplicate receipt prefixes,
+failed trials, exceptions and public failure receipts. The new contract fails
+against the original implementation because it observes the extra repack.
+
+A saved single same-input instrumented carrier construction compares 2,192 to
+2,186 normal attempts, unchanged 2,153 failed attempts, reseats 37 to 28 and
+legalize-only compactions 14 to 8. Construction was 15.20 versus 14.52 seconds;
+this is not a repeated benchmark or a Python comparison. Model/PCB, layout,
+decision ledger and independent placement requirements agree in that comparison.
+No historical coordinate equality is required by the new contract. The actual
+28/8 fallback counts still exceed the unchanged 18/2 ceilings; no full-board
+acceptance, fresh full audit/render, or completion of the long goal is claimed.
+
 ## 2026-10-07 — exact breathing clearance and lean optimisation workflow
 
 (Autonomous, per full-autonomy directive.) Both placement modes now check exact

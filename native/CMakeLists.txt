@@ -378,6 +378,16 @@ if(BUILD_TESTING)
     include(tests/model_failure_receipt_contracts.cmake)
     include(tests/floorplan_receipt_contracts.cmake)
     include(tests/floorplan_fallback_scope_contracts.cmake)
+    add_executable(schgen_connector_incumbent_contracts tests/connector_incumbent_contracts.cpp
+        $<TARGET_OBJECTS:schgen_floorplan_fallback_observed>
+        $<TARGET_OBJECTS:schgen_floorplan_receipt_observed>
+        $<TARGET_OBJECTS:schgen_model_failure_observed>)
+    target_include_directories(schgen_connector_incumbent_contracts PRIVATE src)
+    target_link_libraries(schgen_connector_incumbent_contracts PRIVATE schgen_core)
+    target_compile_options(schgen_connector_incumbent_contracts PRIVATE
+        -Wall -Wextra -Wpedantic -Werror -ffp-contract=off)
+    set_property(TARGET schgen_connector_incumbent_contracts PROPERTY INTERPROCEDURAL_OPTIMIZATION FALSE)
+    add_test(NAME native_connector_incumbent_contracts COMMAND schgen_connector_incumbent_contracts)
     add_executable(schgen_python_free_tree_contracts tests/python_free_tree_contracts.cpp)
     target_compile_options(schgen_python_free_tree_contracts PRIVATE
         -Wall -Wextra -Wpedantic -Werror)
