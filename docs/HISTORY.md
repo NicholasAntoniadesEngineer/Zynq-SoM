@@ -1,5 +1,45 @@
 # carrier — project HISTORY (archived planning logs)
 
+## 2026-10-07 — exact breathing clearance and lean optimisation workflow
+
+(Autonomous, per full-autonomy directive.) Both placement modes now check exact
+interacting member boxes before accepting rounded breathing moves, including
+opposite-face through-hole occupancy. Dispersion rejection restores the complete
+pass, not one sheet whose former space may now contain another moved group.
+Actual trial receipts survive rejection. The live 0.500-to-0.477 mm test-point
+clearance regression is prevented; live owned-candidate construction passes.
+
+An independent frozen-input regression checks both boards, both modes and both
+face assignments: 1,228,830 assertions, including 1,217,424 pair comparisons.
+The old implementation fails 32 physical comparisons and two receipt checks;
+the correction passes. Frozen witnesses include a real 0.500-to-0.490 mm loss
+as well as conservative rejection of floating-point-scale reductions. These
+frozen witnesses are distinct from the live 0.477 mm case. Synthetic tests also
+exercise rounded internal gaps, opposite-face SMD independence and atomic
+rollback. No existing violation is treated as proof of an acceptable board.
+
+Final full carrier validation/render and devkit no-render validation pass all
+mandatory gates except the pre-existing actual-work fallback ceilings. Carrier
+PCB SHA256 is 6eee26aa28eefb9e736490417d9e0e876f7294a64a9ef0a8e34d237902e0dfa4;
+devkit remains c55c085789a3d262a6bb9233bd73cb2d4e7f5b0bba425c5ddebf4f9ced2314c2.
+No generated artifact set is accepted or published by this checkpoint.
+
+Owner clarification: historical placement bytes, coordinates, estimates and
+search paths are NOT optimisation acceptance criteria. Different valid layouts
+are expected; preserve electrical/hardware constraints and measure quality and
+performance. Seeded exploration may produce multiple candidates, with recorded
+configuration for reproduction. Legacy placement/probe expectations remain
+known test failures pending replacement by substantive requirement checks, not
+automatic fixture regeneration or weakened hardware validators.
+
+Owner-approved resource policy: one lead plus one bounded worker; checkpoint
+other lanes without deleting their work. Finish existing patches before new
+research. Use scoped implementation workers and reserve deeper research for
+specific difficult questions. C++ performs candidate exploration and cheap
+screening; full audits/renders qualify finalists. Every investigation needs a
+hypothesis, bounded experiment and stopping condition. This changes execution
+discipline, not the full long-term goal or its correctness requirements.
+
 ## 2026-10-07 — qualify the auxiliary input reservoir and preserve historical input oracles
 
 (Autonomous, per full-autonomy directive.) Board_aux C1 now follows the SY6280

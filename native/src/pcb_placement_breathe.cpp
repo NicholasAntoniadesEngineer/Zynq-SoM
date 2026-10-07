@@ -103,13 +103,12 @@ void Placer::breathe(const std::string &phase) {
         return side(r) == "bottom" ? top : bottom;
     };
     std::set<std::string> through;
-    if (compact)
-        for (const auto &[r, p] : pos) {
-            (void)p;
-            if (geometry.resolvable.count(r) && geometry.bbox_of.count(r) &&
-                has_thru_pads_from_text(mod(r)->bytes))
-                through.insert(r);
-        }
+    for (const auto &[r, p] : pos) {
+        (void)p;
+        if (geometry.resolvable.count(r) && geometry.bbox_of.count(r) &&
+            has_thru_pads_from_text(mod(r)->bytes))
+            through.insert(r);
+    }
     // The own-face movable halo remains pc/2; a through-hole reservation
     // remains the full pc on the opposite face, at the same physical pose.
     auto stamp_movable = [&](const std::string &r, int value) {
@@ -319,6 +318,29 @@ void Placer::breathe(const std::string &phase) {
             delta_precision(ctx.fixed_grid(25 + p.first + delta.first, "breathe_anchor_grid") - 25 - p.first),
             delta_precision(ctx.fixed_grid(25 + p.second + delta.second, "breathe_anchor_grid") - 25 - p.second)};
     };
+    // A raster is a search accelerator, not the physical clearance oracle.
+    // In assignment mode removing one group can erase a shared obstacle cell;
+    // independent coordinate rounding can also break a rigid group. Validate
+    // the whole proposed commit against exact boxes on both physical faces.
+    // Existing undersized gaps are not made worse by this optimisation pass.
+    const auto preserves_clearance = [&](const Offsets &candidate) {
+        const auto margin = [](Box4 a, Box4 b) {
+            return std::max({a.x0-b.x1, b.x0-a.x1, a.y0-b.y1, b.y0-a.y1});
+        };
+        for (const auto &[r, next] : candidate) {
+            if (!geometry.bbox_of.count(r) || !geometry.resolvable.count(r)) continue;
+            const auto before = box(r, pos.at(r)), after = box(r, next);
+            for (const auto &[s, old] : pos) {
+                if (s == r || (candidate.count(s) && s < r) ||
+                    !geometry.bbox_of.count(s) || !geometry.resolvable.count(s) ||
+                    (side(r) != side(s) && !through.count(r) && !through.count(s))) continue;
+                const auto other = candidate.find(s);
+                if (margin(after, box(s, other == candidate.end() ? old : other->second)) <
+                    std::min(pc, margin(before, box(s, old)))) return false;
+            }
+        }
+        return true;
+    };
     for (const auto &g : groups) {
         auto fb = foreign(g.anchor, g.members);
         auto mb = box(g.anchor, pos.at(g.anchor));
@@ -391,14 +413,12 @@ void Placer::breathe(const std::string &phase) {
                     auto p = pos.at(r);
                     const FloorplanPoint next{commit_precision(p.first + commit->first),
                                               commit_precision(p.second + commit->second)};
-                    if (compact)
-                        rounded.emplace(r, next);
-                    else
-                        pos[r] = next;
+                    rounded.emplace(r, next);
                 }
                 // Keep the incumbent if the final rounded geometry is unsafe;
                 // all trial/rounding receipts above still describe actual work.
-                if (compact && free(g, {0, 0}, &rounded) && leash(g, {0, 0}, &rounded))
+                if ((!compact || (free(g, {0, 0}, &rounded) && leash(g, {0, 0}, &rounded))) &&
+                    preserves_clearance(rounded))
                     for (const auto &[r, p] : rounded)
                         pos[r] = p;
             }
@@ -415,17 +435,13 @@ void Placer::breathe(const std::string &phase) {
         auto b = *boxes_union(boxes);
         double d = (b.x1 - b.x0) * (b.y1 - b.y0) / area.at(sheet);
         if (d > std::max(8., disp.at(sheet)) + breathe_epsilon_mm) {
-            if (compact) {
-                // Other sheets may now occupy a moved part's vacated halo.
-                // Reject the complete pass instead of invalidating those
-                // accepted cross-face checks with a partial rollback. The
-                // local grids are discarded; actual-work receipts remain.
-                for (const auto &[r, p] : seed)
-                    pos[r] = p;
-                return;
-            }
-            for (const auto &r : refs)
-                pos[r] = seed.at(r);
+            // Other sheets may now occupy a moved part's vacated halo.
+            // Reject the complete pass in both modes: a partial rollback
+            // would invalidate already accepted physical-clearance checks.
+            // Local grids are discarded; actual-work receipts remain.
+            for (const auto &[r, p] : seed)
+                pos[r] = p;
+            return;
         }
     }
 }

@@ -50,9 +50,9 @@ int main(int argc,char** argv){try{
     const bool legacy_only=argc==2 && std::string(argv[1])=="--legacy-only";
     require(argc==1 || legacy_only,"usage: compact_breathe_tht_contracts [--legacy-only]");
     if(!legacy_only)
-        for(bool reverse:{false,true})for(int kind:{0,1,2,3}) {
+        for(bool compact:{false,true})for(bool reverse:{false,true})for(int kind:{0,1,2,3}) {
             const std::string own=reverse?"bottom":"top",opposite=reverse?"top":"bottom";
-            Fixture rounding(true);
+            Fixture rounding(compact);
             rounding.part("U1","rounding",own,60,60,kind==1);
             rounding.part("C1","rounding",kind==0?own:opposite,61.500041,60,kind==2,false,2);
             rounding.part("J1","fixed",own,58,60,false,true);
@@ -61,7 +61,7 @@ int main(int argc,char** argv){try{
             const auto before=rect_gap(rounding.p->box("U1",entry.at("U1")),
                                        rounding.p->box("C1",entry.at("C1")));
             require(before>=rounding.in.floorplan.place_clear,"rounding fixture must start legal");
-            show("compact rounded clearance "+own+" kind="+std::to_string(kind),rounding);
+            show(std::string(compact?"compact":"default")+" rounded clearance "+own+" kind="+std::to_string(kind),rounding);
             if(kind!=3) {
                 require(rect_gap(rounding.p->box("U1",rounding.p->pos.at("U1")),
                                  rounding.p->box("C1",rounding.p->pos.at("C1")))>=rounding.in.floorplan.place_clear,
@@ -71,7 +71,9 @@ int main(int argc,char** argv){try{
                 require(rounding.p->pos.at("U1").first>60,
                         "opposite SMD faces must not acquire internal clearance coupling");
             }
-            require(rounding.p->ctx.quantization.at("breathe_commit_precision")==4,
+            const auto receipt=rounding.p->ctx.quantization.find("breathe_commit_precision");
+            const auto commits=receipt==rounding.p->ctx.quantization.end()?0:receipt->second;
+            require(commits==(!compact && reverse && kind==2?0u:4u),
                     "actual rounded trial counts must survive rejection");
         }
     for(bool compact:{false,true}){
@@ -147,12 +149,10 @@ int main(int argc,char** argv){try{
             rollback.part("J2","fixed2",opposite,55,60,false,true);
             const auto entry=rollback.p->pos;
             show(std::string(compact?"compact ":"default ")+own+" dispersion rollback",rollback);
-            if(compact){
-                require(rect_gap(rollback.p->box("U1",rollback.p->pos.at("U1")),rollback.p->box("U2",rollback.p->pos.at("U2")))>=rollback.in.floorplan.place_clear,
-                        "partial dispersion rollback invalidates cross-face shadow clearance");
-                require(rollback.p->pos==entry,"compact dispersion rejection must restore the complete pass");
-                require(rollback.p->ctx.quantization.at("breathe_commit_precision")>=4,"rollback erased actual trial receipts");
-            }
+            require(rect_gap(rollback.p->box("U1",rollback.p->pos.at("U1")),rollback.p->box("U2",rollback.p->pos.at("U2")))>=rollback.in.floorplan.place_clear,
+                    "partial dispersion rollback invalidates cross-face shadow clearance");
+            require(rollback.p->pos==entry,"dispersion rejection must restore the complete pass");
+            require(rollback.p->ctx.quantization.at("breathe_commit_precision")>=4,"rollback erased actual trial receipts");
         }
     }
     std::cout<<"PASS real Placer::breathe two-face contracts\n";
