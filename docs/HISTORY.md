@@ -1,5 +1,25 @@
 # carrier — project HISTORY (archived planning logs)
 
+## 2026-10-07 — validate current optimisation metrics without freezing old poses
+
+(Autonomous, per owner clarification.) Experiment stage-probe acceptance now
+recomputes reports from actual checkpoint geometry and the selected current
+plan, rather than requiring the historical optimiser's coordinates and metrics.
+A separate heap-based spanning-tree oracle checks lengths/cross-sheet costs;
+source-authoritative part, net, physical pin multiplicity and population checks
+prevent geometry or identity corruption from certifying itself. Frozen-stage
+movement and fixed-part invariants remain checked. Bounds reports are reconciled
+against observed executed attempts instead of old search counts.
+
+Historical formatter hashes, primitive measurement fixtures and all 39 immutable
+variant-cost vectors remain exact on their original operands. No fixtures or
+hardware validators were altered. Mutations reject incorrect reported metrics,
+tags, geometry, identity, missing/duplicate instances and simultaneous deletion
+of a physical pad and its net entry. The focused live test passes 155,839
+assertions; parent CTest independently passes in 14.79 s. This repairs the stale
+stage-probe oracle, not the separate historical placement/render contracts or
+overall board acceptance failures.
+
 ## 2026-10-07 — reproducible constraint-first candidate without global solver state
 
 (Autonomous, per full-autonomy directive.) The saved constraint-first prototype
