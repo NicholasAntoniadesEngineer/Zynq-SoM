@@ -172,6 +172,7 @@ void boundary_frontier() {
     QuantizationCounts counts;
     measured(counts,[&]{require(!blocked.place_near(3,3,2,2,{},{},1,{},-1,7,-1,7,&counts),"blocked lattice unexpectedly fits");});
     require(counts.at(names[2])==9,"only x/y 1..3 can satisfy the body boundary, so exactly nine frontier calls");
+    require(counts.at(names[4])==4,"one blocking body should need one spatial lookup, not nine");
     QuantizationCounts oversized;
     measured(oversized,[&]{require(!blocked.place_near(3,3,5,2,{},{},1,{},-1,7,-1,7,&oversized),"oversized body unexpectedly fits");});
     require(oversized==QuantizationCounts{{names[5],2}},"impossible body creates no frontier or collision-index work");
@@ -197,6 +198,50 @@ void boundary_frontier() {
         }
     }
 }
+void child_rejection_cache() {
+    Occupancy blocked(6,6,1,2,1,1,.05);blocked.add(0,0,6,6,{},{},1,{});
+    const std::vector<Comp> children{{0,0,2,2,1}};
+    QuantizationCounts counts;
+    measured(counts,[&]{require(!blocked.place_near(3,3,2,2,{},{},2,children,-1,7,-1,7,&counts),"opposite-face child obstruction missed");});
+    require(counts.at(names[2])==9&&counts.at(names[4])==8,
+            "child rejection must reuse its exact offset/mask after the initial body+child lookup");
+    QuantizationCounts repeated;
+    measured(repeated,[&]{require(!blocked.place_near(3,3,2,2,{},{},2,children,-1,7,-1,7,&repeated),"repeat lost obstruction");});
+    require(repeated==counts,"rejection cache or operation sink escaped its invocation");
+    auto edited=blocked;
+    edited.remove(0,0,6,6,{},{},1,{});
+    require(bool(edited.place_near(3,3,2,2,{},{},2,children,-1,7,-1,7)),"copied/removed geometry retained stale obstacle");
+    require(bool(blocked.place_near(3,3,2,2,{},{},2,{},-1,7,-1,7)),"new child-free invocation retained stale child");
+    require(!blocked.place_near(3,3,2,2,{},{},2,children,-1,7,-1,7),"copy edits changed original occupancy");
+}
+void changing_blockers_oracle() {
+    for(int scenario=0;scenario<24;++scenario) {
+        Occupancy scene(16,14,.2,2,2,.5,.05+1e-9);
+        scene.add(3,2,3,4,{.3,.6,.2,.1},{.1,0,0,0},1,{{-.5,1,1,2,2}});
+        scene.add(8,7,4,3,{.4,.1,.5,.2},{0,.2,0,.1},2,{{1,-1,2,1,1}});
+        scene.add(2+scenario%7,5+scenario%3,2,2,{},{},3,{});
+        const int mask=1+scenario%2;
+        const double w=1.5+scenario%3,h=1+scenario%4;
+        const double ax=2.15+scenario%11,ay=1.75+scenario%9;
+        const Halo reach{.2,.3,.1,.4},inset{0,.1,0,.2};
+        const std::vector<Comp> children{{-.5,.5,.75,1.25,3-mask,{.2,.4,.1,.3},{}},
+                                         {w-.5,-.5,1,1,3,{},{}}};
+        std::optional<std::tuple<double,double,double>> best;
+        for(int ix=0;ix<=32;++ix)for(int iy=0;iy<=28;++iy) {
+            const double x=ix*.5,y=iy*.5;
+            if(!scene.fits_exhaustive(x,y,w,h,reach,inset,mask,children))continue;
+            const auto rank=std::make_tuple(occupancy_frontier_key1dp(std::abs(x+w/2-ax)+std::abs(y+h/2-ay)),x,y);
+            if(!best||rank<*best)best=rank;
+        }
+        QuantizationCounts counts;
+        measured(counts,[&]{
+            const auto hit=scene.place_near(ax,ay,w,h,reach,inset,mask,children,0,16,0,14,&counts);
+            require(bool(hit)==bool(best),"cached blocker changed oracle feasibility");
+            if(best)require(hit->x==std::get<1>(*best)&&hit->y==std::get<2>(*best),
+                            "cached body/child blocker changed rounded-distance optimum");
+        });
+    }
+}
 }
 extern "C" void __cyg_profile_func_enter(void* fn,void*) {
     if(!observing)return;
@@ -208,6 +253,6 @@ extern "C" void __cyg_profile_func_enter(void* fn,void*) {
     else if(fn==reinterpret_cast<void*>(&schgen::occupancy_axis_count))++entries[5];
 }
 extern "C" void __cyg_profile_func_exit(void*,void*){}
-int main(){try{scalar_contract();map_lifetimes();geometry();threads();boundary_frontier();
+int main(){try{scalar_contract();map_lifetimes();geometry();threads();boundary_frontier();child_rejection_cache();changing_blockers_oracle();
     std::cout<<"occupancy cell counter contracts PASS (independent function-entry proof)\n";
 }catch(const std::exception& e){observing=false;std::cerr<<e.what()<<'\n';return 1;}}

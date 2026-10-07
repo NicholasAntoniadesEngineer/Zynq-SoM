@@ -232,7 +232,8 @@ void ownership_and_rejections(){
     measured(second,[&]{require(!copy.fits_hashed(-1,0,1,1,{},{},1,{},&second),"boundary rejection expected");});
     auto blocked=Occupancy(6,6,0,2,1,1,.05);blocked.add(0,0,6,6,{},{},1,{});
     const auto failure=measured(second,[&]{require(!blocked.place_near(3,3,1,1,{},{},1,{},0,6,0,6,&second),"fully blocked search accepted");});
-    require(failure.at(names[5])==2&&failure.at(names[2])>1&&failure.at(names[4])>4,"failed search work lost");
+    require(failure.at(names[5])==2&&failure.at(names[2])==36&&failure.at(names[4])==4,
+            "failed search must visit 36 cells but reuse its first blocking rectangle");
     Occupancy empty(6,6,0,2,1,1,.05);SeatShapeCand cand;cand.w=1;cand.h=1;cand.mask=1;cand.side="top";cand.win_x1=6;cand.win_y1=6;
     auto loser=cand;loser.index=9;auto oversized=cand;oversized.w=7;
     const auto ranking=measured(second,[&]{const auto hits=seat_shape_sides(empty,3,3,{cand,loser,oversized},6,6,0,&second);

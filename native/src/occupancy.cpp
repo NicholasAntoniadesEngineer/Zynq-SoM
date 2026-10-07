@@ -73,6 +73,18 @@ struct HeapNode {
     }
 };
 
+bool indexed_conflict(double x, double y, double w, double h,
+                      const Halo& reach, const Halo& inset, int mask,
+                      int parent_mask, bool main, const Rect& r, double clear) {
+    if (!occ_pair_active(mask, parent_mask, main, r.mask, r.pmask, r.main))
+        return false;
+    const char ax = x <= r.x ? 'E' : 'W';
+    const char ay = y <= r.y ? 'S' : 'N';
+    const double gx = std::max(clear, fanout_sep(reach, inset, r.reach, r.inset, ax));
+    const double gy = std::max(clear, fanout_sep(reach, inset, r.reach, r.inset, ay));
+    return !boxes_separated(x, y, w, h, r.x, r.y, r.w, r.h, gx, gy);
+}
+
 }  // namespace
 
 double py_round(double value, int digits) {
@@ -586,7 +598,8 @@ bool Occupancy::body_clear(double x, double y, double w, double h,
 bool Occupancy::query_hashed_cells(double x, double y, double w, double h,
                                    const Halo& qh, const Halo& reach,
                                    const Halo& inset, int qmask, int qpmask,
-                                   bool qmain, QuantizationCounts* counts) const {
+                                   bool qmain, QuantizationCounts* counts,
+                                   const Rect** obstacle) const {
     const double b = bucket_;
     OccupancyCellSlot cell_count(counts);
     const int iy0 = occupancy_cell_index(y - qh.n, b, cell_count);
@@ -600,17 +613,8 @@ bool Occupancy::query_hashed_cells(double x, double y, double w, double h,
                 continue;
             }
             for (const Rect& r : it->second) {
-                if (!occ_pair_active(qmask, qpmask, qmain,
-                                     r.mask, r.pmask, r.main)) {
-                    continue;
-                }
-                const char ax = x <= r.x ? 'E' : 'W';
-                const char ay = y <= r.y ? 'S' : 'N';
-                const double gx = std::max(clear_,
-                    fanout_sep(reach, inset, r.reach, r.inset, ax));
-                const double gy = std::max(clear_,
-                    fanout_sep(reach, inset, r.reach, r.inset, ay));
-                if (!boxes_separated(x, y, w, h, r.x, r.y, r.w, r.h, gx, gy)) {
+                if (indexed_conflict(x, y, w, h, reach, inset, qmask, qpmask, qmain, r, clear_)) {
+                    if (obstacle) *obstacle = &r;
                     return false;
                 }
             }
@@ -643,18 +647,37 @@ bool Occupancy::fits_exhaustive(double x, double y, double w, double h,
 bool Occupancy::fits_hashed(double x, double y, double w, double h,
                             const Halo& reach, const Halo& inset, int mask,
                             const std::vector<Comp>& comps, QuantizationCounts* counts) const {
+    return fits_indexed(x, y, w, h, reach, inset, mask, comps, counts, nullptr);
+}
+
+bool Occupancy::fits_indexed(double x, double y, double w, double h,
+                            const Halo& reach, const Halo& inset, int mask,
+                            const std::vector<Comp>& comps, QuantizationCounts* counts,
+                            Rejection* rejection) const {
     if (x < clear_ || y < clear_ || x + w > board_w_ - clear_
         || y + h > board_h_ - clear_) {
         return false;
     }
-    if (!body_clear(x, y, w, h, reach, inset, mask, mask, true, true, counts)) {
+    if (rejection && rejection->obstacle) {
+        const Comp* c = rejection->child;
+        if (indexed_conflict(c ? x+c->dx : x, c ? y+c->dy : y,
+                             c ? c->w : w, c ? c->h : h,
+                             c ? c->reach : reach, c ? c->inset : inset,
+                             c ? c->mask : mask, mask, !c, *rejection->obstacle, clear_))
+            return false;
+    }
+    const Rect* obstacle = nullptr;
+    if (!query_hashed_cells(x, y, w, h, halo4(reach,inset), reach, inset, mask,
+                            mask, true, counts, rejection ? &obstacle : nullptr)) {
+        if (rejection) *rejection = {obstacle, nullptr};
         return false;
     }
     for (const Comp& c : comps) {
         const double cx0 = x + c.dx;
         const double cy0 = y + c.dy;
         if (!query_hashed_cells(cx0, cy0, c.w, c.h, halo4(c.reach,c.inset), c.reach, c.inset, c.mask,
-                                mask, false, counts)) {
+                                mask, false, counts, rejection ? &obstacle : nullptr)) {
+            if (rejection) *rejection = {obstacle, &c};
             return false;
         }
     }
@@ -699,6 +722,7 @@ std::optional<Pose> Occupancy::place_near(
     std::unordered_map<double, std::vector<std::pair<double, double>>> buckets;
     std::priority_queue<double, std::vector<double>, std::greater<double>> bkeys;
     std::vector<std::pair<double, double>> spare;
+    Rejection rejection;
 
     auto flush = [&](double thresh) -> std::optional<Pose> {
         // At the half-step boundary an unseen distance can still round into
@@ -715,7 +739,7 @@ std::optional<Pose> Occupancy::place_near(
             buckets.erase(it);
             std::sort(cell.begin(), cell.end());
             for (const auto& [x, y] : cell) {
-                if (fits_hashed(x, y, w, h, reach, inset, mask, comps, counts)) {
+                if (fits_indexed(x, y, w, h, reach, inset, mask, comps, counts, &rejection)) {
                     return Pose{x, y, w, h};
                 }
             }

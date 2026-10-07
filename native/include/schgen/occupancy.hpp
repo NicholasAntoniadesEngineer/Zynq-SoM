@@ -88,6 +88,16 @@ public:
     std::size_t rect_count() const { return rects_.size(); }
 
 private:
+    // Borrowed only for one immutable place_near invocation; never retained in
+    // Occupancy across edits, copies or changes to the candidate's children.
+    struct Rejection {
+        const Rect* obstacle = nullptr;
+        const Comp* child = nullptr;
+    };
+    bool fits_indexed(double x, double y, double w, double h,
+                      const Halo& reach, const Halo& inset, int mask,
+                      const std::vector<Comp>& comps, QuantizationCounts* counts,
+                      Rejection* rejection) const;
     void add_one(double x, double y, double w, double h, const Halo& reach,
                  const Halo& inset, int mask, int pmask, bool main, QuantizationCounts* counts);
     void remove_one(double x, double y, double w, double h, const Halo& reach,
@@ -98,7 +108,8 @@ private:
     bool query_hashed_cells(double x, double y, double w, double h,
                             const Halo& qh, const Halo& reach,
                             const Halo& inset, int qmask, int qpmask,
-                            bool qmain, QuantizationCounts* counts) const;
+                            bool qmain, QuantizationCounts* counts,
+                            const Rect** obstacle = nullptr) const;
 
     double board_w_;
     double board_h_;

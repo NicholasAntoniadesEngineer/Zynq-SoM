@@ -1,0 +1,50 @@
+{
+  "base_commit": "4821cb55",
+  "change": "Invocation-local exact obstacle recheck before repeated occupancy spatial-index queries",
+  "project": "carrier",
+  "options": {"compact_search": true, "constraint_first": true, "edge_translation": true, "initial_outline_mm": [168,159], "outline": "auto", "runs": 1},
+  "arguments": "--repo $PWD --project carrier --compact-search on --constraint-first on --edge-translation on --initial-outline-mm 168x159 --runs 1 --kicad-cli /Applications/KiCad/KiCad.app/Contents/MacOS/kicad-cli",
+  "before": {
+    "executable": "native/build/compact-stage-profile-4821cb55",
+    "construction_seconds": 78.360616083, "plan_lattice_seconds": 77.474859875,
+    "cell_index_calls": 3007313556,
+    "log": "native/build/carrier-blocker-cache-baseline.log"
+  },
+  "after": {
+    "executable": "native/build/fast/schgen_compact_stage_profile",
+    "construction_seconds": 62.201591876, "plan_lattice_seconds": 61.286538875,
+    "cell_index_calls": 291899268,
+    "log": "native/build/carrier-blocker-cache-search.log"
+  },
+  "sample_construction_change_percent": -20.62135931892657,
+  "cell_index_change_percent": -90.29368695467018,
+  "unchanged_result": {
+    "dimensions_mm": [168,159], "top": 425, "bottom": 144, "instances": 569,
+    "frontier_calls": 729761888, "outer_attempts": 2226, "packed": 12, "rejected": 2214,
+    "edge_candidates": 59276,
+    "fallbacks": {"cand_cap_truncated": 116, "edge_run_translation": 372, "interior_reseat_retry": 417, "punch_free_plan_rejected": 1},
+    "pcb_sha256": "ccaa5061f105825b678b090e27e467fca710da871a7bd112ac17dab27cd7d3f1",
+    "placement_contract_ok": true, "placement_flow_ok": true, "hard_red": 0,
+    "hard_margin_min": 4.07, "hard_margin_sum": 893.92
+  },
+  "verification": {
+    "targeted_suites_passed": ["occupancy_cell_counter", "occupancy_precision", "occupancy_child_halo", "breathe_occupancy", "compact_profile_inputs", "initial_outline", "floorplan_final_estimate"],
+    "independent_cartesian_scenarios": 510,
+    "independent_scalar_entry_accounting": "PASS, including cached failures and current board fixtures",
+    "asan_ubsan": "PASS: occupancy.cpp and occupancy_cell_counter_contracts.cpp instrumented; other linked production objects not sanitizer-instrumented",
+    "carrier_fixed_finalist_physical_checks": "PASS via compact_profile_inputs; not full acceptance",
+    "devkit_seeded_auto": {
+      "seed_mm": [98,98], "dimensions_mm": [98,98], "top": 106, "bottom": 57,
+      "construction_seconds": [0.300919,0.300894707],
+      "pcb_sha256_both_runs": "fca4d528b046a2604117226739c6cb61ef2b47907a667746c3cf48dd290477ac",
+      "placement_contract_ok_both_runs": true, "placement_flow_ok_both_runs": true, "hard_red_both_runs": 0,
+      "log": "native/build/devkit-blocker-cache-search.log"
+    }
+  },
+  "acceptance": false,
+  "limitations": [
+    "One sample per carrier version, after then before; identical options/environment with no overlapping compile or test load, but thermal/cache state uncontrolled",
+    "Construction only; not full build/render/audit time or the required historical Python comparison",
+    "No full audit/DRC/render qualification; existing retry ceilings remain unchanged"
+  ]
+}
