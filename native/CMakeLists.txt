@@ -388,6 +388,13 @@ if(BUILD_TESTING)
         -Wall -Wextra -Wpedantic -Werror -ffp-contract=off)
     set_property(TARGET schgen_connector_incumbent_contracts PROPERTY INTERPROCEDURAL_OPTIMIZATION FALSE)
     add_test(NAME native_connector_incumbent_contracts COMMAND schgen_connector_incumbent_contracts)
+    add_executable(schgen_floorplan_final_estimate_contracts tests/floorplan_final_estimate_contracts.cpp)
+    target_include_directories(schgen_floorplan_final_estimate_contracts PRIVATE src)
+    target_link_libraries(schgen_floorplan_final_estimate_contracts PRIVATE schgen_core)
+    target_compile_options(schgen_floorplan_final_estimate_contracts PRIVATE
+        -Wall -Wextra -Wpedantic -Werror -ffp-contract=off)
+    add_test(NAME native_floorplan_final_estimate_contracts
+        COMMAND schgen_floorplan_final_estimate_contracts ${CMAKE_CURRENT_SOURCE_DIR}/..)
     add_executable(schgen_python_free_tree_contracts tests/python_free_tree_contracts.cpp)
     target_compile_options(schgen_python_free_tree_contracts PRIVATE
         -Wall -Wextra -Wpedantic -Werror)

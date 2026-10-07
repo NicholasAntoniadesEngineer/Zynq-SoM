@@ -1,4 +1,5 @@
 #pragma once
+#include "schgen/experiment_tools.hpp"
 #include "schgen/board_schematic.hpp"
 #include "schgen/quantize.hpp"
 #include "schgen/turn.hpp"

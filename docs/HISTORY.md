@@ -1,5 +1,28 @@
 # carrier — project HISTORY (archived planning logs)
 
+## 2026-10-07 — compare and report the final refined floorplan estimate
+
+(Autonomous, per full-autonomy directive.) Automatic outline search previously
+kept the screening estimate after final packing/refinement and connector-shape
+selection. A current compact devkit witness reported 1,518 mm although the
+selected plan independently measured 1,500.3 mm. Each automatic pass now measures
+its actual final plan, rechecks the existing airwire budget, and uses that result
+for pass comparison, winner/headroom records and the outline explanation. A
+post-refinement budget failure rejects rather than publishing stale evidence.
+The extra actual estimator calls remain accounted; no prior counters are erased.
+
+An independent current-geometry oracle checks both default and compact automatic
+passes, selected winner/headroom and mutated ledger values. It fails against the
+old implementation. All five focused groups pass in 19.33 s, including fixed
+choice, receipt, connector-incumbent and experiment-tool regressions. The main
+native executable has also been rebuilt.
+
+Fresh construction-only screening passes placement/flow and enforced composition
+for both boards in default and constraint-first compact modes. PCB hashes remain
+unchanged by this calculation correction: carrier default 6eee26aa..., compact
+4eac006f...; devkit default c55c0857..., compact ed606c3e.... The separate fallback
+ceilings still fail; this is neither a full audit/render nor accepted publication.
+
 ## 2026-10-07 — prevent compact passive pulls from creating corridor obstructions
 
 (Autonomous, per full-autonomy directive.) A traced devkit failure originated in

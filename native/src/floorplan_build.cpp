@@ -341,6 +341,13 @@ FloorplanPlan Engine::run() {
         board_size(std::get<1>(*best),std::get<2>(*best));
         if (!attempt_pack(true)) throw FloorplanError("floorplan: the winning outline "+outline_text(plan.board_w,plan.board_h)+" failed the final compact re-pack — refusing to emit a stale layout");
         choose_connector_shapes();
+        // Refinement and connector selection can change the winning layout.
+        // Compare passes and publish headroom using that actual layout, never
+        // the earlier screening estimate for the same board dimensions.
+        std::get<3>(*best)=estimate();
+        if (std::get<3>(*best)>std::get<4>(*best))
+            throw FloorplanError("floorplan: final refined layout exceeds the LAW-5 airwire budget on "+
+                outline_text(plan.board_w,plan.board_h)+" — refusing to emit a stale screening estimate");
         Inputs ti;
         for (const auto* key:{"generated","reject_aspect","reject_min_area","reject_not_smaller","reject_pack","reject_law5_budget","accepted"}) ti.emplace_back(key,jvalue(tally.at(key)));
         calc("outline_candidates",jvalue(tally.at("generated")),std::move(ti),"sizing.pass");
