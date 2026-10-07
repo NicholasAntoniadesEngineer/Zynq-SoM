@@ -29,6 +29,7 @@ struct Options {
     bool constraint_first = false;
     bool edge_translation = false;
     std::optional<FloorplanPoint> outline;
+    std::optional<FloorplanPoint> initial_outline;
 };
 void help() {
     std::cout << "compact_stage_profile --repo ROOT --project NAME --compact-search off|on|both\n"
@@ -36,6 +37,7 @@ void help() {
         "  [--constraint-first off|on] (opt-in candidate, requires --compact-search on)\n"
         "  [--edge-translation off|on] (opt-in bounded edge repair, requires --compact-search on)\n"
         "  [--outline-mm WIDTHxHEIGHT] (explicit diagnostic outline; skips automatic sizing search)\n"
+        "  [--initial-outline-mm WIDTHxHEIGHT] (validated starting candidate for automatic sizing)\n"
         "cold: reload/validate circuits, relink, re-extract netlist and resolve inputs per repetition.\n"
         "prepared: load once; reuse only parsed PcbPlacementInput across repetitions.\n"
         "both: off then on using the same compact-capable input each repetition (fixed order; not randomized).\n"
@@ -58,7 +60,7 @@ Options parse(int argc, char** argv) {
         else if (arg == "--kicad-cli") out.kicad = value;
         else if (arg == "--compact-search") out.compact = value;
         else if (arg == "--input-mode") out.inputs = value;
-        else if (arg == "--outline-mm") {
+        else if (arg == "--outline-mm"||arg=="--initial-outline-mm") {
             const auto separator=value.find('x');
             if(separator==std::string::npos || separator==0 || separator+1==value.size() ||
                value.find('x',separator+1)!=std::string::npos)
@@ -69,7 +71,8 @@ Options parse(int argc, char** argv) {
                     throw std::invalid_argument("outline-mm dimensions must be finite positive numbers");
                 return v;
             };
-            out.outline=FloorplanPoint{dimension(value.substr(0,separator)),dimension(value.substr(separator+1))};
+            const FloorplanPoint dimensions{dimension(value.substr(0,separator)),dimension(value.substr(separator+1))};
+            if(arg=="--outline-mm")out.outline=dimensions;else out.initial_outline=dimensions;
         }
         else if (arg == "--constraint-first") {
             if (value != "on" && value != "off") throw std::invalid_argument("constraint-first must be off|on");
@@ -91,6 +94,7 @@ Options parse(int argc, char** argv) {
     if (out.constraint_first && out.compact != "on")
         throw std::invalid_argument("constraint-first requires --compact-search on");
     if(out.edge_translation&&out.compact!="on")throw std::invalid_argument("edge-translation requires --compact-search on");
+    if(out.outline&&out.initial_outline)throw std::invalid_argument("initial-outline-mm cannot be combined with outline-mm");
     return out;
 }
 struct LoadResult {
@@ -183,7 +187,8 @@ PcbPlacementInput trial_input(const PcbPlacementInput& source,bool compact,
     return input;
 }
 std::string trial(const PcbPlacementInput& source, bool compact, int run, int generation,
-                  bool constraint_first = false,const std::optional<FloorplanPoint>& outline=std::nullopt,bool edge_translation=false) {
+                  bool constraint_first = false,const std::optional<FloorplanPoint>& outline=std::nullopt,bool edge_translation=false,
+                  const std::optional<FloorplanPoint>& initial_outline=std::nullopt) {
     const auto copy_start = Clock::now();
     auto input = trial_input(source,compact,outline);
     const auto copy_seconds = seconds(copy_start);
@@ -194,6 +199,7 @@ std::string trial(const PcbPlacementInput& source, bool compact, int run, int ge
     auto floor = std::make_shared<FloorplanExperiment>();
     floor->compact_constraint_first = constraint_first;
     floor->compact_edge_translation = edge_translation;
+    floor->initial_outline=initial_outline;
     std::size_t edge_candidates=0,edge_repairs=0;
     floor->edge_translation_completed=[&](std::size_t candidates,char edge,double) {
         edge_candidates+=candidates;edge_repairs+=edge!='\0';
@@ -210,6 +216,8 @@ std::string trial(const PcbPlacementInput& source, bool compact, int run, int ge
         << " input_copy_seconds=" << copy_seconds << " status=started\n" << std::flush;
     if(outline)std::cout<<"outline_override width_mm="<<outline->first<<" height_mm="<<outline->second
                         <<" automatic_sizing=disabled source_policy_otherwise_unchanged=1\n"<<std::flush;
+    if(initial_outline)std::cout<<"initial_outline width_mm="<<initial_outline->first<<" height_mm="<<initial_outline->second
+                               <<" automatic_sizing=enabled seed_requires_validation=1\n"<<std::flush;
     ExecutionFailureReceipt failure;
     const auto start = Clock::now();
     profile.mark = start;
@@ -305,7 +313,7 @@ int main(int argc, char** argv) {
             const int generation = options.inputs == "prepared" ? 1 : run;
             for (const bool compact : {false, true}) {
                 if ((compact && options.compact == "off") || (!compact && options.compact == "on")) continue;
-                const auto hash = trial(prepared->input, compact, run, generation, options.constraint_first,options.outline,options.edge_translation);
+                const auto hash = trial(prepared->input, compact, run, generation, options.constraint_first,options.outline,options.edge_translation,options.initial_outline);
                 auto [it, inserted] = first_hash.emplace(compact, hash);
                 if (!inserted && it->second != hash) throw std::runtime_error("repeat PCB bytes changed; investigate input drift/nondeterminism");
                 std::cout << "repeat compact_search=" << compact << " same_as_first=" << (!inserted ? "true" : "first") << '\n';

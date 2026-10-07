@@ -9,6 +9,11 @@
 
 namespace schgen {
 void validate_floorplan_experiment(const FloorplanExperiment &experiment) {
+    if(experiment.initial_outline) {
+        const auto [w,h]=*experiment.initial_outline;
+        if(!std::isfinite(w)||!std::isfinite(h)||w<=0||h<=0||!std::isfinite(w*h))
+            throw FloorplanError("experiment: initial outline must have finite positive dimensions and area");
+    }
     if (experiment.ordinary_via_mm &&
         (!std::isfinite(*experiment.ordinary_via_mm) || *experiment.ordinary_via_mm < 0))
         throw FloorplanError("experiment: ordinary via cost must be finite and nonnegative");

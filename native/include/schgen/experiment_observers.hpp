@@ -28,6 +28,9 @@ struct FloorplanExperiment {
     // Invocation-owned so independent/concurrent solves cannot change each other.
     bool compact_constraint_first = false;
     bool compact_edge_translation = false;
+    // Optional starting candidate, re-evaluated under each reservation policy.
+    // Never a fixed outline, cached proof or permission to bypass any gate.
+    std::optional<std::pair<double,double>> initial_outline;
     // Completed bounded edge searches, including unsuccessful candidates.
     std::function<void(std::size_t, char, double)> edge_translation_completed;
     std::function<void(const FloorplanAttemptObservation &)> attempt_completed;

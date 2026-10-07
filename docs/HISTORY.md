@@ -1,5 +1,32 @@
 # carrier — project HISTORY (archived planning logs)
 
+## 2026-10-08 — validated initial-outline search option
+
+Automatic sizing accepts an invocation-owned `initial_outline` candidate,
+exposed by diagnostic `--initial-outline-mm WIDTHxHEIGHT`. It is re-evaluated
+under each reservation policy using real packing and the current airwire budget.
+Invalid dimensions/area and conflicts with fixed-outline mode reject explicitly;
+an infeasible seed does not suppress the ordinary search. Once an incumbent is
+validated, opt-in coarse growth stops where area cannot improve. Bounded fine
+refinement and final-layout budget checks remain; the seed is not a fixed result
+or a cached proof. Notes disclose seed provenance and changed refinement coverage.
+
+Starting from the previously screened 168×159 candidate produced the same carrier
+PCB hash `ccaa5061f105825b678b090e27e467fca710da871a7bd112ac17dab27cd7d3f1`.
+Construction-only sample was 91.8982 s versus the preceding unseeded 142.2229 s;
+outer attempts fell 2390→2226, edge candidates 64616→59276, applied repairs
+424→372 and reseats 476→417. These are single uncontrolled samples, with some
+test compilation overlapping the seeded run, not statistical or Python speedup
+evidence. The seed is extra input and changes bounded search coverage.
+Retry ceilings and full qualification remain unresolved.
+
+New C++ contracts verify actual seed evaluation for both policies, failed-seed
+fallback, continued size reduction, invalid/fixed-input rejection, source
+isolation and repeatable actual accounting. Independent current-layout budget
+and final-estimate checks now cover seeded/unseeded default and compact devkit
+solves. Three focused suites pass in 13.00 s. Evidence:
+`native/build/carrier-seeded-edge-search.log`.
+
 ## 2026-10-08 — automatic edge-translation search and invariant rejection pruning
 
 The opt-in automatic search finds the same 168×159 carrier as the fixed-outline

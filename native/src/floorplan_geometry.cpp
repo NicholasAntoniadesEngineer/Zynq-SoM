@@ -23,6 +23,8 @@ bool tagged(const SexprList& node, const std::string& tag) {
 
 Engine::Engine(const FloorplanInput& input) : in(input) {
     if (in.experiment) validate_floorplan_experiment(*in.experiment);
+    if(in.experiment&&in.experiment->initial_outline&&in.spec&&in.spec->outline)
+        throw FloorplanError("experiment: initial outline requires automatic sizing, not a fixed outline");
     plan.som = in.som;
     plan.som_source = in.som_source;
     plan.accounting = in.accounting;

@@ -312,12 +312,25 @@ FloorplanPlan Engine::run() {
             if (est>budget) { ++tally["reject_law5_budget"]; return std::nullopt; }
             ++tally["accepted"]; return Winner{precision.area(w*h),w,h,est,budget};
         };
+        const auto seed=in.experiment?in.experiment->initial_outline:std::nullopt;
+        if(seed) {
+            const auto [w,h]=*seed;++tally["generated"];
+            if(w<h)++tally["reject_aspect"];
+            else if(w*h<min_area)++tally["reject_min_area"];
+            else best=evaluate(w,h);
+        }
         for (double aspect:aspects) for (int k=0;k<80;++k) {
             checked_quantization_add(plan.accounting.quantization_engagements, "outline_grow_step");
             const double grow=outline_grow(k);
             const double w=quantize("outline_snap_up",sw+grow*(aspect/seed_aspect));
             const double h=quantize("outline_snap_up",sh+grow);
             ++tally["generated"];
+            // Growth is monotonic. Once a validated incumbent is no larger,
+            // later dimensions in this aspect cannot improve area. This
+            // altered bounded search is opt-in, not an exhaustive optimum.
+            if(seed&&best&&w*h>=std::get<1>(*best)*std::get<2>(*best)-1e-6) {
+                ++tally["reject_not_smaller"];break;
+            }
             if (w<h) { ++tally["reject_aspect"]; continue; }
             if (w*h<min_area) { ++tally["reject_min_area"]; continue; }
             if (auto candidate=evaluate(w,h)) { if (!best || *candidate<*best) best=candidate; break; }
@@ -380,6 +393,11 @@ FloorplanPlan Engine::run() {
         " mm (the smallest feasible board FOUND by this bounded aspect/grid search and greedy packing order, not a global minimum; holding the REAL 2-sided packed blocks with the estimated cross-subsystem airwire "+number(std::get<3>(best),0)+
         " <= LAW-5 budget "+number(std::get<4>(best),0)+" mm — honest routing headroom, the gate is not relaxed), SoM "+
         outline_text(plan.som.w,plan.som.h)+" centered";
+    if(in.experiment&&in.experiment->initial_outline) {
+        const auto [w,h]=*in.experiment->initial_outline;
+        plan.outline_note+="; supplied initial candidate "+outline_text(w,h)+
+            " mm was independently re-evaluated; bounded refinement coverage depends on the incumbent";
+    }
     return std::move(plan);
 }
 }  // namespace schgen::floorplan_detail

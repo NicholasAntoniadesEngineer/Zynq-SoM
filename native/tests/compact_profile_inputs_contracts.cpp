@@ -24,6 +24,12 @@ void profile_option_contracts() {
         if (!rejected) throw std::runtime_error("invalid constraint-first option accepted");
     }
     const auto valid=options({"profile","--repo",".","--compact-search","off","--outline-mm","168x160.5"});
+    const auto seeded=options({"profile","--repo",".","--compact-search","on","--initial-outline-mm","168x159"});
+    if(seeded.outline||seeded.initial_outline!=schgen::FloorplanPoint{168,159})throw std::runtime_error("seed confused with fixed outline");
+    bool mixed=false;
+    try{(void)options({"profile","--repo",".","--compact-search","on","--outline-mm","168x159","--initial-outline-mm","168x160"});}
+    catch(const std::invalid_argument&){mixed=true;}
+    if(!mixed)throw std::runtime_error("fixed outline and seed must not coexist");
     if(options({"profile","--repo",".","--compact-search","on"}).edge_translation||
        !options({"profile","--repo",".","--compact-search","on","--edge-translation","on"}).edge_translation)
         throw std::runtime_error("edge-translation default/opt-in mismatch");

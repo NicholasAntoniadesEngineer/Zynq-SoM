@@ -1,0 +1,11 @@
+{
+  "base_commit":"38318756",
+  "change":"Opt-in validated initial outline with incumbent-bounded coarse growth",
+  "project":"carrier",
+  "options":{"compact_search":true,"constraint_first":true,"edge_translation":true,"initial_outline_mm":[168,159],"outline":"auto","runs":1},
+  "result":{"construction_seconds":91.898174709,"dimensions_mm":[168,159],"top":425,"bottom":144,"instances":569,"outer_attempts":2226,"packed":12,"rejected":2214,"edge_candidates":59276,"edge_repairs":372,"reseats":417,"pcb_sha256":"ccaa5061f105825b678b090e27e467fca710da871a7bd112ac17dab27cd7d3f1","placement_contract_ok":true,"placement_flow_ok":true,"hard_red":0},
+  "prior_unseeded_sample_seconds":142.222942792,
+  "accepted":false,
+  "limitations":["Single samples; caches and thermal state uncontrolled; test compilation overlapped seeded run","Initial outline is extra input and changes bounded search coverage","Not a Python comparison","No full audit/DRC/render qualification","Existing retry ceilings remain unchanged"],
+  "log":"native/build/carrier-seeded-edge-search.log"
+}
