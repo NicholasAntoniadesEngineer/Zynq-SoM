@@ -1,5 +1,24 @@
 # carrier — project HISTORY (archived planning logs)
 
+## 2026-10-08 — bounded translation contracts expose edge rounding inconsistency
+
+Added an internal, not-yet-integrated edge translation helper with a maximum of
+32 candidates, immutable source geometry, strict fanout/body boundary checks,
+SoM keepouts, same-/cross-edge clearance and preservation of existing run gaps.
+Every attempted shifted coordinate uses the accounted 4dp scalar. Focused C++
+tests independently observe scalar calls for success/failure, all four edge
+orientations, stable incumbents, failed-search restoration, grouped moves,
+nonfinite/invalid inputs, fanout boundaries and same-edge overlap.
+
+The stricter helper does not yet reproduce the private 168×159 candidate: the
+original north USB-JTAG/USB-UART run fails its exact forward fanout inequality
+by floating-point roundoff (about 1.4e-14 mm). This is a numerical consistency
+issue, not evidence of a meaningful manufacturing clearance deficit. The
+original private experiment only rechecked cross-edge pairs. A captured
+rounding witness is now covered; do not loosen the predicate to promote the
+candidate. Correct edge coordinate projection before production integration.
+No existing solver path is changed by this helper-only commit.
+
 ## 2026-10-08 — promising bounded edge-translation candidate
 
 Detailed private tracing identifies south PMOD run overflow at 167×163,

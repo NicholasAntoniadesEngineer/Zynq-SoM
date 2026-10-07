@@ -845,6 +845,13 @@ if(BUILD_TESTING)
             "${CMAKE_CURRENT_SOURCE_DIR}/..")
     endforeach()
     target_compile_options(schgen_pack_precision_contracts PRIVATE -ffp-contract=off)
+    add_executable(schgen_edge_translation_contracts tests/edge_translation_contracts.cpp
+        $<TARGET_OBJECTS:schgen_pack_precision_observed>)
+    target_include_directories(schgen_edge_translation_contracts PRIVATE src)
+    target_link_libraries(schgen_edge_translation_contracts PRIVATE schgen_core)
+    target_compile_options(schgen_edge_translation_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror -ffp-contract=off)
+    set_property(TARGET schgen_edge_translation_contracts PROPERTY INTERPROCEDURAL_OPTIMIZATION FALSE)
+    add_test(NAME native_edge_translation_contracts COMMAND schgen_edge_translation_contracts)
     add_test(NAME native_pack_precision_contracts COMMAND schgen_pack_precision_contracts
         "${CMAKE_CURRENT_SOURCE_DIR}/..")
     add_test(NAME native_output_precision_contracts COMMAND schgen_output_precision_contracts
