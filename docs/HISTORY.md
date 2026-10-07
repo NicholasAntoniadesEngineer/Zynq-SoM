@@ -1,5 +1,20 @@
 # carrier — project HISTORY (archived planning logs)
 
+## 2026-10-08 — promising bounded edge-translation candidate
+
+Detailed private tracing identifies south PMOD run overflow at 167×163,
+USB-JTAG seating failure at default 168×162, and camera/HDMI cross-edge fanout
+conflict at compact 168×159. A bounded whole-edge translation experiment preserves
+within-edge spacing and checks directional fanout boundary margins, body margins,
+SoM keepouts and cross-edge clearance. A west-edge shift of -0.5 mm allows the
+168×159 compact constraint-first carrier to complete the full placement model and
+pass the broad physical helper, with 10 recorded reseats. Its area is 2.454% below
+the 168×163 reference. This is private candidate evidence, not production promotion
+or full hardware qualification. General contracts, accounted production search,
+regressions and final audits/renders remain necessary. Automatic-search behaviour
+and timing are not inferred from this fixed-outline screen. See
+`native/benchmarks/2026-10-08-carrier-edge-shift-screen.json`.
+
 ## 2026-10-08 — bounded carrier neighbour screening
 
 Three one-millimetre neighbour probes failed before full construction: default
