@@ -21,7 +21,8 @@
     "overflow": "Exact MAX on shared zone counter accepted once; MAX+1 rejects with unavailable receipt, not a publishable partial prefix"
   },
   "verification": {
-    "passing_suites": ["model_failure_receipt", "producer_accounting", "legalize_registry", "pack_geometry_board", "precision_accounting", "connector_precision", "floorplan_precision"],
+    "passing_suites": ["model_failure_receipt", "producer_accounting", "legalize_registry", "pack_geometry_board", "precision_accounting", "connector_precision", "floorplan_precision", "pcb_placement", "compact_profile_inputs", "compact_retry"],
+    "production_integration_followup": "Both boards pass two-sided AND top-preferred physical acceptance, source identity, stage transport and current-input reproducibility (311803 assertions). Invalid shape-index mutation is rejected; immutable overlapping devkit remains a negative fanout witness. Historical carrier shape-binding failure is no longer required.",
     "independent_receipts": "Function-entry instrumentation, exact per-family/phase ownership, missing/invented count negatives, import-once and replay checks",
     "physical": "Source identity and shape consistency, current placement/composition, mechanical, connector-spacing, fanout, ratsnest, escape-lane and return-stitch checks; both boards and top-preferred/fixed devkit variants",
     "reproducibility": "Current-input repeated model/plan/ledger bytes and executed operation/fallback receipts; no historical optimizer-coordinate requirement",

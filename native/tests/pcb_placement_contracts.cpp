@@ -87,25 +87,17 @@ void run(const std::filesystem::path &root, const std::string &name, const std::
         const auto variant = parse_json_file(
             (root / "native/tests/data/pcb_placement" / (name + "_single.json")).string());
         f.input.two_side = false;
-        if (const auto *error = object_field(variant, "error")) {
-            require(error->string_value.find("bringup_rails chose shape 8") != std::string::npos,
-                    "frozen carrier top-preferred shape rejection");
-            bool rejected = false;
-            try {
-                build_pcb_model(f.input);
-            } catch (const PcbZoneInfeasible &e) {
-                rejected = true;
-                require(std::string(e.what()).find("bringup_rails chose unregistered shape 8") !=
-                            std::string::npos,
-                        "same top-preferred shape binding policy rejection");
-            }
-            require(rejected, "top-preferred model must not ship an unregistered shape");
-            return;
+        // The old devkit result remains an immutable NEGATIVE physical witness.
+        // Do not require current production to reproduce that failure, nor the
+        // carrier's former wrong-shape rejection from mismatched planning zones.
+        if (const auto *model = object_field(variant, "model")) {
+            auto pool=f.expected_pool;
+            for(const auto& [path,bytes]:field(variant,"footprints").object_value)
+                pool[path]=pcb_check_footprint(path,bytes.string_value);
+            const auto original=pcb_model_from_json(*model,pool);
+            require(!check_fanout(PcbCheckInput(original),0).ok,
+                    "immutable top-preferred overlap witness must still fail the physical gate");
         }
-        f.model = field(variant, "model");
-        f.snapshots = field(variant, "snapshots");
-        for (const auto &[path, bytes] : field(variant, "footprints").object_value)
-            f.expected_pool[path] = pcb_check_footprint(path, bytes.string_value);
     }
     auto zones = build_pcb_zone_geometry(f.input);
     if (!single && mode == "--zones-only") {
@@ -125,29 +117,7 @@ void run(const std::filesystem::path &root, const std::string &name, const std::
     // target. Preserve the immutable emitter oracle separately below.
     placement_requirements_test::structure(f.input,zones,result,require);
     const auto expected=pcb_model_from_json(f.model,f.expected_pool);
-    bool physically_accepted=true;
-    if(single) {
-        // This legacy top-preferred constructor fixture already contains two
-        // fanout collisions. It is a negative acceptance case, NOT permission
-        // to publish it: exercise every physical checker and retain its red.
-        std::vector<std::string> failures;
-        placement_requirements_test::physical(f.input,result.model,[&](bool ok,const std::string& message) {
-            ++checks;if(!ok) failures.push_back(message);
-        });
-        if(!failures.empty()) {
-            physically_accepted=false;
-            require(failures.size()==1&&failures.front().find("FAN-OUT CLEARANCE GATE")!=std::string::npos,
-                    "top-preferred negative fixture has an unexpected new physical failure");
-            const auto original=check_fanout(PcbCheckInput(expected),0);
-            const auto current=check_fanout(PcbCheckInput(result.model),0);
-            require(!original.ok,"top-preferred rejection also exists in immutable reference");
-            std::set<std::string> original_offenders;
-            for(const auto& row:original.records) if(row.starved()) original_offenders.insert(row.ref);
-            for(const auto& row:current.records) if(row.starved())
-                require(original_offenders.count(row.ref)!=0,"top-preferred mode introduced a new fanout offender");
-            std::cout<<name<<": legacy top-preferred construction is NOT physically accepted (fanout rejection)\n";
-        }
-    } else placement_requirements_test::physical(f.input,result.model,require);
+    placement_requirements_test::physical(f.input,result.model,require);
     require(result.model.netclass_of==expected.netclass_of,name+" source net-class assignment");
     same(field(pcb_model_json(result.model),"classes"),field(f.model,"classes"),name+" source impedance classes");
     const auto check_structure=[&](auto mutate,const std::string& why) {
@@ -161,6 +131,9 @@ void run(const std::filesystem::path &root, const std::string &name, const std::
     check_structure([](auto& r){r.model.insts.push_back(r.model.insts.front());},"duplicate instance");
     check_structure([](auto& r){r.model.insts.front().x=-100.;},"off-board pose");
     check_structure([](auto& r){++r.model.n_top;},"incorrect side population");
+    require(!result.floorplan.plan.interior_blocks.empty(),"registered-shape mutation witness");
+    check_structure([](auto& r){r.floorplan.plan.interior_blocks.front().shape_idx=1000000;},
+                    "unregistered shape index");
     check_structure([](auto& r){r.model.insts.front().value="WRONG";},"part value");
     check_structure([](auto& r){r.model.insts.front().mirror=!r.model.insts.front().mirror;},"mirror identity");
     check_structure([](auto& r){r.stages.at("breathe").erase(r.stages.at("breathe").begin());},"missing stage reference");
@@ -209,8 +182,8 @@ void run(const std::filesystem::path &root, const std::string &name, const std::
     const auto policy=pcb_emit_policy(f.input.floorplan.project);
     require(render_pcb(result.model,policy).pcb==render_pcb(repeated.model,policy).pcb,
             name+" same-input emitted PCB");
-    std::cout<<name<<": source identity, stage transport and repeatability passed; scoped physical acceptance "
-        <<(physically_accepted?"PASS":"REJECTED")<<'\n';
+    std::cout<<name<<(single?" top-preferred":" two-sided")
+        <<": source identity, stage transport, repeatability and scoped physical acceptance PASS\n";
 }
 } // namespace
 int main(int argc, char **argv) {
