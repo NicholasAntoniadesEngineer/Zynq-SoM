@@ -12,7 +12,7 @@
 *
 * Values mirror native/src/project_authoring_carrier_board_aux.cpp one-for-one
 * (parse_si compatible):
-*   C1 100n  SY6280 IN bypass        (V3V3    -> GND)
+*   C1 10u   SY6280 IN reservoir     (V3V3    -> GND)
 *   C2 100n  SY6280 OUT bypass       (V3V3_AUX-> GND)
 *   C3 10u   SY6280 OUT bulk hold-up (V3V3_AUX-> GND)
 *   C4 100n  PCA9306 VREF1 bypass    (V3V3_SC -> GND)
@@ -32,8 +32,8 @@
 
 .subckt board_aux V3V3 V3V3_AUX GND V3V3_SC STM32_I2C2_SCL STM32_I2C2_SDA AUX_I2C_SCL AUX_I2C_SDA
 
-* supply bypass: SY6280 IN/OUT + PCA9306 VREF1/VREF2 (one 100n each)
-C1 V3V3 GND 100n
+* SY6280 input reservoir10u; other supply bypass capacitors remain100n.
+C1 V3V3 GND 10u
 C2 V3V3_AUX GND 100n
 C4 V3V3_SC GND 100n
 C5 V3V3_AUX GND 100n

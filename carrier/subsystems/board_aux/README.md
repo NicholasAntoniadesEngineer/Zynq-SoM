@@ -38,9 +38,24 @@ bused to `+3V3`, even pins NC). Keeping the gate self-contained on this sheet
 makes the whole block a single add/revert that touches none of the dense
 rail-control sheets, and keeps each sheet below the placer's congestion threshold.
 
-**Bypass + bulk.** 100n on U1.IN and U1.OUT. A 10u 0805 bulk cap holds up
-`+3V3_AUX` for the ~200 mA QWIIC load; the SY6280 datasheet recommends an output
-cap and its soft-start tolerates the 10u.
+**Input reservoir and output bypass.** C1 is 10uF, 0805, LCSC C15850
+(CL21A106KAYNNNE, nominal 25 V X5R), between U1.IN and GND. The
+[Silergy SY6280/A datasheet](https://www.silergy.com/download/downloadFile?ftype=note&id=4369&type=product),
+Rev. 1.0E, page 7, Supply Filter Capacitor, strongly recommends a 10uF ceramic
+input capacitor to reduce hot-plug supply droop and warns about short-circuit
+input ringing without adequate input capacitance. This is a manufacturer
+recommendation, not a stated absolute minimum or evidence that the former
+100nF part failed. Nominal capacitance does not guarantee effective capacitance
+under DC bias. C1 replaces the former 100nF/0603/C14663; its owner remains
+U1.IN, with unchanged connectivity and no new placement-distance threshold.
+
+Output C2 (100nF/0603/C14663) and C3 (10uF/0805/C15850) are unchanged.
+The ISET resistor, enable circuit and declared steady-state loads are unchanged;
+the larger input reservoir can change charging demand. Regenerate and revalidate
+the board and downstream BOM after this hardware change: the larger footprint
+has no compaction or clearance waiver, and no board-area improvement is claimed.
+PCA9306 topology is unchanged by this correction; its startup/bias/EN review
+remains open, and the tests below do not certify transient isolation.
 
 **Status LED.** A red LED on the gated output through R3 = 330R lights when the
 AUX rail is enabled, making the manual gate state visible at a glance.
@@ -64,8 +79,8 @@ off. 100n bypass on each VREF.
 | U2  | PCA9306DCUR | parts: `PCA9306DCUR` | — |
 | SW1 | DSHP04TSGER | parts: `DSHP04TSGER` | — |
 | D   | red | `Device:LED` | C2286 |
-| C (×4) | 100n | `Device:C` | C14663 |
-| C   | 10u | `Device:C` (0805) | C15850 |
+| C2, C4, C5 | 100n | `Device:C` (0603) | C14663 |
+| C1, C3 | 10u | `Device:C` (0805) | C15850 |
 | R (ISET) | 13k | `Device:R` | C22797 |
 | R (EN pulldown) | 100k | `Device:R` | C25803 |
 | R (LED) | 330R | `Device:R` | C23138 |
@@ -77,10 +92,17 @@ authority. Three testpoints sit on `+3V3_AUX`, `AUX_I2C_SCL`, `AUX_I2C_SDA`.
 
 ## Build & test
 
-`test_board_aux.py` checks model completeness, the decap/strap slice, ratings,
-the SPICE-passive match, and the gate/isolation invariants (VREF1 = +3V3_SC,
-VREF2 = +3V3_AUX, EN pulled to the gated rail).
+The native C++ contracts cover independent frozen pin/reference/NC identities,
+live-authoring/derived-circuit parity, C1-C5 values/packages/BOM codes, electrical
+rules, power declarations, part ratings, pin/footprint coverage, compiled
+ownership requirements, and passive SPICE identities:
 
-```bash
-PYTHONPATH=. python3 -m pytest carrier/subsystems/board_aux/test_board_aux.py -q
-```
+- `native/tests/board_aux_c1_contracts.cpp` (REPO CATALOG REPO arguments).
+- `native/tests/carrier_surface_requirements_contracts.cpp`.
+- `native/tests/carrier_spice_identity_contracts.cpp`.
+
+The C1 contract rejects the former C1 value/package/code and unrelated pin swaps,
+reference replacement, missing NC declarations and changes to C2-C5 values.
+These are focused structural checks, not active-device transient simulations or
+full-board acceptance. The C1 contract is registered in CMake/CTest; changed
+boards still require regeneration and validation without footprint waivers.

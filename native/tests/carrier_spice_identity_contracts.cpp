@@ -48,11 +48,11 @@ template<class F> void rejects(F f) { bool bad=false;try{f();}catch(const std::e
 }
 int main(int argc,char** argv) {
     try {
-        require(argc==3,"usage: carrier_spice_identity_contracts REPO CATALOG");
+        require(argc==3||argc==4,"usage: carrier_spice_identity_contracts REPO CATALOG [SPICE_FILE]");
         require(open_part_catalog(argv[2]),"open native catalog");
         ProjectAuthoringInput input;input.context=make_authoring_context(argv[1]);
         const auto live=author_project_subsystem("carrier","board_aux",input);
-        const auto path=std::filesystem::path(argv[1])/"carrier/subsystems/board_aux/board_aux.cir";
+        const auto path=argc==4?std::filesystem::path(argv[3]):std::filesystem::path(argv[1])/"carrier/subsystems/board_aux/board_aux.cir";
         std::ifstream file(path);require(bool(file),"read board_aux SPICE model");
         const std::string bytes{std::istreambuf_iterator<char>(file),{}};
         const auto rows=read_passives(bytes);verify(live,rows);

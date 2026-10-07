@@ -2,6 +2,27 @@
 #define main compact_stage_profile_entry
 #include "compact_stage_profile.cpp"
 #undef main
+#include "historical_input_contracts.hpp"
+
+namespace {
+void reviewed_profile_identity(const schgen::PcbPlacementInput& input) {
+    const auto& sheets = input.floorplan.sheets;
+    if (std::count_if(sheets.begin(), sheets.end(), [](const auto& s) {
+            return s.name == "board_aux"; }) != 1)
+        throw std::runtime_error("profile must load exactly one board_aux sheet");
+    const auto& sheet = *std::find_if(sheets.begin(), sheets.end(), [](const auto& s) {
+        return s.name == "board_aux"; });
+    // The shared guard requires unique C1/LCSC records and Device:C,
+    // 10u / C_0805_2012Metric / C15850 BEFORE any historical projection.
+    // Inspect the actual loader result, not a separately authored circuit.
+    (void)historical_input_contracts::project(sheet, "carrier");
+}
+void reviewed_profile_counts(const std::map<std::string, std::size_t>& counts) {
+    const std::map<std::string, std::size_t> expected{{"board_aux", 36}, {"bringup_rails", 24}};
+    if (counts != expected)
+        throw std::runtime_error("profile must exercise board_aux=36, bringup_rails=24 owned alternatives only");
+}
+}
 
 int main(int argc, char** argv) {
     try {
@@ -9,19 +30,42 @@ int main(int argc, char** argv) {
         const auto paths = schgen::resolve_project_paths(argv[1], "carrier");
         const auto defaults = load(paths, {}, false);
         const auto compact = load(paths, {}, true);
+        reviewed_profile_identity(defaults.input);
+        reviewed_profile_identity(compact.input);
         if (defaults.input.floorplan.compact_search || !defaults.input.owned_groups.empty() ||
             !compact.input.floorplan.compact_search || compact.input.owned_groups.size() != 2)
             throw std::runtime_error("profile input loading omitted mode-specific ownership");
         const auto zones = schgen::build_pcb_zone_geometry(compact.input);
-        std::size_t alternatives = 0;
+        std::map<std::string, std::size_t> alternatives;
         for (const auto& [sheet, shapes] : zones.geometry.shapes) {
-            (void)sheet;
             for (const auto& shape : shapes)
-                alternatives += shape.tag.find("/owned-pins-") != std::string::npos;
+                if (shape.tag.find("/owned-pins-") != std::string::npos) ++alternatives[sheet];
         }
-        if (alternatives != 56)
-            throw std::runtime_error("profile does not exercise the 56 live owned alternatives");
-        std::cout << "PASS actual profile loader: default no ownership; compact two groups, 56 alternatives\n";
+        reviewed_profile_counts(alternatives);
+        // The total alone cannot qualify the reviewed distribution or identity.
+        auto rejects = [](auto action) {
+            bool rejected = false;
+            try { action(); } catch (const std::runtime_error&) { rejected = true; }
+            if (!rejected) throw std::runtime_error("profile identity/count mutation escaped");
+        };
+        auto redistributed = alternatives;
+        --redistributed.at("board_aux"); ++redistributed.at("bringup_rails");
+        rejects([&] { reviewed_profile_counts(redistributed); });
+        auto unrelated = alternatives;
+        --unrelated.at("board_aux"); unrelated["unreviewed_sheet"] = 1;
+        rejects([&] { reviewed_profile_counts(unrelated); });
+        for (int mutation = 0; mutation != 3; ++mutation) {
+            auto changed = compact.input;
+            auto& sheet = *std::find_if(changed.floorplan.sheets.begin(), changed.floorplan.sheets.end(),
+                [](const auto& s) { return s.name == "board_aux"; });
+            auto& c1 = *std::find_if(sheet.parts.begin(), sheet.parts.end(), [](const auto& p) { return p.ref == "C1"; });
+            if (mutation == 0) c1.value = "100n";
+            if (mutation == 1) c1.footprint = "Capacitor_SMD:C_0603_1608Metric";
+            if (mutation == 2) for (auto& f : c1.fields) if (f.key == "LCSC") f.value = "C14663";
+            rejects([&] { reviewed_profile_identity(changed); });
+        }
+        std::cout << "PASS actual profile loader: reviewed C1 10u/0805/C15850; default no ownership; "
+            "compact board_aux=36 + bringup_rails=24, 60 alternatives; identity/count mutations rejected\n";
         return 0;
     } catch (const std::exception& error) {
         std::cerr << error.what() << '\n';

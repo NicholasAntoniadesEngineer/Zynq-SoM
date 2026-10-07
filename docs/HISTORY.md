@@ -1,5 +1,42 @@
 # carrier — project HISTORY (archived planning logs)
 
+## 2026-10-07 — qualify the auxiliary input reservoir and preserve historical input oracles
+
+(Autonomous, per full-autonomy directive.) Board_aux C1 now follows the SY6280
+Rev. 1.0E page 7 recommendation for a nominal 10uF ceramic input reservoir:
+0805 / CL21A106KAYNNNE / C15850, replacing 100nF / 0603 / C14663. This is a
+manufacturer recommendation, not an absolute-minimum or DC-bias qualification.
+The netlist, pin/NC identities, remaining capacitors and PCA9306 topology stay
+unchanged. PCA9306 startup/bias/isolation qualification remains open. The
+compiled ownership declaration, SPICE companion, derived circuit and independent
+component-basis obligation now agree with the new part.
+
+Tests independently freeze the original 18 references and every pin/net/NC,
+exercise capacitor and basis mutations, and compare historical input IR after
+checking and projecting only C1's three reviewed identity fields. The original
+migration fixtures are unchanged. RTC footprint comparison likewise permits
+only the three literal zero-length courtyard records removed in 529c196a;
+pads, surviving edges, models and all other bytes remain exact. The actual
+compact profiler is checked for the reviewed C1 identity and 36 board_aux plus
+24 bringup_rails owned alternatives, including redistribution mutations.
+
+The private pre-clearance snapshot passes all four repaired input/profiler
+contracts. On the current clearance-fix working tree, eight of nine focused
+hardware/input groups pass; the experiment-tools test reaches a separate
+historical placement metric mismatch (16031 versus 16030.8). That is retained
+as a failure pending explicit qualification of the placement correction, not
+silenced by this hardware/input checkpoint.
+
+Fresh carrier generation checks all 37 sheets and passes electrical, physical
+placement, DRC (zero non-unrouted errors), component basis and source policy.
+The C1 schematic and top/bottom board views were inspected. Overall acceptance
+is still FAIL: actual retry/compaction counts 37/14 exceed unchanged 18/2
+ceilings. The 12-sheet devkit similarly retains its exact c55c0857 PCB and fails
+the unchanged 35-retry ceiling with 74 actual retries. No new PCB/render set is
+published as an accepted incumbent; no smaller-board or overall-goal completion
+is claimed. Generated artifact refresh and the distinct breathing correction
+remain separate work.
+
 ## 2026-10-03 — use actual connector rotation for compact base envelopes
 
 (Autonomous, per full-autonomy directive.) Compact base-zone fanout now adds

@@ -20,7 +20,7 @@ int main(int argc, char** argv) {
         const auto& policy = default_component_basis_policy();
         const auto fixture = parse_json_file((root/"native/tests/data/component_basis/python_basis.json").string());
         require(live.size() == 66 && policy.sheets.size() == 66,"complete live coverage");
-        require(policy.declarations.size() == 214 && policy.uses.size() == 685,"expectation coverage");
+        require(policy.declarations.size() == 215 && policy.uses.size() == 685,"expectation coverage");
         for(const auto& row : at(fixture,"declarations").array_value) {
             const auto& a = row.array_value;
             const auto it = std::find_if(policy.declarations.begin(),policy.declarations.end(),
@@ -32,16 +32,35 @@ int main(int argc, char** argv) {
                 it->numeric == (a[1].kind == JsonKind::Number),"declaration differs from original Python");
         }
         auto result = audit_component_basis(live);
+        std::size_t reviewed_migrations = 0;
         for(const auto& row : at(fixture,"components").array_value) {
             const auto& a=row.array_value;
             if(a[5].string_value.empty()) continue; // numeric catalog identity, not a magnitude
+            // Preserve the historical trace: only this independently reviewed
+            // hardware correction may differ from its original binding.
+            const bool c1 = a[0].string_value == "carrier" &&
+                a[1].string_value == "board_aux" && a[2].string_value == "C1";
+            if(c1) {
+                ++reviewed_migrations;
+                require(a[3].string_value == "Device:C" && a[4].string_value == "100n" &&
+                    a[5].string_value == "carrier.board_aux.decap", "original C1 trace changed");
+            }
             const auto match=std::find_if(policy.uses.begin(),policy.uses.end(),[&](const auto& u) {
                 return u.scope==a[0].string_value && u.sheet==a[1].string_value &&
                     u.target==a[2].string_value && u.attribute=="value" &&
-                    u.declaration==a[5].string_value && u.type==a[3].string_value;
+                    u.declaration==(c1 ? "carrier.board_aux.in_reservoir" : a[5].string_value) &&
+                    u.type==a[3].string_value;
             });
             require(match!=policy.uses.end(),"obligation differs from independent Python trace");
         }
+        require(reviewed_migrations == 1, "exactly one reviewed hardware migration");
+        const auto reservoir = std::find_if(policy.declarations.begin(),policy.declarations.end(),
+            [](const auto& d) { return d.name == "carrier.board_aux.in_reservoir"; });
+        require(reservoir != policy.declarations.end(), "missing input reservoir declaration");
+        require(reservoir->value == "10u" && reservoir->unit == "F" &&
+            reservoir->klass == "datasheet" && !reservoir->numeric &&
+            reservoir->basis == "SY6280 Rev.1.0E p.7 strongly recommends a 10uF ceramic VIN-to-GND supply filter for hot-plug droop and ringing. Nominal 10uF, 0805 25 V X5R, LCSC C15850; effective capacitance under DC bias is not established here.",
+            "reviewed input reservoir specification changed");
         for(const auto& row : at(fixture,"policies").array_value) {
             const auto& a=row.array_value;
             require(std::any_of(policy.uses.begin(),policy.uses.end(),[&](const auto& u) {
@@ -51,7 +70,27 @@ int main(int argc, char** argv) {
             }),"port obligation differs from independent Python trace");
         }
         require(result.ok(), component_basis_report(result));
-        require(result.n_files == 66 && result.n_registered == 214 && result.n_sites == 685,"audit counts");
+        require(result.n_files == 66 && result.n_registered == 215 && result.n_sites == 685,"audit counts");
+        {
+            auto old_c1 = live;
+            auto& aux = std::find_if(old_c1.begin(),old_c1.end(),[](const auto& x) {
+                return x.scope == "carrier" && x.sheet == "board_aux"; })->circuit;
+            auto& c1 = *std::find_if(aux.parts.begin(),aux.parts.end(),[](const auto& x) { return x.ref == "C1"; });
+            require(c1.value == "10u", "live C1 nominal value");
+            c1.value = "100n";
+            require(!audit_component_basis(old_c1).ok(), "accepted obsolete C1 value");
+            auto old_binding = policy;
+            auto& use = *std::find_if(old_binding.uses.begin(),old_binding.uses.end(),[](const auto& u) {
+                return u.scope == "carrier" && u.sheet == "board_aux" && u.target == "C1"; });
+            use.declaration = "carrier.board_aux.decap";
+            require(!audit_component_basis(live,{"library","carrier","devkit_mini"},old_binding).ok(),
+                "accepted obsolete C1 binding");
+            auto missing = policy;
+            missing.declarations.erase(std::remove_if(missing.declarations.begin(),missing.declarations.end(),
+                [](const auto& d) { return d.name == "carrier.board_aux.in_reservoir"; }),missing.declarations.end());
+            require(!audit_component_basis(live,{"library","carrier","devkit_mini"},missing).ok(),
+                "accepted missing reservoir declaration");
+        }
         // Mutate EVERY real obligation, not synthetic-only facsimiles. The
         // independently captured registry must detect each live construction drift.
         for(const auto& use : policy.uses) {

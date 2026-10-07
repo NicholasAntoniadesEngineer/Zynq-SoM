@@ -1,5 +1,6 @@
 #include "schgen/authoring_gates.hpp"
 #include "schgen/project_authoring.hpp"
+#include "historical_input_contracts.hpp"
 #include <algorithm>
 #include <fstream>
 #include <iostream>
@@ -335,7 +336,9 @@ int main(int argc,char** argv) {
             for(const auto& p:at(fixture,"packages").array_value) {
                 auto f=std::find_if(factories.begin(),factories.end(),[&](const auto& x){return x.name==at(p,"name").string_value;});
                 require(f!=factories.end(),"missing native project factory");
-                require(authoring_json_equal(authored_circuit_json(f->circuit()),at(p,"circuit")),std::string(project)+":"+f->name+" differs from independent Python circuit output");
+                historical_input_contracts::check(f->circuit(), project, [&](const auto& projected) {
+                    return authoring_json_equal(authored_circuit_json(projected), at(p,"circuit"));
+                });
             }
             auto r=check_carrier_structure(root/project/"subsystems",root/"subsystems",factories);
             require(r.ok(),r.summary());

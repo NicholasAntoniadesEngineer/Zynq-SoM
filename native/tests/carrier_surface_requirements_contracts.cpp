@@ -32,7 +32,7 @@ Pins pins(const CircuitSheetIr& c) {
 }
 using Ownership = std::tuple<std::string,std::string,std::string,std::string,std::string>;
 const std::map<std::string,std::vector<Ownership>> expected{
-    {"board_aux", {{"U1","5","C1","+3V3","100n"},
+    {"board_aux", {{"U1","5","C1","+3V3","10u"},
                    {"U1","1","C2","+3V3_AUX","100n"},
                    {"U1","1","C3","+3V3_AUX","10u"},
                    {"U2","2","C4","+3V3_SC","100n"},
@@ -169,12 +169,13 @@ void runtime_checks(const CircuitSheetIr& circuit,const JsonNode& manifest,PcbCh
     for(auto& p:bad_owner_model.insts) if(p.ref==refs.at(r.ownership.front().owner)) p.value="substituted-owner";
     require(!check(r,bad_owner,bad_owner_model).hard_requirements_met(),"owner value checked against independent catalog");
 }
-void exercise(const std::filesystem::path& root, const std::string& sheet) {
+void exercise(const std::filesystem::path& root, const std::string& sheet,
+              const std::filesystem::path& assets) {
     ProjectAuthoringInput input; input.context=make_authoring_context(root);
     const auto c=author_project_subsystem("carrier",sheet,input);
     const auto original=pins(c);
-    require(original==pins(load_circuit_json(root/"carrier/subsystems"/sheet/"circuit.json")), "live/frozen pin-net identities differ");
-    const auto req=parse_json_file((root/"carrier/subsystems"/sheet/"placement_requirements.json").string());
+    require(original==pins(load_circuit_json(assets/"carrier/subsystems"/sheet/"circuit.json")), "live/frozen pin-net identities differ");
+    const auto req=parse_json_file((assets/"carrier/subsystems"/sheet/"placement_requirements.json").string());
     validate(c,req);
     for(std::size_t i=0;i<expected.at(sheet).size();++i) {
         auto omitted=req; auto& rows=mutable_field(omitted,"ownership").array_value;
@@ -224,9 +225,9 @@ void exercise(const std::filesystem::path& root, const std::string& sheet) {
 }
 int main(int argc,char** argv) {
     try {
-        require(argc==3,"usage: carrier_surface_requirements_contracts REPOSITORY CATALOG");
+        require(argc==3||argc==4,"usage: carrier_surface_requirements_contracts REPOSITORY CATALOG [BOARD_AUX_ASSET_ROOT]");
         require(open_part_catalog(argv[2]),"open read-only native catalog");
-        exercise(argv[1],"board_aux"); exercise(argv[1],"bringup_rails");
+        exercise(argv[1],"board_aux",argc==4?argv[3]:argv[1]); exercise(argv[1],"bringup_rails",argv[1]);
         close_part_catalog();
         std::cout<<"PASS "<<checks<<" requirements assertions; runtime ownership/top-face checked, qualitative proximity/access-envelope UNVERIFIED\n";
     } catch(const std::exception& e) {std::cerr<<e.what()<<'\n';return 1;}

@@ -17,7 +17,8 @@ CircuitSheetIr carrier_board_aux(const SubsystemMeta& meta, const AuthoringConte
     c.part("R1", "Device:R", "13k", "Resistor_SMD:R_0603_1608Metric", {{"LCSC", "C22797"}});
     c.net("BS_ISET_AUX", {"U1.ISET", "R1.1"}, std::nullopt);
     c.net("GND", {"R1.2"}, std::nullopt);
-    c.decouple("U1.IN", {"100n"}, std::nullopt, "GND", "Device:C", "Capacitor_SMD:C_0603_1608Metric");
+    // SY6280/A Rev1.0E p7:10uF input reservoir strongly recommended.
+    c.decouple("U1.IN", {"10u"}, std::nullopt, "GND", "Device:C", "Capacitor_SMD:C_0805_2012Metric");
     c.decouple("U1.OUT", {"100n"}, std::nullopt, "GND", "Device:C", "Capacitor_SMD:C_0603_1608Metric");
     c.auto_ref("C");
     c.part("C3", "Device:C", "10u", "Capacitor_SMD:C_0805_2012Metric", {{"LCSC", "C15850"}});
@@ -96,7 +97,7 @@ CircuitSheetIr carrier_board_aux(const SubsystemMeta& meta, const AuthoringConte
     c.testpoint("+3V3_AUX", std::nullopt);
     c.testpoint("AUX_I2C_SCL", std::nullopt);
     c.testpoint("AUX_I2C_SDA", std::nullopt);
-    c.field("C1", "LCSC", "C14663");
+    c.field("C1", "LCSC", "C15850");
     c.field("C2", "LCSC", "C14663");
     c.field("C4", "LCSC", "C14663");
     c.field("R4", "LCSC", "C25803");

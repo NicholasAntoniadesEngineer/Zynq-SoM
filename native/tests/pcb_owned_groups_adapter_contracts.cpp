@@ -126,8 +126,14 @@ int main(int argc, char** argv) {
             for (auto& p : c.circuit.parts) if (p.ref == "U1") p.value = "wrong-catalog-part";
         rejects([&] { resolve_owned_group_inputs(paths, bad_circuits, in); }, "catalog identity drift accepted");
         bad_circuits = circuits;
+        unsigned mutated_caps = 0;
         for (auto& c : bad_circuits) if (c.name == "board_aux")
-            for (auto& p : c.circuit.parts) if (p.ref == "C1") p.value = "10u";
+            for (auto& p : c.circuit.parts) if (p.ref == "C1") {
+                require(p.value != "1n", "cap mutation must change the authored value");
+                p.value = "1n";
+                ++mutated_caps;
+            }
+        require(mutated_caps == 1, "cap mutation must target exactly one C1");
         rejects([&] { resolve_owned_group_inputs(paths, bad_circuits, in); }, "cap value drift accepted");
         const auto cap = owned_group_placements(*in.owned_groups.at("board_aux")).front().cap;
         bad = in;

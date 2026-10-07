@@ -58,7 +58,7 @@ PlacementRequirementDeclaration carrier_surface_requirement_declaration(const st
     if(sheet=="board_aux") {
         d.owner_mpn={{"U1","SY6280AAC"},{"U2","PCA9306DCUR"}};
         d.required.ownership={
-            {"U1","5","IN","C1","1","2","+3V3","GND","100n","input_bypass"},
+            {"U1","5","IN","C1","1","2","+3V3","GND","10u","input_bypass"},
             {"U1","1","OUT","C2","1","2","+3V3_AUX","GND","100n","output_bypass"},
             {"U1","1","OUT","C3","1","2","+3V3_AUX","GND","10u","shared_output_bulk"},
             {"U2","2","VREF1","C4","1","2","+3V3_SC","GND","100n","authored_reference_rail_bypass_not_translation_filter"},

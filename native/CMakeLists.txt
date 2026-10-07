@@ -348,6 +348,11 @@ if(BUILD_TESTING)
     target_compile_options(schgen_compact_search_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror -ffp-contract=off)
     add_test(NAME native_compact_search_contracts COMMAND schgen_compact_search_contracts)
     add_executable(schgen_carrier_surface_requirements_contracts tests/carrier_surface_requirements_contracts.cpp)
+    add_executable(schgen_board_aux_c1_contracts tests/board_aux_c1_contracts.cpp)
+    target_link_libraries(schgen_board_aux_c1_contracts PRIVATE schgen_core)
+    target_compile_options(schgen_board_aux_c1_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror -ffp-contract=off)
+    add_test(NAME native_board_aux_c1_contracts COMMAND schgen_board_aux_c1_contracts
+        "${CMAKE_CURRENT_SOURCE_DIR}/.." "${CMAKE_CURRENT_SOURCE_DIR}/catalog.bin" "${CMAKE_CURRENT_SOURCE_DIR}/..")
     target_link_libraries(schgen_carrier_surface_requirements_contracts PRIVATE schgen_core)
     target_compile_options(schgen_carrier_surface_requirements_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror -ffp-contract=off)
     add_test(NAME native_carrier_surface_requirements_contracts COMMAND schgen_carrier_surface_requirements_contracts
