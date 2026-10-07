@@ -1,5 +1,17 @@
 # carrier — project HISTORY (archived planning logs)
 
+## 2026-10-08 — bounded carrier neighbour screening
+
+Three one-millimetre neighbour probes failed before full construction: default
+167×163 at edge-run margins, default 168×162 at interior seating/reseat exhaustion,
+and compact constraint-first 168×159 at the combined edge/SoM overlap or cross-edge
+fanout gate. Independent fresh Engine trials confirm both reservation policies
+reject each neighbour; the fixed-outline wrapper alone stops at conservative
+failure. No gates were relaxed and no boards were published. Interior-order
+experiments cannot repair the two early edge failures; these need edge-geometry
+diagnosis instead. This is bounded search evidence, not global infeasibility.
+See `native/benchmarks/2026-10-08-carrier-neighbor-screen.json`.
+
 ## 2026-10-08 — exception-safe connector incumbent preservation
 
 Connector alternatives restored the accepted plan on ordinary rejection but not
