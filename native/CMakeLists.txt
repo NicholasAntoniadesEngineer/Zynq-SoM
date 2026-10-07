@@ -608,6 +608,8 @@ if(BUILD_TESTING)
     target_compile_options(schgen_floorplan_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror -ffp-contract=off)
     add_test(NAME native_floorplan_contracts COMMAND schgen_floorplan_contracts
         "${CMAKE_CURRENT_SOURCE_DIR}/tests/data/floorplan")
+    add_test(NAME native_floorplan_geometry_contracts COMMAND schgen_floorplan_contracts
+        "${CMAKE_CURRENT_SOURCE_DIR}/tests/data/floorplan" --geometry-only)
     add_executable(schgen_pcb_emit_contracts tests/pcb_emit_contracts.cpp)
     target_link_libraries(schgen_pcb_emit_contracts PRIVATE schgen_core)
     target_compile_options(schgen_pcb_emit_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror -ffp-contract=off)

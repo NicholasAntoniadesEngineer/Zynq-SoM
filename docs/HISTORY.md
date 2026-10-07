@@ -1,5 +1,31 @@
 # carrier — project HISTORY (archived planning logs)
 
+## 2026-10-07 — separate placement requirements from historical coordinates
+
+(Autonomous, per owner clarification.) Placement integration now validates
+source part/pin/net identity, actual selected footprint/mirror documents,
+source-fixed mounting/module poses, stage populations, independently recounted
+movement ledgers, model transport and same-input repeatability. Final geometry
+must pass placement/flow, enforced composition, mechanical/connector spacing,
+fanout, ratsnest, escape lanes and return-stitch/emitted-copper checks. Historical
+coordinates, face choices, movement counts and model bytes are not optimisation
+acceptance criteria. Immutable PCB/design-rule formatter operands remain exact;
+the separate floorplan geometry/formatter slice is now registered in CTest.
+
+Positive current carrier and devkit two-sided constructions pass; the suite
+checks 191,020 assertions including corrupt identity/population/stage/mirror
+controls, reversed connectors and deleted return copper. The preserved primitive
+floorplan slice passes 13,053 checks. Combined CTest passes in 35.83 s.
+
+The new checks expose an existing defect in the legacy top-preferred devkit
+fixture: U6004 and Q4001 are fanout-starved by foreign passives. That constructor
+case is explicitly NOT physically accepted: its existing negative verdict must
+remain, new offenders/other physical failures reject, and no hardware checker is
+waived. A future genuinely valid result may pass normally. The carrier's legacy
+unregistered top-preferred shape case remains a rejection test. These diagnostic
+constructor cases do not imply either single-face manufacturing readiness or
+completion of the broader board optimisation goal.
+
 ## 2026-10-07 — compare and report the final refined floorplan estimate
 
 (Autonomous, per full-autonomy directive.) Automatic outline search previously
