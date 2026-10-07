@@ -48,12 +48,29 @@ int main(){try{
         PackEdgeBlock b;b.name=name;b.w=80;b.h=5;b.assigned_edge="N";b.current_edge="N";
         b.reach={0,2,0,4};b.inset={.5,.5,.5,.5};blocks.push_back(b);
     }
-    auto small=spec;small.board_h=50;
+    auto small=spec;small.board_w=102;small.board_h=50;
     const auto spilled=poses(pack_edges(blocks,{},small));
     require(spilled.size()==3&&std::get<0>(spilled.at("b"))=="E"&&std::get<0>(spilled.at("c"))=="E","spill witness exercises new edge");
     require(std::abs(std::get<2>(spilled.at("c"))-std::get<2>(spilled.at("b"))-5-3.5)<1e-9,
             "spilled pair uses destination edge's vertical fanout");
+    QuantizationCounts rejected_counts;
+    const auto overflow=pack_edges({blocks.front()},{},spec,&rejected_counts);
+    require(overflow.poses.empty(),"body-only fit cannot consume reserved far-edge fanout margin");
+    require(rejected_counts.at("pack_edge_pose_precision4dp")==1,"rejected rounded coordinate remains accounted");
     FloorplanInput input;input.som.w=10;input.som.h=10;
+    // Forward clearance must survive 4dp pose rounding, including values just
+    // either side of a decimal grid point. No epsilon in the safety predicate.
+    for(const std::string edge:{"N","E","S","W"})for(int k=0;k<100;++k) {
+        PackEdgeBlock a,b;a.name="a";b.name="b";a.assigned_edge=b.assigned_edge=edge;
+        a.order_hint=0;b.order_hint=1;a.w=b.w=10.9881;a.h=b.h=10.9881;
+        a.reach={0,1.4499,0,1.4499};
+        auto grid=spec;grid.board_w=grid.board_h=300;grid.som_w=grid.som_h=0;
+        grid.som_x=grid.som_y=110.3302+(2*10.9881+1.4499)/2+k*.00001;
+        const auto packed=poses(pack_edges({a,b},{},grid));
+        const double first=edge=="N"||edge=="S"?std::get<1>(packed.at("a")):std::get<2>(packed.at("a"));
+        const double second=edge=="N"||edge=="S"?std::get<1>(packed.at("b")):std::get<2>(packed.at("b"));
+        require(first+10.9881+1.4499<=second,"rounded edge poses preserve exact forward fanout clearance");
+    }
     floorplan_detail::Engine engine(input);engine.board_size(1,1);
     FloorplanBlock block;block.name="jack";block.kind="edge";
     engine.plan.edge_blocks.push_back(block);engine.zbox["jack"]={10,5};engine.edge_of["jack"]="N";

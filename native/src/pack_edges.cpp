@@ -75,6 +75,18 @@ double block_pair_gap(const PackEdgeBlock& a, const PackEdgeBlock& b,
     return pair_gap(a.reach, a.inset, b.reach, b.inset, axis, floor, counts);
 }
 
+double rounded_run_coordinate(double target,double lower,QuantizationCounts* counts) {
+    double value=pack_edge_pose_precision4dp(target,counts);
+    if(value>=lower)return value;
+    // Project onto the existing output grid, then recheck the actual floating
+    // expression. Decimal ceiling alone can still land below the bound.
+    const double tick=std::ceil(lower*10000.0);
+    value=pack_edge_pose_precision4dp(tick/10000.0,counts);
+    if(value<lower)value=pack_edge_pose_precision4dp((tick+1.0)/10000.0,counts);
+    if(!(value>=lower))throw std::runtime_error("pack_edges: no representable safe run coordinate");
+    return value;
+}
+
 }  // namespace
 
 double edge_target(char edge, const PackEdgesSpec& spec,
@@ -291,6 +303,9 @@ PackEdgesResult pack_edges(const std::vector<PackEdgeBlock>& blocks,
         start /= wsum;
         start = std::max(lo, std::min(start, hi - total));
         double pos = start;
+        double lower = lo;
+        const auto run_begin=out.poses.size();
+        bool run_overflow=false;
         for (std::size_t i = 0; i < order.size(); ++i) {
             const PackEdgeBlock& block =
                 blocks[static_cast<std::size_t>(order[i])];
@@ -299,22 +314,28 @@ PackEdgesResult pack_edges(const std::vector<PackEdgeBlock>& blocks,
             PackEdgePose pose;
             pose.name = block.name;
             pose.edge = std::string(1, edge);
+            const double along=rounded_run_coordinate(pos,lower,counts);
+            if(along+sp>hi)run_overflow=true;
             if (edge == 'N') {
-                pose.x = pack_edge_pose_precision4dp(pos, counts);
+                pose.x = along;
                 pose.y = spec.edge_inset;
             } else if (edge == 'S') {
-                pose.x = pack_edge_pose_precision4dp(pos, counts);
+                pose.x = along;
                 pose.y = pack_edge_pose_precision4dp(spec.board_h - dp - spec.edge_inset, counts);
             } else if (edge == 'W') {
                 pose.x = spec.edge_inset;
-                pose.y = pack_edge_pose_precision4dp(pos, counts);
+                pose.y = along;
             } else {
                 pose.x = pack_edge_pose_precision4dp(spec.board_w - dp - spec.edge_inset, counts);
-                pose.y = pack_edge_pose_precision4dp(pos, counts);
+                pose.y = along;
             }
             out.poses.push_back(pose);
+            lower = along + sp + (i < gaps.size() ? gaps[i] : 0.0);
             pos += sp + (i < gaps.size() ? gaps[i] : 0.0);
         }
+        // Projection cannot buy clearance by crossing the far run boundary.
+        // Missing poses make the owning floorplan reject this outline.
+        if(run_overflow)out.poses.resize(run_begin);
     }
     return out;
 }

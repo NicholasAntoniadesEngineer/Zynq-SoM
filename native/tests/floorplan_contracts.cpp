@@ -403,10 +403,13 @@ void pack_behavior() {
         FloorplanBlock a,b;a.name="a";b.name="b";a.kind=b.kind="edge";a.edge=b.edge="S";
         a.fanout_reach={2,0,0,0};e.plan.edge_blocks={a,b};
         e.zbox={{"a",{40,10}},{"b",{40,10}}};e.edge_of={{"a","S"},{"b","S"}};e.max_reach=2;
-        require(e.attempt_pack(false)==(width>102.2),"complete pack enforces edge-run width floor");
+        const bool packed=e.attempt_pack(false);
+        require(packed==(width>102.2),"complete pack enforces edge-run width floor");
         const auto& first=e.plan.edge_blocks[0];const auto& second=e.plan.edge_blocks[1];
         require(first.edge=="S"&&second.edge=="S","width rejection does not silently change edge membership");
-        require(first.x==12&&first.y==108.5&&std::abs(second.x-52.3)<1e-12&&second.y==108.5,"frozen edge-run poses");
+        if(packed)require(first.x==12&&first.y==108.5&&std::abs(second.x-52.3)<1e-12&&second.y==108.5,"frozen feasible edge-run poses");
+        else require(first.x==a.x&&first.y==a.y&&second.x==b.x&&second.y==b.y,
+                     "overflowing edge run must not publish infeasible poses");
     }
     in.som.w=20;in.som.h=20;
     for(const std::string connected:{"small","large"}) {

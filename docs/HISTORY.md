@@ -1,5 +1,32 @@
 # carrier — project HISTORY (archived planning logs)
 
+## 2026-10-08 — project rounded edge runs onto safe output coordinates
+
+Edge runs now use the previous emitted coordinate, body span and required gap
+as the next exact lower bound. If ordinary 4dp rounding violates that bound,
+the packer projects upward onto the same grid and rechecks the actual forward
+expression; no epsilon weakens clearance. Every real quantizer call remains
+accounted. A run crossing its far fanout boundary is rejected with missing poses,
+which the owning floorplan rejects; no coordinates are silently clipped.
+
+A 400-case four-edge decimal-offset sweep fails before and passes after the fix.
+The existing spill witness now has enough north-edge fanout capacity (102 mm,
+not 100 mm); a separate 100 mm witness explicitly requires rejection and retained
+coordinate accounting. Default carrier screening still yields 168×163, 393 top /
+176 bottom instances and 28 reseats; its updated PCB hash is
+`1c24c469e558022bedb7975bbe97b5011cf849f209f5988a117bfbdb1e7c14bf`.
+Construction-only sample 11.5451 s is not a matched speedup claim.
+
+The stricter translation helper now reproduces 168×159 through a -0.5 mm west
+run shift (27 bounded candidates per successful helper call), with the complete
+placement model passing the broad physical helper. Translation remains private
+and unintegrated; full board audit/DRC/render qualification remains outstanding.
+Scratch evidence: `native/build/carrier-safe-edge-auto.log` and
+`native/build/helper-safe-edge-physical.log`.
+Edge-direction, edge-translation, pack-precision and placement contracts pass;
+floorplan contracts pass in 24.36 s after replacing the old overflowing-run pose
+assertion with rejection-state preservation (feasible frozen poses retained).
+
 ## 2026-10-08 — bounded translation contracts expose edge rounding inconsistency
 
 Added an internal, not-yet-integrated edge translation helper with a maximum of
