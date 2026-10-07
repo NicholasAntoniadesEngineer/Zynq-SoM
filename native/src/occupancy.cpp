@@ -676,13 +676,16 @@ std::optional<Pose> Occupancy::place_near(
     ys.reserve(static_cast<std::size_t>(ny));
     for (int ix = 0; ix < nx; ++ix) {
         const double xv = ix * s;
-        if (win_x0 <= xv && xv <= win_x1) {
+        // These are the exact axis-separable boundary predicates used by
+        // fits_hashed. Omit impossible cells before building the frontier;
+        // relative ordering of every potentially legal pose is unchanged.
+        if (win_x0 <= xv && xv <= win_x1 && !(xv < clear_ || xv + w > board_w_ - clear_)) {
             xs.emplace_back(std::abs(xv + hw - ax), xv);
         }
     }
     for (int iy = 0; iy < ny; ++iy) {
         const double yv = iy * s;
-        if (win_y0 <= yv && yv <= win_y1) {
+        if (win_y0 <= yv && yv <= win_y1 && !(yv < clear_ || yv + h > board_h_ - clear_)) {
             ys.emplace_back(std::abs(yv + hh - ay), yv);
         }
     }
@@ -698,7 +701,10 @@ std::optional<Pose> Occupancy::place_near(
     std::vector<std::pair<double, double>> spare;
 
     auto flush = [&](double thresh) -> std::optional<Pose> {
-        while (!bkeys.empty() && bkeys.top() <= thresh) {
+        // At the half-step boundary an unseen distance can still round into
+        // this bucket (ties to even). Wait until strictly beyond it before
+        // selecting by x/y, otherwise a later same-key pose can be skipped.
+        while (!bkeys.empty() && bkeys.top() < thresh) {
             const double key = bkeys.top();
             bkeys.pop();
             auto it = buckets.find(key);

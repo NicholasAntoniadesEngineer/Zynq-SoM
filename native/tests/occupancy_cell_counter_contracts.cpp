@@ -9,6 +9,7 @@
 #include <stdexcept>
 #include <thread>
 #include <type_traits>
+#include <tuple>
 
 // Compile only occupancy_precision.cpp with function-entry instrumentation;
 // this test and occupancy.cpp stay separate, uninstrumented translation units.
@@ -166,6 +167,36 @@ void threads() {
     for(std::size_t i=0;i<workers.size();++i)
         require(observed[i]==400&&counts[i]==QuantizationCounts{{names[4],400}},"query binding escaped thread/invocation");
 }
+void boundary_frontier() {
+    Occupancy blocked(6,6,1,2,1,1,.05);blocked.add(0,0,6,6,{},{},1,{});
+    QuantizationCounts counts;
+    measured(counts,[&]{require(!blocked.place_near(3,3,2,2,{},{},1,{},-1,7,-1,7,&counts),"blocked lattice unexpectedly fits");});
+    require(counts.at(names[2])==9,"only x/y 1..3 can satisfy the body boundary, so exactly nine frontier calls");
+    QuantizationCounts oversized;
+    measured(oversized,[&]{require(!blocked.place_near(3,3,5,2,{},{},1,{},-1,7,-1,7,&oversized),"oversized body unexpectedly fits");});
+    require(oversized==QuantizationCounts{{names[5],2}},"impossible body creates no frontier or collision-index work");
+    for(double step:{.5,1.,1.25})for(double clear:{0.,.3,1.})
+    for(double w:{1.,2.4,6.})for(double h:{.5,2.,7.})for(int mask:{1,2})for(double ax:{-1.,3.1,9.}) {
+        Occupancy scene(6,7,clear,2,2,step,.05);
+        scene.add(2,2,1.5,2,{.2,.3,.4,.1},{},1,{{-.4,.3,.5,.7,3}});
+        const std::vector<Comp> children{{-.25,.5,.5,.5,2}};
+        std::optional<std::tuple<double,double,double>> best;
+        // Independent full Cartesian enumeration, including boundary failures;
+        // compare rounded-distance/x/y rank using exhaustive, non-hashed fits.
+        for(int ix=0;ix<=static_cast<int>(6/step);++ix)for(int iy=0;iy<=static_cast<int>(7/step);++iy) {
+            const double x=ix*step,y=iy*step;
+            if(x>5.5||y<.25||y>6.5||!scene.fits_exhaustive(x,y,w,h,{},{},mask,children))continue;
+            const auto rank=std::make_tuple(occupancy_frontier_key1dp(std::abs(x+w/2-ax)+std::abs(y+h/2-2.65)),x,y);
+            if(!best||rank<*best)best=rank;
+        }
+        const auto actual=scene.place_near(ax,2.65,w,h,{},{},mask,children,-.5,5.5,.25,6.5);
+        require(bool(actual)==bool(best),"axis pruning changed feasibility versus exhaustive lattice");
+        if(best&&!(actual->x==std::get<1>(*best)&&actual->y==std::get<2>(*best))) {
+            std::cerr<<"oracle witness step="<<step<<" clear="<<clear<<" wh="<<w<<","<<h<<" mask="<<mask<<" ax="<<ax<<" actual="<<actual->x<<","<<actual->y<<" expected="<<std::get<1>(*best)<<","<<std::get<2>(*best)<<'\n';
+            require(false,"axis pruning changed the best rounded-distance/x/y pose");
+        }
+    }
+}
 }
 extern "C" void __cyg_profile_func_enter(void* fn,void*) {
     if(!observing)return;
@@ -177,6 +208,6 @@ extern "C" void __cyg_profile_func_enter(void* fn,void*) {
     else if(fn==reinterpret_cast<void*>(&schgen::occupancy_axis_count))++entries[5];
 }
 extern "C" void __cyg_profile_func_exit(void*,void*){}
-int main(){try{scalar_contract();map_lifetimes();geometry();threads();
+int main(){try{scalar_contract();map_lifetimes();geometry();threads();boundary_frontier();
     std::cout<<"occupancy cell counter contracts PASS (independent function-entry proof)\n";
 }catch(const std::exception& e){observing=false;std::cerr<<e.what()<<'\n';return 1;}}

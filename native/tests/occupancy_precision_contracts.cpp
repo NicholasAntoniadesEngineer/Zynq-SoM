@@ -246,7 +246,7 @@ void ownership_and_rejections(){
     RefineBlock b;b.name="blocked";b.w=7;b.h=1;b.mask=1;b.anchor.zone_w=1;b.anchor.zone_ax=3;b.anchor.zone_ay=3;
     const auto refinement=measured(second,[&]{const auto r=refine_pack_passes(blocked,{b},{},1,6,6,&second);
         require(r.passes==1&&r.poses==std::vector<std::pair<double,double>>{{0,0}},"failed refinement moved geometry");});
-    require(refinement.at(names[5])==2&&refinement.at(names[2])>0,"failed refinement work lost");
+    require(refinement.at(names[5])==2&&!refinement.count(names[2]),"oversized refinement counts axes but cannot execute frontier work");
 }
 void registry_and_boards(const std::filesystem::path& root){
     NativeQuantizations registry;register_native_quantizations(registry);
