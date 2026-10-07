@@ -63,13 +63,13 @@ double aff_sum(const std::vector<std::pair<std::string, double>>& j_aff) {
 }
 
 double block_pair_gap(const PackEdgeBlock& a, const PackEdgeBlock& b,
-                      const PackEdgesSpec& spec, QuantizationCounts* counts) {
+                      char edge, const PackEdgesSpec& spec, QuantizationCounts* counts) {
     if (a.overmold && b.overmold) {
         return spec.cable_neighbor_gap;
     }
-    const std::string& use = !a.current_edge.empty() ? a.current_edge
-                                                     : b.current_edge;
-    const char axis = (use == "N" || use == "S") ? 'E' : 'S';
+    // Fanout is along this placement's edge, never a previous attempt's edge.
+    // A fresh block may have no current_edge; a spilled block may have another.
+    const char axis = is_ns(edge) ? 'E' : 'S';
     const double floor = (a.overmold || b.overmold) ? spec.overmold_side_gap
                                                     : spec.clear;
     return pair_gap(a.reach, a.inset, b.reach, b.inset, axis, floor, counts);
@@ -252,7 +252,7 @@ PackEdgesResult pack_edges(const std::vector<PackEdgeBlock>& blocks,
         for (std::size_t i = 0; i + 1 < order.size(); ++i) {
             gaps.push_back(block_pair_gap(
                 blocks[static_cast<std::size_t>(order[i])],
-                blocks[static_cast<std::size_t>(order[i + 1])], spec, counts));
+                blocks[static_cast<std::size_t>(order[i + 1])], edge, spec, counts));
         }
         double total = 0.0;
         for (int idx : order) {

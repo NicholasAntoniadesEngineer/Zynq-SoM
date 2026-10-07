@@ -179,6 +179,17 @@ void board_contracts(const std::filesystem::path& root) {
         auto fixture=placement_fixture::load(root,project);
         begin();const auto result=build_pcb_model(fixture.input);const auto entries=end();
         const auto totals=pcb_placement_accounting(result);receipt(totals.quantization_engagements,entries);
+#ifndef PACK_PRECISION_BASELINE
+        require(!entries.empty(),"real board must exercise instrumented pack boundaries");
+        // Prove the independent observer rejects a missing or invented call.
+        auto missing=totals.quantization_engagements;
+        const auto name=entries.begin()->first;
+        missing.erase(name);
+        rejects<std::runtime_error>([&]{receipt(missing,entries);});
+        auto invented=totals.quantization_engagements;
+        ++invented[name];
+        rejects<std::runtime_error>([&]{receipt(invented,entries);});
+#endif
         auto plan=result.floorplan.plan;
         auto old_counts=totals.quantization_engagements;
 #ifndef PACK_PRECISION_BASELINE
@@ -208,13 +219,21 @@ int main(int argc,char** argv) { try {
 #ifndef PACK_PRECISION_BASELINE
     scalar_contracts();
 #endif
-    producer_contracts();board_contracts(argv[1]);
+    producer_contracts();
+#ifndef PACK_PRECISION_BASELINE
+    // Freeze primitive operands/results, not a historical whole-board search.
+    // Real-board calls remain independently instrumented below; geometry and
+    // current-input reproducibility belong to the placement/floorplan suites.
+    const auto saved=placement_fixture::read(std::filesystem::path(argv[1])/"native/tests/data/pack_precision_legacy.txt");
+    const auto boundary=saved.find("carrier\n");
+    require(boundary!=std::string::npos,"historical primitive boundary missing");
+    require(legacy.str()==saved.substr(0,boundary),"fixed primitive pack geometry changed");
+#endif
+    board_contracts(argv[1]);
 #ifdef PACK_PRECISION_BASELINE
     std::cout<<legacy.str();
 #else
-    require(legacy.str()==placement_fixture::read(std::filesystem::path(argv[1])/"native/tests/data/pack_precision_legacy.txt"),
-            "pre-extraction geometry/counters changed");
-    std::cout<<"Pack precision scalar, producer, ownership and immutable geometry contracts PASS\n";
+    std::cout<<"Pack precision scalar, fixed producer geometry and independently observed board ownership contracts PASS\n";
 #endif
     return 0;
 }catch(const std::exception& error){std::cerr<<error.what()<<'\n';return 1;} }

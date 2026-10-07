@@ -22,6 +22,33 @@ void profile_option_contracts() {
         catch (const std::invalid_argument&) { rejected = true; }
         if (!rejected) throw std::runtime_error("invalid constraint-first option accepted");
     }
+    const auto valid=options({"profile","--repo",".","--compact-search","off","--outline-mm","168x160.5"});
+    if(valid.outline!=schgen::FloorplanPoint{168,160.5})throw std::runtime_error("explicit outline parsed incorrectly");
+    for(const auto* value:{"168","168x","x160","1x2x3","0x10","-1x10","nanx10","10xinf","1e999x10","10x2junk"}) {
+        bool rejected=false;
+        try{(void)options({"profile","--repo",".","--compact-search","off","--outline-mm",value});}
+        catch(const std::invalid_argument&){rejected=true;}
+        if(!rejected)throw std::runtime_error("invalid diagnostic outline accepted");
+    }
+    schgen::PcbPlacementInput source;
+    source.floorplan.spec.emplace();source.floorplan.spec->outline={{200,190}};
+    source.floorplan.spec->edges["N"]={"usb","hdmi"};
+    source.floorplan.spec->ordered_edges["N"]={"hdmi","usb"};
+    source.floorplan.spec->source="immutable policy";
+    const auto original=source.floorplan.spec->outline;
+    const auto changed=trial_input(source,true,valid.outline);
+    const auto unchanged=trial_input(source,false,std::nullopt);
+    if(source.floorplan.spec->outline!=original || source.floorplan.compact_search ||
+       changed.floorplan.spec->outline!=valid.outline || !changed.floorplan.compact_search ||
+       unchanged.floorplan.spec->outline!=original ||
+       changed.floorplan.spec->edges!=source.floorplan.spec->edges ||
+       changed.floorplan.spec->ordered_edges!=source.floorplan.spec->ordered_edges ||
+       changed.floorplan.spec->source!=source.floorplan.spec->source)
+        throw std::runtime_error("outline trial mutated source or changed an unrequested outline");
+    source.floorplan.spec.reset();
+    const auto fresh=trial_input(source,false,valid.outline);
+    if(source.floorplan.spec || !fresh.floorplan.spec || fresh.floorplan.spec->outline!=valid.outline)
+        throw std::runtime_error("outline override failed on an input without an explicit spec");
 }
 void reviewed_profile_identity(const schgen::PcbPlacementInput& input) {
     const auto& sheets = input.floorplan.sheets;

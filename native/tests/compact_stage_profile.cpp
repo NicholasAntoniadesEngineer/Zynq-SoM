@@ -9,6 +9,7 @@
 #include "schgen/validation.hpp"
 #include "schgen/pcb_placement_gates.hpp"
 #include <charconv>
+#include <cmath>
 #include <chrono>
 #include <iomanip>
 #include <iostream>
@@ -26,11 +27,13 @@ struct Options {
     std::string project = "carrier", kicad = "kicad-cli", compact, inputs = "prepared";
     int runs = 1;
     bool constraint_first = false;
+    std::optional<FloorplanPoint> outline;
 };
 void help() {
     std::cout << "compact_stage_profile --repo ROOT --project NAME --compact-search off|on|both\n"
         "  [--runs N] [--input-mode cold|prepared] [--kicad-cli PATH]\n"
         "  [--constraint-first off|on] (opt-in candidate, requires --compact-search on)\n"
+        "  [--outline-mm WIDTHxHEIGHT] (explicit diagnostic outline; skips automatic sizing search)\n"
         "cold: reload/validate circuits, relink, re-extract netlist and resolve inputs per repetition.\n"
         "prepared: load once; reuse only parsed PcbPlacementInput across repetitions.\n"
         "both: off then on using the same compact-capable input each repetition (fixed order; not randomized).\n"
@@ -53,6 +56,19 @@ Options parse(int argc, char** argv) {
         else if (arg == "--kicad-cli") out.kicad = value;
         else if (arg == "--compact-search") out.compact = value;
         else if (arg == "--input-mode") out.inputs = value;
+        else if (arg == "--outline-mm") {
+            const auto separator=value.find('x');
+            if(separator==std::string::npos || separator==0 || separator+1==value.size() ||
+               value.find('x',separator+1)!=std::string::npos)
+                throw std::invalid_argument("outline-mm must be WIDTHxHEIGHT");
+            const auto dimension=[](const std::string& text) {
+                double v=0;const auto parsed=std::from_chars(text.data(),text.data()+text.size(),v);
+                if(parsed.ec!=std::errc{} || parsed.ptr!=text.data()+text.size() || !std::isfinite(v) || v<=0)
+                    throw std::invalid_argument("outline-mm dimensions must be finite positive numbers");
+                return v;
+            };
+            out.outline=FloorplanPoint{dimension(value.substr(0,separator)),dimension(value.substr(separator+1))};
+        }
         else if (arg == "--constraint-first") {
             if (value != "on" && value != "off") throw std::invalid_argument("constraint-first must be off|on");
             out.constraint_first = value == "on";
@@ -149,11 +165,20 @@ void scalar(const JsonNode& value) {
     else if (value.kind == JsonKind::String) std::cout << std::quoted(value.string_value);
     else throw std::runtime_error("unexpected outline tally type");
 }
+PcbPlacementInput trial_input(const PcbPlacementInput& source,bool compact,
+                             const std::optional<FloorplanPoint>& outline) {
+    auto input=source;
+    input.floorplan.compact_search=compact;
+    if(outline) {
+        if(!input.floorplan.spec)input.floorplan.spec.emplace();
+        input.floorplan.spec->outline=outline;
+    }
+    return input;
+}
 std::string trial(const PcbPlacementInput& source, bool compact, int run, int generation,
-                  bool constraint_first = false) {
+                  bool constraint_first = false,const std::optional<FloorplanPoint>& outline=std::nullopt) {
     const auto copy_start = Clock::now();
-    auto input = source;
-    input.floorplan.compact_search = compact;
+    auto input = trial_input(source,compact,outline);
     const auto copy_seconds = seconds(copy_start);
     // Fresh observers for every trial. Existing non-diagnostic policy is retained.
     if (input.experiment || input.floorplan.experiment)
@@ -170,6 +195,8 @@ std::string trial(const PcbPlacementInput& source, bool compact, int run, int ge
     std::cout << "trial run=" << run << " generation=" << generation << " compact_search=" << compact
         << " constraint_first=" << constraint_first
         << " input_copy_seconds=" << copy_seconds << " status=started\n" << std::flush;
+    if(outline)std::cout<<"outline_override width_mm="<<outline->first<<" height_mm="<<outline->second
+                        <<" automatic_sizing=disabled source_policy_otherwise_unchanged=1\n"<<std::flush;
     ExecutionFailureReceipt failure;
     const auto start = Clock::now();
     profile.mark = start;
@@ -263,7 +290,7 @@ int main(int argc, char** argv) {
             const int generation = options.inputs == "prepared" ? 1 : run;
             for (const bool compact : {false, true}) {
                 if ((compact && options.compact == "off") || (!compact && options.compact == "on")) continue;
-                const auto hash = trial(prepared->input, compact, run, generation, options.constraint_first);
+                const auto hash = trial(prepared->input, compact, run, generation, options.constraint_first,options.outline);
                 auto [it, inserted] = first_hash.emplace(compact, hash);
                 if (!inserted && it->second != hash) throw std::runtime_error("repeat PCB bytes changed; investigate input drift/nondeterminism");
                 std::cout << "repeat compact_search=" << compact << " same_as_first=" << (!inserted ? "true" : "first") << '\n';

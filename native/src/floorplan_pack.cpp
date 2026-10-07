@@ -106,6 +106,9 @@ bool Engine::attempt_pack_impl(bool compact) {
     for (const auto& j:plan.som.js) jacks.push_back({j.ref,plan.som_x+j.x,plan.som_y+j.y});
     const auto packed=pack_edges(edge_rows,jacks,{bw,bh,edge_margin,edge_inset,clear,cable_gap,overmold_gap,affinity_floor,
                                                 plan.som_x,plan.som_y,plan.som.w,plan.som.h}, counts);
+    // A bounded spill can leave blocks unplaced. Never retain their poses or
+    // edge labels from an earlier outline, or pass an empty label downstream.
+    if (packed.poses.size()!=plan.edge_blocks.size()) return false;
     for (auto& b:plan.edge_blocks) for (const auto& p:packed.poses) if (p.name==b.name) { b.edge=p.edge; b.x=p.x; b.y=p.y; break; }
     plan.spilled=packed.spilled;
     std::vector<std::tuple<char,double,double,double,double>> run_rows;

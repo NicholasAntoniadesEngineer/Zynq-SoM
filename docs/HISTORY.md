@@ -1,5 +1,46 @@
 # carrier — project HISTORY (archived planning logs)
 
+## 2026-10-08 — cold-start carrier screening and current-edge fanout correctness
+
+Bounded learned-conflict ordering and a baseline-first retry variant both produced
+a worse 178×160 carrier with 67 reseats; neither is integrated. Their receipt is
+`native/benchmarks/2026-10-08-carrier-conflict-screening.json`. Adding a local
+fallback does not itself prove whole-search non-regression: coarse winners set
+the refinement window, and a newly discovered previous-edge dependency also
+affects these runs. These causes must not be conflated.
+
+The diagnostic profiler now accepts `--outline-mm WIDTHxHEIGHT`, cloning the
+input and overriding only its outline. This skips automatic sizing for controlled
+placement experiments without changing the source policy file or publishing a
+board. Finite-positive parsing, malformed inputs, missing spec, source isolation,
+edge ordering and repeatability are tested. All results remain explicitly
+construction-only, not acceptance or global-minimum claims.
+
+Cold starts at the known feasible 168×163 carrier outline initially failed.
+`pack_edges` chose horizontal/vertical fanout from stale `current_edge` labels
+instead of the edge currently being placed. It now uses the actual destination
+edge, including after spills. Fresh, stale, mixed-label and spilled-edge witnesses
+pass; the old implementation fails the new directional-gap witness. Bounded
+spills leaving connectors unplaced now reject before consuming empty or stale
+poses. No occupancy/clearance gate is relaxed.
+
+The repaired cold-start default carrier repeats the current PCB at 168×163 in
+1.2781/1.2780 s construction-only samples; compact constraint-first repeats its
+168×160 PCB in 4.7366/4.7354 s. The automatic default search sample took 11.5819 s.
+These are different workloads, not a speedup or Python comparison: fixed outlines
+deliberately omit the sizing search. Scoped placement/flow/composition checks
+pass; the tested model geometry is unchanged from the existing screened boards.
+Five focused input/edge/floorplan/placement/receipt CTest groups pass in 64.83 s.
+The pack-precision suite initially failed its historical whole-board snapshot.
+Its exact fixed-operand primitive prefix remains checked against the unchanged
+fixture; current carrier/devkit operation counts remain independently observed
+at scalar function entry. Added negative checks reject missing and invented
+calls, and receipt replay must still perform no work. Whole-board geometry is
+covered by the source/physical placement and floorplan contracts, not historical
+optimiser coordinates. Precision, edge-direction and profiler-input suites pass
+together in 17.46 s (precision 13.02 s).
+Full current-board source audits, DRC and render qualification remain outstanding.
+
 ## 2026-10-07 — carrier reseat diagnosis; reject broad area-first ordering
 
 Carrier-only tracing reconciles all 28 default reseats: USB-JTAG displaces
