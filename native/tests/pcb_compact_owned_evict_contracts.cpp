@@ -348,7 +348,40 @@ void unchanged_ceilings(const PcbPlacementInput& source,const std::filesystem::p
     }
     std::cout<<"RATCHET unchanged source ceilings; isolated outputs "<<scratch<<'\n';
 }
+void l4_corridor_contract(const PcbPlacementInput& source) {
+    for (bool compact : {false,true}) {
+        Fixture f(source,"bringup_rails",compact);
+        f.part("J_CORRIDOR",50,50,"top","connector");
+        f.p->ctx.pool["J_CORRIDOR"]=source.return_path_footprints.begin()->second;
+        f.p->ctx.by_ref["J_CORRIDOR"].sheet="som_j1";
+        f.p->geometry.top_off[f.sheet].erase("J_CORRIDOR");
+        f.p->som_refs["J_CORRIDOR"]="J1";
+        const auto corridor=pcb_escape_corridor_board(*f.p->mod("J_CORRIDOR"),50,50,0);
+        const double cx=(corridor.x0+corridor.x1)/2, cy=(corridor.y0+corridor.y1)/2;
+        const bool vertical=corridor.x1-corridor.x0<corridor.y1-corridor.y0;
+        // Make the centroid pull point into the narrow corridor. The two
+        // independent passives remain separated and clear of the top connector.
+        f.stage.plan.som_x=cx;f.stage.plan.som_y=cy;
+        f.stage.plan.som.w=f.stage.plan.som.h=0;
+        for(int side : {-1,1})
+            f.part(side<0?"C_FREE1":"C_FREE2",vertical?corridor.x0-5:cx+side*5,
+                   vertical?cy+side*5:corridor.y0-5,"bottom");
+        const auto before=f.p->pos;
+        f.p->l4_pull();
+        const auto actual=refit_fanout_geometry(*f.p,nullptr);
+        const auto index=evict_index(actual);
+        int obstructions=0;
+        for(const auto* ref : {"C_FREE1","C_FREE2"})
+            obstructions+=rects_intersect_open(evict_box(actual,index.at(ref)),corridor);
+        std::cout<<"L4 corridor compact="<<compact<<" moved="<<(f.p->pos!=before)
+            <<" obstructions="<<obstructions<<" corridor="<<corridor.x0<<","<<corridor.y0<<","<<corridor.x1<<","<<corridor.y1<<"\n";
+        require(f.p->pos!=before,"corridor protection disabled all useful pulling");
+        require(compact?obstructions==0:obstructions>0,
+                "compact L4 must protect corridors at zero offset and 0.5mm clearance; default control stays unchanged");
+    }
+}
 void tests(const PcbPlacementInput& source,const std::filesystem::path& root) {
+    l4_corridor_contract(source);
     error_accounting(source);
     unchanged_ceilings(source,root);
     source_anchor_contract(source);

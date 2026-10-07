@@ -313,7 +313,10 @@ void Placer::l4_pull() {
     }
     auto offset = ctx.in.floorplan.module_offset.value_or(FloorplanPoint{
         ctx.in.floorplan.project.module_offset[0], ctx.in.floorplan.project.module_offset[1]});
-    if (pc > .5 || offset.first || offset.second)
+    // Compact eviction protects these corridors at every clearance/offset.
+    // Do not create an obstruction in the earlier passive-pull stage merely
+    // because the board happens to use the legacy 0.5 mm, zero-offset policy.
+    if (ctx.in.floorplan.compact_search || pc > .5 || offset.first || offset.second)
         for (const auto &[r, j] : som_refs) {
             (void)j;
             if (geometry.resolvable.count(r) && pos.count(r))

@@ -1,5 +1,33 @@
 # carrier — project HISTORY (archived planning logs)
 
+## 2026-10-07 — prevent compact passive pulls from creating corridor obstructions
+
+(Autonomous, per full-autonomy directive.) A traced devkit failure originated in
+L4 pull, not eviction: C5003 moved from (23.668,75.25) to (37.7348,64.0194),
+intersecting the J9002 escape corridor while leaving its power_mon allocation.
+Legacy L4 omitted corridor obstacles at 0.5 mm clearance and zero module offset,
+although compact eviction always protected them. Compact L4 now includes those
+same corridors regardless of that legacy condition. Default behaviour is intact;
+no movement permission, corridor boundary or eviction constraint was relaxed.
+
+A synthetic regression at the exact policy boundary still permits useful legal
+pulling, rejects the old corridor-crossing behaviour, and preserves the default
+control. It fails with the old condition and passes with the correction. Four
+focused contract groups pass in 33.39 s, including live ownership and current
+metric reports. Current compact devkit construction now completes for both
+baseline and constraint-first ordering, with placement/flow passing and zero
+enforced composition failures. Both are 98x98 mm / 106 top / 57 bottom; the
+constraint-first sample took 1.524 s construction, baseline 1.392 s. These are
+single diagnostic timings, not audited builds or controlled speed comparisons.
+Constraint-first devkit still has four legalize-only events against ceiling zero
+(28 reseats against ceiling 35); baseline has 44 reseats and four compactions.
+
+Carrier constraint-first screening remains 168x160 mm with identical PCB
+4eac006ff246d778b83e61a01573920963cc26d83824340641fab45cc9a4f16c,
+passing scoped placement checks, and unchanged 247/10 retry/compaction events.
+No candidate is published or claimed fully accepted; full audits/renders and
+the remaining fallback failures still need work.
+
 ## 2026-10-07 — validate current optimisation metrics without freezing old poses
 
 (Autonomous, per owner clarification.) Experiment stage-probe acceptance now
