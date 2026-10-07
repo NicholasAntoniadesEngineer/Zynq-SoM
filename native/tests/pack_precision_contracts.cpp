@@ -25,7 +25,7 @@
 namespace {
 using namespace schgen;
 using namespace pack_precision_fixture;
-std::array<std::atomic<std::size_t>,6> observed{};
+std::array<std::atomic<std::size_t>,7> observed{};
 std::atomic<bool> recording{false};
 std::ostringstream legacy;
 void require(bool condition,const std::string& why) { if(!condition)throw std::runtime_error(why); }
@@ -101,6 +101,19 @@ void scalar_contracts() {
     // Dyadic inputs are exact; integer division is an independent truncation oracle.
     for(int n=-100000;n<=100000;++n)
         require(pack_control_fit_trunc(n/16.)==n/16,"exact dyadic truncation oracle");
+    for(int k=-512;k<=512;++k) {
+        QuantizationCounts q;begin();
+        require(pack_edge_lower_tick_ceil(k/16.,&q)==k*625.,"exact dyadic tick ceiling");
+        receipt(q,end());require(q==QuantizationCounts{{names[6],1}},"tick entry missing");
+    }
+    for(double v:{double(INFINITY),double(-INFINITY),double(NAN),1e308}) {
+        QuantizationCounts q;begin();
+        rejects<std::invalid_argument>([&]{pack_edge_lower_tick_ceil(v,&q);});
+        receipt(q,end());require(q==QuantizationCounts{{names[6],1}},"failed tick entry missing");
+    }
+    QuantizationCounts full_tick{{names[6],SIZE_MAX}};begin();
+    rejects<std::overflow_error>([&]{pack_edge_lower_tick_ceil(0,&full_tick);});
+    require(end()==QuantizationCounts{{names[6],1}}&&full_tick.at(names[6])==SIZE_MAX,"tick counter overflow");
     NativeQuantizations registry;register_native_quantizations(registry);
     const auto declarations=registry.declarations();
     for(std::size_t i=0;i<names.size();++i) {
@@ -108,7 +121,7 @@ void scalar_contracts() {
         require(d!=declarations.end()&&d->arity==1&&d->symbol=="native/src/pack_precision.cpp::schgen::"+names[i],
                 "stable scalar identity and one-value arity");
         begin();const double actual=registry.invoke(names[i],{1.23455});const auto calls=end();
-        require(bits(actual)==bits(i==2?1.:py_round(1.23455,4))&&calls==QuantizationCounts{{names[i],1}},
+        require(bits(actual)==bits(i==2?1.:i==6?12346.:py_round(1.23455,4))&&calls==QuantizationCounts{{names[i],1}},
                 "registry does not execute real boundary once");
         const auto counts=registry.engagements();
         for(const auto& args:std::vector<std::vector<double>>{{},{1.,2.}}) {
@@ -209,6 +222,7 @@ extern "C" void __cyg_profile_func_enter(void* fn,void*) {
     if(!recording.load(std::memory_order_relaxed))return;
     for(std::size_t i=0;i<rounds.size();++i)if(fn==reinterpret_cast<void*>(rounds[i])){++observed[indices[i]];return;}
     if(fn==reinterpret_cast<void*>(schgen::pack_control_fit_trunc))++observed[2];
+    if(fn==reinterpret_cast<void*>(schgen::pack_edge_lower_tick_ceil))++observed[6];
 #else
     (void)fn;
 #endif

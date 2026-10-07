@@ -40,7 +40,7 @@ void scalars(){
         for(double value:{0.,-0.,double(INFINITY),double(-INFINITY),double(NAN),std::numeric_limits<double>::max(),std::numeric_limits<double>::denorm_min()})compare(value);
     }
     NativeQuantizations registry;register_native_quantizations(registry);
-    require(registry.declarations().size()==155,"122 prior plus9 search plus18 plain plus6 grid operations");
+    require(registry.declarations().size()==156,"122 prior plus9 search plus18 plain plus6 grid plus1 edge tick operations");
     const auto declarations=registry.declarations();
     for(std::size_t i=0;i<names.size();++i){
         const auto found=std::find_if(declarations.begin(),declarations.end(),[&](const auto& d){return d.name==names[i];});

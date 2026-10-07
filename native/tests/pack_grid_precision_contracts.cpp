@@ -182,7 +182,7 @@ void grids() {
 }
 void registry() {
     NativeQuantizations all;register_native_quantizations(all);const auto ds=all.declarations();
-    demand(ds.size()==155,"122 baseline plus9 search plus18 plain plus6 grid");
+    demand(ds.size()==156,"122 baseline plus9 search plus18 plain plus6 grid plus1 edge tick");
     for(std::size_t i=0;i<names.size();++i) {
         auto d=std::find_if(ds.begin(),ds.end(),[&](const auto& row){return row.name==names[i];});
         demand(d!=ds.end()&&d->arity==(i<2?2U:1U)&&

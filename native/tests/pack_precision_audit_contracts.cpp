@@ -14,7 +14,8 @@ int main(int argc,char** argv) { try {
     };
     const std::set<std::string> consumers{
         "native/src/pack.cpp::schgen::shelf_pack","native/src/pack.cpp::schgen::grid_controls",
-        "native/src/pack_edges.cpp::schgen::pack_edges","native/src/pack_edges.cpp::schgen::hf_cap_pose"};
+        "native/src/pack_edges.cpp::schgen::pack_edges","native/src/pack_edges.cpp::schgen::hf_cap_pose",
+        "native/src/pack_edges.cpp::schgen::rounded_run_coordinate"};
     const std::vector<CppAuditSource> files{{"native/src/pack.cpp"},{"native/src/pack_edges.cpp"}};
     // The AST reports a direct raw call and its callee DeclRefExpr separately.
     // Match the audit's public diagnostic identity, not duplicate AST events.
@@ -40,10 +41,10 @@ int main(int argc,char** argv) { try {
     NativeQuantizations all,selected;register_native_quantizations(all);
     for(const auto& declaration:all.declarations())
         if(pack_precision_fixture::added(declaration.name))selected.declare(declaration);
-    if(selected.declarations().size()!=6 || identities(scalars,{}).size()!=7)
-        throw std::runtime_error("six registrations/seven scalar detector sites required");
-    if(scalars.quantization.size()!=13)
-        throw std::runtime_error("all 13 scalar detector events, including duplicates, must remain visible");
+    if(selected.declarations().size()!=7 || identities(scalars,{}).size()!=8)
+        throw std::runtime_error("seven registrations/eight scalar detector sites required");
+    if(scalars.quantization.size()!=15)
+        throw std::runtime_error("all 15 scalar detector events, including duplicates, must remain visible");
     NativeLedger no_policy;const auto checked=check_native_audits(scalars,no_policy,selected);
     if(!checked.ok)throw std::runtime_error(checked.summary());
     for(const auto& name:pack_precision_fixture::names) {

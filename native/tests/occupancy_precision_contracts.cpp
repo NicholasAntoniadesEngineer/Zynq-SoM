@@ -251,7 +251,7 @@ void ownership_and_rejections(){
 }
 void registry_and_boards(const std::filesystem::path& root){
     NativeQuantizations registry;register_native_quantizations(registry);
-    require(registry.declarations().size()==155,"122 prior plus9 search plus18 plain plus6 grid operations");
+    require(registry.declarations().size()==156,"122 prior plus9 search plus18 plain plus6 grid plus1 edge tick operations");
     for(int i=0;i<6;++i){
         const auto declarations=registry.declarations();
         const auto d=std::find_if(declarations.begin(),declarations.end(),[&](const auto& row){return row.name==names[i];});

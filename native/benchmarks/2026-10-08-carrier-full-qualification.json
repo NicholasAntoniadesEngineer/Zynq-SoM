@@ -1,0 +1,61 @@
+{
+  "source_commit": "5186c4b9",
+  "output_directory": "/private/tmp/carrier-5186c4b9-qualification.Y4oUSM",
+  "runner_source": "native/build/qualify-seeded-carrier.cpp",
+  "entry_point": "run_board_pipeline",
+  "options": {"native_policy": true, "timing": true, "no_render": false, "compact_search": true, "compact_constraint_first": true, "compact_edge_translation": true, "initial_outline_mm": [168,159]},
+  "complete": true,
+  "board_ok": false,
+  "exit_code": 1,
+  "sheets": 37,
+  "dimensions_mm": [168,159],
+  "area_mm2": 26712,
+  "instances": {"top": 425, "bottom": 144, "total": 569},
+  "independent_checks": {
+    "authoring_purity": "PASS",
+    "sheet_netlist_erc_visual": "37 PASS",
+    "root_erc_report": "Errors-only report: 0 messages, 0 errors; root gate is advisory",
+    "spice": "17 PASS",
+    "pcb_drc_non_unrouted_errors": 0,
+    "pcb_drc_unrouted_connections": 499,
+    "placement_requirements": "PASS",
+    "pcb_geometry": "PASS",
+    "mechanical": "PASS",
+    "connector_spacing": "PASS",
+    "render3d": "8 views generated; top and bottom visually inspected"
+  },
+  "mandatory_failures": {
+    "fallbacks": {"edge_run_translation": {"actual": 372, "ceiling": 0}, "interior_reseat_retry": {"actual": 417, "ceiling": 18}},
+    "quantize_census_and_ledger": "Unregistered raw ceil in pack_edges.cpp::rounded_run_coordinate; subsequent fix extracts a registered, independently instrumented pack_edge_lower_tick_ceil. Focused source audit passes; this full-run verdict is not retroactively changed."
+  },
+  "advisory_failures": ["return_path", "golden", "contract_coverage_lint"],
+  "post_audit_fix_tests": {
+    "passed": ["pack_precision_source", "edge_translation", "pack_precision", "pack_plain", "pack_grid_precision", "pack_geometry_source", "output_pack_registry", "placement_precision_registry", "occupancy_precision", "native_policy_audits"],
+    "failed_historical_board_comparisons_retained_for_investigation": ["legalize_registry: legacy carrier pose count", "pack_geometry_board: frozen geometry and counts", "precision_accounting: original twenty counters", "connector_precision: byte-exact legacy records", "floorplan_precision: prior fixture count"],
+    "limits": "These broader failures have not been fixed, waived or independently attributed to a particular earlier commit. Whole-board historical equivalence must be separated from genuine primitive/ownership regressions."
+  },
+  "visual_notes": [
+    "Top is considerably denser than bottom; bottom has large unused regions, so count-based side utilisation is not area utilisation",
+    "Board_aux schematic inspected: C1/C3 10u labels and supply/enable network visible; this does not qualify DC-bias capacitance or startup behaviour",
+    "XT60 model checker reports a body-size mismatch; inspected F.Fab contains pin-circle markings, not a complete body outline, making that particular inferred body size unreliable. Warning retained for investigation."
+  ],
+  "seconds": {
+    "pipeline_wall": 316.685,
+    "authoring_audit": 18.919971,
+    "sheet_parallel_checks_and_render_wall": 26.433703,
+    "pcb_build_model_with_internal_checks": 60.128144,
+    "pcb_text_render": 0.034451,
+    "pcb_drc": 2.167008,
+    "render3d": 30.474628,
+    "source_audit": 163.447993,
+    "sum_exclusive_measured_scopes": 316.675810
+  },
+  "sha256": {
+    "pcb": "ccaa5061f105825b678b090e27e467fca710da871a7bd112ac17dab27cd7d3f1",
+    "log": "1999b859b12c5861b7339ddbaca0fbe2425ddb82cbd567de9b1933de9ce99c03",
+    "board_verdicts": "5021c69c7d2c43299cda78cd605bc2c0b6e11526c65d7e931fe69a75d2a2e5f1",
+    "top_render": "85fc3c54160f5783174db8b860e8cf20b509799abfa5acb993dea54461d5df1c",
+    "bottom_render": "fb9dbb9b700fbd80212aaca96792830cb0522c45f1a2ae0969bfda7ce0cbd205"
+  },
+  "limits": ["One full-render sample, no concurrent compilation/test load", "Compile time excluded; mixed stages retain internal checks", "Not a matched historical Python comparison", "Unaccepted candidate; no fabrication-readiness claim; routing remains deferred", "C1 effective capacitance and PCA9306 startup/isolation remain unqualified"]
+}

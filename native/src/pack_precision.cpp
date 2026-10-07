@@ -45,6 +45,13 @@ double pack_edge_pose_precision4dp(double value, QuantizationCounts* counts) {
     }
     return py_round(value, 4);
 }
+double pack_edge_lower_tick_ceil(double value, QuantizationCounts* counts) {
+    if (counts) checked_quantization_add(*counts, "pack_edge_lower_tick_ceil");
+    const double scaled = value * 10000.0;
+    if (!std::isfinite(scaled))
+        throw std::invalid_argument("pack_edge_lower_tick_ceil: finite scaled coordinate required");
+    return std::ceil(scaled);
+}
 double pack_hf_cap_pose_precision4dp(double value, QuantizationCounts* counts) {
     if (counts) {
         static const std::string name = "pack_hf_cap_pose_precision4dp";

@@ -40,7 +40,7 @@ void registry(){
     for(const auto& name:output_precision_fixture::names)mixed[name]=13;
     for(const auto& name:pack_precision_fixture::names)mixed[name]=17;
     require(select(mixed,false)==prior,"historical precision adapter removes only exact reviewed additions");
-    NativeQuantizations q;register_native_quantizations(q);require(q.declarations().size()==155,"122 prior plus9 search plus18 plain plus6 grid operations");
+    NativeQuantizations q;register_native_quantizations(q);require(q.declarations().size()==156,"122 prior plus9 search plus18 plain plus6 grid plus1 edge tick operations");
     const std::array<std::vector<double>,6> arguments{{{11.24955},{11.24955},{11.24955},{11.24955},{1.7,.25},{1.7,.25}}};
     const std::array<double,6> expected{{estimate_position_precision(11.24955),estimate_pad_precision(11.24955),
         breathe_delta_precision(11.24955),breathe_commit_precision(11.24955),7,6}};

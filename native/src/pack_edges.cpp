@@ -80,7 +80,7 @@ double rounded_run_coordinate(double target,double lower,QuantizationCounts* cou
     if(value>=lower)return value;
     // Project onto the existing output grid, then recheck the actual floating
     // expression. Decimal ceiling alone can still land below the bound.
-    const double tick=std::ceil(lower*10000.0);
+    const double tick=pack_edge_lower_tick_ceil(lower,counts);
     value=pack_edge_pose_precision4dp(tick/10000.0,counts);
     if(value<lower)value=pack_edge_pose_precision4dp((tick+1.0)/10000.0,counts);
     if(!(value>=lower))throw std::runtime_error("pack_edges: no representable safe run coordinate");
