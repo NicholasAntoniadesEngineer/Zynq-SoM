@@ -1,5 +1,35 @@
 # carrier — project HISTORY (archived planning logs)
 
+## 2026-10-07 — conservative output-grid bounds at fixed separators
+
+The remaining four default carrier compaction rejections shared one captured
+FMC/power-monitor boundary: the legalizer used `45 - 1.45 - height`, but the
+physical checker required `y + height + 1.45 <= 45`. Floating-point association
+made the rounded 31.3865 mm pose fail. Composer now projects fixed-separator
+bounds onto its existing four-decimal output grid and tests the exact forward
+physical inequality, stepping one grid tick inward only when needed. The
+captured case uses 31.3864 mm. No tolerance or clearance is weakened. Quantization
+calls use the existing counted bound operation; no work is hidden. Final rounded
+poses are rechecked against separations, graph constraints and hard terms before
+caller state changes. Movable-pair bounds are not incorrectly treated as fixed.
+
+The captured upper bound, mirrored lower bound, an empty grid interval with an
+active hard term, unchanged feasible equality and rejection rollback pass. An
+old-Composer negative executable fails the exact forward inequality. A review
+caught the first empty-interval fixture bypassing composition with an empty term
+set; the corrected fixture executes the solver and rejects as required. Seven
+other focused regression groups passed, then both updated floorplan groups
+passed in 21.97 s. The primitive/geometry slice passes 13,151 checks.
+
+Fresh default and constraint-first compact constructions of both current boards
+pass the wider physical suite used above. Default carrier remains 168×163 mm,
+28 reseats, now zero legalize-only compactions (previously four). Compact carrier
+remains 168×160 with 247 reseats and zero such compactions. Both devkit modes stay
+98×98 with 50/22 reseats respectively and zero such compactions. Existing retry
+ceilings still fail for default devkit and both carrier modes; this is not full
+board acceptance. Source audits, DRC, renders and matched historical timing
+qualification are still required for any accepted changed board.
+
 ## 2026-10-07 — validate whole floorplans against current requirements
 
 The remaining whole-solver golden test rejected the improved devkit solely at

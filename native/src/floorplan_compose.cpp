@@ -238,6 +238,12 @@ public:
             const double x = legalize_trial_pose_precision4dp(pos_x[i], counts), y = legalize_trial_pose_precision4dp(pos_y[i], counts);
             const auto& v = *by_name.at(names[i]);
             boxes.push_back({x, y, x + v.w, y + v.h});
+            pos_x[i]=x;pos_y[i]=y;
+        }
+        if (!in.primary_fanout.empty() &&
+            (!physical_seps_ok() || !edges_ok(true,pos_x) || !edges_ok(false,pos_y) || !reds().empty())) {
+            log.push_back("REJECT: final output-grid pose violates physical separation or hard term");
+            return false;
         }
         for (std::size_t i = 0; i < boxes.size(); ++i) {
             std::vector<Box4> others(boxes.begin() + static_cast<std::ptrdiff_t>(i + 1), boxes.end());
@@ -310,10 +316,49 @@ private:
         for (const auto& s : seps) spec.push_back({s.axis_x, s.lo, s.hi, s.gap});
         std::vector<TaggedEdge> out;
         for (const auto& e : wall_sep_edges(x, names, sizes(x), x ? in.board_w : in.board_h,
-                                           in.clear, spec, {frect.begin(), frect.end()}))
-            out.push_back({{e.src, e.dst, e.cost}, e.kind});
+                                           in.clear, spec, {frect.begin(), frect.end()})) {
+            double cost=e.cost;
+            if (!in.primary_fanout.empty() && e.kind=="sep") {
+                const auto& sep=seps.at(static_cast<std::size_t>(e.sep_index));
+                const bool low_fixed=sep.lo.front()=='#',high_fixed=sep.hi.front()=='#';
+                if (low_fixed || high_fixed) {
+                    // The solver and final occupancy check associate sums
+                    // differently. Choose an actual output-grid coordinate
+                    // satisfying the forward physical inequality, not an epsilon.
+                    const auto& fixed_rect=frect.at((low_fixed?sep.lo:sep.hi).substr(1));
+                    const auto& variable=*by_name.at(low_fixed?sep.hi:sep.lo);
+                    const double size=x?variable.w:variable.h;
+                    const double anchor=low_fixed?(x?fixed_rect.x1:fixed_rect.y1):
+                                                   (x?fixed_rect.x0:fixed_rect.y0);
+                    const auto holds=[&](double q) {
+                        return low_fixed?anchor+sep.gap<=q:q+size+sep.gap<=anchor;
+                    };
+                    double q=legalize_bound_precision4dp(low_fixed?-cost:cost,counts);
+                    if (!holds(q))
+                        q=legalize_bound_precision4dp(q+(low_fixed?.0001:-.0001),counts);
+                    // Extreme coordinates may not resolve a grid tick. Leave
+                    // the bound unchanged; final exact checks reject if needed.
+                    if (std::isfinite(q)&&holds(q)) cost=low_fixed?-q:q;
+                }
+            }
+            out.push_back({{e.src, e.dst, cost}, e.kind});
+        }
         const auto more = extra(x); out.insert(out.end(), more.begin(), more.end());
         return out;
+    }
+    bool physical_seps_ok() const {
+        const auto endpoint=[&](const std::string& name,bool x,bool high) {
+            if (name.front()=='#') {
+                const auto& box=frect.at(name.substr(1));
+                return x?(high?box.x1:box.x0):(high?box.y1:box.y0);
+            }
+            const auto i=static_cast<std::size_t>(std::lower_bound(names.begin(),names.end(),name)-names.begin());
+            const auto& v=*by_name.at(name);
+            return (x?pos_x[i]:pos_y[i])+(high?(x?v.w:v.h):0.);
+        };
+        for (const auto& sep:seps)
+            if (!(endpoint(sep.lo,sep.axis_x,true)+sep.gap<=endpoint(sep.hi,sep.axis_x,false))) return false;
+        return true;
     }
     bool violated(const NamedEdge& e, const std::vector<double>& pos) const {
         auto value = [&](const std::string& name) {

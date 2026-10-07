@@ -300,6 +300,56 @@ void primary_fanout_contracts() {
     throws([&]{legalize_repair_axis(false,{"v"},{5},10,.3,
         {{false,"#anchor","v",.3,true,-1.}},fixed,{},2);},"invalid flipped separation gap");
 }
+void output_grid_contracts() {
+    FloorplanLegalizeInput in;
+    in.board_w=180;in.board_h=170;in.compact=true;
+    in.fixed_rects={{"fmc",{53,45,114.63,63.685}}};
+    in.fixed_poses["fmc"]={53,45};
+    in.metrics["power_mon"]={{{"p",13,6}},{{"p",0,0,26.7565,12.1635}},{26.7565,12.1635}};
+    in.metrics["fmc"]={{{"p",30,9}},{{"p",0,0,61.63,18.685}},{61.63,18.685}};
+    in.index.hard.push_back({"flow_hop","power_mon","power_mon","fmc",100,"captured boundary",true,{},{}});
+    in.primary_fanout["power_mon"]={{0,0,1.75,1.75},{.2995,.3,.3,.3},1};
+    in.primary_fanout["fmc"]={{1.75,0,1.25,0},{.3,5.6,.3,.045},1};
+    std::vector<FloorplanLegalizeVar> vars{{"power_mon",26.7565,12.163500000000001,{87.5435,30},87.5435,30}};
+    std::vector<std::string> log;
+    QuantizationCounts counts;
+    require(floorplan_legalize_compact_accounted(in,vars,log,counts),"captured boundary compacts on output grid");
+    require(vars[0].y+vars[0].h+1.45<=45,"exact forward physical inequality, no epsilon");
+    require(vars[0].y==31.3864,"closest conservative representable boundary");
+    require(counts.at("legalize_bound_precision4dp")>0,"actual bound quantization is recorded");
+
+    // Lower-bound projection must round in the opposite direction.
+    in={};in.board_w=60;in.board_h=60;in.compact=true;
+    in.fixed_rects={{"anchor",{20,10,30,20.12345}}};in.fixed_poses["anchor"]={20,10};
+    in.metrics["v"]={{{"p",5,5}},{{"p",0,0,10,10}},{10,10}};
+    in.metrics["anchor"]=in.metrics.at("v");
+    in.index.hard.push_back({"flow_hop","v","v","anchor",100,"lower boundary",true,{},{}});
+    in.primary_fanout["v"]={{},{},1};in.primary_fanout["anchor"]={{},{},1};
+    vars={{"v",10,10,{20,30},20,30}};log.clear();
+    const bool lower_ok=floorplan_legalize_compact(in,vars,log);
+    if(!lower_ok)for(const auto& entry:log)std::cerr<<entry<<'\n';
+    require(lower_ok,"lower boundary compacts");
+    require(vars[0].y==20.4235&&20.12345+.3<=vars[0].y,"lower boundary rounds outward from obstacle");
+
+    // A continuous feasible point need not exist on the output lattice.
+    in.index={};in.metrics.clear();in.fixed_poses.clear();in.primary_fanout.clear();
+    // A harmless enforced self term activates composition without introducing
+    // an additional geometric restriction or a pull toward either obstacle.
+    in.metrics["v"]={{{"p",5,5}},{{"p",0,0,10,10}},{10,10}};
+    in.index.hard.push_back({"near_max","v","v","v",100,"grid feasibility",true,{},{}});
+    in.fixed_rects={{"below",{0,0,60,20.00004}},{"above",{0,30.60004,60,60}}};
+    for(const auto* name:{"v","below","above"})in.primary_fanout[name]={{},{},1};
+    vars={{"v",10,10,{20,20.30004},20,20.30004}};const auto initial=vars;log.clear();
+    const bool empty_ok=floorplan_legalize_compact(in,vars,log);
+    if(empty_ok){std::cerr<<"empty witness returned "<<vars[0].x<<","<<vars[0].y<<'\n';
+        for(const auto& entry:log)std::cerr<<entry<<'\n';}
+    require(!empty_ok,"empty output-grid interval must reject");
+    require(vars[0].x==initial[0].x&&vars[0].y==initial[0].y,"failed grid repair leaves caller pose untouched");
+    in.clear=.5;in.fixed_rects={{"below",{0,0,60,20}},{"above",{0,31,60,60}}};
+    vars={{"v",10,10,{20,20.5},20,20.5}};log.clear();
+    require(floorplan_legalize_compact(in,vars,log)&&vars[0].y==20.5,
+            "genuinely feasible exact equality stays feasible and unchanged");
+}
 void mutations() {
     FloorplanInput in; in.som.w=10; in.som.h=8;
     in.footprints["dip"]={"dip",sexpr_loads(R"((footprint "dip" (fp_rect (start -4 -2) (end 4 2) (layer "F.CrtYd") (width 0.05)) (pad "1" thru_hole circle (at -3 0) (size 0.8 0.8)) (pad "2" thru_hole circle (at 3 0) (size 0.8 0.8))))")};
@@ -655,7 +705,7 @@ int main(int argc,char** argv) {
     try {
         const std::filesystem::path dir=argc>1 ? argv[1]:"native/tests/data/floorplan";
         const bool geometry_only=argc>2 && std::string(argv[2])=="--geometry-only";
-        compose_contracts(dir);primary_fanout_contracts();mutations();pack_behavior();cross_behavior();frozen(dir,"devkit_mini",geometry_only);frozen(dir,"carrier",geometry_only);
+        compose_contracts(dir);primary_fanout_contracts();output_grid_contracts();mutations();pack_behavior();cross_behavior();frozen(dir,"devkit_mini",geometry_only);frozen(dir,"carrier",geometry_only);
         std::cout<<"floorplan contracts: "<<checks<<" checks passed"<<(geometry_only ? " (geometry/estimator slice)":"")<<"\n";
         return 0;
     } catch (const std::exception& e) { std::cerr<<"floorplan contracts: "<<e.what()<<"\n";return 1; }
