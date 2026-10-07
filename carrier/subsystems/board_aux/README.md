@@ -77,6 +77,11 @@ both rail sequences, rail decay, bus state at enable, and the existing VREF2
 capacitor. Adding a resistor alone does not establish transient isolation.
 Until that review and correction are validated, do not claim that the AUX
 peripherals are cleanly isolated or that a passing ERC certifies this circuit.
+The production `part_rules` gate now rejects the catalogued PCA9306DCUR when
+VREF2 is directly on a recognized positive supply and VREF1 is on a different
+net. This finding cannot be waived as a part-rating exception. It is a targeted
+direct-connection check, not a complete bias-network or sequencing verifier:
+absence of this finding alone does not qualify isolation.
 
 ## Parts
 
@@ -111,5 +116,8 @@ ownership requirements, and passive SPICE identities:
 The C1 contract rejects the former C1 value/package/code and unrelated pin swaps,
 reference replacement, missing NC declarations and changes to C2-C5 values.
 These are focused structural checks, not active-device transient simulations or
-full-board acceptance. The C1 contract is registered in CMake/CTest; changed
+full-board acceptance. The C1 contract explicitly expects the unchanged PCA9306
+topology to fail the production parts gate; it does not expect all board checks
+to pass. EN-only resistance, waiver and metadata mutations must not suppress
+that finding. The C1 contract is registered in CMake/CTest; changed
 boards still require regeneration and validation without footprint waivers.

@@ -81,6 +81,30 @@ void cap_mutations(const CircuitSheetIr& c){
     bad=c;for(auto& p:bad.parts)if(p.ref=="C1")for(auto& f:p.fields)if(f.key=="LCSC")f.value="C14663";reject(bad);
     bad=c;for(auto& p:bad.parts)if(p.ref=="C1")p.fields.push_back({"LCSC","C15850"});reject(bad);
 }
+void reference_mutations(const ProjectCircuit& sheet){
+    const auto rejected=[](const ProjectCircuit& s){
+        const auto r=analyze_part_rules({s});
+        return std::any_of(r.findings.begin(),r.findings.end(),[](const auto& f){return f.find("PCA9306_REFERENCE ")==0;});
+    };
+    require(rejected(sheet),"live reference defect escaped");
+    auto changed=sheet;
+    // The EN resistor is not in series with the reference channel.
+    for(auto& p:changed.circuit.parts)if(p.ref=="R4")p.value="200k";
+    require(rejected(changed),"EN-only resistor change masked direct reference tie");
+    changed=sheet;
+    changed.circuit.waivers.push_back({"part_rule_waivers","U2","must not hide direct tie"});
+    require(rejected(changed),"rating waiver masked topology defect");
+    changed=sheet;
+    for(auto& p:changed.circuit.parts)if(p.ref=="U2"){p.value="display renamed";p.pin_names.clear();p.fields.clear();}
+    require(rejected(changed),"display/alias/BOM metadata masked catalog pinout");
+    changed=sheet;
+    // Same physical rail on both reference pins is not the independently
+    // sequenced rail defect. This negative control is NOT isolation approval.
+    for(auto& n:changed.circuit.nets)n.pins.erase(std::remove_if(n.pins.begin(),n.pins.end(),[](const auto& p){return p.ref=="U2"&&p.pin=="7";}),n.pins.end());
+    for(auto& n:changed.circuit.nets)if(n.name=="+3V3_SC")n.pins.push_back({"U2","7"});
+    require(!rejected(changed),"same physical reference rail falsely classified as inter-rail tie");
+    std::cout<<"PASS live reference defect and EN/waiver/metadata/same-rail controls; no transient qualification\n";
+}
 int main(int argc,char**argv){try{
     require(argc==4||argc==5,"usage: c1-contracts REPO CATALOG ASSET_ROOT [--emit]");
     const std::filesystem::path root=argv[1],assets=argv[3];require(open_part_catalog(argv[2]),"catalog");
@@ -94,13 +118,18 @@ int main(int argc,char**argv){try{
     SymbolLibrary lib(root);require(check_circuit_electrical(c,lib).ok(),"ERM");
     auto all=load_project_circuits(resolve_project_paths(root,"carrier"));std::vector<ProjectCircuit> one;
     for(auto& s:all)if(s.name=="board_aux"){s.circuit=c;one.push_back(s);}
-    auto power=analyze_power(all);require(power.ok(),"power");require(analyze_part_rules(one,power).ok(),"ratings");
+    require(one.size()==1,"one live auxiliary sheet");reference_mutations(one.front());
+    auto power=analyze_power(all);require(power.ok(),"power");
+    const auto ratings=analyze_part_rules(one,power);
+    require(!ratings.ok()&&ratings.findings==std::vector<std::string>{
+        "PCA9306_REFERENCE board_aux:U2: VREF2 directly on +3V3_AUX with VREF1 on +3V3_SC; missing reference current limiting (TI SCPS113O 8.1.2/10). EN resistance does not limit this path; power sequencing remains unqualified."},
+        "existing auxiliary reference defect must fail the production parts gate specifically");
     auto bom=check_bom_values(one,load_bom_value_catalog(root/"schgen/verify/data/lcsc_values.json"));require(bom.ok&&bom.unverified.empty(),"BOM values");
     require(check_pin_completeness(one,lib,load_nc_allowlist(root/"schgen/verify/data/nc_allowlist.json")).ok,"pins");
     FootprintResolutionOptions fp;fp.parts_dir=root/"parts";fp.library_tables={root/"som/fp-lib-table"};fp.kicad_footprint_root="/Applications/KiCad/KiCad.app/Contents/SharedSupport/footprints";
     require(check_footprint_pads(one,lib,fp).ok,"footprint coverage");
     const auto req=parse_placement_requirements(parse_json_file((assets/"carrier/subsystems/board_aux/placement_requirements.json").string()));
     require(req.ownership==carrier_surface_requirement_declaration("board_aux").required.ownership,"compiled declaration");
-    std::cout<<"PASS C1-only: independent frozen18-reference/all-pin/NC identity; 3 connectivity/feature mutations and 9 capacitor mutations rejected; C1-C5 exact value/package/BOM identities; live/derived parity, ERM, power, ratings, BOM values, pins, footprints, compiled manifest. PCA9306 unchanged/not certified.\n";
+    std::cout<<"PASS C1-only: independent frozen18-reference/all-pin/NC identity; 3 connectivity/feature mutations and 9 capacitor mutations rejected; C1-C5 exact value/package/BOM identities; live/derived parity, ERM, power, BOM values, pins, footprints, compiled manifest. Production parts gate correctly FAILS unchanged PCA9306 reference topology; isolation not certified.\n";
     return 0;
 }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}

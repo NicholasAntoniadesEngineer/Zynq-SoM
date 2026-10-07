@@ -54,6 +54,19 @@ std::vector<ProjectCircuit> selected(const JsonNode& entry,const JsonNode& corpu
     if(auto cs=object_field(entry,"circuits"))for(const auto& ir:cs->array_value){auto c=decode_intermediate_circuit_ir(ir);sheets.push_back({c.name,{},std::move(c)});}
     return sheets;
 }
+PartCheckResult current_part_expectation(const JsonNode& expected,const std::string& name) {
+    auto result=part_result_from_json(at(expected,"parts"));
+    // Frozen Python reports remain the oracle for unchanged rules. Add only
+    // this independently reviewed defect, never regenerate historical data.
+    text_eq(part_rules_report(result),str(at(expected,"parts_report")),name+" legacy report");
+    const bool carrier=name=="carrier bare"||name=="carrier emitted"||name=="carrier published";
+    if(carrier||name=="carrier/subsystems/board_aux/circuit.json") {
+        require(result.findings.empty()&&result.checked==(carrier?165:6),"original auxiliary ratings evidence");
+        ++result.checked;
+        result.findings.push_back("PCA9306_REFERENCE board_aux:U2: VREF2 directly on +3V3_AUX with VREF1 on +3V3_SC; missing reference current limiting (TI SCPS113O 8.1.2/10). EN resistance does not limit this path; power sequencing remains unqualified.");
+    }
+    return result;
+}
 void family(const std::vector<ProjectCircuit>& sheets,const JsonNode& expected,const std::string& name,const ThermalCopper* copper=nullptr,const std::string& source="",const PowerPolicy& policy=default_power_policy()) {
     eq(power_result_json(detect_power_regulators(sheets,policy)),at(expected,"detection"),name+" detector");
     auto power=analyze_power(sheets,policy);auto pj=power_result_json(power);
@@ -67,8 +80,9 @@ void family(const std::vector<ProjectCircuit>& sheets,const JsonNode& expected,c
     text_eq(thermal_report(thermal),str(at(expected,"thermal_report")),name+" thermal report");
     eq(thermal_result_json(thermal_result_from_json(tj)),tj,name+" thermal inverse");
     auto parts=analyze_part_rules(sheets,power_copy,default_part_ratings(),default_part_rule_policy,policy);
-    auto rj=part_result_json(parts);eq(rj,at(expected,"parts"),name+" parts");
-    text_eq(part_rules_report(parts),str(at(expected,"parts_report")),name+" part report");
+    const auto wanted=current_part_expectation(expected,name);
+    auto rj=part_result_json(parts);eq(rj,part_result_json(wanted),name+" parts");
+    text_eq(part_rules_report(parts),part_rules_report(wanted),name+" part report");
     eq(part_result_json(part_result_from_json(rj)),rj,name+" part inverse");
     require(power.ok()==power.errors.empty()&&thermal.ok()==thermal.errors.empty()&&parts.ok()==parts.findings.empty(),name+" verdict definitions");
 }
@@ -181,7 +195,8 @@ int main(int argc,char** argv) {
         text_eq(read(temp/"docs/power_tree.svg"),str(at(expected,"svg")),"published svg");
         (void)run_thermal_checks(sheets,temp/"reports",&power,temp/"missing.kicad_pcb",temp);
         text_eq(read(temp/"reports/thermal.txt"),str(at(expected,"thermal_report"))+"\n","published missing-copper thermal");
-        (void)run_part_checks(sheets,temp/"reports",&power);text_eq(read(temp/"reports/part_rules.txt"),str(at(expected,"parts_report"))+"\n","published parts");
+        (void)run_part_checks(sheets,temp/"reports",&power);
+        text_eq(read(temp/"reports/part_rules.txt"),part_rules_report(current_part_expectation(expected,"carrier published"))+"\n","published parts");
         write(temp/"scan.kicad_pcb",str(at(scans.array_value.front(),"sexpr")));
         auto scanned=scan_thermal_copper(temp/"scan.kicad_pcb");scanned.path="frozen.kicad_pcb";eq(thermal_copper_json(scanned),at(scans.array_value.front(),"expected"),"file scanner");
         auto rt=run_thermal_checks(sheets,temp/"reports",&power,temp/"scan.kicad_pcb",temp);require(rt.copper_src=="scan.kicad_pcb","explicit repository root relative evidence");
