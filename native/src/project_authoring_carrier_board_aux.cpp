@@ -69,6 +69,9 @@ CircuitSheetIr carrier_board_aux(const SubsystemMeta& meta, const AuthoringConte
         t.expect = "STM32_I2C2 management bus (bringup_rails / usb_pd / power_mon)";
         c.port("STM32_I2C2_SDA", {"U2.SDA1"}, t, true);
     }
+    // OPEN hardware defect: TI SCPS113O 8.1.2/10 require current limiting
+    // on VREF2. R4 is on EN only and does not provide it. Do not interpret
+    // netlist/ERC or the frozen migration identity as isolation qualification.
     c.net("+3V3_AUX", {"U2.VREF2"}, std::nullopt);
     {
         AuthoringPort t;

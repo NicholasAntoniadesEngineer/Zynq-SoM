@@ -21,16 +21,28 @@ int main(int argc, char** argv) {
         const auto fixture = parse_json_file((root/"native/tests/data/component_basis/python_basis.json").string());
         require(live.size() == 66 && policy.sheets.size() == 66,"complete live coverage");
         require(policy.declarations.size() == 215 && policy.uses.size() == 685,"expectation coverage");
+        std::size_t reviewed_basis_corrections = 0;
         for(const auto& row : at(fixture,"declarations").array_value) {
             const auto& a = row.array_value;
             const auto it = std::find_if(policy.declarations.begin(),policy.declarations.end(),
                 [&](const auto& d) { return d.name == a[0].string_value; });
             require(it != policy.declarations.end(),"missing independently captured declaration");
             const auto value = a[1].kind == JsonKind::Number ? std::to_string(static_cast<int>(a[1].number_value)) : a[1].string_value;
+            if(it->name == "carrier.board_aux.iso_en_pullup") {
+                ++reviewed_basis_corrections;
+                require(a[3].string_value == "Ties the PCA9306 EN to +3V3_AUX so the switch OPENS whenever the gated rail is down — that isolation is what stops the powered-down peripherals back-powering the always-on trunk through their ESD diodes (LAW 0). LCSC C25803." &&
+                    a[4].string_value == "datasheet", "original unsupported isolation claim changed");
+                require(it->value == value && it->unit == a[2].string_value && !it->numeric &&
+                    it->klass == "policy" && it->basis ==
+                    "Existing R4 connects PCA9306 EN to +3V3_AUX; LCSC C25803. Isolation is NOT qualified: VREF2 is directly rail-connected without its current-limiting resistor (TI SCPS113O sections 8.1.2, 8.1.5 and 10). Startup, shutdown and reverse rail sequencing require review. This value records the existing design, not datasheet approval.",
+                    "reviewed isolation uncertainty must not become a datasheet approval");
+                continue;
+            }
             require(it->value == value && it->unit == a[2].string_value &&
                 it->basis == a[3].string_value && it->klass == a[4].string_value &&
                 it->numeric == (a[1].kind == JsonKind::Number),"declaration differs from original Python");
         }
+        require(reviewed_basis_corrections == 1, "exactly one reviewed basis correction");
         auto result = audit_component_basis(live);
         std::size_t reviewed_migrations = 0;
         for(const auto& row : at(fixture,"components").array_value) {

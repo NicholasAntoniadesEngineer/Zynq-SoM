@@ -63,13 +63,20 @@ AUX rail is enabled, making the manual gate state visible at a glance.
 **I2C isolator (U2, PCA9306DCUR).** The board_services peripherals run off the
 gated rail but their bus is the always-on `STM32_I2C2`. Tying gated SDA/SCL
 straight to that pulled-up bus would back-power the unpowered chips through their
-ESD diodes (LAW 0). The PCA9306 bidirectional level/isolation switch bridges the
-two domains. The reference asymmetry IS the isolation: VREF1 references `+3V3_SC`
-(always-on side — its pull-ups already live on bringup_rails), VREF2 references
-the gated `+3V3_AUX` with its own 4k7 pull-ups (R5/R6, required on both sides of
-the PCA9306). U2.EN is pulled to `+3V3_AUX` through R4 = 100k, so the switch
-OPENS whenever the AUX rail is down — the peripherals are cleanly isolated while
-off. 100n bypass on each VREF.
+ESD diodes (LAW 0). The intended isolation is **not qualified**. The existing
+circuit directly connects VREF1 to `+3V3_SC` and VREF2 to `+3V3_AUX`, with
+R4 = 100k between EN and `+3V3_AUX`, 100n on each VREF, and R5/R6 = 4k7
+AUX bus pull-ups. R4 does not limit current through VREF2.
+
+[TI PCA9306 datasheet SCPS113O](https://www.ti.com/lit/ds/symlink/pca9306.pdf),
+sections 8.1.2 and 10, requires VREF2 current limiting; the present direct
+connection is an unresolved design defect. Equal-voltage switch operation is
+supported by section 8.1.5, so equal nominal 3.3 V rails alone are not a defect.
+The reference resistor and enable control must be reviewed together, including
+both rail sequences, rail decay, bus state at enable, and the existing VREF2
+capacitor. Adding a resistor alone does not establish transient isolation.
+Until that review and correction are validated, do not claim that the AUX
+peripherals are cleanly isolated or that a passing ERC certifies this circuit.
 
 ## Parts
 
