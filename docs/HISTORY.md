@@ -39,6 +39,12 @@ calls, and receipt replay must still perform no work. Whole-board geometry is
 covered by the source/physical placement and floorplan contracts, not historical
 optimiser coordinates. Precision, edge-direction and profiler-input suites pass
 together in 17.46 s (precision 13.02 s).
+Post-commit `be3a3a21` default carrier (168×163) and devkit (98×98) also
+pass the broader in-memory physical helper: placement/flow/composition,
+mechanical and connector clearance, zero-error fanout, ratsnest budget,
+escape lanes, return stitching and emitted escape-copper parity. Carrier still
+records 28 reseats and devkit 50; their retry ceilings remain unresolved.
+These checks do not include full source audit, KiCad DRC or image rendering.
 Full current-board source audits, DRC and render qualification remain outstanding.
 
 ## 2026-10-07 — carrier reseat diagnosis; reject broad area-first ordering
