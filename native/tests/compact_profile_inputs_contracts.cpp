@@ -5,6 +5,24 @@
 #include "historical_input_contracts.hpp"
 
 namespace {
+void profile_option_contracts() {
+    const auto options = [](std::vector<std::string> args) {
+        std::vector<char*> raw;
+        for (auto& arg : args) raw.push_back(arg.data());
+        return parse(static_cast<int>(raw.size()), raw.data());
+    };
+    if (options({"profile","--repo",".","--compact-search","on"}).constraint_first ||
+        !options({"profile","--repo",".","--compact-search","on","--constraint-first","on"}).constraint_first ||
+        options({"profile","--repo",".","--compact-search","both","--constraint-first","off"}).constraint_first)
+        throw std::runtime_error("constraint-first option default/explicit selection mismatch");
+    for (const auto& [mode, value] : std::vector<std::pair<std::string,std::string>>{
+             {"off","on"},{"both","on"},{"on","typo"}}) {
+        bool rejected = false;
+        try { (void)options({"profile","--repo",".","--compact-search",mode,"--constraint-first",value}); }
+        catch (const std::invalid_argument&) { rejected = true; }
+        if (!rejected) throw std::runtime_error("invalid constraint-first option accepted");
+    }
+}
 void reviewed_profile_identity(const schgen::PcbPlacementInput& input) {
     const auto& sheets = input.floorplan.sheets;
     if (std::count_if(sheets.begin(), sheets.end(), [](const auto& s) {
@@ -27,6 +45,7 @@ void reviewed_profile_counts(const std::map<std::string, std::size_t>& counts) {
 int main(int argc, char** argv) {
     try {
         if (argc != 2) throw std::runtime_error("usage: profile-inputs REPOSITORY");
+        profile_option_contracts();
         const auto paths = schgen::resolve_project_paths(argv[1], "carrier");
         const auto defaults = load(paths, {}, false);
         const auto compact = load(paths, {}, true);

@@ -24,6 +24,9 @@ struct FloorplanExperiment {
     // nets always retain their normal cost. Zero is a valid experiment value.
     std::optional<double> ordinary_via_mm;
     bool conservative_only = false;
+    // Opt-in compact-search candidate; legacy orders remain fallback choices.
+    // Invocation-owned so independent/concurrent solves cannot change each other.
+    bool compact_constraint_first = false;
     std::function<void(const FloorplanAttemptObservation &)> attempt_completed;
     std::function<void(double)> unscoped_estimate;
 };

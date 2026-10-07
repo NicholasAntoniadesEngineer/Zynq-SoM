@@ -65,8 +65,13 @@ void check(const char* name,const Case& c,int winner,Mutation mutation=Mutation:
     require(offers(e)==(accepted?accepted->side:start_offers),"accepted/terminal side offers mismatch");
     std::cout<<name<<" PASS winner="<<winner<<" attempts="<<attempts<<" observed="<<entries<<'\n';
 }
-void exception_contract(){
+void exception_contract(bool constraint_first=false){
     auto in=input();
+    if(constraint_first){
+        auto experiment=std::make_shared<FloorplanExperiment>();
+        experiment->compact_constraint_first=true;
+        in.experiment=experiment;
+    }
     FloorplanTerm term;term.kind="near_max";term.sheet="b0";term.subject="b0";term.target_raw="b1";term.bound=100.;term.enforced=true;
     in.compose.index.hard.push_back(term);
     const Case c{80,70,{{8,6,1,10},{7,5,2,0}}};

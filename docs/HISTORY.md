@@ -1,5 +1,31 @@
 # carrier — project HISTORY (archived planning logs)
 
+## 2026-10-07 — reproducible constraint-first candidate without global solver state
+
+(Autonomous, per full-autonomy directive.) The saved constraint-first prototype
+is now a bounded, invocation-owned experiment, not a production default change.
+Enforced hard-term incidence sorts both endpoints (self once), then nominal
+area, retaining stable ties and all three original fallback orders. No hidden
+thread-local schedule or observer is introduced. The construction profiler's
+explicit --constraint-first on option requires --compact-search on and records
+the selection, actual fallback counts and separately timed placement diagnostics.
+
+Four focused contract groups pass (3.99 s): independent per-attempt receipts,
+rollback on failed/throwing trials, invocation isolation, noncompact behaviour,
+connector incumbent restoration under the new order, hard/soft/self/tie rules,
+and profile option/input contracts. No pruning or validator ceiling changes.
+
+Current carrier screening constructs 168x160 mm / 438 top / 131 bottom in
+70.207 s, including PCB text but excluding input preparation, audits/renders and
+postconstruction diagnostics. Placement/flow pass and hard composition red=0.
+Actual reseats 247 and legalize-only compactions 10 still exceed ceilings 18/2:
+the candidate is NOT accepted or published. This one instrumented run is not a
+controlled speedup or Python comparison. The devkit compact candidate and the
+current compact baseline both fail at the same ownership-preserving C5003
+corridor eviction, after 2,140 completed outer attempts; failure receipts are
+retained. Default generation is unchanged. The screening receipt records these
+failures rather than substituting a successful run from a different mode.
+
 ## 2026-10-07 — restore accepted connector state without redundant packing
 
 (Autonomous, per full-autonomy directive.) Rejected connector mirror trials now

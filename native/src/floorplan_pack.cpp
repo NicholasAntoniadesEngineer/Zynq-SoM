@@ -5,6 +5,7 @@
 #include <cmath>
 #include <unordered_map>
 #include "pack_refine_internal.hpp"
+#include "constraint_order_internal.hpp"
 
 namespace schgen::floorplan_detail {
 namespace {
@@ -54,9 +55,11 @@ bool Engine::attempt_pack(bool compact) {
             if (!in.compact_search) return attempt_pack_impl(compact);
             const auto start=plan;
             const auto offers=side_offers;
-            // Keep the existing order as incumbent. Reconsider earlier greedy
-            // choices only when it fails; each alternative starts identically.
-            for (int order : {0,1,2}) {
+            // Each alternative starts identically. The optional constraint-first
+            // candidate retains every legacy order as a fallback, never pruning.
+            const bool constraint_first = in.experiment && in.experiment->compact_constraint_first;
+            for (int order : {3,0,1,2}) {
+                if (order == 3 && !constraint_first) continue;
                 auto accounting=std::move(plan.accounting);
                 plan=start; plan.accounting=std::move(accounting);
                 side_offers=offers; compact_order=order;
@@ -152,7 +155,9 @@ bool Engine::attempt_pack_impl(bool compact) {
     }
     std::vector<FloorplanBlock*> order,placed;
     for (int i:pack_interior_order(names,tiers,connections,areas)) order.push_back(&plan.interior_blocks[i]);
-    if (in.compact_search && compact_order) {
+    if (in.compact_search && compact_order == 3) {
+        sort_constraint_first(order, in.compose.index, zbox);
+    } else if (in.compact_search && compact_order) {
         // Stable ties retain the established connectivity/priority ordering.
         std::stable_sort(order.begin(),order.end(),[&](const auto* a,const auto* b) {
             if (compact_order==2) {

@@ -111,8 +111,9 @@ FloorplanInput small(bool compact) {
     in.accounting.fallback_events={"interior_reseat_retry","legalize_only_compaction","interior_reseat_retry"};
     return in;
 }
-void unit(bool compact,bool fail_pack) {
+void unit(bool compact,bool fail_pack,bool constraint_first=false) {
     auto in=small(compact);auto observer=std::make_shared<FloorplanExperiment>();in.experiment=observer;
+    observer->compact_constraint_first=constraint_first;
     if(fail_pack) {
         // Only the alternate north connector has an oversized fanout. The
         // unchanged east connector forces a genuine cross-edge rejection.
@@ -168,8 +169,9 @@ void unit(bool compact,bool fail_pack) {
     require(engine.plan.accounting.quantization_engagements==wanted.quantization_engagements&&engine.plan.accounting.fallback_events==wanted.fallback_events,"trial receipt exact, no omitted/doubled work");
     receipt(engine.plan.accounting,prefix,true);
 }
-void failure(bool compact,bool at_estimate) {
+void failure(bool compact,bool at_estimate,bool constraint_first=false) {
     auto in=small(compact);auto observer=std::make_shared<FloorplanExperiment>();in.experiment=observer;
+    observer->compact_constraint_first=constraint_first;
     std::size_t attempts=0,estimates=0;
     observer->attempt_completed=[&](const auto&) {if(++attempts==2&&!at_estimate)throw Injected();};
     observer->unscoped_estimate=[&](double) {if(++estimates==2&&at_estimate)throw Injected();};
@@ -204,6 +206,8 @@ int main() {
             for(bool failed:{false,true})incumbent_test::unit(compact,failed);
             for(bool estimate:{false,true})incumbent_test::failure(compact,estimate);
         }
+        for(bool failed:{false,true})incumbent_test::unit(true,failed,true);
+        for(bool estimate:{false,true})incumbent_test::failure(true,estimate,true);
         std::cout<<"PASS complete incumbent state, exact trial accounting, actual calls and failure transport\n";
     }catch(const std::exception& e){incumbent_test::watching=false;std::cerr<<e.what()<<'\n';return 1;}
 }

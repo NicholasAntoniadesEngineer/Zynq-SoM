@@ -7,6 +7,7 @@
 #include "schgen/catalog.hpp"
 #include "schgen/experiment_observers.hpp"
 #include "schgen/validation.hpp"
+#include "schgen/pcb_placement_gates.hpp"
 #include <charconv>
 #include <chrono>
 #include <iomanip>
@@ -24,16 +25,19 @@ struct Options {
     std::filesystem::path repo;
     std::string project = "carrier", kicad = "kicad-cli", compact, inputs = "prepared";
     int runs = 1;
+    bool constraint_first = false;
 };
 void help() {
     std::cout << "compact_stage_profile --repo ROOT --project NAME --compact-search off|on|both\n"
         "  [--runs N] [--input-mode cold|prepared] [--kicad-cli PATH]\n"
+        "  [--constraint-first off|on] (opt-in candidate, requires --compact-search on)\n"
         "cold: reload/validate circuits, relink, re-extract netlist and resolve inputs per repetition.\n"
         "prepared: load once; reuse only parsed PcbPlacementInput across repetitions.\n"
         "both: off then on using the same compact-capable input each repetition (fixed order; not randomized).\n"
         "on/both resolve ownership inputs before trials; off alone uses default-only input preparation.\n"
         "Neither mode reuses zones, floorplans or placed models; OS/catalog caches are not flushed.\n"
-        "Construction only, NO ACCEPTANCE: no board gates, source audit, DRC or KiCad/3D renders.\n"
+        "Construction timings exclude the subsequent placement/flow/composition diagnostics.\n"
+        "NO ACCEPTANCE: no full board gates, source audit, DRC or KiCad/3D renders.\n"
         "Normal in-memory floorplan documents and PCB text emission are included.\n";
 }
 Options parse(int argc, char** argv) {
@@ -49,6 +53,10 @@ Options parse(int argc, char** argv) {
         else if (arg == "--kicad-cli") out.kicad = value;
         else if (arg == "--compact-search") out.compact = value;
         else if (arg == "--input-mode") out.inputs = value;
+        else if (arg == "--constraint-first") {
+            if (value != "on" && value != "off") throw std::invalid_argument("constraint-first must be off|on");
+            out.constraint_first = value == "on";
+        }
         else if (arg == "--runs") {
             const auto result = std::from_chars(value.data(), value.data() + value.size(), out.runs);
             if (result.ec != std::errc{} || result.ptr != value.data() + value.size() || out.runs < 1 || out.runs > 1000)
@@ -58,6 +66,8 @@ Options parse(int argc, char** argv) {
     if (out.repo.empty() || (out.compact != "off" && out.compact != "on" && out.compact != "both"))
         throw std::invalid_argument("--repo and explicit --compact-search off|on|both required");
     if (out.inputs != "cold" && out.inputs != "prepared") throw std::invalid_argument("input-mode must be cold|prepared");
+    if (out.constraint_first && out.compact != "on")
+        throw std::invalid_argument("constraint-first requires --compact-search on");
     return out;
 }
 struct LoadResult {
@@ -139,7 +149,8 @@ void scalar(const JsonNode& value) {
     else if (value.kind == JsonKind::String) std::cout << std::quoted(value.string_value);
     else throw std::runtime_error("unexpected outline tally type");
 }
-std::string trial(const PcbPlacementInput& source, bool compact, int run, int generation) {
+std::string trial(const PcbPlacementInput& source, bool compact, int run, int generation,
+                  bool constraint_first = false) {
     const auto copy_start = Clock::now();
     auto input = source;
     input.floorplan.compact_search = compact;
@@ -149,6 +160,7 @@ std::string trial(const PcbPlacementInput& source, bool compact, int run, int ge
         throw std::runtime_error("profile requires inputs without preinstalled experiment observers");
     Profile profile;
     auto floor = std::make_shared<FloorplanExperiment>();
+    floor->compact_constraint_first = constraint_first;
     floor->attempt_completed = [&](const auto& row) { profile.attempts.add(row); };
     floor->unscoped_estimate = [&](double) { ++profile.attempts.unscoped_estimates; };
     auto pcb = std::make_shared<PcbPlacementExperiment>();
@@ -156,6 +168,7 @@ std::string trial(const PcbPlacementInput& source, bool compact, int run, int ge
     input.floorplan.experiment = floor;
     input.experiment = pcb;
     std::cout << "trial run=" << run << " generation=" << generation << " compact_search=" << compact
+        << " constraint_first=" << constraint_first
         << " input_copy_seconds=" << copy_seconds << " status=started\n" << std::flush;
     ExecutionFailureReceipt failure;
     const auto start = Clock::now();
@@ -204,6 +217,18 @@ std::string trial(const PcbPlacementInput& source, bool compact, int run, int ge
     receipt("pcb_text_emit_only", emission.quantization_engagements);
     std::cout << "fallback model_total=" << accounting.fallback_events.size()
         << " pcb_text_emit_only=" << emission.fallback_events.size() << '\n';
+    std::map<std::string, std::size_t> fallback_counts;
+    for (const auto& name : accounting.fallback_events) ++fallback_counts[name];
+    for (const auto& [name, count] : fallback_counts)
+        std::cout << "fallback_count name=" << name << " count=" << count << '\n';
+    const auto diagnostic_start = Clock::now();
+    const auto gates = check_pcb_placement_gates(input, result.model);
+    std::cout << "postconstruction_diagnostic seconds=" << seconds(diagnostic_start)
+        << " placement_contract_ok=" << gates.placement_contract.ok
+        << " placement_flow_ok=" << gates.placement_flow.ok
+        << " hard_red=" << gates.composition.hard_red
+        << " hard_margin_min=" << gates.composition.hard_margin_min
+        << " hard_margin_sum=" << gates.composition.hard_margin_sum << '\n';
     std::cout << std::flush;
     return hash;
 }
@@ -238,7 +263,7 @@ int main(int argc, char** argv) {
             const int generation = options.inputs == "prepared" ? 1 : run;
             for (const bool compact : {false, true}) {
                 if ((compact && options.compact == "off") || (!compact && options.compact == "on")) continue;
-                const auto hash = trial(prepared->input, compact, run, generation);
+                const auto hash = trial(prepared->input, compact, run, generation, options.constraint_first);
                 auto [it, inserted] = first_hash.emplace(compact, hash);
                 if (!inserted && it->second != hash) throw std::runtime_error("repeat PCB bytes changed; investigate input drift/nondeterminism");
                 std::cout << "repeat compact_search=" << compact << " same_as_first=" << (!inserted ? "true" : "first") << '\n';
