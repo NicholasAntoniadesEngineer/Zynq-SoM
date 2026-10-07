@@ -186,6 +186,30 @@ void failure(bool compact,bool at_estimate,bool constraint_first=false) {
     FloorplanAccounting a;a.quantization_engagements=failed.accounting.quantization_engagements;a.fallback_events=failed.accounting.fallback_events;
     receipt(a,in.accounting,false);
 }
+void exception_incumbent(bool compact,bool at_estimate) {
+    auto in=small(compact);auto observer=std::make_shared<FloorplanExperiment>();in.experiment=observer;
+    Engine e(in);e.initialize();e.prepare_geometry();e.prepare_cross();e.board_size(100,100);
+    require(e.attempt_pack(true),"exception witness incumbent packs");
+    e.side_offers["sentinel"]={"accepted","top",7,3.,4.};
+    const auto before=plan_state(e.plan),side=offers(e),other=static_state(e);
+    const auto prefix=e.plan.accounting;
+    std::size_t attempts=0,estimates=0;
+    const auto reject=[&] {
+        e.plan.composition={"rejected trial"};
+        e.side_offers["sentinel"]={"rejected","bottom",1,8.,9.};
+        e.fallback("legalize_only_compaction");
+        (void)e.quantize("fixed_part_grid",1.234);
+        throw Injected();
+    };
+    observer->attempt_completed=[&](const auto&) {++attempts;if(!at_estimate)reject();};
+    observer->unscoped_estimate=[&](double) {if(++estimates==2&&at_estimate)reject();};
+    bool threw=false;begin(&e);
+    try {e.choose_connector_shapes();}catch(const Injected&){threw=true;}end();
+    require(threw&&attempts==1,"original exception; no restoration or extra trial");
+    receipt(e.plan.accounting,prefix,true);
+    require(plan_state(e.plan)==before&&offers(e)==side,"throwing connector trial must restore accepted state");
+    require(static_state(e)==other,"throwing connector trial changes no prepared state");
+}
 } // namespace incumbent_test
 extern "C" void __cyg_profile_func_enter(void* fn,void*) {
     using namespace incumbent_test;if(!watching||busy)return;
@@ -205,6 +229,7 @@ int main() {
         for(bool compact:{false,true}) {
             for(bool failed:{false,true})incumbent_test::unit(compact,failed);
             for(bool estimate:{false,true})incumbent_test::failure(compact,estimate);
+            for(bool estimate:{false,true})incumbent_test::exception_incumbent(compact,estimate);
         }
         for(bool failed:{false,true})incumbent_test::unit(true,failed,true);
         for(bool estimate:{false,true})incumbent_test::failure(true,estimate,true);

@@ -1,5 +1,18 @@
 # carrier — project HISTORY (archived planning logs)
 
+## 2026-10-08 — exception-safe connector incumbent preservation
+
+Connector alternatives restored the accepted plan on ordinary rejection but not
+when packing or subsequent estimation threw. The candidate transaction now
+restores the complete accepted plan and side offers on exceptions, retains all
+executed accounting, and rethrows the original error without a restoration pack.
+New default/compact tests inject failures after actual trial completion and during
+challenger estimation, mutate both plan and offer state, independently observe
+scalar/fallback calls, and verify prepared-state preservation. The tests fail on
+the prior implementation. Connector-incumbent, compact-retry and constraint-order
+contracts pass after the fix. This is failure-path reliability work, not a claimed
+board-size or performance improvement.
+
 ## 2026-10-08 — cold-start carrier screening and current-edge fanout correctness
 
 Bounded learned-conflict ordering and a baseline-first retry variant both produced

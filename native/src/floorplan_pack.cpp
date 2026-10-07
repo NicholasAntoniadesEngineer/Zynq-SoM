@@ -375,15 +375,23 @@ void Engine::choose_connector_shapes() {
         const double base=estimate();
         auto incumbent=plan;
         auto offers=side_offers;
-        std::tie(b.fanout_reach,b.fanout_inset)=fanout(shapes->second[1],false); b.shape_idx=1;
-        if (attempt_pack(true) && estimate()<base-1e-6) continue;
+        const auto restore_incumbent=[&] {
+            auto accounting=std::move(plan.accounting);
+            plan=std::move(incumbent); plan.accounting=std::move(accounting);
+            side_offers=std::move(offers);
+        };
+        try {
+            std::tie(b.fanout_reach,b.fanout_inset)=fanout(shapes->second[1],false); b.shape_idx=1;
+            if (attempt_pack(true) && estimate()<base-1e-6) continue;
+        } catch (...) {
+            restore_incumbent();
+            throw;
+        }
         // attempt_pack mutates plan and side_offers; its compact_order is reset
         // before returning. Occupancy/placement/legalizer scratch is local.
         // Restore the complete accepted state, retaining ALL executed trial
         // accounting. No restoration pack ran, so none is counted or observed.
-        auto accounting=std::move(plan.accounting);
-        plan=std::move(incumbent); plan.accounting=std::move(accounting);
-        side_offers=std::move(offers);
+        restore_incumbent();
     }
 }
 }  // namespace schgen::floorplan_detail
