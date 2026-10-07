@@ -1,0 +1,57 @@
+{
+  "status": "diagnostic_candidate_rejected_no_board_acceptance",
+  "base_commit": "f3e25a4a",
+  "project": "carrier",
+  "purpose": "Locate actual reseat conflicts before changing carrier placement ordering.",
+  "input_mode": "prepared",
+  "compact_search": false,
+  "constraint_first": false,
+  "runs_per_configuration": 1,
+  "candidate_change": "In Engine::attempt_pack_impl, replace pack_interior_order(names,tiers,connections,areas) with pack_interior_order(names,tiers,areas,connections). This retains ascending priority tiers, makes area the descending primary within-tier key, connectivity secondary, and name the final tie-breaker. Diagnostic only; not integrated.",
+  "instrumentation": "Compile a private copy of floorplan_pack.cpp with successful retry logging (subject, victim, outline, punch policy, poses), link it ahead of the current schgen_core static archive, and reuse compact_stage_profile.cpp. Both executables use the same logging and -O2 -ffp-contract=off; archive is the current Release build. No solver calls or accounting events are removed or replayed.",
+  "command_arguments": "--repo REPOSITORY --project carrier --compact-search off --kicad-cli /Applications/KiCad/KiCad.app/Contents/MacOS/kicad-cli",
+  "baseline": {
+    "width_mm": 168,
+    "height_mm": 163,
+    "area_mm2": 27384,
+    "instances": 569,
+    "top": 393,
+    "bottom": 176,
+    "interior_reseat_retry": 28,
+    "legalize_only_compaction": 0,
+    "construction_seconds_instrumented_single_sample": 11.961113459,
+    "pcb_sha256": "0c0568831085388a93b58730e211d5b271511d2d22bc0eb41caf5497f8abe375",
+    "reseat_pairs": [
+      {"subject": "usb_jtag", "victim": "bringup_modules", "count": 9},
+      {"subject": "board_services", "victim": "bringup_modules", "count": 8},
+      {"subject": "power", "victim": "power_mon", "count": 6},
+      {"subject": "power", "victim": "user_io", "count": 4},
+      {"subject": "board_services", "victim": "power_som", "count": 1}
+    ],
+    "placement_contract_ok": true,
+    "placement_flow_ok": true,
+    "composition_hard_red": 0
+  },
+  "tier_area_candidate": {
+    "width_mm": 177,
+    "height_mm": 162,
+    "area_mm2": 28674,
+    "instances": 569,
+    "top": 414,
+    "bottom": 155,
+    "interior_reseat_retry": 152,
+    "legalize_only_compaction": 0,
+    "construction_seconds_instrumented_single_sample": 20.818945542,
+    "pcb_sha256": "2599f48be01eb548d0a4a44308c66fa264bb12bcfb931bc1b9ebc1d79adaa607",
+    "placement_contract_ok": true,
+    "placement_flow_ok": true,
+    "composition_hard_red": 0
+  },
+  "decision": "Reject broad area-first ordering: both area and actual retries regress. Preserve the production carrier incumbent and investigate bounded conflict-aware reconsideration that retains useful connectivity ordering. No hard-coded board-name priority was added.",
+  "limitations": [
+    "Only placement-contract, placement-flow and enforced composition checks ran after construction; no full acceptance, DRC, source audit, render or publication.",
+    "Single instrumented samples are diagnostic, not a statistical performance claim or historical Python comparison.",
+    "Reseats count all executed search work, including losing candidates and both punch policies; they are not just movements on the final board.",
+    "Baseline PCB hash matches the uninstrumented current carrier screen, supporting probe non-interference; byte identity is not an optimisation acceptance criterion."
+  ]
+}

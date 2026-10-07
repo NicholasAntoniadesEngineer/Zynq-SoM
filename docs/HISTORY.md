@@ -1,5 +1,24 @@
 # carrier — project HISTORY (archived planning logs)
 
+## 2026-10-07 — carrier reseat diagnosis; reject broad area-first ordering
+
+Carrier-only tracing reconciles all 28 default reseats: USB-JTAG displaces
+bringup_modules nine times, board_services displaces it eight times, power
+displaces power_mon six times and user_io four times, and board_services
+displaces power_som once. These include losing outline trials and both punch
+policies, not only final-board movement. The traced baseline matches the current
+uninstrumented carrier PCB hash.
+
+A single controlled private candidate retained face-anchor/exclusive-pull tiers
+but prioritised area before connectivity within each tier. It regressed from
+168×163 to 177×162 mm and from 28 to 152 reseats. Scoped placement/flow/composition
+checks passed, but it was rejected without expensive DRC or rendering; production
+ordering and board artifacts are unchanged. The saved screening receipt is
+`native/benchmarks/2026-10-07-carrier-reseat-order-screen.json`. The next algorithm
+direction is bounded conflict-aware reconsideration rather than broad largest-
+first sorting. Carrier optimisation is the primary lane; devkit remains shared-
+correctness regression coverage.
+
 ## 2026-10-07 — conservative output-grid bounds at fixed separators
 
 The remaining four default carrier compaction rejections shared one captured
