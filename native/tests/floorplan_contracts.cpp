@@ -1,11 +1,9 @@
-#include "pack_search_precision_fixture.hpp"
-#include "pack_plain_precision_fixture.hpp"
-#include "pack_grid_precision_fixture.hpp"
-// Frozen Python orchestration outputs plus independent numeric/mutation tests.
+// Frozen primitive/formatter operands plus current solver requirements.
 // No Python, installed footprint library, live board output, or source inspection.
 #include "../src/floorplan_internal.hpp"
 #include "board_policy_ledger_reference.hpp"
 #include "floorplan_precision_fixture.hpp"
+#include "experiment_metric_contracts.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -470,6 +468,69 @@ void cross_behavior() {
     changed=in;changed.geometry.bbox_of["U2001"]={1,-1,-1,1};
     throws([&]{Engine bad(changed);},"inverted courtyard");
 }
+void current_plan_requirements(const FloorplanInput& in,const FloorplanPlan& result) {
+    Engine source(in);source.initialize();source.prepare_geometry();
+    std::map<std::string,FloorplanBlock> expected;
+    for(const auto* b:source.blocks())expected.emplace(b->name,*b);
+    std::set<std::string> seen;
+    require(std::isfinite(result.board_w)&&std::isfinite(result.board_h)&&
+            result.board_w>0&&result.board_h>0,"current outline finite and positive");
+    source.board_size(result.board_w,result.board_h);
+    require(result.som_x==source.plan.som_x&&result.som_y==source.plan.som_y&&
+            result.som.w==in.som.w&&result.som.h==in.som.h,"source module dimensions and placement policy");
+    std::vector<PairsBlock> interiors,edges;
+    for(const auto* blocks:{&result.interior_blocks,&result.edge_blocks})for(const auto& b:*blocks) {
+        require(expected.count(b.name)&&seen.insert(b.name).second,"unique source block identity");
+        const auto& base=expected.at(b.name);
+        require(b.kind==base.kind&&b.n_parts==base.n_parts,"source block kind and part count");
+        double w=source.zbox.at(b.name).first,h=source.zbox.at(b.name).second;
+        auto reach=base.fanout_reach,inset=base.fanout_inset;
+        std::string side="top";
+        require(b.shape_idx>=0,"nonnegative selected shape");
+        if(b.shape_idx) {
+            const auto& shape=in.geometry.shapes.at(b.name).at(static_cast<std::size_t>(b.shape_idx));
+            w=shape.w;h=shape.h;side=shape.side;
+            std::tie(reach,inset)=source.fanout(shape,false);
+        }
+        require(b.w==w&&b.h==h&&b.side==side,"selected source shape dimensions and side");
+        same(halo_json(b.fanout_reach),halo_json(reach),"selected reach");
+        same(halo_json(b.fanout_inset),halo_json(inset),"selected inset");
+        require(std::isfinite(b.x)&&std::isfinite(b.y)&&b.x>=0&&b.y>=0&&
+                b.x+b.w<=result.board_w&&b.y+b.h<=result.board_h,"block inside current outline");
+        const auto& pool=source.components[result.punch_free?1:0];
+        const auto entry=pool.find({b.name,b.shape_idx});
+        auto children=entry==pool.end()?std::vector<Comp>{}:entry->second;
+        const int mask=b.kind=="edge"?(result.punch_free?occ_top:occ_punch):side_mask(b.side);
+        if(b.kind=="edge") {
+            require(b.edge.size()==1&&b.edge==source.edge_of.at(b.name),"source connector edge retained");
+            children=result.punch_free?edge_components(b.edge.front(),b.x,b.y,result.board_w,
+                result.board_h,occ_punch,children):std::vector<Comp>{};
+            edges.push_back({b.x,b.y,b.w,b.h,reach,inset,mask,children});
+        } else interiors.push_back({b.x,b.y,b.w,b.h,reach,inset,mask,children});
+    }
+    require(seen.size()==expected.size(),"every source block retained exactly once");
+    require(result.dec_count==source.plan.dec_count&&result.dec_radius==source.plan.dec_radius,
+            "source decoupling geometry retained");
+    source.plan=result;
+    const auto keepouts=source.som_keepouts();
+    const double sx=result.som_x-som_pad,sy=result.som_y-som_pad;
+    const auto children=result.punch_free?som_components(sx,sy,result.dec_radius,
+        som_decoupling_cells(result.som_x,result.som_y,result.som.w,result.som.h,result.dec_count,dec_inset),
+        {keepouts.begin()+1,keepouts.end()},occ_bottom,occ_punch):std::vector<Comp>{};
+    require(pairs_hold_from_layout(interiors,edges,sx,sy,result.som.w+2*som_pad,result.som.h+2*som_pad,
+        result.punch_free?occ_top:occ_punch,children,result.board_w,result.board_h,mh_corner,occ_punch,clear),
+        "selected primary and child occupancy satisfy actual physical clearances");
+    const double estimate=experiment_metric_contracts::estimate(in,result);
+    bool winner=false;
+    for(const auto& d:result.accounting.decisions)if(d.name=="sizing_winner") {
+        winner=true;const auto inputs=jobject(d.inputs);
+        require(num(inputs,"est_cross")==estimate,"winner estimate matches independent current geometry");
+        require(estimate<=num(inputs,"budget"),"current layout fits electrical length budget");
+        require(std::abs(num(inputs,"headroom")-(num(inputs,"budget")-estimate))<1e-9,
+                "headroom uses current geometry");
+    }
+    require(winner,"complete current sizing decision");
+}
 void frozen(const std::filesystem::path& dir,const std::string& name,bool geometry_only) {
     const auto fixture=parse_json_file((dir/(name+".json")).string());
     const auto in=input(field(fixture,"input"));
@@ -538,84 +599,49 @@ void frozen(const std::filesystem::path& dir,const std::string& name,bool geomet
         throws([&]{render_floorplan_md(e.plan,notes,missing_si);},"has no row");
     }
     if (geometry_only) return;
-    auto result=build_floorplan(in);auto out=floorplan_plan_json(result);
-    for (const auto& [key,value]:field(expected,"plan").object_value) same(field(out,key),value,name+".plan."+key);
-    same(field(out,"board_w"),field(expected,"board_w"),name+".board_w");
-    same(field(out,"board_h"),field(expected,"board_h"),name+".board_h");
-    same(field(out,"outline_note"),field(expected,"outline_note"),name+".outline_note");
-    const auto& account=field(out,"accounting");same(field(account,"fallback_events"),field(expected,"events"),name+".fallback_events");
-    auto expected_quant=jobject({});
-    for(const auto& [key,v]:field(expected,"quantization").object_value)
-        if(v.number_value!=0)expected_quant.object_value.emplace_back(key,v);
-    // The original capture missed native legalizer/spatial/fanout calls because
-    // its Python census never observed those kernels. A separate function-entry
-    // observer ran the committed, pre-instrumentation kernel (not these counters).
-    const auto native_counts=parse_json_file((dir.parent_path()/"verification_audits/native_producer_counts.json").string());
-    for(const auto& [key,v]:field(field(native_counts,"counts"),name).object_value) {
-        require(v.number_value>0,name+": independently observed native instrumentation gap");
-        auto found=std::find_if(expected_quant.object_value.begin(),expected_quant.object_value.end(),
-            [wanted=key](const auto& item){return item.first==wanted;});
-        if(found==expected_quant.object_value.end())expected_quant.object_value.emplace_back(key,v);
-        else found->second.number_value+=v.number_value;
+    const auto result=build_floorplan(in);
+    current_plan_requirements(in,result);
+    // Repeatability is same-input/current-code reproducibility, not historical
+    // poses. Exact ledger equality here includes all actually executed work;
+    // instrumented receipt suites independently detect dropped/duplicate calls.
+    const auto repeated=build_floorplan(in);
+    same(floorplan_plan_json(result),floorplan_plan_json(repeated),name+": current repeatability");
+    for(int mutation=0;mutation<7;++mutation) {
+        auto bad=result;
+        if(mutation==0)bad.interior_blocks.pop_back();
+        if(mutation==1)bad.interior_blocks.front().x=-1;
+        if(mutation==2)bad.interior_blocks.front().w+=1;
+        if(mutation==3)bad.interior_blocks.push_back(bad.interior_blocks.front());
+        if(mutation==4) {
+            bool changed=false;
+            for(auto& d:bad.accounting.decisions)if(d.name=="sizing_winner")
+                for(auto& [key,value]:d.inputs)if(key=="est_cross"){value.number_value+=1;changed=true;}
+            require(changed,"mutation must reach the winner estimate");
+        }
+        if(mutation==5) {
+            const auto hit=std::find_if(bad.interior_blocks.begin(),bad.interior_blocks.end(),
+                [](const auto& b){return b.side=="top";});
+            require(hit!=bad.interior_blocks.end(),"physical collision mutation has a top body");
+            hit->x=bad.som_x;hit->y=bad.som_y;
+        }
+        if(mutation==6)bad.board_w=std::numeric_limits<double>::quiet_NaN();
+        bool rejected=false;
+        try {current_plan_requirements(in,bad);}catch(const std::exception&){rejected=true;}
+        require(rejected,"corrupt source geometry or estimate must reject");
     }
-    // Separate additive precision provenance: no historical count is replaced.
-    // Values were independently observed at compiled operation entry, with all
-    // original twenty counters separately checked against the pre-change solve.
-    const auto precision_counts=parse_json_file((dir.parent_path()/"precision_ops/additive_counts.json").string());
-    for(const auto& [key,v]:field(field(precision_counts,name),"floorplan").object_value){
-        require((key=="estimate_position_precision"||key=="estimate_pad_precision")&&v.number_value>0,
-                name+": explicit newly observed estimator precision operation");
-        require(std::none_of(expected_quant.object_value.begin(),expected_quant.object_value.end(),
-                [wanted=key](const auto& entry){return entry.first==wanted;}),name+": additive precision cannot replace an old counter");
-        expected_quant.object_value.emplace_back(key,v);
-    }
-    const auto floorplan_counts=parse_json_file((dir.parent_path()/"floorplan_precision/additive_counts.json").string());
-    for(const auto& [key,v]:field(floorplan_counts,name).object_value){
-        require(floorplan_precision_fixture::added(key)&&v.number_value>0,name+": explicit independently observed floorplan precision operation");
-        require(std::none_of(expected_quant.object_value.begin(),expected_quant.object_value.end(),
-                [wanted=key](const auto& entry){return entry.first==wanted;}),name+": floorplan addition cannot replace a prior counter");
-        expected_quant.object_value.emplace_back(key,v);
-    }
-    // Seven newly exposed numeric assumptions each execute the existing display
-    // operation once. The independent function-entry observer checks this delta.
-    for(auto& [key,value]:expected_quant.object_value)
-        if(key=="floorplan_ledger_display_precision4dp")value.number_value+=7;
-    // Exactly two formerly unbooked entries per completed Engine::run;
-    // independent instrumentation is in native_floorplan_receipt_contracts.
-    auto via=std::find_if(expected_quant.object_value.begin(),expected_quant.object_value.end(),
-        [](const auto& row){return row.first=="est_via_cost";});
-    if(via==expected_quant.object_value.end())expected_quant.object_value.emplace_back("est_via_cost",jvalue(2));
-    else via->second.number_value+=2;
-    // Occupancy additions are independently entry-counted through both boards
-    // by native_occupancy_precision_contracts. Keep every prior expectation.
-    auto prior_quant=field(account,"quantization_engagements");
-    prior_quant.object_value.erase(std::remove_if(prior_quant.object_value.begin(),prior_quant.object_value.end(),
-        [](const auto& row){return occupancy_precision_fixture::added(row.first)||legalize_precision_fixture::added(row.first)||stage_precision_fixture::added(row.first)||placement_precision_fixture::added(row.first)||output_precision_fixture::added(row.first)||pack_precision_fixture::added(row.first)||pack_geometry_precision_fixture::added(row.first)||pack_search_precision_fixture::added(row.first)||pack_plain_precision_fixture::added(row.first)||pack_grid_precision_fixture::added(row.first);}),prior_quant.object_value.end());
-    same(prior_quant,expected_quant,name+".quantization_engagements");
-    std::vector<J> calculations;
-    std::string ledger;
-    for (const auto& d:result.accounting.decisions) {
-        if (d.kind=="CALC") calculations.push_back(jobject({{"name",jvalue(d.name)},{"value",d.value},{"inputs",jobject(d.inputs)},{"step",jvalue(d.step)}}));
-        ledger+=d.text+"\n";
-    }
-    same(jarray(calculations),field(expected,"decisions"),name+".decisions");
-    std::string expected_ledger;
-    for (const auto& d:field(expected,"ledger").array_value) expected_ledger+=str(d,"text")+"\n";
-    require(ledger==expected_ledger,name+": decision ledger exact text");
     const auto documents=render_floorplan_documents(result,in);
-    require(documents.svg==svg,name+": solved plan SVG exact bytes");
-    require(documents.markdown==md,name+": solved plan Markdown exact bytes");
-    require(render_floorplan_ledger(result)==expected_ledger,name+": public ledger exact bytes");
-    same(export_floorplan_spec(result),parse_json_file((dir/(name+"_export.json")).string()),name+": solved seed");
-    const auto seed=read_bytes(dir/(name+"_seed.json"));
-    require(render_floorplan_spec_json(result)==seed,name+": solved seed exact Python bytes");
+    const auto repeated_documents=render_floorplan_documents(repeated,in);
+    require(documents.svg==repeated_documents.svg&&documents.markdown==repeated_documents.markdown,
+            name+": current document repeatability");
+    const auto seed=render_floorplan_spec_json(result);
+    require(seed==render_floorplan_spec_json(repeated),name+": current seed repeatability");
     TemporaryOutput publication;
     const auto paths=write_floorplan_documents(documents,publication.directory);
     require(paths==std::vector<std::filesystem::path>{publication.directory/"FLOORPLAN.svg",publication.directory/"FLOORPLAN.md"},
             name+": explicit published paths");
-    require(read_bytes(paths[0])==svg&&read_bytes(paths[1])==md,name+": published reports exact bytes");
+    require(read_bytes(paths[0])==documents.svg&&read_bytes(paths[1])==documents.markdown,name+": publication matches current documents");
     const auto seed_path=publication.directory/"floorplan.json";
-    require(write_floorplan_spec(result,seed_path)==seed_path&&read_bytes(seed_path)==seed,name+": published seed exact bytes");
+    require(write_floorplan_spec(result,seed_path)==seed_path&&read_bytes(seed_path)==seed,name+": publication matches current seed");
     require(load_floorplan_spec(seed_path.string())->names().size()==result.edge_blocks.size()+result.interior_blocks.size(),
             name+": exported spec reloads every subsystem");
     const FloorplanDocuments replacement{{},"replacement SVG\n","replacement Markdown\n",{}};

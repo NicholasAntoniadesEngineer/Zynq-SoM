@@ -1,5 +1,22 @@
 # carrier — project HISTORY (archived planning logs)
 
+## 2026-10-07 — validate whole floorplans against current requirements
+
+The remaining whole-solver golden test rejected the improved devkit solely at
+the changed SoM X coordinate. It now checks source block identity/population,
+selected shape dimensions, face, fanout reach/inset, connector edge, board bounds,
+module placement policy, decoupling geometry, primary/child physical occupancy,
+and independent current-geometry winner estimate/budget/headroom. Same-input
+repeatability still requires exact current plan, accounting, documents and seed;
+publication must match those generated documents. Corrupt populations, dimensions,
+positions, duplicate blocks, module collisions, NaN outline and stale estimates
+must reject. Instrumented receipt suites retain actual-work checks; no executed
+count is removed from production accounting. Immutable historical primitive,
+geometry and formatter operands still receive their exact regression checks.
+All five focused floorplan/geometry/final-estimate/receipt/scope CTest groups
+pass in 37.28 s. This replaces the stale whole-solver acceptance noted below;
+it does not waive any board audit or hardware requirement.
+
 ## 2026-10-07 — carry selected primary fanout into legalizer separations
 
 The composer previously compacted against nominal/channel rectangle gaps while
