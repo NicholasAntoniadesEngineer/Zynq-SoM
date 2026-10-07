@@ -36,6 +36,12 @@ void validate(const FloorplanLegalizeInput& in) {
     }
     for (const auto& [name, r] : in.som_j_rects) rectangle(r, name);
     for (const auto& [name, p] : in.fixed_poses) point(p, name);
+    for (const auto& [name, body] : in.primary_fanout) {
+        if (name.empty() || name.front() == '#' || body.mask < 0 || body.mask > 3)
+            throw FloorplanError("floorplan compose: invalid primary fanout identity/mask " + name);
+        for (const auto& halo : {body.reach, body.inset})
+            for (double value : {halo.w, halo.e, halo.n, halo.s}) finite(value, name + " primary fanout");
+    }
     for (const auto& [name, m] : in.metrics) {
         point(m.zone_wh, name);
         std::set<std::string> refs;
@@ -152,6 +158,21 @@ public:
         for (const auto& [name, v] : by_name) {
             names.push_back(name); pos_x.push_back(v->x); pos_y.push_back(v->y);
         }
+        if (!in.primary_fanout.empty()) {
+            for (const auto& name : names)
+                if (!in.primary_fanout.count(name))
+                    throw FloorplanError("floorplan compose: missing movable primary fanout " + name);
+            for (const auto& [name, box] : frect) {
+                (void)box;
+                if (!in.primary_fanout.count(name))
+                    throw FloorplanError("floorplan compose: missing fixed primary fanout " + name);
+            }
+            for (const auto& [name, body] : in.primary_fanout) {
+                (void)body;
+                if (!by_name.count(name) && !frect.count(name))
+                    throw FloorplanError("floorplan compose: unknown primary fanout " + name);
+            }
+        }
     }
 
     bool run(std::vector<FloorplanLegalizeVar>& movable) {
@@ -165,8 +186,22 @@ public:
         std::vector<std::pair<std::string, std::string>> near;
         for (const auto& t : in.index.hard) if (t.kind == "near_max") near.emplace_back(t.subject, t.target());
         for (const auto& s : legalize_build_seps(names, seeds, fixed_names, fixed_boxes, demand, near,
-                                                in.clear, channel_min_nets, channel_floor, channel_per_net))
-            seps.push_back({s.axis == "x", s.lo, s.hi, s.gap, s.flippable});
+                                                in.clear, channel_min_nets, channel_floor, channel_per_net)) {
+            RepairSep sep{s.axis == "x", s.lo, s.hi, s.gap, s.flippable};
+            if (!in.primary_fanout.empty()) {
+                const auto key=[](const std::string& name) { return name.front()=='#'?name.substr(1):name; };
+                const auto& low=in.primary_fanout.at(key(s.lo));
+                const auto& high=in.primary_fanout.at(key(s.hi));
+                if (occ_pair_active(low.mask,low.mask,true,high.mask,high.mask,true)) {
+                    const auto gap=[&](bool x) {
+                        return std::max(s.gap,fanout_sep(low.reach,low.inset,high.reach,high.inset,x?'E':'S'));
+                    };
+                    sep.gap=gap(sep.axis_x);
+                    sep.flipped_gap=gap(!sep.axis_x);
+                }
+            }
+            seps.push_back(std::move(sep));
+        }
         if (!edges_ok(true, pos_x) || !edges_ok(false, pos_y)) {
             if (!repair(true, pos_x) || !repair(false, pos_y)) return false;
             descend(true);

@@ -1179,6 +1179,9 @@ RepairAxisResult legalize_repair_axis(
     }
     RepairAxisResult out;
     out.seps = seps_in;
+    for (const auto& sep : out.seps)
+        if (sep.flipped_gap && (!std::isfinite(*sep.flipped_gap) || *sep.flipped_gap < 0))
+            throw std::runtime_error("legalize_repair_axis: invalid flipped separation gap");
     for (int rep = 0; rep <= repair_max; ++rep) {
         std::vector<SepSpec> spec;
         spec.reserve(out.seps.size());
@@ -1244,6 +1247,7 @@ RepairAxisResult legalize_repair_axis(
             out.flips.emplace_back(sep.lo, sep.hi, sep.axis_x);
             RepairSep moved = sep;
             moved.axis_x = !moved.axis_x;
+            if (moved.flipped_gap) std::swap(moved.gap, *moved.flipped_gap);
             moved.flippable = false;
             out.seps.erase(out.seps.begin()
                            + static_cast<std::ptrdiff_t>(sep_i));

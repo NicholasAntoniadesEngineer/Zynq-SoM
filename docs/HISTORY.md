@@ -1,5 +1,45 @@
 # carrier — project HISTORY (archived planning logs)
 
+## 2026-10-07 — carry selected primary fanout into legalizer separations
+
+The composer previously compacted against nominal/channel rectangle gaps while
+the final physical checker correctly required selected-shape directional fanout.
+Captured devkit failures included a 0.3 mm SoM/power gap requiring 1.0 mm, a
+0.3 mm corner/power gap requiring 1.7 mm, and an axis repair that retained
+0.3 mm instead of the UART's 1.7501 mm requirement. Selected primary reach,
+inset and occupancy masks now accompany packing rectangles into composition.
+Each active pair uses the larger of its existing gap and directional fanout;
+axis repair transports the other axis's requirement. Logical corridors retain
+their existing exclusion rule. Empty primitive inputs preserve legacy behavior.
+The final full occupancy checker, fallback limits and actual-work accounting
+remain authoritative and unchanged; minority/child geometry is not approximated
+away by the new primary constraint.
+
+Ten focused CTest groups passed (40.93 s plus 18.48 s), including placement
+requirements, geometry, selected-estimate, connector restoration, ordering,
+retry receipts, scope accounting and compact corridor protection. The extended
+geometry slice passes 13,142 checks; an old-Composer negative build fails the
+new directional-gap witness. Tests exercise four directions, insets (including
+negative ones), opposite faces, two-face punches, logical exclusions, existing
+channel gaps, malformed transport and an independently constructed axis flip.
+
+Fresh current-input default and constraint-first compact constructions of both
+boards pass the scoped physical suite (placement/flow/composition, mechanical,
+connector spacing, zero fanout failures, ratsnest, escape lanes and emitted
+return-stitch/copper). Default devkit improves from 100×100 to 98×98 mm, 3.96%
+less area, and reseats fall 72→50. Experimental compact devkit remains 98×98,
+reseats 28→22 and legalize-only compactions 4→0. Compact carrier remains 168×160,
+reseats remain 247 but legalize-only compactions fall 10→0. Default carrier
+remains 168×163, 28 reseats, with legalize-only compactions 8→4. Thus default
+and carrier retry ceilings are still not met; this is not full acceptance.
+No full source audit, DRC or renders were run for these changed boards. Screening
+timings are not matched statistical benchmarks or historical Python comparisons.
+The separate legacy whole-solver golden test currently rejects the improved
+devkit SoM coordinate (24 versus historical 25); its historical-pose acceptance
+still needs replacement with current requirements. The immutable geometry and
+formatter slice above remains passing. A bounded read-only review found no
+concrete correctness defect in this change.
+
 ## 2026-10-07 — separate placement requirements from historical coordinates
 
 (Autonomous, per owner clarification.) Placement integration now validates

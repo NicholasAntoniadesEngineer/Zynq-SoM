@@ -226,6 +226,9 @@ struct RepairSep {
     std::string hi;
     double gap = 0.0;
     bool flippable = true;
+    // Optional directional gap for the other axis, with the same lo/hi order.
+    // A repair flip must carry geometry, not reuse the old face's requirement.
+    std::optional<double> flipped_gap = std::nullopt;
 };
 
 struct RepairAxisResult {

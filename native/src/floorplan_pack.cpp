@@ -316,11 +316,24 @@ bool Engine::attempt_pack_impl(bool compact) {
             if (participants.count(b.name) && in.compose.wired_participants.count(b.name)) movable.insert(b.name);
         if (!movable.empty()) {
             li.fixed_rects.emplace_back("som",legalize_som_rect(plan.som_x,plan.som_y,plan.som.w,plan.som.h,som_pad));
-            for (const auto& c:corners) li.fixed_rects.emplace_back("corner@"+number(c.x0)+","+number(c.y0),c);
+            li.primary_fanout["som"]={{},{},som_mask};
+            for (const auto& c:corners) {
+                const auto name="corner@"+number(c.x0)+","+number(c.y0);
+                li.fixed_rects.emplace_back(name,c);
+                li.primary_fanout[name]={{},{},occ_punch};
+            }
+            for (const auto& b:plan.edge_blocks)
+                li.primary_fanout[b.name]={b.fanout_reach,b.fanout_inset,edge_mask};
+            for (const auto& b:plan.interior_blocks)
+                li.primary_fanout[b.name]={b.fanout_reach,b.fanout_inset,side_mask(b.side)};
             auto fix=[&](const FloorplanBlock& b){li.fixed_rects.emplace_back(b.name,Box4{b.x,b.y,b.x+b.w,b.y+b.h}); li.fixed_poses[b.name]={b.x,b.y};};
             for (const auto& b:plan.edge_blocks) fix(b);
             for (const auto& b:plan.interior_blocks) if (!movable.count(b.name)) fix(b);
             li.fixed_rects.insert(li.fixed_rects.end(),in.compose.corridors.begin(),in.compose.corridors.end());
+            for (const auto& [name, box]:in.compose.corridors) {
+                (void)box;
+                li.primary_fanout[name]={}; // Logical corridor: retain its existing exclusion gap.
+            }
             li.som_core_page=som_core_rect(plan.som_x,plan.som_y,plan.som.w,plan.som.h,in.origin.first,in.origin.second,.03);
             std::vector<std::tuple<std::string,double,double,double,double>> rows;
             for (const auto& j:plan.som.js) rows.emplace_back(j.ref,j.x,j.y,j.w,j.h);

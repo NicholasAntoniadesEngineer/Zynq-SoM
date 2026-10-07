@@ -232,6 +232,76 @@ void compose_contracts(const std::filesystem::path& dir) {
     require(log.empty(),"malformed compose inputs never append acceptance logs");
     require(floorplan_evaluate_terms(base,{}).empty(),"empty term index evaluates without fabricated terms");
 }
+void primary_fanout_contracts() {
+    // Independent rectangular witnesses: each active face needs reach 2 minus
+    // the other body's 0.5 inset, not the nominal 0.3 clearance. Pull from all
+    // four directions so both endpoint orders and both axes are exercised.
+    for (int direction=0;direction<4;++direction) {
+        FloorplanLegalizeInput in;
+        in.board_w=60;in.board_h=60;in.compact=true;
+        in.fixed_rects={{"anchor",{20,20,30,30}}};
+        in.fixed_poses["anchor"]={20,20};
+        in.metrics["v"]={{{"p",5,5}},{{"p",0,0,10,10}},{10,10}};
+        in.metrics["anchor"]=in.metrics.at("v");
+        in.index.hard.push_back({"flow_hop","v","v","anchor",100,"fanout witness",true,{},{}});
+        const std::array<FloorplanPoint,4> seeds{{{40,20},{0.5,20},{20,40},{20,0.5}}};
+        const auto seed=seeds.at(direction);
+        const std::vector<FloorplanLegalizeVar> initial{{"v",10,10,seed,seed.first,seed.second}};
+        Halo reach;
+        if(direction==0)reach.w=2;
+        if(direction==1)reach.e=2;
+        if(direction==2)reach.n=2;
+        if(direction==3)reach.s=2;
+        in.primary_fanout["v"]={reach,{},1};
+        in.primary_fanout["anchor"]={{},{.5,.5,.5,.5},1};
+        const auto run=[&](const FloorplanLegalizeInput& input) {
+            auto vars=initial;std::vector<std::string> log;
+            require(floorplan_legalize_compact(input,vars,log),"fanout witness must compact legally");
+            const auto& v=vars.front();
+            return direction==0?v.x-30:direction==1?20-v.x-v.w:
+                   direction==2?v.y-30:20-v.y-v.h;
+        };
+        require(std::abs(run(in)-1.5)<1e-9,"directional reach minus opposite inset");
+        auto opposite=in;opposite.primary_fanout["anchor"].mask=2;
+        require(std::abs(run(opposite)-.3)<1e-9,"opposite-face primary fanout is inactive");
+        auto logical=in;logical.primary_fanout["anchor"].mask=0;
+        require(std::abs(run(logical)-.3)<1e-9,"logical exclusions retain nominal clearance");
+        auto primitive=in;primitive.primary_fanout.clear();
+        require(std::abs(run(primitive)-.3)<1e-9,"empty fanout map keeps primitive API");
+        auto outset=in;outset.primary_fanout["anchor"].inset={-.5,-.5,-.5,-.5};
+        require(std::abs(run(outset)-2.5)<1e-9,"negative inset expands required separation");
+        auto channel=in;channel.clear=3;
+        require(std::abs(run(channel)-3)<1e-9,"fanout never weakens nominal clearance");
+        channel=in;channel.channel_demand[{"v","anchor"}]=6;
+        require(std::abs(run(channel)-3.2)<1e-9,"fanout never weakens wiring-channel demand");
+        auto punch=in;punch.primary_fanout["v"].mask=2;punch.primary_fanout["anchor"].mask=3;
+        require(std::abs(run(punch)-1.5)<1e-9,"two-face punch remains active against bottom body");
+        auto bad=in;bad.primary_fanout.erase("v");
+        throws([&]{run(bad);},"missing movable primary fanout");
+        bad=in;bad.primary_fanout.erase("anchor");
+        throws([&]{run(bad);},"missing fixed primary fanout");
+        bad=in;bad.primary_fanout["unknown"]={};
+        throws([&]{run(bad);},"unknown primary fanout");
+        bad=in;bad.primary_fanout["v"].mask=4;
+        throws([&]{run(bad);},"invalid primary fanout");
+        bad=in;bad.primary_fanout["v"].reach.w=std::numeric_limits<double>::infinity();
+        throws([&]{run(bad);},"non-finite");
+    }
+    // Impossible Y separation must flip to X and carry X's actual requirement.
+    // Reusing 0.3 after this flip was the live UART/mechanical failure mode.
+    const std::vector<std::pair<std::string,Box4>> fixed{{"anchor",{0,0,10,6}}};
+    const auto repaired=legalize_repair_axis(false,{"v"},{5},10,.3,
+        {{false,"#anchor","v",.3,true,1.7501}},fixed,{},2);
+    require(repaired.ok&&repaired.flips.size()==1,"Y infeasibility repairs by one flip");
+    require(repaired.seps.size()==1&&repaired.seps[0].axis_x&&!repaired.seps[0].flippable,
+        "repair preserves one nonflippable separation");
+    require(repaired.seps[0].gap==1.7501&&repaired.seps[0].flipped_gap==.3,
+        "axis flip transports its directional gap");
+    const auto x=legalize_repair_axis(true,{"v"},{5},30,.3,repaired.seps,fixed,{},2);
+    require(x.ok&&x.pos.at(0)>=11.7501,"flipped axis enforces larger physical gap");
+    throws([&]{legalize_repair_axis(false,{"v"},{5},10,.3,
+        {{false,"#anchor","v",.3,true,-1.}},fixed,{},2);},"invalid flipped separation gap");
+}
 void mutations() {
     FloorplanInput in; in.som.w=10; in.som.h=8;
     in.footprints["dip"]={"dip",sexpr_loads(R"((footprint "dip" (fp_rect (start -4 -2) (end 4 2) (layer "F.CrtYd") (width 0.05)) (pad "1" thru_hole circle (at -3 0) (size 0.8 0.8)) (pad "2" thru_hole circle (at 3 0) (size 0.8 0.8))))")};
@@ -559,7 +629,7 @@ int main(int argc,char** argv) {
     try {
         const std::filesystem::path dir=argc>1 ? argv[1]:"native/tests/data/floorplan";
         const bool geometry_only=argc>2 && std::string(argv[2])=="--geometry-only";
-        compose_contracts(dir);mutations();pack_behavior();cross_behavior();frozen(dir,"devkit_mini",geometry_only);frozen(dir,"carrier",geometry_only);
+        compose_contracts(dir);primary_fanout_contracts();mutations();pack_behavior();cross_behavior();frozen(dir,"devkit_mini",geometry_only);frozen(dir,"carrier",geometry_only);
         std::cout<<"floorplan contracts: "<<checks<<" checks passed"<<(geometry_only ? " (geometry/estimator slice)":"")<<"\n";
         return 0;
     } catch (const std::exception& e) { std::cerr<<"floorplan contracts: "<<e.what()<<"\n";return 1; }

@@ -136,6 +136,12 @@ struct FloorplanLegalizeVar {
     FloorplanPoint seed{};
     double x = 0.0, y = 0.0;
 };
+struct FloorplanPrimaryFanout {
+    Halo reach{}, inset{};
+    // Occupancy face mask. Zero denotes a logical exclusion rectangle, not
+    // a primary physical body; its existing nominal separation still applies.
+    int mask = 0;
+};
 struct FloorplanLegalizeInput {
     double board_w = 0.0, board_h = 0.0;
     Box4 som_core_page;
@@ -148,6 +154,9 @@ struct FloorplanLegalizeInput {
     double clear = board_decision_policy::floorplan::clear;
     bool compact = false;
     FloorplanPoint origin{25.0, 25.0};
+    // Empty preserves the rectangle-only primitive API. When supplied, cover
+    // every movable/fixed rectangle with its selected primary geometry.
+    std::map<std::string, FloorplanPrimaryFanout> primary_fanout;
 };
 
 // Compose consumes resolved, selected-shape metrics. A rejected candidate
