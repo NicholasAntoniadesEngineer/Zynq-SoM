@@ -55,9 +55,12 @@ void metadata(const fs::path& root){
     const auto stages=native_board_pipeline_metadata();const auto& es=field(reference,"stages").array_value;require(stages.stages.size()==es.size(),"stage census");
     for(std::size_t i=0;i<es.size();++i){const auto& s=stages.stages[i];const auto& e=es[i].array_value;require(s.name==e[0].string_value&&s.domain==e[1].string_value&&s.may_move==e[2].bool_value&&s.tracked==e[3].bool_value,"independent stage order/domain/movement policy");require(!s.validated_by.empty()&&!s.desc.empty(),"stage proof/description nonempty");}
     const auto fb=parse_json_file((root/"native/tests/data/verification_audits/python_state.json").string());
-    const auto& ef=field(fb,"fallbacks").array_value;require(ef.size()==stages.fallbacks.size(),"independent fallback population");
+    const auto& ef=field(fb,"fallbacks").array_value;require(ef.size()+1==stages.fallbacks.size(),"historical fallbacks plus explicit native edge-translation fallback");
     NativeFallbacks f;register_native_fallbacks(f);
     for(const auto& entry:ef){const auto name=field(entry,"name").string_value;auto hit=std::find_if(stages.fallbacks.begin(),stages.fallbacks.end(),[&](const auto& d){return d.name==name;});require(hit!=stages.fallbacks.end(),"independent fallback name");require(hit->stage==field(entry,"stage").string_value&&!hit->meaning.empty(),"independent fallback stage");f.record(hit->name);}
+    const auto edge=std::find_if(stages.fallbacks.begin(),stages.fallbacks.end(),[](const auto& d){return d.name=="edge_run_translation";});
+    require(edge!=stages.fallbacks.end()&&edge->stage=="plan_lattice"&&!edge->meaning.empty(),"native edge-translation fallback metadata");
+    f.record("edge_run_translation");
     for(const auto& [name,count]:f.census())require(count==AuditInteger(1),"metadata matches live fallback registry: "+name);
     NativeQuantizations q;register_native_quantizations(q);require(stages.quantization.size()==q.declarations().size(),"current transform metadata census");
     for(const auto& [name,count]:q.engagements())require(!count.nonzero(),"metadata collection never executes "+name);

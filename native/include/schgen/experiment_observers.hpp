@@ -27,6 +27,9 @@ struct FloorplanExperiment {
     // Opt-in compact-search candidate; legacy orders remain fallback choices.
     // Invocation-owned so independent/concurrent solves cannot change each other.
     bool compact_constraint_first = false;
+    bool compact_edge_translation = false;
+    // Completed bounded edge searches, including unsuccessful candidates.
+    std::function<void(std::size_t, char, double)> edge_translation_completed;
     std::function<void(const FloorplanAttemptObservation &)> attempt_completed;
     std::function<void(double)> unscoped_estimate;
 };

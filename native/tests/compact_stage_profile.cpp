@@ -27,12 +27,14 @@ struct Options {
     std::string project = "carrier", kicad = "kicad-cli", compact, inputs = "prepared";
     int runs = 1;
     bool constraint_first = false;
+    bool edge_translation = false;
     std::optional<FloorplanPoint> outline;
 };
 void help() {
     std::cout << "compact_stage_profile --repo ROOT --project NAME --compact-search off|on|both\n"
         "  [--runs N] [--input-mode cold|prepared] [--kicad-cli PATH]\n"
         "  [--constraint-first off|on] (opt-in candidate, requires --compact-search on)\n"
+        "  [--edge-translation off|on] (opt-in bounded edge repair, requires --compact-search on)\n"
         "  [--outline-mm WIDTHxHEIGHT] (explicit diagnostic outline; skips automatic sizing search)\n"
         "cold: reload/validate circuits, relink, re-extract netlist and resolve inputs per repetition.\n"
         "prepared: load once; reuse only parsed PcbPlacementInput across repetitions.\n"
@@ -73,6 +75,10 @@ Options parse(int argc, char** argv) {
             if (value != "on" && value != "off") throw std::invalid_argument("constraint-first must be off|on");
             out.constraint_first = value == "on";
         }
+        else if (arg == "--edge-translation") {
+            if(value!="on"&&value!="off")throw std::invalid_argument("edge-translation must be off|on");
+            out.edge_translation=value=="on";
+        }
         else if (arg == "--runs") {
             const auto result = std::from_chars(value.data(), value.data() + value.size(), out.runs);
             if (result.ec != std::errc{} || result.ptr != value.data() + value.size() || out.runs < 1 || out.runs > 1000)
@@ -84,6 +90,7 @@ Options parse(int argc, char** argv) {
     if (out.inputs != "cold" && out.inputs != "prepared") throw std::invalid_argument("input-mode must be cold|prepared");
     if (out.constraint_first && out.compact != "on")
         throw std::invalid_argument("constraint-first requires --compact-search on");
+    if(out.edge_translation&&out.compact!="on")throw std::invalid_argument("edge-translation requires --compact-search on");
     return out;
 }
 struct LoadResult {
@@ -176,7 +183,7 @@ PcbPlacementInput trial_input(const PcbPlacementInput& source,bool compact,
     return input;
 }
 std::string trial(const PcbPlacementInput& source, bool compact, int run, int generation,
-                  bool constraint_first = false,const std::optional<FloorplanPoint>& outline=std::nullopt) {
+                  bool constraint_first = false,const std::optional<FloorplanPoint>& outline=std::nullopt,bool edge_translation=false) {
     const auto copy_start = Clock::now();
     auto input = trial_input(source,compact,outline);
     const auto copy_seconds = seconds(copy_start);
@@ -186,6 +193,11 @@ std::string trial(const PcbPlacementInput& source, bool compact, int run, int ge
     Profile profile;
     auto floor = std::make_shared<FloorplanExperiment>();
     floor->compact_constraint_first = constraint_first;
+    floor->compact_edge_translation = edge_translation;
+    std::size_t edge_candidates=0,edge_repairs=0;
+    floor->edge_translation_completed=[&](std::size_t candidates,char edge,double) {
+        edge_candidates+=candidates;edge_repairs+=edge!='\0';
+    };
     floor->attempt_completed = [&](const auto& row) { profile.attempts.add(row); };
     floor->unscoped_estimate = [&](double) { ++profile.attempts.unscoped_estimates; };
     auto pcb = std::make_shared<PcbPlacementExperiment>();
@@ -194,6 +206,7 @@ std::string trial(const PcbPlacementInput& source, bool compact, int run, int ge
     input.experiment = pcb;
     std::cout << "trial run=" << run << " generation=" << generation << " compact_search=" << compact
         << " constraint_first=" << constraint_first
+        << " edge_translation=" << edge_translation
         << " input_copy_seconds=" << copy_seconds << " status=started\n" << std::flush;
     if(outline)std::cout<<"outline_override width_mm="<<outline->first<<" height_mm="<<outline->second
                         <<" automatic_sizing=disabled source_policy_otherwise_unchanged=1\n"<<std::flush;
@@ -203,6 +216,7 @@ std::string trial(const PcbPlacementInput& source, bool compact, int run, int ge
     PcbPlacementResult result;
     try { result = build_pcb_model(input, &failure); }
     catch (...) {
+        std::cout<<"edge_search candidates="<<edge_candidates<<" repairs="<<edge_repairs<<'\n';
         std::cout << "trial status=construction_failed elapsed_seconds=" << seconds(start)
             << " completed_outer_attempts=" << profile.attempts.completed
             << " receipt_captured=" << failure.captured << " receipt_unavailable=" << failure.unavailable << '\n';
@@ -210,6 +224,7 @@ std::string trial(const PcbPlacementInput& source, bool compact, int run, int ge
         throw;
     }
     const auto end = Clock::now();
+    std::cout<<"edge_search candidates="<<edge_candidates<<" repairs="<<edge_repairs<<'\n';
     profile.stages.push_back({"model_return_tail", seconds(profile.mark, end),
         profile.attempts.completed - profile.previous_attempts, profile.attempts.packed - profile.previous_packed, 0});
     const auto model_seconds = seconds(start, end);
@@ -290,7 +305,7 @@ int main(int argc, char** argv) {
             const int generation = options.inputs == "prepared" ? 1 : run;
             for (const bool compact : {false, true}) {
                 if ((compact && options.compact == "off") || (!compact && options.compact == "on")) continue;
-                const auto hash = trial(prepared->input, compact, run, generation, options.constraint_first,options.outline);
+                const auto hash = trial(prepared->input, compact, run, generation, options.constraint_first,options.outline,options.edge_translation);
                 auto [it, inserted] = first_hash.emplace(compact, hash);
                 if (!inserted && it->second != hash) throw std::runtime_error("repeat PCB bytes changed; investigate input drift/nondeterminism");
                 std::cout << "repeat compact_search=" << compact << " same_as_first=" << (!inserted ? "true" : "first") << '\n';

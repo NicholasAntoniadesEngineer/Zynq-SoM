@@ -1,5 +1,33 @@
 # carrier — project HISTORY (archived planning logs)
 
+## 2026-10-08 — opt-in edge translation integrated into native placement
+
+The invocation-owned `compact_edge_translation` option now calls the tested
+bounded helper in the real floorplan packer. It is off by default and only runs
+for compact search. Every applied repair records the declared
+`edge_run_translation` fallback, even when later work rejects the attempt.
+Completed helper searches report actual candidate counts; coordinate operations
+remain in existing independent quantization receipts. The helper is explicitly
+included in board source-audit scope; no fallback baseline or ceiling is raised.
+The diagnostic CLI exposes `--edge-translation on` with compact-only validation.
+
+Real carrier integration at fixed 168×159 with constraint-first ordering passes
+the broad physical helper. Two construction samples took 4.4780/4.4423 s and
+produced identical PCB hash
+`ccaa5061f105825b678b090e27e467fca710da871a7bd112ac17dab27cd7d3f1`:
+425 top / 144 bottom, 569 instances, 270 edge candidates and 10 applied repairs.
+The tracked integration test requires the option-off witness to reject, matches
+observer repairs to actual fallback events, checks source isolation, and runs
+the broad physical requirements. A fixed 98×98 devkit opt-in screen passes with
+zero edge candidates/repairs (106 top / 57 bottom). These are fixed-outline
+construction workloads, not automatic-search or Python speedup comparisons.
+Automatic candidate selection, full audits/DRC, render review and qualification
+of the new fallback policy remain outstanding; the 168×159 board is experimental.
+Validation: five focused helper/retry/incumbent/fallback/input groups passed;
+the extended real-input integration test passed in 9.01 s and native policy-audit
+contracts in 44.48 s. Final board metadata/provider checks passed 1100 assertions
+(without the optional compiler-wide mode).
+
 ## 2026-10-08 — project rounded edge runs onto safe output coordinates
 
 Edge runs now use the previous emitted coordinate, body span and required gap

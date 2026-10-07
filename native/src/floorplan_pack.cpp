@@ -6,6 +6,7 @@
 #include <unordered_map>
 #include "pack_refine_internal.hpp"
 #include "constraint_order_internal.hpp"
+#include "edge_translation_internal.hpp"
 
 namespace schgen::floorplan_detail {
 namespace {
@@ -118,6 +119,22 @@ bool Engine::attempt_pack_impl(bool compact) {
         run_rows.emplace_back(edge_char(b.edge),b.x,b.y,b.w,b.h);
         edge_boxes.push_back({b.x,b.y,b.x+b.w,b.y+b.h});
         fanout_rows.push_back({b.x,b.y,b.w,b.h,b.fanout_reach,b.fanout_inset,edge_char(b.edge)});
+    }
+    if(in.compact_search&&in.experiment&&in.experiment->compact_edge_translation) {
+        const auto shifted=translate_edge_runs(fanout_rows,som_keepouts(),bw,bh,edge_margin,clear,counts);
+        if(shifted.moved_edge) {
+            for(std::size_t i=0;i<plan.edge_blocks.size();++i) {
+                auto& b=plan.edge_blocks[i];b.x=shifted.blocks[i].x;b.y=shifted.blocks[i].y;
+                run_rows[i]={edge_char(b.edge),b.x,b.y,b.w,b.h};
+                edge_boxes[i]={b.x,b.y,b.x+b.w,b.y+b.h};
+            }
+            fanout_rows=shifted.blocks;
+            fallback("edge_run_translation");
+        }
+        if(in.experiment->edge_translation_completed)
+            in.experiment->edge_translation_completed(shifted.candidates,shifted.moved_edge,shifted.shift);
+        // Opt-in search is fail-closed, including same-edge clearance checks.
+        if(!shifted.valid)return false;
     }
     checked_quantization_add(plan.accounting.quantization_engagements, "run_overflow_tol");
     if (!edge_runs_margin_ok(run_rows,bw,bh,edge_margin,native_run_overflow_tol())) return false;

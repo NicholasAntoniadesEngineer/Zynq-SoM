@@ -3,6 +3,7 @@
 #include "compact_stage_profile.cpp"
 #undef main
 #include "historical_input_contracts.hpp"
+#include "pcb_placement_requirements.hpp"
 
 namespace {
 void profile_option_contracts() {
@@ -23,6 +24,15 @@ void profile_option_contracts() {
         if (!rejected) throw std::runtime_error("invalid constraint-first option accepted");
     }
     const auto valid=options({"profile","--repo",".","--compact-search","off","--outline-mm","168x160.5"});
+    if(options({"profile","--repo",".","--compact-search","on"}).edge_translation||
+       !options({"profile","--repo",".","--compact-search","on","--edge-translation","on"}).edge_translation)
+        throw std::runtime_error("edge-translation default/opt-in mismatch");
+    for(const auto& [mode,value]:std::vector<std::pair<std::string,std::string>>{{"off","on"},{"both","on"},{"on","typo"}}) {
+        bool rejected=false;
+        try{(void)options({"profile","--repo",".","--compact-search",mode,"--edge-translation",value});}
+        catch(const std::invalid_argument&){rejected=true;}
+        if(!rejected)throw std::runtime_error("invalid edge-translation option accepted");
+    }
     if(valid.outline!=schgen::FloorplanPoint{168,160.5})throw std::runtime_error("explicit outline parsed incorrectly");
     for(const auto* value:{"168","168x","x160","1x2x3","0x10","-1x10","nanx10","10xinf","1e999x10","10x2junk"}) {
         bool rejected=false;
@@ -88,6 +98,26 @@ int main(int argc, char** argv) {
                 if (shape.tag.find("/owned-pins-") != std::string::npos) ++alternatives[sheet];
         }
         reviewed_profile_counts(alternatives);
+        // Exercise the real opt-in Engine path, not a second translation copy.
+        auto candidate=trial_input(compact.input,true,schgen::FloorplanPoint{168,159});
+        auto observer=std::make_shared<schgen::FloorplanExperiment>();
+        observer->compact_constraint_first=true;candidate.floorplan.experiment=observer;
+        bool baseline_rejected=false;
+        try{(void)schgen::build_pcb_model(candidate);}catch(const schgen::FloorplanError&){baseline_rejected=true;}
+        if(!baseline_rejected)throw std::runtime_error("edge-translation witness no longer requires repair");
+        std::size_t candidates=0,repairs=0;
+        observer->compact_edge_translation=true;
+        observer->edge_translation_completed=[&](std::size_t n,char edge,double shift) {
+            if(n>32||(!edge&&shift!=0))throw std::runtime_error("invalid bounded edge observation");
+            candidates+=n;repairs+=edge!='\0';
+        };
+        const auto repaired=schgen::build_pcb_model(candidate);
+        const auto events=schgen::pcb_placement_accounting(repaired).fallback_events;
+        if(!repairs||candidates<repairs||repairs!=static_cast<std::size_t>(std::count(events.begin(),events.end(),"edge_run_translation")))
+            throw std::runtime_error("edge callback and actual fallback ledger disagree");
+        placement_requirements_test::physical(candidate,repaired.model,[](bool ok,const std::string& why){if(!ok)throw std::runtime_error(why);});
+        if(compact.input.floorplan.experiment||(compact.input.floorplan.spec&&compact.input.floorplan.spec->outline==candidate.floorplan.spec->outline))
+            throw std::runtime_error("edge experiment leaked into original prepared inputs");
         // The total alone cannot qualify the reviewed distribution or identity.
         auto rejects = [](auto action) {
             bool rejected = false;

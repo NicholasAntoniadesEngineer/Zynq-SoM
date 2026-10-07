@@ -298,7 +298,7 @@ std::vector<Box4> Engine::som_keepouts() const {
     return som_keepout_rects(plan.som_x,plan.som_y,plan.som.w,plan.som.h,som_pad,jacks,som_seat_band);
 }
 void Engine::fallback(const std::string& name) {
-    static const std::set<std::string> allowed{"legalize_only_compaction","punch_free_plan_rejected","interior_reseat_retry"};
+    static const std::set<std::string> allowed{"legalize_only_compaction","punch_free_plan_rejected","interior_reseat_retry","edge_run_translation"};
     if (!allowed.count(name)) throw std::logic_error("floorplan: unregistered fallback " + repr(name));
     plan.accounting.fallback_events.push_back(name);
 }
