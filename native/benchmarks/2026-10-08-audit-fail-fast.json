@@ -1,0 +1,18 @@
+{
+  "date": "2026-10-08",
+  "base_commit": "4940b7f0",
+  "change": "Stop claiming useful suffix work after a parallel source-audit failure. Keep every launched job joined and select the earliest manifest-index failure, not the fastest failure.",
+  "reasoning": "Atomic monotonically increasing claim indices mean all indices earlier than a failing job have already been claimed. They continue, and may lower the first-failure index. Later unscheduled work cannot change the reported failure. A job racing the failure check can already be in flight and remains joined. No partial census is returned as success.",
+  "unchanged": ["Successful complete manifest traversal", "Compiler AST and macro preprocessing", "Audit coverage and policy gates", "Worker cap", "Manifest validation", "Compiler timeout and process cleanup"],
+  "tests": {
+    "native_audit_queue_contracts_seconds": 9.91,
+    "native_parallel_audit_contracts_seconds": 1.26,
+    "total_seconds": 11.18,
+    "coverage": "Exact ordered census versus independent frozen scanner, real compiler source mutations, serial and 2/3/4-worker parity, manifest-priority errors, parser/preprocessor/offset failures, timeout, bounded queue liveness, absence of unnecessary suffix compiler launch after two decisive failures.",
+    "red_control": "Removed only the new first_failed guard, rebuilt, and ran queue contracts. Failed in 3.70 seconds with compiler suffix launched after a decisive failure. Restored guard and reran both suites successfully.",
+    "production_cli_relinked": true
+  },
+  "performance_claim": "Avoids unnecessary remaining compiler work on failed audits. No measured successful full-audit speedup claimed; the approximately 153-second successful audit bottleneck remains.",
+  "qualification_reuse": "No layout, schematic, rendering, audit visitor or acceptance policy changes. Reuse both-board qualification from 2026-10-08-multiscale-outline-qualification.json for unchanged generation code; this is not a new full-board run.",
+  "goal_complete": false
+}

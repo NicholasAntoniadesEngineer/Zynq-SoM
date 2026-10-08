@@ -297,7 +297,7 @@ CppSourceCensus scan_cpp_audit_sources(const std::filesystem::path& root,const s
     if(options.workers==1||files.size()==1){
         for(std::size_t i=0;i<files.size();++i)merge(scan_one(i));
     }else{
-        std::atomic<std::size_t> next{0};
+        std::atomic<std::size_t> next{0},first_failed{files.size()};
         std::vector<CppSourceCensus> completed(files.size());
         std::vector<std::exception_ptr> failed(files.size());
         std::vector<std::future<void>> workers;
@@ -305,12 +305,20 @@ CppSourceCensus scan_cpp_audit_sources(const std::filesystem::path& root,const s
             workers.push_back(std::async(std::launch::async,[&]{
                 for(;;){
                     const auto i=next.fetch_add(1,std::memory_order_relaxed);
-                    if(i>=files.size())return;
+                    // Indices are claimed in manifest order. Once index j
+                    // fails, every earlier index has already been claimed;
+                    // finish those jobs for deterministic error precedence,
+                    // but do not launch further jobs that cannot affect it.
+                    if(i>=files.size()||i>=first_failed.load(std::memory_order_relaxed))return;
                     try{completed[i]=scan_one(i);}
-                    catch(...){failed[i]=std::current_exception();}
+                    catch(...){
+                        failed[i]=std::current_exception();
+                        auto limit=first_failed.load(std::memory_order_relaxed);
+                        while(i<limit&&!first_failed.compare_exchange_weak(limit,i,std::memory_order_relaxed)){}
+                    }
                 }
             }));
-        // All work remains joined and bounded. A slow TU no longer prevents an
+        // All launched work remains joined and bounded. A slow TU no longer prevents an
         // idle worker from taking the next TU. Publish in manifest order only,
         // and rethrow the earliest manifest-index error, not the fastest error.
         for(auto& worker:workers)worker.get();

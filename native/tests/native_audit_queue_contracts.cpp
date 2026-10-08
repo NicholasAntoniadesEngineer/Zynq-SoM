@@ -39,6 +39,10 @@ int compiler(int argc,char** argv){
     const fs::path file=argv[argc-1];const auto root=file.parent_path();
     const auto name=file.stem().string();const auto contents=read(file);
     bool ast=false;for(int i=1;i<argc;++i)ast|=std::string(argv[i])=="-ast-dump=json";
+    if(name=="queuefail_first"||name=="queuefail_second"){
+        std::cerr<<"deliberate queue failure "<<name<<'\n';return 15;
+    }
+    if(name=="unneeded")put(root/"unneeded.started","");
     if(name=="timeout"){std::this_thread::sleep_for(std::chrono::seconds(2));return 0;}
     if(name=="badast"&&ast){std::cout<<"{broken";return 0;}
     if(name=="badpre"&&!ast){std::cerr<<"deliberate preprocessor failure\n";return 12;}
@@ -107,6 +111,15 @@ int main(int argc,char** argv){try{
     put(root/"timeout.cpp","");fake.timeout=std::chrono::milliseconds(100);
     (void)error([&]{scan_cpp_audit_sources(root,{{"one.cpp"},{"timeout.cpp"}},fake);});
     fake.timeout=std::chrono::seconds(10);
+    for(const auto* name:{"queuefail_first","queuefail_second","unneeded"})put(root/(std::string(name)+".cpp"),"");
+    const std::vector<CppAuditSource> fail_fast{{"queuefail_first.cpp"},{"queuefail_second.cpp"},{"unneeded.cpp"}};
+    const auto old_failure=error([&]{scan_cpp_audit_sources_reference(root,fail_fast,fake);});
+    // The frozen batch implementation also stops between failed batches. Use
+    // the current implementation's observable launch marker to require no
+    // suffix work, without depending on the relative timing of two failures.
+    fs::remove(root/"unneeded.started");
+    need(error([&]{scan_cpp_audit_sources(root,fail_fast,fake);})==old_failure,"fail-fast changed earliest manifest failure");
+    need(!fs::exists(root/"unneeded.started"),"compiler suffix launched after a decisive failure");
     for(const auto* name:{"slow","fast","third"})put(root/(std::string(name)+".cpp"),"queue");
     const std::vector<CppAuditSource> queued{{"slow.cpp"},{"fast.cpp"},{"third.cpp"}};
     need(error([&]{scan_cpp_audit_sources_reference(root,queued,fake);}).find("fixed batch barrier")!=std::string::npos,"liveness test did not reject old batch scheduler");
