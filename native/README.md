@@ -97,6 +97,23 @@ subject to full board gates and rollback on failure. Their ordinary, live-KiCad
 and apply contracts are registered in CTest. This is not a claim of complete
 source-audit or whole-board acceptance.
 
+For faster automatic outline iteration, `board --multiscale-outline` opts into
+bounded power-of-two axis/diagonal refinement instead of the complete fine-grid
+scan. It can miss smaller solutions and is deliberately not the default. Supply
+a known good starting size with `--initial-outline-mm`; that candidate is
+revalidated, never treated as cached acceptance. Fixed outlines conflict with
+this option. Actual attempts, retries and fallbacks remain accounted, and no
+acceptance gate or retry limit is relaxed. For example:
+
+```sh
+native/bin/schgen board --project carrier --compact-placement --interior-order 3 --initial-outline-mm 168x160 --multiscale-outline --timing -o /tmp/carrier-multiscale
+native/bin/schgen board --project devkit_mini --multiscale-outline --timing -o /tmp/devkit-multiscale
+```
+
+These are experiment configurations, not fabrication-readiness claims. See
+`benchmarks/2026-10-08-multiscale-outline-qualification.json` for qualification,
+timing scope, and the rejected unseeded carrier area regression.
+
 ```sh
 native/bin/schgen project-check --project carrier
 native/bin/schgen project-check --project devkit_mini

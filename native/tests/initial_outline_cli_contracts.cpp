@@ -25,6 +25,12 @@ int main(int argc,char** argv){try{
         throw std::runtime_error("unsupported command accepted seed");
     if(run({"board","--initial-outline-mm","168x163","--compact-placement"}).exit_code!=0)
         throw std::runtime_error("seed and compact placement must be independent options");
+    const auto multiscale=run({"board","--initial-outline-mm","168x160","--compact-placement","--multiscale-outline"});
+    if(multiscale.exit_code||multiscale.stdout_text.find("larger local solution")==std::string::npos)
+        throw std::runtime_error("multiscale help must disclose local-solution limits");
+    if(run({"board","--multiscale-outline","--multiscale-outline"}).exit_code==0||
+       run({"pcb-stage","--multiscale-outline"}).exit_code==0)
+        throw std::runtime_error("duplicate or unsupported multiscale option accepted");
     for(const auto* value:{"0","1","2","3"})
         if(run({"board","--interior-order",value,"--floorplan-spec","/nonexistent/help-only.json","--compact-placement"}).exit_code)
             throw std::runtime_error("valid candidate options must parse without reading repository during help");

@@ -1,4 +1,5 @@
 #include "floorplan_internal.hpp"
+#include "multiscale_outline_internal.hpp"
 #include <iostream>
 #include <cmath>
 #include <limits>
@@ -35,12 +36,46 @@ void objective_bound() {
             "equal rounded area with preferable width was incorrectly pruned");
     }
 }
+void multiscale_contracts() {
+    for(int span=0;span<=64;++span)for(int seed=0;seed<7;++seed) {
+        const auto run=[&] {
+            std::vector<std::pair<int,int>> calls;
+            int best=40000;
+            floorplan_detail::multiscale_outline_indices(span,[&](int i,int j) {
+                require(i>=0&&j>=0&&i<=span&&j<=span,"multiscale candidate left its window");
+                calls.emplace_back(i,j);
+                const int area=(200-i)*(200-j);
+                const bool fits=(i+j+seed)%7!=0;
+                if(fits&&area<best){best=area;return true;}return false;
+            });
+            int levels=1;for(int step=span;step>1;step/=2)++levels;
+            require(calls.size()<=static_cast<std::size_t>(1+3*(2*span+levels)),"multiscale work bound exceeded");
+            require(calls.front()==std::pair<int,int>{0,0},"rounded origin was not screened first");
+            return calls;
+        };
+        require(run()==run(),"multiscale schedule is not deterministic");
+    }
+    bool island=false;
+    floorplan_detail::multiscale_outline_indices(8,[&](int i,int j){
+        if(i==4&&j==4){island=true;return true;}return false;
+    });
+    require(island,"failed axis moves wrongly prune a feasible diagonal island");
+    int calls=0;bool threw=false;
+    try{floorplan_detail::multiscale_outline_indices(8,[&](int,int)->bool{++calls;throw std::runtime_error("injected");});}
+    catch(const std::runtime_error&){threw=true;}
+    require(threw&&calls==1,"callback failure was swallowed or retried");
+    threw=false;
+    try{floorplan_detail::multiscale_outline_indices(-1,[&](int,int){++calls;return false;});}
+    catch(const std::invalid_argument&){threw=true;}
+    require(threw&&calls==1,"negative span reached candidate callback");
+}
 }
 int main(){try{
     objective_bound();
-    for(const auto dimensions:{FloorplanPoint{100,100},FloorplanPoint{30,30}}) {
+    multiscale_contracts();
+    for(bool multiscale:{false,true})for(const auto dimensions:{FloorplanPoint{100,100},FloorplanPoint{30,30}}) {
         auto in=fixture();auto observer=std::make_shared<FloorplanExperiment>();
-        observer->initial_outline=dimensions;in.experiment=observer;
+        observer->initial_outline=dimensions;observer->multiscale_outline=multiscale;in.experiment=observer;
         std::map<bool,FloorplanAttemptObservation> first;
         observer->attempt_completed=[&](const auto& row){first.emplace(row.punch_free,row);};
         const auto result=build_floorplan(in);
@@ -68,5 +103,8 @@ int main(){try{
     auto observer=std::make_shared<FloorplanExperiment>();observer->initial_outline={{80,80}};fixed.experiment=observer;
     bool rejected=false;try{(void)build_floorplan(fixed);}catch(const FloorplanError&){rejected=true;}
     require(rejected,"fixed outline and starting candidate cannot be confused");
+    observer->initial_outline.reset();observer->multiscale_outline=true;rejected=false;
+    try{(void)build_floorplan(fixed);}catch(const FloorplanError&){rejected=true;}
+    require(rejected,"multiscale search must not silently ignore a fixed outline");
     std::cout<<"PASS validated seed, failed-seed fallback, smaller search, isolation and reproducibility\n";
 }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}

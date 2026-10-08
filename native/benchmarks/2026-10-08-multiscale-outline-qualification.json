@@ -1,0 +1,90 @@
+{
+  "date": "2026-10-08",
+  "base_commit": "bcfbd787",
+  "branch": "codex/two-sided-layout",
+  "change": "Opt-in bounded power-of-two axis/diagonal outline refinement; default complete fine-grid strategy unchanged. No gate or retry ceiling relaxed.",
+  "environment": "macOS 26.6.2 arm64, AppleClang 21, MacOSX27.0 SDK, KiCad 10.0.2",
+  "method": "Three prepared-input profiler repetitions per strategy, off then on, serial on same host using fresh qualified schematics. No concurrent compile/test/qualification. No zone/model reuse; OS/catalog caches uncontrolled. Small fixed-order samples, not a statistical benchmark.",
+  "timing_scope": "model_seconds includes construction with internal checks, excludes input loading, PCB text emission, diagnostics, full gates, audit and rendering. This compares C++ strategies, NOT historical Python or end-to-end speedups.",
+  "compile_seconds": null,
+  "compile_note": "Incremental build succeeded; not separately timed in this batch.",
+  "carrier": {
+    "options": "--compact-search on --interior-order 3 --initial-outline-mm 168x160",
+    "model_seconds_off": [12.640330209, 12.799625375, 12.893769333],
+    "model_seconds_on": [3.965413, 3.959649375, 3.976802750],
+    "median_change_percent": -69.01930420756553,
+    "outer_attempts_off_on": [2194, 120],
+    "reseats_off_on": [140, 18],
+    "reseat_limit": 18,
+    "dimensions_mm": [168, 160],
+    "area_mm2": 26880,
+    "reference_dimensions_mm": [168, 163],
+    "area_change_percent": -1.8404907975460123,
+    "top_bottom_count": [438, 131],
+    "pcb_sha256": "91e3a4bb8c1e216fb7f86d4c8ae526635b0d2e216414602de7391c5d3d748fa5",
+    "hard_red": 0,
+    "hard_margin_min_sum": [3.56, 896.56],
+    "all_repetitions_same_output": true,
+    "qualification": {
+      "output": "/private/tmp/carrier-multiscale-qualified.gpzmOW",
+      "command": "native/bin/schgen board --project carrier --compact-placement --interior-order 3 --initial-outline-mm 168x160 --multiscale-outline --timing -o OUTPUT",
+      "board_ok": true, "complete": true, "mandatory_failures": 0,
+      "sheets": 37, "rendered_views": 8, "front_back_inspected": true,
+      "non_unrouted_drc_errors": 0, "unrouted": 499,
+      "wall_seconds": 241.99, "measured_scope_seconds": 241.947894,
+      "model_seconds": 4.073445, "authoring_audit_seconds": 15.866846,
+      "source_audit_seconds": 152.899316,
+      "sheet_parallel_checks_and_render_wall_seconds": 24.915115,
+      "render3d_seconds": 28.163985,
+      "verdict_sha256": "32df485d397a482f6e8c2c32202af61e85c79bc58d11b1c48b7c789083c8e117"
+    }
+  },
+  "devkit": {
+    "options": "--compact-search off, unseeded",
+    "model_seconds_off": [0.299557209, 0.296066792, 0.296370666],
+    "model_seconds_on": [0.184632958, 0.183208083, 0.183964291],
+    "median_change_percent": -37.927631812252294,
+    "outer_attempts_off_on": [2140, 86],
+    "reseats_off_on": [44, 20], "reseat_limit": 35,
+    "dimensions_mm": [98, 98], "top_bottom_count": [106, 57],
+    "pcb_sha256": "cfa0305491d9c4a771adb130b04c4aec6cc2894542391a5c7c9dca3a68bca3cf",
+    "hard_red": 0, "hard_margin_min_sum": [38.28, 147.52],
+    "all_repetitions_same_output": true,
+    "qualification": {
+      "output": "/private/tmp/devkit-multiscale-qualified.DkUYYs",
+      "command": "native/bin/schgen board --project devkit_mini --multiscale-outline --timing -o OUTPUT",
+      "board_ok": true, "complete": true, "mandatory_failures": 0,
+      "not_applicable_skips": ["manual", "scfw"],
+      "sheets": 12, "rendered_views": 8, "front_back_inspected": true,
+      "non_unrouted_drc_errors": 0, "unrouted": 413,
+      "wall_seconds": 204.95, "measured_scope_seconds": 204.912037,
+      "model_seconds": 0.180185, "authoring_audit_seconds": 17.090168,
+      "source_audit_seconds": 153.809931,
+      "sheet_parallel_checks_and_render_wall_seconds": 7.770635,
+      "render3d_seconds": 16.767982,
+      "verdict_sha256": "a27665fb0a238922d78ab91eef1dd3650af99f0f689b8c69b03f8eccf2c326b5"
+    }
+  },
+  "tests": {
+    "passed": ["native_initial_outline_contracts", "native_initial_outline_cli_contracts", "native_floorplan_contracts", "native_compact_profile_inputs_contracts", "native_floorplan_final_estimate_contracts", "native_floorplan_precision_contracts"],
+    "coverage": "Spans 0..64 with seven jagged feasibility patterns, bounded/repeatable visits, diagonal island despite failed axes, exceptions, invalid options, failed seeds, both-board independent operation accounting, final estimates and ledger mutations.",
+    "repaired_failures": ["Outdated profiler-input loader arity", "Stored schematic stale +3V3_AUX net; test now authors fresh 37-sheet schematic with persistent reference bands", "Missing mkdtemp declaration: added unistd.h"],
+    "full_suite_run": false
+  },
+  "rejected_experiment": {
+    "configuration": "unseeded default carrier placement, multiscale outline",
+    "dimensions_mm": [172, 163], "reference_dimensions_mm": [168, 163],
+    "model_seconds": 2.515351,
+    "decision": "Reject area regression; keep multiscale opt-in, not default. Local search is not exhaustive or globally optimal."
+  },
+  "limitations": [
+    "Both boards retain nonmandatory return_path, golden and contract_coverage_lint FAIL reports; no waivers introduced.",
+    "Carrier exactly at reseat ceiling 18; no retry headroom.",
+    "Off screens exceed retry limits and are not qualified builds despite matching PCB geometry.",
+    "168x160 is an existing separately qualified candidate, not a further size improvement caused by this search change.",
+    "Bottom component count is not area utilisation; assembly/thermal unknowns remain.",
+    "Routing out of scope; no fabrication readiness claim.",
+    "Full wall time dominated by source auditing; historical matched-workload Python comparison remains separate and incomplete."
+  ],
+  "logs": ["native/build/carrier-multiscale-matched-off.log", "native/build/carrier-multiscale-matched-on.log", "native/build/devkit-multiscale-matched-off.log", "native/build/devkit-multiscale-matched-on.log", "native/build/carrier-multiscale-qualification.log", "native/build/devkit-multiscale-qualification.log"]
+}

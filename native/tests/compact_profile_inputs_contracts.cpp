@@ -4,6 +4,9 @@
 #undef main
 #include "historical_input_contracts.hpp"
 #include "pcb_placement_requirements.hpp"
+#include "schgen/board_schematic.hpp"
+#include <cstdlib>
+#include <unistd.h>
 
 namespace {
 void profile_option_contracts() {
@@ -25,6 +28,15 @@ void profile_option_contracts() {
     }
     const auto valid=options({"profile","--repo",".","--compact-search","off","--outline-mm","168x160.5"});
     const auto seeded=options({"profile","--repo",".","--compact-search","on","--initial-outline-mm","168x159"});
+    if(options({"profile","--repo",".","--compact-search","off"}).multiscale_outline||
+       !options({"profile","--repo",".","--compact-search","off","--multiscale-outline","on"}).multiscale_outline)
+        throw std::runtime_error("multiscale default/opt-in mismatch");
+    for(const auto& args:std::vector<std::vector<std::string>>{
+        {"profile","--repo",".","--compact-search","off","--multiscale-outline","typo"},
+        {"profile","--repo",".","--compact-search","off","--multiscale-outline","on","--outline-mm","168x160"}}) {
+        bool rejected=false;try{(void)options(args);}catch(const std::invalid_argument&){rejected=true;}
+        if(!rejected)throw std::runtime_error("invalid multiscale profile options accepted");
+    }
     if(seeded.outline||seeded.initial_outline!=schgen::FloorplanPoint{168,159})throw std::runtime_error("seed confused with fixed outline");
     bool mixed=false;
     try{(void)options({"profile","--repo",".","--compact-search","on","--outline-mm","168x159","--initial-outline-mm","168x160"});}
@@ -90,8 +102,26 @@ int main(int argc, char** argv) {
         if (argc != 2) throw std::runtime_error("usage: profile-inputs REPOSITORY");
         profile_option_contracts();
         const auto paths = schgen::resolve_project_paths(argv[1], "carrier");
-        const auto defaults = load(paths, {}, false);
-        const auto compact = load(paths, {}, true);
+        auto pattern=(std::filesystem::temp_directory_path()/"profile-inputs.XXXXXX").string();
+        const auto created=::mkdtemp(pattern.data());
+        if(!created)throw std::runtime_error("private profile schematic scratch creation failed");
+        const std::filesystem::path scratch=created;
+        std::cout<<"fresh schematic scratch="<<scratch<<'\n';
+        const auto index=schgen::load_sheet_index(paths);
+        std::vector<schgen::BoardSheetInput> inputs;
+        for(const auto& circuit:schgen::load_project_circuits(paths)) {
+            const auto band=std::find_if(index.begin(),index.end(),[&](const auto& row){return row.first==circuit.name;});
+            if(band==index.end())throw std::runtime_error("missing persistent sheet reference band");
+            inputs.push_back({circuit.circuit,band->second,std::nullopt});
+        }
+        schgen::SymbolLibrary library(paths.repository_root);
+        schgen::BoardSchematicOptions schematic_options;
+        schematic_options.root_name="Zynq_Carrier";schematic_options.sheet_subdir="schematic";
+        schematic_options.reports_dir=scratch/"reports";
+        const auto schematic=schgen::build_board_schematic(inputs,library,scratch/"generated",schematic_options);
+        if(!schematic.ok())throw std::runtime_error("fresh profile schematic failed: "+schematic.report);
+        const auto defaults = load(paths, {}, false, schematic.root_path);
+        const auto compact = load(paths, {}, true, schematic.root_path);
         reviewed_profile_identity(defaults.input);
         reviewed_profile_identity(compact.input);
         if (defaults.input.floorplan.compact_search || !defaults.input.owned_groups.empty() ||

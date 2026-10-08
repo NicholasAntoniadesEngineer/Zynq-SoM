@@ -63,6 +63,7 @@ struct Options {
     bool allow_missing = false, qualified_refs = false, no_ngspice = false, keep = false;
     bool no_render = false, timing = false, conservative_only = false;
     bool compact_search = false;
+    bool multiscale_outline = false;
     std::optional<std::pair<double,double>> initial_outline;
     std::optional<fs::path> floorplan_spec;
     std::optional<int> interior_order;
@@ -84,6 +85,10 @@ Options parse(int argc, char** argv) {
         const std::string arg = argv[i];
         if (project_command(arg) && out.command.empty()) { out.command = arg; continue; }
         if(arg=="--help"||arg=="-h"){out.help=true;continue;}
+        if(arg=="--multiscale-outline"){
+            if(!seen.insert(arg).second)throw ProjectError("duplicate option "+arg);
+            out.multiscale_outline=true;continue;
+        }
         if(arg=="--compact-placement"){
             if(!seen.insert(arg).second)throw ProjectError("duplicate option "+arg);
             out.compact_search=true;continue;
@@ -171,6 +176,7 @@ Options parse(int argc, char** argv) {
         if(out.command=="w12-stageprobe")allowed.insert("--cons-only");
     } else if (out.command == "board") {
         allowed.insert("--compact-placement");
+        allowed.insert("--multiscale-outline");
         allowed.insert("--initial-outline-mm");
         allowed.insert("--floorplan-spec");
         allowed.insert("--interior-order");
@@ -255,11 +261,12 @@ std::optional<int> run_project_command(int argc, char** argv) {
         if(options.command=="build"||options.command=="subsystem-new")std::cout<<" NAME";
         else if(experiment_command(options.command)&&options.command!="dump-circuits")std::cout<<(options.command=="w11-sweep"?" MM":" TAG")<<" [SHEET ...]";
         std::cout<<" [options]\nOptions:\n  --help, -h\n";
-        const std::set<std::string> flags={"--no-render","--timing","--cons-only","--allow-missing","--qualified-refs","--no-ngspice","--keep","--compact-placement"};
+        const std::set<std::string> flags={"--no-render","--timing","--cons-only","--allow-missing","--qualified-refs","--no-ngspice","--keep","--compact-placement","--multiscale-outline"};
         for(const auto& option:options.help_options)std::cout<<"  "<<option<<(flags.count(option)?"":" VALUE")<<(option=="--output"?" (alias -o)":"")<<'\n';
         if(options.command=="nets"||options.command=="devkit"||options.command=="board-schematic"||options.command=="pcb-stage")std::cout<<"--output is required.\n";
         if(options.command=="devkit")std::cout<<"Builds the four-sheet example, not the twelve-sheet devkit_mini project.\n";
         if(options.command=="board")std::cout<<"--initial-outline-mm WIDTHxHEIGHT: re-evaluate a starting candidate, then continue bounded optimisation. Not a fixed outline or cached acceptance; conflicts with a fixed project outline. All gates remain active.\n";
+        if(options.command=="board")std::cout<<"--multiscale-outline: opt-in bounded axis/diagonal refinement; may stop at a larger local solution. Use a validated starting candidate when available. All gates remain active; fixed outlines conflict.\n";
         if(options.command=="board")std::cout<<"--floorplan-spec PATH: read an explicit candidate specification without editing the project default.\n--interior-order 0|1|2|3: use a single connectivity/area/scarcity/constraint order; no alternate-order retries. Diagnostic strategy selection, not cached acceptance. All gates remain active.\n";
         if(options.command=="chir-rung"||options.command=="w11-sweep")std::cout<<"Publishes board artifacts; restores input spec and fallback baseline. Diagnostic pass=False is not a successful board gate.\n";
         return 0;
@@ -386,10 +393,11 @@ std::optional<int> run_project_command(int argc, char** argv) {
         build.native_policy = true;
         build.pcb.compact_search = options.compact_search;
         build.pcb.floorplan_spec = options.floorplan_spec;
-        if(options.initial_outline || options.interior_order){
+        if(options.initial_outline || options.interior_order || options.multiscale_outline){
             auto experiment=std::make_shared<FloorplanExperiment>();
             experiment->initial_outline=options.initial_outline;
             experiment->interior_order=options.interior_order;
+            experiment->multiscale_outline=options.multiscale_outline;
             build.pcb.experiment=std::move(experiment);
         }
         build.extraction.kicad_cli = options.kicad_cli;

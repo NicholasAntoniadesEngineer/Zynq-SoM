@@ -1,5 +1,6 @@
 #include "floorplan_internal.hpp"
 #include "schgen/precision_ops.hpp"
+#include "multiscale_outline_internal.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -368,13 +369,18 @@ FloorplanPlan Engine::run() {
             checked_quantization_add(plan.accounting.quantization_engagements, "outline_fine_grid");
             hs.push_back(fine_shrink(h0,k));
         }
-        for (double w:ws) for (double h:hs) {
+        auto visit=[&](int i,int j) {
+            const double w=ws[static_cast<std::size_t>(i)],h=hs[static_cast<std::size_t>(j)];
             ++tally["generated"];
-            if (w<=0 || h<=0 || w<h) { ++tally["reject_aspect"]; continue; }
-            if (w*h>=std::get<1>(*best)*std::get<2>(*best)-1e-6) { ++tally["reject_not_smaller"]; continue; }
-            if (w*h<min_area) { ++tally["reject_min_area"]; continue; }
-            if (auto candidate=evaluate(w,h)) best=candidate;
-        }
+            if (w<=0 || h<=0 || w<h) { ++tally["reject_aspect"]; return false; }
+            if (w*h>=std::get<1>(*best)*std::get<2>(*best)-1e-6) { ++tally["reject_not_smaller"]; return false; }
+            if (w*h<min_area) { ++tally["reject_min_area"]; return false; }
+            if (auto candidate=evaluate(w,h)) { best=candidate;return true; }
+            return false;
+        };
+        if(in.experiment&&in.experiment->multiscale_outline)
+            multiscale_outline_indices(refine_span,visit);
+        else for(int i=0;i<=refine_span;++i)for(int j=0;j<=refine_span;++j)visit(i,j);
         // Keep the screened layout, not just its dimensions. A later failed
         // candidate must not become the starting state for final refinement.
         restore(*best_plan); side_offers=std::move(best_offers);
@@ -414,6 +420,8 @@ FloorplanPlan Engine::run() {
         " mm (the smallest feasible board FOUND by this bounded aspect/grid search and greedy packing order, not a global minimum; holding the REAL 2-sided packed blocks with the estimated cross-subsystem airwire "+number(std::get<3>(best),0)+
         " <= LAW-5 budget "+number(std::get<4>(best),0)+" mm — honest routing headroom, the gate is not relaxed), SoM "+
         outline_text(plan.som.w,plan.som.h)+" centered";
+    if(in.experiment&&in.experiment->multiscale_outline)
+        plan.outline_note+="; opt-in multiscale axis/diagonal refinement, not the complete fine-grid scan; may stop at a larger local solution";
     if(in.experiment&&in.experiment->initial_outline) {
         const auto [w,h]=*in.experiment->initial_outline;
         plan.outline_note+="; supplied initial candidate "+outline_text(w,h)+

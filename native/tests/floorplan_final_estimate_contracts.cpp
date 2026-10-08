@@ -44,7 +44,7 @@ int main(int argc,char** argv) {
     try {
         require(argc==2,"usage: final-estimate REPOSITORY");
         auto fixture=placement_fixture::load(argv[1],"devkit_mini");
-        for(bool compact:{false,true})for(bool seeded:{false,true}) {
+        for(bool multiscale:{false,true})for(bool compact:{false,true})for(bool seeded:{false,true}) {
             fixture.input.floorplan.compact_search=compact;
             const auto zones=build_pcb_zone_geometry(fixture.input);
             auto input=prepare_pcb_floorplan(fixture.input,zones);
@@ -52,6 +52,7 @@ int main(int argc,char** argv) {
             std::array<FloorplanPlan,2> passes;
             std::array<int,2> observed{};
             auto observer=std::make_shared<FloorplanExperiment>();
+            observer->multiscale_outline=multiscale;
             if(seeded)observer->initial_outline={{98,98}};
             input.experiment=observer;
             floorplan_detail::Engine engine(input);
@@ -76,7 +77,7 @@ int main(int argc,char** argv) {
                 try{verify(input,changed,passes);}catch(const std::runtime_error&){rejected=true;}
                 require(rejected,"stale/mutated ledger value escaped");
             }
-            std::cout<<"final estimate compact="<<compact<<" seeded="<<seeded<<" actual="
+            std::cout<<"final estimate multiscale="<<multiscale<<" compact="<<compact<<" seeded="<<seeded<<" actual="
                 <<experiment_metric_contracts::estimate(input,result)<<" PASS\n";
         }
     } catch(const std::exception& e) {std::cerr<<e.what()<<'\n';return 1;}

@@ -41,6 +41,9 @@ struct FloorplanExperiment {
     // Optional starting candidate, re-evaluated under each reservation policy.
     // Never a fixed outline, cached proof or permission to bypass any gate.
     std::optional<std::pair<double,double>> initial_outline;
+    // Opt-in local axis/diagonal multiscale refinement, not a global optimum.
+    // Retains the screened incumbent and every executed retry; no gate waiver.
+    bool multiscale_outline = false;
     // Completed bounded edge searches, including unsuccessful candidates.
     std::function<void(std::size_t, char, double)> edge_translation_completed;
     // Every completed victim trial, including failed trials. Successful-event

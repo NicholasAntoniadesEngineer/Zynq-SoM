@@ -29,6 +29,7 @@ struct Options {
     int runs = 1;
     bool constraint_first = false;
     bool edge_translation = false;
+    bool multiscale_outline = false;
     std::optional<int> interior_order;
     std::optional<FloorplanPoint> outline;
     std::optional<FloorplanPoint> initial_outline;
@@ -42,6 +43,7 @@ void help() {
         "  [--edge-translation off|on] (opt-in bounded edge repair, requires --compact-search on)\n"
         "  [--outline-mm WIDTHxHEIGHT] (explicit diagnostic outline; skips automatic sizing search)\n"
         "  [--initial-outline-mm WIDTHxHEIGHT] (validated starting candidate for automatic sizing)\n"
+        "  [--multiscale-outline off|on] (local axis/diagonal refinement; can miss smaller grid candidates)\n"
         "cold: reload/validate circuits, relink, re-extract netlist and resolve inputs per repetition.\n"
         "prepared: load once; reuse only parsed PcbPlacementInput across repetitions.\n"
         "both: off then on using the same compact-capable input each repetition (fixed order; not randomized).\n"
@@ -83,6 +85,10 @@ Options parse(int argc, char** argv) {
             const FloorplanPoint dimensions{dimension(value.substr(0,separator)),dimension(value.substr(separator+1))};
             if(arg=="--outline-mm")out.outline=dimensions;else out.initial_outline=dimensions;
         }
+        else if (arg == "--multiscale-outline") {
+            if(value!="on"&&value!="off")throw std::invalid_argument("multiscale-outline must be off|on");
+            out.multiscale_outline=value=="on";
+        }
         else if (arg == "--constraint-first") {
             if (value != "on" && value != "off") throw std::invalid_argument("constraint-first must be off|on");
             out.constraint_first = value == "on";
@@ -104,6 +110,7 @@ Options parse(int argc, char** argv) {
         throw std::invalid_argument("constraint-first requires --compact-search on");
     if(out.edge_translation&&out.compact!="on")throw std::invalid_argument("edge-translation requires --compact-search on");
     if(out.outline&&out.initial_outline)throw std::invalid_argument("initial-outline-mm cannot be combined with outline-mm");
+    if(out.outline&&out.multiscale_outline)throw std::invalid_argument("multiscale-outline conflicts with fixed outline-mm");
     if(out.interior_order&&out.constraint_first)throw std::invalid_argument("single interior-order conflicts with constraint-first portfolio");
     return out;
 }
@@ -202,7 +209,7 @@ PcbPlacementInput trial_input(const PcbPlacementInput& source,bool compact,
 std::string trial(const PcbPlacementInput& source, bool compact, int run, int generation,
                   bool constraint_first = false,const std::optional<FloorplanPoint>& outline=std::nullopt,bool edge_translation=false,
                   const std::optional<FloorplanPoint>& initial_outline=std::nullopt,
-                  const std::optional<int>& interior_order=std::nullopt) {
+                  const std::optional<int>& interior_order=std::nullopt,bool multiscale_outline=false) {
     const auto copy_start = Clock::now();
     auto input = trial_input(source,compact,outline);
     const auto copy_seconds = seconds(copy_start);
@@ -215,6 +222,8 @@ std::string trial(const PcbPlacementInput& source, bool compact, int run, int ge
     floor->compact_edge_translation = edge_translation;
     floor->initial_outline=initial_outline;
     floor->interior_order=interior_order;
+    floor->multiscale_outline=multiscale_outline;
+    std::cout<<"multiscale_outline="<<multiscale_outline<<'\n';
     if(interior_order)std::cout<<"single_interior_order="<<*interior_order<<" alternate_order_retries=disabled\n";
     std::size_t edge_candidates=0,edge_repairs=0;
     std::vector<FloorplanReseatObservation> reseats;
@@ -345,7 +354,7 @@ int main(int argc, char** argv) {
             const int generation = options.inputs == "prepared" ? 1 : run;
             for (const bool compact : {false, true}) {
                 if ((compact && options.compact == "off") || (!compact && options.compact == "on")) continue;
-                const auto hash = trial(prepared->input, compact, run, generation, options.constraint_first,options.outline,options.edge_translation,options.initial_outline,options.interior_order);
+                const auto hash = trial(prepared->input, compact, run, generation, options.constraint_first,options.outline,options.edge_translation,options.initial_outline,options.interior_order,options.multiscale_outline);
                 auto [it, inserted] = first_hash.emplace(compact, hash);
                 if (!inserted && it->second != hash) throw std::runtime_error("repeat PCB bytes changed; investigate input drift/nondeterminism");
                 std::cout << "repeat compact_search=" << compact << " same_as_first=" << (!inserted ? "true" : "first") << '\n';
