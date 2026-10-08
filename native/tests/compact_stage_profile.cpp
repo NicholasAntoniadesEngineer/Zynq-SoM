@@ -29,6 +29,7 @@ struct Options {
     int runs = 1;
     bool constraint_first = false;
     bool edge_translation = false;
+    std::optional<int> interior_order;
     std::optional<FloorplanPoint> outline;
     std::optional<FloorplanPoint> initial_outline;
 };
@@ -37,6 +38,7 @@ void help() {
         "  [--runs N] [--input-mode cold|prepared] [--kicad-cli PATH]\n"
         "  [--schematic PATH] (use a freshly qualified schematic instead of the stored project output)\n"
         "  [--constraint-first off|on] (opt-in candidate, requires --compact-search on)\n"
+        "  [--interior-order 0|1|2|3] (single connectivity/area/scarcity/constraint order, no order retries)\n"
         "  [--edge-translation off|on] (opt-in bounded edge repair, requires --compact-search on)\n"
         "  [--outline-mm WIDTHxHEIGHT] (explicit diagnostic outline; skips automatic sizing search)\n"
         "  [--initial-outline-mm WIDTHxHEIGHT] (validated starting candidate for automatic sizing)\n"
@@ -63,6 +65,10 @@ Options parse(int argc, char** argv) {
         else if (arg == "--kicad-cli") out.kicad = value;
         else if (arg == "--compact-search") out.compact = value;
         else if (arg == "--input-mode") out.inputs = value;
+        else if (arg == "--interior-order") {
+            if(value.size()!=1 || value[0]<'0' || value[0]>'3')throw std::invalid_argument("interior-order must be 0|1|2|3");
+            out.interior_order=value[0]-'0';
+        }
         else if (arg == "--outline-mm"||arg=="--initial-outline-mm") {
             const auto separator=value.find('x');
             if(separator==std::string::npos || separator==0 || separator+1==value.size() ||
@@ -98,6 +104,7 @@ Options parse(int argc, char** argv) {
         throw std::invalid_argument("constraint-first requires --compact-search on");
     if(out.edge_translation&&out.compact!="on")throw std::invalid_argument("edge-translation requires --compact-search on");
     if(out.outline&&out.initial_outline)throw std::invalid_argument("initial-outline-mm cannot be combined with outline-mm");
+    if(out.interior_order&&out.constraint_first)throw std::invalid_argument("single interior-order conflicts with constraint-first portfolio");
     return out;
 }
 struct LoadResult {
@@ -194,7 +201,8 @@ PcbPlacementInput trial_input(const PcbPlacementInput& source,bool compact,
 }
 std::string trial(const PcbPlacementInput& source, bool compact, int run, int generation,
                   bool constraint_first = false,const std::optional<FloorplanPoint>& outline=std::nullopt,bool edge_translation=false,
-                  const std::optional<FloorplanPoint>& initial_outline=std::nullopt) {
+                  const std::optional<FloorplanPoint>& initial_outline=std::nullopt,
+                  const std::optional<int>& interior_order=std::nullopt) {
     const auto copy_start = Clock::now();
     auto input = trial_input(source,compact,outline);
     const auto copy_seconds = seconds(copy_start);
@@ -206,6 +214,8 @@ std::string trial(const PcbPlacementInput& source, bool compact, int run, int ge
     floor->compact_constraint_first = constraint_first;
     floor->compact_edge_translation = edge_translation;
     floor->initial_outline=initial_outline;
+    floor->interior_order=interior_order;
+    if(interior_order)std::cout<<"single_interior_order="<<*interior_order<<" alternate_order_retries=disabled\n";
     std::size_t edge_candidates=0,edge_repairs=0;
     std::vector<FloorplanReseatObservation> reseats;
     floor->reseat_completed=[&](const auto& row){reseats.push_back(row);};
@@ -277,6 +287,11 @@ std::string trial(const PcbPlacementInput& source, bool compact, int run, int ge
         for (const auto& [name, value] : d.inputs) { std::cout << ' ' << name << '='; scalar(value); }
         std::cout << '\n';
     }
+    for(const auto& d:result.floorplan.plan.accounting.decisions)if(d.name=="sizing_winner") {
+        std::cout<<"sizing_winner";
+        for(const auto& [name,value]:d.inputs){std::cout<<' '<<name<<'=';scalar(value);}
+        std::cout<<'\n';
+    }
     receipt("zone_subset_of_model", result.zone_accounting.quantization_engagements);
     receipt("floorplan_includes_zone", result.floorplan.plan.accounting.quantization_engagements);
     receipt("placement_only", result.placement_accounting.quantization_engagements);
@@ -330,7 +345,7 @@ int main(int argc, char** argv) {
             const int generation = options.inputs == "prepared" ? 1 : run;
             for (const bool compact : {false, true}) {
                 if ((compact && options.compact == "off") || (!compact && options.compact == "on")) continue;
-                const auto hash = trial(prepared->input, compact, run, generation, options.constraint_first,options.outline,options.edge_translation,options.initial_outline);
+                const auto hash = trial(prepared->input, compact, run, generation, options.constraint_first,options.outline,options.edge_translation,options.initial_outline,options.interior_order);
                 auto [it, inserted] = first_hash.emplace(compact, hash);
                 if (!inserted && it->second != hash) throw std::runtime_error("repeat PCB bytes changed; investigate input drift/nondeterminism");
                 std::cout << "repeat compact_search=" << compact << " same_as_first=" << (!inserted ? "true" : "first") << '\n';

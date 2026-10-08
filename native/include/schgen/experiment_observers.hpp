@@ -34,6 +34,10 @@ struct FloorplanExperiment {
     // Invocation-owned so independent/concurrent solves cannot change each other.
     bool compact_constraint_first = false;
     bool compact_edge_translation = false;
+    // Diagnostic single-order ablation, independent of compact shape selection:
+    // 0 connectivity, 1 area, 2 shape scarcity, 3 hard-constraint incidence.
+    // No alternate-order retries are executed when explicitly selected.
+    std::optional<int> interior_order;
     // Optional starting candidate, re-evaluated under each reservation policy.
     // Never a fixed outline, cached proof or permission to bypass any gate.
     std::optional<std::pair<double,double>> initial_outline;

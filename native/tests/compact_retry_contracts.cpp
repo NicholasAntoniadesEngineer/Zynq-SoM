@@ -173,6 +173,37 @@ void reseat_offer_rollback_contract(){
     require(rejected_after_seating>0,"rollback witness must seat incoming and fail displaced block");
     std::cout<<"reseat offer rollback PASS rejected_after_seating="<<rejected_after_seating<<'\n';
 }
+void single_order_contract(){
+    std::size_t interrupted_trials=0;
+    const Case c{70,50,{{29,16,3,4},{12,30,2,0},{30,18,3,2},{31,26,2,3},{7,7,1,3},{31,9,2,1}}};
+    for(bool compact:{false,true})for(int order=0;order<4;++order){
+        auto in=input();in.compact_search=compact;
+        auto experiment=std::make_shared<FloorplanExperiment>();experiment->interior_order=order;in.experiment=experiment;
+        const auto direct=trial(in,c,order);
+        Engine e(in);setup(e,c);e.compact_order=2;
+        entries=0;observing=true;const bool ok=e.attempt_pack(false);observing=false;
+        require(ok==direct.ok&&equal(floorplan_plan_json(e.plan),floorplan_plan_json(direct.plan))&&offers(e)==direct.side,
+            "single-order adapter differs from isolated trial");
+        require(entries==direct.calls&&entries==1&&e.compact_order==2,"single-order repeated or leaked order state");
+        experiment->reseat_completed=[](const auto&){throw std::runtime_error("single-order stop");};
+        Engine interrupted(in);setup(interrupted,c);interrupted.compact_order=2;
+        try{interrupted.attempt_pack(false);}catch(const std::runtime_error& error){
+            require(std::string(error.what())=="single-order stop","single-order exception identity changed");
+            ++interrupted_trials;
+            require(interrupted.compact_order==2,"exception leaked forced order state");
+        }
+    }
+    require(interrupted_trials>0,"single-order exception witness never executed");
+    for(int invalid:{-1,4}){
+        FloorplanExperiment experiment;experiment.interior_order=invalid;bool rejected=false;
+        try{validate_floorplan_experiment(experiment);}catch(const FloorplanError&){rejected=true;}
+        require(rejected,"invalid single order accepted");
+    }
+    FloorplanExperiment conflict;conflict.interior_order=0;conflict.compact_constraint_first=true;
+    bool rejected=false;try{validate_floorplan_experiment(conflict);}catch(const FloorplanError&){rejected=true;}
+    require(rejected,"ambiguous order portfolio accepted");
+    std::cout<<"single-order diagnostic contracts PASS\n";
+}
 }
 extern "C" void __cyg_profile_func_enter(void* fn,void*){if(observing&&fn==reinterpret_cast<void*>(&native_run_overflow_tol))++entries;}
 extern "C" void __cyg_profile_func_exit(void*,void*){}
@@ -192,6 +223,7 @@ int main(){try{
     exception_contract();
     reseat_trace_contract();
     reseat_offer_rollback_contract();
+    single_order_contract();
     for(bool first:{false,true})for(bool translate:{false,true})invariant_edge_failure(first,translate);
     std::cout<<"compact retry contracts PASS\n";return 0;
 }catch(const std::exception& e){observing=false;std::cerr<<e.what()<<'\n';return 1;}}

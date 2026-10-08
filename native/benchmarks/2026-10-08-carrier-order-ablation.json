@@ -1,0 +1,43 @@
+{
+  "base_commit": "15083ce4",
+  "purpose": "Separate interior ordering from compact shape selection for bounded screening; production defaults unchanged.",
+  "command_template": "native/build/fast/schgen_compact_stage_profile --repo REPO --project carrier --compact-search off --runs 1 --interior-order ORDER --outline-mm 168x162 --schematic /private/tmp/carrier-ref-board.ccIYvU/Zynq_Carrier.kicad_sch --kicad-cli /Applications/KiCad/KiCad.app/Contents/MacOS/kicad-cli",
+  "single_order_semantics": "0 connectivity, 1 area, 2 shape scarcity, 3 enforced hard-constraint incidence. Exactly one order per pack call; no alternate-order retry. Geometric victim retries remain executed and accounted. Prior order state restored on return or exception.",
+  "fixed_outline": {
+    "dimensions_mm": [168,162],
+    "connectivity_area_and_scarcity": "Each failed actual packing; no candidate emitted.",
+    "constraint_first": {
+      "result": "REJECTED: final estimated wiring exceeds budget despite passing screened placement contract and flow checks.",
+      "top": 429,
+      "bottom": 140,
+      "pcb_sha256": "4157140dd413ba26e3baf55860811dee42faf4ac9764b8b3553daeab2c6a1dfa",
+      "hard_red": 0,
+      "hard_margin_min": 3.83,
+      "successful_reseats": 6,
+      "estimated_cross_subsystem_wiring_mm_rounded": 18776.1,
+      "budget_mm_rounded": 16332.3,
+      "headroom_mm_rounded": -2443.8
+    }
+  },
+  "automatic_constraint_first": {
+    "result": "REJECTED: larger than reference and one hard-placement failure.",
+    "dimensions_mm": [177,160],
+    "top": 415,
+    "bottom": 154,
+    "successful_reseats": 165,
+    "hard_red": 1,
+    "hard_margin_min": -28.04,
+    "pcb_sha256": "5ac2de7258f59fcc7e6637b65a80c2a09c9187c6bb69a4a4b0776a94890a2d46",
+    "initial_outline_control": "Re-evaluating 168x162 as initial candidate produced the identical final PCB; budget rejection count increased by one per reservation-policy pass. Fixed-outline mode does not enforce the sizing budget itself; full board gate remains authoritative."
+  },
+  "decision": "Do not promote global hard-constraint-count ordering. Preserve connectivity-aware incumbent and investigate constraint priority without sacrificing connectivity/anchor structure. No expensive render or full audit for rejected candidates.",
+  "logs_sha256": {
+    "native/build/carrier-order-0-168x162.log": "988855953943b56095412ff9544834b5e33dc2390b88d524c4ddd84c87579156",
+    "native/build/carrier-order-1-168x162.log": "73724a5cd36d362494f40b7559f061f17da9b28dc5cb47ee50e8e81adcb6c1c9",
+    "native/build/carrier-order-2-168x162.log": "01cef67dab08eed85ddc77e0a49f0d89a1dc4dfc425e8669f7c6c54609a7347b",
+    "native/build/carrier-order-3-budget-check.log": "d3fa8ce0f4d1e909ac0bd4f1fc33ad72cd4628fd2560e13fe0f8a51a70f0c458",
+    "native/build/carrier-order-3-auto.log": "e97bd41598fd3e054772db8df95a27cb441bcfd042eb67ac7569b2155ace66bc",
+    "native/build/carrier-order-3-seeded.log": "873d804147c359970700cc61008ec064426af3e81726164be8e363209f3dda0c"
+  },
+  "limitations": ["Diagnostic construction only, not full board qualification", "No production default changed", "No speedup or Python comparison claimed", "Existing carrier retry-ceiling failure remains unresolved"]
+}

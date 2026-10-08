@@ -63,6 +63,16 @@ PackAnchorIn Engine::anchor_row(const FloorplanBlock& b,
 bool Engine::attempt_pack(bool compact) {
     return run_floorplan_experiment_attempt(in.experiment.get(), plan.punch_free,
         [&] {
+            if(in.experiment && in.experiment->interior_order) {
+                validate_floorplan_experiment(*in.experiment);
+                const int saved_order=compact_order;
+                compact_order=*in.experiment->interior_order;
+                try {
+                    const bool ok=attempt_pack_impl(compact);
+                    compact_order=saved_order;
+                    return ok;
+                } catch(...) {compact_order=saved_order;throw;}
+            }
             if (!in.compact_search) return attempt_pack_impl(compact);
             const auto start=plan;
             const auto offers=side_offers;
@@ -192,9 +202,10 @@ bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure) {
     }
     std::vector<FloorplanBlock*> order,placed;
     for (int i:pack_interior_order(names,tiers,connections,areas)) order.push_back(&plan.interior_blocks[i]);
-    if (in.compact_search && compact_order == 3) {
+    const bool alternate_order=in.compact_search || (in.experiment && in.experiment->interior_order);
+    if (alternate_order && compact_order == 3) {
         sort_constraint_first(order, in.compose.index, zbox);
-    } else if (in.compact_search && compact_order) {
+    } else if (alternate_order && compact_order) {
         // Stable ties retain the established connectivity/priority ordering.
         std::stable_sort(order.begin(),order.end(),[&](const auto* a,const auto* b) {
             if (compact_order==2) {

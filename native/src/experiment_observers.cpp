@@ -9,6 +9,10 @@
 
 namespace schgen {
 void validate_floorplan_experiment(const FloorplanExperiment &experiment) {
+    if(experiment.interior_order && (*experiment.interior_order<0 || *experiment.interior_order>3))
+        throw FloorplanError("experiment: interior order must be in [0,3]");
+    if(experiment.interior_order && experiment.compact_constraint_first)
+        throw FloorplanError("experiment: single interior order conflicts with constraint-first portfolio");
     if(experiment.initial_outline) {
         const auto [w,h]=*experiment.initial_outline;
         if(!std::isfinite(w)||!std::isfinite(h)||w<=0||h<=0||!std::isfinite(w*h))
