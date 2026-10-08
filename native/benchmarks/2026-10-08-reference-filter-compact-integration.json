@@ -40,5 +40,27 @@
     "decision": "Larger than verified incumbent and exceeds existing retry ceiling. No expensive full qualification or rendering warranted; do not adopt this candidate",
     "limitations": "Single instrumented construction screen, not production benchmark or complete hardware qualification. Stage intervals include observer overhead. Internal order/shape trial counts unavailable in profiler summary; actual scalar and fallback ledgers remain recorded in native/build/carrier-seeded-shape-screen.log"
   },
+  "fixed_outline_diagnostic": {
+    "command_change": "Replace --initial-outline-mm 168x163 with --outline-mm 168x163; all other screen arguments unchanged",
+    "status": "REJECTED_NO_ACCEPTANCE",
+    "model_seconds": 6.936704541,
+    "pcb_text_emit_seconds": 0.031364417,
+    "width_mm": 168,
+    "height_mm": 163,
+    "top_instances": 416,
+    "bottom_instances": 153,
+    "estimated_cross_length": 16826.4,
+    "cross_length_budget": 16382.6,
+    "headroom": -443.8,
+    "reseat_events": 30,
+    "candidate_cap_truncation_events": 116,
+    "punch_free_plan_rejected_events": 1,
+    "hard_red": 0,
+    "hard_margin_min": 3.33,
+    "placement_contract_ok": true,
+    "placement_flow_ok": true,
+    "pcb_sha256": "97f8215bf93879c26e5ef1472beba3628bab59bc6ea374d3bec37bcb6ed00cff",
+    "interpretation": "Compact geometry can construct at the incumbent outline, but its selected layout exceeds the connectivity-length budget and retry ceiling. Local shape availability does not imply a better globally acceptable plan. The fixed-outline diagnostic intentionally bypasses automatic size selection, not final acceptance gates"
+  },
   "remaining_work": "Improve search strategy and preserve verified incumbents across strategies rather than accepting the larger compact-mode result; obtain a smaller hardware-safe carrier and complete full qualification. No fabrication-readiness claim"
 }
