@@ -73,6 +73,12 @@ void check(const Occupancy& occ,const std::vector<SeatShapeCand>& c,double ax=8,
     const auto hits=seat_shape_candidates_on_current_board(occ,ax,ay,c,30,30,1,&now);
     require(signature(reference)==signature(hits),"ordered full hits changed");
     require(now==expected(occ,c,ax,ay),"receipts differ from actual unique queries plus every successful shape scalar");
+    QuantizationCounts borrowed_sides;
+    require(signature(sides)==signature(seat_shape_sides_on_current_board(occ,ax,ay,c,30,30,1,&borrowed_sides)),
+            "borrowed default side selection changed");
+    require(borrowed_sides==now,"borrowed default receipts differ from independent unique-query oracle");
+    require(signature(sides)==signature(seat_shape_sides_on_current_board(occ,ax,ay,c,30,30,1,nullptr)),
+            "borrowed default null sink changed sides");
     require(signature(hits)==signature(seat_shape_candidates_on_current_board(occ,ax,ay,c,30,30,1,nullptr)),"null sink changed hits");
     require(signature(hits)==signature(seat_shape_candidates_on_current_board(occ,ax,ay,c,30,30,1,&again))&&now==again,"cross-invocation result reuse");
     std::map<std::string,bool> unique;
@@ -163,6 +169,9 @@ void run() {
         try{(void)seat_shape_candidates(copy,8,8,{a,b},30,30,1,&baseline);}catch(const std::overflow_error& e){e1=e.what();}
         try{(void)seat_shape_candidates_on_current_board(copy,8,8,{a,b},30,30,1,&overflow);}catch(const std::overflow_error& e){e2=e.what();}
         require(!e1.empty()&&e1==e2&&baseline==overflow,"memo suppressed current overflow or prefix");
+        overflow={{name,std::numeric_limits<std::size_t>::max()-once.at(name)}};e2.clear();
+        try{(void)seat_shape_sides_on_current_board(copy,8,8,{a,b},30,30,1,&overflow);}catch(const std::overflow_error& e){e2=e.what();}
+        require(e1==e2&&baseline==overflow,"default memo suppressed current overflow or prefix");
     }
     auto malformed=a;malformed.win_x0=std::numeric_limits<double>::quiet_NaN();
     baseline.clear();overflow.clear();

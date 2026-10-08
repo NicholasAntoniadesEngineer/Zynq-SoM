@@ -227,7 +227,7 @@ bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure) {
         }
         auto hits=in.compact_search
             ? seat_shape_candidates_on_current_board(occ,a.first,a.second,cands,bw,bh,clear,counts)
-            : seat_shape_sides(occ,a.first,a.second,cands,bw,bh,clear,counts);
+            : seat_shape_sides_on_current_board(occ,a.first,a.second,cands,bw,bh,clear,counts);
         if (hits.empty()) return false;
         std::sort(hits.begin(),hits.end(),[](const auto& a,const auto& b){return std::tie(a.dist_key,a.index)<std::tie(b.dist_key,b.index);});
         auto best=hits.front();

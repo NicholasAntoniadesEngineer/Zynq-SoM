@@ -239,6 +239,11 @@ std::vector<SeatShapeHit> seat_shape_candidates(const Occupancy& occupancy,
 namespace floorplan_detail {
 // Internal bridge used only with the board dimensions of the supplied grid.
 // No reference or search result cache survives this call or an occupancy edit.
+std::vector<SeatShapeHit> seat_shape_sides_on_current_board(const Occupancy& occupancy,
+    double anchor_x, double anchor_y, const std::vector<SeatShapeCand>& cands,
+    double board_w, double board_h, double clear, QuantizationCounts* counts) {
+    return seat_shapes(occupancy,anchor_x,anchor_y,cands,board_w,board_h,clear,counts,false,true);
+}
 std::vector<SeatShapeHit> seat_shape_candidates_on_current_board(const Occupancy& occupancy,
     double anchor_x, double anchor_y, const std::vector<SeatShapeCand>& cands,
     double board_w, double board_h, double clear, QuantizationCounts* counts) {

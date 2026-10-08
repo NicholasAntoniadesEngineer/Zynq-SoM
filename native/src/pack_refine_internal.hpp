@@ -49,4 +49,7 @@ inline bool same_query_geometry(const SeatShapeCand& a, const SeatShapeCand& b) 
 std::vector<SeatShapeHit> seat_shape_candidates_on_current_board(const Occupancy&,
     double, double, const std::vector<SeatShapeCand>&, double, double, double,
     QuantizationCounts*);
+std::vector<SeatShapeHit> seat_shape_sides_on_current_board(const Occupancy&,
+    double, double, const std::vector<SeatShapeCand>&, double, double, double,
+    QuantizationCounts*);
 }
