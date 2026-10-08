@@ -24,6 +24,7 @@ double seconds(Clock::time_point start, Clock::time_point end = Clock::now()) {
 }
 struct Options {
     std::filesystem::path repo;
+    std::filesystem::path schematic;
     std::string project = "carrier", kicad = "kicad-cli", compact, inputs = "prepared";
     int runs = 1;
     bool constraint_first = false;
@@ -34,6 +35,7 @@ struct Options {
 void help() {
     std::cout << "compact_stage_profile --repo ROOT --project NAME --compact-search off|on|both\n"
         "  [--runs N] [--input-mode cold|prepared] [--kicad-cli PATH]\n"
+        "  [--schematic PATH] (use a freshly qualified schematic instead of the stored project output)\n"
         "  [--constraint-first off|on] (opt-in candidate, requires --compact-search on)\n"
         "  [--edge-translation off|on] (opt-in bounded edge repair, requires --compact-search on)\n"
         "  [--outline-mm WIDTHxHEIGHT] (explicit diagnostic outline; skips automatic sizing search)\n"
@@ -56,6 +58,7 @@ Options parse(int argc, char** argv) {
         if (i + 1 == argc) throw std::invalid_argument("missing value: " + arg);
         const std::string value = argv[++i];
         if (arg == "--repo") out.repo = value;
+        else if (arg == "--schematic") out.schematic = value;
         else if (arg == "--project") out.project = value;
         else if (arg == "--kicad-cli") out.kicad = value;
         else if (arg == "--compact-search") out.compact = value;
@@ -102,7 +105,8 @@ struct LoadResult {
     std::vector<std::pair<std::string, double>> times;
     std::size_t circuits = 0;
 };
-LoadResult load(const ProjectPaths& paths, const NetlistExtractOptions& extraction, bool compact_capable) {
+LoadResult load(const ProjectPaths& paths, const NetlistExtractOptions& extraction, bool compact_capable,
+                const std::filesystem::path& schematic) {
     // Same sequence and providers as prepare_board_pcb / pcb-stage. In particular
     // use the real project schematic extraction, not synthetic/fixture connectivity.
     LoadResult out;
@@ -124,7 +128,9 @@ LoadResult load(const ProjectPaths& paths, const NetlistExtractOptions& extracti
         parse_json_file((paths.project_root / "som_mapping.json").string()));
     if (!link.ok()) throw ProjectError(link.report());
     tick("link");
-    const auto nets = extract_netlist(paths.project_root / "Zynq_Carrier.kicad_sch", extraction);
+    const auto source=schematic.empty()?paths.project_root / "Zynq_Carrier.kicad_sch":schematic;
+    std::cout<<"input schematic="<<source.string()<<" freshness=caller_responsibility\n";
+    const auto nets = extract_netlist(source, extraction);
     tick("netlist_extract");
     BoardInputOptions options;
     // Compact mode has real input requirements, not just a solver toggle.
@@ -201,6 +207,15 @@ std::string trial(const PcbPlacementInput& source, bool compact, int run, int ge
     floor->compact_edge_translation = edge_translation;
     floor->initial_outline=initial_outline;
     std::size_t edge_candidates=0,edge_repairs=0;
+    std::vector<FloorplanReseatObservation> reseats;
+    floor->reseat_completed=[&](const auto& row){reseats.push_back(row);};
+    const auto print_reseats=[&]{
+        for(const auto& r:reseats)
+            std::cout<<"reseat width="<<r.w<<" height="<<r.h<<" incoming="<<r.incoming
+                     <<" displaced="<<r.displaced<<" incoming_seated="<<r.incoming_seated
+                     <<" displaced_reseated="<<r.displaced_reseated<<" punch_free="<<r.punch_free
+                     <<" order="<<r.order<<'\n';
+    };
     floor->edge_translation_completed=[&](std::size_t candidates,char edge,double) {
         edge_candidates+=candidates;edge_repairs+=edge!='\0';
     };
@@ -224,6 +239,7 @@ std::string trial(const PcbPlacementInput& source, bool compact, int run, int ge
     PcbPlacementResult result;
     try { result = build_pcb_model(input, &failure); }
     catch (...) {
+        print_reseats();
         std::cout<<"edge_search candidates="<<edge_candidates<<" repairs="<<edge_repairs<<'\n';
         std::cout << "trial status=construction_failed elapsed_seconds=" << seconds(start)
             << " completed_outer_attempts=" << profile.attempts.completed
@@ -241,6 +257,7 @@ std::string trial(const PcbPlacementInput& source, bool compact, int run, int ge
     const auto emit_seconds = seconds(emit_start);
     const auto hash = pcb_sha256(emission.pcb);
     const auto accounting = pcb_placement_accounting(result);
+    print_reseats();
     std::cout << "trial status=constructed_no_acceptance model_seconds=" << model_seconds
         << " pcb_text_emit_seconds=" << emit_seconds << " construction_seconds=" << model_seconds + emit_seconds
         << " board_w=" << result.model.board_w << " board_h=" << result.model.board_h
@@ -305,7 +322,7 @@ int main(int argc, char** argv) {
         std::map<bool, std::string> first_hash;
         for (int run = 1; run <= options.runs; ++run) {
             if (!prepared || options.inputs == "cold") {
-                prepared = load(paths, extraction, options.compact != "off");
+                prepared = load(paths, extraction, options.compact != "off", options.schematic);
                 print_load(*prepared, run);
                 std::cout << "input compact_capable=" << (options.compact != "off")
                     << " owned_groups=" << prepared->input.owned_groups.size() << '\n';

@@ -19,6 +19,12 @@ struct FloorplanAttemptObservation {
     bool packed = false, punch_free = false;
     std::optional<double> estimate;
 };
+struct FloorplanReseatObservation {
+    double w=0,h=0;
+    std::string incoming,displaced;
+    bool incoming_seated=false,displaced_reseated=false,punch_free=false;
+    int order=0;
+};
 struct FloorplanExperiment {
     // Null keeps the native ordinary-net cost unchanged. Impedance-controlled
     // nets always retain their normal cost. Zero is a valid experiment value.
@@ -33,6 +39,9 @@ struct FloorplanExperiment {
     std::optional<std::pair<double,double>> initial_outline;
     // Completed bounded edge searches, including unsuccessful candidates.
     std::function<void(std::size_t, char, double)> edge_translation_completed;
+    // Every completed victim trial, including failed trials. Successful-event
+    // accounting is unchanged; this trace is not a gate or a substitute receipt.
+    std::function<void(const FloorplanReseatObservation&)> reseat_completed;
     std::function<void(const FloorplanAttemptObservation &)> attempt_completed;
     std::function<void(double)> unscoped_estimate;
 };

@@ -1,5 +1,6 @@
 #include "floorplan_internal.hpp"
 #include "native_audit_quantize_internal.hpp"
+#include <algorithm>
 #include <iostream>
 #include <stdexcept>
 #include <tuple>
@@ -124,6 +125,31 @@ void invariant_edge_failure(bool constraint_first,bool translate) {
             wrapped.plan.accounting.fallback_events==direct.plan.accounting.fallback_events,"only executed single-trial work retained");
     require(equal(layout(wrapped.plan),start)&&offers(wrapped)==side&&wrapped.compact_order==0,"early stop restores caller candidate state");
 }
+void reseat_trace_contract(){
+    const Case c{70,50,{{29,16,3,4},{12,30,2,0},{30,18,3,2},{31,26,2,3},{7,7,1,3},{31,9,2,1}}};
+    auto plain=input();Engine baseline(plain);setup(baseline,c);const bool expected=baseline.attempt_pack(false);
+    auto traced=input();auto observer=std::make_shared<FloorplanExperiment>();
+    std::vector<FloorplanReseatObservation> rows;
+    observer->reseat_completed=[&](const auto& r){rows.push_back(r);};traced.experiment=observer;
+    Engine e(traced);setup(e,c);
+    require(e.attempt_pack(false)==expected,"observation changed outcome");
+    require(equal(floorplan_plan_json(e.plan),floorplan_plan_json(baseline.plan))&&offers(e)==offers(baseline),
+        "observation changed layout, offers or real accounting");
+    require(!rows.empty(),"witness did not execute reseat trials");
+    std::size_t success=0,failed=0;
+    for(const auto& r:rows){
+        require(r.w==70&&r.h==50&&r.punch_free&&!r.incoming.empty()&&!r.displaced.empty()&&r.incoming!=r.displaced,"reseat identity");
+        require(!r.displaced_reseated||r.incoming_seated,"impossible successful reseat");
+        if(r.displaced_reseated)++success;else ++failed;
+    }
+    require(failed>0,"failed victim trials must be observed");
+    require(success==static_cast<std::size_t>(std::count(e.plan.accounting.fallback_events.begin(),e.plan.accounting.fallback_events.end(),"interior_reseat_retry")),"success trace disagrees with retained actual events");
+    observer->reseat_completed=[](const auto&){throw std::runtime_error("reseat observer stop");};
+    Engine interrupted(traced);setup(interrupted,c);const auto start=layout(interrupted.plan);
+    bool threw=false;try{interrupted.attempt_pack(false);}catch(const std::runtime_error& x){threw=std::string(x.what())=="reseat observer stop";}
+    require(threw&&equal(layout(interrupted.plan),start)&&interrupted.compact_order==0,"observer failure must propagate and restore candidate state");
+    std::cout<<"reseat trace PASS success="<<success<<" failed="<<failed<<'\n';
+}
 }
 extern "C" void __cyg_profile_func_enter(void* fn,void*){if(observing&&fn==reinterpret_cast<void*>(&native_run_overflow_tol))++entries;}
 extern "C" void __cyg_profile_func_exit(void*,void*){}
@@ -141,6 +167,7 @@ int main(){try{
     }
     std::cout<<"four receipt/layout/offer mutations rejected\n";
     exception_contract();
+    reseat_trace_contract();
     for(bool first:{false,true})for(bool translate:{false,true})invariant_edge_failure(first,translate);
     std::cout<<"compact retry contracts PASS\n";return 0;
 }catch(const std::exception& e){observing=false;std::cerr<<e.what()<<'\n';return 1;}}

@@ -294,6 +294,7 @@ bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure) {
             const auto saved_centers=centers;
             occ_pull(e);
             bool ok=seat(b,a,&e);
+            const bool incoming_seated=ok;
             if (ok) {
                 occ_put(b); centers[b.name]={b.cx(),b.cy()};
                 const auto anchor=pack_anchor(anchor_row(e,centers));
@@ -301,8 +302,11 @@ bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure) {
                 if (!p) { ok=false; occ_pull(b); }
                 else { e.x=p->x; e.y=p->y; occ_put(e); centers[e.name]={e.cx(),e.cy()}; }
             }
-            if (ok) { --evict_budget; fallback("interior_reseat_retry"); return true; }
-            b=saved_b; e=saved_e; chosen=saved_chosen; centers=saved_centers; occ_put(e);
+            if (ok) { --evict_budget; fallback("interior_reseat_retry"); }
+            else { b=saved_b; e=saved_e; chosen=saved_chosen; centers=saved_centers; occ_put(e); }
+            if(in.experiment&&in.experiment->reseat_completed)
+                in.experiment->reseat_completed({bw,bh,b.name,e.name,incoming_seated,ok,plan.punch_free,compact_order});
+            if(ok)return true;
         }
         return false;
     };
