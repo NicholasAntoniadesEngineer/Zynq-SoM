@@ -119,6 +119,7 @@ public:
     void initialize();
     void prepare_geometry();
     void prepare_cross();
+    double packing_area_bound(bool free);
     double estimate(const std::vector<const FloorplanBlock*>& blocks,
                     const std::string& only_sheet = {});
     double estimate();

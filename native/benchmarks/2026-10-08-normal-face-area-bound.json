@@ -1,0 +1,29 @@
+{
+  "base_commit": "dd9aa850",
+  "defect": "Normal two-sided sizing summed minimum primary-body areas across both faces. That is not a necessary board-area lower bound when opposite-face bodies can overlap in projection. Expanded compact mode already used a face-aware necessary bound.",
+  "correction": "Both modes now use the same sizing adapter and face-aware necessary bound. Each interior shape contributes its own face mask; core and edge masks follow the selected punch reservation policy. Child punches and clearances remain independently enforced by actual packing, not waived by this lower bound.",
+  "regression_witness": "An 8x16 area contains an 8x8 core at y=0 and two 8x8 blocks on opposite faces at y=8. Exhaustive occupancy confirms the bottom block fits under the top block. Previous bound 192 rejects area 128; new bound 128 admits it to packing. Test runs normal/compact and both punch policies, then checks added edge reservations and asymmetric face loads.",
+  "carrier": {
+    "command": "native/build/fast/schgen_compact_stage_profile --repo REPO --project carrier --compact-search off --runs 1 --schematic /private/tmp/carrier-ref-board.ccIYvU/Zynq_Carrier.kicad_sch --kicad-cli /Applications/KiCad/KiCad.app/Contents/MacOS/kicad-cli",
+    "area_rejections_per_pass_before": [176,176],
+    "area_rejections_per_pass_after": [11,11],
+    "packing_rejections_per_pass_before": [1070,1081],
+    "packing_rejections_per_pass_after": [1235,1246],
+    "interpretation": "330 previously area-pruned candidates are now checked and rejected by actual packing. No new carrier winner in this sample.",
+    "dimensions_mm": [168,163],
+    "top": 393,
+    "bottom": 176,
+    "successful_reseats": 28,
+    "hard_red": 0,
+    "placement_contract_ok": true,
+    "placement_flow_ok": true,
+    "model_seconds_single_sample": 7.915883834,
+    "pcb_text_seconds_single_sample": 0.034097042,
+    "pcb_sha256": "8d93efb96783a53ec53a83b830f1d8987f10ca6d86a2246999783fb9ddcf7417",
+    "unchanged_pcb": true,
+    "log": "native/build/carrier-face-bound.log",
+    "log_sha256": "eae6adaae898c355b354ba6fbe97243b0bbf303e76e22341cdf98e63fed2220a"
+  },
+  "tests": {"native_compact_search_contracts":"PASS; exhaustive assignment bounds and physical two-face witness", "native_floorplan_contracts":"PASS", "native_pcb_placement_contracts":"PASS; both boards, both placement modes, physical/structural checks and same-input reproducibility; 93.44s"},
+  "limitations": ["No measured speedup claimed", "No historical Python comparison", "No full render/source-audit rerun", "Carrier retry ceiling still fails at 28 versus 18"]
+}

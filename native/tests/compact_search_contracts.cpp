@@ -1,4 +1,5 @@
 #include "schgen/pack_refine.hpp"
+#include "../src/floorplan_internal.hpp"
 #include <cmath>
 #include <iostream>
 #include <limits>
@@ -7,6 +8,27 @@ using namespace schgen;
 static void require(bool ok,const char* message) {if(!ok)throw std::runtime_error(message);}
 template<class F> static void rejects(F f) {bool rejected=false;try {f();}catch(const std::exception&){rejected=true;}require(rejected,"malformed area accepted");}
 int main() {try {
+    // Exercise the actual sizing adapter in BOTH search modes. Three 8x8
+    // primary bodies fit on an 8x16 board: core/top at y=0, top and bottom
+    // blocks at y=8. A one-face sum (192) wrongly rejects its area of 128.
+    for(bool compact:{false,true})for(bool free:{false,true}) {
+        FloorplanInput input;input.som.w=8;input.som.h=8;input.compact_search=compact;
+        floorplan_detail::Engine e(input);
+        for(const auto& name:{"top_block","bottom_block"}) {
+            FloorplanBlock b;b.name=name;b.kind="interior";e.plan.interior_blocks.push_back(b);
+            e.zbox[name]={8,8};
+            for(auto& sets:e.shape_sets)sets[name].push_back({8,8,{},{},std::string(name)=="top_block"?"top":"bottom",{}});
+        }
+        require(e.packing_area_bound(free)==128,"normal and compact sizing must use face-aware bound");
+        Occupancy witness(8,16,0,2,0,1,.05);
+        witness.add(0,0,8,8,{},{},free?1:3,{});
+        witness.add(0,8,8,8,{},{},1,{});
+        require(witness.fits_exhaustive(0,8,8,8,{},{},2,{}),"two-face area counterexample is not physically packable");
+        FloorplanBlock edge;edge.name="edge";edge.kind="edge";e.plan.edge_blocks.push_back(edge);e.zbox["edge"]={8,8};
+        require(e.packing_area_bound(free)==192,"edge reservation omitted from sizing bound");
+        for(auto& sets:e.shape_sets)sets.at("top_block").front().side="bottom";
+        require(e.packing_area_bound(free)==(free?128:256),"core/edge punch policy lost in area bound");
+    }
     require(packing_area_lower_bound({{{20,1}},{{20,2}}},1,2)==20,"opposed faces must overlap in projection");
     require(packing_area_lower_bound({{{20,1}},{{20,1}}},1,2)==40,"same-face loads must accumulate");
     require(packing_area_lower_bound({{{20,3}},{{20,1},{20,2}}},1,2)==30,"pierced body consumes both faces");

@@ -53,6 +53,30 @@ void add_weight(std::vector<std::pair<std::string,double>>& rows,const std::stri
 }
 }  // namespace
 
+double Engine::packing_area_bound(bool free) {
+    const int reserved=free ? occ_top:occ_punch;
+    const auto& sets=shape_sets[free ? 1:0];
+    std::vector<std::vector<PackingAreaOption>> bodies{
+        {{plan.som.w*plan.som.h,reserved}}};
+    for(const auto* b:blocks()) {
+        const auto variants=sets.find(b->name);
+        std::vector<PackingAreaOption> options;
+        if(b->kind=="interior" && variants!=sets.end()) {
+            for(const auto& s:variants->second)
+                options.push_back({s.w*s.h,side_mask(s.side)});
+        } else {
+            const auto wh=zbox.at(b->name);
+            options.push_back({wh.first*wh.second,b->kind=="edge" ? reserved:occ_top});
+        }
+        bodies.push_back(std::move(options));
+    }
+    // Both normal and expanded shape selection can use opposite faces. Summing
+    // all primary areas is not a necessary bound for either two-sided mode.
+    // Child punches and clearances can only tighten feasibility; packing still
+    // checks them independently after this conservative area filter.
+    return packing_area_lower_bound(bodies,occ_top,occ_bottom);
+}
+
 void Engine::initialize() {
     std::vector<std::string> sheet_names;
     std::vector<std::tuple<std::string,bool,std::string,std::vector<std::string>>> bindings;
@@ -275,35 +299,7 @@ FloorplanPlan Engine::run() {
         ledger_pass(free);
         std::map<std::string,int> tally{{"generated",0},{"reject_aspect",0},{"reject_min_area",0},{"reject_not_smaller",0},{"reject_pack",0},{"reject_law5_budget",0},{"accepted",0}};
         std::optional<Winner> best; bool fit_seen=false;
-        double min_area=plan.som.w*plan.som.h;
-        const auto& sets=shape_sets[free ? 1:0];
-        for (const auto& [name,wh]:zbox) {
-            double area=wh.first*wh.second;
-            const auto variants=sets.find(name);
-            if (variants!=sets.end()) {
-                area=variants->second.front().w*variants->second.front().h;
-                for (const auto& s:variants->second) area=std::min(area,s.w*s.h);
-            }
-            min_area+=area;
-        }
-        if (in.compact_search) {
-            const int reserved=free ? occ_top:occ_punch;
-            std::vector<std::vector<PackingAreaOption>> bodies{
-                {{plan.som.w*plan.som.h,reserved}}};
-            for (const auto* b:blocks()) {
-                const auto variants=sets.find(b->name);
-                std::vector<PackingAreaOption> options;
-                if (b->kind=="interior" && variants!=sets.end()) {
-                    for (const auto& s:variants->second)
-                        options.push_back({s.w*s.h,side_mask(s.side)});
-                } else {
-                    const auto wh=zbox.at(b->name);
-                    options.push_back({wh.first*wh.second,b->kind=="edge" ? reserved:occ_top});
-                }
-                bodies.push_back(std::move(options));
-            }
-            min_area=packing_area_lower_bound(bodies,occ_top,occ_bottom);
-        }
+        const double min_area=packing_area_bound(free);
         auto evaluate=[&](double w,double h) -> std::optional<Winner> {
             board_size(w,h);
             if (!attempt_pack(false)) { ++tally["reject_pack"]; return std::nullopt; }
