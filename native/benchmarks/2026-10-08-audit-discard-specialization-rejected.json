@@ -1,0 +1,41 @@
+{
+  "base_commit": "4007bac4",
+  "hypothesis": "Avoid constructing empty JsonNode shells for recursively discarded AST fields by specializing retained/discarded payload types while sharing the full grammar and validation",
+  "decision": "REJECTED_AND_REVERTED: representative-TU improvement did not translate into an observed full-manifest audit benefit; retain regression tests, not additional production parser complexity",
+  "baseline_parser_git_blob": "bb03c0d567264092c63842aca9ebf018c61861b6",
+  "control": "Frozen parser source read from base_commit and linked with the same current core scanner/manifest. Its git blob matched committed source exactly. Sequential two-worker full scans; no simultaneous build/test workload or source edits during timing",
+  "representative_translation_unit": {
+    "source": "native/src/floorplan_build.cpp",
+    "compiler_json_bytes": 2460492555,
+    "ast_inner_nodes": 1564837,
+    "baseline_total_seconds": [10.997,9.73771],
+    "candidate_total_seconds": [9.12145,8.99856],
+    "baseline_capture_parse_seconds": [10.648,9.38526],
+    "candidate_capture_parse_seconds": [8.7702,8.64666],
+    "complete_census_equal": true,
+    "scope": "Fresh Clang compile, stream parse, actual visitor and macro preprocessing; not parser-only time. OS caches uncontrolled"
+  },
+  "full_manifest": {
+    "files": 69,
+    "workers": 2,
+    "baseline_seconds": 149.924,
+    "candidate_seconds": 151.126,
+    "constants": 75,
+    "functions": 944,
+    "quantization_sites": 317,
+    "complete_ordered_census_identical": true,
+    "both_census_sha256": "69b4119a3f7534edf6ceb62f9e8b269935dab1d89bb68cfc00fc02f6d4bd25bf",
+    "limits": "One sequential pair. Approximately 0.8 percent slower in this sample; not proof of a significant regression, but no measured full-workload gain to justify adopting the experiment"
+  },
+  "retained_test": "A 10,000-element discarded array must still contribute every JSON value to accounting, match the independently stripped generic-parser result, and reject an unrepresentable numeric value hidden in the discarded payload. Tested in memory and streaming modes",
+  "restored_production_validation": {
+    "native_audit_ast_pipe_contracts": {"status":"PASS","seconds":3.94},
+    "native_audit_ast_pipe_census_contracts": {"status":"PASS","seconds":3.70},
+    "native_audit_ast_projection_contracts": {"status":"PASS","seconds":0.57},
+    "native_parallel_audit_contracts": {"status":"PASS","seconds":1.27},
+    "native_audit_ast_projection_census": {"status":"PASS","seconds":0.55},
+    "normal_cli_relinked_to_restored_parser": true
+  },
+  "next_direction": "Do not repeat this parser specialization. Audit reuse needs explicit compiler/configuration/transitive-input invalidation and corruption/concurrent-mutation handling before adoption; no persistent cache or audit bypass was added. Placement-search and hardware-quality work remain open",
+  "unchanged": ["Production parser bytes", "Hardware/design inputs", "Qualified 168x160 carrier and 98x98 devkit references", "Gate thresholds and complete live runtime accounting"]
+}

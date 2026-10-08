@@ -113,6 +113,15 @@ void contracts(){
     const auto wide=std::string("{\"unused\":\"")+std::string(8*1024*1024,'a')+"\",\"kind\":\"TranslationUnitDecl\"}";
     const auto wide_node=projected(wide,"large skipped string",&stats);
     require(wide_node.object_value.size()==1&&stats.retained_values==2&&stats.json_values==3,"large unknown string has no DOM payload");
+    std::string discarded_array="{\"unknown\":[";
+    for(int i=0;i<10000;++i){if(i)discarded_array+=',';discarded_array+="null";}
+    discarded_array+="],\"kind\":\"TranslationUnitDecl\"}";
+    const auto skipped=projected(discarded_array,"large discarded array",&stats);
+    same(strip(parse_json_text(discarded_array)),skipped);
+    require(stats.json_values==10003&&stats.retained_values==2&&stats.discarded_fields==1,
+        "every discarded array element remains validated and counted");
+    discarded_array.replace(discarded_array.find("null"),4,"1e9999");
+    rejected(discarded_array);
 }
 void streaming_boundaries(){
     const std::vector<std::string> valid={
