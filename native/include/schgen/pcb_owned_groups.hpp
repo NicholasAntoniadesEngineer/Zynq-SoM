@@ -3,6 +3,8 @@
 #include <set>
 
 namespace schgen {
+// Placement policy only: Bypass includes explicitly declared pin-local
+// reference filters. Electrical roles remain distinct in trusted requirements.
 enum class OwnedCapRole { Bypass, OutputBulk };
 // Resolved from validated declarations and trusted hierarchy maps, never from
 // a nearest component, shared-net membership, or candidate geometry.

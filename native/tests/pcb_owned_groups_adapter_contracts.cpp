@@ -95,7 +95,30 @@ int main(int argc, char** argv) {
         const auto link = link_sheets(sheets, parse_json_file(paths.som_interface_file.string()),
             parse_json_file((paths.project_root / "som_mapping.json").string()));
         require(link.ok(), "live link");
-        const auto nets = extract_netlist(paths.project_root / "Zynq_Carrier.kicad_sch");
+        std::filesystem::create_directories(argv[3]);
+        auto pattern = (std::filesystem::path(argv[3]) / "owned-adapter.XXXXXX").string();
+        const auto created = ::mkdtemp(pattern.data());
+        require(created != nullptr, "private schematic/manifest scratch creation");
+        const std::filesystem::path scratch = created;
+        // Extract current emitted hardware, never the stale checked-in board
+        // or a netlist manufactured from the same ownership declarations.
+        const auto index = load_sheet_index(paths);
+        std::vector<BoardSheetInput> schematic_inputs;
+        for (const auto& c : circuits) {
+            const auto band = std::find_if(index.begin(), index.end(),
+                [&](const auto& item) { return item.first == c.name; });
+            require(band != index.end(), "missing persistent reference band");
+            schematic_inputs.push_back({c.circuit, band->second, std::nullopt});
+        }
+        SymbolLibrary library(paths.repository_root);
+        BoardSchematicOptions schematic_options;
+        schematic_options.root_name = "Zynq_Carrier";
+        schematic_options.sheet_subdir = "schematic";
+        schematic_options.reports_dir = scratch / "reports";
+        const auto schematic = build_board_schematic(schematic_inputs, library,
+            scratch / "generated", schematic_options);
+        require(schematic.ok(), "current schematic/netlist gate: " + schematic.report);
+        const auto nets = extract_netlist(schematic.root_path);
         BoardInputOptions options; options.compact_search = true;
         auto in = load_board_inputs(paths, circuits, link, nets, options);
         require(in.owned_groups.size() == 2, "production loader did not resolve both mandatory sheets");
@@ -111,6 +134,16 @@ int main(int argc, char** argv) {
             }
         }
         require(rows == 6 && bulk == 1, "six explicit owners and one fixed bulk");
+        const auto aux_band = std::find_if(index.begin(), index.end(),
+            [](const auto& item) { return item.first == "board_aux"; })->second;
+        const auto filter_cap = board_renamed_ref("C5", aux_band, "board_aux");
+        const auto& aux_rows = owned_group_placements(*in.owned_groups.at("board_aux"));
+        const auto filter = std::find_if(aux_rows.begin(), aux_rows.end(),
+            [&](const auto& row) { return row.cap == filter_cap; });
+        require(filter != aux_rows.end() && filter->role == OwnedCapRole::Bypass &&
+            filter->owner == board_renamed_ref("U2", aux_band, "board_aux") &&
+            filter->owner_pin == "7" && filter->cap_pin == "1" && filter->return_pin == "2",
+            "reference filter must use its explicit VREF2 owner and pin-local placement policy");
         auto disabled = in; disabled.floorplan.compact_search = false;
         require(resolve_owned_group_inputs(paths, {}, disabled).empty(), "default resolver must be a no-op");
         auto unrelated = paths; unrelated.is_default_project = false;
@@ -146,11 +179,6 @@ int main(int argc, char** argv) {
         bad = in; bad.netlist.push_back({"extra-pin-net", {{cap, "99"}}});
         rejects([&] { resolve_owned_group_inputs(paths, circuits, bad); }, "extra physical pin accepted");
 
-        std::filesystem::create_directories(argv[3]);
-        auto pattern = (std::filesystem::path(argv[3]) / "owned-adapter.XXXXXX").string();
-        const auto created = ::mkdtemp(pattern.data());
-        require(created != nullptr, "private manifest scratch creation");
-        const std::filesystem::path scratch = created;
         std::filesystem::create_directories(scratch / "board_aux");
         std::filesystem::create_directories(scratch / "bringup_rails");
         auto private_paths = paths; private_paths.subsystems_dir = scratch;
@@ -163,6 +191,11 @@ int main(int argc, char** argv) {
         auto changed = original; changed.replace(changed.find("input_bypass"), std::string("input_bypass").size(), "unknown_role");
         { std::ofstream file(manifest); file << changed; }
         rejects([&] { resolve_owned_group_inputs(private_paths, circuits, in); }, "unknown manifest role accepted");
+        changed = original;
+        changed.replace(changed.find("reference_filter"), std::string("reference_filter").size(), "supply_bypass");
+        { std::ofstream file(manifest); file << changed; }
+        rejects([&] { resolve_owned_group_inputs(private_paths, circuits, in); },
+            "reference filter electrical role conflated with its placement category");
         changed = original;
         const auto first = changed.find('{', changed.find("\"ownership\""));
         const auto last = changed.find('}', first);

@@ -24,7 +24,11 @@ void demand(bool value, const std::string& message) {
 }
 OwnedCapRole role_of(const std::string& role) {
     if (role == "shared_output_bulk") return OwnedCapRole::OutputBulk;
+    // This is a placement category, not an electrical-role equivalence:
+    // VREF2's filter is pin-local too. The identity gate above still checks
+    // its distinct declared role, value, owner pin and extracted nets.
     if (role == "input_bypass" || role == "output_bypass" || role == "supply_bypass" ||
+        role == "reference_filter" ||
         role == "authored_reference_rail_bypass_not_translation_filter") return OwnedCapRole::Bypass;
     throw std::runtime_error("owned-group adapter: unknown role " + role);
 }
