@@ -1,0 +1,67 @@
+{
+  "status": "Completed devkit pair; see 2026-10-08-timing-summary.json for both boards",
+  "comparison_type": "Revision-to-revision full commands, NOT matched design inputs or a language-only speedup",
+  "python_commit": "0e9bbc913bab77f9cd228940db2a332d25d6bfa1",
+  "cpp_commit": "baf4d769",
+  "environment": {
+    "os": "macOS 26.6.2 build 25G83 arm64",
+    "kicad": "10.0.2; /opt/homebrew/bin/kicad-cli points to /Applications/KiCad/KiCad.app/Contents/MacOS/kicad-cli",
+    "python": "3.14.3; Pillow 12.2.0; PyMuPDF 1.27.2",
+    "cpp": "Release -O3 -DNDEBUG; Apple command-line C++ compiler; binary SHA256 1f92bbaff04d0e81a61b7962e2533fd506f8feafd36e37d2676cbb1a1806f9b7",
+    "execution": "Sequential Python then C++; one sample each; no concurrent agent compilation or tests; OS cache/background activity uncontrolled",
+    "baseline_export": "/private/tmp/zynq-baseline-0e9bbc.munEeX",
+    "baseline_export_provenance": "git archive of exact required commit. No historical source edits, no native geometry extension found. Existing archived checkout's modified renders left untouched."
+  },
+  "compile": {
+    "scope": "Incremental C++ executable rebuild using existing Release tree and compiler cache, not a clean compile",
+    "command": "CCACHE_DIR=REPO/native/build/compiler-cache CCACHE_BASEDIR=REPO /usr/bin/time -p cmake --build native/build/fast --target schgen --parallel 2",
+    "wall_seconds": 2.28,
+    "user_seconds": 2.23,
+    "system_seconds": 0.15,
+    "log": "native/build/timing-baf4d769-compile.log"
+  },
+  "python": {
+    "command": "/usr/bin/time -p /opt/homebrew/bin/python3 -B -u -m schgen --project devkit_mini board --timing",
+    "wall_seconds": 75.06,
+    "user_seconds": 275.28,
+    "system_seconds": 14.95,
+    "exit_code": 1,
+    "blocking_failures": ["testpoints: 9/23 covered, 5 waived", "design_rules: 2 findings, 2 waived"],
+    "sheets": 12,
+    "render3d_views": 8,
+    "dimensions_mm": [100,100],
+    "components": {"top":97,"bottom":55,"total":152},
+    "historical_mixed_phase_seconds": {"sheet_checks_and_render":7.79,"hierarchy_board_erc_and_cc":11.72,"verify_gates_and_documents":8.44,"pcb_gen_drc_ratsnest_law5":27.79,"si_manifest_golden_including_3d_render":18.23},
+    "phase_warning": "Historical lap spans are mixed and PCB work overlaps earlier stages. They do not provide independent audit-free generation or render/audit totals.",
+    "log": "native/build/timing-0e9bbc-devkit-full.log",
+    "log_sha256": "2bde56f56357afa64fc787e95a90604bc748902a7705ad8a2ec2877230fbe277"
+  },
+  "cpp": {
+    "command": "/usr/bin/time -p native/bin/schgen board --project devkit_mini -o /private/tmp/zynq-cpp-devkit-baf4d769.XogRc4 --timing --kicad-cli /Applications/KiCad/KiCad.app/Contents/MacOS/kicad-cli",
+    "wall_seconds": 205.46,
+    "user_seconds": 550.99,
+    "system_seconds": 30.74,
+    "exit_code": 1,
+    "complete": true,
+    "blocking_failures": ["interior_reseat_retry: 50 > committed ceiling 35"],
+    "authoring_and_source_audits": "PASS",
+    "testpoints_and_design_rules": "PASS",
+    "sheets": 12,
+    "render3d_views": 8,
+    "dimensions_mm": [98,98],
+    "components": {"top":106,"bottom":57,"total":163},
+    "exclusive_seconds": {"authoring_audit":17.022065,"source_audit":154.437604,"pcb_model_with_internal_checks":0.327326,"pcb_text_emission":0.008822,"pcb_drc":1.111323,"render3d":16.485825,"sheet_parallel_checks_and_render":7.508870,"measured_scope_total_not_process_wall":204.844909},
+    "pcb_sha256": "cfa0305491d9c4a771adb130b04c4aec6cc2894542391a5c7c9dca3a68bca3cf",
+    "verdict_sha256": "de3138339c42e644b8aa5f1d53b4171baf9c5d52d7843dbbdc001a75d4dc738d",
+    "log": "native/build/timing-baf4d769-devkit-full.log",
+    "log_sha256": "87fe2a4c702758f9ccc740facca4e9c94735970f1ac37442b4cb54278695c699"
+  },
+  "retry_attribution_control": {
+    "before_area_bound_binary": "native/build/profile-before-face-bound (dd9aa850)",
+    "after_binary": "native/build/fast/schgen_compact_stage_profile (baf4d769)",
+    "same_input_schematic": "/private/tmp/zynq-cpp-devkit-baf4d769.XogRc4/Zynq_Carrier.kicad_sch",
+    "result": "Both produce identical PCB hash, 50 reseats and identical sizing tallies. The new face-aware bound did not introduce this devkit failure.",
+    "logs_sha256": {"native/build/devkit-profile-before-face-bound-bound-control.log":"fa55efafd7c59c566dedc65a970073ea58497956274bf50b55788f3b03c6df26","native/build/devkit-schgen_compact_stage_profile-bound-control.log":"3b0608a1fa34513aa6f5e6772ec71178107240d2dd2cdff6e9002d9866bcb227"}
+  },
+  "limitations": ["Different hardware inputs, component counts, geometry and audit coverage", "Neither full board build passed", "Current audit scopes dominate end-to-end time; do not compare the narrower PCB model interval to historical mixed phases", "No clean-compile timing, statistical repetitions or fabrication-readiness claim"]
+}
