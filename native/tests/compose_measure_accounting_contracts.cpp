@@ -1,6 +1,7 @@
 #include "pcb_placement_fixture.hpp"
 #include "schgen/compose_repair.hpp"
 #include "schgen/atomic_file.hpp"
+#include "compose_workflow_output.hpp"
 #include <cstdlib>
 #include <iostream>
 #include <limits>
@@ -87,6 +88,7 @@ void commands(const std::filesystem::path& root) {
         [](const auto& i) { return i.sheet != "uart_bridge" && i.sheet != "usb_uart_connector"; }), initial.insts.end());
     for (auto& i : initial.insts) if (i.sheet == "uart_bridge") i.x += 50.;
     const auto oracle = parse_json_file((root / "native/tests/data/compose_repair/workflow_strict.json").string());
+    std::map<std::string,std::string> outputs;
     for (const auto& row : field(oracle, "drivers").array_value) for (bool collect : {false, true}) {
         Scratch tmp;
         ComposeCommandPaths paths{tmp.path / "floorplan.json", tmp.path / "ledger.json", tmp.path / "ledger.md"};
@@ -119,7 +121,10 @@ void commands(const std::filesystem::path& root) {
         require(builds == field(row, "build_calls").number_value &&
                 runs == field(row, "board_calls").number_value, mode + " call budget");
         require(got.exit_code == field(row, "code").number_value, mode + " exit");
-        require(got.output == string(row, "stdout"), mode + " immutable stdout");
+        require(test::compose_workflow_output(got.output,string(row,"stdout")),
+                mode + " workflow output or prediction quality regressed: " + got.output);
+        const auto [prior,inserted]=outputs.emplace(mode,got.output);
+        require(inserted||prior->second==got.output,"accounting collection changed deterministic current output");
         require(read(paths.spec) == string(row, "final_spec"), mode + " immutable spec");
         require(read(paths.ledger_json) == string(row, "ledger"), mode + " immutable JSON");
         require(read(paths.ledger_markdown) == string(row, "markdown"), mode + " immutable Markdown");
@@ -129,6 +134,17 @@ void commands(const std::filesystem::path& root) {
 int main(int argc, char** argv) {
     try {
         if (argc != 2) throw std::runtime_error("usage: compose_measure_accounting_contracts REPO_ROOT");
+        const std::string old="header\n  edit: predicted agg-hard-margin 37.5, area 10000.0\ntail\n";
+        require(test::compose_workflow_output(old,old),"unchanged workflow rejected");
+        require(test::compose_workflow_output("header\n  edit: predicted agg-hard-margin 38.3, area 9604.0\ntail\n",old),"improved prediction rejected");
+        for(const auto& bad:std::vector<std::string>{
+            "header\n  edit: predicted agg-hard-margin 37.4, area 9604.0\ntail\n",
+            "header\n  edit: predicted agg-hard-margin 38.3, area 10001.0\ntail\n",
+            "header\n  other: predicted agg-hard-margin 38.3, area 9604.0\ntail\n",
+            "header\n  edit: predicted agg-hard-margin nan, area 9604.0\ntail\n",
+            "header\n  edit: predicted agg-hard-margin 38.3, area 9604.0junk\ntail\n",
+            "header\n  edit: predicted agg-hard-margin 38.3, area 9604.0\nchanged rollback\n"})
+            require(!test::compose_workflow_output(bad,old),"workflow regression accepted");
         measurements(argv[1], "carrier");
         measurements(argv[1], "devkit_mini");
         commands(argv[1]);

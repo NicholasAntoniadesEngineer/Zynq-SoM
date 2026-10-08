@@ -1,0 +1,16 @@
+{
+  "date": "2026-10-08",
+  "base_commit": "717712f3",
+  "discovery": "Resumed suite passed tests 2 through 32, then stopped at compose measurement accounting test 33. Related compose repair test 43 reproduced the mismatch: historical predicted margin/area 37.5/10000.0 versus current 38.3/9604.0.",
+  "decision": "Do not require a current optimiser to reproduce historical board dimensions or prediction coordinates. No historical fixture was overwritten and no production gate changed.",
+  "new_workflow_contract": "The same single ranked edit and all surrounding output remain byte-exact. Only its two finite numeric prediction values may differ: margin must not decrease and positive area must not increase. Explicit negatives reject worse margin, larger area, changed edit, NaN, trailing numeric junk and changed rollback text. Accounting-on/off executions must produce identical current stdout.",
+  "prediction_contract": "Current candidate area, spill list and term evaluation transport match a direct current replica. Area may not regress against the historical fixture; previously satisfied terms must remain satisfied. Historical term identities, edited JSON and error behaviour remain checked.",
+  "independent_evidence_preserved": "Frozen measured-board ledgers for both boards, numeric channel-demand/facing kernel fixtures, fixed-input ranking and workflow edit/rollback/exit/call-budget/ledger checks remain exact.",
+  "limitation": "Direct replica comparison exercises integration/transport, not an independent proof of optimiser arithmetic or physical hardware correctness. Those remain covered separately; no complete goal or fabrication readiness claim.",
+  "verification": {
+    "native_compose_measure_accounting_contracts_seconds": 3.89,
+    "native_compose_repair_contracts_seconds": 5.31,
+    "result": "2/2 PASS",
+    "full_suite_complete": false
+  }
+}
