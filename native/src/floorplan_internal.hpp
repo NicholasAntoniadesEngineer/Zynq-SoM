@@ -132,6 +132,7 @@ public:
     void board_size(double w, double h);
     bool attempt_pack(bool compact);
     bool attempt_pack_impl(bool compact,bool* order_independent_failure=nullptr);
+    double refine_screened_incumbent(double incumbent_estimate);
     void choose_connector_shapes();
     PackAnchorIn anchor_row(const FloorplanBlock& b,
                             const std::map<std::string, FloorplanPoint>& centers) const;

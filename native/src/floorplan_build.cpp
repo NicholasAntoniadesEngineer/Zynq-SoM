@@ -321,14 +321,19 @@ FloorplanPlan Engine::run() {
         ledger_pass(free);
         std::map<std::string,int> tally{{"generated",0},{"reject_aspect",0},{"reject_min_area",0},{"reject_not_smaller",0},{"reject_pack",0},{"reject_law5_budget",0},{"accepted",0}};
         std::optional<Winner> best; bool fit_seen=false;
+        std::optional<FloorplanPlan> best_plan;
+        std::map<std::string,SideOffer> best_offers;
         const double min_area=packing_area_bound(free);
         auto evaluate=[&](double w,double h) -> std::optional<Winner> {
             board_size(w,h);
             if (!attempt_pack(false)) { ++tally["reject_pack"]; return std::nullopt; }
             fit_seen=true;
             const double budget=cross_budget(w,h,n_sub,in.cross_budget_k), est=estimate();
-            if (est>budget) { ++tally["reject_law5_budget"]; return std::nullopt; }
-            ++tally["accepted"]; return Winner{precision.area(w*h),w,h,est,budget};
+            if (!std::isfinite(est) || est<0 || est>budget) { ++tally["reject_law5_budget"]; return std::nullopt; }
+            ++tally["accepted"];
+            const Winner candidate{precision.area(w*h),w,h,est,budget};
+            if (!best || candidate<*best) { best_plan=plan; best_offers=side_offers; }
+            return candidate;
         };
         const auto seed=in.experiment?in.experiment->initial_outline:std::nullopt;
         if(seed) {
@@ -369,14 +374,11 @@ FloorplanPlan Engine::run() {
             if (w*h<min_area) { ++tally["reject_min_area"]; continue; }
             if (auto candidate=evaluate(w,h)) best=candidate;
         }
-        board_size(std::get<1>(*best),std::get<2>(*best));
-        if (!attempt_pack(true)) throw FloorplanError("floorplan: the winning outline "+outline_text(plan.board_w,plan.board_h)+" failed the final compact re-pack — refusing to emit a stale layout");
-        choose_connector_shapes();
-        // Refinement and connector selection can change the winning layout.
-        // Compare passes and publish headroom using that actual layout, never
-        // the earlier screening estimate for the same board dimensions.
-        std::get<3>(*best)=estimate();
-        if (std::get<3>(*best)>std::get<4>(*best))
+        // Keep the screened layout, not just its dimensions. A later failed
+        // candidate must not become the starting state for final refinement.
+        restore(*best_plan); side_offers=std::move(best_offers);
+        std::get<3>(*best)=refine_screened_incumbent(std::get<3>(*best));
+        if (!std::isfinite(std::get<3>(*best)) || std::get<3>(*best)<0 || std::get<3>(*best)>std::get<4>(*best))
             throw FloorplanError("floorplan: final refined layout exceeds the LAW-5 airwire budget on "+
                 outline_text(plan.board_w,plan.board_h)+" — refusing to emit a stale screening estimate");
         Inputs ti;

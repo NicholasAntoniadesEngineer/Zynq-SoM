@@ -61,7 +61,12 @@ The following emitted keys already have exact registry entries:
 - Floorplan legalizer: `legalize_pose_quantum`; spatial/fanout kernels:
   `quant_credit`. These are now measured at the actual native call sites.
 - Floorplan fallback events: `legalize_only_compaction`,
-  `punch_free_plan_rejected`, `interior_reseat_retry`.
+  `punch_free_plan_rejected`, `interior_reseat_retry`, `edge_run_translation`,
+  `screened_incumbent_retained`. The latter records a failed or worse final
+  refinement restored from the actual screened plan. All rejected trial work
+  survives restoration; the selected estimate is evaluated again. Exceptions
+  from refinement propagate after restoration, rather than counting as a
+  successful fallback. No existing fallback ceiling is raised.
 - Stage search fallback events: `cand_cap_truncated`, `seat_node_budget`.
 - Zone variants: `bottom_variant_contract_reject`.
 - Placement corridor eviction: `corridor_evict_moved`,

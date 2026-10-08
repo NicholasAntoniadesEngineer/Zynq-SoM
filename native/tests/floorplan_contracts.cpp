@@ -480,7 +480,9 @@ void pack_behavior() {
     }
     require(passes==2&&!automatic.punch_free,"both reservation policies execute; tied free pass rejected");
     const std::map<std::string,std::size_t> quanta{{"outline_fine_grid",164},{"outline_grow_step",10},
-        {"outline_snap_up",20},{"run_overflow_tol",696},{"som_pose_half_mm",1394},{"quant_credit",696},{"est_via_cost",2}};
+        {"outline_snap_up",20},{"run_overflow_tol",696},{"som_pose_half_mm",1390},{"quant_credit",696},{"est_via_cost",2}};
+    // Restoring each screened plan removes two redundant SoM-coordinate
+    // quantizations per pass; all actually executed calls still count.
     require(floorplan_precision_fixture::select(automatic.accounting.quantization_engagements,false)==quanta,"all prior synthetic search quantization engagements accounted exactly");
     const auto extra=floorplan_precision_fixture::select(automatic.accounting.quantization_engagements);
     require(extra.at("floorplan_candidate_area_precision1dp")==110&&extra.at("floorplan_seed_aspect_precision4dp")==1,

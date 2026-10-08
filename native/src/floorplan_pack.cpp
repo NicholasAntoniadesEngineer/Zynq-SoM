@@ -429,6 +429,33 @@ bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure) {
     return true;
 }
 
+double Engine::refine_screened_incumbent(double incumbent_estimate) {
+    if (!std::isfinite(incumbent_estimate) || incumbent_estimate<0)
+        throw FloorplanError("floorplan: invalid screened incumbent estimate");
+    auto incumbent=plan;
+    auto offers=side_offers;
+    auto restore=[&] {
+        // Rejected work is still real work; never rewind the execution ledger.
+        auto accounting=std::move(plan.accounting);
+        plan=std::move(incumbent); plan.accounting=std::move(accounting); side_offers=std::move(offers);
+    };
+    try {
+        if (attempt_pack(true)) {
+            choose_connector_shapes();
+            const double refined=estimate();
+            if (std::isfinite(refined) && refined>=0 && refined<=incumbent_estimate) return refined;
+        }
+    } catch (...) {
+        restore();
+        throw; // An exception is not an infeasible candidate or permission to continue.
+    }
+    restore();
+    fallback("screened_incumbent_retained");
+    // Re-evaluate the selected layout, including its real scalar accounting and
+    // observer event; no stale screening estimate is published as a new result.
+    return estimate();
+}
+
 void Engine::choose_connector_shapes() {
     std::vector<std::string> names;
     for (const auto& b:plan.edge_blocks) names.push_back(b.name);

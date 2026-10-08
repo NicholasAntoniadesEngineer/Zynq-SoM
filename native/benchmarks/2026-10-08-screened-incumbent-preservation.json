@@ -1,0 +1,21 @@
+{
+  "base_commit": "0bd188fe",
+  "change": "Automatic sizing retains the actual best screened plan and its side offers, not only dimensions. Final refinement starts from that snapshot. Infeasible, non-finite or worse-estimate trials restore the screened layout, preserve all trial accounting, record screened_incumbent_retained, and re-evaluate the selected estimate. Refinement exceptions restore state and propagate.",
+  "selection": "Existing area/width/height/estimate candidate ordering is unchanged. Equal-estimate final refinements remain eligible. No hidden cache, replayed packing, new search order or retry ceiling change.",
+  "tests": {
+    "native_connector_incumbent_contracts": {"status": "PASS", "seconds": 0.55, "coverage": "Both search modes: equal trial, injected worse estimate, real failed packing under an oversized-edge fault, attempt-observer exception, estimate-observer exception. Full plan/offer/prepared-state comparison; independent instrumented fallback and scalar call counts; no restoration repack; correct explicit restore-event count."},
+    "native_initial_outline_contracts": {"status": "PASS", "seconds": 0.09},
+    "native_floorplan_final_estimate_contracts": {"status": "PASS", "seconds": 1.61, "coverage": "Live devkit seeded/unseeded and default/compact passes; independent selected-layout estimates and mutated-ledger rejection"},
+    "native_policy_audits_contracts": {"status": "PASS", "seconds": 36.81},
+    "native_floorplan_contracts": {"status": "PASS", "seconds": 14.69},
+    "native_board_policy_contracts": {"status": "PASS", "seconds": 5.16},
+    "total_seconds": 58.91,
+    "initial_failures": ["Oversizing an interior base did not force compact pack failure because its valid shape variants remained available; fault injection now oversizes an edge and explicitly asserts packed=false", "Historical synthetic receipt expected four redundant SoM coordinate quantizations removed by restoring saved coordinates; expectation reduced from 1394 to 1390 with all other exact receipt expectations unchanged"]
+  },
+  "live_screens": {
+    "carrier_default_seeded": {"outline_mm": [168,163], "model_seconds": 5.369865750, "top": 393, "bottom": 176, "outer_attempts": 2295, "packed_attempts": 14, "reseats": 32, "reseat_ceiling": 18, "acceptance": "REJECTED_RUNTIME_CONSTRAINT", "pcb_sha256": "9310d975f4ef23d71e9c154f74a46a8ca46366d4f52568ba1c22a31992ffc8c5", "matches_separately_qualified_fixed_candidate": true, "som_pose_calls_before": 4576, "som_pose_calls_after": 4572, "log": "native/build/carrier-screened-incumbent.log"},
+    "devkit_default_seeded": {"outline_mm": [98,98], "model_seconds": 0.112232, "top": 106, "bottom": 57, "outer_attempts": 1208, "packed_attempts": 6, "reseats": 6, "pcb_sha256": "cfa0305491d9c4a771adb130b04c4aec6cc2894542391a5c7c9dca3a68bca3cf", "matches_previously_qualified_candidate": true, "som_pose_calls_before": 2414, "som_pose_calls_after": 2410, "log": "native/build/devkit-screened-incumbent.log"},
+    "comparison": "PCB hashes and all fallback counts unchanged. Diffing every printed scalar receipt shows only four fewer som_pose_half_mm calls in each board; no other scalar receipt changes. Both placement/flow screens pass, hard-red count zero. New restore fallback is not exercised by these live boards."
+  },
+  "limits": ["No measured speedup claimed; snapshots add bounded copying per improving candidate", "Synthetic injected failures prove transaction behaviour, not a newly discovered live-board refinement failure", "Automatic search still exceeds carrier retry ratchet; no gate waived", "No new full build/render claimed in this batch; unchanged PCB hashes refer to existing independent qualifications", "Full integrated goal, hardware unknowns and source qualification remain ongoing"]
+}

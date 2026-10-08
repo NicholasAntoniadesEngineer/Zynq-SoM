@@ -22,6 +22,7 @@ ManufacturingPipelineInput native_board_pipeline_metadata(){
     // actual native producers, not historical recorded board populations.
     out.fallbacks={
         {"edge_run_translation","plan_lattice","Opt-in bounded translation repaired an invalid edge arrangement. Count all applied repairs, including later rejected candidates; no clearance waiver."},
+        {"screened_incumbent_retained","plan_lattice","Final refinement failed or worsened the screened layout. Restore the actual incumbent and side offers; retain all trial accounting and re-evaluate its estimate."},
         {"legalize_only_compaction","plan_lattice","Compact placement broke a pair floor; retain the rechecked legalize-only candidate. Count each affected compact-pack invocation."},
         {"seat_node_budget","zone_pack","Template DFS exhausted its node budget; that pad is infeasible and the widening search may retry."},
         {"cand_cap_truncated","zone_pack","Ranked candidate list exceeded its cap; discard the tail and count this truncating generation call."},

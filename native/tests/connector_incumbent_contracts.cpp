@@ -210,6 +210,49 @@ void exception_incumbent(bool compact,bool at_estimate) {
     require(plan_state(e.plan)==before&&offers(e)==side,"throwing connector trial must restore accepted state");
     require(static_state(e)==other,"throwing connector trial changes no prepared state");
 }
+void screened_refinement(bool compact,int mode) {
+    // Fault-injected transaction test, not a new hardware feasibility fixture:
+    // 0 equal trial, 1 worse estimate, 2 pack failure, 3/4 observer exceptions.
+    auto in=small(compact);in.geometry.shapes.at("edge").resize(1);
+    auto observer=std::make_shared<FloorplanExperiment>();in.experiment=observer;
+    Engine e(in);e.initialize();e.prepare_geometry();e.prepare_cross();e.board_size(100,100);
+    require(e.attempt_pack(false),"screened witness really packs");
+    for(const auto* name:{"edge","logic"}) {
+        floorplan_detail::CrossPart p;p.owner=floorplan_detail::CrossPart::Owner::Zone;
+        p.ref=p.sheet=p.key=name;p.base_side="top";
+        p.shape_offsets[1]={0,0};p.pad_positions[0]["1"]={{0,0}};p.pad_positions[1]=p.pad_positions[0];
+        e.cross_parts.push_back(p);
+    }
+    e.cross_nets.push_back({"witness",{{0,"1"},{1,"1"}},0});
+    const double accepted=e.estimate();require(accepted>0,"nonzero real estimator witness");
+    e.plan.composition={"screened composition"};e.plan.spilled={"screened diagnostics"};
+    e.side_offers["sentinel"]={"screened","top",7,3.,4.};
+    if(mode==2)e.zbox["edge"]={1000,1000}; // Force a real failed pack, no fake return.
+    const auto before=plan_state(e.plan),side=offers(e),other=static_state(e);
+    const auto prefix=e.plan.accounting;
+    std::size_t attempts=0,estimates=0;bool packed=true;
+    observer->attempt_completed=[&](const auto& row) {
+        ++attempts;packed=row.packed;
+        e.plan.composition={"trial composition"};e.side_offers["sentinel"]={"trial","bottom",1,8.,9.};
+        e.fallback("legalize_only_compaction");(void)e.quantize("fixed_part_grid",1.234);
+        if(mode==1)e.plan.interior_blocks.front().x+=1000; // Deliberately worsened trial.
+        if(mode==3)throw Injected();
+    };
+    observer->unscoped_estimate=[&](double) {++estimates;if(mode==4)throw Injected();};
+    double selected=-1;bool threw=false;begin(&e);
+    try{selected=e.refine_screened_incumbent(accepted);}catch(const Injected&){threw=true;}
+    end();receipt(e.plan.accounting,prefix,true);
+    require(attempts==1,"refinement must not repack during restoration");
+    require(packed==(mode!=2),"pack failure branch actually exercised");
+    require(threw==(mode>=3),"exceptions propagate rather than becoming successful candidates");
+    require(static_state(e)==other,"refinement changes no prepared state");
+    const auto retained=std::count(e.plan.accounting.fallback_events.begin(),e.plan.accounting.fallback_events.end(),"screened_incumbent_retained");
+    require(retained==((mode==1||mode==2)?1:0),"exactly one explicit restore event, none for exceptions or success");
+    if(mode)require(plan_state(e.plan)==before&&offers(e)==side,"complete screened state and offers restored");
+    else require(e.plan.composition==std::vector<std::string>{"trial composition"},"equal valid trial remains eligible");
+    if(!threw)require(selected==accepted,"selected estimate agrees with restored or equal actual layout");
+    require(estimates==static_cast<std::size_t>(mode==1?2:mode==3?0:1),"only actually executed estimators observed");
+}
 } // namespace incumbent_test
 extern "C" void __cyg_profile_func_enter(void* fn,void*) {
     using namespace incumbent_test;if(!watching||busy)return;
@@ -230,6 +273,7 @@ int main() {
             for(bool failed:{false,true})incumbent_test::unit(compact,failed);
             for(bool estimate:{false,true})incumbent_test::failure(compact,estimate);
             for(bool estimate:{false,true})incumbent_test::exception_incumbent(compact,estimate);
+            for(int mode=0;mode<5;++mode)incumbent_test::screened_refinement(compact,mode);
         }
         for(bool failed:{false,true})incumbent_test::unit(true,failed,true);
         for(bool estimate:{false,true})incumbent_test::failure(true,estimate,true);

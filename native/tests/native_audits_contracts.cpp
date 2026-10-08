@@ -47,8 +47,9 @@ void ledger_contracts(const JsonNode& reference){
 }
 void registry_contracts(const JsonNode& reference){
     NativeFallbacks f;register_native_fallbacks(f);f.record("seat_node_budget");const auto snap=f.snapshot();f.record("seat_node_budget");f.restore(snap);
-    const auto census=f.census();require(census.size()==get(reference,"census").object_value.size()+1,"historical fallback census plus explicit native edge translation");
+    const auto census=f.census();require(census.size()==get(reference,"census").object_value.size()+2,"historical fallback census plus explicit native translation and incumbent retention");
     require(census.at("edge_run_translation")==AuditInteger{},"opt-in translation starts with zero events");
+    require(census.at("screened_incumbent_retained")==AuditInteger{},"incumbent retention starts with zero events");
     for(const auto& [name,v]:get(reference,"census").object_value)require(census.at(name)==AuditInteger(std::int64_t(v.number_value)),"independent rollback census "+name);
     rejects([&]{f.record("not-registered");},"unknown fallback is an error");rejects([&]{register_native_fallbacks(f);},"duplicate fallback registration fails");
     rejects([&]{f.restore({"not-registered"});},"bad restore fails before state mutation");require(f.snapshot()==snap,"failed restore preserves events");
