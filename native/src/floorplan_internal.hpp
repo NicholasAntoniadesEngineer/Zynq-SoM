@@ -32,6 +32,7 @@ inline constexpr double affinity_floor = .05;
 inline constexpr int reseat_evict_budget = 3, refine_span = 40;
 
 bool starts(const std::string& value, const std::string& prefix);
+std::set<std::string> deferred_connector_names(const std::string& expectation);
 std::string number(double value, int precision = -1);
 std::string repr(const std::string& value);
 JsonNode jvalue(const std::string& value);

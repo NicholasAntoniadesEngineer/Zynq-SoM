@@ -1,0 +1,41 @@
+{
+  "base_commit":"05ad0df9",
+  "scope":"Remove regex instantiation for two literal deferred connector identifiers; no placement strategy, tolerance, gate or cache change",
+  "implementation":"Literal search preserves both word boundaries using the current C++ locale's alphanumeric classification plus underscore; deduplicated ordered results retained",
+  "tests":{
+    "independent_regex_oracle":"262166 comparisons: every pair of byte boundaries for each identifier in classic and custom '@ is alphanumeric' locales, plus repeats, invalid prefixes/suffixes and punctuation",
+    "ctest_first_batch":{"result":"5/5 PASS","wall_seconds":88.87,"tests":["native_deferred_connector_contracts","native_floorplan_contracts","native_pcb_placement_contracts","native_audit_ast_projection_contracts","native_audit_ast_projection_census"]},
+    "native_policy_audits_contracts":{"result":"PASS","wall_seconds":37.53}
+  },
+  "isolated_floorplan_source_audit":{
+    "command":"schgen_audit_ast_projection_census --compile-census stream REPO native/src/floorplan_build.cpp OUTPUT_CENSUS",
+    "before":{"ast_bytes":2650926698,"inner_nodes":1678547,"compiler_capture_parse_seconds":11.3844,"total_seconds":11.7819,"parent_peak_rss_bytes":2085666816,"constants":0,"functions":21,"quantization_sites":0},
+    "after":{"ast_bytes":2460492555,"inner_nodes":1564837,"compiler_capture_parse_seconds":10.5865,"total_seconds":10.9447,"parent_peak_rss_bytes":1916403712,"constants":0,"functions":23,"quantization_sites":0},
+    "change_percent":{"ast_bytes":-7.183681960865751,"wall_seconds":-7.105814851594405,"parent_peak_rss":-8.115539006590778},
+    "census_change":"New literal helper and its word-classification lambda are visible; no new policy constants or quantization sites. Source line offsets changed normally.",
+    "limitation":"One sequential before/after sample. Spool/stream diagnostic is not the production concurrent pipe timing; no full-build speedup claim. OS caches/background activity uncontrolled."
+  },
+  "four_source_production_pipe_screen":{
+    "command":"schgen_audit_ast_pipe_census pipe REPO OUTPUT_CENSUS native/src/quantize.cpp native/src/pack.cpp native/src/floorplan_build.cpp native/src/pcb_placement_build.cpp",
+    "workers":2,
+    "before_seconds":[12.2106998,12.7229544],
+    "after_seconds":[12.1503822,12.3419611],
+    "after_sampled_aggregate_peak_bytes":[2496053248,2485043200],
+    "both_after_census_sha256":"2e6848121cffa7356a4943b4623a11fcd42569ab99806ff37f66dfd48d662567",
+    "interpretation":"Small whole-subset change, insufficient samples for a robust speedup claim; retained because literal semantics are independently verified and emitted compiler data is measurably reduced"
+  },
+  "both_board_nonregression":{
+    "command":"schgen_compact_stage_profile --repo REPO --project BOARD --compact-search off --runs 1 --schematic FRESH_FULL_BUILD_SCHEMATIC",
+    "carrier":{"dimensions_mm":[168,163],"top":393,"bottom":176,"pcb_sha256":"8d93efb96783a53ec53a83b830f1d8987f10ca6d86a2246999783fb9ddcf7417","interior_reseat_retry":28,"ceiling":18,"placement_contract_ok":true,"placement_flow_ok":true,"hard_red":0,"hard_margin_min_mm":3.06,"log":"native/build/literal-carrier-profile.log"},
+    "devkit_mini":{"dimensions_mm":[98,98],"top":106,"bottom":57,"pcb_sha256":"cfa0305491d9c4a771adb130b04c4aec6cc2894542391a5c7c9dca3a68bca3cf","interior_reseat_retry":50,"ceiling":35,"placement_contract_ok":true,"placement_flow_ok":true,"hard_red":0,"hard_margin_min_mm":38.28,"log":"native/build/literal-devkit-profile.log"},
+    "result":"Both PCB hashes and retry counts exactly match the completed baf4d769 full builds. This confirms unchanged outputs for a recognition implementation change, not a byte-equality requirement on future optimisations. Retry gates remain failing; no accepted finalist or fabrication-readiness claim."
+  },
+  "rejected_lookup_experiment":{
+    "change":"Sorted binary search for the AST field whitelist instead of linear lookup",
+    "before_seconds":[12.2106998,12.7229544],"candidate_seconds":[12.6980361,12.8237411],
+    "all_four_census_sha256":"7c0fdd7d2477310fb3e4aad2ae11ef6a661b79db0546c2fc4afbf51a83fee9af",
+    "result":"Correct but no useful improvement; production change reverted. Retained independent prefix/extension/NUL/neighbour whitelist tests."
+  },
+  "discarded_invocations":["A sandbox-launched phase profiler remained idle with no child compiler and effectively no CPU; terminated task-owned processes and repeated in the successful baseline's execution mode. Not a timing sample.","Initial two-board profiler invocations omitted required --repo; rejected before generation. Corrected invocations above completed."],
+  "remaining":"No audit caching implemented. Safe reuse must account for transitive header bytes, compiler/options/toolchain identity, source locations, audit semantics and concurrent mutation; runtime ledger and fallback validation must always remain live. Full clean compile and matched historical-workload timing remain separate work."
+}

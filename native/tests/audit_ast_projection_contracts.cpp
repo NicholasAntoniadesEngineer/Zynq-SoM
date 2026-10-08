@@ -58,6 +58,20 @@ JsonNode projected(const std::string& input,const std::string& source="fixture",
 }
 void contracts(){
     for(const auto& field:schema)require(audit_ast_projection_keeps_field(field),"schema field missing: "+field);
+    // Exact membership, including neighbours, prefixes and embedded NULs;
+    // lookup optimisations must not turn an unknown spelling into a field.
+    for(const auto& field:schema){
+        for(std::size_t length=0;length<=field.size();++length){
+            const auto prefix=field.substr(0,length);
+            require(audit_ast_projection_keeps_field(prefix)==bool(schema.count(prefix)),"field prefix membership");
+        }
+        for(const auto& candidate:{field+"x",field+std::string(1,'\0'),"x"+field})
+            require(audit_ast_projection_keeps_field(candidate)==bool(schema.count(candidate)),"field extension membership");
+        for(std::size_t i=0;i<field.size();++i)for(const char delta:{-1,1}){
+            auto candidate=field;candidate[i]=char(candidate[i]+delta);
+            require(audit_ast_projection_keeps_field(candidate)==bool(schema.count(candidate)),"field neighbour membership");
+        }
+    }
     for(const auto* field:{"line","col","end","spellingLoc","tokLen","isUsed","valueCategory","definitionData","unknown"})require(!audit_ast_projection_keeps_field(field),"unused field retained");
     const std::string ast=R"JSON({"unused":{"deep":[1,true,null,{"inner":["ignored"]}]},"inner":[{"parentDeclContextId":"0xparent","kind":"CXXMethodDecl","id":"0xmethod","mangledName":"_Zmethod","loc":{"offset":12,"line":2,"col":1,"includedFrom":{"file":"header.hpp"}},"type":{"qualType":"double (double)","desugaredQualType":"double (double)","typeAliasDeclId":"unused"},"isImplicit":false,"inner":[{"range":{"end":{"offset":99},"begin":{"offset":14,"expansionLoc":{"offset":18,"file":"main.cpp"},"spellingLoc":{"offset":999}}},"kind":"DeclRefExpr","referencedDecl":{"kind":"VarDecl","id":"0xvar","name":"α😀","type":{"qualType":"const double"}}}]},{"name":"","kind":"NamespaceDecl","id":"0xanon"}],"kind":"TranslationUnitDecl","id":"0xroot"})JSON";
     AuditAstProjectionStats stats;

@@ -3,7 +3,8 @@
 
 #include <algorithm>
 #include <cmath>
-#include <regex>
+#include <locale>
+#include <string_view>
 
 namespace schgen::floorplan_detail {
 namespace {
@@ -53,6 +54,27 @@ void add_weight(std::vector<std::pair<std::string,double>>& rows,const std::stri
 }
 }  // namespace
 
+std::set<std::string> deferred_connector_names(const std::string& expectation) {
+    // These are literal identifiers, not a user-supplied pattern. Match the
+    // previous ECMAScript word boundaries without instantiating a regex engine
+    // in every compile/source audit of this translation unit. Retain the C++
+    // locale's alphanumeric classification (including non-ASCII byte facets).
+    const std::locale locale;
+    const auto& characters=std::use_facet<std::ctype<char>>(locale);
+    const auto word=[&](char c){return c=='_' || characters.is(std::ctype_base::alnum,c);};
+    std::set<std::string> result;
+    for(const std::string_view name:{"rj45_connector","usb_uart_connector"}) {
+        for(auto at=expectation.find(name);at!=std::string::npos;at=expectation.find(name,at+name.size())) {
+            const auto end=at+name.size();
+            if((at==0 || !word(expectation[at-1])) &&
+               (end==expectation.size() || !word(expectation[end]))) {
+                result.emplace(name);break;
+            }
+        }
+    }
+    return result;
+}
+
 double Engine::packing_area_bound(bool free) {
     const int reserved=free ? occ_top:occ_punch;
     const auto& sets=shape_sets[free ? 1:0];
@@ -100,7 +122,6 @@ void Engine::initialize() {
         zone_refs[sc.name].insert(p->ref);
         const auto wh=part_dims(p->footprint); raw_area+=wh.first*wh.second;
     }
-    const std::regex deferred_re(R"(\b(rj45|usb_uart)_connector\b)");
     for (const auto& [name,sc]:sheets) {
         auto parts=zone_parts(*sc);
         if ((starts(name,"som_j") || name=="som_decoupling") && parts.empty()) continue;
@@ -110,9 +131,10 @@ void Engine::initialize() {
             const auto wh=part_dims(p->footprint); b.conns.push_back({p->ref,p->value,wh.first,wh.second});
         }
         std::set<std::string> reserved;
-        for (const auto& pt:sc->port_types)
-            for (auto m=std::sregex_iterator(pt.expect.begin(),pt.expect.end(),deferred_re);m!=std::sregex_iterator();++m)
-                reserved.insert(m->str());
+        for (const auto& pt:sc->port_types) {
+            const auto names=deferred_connector_names(pt.expect);
+            reserved.insert(names.begin(),names.end());
+        }
         b.reserved.assign(reserved.begin(),reserved.end());
         const bool is_edge=spec_edges.count(name) || ((!b.conns.empty() || !b.reserved.empty()) && !spec.interior.count(name));
         b.kind=is_edge ? "edge":"interior";
