@@ -69,16 +69,15 @@ void matrix(bool before,bool default_only){
             require(child.mask==(bottom?1:2),"minority physical face changed");
             auto relative=physical;relative.x0-=child.dx;relative.x1-=child.dx;
             relative.y0-=child.dy;relative.y1-=child.dy;
-            if(compact)expected(child.reach,child.inset,relative,child.w,child.h);
-            else require(child.reach.w==0&&child.reach.e==0&&child.reach.n==0&&child.reach.s==0,"default child halo changed");
+            expected(child.reach,child.inset,relative,child.w,child.h);
             for(std::size_t k=1;k<children.size();++k)
                 require(children[k].mask==3&&children[k].reach.w==0&&children[k].reach.e==0&&children[k].reach.n==0&&children[k].reach.s==0,"punch semantics changed");
         }
     }
 }
 void admission(bool before){
-    for(bool bottom:{false,true})for(bool pads:{false,true})for(bool thru:{false,true}){
-        FloorplanInput in;in.som.w=10;in.som.h=10;in.compact_search=true;
+    for(bool compact:{false,true})for(bool bottom:{false,true})for(bool pads:{false,true})for(bool thru:{false,true}){
+        FloorplanInput in;in.som.w=10;in.som.h=10;in.compact_search=compact;
         in.footprints["base"]=document(false,thru);in.geometry.resolvable["U1"]="base";
         in.geometry.bbox_of["U1"]={-4,-1,0,0};in.geometry.conn_rot["U1"]=90;
         Engine engine(in);FloorplanZoneShape a;a.w=10;a.h=10;a.side=bottom?"bottom":"top";
@@ -100,8 +99,8 @@ void admission(bool before){
         std::cout<<"WITNESS side="<<a.side<<" pad_punch="<<pads<<" thru="<<thru<<" gap="<<actual_gap<<" need=2 accepted="<<accepted<<'\n';
     }
 }
-void implicit_base(bool before){
-    FloorplanInput in;in.som.w=10;in.som.h=10;in.compact_search=true;
+void implicit_base(bool before,bool compact){
+    FloorplanInput in;in.som.w=10;in.som.h=10;in.compact_search=compact;
     in.footprints["base"]=document(false,false);in.geometry.resolvable["U1"]="base";
     in.geometry.bbox_of["U1"]={-4,-1,0,0};in.geometry.conn_rot["U1"]=90;
     in.geometry.zone_extra_rot["U1"]=0;in.geometry.zone_box["nonpilot"]={10,10};
@@ -113,6 +112,10 @@ void implicit_base(bool before){
     for(int policy:{0,1}){
         const auto& children=engine.components[policy].at({"nonpilot",0});
         require(children.size()==1,"implicit nonpilot base lost minority child");
+        const auto& child=children.front();
+        require(engine.max_reach>=std::max({child.reach.w,child.reach.e,child.reach.n,child.reach.s,
+            -child.inset.w,-child.inset.e,-child.inset.n,-child.inset.s}),
+            "spatial bound excludes minority-face clearance");
         Occupancy grid(50,50,.3,4,10,1,.05);
         grid.add(10,10,10,10,built.fanout_reach,built.fanout_inset,1,children);
         require(grid.fits_hashed(14,20.5,1,1,{},{},1,{{0,0,1,1,2}})==before,
@@ -141,5 +144,5 @@ void primary_admission(){
 int main(int argc,char** argv){try{
     const bool before=argc==2&&std::string(argv[1])=="--before";
     const bool default_only=argc==2&&std::string(argv[1])=="--default-only";
-    matrix(before,default_only);if(!default_only){admission(before);implicit_base(before);if(!before)primary_admission();}std::cout<<"PASS checks="<<checks<<'\n';return 0;
+    matrix(before,default_only);if(!default_only){admission(before);for(bool compact:{false,true})implicit_base(before,compact);if(!before)primary_admission();}std::cout<<"PASS checks="<<checks<<'\n';return 0;
 }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}

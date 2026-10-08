@@ -118,8 +118,9 @@ void contracts(const Frozen& frozen) {
         auto defaults=frozen.input;defaults.compact_search=false;Engine legacy(defaults);
         QuantizationCounts default_counts;
         const auto dc=legacy.zone_components(sw,pad_punch,&default_counts);
-        require(dc.size()==children.size()&&same(dc.front().reach,{})&&same(dc.front().inset,{}),"default child halo changed");
-        require(default_counts==QuantizationCounts{{"pack_zone_component_precision4dp",4}},"default producer receipts changed");
+        require(dc.size()==children.size()&&same(dc.front().reach,child.reach)&&same(dc.front().inset,child.inset),"search strategy changed physical child clearance");
+        require(default_counts.count("pack_fanout_reach_precision4dp")&&default_counts.count("quant_credit"),"default child producer is unaccounted");
+        require(!fits(16,dc)&&fits(14,dc),"default mode admits unsafe child or rejects safe control");
     }
 }
 }

@@ -206,7 +206,7 @@ std::vector<Comp> Engine::zone_components(const FloorplanZoneShape& shape, bool 
         }
     }
     auto children=zone_components_assemble(minor, punches, shape.side == "bottom" ? occ_top : occ_bottom, occ_punch, counts);
-    if (in.compact_search && !minor.empty()) {
+    if (!minor.empty()) {
         // The first assembled child is the minority-face courtyard union.
         // Its halo must be measured in that rectangle's frame, not attached
         // solely to the opposite-face primary body. Rotations/mirroring are
@@ -269,12 +269,11 @@ void Engine::prepare_geometry() {
         (void)name; for (const auto& s : variants) bound(s.reach,s.inset);
     }
     // Cover both courtyard-punch and pad-punch policies, including shapes not
-    // present in the interior variant table. No new numeric work on defaults.
-    if (in.compact_search)
-        for (const auto& policy:components) for (const auto& [key,children]:policy) {
-            (void)key;
-            for (const auto& child:children) bound(child.reach,child.inset);
-        }
+    // present in the interior variant table, regardless of search strategy.
+    for (const auto& policy:components) for (const auto& [key,children]:policy) {
+        (void)key;
+        for (const auto& child:children) bound(child.reach,child.inset);
+    }
     const auto dec = sheets.find("som_decoupling");
     if (dec != sheets.end()) {
         for (const auto& p : dec->second->parts) if (const auto key = resolved(p)) {
