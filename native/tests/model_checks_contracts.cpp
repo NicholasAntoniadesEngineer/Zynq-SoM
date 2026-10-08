@@ -99,8 +99,12 @@ void parsers(const JsonNode& fixtures) {
         }
     }
     for(const auto& [s,v]:at(fixtures,"rail_volts").object_value) {auto got=rail_volts(s);if(v.kind==JsonKind::Null)require(!got,"rail unknown "+s);else require(got&&*got==num(v),"rail voltage "+s);}
-    auto& expected=at(fixtures,"ratings");require(default_part_ratings().size()==expected.object_value.size(),"complete ratings table");
-    for(std::size_t i=0;i<default_part_ratings().size();++i){auto& r=default_part_ratings()[i];auto& e=expected.object_value[i];require(r.first==e.first,"rating insertion order");eq(part_ratings_json(r.second),e.second,"rating "+r.first);auto parsed=part_ratings_from_json(e.second);require(bool(parsed),"rating decode");eq(part_ratings_json(*parsed),e.second,"rating inverse "+r.first);}
+    auto& expected=at(fixtures,"ratings");require(default_part_ratings().size()==expected.object_value.size()+1,"complete ratings table plus reviewed reference filter");
+    for(std::size_t i=0;i<expected.object_value.size();++i){auto& r=default_part_ratings()[i];auto& e=expected.object_value[i];require(r.first==e.first,"rating insertion order");eq(part_ratings_json(r.second),e.second,"rating "+r.first);auto parsed=part_ratings_from_json(e.second);require(bool(parsed),"rating decode");eq(part_ratings_json(*parsed),e.second,"rating inverse "+r.first);}
+    const auto& added=default_part_ratings().back();
+    require(added.first=="C14858"&&added.second.kind=="mlcc"&&added.second.v_max==50.0&&
+        added.second.tol=="±5%"&&added.second.dielectric=="C0G"&&added.second.temp_max==125.0,
+        "independent Samsung reference-filter ratings");
 }
 void mutation_contracts() {
     // A supplied power result is authoritative, even when no circuit regulator

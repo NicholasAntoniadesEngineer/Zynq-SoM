@@ -54,8 +54,8 @@ The ISET resistor, enable circuit and declared steady-state loads are unchanged;
 the larger input reservoir can change charging demand. Regenerate and revalidate
 the board and downstream BOM after this hardware change: the larger footprint
 has no compaction or clearance waiver, and no board-area improvement is claimed.
-PCA9306 topology is unchanged by this correction; its startup/bias/EN review
-remains open, and the tests below do not certify transient isolation.
+The subsequent PCA9306 reference-bias correction is described below; the tests
+do not certify transient isolation.
 
 **Status LED.** A red LED on the gated output through R3 = 330R lights when the
 AUX rail is enabled, making the manual gate state visible at a glance.
@@ -63,20 +63,24 @@ AUX rail is enabled, making the manual gate state visible at a glance.
 **I2C isolator (U2, PCA9306DCUR).** The board_services peripherals run off the
 gated rail but their bus is the always-on `STM32_I2C2`. Tying gated SDA/SCL
 straight to that pulled-up bus would back-power the unpowered chips through their
-ESD diodes (LAW 0). The intended isolation is **not qualified**. The existing
-circuit directly connects VREF1 to `+3V3_SC` and VREF2 to `+3V3_AUX`, with
-R4 = 100k between EN and `+3V3_AUX`, 100n on each VREF, and R5/R6 = 4k7
-AUX bus pull-ups. R4 does not limit current through VREF2.
+ESD diodes (LAW 0). The intended isolation is **not fully qualified**.
+VREF1 connects to `+3V3_SC`; R4 = 100k now connects `+3V3_AUX` to VREF2
+on `AUX_ISO_REF`. EN directly follows `+3V3_AUX`. C5 is now a 100pF
+reference filter to GND, not the former 100nF AUX-rail bypass. R5/R6 remain
+4k7 AUX bus pull-ups. No components or footprint sizes were added or removed.
 
 [TI PCA9306 datasheet SCPS113O](https://www.ti.com/lit/ds/symlink/pca9306.pdf),
-sections 8.1.2 and 10, requires VREF2 current limiting; the present direct
-connection is an unresolved design defect. Equal-voltage switch operation is
-supported by section 8.1.5, so equal nominal 3.3 V rails alone are not a defect.
-The reference resistor and enable control must be reviewed together, including
-both rail sequences, rail decay, bus state at enable, and the existing VREF2
-capacitor. Adding a resistor alone does not establish transient isolation.
-Until that review and correction are validated, do not claim that the AUX
-peripherals are cleanly isolated or that a passing ERC certifies this circuit.
+sections 8.1.2/10 require reference current limiting; section 8.1.5 shows
+equal-voltage switch operation with independent enable control. Section 8.1.8
+allows lower resistance than 200k at increased bias current; section 11.1
+recommends the 100pF filter. This corrects the direct reference-rail connection,
+but rail ramp/decay, reverse sequencing and bus state at enable remain open.
+Do not interpret ERC or passive-only SPICE as transient isolation approval.
+
+C5 is [Samsung CL10C101JB8NNNC](https://product.samsungsem.com/cn/mlcc/CL10C101JB8NNN.do),
+100pF ±5%, 50 V C0G, 0603, [LCSC C14858](https://www.lcsc.com/product-detail/Multilayer-Ceramic-Capacitors-MLCC-SMD-SMT_Samsung-Electro-Mechanics-CL10C101JB8NNNC_C14858.html).
+The resistor-fed reference node is not resolved by the generic named-rail
+voltage checker; its capacitor voltage assessment remains explicitly UNSPEC.
 The production `part_rules` gate now rejects the catalogued PCA9306DCUR when
 VREF2 is directly on a recognized positive supply and VREF1 is on a different
 net. This finding cannot be waived as a part-rating exception. It is a targeted
@@ -91,12 +95,13 @@ absence of this finding alone does not qualify isolation.
 | U2  | PCA9306DCUR | parts: `PCA9306DCUR` | — |
 | SW1 | DSHP04TSGER | parts: `DSHP04TSGER` | — |
 | D   | red | `Device:LED` | C2286 |
-| C2, C4, C5 | 100n | `Device:C` (0603) | C14663 |
+| C2, C4 | 100n | `Device:C` (0603) | C14663 |
+| C5 | 100p | `Device:C` (0603) | C14858 |
 | C1, C3 | 10u | `Device:C` (0805) | C15850 |
 | R (ISET) | 13k | `Device:R` | C22797 |
 | R (EN pulldown) | 100k | `Device:R` | C25803 |
 | R (LED) | 330R | `Device:R` | C23138 |
-| R (PCA9306 EN pull-up) | 100k | `Device:R` | C25803 |
+| R4 (PCA9306 reference current limit) | 100k | `Device:R` | C25803 |
 | R (×2 AUX bus pull-ups) | 4k7 | `Device:R` | C23162 |
 
 Refdes for the `Device:*` parts are auto-assigned; the netlist topology is the
@@ -104,7 +109,8 @@ authority. Three testpoints sit on `+3V3_AUX`, `AUX_I2C_SCL`, `AUX_I2C_SDA`.
 
 ## Build & test
 
-The native C++ contracts cover independent frozen pin/reference/NC identities,
+The native C++ contracts cover historical pin/reference/NC identities plus the
+exact reviewed reference-bias rewiring,
 live-authoring/derived-circuit parity, C1-C5 values/packages/BOM codes, electrical
 rules, power declarations, part ratings, pin/footprint coverage, compiled
 ownership requirements, and passive SPICE identities:
@@ -114,10 +120,10 @@ ownership requirements, and passive SPICE identities:
 - `native/tests/carrier_spice_identity_contracts.cpp`.
 
 The C1 contract rejects the former C1 value/package/code and unrelated pin swaps,
-reference replacement, missing NC declarations and changes to C2-C5 values.
+reference replacement, missing NC declarations, and obsolete C5 value/BOM code.
 These are focused structural checks, not active-device transient simulations or
-full-board acceptance. The C1 contract explicitly expects the unchanged PCA9306
-topology to fail the production parts gate; it does not expect all board checks
-to pass. EN-only resistance, waiver and metadata mutations must not suppress
-that finding. The C1 contract is registered in CMake/CTest; changed
+full-board acceptance. The C1 contract expects the corrected topology to pass
+the direct-reference gate and the original wiring to fail it. EN-only resistance,
+waiver and metadata mutations must not suppress that original finding. Missing
+reference filtering must fail the decoupling rule. The C1 contract is registered in CMake/CTest; changed
 boards still require regeneration and validation without footprint waivers.

@@ -92,7 +92,8 @@ const PartRatingsTable& default_part_ratings() {
         {"C7562", {"ic", std::nullopt, std::nullopt, std::nullopt, std::nullopt, std::nullopt, 85.0, 6.5, "M24C02 EEPROM abs-max Vcc 6.5V"}},
         {"C129895", {"ic", std::nullopt, std::nullopt, std::nullopt, std::nullopt, std::nullopt, 85.0, 6.5, "24AA025E48 EEPROM+MAC abs-max Vcc 6.5V"}},
         {"C3019759", {"ic", std::nullopt, std::nullopt, std::nullopt, std::nullopt, std::nullopt, 85.0, 5.5, "RV-3028-C7 RTC 1.1-5.5V"}},
-        {"C201665", {"ic", std::nullopt, std::nullopt, std::nullopt, std::nullopt, std::nullopt, 85.0, 5.5, "TPD12S016 HDMI ESD/level-shift 4.5-5.5V"}}
+        {"C201665", {"ic", std::nullopt, std::nullopt, std::nullopt, std::nullopt, std::nullopt, 85.0, 5.5, "TPD12S016 HDMI ESD/level-shift 4.5-5.5V"}},
+        {"C14858", {"mlcc", 50.0, std::nullopt, std::nullopt, "±5%", "C0G", 125.0, std::nullopt, "Samsung CL10C101JB8NNNC 100pF 50V C0G 0603; product.samsungsem.com/cn/mlcc/CL10C101JB8NNN.do"}}
     };
     return table;
 }

@@ -69,10 +69,10 @@ CircuitSheetIr carrier_board_aux(const SubsystemMeta& meta, const AuthoringConte
         t.expect = "STM32_I2C2 management bus (bringup_rails / usb_pd / power_mon)";
         c.port("STM32_I2C2_SDA", {"U2.SDA1"}, t, true);
     }
-    // OPEN hardware defect: TI SCPS113O 8.1.2/10 require current limiting
-    // on VREF2. R4 is on EN only and does not provide it. Do not interpret
-    // netlist/ERC or the frozen migration identity as isolation qualification.
-    c.net("+3V3_AUX", {"U2.VREF2"}, std::nullopt);
+    // SCPS113O 8.1.5 switch configuration: separately drive EN from the
+    // gated rail; R4 limits the reference-channel current, not EN current.
+    // Rail-transition/back-power qualification remains a separate obligation.
+    c.net("+3V3_AUX", {"U2.EN"}, std::nullopt);
     {
         AuthoringPort t;
         t.kind = "i2c";
@@ -91,11 +91,12 @@ CircuitSheetIr carrier_board_aux(const SubsystemMeta& meta, const AuthoringConte
         t.expect = "board_services (the gated peripherals on the isolated AUX bus)";
         c.port("AUX_I2C_SDA", {"U2.SDA2"}, t, true);
     }
-    c.net("AUX_ISO_EN", {"U2.EN"}, std::nullopt);
-    c.pullup("U2.EN", "100k", "+3V3_AUX", "Device:R", "Resistor_SMD:R_0603_1608Metric");
+    c.net("AUX_ISO_REF", {"U2.VREF2"}, std::nullopt);
+    c.pullup("U2.VREF2", "100k", "+3V3_AUX", "Device:R", "Resistor_SMD:R_0603_1608Metric");
     c.pullup("U2.SCL2", "4k7", "+3V3_AUX", "Device:R", "Resistor_SMD:R_0603_1608Metric");
     c.pullup("U2.SDA2", "4k7", "+3V3_AUX", "Device:R", "Resistor_SMD:R_0603_1608Metric");
-    c.decouple("U2.VREF2", {"100n"}, std::nullopt, "GND", "Device:C", "Capacitor_SMD:C_0603_1608Metric");
+    // SCPS113O 11.1: 100pF reference filter, not a 100nF rail bypass.
+    c.decouple("U2.VREF2", {"100p"}, std::nullopt, "GND", "Device:C", "Capacitor_SMD:C_0603_1608Metric");
     c.draws("+3V3_AUX", 0.006, "status LED 3.9mA + 2x4k7 AUX-bus pull-ups");
     c.testpoint("+3V3_AUX", std::nullopt);
     c.testpoint("AUX_I2C_SCL", std::nullopt);
@@ -106,7 +107,7 @@ CircuitSheetIr carrier_board_aux(const SubsystemMeta& meta, const AuthoringConte
     c.field("R4", "LCSC", "C25803");
     c.field("R5", "LCSC", "C23162");
     c.field("R6", "LCSC", "C23162");
-    c.field("C5", "LCSC", "C14663");
+    c.field("C5", "LCSC", "C14858");
     return meta.finish(c);
 }
 } // namespace schgen::project_builders

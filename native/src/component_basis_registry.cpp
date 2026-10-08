@@ -114,9 +114,11 @@ const ComponentBasisPolicy& default_component_basis_policy() {
         DECL("carrier.board_aux.en_pulldown", "100k", "ohm", "Holds EN_AUX low so the gate is OFF at power-up until a human closes SW1 pos 1 (constraint C1). LCSC C25803.", "datasheet", false);
         DECL("carrier.board_aux.decap", "100n", "F", "SY6280 and PCA9306 per-pin bypass. LCSC C14663.", "datasheet", false);
         DECL("carrier.board_aux.in_reservoir", "10u", "F", "SY6280 Rev.1.0E p.7 strongly recommends a 10uF ceramic VIN-to-GND supply filter for hot-plug droop and ringing. Nominal 10uF, 0805 25 V X5R, LCSC C15850; effective capacitance under DC bias is not established here.", "datasheet", false);
+        DECL("carrier.board_aux.reference_filter", "100p", "F", "TI SCPS113O 11.1 specifies a 100pF filter near VREF2. Samsung CL10C101JB8NNNC, 0603 50 V C0G +/-5%, LCSC C14858. This filter and its reference-current limiter do not qualify power-transition isolation.", "datasheet", false);
         DECL("carrier.board_aux.out_bulk", "10u", "F", "Hold-up on the gated +3V3_AUX rail for the 200 mA QWIIC load. The SY6280 datasheet recommends an output cap and only the 100n was fitted (audit 2026-06-19); its soft-start tolerates 10u. 0805 25 V, LCSC C15850.", "datasheet", false);
         DECL("carrier.board_aux.led_ballast", "330R", "ohm", "KT-0603R status LED ballast, ~3.9 mA from +3V3_AUX. LCSC C23138.", "datasheet", false);
-        DECL("carrier.board_aux.iso_en_pullup", "100k", "ohm", "Existing R4 connects PCA9306 EN to +3V3_AUX; LCSC C25803. Isolation is NOT qualified: VREF2 is directly rail-connected without its current-limiting resistor (TI SCPS113O sections 8.1.2, 8.1.5 and 10). Startup, shutdown and reverse rail sequencing require review. This value records the existing design, not datasheet approval.", "policy", false);
+        // Identifier retained for historical binding trace; R4 now biases VREF2, not EN.
+        DECL("carrier.board_aux.iso_en_pullup", "100k", "ohm", "R4 limits the PCA9306 VREF2 reference current from +3V3_AUX; EN directly follows AUX in switch mode. TI SCPS113O 8.1.5/8.1.8 permits separate enable control and lower reference resistance than 200k with increased bias current. Retained 100k C25803. Startup, shutdown and reverse rail isolation remain unqualified.", "policy", false);
         DECL("carrier.board_aux.bus_pullup", "4k7", "ohm", "AUX-side I2C pulls to the gated rail; the PCA9306 requires pulls on BOTH sides. LCSC C23162.", "datasheet", false);
         DECL("carrier.board_aux.i2c_speed", "400000", "Hz", "Fast-mode on both sides of the isolator.", "datasheet", true);
         DECL("carrier.board_qwiic.i2c_speed", "400000", "Hz", "Fast-mode AUX_I2C.", "datasheet", true);
@@ -402,7 +404,7 @@ const ComponentBasisPolicy& default_component_basis_policy() {
             {"carrier", "board_aux", "R4", "value", "carrier.board_aux.iso_en_pullup", "Device:R"},
             {"carrier", "board_aux", "R5", "value", "carrier.board_aux.bus_pullup", "Device:R"},
             {"carrier", "board_aux", "R6", "value", "carrier.board_aux.bus_pullup", "Device:R"},
-            {"carrier", "board_aux", "C5", "value", "carrier.board_aux.decap", "Device:C"},
+            {"carrier", "board_aux", "C5", "value", "carrier.board_aux.reference_filter", "Device:C"},
             {"carrier", "board_services", "C1", "value", "carrier.board_services.decap", "Device:C"},
             {"carrier", "board_services", "R1", "value", "carrier.board_services.int_pullup", "Device:R"},
             {"carrier", "board_services", "C2", "value", "carrier.board_services.decap", "Device:C"},

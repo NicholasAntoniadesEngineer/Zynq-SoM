@@ -20,7 +20,7 @@ int main(int argc, char** argv) {
         const auto& policy = default_component_basis_policy();
         const auto fixture = parse_json_file((root/"native/tests/data/component_basis/python_basis.json").string());
         require(live.size() == 66 && policy.sheets.size() == 66,"complete live coverage");
-        require(policy.declarations.size() == 215 && policy.uses.size() == 685,"expectation coverage");
+        require(policy.declarations.size() == 216 && policy.uses.size() == 685,"expectation coverage");
         std::size_t reviewed_basis_corrections = 0;
         for(const auto& row : at(fixture,"declarations").array_value) {
             const auto& a = row.array_value;
@@ -34,7 +34,7 @@ int main(int argc, char** argv) {
                     a[4].string_value == "datasheet", "original unsupported isolation claim changed");
                 require(it->value == value && it->unit == a[2].string_value && !it->numeric &&
                     it->klass == "policy" && it->basis ==
-                    "Existing R4 connects PCA9306 EN to +3V3_AUX; LCSC C25803. Isolation is NOT qualified: VREF2 is directly rail-connected without its current-limiting resistor (TI SCPS113O sections 8.1.2, 8.1.5 and 10). Startup, shutdown and reverse rail sequencing require review. This value records the existing design, not datasheet approval.",
+                    "R4 limits the PCA9306 VREF2 reference current from +3V3_AUX; EN directly follows AUX in switch mode. TI SCPS113O 8.1.5/8.1.8 permits separate enable control and lower reference resistance than 200k with increased bias current. Retained 100k C25803. Startup, shutdown and reverse rail isolation remain unqualified.",
                     "reviewed isolation uncertainty must not become a datasheet approval");
                 continue;
             }
@@ -52,20 +52,32 @@ int main(int argc, char** argv) {
             // hardware correction may differ from its original binding.
             const bool c1 = a[0].string_value == "carrier" &&
                 a[1].string_value == "board_aux" && a[2].string_value == "C1";
+            const bool c5 = a[0].string_value == "carrier" &&
+                a[1].string_value == "board_aux" && a[2].string_value == "C5";
             if(c1) {
                 ++reviewed_migrations;
                 require(a[3].string_value == "Device:C" && a[4].string_value == "100n" &&
                     a[5].string_value == "carrier.board_aux.decap", "original C1 trace changed");
             }
+            if(c5) {
+                ++reviewed_migrations;
+                require(a[3].string_value=="Device:C"&&a[4].string_value=="100n"&&
+                    a[5].string_value=="carrier.board_aux.decap","original C5 trace changed");
+            }
             const auto match=std::find_if(policy.uses.begin(),policy.uses.end(),[&](const auto& u) {
                 return u.scope==a[0].string_value && u.sheet==a[1].string_value &&
                     u.target==a[2].string_value && u.attribute=="value" &&
-                    u.declaration==(c1 ? "carrier.board_aux.in_reservoir" : a[5].string_value) &&
+                    u.declaration==(c1 ? "carrier.board_aux.in_reservoir" : c5 ? "carrier.board_aux.reference_filter" : a[5].string_value) &&
                     u.type==a[3].string_value;
             });
             require(match!=policy.uses.end(),"obligation differs from independent Python trace");
         }
-        require(reviewed_migrations == 1, "exactly one reviewed hardware migration");
+        require(reviewed_migrations == 2, "exactly two reviewed capacitor migrations");
+        const auto filter=std::find_if(policy.declarations.begin(),policy.declarations.end(),
+            [](const auto& d){return d.name=="carrier.board_aux.reference_filter";});
+        require(filter!=policy.declarations.end()&&filter->value=="100p"&&filter->unit=="F"&&
+            filter->klass=="datasheet"&&!filter->numeric&&filter->basis==
+            "TI SCPS113O 11.1 specifies a 100pF filter near VREF2. Samsung CL10C101JB8NNNC, 0603 50 V C0G +/-5%, LCSC C14858. This filter and its reference-current limiter do not qualify power-transition isolation.","reviewed reference-filter basis");
         const auto reservoir = std::find_if(policy.declarations.begin(),policy.declarations.end(),
             [](const auto& d) { return d.name == "carrier.board_aux.in_reservoir"; });
         require(reservoir != policy.declarations.end(), "missing input reservoir declaration");
@@ -82,7 +94,7 @@ int main(int argc, char** argv) {
             }),"port obligation differs from independent Python trace");
         }
         require(result.ok(), component_basis_report(result));
-        require(result.n_files == 66 && result.n_registered == 215 && result.n_sites == 685,"audit counts");
+        require(result.n_files == 66 && result.n_registered == 216 && result.n_sites == 685,"audit counts");
         {
             auto old_c1 = live;
             auto& aux = std::find_if(old_c1.begin(),old_c1.end(),[](const auto& x) {

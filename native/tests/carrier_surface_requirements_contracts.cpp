@@ -36,7 +36,7 @@ const std::map<std::string,std::vector<Ownership>> expected{
                    {"U1","1","C2","+3V3_AUX","100n"},
                    {"U1","1","C3","+3V3_AUX","10u"},
                    {"U2","2","C4","+3V3_SC","100n"},
-                   {"U2","7","C5","+3V3_AUX","100n"}}},
+                   {"U2","7","C5","AUX_ISO_REF","100p"}}},
     {"bringup_rails", {{"U1","24","C1","+3V3_SC","100n"}}}
 };
 // Test-only requirements verification, NOT a replacement runtime placement gate.

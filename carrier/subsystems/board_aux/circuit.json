@@ -250,10 +250,10 @@
     {
       "ref": "C5",
       "lib_id": "Device:C",
-      "value": "100n",
+      "value": "100p",
       "footprint": "Capacitor_SMD:C_0603_1608Metric",
       "fields": {
-        "LCSC": "C14663"
+        "LCSC": "C14858"
       },
       "pin_names": {},
       "pin_numbers": []
@@ -313,11 +313,10 @@
         "C2.1",
         "C3.1",
         "D1.2",
-        "U2.7",
+        "U2.8",
         "R4.1",
         "R5.1",
         "R6.1",
-        "C5.1",
         "TP1.1"
       ]
     },
@@ -403,11 +402,12 @@
       ]
     },
     {
-      "name": "AUX_ISO_EN",
+      "name": "AUX_ISO_REF",
       "net_class": "signal",
       "pins": [
-        "U2.8",
-        "R4.2"
+        "U2.7",
+        "R4.2",
+        "C5.1"
       ]
     }
   ],

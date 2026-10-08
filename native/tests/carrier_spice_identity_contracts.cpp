@@ -56,7 +56,11 @@ int main(int argc,char** argv) {
         std::ifstream file(path);require(bool(file),"read board_aux SPICE model");
         const std::string bytes{std::istreambuf_iterator<char>(file),{}};
         const auto rows=read_passives(bytes);verify(live,rows);
-        auto historical=rows;
+        auto pre_bias=rows;
+        pre_bias.at("C5")={"V3V3_AUX","GND","100n"};
+        pre_bias.at("R4")={"V3V3_AUX","AUX_ISO_EN","100k"};
+        rejects([&]{verify(live,pre_bias);});
+        auto historical=pre_bias;
         historical.at("C3")={"V3V3_SC","GND","100n"};
         historical.at("C4")={"V3V3_AUX","GND","100n"};
         historical.at("C5")={"V3V3_AUX","GND","10u"};
@@ -66,7 +70,7 @@ int main(int argc,char** argv) {
                 result.emplace(ref.front(),p.first,p.second,*parse_si_value(p.value));
             return result;
         };
-        require(electrical(rows)==electrical(historical),"label correction changed the passive network");
+        require(electrical(pre_bias)==electrical(historical),"historical label correction changed the passive network");
         rejects([&]{verify(live,historical);});
         for(const auto& row:rows) {
             auto missing=rows;missing.erase(row.first);rejects([&]{verify(live,missing);});

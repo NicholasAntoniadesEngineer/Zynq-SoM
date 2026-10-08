@@ -1,14 +1,14 @@
 * board_aux.cir — SPICE subckt for the carrier gated-+3V3_AUX rail + PCA9306
 * I2C isolator: the passive network around the SY6280 load switch and the
 * PCA9306 (supply bypass, ILIM-set, EN pulldown, status-LED divider, the
-* isolator VREF bypass + EN/bus pull-ups).
+* isolator reference-current limit + reference filter + bus pull-ups).
 *
 * CARRIER-LOCAL: the subckt pins are the carrier's REAL rail/ground/port nets
 * (not an abstract interface). The SY6280 (load switch) and PCA9306 (passive
 * FET bus switch) have no useful analog small-signal model here; this subckt
 * captures the PASSIVE network the sheet adds, which is what the local test and
 * a board-level .op reason about. Internal SIGNAL nodes (EN_AUX, BS_ISET_AUX,
-* BS_PG_AUX, AUX_ISO_EN) are local subckt nodes, not pins.
+* BS_PG_AUX, AUX_ISO_REF) are local subckt nodes, not pins.
 *
 * Values mirror native/src/project_authoring_carrier_board_aux.cpp one-for-one
 * (parse_si compatible):
@@ -16,11 +16,11 @@
 *   C2 100n  SY6280 OUT bypass       (V3V3_AUX-> GND)
 *   C3 10u   SY6280 OUT bulk hold-up (V3V3_AUX-> GND)
 *   C4 100n  PCA9306 VREF1 bypass    (V3V3_SC -> GND)
-*   C5 100n  PCA9306 VREF2 bypass    (V3V3_AUX-> GND)
+*   C5 100p  PCA9306 VREF2 filter    (AUX_ISO_REF -> GND)
 *   R1 13k   SY6280 ILIM set (~523mA)(BS_ISET_AUX -> GND, internal)
 *   R2 100k  EN_AUX pulldown (def OFF)(EN_AUX -> GND, internal)
 *   R3 330R  status-LED series        (BS_PG_AUX -> GND, internal)
-*   R4 100k  PCA9306 EN pull-up       (V3V3_AUX -> AUX_ISO_EN, internal)
+*   R4 100k  PCA9306 reference limit (V3V3_AUX -> AUX_ISO_REF, internal)
 *   R5 4k7   AUX SCL pull-up          (V3V3_AUX -> AUX_I2C_SCL)
 *   R6 4k7   AUX SDA pull-up          (V3V3_AUX -> AUX_I2C_SDA)
 *   D1 red   status LED               (BS_PG_AUX -> V3V3_AUX)
@@ -36,7 +36,7 @@
 C1 V3V3 GND 10u
 C2 V3V3_AUX GND 100n
 C4 V3V3_SC GND 100n
-C5 V3V3_AUX GND 100n
+C5 AUX_ISO_REF GND 100p
 
 * bulk hold-up on the gated rail for the QWIIC load (audit 2026-06-19)
 C3 V3V3_AUX GND 10u
@@ -52,8 +52,9 @@ R2 EN_AUX GND 100k
 D1 V3V3_AUX BS_PG_AUX DLED
 R3 BS_PG_AUX GND 330R
 
-* PCA9306 EN pulled to the gated rail: switch OPENS (isolated) when AUX is down
-R4 V3V3_AUX AUX_ISO_EN 100k
+* PCA9306 reference current limit. EN directly follows AUX in switch mode.
+* This passive-only model does NOT certify startup/shutdown isolation.
+R4 V3V3_AUX AUX_ISO_REF 100k
 
 * AUX-side I2C bus pull-ups to the gated rail (PCA9306 needs pulls both sides)
 R5 V3V3_AUX AUX_I2C_SCL 4k7

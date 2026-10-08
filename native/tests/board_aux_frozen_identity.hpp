@@ -24,6 +24,13 @@ inline Pins pins() {
 }
 inline void verify(const schgen::CircuitSheetIr& c) {
     auto expected=pins();
+    // Reviewed switch-mode correction: preserve the independent historical
+    // oracle, then apply exactly the reference/enable rewiring. All remaining
+    // pins, references and NC identities must remain unchanged.
+    expected.at({"U2","7"})="AUX_ISO_REF";
+    expected.at({"U2","8"})="+3V3_AUX";
+    expected.at({"R4","2"})="AUX_ISO_REF";
+    expected.at({"C5","1"})="AUX_ISO_REF";
     std::set<std::string> refs{"U1","U2","C1","C2","C3","C4","C5","R1","R2","R3","R4","R5","R6","D1","SW1","TP1","TP2","TP3"};
     Pins actual;std::set<std::string> actual_refs,nc;
     for(const auto& n:c.nets)for(const auto& p:n.pins)if(!actual.emplace(std::make_pair(p.ref,p.pin),n.name).second)throw std::runtime_error("duplicate pin");

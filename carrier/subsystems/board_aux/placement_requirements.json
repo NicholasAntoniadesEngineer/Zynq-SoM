@@ -7,7 +7,7 @@
     {"owner": "U1", "pin": "1", "pin_name": "OUT", "cap": "C2", "cap_pin": "1", "return_pin": "2", "rail": "+3V3_AUX", "return_net": "GND", "value": "100n", "role": "output_bypass"},
     {"owner": "U1", "pin": "1", "pin_name": "OUT", "cap": "C3", "cap_pin": "1", "return_pin": "2", "rail": "+3V3_AUX", "return_net": "GND", "value": "10u", "role": "shared_output_bulk"},
     {"owner": "U2", "pin": "2", "pin_name": "VREF1", "cap": "C4", "cap_pin": "1", "return_pin": "2", "rail": "+3V3_SC", "return_net": "GND", "value": "100n", "role": "authored_reference_rail_bypass_not_translation_filter"},
-    {"owner": "U2", "pin": "7", "pin_name": "VREF2", "cap": "C5", "cap_pin": "1", "return_pin": "2", "rail": "+3V3_AUX", "return_net": "GND", "value": "100n", "role": "authored_reference_rail_bypass_not_translation_filter"}
+    {"owner": "U2", "pin": "7", "pin_name": "VREF2", "cap": "C5", "cap_pin": "1", "return_pin": "2", "rail": "AUX_ISO_REF", "return_net": "GND", "value": "100p", "role": "reference_filter"}
   ],
   "access": {"top_face_switches": ["SW1"], "actuation_envelope": "unverified; existing top-face gate is not an access-envelope proof"},
   "proximity": {"numeric_limit_mm": null, "status": "blocked: cited manufacturer guidance is qualitative; no invented maximum"},
