@@ -8,6 +8,7 @@
 #include "schgen/subsystem_build.hpp"
 #include "schgen/example_devkit.hpp"
 #include "schgen/experiment_tools.hpp"
+#include "schgen/experiment_observers.hpp"
 #include "schgen/net_contract.hpp"
 #include "schgen/pcb_drc.hpp"
 #include "schgen/subsystem_scaffold.hpp"
@@ -39,6 +40,7 @@
 #include "schgen/process.hpp"
 
 #include <algorithm>
+#include <charconv>
 #include <filesystem>
 #include <fstream>
 #include <iterator>
@@ -61,6 +63,7 @@ struct Options {
     bool allow_missing = false, qualified_refs = false, no_ngspice = false, keep = false;
     bool no_render = false, timing = false, conservative_only = false;
     bool compact_search = false;
+    std::optional<std::pair<double,double>> initial_outline;
     bool help = false;
     std::set<std::string> help_options;
     long long quantity = 1, minimum_stock = 50;
@@ -104,7 +107,7 @@ Options parse(int argc, char** argv) {
         if (arg == "--repo" || arg == "--project" || arg == "--som" ||
             arg == "--contract" || arg == "--output" || arg == "-o" ||
             arg == "--xdc" || arg == "--refs" || arg == "--kicad-cli" || arg == "--pcb" ||
-            arg == "--subsystem" || arg == "--qty" || arg == "--min-stock") {
+            arg == "--subsystem" || arg == "--qty" || arg == "--min-stock" || arg == "--initial-outline-mm") {
             if (++i == argc) throw std::runtime_error("missing value for " + arg);
             const std::string key = arg == "-o" ? "--output" : arg;
             if (arg != "--subsystem" && !seen.insert(key).second)
@@ -120,6 +123,22 @@ Options parse(int argc, char** argv) {
             else if (arg == "--pcb") out.pcb = value;
             else if (arg == "--refs") out.refs = value;
             else if (arg == "--kicad-cli") out.kicad_cli = value;
+            else if (arg == "--initial-outline-mm") {
+                const auto split=value.find('x');
+                if(split==std::string::npos || split==0 || split+1==value.size() || value.find('x',split+1)!=std::string::npos)
+                    throw ProjectError("initial-outline-mm must be WIDTHxHEIGHT");
+                const auto dimension=[](const std::string& text){
+                    double number=0;
+                    const auto parsed=std::from_chars(text.data(),text.data()+text.size(),number);
+                    if(parsed.ec!=std::errc{} || parsed.ptr!=text.data()+text.size())
+                        throw ProjectError("invalid initial-outline-mm dimension");
+                    return number;
+                };
+                FloorplanExperiment experiment;
+                experiment.initial_outline={{dimension(value.substr(0,split)),dimension(value.substr(split+1))}};
+                validate_floorplan_experiment(experiment);
+                out.initial_outline=experiment.initial_outline;
+            }
             else if (arg == "--qty" || arg == "--min-stock") {
                 std::size_t used = 0;
                 const auto number = std::stoll(value, &used);
@@ -141,6 +160,7 @@ Options parse(int argc, char** argv) {
         if(out.command=="w12-stageprobe")allowed.insert("--cons-only");
     } else if (out.command == "board") {
         allowed.insert("--compact-placement");
+        allowed.insert("--initial-outline-mm");
         allowed.insert("--no-render"); allowed.insert("--timing"); allowed.insert("--kicad-cli");
     } else if (out.command == "build" || out.command == "devkit") {
         allowed.insert("--no-render"); allowed.insert("--kicad-cli");
@@ -226,6 +246,7 @@ std::optional<int> run_project_command(int argc, char** argv) {
         for(const auto& option:options.help_options)std::cout<<"  "<<option<<(flags.count(option)?"":" VALUE")<<(option=="--output"?" (alias -o)":"")<<'\n';
         if(options.command=="nets"||options.command=="devkit"||options.command=="board-schematic"||options.command=="pcb-stage")std::cout<<"--output is required.\n";
         if(options.command=="devkit")std::cout<<"Builds the four-sheet example, not the twelve-sheet devkit_mini project.\n";
+        if(options.command=="board")std::cout<<"--initial-outline-mm WIDTHxHEIGHT: re-evaluate a starting candidate, then continue bounded optimisation. Not a fixed outline or cached acceptance; conflicts with a fixed project outline. All gates remain active.\n";
         if(options.command=="chir-rung"||options.command=="w11-sweep")std::cout<<"Publishes board artifacts; restores input spec and fallback baseline. Diagnostic pass=False is not a successful board gate.\n";
         return 0;
     }
@@ -350,6 +371,11 @@ std::optional<int> run_project_command(int argc, char** argv) {
         build.timing = options.timing;
         build.native_policy = true;
         build.pcb.compact_search = options.compact_search;
+        if(options.initial_outline){
+            auto experiment=std::make_shared<FloorplanExperiment>();
+            experiment->initial_outline=options.initial_outline;
+            build.pcb.experiment=std::move(experiment);
+        }
         build.extraction.kicad_cli = options.kicad_cli;
         const auto result = run_board_pipeline(paths, build);
         std::cout << result.report();
