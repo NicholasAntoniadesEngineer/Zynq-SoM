@@ -1,6 +1,7 @@
 #include "schgen/board_inputs.hpp"
 #include "schgen/catalog.hpp"
 #include "schgen/netlist_gate.hpp"
+#include "fresh_project_schematic.hpp"
 #include "../src/floorplan_internal.hpp"
 #include <algorithm>
 #include <iostream>
@@ -19,7 +20,7 @@ int main(int argc, char** argv) {
         require(link.ok(), "live link failed");
         BoardInputOptions options; options.compact_search = true;
         auto input = load_board_inputs(paths, circuits, link,
-            extract_netlist(paths.project_root / "Zynq_Carrier.kicad_sch"), options);
+            extract_netlist(test::fresh_project_schematic(paths,circuits)), options);
         input.floorplan.sheets.erase(std::remove_if(input.floorplan.sheets.begin(), input.floorplan.sheets.end(),
             [&](const auto& s) { return !input.owned_groups.count(s.name); }), input.floorplan.sheets.end());
         auto& spec = *input.floorplan.spec; spec.edges.clear(); spec.ordered_edges.clear();

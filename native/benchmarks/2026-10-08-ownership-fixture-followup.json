@@ -1,0 +1,15 @@
+{
+  "date": "2026-10-08",
+  "base_commit": "3f7e8a98",
+  "discovery": "Serial full-suite verification stopped at test 2: native_owned_shape_quality_engine_live_contracts rejected split extracted net +3V3_AUX. Test 1 passed.",
+  "change": "Use the shared fresh_project_schematic helper for all four remaining current ownership contracts that directly extracted the stale project-root schematic. Historical replay inputs are unchanged. No production changes or weakened assertions.",
+  "full_configured_build": "PASS",
+  "tests": [
+    {"name": "native_owned_shape_quality_engine_live_contracts", "result": "PASS", "seconds": 8.14},
+    {"name": "native_owned_shape_quality_live_contracts", "result": "PASS", "seconds": 8.15},
+    {"name": "native_pcb_compact_owned_moves_contracts", "result": "PASS", "seconds": 8.17},
+    {"name": "native_pcb_compact_owned_evict_contracts", "result": "PASS", "seconds": 8.28}
+  ],
+  "suite": "Resumed from test 2 with --stop-on-failure. Full-suite completion is not established by this evidence.",
+  "goal_complete": false
+}

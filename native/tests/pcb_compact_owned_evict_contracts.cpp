@@ -2,6 +2,7 @@
 // Link schgen_core, but do not compile moves.cpp separately for this target.
 #include "schgen/board_inputs.hpp"
 #include "schgen/netlist_gate.hpp"
+#include "fresh_project_schematic.hpp"
 #include "schgen/native_audit_state.hpp"
 #include "../src/pcb_placement_moves.cpp"
 #include <cstdlib>
@@ -469,7 +470,7 @@ int main(int argc,char**argv) {
         require(link.ok(),"hierarchy link failed");
         schgen::BoardInputOptions options;options.compact_search=true;
         const auto source=schgen::load_board_inputs(paths,circuits,link,
-            schgen::extract_netlist(paths.project_root/"Zynq_Carrier.kicad_sch"),options);
+            schgen::extract_netlist(schgen::test::fresh_project_schematic(paths,circuits)),options);
         tests(source,argv[1]);
         std::cout<<"PASS "<<checks<<" compact eviction checks\n";
     } catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}

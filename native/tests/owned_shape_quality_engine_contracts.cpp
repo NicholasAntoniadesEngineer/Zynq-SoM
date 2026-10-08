@@ -2,6 +2,7 @@
 #include "schgen/board_inputs.hpp"
 #include "schgen/catalog.hpp"
 #include "schgen/netlist_gate.hpp"
+#include "fresh_project_schematic.hpp"
 #include <algorithm>
 #include <iostream>
 #include <limits>
@@ -152,7 +153,7 @@ void pilots(const char* root, const char* catalog) {
     require(link.ok(), "live link failed");
     BoardInputOptions options; options.compact_search = true;
     auto in = load_board_inputs(paths, circuits, link,
-        extract_netlist(paths.project_root / "Zynq_Carrier.kicad_sch"), options);
+        extract_netlist(test::fresh_project_schematic(paths,circuits)), options);
     in.floorplan.sheets.erase(std::remove_if(in.floorplan.sheets.begin(), in.floorplan.sheets.end(),
         [&](const auto& s) { return !in.owned_groups.count(s.name); }), in.floorplan.sheets.end());
     auto& spec = *in.floorplan.spec; spec.edges.clear(); spec.ordered_edges.clear();

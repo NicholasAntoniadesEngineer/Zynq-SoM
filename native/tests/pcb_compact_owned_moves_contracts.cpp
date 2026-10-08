@@ -1,6 +1,7 @@
 #include "schgen/board_inputs.hpp"
 #include "schgen/catalog.hpp"
 #include "schgen/netlist_gate.hpp"
+#include "fresh_project_schematic.hpp"
 #include "pcb_placement_internal.hpp"
 #include <iostream>
 
@@ -214,7 +215,7 @@ int main(int argc,char** argv) {
         require(link.ok(),"hierarchy link failed");
         schgen::BoardInputOptions options;options.compact_search=true;
         const auto source=schgen::load_board_inputs(paths,circuits,link,
-            schgen::extract_netlist(paths.project_root/"Zynq_Carrier.kicad_sch"),options);
+            schgen::extract_netlist(schgen::test::fresh_project_schematic(paths,circuits)),options);
         tests(source);eviction_risk(source);
         schgen::close_part_catalog();
         std::cout<<"PASS "<<checks<<" compact ownership move/swap assertions\n";
