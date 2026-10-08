@@ -1,0 +1,25 @@
+{
+  "date": "2026-10-08",
+  "base_commit": "ccdcbf2d",
+  "scope": "All configured C++ targets plus a bounded 16-test migration/geometry/ownership regression cross-section, not the complete 273-test suite.",
+  "all_target_build": {
+    "initial_failure": "Historical pcb_child_halo_seed_contracts used a three-argument profiler loader after its API gained an explicit schematic argument.",
+    "fix": "Pass an empty explicit schematic override, retaining the caller-supplied historical private-root schematic. Do not replace this archival replay's inputs with current circuits.",
+    "final_result": "PASS: full cmake --build native/build/fast --parallel 2, including catalog and circuit compilation",
+    "historical_replay_execution": "Not rerun; compile repair only. Its registered frozen geometry counterpart remains separate."
+  },
+  "regression_batch": {
+    "initial_seconds": 39.82,
+    "initial_pass": 13,
+    "initial_fail": ["native_pcb_breathe_sheet_exemption_contracts", "native_pcb_breathe_owned_groups_contracts", "native_pcb_owned_groups_live_contracts"],
+    "cause": "Current circuit IR was paired with stale checked-in schematic connectivity. Two failed with split extracted net +3V3_AUX; the live group test failed with split extracted net.",
+    "fix": "Shared C++ test fixture emits current real schematics into private scratch using persistent reference bands, requires authoring/netlist gates to pass, then uses real KiCad netlist extraction. Ownership, movement, pin-net and geometry assertions unchanged. No production code, hardware requirement or validator relaxation.",
+    "repaired_test_seconds": [8.15, 8.15, 15.09],
+    "repaired_total_seconds": 31.40,
+    "repaired_result": "3/3 PASS",
+    "unchanged_passing_tests": ["native_compact_seat_memo_contracts", "native_pcb_breathe_clearance_contracts", "native_pcb_owned_groups_adapter_contracts", "native_pcb_owned_groups_adapter_audit_contracts", "native_pcb_owned_groups_contracts", "native_part_courtyard_contracts", "native_carrier_surface_requirements_contracts", "native_placement_requirements_closure_contracts", "native_model_failure_receipt_contracts", "native_floorplan_fixed_choice_contracts", "native_python_free_tree_contracts", "native_compose_kernel_contracts", "native_component_basis_contracts"]
+  },
+  "python_free_evidence": "native_python_free_tree_contracts PASS in 0.76 seconds: scans ignored/hidden working-tree paths except Git object history for .py/.pyc/.pyo and retired root Python configuration. This is not proof of every possible indirect external runtime dependency.",
+  "limitations": ["No clean compile timing claimed", "No full board qualification rerun for test-only changes", "No performance improvement claimed", "Complete 273-test execution and overall goal audit remain outstanding"],
+  "goal_complete": false
+}

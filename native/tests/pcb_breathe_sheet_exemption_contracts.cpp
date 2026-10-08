@@ -2,6 +2,7 @@
 #include "schgen/catalog.hpp"
 #include "schgen/netlist_gate.hpp"
 #include "pcb_placement_internal.hpp"
+#include "fresh_project_schematic.hpp"
 #include <iostream>
 
 namespace {
@@ -59,7 +60,7 @@ int main(int argc,char** argv){try{
     BoardInputOptions options;options.compact_search=true;
     NetlistExtractOptions extraction;extraction.kicad_cli="/Applications/KiCad/KiCad.app/Contents/MacOS/kicad-cli";
     const auto source=load_board_inputs(paths,circuits,link,
-        extract_netlist(paths.project_root/"Zynq_Carrier.kicad_sch",extraction),options);
+        extract_netlist(test::fresh_project_schematic(paths,circuits),extraction),options);
     for(bool reverse:{false,true})for(bool opposite:{false,true})for(int exemption:{1,2}) {
         Probe unlocked(source,true,0,reverse,opposite),locked(source,true,exemption,reverse,opposite);
         const auto before=locked.p->pos;

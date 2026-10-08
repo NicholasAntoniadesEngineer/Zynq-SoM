@@ -2,6 +2,7 @@
 #include "schgen/placement_requirements.hpp"
 #include "schgen/board_pcb.hpp"
 #include "schgen/board_schematic.hpp"
+#include "fresh_project_schematic.hpp"
 #include <iostream>
 #include <limits>
 
@@ -10,7 +11,16 @@ int main(int argc,char** argv) {
     try {
         if(argc!=3||!open_part_catalog(argv[2]))throw std::runtime_error("usage: owned-live REPOSITORY CATALOG");
         const auto paths=resolve_project_paths(argv[1],"carrier");
-        const auto stage=prepare_board_pcb(paths);
+        BoardPcbStage stage;
+        stage.circuits=load_project_circuits(paths);
+        std::vector<CircuitSheetIr> sheets;
+        for(const auto& source:stage.circuits)sheets.push_back(source.circuit);
+        const auto link=link_sheets(sheets,parse_json_file(paths.som_interface_file.string()),
+            parse_json_file((paths.project_root/"som_mapping.json").string()));
+        if(!link.ok())throw std::runtime_error(link.report());
+        const auto schematic=test::fresh_project_schematic(paths,stage.circuits);
+        stage.inputs=load_board_inputs(paths,stage.circuits,link,extract_netlist(schematic));
+        stage.placement=build_pcb_model(stage.inputs);
         const PcbCheckInput all(stage.placement.model);
         const auto index=load_sheet_index(paths);
         std::map<std::string,int> bands(index.begin(),index.end());

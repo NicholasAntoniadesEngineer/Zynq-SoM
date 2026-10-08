@@ -2,6 +2,7 @@
 #include "schgen/catalog.hpp"
 #include "schgen/netlist_gate.hpp"
 #include "pcb_placement_internal.hpp"
+#include "fresh_project_schematic.hpp"
 #include <iostream>
 
 namespace {
@@ -64,7 +65,7 @@ int main(int argc, char** argv) {
         require(link.ok(), "live hierarchy link failed");
         BoardInputOptions options; options.compact_search = true;
         const auto source = load_board_inputs(paths, circuits, link,
-            extract_netlist(paths.project_root / "Zynq_Carrier.kicad_sch"), options);
+            extract_netlist(test::fresh_project_schematic(paths,circuits)), options);
         for (bool reverse : {false, true}) for (bool opposite : {false, true})
             for (int fixed : {0, 1, 2}) {
                 Fixture f(source, true, fixed, opposite, reverse);

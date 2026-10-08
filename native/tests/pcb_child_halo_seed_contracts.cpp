@@ -57,7 +57,9 @@ int main(int argc,char** argv) {try {
     const auto paths=resolve_project_paths(argv[1],"carrier");
     demand(open_part_catalog(paths.part_catalog_file.string()),"catalog open failed");
     NetlistExtractOptions extraction;extraction.kicad_cli="/Applications/KiCad/KiCad.app/Contents/MacOS/kicad-cli";
-    auto loaded=load(paths,extraction,true);auto input=std::move(loaded.input);input.floorplan.compact_search=true;
+    // This diagnostic consumes an explicitly supplied historical private root:
+    // preserve its archived schematic rather than authoring current circuits.
+    auto loaded=load(paths,extraction,true,{});auto input=std::move(loaded.input);input.floorplan.compact_search=true;
     demand(input.owned_groups.size()==2,"expected two resolved owned groups");
     const auto zones=build_pcb_zone_geometry(input);
     std::size_t appended=0;
