@@ -348,10 +348,11 @@ FloorplanPlan Engine::run() {
             const double w=quantize("outline_snap_up",sw+grow*(aspect/seed_aspect));
             const double h=quantize("outline_snap_up",sh+grow);
             ++tally["generated"];
-            // Growth is monotonic. Once a validated incumbent is no larger,
-            // later dimensions in this aspect cannot improve area. This
-            // altered bounded search is opt-in, not an exhaustive optimum.
-            if(seed&&best&&w*h>=std::get<1>(*best)*std::get<2>(*best)-1e-6) {
+            // Growth and candidate-area quantization are monotonic. Once this
+            // aspect is strictly worse in the actual primary objective, later
+            // dimensions cannot win. Retain equal rounded areas: width/height
+            // and estimate remain meaningful tie-breaks, including seeded runs.
+            if(best&&precision.area(w*h)>std::get<0>(*best)) {
                 ++tally["reject_not_smaller"];break;
             }
             if (w<h) { ++tally["reject_aspect"]; continue; }

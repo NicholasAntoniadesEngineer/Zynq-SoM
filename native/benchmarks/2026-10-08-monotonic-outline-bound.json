@@ -1,0 +1,52 @@
+{
+  "base_commit": "5698b461",
+  "change": "Apply the monotonic coarse-growth area bound to unseeded as well as seeded search. Compare the actual rounded primary objective and prune only strictly worse areas; equal rounded areas remain eligible for width/height/estimate tie-breaks.",
+  "proof_scope": "Within each positive aspect, snapped growth dimensions and the one-decimal candidate-area operation are monotonic. Once rounded area is strictly greater than the feasible incumbent's primary objective, later points cannot win. This does not prove a global placement optimum or prune equal-area alternative layouts.",
+  "control": {
+    "frozen_source": "native/build/outline-bound-before.cpp",
+    "source_git_blob": "ce35165de74ec02dff269f331b13685ee9b85a1b",
+    "matches_base_commit_source": true,
+    "profile_binary": "native/build/outline-bound-before-profile",
+    "method": "Explicit frozen floorplan_build object precedes the same core archive; same profiler object, Apple Clang flags, libraries, host, fresh schematic and inputs. Prepared input reuse within repetitions; each repetition constructs fresh zones/plan/model. Serial runs, no concurrent builds. First pair control then candidate; repeat blocks candidate then control. OS caches uncontrolled.",
+    "red_test": {"binary": "native/build/outline-bound-before-contracts", "exit_code": 1, "failure": "equal rounded area with preferable width was incorrectly pruned"}
+  },
+  "tests": {
+    "native_floorplan_receipt_contracts": {"status": "PASS", "seconds": 0.53},
+    "native_initial_outline_contracts": {"status": "PASS", "seconds": 0.24, "coverage": "Independent feasible-area dominance trace, fractional seed with equal-rounded-area width tie-break, failed-seed fallback, immutable inputs and reproducibility"},
+    "native_floorplan_final_estimate_contracts": {"status": "PASS", "seconds": 1.93},
+    "native_floorplan_contracts": {"status": "PASS", "seconds": 12.56},
+    "native_floorplan_precision_contracts": {"status": "PASS", "seconds": 15.69, "coverage": "Independent function-entry accounting for all six precision primitives, repeated both-board plans/ledgers/receipts, mutated counts rejected"},
+    "total_seconds": 30.95,
+    "historical_test_adjustment": "Synthetic accepted-candidate count remains 110 across both passes; eight actual rounded-objective bound probes add eight calls. Exact area-call expectation becomes 118, with other counters unchanged. Initial old expectation failed and was corrected without refreshing historical geometry fixtures."
+  },
+  "matched_cpp_construction_screens": {
+    "scope": "Unseeded default-mode model construction, including its internal checks; excludes input preparation, text emission, rendering and full audits. This is NOT the requested historical Python comparison or a full-build speedup.",
+    "carrier": {
+      "before_seconds": [7.047386750,7.086457833,7.113279667],
+      "after_seconds": [6.529445875,6.516059334,6.531415250],
+      "before_median_seconds": 7.086457833, "after_median_seconds": 6.529445875,
+      "median_percent_change": -7.8602310368,
+      "outer_attempts_before": 2516, "outer_attempts_after": 2504,
+      "packed_before": 33, "packed_after": 25,
+      "reseats_before": 44, "reseats_after": 39, "reseat_ceiling": 18,
+      "status": "REJECTED_RUNTIME_CONSTRAINT",
+      "outline_mm": [168,163], "top": 393, "bottom": 176,
+      "pcb_sha256_all_six_samples": "9310d975f4ef23d71e9c154f74a46a8ca46366d4f52568ba1c22a31992ffc8c5"
+    },
+    "devkit": {
+      "before_seconds": [0.302595000,0.307475875,0.308528583],
+      "after_seconds": [0.281720667,0.282040250,0.286017625],
+      "before_median_seconds": 0.307475875, "after_median_seconds": 0.282040250,
+      "median_percent_change": -8.2723969807,
+      "outer_attempts_before": 2146, "outer_attempts_after": 2140,
+      "packed_before": 42, "packed_after": 36,
+      "reseats_before": 50, "reseats_after": 44, "reseat_ceiling": 35,
+      "status": "REJECTED_RUNTIME_CONSTRAINT",
+      "outline_mm": [98,98], "top": 106, "bottom": 57,
+      "pcb_sha256_all_six_samples": "cfa0305491d9c4a771adb130b04c4aec6cc2894542391a5c7c9dca3a68bca3cf"
+    },
+    "diagnostics": "Both boards retain passing placement/flow screens, zero hard-red constraints, identical PCB hashes and quality margins. Remaining emitted fallback counts unchanged. Runtime ratchets still fail; no ceilings raised.",
+    "logs": "native/build/{carrier,devkit}-outline-bound-{before,after}{,-repeat}.log"
+  },
+  "limits": ["Three samples per implementation are a bounded local comparison, not a broad statistical performance claim", "Full audits remain the dominant end-to-end cost", "No new full render qualification claimed; unchanged PCB hashes reference prior independently qualified fixed/seeded candidates", "Dimension-only packing memoization deliberately not introduced because trial state and connector alternatives require stronger keys", "Goal remains incomplete; bounded total search, hardware unknowns and two-sided space use need further work"]
+}

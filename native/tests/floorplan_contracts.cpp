@@ -485,8 +485,8 @@ void pack_behavior() {
     // quantizations per pass; all actually executed calls still count.
     require(floorplan_precision_fixture::select(automatic.accounting.quantization_engagements,false)==quanta,"all prior synthetic search quantization engagements accounted exactly");
     const auto extra=floorplan_precision_fixture::select(automatic.accounting.quantization_engagements);
-    require(extra.at("floorplan_candidate_area_precision1dp")==110&&extra.at("floorplan_seed_aspect_precision4dp")==1,
-            "both passes count their 55 accepted candidates and only one seed aspect");
+    require(extra.at("floorplan_candidate_area_precision1dp")==118&&extra.at("floorplan_seed_aspect_precision4dp")==1,
+            "both passes count 55 accepted candidates plus four objective-bound probes, and one seed aspect");
 }
 void cross_behavior() {
     FloorplanInput in;in.som.w=20;in.som.h=20;

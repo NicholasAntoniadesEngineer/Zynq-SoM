@@ -1,5 +1,6 @@
 #include "floorplan_internal.hpp"
 #include <iostream>
+#include <cmath>
 #include <limits>
 using namespace schgen;
 namespace {
@@ -10,8 +11,33 @@ FloorplanInput fixture() {
     in.geometry.zone_box["edge"]={30,10};in.spec.emplace();in.spec->edges["N"]={"edge"};
     return in;
 }
+void objective_bound() {
+    for(bool seeded:{false,true}) {
+        auto in=fixture();in.geometry.zone_box["edge"]={60,10};
+        auto observer=std::make_shared<FloorplanExperiment>();in.experiment=observer;
+        if(seeded)observer->initial_outline={{80.0001,79.9999}};
+        std::map<bool,double> best_area;
+        std::map<bool,bool> equal_area_seen;
+        observer->attempt_completed=[&](const auto& row) {
+            // No nets or alternative shapes: every packed witness has cost
+            // zero and meets the budget. Integer/near-integer test areas avoid
+            // halfway ambiguity in this independent rounded-area calculation.
+            const double area=std::nearbyint(row.w*row.h*10)/10;
+            const auto best=best_area.find(row.punch_free);
+            require(best==best_area.end() || area<=best->second,
+                "attempted an area already dominated by a feasible incumbent");
+            if(row.packed)best_area[row.punch_free]=area;
+            if(row.packed && row.w==80 && row.h==80)equal_area_seen[row.punch_free]=true;
+        };
+        const auto result=build_floorplan(in);
+        require(best_area.size()==2&&result.board_w>=80,"both independently feasible policies searched");
+        if(seeded)require(equal_area_seen[false]&&equal_area_seen[true],
+            "equal rounded area with preferable width was incorrectly pruned");
+    }
+}
 }
 int main(){try{
+    objective_bound();
     for(const auto dimensions:{FloorplanPoint{100,100},FloorplanPoint{30,30}}) {
         auto in=fixture();auto observer=std::make_shared<FloorplanExperiment>();
         observer->initial_outline=dimensions;in.experiment=observer;
