@@ -124,7 +124,7 @@ public:
     double estimate(const std::vector<const FloorplanBlock*>& blocks,
                     const std::string& only_sheet = {});
     double estimate();
-    std::pair<Halo, Halo> fanout(const FloorplanZoneShape& shape, bool base);
+    std::pair<Halo, Halo> fanout(const FloorplanZoneShape& shape);
     std::vector<Comp> zone_components(const FloorplanZoneShape& shape,
                                       bool pad_punch, QuantizationCounts* counts) const;
     std::vector<Box4> pad_boxes(const std::string& key, double rotation,

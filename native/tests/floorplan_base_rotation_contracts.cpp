@@ -52,9 +52,9 @@ void matrix(bool before,bool default_only){
         if(mirror)shape.mirror["U1"]="mirror";
         const Box4 local=mirror?Box4{0,-1,4,0}:Box4{-4,-1,0,0};
         const auto physical=actual(local,conn+extra,5,5);
-        auto halos=engine.fanout(shape,true);
-        expected(halos.first,halos.second,actual(local,(compact&&!before)?conn+extra:extra,5,5),10,10);
-        const auto variant=engine.fanout(shape,false);
+        auto halos=engine.fanout(shape);
+        expected(halos.first,halos.second,actual(local,before?extra:conn+extra,5,5),10,10);
+        const auto variant=engine.fanout(shape);
         expected(variant.first,variant.second,physical,10,10);
         if(default_only){
             for(auto halo:{halos.first,halos.second,variant.first,variant.second})
@@ -83,7 +83,7 @@ void admission(bool before){
         in.geometry.bbox_of["U1"]={-4,-1,0,0};in.geometry.conn_rot["U1"]=90;
         Engine engine(in);FloorplanZoneShape a;a.w=10;a.h=10;a.side=bottom?"bottom":"top";
         a.bot_off["U1"]={5,5};a.extra_rot["U1"]=0;
-        const auto h=engine.fanout(a,true);auto c=engine.zone_components(a,pads,nullptr);
+        const auto h=engine.fanout(a);auto c=engine.zone_components(a,pads,nullptr);
         const int primary=bottom?2:1,minor=bottom?1:2;
         Occupancy grid(50,50,.3,4,10,1,.05);
         grid.add(10,10,10,10,h.first,h.second,primary,c);
@@ -119,9 +119,27 @@ void implicit_base(bool before){
             "prepare_geometry implicit shape-zero admission");
     }
 }
+void primary_admission(){
+    for(bool compact:{false,true})for(bool bottom:{false,true}){
+        FloorplanInput in;in.som.w=in.som.h=10;in.compact_search=compact;
+        in.footprints["base"]=document(false,false);in.geometry.resolvable["U1"]="base";
+        in.geometry.bbox_of["U1"]={-4,-1,0,0};in.geometry.conn_rot["U1"]=90;
+        Engine engine(in);FloorplanZoneShape shape;shape.w=shape.h=10;
+        shape.side=bottom?"bottom":"top";shape.top_off["U1"]={5,5};shape.extra_rot["U1"]=0;
+        const auto halo=engine.fanout(shape);const int face=bottom?2:1;
+        Occupancy grid(50,50,.3,4,10,1,.05);
+        grid.add(10,10,10,10,halo.first,halo.second,face,{});
+        const auto body=actual({-4,-1,0,0},90,15,15);
+        require(20.5-body.y1<2.-1e-4,"primary witness must be physically starved");
+        require(!grid.fits_hashed(14,20.5,1,1,{},{},face,{})&&
+                !grid.fits_exhaustive(14,20.5,1,1,{},{},face,{}),
+            "default and compact must reject the same physically starved primary-face placement");
+        require(grid.fits_hashed(14,21.5,1,1,{},{},face,{}),"legal primary-face exit lost");
+    }
+}
 }
 int main(int argc,char** argv){try{
     const bool before=argc==2&&std::string(argv[1])=="--before";
     const bool default_only=argc==2&&std::string(argv[1])=="--default-only";
-    matrix(before,default_only);if(!default_only){admission(before);implicit_base(before);}std::cout<<"PASS checks="<<checks<<'\n';return 0;
+    matrix(before,default_only);if(!default_only){admission(before);implicit_base(before);if(!before)primary_admission();}std::cout<<"PASS checks="<<checks<<'\n';return 0;
 }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}

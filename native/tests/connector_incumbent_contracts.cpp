@@ -151,7 +151,7 @@ void unit(bool compact,bool fail_pack,bool constraint_first=false) {
     };
     const double base=reference.estimate();
     auto& b=reference.plan.edge_blocks.front();
-    std::tie(b.fanout_reach,b.fanout_inset)=reference.fanout(in.geometry.shapes.at("edge")[1],false);b.shape_idx=1;
+    std::tie(b.fanout_reach,b.fanout_inset)=reference.fanout(in.geometry.shapes.at("edge")[1]);b.shape_idx=1;
     const bool fits=reference.attempt_pack(true);
     require(!(fits&&reference.estimate()<base-1e-6),"synthetic mirror must reject");
     const auto wanted=reference.plan.accounting;

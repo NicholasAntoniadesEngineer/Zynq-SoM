@@ -389,7 +389,7 @@ void mutations() {
     Engine no_pad_at(broken);
     throws([&]{no_pad_at.zone_components(s,true,&zone_counts);},"pad kernel found none");
     broken=in;broken.footprints["dip"].source="opaque-provider/Fiducial_1mm.kicad_mod";
-    Engine fiducial(broken);const auto fid_halo=fiducial.fanout(s,true);
+    Engine fiducial(broken);const auto fid_halo=fiducial.fanout(s);
     require(fid_halo.first.w==0&&fid_halo.first.e==0&&fid_halo.second.w==0&&fid_halo.second.e==0,
             "fiducial exclusion follows source identity, not an opaque footprint pool key");
 }
@@ -543,7 +543,7 @@ void current_plan_requirements(const FloorplanInput& in,const FloorplanPlan& res
         if(b.shape_idx) {
             const auto& shape=in.geometry.shapes.at(b.name).at(static_cast<std::size_t>(b.shape_idx));
             w=shape.w;h=shape.h;side=shape.side;
-            std::tie(reach,inset)=source.fanout(shape,false);
+            std::tie(reach,inset)=source.fanout(shape);
         }
         require(b.w==w&&b.h==h&&b.side==side,"selected source shape dimensions and side");
         same(halo_json(b.fanout_reach),halo_json(reach),"selected reach");
@@ -607,7 +607,7 @@ void frozen(const std::filesystem::path& dir,const std::string& name,bool geomet
     for(const auto& row:geometry.array_value) {
         const auto sheet=str(row,"sheet");const int k=static_cast<int>(num(row,"index"));
         Halo reach,inset;
-        if(k)std::tie(reach,inset)=e.fanout(in.geometry.shapes.at(sheet).at(k),false);
+        if(k)std::tie(reach,inset)=e.fanout(in.geometry.shapes.at(sheet).at(k));
         else for(const auto* b:e.blocks())if(b->name==sheet){reach=b->fanout_reach;inset=b->fanout_inset;}
         const auto path=name+".prepared."+sheet+"["+std::to_string(k)+"]";
         same(halo_json(reach),field(row,"reach"),path+".reach");

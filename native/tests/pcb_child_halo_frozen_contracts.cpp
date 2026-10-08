@@ -84,7 +84,7 @@ void contracts(const Frozen& frozen) {
     require(near(sb.x0,53.044)&&near(sb.y0,47.99)&&near(sb.x1,62.274)&&near(sb.y1,59.73),"archived SW7002 pose drift");
     require(near(eb.x0,61.05)&&near(eb.y0,61.05)&&near(eb.x1,65.65)&&near(eb.y1,63.35),"archived C10005 pose drift");
     require(sb.x1>eb.x0&&near(eb.y0-sb.y1,1.32)&&eb.y0-sb.y1<2,"missing real bad-seed witness");
-    const auto sr=engine.fanout(sw,false),er=engine.fanout(eth,true);
+    const auto sr=engine.fanout(sw),er=engine.fanout(eth);
     require(same(sr.first,{1,1.5,0,1.5}),"archived primary halo drift");
     for(bool pad_punch:{false,true}) {
         QuantizationCounts counts;

@@ -446,7 +446,7 @@ void Engine::choose_connector_shapes() {
             side_offers=std::move(offers);
         };
         try {
-            std::tie(b.fanout_reach,b.fanout_inset)=fanout(shapes->second[1],false); b.shape_idx=1;
+            std::tie(b.fanout_reach,b.fanout_inset)=fanout(shapes->second[1]); b.shape_idx=1;
             if (attempt_pack(true) && estimate()<base-1e-6) continue;
         } catch (...) {
             restore_incumbent();

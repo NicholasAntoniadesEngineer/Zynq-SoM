@@ -155,12 +155,12 @@ std::vector<Box4> Engine::pad_boxes(const std::string& key, double rot, bool thr
     return boxes;
 }
 
-std::pair<Halo, Halo> Engine::fanout(const FloorplanZoneShape& shape, bool base) {
+std::pair<Halo, Halo> Engine::fanout(const FloorplanZoneShape& shape) {
     auto rotations = in.geometry.conn_rot;
-    // Preserve the legacy default base receipt/geometry. Compact base zones
-    // must match emitted members and children: connector + extra rotation.
+    // Every shape must match emitted members and occupancy children. A base
+    // shape is not permission to replace the connector rotation with extra.
     for (const auto& [ref, extra] : shape.extra_rot)
-        rotations[ref] = base && !in.compact_search ? extra : rotation(rotations[ref] + extra);
+        rotations[ref] = rotation(rotations[ref] + extra);
     std::vector<std::tuple<double,double,double,double,double,double,double,int>> rows;
     for (const auto* offsets : {&shape.top_off, &shape.bot_off}) {
         for (const auto& [ref, offset_xy] : *offsets) {
@@ -245,7 +245,7 @@ void Engine::prepare_geometry() {
         base.w = zbox.at(b->name).first; base.h = zbox.at(b->name).second;
         base.top_off = get(zg.top_off, b->name); base.bot_off = get(zg.bot_off, b->name);
         base.extra_rot = zg.zone_extra_rot;
-        if (zg.zone_box.count(b->name)) std::tie(b->fanout_reach,b->fanout_inset) = fanout(base, true);
+        if (zg.zone_box.count(b->name)) std::tie(b->fanout_reach,b->fanout_inset) = fanout(base);
         for (int policy : {1,0}) {
             auto& co = components[policy];
             if (zg.zone_box.count(b->name)) co[{b->name,0}] = zone_components(base, policy != 0, &plan.accounting.quantization_engagements);
@@ -258,7 +258,7 @@ void Engine::prepare_geometry() {
             sets.push_back({base.w,base.h,b->fanout_reach,b->fanout_inset,"top",get(co,{b->name,0})});
             for (std::size_t k=1; k<variants->second.size(); ++k) {
                 const auto& s = variants->second[k];
-                const auto ri = fanout(s, false);
+                const auto ri = fanout(s);
                 sets.push_back({s.w,s.h,ri.first,ri.second,s.side,get(co,{b->name,static_cast<int>(k)})});
             }
         }
