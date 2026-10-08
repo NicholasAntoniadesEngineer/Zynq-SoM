@@ -4,7 +4,8 @@
 
 namespace schgen {
 BoardPcbStage prepare_board_pcb(const ProjectPaths& paths,
-        const NetlistExtractOptions& extraction, const BoardInputOptions& options) {
+        const NetlistExtractOptions& extraction, const BoardInputOptions& options,
+        const std::filesystem::path& schematic) {
     const auto circuits = load_project_circuits(paths);
     SymbolLibrary library(paths.repository_root);
     std::vector<CircuitSheetIr> sheets;
@@ -15,7 +16,7 @@ BoardPcbStage prepare_board_pcb(const ProjectPaths& paths,
     const auto link = link_sheets(sheets, parse_json_file(paths.som_interface_file.string()),
         parse_json_file((paths.project_root / "som_mapping.json").string()));
     if (!link.ok()) throw ProjectError(link.report());
-    const auto nets = extract_netlist(paths.project_root / "Zynq_Carrier.kicad_sch", extraction);
+    const auto nets = extract_netlist(schematic.empty()?paths.project_root / "Zynq_Carrier.kicad_sch":schematic, extraction);
     BoardPcbStage out;
     out.circuits = circuits;
     out.inputs = load_board_inputs(paths, circuits, link, nets, options);
