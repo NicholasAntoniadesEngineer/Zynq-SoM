@@ -254,12 +254,17 @@ bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure) {
         auto best=hits.front();
         if (hits.size()==1) side_offers[b.name]={best.side,best.side,best.index,std::nullopt,std::nullopt};
         else {
+            // Membership is invariant across this block's shape trials. Only
+            // b's pose/shape changes; estimate consumes these borrowed pointers
+            // synchronously. Prepare once, not once per competing shape.
+            std::vector<const FloorplanBlock*> partial;
+            partial.reserve(plan.edge_blocks.size()+placed.size()+1);
+            for (const auto& e:plan.edge_blocks) partial.push_back(&e);
+            partial.insert(partial.end(),placed.begin(),placed.end());
+            partial.push_back(&b);
             auto judge=[&](const SeatShapeHit& h) {
                 const auto saved=b;
                 pose(b,{h.x,h.y,h.w,h.h}); b.shape_idx=h.index; b.side=h.side;
-                std::vector<const FloorplanBlock*> partial;
-                for (const auto& e:plan.edge_blocks) partial.push_back(&e);
-                partial.insert(partial.end(),placed.begin(),placed.end()); partial.push_back(&b);
                 double value;
                 try { value=estimate(partial,b.name); } catch (...) { b=saved; throw; }
                 b=saved; return value;

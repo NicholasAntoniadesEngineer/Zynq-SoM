@@ -1,0 +1,45 @@
+{
+  "base_commit": "2b12adf9",
+  "change": "Prepare the invariant partial-board membership vector once per seated block, outside its candidate-shape judge. Candidate poses still change through the same borrowed block pointer; no numerical evaluation, candidate, retry or accounting operation is skipped",
+  "lifetime_review": "The edge vector and placed membership are stable throughout the synchronous shape-scoring loop. Each judge changes and restores only the referenced candidate block state; no plan replacement or callback-driven ordinary mutation occurs inside the estimator. The existing exception-restoration path remains unchanged",
+  "scope": "Small allocation reduction only; not a new search algorithm and not a claimed wall-clock improvement",
+  "validation": {
+    "native_connector_incumbent_contracts": {"status": "PASS", "seconds": 0.54, "coverage": "Complete incumbent/side-offer restoration, throwing callbacks, failure transport and independent scalar/fallback entry counting"},
+    "carrier_fixed": {
+      "outline_mm": [168,160],
+      "order": 3,
+      "before_model_seconds": [3.073426459,3.08182725],
+      "after_model_seconds": [3.07863925,3.089039916],
+      "pcb_sha256": "91e3a4bb8c1e216fb7f86d4c8ae526635b0d2e216414602de7391c5d3d748fa5",
+      "both_runs_same_pcb_as_qualified_reference": true,
+      "all_scalar_receipts_and_fallback_counts_exactly_equal_before_after": true
+    },
+    "carrier_automatic": {
+      "initial_outline_mm": [168,160],
+      "order": 3,
+      "before_model_seconds": 12.141509417,
+      "after_model_seconds": 12.177308375,
+      "outer_attempts": 2194,
+      "packed_attempts": 12,
+      "distinct_outline_punch_keys": 2112,
+      "reseat_events": 140,
+      "reseat_ceiling": 18,
+      "status": "REJECTED_RUNTIME_CONSTRAINT",
+      "pcb_same_as_qualified_fixed_candidate": true,
+      "all_scalar_receipts_and_fallback_counts_exactly_equal_before_after": true,
+      "finding": "Automatic search retains the same final board in this witness but does excessive unsuccessful work. It is not a qualified replacement for the fixed candidate. No current-layout final-refinement loss demonstrated; do not present the suspected issue as a proven live failure"
+    },
+    "devkit_default_strategy_seeded": {
+      "outline_mm": [98,98],
+      "model_seconds": 0.111205792,
+      "pcb_sha256": "cfa0305491d9c4a771adb130b04c4aec6cc2894542391a5c7c9dca3a68bca3cf",
+      "same_as_previous_qualified_reference": true,
+      "all_scalar_receipts_and_fallback_counts_equal_previous_reference": true,
+      "reseat_events": 6,
+      "hard_red": 0,
+      "placement_contract_ok": true,
+      "placement_flow_ok": true
+    }
+  },
+  "limits": ["Short instrumented construction samples are noisy; no measured speed gain claimed", "No new full build/render claimed; unchanged PCB bytes match existing independent qualification evidence", "No gate, constant, retry ceiling, default strategy, hardware declaration or routing change", "Automatic search still needs genuinely bounded strategy selection and incumbent preservation with all executed work retained"]
+}
