@@ -63,7 +63,7 @@ int main(int argc, char** argv) {
                          "  bom [--project NAME] [SUBSYSTEM ...] [-o FILE] [--allow-missing] [--qualified-refs]\n"
                          "  link [--project NAME] [SUBSYSTEM ...] [--contract FILE] [-o REPORT]\n"
                          "  devicetree [--project NAME] [--som FILE] [--contract FILE] [-o FILE]\n"
-                         "  board [--project NAME] [-o DIRECTORY] [--no-render] [--timing] [--compact-placement] [--initial-outline-mm WIDTHxHEIGHT]\n"
+                         "  board [--project NAME] [-o DIRECTORY] [--no-render] [--timing] [--compact-placement] [--initial-outline-mm WIDTHxHEIGHT] [--floorplan-spec PATH] [--interior-order 0|1|2|3]\n"
                          "    --compact-placement: experimental search; not an accepted layout or speedup. All board gates remain mandatory.\n";
             return 0;
         }

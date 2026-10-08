@@ -64,6 +64,8 @@ struct Options {
     bool no_render = false, timing = false, conservative_only = false;
     bool compact_search = false;
     std::optional<std::pair<double,double>> initial_outline;
+    std::optional<fs::path> floorplan_spec;
+    std::optional<int> interior_order;
     bool help = false;
     std::set<std::string> help_options;
     long long quantity = 1, minimum_stock = 50;
@@ -107,7 +109,8 @@ Options parse(int argc, char** argv) {
         if (arg == "--repo" || arg == "--project" || arg == "--som" ||
             arg == "--contract" || arg == "--output" || arg == "-o" ||
             arg == "--xdc" || arg == "--refs" || arg == "--kicad-cli" || arg == "--pcb" ||
-            arg == "--subsystem" || arg == "--qty" || arg == "--min-stock" || arg == "--initial-outline-mm") {
+            arg == "--subsystem" || arg == "--qty" || arg == "--min-stock" || arg == "--initial-outline-mm" ||
+            arg == "--floorplan-spec" || arg == "--interior-order") {
             if (++i == argc) throw std::runtime_error("missing value for " + arg);
             const std::string key = arg == "-o" ? "--output" : arg;
             if (arg != "--subsystem" && !seen.insert(key).second)
@@ -122,6 +125,14 @@ Options parse(int argc, char** argv) {
             else if (arg == "--xdc") out.xdc = value;
             else if (arg == "--pcb") out.pcb = value;
             else if (arg == "--refs") out.refs = value;
+            else if (arg == "--floorplan-spec") out.floorplan_spec = value;
+            else if (arg == "--interior-order") {
+                int order = 0;
+                const auto parsed = std::from_chars(value.data(), value.data()+value.size(), order);
+                if (parsed.ec != std::errc{} || parsed.ptr != value.data()+value.size() || order < 0 || order > 3)
+                    throw ProjectError("interior-order must be an integer in [0,3]");
+                out.interior_order = order;
+            }
             else if (arg == "--kicad-cli") out.kicad_cli = value;
             else if (arg == "--initial-outline-mm") {
                 const auto split=value.find('x');
@@ -161,6 +172,8 @@ Options parse(int argc, char** argv) {
     } else if (out.command == "board") {
         allowed.insert("--compact-placement");
         allowed.insert("--initial-outline-mm");
+        allowed.insert("--floorplan-spec");
+        allowed.insert("--interior-order");
         allowed.insert("--no-render"); allowed.insert("--timing"); allowed.insert("--kicad-cli");
     } else if (out.command == "build" || out.command == "devkit") {
         allowed.insert("--no-render"); allowed.insert("--kicad-cli");
@@ -247,6 +260,7 @@ std::optional<int> run_project_command(int argc, char** argv) {
         if(options.command=="nets"||options.command=="devkit"||options.command=="board-schematic"||options.command=="pcb-stage")std::cout<<"--output is required.\n";
         if(options.command=="devkit")std::cout<<"Builds the four-sheet example, not the twelve-sheet devkit_mini project.\n";
         if(options.command=="board")std::cout<<"--initial-outline-mm WIDTHxHEIGHT: re-evaluate a starting candidate, then continue bounded optimisation. Not a fixed outline or cached acceptance; conflicts with a fixed project outline. All gates remain active.\n";
+        if(options.command=="board")std::cout<<"--floorplan-spec PATH: read an explicit candidate specification without editing the project default.\n--interior-order 0|1|2|3: use a single connectivity/area/scarcity/constraint order; no alternate-order retries. Diagnostic strategy selection, not cached acceptance. All gates remain active.\n";
         if(options.command=="chir-rung"||options.command=="w11-sweep")std::cout<<"Publishes board artifacts; restores input spec and fallback baseline. Diagnostic pass=False is not a successful board gate.\n";
         return 0;
     }
@@ -371,9 +385,11 @@ std::optional<int> run_project_command(int argc, char** argv) {
         build.timing = options.timing;
         build.native_policy = true;
         build.pcb.compact_search = options.compact_search;
-        if(options.initial_outline){
+        build.pcb.floorplan_spec = options.floorplan_spec;
+        if(options.initial_outline || options.interior_order){
             auto experiment=std::make_shared<FloorplanExperiment>();
             experiment->initial_outline=options.initial_outline;
+            experiment->interior_order=options.interior_order;
             build.pcb.experiment=std::move(experiment);
         }
         build.extraction.kicad_cli = options.kicad_cli;

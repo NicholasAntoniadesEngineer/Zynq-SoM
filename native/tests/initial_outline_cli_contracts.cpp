@@ -25,5 +25,18 @@ int main(int argc,char** argv){try{
         throw std::runtime_error("unsupported command accepted seed");
     if(run({"board","--initial-outline-mm","168x163","--compact-placement"}).exit_code!=0)
         throw std::runtime_error("seed and compact placement must be independent options");
-    std::cout<<"PASS initial-outline CLI validation, help isolation and option boundaries\n";
+    for(const auto* value:{"0","1","2","3"})
+        if(run({"board","--interior-order",value,"--floorplan-spec","/nonexistent/help-only.json","--compact-placement"}).exit_code)
+            throw std::runtime_error("valid candidate options must parse without reading repository during help");
+    for(const auto* value:{"","-1","4","nan","3.0","3junk","999999999999999999"," 3"})
+        if(run({"board","--interior-order",value}).exit_code==0)
+            throw std::runtime_error("invalid order accepted");
+    for(const auto* option:{"--floorplan-spec","--interior-order"}) {
+        const std::string value=std::string(option)=="--interior-order"?"3":"candidate.json";
+        if(run({"board",option,value,option,value}).exit_code==0)
+            throw std::runtime_error("duplicate candidate option accepted");
+        if(run({"pcb-stage",option,value}).exit_code==0)
+            throw std::runtime_error("candidate option accepted by unsupported command");
+    }
+    std::cout<<"PASS seed/candidate CLI validation, help isolation and option boundaries\n";
 }catch(const std::exception& error){std::cerr<<error.what()<<'\n';return 1;}}
