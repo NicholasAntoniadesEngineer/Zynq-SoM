@@ -1,0 +1,27 @@
+{
+  "base_commit": "b0fd91a4",
+  "defect": "A rejected victim trial restored block geometry, chosen components and centers but retained its incoming block's rejected side offer.",
+  "fix": "Restore the incoming side-offer entry including prior absence. Snapshot only incoming chosen geometry and center entries instead of copying their entire maps; displaced center changes only on successful trials and displaced chosen geometry never changes.",
+  "red_test": "The new compact_retry contract failed against b0fd91a4 with: failed reseat leaked rejected side offer.",
+  "regression_scope": "Synthetic failed-after-seating witnesses across three retry orders, with both prior side-offer values and absent entries; existing wrapper rollback, failed-prefix accounting and success/failure trace tests retained.",
+  "tests": {"native_compact_retry_contracts":"PASS", "native_producer_accounting_contracts":"PASS", "native_pcb_placement_contracts":"PASS; carrier/devkit two-sided and top-preferred physical, structural and reproducibility checks; 94.32 seconds"},
+  "carrier_profile": {
+    "command": "native/build/fast/schgen_compact_stage_profile --repo REPO --project carrier --compact-search off --runs 3 --schematic /private/tmp/carrier-ref-board.ccIYvU/Zynq_Carrier.kicad_sch --kicad-cli /Applications/KiCad/KiCad.app/Contents/MacOS/kicad-cli",
+    "model_seconds": [8.094599834,8.185462833,8.168356875],
+    "previous_batch_model_seconds": [7.768974792,7.840169167,7.815158584],
+    "interpretation": "No speedup demonstrated: this sequential three-run sample is slower than the previous batch. OS cache, thermal and scheduling state are uncontrolled. Retain as a correctness fix, not a measured performance improvement.",
+    "no_concurrent_compile_or_tests": true,
+    "dimensions_mm": [168,163],
+    "top": 393,
+    "bottom": 176,
+    "pcb_sha256_all_runs": "8d93efb96783a53ec53a83b830f1d8987f10ca6d86a2246999783fb9ddcf7417",
+    "operation_receipts_failed_trials_and_fallback_trace": "Identical to b0fd91a4 for all three paired runs",
+    "log": "native/build/reseat-rollback-after.log",
+    "log_sha256": "8df98f08597256cf7e32b4956e2ca8ad40e82d07d1757eefa5054cec99048a4a"
+  },
+  "limitations": [
+    "Construction diagnostics are not full board qualification; no new render or source audit run.",
+    "Default carrier reseat ceiling remains 28 versus 18; no gate or accounting relaxed.",
+    "No historical Python comparison."
+  ]
+}

@@ -17,6 +17,16 @@ template<class Map> const typename Map::mapped_type& get(const Map& map, const t
 }
 char edge_char(const std::string& edge) { return edge.empty() ? '\0' : edge.front(); }
 void pose(FloorplanBlock& b, const Pose& p) { b.x=p.x; b.y=p.y; b.w=p.w; b.h=p.h; }
+template<class Map> auto save_entry(const Map& map,const typename Map::key_type& key) {
+    const auto it=map.find(key);
+    return it==map.end() ? std::optional<typename Map::mapped_type>{}
+                        : std::optional<typename Map::mapped_type>{it->second};
+}
+template<class Map> void restore_entry(Map& map,const typename Map::key_type& key,
+                                      const std::optional<typename Map::mapped_type>& saved) {
+    if(saved)map.insert_or_assign(key,*saved);
+    else map.erase(key);
+}
 }  // namespace
 
 PackAnchorIn Engine::anchor_row(const FloorplanBlock& b,
@@ -290,8 +300,13 @@ bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure) {
         for (const auto* p:placed) ranks.emplace_back(p->x,p->y,p->w,p->h,p->name);
         for (int idx:reseat_rank(a.first,a.second,ranks)) {
             auto& e=*placed[idx]; const auto saved_e=e,saved_b=b;
-            const auto saved_chosen=chosen;
-            const auto saved_centers=centers;
+            // A rejected victim trial can change only the incoming block's
+            // entries. The displaced block's center is updated only on success;
+            // its chosen geometry is never changed by this retry. Preserve
+            // absence as well as values, including the rejected side offer.
+            const auto saved_chosen=save_entry(chosen,b.name);
+            const auto saved_center=save_entry(centers,b.name);
+            const auto saved_offer=save_entry(side_offers,b.name);
             occ_pull(e);
             bool ok=seat(b,a,&e);
             const bool incoming_seated=ok;
@@ -303,7 +318,13 @@ bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure) {
                 else { e.x=p->x; e.y=p->y; occ_put(e); centers[e.name]={e.cx(),e.cy()}; }
             }
             if (ok) { --evict_budget; fallback("interior_reseat_retry"); }
-            else { b=saved_b; e=saved_e; chosen=saved_chosen; centers=saved_centers; occ_put(e); }
+            else {
+                b=saved_b; e=saved_e;
+                restore_entry(chosen,b.name,saved_chosen);
+                restore_entry(centers,b.name,saved_center);
+                restore_entry(side_offers,b.name,saved_offer);
+                occ_put(e);
+            }
             if(in.experiment&&in.experiment->reseat_completed)
                 in.experiment->reseat_completed({bw,bh,b.name,e.name,incoming_seated,ok,plan.punch_free,compact_order});
             if(ok)return true;

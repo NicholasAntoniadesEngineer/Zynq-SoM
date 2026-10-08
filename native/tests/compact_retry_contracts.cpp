@@ -150,6 +150,29 @@ void reseat_trace_contract(){
     require(threw&&equal(layout(interrupted.plan),start)&&interrupted.compact_order==0,"observer failure must propagate and restore candidate state");
     std::cout<<"reseat trace PASS success="<<success<<" failed="<<failed<<'\n';
 }
+void reseat_offer_rollback_contract(){
+    std::size_t rejected_after_seating=0;
+    for(const Case& c:std::vector<Case>{
+        {70,50,{{29,16,3,4},{12,30,2,0},{30,18,3,2},{31,26,2,3},{7,7,1,3},{31,9,2,1}}},
+        {70,60,{{9,16,1,0},{18,27,2,1},{25,14,2,0},{11,29,1,1},{27,30,1,1},{31,7,1,0},{30,18,3,1}}}}) {
+        for(int order=0;order<3;++order) for(bool seed_offer:{false,true}) {
+            auto in=input();auto observer=std::make_shared<FloorplanExperiment>();in.experiment=observer;
+            Engine e(in);setup(e,c);e.compact_order=order;
+            if(seed_offer)for(const auto& b:e.plan.interior_blocks)e.side_offers[b.name]={"prior","prior",-7,1.,2.};
+            const auto prior=offers(e);
+            observer->reseat_completed=[&](const auto& row){
+                if(!row.displaced_reseated) {
+                    if(seed_offer)require(offers(e).at(row.incoming)==prior.at(row.incoming),"failed reseat leaked rejected side offer");
+                    else require(!e.side_offers.count(row.incoming),"failed reseat invented side offer");
+                    if(row.incoming_seated)++rejected_after_seating;
+                }
+            };
+            (void)e.attempt_pack_impl(false);
+        }
+    }
+    require(rejected_after_seating>0,"rollback witness must seat incoming and fail displaced block");
+    std::cout<<"reseat offer rollback PASS rejected_after_seating="<<rejected_after_seating<<'\n';
+}
 }
 extern "C" void __cyg_profile_func_enter(void* fn,void*){if(observing&&fn==reinterpret_cast<void*>(&native_run_overflow_tol))++entries;}
 extern "C" void __cyg_profile_func_exit(void*,void*){}
@@ -168,6 +191,7 @@ int main(){try{
     std::cout<<"four receipt/layout/offer mutations rejected\n";
     exception_contract();
     reseat_trace_contract();
+    reseat_offer_rollback_contract();
     for(bool first:{false,true})for(bool translate:{false,true})invariant_edge_failure(first,translate);
     std::cout<<"compact retry contracts PASS\n";return 0;
 }catch(const std::exception& e){observing=false;std::cerr<<e.what()<<'\n';return 1;}}
