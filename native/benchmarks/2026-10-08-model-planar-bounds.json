@@ -1,0 +1,21 @@
+{
+  "base_commit":"8817637b",
+  "scope":"Correct planar bounds in the existing approximate STEP/WRL point-envelope checker; no footprint, model asset, board placement, gate threshold or routing change",
+  "defects":["Non-quarter-turn Z rotation retained unrotated width and height, underbounding rotated rectangles", "Negative XY scale used absolute values for the center as well as extents, losing off-origin reflections"],
+  "correction":"Retain signed scale for the center. Rotate extents using absolute sine/cosine contributions, preserving exact quarter-turn extents. Existing clockwise center-transform convention retained.",
+  "independent_evidence":{
+    "red_test":{"result":"FAIL on original implementation","message":"arbitrary rotation must bound all rectangle corners, not retain unrotated width/height","seconds":0.55},
+    "analytic_witness":"STEP envelope [0,0]..[2,1], rotated clockwise 45 degrees, must have bounds [0,-sqrt(2)]..[3/sqrt(2),1/sqrt(2)] and both extents 3/sqrt(2)",
+    "reflection_witness":"The same envelope scaled (-1,2) must occupy [-2,0]..[0,2]",
+    "properties":"99 independent long-double four-corner cases: 11 positive/negative/cardinal/non-cardinal angles, three signed X scales and three signed Y scales, translated by (7,-3)",
+    "historical_geometry":"All 288 original fixture inputs retained and immutable fixture hash checked. Only known-bug 45-degree expectations replaced by an independent analytic envelope and unchanged fit/overlap thresholds; remaining captures still compared exactly.",
+    "real_inventory":"62 footprint reports and 154 hardware asset hashes unchanged"
+  },
+  "validation":{
+    "native_render_models_contracts":{"result":"PASS","seconds":8.05},
+    "first_live_run":{"result":"FAIL before rendering","seconds":7.59,"cause":"Historical PCB byte-identity assertion had become stale after committed courtyard cleanup in 226bfb83; no current-turn PCB edits"},
+    "live_contract_repair":"Assert immutability of the actual current source PCB and relocated render input, plus complete view counts. Retain every independent scene raster comparison, asset-complete fixture, camera diversity, blank-image mutation check, actual STEP export and PDF rendering check. Do not require unrelated historical PCB UUID/degenerate-courtyard bytes.",
+    "native_render_models_live_contracts":{"result":"PASS","seconds":30.61,"coverage":"Eight real KiCad views of each board and the asset-complete hardware fixture; independent raster comparisons; OpenCascade STEP export; schematic PDF rendering; renderer failure, corrupt-output and timeout cases"}
+  },
+  "limitations":["This remains a point-envelope approximation, not a STEP solid or nested VRML scene evaluator", "X/Y model tilt is not evaluated", "Legacy WRL unit conversion and zero-scale fallback remain unchanged and require separate review", "No complete-board rerun or new layout claimed: the live renderer and whole footprint inventory were the affected verification boundary", "No fabrication-readiness claim"]
+}
