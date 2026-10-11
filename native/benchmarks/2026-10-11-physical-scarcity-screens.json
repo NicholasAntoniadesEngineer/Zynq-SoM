@@ -1,0 +1,60 @@
+{
+  "base_commit": "3a23ce52",
+  "scope": "Four construction-only 165x159 carrier initial-ordering experiments; no production heuristic retained and no full qualification performed.",
+  "common": "Same explicit order 3, compact geometry, edge feasibility, board_aux=owned-face-fixed/a2.2/owned-pins-forward, owned quality/face cohesion and USB-JTAG contract-group candidates as the failed-first candidate; failed-first recovery disabled. Exact placement checks and execution accounting remained active.",
+  "variants": [
+    {
+      "name": "Static feasible nearest-shape offers",
+      "ranking": "Stable ascending distinct (x,y,w,h,primary side) nearest-shape offers before interior placement.",
+      "result": "USB-JTAG interior seating failed",
+      "seconds": 0.374377292,
+      "outer_attempts": 2,
+      "log": "native/build/carrier-initial-scarcity-165x159.log"
+    },
+    {
+      "name": "Static physical-domain sample count",
+      "ranking": "Union of feasible (x,y,primary face mask) grid samples over allowed variants, with current near_max necessary windows and hashed physical occupancy. Sample pitch 4*occ_step = 4 mm.",
+      "result": "bringup_rails interior seating failed",
+      "seconds": 0.887655542,
+      "outer_attempts": 2,
+      "log": "native/build/carrier-grid-scarcity-165x159.log"
+    },
+    {
+      "name": "Dynamic physical-domain sample count",
+      "ranking": "Recompute the same sampled domains for remaining blocks after each actual placement; stable least-domain-first ordering.",
+      "result": "Constructed but rejected for poorer estimate/headroom and greater fallback use; not an accepted board.",
+      "model_seconds": 4.078953667,
+      "pcb_text_emit_seconds": 0.034357916,
+      "outline_mm": [
+        165,
+        159
+      ],
+      "top": 420,
+      "bottom": 149,
+      "instances": 569,
+      "pcb_sha256": "96faa10f9bd032d9cb363450b06e9962b42e6fb428ab16c18fb9215d27f28a8d",
+      "estimated_cross": 16992.9,
+      "search_proxy_budget": 16035.2,
+      "headroom": -957.6,
+      "hard_red": 0,
+      "hard_margin_min": 3.02,
+      "hard_margin_sum": 906,
+      "fallbacks": {
+        "interior_reseat_retry": 30,
+        "legalize_facing_retry": 12,
+        "legalize_reservation_retry": 12
+      },
+      "log": "native/build/carrier-dynamic-scarcity-165x159.log"
+    },
+    {
+      "name": "Dynamic area-normalized physical domain",
+      "ranking": "Compare sampled position count divided by minimum offered primary-box area, via cross multiplication.",
+      "result": "hdmi_rx_term then usb_pd interior seating failures in the two outer attempts",
+      "seconds": 0.528390667,
+      "outer_attempts": 2,
+      "log": "native/build/carrier-area-scarcity-165x159.log"
+    }
+  ],
+  "limits": "Coarse domain counts were ordering heuristics, not feasibility proofs; zero samples did not waive/reject physical acceptance by themselves. Unshaped pseudo-blocks used a prototype placeholder rank. Quantization work from occupancy probes was recorded. No reproducibility campaign or full-board audit/render run for these rejected screens. Fixed-outline proxy budget is not a measured routed-length or independent final LAW-5 verdict.",
+  "decision": "All prototype edits, including diagnostic prints, removed. Shape-option counts are not a reliable measure of remaining spatial freedom; dynamic occupancy helps seating but not necessarily wiring quality, legality repair effort or runtime. Do not repeat these unchanged heuristics or adopt their candidate solely because it seats."
+}
