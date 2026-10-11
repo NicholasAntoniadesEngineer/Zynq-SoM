@@ -1,7 +1,9 @@
 #include "pcb_placement_fixture.hpp"
 #include "schgen/pcb_emit.hpp"
 #include "pcb_placement_requirements.hpp"
+#include "../src/contract_rigid_groups_internal.hpp"
 #include <iostream>
+#include <limits>
 
 namespace {
 using namespace placement_fixture;
@@ -13,6 +15,64 @@ void require(bool p, const std::string &message) {
 }
 void exact(double a, double b, const std::string &context) {
     require(a == b, context + " actual " + std::to_string(a) + " expected " + std::to_string(b));
+}
+void rigid_group_contracts(const std::filesystem::path& root) {
+    using pcb_placement::contract_rigid_groups;
+    auto contract=parse_json_file((root/"subsystems/usb_jtag/placement_contract.json").string());
+    const auto circuit=parse_json_file((root/"carrier/subsystems/usb_jtag/circuit.json").string());
+    std::map<std::string,std::string> refs;
+    for(const auto& part:field(circuit,"parts").array_value)refs.emplace(string(part,"ref"),"pcb/"+string(part,"ref"));
+    const std::set<std::string> pinned{"pcb/U1","pcb/SW1","pcb/TP1","pcb/TP2","pcb/TP3"};
+    const auto groups=contract_rigid_groups(contract,refs,pinned);
+    require(groups&&groups->size()==7,"real USB-JTAG must have three rigid groups plus four controls");
+    const auto group_of=[&](const std::string& ref)->const pcb_placement::ContractRigidGroup& {
+        for(const auto& group:*groups)if(std::find(group.refs.begin(),group.refs.end(),"pcb/"+ref)!=group.refs.end())return group;
+        throw std::runtime_error("missing rigid-group witness "+ref);
+    };
+    require(group_of("U4").refs==std::vector<std::string>{"pcb/C1","pcb/C2","pcb/C3","pcb/U4"},"LDO group closure");
+    require(group_of("U2").refs==std::vector<std::string>{"pcb/C7","pcb/R4","pcb/U2"},"buffer group closure");
+    require(group_of("U1").refs==std::vector<std::string>{"pcb/C4","pcb/C5","pcb/C6","pcb/R1","pcb/R2","pcb/R3","pcb/U1","pcb/Y1"},
+        "bridge must retain transitive crystal/load-cap closure");
+    require(group_of("C5").required_top_refs==std::vector<std::string>{"pcb/U1"},"controlled owner pins the entire connected group");
+    require(group_of("U2").required_top_refs.empty()&&group_of("U4").required_top_refs.empty(),"same_side owners are not globally joined");
+    require(group_of("SW1").required_top_refs==std::vector<std::string>{"pcb/SW1"},"top-access control remains pinned");
+    const auto edit=[](JsonNode& node,const std::string& key)->JsonNode& {
+        for(auto& item:node.object_value)if(item.first==key)return item.second;
+        throw std::runtime_error("missing mutation key "+key);
+    };
+    auto reordered=contract;
+    std::reverse(edit(reordered,"structures").array_value.begin(),edit(reordered,"structures").array_value.end());
+    require(contract_rigid_groups(reordered,refs,pinned)==groups,"group partition must be independent of structure order");
+    auto cyclic=contract;
+    edit(cyclic,"structures").array_value.push_back(parse_json_text(
+        R"({"type":"proximity","anchor":"R1","members":["U1"],"max_mm":6})"));
+    require(contract_rigid_groups(cyclic,refs,pinned)==groups,"cyclic constraints must terminate without splitting or duplicating members");
+    std::set<std::string> covered;
+    for(const auto& group:*groups)for(const auto& ref:group.refs)require(covered.insert(ref).second,"part assigned to multiple rigid groups");
+    require(covered.size()==refs.size(),"partition must cover every mapped part");
+    auto linked=contract;
+    edit(linked,"structures").array_value.front().object_value.emplace_back("min_from",parse_json_text(R"([{"part":"U2","min_mm":1}])"));
+    const auto connected=contract_rigid_groups(linked,refs,pinned);
+    require(connected&&connected->size()==6,"minimum-distance cross-link must prevent independently moving groups");
+    for(const auto& mutation:{std::string("unknown-type"),std::string("missing-member"),std::string("bad-distance"),std::string("external"),std::string("schema"),
+                             std::string("unknown-field"),std::string("bad-away-distance"),std::string("bad-pin"),std::string("empty-members"),std::string("nonfinite-bound")}) {
+        auto changed=contract;auto& first=edit(changed,"structures").array_value.front();
+        if(mutation=="unknown-type")edit(first,"type").string_value="future_constraint";
+        if(mutation=="missing-member")edit(first,"members").array_value.front().string_value="MISSING";
+        if(mutation=="bad-distance")edit(first,"max_mm").number_value=-1;
+        if(mutation=="external")changed.object_value.emplace_back("external",parse_json_text(R"({"near":"unknown"})"));
+        if(mutation=="schema")edit(changed,"contract").string_value="future-schema";
+        if(mutation=="unknown-field")first.object_value.emplace_back("future_limit",parse_json_text("1"));
+        if(mutation=="bad-away-distance")first.object_value.emplace_back("min_from",parse_json_text(R"([{"part":"U2","min_mm":-1}])"));
+        if(mutation=="bad-pin")edit(first,"anchor_pins").array_value.front()=parse_json_text("14");
+        if(mutation=="empty-members")edit(first,"members").array_value.clear();
+        if(mutation=="nonfinite-bound")edit(first,"max_mm").number_value=std::numeric_limits<double>::quiet_NaN();
+        require(!contract_rigid_groups(changed,refs,pinned),"unsupported grouping must fail closed: "+mutation);
+    }
+    auto aliases=refs;aliases["alias"]="pcb/U1";
+    require(!contract_rigid_groups(contract,aliases,pinned),"ambiguous board identity must reject");
+    auto unknown=pinned;unknown.insert("pcb/MISSING");
+    require(!contract_rigid_groups(contract,refs,unknown),"unknown mandatory-top owner must reject");
 }
 void same(const J &a, const J &b, const std::string &path) {
     require(a.kind == b.kind, path + " type");
@@ -211,6 +271,7 @@ int main(int argc, char **argv) {
              mode != "--single"))
             throw std::runtime_error(
                 "repo root [--zones-only|--production|--placed-only|--single]");
+        rigid_group_contracts(argv[1]);
         for (const auto &name : {"carrier", "devkit_mini"}) {
             run(argv[1], name, mode);
             if (mode == "--production")
