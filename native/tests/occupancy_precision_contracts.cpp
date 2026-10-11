@@ -1,5 +1,6 @@
 #include "schgen/occupancy.hpp"
 #include "schgen/pack_refine.hpp"
+#include "schgen/floorplan.hpp"
 #include "pcb_placement_fixture.hpp"
 #include "occupancy_precision_fixture.hpp"
 #include "schgen/native_audit_state.hpp"
@@ -119,6 +120,23 @@ void refinement_window_contracts(){
             require(r.poses.front()==std::make_pair(b.x,b.y)&&r.passes==1,
                 "empty grid intersection must retain the valid off-grid incumbent");});
     }
+}
+void reservation_retry_accounting(){
+    FloorplanLegalizeInput in;in.board_w=25;in.board_h=25;
+    in.fixed_rects={{"a",{.5,.5,20.5,20.5}}};in.fixed_poses["a"]={.5,.5};
+    for(const auto* name:{"a","b"})in.metrics[name]={{{"p",10,10}},{{"p",0,0,20,20}},{20,20}};
+    in.index.hard.push_back({"near_max","b","b","a",100,"reservation accounting",true,{},{}});
+    in.primary_fanout["a"]={{},{},1,3,std::vector<Comp>{{0,0,3,20,2}}};
+    in.primary_fanout["b"]={{},{},2,3,std::vector<Comp>{{17,0,3,20,1}}};
+    std::size_t retries=0;in.reservation_retry_started=[&]{++retries;};
+    std::vector<FloorplanLegalizeVar> vars{{"b",20,20,{4.5,.5},4.5,.5}};
+    std::vector<std::string> log;QuantizationCounts counts;
+    for(auto& n:entries)n=0;observing=true;bool ok=false;
+    try{ok=floorplan_legalize_compact_accounted(in,vars,log,counts);}catch(...){observing=false;throw;}
+    observing=false;
+    require(ok&&retries==1&&entries[0]>0,"physical retry accounting witness did not execute");
+    for(int i=0;i<6;++i){const auto it=counts.find(names[i]);
+        require((it==counts.end()?0:it->second)==entries[i],"physical retry occupancy receipt differs from actual entries");}
 }
 void frontier_slots(){
     QuantizationCounts direct,slotted;
@@ -348,7 +366,7 @@ int main(int argc,char** argv){try{
     // from the candidate: /private/tmp/occupancy-agent1.5BMaTe/proof/before.digest.
     require(pure==0xfee57f87ab3a0aa5ULL,"pre-extraction geometry digest drift");
 #ifndef OCCUPANCY_LEGACY_PROBE
-    refinement_window_contracts();frontier_slots();scalars();ownership_and_rejections();QuantizationCounts counts;
+    refinement_window_contracts();reservation_retry_accounting();frontier_slots();scalars();ownership_and_rejections();QuantizationCounts counts;
     measured(counts,[&]{require(geometry(&counts)==pure,"accounting changed geometry bits");});
     require(counts.at(names[0])>0&&counts.at(names[2])>0&&counts.at(names[3])>0&&counts.at(names[4])>0&&counts.at(names[5])>0,"live geometry path omitted precision family");
     if(argc==2)registry_and_boards(argv[1]);

@@ -232,6 +232,47 @@ void compose_contracts(const std::filesystem::path& dir) {
     require(floorplan_evaluate_terms(base,{}).empty(),"empty term index evaluates without fabricated terms");
 }
 void primary_fanout_contracts() {
+    // Two 20 mm groups cannot be separated as rectangles on this board, but
+    // sparse reservations on their opposite faces interlock with 1 mm gaps.
+    for(int direction=0;direction<4;++direction)for(bool compact:{false,true}) {
+        FloorplanLegalizeInput in;in.board_w=25;in.board_h=25;in.compact=compact;
+        FloorplanPoint a{.5,.5},b{4.5,.5};
+        Comp ca{0,0,3,20,2},cb{17,0,3,20,1};
+        if(direction%2){a.first=4.5;b.first=.5;ca.dx=17;cb.dx=0;}
+        if(direction>=2){std::swap(a.first,a.second);std::swap(b.first,b.second);
+            std::swap(ca.dx,ca.dy);std::swap(ca.w,ca.h);std::swap(cb.dx,cb.dy);std::swap(cb.w,cb.h);}
+        in.fixed_rects={{"a",{a.first,a.second,a.first+20,a.second+20}}};in.fixed_poses["a"]=a;
+        for(const auto* name:{"a","b"})in.metrics[name]={{{"p",10,10}},{{"p",0,0,20,20}},{20,20}};
+        in.index.hard.push_back({"near_max","b","b","a",100,"interlocking reservations",true,{},{}});
+        in.primary_fanout["a"]={{},{},1,3};in.primary_fanout["b"]={{},{},2,3};
+        std::vector<FloorplanLegalizeVar> vars{{"b",20,20,b,b.first,b.second}};
+        const auto seed=vars;std::vector<std::string> log;
+        require(!floorplan_legalize_compact(in,vars,log),"whole rectangles must reject the interlocking witness");
+        in.primary_fanout["a"].children=std::vector<Comp>{ca};
+        in.primary_fanout["b"].children=std::vector<Comp>{cb};
+        int retries=0;in.reservation_retry_started=[&]{++retries;};vars=seed;log.clear();
+        QuantizationCounts counts;
+        const bool accepted=floorplan_legalize_compact_accounted(in,vars,log,counts);
+        if(!accepted)for(const auto& line:log)std::cerr<<line<<'\n';
+        require(accepted&&retries==1,"one bounded reservation retry must recover the interlocking layout");
+        require(counts.at("occupancy_component_precision4dp")>0,"exact final child geometry must be accounted");
+        Occupancy physical(25,25,.3,2,1,1,.05);
+        physical.add(a.first,a.second,20,20,{},{},1,{ca});
+        require(physical.fits_exhaustive(vars[0].x,vars[0].y,20,20,{},{},2,{cb}),
+            "independent exhaustive occupancy rejects child geometry finalist");
+        auto blocked=in;blocked.primary_fanout["a"].children=std::vector<Comp>{{0,0,20,20,2}};
+        vars=seed;log.clear();retries=0;
+        require(!floorplan_legalize_compact(blocked,vars,log)&&retries==1,
+            "full secondary-face obstacle must reject after one recorded retry");
+        require(vars[0].x==seed[0].x&&vars[0].y==seed[0].y,"failed physical retry mutated caller pose");
+        auto roomy=in;roomy.board_w=80;roomy.board_h=80;vars={{"b",20,20,{40,40},40,40}};
+        log.clear();retries=0;
+        require(floorplan_legalize_compact(roomy,vars,log)&&retries==0,
+            "accepted conservative incumbent must not execute physical retry");
+        auto invalid=in;invalid.primary_fanout["a"].occupied_mask=1;
+        throws([&]{auto trial=seed;std::vector<std::string> messages;floorplan_legalize_compact(invalid,trial,messages);},
+            "child reservation face census mismatch");
+    }
     for(bool compact:{false,true})for(int face:{1,2}) {
         FloorplanLegalizeInput in;in.board_w=60;in.board_h=60;in.compact=compact;
         for(const auto* name:{"a","b"})
@@ -377,6 +418,13 @@ void primary_fanout_contracts() {
     require(x.ok&&x.pos.at(0)>=11.7501,"flipped axis enforces larger physical gap");
     throws([&]{legalize_repair_axis(false,{"v"},{5},10,.3,
         {{false,"#anchor","v",.3,true,-1.}},fixed,{},2);},"invalid flipped separation gap");
+    RepairSep projection{false,"#anchor","v",.3,true,-1.,false,true};
+    const auto projected=legalize_repair_axis(false,{"v"},{5},10,.3,{projection},fixed,{},2);
+    require(projected.ok&&projected.seps[0].gap==-1.&&projected.seps[0].projected_gap,
+        "typed relative-entity adjustment must survive a repair flip");
+    projection.flipped_gap=std::numeric_limits<double>::infinity();
+    throws([&]{legalize_repair_axis(false,{"v"},{5},10,.3,{projection},fixed,{},2);},
+        "invalid flipped separation gap");
 }
 void output_grid_contracts() {
     FloorplanLegalizeInput in;

@@ -149,6 +149,9 @@ struct FloorplanPrimaryFanout {
     // Complete union of primary and selected child reservation faces.
     // Zero means unknown: retain conservative rectangle separation.
     int occupied_mask = 0;
+    // Complete selected reservations, not an arbitrary subset. Absent keeps
+    // conservative geometry; an engaged empty vector proves no children.
+    std::optional<std::vector<Comp>> children = std::nullopt;
 };
 struct FloorplanLegalizeInput {
     double board_w = 0.0, board_h = 0.0;
@@ -166,6 +169,7 @@ struct FloorplanLegalizeInput {
     // every movable/fixed rectangle with its selected primary geometry.
     std::map<std::string, FloorplanPrimaryFanout> primary_fanout;
     bool report_infeasible_cycle = false; // diagnostic only; no extra solve
+    std::function<void()> reservation_retry_started;
 };
 
 // Compose consumes resolved, selected-shape metrics. A rejected candidate

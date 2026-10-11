@@ -42,6 +42,18 @@ void validate(const FloorplanLegalizeInput& in) {
         if(body.occupied_mask<0||body.occupied_mask>3||
            (body.occupied_mask&&(!body.mask||(body.occupied_mask&body.mask)!=body.mask)))
             throw FloorplanError("floorplan compose: invalid complete occupancy mask " + name);
+        if(body.children) {
+            int faces=body.mask;
+            for(const auto& child:*body.children) {
+                for(double v:{child.dx,child.dy,child.w,child.h})finite(v,name+" child reservation");
+                if(child.w<=0||child.h<=0||child.mask<1||child.mask>3)
+                    throw FloorplanError("floorplan compose: invalid child reservation "+name);
+                for(const auto& h:{child.reach,child.inset})for(double v:{h.w,h.e,h.n,h.s})finite(v,name+" child fanout");
+                faces|=child.mask;
+            }
+            if(!body.mask||faces!=body.occupied_mask)
+                throw FloorplanError("floorplan compose: child reservation face census mismatch "+name);
+        }
         for (const auto& halo : {body.reach, body.inset})
             for (double value : {halo.w, halo.e, halo.n, halo.s}) finite(value, name + " primary fanout");
     }
@@ -143,8 +155,8 @@ public:
     Composer(const FloorplanLegalizeInput& input,
              const std::vector<FloorplanLegalizeVar>& variables,
              std::vector<std::string>& output_log, QuantizationCounts* counts = nullptr,
-             bool pad_seed_hulls = false, bool perpendicular_order = false)
-        : in(input), log(output_log), counts(counts), fixed(input.fixed_poses), pad_seed_hulls(pad_seed_hulls), perpendicular_order(perpendicular_order) {
+             bool pad_seed_hulls = false, bool perpendicular_order = false,bool reservation_geometry=false)
+        : in(input), log(output_log), counts(counts), fixed(input.fixed_poses), pad_seed_hulls(pad_seed_hulls), perpendicular_order(perpendicular_order), reservation_geometry(reservation_geometry) {
         for (const auto& v : variables) {
             if (v.name.empty() || v.name.front() == '#' || !by_name.emplace(v.name, &v).second)
                 throw FloorplanError("floorplan compose: invalid or duplicate movable name " + v.name);
@@ -177,6 +189,15 @@ public:
                 if (!by_name.count(name) && !frect.count(name))
                     throw FloorplanError("floorplan compose: unknown primary fanout " + name);
             }
+        }
+        if(reservation_geometry)for(const auto& [name,body]:in.primary_fanout)if(body.children) {
+            const auto variable=by_name.find(name);
+            const auto box=variable==by_name.end()?frect.at(name):seed_rect.at(name);
+            const double w=variable==by_name.end()?box.x1-box.x0:variable->second->w;
+            const double h=variable==by_name.end()?box.y1-box.y0:variable->second->h;
+            auto& out=local_reservations[name];out.reserve(1+body.children->size());
+            out.push_back({0,0,w,h,body.reach,body.inset,body.mask,body.mask,true});
+            for(const auto& c:*body.children)out.push_back({c.dx,c.dy,c.w,c.h,c.reach,c.inset,c.mask,body.mask,false});
         }
     }
 
@@ -224,6 +245,12 @@ public:
                     sep.flipped_gap=sep.reverse_on_flip?
                         std::max(s.gap,fanout_sep(high.reach,high.inset,low.reach,low.inset,sep.axis_x?'S':'E')):
                         gap(!sep.axis_x);
+                }
+                if(reservation_geometry&&s.gap<=in.clear&&reservation_pair(key(s.lo),key(s.hi))) {
+                    sep.projected_gap=true;
+                    sep.gap=reservation_gap(sep.lo,sep.hi,sep.axis_x);
+                    sep.flipped_gap=sep.reverse_on_flip?
+                        reservation_gap(sep.hi,sep.lo,!sep.axis_x):reservation_gap(sep.lo,sep.hi,!sep.axis_x);
                 }
             }
             seps.push_back(std::move(sep));
@@ -281,11 +308,30 @@ public:
             std::vector<Box4> others;
             others.reserve(boxes.size()-i-1+fixed_boxes.size());
             for(std::size_t j=i+1;j<boxes.size();++j)
-                if(!disjoint(moving_masks[i],moving_masks[j]))others.push_back(boxes[j]);
+                if(!disjoint(moving_masks[i],moving_masks[j])&&
+                   !(reservation_geometry&&reservation_pair(names[i],names[j])))others.push_back(boxes[j]);
             for(std::size_t j=0;j<fixed_boxes.size();++j)
-                if(!disjoint(moving_masks[i],fixed_masks[j]))others.push_back(fixed_boxes[j]);
+                if(!disjoint(moving_masks[i],fixed_masks[j])&&
+                   !(reservation_geometry&&reservation_pair(names[i],fixed_names[j])))others.push_back(fixed_boxes[j]);
             if (rects_overlap_any({boxes[i]}, others, 1e-6)) {
                 log.push_back("REJECT: final rect overlap"); return false;
+            }
+        }
+        if(reservation_geometry) {
+            std::vector<std::vector<Rect>> groups;
+            const auto add=[&](const std::string& name,const Box4& box) {
+                const auto& body=in.primary_fanout.at(name);
+                const std::vector<Comp> empty;
+                const auto variable=by_name.find(name);
+                const double w=variable==by_name.end()?box.x1-box.x0:variable->second->w;
+                const double h=variable==by_name.end()?box.y1-box.y0:variable->second->h;
+                groups.push_back(pairs_entity(box.x0,box.y0,w,h,
+                    body.reach,body.inset,body.mask,body.children?*body.children:empty,counts));
+            };
+            for(std::size_t i=0;i<names.size();++i)add(names[i],boxes[i]);
+            for(std::size_t i=0;i<fixed_names.size();++i)add(fixed_names[i],fixed_boxes[i]);
+            if(!pairs_hold(groups,names.size(),in.clear)) {
+                log.push_back("REJECT: final selected child reservation collision");return false;
             }
         }
         for (auto& v : movable) {
@@ -305,6 +351,28 @@ private:
     std::vector<std::string> names;
     std::vector<double> pos_x, pos_y;
     std::vector<RepairSep> seps;
+    std::map<std::string,std::vector<Rect>> local_reservations;
+    bool reservation_pair(const std::string& a,const std::string& b) const {
+        if(in.primary_fanout.empty())return false;
+        const auto& low=in.primary_fanout.at(a);const auto& high=in.primary_fanout.at(b);
+        return low.mask&&high.mask&&!(low.mask&high.mask)&&low.children&&high.children;
+    }
+    double reservation_gap(const std::string& low,const std::string& high,bool x) const {
+        // Linear raw-offset bounds propose a pose only. Child positions are
+        // rounded by the real occupancy kernel at final validation; no epsilon
+        // or rounded local-offset proxy may turn a collision into acceptance.
+        const auto& a=local_reservations.at(low.front()=='#'?low.substr(1):low);
+        const auto& b=local_reservations.at(high.front()=='#'?high.substr(1):high);
+        std::optional<double> bound;
+        for(const auto& l:a)for(const auto& h:b) {
+            if(!occ_pair_active(l.mask,l.pmask,l.main,h.mask,h.pmask,h.main))continue;
+            const double value=(x?l.x+l.w-h.x:l.y+l.h-h.y)+
+                std::max(in.clear,fanout_sep(l.reach,l.inset,h.reach,h.inset,x?'E':'S'));
+            finite(value,"reservation projection");bound=bound?std::max(*bound,value):value;
+        }
+        if(!bound)throw FloorplanError("floorplan compose: empty reservation separation");
+        const double gap=*bound-(x?a.front().w:a.front().h);finite(gap,"reservation gap");return gap;
+    }
     bool reverse_perpendicular(const std::string& lo,const std::string& hi,bool was_x) const {
         const auto box=[&](const std::string& name)->const Box4& {
             return name.front()=='#'?frect.at(name.substr(1)):seed_rect.at(name);
@@ -491,6 +559,7 @@ private:
     bool pad_seed_hulls = false;
     bool perpendicular_order = false;
     bool flip_order_differs = false;
+    bool reservation_geometry = false;
 };
 
 bool compose_with_bounded_retries(const FloorplanLegalizeInput& input,
@@ -500,7 +569,8 @@ bool compose_with_bounded_retries(const FloorplanLegalizeInput& input,
     // search strategy, but can falsely reject when local pads favour another
     // axis. Try that geometry once, from unchanged caller poses, on rejection.
     // A final distinct strategy reverses flipped pairs to follow their
-    // perpendicular seed order. At most three composer attempts execute.
+    // perpendicular seed order. A final physical-reservation strategy may run
+    // after all conservative strategies fail: at most four composer attempts.
     Composer original(input,movable,log,counts);
     if(original.run(movable))return true;
     Composer alternative(input,movable,log,counts,true);
@@ -511,9 +581,29 @@ bool compose_with_bounded_retries(const FloorplanLegalizeInput& input,
         log.push_back("retry: near constraints use selected pad-hull axes");
         if(alternative.run(movable))return true;
     }
-    if(!original.changed_flip_order())return false;
-    log.push_back("retry: flipped separations follow perpendicular seed order");
-    return Composer(input,movable,log,counts,false,true).run(movable);
+    if(original.changed_flip_order()) {
+        log.push_back("retry: flipped separations follow perpendicular seed order");
+        if(Composer(input,movable,log,counts,false,true).run(movable))return true;
+    }
+    const bool candidate=[&] {
+        // Fixed/fixed pairs cannot be repaired by this solve. Stop at the
+        // first relevant pair instead of sweeping a quadratic fixed set.
+        for(const auto& v:movable) {
+            const auto ai=input.primary_fanout.find(v.name);
+            if(ai==input.primary_fanout.end())continue;
+            const auto& a=ai->second;
+            for(const auto& [bn,b]:input.primary_fanout) {
+                (void)bn;
+                if(a.mask&&b.mask&&!(a.mask&b.mask)&&a.children&&b.children&&
+                   (a.occupied_mask&b.occupied_mask))return true;
+            }
+        }
+        return false;
+    }();
+    if(!candidate)return false;
+    log.push_back("retry: selected child-face reservation geometry");
+    if(input.reservation_retry_started)input.reservation_retry_started();
+    return Composer(input,movable,log,counts,false,false,true).run(movable);
 }
 }  // namespace
 

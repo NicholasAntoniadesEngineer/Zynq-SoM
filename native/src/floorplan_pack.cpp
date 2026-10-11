@@ -464,16 +464,17 @@ bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure) {
                 for(const auto& child:children)primary|=child.mask;
                 return primary;
             };
-            li.primary_fanout["som"]={{},{},som_mask,occupied_faces(som_mask,som_comps)};
+            li.primary_fanout["som"]={{},{},som_mask,occupied_faces(som_mask,som_comps),som_comps};
             for (const auto& c:corners) {
                 const auto name="corner@"+number(c.x0)+","+number(c.y0);
                 li.fixed_rects.emplace_back(name,c);
-                li.primary_fanout[name]={{},{},occ_punch,occ_punch};
+                li.primary_fanout[name]={{},{},occ_punch,occ_punch,std::vector<Comp>{}};
             }
             for (const auto& b:plan.edge_blocks)
-                li.primary_fanout[b.name]={b.fanout_reach,b.fanout_inset,edge_mask,occupied_faces(edge_mask,get(edge_comps,b.name))};
+                li.primary_fanout[b.name]={b.fanout_reach,b.fanout_inset,edge_mask,occupied_faces(edge_mask,get(edge_comps,b.name)),get(edge_comps,b.name)};
             for (const auto& b:plan.interior_blocks)
-                li.primary_fanout[b.name]={b.fanout_reach,b.fanout_inset,side_mask(b.side),occupied_faces(side_mask(b.side),get(chosen,b.name))};
+                li.primary_fanout[b.name]={b.fanout_reach,b.fanout_inset,side_mask(b.side),occupied_faces(side_mask(b.side),get(chosen,b.name)),get(chosen,b.name)};
+            li.reservation_retry_started=[&]{fallback("legalize_reservation_retry");};
             auto fix=[&](const FloorplanBlock& b){li.fixed_rects.emplace_back(b.name,Box4{b.x,b.y,b.x+b.w,b.y+b.h}); li.fixed_poses[b.name]={b.x,b.y};};
             for (const auto& b:plan.edge_blocks) fix(b);
             for (const auto& b:plan.interior_blocks) if (!movable.count(b.name)) fix(b);

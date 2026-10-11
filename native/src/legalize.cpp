@@ -1181,7 +1181,7 @@ RepairAxisResult legalize_repair_axis(
     RepairAxisResult out;
     out.seps = seps_in;
     for (const auto& sep : out.seps)
-        if (sep.flipped_gap && (!std::isfinite(*sep.flipped_gap) || *sep.flipped_gap < 0))
+        if (sep.flipped_gap && (!std::isfinite(*sep.flipped_gap) || (!sep.projected_gap&&*sep.flipped_gap < 0)))
             throw std::runtime_error("legalize_repair_axis: invalid flipped separation gap");
     for (int rep = 0; rep <= repair_max; ++rep) {
         std::vector<SepSpec> spec;

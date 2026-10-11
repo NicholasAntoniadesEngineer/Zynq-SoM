@@ -230,6 +230,9 @@ struct RepairSep {
     // A repair flip must carry geometry, not reuse the old face's requirement.
     std::optional<double> flipped_gap = std::nullopt;
     bool reverse_on_flip = false;
+    // Entity projections encode origin separation minus primary width/height.
+    // Their adjustment may be negative; physical entity clearances are not.
+    bool projected_gap = false;
 };
 
 struct RepairAxisResult {

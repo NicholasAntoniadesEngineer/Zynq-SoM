@@ -47,7 +47,8 @@ void ledger_contracts(const JsonNode& reference){
 }
 void registry_contracts(const JsonNode& reference){
     NativeFallbacks f;register_native_fallbacks(f);f.record("seat_node_budget");const auto snap=f.snapshot();f.record("seat_node_budget");f.restore(snap);
-    const auto census=f.census();require(census.size()==get(reference,"census").object_value.size()+3,"historical fallback census plus translation, incumbent retention and bounded contract retry");
+    const auto census=f.census();require(census.size()==get(reference,"census").object_value.size()+4,"historical fallback census plus translation, incumbent retention, bounded contract and reservation retries");
+    require(census.at("legalize_reservation_retry")==AuditInteger{},"reservation retry starts with zero events");
     require(census.at("contract_group_orientation_retry")==AuditInteger{},"contract retry starts with zero events");
     require(census.at("edge_run_translation")==AuditInteger{},"opt-in translation starts with zero events");
     require(census.at("screened_incumbent_retained")==AuditInteger{},"incumbent retention starts with zero events");
