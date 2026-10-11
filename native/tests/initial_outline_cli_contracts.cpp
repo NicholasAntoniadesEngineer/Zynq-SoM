@@ -31,6 +31,14 @@ int main(int argc,char** argv){try{
     const auto feasible=run({"board","--compact-placement","--edge-feasibility"});
     if(feasible.exit_code||feasible.stdout_text.find("Not a complete joint solver")==std::string::npos)
         throw std::runtime_error("edge feasibility help must disclose solver limits");
+    if(run({"board","--compact-placement","--interior-order","3","--failed-first-retry"}).exit_code)
+        throw std::runtime_error("valid failed-first retry option rejected");
+    for(const auto& args:std::vector<std::vector<std::string>>{
+        {"board","--compact-placement","--failed-first-retry"},
+        {"board","--interior-order","3","--failed-first-retry"},
+        {"board","--compact-placement","--interior-order","3","--failed-first-retry","--failed-first-retry"},
+        {"pcb-stage","--failed-first-retry"}})
+        if(run(args).exit_code==0)throw std::runtime_error("invalid failed-first retry option accepted");
     const auto quality=run({"board","--compact-placement","--owned-quality-first"});
     if(quality.exit_code||quality.stdout_text.find("May increase inter-block estimate")==std::string::npos)
         throw std::runtime_error("quality-first help must disclose tradeoff");

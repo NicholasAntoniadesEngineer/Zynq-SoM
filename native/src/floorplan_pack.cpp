@@ -75,12 +75,27 @@ bool Engine::attempt_pack(bool compact) {
             if(in.experiment && in.experiment->interior_order) {
                 validate_floorplan_experiment(*in.experiment);
                 const int saved_order=compact_order;
+                const bool recovery=in.compact_search&&in.experiment->failed_first_retry;
+                const auto start=recovery?std::optional{plan}:std::nullopt;
+                const auto offers=recovery?std::optional{side_offers}:std::nullopt;
+                const auto restore=[&] {
+                    auto accounting=std::move(plan.accounting);
+                    plan=*start;plan.accounting=std::move(accounting);side_offers=*offers;
+                };
                 compact_order=*in.experiment->interior_order;
                 try {
-                    const bool ok=attempt_pack_impl(compact);
+                    std::string failed;
+                    bool ok=attempt_pack_impl(compact,nullptr,{},recovery?&failed:nullptr);
+                    if(!ok&&recovery&&!failed.empty()) {
+                        restore();
+                        fallback("interior_failed_first_retry");
+                        ok=attempt_pack_impl(compact,nullptr,failed);
+                        if(ok)plan.composition.push_back("failure-directed order: "+failed+" first");
+                    }
+                    if(!ok&&recovery)restore();
                     compact_order=saved_order;
                     return ok;
-                } catch(...) {compact_order=saved_order;throw;}
+                } catch(...) {if(recovery)restore();compact_order=saved_order;throw;}
             }
             if (!in.compact_search) return attempt_pack_impl(compact);
             const auto start=plan;
@@ -117,7 +132,8 @@ bool Engine::attempt_pack(bool compact) {
                                                plan.punch_free, std::nullopt};
         });
 }
-bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure) {
+bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure,
+                              const std::string& promote,std::string* failed_subject) {
     if(order_independent_failure)*order_independent_failure=true;
     // Borrow only for this synchronous invocation; never attach a sink to
     // occupancy geometry or candidate copies. Rejected trials remain counted.
@@ -240,6 +256,10 @@ bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure) {
             const auto awh=zbox.at(a->name),bwh=zbox.at(b->name);
             return awh.first*awh.second>bwh.first*bwh.second;
         });
+    }
+    if(!promote.empty()) {
+        const auto found=std::find_if(order.begin(),order.end(),[&](const auto* b){return b->name==promote;});
+        if(found!=order.end())std::rotate(order.begin(),found,found+1);
     }
     std::map<std::string,std::vector<Comp>> chosen;
     auto occ_put=[&](const FloorplanBlock& b){occ.add(b.x,b.y,b.w,b.h,b.fanout_reach,b.fanout_inset,side_mask(b.side),get(chosen,b.name),counts);};
@@ -438,7 +458,10 @@ bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure) {
         std::tie(b->w,b->h)=zbox.at(b->name); b->area=block_area(b->w,b->h, counts);
         const auto a=pack_anchor(anchor_row(*b,centers));
         if (seat(*b,a,nullptr)) { occ_put(*b); centers[b->name]={b->cx(),b->cy()}; }
-        else if (!retry(*b,a)) {rejected("interior_seating",b->name,compact);return false;}
+        else if (!retry(*b,a)) {
+            if(failed_subject&&b!=order.front())*failed_subject=b->name;
+            rejected("interior_seating",b->name,compact);return false;
+        }
         placed.push_back(b);
     }
     std::vector<RefineBlock> refine;

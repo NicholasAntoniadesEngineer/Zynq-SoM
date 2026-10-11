@@ -41,6 +41,8 @@ struct FloorplanExperiment {
     // Opt-in compact-search candidate; legacy orders remain fallback choices.
     // Invocation-owned so independent/concurrent solves cannot change each other.
     bool compact_constraint_first = false;
+    // One failure-directed restart of an explicitly selected interior order.
+    bool failed_first_retry = false;
     bool compact_edge_translation = false;
     bool compact_edge_feasibility = false;
     bool owned_quality_first = false;
@@ -58,7 +60,7 @@ struct FloorplanExperiment {
                        const OwnedShapeQualityTable&,int)> owned_shape_selection_completed;
     // Diagnostic single-order ablation, independent of compact shape selection:
     // 0 connectivity, 1 area, 2 shape scarcity, 3 hard-constraint incidence.
-    // No alternate-order retries are executed when explicitly selected.
+    // No alternate-order retries unless failed_first_retry is explicitly set.
     std::optional<int> interior_order;
     // Optional starting candidate, re-evaluated under each reservation policy.
     // Never a fixed outline, cached proof or permission to bypass any gate.

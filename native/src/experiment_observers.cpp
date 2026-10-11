@@ -9,6 +9,8 @@
 
 namespace schgen {
 void validate_floorplan_experiment(const FloorplanExperiment &experiment) {
+    if(experiment.failed_first_retry&&!experiment.interior_order)
+        throw FloorplanError("experiment: failed-first retry requires an explicit interior order");
     if(experiment.interior_order && (*experiment.interior_order<0 || *experiment.interior_order>3))
         throw FloorplanError("experiment: interior order must be in [0,3]");
     if(experiment.interior_order && experiment.compact_constraint_first)

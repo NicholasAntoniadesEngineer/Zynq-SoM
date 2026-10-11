@@ -65,6 +65,7 @@ struct Options {
     bool compact_search = false;
     bool multiscale_outline = false;
     bool edge_feasibility = false;
+    bool failed_first_retry = false;
     bool owned_quality_first = false;
     bool owned_face_cohesion = false;
     std::optional<std::string> contract_group_face_sheet;
@@ -107,6 +108,10 @@ Options parse(int argc, char** argv) {
             if(++i==argc||std::string(argv[i]).empty()||std::string(argv[i]).front()=='-')
                 throw ProjectError("contract-group-face-sheet requires SHEET");
             out.contract_group_face_sheet=argv[i];continue;
+        }
+        if(arg=="--failed-first-retry"){
+            if(!seen.insert(arg).second)throw ProjectError("duplicate option "+arg);
+            out.failed_first_retry=true;continue;
         }
         if(arg=="--owned-quality-first"){
             if(!seen.insert(arg).second)throw ProjectError("duplicate option "+arg);
@@ -209,6 +214,7 @@ Options parse(int argc, char** argv) {
         allowed.insert("--compact-placement");
         allowed.insert("--multiscale-outline");
         allowed.insert("--edge-feasibility");
+        allowed.insert("--failed-first-retry");
         allowed.insert("--owned-quality-first");
         allowed.insert("--owned-face-cohesion");allowed.insert("--owned-shape");
         allowed.insert("--contract-group-face-sheet");
@@ -265,6 +271,8 @@ Options parse(int argc, char** argv) {
     out.help_options=std::move(allowed);
     if(out.edge_feasibility&&!out.compact_search)
         throw ProjectError("edge-feasibility requires --compact-placement");
+    if(out.failed_first_retry&&(!out.compact_search||!out.interior_order))
+        throw ProjectError("failed-first-retry requires --compact-placement and --interior-order");
     if(out.owned_quality_first&&!out.compact_search)
         throw ProjectError("owned-quality-first requires --compact-placement");
     if((out.owned_face_cohesion||!out.owned_shapes.empty()||out.contract_group_face_sheet)&&!out.compact_search)
@@ -302,7 +310,7 @@ std::optional<int> run_project_command(int argc, char** argv) {
         if(options.command=="build"||options.command=="subsystem-new")std::cout<<" NAME";
         else if(experiment_command(options.command)&&options.command!="dump-circuits")std::cout<<(options.command=="w11-sweep"?" MM":" TAG")<<" [SHEET ...]";
         std::cout<<" [options]\nOptions:\n  --help, -h\n";
-        const std::set<std::string> flags={"--no-render","--timing","--cons-only","--allow-missing","--qualified-refs","--no-ngspice","--keep","--compact-placement","--multiscale-outline","--edge-feasibility","--owned-quality-first","--owned-face-cohesion"};
+        const std::set<std::string> flags={"--no-render","--timing","--cons-only","--allow-missing","--qualified-refs","--no-ngspice","--keep","--compact-placement","--multiscale-outline","--edge-feasibility","--failed-first-retry","--owned-quality-first","--owned-face-cohesion"};
         for(const auto& option:options.help_options)std::cout<<"  "<<option<<(flags.count(option)?"":" VALUE")<<(option=="--output"?" (alias -o)":"")<<'\n';
         if(options.command=="nets"||options.command=="devkit"||options.command=="board-schematic"||options.command=="pcb-stage")std::cout<<"--output is required.\n";
         if(options.command=="devkit")std::cout<<"Builds the four-sheet example, not the twelve-sheet devkit_mini project.\n";
@@ -312,7 +320,7 @@ std::optional<int> run_project_command(int argc, char** argv) {
         if(options.command=="board")std::cout<<"--owned-quality-first: opt-in same-pose, same-face owned proximity priority; requires --compact-placement. May increase inter-block estimate. No hardware proximity limit is implied; all gates remain active.\n";
         if(options.command=="board")std::cout<<"--owned-face-cohesion: append owner/cap same-face initial packs, preserving existing candidates.\n--owned-shape SHEET=TAG: restrict a measured candidate by generated tag; unknown, ambiguous or infeasible choices fail without substitution. Requires --compact-placement. All gates remain active.\n";
         if(options.command=="board")std::cout<<"--contract-group-face-sheet SHEET: experimental bounded rigid-group bottom candidates for one sheet; requires --compact-placement. Controlled-net owners and top-access parts remain pinned. No assembly or thermal approval is implied; all gates remain active.\n";
-        if(options.command=="board")std::cout<<"--floorplan-spec PATH: read an explicit candidate specification without editing the project default.\n--interior-order 0|1|2|3: use a single connectivity/area/scarcity/constraint order; no alternate-order retries. Diagnostic strategy selection, not cached acceptance. All gates remain active.\n";
+        if(options.command=="board")std::cout<<"--floorplan-spec PATH: read an explicit candidate specification without editing the project default.\n--interior-order 0|1|2|3: use a single connectivity/area/scarcity/constraint order; no alternate-order retries unless explicitly enabled. Diagnostic strategy selection, not cached acceptance. All gates remain active.\n--failed-first-retry: one opt-in failed-block-first restart after interior seating failure; requires --compact-placement and --interior-order. Successful incumbents are retained. Final geometry and hard-term checks remain mandatory.\n";
         if(options.command=="chir-rung"||options.command=="w11-sweep")std::cout<<"Publishes board artifacts; restores input spec and fallback baseline. Diagnostic pass=False is not a successful board gate.\n";
         return 0;
     }
@@ -444,6 +452,7 @@ std::optional<int> run_project_command(int argc, char** argv) {
             experiment->interior_order=options.interior_order;
             experiment->multiscale_outline=options.multiscale_outline;
             experiment->compact_edge_feasibility=options.edge_feasibility;
+            experiment->failed_first_retry=options.failed_first_retry;
             experiment->owned_quality_first=options.owned_quality_first;
             experiment->owned_face_cohesion=options.owned_face_cohesion;
             experiment->owned_shape_tags=options.owned_shapes;

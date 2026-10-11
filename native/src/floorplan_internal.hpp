@@ -132,7 +132,8 @@ public:
                                 bool thru_only = false) const;
     void board_size(double w, double h);
     bool attempt_pack(bool compact);
-    bool attempt_pack_impl(bool compact,bool* order_independent_failure=nullptr);
+    bool attempt_pack_impl(bool compact,bool* order_independent_failure=nullptr,
+                           const std::string& promote={},std::string* failed_subject=nullptr);
     double refine_screened_incumbent(double incumbent_estimate);
     void choose_connector_shapes();
     PackAnchorIn anchor_row(const FloorplanBlock& b,

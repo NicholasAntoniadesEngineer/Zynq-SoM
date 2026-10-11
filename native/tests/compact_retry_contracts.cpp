@@ -104,10 +104,11 @@ void exception_contract(bool constraint_first=false){
     require(offers(wrapped)==start_offers,"exception must restore entry side offers");
     std::cout<<"exception rollback PASS\n";
 }
-void invariant_edge_failure(bool constraint_first,bool translate) {
+void invariant_edge_failure(bool constraint_first,bool translate,bool recovery=false) {
     auto in=input();auto experiment=std::make_shared<FloorplanExperiment>();
     experiment->compact_constraint_first=constraint_first;
     experiment->compact_edge_translation=translate;in.experiment=experiment;
+    if(recovery){experiment->interior_order=0;experiment->failed_first_retry=true;}
     const auto seed=[](Engine& e) {
         setup(e,{40,40,{}});
         FloorplanBlock b;b.name="edge";b.kind="edge";
@@ -173,6 +174,59 @@ void reseat_offer_rollback_contract(){
     require(rejected_after_seating>0,"rollback witness must seat incoming and fail displaced block");
     std::cout<<"reseat offer rollback PASS rejected_after_seating="<<rejected_after_seating<<'\n';
 }
+void failed_first_contract(){
+    std::size_t retries=0,rescued=0,preserved=0;
+    const std::vector<Case> cases{
+        {80,70,{{8,6,2,1},{7,5,2,0}}},
+        {70,50,{{29,16,3,4},{12,30,2,0},{30,18,3,2},{31,26,2,3},{7,7,1,3},{31,9,2,1}}},
+        {70,60,{{9,16,1,0},{18,27,2,1},{25,14,2,0},{11,29,1,1},{27,30,1,1},{31,7,1,0},{30,18,3,1}}},
+        {80,70,{{8,6,2,100},{90,80,1,0}}}};
+    for(const auto& c:cases)for(int order=0;order<4;++order){
+        auto in=input();auto experiment=std::make_shared<FloorplanExperiment>();
+        experiment->interior_order=order;experiment->failed_first_retry=true;in.experiment=experiment;
+        Engine first(in);setup(first,c);first.compact_order=order;
+        const auto start=layout(first.plan);const auto start_offers=offers(first);
+        std::string failed;entries=0;observing=true;
+        bool expected_ok=first.attempt_pack_impl(false,nullptr,{},&failed);observing=false;
+        auto expected_counts=first.plan.accounting.quantization_engagements;
+        auto expected_events=first.plan.accounting.fallback_events;
+        auto expected_layout=expected_ok?layout(first.plan):start;
+        auto expected_offers=expected_ok?offers(first):start_offers;
+        auto calls=entries;
+        if(expected_ok)++preserved;
+        if(!expected_ok&&!failed.empty()){
+            ++retries;Engine second(in);setup(second,c);second.compact_order=order;
+            entries=0;observing=true;expected_ok=second.attempt_pack_impl(false,nullptr,failed);observing=false;
+            calls+=entries;auto delta=second.plan.accounting.quantization_engagements;delta.erase("entry-sentinel");
+            checked_quantization_merge(expected_counts,delta);
+            expected_events.push_back("interior_failed_first_retry");
+            expected_events.insert(expected_events.end(),second.plan.accounting.fallback_events.begin()+1,second.plan.accounting.fallback_events.end());
+            if(expected_ok){++rescued;second.plan.composition.push_back("failure-directed order: "+failed+" first");expected_layout=layout(second.plan);expected_offers=offers(second);}
+        }
+        Engine wrapped(in);setup(wrapped,c);wrapped.compact_order=2;
+        entries=0;observing=true;const bool actual=wrapped.attempt_pack(false);observing=false;
+        require(actual==expected_ok&&entries==calls&&entries<=2,"failed-first retry must execute at most the independently observed two trials");
+        require(wrapped.plan.accounting.quantization_engagements==expected_counts&&wrapped.plan.accounting.fallback_events==expected_events,
+                "failed-first retry loses, duplicates or invents executed work");
+        require(equal(layout(wrapped.plan),expected_layout)&&offers(wrapped)==expected_offers&&wrapped.compact_order==2,
+                "failed-first retry incumbent or terminal rollback differs from independent trials");
+    }
+    require(retries>0&&rescued>0&&preserved>0,"failed-first fixtures must exercise failed trials, real rescues and preserved incumbents");
+    auto in=input();auto experiment=std::make_shared<FloorplanExperiment>();
+    experiment->interior_order=0;experiment->failed_first_retry=true;in.experiment=experiment;
+    int rejected=0;experiment->stage_rejected=[&](const auto&){if(++rejected==2)throw std::runtime_error("recovery stop");};
+    Engine interrupted(in);setup(interrupted,cases.back());interrupted.compact_order=2;
+    const auto start=layout(interrupted.plan);const auto side=offers(interrupted);
+    bool threw=false;try{interrupted.attempt_pack(false);}catch(const std::runtime_error& error){threw=std::string(error.what())=="recovery stop";}
+    require(threw&&equal(layout(interrupted.plan),start)&&offers(interrupted)==side&&interrupted.compact_order==2,
+            "recovery observer exception must propagate and restore candidate state");
+    require(std::count(interrupted.plan.accounting.fallback_events.begin(),interrupted.plan.accounting.fallback_events.end(),"interior_failed_first_retry")==1,
+            "interrupted recovery must retain its executed fallback event");
+    experiment->interior_order.reset();bool invalid=false;
+    try{validate_floorplan_experiment(*experiment);}catch(const FloorplanError&){invalid=true;}
+    require(invalid,"failed-first retry without explicit order accepted");
+    std::cout<<"failed-first retry PASS retries="<<retries<<" rescued="<<rescued<<" preserved="<<preserved<<'\n';
+}
 void single_order_contract(){
     std::size_t interrupted_trials=0;
     const Case c{70,50,{{29,16,3,4},{12,30,2,0},{30,18,3,2},{31,26,2,3},{7,7,1,3},{31,9,2,1}}};
@@ -224,6 +278,8 @@ int main(){try{
     reseat_trace_contract();
     reseat_offer_rollback_contract();
     single_order_contract();
+    failed_first_contract();
     for(bool first:{false,true})for(bool translate:{false,true})invariant_edge_failure(first,translate);
+    for(bool translate:{false,true})invariant_edge_failure(false,translate,true);
     std::cout<<"compact retry contracts PASS\n";return 0;
 }catch(const std::exception& e){observing=false;std::cerr<<e.what()<<'\n';return 1;}}

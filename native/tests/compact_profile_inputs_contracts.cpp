@@ -52,6 +52,16 @@ void profile_option_contracts() {
     if(options({"profile","--repo",".","--compact-search","on"}).owned_selection_trace||
        !options({"profile","--repo",".","--compact-search","on","--owned-selection-trace","on"}).owned_selection_trace)
         throw std::runtime_error("owned selection trace default/selection mismatch");
+    if(options({"profile","--repo",".","--compact-search","on"}).failed_first_retry||
+       !options({"profile","--repo",".","--compact-search","on","--interior-order","3","--failed-first-retry","on"}).failed_first_retry)
+        throw std::runtime_error("failed-first retry default/selection mismatch");
+    for(const auto& args:std::vector<std::vector<std::string>>{
+        {"profile","--repo",".","--compact-search","on","--failed-first-retry","on"},
+        {"profile","--repo",".","--compact-search","off","--interior-order","3","--failed-first-retry","on"},
+        {"profile","--repo",".","--compact-search","on","--interior-order","3","--failed-first-retry","typo"}}){
+        bool rejected=false;try{(void)options(args);}catch(const std::invalid_argument&){rejected=true;}
+        if(!rejected)throw std::runtime_error("invalid failed-first retry option accepted");
+    }
     bool invalid_trace=false;
     try{(void)options({"profile","--repo",".","--compact-search","on","--owned-selection-trace","typo"});}
     catch(const std::invalid_argument&){invalid_trace=true;}
