@@ -190,18 +190,28 @@ PcbZoneResult build_pcb_zone_geometry(const PcbPlacementInput &in, ExecutionFail
             if (!edge && !conn_rot.count(sheet)) {
                 std::set<FloorplanPoint> seen{{placement_shape_key_precision4dp(p.w, &ctx.quantization), placement_shape_key_precision4dp(p.h, &ctx.quantization)}};
                 std::vector<Shape> variants;
+                std::vector<Shape> same_box_alternatives;
                 for (double aspect : {2.2, 1., .45}) {
                     auto v = pack_zone(ctx, g, refs, aspect);
-                    if (seen.insert({placement_shape_key_precision4dp(v.w, &ctx.quantization), placement_shape_key_precision4dp(v.h, &ctx.quantization)}).second)
-                        variants.push_back(shape(v, aspect == 2.2 ? "a2.2"
+                    const bool new_box=seen.insert({placement_shape_key_precision4dp(v.w, &ctx.quantization), placement_shape_key_precision4dp(v.h, &ctx.quantization)}).second;
+                    if(!new_box&&!in.floorplan.compact_search)continue;
+                    auto candidate=shape(v, aspect == 2.2 ? "a2.2"
                                                     : aspect == 1 ? "a1"
-                                                                  : "a0.45"));
+                                                                  : "a0.45");
+                    if (new_box)
+                        variants.push_back(std::move(candidate));
+                    else if(in.floorplan.compact_search)
+                        same_box_alternatives.push_back(std::move(candidate));
                 }
                 if (eligible) {
                     auto bottom = bottom_shapes(ctx, g, sheet, faces[sheet], std::nullopt, {},
                                                 out.fallback_events);
                     variants.insert(variants.end(), bottom.begin(), bottom.end());
                 }
+                // Preserve legacy unrotated offers/indices; append newly retained
+                // arrangements instead of inserting them ahead of incumbents.
+                if(!same_box_alternatives.empty())
+                    append_distinct_zone_shapes(shape(p,"base"),variants,same_box_alternatives);
                 if (!variants.empty()) {
                     variants.insert(variants.begin(), shape(p, "base"));
                     g.shapes[sheet] = std::move(variants);

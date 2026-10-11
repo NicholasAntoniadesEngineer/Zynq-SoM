@@ -4,8 +4,7 @@
 #include "contract_rigid_groups_internal.hpp"
 
 namespace schgen::pcb_placement {
-namespace {
-bool same_orientation(const Shape& a, const Shape& b) {
+bool same_zone_shape_geometry(const Shape& a, const Shape& b) {
     if (a.w != b.w || a.h != b.h || a.top_off != b.top_off ||
         a.bot_off != b.bot_off || a.side != b.side || a.mirror != b.mirror) return false;
     // Missing rotations already mean zero to the consumer. Compare their
@@ -19,6 +18,14 @@ bool same_orientation(const Shape& a, const Shape& b) {
     };
     return agrees(a.extra_rot, b.extra_rot) && agrees(b.extra_rot, a.extra_rot);
 }
+void append_distinct_zone_shapes(Shape incumbent,std::vector<Shape>& existing,
+                                const std::vector<Shape>& candidates) {
+    for(const auto& candidate:candidates)
+        if(!same_zone_shape_geometry(incumbent,candidate)&&
+           std::none_of(existing.begin(),existing.end(),[&](const auto& prior){return same_zone_shape_geometry(prior,candidate);}))
+            existing.push_back(candidate);
+}
+namespace {
 bool orientation_eligible(const Context& ctx, const Geometry& g, const std::string& sheet) {
     if (!ctx.in.floorplan.compact_search) return false;
     if (ctx.in.floorplan.spec && ctx.in.floorplan.spec->edge_of().count(sheet)) return false;
@@ -103,7 +110,7 @@ void append_rigid_zone_orientations(Context& ctx, Geometry& g, const std::string
             next.tag = original.tag + suffix;
             if (orientation_holds(ctx, g, sheet, next) &&
                 std::none_of(variants.begin(), variants.end(),
-                    [&](const auto& prior) { return same_orientation(prior, next); }))
+                    [&](const auto& prior) { return same_zone_shape_geometry(prior, next); }))
                 variants.push_back(next);
         }
     }
@@ -203,7 +210,7 @@ void append_contract_group_faces(Context& ctx,Geometry& g,const std::string& she
             if(candidate.w*candidate.h>=seed.w*seed.h||!orientation_holds(ctx,g,sheet,candidate)||!check_fanout(model(candidate),0).ok)continue;
             auto found=g.shapes.find(sheet);
             if(found==g.shapes.end())found=g.shapes.emplace(sheet,std::vector<Shape>{seed}).first;
-            if(std::none_of(found->second.begin(),found->second.end(),[&](const auto& old){return same_orientation(old,candidate);}))
+            if(std::none_of(found->second.begin(),found->second.end(),[&](const auto& old){return same_zone_shape_geometry(old,candidate);}))
                 found->second.push_back(std::move(candidate));
         }
     }

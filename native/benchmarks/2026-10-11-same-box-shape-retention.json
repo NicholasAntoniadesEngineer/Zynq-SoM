@@ -1,0 +1,37 @@
+{
+  "base_commit": "2374794d",
+  "defect": "Aspect-ratio zone candidates were discarded solely because their rounded width/height matched an earlier candidate, before comparing actual component geometry. Equal boxes do not imply equal pin positions, rotations or opposite-face occupancy.",
+  "change": "In compact mode, retain same-box candidates when their full shape geometry differs. Share the existing rigid-orientation identity predicate: dimensions, top/bottom offsets, primary side, mirrored footprint mapping and effective per-part rotations (absent means zero), ignoring tags. Append distinct same-box arrangements after legacy unrotated offers and bottom alternatives, before subsequent orientation expansion. Existing initial offer prefix is unchanged; later generated indices are not promised unchanged when new candidates actually exist.",
+  "implementation_notes": "Noncompact mode preserves dimension pruning and avoids constructing shapes that it will discard. Skip incumbent copies when there are no same-box candidates. The append helper owns its incumbent value, preventing vector reallocation from invalidating a borrowed existing element. No new side permission, rotation permission, clearance or acceptance waiver.",
+  "tests": {
+    "coverage": "Same-size arrangements differing in top position, bottom position, mirrored footprint identity, rotation and primary face survive. Exact duplicates and absent-versus-zero rotations collapse. Existing prefix and tags remain intact; repeated append is idempotent; an incumbent borrowed from the growing vector remains valid.",
+    "negative_control": "Restoring dimension-only pruning fails native_pcb_orientation_contracts: equal-box dedup discarded distinct geometry or retained duplicates.",
+    "negative_log": "native/build/same-box-shapes-negative-tests.log",
+    "passed_suites": ["native_pcb_orientation_contracts", "native_pcb_placement_contracts", "native_model_failure_receipt_contracts"],
+    "test_wall_seconds": 33.94,
+    "log": "native/build/same-box-shapes-complete-tests.log"
+  },
+  "final_screens": [
+    {
+      "board":"carrier compact qualified configuration", "outline_mm":[166,159],
+      "model_seconds":[2.888499166,2.88725125], "text_emit_seconds":[0.0353655,0.035142334],
+      "pcb_sha256":"4d1432b252230cbfc6e7342de7f0e431a0f12dc16d7d26ebd08fe0a67508bab1",
+      "top":416,"bottom":153,"contract_pass":true,"flow_pass":true,"hard_red":0,
+      "unchanged_reference_and_reproducible":true,"log":"native/build/carrier-same-box-final.log"
+    },
+    {
+      "board":"devkit_mini multiscale qualified configuration", "outline_mm":[98,98],
+      "model_seconds":[0.188458458,0.188583], "text_emit_seconds":[0.009414334,0.009087],
+      "pcb_sha256":"cfa0305491d9c4a771adb130b04c4aec6cc2894542391a5c7c9dca3a68bca3cf",
+      "top":106,"bottom":57,"contract_pass":true,"flow_pass":true,"hard_red":0,
+      "unchanged_reference_and_reproducible":true,"log":"native/build/devkit-same-box-final.log"
+    }
+  ],
+  "smaller_screen": {
+    "outline_mm":[165,159],"accepted":false,"failure":"usb_jtag interior seating",
+    "failure_seconds":0.298236542,"outer_attempts":2,"failure_receipt_captured":true,
+    "log":"native/build/carrier-same-box-shapes-165x159.log",
+    "scope":"Initial implementation before helper extraction and copy/alias refinements; no smaller-board gain demonstrated."
+  },
+  "limits": "Targeted tests and construction screens, not a new full audit/render qualification. No demonstrated size improvement. Timings overlapped tests and are not controlled speed comparisons or historical Python comparisons. Existing hardware-evidence gaps remain."
+}

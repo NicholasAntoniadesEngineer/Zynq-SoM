@@ -2,6 +2,10 @@
 #include "pcb_placement_internal.hpp"
 
 namespace schgen::pcb_placement {
+// Geometric identity ignores tags and treats absent per-part rotations as zero.
+bool same_zone_shape_geometry(const Shape&, const Shape&);
+void append_distinct_zone_shapes(Shape incumbent, std::vector<Shape>& existing,
+                                const std::vector<Shape>& candidates);
 // Compact-mode only. Retains the incumbent and every existing variant/index.
 // Whole-zone turns never exchange faces or rewrite footprint/pin documents.
 // first_original limits work to an appended suffix; it does not prune offers

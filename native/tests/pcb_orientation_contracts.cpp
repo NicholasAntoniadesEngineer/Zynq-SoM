@@ -130,6 +130,24 @@ void unit(){
   demand(equal(sparse_prefix[i],g.shapes.at("unit")[i]),"dedup rewrote original sparse representation");
  demand(g.shapes.at("unit")[0].extra_rot.empty(),"dedup filled original rotation map");
  auto explicit_zero=sparse;explicit_zero.extra_rot={{"R1",0},{"R2",0}};explicit_zero.tag="explicit-zero";
+ // Equal outlines are not equal layouts. Preserve every existing index and
+ // compare the actual member geometry, including opposite-face placement.
+ auto rearranged=sparse;rearranged.top_off.at("R1").first+=1;rearranged.tag="same-size-rearranged";
+ auto back_changed=sparse;back_changed.bot_off.at("R2").second+=1;
+ auto mirrored_changed=sparse;mirrored_changed.mirror["R1"]="mirrored";
+ auto rotated_changed=sparse;rotated_changed.extra_rot["R1"]=90;
+ auto side_changed=sparse;side_changed.side="bottom";
+ std::vector<Shape> retained{sparse,explicit_zero};const auto original_prefix=retained;
+ const std::vector<Shape> alternatives{explicit_zero,rearranged,rearranged,back_changed,mirrored_changed,rotated_changed,side_changed};
+ append_distinct_zone_shapes(sparse,retained,alternatives);
+ demand(retained.size()==7,"equal-box dedup discarded distinct geometry or retained duplicates");
+ demand(equal(retained[0],original_prefix[0])&&equal(retained[1],original_prefix[1]),"equal-box dedup rewrote legacy prefix");
+ const auto once=retained;append_distinct_zone_shapes(sparse,retained,alternatives);
+ demand(retained.size()==once.size(),"repeated same-box expansion is not idempotent");
+ for(std::size_t i=0;i<once.size();++i)demand(equal(retained[i],once[i]),"repeat expansion changed geometry/index");
+ std::vector<Shape> alias{sparse};alias.shrink_to_fit();
+ append_distinct_zone_shapes(alias.front(),alias,alternatives);
+ demand(alias.size()==6&&equal(alias.front(),sparse),"append invalidated a borrowed incumbent");
  g.shapes["unit"]={sparse,explicit_zero};append_rigid_zone_orientations(ctx,g,"unit",sparse);
  demand(g.shapes.at("unit").size()==5,"equivalent old zeros generated duplicate new variants");
  demand(equal(g.shapes.at("unit")[0],sparse)&&equal(g.shapes.at("unit")[1],explicit_zero),
