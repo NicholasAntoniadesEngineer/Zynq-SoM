@@ -1,0 +1,50 @@
+{
+  "status": "bounded_failure_only_retry_verified_no_smaller_finalist",
+  "base_commit": "5f3c08c1",
+  "implementation": {
+    "classification": "FloorplanPackingInfeasible derives from FloorplanError and identifies only exhausted fixed/automatic packing searches. Malformed specifications, ordinary exceptions and other floorplan errors are not retryable.",
+    "policy": "Only an opted-in contract-group sheet with appended bottom candidates can retry. Successful initial plans are returned unchanged. After packing failure, append quarter turns for only the new suffix and run at most one additional search.",
+    "reuse": "Original placement zones and footprints are reused, not regenerated.",
+    "accounting": "Retain the first failed search's complete seeded receipt, add actual suffix-rotation work and one contract_group_orientation_retry event, replace rather than duplicate the second search's original seed, then retain all second-attempt work whether it succeeds or fails.",
+    "ratchet": "Event registered in native registry and board metadata. No baseline ceilings changed; this does not auto-approve a future retry-produced finalist.",
+    "diagnostics": "Profiler now prints every captured failure fallback event with its ordered index; previously it printed only failure quantization counts."
+  },
+  "regressions": {
+    "log": "native/build/contract-retry-regressions.log",
+    "passed": 4,
+    "failed": 0,
+    "seconds": 65.57,
+    "tests": [
+      {"name":"native_model_failure_receipt_contracts","seconds":8.88},
+      {"name":"native_policy_audits_contracts","seconds":37.12},
+      {"name":"native_floorplan_contracts","seconds":13.87},
+      {"name":"native_board_policy_contracts","seconds":5.69}
+    ],
+    "instrumented_cases": "Controlled initial packing rejection followed by success; two packing rejections; generic observer exception; invalid-specification exception. Independently count ten scalar entry points, including actual rotations and original zone work, compare against successful/failed receipts, check exactly one retry event and at most two attempts. Existing both-side devkit success/failure/overflow tests remain active."
+  },
+  "qualified_incumbent_screen": {
+    "log": "native/build/carrier-contract-retry-incumbent.log",
+    "runs": 2,
+    "outline_mm": [166,159],
+    "pcb_sha256": "4d1432b252230cbfc6e7342de7f0e431a0f12dc16d7d26ebd08fe0a67508bab1",
+    "matches_previously_qualified_pcb": true,
+    "all_quantization_and_fallback_rows_match_previous_screen": true,
+    "placement_contract_ok": true,
+    "placement_flow_ok": true,
+    "hard_red": 0,
+    "construction_seconds": [2.652028542,2.659093250]
+  },
+  "failed_adjacent_screen": {
+    "log": "native/build/carrier-contract-retry-165x159-events.log",
+    "outline_mm": [165,159],
+    "elapsed_seconds": 0.572122084,
+    "completed_outer_attempts": 2,
+    "receipt_captured": true,
+    "receipt_unavailable": false,
+    "retry_event_index": 118,
+    "retry_event_count": 1,
+    "failure_event_count": 121,
+    "result": "Both offer sets remain infeasible. No failed candidate promoted and no clearance or contract bound relaxed."
+  },
+  "limits": "This changes bounded search reliability, not the current best dimensions. No full new board qualification or matched Python timing comparison is claimed. The earlier full qualified output remains revision-specific; current successful PCB and work receipts were independently matched. Routing, fabrication readiness and unresolved hardware requirements remain outside this evidence."
+}

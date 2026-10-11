@@ -16,7 +16,9 @@ namespace {
 using namespace schgen;
 struct Injected : std::runtime_error { Injected():std::runtime_error("injected checkpoint failure"){} };
 struct Op {const char* name;void* address;};
-const std::array<Op,8> ops{{
+const std::array<Op,10> ops{{
+ {"placement_turn_dimension_precision4dp",reinterpret_cast<void*>(&placement_turn_dimension_precision4dp)},
+ {"placement_turn_offset_precision4dp",reinterpret_cast<void*>(&placement_turn_offset_precision4dp)},
  {"stage_root_pose_precision4dp",reinterpret_cast<void*>(&stage_root_pose_precision4dp)},
  {"stage_hot_extent_precision4dp",reinterpret_cast<void*>(&stage_hot_extent_precision4dp)},
  {"placement_bottom_pose_precision4dp",reinterpret_cast<void*>(&placement_bottom_pose_precision4dp)},
@@ -27,7 +29,7 @@ const std::array<Op,8> ops{{
  {"escape_copper_precision4dp",reinterpret_cast<void*>(&escape_copper_precision4dp)}
 }};
 thread_local bool observing=false;
-thread_local std::array<std::size_t,8> entries{};
+thread_local std::array<std::size_t,10> entries{};
 void begin(){entries={};observing=true;}
 void require(bool b,const std::string& m){if(!b)throw std::runtime_error(m);}
 void verify(const ExecutionAccounting& receipt,const std::string& label){
@@ -116,6 +118,38 @@ void success(const std::filesystem::path& root,bool two_side){
         late.accounting.fallback_events==total.fallback_events,"late failed prefix equals complete successful receipt exactly");
     inbox(late.accounting);
 }
+void contract_retry(const std::filesystem::path& root){
+ for(int mode:{0,1,2,3}) {
+    auto fixture=placement_fixture::load(root,"carrier");
+    fixture.input.floorplan.compact_search=true;
+    fixture.input.floorplan.spec=load_floorplan_spec((root/"native/benchmarks/carrier-168x159-initial-edge.floorplan.json").string());
+    fixture.input.floorplan.spec->outline=FloorplanPoint{168,163};
+    auto observer=std::make_shared<FloorplanExperiment>();
+    observer->contract_group_face_sheet="usb_jtag";
+    observer->compact_edge_feasibility=true;observer->interior_order=3;
+    int attempts=0;
+    observer->attempt_completed=[&](const FloorplanAttemptObservation&){
+        ++attempts;
+        if(mode==2)throw Injected();
+        if(mode==3)throw FloorplanSpecError("controlled invalid specification");
+        if(mode==1||attempts==1)throw FloorplanPackingInfeasible("controlled packing rejection");
+    };
+    fixture.input.floorplan.experiment=observer;
+    ExecutionFailureReceipt failure;ExecutionAccounting receipt;bool failed=false;
+    begin();
+    try {receipt=pcb_placement_accounting(build_pcb_model(fixture.input,&failure));}
+    catch(const FloorplanPackingInfeasible& e){failed=true;receipt=failure.accounting;if(mode==0)std::cerr<<e.what()<<'\n';}
+    catch(const Injected&){failed=true;receipt=failure.accounting;}
+    catch(const FloorplanSpecError&){failed=true;receipt=failure.accounting;}
+    observing=false;
+    require(failed==(mode!=0),"controlled retry success/failure outcome");
+    require(mode==0?!failure.captured:failure.captured,"retry receipt ownership");
+    verify(receipt,"contract orientation retry mode "+std::to_string(mode));inbox(receipt);
+    const auto events=std::count(receipt.fallback_events.begin(),receipt.fallback_events.end(),"contract_group_orientation_retry");
+    require(events==(mode>=2?0:1),"retry event missing, duplicated, or recorded for non-packing error");
+    if(mode!=0)require(attempts==(mode>=2?1:2),"retry exceeded one additional attempt");
+ }
+}
 void overflow(){
     ExecutionFailureReceipt sink;sink.captured=true;sink.accounting.quantization_engagements["real"]=3;
     ExecutionFailureReceipt child;child.captured=true;child.accounting.quantization_engagements["real"]=1;
@@ -184,4 +218,4 @@ void invalid_stage(const std::filesystem::path& root){
 }
 extern "C" void __cyg_profile_func_enter(void* f,void*){if(!observing)return;for(std::size_t i=0;i<ops.size();++i)if(f==ops[i].address){++entries[i];break;}}
 extern "C" void __cyg_profile_func_exit(void*,void*){}
-int main(int argc,char** argv){try{require(argc==2,"repo path required");overflow();constructor_failure(argv[1]);owning_overflow(argv[1]);invalid_stage(argv[1]);for(bool two_side:{true,false}){checkpoints(argv[1],two_side);floorplan_failure(argv[1],two_side);success(argv[1],two_side);}std::cout<<"model failure receipts PASS\n";}catch(const std::exception& e){observing=false;std::cerr<<e.what()<<'\n';return 1;}}
+int main(int argc,char** argv){try{require(argc==2,"repo path required");contract_retry(argv[1]);overflow();constructor_failure(argv[1]);owning_overflow(argv[1]);invalid_stage(argv[1]);for(bool two_side:{true,false}){checkpoints(argv[1],two_side);floorplan_failure(argv[1],two_side);success(argv[1],two_side);}std::cout<<"model failure receipts PASS\n";}catch(const std::exception& e){observing=false;std::cerr<<e.what()<<'\n';return 1;}}

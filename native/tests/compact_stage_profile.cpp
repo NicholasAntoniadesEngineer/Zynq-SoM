@@ -358,7 +358,11 @@ std::string trial(const PcbPlacementInput& source, bool compact, int run, int ge
         std::cout << "trial status=construction_failed elapsed_seconds=" << seconds(start)
             << " completed_outer_attempts=" << profile.attempts.completed
             << " receipt_captured=" << failure.captured << " receipt_unavailable=" << failure.unavailable << '\n';
-        if (failure.captured && !failure.unavailable) receipt("failure_prefix", failure.accounting.quantization_engagements);
+        if (failure.captured && !failure.unavailable) {
+            receipt("failure_prefix", failure.accounting.quantization_engagements);
+            for(std::size_t i=0;i<failure.accounting.fallback_events.size();++i)
+                std::cout<<"failure_fallback index="<<i<<" name="<<failure.accounting.fallback_events[i]<<'\n';
+        }
         throw;
     }
     const auto end = Clock::now();

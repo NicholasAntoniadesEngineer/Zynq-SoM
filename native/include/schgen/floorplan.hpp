@@ -66,6 +66,11 @@ class FloorplanSpecError : public FloorplanError {
 public:
     using FloorplanError::FloorplanError;
 };
+// Exhausted packing search, not malformed input or infrastructure failure.
+class FloorplanPackingInfeasible : public FloorplanError {
+public:
+    using FloorplanError::FloorplanError;
+};
 
 // A resolved footprint is parsed once. Providers retain the exact document,
 // including duplicate/unnumbered pads and mirrored variants; consumers must not

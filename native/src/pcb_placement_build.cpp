@@ -1,4 +1,5 @@
 #include "pcb_placement_internal.hpp"
+#include "pcb_placement_orientations.hpp"
 
 namespace schgen::pcb_placement {
 namespace {
@@ -235,7 +236,35 @@ PcbPlacementResult build_pcb_model(const PcbPlacementInput &input, ExecutionFail
     // seed even if the engine rejects during construction. Do not count that
     // same planning zone again at the parent boundary.
     completed=ExecutionAccounting{};
-    auto floorplan = generate_floorplan(prepared,&child);
+    FloorplanStage floorplan;
+    try {floorplan = generate_floorplan(prepared,&child);}
+    catch(const FloorplanPackingInfeasible&) {
+        const auto experiment=input.floorplan.experiment;
+        if(!experiment||!experiment->contract_group_face_sheet||!child.captured||child.unavailable)throw;
+        const auto& sheet=*experiment->contract_group_face_sheet;
+        const auto found=zones.geometry.shapes.find(sheet);
+        if(found==zones.geometry.shapes.end())throw;
+        const auto& offers=found->second;
+        const auto first=std::find_if(offers.begin(),offers.end(),[](const auto& s){return s.tag.rfind("contract-bottom/",0)==0;});
+        if(first==offers.end())throw;
+        const auto index=static_cast<std::size_t>(first-offers.begin()),old_size=offers.size();
+        const auto seed=offers.front();
+        // The first failed receipt already owns original zone/caller work.
+        completed=std::move(child.accounting);child={};
+        completed.fallback_events.push_back("contract_group_orientation_retry");
+        pcb_placement::Context expansion(input);expansion.pool=zones.footprints;
+        try {pcb_placement::append_rigid_zone_orientations(expansion,zones.geometry,sheet,seed,index);}
+        catch(...) {append_execution_accounting(completed,{expansion.quantization,{}},&child);throw;}
+        append_execution_accounting(completed,{expansion.quantization,{}},&child);
+        if(zones.geometry.shapes.at(sheet).size()==old_size)throw;
+        prepared=prepare_pcb_floorplan(input,zones);
+        // Replace the repeated seed: count original work exactly once, then
+        // all new rotation and search work, including rejected alternatives.
+        prepared.accounting.quantization_engagements=completed.quantization_engagements;
+        prepared.accounting.fallback_events=completed.fallback_events;
+        completed={};
+        floorplan=generate_floorplan(prepared,&child); // At most one retry.
+    }
     append_execution_accounting(completed,{floorplan.plan.accounting.quantization_engagements,floorplan.plan.accounting.fallback_events},&child);
     append_execution_accounting(completed,floorplan.documents.accounting,&child);
     observe_pcb_experiment_checkpoint(input.experiment.get(), [&] {

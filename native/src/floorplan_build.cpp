@@ -292,7 +292,7 @@ FloorplanPlan Engine::run() {
         board_size(in.spec->outline->first,in.spec->outline->second);
         auto fixed=[&](bool free) {
             plan.punch_free=free;
-            if (!attempt_pack(true)) throw FloorplanError("floorplan: the REAL 2-sided packed blocks do not fit the fixed outline "+
+            if (!attempt_pack(true)) throw FloorplanPackingInfeasible("floorplan: the REAL 2-sided packed blocks do not fit the fixed outline "+
                 outline_text(plan.board_w,plan.board_h)+" declared in carrier/floorplan.json — enlarge it or use \"outline\":\"auto\"");
             choose_connector_shapes(); return estimate();
         };
@@ -360,7 +360,7 @@ FloorplanPlan Engine::run() {
             if (w*h<min_area) { ++tally["reject_min_area"]; continue; }
             if (auto candidate=evaluate(w,h)) { if (!best || *candidate<*best) best=candidate; break; }
         }
-        if (!best) throw FloorplanError(std::string("floorplan: could not fit all REAL packed blocks under the LAW-5 airwire budget on any searched outline (blocks ")+(fit_seen ? "did":"never")+" fit)");
+        if (!best) throw FloorplanPackingInfeasible(std::string("floorplan: could not fit all REAL packed blocks under the LAW-5 airwire budget on any searched outline (blocks ")+(fit_seen ? "did":"never")+" fit)");
         const double w0=std::get<1>(*best),h0=std::get<2>(*best);
         std::vector<double> ws,hs;
         for (int k=0;k<=refine_span;++k) {
