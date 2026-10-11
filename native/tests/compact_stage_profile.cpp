@@ -312,6 +312,12 @@ std::string trial(const PcbPlacementInput& source, bool compact, int run, int ge
                  <<" shift_mm="<<shift<<'\n';
     };
     floor->attempt_completed = [&](const auto& row) { profile.attempts.add(row); };
+    floor->stage_rejected=[](const auto& row) {
+        std::cout<<"stage_rejection width="<<row.w<<" height="<<row.h<<" stage="<<row.stage
+                 <<" subject="<<std::quoted(row.subject)<<" compact="<<row.compact
+                 <<" punch_free="<<row.punch_free<<" order="<<row.order<<'\n';
+        for(const auto& line:row.diagnostics)std::cout<<"stage_rejection_detail "<<std::quoted(line)<<'\n';
+    };
     floor->unscoped_estimate = [&](double) { ++profile.attempts.unscoped_estimates; };
     auto pcb = std::make_shared<PcbPlacementExperiment>();
     pcb->checkpoint = [&](const auto& row) { profile.checkpoint(row); };

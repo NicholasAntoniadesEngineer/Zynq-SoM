@@ -26,6 +26,13 @@ struct FloorplanReseatObservation {
     bool incoming_seated=false,displaced_reseated=false,punch_free=false;
     int order=0;
 };
+struct FloorplanRejectionObservation {
+    double w=0,h=0;
+    std::string stage,subject;
+    bool compact=false,punch_free=false;
+    int order=0;
+    std::vector<std::string> diagnostics;
+};
 struct FloorplanExperiment {
     // Null keeps the native ordinary-net cost unchanged. Impedance-controlled
     // nets always retain their normal cost. Zero is a valid experiment value.
@@ -63,6 +70,9 @@ struct FloorplanExperiment {
     // Every completed victim trial, including failed trials. Successful-event
     // accounting is unchanged; this trace is not a gate or a substitute receipt.
     std::function<void(const FloorplanReseatObservation&)> reseat_completed;
+    // Each executed failed stage, including compact/noncompact legalizer
+    // retries. An event is not necessarily the final outer-attempt result.
+    std::function<void(const FloorplanRejectionObservation&)> stage_rejected;
     std::function<void(const FloorplanAttemptObservation &)> attempt_completed;
     std::function<void(double)> unscoped_estimate;
 };

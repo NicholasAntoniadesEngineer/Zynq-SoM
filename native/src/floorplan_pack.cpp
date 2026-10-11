@@ -114,6 +114,11 @@ bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure) {
     // occupancy geometry or candidate copies. Rejected trials remain counted.
     auto* const counts=&plan.accounting.quantization_engagements;
     const double bw=plan.board_w,bh=plan.board_h;
+    const auto rejected=[&](const std::string& stage,const std::string& subject,bool phase_compact,
+                            const std::vector<std::string>& diagnostics=std::vector<std::string>{}) {
+        if(in.experiment&&in.experiment->stage_rejected)
+            in.experiment->stage_rejected({bw,bh,stage,subject,phase_compact,plan.punch_free,compact_order,diagnostics});
+    };
     const int policy=plan.punch_free ? 1:0;
     const auto& shapes=shape_sets[policy];
     const auto& co=components[policy];
@@ -379,7 +384,7 @@ bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure) {
         std::tie(b->w,b->h)=zbox.at(b->name); b->area=block_area(b->w,b->h, counts);
         const auto a=pack_anchor(anchor_row(*b,centers));
         if (seat(*b,a,nullptr)) { occ_put(*b); centers[b->name]={b->cx(),b->cy()}; }
-        else if (!retry(*b,a)) return false;
+        else if (!retry(*b,a)) {rejected("interior_seating",b->name,compact);return false;}
         placed.push_back(b);
     }
     std::vector<RefineBlock> refine;
@@ -440,12 +445,16 @@ bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure) {
                 std::vector<FloorplanLegalizeVar> vars;
                 for (const auto& b:plan.interior_blocks) if (movable.count(b.name)) vars.push_back({b.name,b.w,b.h,{b.x,b.y},b.x,b.y});
                 std::vector<std::string> log; li.compact=do_compact;
-                if (!floorplan_legalize_compact_accounted(li,vars,log,plan.accounting.quantization_engagements)) return false;
+                if (!floorplan_legalize_compact_accounted(li,vars,log,plan.accounting.quantization_engagements)) {
+                    rejected("legalizer","",do_compact,log);return false;
+                }
                 for (auto& b:plan.interior_blocks) for (const auto& v:vars) if (v.name==b.name) { b.x=v.x; b.y=v.y; break; }
                 std::vector<PairsBlock> ints,edges;
                 for (const auto& b:plan.interior_blocks) ints.push_back({b.x,b.y,b.w,b.h,b.fanout_reach,b.fanout_inset,side_mask(b.side),get(chosen,b.name)});
                 for (const auto& b:plan.edge_blocks) edges.push_back({b.x,b.y,b.w,b.h,b.fanout_reach,b.fanout_inset,edge_mask,get(edge_comps,b.name)});
-                if (!pairs_hold_from_layout(ints,edges,som_occ.x,som_occ.y,som_occ.w,som_occ.h,som_mask,som_comps,bw,bh,mh_corner,occ_punch,clear,counts)) return false;
+                if (!pairs_hold_from_layout(ints,edges,som_occ.x,som_occ.y,som_occ.w,som_occ.h,som_mask,som_comps,bw,bh,mh_corner,occ_punch,clear,counts)) {
+                    rejected("post_legalizer_geometry","",do_compact,log);return false;
+                }
                 plan.composition=std::move(log); return true;
             };
             if (!legalize(compact)) {

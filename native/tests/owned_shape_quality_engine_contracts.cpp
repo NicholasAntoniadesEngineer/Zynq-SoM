@@ -127,9 +127,18 @@ void synthetic() {
     require(pack(restricted).chosen==0,"explicit measured candidate restriction ignored");
     restriction->owned_shape_tags["pilot"]="fixture-1";
     require(pack(restricted).chosen==1,"candidate tag failed to resolve stable shape index");
+    const auto before_rejection_observer=pack(restricted);
+    std::vector<FloorplanRejectionObservation> rejected_stages;
+    restriction->stage_rejected=[&](const auto& event){rejected_stages.push_back(event);};
+    unchanged(before_rejection_observer,pack(restricted),"rejection observation changed successful placement");
+    require(rejected_stages.empty(),"successful fixture reported failed stage");
     bool unseated=false;
     try{(void)pack(restricted,{1});}catch(const std::runtime_error& e){unseated=std::string(e.what())=="actual engine fixture did not pack";}
     require(unseated,"infeasible restricted shape silently fell back to a feasible alternative");
+    require(rejected_stages.size()==1&&rejected_stages[0].stage=="interior_seating"&&
+        rejected_stages[0].subject=="pilot"&&rejected_stages[0].w==80&&rejected_stages[0].h==70&&
+        rejected_stages[0].punch_free&&!rejected_stages[0].compact,
+        "failed interior fixture lost its actual rejection context");
     for(int mutation=0;mutation<5;++mutation){
         auto bad=restricted;
         auto experiment=std::make_shared<FloorplanExperiment>(*restriction);
