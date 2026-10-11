@@ -250,6 +250,8 @@ struct RepairAxisResult {
     std::vector<std::string> infeasible_cycle_origins; // parallel provenance
 };
 
+// At most repair_max separation flips. A zero budget still checks feasibility;
+// exhausted results contain only executed flips, never speculative positions.
 RepairAxisResult legalize_repair_axis(
     bool axis_x, const std::vector<std::string>& names,
     const std::vector<double>& sizes, double span, double clear,

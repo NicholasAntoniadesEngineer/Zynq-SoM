@@ -1257,6 +1257,10 @@ RepairAxisResult legalize_repair_axis(
             }
             out.fail="cycle";return out;
         }
+        // The initial solve is a probe, not a repair. After the last allowed
+        // flip, one final solve may establish feasibility, but must not spend
+        // another flip or report an unexecuted choice as actual work.
+        if(rep==repair_max){out.fail="exhausted";return out;}
         const auto step=out.flips.size();
         const auto choice=step<choice_path.size()?choice_path[step]:std::size_t{0};
         if(choice>=eligible.size())throw std::runtime_error("legalize_repair_axis: choice outside cycle alternatives");

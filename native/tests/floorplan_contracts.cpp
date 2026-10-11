@@ -920,6 +920,33 @@ void repair_choice_contracts() {
     const auto exhausted=legalize_repair_axis(true,names,sizes,20,0,seps,{}, {},0);
     require(!exhausted.ok&&exhausted.fail=="exhausted"&&exhausted.infeasible_cycle.empty(),
         "unexecuted budget-exhausted solve must not invent cycle evidence");
+    require(exhausted.flips.empty()&&exhausted.choice_counts.empty()&&
+        exhausted.seps[0].axis_x&&exhausted.seps[1].axis_x,
+        "zero repair budget executed a flip");
+    const std::vector<RepairSep> two_cycles{{true,"a","b",1,true},{true,"b","a",1,true},
+        {true,"c","d",1,true},{true,"d","c",1,true}};
+    for(int budget=0;budget<=3;++budget) {
+        const auto bounded=legalize_repair_axis(true,{"a","b","c","d"},{2,2,2,2},20,0,two_cycles,{}, {},budget);
+        require(bounded.flips.size()==static_cast<std::size_t>(std::min(budget,2))&&
+            bounded.choice_counts.size()==bounded.flips.size(),"repair exceeded its exact flip budget");
+        require(bounded.ok==(budget>=2),"two independent cycles require exactly two flips");
+        if(budget<2)require(bounded.fail=="exhausted"&&bounded.pos.empty()&&bounded.infeasible_cycle.empty(),
+            "budget exhaustion published positions or false infeasibility evidence");
+    }
+    const auto no_repair=legalize_repair_axis(true,{"a"},{2},20,0,{}, {}, {},0);
+    require(no_repair.ok&&no_repair.flips.empty()&&no_repair.pos.size()==1,
+        "zero budget must still accept an already feasible axis");
+    std::vector<std::string> many_names;std::vector<double> many_sizes;std::vector<RepairSep> many_cycles;
+    for(int i=0;i<17;++i) {
+        const auto a="a"+std::to_string(i),b="b"+std::to_string(i);
+        many_names.push_back(a);many_names.push_back(b);many_sizes.push_back(2);many_sizes.push_back(2);
+        many_cycles.push_back({true,a,b,1,true});many_cycles.push_back({true,b,a,1,true});
+    }
+    for(int budget:{16,17}) {
+        const auto bounded=legalize_repair_axis(true,many_names,many_sizes,20,0,many_cycles,{}, {},budget);
+        require(bounded.flips.size()==static_cast<std::size_t>(budget)&&bounded.ok==(budget==17),
+            "configured sixteen-flip limit must not execute a seventeenth repair");
+    }
     require(first.choice_counts==std::vector<std::size_t>{2}&&second.choice_counts==first.choice_counts,
         "cycle alternatives not reported exactly");
     require(ordinary.pos==first.pos&&ordinary.flips==first.flips&&ordinary.fail==first.fail,
