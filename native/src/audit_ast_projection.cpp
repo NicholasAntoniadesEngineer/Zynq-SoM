@@ -10,14 +10,26 @@
 
 namespace schgen {
 bool audit_ast_projection_keeps_field(std::string_view key) {
-    // Preserve every field read by the visitor, plus declaration-chain identity.
-    static constexpr std::array<std::string_view,28> fields{{
-        "begin", "castKind", "constexpr", "desugaredQualType", "expansionLoc",
-        "file", "hasInClassInitializer", "id", "includedFrom", "init", "inner",
-        "isImplicit", "kind", "loc", "mangledName", "name", "offset", "opcode",
-        "parentDeclContextId", "previousDecl", "qualType", "range", "referencedDecl",
-        "scopedEnumTag", "storageClass", "type", "value", "isInvalid"}};
-    return std::find(fields.begin(),fields.end(),key)!=fields.end();
+    // Exact length dispatch avoids scanning the entire field set for every
+    // compiler object key. Unknown spellings and embedded NULs still reject.
+    switch(key.size()) {
+    case 2: return key=="id";
+    case 3: return key=="loc";
+    case 4: return key=="file"||key=="init"||key=="kind"||key=="name"||key=="type";
+    case 5: return key=="begin"||key=="inner"||key=="range"||key=="value";
+    case 6: return key=="offset"||key=="opcode";
+    case 8: return key=="castKind"||key=="qualType";
+    case 9: return key=="constexpr"||key=="isInvalid";
+    case 10: return key=="isImplicit";
+    case 11: return key=="mangledName";
+    case 12: return key=="expansionLoc"||key=="includedFrom"||key=="previousDecl"||key=="storageClass";
+    case 13: return key=="scopedEnumTag";
+    case 14: return key=="referencedDecl";
+    case 17: return key=="desugaredQualType";
+    case 19: return key=="parentDeclContextId";
+    case 21: return key=="hasInClassInitializer";
+    default: return false;
+    }
 }
 namespace {
 // Most Clang objects have only a handful of fields. Keep their decoded keys
