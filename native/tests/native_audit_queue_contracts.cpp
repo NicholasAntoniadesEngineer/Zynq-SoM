@@ -38,7 +38,21 @@ void parity(const fs::path& root,const std::vector<CppAuditSource>& manifest,Cpp
 int compiler(int argc,char** argv){
     const fs::path file=argv[argc-1];const auto root=file.parent_path();
     const auto name=file.stem().string();const auto contents=read(file);
-    bool ast=false;for(int i=1;i<argc;++i)ast|=std::string(argv[i])=="-ast-dump=json";
+    bool ast=false,dependencies=false;fs::path dependency_file;
+    for(int i=1;i<argc;++i){const std::string arg=argv[i];
+        ast|=arg=="-ast-dump=json";dependencies|=arg=="-M";
+        if(arg=="-MF"&&i+1<argc)dependency_file=argv[++i];
+    }
+    std::string record="schgen_audit_deps: ";
+    for(const char c:file.string()){
+        if(c==' '||c=='\t'||c=='#')record+='\\';
+        if(c=='$')record+='$';
+        record+=c;
+    }
+    record+='\n';
+    // The queue/error fixtures target AST and macro compilation. Dependency
+    // discovery must support the current protocol without triggering them.
+    if(dependencies){std::cout<<record;return 0;}
     if(name=="queuefail_first"||name=="queuefail_second"){
         std::cerr<<"deliberate queue failure "<<name<<'\n';return 15;
     }
@@ -57,7 +71,8 @@ int compiler(int argc,char** argv){
         }
         fs::remove(active);
     }
-    if(!ast){std::cout<<"# 1 "<<std::quoted(file.string())<<"\n#define POLICY 7\n";return 0;}
+    if(!ast){if(!dependency_file.empty())put(dependency_file,record);
+        std::cout<<"# 1 "<<std::quoted(file.string())<<"\n#define POLICY 7\n";return 0;}
     std::cout<<"{\"kind\":\"TranslationUnitDecl\",\"inner\":[{\"kind\":\"FunctionDecl\",\"name\":"<<std::quoted(name)
         <<",\"type\":{\"qualType\":\"double (double)\"},\"loc\":{\"file\":"<<std::quoted(file.string())<<",\"offset\":0},\"inner\":[{\"kind\":\"CompoundStmt\",\"inner\":[";
     std::vector<std::size_t> offsets{0};

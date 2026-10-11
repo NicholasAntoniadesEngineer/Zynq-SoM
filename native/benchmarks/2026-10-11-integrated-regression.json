@@ -1,0 +1,40 @@
+{
+  "base_commit": "debb3be8",
+  "scope": "Full native build and complete CTest sweep after hard-proximity seating/refinement changes; followed by a test-fixture-only correction and targeted repeats. Not a fresh full board qualification, render campaign or Python timing comparison.",
+  "build": {
+    "command": "CCACHE_DIR=$PWD/native/build/compiler-cache CCACHE_BASEDIR=$PWD cmake --build native/build/fast --parallel 2",
+    "passed": true,
+    "log": "native/build/integrated-oct11-build.log",
+    "sha256": "9152ee171cecf6728f4806b7b1332348f8aa26ca9ceb0ca70ee6315132183f45"
+  },
+  "full_suite": {
+    "command": "ctest --test-dir native/build/fast --output-on-failure --parallel 2",
+    "total": 273,
+    "passed": 272,
+    "failed": 1,
+    "wall_seconds": 909.92,
+    "failure": "native_audit_queue_contracts: native audit: invalid compiler dependency target",
+    "log": "native/build/integrated-oct11-tests.log",
+    "sha256": "82f778ef3f228898f091d126f9280e390f6da020a5c19b778d15d954c2ef643b"
+  },
+  "correction": {
+    "file": "native/tests/native_audit_queue_contracts.cpp",
+    "cause": "Fake compiler did not implement the dependency discovery and preprocessor-sidecar protocol introduced by the transitive audit consistency checks.",
+    "change": "Implement -M dependency output and -MF sidecar with the expected fixed target and Make escaping. Keep dependency discovery separate from deliberate AST/macro failures and queue markers.",
+    "preserved": "Queue liveness, earliest-manifest failure ordering, malformed compiler output checks and fixed-batch negative control; production scanner and acceptance gates unchanged.",
+    "command": "ctest --test-dir native/build/fast --output-on-failure -R ^native_audit_queue_contracts$ --repeat until-fail:3",
+    "passed_repeats": 3,
+    "test_seconds": [11.64, 10.75, 10.78],
+    "wall_seconds": 33.18,
+    "log": "native/build/integrated-oct11-queue-tests.log",
+    "sha256": "f705dafaf5d8f3bd9744bb43778392a850f8a841b9193e9dcbec3ad9f7d66b71"
+  },
+  "coverage_statement": "All 273 tests have passing evidence across the full sweep and fixture-only targeted rerun, not a single uninterrupted 273/273 final run. Full-suite wall time is test execution, not compile or board generation time.",
+  "narrow_repository_checks": {
+    "tracked_py_or_pyi_files": 0,
+    "migration_commit_ebcf7c4e_is_ancestor_of": ["master", "HEAD", "perf-native"],
+    "limitations": "Tracked filename and ancestry checks do not establish a complete runtime-dependency or migration correctness audit. Local mainline branch is master."
+  },
+  "rejected_experiment": "2026-10-11-victim-first-screen.json",
+  "remaining": "Goal remains incomplete. Accepted carrier remains 166x159 mm; no smaller finalist accepted. Current integrated full board/render qualification, unresolved hardware evidence, substantive quality improvements and matched historical workload comparisons remain separate obligations."
+}
