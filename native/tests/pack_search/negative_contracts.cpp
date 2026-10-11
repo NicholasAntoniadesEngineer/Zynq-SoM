@@ -7,7 +7,8 @@
 #include <limits>
 #include <iostream>
 using namespace schgen;
-void require(bool b){if(!b)throw std::runtime_error("search9 independent oracle mismatch");}
+void require_at(bool b,int line){if(!b)throw std::runtime_error("search9 independent oracle mismatch at line "+std::to_string(line));}
+#define require(...) require_at((__VA_ARGS__),__LINE__)
 template<class F> void rejects(F f){bool threw=false;try{f();}catch(const std::exception&){threw=true;}require(threw);}
 int main(){try{
  for(int n=-10000;n<=10000;++n){
@@ -84,7 +85,8 @@ int main(){try{
  search_proof::begin();(void)fallback_axis_count(1,nullptr);
  rejects([&]{search_proof::receipt({});});
  NativeQuantizations all,r;register_native_quantizations(all);
- require(all.declarations().size()==155);
+ // b1289e95 added the independently tested edge lower-bound tick ceiling.
+ require(all.declarations().size()==156);
  for(const auto& d:all.declarations())if(search_proof::added(d.name))r.declare(d);
  require(r.declarations().size()==9);
  for(const auto& d:r.declarations()){

@@ -1,0 +1,29 @@
+{
+  "scope": "Search and stage accounting regressions; no production algorithms, hardware inputs or historical fixture bytes changed",
+  "predecessor": "c74e3aac",
+  "changes": [
+    "Search board contract checks source identity and physical requirements, actual instrumented operation receipts, and full current output across two fresh processes instead of historical optimizer coordinates/counts",
+    "Search output includes all current aggregate counts, model, plan, fallback events, PCB bytes and emission diagnostics; external/result-owned emission sinks remain equivalent",
+    "Stage board contracts repeat carrier/devkit two-sided, devkit single-sided and fixed-outline builds, checking physical requirements, complete current model/plan equality and operation/fallback receipts",
+    "Missing and incremented operation receipts must fail the independent observers",
+    "Standalone stage/kernel geometry, errors and operation-count fixtures remain byte-exact; scalar and synthetic numerical fixtures unchanged",
+    "Remaining registry cardinality assertions updated from 155 to 156 for reviewed b1289e95 pack_edge_lower_tick_ceil addition; precise 9/18/6 family membership and missing-registration checks retained",
+    "Search negative-test failures now report their assertion line"
+  ],
+  "results_seconds": {
+    "native_pack_search_board": 16.62,
+    "native_pack_search_helper": 0.02,
+    "native_pack_search_defined_edge": 0.02,
+    "native_pack_search_negative": 0.44,
+    "native_pack_search_header": 0.42,
+    "native_pack_search_adapters": 0.51,
+    "native_pack_search_source": 13.04,
+    "native_pack_plain_source_contracts": 12.94,
+    "native_pack_grid_precision_source_contracts": 13.33,
+    "native_stage_precision_contracts": 17.86,
+    "native_pack_search_fixture_mutation": 0.05,
+    "native_pack_plain_contracts": 0.53
+  },
+  "results_status": "All listed tests PASS. Stage reports 69393 assertions and 2891 frozen geometry assertions, including 29 independent historical stage mutations. Each source-family proof rejects 33 missing-registration mutations.",
+  "limitations": "These are regression-test elapsed times, not matched build benchmarks. Whole-board repetitions prove current reproducibility, not optimality or fabrication readiness. Historical tests run entirely in C++; no Python runtime is introduced. Full suite and broader goal remain incomplete."
+}

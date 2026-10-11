@@ -53,7 +53,8 @@ inline void run(const std::filesystem::path& root,const std::filesystem::path& s
  if(other_before!=other_after)throw std::runtime_error("remaining unowned families changed");
  if(!after.quantization.empty())throw std::runtime_error("combined pack retains raw boundary");
  NativeQuantizations all;register_native_quantizations(all);
- if(all.declarations().size()!=155)throw std::runtime_error("expected155 central declarations");
+ // Includes the separately owned edge lower-bound ceiling from b1289e95.
+ if(all.declarations().size()!=156)throw std::runtime_error("expected156 central declarations");
  const std::array<std::string,3> files{{"pack_search_precision.cpp","pack_plain_precision.cpp","pack_grid_precision.cpp"}};
  const std::array<std::size_t,3> expected{{9,18,6}};
  for(std::size_t i=0;i<files.size();++i){
@@ -72,7 +73,7 @@ inline void run(const std::filesystem::path& root,const std::filesystem::path& s
    if(check_native_audits(scalar,ledger,missing).ok)throw std::runtime_error("missing-registration mutation accepted "+d.name);
   }
  }
- std::cout<<"PASS original14/34/16 reported sites ->0;155 registrations;9/18/6 genuine scalar families;33 missing-registration mutations rejected; remaining unowned invariants unchanged\n";
+ std::cout<<"PASS original14/34/16 reported sites ->0;156 registrations;9/18/6 genuine scalar families;33 missing-registration mutations rejected; remaining unowned invariants unchanged\n";
 }
 inline std::filesystem::path scratch_path(){return std::filesystem::temp_directory_path()/("pack-combined-source-"+std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));}
 }
