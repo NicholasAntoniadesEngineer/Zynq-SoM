@@ -38,7 +38,9 @@ void rigid(const Shape& seed,const Shape& result,int turns,const Context& ctx,co
   const auto& x=a.model().insts[i];const auto& y=b.model().insts[i];
   demand(x.ref==y.ref&&x.mod==y.mod&&x.pad_nets==y.pad_nets&&x.side==y.side&&x.mirror==y.mirror,
          "identity, pad-net, face or mirrored-document mutation");
-  demand(handed(a,i)*handed(b,i)>0,"rigid rotation changed chirality");
+  const auto& pins=a.geometry_at(i).pad_boxes;
+  if(pins.count("1")&&pins.count("2")&&pins.count("3"))
+   demand(std::abs(handed(a,i)-handed(b,i))<1e-8,"rigid rotation changed signed pad-triangle area");
   for(const auto& [pin,box]:a.geometry_at(i).pad_boxes){
    auto p=rect_center(box);double w=seed.w,h=seed.h;
    for(int t=0;t<turns;++t){p={p.second,w-p.first};std::swap(w,h);}
@@ -136,6 +138,17 @@ void unit(){
  auto nonzero=sparse;nonzero.extra_rot["R1"]=90;nonzero.tag="nonzero";
  g.shapes["unit"]={sparse,nonzero};append_rigid_zone_orientations(ctx,g,"unit",sparse);
  demand(g.shapes.at("unit").size()==8,"dedup erased genuinely different member rotation");
+ // Incremental orientation expansion must not redo the old candidate prefix.
+ g.shapes["unit"]={sparse,nonzero};ctx.quantization.clear();dimensions=0;coordinates=0;observing=true;
+ append_rigid_zone_orientations(ctx,g,"unit",sparse,1);observing=false;
+ demand(dimensions==6&&coordinates==12,"suffix expansion repeated old orientation work");
+ demand(equal(g.shapes.at("unit")[0],sparse)&&equal(g.shapes.at("unit")[1],nonzero),"suffix changed prior indices");
+ const auto suffix_count=g.shapes.at("unit").size();ctx.quantization.clear();
+ append_rigid_zone_orientations(ctx,g,"unit",sparse,suffix_count);
+ demand(ctx.quantization.empty()&&g.shapes.at("unit").size()==suffix_count,"empty suffix performed work");
+ bool invalid_suffix=false;
+ try {append_rigid_zone_orientations(ctx,g,"unit",sparse,suffix_count+1);}catch(const PcbZoneInfeasible&){invalid_suffix=true;}
+ demand(invalid_suffix&&ctx.quantization.empty(),"invalid suffix did not fail before work");
 }
 void live(const std::filesystem::path& root){
  for(const auto* project:{"carrier","devkit_mini"}){
@@ -195,8 +208,21 @@ void live(const std::filesystem::path& root){
    demand(split.quantization_engagements.at("placement_bottom_pose_precision4dp")==bottom_coordinates&&
           split.quantization_engagements.at("placement_variant_dimension_precision4dp")==variant_dimensions,
           "actual mixed-face scalar operations differ from receipt");
+   // Test incremental alternatives independently. Automatically offering all
+   // of them regresses the qualified global plan; production keeps its offers.
+   const auto expand=[&](PcbZoneResult& zones) {
+    Context ctx(f.input);ctx.pool=zones.footprints;
+    const auto& originals=zones.geometry.shapes.at("usb_jtag");
+    const auto start=std::find_if(originals.begin(),originals.end(),[](const auto& s){return s.tag.rfind("contract-bottom/",0)==0;});
+    demand(start!=originals.end(),"missing new contract-group suffix");
+    const auto first=static_cast<std::size_t>(start-originals.begin());
+    const Shape seed=originals.front();
+    append_rigid_zone_orientations(ctx,zones.geometry,"usb_jtag",seed,first);
+   };
+   expand(split);
    const auto& variants=split.geometry.shapes.at("usb_jtag");
    auto repeated=build_pcb_zone_geometry(f.input);
+   expand(repeated);
    demand(split.quantization_engagements==repeated.quantization_engagements,"face candidate receipts not reproducible");
    const auto& repeated_variants=repeated.geometry.shapes.at("usb_jtag");
    demand(variants.size()==repeated_variants.size(),"face candidate count not reproducible");
@@ -207,7 +233,7 @@ void live(const std::filesystem::path& root){
    const auto original=model(variants.front(),candidate_context,split.geometry,"usb_jtag");
    std::map<std::string,std::size_t> original_indices;
    for(std::size_t i=0;i<original.model().insts.size();++i)original_indices.emplace(original.model().insts[i].ref,i);
-   std::size_t candidates=0;
+   std::size_t candidates=0,rotated_candidates=0;
    for(std::size_t index=0;index<variants.size();++index) {
     const auto& candidate=variants[index];
     if(candidate.tag.rfind("contract-bottom/",0)!=0)continue;
@@ -215,6 +241,22 @@ void live(const std::filesystem::path& root){
     const auto measured=model(candidate,candidate_context,split.geometry,"usb_jtag");
     demand(check_pcb_placement_contract(measured,"usb_jtag",&f.input.contracts.at("usb_jtag"),
         candidate_context.board_refs.at("usb_jtag")).ok,"local mixed-face contract failed");
+    const auto slash=candidate.tag.find_last_of('/');
+    const auto suffix=candidate.tag.substr(slash);
+    if(suffix=="/r90"||suffix=="/r180"||suffix=="/r270") {
+     ++rotated_candidates;
+     const auto parent_tag=candidate.tag.substr(0,slash);
+     const auto parent=std::find_if(variants.begin(),variants.end(),[&](const auto& s){return s.tag==parent_tag;});
+     demand(parent!=variants.end(),"rotated candidate lost its unrotated parent");
+     rigid(*parent,candidate,suffix=="/r90"?1:suffix=="/r180"?2:3,candidate_context,split.geometry);
+     const auto bound=bind_pcb_zone_shapes(split,{{"usb_jtag",static_cast<int>(index)}});
+     for(const auto& [ref,key]:candidate.mirror)
+      demand(bound.resolvable.at(ref)==key&&bound.mirror_refs.count(ref)&&bound.side_of.at(ref)=="bottom",
+             "rotated mixed-face candidate lost mirrored binding");
+     demand(candidate_context.stage_input("usb_jtag",bound).pad_nets==
+            candidate_context.stage_input("usb_jtag",after.geometry).pad_nets,"rotated binding changed authored net identity");
+     continue;
+    }
     for(const auto* pinned:{"U1","SW1","TP1","TP2","TP3"}) {
      const auto ref=candidate_context.board_refs.at("usb_jtag").at(pinned);
      demand(candidate.top_off.at(ref)==variants.front().top_off.at(ref)&&!candidate.mirror.count(ref),
@@ -246,6 +288,7 @@ void live(const std::filesystem::path& root){
            candidate_context.stage_input("usb_jtag",after.geometry).pad_nets,"binding changed authored net identity");
    }
    demand(candidates>0,"contract-group face experiment generated no candidates");
+   demand(rotated_candidates==3*(candidates-rotated_candidates),"new groups missing legal quarter turns");
    auto blocked_context=candidate_context;
    for(const auto* owner:{"U2","U4"})blocked_context.by_ref.at(blocked_context.board_refs.at("usb_jtag").at(owner)).lib_id="Switch:SW_SPST";
    auto blocked_geometry=after.geometry;

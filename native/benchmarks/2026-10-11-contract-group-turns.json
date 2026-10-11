@@ -1,0 +1,32 @@
+{
+  "status": "incremental_orientation_api_tested_automatic_global_expansion_rejected",
+  "base_commit": "9f94ee3f",
+  "finding": "Contract-group bottom candidates are appended after existing quarter-turn generation. Incrementally rotating the four new candidates yields sixteen locally valid offers, but merely retaining old offers does not preserve the packer's successful complete plan.",
+  "retained_changes": {
+    "api": "append_rigid_zone_orientations accepts an optional first_original index. Only that original suffix is rotated; the complete existing prefix and indices remain unchanged. Existing callers default to zero, preserving their behavior.",
+    "tests": "Independent real named-pad positions/extents and signed triangle area for mixed-face turns; supports two-pad capacitors and collinear IC pin rows. Full local contracts, mirrored-document binding, real authored pad-net identities, deterministic candidates, prefix retention, exact instrumented suffix operation counts, empty suffix and invalid suffix are checked.",
+    "test_log": "native/build/contract-turn-final-tests.log",
+    "production_integration": "Automatic expansion of contract-group offers was removed after the global regression. No new production strategy flag or validator relaxation."
+  },
+  "rejected_integration": {
+    "log": "native/build/carrier-contract-turn-reference.log",
+    "outline_mm": [166,159],
+    "local_candidates": 16,
+    "construction_seconds_before_failure": 0.375561375,
+    "receipt_captured": true,
+    "result": "The legalizer rejects a stale X separation, and its existing perpendicular-order retry finds a Y negative cycle. The previously qualified outline no longer constructs. This disproves the assumption that appending locally valid offers is globally non-regressing."
+  },
+  "restored_reference": {
+    "log": "native/build/carrier-contract-turn-restored.log",
+    "runs": 2,
+    "pcb_sha256": "4d1432b252230cbfc6e7342de7f0e431a0f12dc16d7d26ebd08fe0a67508bab1",
+    "matches_qualified_166x159": true,
+    "all_receipt_and_fallback_rows_match_previous_screen": true,
+    "placement_contract_ok": true,
+    "placement_flow_ok": true,
+    "hard_red": 0,
+    "construction_seconds": [2.652538000,2.643593291],
+    "timing_limits": "Short sequential screens, not matched Python measurements or a speedup claim. Full qualification was not repeated for an unused optional API parameter; the earlier integrated qualification remains tied to its recorded code revision."
+  },
+  "next_design_requirement": "A bounded strategy portfolio must preserve a successfully constructed complete incumbent, not just the shape list. Try alternative offer sets only after the incumbent strategy fails, or compare completed validated models. Retain all failed-attempt operation accounting and failure receipts; do not silently rerun or discard costs."
+}

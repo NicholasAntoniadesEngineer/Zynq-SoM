@@ -85,13 +85,15 @@ bool orientation_holds(const Context& ctx, const Geometry& g, const std::string&
 }
 }
 void append_rigid_zone_orientations(Context& ctx, Geometry& g, const std::string& sheet,
-                                    const Shape& incumbent) {
+                                    const Shape& incumbent, std::size_t first_original) {
     if (!orientation_eligible(ctx, g, sheet)) return;
     const auto found = g.shapes.find(sheet);
     const std::vector<Shape> originals = found == g.shapes.end()
         ? std::vector<Shape>{incumbent} : found->second;
     auto variants = originals;
-    for (const auto& original : originals) {
+    if(first_original>originals.size())throw PcbZoneInfeasible("orientation suffix starts beyond registered shapes");
+    for (std::size_t index=first_original;index<originals.size();++index) {
+        const auto& original=originals[index];
         if (!orientation_holds(ctx, g, sheet, original)) continue;
         auto next = original;
         for (const auto* suffix : {"/r90", "/r180", "/r270"}) {
