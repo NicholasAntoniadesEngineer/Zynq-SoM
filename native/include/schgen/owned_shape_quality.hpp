@@ -140,4 +140,47 @@ inline std::optional<int> owned_shape_select_tied_bucket(bool compact,
     const auto survivors = owned_shape_nondominated_indices(compact, quality, sheet, bucket);
     return survivors.empty() ? std::nullopt : std::optional<int>{survivors.front()};
 }
+struct OwnedShapeLocatedRank {
+    OwnedShapeTieRank rank;
+    double x=0,y=0;
+};
+// Experimental lexicographic strategy, not a widened numerical tie: improve
+// same-face owned proximity first, then minimise the existing estimate among
+// the nondominated improvements. Preserve the incumbent's exact rectangle,
+// location, face, subjects, bulk gaps and fanout. Missing/unknown evidence
+// grants no preference. Full-board checks still decide acceptance.
+inline int owned_shape_select_same_pose_quality(const OwnedShapeQualityTable& quality,
+    const std::string& sheet,const std::vector<OwnedShapeLocatedRank>& candidates,int incumbent) {
+    std::set<int> indices;
+    const OwnedShapeLocatedRank* original=nullptr;
+    for(const auto& c:candidates){
+        if(!owned_shape_valid_tie_rank(c.rank)||!std::isfinite(c.x)||!std::isfinite(c.y)||
+           !indices.insert(c.rank.index).second)throw std::invalid_argument("owned quality requires unique finite feasible poses");
+        if(c.rank.index==incumbent)original=&c;
+    }
+    if(!original||sheet.empty())throw std::invalid_argument("owned quality requires an incumbent and sheet");
+    const auto before=quality.find({sheet,incumbent});
+    if(before==quality.end()||!owned_shape_quality_comparable(before->second,before->second))return incumbent;
+    for(const auto& [cap,s]:before->second.subjects){
+        (void)cap;
+        if(s.role==OwnedShapeRole::Bypass&&s.owner_side!=s.cap_side)return incumbent;
+    }
+    std::vector<const OwnedShapeLocatedRank*> eligible;
+    for(const auto& c:candidates){
+        const auto found=quality.find({sheet,c.rank.index});
+        if(c.x==original->x&&c.y==original->y&&c.rank.w==original->rank.w&&c.rank.h==original->rank.h&&
+           c.rank.side==original->rank.side&&found!=quality.end()&&
+           owned_shape_pareto_dominates(found->second,before->second))eligible.push_back(&c);
+    }
+    const OwnedShapeLocatedRank* best=nullptr;
+    for(const auto* c:eligible){
+        const auto& q=quality.at({sheet,c->rank.index});
+        if(std::any_of(eligible.begin(),eligible.end(),[&](const auto* other){
+            return owned_shape_pareto_dominates(quality.at({sheet,other->rank.index}),q);
+        }))continue;
+        if(!best||std::tie(c->rank.estimator,c->rank.distance_key,c->rank.index)<
+                  std::tie(best->rank.estimator,best->rank.distance_key,best->rank.index))best=c;
+    }
+    return best?best->rank.index:incumbent;
+}
 }

@@ -36,6 +36,7 @@ struct FloorplanExperiment {
     bool compact_constraint_first = false;
     bool compact_edge_translation = false;
     bool compact_edge_feasibility = false;
+    bool owned_quality_first = false;
     std::function<void(std::size_t,std::size_t,std::size_t)> edge_feasibility_completed;
     // Observes already evaluated feasible alternatives; never runs additional
     // estimators or supplies an acceptance decision. References are borrowed

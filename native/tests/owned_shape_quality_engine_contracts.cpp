@@ -80,11 +80,50 @@ void unchanged(const Result& a, const Result& b, const char* why) {
         a.plan.accounting.fallback_events == b.plan.accounting.fallback_events, why);
 }
 void synthetic() {
+    {
+        OwnedShapeQualityTable table{{{"pilot",0},quality(5,5)},{{"pilot",1},quality(3,4)},
+                                    {{"pilot",2},quality(4,3)},{{"pilot",3},quality(4,4)}};
+        std::vector<OwnedShapeLocatedRank> ranks;
+        for(int i=0;i<4;++i)ranks.push_back({{i,true,8,6,i==0?10.:i==1?12.:i==2?11.:10.5,2,"top"},20,30});
+        int permutations=0;
+        do {
+            require(owned_shape_select_same_pose_quality(table,"pilot",ranks,0)==2,
+                "quality-first must choose lowest estimate on complete improving frontier");
+            ++permutations;
+        }while(std::next_permutation(ranks.begin(),ranks.end(),[](const auto& a,const auto& b){return a.rank.index<b.rank.index;}));
+        require(permutations==24,"quality strategy permutation coverage");
+        for(int mutation=0;mutation<9;++mutation){
+            auto bad=table;auto candidates=ranks;
+            for(std::size_t i=1;i<candidates.size();++i){
+                auto& r=candidates[i];auto& q=bad.at({"pilot",r.rank.index});
+                if(mutation==0)r.x+=1;
+                if(mutation==1)r.y+=1;
+                if(mutation==2)r.rank.w+=1;
+                if(mutation==3)r.rank.side="bottom";
+                if(mutation==4)q.subjects.at("C1").owner="U2";
+                if(mutation==5)q.bulk_pad_gaps.at("C3")=8;
+                if(mutation==6)q.bypass_pad_gaps.at("C2")=6;
+                if(mutation==7)q.fanout_starved=1;
+                if(mutation==8)q.state=OwnedShapeQualityState::Rejected;
+            }
+            require(owned_shape_select_same_pose_quality(bad,"pilot",candidates,0)==0,
+                "incompatible or worsening candidate displaced incumbent");
+        }
+        auto cross=table;
+        for(auto& [key,q]:cross){(void)key;q.subjects.at("C1").cap_side="bottom";}
+        require(owned_shape_select_same_pose_quality(cross,"pilot",ranks,0)==0,"opposite-face projected gap acquired quality priority");
+        auto duplicate=ranks;duplicate.push_back(ranks.front());bool rejected=false;
+        try{(void)owned_shape_select_same_pose_quality(table,"pilot",duplicate,0);}catch(const std::invalid_argument&){rejected=true;}
+        require(rejected,"duplicate quality candidate accepted");
+    }
     auto in = input(2); const auto baseline = pack(in);
     require(baseline.chosen == 0, "baseline should retain incumbent index zero");
     in.owned_shape_quality = {{{"pilot", 0}, quality(3, 4)}, {{"pilot", 1}, quality(2, 4)}};
     const auto improved = pack(in);
     require(improved.chosen == 1, "engine failed to replace dominated same-primary original");
+    auto quality_first=in;auto strategy=std::make_shared<FloorplanExperiment>();strategy->owned_quality_first=true;
+    quality_first.experiment=strategy;
+    unchanged(improved,pack(quality_first),"quality-first engine path changed an already optimal fixture or work receipts");
     auto observed=in;
     auto observation=std::make_shared<FloorplanExperiment>();
     std::size_t events=0;

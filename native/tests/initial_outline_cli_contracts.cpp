@@ -31,6 +31,14 @@ int main(int argc,char** argv){try{
     const auto feasible=run({"board","--compact-placement","--edge-feasibility"});
     if(feasible.exit_code||feasible.stdout_text.find("Not a complete joint solver")==std::string::npos)
         throw std::runtime_error("edge feasibility help must disclose solver limits");
+    const auto quality=run({"board","--compact-placement","--owned-quality-first"});
+    if(quality.exit_code||quality.stdout_text.find("May increase inter-block estimate")==std::string::npos)
+        throw std::runtime_error("quality-first help must disclose tradeoff");
+    for(const auto& args:std::vector<std::vector<std::string>>{
+        {"board","--owned-quality-first"},
+        {"board","--compact-placement","--owned-quality-first","--owned-quality-first"},
+        {"pcb-stage","--owned-quality-first"}})
+        if(run(args).exit_code==0)throw std::runtime_error("invalid quality-first option accepted");
     for(const auto& args:std::vector<std::vector<std::string>>{
         {"board","--edge-feasibility"},
         {"board","--compact-placement","--edge-feasibility","--edge-feasibility"},

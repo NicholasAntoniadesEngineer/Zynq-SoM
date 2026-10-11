@@ -15,6 +15,15 @@ void profile_option_contracts() {
         for (auto& arg : args) raw.push_back(arg.data());
         return parse(static_cast<int>(raw.size()), raw.data());
     };
+    if(options({"profile","--repo",".","--compact-search","on"}).owned_quality_first||
+       !options({"profile","--repo",".","--compact-search","on","--owned-quality-first","on"}).owned_quality_first)
+        throw std::runtime_error("quality-first default/selection mismatch");
+    for(const auto& [mode,value]:std::vector<std::pair<std::string,std::string>>{{"off","on"},{"both","on"},{"on","typo"}}){
+        bool rejected=false;
+        try{(void)options({"profile","--repo",".","--compact-search",mode,"--owned-quality-first",value});}
+        catch(const std::invalid_argument&){rejected=true;}
+        if(!rejected)throw std::runtime_error("invalid quality-first option accepted");
+    }
     if(options({"profile","--repo",".","--compact-search","on"}).owned_selection_trace||
        !options({"profile","--repo",".","--compact-search","on","--owned-selection-trace","on"}).owned_selection_trace)
         throw std::runtime_error("owned selection trace default/selection mismatch");

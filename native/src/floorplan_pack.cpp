@@ -303,6 +303,15 @@ bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure) {
                 if (winner) for (std::size_t i=0;i<hits.size();++i) if (hits[i].index==*winner) {
                     best=hits[i]; selected=evaluated.at(i); break;
                 }
+                if(in.experiment&&in.experiment->owned_quality_first) {
+                    std::vector<OwnedShapeLocatedRank> alternatives;
+                    for(std::size_t i=0;i<hits.size();++i){
+                        const auto& h=hits[i];
+                        alternatives.push_back({{h.index,true,h.w,h.h,evaluated.at(i),h.dist_key,h.side},h.x,h.y});
+                    }
+                    const int choice=owned_shape_select_same_pose_quality(in.owned_shape_quality,b.name,alternatives,best.index);
+                    for(std::size_t i=0;i<hits.size();++i)if(hits[i].index==choice){best=hits[i];selected=evaluated.at(i);break;}
+                }
                 if(in.experiment&&in.experiment->owned_shape_selection_completed) {
                     std::vector<OwnedShapeTieRank> alternatives;
                     alternatives.reserve(hits.size());
