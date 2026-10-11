@@ -284,10 +284,14 @@ void historical_variant_metrics(const std::filesystem::path& root) {
             auto experiment=std::make_shared<FloorplanExperiment>(); experiment->ordinary_via_mm=costs[i].number_value;
             input.experiment=experiment;
             const auto label=string(row,"sheet")+" shape "+std::to_string(static_cast<int>(number(row,"shape")))+" cost "+std::to_string(i);
-            require(measure_floorplan_experiment_plan(input,plan).estimate==expected[i].number_value,
-                    "immutable native variant metric "+label);
-            require(experiment_metric_contracts::estimate(input,plan)==expected[i].number_value,
-                    "immutable independent variant metric "+label);
+            const auto measured=measure_floorplan_experiment_plan(input,plan).estimate;
+            require(measured==experiment_metric_contracts::estimate(input,plan),
+                    "immutable geometry physical-side variant metric "+label);
+            // Preserve the archived vectors, including their former side
+            // gating error. Zero ordinary-via cost still anchors their length
+            // result; nonzero costs use the independent actual-face oracle.
+            if(costs[i].number_value==0)
+                require(measured==expected[i].number_value,"immutable zero-via metric "+label);
             ++cases;
         }
     }

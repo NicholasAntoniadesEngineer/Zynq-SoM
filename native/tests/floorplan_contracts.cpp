@@ -707,7 +707,10 @@ void cross_behavior() {
         in.geometry.resolvable[ref]="one";in.geometry.bbox_of[ref]={-1,-1,1,1};
     }
     FloorplanZoneShape top;top.w=top.h=2;top.top_off["U2001"]={0,0};
-    auto bottom=top;bottom.side="bottom";in.geometry.shapes["sink"]={top,bottom};
+    auto bottom=top;bottom.side="bottom";
+    auto mixed_top=top;mixed_top.bot_off=mixed_top.top_off;mixed_top.top_off.clear();
+    auto mixed_bottom=mixed_top;mixed_bottom.side="bottom";
+    in.geometry.shapes["sink"]={top,bottom,mixed_top,mixed_bottom};
     for(bool impedance:{false,true}) {
         if(impedance)in.impedance_net_classes["signal"]="DP100_TMDS";
         Engine e(in);e.prepare_cross();
@@ -716,9 +719,17 @@ void cross_behavior() {
         require(e.estimate()==5,"hand-computed 3-4-5 cross-subsystem MST");
         e.plan.interior_blocks[1].shape_idx=1;e.plan.interior_blocks[1].side="bottom";
         require(std::abs(e.estimate()-(impedance?12.6:7.2))<1e-12,"actual selected-bottom topology charges correct via class");
+        e.plan.interior_blocks[1].shape_idx=2;e.plan.interior_blocks[1].side="top";
+        require(std::abs(e.estimate()-(impedance?12.6:7.2))<1e-12,"top-primary alternate must charge its physical bottom pin transition");
+        e.plan.interior_blocks[1].shape_idx=3;e.plan.interior_blocks[1].side="bottom";
+        require(e.estimate()==5,"bottom-primary alternate must not charge a physical top pin transition");
         const std::vector<const FloorplanBlock*> partial{&e.plan.interior_blocks[1]};
         require(e.estimate(partial,"sink")==0,"one-sheet partial estimator excludes absent endpoint");
         require(e.n_impedance==(impedance?1:0),"impedance split reflects source class, not sheet name");
+        auto base_bottom=in;base_bottom.geometry.side_of["U2001"]="bottom";
+        base_bottom.geometry.bot_off["sink"]=base_bottom.geometry.top_off.at("sink");base_bottom.geometry.top_off.erase("sink");
+        Engine base(base_bottom);base.prepare_cross();base.plan.interior_blocks={a,b};
+        require(std::abs(base.estimate()-(impedance?12.6:7.2))<1e-12,"base bottom endpoint must charge its transition without selecting a variant");
     }
     // Change the source document, not the already-captured expected points.
     auto changed=in;
@@ -837,7 +848,11 @@ void frozen(const std::filesystem::path& dir,const std::string& name,bool geomet
     }
     e.plan=plan(expected);
     same(export_floorplan_spec(e.plan),parse_json_file((dir/(name+"_export.json")).string()),name+".export");
-    require(std::abs(e.estimate()-num(expected,"cross_estimate"))<1e-8,name+": frozen placed-board cross estimate");
+    // Historical cross_estimate omitted base-bottom and mixed-top transitions.
+    // Keep those source fixtures unchanged, but judge the same frozen geometry
+    // with the independent physical-pad/MST oracle, not the obsolete score.
+    require(std::abs(e.estimate()-experiment_metric_contracts::estimate(in,e.plan,false))<1e-8,
+            name+": frozen geometry estimate matches independent physical-side oracle");
     const auto notes=build_floorplan_notes(e.plan,in);
     std::vector<J> note_rows;
     for(const auto& n:notes)note_rows.push_back(jobject({{"n",jvalue(n.n)},{"block",jvalue(n.block)},{"short",jvalue(n.short_text)},{"long",jvalue(n.long_text)}}));

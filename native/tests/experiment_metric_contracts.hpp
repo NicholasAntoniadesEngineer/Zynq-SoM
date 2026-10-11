@@ -77,15 +77,13 @@ inline std::map<std::string, Part> parts(const FloorplanInput& input) {
     return result;
 }
 
-inline double estimate(const FloorplanInput& input, const FloorplanPlan& plan) {
+inline double estimate(const FloorplanInput& input, const FloorplanPlan& plan, bool rounded=true) {
     const auto& g = input.geometry;
     const auto authored = parts(input);
     std::map<std::string, const FloorplanBlock*> blocks;
-    std::set<std::string> bottom;
     for (const auto* list : {&plan.edge_blocks, &plan.interior_blocks})
         for (const auto& b : *list) {
             blocks.emplace(b.name, &b);
-            if (b.shape_idx && g.shapes.at(b.name).at(b.shape_idx).side == "bottom") bottom.insert(b.name);
         }
     std::map<std::string, PcbCheckFootprintPtr> mods;
     for (const auto& [key, fp] : input.footprints)
@@ -125,7 +123,8 @@ inline double estimate(const FloorplanInput& input, const FloorplanPlan& plan) {
                 rot = shape->extra_rot.count(ref) ?
                     (g.conn_rot.count(ref) ? g.conn_rot.at(ref) : 0.)+shape->extra_rot.at(ref) : 0.;
                 if (shape->mirror.count(ref)) selected_key=shape->mirror.at(ref);
-                if (bottom.count(sheet)) side = shape->top_off.count(ref) ? 1 : 0;
+                const int primary_side=shape->side=="bottom"?1:0;
+                side=shape->top_off.count(ref)?primary_side:1-primary_side;
             }
             xy = {py_round(py_round(input.origin.first+b.x,4)+xy.first,4),
                   py_round(py_round(input.origin.second+b.y,4)+xy.second,4)};
@@ -211,11 +210,11 @@ inline double estimate(const FloorplanInput& input, const FloorplanPlan& plan) {
         tree(pads,[&](const Pad& a,const Pad& b) {
             if (a.sheet==b.sheet) return;
             cost+=std::sqrt((a.x-b.x)*(a.x-b.x)+(a.y-b.y)*(a.y-b.y));
-            if ((bottom.count(a.sheet)||bottom.count(b.sheet)) && a.side!=b.side) cost+=via;
+            if (a.side!=b.side) cost+=via;
         });
         result+=cost;
     }
-    return py_round(result,1);
+    return rounded?py_round(result,1):result;
 }
 
 template<class Require> void identity(const PcbPlacementInput& input,
