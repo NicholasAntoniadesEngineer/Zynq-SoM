@@ -83,7 +83,7 @@ void unit(const std::filesystem::path &root) {
     empty.conservative_only = true;
     bool blocked = false;
     try { (void)run_floorplan_experiment_attempt(&empty, true, attempt, snap); }
-    catch (const FloorplanError &e) {
+    catch (const FloorplanReservationExcluded &e) {
         blocked = true;
         require(e.what() == string(field(fixture, "conservative_only"), "error"), "exact forced rejection");
     }

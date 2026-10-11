@@ -93,6 +93,17 @@ void free_wins(std::ostream& dump,bool fixed){
 }
 struct InjectedFailure:std::runtime_error {InjectedFailure():std::runtime_error("test failure after fallback in free pass"){} };
 struct InjectedDomainFailure:FloorplanError {InjectedDomainFailure():FloorplanError("test non-packing domain failure in free pass"){} };
+void policy_exclusion(bool fixed){
+    auto in=fixed?fixed_choice_fixture::input():free_input();
+    require(build_floorplan(in).punch_free,"policy fixture naturally selects the free reservation");
+    auto experiment=std::make_shared<FloorplanExperiment>();in.experiment=experiment;
+    experiment->conservative_only=true;std::size_t free_calls=0;
+    experiment->attempt_completed=[&](const FloorplanAttemptObservation& row){if(row.punch_free)++free_calls;};
+    Engine engine(in);begin(&engine);const auto result=engine.run();stop();
+    require(!result.punch_free&&free_calls==0,"explicit policy excludes free pass before any attempt callback");
+    require(!observed.empty()&&observed.back()=="punch_free_plan_rejected","policy exclusion remains explicit in fallback receipt");
+    receipt(fixed?"fixed-policy-exclusion":"auto-policy-exclusion",in.accounting.fallback_events,result.accounting.fallback_events);
+}
 void packing_rejection(const std::filesystem::path& root,bool fixed){
     auto in=frozen(root,"devkit_mini");
     if(fixed){if(!in.spec)in.spec=FloorplanSpec{};in.spec->outline={{100,100}};}
@@ -148,6 +159,7 @@ int main(int argc,char** argv){try{
     scope_test::failure<scope_test::InjectedDomainFailure>(argv[1],false);
     scope_test::failure<scope_test::InjectedDomainFailure>(argv[1],true);
     scope_test::packing_rejection(argv[1],false);scope_test::packing_rejection(argv[1],true);
+    scope_test::policy_exclusion(false);scope_test::policy_exclusion(true);
     if(argc==3){std::ofstream file(argv[2],std::ios::binary);file<<dump.str();require(bool(file),"write private nonfallback dump");}
     require(!scope_test::mismatch,"all incoming prefixes plus observed fallback calls retained EXACTLY in order");
     std::cout<<"fallback scope contracts PASS\n";

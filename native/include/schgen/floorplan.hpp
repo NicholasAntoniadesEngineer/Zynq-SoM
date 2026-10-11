@@ -71,6 +71,12 @@ class FloorplanPackingInfeasible : public FloorplanError {
 public:
     using FloorplanError::FloorplanError;
 };
+// An explicitly requested diagnostic policy excludes a reservation pass;
+// distinct from both exhausted packing search and malformed/failing inputs.
+class FloorplanReservationExcluded : public FloorplanError {
+public:
+    using FloorplanError::FloorplanError;
+};
 
 // A resolved footprint is parsed once. Providers retain the exact document,
 // including duplicate/unnumbered pads and mirrored variants; consumers must not

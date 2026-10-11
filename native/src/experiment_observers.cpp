@@ -26,7 +26,7 @@ void validate_floorplan_experiment(const FloorplanExperiment &experiment) {
 }
 void require_floorplan_experiment_policy(const FloorplanExperiment &experiment, bool punch_free) {
     if (experiment.conservative_only && punch_free)
-        throw FloorplanError("w12 probe: conservative-only forced");
+        throw FloorplanReservationExcluded("w12 probe: conservative-only forced");
 }
 double floorplan_experiment_via_cost(const FloorplanExperiment *experiment, bool impedance,
                                    double normal_cost) {

@@ -726,6 +726,16 @@ void cross_behavior() {
         const std::vector<const FloorplanBlock*> partial{&e.plan.interior_blocks[1]};
         require(e.estimate(partial,"sink")==0,"one-sheet partial estimator excludes absent endpoint");
         require(e.n_impedance==(impedance?1:0),"impedance split reflects source class, not sheet name");
+        // Source has physical net endpoints but no alternate geometry table.
+        // An unavailable selected shape must not silently score its base pose.
+        for(int invalid:{-1,1,999}) {
+            e.plan.interior_blocks[0].shape_idx=invalid;
+            throws([&]{(void)e.estimate();},"no prepared geometry for U1001");
+            const std::vector<const FloorplanBlock*> selected{&e.plan.interior_blocks[0],&e.plan.interior_blocks[1]};
+            throws([&]{(void)e.estimate(selected,"sink");},"no prepared geometry for U1001");
+        }
+        e.plan.interior_blocks[0].shape_idx=0;
+        require(e.estimate()==5,"base geometry remains valid after rejected selections");
         auto base_bottom=in;base_bottom.geometry.side_of["U2001"]="bottom";
         base_bottom.geometry.bot_off["sink"]=base_bottom.geometry.top_off.at("sink");base_bottom.geometry.top_off.erase("sink");
         Engine base(base_bottom);base.prepare_cross();base.plan.interior_blocks={a,b};

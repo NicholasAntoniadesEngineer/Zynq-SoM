@@ -301,7 +301,9 @@ FloorplanPlan Engine::run() {
         const auto conservative=plan; const auto offers=side_offers;
         reset_shapes();
         std::optional<double> free_est;
-        try { free_est=fixed(true); } catch (const FloorplanPackingInfeasible&) {}
+        try { free_est=fixed(true); }
+        catch (const FloorplanPackingInfeasible&) {}
+        catch (const FloorplanReservationExcluded&) {}
         if (free_est && *free_est<estimate_real-1e-6) estimate_real=*free_est;
         else { restore(conservative); side_offers=offers; fallback("punch_free_plan_rejected"); }
         const double area=precision.area(plan.board_w*plan.board_h);
@@ -400,7 +402,9 @@ FloorplanPlan Engine::run() {
     const auto conservative=plan; const auto offers=side_offers;
     reset_shapes();
     std::optional<Winner> free_best;
-    try { free_best=search(true); } catch (const FloorplanPackingInfeasible&) {}
+    try { free_best=search(true); }
+    catch (const FloorplanPackingInfeasible&) {}
+    catch (const FloorplanReservationExcluded&) {}
     Winner best=conservative_best; std::string choice="conservative";
     if (free_best && (std::get<0>(*free_best)<std::get<0>(best)-1e-6 ||
         (std::get<0>(*free_best)<=std::get<0>(best)+1e-6 && std::get<3>(*free_best)<std::get<3>(best)-1e-6))) {

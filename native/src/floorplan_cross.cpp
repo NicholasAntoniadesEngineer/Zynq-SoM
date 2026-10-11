@@ -154,9 +154,11 @@ double Engine::estimate(const std::vector<const FloorplanBlock*>& blocks, const 
     std::map<std::string,int> selected;
     for (const auto* b:blocks) {
         by_name[b->name]=b;
-        if (b->shape_idx && in.geometry.shapes.count(b->name)) {
-            const auto& variants=in.geometry.shapes.at(b->name);
-            if (b->shape_idx<0 || static_cast<std::size_t>(b->shape_idx)>=variants.size()) throw FloorplanError("floorplan: shape index out of range for "+b->name);
+        if (b->shape_idx) {
+            const auto variants=in.geometry.shapes.find(b->name);
+            if (variants!=in.geometry.shapes.end() &&
+                (b->shape_idx<0 || static_cast<std::size_t>(b->shape_idx)>=variants->second.size()))
+                throw FloorplanError("floorplan: shape index out of range for "+b->name);
             selected[b->name]=b->shape_idx;
         }
     }
@@ -171,7 +173,14 @@ double Engine::estimate(const std::vector<const FloorplanBlock*>& blocks, const 
             const auto block=by_name.find(part.key);
             if (block==by_name.end()) continue;
             const int k=get(selected,part.key);
-            const auto d=k ? part.shape_offsets.at(k) : part.offset;
+            auto d=part.offset;
+            if(k) {
+                const auto prepared=part.shape_offsets.find(k);
+                if(prepared==part.shape_offsets.end())
+                    throw FloorplanError("floorplan: selected shape "+std::to_string(k)+" of "+part.sheet+
+                                         " has no prepared geometry for "+part.ref);
+                d=prepared->second;
+            }
             x=position_precision(position_precision(in.origin.first+block->second->x)+d.first);
             y=position_precision(position_precision(in.origin.second+block->second->y)+d.second);
         } else if (part.owner==CrossPart::Owner::SomJack) {
