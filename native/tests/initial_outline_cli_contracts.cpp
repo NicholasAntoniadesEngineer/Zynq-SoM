@@ -34,6 +34,17 @@ int main(int argc,char** argv){try{
     const auto quality=run({"board","--compact-placement","--owned-quality-first"});
     if(quality.exit_code||quality.stdout_text.find("May increase inter-block estimate")==std::string::npos)
         throw std::runtime_error("quality-first help must disclose tradeoff");
+    if(run({"board","--compact-placement","--owned-face-cohesion","--owned-shape","board_aux=tag","--owned-shape","bringup_rails=tag2"}).exit_code)
+        throw std::runtime_error("valid named candidate help failed");
+    for(const auto& args:std::vector<std::vector<std::string>>{
+        {"board","--owned-face-cohesion"}, {"board","--owned-shape","board_aux=tag"},
+        {"board","--compact-placement","--owned-face-cohesion","--owned-face-cohesion"},
+        {"board","--compact-placement","--owned-shape","=tag"},
+        {"board","--compact-placement","--owned-shape","a="},
+        {"board","--compact-placement","--owned-shape","a=b=c"},
+        {"board","--compact-placement","--owned-shape","a=b","--owned-shape","a=c"},
+        {"pcb-stage","--owned-shape","a=b"}})
+        if(run(args).exit_code==0)throw std::runtime_error("invalid named candidate option accepted");
     for(const auto& args:std::vector<std::vector<std::string>>{
         {"board","--owned-quality-first"},
         {"board","--compact-placement","--owned-quality-first","--owned-quality-first"},

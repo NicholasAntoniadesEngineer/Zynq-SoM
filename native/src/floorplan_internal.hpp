@@ -100,6 +100,7 @@ public:
     std::array<std::map<FloorplanShapeKey, std::vector<Comp>>, 2> components;
     std::array<std::map<std::string, std::vector<Shape>>, 2> shape_sets;
     std::map<std::string, SideOffer> side_offers;
+    std::map<std::string,int> owned_shape_choices;
     std::vector<CrossPart> cross_parts;
     std::vector<CrossNet> cross_nets;
     std::map<std::string, std::vector<std::size_t>> nets_by_sheet;

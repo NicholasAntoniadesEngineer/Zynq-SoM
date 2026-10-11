@@ -15,6 +15,17 @@ void profile_option_contracts() {
         for (auto& arg : args) raw.push_back(arg.data());
         return parse(static_cast<int>(raw.size()), raw.data());
     };
+    if(options({"profile","--repo",".","--compact-search","on","--owned-shape","board_aux=tag"}).owned_shapes.at("board_aux")!="tag")
+        throw std::runtime_error("owned shape restriction lost tag");
+    for(const auto& args:std::vector<std::vector<std::string>>{
+        {"profile","--repo",".","--compact-search","off","--owned-shape","board_aux=tag"},
+        {"profile","--repo",".","--compact-search","on","--owned-shape","=tag"},
+        {"profile","--repo",".","--compact-search","on","--owned-shape","board_aux="},
+        {"profile","--repo",".","--compact-search","on","--owned-shape","board_aux=a=b"},
+        {"profile","--repo",".","--compact-search","on","--owned-shape","board_aux=a","--owned-shape","board_aux=b"}}){
+        bool rejected=false;try{(void)options(args);}catch(const std::invalid_argument&){rejected=true;}
+        if(!rejected)throw std::runtime_error("invalid owned shape restriction accepted");
+    }
     if(options({"profile","--repo",".","--compact-search","on"}).owned_face_cohesion||
        !options({"profile","--repo",".","--compact-search","on","--owned-face-cohesion","on"}).owned_face_cohesion)
         throw std::runtime_error("owned face cohesion default/selection mismatch");

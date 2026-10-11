@@ -121,6 +121,27 @@ void synthetic() {
     in.owned_shape_quality = {{{"pilot", 0}, quality(3, 4)}, {{"pilot", 1}, quality(2, 4)}};
     const auto improved = pack(in);
     require(improved.chosen == 1, "engine failed to replace dominated same-primary original");
+    auto restricted=in;
+    auto restriction=std::make_shared<FloorplanExperiment>();restriction->owned_shape_tags={{"pilot","fixture-0"}};
+    restricted.experiment=restriction;
+    require(pack(restricted).chosen==0,"explicit measured candidate restriction ignored");
+    restriction->owned_shape_tags["pilot"]="fixture-1";
+    require(pack(restricted).chosen==1,"candidate tag failed to resolve stable shape index");
+    bool unseated=false;
+    try{(void)pack(restricted,{1});}catch(const std::runtime_error& e){unseated=std::string(e.what())=="actual engine fixture did not pack";}
+    require(unseated,"infeasible restricted shape silently fell back to a feasible alternative");
+    for(int mutation=0;mutation<5;++mutation){
+        auto bad=restricted;
+        auto experiment=std::make_shared<FloorplanExperiment>(*restriction);
+        bad.experiment=experiment;
+        if(mutation==0)experiment->owned_shape_tags={{"unknown","fixture-1"}};
+        if(mutation==1)experiment->owned_shape_tags["pilot"]="missing";
+        if(mutation==2)bad.geometry.shapes["pilot"][0].tag="fixture-1";
+        if(mutation==3)bad.owned_shape_quality.erase({"pilot",1});
+        if(mutation==4)bad.compact_search=false;
+        bool rejected=false;try{(void)pack(bad);}catch(const FloorplanError&){rejected=true;}
+        require(rejected,"invalid candidate restriction accepted");
+    }
     auto quality_first=in;auto strategy=std::make_shared<FloorplanExperiment>();strategy->owned_quality_first=true;
     quality_first.experiment=strategy;
     unchanged(improved,pack(quality_first),"quality-first engine path changed an already optimal fixture or work receipts");

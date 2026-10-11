@@ -38,6 +38,9 @@ struct FloorplanExperiment {
     bool compact_edge_feasibility = false;
     bool owned_quality_first = false;
     bool owned_face_cohesion = false;
+    // Diagnostic candidate restrictions by generated tag, not unstable index.
+    // Unknown, ambiguous or unmeasured choices fail; never silently fall back.
+    std::map<std::string,std::string> owned_shape_tags;
     std::function<void(std::size_t,std::size_t,std::size_t)> edge_feasibility_completed;
     // Observes already evaluated feasible alternatives; never runs additional
     // estimators or supplies an acceptance decision. References are borrowed

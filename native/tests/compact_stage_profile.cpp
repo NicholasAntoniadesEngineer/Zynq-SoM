@@ -33,6 +33,7 @@ struct Options {
     bool owned_selection_trace = false;
     bool owned_quality_first = false;
     bool owned_face_cohesion = false;
+    std::map<std::string,std::string> owned_shapes;
     bool multiscale_outline = false;
     std::optional<int> interior_order;
     std::optional<FloorplanPoint> outline;
@@ -49,6 +50,7 @@ void help() {
         "  [--owned-selection-trace off|on] (read-only multi-alternative selection trace)\n"
         "  [--owned-quality-first off|on] (same-pose same-face quality-first experiment)\n"
         "  [--owned-face-cohesion off|on] (append initial owner/cap same-face packs)\n"
+        "  [--owned-shape SHEET=TAG] (restrict a measured owned candidate; repeat for different sheets)\n"
         "  [--outline-mm WIDTHxHEIGHT] (explicit diagnostic outline; skips automatic sizing search)\n"
         "  [--initial-outline-mm WIDTHxHEIGHT] (validated starting candidate for automatic sizing)\n"
         "  [--multiscale-outline off|on] (local axis/diagonal refinement; can miss smaller grid candidates)\n"
@@ -101,6 +103,12 @@ Options parse(int argc, char** argv) {
             if (value != "on" && value != "off") throw std::invalid_argument("constraint-first must be off|on");
             out.constraint_first = value == "on";
         }
+        else if (arg == "--owned-shape") {
+            const auto split=value.find('=');
+            if(split==std::string::npos||split==0||split+1==value.size()||value.find('=',split+1)!=std::string::npos||
+               !out.owned_shapes.emplace(value.substr(0,split),value.substr(split+1)).second)
+                throw std::invalid_argument("owned-shape requires unique SHEET=TAG");
+        }
         else if (arg == "--owned-face-cohesion") {
             if(value!="on"&&value!="off")throw std::invalid_argument("owned-face-cohesion must be off|on");
             out.owned_face_cohesion=value=="on";
@@ -136,6 +144,7 @@ Options parse(int argc, char** argv) {
     if(out.edge_feasibility&&out.compact!="on")throw std::invalid_argument("edge-feasibility requires --compact-search on");
     if(out.owned_quality_first&&out.compact!="on")throw std::invalid_argument("owned-quality-first requires --compact-search on");
     if(out.owned_face_cohesion&&out.compact!="on")throw std::invalid_argument("owned-face-cohesion requires --compact-search on");
+    if(!out.owned_shapes.empty()&&out.compact!="on")throw std::invalid_argument("owned-shape requires --compact-search on");
     if(out.outline&&out.initial_outline)throw std::invalid_argument("initial-outline-mm cannot be combined with outline-mm");
     if(out.outline&&out.multiscale_outline)throw std::invalid_argument("multiscale-outline conflicts with fixed outline-mm");
     if(out.interior_order&&out.constraint_first)throw std::invalid_argument("single interior-order conflicts with constraint-first portfolio");
@@ -236,7 +245,7 @@ PcbPlacementInput trial_input(const PcbPlacementInput& source,bool compact,
 std::string trial(const PcbPlacementInput& source, bool compact, int run, int generation,
                   bool constraint_first = false,const std::optional<FloorplanPoint>& outline=std::nullopt,bool edge_translation=false,
                   const std::optional<FloorplanPoint>& initial_outline=std::nullopt,
-                  const std::optional<int>& interior_order=std::nullopt,bool multiscale_outline=false,bool edge_feasibility=false,bool owned_selection_trace=false,bool owned_quality_first=false,bool owned_face_cohesion=false) {
+                  const std::optional<int>& interior_order=std::nullopt,bool multiscale_outline=false,bool edge_feasibility=false,bool owned_selection_trace=false,bool owned_quality_first=false,bool owned_face_cohesion=false,const std::map<std::string,std::string>& owned_shapes={}) {
     const auto copy_start = Clock::now();
     auto input = trial_input(source,compact,outline);
     const auto copy_seconds = seconds(copy_start);
@@ -250,6 +259,8 @@ std::string trial(const PcbPlacementInput& source, bool compact, int run, int ge
     floor->compact_edge_feasibility = edge_feasibility;
     floor->owned_quality_first = owned_quality_first;
     floor->owned_face_cohesion = owned_face_cohesion;
+    floor->owned_shape_tags=owned_shapes;
+    for(const auto& [sheet,tag]:owned_shapes)std::cout<<"owned_shape_restriction sheet="<<sheet<<" tag="<<tag<<'\n';
     if(owned_selection_trace)floor->owned_shape_selection_completed=[event=std::size_t{0}](const std::string& sheet,const auto& alternatives,const auto& quality,int selected) mutable {
         ++event;
         for(const auto& rank:alternatives){
@@ -374,6 +385,21 @@ std::string trial(const PcbPlacementInput& source, bool compact, int run, int ge
         << " hard_red=" << gates.composition.hard_red
         << " hard_margin_min=" << gates.composition.hard_margin_min
         << " hard_margin_sum=" << gates.composition.hard_margin_sum << '\n';
+    if(!owned_shapes.empty()) {
+        const PcbCheckInput measured(result.model);
+        std::map<std::string,std::size_t> indices;
+        for(std::size_t i=0;i<result.model.insts.size();++i)
+            if(!indices.emplace(result.model.insts[i].ref,i).second)throw std::runtime_error("duplicate final reference");
+        for(const auto& [sheet,trusted]:input.owned_groups)for(const auto& row:owned_group_placements(*trusted)){
+            const auto oi=indices.at(row.owner),ci=indices.at(row.cap);
+            const auto a=measured.geometry_at(oi).pad_boxes.at(row.owner_pin);
+            const auto b=measured.geometry_at(ci).pad_boxes.at(row.cap_pin);
+            const double gap=std::hypot(std::max({0.,a.x0-b.x1,b.x0-a.x1}),std::max({0.,a.y0-b.y1,b.y0-a.y1}));
+            std::cout<<"owned_final sheet="<<sheet<<" owner="<<row.owner<<'.'<<row.owner_pin
+                     <<" member="<<row.cap<<'.'<<row.cap_pin<<" pad_gap_mm="<<gap
+                     <<" sides="<<result.model.insts[oi].side<<'/'<<result.model.insts[ci].side<<" proximity=UNVERIFIED\n";
+        }
+    }
     std::cout << std::flush;
     return hash;
 }
@@ -408,7 +434,7 @@ int main(int argc, char** argv) {
             const int generation = options.inputs == "prepared" ? 1 : run;
             for (const bool compact : {false, true}) {
                 if ((compact && options.compact == "off") || (!compact && options.compact == "on")) continue;
-                const auto hash = trial(prepared->input, compact, run, generation, options.constraint_first,options.outline,options.edge_translation,options.initial_outline,options.interior_order,options.multiscale_outline,options.edge_feasibility,options.owned_selection_trace,options.owned_quality_first,options.owned_face_cohesion);
+                const auto hash = trial(prepared->input, compact, run, generation, options.constraint_first,options.outline,options.edge_translation,options.initial_outline,options.interior_order,options.multiscale_outline,options.edge_feasibility,options.owned_selection_trace,options.owned_quality_first,options.owned_face_cohesion,options.owned_shapes);
                 auto [it, inserted] = first_hash.emplace(compact, hash);
                 if (!inserted && it->second != hash) throw std::runtime_error("repeat PCB bytes changed; investigate input drift/nondeterminism");
                 std::cout << "repeat compact_search=" << compact << " same_as_first=" << (!inserted ? "true" : "first") << '\n';

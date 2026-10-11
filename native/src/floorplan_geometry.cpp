@@ -23,6 +23,23 @@ bool tagged(const SexprList& node, const std::string& tag) {
 
 Engine::Engine(const FloorplanInput& input) : in(input) {
     if (in.experiment) validate_floorplan_experiment(*in.experiment);
+    if(in.experiment&&!in.experiment->owned_shape_tags.empty()) {
+        if(!in.compact_search)throw FloorplanError("owned shape selection requires compact search");
+        for(const auto& [sheet,tag]:in.experiment->owned_shape_tags) {
+            const auto found=in.geometry.shapes.find(sheet);
+            int selected=-1;
+            if(sheet.empty()||tag.empty()||found==in.geometry.shapes.end())
+                throw FloorplanError("owned shape selection: unknown sheet or empty tag");
+            for(std::size_t i=0;i<found->second.size();++i)if(found->second[i].tag==tag){
+                if(selected!=-1)throw FloorplanError("owned shape selection: ambiguous tag for "+sheet);
+                selected=static_cast<int>(i);
+            }
+            const auto q=in.owned_shape_quality.find({sheet,selected});
+            if(selected<0||q==in.owned_shape_quality.end()||!owned_shape_quality_comparable(q->second,q->second))
+                throw FloorplanError("owned shape selection: unknown or unmeasured tag for "+sheet);
+            owned_shape_choices.emplace(sheet,selected);
+        }
+    }
     if(in.experiment&&in.experiment->multiscale_outline&&in.spec&&in.spec->outline)
         throw FloorplanError("multiscale outline search conflicts with a fixed outline");
     if(in.experiment&&in.experiment->initial_outline&&in.spec&&in.spec->outline)

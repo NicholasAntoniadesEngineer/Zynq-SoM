@@ -243,7 +243,9 @@ bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure) {
             b.shape_idx=0; b.side="top"; chosen[b.name]=cc; pose(b,*p); return true;
         }
         std::vector<SeatShapeCand> cands;
+        const auto restricted=owned_shape_choices.find(b.name);
         for (std::size_t k=0;k<variants->second.size();++k) {
+            if(restricted!=owned_shape_choices.end()&&static_cast<int>(k)!=restricted->second)continue;
             const auto& s=variants->second[k];
             auto win=std::make_tuple(-bw,2*bw,-bh,2*bh);
             if (evicted) win=evict_window(evicted->x,evicted->y,evicted->w,evicted->h,evicted->fanout_reach,evicted->fanout_inset,
