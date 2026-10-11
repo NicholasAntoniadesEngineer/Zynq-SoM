@@ -1,0 +1,56 @@
+{
+  "base_commit": "fd97051a",
+  "scope": "Source-audit consistency across compiler-reported transitive inputs. Reliability prerequisite for future audit reuse, not an implemented cache or a speedup claim.",
+  "implementation": {
+    "discovery": "Compiler -M resolves each translation unit's dependency graph with the same configured compiler, include paths, defines and target flags as its AST/preprocessor commands.",
+    "snapshots": "Shared immutable byte snapshots include system and transitive headers. Explicit manifest source snapshots still bind AST offsets to their original source text.",
+    "checks": "Check observed bytes before and after compiler passes, compare the macro pass's -MD graph, then re-resolve every translation unit's graph and check bytes again before publication. The final graph check covers newly appearing __has_include targets affecting earlier completed units.",
+    "resources": "Existing one-to-four-worker limit and single retained AST projection remain. Dependency sidecars use privately created temporary directories with RAII cleanup.",
+    "coverage": "Dependency inclusion does not automatically grant audit coverage; included sources still require explicit manifest ownership.",
+    "parser": "Fixed Make target; escaped spaces, tabs, hashes, doubled dollars, LF/CRLF continuations. Reject unsupported backslash escapes, variable expansion, malformed or empty records. No general arbitrary-filename Make parser claim."
+  },
+  "tests": {
+    "mutation_cases": "Eight transitive/header-appearance cases across one and two workers, in addition to eight existing explicit-source mutation cases. The earlier-TU appearance fixture synchronizes on completed preprocessing rather than depending on worker scheduling.",
+    "transport": "Updated simulated compilers emit dependency records without bypassing malformed AST, preprocessing failure, source-offset, timeout or dynamic queue checks.",
+    "parser_cases": "Filename identity with spaces/hash/dollar; LF and CRLF adjacent-token continuation; wrong target, empty dependencies, variable expansion, unsupported and truncated escapes.",
+    "integrated_pass": true,
+    "suites": ["native_audit_ast_pipe_contracts", "native_audit_ast_pipe_census_contracts", "native_audit_ast_projection_contracts", "native_parallel_audit_contracts", "native_audit_ast_projection_census", "native_cpp_auditor_contracts"],
+    "integrated_seconds": 30.26,
+    "integrated_log": "native/build/audit-dependency-integrated-final-tests.log",
+    "integrated_log_sha256": "4b45d8ba64d2bb53618ef979d872e55cb559fe78d1ffae9bb68a895a6735531b",
+    "integrated_scope": "Final production parser/guard and transport fixtures; before the last test-only synchronization change and public API documentation comment.",
+    "synchronized_fixture_repeats": {
+      "pass": true,
+      "suite": "native_parallel_audit_contracts",
+      "consecutive_runs": 5,
+      "seconds": 17.37,
+      "log": "native/build/audit-dependency-synchronized-tests.log",
+      "log_sha256": "fdb2c5a8f940df8345d617bdf83e7f80f6b182529ff9f27ee424325709296310"
+    }
+  },
+  "full_manifest_control": {
+    "files": 69,
+    "constants": 75,
+    "functions": 970,
+    "quantization_sites": 317,
+    "census_sha256": "2d2bfe245aacb0848676c0685b96df7adbc37eb724d3ac6fabe46dd1c55d148d",
+    "control_executable": "native/build/audit-discard-full-baseline",
+    "control_log": "native/build/dependency-guard-control.log",
+    "initial_guard_log": "native/build/dependency-guard-candidate.log",
+    "initial_exact_comparison_pass": true,
+    "final_exact_comparison_pass": true,
+    "final_guard_log": "native/build/dependency-guard-final.log",
+    "final_guard_seconds": 168.38,
+    "final_scope": "Final production dependency parser/guard; cmp against the preserved control exits zero, with the same census SHA256 and counts. No builds/tests overlapped this final run. OS cache uncontrolled; the control run had contention, so this still is not a matched performance comparison.",
+    "control_seconds": 161.837,
+    "initial_guard_seconds": 165.952,
+    "timing_caveat": "Builds/tests overlapped parts of the initial comparison. These are correctness runs, not a controlled speed comparison. No performance attribution or Python comparison."
+  },
+  "limitations": [
+    "Observed consistency is not an atomic filesystem snapshot: changes restored between observations and changes after the final check remain possible.",
+    "Compiler binaries, effective toolchain/environment and dynamic inputs are not fully fingerprinted. These checks are not sufficient as a persistent cache key.",
+    "Extra dependency discovery and byte checks can add cost; no claim of audit speed improvement.",
+    "Census equality is not complete board qualification. This batch does not change placement algorithms, hardware requirements or board acceptance gates.",
+    "Full goal outcomes, including matched both-board Python timing comparisons, remain incomplete."
+  ]
+}

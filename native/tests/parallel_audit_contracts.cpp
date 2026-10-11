@@ -3,6 +3,8 @@
 #endif
 #include "schgen/native_audit_state.hpp"
 #include "schgen/board_policy.hpp"
+#include "schgen/process.hpp"
+#include "../src/audit_dependencies_internal.hpp"
 #include <algorithm>
 #include <chrono>
 #include <cstdlib>
@@ -32,6 +34,18 @@ struct Scratch {
 void write(const std::filesystem::path& path,const std::string& text){std::ofstream out(path);out<<text;out.close();require(bool(out),"cannot write proof file");}
 CppAuditOptions options(const std::filesystem::path& root,std::size_t workers){CppAuditOptions o;o.workers=workers;o.flags={"-I"+(root/"native/include").string(),"-I"+(root/"native/src").string()};return o;}
 void contracts(const std::filesystem::path& root,const std::string& self){
+    const auto parsed=audit_detail::dependency_paths("schgen_audit_deps: source.cpp \\" "\n"
+        " folder\\ name/\\#policy$$.hpp\n");
+    require(parsed.size()==2,"dependency continuation added a spurious path");
+    require(parsed.count(std::filesystem::absolute("folder name/#policy$.hpp")),"Make dependency escaping lost filename identity");
+    for(const auto* newline:{"\n","\r\n"}) {
+        const auto continued=audit_detail::dependency_paths(std::string("schgen_audit_deps: one.cpp\\")+newline+"two.hpp\n");
+        require(continued.size()==2&&continued.count(std::filesystem::absolute("one.cpp"))&&
+                continued.count(std::filesystem::absolute("two.hpp")),"Make continuation must separate adjacent tokens");
+    }
+    for(const auto* bad:{"wrong: file.cpp\n","schgen_audit_deps:","schgen_audit_deps: $(unsafe)",
+                         "schgen_audit_deps: bad\\path.hpp","schgen_audit_deps: truncated\\"})
+        failure([&]{audit_detail::dependency_paths(bad);});
     std::vector<CppAuditSource> files{{"native/tests/data/audit_ast_projection/policy.cpp"},{"native/tests/data/audit_ast_projection/policy.hpp"}};
     const auto serial=scan_cpp_audit_sources(root,files,options(root,1));
     require(serial.n_files==2&&!serial.constants.empty()&&!serial.quantization.empty(),"adversarial census must contain real findings");
@@ -74,13 +88,56 @@ void contracts(const std::filesystem::path& root,const std::string& self){
         require(changed.find("source changed during audit")!=std::string::npos,
                 "concurrently edited source must not publish a mixed-version census");
     }
+    for(const auto* phase:{"ast","preprocessor","appearing","appearing_earlier"})for(std::size_t workers:{1,2}) {
+        std::filesystem::create_directories(scratch.path/"nested path");
+        write(scratch.path/"nested path/#policy$.hpp","#define HEADER_VALUE 0.25\n");
+        write(scratch.path/"unlisted.hpp","#include \"nested path/#policy$.hpp\"\n");
+        std::error_code ignored;std::filesystem::remove(scratch.path/"appears.hpp",ignored);
+        std::filesystem::remove(scratch.path/"first.preprocessed",ignored);
+        for(const auto& file:bad) {
+            const std::string lookup=(std::string(phase)=="appearing_earlier"&&file.path=="second.cpp")?"":
+                "#if __has_include(\"appears.hpp\")\n#include \"appears.hpp\"\n#endif\n";
+            write(scratch.path/file.path,"#include \"unlisted.hpp\"\n"+lookup+"constexpr double stable=HEADER_VALUE;\n");
+        }
+        auto changing=options(root,workers);changing.compiler=self;changing.flags={"--header-mutating-compiler",phase};
+        const auto changed=failure([&]{scan_cpp_audit_sources(scratch.path,bad,changing);});
+        require(changed.find("dependency changed during audit")!=std::string::npos||
+                changed.find("dependency graph changed during audit")!=std::string::npos,
+                "transitive or newly appearing include must not publish a mixed-input census");
+    }
     std::cout<<"parallel audit exact-census, failure and timeout contracts PASS\n";
 }
 }
 int main(int argc,char** argv){try{
+    if(argc>3&&std::string(argv[1])=="--header-mutating-compiler") {
+        const auto has=[&](const char* option){return std::find_if(argv+3,argv+argc,[&](const char* a){return std::string(a)==option;})!=argv+argc;};
+        const bool dependency=has("-M"),preprocess=has("-E");
+        const std::string phase=argv[2];const std::filesystem::path source=argv[argc-1];
+        if(source.filename()=="first.cpp"&&!dependency&&((phase=="ast"&&!preprocess)||(phase=="preprocessor"&&preprocess)))
+            write(source.parent_path()/"nested path/#policy$.hpp","#define HEADER_VALUE 0.75\n");
+        if(phase=="appearing"&&source.filename()=="first.cpp"&&!dependency&&!preprocess)
+            write(source.parent_path()/"appears.hpp","constexpr double introduced=0.5;\n");
+        if(phase=="appearing_earlier"&&!dependency&&!preprocess&&source.filename()=="second.cpp") {
+            // Establish ordering explicitly; worker scheduling must not decide
+            // whether this fixture actually edits a previously scanned graph.
+            const auto ready=source.parent_path()/"first.preprocessed";
+            const auto deadline=std::chrono::steady_clock::now()+std::chrono::seconds(5);
+            while(!std::filesystem::exists(ready)&&std::chrono::steady_clock::now()<deadline)
+                std::this_thread::sleep_for(std::chrono::milliseconds(5));
+            require(std::filesystem::exists(ready),"first TU preprocessing did not complete");
+            write(source.parent_path()/"appears.hpp","constexpr double introduced=0.5;\n");
+        }
+        std::vector<std::string> command{"clang++"};command.insert(command.end(),argv+3,argv+argc);
+        const auto result=run_process(command);
+        if(result.exit_code==0&&phase=="appearing_earlier"&&preprocess&&source.filename()=="first.cpp")
+            write(source.parent_path()/"first.preprocessed","");
+        std::cout<<result.stdout_text;std::cerr<<result.stderr_text;return result.exit_code;
+    }
     if(argc>3&&std::string(argv[1])=="--mutating-compiler"){
         const bool preprocess=std::find_if(argv+3,argv+argc,[](const char* arg){return std::string(arg)=="-E";})!=argv+argc;
+        const bool dependency=std::find_if(argv+3,argv+argc,[](const char* arg){return std::string(arg)=="-M";})!=argv+argc;
         const std::string phase=argv[2];const std::filesystem::path source=argv[argc-1];
+        if(dependency){std::cout<<"schgen_audit_deps: "<<source.string()<<'\n';return 0;}
         if((phase=="ast"&&!preprocess)||(phase=="preprocessor"&&preprocess))
             write(argv[argc-1],"constexpr double changed=0.5;\n");
         if(preprocess&&phase=="earlier"&&source.filename()=="second.cpp")
@@ -88,6 +145,7 @@ int main(int argc,char** argv){try{
         if(preprocess&&phase=="queued"&&source.filename()=="first.cpp")
             write(source.parent_path()/"second.cpp","constexpr double changed=0.5;\n");
         if(!preprocess)std::cout<<"{\"kind\":\"TranslationUnitDecl\",\"inner\":[]}\n";
+        else for(int i=3;i+1<argc;++i)if(std::string(argv[i])=="-MF")write(argv[i+1],"schgen_audit_deps: "+source.string()+"\n");
         return 0;
     }
     if(argc>1&&std::string(argv[1])=="--slow-compiler"){std::this_thread::sleep_for(std::chrono::seconds{5});return 0;}

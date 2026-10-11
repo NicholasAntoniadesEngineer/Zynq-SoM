@@ -159,6 +159,9 @@ struct CppSourceCensus {
 // are elided; overloaded functions are not eligible for ambiguous registration.
 // Explicit manifest is mandatory, every file must exist. Headers are audited
 // as standalone C++ TUs. Included files must also be listed to own coverage.
+// Compiler-reported dependencies are checked for observed byte/graph changes
+// across the scan, including newly appearing includes before publication.
+// These consistency guards do not provide an atomic snapshot or a cache key.
 CppSourceCensus scan_cpp_audit_sources(const std::filesystem::path& root,
     const std::vector<CppAuditSource>&,const CppAuditOptions& = {});
 struct NativeAuditResult {
