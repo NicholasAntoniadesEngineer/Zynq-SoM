@@ -5,11 +5,9 @@
 #include "verification_internal.hpp"
 #include "verification_audits_unicode.hpp"
 #include "audit_dependencies_internal.hpp"
+#include "audit_parallel_internal.hpp"
 #include <cctype>
 #include <cstring>
-#include <future>
-#include <atomic>
-#include <exception>
 #include <memory>
 #include <unistd.h>
 
@@ -355,48 +353,18 @@ CppSourceCensus scan_cpp_audit_sources(const std::filesystem::path& root,const s
         result.quantization.insert(result.quantization.end(),local.quantization.begin(),local.quantization.end());
         result.n_files+=local.n_files;
     };
-    if(options.workers==1||files.size()==1){
-        for(std::size_t i=0;i<files.size();++i)merge(scan_one(i));
-    }else{
-        std::atomic<std::size_t> next{0},first_failed{files.size()};
-        std::vector<CppSourceCensus> completed(files.size());
-        std::vector<std::exception_ptr> failed(files.size());
-        std::vector<std::future<void>> workers;
-        for(std::size_t w=0;w<std::min(files.size(),options.workers);++w)
-            workers.push_back(std::async(std::launch::async,[&]{
-                for(;;){
-                    const auto i=next.fetch_add(1,std::memory_order_relaxed);
-                    // Indices are claimed in manifest order. Once index j
-                    // fails, every earlier index has already been claimed;
-                    // finish those jobs for deterministic error precedence,
-                    // but do not launch further jobs that cannot affect it.
-                    if(i>=files.size()||i>=first_failed.load(std::memory_order_relaxed))return;
-                    try{completed[i]=scan_one(i);}
-                    catch(...){
-                        failed[i]=std::current_exception();
-                        auto limit=first_failed.load(std::memory_order_relaxed);
-                        while(i<limit&&!first_failed.compare_exchange_weak(limit,i,std::memory_order_relaxed)){}
-                    }
-                }
-            }));
-        // All launched work remains joined and bounded. A slow TU no longer prevents an
-        // idle worker from taking the next TU. Publish in manifest order only,
-        // and rethrow the earliest manifest-index error, not the fastest error.
-        for(auto& worker:workers)worker.get();
-        for(std::size_t i=0;i<files.size();++i){
-            if(failed[i])std::rethrow_exception(failed[i]);
-            merge(std::move(completed[i]));
-        }
-    }
+    std::vector<CppSourceCensus> completed(files.size());
+    audit_detail::for_each_input(files.size(),options.workers,[&](std::size_t i){completed[i]=scan_one(i);});
+    for(auto& census:completed)merge(std::move(census));
     for(std::size_t i=0;i<files.size();++i)unchanged(i);
     unchanged_dependencies(dependencies);
     // An absent __has_include target is not a file snapshot. Re-resolve every
     // graph before publication, including TUs completed before a later edit.
-    for(std::size_t i=0;i<files.size();++i) {
+    audit_detail::for_each_input(files.size(),options.workers,[&](std::size_t i) {
         const auto path=std::filesystem::absolute(root/relative_paths[i]).lexically_normal();
         if(discover_dependencies(path)!=dependency_graphs[i])
             throw AuditSyntaxError(path.string()+": dependency graph changed during audit");
-    }
+    });
     for(std::size_t i=0;i<files.size();++i)unchanged(i);
     unchanged_dependencies(dependencies);
     return result;

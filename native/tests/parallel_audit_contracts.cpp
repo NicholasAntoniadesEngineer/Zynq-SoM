@@ -5,6 +5,7 @@
 #include "schgen/board_policy.hpp"
 #include "schgen/process.hpp"
 #include "../src/audit_dependencies_internal.hpp"
+#include "../src/audit_parallel_internal.hpp"
 #include <algorithm>
 #include <chrono>
 #include <cstdlib>
@@ -34,6 +35,32 @@ struct Scratch {
 void write(const std::filesystem::path& path,const std::string& text){std::ofstream out(path);out<<text;out.close();require(bool(out),"cannot write proof file");}
 CppAuditOptions options(const std::filesystem::path& root,std::size_t workers){CppAuditOptions o;o.workers=workers;o.flags={"-I"+(root/"native/include").string(),"-I"+(root/"native/src").string()};return o;}
 void contracts(const std::filesystem::path& root,const std::string& self){
+    for(std::size_t workers:{1,2,3,4}) {
+        std::atomic<std::size_t> live{0},peak{0};std::vector<int> visited(13);
+        audit_detail::for_each_input(visited.size(),workers,[&](std::size_t i){
+            const auto n=live.fetch_add(1)+1;auto maximum=peak.load();
+            while(n>maximum&&!peak.compare_exchange_weak(maximum,n)){}
+            ++visited[i];std::this_thread::yield();live.fetch_sub(1);
+        });
+        require(live==0&&peak<=workers,"audit phase exceeded worker bound or returned before joining");
+        require(std::all_of(visited.begin(),visited.end(),[](int n){return n==1;}),"audit phase skipped or repeated an input");
+        audit_detail::for_each_input(0,workers,[](std::size_t){throw std::runtime_error("empty phase executed work");});
+    }
+    for(std::size_t workers:{2,3,4}) {
+        std::atomic<bool> later_failed{false};std::atomic<int> live{0};
+        const auto message=failure([&]{audit_detail::for_each_input(9,workers,[&](std::size_t i){
+            struct Active {std::atomic<int>& n;Active(std::atomic<int>& x):n(x){++n;}~Active(){--n;}} active(live);
+            if(i==0){
+                const auto deadline=std::chrono::steady_clock::now()+std::chrono::seconds(5);
+                while(!later_failed&&std::chrono::steady_clock::now()<deadline)std::this_thread::yield();
+                require(later_failed,"independent audit worker did not advance");
+                throw std::runtime_error("earliest input");
+            }
+            if(i==1){later_failed=true;throw std::runtime_error("fast later input");}
+        });});
+        require(message=="earliest input"&&live==0,"audit phase lost failure ordering or failed to join");
+    }
+    for(std::size_t workers:{0,5})failure([&]{audit_detail::for_each_input(1,workers,[](std::size_t){});});
     const auto parsed=audit_detail::dependency_paths("schgen_audit_deps: source.cpp \\" "\n"
         " folder\\ name/\\#policy$$.hpp\n");
     require(parsed.size()==2,"dependency continuation added a spurious path");
@@ -64,6 +91,18 @@ void contracts(const std::filesystem::path& root,const std::string& self){
     failure([&]{scan_cpp_audit_sources(root,{{"missing.cpp"}},options(root,2));});
     failure([&]{scan_cpp_audit_sources(root,{},options(root,2));});
     Scratch scratch;
+    // A compiler-level rendezvous, not just a helper test: both final -M
+    // requests must run concurrently after their own macro passes finish.
+    for(std::size_t workers:{2,3,4}) {
+        for(const auto* name:{"left","right"}) {
+            write(scratch.path/(std::string(name)+".cpp"),"");
+            std::filesystem::remove(scratch.path/(std::string(name)+".macro_done"));
+            std::filesystem::remove(scratch.path/(std::string(name)+".final_started"));
+        }
+        auto wave=options(root,workers);wave.compiler=self;wave.flags={"--final-graph-compiler"};
+        require(scan_cpp_audit_sources(scratch.path,{{"left.cpp"},{"right.cpp"}},wave).n_files==2,
+                "final compiler dependency phase did not complete its bounded parallel wave");
+    }
     std::vector<CppAuditSource> batches;
     for(int i=0;i<5;++i){
         const auto name="unit"+std::to_string(i)+".cpp";batches.push_back({name});
@@ -109,6 +148,27 @@ void contracts(const std::filesystem::path& root,const std::string& self){
 }
 }
 int main(int argc,char** argv){try{
+    if(argc>2&&std::string(argv[1])=="--final-graph-compiler") {
+        const auto has=[&](const char* flag){return std::find_if(argv+2,argv+argc,[&](const char* a){return std::string(a)==flag;})!=argv+argc;};
+        const std::filesystem::path source=argv[argc-1];const auto dir=source.parent_path();
+        const auto name=source.stem().string();const auto record="schgen_audit_deps: "+source.string()+"\n";
+        if(has("-M")) {
+            if(std::filesystem::exists(dir/(name+".macro_done"))) {
+                write(dir/(name+".final_started"),"");
+                const auto other=dir/((name=="left"?std::string("right"):std::string("left"))+".final_started");
+                const auto deadline=std::chrono::steady_clock::now()+std::chrono::seconds(5);
+                while(!std::filesystem::exists(other)&&std::chrono::steady_clock::now()<deadline)
+                    std::this_thread::sleep_for(std::chrono::milliseconds(5));
+                require(std::filesystem::exists(other),"final dependency revalidation was serialized");
+            }
+            std::cout<<record;return 0;
+        }
+        if(has("-E")) {
+            for(int i=2;i+1<argc;++i)if(std::string(argv[i])=="-MF")write(argv[i+1],record);
+            write(dir/(name+".macro_done"),"");return 0;
+        }
+        std::cout<<"{\"kind\":\"TranslationUnitDecl\",\"inner\":[]}\n";return 0;
+    }
     if(argc>3&&std::string(argv[1])=="--header-mutating-compiler") {
         const auto has=[&](const char* option){return std::find_if(argv+3,argv+argc,[&](const char* a){return std::string(a)==option;})!=argv+argc;};
         const bool dependency=has("-M"),preprocess=has("-E");

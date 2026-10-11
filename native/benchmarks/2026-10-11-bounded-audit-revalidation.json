@@ -1,0 +1,37 @@
+{
+  "base_commit": "88a43ad8",
+  "scope": "Bounded parallelism for the final transitive dependency graph revalidation phase. No cache, reduced coverage, worker-limit increase or board geometry change.",
+  "implementation": "Extract the existing input-ordered bounded work queue into an internal helper and use it for both complete translation-unit scans and final graph revalidation. The phases do not overlap or nest. Every launched task is joined; earliest manifest-index failure wins; successful census merge remains manifest ordered. One retained AST projection remains the limit.",
+  "tests": {
+    "suites_passed": 6,
+    "suites": ["native_audit_ast_pipe_contracts", "native_audit_ast_pipe_census_contracts", "native_audit_ast_projection_contracts", "native_parallel_audit_contracts", "native_audit_ast_projection_census", "native_cpp_auditor_contracts"],
+    "seconds": 28.68,
+    "log": "native/build/audit-parallel-graph-tests.log",
+    "log_sha256": "7d4795ad2bfa12443a88a960bae32adc99919327986989a1b536a8f3b19f95df",
+    "new_adversarial_cases": "All worker limits 1..4: exactly-once disjoint results, active-worker bound and completed joins, empty phase. Limits 2..4: explicitly ordered fast later failure and delayed earlier failure must report earlier failure after joining. Invalid worker counts reject. Existing real-compiler serial/parallel parity and concurrent dependency mutation tests remain active.",
+    "compiler_wave_regression": {
+      "pass": true,
+      "description": "Final -M compiler requests rendezvous after their respective macro passes, proving actual final-phase concurrency for configured worker limits 2, 3 and 4. This test fails if final graph discovery is accidentally serialized.",
+      "consecutive_suite_runs": 3,
+      "seconds": 9.51,
+      "log": "native/build/audit-parallel-wave-tests.log",
+      "log_sha256": "c3fa461bb104186fff4ffa9fed1c0c2d529bce59961a4b67fc8ca0a43dd3915a"
+    }
+  },
+  "measurement": {
+    "status": "Full workload completed successfully with exact census parity and lower observed wall time in one sequential pair.",
+    "control_executable": "native/build/audit-serial-graph-control",
+    "candidate_executable": "native/build/fast/schgen_parallel_audit_contracts",
+    "command": "EXECUTABLE --full REPOSITORY_ROOT 2 OUTPUT_CENSUS",
+    "control_seconds": 166.98,
+    "candidate_seconds": 161.252,
+    "change_percent": -3.43035,
+    "exact_census_equal": true,
+    "census_sha256": "2d2bfe245aacb0848676c0685b96df7adbc37eb724d3ac6fabe46dd1c55d148d",
+    "counts": {"files":69,"constants":75,"functions":970,"quantization_sites":317},
+    "control_log": "native/build/audit-serial-graph-control.log",
+    "candidate_log": "native/build/audit-parallel-graph-candidate.log",
+    "protocol": "Sequential full 69-file scans using the same source manifest, flags, compiler and two-worker cap. Compile/test work occurs between, not during, measured scans. OS caches uncontrolled; limited repetition. Source audit time only, not board generation, rendering, compile time or a historical Python comparison."
+  },
+  "limitations": "Dependency consistency remains observation-based, not an atomic filesystem snapshot or sufficient persistent cache key. No full-board qualification or smaller-layout claim. Other sustained goal requirements remain open."
+}
