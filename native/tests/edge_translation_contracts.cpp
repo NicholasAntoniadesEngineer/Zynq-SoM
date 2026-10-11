@@ -1,4 +1,5 @@
 #include "edge_translation_internal.hpp"
+#include "edge_feasible_start_contracts.hpp"
 #include <iostream>
 #include <limits>
 using namespace schgen;
@@ -18,6 +19,19 @@ extern "C" void __cyg_profile_func_enter(void* fn,void*) {
 }
 extern "C" void __cyg_profile_func_exit(void*,void*){}
 int main(){try{
+    edge_feasible_start_test::run(require);
+    {
+        PackEdgeBlock block;block.name="south";block.w=10;block.h=5;block.assigned_edge="S";
+        const PackEdgesSpec spec{30,30,2,1.5,.5,1,1,1,0,0,20,20};
+        for(double boundary:{9.,9.00001}) {
+            const std::vector<Box4> obstacles{{4,23.5,boundary,28.5}};
+            QuantizationCounts actual;calls=0;watching=true;
+            const auto solved=pack_edges({block},{},spec,&actual,&obstacles);watching=false;
+            require((boundary==9.)==!solved.poses.empty(),"initial edge acceptance/rounding rejection setup");
+            require(calls>0&&actual.at("pack_edge_pose_precision4dp")==calls,
+                "initial feasible and rejected edge poses retain independently counted quantization calls");
+        }
+    }
     const std::vector<EdgeFanoutBlock> source{{10,1.5,10,9,{},{},'N'},{1.5,10.5,9,5,{},{},'W'}};
     QuantizationCounts counts;calls=0;watching=true;
     const auto result=translate_edge_runs(source,{},30,30,10,.5,&counts);watching=false;

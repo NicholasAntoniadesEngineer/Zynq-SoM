@@ -7,6 +7,7 @@
 #include <vector>
 
 #include "schgen/occupancy.hpp"
+#include "schgen/seat.hpp"
 
 namespace schgen {
 
@@ -54,15 +55,23 @@ struct PackEdgePose {
 struct PackEdgesResult {
     std::vector<PackEdgePose> poses;
     std::vector<std::string> spilled;
+    std::size_t feasibility_intervals = 0;
+    std::size_t feasibility_runs = 0;
+    std::size_t feasibility_rejections = 0;
 };
 
 double edge_target(char edge, const PackEdgesSpec& spec,
                    const std::vector<std::pair<std::string, double>>& j_aff,
                    const std::vector<PackEdgeJack>& jacks);
 
+// Null initial_keepouts preserves the existing unconstrained run objective.
+// Non-null enables sequential initial feasibility against these body keepouts
+// and already seated runs. This is not a complete joint solver; missing poses
+// indicate failure, including a rounded candidate failing physical checks.
 PackEdgesResult pack_edges(const std::vector<PackEdgeBlock>& blocks,
                            const std::vector<PackEdgeJack>& jacks,
-                           const PackEdgesSpec& spec, QuantizationCounts* counts = nullptr);
+                           const PackEdgesSpec& spec, QuantizationCounts* counts = nullptr,
+                           const std::vector<Box4>* initial_keepouts = nullptr);
 
 bool pick_sided_challenger(double est_inc, double est_chal, double eps);
 

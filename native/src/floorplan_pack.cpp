@@ -131,8 +131,13 @@ bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure) {
     }
     std::vector<PackEdgeJack> jacks;
     for (const auto& j:plan.som.js) jacks.push_back({j.ref,plan.som_x+j.x,plan.som_y+j.y});
+    const bool initial_feasibility=in.compact_search&&in.experiment&&in.experiment->compact_edge_feasibility;
+    const auto initial_keepouts=initial_feasibility?som_keepouts():std::vector<Box4>{};
     const auto packed=pack_edges(edge_rows,jacks,{bw,bh,edge_margin,edge_inset,clear,cable_gap,overmold_gap,affinity_floor,
-                                                plan.som_x,plan.som_y,plan.som.w,plan.som.h}, counts);
+                                                plan.som_x,plan.som_y,plan.som.w,plan.som.h}, counts,
+                                                initial_feasibility?&initial_keepouts:nullptr);
+    if(initial_feasibility&&in.experiment->edge_feasibility_completed)
+        in.experiment->edge_feasibility_completed(packed.feasibility_runs,packed.feasibility_intervals,packed.feasibility_rejections);
     // A bounded spill can leave blocks unplaced. Never retain their poses or
     // edge labels from an earlier outline, or pass an empty label downstream.
     if (packed.poses.size()!=plan.edge_blocks.size()) return false;

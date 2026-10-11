@@ -15,6 +15,15 @@ void profile_option_contracts() {
         for (auto& arg : args) raw.push_back(arg.data());
         return parse(static_cast<int>(raw.size()), raw.data());
     };
+    if(options({"profile","--repo",".","--compact-search","on"}).edge_feasibility||
+       !options({"profile","--repo",".","--compact-search","on","--edge-feasibility","on"}).edge_feasibility)
+        throw std::runtime_error("initial edge feasibility default/selection mismatch");
+    for(const auto& [mode,value]:std::vector<std::pair<std::string,std::string>>{{"off","on"},{"both","on"},{"on","typo"}}){
+        bool rejected=false;
+        try{(void)options({"profile","--repo",".","--compact-search",mode,"--edge-feasibility",value});}
+        catch(const std::invalid_argument&){rejected=true;}
+        if(!rejected)throw std::runtime_error("invalid initial edge feasibility option accepted");
+    }
     if (options({"profile","--repo",".","--compact-search","on"}).constraint_first ||
         !options({"profile","--repo",".","--compact-search","on","--constraint-first","on"}).constraint_first ||
         options({"profile","--repo",".","--compact-search","both","--constraint-first","off"}).constraint_first)

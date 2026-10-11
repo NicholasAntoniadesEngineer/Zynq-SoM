@@ -1,5 +1,6 @@
 #include "schgen/pack_edges.hpp"
 #include "schgen/pack_precision.hpp"
+#include "edge_feasible_start_internal.hpp"
 
 #if defined(__clang__)
 #pragma clang fp contract(off)
@@ -7,6 +8,7 @@
 
 #include "schgen/occupancy.hpp"
 #include "schgen/pack.hpp"
+#include "schgen/legalize.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -147,7 +149,8 @@ std::pair<double, double> hf_cap_pose(double beside_oy, double inductor_left,
 
 PackEdgesResult pack_edges(const std::vector<PackEdgeBlock>& blocks,
                            const std::vector<PackEdgeJack>& jacks,
-                           const PackEdgesSpec& spec, QuantizationCounts* counts) {
+                           const PackEdgesSpec& spec, QuantizationCounts* counts,
+                           const std::vector<Box4>* initial_keepouts) {
     std::vector<int> pending[4];
     auto slot = [](char edge) -> int {
         switch (edge) {
@@ -223,6 +226,7 @@ PackEdgesResult pack_edges(const std::vector<PackEdgeBlock>& blocks,
     PackEdgesResult out;
     out.spilled = std::move(spilled);
     const char faces[4] = {'N', 'E', 'S', 'W'};
+    std::vector<EdgeFanoutBlock> seated;
     for (char edge : faces) {
         const int si = slot(edge);
         std::vector<int> order = placed[si];
@@ -302,6 +306,36 @@ PackEdgesResult pack_edges(const std::vector<PackEdgeBlock>& blocks,
         }
         start /= wsum;
         start = std::max(lo, std::min(start, hi - total));
+        if(initial_keepouts) {
+            ++out.feasibility_runs;
+            if(hi-total<lo){++out.feasibility_rejections;return out;}
+            double feasible_low=lo,feasible_high=hi-total;
+            std::vector<std::pair<double,double>> forbidden;
+            for(std::size_t i=0;i<order.size();++i) {
+                const auto& block=blocks[static_cast<std::size_t>(order[i])];
+                const double offset=offs[i]-span_of(block,edge)/2.0;
+                feasible_low=std::max(feasible_low,spec.edge_margin+(is_ns(edge)?block.reach.w:block.reach.n)-offset);
+                feasible_high=std::min(feasible_high,span-spec.edge_margin-(is_ns(edge)?block.reach.e:block.reach.s)-span_of(block,edge)-offset);
+                const double transverse=edge=='N'||edge=='W'?spec.edge_inset:
+                    pack_edge_pose_precision4dp((edge=='S'?spec.board_h:spec.board_w)-depth_of(block,edge)-spec.edge_inset,counts);
+                const EdgeFanoutBlock moving{is_ns(edge)?0:transverse,is_ns(edge)?transverse:0,
+                    block.w,block.h,block.reach,block.inset,edge};
+                const auto add=[&](const EdgeFanoutBlock& obstacle,double clearance,bool body_only){
+                    auto box=moving;
+                    if(body_only){box.reach={};box.inset={};}
+                    if(const auto interval=floorplan_detail::edge_collision_interval(box,obstacle,is_ns(edge),clearance)) {
+                        forbidden.emplace_back(interval->first-offset,interval->second-offset);
+                        ++out.feasibility_intervals;
+                    }
+                };
+                for(const auto& obstacle:seated)add(obstacle,spec.clear,false);
+                for(const auto& ko:*initial_keepouts)add({ko.x0,ko.y0,ko.x1-ko.x0,ko.y1-ko.y0,{},{},'\0'},0,true);
+            }
+            if(feasible_low>feasible_high){++out.feasibility_rejections;return out;}
+            const auto feasible=floorplan_detail::nearest_feasible_edge_start(start,feasible_low,feasible_high,forbidden);
+            if(!feasible){++out.feasibility_rejections;return out;}
+            start=*feasible;
+        }
         double pos = start;
         double lower = lo;
         const auto run_begin=out.poses.size();
@@ -336,6 +370,34 @@ PackEdgesResult pack_edges(const std::vector<PackEdgeBlock>& blocks,
         // Projection cannot buy clearance by crossing the far run boundary.
         // Missing poses make the owning floorplan reject this outline.
         if(run_overflow)out.poses.resize(run_begin);
+        if(initial_keepouts) {
+            auto candidate=seated;
+            std::vector<Box4> bodies;
+            bool actual_valid=!run_overflow;
+            for(std::size_t i=run_begin;i<out.poses.size();++i) {
+                const auto& p=out.poses[i];
+                const auto& block=blocks[static_cast<std::size_t>(order[i-run_begin])];
+                candidate.push_back({p.x,p.y,block.w,block.h,block.reach,block.inset,edge});
+                bodies.push_back({p.x,p.y,p.x+block.w,p.y+block.h});
+                const double along=is_ns(edge)?p.x:p.y;
+                if(along<spec.edge_margin+(is_ns(edge)?block.reach.w:block.reach.n)||
+                   along+span_of(block,edge)>span-spec.edge_margin-(is_ns(edge)?block.reach.e:block.reach.s))actual_valid=false;
+            }
+            for(std::size_t i=seated.size();i<candidate.size();++i)
+                for(std::size_t j=i+1;j<candidate.size();++j) {
+                    const auto& a=candidate[i];const auto& b=candidate[j];
+                    const auto gx=std::max(spec.clear,fanout_sep(a.reach,a.inset,b.reach,b.inset,a.x<=b.x?'E':'W'));
+                    const auto gy=std::max(spec.clear,fanout_sep(a.reach,a.inset,b.reach,b.inset,a.y<=b.y?'S':'N'));
+                    if(!boxes_separated(a.x,a.y,a.w,a.h,b.x,b.y,b.w,b.h,gx,gy))actual_valid=false;
+                }
+            // The analytical answer is only a proposal. Actual emitted poses
+            // must satisfy the independent physical predicate, with no epsilon
+            // added to cross-edge clearance or keepout contact.
+            if(!actual_valid||!cross_edge_fanout_hold(candidate,spec.clear)||rects_overlap_any(bodies,*initial_keepouts,0)) {
+                out.poses.resize(run_begin);++out.feasibility_rejections;return out;
+            }
+            seated=std::move(candidate);
+        }
     }
     return out;
 }
