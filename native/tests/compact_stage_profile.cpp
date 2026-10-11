@@ -25,6 +25,7 @@ double seconds(Clock::time_point start, Clock::time_point end = Clock::now()) {
 struct Options {
     std::filesystem::path repo;
     std::filesystem::path schematic;
+    std::optional<std::filesystem::path> floorplan_spec;
     std::string project = "carrier", kicad = "kicad-cli", compact, inputs = "prepared";
     int runs = 1;
     bool constraint_first = false;
@@ -40,6 +41,7 @@ struct Options {
     std::optional<FloorplanPoint> initial_outline;
 };
 void help() {
+    std::cout << "  [--floorplan-spec PATH] (explicit candidate policy; project default is not edited)\n";
     std::cout << "compact_stage_profile --repo ROOT --project NAME --compact-search off|on|both\n"
         "  [--runs N] [--input-mode cold|prepared] [--kicad-cli PATH]\n"
         "  [--schematic PATH] (use a freshly qualified schematic instead of the stored project output)\n"
@@ -73,6 +75,10 @@ Options parse(int argc, char** argv) {
         const std::string value = argv[++i];
         if (arg == "--repo") out.repo = value;
         else if (arg == "--schematic") out.schematic = value;
+        else if (arg == "--floorplan-spec") {
+            if(value.empty())throw std::invalid_argument("floorplan-spec requires a nonempty path");
+            out.floorplan_spec=value;
+        }
         else if (arg == "--project") out.project = value;
         else if (arg == "--kicad-cli") out.kicad = value;
         else if (arg == "--compact-search") out.compact = value;
@@ -156,7 +162,8 @@ struct LoadResult {
     std::size_t circuits = 0;
 };
 LoadResult load(const ProjectPaths& paths, const NetlistExtractOptions& extraction, bool compact_capable,
-                const std::filesystem::path& schematic) {
+                const std::filesystem::path& schematic,
+                const std::optional<std::filesystem::path>& floorplan_spec=std::nullopt) {
     // Same sequence and providers as prepare_board_pcb / pcb-stage. In particular
     // use the real project schematic extraction, not synthetic/fixture connectivity.
     LoadResult out;
@@ -186,6 +193,8 @@ LoadResult load(const ProjectPaths& paths, const NetlistExtractOptions& extracti
     // Compact mode has real input requirements, not just a solver toggle.
     // Resolve them here so profiling cannot silently omit owned alternatives.
     options.compact_search = compact_capable;
+    options.floorplan_spec = floorplan_spec;
+    if(floorplan_spec)std::cout<<"input floorplan_spec="<<floorplan_spec->string()<<" explicit_policy=1\n";
     out.input = load_board_inputs(paths, circuits, link, nets, options);
     tick("board_input_resolve");
     return out;
@@ -429,7 +438,7 @@ int main(int argc, char** argv) {
         std::map<bool, std::string> first_hash;
         for (int run = 1; run <= options.runs; ++run) {
             if (!prepared || options.inputs == "cold") {
-                prepared = load(paths, extraction, options.compact != "off", options.schematic);
+                prepared = load(paths, extraction, options.compact != "off", options.schematic, options.floorplan_spec);
                 print_load(*prepared, run);
                 std::cout << "input compact_capable=" << (options.compact != "off")
                     << " owned_groups=" << prepared->input.owned_groups.size() << '\n';

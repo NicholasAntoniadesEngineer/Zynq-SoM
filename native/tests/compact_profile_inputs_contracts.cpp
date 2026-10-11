@@ -15,6 +15,11 @@ void profile_option_contracts() {
         for (auto& arg : args) raw.push_back(arg.data());
         return parse(static_cast<int>(raw.size()), raw.data());
     };
+    if(options({"profile","--repo",".","--compact-search","on","--floorplan-spec","candidate.json"}).floorplan_spec!=std::filesystem::path("candidate.json"))
+        throw std::runtime_error("explicit floorplan path lost");
+    bool empty_spec=false;
+    try{(void)options({"profile","--repo",".","--compact-search","on","--floorplan-spec",""});}catch(const std::invalid_argument&){empty_spec=true;}
+    if(!empty_spec)throw std::runtime_error("empty explicit spec path accepted");
     if(options({"profile","--repo",".","--compact-search","on","--owned-shape","board_aux=tag"}).owned_shapes.at("board_aux")!="tag")
         throw std::runtime_error("owned shape restriction lost tag");
     for(const auto& args:std::vector<std::vector<std::string>>{
@@ -166,6 +171,10 @@ int main(int argc, char** argv) {
         const auto schematic=schgen::build_board_schematic(inputs,library,scratch/"generated",schematic_options);
         if(!schematic.ok())throw std::runtime_error("fresh profile schematic failed: "+schematic.report);
         const auto defaults = load(paths, {}, false, schematic.root_path);
+        const auto explicit_input = load(paths, {}, true, schematic.root_path,
+            paths.repository_root/"native/benchmarks/carrier-168x159-initial-edge.floorplan.json");
+        if(!explicit_input.input.floorplan.spec||explicit_input.input.floorplan.spec->outline!=schgen::FloorplanPoint{168,159})
+            throw std::runtime_error("explicit profiler spec was not loaded");
         const auto compact = load(paths, {}, true, schematic.root_path);
         reviewed_profile_identity(defaults.input);
         reviewed_profile_identity(compact.input);
