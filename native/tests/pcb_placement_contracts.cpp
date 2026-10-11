@@ -1,5 +1,6 @@
 #include "pcb_placement_fixture.hpp"
 #include "schgen/pcb_emit.hpp"
+#include "schgen/pcb_placement_gates.hpp"
 #include "pcb_placement_requirements.hpp"
 #include "../src/contract_rigid_groups_internal.hpp"
 #include <iostream>
@@ -15,6 +16,39 @@ void require(bool p, const std::string &message) {
 }
 void exact(double a, double b, const std::string &context) {
     require(a == b, context + " actual " + std::to_string(a) + " expected " + std::to_string(b));
+}
+void constraint_merge_contracts() {
+    for (bool hard : {false, true}) for (bool reverse : {false, true})
+        for (bool minimum : {false, true}) {
+            PcbPlacementInput in;
+            CircuitSheetIr a, b; a.name="a"; b.name="b";
+            in.floorplan.sheets={a,b};
+            if(hard) in.floorplan.project.wired_sheets={"a"};
+            const std::string key=minimum?"far":"near_max";
+            const std::string target=minimum?"what":"other", bound=minimum?"min_mm":"max_mm";
+            std::string rows;
+            // Reordered and repeated declarations must describe the same
+            // conjunction, independently of hard/advisory classification.
+            for(int n : reverse?std::vector<int>{8,2,8}:std::vector<int>{2,8,2}) {
+                if(!rows.empty())rows+=",";
+                rows+="{\""+target+"\":\"b\",\""+bound+"\":"+std::to_string(n)+
+                    ",\"basis\":\"requirement "+std::to_string(n)+"\"}";
+            }
+            in.contracts["a"]=parse_json_text("{\"external\":{\""+key+"\":["+rows+"]}}");
+            const auto prepared=prepare_pcb_floorplan(in,{});
+            PcbCheckModel model;model.insts.resize(2);
+            model.insts[0].sheet="a";model.insts[1].sheet="b";
+            const auto final_index=pcb_final_compose_index(in,model);
+            for(const auto* index : {&prepared.compose.index,&final_index}) {
+                const auto& terms=hard?index->hard:index->soft;
+                require(terms.size()==1&&index->na.empty()&&
+                        (hard?index->soft:index->hard).empty(),"merged requirement classification");
+                const auto& term=terms.front();
+                require(term.bound&&*term.bound==(minimum?8:2),"merged constraint weakened a bound");
+                require(term.basis==std::string("requirement ")+(minimum?"8":"2"),
+                        "retained bound lost its authored justification");
+            }
+        }
 }
 void rigid_group_contracts(const std::filesystem::path& root) {
     using pcb_placement::contract_rigid_groups;
@@ -271,6 +305,7 @@ int main(int argc, char **argv) {
              mode != "--single"))
             throw std::runtime_error(
                 "repo root [--zones-only|--production|--placed-only|--single]");
+        constraint_merge_contracts();
         rigid_group_contracts(argv[1]);
         for (const auto &name : {"carrier", "devkit_mini"}) {
             run(argv[1], name, mode);

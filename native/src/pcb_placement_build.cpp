@@ -11,8 +11,13 @@ FloorplanTermIndex term_index(const Context &ctx) {
         if (fresh)
             return;
         auto &old = p->second;
-        if (t.bound && (!old.bound || *t.bound < *old.bound))
+        // Conjunction keeps the strongest requirement: upper limits shrink,
+        // but minimum clearances grow. Keep its authored justification too.
+        if (t.bound && (!old.bound ||
+                       (t.kind == "far_min" ? *t.bound > *old.bound : *t.bound < *old.bound))) {
             old.bound = t.bound;
+            old.basis = t.basis;
+        }
         old.enforced = old.enforced || t.enforced;
         old.require_positive_facing = old.require_positive_facing || t.require_positive_facing;
         if (old.output_roles.empty())

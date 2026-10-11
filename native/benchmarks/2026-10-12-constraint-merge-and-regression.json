@@ -1,0 +1,36 @@
+{
+  "base_commit": "84653b7f",
+  "integrated_regression_before_repair": {
+    "build_pass": true,
+    "tests_passed": 271,
+    "tests_total": 273,
+    "wall_seconds": 983.10,
+    "log": "native/build/integrated-oct12-tests.log",
+    "log_sha256": "82dca4a3158b618d5bfb9dbcf10f24484038b616ae2a2a06425031df58587e94",
+    "unresolved_failures": [
+      {
+        "test": "native_pcb_compact_strict_facing_contracts",
+        "message": "strict facing bypassed by compaction mode/fallback",
+        "status": "Needs independent examination of repaired final poses versus the test's unconditional rejection expectation. Not waived."
+      },
+      {
+        "test": "native_floorplan_precision_contracts",
+        "message": "D13 fan-out: SW19001 pmod_expansion top courtyard gap 1.485 mm to D20001 power; required 1.50 mm; slack -0.015 mm; zero-starvation baseline",
+        "status": "Physical regression remains open. No threshold or baseline changed."
+      }
+    ]
+  },
+  "independent_review_fix": {
+    "issue": "Duplicate far_min constraints retained the smaller bound, weakening a conjunction of minimum clearances. Final-check index reconstruction shared this defect.",
+    "origin": "Merge logic introduced in 042888ec4; reviewed actual current implementation and public preparation path.",
+    "repair": "Retain the maximum far_min bound and the minimum upper bound. When replacing a bound retain its source basis. Preserve classification, equal-bound stability, and duplicate collapse.",
+    "negative_control": "Isolated C++ probe against the original library: 16 public-API checks, all 8 minimum-bound cases failed, all 8 upper-bound cases passed. Both declaration orders, repeated declarations, hard/advisory modes and preparation/final-check indexes covered.",
+    "isolated_repair": "16/16 checks passed, additionally requiring the retained bound's authored justification.",
+    "maintained_coverage": "Same matrix integrated into pcb_placement_contracts with separate assertions for classification, bound strength and justification.",
+    "focused_suites": ["native_pcb_placement_contracts", "native_pcb_placement_gates_contracts"],
+    "focused_all_pass": true,
+    "focused_wall_seconds": 34.74,
+    "focused_log": "native/build/constraint-merge-tests.log"
+  },
+  "limitations": "The full regression preceded this repair and was not all green. The focused placement suite exercises both fixture boards; it is not a fresh full board/audit/render qualification or performance comparison. The two integrated failures remain open. No hardware limits, fallback ceilings or acceptance gates were relaxed."
+}
