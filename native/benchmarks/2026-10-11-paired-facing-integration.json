@@ -1,0 +1,41 @@
+{
+  "base_commit": "5ff01f59",
+  "configuration": "165x159 carrier override; otherwise qualified 166x159 spec, compact order 3, edge feasibility, owned quality first, face cohesion, USB-JTAG contract-group candidates and fixed board_aux owned shape. Construction-only prepared-input screens, one run per variant.",
+  "temporary_common_changes": "After ordinary recovery fails, try both orders of pairs drawn from the eight nearest placed groups (at most 56 trials), preserving their selected shapes. Free both, seat incoming group, then reseat both; rollback all poses/maps/occupancy on rejection. Allow all wired interior groups to move in legalization. This reconstructs the previous failing seed to test the committed strict-facing retry.",
+  "screens": [
+    {
+      "variant": "paired reseating plus all wired movers, committed facing retry unchanged",
+      "failure_seconds": 1.060754291,
+      "failure": "Facing retry produces Y negative cycle: power_som-power <= -24.635 from separation, power-power_som <= -81.6046 from facing.",
+      "log": "native/build/carrier-paired-facing-165x159.log"
+    },
+    {
+      "variant": "as above, facing retry additionally follows perpendicular seed order when flipping separations",
+      "failure_seconds": 1.070719833,
+      "failure": "Y repairs invalidate an already-solved X edge: uart_bridge|#0 separation. Final consistency check rejects it.",
+      "log": "native/build/carrier-paired-facing-order-165x159.log"
+    },
+    {
+      "variant": "as previous, at most three X/Y repair sweeps, rechecking both axes after every sweep",
+      "failure_seconds": 1.062257958,
+      "failure": "Subsequent X solve reports negative cycle: power_som <= 75.7651 from mechanical exclusion, but power_som >= 80.85 from escape:J2:N separation.",
+      "log": "native/build/carrier-paired-facing-coupled-165x159.log"
+    },
+    {
+      "variant": "as previous, replace seed-centred facing slack shares with direction-quadrant shares abs(axis)*clearance/(abs(ax)+abs(ay))",
+      "failure_seconds": 1.05454375,
+      "failure": "Y cycle: power_mon >= 0.3, power_mon-power <= -27.4365, power <= 8.0896 from SoM separation. Alternative cut allocation does not rescue this seed.",
+      "log": "native/build/carrier-paired-facing-quadrant-165x159.log"
+    },
+    {
+      "variant": "restore committed composer; discard the first successfully seated pair and search remaining ordered pairs among the same eight nearby groups",
+      "failure_seconds": 1.452797625,
+      "failure": "No second feasible paired reseat. Only hdmi_rx_term then power_som seats all groups, once per outer attempt. Discarding it restores incoming/victim maps and occupancy, then fails USB-JTAG seating.",
+      "log": "native/build/carrier-paired-facing-second-165x159.log"
+    }
+  ],
+  "receipts": "All five failed construction screens captured receipts and executed two outer attempts. Paired trials were observed through the diagnostic callback; successful relocation was not treated as accepted layout. Temporary strategies were not separately registered/qualified as production fallbacks.",
+  "conclusion": "The committed facing retry exposes a constraint conflict during solving instead of merely reporting facing failure afterward. It does not rescue the actual smaller-board seed. Increasing repair passes or changing this cut allocation is insufficient. Do not repeat these exact combinations without new input geometry, candidate construction or a materially different joint constraint strategy.",
+  "restoration": "All temporary edits to floorplan_pack.cpp and floorplan_compose.cpp reversed exactly; git diff empty and profiler rebuilt from 5ff01f59 production sources. Production CLI was not replaced by experiment builds.",
+  "limits": "No global infeasibility or optimality claim. Search is bounded to eight nearby victims and selected shapes. No smaller accepted carrier, no speedup, no acceptance waiver. Current accepted carrier remains 166x159 mm; routing and fabrication readiness remain out of scope."
+}
