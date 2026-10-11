@@ -1,0 +1,50 @@
+{
+  "status": "tested_opt_in_candidate_generation_no_emitted_layout_improvement_yet",
+  "base_commit": "5c7a5689",
+  "problem": "Generic classify_side assigns small decoupling capacitors to bottom independently of their declared owners. The later owned-group local optimiser preserves this split. Candidate selection alone cannot remove it.",
+  "implementation": {
+    "activation": "Profiler --owned-face-cohesion on, requires --compact-search on; not exposed through full board CLI yet.",
+    "bounded_generation": "For eligible uncontracted owned zones, move only declared Device:C SMD bypass/filter members from their soft initial side classification to their owner's classification. Pack three existing aspect choices and use the existing bottom-template mirroring/lifting path when permitted. Validate actual footprint/pin identity, mechanical checks and local quality; append only. Optimise only the new range.",
+    "preserved": ["every original candidate and index", "existing quality records", "top-facing controls", "zone face eligibility", "THT exclusions", "contracted/connector-zone exclusions", "actual quantization and fallback accounting", "qualified default artifacts"],
+    "binder_correction": "Top-primary shape binding previously retained the original heuristic side map. New side-coherent top shapes therefore bound capacitors to the wrong face. Bind explicit top_off/bot_off membership for top-primary shapes, matching the existing bottom-primary treatment. Existing default alternatives retain their existing memberships."
+  },
+  "tests": {
+    "red": {"test":"native_pcb_owned_groups_adapter_contracts","message":"bound capacitor separated from owner face","seconds":9.80,"log":"native/build/owned-face-red-tests.log"},
+    "green_batch": {"passed":3,"failed":0,"seconds":38.12,"log":"native/build/owned-face-green-tests.log"},
+    "green_batch_names": ["native_pcb_owned_groups_adapter_contracts","native_compact_profile_inputs_contracts","native_pack_plain_board_contracts"],
+    "final_adapter": {"passed":1,"failed":0,"seconds":8.67,"log":"native/build/owned-face-final-tests.log"},
+    "coverage": ["real carrier footprint/pin/net inputs", "actual binder rather than copied side logic", "both top and bottom candidate families", "every new bypass owner/member has the same physical side", "top access preserved", "entire old candidate prefix retained exactly", "repeated shapes and all operation/fallback receipts identical", "denied zone eligibility adds no candidates or counts", "both-board default packing regressions", "invalid/default profiler options"]
+  },
+  "carrier_screen": {
+    "command": "native/build/fast/schgen_compact_stage_profile --repo . --project carrier --compact-search on --interior-order 3 --outline-mm 168x159 --runs 2 --input-mode prepared --edge-feasibility on --owned-quality-first on --owned-face-cohesion on --owned-selection-trace on --schematic /private/tmp/carrier-owned-quality-qualified.eD59Wc/Zynq_Carrier.kicad_sch",
+    "log": "native/build/carrier-owned-face-screen.log",
+    "model_seconds": [3.410580209,3.369612834],
+    "pcb_sha256": "f7ad4f0339b96c1439d8b601e7ffa9dc4c12ee08529eb5982451058a7d8d949a",
+    "both_repeats_identical_to_qualified_reference": true,
+    "dimensions_mm": [168,159],
+    "top_bottom_components": [425,144],
+    "placement_contract_ok": true,
+    "placement_flow_ok": true,
+    "hard_red": 0,
+    "nonzero_fallbacks": {"cand_cap_truncated":116,"interior_reseat_retry":10,"punch_free_plan_rejected":1},
+    "decision": "Not promoted to default. New alternatives are not selected, so their generation currently adds runtime without emitted quality/area improvement. No repeat of expensive full qualification for identical output."
+  },
+  "representative_local_tradeoff": {
+    "event": 16,
+    "sheet": "board_aux",
+    "selected_index": 29,
+    "selected_dimensions_mm": [19.9,11.68],
+    "selected_estimator": 1372.1426683655377,
+    "selected_bypass_owner_member_faces": "bottom/top",
+    "selected_pad_gaps_mm": {"C1001":11.789482685182767,"C1002":9.6191971124947084,"C1004":10.418536863509638,"C1005":11.116994929840946},
+    "same_face_candidate_index": 73,
+    "same_face_dimensions_mm": [11.42,19.134],
+    "same_face_estimator": 1463.3870963220463,
+    "same_face_bypass_owner_member_faces": "bottom/bottom",
+    "same_face_pad_gaps_mm": {"C1001":3.3069739739260502,"C1002":6.8100045,"C1004":3.3352030000000017,"C1005":5.0561992994846676},
+    "bulk_C1003": "Remains bottom/top; no implicit bypass objective or side permission for shared output bulk.",
+    "interpretation": "This is a different envelope/location and a higher inter-block estimate, not a same-pose quality improvement. The existing bounded same-pose strategy correctly leaves it incomparable. All gaps remain qualitative UNVERIFIED measurements."
+  },
+  "next_action": "Explore a bounded whole-board candidate policy that can evaluate the new coherent shapes while retaining the qualified incumbent. Compare actual complete-board constraints and area; do not widen score tolerances or infer hardware acceptance from projected pad distances.",
+  "limitations": ["The new side-coherent alternatives are locally screened, not independently fully board-qualified.","No newly emitted layout or speed improvement in this batch.","No full current devkit build/audit/render; both-board default packing regressions passed.","Hardware proximity/assembly/height/thermal unknowns and existing advisory failures remain unresolved.","Routing remains out of scope; no fabrication-readiness claim."]
+}

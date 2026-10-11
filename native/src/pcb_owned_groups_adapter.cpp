@@ -193,11 +193,12 @@ bool same_shape(const Shape& a, const Shape& b) {
 }
 }
 void append_owned_group_zone_shapes(Context& ctx, PcbZoneResult& out, const std::string& sheet,
-    const Shape& incumbent, bool allow_movement, ExecutionFailureReceipt* failure) {
+    const Shape& incumbent, bool allow_movement, ExecutionFailureReceipt* failure, std::size_t first_index) {
     if (!ctx.in.floorplan.compact_search) return;
     auto& g = out.geometry;
     const auto found = g.shapes.find(sheet);
     const auto originals = found == g.shapes.end() ? std::vector<Shape>{incumbent} : found->second;
+    demand(first_index<=originals.size(),"owned-group candidate range exceeds shape population");
     const auto evidence = ctx.in.owned_groups.find(sheet);
     if (evidence == ctx.in.owned_groups.end()) {
         for (std::size_t i = 0; i < originals.size(); ++i)
@@ -211,7 +212,7 @@ void append_owned_group_zone_shapes(Context& ctx, PcbZoneResult& out, const std:
     const auto contract = ctx.in.contracts.find(sheet);
     if (contract != ctx.in.contracts.end()) allow_movement = false;
     auto variants = originals;
-    for (std::size_t i = 0; i < originals.size(); ++i) {
+    for (std::size_t i = first_index; i < originals.size(); ++i) {
         const auto model = local_model(ctx, g, sheet, originals[i], trusted);
         const auto before = quality(ctx, trusted, model, failure);
         out.owned_shape_quality[{sheet, static_cast<int>(i)}] = before;
@@ -251,6 +252,49 @@ void append_owned_group_zone_shapes(Context& ctx, PcbZoneResult& out, const std:
         }
     }
     if (variants.size() > originals.size()) g.shapes[sheet] = std::move(variants);
+}
+void append_owned_face_zone_shapes(Context& ctx,PcbZoneResult& out,const std::string& sheet,
+    const Shape& incumbent,bool allow_movement,bool allow_top,bool allow_bottom,
+    const std::set<std::string>& face_refs,ExecutionFailureReceipt* failure) {
+    if(!ctx.in.floorplan.compact_search||!allow_movement||ctx.in.contracts.count(sheet))return;
+    const auto evidence=ctx.in.owned_groups.find(sheet);
+    if(evidence==ctx.in.owned_groups.end())return;
+    demand(bool(evidence->second),"null trusted face-cohesion input");
+    const auto& trusted=*evidence->second;
+    auto& g=out.geometry;
+    auto sides=g.side_of;bool changed=false;
+    for(const auto& row:trusted.rows)if(row.role==OwnedCapRole::Bypass) {
+        const auto& part=ctx.by_ref.at(row.cap);
+        if(face_refs.count(row.cap)||face_refs.count(row.owner)||face_top(part)||
+           g.conn_rot.count(row.cap)||g.conn_edge.count(row.cap))continue;
+        // Only change an SMD capacitor's soft initial classification. Through-
+        // hole parts and special user-facing parts get no new side permission.
+        if(part.lib_id!="Device:C"||has_thru_pads_from_text(ctx.pool.at(g.resolvable.at(row.cap))->bytes))continue;
+        const auto& owner_side=sides.at(row.owner);
+        if(sides.at(row.cap)!=owner_side){sides.at(row.cap)=owner_side;changed=true;}
+    }
+    if(!changed)return;
+    auto& shapes=g.shapes[sheet];
+    if(shapes.empty())shapes.push_back(incumbent);
+    const auto first=shapes.size();
+    const auto append=[&](Shape candidate){
+        const auto measured=quality(ctx,trusted,local_model(ctx,g,sheet,candidate,trusted),failure);
+        if(measured.state!=OwnedShapeQualityState::Measured)return;
+        if(std::any_of(shapes.begin(),shapes.end(),[&](const auto& prior){return same_shape(prior,candidate);}))return;
+        shapes.push_back(std::move(candidate));
+    };
+    for(double aspect:{1.,2.2,.45}) {
+        const auto packed=pack_zone(ctx,g,g.refs_by_sheet.at(sheet),aspect,{},"",{},&sides);
+        Shape top;top.w=packed.w;top.h=packed.h;top.top_off=packed.top;top.bot_off=packed.bottom;
+        top.extra_rot=packed.rotations;top.tag="owned-face-a"+std::to_string(aspect);
+        if(allow_top)append(top);
+        if(allow_bottom)for(auto bottom:bottom_shapes(ctx,g,sheet,face_refs,packed,{},out.fallback_events)){
+            bottom.tag=top.tag+"/"+bottom.tag;append(std::move(bottom));
+        }
+    }
+    // Evaluate/optimise only the newly appended range. Existing alternatives,
+    // indices and quality records are not revisited or replaced.
+    if(shapes.size()>first)append_owned_group_zone_shapes(ctx,out,sheet,incumbent,true,failure,first);
 }
 }
 }

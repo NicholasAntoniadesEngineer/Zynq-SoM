@@ -214,6 +214,10 @@ PcbZoneResult build_pcb_zone_geometry(const PcbPlacementInput &in, ExecutionFail
             append_owned_group_zone_shapes(ctx, out, sheet, shape(p, "base"),
                 !templated && !edge && !conn_rot.count(sheet) &&
                 !sheet_edges.count(sheet) && !connector_class.count(sheet), &child);
+        if(in.floorplan.experiment&&in.floorplan.experiment->owned_face_cohesion)
+            append_owned_face_zone_shapes(ctx,out,sheet,shape(p,"base"),
+                !templated&&!edge&&!conn_rot.count(sheet)&&!sheet_edges.count(sheet)&&!connector_class.count(sheet),
+                layers[sheet]!="bottom",eligible,faces[sheet],&child);
         g.top_off[sheet] = p.top;
         g.bot_off[sheet] = p.bottom;
         g.zone_box[sheet] = {p.w, p.h};
@@ -242,6 +246,7 @@ FloorplanZoneGeometry bind_pcb_zone_shapes(const PcbZoneResult &zones,
             throw PcbZoneInfeasible("apply_chosen_shapes: " + sheet + " chose unregistered shape " +
                                     std::to_string(index));
         const auto &s = variants->second[index];
+        if(s.side!="top"&&s.side!="bottom")throw PcbZoneInfeasible("apply_chosen_shapes: invalid primary face");
         for (const auto *offsets : {&g.top_off[sheet], &g.bot_off[sheet]})
             for (const auto &[r, p] : *offsets) {
                 (void)p;
@@ -251,6 +256,12 @@ FloorplanZoneGeometry bind_pcb_zone_shapes(const PcbZoneResult &zones,
         g.top_off[sheet] = s.top_off;
         g.bot_off[sheet] = s.bot_off;
         g.zone_extra_rot.insert(s.extra_rot.begin(), s.extra_rot.end());
+        if(s.side=="top") {
+            // A selected shape may carry an explicitly different soft side
+            // assignment. Bind its physical faces, not the original heuristic.
+            for(const auto& [r,p]:s.top_off){(void)p;g.side_of[r]="top";}
+            for(const auto& [r,p]:s.bot_off){(void)p;g.side_of[r]="bottom";}
+        }
         if (s.side == "bottom") {
             if (s.mirror.size() != s.top_off.size())
                 throw PcbZoneInfeasible("bottom primary pack and mirror map disagree");

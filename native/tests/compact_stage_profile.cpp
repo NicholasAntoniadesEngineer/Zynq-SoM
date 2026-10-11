@@ -32,6 +32,7 @@ struct Options {
     bool edge_feasibility = false;
     bool owned_selection_trace = false;
     bool owned_quality_first = false;
+    bool owned_face_cohesion = false;
     bool multiscale_outline = false;
     std::optional<int> interior_order;
     std::optional<FloorplanPoint> outline;
@@ -47,6 +48,7 @@ void help() {
         "  [--edge-feasibility off|on] (constraint-aware initial runs, requires --compact-search on)\n"
         "  [--owned-selection-trace off|on] (read-only multi-alternative selection trace)\n"
         "  [--owned-quality-first off|on] (same-pose same-face quality-first experiment)\n"
+        "  [--owned-face-cohesion off|on] (append initial owner/cap same-face packs)\n"
         "  [--outline-mm WIDTHxHEIGHT] (explicit diagnostic outline; skips automatic sizing search)\n"
         "  [--initial-outline-mm WIDTHxHEIGHT] (validated starting candidate for automatic sizing)\n"
         "  [--multiscale-outline off|on] (local axis/diagonal refinement; can miss smaller grid candidates)\n"
@@ -99,6 +101,10 @@ Options parse(int argc, char** argv) {
             if (value != "on" && value != "off") throw std::invalid_argument("constraint-first must be off|on");
             out.constraint_first = value == "on";
         }
+        else if (arg == "--owned-face-cohesion") {
+            if(value!="on"&&value!="off")throw std::invalid_argument("owned-face-cohesion must be off|on");
+            out.owned_face_cohesion=value=="on";
+        }
         else if (arg == "--owned-quality-first") {
             if(value!="on"&&value!="off")throw std::invalid_argument("owned-quality-first must be off|on");
             out.owned_quality_first=value=="on";
@@ -129,6 +135,7 @@ Options parse(int argc, char** argv) {
     if(out.edge_translation&&out.compact!="on")throw std::invalid_argument("edge-translation requires --compact-search on");
     if(out.edge_feasibility&&out.compact!="on")throw std::invalid_argument("edge-feasibility requires --compact-search on");
     if(out.owned_quality_first&&out.compact!="on")throw std::invalid_argument("owned-quality-first requires --compact-search on");
+    if(out.owned_face_cohesion&&out.compact!="on")throw std::invalid_argument("owned-face-cohesion requires --compact-search on");
     if(out.outline&&out.initial_outline)throw std::invalid_argument("initial-outline-mm cannot be combined with outline-mm");
     if(out.outline&&out.multiscale_outline)throw std::invalid_argument("multiscale-outline conflicts with fixed outline-mm");
     if(out.interior_order&&out.constraint_first)throw std::invalid_argument("single interior-order conflicts with constraint-first portfolio");
@@ -229,7 +236,7 @@ PcbPlacementInput trial_input(const PcbPlacementInput& source,bool compact,
 std::string trial(const PcbPlacementInput& source, bool compact, int run, int generation,
                   bool constraint_first = false,const std::optional<FloorplanPoint>& outline=std::nullopt,bool edge_translation=false,
                   const std::optional<FloorplanPoint>& initial_outline=std::nullopt,
-                  const std::optional<int>& interior_order=std::nullopt,bool multiscale_outline=false,bool edge_feasibility=false,bool owned_selection_trace=false,bool owned_quality_first=false) {
+                  const std::optional<int>& interior_order=std::nullopt,bool multiscale_outline=false,bool edge_feasibility=false,bool owned_selection_trace=false,bool owned_quality_first=false,bool owned_face_cohesion=false) {
     const auto copy_start = Clock::now();
     auto input = trial_input(source,compact,outline);
     const auto copy_seconds = seconds(copy_start);
@@ -242,6 +249,7 @@ std::string trial(const PcbPlacementInput& source, bool compact, int run, int ge
     floor->compact_edge_translation = edge_translation;
     floor->compact_edge_feasibility = edge_feasibility;
     floor->owned_quality_first = owned_quality_first;
+    floor->owned_face_cohesion = owned_face_cohesion;
     if(owned_selection_trace)floor->owned_shape_selection_completed=[event=std::size_t{0}](const std::string& sheet,const auto& alternatives,const auto& quality,int selected) mutable {
         ++event;
         for(const auto& rank:alternatives){
@@ -292,6 +300,7 @@ std::string trial(const PcbPlacementInput& source, bool compact, int run, int ge
         << " edge_feasibility=" << edge_feasibility
         << " owned_selection_trace=" << owned_selection_trace
         << " owned_quality_first=" << owned_quality_first
+        << " owned_face_cohesion=" << owned_face_cohesion
         << " input_copy_seconds=" << copy_seconds << " status=started\n" << std::flush;
     if(outline)std::cout<<"outline_override width_mm="<<outline->first<<" height_mm="<<outline->second
                         <<" automatic_sizing=disabled source_policy_otherwise_unchanged=1\n"<<std::flush;
@@ -399,7 +408,7 @@ int main(int argc, char** argv) {
             const int generation = options.inputs == "prepared" ? 1 : run;
             for (const bool compact : {false, true}) {
                 if ((compact && options.compact == "off") || (!compact && options.compact == "on")) continue;
-                const auto hash = trial(prepared->input, compact, run, generation, options.constraint_first,options.outline,options.edge_translation,options.initial_outline,options.interior_order,options.multiscale_outline,options.edge_feasibility,options.owned_selection_trace,options.owned_quality_first);
+                const auto hash = trial(prepared->input, compact, run, generation, options.constraint_first,options.outline,options.edge_translation,options.initial_outline,options.interior_order,options.multiscale_outline,options.edge_feasibility,options.owned_selection_trace,options.owned_quality_first,options.owned_face_cohesion);
                 auto [it, inserted] = first_hash.emplace(compact, hash);
                 if (!inserted && it->second != hash) throw std::runtime_error("repeat PCB bytes changed; investigate input drift/nondeterminism");
                 std::cout << "repeat compact_search=" << compact << " same_as_first=" << (!inserted ? "true" : "first") << '\n';

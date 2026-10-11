@@ -308,6 +308,43 @@ int main(int argc, char** argv) {
             require(a.size() == b.size(), "nondeterministic alternatives");
             for (std::size_t i = 0; i < a.size(); ++i) require(same(a[i], b[i]), "nondeterministic shape");
         }
+        auto cohesive_in=in;
+        auto cohesive_experiment=std::make_shared<FloorplanExperiment>();cohesive_experiment->owned_face_cohesion=true;
+        cohesive_in.floorplan.experiment=cohesive_experiment;
+        const auto cohesive=build_pcb_zone_geometry(cohesive_in);
+        const auto cohesive_repeat=build_pcb_zone_geometry(cohesive_in);
+        require(cohesive.quantization_engagements==cohesive_repeat.quantization_engagements&&
+            cohesive.fallback_events==cohesive_repeat.fallback_events,"face cohesion changed repeated actual-work receipts");
+        pcb_placement::Context cohesive_context(cohesive_in);
+        for(const auto& [sheet,trusted]:in.owned_groups){
+            const auto old=shapes(zones,sheet),added=shapes(cohesive,sheet);
+            const auto repeated=shapes(cohesive_repeat,sheet);
+            require(added.size()==repeated.size(),"face cohesion shape count not repeatable");
+            for(std::size_t i=0;i<added.size();++i)require(same(added[i],repeated[i]),"face cohesion geometry not repeatable");
+            require(added.size()>old.size(),"face cohesion appended no alternatives for "+sheet);
+            for(std::size_t i=0;i<old.size();++i)require(same(old[i],added[i]),"face cohesion changed an existing candidate/index");
+            bool top=false,bottom=false;
+            for(std::size_t i=old.size();i<added.size();++i){
+                check_quality(cohesive_in,cohesive,sheet,static_cast<int>(i));
+                const auto model=model_for(cohesive_in,cohesive,sheet,static_cast<int>(i));
+                std::map<std::string,std::string> actual_sides;
+                for(const auto& p:model.insts){
+                    actual_sides[p.ref]=p.side;
+                    if(pcb_placement::face_top(cohesive_context.by_ref.at(p.ref)))
+                        require(p.side=="top","face cohesion moved an access part to bottom");
+                }
+                for(const auto& row:owned_group_placements(*trusted))if(row.role==OwnedCapRole::Bypass)
+                    require(actual_sides.at(row.owner)==actual_sides.at(row.cap),"bound capacitor separated from owner face");
+                top|=added[i].side=="top";bottom|=added[i].side=="bottom";
+            }
+            require(top&&bottom,"face cohesion did not exercise both physical faces");
+        }
+        auto denied=zones;
+        pcb_placement::Context denied_context(cohesive_in);denied_context.pool=zones.footprints;
+        pcb_placement::append_owned_face_zone_shapes(denied_context,denied,"board_aux",
+            shapes(zones,"board_aux").front(),false,true,true,{});
+        require(denied_context.quantization.empty()&&shapes(denied,"board_aux").size()==shapes(zones,"board_aux").size(),
+            "excluded zone acquired face-cohesion work or alternatives");
         auto legacy = in; legacy.floorplan.compact_search = false;
         auto legacy_empty = legacy; legacy_empty.owned_groups.clear();
         auto a = build_pcb_zone_geometry(legacy), b = build_pcb_zone_geometry(legacy_empty);
