@@ -231,6 +231,44 @@ void compose_contracts(const std::filesystem::path& dir) {
     require(log.empty(),"malformed compose inputs never append acceptance logs");
     require(floorplan_evaluate_terms(base,{}).empty(),"empty term index evaluates without fabricated terms");
 }
+void facing_projection_contracts() {
+    for(const auto [dx,dy]:std::vector<FloorplanPoint>{{1,0},{-1,0},{0,1},{0,-1},{1,1},{-1,1},{1,-1},{-1,-1}})
+        for(bool source_moves:{false,true})for(bool compact:{false,true})for(bool both_back:{false,true})for(int target_kind:{0,1,2}) {
+            if(both_back&&(dx==0||dy==0))continue;
+            if(target_kind&&!source_moves)continue;
+            FloorplanLegalizeInput in;in.board_w=in.board_h=60;in.compact=compact;
+            const FloorplanPoint s{30,30},t{30-10*dx,30+(dx!=0&&dy!=0&&!both_back?5:-10)*dy};
+            const std::string target=target_kind==1?"@som":target_kind==2?"som_j1":"target";
+            in.metrics["source"].offsets={{"out",1+dx,1+dy},{"in",1-dx,1-dy}};
+            in.metrics[target].offsets={{"p",1,1}};
+            if(target_kind==1)in.som_core_page={t.first+in.origin.first,t.second+in.origin.second,t.first+2+in.origin.first,t.second+2+in.origin.second};
+            if(target_kind==2)in.som_j_rects[target]={t.first,t.second,t.first+2,t.second+2};
+            const std::string fixed=source_moves?target:"source",moving=source_moves?"source":target;
+            const auto fp=source_moves?t:s,mp=source_moves?s:t;
+            in.fixed_poses[fixed]=fp;in.fixed_rects={{fixed,{fp.first,fp.second,fp.first+2,fp.second+2}}};
+            FloorplanTerm term;term.kind="facing";term.subject="source";term.target_raw=target;
+            term.enforced=true;term.require_positive_facing=true;term.out_refs={"out"};in.index.hard={term};
+            std::vector<FloorplanLegalizeVar> vars{{moving,2,2,mp,mp.first,mp.second}};
+            std::vector<std::string> log;int retries=0;in.facing_retry_started=[&]{++retries;};
+            QuantizationCounts counts;
+            const bool accepted=floorplan_legalize_compact_accounted(in,vars,log,counts);
+            require(counts.at("legalize_bound_precision4dp")>0&&counts.at("legalize_centroid_precision4dp")>0,
+                "facing retry lost executed projection or centroid work");
+            if(!accepted) {
+                // A separable restriction cannot promise every feasible
+                // half-plane solution. Failed retries must not publish poses.
+                require(both_back,"strict facing retry must rescue backward group "+std::to_string(dx)+","+std::to_string(dy)+" source_moves="+std::to_string(source_moves));
+                require(retries==1&&vars[0].x==mp.first&&vars[0].y==mp.second,"failed facing retry changed caller poses or lost accounting");
+                continue;
+            }
+            require(retries==1,"strict facing retry must be counted once");
+            auto poses=in.fixed_poses;poses[moving]={vars[0].x,vars[0].y};
+            require(floorplan_evaluate_terms(in,poses).front().ok,"projected cuts bypassed exact facing gate");
+            const auto seed=vars;log.clear();retries=0;
+            require(floorplan_legalize_compact(in,vars,log)&&retries==0,"valid facing incumbent must skip retry");
+            require(vars[0].x==seed[0].x&&vars[0].y==seed[0].y,"valid facing incumbent moved");
+        }
+}
 void primary_fanout_contracts() {
     // Two 20 mm groups cannot be separated as rectangles on this board, but
     // sparse reservations on their opposite faces interlock with 1 mm gaps.
@@ -1012,6 +1050,7 @@ int main(int argc,char** argv) {
         const std::filesystem::path dir=argc>1 ? argv[1]:"native/tests/data/floorplan";
         const bool geometry_only=argc>2 && std::string(argv[2])=="--geometry-only";
         repair_choice_contracts();
+        facing_projection_contracts();
         compose_contracts(dir);primary_fanout_contracts();output_grid_contracts();mutations();pack_behavior();cross_behavior();frozen(dir,"devkit_mini",geometry_only);frozen(dir,"carrier",geometry_only);
         std::cout<<"floorplan contracts: "<<checks<<" checks passed"<<(geometry_only ? " (geometry/estimator slice)":"")<<"\n";
         return 0;

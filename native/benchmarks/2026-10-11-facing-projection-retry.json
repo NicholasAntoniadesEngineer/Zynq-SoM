@@ -1,0 +1,23 @@
+{
+  "base_commit": "644f001d",
+  "motivation": "Paired reseating plus movable wired blockers solved the smaller carrier's separation constraints but violated strict power-chain facing. Existing composer extra edges represented near_max only; facing was checked after solving.",
+  "implementation": "After all existing strategies fail, attempt one additional solve with static axis-wise cuts for enforced require_positive_facing terms. Derive output direction from selected metric centroids, normalize it, and divide seed dot-product slack among nonzero axes. Each axis independently preserves its allocated directional contribution. Use existing clearance as a conservative search projection margin, not a new hardware acceptance threshold. Substitute fixed endpoint poses, including page-origin-correct SoM core and SoM connector anchors. Round difference bounds inward to the existing 4-decimal output lattice using accounted bound operations. Retain exact final physical and hard-term checks, including after pose rounding.",
+  "boundedness": "At most five composer attempts total. Existing successful incumbents return before constructing new cuts. New retry registered as legalize_facing_retry, emitted before every attempt; failed work and prior events retained. Unsuccessful calls leave caller poses unchanged.",
+  "mathematical_limit": "Separable cuts describe a conservative subset of the positive-dot-product half-plane. They are not a complete coupled linear-programming solver and may reject feasible diagonal arrangements. Quantized local direction is only a search approximation; final predicted-centroid facing validation remains authoritative. Missing/degenerate direction does not become PASS.",
+  "tests": {
+    "directional_fixtures": "96 cases across eight axial/diagonal directions, compact/noncompact modes, fixed/moving subjects, ordinary fixed targets, SoM core and SoM connector targets. Include mixed-sign rescuable projections and fully backward diagonal configurations; those may safely reject without publishing poses. Verify independent final facing evaluation, actual centroid/bound accounting, one executed retry and no retry for accepted incumbents.",
+    "negative_control": "Disable the new retry: first backward axial rescue fails. Log native/build/facing-projection-negative-tests.log, SHA256 b58e96f2621ca3d9b93d2e98babbb77c69454a9c779afe9c551c4c5e91768b50.",
+    "boundary_correction": "Final output-grid check initially rejected oblique continuous cuts. Conservatively quantizing bounds before solving fixes the rescues without relaxing checks.",
+    "passed_suites": ["native_floorplan_contracts", "native_model_failure_receipt_contracts", "native_occupancy_precision_contracts", "native_board_policy_contracts", "native_policy_audits_contracts"],
+    "test_wall_seconds": 48.14,
+    "log": "native/build/facing-projection-verified-tests.log",
+    "sha256": "706652b7c922d45817724d3b8e7da382c38c901b9f47445d6e28ec8bc75e34e2"
+  },
+  "final_screens": [
+    {"board":"carrier compact qualified configuration","outline_mm":[166,159],"model_seconds":2.964708708,"text_emit_seconds":0.036878375,"pcb_sha256":"4d1432b252230cbfc6e7342de7f0e431a0f12dc16d7d26ebd08fe0a67508bab1","top":416,"bottom":153,"contract_pass":true,"flow_pass":true,"hard_red":0,"log":"native/build/carrier-facing-projection-final.log"},
+    {"board":"devkit_mini multiscale qualified configuration","outline_mm":[98,98],"model_seconds":0.479771166,"text_emit_seconds":0.009235417,"pcb_sha256":"cfa0305491d9c4a771adb130b04c4aec6cc2894542391a5c7c9dca3a68bca3cf","top":106,"bottom":57,"contract_pass":true,"flow_pass":true,"hard_red":0,"log":"native/build/devkit-facing-projection-final.log"},
+    {"board":"ordinary carrier reference","outline_mm":[168,163],"model_seconds":7.460712709,"text_emit_seconds":0.034881625,"pcb_sha256":"9310d975f4ef23d71e9c154f74a46a8ca46366d4f52568ba1c22a31992ffc8c5","top":393,"bottom":176,"contract_pass":true,"flow_pass":true,"hard_red":0,"log":"native/build/carrier-facing-projection-default.log"}
+  ],
+  "incumbent_observation": "All three final PCB hashes match reference layouts. Initial two-run carrier/devkit screens before output-grid hardening were also reproducible; final screens use the hardened implementation. No facing retry executed for accepted references.",
+  "limits": "No smaller carrier accepted yet; the paired relocation prototype remains removed. Further integrated experiment needed to establish whether the new cuts resolve that actual seed. This is targeted test and construction evidence, not new complete board/source-audit/render qualification. Timing samples overlapped tests/build activity and are not controlled performance comparisons. No speed or historical Python comparison claim."
+}

@@ -155,7 +155,7 @@ public:
     Composer(const FloorplanLegalizeInput& input,
              const std::vector<FloorplanLegalizeVar>& variables,
              std::vector<std::string>& output_log, QuantizationCounts* counts = nullptr,
-             bool pad_seed_hulls = false, bool perpendicular_order = false,bool reservation_geometry=false)
+             bool pad_seed_hulls = false, bool perpendicular_order = false,bool reservation_geometry=false,bool facing_cuts=false)
         : in(input), log(output_log), counts(counts), fixed(input.fixed_poses), pad_seed_hulls(pad_seed_hulls), perpendicular_order(perpendicular_order), reservation_geometry(reservation_geometry) {
         for (const auto& v : variables) {
             if (v.name.empty() || v.name.front() == '#' || !by_name.emplace(v.name, &v).second)
@@ -199,6 +199,7 @@ public:
             out.push_back({0,0,w,h,body.reach,body.inset,body.mask,body.mask,true});
             for(const auto& c:*body.children)out.push_back({c.dx,c.dy,c.w,c.h,c.reach,c.inset,c.mask,body.mask,false});
         }
+        if(facing_cuts)build_facing_cuts();
     }
 
     bool changed_flip_order() const {return flip_order_differs;}
@@ -293,7 +294,7 @@ public:
             boxes.push_back({x, y, x + v.w, y + v.h});
             pos_x[i]=x;pos_y[i]=y;
         }
-        if (!in.primary_fanout.empty() &&
+        if ((!in.primary_fanout.empty()||!facing_x.empty()||!facing_y.empty()) &&
             (!physical_seps_ok() || !edges_ok(true,pos_x) || !edges_ok(false,pos_y) || !reds().empty())) {
             log.push_back("REJECT: final output-grid pose violates physical separation or hard term");
             return false;
@@ -352,6 +353,65 @@ private:
     std::vector<double> pos_x, pos_y;
     std::vector<RepairSep> seps;
     std::map<std::string,std::vector<Rect>> local_reservations;
+    std::vector<TaggedEdge> facing_x,facing_y;
+    void build_facing_cuts() {
+        struct Endpoint { FloorplanPoint local,pose; bool moving; };
+        const auto endpoint=[&](const std::string& name)->std::optional<Endpoint> {
+            if(name=="@som")return Endpoint{{(in.som_core_page.x0+in.som_core_page.x1)/2-in.origin.first,
+                (in.som_core_page.y0+in.som_core_page.y1)/2-in.origin.second},{0,0},false};
+            const auto jack=in.som_j_rects.find(name);
+            if(jack!=in.som_j_rects.end())return Endpoint{{(jack->second.x0+jack->second.x1)/2,
+                (jack->second.y0+jack->second.y1)/2},{0,0},false};
+            const auto metric=in.metrics.find(name);if(metric==in.metrics.end())return std::nullopt;
+            const auto center=predicted_centroid(0,0,0,0,metric->second.offsets,nullptr,counts);
+            if(!center)return std::nullopt;
+            const auto variable=by_name.find(name);
+            if(variable!=by_name.end())return Endpoint{*center,{variable->second->x,variable->second->y},true};
+            const auto pose=fixed.find(name);
+            if(pose==fixed.end())return std::nullopt;
+            return Endpoint{*center,pose->second,false};
+        };
+        for(const auto& term:in.index.hard) {
+            if(term.kind!="facing"||!term.enforced||!term.require_positive_facing)continue;
+            const auto s=endpoint(term.subject),t=endpoint(term.target());
+            const auto metric=in.metrics.find(term.subject);
+            if(!s||!t||(!s->moving&&!t->moving)||metric==in.metrics.end())continue;
+            const auto output=predicted_centroid(0,0,0,0,metric->second.offsets,&term.out_refs,counts);
+            if(!output)continue;
+            const double dx=output->first-s->local.first,dy=output->second-s->local.second;
+            const double norm=std::hypot(dx,dy);if(norm==0)continue;
+            finite(norm,"facing direction norm");
+            const double ax=dx/norm,ay=dy/norm;
+            const double rx=t->pose.first+t->local.first-s->pose.first-s->local.first;
+            const double ry=t->pose.second+t->local.second-s->pose.second-s->local.second;
+            // Split the dot-product slack between the active axes. Each
+            // static cut preserves its share independently, so later Y moves
+            // cannot invalidate the X contribution. This is a sufficient,
+            // seed-centred restriction, not a complete half-plane solver.
+            const double slack=(ax*rx+ay*ry-in.clear)/((ax!=0)+(ay!=0));
+            finite(slack,"facing projection slack");
+            for(const bool x:{true,false}) {
+                const double a=x?ax:ay;if(a==0)continue;
+                const double local=x?t->local.first-s->local.first:t->local.second-s->local.second;
+                const double share=a*(x?rx:ry)-slack;
+                const bool positive=a>0;
+                const auto& source=positive?*t:*s;const auto& dest=positive?*s:*t;
+                double cost=positive?local-share/a:-local+share/a;
+                if(!source.moving)cost+=x?source.pose.first:source.pose.second;
+                if(!dest.moving)cost-=x?dest.pose.first:dest.pose.second;
+                finite(cost,"facing projection bound");
+                // Difference bounds live on the same output lattice as the
+                // poses. Round toward the safe side before solving, never
+                // accept a rounded pose against a looser continuous cut.
+                double quantized=legalize_bound_precision4dp(cost,counts);
+                if(quantized>cost)quantized=legalize_bound_precision4dp(quantized-.0001,counts);
+                cost=quantized;
+                const std::string src=source.moving?(positive?term.target():term.subject):"#0";
+                const std::string dst=dest.moving?(positive?term.subject:term.target()):"#0";
+                (x?facing_x:facing_y).push_back({{src,dst,cost},"facing",term.subject+" -> "+term.target()});
+            }
+        }
+    }
     bool reservation_pair(const std::string& a,const std::string& b) const {
         if(in.primary_fanout.empty())return false;
         const auto& low=in.primary_fanout.at(a);const auto& high=in.primary_fanout.at(b);
@@ -406,7 +466,7 @@ private:
         return {p.first + h.x0, p.second + h.y0, p.first + h.x1, p.second + h.y1};
     }
     std::vector<TaggedEdge> extra(bool x) const {
-        std::vector<TaggedEdge> out;
+        std::vector<TaggedEdge> out=x?facing_x:facing_y;
         for (const auto& t : in.index.hard) {
             if (t.kind != "near_max") continue;
             const auto s = t.subject, g = t.target();
@@ -570,7 +630,8 @@ bool compose_with_bounded_retries(const FloorplanLegalizeInput& input,
     // axis. Try that geometry once, from unchanged caller poses, on rejection.
     // A final distinct strategy reverses flipped pairs to follow their
     // perpendicular seed order. A final physical-reservation strategy may run
-    // after all conservative strategies fail: at most four composer attempts.
+    // after all conservative strategies fail, followed by one strict-facing
+    // projection strategy: at most five composer attempts.
     Composer original(input,movable,log,counts);
     if(original.run(movable))return true;
     Composer alternative(input,movable,log,counts,true);
@@ -600,10 +661,18 @@ bool compose_with_bounded_retries(const FloorplanLegalizeInput& input,
         }
         return false;
     }();
-    if(!candidate)return false;
-    log.push_back("retry: selected child-face reservation geometry");
-    if(input.reservation_retry_started)input.reservation_retry_started();
-    return Composer(input,movable,log,counts,false,false,true).run(movable);
+    if(candidate) {
+        log.push_back("retry: selected child-face reservation geometry");
+        if(input.reservation_retry_started)input.reservation_retry_started();
+        if(Composer(input,movable,log,counts,false,false,true).run(movable))return true;
+    }
+    const bool facing=std::any_of(input.index.hard.begin(),input.index.hard.end(),[](const auto& t){
+        return t.kind=="facing"&&t.enforced&&t.require_positive_facing;
+    });
+    if(!facing)return false;
+    log.push_back("retry: strict facing projection cuts");
+    if(input.facing_retry_started)input.facing_retry_started();
+    return Composer(input,movable,log,counts,false,false,candidate,true).run(movable);
 }
 }  // namespace
 

@@ -170,6 +170,7 @@ struct FloorplanLegalizeInput {
     std::map<std::string, FloorplanPrimaryFanout> primary_fanout;
     bool report_infeasible_cycle = false; // diagnostic only; no extra solve
     std::function<void()> reservation_retry_started;
+    std::function<void()> facing_retry_started;
 };
 
 // Compose consumes resolved, selected-shape metrics. A rejected candidate
