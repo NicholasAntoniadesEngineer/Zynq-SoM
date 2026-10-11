@@ -323,13 +323,33 @@ int main(int argc, char** argv) {
             for(std::size_t i=0;i<added.size();++i)require(same(added[i],repeated[i]),"face cohesion geometry not repeatable");
             require(added.size()>old.size(),"face cohesion appended no alternatives for "+sheet);
             for(std::size_t i=0;i<old.size();++i)require(same(old[i],added[i]),"face cohesion changed an existing candidate/index");
-            bool top=false,bottom=false;
+            bool top=false,bottom=false;std::size_t fixed_candidates=0;
+            std::set<std::string> bypass;
+            for(const auto& row:owned_group_placements(*trusted))
+                if(row.role==OwnedCapRole::Bypass)bypass.insert(row.cap);
             for(std::size_t i=old.size();i<added.size();++i){
                 check_quality(cohesive_in,cohesive,sheet,static_cast<int>(i));
                 const auto model=model_for(cohesive_in,cohesive,sheet,static_cast<int>(i));
+                std::map<std::string,PcbCheckInstance> base_parts;
+                if(added[i].tag.rfind("owned-face-fixed/",0)==0) {
+                    ++fixed_candidates;
+                    const auto start=std::string("owned-face-fixed/").size();
+                    const auto tag=added[i].tag.substr(start,added[i].tag.find('/',start)-start);
+                    const auto seed=std::find_if(old.begin(),old.end(),[&](const auto& s){return s.tag==tag;});
+                    require(seed!=old.end(),"fixed-face seed not retained");
+                    for(const auto& p:model_for(cohesive_in,zones,sheet,static_cast<int>(seed-old.begin())).insts)
+                        base_parts.emplace(p.ref,p);
+                    std::cout<<"fixed-face candidate "<<sheet<<' '<<added[i].tag<<'\n';
+                }
                 std::map<std::string,std::string> actual_sides;
                 for(const auto& p:model.insts){
                     actual_sides[p.ref]=p.side;
+                    if(added[i].tag.rfind("owned-face-fixed/",0)==0&&!bypass.count(p.ref)) {
+                        const auto& before=base_parts.at(p.ref);
+                        require(p.x==before.x&&p.y==before.y&&p.rotation==before.rotation&&
+                            p.side==before.side&&p.mirror==before.mirror,
+                            "fixed-face construction moved owner/bulk/unrelated member");
+                    }
                     if(pcb_placement::face_top(cohesive_context.by_ref.at(p.ref)))
                         require(p.side=="top","face cohesion moved an access part to bottom");
                 }
@@ -338,6 +358,7 @@ int main(int argc, char** argv) {
                 top|=added[i].side=="top";bottom|=added[i].side=="bottom";
             }
             require(top&&bottom,"face cohesion did not exercise both physical faces");
+            require(fixed_candidates>0,"fixed-owner face construction produced no tested candidate");
         }
         auto denied=zones;
         pcb_placement::Context denied_context(cohesive_in);denied_context.pool=zones.footprints;

@@ -1,0 +1,41 @@
+{
+  "status": "pipeline_qualified_opt_in_fixed_owner_improvement_not_hardware_proximity_acceptance",
+  "base_commit": "52b5f3e7",
+  "implementation": "Under opt-in owned-face-cohesion, add fixed-owner alternatives from existing canonical unmirrored top-primary packs (base/a1/a2.2/a0.45). Change only already-eligible bypass face membership and search their positions using the existing bounded named-pad constructor. All owners, shared bulk and unrelated member poses remain fixed relative to the selected seed. The potentially overlapping seed is never published. Import executed work before independent mechanical/identity screening and deduplication. Preserve all previous alternatives.",
+  "tests": {
+    "integration": {"passed":2,"failed":0,"seconds":24.16,"log":"native/build/owned-fixed-integration-tests.log"},
+    "names":["native_pcb_owned_groups_adapter_contracts","native_pack_plain_board_contracts"],
+    "coverage":["real footprints and production binder","non-vacuous fixed candidate production for both pilots","owner/bulk/unrelated position, rotation, face and mirror invariance","same-face bypass and top controls","independent quality measurement","retained original candidate prefix","repeat geometry and operation receipts","both-board default packing regression"],
+    "candidate_population":{"board_aux":3,"bringup_rails":2},
+    "failed_base_only_screen":"No measured board_aux fixed-base candidate existed; explicit restriction correctly failed without substitution. Expanded only to the existing bounded canonical shape family, not an uncontrolled search."
+  },
+  "screen": {
+    "command":"native/build/fast/schgen_compact_stage_profile --repo . --project carrier --compact-search on --interior-order 3 --outline-mm 168x159 --runs 2 --input-mode prepared --edge-feasibility on --owned-quality-first on --owned-face-cohesion on --owned-shape board_aux=owned-face-fixed/a2.2/owned-pins-forward --schematic /private/tmp/carrier-owned-quality-qualified.eD59Wc/Zynq_Carrier.kicad_sch",
+    "log":"native/build/carrier-owned-fixed-wide-screen.log",
+    "model_seconds":[2.443541875,2.434435959],
+    "emit_seconds":[0.032882333,0.032352667],
+    "identical_repeats":true,
+    "pcb_sha256":"03b934e20ef3cc7ef5dfc01695a9ce923f75f248b277e3e7cb8345144080493b",
+    "dimensions_mm":[168,159],"area_mm2":26712,"top_bottom_components":[420,149],
+    "placement_contract_ok":true,"placement_flow_ok":true,"hard_red":0,"hard_margin_min_sum":[4.07,893.91],
+    "final_pad_gaps_mm":{"C1001":5.013198,"C1002":0.7548025,"C1003_bulk":3.390549146,"C1004":1.764082880,"C1005":2.971355348,"C7001":6.8005955},
+    "bypass_faces":"board_aux top/top; bringup_rails bottom/bottom",
+    "bulk_faces":"top/bottom",
+    "reference_comparison":"All five board_aux projected pad gaps improve against preserved f7ad4f reference; C7001 unchanged. Bulk gap 6.57761 -> 3.390549146 mm. Against previous square coherent candidate, C1001 worsens (3.30697 -> 5.013198), so this does not dominate every alternative.",
+    "hardware_proximity_status":"UNVERIFIED; no reviewed numeric maximum or routed loop measurement"
+  },
+  "qualification":{
+    "command":"native/bin/schgen board --project carrier --compact-placement --interior-order 3 --edge-feasibility --owned-quality-first --owned-face-cohesion --owned-shape board_aux=owned-face-fixed/a2.2/owned-pins-forward --floorplan-spec native/benchmarks/carrier-168x159-initial-edge.floorplan.json --timing -o /private/tmp/carrier-owned-fixed-qualified.Z1zLPo",
+    "output":"/private/tmp/carrier-owned-fixed-qualified.Z1zLPo","log":"native/build/carrier-owned-fixed-qualification.log",
+    "exit_code":0,"board_ok":true,"complete":true,"sheets":37,
+    "mandatory_nonpass":[],"advisory_failures":["return_path","golden","contract_coverage_lint"],
+    "non_unrouted_drc_errors":0,"unrouted":499,"matches_screen_pcb":true,
+    "verdict_sha256":"10d64ae8e4d719fe78e2f4129b6b0c14421d9ac8730a5ded7e4463ea0b9604dc",
+    "nonzero_fallbacks":{"cand_cap_truncated":116,"interior_reseat_retry":12,"punch_free_plan_rejected":1},
+    "retry_tradeoff":"12 executed reseats versus 10 in prior square coherent/reference runs; below unchanged ceiling 18. No event hidden or baseline raised.",
+    "views_rendered":8,"top_bottom_inspected":true,
+    "render_observations":"board_aux moves as a whole to the upper-left of the top view with its owners and bypass capacitors on top; bulk and resistors are visible in the corresponding upper-right bottom view. Central module reservation and edge access remain visually consistent. Bottom remains sparse. Visual inspection does not establish access, assembly or electrical suitability."
+  },
+  "timing_seconds":{"compile":null,"wall":246.61,"measured_scope":246.049125,"authoring_audit":17.138790,"source_audit":155.429303,"sheet_checks_and_render_wall":26.022597,"pcb_input_loading_and_netlist_validation":1.455387,"model_with_internal_checks":2.540633,"pcb_text_emission":0.033788,"drc":1.545154,"render3d":28.7358},
+  "limitations":["Opt-in top-primary constructor only; bottom-primary mirrored fixed-owner construction is not implemented.","Fixed relationship means fixed relative to each seed, not identical placement across the complete board or to a different reference seed.","No board-area reduction over the 168x159 reference.","No fresh full devkit qualification or matched historical Python comparison in this batch.","Hardware assembly/access/height/thermal/proximity unknowns remain; routing out of scope; not fabrication ready."]
+}

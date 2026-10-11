@@ -295,6 +295,42 @@ void append_owned_face_zone_shapes(Context& ctx,PcbZoneResult& out,const std::st
     // Evaluate/optimise only the newly appended range. Existing alternatives,
     // indices and quality records are not revisited or replaced.
     if(shapes.size()>first)append_owned_group_zone_shapes(ctx,out,sheet,incumbent,true,failure,first);
+    // An alternative to repacking: retain every owner, bulk and unrelated
+    // member pose, changing only eligible bypass membership and positions.
+    // The seed may overlap after the face change; only independently checked
+    // constructor results are appended, never the unchecked seed itself.
+    const auto fixed_seeds=shapes;
+    for(const auto& original:fixed_seeds)if(allow_top&&original.side=="top"&&original.mirror.empty()&&
+        (original.tag=="base"||original.tag=="a1"||original.tag=="a2.2"||original.tag=="a0.45")) {
+        auto seed=original;
+        OwnedGroupOptions options;options.compact=true;options.clearance=ctx.clearance;
+        for(const auto& row:trusted.rows)if(row.role==OwnedCapRole::Bypass&&
+            sides.at(row.cap)!=g.side_of.at(row.cap)) {
+            auto& source=seed.top_off.count(row.cap)?seed.top_off:seed.bot_off;
+            const auto xy=source.at(row.cap);source.erase(row.cap);
+            (sides.at(row.cap)=="top"?seed.top_off:seed.bot_off).emplace(row.cap,xy);
+            options.movable_caps.insert(row.cap);
+        }
+        for(const auto& [ref,xy]:seed.top_off) {
+            (void)xy;if(!options.movable_caps.count(ref))options.fixed_refs.insert(ref);
+        }
+        for(const auto& [ref,xy]:seed.bot_off) {
+            (void)xy;if(!options.movable_caps.count(ref))options.fixed_refs.insert(ref);
+        }
+        const auto candidates=construct_owned_group_candidates(local_model(ctx,g,sheet,seed,trusted),trusted.rows,options);
+        merge_execution_counts(ctx.quantization,candidates.quantization,failure);
+        for(const auto& candidate:candidates.alternatives) {
+            auto next=seed;next.w=candidate.model.board_w;next.h=candidate.model.board_h;
+            next.tag="owned-face-fixed/"+original.tag+"/"+candidate.tag;
+            for(const auto& p:candidate.model.insts)
+                (next.top_off.count(p.ref)?next.top_off:next.bot_off).at(p.ref)={p.x,p.y};
+            const auto measured=quality(ctx,trusted,local_model(ctx,g,sheet,next,trusted),failure);
+            if(measured.state!=OwnedShapeQualityState::Measured||
+                std::any_of(shapes.begin(),shapes.end(),[&](const auto& prior){return same_shape(prior,next);}))continue;
+            out.owned_shape_quality[{sheet,static_cast<int>(shapes.size())}]=measured;
+            shapes.push_back(std::move(next));
+        }
+    }
 }
 }
 }
