@@ -31,14 +31,24 @@ std::string before_repair(std::string bytes){
 }
 void run(const fs::path& root){
     const std::string pcb="carrier/Zynq_Carrier.kicad_pcb";
-    const auto baseline=git(root,{"show","origin/master:"+pcb});
+    const std::string historical="c3a627a0f4fd21f7084264395bde3d8da033a4d0";
+    const auto baseline=git(root,{"show",historical+":"+pcb});
     // Same approved bytes as historical MD5 06308484dd95ffb65b09ef456bd64547.
-    // Independently verified from origin/master with both digests at retirement;
+    // Pin immutable history: origin/master legitimately advances after merges.
+    // Independently verified with both digests at retirement;
     // SHA-256 strengthens the pin, it does not bless a new board.
     const std::string approved="4b45325d224e6376dc43b871484357fad50b1705b37b0389e2c746683c4022f7";
     require(pcb_sha256(baseline)==approved,"historical approved board baseline changed");
+    const auto model_repair=git(root,{"show","374c42acc50138ea609d85dfe4d2c503fb0c538c:"+pcb});
+    require(pcb_sha256(before_repair(model_repair))==approved,"historical physical-model repair changed other bytes");
+    // 226bfb83 subsequently removed exactly three degenerate RV-3028
+    // courtyard lines and resequenced that footprint's generated UUIDs.
+    // The full diff was reviewed; no pad, placement, valid edge or model moved.
+    // Pin its entire artifact rather than normalize arbitrary geometry away.
+    const auto corrected=git(root,{"show","226bfb8346eadf0d59e59d4e6b1f3ef99fec279d:"+pcb});
+    require(pcb_sha256(corrected)=="8437ddd4fbcf012c800bed70a1b6968c0d09444b00c9e816390dfc5946360633","reviewed courtyard correction artifact changed");
     const auto current=read(root/pcb);
-    require(pcb_sha256(before_repair(current))==approved,"board changed beyond the approved FUSB302 model repair");
+    require(current==corrected,"board changed beyond reviewed physical-model and courtyard repairs");
     bool rejected=false;try{before_repair(current+repaired_model);}catch(const std::exception&){rejected=true;}
     require(rejected,"duplicate repair must not be normalized away");
     rejected=false;try{before_repair(current+old_model);}catch(const std::exception&){rejected=true;}
@@ -52,11 +62,11 @@ void run(const fs::path& root){
             if(path.extension()==".png"&&(parent=="carrier/renders"||parent=="carrier/renders/ratsnest"||parent=="carrier/renders/assembly"))paths.insert(path.generic_string());
         }
     };
-    collect(git(root,{"ls-tree","-r","--name-only","-z","origin/master","--","carrier/renders"}));
+    collect(git(root,{"ls-tree","-r","--name-only","-z",historical,"--","carrier/renders"}));
     collect(git(root,{"ls-files","-z","--","carrier/renders"}));
     require(paths.size()>=10,"official baseline population cannot shrink");
-    for(const auto& path:paths){auto bytes=read(root/path);if(path==pcb)bytes=before_repair(std::move(bytes));
-        require(bytes==git(root,{"show","origin/master:"+path}),"official artifact bytes drifted: "+path);}
+    for(const auto& path:paths){if(path==pcb)continue; // separately pinned in full above
+        require(read(root/path)==git(root,{"show",historical+":"+path}),"official artifact bytes drifted: "+path);}
     const auto golden=parse_json_file((root/"carrier/renders/golden.json").string());
     require(golden.kind==JsonKind::Object&&!golden.object_value.empty(),"golden map must not be empty");
     for(const auto& [name,expected]:golden.object_value){

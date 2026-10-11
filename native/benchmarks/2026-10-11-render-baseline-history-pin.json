@@ -1,0 +1,15 @@
+{
+  "date": "2026-10-11",
+  "base_commit": "7d1a0864",
+  "failure": "Render-baseline contract compared an old pinned PCB digest to moving origin/master, which has legitimately advanced, and omitted the later reviewed RTC courtyard correction.",
+  "original_commit": "c3a627a0f4fd21f7084264395bde3d8da033a4d0",
+  "original_pcb_sha256": "4b45325d224e6376dc43b871484357fad50b1705b37b0389e2c746683c4022f7",
+  "model_repair_commit": "374c42acc50138ea609d85dfe4d2c503fb0c538c",
+  "model_repair_check": "Exact reverse replacement of the unique FUSB302 model reference/rotation reproduces the original pinned digest.",
+  "courtyard_repair_commit": "226bfb8346eadf0d59e59d4e6b1f3ef99fec279d",
+  "corrected_pcb_sha256": "8437ddd4fbcf012c800bed70a1b6968c0d09444b00c9e816390dfc5946360633",
+  "courtyard_review": "Inspected the full PCB diff from model repair to courtyard repair: exactly three zero-length RV-3028 F.CrtYd lines removed, with generated UUID resequencing inside the footprint. No valid edge, pad, placement or model change. Test pins the entire corrected artifact; it does not normalize arbitrary geometry away.",
+  "render_checks": "Every historical/current tracked golden PNG and golden.json remains byte-identical to the immutable original commit; every average hash remains zero-distance. No golden file, PCB or image modified.",
+  "verification": {"native_render_baseline_contracts": "PASS", "seconds": 3.91},
+  "scope": "Historical evidence integrity only, not current candidate acceptance or fabrication readiness. Full regression campaign remains incomplete."
+}
