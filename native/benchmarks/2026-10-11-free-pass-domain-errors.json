@@ -1,0 +1,54 @@
+{
+  "base_commit": "3a23ce52",
+  "defect": "Both fixed-outline and automatic sizing caught every FloorplanError from the optional punch-free pass. That includes non-packing domain/calculation/observer errors, allowing a successful conservative result to hide an actual failure.",
+  "change": "Catch only FloorplanPackingInfeasible at these two boundaries. Genuine packing-search rejection still retains the conservative incumbent and records punch_free_plan_rejected. Other errors propagate unchanged through the public failure-receipt transport.",
+  "tests": {
+    "negative_control": "New InjectedDomainFailure (a non-packing FloorplanError subtype) thrown after actual free-pass fallback work is swallowed by the original code; the instrumented regression fails. This was run before narrowing the catches.",
+    "negative_seconds": 11.38,
+    "negative_log": "native/build/free-domain-negative-tests.log",
+    "coverage": "Fixed and auto outline paths: ordinary runtime failures and non-packing domain failures propagate; independent fallback entry/exit observations and direct/public receipts match exactly, including incoming prefixes. Typed packing rejection is handled, preserves the conservative result and complete accounting, executes one rejected free-pass attempt, and does not produce a terminal failure receipt.",
+    "passed_suites": [
+      "native_floorplan_fallback_scope_contracts",
+      "native_floorplan_final_estimate_contracts",
+      "native_model_failure_receipt_contracts"
+    ],
+    "wall_seconds": 13.33,
+    "log": "native/build/free-domain-tests.log"
+  },
+  "references": [
+    {
+      "board": "carrier compact",
+      "outline_mm": [
+        166,
+        159
+      ],
+      "runs": 2,
+      "pcb_sha256": "b9389efa52adf30b1d94cad1ede3a4387bacd53802f7babb5da07dd6306cff76",
+      "unchanged": true,
+      "log": "native/build/carrier-free-domain-reference.log"
+    },
+    {
+      "board": "devkit_mini multiscale",
+      "outline_mm": [
+        98,
+        98
+      ],
+      "runs": 2,
+      "pcb_sha256": "cfa0305491d9c4a771adb130b04c4aec6cc2894542391a5c7c9dca3a68bca3cf",
+      "unchanged": true,
+      "log": "native/build/devkit-free-domain-reference.log"
+    },
+    {
+      "board": "ordinary carrier",
+      "outline_mm": [
+        168,
+        163
+      ],
+      "runs": 1,
+      "pcb_sha256": "9310d975f4ef23d71e9c154f74a46a8ca46366d4f52568ba1c22a31992ffc8c5",
+      "unchanged": true,
+      "log": "native/build/carrier-free-domain-ordinary.log"
+    }
+  ],
+  "scope": "All reference construction screens pass placement-contract/flow diagnostics and have zero hard-red constraints. Successful-path output parity and targeted failure-path tests, not a new full board qualification, speed comparison, or hardware readiness claim. No fallback ceiling or other acceptance gate changed. The experimental 165x159 candidate remains unaccepted."
+}

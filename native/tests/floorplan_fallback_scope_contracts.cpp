@@ -92,21 +92,40 @@ void free_wins(std::ostream& dump,bool fixed){
     dump<<(fixed?"fixed-free-win\n":"auto-free-win\n")<<without_events(result);
 }
 struct InjectedFailure:std::runtime_error {InjectedFailure():std::runtime_error("test failure after fallback in free pass"){} };
+struct InjectedDomainFailure:FloorplanError {InjectedDomainFailure():FloorplanError("test non-packing domain failure in free pass"){} };
+void packing_rejection(const std::filesystem::path& root,bool fixed){
+    auto in=frozen(root,"devkit_mini");
+    if(fixed){if(!in.spec)in.spec=FloorplanSpec{};in.spec->outline={{100,100}};}
+    auto experiment=std::make_shared<FloorplanExperiment>();in.experiment=experiment;
+    std::size_t free_calls=0;
+    experiment->attempt_completed=[&](const FloorplanAttemptObservation& row){
+        if(row.punch_free){++free_calls;throw FloorplanPackingInfeasible("controlled free-pass packing rejection");}
+    };
+    Engine engine(in);begin(&engine);const auto result=engine.run();stop();
+    require(free_calls==1&&!result.punch_free,"typed packing rejection must retain the conservative incumbent");
+    require(!observed.empty()&&observed.back()=="punch_free_plan_rejected","rejected free pass remains explicitly recorded");
+    receipt(fixed?"fixed-packing-rejection":"auto-packing-rejection",in.accounting.fallback_events,result.accounting.fallback_events);
+    const auto calls=entries;free_calls=0;ExecutionFailureReceipt failed;
+    begin(nullptr);const auto published=build_floorplan(in,&failed);stop();
+    require(free_calls==1&&entries==calls&&!failed.captured&&!failed.unavailable,"handled infeasibility is not a terminal failure");
+    same(floorplan_plan_json(result),floorplan_plan_json(published),"public typed-rejection layout and full receipt");
+}
+template<class Error=InjectedFailure>
 void failure(const std::filesystem::path& root,bool fixed){
     auto in=frozen(root,"devkit_mini");if(fixed){if(!in.spec)in.spec=FloorplanSpec{};in.spec->outline={{100,100}};}
     in.accounting.fallback_events.insert(in.accounting.fallback_events.begin(),{"interior_reseat_retry","legalize_only_compaction","interior_reseat_retry"});
     const auto prefix=in.accounting.fallback_events;
     auto experiment=std::make_shared<FloorplanExperiment>();in.experiment=experiment;
-    experiment->attempt_completed=[](const FloorplanAttemptObservation& row){if(row.punch_free&&entries>0)throw InjectedFailure();};
+    experiment->attempt_completed=[](const FloorplanAttemptObservation& row){if(row.punch_free&&entries>0)throw Error();};
     Engine engine(in);bool rejected=false;begin(&engine);
-    try{(void)engine.run();}catch(const InjectedFailure&){rejected=true;}stop();
+    try{(void)engine.run();}catch(const Error&){rejected=true;}stop();
     require(rejected&&entries>0,"injected failure occurs after actual fallback calls");
     receipt(fixed?"fixed-failure":"auto-failure",prefix,engine.plan.accounting.fallback_events);
     const auto calls=entries;const auto expected=engine.plan.accounting;
     // Repeat through the PUBLIC transport. Entry counts remain independent;
     // the directly observed run supplies event identities and exact ordering.
     ExecutionFailureReceipt failed;rejected=false;begin(nullptr);
-    try{(void)build_floorplan(in,&failed);}catch(const InjectedFailure&){rejected=true;}stop();
+    try{(void)build_floorplan(in,&failed);}catch(const Error&){rejected=true;}stop();
     require(rejected&&entries==calls&&failed.captured&&!failed.unavailable,"public failure transport captures identical executed prefix");
     require(failed.accounting.fallback_events==expected.fallback_events&&failed.accounting.quantization_engagements==expected.quantization_engagements,"public receipt preserves exact events and actual-work counters");
     require(in.accounting.fallback_events==prefix,"failure never mutates incoming prefix");
@@ -126,6 +145,9 @@ int main(int argc,char** argv){try{
     scope_test::setup();std::ostringstream dump;scope_test::defaults(argv[1],dump);
     scope_test::free_wins(dump,false);scope_test::free_wins(dump,true);
     scope_test::failure(argv[1],false);scope_test::failure(argv[1],true);
+    scope_test::failure<scope_test::InjectedDomainFailure>(argv[1],false);
+    scope_test::failure<scope_test::InjectedDomainFailure>(argv[1],true);
+    scope_test::packing_rejection(argv[1],false);scope_test::packing_rejection(argv[1],true);
     if(argc==3){std::ofstream file(argv[2],std::ios::binary);file<<dump.str();require(bool(file),"write private nonfallback dump");}
     require(!scope_test::mismatch,"all incoming prefixes plus observed fallback calls retained EXACTLY in order");
     std::cout<<"fallback scope contracts PASS\n";
