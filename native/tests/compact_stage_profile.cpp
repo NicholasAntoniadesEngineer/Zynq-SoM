@@ -235,8 +235,10 @@ std::string trial(const PcbPlacementInput& source, bool compact, int run, int ge
                      <<" displaced_reseated="<<r.displaced_reseated<<" punch_free="<<r.punch_free
                      <<" order="<<r.order<<'\n';
     };
-    floor->edge_translation_completed=[&](std::size_t candidates,char edge,double) {
+    floor->edge_translation_completed=[&](std::size_t candidates,char edge,double shift) {
         edge_candidates+=candidates;edge_repairs+=edge!='\0';
+        std::cout<<"edge_translation candidates="<<candidates<<" edge="<<(edge?std::string(1,edge):"none")
+                 <<" shift_mm="<<shift<<'\n';
     };
     floor->attempt_completed = [&](const auto& row) { profile.attempts.add(row); };
     floor->unscoped_estimate = [&](double) { ++profile.attempts.unscoped_estimates; };
