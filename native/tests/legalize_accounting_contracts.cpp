@@ -137,6 +137,25 @@ void pad_retry_accounting(){
         require(!counts.empty(),"retry observation must not be vacuous");
     }
 }
+void perpendicular_retry_accounting(){
+    for(const bool impossible:{false,true}) {
+        FloorplanLegalizeInput in;in.board_w=60;in.board_h=60;in.compact=true;
+        in.metrics["v"]={{{"p",5,5}},{{"p",0,0,10,10}},{10,10}};
+        in.som_j_rects["som_j1"]={25,42,26,43};
+        in.index.hard.push_back({"near_max","v","v","som_j1",5,"perpendicular retry",true,{},{}});
+        in.fixed_rects={{"obstacle",{20,20,30,30}}};
+        if(impossible)in.fixed_rects.push_back({"lower",{0,35,60,60}});
+        std::vector<FloorplanLegalizeVar> vars{{"v",10,10,{5,30},5,30}};
+        std::vector<std::string> log;QuantizationCounts counts;begin();
+        const bool ok=floorplan_legalize_compact_accounted(in,vars,log,counts);
+        verify_entries(counts);
+        require(ok!=impossible,"perpendicular retry feasibility");
+        require(std::count(log.begin(),log.end(),"retry: flipped separations follow perpendicular seed order")==1,
+            "perpendicular retry receipt must be bounded and present");
+        if(impossible)require(vars[0].x==5&&vars[0].y==30,"failed perpendicular retry mutated caller");
+        require(!counts.empty(),"perpendicular accounting must be nonvacuous");
+    }
+}
 #endif
 void compose(std::ostream& out,const std::filesystem::path& root){
     using namespace placement_fixture;
@@ -228,7 +247,7 @@ extern "C" void __cyg_profile_func_exit(void*,void*){}
 int main(int argc,char** argv){try{
     require(argc==2||argc==3,"repo [baseline]");std::ostringstream out;out<<std::hexfloat;
 #ifndef LEGALIZE_LEGACY_PROBE
-    scalars();pad_retry_accounting();
+    scalars();pad_retry_accounting();perpendicular_retry_accounting();
 #endif
     kernels(out);compose(out,argv[1]);
     if(argc==3&&std::string(argv[2])=="--kernels-only"){

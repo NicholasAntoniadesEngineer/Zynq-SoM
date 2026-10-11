@@ -1,0 +1,101 @@
+{
+  "status": "tested_perpendicular_order_repair_with_incumbent_preservation",
+  "base_commit": "f3c5e421",
+  "finding": "An axis flip previously preserved endpoint order: left-of became above even when the seed placed the first body below. This can reject otherwise feasible layouts. A new regression fails with reversal disabled and passes when perpendicular seed order is used.",
+  "implementation": {
+    "primitive": "RepairSep.reverse_on_flip defaults false. Executed flips can swap endpoints, carry the caller-supplied directional flipped_gap, and clear both reversibility and flippability.",
+    "composer": "Original strategy remains first. Existing distinct pad-hull retry remains second. Only after rejection, when the original actually flipped a pair whose perpendicular seed order differs, run one fresh perpendicular-order strategy using original near axes. Maximum three attempts; never replace an accepted incumbent.",
+    "clearance": "Reversed flipped gap is recalculated from the opposite low/high fanout geometry while retaining the original channel/clearance minimum.",
+    "observability": "Record each executed retry. The new strategy logs actual flips and endpoint reversals before returning even on failure. Caller poses stay unchanged when all attempts fail. Existing accounting sink accumulates all executed scalar operations."
+  },
+  "tests": {
+    "red": {
+      "log": "native/build/perpendicular-red-tests.log",
+      "seconds": 0.56,
+      "result": "Lower-slot witness rejects with negative Y cycle when reversal is disabled."
+    },
+    "final": {
+      "log": "native/build/perpendicular-final-tests.log",
+      "passed": 2,
+      "failed": 0,
+      "seconds": 29.35,
+      "names": [
+        "native_floorplan_contracts",
+        "native_legalize_accounting_contracts"
+      ]
+    },
+    "coverage": [
+      "Primitive swaps endpoints, transfers selected gap and locks the separation",
+      "Integration rescues a near-constrained lower slot",
+      "Asymmetric fanout requires a reversed gap of 4.5 mm rather than reusing forward geometry",
+      "Identical inputs reproduce poses and all decisions",
+      "Exactly one perpendicular-order retry event",
+      "Independent scalar-entry accounting for successful and failed retries",
+      "Failed alternative rolls back caller poses",
+      "Existing frozen geometry, decision and accounting expectations retained"
+    ]
+  },
+  "references": {
+    "carrier": {
+      "log": "native/build/carrier-perpendicular-final.log",
+      "outline_mm": [
+        168,
+        159
+      ],
+      "top_bottom": [
+        420,
+        149
+      ],
+      "model_seconds": [
+        2.430000833,
+        2.4481355
+      ],
+      "pcb_text_emit_seconds": [
+        0.032632375,
+        0.032542291
+      ],
+      "pcb_sha256": "03b934e20ef3cc7ef5dfc01695a9ce923f75f248b277e3e7cb8345144080493b",
+      "qualified_output_and_receipt_rows_unchanged": true,
+      "repeats": 2
+    },
+    "devkit": {
+      "log": "native/build/devkit-perpendicular-final.log",
+      "outline_mm": [
+        98,
+        98
+      ],
+      "top_bottom": [
+        106,
+        57
+      ],
+      "model_seconds": [
+        0.184991208,
+        0.180855333
+      ],
+      "pcb_text_emit_seconds": [
+        0.008829917,
+        0.008133209
+      ],
+      "pcb_sha256": "cfa0305491d9c4a771adb130b04c4aec6cc2894542391a5c7c9dca3a68bca3cf",
+      "qualified_output_and_receipt_rows_unchanged": true,
+      "repeats": 2
+    },
+    "smaller_carrier": {
+      "log": "native/build/carrier-perpendicular-small-final.log",
+      "spec": "native/benchmarks/carrier-167x159-south-interleaved.floorplan.json",
+      "seconds": 0.36217775,
+      "exit_code": 1,
+      "result": "Original compact/noncompact paths retain the stale-X failure. Each new perpendicular retry reverses hdmi_rx_term versus usb_jtag but rejects a Y negative cycle. No smaller board accepted.",
+      "failure_prefix_bound_precision_calls_before": 1190,
+      "failure_prefix_bound_precision_calls_after": 1492,
+      "receipt_captured": true
+    }
+  },
+  "limitations": [
+    "No new full board qualification or renders: both previously qualified output hashes were reproduced, not a new layout promoted.",
+    "Construction-only times exclude input preparation, source audits, ERC/DRC and rendering; no language speedup comparison claimed.",
+    "The heuristic is bounded and does not enumerate all separation directions or prove global infeasibility.",
+    "Carrier size reduction still needs a different placement/grouping or permitted blocker-displacement strategy.",
+    "Hardware unknowns, advisory failures and the wider objective remain unresolved."
+  ]
+}

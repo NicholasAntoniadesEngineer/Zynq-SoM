@@ -741,11 +741,41 @@ void frozen(const std::filesystem::path& dir,const std::string& name,bool geomet
     require(!load_floorplan_spec((publication.directory/"missing.json").string()),name+": missing optional spec");
 }
 void repair_choice_contracts() {
+    for(const bool directional_gap:{false,true}) {
+        FloorplanLegalizeInput in;in.board_w=60;in.board_h=60;in.compact=true;
+        in.metrics["v"]={{{"p",5,5}},{{"p",0,0,10,10}},{10,10}};
+        in.som_j_rects["som_j1"]={25,42,26,43};
+        in.index.hard.push_back({"near_max","v","v","som_j1",5,"perpendicular-order witness",true,{},{}});
+        in.fixed_rects={{"obstacle",{20,20,30,30}}};
+        if(directional_gap) {
+            in.primary_fanout["v"]={{.4,.8,4.5,.9},{},1};
+            in.primary_fanout["obstacle"]={{.2,.3,.4,1.25},{},1};
+        }
+        std::vector<FloorplanLegalizeVar> vars{{"v",10,10,{5,30},5,30}};
+        std::vector<std::string> log;
+        const bool ok=floorplan_legalize_compact(in,vars,log);
+        if(!ok)for(const auto& line:log)std::cerr<<line<<'\n';
+        require(ok,"perpendicular-order repair rescues the lower slot");
+        require(vars[0].y>=(directional_gap?34.5:30.3),"flipped body must respect reversed directional gap");
+        require(std::count(log.begin(),log.end(),"retry: flipped separations follow perpendicular seed order")==1,
+            "perpendicular order must execute once and be recorded");
+        auto repeat=std::vector<FloorplanLegalizeVar>{{"v",10,10,{5,30},5,30}};
+        std::vector<std::string> second_log;
+        require(floorplan_legalize_compact(in,repeat,second_log)&&second_log==log&&
+            repeat[0].x==vars[0].x&&repeat[0].y==vars[0].y,"perpendicular repair must be deterministic");
+    }
     const std::vector<std::string> names{"a","b"};
     const std::vector<double> sizes{2,2};
     const std::vector<RepairSep> seps{{true,"a","b",1,true,2},{true,"b","a",1,true,3}};
     const auto run=[&](std::vector<std::size_t> path){return legalize_repair_axis(true,names,sizes,20,0,seps,{}, {},4,path);};
     const auto ordinary=run({}),first=run({0}),second=run({1}),repeat=run({1});
+    auto reversed_seps=seps;
+    for(auto& s:reversed_seps){s.reverse_on_flip=true;s.flipped_gap=7;}
+    const auto reversed=legalize_repair_axis(true,names,sizes,20,0,reversed_seps,{}, {},4,{0});
+    require(reversed.ok&&reversed.seps.back().lo==first.seps.back().hi&&
+        reversed.seps.back().hi==first.seps.back().lo&&reversed.seps.back().gap==7&&
+        !reversed.seps.back().flippable&&!reversed.seps.back().reverse_on_flip,
+        "primitive reversal must retain selected directional gap and lock the result");
     require(ordinary.ok&&first.ok&&second.ok,"both eligible cycle branches must solve X");
     require(first.choice_counts==std::vector<std::size_t>{2}&&second.choice_counts==first.choice_counts,
         "cycle alternatives not reported exactly");

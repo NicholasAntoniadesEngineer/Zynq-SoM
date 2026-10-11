@@ -139,8 +139,8 @@ public:
     Composer(const FloorplanLegalizeInput& input,
              const std::vector<FloorplanLegalizeVar>& variables,
              std::vector<std::string>& output_log, QuantizationCounts* counts = nullptr,
-             bool pad_seed_hulls = false)
-        : in(input), log(output_log), counts(counts), fixed(input.fixed_poses), pad_seed_hulls(pad_seed_hulls) {
+             bool pad_seed_hulls = false, bool perpendicular_order = false)
+        : in(input), log(output_log), counts(counts), fixed(input.fixed_poses), pad_seed_hulls(pad_seed_hulls), perpendicular_order(perpendicular_order) {
         for (const auto& v : variables) {
             if (v.name.empty() || v.name.front() == '#' || !by_name.emplace(v.name, &v).second)
                 throw FloorplanError("floorplan compose: invalid or duplicate movable name " + v.name);
@@ -176,6 +176,7 @@ public:
         }
     }
 
+    bool changed_flip_order() const {return flip_order_differs;}
     bool same_near_axes(const Composer& other) const {
         for(const bool x:{true,false}) {
             const auto a=extra(x),b=other.extra(x);
@@ -200,6 +201,7 @@ public:
         for (const auto& s : legalize_build_seps(names, seeds, fixed_names, fixed_boxes, demand, near,
                                                 in.clear, channel_min_nets, channel_floor, channel_per_net)) {
             RepairSep sep{s.axis == "x", s.lo, s.hi, s.gap, s.flippable};
+            sep.reverse_on_flip=perpendicular_order&&reverse_perpendicular(sep.lo,sep.hi,sep.axis_x);
             if (!in.primary_fanout.empty()) {
                 const auto key=[](const std::string& name) { return name.front()=='#'?name.substr(1):name; };
                 const auto& low=in.primary_fanout.at(key(s.lo));
@@ -209,7 +211,9 @@ public:
                         return std::max(s.gap,fanout_sep(low.reach,low.inset,high.reach,high.inset,x?'E':'S'));
                     };
                     sep.gap=gap(sep.axis_x);
-                    sep.flipped_gap=gap(!sep.axis_x);
+                    sep.flipped_gap=sep.reverse_on_flip?
+                        std::max(s.gap,fanout_sep(high.reach,high.inset,low.reach,low.inset,sep.axis_x?'S':'E')):
+                        gap(!sep.axis_x);
                 }
             }
             seps.push_back(std::move(sep));
@@ -281,6 +285,13 @@ private:
     std::vector<std::string> names;
     std::vector<double> pos_x, pos_y;
     std::vector<RepairSep> seps;
+    bool reverse_perpendicular(const std::string& lo,const std::string& hi,bool was_x) const {
+        const auto box=[&](const std::string& name)->const Box4& {
+            return name.front()=='#'?frect.at(name.substr(1)):seed_rect.at(name);
+        };
+        const auto& a=box(lo);const auto& b=box(hi);
+        return was_x?a.y0>b.y0:a.x0>b.x0;
+    }
 
     std::vector<double> sizes(bool x) const {
         std::vector<double> out;
@@ -395,6 +406,11 @@ private:
         for (const auto& e : extra(x)) additional.push_back(e.edge);
         auto r = legalize_repair_axis(x, names, sizes(x), x ? in.board_w : in.board_h,
             in.clear, seps, {frect.begin(), frect.end()}, additional, repair_max);
+        for(const auto& [lo,hi,was_x]:r.flips)
+            flip_order_differs|=reverse_perpendicular(lo,hi,was_x);
+        if(perpendicular_order)for(const auto& [lo,hi,was_x]:r.flips)
+            log.push_back("repair: flip "+lo+"|"+hi+" off "+(was_x?"x":"y")+
+                (reverse_perpendicular(lo,hi,was_x)?" (perpendicular endpoints reversed)":""));
         seps = std::move(r.seps);
         if (!r.ok) {
             log.push_back(std::string("INFEASIBLE ") + (x ? "x" : "y") +
@@ -402,7 +418,7 @@ private:
             return false;
         }
         pos = std::move(r.pos);
-        for (const auto& [lo, hi, was_x] : r.flips)
+        if(!perpendicular_order)for (const auto& [lo, hi, was_x] : r.flips)
             log.push_back("repair: flip " + lo + "|" + hi + " off " + (was_x ? "x" : "y"));
         return true;
     }
@@ -442,23 +458,31 @@ private:
         return out;
     }
     bool pad_seed_hulls = false;
+    bool perpendicular_order = false;
+    bool flip_order_differs = false;
 };
 
-bool compose_with_pad_retry(const FloorplanLegalizeInput& input,
+bool compose_with_bounded_retries(const FloorplanLegalizeInput& input,
         std::vector<FloorplanLegalizeVar>& movable,std::vector<std::string>& log,
         QuantizationCounts* counts=nullptr) {
     // Preserve every accepted incumbent. Body-derived axes remain a useful
     // search strategy, but can falsely reject when local pads favour another
     // axis. Try that geometry once, from unchanged caller poses, on rejection.
+    // A final distinct strategy reverses flipped pairs to follow their
+    // perpendicular seed order. At most three composer attempts execute.
     Composer original(input,movable,log,counts);
     if(original.run(movable))return true;
     Composer alternative(input,movable,log,counts,true);
     // Different hulls can still yield identical constraints. Do not execute
     // or report a second solver attempt when it would repeat the same work.
-    if(original.same_near_axes(alternative))return false;
-    // Retain the failed first attempt's diagnostics and executed accounting.
-    log.push_back("retry: near constraints use selected pad-hull axes");
-    return alternative.run(movable);
+    if(!original.same_near_axes(alternative)) {
+        // Retain the failed first attempt's diagnostics and executed accounting.
+        log.push_back("retry: near constraints use selected pad-hull axes");
+        if(alternative.run(movable))return true;
+    }
+    if(!original.changed_flip_order())return false;
+    log.push_back("retry: flipped separations follow perpendicular seed order");
+    return Composer(input,movable,log,counts,false,true).run(movable);
 }
 }  // namespace
 
@@ -472,12 +496,12 @@ std::vector<FloorplanTermEval> floorplan_evaluate_terms(
 bool floorplan_legalize_compact(const FloorplanLegalizeInput& input,
         std::vector<FloorplanLegalizeVar>& movable, std::vector<std::string>& log) {
     validate(input);
-    return compose_with_pad_retry(input, movable, log);
+    return compose_with_bounded_retries(input, movable, log);
 }
 bool floorplan_legalize_compact_accounted(const FloorplanLegalizeInput& input,
         std::vector<FloorplanLegalizeVar>& movable, std::vector<std::string>& log,
         QuantizationCounts& counts) {
     validate(input);
-    return compose_with_pad_retry(input, movable, log, &counts);
+    return compose_with_bounded_retries(input, movable, log, &counts);
 }
 }  // namespace schgen

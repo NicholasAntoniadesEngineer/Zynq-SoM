@@ -1256,6 +1256,8 @@ RepairAxisResult legalize_repair_axis(
             RepairSep moved = sep;
             moved.axis_x = !moved.axis_x;
             if (moved.flipped_gap) std::swap(moved.gap, *moved.flipped_gap);
+            if(moved.reverse_on_flip)std::swap(moved.lo,moved.hi);
+            moved.reverse_on_flip=false;
             moved.flippable = false;
             out.seps.erase(out.seps.begin()
                            + static_cast<std::ptrdiff_t>(sep_i));
