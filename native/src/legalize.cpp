@@ -1169,7 +1169,8 @@ RepairAxisResult legalize_repair_axis(
     const std::vector<double>& sizes, double span, double clear,
     const std::vector<RepairSep>& seps_in,
     const std::vector<std::pair<std::string, Box4>>& frects,
-    const std::vector<NamedEdge>& extra, int repair_max) {
+    const std::vector<NamedEdge>& extra, int repair_max,
+    const std::vector<std::size_t>& choice_path) {
     if (names.size() != sizes.size()) {
         throw std::runtime_error(
             "legalize_repair_axis: names and sizes required same length");
@@ -1230,7 +1231,7 @@ RepairAxisResult legalize_repair_axis(
             out.ok = true;
             return out;
         }
-        bool flipped = false;
+        std::vector<int> eligible;
         for (int edge_i : hit.cycle_edges) {
             if (edge_i < 0
                 || edge_i >= static_cast<int>(sep_of_edge.size())) {
@@ -1240,10 +1241,17 @@ RepairAxisResult legalize_repair_axis(
             if (sep_i < 0 || sep_i >= static_cast<int>(out.seps.size())) {
                 continue;
             }
-            RepairSep& sep = out.seps[static_cast<std::size_t>(sep_i)];
-            if (!sep.flippable) {
-                continue;
-            }
+            if(out.seps[static_cast<std::size_t>(sep_i)].flippable&&
+                std::find(eligible.begin(),eligible.end(),sep_i)==eligible.end())eligible.push_back(sep_i);
+        }
+        if(eligible.empty()){out.fail="cycle";return out;}
+        const auto step=out.flips.size();
+        const auto choice=step<choice_path.size()?choice_path[step]:std::size_t{0};
+        if(choice>=eligible.size())throw std::runtime_error("legalize_repair_axis: choice outside cycle alternatives");
+        out.choice_counts.push_back(eligible.size());
+        {
+            const int sep_i=eligible[choice];
+            const RepairSep& sep=out.seps[static_cast<std::size_t>(sep_i)];
             out.flips.emplace_back(sep.lo, sep.hi, sep.axis_x);
             RepairSep moved = sep;
             moved.axis_x = !moved.axis_x;
@@ -1252,12 +1260,6 @@ RepairAxisResult legalize_repair_axis(
             out.seps.erase(out.seps.begin()
                            + static_cast<std::ptrdiff_t>(sep_i));
             out.seps.push_back(moved);
-            flipped = true;
-            break;
-        }
-        if (!flipped) {
-            out.fail = "cycle";
-            return out;
         }
     }
     out.fail = "exhausted";

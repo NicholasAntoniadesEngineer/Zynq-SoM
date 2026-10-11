@@ -705,11 +705,35 @@ void frozen(const std::filesystem::path& dir,const std::string& name,bool geomet
     throws([&]{write_floorplan_documents(documents,paths[0]);},"filesystem");
     require(!load_floorplan_spec((publication.directory/"missing.json").string()),name+": missing optional spec");
 }
+void repair_choice_contracts() {
+    const std::vector<std::string> names{"a","b"};
+    const std::vector<double> sizes{2,2};
+    const std::vector<RepairSep> seps{{true,"a","b",1,true,2},{true,"b","a",1,true,3}};
+    const auto run=[&](std::vector<std::size_t> path){return legalize_repair_axis(true,names,sizes,20,0,seps,{}, {},4,path);};
+    const auto ordinary=run({}),first=run({0}),second=run({1}),repeat=run({1});
+    require(ordinary.ok&&first.ok&&second.ok,"both eligible cycle branches must solve X");
+    require(first.choice_counts==std::vector<std::size_t>{2}&&second.choice_counts==first.choice_counts,
+        "cycle alternatives not reported exactly");
+    require(ordinary.pos==first.pos&&ordinary.flips==first.flips&&ordinary.fail==first.fail,
+        "default first-choice repair changed");
+    require(first.flips!=second.flips&&second.flips==repeat.flips&&second.pos==repeat.pos,
+        "explicit alternative ignored or not deterministic");
+    for(const auto* result:{&first,&second}) {
+        require(result->flips.size()==1&&result->seps.size()==2,"branch silently added flips or removed constraints");
+        const auto& moved=result->seps.back();
+        require(!moved.axis_x&&!moved.flippable&&moved.flipped_gap==1&&
+            moved.gap==(moved.lo=="a"?2:3),"branch lost directional gap or flip lock");
+    }
+    throws([&]{(void)run({2});},"choice outside");
+    require(seps[0].axis_x&&seps[1].axis_x&&seps[0].flippable&&seps[1].flippable,
+        "branch mutated caller separation state");
+}
 }  // namespace
 int main(int argc,char** argv) {
     try {
         const std::filesystem::path dir=argc>1 ? argv[1]:"native/tests/data/floorplan";
         const bool geometry_only=argc>2 && std::string(argv[2])=="--geometry-only";
+        repair_choice_contracts();
         compose_contracts(dir);primary_fanout_contracts();output_grid_contracts();mutations();pack_behavior();cross_behavior();frozen(dir,"devkit_mini",geometry_only);frozen(dir,"carrier",geometry_only);
         std::cout<<"floorplan contracts: "<<checks<<" checks passed"<<(geometry_only ? " (geometry/estimator slice)":"")<<"\n";
         return 0;

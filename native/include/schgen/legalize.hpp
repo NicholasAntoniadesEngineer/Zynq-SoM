@@ -237,6 +237,9 @@ struct RepairAxisResult {
     std::vector<RepairSep> seps;
     std::vector<std::tuple<std::string, std::string, bool>> flips;
     std::string fail;
+    // Eligible choices at each executed flip, in deterministic cycle order.
+    // This is evidence for a caller-bounded search, not extra executed work.
+    std::vector<std::size_t> choice_counts;
 };
 
 RepairAxisResult legalize_repair_axis(
@@ -244,6 +247,7 @@ RepairAxisResult legalize_repair_axis(
     const std::vector<double>& sizes, double span, double clear,
     const std::vector<RepairSep>& seps_in,
     const std::vector<std::pair<std::string, Box4>>& frects,
-    const std::vector<NamedEdge>& extra, int repair_max);
+    const std::vector<NamedEdge>& extra, int repair_max,
+    const std::vector<std::size_t>& choice_path = {});
 
 }  // namespace schgen
