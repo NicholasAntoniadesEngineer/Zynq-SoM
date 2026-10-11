@@ -7,6 +7,7 @@
 #include "pack_refine_internal.hpp"
 #include "constraint_order_internal.hpp"
 #include "edge_translation_internal.hpp"
+#include "near_translation_domain_internal.hpp"
 
 namespace schgen::floorplan_detail {
 namespace {
@@ -243,18 +244,47 @@ bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure) {
     std::map<std::string,std::vector<Comp>> chosen;
     auto occ_put=[&](const FloorplanBlock& b){occ.add(b.x,b.y,b.w,b.h,b.fanout_reach,b.fanout_inset,side_mask(b.side),get(chosen,b.name),counts);};
     auto occ_pull=[&](const FloorplanBlock& b){occ.remove(b.x,b.y,b.w,b.h,b.fanout_reach,b.fanout_inset,side_mask(b.side),get(chosen,b.name),counts);};
-    auto near=[&](FloorplanPoint a,double w,double h,Halo reach,Halo inset,int mask,const std::vector<Comp>& comps,
+    const auto near_domain=[&](const FloorplanBlock& b,int shape_index,auto& win) {
+        if(!starts(b.zone,"@som_j"))return;
+        // Resolve only an explicit near-SoM intent backed by an existing
+        // hard distance limit. Other targets and ordinary hints are intact.
+        for(const auto& term:in.compose.index.hard) {
+            if(term.kind!="near_max"||term.subject!=b.name||!term.bound||b.zone!="@"+term.target())continue;
+            for(const auto& jack:plan.som.js) {
+                if(jack.ref.empty()||jack.ref.front()!='J'||term.target()!="som_j"+jack.ref.substr(1))continue;
+                const FloorplanLocalMetrics* metrics=nullptr;
+                if(shape_index) {
+                    const auto m=in.compose.shape_metrics.find({b.name,shape_index});
+                    if(m!=in.compose.shape_metrics.end())metrics=&m->second;
+                } else {
+                    const auto m=in.compose.metrics.find(b.name);
+                    if(m!=in.compose.metrics.end())metrics=&m->second;
+                }
+                if(!metrics)continue;
+                const auto hull=pad_union_hull(metrics->pad_union);if(!hull)continue;
+                const Box4 target{plan.som_x+jack.x,plan.som_y+jack.y,
+                    plan.som_x+jack.x+jack.w,plan.som_y+jack.y+jack.h};
+                const auto domain=near_translation_domain(*hull,target,*term.bound,occ_step);
+                std::get<0>(win)=std::max(std::get<0>(win),domain.x0);
+                std::get<1>(win)=std::min(std::get<1>(win),domain.x1);
+                std::get<2>(win)=std::max(std::get<2>(win),domain.y0);
+                std::get<3>(win)=std::min(std::get<3>(win),domain.y1);
+            }
+        }
+    };
+    auto near=[&](const FloorplanBlock& b,int shape_index,FloorplanPoint a,double w,double h,Halo reach,Halo inset,int mask,const std::vector<Comp>& comps,
                   const FloorplanBlock* evicted) {
         std::tuple<double,double,double,double> win{-bw,2*bw,-bh,2*bh};
         if (evicted) win=evict_window(evicted->x,evicted->y,evicted->w,evicted->h,evicted->fanout_reach,evicted->fanout_inset,
                                      get(chosen,evicted->name),w,h,reach,inset,comps,clear);
+        near_domain(b,shape_index,win);
         return occ.place_near(a.first,a.second,w,h,reach,inset,mask,comps,std::get<0>(win),std::get<1>(win),std::get<2>(win),std::get<3>(win),counts);
     };
     auto seat=[&](FloorplanBlock& b,FloorplanPoint a,const FloorplanBlock* evicted) {
         const auto variants=shapes.find(b.name);
         if (variants==shapes.end()) {
             const auto& cc=get(co,{b.name,0});
-            const auto p=near(a,b.w,b.h,b.fanout_reach,b.fanout_inset,occ_top,cc,evicted);
+            const auto p=near(b,0,a,b.w,b.h,b.fanout_reach,b.fanout_inset,occ_top,cc,evicted);
             if (!p) return false;
             b.shape_idx=0; b.side="top"; chosen[b.name]=cc; pose(b,*p); return true;
         }
@@ -266,6 +296,7 @@ bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure) {
             auto win=std::make_tuple(-bw,2*bw,-bh,2*bh);
             if (evicted) win=evict_window(evicted->x,evicted->y,evicted->w,evicted->h,evicted->fanout_reach,evicted->fanout_inset,
                 get(chosen,evicted->name),s.w,s.h,s.reach,s.inset,s.comps,clear);
+            near_domain(b,static_cast<int>(k),win);
             cands.push_back({static_cast<int>(k),s.w,s.h,s.reach,s.inset,side_mask(s.side),s.side,s.comps,
                 std::get<0>(win),std::get<1>(win),std::get<2>(win),std::get<3>(win)});
         }
@@ -370,7 +401,7 @@ bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure) {
             if (ok) {
                 occ_put(b); centers[b.name]={b.cx(),b.cy()};
                 const auto anchor=pack_anchor(anchor_row(e,centers));
-                const auto p=near(anchor,e.w,e.h,e.fanout_reach,e.fanout_inset,side_mask(e.side),get(chosen,e.name),nullptr);
+                const auto p=near(e,e.shape_idx,anchor,e.w,e.h,e.fanout_reach,e.fanout_inset,side_mask(e.side),get(chosen,e.name),nullptr);
                 if (!p) { ok=false; occ_pull(b); }
                 else { e.x=p->x; e.y=p->y; occ_put(e); centers[e.name]={e.cx(),e.cy()}; }
             }

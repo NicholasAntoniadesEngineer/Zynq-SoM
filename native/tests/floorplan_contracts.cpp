@@ -4,6 +4,7 @@
 #include "board_policy_ledger_reference.hpp"
 #include "floorplan_precision_fixture.hpp"
 #include "experiment_metric_contracts.hpp"
+#include "../src/near_translation_domain_internal.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -748,6 +749,32 @@ void frozen(const std::filesystem::path& dir,const std::string& name,bool geomet
     require(!load_floorplan_spec((publication.directory/"missing.json").string()),name+": missing optional spec");
 }
 void repair_choice_contracts() {
+    const Box4 moving{-3,-2,5,4},target{10,20,12,28};
+    const auto domain=near_translation_domain(moving,target,2,0);
+    require(domain.x0==3&&domain.x1==17&&domain.y0==14&&domain.y1==32,"near domain must use asymmetric pad extents");
+    std::size_t feasible=0;
+    for(int x=-20;x<=30;++x)for(int y=-20;y<=40;++y) {
+        const auto gap_x=std::max({0.,target.x0-(x+moving.x1),x+moving.x0-target.x1});
+        const auto gap_y=std::max({0.,target.y0-(y+moving.y1),y+moving.y0-target.y1});
+        if(std::hypot(gap_x,gap_y)<=2) {
+            ++feasible;require(x>=domain.x0&&x<=domain.x1&&y>=domain.y0&&y<=domain.y1,
+                "near domain excluded a physically feasible pad-hull translation");
+        }
+    }
+    require(feasible>0,"near-domain oracle was vacuous");
+    require(std::hypot(target.x0-(domain.x0+moving.x1),target.y0-(domain.y0+moving.y1))>2,
+        "a domain corner may still fail Euclidean distance and needs the final gate");
+    const auto contact=near_translation_domain({0,0,0,0},target,0,0);
+    require(contact.x0==target.x0&&contact.y0==target.y0&&contact.x1==target.x1&&contact.y1==target.y1,
+        "zero-distance point domain must preserve closed contact bounds");
+    const auto guarded=near_translation_domain({0,0,.3,1},{.1,0,1,1},2,.05);
+    const double closed_x=-2.2;
+    require(.1-(closed_x+.3)==2&&closed_x>=guarded.x0,"cancellation excluded an accepted closed-boundary grid point");
+    throws([&]{near_translation_domain(moving,target,-1,0);},"nonnegative");
+    throws([&]{near_translation_domain({3,0,2,1},target,2,0);},"ordered");
+    throws([&]{near_translation_domain(moving,target,std::numeric_limits<double>::infinity(),0);},"finite");
+    throws([&]{near_translation_domain(moving,{1e308,0,1e308,1},1e308,0);},"not finite");
+    throws([&]{near_translation_domain(moving,target,2,-1);},"nonnegative");
     for(const bool directional_gap:{false,true}) {
         FloorplanLegalizeInput in;in.board_w=60;in.board_h=60;in.compact=true;
         in.metrics["v"]={{{"p",5,5}},{{"p",0,0,10,10}},{10,10}};
