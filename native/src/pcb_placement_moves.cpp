@@ -568,10 +568,10 @@ void Placer::refit(ExecutionFailureReceipt* failure) {
                                   centroid.first - zone.first, centroid.second - zone.second) > 0))
                 continue;
         }
-        // The compact refit must not buy a facing/airwire improvement by
+        // No refit mode may buy a facing/airwire improvement by
         // starving another group. Preserve all trial receipts above, and
         // leave the incumbent poses intact when the trial fails this check.
-        if (ctx.in.floorplan.compact_search && result.poses &&
+        if (result.poses &&
             !refit_preserves_fanout(refit_fanout_geometry(*this, nullptr),
                                    refit_fanout_geometry(*this, &*result.poses)))
             continue;

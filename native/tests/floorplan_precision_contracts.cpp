@@ -127,7 +127,8 @@ void boards(const std::filesystem::path& root,const std::filesystem::path& data,
                     "missing/invented work must fail observed floorplan receipt");
         }
         if(capture){if(!first)std::cout<<",\n";first=false;std::cout<<std::quoted(name)<<':';show(observed);}
-        placement_requirements_test::physical(fixture.input,result.model,require);
+        placement_requirements_test::physical(fixture.input,result.model,
+            [&](bool ok,const std::string& why){require(ok,name+": "+why);});
         std::ostringstream first_plan;plan(first_plan,name,result.floorplan.plan);
         begin();const auto repeated=build_pcb_model(fixture.input);const auto repeat_entries=end();
         const auto repeat_receipt=pcb_placement_accounting(repeated);

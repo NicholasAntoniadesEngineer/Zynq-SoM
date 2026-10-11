@@ -1,0 +1,68 @@
+{
+  "base_commit": "02efd8af",
+  "retained_changes": [
+    {
+      "change": "Strict-facing regression now distinguishes a repaired pose from bypassed enforcement.",
+      "evidence": "Projection retry moved the power fixture from (20,20) to (69.8,15.7). Tests independently require a positive centroid/output dot, board bounds, target separation and strict final evaluation. A zero-direction fixture remains impossible and must reject without changing incumbent poses or dropping work receipts, for both endpoint guards and compaction modes."
+    },
+    {
+      "change": "Every facing refit now preserves per-subject fan-out, not just compact-mode refits.",
+      "evidence": "Carrier multiscale fixture (175x162) had SW19001 clearance 1.7395 mm before refit; moving/rotating power D20001 reduced it to 1.4845 mm, below its 1.5 mm requirement. The existing independent guard is now unconditional when a refit trial exists. Rejected trial work remains accounted.",
+      "stage_trace": "native/build/carrier-multiscale-fanout-stages.log",
+      "maintained_regression": "pcb_refit_fanout_contracts recreates the deferred-facing plan and requires the noncompact adapter to retain the diode incumbent and avoid new starvation.",
+      "negative_control": "Isolated original compact-only guard fails the new adapter test: noncompact adapter accepted a refit that newly starves a foreign subject.",
+      "negative_log": "native/build/refit-adapter-negative.log"
+    }
+  ],
+  "final_focused_tests": {
+    "all_pass": true,
+    "count": 5,
+    "wall_seconds": 34.07,
+    "suites": ["native_pcb_compact_strict_facing_contracts", "native_pcb_refit_fanout_contracts", "native_pcb_placement_contracts", "native_placement_precision_contracts", "native_model_failure_receipt_contracts"],
+    "log": "native/build/refit-retained-tests.log"
+  },
+  "open_failure": {
+    "test": "native_floorplan_precision_contracts",
+    "variant": "carrier_multiscale",
+    "outline_mm": [175,162],
+    "reason": "Rejecting the unsafe power refit leaves power->power_som facing negative (dot -559.45). This alternative is still unaccepted; no facing or clearance requirement was relaxed.",
+    "wall_seconds": 19.52,
+    "log": "native/build/refit-retained-open-failure.log",
+    "next_direction": "Preserve already-valid incumbents and invoke stricter placement only for unsafe required refits, retaining complete trial/failure accounting."
+  },
+  "removed_experiments": [
+    {
+      "change": "Preserve the courtyard centre for all half-turn refits.",
+      "result": "Did not resolve the multiscale facing/clearance conflict; removed.",
+      "log": "native/build/refit-courtyard-tests.log"
+    },
+    {
+      "change": "Unconditionally require positive facing during all multiscale placement solves.",
+      "result": "Six focused suites passed (50.20s), including the previously failing carrier case, but reference screening expanded the devkit from 98x98 to 109x109 mm. Rejected for unnecessary incumbent regression; removed, including its mode-specific tests.",
+      "test_log": "native/build/refit-regression-tests.log",
+      "devkit_screen": "native/build/devkit-refit-guard-reference.log",
+      "devkit_rejected_pcb_sha256": "7111fdd57c3b75393d690bc49fd2d036db1fbfe5b1302b0c4823f24b94f4ee79"
+    }
+  ],
+  "retained_reference_screens": [
+    {
+      "board": "carrier compact",
+      "outline_mm": [166,159],
+      "pcb_sha256": "b9389efa52adf30b1d94cad1ede3a4387bacd53802f7babb5da07dd6306cff76",
+      "unchanged": true,
+      "repeated_identically": true,
+      "runs": 2,
+      "log": "native/build/carrier-refit-retained-reference.log"
+    },
+    {
+      "board": "devkit_mini multiscale",
+      "outline_mm": [98,98],
+      "pcb_sha256": "cfa0305491d9c4a771adb130b04c4aec6cc2894542391a5c7c9dca3a68bca3cf",
+      "unchanged": true,
+      "repeated_identically": true,
+      "runs": 2,
+      "log": "native/build/devkit-refit-retained-reference.log"
+    }
+  ],
+  "limits": "Production CLI rebuilt. Construction screens are not full board/audit/render qualification or timing comparisons. One integrated regression remains open; the goal is incomplete. No hardware limits, audit baselines or fallback ceilings changed."
+}

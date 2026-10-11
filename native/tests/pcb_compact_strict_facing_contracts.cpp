@@ -71,8 +71,33 @@ void tests() {
             const auto& t=strict.index.hard.front();
             std::vector<FloorplanLegalizeVar> vars{{t.subject,4,4,{20,20},20,20}};
             QuantizationCounts counts;std::vector<std::string> log;
-            require(!floorplan_legalize_compact_accounted(strict,vars,log,counts),
-                    "strict facing bypassed by compaction mode/fallback");
+            const bool accepted=floorplan_legalize_compact_accounted(strict,vars,log,counts);
+            require(accepted,"repairable strict-facing fixture was not repaired");
+            auto final=positions(strict);final[t.subject]={vars.front().x,vars.front().y};
+            // Independent centroid/dot witness: output C is left of the
+            // subject centroid, so the target must be left after repair.
+            const double sx=vars.front().x+1.5,tx=strict.fixed_poses.at(t.target()).first+1;
+            require((1.-1.5)*(tx-sx)>0,"repair accepted a nonpositive physical facing dot");
+            require(floorplan_evaluate_terms(strict,final).front().ok,
+                    "repaired final pose fails strict-facing evaluation");
+            const auto target=strict.fixed_poses.at(t.target());
+            const auto& v=vars.front();
+            require(v.x>=strict.clear&&v.y>=strict.clear&&
+                    v.x+v.w<=strict.board_w-strict.clear&&v.y+v.h<=strict.board_h-strict.clear,
+                    "facing repair escaped board bounds");
+            require(v.x+v.w+strict.clear<=target.first||target.first+4+strict.clear<=v.x||
+                    v.y+v.h+strict.clear<=target.second||target.second+4+strict.clear<=v.y,
+                    "facing repair violated fixed target separation");
+            require(!counts.empty(),"successful repair work receipts dropped");
+
+            // With C at the subject centroid no translation can establish a
+            // positive direction. This remains a true rejection witness even
+            // as legalizer search becomes capable of repairing the prior case.
+            auto impossible=strict;
+            impossible.metrics.at(t.subject).offsets={{"U",2,2},{"C",2,2}};
+            vars={{t.subject,4,4,{20,20},20,20}};counts.clear();log.clear();
+            require(!floorplan_legalize_compact_accounted(impossible,vars,log,counts),
+                    "zero-direction strict facing bypassed by compaction mode/fallback");
             require(vars.front().x==20 && vars.front().y==20,"rejected legalization mutated incumbent");
             require(!counts.empty(),"rejected work receipts dropped");
             require(!log.empty() && log.back().find("hard red")!=std::string::npos,"wrong rejection reason");
