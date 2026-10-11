@@ -6,4 +6,5 @@ namespace schgen::pcb_placement {
 // Whole-zone turns never exchange faces or rewrite footprint/pin documents.
 void append_rigid_zone_orientations(Context&, Geometry&, const std::string&,
                                     const Shape& incumbent);
+void append_contract_group_faces(Context&, Geometry&, const std::string&, const Shape&);
 }

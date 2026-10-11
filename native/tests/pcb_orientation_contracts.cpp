@@ -10,13 +10,14 @@ using namespace schgen::pcb_placement;
 namespace {
 std::atomic<bool> observing{false};
 std::atomic<std::size_t> dimensions{0}, coordinates{0};
+std::atomic<std::size_t> bottom_coordinates{0}, variant_dimensions{0};
 void demand(bool ok,const std::string& why){if(!ok)throw std::runtime_error(why);}
 bool equal(const Shape& a,const Shape& b){return a.w==b.w&&a.h==b.h&&a.top_off==b.top_off&&
  a.bot_off==b.bot_off&&a.extra_rot==b.extra_rot&&a.mirror==b.mirror&&a.side==b.side&&a.tag==b.tag;}
-PcbCheckInput model(const Shape& s,const Context& ctx,const Geometry& g) {
+PcbCheckInput model(const Shape& s,const Context& ctx,const Geometry& g,const std::string& sheet="unit") {
  PcbCheckModel m;m.board_w=s.w;m.board_h=s.h;m.origin_x=0;m.origin_y=0;
  for(const auto* offsets:{&s.top_off,&s.bot_off})for(const auto& [ref,p]:*offsets){
-  PcbCheckInstance i;i.ref=ref;i.sheet="unit";i.x=p.first;i.y=p.second;
+  PcbCheckInstance i;i.ref=ref;i.sheet=sheet;i.x=p.first;i.y=p.second;
   i.rotation=s.extra_rot.count(ref)?s.extra_rot.at(ref):0;
   i.side=offsets==&s.top_off?s.side:(s.side=="top"?"bottom":"top");
   i.mirror=s.mirror.count(ref);i.mod=ctx.pool.at(i.mirror?s.mirror.at(ref):g.resolvable.at(ref));
@@ -186,6 +187,72 @@ void live(const std::filesystem::path& root){
   }
   demand(before.fallback_events==after.fallback_events,"orientation manufactured fallback");
   std::cout<<project<<" appended="<<added<<" incumbent/prefix/old receipts unchanged\n";
+  if(std::string(project)=="carrier") {
+   auto experiment=std::make_shared<FloorplanExperiment>();
+   experiment->contract_group_face_sheet="usb_jtag";f.input.floorplan.experiment=experiment;
+   bottom_coordinates=0;variant_dimensions=0;observing=true;
+   auto split=build_pcb_zone_geometry(f.input);observing=false;
+   demand(split.quantization_engagements.at("placement_bottom_pose_precision4dp")==bottom_coordinates&&
+          split.quantization_engagements.at("placement_variant_dimension_precision4dp")==variant_dimensions,
+          "actual mixed-face scalar operations differ from receipt");
+   const auto& variants=split.geometry.shapes.at("usb_jtag");
+   auto repeated=build_pcb_zone_geometry(f.input);
+   demand(split.quantization_engagements==repeated.quantization_engagements,"face candidate receipts not reproducible");
+   const auto& repeated_variants=repeated.geometry.shapes.at("usb_jtag");
+   demand(variants.size()==repeated_variants.size(),"face candidate count not reproducible");
+   for(std::size_t i=0;i<variants.size();++i)demand(equal(variants[i],repeated_variants[i]),"face candidates not reproducible");
+   const auto& prefix=after.geometry.shapes.at("usb_jtag");
+   for(std::size_t i=0;i<prefix.size();++i)demand(equal(prefix[i],variants[i]),"face experiment rewrote original variants");
+   Context candidate_context(f.input);candidate_context.pool=split.footprints;
+   const auto original=model(variants.front(),candidate_context,split.geometry,"usb_jtag");
+   std::map<std::string,std::size_t> original_indices;
+   for(std::size_t i=0;i<original.model().insts.size();++i)original_indices.emplace(original.model().insts[i].ref,i);
+   std::size_t candidates=0;
+   for(std::size_t index=0;index<variants.size();++index) {
+    const auto& candidate=variants[index];
+    if(candidate.tag.rfind("contract-bottom/",0)!=0)continue;
+    ++candidates;
+    const auto measured=model(candidate,candidate_context,split.geometry,"usb_jtag");
+    demand(check_pcb_placement_contract(measured,"usb_jtag",&f.input.contracts.at("usb_jtag"),
+        candidate_context.board_refs.at("usb_jtag")).ok,"local mixed-face contract failed");
+    for(const auto* pinned:{"U1","SW1","TP1","TP2","TP3"}) {
+     const auto ref=candidate_context.board_refs.at("usb_jtag").at(pinned);
+     demand(candidate.top_off.at(ref)==variants.front().top_off.at(ref)&&!candidate.mirror.count(ref),
+            "controlled owner or top-access part moved");
+    }
+    demand(candidate.w*candidate.h<variants.front().w*variants.front().h,"candidate did not reduce envelope");
+    std::optional<FloorplanPoint> translation;
+    for(std::size_t i=0;i<measured.model().insts.size();++i) {
+     const auto& part=measured.model().insts[i];const auto oi=original_indices.at(part.ref);
+     const auto& old=original.model().insts[oi];
+     demand(part.pad_nets==old.pad_nets,"candidate changed pad-net identity");
+     if(!candidate.mirror.count(part.ref))continue;
+     const FloorplanPoint delta{part.x+old.x,part.y-old.y};
+     if(!translation)translation=delta;
+     demand(std::abs(delta.first-translation->first)<1e-4&&std::abs(delta.second-translation->second)<1e-4,
+            "group was not moved rigidly");
+     for(const auto& [pin,box]:original.geometry_at(oi).pad_boxes) {
+      const auto a=rect_center(box),b=rect_center(measured.geometry_at(i).pad_boxes.at(pin));
+      demand(std::abs(b.first-(delta.first-a.first))<1e-8&&std::abs(b.second-(delta.second+a.second))<1e-8,
+             "named pad failed independent bottom reflection");
+     }
+    }
+    const auto bound=bind_pcb_zone_shapes(split,{{"usb_jtag",static_cast<int>(index)}});
+    for(const auto& [ref,key]:candidate.mirror) {
+     demand(bound.resolvable.at(ref)==key&&bound.mirror_refs.count(ref),"mixed-face binder lost mirrored document");
+     demand(bound.side_of.at(ref)=="bottom","mixed-face binder lost bottom face");
+    }
+    demand(candidate_context.stage_input("usb_jtag",bound).pad_nets==
+           candidate_context.stage_input("usb_jtag",after.geometry).pad_nets,"binding changed authored net identity");
+   }
+   demand(candidates>0,"contract-group face experiment generated no candidates");
+   auto blocked_context=candidate_context;
+   for(const auto* owner:{"U2","U4"})blocked_context.by_ref.at(blocked_context.board_refs.at("usb_jtag").at(owner)).lib_id="Switch:SW_SPST";
+   auto blocked_geometry=after.geometry;
+   append_contract_group_faces(blocked_context,blocked_geometry,"usb_jtag",variants.front());
+   demand(blocked_geometry.shapes.at("usb_jtag").size()==prefix.size(),"pinned owners still generated bottom candidates");
+   std::cout<<"carrier contract-group candidates="<<candidates<<'\n';
+  }
  }
 }
 }
@@ -193,6 +260,8 @@ extern "C" void __cyg_profile_func_enter(void* fn,void*) {
  if(!observing)return;
  if(fn==reinterpret_cast<void*>(&placement_turn_dimension_precision4dp))++dimensions;
  if(fn==reinterpret_cast<void*>(&placement_turn_offset_precision4dp))++coordinates;
+ if(fn==reinterpret_cast<void*>(&placement_bottom_pose_precision4dp))++bottom_coordinates;
+ if(fn==reinterpret_cast<void*>(&placement_variant_dimension_precision4dp))++variant_dimensions;
 }
 extern "C" void __cyg_profile_func_exit(void*,void*) {}
 int main(int argc,char** argv){try{demand(argc==2,"fixture root required");unit();live(argv[1]);

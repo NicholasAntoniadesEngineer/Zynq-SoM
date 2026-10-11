@@ -9,6 +9,11 @@ PcbZoneResult build_pcb_zone_geometry(const PcbPlacementInput &in, ExecutionFail
     PcbZoneResult out;
     ExecutionFailureReceipt child;
     try {
+    if(in.floorplan.experiment&&in.floorplan.experiment->contract_group_face_sheet) {
+        const auto& selected=*in.floorplan.experiment->contract_group_face_sheet;
+        if(!in.floorplan.compact_search||!ctx.board_refs.count(selected))
+            throw PcbZoneInfeasible("contract-group face candidates require compact mode and a known sheet: "+selected);
+    }
     auto &g = out.geometry;
     std::set<std::string> edges;
     std::map<std::string, std::set<std::string>> faces;
@@ -214,6 +219,8 @@ PcbZoneResult build_pcb_zone_geometry(const PcbPlacementInput &in, ExecutionFail
             append_owned_group_zone_shapes(ctx, out, sheet, shape(p, "base"),
                 !templated && !edge && !conn_rot.count(sheet) &&
                 !sheet_edges.count(sheet) && !connector_class.count(sheet), &child);
+        if(in.floorplan.experiment&&in.floorplan.experiment->contract_group_face_sheet==sheet)
+            append_contract_group_faces(ctx,g,sheet,shape(p,"base"));
         if(in.floorplan.experiment&&in.floorplan.experiment->owned_face_cohesion)
             append_owned_face_zone_shapes(ctx,out,sheet,shape(p,"base"),
                 !templated&&!edge&&!conn_rot.count(sheet)&&!sheet_edges.count(sheet)&&!connector_class.count(sheet),
@@ -275,11 +282,15 @@ FloorplanZoneGeometry bind_pcb_zone_shapes(const PcbZoneResult &zones,
                 (void)p;
                 g.side_of[r] = "top";
             }
-            for (const auto &[r, key] : s.mirror) {
-                g.resolvable[r] = key;
-                g.bbox_of[r] = footprint_bbox(zones.footprints.at(key)->document, 3);
-                g.mirror_refs.insert(r);
-            }
+        }
+        // Mixed-face top-primary variants also carry mirrored bottom members.
+        // Bind the selected document independently of the primary pack face.
+        for (const auto &[r, key] : s.mirror) {
+            if(g.side_of.at(r)!="bottom"||(!s.top_off.count(r)&&!s.bot_off.count(r)))
+                throw PcbZoneInfeasible("mirrored member is not a selected bottom-side part: "+r);
+            g.resolvable[r] = key;
+            g.bbox_of[r] = footprint_bbox(zones.footprints.at(key)->document, 3);
+            g.mirror_refs.insert(r);
         }
     }
     return g;

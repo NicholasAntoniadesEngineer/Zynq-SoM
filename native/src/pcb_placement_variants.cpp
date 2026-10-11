@@ -1,6 +1,7 @@
 #include "pcb_placement_internal.hpp"
 #include "pcb_placement_orientations.hpp"
 #include "schgen/pcb_placement_gates.hpp"
+#include "contract_rigid_groups_internal.hpp"
 
 namespace schgen::pcb_placement {
 namespace {
@@ -106,6 +107,106 @@ void append_rigid_zone_orientations(Context& ctx, Geometry& g, const std::string
     }
     if (variants.size() > originals.size()) g.shapes[sheet] = std::move(variants);
 }
+void append_contract_group_faces(Context& ctx,Geometry& g,const std::string& sheet,const Shape& seed) {
+    // Local geometry candidates, not hardware qualification. Preserve the
+    // incumbent and only explore four deterministic alignments per eligible
+    // contract-connected group. Final board gates remain authoritative.
+    if(!orientation_eligible(ctx,g,sheet)||seed.side!="top"||!orientation_holds(ctx,g,sheet,seed))return;
+    const auto contract=ctx.in.contracts.find(sheet);
+    if(contract==ctx.in.contracts.end())return;
+    std::set<std::string> pinned;
+    for(const auto& ref:g.refs_by_sheet.at(sheet))
+        if(face_top(ctx.by_ref.at(ref))||has_thru_pads_from_text(ctx.pool.at(g.resolvable.at(ref))->bytes))pinned.insert(ref);
+    for(const auto& sc:ctx.in.floorplan.sheets)if(sc.name==sheet)
+        for(const auto& net:sc.nets) {
+            const auto nc=ctx.netclass_of.find(net.name);
+            if(nc==ctx.netclass_of.end()||!ctx.classes.at(nc->second))continue;
+            for(const auto& pin:net.pins)if(!pin.ref.empty()&&pin.ref.front()!='#')
+                pinned.insert(ctx.board_refs.at(sheet).at(pin.ref));
+        }
+    const auto groups=contract_rigid_groups(contract->second,ctx.board_refs.at(sheet),pinned);
+    if(!groups)return;
+    const auto model=[&](const Shape& s) {
+        PcbCheckModel m;m.board_w=s.w;m.board_h=s.h;m.origin_x=0;m.origin_y=0;
+        for(const auto* offsets:{&s.top_off,&s.bot_off})for(const auto& [ref,xy]:*offsets) {
+            const auto& p=ctx.by_ref.at(ref);PcbCheckInstance i;
+            i.ref=ref;i.sheet=sheet;i.value=p.value;i.footprint=p.footprint;
+            i.x=xy.first;i.y=xy.second;i.rotation=s.extra_rot.count(ref)?s.extra_rot.at(ref):0;
+            i.side=offsets==&s.top_off?"top":"bottom";i.mirror=s.mirror.count(ref);
+            i.mod=ctx.pool.at(i.mirror?s.mirror.at(ref):g.resolvable.at(ref));m.insts.push_back(std::move(i));
+        }
+        return PcbCheckInput(std::move(m));
+    };
+    const auto before=model(seed);
+    std::map<std::string,Box4> boxes;
+    double old_right=0,old_bottom=0;
+    for(std::size_t i=0;i<before.model().insts.size();++i) {
+        const auto box=before.courtyard_at(i);boxes.emplace(before.model().insts[i].ref,box);
+        old_right=std::max(old_right,box.x1);old_bottom=std::max(old_bottom,box.y1);
+    }
+    for(const auto& group:*groups) {
+        if(group.refs.size()<2||!group.required_top_refs.empty())continue;
+        bool eligible=true;
+        std::vector<Box4> moved_boxes,remaining_boxes;
+        for(const auto& ref:group.refs) {
+            eligible&=seed.top_off.count(ref)&&!seed.mirror.count(ref);
+            moved_boxes.push_back(boxes.at(ref));
+        }
+        if(!eligible)continue;
+        for(const auto& [ref,box]:boxes)
+            if(!std::binary_search(group.refs.begin(),group.refs.end(),ref))remaining_boxes.push_back(box);
+        const auto moving=boxes_union(moved_boxes),remaining=boxes_union(remaining_boxes);
+        if(!moving||!remaining)continue;
+        try {
+            for(const auto& ref:group.refs) {
+                const auto key=g.resolvable.at(ref),mk="@mirror/"+key;
+                if(ctx.pool.count(mk))continue;
+                const auto fp=ctx.pool.at(key);const auto document=mirrored_footprint(fp->document);
+                auto parent=std::filesystem::path(fp->source).parent_path().filename().string();
+                if(parent.size()>=7&&parent.compare(parent.size()-7,7,".pretty")==0)parent.resize(parent.size()-7);
+                const auto path=(std::filesystem::path(".mirrored_fp")/(parent+"__"+
+                    std::filesystem::path(fp->source).stem().string()+".kicad_mod")).string();
+                ctx.pool.emplace(mk,pcb_check_footprint(path,sexpr_dumps(document)+"\n",document));
+            }
+        } catch(const MirrorUnsupported&) {continue;}
+        const double width=moving->x1-moving->x0,height=moving->y1-moving->y0;
+        for(const auto target:std::vector<FloorplanPoint>{{remaining->x0,remaining->y0},
+                {remaining->x1-width,remaining->y0},{remaining->x0,remaining->y1-height},
+                {remaining->x1-width,remaining->y1-height}}) {
+            Shape candidate=seed;
+            candidate.tag="contract-bottom/"+group.refs.front()+"/"+std::to_string(target.first)+"/"+std::to_string(target.second);
+            for(const auto& ref:group.refs) {
+                const auto xy=seed.top_off.at(ref);candidate.top_off.erase(ref);
+                candidate.bot_off[ref]={placement_bottom_pose_precision4dp(moving->x1-xy.first+target.first,&ctx.quantization),
+                    placement_bottom_pose_precision4dp(xy.second-moving->y0+target.second,&ctx.quantization)};
+                candidate.extra_rot[ref]=normalize(180-(seed.extra_rot.count(ref)?seed.extra_rot.at(ref):0));
+                const auto key=g.resolvable.at(ref),mk="@mirror/"+key;
+                candidate.mirror[ref]=mk;
+            }
+            const auto checked=model(candidate);double right=0,bottom=0;bool physical=true;
+            for(std::size_t i=0;i<checked.model().insts.size();++i) {
+                const auto a=checked.courtyard_at(i);right=std::max(right,a.x1);bottom=std::max(bottom,a.y1);
+                physical&=a.x0>=0&&a.y0>=0;
+                for(std::size_t j=0;j<i;++j) {
+                    const auto& pi=checked.model().insts[i];const auto& pj=checked.model().insts[j];
+                    if(pi.side!=pj.side&&!has_thru_pads_from_text(pi.mod->bytes)&&!has_thru_pads_from_text(pj.mod->bytes))continue;
+                    const auto b=checked.courtyard_at(j);
+                    if(a.x0<b.x1+ctx.clearance&&a.x1+ctx.clearance>b.x0&&
+                       a.y0<b.y1+ctx.clearance&&a.y1+ctx.clearance>b.y0)physical=false;
+                }
+            }
+            if(!physical)continue;
+            candidate.w=placement_variant_dimension_precision4dp(right+seed.w-old_right,&ctx.quantization);
+            candidate.h=placement_variant_dimension_precision4dp(bottom+seed.h-old_bottom,&ctx.quantization);
+            if(candidate.w*candidate.h>=seed.w*seed.h||!orientation_holds(ctx,g,sheet,candidate)||!check_fanout(model(candidate),0).ok)continue;
+            auto found=g.shapes.find(sheet);
+            if(found==g.shapes.end())found=g.shapes.emplace(sheet,std::vector<Shape>{seed}).first;
+            if(std::none_of(found->second.begin(),found->second.end(),[&](const auto& old){return same_orientation(old,candidate);}))
+                found->second.push_back(std::move(candidate));
+        }
+    }
+}
+
 bool mirror_holds(const Context &ctx, const Geometry &g, const std::string &sheet,
                   const Shape &shape) {
     if (!ctx.in.contracts.count(sheet))

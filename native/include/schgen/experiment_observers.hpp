@@ -45,6 +45,7 @@ struct FloorplanExperiment {
     bool compact_edge_feasibility = false;
     bool owned_quality_first = false;
     bool owned_face_cohesion = false;
+    std::optional<std::string> contract_group_face_sheet;
     // Diagnostic candidate restrictions by generated tag, not unstable index.
     // Unknown, ambiguous or unmeasured choices fail; never silently fall back.
     std::map<std::string,std::string> owned_shape_tags;

@@ -36,8 +36,16 @@ int main(int argc,char** argv){try{
         throw std::runtime_error("quality-first help must disclose tradeoff");
     if(run({"board","--compact-placement","--owned-face-cohesion","--owned-shape","board_aux=tag","--owned-shape","bringup_rails=tag2"}).exit_code)
         throw std::runtime_error("valid named candidate help failed");
+    const auto groups=run({"board","--compact-placement","--contract-group-face-sheet","usb_jtag"});
+    if(groups.exit_code||groups.stdout_text.find("No assembly or thermal approval is implied")==std::string::npos)
+        throw std::runtime_error("contract-group help must disclose qualification limits");
     for(const auto& args:std::vector<std::vector<std::string>>{
         {"board","--owned-face-cohesion"}, {"board","--owned-shape","board_aux=tag"},
+        {"board","--contract-group-face-sheet","usb_jtag"},
+        {"board","--compact-placement","--contract-group-face-sheet"},
+        {"board","--compact-placement","--contract-group-face-sheet",""},
+        {"board","--compact-placement","--contract-group-face-sheet","a","--contract-group-face-sheet","b"},
+        {"pcb-stage","--contract-group-face-sheet","usb_jtag"},
         {"board","--compact-placement","--owned-face-cohesion","--owned-face-cohesion"},
         {"board","--compact-placement","--owned-shape","=tag"},
         {"board","--compact-placement","--owned-shape","a="},
