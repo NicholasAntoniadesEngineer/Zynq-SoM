@@ -1,5 +1,6 @@
 #include "schgen/bom.hpp"
 #include "schgen/project.hpp"
+#include "historical_input_contracts.hpp"
 
 #include <fstream>
 #include <iostream>
@@ -53,7 +54,34 @@ int main(int argc, char** argv) {
             require(file.good(), "cannot read real carrier BOM baseline");
             const std::string golden((std::istreambuf_iterator<char>(file)), {});
             const auto real = schgen::generate_bom(sheets);
-            require(real.csv == golden, "real carrier BOM differs from baseline");
+            // The committed manufacturing reference predates the reviewed C1
+            // bulk capacitor and C5 reference-filter corrections. Keep that
+            // oracle immutable; validate the precise current identities before
+            // projecting ONLY those reviewed input changes for comparison.
+            auto historical=sheets;
+            for(auto& sheet:historical)sheet=historical_input_contracts::project(sheet,"carrier");
+            require(schgen::generate_bom(historical).csv==golden,
+                    "carrier BOM differs beyond reviewed capacitor changes");
+            const auto identity=[&](const char* ref,const char* value,const char* footprint,const char* lcsc){
+                std::size_t found=0;
+                for(const auto& row:real.rows)for(const auto& actual:row.refs)if(actual==ref){
+                    ++found;require(row.value==value&&row.footprint==footprint&&row.lcsc==lcsc,
+                                    "current reviewed capacitor BOM identity");
+                }
+                require(found==1,"current capacitor BOM reference must appear exactly once");
+            };
+            identity("board_aux:C1","10u","Capacitor_SMD:C_0805_2012Metric","C15850");
+            identity("board_aux:C5","100p","Capacitor_SMD:C_0603_1608Metric","C14858");
+            require(real.rows.size()==schgen::generate_bom(historical).rows.size()+1,
+                    "reviewed filter creates exactly one extra BOM group");
+            for(const auto* ref:{"C1","C5"}){
+                auto changed=sheets;bool rejected=false;
+                for(auto& sheet:changed)if(sheet.name=="board_aux")for(auto& p:sheet.parts)
+                    if(p.ref==ref)p.value="100n";
+                try{for(auto& sheet:changed)sheet=historical_input_contracts::project(sheet,"carrier");}
+                catch(const std::runtime_error&){rejected=true;}
+                require(rejected,"reverted capacitor BOM must not pass historical projection");
+            }
             require(real.missing_footprints.empty(), "carrier contains unplaceable BOM rows");
             require(sheets.size() == 37, "carrier BOM omitted circuits");
         }
