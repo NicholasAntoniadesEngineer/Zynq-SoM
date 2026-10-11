@@ -42,6 +42,7 @@ struct FloorplanExperiment {
     // Unknown, ambiguous or unmeasured choices fail; never silently fall back.
     std::map<std::string,std::string> owned_shape_tags;
     std::function<void(std::size_t,std::size_t,std::size_t)> edge_feasibility_completed;
+    std::function<void(const std::string&,const std::string&,double,double)> edge_feasibility_rejected;
     // Observes already evaluated feasible alternatives; never runs additional
     // estimators or supplies an acceptance decision. References are borrowed
     // only for the synchronous callback.

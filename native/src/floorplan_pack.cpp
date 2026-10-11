@@ -138,6 +138,9 @@ bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure) {
                                                 initial_feasibility?&initial_keepouts:nullptr);
     if(initial_feasibility&&in.experiment->edge_feasibility_completed)
         in.experiment->edge_feasibility_completed(packed.feasibility_runs,packed.feasibility_intervals,packed.feasibility_rejections);
+    if(initial_feasibility&&!packed.rejection_reason.empty()&&in.experiment->edge_feasibility_rejected)
+        in.experiment->edge_feasibility_rejected(packed.rejected_edge,packed.rejection_reason,
+            packed.feasible_start_low,packed.feasible_start_high);
     // A bounded spill can leave blocks unplaced. Never retain their poses or
     // edge labels from an earlier outline, or pass an empty label downstream.
     if (packed.poses.size()!=plan.edge_blocks.size()) return false;

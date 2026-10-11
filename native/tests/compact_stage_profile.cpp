@@ -276,6 +276,9 @@ std::string trial(const PcbPlacementInput& source, bool compact, int run, int ge
             std::cout<<'\n';
         }
     };
+    floor->edge_feasibility_rejected=[](const std::string& edge,const std::string& reason,double low,double high){
+        std::cout<<"edge_rejection edge="<<edge<<" reason="<<reason<<" start_low="<<low<<" start_high="<<high<<'\n';
+    };
     floor->edge_feasibility_completed=[](std::size_t runs,std::size_t intervals,std::size_t rejected){
         std::cout<<"edge_feasibility runs="<<runs<<" intervals="<<intervals<<" rejected="<<rejected<<'\n';
     };

@@ -308,7 +308,8 @@ PackEdgesResult pack_edges(const std::vector<PackEdgeBlock>& blocks,
         start = std::max(lo, std::min(start, hi - total));
         if(initial_keepouts) {
             ++out.feasibility_runs;
-            if(hi-total<lo){++out.feasibility_rejections;return out;}
+            out.feasible_start_low=lo;out.feasible_start_high=hi-total;
+            if(hi-total<lo){++out.feasibility_rejections;out.rejected_edge=std::string(1,edge);out.rejection_reason="run_span";return out;}
             double feasible_low=lo,feasible_high=hi-total;
             std::vector<std::pair<double,double>> forbidden;
             for(std::size_t i=0;i<order.size();++i) {
@@ -331,9 +332,10 @@ PackEdgesResult pack_edges(const std::vector<PackEdgeBlock>& blocks,
                 for(const auto& obstacle:seated)add(obstacle,spec.clear,false);
                 for(const auto& ko:*initial_keepouts)add({ko.x0,ko.y0,ko.x1-ko.x0,ko.y1-ko.y0,{},{},'\0'},0,true);
             }
-            if(feasible_low>feasible_high){++out.feasibility_rejections;return out;}
+            out.feasible_start_low=feasible_low;out.feasible_start_high=feasible_high;
+            if(feasible_low>feasible_high){++out.feasibility_rejections;out.rejected_edge=std::string(1,edge);out.rejection_reason="fanout_domain";return out;}
             const auto feasible=floorplan_detail::nearest_feasible_edge_start(start,feasible_low,feasible_high,forbidden);
-            if(!feasible){++out.feasibility_rejections;return out;}
+            if(!feasible){++out.feasibility_rejections;out.rejected_edge=std::string(1,edge);out.rejection_reason="obstacle_intervals";return out;}
             start=*feasible;
         }
         double pos = start;
@@ -394,7 +396,8 @@ PackEdgesResult pack_edges(const std::vector<PackEdgeBlock>& blocks,
             // must satisfy the independent physical predicate, with no epsilon
             // added to cross-edge clearance or keepout contact.
             if(!actual_valid||!cross_edge_fanout_hold(candidate,spec.clear)||rects_overlap_any(bodies,*initial_keepouts,0)) {
-                out.poses.resize(run_begin);++out.feasibility_rejections;return out;
+                out.poses.resize(run_begin);++out.feasibility_rejections;
+                out.rejected_edge=std::string(1,edge);out.rejection_reason="rounded_geometry";return out;
             }
             seated=std::move(candidate);
         }

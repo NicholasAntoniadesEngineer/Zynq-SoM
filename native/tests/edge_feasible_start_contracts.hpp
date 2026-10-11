@@ -80,6 +80,13 @@ template<class Require> void run(Require require){
     const std::vector<Box4> blocked{{0,0,30,30}};
     const auto impossible=pack_edges({north,west},jacks,spec,nullptr,&blocked);
     require(impossible.poses.empty()&&impossible.feasibility_rejections==1,"blocked initial run must fail closed");
+    require(impossible.rejected_edge=="N"&&impossible.rejection_reason=="obstacle_intervals"&&
+        impossible.feasible_start_low<=impossible.feasible_start_high,"blocked domain rejection misreported");
+    require(constrained.rejection_reason.empty()&&constrained.rejected_edge.empty(),"successful run reported a rejection");
+    auto oversized_reach=north;oversized_reach.reach.w=100;
+    const auto no_domain=pack_edges({oversized_reach},{},spec,nullptr,&keepouts);
+    require(no_domain.rejected_edge=="N"&&no_domain.rejection_reason=="run_span"&&
+        no_domain.feasible_start_low>no_domain.feasible_start_high,"run including endpoint reach exceeds domain");
     for(char edge:{'N','E','S','W'}) {
         const bool horizontal=edge=='N'||edge=='S';
         PackEdgeBlock block;block.name="single";block.assigned_edge=std::string(1,edge);
@@ -94,6 +101,8 @@ template<class Require> void run(Require require){
         const auto rounded=pack_edges({block},{},spec,nullptr,&fractional);
         require(rounded.poses.empty()&&rounded.feasibility_rejections==1,
             "rounded-down unsafe clearance boundary must fail closed");
+        require(rounded.rejected_edge==std::string(1,edge)&&rounded.rejection_reason=="rounded_geometry",
+            "rounded rejection lost its edge or physical-check reason");
     }
     for(const auto& domain:Intervals{{2,1},{0,std::numeric_limits<double>::infinity()}}){
         bool threw=false;try{(void)nearest_feasible_edge_start(0,domain.first,domain.second,{});}

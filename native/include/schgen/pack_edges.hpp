@@ -58,6 +58,9 @@ struct PackEdgesResult {
     std::size_t feasibility_intervals = 0;
     std::size_t feasibility_runs = 0;
     std::size_t feasibility_rejections = 0;
+    // Diagnostic only: first rejected sequential run, not a global proof.
+    std::string rejected_edge, rejection_reason;
+    double feasible_start_low = 0, feasible_start_high = 0;
 };
 
 double edge_target(char edge, const PackEdgesSpec& spec,
