@@ -256,18 +256,23 @@ bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure) {
         // Hard connector proximity constrains every seating strategy, not
         // only those whose preferred anchor explicitly names that connector.
         for(const auto& term:in.compose.index.hard) {
-            if(term.kind!="near_max"||term.subject!=b.name||!term.bound)continue;
+            if(term.kind!="near_max"||!term.bound)continue;
+            // Pad-to-pad distance is symmetric even though authored terms
+            // retain a subject/target direction for diagnostics.
+            const auto other=term.subject==b.name?term.target():
+                (term.target()==b.name?term.subject:std::string{});
+            if(other.empty())continue;
             const auto hull=selected_hull(b.name,shape_index);if(!hull)continue;
             std::optional<Box4> target;
             for(const auto& jack:plan.som.js) {
-                if(jack.ref.empty()||jack.ref.front()!='J'||term.target()!="som_j"+jack.ref.substr(1))continue;
+                if(jack.ref.empty()||jack.ref.front()!='J'||other!="som_j"+jack.ref.substr(1))continue;
                 target=Box4{plan.som_x+jack.x,plan.som_y+jack.y,
                     plan.som_x+jack.x+jack.w,plan.som_y+jack.y+jack.h};
                 break;
             }
             // Edge blocks have their final poses before interior seating.
             // Use their actual selected pad geometry, not the body envelope.
-            if(!target)for(const auto& edge:plan.edge_blocks)if(edge.name==term.target()) {
+            if(!target)for(const auto& edge:plan.edge_blocks)if(edge.name==other) {
                 if(const auto local=selected_hull(edge.name,edge.shape_idx))
                     target=Box4{edge.x+local->x0,edge.y+local->y0,
                                 edge.x+local->x1,edge.y+local->y1};

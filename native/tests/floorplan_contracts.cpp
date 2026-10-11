@@ -540,10 +540,13 @@ void pack_behavior() {
     in.som.w=20;in.som.h=20;
     // Isolate actual seating/refinement from later legalization: the hard
     // connector distance supplies a necessary domain even for a side hint.
-    for(const bool edge_target:{false,true})for(const bool shaped:{false,true})for(const std::string hint:{"E","N","S","W"}) {
+    std::map<std::pair<bool,std::string>,FloorplanPoint> forward_edge_poses;
+    for(const bool reversed:{false,true})for(const bool edge_target:{false,true})for(const bool shaped:{false,true})for(const std::string hint:{"E","N","S","W"}) {
+        if(reversed&&!edge_target)continue; // Edge-to-interior authored terms.
         auto constrained=in;SomJGeom jack;jack.ref="J2";jack.x=0;jack.y=5;jack.w=2;jack.h=10;
         constrained.som.js={jack};
         FloorplanTerm term;term.kind="near_max";term.subject="logic";term.target_raw=edge_target?"connector":"som_j2";term.bound=5;
+        if(reversed)std::swap(term.subject,term.target_raw);
         constrained.compose.index.hard={term};
         constrained.compose.metrics["logic"].pad_union={{"U1",0,0,10,10}};
         if(shaped)constrained.compose.shape_metrics[{"logic",1}].pad_union={{"U1",1,1,9,9}};
@@ -561,6 +564,13 @@ void pack_behavior() {
         }
         require(e.attempt_pack(false),"side-hinted constrained block must find the available left slot");
         const auto& placed=e.plan.interior_blocks.front();
+        if(edge_target) {
+            const auto key=std::make_pair(shaped,hint);
+            const FloorplanPoint point{placed.x,placed.y};
+            if(reversed)require(point==forward_edge_poses.at(key),
+                "reversing a symmetric proximity term changes seating/refinement");
+            else forward_edge_poses[key]=point;
+        }
         Box4 target{e.plan.som_x,e.plan.som_y+5,e.plan.som_x+2,e.plan.som_y+15};
         if(edge_target) {
             const auto& edge=e.plan.edge_blocks.front();
