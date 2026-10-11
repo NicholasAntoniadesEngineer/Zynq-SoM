@@ -303,6 +303,15 @@ bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure) {
                 if (winner) for (std::size_t i=0;i<hits.size();++i) if (hits[i].index==*winner) {
                     best=hits[i]; selected=evaluated.at(i); break;
                 }
+                if(in.experiment&&in.experiment->owned_shape_selection_completed) {
+                    std::vector<OwnedShapeTieRank> alternatives;
+                    alternatives.reserve(hits.size());
+                    for(std::size_t i=0;i<hits.size();++i) {
+                        const auto& h=hits[i];
+                        alternatives.push_back({h.index,true,h.w,h.h,evaluated.at(i),h.dist_key,h.side});
+                    }
+                    in.experiment->owned_shape_selection_completed(b.name,alternatives,in.owned_shape_quality,best.index);
+                }
             }
             side_offers[b.name]={hits[0].side+"(incumbent)/"+
                 (in.compact_search ? "all-shapes":hits[1].side),best.side,best.index,incumbent,

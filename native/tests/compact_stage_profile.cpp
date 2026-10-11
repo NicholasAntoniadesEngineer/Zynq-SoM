@@ -30,6 +30,7 @@ struct Options {
     bool constraint_first = false;
     bool edge_translation = false;
     bool edge_feasibility = false;
+    bool owned_selection_trace = false;
     bool multiscale_outline = false;
     std::optional<int> interior_order;
     std::optional<FloorplanPoint> outline;
@@ -43,6 +44,7 @@ void help() {
         "  [--interior-order 0|1|2|3] (single connectivity/area/scarcity/constraint order, no order retries)\n"
         "  [--edge-translation off|on] (opt-in bounded edge repair, requires --compact-search on)\n"
         "  [--edge-feasibility off|on] (constraint-aware initial runs, requires --compact-search on)\n"
+        "  [--owned-selection-trace off|on] (read-only multi-alternative selection trace)\n"
         "  [--outline-mm WIDTHxHEIGHT] (explicit diagnostic outline; skips automatic sizing search)\n"
         "  [--initial-outline-mm WIDTHxHEIGHT] (validated starting candidate for automatic sizing)\n"
         "  [--multiscale-outline off|on] (local axis/diagonal refinement; can miss smaller grid candidates)\n"
@@ -94,6 +96,10 @@ Options parse(int argc, char** argv) {
         else if (arg == "--constraint-first") {
             if (value != "on" && value != "off") throw std::invalid_argument("constraint-first must be off|on");
             out.constraint_first = value == "on";
+        }
+        else if (arg == "--owned-selection-trace") {
+            if(value!="on"&&value!="off")throw std::invalid_argument("owned-selection-trace must be off|on");
+            out.owned_selection_trace=value=="on";
         }
         else if (arg == "--edge-feasibility") {
             if(value!="on"&&value!="off")throw std::invalid_argument("edge-feasibility must be off|on");
@@ -216,7 +222,7 @@ PcbPlacementInput trial_input(const PcbPlacementInput& source,bool compact,
 std::string trial(const PcbPlacementInput& source, bool compact, int run, int generation,
                   bool constraint_first = false,const std::optional<FloorplanPoint>& outline=std::nullopt,bool edge_translation=false,
                   const std::optional<FloorplanPoint>& initial_outline=std::nullopt,
-                  const std::optional<int>& interior_order=std::nullopt,bool multiscale_outline=false,bool edge_feasibility=false) {
+                  const std::optional<int>& interior_order=std::nullopt,bool multiscale_outline=false,bool edge_feasibility=false,bool owned_selection_trace=false) {
     const auto copy_start = Clock::now();
     auto input = trial_input(source,compact,outline);
     const auto copy_seconds = seconds(copy_start);
@@ -228,6 +234,21 @@ std::string trial(const PcbPlacementInput& source, bool compact, int run, int ge
     floor->compact_constraint_first = constraint_first;
     floor->compact_edge_translation = edge_translation;
     floor->compact_edge_feasibility = edge_feasibility;
+    if(owned_selection_trace)floor->owned_shape_selection_completed=[event=std::size_t{0}](const std::string& sheet,const auto& alternatives,const auto& quality,int selected) mutable {
+        ++event;
+        for(const auto& rank:alternatives){
+            const auto found=quality.find({sheet,rank.index});
+            if(found==quality.end())continue;
+            const auto& q=found->second;
+            if(q.state!=OwnedShapeQualityState::Measured||q.bypass_pad_gaps.empty())continue;
+            std::cout<<"owned_selection event="<<event<<" sheet="<<sheet<<" index="<<rank.index<<" chosen="<<(rank.index==selected)
+                     <<" width="<<rank.w<<" height="<<rank.h<<" estimator="<<rank.estimator
+                     <<" distance_key="<<rank.distance_key<<" side="<<rank.side;
+            for(const auto& [cap,gap]:q.bypass_pad_gaps)std::cout<<" gap_"<<cap<<'='<<gap;
+            for(const auto& [cap,subject]:q.subjects)std::cout<<" sides_"<<cap<<'='<<subject.owner_side<<'/'<<subject.cap_side;
+            std::cout<<'\n';
+        }
+    };
     floor->edge_feasibility_completed=[](std::size_t runs,std::size_t intervals,std::size_t rejected){
         std::cout<<"edge_feasibility runs="<<runs<<" intervals="<<intervals<<" rejected="<<rejected<<'\n';
     };
@@ -261,6 +282,7 @@ std::string trial(const PcbPlacementInput& source, bool compact, int run, int ge
         << " constraint_first=" << constraint_first
         << " edge_translation=" << edge_translation
         << " edge_feasibility=" << edge_feasibility
+        << " owned_selection_trace=" << owned_selection_trace
         << " input_copy_seconds=" << copy_seconds << " status=started\n" << std::flush;
     if(outline)std::cout<<"outline_override width_mm="<<outline->first<<" height_mm="<<outline->second
                         <<" automatic_sizing=disabled source_policy_otherwise_unchanged=1\n"<<std::flush;
@@ -368,7 +390,7 @@ int main(int argc, char** argv) {
             const int generation = options.inputs == "prepared" ? 1 : run;
             for (const bool compact : {false, true}) {
                 if ((compact && options.compact == "off") || (!compact && options.compact == "on")) continue;
-                const auto hash = trial(prepared->input, compact, run, generation, options.constraint_first,options.outline,options.edge_translation,options.initial_outline,options.interior_order,options.multiscale_outline,options.edge_feasibility);
+                const auto hash = trial(prepared->input, compact, run, generation, options.constraint_first,options.outline,options.edge_translation,options.initial_outline,options.interior_order,options.multiscale_outline,options.edge_feasibility,options.owned_selection_trace);
                 auto [it, inserted] = first_hash.emplace(compact, hash);
                 if (!inserted && it->second != hash) throw std::runtime_error("repeat PCB bytes changed; investigate input drift/nondeterminism");
                 std::cout << "repeat compact_search=" << compact << " same_as_first=" << (!inserted ? "true" : "first") << '\n';

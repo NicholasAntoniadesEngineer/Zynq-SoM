@@ -15,6 +15,13 @@ void profile_option_contracts() {
         for (auto& arg : args) raw.push_back(arg.data());
         return parse(static_cast<int>(raw.size()), raw.data());
     };
+    if(options({"profile","--repo",".","--compact-search","on"}).owned_selection_trace||
+       !options({"profile","--repo",".","--compact-search","on","--owned-selection-trace","on"}).owned_selection_trace)
+        throw std::runtime_error("owned selection trace default/selection mismatch");
+    bool invalid_trace=false;
+    try{(void)options({"profile","--repo",".","--compact-search","on","--owned-selection-trace","typo"});}
+    catch(const std::invalid_argument&){invalid_trace=true;}
+    if(!invalid_trace)throw std::runtime_error("invalid owned selection trace accepted");
     if(options({"profile","--repo",".","--compact-search","on"}).edge_feasibility||
        !options({"profile","--repo",".","--compact-search","on","--edge-feasibility","on"}).edge_feasibility)
         throw std::runtime_error("initial edge feasibility default/selection mismatch");

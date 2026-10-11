@@ -1,0 +1,56 @@
+{
+  "status": "diagnostic_evidence_selection_policy_unchanged",
+  "base_commit": "f7aa61fa",
+  "change": "Add a synchronous read-only observer of already evaluated multi-alternative owned-shape selections and an opt-in profiler trace. No additional estimator calls, search candidates, movement permission, side changes or acceptance decisions.",
+  "command": "native/build/fast/schgen_compact_stage_profile --repo . --project carrier --compact-search on --interior-order 3 --outline-mm 168x159 --runs 1 --input-mode prepared --edge-feasibility on --owned-selection-trace on --schematic /private/tmp/carrier-initial-edge-qualified.oZRoap/Zynq_Carrier.kicad_sch",
+  "log": "native/build/carrier-owned-selection-final-trace.log",
+  "tests": {
+    "passed": 3,
+    "failed": 0,
+    "seconds": 20.54,
+    "names": ["native_owned_shape_quality_engine_contracts", "native_owned_shape_quality_engine_live_contracts", "native_compact_profile_inputs_contracts"],
+    "proof": "Synthetic actual-engine fixture compares observed/unobserved geometry, offers, complete plan JSON, quantization receipts and fallback counts; verifies both evaluated ranks and the final selected index. Real pilot engine and profiler input tests also pass."
+  },
+  "current_carrier": {
+    "pcb_sha256": "06b36274ba38429aeb1d8c7657ebfe01d0926fb52fa49ac8157d92491abb6997",
+    "matches_qualified_carrier": true,
+    "dimensions_mm": [168,159],
+    "placement_contract_ok": true,
+    "placement_flow_ok": true,
+    "hard_red": 0,
+    "model_seconds_with_trace": 3.032974208,
+    "timing_note": "Diagnostic logging is included; not a performance comparison or full build."
+  },
+  "finding_bringup_rails": {
+    "event": 10,
+    "chosen_index": 25,
+    "alternative_index": 57,
+    "same_dimensions_mm": [16.894,41.35],
+    "same_side": "bottom",
+    "same_distance_key": 66.402,
+    "owner_cap_sides": "bottom/bottom",
+    "chosen_estimator": 1534.3347638698262,
+    "alternative_estimator": 1535.3606582501009,
+    "estimator_change_percent": 0.06686248688566239,
+    "chosen_C7001_pad_gap_mm": 8.0298005,
+    "alternative_C7001_pad_gap_mm": 6.8005955,
+    "pad_gap_change_percent": -15.308039097608946,
+    "interpretation": "A feasible same-envelope, same-side local alternative is available but loses the primary estimated inter-block cost ranking. The current exact-rank tie rule never compares its improved proximity against the winner. These gaps remain UNVERIFIED hardware proximity, not approved thresholds."
+  },
+  "finding_board_aux": {
+    "event": 16,
+    "chosen_index": 29,
+    "chosen_dimensions_mm": [19.9,11.68],
+    "chosen_estimator": 1371.1167739852629,
+    "chosen_owner_cap_sides": "bottom/top",
+    "chosen_bypass_gaps_mm": {"C1001":11.789482685182767,"C1002":9.6191971124947084,"C1004":10.418536863509638,"C1005":11.116994929840946},
+    "alternative_index": 37,
+    "alternative_dimensions_mm": [10.98,16.804],
+    "alternative_estimator": 1475.2867164532602,
+    "alternative_owner_cap_sides": "top/bottom",
+    "alternative_bypass_planar_gaps_mm": {"C1001":0,"C1002":0,"C1004":0,"C1005":0},
+    "interpretation": "Better projected pad distances exist, but this alternative also changes envelope, location and side arrangement. Zero planar gap across opposite faces does not prove short electrical loop length or safe assembly. Do not promote it using the gap alone."
+  },
+  "next_experiment": "Add an opt-in, bounded owned-quality-first candidate strategy within compatible same-envelope/same-side alternatives, retain the existing strategy as an incumbent, and compare full-board constraints and area before expensive qualification. Do not invent numeric decoupling limits or widen exact ties by arbitrary tolerances. Separate same-face proximity from cross-face projected distance.",
+  "limitations": ["Observer reports only multi-alternative selection branches, not infeasible shapes or singleton choices.","Events are trial-local decisions, not proof every chosen shape survives final refinement.","No board geometry changed in this batch.","Full source audit and render were not repeated because this batch only observes selection; previous qualified artifact remains preserved.","Broader goal remains incomplete."]
+}

@@ -85,6 +85,18 @@ void synthetic() {
     in.owned_shape_quality = {{{"pilot", 0}, quality(3, 4)}, {{"pilot", 1}, quality(2, 4)}};
     const auto improved = pack(in);
     require(improved.chosen == 1, "engine failed to replace dominated same-primary original");
+    auto observed=in;
+    auto observation=std::make_shared<FloorplanExperiment>();
+    std::size_t events=0;
+    observation->owned_shape_selection_completed=[&](const std::string& sheet,const auto& ranks,const auto& qualities,int chosen){
+        ++events;
+        require(sheet=="pilot"&&ranks.size()==2&&chosen==1,"selection observer missed evaluated alternatives or final choice");
+        require(qualities.at({sheet,chosen}).bypass_pad_gaps.at("C1")==2,"selection observer lost subject quality");
+        for(const auto& rank:ranks)require(owned_shape_valid_tie_rank(rank),"invalid observed rank");
+    };
+    observed.experiment=observation;
+    unchanged(improved,pack(observed),"read-only observer changed geometry or actual work receipts");
+    require(events==1,"selection observer duplicated an event");
     require(improved.plan.interior_blocks[0].w == baseline.plan.interior_blocks[0].w &&
         improved.plan.interior_blocks[0].h == baseline.plan.interior_blocks[0].h &&
         improved.plan.interior_blocks[0].x == baseline.plan.interior_blocks[0].x &&

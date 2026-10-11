@@ -1,6 +1,7 @@
 #pragma once
 
 #include "schgen/pcb_checks.hpp"
+#include "schgen/owned_shape_quality.hpp"
 
 #include <functional>
 #include <set>
@@ -36,6 +37,11 @@ struct FloorplanExperiment {
     bool compact_edge_translation = false;
     bool compact_edge_feasibility = false;
     std::function<void(std::size_t,std::size_t,std::size_t)> edge_feasibility_completed;
+    // Observes already evaluated feasible alternatives; never runs additional
+    // estimators or supplies an acceptance decision. References are borrowed
+    // only for the synchronous callback.
+    std::function<void(const std::string&,const std::vector<OwnedShapeTieRank>&,
+                       const OwnedShapeQualityTable&,int)> owned_shape_selection_completed;
     // Diagnostic single-order ablation, independent of compact shape selection:
     // 0 connectivity, 1 area, 2 shape scarcity, 3 hard-constraint incidence.
     // No alternate-order retries are executed when explicitly selected.
