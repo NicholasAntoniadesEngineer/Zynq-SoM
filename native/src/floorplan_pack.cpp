@@ -432,6 +432,10 @@ bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure) {
         row.name=b->name; row.x=b->x; row.y=b->y; row.w=b->w; row.h=b->h;
         row.reach=b->fanout_reach; row.inset=b->fanout_inset; row.mask=side_mask(b->side); row.comps=get(chosen,b->name);
         row.anchor=anchor_row(*b,centers); row.aff_named=get(affinity,b->name);
+        if(starts(b->zone,"@som_j")) {
+            auto win=std::make_tuple(-bw,2*bw,-bh,2*bh);
+            near_domain(*b,b->shape_idx,win);row.translation_window=win;
+        }
         if (b->pull && !b->pull->exclusive) row.pull_to=b->pull->to;
         refine.push_back(std::move(row));
     }

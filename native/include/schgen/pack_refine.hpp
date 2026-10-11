@@ -4,6 +4,8 @@
 #include "schgen/pack_anchor.hpp"
 
 #include <string>
+#include <optional>
+#include <tuple>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -23,6 +25,10 @@ struct RefineBlock {
     PackAnchorIn anchor;
     std::string pull_to;
     std::vector<std::pair<std::string, double>> aff_named;
+    // Optional necessary translation bounds (x0,x1,y0,y1), not an
+    // electrical acceptance test. Refinement must retain seating's domain;
+    // bounds must be finite/ordered and contain the supplied incumbent.
+    std::optional<std::tuple<double,double,double,double>> translation_window;
 };
 
 struct RefineResult {

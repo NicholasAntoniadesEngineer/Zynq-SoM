@@ -59,6 +59,13 @@ RefineResult refine_pack_passes(
     if (max_passes < 1) {
         throw std::runtime_error("refine_pack_passes: max_passes required");
     }
+    for(const auto& block:blocks)if(block.translation_window) {
+        const auto [x0,x1,y0,y1]=*block.translation_window;
+        if(!std::isfinite(x0)||!std::isfinite(x1)||!std::isfinite(y0)||!std::isfinite(y1)||x0>x1||y0>y1)
+            throw std::invalid_argument("refine_pack_passes: invalid translation window");
+        if(!std::isfinite(block.x)||!std::isfinite(block.y)||block.x<x0||block.x>x1||block.y<y0||block.y>y1)
+            throw std::invalid_argument("refine_pack_passes: incumbent outside translation window");
+    }
     Occupancy working = occupancy;
     working.set_board(board_w, board_h);
     auto centers = start_centers;
@@ -74,10 +81,12 @@ RefineResult refine_pack_passes(
                            block.inset, block.mask, block.comps, counts);
             rebuild_anchor(block.anchor, block, centers);
             const auto anchor = pack_anchor(block.anchor);
+            const auto [x0,x1,y0,y1]=block.translation_window.value_or(std::make_tuple(wx0,wx1,wy0,wy1));
             auto hit = working.place_near(anchor.first, anchor.second, block.w,
                                           block.h, block.reach, block.inset,
-                                          block.mask, block.comps, wx0, wx1,
-                                          wy0, wy1, counts);
+                                          block.mask, block.comps,
+                                          std::max(wx0,x0),std::min(wx1,x1),
+                                          std::max(wy0,y0),std::min(wy1,y1),counts);
             if (!hit.has_value()) {
                 working.add(block.x, block.y, block.w, block.h, block.reach,
                             block.inset, block.mask, block.comps, counts);

@@ -1,0 +1,79 @@
+{
+  "base_commit": "1c77bb96",
+  "scope": "Retain necessary near-SoM translation bounds from seating through refinement; not hardware qualification or a Python timing comparison.",
+  "implementation": {
+    "retained": "Optional finite closed translation windows in RefineBlock, validated before occupancy work. Engine passes the selected shape's existing guarded pad-hull domain for explicit near-SoM intent. Unbounded callers retain the original search. Empty grid intersections retain the valid incumbent.",
+    "acceptance": "Necessary rectangular filter only: not a Euclidean-distance, assembly, electrical or final placement acceptance test. Existing legalizer and final gates remain authoritative.",
+    "rejected_prototype": "After exhausting original victim rescues, reconsider displaced blocks' registered shapes without recursive eviction. Counted attempted shape searches and restored victim/incoming state. It seated USB-JTAG at 165x159 but failed subsequent legalization. Removed all prototype code and its temporary fallback registration: no demonstrated accepted-board benefit justified the extra search."
+  },
+  "tests": {
+    "command": "ctest --test-dir native/build/fast -R '^(native_floorplan_contracts|native_occupancy_precision_contracts|native_compact_retry_contracts)$' --output-on-failure",
+    "passed": 3,
+    "failed": 0,
+    "seconds": 22.29,
+    "coverage": [
+      "Both-board floorplan geometry/estimator regressions and retry rollback/accounting",
+      "Top and bottom primary faces with opposite-face child reservations",
+      "Unbounded refinement demonstrably leaves the supplied domain; bounded refinement reaches its closed boundary",
+      "Repeat determinism and caller occupancy preservation",
+      "Inverted, nonfinite and incumbent-excluding windows reject before occupancy operations",
+      "A zero-width off-grid domain preserves the valid incumbent when no search-grid candidate exists",
+      "Independent instrumentation of all six occupancy precision families, including rejected and empty-grid paths"
+    ],
+    "log": "native/build/refinement-domain-tests.log",
+    "log_sha256": "9e3e4219178024aca6f2102a04e5022fab2da6bccf713cf5a27a594102e5c78d"
+  },
+  "screen_configuration": {
+    "executable": "native/build/fast/schgen_compact_stage_profile",
+    "common_arguments": ["--repo", ".", "--project", "carrier", "--compact-search", "on", "--input-mode", "prepared", "--schematic", "/private/tmp/carrier-contract-finalist.PuuvCD/Zynq_Carrier.kicad_sch", "--interior-order", "3", "--edge-feasibility", "on", "--owned-quality-first", "on", "--owned-face-cohesion", "on", "--contract-group-face-sheet", "usb_jtag", "--owned-shape", "board_aux=owned-face-fixed/a2.2/owned-pins-forward"],
+    "note": "Construction-only screens; prepared input loading excluded from model times, observer overhead included, OS cache uncontrolled. No full source audit, DRC or rendering in these screens."
+  },
+  "retained_code_incumbent": {
+    "spec": "native/benchmarks/carrier-166x159-contract-groups.floorplan.json",
+    "runs": 2,
+    "dimensions_mm": [166,159],
+    "area_mm2": 26394,
+    "top": 416,
+    "bottom": 153,
+    "pcb_sha256_both_runs": "4d1432b252230cbfc6e7342de7f0e431a0f12dc16d7d26ebd08fe0a67508bab1",
+    "matches_previously_qualified_finalist": true,
+    "model_seconds": [2.762199291,2.708708792],
+    "pcb_text_seconds": [0.034590791,0.034291167],
+    "receipt_comparison": "All receipt and fallback rows exactly match native/build/carrier-166x159-contract-groups-domain-final.log (two runs each).",
+    "log": "native/build/carrier-166x159-refinement-domain-incumbent.log",
+    "log_sha256": "7da190d50fd64fc3a7a74a6b28638c06807c8b05b7df3559576a66c335ea9792"
+  },
+  "explicit_domain_integration": {
+    "spec": "native/benchmarks/carrier-165x159-term-near-som.floorplan.json",
+    "outline_override_mm": [166,159],
+    "runs": 1,
+    "same_qualified_pcb_hash": true,
+    "placement_contract_ok": true,
+    "placement_flow_ok": true,
+    "hard_red": 0,
+    "hard_margin_min": 4.07,
+    "hard_margin_sum": 887.46,
+    "model_seconds": 2.7312295,
+    "pcb_text_seconds": 0.034018167,
+    "model_occupancy_cell_index_before_after": [8266040,8263160],
+    "model_occupancy_frontier_key1dp_before_after": [23854769,23851817],
+    "performance_claim": "Small proven work reduction for this explicit-domain configuration, not a measured general wall-time speedup.",
+    "log": "native/build/carrier-166x159-refinement-domain-explicit.log"
+  },
+  "rejected_prototype_screens": {
+    "spec": "native/benchmarks/carrier-165x159-term-near-som.floorplan.json",
+    "runs_each": 1,
+    "rows": [
+      {"outline_mm":[165,159],"model_failure_seconds":0.6284305,"stage":"legalizer","detail":"HDMI termination near-Max versus USB-JTAG separation cycle; 32.311 mm contradictory bounds"},
+      {"outline_mm":[164,160],"model_failure_seconds":0.352713333,"stage":"interior_seating","subject":"usb_jtag"},
+      {"outline_mm":[163,161],"model_failure_seconds":0.358644959,"stage":"interior_seating","subject":"usb_jtag"},
+      {"outline_mm":[166,158],"model_failure_seconds":0.631772291,"stage":"legalizer"},
+      {"outline_mm":[167,157],"model_failure_seconds":1.008476625,"stage":"interior_seating","subject":"bringup_modules"}
+    ],
+    "outer_attempts_each": 2,
+    "failure_receipts_captured_each": true,
+    "not_a_global_infeasibility_proof": true,
+    "after_removing_prototype": "165x159 again fails early USB-JTAG seating in two outer attempts, 0.300074625 s; receipt captured. No smaller board was accepted."
+  },
+  "remaining": "Goal remains incomplete. Preserve 166x159 accepted finalist and original 168x163 reference. Need improved coupled placement/legalization, authoritative unresolved hardware constraints, broader performance work and matched historical comparisons. No fabrication-readiness claim."
+}
