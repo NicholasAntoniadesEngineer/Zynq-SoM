@@ -1,4 +1,5 @@
 #include "pcb_placement_fixture.hpp"
+#include "pcb_placement_requirements.hpp"
 #include "ledger_accounting_fixture.hpp"
 #include "floorplan_precision_fixture.hpp"
 #include "placement_precision_fixture.hpp"
@@ -49,9 +50,9 @@ const std::array<Scalar,18> operations{{placement_turn_dimension_precision4dp,
 void begin(){for(auto& count:entries)count=0;observing=true;}
 QuantizationCounts end(){observing=false;QuantizationCounts out;for(std::size_t i=0;i<names.size();++i)if(entries[i])out[names[i]]=entries[i];return out;}
 [[maybe_unused]] void verify(const QuantizationCounts& owned,const QuantizationCounts& calls){require(select(owned)==calls,"receipt differs from independently instrumented entries");}
-void account(const std::string& label,const QuantizationCounts& owned,const QuantizationCounts& calls){
+void account(const std::string& label,const QuantizationCounts& owned,const QuantizationCounts& calls,bool historical=true){
 #ifdef PLACEMENT_PRECISION_BASELINE
-    (void)label;(void)owned;(void)calls;
+    (void)label;(void)owned;(void)calls;(void)historical;
 #else
 #ifndef PLACEMENT_PRECISION_PLAIN
     verify(owned,calls);
@@ -60,7 +61,7 @@ void account(const std::string& label,const QuantizationCounts& owned,const Quan
 #endif
     const auto actual=select(owned);
     for(const auto& [name,count]:actual)if(count)exercised.insert(name);
-    if(!capture_counts){
+    if(!capture_counts&&historical){
         QuantizationCounts expected;
         for(const auto& [name,value]:placement_fixture::field(expected_counts,label).object_value)
             expected[name]=static_cast<std::size_t>(value.number_value);
@@ -199,12 +200,37 @@ void boards(const std::filesystem::path& root){
         if(variant==3){if(!f.input.floorplan.spec)f.input.floorplan.spec=FloorplanSpec{};f.input.floorplan.spec->outline=std::make_pair(100.,100.);}
         std::cerr<<"board "<<label<<'\n';
         begin();const auto zones=build_pcb_zone_geometry(f.input);const auto zone_calls=end();
-        account("zones/"+label,zones.quantization_engagements,zone_calls);
+        account("zones/"+label,zones.quantization_engagements,zone_calls,false);
         for(const auto& [sheet,shapes]:zones.geometry.shapes){legacy<<"SHAPES "<<std::quoted(sheet)<<'\n';for(const auto& s:shapes)shape(s);}
         for(const auto& [key,fp]:zones.footprints)legacy<<"FOOTPRINT "<<std::quoted(key)<<' '<<std::quoted(fp->bytes)<<'\n';
         counts("zone standalone",zones.quantization_engagements);
         begin();const auto result=build_pcb_model(f.input);const auto calls=end();const auto total=pcb_placement_accounting(result);
-        account("board/"+label,total.quantization_engagements,calls);
+        account("board/"+label,total.quantization_engagements,calls,false);
+#ifndef PLACEMENT_PRECISION_BASELINE
+        placement_requirements_test::structure(f.input,zones,result,require);
+        placement_requirements_test::physical(f.input,result.model,require);
+        begin();const auto repeated=build_pcb_model(f.input);const auto repeated_calls=end();
+        const auto repeated_total=pcb_placement_accounting(repeated);
+        account("repeat/"+label,repeated_total.quantization_engagements,repeated_calls,false);
+        require(calls==repeated_calls&&total.quantization_engagements==repeated_total.quantization_engagements&&
+            total.fallback_events==repeated_total.fallback_events,"current board work is not reproducible");
+        std::ostringstream first_output,second_output;first_output<<std::hexfloat;second_output<<std::hexfloat;
+        floorplan_precision_fixture::node(first_output,pcb_model_json(result.model));
+        floorplan_precision_fixture::node(second_output,pcb_model_json(repeated.model));
+        floorplan_precision_fixture::node(first_output,floorplan_plan_json(result.floorplan.plan));
+        floorplan_precision_fixture::node(second_output,floorplan_plan_json(repeated.floorplan.plan));
+        require(first_output.str()==second_output.str()&&result.stages==repeated.stages,
+            "current model/plan/checkpoint geometry is not reproducible");
+#ifndef PLACEMENT_PRECISION_PLAIN
+        for(const auto& [key,count]:calls){
+            (void)count;
+            for(bool erase:{false,true}){
+                auto bad=total.quantization_engagements;if(erase)bad.erase(key);else ++bad[key];
+                rejects([&]{verify(bad,calls);});
+            }
+        }
+#endif
+#endif
         legacy<<"BOARD "<<label<<'\n';floorplan_precision_fixture::node(legacy,pcb_model_json(result.model));
         auto plan=result.floorplan.plan;
         auto prior_total=total.quantization_engagements;
@@ -251,12 +277,21 @@ int main(int argc,char** argv){try{
     if(!capture_counts)expected_counts=parse_json_file((data/"additive_counts.json").string());
     scalars();
 #endif
-    kernels();boards(root);
+    kernels();
+#ifndef PLACEMENT_PRECISION_BASELINE
+    const auto frozen=placement_fixture::read(data/"legacy_output.txt");
+    const auto board_start=frozen.find("SHAPES ");
+    require(board_start!=std::string::npos&&legacy.str()==frozen.substr(0,board_start),
+        "immutable placement kernel geometry and prior counts drift");
+#endif
+    boards(root);
 #ifndef PLACEMENT_PRECISION_BASELINE
     for(const auto& name:names)require(exercised.count(name)!=0,"no actual consumer exercised "+name);
 #endif
     if(mode=="--capture-legacy")std::cout<<legacy.str();
+#ifdef PLACEMENT_PRECISION_BASELINE
     else require(legacy.str()==placement_fixture::read(data/"legacy_output.txt"),"pre-migration full geometry/output/old-count bytes drift");
+#endif
     if(capture_counts)std::cout<<"{\n"<<additive.str()<<"\n}\n";
     std::cerr<<checks<<" placement precision checks PASS\n";return 0;
 }catch(const std::exception& e){std::cerr<<"placement precision FAILED: "<<e.what()<<'\n';return 1;}}
