@@ -83,6 +83,23 @@ void geometry(const PcbZoneResult &zones, const J &expected, const std::string &
 void run(const std::filesystem::path &root, const std::string &name, const std::string &mode) {
     auto f = load(root, name);
     const bool single = mode == "--single";
+    if(name=="carrier"&&!single) {
+        // A two-sided search must not move the whole USB bridge zone onto an
+        // unreferenced signal layer. Exercise both authored eligibility forms
+        // against the real carrier net classes, not a mocked gate result.
+        require(bool(f.input.floorplan.spec),"carrier side-policy witness needs a spec");
+        for(const auto* layer:{"either","bottom"}) {
+            auto changed=f.input;
+            changed.floorplan.spec->interior.at("usb_jtag").layer=layer;
+            bool rejected=false;
+            try{(void)build_pcb_zone_geometry(changed);}
+            catch(const std::exception& e){
+                rejected=std::string(e.what()).find(
+                    "usb_jtag carries impedance-controlled net class DP90_USB; B.Cu has no emitted reference plane")!=std::string::npos;
+            }
+            require(rejected,std::string("unreferenced USB face eligibility escaped: ")+layer);
+        }
+    }
     if (single) {
         const auto variant = parse_json_file(
             (root / "native/tests/data/pcb_placement" / (name + "_single.json")).string());

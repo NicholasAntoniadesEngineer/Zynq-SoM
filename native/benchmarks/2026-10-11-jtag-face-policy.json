@@ -1,0 +1,71 @@
+{
+  "status": "whole_zone_face_rejected_and_both_board_regression_extended",
+  "base_commit": "3c9a5dc1",
+  "screens": [
+    {
+      "spec": "native/benchmarks/carrier-167x159-jtag-face-screen.floorplan.json",
+      "log": "native/build/carrier-jtag-face-screen.log",
+      "change": "Only USB-JTAG layer eligibility to either, plus experiment comment, relative to the south-interleaved screen.",
+      "construction_seconds": 0.005684584,
+      "outer_attempts": 0,
+      "exit_code": 1,
+      "receipt_captured": true,
+      "result": "usb_jtag carries impedance-controlled net class DP90_USB; B.Cu has no emitted reference plane"
+    },
+    {
+      "spec": "native/benchmarks/carrier-167x159-jtag-west.floorplan.json",
+      "log": "native/build/carrier-jtag-west-screen.log",
+      "change": "Only USB-JTAG advisory attraction E to W, plus experiment comment.",
+      "construction_seconds": 0.355360375,
+      "exit_code": 1,
+      "receipt_captured": true,
+      "result": "Same HDMI termination stale-X rejection followed by perpendicular-order Y negative cycle."
+    }
+  ],
+  "regression": {
+    "file": "native/tests/pcb_placement_contracts.cpp",
+    "coverage": "Both either and bottom requests on the real carrier USB-JTAG input must reject specifically for the DP90_USB reference-plane constraint. Original input remains untouched. Existing carrier/devkit production and top-preferred structural, physical and repeatability checks execute unchanged.",
+    "test": "native_pcb_placement_contracts",
+    "passed": 1,
+    "failed": 0,
+    "seconds": 148.24,
+    "log": "native/build/jtag-face-regression-tests.log",
+    "observation": "Process was confirmed live and CPU-active at 132 seconds. It completed normally before a requested one-second stack sample could attach; it was not restarted."
+  },
+  "architecture_finding": {
+    "contract": "subsystems/usb_jtag/placement_contract.json",
+    "independent_proximity_components": [
+      [
+        "U4",
+        "C1",
+        "C2",
+        "C3"
+      ],
+      [
+        "U1",
+        "C4",
+        "Y1",
+        "C5",
+        "C6",
+        "R1",
+        "R2",
+        "R3"
+      ],
+      [
+        "U2",
+        "C7",
+        "R4"
+      ]
+    ],
+    "semantics": "The same_side structure's ics list applies each owner to its own contract members; it does not force all listed ICs onto one common face. Proximity links connect Y1's load caps transitively to U1. Switch and testpoints remain governed by face_top.",
+    "implementation_boundary": "pcb_placement_zones.cpp sets every template contract member top before build_pcb_stage_zone. pcb_stage_zone.cpp exports every solved contract part into result.top. Whole-zone bottom eligibility rejects any controlled net on that sheet before constructing alternatives.",
+    "next_direction": "Implement bounded group-local alternatives preserving contract-connected components, controlled-net owners and face-top controls. Reuse exact footprint mirroring, named-pad geometry and complete contract/physical checks. A structurally independent component is not proof of hardware-safe bottom eligibility; assembly, height, return-path and thermal evidence still matter.",
+    "not_authorized_by_this_evidence": "Do not disable the DP90_USB gate, change the stackup implicitly, move USB controlled-net parts onto unreferenced B.Cu, split same-side proximity groups, or treat the contract partition as fabrication approval."
+  },
+  "limitations": [
+    "No smaller board or new accepted layout in this batch.",
+    "No production side policy changed, no hardware limit invented and no electrical gate waived.",
+    "No full build/render or timing comparison repeated for failed screens.",
+    "Qualified carrier remains 168x159 and devkit 98x98; unresolved hardware requirements and the broader goal remain open."
+  ]
+}
