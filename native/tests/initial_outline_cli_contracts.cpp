@@ -28,6 +28,14 @@ int main(int argc,char** argv){try{
     const auto multiscale=run({"board","--initial-outline-mm","168x160","--compact-placement","--multiscale-outline"});
     if(multiscale.exit_code||multiscale.stdout_text.find("larger local solution")==std::string::npos)
         throw std::runtime_error("multiscale help must disclose local-solution limits");
+    const auto feasible=run({"board","--compact-placement","--edge-feasibility"});
+    if(feasible.exit_code||feasible.stdout_text.find("Not a complete joint solver")==std::string::npos)
+        throw std::runtime_error("edge feasibility help must disclose solver limits");
+    for(const auto& args:std::vector<std::vector<std::string>>{
+        {"board","--edge-feasibility"},
+        {"board","--compact-placement","--edge-feasibility","--edge-feasibility"},
+        {"pcb-stage","--edge-feasibility"}})
+        if(run(args).exit_code==0)throw std::runtime_error("invalid edge feasibility option accepted");
     if(run({"board","--multiscale-outline","--multiscale-outline"}).exit_code==0||
        run({"pcb-stage","--multiscale-outline"}).exit_code==0)
         throw std::runtime_error("duplicate or unsupported multiscale option accepted");
