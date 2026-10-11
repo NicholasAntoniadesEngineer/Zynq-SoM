@@ -1,0 +1,70 @@
+{
+  "code_commit": "2a6a8258",
+  "method": "Sequential full production CLI runs on the same host, carrier then devkit. No concurrent build, test or candidate campaign. Fresh isolated output directories; existing compiler/catalog/OS caches not controlled. Each run includes its own authoring and source audits. Compile was not timed.",
+  "carrier": {
+    "command": "native/bin/schgen board --project carrier --compact-placement --interior-order 3 --edge-feasibility --owned-quality-first --owned-face-cohesion --contract-group-face-sheet usb_jtag --owned-shape board_aux=owned-face-fixed/a2.2/owned-pins-forward --floorplan-spec native/benchmarks/carrier-166x159-contract-groups.floorplan.json --timing -o OUTPUT",
+    "output": "/private/tmp/carrier-integrated-oct11.1WeoS8",
+    "log": "native/build/carrier-integrated-oct11-qualification.log",
+    "log_sha256": "cd4984ffee004c111d576931ccd59dee5f22d82d19a8d869fc403248ab4e666b",
+    "board_ok": true, "complete": true, "sheets": 37,
+    "all_mandatory_gates_pass": true,
+    "advisory_failures": ["return_path", "golden", "contract_coverage_lint"],
+    "outline_mm": [166,159], "area_mm2": 26394,
+    "top": 416, "bottom": 153,
+    "pcb_sha256": "4d1432b252230cbfc6e7342de7f0e431a0f12dc16d7d26ebd08fe0a67508bab1",
+    "verdict_sha256": "b588d01d94b69cee3553fdfcb6d93c34f4a8344ce90b7188f5b0a9c1258d2d89",
+    "pcb_identical_to_previous_qualified_finalist": true,
+    "non_unrouted_drc_errors": 0, "unrouted": 499,
+    "hard_red": 0, "hard_margin_min_mm": 4.07, "hard_margin_sum_mm": 887.46,
+    "renders": 8,
+    "visually_inspected": ["renders/3d_top.png", "renders/3d_bottom.png"],
+    "visual_observation": "Central top SoM reserve clear; perimeter connectors and controls retained. USB-JTAG U28004/C28001/C28002/C28003 group visible on bottom. Bottom free area remains substantial but does not itself establish legal relocation or assembly clearance.",
+    "timings_seconds": {
+      "process_wall": 255.61, "measured_scope": 254.911152, "compile": null,
+      "authoring_audit": 18.595003,
+      "sheet_parallel_checks_and_render_wall": 26.448412,
+      "pcb_input_loading_and_netlist_validation": 1.491322,
+      "pcb_build_model_with_internal_checks": 2.887404,
+      "pcb_text_emission": 0.035651,
+      "pcb_drc": 1.583097,
+      "render3d": 29.371448,
+      "source_audit": 161.282641
+    }
+  },
+  "devkit": {
+    "command": "native/bin/schgen board --project devkit_mini --multiscale-outline --timing -o OUTPUT",
+    "output": "/private/tmp/devkit-integrated-oct11.NqlVDe",
+    "log": "native/build/devkit-integrated-oct11-qualification.log",
+    "log_sha256": "83d9b268222f85f0a7cb6b77fda8d74c456a55c89977104faa093370822fefa4",
+    "board_ok": true, "complete": true, "sheets": 12,
+    "mandatory_failures": [],
+    "mandatory_skips": {
+      "manual": "project has no bringup_rails, bringup_en, bringup_en_modules, bringup_modules",
+      "scfw": "project has no bringup_en, bringup_modules, bringup_rails, usb_pd, board_services, bringup_en_modules"
+    },
+    "advisory_failures": ["return_path", "golden", "contract_coverage_lint"],
+    "outline_mm": [98,98], "area_mm2": 9604,
+    "top": 106, "bottom": 57,
+    "pcb_sha256": "cfa0305491d9c4a771adb130b04c4aec6cc2894542391a5c7c9dca3a68bca3cf",
+    "verdict_sha256": "25b35e1451936b02ff8a47d7b5e17d004478bcdcbfbc9095edac9c63afa5f908",
+    "pcb_identical_to_previous_qualified_finalist": true,
+    "non_unrouted_drc_errors": 0, "unrouted": 413,
+    "hard_red": 0, "hard_margin_min_mm": 38.28, "hard_margin_sum_mm": 147.52,
+    "renders": 8,
+    "visually_inspected": ["renders/3d_top.png", "renders/3d_bottom.png"],
+    "visual_observation": "Central top SoM reserve clear, perimeter power/UART and debug connectors retained, bottom decoupling and shunts visible. Visual inspection is not thermal, assembly or electrical validation.",
+    "timings_seconds": {
+      "process_wall": 235.02, "measured_scope": 234.955909, "compile": null,
+      "authoring_audit": 19.376095,
+      "sheet_parallel_checks_and_render_wall": 8.950765,
+      "pcb_input_loading_and_netlist_validation": 0.672523,
+      "pcb_build_model_with_internal_checks": 0.186846,
+      "pcb_text_emission": 0.008934,
+      "pcb_drc": 1.249232,
+      "render3d": 18.968576,
+      "source_audit": 177.836966
+    }
+  },
+  "source_audit_both": "PASS: 69 C++ files, 75 constants, 156 registered transforms",
+  "limits": "Selected phase timings are not an additive complete pipeline breakdown. Model time is not complete generation/build time. Single runs, no statistical speed claim and no matched Python comparison. Historical comparison must still use only 0e9bbc913bab77f9cd228940db2a332d25d6bfa1 with workload differences disclosed. No routing or fabrication-readiness claim. Existing assembly/height/thermal evidence limits, qualitative decoupling proximity and contract coverage gaps remain unresolved; no failure waived or unknown converted to PASS. Goal remains incomplete."
+}
