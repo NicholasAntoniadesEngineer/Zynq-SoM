@@ -45,6 +45,14 @@ PackAnchorIn Engine::anchor_row(const FloorplanBlock& b,
     } else {
         const char z=b.zone=="N" || b.zone=="E" || b.zone=="S" || b.zone=="W" ? b.zone.front() : 'E';
         std::tie(a.zone_ax,a.zone_ay)=zone_anchor(z,plan.som_x,plan.som_y,plan.som.w,plan.som.h,plan.board_w,plan.board_h);
+        // SoM connectors are not edge blocks. Honour their explicit near
+        // anchors using the actual connector rectangle, not the E fallback.
+        for(const auto& jack:plan.som.js)
+            if(!jack.ref.empty()&&jack.ref.front()=='J'&&b.zone=="@som_j"+jack.ref.substr(1)) {
+                a.zone_ax=plan.som_x+jack.x+jack.w/2;
+                a.zone_ay=plan.som_y+jack.y+jack.h/2;
+                break;
+            }
     }
     if (b.pull) {
         a.exclusive=b.pull->exclusive; a.inboard=b.pull->face=="inboard"; a.pull_weight=b.pull->weight;
@@ -445,6 +453,7 @@ bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure) {
                 std::vector<FloorplanLegalizeVar> vars;
                 for (const auto& b:plan.interior_blocks) if (movable.count(b.name)) vars.push_back({b.name,b.w,b.h,{b.x,b.y},b.x,b.y});
                 std::vector<std::string> log; li.compact=do_compact;
+                li.report_infeasible_cycle=in.experiment&&bool(in.experiment->stage_rejected);
                 if (!floorplan_legalize_compact_accounted(li,vars,log,plan.accounting.quantization_engagements)) {
                     rejected("legalizer","",do_compact,log);return false;
                 }

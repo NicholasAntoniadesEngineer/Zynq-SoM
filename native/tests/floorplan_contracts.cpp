@@ -640,6 +640,13 @@ void frozen(const std::filesystem::path& dir,const std::string& name,bool geomet
     for(const auto& row:field(expected,"ledger").array_value)replay_expected+=str(row,"text")+"\n";
     require(render_floorplan_ledger(replay.plan)==replay_expected,name+": frozen decision ledger replay");
     Engine e(in);e.initialize();e.prepare_geometry();e.prepare_cross();
+    for(const auto& jack:e.plan.som.js) {
+        FloorplanBlock block;block.name="near_som_probe";block.zone="@som_j"+jack.ref.substr(1);
+        const auto anchor=e.anchor_row(block,{});
+        require(!anchor.zone_is_at_edge,"SoM target must not masquerade as a perimeter connector");
+        require(anchor.zone_ax==e.plan.som_x+jack.x+jack.w/2&&
+                anchor.zone_ay==e.plan.som_y+jack.y+jack.h/2,"explicit SoM connector anchor fell back to E");
+    }
     const auto geometry=parse_json_file((dir/(name+"_geometry.json")).string());
     for(const auto& row:geometry.array_value) {
         const auto sheet=str(row,"sheet");const int k=static_cast<int>(num(row,"index"));
@@ -777,6 +784,25 @@ void repair_choice_contracts() {
         !reversed.seps.back().flippable&&!reversed.seps.back().reverse_on_flip,
         "primitive reversal must retain selected directional gap and lock the result");
     require(ordinary.ok&&first.ok&&second.ok,"both eligible cycle branches must solve X");
+    require(ordinary.infeasible_cycle.empty(),"successful repair retained a stale cycle");
+    auto locked=seps;for(auto& sep:locked)sep.flippable=false;
+    const auto infeasible=legalize_repair_axis(true,names,sizes,20,0,locked,{}, {},4);
+    require(!infeasible.ok&&infeasible.fail=="cycle"&&infeasible.infeasible_cycle.size()==2,
+        "locked contradictory pair needs an actual terminal cycle witness");
+    require(infeasible.infeasible_cycle_origins.size()==2,"cycle provenance lost an edge");
+    for(const auto& origin:infeasible.infeasible_cycle_origins)
+        require(origin=="separation a -> b"||origin=="separation b -> a","cycle provenance lost separation identity");
+    std::map<std::string,int> balance;double cycle_cost=0;
+    for(const auto& edge:infeasible.infeasible_cycle) {
+        ++balance[edge.src];--balance[edge.dst];cycle_cost+=edge.cost;
+        require(((edge.src=="a"&&edge.dst=="b")||(edge.src=="b"&&edge.dst=="a"))&&edge.cost==-3,
+            "cycle witness invented an edge or changed its exact bound");
+    }
+    for(const auto& [name,count]:balance){(void)name;require(count==0,"cycle witness is not closed");}
+    require(cycle_cost==-6,"cycle witness does not independently prove negative total cost");
+    const auto exhausted=legalize_repair_axis(true,names,sizes,20,0,seps,{}, {},0);
+    require(!exhausted.ok&&exhausted.fail=="exhausted"&&exhausted.infeasible_cycle.empty(),
+        "unexecuted budget-exhausted solve must not invent cycle evidence");
     require(first.choice_counts==std::vector<std::size_t>{2}&&second.choice_counts==first.choice_counts,
         "cycle alternatives not reported exactly");
     require(ordinary.pos==first.pos&&ordinary.flips==first.flips&&ordinary.fail==first.fail,

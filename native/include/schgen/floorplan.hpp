@@ -162,6 +162,7 @@ struct FloorplanLegalizeInput {
     // Empty preserves the rectangle-only primitive API. When supplied, cover
     // every movable/fixed rectangle with its selected primary geometry.
     std::map<std::string, FloorplanPrimaryFanout> primary_fanout;
+    bool report_infeasible_cycle = false; // diagnostic only; no extra solve
 };
 
 // Compose consumes resolved, selected-shape metrics. A rejected candidate

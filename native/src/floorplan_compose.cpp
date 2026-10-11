@@ -132,6 +132,7 @@ std::string float_text(double value) {
 struct TaggedEdge {
     NamedEdge edge;
     std::string kind;
+    std::string source{};
 };
 
 class Composer {
@@ -334,7 +335,8 @@ private:
             const auto sp = sm ? std::nullopt : std::optional<FloorplanPoint>{fixed_pose(s)};
             const auto gp = gm ? std::nullopt : std::optional<FloorplanPoint>{fixed_pose(g)};
             for (const auto& e : near_max_edges(s, g, bound, x, *hs, *hg, sr, gr, sm, gm, sp, gp))
-                out.push_back({{e.src, e.dst, e.cost}, e.perp ? "near_max-perp" : "near_max"});
+                out.push_back({{e.src, e.dst, e.cost}, e.perp ? "near_max-perp" : "near_max",
+                    in.report_infeasible_cycle?s+" -> "+g:std::string{}});
         }
         return out;
     }
@@ -403,7 +405,8 @@ private:
     }
     bool repair(bool x, std::vector<double>& pos) {
         std::vector<NamedEdge> additional;
-        for (const auto& e : extra(x)) additional.push_back(e.edge);
+        const auto additional_terms=extra(x);
+        for (const auto& e : additional_terms) additional.push_back(e.edge);
         auto r = legalize_repair_axis(x, names, sizes(x), x ? in.board_w : in.board_h,
             in.clear, seps, {frect.begin(), frect.end()}, additional, repair_max);
         for(const auto& [lo,hi,was_x]:r.flips)
@@ -415,6 +418,15 @@ private:
         if (!r.ok) {
             log.push_back(std::string("INFEASIBLE ") + (x ? "x" : "y") +
                 (r.fail == "exhausted" ? ": REPAIR_MAX exhausted" : ": negative cycle"));
+            if(in.report_infeasible_cycle)for(std::size_t i=0;i<r.infeasible_cycle.size();++i) {
+                const auto& edge=r.infeasible_cycle[i];
+                auto origin=r.infeasible_cycle_origins.at(i);
+                if(origin.rfind("extra[",0)==0)for(const auto& term:additional_terms)
+                    if(term.edge.src==edge.src&&term.edge.dst==edge.dst&&term.edge.cost==edge.cost)
+                        origin+="; "+term.kind+" "+term.source;
+                log.push_back(std::string("cycle ")+(x?"x":"y")+": "+edge.dst+" - "+edge.src+" <= "+float_text(edge.cost)+
+                    " ["+origin+"]");
+            }
             return false;
         }
         pos = std::move(r.pos);

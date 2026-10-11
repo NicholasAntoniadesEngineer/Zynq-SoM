@@ -1244,7 +1244,19 @@ RepairAxisResult legalize_repair_axis(
             if(out.seps[static_cast<std::size_t>(sep_i)].flippable&&
                 std::find(eligible.begin(),eligible.end(),sep_i)==eligible.end())eligible.push_back(sep_i);
         }
-        if(eligible.empty()){out.fail="cycle";return out;}
+        if(eligible.empty()){
+            for(const int edge_i:hit.cycle_edges) {
+                const auto& edge=edges.at(static_cast<std::size_t>(edge_i));
+                out.infeasible_cycle.push_back({edge.src,edge.dst,edge.cost});
+                const auto offset=static_cast<std::size_t>(edge_i);
+                if(offset>=wall.size())out.infeasible_cycle_origins.push_back("extra["+std::to_string(offset-wall.size())+"]");
+                else if(wall[offset].kind=="sep") {
+                    const auto& sep=out.seps.at(static_cast<std::size_t>(wall[offset].sep_index));
+                    out.infeasible_cycle_origins.push_back("separation "+sep.lo+" -> "+sep.hi);
+                } else out.infeasible_cycle_origins.push_back(wall[offset].kind);
+            }
+            out.fail="cycle";return out;
+        }
         const auto step=out.flips.size();
         const auto choice=step<choice_path.size()?choice_path[step]:std::size_t{0};
         if(choice>=eligible.size())throw std::runtime_error("legalize_repair_axis: choice outside cycle alternatives");

@@ -241,6 +241,10 @@ struct RepairAxisResult {
     // Eligible choices at each executed flip, in deterministic cycle order.
     // This is evidence for a caller-bounded search, not extra executed work.
     std::vector<std::size_t> choice_counts;
+    // Actual terminal Bellman-Ford witness, in returned cycle order. Empty on
+    // success or repair-budget exhaustion; never a reconstructed proxy.
+    std::vector<NamedEdge> infeasible_cycle;
+    std::vector<std::string> infeasible_cycle_origins; // parallel provenance
 };
 
 RepairAxisResult legalize_repair_axis(
