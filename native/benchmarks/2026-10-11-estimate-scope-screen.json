@@ -1,0 +1,74 @@
+{
+  "base_commit": "d22ab89c",
+  "status": "Rejected both prototypes; all production and test edits restored to the committed implementation.",
+  "hypothesis": "Candidate-local scoring transforms unrelated part poses even though it only evaluates nets touching one sheet. Restrict pose calculation to endpoints of those nets, retaining remote endpoints and recomputing mutable borrowed poses.",
+  "variants": [
+    {
+      "name": "Per-call membership mask",
+      "carrier_model_seconds": [
+        2.692587334,
+        2.696819958,
+        2.733495708
+      ],
+      "tests_passed": 3,
+      "test_wall_seconds": 17.54,
+      "test_log": "native/build/estimate-scope-tests.log"
+    },
+    {
+      "name": "Per-Engine prepared connectivity membership",
+      "carrier_model_seconds": [
+        2.864921459,
+        2.876559542,
+        2.864432541
+      ],
+      "tests_passed": 3,
+      "test_wall_seconds": 18.74,
+      "test_log": "native/build/estimate-membership-tests.log"
+    }
+  ],
+  "coverage": "Hand-computed score parity with an unrelated third block; selected sheet still includes its remote endpoint; moved borrowed endpoint recomputed; absent sheet performs no coordinate work. Exact operation-accounting delta 12 full versus 8 scoped. Final-estimate and failure-receipt suites also passed.",
+  "work": {
+    "carrier_pose_precision_calls_control": 1714432,
+    "carrier_pose_precision_calls_candidate": 1130472,
+    "reduction_percent": 34.061426758249965,
+    "devkit_calls": 12540,
+    "devkit_calls_unchanged": true
+  },
+  "timings": {
+    "initial_control_model_seconds": [
+      2.681773167,
+      2.697846458,
+      2.6926835
+    ],
+    "initial_control_log": "native/build/carrier-estimate-scope-control.log",
+    "per_call_log": "native/build/carrier-estimate-scope-candidate.log",
+    "prepared_log": "native/build/carrier-estimate-membership-candidate.log",
+    "consecutive_recheck": {
+      "control_model_seconds": [
+        2.845420333,
+        2.84250325,
+        2.941768792
+      ],
+      "candidate_model_seconds": [
+        2.861788208,
+        2.848130292,
+        2.822111709
+      ],
+      "control_median_seconds": 2.845420333,
+      "candidate_median_seconds": 2.848130292,
+      "median_change_percent": 0.09523932083324027,
+      "control_log": "native/build/estimate-recheck-schgen_compact_stage_profile.log",
+      "candidate_log": "native/build/estimate-recheck-estimate-membership-candidate.log"
+    },
+    "protocol": "Identical compact carrier 166x159 configuration and prepared schematic as 2026-10-11-physical-side-estimator.json; three runs per executable, no concurrent build/test workloads. Control restored/rebuilt and candidate executable preserved for consecutive recheck. OS caches/CPU clocks uncontrolled. Counts demonstrate reduced work, but recheck median has no runtime improvement. These are construction-only model timings, not full-board or Python comparisons."
+  },
+  "outputs": {
+    "carrier_sha256": "b9389efa52adf30b1d94cad1ede3a4387bacd53802f7babb5da07dd6306cff76",
+    "devkit_sha256": "cfa0305491d9c4a771adb130b04c4aec6cc2894542391a5c7c9dca3a68bca3cf",
+    "unchanged_and_reproducible": true,
+    "placement_contract_pass": true,
+    "placement_flow_pass": true,
+    "hard_red": 0
+  },
+  "decision": "Do not retain extra connectivity masks and scope branches without a demonstrated end-to-end construction benefit. Avoid repeating this unchanged micro-optimization; investigate larger algorithmic search/geometry costs or qualification architecture instead. No new size, full-qualification, speedup, or goal-completion claim."
+}
