@@ -1,0 +1,66 @@
+{
+  "base_commit": "0abc9fbf",
+  "scope": "Cheap construction-only screens of three repair hypotheses for the carrier at 165x159 mm. No source audit, DRC, board publication or renders. All hypotheses rejected and production sources restored exactly.",
+  "configuration": {
+    "project": "carrier",
+    "floorplan_spec": "native/benchmarks/carrier-166x159-contract-groups.floorplan.json",
+    "schematic": "/private/tmp/carrier-contract-finalist.PuuvCD/Zynq_Carrier.kicad_sch",
+    "arguments": "--compact-search on --runs 1 --input-mode prepared --interior-order 3 --edge-feasibility on --owned-quality-first on --owned-face-cohesion on --contract-group-face-sheet usb_jtag --owned-shape board_aux=owned-face-fixed/a2.2/owned-pins-forward --outline-mm 165x159",
+    "unchanged": "Hardware inputs, selected shapes, clearances, near constraints, final independent physical checks and operation/fallback accounting. Each prototype tested separately against the baseline, not cumulatively."
+  },
+  "experiments": [
+    {
+      "name": "y_before_x",
+      "temporary_change": "Reverse the initial axis repair order in Composer::run; keep all existing strategies and final checks.",
+      "accepted": false,
+      "construction_failure_seconds": 0.597502333,
+      "outer_attempts": 2,
+      "receipt_captured": true,
+      "finding": "The same coupled-axis rejection moves from X to Y: subsequent USB-JTAG separation repair invalidates an already-solved axis. Reordering alone does not resolve the disjunction.",
+      "log": "native/build/carrier-yfirst-165x159.log",
+      "log_sha256": "7268e59d5d202120e074a4a36c0ec9f12bbe2506fe107e4ec0601de9c68f3803"
+    },
+    {
+      "name": "all_wired_interior_movers",
+      "temporary_change": "Allow all already-wired interior groups into the legalizer, instead of only hard-term participants.",
+      "accepted": false,
+      "construction_failure_seconds": 0.590691458,
+      "outer_attempts": 2,
+      "receipt_captured": true,
+      "finding": "Releases USB-JTAG but adds FMC/RJ45 and ethernet/board_aux/microSD conflicts. Still fails final X separation after Y repair; widening the mover set alone does not help.",
+      "log": "native/build/carrier-wired-movers-165x159.log",
+      "log_sha256": "9d20f7c1713424b7c71c7aef8de64916990dea25f74201722cda84ab90d27b24"
+    },
+    {
+      "name": "only_blocking_usb_jtag_added",
+      "temporary_change": "Diagnostic-only board-specific exception adds USB-JTAG to the original movable set. Exception removed; not an engine policy.",
+      "accepted": false,
+      "construction_failure_seconds": 0.585664959,
+      "outer_attempts": 2,
+      "receipt_captured": true,
+      "finding": "USB-JTAG now encounters HDMI RX and bringup_en. Perpendicular-order repair produces incompatible Y inequalities: USB-JTAG >=128.8 and <=107.8964. Original ordering leaves an X separation unsatisfied. Fixed-group selection is not the only obstruction.",
+      "log": "native/build/carrier-blocker-mover-165x159.log",
+      "log_sha256": "2973b6c4911a4ada6c086a8483df3c061b60882c2375fe568728e152f1f5d1d4"
+    }
+  ],
+  "decision": "Do not add these unsuccessful retries or widen normal mover sets. The next justified investigation is conflict-directed coupled-axis separation choices, not repeated axis passes, blanket movement or weakened hardware limits. These failures are not a proof of global infeasibility.",
+  "restoration": {
+    "source_diff_empty": true,
+    "normal_cli_and_profiler_rebuilt": true,
+    "incumbent_verification": "Both construction-only screens pass placement contract and flow checks with zero hard-red terms and exact prior qualified PCB hashes. Not a new full qualification.",
+    "carrier": {
+      "dimensions_mm": [166,159], "top_bottom": [416,153],
+      "pcb_sha256": "4d1432b252230cbfc6e7342de7f0e431a0f12dc16d7d26ebd08fe0a67508bab1",
+      "model_seconds": 2.696963708, "pcb_text_seconds": 0.033794667,
+      "hard_margin_min_sum": [4.07,887.46],
+      "log": "native/build/carrier-repair-screen-restored.log"
+    },
+    "devkit_mini": {
+      "dimensions_mm": [98,98], "top_bottom": [106,57],
+      "pcb_sha256": "cfa0305491d9c4a771adb130b04c4aec6cc2894542391a5c7c9dca3a68bca3cf",
+      "model_seconds": 0.428902917, "pcb_text_seconds": 0.008891459,
+      "hard_margin_min_sum": [38.28,147.52],
+      "log": "native/build/devkit-repair-screen-restored.log"
+    }
+  }
+}
