@@ -1,0 +1,9 @@
+{
+  "date": "2026-10-11",
+  "base_commit": "bd13fe62",
+  "discovery": "Test 67 stopped on carrier manufacturing manifest byte 222. Saved actual/immutable reference diff contained only bom.lines: 105 to 106.",
+  "cause": "Reviewed PCA9306 C5 replacement introduces a distinct 100p/C14858 BOM group; it does not add a physical part.",
+  "contract": "Validate exact reviewed current circuit identity before historical projection, require the projected manifest to equal the immutable historical fixture, and require the current manifest to differ only in the single enumerated BOM-line count. Part count, costs, missing-part list, power, SI and every other manifest byte stay exact; devkit has no permitted manifest change.",
+  "verification": {"native_manufacturing_contracts": "PASS", "seconds": 1.67},
+  "scope": "Test-only fixture reconciliation. No production hardware, manufacturing rules, immutable fixtures or acceptance gates changed; no fabrication readiness claim. Full suite remains incomplete."
+}

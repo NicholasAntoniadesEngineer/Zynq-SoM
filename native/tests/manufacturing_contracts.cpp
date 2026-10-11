@@ -2,6 +2,7 @@
 #include "schgen/manufacturing_checks.hpp"
 #include "schgen/atomic_file.hpp"
 #include "schgen/board_policy.hpp"
+#include "historical_input_contracts.hpp"
 #include <algorithm>
 #include <cstdlib>
 #include <fstream>
@@ -59,7 +60,20 @@ void project(const fs::path& root,const fs::path& scratch,const std::string& nam
     const auto run_path=output/"si-run";write(run_path/"rules.kicad_dru","(version 1)\n# preserve caller rule\n");const auto run=run_si_constraints(sheets,paths.project_root/"research/si_spec.json",run_path/"rules.kicad_dru",run_path/"SI.md");require(run.verdict.ok,"SI run checks real model");require(read(run.md)==render_si_markdown(si)&&read(run.dru)==render_si_design_rules(si,"(version 1)\n# preserve caller rule\n"),"SI run publishes rules and Markdown");throws([&]{run_si_constraints(sheets,paths.project_root/"research/si_spec.json",run.md,run.md);},"distinct");
     auto in=prepare_manufacturing_manifest(sheets,stm32(field(input,"stm32")),ManufacturingXdc{5,{35,34,35},std::nullopt},"xc7z020clg400-1",{12.34565,7});
     for(const auto& a:field(input,"artifacts").array_value)in.artifacts.push_back({str(a,"path"),str(a,"sha256")});
-    exact(render_manufacturing_manifest(in),fixture/"manifest.json",output/"manifest.json");
+    auto historical=in;
+    for(auto& sheet:historical.sheets)sheet.circuit=historical_input_contracts::project(sheet.circuit,name);
+    exact(render_manufacturing_manifest(historical),fixture/"manifest.json",output/"historical-manifest.json");
+    auto current_expected=read(fixture/"manifest.json");
+    if(name=="carrier") {
+        // The reviewed 100p/C14858 reference filter adds one BOM group;
+        // part count and every other manifest byte remain unchanged.
+        const std::string before="\"lines\": 105",after="\"lines\": 106";
+        const auto pos=current_expected.find(before);
+        require(pos!=std::string::npos&&current_expected.find(before,pos+before.size())==std::string::npos,"unique historical BOM-line preimage");
+        current_expected.replace(pos,before.size(),after);
+    }
+    const auto current_manifest=render_manufacturing_manifest(in);write(output/"manifest.json",current_manifest);
+    require(current_manifest==current_expected,"current manifest differs beyond reviewed reference-filter BOM group");
     std::cout<<name<<": SI and live-analysis manifest exact\n";
     const auto images=render_assembly_images(m,plan);const auto expected=parse_json_file((fixture/"images.json").string()).array_value;check_images(images,expected,output,name);
     std::cout<<name<<": "<<images.size()<<" assembly PNGs exact\n";
