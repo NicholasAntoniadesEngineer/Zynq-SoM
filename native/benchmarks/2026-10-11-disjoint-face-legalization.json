@@ -1,0 +1,76 @@
+{
+  "base_commit": "369b6c7d",
+  "scope": "Correct two-sided legality for groups whose complete occupied faces are disjoint. This does not qualify assembly height/thermal requirements or prove a smaller carrier.",
+  "defect": "The composer disabled primary fanout reach for opposite faces, but still imposed nominal rectangle separation and rejected every final XY overlap. Thus even two pure opposite-face groups could not share XY space.",
+  "correction": {
+    "evidence": "FloorplanPrimaryFanout now carries an optional complete occupied-face union, derived from the same selected primary and child reservations used by occupancy. Zero means unknown, not empty.",
+    "rules": [
+      "Remove only nominal body separations when both complete masks are known and disjoint.",
+      "Final rectangle overlap check uses the same complete face evidence.",
+      "Retain wider channel-demand separation, all hard electrical terms, wall constraints, exact separation checks and final physical occupancy validation.",
+      "Mixed-face and THT reservations contribute both occupied faces; logical exclusions remain conservative.",
+      "Reject invalid masks and any complete mask that omits its primary face.",
+      "Primitive callers without complete metadata retain their previous conservative behavior."
+    ],
+    "implementation_cost": "Reuse existing map references during separation construction. Prepare face-mask arrays once for the final quadratic overlap check, with no per-pair map lookup."
+  },
+  "tests": {
+    "floorplan": {
+      "name": "native_floorplan_contracts",
+      "pass": true,
+      "seconds": 14.71,
+      "coverage": "Both movable/movable and movable/fixed pairs; all four approach directions; both faces; compact and legalize-only modes; independent exhaustive occupancy accepts opposite-face overlap and rejects THT collisions; mixed/unknown/invalid masks; wider channel constraints; both-board floorplan regressions.",
+      "log": "native/build/face-aware-legalizer-final-tests.log",
+      "log_sha256": "4dd8b7209d53762676a44f053ff8780fccba64d3dd61102f10afc326fc434aa1"
+    },
+    "integration": {
+      "pass": true,
+      "cases": [
+        {"name":"native_model_failure_receipt_contracts","seconds":9.42},
+        {"name":"native_pcb_placement_contracts","seconds":161.06},
+        {"name":"native_occupancy_precision_contracts","seconds":9.21}
+      ],
+      "log": "native/build/face-aware-integration-tests.log",
+      "log_sha256": "dddfa989d85f8db0a0df8f9e50e637764d7688435e190c05ea92c50986cbcd18a"
+    }
+  },
+  "final_code_screens": {
+    "scope": "Construction-only, prepared inputs, two runs per board. No new full source audit, DRC or renders in these screens; hashes match previously qualified rendered boards. Observer overhead included. These are not compile/full-build or matched Python comparison times.",
+    "carrier": {
+      "spec": "native/benchmarks/carrier-166x159-contract-groups.floorplan.json",
+      "options": "--compact-search on --input-mode prepared --runs 2 --interior-order 3 --edge-feasibility on --owned-quality-first on --owned-face-cohesion on --contract-group-face-sheet usb_jtag --owned-shape board_aux=owned-face-fixed/a2.2/owned-pins-forward",
+      "schematic": "/private/tmp/carrier-contract-finalist.PuuvCD/Zynq_Carrier.kicad_sch",
+      "dimensions_mm": [166,159],
+      "top_bottom": [416,153],
+      "pcb_sha256_both_runs": "4d1432b252230cbfc6e7342de7f0e431a0f12dc16d7d26ebd08fe0a67508bab1",
+      "model_seconds": [2.942630458,2.949251417],
+      "pcb_text_seconds": [0.036961375,0.036873583],
+      "placement_contract_ok": true,
+      "placement_flow_ok": true,
+      "hard_red": 0,
+      "hard_margin_min_sum": [4.07,887.46],
+      "receipts": "All receipt and fallback rows match native/build/carrier-166x159-refinement-domain-incumbent.log exactly, two runs each.",
+      "log": "native/build/carrier-face-aware-final-screen.log"
+    },
+    "devkit_mini": {
+      "options": "--compact-search off --multiscale-outline on --input-mode prepared --runs 2",
+      "schematic": "/private/tmp/devkit-multiscale-qualified.DkUYYs/Zynq_Carrier.kicad_sch",
+      "dimensions_mm": [98,98],
+      "top_bottom": [106,57],
+      "pcb_sha256_both_runs": "cfa0305491d9c4a771adb130b04c4aec6cc2894542391a5c7c9dca3a68bca3cf",
+      "model_seconds": [0.47693925,0.467078292],
+      "pcb_text_seconds": [0.009309584,0.009210042],
+      "placement_contract_ok": true,
+      "placement_flow_ok": true,
+      "hard_red": 0,
+      "hard_margin_min_sum": [38.28,147.52],
+      "log": "native/build/devkit-face-aware-final-screen.log"
+    },
+    "performance_claim": "None. Current model times are higher than earlier non-interleaved screens; input extraction and unchanged downstream stages also slowed. No controlled A/B attribution or speedup is claimed."
+  },
+  "smaller_carrier_screens": [
+    {"outline_mm":[165,159],"accepted":false,"stage":"legalizer","outer_attempts":2,"failure_receipt_captured":true,"model_failure_seconds":0.60301125},
+    {"outline_mm":[166,158],"accepted":false,"stage":"legalizer","outer_attempts":2,"failure_receipt_captured":true,"model_failure_seconds":0.600527583}
+  ],
+  "remaining": "Current qualified board sizes and layouts remain unchanged. Mixed-face groups still use conservative whole-zone rectangle separation; complete masks alone cannot model sparse secondary-face geometry. Need face-specific reservation geometry and coupled placement/legalization improvements, with independent collision checks. Other goal outcomes remain incomplete; no fabrication-readiness claim."
+}

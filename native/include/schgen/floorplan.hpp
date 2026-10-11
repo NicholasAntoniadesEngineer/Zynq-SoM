@@ -146,6 +146,9 @@ struct FloorplanPrimaryFanout {
     // Occupancy face mask. Zero denotes a logical exclusion rectangle, not
     // a primary physical body; its existing nominal separation still applies.
     int mask = 0;
+    // Complete union of primary and selected child reservation faces.
+    // Zero means unknown: retain conservative rectangle separation.
+    int occupied_mask = 0;
 };
 struct FloorplanLegalizeInput {
     double board_w = 0.0, board_h = 0.0;

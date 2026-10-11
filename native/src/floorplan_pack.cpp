@@ -460,16 +460,20 @@ bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure) {
             if (participants.count(b.name) && in.compose.wired_participants.count(b.name)) movable.insert(b.name);
         if (!movable.empty()) {
             li.fixed_rects.emplace_back("som",legalize_som_rect(plan.som_x,plan.som_y,plan.som.w,plan.som.h,som_pad));
-            li.primary_fanout["som"]={{},{},som_mask};
+            const auto occupied_faces=[](int primary,const std::vector<Comp>& children) {
+                for(const auto& child:children)primary|=child.mask;
+                return primary;
+            };
+            li.primary_fanout["som"]={{},{},som_mask,occupied_faces(som_mask,som_comps)};
             for (const auto& c:corners) {
                 const auto name="corner@"+number(c.x0)+","+number(c.y0);
                 li.fixed_rects.emplace_back(name,c);
-                li.primary_fanout[name]={{},{},occ_punch};
+                li.primary_fanout[name]={{},{},occ_punch,occ_punch};
             }
             for (const auto& b:plan.edge_blocks)
-                li.primary_fanout[b.name]={b.fanout_reach,b.fanout_inset,edge_mask};
+                li.primary_fanout[b.name]={b.fanout_reach,b.fanout_inset,edge_mask,occupied_faces(edge_mask,get(edge_comps,b.name))};
             for (const auto& b:plan.interior_blocks)
-                li.primary_fanout[b.name]={b.fanout_reach,b.fanout_inset,side_mask(b.side)};
+                li.primary_fanout[b.name]={b.fanout_reach,b.fanout_inset,side_mask(b.side),occupied_faces(side_mask(b.side),get(chosen,b.name))};
             auto fix=[&](const FloorplanBlock& b){li.fixed_rects.emplace_back(b.name,Box4{b.x,b.y,b.x+b.w,b.y+b.h}); li.fixed_poses[b.name]={b.x,b.y};};
             for (const auto& b:plan.edge_blocks) fix(b);
             for (const auto& b:plan.interior_blocks) if (!movable.count(b.name)) fix(b);

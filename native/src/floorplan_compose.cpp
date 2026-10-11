@@ -39,6 +39,9 @@ void validate(const FloorplanLegalizeInput& in) {
     for (const auto& [name, body] : in.primary_fanout) {
         if (name.empty() || name.front() == '#' || body.mask < 0 || body.mask > 3)
             throw FloorplanError("floorplan compose: invalid primary fanout identity/mask " + name);
+        if(body.occupied_mask<0||body.occupied_mask>3||
+           (body.occupied_mask&&(!body.mask||(body.occupied_mask&body.mask)!=body.mask)))
+            throw FloorplanError("floorplan compose: invalid complete occupancy mask " + name);
         for (const auto& halo : {body.reach, body.inset})
             for (double value : {halo.w, halo.e, halo.n, halo.s}) finite(value, name + " primary fanout");
     }
@@ -207,6 +210,12 @@ public:
                 const auto key=[](const std::string& name) { return name.front()=='#'?name.substr(1):name; };
                 const auto& low=in.primary_fanout.at(key(s.lo));
                 const auto& high=in.primary_fanout.at(key(s.hi));
+                // A primary face alone cannot prove disjoint occupancy: a
+                // mixed-face group or THT pad may reserve the opposite face.
+                // Remove only body-clearance separations with complete masks;
+                // wider channel-demand constraints and logical exclusions stay.
+                if(low.occupied_mask&&high.occupied_mask&&
+                   !(low.occupied_mask&high.occupied_mask)&&s.gap<=in.clear)continue;
                 if (occ_pair_active(low.mask,low.mask,true,high.mask,high.mask,true)) {
                     const auto gap=[&](bool x) {
                         return std::max(s.gap,fanout_sep(low.reach,low.inset,high.reach,high.inset,x?'E':'S'));
@@ -262,9 +271,19 @@ public:
             log.push_back("REJECT: final output-grid pose violates physical separation or hard term");
             return false;
         }
+        std::vector<int> moving_masks(names.size()),fixed_masks(fixed_names.size());
+        if(!in.primary_fanout.empty()) {
+            for(std::size_t i=0;i<names.size();++i)moving_masks[i]=in.primary_fanout.at(names[i]).occupied_mask;
+            for(std::size_t i=0;i<fixed_names.size();++i)fixed_masks[i]=in.primary_fanout.at(fixed_names[i]).occupied_mask;
+        }
+        const auto disjoint=[](int a,int b){return a&&b&&!(a&b);};
         for (std::size_t i = 0; i < boxes.size(); ++i) {
-            std::vector<Box4> others(boxes.begin() + static_cast<std::ptrdiff_t>(i + 1), boxes.end());
-            others.insert(others.end(), fixed_boxes.begin(), fixed_boxes.end());
+            std::vector<Box4> others;
+            others.reserve(boxes.size()-i-1+fixed_boxes.size());
+            for(std::size_t j=i+1;j<boxes.size();++j)
+                if(!disjoint(moving_masks[i],moving_masks[j]))others.push_back(boxes[j]);
+            for(std::size_t j=0;j<fixed_boxes.size();++j)
+                if(!disjoint(moving_masks[i],fixed_masks[j]))others.push_back(fixed_boxes[j]);
             if (rects_overlap_any({boxes[i]}, others, 1e-6)) {
                 log.push_back("REJECT: final rect overlap"); return false;
             }

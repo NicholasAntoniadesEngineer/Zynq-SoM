@@ -232,6 +232,30 @@ void compose_contracts(const std::filesystem::path& dir) {
     require(floorplan_evaluate_terms(base,{}).empty(),"empty term index evaluates without fabricated terms");
 }
 void primary_fanout_contracts() {
+    for(bool compact:{false,true})for(int face:{1,2}) {
+        FloorplanLegalizeInput in;in.board_w=60;in.board_h=60;in.compact=compact;
+        for(const auto* name:{"a","b"})
+            in.metrics[name]={{{"p",5,5}},{{"p",0,0,10,10}},{10,10}};
+        in.index.hard.push_back({"near_max","a","a","b",100,"opposite-face witness",true,{},{}});
+        in.primary_fanout["a"]={{},{},face,face};
+        in.primary_fanout["b"]={{},{},3-face,3-face};
+        std::vector<FloorplanLegalizeVar> vars{{"a",10,10,{20,20},20,20},{"b",10,10,{20,20},20,20}};
+        const auto seed=vars;std::vector<std::string> log;
+        require(floorplan_legalize_compact(in,vars,log),"two movable disjoint-face bodies may overlap");
+        require(vars[0].x==vars[1].x&&vars[0].y==vars[1].y,"legalizer separated disjoint movable bodies");
+        Occupancy physical(60,60,.3,2,1,1,.05);
+        const auto physical_anchor=vars[0];
+        physical.add(vars[0].x,vars[0].y,10,10,{},{},face,{});
+        require(physical.fits_exhaustive(vars[1].x,vars[1].y,10,10,{},{},3-face,{}),
+            "independent occupancy disagrees with opposite-face overlap");
+        const std::vector<Comp> tht{{4,4,2,2,3}};
+        require(!physical.fits_exhaustive(vars[1].x,vars[1].y,10,10,{},{},3-face,tht),
+            "independent occupancy must reject overlapping through-hole reservation");
+        in.primary_fanout["b"].occupied_mask=3;vars=seed;log.clear();
+        require(floorplan_legalize_compact(in,vars,log),"mixed-face witness must retain feasible separated placement");
+        require(physical.fits_exhaustive(vars[1].x-vars[0].x+physical_anchor.x,vars[1].y-vars[0].y+physical_anchor.y,
+            10,10,{},{},3-face,tht),"mixed-face legalization retained a physical collision");
+    }
     for(int direction=0;direction<4;++direction) {
         // Body and pad hull favour different proximity axes. The legal body
         // fits a narrow slot; its pad already satisfies the jack constraint.
@@ -298,6 +322,24 @@ void primary_fanout_contracts() {
         require(std::abs(run(in)-1.5)<1e-9,"directional reach minus opposite inset");
         auto opposite=in;opposite.primary_fanout["anchor"].mask=2;
         require(std::abs(run(opposite)-.3)<1e-9,"opposite-face primary fanout is inactive");
+        auto disjoint=opposite;
+        disjoint.primary_fanout["v"].occupied_mask=1;
+        disjoint.primary_fanout["anchor"].occupied_mask=2;
+        require(run(disjoint)<0,"proven disjoint faces may share XY space");
+        auto unknown=disjoint;unknown.primary_fanout["v"].occupied_mask=0;
+        require(std::abs(run(unknown)-.3)<1e-9,"one unknown occupied-face mask cannot certify disjointness");
+        auto mixed=disjoint;mixed.primary_fanout["v"].occupied_mask=3;
+        require(std::abs(run(mixed)-.3)<1e-9,"opposite-face children retain conservative separation");
+        mixed=disjoint;mixed.primary_fanout["anchor"].occupied_mask=3;
+        require(std::abs(run(mixed)-.3)<1e-9,"fixed THT/secondary reservations must not disappear");
+        auto channel_faces=disjoint;channel_faces.channel_demand[{"v","anchor"}]=6;
+        require(std::abs(run(channel_faces)-3.2)<1e-9,"disjoint faces retain wider wiring-channel requirement");
+        auto malformed=disjoint;malformed.primary_fanout["v"].occupied_mask=2;
+        throws([&]{run(malformed);},"invalid complete occupancy mask");
+        malformed=disjoint;malformed.primary_fanout["v"].occupied_mask=4;
+        throws([&]{run(malformed);},"invalid complete occupancy mask");
+        malformed=disjoint;malformed.primary_fanout["anchor"].mask=0;
+        throws([&]{run(malformed);},"invalid complete occupancy mask");
         auto logical=in;logical.primary_fanout["anchor"].mask=0;
         require(std::abs(run(logical)-.3)<1e-9,"logical exclusions retain nominal clearance");
         auto primitive=in;primitive.primary_fanout.clear();
