@@ -1,0 +1,15 @@
+{
+  "scope": "Output precision regression requirements; no production or historical fixture changes",
+  "predecessor": "d9b4e5f4",
+  "campaign": "Tests 116 through 126 passed. Test 127 initially failed only the combined historical-output comparison after its scalar and rejected-prefix accounting checks completed.",
+  "retained_exact_reference": "Both frozen input boards retain exact SVG, full PCB, project serialization, ratsnest geometry/reports, escape copper/metadata/plan and emitted-block bytes and prior rounding counts against output_precision_legacy.txt. Scalar IEEE, narrowing, overflow, skipped-operation and late-failure prefix checks remain.",
+  "current_board_acceptance": [
+    "Both boards satisfy source-derived identity, checkpoint consistency and physical placement requirements",
+    "Each output-precision receipt matches independently instrumented actual calls",
+    "Erasing or incrementing each executed output-precision operation is rejected",
+    "Two builds on identical current inputs produce identical complete model, plan, SVG, Markdown, aggregate operation counts and fallback events",
+    "Ownership remains exactly-once across SVG documents and escape generation; report replay executes no new work"
+  ],
+  "result": "native_output_precision_contracts PASS 19.13 s; git diff --check PASS",
+  "limitations": "This test time is not a generation benchmark. Regression campaign remains incomplete; no new real-KiCad qualification or fabrication-readiness claim."
+}
