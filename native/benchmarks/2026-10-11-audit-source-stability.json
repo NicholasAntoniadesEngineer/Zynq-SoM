@@ -1,0 +1,34 @@
+{
+  "predecessor": "e528961e",
+  "scope": "Fail closed on observed edits to explicitly audited source files; prerequisite reliability work, not persistent audit caching",
+  "defect": "Compiler AST, source-offset interpretation and macro preprocessing could observe different versions of the same source. The old scanner accepted the negative fixture instead of rejecting it.",
+  "implementation": "Capture all explicit manifest source bytes before compiler work. Check equality before a file's scan, after AST compilation, after preprocessing, and again across the manifest before returning. Interpret AST offsets using the captured source, not a later read.",
+  "negative_controls": "AST-stage edits, preprocessor-stage edits, edits to a previously completed manifest entry, and edits to a queued entry; each checked with one and two workers. Pre-fix test failed with expected audit rejection; post-fix all eight reject.",
+  "verification": {
+    "all_configured_targets_rebuilt": true,
+    "targeted_tests": "7/7 PASS in 35.70 s: queue, pipe, pipe census, projection, parallel/mutation, projection census and C++ auditor contracts",
+    "full_current_source_comparison": {
+      "control": "Existing native/build/audit-discard-full-baseline executable used in the recorded 2026-10-08 parser control, now scanning CURRENT sources",
+      "candidate": "Rebuilt schgen_parallel_audit_contracts with source-stability guard",
+      "workers": 2,
+      "files": 69,
+      "constants": 75,
+      "functions": 947,
+      "quantization_sites": 317,
+      "complete_ordered_census_byte_equal": true,
+      "sha256": "938d425a31c623dde22d19a3c9975372702ac4646ec4b352a9f7192b07fa4b38",
+      "candidate_seconds": 159.033,
+      "control_seconds": 159.864,
+      "conditions": "Sequential candidate then control; same current source tree and compiler flags; no concurrent build/test workload or source edits. Single pair, OS caches uncontrolled; no statistically supported speed claim."
+    },
+    "archived_census_note": "The earlier 944-function snapshot predates committed floorplan changes. Its constants/sites matched, but function offsets and three added functions did not; it was NOT treated as an equivalent-input comparator.",
+    "diff_check": "PASS"
+  },
+  "regression_checkpoint": "Before this production guard, all 273 configured tests had passing results across the serial repair campaign, not one clean all-suite run at one commit. The final 190-273 batch passed 84/84 in 65.23 s. The new guard was then rebuilt and verified as detailed above.",
+  "limitations": [
+    "Not an atomic filesystem snapshot: an edit restored between equality checks can evade detection",
+    "Only explicit manifest files are checked; unlisted transitive headers/compiler environment are not covered",
+    "No persistent cache, skipped compiler pass, relaxed gate or shortened census introduced",
+    "Hardware/layout optimisation, fully current qualified output package and matched Python comparisons remain unfinished"
+  ]
+}

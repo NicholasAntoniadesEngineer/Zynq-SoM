@@ -67,10 +67,29 @@ void contracts(const std::filesystem::path& root,const std::string& self){
     auto slow=options(root,2);slow.compiler=self;slow.flags={"--slow-compiler"};slow.timeout=std::chrono::milliseconds{25};
     const auto message=failure([&]{scan_cpp_audit_sources(scratch.path,bad,slow);});
     require(message.find("timed out")!=std::string::npos,"worker timeout must propagate, never yield a partial census");
+    for(const auto* phase:{"ast","preprocessor","earlier","queued"})for(std::size_t workers:{1,2}){
+        for(const auto& file:bad)write(scratch.path/file.path,"constexpr double stable=0.25;\n");
+        auto changing=options(root,workers);changing.compiler=self;changing.flags={"--mutating-compiler",phase};
+        const auto changed=failure([&]{scan_cpp_audit_sources(scratch.path,bad,changing);});
+        require(changed.find("source changed during audit")!=std::string::npos,
+                "concurrently edited source must not publish a mixed-version census");
+    }
     std::cout<<"parallel audit exact-census, failure and timeout contracts PASS\n";
 }
 }
 int main(int argc,char** argv){try{
+    if(argc>3&&std::string(argv[1])=="--mutating-compiler"){
+        const bool preprocess=std::find_if(argv+3,argv+argc,[](const char* arg){return std::string(arg)=="-E";})!=argv+argc;
+        const std::string phase=argv[2];const std::filesystem::path source=argv[argc-1];
+        if((phase=="ast"&&!preprocess)||(phase=="preprocessor"&&preprocess))
+            write(argv[argc-1],"constexpr double changed=0.5;\n");
+        if(preprocess&&phase=="earlier"&&source.filename()=="second.cpp")
+            write(source.parent_path()/"first.cpp","constexpr double changed=0.5;\n");
+        if(preprocess&&phase=="queued"&&source.filename()=="first.cpp")
+            write(source.parent_path()/"second.cpp","constexpr double changed=0.5;\n");
+        if(!preprocess)std::cout<<"{\"kind\":\"TranslationUnitDecl\",\"inner\":[]}\n";
+        return 0;
+    }
     if(argc>1&&std::string(argv[1])=="--slow-compiler"){std::this_thread::sleep_for(std::chrono::seconds{5});return 0;}
     if(argc==5&&std::string(argv[1])=="--full"){
         const auto root=std::filesystem::absolute(argv[2]);const auto workers=std::stoul(argv[3]);

@@ -252,6 +252,7 @@ CppSourceCensus scan_cpp_audit_sources(const std::filesystem::path& root,const s
     CppSourceCensus result;std::set<std::string> unique;
     // Validate the whole explicit manifest before launching compiler work.
     std::vector<std::filesystem::path> relative_paths;
+    std::vector<std::string> source_snapshots;
     for(const auto& file:files){
         const auto relative=std::filesystem::path(file.path).lexically_normal();
         if(relative.is_absolute()||relative.empty()||*relative.begin()=="..")throw std::invalid_argument("native audit manifest paths must be root-relative");
@@ -259,22 +260,33 @@ CppSourceCensus scan_cpp_audit_sources(const std::filesystem::path& root,const s
         const auto path=std::filesystem::absolute(root/relative).lexically_normal();
         if(!std::filesystem::is_regular_file(path))throw std::runtime_error("native audit source is missing/not a file: "+path.string());
         relative_paths.push_back(relative);
+        source_snapshots.push_back(model_checks::read(path));
     }
+    // Bind source-offset interpretation and both compiler passes to the same
+    // observed source contents. This is not a transitive-input cache key or a
+    // filesystem snapshot: edits restored between checks remain undetectable.
+    const auto unchanged=[&](std::size_t index){
+        const auto path=std::filesystem::absolute(root/relative_paths[index]).lexically_normal();
+        if(model_checks::read(path)!=source_snapshots[index])
+            throw AuditSyntaxError(path.string()+": source changed during audit");
+    };
     // Keep the compiler worker cap unchanged, but retain at most one full AST
     // per scan. Waiting compilers use bounded pipe backpressure, not a DOM queue.
     std::mutex projection_slot;
     const auto scan_one=[&](std::size_t index){
         const auto& relative=relative_paths[index];
         const auto path=std::filesystem::absolute(root/relative).lexically_normal();
+        unchanged(index);
         std::vector<std::string> command{options.compiler};command.insert(command.end(),options.flags.begin(),options.flags.end());
         command.insert(command.end(),{"-std=c++17","-ffp-contract=off","-x","c++","-fsyntax-only","-Xclang","-ast-dump=json",path.string()});
         std::unique_lock<std::mutex> projection_lock(projection_slot,std::defer_lock);
         auto compiled=run_audit_ast_process(command,path.string()+" compiler AST",options.timeout,projection_lock);
         if(compiled.process.exit_code!=0)throw AuditSyntaxError(path.string()+": C++ compiler failed ("+std::to_string(compiled.process.exit_code)+")\n"+compiled.process.stderr_text);
+        unchanged(index);
         JsonNode ast=std::move(*compiled.ast);
         if(text(ast,"kind")!="TranslationUnitDecl")throw AuditSyntaxError(path.string()+": compiler did not return a translation-unit AST");
         CppSourceCensus local;
-        Visitor visitor{relative.generic_string(),path.string(),model_checks::read(path),local,{},{},{},{},{}};
+        Visitor visitor{relative.generic_string(),path.string(),source_snapshots[index],local,{},{},{},{},{}};
         visitor.index_lines();visitor.index(ast);visitor.visit(ast);visitor.finish();
         ast=JsonNode{};projection_lock.unlock();
         // Clang's JSON AST contains macro *expansions*, not definitions. Keep
@@ -284,6 +296,7 @@ CppSourceCensus scan_cpp_audit_sources(const std::filesystem::path& root,const s
         command.insert(command.end(),{"-std=c++17","-ffp-contract=off","-x","c++","-E","-dD",path.string()});
         const auto expanded=run_process(command,options.timeout);
         if(expanded.exit_code!=0)throw AuditSyntaxError(path.string()+": C++ preprocessing failed\n"+expanded.stderr_text);
+        unchanged(index);
         macros(expanded.stdout_text,path,relative.generic_string(),local);
         local.n_files=1;
         return local;
@@ -327,6 +340,7 @@ CppSourceCensus scan_cpp_audit_sources(const std::filesystem::path& root,const s
             merge(std::move(completed[i]));
         }
     }
+    for(std::size_t i=0;i<files.size();++i)unchanged(i);
     return result;
 }
 NativeAuditResult check_native_audits(const CppSourceCensus& census,const NativeLedger& ledger,const NativeQuantizations& quantize){
