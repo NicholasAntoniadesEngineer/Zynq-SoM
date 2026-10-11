@@ -244,26 +244,37 @@ bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure) {
     std::map<std::string,std::vector<Comp>> chosen;
     auto occ_put=[&](const FloorplanBlock& b){occ.add(b.x,b.y,b.w,b.h,b.fanout_reach,b.fanout_inset,side_mask(b.side),get(chosen,b.name),counts);};
     auto occ_pull=[&](const FloorplanBlock& b){occ.remove(b.x,b.y,b.w,b.h,b.fanout_reach,b.fanout_inset,side_mask(b.side),get(chosen,b.name),counts);};
+    const auto selected_hull=[&](const std::string& name,int shape_index)->std::optional<Box4> {
+        if(shape_index) {
+            const auto m=in.compose.shape_metrics.find({name,shape_index});
+            return m==in.compose.shape_metrics.end()?std::nullopt:pad_union_hull(m->second.pad_union);
+        }
+        const auto m=in.compose.metrics.find(name);
+        return m==in.compose.metrics.end()?std::nullopt:pad_union_hull(m->second.pad_union);
+    };
     const auto near_domain=[&](const FloorplanBlock& b,int shape_index,auto& win) {
         // Hard connector proximity constrains every seating strategy, not
         // only those whose preferred anchor explicitly names that connector.
         for(const auto& term:in.compose.index.hard) {
             if(term.kind!="near_max"||term.subject!=b.name||!term.bound)continue;
+            const auto hull=selected_hull(b.name,shape_index);if(!hull)continue;
+            std::optional<Box4> target;
             for(const auto& jack:plan.som.js) {
                 if(jack.ref.empty()||jack.ref.front()!='J'||term.target()!="som_j"+jack.ref.substr(1))continue;
-                const FloorplanLocalMetrics* metrics=nullptr;
-                if(shape_index) {
-                    const auto m=in.compose.shape_metrics.find({b.name,shape_index});
-                    if(m!=in.compose.shape_metrics.end())metrics=&m->second;
-                } else {
-                    const auto m=in.compose.metrics.find(b.name);
-                    if(m!=in.compose.metrics.end())metrics=&m->second;
-                }
-                if(!metrics)continue;
-                const auto hull=pad_union_hull(metrics->pad_union);if(!hull)continue;
-                const Box4 target{plan.som_x+jack.x,plan.som_y+jack.y,
+                target=Box4{plan.som_x+jack.x,plan.som_y+jack.y,
                     plan.som_x+jack.x+jack.w,plan.som_y+jack.y+jack.h};
-                const auto domain=near_translation_domain(*hull,target,*term.bound,occ_step);
+                break;
+            }
+            // Edge blocks have their final poses before interior seating.
+            // Use their actual selected pad geometry, not the body envelope.
+            if(!target)for(const auto& edge:plan.edge_blocks)if(edge.name==term.target()) {
+                if(const auto local=selected_hull(edge.name,edge.shape_idx))
+                    target=Box4{edge.x+local->x0,edge.y+local->y0,
+                                edge.x+local->x1,edge.y+local->y1};
+                break;
+            }
+            if(target) {
+                const auto domain=near_translation_domain(*hull,*target,*term.bound,occ_step);
                 std::get<0>(win)=std::max(std::get<0>(win),domain.x0);
                 std::get<1>(win)=std::min(std::get<1>(win),domain.x1);
                 std::get<2>(win)=std::max(std::get<2>(win),domain.y0);
