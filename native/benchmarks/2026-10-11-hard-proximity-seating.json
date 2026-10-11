@@ -1,0 +1,45 @@
+{
+  "base_commit": "aa2a3c38",
+  "implementation": "Apply existing hard near_max limits to known SoM connector targets during seating regardless of the block's preferred anchor. Intersect the selected shape's necessary pad-hull translation domain with ordinary and eviction search windows. Carry that same domain into refinement for every affected block, not just explicit @som_j anchors.",
+  "unchanged": "Authored hardware distance limits, the existing one-grid-step conservative search guard, exact final hardware checks, fallback limits and incumbent selection. This domain is necessary but not sufficient for final distance acceptance. Unknown metrics/targets do not become inferred hardware proof.",
+  "tests": {
+    "engine_cases": "All four side hints E/N/S/W, each with primary shape zero and a forced nonzero bottom-side shape with different pad metrics: eight cases check the final seating/refinement pose remains within its selected hard domain. Existing unbounded placement regressions remain intact.",
+    "integration_defect_detected": "The seating-only implementation failed the new test because refinement could escape the domain. Applying the bound through refinement fixes that reproduced failure.",
+    "negative_log": "native/build/hard-domain-tests.log",
+    "negative_log_sha256": "e099db10f4f08c35fa479e7687088da888741f65bf7f6f7d4390ad0743f61b37",
+    "floorplan_pass": true,
+    "floorplan_seconds": 13.25,
+    "floorplan_log": "native/build/hard-domain-shaped-tests.log",
+    "floorplan_log_sha256": "0065de1b1e5233e35ba04398b407b50e0343c0151fa7a7b480c9189e68895338",
+    "failure_receipt_suite_pass": true,
+    "receipt_and_initial_floorplan_seconds": 22.39,
+    "receipt_log": "native/build/hard-domain-final-tests.log",
+    "receipt_log_sha256": "63bdd5ff7419bc1f3a52ec180818cd6b5d9aaaf5727ca5f2888b96f98cb1824c"
+  },
+  "accepted_incumbent_screens": {
+    "scope": "Prepared construction-only screens. Both placement contract and flow checks pass, hard_red=0, exact prior accepted PCB hashes. Not new full source audits, DRC or renders. OS caches uncontrolled; timings include observer overhead, not an isolated speed comparison.",
+    "carrier_compact": {
+      "dimensions_mm": [166,159], "top_bottom": [416,153],
+      "pcb_sha256_both_runs": "4d1432b252230cbfc6e7342de7f0e431a0f12dc16d7d26ebd08fe0a67508bab1",
+      "model_seconds": [2.634028208,2.630773916], "pcb_text_seconds": [0.033246417,0.032329291],
+      "hard_margin_min_sum": [4.07,887.46], "log":"native/build/carrier-hard-domain-final.log"
+    },
+    "devkit_mini": {
+      "dimensions_mm": [98,98], "top_bottom": [106,57],
+      "pcb_sha256_both_runs": "cfa0305491d9c4a771adb130b04c4aec6cc2894542391a5c7c9dca3a68bca3cf",
+      "model_seconds": [0.42649275,0.424980334], "pcb_text_seconds": [0.008474625,0.008294208],
+      "hard_margin_min_sum": [38.28,147.52], "log":"native/build/devkit-hard-domain-final.log"
+    },
+    "carrier_ordinary": {
+      "dimensions_mm": [168,163], "top_bottom": [393,176],
+      "pcb_sha256": "9310d975f4ef23d71e9c154f74a46a8ca46366d4f52568ba1c22a31992ffc8c5",
+      "model_seconds": 6.738774875, "pcb_text_seconds": 0.029851625,
+      "hard_margin_min_sum": [3.06,955.24], "log":"native/build/carrier-hard-domain-default.log"
+    }
+  },
+  "screening_findings": {
+    "unrestricted_owned_shapes": "Removing the board_aux owned-shape restriction did not rescue 165x159, 164x160 or 163x161. Legalizer, bringup_modules seating, legalizer respectively; failure model times 0.691454583, 0.517886833, 0.692801750 seconds. Logs native/build/carrier-free-owned-shapes-OUTLINE.log.",
+    "early_hard_domains": "At 165x159 and 163x161 with the fixed owned shape, failure now occurs at USB-JTAG seating before the legalizer: 0.283977083 and 0.299645459 seconds. This identifies incompatible earlier seating rather than falsely accepting a smaller board. These screens precede the refinement follow-through change, but terminate before refinement runs. Logs native/build/carrier-hard-domain-OUTLINE.log.",
+    "limitation": "No statistically established performance claim, no matched Python comparison and no smaller accepted board. Early rejection is evidence for subsequent constrained-neighbour seating work, not proof of global infeasibility."
+  }
+}

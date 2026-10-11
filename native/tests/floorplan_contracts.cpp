@@ -538,6 +538,30 @@ void pack_behavior() {
                      "overflowing edge run must not publish infeasible poses");
     }
     in.som.w=20;in.som.h=20;
+    // Isolate actual seating/refinement from later legalization: the hard
+    // connector distance supplies a necessary domain even for a side hint.
+    for(const bool shaped:{false,true})for(const std::string hint:{"E","N","S","W"}) {
+        auto constrained=in;SomJGeom jack;jack.ref="J2";jack.x=0;jack.y=5;jack.w=2;jack.h=10;
+        constrained.som.js={jack};
+        FloorplanTerm term;term.kind="near_max";term.subject="logic";term.target_raw="som_j2";term.bound=5;
+        constrained.compose.index.hard={term};
+        constrained.compose.metrics["logic"].pad_union={{"U1",0,0,10,10}};
+        if(shaped)constrained.compose.shape_metrics[{"logic",1}].pad_union={{"U1",1,1,9,9}};
+        Engine e(constrained);e.board_size(100,80);
+        FloorplanBlock b;b.name="logic";b.kind="interior";b.zone=hint;
+        e.plan.interior_blocks={b};e.zbox={{"logic",{10,10}}};
+        if(shaped) {
+            Shape alternate;alternate.w=alternate.h=10;alternate.side="bottom";
+            e.shape_sets[e.plan.punch_free?1:0]["logic"]={alternate,alternate};e.owned_shape_choices["logic"]=1;
+        }
+        require(e.attempt_pack(false),"side-hinted constrained block must find the available left slot");
+        const auto& placed=e.plan.interior_blocks.front();
+        const Box4 target{e.plan.som_x,e.plan.som_y+5,e.plan.som_x+2,e.plan.som_y+15};
+        const auto domain=near_translation_domain(shaped?Box4{1,1,9,9}:Box4{0,0,10,10},target,5,occ_step);
+        require(placed.shape_idx==(shaped?1:0),"hard-domain fixture lost selected-shape coverage");
+        require(placed.x>=domain.x0&&placed.x<=domain.x1&&placed.y>=domain.y0&&placed.y<=domain.y1,
+                "side hint bypassed hard connector proximity during seating/refinement");
+    }
     for(const std::string connected:{"small","large"}) {
         Engine e(in);e.board_size(100,80);
         FloorplanBlock a,b;a.name="large";b.name="small";a.kind=b.kind="interior";a.zone=b.zone="E";

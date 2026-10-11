@@ -245,11 +245,10 @@ bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure) {
     auto occ_put=[&](const FloorplanBlock& b){occ.add(b.x,b.y,b.w,b.h,b.fanout_reach,b.fanout_inset,side_mask(b.side),get(chosen,b.name),counts);};
     auto occ_pull=[&](const FloorplanBlock& b){occ.remove(b.x,b.y,b.w,b.h,b.fanout_reach,b.fanout_inset,side_mask(b.side),get(chosen,b.name),counts);};
     const auto near_domain=[&](const FloorplanBlock& b,int shape_index,auto& win) {
-        if(!starts(b.zone,"@som_j"))return;
-        // Resolve only an explicit near-SoM intent backed by an existing
-        // hard distance limit. Other targets and ordinary hints are intact.
+        // Hard connector proximity constrains every seating strategy, not
+        // only those whose preferred anchor explicitly names that connector.
         for(const auto& term:in.compose.index.hard) {
-            if(term.kind!="near_max"||term.subject!=b.name||!term.bound||b.zone!="@"+term.target())continue;
+            if(term.kind!="near_max"||term.subject!=b.name||!term.bound)continue;
             for(const auto& jack:plan.som.js) {
                 if(jack.ref.empty()||jack.ref.front()!='J'||term.target()!="som_j"+jack.ref.substr(1))continue;
                 const FloorplanLocalMetrics* metrics=nullptr;
@@ -432,10 +431,10 @@ bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure) {
         row.name=b->name; row.x=b->x; row.y=b->y; row.w=b->w; row.h=b->h;
         row.reach=b->fanout_reach; row.inset=b->fanout_inset; row.mask=side_mask(b->side); row.comps=get(chosen,b->name);
         row.anchor=anchor_row(*b,centers); row.aff_named=get(affinity,b->name);
-        if(starts(b->zone,"@som_j")) {
-            auto win=std::make_tuple(-bw,2*bw,-bh,2*bh);
-            near_domain(*b,b->shape_idx,win);row.translation_window=win;
-        }
+        const auto unrestricted=std::make_tuple(-bw,2*bw,-bh,2*bh);
+        auto win=unrestricted;
+        near_domain(*b,b->shape_idx,win);
+        if(win!=unrestricted)row.translation_window=win;
         if (b->pull && !b->pull->exclusive) row.pull_to=b->pull->to;
         refine.push_back(std::move(row));
     }
