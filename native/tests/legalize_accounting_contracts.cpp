@@ -117,6 +117,27 @@ void kernels(std::ostream& out){
         {{"som_j1",{1.23455,2.34565,20,30}}},25,25 SINK));
     verify_entries(counts);print_counts(out,counts);
 }
+#ifndef LEGALIZE_LEGACY_PROBE
+void pad_retry_accounting(){
+    for(const bool impossible:{false,true}) {
+        FloorplanLegalizeInput in;in.board_w=60;in.board_h=60;in.clear=.25;in.compact=true;
+        in.metrics["v"]={{{"p",18.5,1.5}},{{"p",18,1,19,2}},{20,20}};
+        in.som_j_rects["som_j1"]={38,30,39,31};
+        in.index.hard.push_back({"near_max","v","v","som_j1",impossible?7.:13.,"retry witness",true,{},{}});
+        in.fixed_rects={{"west",{0,0,19.75,60}},{"east",{40.25,0,60,60}},
+                        {"north",{0,0,60,19.75}},{"south",{0,40.25,60,60}}};
+        std::vector<FloorplanLegalizeVar> vars{{"v",20,20,{20,20},20,20}};
+        std::vector<std::string> log;QuantizationCounts counts;begin();
+        const bool ok=floorplan_legalize_compact_accounted(in,vars,log,counts);
+        verify_entries(counts);
+        require(ok!=impossible,"retry witness feasibility");
+        require(vars[0].x==20&&vars[0].y==20,"retry must preserve accepted or rejected caller pose");
+        require(std::count(log.begin(),log.end(),"retry: near constraints use selected pad-hull axes")==1,
+            "executed retry missing or unbounded");
+        require(!counts.empty(),"retry observation must not be vacuous");
+    }
+}
+#endif
 void compose(std::ostream& out,const std::filesystem::path& root){
     using namespace placement_fixture;
     const auto fixture=parse_json_file((root/"native/tests/data/floorplan/compose.json").string());
@@ -207,7 +228,7 @@ extern "C" void __cyg_profile_func_exit(void*,void*){}
 int main(int argc,char** argv){try{
     require(argc==2||argc==3,"repo [baseline]");std::ostringstream out;out<<std::hexfloat;
 #ifndef LEGALIZE_LEGACY_PROBE
-    scalars();
+    scalars();pad_retry_accounting();
 #endif
     kernels(out);compose(out,argv[1]);
     if(argc==3&&std::string(argv[2])=="--kernels-only"){

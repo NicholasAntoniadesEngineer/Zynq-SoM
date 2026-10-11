@@ -1,0 +1,137 @@
+{
+  "status": "tested_bounded_pad_hull_retry_preserves_qualified_incumbents",
+  "base_commit": "41a6e413",
+  "finding": "Near-distance axis choice used body geometry for movable blocks but pad geometry for fixed blocks. Globally replacing body seeds by translated selected pad hulls rescues a four-direction narrow-slot witness but regresses the real devkit search. Neither strategy dominates.",
+  "implementation": "Keep every accepted original composition. After rejection, construct one fresh pad-hull alternative from unchanged caller poses. Compare exact generated near constraints on both axes and skip identical alternatives. Execute at most one distinct alternative; retain first-attempt diagnostics, all executed quantization counts, retry marker, final hard/physical checks and rejection rollback. No new hardware permissions or relaxed guards.",
+  "rejected_experiments": [
+    {
+      "strategy": "Necessary near-pad rectangular seating window",
+      "first_screen_seconds": 0.385574208,
+      "refinement_window_screen_seconds": 0.382695667,
+      "outline_mm": [
+        167,
+        159
+      ],
+      "result": "Same HDMI coupled-axis legalizer failure. Prototype removed, including header, profiler flag and refinement API."
+    },
+    {
+      "strategy": "Seating/refinement window, 168x158",
+      "seconds": 0.39925475,
+      "result": "Rejected power and power_som facing constraints; prototype removed."
+    },
+    {
+      "strategy": "Global pad-hull axis replacement",
+      "devkit_dimensions_mm": [
+        100,
+        100
+      ],
+      "devkit_pcb_sha256": "c55c085789a3d262a6bb9233bd73cb2d4e7f5b0bba425c5ddebf4f9ced2314c2",
+      "matched_original_dimensions_mm": [
+        98,
+        98
+      ],
+      "result": "Rejected as a default replacement. Same current inputs/options with original composer recovered the qualified 98x98 hash.",
+      "logs": [
+        "native/build/devkit-pad-axis-reference-corrected.log",
+        "native/build/devkit-pad-axis-baseline.log"
+      ]
+    }
+  ],
+  "tests": {
+    "red_original": {
+      "log": "native/build/pad-axis-guarded-red.log",
+      "result": "Fails the guarded narrow-slot witness with a stale-axis separation rejection."
+    },
+    "final": {
+      "log": "native/build/pad-axis-distinct-tests.log",
+      "passed": 2,
+      "failed": 0,
+      "seconds": 30.71,
+      "names": [
+        "native_floorplan_contracts",
+        "native_legalize_accounting_contracts"
+      ]
+    },
+    "earlier_retry_precision": {
+      "log": "native/build/pad-axis-retry-tests.log",
+      "passed": 2,
+      "failed": 0,
+      "seconds": 36.52,
+      "note": "Before identical-constraint retry elimination; floorplan precision and floorplan contracts."
+    },
+    "coverage": [
+      "Four reflected/transposed pad/body axis witnesses, exact eight-mm measured pad gap and unchanged 4 mm solver guard",
+      "Deterministic accepted poses and complete decision logs",
+      "Exactly one executed distinct retry",
+      "Failed retry leaves caller poses unchanged",
+      "Independent scalar function-entry observations equal reported counts for successful and failed retries",
+      "Existing frozen geometry and accounting expectations unchanged"
+    ]
+  },
+  "reference_screens": {
+    "carrier": {
+      "log": "native/build/carrier-pad-retry-final.log",
+      "dimensions_mm": [
+        168,
+        159
+      ],
+      "top_bottom": [
+        420,
+        149
+      ],
+      "model_seconds": [
+        2.530143792,
+        2.5297015
+      ],
+      "pcb_text_emit_seconds": [
+        0.034427708,
+        0.033542792
+      ],
+      "pcb_sha256": "03b934e20ef3cc7ef5dfc01695a9ce923f75f248b277e3e7cb8345144080493b",
+      "hard_red": 0,
+      "min_margin": 4.07,
+      "qualified_pcb_unchanged": true,
+      "receipt_rows_unchanged": true
+    },
+    "devkit": {
+      "log": "native/build/devkit-pad-retry-final.log",
+      "project": "devkit_mini",
+      "configuration": "--compact-search off --multiscale-outline on",
+      "dimensions_mm": [
+        98,
+        98
+      ],
+      "top_bottom": [
+        106,
+        57
+      ],
+      "model_seconds": [
+        0.189478958,
+        0.186501833
+      ],
+      "pcb_text_emit_seconds": [
+        0.0089785,
+        0.0085765
+      ],
+      "pcb_sha256": "cfa0305491d9c4a771adb130b04c4aec6cc2894542391a5c7c9dca3a68bca3cf",
+      "hard_red": 0,
+      "min_margin": 38.28,
+      "qualified_pcb_unchanged": true,
+      "receipt_rows_unchanged": true
+    },
+    "small_carrier": {
+      "log": "native/build/carrier-pad-retry-small-final.log",
+      "spec": "native/benchmarks/carrier-167x159-south-interleaved.floorplan.json",
+      "seconds": 0.374621875,
+      "exit_code": 1,
+      "result": "Same coupled-axis HDMI failure; alternative has identical near constraints and is skipped. Failure receipts unchanged."
+    }
+  },
+  "limitations": [
+    "Construction-only reference screens: no fresh full source audit, ERC, DRC or render qualification in this batch. Previously qualified output hashes and complete receipt rows reproduced twice for both boards.",
+    "Model times exclude input preparation, full generation, audit and rendering; no full-build speedup or Python timing comparison claimed.",
+    "No new smaller board accepted. Carrier remains 168x159; devkit remains 98x98.",
+    "The retry is a bounded heuristic, not an exhaustive disjunctive or Euclidean proximity solver. Hardware unknowns and advisory failures remain open.",
+    "One initial devkit invocation used nonexistent project name devkit and failed before placement; corrected to devkit_mini and matched its compact-search-off configuration."
+  ]
+}

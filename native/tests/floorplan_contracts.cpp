@@ -231,6 +231,41 @@ void compose_contracts(const std::filesystem::path& dir) {
     require(floorplan_evaluate_terms(base,{}).empty(),"empty term index evaluates without fabricated terms");
 }
 void primary_fanout_contracts() {
+    for(int direction=0;direction<4;++direction) {
+        // Body and pad hull favour different proximity axes. The legal body
+        // fits a narrow slot; its pad already satisfies the jack constraint.
+        FloorplanLegalizeInput in;
+        in.board_w=60;in.board_h=60;in.compact=true;in.clear=.25;
+        in.metrics["v"]={{{"p",18.5,1.5}},{{"p",18,1,19,2}},{20,20}};
+        in.som_j_rects["som_j1"]={38,30,39,31};
+        if(direction>=2) {
+            in.metrics["v"]={{{"p",18.5,18.5}},{{"p",18,18,19,19}},{20,20}};
+            in.som_j_rects["som_j1"]={38,29,39,30};
+        }
+        if(direction%2) {
+            auto& [ref,x,y]=in.metrics["v"].offsets[0];(void)ref;std::swap(x,y);
+            auto& [pad,x0,y0,x1,y1]=in.metrics["v"].pad_union[0];(void)pad;
+            std::swap(x0,y0);std::swap(x1,y1);
+            auto& jack=in.som_j_rects["som_j1"];
+            std::swap(jack.x0,jack.y0);std::swap(jack.x1,jack.y1);
+        }
+        in.index.hard.push_back({"near_max","v","v","som_j1",13,"pad-axis witness (includes 4 mm solver guard)",true,{},{}});
+        in.fixed_rects={{"west",{0,0,19.75,60}},{"east",{40.25,0,60,60}},
+                        {"north",{0,0,60,19.75}},{"south",{0,40.25,60,60}}};
+        std::vector<FloorplanLegalizeVar> vars{{"v",20,20,{20,20},20,20}};
+        std::vector<std::string> log;
+        const bool ok=floorplan_legalize_compact(in,vars,log);
+        if(!ok)for(const auto& line:log)std::cerr<<line<<'\n';
+        require(ok,"pad-hull axis preserves feasible narrow slot");
+        require(std::count(log.begin(),log.end(),"retry: near constraints use selected pad-hull axes")==1,
+            "bounded pad-hull retry must be reported exactly once");
+        require(vars[0].x==20&&vars[0].y==20,"pad-hull witness changed pinned pose");
+        const auto terms=floorplan_evaluate_terms(in,{{"v",{20,20}}});
+        require(terms.size()==1&&terms[0].ok&&terms[0].measured==8,"independent pad gap is eight mm");
+        auto repeat=vars;std::vector<std::string> repeated_log;
+        require(floorplan_legalize_compact(in,repeat,repeated_log)&&repeat[0].x==20&&repeat[0].y==20&&
+            repeated_log==log,"pad-hull decision must repeat deterministically");
+    }
     // Independent rectangular witnesses: each active face needs reach 2 minus
     // the other body's 0.5 inset, not the nominal 0.3 clearance. Pull from all
     // four directions so both endpoint orders and both axes are exercised.

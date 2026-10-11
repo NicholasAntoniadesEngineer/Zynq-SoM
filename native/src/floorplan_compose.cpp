@@ -138,8 +138,9 @@ class Composer {
 public:
     Composer(const FloorplanLegalizeInput& input,
              const std::vector<FloorplanLegalizeVar>& variables,
-             std::vector<std::string>& output_log, QuantizationCounts* counts = nullptr)
-        : in(input), log(output_log), counts(counts), fixed(input.fixed_poses) {
+             std::vector<std::string>& output_log, QuantizationCounts* counts = nullptr,
+             bool pad_seed_hulls = false)
+        : in(input), log(output_log), counts(counts), fixed(input.fixed_poses), pad_seed_hulls(pad_seed_hulls) {
         for (const auto& v : variables) {
             if (v.name.empty() || v.name.front() == '#' || !by_name.emplace(v.name, &v).second)
                 throw FloorplanError("floorplan compose: invalid or duplicate movable name " + v.name);
@@ -173,6 +174,17 @@ public:
                     throw FloorplanError("floorplan compose: unknown primary fanout " + name);
             }
         }
+    }
+
+    bool same_near_axes(const Composer& other) const {
+        for(const bool x:{true,false}) {
+            const auto a=extra(x),b=other.extra(x);
+            if(a.size()!=b.size())return false;
+            for(std::size_t i=0;i<a.size();++i)
+                if(a[i].kind!=b[i].kind||a[i].edge.src!=b[i].edge.src||
+                   a[i].edge.dst!=b[i].edge.dst||a[i].edge.cost!=b[i].edge.cost)return false;
+        }
+        return true;
     }
 
     bool run(std::vector<FloorplanLegalizeVar>& movable) {
@@ -286,7 +298,11 @@ private:
     }
     Box4 seed_or_fixed(const std::string& name, const Box4& h) const {
         const auto s = seed_rect.find(name);
-        if (s != seed_rect.end()) return s->second;
+        if (s != seed_rect.end()) {
+            if(!pad_seed_hulls)return s->second;
+            return {s->second.x0+h.x0,s->second.y0+h.y0,
+                    s->second.x0+h.x1,s->second.y0+h.y1};
+        }
         const auto p = fixed_pose(name);
         return {p.first + h.x0, p.second + h.y0, p.first + h.x1, p.second + h.y1};
     }
@@ -425,7 +441,25 @@ private:
         out.erase(std::remove_if(out.begin(), out.end(), [](const auto& e) { return !e.term.enforced || e.ok; }), out.end());
         return out;
     }
+    bool pad_seed_hulls = false;
 };
+
+bool compose_with_pad_retry(const FloorplanLegalizeInput& input,
+        std::vector<FloorplanLegalizeVar>& movable,std::vector<std::string>& log,
+        QuantizationCounts* counts=nullptr) {
+    // Preserve every accepted incumbent. Body-derived axes remain a useful
+    // search strategy, but can falsely reject when local pads favour another
+    // axis. Try that geometry once, from unchanged caller poses, on rejection.
+    Composer original(input,movable,log,counts);
+    if(original.run(movable))return true;
+    Composer alternative(input,movable,log,counts,true);
+    // Different hulls can still yield identical constraints. Do not execute
+    // or report a second solver attempt when it would repeat the same work.
+    if(original.same_near_axes(alternative))return false;
+    // Retain the failed first attempt's diagnostics and executed accounting.
+    log.push_back("retry: near constraints use selected pad-hull axes");
+    return alternative.run(movable);
+}
 }  // namespace
 
 std::vector<FloorplanTermEval> floorplan_evaluate_terms(
@@ -438,12 +472,12 @@ std::vector<FloorplanTermEval> floorplan_evaluate_terms(
 bool floorplan_legalize_compact(const FloorplanLegalizeInput& input,
         std::vector<FloorplanLegalizeVar>& movable, std::vector<std::string>& log) {
     validate(input);
-    return Composer(input, movable, log).run(movable);
+    return compose_with_pad_retry(input, movable, log);
 }
 bool floorplan_legalize_compact_accounted(const FloorplanLegalizeInput& input,
         std::vector<FloorplanLegalizeVar>& movable, std::vector<std::string>& log,
         QuantizationCounts& counts) {
     validate(input);
-    return Composer(input, movable, log, &counts).run(movable);
+    return compose_with_pad_retry(input, movable, log, &counts);
 }
 }  // namespace schgen
