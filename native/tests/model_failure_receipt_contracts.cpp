@@ -119,20 +119,23 @@ void success(const std::filesystem::path& root,bool two_side){
     inbox(late.accounting);
 }
 void contract_retry(const std::filesystem::path& root){
- for(int mode:{0,1,2,3}) {
+ for(bool multiple:{false,true})for(int mode:{0,1,2,3}) {
     auto fixture=placement_fixture::load(root,"carrier");
     fixture.input.floorplan.compact_search=true;
     fixture.input.floorplan.spec=load_floorplan_spec((root/"native/benchmarks/carrier-168x159-initial-edge.floorplan.json").string());
     fixture.input.floorplan.spec->outline=FloorplanPoint{168,163};
     auto observer=std::make_shared<FloorplanExperiment>();
-    observer->contract_group_face_sheet="usb_jtag";
+    observer->contract_group_face_sheets={"usb_jtag"};
+    if(multiple)observer->contract_group_face_sheets.insert({"power_mon","power"});
     observer->compact_edge_feasibility=true;observer->interior_order=3;
     int attempts=0;
     observer->attempt_completed=[&](const FloorplanAttemptObservation&){
         ++attempts;
         if(mode==2)throw Injected();
         if(mode==3)throw FloorplanSpecError("controlled invalid specification");
-        if(mode==1||attempts==1)throw FloorplanPackingInfeasible("controlled packing rejection");
+        // Both reservation policies now execute before the parent orientation
+        // retry. Reject both to exercise that retry, not just its first pass.
+        if(mode==1||attempts<=2)throw FloorplanPackingInfeasible("controlled packing rejection");
     };
     fixture.input.floorplan.experiment=observer;
     ExecutionFailureReceipt failure;ExecutionAccounting receipt;bool failed=false;
@@ -147,7 +150,7 @@ void contract_retry(const std::filesystem::path& root){
     verify(receipt,"contract orientation retry mode "+std::to_string(mode));inbox(receipt);
     const auto events=std::count(receipt.fallback_events.begin(),receipt.fallback_events.end(),"contract_group_orientation_retry");
     require(events==(mode>=2?0:1),"retry event missing, duplicated, or recorded for non-packing error");
-    if(mode!=0)require(attempts==(mode>=2?1:2),"retry exceeded one additional attempt");
+    if(mode!=0)require(attempts==(mode>=2?1:4),"retry exceeded one additional two-policy solve");
  }
 }
 void facing_retry(const std::filesystem::path& root){

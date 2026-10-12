@@ -69,7 +69,7 @@ struct Options {
     bool owned_quality_first = false;
     bool owned_extent_alternatives = false;
     bool owned_face_cohesion = false;
-    std::optional<std::string> contract_group_face_sheet;
+    std::set<std::string> contract_group_face_sheets;
     std::map<std::string,std::string> owned_shapes;
     std::optional<std::pair<double,double>> initial_outline;
     std::optional<fs::path> floorplan_spec;
@@ -106,10 +106,11 @@ Options parse(int argc, char** argv) {
             out.owned_face_cohesion=true;continue;
         }
         if(arg=="--contract-group-face-sheet"){
-            if(!seen.insert(arg).second)throw ProjectError("duplicate option "+arg);
             if(++i==argc||std::string(argv[i]).empty()||std::string(argv[i]).front()=='-')
                 throw ProjectError("contract-group-face-sheet requires SHEET");
-            out.contract_group_face_sheet=argv[i];continue;
+            if(!out.contract_group_face_sheets.insert(argv[i]).second)
+                throw ProjectError("duplicate contract-group-face-sheet "+std::string(argv[i]));
+            seen.insert(arg);continue;
         }
         if(arg=="--failed-first-retry"){
             if(!seen.insert(arg).second)throw ProjectError("duplicate option "+arg);
@@ -297,7 +298,7 @@ Options parse(int argc, char** argv) {
         throw ProjectError("owned-quality-first requires --compact-placement");
     if(out.owned_extent_alternatives&&!out.compact_search)
         throw ProjectError("owned-extent-alternatives requires --compact-placement");
-    if((out.owned_face_cohesion||!out.owned_shapes.empty()||out.contract_group_face_sheet)&&!out.compact_search)
+    if((out.owned_face_cohesion||!out.owned_shapes.empty()||!out.contract_group_face_sheets.empty())&&!out.compact_search)
         throw ProjectError("owned face/shape selection requires --compact-placement");
     return out;
 }
@@ -343,7 +344,7 @@ std::optional<int> run_project_command(int argc, char** argv) {
         if(options.command=="board")std::cout<<"--owned-quality-first: opt-in same-pose, same-face owned proximity priority; requires --compact-placement. May increase inter-block estimate. No hardware proximity limit is implied; all gates remain active.\n";
         if(options.command=="board")std::cout<<"--owned-extent-alternatives: append bounded extent-first owned-group candidates; requires --compact-placement. Original alternatives and all gates remain active.\n";
         if(options.command=="board")std::cout<<"--owned-face-cohesion: append owner/cap same-face initial packs, preserving existing candidates.\n--owned-shape SHEET=TAG: restrict a measured candidate by generated tag; unknown, ambiguous or infeasible choices fail without substitution. Requires --compact-placement. All gates remain active.\n";
-        if(options.command=="board")std::cout<<"--contract-group-face-sheet SHEET: experimental bounded rigid-group bottom candidates for one sheet; requires --compact-placement. Controlled-net owners and top-access parts remain pinned. No assembly or thermal approval is implied; all gates remain active.\n";
+        if(options.command=="board")std::cout<<"--contract-group-face-sheet SHEET: repeat for multiple sheets; experimental rigid-group bottom candidates, requires --compact-placement. Controlled-net owners and top-access parts remain pinned. No assembly or thermal approval is implied; all gates remain active.\n";
         if(options.command=="board")std::cout<<"--floorplan-spec PATH: read an explicit candidate specification without editing the project default.\n--interior-order 0|1|2|3: use a single connectivity/area/scarcity/constraint order; no alternate-order retries unless explicitly enabled. Diagnostic strategy selection, not cached acceptance. All gates remain active.\n--failed-first-retry: one opt-in failed-block-first restart after interior seating failure; requires --compact-placement and --interior-order. Successful incumbents are retained. Final geometry and hard-term checks remain mandatory.\n";
         if(options.command=="chir-rung"||options.command=="w11-sweep")std::cout<<"Publishes board artifacts; restores input spec and fallback baseline. Diagnostic pass=False is not a successful board gate.\n";
         return 0;
@@ -470,7 +471,7 @@ std::optional<int> run_project_command(int argc, char** argv) {
         build.native_policy = true;
         build.pcb.compact_search = options.compact_search;
         build.pcb.floorplan_spec = options.floorplan_spec;
-        if(options.initial_outline || options.interior_order || options.multiscale_outline || options.edge_feasibility || options.owned_quality_first || options.owned_extent_alternatives || options.owned_face_cohesion || !options.owned_shapes.empty() || options.contract_group_face_sheet || options.joint_states){
+        if(options.initial_outline || options.interior_order || options.multiscale_outline || options.edge_feasibility || options.owned_quality_first || options.owned_extent_alternatives || options.owned_face_cohesion || !options.owned_shapes.empty() || !options.contract_group_face_sheets.empty() || options.joint_states){
             auto experiment=std::make_shared<FloorplanExperiment>();
             experiment->initial_outline=options.initial_outline;
             experiment->interior_order=options.interior_order;
@@ -482,7 +483,7 @@ std::optional<int> run_project_command(int argc, char** argv) {
             experiment->owned_extent_alternatives=options.owned_extent_alternatives;
             experiment->owned_face_cohesion=options.owned_face_cohesion;
             experiment->owned_shape_tags=options.owned_shapes;
-            experiment->contract_group_face_sheet=options.contract_group_face_sheet;
+            experiment->contract_group_face_sheets=options.contract_group_face_sheets;
             build.pcb.experiment=std::move(experiment);
         }
         build.extraction.kicad_cli = options.kicad_cli;

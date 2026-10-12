@@ -229,12 +229,45 @@ void live(const std::filesystem::path& root){
   std::cout<<project<<" appended="<<added<<" incumbent/prefix/old receipts unchanged\n";
   if(std::string(project)=="carrier") {
    auto experiment=std::make_shared<FloorplanExperiment>();
-   experiment->contract_group_face_sheet="usb_jtag";f.input.floorplan.experiment=experiment;
+   experiment->contract_group_face_sheets={"usb_jtag"};f.input.floorplan.experiment=experiment;
    bottom_coordinates=0;variant_dimensions=0;observing=true;
    auto split=build_pcb_zone_geometry(f.input);observing=false;
    demand(split.quantization_engagements.at("placement_bottom_pose_precision4dp")==bottom_coordinates&&
           split.quantization_engagements.at("placement_variant_dimension_precision4dp")==variant_dimensions,
           "actual mixed-face scalar operations differ from receipt");
+   experiment->contract_group_face_sheets={"power_mon"};
+   const auto monitor=build_pcb_zone_geometry(f.input);
+   experiment->contract_group_face_sheets={"usb_jtag","power_mon","power"};
+   bottom_coordinates=0;variant_dimensions=0;observing=true;
+   const auto combined=build_pcb_zone_geometry(f.input);observing=false;
+   demand(combined.quantization_engagements.at("placement_bottom_pose_precision4dp")==bottom_coordinates&&
+          combined.quantization_engagements.at("placement_variant_dimension_precision4dp")==variant_dimensions,
+          "multi-sheet actual scalar operations differ from receipt");
+   demand(monitor.geometry.shapes.at("power_mon").size()>after.geometry.shapes.at("power_mon").size(),
+          "second selected sheet contributed no candidates");
+   for(const auto& [name,actual]:combined.geometry.shapes){
+    const auto& expected=(name=="usb_jtag"?split:name=="power_mon"?monitor:after).geometry.shapes.at(name);
+    demand(actual.size()==expected.size(),"multi-sheet altered unrelated offer count: "+name);
+    for(std::size_t i=0;i<actual.size();++i)demand(equal(actual[i],expected[i]),"multi-sheet offers differ from independent sheet: "+name);
+   }
+   experiment->contract_group_face_sheets={"power","power_mon","usb_jtag"};
+   const auto combined_repeat=build_pcb_zone_geometry(f.input);
+   demand(combined.quantization_engagements==combined_repeat.quantization_engagements,
+          "multi-sheet declaration order changed operation receipt");
+   for(const auto& [name,actual]:combined.geometry.shapes){
+    const auto& repeated=combined_repeat.geometry.shapes.at(name);
+    demand(actual.size()==repeated.size(),"multi-sheet replay offer count changed");
+    for(std::size_t i=0;i<actual.size();++i)demand(equal(actual[i],repeated[i]),"multi-sheet replay geometry changed");
+   }
+   const auto count=[](const auto& result,const std::string& key){
+    const auto p=result.quantization_engagements.find(key);return p==result.quantization_engagements.end()?std::size_t{}:p->second;
+   };
+   for(const auto& [key,n]:combined.quantization_engagements)
+    demand(n+count(after,key)==count(split,key)+count(monitor,key),"multi-sheet work differs from independent per-sheet deltas: "+key);
+   experiment->contract_group_face_sheets.insert("missing-sheet");bool unknown=false;
+   try{(void)build_pcb_zone_geometry(f.input);}catch(const PcbZoneInfeasible&){unknown=true;}
+   demand(unknown,"unknown additional sheet must not be silently ignored");
+   experiment->contract_group_face_sheets={"usb_jtag"};
    experiment->contract_group_rotations=true;
    bottom_coordinates=0;variant_dimensions=0;observing=true;
    const auto group_turns=build_pcb_zone_geometry(f.input);observing=false;

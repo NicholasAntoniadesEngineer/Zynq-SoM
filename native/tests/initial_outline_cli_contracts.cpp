@@ -67,12 +67,14 @@ int main(int argc,char** argv){try{
     const auto groups=run({"board","--compact-placement","--contract-group-face-sheet","usb_jtag"});
     if(groups.exit_code||groups.stdout_text.find("No assembly or thermal approval is implied")==std::string::npos)
         throw std::runtime_error("contract-group help must disclose qualification limits");
+    if(run({"board","--compact-placement","--contract-group-face-sheet","usb_jtag","--contract-group-face-sheet","power"}).exit_code)
+        throw std::runtime_error("distinct contract-group sheets must be accepted together");
     for(const auto& args:std::vector<std::vector<std::string>>{
         {"board","--owned-face-cohesion"}, {"board","--owned-shape","board_aux=tag"},
         {"board","--contract-group-face-sheet","usb_jtag"},
         {"board","--compact-placement","--contract-group-face-sheet"},
         {"board","--compact-placement","--contract-group-face-sheet",""},
-        {"board","--compact-placement","--contract-group-face-sheet","a","--contract-group-face-sheet","b"},
+        {"board","--compact-placement","--contract-group-face-sheet","a","--contract-group-face-sheet","a"},
         {"pcb-stage","--contract-group-face-sheet","usb_jtag"},
         {"board","--compact-placement","--owned-face-cohesion","--owned-face-cohesion"},
         {"board","--compact-placement","--owned-shape","=tag"},

@@ -71,7 +71,8 @@ struct FloorplanExperiment {
     bool owned_quality_first = false;
     bool owned_extent_alternatives = false;
     bool owned_face_cohesion = false;
-    std::optional<std::string> contract_group_face_sheet;
+    // Canonical order makes multi-sheet expansion independent of CLI order.
+    std::set<std::string> contract_group_face_sheets;
     bool contract_group_rotations = false;
     // Diagnostic candidate restrictions by generated tag, not unstable index.
     // Unknown, ambiguous or unmeasured choices fail; never silently fall back.

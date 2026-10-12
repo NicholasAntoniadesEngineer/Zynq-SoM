@@ -246,23 +246,32 @@ PcbPlacementResult build_pcb_model(const PcbPlacementInput &input, ExecutionFail
     try {floorplan = generate_floorplan(prepared,&child);}
     catch(const FloorplanPackingInfeasible&) {
         const auto experiment=input.floorplan.experiment;
-        if(!experiment||!experiment->contract_group_face_sheet||!child.captured||child.unavailable)throw;
-        const auto& sheet=*experiment->contract_group_face_sheet;
-        const auto found=zones.geometry.shapes.find(sheet);
-        if(found==zones.geometry.shapes.end())throw;
-        const auto& offers=found->second;
-        const auto first=std::find_if(offers.begin(),offers.end(),[](const auto& s){return s.tag.rfind("contract-bottom/",0)==0;});
-        if(first==offers.end())throw;
-        const auto index=static_cast<std::size_t>(first-offers.begin()),old_size=offers.size();
-        const auto seed=offers.front();
+        if(!experiment||experiment->contract_group_face_sheets.empty()||!child.captured||child.unavailable)throw;
+        struct Expansion {std::string sheet;FloorplanZoneShape seed;std::size_t index,old_size;};
+        std::vector<Expansion> selected;
+        for(const auto& sheet:experiment->contract_group_face_sheets){
+            const auto found=zones.geometry.shapes.find(sheet);
+            if(found==zones.geometry.shapes.end())continue;
+            const auto& offers=found->second;
+            const auto first=std::find_if(offers.begin(),offers.end(),[](const auto& s){return s.tag.rfind("contract-bottom/",0)==0;});
+            if(first!=offers.end())selected.push_back({sheet,offers.front(),static_cast<std::size_t>(first-offers.begin()),offers.size()});
+        }
+        if(selected.empty())throw;
         // The first failed receipt already owns original zone/caller work.
         completed=std::move(child.accounting);child={};
         completed.fallback_events.push_back("contract_group_orientation_retry");
         pcb_placement::Context expansion(input);expansion.pool=zones.footprints;
-        try {pcb_placement::append_rigid_zone_orientations(expansion,zones.geometry,sheet,seed,index);}
+        bool changed=false;
+        // Expand each eligible suffix in canonical sheet order, then replan
+        // once with all offers together. Count the complete failed prefix and
+        // every expansion, including a throw after earlier sheets succeeded.
+        try {for(const auto& choice:selected){
+            pcb_placement::append_rigid_zone_orientations(expansion,zones.geometry,choice.sheet,choice.seed,choice.index);
+            changed|=zones.geometry.shapes.at(choice.sheet).size()!=choice.old_size;
+        }}
         catch(...) {append_execution_accounting(completed,{expansion.quantization,{}},&child);throw;}
         append_execution_accounting(completed,{expansion.quantization,{}},&child);
-        if(zones.geometry.shapes.at(sheet).size()==old_size)throw;
+        if(!changed)throw;
         prepared=prepare_pcb_floorplan(input,zones);
         // Replace the repeated seed: count original work exactly once, then
         // all new rotation and search work, including rejected alternatives.
