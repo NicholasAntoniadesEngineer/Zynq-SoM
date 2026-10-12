@@ -124,6 +124,18 @@ void contracts(){
     rejected(discarded_array);
 }
 void streaming_boundaries(){
+    // Word-sized whitespace fast paths must neither overread a short tail nor
+    // accept any non-JSON whitespace byte hidden inside an indentation run.
+    for(std::size_t n:{0u,1u,7u,8u,9u,15u,16u,17u,65535u,65536u,65537u}) {
+        const auto padding=std::string(n,' ');
+        const auto valid=padding+"\t\r\n {\"kind\" "+padding+": \"TranslationUnitDecl\"}"+padding;
+        AuditAstProjectionStats stats;
+        same(strip(parse_json_text(valid)),projected(valid,"whitespace words",&stats));
+        require(stats.input_bytes==valid.size(),"whitespace byte accounting changed");
+        for(const char c:{'\v','\f','\0',static_cast<char>(0xa0)})
+            rejected(padding+std::string(1,c)+"null");
+        rejected(padding);
+    }
     const std::vector<std::string> valid={
         R"({"name":"\uD83D\uDE00α😀\\\"","unknown":"\uD834\uDD1E","loc":{"offset":-123.45678e+12}})",
         R"({"inner":[true,false,null,1.7976931348623157e308],"kind":"TranslationUnitDecl"})",

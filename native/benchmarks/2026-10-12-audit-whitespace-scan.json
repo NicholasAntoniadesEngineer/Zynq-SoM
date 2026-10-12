@@ -1,0 +1,44 @@
+{
+  "base_commit": "656141138711ba0a5191e24fa6545008cabd7a2e",
+  "control_parser_git_blob": "1c902bffc2eaccc637990f22435b921c16d947ee",
+  "change": "Scan runs of eight ASCII spaces with an in-bounds unaligned-safe memcpy into uint64_t; retain the exact scalar JSON whitespace predicate for all other bytes and short tails. No schema, semantic visitor, compiler flags, dependency checks, macro scan, mutation guards or memory-concurrency policy changed.",
+  "decision": "Retain the bounded portable implementation: both sequential full-manifest comparisons improved, including reversed run order. Benefit is modest and host/cache sensitive; do not present the best observed percentage as a guaranteed speedup.",
+  "environment": {
+    "os": "macOS 26.6.2 build 25G83 arm64",
+    "compiler": "Apple Clang 21.0.0 clang-2100.3.34.2, /usr/bin/clang++",
+    "workers": 2,
+    "method": "Control executable copied before the production edit; both use the same current scanner, source inputs and ordered native_board_policy_audit_sources manifest. Sequential runs, no concurrent builds/tests, no source changes during timing. OS caches and external host load uncontrolled."
+  },
+  "four_file_screen": {
+    "manifest": ["native/src/quantize.cpp", "native/src/pack.cpp", "native/src/floorplan_build.cpp", "native/src/pcb_placement_build.cpp"],
+    "control_seconds": [12.6935122,12.9249342],
+    "candidate_seconds": [12.5539188,12.6708747],
+    "ordered_census_equal_each_pair": true,
+    "logs": ["native/build/audit-space-control-1.log", "native/build/audit-space-candidate-1.log", "native/build/audit-space-control-2.log", "native/build/audit-space-candidate-2.log"]
+  },
+  "full_manifest": {
+    "files": 69,
+    "first_pair_order": ["control", "candidate"],
+    "first_pair_seconds": [170.434298,159.899937],
+    "first_pair_change_percent": -6.1808926511,
+    "reverse_pair_order": ["candidate", "control"],
+    "reverse_pair_seconds": [159.394242,161.683294],
+    "reverse_pair_change_percent": -1.4157628431,
+    "all_four_ordered_census_equal": true,
+    "census_sha256": "54c6d8982106800a01afe41cc4f77e1af9025b05d0e79b9cabf62bc402083d11",
+    "constants": 75,
+    "functions": 980,
+    "quantization_sites": 317,
+    "sampled_aggregate_peak_bytes_in_run_order": [2869215232,2865233920,2865152000,2864906240],
+    "logs": ["native/build/audit-space-full-control.log", "native/build/audit-space-full-candidate.log", "native/build/audit-space-full-candidate-reverse.log", "native/build/audit-space-full-control-reverse.log"]
+  },
+  "new_regression_coverage": "Memory and streaming inputs: runs of 0/1/7/8/9/15/16/17/65535/65536/65537 spaces; mixed JSON tab/CR/LF; leading/interior/trailing whitespace; exact consumed-byte accounting; whitespace-only incomplete input; rejection of VT, FF, NUL and 0xA0 after every tested run. Existing generic-parser projection oracle and malformed skipped-field tests remain active.",
+  "regressions": {
+    "passed": ["native_audit_ast_pipe_contracts", "native_audit_ast_pipe_census_contracts", "native_audit_ast_projection_contracts", "native_parallel_audit_contracts", "native_audit_ast_projection_census"],
+    "failed": 0,
+    "seconds": 13.78,
+    "log": "native/build/audit-space-final-tests.log",
+    "production_cli_rebuilt": true
+  },
+  "scope_limits": "These are source-audit times, not compilation, placement, rendering, total board build, or Python comparison timings. No new board qualification or layout change. Persistent reuse and compiler-output reduction are not enabled. Overall goal remains incomplete."
+}

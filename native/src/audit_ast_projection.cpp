@@ -4,6 +4,7 @@
 #include <charconv>
 #include <cmath>
 #include <cstdint>
+#include <cstring>
 #include <istream>
 #include <stdexcept>
 #include <vector>
@@ -97,7 +98,24 @@ private:
     char peek(){const auto c=input_.chunk();if(c.empty())fail("unexpected end of JSON");return c.front();}
     char take(){const auto c=peek();input_.advance(1);return c;}
     static bool white(char c){return c==' '||c=='\t'||c=='\r'||c=='\n';}
-    void space(){for(;;){const auto v=input_.chunk();std::size_t i=0;while(i<v.size()&&white(v[i]))++i;input_.advance(i);if(i<v.size()||v.empty())return;}}
+    void space(){
+        for(;;){
+            const auto v=input_.chunk();std::size_t i=0;
+            while(i<v.size()){
+                // Clang indentation dominates large JSON dumps. Read complete
+                // words only within this chunk; memcpy permits unaligned input
+                // without aliasing assumptions. All other bytes use the exact
+                // JSON whitespace predicate, including across stream refills.
+                if(v.size()-i>=sizeof(std::uint64_t)){
+                    std::uint64_t word;std::memcpy(&word,v.data()+i,sizeof word);
+                    if(word==UINT64_C(0x2020202020202020)){i+=sizeof word;continue;}
+                }
+                if(!white(v[i]))break;
+                ++i;
+            }
+            input_.advance(i);if(i<v.size()||v.empty())return;
+        }
+    }
     bool consume(char c){if(!end()&&peek()==c){input_.advance(1);return true;}return false;}
     void expect(char c){space();if(!consume(c))fail(std::string("expected '")+c+"'");}
     static bool digit(char c){return c>='0'&&c<='9';}
