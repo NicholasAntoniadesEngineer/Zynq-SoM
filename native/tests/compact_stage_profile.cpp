@@ -372,6 +372,9 @@ std::string trial(const PcbPlacementInput& source, bool compact, int run, int ge
     std::cout<<"contract_group_rotations="<<contract_group_rotations<<'\n';
     for(const auto& selected:contract_group_face_sheets)std::cout<<"contract_group_face_sheet="<<selected<<'\n';
     for(const auto& [sheet,tag]:owned_shapes)std::cout<<"owned_shape_restriction sheet="<<sheet<<" tag="<<tag<<'\n';
+    if(observers&&owned_selection_trace)floor->owned_shape_catalogued=[](const auto& sheet,int index,const auto& tag){
+        std::cout<<"owned_shape_catalog sheet="<<sheet<<" index="<<index<<" tag="<<std::quoted(tag)<<'\n';
+    };
     if(observers&&owned_selection_trace)floor->owned_shape_selection_completed=[event=std::size_t{0}](const std::string& sheet,const auto& alternatives,const auto& quality,int selected) mutable {
         ++event;
         for(const auto& rank:alternatives){

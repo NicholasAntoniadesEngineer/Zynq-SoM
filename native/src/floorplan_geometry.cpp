@@ -25,6 +25,13 @@ Engine::Engine(const FloorplanInput& input) : in(input) {
     if (in.experiment) validate_floorplan_experiment(*in.experiment);
     if(in.experiment&&in.experiment->reseat_pose_limits&&!in.compact_search)
         throw FloorplanError("pose retry requires compact search");
+    if(in.experiment&&in.experiment->owned_shape_catalogued)
+        for(const auto& [sheet,shapes]:in.geometry.shapes)for(std::size_t i=0;i<shapes.size();++i){
+            const auto q=in.owned_shape_quality.find({sheet,static_cast<int>(i)});
+            if(!shapes[i].tag.empty()&&q!=in.owned_shape_quality.end()&&
+               owned_shape_quality_comparable(q->second,q->second))
+                in.experiment->owned_shape_catalogued(sheet,static_cast<int>(i),shapes[i].tag);
+        }
     if(in.experiment&&!in.experiment->owned_shape_tags.empty()) {
         if(!in.compact_search)throw FloorplanError("owned shape selection requires compact search");
         for(const auto& [sheet,tag]:in.experiment->owned_shape_tags) {

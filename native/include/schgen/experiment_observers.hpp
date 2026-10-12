@@ -79,6 +79,9 @@ struct FloorplanExperiment {
     // Diagnostic candidate restrictions by generated tag, not unstable index.
     // Unknown, ambiguous or unmeasured choices fail; never silently fall back.
     std::map<std::string,std::string> owned_shape_tags;
+    // Read-only inventory of tagged shapes with complete measured quality.
+    // Registration is not a final-board feasibility or hardware verdict.
+    std::function<void(const std::string&,int,const std::string&)> owned_shape_catalogued;
     std::function<void(std::size_t,std::size_t,std::size_t)> edge_feasibility_completed;
     std::function<void(const std::string&,const std::string&,double,double)> edge_feasibility_rejected;
     // Observes already evaluated feasible alternatives; never runs additional

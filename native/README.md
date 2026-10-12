@@ -314,6 +314,25 @@ qualification, unresolved trade-off and separately tested recovery change.
 The subsequent selector correction and validation are recorded in
 `benchmarks/2026-10-12-unchanged-face-planar-quality.json`.
 
+The subsequent **two-pilot 166x156 candidate** passes the full mandatory
+pipeline with bringup_rails U1.24–C1.1 at 6.8006 mm, bottom/bottom, while
+preserving the five rounded board_aux proximity measurements of the retained
+165x158 board. Reproduce with the continuation recipe above, replacing its
+floorplan spec with `benchmarks/carrier-166x156.floorplan.json` and adding
+`--owned-shape bringup_rails=bottom-a2.2/r270/owned-pins-forward`
+and `--owned-shape board_aux=owned-face-a1.000000` (no victim-shapes option).
+These are explicit experimental selections, not new mandatory shape rules.
+The profiler's owned-selection trace now includes a read-only catalog of
+registered, measured shape tags; registration does not imply board feasibility.
+Evidence: `benchmarks/2026-10-12-two-pilot-carrier-qualification.json`.
+This is 0.6674% less area than 165x158, but 1 mm wider; retain both incumbents.
+Qualitative bypass/access requirements remain UNVERIFIED, and the three
+existing advisory failures remain. No routing or fabrication readiness is implied.
+Search caps, discrete shape portfolios and shrink-only refinement neighborhoods
+are algorithm choices to challenge, not evidence of physical impossibility.
+Next selection work must explore area-improving aspect-ratio trades and measured
+pilot quality without requiring these hand-selected tags or relaxing hardware gates.
+
 Firmware source provenance now reads canonical circuit JSON and compiled factory
 registrations rather than checking for Python constructors. Independent source
 inventories cover both projects, reject damaged/missing registered inputs, and

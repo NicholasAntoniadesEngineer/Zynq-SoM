@@ -160,6 +160,10 @@ void synthetic() {
     auto observed=in;
     auto observation=std::make_shared<FloorplanExperiment>();
     std::size_t events=0;
+    std::vector<std::pair<int,std::string>> catalog;
+    observation->owned_shape_catalogued=[&](const auto& sheet,int index,const auto& tag){
+        require(sheet=="pilot","catalog sheet identity changed");catalog.emplace_back(index,tag);
+    };
     observation->owned_shape_selection_completed=[&](const std::string& sheet,const auto& ranks,const auto& qualities,int chosen){
         ++events;
         require(sheet=="pilot"&&ranks.size()==2&&chosen==1,"selection observer missed evaluated alternatives or final choice");
@@ -169,6 +173,11 @@ void synthetic() {
     observed.experiment=observation;
     unchanged(improved,pack(observed),"read-only observer changed geometry or actual work receipts");
     require(events==1,"selection observer duplicated an event");
+    require(catalog==std::vector<std::pair<int,std::string>>{{0,"fixture-0"},{1,"fixture-1"}},"catalog must expose stable registered tags without changing selection");
+    catalog.clear();observation->owned_shape_selection_completed={};
+    auto missing_catalog_quality=observed;missing_catalog_quality.owned_shape_quality.erase({"pilot",1});
+    (void)pack(missing_catalog_quality);
+    require(catalog==std::vector<std::pair<int,std::string>>{{0,"fixture-0"}},"catalog advertised an unmeasured shape");
     require(improved.plan.interior_blocks[0].w == baseline.plan.interior_blocks[0].w &&
         improved.plan.interior_blocks[0].h == baseline.plan.interior_blocks[0].h &&
         improved.plan.interior_blocks[0].x == baseline.plan.interior_blocks[0].x &&

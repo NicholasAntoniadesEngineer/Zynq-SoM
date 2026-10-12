@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "base_commit": "f37ad0ac",
+  "change": "Read-only catalog of registered shapes with complete measured quality; observer parity and missing-quality tests.",
+  "output": "/private/tmp/carrier-166x156-two-pilots.iK3HkI",
+  "log": "native/build/carrier-166x156-two-pilots-full.log",
+  "recipe": "native/bin/schgen board --project carrier --compact-placement --interior-order 3 --edge-feasibility --owned-quality-first --owned-face-cohesion --contract-group-face-sheet usb_jtag --floorplan-spec native/benchmarks/carrier-166x156.floorplan.json --joint-separation-states 1024 --reseat-poses 8 --reseat-frontier 4096 --reseat-continuations 3 --owned-shape bringup_rails=bottom-a2.2/r270/owned-pins-forward --owned-shape board_aux=owned-face-a1.000000 --audit-projections 2 --timing -o FRESH_OUTPUT",
+  "pcb_sha256": "99bd6a1dddb8f94f314f8b0d775ccc894ef84556e82ab70159360fa071470a5e",
+  "screen_matches_full_pcb": true,
+  "dimensions_mm": [166, 156],
+  "area_mm2": 25896,
+  "instances": {"top": 413, "bottom": 153},
+  "estimated_cross_wire_mm": 15862.3,
+  "qualification": {
+    "sheets": 37,
+    "mandatory_gates": "PASS",
+    "source_audit": "PASS: 69 C++ files, 75 constants, 156 transforms",
+    "non_routing_drc_errors": 0,
+    "unrouted": 499,
+    "placement_flow": "PASS: 19 details, no unresolved or violated constraints",
+    "advisory_failures": ["return_path", "golden", "contract_coverage_lint"],
+    "front_back_render_inspection": "Completed; bottom remains substantially underused. Visual inspection is not proof of assembly or electrical readiness.",
+    "qualitative_hardware_requirements": "UNVERIFIED"
+  },
+  "pilot_planar_pad_gaps_mm": {
+    "bringup_rails_U1.24_C1.1": {"current": 6.8006, "retained_165x158": 8.0298, "faces": "bottom/bottom"},
+    "board_aux": [3.30697, 6.81, 11.3052, 3.3352, 5.0562],
+    "board_aux_comparison": "Same rounded gaps and corresponding faces as retained 165x158; not a routed-loop or hardware-limit verdict."
+  },
+  "timing_seconds": {
+    "pcb_input_loading_and_netlist_validation": 1.476904,
+    "pcb_build_model_with_internal_checks": 3.031731,
+    "pcb_text_render": 0.036166,
+    "render3d": 28.324339,
+    "source_audit": 106.507309,
+    "measured_scope_total_not_process_wall": 195.938493
+  },
+  "other_executed_experiments": [
+    {"log": "native/build/carrier-166x156-bypass-coherent-full.log", "result": "Mandatory PASS; rail-only pinning retains board_aux C4 proximity regression, so prefer two-pilot candidate."},
+    {"log": "native/build/carrier-166x156-both-owned-pilots.log", "result": "Bounded search failed with board_aux owned-face-fixed/a2.2/owned-pins-forward. Not an infeasibility proof."},
+    {"log": "native/build/carrier-166x156-two-pilot-proximity.log", "result": "Screen PASS, PCB matches full build."}
+  ],
+  "tests": ["native_owned_shape_quality_engine_contracts PASS", "native_compact_retry_contracts PASS", "native_initial_outline_cli_contracts PASS"],
+  "limitations": [
+    "Explicit experimental tags demonstrate a better candidate, not automated quality-aware portfolio selection.",
+    "Retain 165x158 and original 168x163 incumbents; 166x156 is wider than 165x158.",
+    "No fresh matched Python timing comparison or compile timing in this experiment.",
+    "No limits waived. Routing excluded; no fabrication readiness claim."
+  ]
+}
