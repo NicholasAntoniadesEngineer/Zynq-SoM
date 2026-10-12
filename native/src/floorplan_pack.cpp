@@ -86,7 +86,15 @@ bool Engine::attempt_pack(bool compact) {
                 compact_order=*in.experiment->interior_order;
                 try {
                     std::string failed;
-                    bool ok=attempt_pack_impl(compact,nullptr,{},recovery?&failed:nullptr);
+                    bool selected_pose=false;
+                    bool ok=attempt_pack_impl(compact,nullptr,{},recovery?&failed:nullptr,0,&selected_pose);
+                    const auto continuations=in.experiment->reseat_pose_limits?
+                        in.experiment->reseat_pose_limits->continuations:0;
+                    for(std::size_t replay=0;!ok&&selected_pose&&replay<continuations;++replay){
+                        restore();
+                        fallback("interior_reseat_pose_resume");
+                        ok=attempt_pack_impl(compact,nullptr,{},nullptr,replay+1,&selected_pose);
+                    }
                     if(!ok&&recovery&&!failed.empty()) {
                         restore();
                         fallback("interior_failed_first_retry");
@@ -134,7 +142,9 @@ bool Engine::attempt_pack(bool compact) {
         });
 }
 bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure,
-                              const std::string& promote,std::string* failed_subject) {
+                              const std::string& promote,std::string* failed_subject,
+                              std::size_t first_pose_skip,bool* selected_pose) {
+    if(selected_pose)*selected_pose=false;
     if(order_independent_failure)*order_independent_failure=true;
     // Borrow only for this synchronous invocation; never attach a sink to
     // occupancy geometry or candidate copies. Rejected trials remain counted.
@@ -418,6 +428,7 @@ bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure,
         return true;
     };
     int evict_budget=reseat_evict_budget;
+    bool first_recovery=true;
     auto retry=[&](FloorplanBlock& b,FloorplanPoint a) {
         if (evict_budget<1) return false;
         std::vector<std::tuple<double,double,double,double,std::string>> ranks;
@@ -471,6 +482,13 @@ bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure,
                     const auto next=near(e,e.shape_idx,anchor,e.w,e.h,e.fanout_reach,e.fanout_inset,
                                          side_mask(e.side),get(chosen,e.name),nullptr);
                     if(!next){occ_pull(b);continue;}
+                    if(first_recovery&&first_pose_skip){
+                        --first_pose_skip;++observation.skipped;
+                        fallback("interior_reseat_pose_skip");
+                        occ_pull(b);continue;
+                    }
+                    first_recovery=false;
+                    if(selected_pose)*selected_pose=true;
                     e.x=next->x;e.y=next->y;occ_put(e);centers[e.name]={e.cx(),e.cy()};
                     // The earlier score compared different poses. Do not keep
                     // that stale estimate as evidence for this recovered pose.

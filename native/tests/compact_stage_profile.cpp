@@ -50,6 +50,7 @@ void help() {
     std::cout << "  [--contract-group-face-sheet SHEET] (experimental bounded rigid-group face candidates)\n";
     std::cout << "  [--contract-group-rotations on|off] (requires contract-group-face-sheet)\n";
     std::cout << "  [--reseat-poses N --reseat-frontier N] (failure-only alternative poses; both required)\n";
+    std::cout << "  [--reseat-continuations N] (capped first-recovery replays; explicit interior order required)\n";
     std::cout << "  [--floorplan-spec PATH] (explicit candidate policy; project default is not edited)\n";
     std::cout << "compact_stage_profile --repo ROOT --project NAME --compact-search off|on|both\n"
         "  [--runs N] [--input-mode cold|prepared] [--kicad-cli PATH]\n"
@@ -92,12 +93,14 @@ Options parse(int argc, char** argv) {
             out.floorplan_spec=value;
         }
         else if (arg == "--project") out.project = value;
-        else if(arg=="--reseat-poses"||arg=="--reseat-frontier") {
+        else if(arg=="--reseat-poses"||arg=="--reseat-frontier"||arg=="--reseat-continuations") {
             std::size_t n=0;const auto parsed=std::from_chars(value.data(),value.data()+value.size(),n);
             if(parsed.ec!=std::errc{}||parsed.ptr!=value.data()+value.size()||!n)
                 throw std::invalid_argument("reseat limits must be positive integers");
             if(!out.reseat_pose_limits)out.reseat_pose_limits.emplace();
-            if(arg=="--reseat-poses")out.reseat_pose_limits->poses=n;else out.reseat_pose_limits->frontier_nodes=n;
+            if(arg=="--reseat-poses")out.reseat_pose_limits->poses=n;
+            else if(arg=="--reseat-frontier")out.reseat_pose_limits->frontier_nodes=n;
+            else out.reseat_pose_limits->continuations=n;
         }
         else if(arg=="--contract-group-rotations") {
             if(value!="on"&&value!="off")throw std::invalid_argument("contract-group-rotations must be on|off");
@@ -197,6 +200,8 @@ Options parse(int argc, char** argv) {
     if(out.contract_group_rotations&&!out.contract_group_face_sheet)throw std::invalid_argument("contract-group-rotations requires --contract-group-face-sheet");
     if(out.reseat_pose_limits&&(out.compact!="on"||out.reseat_pose_limits->poses<2||!out.reseat_pose_limits->frontier_nodes))
         throw std::invalid_argument("reseat requires --compact-search on, --reseat-poses >=2 and --reseat-frontier >0");
+    if(out.reseat_pose_limits&&out.reseat_pose_limits->continuations&&(!out.interior_order||out.failed_first_retry))
+        throw std::invalid_argument("reseat continuations require interior-order and exclude failed-first-retry");
     if(out.outline&&out.initial_outline)throw std::invalid_argument("initial-outline-mm cannot be combined with outline-mm");
     if(out.outline&&out.multiscale_outline)throw std::invalid_argument("multiscale-outline conflicts with fixed outline-mm");
     if(out.interior_order&&out.constraint_first)throw std::invalid_argument("single interior-order conflicts with constraint-first portfolio");
@@ -324,10 +329,10 @@ std::string trial(const PcbPlacementInput& source, bool compact, int run, int ge
     floor->contract_group_face_sheet=contract_group_face_sheet;
     floor->contract_group_rotations=contract_group_rotations;
     floor->reseat_pose_limits=reseat_pose_limits;
-    if(reseat_pose_limits)std::cout<<"reseat_limits poses="<<reseat_pose_limits->poses<<" frontier="<<reseat_pose_limits->frontier_nodes<<'\n';
+    if(reseat_pose_limits)std::cout<<"reseat_limits poses="<<reseat_pose_limits->poses<<" frontier="<<reseat_pose_limits->frontier_nodes<<" continuations="<<reseat_pose_limits->continuations<<'\n';
     if(observers)floor->pose_retry_completed=[](const auto& r){
         std::cout<<"pose_retry incoming="<<r.incoming<<" displaced="<<r.displaced
-                 <<" generated="<<r.generated<<" frontier="<<r.frontier_nodes<<" attempted="<<r.attempted
+                 <<" generated="<<r.generated<<" frontier="<<r.frontier_nodes<<" attempted="<<r.attempted<<" skipped="<<r.skipped
                  <<" budget_exhausted="<<r.budget_exhausted<<" result_capped="<<r.result_capped<<" success="<<r.success<<'\n';
     };
     std::cout<<"contract_group_rotations="<<contract_group_rotations<<'\n';

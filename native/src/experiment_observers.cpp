@@ -12,6 +12,9 @@ void validate_floorplan_experiment(const FloorplanExperiment &experiment) {
     if(experiment.reseat_pose_limits &&
        (experiment.reseat_pose_limits->poses<2 || !experiment.reseat_pose_limits->frontier_nodes))
         throw FloorplanError("experiment: pose retry requires at least two poses and a positive frontier budget");
+    if(experiment.reseat_pose_limits && experiment.reseat_pose_limits->continuations &&
+       (!experiment.interior_order || experiment.failed_first_retry))
+        throw FloorplanError("experiment: pose continuations require an explicit order without failed-first retry");
     if(experiment.failed_first_retry&&!experiment.interior_order)
         throw FloorplanError("experiment: failed-first retry requires an explicit interior order");
     if(experiment.interior_order && (*experiment.interior_order<0 || *experiment.interior_order>3))

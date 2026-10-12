@@ -23,7 +23,7 @@ auto offers(const Engine& e){
     return out;
 }
 struct Block {double w,h;int variants=1;double priority=0;};
-struct Case {double w,h;std::vector<Block> blocks;};
+struct Case {double w,h;std::vector<Block> blocks;bool terminal_trap=false;};
 FloorplanInput input(){FloorplanInput in;in.som.w=8;in.som.h=8;in.module_offset=FloorplanPoint{0,0};in.compact_search=true;return in;}
 void setup(Engine& e,const Case& c){
     e.board_size(c.w,c.h);e.plan.punch_free=true;e.compact_order=0;
@@ -34,14 +34,22 @@ void setup(Engine& e,const Case& c){
         e.plan.interior_blocks.push_back(b);e.zbox[b.name]={s.w,s.h};e.som_pull[b.name]=s.priority;
         for(int k=0;k<s.variants;++k)e.shape_sets[1][b.name].push_back({s.w,s.h,{}, {},k%2?"bottom":"top",{}});
     }
+    if(c.terminal_trap){
+        // Intentionally inconsistent nominal/candidate dimensions force a
+        // late seating rejection after an earlier local recovery. All four
+        // physical candidates are too large; none may be accepted.
+        FloorplanBlock b;b.name="terminal";b.kind="interior";b.zone="E";b.x=-11;b.y=-13;b.w=1;b.h=1;
+        e.plan.interior_blocks.push_back(b);e.zbox[b.name]={1,1};e.som_pull[b.name]=0;
+        for(int k=0;k<4;++k)e.shape_sets[1][b.name].push_back({c.w*2,c.h*2,{}, {},"top",{}});
+    }
     e.plan.accounting.quantization_engagements.clear();
     e.plan.accounting.quantization_engagements["entry-sentinel"]=19;
     e.plan.accounting.fallback_events={"entry-fallback"};
 }
 struct Result {bool ok;FloorplanPlan plan;decltype(offers(std::declval<Engine>())) side;std::size_t calls;};
-Result trial(const FloorplanInput& in,const Case& c,int order){
+Result trial(const FloorplanInput& in,const Case& c,int order,std::size_t skip=0,bool* selected=nullptr){
     Engine e(in);setup(e,c);e.compact_order=order;entries=0;observing=true;
-    bool ok=false;try{ok=e.attempt_pack_impl(false);}catch(...){observing=false;throw;}observing=false;
+    bool ok=false;try{ok=e.attempt_pack_impl(false,nullptr,{},nullptr,skip,selected);}catch(...){observing=false;throw;}observing=false;
     const auto calls=entries;require(e.plan.accounting.quantization_engagements.at("run_overflow_tol")==calls,"direct receipt disagrees with actual scalar entries");
     return {ok,e.plan,offers(e),calls};
 }
@@ -310,6 +318,57 @@ void alternative_pose_retry_contract(){
                 "pose retry not reproducible or callback changed behavior");
     }
     require(searches>0&&attempts>0&&exhausted>0&&capped>0&&recovered>0,"pose recovery fixtures missed successful, attempted or limited searches");
+    std::size_t replays=0,skips=0,replay_recovered=0;
+    std::optional<std::pair<Case,int>> interrupted_case;
+    auto replay_cases=cases;for(auto c:cases){c.terminal_trap=true;replay_cases.push_back(std::move(c));}
+    for(const auto& c:replay_cases)for(int order=0;order<3;++order){
+        auto replay_input=input();auto config=std::make_shared<FloorplanExperiment>();replay_input.experiment=config;
+        config->interior_order=order;config->reseat_pose_limits=FloorplanPoseRetryLimits{8,4096,3};
+        QuantizationCounts expected{{"entry-sentinel",19}};std::vector<std::string> events{"entry-fallback"};
+        std::optional<Result> accepted;std::size_t calls=0,executed=0;
+        for(std::size_t skip=0;skip<=3;++skip){
+            if(skip)events.push_back("interior_reseat_pose_resume");
+            bool selected=false;auto r=trial(replay_input,c,order,skip,&selected);++executed;calls+=r.calls;
+            auto delta=r.plan.accounting.quantization_engagements;delta.erase("entry-sentinel");checked_quantization_merge(expected,delta);
+            const auto& ev=r.plan.accounting.fallback_events;events.insert(events.end(),ev.begin()+1,ev.end());
+            if(r.ok){if(skip)++replay_recovered;accepted=std::move(r);break;}
+            if(!selected)break;
+        }
+        Engine wrapped(replay_input);setup(wrapped,c);const auto entry=layout(wrapped.plan);const auto side=offers(wrapped);
+        entries=0;observing=true;bool ok=false;
+        try{ok=wrapped.attempt_pack(false);}catch(...){observing=false;throw;}observing=false;
+        require(ok==accepted.has_value()&&entries==calls,"continuation result or actual invocation count mismatch");
+        require(wrapped.plan.accounting.quantization_engagements==expected&&wrapped.plan.accounting.fallback_events==events,
+                "continuation lost/duplicated executed work or reordered events");
+        require(equal(layout(wrapped.plan),accepted?layout(accepted->plan):entry)&&offers(wrapped)==(accepted?accepted->side:side),
+                "continuation result differs from independently replayed branch or failed rollback");
+        const auto resumed=std::count(events.begin(),events.end(),"interior_reseat_pose_resume");
+        require(resumed==static_cast<std::ptrdiff_t>(executed-1)&&resumed<=3,"continuation exceeded restart budget");
+        replays+=resumed;skips+=std::count(events.begin(),events.end(),"interior_reseat_pose_skip");
+        if(resumed&&!interrupted_case)interrupted_case=std::make_pair(c,order);
+    }
+    require(replays>0&&skips>0,"continuation fixtures never revisited a locally feasible branch");
+    {
+        auto replay_input=input();auto config=std::make_shared<FloorplanExperiment>();replay_input.experiment=config;
+        config->interior_order=interrupted_case->second;config->reseat_pose_limits=FloorplanPoseRetryLimits{8,4096,3};
+        config->pose_retry_completed=[](const auto& row){if(row.skipped)throw std::runtime_error("replay observer stop");};
+        Engine interrupted(replay_input);setup(interrupted,interrupted_case->first);
+        const auto entry=layout(interrupted.plan);const auto side=offers(interrupted);
+        bool threw=false;entries=0;observing=true;
+        try{interrupted.attempt_pack(false);}catch(const std::runtime_error& error){threw=std::string(error.what())=="replay observer stop";}observing=false;
+        require(threw&&entries==2,"replay interruption did not stop on second real attempt");
+        require(equal(layout(interrupted.plan),entry)&&offers(interrupted)==side,"interrupted continuation leaked branch state");
+        require(interrupted.plan.accounting.quantization_engagements.at("run_overflow_tol")==entries&&
+                std::count(interrupted.plan.accounting.fallback_events.begin(),interrupted.plan.accounting.fallback_events.end(),"interior_reseat_pose_resume")==1,
+                "interrupted continuation lost executed prefix");
+        config->interior_order.reset();bool rejected=false;
+        try{validate_floorplan_experiment(*config);}catch(const FloorplanError&){rejected=true;}
+        require(rejected,"continuation accepted without explicit order");
+        config->interior_order=0;config->failed_first_retry=true;rejected=false;
+        try{validate_floorplan_experiment(*config);}catch(const FloorplanError&){rejected=true;}
+        require(rejected,"conflicting failed-first and continuation policies accepted");
+    }
+    std::cout<<"pose continuation PASS replays="<<replays<<" skipped="<<skips<<" recovered="<<replay_recovered<<'\n';
     auto in=input();auto experiment=std::make_shared<FloorplanExperiment>();in.experiment=experiment;
     experiment->reseat_pose_limits=FloorplanPoseRetryLimits{8,4096};experiment->interior_order=0;
     experiment->pose_retry_completed=[](const auto&){throw std::runtime_error("pose observer stop");};

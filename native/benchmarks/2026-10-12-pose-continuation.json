@@ -1,0 +1,44 @@
+{
+  "base_commit": "e3d3ca2f",
+  "status": "Experimental bounded continuation recovers a smaller construction candidate. Not an accepted or fully qualified board; current fallback ceilings would be exceeded.",
+  "mechanism": {
+    "configuration": "FloorplanPoseRetryLimits.continuations defaults to zero; profiler --reseat-continuations N requires both pose limits, compact mode and an explicit interior order. Conflicts with failed-first restart are rejected.",
+    "policy": "After a full attempt fails downstream of a selected alternative-pose recovery, restore entry state and replay with the next locally feasible choice at the first recovery. Preserve every ordinary/complete successful incumbent. Stop at success, no selectable first recovery, or the explicit continuation cap. Later recovery decisions still use their first feasible choice; this is bounded first-decision reconsideration, not exhaustive backtracking.",
+    "accounting": "Record interior_reseat_pose_resume before each actual full-attempt replay and interior_reseat_pose_skip for each locally feasible branch exclusion. Retain every executed precision operation, budget event and failed legalizer attempt. Observer skipped counts distinguish exclusions from geometric rejection.",
+    "bounds": "At most continuations additional complete attempts per explicitly ordered attempt_pack invocation. Each inner position query retains its pose/frontier bounds. No wall-time guarantee; repeated outer sizing/refinement calls each have their own cap.",
+    "transaction": "Restore original layout, side offers and order on terminal failure or exception, preserving executed accounting. No shared cache, global state or changed hard-constraint thresholds."
+  },
+  "tests": {
+    "independent_replay": "29 finite fixture cases plus 29 late-failure variants, each at three orders. Compare the wrapper against independently executed skip-0 through skip-3 attempts: actual instrumented scalar entries, full quantization receipts, ordered fallback events, selected layout and side offers or entry rollback. Nine replay events and eighteen skipped local choices exercised; synthetic replay rescues zero complete plans, while the earlier pose-recovery fixtures retain three successes.",
+    "late_failure": "Adversarial terminal block has small nominal ordering dimensions and four physically oversized candidate shapes. It forces downstream failure after local recovery; no oversized candidate is accepted.",
+    "exception": "Throw from an observer after a skipped local choice during the second actual attempt. Verify immediate abort, restored layout/offers, two actual scalar entries and exactly one retained replay event.",
+    "invalid_policies": "Reject continuation without explicit order or combined with failed-first retry. Independently enumerate both new fallback declarations.",
+    "passed_suites": ["native_compact_retry_contracts","native_floorplan_contracts","native_board_policy_contracts","native_experiment_observer_contracts"],
+    "seconds":47.07,
+    "log":"native/build/pose-continuation-tests.log"
+  },
+  "carrier_screen": {
+    "common": "Same prepared schematic and explicit policy/shape settings as 2026-10-12-bounded-reseat-poses.json; poses=8, frontier=4096, continuations=3. No independent group rotations or extent alternatives.",
+    "smaller_candidate": {
+      "outline_mm":[165,159],"area_mm2":26235,"reference_area_mm2":26394,"area_change_percent":-0.6024096385542133,
+      "parts":569,"top":420,"bottom":149,
+      "pcb_sha256":"36bb6af616d4a3b6ab6186a5d3d80be78417b6433fc1a68d966ecce83caa977c",
+      "repeated_construction_equal":true,
+      "estimated_cross":15676.4,"budget":16035.2,"headroom":358.9,
+      "placement_contract_ok":true,"placement_flow_ok":true,"hard_red":0,
+      "observed_model_seconds":[7.87556925,7.879139292],"observed_text_seconds":[0.037228791,0.0361335],
+      "completed_outer_attempts":10,"packed_outer_attempts":8,
+      "fallback_counts":{"cand_cap_truncated":116,"interior_reseat_pose_cap":32,"interior_reseat_pose_resume":24,"interior_reseat_pose_search":64,"interior_reseat_pose_skip":48,"interior_reseat_pose_trial":144,"interior_reseat_retry":68,"legalize_facing_retry":52,"legalize_reservation_retry":52,"punch_free_plan_rejected":1},
+      "acceptance_blocker":"Measured reseating count 68 exceeds carrier/reports/fallback_baseline.json ceiling 18; new resume/skip and other unlisted events have zero allowance. Baseline unchanged. Full board qualification was not run; do not present this as an observed full-build result.",
+      "log":"native/build/carrier-pose-continuation-repeat.log"
+    },
+    "rejected_outlines_mm":[[166,158],[167,157],[168,156]],
+    "rejection_logs":"native/build/carrier-pose-continuation-<width>x<height>.log",
+    "timing_limitations":"Construction-only diagnostics, observers enabled, OS caches uncontrolled, with other validation activity. Not isolated performance measurements, compile/render/audit timings, a same-layout speed comparison or a Python comparison."
+  },
+  "reference_preservation": [
+    {"board":"carrier","outline_mm":[166,159],"continuations_enabled":true,"pcb_sha256":"b9389efa52adf30b1d94cad1ede3a4387bacd53802f7babb5da07dd6306cff76","all_receipt_and_fallback_count_rows_unchanged":true,"log":"native/build/carrier-pose-continuation-reference.log"},
+    {"board":"devkit_mini","outline_mm":[98,98],"continuations_enabled":false,"pcb_sha256":"cfa0305491d9c4a771adb130b04c4aec6cc2894542391a5c7c9dca3a68bca3cf","all_receipt_and_fallback_count_rows_unchanged":true,"log":"native/build/devkit-pose-continuation-reference.log"}
+  ],
+  "next_step":"Reduce redundant failed prefixes across repeated outer attempts and investigate principled ordering of locally feasible branches using downstream constraint evidence. Preserve deterministic behavior, valid incumbents and complete accounting. No threshold waiver, accepted smaller carrier, new render, routing or fabrication-readiness claim. Goal remains incomplete."
+}

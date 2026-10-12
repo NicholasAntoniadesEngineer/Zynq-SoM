@@ -35,10 +35,13 @@ struct FloorplanRejectionObservation {
 };
 struct FloorplanPoseRetryLimits {
     std::size_t poses=0,frontier_nodes=0;
+    // Capped full-attempt replays of the first recovered choice after later
+    // failure. Zero preserves nearest successful recovery behavior.
+    std::size_t continuations=0;
 };
 struct FloorplanPoseRetryObservation {
     std::string incoming,displaced;
-    std::size_t generated=0,frontier_nodes=0,attempted=0;
+    std::size_t generated=0,frontier_nodes=0,attempted=0,skipped=0;
     bool budget_exhausted=false,result_capped=false,success=false;
 };
 struct FloorplanExperiment {
