@@ -118,11 +118,16 @@ void boards(const std::filesystem::path& root,const std::filesystem::path& data,
         begin();const auto result=build_pcb_model(fixture.input);const auto observed=end();const auto total=pcb_placement_accounting(result);
         require(select(result.floorplan.plan.accounting.quantization_engagements)==observed&&select(total.quantization_engagements)==observed,"all new actual work owned exactly by floorplan invocation "+name);
         require(select(result.zone_accounting.quantization_engagements).empty()&&select(result.placement_accounting.quantization_engagements).empty(),"no downstream double import "+name);
-        const std::size_t solves=multiscale&&variant==1?2:1;
+        // Count actual solver invocations from independently instrumented
+        // seed-aspect calls, not a historical board-specific retry outcome.
+        // Better search may avoid a facing retry, but may not omit its receipt
+        // if it really executed. Fixed outlines never evaluate a seed aspect.
+        const std::size_t solves=variant==3?1:observed.at(names[1]);
+        require(solves>=1&&solves<=2,"one initial solve and at most one facing replan: "+name);
         require(static_cast<std::size_t>(std::count(total.fallback_events.begin(),total.fallback_events.end(),"facing_replan_retry"))==solves-1,
-                "only the resolved carrier multiscale facing failure replans once: "+name);
+                "every independently observed facing replan has exactly one receipt: "+name);
         require(observed.at(names[0])>0&&observed.at(names[2])>0&&observed.at(names[4])==2*solves&&observed.at(names[5])>0,"real build and ledger primitives engaged: "+name);
-        require(variant==3?!observed.count(names[1]):observed.at(names[1])==solves,"one aspect operation per auto solve: "+name);
+        if(variant==3)require(!observed.count(names[1]),"fixed outline executes no seed-aspect operation: "+name);
         for(bool missing:{true,false}) {
             auto bad=total.quantization_engagements;
             if(missing)bad.erase(observed.begin()->first);else ++bad[observed.begin()->first];

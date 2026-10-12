@@ -333,6 +333,17 @@ are algorithm choices to challenge, not evidence of physical impossibility.
 Next selection work must explore area-improving aspect-ratio trades and measured
 pilot quality without requiring these hand-selected tags or relaxing hardware gates.
 
+An additional multiscale aspect-trade stage was tested and **not retained**:
+the original coarse search already discovers 166x156 from a 165x158 seed with
+`benchmarks/carrier-two-pilot-auto.floorplan.json` and the two tags above.
+The extra stage added 56 failed packing attempts with the same PCB. See
+`benchmarks/2026-10-12-aspect-trade-screening.json` and its archived experiment
+patch. This rejects redundant work, not alternative aspect ratios: portrait
+156x165 and 152x168 probes failed at rail-group seating, not a proven physical
+limit. Future algorithms need not preserve historical outputs, search ceilings,
+or implementation choices. Historical boards remain comparison evidence;
+acceptance rests on hardware correctness, quality, reliability and measured work.
+
 Firmware source provenance now reads canonical circuit JSON and compiled factory
 registrations rather than checking for Python constructors. Independent source
 inventories cover both projects, reject damaged/missing registered inputs, and
