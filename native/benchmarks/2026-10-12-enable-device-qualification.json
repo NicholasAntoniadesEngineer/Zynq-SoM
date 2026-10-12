@@ -1,0 +1,30 @@
+{
+  "base_commit": "a00171eb",
+  "defect": "The generic buck enable path applied TPS54302-specific equations and limits to live LM61460AANRJRR power_som U4 on both boards. Prior aggregate PASS receipts therefore did not qualify that enable network.",
+  "implementation": {
+    "device_scope": "Restrict the existing enable equations to TPS54302. Other detected buck families on the series-fed enable path produce an explicit unverified reason instead of wrong-device calculations.",
+    "result_model": "SpiceResult retains completed checks and separate unverified reasons. Any unverified reason prevents aggregate success, survives ngspice cross-checking, appears in errors and JSON, and is printed in generated test plans. A real failed calculation still makes the report FAIL rather than hiding behind UNVERIFIED.",
+    "hardware_changes": "None. R12, D5, C20 and all electrical limits remain unchanged. No fabricated input-current bound or nominal-only replacement was introduced."
+  },
+  "source_review": {
+    "url": "https://www.ti.com/lit/ds/symlink/lm61460.pdf",
+    "document": "TI SNVSBD5D, revised July 2022",
+    "download_sha256": "2c8a0bf340c70aa3ac29e586146804d7651822e14bee0897f6415ee9e56be84d",
+    "visual_review": "Pages 4 and 5 rendered with Poppler and inspected: operating conditions and absolute maxima are distinct; enable input current is typical-only. Page 13 section 8.3.1 also describes direct VIN enable as a supported self-start arrangement.",
+    "implication": "Do not transplant TPS54302 behavior or treat a typical LM61460 current as a guaranteed bound. A direct-VIN simplification is a candidate for further system-level review, not an implemented or qualified change."
+  },
+  "tests": {
+    "passed": ["native_spice_contracts", "native_board_pipeline_contracts", "native_firmware_docs_contracts"],
+    "final_suite_seconds": 42.84,
+    "failed": 0,
+    "coverage": "Partial coverage and mixed failure status; JSON unverified transport; both frozen board fixtures explicitly corrected for precisely two obsolete enable checks; ngspice cannot clear the missing model; mandatory live devkit gate fails visibly; current test plans expose the reason. Other frozen calculations retain their prior oracles. Test-only document format comparison reconstructs the old presentation separately, never production output.",
+    "structural_checks": "carrier and devkit_mini power_som circuit-check commands exit 0; completeness is not electrical qualification"
+  },
+  "current_board_spot_checks": {
+    "options": "schgen spice --project PROJECT --no-ngspice",
+    "carrier": {"exit_code": 1, "aggregate": "UNVERIFIED", "completed_checks": 15, "unverified_models": 1, "report_sha256": "214d4ae5024ab706964ad0e0bbba62f7df6447d903274e4c52e3f534f74291cd"},
+    "devkit_mini": {"exit_code": 1, "aggregate": "UNVERIFIED", "completed_checks": 9, "unverified_models": 1, "report_sha256": "825e5d463e9734726e979892def736c612a803e3b9e9edbf2f5fc8dfd415fbdf"}
+  },
+  "qualification_status": "This supersedes prior complete-build PASS as evidence for device-specific enable correctness. Previously measured PCB geometry and timings remain historical observations, not renewed whole-board qualification. No new full board render or performance comparison was run; the mandatory electrical gate is intentionally non-green until the real qualification gap is resolved. The physical circuit has not been proven faulty by this change.",
+  "next_work": "Review the inherited TPS54302-era R12/D5/C20 network against the LM61460 always-on requirement. Evaluate a datasheet-supported direct VIN connection, including startup/filter/sequencing consequences and all authoring, canonical-data, placement-contract and regression impacts, or provide a genuinely bounded device-specific model. Independently qualify both boards after the selected correction. Continue carrier placement optimisation and the remaining goal outcomes; no completion claim."
+}

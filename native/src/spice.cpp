@@ -141,7 +141,16 @@ void en_clamp(const std::string& sheet,const SpiceIndex& idx,const std::vector<P
             const auto a=idx.net(ref,"1"),b=idx.net(ref,"2");if(!a||!b)continue;
             if((a->name==en->name||b->name==en->name)&&(ground(*a)||ground(*b)))zeners.emplace_back(ref,p->value);
         }
-        if(series.empty())continue;const auto& r=series[0];const auto& rail=*r.other;const double v=rail_volts(rail.name,policy).value_or(0);
+        if(series.empty())continue;
+        // These equations and limits come from TPS54302 SLVSDG6C, not from
+        // the generic buck topology. In particular LM61460 SNVSBD5D has its
+        // own EN/SYNC characteristics and a typical-only input-current entry.
+        // Do not turn that missing qualified model into a different IC's PASS.
+        if(!starts(reg.value,"TPS54302")){
+            out.unverified.push_back("SPICE unverified: "+sheet+":"+reg.ref+" ("+reg.value+") enable network needs a device-specific model; TPS54302 assumptions do not apply");
+            continue;
+        }
+        const auto& r=series[0];const auto& rail=*r.other;const double v=rail_volts(rail.name,policy).value_or(0);
         if(zeners.empty()) {
             const auto bots=select(idx.on(en->name),ground);double ceiling;std::string topo;
             if(!bots.empty()){const auto& b=bots[0];ceiling=divide(21.0*b.value,r.value+b.value);topo="divider "+resistor_description(r)+"/"+resistor_description(b);}
@@ -180,10 +189,11 @@ bool SpiceCheck::ok() const {
     if(spice_value&&std::abs(*spice_value-value)>0.01*std::abs(value))return false;return true;
 }
 std::vector<std::string> SpiceResult::errors() const {
-    if(checks.empty())return {"No supported analytic checks were extracted; electrical behavior is unverified."};
-    std::vector<std::string> out;for(const auto& c:checks)if(!c.ok())out.push_back(c.sheet+":"+c.name+" = "+reported_value(c)+" "+c.unit+" outside ["+(c.lo?g(*c.lo):"")+" .. "+(c.hi?g(*c.hi):"")+"] "+c.unit+" — "+c.detail+(c.spice_value?"; ngspice="+g(*c.spice_value):""));return out;
+    auto out=unverified;
+    if(checks.empty())out.push_back("No supported analytic checks were extracted; electrical behavior is unverified.");
+    for(const auto& c:checks)if(!c.ok())out.push_back(c.sheet+":"+c.name+" = "+reported_value(c)+" "+c.unit+" outside ["+(c.lo?g(*c.lo):"")+" .. "+(c.hi?g(*c.hi):"")+"] "+c.unit+" — "+c.detail+(c.spice_value?"; ngspice="+g(*c.spice_value):""));return out;
 }
-bool SpiceResult::ok() const{return !checks.empty()&&std::all_of(checks.begin(),checks.end(),[](const auto& c){return c.ok();});}
+bool SpiceResult::ok() const{return unverified.empty()&&!checks.empty()&&std::all_of(checks.begin(),checks.end(),[](const auto& c){return c.ok();});}
 SpiceResult extract_spice_checks(const std::vector<ProjectCircuit>& sheets,const PowerPolicy& policy) {
     SpiceResult out;std::set<std::string> nets,extracted_named;
     for(const auto& sheet:sheets) {
@@ -207,10 +217,13 @@ std::string spice_report(const SpiceResult& r,bool present) {
     if(!r.notes.empty()){lines.push_back("");for(const auto& n:r.notes)lines.push_back("  "+n);}
     lines.push_back("");const auto errors=r.errors();
     if(errors.empty())lines.push_back("errors: none");else{lines.push_back("ERRORS ("+std::to_string(errors.size())+"):");for(const auto& e:errors)lines.push_back("  ERROR: "+e);}
-    lines.push_back("");lines.push_back("SPICE GATE: "+std::string(r.checks.empty()?"UNVERIFIED":r.ok()?"PASS":"FAIL")+" ("+std::to_string(r.checks.size())+" checks)");return join(lines);
+    const bool failed=std::any_of(r.checks.begin(),r.checks.end(),[](const auto& c){return !c.ok();});
+    lines.push_back("");lines.push_back("SPICE GATE: "+std::string(failed?"FAIL":r.checks.empty()||!r.unverified.empty()?"UNVERIFIED":"PASS")+" ("+std::to_string(r.checks.size())+" checks)");return join(lines);
 }
 JsonNode spice_result_json(const SpiceResult& r) {
     auto checks=arr();for(const auto& c:r.checks)checks.array_value.push_back(obj({{"name",j(c.name)},{"sheet",j(c.sheet)},{"kind",j(c.kind)},{"detail",j(c.detail)},{"value",j(c.value)},{"unit",j(c.unit)},{"lo",opt(c.lo)},{"hi",opt(c.hi)},{"engine",j(c.engine)},{"spice_value",opt(c.spice_value)},{"ok",j(c.ok())}}));
-    return obj({{"checks",checks},{"notes",strings(r.notes)},{"engine",j(r.engine)},{"errors",strings(r.errors())},{"ok",j(r.ok())},{"n_checks",j(double(r.checks.size()))}});
+    auto out=obj({{"checks",checks},{"notes",strings(r.notes)},{"engine",j(r.engine)},{"errors",strings(r.errors())},{"ok",j(r.ok())},{"n_checks",j(double(r.checks.size()))}});
+    if(!r.unverified.empty())out.object_value.emplace_back("unverified",strings(r.unverified));
+    return out;
 }
 }  // namespace schgen

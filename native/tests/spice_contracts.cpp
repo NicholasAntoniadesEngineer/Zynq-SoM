@@ -57,6 +57,28 @@ void empty_coverage(){
     require(!field(encoded,"ok").bool_value&&field(encoded,"n_checks").number_value==0&&field(encoded,"errors").array_value.size()==1,
             "JSON concealed missing coverage");
     require(runnable().ok(),"valid positive coverage was rejected");
+    auto partial=runnable();partial.unverified={"missing device-specific model"};
+    require(!partial.ok()&&partial.errors()==partial.unverified,"partial model coverage was accepted");
+    const auto partial_json=spice_result_json(partial);
+    require(!field(partial_json,"ok").bool_value&&field(partial_json,"unverified").array_value.size()==1,"JSON hid unverified coverage");
+    require(spice_report(partial,false).find("SPICE GATE: UNVERIFIED")!=std::string::npos,"partial report claimed PASS");
+    partial.checks.front().value=10;
+    require(partial.errors().size()==2&&spice_report(partial,false).find("SPICE GATE: FAIL")!=std::string::npos,"unverified coverage concealed a real failed calculation");
+}
+const std::string lm61460_unverified="SPICE unverified: sheet_power_som:U4 (LM61460AANRJRR) enable network needs a device-specific model; TPS54302 assumptions do not apply";
+void correct_wrong_device_fixture(JsonNode& expected){
+    JsonNode reasons;reasons.kind=JsonKind::Array;JsonNode reason;reason.kind=JsonKind::String;reason.string_value=lm61460_unverified;reasons.array_value.push_back(reason);
+    for(auto& [key,value]:expected.object_value){
+        if(key=="checks"){
+            const auto before=value.array_value.size();
+            value.array_value.erase(std::remove_if(value.array_value.begin(),value.array_value.end(),[](const auto& check){return field(check,"kind").string_value=="en_clamp";}),value.array_value.end());
+            require(before-value.array_value.size()==2,"expected exactly two wrong-device checks in frozen fixture");
+        }
+        if(key=="n_checks")value.number_value-=2;
+        if(key=="ok")value.bool_value=false;
+        if(key=="errors")value=reasons;
+    }
+    expected.object_value.emplace_back("unverified",reasons);
 }
 std::vector<ProjectCircuit> fixture_sheets(const std::filesystem::path& path){
     const auto row=parse_json_file(path.string());std::vector<ProjectCircuit> sheets;
@@ -247,7 +269,7 @@ int main(int argc,char** argv) {
         require(argc==2,"usage: spice_contracts <fixture-directory>");const std::filesystem::path dir(argv[1]);
         numeric_safety();empty_coverage();required_divider_coverage(dir);incomplete_model_coverage(dir);divider_threshold_precision(dir);remaining_threshold_precision(dir);
         const auto manifest=parse_json_file((dir/"manifest.json").string());std::size_t passed=0,live=0;
-        const auto ngspice=ngspice_available();std::size_t corrected_empty=0,corrected_required=0,corrected_models=0;
+        const auto ngspice=ngspice_available();std::size_t corrected_empty=0,corrected_required=0,corrected_models=0,corrected_device=0;
         for(const auto& file:field(manifest,"cases").array_value) {
             const auto row=parse_json_file((dir/file.string_value).string());std::vector<ProjectCircuit> sheets;
             for(const auto& sc:field(row,"sheets").array_value)sheets.push_back({field(sc,"name").string_value,{},decode_intermediate_circuit_ir(field(sc,"circuit"))});
@@ -269,6 +291,11 @@ int main(int argc,char** argv) {
             if(result){
                 auto expected=field(row,"expected");
                 auto absent=field(row,"report_absent").string_value,present=field(row,"report_present").string_value;
+                const bool wrong_device=file.string_value=="001_carrier.json"||file.string_value=="002_devkit.json";
+                if(wrong_device){
+                    require(result->unverified==std::vector<std::string>{lm61460_unverified}&&!result->ok(),"live-family fixture failed to identify its missing model");
+                    correct_wrong_device_fixture(expected);++corrected_device;
+                }
                 if(result->checks.empty()){
                     require(field(expected,"ok").bool_value&&field(expected,"n_checks").number_value==0&&field(expected,"errors").array_value.empty(),
                             "unexpected frozen empty-coverage correction");
@@ -280,9 +307,19 @@ int main(int argc,char** argv) {
                 }
                 const auto analytic_view=historical_analytic_view(*result,expected);
                 same(spice_result_json(analytic_view),expected,file.string_value);
-                require(spice_report(analytic_view,false)==absent,file.string_value+": absent report differs");
-                require(spice_report(analytic_view,true)==present,file.string_value+": present report differs");
-                if(const auto* expected=object_field(row,"ngspice");expected&&ngspice){
+                if(wrong_device){
+                    for(bool installed:{false,true}){
+                        const auto report=spice_report(*result,installed);
+                        require(report.find("SPICE GATE: UNVERIFIED")!=std::string::npos&&report.find(lm61460_unverified)!=std::string::npos&&
+                                report.find("SLVSDG6C")==std::string::npos,"report retained another device's model or hid missing qualification");
+                    }
+                }else{
+                    require(spice_report(analytic_view,false)==absent,file.string_value+": absent report differs");
+                    require(spice_report(analytic_view,true)==present,file.string_value+": present report differs");
+                }
+                if(const auto* frozen=object_field(row,"ngspice");frozen&&ngspice){
+                    auto current_expected=*frozen;if(wrong_device)correct_wrong_device_fixture(current_expected);
+                    const auto* expected=&current_expected;
                     SpiceRunOptions opts;opts.executable=ngspice;run_ngspice_crosschecks(*result,opts);
                     auto historical_view=historical_analytic_view(*result,*expected);
                     const auto& old_checks=field(*expected,"checks").array_value;
@@ -301,12 +338,17 @@ int main(int argc,char** argv) {
                         }
                     }
                     same(spice_result_json(historical_view),*expected,file.string_value+".ngspice");
-                    require(spice_report(historical_view,true)==field(row,"ngspice_report").string_value,file.string_value+": historical ngspice report differs");++live;
+                    if(wrong_device){
+                        require(!result->ok()&&result->unverified==std::vector<std::string>{lm61460_unverified}&&
+                                spice_report(*result,true).find("SPICE GATE: UNVERIFIED")!=std::string::npos,
+                                "ngspice cross-checks concealed missing device-specific qualification");
+                    }else require(spice_report(historical_view,true)==field(row,"ngspice_report").string_value,file.string_value+": historical ngspice report differs");
+                    ++live;
                 }
             }
             ++passed;
         }
-        require(corrected_empty==3&&corrected_required==2&&corrected_models==4,"exact historical empty/required-divider/unsupported-model corrections required");
+        require(corrected_empty==3&&corrected_required==2&&corrected_models==4&&corrected_device==2,"exact historical coverage and model corrections required");
         const auto boundaries=parse_json_file((dir/"boundaries.json").string());
         std::size_t corrected_zero_cases = 0;
         for(const auto& row:boundaries.array_value) {

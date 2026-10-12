@@ -16,6 +16,9 @@ struct SpiceResult {
     std::vector<SpiceCheck> checks;
     std::vector<std::string> notes;
     std::string engine = "analytic (closed-form linear solutions)";
+    // Missing qualification is distinct from an out-of-limit calculation.
+    // Preserve completed checks, but never publish aggregate success for it.
+    std::vector<std::string> unverified{};
     std::vector<std::string> errors() const;
     // A successful gate needs positive check coverage, not vacuous all_of.
     // Empty coverage is unverified and fails closed for CLI/board consumers.

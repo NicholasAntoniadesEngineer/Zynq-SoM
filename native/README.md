@@ -71,6 +71,12 @@ Likewise, detected regulators with missing feedback/current-setting topology,
 an unsupported feedback reference, or an unmodelled enable-clamp zener fail
 extraction with `SPICE unverified`. Other passing checks cannot certify these
 missing models; the diagnostic is not a claim that the physical circuit fails.
+Enable equations are device-specific: the existing TPS54302 model must not
+qualify LM61460 or another buck family. Unsupported enable networks are retained
+as explicit `unverified` reasons in the result/JSON and test plan, with a nonzero
+CLI exit and failed mandatory board gate, while other completed checks remain
+available. The present `power_som` LM61460 enable network is **UNVERIFIED** pending
+qualified device-specific analysis or a separately reviewed circuit change.
 Analytic checks retain full calculated precision for acceptance, JSON and
 simulator comparisons, including dividers, RC timing, current setting,
 regulator feedback, enable clamps and boot straps. Decimal display rounding

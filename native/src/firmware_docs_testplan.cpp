@@ -64,6 +64,11 @@ std::string render_test_plan(const FirmwareDocsInput& in,const SpiceResult& resu
     for(auto& [stage,rs]:rows){(void)stage;std::stable_sort(rs.begin(),rs.end(),[](const Row& a,const Row& b){return std::make_pair(a.first.value_or("~"),a.second->name)<std::make_pair(b.first.value_or("~"),b.second->name);});}
     const std::vector<std::string> titles{"Stage 0 — power-off continuity","Stage 1 — first power: PD + always-on +3V3_SC domain","Stage 2 — rails, one DIP at a time","Stage 3 — user IO","Stage 4 — module load switches","Stage 5 — boot modes, JTAG, SWD","Stage 6 — board services (+3V3_AUX): ID-EEPROM, RTC, watchdog, QWIIC"};
     std::ostringstream o;o<<testplan_intro<<"Source spice gate: "<<result.checks.size()<<" checks, "<<result.engine<<".\n"<<testplan_electrical;
+    if(!result.unverified.empty()){
+        o<<"\n**UNVERIFIED electrical models — this test plan does not qualify these circuits:**\n\n";
+        for(const auto& reason:result.unverified)o<<"- "<<reason<<'\n';
+        o<<'\n';
+    }
     for(int st=0;st<7;++st) {
         if(!rows.count(st)||rows.at(st).empty())continue;const auto& rs=rows.at(st);
         o<<"### "<<titles[st]<<'\n'<<testplan_columns;

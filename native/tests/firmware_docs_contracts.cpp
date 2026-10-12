@@ -492,6 +492,9 @@ int main(int argc,char** argv) {
             for(const auto& [net,locations]:coverage.have){std::string joined;for(const auto& loc:locations){if(!joined.empty())joined+=", ";joined+=loc;}native_probes.emplace_back(net,joined);}
             const auto raw_spice=extract_spice_checks(in.sheets);
             const auto raw_plan=render_test_plan(in,raw_spice,native_probes);
+            require(raw_spice.unverified.size()==1&&!raw_spice.ok()&&raw_plan.find("UNVERIFIED electrical models")!=std::string::npos&&
+                    raw_plan.find(raw_spice.unverified.front())!=std::string::npos,
+                    "test plan concealed missing device-specific enable qualification");
             auto historical_spice=raw_spice;std::size_t joined_checks=0;
             for(auto& check:historical_spice.checks){
                 const auto old=std::find_if(sp.checks.begin(),sp.checks.end(),[&](const auto& c){return c.name==check.name&&c.sheet==check.sheet;});
@@ -507,6 +510,15 @@ int main(int argc,char** argv) {
                 check.value=old->value;
             }
             require(joined_checks>0,"live native test plan missed analytic precision coverage");
+            // Reconstruct only the historical presentation for the old format
+            // oracle. Those two invalid device-specific calculations are never
+            // restored to the production result or its published test plan.
+            std::size_t obsolete=0;
+            for(const auto& old:sp.checks)if(old.kind=="en_clamp"&&old.sheet=="power_som"){
+                historical_spice.checks.push_back(old);++obsolete;
+            }
+            require(obsolete==2,"expected precisely two obsolete enable checks in the frozen document");
+            historical_spice.unverified.clear();
             exact(render_test_plan(in,historical_spice,native_probes),dir/"TEST_PLAN.md",scratch/name/"native-TEST_PLAN.md",sources);
             const auto native_power=analyze_power(in.sheets);
             exact(render_power_sequence_svg(build_power_sequence(in.sheets,native_power),native_power.ok()),dir/"power_sequence.svg",scratch/name/"native-power_sequence.svg",sources);

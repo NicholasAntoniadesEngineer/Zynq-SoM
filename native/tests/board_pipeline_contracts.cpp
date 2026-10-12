@@ -224,7 +224,11 @@ void live_electrical(const fs::path& root){
     c.som=load_som_interface(paths.som_interface_file);c.link=link_sheets(c.sheets,parse_json_file(paths.som_interface_file.string()),parse_json_file((paths.project_root/"som_mapping.json").string()));
     electrical_stages(c);
     require(c.result.gates.size()==10,"composed electrical family executes every report");
-    for(const auto& g:c.result.gates)if(g.mandatory)require(g.status==BoardGateStatus::passed,"live devkit electrical gate "+g.name+": "+g.report);
+    for(const auto& g:c.result.gates)if(g.mandatory){
+        if(g.name=="spice")require(g.status==BoardGateStatus::failed&&g.report.find("SPICE GATE: UNVERIFIED")!=std::string::npos&&
+                g.report.find("power_som:U4 (LM61460AANRJRR)")!=std::string::npos,"live devkit wrong-device model was not rejected");
+        else require(g.status==BoardGateStatus::passed,"live devkit electrical gate "+g.name+": "+g.report);
+    }
     require(c.power&&c.testpoints&&c.spice,"computed results retained for dependent docs; no recomputation required");
     Context no_checks(paths,o);electrical_stages(no_checks);
     const auto uncovered=std::find_if(no_checks.result.gates.begin(),no_checks.result.gates.end(),[](const auto& g){return g.name=="spice";});
