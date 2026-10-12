@@ -1331,6 +1331,12 @@ JointSeparationResult legalize_joint_separations(
             throw std::invalid_argument("joint separation search: invalid additional edge");
     std::vector<std::vector<std::size_t>> queue(1,std::vector<std::size_t>(domains.size(),0));
     std::set<std::vector<std::size_t>> seen{queue.front()};out.generated=1;
+    // Invocation-local, tri-state proofs: 0 untested, 1 not ruled out, -1
+    // impossible even without other pair separations. A feasible unary probe
+    // never qualifies a combined placement. The independent probe cap only
+    // disables further filtering; it must not exclude untested directions.
+    std::vector<std::vector<int>> unary;
+    for(const auto& domain:domains)unary.emplace_back(domain.size(),0);
     for(std::size_t head=0;head<queue.size();++head){
         // Copy before scheduling children; queue reallocation must not leave a
         // borrowed current-state reference dangling.
@@ -1376,6 +1382,22 @@ JointSeparationResult legalize_joint_separations(
             if(choice==choices[i])continue;
             auto next=choices;next[i]=choice;
             if(seen.count(next))continue;
+            auto& status=unary[i][choice];
+            if(!status&&out.domain_probes<max_states){
+                auto s=domains[i][choice];s.flippable=false;s.flipped_gap.reset();s.reverse_on_flip=false;
+                const auto& sizes=s.axis_x?widths:heights;
+                for(const auto& edge:wall_sep_edges(s.axis_x,names,sizes,s.axis_x?board_w:board_h,clear,
+                                                   {{s.axis_x,s.lo,s.hi,s.gap}},fixed))
+                    if(!std::isfinite(edge.cost))throw std::overflow_error("joint separation search: nonfinite derived edge");
+                ++out.domain_probes;
+                const auto single=legalize_repair_axis(s.axis_x,names,sizes,s.axis_x?board_w:board_h,clear,
+                                                     {s},fixed,s.axis_x?extra_x:extra_y,0);
+                if(!single.ok&&(single.fail!="cycle"||single.infeasible_cycle.empty()))
+                    throw std::logic_error("joint separation search: missing unary cycle evidence");
+                status=single.ok?1:-1;
+                if(status<0)++out.domain_rejections;
+            }
+            if(status<0)continue;
             if(out.generated==max_states){out.budget_exhausted=true;continue;}
             seen.insert(next);queue.push_back(std::move(next));++out.generated;
         }

@@ -351,6 +351,7 @@ std::string trial(const PcbPlacementInput& source, bool compact, int run, int ge
     if(joint_states)std::cout<<"joint_separation_states="<<*joint_states<<'\n';
     if(observers)floor->joint_retry_completed=[](const JointSeparationWork& w,bool ok){
         std::cout<<"joint_retry generated="<<w.generated<<" visited="<<w.visited<<" axes="<<w.axis_solves
+                 <<" domain_probes="<<w.domain_probes<<" domain_rejections="<<w.domain_rejections
                  <<" proposals="<<w.qualifications<<" rejected="<<w.qualification_rejections<<" capped="<<w.budget_exhausted<<" success="<<ok<<'\n';
     };
     if(reseat_pose_limits)std::cout<<"reseat_limits poses="<<reseat_pose_limits->poses<<" frontier="<<reseat_pose_limits->frontier_nodes<<" continuations="<<reseat_pose_limits->continuations<<" reuse="<<reseat_pose_limits->reuse_continuation<<'\n';

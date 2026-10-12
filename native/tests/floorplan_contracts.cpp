@@ -1110,6 +1110,9 @@ void joint_separation_contracts() {
             const auto r=run(),repeat=run();
             require(r.generated<=budget&&r.visited<=r.generated&&r.visited>0&&r.axis_solves>=r.visited&&r.axis_solves<=2*r.visited,
                 "joint search exceeded generated-state budget or miscounted axis probes");
+            require(r.domain_probes<=budget&&r.domain_rejections<=r.domain_probes&&
+                    r.domain_probes==repeat.domain_probes&&r.domain_rejections==repeat.domain_rejections,
+                    "unary pruning exceeded independent probe cap or lost reproducibility");
             require(r.ok==repeat.ok&&r.complete==repeat.complete&&r.budget_exhausted==repeat.budget_exhausted&&
                 r.generated==repeat.generated&&r.visited==repeat.visited&&r.axis_solves==repeat.axis_solves&&r.choices==repeat.choices&&r.x==repeat.x&&r.y==repeat.y,
                 "joint search is not reproducible");
@@ -1137,6 +1140,27 @@ void joint_separation_contracts() {
     const auto blocked=legalize_joint_separations({"a","b"},{2,2},{2,2},4,12,0,directional,{}, {},{{"#0","a",6},{"#0","b",0}},4);
     require(!blocked.ok&&blocked.complete&&!blocked.budget_exhausted,"reversed direction incorrectly reused a smaller gap");
     const auto incumbent=legalize_joint_separations({"a"},{2},{2},10,10,0,{}, {},{},{},1);
+    const auto pruned=legalize_joint_separations({"a","b"},{2,2},{2,2},4,10,0,{domain("a","b")},{},
+        {},{{"a","#0",-8},{"#0","b",0}},2);
+    require(pruned.ok&&pruned.choices==std::vector<std::size_t>{3}&&pruned.generated==2&&pruned.visited==2&&
+            pruned.domain_probes==2&&pruned.domain_rejections==2&&pruned.axis_solves==3,
+            "unary contradictions consumed assignment budget or unprobed feasible direction was excluded");
+    auto forward=RepairSep{true,"a","b",-1,false};forward.projected_gap=true;
+    auto backward=RepairSep{true,"b","a",-1,false};backward.projected_gap=true;
+    const auto projected=legalize_joint_separations({"a","b"},{2,2},{2,2},3,2,0,{{forward,backward}}, {},
+        {{"a","#0",-1},{"#0","b",0}}, {},2);
+    require(projected.ok&&projected.choices==std::vector<std::size_t>{1}&&projected.domain_probes==1&&
+            projected.domain_rejections==0&&projected.x==std::vector<double>{1,0},
+            "unary pruning lost explicitly projected signed separation gaps");
+    for(int lower:{0,2,4})for(int upper:{0,2,4}){
+        bool oracle=false;
+        for(int ax=0;ax<=4;++ax)for(int ay=lower;ay<=4;++ay)
+            for(int bx=0;bx<=4;++bx)for(int by=0;by<=upper;++by)
+                oracle|=apart(ax,ay,bx,by)&&apart(ax,ay,2,2)&&apart(bx,by,2,2);
+        const auto bounded=legalize_joint_separations({"a","b"},{2,2},{2,2},6,6,0,domains,
+            {{"obstacle",{2,2,4,4}}},{},{{"a","#0",-double(lower)},{"#0","b",double(upper)}},64);
+        require(bounded.ok==oracle&&(bounded.ok||bounded.complete),"unary hard-bound pruning disagrees with independent coordinate oracle");
+    }
     require(incumbent.ok&&incumbent.visited==1&&incumbent.generated==1&&incumbent.axis_solves==2&&incumbent.x==std::vector<double>{0}&&incumbent.y==incumbent.x,
         "already feasible joint incumbent did extra work or moved");
     const auto hard=legalize_joint_separations({"a"},{2},{2},10,10,0,{}, {},{{"#0","a",0},{"a","#0",-1}},{},5);
@@ -1154,6 +1178,10 @@ void joint_separation_contracts() {
     throws([&]{legalize_joint_separations({"a","b"},{1e308,1e308},{2,2},1e308,10,0,{{{true,"a","b",1e308}}}, {},{},{},1,&receipt);},"nonfinite derived edge");
     require(receipt.generated==1&&receipt.visited==1&&receipt.axis_solves==0&&!receipt.budget_exhausted,
         "exception receipt lost prepared state or claimed an unexecuted axis solve");
+    throws([&]{legalize_joint_separations({"a","b"},{1e308,1e308},{2,2},1e308,10,0,
+        {{{true,"a","b",0},{true,"b","a",1e308}}}, {},{},{},2,&receipt);},"nonfinite derived edge");
+    require(receipt.visited==1&&receipt.axis_solves==1&&receipt.domain_probes==0&&receipt.domain_rejections==0,
+            "unary preparation overflow lost executed root work or invented an unexecuted probe");
     throws([&]{legalize_joint_separations({"a"},{2},{2},10,10,0,{}, {},{},{},0,&receipt);},"state limit");
     require(receipt.generated==0&&receipt.visited==0&&receipt.axis_solves==0,"invalid invocation retained a stale receipt");
     const std::vector<std::vector<RepairSep>> qualify_domain{domain("a","b")};

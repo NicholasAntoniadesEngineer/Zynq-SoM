@@ -266,6 +266,7 @@ struct JointSeparationWork {
     std::size_t generated=0,visited=0,axis_solves=0;
     bool budget_exhausted=false;
     std::size_t qualifications=0,qualification_rejections=0;
+    std::size_t domain_probes=0,domain_rejections=0;
 };
 struct JointSeparationResult : JointSeparationWork {
     // complete means a failed search exhausted the supplied finite domains;
@@ -283,6 +284,9 @@ struct JointSeparationResult : JointSeparationWork {
 // not just visited nodes. No speculative pose is published on failure. Limits
 // above size_t max/2 are rejected so axis-probe accounting cannot wrap. Optional
 // invocation-owned work receipt is replaced with actual work even on exception.
+// Additionally at most max_states unary axis probes reject directions that
+// contradict walls/hard edges even alone. They are counted separately from
+// assignment axis_solves; unprobed directions remain eligible.
 // Optional synchronous qualifier may reject a linear proposal; then all domain
 // alternatives remain eligible. Exhausting those proposals is not a proof that
 // no other continuous pose for an assignment could satisfy that qualifier.

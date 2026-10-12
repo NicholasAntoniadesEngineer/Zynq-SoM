@@ -24,6 +24,8 @@ void register_native_fallbacks(NativeFallbacks& r){
     r.declare({"interior_reseat_pose_resume","plan_lattice","One capped full-attempt replay after downstream failure, reconsidering the first alternative-pose recovery. Preserve all executed work and final gates."});
     r.declare({"interior_reseat_pose_hint","plan_lattice","A previously successful continuation ordinal was tried ahead of ascending retries after ordinary failure. Advisory ordering only; all geometry and acceptance checks run again."});
     r.declare({"legalize_joint_retry","plan_lattice","One opt-in joint separation search after existing composer strategies fail."});
+    r.declare({"legalize_joint_domain_probe","plan_lattice","One bounded unary axis solve testing a directional choice against walls and hard edges alone."});
+    r.declare({"legalize_joint_domain_reject","plan_lattice","One directional choice excluded by an actual unary negative cycle; unprobed choices remain eligible."});
     r.declare({"legalize_joint_state","plan_lattice","One visited joint separation assignment, including rejected work."});
     r.declare({"legalize_joint_axis","plan_lattice","One actual axis solver invocation in joint separation search."});
     r.declare({"legalize_joint_proposal","plan_lattice","One two-axis proposal submitted to existing hard-term, geometry and output-grid gates."});
