@@ -6,6 +6,7 @@
 #include "pcb_placement_requirements.hpp"
 #include "schgen/board_schematic.hpp"
 #include <cstdlib>
+#include <sstream>
 #include <unistd.h>
 
 namespace {
@@ -22,6 +23,19 @@ void profile_option_contracts() {
     if(!empty_spec)throw std::runtime_error("empty explicit spec path accepted");
     if(options({"profile","--repo",".","--compact-search","on","--owned-shape","board_aux=tag"}).owned_shapes.at("board_aux")!="tag")
         throw std::runtime_error("owned shape restriction lost tag");
+    const auto multiple=options({"profile","--repo",".","--compact-search","on","--owned-shape","board_aux=tag","--owned-shape","bringup_rails=tag2"});
+    if(multiple.owned_shapes!=std::map<std::string,std::string>{{"board_aux","tag"},{"bringup_rails","tag2"}})
+        throw std::runtime_error("distinct subsystem shape restrictions must coexist");
+    if(!options({"profile","--repo",".","--compact-search","off"}).observers||
+       options({"profile","--repo",".","--compact-search","off","--observers","off"}).observers)
+        throw std::runtime_error("observer mode default/selection mismatch");
+    for(const auto& args:std::vector<std::vector<std::string>>{
+        {"profile","--repo",".","--compact-search","off","--observers","typo"},
+        {"profile","--repo",".","--compact-search","off","--observers","off","--observers","on"},
+        {"profile","--repo",".","--compact-search","off","--observers","off","--owned-selection-trace","on"}}){
+        bool rejected=false;try{(void)options(args);}catch(const std::invalid_argument&){rejected=true;}
+        if(!rejected)throw std::runtime_error("invalid observer options accepted");
+    }
     for(const auto& args:std::vector<std::vector<std::string>>{
         {"profile","--repo",".","--compact-search","off","--owned-shape","board_aux=tag"},
         {"profile","--repo",".","--compact-search","on","--owned-shape","=tag"},
@@ -155,6 +169,26 @@ void reviewed_profile_counts(const std::map<std::string, std::size_t>& counts) {
     if (counts != expected)
         throw std::runtime_error("profile must exercise board_aux=36, bringup_rails=24 owned alternatives only");
 }
+void observer_free_equivalence(const schgen::PcbPlacementInput& input){
+    std::array<std::string,2> hashes,receipts;
+    for(int mode=0;mode<2;++mode){
+        std::ostringstream capture;
+        auto* saved=std::cout.rdbuf(capture.rdbuf());
+        try{hashes[mode]=trial(input,false,1,1,mode==0);}
+        catch(...){std::cout.rdbuf(saved);throw;}
+        std::cout.rdbuf(saved);
+        std::istringstream lines(capture.str());std::string line;
+        while(std::getline(lines,line)){
+            if(line.rfind("receipt ",0)==0||line.rfind("fallback",0)==0)receipts[mode]+=line+'\n';
+            if(mode==1&&(line.rfind("stage ",0)==0||line.rfind("edge_search ",0)==0||line.rfind("work completed_outer_attempts=",0)==0))
+                throw std::runtime_error("disabled observer published fabricated observations");
+        }
+        if(mode==1&&capture.str().find("observer_counts=unavailable")==std::string::npos)
+            throw std::runtime_error("disabled observations must be explicitly unavailable");
+    }
+    if(hashes[0]!=hashes[1]||receipts[0].empty()||receipts[0]!=receipts[1])
+        throw std::runtime_error("diagnostic observer mode changed PCB output or production receipts");
+}
 }
 
 int main(int argc, char** argv) {
@@ -188,6 +222,7 @@ int main(int argc, char** argv) {
         const auto compact = load(paths, {}, true, schematic.root_path);
         reviewed_profile_identity(defaults.input);
         reviewed_profile_identity(compact.input);
+        observer_free_equivalence(defaults.input);
         if (defaults.input.floorplan.compact_search || !defaults.input.owned_groups.empty() ||
             !compact.input.floorplan.compact_search || compact.input.owned_groups.size() != 2)
             throw std::runtime_error("profile input loading omitted mode-specific ownership");

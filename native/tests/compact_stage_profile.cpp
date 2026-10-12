@@ -28,6 +28,7 @@ struct Options {
     std::optional<std::filesystem::path> floorplan_spec;
     std::string project = "carrier", kicad = "kicad-cli", compact, inputs = "prepared";
     int runs = 1;
+    bool observers = true;
     bool constraint_first = false;
     bool edge_translation = false;
     bool edge_feasibility = false;
@@ -47,6 +48,7 @@ void help() {
     std::cout << "  [--floorplan-spec PATH] (explicit candidate policy; project default is not edited)\n";
     std::cout << "compact_stage_profile --repo ROOT --project NAME --compact-search off|on|both\n"
         "  [--runs N] [--input-mode cold|prepared] [--kicad-cli PATH]\n"
+        "  [--observers on|off] (off removes diagnostic callbacks, preserving solver policy and receipts)\n"
         "  [--schematic PATH] (use a freshly qualified schematic instead of the stored project output)\n"
         "  [--constraint-first off|on] (opt-in candidate, requires --compact-search on)\n"
         "  [--interior-order 0|1|2|3] (single connectivity/area/scarcity/constraint order, no order retries)\n"
@@ -74,7 +76,7 @@ Options parse(int argc, char** argv) {
     std::set<std::string> seen;
     for (int i = 1; i < argc; ++i) {
         const std::string arg = argv[i];
-        if (!seen.insert(arg).second) throw std::invalid_argument("duplicate option: " + arg);
+        if (!seen.insert(arg).second && arg!="--owned-shape") throw std::invalid_argument("duplicate option: " + arg);
         if (i + 1 == argc) throw std::invalid_argument("missing value: " + arg);
         const std::string value = argv[++i];
         if (arg == "--repo") out.repo = value;
@@ -91,6 +93,10 @@ Options parse(int argc, char** argv) {
         else if (arg == "--kicad-cli") out.kicad = value;
         else if (arg == "--compact-search") out.compact = value;
         else if (arg == "--input-mode") out.inputs = value;
+        else if (arg == "--observers") {
+            if(value!="on"&&value!="off")throw std::invalid_argument("observers must be on|off");
+            out.observers=value=="on";
+        }
         else if (arg == "--interior-order") {
             if(value.size()!=1 || value[0]<'0' || value[0]>'3')throw std::invalid_argument("interior-order must be 0|1|2|3");
             out.interior_order=value[0]-'0';
@@ -156,6 +162,7 @@ Options parse(int argc, char** argv) {
     if (out.repo.empty() || (out.compact != "off" && out.compact != "on" && out.compact != "both"))
         throw std::invalid_argument("--repo and explicit --compact-search off|on|both required");
     if (out.inputs != "cold" && out.inputs != "prepared") throw std::invalid_argument("input-mode must be cold|prepared");
+    if(!out.observers&&out.owned_selection_trace)throw std::invalid_argument("owned-selection-trace requires observers on");
     if (out.constraint_first && out.compact != "on")
         throw std::invalid_argument("constraint-first requires --compact-search on");
     if(out.edge_translation&&out.compact!="on")throw std::invalid_argument("edge-translation requires --compact-search on");
@@ -266,6 +273,7 @@ PcbPlacementInput trial_input(const PcbPlacementInput& source,bool compact,
     return input;
 }
 std::string trial(const PcbPlacementInput& source, bool compact, int run, int generation,
+                  bool observers = true,
                   bool constraint_first = false,const std::optional<FloorplanPoint>& outline=std::nullopt,bool edge_translation=false,
                   const std::optional<FloorplanPoint>& initial_outline=std::nullopt,
                   const std::optional<int>& interior_order=std::nullopt,bool multiscale_outline=false,bool edge_feasibility=false,bool owned_selection_trace=false,bool owned_quality_first=false,bool owned_face_cohesion=false,const std::map<std::string,std::string>& owned_shapes={},const std::optional<std::string>& contract_group_face_sheet=std::nullopt,bool failed_first_retry=false) {
@@ -290,7 +298,7 @@ std::string trial(const PcbPlacementInput& source, bool compact, int run, int ge
     floor->contract_group_face_sheet=contract_group_face_sheet;
     if(contract_group_face_sheet)std::cout<<"contract_group_face_sheet="<<*contract_group_face_sheet<<'\n';
     for(const auto& [sheet,tag]:owned_shapes)std::cout<<"owned_shape_restriction sheet="<<sheet<<" tag="<<tag<<'\n';
-    if(owned_selection_trace)floor->owned_shape_selection_completed=[event=std::size_t{0}](const std::string& sheet,const auto& alternatives,const auto& quality,int selected) mutable {
+    if(observers&&owned_selection_trace)floor->owned_shape_selection_completed=[event=std::size_t{0}](const std::string& sheet,const auto& alternatives,const auto& quality,int selected) mutable {
         ++event;
         for(const auto& rank:alternatives){
             const auto found=quality.find({sheet,rank.index});
@@ -305,10 +313,10 @@ std::string trial(const PcbPlacementInput& source, bool compact, int run, int ge
             std::cout<<'\n';
         }
     };
-    floor->edge_feasibility_rejected=[](const std::string& edge,const std::string& reason,double low,double high){
+    if(observers)floor->edge_feasibility_rejected=[](const std::string& edge,const std::string& reason,double low,double high){
         std::cout<<"edge_rejection edge="<<edge<<" reason="<<reason<<" start_low="<<low<<" start_high="<<high<<'\n';
     };
-    floor->edge_feasibility_completed=[](std::size_t runs,std::size_t intervals,std::size_t rejected){
+    if(observers)floor->edge_feasibility_completed=[](std::size_t runs,std::size_t intervals,std::size_t rejected){
         std::cout<<"edge_feasibility runs="<<runs<<" intervals="<<intervals<<" rejected="<<rejected<<'\n';
     };
     floor->initial_outline=initial_outline;
@@ -318,7 +326,7 @@ std::string trial(const PcbPlacementInput& source, bool compact, int run, int ge
     if(interior_order)std::cout<<"single_interior_order="<<*interior_order<<" alternate_order_retries=disabled\n";
     std::size_t edge_candidates=0,edge_repairs=0;
     std::vector<FloorplanReseatObservation> reseats;
-    floor->reseat_completed=[&](const auto& row){reseats.push_back(row);};
+    if(observers)floor->reseat_completed=[&](const auto& row){reseats.push_back(row);};
     const auto print_reseats=[&]{
         for(const auto& r:reseats)
             std::cout<<"reseat width="<<r.w<<" height="<<r.h<<" incoming="<<r.incoming
@@ -326,23 +334,23 @@ std::string trial(const PcbPlacementInput& source, bool compact, int run, int ge
                      <<" displaced_reseated="<<r.displaced_reseated<<" punch_free="<<r.punch_free
                      <<" order="<<r.order<<'\n';
     };
-    floor->edge_translation_completed=[&](std::size_t candidates,char edge,double shift) {
+    if(observers)floor->edge_translation_completed=[&](std::size_t candidates,char edge,double shift) {
         edge_candidates+=candidates;edge_repairs+=edge!='\0';
         std::cout<<"edge_translation candidates="<<candidates<<" edge="<<(edge?std::string(1,edge):"none")
                  <<" shift_mm="<<shift<<'\n';
     };
-    floor->attempt_completed = [&](const auto& row) { profile.attempts.add(row); };
-    floor->stage_rejected=[](const auto& row) {
+    if(observers)floor->attempt_completed = [&](const auto& row) { profile.attempts.add(row); };
+    if(observers)floor->stage_rejected=[](const auto& row) {
         std::cout<<"stage_rejection width="<<row.w<<" height="<<row.h<<" stage="<<row.stage
                  <<" subject="<<std::quoted(row.subject)<<" compact="<<row.compact
                  <<" punch_free="<<row.punch_free<<" order="<<row.order<<'\n';
         for(const auto& line:row.diagnostics)std::cout<<"stage_rejection_detail "<<std::quoted(line)<<'\n';
     };
-    floor->unscoped_estimate = [&](double) { ++profile.attempts.unscoped_estimates; };
+    if(observers)floor->unscoped_estimate = [&](double) { ++profile.attempts.unscoped_estimates; };
     auto pcb = std::make_shared<PcbPlacementExperiment>();
     pcb->checkpoint = [&](const auto& row) { profile.checkpoint(row); };
     input.floorplan.experiment = floor;
-    input.experiment = pcb;
+    if(observers)input.experiment = pcb;
     std::cout << "trial run=" << run << " generation=" << generation << " compact_search=" << compact
         << " constraint_first=" << constraint_first
         << " edge_translation=" << edge_translation
@@ -352,6 +360,7 @@ std::string trial(const PcbPlacementInput& source, bool compact, int run, int ge
         << " failed_first_retry=" << failed_first_retry
         << " owned_face_cohesion=" << owned_face_cohesion
         << " input_copy_seconds=" << copy_seconds << " status=started\n" << std::flush;
+    std::cout<<"observers="<<(observers?"on":"off")<<" model_timing_includes_diagnostic_callbacks="<<observers<<'\n';
     if(outline)std::cout<<"outline_override width_mm="<<outline->first<<" height_mm="<<outline->second
                         <<" automatic_sizing=disabled source_policy_otherwise_unchanged=1\n"<<std::flush;
     if(initial_outline)std::cout<<"initial_outline width_mm="<<initial_outline->first<<" height_mm="<<initial_outline->second
@@ -363,9 +372,9 @@ std::string trial(const PcbPlacementInput& source, bool compact, int run, int ge
     try { result = build_pcb_model(input, &failure); }
     catch (...) {
         print_reseats();
-        std::cout<<"edge_search candidates="<<edge_candidates<<" repairs="<<edge_repairs<<'\n';
+        if(observers)std::cout<<"edge_search candidates="<<edge_candidates<<" repairs="<<edge_repairs<<'\n';
         std::cout << "trial status=construction_failed elapsed_seconds=" << seconds(start)
-            << " completed_outer_attempts=" << profile.attempts.completed
+            << " completed_outer_attempts=" << (observers?std::to_string(profile.attempts.completed):"unavailable")
             << " receipt_captured=" << failure.captured << " receipt_unavailable=" << failure.unavailable << '\n';
         if (failure.captured && !failure.unavailable) {
             receipt("failure_prefix", failure.accounting.quantization_engagements);
@@ -375,8 +384,8 @@ std::string trial(const PcbPlacementInput& source, bool compact, int run, int ge
         throw;
     }
     const auto end = Clock::now();
-    std::cout<<"edge_search candidates="<<edge_candidates<<" repairs="<<edge_repairs<<'\n';
-    profile.stages.push_back({"model_return_tail", seconds(profile.mark, end),
+    if(observers)std::cout<<"edge_search candidates="<<edge_candidates<<" repairs="<<edge_repairs<<'\n';
+    if(observers)profile.stages.push_back({"model_return_tail", seconds(profile.mark, end),
         profile.attempts.completed - profile.previous_attempts, profile.attempts.packed - profile.previous_packed, 0});
     const auto model_seconds = seconds(start, end);
     const auto emit_start = Clock::now();
@@ -394,10 +403,11 @@ std::string trial(const PcbPlacementInput& source, bool compact, int run, int ge
         std::cout << "stage interval_ending=" << row.stage << " seconds=" << row.seconds
             << " outer_attempts=" << row.attempts << " packed=" << row.packed << " snapshot_instances=" << row.instances << '\n';
     const auto& a = profile.attempts;
-    std::cout << "work completed_outer_attempts=" << a.completed << " packed=" << a.packed << " rejected=" << a.rejected
+    if(observers)std::cout << "work completed_outer_attempts=" << a.completed << " packed=" << a.packed << " rejected=" << a.rejected
         << " punch_free=" << a.punch_free << " distinct_outline_punch_keys=" << a.outlines.size()
         << " unscoped_estimate_callbacks=" << a.unscoped_estimates
         << " internal_order_retry_count=unavailable shape_trial_count=unavailable\n";
+    else std::cout<<"work observer_counts=unavailable reason=observers_disabled production_receipts=retained\n";
     std::size_t pass = 0;
     for (const auto& d : result.floorplan.plan.accounting.decisions) if (d.name == "outline_candidates") {
         std::cout << "sizing pass=" << ++pass;
@@ -456,7 +466,7 @@ int main(int argc, char** argv) {
         std::cout << std::setprecision(17);
         std::cout << "CONSTRUCTION_ONLY_NO_ACCEPTANCE input_mode=" << options.inputs
             << " zone_cache=none model_cache=none OS_cache=uncontrolled\n"
-            << "Stage intervals include observer snapshot/measurement overhead; not exclusive algorithm timings.\n"
+            << "Observer mode on includes snapshot/measurement overhead; off omits callbacks and stage intervals.\n"
             << "Outer attempt callbacks exclude inner order retries and early sizing filters; sizing ledger reports filters.\n"
             << "Receipt scopes overlap as labelled; do not sum subsets with model_total.\n"
             << "No source audit, full board acceptance, DRC, board publication, or KiCad/3D render performed.\n"
@@ -479,7 +489,7 @@ int main(int argc, char** argv) {
             const int generation = options.inputs == "prepared" ? 1 : run;
             for (const bool compact : {false, true}) {
                 if ((compact && options.compact == "off") || (!compact && options.compact == "on")) continue;
-                const auto hash = trial(prepared->input, compact, run, generation, options.constraint_first,options.outline,options.edge_translation,options.initial_outline,options.interior_order,options.multiscale_outline,options.edge_feasibility,options.owned_selection_trace,options.owned_quality_first,options.owned_face_cohesion,options.owned_shapes,options.contract_group_face_sheet,options.failed_first_retry);
+                const auto hash = trial(prepared->input, compact, run, generation, options.observers,options.constraint_first,options.outline,options.edge_translation,options.initial_outline,options.interior_order,options.multiscale_outline,options.edge_feasibility,options.owned_selection_trace,options.owned_quality_first,options.owned_face_cohesion,options.owned_shapes,options.contract_group_face_sheet,options.failed_first_retry);
                 auto [it, inserted] = first_hash.emplace(compact, hash);
                 if (!inserted && it->second != hash) throw std::runtime_error("repeat PCB bytes changed; investigate input drift/nondeterminism");
                 std::cout << "repeat compact_search=" << compact << " same_as_first=" << (!inserted ? "true" : "first") << '\n';
