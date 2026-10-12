@@ -1,0 +1,22 @@
+{
+  "base_commit": "807a4eca",
+  "defect": "The completed first model could overflow when combining inherited and placement accounting before facing screening. The outer catch then published the earlier floorplan-only prefix as captured, omitting actual placement work.",
+  "fix": "Invalidate the child failure channel on aggregate overflow before rethrowing. The outer owner must publish unavailable=true, captured=false and no accounting, not an apparently complete smaller prefix.",
+  "negative_control": {
+    "production_unchanged": true,
+    "exit_code": 1,
+    "message": "devkit_mini: completed model aggregation overflow must not publish a smaller prefix",
+    "log": "native/build/replan-overflow-negative.log"
+  },
+  "regression": "Multiscale carrier and devkit seed placement_emission_pose_precision4dp with SIZE_MAX. Completed placement must cause aggregate overflow, and neither board may publish a partial failure receipt. Existing normal success, injected retry failure and independently instrumented receipt comparisons remain enabled.",
+  "additional_correction": "Producer-accounting regression now measures final-emission snapping relative to its pre-emission prefix, requiring exactly two added snaps per non-grid-placed instance. It independently verifies every refit call and explicitly requires devkit fan-out trial projections to retain their work. It no longer incorrectly assumes that final emission is the sole fixed-grid caller.",
+  "verification": {
+    "tests_passed": 3,
+    "tests_failed": 0,
+    "wall_seconds": 47.07,
+    "suites": ["native_producer_accounting_contracts", "native_model_failure_receipt_contracts", "native_floorplan_precision_contracts"],
+    "log": "native/build/replan-overflow-fixed-tests.log",
+    "production_cli_rebuilt": true
+  },
+  "limits": "No geometry algorithm, numerical limit or fallback ceiling changed. Focused current-code verification does not by itself establish complete board qualification or completion of the goal. The separately running broad regression began before this correction; its original failure history is retained."
+}

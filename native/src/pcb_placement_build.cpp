@@ -290,7 +290,11 @@ PcbPlacementResult build_pcb_model(const PcbPlacementInput &input, ExecutionFail
 
     // Preserve successful incumbents. Only a resolved final facing failure
     // justifies the one stricter placement trial; unknown inputs never PASS.
-    completed=pcb_placement_accounting(result);child={};
+    // Placement has already executed. An unrepresentable aggregate cannot
+    // be reported as the earlier, smaller floorplan-only failure prefix.
+    try {completed=pcb_placement_accounting(result);}
+    catch(const std::overflow_error&){invalidate_execution_failure(&child);throw;}
+    child={};
     ExecutionAccounting screening;
     PcbPlacementFlowResult flow;
     try {

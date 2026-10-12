@@ -114,12 +114,17 @@ void live(const std::filesystem::path& root,const std::string& name){
     step("l4",[&]{p.l4_pull();});p.checkpoint("l4_pull");
     step("edge",[&]{p.edge_seat();});p.checkpoint("edge_seat");
     step("breathe-A",[&]{p.breathe("A");});step("breathe-B",[&]{p.breathe("B");});p.checkpoint("breathe");
+    const auto before_refit_grid=count(p.ctx.quantization,"fixed_part_grid");
     step("refit",[&]{p.refit();});p.checkpoint("refit_facing");
+    if(name=="devkit_mini")require(count(p.ctx.quantization,"fixed_part_grid")>before_refit_grid,
+        "devkit refit fan-out trials execute and retain real projected-coordinate work");
     step("reorder",[&]{p.reorder();});p.checkpoint("reorder");step("evict",[&]{p.evict();});
     p.checkpoint("corridor_eviction"); // same freeze boundary as production
     std::size_t fixed_coordinates=0;for(const auto& [r,key]:p.geometry.resolvable){(void)key;if(!p.grid_placed.count(r))fixed_coordinates+=2;}
+    const auto before_emission_grid=count(p.ctx.quantization,"fixed_part_grid");
     step("instantiate",[&]{p.instantiate();});
-    require(count(p.ctx.quantization,"fixed_part_grid")==fixed_coordinates,name+" exactly two coordinate snaps per non-grid-placed instance");
+    require(count(p.ctx.quantization,"fixed_part_grid")==before_emission_grid+fixed_coordinates,
+        name+" emission adds exactly two coordinate snaps per non-grid-placed instance, retaining all trial work");
     require(count(p.ctx.quantization,"breathe_anchor_grid")>0,name+" actual breathing trials occurred");
     // Production exports after escape(), so the manual receipt must include it.
     step("escape",[&]{p.escape();});

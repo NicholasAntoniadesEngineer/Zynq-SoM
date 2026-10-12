@@ -211,6 +211,20 @@ void owning_overflow(const std::filesystem::path& root){
     if(failure.captured)in.merge_once("pcb/placement",failure.accounting);
     require(q.engagements()==before,"pipeline import condition skips unavailable model receipt");
 }
+void facing_aggregate_overflow(const std::filesystem::path& root){
+    for(const auto* project:{"devkit_mini","carrier"}){
+        auto fixture=placement_fixture::load(root,project);
+        auto mode=std::make_shared<FloorplanExperiment>();mode->multiscale_outline=true;
+        fixture.input.floorplan.experiment=mode;
+        fixture.input.floorplan.accounting.quantization_engagements["placement_emission_pose_precision4dp"]=
+            std::numeric_limits<std::size_t>::max();
+        ExecutionFailureReceipt failure;bool rejected=false;
+        try{(void)build_pcb_model(fixture.input,&failure);}catch(const std::overflow_error&){rejected=true;}
+        require(rejected&&failure.unavailable&&!failure.captured&&
+                failure.accounting.quantization_engagements.empty()&&failure.accounting.fallback_events.empty(),
+                std::string(project)+": completed model aggregation overflow must not publish a smaller prefix");
+    }
+}
 void constructor_failure(const std::filesystem::path& root){
     auto fixture=placement_fixture::load(root,"devkit_mini");
     auto input=fixture.input.floorplan;input.som.w=0;
@@ -243,4 +257,4 @@ void invalid_stage(const std::filesystem::path& root){
 }
 extern "C" void __cyg_profile_func_enter(void* f,void*){if(!observing)return;for(std::size_t i=0;i<ops.size();++i)if(f==ops[i].address){++entries[i];break;}}
 extern "C" void __cyg_profile_func_exit(void*,void*){}
-int main(int argc,char** argv){try{require(argc==2,"repo path required");facing_retry(argv[1]);contract_retry(argv[1]);overflow();constructor_failure(argv[1]);owning_overflow(argv[1]);invalid_stage(argv[1]);for(bool two_side:{true,false}){checkpoints(argv[1],two_side);floorplan_failure(argv[1],two_side);success(argv[1],two_side);}std::cout<<"model failure receipts PASS\n";}catch(const std::exception& e){observing=false;std::cerr<<e.what()<<'\n';return 1;}}
+int main(int argc,char** argv){try{require(argc==2,"repo path required");facing_aggregate_overflow(argv[1]);facing_retry(argv[1]);contract_retry(argv[1]);overflow();constructor_failure(argv[1]);owning_overflow(argv[1]);invalid_stage(argv[1]);for(bool two_side:{true,false}){checkpoints(argv[1],two_side);floorplan_failure(argv[1],two_side);success(argv[1],two_side);}std::cout<<"model failure receipts PASS\n";}catch(const std::exception& e){observing=false;std::cerr<<e.what()<<'\n';return 1;}}
