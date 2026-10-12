@@ -1,0 +1,16 @@
+{
+  "checked_optimization_commit": "7a91563c28e93d74762ffbd1b2c2a5e501f2b94c",
+  "branch": "codex/two-sided-layout",
+  "remote_default_branch": "master",
+  "remote_head_commit": "ebcf7c4e4fcffdf6146784fedaa2792a1c81993d",
+  "remote_master_commit": "ebcf7c4e4fcffdf6146784fedaa2792a1c81993d",
+  "remote_perf_native_commit": "ebcf7c4e4fcffdf6146784fedaa2792a1c81993d",
+  "verification": [
+    "git ls-remote origin HEAD refs/heads/master refs/heads/perf-native returned the recorded identical migration commit for all three refs.",
+    "git merge-base --is-ancestor master HEAD succeeded; git merge-base --is-ancestor perf-native master succeeded. Local master, origin/master and perf-native match the queried remote refs.",
+    "git ls-files '*.py' '*.pyi' '*.pyx' returned zero tracked files.",
+    "Tracked-name search found no pyproject.toml, setup.py, requirements*.txt, Pipfile or poetry.lock.",
+    "Targeted search in native/CMakeLists.txt, .github, native/cmake and native/tests build/workflow scripts found no find_package(Python, Python_EXECUTABLE, pip install or Python interpreter dash-option invocations."
+  ],
+  "limits": "Inventory and ancestry checks do not replace runtime dependency isolation, complete commit review, electrical qualification or full regression results. Historical Python benchmark checkout is outside this repository and intentionally retained for the explicitly requested reference comparison. The unrelated untracked 2026-10-03-c1-default-render-validation.json evidence was preserved."
+}
