@@ -69,6 +69,11 @@ void profile_option_contracts() {
     if(options({"profile","--repo",".","--compact-search","on"}).failed_first_retry||
        !options({"profile","--repo",".","--compact-search","on","--interior-order","3","--failed-first-retry","on"}).failed_first_retry)
         throw std::runtime_error("failed-first retry default/selection mismatch");
+    const auto combined=options({"profile","--repo",".","--compact-search","on","--interior-order","3",
+        "--failed-first-retry","on","--reseat-poses","8","--reseat-frontier","4096",
+        "--reseat-continuations","2","--reseat-victim-shapes","on"});
+    if(!combined.failed_first_retry||!combined.reseat_pose_limits->victim_shapes||combined.reseat_pose_limits->continuations!=2)
+        throw std::runtime_error("combined recovery options lost a requested strategy");
     for(const auto& args:std::vector<std::vector<std::string>>{
         {"profile","--repo",".","--compact-search","on","--failed-first-retry","on"},
         {"profile","--repo",".","--compact-search","off","--interior-order","3","--failed-first-retry","on"},

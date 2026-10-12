@@ -305,6 +305,17 @@ Eight carrier factorial screens and two paired extensions are recorded in
 screens failed under their tested settings; that does not establish that
 other combinations cannot help. Keep correctness tests distinct from search
 experiments, and retain configuration-specific negative results for reuse.
+Continuation retries can now be combined with `--failed-first-retry`. After
+the original, continuation, failed-first and shape-only attempts fail, enabling
+both failed-first and shape recovery also tries shapes in the failure-directed
+order. This extra full attempt records both existing strategy events; they
+describe two enabled strategy dimensions, not two solver invocations. Actual
+solver work remains independently counted. This is not a complete Cartesian
+search: continuation replay still applies to the original-order strategy.
+The 300-case composition tests compare independent attempts, enforce geometry,
+check reproducibility, and verify failed/exception rollback without dropping
+executed work. See `benchmarks/2026-10-12-composed-recovery.json` for the current
+negative carrier screens and explicit qualification limits.
 Scarcity order (`--interior-order 2`) counts permitted shapes rather than the
 entire registry: a pinned group has one choice, even if many unselected shapes
 exist. Property and placement-level contracts cover this distinction; restoring

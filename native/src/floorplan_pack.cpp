@@ -121,6 +121,15 @@ bool Engine::attempt_pack(bool compact) {
                         restore();
                         fallback("interior_reseat_shape_retry");
                         ok=attempt_pack_impl(compact,nullptr,{},nullptr,0,nullptr,true,true);
+                        if(!ok&&recovery&&!failed.empty()) {
+                            // Enabling both strategies must also explore their
+                            // interaction, not merely two isolated attempts.
+                            restore();
+                            fallback("interior_failed_first_retry");
+                            fallback("interior_reseat_shape_retry");
+                            ok=attempt_pack_impl(compact,nullptr,failed,nullptr,0,nullptr,true,true);
+                            if(ok)plan.composition.push_back("failure-directed shape recovery: "+failed+" first");
+                        }
                     }
                     if(!ok&&transactional)restore();
                     compact_order=saved_order;

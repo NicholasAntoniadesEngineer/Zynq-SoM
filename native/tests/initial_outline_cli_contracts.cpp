@@ -15,6 +15,8 @@ int main(int argc,char** argv){try{
     const auto shape_help=run(shape_args);
     if(shape_help.exit_code||shape_help.stdout_text.find("original strategies fail")==std::string::npos)
         throw std::runtime_error("shape strategy options/help failed");
+    auto combined_args=shape_args;combined_args.push_back("--failed-first-retry");
+    if(run(combined_args).exit_code)throw std::runtime_error("combined continuation/order/shape options rejected");
     shape_args.push_back("--reseat-victim-shapes");
     if(!run(shape_args).exit_code)throw std::runtime_error("duplicate shape strategy accepted");
     for(const auto& args:std::vector<std::vector<std::string>>{
@@ -39,8 +41,8 @@ int main(int argc,char** argv){try{
             if(!run({"board","--compact-placement",flag,value}).exit_code)
                 throw std::runtime_error("invalid reseat integer accepted");
     }
-    auto conflicting=reseat;conflicting.push_back("--failed-first-retry");
-    if(!run(conflicting).exit_code)throw std::runtime_error("ambiguous continuation and failed-first recovery accepted");
+    auto composed=reseat;composed.push_back("--failed-first-retry");
+    if(run(composed).exit_code)throw std::runtime_error("continuation and failed-first composition rejected");
     for(const auto* slots:{"1","2"}){
         const auto result=run({"board","--audit-projections",slots});
         if(result.exit_code||result.stdout_text.find("audit coverage and source-change checks are unchanged")==std::string::npos)

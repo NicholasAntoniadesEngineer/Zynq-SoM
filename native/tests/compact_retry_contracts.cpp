@@ -377,9 +377,8 @@ void alternative_pose_retry_contract(){
         config->interior_order.reset();bool rejected=false;
         try{validate_floorplan_experiment(*config);}catch(const FloorplanError&){rejected=true;}
         require(rejected,"continuation accepted without explicit order");
-        config->interior_order=0;config->failed_first_retry=true;rejected=false;
-        try{validate_floorplan_experiment(*config);}catch(const FloorplanError&){rejected=true;}
-        require(rejected,"conflicting failed-first and continuation policies accepted");
+        config->interior_order=0;config->failed_first_retry=true;
+        validate_floorplan_experiment(*config);
         config->failed_first_retry=false;config->reseat_pose_limits->continuations=0;config->reseat_pose_limits->reuse_continuation=true;rejected=false;
         try{validate_floorplan_experiment(*config);}catch(const FloorplanError&){rejected=true;}
         require(rejected,"reuse accepted without continuation budget");
@@ -631,6 +630,77 @@ void victim_shape_portfolio_contract(){
     bool rejected=false;try{validate_floorplan_experiment(invalid);}catch(const FloorplanError&){rejected=true;}
     require(rejected,"shape portfolio silently accepted missing explicit order");
 }
+void combined_order_shape_contract(){
+    const Case crowded{70,50,{{29,16,3,4},{12,30,2,0},{30,18,3,2},{31,26,2,3},{7,7,1,3},{31,9,2,1}}};
+    std::size_t combined_attempts=0,recovered=0,failed_cases=0;
+    bool exception_verified=false;
+    for(std::size_t continuations:{0,2})for(bool rotate:{false,true})for(int w=65;w<=85;w+=5)for(int h=45;h<=65;h+=5)for(int order=0;order<3;++order){
+        auto c=crowded;c.w=w;c.h=h;
+        auto in=input();auto config=std::make_shared<FloorplanExperiment>();in.experiment=config;
+        config->interior_order=order;config->failed_first_retry=true;
+        config->reseat_pose_limits=FloorplanPoseRetryLimits{8,4096,continuations,false,true};
+        auto prepare=[&](Engine& e){setup(e,c);e.compact_order=order;
+            if(rotate)for(auto& [name,shapes]:e.shape_sets[1]){(void)name;if(shapes.size()>2)std::swap(shapes[2].w,shapes[2].h);}
+        };
+        Engine first(in);prepare(first);std::string subject;
+        bool selected=false;
+        entries=0;observing=true;
+        bool expected=first.attempt_pack_impl(false,nullptr,{},&subject,0,&selected);
+        if(!expected&&selected)for(std::size_t skip=1;skip<=continuations;++skip){
+            Engine replay(in);prepare(replay);bool replay_selected=false;
+            expected=replay.attempt_pack_impl(false,nullptr,{},nullptr,skip,&replay_selected);
+            if(expected||!replay_selected)break;
+        }
+        if(!expected&&!subject.empty()){Engine promoted(in);prepare(promoted);expected=promoted.attempt_pack_impl(false,nullptr,subject);}
+        if(!expected){Engine shapes(in);prepare(shapes);expected=shapes.attempt_pack_impl(false,nullptr,{},nullptr,0,nullptr,true,true);}
+        bool combined=false;
+        if(!expected&&!subject.empty()){
+            ++combined_attempts;combined=true;Engine both(in);prepare(both);
+            expected=both.attempt_pack_impl(false,nullptr,subject,nullptr,0,nullptr,true,true);
+            if(expected)++recovered;
+        }
+        observing=false;const auto reference_calls=entries;
+        Engine actual(in);prepare(actual);const auto initial=layout(actual.plan);const auto initial_offers=offers(actual);
+        entries=0;observing=true;const bool ok=actual.attempt_pack(false);observing=false;
+        require(ok==expected,"combined order/shape strategy omitted or fabricated a result");
+        require(entries==reference_calls,"combined wrapper omitted or duplicated an independently executed strategy");
+        require(actual.plan.accounting.quantization_engagements.at("run_overflow_tol")==entries,
+                "combined strategy lost independently observed work");
+        const auto& events=actual.plan.accounting.fallback_events;
+        if(combined)require(std::count(events.begin(),events.end(),"interior_reseat_shape_retry")==2&&
+                            std::count(events.begin(),events.end(),"interior_failed_first_retry")==2,
+                            "combined attempt must record both executed strategy dimensions");
+        if(!ok){++failed_cases;require(equal(layout(actual.plan),initial)&&offers(actual)==initial_offers,
+                                      "combined failed strategy leaked partial state");}
+        else for(const auto& a:actual.plan.interior_blocks){
+            require(a.x>=0&&a.y>=0&&a.x+a.w<=w&&a.y+a.h<=h,"combined recovery outside board");
+            for(const auto& b:actual.plan.interior_blocks)if(a.name!=b.name)
+                require(a.side!=b.side||a.x+a.w<=b.x||b.x+b.w<=a.x||a.y+a.h<=b.y||b.y+b.h<=a.y,
+                        "combined recovery overlaps same-face blocks");
+        }
+        Engine repeat(in);prepare(repeat);require(repeat.attempt_pack(false)==ok&&
+            equal(floorplan_plan_json(actual.plan),floorplan_plan_json(repeat.plan))&&offers(actual)==offers(repeat),
+            "combined recovery not reproducible including accounting");
+        if(combined&&!ok&&!exception_verified){
+            Engine interrupted(in);prepare(interrupted);
+            config->stage_rejected=[&](const auto&){
+                const auto& seen=interrupted.plan.accounting.fallback_events;
+                if(std::count(seen.begin(),seen.end(),"interior_reseat_shape_retry")==2)
+                    throw std::runtime_error("combined stop");
+            };
+            entries=0;observing=true;
+            try{(void)interrupted.attempt_pack(false);}catch(const std::runtime_error& e){exception_verified=std::string(e.what())=="combined stop";}
+            observing=false;config->stage_rejected={};
+            require(exception_verified&&equal(layout(interrupted.plan),initial)&&offers(interrupted)==initial_offers,
+                    "interrupted combined attempt leaked state or swallowed exception");
+            require(interrupted.plan.accounting.quantization_engagements.at("run_overflow_tol")==entries&&
+                std::count(interrupted.plan.accounting.fallback_events.begin(),interrupted.plan.accounting.fallback_events.end(),"interior_reseat_shape_retry")==2,
+                "interrupted combined attempt lost executed work");
+        }
+    }
+    require(combined_attempts&&failed_cases&&exception_verified,"combined fixture missed execution, rollback or exception");
+    std::cout<<"combined order/shape PASS attempts="<<combined_attempts<<" recovered="<<recovered<<" failures="<<failed_cases<<'\n';
+}
 int main(){try{
     check("canonical",{80,70,{{8,6,2,1},{7,5,2,0}}},0);
     check("area-wins",{70,50,{{29,16,3,4},{12,30,2,0},{30,18,3,2},{31,26,2,3},{7,7,1,3},{31,9,2,1}}},1);
@@ -651,6 +721,7 @@ int main(){try{
     failed_first_contract();
     alternative_pose_retry_contract();
     victim_shape_portfolio_contract();
+    combined_order_shape_contract();
     neighbour_retry_contract();
     for(bool first:{false,true})for(bool translate:{false,true})invariant_edge_failure(first,translate);
     for(bool translate:{false,true})invariant_edge_failure(false,translate,true);

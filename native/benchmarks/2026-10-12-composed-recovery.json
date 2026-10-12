@@ -1,0 +1,130 @@
+{
+  "schema_version": 1,
+  "base_commit": "b8963cb9",
+  "changes": [
+    "Allow pose continuations together with failed-first retry; the previous CLI/core exclusion prevented testing this composition.",
+    "After failed-first and shape-only strategies both fail, also try shape recovery in the failure-directed order when both options are enabled."
+  ],
+  "hardware_checks": "Unchanged; configured pose/frontier/continuation search budgets remain in effect. No geometric feasibility inference from exhaustion.",
+  "synthetic_tests": {
+    "cases": 300,
+    "continuation_settings": [
+      0,
+      2
+    ],
+    "combined_attempts": 32,
+    "additional_recoveries": 0,
+    "failed_cases": 32,
+    "checks": [
+      "Independent execution of original, continuation, promoted-order, shape-only and combined attempts compared with wrapper results.",
+      "Independently instrumented operation counts agree between reference attempts and wrapper; production receipts agree with actual calls.",
+      "Both strategy events retained for the combined attempt; no invented second invocation.",
+      "Bounds, same-face non-overlap, determinism including receipts, failed-state rollback and injected-exception rollback."
+    ]
+  },
+  "cli_tests": [
+    "native_compact_profile_inputs_contracts PASS",
+    "native_initial_outline_cli_contracts PASS"
+  ],
+  "core_test": "native_compact_retry_contracts PASS",
+  "rejected_initial_probe": {
+    "log": "native/build/combined-order-shapes-before.log",
+    "result": "CLI rejected failed-first plus continuations before model construction. Not a solver failure or timing baseline."
+  },
+  "carrier_options": "--compact-search on --interior-order 3 --failed-first-retry on --edge-feasibility on --owned-quality-first on --owned-face-cohesion on --contract-group-face-sheet usb_jtag --floorplan-spec native/benchmarks/carrier-two-pilot-auto.floorplan.json --joint-separation-states 1024 --reseat-poses 8 --reseat-frontier 4096 --reseat-continuations 3 --reseat-victim-shapes on --owned-shape board_aux=owned-face-a1.000000 --runs 1 --observers on",
+  "pinned_rail_tag": "bottom-a2.2/r270/owned-pins-forward",
+  "schematic": "/private/tmp/carrier-166x156-two-pilots.iK3HkI/Zynq_Carrier.kicad_sch",
+  "screens": [
+    {
+      "outline": "165x156",
+      "rail": "pinned",
+      "log": "native/build/composed-recovery-165x156-pinned.log",
+      "elapsed_seconds": 3.309229083,
+      "subjects": [
+        "board_services",
+        "usb_jtag",
+        "bringup_rails",
+        "bringup_modules",
+        ""
+      ],
+      "result": "bounded search failed",
+      "failure_receipt_captured": true
+    },
+    {
+      "outline": "165x156",
+      "rail": "free",
+      "log": "native/build/composed-recovery-165x156-free.log",
+      "elapsed_seconds": 6.90782475,
+      "subjects": [
+        "board_services",
+        "usb_jtag",
+        ""
+      ],
+      "result": "bounded search failed",
+      "failure_receipt_captured": true
+    },
+    {
+      "outline": "166x155",
+      "rail": "pinned",
+      "log": "native/build/composed-recovery-166x155-pinned.log",
+      "elapsed_seconds": 6.823985375,
+      "subjects": [
+        "bringup_modules",
+        "usb_jtag"
+      ],
+      "result": "bounded search failed",
+      "failure_receipt_captured": true
+    },
+    {
+      "outline": "166x155",
+      "rail": "free",
+      "log": "native/build/composed-recovery-166x155-free.log",
+      "elapsed_seconds": 9.259754125,
+      "subjects": [
+        "bringup_modules",
+        "usb_jtag"
+      ],
+      "result": "bounded search failed",
+      "failure_receipt_captured": true
+    }
+  ],
+  "diagnostic": "Some 165x156 branches now reach legalization. A recorded USB-JTAG/HDMI conflict places hdmi_rx_term below a separation lower bound incompatible with its near_max upper bound. This is infeasibility of that attempted separation system, not of the whole board outline.",
+  "regression_screens": [
+    {
+      "project": "carrier",
+      "log": "native/build/carrier-composed-recovery-regression.log",
+      "runs": 2,
+      "dimensions_mm": [
+        166,
+        156
+      ],
+      "pcb_sha256": "99bd6a1dddb8f94f314f8b0d775ccc894ef84556e82ab70159360fa071470a5e",
+      "model_seconds": [
+        3.865719375,
+        3.814698625
+      ],
+      "result": "Matches qualified reference with composed recovery enabled."
+    },
+    {
+      "project": "devkit_mini",
+      "log": "native/build/devkit-composed-recovery-regression.log",
+      "runs": 2,
+      "dimensions_mm": [
+        98,
+        98
+      ],
+      "pcb_sha256": "b6798d4b63d2fddbf9fad24945c151b9420b049b674ad5d637c43bf4a365137f",
+      "model_seconds": [
+        0.177965958,
+        0.178099416
+      ],
+      "result": "Matches qualified reference."
+    }
+  ],
+  "limitations": [
+    "No smaller accepted carrier.",
+    "This batch has targeted tests and construction screens, not a new full-board/source-audit qualification.",
+    "Diagnostic timings, not controlled performance comparisons; no matched Python comparison.",
+    "Not exhaustive composition: continuation replay still applies only to the original-order strategy."
+  ]
+}

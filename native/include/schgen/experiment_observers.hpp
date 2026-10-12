@@ -41,7 +41,8 @@ struct FloorplanPoseRetryLimits {
     std::size_t continuations=0;
     // Advisory ordering only; never reuse a geometry verdict or omit a gate.
     bool reuse_continuation=false;
-    // Additional full strategy after the unchanged pose portfolio fails.
+    // Additional full strategy after the pose portfolio fails; when combined
+    // with failed_first_retry, also try shapes in the failure-directed order.
     bool victim_shapes=false;
 };
 struct FloorplanPoseRetryObservation {
@@ -57,7 +58,8 @@ struct FloorplanExperiment {
     // Opt-in compact-search candidate; legacy orders remain fallback choices.
     // Invocation-owned so independent/concurrent solves cannot change each other.
     bool compact_constraint_first = false;
-    // One failure-directed restart of an explicitly selected interior order.
+    // Failure-directed restart of an explicit order, plus its shape-recovery
+    // combination when enabled. Compatible with prior continuation attempts.
     bool failed_first_retry = false;
     // Failure-only second victim pass; never replaces a successful ordinary
     // placement/reseat. Both per-query limits are explicit invocation inputs.

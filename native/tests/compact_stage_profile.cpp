@@ -224,8 +224,8 @@ Options parse(int argc, char** argv) {
         throw std::invalid_argument("reseat requires --compact-search on, --reseat-poses >=2 and --reseat-frontier >0");
     if(out.reseat_pose_limits&&out.reseat_pose_limits->victim_shapes&&!out.interior_order)
         throw std::invalid_argument("victim-shape recovery requires interior-order");
-    if(out.reseat_pose_limits&&out.reseat_pose_limits->continuations&&(!out.interior_order||out.failed_first_retry))
-        throw std::invalid_argument("reseat continuations require interior-order and exclude failed-first-retry");
+    if(out.reseat_pose_limits&&out.reseat_pose_limits->continuations&&!out.interior_order)
+        throw std::invalid_argument("reseat continuations require interior-order");
     if(out.reseat_pose_limits&&out.reseat_pose_limits->reuse_continuation&&!out.reseat_pose_limits->continuations)
         throw std::invalid_argument("reseat reuse requires a positive continuation budget");
     if(out.outline&&out.initial_outline)throw std::invalid_argument("initial-outline-mm cannot be combined with outline-mm");
