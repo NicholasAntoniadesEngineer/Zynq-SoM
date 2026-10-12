@@ -485,6 +485,11 @@ void neighbour_retry_contract() {
     require(wrapped.plan.accounting.quantization_engagements==direct.plan.accounting.quantization_engagements&&
             wrapped.plan.accounting.fallback_events==direct.plan.accounting.fallback_events,
         "neighbour rollback lost or duplicated failed work");
+    Engine compact_failure(in);setup(compact_failure,c);
+    require(!compact_failure.attempt_pack(true)&&equal(layout(compact_failure.plan),entry)&&
+        compact_failure.plan.accounting.quantization_engagements==direct.plan.accounting.quantization_engagements&&
+        compact_failure.plan.accounting.fallback_events==direct.plan.accounting.fallback_events,
+        "pre-compaction failure repeated identical noncompact attempts");
     experiment->stage_rejected=[](const auto& row){
         if(std::any_of(row.diagnostics.begin(),row.diagnostics.end(),[](const auto& line){
             return line.rfind("retry: jointly translate interior neighbours",0)==0;

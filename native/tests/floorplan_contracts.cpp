@@ -947,7 +947,8 @@ void frozen(const std::filesystem::path& dir,const std::string& name,bool geomet
 }
 void repair_choice_contracts() {
     {
-        FloorplanLegalizeInput in;in.board_w=20;in.board_h=20;
+        FloorplanLegalizeInput in;in.board_w=20;in.board_h=20;in.compact=true;
+        std::size_t compactions=0;in.compaction_started=[&]{++compactions;};
         in.fixed_rects={{"obstacle",{0,0,20,20}}};
         in.metrics["v"]={{{"p",1,1}},{{"p",0,0,2,2}},{2,2}};
         in.som_j_rects["som_j1"]={9,9,10,10};
@@ -956,6 +957,12 @@ void repair_choice_contracts() {
         auto quiet=initial,loud=initial;std::vector<std::string> quiet_log,loud_log;
         QuantizationCounts quiet_counts,loud_counts;
         require(!floorplan_legalize_compact_accounted(in,quiet,quiet_log,quiet_counts),"fully occupied board must fail");
+        require(compactions==0,"infeasible axis search must not claim compaction started");
+        auto plain=in;plain.compact=false;auto retry=initial;
+        std::vector<std::string> retry_log;QuantizationCounts retry_counts;
+        require(!floorplan_legalize_compact_accounted(plain,retry,retry_log,retry_counts)&&
+            retry_counts==quiet_counts&&retry_log==quiet_log&&compactions==0,
+            "pre-compaction failure differs in noncompact mode");
         in.report_infeasible_cycle=true;
         require(!floorplan_legalize_compact_accounted(in,loud,loud_log,loud_counts),"diagnostic mode changed infeasibility");
         const auto contains=[&](const auto& lines,const std::string& text){return std::any_of(lines.begin(),lines.end(),[&](const auto& line){return line.find(text)!=std::string::npos;});};
@@ -1202,7 +1209,7 @@ void joint_separation_contracts() {
     std::cout<<"joint separation oracle PASS solved="<<solved<<" exhausted="<<impossible<<" capped="<<capped<<'\n';
 }
 void joint_composer_contracts(){
-    std::size_t recovered=0,preserved=0,failed=0;
+    std::size_t recovered=0,preserved=0,failed=0,pre_compact_failures=0,compact_passes=0;
     std::array<std::size_t,4> recovered_modes{};
     std::optional<FloorplanLegalizeInput> witness;
     std::vector<FloorplanLegalizeVar> witness_vars;
@@ -1228,13 +1235,23 @@ void joint_composer_contracts(){
         const bool before=floorplan_legalize_compact_accounted(in,legacy,first_log,first_counts);
         in.joint_separation_states=128;std::size_t starts=0,ends=0;JointSeparationWork work;
         in.joint_retry_started=[&]{++starts;};in.joint_retry_completed=[&](const auto& w,bool){++ends;work=w;};
+        std::size_t compactions=0;in.compaction_started=[&]{++compactions;};
         const bool after=floorplan_legalize_compact_accounted(in,candidate,second_log,second_counts);
+        compact_passes+=compactions;
+        if(!after&&!compactions) {
+            ++pre_compact_failures;
+            auto plain=in;plain.compact=false;plain.joint_retry_started={};plain.joint_retry_completed={};
+            auto retry=initial;std::vector<std::string> retry_log;QuantizationCounts retry_counts;
+            require(!floorplan_legalize_compact_accounted(plain,retry,retry_log,retry_counts)&&!compactions&&
+                retry_counts==second_counts&&retry_log==second_log,
+                "pre-compaction failure changed when compaction disabled");
+        }
         if(before){++preserved;require(after&&starts==0&&ends==0&&legacy[0].x==candidate[0].x&&legacy[0].y==candidate[0].y&&first_counts==second_counts&&first_log==second_log,
             "joint retry replaced a successful incumbent or its work");}
         else{
             require(starts==1&&ends==1&&work.generated<=128&&work.visited<=work.generated,"joint retry lost boundaries or exceeded budget");
             if(after){++recovered;++recovered_modes[mode];
-                if(!witness){witness=in;witness->joint_retry_started={};witness->joint_retry_completed={};witness_vars=initial;}
+                if(!witness){witness=in;witness->joint_retry_started={};witness->joint_retry_completed={};witness->compaction_started={};witness_vars=initial;}
                 const auto& v=candidate[0];require(v.x>=in.clear&&v.y>=in.clear&&v.x+v.w+in.clear<=24&&v.y+v.h+in.clear<=24,"joint composer violated walls");
                 const auto separated=[&](const Box4& a,const Halo& ar,const Box4& b,const Halo& br){
                     return a.x1+std::max({in.clear,ar.e,br.w})<=b.x0||b.x1+std::max({in.clear,br.e,ar.w})<=a.x0||
@@ -1253,11 +1270,12 @@ void joint_composer_contracts(){
     }
     require(recovered&&preserved&&std::all_of(recovered_modes.begin(),recovered_modes.end(),[](auto n){return n>0;}),
         "joint composer fixtures missed a physical mode or incumbent preservation");
+    require(compact_passes,"compaction lifecycle observation was vacuous");
     auto interrupted=witness_vars;std::vector<std::string> log;QuantizationCounts counts;
     witness->joint_retry_completed=[](const auto&,bool){throw std::runtime_error("joint observer stop");};
     throws([&]{floorplan_legalize_compact_accounted(*witness,interrupted,log,counts);},"joint observer stop");
     require(interrupted[0].x==witness_vars[0].x&&interrupted[0].y==witness_vars[0].y&&!counts.empty(),"joint observer exception lost work or published placement");
-    std::cout<<"joint composer PASS recovered="<<recovered<<" preserved="<<preserved<<" rejected="<<failed
+    std::cout<<"joint composer PASS recovered="<<recovered<<" preserved="<<preserved<<" rejected="<<failed<<" pre_compact_failures="<<pre_compact_failures
              <<" plain="<<recovered_modes[0]<<" directional="<<recovered_modes[1]<<" mixed="<<recovered_modes[2]<<" through="<<recovered_modes[3]<<'\n';
 }
 }  // namespace

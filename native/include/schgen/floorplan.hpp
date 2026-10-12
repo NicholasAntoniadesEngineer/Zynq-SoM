@@ -181,6 +181,10 @@ struct FloorplanLegalizeInput {
     std::optional<std::size_t> joint_separation_states;
     std::function<void()> joint_retry_started;
     std::function<void(const JointSeparationWork&,bool)> joint_retry_completed;
+    // Called only when the optional compaction pass actually begins. Absence
+    // of this event across a failed solve proves disabling compaction cannot
+    // change that execution; callers may omit an otherwise duplicate retry.
+    std::function<void()> compaction_started;
 };
 
 // Compose consumes resolved, selected-shape metrics. A rejected candidate

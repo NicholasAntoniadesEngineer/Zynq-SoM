@@ -611,9 +611,12 @@ bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure,
             for (const auto& j:plan.som.js) rows.emplace_back(j.ref,j.x,j.y,j.w,j.h);
             for (const auto& [n,x0,y0,x1,y1]:som_jack_rects(plan.som_x,plan.som_y,rows)) li.som_j_rects[n]={x0,y0,x1,y1};
             const auto orig=plan.interior_blocks;
+            bool compaction_attempted=false;
             auto legalize=[&](bool do_compact,bool release_neighbours=false) {
                 plan.interior_blocks=orig;
                 auto active=li;
+                compaction_attempted=false;
+                active.compaction_started=[&]{compaction_attempted=true;};
                 auto moving=movable;
                 if(release_neighbours) {
                     // Interior placement is a search decision, not a fixed
@@ -643,14 +646,18 @@ bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure,
                 plan.composition=std::move(log); return true;
             };
             if (!legalize(compact)) {
-                if (compact && legalize(false)) fallback("legalize_only_compaction");
+                // Before compaction starts, compact and noncompact inputs run
+                // the identical search. Do not repeat a proven common failure.
+                // Scope duplicate-elision to the opt-in joint portfolio;
+                // ordinary callers retain their existing execution policy.
+                if (compact && (!li.joint_separation_states||compaction_attempted) && legalize(false)) fallback("legalize_only_compaction");
                 else {
                     // Opt-in, failure-only, at most two neighbourhood solves.
                     // Never replace an already accepted incumbent or erase
                     // failed trial accounting when expanding the moving set.
                     if(!li.joint_separation_states||movable.size()==orig.size())return false;
                     if(!legalize(compact,true)) {
-                        if(!(compact&&legalize(false,true)))return false;
+                        if(!(compact&&compaction_attempted&&legalize(false,true)))return false;
                         fallback("legalize_only_compaction");
                     }
                 }

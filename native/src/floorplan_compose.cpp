@@ -329,6 +329,7 @@ public:
             log.push_back(std::move(message)); return false;
         }
         if (in.compact) {
+            if(in.compaction_started)in.compaction_started();
             const auto keep_x = pos_x, keep_y = pos_y;
             descend(false);
             if (!reds().empty() || !edges_ok(true, pos_x) || !edges_ok(false, pos_y)) {

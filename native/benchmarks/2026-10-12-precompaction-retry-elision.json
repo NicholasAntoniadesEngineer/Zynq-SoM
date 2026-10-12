@@ -1,0 +1,50 @@
+{
+  "base_commit":"b9802c1d",
+  "change":"Track actual compaction entry. In the opt-in joint-search portfolio, do not repeat a failed compact solve with compaction disabled when no compaction pass ran. Ordinary execution policy is unchanged.",
+  "proof_boundary":"floorplan_compose.cpp only branches on input.compact in finish(), after feasibility search and hard-red checks. The lifecycle callback runs immediately before compaction begins, including passes later reverted. Any execution that enters compaction retains the noncompact fallback. No failed execution, accounting event or hardware gate is erased.",
+  "rejected_probe":{
+    "strategy":"Release only USB-JTAG instead of all interior neighbours; diagnostic hard-coded probe, removed",
+    "result":"165x159 failed after two outer attempts; a single-neighbour release is insufficient for this bounded search",
+    "log":"native/build/carrier-single-neighbour-165x159.log"
+  },
+  "candidate":{
+    "dimensions_mm":[165,159],
+    "pcb_sha256":"24ac25bfe6cb2ea6477a01b195b5ca78070ccff3bb2640f12d5b8f7275da5c64",
+    "geometry":"Identical to the previous fully rendered candidate; two repeated current runs agree",
+    "initial_checks":"Placement contract PASS, flow PASS, hard RED 0",
+    "options":"Prepared current qualified carrier schematic; compact search; interior-order 3; edge feasibility; owned quality first; owned face cohesion; usb_jtag contract-group faces; board_aux=owned-face-fixed/a2.2/owned-pins-forward; carrier-165x159-failed-first.floorplan.json; joint-separation-states 128. Failed-first retry is not enabled.",
+    "log":"native/build/carrier-elide-precompact-165x159.log",
+    "comparison_log":"native/build/carrier-neighbour-retry-165x159.log"
+  },
+  "actual_work_before_after":{
+    "outer_attempts":[7,7],
+    "joint_states":[2314,1418],
+    "joint_states_change_percent":-38.7208297321,
+    "joint_axis_solves":[3503,2173],
+    "joint_axis_change_percent":-37.9674564659,
+    "joint_domain_probes":[1636,1104],
+    "joint_domain_rejections":[477,296],
+    "joint_searches":[23,16],
+    "joint_budget_exhaustions":[18,11],
+    "joint_proposals":[121,121],
+    "joint_qualification_rejections":[116,116],
+    "neighbour_retries":[9,9],
+    "successful_reseats":[14,14],
+    "total_recorded_fallback_events":[8395,5428]
+  },
+  "observed_seconds":{
+    "previous_model_samples":[2.623068625,2.605872291],
+    "current_model_samples":[2.519653542,2.497738958],
+    "current_floorplan_intervals":[1.699353833,1.688767916],
+    "limits":"Diagnostic samples with other test/build activity, not controlled A/B wall-time benchmarks. Work-count reductions are directly measured; no wall-speedup percentage, compile comparison or new Python comparison claimed."
+  },
+  "tests":{
+    "native_producer_accounting_contracts":"PASS 16.80s; reverted compaction still reports its executed pass and preserves independently observed scalar accounting",
+    "native_compact_retry_contracts":"PASS 3.37s; impossible-bound compact failure now executes exactly the same real work as noncompact mode; recovery, incumbent, rollback and exception tests retained",
+    "native_floorplan_contracts":"PASS 14.63s; infeasible pre-compaction witness has identical noncompact rejection logs and scalar counts; current joint composer physical-mode coverage retained",
+    "targeted_source_audits":"58 contracts PASS using schgen_native_audits_contracts --sources-only; includes actual floorplan/legalizer source scans and mutation checks",
+    "carrier_default":"166x159 unchanged PCB SHA256 031da411516efe7785e532cf57c7f4847cbb181ad59979cb376e9bc8b896da44; placement/flow PASS",
+    "devkit_default":"98x98 unchanged PCB SHA256 b6798d4b63d2fddbf9fad24945c151b9420b049b674ad5d637c43bf4a365137f; placement/flow PASS"
+  },
+  "acceptance":"The smaller candidate is still NOT accepted: nonzero new search paths exceed the committed zero ceilings. No ceilings raised. Previous geometry/DRC/render evidence remains applicable to identical PCB bytes; no new full board/source qualification claimed for this source revision. Retain qualified default and all unresolved hardware risks."
+}

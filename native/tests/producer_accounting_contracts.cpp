@@ -61,12 +61,14 @@ void legalizer(){
     rejects<std::overflow_error>([&]{run({1},{2},q);},"legalizer source rejects overflow before snap");
     // Existing independent fixture deliberately reverts compaction after snaps.
     FloorplanLegalizeInput in;in.board_w=100;in.board_h=100;in.som_core_page={65,65,85,85};in.compact=true;
+    std::size_t compactions=0;in.compaction_started=[&]{++compactions;};
     for(const auto& name:{"a","b"})in.metrics[name]={{{"p",5,5}},{{"p",0,0,10,10}},{10,10}};
     in.index.hard.push_back({"flow_hop","a","a","b",{},"test",true,{},{}});
     in.index.hard.push_back({"far_min","a","a","b",30.,"test",true,{},{}});
     std::vector<FloorplanLegalizeVar> vars{{"a",10,10,{5,5},5,5},{"b",10,10,{60,5},60,5}};
     std::vector<std::string> log;q.clear();calls={};
     require(floorplan_legalize_compact_accounted(in,vars,log,q),"reverted compact solve remains feasible");
+    require(compactions==1,"reverted compaction must still report its executed pass");
     require(std::find(log.begin(),log.end(),"compaction REVERTED (would break a hard term or separation)")!=log.end(),"actual compact trial reverted");
     require(!q.empty()&&q.at("legalize_pose_quantum")>0,"reverted trial retains engagements");measured(q,calls,"reverted compaction");
 }
