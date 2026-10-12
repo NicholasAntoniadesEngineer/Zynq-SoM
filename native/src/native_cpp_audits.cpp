@@ -303,11 +303,16 @@ CppSourceCensus scan_cpp_audit_sources(const std::filesystem::path& root,const s
     // Keep the compiler worker cap unchanged, but retain at most one full AST
     // per scan. Waiting compilers use bounded pipe backpressure, not a DOM queue.
     std::mutex projection_slot;
+    std::vector<CppAuditTiming> timings(files.size());
+    using Clock=std::chrono::steady_clock;
+    const auto elapsed=[](Clock::time_point start){return std::chrono::duration<double>(Clock::now()-start).count();};
     const auto scan_one=[&](std::size_t index){
         const auto& relative=relative_paths[index];
         const auto path=std::filesystem::absolute(root/relative).lexically_normal();
         unchanged(index);
-        const auto graph=discover_dependencies(path);
+        auto& timing=timings[index];timing.source=relative.generic_string();
+        auto start=Clock::now();const auto graph=discover_dependencies(path);
+        timing.dependency_seconds=elapsed(start);start=Clock::now();
         std::vector<Dependency> watched;
         for(const auto& dependency:graph) {
             if(!std::filesystem::is_regular_file(dependency))throw AuditSyntaxError("native audit dependency is missing/not a file: "+dependency.string());
@@ -318,10 +323,16 @@ CppSourceCensus scan_cpp_audit_sources(const std::filesystem::path& root,const s
             watched.push_back(*it);
         }
         unchanged(index);unchanged_dependencies(watched);
+        timing.snapshot_seconds=elapsed(start);start=Clock::now();
         std::vector<std::string> command{options.compiler};command.insert(command.end(),options.flags.begin(),options.flags.end());
         command.insert(command.end(),{"-std=c++17","-ffp-contract=off","-x","c++","-fsyntax-only","-Xclang","-ast-dump=json",path.string()});
         std::unique_lock<std::mutex> projection_lock(projection_slot,std::defer_lock);
-        auto compiled=run_audit_ast_process(command,path.string()+" compiler AST",options.timeout,projection_lock);
+        AuditAstProcessTiming ast_timing;
+        auto compiled=run_audit_ast_process(command,path.string()+" compiler AST",options.timeout,projection_lock,&ast_timing);
+        timing.first_byte_seconds=ast_timing.first_byte_seconds;
+        timing.projection_wait_seconds=ast_timing.projection_wait_seconds;
+        timing.parsing_seconds=ast_timing.parsing_seconds;
+        timing.ast_seconds=elapsed(start);start=Clock::now();
         if(compiled.process.exit_code!=0)throw AuditSyntaxError(path.string()+": C++ compiler failed ("+std::to_string(compiled.process.exit_code)+")\n"+compiled.process.stderr_text);
         unchanged(index);unchanged_dependencies(watched);
         JsonNode ast=std::move(*compiled.ast);
@@ -330,6 +341,7 @@ CppSourceCensus scan_cpp_audit_sources(const std::filesystem::path& root,const s
         Visitor visitor{relative.generic_string(),path.string(),source_snapshots[index],local,{},{},{},{},{}};
         visitor.index_lines();visitor.index(ast);visitor.visit(ast);visitor.finish();
         ast=JsonNode{};projection_lock.unlock();
+        timing.visitor_seconds=elapsed(start);start=Clock::now();
         // Clang's JSON AST contains macro *expansions*, not definitions. Keep
         // object-like numeric policy macros visible using its preprocessor,
         // with the same target/defines/includes and compiler line markers.
@@ -343,6 +355,7 @@ CppSourceCensus scan_cpp_audit_sources(const std::filesystem::path& root,const s
         if(audit_detail::dependency_paths(model_checks::read(dependency_file))!=graph)
             throw AuditSyntaxError(path.string()+": dependency graph changed during audit");
         macros(expanded.stdout_text,path,relative.generic_string(),local);
+        timing.preprocessing_seconds=elapsed(start);
         dependency_graphs[index]=graph;
         local.n_files=1;
         return local;
@@ -362,11 +375,14 @@ CppSourceCensus scan_cpp_audit_sources(const std::filesystem::path& root,const s
     // graph before publication, including TUs completed before a later edit.
     audit_detail::for_each_input(files.size(),options.workers,[&](std::size_t i) {
         const auto path=std::filesystem::absolute(root/relative_paths[i]).lexically_normal();
+        const auto start=Clock::now();
         if(discover_dependencies(path)!=dependency_graphs[i])
             throw AuditSyntaxError(path.string()+": dependency graph changed during audit");
+        timings[i].final_dependency_seconds=elapsed(start);
     });
     for(std::size_t i=0;i<files.size();++i)unchanged(i);
     unchanged_dependencies(dependencies);
+    if(options.timings)*options.timings=std::move(timings);
     return result;
 }
 NativeAuditResult check_native_audits(const CppSourceCensus& census,const NativeLedger& ledger,const NativeQuantizations& quantize){

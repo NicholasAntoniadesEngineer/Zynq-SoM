@@ -8,6 +8,7 @@
 #include "../src/audit_parallel_internal.hpp"
 #include <algorithm>
 #include <chrono>
+#include <cmath>
 #include <cstdlib>
 #include <fstream>
 #include <iomanip>
@@ -79,7 +80,19 @@ void contracts(const std::filesystem::path& root,const std::string& self){
     NativeLedger ledger;NativeQuantizations quant;
     const auto verdict=check_native_audits(serial,ledger,quant).summary();
     for(std::size_t workers:{2,3,4}){
-        const auto parallel=scan_cpp_audit_sources(root,files,options(root,workers));
+        auto configured=options(root,workers);std::vector<CppAuditTiming> timings;
+        configured.timings=&timings;
+        const auto parallel=scan_cpp_audit_sources(root,files,configured);
+        require(timings.size()==files.size(),"successful diagnostics cover every manifest source");
+        for(std::size_t i=0;i<timings.size();++i){const auto& t=timings[i];
+            require(t.source==files[i].path,"diagnostic publication preserves manifest order");
+            for(const auto value:{t.dependency_seconds,t.snapshot_seconds,t.ast_seconds,t.visitor_seconds,t.preprocessing_seconds,t.final_dependency_seconds,t.first_byte_seconds,t.projection_wait_seconds,t.parsing_seconds})
+                require(std::isfinite(value)&&value>=0,"phase elapsed time must be finite and nonnegative");
+            require(t.first_byte_seconds+t.projection_wait_seconds+t.parsing_seconds<=t.ast_seconds+1e-6,"AST subphases belong within overall phase");
+        }
+        const auto saved=timings.front().source;
+        failure([&]{scan_cpp_audit_sources(root,{{"missing.cpp"}},configured);});
+        require(timings.size()==files.size()&&timings.front().source==saved,"failure cannot publish partial timings");
         require(census_text(serial)==census_text(parallel),"exact ordered census and duplicate populations differ");
         require(check_native_audits(parallel,ledger,quant).summary()==verdict,"gate findings differ");
     }

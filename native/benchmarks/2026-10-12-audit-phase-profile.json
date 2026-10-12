@@ -1,0 +1,26 @@
+{
+  "base_commit": "2ea60557",
+  "scope": "Diagnostic four-translation-unit source audit; not a full board, Python comparison or speedup claim",
+  "implementation": "Optional manifest-ordered phase diagnostics published only after a successful complete audit. Existing compiler, dependency consistency, AST projection, semantic visitor, macro checks and verdict are unchanged.",
+  "manifest": ["native/src/quantize.cpp", "native/src/pack.cpp", "native/src/floorplan_build.cpp", "native/src/pcb_placement_build.cpp"],
+  "workers": 2,
+  "profile_wall_seconds": 12.9518641,
+  "control_wall_seconds": 12.94071,
+  "exact_census_equal": true,
+  "census": {"files":4,"constants":0,"functions":225,"quantization_sites":32},
+  "largest_file_seconds": {
+    "source":"native/src/pcb_placement_build.cpp",
+    "dependency":0.079050042,"snapshot":0.060176166,"ast":7.53245104,
+    "visitor":0.590807625,"preprocessing":0.136169667,"final_dependency":0.070645875,
+    "nested_ast_first_byte":0.735974375,"nested_ast_projection_wait":2.70820279,"nested_ast_parsing":4.08693508
+  },
+  "measurement_semantics": "AST subphases are nested within AST elapsed time. Per-file phases overlap across workers and must not be summed as wall time. Parsing includes pipe-input waits, not CPU-only parser time. Visitor includes post-AST consistency checks and destruction. Global final snapshot checks and census merge are outside per-file phase measurements.",
+  "logs": ["native/build/audit-phase-final.log", "native/build/audit-phase-control.log"],
+  "tests": {
+    "native_parallel_audit_contracts": {"status":"PASS","seconds":3.39},
+    "native_audit_ast_pipe_contracts": {"status":"PASS","seconds":3.99},
+    "new_checks": "For two, three and four workers, timing collection leaves exact ordered census and audit findings equal to serial control, covers manifest order, uses finite nonnegative durations, contains AST subphases within the parent phase, and does not publish partial diagnostics on failure."
+  },
+  "next_action": "Investigate validated reuse of unchanged compiler audit evidence with explicit compiler, flags, source/transitive inputs and include-graph invalidation. Do not repeat the already rejected parser-specialization experiment or remove dependency checks. Preserve the single-projection memory bound unless independently measured memory evidence justifies a change.",
+  "limitations": "One control/profile sample each; uncontrolled OS caches and host load. No production placement changes, cache implementation, complete-board qualification or new speedup demonstrated."
+}
