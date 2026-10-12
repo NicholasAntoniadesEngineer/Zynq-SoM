@@ -433,7 +433,8 @@ std::string board_project_json(const JsonNode& existing, const std::string& root
     return dump(result) + "\n";
 }
 bool BoardSchematicResult::ok() const {
-    return board.ok() && std::all_of(per_sheet.begin(), per_sheet.end(), [](const auto& s) { return s.ok(); });
+    return per_sheet_failures.empty() && board.ok() &&
+        std::all_of(per_sheet.begin(), per_sheet.end(), [](const auto& s) { return s.ok(); });
 }
 BoardSchematicResult build_board_schematic(const std::vector<BoardSheetInput>& inputs, SymbolLibrary& library,
                                          const fs::path& outdir, const BoardSchematicOptions& options) {

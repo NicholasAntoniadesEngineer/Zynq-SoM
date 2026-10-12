@@ -1,6 +1,7 @@
 #include "schgen/board_pcb.hpp"
 #include "schgen/pcb_verification.hpp"
 #include "fresh_project_schematic.hpp"
+#include "../src/board_pipeline_internal.hpp"
 #include <fstream>
 #include <iostream>
 #include <iterator>
@@ -24,6 +25,22 @@ int main(int argc, char** argv) {
         if (PcbVerificationResult{}.ok()) throw std::runtime_error("unexecuted aggregate cannot pass");
         for (const auto* project : {"carrier", "devkit_mini"}) {
             const auto paths = resolve_project_paths(root, std::filesystem::path(project));
+            // Even a root hierarchy that passes its surviving-sheet checks
+            // must not authorize PCB construction when a sheet was omitted.
+            BoardSchematicResult partial;
+            partial.per_sheet_failures.push_back("power_som: placement failed");
+            if(partial.ok())throw std::runtime_error("omitted schematic sheet accepted");
+            BoardPipelineOptions rejected_options;
+            rejected_options.output_root=std::filesystem::path(argv[2])/project/"rejected-partial";
+            board_pipeline_detail::Context partial_context(paths,rejected_options);
+            partial_context.schematic=partial;partial_context.link=LinkResult{};
+            board_pipeline_detail::pcb_stages(partial_context);
+            const auto failed=std::find_if(partial_context.result.gates.begin(),partial_context.result.gates.end(),
+                [](const auto& gate){return gate.name=="pcb";});
+            if(failed==partial_context.result.gates.end()||failed->status!=BoardGateStatus::failed||
+               failed->report.find("refusing incomplete or stale board inputs")==std::string::npos||
+               partial_context.pcb_published||partial_context.pcb)
+                throw std::runtime_error("partial schematic reached PCB construction");
             const auto schematic=test::fresh_project_schematic(paths,load_project_circuits(paths));
             const auto missing=schematic.parent_path()/"missing-explicit-input.kicad_sch";
             bool missing_rejected=false;
@@ -55,6 +72,10 @@ int main(int argc, char** argv) {
             std::filesystem::copy_file(paths.project_root / "Zynq_Carrier.kicad_pro",
                 output / "Zynq_Carrier.kicad_pro", std::filesystem::copy_options::overwrite_existing);
             publish_board_pcb(stage, output);
+            std::string diagnostics="PCB emission diagnostics (not a qualification verdict)\n";
+            for(const auto& message:stage.emission.diagnostics)diagnostics+=message+'\n';
+            if(read(output/"reports/pcb_emission.txt")!=diagnostics)
+                throw std::runtime_error("PCB publication lost emission diagnostics");
             const auto existing=read_pcb_project(paths.project_root/"Zynq_Carrier.kicad_pro");
             const auto policy=pcb_emit_policy(stage.inputs.floorplan.project);
             if(read(output/"Zynq_Carrier.kicad_pcb")!=stage.emission.pcb||

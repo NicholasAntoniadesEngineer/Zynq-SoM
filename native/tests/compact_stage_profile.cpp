@@ -457,6 +457,8 @@ std::string trial(const PcbPlacementInput& source, bool compact, int run, int ge
     const auto emit_start = Clock::now();
     const auto emission = render_pcb(result.model, pcb_emit_policy(input.floorplan.project));
     const auto emit_seconds = seconds(emit_start);
+    for (const auto& diagnostic : emission.diagnostics)
+        std::cout << "pcb_emission_diagnostic " << std::quoted(diagnostic) << '\n';
     const auto hash = pcb_sha256(emission.pcb);
     const auto accounting = pcb_placement_accounting(result);
     print_reseats();

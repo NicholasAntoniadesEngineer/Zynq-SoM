@@ -107,7 +107,7 @@ void carrier_surface_requirements_stage(Context& c) {
 void pcb_stages(Context& c){
     const auto pcb_path=c.out/"Zynq_Carrier.kicad_pcb";
     const auto report_root=c.out==c.paths.project_root?c.paths.repository_root:c.out;
-    c.attempt("pcb",[&]{if(!c.schematic||!c.link||!c.link->ok())throw ProjectError("current schematic/valid link required; refusing stale board inputs");
+    c.attempt("pcb",[&]{if(!c.schematic||!c.schematic->ok()||!c.link||!c.link->ok())throw ProjectError("current qualified schematic/valid link required; refusing incomplete or stale board inputs");
         BoardPcbStage stage;stage.circuits=c.circuits;
         stage.inputs=c.measure("pcb_input_loading_and_netlist_validation",[&]{return load_board_inputs(c.paths,c.circuits,*c.link,extract_netlist(c.schematic->root_path,c.options.extraction),c.options.pcb);});
         stage.inputs.floorplan.sheet_index=c.index;

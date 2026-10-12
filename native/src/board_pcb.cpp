@@ -40,6 +40,11 @@ void publish_board_pcb(const BoardPcbStage& stage, const std::filesystem::path& 
     publish("Zynq_Carrier.kicad_pcb", stage.emission.pcb);
     publish("Zynq_Carrier.kicad_pro", project);
     publish("manufacturing/Zynq_Carrier_pcb.kicad_dru", rules);
+    // Preserve the emitter's evidence in both pcb-stage and full board builds.
+    // A fallback count alone does not identify the affected thermal geometry.
+    std::string diagnostics = "PCB emission diagnostics (not a qualification verdict)\n";
+    for (const auto& message : stage.emission.diagnostics) diagnostics += message + '\n';
+    publish("reports/pcb_emission.txt", diagnostics);
     write_floorplan_documents(stage.placement.floorplan.documents, directory / "docs");
 }
 }
