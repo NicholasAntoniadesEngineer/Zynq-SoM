@@ -229,6 +229,32 @@ void live(const std::filesystem::path& root){
   std::cout<<project<<" appended="<<added<<" incumbent/prefix/old receipts unchanged\n";
   if(std::string(project)=="carrier") {
    auto experiment=std::make_shared<FloorplanExperiment>();
+   experiment->contract_group_face_sheets={"hdmi_rx_term"};f.input.floorplan.experiment=experiment;
+   const auto near_shapes=build_pcb_zone_geometry(f.input);
+   const auto& old_near=after.geometry.shapes.at("hdmi_rx_term");
+   const auto& new_near=near_shapes.geometry.shapes.at("hdmi_rx_term");
+   // The stage builder already supplies all four HDMI rigid turns, despite
+   // the generic orientation helper excluding external contracts.
+   demand(new_near.size()>=old_near.size()&&old_near.size()>=4,"HDMI existing rigid alternatives lost");
+   for(std::size_t i=0;i<old_near.size();++i)
+    demand(equal(old_near[i],new_near[i]),"HDMI incumbent offer changed");
+   const auto prepared_near=prepare_pcb_floorplan(f.input,near_shapes);
+   const auto hard_near=std::find_if(prepared_near.compose.index.hard.begin(),prepared_near.compose.index.hard.end(),
+    [](const auto& t){return t.kind=="near_max"&&t.subject=="hdmi_rx_term"&&t.target_raw=="som_j2";});
+   demand(hard_near!=prepared_near.compose.index.hard.end()&&hard_near->enforced&&hard_near->bound==10.,
+          "HDMI alternatives lost or weakened hard proximity requirement");
+   for(std::size_t i=1;i<new_near.size();++i){
+    const auto& m=prepared_near.compose.shape_metrics.at({"hdmi_rx_term",static_cast<int>(i)});
+    demand(m.zone_wh==FloorplanPoint{new_near[i].w,new_near[i].h}&&!m.pad_union.empty(),
+           "HDMI alternative missing actual geometry for external evaluation");
+   }
+   experiment->contract_group_face_sheets={"uart_bridge"};
+   const auto uart_shapes=build_pcb_zone_geometry(f.input);
+   const auto prepared_uart=prepare_pcb_floorplan(f.input,uart_shapes);
+   const auto hard_uart=std::find_if(prepared_uart.compose.index.hard.begin(),prepared_uart.compose.index.hard.end(),
+    [](const auto& t){return t.kind=="near_max"&&t.subject=="uart_bridge"&&t.target_raw=="usb_uart_connector";});
+   demand(hard_uart!=prepared_uart.compose.index.hard.end()&&hard_uart->enforced&&hard_uart->bound==40.,
+          "UART alternatives lost or weakened hard proximity requirement");
    experiment->contract_group_face_sheets={"usb_jtag"};f.input.floorplan.experiment=experiment;
    bottom_coordinates=0;variant_dimensions=0;observing=true;
    auto split=build_pcb_zone_geometry(f.input);observing=false;
