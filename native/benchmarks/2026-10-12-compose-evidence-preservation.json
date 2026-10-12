@@ -1,0 +1,26 @@
+{
+  "base_commit": "3451928a",
+  "defect": "Repair acceptance silently skipped missing terms and null margins, while its term map overwrote duplicates. Frozen migration fixtures explicitly expected five examples of lost or ambiguous evidence to be accepted.",
+  "reproduction": "An independent test removed the only enforced term from an otherwise passing rebuilt ledger. Before the fix, the test failed because accept_compose_repair returned success (native/build/compose-evidence-before-test.log).",
+  "changes": [
+    "Reject missing/malformed term arrays and duplicate identities in either ledger.",
+    "Require every original term and requested target to remain present; reject lost enforcement.",
+    "Require finite numeric rebuilt measured/bound/margin evidence for enforced or targeted terms.",
+    "Reject invalid numeric margins without proceeding into unsafe scalar comparisons. An initial NaN adversarial test exposed that diagnostic path and was fixed.",
+    "Keep the full board gate pipeline, original margin policy, repair thresholds, operation accounting and rollback authority unchanged."
+  ],
+  "verification": {
+    "targeted_suites_passed": 3,
+    "targeted_suites_failed": 0,
+    "wall_seconds": 5.62,
+    "suites": ["native_compose_repair_contracts", "native_compose_measure_accounting_contracts", "native_compose_help"],
+    "log": "native/build/compose-evidence-verified-tests.log",
+    "production_cli_rebuilt": true,
+    "adversarial_cases": 13,
+    "both_board_complete_baseline_identity_checks": true,
+    "historical_fixture_files_changed": false,
+    "historical_expectation_changes": "Only the five documented missing/null/duplicate unsafe acceptance examples now require explicit rejection; other frozen acceptance cases retain their expected verdicts and reasons.",
+    "workflow": "Existing successful native rebuild, gate rejection, failed build, exception rollback, concurrent edit preservation and exact measurement-accounting tests pass."
+  },
+  "limits": "This is a repair acceptance reliability correction, not a placement improvement, a full board requalification, a complete ledger-schema validator or a performance benchmark. Full hardware qualification and the wider goal remain incomplete."
+}

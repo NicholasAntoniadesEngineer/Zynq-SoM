@@ -55,6 +55,30 @@ void edit_same(const ComposeSpecEdit &e,const J &r,const std::string &label) {
     require(e.edits.size()==expected.edits.size(),label+" children");
     for(std::size_t i=0;i<e.edits.size();++i)require(e.edits[i].describe()==expected.edits[i].describe()&&e.edits[i].basis==expected.edits[i].basis&&e.edits[i].target_key==expected.edits[i].target_key,label+" child fields");
 }
+void acceptance_evidence() {
+    const auto original=parse_compose_document(R"({"board":{"area_mm2":100},"flow_gate":{"ok":true},"law5":{"ok":true},"terms":[{"kind":"near_max","subject":"a","target":"b","margin":2,"measured":8,"bound":10,"ok":true,"enforced":true}],"contract_violations":{}})");
+    const auto change=[](J& row,const std::string& key,J value){for(auto& p:row.object_value)if(p.first==key){p.second=std::move(value);return;}throw std::runtime_error("test field absent");};
+    const auto terms=[](ComposeDocument& d)->J&{for(auto& p:d.data.object_value)if(p.first=="terms")return p.second;throw std::runtime_error("test terms absent");};
+    require(accept_compose_repair(original,original).ok,"unchanged resolved evidence accepted");
+    for(int mode=0;mode<13;++mode){
+        auto before=original,after=original;auto& rows=terms(after).array_value;
+        if(mode==0)rows.clear();
+        if(mode==1)change(rows[0],"margin",J{});
+        if(mode==2)change(rows[0],"enforced",parse_compose_document("false").data);
+        if(mode==3)rows.push_back(rows.front());
+        if(mode==4)terms(before).array_value.push_back(terms(before).array_value.front());
+        if(mode==5){auto n=field(rows[0],"margin");n.number_value=NAN;change(rows[0],"margin",n);}
+        if(mode==6){auto n=field(rows[0],"measured");n.number_value=INFINITY;change(rows[0],"measured",n);}
+        if(mode==7)change(rows[0],"bound",J{});
+        if(mode==9)change(rows[0],"enforced",J{});
+        if(mode==10){auto n=field(terms(before).array_value[0],"margin");n.number_value=NAN;change(terms(before).array_value[0],"margin",n);}
+        if(mode==11)terms(after)=J{};
+        if(mode==12)terms(before)=J{};
+        const auto targets=mode==8?std::set<ComposeTermKey>{{"near_max","absent","target"}}:std::set<ComposeTermKey>{};
+        const auto result=accept_compose_repair(before,after,targets);
+        require(!result.ok&&!result.reasons.empty(),"incomplete/ambiguous repair evidence rejected mode="+std::to_string(mode));
+    }
+}
 void units(const std::filesystem::path &base) {
     require(test::compose_ledger_projection(R"({"hard_margins":{},"ok":true})",R"({"aggregate_hard_margin":{},"ok":true})"),"projection permits only root summary replacement");
     require(!test::compose_ledger_projection(R"({"hard_margins":{},"ok":false})",R"({"aggregate_hard_margin":{},"ok":true})"),"projection rejects changed verdict");
@@ -67,6 +91,15 @@ void units(const std::filesystem::path &base) {
         const auto p="/accept/"+std::to_string(i++);
         std::set<ComposeTermKey> targets;for(const auto &k:field(r,"target_keys").array_value)targets.insert(key(k));
         const auto got=accept_compose_repair(subdoc(doc,field(r,"before"),p+"/before"),subdoc(doc,field(r,"after"),p+"/after"),targets,field(r,"allow_area_growth").bool_value);
+        const auto name=string(r,"name");
+        if(name=="missing or null"||name=="null after"||name=="duplicate last wins"){
+            require(field(r,"ok").bool_value,"frozen case documents historical unsafe acceptance");
+            const std::string expected=name=="missing or null"?"rebuilt term missing ('flow_hop', 'a', 'b')":
+                name=="null after"?"rebuilt ('flow_hop', 'a', 'b') has unresolved or invalid margin":
+                "before duplicate term ('flow_hop', 'a', 'b')";
+            require(!got.ok&&std::find(got.reasons.begin(),got.reasons.end(),expected)!=got.reasons.end(),name+" must reject lost or ambiguous evidence");
+            continue;
+        }
         require(got.ok==field(r,"ok").bool_value,string(r,"name")+" verdict");
         require(got.reasons==strings(field(r,"reasons")),string(r,"name")+" reasons"+(got.reasons.empty()?"":got.reasons.front()));
     }
@@ -117,6 +150,7 @@ void real_ledgers(const std::filesystem::path &root,const std::string &project) 
         if(string(r,"name")=="moved_power_first")for(auto &inst:changed.insts)if(inst.sheet=="power"){inst.x+=100;break;}
         if(string(r,"name")=="missing_power")changed.insts.erase(std::remove_if(changed.insts.begin(),changed.insts.end(),[](const auto &inst){return inst.sheet=="power";}),changed.insts.end());
         const auto got=measure_compose_ledger(fixture.input,changed);
+        if(string(r,"name")=="baseline")require(accept_compose_repair(got,got).ok,project+" complete baseline evidence remains acceptable");
         auto expected=parse_compose_document(string(r,"ledger")),actual=got;
         require(!object_field(got.data,"aggregate_hard_margin"),"new ledger cannot publish mixed-unit scalar");
         const auto& groups=field(got.data,"hard_margins");
@@ -340,7 +374,7 @@ void kernels(const std::filesystem::path &root) {
 int main(int argc,char **argv) {
     try {
         if(argc!=2)throw std::runtime_error("usage: compose_repair_contracts REPO_ROOT");
-        const std::filesystem::path root=argv[1];units(root/"native/tests/data/compose_repair");
+        const std::filesystem::path root=argv[1];acceptance_evidence();units(root/"native/tests/data/compose_repair");
         for(const auto *project:{"carrier","devkit_mini"})real_ledgers(root,project);
         workflow(root);
         ranking(root);

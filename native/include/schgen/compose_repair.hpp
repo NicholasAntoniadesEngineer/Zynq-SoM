@@ -30,6 +30,9 @@ struct ComposeAcceptance {
     bool ok = true;
     std::vector<std::string> reasons;
 };
+// Fail closed on missing/duplicate terms, lost enforcement and unresolved
+// rebuilt hard/target measurements. This comparison supplements, not replaces,
+// the complete rebuilt-board gates required by the apply workflow.
 ComposeAcceptance accept_compose_repair(const ComposeDocument &before, const ComposeDocument &after,
     const std::set<ComposeTermKey> &targets = {}, bool allow_area_growth = false);
 
