@@ -44,8 +44,9 @@ output (worst case).
 - **Bank-local AVCC bypass.** 100 nF HF (C1) + 1 µF reservoir (C2) from +3V3 to
   GND, placed in the termination island next to bank 33 to absorb the ~64 mA load
   swing against AVCC. On this IC-less sheet there is no IC body for a decoupling
-  cluster, so the caps anchor as rail-decoupling columns (place.py
-  `_rail_decoupling_columns`): rail symbol on top, cap stacked down to a GND foot.
+  cluster, so the caps anchor as rail-decoupling columns (the C++
+  `Engine::_rail_decoupling_columns` in `native/src/schematic_place_chain.cpp`):
+  rail symbol on top, cap stacked down to a GND foot.
 
 ## Parts
 
@@ -61,10 +62,22 @@ CLK_N. Termination R is YAGEO RC0603FR-0749R9L (49.9 Ω 1%); C1 is 50 V X7R, C2 
 
 ## Build & test
 
-`test_hdmi_rx_term.py` runs the subsystem-local slices offline: model
-completeness, the 8× 49.9 Ω-to-AVCC census, the AVCC bypass, and the `.cir` ↔
-netlist passive match.
+From the repository root, after the native build is configured as described in
+[`native/README.md`](../../../native/README.md):
 
 ```bash
-PYTHONPATH=. python3 -m pytest carrier/subsystems/hdmi_rx_term/test_hdmi_rx_term.py -q
+cmake --build native/build/fast --target schgen schgen_carrier_spice_identity_contracts --parallel 2
+native/bin/schgen circuit-check --project carrier hdmi_rx_term
+ctest --test-dir native/build/fast --output-on-failure -R '^native_carrier_spice_identity_contracts$'
 ```
+
+The C++ identity contract checks the live authored circuit against the retained
+`.cir`: eight distinct 49.9 Ω resistors, their exact TMDS lane/AVCC ownership,
+and the 100 nF/1 µF AVCC bypass. Mutation tests reject missing parts, wrong
+values/types, swapped lanes and matching-but-wrong circuit/model edits. It also
+retains the board_aux passive identity checks. This is structural/electrical
+identity coverage, not a signal-integrity simulation or physical placement proof.
+
+`schgen spice --project carrier hdmi_rx_term --no-ngspice` currently extracts
+zero analytic spot checks for this network; its `PASS (0 checks)` must not be
+used as evidence that the termination network was tested.
