@@ -1031,6 +1031,9 @@ void repair_choice_contracts() {
     require(!infeasible.ok&&infeasible.fail=="cycle"&&infeasible.infeasible_cycle.size()==2,
         "locked contradictory pair needs an actual terminal cycle witness");
     require(infeasible.infeasible_cycle_origins.size()==2,"cycle provenance lost an edge");
+    require(infeasible.infeasible_cycle_separations.size()==2&&
+        std::set<int>(infeasible.infeasible_cycle_separations.begin(),infeasible.infeasible_cycle_separations.end())==std::set<int>{0,1},
+        "cycle provenance lost stable input separation indices");
     for(const auto& origin:infeasible.infeasible_cycle_origins)
         require(origin=="separation a -> b"||origin=="separation b -> a","cycle provenance lost separation identity");
     std::map<std::string,int> balance;double cycle_cost=0;
@@ -1087,12 +1090,81 @@ void repair_choice_contracts() {
     require(seps[0].axis_x&&seps[1].axis_x&&seps[0].flippable&&seps[1].flippable,
         "branch mutated caller separation state");
 }
+void joint_separation_contracts() {
+    const auto domain=[](const std::string& a,const std::string& b){
+        return std::vector<RepairSep>{{true,a,b,1},{false,a,b,1},{true,b,a,1},{false,b,a,1}};
+    };
+    const std::vector<std::vector<RepairSep>> domains{domain("a","b"),domain("a","#obstacle"),domain("b","#obstacle")};
+    const auto apart=[](double ax,double ay,double bx,double by){return ax+3<=bx||bx+3<=ax||ay+3<=by||by+3<=ay;};
+    std::size_t solved=0,impossible=0,capped=0;
+    for(int w=5;w<=9;++w)for(int h=5;h<=9;++h){
+        // Integer dimensions, gaps and bounds give integral difference-system
+        // solutions. Exhaustive coordinate enumeration is independent of the
+        // negative-cycle search and its separation/domain selection.
+        bool oracle=false;
+        for(int ax=0;ax<=w-2;++ax)for(int ay=0;ay<=h-2;++ay)
+            for(int bx=0;bx<=w-2;++bx)for(int by=0;by<=h-2;++by)
+                oracle|=apart(ax,ay,bx,by)&&apart(ax,ay,2,2)&&apart(bx,by,2,2);
+        for(std::size_t budget:{1u,4u,16u,64u}){
+            const auto run=[&]{return legalize_joint_separations({"a","b"},{2,2},{2,2},w,h,0,domains,{{"obstacle",{2,2,4,4}}},{},{},budget);};
+            const auto r=run(),repeat=run();
+            require(r.generated<=budget&&r.visited<=r.generated&&r.visited>0&&r.axis_solves>=r.visited&&r.axis_solves<=2*r.visited,
+                "joint search exceeded generated-state budget or miscounted axis probes");
+            require(r.ok==repeat.ok&&r.complete==repeat.complete&&r.budget_exhausted==repeat.budget_exhausted&&
+                r.generated==repeat.generated&&r.visited==repeat.visited&&r.axis_solves==repeat.axis_solves&&r.choices==repeat.choices&&r.x==repeat.x&&r.y==repeat.y,
+                "joint search is not reproducible");
+            if(budget==64)require(r.ok==oracle&&!r.budget_exhausted&&(r.ok||r.complete),"complete domain search disagrees with coordinate oracle");
+            if(r.ok){
+                ++solved;require(oracle&&r.x.size()==2&&r.y.size()==2&&r.choices.size()==3,"joint search published invalid solution shape");
+                for(int i=0;i<2;++i)require(r.x[i]>=0&&r.y[i]>=0&&r.x[i]+2<=w&&r.y[i]+2<=h,"joint pose exceeds walls");
+                require(apart(r.x[0],r.y[0],r.x[1],r.y[1])&&apart(r.x[0],r.y[0],2,2)&&apart(r.x[1],r.y[1],2,2),
+                    "independent physical separation check rejects joint solution");
+                const auto pos=[&](const std::string& n,bool x){return n=="#obstacle"?2.:(x?r.x[n=="a"?0:1]:r.y[n=="a"?0:1]);};
+                for(std::size_t i=0;i<domains.size();++i){const auto& s=domains[i].at(r.choices[i]);
+                    require(pos(s.lo,s.axis_x)+2+s.gap<=pos(s.hi,s.axis_x),"joint result violates its selected directed alternative");}
+            } else {
+                require(r.x.empty()&&r.y.empty()&&r.choices.empty(),"failed search leaked speculative poses");
+                require(r.complete!=r.budget_exhausted,"failed search conflated exhaustion and capped exploration");
+                if(r.complete){++impossible;require(!oracle,"joint search falsely proved supplied domains infeasible");}else ++capped;
+            }
+        }
+    }
+    require(solved&&impossible&&capped,"joint oracle missed a success, exhausted search or capped search");
+    const std::vector<std::vector<RepairSep>> directional{{{true,"a","b",1},{false,"a","b",3},{false,"b","a",5}}};
+    const auto reversed=legalize_joint_separations({"a","b"},{2,2},{2,2},4,12,0,directional,{}, {},{{"a","#0",-8},{"#0","b",0}},4);
+    require(reversed.ok&&reversed.choices==std::vector<std::size_t>{2}&&reversed.y[0]>=reversed.y[1]+7,
+        "coupled solver failed to reverse with the explicitly supplied directional gap");
+    const auto blocked=legalize_joint_separations({"a","b"},{2,2},{2,2},4,12,0,directional,{}, {},{{"#0","a",6},{"#0","b",0}},4);
+    require(!blocked.ok&&blocked.complete&&!blocked.budget_exhausted,"reversed direction incorrectly reused a smaller gap");
+    const auto incumbent=legalize_joint_separations({"a"},{2},{2},10,10,0,{}, {},{},{},1);
+    require(incumbent.ok&&incumbent.visited==1&&incumbent.generated==1&&incumbent.axis_solves==2&&incumbent.x==std::vector<double>{0}&&incumbent.y==incumbent.x,
+        "already feasible joint incumbent did extra work or moved");
+    const auto hard=legalize_joint_separations({"a"},{2},{2},10,10,0,{}, {},{{"#0","a",0},{"a","#0",-1}},{},5);
+    require(!hard.ok&&hard.complete&&hard.visited==1&&hard.axis_solves==1,"hard-only negative cycle needs no geometric retries");
+    throws([&]{legalize_joint_separations({"a"},{2},{2},10,10,0,{}, {},{},{},0);},"state limit");
+    throws([&]{legalize_joint_separations({"a"},{2},{2},10,10,0,{{}}, {},{},{},1);},"empty domain");
+    throws([&]{legalize_joint_separations({"a"},{2},{2},10,10,0,{{{true,"a","unknown",1}}}, {},{},{},1);},"pair domain");
+    throws([&]{legalize_joint_separations({"a"},{2},{2},10,10,0,{}, {},{{"unknown","a",0}},{},1);},"additional edge");
+    throws([&]{legalize_joint_separations({"a"},{2},{2},10,10,0,{},{{"a",{0,0,1,1}}},{},{},1);},"fixed rectangle");
+    throws([&]{legalize_joint_separations({"a"},{2},{2},10,10,0,{}, {},{},{},std::numeric_limits<std::size_t>::max());},"state limit");
+    throws([&]{legalize_joint_separations({"a","b"},{1e308,1e308},{2,2},1e308,10,0,{{{true,"a","b",1e308}}}, {},{},{},1);},"nonfinite derived edge");
+    throws([&]{legalize_joint_separations({"a"},{2},{2},10,10,0,{}, {},{{"#0","a",std::numeric_limits<double>::infinity()}},{},1);},"additional edge");
+    throws([&]{legalize_joint_separations({"a"},{2},{2},10,10,0,{},{{"obstacle",{0,0,std::numeric_limits<double>::quiet_NaN(),1}}},{},{},1);},"fixed rectangle");
+    JointSeparationWork receipt{99,99,99,true};
+    throws([&]{legalize_joint_separations({"a","b"},{1e308,1e308},{2,2},1e308,10,0,{{{true,"a","b",1e308}}}, {},{},{},1,&receipt);},"nonfinite derived edge");
+    require(receipt.generated==1&&receipt.visited==1&&receipt.axis_solves==0&&!receipt.budget_exhausted,
+        "exception receipt lost prepared state or claimed an unexecuted axis solve");
+    throws([&]{legalize_joint_separations({"a"},{2},{2},10,10,0,{}, {},{},{},0,&receipt);},"state limit");
+    require(receipt.generated==0&&receipt.visited==0&&receipt.axis_solves==0,"invalid invocation retained a stale receipt");
+    std::cout<<"joint separation oracle PASS solved="<<solved<<" exhausted="<<impossible<<" capped="<<capped<<'\n';
+}
 }  // namespace
 int main(int argc,char** argv) {
     try {
         const std::filesystem::path dir=argc>1 ? argv[1]:"native/tests/data/floorplan";
         const bool geometry_only=argc>2 && std::string(argv[2])=="--geometry-only";
         repair_choice_contracts();
+        joint_separation_contracts();
         facing_projection_contracts();
         compose_contracts(dir);primary_fanout_contracts();output_grid_contracts();mutations();pack_behavior();cross_behavior();frozen(dir,"devkit_mini",geometry_only);frozen(dir,"carrier",geometry_only);
         std::cout<<"floorplan contracts: "<<checks<<" checks passed"<<(geometry_only ? " (geometry/estimator slice)":"")<<"\n";

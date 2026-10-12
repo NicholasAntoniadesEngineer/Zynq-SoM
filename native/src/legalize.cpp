@@ -10,6 +10,7 @@
 #include <cstdint>
 #include <cstdio>
 #include <limits>
+#include <set>
 #include <stdexcept>
 #include <tuple>
 #include <unordered_map>
@@ -1249,6 +1250,7 @@ RepairAxisResult legalize_repair_axis(
                 const auto& edge=edges.at(static_cast<std::size_t>(edge_i));
                 out.infeasible_cycle.push_back({edge.src,edge.dst,edge.cost});
                 const auto offset=static_cast<std::size_t>(edge_i);
+                out.infeasible_cycle_separations.push_back(sep_of_edge.at(offset));
                 if(offset>=wall.size())out.infeasible_cycle_origins.push_back("extra["+std::to_string(offset-wall.size())+"]");
                 else if(wall[offset].kind=="sep") {
                     const auto& sep=out.seps.at(static_cast<std::size_t>(wall[offset].sep_index));
@@ -1282,6 +1284,93 @@ RepairAxisResult legalize_repair_axis(
     }
     out.fail = "exhausted";
     return out;
+}
+
+JointSeparationResult legalize_joint_separations(
+    const std::vector<std::string>& names,const std::vector<double>& widths,
+    const std::vector<double>& heights,double board_w,double board_h,double clear,
+    const std::vector<std::vector<RepairSep>>& domains,
+    const std::vector<std::pair<std::string,Box4>>& fixed,
+    const std::vector<NamedEdge>& extra_x,const std::vector<NamedEdge>& extra_y,
+    std::size_t max_states,JointSeparationWork* receipt) {
+    JointSeparationResult out;
+    struct WorkReceipt {
+        const JointSeparationResult& result;
+        JointSeparationWork* target;
+        ~WorkReceipt(){if(target)*target=static_cast<const JointSeparationWork&>(result);}
+    } work_receipt{out,receipt};
+    const auto positive=[](double v){return std::isfinite(v)&&v>0;};
+    if(!max_states||max_states>std::numeric_limits<std::size_t>::max()/2||names.empty()||names.size()!=widths.size()||names.size()!=heights.size()||
+       !positive(board_w)||!positive(board_h)||!std::isfinite(clear)||clear<0)
+        throw std::invalid_argument("joint separation search: invalid dimensions or state limit");
+    std::set<std::string> movable,entities;
+    for(std::size_t i=0;i<names.size();++i){
+        if(names[i].empty()||names[i].front()=='#'||!movable.insert(names[i]).second||
+           !positive(widths[i])||!positive(heights[i]))
+            throw std::invalid_argument("joint separation search: invalid movable");
+        entities.insert(names[i]);
+    }
+    for(const auto& [name,b]:fixed){
+        if(name.empty()||name.front()=='#'||name=="0"||movable.count(name)||!entities.insert("#"+name).second||
+           !std::isfinite(b.x0)||!std::isfinite(b.y0)||!std::isfinite(b.x1)||!std::isfinite(b.y1)||b.x0>b.x1||b.y0>b.y1)
+            throw std::invalid_argument("joint separation search: invalid fixed rectangle");
+    }
+    for(const auto& domain:domains){
+        if(domain.empty())throw std::invalid_argument("joint separation search: empty domain");
+        const auto pair=std::minmax(domain.front().lo,domain.front().hi);
+        for(const auto& s:domain){
+            if(s.lo==s.hi||!entities.count(s.lo)||!entities.count(s.hi)||
+               (!movable.count(s.lo)&&!movable.count(s.hi))||
+               std::minmax(s.lo,s.hi)!=pair||!std::isfinite(s.gap)||(!s.projected_gap&&s.gap<0))
+                throw std::invalid_argument("joint separation search: invalid pair domain");
+        }
+    }
+    for(const auto* edges:{&extra_x,&extra_y})for(const auto& e:*edges)
+        if(!std::isfinite(e.cost)||(e.src!="#0"&&!movable.count(e.src))||(e.dst!="#0"&&!movable.count(e.dst)))
+            throw std::invalid_argument("joint separation search: invalid additional edge");
+    std::vector<std::vector<std::size_t>> queue(1,std::vector<std::size_t>(domains.size(),0));
+    std::set<std::vector<std::size_t>> seen{queue.front()};out.generated=1;
+    for(std::size_t head=0;head<queue.size();++head){
+        // Copy before scheduling children; queue reallocation must not leave a
+        // borrowed current-state reference dangling.
+        const auto choices=queue[head];++out.visited;
+        std::vector<RepairSep> seps;seps.reserve(domains.size());
+        for(std::size_t i=0;i<domains.size();++i){
+            auto s=domains[i][choices[i]];s.flippable=false;s.flipped_gap.reset();s.reverse_on_flip=false;
+            seps.push_back(std::move(s));
+        }
+        const auto solve=[&](bool axis_x){
+            const auto& sizes=axis_x?widths:heights;
+            std::vector<SepSpec> specs;specs.reserve(seps.size());
+            for(const auto& s:seps)specs.push_back({s.axis_x,s.lo,s.hi,s.gap});
+            for(const auto& edge:wall_sep_edges(axis_x,names,sizes,axis_x?board_w:board_h,clear,specs,fixed))
+                if(!std::isfinite(edge.cost))throw std::overflow_error("joint separation search: nonfinite derived edge");
+            ++out.axis_solves;
+            auto result=legalize_repair_axis(axis_x,names,sizes,axis_x?board_w:board_h,clear,seps,fixed,axis_x?extra_x:extra_y,0);
+            for(const double p:result.pos)if(!std::isfinite(p))throw std::overflow_error("joint separation search: nonfinite solver position");
+            return result;
+        };
+        auto x=solve(true);
+        RepairAxisResult y;
+        if(x.ok)y=solve(false);
+        if(x.ok&&y.ok){out.ok=true;out.choices=choices;out.x=std::move(x.pos);out.y=std::move(y.pos);return out;}
+        const auto& failed=x.ok?y:x;
+        if(failed.fail!="cycle"||failed.infeasible_cycle_separations.empty())
+            throw std::logic_error("joint separation search: missing actual cycle evidence");
+        // Any feasible assignment must change at least one separation in this
+        // actual negative cycle. Keep every alternative for those pairs; hard
+        // edges and walls are not softened. A hard-only cycle closes this node.
+        std::set<std::size_t> conflicting;
+        for(const int index:failed.infeasible_cycle_separations)if(index>=0)conflicting.insert(static_cast<std::size_t>(index));
+        for(const auto i:conflicting)for(std::size_t choice=0;choice<domains.at(i).size();++choice){
+            if(choice==choices[i])continue;
+            auto next=choices;next[i]=choice;
+            if(seen.count(next))continue;
+            if(out.generated==max_states){out.budget_exhausted=true;continue;}
+            seen.insert(next);queue.push_back(std::move(next));++out.generated;
+        }
+    }
+    out.complete=!out.budget_exhausted;return out;
 }
 
 }  // namespace schgen

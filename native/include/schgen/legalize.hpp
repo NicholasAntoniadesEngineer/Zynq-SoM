@@ -248,6 +248,7 @@ struct RepairAxisResult {
     // success or repair-budget exhaustion; never a reconstructed proxy.
     std::vector<NamedEdge> infeasible_cycle;
     std::vector<std::string> infeasible_cycle_origins; // parallel provenance
+    std::vector<int> infeasible_cycle_separations; // input separation index, or -1
 };
 
 // At most repair_max separation flips. A zero budget still checks feasibility;
@@ -259,5 +260,33 @@ RepairAxisResult legalize_repair_axis(
     const std::vector<std::pair<std::string, Box4>>& frects,
     const std::vector<NamedEdge>& extra, int repair_max,
     const std::vector<std::size_t>& choice_path = {});
+
+struct JointSeparationWork {
+    std::size_t generated=0,visited=0,axis_solves=0;
+    bool budget_exhausted=false;
+};
+struct JointSeparationResult : JointSeparationWork {
+    // complete means a failed search exhausted the supplied finite domains;
+    // false on success. budget_exhausted records any omitted unexplored states.
+    bool ok=false,complete=false;
+    std::vector<std::size_t> choices;
+    std::vector<double> x,y;
+};
+// Each domain supplies explicitly legal directional alternatives for ONE pair;
+// index zero is the incumbent. Gaps are supplied, never inferred by reversing a
+// directional halo. Search only the finite supplied linear systems. Returned
+// poses still require independent physical/hard-term/output-grid validation;
+// axis feasibility uses the existing Bellman-Ford numerical tolerance.
+// max_states bounds generated DISTINCT states (including the initial state),
+// not just visited nodes. No speculative pose is published on failure. Limits
+// above size_t max/2 are rejected so axis-probe accounting cannot wrap. Optional
+// invocation-owned work receipt is replaced with actual work even on exception.
+JointSeparationResult legalize_joint_separations(
+    const std::vector<std::string>& names,const std::vector<double>& widths,
+    const std::vector<double>& heights,double board_w,double board_h,double clear,
+    const std::vector<std::vector<RepairSep>>& domains,
+    const std::vector<std::pair<std::string,Box4>>& fixed,
+    const std::vector<NamedEdge>& extra_x,const std::vector<NamedEdge>& extra_y,
+    std::size_t max_states,JointSeparationWork* receipt=nullptr);
 
 }  // namespace schgen
