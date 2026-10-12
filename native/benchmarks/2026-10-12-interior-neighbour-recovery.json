@@ -1,0 +1,60 @@
+{
+  "base_commit": "1e2aff30",
+  "scope": "Carrier USB-JTAG/HDMI search limitation: jointly translate interior neighbours after constrained-participant legalization fails",
+  "implementation": {
+    "activation": "Explicit FloorplanExperiment.joint_separation_states; board and profiler --joint-separation-states N",
+    "bounds": "Keep constrained-only compact/noncompact attempts first. Only on failure, at most one neighbourhood compact and one noncompact attempt per packing attempt. Each joint search retains its explicit state budget. N does not bound aggregate build work.",
+    "preservation": "Successful incumbents untouched. Selected shapes, sides, hard terms, edge connectors, SoM, corridors and corner keepouts retained. Failed and interrupted work remains accounted; entry layout restored by attempt wrapper.",
+    "new_event": "legalize_neighbour_retry; independently registered in runtime census and pipeline metadata",
+    "no_policy_waiver": "No hardware requirement, fallback ceiling or acceptance gate changed. Candidate remains experimental."
+  },
+  "experiments": [
+    {"strategy":"One-block shape lookahead, first eight hits", "165x159":"FAIL legalizer", "166x158":"FAIL USB-JTAG seating", "retained":false, "logs":["native/build/carrier-one-block-lookahead-165x159.log","native/build/carrier-one-block-lookahead-166x158.log"]},
+    {"strategy":"Unconditionally movable interiors, ordinary axis repair", "165x159":"FAIL: repairs invalidate the previously solved axis", "retained":false, "log":"native/build/carrier-all-interior-movable-165x159.log"},
+    {"strategy":"Unconditionally movable interiors plus joint search, 128 states", "165x159":"Constructed, initial placement and flow PASS, hard RED 0", "retained":false, "reason":"Replaced unconditional policy with failure-only incumbent-preserving recovery", "log":"native/build/carrier-all-interior-joint-165x159.log"},
+    {"strategy":"Failure-only neighbour retry, 128 joint states", "165x159":"Two repeated constructions have identical PCB hash and work counts", "log":"native/build/carrier-neighbour-retry-165x159.log"}
+  ],
+  "candidate": {
+    "dimensions_mm":[165,159], "area_mm2":26235,
+    "comparison":"159 mm2 smaller than qualified 166x159; not adopted as a fully accepted replacement",
+    "instances":566, "top":413, "bottom":153,
+    "pcb_sha256":"24ac25bfe6cb2ea6477a01b195b5ca78070ccff3bb2640f12d5b8f7275da5c64",
+    "hard_red":0,
+    "spatial_margins":{"measured":16,"unresolved":0,"sum_mm":831.26,"minimum_mm":4.07},
+    "angular_margins":{"measured":2,"unresolved":0,"sum_degrees":67.79,"minimum_degrees":12.06},
+    "reported_cross_airwire_mm":15340,
+    "drc":{"non_unrouted_errors":0,"unrouted":499},
+    "thermal_via_lattice_fallbacks":0,
+    "render_review":"Eight 3D views generated. Top and bottom inspected: perimeter connector access and SoM reserve visibly retained. This is not assembly-height or fabrication qualification."
+  },
+  "full_run": {
+    "command":"native/bin/schgen board --project carrier --compact-placement --interior-order 3 --edge-feasibility --owned-quality-first --owned-face-cohesion --contract-group-face-sheet usb_jtag --owned-shape board_aux=owned-face-fixed/a2.2/owned-pins-forward --floorplan-spec native/benchmarks/carrier-165x159-failed-first.floorplan.json --joint-separation-states 128 --timing -o /private/tmp/carrier-neighbour-165x159.7J1x6h",
+    "note":"The reused candidate spec differs from carrier-166x159-contract-groups.floorplan.json only in outline width and comment. The failed-first retry is NOT enabled.",
+    "exit_code":1, "sheets":37,
+    "mandatory_failures":["fallbacks"],
+    "other_mandatory_gates":"PASS, including source audit, schematic/ERC, connectivity, placement, DRC, assembly and thermal gates within their stated model scope",
+    "advisory_failures":["return_path","golden","contract_coverage_lint"],
+    "unresolved_risks":"Existing qualitative ownership proximity/access requirements remain UNVERIFIED; contract coverage is incomplete. Routing excluded. No fabrication-readiness claim.",
+    "log":"native/build/carrier-neighbour-165x159-full.log",
+    "verdict_sha256":"f4251b481470b7c880bfeba2e89c3e5b9f49fc01b64faeb485fb0377b766371f",
+    "top_sha256":"20f938e7d67650e254c7cbdca911555ec934271a193f67719d37c5f297f9af08",
+    "bottom_sha256":"b3071bd42ed84529118ff3da6c39a19c8ff7516a2e4c283b6343280dd50d7fc0",
+    "seconds":{"process_wall":255.96,"measured_scope":255.880515,"authoring_audit":19.207778,"sheet_checks_and_render_wall":27.188468,"board_schematic":6.143327,"pcb_input_and_netlist":1.564138,"pcb_model":2.583324,"pcb_text_emission":0.038104,"pcb_drc":1.584940,"render3d":29.963217,"source_audit":160.143059},
+    "timing_limits":"Observed diagnostic run, overlapped some targeted checks and profiles. Not isolated performance evidence, no measured compile timing, no new matched Python comparison."
+  },
+  "executed_fallbacks": {
+    "cand_cap_truncated":116,"contract_group_orientation_retry":1,"interior_reseat_retry":14,
+    "legalize_facing_retry":23,"legalize_joint_axis":3503,"legalize_joint_budget":18,
+    "legalize_joint_domain_probe":1636,"legalize_joint_domain_reject":477,"legalize_joint_proposal":121,
+    "legalize_joint_reject":116,"legalize_joint_retry":23,"legalize_joint_state":2314,
+    "legalize_neighbour_retry":9,"legalize_reservation_retry":23,"punch_free_plan_rejected":1
+  },
+  "regressions": {
+    "carrier_disabled":"166x159: unchanged qualified PCB SHA256 031da411516efe7785e532cf57c7f4847cbb181ad59979cb376e9bc8b896da44; initial placement/flow PASS",
+    "devkit_disabled":"98x98: unchanged qualified PCB SHA256 b6798d4b63d2fddbf9fad24945c151b9420b049b674ad5d637c43bf4a365137f; initial placement/flow PASS",
+    "tests":["native_floorplan_contracts PASS 15.06s","native_compact_retry_contracts PASS 3.35s, including deterministic six-block successful recovery in compact and noncompact modes; no changes to shapes/faces/SoM/outline/hard bounds; incumbent and failed/exception rollback receipts","native_board_policy_contracts PASS 6.25s","native_initial_outline_cli_contracts PASS 1.77s","schgen_native_audits_contracts: 710 contracts PASS, real C++ source mutations rejected"],
+    "test_maintenance":"Corrected stale native audit state census expectation from seven to twenty-three added events; metadata test independently enumerates all events, including the new neighbour retry.",
+    "review":"One bounded read-only helper found no confirmed implementation defect and requested successful-recovery coverage; deterministic six-block regression added."
+  },
+  "next":"Keep qualified 166x159 incumbent. Improve selective neighbour release and avoid redundant failed solver work; do not repeat the claim that USB-JTAG and HDMI cannot coexist. Resolve execution-policy acceptance without hiding work or waiving limits."
+}

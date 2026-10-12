@@ -611,13 +611,26 @@ bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure,
             for (const auto& j:plan.som.js) rows.emplace_back(j.ref,j.x,j.y,j.w,j.h);
             for (const auto& [n,x0,y0,x1,y1]:som_jack_rects(plan.som_x,plan.som_y,rows)) li.som_j_rects[n]={x0,y0,x1,y1};
             const auto orig=plan.interior_blocks;
-            auto legalize=[&](bool do_compact) {
+            auto legalize=[&](bool do_compact,bool release_neighbours=false) {
                 plan.interior_blocks=orig;
+                auto active=li;
+                auto moving=movable;
+                if(release_neighbours) {
+                    // Interior placement is a search decision, not a fixed
+                    // hardware obstacle. Keep edge connectors, SoM, corridors
+                    // and keepouts fixed; jointly translate selected interior
+                    // shapes without changing their geometry or constraints.
+                    fallback("legalize_neighbour_retry");
+                    for(const auto& b:orig) {moving.insert(b.name);active.fixed_poses.erase(b.name);}
+                    active.fixed_rects.erase(std::remove_if(active.fixed_rects.begin(),active.fixed_rects.end(),
+                        [&](const auto& row){return moving.count(row.first);}),active.fixed_rects.end());
+                }
                 std::vector<FloorplanLegalizeVar> vars;
-                for (const auto& b:plan.interior_blocks) if (movable.count(b.name)) vars.push_back({b.name,b.w,b.h,{b.x,b.y},b.x,b.y});
-                std::vector<std::string> log; li.compact=do_compact;
-                li.report_infeasible_cycle=in.experiment&&bool(in.experiment->stage_rejected);
-                if (!floorplan_legalize_compact_accounted(li,vars,log,plan.accounting.quantization_engagements)) {
+                for (const auto& b:plan.interior_blocks) if (moving.count(b.name)) vars.push_back({b.name,b.w,b.h,{b.x,b.y},b.x,b.y});
+                std::vector<std::string> log; active.compact=do_compact;
+                if(release_neighbours)log.push_back("retry: jointly translate interior neighbours; hardware-fixed obstacles retained");
+                active.report_infeasible_cycle=in.experiment&&bool(in.experiment->stage_rejected);
+                if (!floorplan_legalize_compact_accounted(active,vars,log,plan.accounting.quantization_engagements)) {
                     rejected("legalizer","",do_compact,log);return false;
                 }
                 for (auto& b:plan.interior_blocks) for (const auto& v:vars) if (v.name==b.name) { b.x=v.x; b.y=v.y; break; }
@@ -630,8 +643,17 @@ bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure,
                 plan.composition=std::move(log); return true;
             };
             if (!legalize(compact)) {
-                if (!(compact && legalize(false))) return false;
-                fallback("legalize_only_compaction");
+                if (compact && legalize(false)) fallback("legalize_only_compaction");
+                else {
+                    // Opt-in, failure-only, at most two neighbourhood solves.
+                    // Never replace an already accepted incumbent or erase
+                    // failed trial accounting when expanding the moving set.
+                    if(!li.joint_separation_states||movable.size()==orig.size())return false;
+                    if(!legalize(compact,true)) {
+                        if(!(compact&&legalize(false,true)))return false;
+                        fallback("legalize_only_compaction");
+                    }
+                }
             }
         }
     }

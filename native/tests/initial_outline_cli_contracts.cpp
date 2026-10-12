@@ -29,6 +29,18 @@ int main(int argc,char** argv){try{
     if(multiscale.exit_code||multiscale.stdout_text.find("larger local solution")==std::string::npos)
         throw std::runtime_error("multiscale help must disclose local-solution limits");
     const auto feasible=run({"board","--compact-placement","--edge-feasibility"});
+    for(const auto* value:{"1","128"})
+        if(run({"board","--compact-placement","--joint-separation-states",value}).exit_code)
+            throw std::runtime_error("valid joint search option rejected");
+    for(const auto* value:{"","0","-1","1.0","128junk"," 128","18446744073709551615","9999999999999999999999999"})
+        if(run({"board","--compact-placement","--joint-separation-states",value}).exit_code==0)
+            throw std::runtime_error("invalid joint search budget accepted");
+    for(const auto& args:std::vector<std::vector<std::string>>{
+        {"board","--joint-separation-states","128"},
+        {"pcb-stage","--joint-separation-states","128"},
+        {"board","--compact-placement","--joint-separation-states"},
+        {"board","--compact-placement","--joint-separation-states","128","--joint-separation-states","128"}})
+        if(run(args).exit_code==0)throw std::runtime_error("invalid joint search invocation accepted");
     if(feasible.exit_code||feasible.stdout_text.find("Not a complete joint solver")==std::string::npos)
         throw std::runtime_error("edge feasibility help must disclose solver limits");
     if(run({"board","--compact-placement","--interior-order","3","--failed-first-retry"}).exit_code)

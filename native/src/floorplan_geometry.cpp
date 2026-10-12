@@ -320,7 +320,7 @@ std::vector<Box4> Engine::som_keepouts() const {
     return som_keepout_rects(plan.som_x,plan.som_y,plan.som.w,plan.som.h,som_pad,jacks,som_seat_band);
 }
 void Engine::fallback(const std::string& name) {
-    static const std::set<std::string> joint{"legalize_joint_retry","legalize_joint_state","legalize_joint_axis","legalize_joint_proposal","legalize_joint_reject","legalize_joint_budget","legalize_joint_domain_probe","legalize_joint_domain_reject"};
+    static const std::set<std::string> joint{"legalize_neighbour_retry","legalize_joint_retry","legalize_joint_state","legalize_joint_axis","legalize_joint_proposal","legalize_joint_reject","legalize_joint_budget","legalize_joint_domain_probe","legalize_joint_domain_reject"};
     static const std::set<std::string> allowed{"interior_reseat_pose_hint","interior_reseat_pose_resume","interior_reseat_pose_skip","interior_reseat_pose_search","interior_reseat_pose_trial","interior_reseat_pose_budget","interior_reseat_pose_cap","interior_failed_first_retry","legalize_only_compaction","punch_free_plan_rejected","interior_reseat_retry","edge_run_translation","screened_incumbent_retained","legalize_reservation_retry","legalize_facing_retry"};
     if (!allowed.count(name)&&!joint.count(name)) throw std::logic_error("floorplan: unregistered fallback " + repr(name));
     plan.accounting.fallback_events.push_back(name);

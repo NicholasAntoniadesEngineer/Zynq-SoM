@@ -47,7 +47,11 @@ void ledger_contracts(const JsonNode& reference){
 }
 void registry_contracts(const JsonNode& reference){
     NativeFallbacks f;register_native_fallbacks(f);f.record("seat_node_budget");const auto snap=f.snapshot();f.record("seat_node_budget");f.restore(snap);
-    const auto census=f.census();require(census.size()==get(reference,"census").object_value.size()+7,"historical fallback census plus seven named native recovery events");
+    const auto census=f.census();require(census.size()==get(reference,"census").object_value.size()+23,"historical fallback census plus twenty-three named native recovery events");
+    require(census.at("legalize_neighbour_retry")==AuditInteger{},"neighbour retry starts with zero events");
+    f.record("legalize_neighbour_retry");
+    require(f.census().at("legalize_neighbour_retry")==AuditInteger(1),"executed neighbour retry is counted");
+    f.restore(snap);
     require(census.at("facing_replan_retry")==AuditInteger{},"facing replan starts with zero events");
     f.record("facing_replan_retry");
     require(f.census().at("facing_replan_retry")==AuditInteger(1),"executed facing replan is counted");

@@ -61,6 +61,9 @@ struct FloorplanExperiment {
     // placement/reseat. Both per-query limits are explicit invocation inputs.
     std::optional<FloorplanPoseRetryLimits> reseat_pose_limits;
     std::function<void(const FloorplanPoseRetryObservation&)> pose_retry_completed;
+    // Also permits one compact/noncompact retry with interior neighbours
+    // movable after the constrained-participant-only solves have failed.
+    // Hardware-fixed obstacles remain fixed; successful incumbents are kept.
     std::optional<std::size_t> joint_separation_states;
     std::function<void(const JointSeparationWork&,bool)> joint_retry_completed;
     bool compact_edge_translation = false;

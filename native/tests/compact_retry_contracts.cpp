@@ -418,6 +418,86 @@ void alternative_pose_retry_contract(){
     }
     std::cout<<"alternative pose retry PASS searches="<<searches<<" attempts="<<attempts<<" budgets="<<exhausted<<" caps="<<capped<<" recovered="<<recovered<<'\n';
 }
+void neighbour_retry_contract() {
+    // Fixed deterministic witness found by bounded synthetic exploration.
+    // b1 has no wired participation: it was frozen even though its position
+    // is only a packer decision. The near bound is feasible when it can move.
+    const Case recovery{63,67,{{6,24,1,2},{9,20,1,7},{23,20,1,3},{18,15,1,4},{7,15,1,7},{6,14,1,5}}};
+    auto rescue=input();auto config=std::make_shared<FloorplanExperiment>();rescue.experiment=config;config->interior_order=0;
+    rescue.compose.index.hard.push_back({"near_max","b0","b0","b1",11,"test",true,{},{}});
+    rescue.compose.wired_participants.insert("b0");
+    for(std::size_t i=0;i<recovery.blocks.size();++i){
+        const auto& b=recovery.blocks[i];const auto name="b"+std::to_string(i);
+        rescue.compose.metrics[name]={{{"p",b.w/2,b.h/2}},{{"p",b.w/2-.5,b.h/2-.5,b.w/2+.5,b.h/2+.5}},{b.w,b.h}};
+    }
+    require(!trial(rescue,recovery,0).ok,"frozen-neighbour witness unexpectedly passed");
+    config->joint_separation_states=32;
+    for(bool compact:{false,true}) {
+        Engine e(rescue);setup(e,recovery);const auto initial=e.plan;
+        require(e.attempt_pack(compact),"joint neighbour translation did not recover feasible witness");
+        require(e.plan.som_x==initial.som_x&&e.plan.som_y==initial.som_y&&e.plan.board_w==63&&e.plan.board_h==67,
+            "neighbour recovery moved SoM or enlarged outline");
+        FloorplanOffsets poses;
+        for(std::size_t i=0;i<e.plan.interior_blocks.size();++i){
+            const auto& b=e.plan.interior_blocks[i];const auto& size=recovery.blocks[i];
+            require(b.w==size.w&&b.h==size.h&&b.shape_idx==0&&b.side=="top","neighbour translation changed shape or face");
+            poses[b.name]={b.x,b.y};
+        }
+        FloorplanLegalizeInput checked;checked.board_w=63;checked.board_h=67;
+        checked.metrics=rescue.compose.metrics;checked.index=rescue.compose.index;
+        require(floorplan_evaluate_terms(checked,poses).front().ok,"recovered neighbour violated unchanged hard bound");
+        require(std::count(e.plan.accounting.fallback_events.begin(),e.plan.accounting.fallback_events.end(),
+            "legalize_neighbour_retry")==1,"recovered witness did not count exactly one neighbourhood solve");
+        // Enlarging the moving set can let an ordinary axis solve succeed;
+        // do not require an unnecessary second joint search after that.
+        require(std::count(e.plan.accounting.fallback_events.begin(),e.plan.accounting.fallback_events.end(),
+            "legalize_joint_retry")>=1,"recovered witness discarded constrained-only failed search");
+        Engine repeat(rescue);setup(repeat,recovery);
+        require(repeat.attempt_pack(compact)&&equal(layout(repeat.plan),layout(e.plan))&&
+            repeat.plan.accounting.fallback_events==e.plan.accounting.fallback_events&&
+            repeat.plan.accounting.quantization_engagements==e.plan.accounting.quantization_engagements,
+            "neighbour recovery layout or work receipts are not deterministic");
+    }
+    const Case c{80,70,{{8,6,1,10},{7,5,1,0}}};
+    auto in=input();auto experiment=std::make_shared<FloorplanExperiment>();
+    experiment->interior_order=0;in.experiment=experiment;
+    in.compose.index.hard.push_back({"near_max","b0","b0","b1",100,"test",true,{},{}});
+    in.compose.wired_participants.insert("b0");
+    for(const auto* n:{"b0","b1"})in.compose.metrics[n]={{{"p",1,1}},{{"p",0,0,2,2}},{8,6}};
+    const auto ordinary=trial(in,c,0);require(ordinary.ok,"neighbour incumbent fixture must pass");
+    experiment->joint_separation_states=8;
+    const auto enabled=trial(in,c,0);
+    require(enabled.ok&&equal(layout(enabled.plan),layout(ordinary.plan))&&enabled.side==ordinary.side,
+        "neighbour retry replaced a valid incumbent");
+    require(enabled.plan.accounting.quantization_engagements==ordinary.plan.accounting.quantization_engagements&&
+            enabled.plan.accounting.fallback_events==ordinary.plan.accounting.fallback_events,
+        "valid incumbent performed extra work");
+    // An impossible hard bound exercises every failure path without relaxing
+    // the requirement. Only b0 was initially movable; b1 is a search neighbour.
+    in.compose.index.hard.front().bound=-1;
+    const auto direct=trial(in,c,0);
+    require(!direct.ok&&std::count(direct.plan.accounting.fallback_events.begin(),
+        direct.plan.accounting.fallback_events.end(),"legalize_neighbour_retry")==1,
+        "noncompact failure must execute exactly one neighbour retry");
+    Engine wrapped(in);setup(wrapped,c);const auto entry=layout(wrapped.plan);const auto side=offers(wrapped);
+    require(!wrapped.attempt_pack(false)&&equal(layout(wrapped.plan),entry)&&offers(wrapped)==side,
+        "failed neighbour retry leaked poses or side offers");
+    require(wrapped.plan.accounting.quantization_engagements==direct.plan.accounting.quantization_engagements&&
+            wrapped.plan.accounting.fallback_events==direct.plan.accounting.fallback_events,
+        "neighbour rollback lost or duplicated failed work");
+    experiment->stage_rejected=[](const auto& row){
+        if(std::any_of(row.diagnostics.begin(),row.diagnostics.end(),[](const auto& line){
+            return line.rfind("retry: jointly translate interior neighbours",0)==0;
+        }))throw std::runtime_error("neighbour observer stop");
+    };
+    Engine interrupted(in);setup(interrupted,c);bool threw=false;
+    try{interrupted.attempt_pack(false);}catch(const std::runtime_error& error){threw=std::string(error.what())=="neighbour observer stop";}
+    require(threw&&equal(layout(interrupted.plan),entry)&&offers(interrupted)==side,
+        "interrupted neighbour retry leaked state");
+    require(std::count(interrupted.plan.accounting.fallback_events.begin(),interrupted.plan.accounting.fallback_events.end(),
+        "legalize_neighbour_retry")==1,"interrupted retry lost executed event");
+    std::cout<<"neighbour retry incumbent/failure/exception contracts PASS\n";
+}
 }
 extern "C" void __cyg_profile_func_enter(void* fn,void*){if(observing&&fn==reinterpret_cast<void*>(&native_run_overflow_tol))++entries;}
 extern "C" void __cyg_profile_func_exit(void*,void*){}
@@ -440,6 +520,7 @@ int main(){try{
     single_order_contract();
     failed_first_contract();
     alternative_pose_retry_contract();
+    neighbour_retry_contract();
     for(bool first:{false,true})for(bool translate:{false,true})invariant_edge_failure(first,translate);
     for(bool translate:{false,true})invariant_edge_failure(false,translate,true);
     std::cout<<"compact retry contracts PASS\n";return 0;
