@@ -111,6 +111,10 @@ public:
     FloorplanPoint offset{};
     // Per-attempt search state, never persisted into project policy.
     int compact_order = 0;
+    // Single invocation-owned search-order hint, never cached geometry or
+    // acceptance evidence. Changed geometry is always checked afresh.
+    using ContinuationKey=std::tuple<double,double,bool,bool,int>;
+    std::optional<std::pair<ContinuationKey,std::size_t>> continuation_hint;
 
     std::vector<FloorplanBlock*> blocks();
     const CachedFootprint& footprint(const std::string& key) const;

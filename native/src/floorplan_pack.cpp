@@ -90,10 +90,25 @@ bool Engine::attempt_pack(bool compact) {
                     bool ok=attempt_pack_impl(compact,nullptr,{},recovery?&failed:nullptr,0,&selected_pose);
                     const auto continuations=in.experiment->reseat_pose_limits?
                         in.experiment->reseat_pose_limits->continuations:0;
-                    for(std::size_t replay=0;!ok&&selected_pose&&replay<continuations;++replay){
+                    const bool reuse=in.experiment->reseat_pose_limits&&in.experiment->reseat_pose_limits->reuse_continuation;
+                    const ContinuationKey key{plan.board_w,plan.board_h,plan.punch_free,compact,compact_order};
+                    const std::size_t preferred=reuse&&continuation_hint&&continuation_hint->first==key&&
+                        continuation_hint->second<=continuations?continuation_hint->second:0;
+                    const bool can_replay=selected_pose;
+                    std::optional<std::size_t> exhausted;
+                    for(std::size_t replay=0;!ok&&can_replay&&replay<continuations;++replay){
+                        // Permute, never prune: preferred, then the remaining
+                        // ascending ordinals. A stale high hint may be empty;
+                        // lower ordinals must still run before exhaustion.
+                        const auto branch=preferred>1?(replay==0?preferred:
+                            (replay<preferred?replay:replay+1)):replay+1;
+                        if(exhausted&&branch>=*exhausted)break;
                         restore();
+                        if(preferred>1&&replay==0)fallback("interior_reseat_pose_hint");
                         fallback("interior_reseat_pose_resume");
-                        ok=attempt_pack_impl(compact,nullptr,{},nullptr,replay+1,&selected_pose);
+                        ok=attempt_pack_impl(compact,nullptr,{},nullptr,branch,&selected_pose);
+                        if(!selected_pose)exhausted=branch;
+                        if(ok&&reuse)continuation_hint=std::make_pair(key,branch);
                     }
                     if(!ok&&recovery&&!failed.empty()) {
                         restore();

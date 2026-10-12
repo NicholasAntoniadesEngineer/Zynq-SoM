@@ -38,6 +38,8 @@ struct FloorplanPoseRetryLimits {
     // Capped full-attempt replays of the first recovered choice after later
     // failure. Zero preserves nearest successful recovery behavior.
     std::size_t continuations=0;
+    // Advisory ordering only; never reuse a geometry verdict or omit a gate.
+    bool reuse_continuation=false;
 };
 struct FloorplanPoseRetryObservation {
     std::string incoming,displaced;
