@@ -1,0 +1,26 @@
+{
+  "base_commit":"6afe003a",
+  "scope":"Bounded upstream carrier placement experiments, current direct-enable hardware; no larger solver caps",
+  "input":"/private/tmp/carrier-direct-enable-full-fixed-oct12/Zynq_Carrier.kicad_sch",
+  "common_options":"compact search, interior-order 3, edge-feasibility, owned-quality-first, owned-face-cohesion, usb_jtag contract-group face candidates, board_aux owned-face-fixed/a2.2/owned-pins-forward, carrier-166x159-contract-groups.floorplan.json",
+  "experiments":[
+    {
+      "strategy":"Sort blocks by enforced near_max incidence before existing total hard-constraint incidence and area tie-breaks",
+      "165x159":"FAIL USB-JTAG interior seating, 2 outer attempts",
+      "166x158":"FAIL USB-JTAG interior seating, 2 outer attempts",
+      "166x159":"Constructed, 566 instances, 413 top/153 bottom; PCB hash 2e78bb2b7648e2be1cd122267bc9756f07e8cf7714241ced011757dd9a93c3f4. No full qualification or claimed quality improvement.",
+      "retained":false,
+      "logs":["native/build/carrier-proximity-first-165x159.log","native/build/carrier-proximity-first-166x158.log","native/build/carrier-proximity-first-166x159.log"]
+    },
+    {
+      "strategy":"Replace group-face candidate total-area pruning with dimension dominance: allow wider/shorter or narrower/taller alternatives. Enable independent group rotations. Preserve all physical/contract/fanout checks.",
+      "165x159":"FAIL legalizer, 4 outer attempts",
+      "166x158":"FAIL USB-JTAG interior seating, 2 outer attempts",
+      "retained":false,
+      "logs":["native/build/carrier-dimension-frontier-165x159.log","native/build/carrier-dimension-frontier-166x158.log"]
+    }
+  ],
+  "conclusion":"Neither local ordering nor dimension-trade-off offers produced a smaller constructible carrier. Prototype source edits reverted. These failures do not prove geometric infeasibility or that dimension trade-offs are generally unhelpful. Avoid repeating these unchanged screens; further work needs board-level space allocation or shape/pose lookahead with incumbent preservation.",
+  "timing":"Concurrent diagnostic samples, not a controlled performance benchmark",
+  "acceptance":"No accepted hardware change, no waived limits, no new full-board qualification; preserve the qualified 166x159 incumbent"
+}
