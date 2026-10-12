@@ -1022,6 +1022,41 @@ void frozen(const std::filesystem::path& dir,const std::string& name,bool geomet
 }
 void repair_choice_contracts() {
     {
+        std::size_t restored=0;
+        for(double a:{.1,.2,.3,1.1})for(double b:{.3001,.4,.5,1.3,2.3}){
+            if(a+.1+.1>b)continue;
+            FloorplanLegalizeInput in;in.board_w=10;in.board_h=10;in.clear=.1;in.compact=true;
+            for(const auto* name:{"a","b"}){
+                in.primary_fanout[name]={{},{},1,1,std::vector<Comp>{}};
+                in.metrics[name]={{{"p",.05,.5}},{{"p",0,0,.1,1}},{.1,1}};
+            }
+            in.index.hard.push_back({"near_max","a","a","b",10,"test",true,{},{}});
+            in.index.hard.push_back({"flow_hop","a","a","b",{},"test",true,{},{}});
+            std::vector<FloorplanLegalizeVar> vars{{"a",.1,1,{a,5},a,5},{"b",.1,1,{b,5},b,5}};
+            const auto initial=vars;
+            std::vector<std::string> log;QuantizationCounts work;
+            const bool ok=floorplan_legalize_compact_accounted(in,vars,log,work);
+            if(ok&&std::find(log.begin(),log.end(),"compaction REVERTED (output-grid geometry or hard term)")!=log.end()){
+                ++restored;
+                require(vars[0].x+.1+.1<=vars[1].x,"restored grid pose violates exact separation");
+                auto plain=in;plain.compact=false;auto incumbent=initial;
+                std::vector<std::string> plain_log;QuantizationCounts plain_work;
+                require(floorplan_legalize_compact_accounted(plain,incumbent,plain_log,plain_work),
+                        "rollback witness has no valid pre-compaction incumbent");
+                for(std::size_t i=0;i<vars.size();++i)
+                    require(vars[i].x==incumbent[i].x&&vars[i].y==incumbent[i].y,"rollback lost valid incumbent");
+                for(const auto& term:floorplan_evaluate_terms(in,{{"a",{vars[0].x,vars[0].y}},{"b",{vars[1].x,vars[1].y}}}))
+                    require(!term.term.enforced||term.ok,"rollback waived hard term");
+                auto repeat=initial;std::vector<std::string> repeat_log;QuantizationCounts repeat_work;
+                require(floorplan_legalize_compact_accounted(in,repeat,repeat_log,repeat_work)&&repeat_log==log&&repeat_work==work,
+                        "rollback work and diagnostics not reproducible");
+                for(std::size_t i=0;i<vars.size();++i)
+                    require(vars[i].x==repeat[i].x&&vars[i].y==repeat[i].y,"rollback pose not reproducible");
+            }
+        }
+        require(restored>0,"output-grid compaction rollback fixture missed recovery");
+    }
+    {
         // Decimal-grid contact can fail the strict forward sum despite a
         // satisfied difference edge: .1 + .1 + .1 > .3 in binary arithmetic.
         // The diagnostic must expose this, not silently waive the separation.

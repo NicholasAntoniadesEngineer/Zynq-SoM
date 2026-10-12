@@ -1,0 +1,24 @@
+{
+  "base_commit": "16a2602d",
+  "defect": "Optional compaction could pass difference-edge and hard-term checks before output rounding but violate exact physical separation on emitted coordinates. The earlier pose was then discarded instead of being reconsidered.",
+  "change": "Retain the pre-compaction pose until output-grid checks pass. On an exact-grid failure, restore that pose, round it using the existing accounted operation, and independently recheck exact separation, edges and hard terms. All subsequent occupancy and publication checks remain active. A restored pose that still fails is rejected.",
+  "policy": "No distance, clearance, collision tolerance, electrical requirement, output precision or search budget changed. Failed compaction and restoration remain in diagnostics; executed scalar operations remain accounted. This fixes incumbent preservation, not search completeness.",
+  "tests": {
+    "native_floorplan_contracts": "PASS 15.42 seconds",
+    "native_compact_retry_contracts": "PASS 3.31 seconds",
+    "native_model_failure_receipt_contracts": "PASS 28.20 seconds",
+    "native_cpp_source_audits": "58 contracts passed",
+    "new_coverage": "Decimal-boundary fixture family contains successful exact-grid restorations. Independently verify restored separation and hard terms, equality with the successful noncompacting incumbent, and reproducibility of poses, diagnostic logs and operation counts. Existing strict-contact rejection remains active."
+  },
+  "screens": [
+    {"log": "native/build/carrier-grid-rollback-164x159-probe.log", "outline_mm": [164,159], "result": "construction_failed", "seconds": 1.212561333},
+    {"log": "native/build/carrier-grid-rollback-165x159-probe.log", "outline_mm": [165,159], "result": "constructed_no_acceptance", "model_seconds": 2.829603875, "emit_seconds": 0.037241542, "pcb_sha256": "24ac25bfe6cb2ea6477a01b195b5ca78070ccff3bb2640f12d5b8f7275da5c64", "top": 413, "bottom": 153, "hard_red": 0},
+    {"log": "native/build/devkit-grid-rollback-regression.log", "outline_mm": [98,98], "result": "constructed_no_acceptance", "model_seconds": 0.186774875, "emit_seconds": 0.0090065, "pcb_sha256": "b6798d4b63d2fddbf9fad24945c151b9420b049b674ad5d637c43bf4a365137f", "top": 105, "bottom": 55, "hard_red": 0}
+  ],
+  "discarded_prototype": {
+    "strategy": "After a rejected seed-adjusted joint solution, qualify the original Bellman solution through the same finish path.",
+    "logs": ["native/build/carrier-raw-joint-164x159-probe.log", "native/build/carrier-raw-joint-165x158-probe.log", "native/build/carrier-raw-joint-165x159-probe.log"],
+    "result": "Both smaller outlines still failed; 165x159 retained the reference PCB hash. No demonstrated benefit; prototype removed."
+  },
+  "scope": "Both-board construction regressions, not fresh full qualification or a matched performance benchmark. Timing samples overlapped test/build work and do not support speedup claims. No new smaller carrier accepted. Goal remains incomplete."
+}

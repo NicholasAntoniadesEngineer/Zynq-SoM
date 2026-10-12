@@ -328,24 +328,43 @@ public:
             }
             log.push_back(std::move(message)); return false;
         }
+        std::optional<std::pair<std::vector<double>,std::vector<double>>> precompact;
         if (in.compact) {
             if(in.compaction_started)in.compaction_started();
-            const auto keep_x = pos_x, keep_y = pos_y;
+            auto keep_x = pos_x, keep_y = pos_y;
             descend(false);
             if (!reds().empty() || !edges_ok(true, pos_x) || !edges_ok(false, pos_y)) {
                 pos_x = keep_x; pos_y = keep_y;
                 log.push_back("compaction REVERTED (would break a hard term or separation)");
-            } else log.push_back("compacted (wired hop pulls applied)");
+            } else {
+                precompact=std::make_pair(std::move(keep_x),std::move(keep_y));
+                log.push_back("compacted (wired hop pulls applied)");
+            }
         }
         std::vector<Box4> boxes;
-        for (std::size_t i = 0; i < names.size(); ++i) {
-            const double x = legalize_trial_pose_precision4dp(pos_x[i], counts), y = legalize_trial_pose_precision4dp(pos_y[i], counts);
-            const auto& v = *by_name.at(names[i]);
-            boxes.push_back({x, y, x + v.w, y + v.h});
-            pos_x[i]=x;pos_y[i]=y;
+        const auto emit_grid=[&]{
+            boxes.clear();
+            for (std::size_t i = 0; i < names.size(); ++i) {
+                const double x = legalize_trial_pose_precision4dp(pos_x[i], counts), y = legalize_trial_pose_precision4dp(pos_y[i], counts);
+                const auto& v = *by_name.at(names[i]);
+                boxes.push_back({x, y, x + v.w, y + v.h});
+                pos_x[i]=x;pos_y[i]=y;
+            }
+        };
+        emit_grid();
+        const auto exact_holds=[&]{return physical_seps_ok()&&edges_ok(true,pos_x)&&edges_ok(false,pos_y)&&reds().empty();};
+        const bool exact_required=force_exact||!in.primary_fanout.empty()||!facing_x.empty()||!facing_y.empty();
+        bool exact_ok=!exact_required||exact_holds();
+        // Optional compaction must not discard a feasible pre-compaction pose
+        // merely because its grid-rounded result violates exact geometry.
+        // Restore and independently recheck; never relax the failed predicate.
+        if(precompact&&!exact_ok){
+            pos_x=std::move(precompact->first);pos_y=std::move(precompact->second);
+            log.push_back("compaction REVERTED (output-grid geometry or hard term)");
+            emit_grid();
+            exact_ok=exact_holds();
         }
-        if ((force_exact||!in.primary_fanout.empty()||!facing_x.empty()||!facing_y.empty()) &&
-            (!physical_seps_ok() || !edges_ok(true,pos_x) || !edges_ok(false,pos_y) || !reds().empty())) {
+        if (!exact_ok) {
             log.push_back("REJECT: final output-grid pose violates physical separation or hard term");
             return false;
         }
