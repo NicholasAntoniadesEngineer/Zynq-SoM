@@ -103,11 +103,19 @@ OwnedGroupResult construct_owned_group_candidates(const PcbCheckModel& original,
                 if(collision(a,occupied(m,j),options.clearance))return false;
             return true;
         };
+        double original_x=bounds.x0,original_y=bounds.y0;
+        for(std::size_t i=0;i<original.insts.size();++i){const auto b=occupied(original,i);
+            original_x=std::max(original_x,b.x1);original_y=std::max(original_y,b.y1);}
+        const double trailing_x=std::max(0.,bounds.x1-original_x),trailing_y=std::max(0.,bounds.y1-original_y);
         // Opposite iteration orders give bounded alternatives for shared owners.
         // They do not replace any pre-existing packing alternative.
-        for(int order=0;order<2;++order) {
-            auto sequence=rows;if(order)std::reverse(sequence.begin(),sequence.end());
+        for(int order=0;order<(options.extent_alternatives?4:2);++order) {
+            const bool extent_first=order>=2;
+            auto sequence=rows;if(order%2)std::reverse(sequence.begin(),sequence.end());
             PcbCheckModel model=original;
+            // A later movable member can hide the earlier member's extent.
+            // One bounded revisit exposes space freed by the first sweep.
+            for(int sweep=0;sweep<(extent_first?2:1);++sweep)
             for(const auto& r:sequence) {
                 if(r.role==OwnedCapRole::OutputBulk||!options.movable_caps.count(r.cap)||options.fixed_refs.count(r.cap))continue;
                 const auto i=indices.at(r.cap),o=indices.at(r.owner);
@@ -124,6 +132,7 @@ OwnedGroupResult construct_owned_group_candidates(const PcbCheckModel& original,
                     trials.emplace(x,y);
                 };
                 add(tx,ty);
+                if(extent_first)add(model.insts[i].x,model.insts[i].y);
                 // Contact-line trials use actual occupied boundaries, not a
                 // fabricated proximity radius or a nearest-owner assignment.
                 for(std::size_t j=0;j<model.insts.size();++j) if(j!=i) {
@@ -133,14 +142,35 @@ OwnedGroupResult construct_owned_group_candidates(const PcbCheckModel& original,
                     for(double x:xs)for(double y:{ty,b.y0-local.y0,b.y1-local.y1})add(x,y);
                     for(double y:ys)for(double x:{tx,b.x0-local.x0,b.x1-local.x1})add(x,y);
                 }
-                const auto before=distance(model,r);double best=before;
+                // Extent alternatives may trade proximity against one another,
+                // but never exceed the ORIGINAL owned gap. The proximity-first
+                // candidates remain separate retained incumbents.
+                const auto before=distance(extent_first?original:model,r);double best=before;
                 auto best_pose=std::make_pair(model.insts[i].x,model.insts[i].y);
-                std::vector<std::tuple<double,double,double>> ranked;
-                for(const auto& [x,y]:trials)ranked.emplace_back(gap(owner,shifted(pin,x,y)),x,y);
+                double other_x=bounds.x0,other_y=bounds.y0;
+                if(extent_first)for(std::size_t j=0;j<model.insts.size();++j)if(j!=i){
+                    const auto b=occupied(model,j);other_x=std::max(other_x,b.x1);other_y=std::max(other_y,b.y1);
+                }
+                std::vector<std::tuple<double,double,double,double,double>> ranked;
+                for(const auto& [x,y]:trials){
+                    const auto b=shifted(local,x,y);
+                    const double extent=extent_first?
+                        (std::max(other_x,b.x1)-bounds.x0+trailing_x)*(std::max(other_y,b.y1)-bounds.y0+trailing_y):0.;
+                    // When another movable member masks the group envelope,
+                    // prefer the smaller member-to-origin extent before pad
+                    // distance. Otherwise equal-envelope nearest choices can
+                    // trap BOTH members on the same protruding boundary.
+                    const double member_extent=extent_first?(b.x1-bounds.x0+trailing_x)*(b.y1-bounds.y0+trailing_y):0.;
+                    if(extent_first&&(!std::isfinite(extent)||!std::isfinite(member_extent)))continue;
+                    ranked.emplace_back(extent,member_extent,gap(owner,shifted(pin,x,y)),x,y);
+                }
                 std::sort(ranked.begin(),ranked.end());
                 std::size_t attempted=0;
-                for(const auto& [d,x,y]:ranked) {
-                    if(!(d<best)||attempted++==256)break;
+                for(const auto& [extent,member_extent,d,x,y]:ranked) {
+                    (void)extent;(void)member_extent;
+                    if(!(d<best)){if(extent_first)continue;else break;}
+                    if(attempted==256){++result.trial_budget_exhaustions;break;}
+                    ++attempted;++result.trial_checks;
                     model.insts[i].x=x;model.insts[i].y=y;
                     if(valid_pose(model,i)){best=d;best_pose={x,y};break;}
                 }
@@ -148,7 +178,8 @@ OwnedGroupResult construct_owned_group_candidates(const PcbCheckModel& original,
             }
             bool improved=false,valid=true;
             OwnedGroupCandidate candidate;candidate.model=model;
-            candidate.tag=order?"owned-pins-reverse":"owned-pins-forward";
+            candidate.tag=extent_first?(order%2?"owned-extent-reverse":"owned-extent-forward"):
+                (order%2?"owned-pins-reverse":"owned-pins-forward");
             for(std::size_t i=0;i<model.insts.size();++i)valid&=valid_pose(model,i);
             // Re-prepare the actual rounded poses: pad-bbox/courtyard consumers
             // have their own established precision. A translated cache alone

@@ -82,6 +82,37 @@ void tests() {
         invariant(model,a,o.clearance);
         require(a.owned_pad_gaps.at("C1")<10,"explicit distant owner, not nearest U2 on same rail");
     }
+    auto expanded_options=o;expanded_options.extent_alternatives=true;
+    const auto expanded=construct_owned_group_candidates(model,rows,expanded_options);
+    require(expanded.alternatives.size()>=result.alternatives.size()&&expanded.alternatives.size()<=4,"bounded extent alternatives retain incumbents");
+    require(expanded.quantization.at("placement_member_pose_precision4dp")==
+        result.quantization.at("placement_member_pose_precision4dp")+2*2*2*(2+12*(model.insts.size()-1))*2,
+        "two extent orders, two sweeps, two eligible caps and explicit incumbent trials counted");
+    require(result.trial_checks>0&&expanded.trial_checks>=result.trial_checks,"actual trial checks reported");
+    for(std::size_t i=0;i<expanded.alternatives.size();++i){
+        const auto& a=expanded.alternatives[i];invariant(model,a,o.clearance);
+        if(i<result.alternatives.size()){
+            require(a.tag==result.alternatives[i].tag,"proximity incumbents retain order");
+            for(std::size_t j=0;j<a.model.insts.size();++j)
+                require(a.model.insts[j].x==result.alternatives[i].model.insts[j].x&&a.model.insts[j].y==result.alternatives[i].model.insts[j].y,"proximity incumbent unchanged");
+        }
+    }
+    auto tall=model;tall.insts[1].x=10;tall.insts[1].y=30;
+    tall.insts[4].x=3;tall.insts[4].y=25;tall.insts[5].x=5;tall.insts[5].y=40;
+    const auto nearest=construct_owned_group_candidates(tall,rows,o);
+    const auto extent=construct_owned_group_candidates(tall,rows,expanded_options);
+    const auto area=[](const OwnedGroupResult& r){double best=INFINITY;for(const auto& a:r.alternatives)best=std::min(best,a.model.board_w*a.model.board_h);return best;};
+    if(!(area(extent)<area(nearest))){for(const auto* r:{&nearest,&extent}){for(const auto& a:r->alternatives)std::cerr<<a.tag<<" "<<a.model.board_w<<"x"<<a.model.board_h<<'\n';for(const auto& d:r->diagnostics)std::cerr<<d<<'\n';}}
+    require(std::isfinite(area(nearest))&&area(extent)<area(nearest),"extent alternatives escape nearest-pad greed on tall fixed geometry");
+    std::cout<<"extent fixture area: nearest="<<area(nearest)<<" extent="<<area(extent)<<" mm^2\n";
+    for(const auto& a:extent.alternatives)invariant(tall,a,o.clearance);
+    require(extent.trial_checks<=(2+2*2)*2*256,"independent upper bound on actual eligible trial checks");
+    auto crowded=model;crowded.board_w=10000;crowded.insts[2].x=9000;
+    for(int i=0;i<90;++i){auto obstacle=model.insts[4];obstacle.ref="obstacle"+std::to_string(i);obstacle.x=100+2*i;obstacle.y=20;crowded.insts.push_back(obstacle);}
+    auto limited=o;limited.clearance=100;limited.movable_caps={"C1"};
+    const auto exhausted=construct_owned_group_candidates(crowded,{rows.front()},limited);
+    require(exhausted.alternatives.empty()&&exhausted.trial_budget_exhaustions>0,"exhausted rejected searches publish explicit receipts");
+    require(exhausted.trial_checks==256*exhausted.trial_budget_exhaustions,"budget receipt excludes unexecuted 257th check");
     auto disabled=o;disabled.compact=false;
     const auto default_result=construct_owned_group_candidates(model,rows,disabled);
     require(default_result.alternatives.empty()&&default_result.quantization.empty(),"default unchanged and no receipts manufactured");
@@ -111,32 +142,38 @@ void tests() {
     const auto bulk_result=construct_owned_group_candidates(model,bulk_only,bulk_options);
     require(bulk_result.alternatives.empty()&&bulk_result.quantization.empty(),"output bulk does not acquire bypass objective or work counts");
     changed=model;changed.insts[2].side="bottom";
-    auto opposite=construct_owned_group_candidates(changed,rows,o);
+    auto opposite=construct_owned_group_candidates(changed,rows,expanded_options);
     require(!opposite.alternatives.empty(),"same existing opposite-side eligibility retained");
     for(const auto& a:opposite.alternatives)invariant(changed,a,o.clearance);
     changed.insts[0].mod=footprint(true,true);
-    auto thru=construct_owned_group_candidates(changed,rows,o);
+    auto thru=construct_owned_group_candidates(changed,rows,expanded_options);
     require(!thru.alternatives.empty(),"THT obstacle still permits local alternative");
     for(const auto& a:thru.alternatives)invariant(changed,a,o.clearance);
     changed=model;changed.insts[0].rotation=90;changed.insts[2].rotation=180;
-    auto rotated=construct_owned_group_candidates(changed,rows,o);
+    auto rotated=construct_owned_group_candidates(changed,rows,expanded_options);
     require(!rotated.alternatives.empty(),"rotated named-pad alternative");
     for(const auto& a:rotated.alternatives)invariant(changed,a,o.clearance);
     for(double angle:{0.,90.,180.,270.})for(double fractional:{0.00004,0.00006,0.00049,0.00051}) {
         changed=model;changed.insts[0].rotation=angle;changed.insts[2].rotation=angle;
         for(auto& p:changed.insts){p.x+=fractional;p.y+=fractional;}
-        const auto trial=construct_owned_group_candidates(changed,rows,o);
+        const auto trial=construct_owned_group_candidates(changed,rows,expanded_options);
         for(const auto& a:trial.alternatives)invariant(changed,a,o.clearance);
     }
     for(double translation:{-100.,25.,10000.,1000000.}) {
         changed=model;changed.origin_x+=translation;changed.origin_y+=translation;
         for(auto& p:changed.insts){p.x+=translation;p.y+=translation;}
-        const auto trial=construct_owned_group_candidates(changed,rows,o);
+        const auto trial=construct_owned_group_candidates(changed,rows,expanded_options);
         require(!trial.alternatives.empty(),"finite translated-frame alternatives");
         for(const auto& a:trial.alternatives)invariant(changed,a,o.clearance);
     }
     std::reverse(rows.begin(),rows.end());
     const auto shuffled=construct_owned_group_candidates(model,rows,o);
+    const auto shuffled_extent=construct_owned_group_candidates(model,rows,expanded_options);
+    require(shuffled_extent.alternatives.size()==expanded.alternatives.size()&&shuffled_extent.quantization==expanded.quantization&&
+        shuffled_extent.trial_checks==expanded.trial_checks&&shuffled_extent.trial_budget_exhaustions==expanded.trial_budget_exhaustions,"extent search declaration order and accounting deterministic");
+    for(std::size_t i=0;i<expanded.alternatives.size();++i)for(std::size_t j=0;j<model.insts.size();++j)
+        require(shuffled_extent.alternatives[i].model.insts[j].x==expanded.alternatives[i].model.insts[j].x&&
+            shuffled_extent.alternatives[i].model.insts[j].y==expanded.alternatives[i].model.insts[j].y,"extent candidate coordinates deterministic");
     require(shuffled.alternatives.size()==result.alternatives.size()&&shuffled.quantization==result.quantization,"declaration order deterministic");
     for(std::size_t i=0;i<result.alternatives.size();++i)
         for(std::size_t j=0;j<model.insts.size();++j)

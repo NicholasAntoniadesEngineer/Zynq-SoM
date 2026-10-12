@@ -42,6 +42,14 @@ int main(int argc,char** argv){try{
     const auto quality=run({"board","--compact-placement","--owned-quality-first"});
     if(quality.exit_code||quality.stdout_text.find("May increase inter-block estimate")==std::string::npos)
         throw std::runtime_error("quality-first help must disclose tradeoff");
+    const auto extent=run({"board","--compact-placement","--owned-extent-alternatives"});
+    if(extent.exit_code||extent.stdout_text.find("Original alternatives and all gates remain active")==std::string::npos)
+        throw std::runtime_error("extent alternatives help must disclose retained safeguards");
+    for(const auto& args:std::vector<std::vector<std::string>>{
+        {"board","--owned-extent-alternatives"},
+        {"board","--compact-placement","--owned-extent-alternatives","--owned-extent-alternatives"},
+        {"pcb-stage","--owned-extent-alternatives"}})
+        if(run(args).exit_code==0)throw std::runtime_error("invalid extent-alternative option accepted");
     if(run({"board","--compact-placement","--owned-face-cohesion","--owned-shape","board_aux=tag","--owned-shape","bringup_rails=tag2"}).exit_code)
         throw std::runtime_error("valid named candidate help failed");
     const auto groups=run({"board","--compact-placement","--contract-group-face-sheet","usb_jtag"});

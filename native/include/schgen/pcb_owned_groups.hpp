@@ -18,6 +18,9 @@ struct OwnedGroupOptions {
     // Explicit permission supplied by the existing placement eligibility path.
     // Empty means no movement. No side/rotation permission is inferred here.
     std::set<std::string> movable_caps, fixed_refs, top_refs;
+    // Append extent-first forward/reverse alternatives; retain proximity-first
+    // alternatives first. This never permits an increased owned bypass gap.
+    bool extent_alternatives = false;
 };
 struct OwnedGroupCandidate {
     PcbCheckModel model;
@@ -28,9 +31,11 @@ struct OwnedGroupResult {
     std::vector<OwnedGroupCandidate> alternatives;
     QuantizationCounts quantization;
     std::vector<std::string> diagnostics;
+    std::size_t trial_checks=0, trial_budget_exhaustions=0;
 };
 // Bounded local search, not a clearance/decoupling acceptance gate. Original
-// model is immutable and is NOT replaced. At most two alternatives, each with
+// model is immutable and is NOT replaced. At most two alternatives (four with
+// extent_alternatives), each with
 // no owned bypass gap increased and at least one strictly decreased. Same side
 // and rotation, immutable pad nets, fixed owners and output bulk. Courtyard +
 // pad extents obey caller clearance and THT blocks both copper faces.

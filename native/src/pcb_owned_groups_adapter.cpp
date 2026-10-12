@@ -218,6 +218,7 @@ void append_owned_group_zone_shapes(Context& ctx, PcbZoneResult& out, const std:
         out.owned_shape_quality[{sheet, static_cast<int>(i)}] = before;
         if (!allow_movement || before.state != OwnedShapeQualityState::Measured) continue;
         OwnedGroupOptions options; options.compact = true; options.clearance = ctx.clearance;
+        options.extent_alternatives = ctx.in.floorplan.experiment&&ctx.in.floorplan.experiment->owned_extent_alternatives;
         for (const auto& ref : trusted.requirements.top_switches) {
             options.top_refs.insert(trusted.refs.at(ref)); options.fixed_refs.insert(trusted.refs.at(ref));
         }
@@ -235,7 +236,9 @@ void append_owned_group_zone_shapes(Context& ctx, PcbZoneResult& out, const std:
         merge_execution_counts(ctx.quantization, candidates.quantization, failure);
         auto& search_notes = out.owned_shape_quality.at({sheet, static_cast<int>(i)}).diagnostics;
         for (const auto& note : candidates.diagnostics) search_notes.push_back("search: " + note);
-        search_notes.push_back("Bounded search only: no emitted alternatives is not an infeasibility proof; trial-budget exhaustion is not separately reported by the constructor.");
+        search_notes.push_back("Trial checks: "+std::to_string(candidates.trial_checks)+
+            "; exhausted budgets: "+std::to_string(candidates.trial_budget_exhaustions)+
+            ". Bounded search only: no emitted alternatives is not an infeasibility proof.");
         for (const auto& candidate : candidates.alternatives) {
             const auto measured = quality(ctx, trusted, candidate.model, failure);
             if (measured.state != OwnedShapeQualityState::Measured ||

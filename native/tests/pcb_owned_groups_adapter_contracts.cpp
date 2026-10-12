@@ -309,6 +309,15 @@ int main(int argc, char** argv) {
             for (std::size_t i = 0; i < a.size(); ++i) require(same(a[i], b[i]), "nondeterministic shape");
         }
         auto cohesive_in=in;
+        auto extent_input=in;auto extent_experiment=std::make_shared<FloorplanExperiment>();
+        extent_experiment->owned_extent_alternatives=true;extent_input.floorplan.experiment=extent_experiment;
+        const auto extent_zones=build_pcb_zone_geometry(extent_input);std::size_t extent_count=0;
+        for(const auto& [sheet,trusted]:in.owned_groups){(void)trusted;
+            const auto old=shapes(zones,sheet),added=shapes(extent_zones,sheet);
+            for(const auto& shape:old)require(std::any_of(added.begin(),added.end(),[&](const auto& candidate){return same(shape,candidate);}),"extent search must retain each prior shape");
+            for(const auto& shape:added)if(shape.tag.find("/owned-extent-")!=std::string::npos)++extent_count;
+        }
+        require(extent_count>0,"explicit extent experiment must reach the live owned-zone constructor");
         auto cohesive_experiment=std::make_shared<FloorplanExperiment>();cohesive_experiment->owned_face_cohesion=true;
         cohesive_in.floorplan.experiment=cohesive_experiment;
         const auto cohesive=build_pcb_zone_geometry(cohesive_in);

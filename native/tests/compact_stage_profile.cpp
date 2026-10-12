@@ -35,6 +35,7 @@ struct Options {
     bool owned_selection_trace = false;
     bool failed_first_retry = false;
     bool owned_quality_first = false;
+    bool owned_extent_alternatives = false;
     bool owned_face_cohesion = false;
     std::optional<std::string> contract_group_face_sheet;
     std::map<std::string,std::string> owned_shapes;
@@ -57,6 +58,7 @@ void help() {
         "  [--edge-feasibility off|on] (constraint-aware initial runs, requires --compact-search on)\n"
         "  [--owned-selection-trace off|on] (read-only multi-alternative selection trace)\n"
         "  [--owned-quality-first off|on] (same-pose same-face quality-first experiment)\n"
+        "  [--owned-extent-alternatives off|on] (append bounded extent-first local candidates)\n"
         "  [--owned-face-cohesion off|on] (append initial owner/cap same-face packs)\n"
         "  [--owned-shape SHEET=TAG] (restrict a measured owned candidate; repeat for different sheets)\n"
         "  [--outline-mm WIDTHxHEIGHT] (explicit diagnostic outline; skips automatic sizing search)\n"
@@ -141,6 +143,10 @@ Options parse(int argc, char** argv) {
             if(value!="on"&&value!="off")throw std::invalid_argument("owned-quality-first must be off|on");
             out.owned_quality_first=value=="on";
         }
+        else if (arg == "--owned-extent-alternatives") {
+            if(value!="on"&&value!="off")throw std::invalid_argument("owned-extent-alternatives must be off|on");
+            out.owned_extent_alternatives=value=="on";
+        }
         else if (arg == "--owned-selection-trace") {
             if(value!="on"&&value!="off")throw std::invalid_argument("owned-selection-trace must be off|on");
             out.owned_selection_trace=value=="on";
@@ -169,6 +175,7 @@ Options parse(int argc, char** argv) {
     if(out.edge_feasibility&&out.compact!="on")throw std::invalid_argument("edge-feasibility requires --compact-search on");
     if(out.failed_first_retry&&(out.compact!="on"||!out.interior_order))throw std::invalid_argument("failed-first-retry requires --compact-search on and --interior-order");
     if(out.owned_quality_first&&out.compact!="on")throw std::invalid_argument("owned-quality-first requires --compact-search on");
+    if(out.owned_extent_alternatives&&out.compact!="on")throw std::invalid_argument("owned-extent-alternatives requires --compact-search on");
     if(out.owned_face_cohesion&&out.compact!="on")throw std::invalid_argument("owned-face-cohesion requires --compact-search on");
     if(!out.owned_shapes.empty()&&out.compact!="on")throw std::invalid_argument("owned-shape requires --compact-search on");
     if(out.contract_group_face_sheet&&out.compact!="on")throw std::invalid_argument("contract-group-face-sheet requires --compact-search on");
@@ -276,7 +283,7 @@ std::string trial(const PcbPlacementInput& source, bool compact, int run, int ge
                   bool observers = true,
                   bool constraint_first = false,const std::optional<FloorplanPoint>& outline=std::nullopt,bool edge_translation=false,
                   const std::optional<FloorplanPoint>& initial_outline=std::nullopt,
-                  const std::optional<int>& interior_order=std::nullopt,bool multiscale_outline=false,bool edge_feasibility=false,bool owned_selection_trace=false,bool owned_quality_first=false,bool owned_face_cohesion=false,const std::map<std::string,std::string>& owned_shapes={},const std::optional<std::string>& contract_group_face_sheet=std::nullopt,bool failed_first_retry=false) {
+                  const std::optional<int>& interior_order=std::nullopt,bool multiscale_outline=false,bool edge_feasibility=false,bool owned_selection_trace=false,bool owned_quality_first=false,bool owned_face_cohesion=false,const std::map<std::string,std::string>& owned_shapes={},const std::optional<std::string>& contract_group_face_sheet=std::nullopt,bool failed_first_retry=false,bool owned_extent_alternatives=false) {
     const auto copy_start = Clock::now();
     auto input = trial_input(source,compact,outline);
     if(contract_group_face_sheet&&std::none_of(input.floorplan.sheets.begin(),input.floorplan.sheets.end(),
@@ -293,6 +300,7 @@ std::string trial(const PcbPlacementInput& source, bool compact, int run, int ge
     floor->compact_edge_feasibility = edge_feasibility;
     floor->failed_first_retry=failed_first_retry;
     floor->owned_quality_first = owned_quality_first;
+    floor->owned_extent_alternatives = owned_extent_alternatives;
     floor->owned_face_cohesion = owned_face_cohesion;
     floor->owned_shape_tags=owned_shapes;
     floor->contract_group_face_sheet=contract_group_face_sheet;
@@ -357,6 +365,7 @@ std::string trial(const PcbPlacementInput& source, bool compact, int run, int ge
         << " edge_feasibility=" << edge_feasibility
         << " owned_selection_trace=" << owned_selection_trace
         << " owned_quality_first=" << owned_quality_first
+        << " owned_extent_alternatives=" << owned_extent_alternatives
         << " failed_first_retry=" << failed_first_retry
         << " owned_face_cohesion=" << owned_face_cohesion
         << " input_copy_seconds=" << copy_seconds << " status=started\n" << std::flush;
@@ -495,7 +504,7 @@ int main(int argc, char** argv) {
             const int generation = options.inputs == "prepared" ? 1 : run;
             for (const bool compact : {false, true}) {
                 if ((compact && options.compact == "off") || (!compact && options.compact == "on")) continue;
-                const auto hash = trial(prepared->input, compact, run, generation, options.observers,options.constraint_first,options.outline,options.edge_translation,options.initial_outline,options.interior_order,options.multiscale_outline,options.edge_feasibility,options.owned_selection_trace,options.owned_quality_first,options.owned_face_cohesion,options.owned_shapes,options.contract_group_face_sheet,options.failed_first_retry);
+                const auto hash = trial(prepared->input, compact, run, generation, options.observers,options.constraint_first,options.outline,options.edge_translation,options.initial_outline,options.interior_order,options.multiscale_outline,options.edge_feasibility,options.owned_selection_trace,options.owned_quality_first,options.owned_face_cohesion,options.owned_shapes,options.contract_group_face_sheet,options.failed_first_retry,options.owned_extent_alternatives);
                 auto [it, inserted] = first_hash.emplace(compact, hash);
                 if (!inserted && it->second != hash) throw std::runtime_error("repeat PCB bytes changed; investigate input drift/nondeterminism");
                 std::cout << "repeat compact_search=" << compact << " same_as_first=" << (!inserted ? "true" : "first") << '\n';
