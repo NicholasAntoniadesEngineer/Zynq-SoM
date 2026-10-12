@@ -15,6 +15,7 @@
 
 namespace schgen {
 void register_native_fallbacks(NativeFallbacks& r){
+    r.declare({"interior_reseat_incoming_shape_trial","plan_lattice","One alternative incoming-shape nearest-position query after all original victim/pose trials fail; every executed query is retained."});
     r.declare({"interior_reseat_shape_retry","plan_lattice","One opt-in full victim-shape strategy after the original pose portfolio failed; retain all work and final gates."});
     r.declare({"interior_reseat_shape_trial","plan_lattice","One actual alternative victim-shape relocation query after its original shape failed; retain rejected and successful queries."});
     r.declare({"legalize_reservation_retry","plan_lattice","One selected child-reservation geometry solve after conservative composer strategies fail. Preserve successful incumbents and all failed work; record every attempted retry, successful or not. Final exact reservation collision and hard-term gates remain mandatory."});

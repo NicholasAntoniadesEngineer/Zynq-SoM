@@ -21,6 +21,7 @@ ManufacturingPipelineInput native_board_pipeline_metadata(){
     // These labels/stages are exact registry keys. Descriptions describe the
     // actual native producers, not historical recorded board populations.
     out.fallbacks={
+        {"interior_reseat_incoming_shape_trial","plan_lattice","One alternative incoming-shape nearest-position query after all original victim/pose trials fail; every executed query is retained."},
         {"interior_reseat_shape_retry","plan_lattice","One opt-in full victim-shape strategy after the original pose portfolio failed; retain all work and final gates."},
         {"interior_reseat_shape_trial","plan_lattice","One actual alternative victim-shape relocation query after its original shape failed; retain rejected and successful queries."},
         {"interior_reseat_pose_search","plan_lattice","One opt-in victim reconsideration after every ordinary victim trial failed; counts even when incoming seating or bounded enumeration fails."},

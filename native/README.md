@@ -288,10 +288,25 @@ does one separate full attempt allow a displaced subsystem to try its other
 registered shapes when its existing shape cannot be reseated. Explicit shape
 selections and final hardware checks still apply. Rejected attempts restore the
 entry layout and offers but retain actual operation and fallback receipts.
+After the original victim/position trials are exhausted for an incoming block,
+the extra strategy also tries the nearest legal pose of its other registered
+shapes, with the same explicit shape-selection restrictions. Incoming-shape
+queries have a separate `interior_reseat_incoming_shape_trial` receipt. This
+does not enumerate all positions for all shapes or displace multiple victims.
 This is not exhaustive shape/pose search: the additional strategy currently
 selects the first locally valid victim shape. It preserves the 165x158 carrier
 candidate in screening but has not recovered 164x159; leave it off for the
 qualified recipe above to avoid extra search cost without a demonstrated gain.
+
+`benchmarks/carrier-166x156.floorplan.json` is a **trade-off candidate, not a
+replacement for the retained carrier**. Using the original continuation recipe
+without `--reseat-victim-shapes`, it passes the full mandatory pipeline at
+25,896 mm² and an estimated cross-wire length of 15,822.8 mm. However,
+bringup_rails U1.24–C1.1 planar pad gap increases from 8.03 to 39.76 mm
+(bottom/top). Its qualitative bypass requirement remains UNVERIFIED. Lower
+aggregate area/wire length does not establish acceptable bypass placement.
+See `benchmarks/2026-10-12-incoming-shapes-and-aspect-ratio.json` for the
+qualification, unresolved trade-off and separately tested recovery change.
 
 Firmware source provenance now reads canonical circuit JSON and compiled factory
 registrations rather than checking for Python constructors. Independent source

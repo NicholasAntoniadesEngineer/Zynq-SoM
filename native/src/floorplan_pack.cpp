@@ -120,7 +120,7 @@ bool Engine::attempt_pack(bool compact) {
                     if(!ok&&!order_independent_failure&&in.experiment->reseat_pose_limits&&in.experiment->reseat_pose_limits->victim_shapes) {
                         restore();
                         fallback("interior_reseat_shape_retry");
-                        ok=attempt_pack_impl(compact,nullptr,{},nullptr,0,nullptr,true);
+                        ok=attempt_pack_impl(compact,nullptr,{},nullptr,0,nullptr,true,true);
                     }
                     if(!ok&&transactional)restore();
                     compact_order=saved_order;
@@ -164,7 +164,7 @@ bool Engine::attempt_pack(bool compact) {
 }
 bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure,
                               const std::string& promote,std::string* failed_subject,
-                              std::size_t first_pose_skip,bool* selected_pose,bool victim_shapes) {
+                              std::size_t first_pose_skip,bool* selected_pose,bool victim_shapes,bool incoming_shapes) {
     if(selected_pose)*selected_pose=false;
     if(order_independent_failure)*order_independent_failure=true;
     // Borrow only for this synchronous invocation; never attach a sink to
@@ -456,7 +456,7 @@ bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure,
         for (const auto* p:placed) ranks.emplace_back(p->x,p->y,p->w,p->h,p->name);
         const auto ranked=reseat_rank(a.first,a.second,ranks);
         const bool alternatives=in.experiment&&in.experiment->reseat_pose_limits.has_value();
-        for(int pass=0;pass<(alternatives?2:1);++pass) for (int idx:ranked) {
+        for(int pass=0;pass<(incoming_shapes?3:(alternatives?2:1));++pass) for (int idx:ranked) {
             auto& e=*placed[idx]; const auto saved_e=e,saved_b=b;
             // A rejected victim trial can change only the incoming block's
             // entries. The displaced block's geometry and center change only
@@ -466,7 +466,7 @@ bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure,
             const auto saved_center=save_entry(centers,b.name);
             const auto saved_offer=save_entry(side_offers,b.name);
             FloorplanPoseRetryObservation observation;
-            if(pass){
+            if(pass==1){
                 observation.incoming=b.name;observation.displaced=e.name;
                 fallback("interior_reseat_pose_search");
             }
@@ -498,6 +498,32 @@ bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure,
                 }
                 if (!p) { ok=false; occ_pull(b); }
                 else { e.x=p->x; e.y=p->y; occ_put(e); centers[e.name]={e.cx(),e.cy()}; }
+            }
+            else if(ok&&pass==2) {
+                // Every original victim and position trial failed. Explore
+                // other incoming shapes without replacing a successful path.
+                const int previous=b.shape_idx;
+                const auto variants=shapes.find(b.name);
+                const auto restricted=owned_shape_choices.find(b.name);
+                ok=false;
+                if(variants!=shapes.end())for(std::size_t k=0;k<variants->second.size();++k){
+                    if(static_cast<int>(k)==previous||
+                       (restricted!=owned_shape_choices.end()&&static_cast<int>(k)!=restricted->second))continue;
+                    const auto& s=variants->second[k];
+                    fallback("interior_reseat_incoming_shape_trial");
+                    const auto p=near(b,static_cast<int>(k),a,s.w,s.h,s.reach,s.inset,side_mask(s.side),s.comps,&e);
+                    if(!p)continue;
+                    b.shape_idx=static_cast<int>(k);b.side=s.side;b.fanout_reach=s.reach;b.fanout_inset=s.inset;
+                    pose(b,*p);b.area=block_area(b.w,b.h,counts);chosen[b.name]=s.comps;
+                    occ_put(b);centers[b.name]={b.cx(),b.cy()};
+                    const auto anchor=pack_anchor(anchor_row(e,centers));
+                    const auto next=near(e,e.shape_idx,anchor,e.w,e.h,e.fanout_reach,e.fanout_inset,
+                                         side_mask(e.side),get(chosen,e.name),nullptr);
+                    if(!next){occ_pull(b);continue;}
+                    e.x=next->x;e.y=next->y;occ_put(e);centers[e.name]={e.cx(),e.cy()};
+                    side_offers[b.name]={b.side,b.side,b.shape_idx,std::nullopt,std::nullopt};
+                    ok=true;break;
+                }
             }
             else if(ok) {
                 const auto first=FloorplanPoint{b.x,b.y};
@@ -546,7 +572,7 @@ bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure,
             }
             if(in.experiment&&in.experiment->reseat_completed)
                 in.experiment->reseat_completed({bw,bh,b.name,e.name,incoming_seated,ok,plan.punch_free,compact_order});
-            if(pass&&in.experiment->pose_retry_completed){observation.success=ok;in.experiment->pose_retry_completed(observation);}
+            if(pass==1&&in.experiment->pose_retry_completed){observation.success=ok;in.experiment->pose_retry_completed(observation);}
             if(ok)return true;
         }
         return false;

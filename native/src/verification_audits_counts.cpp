@@ -166,6 +166,7 @@ bool is_board_search_effort(std::string_view name){
     // checks. Their counts measure work, not electrical/physical correctness.
     // Keep explicit membership: a new path needs review before becoming advisory.
     static const std::set<std::string_view> names={
+        "interior_reseat_incoming_shape_trial",
         "interior_reseat_shape_retry","interior_reseat_shape_trial",
         "legalize_reservation_retry","legalize_facing_retry",
         "interior_reseat_pose_search","interior_reseat_pose_trial",
