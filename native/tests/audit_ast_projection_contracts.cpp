@@ -124,6 +124,25 @@ void contracts(){
     rejected(discarded_array);
 }
 void streaming_boundaries(){
+    // Every byte in every word lane, retained and discarded, with short tails
+    // and across the stream refill. Non-ASCII singletons are invalid UTF-8.
+    for(const auto* key:{"name","unknown"})for(std::size_t lane=0;lane<16;++lane)
+        for(unsigned byte=0;byte<256;++byte){
+            const auto prefix=std::string("{\"")+key+"\":\""+std::string(lane,'a');
+            const auto input=prefix+static_cast<char>(byte)+std::string(24,'z')+"\"}";
+            const bool ordinary=byte>=32&&byte<128&&byte!='"'&&byte!='\\';
+            if(ordinary)same(strip(parse_json_text(input)),projected(input));
+            else rejected(input);
+        }
+    for(std::size_t n=65515;n<65545;++n)for(const auto* key:{"name","unknown"}){
+        const auto prefix=std::string("{\"")+key+"\":\""+std::string(n,'a');
+        for(const auto* tail:{"\\\"", "\\\\", "α", "😀", "\\u0000"}){
+            const auto input=prefix+tail+"end\"}";
+            same(strip(parse_json_text(input)),projected(input));
+        }
+        for(const char byte:{'\0','\n',static_cast<char>(0x80)})
+            rejected(prefix+byte+"end\"}");
+    }
     // Word-sized whitespace fast paths must neither overread a short tail nor
     // accept any non-JSON whitespace byte hidden inside an indentation run.
     for(std::size_t n:{0u,1u,7u,8u,9u,15u,16u,17u,65535u,65536u,65537u}) {
