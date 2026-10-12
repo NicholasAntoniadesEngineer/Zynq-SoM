@@ -1,0 +1,29 @@
+{
+  "base_commit": "608f1a78",
+  "purpose": "Enable bounded placement reconsideration beyond the single nearest pose per shape, without changing the accepted/default board search policy.",
+  "implementation": {
+    "api": "Occupancy::place_near_candidates",
+    "mechanism": "Share the existing sorted frontier, rounded-distance buckets and exact face-aware collision predicate. Collect a deterministic prefix of legal poses instead of returning only the first. The legacy single-result entry point uses the same implementation without allocating a result list.",
+    "bounds": "Caller-supplied positive maximum returned poses and maximum visited frontier nodes. Budget exhaustion and complete traversal are distinct result fields. No partial, not-yet-ordered distance bucket is published. The frontier limit does not bound axis-array preparation or wall time.",
+    "validation": "New entry point rejects zero limits, nonfinite query coordinates/windows and nonpositive/nonfinite dimensions before search work. Inverted finite windows describe an empty queried domain. Legacy entry-point behavior is preserved.",
+    "accounting": "All executed precision operations, including abandoned frontier work, remain in invocation-owned receipts. Candidate metadata counts actual visited frontier nodes. No occupancy or retained incumbent is mutated."
+  },
+  "independent_tests": {
+    "oracle": "Full Cartesian grid enumeration using exhaustive rather than hashed collision checks, sorted by rounded distance/x/y; compare every returned pose against the oracle prefix.",
+    "coverage": "Two grid steps, three face masks, three anchors, three result caps and three frontier budgets; opposite-face child geometry and halos; exact instrumented scalar calls; legacy single-result receipt/pose equivalence; empty domains; invalid anchors and zero limits; partially explored blocked domains versus completely exhausted blocked domains.",
+    "greedy_trap_witness": "On a 10x4 test board, a 2x2 group's nearest pose blocks a 6x4 group constrained to the left edge. Enumerating the small group's legal alternatives recovers a legal two-group arrangement with the same dimensions and collision predicates. Every branch works on a copy; original occupancy remains empty.",
+    "log": "native/build/alternative-poses-oracle.log"
+  },
+  "regressions": {
+    "passed": ["native_compact_retry_contracts", "native_floorplan_contracts", "native_occupancy_cell_counter_contracts", "native_occupancy_precision_contracts"],
+    "failed": 0,
+    "seconds": 25.83,
+    "log": "native/build/alternative-poses-final-tests.log",
+    "production_cli_rebuilt": true
+  },
+  "default_board_regressions": [
+    {"board":"carrier", "outline_mm":[166,159], "pcb_sha256":"b9389efa52adf30b1d94cad1ede3a4387bacd53802f7babb5da07dd6306cff76", "geometry_unchanged":true, "all_receipt_and_fallback_count_rows_unchanged":true, "log":"native/build/carrier-alternative-api-reference.log"},
+    {"board":"devkit_mini", "outline_mm":[98,98], "pcb_sha256":"cfa0305491d9c4a771adb130b04c4aec6cc2894542391a5c7c9dca3a68bca3cf", "geometry_unchanged":true, "all_receipt_and_fallback_count_rows_unchanged":true, "log":"native/build/devkit-alternative-api-reference.log"}
+  ],
+  "limits_and_next_step": "This is a tested search primitive, not a claim of a smaller or faster carrier. Current board policies remain nearest-only. Next integrate bounded alternative incoming poses into failure-directed carrier reconsideration, preserving complete incumbents, rollback and all retry/budget receipts; qualify any successful candidate through existing gates. No new renders, full board qualification, routing or fabrication-readiness claim. Overall goal remains incomplete."
+}

@@ -1,5 +1,6 @@
 #include "schgen/occupancy.hpp"
 #include "schgen/occupancy_precision.hpp"
+#include <algorithm>
 #include <array>
 #include <atomic>
 #include <cmath>
@@ -198,6 +199,72 @@ void boundary_frontier() {
         }
     }
 }
+void alternative_poses() {
+    for(double step:{.5,1.})for(int mask:{1,2,3})for(double ax:{-1.,3.05,7.}) {
+        Occupancy scene(7,6,.1,2,2,step,.05);
+        const std::vector<Comp> children{{-.25,.5,.5,.5,2}};
+        scene.add(3,2,1,2,{.1,.2,.3,.1},{},1,{{.25,-.5,.5,.5,3}});
+        std::vector<std::tuple<double,double,double>> oracle;
+        for(int ix=0;ix<=static_cast<int>(7/step);++ix)for(int iy=0;iy<=static_cast<int>(6/step);++iy) {
+            const double x=ix*step,y=iy*step;
+            if(x<.5||x>6||y<.5||y>5||!scene.fits_exhaustive(x,y,1,1,{},{},mask,children))continue;
+            oracle.emplace_back(occupancy_frontier_key1dp(std::abs(x+.5-ax)+std::abs(y+.5-2.65)),x,y);
+        }
+        std::sort(oracle.begin(),oracle.end());
+        QuantizationCounts legacy_counts,one_counts;
+        const auto first=scene.place_near(ax,2.65,1,1,{},{},mask,children,.5,6,.5,5,&legacy_counts);
+        const auto one=scene.place_near_candidates(ax,2.65,1,1,{},{},mask,children,.5,6,.5,5,1,10000,&one_counts);
+        require(legacy_counts==one_counts&&bool(first)==!one.poses.empty(),"single-result adapter changed receipts or feasibility");
+        if(first)require(first->x==one.poses[0].x&&first->y==one.poses[0].y,"single-result adapter changed incumbent");
+        for(std::size_t limit:{1u,4u,10000u})for(std::size_t budget:{1u,3u,10000u}) {
+            QuantizationCounts counts;NearPoseCandidates result;
+            measured(counts,[&]{result=scene.place_near_candidates(ax,2.65,1,1,{},{},mask,children,.5,6,.5,5,limit,budget,&counts);});
+            require(result.frontier_nodes<=budget&&result.poses.size()<=limit,"alternative query exceeded explicit limits");
+            require(result.poses.size()<=oracle.size(),"alternative query invented feasibility");
+            for(std::size_t i=0;i<result.poses.size();++i)
+                require(result.poses[i].x==std::get<1>(oracle[i])&&result.poses[i].y==std::get<2>(oracle[i]),"alternative list differs from exhaustive ordered prefix");
+            if(result.search_complete)require(!result.budget_exhausted&&result.poses.size()==oracle.size(),"incomplete domain reported exhausted");
+            if(result.budget_exhausted)require(!result.search_complete&&result.frontier_nodes==budget,"budget status lost executed frontier work");
+            require(counts[names[2]]==result.frontier_nodes,"alternative frontier count differs from actual precision calls");
+            if(budget==10000)require(!result.budget_exhausted&&result.poses.size()==std::min(limit,oracle.size()),"large budget lost legal alternatives");
+        }
+    }
+    Occupancy scene(10,4,0,2,0,1,.05);
+    const auto alternatives=scene.place_near_candidates(5,2,2,2,{},{},1,{},0,8,1,1,9,100);
+    require(alternatives.poses.size()==9,"backtracking fixture missing alternatives");
+    std::size_t rescued=0;
+    for(std::size_t i=0;i<alternatives.poses.size();++i) {
+        auto branch=scene;const auto& p=alternatives.poses[i];branch.add(p.x,p.y,p.w,p.h,{},{},1,{});
+        const auto large=branch.place_near(3,2,6,4,{},{},1,{},0,0,0,0);
+        if(!i)require(!large,"nearest-only fixture should block the constrained group");
+        if(large)++rescued;
+    }
+    require(rescued>0&&scene.rect_count()==0,"alternative exploration failed to recover or mutated its incumbent");
+    QuantizationCounts invalid;
+    for(const auto limits:std::vector<std::pair<std::size_t,std::size_t>>{{0,1},{1,0}}) {
+        const auto failure=outcome([&]{(void)scene.place_near_candidates(5,2,2,2,{},{},1,{},0,8,1,1,limits.first,limits.second,&invalid);return 0;});
+        require(failure.kind=="invalid"&&invalid.empty(),"zero limits performed search work");
+    }
+    const auto empty=scene.place_near_candidates(5,2,2,2,{},{},1,{},20,21,20,21,4,1);
+    require(empty.poses.empty()&&empty.search_complete&&!empty.budget_exhausted&&!empty.frontier_nodes,"empty domain misreported as budget exhaustion");
+    for(double bad:{std::numeric_limits<double>::quiet_NaN(),std::numeric_limits<double>::infinity()}) {
+        const auto failure=outcome([&]{(void)scene.place_near_candidates(bad,2,2,2,{},{},1,{},20,21,20,21,4,1,&invalid);return 0;});
+        require(failure.kind=="invalid"&&invalid.empty(),"invalid anchor passed as an exhausted empty domain");
+    }
+    auto blocked=scene;blocked.add(0,0,10,4,{},{},1,{});
+    QuantizationCounts partial_counts,complete_counts;
+    measured(partial_counts,[&]{
+        const auto partial=blocked.place_near_candidates(5,2,2,2,{},{},1,{},0,8,1,1,4,2,&partial_counts);
+        require(partial.poses.empty()&&partial.budget_exhausted&&!partial.search_complete&&partial.frontier_nodes==2,
+                "bounded failure must not certify global infeasibility");
+    });
+    measured(complete_counts,[&]{
+        const auto complete=blocked.place_near_candidates(5,2,2,2,{},{},1,{},0,8,1,1,4,100,&complete_counts);
+        require(complete.poses.empty()&&!complete.budget_exhausted&&complete.search_complete&&complete.frontier_nodes==9,
+                "exhaustive empty result must certify the queried lattice only");
+    });
+    std::cout<<"bounded alternative poses PASS (ordered oracle, exact receipts, greedy-trap recovery)\n";
+}
 void child_rejection_cache() {
     Occupancy blocked(6,6,1,2,1,1,.05);blocked.add(0,0,6,6,{},{},1,{});
     const std::vector<Comp> children{{0,0,2,2,1}};
@@ -253,6 +320,6 @@ extern "C" void __cyg_profile_func_enter(void* fn,void*) {
     else if(fn==reinterpret_cast<void*>(&schgen::occupancy_axis_count))++entries[5];
 }
 extern "C" void __cyg_profile_func_exit(void*,void*){}
-int main(){try{scalar_contract();map_lifetimes();geometry();threads();boundary_frontier();child_rejection_cache();changing_blockers_oracle();
+int main(){try{scalar_contract();map_lifetimes();geometry();threads();boundary_frontier();alternative_poses();child_rejection_cache();changing_blockers_oracle();
     std::cout<<"occupancy cell counter contracts PASS (independent function-entry proof)\n";
 }catch(const std::exception& e){observing=false;std::cerr<<e.what()<<'\n';return 1;}}

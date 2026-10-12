@@ -688,6 +688,30 @@ std::optional<Pose> Occupancy::place_near(
     double ax, double ay, double w, double h, const Halo& reach,
     const Halo& inset, int mask, const std::vector<Comp>& comps,
     double win_x0, double win_x1, double win_y0, double win_y1, QuantizationCounts* counts) const {
+    return place_near_impl(ax,ay,w,h,reach,inset,mask,comps,
+                          win_x0,win_x1,win_y0,win_y1,counts,nullptr,0,0);
+}
+
+NearPoseCandidates Occupancy::place_near_candidates(
+    double ax,double ay,double w,double h,const Halo& reach,const Halo& inset,
+    int mask,const std::vector<Comp>& comps,double win_x0,double win_x1,double win_y0,double win_y1,
+    std::size_t max_poses,std::size_t max_frontier_nodes,QuantizationCounts* counts) const {
+    if(!max_poses||!max_frontier_nodes)
+        throw std::invalid_argument("place_near_candidates requires positive result and frontier limits");
+    if(!std::isfinite(ax)||!std::isfinite(ay)||!std::isfinite(w)||!std::isfinite(h)||w<=0||h<=0||
+       !std::isfinite(win_x0)||!std::isfinite(win_x1)||!std::isfinite(win_y0)||!std::isfinite(win_y1))
+        throw std::invalid_argument("place_near_candidates requires finite query coordinates and positive dimensions");
+    NearPoseCandidates result;
+    (void)place_near_impl(ax,ay,w,h,reach,inset,mask,comps,
+                        win_x0,win_x1,win_y0,win_y1,counts,&result,max_poses,max_frontier_nodes);
+    return result;
+}
+
+std::optional<Pose> Occupancy::place_near_impl(
+    double ax,double ay,double w,double h,const Halo& reach,const Halo& inset,
+    int mask,const std::vector<Comp>& comps,double win_x0,double win_x1,double win_y0,double win_y1,
+    QuantizationCounts* counts,NearPoseCandidates* alternatives,
+    std::size_t max_poses,std::size_t max_frontier_nodes) const {
     const double s = step_;
     const int nx = occupancy_axis_count(board_w_, s, counts);
     const int ny = occupancy_axis_count(board_h_, s, counts);
@@ -715,6 +739,7 @@ std::optional<Pose> Occupancy::place_near(
     std::sort(xs.begin(), xs.end());
     std::sort(ys.begin(), ys.end());
     if (xs.empty() || ys.empty()) {
+        if(alternatives)alternatives->search_complete=true;
         return std::nullopt;
     }
     std::priority_queue<HeapNode, std::vector<HeapNode>, std::greater<HeapNode>> heap;
@@ -740,10 +765,14 @@ std::optional<Pose> Occupancy::place_near(
             std::sort(cell.begin(), cell.end());
             for (const auto& [x, y] : cell) {
                 if (fits_indexed(x, y, w, h, reach, inset, mask, comps, counts, &rejection)) {
+                    if(alternatives){
+                        alternatives->poses.push_back({x,y,w,h});
+                        if(alternatives->poses.size()<max_poses)continue;
+                    }
                     return Pose{x, y, w, h};
                 }
             }
-            // Retain capacity only after every candidate in this bucket fails.
+            // Retain capacity after every candidate in this bucket is visited.
             // No coordinates or legality results survive into the next bucket.
             cell.clear();
             spare.swap(cell);
@@ -753,6 +782,12 @@ std::optional<Pose> Occupancy::place_near(
 
     OccupancyFrontierSlot frontier_count(counts);
     while (!heap.empty()) {
+        if(alternatives){
+            if(alternatives->frontier_nodes==max_frontier_nodes){
+                alternatives->budget_exhausted=true;return std::nullopt;
+            }
+            ++alternatives->frontier_nodes;
+        }
         const HeapNode node = heap.top();
         heap.pop();
         const double xcost = xs[static_cast<std::size_t>(node.i)].first;
@@ -792,6 +827,7 @@ std::optional<Pose> Occupancy::place_near(
     if (auto hit = flush(INFINITY)) {
         return hit;
     }
+    if(alternatives)alternatives->search_complete=true;
     return std::nullopt;
 }
 
