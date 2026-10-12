@@ -1,0 +1,90 @@
+{
+  "code_commit": "f803971c",
+  "method": "Fresh full production builds, carrier then devkit, sequentially after all tests and rebuilds stopped. No concurrent compilation, tests or candidate campaign. Front/back images were inspected. OS/compiler/catalog caches uncontrolled; one sample per board; compilation not timed.",
+  "environment": {"os": "macOS 26.6.2 (25G83)", "architecture": "arm64", "kicad": "10.0.2"},
+  "carrier": {
+    "command": "native/bin/schgen board --project carrier --compact-placement --interior-order 3 --edge-feasibility --owned-quality-first --owned-face-cohesion --contract-group-face-sheet usb_jtag --owned-shape board_aux=owned-face-fixed/a2.2/owned-pins-forward --floorplan-spec native/benchmarks/carrier-166x159-contract-groups.floorplan.json --timing -o OUTPUT",
+    "output": "/private/tmp/carrier-qualified-oct12.SwxP7c",
+    "log": "native/build/carrier-qualified-oct12.log",
+    "log_sha256": "89c88b7286cb90350395167a809cff047c0d551fbf93b5a9089ce91ff5237ff8",
+    "exit_code": 0, "board_ok": true, "complete": true, "sheets": 37,
+    "all_mandatory_gates_pass": true,
+    "advisory_failures": ["return_path", "golden", "contract_coverage_lint"],
+    "outline_mm": [166,159], "area_mm2": 26394,
+    "area_change_percent_from_168x163": -3.6152497808939525,
+    "top": 416, "bottom": 153,
+    "pcb_sha256": "b9389efa52adf30b1d94cad1ede3a4387bacd53802f7babb5da07dd6306cff76",
+    "unchanged_from_accepted_physical_side_reference": true,
+    "non_unrouted_drc_errors": 0, "unrouted": 499,
+    "hard_red": 0,
+    "hdmi_rx_term_to_som_j2_near_max_margin_mm": 4.07,
+    "renders": 8,
+    "visually_inspected": ["renders/3d_top.png", "renders/3d_bottom.png"],
+    "visual_observation": "Central top SoM reserve clear; perimeter controls and connectors retained; USB-JTAG group on bottom. Substantial bottom free space remains, but does not establish legal relocation or assembly clearance.",
+    "timings_seconds": {
+      "process_wall": 257.35, "measured_scope": 257.297486, "compile": null,
+      "authoring_audit": 19.179003,
+      "sheet_parallel_checks_and_render_wall": 26.051946,
+      "pcb_input_loading_and_netlist_validation": 1.541820,
+      "pcb_build_model_with_internal_checks": 2.896580,
+      "pcb_text_emission": 0.036190,
+      "pcb_drc": 1.618965,
+      "render3d": 30.244419,
+      "source_audit": 162.126083
+    }
+  },
+  "devkit": {
+    "command": "native/bin/schgen board --project devkit_mini --multiscale-outline --timing -o OUTPUT",
+    "output": "/private/tmp/devkit-qualified-oct12.wN3PN1",
+    "log": "native/build/devkit-qualified-oct12.log",
+    "log_sha256": "4aa653331cae7082cfe484913a31fd5ffc4cdabcc98d1a79cee7fee9a1b3213d",
+    "exit_code": 0, "board_ok": true, "complete": true, "sheets": 12,
+    "mandatory_failures": [],
+    "mandatory_skips": {
+      "manual": "project has no bringup_rails, bringup_en, bringup_en_modules, bringup_modules",
+      "scfw": "project has no bringup_en, bringup_modules, bringup_rails, usb_pd, board_services, bringup_en_modules"
+    },
+    "advisory_failures": ["return_path", "golden", "contract_coverage_lint"],
+    "outline_mm": [98,98], "area_mm2": 9604,
+    "top": 106, "bottom": 57,
+    "pcb_sha256": "cfa0305491d9c4a771adb130b04c4aec6cc2894542391a5c7c9dca3a68bca3cf",
+    "unchanged_from_accepted_reference": true,
+    "non_unrouted_drc_errors": 0, "unrouted": 413,
+    "renders": 8,
+    "visually_inspected": ["renders/3d_top.png", "renders/3d_bottom.png"],
+    "visual_observation": "Central top SoM reserve remains clear; perimeter power/UART and debug connectors retained. Bottom decoupling and shunts are visible, with sparse overall bottom population.",
+    "timings_seconds": {
+      "process_wall": 226.84, "measured_scope": 226.786924, "compile": null,
+      "authoring_audit": 18.882433,
+      "sheet_parallel_checks_and_render_wall": 8.279826,
+      "pcb_input_loading_and_netlist_validation": 0.691147,
+      "pcb_build_model_with_internal_checks": 0.182201,
+      "pcb_text_emission": 0.008877,
+      "pcb_drc": 1.198938,
+      "render3d": 17.148959,
+      "source_audit": 172.734661
+    }
+  },
+  "historical_revision_comparison": {
+    "python_commit": "0e9bbc913bab77f9cd228940db2a332d25d6bfa1",
+    "baseline_record": "2026-10-08-timing-summary.json",
+    "baseline_log_hashes_rechecked": true,
+    "matched_hardware_inputs": false,
+    "render_request": "Eight high-quality opaque 1600x1200 3D views, plus schematic renders, on both revisions",
+    "percentage_formula": "100 * (cpp_seconds - python_seconds) / python_seconds",
+    "carrier": {"python_wall_seconds": 717.95, "python_exit_code": 0, "cpp_wall_seconds": 257.35, "change_percent": -64.15488543770458},
+    "devkit": {"python_wall_seconds": 75.06, "python_exit_code": 1, "cpp_wall_seconds": 226.84, "change_percent": 202.21156408206767},
+    "limitations": ["Historical carrier 168x163; current carrier 166x159 with corrected reference topology and capacitor.", "Historical devkit 152 components at 100x100, failing design rules and test-point gates; current 163 components at 98x98.", "Audit coverage, scheduling and algorithms differ. These whole-command changes are not language-only speedups.", "Historical mixed phase spans overlap work; they cannot supply honest exclusive model, rendering or audit comparisons.", "Historical runs were recorded October 8, current runs October 12; same host/OS/KiCad, but uncontrolled cache/background conditions."]
+  },
+  "integrated_regressions": {
+    "full_run_started_at": "7a91563c",
+    "initial_passed": 271, "initial_failed": 2, "total": 273,
+    "wall_seconds": 969.79,
+    "log": "native/build/integrated-facing-replan-tests.log",
+    "log_sha256": "d470567b2a1108e1df6c777e6d3becc8f0dc942fceee712fb2c159222be42a39",
+    "initial_failures": ["native_producer_accounting_contracts", "native_policy_audits_contracts"],
+    "correction": "Both stale accounting assertions corrected without deleting work or relaxing gates. All binaries rebuilt, and both failed suites passed again at f803971c (46.99 seconds); see native/build/integrated-receipt-final-tests.log. The new overflow fix separately passed model failure, producer and floorplan precision suites (47.07 seconds).",
+    "scope": "Broad run plus targeted corrections, not a claimed single all-green 273-test run at f803971c. Profiler/test fixes and the overflow correction were developed during the broad run; production remained frozen throughout the two timed board builds."
+  },
+  "remaining_risks": ["Not routed and not fabrication-ready.", "Existing assembly, height, thermal and qualitative decoupling/access evidence limits remain unresolved.", "Three advisory failures remain on both boards; no unknown was relabeled PASS.", "The composition report currently aggregates linear and angular margins under a millimetre label. That mixed-unit aggregate is excluded from accepted quality evidence here and requires correction.", "Matched-input Python timing and clean compile timing remain incomplete. Partial qualification is not goal completion."]
+}
