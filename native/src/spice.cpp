@@ -60,7 +60,8 @@ bool ground(const CircuitNetIr& n){return n.net_class=="ground";}
 bool power(const CircuitNetIr& n){return n.net_class=="power";}
 bool signal(const CircuitNetIr& n){return n.net_class=="signal"||n.net_class=="port";}
 std::string resistor_description(const Passive& p){return p.ref+"="+g(p.value)+"R";}
-void auto_dividers(const std::string& sheet,const SpiceIndex& idx,SpiceResult& out,const PowerPolicy& policy) {
+void auto_dividers(const std::string& sheet,const SpiceIndex& idx,SpiceResult& out,const PowerPolicy& policy,
+                   std::set<std::string>& extracted_named) {
     for(const auto& net:idx.c.nets) {
         if(!signal(net))continue;const auto& rs=idx.on(net.name);if(rs.size()!=2)continue;
         const auto tops=select(rs,[](const auto& n){return power(n)||source_override(n.name);});const auto bots=select(rs,ground);
@@ -74,11 +75,11 @@ void auto_dividers(const std::string& sheet,const SpiceIndex& idx,SpiceResult& o
             out.checks.push_back({"divider "+net.name,sheet,"divider",prefix+g(v)+" V (informational, no named threshold)",py_round(v*ratio,4),"V",{}, {},"analytic",{}});continue;
         }
         const bool source_ok=src.name==named->source;
+        if(!source_ok)throw ModelCheckError("required divider "+net.name+": source "+src.name+", expected "+named->source);
+        extracted_named.insert(net.name);
         for(const auto& sub:named->checks) {
             auto v=sub.volts;auto tag=sub.tag;
-            if(!source_ok){v=volts(src.name,policy);tag+="; SOURCE IS "+src.name+" ("+g(v)+" V), expected "+named->source;}
             out.checks.push_back({"divider "+net.name+" ["+tag+"]",sheet,"divider",prefix+g(v)+" V: "+named->why,py_round(v*ratio,4),"V",sub.lo,sub.hi,"analytic",{}});
-            if(!source_ok)break;
         }
     }
 }
@@ -177,18 +178,18 @@ std::vector<std::string> SpiceResult::errors() const {
 }
 bool SpiceResult::ok() const{return !checks.empty()&&std::all_of(checks.begin(),checks.end(),[](const auto& c){return c.ok();});}
 SpiceResult extract_spice_checks(const std::vector<ProjectCircuit>& sheets,const PowerPolicy& policy) {
-    SpiceResult out;std::set<std::string> nets;
+    SpiceResult out;std::set<std::string> nets,extracted_named;
     for(const auto& sheet:sheets) {
         const SpiceIndex index(sheet.circuit);for(const auto& n:sheet.circuit.nets)nets.insert(n.name);
         // The shared pure detection stage does not run unrelated load/thermal
         // analysis or alter the original spice extraction's failure boundary.
-        auto_dividers(sheet.name,index,out,policy);rc_networks(sheet.name,index,out);sy7201_iset(sheet.name,index,out);
+        auto_dividers(sheet.name,index,out,policy,extracted_named);rc_networks(sheet.name,index,out);sy7201_iset(sheet.name,index,out);
         const auto regs=detect_power_regulators({sheet},policy).regs;
         buck_fb(sheet.name,index,regs,out,policy);en_clamp(sheet.name,index,regs,out,policy);boot0(sheet.name,index,out);
     }
     for(const auto& named:named_dividers()) {
-        const bool found=std::any_of(out.checks.begin(),out.checks.end(),[&](const auto& c){return c.name.find(named.net)!=std::string::npos;});
-        if(!found&&nets.count(named.net))out.notes.push_back("NOTE: named divider "+named.net+" exists but was not extracted — check the topology ("+named.why+")");
+        if(!extracted_named.count(named.net)&&nets.count(named.net))
+            throw ModelCheckError("required divider "+named.net+": topology could not be extracted");
     }return out;
 }
 std::string spice_report(const SpiceResult& r,bool present) {

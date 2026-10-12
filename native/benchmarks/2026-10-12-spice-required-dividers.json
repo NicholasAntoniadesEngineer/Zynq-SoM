@@ -1,0 +1,30 @@
+{
+  "schema": 1,
+  "base_commit": "fb0657fb",
+  "defects": [
+    "A present required named-divider net with unextractable topology only added a note; unrelated checks could make the result pass",
+    "Coverage was inferred by substring search of human-readable check names, so a prefix-lookalike net could hide missing required coverage",
+    "A wrong named-divider source rail merely changed the computed voltage and ran the first threshold; a wrong low-voltage rail could pass the upper-only check"
+  ],
+  "correction": "Track exact successfully extracted named-divider net identities. Fail with ModelCheckError for a wrong required source or a present required net with no extracted topology. Preserve all existing numeric limits and valid calculations.",
+  "coverage": [
+    "Frozen wrong-source and unextractable-topology fixtures now explicitly require typed extraction errors; historical fixtures preserved",
+    "Unextractable HDMI_RX_5V_DET combined with an independently valid HDMI_RX_5V_DET_suffix informational divider must fail in both sheet orders",
+    "HDMI required divider fed from +3V3 must fail despite its 1:1 ratio fitting the old upper-only voltage test"
+  ],
+  "validation": {
+    "command": "ctest --test-dir native/build/fast --output-on-failure -R '^native_(spice|board_pipeline|firmware_docs)_contracts$'",
+    "passed": 3,
+    "failed": 0,
+    "seconds": 42.88,
+    "production_cli_rebuilt": true,
+    "live_carrier": "17 analytic checks PASS; complete CLI report identical to previous zero-coverage-corrected reference",
+    "live_devkit_mini": "11 analytic checks PASS; complete CLI report identical to previous zero-coverage-corrected reference"
+  },
+  "limits": [
+    "Only the already-declared named-divider contracts are tightened; this is not a complete topology/model-coverage audit",
+    "Other extractor paths still have advisory notes for unsupported or missing model details and need separate review",
+    "No schematic, component value, placement constraint, numeric electrical limit or accepted board changed",
+    "No full render/audit qualification, matched historical Python benchmark, or fabrication-readiness claim"
+  ]
+}

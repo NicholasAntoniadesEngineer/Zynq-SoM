@@ -55,6 +55,34 @@ void empty_coverage(){
             "JSON concealed missing coverage");
     require(runnable().ok(),"valid positive coverage was rejected");
 }
+std::vector<ProjectCircuit> fixture_sheets(const std::filesystem::path& path){
+    const auto row=parse_json_file(path.string());std::vector<ProjectCircuit> sheets;
+    for(const auto& sc:field(row,"sheets").array_value)
+        sheets.push_back({field(sc,"name").string_value,{},decode_intermediate_circuit_ir(field(sc,"circuit"))});
+    return sheets;
+}
+void rejects_divider(const std::vector<ProjectCircuit>& sheets,const std::string& expected){
+    bool rejected=false;
+    try{(void)extract_spice_checks(sheets);}catch(const ModelCheckError& error){
+        require(error.what()==expected,"required-divider diagnostic mismatch: "+std::string(error.what()));rejected=true;
+    }
+    require(rejected,"required-divider extraction silently accepted unsupported topology/source");
+}
+void required_divider_coverage(const std::filesystem::path& dir){
+    auto unrelated=fixture_sheets(dir/"015_INFORMATIONAL_10k_10k.json");
+    require(extract_spice_checks(unrelated).ok(),"unrelated coverage fixture must pass alone");
+    for(auto& net:unrelated[0].circuit.nets)if(net.name=="INFORMATIONAL")net.name="HDMI_RX_5V_DET_suffix";
+    require(extract_spice_checks(unrelated).ok(),"prefix-lookalike generic divider must remain independently valid");
+    auto broken=fixture_sheets(dir/"022_named_not_extracted.json");
+    auto combined=broken;combined.insert(combined.end(),unrelated.begin(),unrelated.end());
+    rejects_divider(combined,"required divider HDMI_RX_5V_DET: topology could not be extracted");
+    std::reverse(combined.begin(),combined.end());
+    rejects_divider(combined,"required divider HDMI_RX_5V_DET: topology could not be extracted");
+    auto wrong=fixture_sheets(dir/"021_wrong_named_source.json");
+    for(auto& net:wrong[0].circuit.nets)if(net.name=="+VIN")net.name="+3V3";
+    // Half of 3.3 V lies below the old upper-only check, but the rail is wrong.
+    rejects_divider(wrong,"required divider HDMI_RX_5V_DET: source +3V3, expected HDMI_RX_5V");
+}
 void numeric_safety() {
     for (const auto bad : {std::numeric_limits<double>::quiet_NaN(),
                            std::numeric_limits<double>::infinity(),
@@ -101,12 +129,18 @@ int main(int argc,char** argv) {
     }
     try {
         require(argc==2,"usage: spice_contracts <fixture-directory>");const std::filesystem::path dir(argv[1]);
-        numeric_safety();empty_coverage();
+        numeric_safety();empty_coverage();required_divider_coverage(dir);
         const auto manifest=parse_json_file((dir/"manifest.json").string());std::size_t passed=0,live=0;
-        const auto ngspice=ngspice_available();std::size_t corrected_empty=0;
+        const auto ngspice=ngspice_available();std::size_t corrected_empty=0,corrected_required=0;
         for(const auto& file:field(manifest,"cases").array_value) {
             const auto row=parse_json_file((dir/file.string_value).string());std::vector<ProjectCircuit> sheets;
             for(const auto& sc:field(row,"sheets").array_value)sheets.push_back({field(sc,"name").string_value,{},decode_intermediate_circuit_ir(field(sc,"circuit"))});
+            if(file.string_value=="021_wrong_named_source.json"||file.string_value=="022_named_not_extracted.json"){
+                rejects_divider(sheets,file.string_value=="021_wrong_named_source.json"
+                    ?"required divider HDMI_RX_5V_DET: source +VIN, expected HDMI_RX_5V"
+                    :"required divider HDMI_RX_5V_DET: topology could not be extracted");
+                ++corrected_required;++passed;continue;
+            }
             const auto* error=object_field(row,"error");std::optional<SpiceResult> result;
             try{result=extract_spice_checks(sheets);}
             catch(const ModelCheckError& e){require(error!=nullptr,file.string_value+": unexpected error "+e.what());require(field(*error,"message").string_value==e.what(),file.string_value+": diagnostic differs "+e.what());}
@@ -150,7 +184,7 @@ int main(int argc,char** argv) {
             }
             ++passed;
         }
-        require(corrected_empty==7,"exact seven historical empty-coverage corrections required");
+        require(corrected_empty==6&&corrected_required==2,"exact historical empty/required-divider corrections required");
         const auto boundaries=parse_json_file((dir/"boundaries.json").string());
         std::size_t corrected_zero_cases = 0;
         for(const auto& row:boundaries.array_value) {
