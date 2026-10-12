@@ -1258,6 +1258,14 @@ void joint_separation_contracts() {
             if(budget==64)require(r.ok==oracle&&!r.budget_exhausted&&(r.ok||r.complete),"complete domain search disagrees with coordinate oracle");
             if(r.ok){
                 ++solved;require(oracle&&r.x.size()==2&&r.y.size()==2&&r.choices.size()==3,"joint search published invalid solution shape");
+                std::vector<RepairSep> selected;
+                for(std::size_t i=0;i<domains.size();++i)selected.push_back(domains[i].at(r.choices[i]));
+                for(const bool axis_x:{true,false}){
+                    const auto rebuilt=legalize_repair_axis(axis_x,{"a","b"},{2,2},axis_x?w:h,0,
+                        selected,{{"obstacle",{2,2,4,4}}},{},0);
+                    require(rebuilt.ok&&rebuilt.pos==(axis_x?r.x:r.y),
+                            "joint solution differs from independently rebuilt axis graph");
+                }
                 for(int i=0;i<2;++i)require(r.x[i]>=0&&r.y[i]>=0&&r.x[i]+2<=w&&r.y[i]+2<=h,"joint pose exceeds walls");
                 require(apart(r.x[0],r.y[0],r.x[1],r.y[1])&&apart(r.x[0],r.y[0],2,2)&&apart(r.x[1],r.y[1],2,2),
                     "independent physical separation check rejects joint solution");
