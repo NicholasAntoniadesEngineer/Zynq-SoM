@@ -22,6 +22,7 @@ ManufacturingPipelineInput native_board_pipeline_metadata(){
     // actual native producers, not historical recorded board populations.
     out.fallbacks={
         {"interior_failed_first_retry","plan_lattice","One opt-in failed-block-first restart of an explicit order; count every attempt and retain rejected work without weakening geometry or hard terms."},
+        {"facing_replan_retry","plan_lattice","One multiscale strict-facing replan after a resolved final facing failure; retain valid incumbents and all prior model/screening work, including failed retries."},
         {"legalize_reservation_retry","plan_lattice","One failure-only child-reservation geometry solve. Count every attempt; retain all earlier work and exact final collision gates."},
         {"legalize_facing_retry","plan_lattice","One failure-only strict-facing projection solve. Count every attempt; preserve accepted incumbents and final exact gates."},
         {"contract_group_orientation_retry","plan_lattice","One opt-in suffix orientation expansion after typed packing infeasibility. Preserve failed work, count attempts even on rejection, never replace a successful initial plan."},

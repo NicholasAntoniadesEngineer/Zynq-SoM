@@ -1,5 +1,6 @@
 #include "pcb_placement_internal.hpp"
 #include "pcb_placement_orientations.hpp"
+#include "schgen/pcb_placement_gates.hpp"
 
 namespace schgen::pcb_placement {
 namespace {
@@ -278,6 +279,44 @@ PcbPlacementResult build_pcb_model(const PcbPlacementInput &input, ExecutionFail
         // Measure the same placement zones before shape binding.
         row.plan = measure_floorplan_experiment_plan(prepare_pcb_floorplan(input, zones), floorplan.plan);
         return row;
+    });
+    auto result=place_pcb_model_accounted(input, zones, floorplan,
+        PcbZoneAccountingOwnership::IncludedInFloorplan,&child);
+    const auto experiment=input.floorplan.experiment;
+    if(input.floorplan.compact_search || !experiment || !experiment->multiscale_outline ||
+       std::none_of(prepared.compose.index.hard.begin(),prepared.compose.index.hard.end(),
+           [](const auto& t){return t.kind=="facing"&&t.enforced&&!t.require_positive_facing;}))
+        return result;
+
+    // Preserve successful incumbents. Only a resolved final facing failure
+    // justifies the one stricter placement trial; unknown inputs never PASS.
+    completed=pcb_placement_accounting(result);child={};
+    ExecutionAccounting screening;
+    PcbPlacementFlowResult flow;
+    try {
+        flow=check_pcb_placement_flow(PcbCheckInput(result.model),pcb_placement_gate_policy(input),
+            nullptr,&screening.quantization_engagements);
+    } catch(...) {append_execution_accounting(completed,screening,&child);throw;}
+    append_execution_accounting(completed,screening,&child);
+    append_execution_accounting(result.placement_accounting,screening,&child);
+    if(!flow.facing_fail || !flow.unresolved.empty())return result;
+
+    // A late half-turn may be unsafe even when its facing direction is right.
+    // Reuse the prepared zones, but solve the actual positive-facing terms
+    // before placement. Never discard the original model's executed work.
+    for(auto& term:prepared.compose.index.hard)
+        if(term.kind=="facing"&&term.enforced)term.require_positive_facing=true;
+    completed.fallback_events.push_back("facing_replan_retry");
+    prepared.accounting.quantization_engagements=completed.quantization_engagements;
+    prepared.accounting.fallback_events=completed.fallback_events;
+    completed={};child={};
+    floorplan=generate_floorplan(prepared,&child); // One retry; no recursion.
+    append_execution_accounting(completed,{floorplan.plan.accounting.quantization_engagements,
+        floorplan.plan.accounting.fallback_events},&child);
+    append_execution_accounting(completed,floorplan.documents.accounting,&child);
+    observe_pcb_experiment_checkpoint(input.experiment.get(), [&] {
+        PcbPlacementObservation row;row.stage="plan_lattice";
+        row.plan=measure_floorplan_experiment_plan(prepared,floorplan.plan);return row;
     });
     return place_pcb_model_accounted(input, zones, floorplan,
         PcbZoneAccountingOwnership::IncludedInFloorplan,&child);

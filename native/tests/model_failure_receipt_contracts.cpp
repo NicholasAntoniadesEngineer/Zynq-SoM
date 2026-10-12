@@ -150,6 +150,31 @@ void contract_retry(const std::filesystem::path& root){
     if(mode!=0)require(attempts==(mode>=2?1:2),"retry exceeded one additional attempt");
  }
 }
+void facing_retry(const std::filesystem::path& root){
+    for(int mode:{0,1,2}){
+        auto fixture=placement_fixture::load(root,mode==2?"devkit_mini":"carrier");
+        auto observer=std::make_shared<FloorplanExperiment>();
+        observer->multiscale_outline=true;
+        bool second_solve=false;
+        // Witness a new solve after actual first-model emission, without
+        // invoking diagnostic snapshots or trusting the production receipt.
+        observer->attempt_completed=[&](const FloorplanAttemptObservation&){
+            if(entries[5]){second_solve=true;if(mode==1)throw Injected();}
+        };
+        fixture.input.floorplan.experiment=observer;
+        ExecutionFailureReceipt failure;ExecutionAccounting receipt;bool injected=false;
+        begin();
+        try{receipt=pcb_placement_accounting(build_pcb_model(fixture.input,&failure));}
+        catch(const Injected&){injected=true;receipt=failure.accounting;}
+        observing=false;
+        require(injected==(mode==1)&&failure.captured==(mode==1),"facing retry preserves original exception and receipt ownership");
+        require(second_solve==(mode!=2),"valid incumbent must not replan; failing carrier must replan");
+        require(std::count(receipt.fallback_events.begin(),receipt.fallback_events.end(),"facing_replan_retry")==
+                (mode==2?0:1),"one facing retry event including interrupted solve");
+        verify(receipt,"facing retry mode "+std::to_string(mode));
+        inbox(receipt);reject_receipt_mutations(receipt);
+    }
+}
 void overflow(){
     ExecutionFailureReceipt sink;sink.captured=true;sink.accounting.quantization_engagements["real"]=3;
     ExecutionFailureReceipt child;child.captured=true;child.accounting.quantization_engagements["real"]=1;
@@ -218,4 +243,4 @@ void invalid_stage(const std::filesystem::path& root){
 }
 extern "C" void __cyg_profile_func_enter(void* f,void*){if(!observing)return;for(std::size_t i=0;i<ops.size();++i)if(f==ops[i].address){++entries[i];break;}}
 extern "C" void __cyg_profile_func_exit(void*,void*){}
-int main(int argc,char** argv){try{require(argc==2,"repo path required");contract_retry(argv[1]);overflow();constructor_failure(argv[1]);owning_overflow(argv[1]);invalid_stage(argv[1]);for(bool two_side:{true,false}){checkpoints(argv[1],two_side);floorplan_failure(argv[1],two_side);success(argv[1],two_side);}std::cout<<"model failure receipts PASS\n";}catch(const std::exception& e){observing=false;std::cerr<<e.what()<<'\n';return 1;}}
+int main(int argc,char** argv){try{require(argc==2,"repo path required");facing_retry(argv[1]);contract_retry(argv[1]);overflow();constructor_failure(argv[1]);owning_overflow(argv[1]);invalid_stage(argv[1]);for(bool two_side:{true,false}){checkpoints(argv[1],two_side);floorplan_failure(argv[1],two_side);success(argv[1],two_side);}std::cout<<"model failure receipts PASS\n";}catch(const std::exception& e){observing=false;std::cerr<<e.what()<<'\n';return 1;}}
