@@ -76,6 +76,7 @@ struct Options {
     std::optional<fs::path> floorplan_spec;
     std::optional<int> interior_order;
     std::optional<std::size_t> joint_states;
+    std::optional<FloorplanPoseRetryLimits> reseat_pose_limits;
     bool help = false;
     std::set<std::string> help_options;
     long long quantity = 1, minimum_stock = 50;
@@ -144,6 +145,19 @@ Options parse(int argc, char** argv) {
                 throw ProjectError("joint-separation-states requires a positive integer");
             FloorplanExperiment experiment;experiment.joint_separation_states=n;
             validate_floorplan_experiment(experiment);out.joint_states=n;continue;
+        }
+        if(arg=="--reseat-poses"||arg=="--reseat-frontier"||arg=="--reseat-continuations"){
+            if(!seen.insert(arg).second)throw ProjectError("duplicate option "+arg);
+            if(++i==argc)throw ProjectError("reseat limits require positive integers");
+            const std::string value=argv[i];std::size_t n=0;
+            const auto parsed=std::from_chars(value.data(),value.data()+value.size(),n);
+            if(parsed.ec!=std::errc{}||parsed.ptr!=value.data()+value.size()||!n)
+                throw ProjectError("reseat limits require positive integers");
+            if(!out.reseat_pose_limits)out.reseat_pose_limits.emplace();
+            if(arg=="--reseat-poses")out.reseat_pose_limits->poses=n;
+            else if(arg=="--reseat-frontier")out.reseat_pose_limits->frontier_nodes=n;
+            else out.reseat_pose_limits->continuations=n;
+            continue;
         }
         if(arg=="--multiscale-outline"){
             if(!seen.insert(arg).second)throw ProjectError("duplicate option "+arg);
@@ -240,6 +254,7 @@ Options parse(int argc, char** argv) {
         allowed.insert("--multiscale-outline");
         allowed.insert("--edge-feasibility");
         allowed.insert("--joint-separation-states");
+        allowed.insert("--reseat-poses");allowed.insert("--reseat-frontier");allowed.insert("--reseat-continuations");
         allowed.insert("--failed-first-retry");
         allowed.insert("--owned-quality-first");
         allowed.insert("--owned-extent-alternatives");
@@ -296,6 +311,12 @@ Options parse(int argc, char** argv) {
         if (!allowed.count(key)) throw std::runtime_error(key + " is not valid for " + out.command);
     }
     out.help_options=std::move(allowed);
+    if(out.reseat_pose_limits){
+        if(!out.compact_search)throw ProjectError("reseat limits require --compact-placement");
+        FloorplanExperiment experiment;experiment.reseat_pose_limits=out.reseat_pose_limits;
+        experiment.interior_order=out.interior_order;experiment.failed_first_retry=out.failed_first_retry;
+        validate_floorplan_experiment(experiment);
+    }
     if(out.edge_feasibility&&!out.compact_search)
         throw ProjectError("edge-feasibility requires --compact-placement");
     if(out.joint_states&&!out.compact_search)
@@ -350,6 +371,7 @@ std::optional<int> run_project_command(int argc, char** argv) {
         if(options.command=="board")std::cout<<"--edge-feasibility: opt-in sequential clearance-aware initial edge runs; requires --compact-placement. Not a complete joint solver. Rounded poses are rechecked; all gates remain active.\n";
         if(options.command=="board")std::cout<<"--joint-separation-states N: opt-in failure-only coupled-axis search, with interior-neighbour translation after constrained-only solves fail. N bounds each joint search, not total build work; hardware-fixed obstacles and all gates remain active. Requires --compact-placement.\n";
         if(options.command=="board")std::cout<<"--audit-projections 1|2: simultaneous source-audit AST projections (default 1). Two trades more memory for potential throughput; audit coverage and source-change checks are unchanged.\n";
+        if(options.command=="board")std::cout<<"--reseat-poses N --reseat-frontier N [--reseat-continuations N]: failure-only placement alternatives; both pose/frontier limits required. Continuations revisit early choices after downstream failure and require --interior-order. All hardware checks remain active; limits bound search effort, not feasibility. Requires --compact-placement.\n";
         if(options.command=="board")std::cout<<"--owned-quality-first: opt-in same-pose, same-face owned proximity priority; requires --compact-placement. May increase inter-block estimate. No hardware proximity limit is implied; all gates remain active.\n";
         if(options.command=="board")std::cout<<"--owned-extent-alternatives: append bounded extent-first owned-group candidates; requires --compact-placement. Original alternatives and all gates remain active.\n";
         if(options.command=="board")std::cout<<"--owned-face-cohesion: append owner/cap same-face initial packs, preserving existing candidates.\n--owned-shape SHEET=TAG: restrict a measured candidate by generated tag; unknown, ambiguous or infeasible choices fail without substitution. Requires --compact-placement. All gates remain active.\n";
@@ -481,11 +503,12 @@ std::optional<int> run_project_command(int argc, char** argv) {
         build.native_policy = true;
         build.pcb.compact_search = options.compact_search;
         build.pcb.floorplan_spec = options.floorplan_spec;
-        if(options.initial_outline || options.interior_order || options.multiscale_outline || options.edge_feasibility || options.owned_quality_first || options.owned_extent_alternatives || options.owned_face_cohesion || !options.owned_shapes.empty() || !options.contract_group_face_sheets.empty() || options.joint_states){
+        if(options.initial_outline || options.interior_order || options.multiscale_outline || options.edge_feasibility || options.owned_quality_first || options.owned_extent_alternatives || options.owned_face_cohesion || !options.owned_shapes.empty() || !options.contract_group_face_sheets.empty() || options.joint_states || options.reseat_pose_limits){
             auto experiment=std::make_shared<FloorplanExperiment>();
             experiment->initial_outline=options.initial_outline;
             experiment->interior_order=options.interior_order;
             experiment->joint_separation_states=options.joint_states;
+            experiment->reseat_pose_limits=options.reseat_pose_limits;
             experiment->multiscale_outline=options.multiscale_outline;
             experiment->compact_edge_feasibility=options.edge_feasibility;
             experiment->failed_first_retry=options.failed_first_retry;

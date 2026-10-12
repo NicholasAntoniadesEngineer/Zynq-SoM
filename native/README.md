@@ -265,6 +265,20 @@ census order and failure propagation. In a paired 49-file measurement, audit tim
 fell from 130.07 s to 88.05 s while sampled process-tree peak memory rose from
 2.87 GB to 4.32 GB. These are single-run audit measurements, not whole-build or
 Python-comparison speedups. Use `--audit-projections 1` on memory-constrained runs.
+That paired benchmark uses the 49-file pipeline manifest; the integrated native
+policy audit includes additional sources (69 files in the qualified builds).
+
+The qualified 165x158 carrier alternative is reproducible with
+`benchmarks/carrier-165x158-continuation.floorplan.json`, compact placement,
+interior order 3, edge feasibility, owned quality/face cohesion, USB-JTAG
+contract-group candidates, `--joint-separation-states 1024 --reseat-poses 8
+--reseat-frontier 4096 --reseat-continuations 3`, and **no** pinned `--owned-shape`.
+Both reseat pose/frontier limits are required; continuation replays require an
+explicit interior order and cannot be combined with failed-first retry. These
+limits control computation, not physical feasibility. The 165x159 reference is
+retained: the smaller alternative uses more search and has a higher cross-wire
+estimate. See `benchmarks/2026-10-12-carrier-165x158-qualification.json` for the
+full gate, rendering, quality and unresolved-risk evidence.
 
 Firmware source provenance now reads canonical circuit JSON and compiled factory
 registrations rather than checking for Python constructors. Independent source

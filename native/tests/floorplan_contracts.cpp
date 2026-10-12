@@ -1021,6 +1021,22 @@ void frozen(const std::filesystem::path& dir,const std::string& name,bool geomet
     require(!load_floorplan_spec((publication.directory/"missing.json").string()),name+": missing optional spec");
 }
 void repair_choice_contracts() {
+    for(const double limit:{1.,2.,3.}) {
+        FloorplanLegalizeInput in;in.board_w=30;in.board_h=30;in.clear=.1;
+        in.som_j_rects["som_j1"]={10,10,12,12};
+        in.metrics["v"]={{{"p",.5,.5}},{{"p",0,0,1,1}},{1,1}};
+        in.index.hard.push_back({"near_max","v","v","som_j1",limit,"tight authored limit",true,{},{}});
+        std::vector<FloorplanLegalizeVar> vars{{"v",1,1,{24,10},24,10}};
+        std::vector<std::string> log;QuantizationCounts work;
+        require(floorplan_legalize_compact_accounted(in,vars,log,work),
+                "sub-guard proximity requirement failed to guide feasible placement");
+        const auto& v=vars.front();
+        const double dx=std::max({10-(v.x+1),v.x-12,0.}),dy=std::max({10-(v.y+1),v.y-12,0.});
+        require(std::hypot(dx,dy)<=limit&&v.x>=in.clear&&v.y>=in.clear,
+                "tight-limit result violates independent pad-box distance");
+        for(const auto& term:floorplan_evaluate_terms(in,{{"v",{vars.front().x,vars.front().y}}}))
+            require(!term.term.enforced||term.ok,"tight-limit solver waived authored proximity");
+    }
     {
         std::size_t restored=0;
         for(double a:{.1,.2,.3,1.1})for(double b:{.3001,.4,.5,1.3,2.3}){

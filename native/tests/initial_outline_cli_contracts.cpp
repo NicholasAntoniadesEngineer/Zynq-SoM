@@ -9,6 +9,27 @@ int main(int argc,char** argv){try{
         args.insert(args.end(),{"--help","--repo","/nonexistent/seed-help-must-not-read"});
         return schgen::run_process(args);
     };
+    const std::vector<std::string> reseat{"board","--compact-placement","--interior-order","3","--reseat-poses","8","--reseat-frontier","4096","--reseat-continuations","3"};
+    const auto reseat_help=run(reseat);
+    if(reseat_help.exit_code||reseat_help.stdout_text.find("limits bound search effort, not feasibility")==std::string::npos)
+        throw std::runtime_error("valid continuation options/help failed");
+    for(const auto& args:std::vector<std::vector<std::string>>{
+        {"board","--reseat-poses","8","--reseat-frontier","4096"},
+        {"board","--compact-placement","--reseat-poses","8"},
+        {"board","--compact-placement","--reseat-frontier","4096"},
+        {"board","--compact-placement","--reseat-poses","1","--reseat-frontier","4096"},
+        {"board","--compact-placement","--reseat-poses","8","--reseat-frontier","4096","--reseat-continuations","3"},
+        {"pcb-stage","--reseat-poses","8","--reseat-frontier","4096"}})
+        if(!run(args).exit_code)throw std::runtime_error("invalid continuation configuration accepted");
+    for(const auto* flag:{"--reseat-poses","--reseat-frontier","--reseat-continuations"}){
+        auto duplicate=reseat;duplicate.insert(duplicate.end(),{flag,"2"});
+        if(!run(duplicate).exit_code)throw std::runtime_error("duplicate reseat limit accepted");
+        for(const auto* value:{"0","-1","2.5","2x","","99999999999999999999999999"})
+            if(!run({"board","--compact-placement",flag,value}).exit_code)
+                throw std::runtime_error("invalid reseat integer accepted");
+    }
+    auto conflicting=reseat;conflicting.push_back("--failed-first-retry");
+    if(!run(conflicting).exit_code)throw std::runtime_error("ambiguous continuation and failed-first recovery accepted");
     for(const auto* slots:{"1","2"}){
         const auto result=run({"board","--audit-projections",slots});
         if(result.exit_code||result.stdout_text.find("audit coverage and source-change checks are unchanged")==std::string::npos)

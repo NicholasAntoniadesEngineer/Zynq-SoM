@@ -1,0 +1,52 @@
+{
+  "base_commit": "5230fd1e",
+  "changes": {
+    "cli": "Expose existing failure-only pose/frontier/continuation controls to normal board builds with strict argument validation. Defaults unchanged; every executed retry and failed branch remains accounted.",
+    "tight_near_fix": "When an authored near_max is below the 4 mm compose search margin, use the authored bound instead of producing a negative bound and silently omitting its positioning edges. Final distance checking is unchanged. The new feasible 2 mm fixture failed before the fix; 1, 2 and 3 mm fixtures now pass with independent pad-box distance checks.",
+    "candidate": "Unpin board_aux's preferred shape, permit existing validated alternatives and use joint-search effort 1024 with poses 8/frontier 4096/continuations 3. No electrical distance, clearance or mandatory gate weakened."
+  },
+  "qualification": {
+    "directory": "/private/tmp/carrier-165x158-qualified.Wd9GT7",
+    "log": "native/build/carrier-165x158-continuation-full.log",
+    "exit_code": 0, "board_status": "PASS", "sheets": 37,
+    "command": "native/bin/schgen board --project carrier --compact-placement --interior-order 3 --edge-feasibility --owned-quality-first --owned-face-cohesion --contract-group-face-sheet usb_jtag --floorplan-spec native/benchmarks/carrier-165x158-continuation.floorplan.json --joint-separation-states 1024 --reseat-poses 8 --reseat-frontier 4096 --reseat-continuations 3 --audit-projections 2 --timing -o FRESH_DIRECTORY",
+    "dimensions_mm": [165,158], "area_mm2": 26070,
+    "area_change_from_165x159_percent": -0.6289308176100628,
+    "area_change_from_168x163_percent": -4.798422436459249,
+    "instances": 566, "top": 413, "bottom": 153,
+    "pcb_sha256": "c2c501eb87f3fb492a35160c41ccd7cc7c19c922df0013b25a394c36fd0eeecf",
+    "mandatory_gate_failures": 0, "non_unrouted_drc_errors": 0, "unrouted": 499,
+    "native_policy_audit": "PASS: 69 C++ files, 75 constants, 156 registered transforms",
+    "renders": "Eight 3D views produced; top and bottom inspected. Module outline and mating connectors remain visible, components populate both faces, and perimeter connectors remain at edges. Visual review does not certify unverified access/height/thermal requirements.",
+    "top_render_sha256": "ff27e3b5c02d2252fbb865131e324e10cfbaaac1b0b457388c338d723b2fe4bf",
+    "bottom_render_sha256": "5690fd6a71b444a282d932e26dfe23e10c332c04aa93e5a59015694791dc72fd"
+  },
+  "quality_tradeoffs": {
+    "previous_estimated_cross_mm": 15899.8, "candidate_estimated_cross_mm": 16429.7,
+    "estimated_cross_change_percent": 3.332746323853142,
+    "candidate_sizing_heuristic_budget_mm": 15984.7, "candidate_headroom_mm": -444.9,
+    "interpretation": "The fixed-outline candidate exceeds the sizing estimator's heuristic budget. Actual placement/flow gates pass. Preserve both candidates rather than asserting an unqualified quality improvement or replacing the previous reference.",
+    "external_flow_report": "19 details, 0 unresolved, 0 violations; flow 0/7 failures, facing 0/2, far 0/5, near_max 0/5.",
+    "printed_margin_examples": "HDMI termination gap 6.70 mm against maximum 10 mm (about 3.30 mm margin); power facing 77.7 degrees against positive-facing requirement (about 12.3 degrees from perpendicular). Report precision is rounded; these are not exact raw margins.",
+    "search_work": {"joint_states":12750,"joint_axis_solves":17101,"continuation_replays":9,"skipped_local_choices":18,"fallback_events":33825}
+  },
+  "timings_seconds": {
+    "full_measured_scopes_not_process_wall":199.089266,
+    "pcb_input_netlist":1.483904,"pcb_model":6.116435,"pcb_text":0.034724,
+    "render_3d":28.223058,"source_audit":106.571276,
+    "repeat_profile_model":[5.869596125,5.873799083]
+  },
+  "verification": {
+    "native_floorplan_contracts":"PASS 14.07 seconds including tight-limit regression",
+    "native_compact_retry_contracts":"PASS 3.13 seconds",
+    "native_initial_outline_cli_contracts":"PASS 2.19 seconds including continuation values, scope, duplicates and conflicts",
+    "repeatability":"Two additional prepared-input runs produce the full-build PCB hash and pass placement/flow checks with hard_red=0; native/build/carrier-165x158-repeat.log",
+    "devkit_regression":"98x98, 105 top/55 bottom, placement/flow PASS and hard_red=0; PCB hash b6798d4b63d2fddbf9fad24945c151b9420b049b674ad5d637c43bf4a365137f unchanged. Log native/build/devkit-tight-near-regression.log. Not a fresh full devkit qualification after this change."
+  },
+  "failed_experiments": [
+    "Pinned board_aux, 128 joint states and continuation: 164x159 and 165x158 both failed; carrier-current-continuation-*.log.",
+    "Unpinned board_aux, 128 joint states and continuation: both outlines still failed. 165x158 advanced from seating failure to legalizer failure; carrier-unpinned-continuation-*.log.",
+    "Removing the 4 mm margin globally in the unpinned 165x158 trial still failed; prototype removed. This is distinct from the retained sub-4-mm bug fix; carrier-authored-unpinned-continuation-165x158.log."
+  ],
+  "limits": "Existing return_path, golden and contract_coverage_lint advisory FAILs and qualitative UNVERIFIED requirements remain. No routing or fabrication-readiness claim. More search was needed, not less. No matched Python comparison; compile time is not measured here. Preserve original and prior qualified references; overall goal remains incomplete."
+}

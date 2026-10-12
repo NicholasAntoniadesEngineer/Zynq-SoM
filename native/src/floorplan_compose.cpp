@@ -543,7 +543,10 @@ private:
             const auto hs = hull(s);
             const auto hg = jr == in.som_j_rects.end() ? hull(g) :
                 std::optional<Box4>{{0, 0, jr->second.x1 - jr->second.x0, jr->second.y1 - jr->second.y0}};
-            const double bound = t.bound.value_or(0) - guard_mm;
+            const double authored = t.bound.value_or(0);
+            // A search margin must not erase a tighter authored requirement.
+            // Use that requirement itself when the heuristic would go negative.
+            const double bound = authored < guard_mm ? authored : authored - guard_mm;
             const bool sm = by_name.count(s), gm = by_name.count(g);
             if (!hs || !hg || bound < 0 || (!sm && !gm)) continue;
             const auto sr = seed_or_fixed(s, *hs);
