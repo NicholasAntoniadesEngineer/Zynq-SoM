@@ -582,8 +582,15 @@ private:
             const auto& v=*by_name.at(name);
             return (x?pos_x[i]:pos_y[i])+(high?(x?v.w:v.h):0.);
         };
-        for (const auto& sep:seps)
-            if (!(endpoint(sep.lo,sep.axis_x,true)+sep.gap<=endpoint(sep.hi,sep.axis_x,false))) return false;
+        for (const auto& sep:seps) {
+            const auto lower=endpoint(sep.lo,sep.axis_x,true)+sep.gap;
+            const auto upper=endpoint(sep.hi,sep.axis_x,false);
+            if (!(lower<=upper)) {
+                if(in.report_infeasible_cycle)log.push_back("physical separation: "+sep.lo+" -> "+sep.hi+
+                    (sep.axis_x?" x ":" y ")+float_text(lower)+" > "+float_text(upper));
+                return false;
+            }
+        }
         return true;
     }
     bool violated(const NamedEdge& e, const std::vector<double>& pos) const {

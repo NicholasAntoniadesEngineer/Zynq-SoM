@@ -947,6 +947,27 @@ void frozen(const std::filesystem::path& dir,const std::string& name,bool geomet
 }
 void repair_choice_contracts() {
     {
+        // Decimal-grid contact can fail the strict forward sum despite a
+        // satisfied difference edge: .1 + .1 + .1 > .3 in binary arithmetic.
+        // The diagnostic must expose this, not silently waive the separation.
+        FloorplanLegalizeInput in;in.board_w=10;in.board_h=10;in.clear=.1;
+        in.primary_fanout["a"]={{},{},1,1,std::vector<Comp>{}};
+        in.primary_fanout["b"]={{},{},1,1,std::vector<Comp>{}};
+        for(const auto* name:{"a","b"})in.metrics[name]={{{"p",.05,.5}},{{"p",0,0,.1,1}},{.1,1}};
+        in.index.hard.push_back({"near_max","a","a","b",10,"test",true,{},{}});
+        const std::vector<FloorplanLegalizeVar> seed{{"a",.1,1,{.1,5},.1,5},{"b",.1,1,{.3,5},.3,5}};
+        auto quiet=seed,loud=seed;std::vector<std::string> quiet_log,loud_log;QuantizationCounts quiet_work,loud_work;
+        const bool quiet_ok=floorplan_legalize_compact_accounted(in,quiet,quiet_log,quiet_work);
+        require(!quiet_ok,"strict output-grid contact fixture must reject");
+        in.report_infeasible_cycle=true;
+        require(!floorplan_legalize_compact_accounted(in,loud,loud_log,loud_work),"diagnostics relaxed a strict physical gate");
+        require(quiet_work==loud_work&&quiet[0].x==seed[0].x&&loud[0].x==seed[0].x&&
+            quiet[1].x==seed[1].x&&loud[1].x==seed[1].x,"physical diagnostics changed work or poses");
+        const auto detail=[](const auto& row){return row.find("physical separation: a -> b x 0.30000000000000004 > 0.3")!=std::string::npos;};
+        require(std::none_of(quiet_log.begin(),quiet_log.end(),detail)&&std::any_of(loud_log.begin(),loud_log.end(),detail),
+            "physical diagnostic lost pair, axis or exact forward boundary");
+    }
+    {
         FloorplanLegalizeInput in;in.board_w=20;in.board_h=20;in.compact=true;
         std::size_t compactions=0;in.compaction_started=[&]{++compactions;};
         in.fixed_rects={{"obstacle",{0,0,20,20}}};

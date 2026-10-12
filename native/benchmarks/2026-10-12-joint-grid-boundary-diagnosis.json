@@ -1,0 +1,36 @@
+{
+  "base_commit":"df286e50",
+  "scope":"Identify why joint proposals fail final strict geometry checks without weakening those checks",
+  "retained_change":"Diagnostic mode reports the first failed physical separation, axis and actual forward-sum values. It uses the already required comparisons; no additional solver/geometry work or acceptance-policy change.",
+  "observed_boundary_rejections":[
+    {"pair":"usb_jtag -> hdmi_rx_term","axis":"x","required_forward_sum":78.10000000000001,"available_coordinate":78.1,"reported_occurrences":56},
+    {"pair":"bringup_en_modules -> bringup_rails","axis":"y","required_forward_sum":33.854600000000005,"available_coordinate":33.8546,"reported_occurrences":56}
+  ],
+  "baseline_diagnostic":{
+    "log":"native/build/carrier-joint-physical-rejection.log",
+    "pcb_sha256":"24ac25bfe6cb2ea6477a01b195b5ca78070ccff3bb2640f12d5b8f7275da5c64",
+    "dimensions_mm":[165,159],"top":413,"bottom":153,
+    "recorded_fallback_events":5428,
+    "initial_checks":"Placement and flow PASS, hard RED 0; same geometry and event count as previous candidate"
+  },
+  "rejected_experiment":{
+    "strategy":"Add 0.0001 mm (one final 4-decimal output step) to movable/movable joint-search separation gaps. Keep unmodified required separations for final physical checks. Fixed obstacles, hard terms, final collision/flow gates unchanged.",
+    "log":"native/build/carrier-joint-grid-guard-probe.log",
+    "result":"Constructed 165x159, placement and flow PASS, hard RED 0. Joint proposals 121 -> 10 and qualification rejections 116 -> 0, but this is a different search path and layout, not a same-output timing comparison.",
+    "pcb_sha256":"129f3be0734d542599842db200c8bf17d338ba862cf6577f1870df2dc6971647",
+    "top":417,"bottom":149,"instances":566,
+    "successful_reseats":20,"committed_reseat_ceiling":18,
+    "before_reseats":14,
+    "joint_states":1300,"joint_axes":1930,"joint_domain_probes":880,
+    "retained":false,
+    "reasons":["Increased successful reseats beyond the committed ceiling","Unconditional guard can exclude tightly fitting candidates; an incumbent-preserving strategy is needed","Different PCB not independently fully qualified; no new accepted carrier"],
+    "restoration":"Guarded domain and alternate required-separation storage removed; normal search rebuilt"
+  },
+  "regression_test":{
+    "file":"native/tests/floorplan_contracts.cpp",
+    "witness":"Two movable groups: 0.1 + 0.1 + 0.1 > 0.3 in binary floating point; a satisfiable near term activates legalization. Diagnostic and non-diagnostic modes both reject the strict physical contact, preserve input poses and produce equal operation counts. Only diagnostic mode reports the exact boundary.",
+    "result":"native_floorplan_contracts PASS 13.85s"
+  },
+  "acceptance":"No new accepted layout, hardware-policy change or raised execution ceiling. Existing 165x159 candidate still fails execution ratchet; qualified 166x159 remains the incumbent.",
+  "next":"Implement narrowly bounded, accounted grid-safe repair that preserves unmodified requirements and feasible incumbents; avoid globally inflating gaps or relaxing collision tolerances. Preserve actual numerical values in failure evidence."
+}
