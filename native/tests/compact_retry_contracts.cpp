@@ -406,6 +406,16 @@ void alternative_pose_retry_contract(){
     experiment->reseat_pose_limits=FloorplanPoseRetryLimits{8,4096};in.compact_search=false;
     bool rejected=false;try{Engine invalid(in);}catch(const FloorplanError&){rejected=true;}
     require(rejected,"pose recovery accepted without compact search");
+    {
+        auto joint_input=input();auto joint=std::make_shared<FloorplanExperiment>();joint_input.experiment=joint;
+        joint->interior_order=0;joint->joint_separation_states=8;
+        const auto direct=trial(joint_input,cases[1],0);Engine wrapped(joint_input);setup(wrapped,cases[1]);
+        const auto entry=layout(wrapped.plan);const auto side=offers(wrapped);
+        require(!direct.ok&&!wrapped.attempt_pack(false)&&equal(layout(wrapped.plan),entry)&&offers(wrapped)==side,
+            "joint-only explicit-order failure did not restore entry state");
+        require(wrapped.plan.accounting.quantization_engagements==direct.plan.accounting.quantization_engagements&&
+                wrapped.plan.accounting.fallback_events==direct.plan.accounting.fallback_events,"joint-only rollback changed executed receipts");
+    }
     std::cout<<"alternative pose retry PASS searches="<<searches<<" attempts="<<attempts<<" budgets="<<exhausted<<" caps="<<capped<<" recovered="<<recovered<<'\n';
 }
 }

@@ -23,6 +23,12 @@ void register_native_fallbacks(NativeFallbacks& r){
     r.declare({"interior_reseat_pose_cap","plan_lattice","A bounded alternative-position query stopped at its result limit without proving the remaining domain exhausted."});
     r.declare({"interior_reseat_pose_resume","plan_lattice","One capped full-attempt replay after downstream failure, reconsidering the first alternative-pose recovery. Preserve all executed work and final gates."});
     r.declare({"interior_reseat_pose_hint","plan_lattice","A previously successful continuation ordinal was tried ahead of ascending retries after ordinary failure. Advisory ordering only; all geometry and acceptance checks run again."});
+    r.declare({"legalize_joint_retry","plan_lattice","One opt-in joint separation search after existing composer strategies fail."});
+    r.declare({"legalize_joint_state","plan_lattice","One visited joint separation assignment, including rejected work."});
+    r.declare({"legalize_joint_axis","plan_lattice","One actual axis solver invocation in joint separation search."});
+    r.declare({"legalize_joint_proposal","plan_lattice","One two-axis proposal submitted to existing hard-term, geometry and output-grid gates."});
+    r.declare({"legalize_joint_reject","plan_lattice","One proposal rejected by final qualification; no invented negative-cycle pruning."});
+    r.declare({"legalize_joint_budget","plan_lattice","Joint separation search omitted unexplored states at its generation cap; not an infeasibility proof."});
     r.declare({"interior_reseat_pose_skip","plan_lattice","One locally feasible recovery choice skipped during deterministic replay of the first recovery. This is a branch exclusion, not a geometry rejection."});
     r.declare({"interior_failed_first_retry","plan_lattice","One opt-in restart after interior seating failure in an explicit order, promoting the blocked block to first. Count before execution, retain all failed work, preserve successful incumbents and final gates."});
     r.declare({"facing_replan_retry","plan_lattice","One multiscale replan after a resolved final facing failure, requiring positive facing during placement. Preserve valid incumbents, prepared geometry and all executed model/screening work; record before retry, including failures."});

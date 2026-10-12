@@ -1292,7 +1292,8 @@ JointSeparationResult legalize_joint_separations(
     const std::vector<std::vector<RepairSep>>& domains,
     const std::vector<std::pair<std::string,Box4>>& fixed,
     const std::vector<NamedEdge>& extra_x,const std::vector<NamedEdge>& extra_y,
-    std::size_t max_states,JointSeparationWork* receipt) {
+    std::size_t max_states,JointSeparationWork* receipt,
+    const std::function<bool(const std::vector<std::size_t>&,const std::vector<double>&,const std::vector<double>&)>& qualify) {
     JointSeparationResult out;
     struct WorkReceipt {
         const JointSeparationResult& result;
@@ -1353,15 +1354,24 @@ JointSeparationResult legalize_joint_separations(
         auto x=solve(true);
         RepairAxisResult y;
         if(x.ok)y=solve(false);
-        if(x.ok&&y.ok){out.ok=true;out.choices=choices;out.x=std::move(x.pos);out.y=std::move(y.pos);return out;}
-        const auto& failed=x.ok?y:x;
-        if(failed.fail!="cycle"||failed.infeasible_cycle_separations.empty())
-            throw std::logic_error("joint separation search: missing actual cycle evidence");
+        std::set<std::size_t> conflicting;
+        if(x.ok&&y.ok){
+            bool accepted=true;
+            if(qualify){++out.qualifications;accepted=qualify(choices,x.pos,y.pos);}
+            if(accepted){out.ok=true;out.choices=choices;out.x=std::move(x.pos);out.y=std::move(y.pos);return out;}
+            ++out.qualification_rejections;
+            // A nonlinear/output-grid rejection supplies no valid negative
+            // cycle cut. Explore every domain, never invent a narrower reason.
+            for(std::size_t i=0;i<domains.size();++i)conflicting.insert(i);
+        }else{
+            const auto& failed=x.ok?y:x;
+            if(failed.fail!="cycle"||failed.infeasible_cycle_separations.empty())
+                throw std::logic_error("joint separation search: missing actual cycle evidence");
+            for(const int index:failed.infeasible_cycle_separations)if(index>=0)conflicting.insert(static_cast<std::size_t>(index));
+        }
         // Any feasible assignment must change at least one separation in this
         // actual negative cycle. Keep every alternative for those pairs; hard
         // edges and walls are not softened. A hard-only cycle closes this node.
-        std::set<std::size_t> conflicting;
-        for(const int index:failed.infeasible_cycle_separations)if(index>=0)conflicting.insert(static_cast<std::size_t>(index));
         for(const auto i:conflicting)for(std::size_t choice=0;choice<domains.at(i).size();++choice){
             if(choice==choices[i])continue;
             auto next=choices;next[i]=choice;

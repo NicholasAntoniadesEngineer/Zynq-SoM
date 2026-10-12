@@ -2,6 +2,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <functional>
 #include <optional>
 #include <string>
 #include <tuple>
@@ -264,6 +265,7 @@ RepairAxisResult legalize_repair_axis(
 struct JointSeparationWork {
     std::size_t generated=0,visited=0,axis_solves=0;
     bool budget_exhausted=false;
+    std::size_t qualifications=0,qualification_rejections=0;
 };
 struct JointSeparationResult : JointSeparationWork {
     // complete means a failed search exhausted the supplied finite domains;
@@ -281,12 +283,16 @@ struct JointSeparationResult : JointSeparationWork {
 // not just visited nodes. No speculative pose is published on failure. Limits
 // above size_t max/2 are rejected so axis-probe accounting cannot wrap. Optional
 // invocation-owned work receipt is replaced with actual work even on exception.
+// Optional synchronous qualifier may reject a linear proposal; then all domain
+// alternatives remain eligible. Exhausting those proposals is not a proof that
+// no other continuous pose for an assignment could satisfy that qualifier.
 JointSeparationResult legalize_joint_separations(
     const std::vector<std::string>& names,const std::vector<double>& widths,
     const std::vector<double>& heights,double board_w,double board_h,double clear,
     const std::vector<std::vector<RepairSep>>& domains,
     const std::vector<std::pair<std::string,Box4>>& fixed,
     const std::vector<NamedEdge>& extra_x,const std::vector<NamedEdge>& extra_y,
-    std::size_t max_states,JointSeparationWork* receipt=nullptr);
+    std::size_t max_states,JointSeparationWork* receipt=nullptr,
+    const std::function<bool(const std::vector<std::size_t>&,const std::vector<double>&,const std::vector<double>&)>& qualify={});
 
 }  // namespace schgen

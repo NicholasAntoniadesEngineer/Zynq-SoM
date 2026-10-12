@@ -1156,7 +1156,80 @@ void joint_separation_contracts() {
         "exception receipt lost prepared state or claimed an unexecuted axis solve");
     throws([&]{legalize_joint_separations({"a"},{2},{2},10,10,0,{}, {},{},{},0,&receipt);},"state limit");
     require(receipt.generated==0&&receipt.visited==0&&receipt.axis_solves==0,"invalid invocation retained a stale receipt");
+    const std::vector<std::vector<RepairSep>> qualify_domain{domain("a","b")};
+    std::size_t qualified=0;
+    const auto later=legalize_joint_separations({"a","b"},{2,2},{2,2},10,10,0,qualify_domain,{}, {},{},4,&receipt,
+        [&](const auto& choices,const auto&,const auto&){++qualified;return choices[0]==2;});
+    require(later.ok&&later.choices[0]==2&&qualified==3&&receipt.qualifications==3&&receipt.qualification_rejections==2,
+        "qualification rejection failed to continue or lost its actual work");
+    const auto rejected=legalize_joint_separations({"a","b"},{2,2},{2,2},10,10,0,qualify_domain,{}, {},{},4,&receipt,
+        [](const auto&,const auto&,const auto&){return false;});
+    require(!rejected.ok&&rejected.complete&&rejected.x.empty()&&receipt.qualifications==4&&receipt.qualification_rejections==4,
+        "all-rejected qualification published a proposal or misreported exhaustion");
+    throws([&]{legalize_joint_separations({"a","b"},{2,2},{2,2},10,10,0,qualify_domain,{}, {},{},4,&receipt,
+        [](const auto&,const auto&,const auto&)->bool{throw std::runtime_error("qualifier stop");});},"qualifier stop");
+    require(receipt.visited==1&&receipt.axis_solves==2&&receipt.qualifications==1&&receipt.qualification_rejections==0,
+        "throwing qualifier lost executed prefix or invented a rejection verdict");
     std::cout<<"joint separation oracle PASS solved="<<solved<<" exhausted="<<impossible<<" capped="<<capped<<'\n';
+}
+void joint_composer_contracts(){
+    std::size_t recovered=0,preserved=0,failed=0;
+    std::array<std::size_t,4> recovered_modes{};
+    std::optional<FloorplanLegalizeInput> witness;
+    std::vector<FloorplanLegalizeVar> witness_vars;
+    for(int mode:{0,1,2,3})for(int row:{4,8,12})for(int column:{4,8,12})for(int x:{3,8,13})for(int y:{3,8,13}){
+        FloorplanLegalizeInput in;in.board_w=24;in.board_h=24;in.compact=true;
+        in.fixed_rects={{"horizontal",{8.,double(row),14.,double(row+3)}},{"vertical",{double(column),8.,double(column+3),16.}}};
+        in.metrics["v"]={{{"p",1.5,1.5}},{{"p",0,0,3,3}},{3,3}};
+        in.som_j_rects["som_j1"]={11,11,13,13};
+        in.index.hard.push_back({"near_max","v","v","som_j1",7,"joint fixture",true,{},{}});
+        if(mode){
+            in.primary_fanout["v"]={{.4,1.2,.8,1.6},{},1,1,std::vector<Comp>{}};
+            in.primary_fanout["horizontal"]={{.5,1.7,1.1,.6},{},1,1,std::vector<Comp>{}};
+            in.primary_fanout["vertical"]={{1.3,.4,.7,1.5},{},1,1,std::vector<Comp>{}};
+            if(mode>=2){
+                in.primary_fanout["horizontal"].mask=2;in.primary_fanout["horizontal"].occupied_mask=2;
+                in.primary_fanout["v"].occupied_mask=3;
+                Comp child;child.dx=1.25;child.dy=1.5;child.w=.75;child.h=.5;child.mask=mode==3?3:2;child.reach={.2,.4,.3,.1};
+                in.primary_fanout["v"].children=std::vector<Comp>{child};
+            }
+        }
+        const std::vector<FloorplanLegalizeVar> initial{{"v",3,3,{double(x),double(y)},double(x),double(y)}};
+        auto legacy=initial,candidate=initial;std::vector<std::string> first_log,second_log;QuantizationCounts first_counts,second_counts;
+        const bool before=floorplan_legalize_compact_accounted(in,legacy,first_log,first_counts);
+        in.joint_separation_states=128;std::size_t starts=0,ends=0;JointSeparationWork work;
+        in.joint_retry_started=[&]{++starts;};in.joint_retry_completed=[&](const auto& w,bool){++ends;work=w;};
+        const bool after=floorplan_legalize_compact_accounted(in,candidate,second_log,second_counts);
+        if(before){++preserved;require(after&&starts==0&&ends==0&&legacy[0].x==candidate[0].x&&legacy[0].y==candidate[0].y&&first_counts==second_counts&&first_log==second_log,
+            "joint retry replaced a successful incumbent or its work");}
+        else{
+            require(starts==1&&ends==1&&work.generated<=128&&work.visited<=work.generated,"joint retry lost boundaries or exceeded budget");
+            if(after){++recovered;++recovered_modes[mode];
+                if(!witness){witness=in;witness->joint_retry_started={};witness->joint_retry_completed={};witness_vars=initial;}
+                const auto& v=candidate[0];require(v.x>=in.clear&&v.y>=in.clear&&v.x+v.w+in.clear<=24&&v.y+v.h+in.clear<=24,"joint composer violated walls");
+                const auto separated=[&](const Box4& a,const Halo& ar,const Box4& b,const Halo& br){
+                    return a.x1+std::max({in.clear,ar.e,br.w})<=b.x0||b.x1+std::max({in.clear,br.e,ar.w})<=a.x0||
+                        a.y1+std::max({in.clear,ar.s,br.n})<=b.y0||b.y1+std::max({in.clear,br.s,ar.n})<=a.y0;
+                };
+                for(const auto& fixed:in.fixed_rects){const auto& b=fixed.second;
+                    const auto ar=mode?in.primary_fanout.at("v").reach:Halo{},br=mode?in.primary_fanout.at(fixed.first).reach:Halo{};
+                    if(mode>=2&&fixed.first=="horizontal")
+                        require(separated({v.x+1.25,v.y+1.5,v.x+2,v.y+2},{.2,.4,.3,.1},b,br),"independent bottom-child clearance rejected joint result");
+                    else require(separated({v.x,v.y,v.x+v.w,v.y+v.h},ar,b,br),"independent directional fanout rejected joint result");
+                    if(mode==3)require(separated({v.x+1.25,v.y+1.5,v.x+2,v.y+2},{.2,.4,.3,.1},b,br),"through-hole reservation must clear both faces");
+                }
+                for(const auto& t:floorplan_evaluate_terms(in,{{"v",{v.x,v.y}}}))require(!t.term.enforced||t.ok,"joint composer accepted a red term");
+            }else{++failed;require(candidate[0].x==initial[0].x&&candidate[0].y==initial[0].y,"failed joint composer published partial placement");}
+        }
+    }
+    require(recovered&&preserved&&std::all_of(recovered_modes.begin(),recovered_modes.end(),[](auto n){return n>0;}),
+        "joint composer fixtures missed a physical mode or incumbent preservation");
+    auto interrupted=witness_vars;std::vector<std::string> log;QuantizationCounts counts;
+    witness->joint_retry_completed=[](const auto&,bool){throw std::runtime_error("joint observer stop");};
+    throws([&]{floorplan_legalize_compact_accounted(*witness,interrupted,log,counts);},"joint observer stop");
+    require(interrupted[0].x==witness_vars[0].x&&interrupted[0].y==witness_vars[0].y&&!counts.empty(),"joint observer exception lost work or published placement");
+    std::cout<<"joint composer PASS recovered="<<recovered<<" preserved="<<preserved<<" rejected="<<failed
+             <<" plain="<<recovered_modes[0]<<" directional="<<recovered_modes[1]<<" mixed="<<recovered_modes[2]<<" through="<<recovered_modes[3]<<'\n';
 }
 }  // namespace
 int main(int argc,char** argv) {
@@ -1165,6 +1238,7 @@ int main(int argc,char** argv) {
         const bool geometry_only=argc>2 && std::string(argv[2])=="--geometry-only";
         repair_choice_contracts();
         joint_separation_contracts();
+        joint_composer_contracts();
         facing_projection_contracts();
         compose_contracts(dir);primary_fanout_contracts();output_grid_contracts();mutations();pack_behavior();cross_behavior();frozen(dir,"devkit_mini",geometry_only);frozen(dir,"carrier",geometry_only);
         std::cout<<"floorplan contracts: "<<checks<<" checks passed"<<(geometry_only ? " (geometry/estimator slice)":"")<<"\n";

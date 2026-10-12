@@ -5,10 +5,13 @@
 
 #include <algorithm>
 #include <cmath>
+#include <limits>
 #include <tuple>
 
 namespace schgen {
 void validate_floorplan_experiment(const FloorplanExperiment &experiment) {
+    if(experiment.joint_separation_states&&(!*experiment.joint_separation_states||*experiment.joint_separation_states>std::numeric_limits<std::size_t>::max()/2))
+        throw FloorplanError("experiment: invalid joint separation state limit");
     if(experiment.reseat_pose_limits &&
        (experiment.reseat_pose_limits->poses<2 || !experiment.reseat_pose_limits->frontier_nodes))
         throw FloorplanError("experiment: pose retry requires at least two poses and a positive frontier budget");

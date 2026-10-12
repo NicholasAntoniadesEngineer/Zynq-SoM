@@ -8,6 +8,7 @@
 #include <utility>
 
 namespace schgen {
+struct JointSeparationWork;
 struct FloorplanInput;
 struct FloorplanPlan;
 
@@ -60,6 +61,8 @@ struct FloorplanExperiment {
     // placement/reseat. Both per-query limits are explicit invocation inputs.
     std::optional<FloorplanPoseRetryLimits> reseat_pose_limits;
     std::function<void(const FloorplanPoseRetryObservation&)> pose_retry_completed;
+    std::optional<std::size_t> joint_separation_states;
+    std::function<void(const JointSeparationWork&,bool)> joint_retry_completed;
     bool compact_edge_translation = false;
     bool compact_edge_feasibility = false;
     bool owned_quality_first = false;

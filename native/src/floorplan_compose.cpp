@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <charconv>
 #include <cmath>
+#include <limits>
 
 namespace schgen {
 namespace {
@@ -23,6 +24,8 @@ void rectangle(const Box4& r, const std::string& where) {
         throw FloorplanError("floorplan compose: inverted rectangle " + where);
 }
 void validate(const FloorplanLegalizeInput& in) {
+    if(in.joint_separation_states&&(!*in.joint_separation_states||*in.joint_separation_states>std::numeric_limits<std::size_t>::max()/2))
+        throw FloorplanError("floorplan compose: invalid joint separation state limit");
     finite(in.board_w, "board width"); finite(in.board_h, "board height");
     finite(in.clear, "clearance"); point(in.origin, "origin");
     if (in.board_w <= 0 || in.board_h <= 0 || in.clear < 0)
@@ -214,7 +217,7 @@ public:
         return true;
     }
 
-    bool run(std::vector<FloorplanLegalizeVar>& movable) {
+    bool run(std::vector<FloorplanLegalizeVar>& movable,bool joint=false) {
         if (in.index.hard.empty() || movable.empty()) return true;
         std::vector<Box4> seeds, fixed_boxes;
         std::vector<std::string> fixed_names;
@@ -223,6 +226,7 @@ public:
         std::vector<std::tuple<std::string, std::string, int>> demand;
         for (const auto& [pair, n] : in.channel_demand) demand.emplace_back(pair.first, pair.second, n);
         std::vector<std::pair<std::string, std::string>> near;
+        std::vector<std::vector<RepairSep>> domains;
         for (const auto& t : in.index.hard) if (t.kind == "near_max") near.emplace_back(t.subject, t.target());
         for (const auto& s : legalize_build_seps(names, seeds, fixed_names, fixed_boxes, demand, near,
                                                 in.clear, channel_min_nets, channel_floor, channel_per_net)) {
@@ -254,7 +258,47 @@ public:
                         reservation_gap(sep.hi,sep.lo,!sep.axis_x):reservation_gap(sep.lo,sep.hi,!sep.axis_x);
                 }
             }
+            if(joint){
+                std::vector<RepairSep> domain{sep};
+                if(s.flippable)for(const bool reverse:{false,true})for(const bool x:{true,false}){
+                    const auto lo=reverse?s.hi:s.lo,hi=reverse?s.lo:s.hi;
+                    if(x==sep.axis_x&&lo==sep.lo&&hi==sep.hi)continue;
+                    RepairSep alternative{x,lo,hi,s.gap,false};
+                    if(!in.primary_fanout.empty()){
+                        const auto key=[](const std::string& name){return name.front()=='#'?name.substr(1):name;};
+                        const auto& low=in.primary_fanout.at(key(lo));const auto& high=in.primary_fanout.at(key(hi));
+                        if(occ_pair_active(low.mask,low.mask,true,high.mask,high.mask,true))
+                            alternative.gap=std::max(s.gap,fanout_sep(low.reach,low.inset,high.reach,high.inset,x?'E':'S'));
+                        if(reservation_geometry&&s.gap<=in.clear&&reservation_pair(key(lo),key(hi))){
+                            alternative.projected_gap=true;alternative.gap=reservation_gap(lo,hi,x);
+                        }
+                    }
+                    domain.push_back(std::move(alternative));
+                }
+                domains.push_back(std::move(domain));
+            }
             seps.push_back(std::move(sep));
+        }
+        if(joint){
+            std::vector<NamedEdge> ex,ey;for(const auto& e:extra(true))ex.push_back(e.edge);for(const auto& e:extra(false))ey.push_back(e.edge);
+            JointSeparationWork work;auto candidate=movable;bool accepted=false;
+            try{
+                const auto result=legalize_joint_separations(names,sizes(true),sizes(false),in.board_w,in.board_h,in.clear,
+                    domains,{frect.begin(),frect.end()},ex,ey,*in.joint_separation_states,&work,
+                    [&](const auto& choices,const auto& x,const auto& y){
+                        seps.clear();for(std::size_t i=0;i<choices.size();++i)seps.push_back(domains[i][choices[i]]);
+                        pos_x=x;pos_y=y;descend(true);
+                        if(!edges_ok(true,pos_x)||!edges_ok(false,pos_y))return false;
+                        return finish(candidate,fixed_names,fixed_boxes,true);
+                    });
+                accepted=result.ok;
+            }catch(...){if(in.joint_retry_completed)in.joint_retry_completed(work,false);throw;}
+            log.push_back("joint separation: generated="+std::to_string(work.generated)+" visited="+std::to_string(work.visited)+
+                " axes="+std::to_string(work.axis_solves)+" proposals="+std::to_string(work.qualifications)+
+                " rejected="+std::to_string(work.qualification_rejections)+" capped="+std::to_string(work.budget_exhausted));
+            if(in.joint_retry_completed)in.joint_retry_completed(work,accepted);
+            if(accepted)movable=std::move(candidate);
+            return accepted;
         }
         if (!edges_ok(true, pos_x) || !edges_ok(false, pos_y)) {
             if (!repair(true, pos_x) || !repair(false, pos_y)) return false;
@@ -268,6 +312,10 @@ public:
                 }
             }
         }
+        return finish(movable,fixed_names,fixed_boxes);
+    }
+    bool finish(std::vector<FloorplanLegalizeVar>& movable,const std::vector<std::string>& fixed_names,
+                const std::vector<Box4>& fixed_boxes,bool force_exact=false){
         const auto red = reds();
         if (!red.empty()) {
             std::string message = "REJECT: hard red after legalization: ";
@@ -294,7 +342,7 @@ public:
             boxes.push_back({x, y, x + v.w, y + v.h});
             pos_x[i]=x;pos_y[i]=y;
         }
-        if ((!in.primary_fanout.empty()||!facing_x.empty()||!facing_y.empty()) &&
+        if ((force_exact||!in.primary_fanout.empty()||!facing_x.empty()||!facing_y.empty()) &&
             (!physical_seps_ok() || !edges_ok(true,pos_x) || !edges_ok(false,pos_y) || !reds().empty())) {
             log.push_back("REJECT: final output-grid pose violates physical separation or hard term");
             return false;
@@ -645,7 +693,8 @@ bool compose_with_bounded_retries(const FloorplanLegalizeInput& input,
     // A final distinct strategy reverses flipped pairs to follow their
     // perpendicular seed order. A final physical-reservation strategy may run
     // after all conservative strategies fail, followed by one strict-facing
-    // projection strategy: at most five composer attempts.
+    // projection strategy: at most five legacy composer attempts, followed
+    // only when explicitly enabled by one state-bounded joint search.
     Composer original(input,movable,log,counts);
     if(original.run(movable))return true;
     Composer alternative(input,movable,log,counts,true);
@@ -683,10 +732,15 @@ bool compose_with_bounded_retries(const FloorplanLegalizeInput& input,
     const bool facing=std::any_of(input.index.hard.begin(),input.index.hard.end(),[](const auto& t){
         return t.kind=="facing"&&t.enforced&&t.require_positive_facing;
     });
-    if(!facing)return false;
-    log.push_back("retry: strict facing projection cuts");
-    if(input.facing_retry_started)input.facing_retry_started();
-    return Composer(input,movable,log,counts,false,false,candidate,true).run(movable);
+    if(facing){
+        log.push_back("retry: strict facing projection cuts");
+        if(input.facing_retry_started)input.facing_retry_started();
+        if(Composer(input,movable,log,counts,false,false,candidate,true).run(movable))return true;
+    }
+    if(!input.joint_separation_states)return false;
+    log.push_back("retry: bounded joint separation choices");
+    if(input.joint_retry_started)input.joint_retry_started();
+    return Composer(input,movable,log,counts,false,false,candidate,false).run(movable,true);
 }
 }  // namespace
 

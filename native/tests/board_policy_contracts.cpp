@@ -55,7 +55,7 @@ void metadata(const fs::path& root){
     const auto stages=native_board_pipeline_metadata();const auto& es=field(reference,"stages").array_value;require(stages.stages.size()==es.size(),"stage census");
     for(std::size_t i=0;i<es.size();++i){const auto& s=stages.stages[i];const auto& e=es[i].array_value;require(s.name==e[0].string_value&&s.domain==e[1].string_value&&s.may_move==e[2].bool_value&&s.tracked==e[3].bool_value,"independent stage order/domain/movement policy");require(!s.validated_by.empty()&&!s.desc.empty(),"stage proof/description nonempty");}
     const auto fb=parse_json_file((root/"native/tests/data/verification_audits/python_state.json").string());
-    const auto& ef=field(fb,"fallbacks").array_value;require(ef.size()+14==stages.fallbacks.size(),"historical fallbacks plus fourteen independently declared native recovery events");
+    const auto& ef=field(fb,"fallbacks").array_value;require(ef.size()+20==stages.fallbacks.size(),"historical fallbacks plus twenty independently declared native recovery events");
     NativeFallbacks f;register_native_fallbacks(f);
     for(const auto& entry:ef){const auto name=field(entry,"name").string_value;auto hit=std::find_if(stages.fallbacks.begin(),stages.fallbacks.end(),[&](const auto& d){return d.name==name;});require(hit!=stages.fallbacks.end(),"independent fallback name");require(hit->stage==field(entry,"stage").string_value&&!hit->meaning.empty(),"independent fallback stage");f.record(hit->name);}
     const auto edge=std::find_if(stages.fallbacks.begin(),stages.fallbacks.end(),[](const auto& d){return d.name=="edge_run_translation";});
@@ -76,7 +76,7 @@ void metadata(const fs::path& root){
     const auto failed_first=std::find_if(stages.fallbacks.begin(),stages.fallbacks.end(),[](const auto& d){return d.name=="interior_failed_first_retry";});
     require(failed_first!=stages.fallbacks.end()&&failed_first->stage=="plan_lattice"&&!failed_first->meaning.empty(),"failed-first retry fallback metadata");
     f.record("interior_failed_first_retry");
-    for(const std::string name:{"interior_reseat_pose_search","interior_reseat_pose_trial","interior_reseat_pose_budget","interior_reseat_pose_cap","interior_reseat_pose_resume","interior_reseat_pose_skip","interior_reseat_pose_hint"}){
+    for(const std::string name:{"interior_reseat_pose_search","interior_reseat_pose_trial","interior_reseat_pose_budget","interior_reseat_pose_cap","interior_reseat_pose_resume","interior_reseat_pose_skip","interior_reseat_pose_hint","legalize_joint_retry","legalize_joint_state","legalize_joint_axis","legalize_joint_proposal","legalize_joint_reject","legalize_joint_budget"}){
         const auto row=std::find_if(stages.fallbacks.begin(),stages.fallbacks.end(),[&](const auto& d){return d.name==name;});
         require(row!=stages.fallbacks.end()&&row->stage=="plan_lattice"&&!row->meaning.empty(),"bounded pose recovery metadata: "+name);
         f.record(name);

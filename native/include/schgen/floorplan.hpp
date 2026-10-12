@@ -25,6 +25,7 @@
 #include <vector>
 
 namespace schgen {
+struct JointSeparationWork;
 struct FloorplanExperiment;
 
 // Millimetres throughout. Box4 is x0,y0,x1,y1; Pose is x,y,width,height.
@@ -177,6 +178,9 @@ struct FloorplanLegalizeInput {
     bool report_infeasible_cycle = false; // diagnostic only; no extra solve
     std::function<void()> reservation_retry_started;
     std::function<void()> facing_retry_started;
+    std::optional<std::size_t> joint_separation_states;
+    std::function<void()> joint_retry_started;
+    std::function<void(const JointSeparationWork&,bool)> joint_retry_completed;
 };
 
 // Compose consumes resolved, selected-shape metrics. A rejected candidate

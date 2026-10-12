@@ -76,7 +76,7 @@ bool Engine::attempt_pack(bool compact) {
                 validate_floorplan_experiment(*in.experiment);
                 const int saved_order=compact_order;
                 const bool recovery=in.compact_search&&in.experiment->failed_first_retry;
-                const bool transactional=recovery||in.experiment->reseat_pose_limits.has_value();
+                const bool transactional=recovery||in.experiment->reseat_pose_limits.has_value()||in.experiment->joint_separation_states.has_value();
                 const auto start=transactional?std::optional{plan}:std::nullopt;
                 const auto offers=transactional?std::optional{side_offers}:std::nullopt;
                 const auto restore=[&] {
@@ -586,6 +586,16 @@ bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure,
                 li.primary_fanout[b.name]={b.fanout_reach,b.fanout_inset,side_mask(b.side),occupied_faces(side_mask(b.side),get(chosen,b.name)),get(chosen,b.name)};
             li.reservation_retry_started=[&]{fallback("legalize_reservation_retry");};
             li.facing_retry_started=[&]{fallback("legalize_facing_retry");};
+            if(in.experiment)li.joint_separation_states=in.experiment->joint_separation_states;
+            li.joint_retry_started=[&]{fallback("legalize_joint_retry");};
+            li.joint_retry_completed=[&](const JointSeparationWork& work,bool ok){
+                for(std::size_t i=0;i<work.visited;++i)fallback("legalize_joint_state");
+                for(std::size_t i=0;i<work.axis_solves;++i)fallback("legalize_joint_axis");
+                for(std::size_t i=0;i<work.qualifications;++i)fallback("legalize_joint_proposal");
+                for(std::size_t i=0;i<work.qualification_rejections;++i)fallback("legalize_joint_reject");
+                if(work.budget_exhausted)fallback("legalize_joint_budget");
+                if(in.experiment&&in.experiment->joint_retry_completed)in.experiment->joint_retry_completed(work,ok);
+            };
             auto fix=[&](const FloorplanBlock& b){li.fixed_rects.emplace_back(b.name,Box4{b.x,b.y,b.x+b.w,b.y+b.h}); li.fixed_poses[b.name]={b.x,b.y};};
             for (const auto& b:plan.edge_blocks) fix(b);
             for (const auto& b:plan.interior_blocks) if (!movable.count(b.name)) fix(b);
