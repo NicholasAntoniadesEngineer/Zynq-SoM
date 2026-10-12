@@ -15,6 +15,13 @@
 
 namespace schgen::floorplan_detail {
 
+// Scarcity is the number of permitted choices, not the registry size. A
+// selected shape does not retain flexibility from its disallowed alternatives.
+inline std::size_t permitted_shape_count(std::size_t registered,std::optional<int> selected) {
+    if(!selected)return registered;
+    return *selected>=0&&static_cast<std::size_t>(*selected)<registered?1:0;
+}
+
 using board_decision_policy::floorplan::clear;
 inline constexpr double edge_margin = 10, mh_corner = 10;
 inline constexpr double edge_depth_cap = 15, edge_band_relief = 4;

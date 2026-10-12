@@ -305,6 +305,14 @@ Eight carrier factorial screens and two paired extensions are recorded in
 screens failed under their tested settings; that does not establish that
 other combinations cannot help. Keep correctness tests distinct from search
 experiments, and retain configuration-specific negative results for reuse.
+Scarcity order (`--interior-order 2`) counts permitted shapes rather than the
+entire registry: a pinned group has one choice, even if many unselected shapes
+exist. Property and placement-level contracts cover this distinction; restoring
+the previous registry-size comparison fails the integration test. Six further
+order/recovery screens and the corrected screens remain unsuccessful at
+165x156, so this is a correctness fix to the search heuristic, not an area win.
+The integrated code passed a fresh full 166x156 carrier build and source audit;
+see `benchmarks/2026-10-12-permitted-shape-scarcity.json` for scope and timings.
 This is not exhaustive shape/pose search: the additional strategy currently
 selects the first locally valid victim shape. It preserves the 165x158 carrier
 candidate in screening but has not recovered 164x159; leave it off for the

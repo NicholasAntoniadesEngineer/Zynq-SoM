@@ -281,7 +281,9 @@ bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure,
             if (compact_order==2) {
                 auto count=[&](const auto* block) {
                     const auto it=shapes.find(block->name);
-                    return it==shapes.end() ? std::size_t{1}:it->second.size();
+                    const auto selected=owned_shape_choices.find(block->name);
+                    return permitted_shape_count(it==shapes.end()?std::size_t{1}:it->second.size(),
+                        selected==owned_shape_choices.end()?std::nullopt:std::optional<int>{selected->second});
                 };
                 if (count(a)!=count(b)) return count(a)<count(b);
             }

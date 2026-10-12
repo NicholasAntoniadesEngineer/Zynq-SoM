@@ -508,6 +508,28 @@ void neighbour_retry_contract() {
 extern "C" void __cyg_profile_func_enter(void* fn,void*){if(observing&&fn==reinterpret_cast<void*>(&native_run_overflow_tol))++entries;}
 extern "C" void __cyg_profile_func_exit(void*,void*){}
 void victim_shape_portfolio_contract(){
+    using schgen::floorplan_detail::permitted_shape_count;
+    for(std::size_t n=0;n<128;++n){
+        require(permitted_shape_count(n,std::nullopt)==n,"unrestricted scarcity changed");
+        require(permitted_shape_count(n,-1)==0&&permitted_shape_count(n,static_cast<int>(n))==0,
+                "invalid selected shape counted as available");
+        for(std::size_t index=0;index<n;++index)
+            require(permitted_shape_count(n,static_cast<int>(index))==1,
+                    "pinned shape falsely retains all registered alternatives");
+    }
+    require(permitted_shape_count(87,72)<permitted_shape_count(2,std::nullopt),
+            "pinned large catalog should precede a two-choice group in scarcity order");
+    {
+        const Case constrained{70,50,{{16,12,2,0},{16,12,4,0}}};
+        auto in=input();Engine scarce(in),forced(in);
+        setup(scarce,constrained);setup(forced,constrained);
+        scarce.owned_shape_choices["b1"]=0;forced.owned_shape_choices["b1"]=0;
+        scarce.compact_order=2;forced.compact_order=0;
+        require(scarce.attempt_pack_impl(false)&&forced.attempt_pack_impl(false,nullptr,"b1"),
+                "scarcity integration fixture must pack");
+        require(equal(layout(scarce.plan),layout(forced.plan)),
+                "scarcity order did not prioritize the actually single-choice group");
+    }
     std::size_t preserved=0,recovered=0,failed=0,queries=0,incoming_recovered=0,incoming_queries=0;
     std::size_t combination_only=0,paired_queries=0;
     bool exception_checked=false;
