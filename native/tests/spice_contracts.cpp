@@ -67,9 +67,9 @@ std::vector<ProjectCircuit> fixture_sheets(const std::filesystem::path& path){
 void rejects_divider(const std::vector<ProjectCircuit>& sheets,const std::string& expected){
     bool rejected=false;
     try{(void)extract_spice_checks(sheets);}catch(const ModelCheckError& error){
-        require(error.what()==expected,"required-divider diagnostic mismatch: "+std::string(error.what()));rejected=true;
+        require(error.what()==expected,"extraction diagnostic mismatch: "+std::string(error.what()));rejected=true;
     }
-    require(rejected,"required-divider extraction silently accepted unsupported topology/source");
+    require(rejected,"extraction silently accepted unsupported topology/source/model");
 }
 void required_divider_coverage(const std::filesystem::path& dir){
     auto unrelated=fixture_sheets(dir/"015_INFORMATIONAL_10k_10k.json");
@@ -85,6 +85,39 @@ void required_divider_coverage(const std::filesystem::path& dir){
     for(auto& net:wrong[0].circuit.nets)if(net.name=="+VIN")net.name="+3V3";
     // Half of 3.3 V lies below the old upper-only check, but the rail is wrong.
     rejects_divider(wrong,"required divider HDMI_RX_5V_DET: source +3V3, expected HDMI_RX_5V");
+}
+const std::vector<std::pair<std::string,std::string>> unsupported_models={
+    {"038_sy7201_invalid.json","SPICE unverified: sheet_sy7201:U1 SY7201 ISET resistor not found on FB"},
+    {"039_sy7201_no_fb_alias.json","SPICE unverified: sheet_sy7201:U1 SY7201 FB pin not netted"},
+    {"046_buck_en_unknown_zener.json","SPICE unverified: sheet_buck:D1 zener UNKNOWN has no modelled Vz — EN clamp not checked"},
+    {"049_buck_missing_fb.json","SPICE unverified: sheet_buck:U1 FB divider not found"}
+};
+void incomplete_model_coverage(const std::filesystem::path& dir){
+    const auto unrelated=fixture_sheets(dir/"015_INFORMATIONAL_10k_10k.json");
+    for(const auto& [file,message]:unsupported_models){
+        const auto broken=fixture_sheets(dir/file);
+        rejects_divider(broken,message);
+        auto combined=broken;combined.insert(combined.end(),unrelated.begin(),unrelated.end());
+        rejects_divider(combined,message);
+        std::reverse(combined.begin(),combined.end());rejects_divider(combined,message);
+    }
+    // A custom detection policy does not supply a voltage-reference model.
+    auto policy=default_power_policy();
+    const auto known=std::find_if(policy.regulators.begin(),policy.regulators.end(),[](const auto& entry){return entry.first=="TPS54302";});
+    require(known!=policy.regulators.end()&&known->second.kind=="buck","custom buck fixture needs the known buck pin mapping");
+    const auto spec=known->second;
+    policy.regulators.insert(policy.regulators.begin(),{"UNMODELLED_BUCK",spec});
+    auto sheets=fixture_sheets(dir/"040_buck_45k3_10k.json");
+    for(auto& part:sheets.front().circuit.parts)if(part.ref=="U1")part.value="UNMODELLED_BUCK";
+    sheets.insert(sheets.end(),unrelated.begin(),unrelated.end());
+    for(int order=0;order<2;++order){
+        bool rejected=false;
+        try{(void)extract_spice_checks(sheets,policy);}catch(const ModelCheckError& error){
+            require(std::string(error.what())=="SPICE unverified: sheet_buck:U1 (UNMODELLED_BUCK) has no FB_VREF entry — FB divider unchecked","unknown-reference diagnostic");rejected=true;
+        }
+        require(rejected,"positive checks hid an unknown regulator reference model");
+        std::reverse(sheets.begin(),sheets.end());
+    }
 }
 void divider_threshold_precision(const std::filesystem::path& dir){
     const auto decimal=[](double value){std::ostringstream out;out<<std::setprecision(17)<<value;return out.str();};
@@ -212,12 +245,17 @@ int main(int argc,char** argv) {
     }
     try {
         require(argc==2,"usage: spice_contracts <fixture-directory>");const std::filesystem::path dir(argv[1]);
-        numeric_safety();empty_coverage();required_divider_coverage(dir);divider_threshold_precision(dir);remaining_threshold_precision(dir);
+        numeric_safety();empty_coverage();required_divider_coverage(dir);incomplete_model_coverage(dir);divider_threshold_precision(dir);remaining_threshold_precision(dir);
         const auto manifest=parse_json_file((dir/"manifest.json").string());std::size_t passed=0,live=0;
-        const auto ngspice=ngspice_available();std::size_t corrected_empty=0,corrected_required=0;
+        const auto ngspice=ngspice_available();std::size_t corrected_empty=0,corrected_required=0,corrected_models=0;
         for(const auto& file:field(manifest,"cases").array_value) {
             const auto row=parse_json_file((dir/file.string_value).string());std::vector<ProjectCircuit> sheets;
             for(const auto& sc:field(row,"sheets").array_value)sheets.push_back({field(sc,"name").string_value,{},decode_intermediate_circuit_ir(field(sc,"circuit"))});
+            const auto unsupported=std::find_if(unsupported_models.begin(),unsupported_models.end(),[&](const auto& entry){return entry.first==file.string_value;});
+            if(unsupported!=unsupported_models.end()){
+                require(field(field(row,"expected"),"ok").bool_value,"historical unsupported model was not falsely green");
+                rejects_divider(sheets,unsupported->second);++corrected_models;++passed;continue;
+            }
             if(file.string_value=="021_wrong_named_source.json"||file.string_value=="022_named_not_extracted.json"){
                 rejects_divider(sheets,file.string_value=="021_wrong_named_source.json"
                     ?"required divider HDMI_RX_5V_DET: source +VIN, expected HDMI_RX_5V"
@@ -268,7 +306,7 @@ int main(int argc,char** argv) {
             }
             ++passed;
         }
-        require(corrected_empty==6&&corrected_required==2,"exact historical empty/required-divider corrections required");
+        require(corrected_empty==3&&corrected_required==2&&corrected_models==4,"exact historical empty/required-divider/unsupported-model corrections required");
         const auto boundaries=parse_json_file((dir/"boundaries.json").string());
         std::size_t corrected_zero_cases = 0;
         for(const auto& row:boundaries.array_value) {

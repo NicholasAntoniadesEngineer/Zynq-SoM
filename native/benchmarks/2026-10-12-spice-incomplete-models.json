@@ -1,0 +1,28 @@
+{
+  "base_commit": "c7e3db4e",
+  "defect": "Missing models/topology were notes only. In particular, frozen fixture 046_buck_en_unknown_zener had two passing feedback checks and a passing aggregate verdict despite skipping its unknown enable-clamp zener.",
+  "change": "Fail extraction with a typed ModelCheckError prefixed SPICE unverified for missing SY7201 FB wiring or ISET resistance, detected buck feedback topology/reference models, and unsupported enable-clamp zener models. No electrical values, thresholds, calculations or device models changed.",
+  "tests": {
+    "red_before_fix": "native_spice_contracts failed because unsupported topology/model extraction was accepted",
+    "adversarial": "Four frozen unsupported-model cases tested alone and alongside a passing unrelated divider in both sheet orders; a custom-policy buck lacking a reference model tested in both orders. Exact diagnostic assertions prevent unrelated exceptions from satisfying the tests.",
+    "historical_fixtures": "The original 50 fixtures remain unmodified. Four specific historical false-PASS cases now explicitly require extraction errors, in addition to the two prior required-divider corrections. Three other zero-coverage cases remain unverified.",
+    "board_integration": "A live devkit circuit set plus the unknown-zener fixture must produce a failed mandatory SPICE gate with the specific unverified diagnostic and no retained partial SpiceResult.",
+    "passed": ["native_spice_contracts", "native_board_pipeline_contracts", "native_firmware_docs_contracts"],
+    "initial_three_suite_seconds": 46.69,
+    "final_spice_seconds": 0.91,
+    "final_board_pipeline_seconds": 40.51,
+    "failed_after_fix": 0
+  },
+  "live_analytic_commands": {
+    "options": "--no-ngspice; these are spot checks, not new whole-board qualification",
+    "carrier": {"exit_code": 0, "checks": 17, "report": "/private/tmp/carrier-model-coverage-oct12.txt", "sha256": "822a3f310d03a5ae749405693fc24cacaf22a06d559bd7fb5d745da65318332d"},
+    "devkit_mini": {"exit_code": 0, "checks": 11, "report": "/private/tmp/devkit-model-coverage-oct12.txt", "sha256": "6f1533e756a89e5cd96a60d825891b9e8dbdcaa2c2fa9dcda98abd3b8923fe47"}
+  },
+  "known_remaining_defect": {
+    "priority": "Next electrical correctness work; current PASS must not be treated as correct device-specific enable qualification",
+    "finding": "en_clamp applies TPS54302-specific hysteresis/enable assumptions to every detected buck. Both live power_som U4 parts are LM61460AANRJRR, yet their report cites the TPS54302/SLVSDG6C model. The branch corrections in this commit do not fix this distinct model-selection defect.",
+    "authoritative_followup": "https://www.ti.com/lit/ds/symlink/lm61460.pdf",
+    "evidence": "TI LM61460 SNVSBD5D specifies its own enable characteristics. Read and verify the electrical table, distinguish typical values from guaranteed limits, and add device-specific model selection plus mutation tests before claiming this path qualified. Do not silently substitute typical values for missing bounds."
+  },
+  "scope_limits": "No layout/hardware change, complete board rerender, new performance measurement or Python comparison. Regulator-detection omissions and unsupported enable topologies remain separate review work. Overall goal incomplete."
+}

@@ -106,9 +106,9 @@ void sy7201_iset(const std::string& sheet,const SpiceIndex& idx,SpiceResult& out
         if(!starts(p->value,"SY7201"))continue;std::vector<std::string> pins{"?"};
         for(const auto& alias:p->pin_names)if(alias.name=="FB"){pins=alias.numbers;break;}
         const CircuitNetIr* fb=nullptr;for(const auto& pin:pins){fb=idx.net(ref,pin);if(fb)break;}
-        if(!fb){out.notes.push_back("NOTE: "+sheet+":"+ref+" SY7201 FB pin not netted");continue;}
+        if(!fb)throw ModelCheckError("SPICE unverified: "+sheet+":"+ref+" SY7201 FB pin not netted");
         const auto rs=select(idx.on(fb->name),ground);
-        if(rs.empty()){out.notes.push_back("NOTE: "+sheet+":"+ref+" SY7201 ISET resistor not found on "+fb->name);continue;}
+        if(rs.empty())throw ModelCheckError("SPICE unverified: "+sheet+":"+ref+" SY7201 ISET resistor not found on "+fb->name);
         const auto& r=rs[0];out.checks.push_back({"SY7201 ISET ("+r.ref+")",sheet,"iset","I_LED = 0.2 V / "+g(r.value)+"R; panel-class window 125-150 mA (lcd_backlight.md)",divide(0.2,r.value)*1e3,"mA",125.0,150.0,"analytic",{}});
     }
 }
@@ -116,14 +116,14 @@ void buck_fb(const std::string& sheet,const SpiceIndex& idx,const std::vector<Po
     for(const auto& reg:regs) {
         if(reg.kind!="buck")continue;std::optional<double> vref;
         for(const auto& [prefix,v]:std::vector<std::pair<std::string,double>>{{"TPS54302",vref_tps54302},{"LMR33630",1.0},{"LM61460",1.0}})if(starts(reg.value,prefix)){vref=v;break;}
-        if(!vref){out.notes.push_back("NOTE: "+sheet+":"+reg.ref+" ("+reg.value+") has no FB_VREF entry — FB divider unchecked");continue;}
+        if(!vref)throw ModelCheckError("SPICE unverified: "+sheet+":"+reg.ref+" ("+reg.value+") has no FB_VREF entry — FB divider unchecked");
         const CircuitNetIr* fb=nullptr;std::vector<Passive> tops,bots;
         for(const auto& net:idx.c.nets) {
             if(net.net_class!="signal"||std::none_of(net.pins.begin(),net.pins.end(),[&](const auto& p){return p.ref==reg.ref;}))continue;
             auto t=select(idx.on(net.name),[&](const auto& other){return other.name==reg.vout;});auto b=select(idx.on(net.name),ground);
             if(!t.empty()&&!b.empty()){fb=&net;tops=std::move(t);bots=std::move(b);break;}
         }
-        if(!fb){out.notes.push_back("NOTE: "+sheet+":"+reg.ref+" FB divider not found");continue;}
+        if(!fb)throw ModelCheckError("SPICE unverified: "+sheet+":"+reg.ref+" FB divider not found");
         const auto& t=tops[0];const auto& b=bots[0];const double value=*vref*(1+divide(t.value,b.value)),nominal=rail_volts(reg.vout,policy).value_or(0);
         out.checks.push_back({reg.value+" FB ("+reg.vout+")",sheet,"fb_divider","Vout = "+(*vref==1?"1.0":g(*vref))+" * (1 + "+t.ref+"/"+b.ref+" = "+g(t.value)+"/"+g(b.value)+") vs nominal "+g(nominal)+" V +/-3%",
             value,"V",nominal*0.97,nominal*1.03,"analytic",{}});
@@ -149,7 +149,7 @@ void en_clamp(const std::string& sheet,const SpiceIndex& idx,const std::vector<P
             out.checks.push_back({"EN clamp ceiling ("+reg.ref+")",sheet,"en_clamp",rail.name+"="+g(v)+"V EN strap "+topo+", NO clamp zener: EN at VIN=21.0V must stay <= the EN recommended-max 5.5V (TPS54302 has NO internal EN clamp — SLVSDG6C; PWR-1)",ceiling,"V",{},5.5,"analytic",{}});continue;
         }
         const auto& [zref,zval]=zeners[0];
-        if(!starts(zval,"MMSZ5231B")&&!starts(zval,"BZT52C5V1")){out.notes.push_back("NOTE: "+sheet+":"+zref+" zener "+zval+" has no modelled Vz — EN clamp not checked");continue;}
+        if(!starts(zval,"MMSZ5231B")&&!starts(zval,"BZT52C5V1"))throw ModelCheckError("SPICE unverified: "+sheet+":"+zref+" zener "+zval+" has no modelled Vz — EN clamp not checked");
         auto en_at=[&](double vin,double test){const double knee=test-zener_izt*zener_zzt,open=vin-en_ihys*r.value;if(open<=knee)return open;
             const double iz=divide(vin-test+zener_izt*zener_zzt-r.value*en_ihys,r.value+zener_zzt);return test+(iz-zener_izt)*zener_zzt;};
         const double turnon=std::min(en_at(4.75,4.845),en_at(4.75,5.355)),ceiling=en_at(21.0,5.355);

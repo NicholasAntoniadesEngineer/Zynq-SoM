@@ -231,6 +231,17 @@ void live_electrical(const fs::path& root){
     require(uncovered!=no_checks.result.gates.end()&&uncovered->mandatory&&uncovered->status==BoardGateStatus::failed&&
             uncovered->report.find("SPICE GATE: UNVERIFIED (0 checks)")!=std::string::npos,
             "board pipeline accepted missing SPICE coverage or concealed its reason");
+    // Passing live-board checks must not mask one detected, unmodelled clamp.
+    auto unsupported_options=o;unsupported_options.output_root=tmp.path/"unsupported-model";
+    Context unsupported(paths,unsupported_options);unsupported.circuits=c.circuits;
+    const auto fixture=parse_json_file((root/"native/tests/data/spice/046_buck_en_unknown_zener.json").string());
+    for(const auto& sheet:field(fixture,"sheets").array_value)
+        unsupported.circuits.push_back({field(sheet,"name").string_value,{},decode_intermediate_circuit_ir(field(sheet,"circuit"))});
+    electrical_stages(unsupported);
+    const auto missing_model=std::find_if(unsupported.result.gates.begin(),unsupported.result.gates.end(),[](const auto& g){return g.name=="spice";});
+    require(missing_model!=unsupported.result.gates.end()&&missing_model->mandatory&&missing_model->status==BoardGateStatus::failed&&
+            missing_model->report.find("SPICE unverified: sheet_buck:D1 zener UNKNOWN")!=std::string::npos&&!unsupported.spice,
+            "board pipeline published partial SPICE success despite an unmodelled clamp");
 }
 void authored_inputs(const fs::path& root){
     require(open_part_catalog((root/"native/catalog.bin").string()),"open repository part catalog");

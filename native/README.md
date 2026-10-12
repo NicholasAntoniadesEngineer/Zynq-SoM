@@ -67,6 +67,10 @@ selected circuit or signal-integrity behavior. Dedicated native identity
 contracts cover retained passive models such as HDMI termination separately.
 For the existing named-divider contracts, a present net with unextractable
 topology or the wrong source rail is an error even if other checks pass.
+Likewise, detected regulators with missing feedback/current-setting topology,
+an unsupported feedback reference, or an unmodelled enable-clamp zener fail
+extraction with `SPICE unverified`. Other passing checks cannot certify these
+missing models; the diagnostic is not a claim that the physical circuit fails.
 Analytic checks retain full calculated precision for acceptance, JSON and
 simulator comparisons, including dividers, RC timing, current setting,
 regulator feedback, enable clamps and boot straps. Decimal display rounding
