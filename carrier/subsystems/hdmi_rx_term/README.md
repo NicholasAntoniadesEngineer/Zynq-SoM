@@ -79,5 +79,6 @@ retains the board_aux passive identity checks. This is structural/electrical
 identity coverage, not a signal-integrity simulation or physical placement proof.
 
 `schgen spice --project carrier hdmi_rx_term --no-ngspice` currently extracts
-zero analytic spot checks for this network; its `PASS (0 checks)` must not be
-used as evidence that the termination network was tested.
+zero analytic spot checks for this network. It reports `UNVERIFIED (0 checks)`
+and returns a nonzero exit status; use the identity contract above for the
+documented structural checks. Zero extracted checks are not a passing test.

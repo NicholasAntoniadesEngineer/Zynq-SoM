@@ -17,6 +17,8 @@ struct SpiceResult {
     std::vector<std::string> notes;
     std::string engine = "analytic (closed-form linear solutions)";
     std::vector<std::string> errors() const;
+    // A successful gate needs positive check coverage, not vacuous all_of.
+    // Empty coverage is unverified and fails closed for CLI/board consumers.
     bool ok() const;
 };
 SpiceResult extract_spice_checks(const std::vector<ProjectCircuit>&,

@@ -172,9 +172,10 @@ bool SpiceCheck::ok() const {
     if(spice_value&&std::abs(*spice_value-value)>0.01*std::abs(value))return false;return true;
 }
 std::vector<std::string> SpiceResult::errors() const {
+    if(checks.empty())return {"No supported analytic checks were extracted; electrical behavior is unverified."};
     std::vector<std::string> out;for(const auto& c:checks)if(!c.ok())out.push_back(c.sheet+":"+c.name+" = "+g(c.value)+" "+c.unit+" outside ["+(c.lo?g(*c.lo):"")+" .. "+(c.hi?g(*c.hi):"")+"] "+c.unit+" — "+c.detail+(c.spice_value?"; ngspice="+g(*c.spice_value):""));return out;
 }
-bool SpiceResult::ok() const{return std::all_of(checks.begin(),checks.end(),[](const auto& c){return c.ok();});}
+bool SpiceResult::ok() const{return !checks.empty()&&std::all_of(checks.begin(),checks.end(),[](const auto& c){return c.ok();});}
 SpiceResult extract_spice_checks(const std::vector<ProjectCircuit>& sheets,const PowerPolicy& policy) {
     SpiceResult out;std::set<std::string> nets;
     for(const auto& sheet:sheets) {
@@ -198,7 +199,7 @@ std::string spice_report(const SpiceResult& r,bool present) {
     if(!r.notes.empty()){lines.push_back("");for(const auto& n:r.notes)lines.push_back("  "+n);}
     lines.push_back("");const auto errors=r.errors();
     if(errors.empty())lines.push_back("errors: none");else{lines.push_back("ERRORS ("+std::to_string(errors.size())+"):");for(const auto& e:errors)lines.push_back("  ERROR: "+e);}
-    lines.push_back("");lines.push_back("SPICE GATE: "+std::string(r.ok()?"PASS":"FAIL")+" ("+std::to_string(r.checks.size())+" checks)");return join(lines);
+    lines.push_back("");lines.push_back("SPICE GATE: "+std::string(r.checks.empty()?"UNVERIFIED":r.ok()?"PASS":"FAIL")+" ("+std::to_string(r.checks.size())+" checks)");return join(lines);
 }
 JsonNode spice_result_json(const SpiceResult& r) {
     auto checks=arr();for(const auto& c:r.checks)checks.array_value.push_back(obj({{"name",j(c.name)},{"sheet",j(c.sheet)},{"kind",j(c.kind)},{"detail",j(c.detail)},{"value",j(c.value)},{"unit",j(c.unit)},{"lo",opt(c.lo)},{"hi",opt(c.hi)},{"engine",j(c.engine)},{"spice_value",opt(c.spice_value)},{"ok",j(c.ok())}}));

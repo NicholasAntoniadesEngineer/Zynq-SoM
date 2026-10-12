@@ -59,6 +59,13 @@ selftest and every configured native CTest, requiring complete passing JUnit
 evidence. It does not build its selected test directory or waive failing gates.
 Unsupported commands fail.
 
+The `spice` command requires at least one supported analytic check before it
+can pass. Empty coverage reports `UNVERIFIED (0 checks)` and exits nonzero;
+the mandatory board SPICE gate also fails closed for that case. A nonempty
+passing report proves only its listed spot checks, not coverage of every
+selected circuit or signal-integrity behavior. Dedicated native identity
+contracts cover retained passive models such as HDMI termination separately.
+
 `subsystem-new NAME` creates a C++ source/header/test package with retained
 README, SPICE and JSON metadata. It never overwrites an existing destination.
 New packages are opt-in with `-DSCHGEN_SUBSYSTEM_PACKAGES='name;another'`;

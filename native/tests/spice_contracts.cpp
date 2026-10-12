@@ -29,6 +29,32 @@ void same(const JsonNode& a,const JsonNode& b,const std::string& path) {
 }
 std::optional<double> number(const JsonNode& n,const std::string& key){const auto& v=field(n,key);return v.kind==JsonKind::Null?std::nullopt:std::optional<double>(v.number_value);}
 SpiceResult runnable(){SpiceResult out;out.checks.push_back({"divider TEST","sheet","divider","+3V3 -[R1=10000R]- TEST -[R2=10000R]- GND @ 3.3 V",1.65,"V",0.0,3.3,"analytic",{}});return out;}
+const std::string no_coverage="No supported analytic checks were extracted; electrical behavior is unverified.";
+std::string coverage_report(std::string historical){
+    for(const auto& replacement:std::vector<std::pair<std::string,std::string>>{
+            {"errors: none","ERRORS (1):\n  ERROR: "+no_coverage},
+            {"SPICE GATE: PASS (0 checks)","SPICE GATE: UNVERIFIED (0 checks)"}}){
+        const auto at=historical.find(replacement.first);
+        require(at!=std::string::npos&&historical.find(replacement.first,at+1)==std::string::npos,"unexpected historical empty-coverage report");
+        historical.replace(at,replacement.first.size(),replacement.second);
+    }
+    return historical;
+}
+void empty_coverage(){
+    auto empty=extract_spice_checks({});
+    require(empty.checks.empty()&&!empty.ok()&&empty.errors()==std::vector<std::string>{no_coverage},"empty extraction was accepted");
+    empty.notes.push_back("informational note is not a check");
+    require(!empty.ok(),"notes supplied nonexistent check coverage");
+    for(bool installed:{false,true}){
+        const auto report=spice_report(empty,installed);
+        require(report.find("SPICE GATE: UNVERIFIED (0 checks)")!=std::string::npos&&report.find("SPICE GATE: PASS")==std::string::npos,
+                "empty report claimed PASS");
+    }
+    const auto encoded=spice_result_json(empty);
+    require(!field(encoded,"ok").bool_value&&field(encoded,"n_checks").number_value==0&&field(encoded,"errors").array_value.size()==1,
+            "JSON concealed missing coverage");
+    require(runnable().ok(),"valid positive coverage was rejected");
+}
 void numeric_safety() {
     for (const auto bad : {std::numeric_limits<double>::quiet_NaN(),
                            std::numeric_limits<double>::infinity(),
@@ -75,9 +101,9 @@ int main(int argc,char** argv) {
     }
     try {
         require(argc==2,"usage: spice_contracts <fixture-directory>");const std::filesystem::path dir(argv[1]);
-        numeric_safety();
+        numeric_safety();empty_coverage();
         const auto manifest=parse_json_file((dir/"manifest.json").string());std::size_t passed=0,live=0;
-        const auto ngspice=ngspice_available();
+        const auto ngspice=ngspice_available();std::size_t corrected_empty=0;
         for(const auto& file:field(manifest,"cases").array_value) {
             const auto row=parse_json_file((dir/file.string_value).string());std::vector<ProjectCircuit> sheets;
             for(const auto& sc:field(row,"sheets").array_value)sheets.push_back({field(sc,"name").string_value,{},decode_intermediate_circuit_ir(field(sc,"circuit"))});
@@ -85,7 +111,21 @@ int main(int argc,char** argv) {
             try{result=extract_spice_checks(sheets);}
             catch(const ModelCheckError& e){require(error!=nullptr,file.string_value+": unexpected error "+e.what());require(field(*error,"message").string_value==e.what(),file.string_value+": diagnostic differs "+e.what());}
             require(bool(result)==!bool(error),file.string_value+": expected error presence differs");
-            if(result){same(spice_result_json(*result),field(row,"expected"),file.string_value);require(spice_report(*result,false)==field(row,"report_absent").string_value,file.string_value+": absent report differs");require(spice_report(*result,true)==field(row,"report_present").string_value,file.string_value+": present report differs");
+            if(result){
+                auto expected=field(row,"expected");
+                auto absent=field(row,"report_absent").string_value,present=field(row,"report_present").string_value;
+                if(result->checks.empty()){
+                    require(field(expected,"ok").bool_value&&field(expected,"n_checks").number_value==0&&field(expected,"errors").array_value.empty(),
+                            "unexpected frozen empty-coverage correction");
+                    for(auto& [key,value]:expected.object_value){
+                        if(key=="ok")value.bool_value=false;
+                        if(key=="errors"){JsonNode message;message.kind=JsonKind::String;message.string_value=no_coverage;value.array_value.push_back(message);}
+                    }
+                    absent=coverage_report(absent);present=coverage_report(present);++corrected_empty;
+                }
+                same(spice_result_json(*result),expected,file.string_value);
+                require(spice_report(*result,false)==absent,file.string_value+": absent report differs");
+                require(spice_report(*result,true)==present,file.string_value+": present report differs");
                 if(const auto* expected=object_field(row,"ngspice");expected&&ngspice){
                     SpiceRunOptions opts;opts.executable=ngspice;run_ngspice_crosschecks(*result,opts);
                     auto historical_view=*result;
@@ -110,6 +150,7 @@ int main(int argc,char** argv) {
             }
             ++passed;
         }
+        require(corrected_empty==7,"exact seven historical empty-coverage corrections required");
         const auto boundaries=parse_json_file((dir/"boundaries.json").string());
         std::size_t corrected_zero_cases = 0;
         for(const auto& row:boundaries.array_value) {

@@ -226,6 +226,11 @@ void live_electrical(const fs::path& root){
     require(c.result.gates.size()==10,"composed electrical family executes every report");
     for(const auto& g:c.result.gates)if(g.mandatory)require(g.status==BoardGateStatus::passed,"live devkit electrical gate "+g.name+": "+g.report);
     require(c.power&&c.testpoints&&c.spice,"computed results retained for dependent docs; no recomputation required");
+    Context no_checks(paths,o);electrical_stages(no_checks);
+    const auto uncovered=std::find_if(no_checks.result.gates.begin(),no_checks.result.gates.end(),[](const auto& g){return g.name=="spice";});
+    require(uncovered!=no_checks.result.gates.end()&&uncovered->mandatory&&uncovered->status==BoardGateStatus::failed&&
+            uncovered->report.find("SPICE GATE: UNVERIFIED (0 checks)")!=std::string::npos,
+            "board pipeline accepted missing SPICE coverage or concealed its reason");
 }
 void authored_inputs(const fs::path& root){
     require(open_part_catalog((root/"native/catalog.bin").string()),"open repository part catalog");
