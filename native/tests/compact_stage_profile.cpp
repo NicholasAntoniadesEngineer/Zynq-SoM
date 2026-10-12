@@ -435,9 +435,15 @@ std::string trial(const PcbPlacementInput& source, bool compact, int run, int ge
     std::cout << "postconstruction_diagnostic seconds=" << seconds(diagnostic_start)
         << " placement_contract_ok=" << gates.placement_contract.ok
         << " placement_flow_ok=" << gates.placement_flow.ok
-        << " hard_red=" << gates.composition.hard_red
-        << " hard_margin_min=" << gates.composition.hard_margin_min
-        << " hard_margin_sum=" << gates.composition.hard_margin_sum << '\n';
+        << " hard_red=" << gates.composition.hard_red << '\n';
+    const auto margin_row=[](const PcbComposeMarginStats& group,const char* unit) {
+        std::cout<<"hard_margins unit="<<unit<<" measured="<<group.measured
+                 <<" unresolved="<<group.unresolved<<" sum="<<group.sum<<" min=";
+        if(group.minimum)std::cout<<*group.minimum;else std::cout<<"unavailable";
+        std::cout<<'\n';
+    };
+    margin_row(gates.composition.hard_margins.distance_mm,"mm");
+    margin_row(gates.composition.hard_margins.facing_degrees,"degrees");
     for(const auto& violation:gates.placement_contract.violations)
         std::cout<<"placement_contract_violation="<<std::quoted(violation)<<'\n';
     if(!owned_shapes.empty()) {

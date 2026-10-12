@@ -177,6 +177,27 @@ PcbCrossAirwires pcb_cross_airwires_by_pair(const PcbCheckModel &model,
     }
     return out;
 }
+PcbComposeMargins pcb_compose_hard_margins(const std::vector<FloorplanTermEval>& evaluations) {
+    PcbComposeMargins out;
+    for(const auto& e:evaluations) {
+        if(!e.term.enforced)continue;
+        const auto& kind=e.term.kind;
+        if(kind!="facing"&&kind!="flow_hop"&&kind!="near_max"&&kind!="near_intent"&&kind!="far_min")
+            throw std::invalid_argument("compose margin: unsupported term kind "+kind);
+        auto& group=kind=="facing"?out.facing_degrees:out.distance_mm;
+        // Unresolved facing uses a finite -90 sentinel; it is not a measurement.
+        if(e.note=="UNRESOLVED"||!std::isfinite(e.margin)) {++group.unresolved;continue;}
+        const double sum=group.sum+e.margin;
+        if(!std::isfinite(sum))throw std::overflow_error("compose margin sum overflow");
+        group.sum=sum;++group.measured;
+        if(!group.minimum||e.margin<*group.minimum)group.minimum=e.margin;
+    }
+    for(auto* group:{&out.distance_mm,&out.facing_degrees}) {
+        group->sum=py_round(group->sum,2);
+        if(group->minimum)group->minimum=py_round(*group->minimum,2);
+    }
+    return out;
+}
 PcbComposeReport report_pcb_composition(const PcbCheckInput &in, const FloorplanTermIndex &index,
                                         const PcbPlacementGatePolicy &policy,
                                         const PcbComposeEvidence &evidence,
@@ -185,19 +206,11 @@ PcbComposeReport report_pcb_composition(const PcbCheckInput &in, const Floorplan
     out.index = index;
     out.evaluations = measure_pcb_compose_terms(in, index, policy, counts);
     out.n_corridors = evidence.corridors.size();
-    std::optional<double> minimum;
-    double sum = 0;
     for (const auto &e : out.evaluations) {
         if (!e.ok)
             ++(e.term.enforced ? out.hard_red : out.soft_red);
-        if (e.term.enforced && std::isfinite(e.margin)) {
-            sum += e.margin;
-            if (!minimum || e.margin < *minimum)
-                minimum = e.margin;
-        }
     }
-    out.hard_margin_sum = py_round(sum, 2);
-    out.hard_margin_min = minimum ? py_round(*minimum, 2) : 0;
+    out.hard_margins=pcb_compose_hard_margins(out.evaluations);
     const auto &model = in.model();
     std::map<std::pair<std::string, std::string>, std::string> managed;
     for (const auto &c : evidence.coexistence)
@@ -246,9 +259,14 @@ std::string PcbComposeReport::text() const {
     std::vector<std::string> lines{
         "FLOORPLAN COMPOSITION (T1): " + std::to_string(index.hard.size()) + " hard / " +
             std::to_string(index.soft.size()) + " soft terms; hard RED " +
-            std::to_string(hard_red) + ", soft RED " + std::to_string(soft_red) + " (advisory)",
-        "  aggregate hard margin: sum " + pyfloat(hard_margin_sum) + " mm, min " +
-            pyfloat(hard_margin_min) + " mm (informational)"};
+            std::to_string(hard_red) + ", soft RED " + std::to_string(soft_red) + " (advisory)"};
+    const auto margins=[&](const PcbComposeMarginStats& group,const std::string& unit) {
+        lines.push_back("  hard margins ("+unit+"): measured "+std::to_string(group.measured)+
+            ", unresolved "+std::to_string(group.unresolved)+", sum "+pyfloat(group.sum)+
+            ", min "+(group.minimum?pyfloat(*group.minimum):"unavailable")+" (informational)");
+    };
+    margins(hard_margins.distance_mm,"mm");
+    margins(hard_margins.facing_degrees,"degrees");
     std::vector<FloorplanTermEval> hard, soft;
     for (const auto &e : evaluations)
         (e.term.enforced ? hard : soft).push_back(e);
