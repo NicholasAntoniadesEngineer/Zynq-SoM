@@ -147,6 +147,34 @@ void isolated_ratchet(){
     result=check_fallback_ratchet({{"fallback",AuditInteger(4)}},source,output);
     require(!result.ok&&read(output)==published,"failed isolated rerun rewrote previous evidence");
 }
+void board_search_accounting(){
+    Temp tmp;const auto source=tmp.path/"committed.json",output=tmp.path/"isolated.json";
+    publish_text(source,fallback_baseline_text({{"interior_reseat_retry",18},{"thermal_via_lattice",0}}));
+    const auto original=read(source);
+    AuditCounts census{{"interior_reseat_retry",200},{"legalize_joint_state",1000000},
+                       {"legalize_joint_budget",7},{"thermal_via_lattice",0}};
+    auto result=check_board_fallbacks(census,source,output);
+    require(result.ok&&result.n_names==1&&result.search_effort.size()==3,
+            "search growth does not reject a board or contaminate mandatory counts");
+    require(result.search_effort.at("legalize_joint_state")==AuditInteger(1000000)&&
+            result.summary().find("legalize_joint_budget: 7")!=std::string::npos,
+            "actual work and exhausted searches remain visible without ceilings");
+    require(read(source)==original,"search classification never rewrites committed baseline");
+    require(!load_fallback_baseline(output)->count("interior_reseat_retry"),
+            "output baseline does not publish obsolete search ceilings");
+    census["thermal_via_lattice"]=1;
+    result=check_board_fallbacks(census,source,output);
+    require(!result.ok&&result.search_effort.size()==3,"search observations cannot mask non-search regression");
+    census["thermal_via_lattice"]=0;census["legalize_unreviewed_path"]=1;
+    require(!check_board_fallbacks(census,source,output).ok,"new legalize names fail closed, not prefix-exempted");
+    census.erase("legalize_unreviewed_path");census["assembly_generation_failed"]=1;
+    require(!check_board_fallbacks(census,source,output).ok,"assembly failure remains mandatory");
+    census.erase("assembly_generation_failed");census["corridor_stray_unmovable"]=1;
+    require(!check_board_fallbacks(census,source,output).ok,"unresolved corridor obstruction remains mandatory");
+    census.erase("corridor_stray_unmovable");census["legalize_joint_state"]=-1;
+    rejects([&]{check_board_fallbacks(census,source,output);},"negative search accounting rejected");
+    rejects([&]{check_board_fallbacks({},tmp.path/"missing",output);},"no automatic board acceptance baseline pinning");
+}
 void failed_inputs(const fs::path& root){
     Temp tmp;ProjectPaths p;p.repository_root=root;p.project_root=tmp.path/"source";p.subsystems_dir=p.project_root/"subsystems";p.sheet_index_file=p.project_root/"sheet_index.json";
     SymbolLibrary library(root);auto broken=selftest_rc_fixture();broken.nets.clear();
@@ -303,7 +331,7 @@ int main(int argc,char** argv){
         if(argc<2||argc>3)throw std::runtime_error("usage: board_pipeline_contracts REPOSITORY [--live-kicad]");
         const fs::path root=argv[1];
         const auto reference=parse_json_file((root/"native/tests/data/board_pipeline/python_reference.json").string());
-        cc(field(reference,"cc"));ledger();policy(reference);coverage();golden(root);isolated_ratchet();
+        cc(field(reference,"cc"));ledger();policy(reference);coverage();golden(root);isolated_ratchet();board_search_accounting();
         failed_inputs(root);purity_precondition(root);live_electrical(root);authored_inputs(root);
         if(argc==3){
             if(std::string(argv[2])!="--live-kicad")throw std::runtime_error("unknown mode");

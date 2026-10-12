@@ -1,0 +1,68 @@
+{
+  "base_commit": "70d2466f",
+  "decision": "Separate reviewed search effort from board correctness. Historical search-count ceilings are not electrical or physical requirements.",
+  "policy": {
+    "reviewed_search_event_names": 30,
+    "non_search_names": ["assembly_generation_failed", "corridor_stray_unmovable", "thermal_via_lattice"],
+    "unknown_names": "Remain mandatory; no prefix-based exemptions.",
+    "accounting": "Preserve every actual count, including failed trials and exhaustion; no new search acceptance ceiling.",
+    "hardware_gates": "Unchanged. Missing or corrupt board fallback baseline now fails instead of automatically pinning acceptance."
+  },
+  "carrier": {
+    "output": "/private/tmp/carrier-search-policy-165x159.sulhoA",
+    "log": "native/build/carrier-search-policy-165x159-full.log",
+    "arguments": "board --project carrier --compact-placement --interior-order 3 --edge-feasibility --owned-quality-first --owned-face-cohesion --contract-group-face-sheet usb_jtag --owned-shape board_aux=owned-face-fixed/a2.2/owned-pins-forward --floorplan-spec native/benchmarks/carrier-165x159-failed-first.floorplan.json --joint-separation-states 128 --timing",
+    "exit_code": 0,
+    "mandatory_gates": "PASS",
+    "sheets": 37,
+    "width_mm": 165,
+    "height_mm": 159,
+    "area_mm2": 26235,
+    "parts_top": 413,
+    "parts_bottom": 153,
+    "pcb_sha256": "24ac25bfe6cb2ea6477a01b195b5ca78070ccff3bb2640f12d5b8f7275da5c64",
+    "pcb_change": "Byte-identical to previously checked neighbour-recovery candidate; policy does not alter geometry.",
+    "verdict_sha256": "13917c25af5fb4589774a74b80c2b1bc657bccd16d1328f1b568bd7c53652bad",
+    "non_unrouted_drc_errors": 0,
+    "expected_unrouted": 499,
+    "hard_constraint_red": 0,
+    "joint_states": 1418,
+    "joint_axis_solves": 2173,
+    "joint_budget_exhaustions": 11,
+    "neighbour_retries": 9,
+    "reseats": 14,
+    "front_back_render_inspection": "Inspected both new views; SoM reserve and perimeter connectors remain visible. Not an assembly-height or fabrication approval.",
+    "top_render_sha256": "91ec6d3c0eefd538df5c069b105d5ddaf31a684bdda53fc8a2ab36c59b7b626b",
+    "bottom_render_sha256": "9490c59451fc3dc6c45722dc2f46a52985853ccc3caed10cce088d25738f76df",
+    "advisory_failures": ["return_path", "golden", "contract_coverage_lint"],
+    "unresolved": "286 parts outside structured contracts; qualitative proximity and access requirements remain UNVERIFIED. Routing out of scope; no fabrication readiness claim."
+  },
+  "observed_seconds": {
+    "measured_scope_not_process_wall": 257.978282,
+    "pcb_model_including_internal_checks": 2.560566,
+    "pcb_input_and_netlist": 1.549963,
+    "pcb_text_emission": 0.038128,
+    "render_3d": 29.708917,
+    "source_audit": 161.716250,
+    "qualification": "Not a controlled performance comparison; a small manufacturing-test rebuild overlapped source auditing. No matched Python timing claim."
+  },
+  "tests": {
+    "board_pipeline_contracts": "944 passed, including search growth, complete count retention, non-search/unknown rejection, negative counts and missing baseline",
+    "manufacturing_contracts": "PASS 1.64 seconds; updated authority assertion and exact reviewed direct-enable BOM delta (three removed parts and one BOM group per board), retaining historical manifests",
+    "devkit": "No fresh full build this batch; manufacturing regression covers both boards. Earlier full-build evidence not relabelled as a new run."
+  },
+  "follow_up_constraint_review": [
+    "Distinguish measured hardware limits from judgment/proxy distances; verify the underlying pin-level requirement before retaining a hard placement rejection.",
+    "Review cross-airwire and dispersion heuristics as quality objectives rather than assuming their constants prove electrical correctness.",
+    "Review search caps and rigid group/side assumptions for lost feasible solutions; retain incumbents and count exhaustion without claiming impossibility."
+  ],
+  "deferred_audit_concurrency_experiment": {
+    "scope": "quantize.cpp, pack.cpp, floorplan_build.cpp, pcb_placement_build.cpp; two compiler workers",
+    "one_projection_seconds": 12.3152172,
+    "two_projections_seconds": 9.71164675,
+    "one_projection_sampled_aggregate_peak_bytes": 2668183552,
+    "two_projections_sampled_aggregate_peak_bytes": 3063070720,
+    "census": "cmp identical",
+    "decision": "Prototype reverted pending full-manifest timing and memory assessment; promising observation, not a production speedup claim."
+  }
+}

@@ -45,7 +45,7 @@ ManufacturingPipelineInput native_board_pipeline_metadata(){
         {"edge_run_translation","plan_lattice","Opt-in bounded translation repaired an invalid edge arrangement. Count all applied repairs, including later rejected candidates; no clearance waiver."},
         {"screened_incumbent_retained","plan_lattice","Final refinement failed or worsened the screened layout. Restore the actual incumbent and side offers; retain all trial accounting and re-evaluate its estimate."},
         {"legalize_only_compaction","plan_lattice","Compact placement broke a pair floor; retain the rechecked legalize-only candidate. Count each affected compact-pack invocation."},
-        {"seat_node_budget","zone_pack","Template DFS exhausted its node budget; that pad is infeasible and the widening search may retry."},
+        {"seat_node_budget","zone_pack","Template DFS exhausted its node budget without finding a placement; the widening search may retry. This is not proof that the pad is infeasible."},
         {"cand_cap_truncated","zone_pack","Ranked candidate list exceeded its cap; discard the tail and count this truncating generation call."},
         {"thermal_via_lattice","emission","A preferred thermal via site was blocked; a checked lattice candidate supplied the via. Count each such via."},
         {"bottom_variant_contract_reject","zone_pack","An eligible bottom variant failed its mirrored contract or required lifting a load-bearing contract member; do not offer that shape."},

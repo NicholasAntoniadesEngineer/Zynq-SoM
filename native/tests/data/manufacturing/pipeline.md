@@ -46,7 +46,7 @@ Every live geometry-touching snap/round/pad/credit is a NAMED transform; the cen
 
 ## Fallback registry + committed ratchet baselines
 
-Every degraded path is a NAMED event; the ratchet gate (`native/src/manufacturing_pipeline.cpp`) fails the board when any count exceeds its committed per-project ceiling (ceilings only ever decrease). Live counts print in the build report and in `board_verdicts.json` (`fallbacks`).
+Every alternate path is a NAMED event. The board gate (`check_board_fallbacks` in `native/src/verification_audits_counts.cpp`) separates explicitly reviewed search effort from non-search regressions. Search counts have no acceptance ceiling: the committed values below are historical references, not hardware limits. Non-search and unreviewed paths retain the ratchet. Live counts, including failed trials and budget exhaustion, remain in the build report and `board_verdicts.json` (`fallbacks`). Independent electrical and physical checks decide board correctness; search exhaustion does not prove infeasibility.
 
 | name | stage | carrier ceiling | devkit_mini ceiling | meaning |
 |------|-------|---------|---------|---------|

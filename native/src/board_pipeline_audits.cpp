@@ -95,13 +95,13 @@ void record_pipeline_after(Context& c,const fs::path& baseline){
     std::size_t nq=0,nf=0;c.ledger.open_step("census");
     for(const auto& [name,n]:q)if(n.nonzero()){++nq;const auto& d=qdefs.at(name);c.ledger.calc("quantize_engagement",text(n.str()),{{"klass",text(d.proof_class)},{"value",text(d.value.substr(0,std::min<std::size_t>(60,d.value.find('\n'))))}},name);}
     for(const auto& [name,n]:fb)if(n.nonzero()){++nf;if(!stages.count(name))throw ProjectError("missing live fallback stage metadata "+name);
-        c.ledger.calc("fallback_engagement",text(n.str()),{{"stage",text(stages.at(name))},{"ceiling",text(!ceiling?"-1":ceiling->count(name)?ceiling->at(name).str():"0")}},name);}
+        c.ledger.calc("fallback_engagement",text(n.str()),{{"stage",text(stages.at(name))},{"ceiling",text(is_board_search_effort(name)?"observational":!ceiling?"-1":ceiling->count(name)?ceiling->at(name).str():"0")}},name);}
     c.ledger.calc("register_silence",number(q.size()-nq+fb.size()-nf),{{"quantize_registered",number(q.size())},{"quantize_engaged",number(nq)},{"fallback_registered",number(fb.size())},{"fallback_fired",number(nf)}});c.ledger.close_step("census");
 }
 }
 void audit_stages(Context& c){
     const auto fb=c.options.fallback_baseline.empty()?c.paths.reports_dir/"fallback_baseline.json":c.options.fallback_baseline;
-    c.attempt("fallbacks",[&]{if(!c.pcb)throw ProjectError("census producer did not finish");const auto r=check_fallback_ratchet(c.fallbacks.census(),fb,c.reports/"fallback_baseline.json");c.report("fallbacks.txt",r.summary());c.gate("fallbacks",r.ok,r.summary());});
+    c.attempt("fallbacks",[&]{if(!c.pcb)throw ProjectError("census producer did not finish");const auto r=check_board_fallbacks(c.fallbacks.census(),fb,c.reports/"fallback_baseline.json");c.report("fallbacks.txt",r.summary());c.gate("fallbacks",r.ok,r.summary());});
     bool imported=false;
     c.attempt("ledger_import",[&]{
         if(c.options.ledger_declarations.empty())throw ProjectError("reviewed native ledger declarations are required; scanner output cannot supply them");

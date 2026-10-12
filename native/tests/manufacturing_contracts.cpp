@@ -62,12 +62,29 @@ void project(const fs::path& root,const fs::path& scratch,const std::string& nam
     for(const auto& a:field(input,"artifacts").array_value)in.artifacts.push_back({str(a,"path"),str(a,"sha256")});
     auto historical=in;
     for(auto& sheet:historical.sheets)sheet.circuit=historical_input_contracts::project(sheet.circuit,name);
-    exact(render_manufacturing_manifest(historical),fixture/"manifest.json",output/"historical-manifest.json");
-    auto current_expected=read(fixture/"manifest.json");
+    auto reviewed_expected=read(fixture/"manifest.json");
+    const auto replace_once=[&](const std::string& before,const std::string& after){
+        const auto pos=reviewed_expected.find(before);
+        require(pos!=std::string::npos&&reviewed_expected.find(before,pos+before.size())==std::string::npos,
+                "unique reviewed manifest preimage: "+before);
+        reviewed_expected.replace(pos,before.size(),after);
+    };
+    // d2a1ec20 adopted direct VIN enable on both boards: R12/D5/C20
+    // disappeared, removing three parts and one unique BOM group. Keep the
+    // original oracle immutable and constrain the exact reviewed delta.
+    const auto enable_sheet=std::find_if(in.sheets.begin(),in.sheets.end(),[](const auto& s){return s.circuit.name=="power_som";});
+    require(enable_sheet!=in.sheets.end(),"direct-enable power_som sheet present");
+    for(const auto* ref:{"R12","D5","C20"})
+        require(std::none_of(enable_sheet->circuit.parts.begin(),enable_sheet->circuit.parts.end(),[&](const auto& p){return p.ref==ref;}),
+                "removed enable network must not reappear: "+std::string(ref));
+    replace_once(name=="carrier"?"\"lines\": 105":"\"lines\": 43",name=="carrier"?"\"lines\": 104":"\"lines\": 42");
+    replace_once(name=="carrier"?"\"parts\": 502":"\"parts\": 136",name=="carrier"?"\"parts\": 499":"\"parts\": 133");
+    require(render_manufacturing_manifest(historical)==reviewed_expected,"manifest differs beyond reviewed direct-enable removal");
+    auto current_expected=reviewed_expected;
     if(name=="carrier") {
         // The reviewed 100p/C14858 reference filter adds one BOM group;
         // part count and every other manifest byte remain unchanged.
-        const std::string before="\"lines\": 105",after="\"lines\": 106";
+        const std::string before="\"lines\": 104",after="\"lines\": 105";
         const auto pos=current_expected.find(before);
         require(pos!=std::string::npos&&current_expected.find(before,pos+before.size())==std::string::npos,"unique historical BOM-line preimage");
         current_expected.replace(pos,before.size(),after);
@@ -114,7 +131,7 @@ void misc(const fs::path& root,const fs::path& scratch){
     const auto native_pipeline=render_manufacturing_pipeline(native_board_pipeline_metadata());
     require(native_pipeline.find(".py")==std::string::npos,"live native pipeline documentation has no obsolete Python source paths");
     for(const auto* source:{"native/src/board_policy_metadata.cpp","native/src/native_audit_registry.cpp",
-                           "native/src/native_cpp_audits.cpp","native/src/manufacturing_pipeline.cpp"}) {
+                           "native/src/native_cpp_audits.cpp","native/src/verification_audits_counts.cpp"}) {
         require(native_pipeline.find(source)!=std::string::npos,"live pipeline cites native authority: "+std::string(source));
         require(fs::is_regular_file(root/source),"cited native authority exists: "+std::string(source));
     }
