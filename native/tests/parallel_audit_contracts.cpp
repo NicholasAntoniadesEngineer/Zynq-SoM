@@ -140,14 +140,17 @@ void contracts(const std::filesystem::path& root,const std::string& self){
         require(changed.find("source changed during audit")!=std::string::npos,
                 "concurrently edited source must not publish a mixed-version census");
     }
-    for(const auto* phase:{"ast","preprocessor","appearing","appearing_earlier"})for(std::size_t workers:{1,2}) {
+    for(const auto* phase:{"ast","preprocessor","appearing","appearing_earlier","probe_earlier"})for(std::size_t workers:{1,2}) {
         std::filesystem::create_directories(scratch.path/"nested path");
         write(scratch.path/"nested path/#policy$.hpp","#define HEADER_VALUE 0.25\n");
         write(scratch.path/"unlisted.hpp","#include \"nested path/#policy$.hpp\"\n");
         std::error_code ignored;std::filesystem::remove(scratch.path/"appears.hpp",ignored);
         std::filesystem::remove(scratch.path/"first.preprocessed",ignored);
         for(const auto& file:bad) {
-            const std::string lookup=(std::string(phase)=="appearing_earlier"&&file.path=="second.cpp")?"":
+            const bool late=std::string(phase)=="appearing_earlier"||std::string(phase)=="probe_earlier";
+            const std::string lookup=late&&file.path=="second.cpp"?"":
+                std::string(phase)=="probe_earlier"?
+                "#if __has_include(\"appears.hpp\")\nconstexpr double selected=0.75;\n#else\nconstexpr double selected=0.25;\n#endif\n":
                 "#if __has_include(\"appears.hpp\")\n#include \"appears.hpp\"\n#endif\n";
             write(scratch.path/file.path,"#include \"unlisted.hpp\"\n"+lookup+"constexpr double stable=HEADER_VALUE;\n");
         }
@@ -156,6 +159,8 @@ void contracts(const std::filesystem::path& root,const std::string& self){
         require(changed.find("dependency changed during audit")!=std::string::npos||
                 changed.find("dependency graph changed during audit")!=std::string::npos,
                 "transitive or newly appearing include must not publish a mixed-input census");
+        if(std::string(phase)=="probe_earlier")require(changed.find("dependency graph changed during audit")!=std::string::npos,
+                "Clang must track successful has_include probes even without including the probed file");
     }
     std::cout<<"parallel audit exact-census, failure and timeout contracts PASS\n";
 }
@@ -190,7 +195,7 @@ int main(int argc,char** argv){try{
             write(source.parent_path()/"nested path/#policy$.hpp","#define HEADER_VALUE 0.75\n");
         if(phase=="appearing"&&source.filename()=="first.cpp"&&!dependency&&!preprocess)
             write(source.parent_path()/"appears.hpp","constexpr double introduced=0.5;\n");
-        if(phase=="appearing_earlier"&&!dependency&&!preprocess&&source.filename()=="second.cpp") {
+        if((phase=="appearing_earlier"||phase=="probe_earlier")&&!dependency&&!preprocess&&source.filename()=="second.cpp") {
             // Establish ordering explicitly; worker scheduling must not decide
             // whether this fixture actually edits a previously scanned graph.
             const auto ready=source.parent_path()/"first.preprocessed";
@@ -202,7 +207,7 @@ int main(int argc,char** argv){try{
         }
         std::vector<std::string> command{"clang++"};command.insert(command.end(),argv+3,argv+argc);
         const auto result=run_process(command);
-        if(result.exit_code==0&&phase=="appearing_earlier"&&preprocess&&source.filename()=="first.cpp")
+        if(result.exit_code==0&&(phase=="appearing_earlier"||phase=="probe_earlier")&&preprocess&&source.filename()=="first.cpp")
             write(source.parent_path()/"first.preprocessed","");
         std::cout<<result.stdout_text;std::cerr<<result.stderr_text;return result.exit_code;
     }

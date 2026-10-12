@@ -1,0 +1,25 @@
+{
+  "base_commit": "750e03a5",
+  "scope": "Audit-reuse invalidation investigation and adversarial regression; no cache or production bypass enabled",
+  "review": "One bounded read-only helper reviewed the existing scanner and tests while the lead examined compiler invocation and evidence boundaries. Helper is closed.",
+  "hypothesis": "A file whose existence is tested by __has_include but never included might change selected code without changing the compiler dependency graph.",
+  "result": "DISPROVED for the current Clang. Its -M output includes successful include-presence probes even without a corresponding include directive. The existing final graph guard rejects a late appearing file after the first TU has finished preprocessing.",
+  "test": {
+    "file": "native/tests/parallel_audit_contracts.cpp",
+    "case": "probe_earlier",
+    "workers": [1,2],
+    "ordering": "Second TU waits for first TU preprocessing, then creates appears.hpp. First TU tests presence to select between two numeric declarations but never includes the file.",
+    "required_diagnostic": "dependency graph changed during audit",
+    "verified_suite": "native_parallel_audit_contracts",
+    "status": "PASS"
+  },
+  "reuse_boundary_to_implement": {
+    "payload": "Per-TU semantic census after AST visitor, before live macro findings; never cache the live ledger/quantization verdict.",
+    "admission": "Start opt-in and caller-owned. Unsupported compiler wrappers, response/config files, plugins, volatile builtins, PCH and module inputs must disable reuse until their semantic inputs are explicitly represented.",
+    "identity": "Normalized absolute and manifest-relative source paths, ordered effective arguments, working directory, inherited environment, resolved actual compiler/toolchain identity, dependency graph and bytes, and live preprocessed evidence with line markers. Compiler name or version text alone is insufficient.",
+    "hit_work": "Retain live dependency discovery/snapshots, macro preprocessing/extraction, final byte/graph checks and fresh live registry verdict.",
+    "publication": "Publish entries only after complete scan success; maintain manifest-order findings and fail-closed concurrent-mutation behavior."
+  },
+  "decision": "Do not add a redundant preprocessing pass for the disproved probe hypothesis. Do not ship a source-only, timestamp-only or compiler-version-only cache. Implement the restricted compiler-context identity and unsupported-input admission policy before enabling reuse.",
+  "limits": "Production scanner behavior and performance are unchanged. Compiler behavior was verified on the current host, not asserted for arbitrary tools. Safe reusable evidence, persistent reuse, full-manifest performance qualification and the wider engineering goal remain unfinished."
+}
