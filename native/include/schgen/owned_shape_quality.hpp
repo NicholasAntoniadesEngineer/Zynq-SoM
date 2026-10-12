@@ -145,10 +145,12 @@ struct OwnedShapeLocatedRank {
     double x=0,y=0;
 };
 // Experimental lexicographic strategy, not a widened numerical tie: improve
-// same-face owned proximity first, then minimise the existing estimate among
+// owned planar proximity first, then minimise the existing estimate among
 // the nondominated improvements. Preserve the incumbent's exact rectangle,
 // location, face, subjects, bulk gaps and fanout. Missing/unknown evidence
-// grants no preference. Full-board checks still decide acceptance.
+// grants no preference. Existing opposite-face pairs may be compared only
+// with the same owner/cap faces; this does not permit a layer change or claim
+// routed-loop improvement. Full-board checks still decide acceptance.
 inline int owned_shape_select_same_pose_quality(const OwnedShapeQualityTable& quality,
     const std::string& sheet,const std::vector<OwnedShapeLocatedRank>& candidates,int incumbent) {
     std::set<int> indices;
@@ -161,10 +163,6 @@ inline int owned_shape_select_same_pose_quality(const OwnedShapeQualityTable& qu
     if(!original||sheet.empty())throw std::invalid_argument("owned quality requires an incumbent and sheet");
     const auto before=quality.find({sheet,incumbent});
     if(before==quality.end()||!owned_shape_quality_comparable(before->second,before->second))return incumbent;
-    for(const auto& [cap,s]:before->second.subjects){
-        (void)cap;
-        if(s.role==OwnedShapeRole::Bypass&&s.owner_side!=s.cap_side)return incumbent;
-    }
     std::vector<const OwnedShapeLocatedRank*> eligible;
     for(const auto& c:candidates){
         const auto found=quality.find({sheet,c.rank.index});

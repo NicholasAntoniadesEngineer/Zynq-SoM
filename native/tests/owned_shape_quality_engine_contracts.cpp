@@ -92,7 +92,7 @@ void synthetic() {
             ++permutations;
         }while(std::next_permutation(ranks.begin(),ranks.end(),[](const auto& a,const auto& b){return a.rank.index<b.rank.index;}));
         require(permutations==24,"quality strategy permutation coverage");
-        for(int mutation=0;mutation<9;++mutation){
+        for(int mutation=0;mutation<10;++mutation){
             auto bad=table;auto candidates=ranks;
             for(std::size_t i=1;i<candidates.size();++i){
                 auto& r=candidates[i];auto& q=bad.at({"pilot",r.rank.index});
@@ -105,13 +105,16 @@ void synthetic() {
                 if(mutation==6)q.bypass_pad_gaps.at("C2")=6;
                 if(mutation==7)q.fanout_starved=1;
                 if(mutation==8)q.state=OwnedShapeQualityState::Rejected;
+                if(mutation==9)q.subjects.at("C1").cap_side="bottom";
             }
             require(owned_shape_select_same_pose_quality(bad,"pilot",candidates,0)==0,
                 "incompatible or worsening candidate displaced incumbent");
         }
         auto cross=table;
         for(auto& [key,q]:cross){(void)key;q.subjects.at("C1").cap_side="bottom";}
-        require(owned_shape_select_same_pose_quality(cross,"pilot",ranks,0)==0,"opposite-face projected gap acquired quality priority");
+        require(owned_shape_select_same_pose_quality(cross,"pilot",ranks,0)==2,"unchanged opposite-face topology prevented planar proximity improvement");
+        for(auto& [key,q]:cross)if(key.second!=0)q.subjects.at("C1").cap_side="top";
+        require(owned_shape_select_same_pose_quality(cross,"pilot",ranks,0)==0,"quality strategy changed an existing opposite-face topology");
         auto duplicate=ranks;duplicate.push_back(ranks.front());bool rejected=false;
         try{(void)owned_shape_select_same_pose_quality(table,"pilot",duplicate,0);}catch(const std::invalid_argument&){rejected=true;}
         require(rejected,"duplicate quality candidate accepted");

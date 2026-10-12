@@ -300,13 +300,19 @@ qualified recipe above to avoid extra search cost without a demonstrated gain.
 
 `benchmarks/carrier-166x156.floorplan.json` is a **trade-off candidate, not a
 replacement for the retained carrier**. Using the original continuation recipe
-without `--reseat-victim-shapes`, it passes the full mandatory pipeline at
-25,896 mm² and an estimated cross-wire length of 15,822.8 mm. However,
-bringup_rails U1.24–C1.1 planar pad gap increases from 8.03 to 39.76 mm
-(bottom/top). Its qualitative bypass requirement remains UNVERIFIED. Lower
+without `--reseat-victim-shapes`, the initial build passed the full mandatory
+pipeline at 25,896 mm² and an estimated cross-wire length of 15,822.8 mm, but
+bringup_rails U1.24–C1.1 planar pad gap increased from 8.03 to 39.76 mm.
+The quality-first selector now compares existing opposite-face pairs when
+their owner/cap faces, pose, envelope, bulk gaps and fanout remain identical.
+It reduces that gap to 17.38 mm (still bottom/top), with a 15,826.8 mm estimate
+and another full mandatory-gate PASS. The bypass requirement still remains
+UNVERIFIED; this is planar proximity, not proof of routed loop quality. Lower
 aggregate area/wire length does not establish acceptable bypass placement.
 See `benchmarks/2026-10-12-incoming-shapes-and-aspect-ratio.json` for the
 qualification, unresolved trade-off and separately tested recovery change.
+The subsequent selector correction and validation are recorded in
+`benchmarks/2026-10-12-unchanged-face-planar-quality.json`.
 
 Firmware source provenance now reads canonical circuit JSON and compiled factory
 registrations rather than checking for Python constructors. Independent source
