@@ -696,6 +696,47 @@ void pack_behavior() {
     require(extra.at("floorplan_candidate_area_precision1dp")==118&&extra.at("floorplan_seed_aspect_precision4dp")==1,
             "both passes count 55 accepted candidates plus four objective-bound probes, and one seed aspect");
 }
+void current_plan_requirements(const FloorplanInput&,const FloorplanPlan&);
+void fixed_face_recovery(){
+    FloorplanInput in;in.som.w=20;in.som.h=20;
+    CircuitSheetIr logic;logic.name="logic";
+    logic.parts.push_back({"R1","Device:R","10k","Resistor_SMD:R_0603_1608Metric",{},{},{}});
+    in.sheets={logic};in.geometry.zone_box["logic"]={12,8};
+    FloorplanZoneShape top;top.w=12;top.h=8;
+    auto bottom=top;bottom.side="bottom";
+    in.geometry.shapes["logic"]={top,bottom};
+    FloorplanSpec spec;spec.outline={{30,30}};spec.interior["logic"].side="bottom";in.spec=spec;
+    Engine isolated(in);isolated.initialize();isolated.board_size(30,30);isolated.prepare_geometry();isolated.prepare_cross();
+    isolated.plan.punch_free=false;
+    require(!isolated.attempt_pack(true),"whole-body reservation must exclude bottom recovery witness");
+    const auto failed_work=isolated.plan.accounting.quantization_engagements.at("run_overflow_tol");
+    isolated.plan.punch_free=true;
+    require(isolated.attempt_pack(true),"face-aware reservation independently fits bottom witness");
+    const auto expected_work=isolated.plan.accounting.quantization_engagements.at("run_overflow_tol");
+    require(expected_work>failed_work,"both isolated attempts actually execute");
+    const auto recovered=build_floorplan(in);
+    require(recovered.punch_free&&recovered.interior_blocks.size()==1&&recovered.interior_blocks[0].side=="bottom",
+            "fixed-outline search must reach feasible second policy after first fails");
+    require(recovered.accounting.quantization_engagements.at("run_overflow_tol")==expected_work,
+            "failed conservative work and successful recovery count exactly once");
+    bool receipt=false;
+    for(const auto& d:recovered.accounting.decisions)if(d.name=="plan_choice"){
+        const auto inputs=jobject(d.inputs);
+        receipt=d.value.string_value=="fixed-free-recovery"&&str(inputs,"conservative_est")=="unavailable";
+    }
+    require(receipt,"failed policy cannot publish an invented zero-cost incumbent");
+    current_plan_requirements(in,recovered);
+    same(floorplan_plan_json(recovered),floorplan_plan_json(build_floorplan(in)),"deterministic fixed face recovery");
+    auto experiment=std::make_shared<FloorplanExperiment>();int interrupted=0;
+    experiment->stage_rejected=[&](const auto&){++interrupted;throw std::runtime_error("fixed reservation observer stopped");};
+    in.experiment=experiment;
+    throws([&]{build_floorplan(in);},"fixed reservation observer stopped");
+    require(interrupted==1,"unexpected errors propagate without a second policy retry");
+    in.experiment.reset();
+    in.spec->interior["logic"].side="top";
+    in.geometry.shapes.erase("logic");
+    throws([&]{build_floorplan(in);},"under either reservation policy");
+}
 void cross_behavior() {
     FloorplanInput in;in.som.w=20;in.som.h=20;
     in.footprints["one"]={"synthetic-one-pad",sexpr_loads(R"((footprint "one" (fp_rect (start -1 -1) (end 1 1) (layer "F.CrtYd") (width 0.05)) (pad "1" smd rect (at 0 0) (size 1 1))))")};
@@ -1307,7 +1348,7 @@ int main(int argc,char** argv) {
         repair_choice_contracts();
         joint_separation_contracts();
         joint_composer_contracts();
-        facing_projection_contracts();
+        facing_projection_contracts();fixed_face_recovery();
         compose_contracts(dir);primary_fanout_contracts();output_grid_contracts();mutations();pack_behavior();cross_behavior();frozen(dir,"devkit_mini",geometry_only);frozen(dir,"carrier",geometry_only);
         std::cout<<"floorplan contracts: "<<checks<<" checks passed"<<(geometry_only ? " (geometry/estimator slice)":"")<<"\n";
         return 0;

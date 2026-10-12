@@ -294,21 +294,36 @@ FloorplanPlan Engine::run() {
             plan.punch_free=free;
             if (!attempt_pack(true)) throw FloorplanPackingInfeasible("floorplan: bounded placement search found no valid layout for the requested fixed outline "+
                 outline_text(plan.board_w,plan.board_h)+"; this does not prove geometric infeasibility. Reconsider group shapes, poses or allocation; a larger outline is one option, not a demonstrated requirement.");
-            choose_connector_shapes(); return estimate();
+            choose_connector_shapes();
+            const double value=estimate();
+            if(!std::isfinite(value)||value<0)throw FloorplanError("floorplan: invalid fixed-outline estimate");
+            return value;
         };
-        reset_shapes(); double estimate_real=fixed(false);
-        const double conservative_estimate=estimate_real;
+        // A conservative reservation is a search policy, not a prerequisite
+        // for the face-aware policy. Failure must not suppress the latter.
+        const auto entry=plan;const auto entry_offers=side_offers;
+        reset_shapes();
+        std::optional<double> conservative_estimate;
+        try { conservative_estimate=fixed(false); }
+        catch (const FloorplanPackingInfeasible&) { restore(entry);side_offers=entry_offers; }
+        catch (const FloorplanReservationExcluded&) { restore(entry);side_offers=entry_offers; }
         const auto conservative=plan; const auto offers=side_offers;
         reset_shapes();
         std::optional<double> free_est;
         try { free_est=fixed(true); }
         catch (const FloorplanPackingInfeasible&) {}
         catch (const FloorplanReservationExcluded&) {}
-        if (free_est && *free_est<estimate_real-1e-6) estimate_real=*free_est;
-        else { restore(conservative); side_offers=offers; fallback("punch_free_plan_rejected"); }
+        if(!conservative_estimate&&!free_est)
+            throw FloorplanPackingInfeasible("floorplan: bounded placement search found no valid layout for the requested fixed outline "+
+                outline_text(plan.board_w,plan.board_h)+" under either reservation policy; this does not prove geometric infeasibility.");
+        double estimate_real=free_est.value_or(0.0);
+        if(conservative_estimate&&(!free_est||*free_est>=*conservative_estimate-1e-6)) {
+            estimate_real=*conservative_estimate;
+            restore(conservative); side_offers=offers; fallback("punch_free_plan_rejected");
+        }
         const double area=precision.area(plan.board_w*plan.board_h);
         const double budget=cross_budget(plan.board_w,plan.board_h,n_sub,in.cross_budget_k);
-        calc("plan_choice",jvalue("fixed"),{{"conservative_area",jvalue(area)},{"conservative_est",jvalue(precision.value(conservative_estimate))},
+        calc("plan_choice",jvalue(conservative_estimate?"fixed":"fixed-free-recovery"),{{"conservative_area",conservative_estimate?jvalue(area):jvalue("unavailable")},{"conservative_est",conservative_estimate?jvalue(precision.value(*conservative_estimate)):jvalue("unavailable")},
             {"free_area",jvalue(area)},{"free_est",jvalue(free_est ? precision.value(*free_est):0.0)}});
         ledger_sides();
         auto inputs=winner_inputs({area,plan.board_w,plan.board_h,estimate_real,budget},plan.accounting.quantization_engagements); inputs.emplace_back("plan",jvalue("fixed"));
