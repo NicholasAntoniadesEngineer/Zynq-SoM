@@ -293,6 +293,18 @@ the extra strategy also tries the nearest legal pose of its other registered
 shapes, with the same explicit shape-selection restrictions. Incoming-shape
 queries have a separate `interior_reseat_incoming_shape_trial` receipt. This
 does not enumerate all positions for all shapes or displace multiple victims.
+Alternative incoming shapes now also try legal alternative displaced shapes;
+previously that phase held the displaced shape fixed. Every additional query
+retains its existing shape-trial receipt. Interaction contracts include a
+fixture where either strategy alone fails but their combination succeeds,
+plus a mutation test that detects removal of paired exploration. The current
+150-case set has no additional recoveries from the paired-query extension;
+it adds ten exercised queries, not a demonstrated board-size improvement.
+Eight carrier factorial screens and two paired extensions are recorded in
+`benchmarks/2026-10-12-shape-interaction-screening.json`. All smaller-board
+screens failed under their tested settings; that does not establish that
+other combinations cannot help. Keep correctness tests distinct from search
+experiments, and retain configuration-specific negative results for reuse.
 This is not exhaustive shape/pose search: the additional strategy currently
 selects the first locally valid victim shape. It preserves the 165x158 carrier
 candidate in screening but has not recovered 164x159; leave it off for the

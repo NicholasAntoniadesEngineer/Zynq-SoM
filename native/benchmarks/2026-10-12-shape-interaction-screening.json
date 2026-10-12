@@ -1,0 +1,224 @@
+{
+  "schema_version": 1,
+  "base_commit": "91d86a42",
+  "purpose": "Test interactions rather than infer general ineffectiveness from isolated or single-configuration experiments.",
+  "controlled_screen": {
+    "factors": [
+      "rail shape pinned/free",
+      "existing shape recovery off/on"
+    ],
+    "outlines_mm": [
+      [
+        156,
+        165
+      ],
+      [
+        165,
+        156
+      ]
+    ],
+    "fixed_options": "--project carrier --compact-search on --interior-order 3 --edge-feasibility on --owned-quality-first on --owned-face-cohesion on --contract-group-face-sheet usb_jtag --floorplan-spec native/benchmarks/carrier-two-pilot-auto.floorplan.json --joint-separation-states 1024 --reseat-poses 8 --reseat-frontier 4096 --reseat-continuations 3 --owned-shape board_aux=owned-face-a1.000000 --runs 1 --observers on",
+    "pinned_rail_tag": "bottom-a2.2/r270/owned-pins-forward",
+    "schematic": "/private/tmp/carrier-166x156-two-pilots.iK3HkI/Zynq_Carrier.kicad_sch",
+    "rows": [
+      {
+        "outline": "156x165",
+        "rail_shape": "pinned",
+        "recovery": "off",
+        "log": "native/build/interaction-156x165-pinned-off.log",
+        "model_seconds": 0.378567209,
+        "result": "bounded search failed",
+        "failure_subjects": [
+          "bringup_rails"
+        ],
+        "receipt_captured": true
+      },
+      {
+        "outline": "156x165",
+        "rail_shape": "pinned",
+        "recovery": "on",
+        "log": "native/build/interaction-156x165-pinned-on.log",
+        "model_seconds": 0.568486375,
+        "result": "bounded search failed",
+        "failure_subjects": [
+          "bringup_rails"
+        ],
+        "receipt_captured": true
+      },
+      {
+        "outline": "156x165",
+        "rail_shape": "free",
+        "recovery": "off",
+        "log": "native/build/interaction-156x165-free-off.log",
+        "model_seconds": 0.898760167,
+        "result": "bounded search failed",
+        "failure_subjects": [
+          "bringup_en_modules",
+          "debug_boot"
+        ],
+        "receipt_captured": true
+      },
+      {
+        "outline": "156x165",
+        "rail_shape": "free",
+        "recovery": "on",
+        "log": "native/build/interaction-156x165-free-on.log",
+        "model_seconds": 2.017969209,
+        "result": "bounded search failed",
+        "failure_subjects": [
+          "bringup_en_modules",
+          "board_services",
+          "debug_boot"
+        ],
+        "receipt_captured": true
+      },
+      {
+        "outline": "165x156",
+        "rail_shape": "pinned",
+        "recovery": "off",
+        "log": "native/build/interaction-165x156-pinned-off.log",
+        "model_seconds": 1.858960542,
+        "result": "bounded search failed",
+        "failure_subjects": [
+          "board_services",
+          "usb_jtag"
+        ],
+        "receipt_captured": true
+      },
+      {
+        "outline": "165x156",
+        "rail_shape": "pinned",
+        "recovery": "on",
+        "log": "native/build/interaction-165x156-pinned-on.log",
+        "model_seconds": 2.301632916,
+        "result": "bounded search failed",
+        "failure_subjects": [
+          "board_services",
+          "usb_jtag",
+          "bringup_modules"
+        ],
+        "receipt_captured": true
+      },
+      {
+        "outline": "165x156",
+        "rail_shape": "free",
+        "recovery": "off",
+        "log": "native/build/interaction-165x156-free-off.log",
+        "model_seconds": 2.31729475,
+        "result": "bounded search failed",
+        "failure_subjects": [
+          "board_services",
+          "usb_jtag"
+        ],
+        "receipt_captured": true
+      },
+      {
+        "outline": "165x156",
+        "rail_shape": "free",
+        "recovery": "on",
+        "log": "native/build/interaction-165x156-free-on.log",
+        "model_seconds": 4.352294958,
+        "result": "bounded search failed",
+        "failure_subjects": [
+          "board_services",
+          "usb_jtag",
+          "bringup_modules"
+        ],
+        "receipt_captured": true
+      }
+    ]
+  },
+  "interpretation": "All eight carrier screens failed; freeing the rail shape changes the failing subjects. This is bounded search evidence, not physical infeasibility or evidence that combinations cannot help.",
+  "implementation": "In opt-in shape recovery, alternative incoming shapes now also try legal alternative displaced shapes. Reuses the same reseat routine as the victim-only phase; explicit shape restrictions, geometry checks, failure rollback and per-query receipts remain enforced.",
+  "synthetic_test": {
+    "cases": 150,
+    "original_successes_preserved": 102,
+    "recovered_by_shape_portfolio": 30,
+    "remaining_failures": 18,
+    "combination_only_witnesses": 1,
+    "witness": {
+      "rotated_alternative": true,
+      "width": 85,
+      "height": 45,
+      "order": 2
+    },
+    "interpretation": "This fixture fails the base strategy and either incoming-only or victim-only shape strategy, but succeeds with both. The witness demonstrates an interaction in the existing portfolio; it is NOT claimed as a newly recovered case caused by the paired-query extension.",
+    "new_paired_queries": 10,
+    "total_victim_shape_queries": 128,
+    "previous_victim_shape_queries": 118,
+    "coverage": [
+      "bounds and face-aware non-overlap",
+      "full failed-strategy and exception rollback",
+      "independently instrumented operation counts",
+      "complete ordered fallback receipts",
+      "current-input determinism",
+      "explicit shape restrictions"
+    ]
+  },
+  "mutation_test": {
+    "log": "native/build/paired-shape-mutation.log",
+    "mutation": "Replace only the new paired displaced-shape call with the previous fixed-shape call.",
+    "expected_exit": 1,
+    "observed_failure": "alternative incoming shapes never tried alternative displaced shapes",
+    "mutation_restored": true
+  },
+  "paired_carrier_screens": [
+    {
+      "outline_mm": [
+        156,
+        165
+      ],
+      "model_seconds": 3.326560542,
+      "log": "native/build/interaction-156x165-paired-shapes.log",
+      "result": "bounded search failed; receipt captured"
+    },
+    {
+      "outline_mm": [
+        165,
+        156
+      ],
+      "model_seconds": 4.563592209,
+      "log": "native/build/interaction-165x156-paired-shapes.log",
+      "result": "bounded search failed; receipt captured"
+    }
+  ],
+  "regression_screens": [
+    {
+      "project": "carrier",
+      "log": "native/build/carrier-paired-shape-regression.log",
+      "dimensions_mm": [
+        166,
+        156
+      ],
+      "runs": 2,
+      "pcb_sha256": "99bd6a1dddb8f94f314f8b0d775ccc894ef84556e82ab70159360fa071470a5e",
+      "model_seconds": [
+        3.540069,
+        3.440492834
+      ],
+      "same_as_qualified": true
+    },
+    {
+      "project": "devkit_mini",
+      "log": "native/build/devkit-paired-shape-regression.log",
+      "dimensions_mm": [
+        98,
+        98
+      ],
+      "runs": 2,
+      "pcb_sha256": "b6798d4b63d2fddbf9fad24945c151b9420b049b674ad5d637c43bf4a365137f",
+      "model_seconds": [
+        0.175914458,
+        0.175925042
+      ],
+      "same_as_qualified": true
+    }
+  ],
+  "scope_limits": [
+    "Placement construction screens, not fresh full board/source audit qualification.",
+    "No new smaller valid carrier demonstrated in this campaign.",
+    "Timings are diagnostic samples with uncontrolled OS caches and some concurrent development work, not controlled performance or Python comparisons.",
+    "Two real-board outlines and selected factors are not exhaustive interaction coverage.",
+    "Archived aspect-trade strategy remains available for future combinations; earlier no-benefit finding is configuration-specific."
+  ]
+}

@@ -509,6 +509,7 @@ extern "C" void __cyg_profile_func_enter(void* fn,void*){if(observing&&fn==reint
 extern "C" void __cyg_profile_func_exit(void*,void*){}
 void victim_shape_portfolio_contract(){
     std::size_t preserved=0,recovered=0,failed=0,queries=0,incoming_recovered=0,incoming_queries=0;
+    std::size_t combination_only=0,paired_queries=0;
     bool exception_checked=false;
     const Case crowded{70,50,{{29,16,3,4},{12,30,2,0},{30,18,3,2},{31,26,2,3},{7,7,1,3},{31,9,2,1}}};
     for(bool rotate:{false,true})for(int w=65;w<=85;w+=5)for(int h=45;h<=65;h+=5)for(int order=0;order<3;++order){
@@ -531,7 +532,12 @@ void victim_shape_portfolio_contract(){
             Engine previous(in);prepare(previous);previous.compact_order=order;
             const bool previous_ok=previous.attempt_pack_impl(false,nullptr,{},nullptr,0,nullptr,true,false);
             if(previous_ok)require(ok&&equal(floorplan_plan_json(previous.plan),floorplan_plan_json(direct.plan))&&offers(previous)==offers(direct),"incoming shapes replaced a successful victim strategy");
-            else if(ok)++incoming_recovered;
+            else if(ok){
+                ++incoming_recovered;
+                Engine incoming_only(in);prepare(incoming_only);incoming_only.compact_order=order;
+                const bool alone=incoming_only.attempt_pack_impl(false,nullptr,{},nullptr,0,nullptr,false,true);
+                if(!alone)++combination_only;
+            }
             auto delta=direct.plan.accounting.quantization_engagements;delta.erase("entry-sentinel");
             checked_quantization_merge(expected_counts,delta);
             expected_events.push_back("interior_reseat_shape_retry");
@@ -556,6 +562,17 @@ void victim_shape_portfolio_contract(){
         }
         queries+=std::count(expected_events.begin(),expected_events.end(),"interior_reseat_shape_trial");
         incoming_queries+=std::count(expected_events.begin(),expected_events.end(),"interior_reseat_incoming_shape_trial");
+        // Pass 2 is the only source of incoming-shape queries. A displaced
+        // shape query after entering that pass proves paired exploration,
+        // rather than two independent earlier strategies being mislabeled.
+        bool incoming_phase=false;
+        for(const auto& event:expected_events) {
+            if(event=="interior_reseat_incoming_shape_trial")incoming_phase=true;
+            if(incoming_phase&&event=="interior_reseat_shape_trial")++paired_queries;
+            // A recovered block can be followed by another block's ordinary
+            // victim-only pass; those later queries are not paired trials.
+            if(event=="interior_reseat_retry")incoming_phase=false;
+        }
         Engine repeat(in);prepare(repeat);require(repeat.attempt_pack(false)==ok&&equal(floorplan_plan_json(repeat.plan),floorplan_plan_json(actual.plan))&&offers(repeat)==offers(actual),"shape portfolio is not deterministic");
         if(!ok&&!exception_checked&&std::count(expected_events.begin(),expected_events.end(),"interior_reseat_shape_trial")){
             Engine interrupted(in);prepare(interrupted);
@@ -574,6 +591,8 @@ void victim_shape_portfolio_contract(){
     }
     require(preserved&&recovered&&failed&&queries&&exception_checked,"shape fixtures missed preservation, recovery, rollback, exception or actual queries");
     require(incoming_recovered&&incoming_queries,"incoming-shape strategy has no tested recovery or work");
+    require(combination_only>0,"no witness where both shape strategies succeed but either alone fails");
+    require(paired_queries>0,"alternative incoming shapes never tried alternative displaced shapes");
     {
         auto locked_input=input();auto locked_config=std::make_shared<FloorplanExperiment>();locked_input.experiment=locked_config;
         locked_config->reseat_pose_limits=FloorplanPoseRetryLimits{8,4096};
@@ -584,6 +603,7 @@ void victim_shape_portfolio_contract(){
         require(std::count(events.begin(),events.end(),"interior_reseat_incoming_shape_trial")==0,"incoming recovery ignored explicit shape selection");
     }
     std::cout<<"incoming shape recovery PASS recovered="<<incoming_recovered<<" queries="<<incoming_queries<<'\n';
+    std::cout<<"shape interaction PASS combination_only="<<combination_only<<" paired_queries="<<paired_queries<<'\n';
     std::cout<<"victim shape portfolio PASS preserved="<<preserved<<" recovered="<<recovered<<" failed="<<failed<<" queries="<<queries<<'\n';
     FloorplanExperiment invalid;invalid.reseat_pose_limits=FloorplanPoseRetryLimits{8,4096,0,false,true};
     bool rejected=false;try{validate_floorplan_experiment(invalid);}catch(const FloorplanError&){rejected=true;}

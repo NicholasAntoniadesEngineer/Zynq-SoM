@@ -450,6 +450,27 @@ bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure,
     };
     int evict_budget=reseat_evict_budget;
     bool first_recovery=true;
+    auto reseat_displaced=[&](FloorplanBlock& e,FloorplanPoint anchor) {
+        auto p=near(e,e.shape_idx,anchor,e.w,e.h,e.fanout_reach,e.fanout_inset,side_mask(e.side),get(chosen,e.name),nullptr);
+        if(!p&&victim_shapes) {
+            const auto variants=shapes.find(e.name);
+            const auto restricted=owned_shape_choices.find(e.name);
+            if(variants!=shapes.end())for(std::size_t k=0;k<variants->second.size();++k) {
+                if(static_cast<int>(k)==e.shape_idx||
+                   (restricted!=owned_shape_choices.end()&&static_cast<int>(k)!=restricted->second))continue;
+                const auto& s=variants->second[k];
+                fallback("interior_reseat_shape_trial");
+                p=near(e,static_cast<int>(k),anchor,s.w,s.h,s.reach,s.inset,side_mask(s.side),s.comps,nullptr);
+                if(!p)continue;
+                e.shape_idx=static_cast<int>(k);e.side=s.side;e.w=s.w;e.h=s.h;
+                e.fanout_reach=s.reach;e.fanout_inset=s.inset;e.area=block_area(s.w,s.h,counts);
+                chosen[e.name]=s.comps;
+                side_offers[e.name]={e.side,e.side,e.shape_idx,std::nullopt,std::nullopt};
+                break;
+            }
+        }
+        return p;
+    };
     auto retry=[&](FloorplanBlock& b,FloorplanPoint a) {
         if (evict_budget<1) return false;
         std::vector<std::tuple<double,double,double,double,std::string>> ranks;
@@ -476,26 +497,7 @@ bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure,
             if (ok && !pass) {
                 occ_put(b); centers[b.name]={b.cx(),b.cy()};
                 const auto anchor=pack_anchor(anchor_row(e,centers));
-                auto p=near(e,e.shape_idx,anchor,e.w,e.h,e.fanout_reach,e.fanout_inset,side_mask(e.side),get(chosen,e.name),nullptr);
-                // This strategy runs only after the original full portfolio
-                // fails. Never replace an ordinary successful incumbent.
-                if(!p&&victim_shapes) {
-                    const auto variants=shapes.find(e.name);
-                    const auto restricted=owned_shape_choices.find(e.name);
-                    if(variants!=shapes.end())for(std::size_t k=0;k<variants->second.size();++k) {
-                        if(static_cast<int>(k)==e.shape_idx||
-                           (restricted!=owned_shape_choices.end()&&static_cast<int>(k)!=restricted->second))continue;
-                        const auto& s=variants->second[k];
-                        fallback("interior_reseat_shape_trial");
-                        p=near(e,static_cast<int>(k),anchor,s.w,s.h,s.reach,s.inset,side_mask(s.side),s.comps,nullptr);
-                        if(!p)continue;
-                        e.shape_idx=static_cast<int>(k);e.side=s.side;e.w=s.w;e.h=s.h;
-                        e.fanout_reach=s.reach;e.fanout_inset=s.inset;e.area=block_area(s.w,s.h,counts);
-                        chosen[e.name]=s.comps;
-                        side_offers[e.name]={e.side,e.side,e.shape_idx,std::nullopt,std::nullopt};
-                        break;
-                    }
-                }
+                const auto p=reseat_displaced(e,anchor);
                 if (!p) { ok=false; occ_pull(b); }
                 else { e.x=p->x; e.y=p->y; occ_put(e); centers[e.name]={e.cx(),e.cy()}; }
             }
@@ -517,8 +519,9 @@ bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure,
                     pose(b,*p);b.area=block_area(b.w,b.h,counts);chosen[b.name]=s.comps;
                     occ_put(b);centers[b.name]={b.cx(),b.cy()};
                     const auto anchor=pack_anchor(anchor_row(e,centers));
-                    const auto next=near(e,e.shape_idx,anchor,e.w,e.h,e.fanout_reach,e.fanout_inset,
-                                         side_mask(e.side),get(chosen,e.name),nullptr);
+                    // Alternative incoming and displaced shapes must be
+                    // considered together, not only as isolated changes.
+                    const auto next=reseat_displaced(e,anchor);
                     if(!next){occ_pull(b);continue;}
                     e.x=next->x;e.y=next->y;occ_put(e);centers[e.name]={e.cx(),e.cy()};
                     side_offers[b.name]={b.side,b.side,b.shape_idx,std::nullopt,std::nullopt};
