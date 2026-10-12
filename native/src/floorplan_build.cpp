@@ -292,8 +292,8 @@ FloorplanPlan Engine::run() {
         board_size(in.spec->outline->first,in.spec->outline->second);
         auto fixed=[&](bool free) {
             plan.punch_free=free;
-            if (!attempt_pack(true)) throw FloorplanPackingInfeasible("floorplan: the REAL 2-sided packed blocks do not fit the fixed outline "+
-                outline_text(plan.board_w,plan.board_h)+" declared in carrier/floorplan.json — enlarge it or use \"outline\":\"auto\"");
+            if (!attempt_pack(true)) throw FloorplanPackingInfeasible("floorplan: bounded placement search found no valid layout for the requested fixed outline "+
+                outline_text(plan.board_w,plan.board_h)+"; this does not prove geometric infeasibility. Reconsider group shapes, poses or allocation; a larger outline is one option, not a demonstrated requirement.");
             choose_connector_shapes(); return estimate();
         };
         reset_shapes(); double estimate_real=fixed(false);

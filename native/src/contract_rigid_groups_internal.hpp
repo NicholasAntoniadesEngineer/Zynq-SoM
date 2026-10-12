@@ -20,6 +20,9 @@ struct ContractRigidGroup {
 // Partition supported lightweight contracts into rigid translation groups.
 // This is constraint closure, NOT bottom-side permission: geometry, electrical,
 // assembly and thermal qualification must still decide candidate eligibility.
+// Rigidity is a conservative search strategy, not a hardware requirement:
+// proximity bounds generally allow internal repacking. Failure of these fixed
+// internal arrangements cannot prove that the authored constraints are infeasible.
 // Unsupported or malformed constraints return no partition, never free parts.
 inline std::optional<std::vector<ContractRigidGroup>> contract_rigid_groups(
         const JsonNode& contract,const std::map<std::string,std::string>& board_refs,

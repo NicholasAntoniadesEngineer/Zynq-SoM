@@ -648,7 +648,8 @@ void pack_behavior() {
     const auto moved=build_floorplan(changed);
     require(moved.som_x==42&&moved.som_y==27&&first.som_x==40&&first.som_y==30,"new offset rebuild cannot mutate saved stage");
     changed=in;changed.spec->outline={{20,20}};
-    throws([&]{build_floorplan(changed);},"do not fit the fixed outline");
+    throws([&]{build_floorplan(changed);},"bounded placement search found no valid layout for the requested fixed outline");
+    throws([&]{build_floorplan(changed);},"this does not prove geometric infeasibility");
     changed=in;changed.spec->outline={{std::numeric_limits<double>::quiet_NaN(),80}};
     throws([&]{build_floorplan(changed);},"finite");
     const auto captured=generate_floorplan(in);
