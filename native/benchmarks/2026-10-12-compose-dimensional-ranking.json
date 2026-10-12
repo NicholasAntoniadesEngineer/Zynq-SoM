@@ -1,0 +1,22 @@
+{
+  "base_commit": "b2df65b3",
+  "defect": "Compose repair independently added degree and millimetre margins into one scalar, mislabeled it mm, and used that scalar ahead of board area to rank candidate edits. Generous unrelated terms could conceal a tight spatial bottleneck.",
+  "change": {
+    "ledger": "Separate distance_mm and facing_degrees summaries with measured/unresolved counts, same-unit sum and optional minimum. Existing historical JSON remains readable without rewriting its data; Markdown labels old summaries legacy mixed-unit, not mm.",
+    "ranking": "Reject invalid area, spilled candidates, hard RED, unresolved/nonfinite enforced measurements and unknown enforced term kinds. Lexicographic order: advisory failures ascending, area ascending, unrounded minimum spatial margin descending, unrounded minimum facing margin descending, edit description. Missing groups are not infinite safety credit.",
+    "authority": "Ranking selects a prediction, not an accepted board. Full rebuild, independent acceptance checks, spec conflict protection and rollback remain unchanged. No thresholds or fallback ceilings relaxed."
+  },
+  "verification": {
+    "production_cli_rebuilt": true,
+    "suites_passed": 5,
+    "suites_failed": 0,
+    "wall_seconds": 5.45,
+    "log": "native/build/compose-unit-integration-tests.log",
+    "suites": ["native_compose_measure_accounting_contracts", "native_compose_repair_contracts", "native_pcb_placement_gates_contracts", "native_compose_kernel_contracts", "native_compose_help"],
+    "compose_repair_assertions": 8839,
+    "placement_gate_assertions": 56011,
+    "coverage": ["positive spatial/angular unit conversion preserves ranking", "input permutation determinism", "sub-centesimal margin distinction", "generous extra term cannot hide spatial bottleneck", "area precedes margin preferences", "invalid area and hard measurements rejected", "both-board ledger summaries checked against independent term census and raw sums/minima", "legacy/current mixed history", "unchanged non-summary historical ledger contents", "projection rejects missing summaries, changed verdicts and nested unrelated changes", "exact operation-accounting accumulation and overflow", "acceptance and rollback workflows"],
+    "frozen_fixtures_modified": false
+  },
+  "limits": "This batch intentionally changes repair candidate order and ledger summary schema. It does not modify production placement or board designs directly, does not establish a smaller accepted board, and is not a new complete board qualification or performance benchmark. Overall goal remains incomplete."
+}

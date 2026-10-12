@@ -8,7 +8,22 @@ namespace schgen::test {
 // historical prediction. Permit only finite, non-regressing margin/area for
 // the SAME single ranked edit; everything else remains byte-exact. Independent
 // model/ledger checks in the callers remain the acceptance authority.
-inline bool compose_workflow_output(const std::string& actual,const std::string& historical) {
+inline bool compose_workflow_output(const std::string& raw_actual,const std::string& historical) {
+    auto actual=raw_actual;
+    // This frozen workflow has one spatial term and no facing term. Only in
+    // that case is its old aggregate comparable to the new spatial minimum.
+    const std::string unit_marker=": predicted min margin ";
+    if(const auto at=actual.find(unit_marker);at!=std::string::npos) {
+        const auto split=actual.find(" mm / unavailable degrees, area ",at);
+        const auto end=actual.find(" mm^2\n",at);
+        if(split==std::string::npos||end==std::string::npos||split>=end)return false;
+        actual.erase(end,5);
+        actual.replace(split,std::string(" mm / unavailable degrees, area ").size(),", area ");
+        actual.replace(at,unit_marker.size(),": predicted agg-hard-margin ");
+        const std::string policy="compose: ranked candidates (soft RED, area, minimum mm margin, minimum degree margin, edit; replica ORDER only";
+        if(const auto p=actual.find(policy);p!=std::string::npos)
+            actual.replace(p,policy.size(),"compose: ranked candidates (replica ORDER only");
+    }
     const std::string marker=": predicted agg-hard-margin ",separator=", area ";
     const auto parse=[&](const std::string& text,std::size_t& begin,std::size_t& end,double& margin,double& area) {
         const auto m=text.find(marker);

@@ -33,13 +33,12 @@ ComposeDocument measure_compose_ledger(const PcbPlacementInput &input,const PcbM
     std::map<std::string,JsonNode> advisory;
     for(const auto &i:model.insts){auto p=policy.contracts.find(i.sheet);if(p!=policy.contracts.end())advisory[p->first]=p->second;}
     set(d.data,"advisory_gate",flow(check_pcb_placement_flow(checked,policy,&advisory,measurement_counts),false));
-    auto terms=ja();std::vector<double> finite;std::vector<std::string> triggers;
+    auto terms=ja();std::vector<std::string> triggers;
     const auto floor=floors();
     for(const auto &e:evaluations) {
         const auto &t=e.term;
         terms.array_value.push_back(jo({{"kind",j(t.kind)},{"subject",j(t.subject)},{"target",j(t.target_raw)},{"enforced",jb(t.enforced)},{"measured",rounded(e.measured,4)},{"bound",rounded(e.bound,4)},{"margin",rounded(e.margin,4)},{"ok",jb(e.ok)},{"basis",j(t.basis)}}));
         if(!std::isfinite(e.margin))continue;
-        if(t.enforced)finite.push_back(e.margin);
         auto f=floor.find(t.kind);
         if(t.enforced&&f!=floor.end()&&e.margin<f->second) {
             auto name=t.kind=="flow_hop"?"flow":t.kind=="far_min"?"far":t.kind;
@@ -48,8 +47,12 @@ ComposeDocument measure_compose_ledger(const PcbPlacementInput &input,const PcbM
         if(!e.ok&&!t.enforced&&t.kind!="near_intent")triggers.push_back("ADVISORY-RED "+t.kind+" "+t.subject+"->"+t.target_raw+": "+fmt(e.measured,2,true)+" vs "+fmt(e.bound,2,true)+" (repair-before-wire blocker)");
     }
     set(d.data,"terms",terms);
-    double sum=0.,min=0.;if(!finite.empty()){min=finite.front();for(double n:finite){sum+=n;min=std::min(min,n);}}
-    set(d.data,"aggregate_hard_margin",jo({{"sum",j(py_round(sum,2))},{"min",j(py_round(min,2))}}));
+    const auto margins=pcb_compose_hard_margins(evaluations);
+    const auto group=[](const PcbComposeMarginStats& s){return jo({{"measured",j(static_cast<double>(s.measured))},
+        {"unresolved",j(static_cast<double>(s.unresolved))},{"sum",j(s.sum)},
+        {"minimum",s.minimum?j(*s.minimum):JsonNode{}}});};
+    set(d.data,"hard_margins",jo({{"distance_mm",group(margins.distance_mm)},
+        {"facing_degrees",group(margins.facing_degrees)}}));
     const auto rats=check_ratsnest(checked);const auto slack=rats.cross_budget_mm-rats.cross_mm;
     const auto pct=rats.cross_budget_mm?py_round(100.*slack/rats.cross_budget_mm,2):0.;
     auto dispersion=jo();for(const auto &[k,v]:ratsnest_dispersion_by_sheet(rats))set(dispersion,k,j(v));
@@ -65,6 +68,8 @@ ComposeDocument measure_compose_ledger(const PcbPlacementInput &input,const PcbM
     if(pct<5.)triggers.push_back("law5 cross slack "+pyfloat(pct)+"% < floor 5.0%");
     set(d.data,"repair_triggers",sorted_strings(triggers));set(d.data,"seat_consistency",strings(seats(index,input.floorplan.spec)));
     floats(d,d.data);
+    for(const auto* unit:{"distance_mm","facing_degrees"})for(const auto* count:{"measured","unresolved"})
+        d.float_paths.erase(std::string("/hard_margins/")+unit+"/"+count);
     d.float_paths.erase("/law5/off_board");d.float_paths.erase("/law5/dispersed");
     for(const auto &[s,v]:violations.object_value){(void)v;d.float_paths.erase("/contract_violations/"+pointer(s));}
     for(const auto &[s,v]:hotspots.object_value){(void)v;d.float_paths.erase("/channel_hotspots/"+pointer(s)+"/airwires");}
@@ -98,19 +103,34 @@ ComposeRanking rank_compose_candidates(std::vector<ComposeCandidate> candidates)
         const auto prefix="  candidate "+c.edit.describe()+": ";
         if(!c.error.empty()){out.output+=prefix+"INVALID ("+c.error+")\n";continue;}
         if(!c.spilled.empty()){out.output+=prefix+"REJECT (spilled: "+list_repr(c.spilled)+")\n";continue;}
+        if(!std::isfinite(c.area)||c.area<=0){out.output+=prefix+"REJECT (invalid board area)\n";continue;}
         std::vector<std::string> red;
         for(const auto &ev:c.evaluations)if(ev.term.enforced&&!ev.ok)red.push_back(key_repr(key(ev.term)));
         if(!red.empty()){out.output+=prefix+"REJECT (predicts hard RED: ["+document_detail::join(red,", ")+"])\n";continue;}
-        c.aggregate_margin=0.;c.soft_red=0;
+        c.minimum_distance_mm.reset();c.minimum_facing_degrees.reset();c.soft_red=0;
+        bool invalid=false;
         for(const auto &ev:c.evaluations) {
-            if(ev.term.enforced&&std::isfinite(ev.margin))c.aggregate_margin+=ev.margin;
+            if(ev.term.enforced) {
+                const auto& kind=ev.term.kind;
+                if(ev.note=="UNRESOLVED"||!std::isfinite(ev.measured)||!std::isfinite(ev.bound)||!std::isfinite(ev.margin)||
+                   (kind!="facing"&&kind!="flow_hop"&&kind!="near_max"&&kind!="far_min")) {invalid=true;break;}
+                auto& minimum=kind=="facing"?c.minimum_facing_degrees:c.minimum_distance_mm;
+                if(!minimum||ev.margin<*minimum)minimum=ev.margin;
+            }
             if(!ev.term.enforced&&!ev.ok&&ev.term.kind!="near_intent")++c.soft_red;
         }
+        if(invalid){out.output+=prefix+"REJECT (unresolved or invalid hard measurement)\n";continue;}
         out.ranked.push_back(std::move(c));
     }
-    std::stable_sort(out.ranked.begin(),out.ranked.end(),[](const auto &a,const auto &b){return std::make_tuple(a.soft_red,-a.aggregate_margin,a.area,a.edit.describe())<std::make_tuple(b.soft_red,-b.aggregate_margin,b.area,b.edit.describe());});
-    out.output+="compose: ranked candidates (replica ORDER only — emitted board is the arbiter):\n";
-    for(std::size_t i=0;i<std::min<std::size_t>(10,out.ranked.size());++i){const auto &c=out.ranked[i];out.output+="  "+c.edit.describe()+": predicted agg-hard-margin "+fmt(c.aggregate_margin,1,true)+", area "+pyfloat(c.area)+"\n";}
+    const auto rank=[](const auto& c) {
+        // Missing groups are not measurements or infinite safety credit.
+        return std::make_tuple(c.soft_red,c.area,-c.minimum_distance_mm.value_or(0.),
+            -c.minimum_facing_degrees.value_or(0.),c.edit.describe());
+    };
+    std::stable_sort(out.ranked.begin(),out.ranked.end(),[&](const auto& a,const auto& b){return rank(a)<rank(b);});
+    out.output+="compose: ranked candidates (soft RED, area, minimum mm margin, minimum degree margin, edit; replica ORDER only — emitted board is the arbiter):\n";
+    const auto shown=[](const std::optional<double>& v){return v?fmt(*v,4,true):"unavailable";};
+    for(std::size_t i=0;i<std::min<std::size_t>(10,out.ranked.size());++i){const auto &c=out.ranked[i];out.output+="  "+c.edit.describe()+": predicted min margin "+shown(c.minimum_distance_mm)+" mm / "+shown(c.minimum_facing_degrees)+" degrees, area "+pyfloat(c.area)+" mm^2\n";}
     return out;
 }
 } // namespace schgen

@@ -2,6 +2,7 @@
 #include "schgen/compose_repair.hpp"
 #include "schgen/atomic_file.hpp"
 #include "compose_workflow_output.hpp"
+#include "compose_ledger_projection.hpp"
 #include <cstdlib>
 #include <iostream>
 #include <limits>
@@ -50,9 +51,9 @@ void measurements(const std::filesystem::path& root, const std::string& project)
         checked_quantization_merge(wanted, expected);
         const auto measured = measure_compose_ledger(f.input, model, &actual);
         require(actual == wanted, "three-call exact projection");
-        require(render_compose_json(measured, 1, true) == string(row, "ledger"), "immutable ledger bytes");
+        require(test::compose_ledger_projection(render_compose_json(measured, 1, true),string(row, "ledger")), "immutable non-summary ledger bytes");
         require(render_compose_json(measure_compose_ledger(f.input, model), 1, true) ==
-                string(row, "ledger"), "default API unchanged");
+                render_compose_json(measured,1,true), "default and accounted API agree including unit summaries");
         (void)measure_compose_ledger(f.input, model, &actual);
         checked_quantization_merge(wanted, expected);
         require(actual == wanted, "caller accumulation, no reset");
@@ -126,8 +127,8 @@ void commands(const std::filesystem::path& root) {
         const auto [prior,inserted]=outputs.emplace(mode,got.output);
         require(inserted||prior->second==got.output,"accounting collection changed deterministic current output");
         require(read(paths.spec) == string(row, "final_spec"), mode + " immutable spec");
-        require(read(paths.ledger_json) == string(row, "ledger"), mode + " immutable JSON");
-        require(read(paths.ledger_markdown) == string(row, "markdown"), mode + " immutable Markdown");
+        require(test::compose_ledger_projection(read(paths.ledger_json),string(row, "ledger")), mode + " immutable non-summary JSON");
+        require(test::compose_markdown_projection(read(paths.ledger_markdown),string(row, "markdown")), mode + " immutable non-summary Markdown");
     }
 }
 }
@@ -136,6 +137,8 @@ int main(int argc, char** argv) {
         if (argc != 2) throw std::runtime_error("usage: compose_measure_accounting_contracts REPO_ROOT");
         const std::string old="header\n  edit: predicted agg-hard-margin 37.5, area 10000.0\ntail\n";
         require(test::compose_workflow_output(old,old),"unchanged workflow rejected");
+        require(test::compose_workflow_output("header\n  edit: predicted min margin 38.2791 mm / unavailable degrees, area 9604.0 mm^2\ntail\n",old),"unit-safe single-spatial-term workflow rejected");
+        require(!test::compose_workflow_output("header\n  edit: predicted min margin 38.2791 mm / 30 degrees, area 9604.0 mm^2\ntail\n",old),"mixed-kind workflow cannot be compared to a historical scalar");
         require(test::compose_workflow_output("header\n  edit: predicted agg-hard-margin 38.3, area 9604.0\ntail\n",old),"improved prediction rejected");
         for(const auto& bad:std::vector<std::string>{
             "header\n  edit: predicted agg-hard-margin 37.4, area 9604.0\ntail\n",

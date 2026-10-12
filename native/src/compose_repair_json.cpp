@@ -102,6 +102,22 @@ std::string render_compose_json(const ComposeDocument &d,int indent,bool sorted)
     if(indent<0||indent>16)throw std::invalid_argument("compose: invalid JSON indentation");
     return dump(d,d.data,"",indent,sorted,0)+"\n";
 }
+std::string compose_detail::margin_summary(const ComposeDocument& d,const JsonNode& led,const std::string& base) {
+    if(const auto* groups=object_field(led,"hard_margins")) {
+        std::string out;
+        for(const auto* unit:{"distance_mm","facing_degrees"}) {
+            const auto& g=required(*groups,unit);const auto path=base+"/hard_margins/"+unit;
+            if(!out.empty())out+="; ";
+            const auto value=[&](const std::string& k){const auto& v=required(g,k);return v.kind==JsonKind::Null?std::string("unavailable"):scalar(d,v,path+"/"+k);};
+            out+=std::string("hard margins ")+unit+": measured "+value("measured")+", unresolved "+value("unresolved")+
+                ", sum "+value("sum")+", min "+value("minimum");
+        }
+        return out;
+    }
+    const auto& legacy=required(led,"aggregate_hard_margin");
+    return "legacy mixed-unit margin (not a physical quantity): sum "+scalar(d,required(legacy,"sum"),base+"/aggregate_hard_margin/sum")+
+        " / min "+scalar(d,required(legacy,"min"),base+"/aggregate_hard_margin/min");
+}
 ComposeLedgerDocuments append_compose_ledger(const ComposeDocument &history,const ComposeDocument &ledger,const std::string &step) {
     auto d=history;kind(d.data,JsonKind::Array);
     auto prefix="/"+std::to_string(d.data.array_value.size())+"/ledger";
@@ -110,11 +126,11 @@ ComposeLedgerDocuments append_compose_ledger(const ComposeDocument &history,cons
     for(const auto &[p,v]:ledger.integer_tokens)d.integer_tokens[prefix+p]=v;
     std::string md="# compose ledger (T1) — driver-written measurement time-series\n\n";
     for(std::size_t k=0;k<d.data.array_value.size();++k) {
-        const auto &h=d.data.array_value[k],&led=required(h,"ledger"),&b=required(led,"board"),&agg=required(led,"aggregate_hard_margin");
+        const auto &h=d.data.array_value[k],&led=required(h,"ledger"),&b=required(led,"board");
         auto base="/"+std::to_string(k)+"/ledger";
         const auto &triggers=required(led,"repair_triggers").array_value;
         md+="## "+str(h,"step")+"\n- board "+fmt(jnum(required(b,"w")))+" x "+fmt(jnum(required(b,"h")))+" = "+scalar(d,required(b,"area_mm2"),base+"/board/area_mm2")+" mm^2\n";
-        md+="- hard margin sum "+scalar(d,required(agg,"sum"),base+"/aggregate_hard_margin/sum")+" / min "+scalar(d,required(agg,"min"),base+"/aggregate_hard_margin/min")+" mm\n";
+        md+="- "+margin_summary(d,led,base)+"\n";
         md+="- LAW-5 slack "+scalar(d,required(required(led,"law5"),"slack_pct"),base+"/law5/slack_pct")+"%\n- repair triggers: "+std::to_string(triggers.size())+"\n";
         for(const auto &t:triggers)md+="  - "+jstr(t)+"\n";
         if(k+1<d.data.array_value.size())md+='\n';
