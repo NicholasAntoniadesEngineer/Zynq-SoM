@@ -945,6 +945,24 @@ void frozen(const std::filesystem::path& dir,const std::string& name,bool geomet
     require(!load_floorplan_spec((publication.directory/"missing.json").string()),name+": missing optional spec");
 }
 void repair_choice_contracts() {
+    {
+        FloorplanLegalizeInput in;in.board_w=20;in.board_h=20;
+        in.fixed_rects={{"obstacle",{0,0,20,20}}};
+        in.metrics["v"]={{{"p",1,1}},{{"p",0,0,2,2}},{2,2}};
+        in.som_j_rects["som_j1"]={9,9,10,10};
+        in.index.hard.push_back({"near_max","v","v","som_j1",1,"cycle geometry witness",true,{},{}});
+        const std::vector<FloorplanLegalizeVar> initial{{"v",2,2,{10,10},10,10}};
+        auto quiet=initial,loud=initial;std::vector<std::string> quiet_log,loud_log;
+        QuantizationCounts quiet_counts,loud_counts;
+        require(!floorplan_legalize_compact_accounted(in,quiet,quiet_log,quiet_counts),"fully occupied board must fail");
+        in.report_infeasible_cycle=true;
+        require(!floorplan_legalize_compact_accounted(in,loud,loud_log,loud_counts),"diagnostic mode changed infeasibility");
+        const auto contains=[&](const auto& lines,const std::string& text){return std::any_of(lines.begin(),lines.end(),[&](const auto& line){return line.find(text)!=std::string::npos;});};
+        require(contains(loud_log,"cycle seed:")&&contains(loud_log,"#obstacle [0.0,0.0,20.0,20.0]")&&
+                contains(loud_log,"v [10.0,10.0,12.0,12.0]"),"cycle diagnostic lost fixed or moving seed geometry");
+        require(!contains(quiet_log,"cycle seed:")&&quiet_counts==loud_counts&&quiet[0].x==loud[0].x&&quiet[0].y==loud[0].y,
+                "cycle diagnostics changed accounting or poses, or leaked while disabled");
+    }
     const Box4 moving{-3,-2,5,4},target{10,20,12,28};
     const auto domain=near_translation_domain(moving,target,2,0);
     require(domain.x0==3&&domain.x1==17&&domain.y0==14&&domain.y1==32,"near domain must use asymmetric pad extents");

@@ -573,6 +573,20 @@ private:
                         origin+="; "+term.kind+" "+term.source;
                 log.push_back(std::string("cycle ")+(x?"x":"y")+": "+edge.dst+" - "+edge.src+" <= "+float_text(edge.cost)+
                     " ["+origin+"]");
+                // A fixed endpoint is collapsed to #0 in the difference
+                // graph. Preserve its actual geometry in diagnostic evidence
+                // so a failed separation can be distinguished from a bad
+                // near bound without rerunning a different placement.
+                for(const auto& sep:seps)if(origin=="separation "+sep.lo+" -> "+sep.hi){
+                    const auto describe=[&](const std::string& name){
+                        const auto& box=name.front()=='#'?frect.at(name.substr(1)):seed_rect.at(name);
+                        return name+" ["+float_text(box.x0)+","+float_text(box.y0)+","+
+                            float_text(box.x1)+","+float_text(box.y1)+"]";
+                    };
+                    log.push_back("cycle seed: "+describe(sep.lo)+" -> "+describe(sep.hi)+
+                        " gap="+float_text(sep.gap));
+                    break;
+                }
             }
             return false;
         }
