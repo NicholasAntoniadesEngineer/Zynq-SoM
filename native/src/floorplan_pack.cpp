@@ -76,8 +76,9 @@ bool Engine::attempt_pack(bool compact) {
                 validate_floorplan_experiment(*in.experiment);
                 const int saved_order=compact_order;
                 const bool recovery=in.compact_search&&in.experiment->failed_first_retry;
-                const auto start=recovery?std::optional{plan}:std::nullopt;
-                const auto offers=recovery?std::optional{side_offers}:std::nullopt;
+                const bool transactional=recovery||in.experiment->reseat_pose_limits.has_value();
+                const auto start=transactional?std::optional{plan}:std::nullopt;
+                const auto offers=transactional?std::optional{side_offers}:std::nullopt;
                 const auto restore=[&] {
                     auto accounting=std::move(plan.accounting);
                     plan=*start;plan.accounting=std::move(accounting);side_offers=*offers;
@@ -92,10 +93,10 @@ bool Engine::attempt_pack(bool compact) {
                         ok=attempt_pack_impl(compact,nullptr,failed);
                         if(ok)plan.composition.push_back("failure-directed order: "+failed+" first");
                     }
-                    if(!ok&&recovery)restore();
+                    if(!ok&&transactional)restore();
                     compact_order=saved_order;
                     return ok;
-                } catch(...) {if(recovery)restore();compact_order=saved_order;throw;}
+                } catch(...) {if(transactional)restore();compact_order=saved_order;throw;}
             }
             if (!in.compact_search) return attempt_pack_impl(compact);
             const auto start=plan;
@@ -421,7 +422,9 @@ bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure,
         if (evict_budget<1) return false;
         std::vector<std::tuple<double,double,double,double,std::string>> ranks;
         for (const auto* p:placed) ranks.emplace_back(p->x,p->y,p->w,p->h,p->name);
-        for (int idx:reseat_rank(a.first,a.second,ranks)) {
+        const auto ranked=reseat_rank(a.first,a.second,ranks);
+        const bool alternatives=in.experiment&&in.experiment->reseat_pose_limits.has_value();
+        for(int pass=0;pass<(alternatives?2:1);++pass) for (int idx:ranked) {
             auto& e=*placed[idx]; const auto saved_e=e,saved_b=b;
             // A rejected victim trial can change only the incoming block's
             // entries. The displaced block's center is updated only on success;
@@ -430,15 +433,50 @@ bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure,
             const auto saved_chosen=save_entry(chosen,b.name);
             const auto saved_center=save_entry(centers,b.name);
             const auto saved_offer=save_entry(side_offers,b.name);
+            FloorplanPoseRetryObservation observation;
+            if(pass){
+                observation.incoming=b.name;observation.displaced=e.name;
+                fallback("interior_reseat_pose_search");
+            }
             occ_pull(e);
             bool ok=seat(b,a,&e);
             const bool incoming_seated=ok;
-            if (ok) {
+            if (ok && !pass) {
                 occ_put(b); centers[b.name]={b.cx(),b.cy()};
                 const auto anchor=pack_anchor(anchor_row(e,centers));
                 const auto p=near(e,e.shape_idx,anchor,e.w,e.h,e.fanout_reach,e.fanout_inset,side_mask(e.side),get(chosen,e.name),nullptr);
                 if (!p) { ok=false; occ_pull(b); }
                 else { e.x=p->x; e.y=p->y; occ_put(e); centers[e.name]={e.cx(),e.cy()}; }
+            }
+            else if(ok) {
+                const auto first=FloorplanPoint{b.x,b.y};
+                auto win=evict_window(e.x,e.y,e.w,e.h,e.fanout_reach,e.fanout_inset,get(chosen,e.name),
+                                     b.w,b.h,b.fanout_reach,b.fanout_inset,get(chosen,b.name),clear);
+                near_domain(b,b.shape_idx,win);
+                const auto limits=*in.experiment->reseat_pose_limits;
+                const auto poses=occ.place_near_candidates(a.first,a.second,b.w,b.h,b.fanout_reach,b.fanout_inset,
+                    side_mask(b.side),get(chosen,b.name),std::get<0>(win),std::get<1>(win),std::get<2>(win),std::get<3>(win),
+                    limits.poses,limits.frontier_nodes,counts);
+                observation.generated=poses.poses.size();observation.frontier_nodes=poses.frontier_nodes;
+                observation.budget_exhausted=poses.budget_exhausted;
+                observation.result_capped=!poses.search_complete&&!poses.budget_exhausted;
+                if(observation.budget_exhausted)fallback("interior_reseat_pose_budget");
+                if(observation.result_capped)fallback("interior_reseat_pose_cap");
+                ok=false;
+                for(const auto& p:poses.poses) {
+                    if(p.x==first.first&&p.y==first.second)continue; // ordinary pass already tried it
+                    fallback("interior_reseat_pose_trial");++observation.attempted;
+                    b.x=p.x;b.y=p.y;occ_put(b);centers[b.name]={b.cx(),b.cy()};
+                    const auto anchor=pack_anchor(anchor_row(e,centers));
+                    const auto next=near(e,e.shape_idx,anchor,e.w,e.h,e.fanout_reach,e.fanout_inset,
+                                         side_mask(e.side),get(chosen,e.name),nullptr);
+                    if(!next){occ_pull(b);continue;}
+                    e.x=next->x;e.y=next->y;occ_put(e);centers[e.name]={e.cx(),e.cy()};
+                    // The earlier score compared different poses. Do not keep
+                    // that stale estimate as evidence for this recovered pose.
+                    side_offers[b.name]={b.side,b.side,b.shape_idx,std::nullopt,std::nullopt};
+                    ok=true;break;
+                }
             }
             if (ok) { --evict_budget; fallback("interior_reseat_retry"); }
             else {
@@ -450,6 +488,7 @@ bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure,
             }
             if(in.experiment&&in.experiment->reseat_completed)
                 in.experiment->reseat_completed({bw,bh,b.name,e.name,incoming_seated,ok,plan.punch_free,compact_order});
+            if(pass&&in.experiment->pose_retry_completed){observation.success=ok;in.experiment->pose_retry_completed(observation);}
             if(ok)return true;
         }
         return false;

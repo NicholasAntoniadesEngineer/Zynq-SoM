@@ -259,6 +259,82 @@ void single_order_contract(){
     std::cout<<"single-order diagnostic contracts PASS\n";
 }
 }
+namespace {
+void alternative_pose_retry_contract(){
+    std::vector<Case> cases{
+        {80,70,{{8,6,2,1},{7,5,2,0}}},
+        {70,50,{{29,16,3,4},{12,30,2,0},{30,18,3,2},{31,26,2,3},{7,7,1,3},{31,9,2,1}}},
+        {70,60,{{9,16,1,0},{18,27,2,1},{25,14,2,0},{11,29,1,1},{27,30,1,1},{31,7,1,0},{30,18,3,1}}},
+        {80,70,{{8,6,2,100},{90,80,1,0}}}};
+    // Neighbouring finite fixtures cover successful continuations as well as
+    // dead ends; this is not an unbounded randomized campaign.
+    const auto crowded=cases[1];
+    for(int w=65;w<=85;w+=5)for(int h=45;h<=65;h+=5){
+        auto c=crowded;c.w=w;c.h=h;cases.push_back(std::move(c));
+    }
+    std::size_t searches=0,attempts=0,exhausted=0,capped=0,recovered=0;
+    for(const auto& c:cases)for(int order=0;order<3;++order)for(std::size_t budget:{1u,4096u}) {
+        const auto normal=trial(input(),c,order);
+        auto in=input();auto experiment=std::make_shared<FloorplanExperiment>();in.experiment=experiment;
+        experiment->reseat_pose_limits=FloorplanPoseRetryLimits{8,budget};
+        std::vector<FloorplanPoseRetryObservation> rows;
+        experiment->pose_retry_completed=[&](const auto& row){rows.push_back(row);};
+        const auto result=trial(in,c,order);
+        if(normal.ok)require(result.ok&&rows.empty()&&equal(floorplan_plan_json(normal.plan),floorplan_plan_json(result.plan))&&normal.side==result.side,
+                             "pose recovery replaced an ordinary incumbent or its receipts");
+        if(!normal.ok&&result.ok){
+            ++recovered;
+            // Independent rectangle checks for these zero-halo synthetic
+            // blocks, not the production occupancy predicate under test.
+            const auto& blocks=result.plan.interior_blocks;
+            for(std::size_t i=0;i<blocks.size();++i){const auto& a=blocks[i];
+                require(a.x>=0&&a.y>=0&&a.x+a.w<=c.w&&a.y+a.h<=c.h,"recovered block outside board");
+                for(std::size_t j=0;j<i;++j){const auto& b=blocks[j];
+                    require(a.side!=b.side||a.x+a.w<=b.x||b.x+b.w<=a.x||a.y+a.h<=b.y||b.y+b.h<=a.y,
+                            "recovered same-face rectangles overlap");
+                }
+            }
+        }
+        const auto count=[&](const char* key){return static_cast<std::size_t>(std::count(result.plan.accounting.fallback_events.begin(),result.plan.accounting.fallback_events.end(),key));};
+        std::size_t tried=0,limited=0,full=0;
+        for(const auto& row:rows){
+            require(row.generated<=8&&row.frontier_nodes<=budget&&row.attempted<=row.generated,"pose retry exceeded query bounds");
+            require(row.incoming!=row.displaced&&(!row.success||row.attempted>0),"pose retry identity/success evidence invalid");
+            tried+=row.attempted;limited+=row.budget_exhausted;full+=row.result_capped;
+        }
+        require(count("interior_reseat_pose_search")==rows.size()&&count("interior_reseat_pose_trial")==tried&&
+                count("interior_reseat_pose_budget")==limited&&count("interior_reseat_pose_cap")==full,"pose retry event receipt disagrees with observations");
+        searches+=rows.size();attempts+=tried;exhausted+=limited;capped+=full;
+        experiment->pose_retry_completed={};const auto repeat=trial(in,c,order);
+        require(result.ok==repeat.ok&&equal(floorplan_plan_json(result.plan),floorplan_plan_json(repeat.plan))&&result.side==repeat.side,
+                "pose retry not reproducible or callback changed behavior");
+    }
+    require(searches>0&&attempts>0&&exhausted>0&&capped>0&&recovered>0,"pose recovery fixtures missed successful, attempted or limited searches");
+    auto in=input();auto experiment=std::make_shared<FloorplanExperiment>();in.experiment=experiment;
+    experiment->reseat_pose_limits=FloorplanPoseRetryLimits{8,4096};experiment->interior_order=0;
+    experiment->pose_retry_completed=[](const auto&){throw std::runtime_error("pose observer stop");};
+    Engine e(in);setup(e,cases[1]);const auto before=layout(e.plan);const auto side=offers(e);
+    bool threw=false;try{e.attempt_pack(false);}catch(const std::runtime_error& error){threw=std::string(error.what())=="pose observer stop";}
+    require(threw,"pose observer interruption fixture did not reach recovery");
+    require(equal(layout(e.plan),before)&&offers(e)==side,"pose observer failure did not restore entry state");
+    require(std::count(e.plan.accounting.fallback_events.begin(),e.plan.accounting.fallback_events.end(),"interior_reseat_pose_search")==1,
+            "observer failure lost executed pose-search receipt");
+    experiment->pose_retry_completed={};
+    const auto failed=trial(in,cases[1],0);Engine terminal(in);setup(terminal,cases[1]);
+    const auto initial=layout(terminal.plan);const auto initial_side=offers(terminal);
+    require(!failed.ok&&!terminal.attempt_pack(false),"terminal rollback witness unexpectedly succeeded");
+    require(equal(layout(terminal.plan),initial)&&offers(terminal)==initial_side,"terminal recovery failure leaked candidate state");
+    require(terminal.plan.accounting.quantization_engagements==failed.plan.accounting.quantization_engagements&&
+            terminal.plan.accounting.fallback_events==failed.plan.accounting.fallback_events,"terminal rollback lost or duplicated executed receipts");
+    for(const auto limit:std::vector<FloorplanPoseRetryLimits>{{0,1},{1,1},{2,0}}){experiment->reseat_pose_limits=limit;
+        bool rejected=false;try{validate_floorplan_experiment(*experiment);}catch(const FloorplanError&){rejected=true;}require(rejected,"invalid pose limits accepted by shared validator");
+        rejected=false;try{Engine invalid(in);}catch(const FloorplanError&){rejected=true;}require(rejected,"invalid pose limits accepted");}
+    experiment->reseat_pose_limits=FloorplanPoseRetryLimits{8,4096};in.compact_search=false;
+    bool rejected=false;try{Engine invalid(in);}catch(const FloorplanError&){rejected=true;}
+    require(rejected,"pose recovery accepted without compact search");
+    std::cout<<"alternative pose retry PASS searches="<<searches<<" attempts="<<attempts<<" budgets="<<exhausted<<" caps="<<capped<<" recovered="<<recovered<<'\n';
+}
+}
 extern "C" void __cyg_profile_func_enter(void* fn,void*){if(observing&&fn==reinterpret_cast<void*>(&native_run_overflow_tol))++entries;}
 extern "C" void __cyg_profile_func_exit(void*,void*){}
 int main(){try{
@@ -279,6 +355,7 @@ int main(){try{
     reseat_offer_rollback_contract();
     single_order_contract();
     failed_first_contract();
+    alternative_pose_retry_contract();
     for(bool first:{false,true})for(bool translate:{false,true})invariant_edge_failure(first,translate);
     for(bool translate:{false,true})invariant_edge_failure(false,translate,true);
     std::cout<<"compact retry contracts PASS\n";return 0;

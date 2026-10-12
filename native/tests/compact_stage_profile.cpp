@@ -39,6 +39,7 @@ struct Options {
     bool owned_face_cohesion = false;
     std::optional<std::string> contract_group_face_sheet;
     bool contract_group_rotations = false;
+    std::optional<FloorplanPoseRetryLimits> reseat_pose_limits;
     std::map<std::string,std::string> owned_shapes;
     bool multiscale_outline = false;
     std::optional<int> interior_order;
@@ -48,6 +49,7 @@ struct Options {
 void help() {
     std::cout << "  [--contract-group-face-sheet SHEET] (experimental bounded rigid-group face candidates)\n";
     std::cout << "  [--contract-group-rotations on|off] (requires contract-group-face-sheet)\n";
+    std::cout << "  [--reseat-poses N --reseat-frontier N] (failure-only alternative poses; both required)\n";
     std::cout << "  [--floorplan-spec PATH] (explicit candidate policy; project default is not edited)\n";
     std::cout << "compact_stage_profile --repo ROOT --project NAME --compact-search off|on|both\n"
         "  [--runs N] [--input-mode cold|prepared] [--kicad-cli PATH]\n"
@@ -90,6 +92,13 @@ Options parse(int argc, char** argv) {
             out.floorplan_spec=value;
         }
         else if (arg == "--project") out.project = value;
+        else if(arg=="--reseat-poses"||arg=="--reseat-frontier") {
+            std::size_t n=0;const auto parsed=std::from_chars(value.data(),value.data()+value.size(),n);
+            if(parsed.ec!=std::errc{}||parsed.ptr!=value.data()+value.size()||!n)
+                throw std::invalid_argument("reseat limits must be positive integers");
+            if(!out.reseat_pose_limits)out.reseat_pose_limits.emplace();
+            if(arg=="--reseat-poses")out.reseat_pose_limits->poses=n;else out.reseat_pose_limits->frontier_nodes=n;
+        }
         else if(arg=="--contract-group-rotations") {
             if(value!="on"&&value!="off")throw std::invalid_argument("contract-group-rotations must be on|off");
             out.contract_group_rotations=value=="on";
@@ -186,6 +195,8 @@ Options parse(int argc, char** argv) {
     if(!out.owned_shapes.empty()&&out.compact!="on")throw std::invalid_argument("owned-shape requires --compact-search on");
     if(out.contract_group_face_sheet&&out.compact!="on")throw std::invalid_argument("contract-group-face-sheet requires --compact-search on");
     if(out.contract_group_rotations&&!out.contract_group_face_sheet)throw std::invalid_argument("contract-group-rotations requires --contract-group-face-sheet");
+    if(out.reseat_pose_limits&&(out.compact!="on"||out.reseat_pose_limits->poses<2||!out.reseat_pose_limits->frontier_nodes))
+        throw std::invalid_argument("reseat requires --compact-search on, --reseat-poses >=2 and --reseat-frontier >0");
     if(out.outline&&out.initial_outline)throw std::invalid_argument("initial-outline-mm cannot be combined with outline-mm");
     if(out.outline&&out.multiscale_outline)throw std::invalid_argument("multiscale-outline conflicts with fixed outline-mm");
     if(out.interior_order&&out.constraint_first)throw std::invalid_argument("single interior-order conflicts with constraint-first portfolio");
@@ -290,7 +301,7 @@ std::string trial(const PcbPlacementInput& source, bool compact, int run, int ge
                   bool observers = true,
                   bool constraint_first = false,const std::optional<FloorplanPoint>& outline=std::nullopt,bool edge_translation=false,
                   const std::optional<FloorplanPoint>& initial_outline=std::nullopt,
-                  const std::optional<int>& interior_order=std::nullopt,bool multiscale_outline=false,bool edge_feasibility=false,bool owned_selection_trace=false,bool owned_quality_first=false,bool owned_face_cohesion=false,const std::map<std::string,std::string>& owned_shapes={},const std::optional<std::string>& contract_group_face_sheet=std::nullopt,bool failed_first_retry=false,bool owned_extent_alternatives=false,bool contract_group_rotations=false) {
+                  const std::optional<int>& interior_order=std::nullopt,bool multiscale_outline=false,bool edge_feasibility=false,bool owned_selection_trace=false,bool owned_quality_first=false,bool owned_face_cohesion=false,const std::map<std::string,std::string>& owned_shapes={},const std::optional<std::string>& contract_group_face_sheet=std::nullopt,bool failed_first_retry=false,bool owned_extent_alternatives=false,bool contract_group_rotations=false,const std::optional<FloorplanPoseRetryLimits>& reseat_pose_limits=std::nullopt) {
     const auto copy_start = Clock::now();
     auto input = trial_input(source,compact,outline);
     if(contract_group_face_sheet&&std::none_of(input.floorplan.sheets.begin(),input.floorplan.sheets.end(),
@@ -312,6 +323,13 @@ std::string trial(const PcbPlacementInput& source, bool compact, int run, int ge
     floor->owned_shape_tags=owned_shapes;
     floor->contract_group_face_sheet=contract_group_face_sheet;
     floor->contract_group_rotations=contract_group_rotations;
+    floor->reseat_pose_limits=reseat_pose_limits;
+    if(reseat_pose_limits)std::cout<<"reseat_limits poses="<<reseat_pose_limits->poses<<" frontier="<<reseat_pose_limits->frontier_nodes<<'\n';
+    if(observers)floor->pose_retry_completed=[](const auto& r){
+        std::cout<<"pose_retry incoming="<<r.incoming<<" displaced="<<r.displaced
+                 <<" generated="<<r.generated<<" frontier="<<r.frontier_nodes<<" attempted="<<r.attempted
+                 <<" budget_exhausted="<<r.budget_exhausted<<" result_capped="<<r.result_capped<<" success="<<r.success<<'\n';
+    };
     std::cout<<"contract_group_rotations="<<contract_group_rotations<<'\n';
     if(contract_group_face_sheet)std::cout<<"contract_group_face_sheet="<<*contract_group_face_sheet<<'\n';
     for(const auto& [sheet,tag]:owned_shapes)std::cout<<"owned_shape_restriction sheet="<<sheet<<" tag="<<tag<<'\n';
@@ -515,7 +533,7 @@ int main(int argc, char** argv) {
             const int generation = options.inputs == "prepared" ? 1 : run;
             for (const bool compact : {false, true}) {
                 if ((compact && options.compact == "off") || (!compact && options.compact == "on")) continue;
-                const auto hash = trial(prepared->input, compact, run, generation, options.observers,options.constraint_first,options.outline,options.edge_translation,options.initial_outline,options.interior_order,options.multiscale_outline,options.edge_feasibility,options.owned_selection_trace,options.owned_quality_first,options.owned_face_cohesion,options.owned_shapes,options.contract_group_face_sheet,options.failed_first_retry,options.owned_extent_alternatives,options.contract_group_rotations);
+                const auto hash = trial(prepared->input, compact, run, generation, options.observers,options.constraint_first,options.outline,options.edge_translation,options.initial_outline,options.interior_order,options.multiscale_outline,options.edge_feasibility,options.owned_selection_trace,options.owned_quality_first,options.owned_face_cohesion,options.owned_shapes,options.contract_group_face_sheet,options.failed_first_retry,options.owned_extent_alternatives,options.contract_group_rotations,options.reseat_pose_limits);
                 auto [it, inserted] = first_hash.emplace(compact, hash);
                 if (!inserted && it->second != hash) throw std::runtime_error("repeat PCB bytes changed; investigate input drift/nondeterminism");
                 std::cout << "repeat compact_search=" << compact << " same_as_first=" << (!inserted ? "true" : "first") << '\n';

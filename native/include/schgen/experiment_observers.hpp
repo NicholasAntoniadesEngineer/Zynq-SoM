@@ -33,6 +33,14 @@ struct FloorplanRejectionObservation {
     int order=0;
     std::vector<std::string> diagnostics;
 };
+struct FloorplanPoseRetryLimits {
+    std::size_t poses=0,frontier_nodes=0;
+};
+struct FloorplanPoseRetryObservation {
+    std::string incoming,displaced;
+    std::size_t generated=0,frontier_nodes=0,attempted=0;
+    bool budget_exhausted=false,result_capped=false,success=false;
+};
 struct FloorplanExperiment {
     // Null keeps the native ordinary-net cost unchanged. Impedance-controlled
     // nets always retain their normal cost. Zero is a valid experiment value.
@@ -43,6 +51,10 @@ struct FloorplanExperiment {
     bool compact_constraint_first = false;
     // One failure-directed restart of an explicitly selected interior order.
     bool failed_first_retry = false;
+    // Failure-only second victim pass; never replaces a successful ordinary
+    // placement/reseat. Both per-query limits are explicit invocation inputs.
+    std::optional<FloorplanPoseRetryLimits> reseat_pose_limits;
+    std::function<void(const FloorplanPoseRetryObservation&)> pose_retry_completed;
     bool compact_edge_translation = false;
     bool compact_edge_feasibility = false;
     bool owned_quality_first = false;
