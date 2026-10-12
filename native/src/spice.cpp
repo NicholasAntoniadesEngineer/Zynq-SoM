@@ -98,7 +98,7 @@ void rc_networks(const std::string& sheet,const SpiceIndex& idx,SpiceResult& out
         else continue;
         double farads=0;std::vector<std::string> refs;for(const auto& cap:caps){farads+=cap.value;refs.push_back(cap.ref);}
         out.checks.push_back({"RC "+net.name,sheet,"rc","debounce/reset ramp: "+src+" with "+join(refs,"+")+"="+g(farads*1e9)+"n -> tau must mask >=0.2 ms bounce, release <20 ms",
-            py_round(ohms*farads*1e3,3),"ms",0.2,20.0,"analytic",{}});
+            ohms*farads*1e3,"ms",0.2,20.0,"analytic",{}});
     }
 }
 void sy7201_iset(const std::string& sheet,const SpiceIndex& idx,SpiceResult& out) {
@@ -109,7 +109,7 @@ void sy7201_iset(const std::string& sheet,const SpiceIndex& idx,SpiceResult& out
         if(!fb){out.notes.push_back("NOTE: "+sheet+":"+ref+" SY7201 FB pin not netted");continue;}
         const auto rs=select(idx.on(fb->name),ground);
         if(rs.empty()){out.notes.push_back("NOTE: "+sheet+":"+ref+" SY7201 ISET resistor not found on "+fb->name);continue;}
-        const auto& r=rs[0];out.checks.push_back({"SY7201 ISET ("+r.ref+")",sheet,"iset","I_LED = 0.2 V / "+g(r.value)+"R; panel-class window 125-150 mA (lcd_backlight.md)",py_round(divide(0.2,r.value)*1e3,1),"mA",125.0,150.0,"analytic",{}});
+        const auto& r=rs[0];out.checks.push_back({"SY7201 ISET ("+r.ref+")",sheet,"iset","I_LED = 0.2 V / "+g(r.value)+"R; panel-class window 125-150 mA (lcd_backlight.md)",divide(0.2,r.value)*1e3,"mA",125.0,150.0,"analytic",{}});
     }
 }
 void buck_fb(const std::string& sheet,const SpiceIndex& idx,const std::vector<PowerReg>& regs,SpiceResult& out,const PowerPolicy& policy) {
@@ -126,7 +126,7 @@ void buck_fb(const std::string& sheet,const SpiceIndex& idx,const std::vector<Po
         if(!fb){out.notes.push_back("NOTE: "+sheet+":"+reg.ref+" FB divider not found");continue;}
         const auto& t=tops[0];const auto& b=bots[0];const double value=*vref*(1+divide(t.value,b.value)),nominal=rail_volts(reg.vout,policy).value_or(0);
         out.checks.push_back({reg.value+" FB ("+reg.vout+")",sheet,"fb_divider","Vout = "+(*vref==1?"1.0":g(*vref))+" * (1 + "+t.ref+"/"+b.ref+" = "+g(t.value)+"/"+g(b.value)+") vs nominal "+g(nominal)+" V +/-3%",
-            py_round(value,4),"V",nominal*0.97,nominal*1.03,"analytic",{}});
+            value,"V",nominal*0.97,nominal*1.03,"analytic",{}});
     }
 }
 std::string en_pin(const CircuitPartIr& part) {
@@ -146,7 +146,7 @@ void en_clamp(const std::string& sheet,const SpiceIndex& idx,const std::vector<P
             const auto bots=select(idx.on(en->name),ground);double ceiling;std::string topo;
             if(!bots.empty()){const auto& b=bots[0];ceiling=divide(21.0*b.value,r.value+b.value);topo="divider "+resistor_description(r)+"/"+resistor_description(b);}
             else{ceiling=21.0-en_ihys*r.value;topo="series "+resistor_description(r)+" only (no shunt)";}
-            out.checks.push_back({"EN clamp ceiling ("+reg.ref+")",sheet,"en_clamp",rail.name+"="+g(v)+"V EN strap "+topo+", NO clamp zener: EN at VIN=21.0V must stay <= the EN recommended-max 5.5V (TPS54302 has NO internal EN clamp — SLVSDG6C; PWR-1)",py_round(ceiling,3),"V",{},5.5,"analytic",{}});continue;
+            out.checks.push_back({"EN clamp ceiling ("+reg.ref+")",sheet,"en_clamp",rail.name+"="+g(v)+"V EN strap "+topo+", NO clamp zener: EN at VIN=21.0V must stay <= the EN recommended-max 5.5V (TPS54302 has NO internal EN clamp — SLVSDG6C; PWR-1)",ceiling,"V",{},5.5,"analytic",{}});continue;
         }
         const auto& [zref,zval]=zeners[0];
         if(!starts(zval,"MMSZ5231B")&&!starts(zval,"BZT52C5V1")){out.notes.push_back("NOTE: "+sheet+":"+zref+" zener "+zval+" has no modelled Vz — EN clamp not checked");continue;}
@@ -154,15 +154,15 @@ void en_clamp(const std::string& sheet,const SpiceIndex& idx,const std::vector<P
             const double iz=divide(vin-test+zener_izt*zener_zzt-r.value*en_ihys,r.value+zener_zzt);return test+(iz-zener_izt)*zener_zzt;};
         const double turnon=std::min(en_at(4.75,4.845),en_at(4.75,5.355)),ceiling=en_at(21.0,5.355);
         const auto pre=rail.name+"="+g(v)+"V -["+resistor_description(r)+"]- EN, "+zref+"="+zval+" zener->GND: EN at VIN=";
-        out.checks.push_back({"EN clamp turn-on ("+reg.ref+")",sheet,"en_clamp",pre+"4.75V (5V contract low) must exceed enable+margin 1.5V (threshold 1.21V typ, SLVSDG6C) so the always-on buck is sure to start",py_round(turnon,3),"V",1.5,{},"analytic",{}});
-        out.checks.push_back({"EN clamp ceiling ("+reg.ref+")",sheet,"en_clamp",pre+"21.0V (20V+5%) worst-case (Vz 5.355V) must stay <= the EN recommended-max 5.5V (no internal clamp, I_hys 1.55uA only — SLVSDG6C)",py_round(ceiling,3),"V",{},5.5,"analytic",{}});
+        out.checks.push_back({"EN clamp turn-on ("+reg.ref+")",sheet,"en_clamp",pre+"4.75V (5V contract low) must exceed enable+margin 1.5V (threshold 1.21V typ, SLVSDG6C) so the always-on buck is sure to start",turnon,"V",1.5,{},"analytic",{}});
+        out.checks.push_back({"EN clamp ceiling ("+reg.ref+")",sheet,"en_clamp",pre+"21.0V (20V+5%) worst-case (Vz 5.355V) must stay <= the EN recommended-max 5.5V (no internal clamp, I_hys 1.55uA only — SLVSDG6C)",ceiling,"V",{},5.5,"analytic",{}});
     }
 }
 void boot0(const std::string& sheet,const SpiceIndex& idx,SpiceResult& out) {
     if(std::none_of(idx.c.nets.begin(),idx.c.nets.end(),[](const auto& n){return n.name=="BOOT0_SET";}))return;
     const auto rs=select(idx.on("BOOT0_SET"),power);if(rs.empty())return;const auto& r=rs[0];
     out.checks.push_back({"BOOT0 strap VIH",sheet,"divider","DIP closed: 3.3 V through "+resistor_description(r)+" vs the SoM 1k5 pull-down (contract) -> must exceed STM32 VIH = 0.7*VDD = "+f(stm32_vih,2)+" V",
-        py_round(divide(stm32_vdd*1500,1500+r.value),3),"V",stm32_vih,stm32_vdd,"analytic",{}});
+        divide(stm32_vdd*1500,1500+r.value),"V",stm32_vih,stm32_vdd,"analytic",{}});
 }
 std::string reported_value(const SpiceCheck& check){
     const auto compact=g(check.value);

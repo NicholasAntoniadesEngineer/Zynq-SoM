@@ -5,7 +5,7 @@
 namespace schgen {
 struct SpiceCheck {
     std::string name, sheet, kind, detail;
-    double value = 0;
+    double value = 0; // Full calculated value; round only for presentation.
     std::string unit;
     std::optional<double> lo, hi;
     std::string engine = "analytic";

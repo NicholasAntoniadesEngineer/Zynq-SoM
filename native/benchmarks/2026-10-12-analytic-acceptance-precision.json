@@ -1,0 +1,37 @@
+{
+  "schema": 1,
+  "base_commit": "996affaa",
+  "scope": "Remove remaining pre-acceptance decimal rounding from analytic SPICE calculations: RC time constants, SY7201 current setting, buck feedback voltage, enable ceiling/turn-on and BOOT0 strap voltage",
+  "changes": [
+    "Removed seven rounding call sites; no py_round remains in native/src/spice.cpp",
+    "All analytic values retain calculation precision through limits, JSON and simulator agreement checks",
+    "Shared test-only historical precision metadata preserves existing fixtures without reintroducing production rounding",
+    "Generated test-plan tests verify the current analytic values in their corresponding rows and compare an isolated historical presentation view for legacy structure"
+  ],
+  "negative_control": "Before the fix, the new regression failed with 'rounded acceptance at RC'; native/build/spice-all-precision-red.log",
+  "boundary_coverage": {
+    "new_cases": 50,
+    "existing_divider_cases_retained": 10,
+    "boundaries": "RC lower/upper; ISET lower/upper; feedback lower/upper; unclamped enable ceiling; zener enable turn-on/ceiling; BOOT0 lower",
+    "offsets": "For each boundary: minus 0.4 of the former rounding step, minus 1e-7, zero, plus 1e-7, plus 0.4 step in the check's existing unit",
+    "independent_construction": "Resistor values calculated from the inverse equations for the target value; forward extraction must reproduce the target within floating representation error",
+    "hidden_violations_rejected": 20,
+    "rounded_negative_controls": "Each of the twenty rejected outside cases would pass if its result were rounded using the former step; the tests assert both facts"
+  },
+  "validation": {
+    "command": "ctest --test-dir native/build/fast --output-on-failure -R '^native_(spice|board_pipeline|firmware_docs)_contracts$'",
+    "passed": 3,
+    "failed": 0,
+    "seconds": 41.70,
+    "targeted_spice_suite": "50 retained fixtures, nine tolerance vectors, six live ngspice comparisons and 4460 exact assertions",
+    "carrier": "17 analytic checks PASS",
+    "devkit_mini": "11 analytic checks PASS",
+    "production_cli_rebuilt": true
+  },
+  "limits": [
+    "Existing electrical thresholds, comparison tolerances, model constants, component values and connectivity unchanged",
+    "Improved arithmetic precision does not improve the physical fidelity of approximate models or establish exhaustive electrical coverage",
+    "No board placement changed, no smaller carrier accepted, no fabrication-readiness claim",
+    "Full rendering/source-audit qualification and matched historical Python benchmarks not rerun for this calculation correction"
+  ]
+}

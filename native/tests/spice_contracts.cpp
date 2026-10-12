@@ -1,5 +1,6 @@
 #include "schgen/spice.hpp"
 #include "schgen/process.hpp"
+#include "spice_historical_precision.hpp"
 #include <chrono>
 #include <cmath>
 #include <cstdlib>
@@ -111,16 +112,59 @@ SpiceResult historical_analytic_view(const SpiceResult& raw,const JsonNode& expe
     require(old.size()==raw.checks.size(),"historical analytic check census changed");
     for(std::size_t i=0;i<old.size();++i){
         const auto& check=raw.checks[i];
-        if(check.kind!="divider"||check.name.rfind("divider ",0)!=0)continue;
+        const auto scale=historical_spice_scale(check);
         const double rounded=field(old[i],"value").number_value;
-        require(std::abs(std::round(check.value*10000)/10000-rounded)<1e-12,
-                "raw divider result differs from historical four-decimal calculation");
-        require(check.ok()==field(old[i],"ok").bool_value,"raw divider changed a frozen fixture verdict");
+        require(std::abs(std::round(check.value*scale)/scale-rounded)<1e-12,
+                "raw result differs from historical rounded calculation");
+        require(check.ok()==field(old[i],"ok").bool_value,"raw calculation changed a frozen fixture verdict");
         // Only this legacy comparison view is rounded. Actual gate values,
         // JSON and simulator comparisons retain full calculation precision.
         view.checks[i].value=rounded;
     }
     return view;
+}
+void remaining_threshold_precision(const std::filesystem::path& dir){
+    struct Case {const char* file;const char* ref;const char* prefix;int formula;double limit,step;bool upper;};
+    const std::vector<Case> cases{
+        {"027_rc_False_100n.json","R1","RC ",0,.2,.001,false},
+        {"027_rc_False_100n.json","R1","RC ",0,20,.001,true},
+        {"035_sy7201_1.5R.json","R1","SY7201 ISET",1,125,.1,false},
+        {"035_sy7201_1.5R.json","R1","SY7201 ISET",1,150,.1,true},
+        {"040_buck_45k3_10k.json","R1","TPS54302DDCR FB",2,3.201,.0001,false},
+        {"040_buck_45k3_10k.json","R1","TPS54302DDCR FB",2,3.399,.0001,true},
+        {"043_buck_en_unclamped.json","R3","EN clamp ceiling",3,5.5,.001,true},
+        {"045_buck_en_zener.json","R3","EN clamp turn-on",4,1.5,.001,false},
+        {"045_buck_en_zener.json","R3","EN clamp ceiling",5,5.5,.001,true},
+        {"032_boot0_100.json","R1","BOOT0 strap VIH",6,2.31,.001,false}
+    };
+    std::size_t hidden=0;
+    for(const auto& test:cases)for(double delta:{-.4*test.step,-1e-7,0.,1e-7,.4*test.step}){
+        const double target=test.limit+delta;
+        double resistance=0;
+        switch(test.formula){
+        case 0: resistance=target*10000;break; // tau/ms, C=100nF
+        case 1: resistance=200/target;break; // 0.2V / R in mA
+        case 2: resistance=(target/.596-1)*10000;break; // feedback bottom 10k
+        case 3: resistance=(21-target)/1.55e-6;break;
+        case 4: resistance=(4.75-target)/1.55e-6;break; // below zener knee
+        case 5: resistance=(21-target)/((target-(5.355-.02*17))/17+1.55e-6);break;
+        case 6: resistance=1500*(3.3/target-1);break;
+        default: throw std::runtime_error("unknown threshold fixture");
+        }
+        auto sheets=fixture_sheets(dir/test.file);std::ostringstream value;value<<std::setprecision(17)<<resistance;
+        bool changed=false;for(auto& part:sheets[0].circuit.parts)if(part.ref==test.ref){part.value=value.str();changed=true;}
+        require(changed,"threshold fixture resistor missing");
+        const auto result=extract_spice_checks(sheets);
+        const auto found=std::find_if(result.checks.begin(),result.checks.end(),[&](const auto& c){return c.name.rfind(test.prefix,0)==0;});
+        require(found!=result.checks.end(),"threshold extraction missing "+std::string(test.prefix));
+        const bool inside=test.upper?delta<=0:delta>=0;
+        require(found->ok()==inside,"rounded acceptance at "+std::string(test.prefix));
+        require(std::abs(found->value-target)<=32*std::numeric_limits<double>::epsilon()*std::max(1.,target),
+                "raw calculation precision lost at "+std::string(test.prefix));
+        if(!inside){auto rounded=*found;rounded.value=std::round(rounded.value/test.step)*test.step;
+            require(rounded.ok(),"negative control no longer demonstrates rounded false pass");++hidden;}
+    }
+    require(hidden==20,"all twenty near-boundary rounded false passes must be rejected");
 }
 void numeric_safety() {
     for (const auto bad : {std::numeric_limits<double>::quiet_NaN(),
@@ -168,7 +212,7 @@ int main(int argc,char** argv) {
     }
     try {
         require(argc==2,"usage: spice_contracts <fixture-directory>");const std::filesystem::path dir(argv[1]);
-        numeric_safety();empty_coverage();required_divider_coverage(dir);divider_threshold_precision(dir);
+        numeric_safety();empty_coverage();required_divider_coverage(dir);divider_threshold_precision(dir);remaining_threshold_precision(dir);
         const auto manifest=parse_json_file((dir/"manifest.json").string());std::size_t passed=0,live=0;
         const auto ngspice=ngspice_available();std::size_t corrected_empty=0,corrected_required=0;
         for(const auto& file:field(manifest,"cases").array_value) {

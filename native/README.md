@@ -67,8 +67,10 @@ selected circuit or signal-integrity behavior. Dedicated native identity
 contracts cover retained passive models such as HDMI termination separately.
 For the existing named-divider contracts, a present net with unextractable
 topology or the wrong source rail is an error even if other checks pass.
-Voltage-divider checks retain full calculated precision for acceptance, JSON
-and simulator comparisons; decimal display rounding must not hide violations.
+Analytic checks retain full calculated precision for acceptance, JSON and
+simulator comparisons, including dividers, RC timing, current setting,
+regulator feedback, enable clamps and boot straps. Decimal display rounding
+must not hide violations.
 
 `subsystem-new NAME` creates a C++ source/header/test package with retained
 README, SPICE and JSON metadata. It never overwrites an existing destination.
