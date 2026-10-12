@@ -4,6 +4,7 @@
 #include "../src/schematic_place_internal.hpp"
 #include "schgen/json.hpp"
 #include "schgen/sexpr.hpp"
+#include "schgen/schematic_route.hpp"
 
 #include <cmath>
 #include <filesystem>
@@ -366,6 +367,29 @@ void mutations(const std::vector<J>& fixtures,SymbolLibrary& lib,std::size_t& co
     const auto detected=detection._detect_stages();
     same(state(detection),prior,"stage detection is read-only");
     require(detected.size()==3 && detected.at("U1").inductor=="L1" && detected.at("U3").kind=="ldo","topology classification");++count;
+    // A right-facing control pin tied to VIN used to be silently omitted by
+    // the box-buck template. Exercise the real frozen symbol and independent
+    // router, retaining its strict power-island check.
+    auto direct=parse_circuit_ir(field(find("carrier/power_som"),"circuit"));
+    const auto retired=[](const std::string& ref) { return ref=="R12" || ref=="D5" || ref=="C20"; };
+    const auto erase_where=[](auto& values,auto predicate) {
+        values.erase(std::remove_if(values.begin(),values.end(),predicate),values.end());
+    };
+    erase_where(direct.parts,[&](const auto& p) { return retired(p.ref); });
+    erase_where(direct.nets,[](const auto& n) { return n.name=="EN_5V_SOM"; });
+    for(auto& n:direct.nets) {
+        erase_where(n.pins,[&](const auto& p) { return retired(p.ref); });
+        if(n.name=="+VIN_SYS")n.pins.push_back({"U4","7"});
+    }
+    Engine enabled(direct,lib);
+    enabled._regulator_template(enabled._detect_stages());
+    (void)route_schematic(direct,enabled.pl,lib);++count;
+    auto disconnected=enabled.pl;
+    erase_where(disconnected.powers,[](const auto& p) { return p.net_name()=="+VIN_SYS"; });
+    bool open_rejected=false;
+    try { (void)route_schematic(direct,disconnected,lib); }
+    catch(const SchematicRouteError& ex) { open_rejected=std::string(ex.what()).find("opens forbidden")!=std::string::npos; }
+    require(open_rejected,"direct enable test must retain independent power-island rejection");++count;
     const auto fb=SymbolPin{"1","FB/VSENSE","input",0,0,0,2.54,false};
     require(detection._is_fb_pin(fb,"unknown", "+3V3_REG"),"named feedback not recognized");
     for(const auto& name:{"BIAS","VCC","RT","PGOOD","SS","COMP","EN_SYNC","EN"}) {

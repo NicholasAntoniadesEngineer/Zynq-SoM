@@ -673,7 +673,12 @@ void Engine::_buck_box_stage(const std::string& ref, const Stage& stage, double 
         const auto* n = net_of(ref, p.number);
         if (!n || (feedback && n->name == *feedback)) continue;
         const auto pt = pins.at(p.number);
-        if (n->net_class == "port") {
+        if (rail(*n)) {
+            // Control pins may be strapped directly to a supply (for example
+            // EN/SYNC to VIN). They still need an explicit powered islet;
+            // signal labels cannot satisfy the power-net connectivity gate.
+            _rail_stub(n->name, pt, "top");
+        } else if (n->net_class == "port") {
             const double x = r3(pt.first + sp.port_run);
             pl.plan(n->name, {pt, {x, pt.second}});
             label(n->name, x, pt.second, 0, p.etype == "input" || p.etype == "output" ? p.etype : "bidirectional");
