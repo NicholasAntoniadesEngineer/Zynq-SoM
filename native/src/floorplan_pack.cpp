@@ -87,7 +87,8 @@ bool Engine::attempt_pack(bool compact) {
                 try {
                     std::string failed;
                     bool selected_pose=false;
-                    bool ok=attempt_pack_impl(compact,nullptr,{},recovery?&failed:nullptr,0,&selected_pose);
+                    bool order_independent_failure=false;
+                    bool ok=attempt_pack_impl(compact,&order_independent_failure,{},recovery?&failed:nullptr,0,&selected_pose);
                     const auto continuations=in.experiment->reseat_pose_limits?
                         in.experiment->reseat_pose_limits->continuations:0;
                     const bool reuse=in.experiment->reseat_pose_limits&&in.experiment->reseat_pose_limits->reuse_continuation;
@@ -115,6 +116,11 @@ bool Engine::attempt_pack(bool compact) {
                         fallback("interior_failed_first_retry");
                         ok=attempt_pack_impl(compact,nullptr,failed);
                         if(ok)plan.composition.push_back("failure-directed order: "+failed+" first");
+                    }
+                    if(!ok&&!order_independent_failure&&in.experiment->reseat_pose_limits&&in.experiment->reseat_pose_limits->victim_shapes) {
+                        restore();
+                        fallback("interior_reseat_shape_retry");
+                        ok=attempt_pack_impl(compact,nullptr,{},nullptr,0,nullptr,true);
                     }
                     if(!ok&&transactional)restore();
                     compact_order=saved_order;
@@ -158,7 +164,7 @@ bool Engine::attempt_pack(bool compact) {
 }
 bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure,
                               const std::string& promote,std::string* failed_subject,
-                              std::size_t first_pose_skip,bool* selected_pose) {
+                              std::size_t first_pose_skip,bool* selected_pose,bool victim_shapes) {
     if(selected_pose)*selected_pose=false;
     if(order_independent_failure)*order_independent_failure=true;
     // Borrow only for this synchronous invocation; never attach a sink to
@@ -453,8 +459,8 @@ bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure,
         for(int pass=0;pass<(alternatives?2:1);++pass) for (int idx:ranked) {
             auto& e=*placed[idx]; const auto saved_e=e,saved_b=b;
             // A rejected victim trial can change only the incoming block's
-            // entries. The displaced block's center is updated only on success;
-            // its chosen geometry is never changed by this retry. Preserve
+            // entries. The displaced block's geometry and center change only
+            // on success (the full strategy owns later rollback). Preserve
             // absence as well as values, including the rejected side offer.
             const auto saved_chosen=save_entry(chosen,b.name);
             const auto saved_center=save_entry(centers,b.name);
@@ -470,7 +476,26 @@ bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure,
             if (ok && !pass) {
                 occ_put(b); centers[b.name]={b.cx(),b.cy()};
                 const auto anchor=pack_anchor(anchor_row(e,centers));
-                const auto p=near(e,e.shape_idx,anchor,e.w,e.h,e.fanout_reach,e.fanout_inset,side_mask(e.side),get(chosen,e.name),nullptr);
+                auto p=near(e,e.shape_idx,anchor,e.w,e.h,e.fanout_reach,e.fanout_inset,side_mask(e.side),get(chosen,e.name),nullptr);
+                // This strategy runs only after the original full portfolio
+                // fails. Never replace an ordinary successful incumbent.
+                if(!p&&victim_shapes) {
+                    const auto variants=shapes.find(e.name);
+                    const auto restricted=owned_shape_choices.find(e.name);
+                    if(variants!=shapes.end())for(std::size_t k=0;k<variants->second.size();++k) {
+                        if(static_cast<int>(k)==e.shape_idx||
+                           (restricted!=owned_shape_choices.end()&&static_cast<int>(k)!=restricted->second))continue;
+                        const auto& s=variants->second[k];
+                        fallback("interior_reseat_shape_trial");
+                        p=near(e,static_cast<int>(k),anchor,s.w,s.h,s.reach,s.inset,side_mask(s.side),s.comps,nullptr);
+                        if(!p)continue;
+                        e.shape_idx=static_cast<int>(k);e.side=s.side;e.w=s.w;e.h=s.h;
+                        e.fanout_reach=s.reach;e.fanout_inset=s.inset;e.area=block_area(s.w,s.h,counts);
+                        chosen[e.name]=s.comps;
+                        side_offers[e.name]={e.side,e.side,e.shape_idx,std::nullopt,std::nullopt};
+                        break;
+                    }
+                }
                 if (!p) { ok=false; occ_pull(b); }
                 else { e.x=p->x; e.y=p->y; occ_put(e); centers[e.name]={e.cx(),e.cy()}; }
             }

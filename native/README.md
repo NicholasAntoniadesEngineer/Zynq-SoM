@@ -280,6 +280,19 @@ retained: the smaller alternative uses more search and has a higher cross-wire
 estimate. See `benchmarks/2026-10-12-carrier-165x158-qualification.json` for the
 full gate, rendering, quality and unresolved-risk evidence.
 
+`--reseat-victim-shapes` is an opt-in additional recovery strategy for `board`
+(profiler: `--reseat-victim-shapes on`). It requires compact placement, an explicit
+interior order, and both pose/frontier limits. The unchanged original strategy,
+including its configured continuation attempts, runs first. Only after failure
+does one separate full attempt allow a displaced subsystem to try its other
+registered shapes when its existing shape cannot be reseated. Explicit shape
+selections and final hardware checks still apply. Rejected attempts restore the
+entry layout and offers but retain actual operation and fallback receipts.
+This is not exhaustive shape/pose search: the additional strategy currently
+selects the first locally valid victim shape. It preserves the 165x158 carrier
+candidate in screening but has not recovered 164x159; leave it off for the
+qualified recipe above to avoid extra search cost without a demonstrated gain.
+
 Firmware source provenance now reads canonical circuit JSON and compiled factory
 registrations rather than checking for Python constructors. Independent source
 inventories cover both projects, reject damaged/missing registered inputs, and

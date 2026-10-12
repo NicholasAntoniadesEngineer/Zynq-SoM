@@ -146,6 +146,11 @@ Options parse(int argc, char** argv) {
             FloorplanExperiment experiment;experiment.joint_separation_states=n;
             validate_floorplan_experiment(experiment);out.joint_states=n;continue;
         }
+        if(arg=="--reseat-victim-shapes"){
+            if(!seen.insert(arg).second)throw ProjectError("duplicate option "+arg);
+            if(!out.reseat_pose_limits)out.reseat_pose_limits.emplace();
+            out.reseat_pose_limits->victim_shapes=true;continue;
+        }
         if(arg=="--reseat-poses"||arg=="--reseat-frontier"||arg=="--reseat-continuations"){
             if(!seen.insert(arg).second)throw ProjectError("duplicate option "+arg);
             if(++i==argc)throw ProjectError("reseat limits require positive integers");
@@ -250,6 +255,7 @@ Options parse(int argc, char** argv) {
         if(out.command=="w12-stageprobe")allowed.insert("--cons-only");
     } else if (out.command == "board") {
         allowed.insert("--audit-projections");
+        allowed.insert("--reseat-victim-shapes");
         allowed.insert("--compact-placement");
         allowed.insert("--multiscale-outline");
         allowed.insert("--edge-feasibility");
@@ -371,7 +377,7 @@ std::optional<int> run_project_command(int argc, char** argv) {
         if(options.command=="board")std::cout<<"--edge-feasibility: opt-in sequential clearance-aware initial edge runs; requires --compact-placement. Not a complete joint solver. Rounded poses are rechecked; all gates remain active.\n";
         if(options.command=="board")std::cout<<"--joint-separation-states N: opt-in failure-only coupled-axis search, with interior-neighbour translation after constrained-only solves fail. N bounds each joint search, not total build work; hardware-fixed obstacles and all gates remain active. Requires --compact-placement.\n";
         if(options.command=="board")std::cout<<"--audit-projections 1|2: simultaneous source-audit AST projections (default 1). Two trades more memory for potential throughput; audit coverage and source-change checks are unchanged.\n";
-        if(options.command=="board")std::cout<<"--reseat-poses N --reseat-frontier N [--reseat-continuations N]: failure-only placement alternatives; both pose/frontier limits required. Continuations revisit early choices after downstream failure and require --interior-order. All hardware checks remain active; limits bound search effort, not feasibility. Requires --compact-placement.\n";
+        if(options.command=="board")std::cout<<"--reseat-poses N --reseat-frontier N [--reseat-continuations N]: failure-only placement alternatives; both pose/frontier limits required. Continuations revisit early choices after downstream failure and require --interior-order. All hardware checks remain active; limits bound search effort, not feasibility. Requires --compact-placement. --reseat-victim-shapes adds one full alternate-victim-shape strategy only after original strategies fail; requires explicit --interior-order and pose/frontier limits.\n";
         if(options.command=="board")std::cout<<"--owned-quality-first: opt-in same-pose, same-face owned proximity priority; requires --compact-placement. May increase inter-block estimate. No hardware proximity limit is implied; all gates remain active.\n";
         if(options.command=="board")std::cout<<"--owned-extent-alternatives: append bounded extent-first owned-group candidates; requires --compact-placement. Original alternatives and all gates remain active.\n";
         if(options.command=="board")std::cout<<"--owned-face-cohesion: append owner/cap same-face initial packs, preserving existing candidates.\n--owned-shape SHEET=TAG: restrict a measured candidate by generated tag; unknown, ambiguous or infeasible choices fail without substitution. Requires --compact-placement. All gates remain active.\n";

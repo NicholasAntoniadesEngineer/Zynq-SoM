@@ -54,6 +54,7 @@ void help() {
     std::cout << "  [--contract-group-rotations on|off] (requires contract-group-face-sheet)\n";
     std::cout << "  [--reseat-poses N --reseat-frontier N] (failure-only alternative poses; both required)\n";
     std::cout << "  [--reseat-continuations N] (capped first-recovery replays; explicit interior order required)\n";
+    std::cout << "  [--reseat-victim-shapes on|off] (additional failure-only shape strategy; explicit interior order required)\n";
     std::cout << "  [--reseat-reuse on|off] (advisory continuation ordering; requires continuations)\n";
     std::cout << "  [--joint-separation-states N] (failure-only coupled-axis search)\n";
     std::cout << "  [--floorplan-spec PATH] (explicit candidate policy; project default is not edited)\n";
@@ -103,6 +104,11 @@ Options parse(int argc, char** argv) {
             if(parsed.ec!=std::errc{}||parsed.ptr!=value.data()+value.size()||!n||n>std::numeric_limits<std::size_t>::max()/2)
                 throw std::invalid_argument("invalid joint separation state limit");
             out.joint_states=n;
+        }
+        else if(arg=="--reseat-victim-shapes") {
+            if(value!="on"&&value!="off")throw std::invalid_argument("reseat-victim-shapes must be on|off");
+            if(!out.reseat_pose_limits)out.reseat_pose_limits.emplace();
+            out.reseat_pose_limits->victim_shapes=value=="on";
         }
         else if(arg=="--reseat-reuse") {
             if(value!="on"&&value!="off")throw std::invalid_argument("reseat-reuse must be on|off");
@@ -216,6 +222,8 @@ Options parse(int argc, char** argv) {
     if(out.contract_group_rotations&&out.contract_group_face_sheets.empty())throw std::invalid_argument("contract-group-rotations requires --contract-group-face-sheet");
     if(out.reseat_pose_limits&&(out.compact!="on"||out.reseat_pose_limits->poses<2||!out.reseat_pose_limits->frontier_nodes))
         throw std::invalid_argument("reseat requires --compact-search on, --reseat-poses >=2 and --reseat-frontier >0");
+    if(out.reseat_pose_limits&&out.reseat_pose_limits->victim_shapes&&!out.interior_order)
+        throw std::invalid_argument("victim-shape recovery requires interior-order");
     if(out.reseat_pose_limits&&out.reseat_pose_limits->continuations&&(!out.interior_order||out.failed_first_retry))
         throw std::invalid_argument("reseat continuations require interior-order and exclude failed-first-retry");
     if(out.reseat_pose_limits&&out.reseat_pose_limits->reuse_continuation&&!out.reseat_pose_limits->continuations)
@@ -355,7 +363,7 @@ std::string trial(const PcbPlacementInput& source, bool compact, int run, int ge
                  <<" domain_probes="<<w.domain_probes<<" domain_rejections="<<w.domain_rejections
                  <<" proposals="<<w.qualifications<<" rejected="<<w.qualification_rejections<<" capped="<<w.budget_exhausted<<" success="<<ok<<'\n';
     };
-    if(reseat_pose_limits)std::cout<<"reseat_limits poses="<<reseat_pose_limits->poses<<" frontier="<<reseat_pose_limits->frontier_nodes<<" continuations="<<reseat_pose_limits->continuations<<" reuse="<<reseat_pose_limits->reuse_continuation<<'\n';
+    if(reseat_pose_limits)std::cout<<"reseat_limits poses="<<reseat_pose_limits->poses<<" frontier="<<reseat_pose_limits->frontier_nodes<<" continuations="<<reseat_pose_limits->continuations<<" reuse="<<reseat_pose_limits->reuse_continuation<<" victim_shapes="<<reseat_pose_limits->victim_shapes<<'\n';
     if(observers)floor->pose_retry_completed=[](const auto& r){
         std::cout<<"pose_retry incoming="<<r.incoming<<" displaced="<<r.displaced
                  <<" generated="<<r.generated<<" frontier="<<r.frontier_nodes<<" attempted="<<r.attempted<<" skipped="<<r.skipped

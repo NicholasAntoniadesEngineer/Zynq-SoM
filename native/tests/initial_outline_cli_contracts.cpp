@@ -11,6 +11,17 @@ int main(int argc,char** argv){try{
     };
     const std::vector<std::string> reseat{"board","--compact-placement","--interior-order","3","--reseat-poses","8","--reseat-frontier","4096","--reseat-continuations","3"};
     const auto reseat_help=run(reseat);
+    auto shape_args=reseat;shape_args.push_back("--reseat-victim-shapes");
+    const auto shape_help=run(shape_args);
+    if(shape_help.exit_code||shape_help.stdout_text.find("original strategies fail")==std::string::npos)
+        throw std::runtime_error("shape strategy options/help failed");
+    shape_args.push_back("--reseat-victim-shapes");
+    if(!run(shape_args).exit_code)throw std::runtime_error("duplicate shape strategy accepted");
+    for(const auto& args:std::vector<std::vector<std::string>>{
+        {"board","--reseat-victim-shapes"},
+        {"board","--compact-placement","--reseat-poses","8","--reseat-frontier","4096","--reseat-victim-shapes"},
+        {"pcb-stage","--reseat-victim-shapes"}})
+        if(!run(args).exit_code)throw std::runtime_error("invalid shape strategy configuration accepted");
     if(reseat_help.exit_code||reseat_help.stdout_text.find("limits bound search effort, not feasibility")==std::string::npos)
         throw std::runtime_error("valid continuation options/help failed");
     for(const auto& args:std::vector<std::vector<std::string>>{

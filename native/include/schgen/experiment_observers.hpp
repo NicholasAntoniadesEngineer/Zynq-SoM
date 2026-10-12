@@ -41,6 +41,8 @@ struct FloorplanPoseRetryLimits {
     std::size_t continuations=0;
     // Advisory ordering only; never reuse a geometry verdict or omit a gate.
     bool reuse_continuation=false;
+    // Additional full strategy after the unchanged pose portfolio fails.
+    bool victim_shapes=false;
 };
 struct FloorplanPoseRetryObservation {
     std::string incoming,displaced;

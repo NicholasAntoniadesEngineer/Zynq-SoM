@@ -138,7 +138,8 @@ public:
     bool attempt_pack(bool compact);
     bool attempt_pack_impl(bool compact,bool* order_independent_failure=nullptr,
                            const std::string& promote={},std::string* failed_subject=nullptr,
-                           std::size_t first_pose_skip=0,bool* selected_pose=nullptr);
+                           std::size_t first_pose_skip=0,bool* selected_pose=nullptr,
+                           bool victim_shapes=false);
     double refine_screened_incumbent(double incumbent_estimate);
     void choose_connector_shapes();
     PackAnchorIn anchor_row(const FloorplanBlock& b,

@@ -10,6 +10,9 @@
 
 namespace schgen {
 void validate_floorplan_experiment(const FloorplanExperiment &experiment) {
+    if(experiment.reseat_pose_limits && experiment.reseat_pose_limits->victim_shapes &&
+       !experiment.interior_order)
+        throw FloorplanError("experiment: victim-shape recovery requires an explicit interior order");
     if(experiment.joint_separation_states&&(!*experiment.joint_separation_states||*experiment.joint_separation_states>std::numeric_limits<std::size_t>::max()/2))
         throw FloorplanError("experiment: invalid joint separation state limit");
     if(experiment.reseat_pose_limits &&

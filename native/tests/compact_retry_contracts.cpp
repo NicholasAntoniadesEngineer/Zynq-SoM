@@ -112,11 +112,12 @@ void exception_contract(bool constraint_first=false){
     require(offers(wrapped)==start_offers,"exception must restore entry side offers");
     std::cout<<"exception rollback PASS\n";
 }
-void invariant_edge_failure(bool constraint_first,bool translate,bool recovery=false) {
+void invariant_edge_failure(bool constraint_first,bool translate,bool recovery=false,bool shapes=false) {
     auto in=input();auto experiment=std::make_shared<FloorplanExperiment>();
     experiment->compact_constraint_first=constraint_first;
     experiment->compact_edge_translation=translate;in.experiment=experiment;
     if(recovery){experiment->interior_order=0;experiment->failed_first_retry=true;}
+    if(shapes){experiment->interior_order=0;experiment->reseat_pose_limits=FloorplanPoseRetryLimits{8,4096,0,false,true};}
     const auto seed=[](Engine& e) {
         setup(e,{40,40,{}});
         FloorplanBlock b;b.name="edge";b.kind="edge";
@@ -506,6 +507,72 @@ void neighbour_retry_contract() {
 }
 extern "C" void __cyg_profile_func_enter(void* fn,void*){if(observing&&fn==reinterpret_cast<void*>(&native_run_overflow_tol))++entries;}
 extern "C" void __cyg_profile_func_exit(void*,void*){}
+void victim_shape_portfolio_contract(){
+    std::size_t preserved=0,recovered=0,failed=0,queries=0;
+    bool exception_checked=false;
+    const Case crowded{70,50,{{29,16,3,4},{12,30,2,0},{30,18,3,2},{31,26,2,3},{7,7,1,3},{31,9,2,1}}};
+    for(bool rotate:{false,true})for(int w=65;w<=85;w+=5)for(int h=45;h<=65;h+=5)for(int order=0;order<3;++order){
+        auto c=crowded;c.w=w;c.h=h;
+        const auto prepare=[&](Engine& e){setup(e,c);if(rotate)for(auto& [name,shapes]:e.shape_sets[1]){
+            (void)name;if(shapes.size()>2)std::swap(shapes[2].w,shapes[2].h);
+        }};
+        auto in=input();auto config=std::make_shared<FloorplanExperiment>();in.experiment=config;
+        config->interior_order=order;config->reseat_pose_limits=FloorplanPoseRetryLimits{8,4096,2};
+        Engine original(in);prepare(original);const bool original_ok=original.attempt_pack(false);
+        auto expected_counts=original.plan.accounting.quantization_engagements;
+        auto expected_events=original.plan.accounting.fallback_events;
+        std::optional<Result> branch;
+        if(!original_ok){
+            Engine direct(in);prepare(direct);direct.compact_order=order;entries=0;observing=true;
+            const bool ok=direct.attempt_pack_impl(false,nullptr,{},nullptr,0,nullptr,true);
+            observing=false;
+            require(direct.plan.accounting.quantization_engagements.at("run_overflow_tol")==entries,"shape branch operation count");
+            branch=Result{ok,direct.plan,offers(direct),entries};
+            auto delta=direct.plan.accounting.quantization_engagements;delta.erase("entry-sentinel");
+            checked_quantization_merge(expected_counts,delta);
+            expected_events.push_back("interior_reseat_shape_retry");
+            expected_events.insert(expected_events.end(),direct.plan.accounting.fallback_events.begin()+1,direct.plan.accounting.fallback_events.end());
+        }
+        config->reseat_pose_limits->victim_shapes=true;
+        Engine actual(in);prepare(actual);const auto initial=layout(actual.plan);const auto initial_offers=offers(actual);
+        const bool ok=actual.attempt_pack(false);
+        require(ok==(original_ok||(branch&&branch->ok)),"shape portfolio omitted or replaced a strategy");
+        require(actual.plan.accounting.quantization_engagements==expected_counts&&actual.plan.accounting.fallback_events==expected_events,
+                "shape portfolio lost or duplicated executed work");
+        if(original_ok){++preserved;require(equal(layout(actual.plan),layout(original.plan))&&offers(actual)==offers(original),"shape portfolio replaced an incumbent");}
+        else if(ok){++recovered;require(equal(layout(actual.plan),layout(branch->plan))&&offers(actual)==branch->side,"shape strategy result mismatch");}
+        else {++failed;require(equal(layout(actual.plan),initial)&&offers(actual)==initial_offers,"shape strategy failure leaked state");}
+        if(ok){const auto& blocks=actual.plan.interior_blocks;
+            for(std::size_t i=0;i<blocks.size();++i){const auto& a=blocks[i];
+                require(a.x>=0&&a.y>=0&&a.x+a.w<=c.w&&a.y+a.h<=c.h,"shape branch outside outline");
+                for(std::size_t j=0;j<i;++j){const auto& b=blocks[j];
+                    require(a.side!=b.side||a.x+a.w<=b.x||b.x+b.w<=a.x||a.y+a.h<=b.y||b.y+b.h<=a.y,"shape branch rectangles overlap");
+                }
+            }
+        }
+        queries+=std::count(expected_events.begin(),expected_events.end(),"interior_reseat_shape_trial");
+        Engine repeat(in);prepare(repeat);require(repeat.attempt_pack(false)==ok&&equal(floorplan_plan_json(repeat.plan),floorplan_plan_json(actual.plan))&&offers(repeat)==offers(actual),"shape portfolio is not deterministic");
+        if(!ok&&!exception_checked&&std::count(expected_events.begin(),expected_events.end(),"interior_reseat_shape_trial")){
+            Engine interrupted(in);prepare(interrupted);
+            config->stage_rejected=[&](const auto&){
+                const auto& events=interrupted.plan.accounting.fallback_events;
+                if(std::find(events.begin(),events.end(),"interior_reseat_shape_retry")!=events.end())
+                    throw std::runtime_error("shape observer interrupted");
+            };
+            try{(void)interrupted.attempt_pack(false);}catch(const std::runtime_error& e){exception_checked=std::string(e.what())=="shape observer interrupted";}
+            config->stage_rejected={};
+            require(exception_checked&&equal(layout(interrupted.plan),initial)&&offers(interrupted)==initial_offers,"shape exception did not restore entry state");
+            const auto& events=interrupted.plan.accounting.fallback_events;
+            require(std::count(events.begin(),events.end(),"interior_reseat_shape_retry")==1&&
+                std::count(events.begin(),events.end(),"interior_reseat_shape_trial")>0,"shape exception lost executed attempts");
+        }
+    }
+    require(preserved&&recovered&&failed&&queries&&exception_checked,"shape fixtures missed preservation, recovery, rollback, exception or actual queries");
+    std::cout<<"victim shape portfolio PASS preserved="<<preserved<<" recovered="<<recovered<<" failed="<<failed<<" queries="<<queries<<'\n';
+    FloorplanExperiment invalid;invalid.reseat_pose_limits=FloorplanPoseRetryLimits{8,4096,0,false,true};
+    bool rejected=false;try{validate_floorplan_experiment(invalid);}catch(const FloorplanError&){rejected=true;}
+    require(rejected,"shape portfolio silently accepted missing explicit order");
+}
 int main(){try{
     check("canonical",{80,70,{{8,6,2,1},{7,5,2,0}}},0);
     check("area-wins",{70,50,{{29,16,3,4},{12,30,2,0},{30,18,3,2},{31,26,2,3},{7,7,1,3},{31,9,2,1}}},1);
@@ -525,8 +592,10 @@ int main(){try{
     single_order_contract();
     failed_first_contract();
     alternative_pose_retry_contract();
+    victim_shape_portfolio_contract();
     neighbour_retry_contract();
     for(bool first:{false,true})for(bool translate:{false,true})invariant_edge_failure(first,translate);
     for(bool translate:{false,true})invariant_edge_failure(false,translate,true);
+    for(bool translate:{false,true})invariant_edge_failure(false,translate,false,true);
     std::cout<<"compact retry contracts PASS\n";return 0;
 }catch(const std::exception& e){observing=false;std::cerr<<e.what()<<'\n';return 1;}}
