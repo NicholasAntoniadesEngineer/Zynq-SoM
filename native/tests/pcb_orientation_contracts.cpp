@@ -18,10 +18,19 @@ PcbCheckInput model(const Shape& s,const Context& ctx,const Geometry& g,const st
  PcbCheckModel m;m.board_w=s.w;m.board_h=s.h;m.origin_x=0;m.origin_y=0;
  for(const auto* offsets:{&s.top_off,&s.bot_off})for(const auto& [ref,p]:*offsets){
   PcbCheckInstance i;i.ref=ref;i.sheet=sheet;i.x=p.first;i.y=p.second;
+  const auto& source=ctx.by_ref.at(ref);i.value=source.value;i.footprint=source.footprint;
   i.rotation=s.extra_rot.count(ref)?s.extra_rot.at(ref):0;
   i.side=offsets==&s.top_off?s.side:(s.side=="top"?"bottom":"top");
   i.mirror=s.mirror.count(ref);i.mod=ctx.pool.at(i.mirror?s.mirror.at(ref):g.resolvable.at(ref));
   i.pad_nets={{"1",{1,"signal_A"}},{"2",{2,"signal_B"}},{"3",{3,"return"}}};
+  if(sheet!="unit") {
+   i.pad_nets.clear();
+   const auto stage=ctx.stage_input(sheet,g);
+   for(const auto& pin:pad_names_from_text(i.mod->bytes)) {
+    const auto net=stage.pad_nets.find({ref,pin});
+    i.pad_nets.emplace(pin,std::make_pair(0,net==stage.pad_nets.end()?std::string{}:net->second));
+   }
+  }
   m.insts.push_back(i);
  }
  return PcbCheckInput(std::move(m));
@@ -226,6 +235,79 @@ void live(const std::filesystem::path& root){
    demand(split.quantization_engagements.at("placement_bottom_pose_precision4dp")==bottom_coordinates&&
           split.quantization_engagements.at("placement_variant_dimension_precision4dp")==variant_dimensions,
           "actual mixed-face scalar operations differ from receipt");
+   experiment->contract_group_rotations=true;
+   bottom_coordinates=0;variant_dimensions=0;observing=true;
+   const auto group_turns=build_pcb_zone_geometry(f.input);observing=false;
+   demand(group_turns.quantization_engagements.at("placement_bottom_pose_precision4dp")==bottom_coordinates&&
+          group_turns.quantization_engagements.at("placement_variant_dimension_precision4dp")==variant_dimensions,
+          "group-only rotation operations differ from receipts");
+   const auto group_repeat=build_pcb_zone_geometry(f.input);
+   demand(group_turns.quantization_engagements==group_repeat.quantization_engagements,
+          "group-only rotation receipts not reproducible");
+   const auto& offers=group_turns.geometry.shapes.at("usb_jtag");
+   const auto& originals=split.geometry.shapes.at("usb_jtag");
+   demand(offers.size()>originals.size(),"group-only rotations added no candidates");
+   demand(offers.size()==group_repeat.geometry.shapes.at("usb_jtag").size(),"group-only count not reproducible");
+   Context gc(f.input);gc.pool=group_turns.footprints;
+   const auto base=model(originals.front(),gc,group_turns.geometry,"usb_jtag");
+   std::map<std::string,std::size_t> base_indices;
+   for(std::size_t i=0;i<base.model().insts.size();++i)base_indices.emplace(base.model().insts[i].ref,i);
+   std::set<int> seen_turns;
+   for(std::size_t n=0;n<offers.size();++n) {
+    demand(equal(offers[n],group_repeat.geometry.shapes.at("usb_jtag")[n]),"group-only geometry not reproducible");
+    if(n<originals.size()){demand(equal(offers[n],originals[n]),"group rotations rewrote existing prefix");continue;}
+    const auto& offer=offers[n];const auto pos=offer.tag.find("/group-r");
+    demand(pos!=std::string::npos,"new group candidate missing orientation tag");
+    const int turns=std::stoi(offer.tag.substr(pos+8))/90;seen_turns.insert(turns);
+    const auto transform=[&](FloorplanPoint p){p.first=-p.first;for(int t=0;t<turns;++t)p={p.second,-p.first};return p;};
+    const auto measured=model(offer,gc,group_turns.geometry,"usb_jtag");
+    demand(check_pcb_placement_contract(measured,"usb_jtag",&f.input.contracts.at("usb_jtag"),gc.board_refs.at("usb_jtag")).ok,
+           "group rotation violated local contract");
+    const auto fanout=check_fanout(measured,0);
+    demand(fanout.n_subjects>0&&fanout.ok,"group rotation fanout missing subjects or violated clearance");
+    std::optional<FloorplanPoint> delta;
+    for(std::size_t i=0;i<measured.model().insts.size();++i) {
+     const auto& part=measured.model().insts[i];const auto oi=base_indices.at(part.ref);
+     const auto& old=base.model().insts[oi];
+     if(!offer.mirror.count(part.ref)) {
+      demand(part.x==old.x&&part.y==old.y&&part.rotation==old.rotation&&part.side==old.side,
+             "group rotation moved stationary part");continue;
+     }
+     const auto origin=transform({old.x,old.y});const FloorplanPoint shift{part.x-origin.first,part.y-origin.second};
+     if(!delta)delta=shift;
+     demand(std::abs(shift.first-delta->first)<1.1e-4&&std::abs(shift.second-delta->second)<1.1e-4,
+            "group rotation lost rigid membership");
+     for(const auto& [pin,box]:base.geometry_at(oi).pad_boxes) {
+      const auto expected=transform(rect_center(box));const auto actual=rect_center(measured.geometry_at(i).pad_boxes.at(pin));
+      demand(std::abs(actual.first-expected.first-shift.first)<1e-8&&
+             std::abs(actual.second-expected.second-shift.second)<1e-8,"group-only pad transform wrong");
+     }
+    }
+    const auto bound=bind_pcb_zone_shapes(group_turns,{{"usb_jtag",static_cast<int>(n)}});
+    demand(gc.stage_input("usb_jtag",bound).pad_nets==gc.stage_input("usb_jtag",after.geometry).pad_nets,
+           "group-only rotation changed net identity");
+   }
+   demand(seen_turns==std::set<int>{1,2,3},"missing legal group-only quarter turn");
+   std::cout<<"carrier independent group rotations="<<offers.size()-originals.size()<<'\n';
+   // Synthetic packages: a third disconnected physical pad makes former
+   // two-pin passives fanout subjects/crowders without changing their poses.
+   // This catches both empty pin maps and connected-only pin counting.
+   auto crowded=gc;auto crowded_geometry=after.geometry;std::set<std::string> replaced;
+   for(const auto& ref:crowded_geometry.refs_by_sheet.at("usb_jtag")) {
+    const auto key=crowded_geometry.resolvable.at(ref);
+    if(!replaced.insert(key).second)continue;
+    const auto fp=crowded.pool.at(key);
+    if(pad_names_from_text(fp->bytes).size()!=2)continue;
+    auto bytes=fp->bytes;
+    bytes.insert(bytes.rfind(')')," (pad \"UNCONNECTED_TEST\" smd rect (at 0 0) (size 0.01 0.01) (layers \"F.Cu\"))");
+    crowded.pool[key]=pcb_check_footprint(fp->source,bytes);crowded.pool.erase("@mirror/"+key);
+   }
+   demand(!check_fanout(model(originals.front(),crowded,crowded_geometry,"usb_jtag"),0).ok,
+          "disconnected-pad crowding fixture did not exercise rejection");
+   append_contract_group_faces(crowded,crowded_geometry,"usb_jtag",originals.front(),true);
+   demand(crowded_geometry.shapes.at("usb_jtag").size()==after.geometry.shapes.at("usb_jtag").size(),
+          "fanout-starved disconnected-pad candidates were offered");
+   experiment->contract_group_rotations=false;
    // Test incremental alternatives independently. Automatically offering all
    // of them regresses the qualified global plan; production keeps its offers.
    const auto expand=[&](PcbZoneResult& zones) {
@@ -311,6 +393,7 @@ void live(const std::filesystem::path& root){
    for(const auto* owner:{"U2","U4"})blocked_context.by_ref.at(blocked_context.board_refs.at("usb_jtag").at(owner)).lib_id="Switch:SW_SPST";
    auto blocked_geometry=after.geometry;
    append_contract_group_faces(blocked_context,blocked_geometry,"usb_jtag",variants.front());
+   append_contract_group_faces(blocked_context,blocked_geometry,"usb_jtag",variants.front(),true);
    demand(blocked_geometry.shapes.at("usb_jtag").size()==prefix.size(),"pinned owners still generated bottom candidates");
    // An unconnected copper pad is still physical occupancy. Keep the authored
    // courtyard unchanged, so a courtyard-only gate cannot detect this escape.
@@ -321,6 +404,7 @@ void live(const std::filesystem::path& root){
    bytes.insert(bytes.rfind(')')," (pad \"PROBE\" smd rect (at 1000 0) (size 1 1) (layers \"F.Cu\" \"F.Paste\" \"F.Mask\"))");
    protruding_context.pool[switch_key]=pcb_check_footprint(original_fp->source,bytes);
    append_contract_group_faces(protruding_context,protruding_geometry,"usb_jtag",variants.front());
+   append_contract_group_faces(protruding_context,protruding_geometry,"usb_jtag",variants.front(),true);
    demand(protruding_geometry.shapes.at("usb_jtag").size()==prefix.size(),"copper outside courtyard escaped contract-group bounds");
    protruding_geometry.shapes["usb_jtag"]={variants.front()};
    append_rigid_zone_orientations(protruding_context,protruding_geometry,"usb_jtag",variants.front());

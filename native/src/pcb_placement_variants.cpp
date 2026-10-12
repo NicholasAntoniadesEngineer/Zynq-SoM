@@ -116,10 +116,11 @@ void append_rigid_zone_orientations(Context& ctx, Geometry& g, const std::string
     }
     if (variants.size() > originals.size()) g.shapes[sheet] = std::move(variants);
 }
-void append_contract_group_faces(Context& ctx,Geometry& g,const std::string& sheet,const Shape& seed) {
+void append_contract_group_faces(Context& ctx,Geometry& g,const std::string& sheet,const Shape& seed,
+                                 bool group_rotations) {
     // Local geometry candidates, not hardware qualification. Preserve the
-    // incumbent and only explore four deterministic alignments per eligible
-    // contract-connected group. Final board gates remain authoritative.
+    // incumbent and explore four deterministic alignments per eligible
+    // contract-connected group/orientation. Final board gates remain authoritative.
     if(!orientation_eligible(ctx,g,sheet)||seed.side!="top"||!orientation_holds(ctx,g,sheet,seed))return;
     const auto contract=ctx.in.contracts.find(sheet);
     if(contract==ctx.in.contracts.end())return;
@@ -135,11 +136,21 @@ void append_contract_group_faces(Context& ctx,Geometry& g,const std::string& she
         }
     const auto groups=contract_rigid_groups(contract->second,ctx.board_refs.at(sheet),pinned);
     if(!groups)return;
+    const auto stage=ctx.stage_input(sheet,g);
+    std::map<std::string,decltype(PcbCheckInstance::pad_nets)> pad_nets;
+    // Match final emission: unconnected physical pads still count toward the
+    // fanout tier. An empty map would silently skip every multi-pin subject.
+    for(const auto& ref:g.refs_by_sheet.at(sheet))
+        for(const auto& pin:pad_names_from_text(ctx.pool.at(g.resolvable.at(ref))->bytes)) {
+            const auto net=stage.pad_nets.find({ref,pin});
+            pad_nets[ref].emplace(pin,std::make_pair(0,net==stage.pad_nets.end()?std::string{}:net->second));
+        }
     const auto model=[&](const Shape& s) {
         PcbCheckModel m;m.board_w=s.w;m.board_h=s.h;m.origin_x=0;m.origin_y=0;
         for(const auto* offsets:{&s.top_off,&s.bot_off})for(const auto& [ref,xy]:*offsets) {
             const auto& p=ctx.by_ref.at(ref);PcbCheckInstance i;
             i.ref=ref;i.sheet=sheet;i.value=p.value;i.footprint=p.footprint;
+            if(const auto pins=pad_nets.find(ref);pins!=pad_nets.end())i.pad_nets=pins->second;
             i.x=xy.first;i.y=xy.second;i.rotation=s.extra_rot.count(ref)?s.extra_rot.at(ref):0;
             i.side=offsets==&s.top_off?"top":"bottom";i.mirror=s.mirror.count(ref);
             i.mod=ctx.pool.at(i.mirror?s.mirror.at(ref):g.resolvable.at(ref));m.insts.push_back(std::move(i));
@@ -153,7 +164,8 @@ void append_contract_group_faces(Context& ctx,Geometry& g,const std::string& she
         const auto box=before.courtyard_at(i);boxes.emplace(before.model().insts[i].ref,box);
         old_right=std::max(old_right,box.x1);old_bottom=std::max(old_bottom,box.y1);
     }
-    for(const auto& group:*groups) {
+    // Keep every original offer in its original index before appending turns.
+    for(int turn=0;turn<(group_rotations?4:1);++turn) for(const auto& group:*groups) {
         if(group.refs.size()<2||!group.required_top_refs.empty())continue;
         bool eligible=true;
         std::vector<Box4> moved_boxes,remaining_boxes;
@@ -178,17 +190,23 @@ void append_contract_group_faces(Context& ctx,Geometry& g,const std::string& she
                 ctx.pool.emplace(mk,pcb_check_footprint(path,sexpr_dumps(document)+"\n",document));
             }
         } catch(const MirrorUnsupported&) {continue;}
-        const double width=moving->x1-moving->x0,height=moving->y1-moving->y0;
+        const double original_width=moving->x1-moving->x0,original_height=moving->y1-moving->y0;
+        const double width=turn%2?original_height:original_width;
+        const double height=turn%2?original_width:original_height;
         for(const auto target:std::vector<FloorplanPoint>{{remaining->x0,remaining->y0},
                 {remaining->x1-width,remaining->y0},{remaining->x0,remaining->y1-height},
                 {remaining->x1-width,remaining->y1-height}}) {
             Shape candidate=seed;
             candidate.tag="contract-bottom/"+group.refs.front()+"/"+std::to_string(target.first)+"/"+std::to_string(target.second);
+            if(turn)candidate.tag+="/group-r"+std::to_string(90*turn);
             for(const auto& ref:group.refs) {
                 const auto xy=seed.top_off.at(ref);candidate.top_off.erase(ref);
-                candidate.bot_off[ref]={placement_bottom_pose_precision4dp(moving->x1-xy.first+target.first,&ctx.quantization),
-                    placement_bottom_pose_precision4dp(xy.second-moving->y0+target.second,&ctx.quantization)};
-                candidate.extra_rot[ref]=normalize(180-(seed.extra_rot.count(ref)?seed.extra_rot.at(ref):0));
+                FloorplanPoint local{moving->x1-xy.first,xy.second-moving->y0};
+                double w=original_width,h=original_height;
+                for(int t=0;t<turn;++t){local={local.second,w-local.first};std::swap(w,h);}
+                candidate.bot_off[ref]={placement_bottom_pose_precision4dp(local.first+target.first,&ctx.quantization),
+                    placement_bottom_pose_precision4dp(local.second+target.second,&ctx.quantization)};
+                candidate.extra_rot[ref]=normalize(180-(seed.extra_rot.count(ref)?seed.extra_rot.at(ref):0)+90*turn);
                 const auto key=g.resolvable.at(ref),mk="@mirror/"+key;
                 candidate.mirror[ref]=mk;
             }

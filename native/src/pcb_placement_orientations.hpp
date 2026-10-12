@@ -12,5 +12,6 @@ void append_distinct_zone_shapes(Shape incumbent, std::vector<Shape>& existing,
 // or make a global packer preserve an incumbent across different offer sets.
 void append_rigid_zone_orientations(Context&, Geometry&, const std::string&,
                                     const Shape& incumbent, std::size_t first_original = 0);
-void append_contract_group_faces(Context&, Geometry&, const std::string&, const Shape&);
+void append_contract_group_faces(Context&, Geometry&, const std::string&, const Shape&,
+                                 bool group_rotations = false);
 }

@@ -230,7 +230,7 @@ PcbZoneResult build_pcb_zone_geometry(const PcbPlacementInput &in, ExecutionFail
                 !templated && !edge && !conn_rot.count(sheet) &&
                 !sheet_edges.count(sheet) && !connector_class.count(sheet), &child);
         if(in.floorplan.experiment&&in.floorplan.experiment->contract_group_face_sheet==sheet)
-            append_contract_group_faces(ctx,g,sheet,shape(p,"base"));
+            append_contract_group_faces(ctx,g,sheet,shape(p,"base"),in.floorplan.experiment->contract_group_rotations);
         if(in.floorplan.experiment&&in.floorplan.experiment->owned_face_cohesion)
             append_owned_face_zone_shapes(ctx,out,sheet,shape(p,"base"),
                 !templated&&!edge&&!conn_rot.count(sheet)&&!sheet_edges.count(sheet)&&!connector_class.count(sheet),

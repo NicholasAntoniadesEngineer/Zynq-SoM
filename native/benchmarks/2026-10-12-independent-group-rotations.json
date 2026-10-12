@@ -1,0 +1,36 @@
+{
+  "base_commit": "d33806bb",
+  "scope": "Carrier-first local geometry exploration, not full board acceptance or hardware qualification.",
+  "correctness_fix": {
+    "defect": "append_contract_group_faces invoked check_fanout on local instances without pad_nets. The check therefore had zero multi-pin subjects and could not reject starved candidates.",
+    "repair": "Populate every physical pad, including disconnected pads, with authored net names where available. This matches final-emission pin-count semantics. Prepare per-reference maps once for all candidate models.",
+    "negative_control": "Temporarily omitting production pin-map population made the new synthetic disconnected-pad test fail: fanout-starved disconnected-pad candidates were offered. Restored correction passes.",
+    "negative_control_log": "native/build/group-turn-negative-control.log"
+  },
+  "experiment": {
+    "flag": "schgen_compact_stage_profile --contract-group-rotations on --contract-group-face-sheet usb_jtag",
+    "default": "off; not exposed as a production CLI policy",
+    "candidate_policy": "Reflect eligible contract-connected groups onto bottom, then optionally rotate each group independently through quarter turns. Stationary top parts remain fixed. Four alignments per orientation; preserve existing offer prefix, deduplicate, and apply local geometry, contract and non-vacuous fanout checks.",
+    "new_usb_jtag_candidates": 12,
+    "verification": "Independent named-pad reflection/rotation oracle, stationary parts, authored pin-net identity, all three nonzero turns, reproducible geometry/order/receipts, instrumented scalar-operation counts, pinned owners, protruding copper and disconnected-pad fanout rejection."
+  },
+  "tests": {
+    "passed": ["native_pcb_checks_contracts", "native_pcb_orientation_contracts", "native_placement_precision_source_contracts", "native_mirror_contracts"],
+    "failed": 0,
+    "seconds": 35.58,
+    "log": "native/build/group-turn-tests.log",
+    "earlier_attempt": "One concurrent source-audit run correctly rejected source modification during scanning. Final stable-source run passed. Initial test helper used dummy three-pin assignments; replaced them with actual footprint pads and authored connectivity before acceptance."
+  },
+  "screens": [
+    {"board":"carrier", "rotations":false, "outline_mm":[166,159], "top":416, "bottom":153, "pcb_sha256":"b9389efa52adf30b1d94cad1ede3a4387bacd53802f7babb5da07dd6306cff76", "reference_unchanged":true, "log":"native/build/carrier-group-turn-final-off-166x159.log"},
+    {"board":"carrier", "rotations":true, "outline_mm":[166,159], "top":416, "bottom":153, "pcb_sha256":"2563f4bf39121bc60a9bf0662e06bd8edcddca5ee11e795b99b63e7a4c7301ca", "promoted":false, "log":"native/build/carrier-group-turn-final-on-166x159.log"},
+    {"board":"devkit_mini", "outline_mm":[98,98], "top":106, "bottom":57, "pcb_sha256":"cfa0305491d9c4a771adb130b04c4aec6cc2894542391a5c7c9dca3a68bca3cf", "reference_unchanged":true, "log":"native/build/devkit-group-turn-final.log"}
+  ],
+  "screen_diagnostics": "All three constructed models pass placement-contract/flow diagnostics with zero hard RED. No new full qualification or renders.",
+  "smaller_outline_results": {
+    "outlines_mm": [[165,159],[166,158],[167,157],[168,156]],
+    "result": "All reject at USB-JTAG interior seating. Two outer attempts each; captured failure receipts include executed orientation retry. No failed candidate accepted, fallback ceiling raised or constraint waived.",
+    "logs": ["native/build/carrier-group-turn-final-on-165x159.log", "native/build/carrier-group-turn-final-on-166x158.log", "native/build/carrier-group-turn-final-on-167x157.log", "native/build/carrier-group-turn-final-on-168x156.log"]
+  },
+  "limits_and_next_step": "No smaller board or speedup demonstrated. Timing samples overlapped targeted test work and are not a benchmark. Keep rotations opt-in and the qualified carrier incumbent. Additional rigid group orientations alone do not resolve the seating bottleneck; investigate global allocation of free space and sheet interactions rather than repeating these screens unchanged. Overall goal remains incomplete."
+}
