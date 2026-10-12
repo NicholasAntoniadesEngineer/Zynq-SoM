@@ -48,6 +48,48 @@ int main(int argc, char** argv) {
             catch(const std::exception& error){missing_rejected=std::string(error.what()).find(missing.filename().string())!=std::string::npos;}
             if(!missing_rejected)throw std::runtime_error("missing explicit schematic silently fell back or lost its diagnostic");
             const auto stage = prepare_board_pcb(paths,{},{},schematic);
+            const auto bands=load_sheet_index(paths);
+            const auto reject_connectivity=[&](const KicadNetlist& nets) {
+                bool caught=false;
+                try { validate_board_input_connectivity(stage.circuits,bands,nets); }
+                catch(const ProjectError& e) { caught=std::string(e.what()).find("PCB input connectivity:")==0; }
+                if(!caught)throw std::runtime_error("corrupted board connectivity accepted");
+            };
+            reject_connectivity({});
+            auto corrupt=stage.inputs.netlist;
+            const auto connected=std::find_if(corrupt.begin(),corrupt.end(),[](const auto& net){
+                return !net.first.empty()&&net.first.rfind("unconnected-",0)!=0&&
+                    std::any_of(net.second.begin(),net.second.end(),[](const auto& p){return p.ref.rfind("#",0)!=0;});
+            });
+            if(connected==corrupt.end())throw std::runtime_error("no live connected net for mutation");
+            const auto net_index=static_cast<std::size_t>(connected-corrupt.begin());
+            const auto pin=std::find_if(connected->second.begin(),connected->second.end(),[](const auto& p){return p.ref.rfind("#",0)!=0;});
+            const auto removed=*pin;
+            connected->second.erase(pin);reject_connectivity(corrupt);
+            corrupt=stage.inputs.netlist;corrupt.push_back({"unexpected-duplicate-membership",{removed}});reject_connectivity(corrupt);
+            corrupt=stage.inputs.netlist;corrupt.push_back(corrupt.at(net_index));reject_connectivity(corrupt);
+            corrupt=stage.inputs.netlist;corrupt.at(net_index).second.push_back({"UNAUTHORED999","1"});reject_connectivity(corrupt);
+            corrupt=stage.inputs.netlist;
+            auto& split=corrupt.at(net_index).second;
+            split.erase(std::remove_if(split.begin(),split.end(),[&](const auto& p){return p.ref==removed.ref&&p.pin==removed.pin;}),split.end());
+            corrupt.push_back({"renamed-or-split-net",{removed}});reject_connectivity(corrupt);
+            corrupt=stage.inputs.netlist;
+            const auto other=std::find_if(corrupt.begin(),corrupt.end(),[&](const auto& n){return n.first!=corrupt.at(net_index).first&&n.first.rfind("unconnected-",0)!=0&&!n.second.empty();});
+            if(other==corrupt.end())throw std::runtime_error("no second net for short mutation");
+            corrupt.at(net_index).second.insert(corrupt.at(net_index).second.end(),other->second.begin(),other->second.end());
+            corrupt.erase(other);reject_connectivity(corrupt);
+            corrupt=stage.inputs.netlist;std::reverse(corrupt.begin(),corrupt.end());
+            for(auto& net:corrupt)std::reverse(net.second.begin(),net.second.end());
+            validate_board_input_connectivity(stage.circuits,bands,corrupt);
+            std::set<std::string> public_names;
+            for(const auto& s:stage.circuits)for(const auto& n:s.circuit.nets)
+                if(n.net_class=="power"||n.net_class=="ground"||n.net_class=="port")public_names.insert(n.name);
+            corrupt=stage.inputs.netlist;
+            const auto internal=std::find_if(corrupt.begin(),corrupt.end(),[&](const auto& n){
+                return !n.first.empty()&&n.first.rfind("unconnected-",0)!=0&&!public_names.count(normalize_netlist_name(n.first));});
+            if(internal==corrupt.end())throw std::runtime_error("missing internal-net rename fixture");
+            internal->first="renamed-private-net";
+            validate_board_input_connectivity(stage.circuits,bands,corrupt);
             const auto repeated = prepare_board_pcb(paths,{},{},schematic);
             if(stage.placement.model.board_w!=repeated.placement.model.board_w ||
                stage.placement.model.board_h!=repeated.placement.model.board_h ||

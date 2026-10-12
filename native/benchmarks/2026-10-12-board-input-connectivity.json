@@ -1,0 +1,23 @@
+{
+  "base_commit":"d2a1ec20",
+  "scope":"Close the standalone PCB and profiling input boundary exposed by the incomplete-schematic thermal regression",
+  "implementation":"Compare every authored connected pin, renamed using the persistent sheet bands, to the extracted netlist. Require a bijection between authored net groups and extracted net groups. Public rails/ports retain canonical identity; private signal names and ordering may change. Reject missing/extra connected pins, splits, shorts, duplicate pin membership, duplicate extracted names and duplicate sheet/index bands. KiCad power symbols and explicitly unconnected nets are not treated as authored connected components.",
+  "entrypoints":["prepare_board_pcb (standalone PCB stage)","full board pipeline PCB input loading","compact_stage_profile prepared/cold input loading"],
+  "negative_replay":{
+    "input":"/private/tmp/carrier-direct-enable-qual.SZJU3t/Zynq_Carrier.kicad_sch",
+    "before":"Accepted for PCB construction despite missing power_som; produced seven thermal-via fallback events",
+    "after":"Rejected before placement: PCB input connectivity: missing connected pin C22014.1",
+    "log":"native/build/carrier-incomplete-input-rejected.log"
+  },
+  "smaller_outline_screen":{
+    "hardware":"Current direct-VIN-enable carrier; 566 instances",
+    "input":"/private/tmp/carrier-direct-enable-full-fixed-oct12/Zynq_Carrier.kicad_sch",
+    "policy":"Same policy as 2026-10-12-direct-enable-adoption.json; explicit outline only changed",
+    "165x159":"REJECTED: legalizer separation between USB-JTAG and HDMI termination conflicts with termination-to-SoM near_max. No larger search budget attempted.",
+    "166x158":"REJECTED: USB-JTAG interior seating",
+    "acceptance":"No smaller candidate accepted; neither failure proves geometric impossibility. Keep the qualified 166x159 incumbent."
+  },
+  "tests":"PASS native_board_live_contracts, 30.94 seconds: both-board live construction/publication/independent geometry, plus empty netlist, missing pin, duplicate membership, duplicate net name, extra pin, split and short mutations. Positive reordered input and private-net rename checks.",
+  "carrier_control":"PASS construction-only replay; PCB SHA256 031da411516efe7785e532cf57c7f4847cbb181ad59979cb376e9bc8b896da44 matches the d2a1ec20 qualified carrier exactly. Guard adds no placement or copper changes.",
+  "limits":"Pure connectivity equality does not qualify electrical margins, timing or routing. Lower-level load_board_inputs remains a data loader; production/profiling construction entrypoints apply the guard. No source-audit or whole-board timing claim."
+}

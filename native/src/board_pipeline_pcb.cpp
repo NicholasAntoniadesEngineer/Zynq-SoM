@@ -109,7 +109,10 @@ void pcb_stages(Context& c){
     const auto report_root=c.out==c.paths.project_root?c.paths.repository_root:c.out;
     c.attempt("pcb",[&]{if(!c.schematic||!c.schematic->ok()||!c.link||!c.link->ok())throw ProjectError("current qualified schematic/valid link required; refusing incomplete or stale board inputs");
         BoardPcbStage stage;stage.circuits=c.circuits;
-        stage.inputs=c.measure("pcb_input_loading_and_netlist_validation",[&]{return load_board_inputs(c.paths,c.circuits,*c.link,extract_netlist(c.schematic->root_path,c.options.extraction),c.options.pcb);});
+        stage.inputs=c.measure("pcb_input_loading_and_netlist_validation",[&]{
+            const auto nets=extract_netlist(c.schematic->root_path,c.options.extraction);
+            validate_board_input_connectivity(c.circuits,c.index,nets);
+            return load_board_inputs(c.paths,c.circuits,*c.link,nets,c.options.pcb);});
         stage.inputs.floorplan.sheet_index=c.index;
         if(c.options.native_policy){
             const auto policy=configure_native_board_policy(c.options,c.paths,stage.inputs.floorplan);

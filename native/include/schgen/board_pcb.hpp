@@ -4,6 +4,10 @@
 #include "schgen/pcb_emit.hpp"
 
 namespace schgen {
+// Validate complete connected-pin partitions against live authored circuits.
+// Internal net names may change; public rail/port identities may not.
+void validate_board_input_connectivity(const std::vector<ProjectCircuit>&,
+    const SheetIndex&, const KicadNetlist&);
 struct BoardPcbStage {
     std::vector<ProjectCircuit> circuits;
     PcbPlacementInput inputs;

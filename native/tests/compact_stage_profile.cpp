@@ -257,6 +257,7 @@ LoadResult load(const ProjectPaths& paths, const NetlistExtractOptions& extracti
     const auto source=schematic.empty()?paths.project_root / "Zynq_Carrier.kicad_sch":schematic;
     std::cout<<"input schematic="<<source.string()<<" freshness=caller_responsibility\n";
     const auto nets = extract_netlist(source, extraction);
+    validate_board_input_connectivity(circuits,load_sheet_index(paths),nets);
     tick("netlist_extract");
     BoardInputOptions options;
     // Compact mode has real input requirements, not just a solver toggle.
