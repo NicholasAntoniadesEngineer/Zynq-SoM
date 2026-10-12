@@ -75,14 +75,15 @@ Enable equations are device-specific: the existing TPS54302 model must not
 qualify LM61460 or another buck family. Unsupported enable networks are retained
 as explicit `unverified` reasons in the result/JSON and test plan, with a nonzero
 CLI exit and failed mandatory board gate, while other completed checks remain
-available. The present `power_som` LM61460 enable network is **UNVERIFIED** pending
-qualified device-specific analysis or a separately reviewed circuit change.
+available. The former `power_som` clamp network remains **UNVERIFIED** in the
+historical fixtures; current authoring uses the direct-enable arrangement below.
 A separately supported LM61460AANRJRR self-start topology requires uniquely
 netted pins 7 (EN/SYNC), 8 (VIN1) and 12 (VIN2) on the same power net. Its check
 is explicitly a connectivity result, not a voltage-envelope, startup-timing or
 transient claim. Missing regulator-detection evidence also makes the aggregate
-unverified instead of disappearing behind unrelated checks. The live boards
-have not yet adopted this direct connection.
+unverified instead of disappearing behind unrelated checks. Both live boards
+use this direct connection without the old R12/D5/C20 clamp/filter. Input
+envelope, startup timing and transient qualification remain separate obligations.
 Analytic checks retain full calculated precision for acceptance, JSON and
 simulator comparisons, including dividers, RC timing, current setting,
 regulator feedback, enable clamps and boot straps. Decimal display rounding

@@ -20,12 +20,17 @@ int main(int argc, char** argv) {
         const auto& policy = default_component_basis_policy();
         const auto fixture = parse_json_file((root/"native/tests/data/component_basis/python_basis.json").string());
         require(live.size() == 66 && policy.sheets.size() == 66,"complete live coverage");
-        require(policy.declarations.size() == 216 && policy.uses.size() == 685,"expectation coverage");
-        std::size_t reviewed_basis_corrections = 0;
+        require(policy.declarations.size() == 212 && policy.uses.size() == 681,"expectation coverage");
+        const std::vector<std::string> retired={"carrier.power_som.en_series_r","carrier.power_som.en_bypass","devkit_mini.power_som.en_series_r","devkit_mini.power_som.en_bypass"};
+        std::size_t reviewed_basis_corrections = 0,retired_declarations=0,retired_uses=0;
         for(const auto& row : at(fixture,"declarations").array_value) {
             const auto& a = row.array_value;
             const auto it = std::find_if(policy.declarations.begin(),policy.declarations.end(),
                 [&](const auto& d) { return d.name == a[0].string_value; });
+            if(std::find(retired.begin(),retired.end(),a[0].string_value)!=retired.end()){
+                require(it==policy.declarations.end(),"removed enable component kept a stale declaration");
+                ++retired_declarations;continue;
+            }
             require(it != policy.declarations.end(),"missing independently captured declaration");
             const auto value = a[1].kind == JsonKind::Number ? std::to_string(static_cast<int>(a[1].number_value)) : a[1].string_value;
             if(it->name == "carrier.board_aux.iso_en_pullup") {
@@ -43,11 +48,17 @@ int main(int argc, char** argv) {
                 it->numeric == (a[1].kind == JsonKind::Number),"declaration differs from original Python");
         }
         require(reviewed_basis_corrections == 1, "exactly one reviewed basis correction");
+        require(retired_declarations==4,"exactly four retired enable declarations");
         auto result = audit_component_basis(live);
         std::size_t reviewed_migrations = 0;
         for(const auto& row : at(fixture,"components").array_value) {
             const auto& a=row.array_value;
             if(a[5].string_value.empty()) continue; // numeric catalog identity, not a magnitude
+            if(std::find(retired.begin(),retired.end(),a[5].string_value)!=retired.end()){
+                require(std::none_of(policy.uses.begin(),policy.uses.end(),[&](const auto& u){return u.scope==a[0].string_value&&u.sheet==a[1].string_value&&u.target==a[2].string_value;}),
+                        "removed enable part kept a stale value binding");
+                ++retired_uses;continue;
+            }
             // Preserve the historical trace: only this independently reviewed
             // hardware correction may differ from its original binding.
             const bool c1 = a[0].string_value == "carrier" &&
@@ -73,6 +84,7 @@ int main(int argc, char** argv) {
             require(match!=policy.uses.end(),"obligation differs from independent Python trace");
         }
         require(reviewed_migrations == 2, "exactly two reviewed capacitor migrations");
+        require(retired_uses==4,"exactly four retired enable uses");
         const auto filter=std::find_if(policy.declarations.begin(),policy.declarations.end(),
             [](const auto& d){return d.name=="carrier.board_aux.reference_filter";});
         require(filter!=policy.declarations.end()&&filter->value=="100p"&&filter->unit=="F"&&
@@ -94,7 +106,7 @@ int main(int argc, char** argv) {
             }),"port obligation differs from independent Python trace");
         }
         require(result.ok(), component_basis_report(result));
-        require(result.n_files == 66 && result.n_registered == 216 && result.n_sites == 685,"audit counts");
+        require(result.n_files == 66 && result.n_registered == 212 && result.n_sites == 681,"audit counts");
         {
             auto old_c1 = live;
             auto& aux = std::find_if(old_c1.begin(),old_c1.end(),[](const auto& x) {

@@ -20,7 +20,7 @@ carrier nets directly:
 | `+5V_SOM`  | output | buck OUTPUT, **always-on**, the SoM VIN supply (`som_conn_gen` binds `J1.VIN` here) + BIAS tie |
 | `GND`      | return | return + the LM61460 heat path (PGND1/PGND2/AGND on the GND pour) |
 
-Every other net (`EN_5V_SOM`, `SW_5V_SOM`, `BOOT_5V_SOM`, `FB_5V_SOM`,
+Every other net (`SW_5V_SOM`, `BOOT_5V_SOM`, `FB_5V_SOM`,
 `PG_5V_SOM`, `RT_5V_SOM`, `BIAS_5V_SOM`, `CFF_5V_SOM`, `U4_VCC`) is internal to
 this stage. Cross-sheet rails merge by name with the `power` subsystem.
 
@@ -44,13 +44,15 @@ this stage. Cross-sheet rails merge by name with the `power` subsystem.
   contract the buck runs near 100% duty and passes ~4.7-4.8 V (inside the
   4.2-5 V window); after the 20 V contract it regulates ~4.65 V.
 
-- **PWR-1 — EN network: UNVERIFIED.** The retained R12/D5/C20 circuit was
-  inherited from a TPS54302 design. Its previous TPS54302-based PASS was not
-  applicable to LM61460. [TI SNVSBD5D](https://www.ti.com/lit/ds/symlink/lm61460.pdf)
-  specifies different enable characteristics; a typical-only input-current
-  value is not a guaranteed bound. The native gate now exposes missing
-  device-specific qualification. No components or acceptance limits have been
-  changed to conceal it.
+- **PWR-1 — direct VIN enable.** U4.7 now shares `+VIN_SYS` with VIN1/VIN2
+  (pins 8/12), the self-start arrangement described in
+  [TI SNVSBD5D section 8.3.1](https://www.ti.com/lit/ds/symlink/lm61460.pdf).
+  The inherited TPS54302-era R12/D5/C20 network is removed, including its
+  external RC delay/filter. No external enable-delay requirement was identified;
+  input decoupling and internal UVLO/soft-start are retained. The native check
+  proves unique net ownership only, not input-envelope, startup-time or transient
+  performance. Those require separate qualification; this is not fabrication
+  readiness. No device voltage limit was relaxed.
 
 - **FB divider.** Vref = 1.0 V, so `Vout = 1.0 * (1 + Rtop/Rbot)`. `R14/R15` =
   47.5k/13k -> **4.654 V nom** (WC-corner [4.582, 4.728] V, inside the SoM
@@ -79,9 +81,6 @@ this stage. Cross-sheet rails merge by name with the `power` subsystem.
 |-----|-------|----------|------|
 | U4  | LM61460AANRJRR | LM61460AANRJRR | C2864505 |
 | L3  | 10uH | Device:L (SWPA8040S100MT) | C37429 |
-| R12 | 10k | Device:R | C25804 |
-| D5  | MMSZ5231B | Device:D_Zener | C85181 |
-| C20 | 100n | Device:C | C14663 |
 | C14 | 100n | Device:C | C14663 |
 | C25 | 100n | Device:C | C14663 |
 | C15 | 10u | Device:C | C13585 |
@@ -103,8 +102,9 @@ this stage. Cross-sheet rails merge by name with the `power` subsystem.
 ## Build & test
 
 The native commands distinguish circuit completeness from electrical
-qualification. The SPICE command currently exits nonzero because the LM61460
-enable network is unverified; passing structural checks do not override it.
+qualification. The SPICE report labels the direct enable check as netlist
+topology, not an analog voltage calculation. Structural or topology PASS alone
+does not qualify operating margins or transients.
 
 ```bash
 native/bin/schgen circuit-check --project carrier power_som

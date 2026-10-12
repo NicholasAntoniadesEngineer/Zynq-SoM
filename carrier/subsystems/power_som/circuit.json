@@ -73,39 +73,6 @@
       ]
     },
     {
-      "ref": "R12",
-      "lib_id": "Device:R",
-      "value": "10k",
-      "footprint": "Resistor_SMD:R_0603_1608Metric",
-      "fields": {
-        "LCSC": "C25804"
-      },
-      "pin_names": {},
-      "pin_numbers": []
-    },
-    {
-      "ref": "D5",
-      "lib_id": "Device:D_Zener",
-      "value": "MMSZ5231B",
-      "footprint": "Diode_SMD:D_SOD-123",
-      "fields": {
-        "LCSC": "C85181"
-      },
-      "pin_names": {},
-      "pin_numbers": []
-    },
-    {
-      "ref": "C20",
-      "lib_id": "Device:C",
-      "value": "100n",
-      "footprint": "Capacitor_SMD:C_0603_1608Metric",
-      "fields": {
-        "LCSC": "C14663"
-      },
-      "pin_names": {},
-      "pin_numbers": []
-    },
-    {
       "ref": "C14",
       "lib_id": "Device:C",
       "value": "100n",
@@ -320,9 +287,9 @@
       "name": "+VIN_SYS",
       "net_class": "power",
       "pins": [
+        "U4.7",
         "U4.8",
         "U4.12",
-        "R12.1",
         "C14.1",
         "C25.1",
         "C15.1",
@@ -336,8 +303,6 @@
         "U4.9",
         "U4.11",
         "U4.3",
-        "D5.2",
-        "C20.2",
         "C14.2",
         "C25.2",
         "C15.2",
@@ -349,16 +314,6 @@
         "C19.2",
         "R15.2",
         "R16.2"
-      ]
-    },
-    {
-      "name": "EN_5V_SOM",
-      "net_class": "signal",
-      "pins": [
-        "U4.7",
-        "R12.2",
-        "D5.1",
-        "C20.1"
       ]
     },
     {

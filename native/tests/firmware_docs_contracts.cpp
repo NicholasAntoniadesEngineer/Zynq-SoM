@@ -492,9 +492,12 @@ int main(int argc,char** argv) {
             for(const auto& [net,locations]:coverage.have){std::string joined;for(const auto& loc:locations){if(!joined.empty())joined+=", ";joined+=loc;}native_probes.emplace_back(net,joined);}
             const auto raw_spice=extract_spice_checks(in.sheets);
             const auto raw_plan=render_test_plan(in,raw_spice,native_probes);
-            require(raw_spice.unverified.size()==1&&!raw_spice.ok()&&raw_plan.find("UNVERIFIED electrical models")!=std::string::npos&&
-                    raw_plan.find(raw_spice.unverified.front())!=std::string::npos,
-                    "test plan concealed missing device-specific enable qualification");
+            require(raw_spice.unverified.empty()&&raw_spice.ok()&&raw_plan.find("Netlist topology (not a bench measurement): [PASS] power_som: LM61460 direct VIN enable (U4)")!=std::string::npos,
+                    "test plan lost the reviewed direct-enable topology");
+            auto partial=raw_spice;partial.unverified.push_back("unqualified device sentinel");
+            const auto partial_plan=render_test_plan(in,partial,native_probes);
+            require(!partial.ok()&&partial_plan.find("UNVERIFIED electrical models")!=std::string::npos&&partial_plan.find(partial.unverified.front())!=std::string::npos,
+                    "test plan concealed missing device-specific qualification");
             auto topology_result=raw_spice;
             topology_result.checks.push_back({"topology sentinel", "power_som", "enable_topology", "connectivity only", 1,"match",1.0,1.0,"netlist topology",{}});
             const auto topology_plan=render_test_plan(in,topology_result,native_probes);
@@ -505,6 +508,10 @@ int main(int argc,char** argv) {
             require(render_test_plan(in,topology_result,native_probes).find("[FAIL] power_som: topology sentinel")!=std::string::npos,
                     "test plan hid a failed topology check");
             auto historical_spice=raw_spice;std::size_t joined_checks=0;
+            const auto topology_count=historical_spice.checks.size();
+            historical_spice.checks.erase(std::remove_if(historical_spice.checks.begin(),historical_spice.checks.end(),[](const auto& c){return c.kind=="enable_topology"&&c.sheet=="power_som";}),historical_spice.checks.end());
+            require(topology_count-historical_spice.checks.size()==1,"exactly one current topology check replaces the old enable calculations");
+            historical_spice.engine=sp.engine; // Historical format oracle only.
             for(auto& check:historical_spice.checks){
                 const auto old=std::find_if(sp.checks.begin(),sp.checks.end(),[&](const auto& c){return c.name==check.name&&c.sheet==check.sheet;});
                 const auto scale=historical_spice_scale(check);
@@ -536,7 +543,8 @@ int main(int argc,char** argv) {
                 const auto loaded=load_firmware_docs_input(paths);
                 check_stm32(loaded.stm32,field(snapshot,"stm32"));
                 // Source comments intentionally migrate to independently frozen
-                // native provenance; every hardware byte still matches the old IR.
+                // native provenance. The firmware interface is unchanged by
+                // the separately tested power-supply enable topology change.
                 std::string actual;for(const auto& source:loaded.firmware_sources)actual+=source+'\n';
                 require(actual==reviewed,"live native provenance differs from reviewed inventory");
                 require(render_firmware_contract(loaded)==render_firmware_contract(in),"live hardware loader parity");

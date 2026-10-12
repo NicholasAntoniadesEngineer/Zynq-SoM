@@ -224,11 +224,7 @@ void live_electrical(const fs::path& root){
     c.som=load_som_interface(paths.som_interface_file);c.link=link_sheets(c.sheets,parse_json_file(paths.som_interface_file.string()),parse_json_file((paths.project_root/"som_mapping.json").string()));
     electrical_stages(c);
     require(c.result.gates.size()==10,"composed electrical family executes every report");
-    for(const auto& g:c.result.gates)if(g.mandatory){
-        if(g.name=="spice")require(g.status==BoardGateStatus::failed&&g.report.find("SPICE GATE: UNVERIFIED")!=std::string::npos&&
-                g.report.find("power_som:U4 (LM61460AANRJRR)")!=std::string::npos,"live devkit wrong-device model was not rejected");
-        else require(g.status==BoardGateStatus::passed,"live devkit electrical gate "+g.name+": "+g.report);
-    }
+    for(const auto& g:c.result.gates)if(g.mandatory)require(g.status==BoardGateStatus::passed,"live devkit electrical gate "+g.name+": "+g.report);
     require(c.power&&c.testpoints&&c.spice,"computed results retained for dependent docs; no recomputation required");
     Context no_checks(paths,o);electrical_stages(no_checks);
     const auto uncovered=std::find_if(no_checks.result.gates.begin(),no_checks.result.gates.end(),[](const auto& g){return g.name=="spice";});
@@ -252,6 +248,19 @@ void authored_inputs(const fs::path& root){
     for(const auto* project:{"carrier","devkit_mini"}){
         const auto paths=resolve_project_paths(root,fs::path(project));
         auto authored=author_board_pipeline_inputs(paths);
+        const auto power_som=std::find_if(authored.circuits.begin(),authored.circuits.end(),[](const auto& s){return s.name=="power_som";});
+        require(power_som!=authored.circuits.end(),"missing always-on buck");
+        for(const auto* ref:{"R12","D5","C20"}){
+            require(std::none_of(power_som->circuit.parts.begin(),power_som->circuit.parts.end(),[&](const auto& p){return p.ref==ref;}),"obsolete enable component reintroduced");
+            for(const auto& net:power_som->circuit.nets)require(std::none_of(net.pins.begin(),net.pins.end(),[&](const auto& p){return p.ref==ref;}),"obsolete enable component has dangling pins");
+        }
+        for(const auto* number:{"7","8","12"}){
+            std::size_t count=0;
+            for(const auto& net:power_som->circuit.nets)for(const auto& pin:net.pins)if(pin.ref=="U4"&&pin.pin==number){
+                require(net.name=="+VIN_SYS"&&net.net_class=="power","always-on EN/VIN not on the post-shunt input rail");++count;
+            }
+            require(count==1,"always-on pin ownership is not unique");
+        }
         const auto reference=load_project_circuits(paths);
         require(authored.circuits.size()==reference.size(),"live native authoring sheet census");
         for(const auto& expected:reference){
