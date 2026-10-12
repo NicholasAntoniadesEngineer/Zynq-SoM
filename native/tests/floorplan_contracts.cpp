@@ -733,6 +733,40 @@ void fixed_face_recovery(){
     throws([&]{build_floorplan(in);},"fixed reservation observer stopped");
     require(interrupted==1,"unexpected errors propagate without a second policy retry");
     in.experiment.reset();
+    auto automatic=in;automatic.spec->outline.reset();
+    // A zero edge-gap contract requires overlap/touching in projection. The
+    // conservative two-face module reservation cannot satisfy it at any size;
+    // the physical bottom variant can, without relaxing actual clearance.
+    FloorplanTerm near;near.kind="near_max";near.sheet="logic";near.subject="logic";
+    near.target_raw="@som";near.bound=0;near.enforced=true;
+    automatic.compose.index.hard.push_back(near);automatic.compose.wired_participants.insert("logic");
+    FloorplanLocalMetrics metric;metric.zone_wh={12,8};
+    metric.offsets={{"R1",6,4}};metric.pad_union={{"R1",0,0,12,8}};
+    automatic.compose.metrics["logic"]=metric;automatic.compose.shape_metrics[{"logic",1}]=metric;
+    auto seeded=std::make_shared<FloorplanExperiment>();seeded->initial_outline={{30,30}};
+    std::size_t conservative_calls=0,free_calls=0;
+    seeded->attempt_completed=[&](const auto& r){++(r.punch_free?free_calls:conservative_calls);};
+    automatic.experiment=seeded;
+    const auto auto_recovered=build_floorplan(automatic);
+    require(auto_recovered.punch_free,"automatic sizing must try face-aware policy after conservative exhaustion");
+    current_plan_requirements(automatic,auto_recovered);
+    const auto& placed=auto_recovered.interior_blocks.front();
+    require(placed.side=="bottom"&&placed.x<=auto_recovered.som_x+20&&placed.x+12>=auto_recovered.som_x&&
+            placed.y<=auto_recovered.som_y+20&&placed.y+8>=auto_recovered.som_y,
+            "recovered physical bottom placement independently satisfies zero projected gap");
+    require(conservative_calls>0&&free_calls>0&&auto_recovered.accounting.quantization_engagements.at("run_overflow_tol")==conservative_calls+free_calls,
+            "automatic failure and recovery receipts match independently observed pack invocations");
+    std::vector<JsonNode> pass_counts;
+    for(const auto& d:auto_recovered.accounting.decisions)if(d.name=="outline_candidates")pass_counts.push_back(jobject(d.inputs));
+    require(pass_counts.size()==2&&num(pass_counts[0],"accepted")==0&&num(pass_counts[0],"reject_pack")>0&&num(pass_counts[1],"accepted")>0,
+            "exhausted automatic pass retains its candidate tally alongside successful pass");
+    same(floorplan_plan_json(auto_recovered),floorplan_plan_json(build_floorplan(automatic)),"deterministic automatic face recovery");
+    auto top_only=automatic;top_only.geometry.shapes.erase("logic");
+    throws([&]{build_floorplan(top_only);},"under either reservation policy");
+    int auto_interrupted=0;
+    seeded->stage_rejected=[&](const auto&){++auto_interrupted;throw std::runtime_error("automatic reservation observer stopped");};
+    throws([&]{build_floorplan(automatic);},"automatic reservation observer stopped");
+    require(auto_interrupted==1,"unexpected automatic-search errors propagate without a second policy retry");
     in.spec->interior["logic"].side="top";
     in.geometry.shapes.erase("logic");
     throws([&]{build_floorplan(in);},"under either reservation policy");

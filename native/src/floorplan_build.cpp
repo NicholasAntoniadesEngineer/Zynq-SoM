@@ -338,6 +338,12 @@ FloorplanPlan Engine::run() {
         plan.punch_free=free;
         ledger_pass(free);
         std::map<std::string,int> tally{{"generated",0},{"reject_aspect",0},{"reject_min_area",0},{"reject_not_smaller",0},{"reject_pack",0},{"reject_law5_budget",0},{"accepted",0}};
+        const auto record_tally=[&]{
+            Inputs ti;
+            for(const auto* key:{"generated","reject_aspect","reject_min_area","reject_not_smaller","reject_pack","reject_law5_budget","accepted"})
+                ti.emplace_back(key,jvalue(tally.at(key)));
+            calc("outline_candidates",jvalue(tally.at("generated")),std::move(ti),"sizing.pass");
+        };
         std::optional<Winner> best; bool fit_seen=false;
         std::optional<FloorplanPlan> best_plan;
         std::map<std::string,SideOffer> best_offers;
@@ -377,7 +383,10 @@ FloorplanPlan Engine::run() {
             if (w*h<min_area) { ++tally["reject_min_area"]; continue; }
             if (auto candidate=evaluate(w,h)) { if (!best || *candidate<*best) best=candidate; break; }
         }
-        if (!best) throw FloorplanPackingInfeasible(std::string("floorplan: could not fit all REAL packed blocks under the LAW-5 airwire budget on any searched outline (blocks ")+(fit_seen ? "did":"never")+" fit)");
+        if (!best) {
+            record_tally();
+            throw FloorplanPackingInfeasible(std::string("floorplan: no accepted candidate on searched outlines (blocks ")+(fit_seen ? "did":"never")+" fit; airwire screening also applies)");
+        }
         const double w0=std::get<1>(*best),h0=std::get<2>(*best);
         std::vector<double> ws,hs;
         for (int k=0;k<=refine_span;++k) {
@@ -405,30 +414,34 @@ FloorplanPlan Engine::run() {
         if (!std::isfinite(std::get<3>(*best)) || std::get<3>(*best)<0 || std::get<3>(*best)>std::get<4>(*best))
             throw FloorplanError("floorplan: final refined layout exceeds the LAW-5 airwire budget on "+
                 outline_text(plan.board_w,plan.board_h)+" — refusing to emit a stale screening estimate");
-        Inputs ti;
-        for (const auto* key:{"generated","reject_aspect","reject_min_area","reject_not_smaller","reject_pack","reject_law5_budget","accepted"}) ti.emplace_back(key,jvalue(tally.at(key)));
-        calc("outline_candidates",jvalue(tally.at("generated")),std::move(ti),"sizing.pass");
+        record_tally();
         calc("law5_airwire_budget",jvalue(precision.value(std::get<4>(*best))),{{"cross_k",jvalue(in.cross_budget_k)},
             {"board_w",jvalue(plan.board_w)},{"board_h",jvalue(plan.board_h)},{"n_subsystems",jvalue(n_sub)}},"sizing.pass");
         calc("pass_winner",jvalue(outline_text(plan.board_w,plan.board_h)),winner_inputs(*best,plan.accounting.quantization_engagements),"sizing.pass");
         return *best;
     };
-    reset_shapes(); const Winner conservative_best=search(false);
+    const auto entry=plan;const auto entry_offers=side_offers;
+    reset_shapes();std::optional<Winner> conservative_best;
+    try { conservative_best=search(false); }
+    catch (const FloorplanPackingInfeasible&) { restore(entry);side_offers=entry_offers; }
+    catch (const FloorplanReservationExcluded&) { restore(entry);side_offers=entry_offers; }
     const auto conservative=plan; const auto offers=side_offers;
     reset_shapes();
     std::optional<Winner> free_best;
     try { free_best=search(true); }
     catch (const FloorplanPackingInfeasible&) {}
     catch (const FloorplanReservationExcluded&) {}
-    Winner best=conservative_best; std::string choice="conservative";
-    if (free_best && (std::get<0>(*free_best)<std::get<0>(best)-1e-6 ||
+    if(!conservative_best&&!free_best)
+        throw FloorplanPackingInfeasible("floorplan: automatic sizing found no accepted layout under either reservation policy; bounded search exhaustion is not proof of geometric infeasibility");
+    Winner best=conservative_best?*conservative_best:*free_best; std::string choice="conservative";
+    if (free_best && (!conservative_best || std::get<0>(*free_best)<std::get<0>(best)-1e-6 ||
         (std::get<0>(*free_best)<=std::get<0>(best)+1e-6 && std::get<3>(*free_best)<std::get<3>(best)-1e-6))) {
         best=*free_best; choice="free";
     } else {
         restore(conservative); side_offers=offers; fallback("punch_free_plan_rejected");
     }
-    calc("plan_choice",jvalue(choice),{{"conservative_area",jvalue(std::get<0>(conservative_best))},
-        {"conservative_est",jvalue(precision.value(std::get<3>(conservative_best)))},
+    calc("plan_choice",jvalue(choice),{{"conservative_area",conservative_best?jvalue(std::get<0>(*conservative_best)):jvalue("unavailable")},
+        {"conservative_est",conservative_best?jvalue(precision.value(std::get<3>(*conservative_best))):jvalue("unavailable")},
         {"free_area",jvalue(free_best ? std::get<0>(*free_best):0.0)},{"free_est",jvalue(free_best ? precision.value(std::get<3>(*free_best)):0.0)}});
     ledger_sides();
     auto wi=winner_inputs(best,plan.accounting.quantization_engagements); wi.emplace_back("plan",jvalue(choice));
