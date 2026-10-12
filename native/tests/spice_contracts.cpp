@@ -162,6 +162,53 @@ void divider_threshold_precision(const std::filesystem::path& dir){
                     "report rounded a failed voltage to the displayed limit");
     }
 }
+void direct_enable_topology(const std::filesystem::path& dir){
+    const auto board=fixture_sheets(dir/"001_carrier.json");
+    const auto found=std::find_if(board.begin(),board.end(),[](const auto& s){return s.name=="sheet_power_som";});
+    require(found!=board.end(),"missing always-on source fixture");
+    auto candidate=*found;
+    const auto removed=[](const std::string& ref){return ref=="R12"||ref=="D5"||ref=="C20";};
+    candidate.circuit.parts.erase(std::remove_if(candidate.circuit.parts.begin(),candidate.circuit.parts.end(),[&](const auto& p){return removed(p.ref);}),candidate.circuit.parts.end());
+    for(auto& net:candidate.circuit.nets){
+        net.pins.erase(std::remove_if(net.pins.begin(),net.pins.end(),[&](const auto& p){return removed(p.ref)||(p.ref=="U4"&&p.pin=="7");}),net.pins.end());
+        if(net.name=="+VIN_SYS")net.pins.push_back({"U4","7"});
+    }
+    candidate.circuit.nets.erase(std::remove_if(candidate.circuit.nets.begin(),candidate.circuit.nets.end(),[](const auto& net){return net.pins.empty();}),candidate.circuit.nets.end());
+    const auto valid=extract_spice_checks({candidate});
+    require(valid.ok()&&valid.unverified.empty(),"documented direct VIN enable topology was not recognized");
+    require(std::count_if(valid.checks.begin(),valid.checks.end(),[](const auto& c){return c.kind=="enable_topology"&&c.value==1&&c.unit=="match"&&c.engine=="netlist topology"&&c.detail.find("connectivity only")!=std::string::npos;})==1,"missing scoped topology evidence");
+    const auto unrelated=fixture_sheets(dir/"015_INFORMATIONAL_10k_10k.json");
+    for(int mutation=0;mutation<9;++mutation){
+        auto broken=candidate;
+        const std::string pin=mutation%3==0?"7":mutation%3==1?"8":"12";
+        if(mutation<6)for(auto& net:broken.circuit.nets)
+            net.pins.erase(std::remove_if(net.pins.begin(),net.pins.end(),[&](const auto& p){return p.ref=="U4"&&p.pin==pin;}),net.pins.end());
+        if(mutation>=3)for(auto& net:broken.circuit.nets)if(net.net_class=="ground")net.pins.push_back({"U4",pin});
+        for(bool reverse:{false,true}){
+            auto combined=unrelated;combined.push_back(broken);if(reverse)std::reverse(combined.begin(),combined.end());
+            const auto result=extract_spice_checks(combined);
+            require(!result.ok()&&!result.unverified.empty(),"positive checks hid missing/miswired/duplicate enable or VIN pin, mutation "+std::to_string(mutation));
+            require(std::none_of(result.checks.begin(),result.checks.end(),[](const auto& c){return c.kind=="enable_topology";}),"invalid connectivity retained topology PASS");
+        }
+    }
+    auto missing_resistor=*found;
+    missing_resistor.circuit.parts.erase(std::remove_if(missing_resistor.circuit.parts.begin(),missing_resistor.circuit.parts.end(),[](const auto& p){return p.ref=="R12";}),missing_resistor.circuit.parts.end());
+    auto combined=unrelated;combined.push_back(missing_resistor);
+    require(!extract_spice_checks(combined).ok(),"deleting the series resistor concealed the unsupported always-on enable network");
+    auto reordered=candidate;std::reverse(reordered.circuit.nets.begin(),reordered.circuit.nets.end());
+    require(extract_spice_checks({reordered}).ok(),"valid topology depends on net ordering");
+    for(int mutation=0;mutation<3;++mutation){
+        auto broken=candidate;
+        if(mutation==0)for(auto& part:broken.circuit.parts)if(part.ref=="U4")part.value="LM61460_UNREVIEWED_PACKAGE";
+        if(mutation==1)for(auto& net:broken.circuit.nets)if(net.name=="+VIN_SYS")net.net_class="signal";
+        if(mutation==2){
+            for(auto& net:broken.circuit.nets)net.pins.erase(std::remove_if(net.pins.begin(),net.pins.end(),[](const auto& p){return p.ref=="U4"&&p.pin=="7";}),net.pins.end());
+            broken.circuit.nets.push_back({"+VIN_SYS","power",{{"U4","7"}}});
+        }
+        auto witness=unrelated;witness.push_back(broken);const auto result=extract_spice_checks(witness);
+        require(!result.ok()&&!result.unverified.empty(),"unreviewed package, non-power source or same-name distinct net supplied topology proof");
+    }
+}
 SpiceResult historical_analytic_view(const SpiceResult& raw,const JsonNode& expected){
     auto view=raw;const auto& old=field(expected,"checks").array_value;
     require(old.size()==raw.checks.size(),"historical analytic check census changed");
@@ -267,7 +314,7 @@ int main(int argc,char** argv) {
     }
     try {
         require(argc==2,"usage: spice_contracts <fixture-directory>");const std::filesystem::path dir(argv[1]);
-        numeric_safety();empty_coverage();required_divider_coverage(dir);incomplete_model_coverage(dir);divider_threshold_precision(dir);remaining_threshold_precision(dir);
+        numeric_safety();empty_coverage();required_divider_coverage(dir);incomplete_model_coverage(dir);divider_threshold_precision(dir);remaining_threshold_precision(dir);direct_enable_topology(dir);
         const auto manifest=parse_json_file((dir/"manifest.json").string());std::size_t passed=0,live=0;
         const auto ngspice=ngspice_available();std::size_t corrected_empty=0,corrected_required=0,corrected_models=0,corrected_device=0;
         for(const auto& file:field(manifest,"cases").array_value) {

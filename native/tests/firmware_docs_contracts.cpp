@@ -495,6 +495,15 @@ int main(int argc,char** argv) {
             require(raw_spice.unverified.size()==1&&!raw_spice.ok()&&raw_plan.find("UNVERIFIED electrical models")!=std::string::npos&&
                     raw_plan.find(raw_spice.unverified.front())!=std::string::npos,
                     "test plan concealed missing device-specific enable qualification");
+            auto topology_result=raw_spice;
+            topology_result.checks.push_back({"topology sentinel", "power_som", "enable_topology", "connectivity only", 1,"match",1.0,1.0,"netlist topology",{}});
+            const auto topology_plan=render_test_plan(in,topology_result,native_probes);
+            require(topology_plan.find("Netlist topology (not a bench measurement): [PASS] power_som: topology sentinel")!=std::string::npos&&
+                    topology_plan.find("topology sentinel |")==std::string::npos,
+                    "topology proof was offered as an analog bench measurement");
+            topology_result.checks.back().value=0;
+            require(render_test_plan(in,topology_result,native_probes).find("[FAIL] power_som: topology sentinel")!=std::string::npos,
+                    "test plan hid a failed topology check");
             auto historical_spice=raw_spice;std::size_t joined_checks=0;
             for(auto& check:historical_spice.checks){
                 const auto old=std::find_if(sp.checks.begin(),sp.checks.end(),[&](const auto& c){return c.name==check.name&&c.sheet==check.sheet;});

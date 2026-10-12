@@ -134,7 +134,33 @@ std::string en_pin(const CircuitPartIr& part) {
 }
 void en_clamp(const std::string& sheet,const SpiceIndex& idx,const std::vector<PowerReg>& regs,SpiceResult& out,const PowerPolicy& policy) {
     for(const auto& reg:regs) {
-        if(reg.kind!="buck")continue;const auto* en=idx.net(reg.ref,en_pin(*idx.parts.at(reg.ref)));
+        if(reg.kind!="buck")continue;
+        // SNVSBD5D 8.3.1 explicitly supports EN/SYNC tied to VIN for self-start.
+        // Bind the actual pins of the reviewed part, not a possibly stale alias
+        // or a same-named net. This verifies connectivity only, not VIN bounds,
+        // startup timing, transients or regulator operation.
+        if(starts(reg.value,"LM61460")){
+            const auto* en=idx.net(reg.ref,"7");const auto* vin1=idx.net(reg.ref,"8");const auto* vin2=idx.net(reg.ref,"12");
+            const auto unique=[&](const std::string& number){
+                std::size_t count=0;
+                for(const auto& net:idx.c.nets)for(const auto& pin:net.pins)if(pin.ref==reg.ref&&pin.pin==number)++count;
+                return count==1;
+            };
+            if(reg.value=="LM61460AANRJRR"&&en&&power(*en)&&en==vin1&&en==vin2&&unique("7")&&unique("8")&&unique("12")){
+                out.engine="analytic spot checks + netlist topology";
+                out.checks.push_back({"LM61460 direct VIN enable ("+reg.ref+")",sheet,"enable_topology",
+                    "SNVSBD5D 8.3.1 self-start topology: EN/SYNC pin 7 and VIN pins 8/12 share one power net; connectivity only, not input-envelope or transient qualification",
+                    1,"match",1.0,1.0,"netlist topology",{}});
+                continue;
+            }
+            // This named always-on rail must not lose the missing-model
+            // receipt merely because its series resistor or EN wire disappears.
+            if(reg.vout=="+5V_SOM"){
+                out.unverified.push_back("SPICE unverified: "+sheet+":"+reg.ref+" ("+reg.value+") enable network needs a device-specific model; TPS54302 assumptions do not apply");
+                continue;
+            }
+        }
+        const auto* en=idx.net(reg.ref,en_pin(*idx.parts.at(reg.ref)));
         if(!en||en->net_class!="signal")continue;const auto series=select(idx.on(en->name),power);
         std::vector<std::pair<std::string,std::string>> zeners;
         for(const auto& [ref,p]:idx.parts)if(ends(p->lib_id,":D_Zener")) {
@@ -201,8 +227,9 @@ SpiceResult extract_spice_checks(const std::vector<ProjectCircuit>& sheets,const
         // The shared pure detection stage does not run unrelated load/thermal
         // analysis or alter the original spice extraction's failure boundary.
         auto_dividers(sheet.name,index,out,policy,extracted_named);rc_networks(sheet.name,index,out);sy7201_iset(sheet.name,index,out);
-        const auto regs=detect_power_regulators({sheet},policy).regs;
-        buck_fb(sheet.name,index,regs,out,policy);en_clamp(sheet.name,index,regs,out,policy);boot0(sheet.name,index,out);
+        const auto detected=detect_power_regulators({sheet},policy);
+        for(const auto& error:detected.errors)out.unverified.push_back("SPICE unverified: regulator detection: "+error);
+        buck_fb(sheet.name,index,detected.regs,out,policy);en_clamp(sheet.name,index,detected.regs,out,policy);boot0(sheet.name,index,out);
     }
     for(const auto& named:named_dividers()) {
         if(!extracted_named.count(named.net)&&nets.count(named.net))
