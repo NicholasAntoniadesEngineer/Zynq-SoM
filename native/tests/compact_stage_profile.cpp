@@ -450,6 +450,8 @@ std::string trial(const PcbPlacementInput& source, bool compact, int run, int ge
         std::cout << "fallback_count name=" << name << " count=" << count << '\n';
     const auto diagnostic_start = Clock::now();
     const auto gates = check_pcb_placement_gates(input, result.model);
+    const auto fanout = check_fanout(PcbCheckInput(result.model),0);
+    std::cout<<fanout.summary()<<'\n';
     std::cout << "postconstruction_diagnostic seconds=" << seconds(diagnostic_start)
         << " placement_contract_ok=" << gates.placement_contract.ok
         << " placement_flow_ok=" << gates.placement_flow.ok

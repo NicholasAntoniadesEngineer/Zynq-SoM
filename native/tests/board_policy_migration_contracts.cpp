@@ -150,8 +150,8 @@ void precision(){
         require(bits(som_pose_half_mm(x))==bits(py_round(py_round(x*2.,0)/2.,1)),"half-grid multiply/divide order bits");
         require(bits(legalize_pose_quantum(x))==bits(py_round(py_round(x/.5,0)*.5,4)),"legalizer quantum bits");
     }
-    require(board_decision_policy::df40_min_pins==40&&!pcb_is_df40_part("logic",39)&&pcb_is_df40_part("logic",40),"shared DF40 threshold boundaries");
-    require(pcb_is_df40_part("som_j2",3)&&!pcb_is_df40_part("som_jx",3),"DF40 sheet-name semantics preserved");
+    require(board_decision_policy::df40_min_pins==40&&!pcb_is_df40_part("som_j2",39)&&pcb_is_df40_part("som_j2",40),"shared DF40 threshold boundaries");
+    require(!pcb_is_df40_part("logic",40)&&!pcb_is_df40_part("som_j2",3)&&!pcb_is_df40_part("som_jx",40),"pad count alone must not identify a DF40 connector");
 }
 }
 int main(int argc,char** argv){try{

@@ -236,10 +236,7 @@ void Placer::breathe(const std::string &phase) {
                 side(r) != side(anchor) || som_refs.count(r))
                 continue;
             const auto &part = ctx.by_ref.at(r);
-            bool df40 = part.sheet.size() > 5 && part.sheet.rfind("som_j", 0) == 0 &&
-                        std::all_of(part.sheet.begin() + 5, part.sheet.end(),
-                                    [](char c) { return c >= '0' && c <= '9'; });
-            if (df40 || pins(r) >= board_decision_policy::df40_min_pins || part.footprint.find("Fiducial") != std::string::npos ||
+            if (pcb_is_df40_part(part.sheet,pins(r)) || part.footprint.find("Fiducial") != std::string::npos ||
                 is_testpoint_ref(r) || (part.sheet == sheet && cp(r)))
                 continue;
             out.push_back(box(r, p));
@@ -264,7 +261,7 @@ void Placer::breathe(const std::string &phase) {
         if (!geometry.bbox_of.count(r) || !geometry.resolvable.count(r) || som_refs.count(r))
             continue;
         int n = pins(r);
-        if (n >= 3 && n < board_decision_policy::df40_min_pins && need(n) > pc + 1e-9)
+        if (n >= 3 && !pcb_is_df40_part(ctx.by_ref.at(r).sheet,n) && need(n) > pc + 1e-9)
             guards.push_back(r);
     }
     auto free = [&](const Group &g, FloorplanPoint delta, const Offsets *rounded = nullptr) {

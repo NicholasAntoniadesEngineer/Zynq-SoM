@@ -40,7 +40,14 @@ void synthetic(){
     m.insts[0].mod=pcb_check_footprint("tail",R"((footprint "tail" (pad "1" smd rect (at 0 2) (size 1 1)) (pad "2" smd rect (at 1 2) (size 1 1)) (pad "3" smd rect (at 0 -2) (size 1 1))))");require(check_connector_models(m).geom_conflicts.size()==1,"dense tail sign mutant");
     require(check_connector_models(m,{{"HDMI-019S","-Y"}}).geom_conflicts.empty(),"explicit mating-face policy respected");
     require(check_connector_models(m,{{"HDMI-019S","+Y"}}).geom_conflicts.size()==1,"policy mutation remains detectable");
-    m.insts={part("U1",10,10,8),part("R2",12.5,10,2,"other")};auto fan=check_fanout(PcbCheckInput(m),0);require(!fan.ok&&fan.n_starved==1&&fan.records[0].clearance==0.5,"fanout foreign passive");m.insts[1].sheet="s";require(check_fanout(PcbCheckInput(m),0).ok,"own cluster ignored");m.insts[1].sheet="other";m.insts[1].side="bottom";require(check_fanout(PcbCheckInput(m),0).ok,"opposite side ignored");m.insts[1].side="top";m.insts[1].ref="TP2";require(check_fanout(PcbCheckInput(m),0).ok,"TP excluded");m.insts[1].ref="R2";require(check_fanout(PcbCheckInput(m),std::nullopt).ok,"first-run ratchet");require(pcb_fanout_ratchet(5,3)==3&&pcb_fanout_ratchet(1,3)==1,"ratchet never increases");require(pcb_is_df40_part("som_j7",1)&&pcb_is_df40_part("x",40)&&!pcb_is_df40_part("som_jx",3),"DF40 recognition");
+    m.insts={part("U1",10,10,8),part("R2",12.5,10,2,"other")};auto fan=check_fanout(PcbCheckInput(m),0);require(!fan.ok&&fan.n_starved==1&&fan.records[0].clearance==0.5,"fanout foreign passive");m.insts[1].sheet="s";require(check_fanout(PcbCheckInput(m),0).ok,"own cluster ignored");m.insts[1].sheet="other";m.insts[1].side="bottom";require(check_fanout(PcbCheckInput(m),0).ok,"opposite side ignored");m.insts[1].side="top";m.insts[1].ref="TP2";require(check_fanout(PcbCheckInput(m),0).ok,"TP excluded");m.insts[1].ref="R2";require(check_fanout(PcbCheckInput(m),std::nullopt).ok,"first-run ratchet");require(pcb_fanout_ratchet(5,3)==3&&pcb_fanout_ratchet(1,3)==1,"ratchet never increases");require(pcb_is_df40_part("som_j7",40)&&!pcb_is_df40_part("x",40)&&!pcb_is_df40_part("som_j7",1)&&!pcb_is_df40_part("som_jx",40),"DF40 recognition");
+    for(int pins:{39,40,64,100}) {
+        m.insts={part("U1",10,10,pins,"logic"),part("R2",12.5,10,2,"other")};
+        const auto dense=check_fanout(PcbCheckInput(m),0);
+        require(dense.n_subjects==1&&dense.n_starved==1&&!dense.ok,"dense nonconnector must be a fanout subject");
+        m.insts={part("U1",10,10,8,"logic"),part("U2",12.5,10,pins,"other")};
+        require(check_fanout(PcbCheckInput(m),0).n_starved==2,"dense nonconnector must count as a crowder");
+    }
     auto board=sexpr_loads(R"((kicad_pcb (footprint "x" (at 5 5 90) (property "Reference" "R1" (at 1 0) (layer "F.SilkS"))) (footprint "y" (at 5 4) (property "Reference" "R2" (at 0 0) (layer "F.SilkS")))))");auto refs=check_refdes_overlap(board);require(!refs.ok&&refs.top_pairs==std::vector<std::pair<std::string,std::string>>{{"R1","R2"}},"rotated refdes overlap");
     auto bottom=sexpr_loads(R"((kicad_pcb (footprint "x" (at 0 0) (property "Reference" "B1" (at 0 0) (layer "B.SilkS"))) (footprint "x" (at 0 0) (property "Reference" "B2" (at 0 0) (layer "B.SilkS"))) (footprint "x" (at 0 0) (property "Reference" "H1" (at 0 0) (layer "F.SilkS") (hide yes)))))");require(check_refdes_overlap(bottom).ok&&check_refdes_overlap(bottom).bottom_pairs==1&&!check_refdes_overlap(bottom,true).ok,"bottom enforcement and hidden refs");
     std::map<std::string,std::vector<ReturnPathContact>> contacts{{"J9",{{"J9","1",0,0,0,0,"X_P","SIGNAL"},{"J9","2",0,1,1,0,"X_N","SIGNAL"},{"J9","3",0,2,2,0,"GND","GND"}}}};require(check_return_path(contacts).ok,"adjacent return ground");contacts["J9"][2].klass="SIGNAL";auto rp=check_return_path(contacts);require(!rp.ok&&rp.n_fail()==2&&!rp.worst_distance,"missing return ground");equal(rp.violations[0].as_line(),"J9 pad 2 net X_N (pair X_*): nearest GND at none-on-connector steps > K=2","return path failure diagnostic");
@@ -124,6 +131,23 @@ void real_project(const fs::path& root,const std::string& name){
     mutated=live.model;std::vector<std::size_t> usb;for(std::size_t i=0;i<mutated.insts.size();++i)if(mutated.insts[i].value=="TYPE-C-31-M-12")usb.push_back(i);require(usb.size()>=2,"two actual USB connectors");mutated.insts[usb[1]].x=mutated.insts[usb[0]].x;mutated.insts[usb[1]].y=mutated.insts[usb[0]].y;mutated.insts[usb[1]].rotation=mutated.insts[usb[0]].rotation;require(has(check_connector_spacing(PcbCheckInput(mutated)).violations,"OVERLAP"),name+" actual connector stack");
     pcb=live.board;std::vector<std::pair<Sexpr*,Sexpr*>> silk;for(auto& fp:std::get<SexprList>(pcb.document.v))if(tag(fp,"footprint"))for(auto& p:std::get<SexprList>(fp.v))if(tag(p,"property")&&atom(ls(p)[1])=="Reference"){auto lay=sub(p,"layer");if(lay&&atom(ls(*lay)[1])=="F.SilkS"&&!sub(p,"hide"))silk.emplace_back(&fp,&p);}require(silk.size()>=2,"two actual visible refs");*mut_sub(*silk[1].first,"at")=*sub(*silk[0].first,"at");*mut_sub(*silk[1].second,"at")=*sub(*silk[0].second,"at");require(!check_refdes_overlap(pcb.document).ok,name+" actual emitted refdes collision");
     mutated=live.model;auto subject=std::find_if(mutated.insts.begin(),mutated.insts.end(),[](const auto& i){return i.ref[0]=='U'&&i.pad_nets.size()>=3&&i.pad_nets.size()<40;});auto crowder=std::find_if(mutated.insts.begin(),mutated.insts.end(),[&](const auto& i){return i.ref[0]=='R'&&i.sheet!=subject->sheet;});require(crowder!=mutated.insts.end(),"actual fanout crowder");crowder->x=subject->x;crowder->y=subject->y;crowder->side=subject->side;require(!check_fanout(PcbCheckInput(mutated),0).ok,name+" real fanout crowding");
+    if(name=="carrier") {
+        const auto verified=check_fanout(input,0);std::size_t dense_count=0;
+        for(const auto& package:live.model.insts)if(package.pad_nets.size()>=40&&!pcb_is_df40_part(package.sheet,static_cast<int>(package.pad_nets.size()))) {
+            ++dense_count;
+            const auto row=std::find_if(verified.records.begin(),verified.records.end(),[&](const auto& r){return r.ref==package.ref;});
+            require(row!=verified.records.end(),"real non-SoM dense package omitted from fanout records");
+            std::cout<<"dense subject "<<row->ref<<" sheet="<<row->sheet<<" pads="<<row->pins<<" clearance="<<row->clearance<<" need="<<row->need<<'\n';
+            auto collision=live.model;
+            auto foreign=std::find_if(collision.insts.begin(),collision.insts.end(),[&](const auto& i){return i.ref.front()=='R'&&i.sheet!=package.sheet;});
+            require(foreign!=collision.insts.end(),"dense package crowding fixture lacks foreign resistor");
+            foreign->x=package.x;foreign->y=package.y;foreign->side=package.side;
+            const auto rejected=check_fanout(PcbCheckInput(collision),0);
+            require(!rejected.ok&&std::any_of(rejected.records.begin(),rejected.records.end(),[&](const auto& r){return r.ref==package.ref&&r.starved();}),
+                    "real dense package collision escaped fanout gate");
+        }
+        require(dense_count==2,"expected two formerly exempt non-SoM dense packages");
+    }
     std::cout<<name<<": eight exact report snapshots and real PCB/interface mutations passed\n";
 }
 }
