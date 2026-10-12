@@ -1,0 +1,30 @@
+{
+  "base_commit": "023744f6",
+  "smaller_carrier_screens": {
+    "outlines_mm": [[165,159],[166,158],[167,157],[168,156]],
+    "result": "All four fail interior seating at usb_jtag with two observed outer attempts and captured failure receipts. Extent alternatives enabled; no constraints relaxed and no failed candidate promoted.",
+    "logs": ["native/build/carrier-extent-165x159.log","native/build/carrier-extent-166x158.log","native/build/carrier-extent-167x157.log","native/build/carrier-extent-168x156.log"],
+    "next_layout_direction": "The local capacitor extent alternatives do not resolve the carrier's USB-JTAG seating bottleneck. Do not repeat these configurations unchanged. Investigate additional legal rigid-group arrangements or placement interactions while preserving incumbent and complete receipts."
+  },
+  "disproved_hypothesis": "Protruding pads were thought absent from local orientation bounds because their API is named courtyard_at. Inspection and a regression show footprint_bbox already includes pads; no redundant pad union was added. Retain negative tests that a disconnected protruding pad blocks both rigid orientation and contract-group candidate generation.",
+  "confirmed_defect": "Modern three-point courtyard arcs used start/mid/end coordinates but omitted swept cardinal extrema. Exact radius-5 case (3,4),(-3,4),(-4,-3) was underbounded at x=-4,y=4 instead of x=-5,y=5. The independent new test failed before the production change.",
+  "format_source": "https://dev-docs.kicad.org/en/file-formats/sexpr-intro/#_footprint_arc",
+  "fix": "Translate and scale the three input points before solving the circumcenter. Use arc orientation to include only swept cardinal extrema, keeping original endpoints and existing decimal quantization. Reject malformed, collinear and unrepresentable modern arc geometry rather than silently using endpoint bounds. No full-circle expansion for partial arcs.",
+  "verification": {
+    "suites_passed": ["native_footprint_arc_bounds_contracts","native_pcb_orientation_contracts","native_pcb_checks_contracts","native_mirror_contracts"],
+    "suites_failed": 0,
+    "wall_seconds": 1.74,
+    "log": "native/build/arc-bounds-integration-tests.log",
+    "coverage": "Exact rational-circle extrema; billion-unit translation; malformed/collinear cases; 120 independent sampled combinations of clockwise/counterclockwise sweeps, major/minor arcs, radii and starting quadrants. Bounds tested both for containment and tightness, with tolerance derived from output quantization and angular sample spacing.",
+    "production_cli_rebuilt": true
+  },
+  "current_reference_screens": [
+    {"board":"carrier","outline_mm":[166,159],"top":416,"bottom":153,
+     "pcb_sha256":"b9389efa52adf30b1d94cad1ede3a4387bacd53802f7babb5da07dd6306cff76","unchanged":true,
+     "log":"native/build/carrier-arc-bounds-reference.log"},
+    {"board":"devkit","outline_mm":[98,98],"top":106,"bottom":57,
+     "pcb_sha256":"cfa0305491d9c4a771adb130b04c4aec6cc2894542391a5c7c9dca3a68bca3cf","unchanged":true,
+     "log":"native/build/devkit-arc-bounds-reference.log"}
+  ],
+  "limits": "The fix covers modern start/mid/end courtyard arcs; legacy arc handling and existing stroke/decimal policies are unchanged. Both construction screens pass placement-contract/flow diagnostics with zero hard RED, but are not new full qualification or renders. No smaller board or speedup established. Overall goal remains incomplete."
+}

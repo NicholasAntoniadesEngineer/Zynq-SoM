@@ -312,6 +312,19 @@ void live(const std::filesystem::path& root){
    auto blocked_geometry=after.geometry;
    append_contract_group_faces(blocked_context,blocked_geometry,"usb_jtag",variants.front());
    demand(blocked_geometry.shapes.at("usb_jtag").size()==prefix.size(),"pinned owners still generated bottom candidates");
+   // An unconnected copper pad is still physical occupancy. Keep the authored
+   // courtyard unchanged, so a courtyard-only gate cannot detect this escape.
+   auto protruding_context=candidate_context;auto protruding_geometry=after.geometry;
+   const auto switch_ref=protruding_context.board_refs.at("usb_jtag").at("SW1");
+   const auto switch_key=protruding_geometry.resolvable.at(switch_ref);
+   const auto original_fp=protruding_context.pool.at(switch_key);auto bytes=original_fp->bytes;
+   bytes.insert(bytes.rfind(')')," (pad \"PROBE\" smd rect (at 1000 0) (size 1 1) (layers \"F.Cu\" \"F.Paste\" \"F.Mask\"))");
+   protruding_context.pool[switch_key]=pcb_check_footprint(original_fp->source,bytes);
+   append_contract_group_faces(protruding_context,protruding_geometry,"usb_jtag",variants.front());
+   demand(protruding_geometry.shapes.at("usb_jtag").size()==prefix.size(),"copper outside courtyard escaped contract-group bounds");
+   protruding_geometry.shapes["usb_jtag"]={variants.front()};
+   append_rigid_zone_orientations(protruding_context,protruding_geometry,"usb_jtag",variants.front());
+   demand(protruding_geometry.shapes.at("usb_jtag").size()==1,"copper outside courtyard escaped orientation bounds");
    std::cout<<"carrier contract-group candidates="<<candidates<<'\n';
   }
  }
