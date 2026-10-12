@@ -11,6 +11,15 @@
     "log": "native/build/facing-replan-integration-tests.log",
     "suites": ["native_pcb_placement_contracts", "native_model_failure_receipt_contracts", "native_placement_precision_contracts", "native_pcb_refit_fanout_contracts", "native_board_policy_contracts", "native_pcb_compact_strict_facing_contracts", "native_floorplan_precision_contracts"]
   },
+  "additional_pipeline_verification": {
+    "tested_commit": "e6bb5db7",
+    "tests_passed": 5,
+    "tests_failed": 0,
+    "wall_seconds": 54.17,
+    "log": "native/build/facing-replan-pipeline-tests.log",
+    "suites": ["native_board_pipeline_contracts", "native_board_pipeline_live_contracts", "native_carrier_requirements_pipeline_contracts", "native_placement_metadata_contracts", "native_floorplan_fallback_scope_contracts"],
+    "scope": "Freshly rebuilt pipeline, live KiCad schematic, electrical, fallback-scope and metadata contracts; not a full board qualification."
+  },
   "reference_screens": [
     {
       "board": "carrier compact",
