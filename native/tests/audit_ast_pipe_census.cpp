@@ -1,4 +1,5 @@
 #include "schgen/native_audit_state.hpp"
+#include "schgen/board_pipeline.hpp"
 #include <atomic>
 #include <chrono>
 #include <fstream>
@@ -38,13 +39,15 @@ std::uint64_t resident_tree(pid_t pid,unsigned& children){
 }
 }
 int main(int argc,char** argv){try{
-    if(argc<5)throw std::runtime_error("usage: census baseline|pipe|pipe-profile ROOT OUTPUT RELATIVE_SOURCE...");
-    const std::string mode=argv[1];if(mode!="baseline"&&mode!="pipe"&&mode!="pipe-profile")throw std::runtime_error("unknown mode");
+    if(argc<5)throw std::runtime_error("usage: census baseline|pipe|pipe-profile|pipe-profile-two ROOT OUTPUT RELATIVE_SOURCE...|--board-manifest");
+    const std::string mode=argv[1];if(mode!="baseline"&&mode!="pipe"&&mode!="pipe-profile"&&mode!="pipe-profile-two")throw std::runtime_error("unknown mode");
     const auto root=std::filesystem::absolute(argv[2]);
     std::vector<CppAuditSource> manifest;for(int i=4;i<argc;++i)manifest.push_back({argv[i]});
+    if(argc==5&&std::string(argv[4])=="--board-manifest")manifest=board_pipeline_audit_sources();
     CppAuditOptions options;options.compiler="/usr/bin/clang++";options.workers=2;options.timeout=std::chrono::seconds(120);
     options.flags={"-I"+(root/"native/include").string(),"-I"+(root/"native/src").string()};
-    std::vector<CppAuditTiming> timings;if(mode=="pipe-profile")options.timings=&timings;
+    if(mode=="pipe-profile-two")options.projection_slots=2;
+    std::vector<CppAuditTiming> timings;if(mode=="pipe-profile"||mode=="pipe-profile-two")options.timings=&timings;
     std::atomic<bool> done{false};std::uint64_t aggregate_peak=0;unsigned child_peak=0;
     std::thread sampler([&]{do{unsigned children=0;aggregate_peak=std::max(aggregate_peak,resident_tree(::getpid(),children));child_peak=std::max(child_peak,children);
         std::this_thread::sleep_for(std::chrono::milliseconds(20));}while(!done.load());});
@@ -60,7 +63,7 @@ int main(int argc,char** argv){try{
         <<" first_byte="<<t.first_byte_seconds<<" projection_wait="<<t.projection_wait_seconds<<" parsing="<<t.parsing_seconds
         <<" preprocessing="<<t.preprocessing_seconds<<" final_dependency="<<t.final_dependency_seconds<<'\n';
     std::cout<<std::setprecision(9)<<"mode="<<mode<<" files="<<manifest.size()<<" workers=2 seconds="<<elapsed
-        <<" sampled_aggregate_peak_bytes="<<(child_peak?aggregate_peak:0)<<" observed_child_peak="<<child_peak
+        <<" projection_slots="<<options.projection_slots<<" sampled_aggregate_peak_bytes="<<(child_peak?aggregate_peak:0)<<" observed_child_peak="<<child_peak
         <<" parent_ru_maxrss="<<usage.ru_maxrss<<" constants="<<census.constants.size()<<" functions="<<census.functions.size()
         <<" sites="<<census.quantization.size()<<'\n';
 }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}

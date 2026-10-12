@@ -258,6 +258,14 @@ or claimed fabrication-ready. Coverage lint uses every wired-sheet part,
 including unplaced parts. Successful migration does not certify every historical
 hardware or generated-firmware design decision.
 
+`board --audit-projections 2` opts into two simultaneous source-audit AST
+projections; the default is one to retain the lower-memory path. Both settings
+scan the complete manifest and retain dependency-change detection, deterministic
+census order and failure propagation. In a paired 49-file measurement, audit time
+fell from 130.07 s to 88.05 s while sampled process-tree peak memory rose from
+2.87 GB to 4.32 GB. These are single-run audit measurements, not whole-build or
+Python-comparison speedups. Use `--audit-projections 1` on memory-constrained runs.
+
 Firmware source provenance now reads canonical circuit JSON and compiled factory
 registrations rather than checking for Python constructors. Independent source
 inventories cover both projects, reject damaged/missing registered inputs, and

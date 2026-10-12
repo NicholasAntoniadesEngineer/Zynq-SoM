@@ -153,6 +153,9 @@ struct CppAuditOptions {
     // Bound concurrent full translation-unit scans. Census order is always
     // manifest order, independent of worker completion. One is the serial path.
     std::size_t workers=2;
+    // Memory/throughput choice, not an audit-coverage limit. Waiting compilers
+    // retain bounded pipe backpressure; each slot holds at most one full AST.
+    std::size_t projection_slots=1;
     // Optional diagnostics, published in manifest order only after success.
     // Per-file elapsed phases overlap between workers; do not sum as wall time.
     // ast_seconds includes compiler, pipe/projection wait and AST parsing.

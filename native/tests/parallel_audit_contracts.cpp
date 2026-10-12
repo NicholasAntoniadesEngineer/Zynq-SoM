@@ -34,7 +34,7 @@ struct Scratch {
     ~Scratch(){std::error_code e;std::filesystem::remove_all(path,e);}
 };
 void write(const std::filesystem::path& path,const std::string& text){std::ofstream out(path);out<<text;out.close();require(bool(out),"cannot write proof file");}
-CppAuditOptions options(const std::filesystem::path& root,std::size_t workers){CppAuditOptions o;o.workers=workers;o.flags={"-I"+(root/"native/include").string(),"-I"+(root/"native/src").string()};return o;}
+CppAuditOptions options(const std::filesystem::path& root,std::size_t workers){CppAuditOptions o;o.workers=workers;o.projection_slots=std::min(workers,std::size_t{2});o.flags={"-I"+(root/"native/include").string(),"-I"+(root/"native/src").string()};return o;}
 void contracts(const std::filesystem::path& root,const std::string& self){
     for(std::size_t workers:{1,2,3,4}) {
         std::atomic<std::size_t> live{0},peak{0};std::vector<int> visited(13);

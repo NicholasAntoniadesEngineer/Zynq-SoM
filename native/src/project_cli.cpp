@@ -62,6 +62,7 @@ struct Options {
     std::vector<std::string> subsystems;
     bool allow_missing = false, qualified_refs = false, no_ngspice = false, keep = false;
     bool no_render = false, timing = false, conservative_only = false;
+    std::size_t audit_projection_slots=1;
     bool compact_search = false;
     bool multiscale_outline = false;
     bool edge_feasibility = false;
@@ -93,6 +94,12 @@ Options parse(int argc, char** argv) {
         const std::string arg = argv[i];
         if (project_command(arg) && out.command.empty()) { out.command = arg; continue; }
         if(arg=="--help"||arg=="-h"){out.help=true;continue;}
+        if(arg=="--audit-projections"){
+            if(!seen.insert(arg).second)throw ProjectError("duplicate option "+arg);
+            if(++i==argc||(std::string(argv[i])!="1"&&std::string(argv[i])!="2"))
+                throw ProjectError("audit-projections requires 1 or 2");
+            out.audit_projection_slots=std::string(argv[i])=="2"?2:1;continue;
+        }
         if(arg=="--owned-shape"){
             if(++i==argc)throw ProjectError("owned-shape requires SHEET=TAG");
             const std::string value=argv[i];const auto split=value.find('=');
@@ -228,6 +235,7 @@ Options parse(int argc, char** argv) {
         allowed.erase("--output");allowed.insert("--kicad-cli");
         if(out.command=="w12-stageprobe")allowed.insert("--cons-only");
     } else if (out.command == "board") {
+        allowed.insert("--audit-projections");
         allowed.insert("--compact-placement");
         allowed.insert("--multiscale-outline");
         allowed.insert("--edge-feasibility");
@@ -341,6 +349,7 @@ std::optional<int> run_project_command(int argc, char** argv) {
         if(options.command=="board")std::cout<<"--multiscale-outline: opt-in bounded axis/diagonal refinement; may stop at a larger local solution. Use a validated starting candidate when available. All gates remain active; fixed outlines conflict.\n";
         if(options.command=="board")std::cout<<"--edge-feasibility: opt-in sequential clearance-aware initial edge runs; requires --compact-placement. Not a complete joint solver. Rounded poses are rechecked; all gates remain active.\n";
         if(options.command=="board")std::cout<<"--joint-separation-states N: opt-in failure-only coupled-axis search, with interior-neighbour translation after constrained-only solves fail. N bounds each joint search, not total build work; hardware-fixed obstacles and all gates remain active. Requires --compact-placement.\n";
+        if(options.command=="board")std::cout<<"--audit-projections 1|2: simultaneous source-audit AST projections (default 1). Two trades more memory for potential throughput; audit coverage and source-change checks are unchanged.\n";
         if(options.command=="board")std::cout<<"--owned-quality-first: opt-in same-pose, same-face owned proximity priority; requires --compact-placement. May increase inter-block estimate. No hardware proximity limit is implied; all gates remain active.\n";
         if(options.command=="board")std::cout<<"--owned-extent-alternatives: append bounded extent-first owned-group candidates; requires --compact-placement. Original alternatives and all gates remain active.\n";
         if(options.command=="board")std::cout<<"--owned-face-cohesion: append owner/cap same-face initial packs, preserving existing candidates.\n--owned-shape SHEET=TAG: restrict a measured candidate by generated tag; unknown, ambiguous or infeasible choices fail without substitution. Requires --compact-placement. All gates remain active.\n";
@@ -468,6 +477,7 @@ std::optional<int> run_project_command(int argc, char** argv) {
         build.output_root = options.output;
         build.no_render = options.no_render;
         build.timing = options.timing;
+        build.audit.projection_slots = options.audit_projection_slots;
         build.native_policy = true;
         build.pcb.compact_search = options.compact_search;
         build.pcb.floorplan_spec = options.floorplan_spec;

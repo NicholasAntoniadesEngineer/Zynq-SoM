@@ -9,6 +9,7 @@
 #include <cctype>
 #include <cstring>
 #include <memory>
+#include <array>
 #include <unistd.h>
 
 namespace schgen {
@@ -258,6 +259,8 @@ CppSourceCensus scan_cpp_audit_sources(const std::filesystem::path& root,const s
     if(files.empty())throw std::invalid_argument("native source audit requires a nonempty decision-file manifest");
     if(options.compiler.empty())throw std::invalid_argument("native source audit requires a compiler");
     if(options.workers<1||options.workers>4)throw std::invalid_argument("native source audit workers must be between 1 and 4");
+    if(options.projection_slots<1||options.projection_slots>2||options.projection_slots>options.workers)
+        throw std::invalid_argument("native source audit projection slots must be 1 or 2 and not exceed workers");
     CppSourceCensus result;std::set<std::string> unique;
     // Validate the whole explicit manifest before launching compiler work.
     std::vector<std::filesystem::path> relative_paths;
@@ -300,9 +303,9 @@ CppSourceCensus scan_cpp_audit_sources(const std::filesystem::path& root,const s
         if(!graph.count(path))throw AuditSyntaxError(path.string()+": compiler dependency graph omitted source");
         return graph;
     };
-    // Keep the compiler worker cap unchanged, but retain at most one full AST
-    // per scan. Waiting compilers use bounded pipe backpressure, not a DOM queue.
-    std::mutex projection_slot;
+    // Invocation-local, bounded projection stripes; no shared cache or DOM
+    // queue. Preserve the compiler-worker and transactional dependency checks.
+    std::array<std::mutex,2> projection_slots;
     std::vector<CppAuditTiming> timings(files.size());
     using Clock=std::chrono::steady_clock;
     const auto elapsed=[](Clock::time_point start){return std::chrono::duration<double>(Clock::now()-start).count();};
@@ -326,7 +329,7 @@ CppSourceCensus scan_cpp_audit_sources(const std::filesystem::path& root,const s
         timing.snapshot_seconds=elapsed(start);start=Clock::now();
         std::vector<std::string> command{options.compiler};command.insert(command.end(),options.flags.begin(),options.flags.end());
         command.insert(command.end(),{"-std=c++17","-ffp-contract=off","-x","c++","-fsyntax-only","-Xclang","-ast-dump=json",path.string()});
-        std::unique_lock<std::mutex> projection_lock(projection_slot,std::defer_lock);
+        std::unique_lock<std::mutex> projection_lock(projection_slots[index%options.projection_slots],std::defer_lock);
         AuditAstProcessTiming ast_timing;
         auto compiled=run_audit_ast_process(command,path.string()+" compiler AST",options.timeout,projection_lock,&ast_timing);
         timing.first_byte_seconds=ast_timing.first_byte_seconds;

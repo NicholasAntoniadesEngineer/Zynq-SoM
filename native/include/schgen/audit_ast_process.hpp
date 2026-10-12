@@ -28,7 +28,7 @@ inline AuditAstProcessResult run_audit_ast_process(const std::vector<std::string
         (void)input.peek();
         measured.first_byte_seconds=elapsed();start=Clock::now();
         // Compiler has already started. Its pipe applies bounded backpressure
-        // until this scan can own the sole live projection. Caller holds the
+        // until this scan can own a bounded projection slot. Caller holds the
         // slot through semantic consumption and AST destruction.
         projection_slot.lock();
         measured.projection_wait_seconds=elapsed();start=Clock::now();

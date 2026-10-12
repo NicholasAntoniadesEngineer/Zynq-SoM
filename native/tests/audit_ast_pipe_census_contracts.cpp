@@ -30,7 +30,11 @@ void parity(const fs::path& root,const std::vector<CppAuditSource>& manifest,Cpp
     options.workers=1;const auto expected=encode(scan_cpp_audit_sources_reference(root,manifest,options));
     for(const auto scan:{Scan(scan_cpp_audit_sources_reference),Scan(scan_cpp_audit_sources)})
         for(const auto workers:{std::size_t(1),std::size_t(2)}){
-            options.workers=workers;need(encode(scan(root,manifest,options))==expected,"exact census/order differs");
+            options.workers=workers;
+            for(std::size_t slots=1;slots<=workers;++slots){
+                options.projection_slots=slots;
+                need(encode(scan(root,manifest,options))==expected,"exact census/order differs");
+            }
         }
 }
 // Child compiler simulator: no production hook or detector exemption. Used only
@@ -114,8 +118,21 @@ int main(int argc,char** argv){try{
     for(const auto* name:{"invalid","badast","badpre"}){
         put(root/(std::string(name)+".cpp"),"a\nb");std::vector<CppAuditSource> bad{{"one.cpp"},{std::string(name)+".cpp"}};
         fake.workers=1;const auto diagnostic=error([&]{scan_cpp_audit_sources_reference(root,bad,fake);});
-        fake.workers=2;need(error([&]{scan_cpp_audit_sources(root,bad,fake);})==diagnostic,"parser/preprocessor/offset error differs");
+        fake.workers=2;
+        for(std::size_t slots:{1u,2u}){
+            fake.projection_slots=slots;
+            need(error([&]{scan_cpp_audit_sources(root,bad,fake);})==diagnostic,"parser/preprocessor/offset error differs");
+        }
     }
+    fake.workers=2;
+    for(std::size_t slots:{0u,3u}){
+        fake.projection_slots=slots;
+        need(error([&]{scan_cpp_audit_sources(root,manifest,fake);}).find("projection slots")!=std::string::npos,
+             "invalid projection slots accepted");
+    }
+    fake.projection_slots=2;fake.workers=1;
+    need(error([&]{scan_cpp_audit_sources(root,manifest,fake);}).find("projection slots")!=std::string::npos,
+         "projection slots exceeded worker capacity");
     fake.workers=2;
     for(const auto& bad:{std::vector<CppAuditSource>{},std::vector<CppAuditSource>{{"absent.cpp"}},std::vector<CppAuditSource>{{"one.cpp"},{"one.cpp"}},std::vector<CppAuditSource>{{"../escape.cpp"}}})
         need(error([&]{scan_cpp_audit_sources(root,bad,fake);})==error([&]{scan_cpp_audit_sources_reference(root,bad,fake);}),"manifest validation changed");

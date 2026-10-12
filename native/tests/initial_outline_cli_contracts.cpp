@@ -9,6 +9,17 @@ int main(int argc,char** argv){try{
         args.insert(args.end(),{"--help","--repo","/nonexistent/seed-help-must-not-read"});
         return schgen::run_process(args);
     };
+    for(const auto* slots:{"1","2"}){
+        const auto result=run({"board","--audit-projections",slots});
+        if(result.exit_code||result.stdout_text.find("audit coverage and source-change checks are unchanged")==std::string::npos)
+            throw std::runtime_error("audit projection choice/help rejected");
+    }
+    for(const auto* slots:{"0","3","-1","2.0","2junk",""})
+        if(!run({"board","--audit-projections",slots}).exit_code)throw std::runtime_error("invalid projection choice accepted");
+    for(const auto& args:std::vector<std::vector<std::string>>{
+        {"board","--audit-projections"},{"board","--audit-projections","1","--audit-projections","2"},
+        {"pcb-stage","--audit-projections","2"}})
+        if(!run(args).exit_code)throw std::runtime_error("invalid projection option scope accepted");
     for(const auto* value:{"168x163","98x98","1e2x9.8e1","168.25x163.5"}){
         const auto result=run({"board","--initial-outline-mm",value});
         if(result.exit_code || result.stdout_text.find("Not a fixed outline or cached acceptance")==std::string::npos)
