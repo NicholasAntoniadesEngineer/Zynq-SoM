@@ -1,0 +1,33 @@
+{
+  "schema": 1,
+  "base_commit": "dbc8c93f",
+  "defect": "Named and informational voltage-divider extraction rounded voltage to four decimals before threshold and simulator-agreement checks, concealing sufficiently small limit violations.",
+  "negative_control": "New boundary regression failed against the pre-change calculation with 'pre-acceptance voltage rounding concealed a threshold violation'; log native/build/spice-divider-red.log",
+  "changes": [
+    "Store the full calculated divider voltage in SpiceCheck.value; JSON and ngspice agreement consume that value",
+    "Display enough digits when compact formatting would make a value outside a limit appear exactly equal to it",
+    "Keep historical fixtures unchanged: tests compare an explicitly isolated rounded legacy view, independently check raw values/verdicts, and verify that generated test plans join current calculation values"
+  ],
+  "boundary_tests": {
+    "cases": 10,
+    "limits": "Existing HDMI divider upper 3.465 V at 5.25 V source and lower 2 V at 4.75 V source",
+    "offsets_V": [-0.00004, -0.0000001, 0, 0.0000001, 0.00004],
+    "checks": "Correct inside/outside verdicts, independently constructed resistor ratios, full calculation precision within floating representation error, lossless JSON value, informative near-limit failure text"
+  },
+  "verification": {
+    "command": "ctest --test-dir native/build/fast --output-on-failure -R '^native_(spice|board_pipeline|firmware_docs)_contracts$'",
+    "passed": 3,
+    "failed": 0,
+    "seconds": 43.39,
+    "production_cli_rebuilt": true,
+    "carrier": "17 analytic checks PASS",
+    "devkit_mini": "11 analytic checks PASS",
+    "historical_fixture_policy": "Only the test comparison view is rounded; production verdicts, JSON and simulator comparisons are not. Full-precision generated test-plan values are independently checked in their corresponding rows."
+  },
+  "limitations": [
+    "This change covers auto-extracted voltage dividers, not every SPICE calculation family; RC, ISET, buck feedback, enable-clamp and BOOT0 pre-acceptance rounding remain for targeted review",
+    "No electrical limit or existing threshold-comparison tolerance changed",
+    "No component value, schematic connectivity, board placement or routing changed",
+    "No full render/source-audit qualification or matched Python performance benchmark rerun in this batch"
+  ]
+}

@@ -5,6 +5,7 @@
 #include <cmath>
 #include <fstream>
 #include <iostream>
+#include <iomanip>
 #include <iterator>
 #include <map>
 #include <regex>
@@ -488,7 +489,23 @@ int main(int argc,char** argv) {
             std::vector<CircuitSheetIr> circuits;for(const auto& sc:in.sheets)circuits.push_back(sc.circuit);
             const auto coverage=check_testpoint_coverage(circuits);ProjectStrings native_probes;
             for(const auto& [net,locations]:coverage.have){std::string joined;for(const auto& loc:locations){if(!joined.empty())joined+=", ";joined+=loc;}native_probes.emplace_back(net,joined);}
-            exact(render_test_plan(in,extract_spice_checks(in.sheets),native_probes),dir/"TEST_PLAN.md",scratch/name/"native-TEST_PLAN.md",sources);
+            const auto raw_spice=extract_spice_checks(in.sheets);
+            const auto raw_plan=render_test_plan(in,raw_spice,native_probes);
+            auto historical_spice=raw_spice;std::size_t joined_dividers=0;
+            for(auto& check:historical_spice.checks)if(check.kind=="divider"&&check.name.rfind("divider ",0)==0){
+                const auto old=std::find_if(sp.checks.begin(),sp.checks.end(),[&](const auto& c){return c.name==check.name&&c.sheet==check.sheet;});
+                require(old!=sp.checks.end()&&std::abs(std::round(check.value*10000)/10000-old->value)<1e-12,
+                        "divider calculation changed beyond removed four-decimal rounding");
+                const auto row=raw_plan.find(" "+check.name+" |");
+                if(row!=std::string::npos){
+                    std::ostringstream measured;measured<<std::setprecision(6)<<check.value;
+                    require(raw_plan.substr(row,raw_plan.find('\n',row)-row).find(" | "+measured.str()+" "+check.unit+" |")!=std::string::npos,
+                            "test plan did not join the full-precision analytic value");++joined_dividers;
+                }
+                check.value=old->value;
+            }
+            require(joined_dividers>0,"live native test plan missed divider precision coverage");
+            exact(render_test_plan(in,historical_spice,native_probes),dir/"TEST_PLAN.md",scratch/name/"native-TEST_PLAN.md",sources);
             const auto native_power=analyze_power(in.sheets);
             exact(render_power_sequence_svg(build_power_sequence(in.sheets,native_power),native_power.ok()),dir/"power_sequence.svg",scratch/name/"native-power_sequence.svg",sources);
             if(argc==4){

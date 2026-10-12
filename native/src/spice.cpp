@@ -72,14 +72,14 @@ void auto_dividers(const std::string& sheet,const SpiceIndex& idx,SpiceResult& o
         const auto prefix=src.name+" -["+resistor_description(top)+"]- "+net.name+" -["+resistor_description(bot)+"]- GND @ ";
         if(named==named_dividers().end()) {
             const double v=volts(src.name,policy);if(v==0)continue;
-            out.checks.push_back({"divider "+net.name,sheet,"divider",prefix+g(v)+" V (informational, no named threshold)",py_round(v*ratio,4),"V",{}, {},"analytic",{}});continue;
+            out.checks.push_back({"divider "+net.name,sheet,"divider",prefix+g(v)+" V (informational, no named threshold)",v*ratio,"V",{}, {},"analytic",{}});continue;
         }
         const bool source_ok=src.name==named->source;
         if(!source_ok)throw ModelCheckError("required divider "+net.name+": source "+src.name+", expected "+named->source);
         extracted_named.insert(net.name);
         for(const auto& sub:named->checks) {
             auto v=sub.volts;auto tag=sub.tag;
-            out.checks.push_back({"divider "+net.name+" ["+tag+"]",sheet,"divider",prefix+g(v)+" V: "+named->why,py_round(v*ratio,4),"V",sub.lo,sub.hi,"analytic",{}});
+            out.checks.push_back({"divider "+net.name+" ["+tag+"]",sheet,"divider",prefix+g(v)+" V: "+named->why,v*ratio,"V",sub.lo,sub.hi,"analytic",{}});
         }
     }
 }
@@ -164,6 +164,13 @@ void boot0(const std::string& sheet,const SpiceIndex& idx,SpiceResult& out) {
     out.checks.push_back({"BOOT0 strap VIH",sheet,"divider","DIP closed: 3.3 V through "+resistor_description(r)+" vs the SoM 1k5 pull-down (contract) -> must exceed STM32 VIH = 0.7*VDD = "+f(stm32_vih,2)+" V",
         py_round(divide(stm32_vdd*1500,1500+r.value),3),"V",stm32_vih,stm32_vdd,"analytic",{}});
 }
+std::string reported_value(const SpiceCheck& check){
+    const auto compact=g(check.value);
+    // Do not print a rejected voltage as exactly equal to its stated limit.
+    if((check.lo&&check.value<*check.lo&&compact==g(*check.lo))||
+       (check.hi&&check.value>*check.hi&&compact==g(*check.hi)))return fmt(check.value,17);
+    return compact;
+}
 }  // namespace
 
 bool SpiceCheck::ok() const {
@@ -174,7 +181,7 @@ bool SpiceCheck::ok() const {
 }
 std::vector<std::string> SpiceResult::errors() const {
     if(checks.empty())return {"No supported analytic checks were extracted; electrical behavior is unverified."};
-    std::vector<std::string> out;for(const auto& c:checks)if(!c.ok())out.push_back(c.sheet+":"+c.name+" = "+g(c.value)+" "+c.unit+" outside ["+(c.lo?g(*c.lo):"")+" .. "+(c.hi?g(*c.hi):"")+"] "+c.unit+" — "+c.detail+(c.spice_value?"; ngspice="+g(*c.spice_value):""));return out;
+    std::vector<std::string> out;for(const auto& c:checks)if(!c.ok())out.push_back(c.sheet+":"+c.name+" = "+reported_value(c)+" "+c.unit+" outside ["+(c.lo?g(*c.lo):"")+" .. "+(c.hi?g(*c.hi):"")+"] "+c.unit+" — "+c.detail+(c.spice_value?"; ngspice="+g(*c.spice_value):""));return out;
 }
 bool SpiceResult::ok() const{return !checks.empty()&&std::all_of(checks.begin(),checks.end(),[](const auto& c){return c.ok();});}
 SpiceResult extract_spice_checks(const std::vector<ProjectCircuit>& sheets,const PowerPolicy& policy) {
@@ -196,7 +203,7 @@ std::string spice_report(const SpiceResult& r,bool present) {
     std::vector<std::string> lines{"schgen spice / analytic spot-check gate",std::string(64,'='),"","engine: "+r.engine};
     if(!present)lines.push_back("ngspice: NOT INSTALLED (brew install ngspice) — the closed-form analytic layer IS the gate; every check below is an exact linear-network solution, not an approximation. ngspice adds an independent recompute when present.");
     lines.push_back("");lines.push_back("checks ("+std::to_string(r.checks.size())+"):");
-    for(const auto& c:r.checks){lines.push_back("  ["+std::string(c.ok()?"PASS":"FAIL")+"] "+c.sheet+": "+c.name+" = "+g(c.value)+" "+c.unit+" (limits "+(c.lo?g(*c.lo):"")+" .. "+(c.hi?g(*c.hi):"")+" "+c.unit+"; "+c.engine+")"+(c.spice_value?"  ngspice="+g(*c.spice_value):""));lines.push_back("         "+c.detail);}
+    for(const auto& c:r.checks){lines.push_back("  ["+std::string(c.ok()?"PASS":"FAIL")+"] "+c.sheet+": "+c.name+" = "+reported_value(c)+" "+c.unit+" (limits "+(c.lo?g(*c.lo):"")+" .. "+(c.hi?g(*c.hi):"")+" "+c.unit+"; "+c.engine+")"+(c.spice_value?"  ngspice="+g(*c.spice_value):""));lines.push_back("         "+c.detail);}
     if(!r.notes.empty()){lines.push_back("");for(const auto& n:r.notes)lines.push_back("  "+n);}
     lines.push_back("");const auto errors=r.errors();
     if(errors.empty())lines.push_back("errors: none");else{lines.push_back("ERRORS ("+std::to_string(errors.size())+"):");for(const auto& e:errors)lines.push_back("  ERROR: "+e);}

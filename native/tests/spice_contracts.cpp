@@ -5,7 +5,9 @@
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
+#include <iomanip>
 #include <limits>
+#include <sstream>
 #include <stdexcept>
 #include <sys/stat.h>
 #include <thread>
@@ -83,6 +85,43 @@ void required_divider_coverage(const std::filesystem::path& dir){
     // Half of 3.3 V lies below the old upper-only check, but the rail is wrong.
     rejects_divider(wrong,"required divider HDMI_RX_5V_DET: source +3V3, expected HDMI_RX_5V");
 }
+void divider_threshold_precision(const std::filesystem::path& dir){
+    const auto decimal=[](double value){std::ostringstream out;out<<std::setprecision(17)<<value;return out.str();};
+    for(bool upper:{false,true})for(double delta:{-4e-5,-1e-7,0.,1e-7,4e-5}){
+        const double limit=upper?3.465:2.,source=upper?5.25:4.75,target=limit+delta;
+        auto sheets=fixture_sheets(dir/"003_HDMI_RX_5V_DET_10k_10k.json");
+        for(auto& part:sheets[0].circuit.parts)part.value=decimal((part.ref=="R1"?source-target:target)*10000);
+        const auto result=extract_spice_checks(sheets);
+        const auto check=std::find_if(result.checks.begin(),result.checks.end(),[&](const auto& c){
+            return upper?(c.hi&&*c.hi==limit):(c.lo&&*c.lo==limit);
+        });
+        require(check!=result.checks.end(),"threshold fixture lost required check");
+        require(check->ok()==(upper?delta<=0:delta>=0),"pre-acceptance voltage rounding concealed a threshold violation");
+        require(std::abs(check->value-target)<=8*std::numeric_limits<double>::epsilon()*target,"analytic voltage lost calculation precision");
+        const auto encoded=spice_result_json(result);
+        const auto index=static_cast<std::size_t>(check-result.checks.begin());
+        require(field(field(encoded,"checks").array_value[index],"value").number_value==check->value,"JSON dropped acceptance precision");
+        if(!check->ok()&&std::abs(delta)<1e-6)
+            require(spice_report(result,false).find("= "+decimal(check->value)+" V")!=std::string::npos,
+                    "report rounded a failed voltage to the displayed limit");
+    }
+}
+SpiceResult historical_analytic_view(const SpiceResult& raw,const JsonNode& expected){
+    auto view=raw;const auto& old=field(expected,"checks").array_value;
+    require(old.size()==raw.checks.size(),"historical analytic check census changed");
+    for(std::size_t i=0;i<old.size();++i){
+        const auto& check=raw.checks[i];
+        if(check.kind!="divider"||check.name.rfind("divider ",0)!=0)continue;
+        const double rounded=field(old[i],"value").number_value;
+        require(std::abs(std::round(check.value*10000)/10000-rounded)<1e-12,
+                "raw divider result differs from historical four-decimal calculation");
+        require(check.ok()==field(old[i],"ok").bool_value,"raw divider changed a frozen fixture verdict");
+        // Only this legacy comparison view is rounded. Actual gate values,
+        // JSON and simulator comparisons retain full calculation precision.
+        view.checks[i].value=rounded;
+    }
+    return view;
+}
 void numeric_safety() {
     for (const auto bad : {std::numeric_limits<double>::quiet_NaN(),
                            std::numeric_limits<double>::infinity(),
@@ -129,7 +168,7 @@ int main(int argc,char** argv) {
     }
     try {
         require(argc==2,"usage: spice_contracts <fixture-directory>");const std::filesystem::path dir(argv[1]);
-        numeric_safety();empty_coverage();required_divider_coverage(dir);
+        numeric_safety();empty_coverage();required_divider_coverage(dir);divider_threshold_precision(dir);
         const auto manifest=parse_json_file((dir/"manifest.json").string());std::size_t passed=0,live=0;
         const auto ngspice=ngspice_available();std::size_t corrected_empty=0,corrected_required=0;
         for(const auto& file:field(manifest,"cases").array_value) {
@@ -157,12 +196,13 @@ int main(int argc,char** argv) {
                     }
                     absent=coverage_report(absent);present=coverage_report(present);++corrected_empty;
                 }
-                same(spice_result_json(*result),expected,file.string_value);
-                require(spice_report(*result,false)==absent,file.string_value+": absent report differs");
-                require(spice_report(*result,true)==present,file.string_value+": present report differs");
+                const auto analytic_view=historical_analytic_view(*result,expected);
+                same(spice_result_json(analytic_view),expected,file.string_value);
+                require(spice_report(analytic_view,false)==absent,file.string_value+": absent report differs");
+                require(spice_report(analytic_view,true)==present,file.string_value+": present report differs");
                 if(const auto* expected=object_field(row,"ngspice");expected&&ngspice){
                     SpiceRunOptions opts;opts.executable=ngspice;run_ngspice_crosschecks(*result,opts);
-                    auto historical_view=*result;
+                    auto historical_view=historical_analytic_view(*result,*expected);
                     const auto& old_checks=field(*expected,"checks").array_value;
                     require(old_checks.size()==result->checks.size(),"historical simulation check count");
                     for(std::size_t i=0;i<old_checks.size();++i) {
