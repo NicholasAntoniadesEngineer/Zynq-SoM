@@ -280,10 +280,15 @@ void compact_recover_thermal(Placer& p) {
         const auto contract=p.ctx.in.contracts.find(sheet);
         const auto refs=p.ctx.board_refs.find(sheet);
         if (contract==p.ctx.in.contracts.end() || refs==p.ctx.board_refs.end()) return options;
-        const auto groups=contract_rigid_groups(contract->second,refs->second,{});
+        const auto* external=object_field(contract->second,"external");
+        if(external&&external->kind==JsonKind::Object&&!external->object_value.empty()&&
+           !p.ctx.wired.count(sheet))return options;
+        PcbPadNets pad_nets;
+        for(const auto& [pad,net]:p.pin_net)pad_nets.emplace(pad,net.second);
+        const auto groups=contract_rigid_groups(contract->second,refs->second,{},true,&pad_nets);
         if (!groups) return options; // Unsupported constraints grant no new movement permission.
         const auto offer=[&](std::set<std::string> group) {
-            if (group.size()<2 || std::find(options.begin(),options.end(),group)!=options.end()) return;
+            if (group.empty() || std::find(options.begin(),options.end(),group)!=options.end()) return;
             if (std::all_of(group.begin(),group.end(),[&](const auto& r) {
                     return p.pos.count(r) && evict_movable(p,r,true);
                 })) options.push_back(std::move(group));
@@ -316,7 +321,10 @@ void compact_recover_thermal(Placer& p) {
             bool accepted=false;
             for (const auto& move : thermal_pad_move_candidates(before.model(),policy,fields,&p.ctx.quantization)) {
               for (const auto& members : group_options(move.ref,before,move.dx,move.dy)) {
-                const bool grouped=members.size()>1;
+                // A validated contract singleton still needs the checked-group
+                // path: membership in a wired subsystem is not permission to
+                // bypass its local and board-level constraints.
+                const bool grouped=members.size()>1||!evict_movable(p,move.ref);
                 // Try the nearest output-grid point, then the adjacent outward
                 // tick if rounding consumed the mathematically exact clearance.
                 for (int tick : {0,1}) {

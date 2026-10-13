@@ -1,0 +1,29 @@
+{
+  "parent_commit": "f0808b43",
+  "defect": "Thermal repair excluded placement/v2 groups and every contract singleton. Power test points therefore received no repair trial despite a valid independent group partition.",
+  "change": "Use validated power-stage closure with actual pad nets for thermal repair. Offer contract singletons as well as multi-part groups. A singleton excluded by ordinary movement eligibility uses the checked-contract path, including all local placement contracts and board flow after rounded geometry checks. Unknown/malformed constraints still suppress new movement.",
+  "tests": {
+    "native_pcb_compact_owned_evict_contracts": "PASS 8.33s; final external-enforcement guard rebuild PASS 8.39s",
+    "new_coverage": "v2 protected group recovers thermal capacity by rigid translation; v2 independent singleton recovers capacity without dragging an unrelated part. Existing fixed/owned/contact closure, geometry, accounting and failure tests retained. Singleton fixture separates an unrelated physical obstacle so it tests eligibility rather than requiring a colliding move to succeed."
+  },
+  "candidate": {
+    "dimensions_mm": [163,153],
+    "top_parts": 394,
+    "bottom_parts": 172,
+    "model_seconds": 15.194656875,
+    "pcb_text_seconds": 0.027726667,
+    "pcb_sha256": "1940cbfa9c932fa56686741b354ebfab067b8bcd19d7cb6eb97eff09df2a6b4d",
+    "emission_lattice_events_before": 2,
+    "emission_lattice_events_after": 1,
+    "new_repair": "TP20003 first rounded y=46.8550 produced no capacity improvement; outward y=46.8551 was accepted. Both trials recorded.",
+    "log": "native/build/thermal-v2-singleton-carrier.log",
+    "accepted_finalist": false
+  },
+  "controls": {
+    "carrier_pcb_sha256": "d954ec91a789f69a1e94a26a9d3a91b279fbc208dff2503cbe8ee4c8eabc199f",
+    "devkit_pcb_sha256": "1b12fecbcbbaa5e6084c2459da93cb144a660ff19805e6e4e3f75f9c22689fdb",
+    "result": "Both default reference outputs unchanged",
+    "logs": ["native/build/thermal-v2-reference.log", "native/build/thermal-v2-devkit.log"]
+  },
+  "limits": "One thermal-via lattice event still exceeds the committed zero ceiling. No new full qualification, render review, smaller outline or historical Python speedup claim. Single-run times are diagnostic only."
+}

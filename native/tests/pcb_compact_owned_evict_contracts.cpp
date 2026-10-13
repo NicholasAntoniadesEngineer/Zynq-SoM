@@ -497,6 +497,24 @@ void tests(const PcbPlacementInput& source,const std::filesystem::path& root) {
                 "contract-group translation preserves the internal arrangement");
         require(plan_preferred_thermal_vias(refit_fanout_geometry(*f.p,nullptr).model(),policy)
                     .front().sites.chosen.size()==3,"contract-group translation recovers thermal capacity");
+        f.p->pos=group_entry;
+        f.in.contracts[f.sheet]=parse_json_text(R"({"contract":"placement/v2","structures":[
+            {"type":"proximity","anchor":"R1","anchor_pins":["1"],"members":["R2"],"max_mm":10,"same_side":true}]})");
+        compact_recover_thermal(*f.p);
+        require(f.p->pos.at("R_BLOCKER")!=group_entry.at("R_BLOCKER")&&
+                f.p->pos.at("R_PARTNER")!=group_entry.at("R_PARTNER"),
+                "v2 validated contract groups must receive checked thermal trials");
+        f.p->pos=group_entry;
+        f.p->pos["R_PARTNER"]={50,70};
+        const auto singleton_entry=f.p->pos;
+        f.in.contracts[f.sheet]=parse_json_text(R"({"contract":"placement/v2","structures":[
+            {"type":"same_side","ics":["R2"]}]})");
+        compact_recover_thermal(*f.p);
+        require(f.p->pos.at("R_BLOCKER")!=group_entry.at("R_BLOCKER")&&
+                f.p->pos.at("R_PARTNER")==singleton_entry.at("R_PARTNER"),
+                "validated unconstrained singleton may move without dragging unrelated contract parts");
+        require(plan_preferred_thermal_vias(refit_fanout_geometry(*f.p,nullptr).model(),policy)
+                    .front().sites.chosen.size()==3,"v2 singleton recovers thermal capacity");
         import_actual(f);
     }
     {
