@@ -351,6 +351,7 @@ void primary_fanout_contracts() {
     }
     // Two 20 mm groups cannot be separated as rectangles on this board, but
     // sparse reservations on their opposite faces interlock with 1 mm gaps.
+    for(bool wired:{false,true})
     for(int direction=0;direction<4;++direction)for(bool compact:{false,true}) {
         FloorplanLegalizeInput in;in.board_w=25;in.board_h=25;in.compact=compact;
         FloorplanPoint a{.5,.5},b{4.5,.5};
@@ -360,7 +361,8 @@ void primary_fanout_contracts() {
             std::swap(ca.dx,ca.dy);std::swap(ca.w,ca.h);std::swap(cb.dx,cb.dy);std::swap(cb.w,cb.h);}
         in.fixed_rects={{"a",{a.first,a.second,a.first+20,a.second+20}}};in.fixed_poses["a"]=a;
         for(const auto* name:{"a","b"})in.metrics[name]={{{"p",10,10}},{{"p",0,0,20,20}},{20,20}};
-        in.index.hard.push_back({"near_max","b","b","a",100,"interlocking reservations",true,{},{}});
+        in.index.hard.push_back({wired?"flow_hop":"near_max","b","b","a",100,"interlocking reservations",true,{},{}});
+        if(wired)in.channel_demand[{"a","b"}]=12;
         in.primary_fanout["a"]={{},{},1,3};in.primary_fanout["b"]={{},{},2,3};
         std::vector<FloorplanLegalizeVar> vars{{"b",20,20,b,b.first,b.second}};
         const auto seed=vars;std::vector<std::string> log;
@@ -383,6 +385,9 @@ void primary_fanout_contracts() {
             "full secondary-face obstacle must reject after one recorded retry");
         require(vars[0].x==seed[0].x&&vars[0].y==seed[0].y,"failed physical retry mutated caller pose");
         auto roomy=in;roomy.board_w=80;roomy.board_h=80;vars={{"b",20,20,{40,40},40,40}};
+        // Keep the original near-adjacency incumbent control; the wired case
+        // above intentionally replaces that policy with a channel heuristic.
+        roomy.index.hard.front().kind="near_max";
         log.clear();retries=0;
         require(floorplan_legalize_compact(roomy,vars,log)&&retries==0,
             "accepted conservative incumbent must not execute physical retry");

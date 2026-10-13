@@ -254,7 +254,10 @@ public:
                         std::max(s.gap,fanout_sep(high.reach,high.inset,low.reach,low.inset,sep.axis_x?'S':'E')):
                         gap(!sep.axis_x);
                 }
-                if(reservation_geometry&&s.gap<=in.clear&&reservation_pair(key(s.lo),key(s.hi))) {
+                // Opposite primary faces use their complete selected physical
+                // reservations, not a net-count channel around both envelopes.
+                // Exact child clearance/fanout and hard-term checks remain.
+                if(reservation_geometry&&reservation_pair(key(s.lo),key(s.hi))) {
                     if(auto pocket=reservation_seed_seps(sep.lo,sep.hi)) {
                         for(const auto& child:*pocket) {
                             seps.push_back(child);
@@ -279,7 +282,7 @@ public:
                         const auto& low=in.primary_fanout.at(key(lo));const auto& high=in.primary_fanout.at(key(hi));
                         if(occ_pair_active(low.mask,low.mask,true,high.mask,high.mask,true))
                             alternative.gap=std::max(s.gap,fanout_sep(low.reach,low.inset,high.reach,high.inset,x?'E':'S'));
-                        if(reservation_geometry&&s.gap<=in.clear&&reservation_pair(key(lo),key(hi))){
+                        if(reservation_geometry&&reservation_pair(key(lo),key(hi))){
                             alternative.projected_gap=true;alternative.gap=reservation_gap(lo,hi,x);
                         }
                     }
