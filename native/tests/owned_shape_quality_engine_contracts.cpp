@@ -224,7 +224,8 @@ void synthetic() {
     catalog.clear();observation->owned_shape_selection_completed={};
     auto missing_catalog_quality=observed;missing_catalog_quality.owned_shape_quality.erase({"pilot",1});
     (void)pack(missing_catalog_quality);
-    require(catalog==std::vector<std::pair<int,std::string>>{{0,"fixture-0"}},"catalog advertised an unmeasured shape");
+    require(catalog==std::vector<std::pair<int,std::string>>{{0,"fixture-0"},{1,"fixture-1"}},
+            "catalog omitted a registered tag because owned quality was unavailable");
     require(improved.plan.interior_blocks[0].w == baseline.plan.interior_blocks[0].w &&
         improved.plan.interior_blocks[0].h == baseline.plan.interior_blocks[0].h &&
         improved.plan.interior_blocks[0].x == baseline.plan.interior_blocks[0].x &&

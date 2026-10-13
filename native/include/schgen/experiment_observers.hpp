@@ -86,8 +86,9 @@ struct FloorplanExperiment {
     // Controlled downstream packing experiment: require an already offered
     // bottom-primary shape for these groups. Never creates or validates one.
     std::set<std::string> require_bottom_sheets;
-    // Read-only inventory of tagged shapes with complete measured quality.
-    // Registration is not a final-board feasibility or hardware verdict.
+    // Read-only inventory of all tagged shapes, including mixed-face contract
+    // candidates without owned quality. Registration neither supplies missing
+    // quality nor proves final-board feasibility or permits tag restriction.
     std::function<void(const std::string&,int,const std::string&)> owned_shape_catalogued;
     std::function<void(std::size_t,std::size_t,std::size_t)> edge_feasibility_completed;
     std::function<void(const std::string&,const std::string&,double,double)> edge_feasibility_rejected;

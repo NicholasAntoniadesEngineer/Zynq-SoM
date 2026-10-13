@@ -1,0 +1,21 @@
+{
+  "parent_commit": "b66c755e",
+  "change": "Expose all tagged shapes in the read-only candidate catalogue, not only shapes with comparable owned-component quality",
+  "safety": "No selection or hardware policy changes. Missing quality remains missing; explicit owned-tag restrictions still reject unmeasured choices.",
+  "test": {"name": "native_owned_shape_quality_engine_contracts", "status": "PASS", "seconds": 0.53, "log": "native/build/face-catalog-tests.log"},
+  "screens": [
+    {"ranking": "area-first", "outline_mm": [164,152], "status": "construction_failed", "seconds": 5.926734334, "log": "native/build/face-selection-area-164x152.log"},
+    {"ranking": "estimate-first", "outline_mm": [164,152], "status": "construction_failed", "seconds": 5.888720125, "log": "native/build/face-selection-estimate-164x152.log"},
+    {"ranking": "area-first with expanded read-only catalogue", "outline_mm": [164,152], "status": "construction_failed", "seconds": 5.968549542, "outer_attempts": 4, "failure_receipt_captured": true, "log": "native/build/face-catalog-164x152.log"}
+  ],
+  "diagnostic_parity": "All failure_ trace lines identical before and after catalogue change",
+  "findings": [
+    "USB-JTAG indices 4 through 11 are mixed-face contract-bottom candidates; indices 12 through 35 are their whole-group rotations added in the failure retry.",
+    "Selected index 4 maps to contract-bottom/C28001/0.300000/0.300000; selected index 9 maps to contract-bottom/C28007/20.659000/11.450000.",
+    "A reported primary side of top does not mean that all components in the candidate are top-side.",
+    "Switching between area-first and estimate-first alone does not solve this outline.",
+    "append_contract_group_faces constructs each candidate from the original seed, moving one connected group at a time; combinations of independent movable groups are not enumerated by this generator."
+  ],
+  "next": "Investigate combined contract-group face assignments with actual geometry, fanout and contract validation, rather than assuming mixed-face candidates are never selected.",
+  "limits": "No smaller board, new full qualification, or speedup established. Single-run diagnostic timings include observer overhead."
+}
