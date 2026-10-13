@@ -1,4 +1,6 @@
 #include "pcb_placement_internal.hpp"
+#include "schgen/pcb_emit.hpp"
+#include "schgen/thermal_via_planning.hpp"
 
 namespace schgen::pcb_placement {
 namespace {
@@ -35,6 +37,7 @@ PcbCheckInput refit_fanout_geometry(const Placer &placer, const PcbStageRefitPos
     model.origin_x = model.origin_y = 25;
     model.board_w = placer.width;
     model.board_h = placer.height;
+    model.net_numbers = placer.net_numbers;
     for (const auto &[ref, xy] : placer.pos) {
         if (!placer.geometry.resolvable.count(ref)) continue;
         const auto &source = placer.ctx.by_ref.at(ref);
@@ -571,10 +574,15 @@ void Placer::refit(ExecutionFailureReceipt* failure) {
         // No refit mode may buy a facing/airwire improvement by
         // starving another group. Preserve all trial receipts above, and
         // leave the incumbent poses intact when the trial fails this check.
-        if (result.poses &&
-            !refit_preserves_fanout(refit_fanout_geometry(*this, nullptr),
-                                   refit_fanout_geometry(*this, &*result.poses)))
-            continue;
+        if (result.poses) {
+            const auto before = refit_fanout_geometry(*this, nullptr);
+            const auto after = refit_fanout_geometry(*this, &*result.poses);
+            if (!refit_preserves_fanout(before, after)) continue;
+            const auto policy = pcb_emit_policy(ctx.in.floorplan.project);
+            const auto thermal_before = plan_preferred_thermal_vias(before.model(),policy,&ctx.quantization);
+            const auto thermal_after = plan_preferred_thermal_vias(after.model(),policy,&ctx.quantization);
+            if (!preserves_preferred_thermal_vias(thermal_before,thermal_after)) continue;
+        }
         if (result.poses)
             for (const auto &[r, p] : *result.poses) {
                 pos[r] = {std::get<0>(p), std::get<1>(p)};

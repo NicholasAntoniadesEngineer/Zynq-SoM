@@ -1,5 +1,6 @@
 #include "pcb_emit_internal.hpp"
 #include "schgen/embed_fp.hpp"
+#include "schgen/thermal_via_planning.hpp"
 
 namespace schgen::pcb_emission {
 Box4 courtyard(const PcbFootprintInst &i) {
@@ -57,30 +58,13 @@ Sexpr embed(const PcbFootprintInst &i, const PcbEmitPolicy &p, const Uid &uid) {
                                     inherited, uid);
 }
 
-ThermalNodes thermal_nodes(const PcbModel &m, const PcbEmitPolicy &p, const Uid &uid,
-                           PcbEmissionResult &result, QuantizationCounts* counts) {
-    ThermalNodes out;
-    auto g = m.net_numbers.find("GND");
-    if (g == m.net_numbers.end() || !g->second)
-        return out;
-    if (std::none_of(m.insts.begin(), m.insts.end(), [&](const auto &i) {
-            return std::any_of(p.thermal_copper.begin(), p.thermal_copper.end(),
-                [&](const auto &s) { return starts(i.value, s.first); });
-        }))
-        return out;
+std::vector<ViaObstacle> thermal_obstacles(const PcbCheckModel &m, QuantizationCounts* counts) {
     std::map<int, std::string> net_names;
     for (const auto &[name, n] : m.net_numbers)
         net_names[n] = name;
     // Scan each immutable source once per render, never cache by a mutable path.
     using Pads = decltype(scan_mod_pads(Sexpr{}));
     std::map<const PcbCheckFootprint *, Pads> scans;
-    std::vector<Points> polygons;
-    std::vector<std::string> layers;
-    Points placed;
-    ViaSiteSpec rule{m.origin_x,          m.origin_y,           m.board_w,
-                     m.board_h,           p.thermal_via_edge,   p.thermal_via_size,
-                     p.thermal_via_drill, p.thermal_via_clear,  p.hole_samenet_pad,
-                     p.thermal_via_h2h,   p.thermal_via_spacing};
     // Through-vias must clear pads on both faces. Footprint origins do not
     // bound pad extent: connectors and offset-origin footprints can reach far
     // beyond them. Prepare actual world geometry once, shared by all subjects.
@@ -107,6 +91,30 @@ ThermalNodes thermal_nodes(const PcbModel &m, const PcbEmitPolicy &p, const Uid 
             obstacles.push_back({x, y, radius, radius, net_names[c.net], c.drill,
                 "escape via @(" + fmt(c.x, 3, true) + "," + fmt(c.y, 3, true) + ")"});
         }
+    return obstacles;
+}
+ViaSiteSpec thermal_rule(const PcbCheckModel &m, const PcbEmitPolicy &p) {
+    return {m.origin_x, m.origin_y, m.board_w, m.board_h, p.thermal_via_edge,
+            p.thermal_via_size, p.thermal_via_drill, p.thermal_via_clear,
+            p.hole_samenet_pad, p.thermal_via_h2h, p.thermal_via_spacing};
+}
+bool has_thermal_subjects(const PcbCheckModel& m, const PcbEmitPolicy& p) {
+    return std::any_of(m.insts.begin(), m.insts.end(), [&](const auto &i) {
+        return std::any_of(p.thermal_copper.begin(), p.thermal_copper.end(),
+            [&](const auto &s) { return starts(i.value, s.first); });
+    });
+}
+ThermalNodes thermal_nodes(const PcbModel &m, const PcbEmitPolicy &p, const Uid &uid,
+                           PcbEmissionResult &result, QuantizationCounts* counts) {
+    ThermalNodes out;
+    auto g = m.net_numbers.find("GND");
+    if (g == m.net_numbers.end() || !g->second || !has_thermal_subjects(m, p))
+        return out;
+    const auto obstacles = thermal_obstacles(m, counts);
+    const auto rule = thermal_rule(m, p);
+    std::vector<Points> polygons;
+    std::vector<std::string> layers;
+    Points placed;
     for (const auto &i : m.insts) {
         auto match = std::find_if(p.thermal_copper.begin(), p.thermal_copper.end(),
                                   [&](const auto &s) { return starts(i.value, s.first); });
@@ -229,3 +237,48 @@ ThermalNodes thermal_nodes(const PcbModel &m, const PcbEmitPolicy &p, const Uid 
     return out;
 }
 } // namespace schgen::pcb_emission
+
+namespace schgen {
+std::vector<PreferredThermalField> plan_preferred_thermal_vias(
+    const PcbCheckModel& m, const PcbEmitPolicy& p, QuantizationCounts* counts) {
+    using namespace pcb_emission;
+    std::vector<PreferredThermalField> result;
+    if (!has_thermal_subjects(m,p)) return result;
+    const auto ground = m.net_numbers.find("GND");
+    if (ground == m.net_numbers.end() || !ground->second)
+        throw PcbEmissionError("thermal planning requires a resolved GND net");
+    const auto obstacles = thermal_obstacles(m,counts);
+    const auto rule = thermal_rule(m,p);
+    Points occupied;
+    for (const auto& i : m.insts) {
+        const auto match = std::find_if(p.thermal_copper.begin(),p.thermal_copper.end(),
+            [&](const auto& s) { return starts(i.value,s.first); });
+        if (match == p.thermal_copper.end()) continue;
+        auto spec = match->second;
+        if (spec.via_sites.empty()) throw PcbEmissionError(i.ref+": thermal copper requires preferred via sites");
+        if (i.mirror) {
+            for (auto& xy : spec.via_sites) xy.second = -xy.second;
+            spec.pour = {spec.pour.x0,-spec.pour.y1,spec.pour.x1,-spec.pour.y0};
+        }
+        auto sites = select_via_sites(i.x,i.y,i.rotation,spec.via_sites,spec.pour,
+            spec.max_vias,p.thermal_lattice_pitch,false,rule,obstacles,occupied,counts);
+        occupied.insert(occupied.end(),sites.chosen.begin(),sites.chosen.end());
+        result.push_back({i.ref,spec.max_vias,std::move(sites)});
+    }
+    return result;
+}
+bool preserves_preferred_thermal_vias(const std::vector<PreferredThermalField>& before,
+                                      const std::vector<PreferredThermalField>& after) {
+    if (before.size()!=after.size()) return false;
+    std::map<std::string,const PreferredThermalField*> prior;
+    for (const auto& field : before)
+        if (!prior.emplace(field.ref,&field).second) return false;
+    for (const auto& field : after) {
+        const auto old = prior.find(field.ref);
+        if (old==prior.end() || field.requested!=old->second->requested ||
+            field.sites.chosen.size()<old->second->sites.chosen.size()) return false;
+        prior.erase(old);
+    }
+    return prior.empty();
+}
+}

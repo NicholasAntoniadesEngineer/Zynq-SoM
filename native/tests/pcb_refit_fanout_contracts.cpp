@@ -57,6 +57,8 @@ void projection(const std::filesystem::path& root) {
         trial[ref] = {xy.first + .000049, xy.second - .000049, p.rot(ref)};
     const auto before = p.ctx.quantization;
     const auto checked = refit_fanout_geometry(p,&trial);
+    require(checked.model().net_numbers==p.net_numbers,
+            "refit projection retains net identities for thermal planning");
     require(p.pos==old_pos && p.rotations==old_rot && p.pin_net==old_nets && p.geometry.side_of==old_sides,
             "trial projection is atomic and preserves identities");
     std::map<std::string,std::size_t> expected;

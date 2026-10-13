@@ -1,5 +1,6 @@
 #include "schgen/atomic_file.hpp"
 #include "schgen/pcb_emit.hpp"
+#include "schgen/thermal_via_planning.hpp"
 #include "../src/pcb_emit_internal.hpp"
 #include <algorithm>
 #include <fstream>
@@ -273,7 +274,12 @@ void thermal_world_obstacles() {
         const auto *at = pcb_emission::child(nodes.vias.front(), "at");
         require(at != nullptr, "thermal via has coordinates");
         const auto &values = std::get<SexprList>(at->v);
-        return std::pair{std::get<double>(values.at(1).v), std::get<double>(values.at(2).v)};
+        const auto xy = std::pair{std::get<double>(values.at(1).v), std::get<double>(values.at(2).v)};
+        const auto planned = plan_preferred_thermal_vias(m,policy);
+        require(planned.size()==1 && planned.front().ref=="U1" &&
+                planned.front().sites.chosen==std::vector<std::pair<double,double>>{xy},
+                "preferred-only model plan agrees with independently emitted via");
+        return xy;
     };
     require(sites(model) == std::pair{100.0, 100.0}, "unobstructed preferred site");
     // Identical physical pad, represented with near and distant footprint
@@ -321,6 +327,34 @@ void thermal_world_obstacles() {
     copper.copper.push_back(obstacle);
     require(sites(copper) == std::pair{104.0, 100.0},
         "escape copper extent cannot be culled by center distance");
+    auto missing_ground = model;
+    missing_ground.net_numbers.erase("GND");
+    rejects([&] { plan_preferred_thermal_vias(missing_ground,policy); }, "resolved GND");
+    const auto initial = plan_preferred_thermal_vias(model,policy);
+    require(preserves_preferred_thermal_vias(initial,initial), "identical thermal field preserved");
+    auto lost = initial;
+    lost.front().sites.chosen.clear();
+    require(!preserves_preferred_thermal_vias(initial,lost), "losing a preferred site rejects trial");
+    require(preserves_preferred_thermal_vias(lost,initial), "recovering preferred site is allowed");
+    require(!preserves_preferred_thermal_vias(initial,{}), "missing subject cannot pass");
+    auto two = initial;
+    two.push_back(initial.front());
+    two.back().ref="U2";
+    auto traded = two;
+    traded.front().sites.chosen.clear();
+    traded.back().sites.chosen.push_back({101,101});
+    require(!preserves_preferred_thermal_vias(two,traded), "aggregate site count cannot hide a subject loss");
+    std::reverse(two.begin(),two.end());
+    require(preserves_preferred_thermal_vias(two,two), "subject order does not alter preservation");
+    auto mirrored = model;
+    mirrored.insts.front().mirror = true;
+    mirrored.insts.front().side = "bottom";
+    policy.thermal_copper.front().second.via_sites = {{1,2}};
+    for (int rotation : {0,90,180,270}) {
+        mirrored.insts.front().rotation=rotation;
+        require(sites(mirrored)==world_turned_point(100,100,1,-2,rotation,3),
+                "preferred plan and emitter mirror local sites before rotation");
+    }
     std::cout << "Thermal world-space obstacle contracts PASS\n";
 }
 void thermal_selection_contracts() {

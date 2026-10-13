@@ -1,0 +1,28 @@
+{
+  "base_commit": "a6f27bb0",
+  "implementation": "Model-level preferred thermal-via planning shares actual world-pad/escape-via obstacle preparation and collision policy with emission. Facing refit now rejects trials that lose preferred capacity for any thermal subject; an improvement elsewhere cannot compensate. Incumbent poses remain intact on rejection. Trial projection now retains the net-number map.",
+  "scope": "Preferred capacity is an authored geometric heuristic, not a thermal adequacy verdict. Planning uses supplied copper and earlier selected preferred sites, not future escape or lattice vias. Final emission and independent checks remain required. This does not impose a new board acceptance gate or waive an existing one.",
+  "tests": {
+    "native_pcb_emit_contracts": "PASS 0.62 seconds",
+    "native_pcb_refit_fanout_contracts": "PASS 3.62 seconds",
+    "new_coverage": "Model planning compared with emitted via coordinates for offset origins, wide pads, both obstacle faces, escape copper, mirrored thermal sites and four rotations. Missing GND fails explicitly. Per-subject preservation rejects lost/missing subjects and aggregate-neutral capacity swaps, accepts unchanged capacity and recovery. Existing accounted projection and real noncompact refit integration continue passing.",
+    "carrier": {
+      "log": "native/build/thermal-refit-carrier.log",
+      "pcb_sha256": "e16f6a4bfe5227fbbb94c0e55b3acdb79c1f482eaef0edddde4c4ff4065c8bd8",
+      "two_runs_identical": true,
+      "model_seconds": [6.501786375, 6.457499791],
+      "pcb_text_seconds": [0.043757791, 0.041637791],
+      "thermal_lattice_events": 3,
+      "status": "165x156 bottom-monitor experiment remains unqualified; refit protection does not repair its existing via conflict"
+    },
+    "devkit": {
+      "log": "native/build/thermal-refit-devkit.log",
+      "pcb_sha256": "b6798d4b63d2fddbf9fad24945c151b9420b049b674ad5d637c43bf4a365137f",
+      "two_runs_identical": true,
+      "model_seconds": [0.193322791, 0.193285083],
+      "pcb_text_seconds": [0.008953709, 0.008601250]
+    }
+  },
+  "limitations": "Prepared-input screens and targeted tests only. No new full build/audit/DRC/render qualification, Python comparison or speedup claim. All corresponding PCB hashes unchanged.",
+  "next": "Use stage snapshots to locate where preferred capacity first disappears, then apply thermal-aware reservation or reconsideration at that stage. Do not assume the facing-refit stage caused the observed conflicts."
+}
