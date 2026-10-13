@@ -326,8 +326,33 @@ void live(const std::filesystem::path& root){
    std::map<std::string,std::size_t> base_indices;
    for(std::size_t i=0;i<base.model().insts.size();++i)base_indices.emplace(base.model().insts[i].ref,i);
    std::set<int> seen_turns;
+   std::size_t pair_candidates=0;
    for(std::size_t n=0;n<offers.size();++n) {
     demand(equal(offers[n],group_repeat.geometry.shapes.at("usb_jtag")[n]),"group-only geometry not reproducible");
+    if(offers[n].tag.rfind("contract-bottom-pair/",0)==0) {
+     ++pair_candidates;
+     const auto measured=model(offers[n],gc,group_turns.geometry,"usb_jtag");
+     demand(check_pcb_placement_contract(measured,"usb_jtag",&f.input.contracts.at("usb_jtag"),gc.board_refs.at("usb_jtag")).ok,
+            "combined bottom groups violated local contracts");
+     demand(check_fanout(measured,0).ok,"combined bottom groups starved fanout");
+     for(std::size_t i=0;i<measured.model().insts.size();++i) {
+      const auto& part=measured.model().insts[i];
+      demand(part.pad_nets==base.model().insts[base_indices.at(part.ref)].pad_nets,
+             "combined bottom groups changed net identity");
+      if(part.side!="bottom")continue;
+      const auto a=measured.courtyard_at(i);
+      for(std::size_t j=0;j<i;++j)if(measured.model().insts[j].side=="bottom") {
+       const auto b=measured.courtyard_at(j);
+       demand(a.x1+gc.clearance<=b.x0||b.x1+gc.clearance<=a.x0||
+              a.y1+gc.clearance<=b.y0||b.y1+gc.clearance<=a.y0,
+              "individually valid groups collide when combined on bottom");
+      }
+     }
+     for(const auto* owner:{"U2","U4"})
+      demand(offers[n].bot_off.count(gc.board_refs.at("usb_jtag").at(owner)),"combined candidate lacks both movable owners");
+     if(n<originals.size())demand(equal(offers[n],originals[n]),"group rotations rewrote original pair");
+     continue;
+    }
     if(n<originals.size()){demand(equal(offers[n],originals[n]),"group rotations rewrote existing prefix");continue;}
     const auto& offer=offers[n];const auto pos=offer.tag.find("/group-r");
     demand(pos!=std::string::npos,"new group candidate missing orientation tag");
@@ -361,6 +386,8 @@ void live(const std::filesystem::path& root){
            "group-only rotation changed net identity");
    }
    demand(seen_turns==std::set<int>{1,2,3},"missing legal group-only quarter turn");
+   demand(pair_candidates>0,"no combined bottom-group assignments exercised");
+   std::cout<<"combined bottom candidates="<<pair_candidates<<'\n';
    std::cout<<"carrier independent group rotations="<<offers.size()-originals.size()<<'\n';
    // Synthetic packages: a third disconnected physical pad makes former
    // two-pin passives fanout subjects/crowders without changing their poses.

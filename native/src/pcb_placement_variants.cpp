@@ -164,8 +164,35 @@ void append_contract_group_faces(Context& ctx,Geometry& g,const std::string& she
         const auto box=before.courtyard_at(i);boxes.emplace(before.model().insts[i].ref,box);
         old_right=std::max(old_right,box.x1);old_bottom=std::max(old_bottom,box.y1);
     }
+    const auto append_checked=[&](Shape candidate) {
+        const auto checked=model(candidate);double right=0,bottom=0;bool physical=true;
+        for(std::size_t i=0;i<checked.model().insts.size();++i) {
+            const auto a=checked.courtyard_at(i);right=std::max(right,a.x1);bottom=std::max(bottom,a.y1);
+            physical&=a.x0>=0&&a.y0>=0;
+            for(std::size_t j=0;j<i;++j) {
+                const auto& pi=checked.model().insts[i];const auto& pj=checked.model().insts[j];
+                if(pi.side!=pj.side&&!has_thru_pads_from_text(pi.mod->bytes)&&!has_thru_pads_from_text(pj.mod->bytes))continue;
+                const auto b=checked.courtyard_at(j);
+                if(a.x0<b.x1+ctx.clearance&&a.x1+ctx.clearance>b.x0&&
+                   a.y0<b.y1+ctx.clearance&&a.y1+ctx.clearance>b.y0)physical=false;
+            }
+        }
+        if(!physical)return false;
+        candidate.w=placement_variant_dimension_precision4dp(right+seed.w-old_right,&ctx.quantization);
+        candidate.h=placement_variant_dimension_precision4dp(bottom+seed.h-old_bottom,&ctx.quantization);
+        // Face assignments may help global packing without reducing local area.
+        if(!orientation_holds(ctx,g,sheet,candidate)||!check_fanout(model(candidate),0).ok)return false;
+        auto found=g.shapes.find(sheet);
+        if(found==g.shapes.end())found=g.shapes.emplace(sheet,std::vector<Shape>{seed}).first;
+        if(std::none_of(found->second.begin(),found->second.end(),[&](const auto& old){return same_zone_shape_geometry(old,candidate);}))
+            found->second.push_back(std::move(candidate));
+        return true;
+    };
+    std::vector<Shape> single_group;
     // Keep every original offer in its original index before appending turns.
-    for(int turn=0;turn<(group_rotations?4:1);++turn) for(const auto& group:*groups) {
+    for(int turn=0;turn<(group_rotations?4:1);++turn) {
+    const auto previous_singles=single_group.size();
+    for(const auto& group:*groups) {
         if(group.refs.size()<2||!group.required_top_refs.empty())continue;
         bool eligible=true;
         std::vector<Box4> moved_boxes,remaining_boxes;
@@ -210,31 +237,29 @@ void append_contract_group_faces(Context& ctx,Geometry& g,const std::string& she
                 const auto key=g.resolvable.at(ref),mk="@mirror/"+key;
                 candidate.mirror[ref]=mk;
             }
-            const auto checked=model(candidate);double right=0,bottom=0;bool physical=true;
-            for(std::size_t i=0;i<checked.model().insts.size();++i) {
-                const auto a=checked.courtyard_at(i);right=std::max(right,a.x1);bottom=std::max(bottom,a.y1);
-                physical&=a.x0>=0&&a.y0>=0;
-                for(std::size_t j=0;j<i;++j) {
-                    const auto& pi=checked.model().insts[i];const auto& pj=checked.model().insts[j];
-                    if(pi.side!=pj.side&&!has_thru_pads_from_text(pi.mod->bytes)&&!has_thru_pads_from_text(pj.mod->bytes))continue;
-                    const auto b=checked.courtyard_at(j);
-                    if(a.x0<b.x1+ctx.clearance&&a.x1+ctx.clearance>b.x0&&
-                       a.y0<b.y1+ctx.clearance&&a.y1+ctx.clearance>b.y0)physical=false;
-                }
-            }
-            if(!physical)continue;
-            candidate.w=placement_variant_dimension_precision4dp(right+seed.w-old_right,&ctx.quantization);
-            candidate.h=placement_variant_dimension_precision4dp(bottom+seed.h-old_bottom,&ctx.quantization);
-            // Local envelope area is not global packing quality: moving a
-            // group to the other face can free scarce top-side occupancy even
-            // when the union envelope is unchanged or grows. Let the board
-            // search decide among physically valid, distinct face assignments.
-            if(!orientation_holds(ctx,g,sheet,candidate)||!check_fanout(model(candidate),0).ok)continue;
-            auto found=g.shapes.find(sheet);
-            if(found==g.shapes.end())found=g.shapes.emplace(sheet,std::vector<Shape>{seed}).first;
-            if(std::none_of(found->second.begin(),found->second.end(),[&](const auto& old){return same_zone_shape_geometry(old,candidate);}))
-                found->second.push_back(std::move(candidate));
+            if(append_checked(candidate))single_group.push_back(std::move(candidate));
         }
+    }
+    // Combine disjoint connected groups, not arbitrary individual components.
+    // Singles stay first; every combination is independently checked because
+    // two legal moves can collide or jointly starve a fanout corridor.
+    for(std::size_t i=0;i<single_group.size();++i)for(std::size_t j=i+1;j<single_group.size();++j) {
+        if(j<previous_singles)continue; // earlier orientations already combined these
+        const auto& a=single_group[i];const auto& b=single_group[j];
+        bool disjoint=true;
+        for(const auto& [ref,xy]:b.bot_off) {
+            (void)xy;
+            if(seed.top_off.count(ref)&&!a.top_off.count(ref))disjoint=false;
+        }
+        if(!disjoint)continue;
+        Shape candidate=a;
+        candidate.tag="contract-bottom-pair/"+a.tag+"+"+b.tag;
+        for(const auto& [ref,xy]:b.bot_off)if(seed.top_off.count(ref)) {
+            candidate.top_off.erase(ref);candidate.bot_off[ref]=xy;
+            candidate.extra_rot[ref]=b.extra_rot.at(ref);candidate.mirror[ref]=b.mirror.at(ref);
+        }
+        append_checked(std::move(candidate));
+    }
     }
 }
 
