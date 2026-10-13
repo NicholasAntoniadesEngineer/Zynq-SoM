@@ -1,0 +1,33 @@
+{
+  "source_commit": "6361c8f2",
+  "result": "BOARD PASS, 12 sheets; applicable mandatory checks pass",
+  "output": "/private/tmp/devkit-current-qualified.FeLd2L",
+  "log": "native/build/devkit-current-qualification.log",
+  "command": "native/bin/schgen board --project devkit_mini --multiscale-outline --audit-projections 2 --timing -o FRESH_OUTPUT",
+  "binary_verification": {
+    "build": "cmake --build native/build/fast --target schgen --parallel 2",
+    "result": "ninja: no work to do",
+    "sha256": "224dc2b06de0ff73fb301d09dfd8850f66815e9b385f16ef596ea7ef580221b5"
+  },
+  "dimensions_mm": [98,98],
+  "top_components": 105,
+  "bottom_components": 55,
+  "pcb_sha256": "1b12fecbcbbaa5e6084c2459da93cb144a660ff19805e6e4e3f75f9c22689fdb",
+  "matches_current_profiler_reference": true,
+  "nonrouting_drc_errors": 0,
+  "unrouted": 408,
+  "reference_silk_overlaps_top_bottom": [0,0],
+  "advisory_failures": ["return_path", "golden", "contract_coverage_lint"],
+  "inapplicable_mandatory_skips": ["manual", "scfw"],
+  "timings_seconds": {
+    "pcb_input_loading_and_netlist_validation": 0.669459,
+    "pcb_build_model_with_internal_checks": 0.187027,
+    "pcb_text_render": 0.007949,
+    "render3d": 16.819293,
+    "source_audit": 108.823561,
+    "measured_scope_total_not_process_wall": 160.166665
+  },
+  "visual_review": "Eight 3D views generated; top/bottom inspected. Interface/service labels retained, ordinary references hidden. Layout matches current reference; bottom remains sparsely occupied.",
+  "historical_reference_check": "Retained timing worktree HEAD verified as 0e9bbc913bab77f9cd228940db2a332d25d6bfa1. No historical timing rerun or percentage claim in this qualification.",
+  "limits": "Not fabrication-ready; routing excluded. This closes full-devkit regression evidence for current code, not the overall optimisation goal or matched historical comparison."
+}
