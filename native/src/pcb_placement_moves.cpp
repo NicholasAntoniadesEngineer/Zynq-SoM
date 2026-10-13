@@ -152,10 +152,11 @@ bool evict_allocated(const Placer &p, const std::string &ref, Box4 b) {
                    b.x1<=block.x+block.w && b.y1<=block.y+block.h;
     return false; // Cannot prove an absent allocation.
 }
+enum class MovementFrame { CorridorAllocation, FinalFrameNonregression };
 bool evict_legal(const Placer &p, const PcbCheckInput &before, const PcbCheckInput &after,
                  const std::set<std::string> &members, const EvictRows &rows,
                  const std::vector<Box4> &corridors, bool rigid, std::string* reason=nullptr,
-                 bool retain_allocation=true) {
+                 MovementFrame frame=MovementFrame::CorridorAllocation) {
     if (reason) reason->clear();
     const auto reject=[&](const std::string& why) { if(reason)*reason=why; return false; };
     const auto prior=evict_index(before), next=evict_index(after);
@@ -174,7 +175,7 @@ bool evict_legal(const Placer &p, const PcbCheckInput &before, const PcbCheckInp
         const bool tht=has_thru_pads_from_text(part.mod->bytes);
         if (b.x0<.6 || b.y0<.6 || b.x1>p.width-.6 || b.y1>p.height-.6)
             return reject("board_edge:"+r);
-        if (retain_allocation && !evict_allocated(p,r,b)) return reject("allocated_block:"+r+
+        if (frame==MovementFrame::CorridorAllocation && !evict_allocated(p,r,b)) return reject("allocated_block:"+r+
             (evict_allocated(p,r,evict_box(before,prior.at(r)))?":incumbent_inside":":incumbent_outside"));
         if ((part.side=="bottom" || tht) && hit(b,corridors)) return reject("corridor:"+r);
         if (part.side=="top" && rects_intersect_open(b,p.keepout)) return reject("keepout:"+r);
@@ -183,9 +184,15 @@ bool evict_legal(const Placer &p, const PcbCheckInput &before, const PcbCheckInp
             const auto &other=after.model().insts[i];
             if (part.side!=other.side && !tht && !has_thru_pads_from_text(other.mod->bytes))
                 continue;
-            if (separation(b,evict_box(after,i))<p.ctx.clearance)
+            const double previous=separation(evict_box(before,prior.at(r)),evict_box(before,prior.at(s)));
+            // Match the earlier breathing stage's no-worsening rule. An
+            // existing tight gap is not a licence to create or worsen one;
+            // independent final-board acceptance still owns absolute limits.
+            const double required=frame==MovementFrame::FinalFrameNonregression
+                ? std::min(p.ctx.clearance,previous) : p.ctx.clearance;
+            if (separation(b,evict_box(after,i))<required)
                 return reject("body_clearance:"+r+":"+s+
-                    (separation(evict_box(before,prior.at(r)),evict_box(before,prior.at(s)))<p.ctx.clearance
+                    (previous<p.ctx.clearance
                         ?":incumbent_below_clearance":":incumbent_clear"));
         }
     }
@@ -259,7 +266,8 @@ void compact_recover_thermal(Placer& p) {
                     // keepouts; earlier breathing may already leave them.
                     // Independent thermal recovery uses actual final-frame
                     // obstacles and protected memberships instead of that leash.
-                    if (evict_legal(p,before,after,{move.ref},{},corridors,false,&reason,false)) {
+                    if (evict_legal(p,before,after,{move.ref},{},corridors,false,&reason,
+                            MovementFrame::FinalFrameNonregression)) {
                         const auto next=plan_preferred_thermal_vias(after.model(),policy,&p.ctx.quantization);
                         if (capacity(next)>capacity(fields)) {
                             const auto& pose=trial.at(move.ref);

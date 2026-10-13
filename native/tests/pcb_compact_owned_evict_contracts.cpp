@@ -384,6 +384,26 @@ void l4_corridor_contract(const PcbPlacementInput& source) {
 void tests(const PcbPlacementInput& source,const std::filesystem::path& root) {
     {
         Fixture f(source,"bringup_rails",true);
+        f.part("R_FREE1",20,20,"bottom");
+        f.part("R_FREE2",22.25,20,"bottom");
+        const auto before=refit_fanout_geometry(*f.p,nullptr);
+        const auto legal=[&](double x,MovementFrame frame) {
+            PcbStageRefitPoses pose{{"R_FREE1",{x,20,0}}};
+            const auto after=refit_fanout_geometry(*f.p,&pose);
+            return evict_legal(*f.p,before,after,{"R_FREE1"},{},{},false,nullptr,frame);
+        };
+        require(!legal(19.9,MovementFrame::CorridorAllocation),"allocation repair retains its absolute gap policy");
+        require(legal(19.9,MovementFrame::FinalFrameNonregression),"thermal repair may improve an existing tight gap");
+        require(!legal(20.1,MovementFrame::FinalFrameNonregression),"thermal repair may not worsen an existing tight gap");
+        require(legal(19.75,MovementFrame::FinalFrameNonregression),"full nominal clearance recovery is allowed");
+        f.p->pos["R_FREE2"]={23,20};
+        const auto clear=refit_fanout_geometry(*f.p,nullptr);
+        PcbStageRefitPoses pose{{"R_FREE1",{20.6,20,0}}};
+        require(!evict_legal(*f.p,clear,refit_fanout_geometry(*f.p,&pose),{"R_FREE1"},{},{},false,nullptr,
+                            MovementFrame::FinalFrameNonregression),"thermal repair may not create a new undersized gap");
+    }
+    {
+        Fixture f(source,"bringup_rails",true);
         std::vector<std::string> outcomes;
         auto observer=std::make_shared<PcbPlacementExperiment>();
         observer->thermal_trial=[&](const auto& ref,double x,double y,const auto& outcome) {
