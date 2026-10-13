@@ -527,8 +527,13 @@ std::string trial(const PcbPlacementInput& source, bool compact, int run, int ge
                          <<" copper=not_in_snapshot\n";
                 if(field.sites.chosen.size()<field.requested) {
                     std::map<std::string,std::size_t> blockers;
-                    for(const auto& rejected:field.sites.rejected)
+                    for(const auto& rejected:field.sites.rejected) {
                         ++blockers[rejected.blocker.kind+":"+rejected.blocker.label];
+                        std::cout<<"thermal_stage_rejected_site stage="<<snapshot.stage<<" ref="<<field.ref
+                                 <<" x="<<rejected.candidate.first<<" y="<<rejected.candidate.second
+                                 <<" blocker="<<std::quoted(rejected.blocker.kind+":"+rejected.blocker.label)
+                                 <<" blocker_x="<<rejected.blocker.x<<" blocker_y="<<rejected.blocker.y<<'\n';
+                    }
                     for(const auto& [label,count]:blockers)
                         std::cout<<"thermal_stage_blocker stage="<<snapshot.stage<<" ref="<<field.ref
                                  <<" label="<<std::quoted(label)<<" count="<<count<<'\n';

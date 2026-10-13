@@ -191,7 +191,7 @@ ViaSelection select_via_sites(
             if (is_preferred) ++result.preferred_examined;
             else ++result.lattice_examined;
             auto hit = via_site_blocker(point.first, point.second, rule, obstacles, used);
-            if (hit.blocked) result.rejected.push_back({is_preferred, std::move(hit)});
+            if (hit.blocked) result.rejected.push_back({is_preferred, std::move(hit), point});
             else {
                 result.chosen.push_back(point);
                 used.push_back(point);

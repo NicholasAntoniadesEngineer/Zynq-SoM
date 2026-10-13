@@ -81,7 +81,9 @@ std::vector<std::pair<double, double>> fallback_via_sites(
 
 struct ViaSelection {
     std::vector<std::pair<double, double>> chosen;
-    struct Rejection { bool preferred; ViaBlockHit blocker; };
+    // Candidate is the actual rounded world point tested, not the obstacle
+    // centre stored in blocker. Retain it for geometry-directed reconsideration.
+    struct Rejection { bool preferred; ViaBlockHit blocker; std::pair<double,double> candidate; };
     std::vector<Rejection> rejected;
     std::size_t preferred_examined = 0, lattice_examined = 0, lattice_chosen = 0;
 };

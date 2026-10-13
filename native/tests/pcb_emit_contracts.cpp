@@ -395,12 +395,13 @@ void thermal_selection_contracts() {
             candidates.insert(candidates.end(), lattice.begin(), lattice.end());
             std::vector<std::pair<double,double>> expected, occupied{{52,50}};
             std::vector<std::string> rejected;
+            std::vector<std::pair<double,double>> rejected_points;
             std::size_t examined = 0, lattice_chosen = 0;
             for (std::size_t j = 0; j < candidates.size() && expected.size() < requested; ++j) {
                 const auto point = world_turned_point(50,50,candidates[j].first,candidates[j].second,rotation,3);
                 const auto hit = via_site_blocker(point.first,point.second,rule,blocker,occupied);
                 ++examined;
-                if (hit.blocked) rejected.push_back(hit.kind + ":" + hit.label);
+                if (hit.blocked) {rejected.push_back(hit.kind + ":" + hit.label);rejected_points.push_back(point);}
                 else {
                     expected.push_back(point);
                     occupied.push_back(point);
@@ -410,8 +411,10 @@ void thermal_selection_contracts() {
             auto actual = select_via_sites(50,50,rotation,preferred,pour,requested,.25,true,
                                            rule,blocker,{{52,50}});
             std::vector<std::string> actual_rejected;
+            std::vector<std::pair<double,double>> actual_rejected_points;
+            for (const auto& r : actual.rejected) actual_rejected_points.push_back(r.candidate);
             for (const auto& r : actual.rejected) actual_rejected.push_back(r.blocker.kind+":"+r.blocker.label);
-            require(actual.chosen == expected && actual_rejected == rejected &&
+            require(actual.chosen == expected && actual_rejected == rejected && actual_rejected_points==rejected_points &&
                     actual.preferred_examined + actual.lattice_examined == examined &&
                     actual.lattice_chosen == lattice_chosen,
                     "lazy planning matches independent eager selection and execution receipts");
