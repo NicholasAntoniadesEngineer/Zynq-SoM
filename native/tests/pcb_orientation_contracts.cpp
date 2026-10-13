@@ -406,7 +406,7 @@ void live(const std::filesystem::path& root){
    const auto original=model(variants.front(),candidate_context,split.geometry,"usb_jtag");
    std::map<std::string,std::size_t> original_indices;
    for(std::size_t i=0;i<original.model().insts.size();++i)original_indices.emplace(original.model().insts[i].ref,i);
-   std::size_t candidates=0,rotated_candidates=0;
+   std::size_t candidates=0,rotated_candidates=0,nonshrinking_candidates=0;
    for(std::size_t index=0;index<variants.size();++index) {
     const auto& candidate=variants[index];
     if(candidate.tag.rfind("contract-bottom/",0)!=0)continue;
@@ -435,7 +435,12 @@ void live(const std::filesystem::path& root){
      demand(candidate.top_off.at(ref)==variants.front().top_off.at(ref)&&!candidate.mirror.count(ref),
             "controlled owner or top-access part moved");
     }
-    demand(candidate.w*candidate.h<variants.front().w*variants.front().h,"candidate did not reduce envelope");
+    if(candidate.w*candidate.h>=variants.front().w*variants.front().h) {
+     ++nonshrinking_candidates;
+     demand(candidate.top_off.size()<variants.front().top_off.size()&&
+            candidate.bot_off.size()>variants.front().bot_off.size(),
+            "nonshrinking face candidate did not free top-side occupancy");
+    }
     std::optional<FloorplanPoint> translation;
     for(std::size_t i=0;i<measured.model().insts.size();++i) {
      const auto& part=measured.model().insts[i];const auto oi=original_indices.at(part.ref);
@@ -461,6 +466,8 @@ void live(const std::filesystem::path& root){
            candidate_context.stage_input("usb_jtag",after.geometry).pad_nets,"binding changed authored net identity");
    }
    demand(candidates>0,"contract-group face experiment generated no candidates");
+   demand(nonshrinking_candidates>0,"valid nonshrinking bottom assignments were pruned by local area");
+   std::cout<<"nonshrinking face candidates="<<nonshrinking_candidates<<'\n';
    demand(rotated_candidates==3*(candidates-rotated_candidates),"new groups missing legal quarter turns");
    auto blocked_context=candidate_context;
    for(const auto* owner:{"U2","U4"})blocked_context.by_ref.at(blocked_context.board_refs.at("usb_jtag").at(owner)).lib_id="Switch:SW_SPST";

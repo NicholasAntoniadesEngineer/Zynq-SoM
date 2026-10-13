@@ -225,7 +225,11 @@ void append_contract_group_faces(Context& ctx,Geometry& g,const std::string& she
             if(!physical)continue;
             candidate.w=placement_variant_dimension_precision4dp(right+seed.w-old_right,&ctx.quantization);
             candidate.h=placement_variant_dimension_precision4dp(bottom+seed.h-old_bottom,&ctx.quantization);
-            if(candidate.w*candidate.h>=seed.w*seed.h||!orientation_holds(ctx,g,sheet,candidate)||!check_fanout(model(candidate),0).ok)continue;
+            // Local envelope area is not global packing quality: moving a
+            // group to the other face can free scarce top-side occupancy even
+            // when the union envelope is unchanged or grows. Let the board
+            // search decide among physically valid, distinct face assignments.
+            if(!orientation_holds(ctx,g,sheet,candidate)||!check_fanout(model(candidate),0).ok)continue;
             auto found=g.shapes.find(sheet);
             if(found==g.shapes.end())found=g.shapes.emplace(sheet,std::vector<Shape>{seed}).first;
             if(std::none_of(found->second.begin(),found->second.end(),[&](const auto& old){return same_zone_shape_geometry(old,candidate);}))
