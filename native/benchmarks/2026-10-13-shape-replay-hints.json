@@ -1,0 +1,92 @@
+{
+  "parent_commit": "82e5b5a2",
+  "change": "Reuse successful early-choice prefixes solely as invocation-local replay ordering hints. Promote only a prefix already present in the newly generated queue. Key: width, height, reservation policy, compact mode and explicit interior order.",
+  "safety": "Initial successful attempt still returns immediately. No cached pose/acceptance reuse, no new candidate injection, no bypass of caller restrictions or any geometry/hardware gate. Record every actual promotion and retain all trial accounting. A hint is packing success only, not board qualification.",
+  "tests": {
+    "native_compact_retry_contracts": "PASS 6.06s; final expanded successful-incumbent hint fixture also PASS",
+    "native_policy_audits_contracts": "PASS 45.12s",
+    "logs": [
+      "native/build/shape-hint-tests.log",
+      "native/build/shape-hint-final-tests.log"
+    ],
+    "coverage": "Matching hint permutes an existing four-prefix failure frontier without changing its members or independently measured scalar work. Wrong-outline and absent-prefix hints preserve original order. Stale hints still fail actual geometry and roll back. A successful original layout remains byte/accounting identical even with a pre-existing hint. Successful recovery records a hint."
+  },
+  "carrier_recovery": {
+    "recipe_base": "native/build/fast/schgen_compact_stage_profile --repo . --project carrier --compact-search on --edge-feasibility on --owned-quality-first on --owned-face-cohesion on --contract-group-face-sheet usb_jtag --require-bottom-sheet power_mon --require-bottom-sheet bringup_modules --require-bottom-sheet bringup_en_modules --joint-separation-states 1024 --reseat-poses 8 --reseat-frontier 4096 --reseat-continuations 3 --reseat-victim-shapes on --owned-shape board_aux=owned-face-a1.000000 --owned-shape bringup_rails=bottom-a2.2/r270/owned-pins-forward --schematic /private/tmp/carrier-166x156-two-pilots.iK3HkI/Zynq_Carrier.kicad_sch --runs 1 --interior-order 3 --failed-first-retry on --shape-area-first on",
+    "extra_flags": "--shape-choice-replays 8",
+    "floorplan_spec": "/private/tmp/carrier-aspect-screen.3noxv0/power-som-either-163x153.json",
+    "spec_reconstruction": "native/benchmarks/carrier-163x153-combined-bottom.floorplan.json with interior.power_som.layer=either",
+    "outline_mm": [
+      163,
+      153
+    ],
+    "pcb_sha256": "d954ec91a789f69a1e94a26a9d3a91b279fbc208dff2503cbe8ee4c8eabc199f",
+    "before": {
+      "model_seconds": 81.827055291,
+      "outer_attempts": 54,
+      "replays": 46,
+      "packed": 3,
+      "budget_events": 5,
+      "log": "native/build/shape-choice-hints-carrier-163x153.log"
+    },
+    "after": {
+      "model_seconds": 78.911284583,
+      "outer_attempts": 52,
+      "replays": 44,
+      "packed": 3,
+      "budget_events": 5,
+      "hint_promotions": 4,
+      "log": "native/build/shape-hint-carrier-163x153.log"
+    },
+    "replay_change_percent": -4.3478260869565215,
+    "cheap_checks": "fanout, ratsnest, placement contract and flow PASS; hard_red=0; no nonsearch fallback events",
+    "selected_work": [
+      {
+        "operation": "occupancy_frontier_key1dp",
+        "before": 947972493,
+        "after": 934655477,
+        "change_percent": -1.404789284323675
+      },
+      {
+        "operation": "occupancy_cell_index",
+        "before": 471049036,
+        "after": 463300492,
+        "change_percent": -1.6449548577358728
+      },
+      {
+        "operation": "legalize_position_precision4dp",
+        "before": 17781542,
+        "after": 16383598,
+        "change_percent": -7.861770368396622
+      },
+      {
+        "operation": "legalize_bound_precision4dp",
+        "before": 10086955,
+        "after": 8967399,
+        "change_percent": -11.099048226149517
+      },
+      {
+        "operation": "estimate_position_precision",
+        "before": 42456792,
+        "after": 42085384,
+        "change_percent": -0.874790539991811
+      }
+    ]
+  },
+  "controls": {
+    "carrier": {
+      "replay_option": "omitted",
+      "model_seconds": 12.49956775,
+      "pcb_sha256": "d954ec91a789f69a1e94a26a9d3a91b279fbc208dff2503cbe8ee4c8eabc199f",
+      "log": "native/build/shape-hint-carrier-control.log"
+    },
+    "devkit": {
+      "model_seconds": 0.199360833,
+      "pcb_sha256": "1b12fecbcbbaa5e6084c2459da93cb144a660ff19805e6e4e3f75f9c22689fdb",
+      "log": "native/build/shape-hint-devkit-control.log"
+    },
+    "cheap_checks": "Both retain reference hashes and pass fanout/ratsnest/placement contract/flow with hard_red=0."
+  },
+  "limitations": "No smaller board and no new full qualification or renders. Measured replay and operation counts demonstrate a modest work reduction. Wall-time samples overlapped unrelated tests in both campaigns and are not controlled timing comparisons. No historical Python speed claim. First-pass bounded exploration remains incomplete; failed experiments do not establish infeasibility.",
+  "next_bottleneck": "Recovery still executes five budget-exhausted packing calls. Occupancy frontier rounding and cell indexing dominate recorded scalar-call volume; investigate actual time and avoid equating operation counts with wall-time cost."
+}

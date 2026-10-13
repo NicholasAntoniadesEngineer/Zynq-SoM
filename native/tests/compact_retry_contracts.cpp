@@ -795,7 +795,9 @@ void shape_choice_replay_contract() {
     const Case roomy{80,70,{{8,6,2,100},{7,5,2,1}}};
     Engine baseline(in);setup(baseline,roomy);require(baseline.attempt_pack(false),"roomy control failed");
     config->shape_choice_replays=16;
-    Engine unchanged(in);setup(unchanged,roomy);require(unchanged.attempt_pack(false),"replay displaced success");
+    Engine unchanged(in);setup(unchanged,roomy);
+    unchanged.shape_replay_hint=std::make_pair(Engine::ContinuationKey{80,70,true,false,0},std::map<std::string,int>{{"b0",1}});
+    require(unchanged.attempt_pack(false),"replay displaced success");
     require(equal(floorplan_plan_json(baseline.plan),floorplan_plan_json(unchanged.plan))&&
             offers(baseline)==offers(unchanged),"successful incumbent or accounting changed");
     // Two independently selectable early blocks plus a genuinely impossible
@@ -834,6 +836,30 @@ void shape_choice_replay_contract() {
     }
     require(failed.plan.accounting.quantization_engagements==expected&&events==expected_events,
             "replay aggregate differs from independently executed prefix receipts");
+    config->shape_choice_replays=16;
+    const Engine::ContinuationKey hint_key{80,70,true,false,0};
+    for(int mode=0;mode<3;++mode) {
+        Engine hinted(in);setup(hinted,impossible);
+        auto key=hint_key;auto choices=executed_prefixes.at(2);
+        if(mode==1)std::get<0>(key)=81; // Different outline: cannot reuse ordering.
+        if(mode==2)choices["b0"]=999; // Not in the newly generated frontier.
+        hinted.shape_replay_hint=std::make_pair(key,choices);
+        std::vector<std::map<std::string,int>> actual;
+        config->stage_rejected=[&](const auto&){actual.push_back(hinted.shape_replay_choices);};
+        require(!hinted.attempt_pack(false),"stale success hint bypassed failed geometry");
+        config->stage_rejected={};
+        require(actual.size()==executed_prefixes.size()&&
+                std::set<std::map<std::string,int>>(actual.begin(),actual.end())==
+                std::set<std::map<std::string,int>>(executed_prefixes.begin(),executed_prefixes.end()),
+                "hint injected or pruned a prefix");
+        require(hinted.plan.accounting.quantization_engagements==expected&&equal(layout(hinted.plan),initial),
+                "hint reused acceptance, changed isolated work or leaked layout");
+        const auto& hinted_events=hinted.plan.accounting.fallback_events;
+        require(std::count(hinted_events.begin(),hinted_events.end(),"interior_shape_choice_hint")==
+                (mode==0?1:0),"hint promotion accounting mismatch");
+        require(mode==0?actual.at(1)==choices:actual==executed_prefixes,
+                "matching hint not prioritised or stale hint affected order");
+    }
     config->shape_choice_replays=1;
     Engine capped(in);setup(capped,impossible);require(!capped.attempt_pack(false),"capped impossible fixture accepted");
     require(std::count(capped.plan.accounting.fallback_events.begin(),capped.plan.accounting.fallback_events.end(),
@@ -882,6 +908,8 @@ void shape_choice_replay_contract() {
     std::cout<<"shape-choice recovery witness="<<ok<<" replays="<<std::count(recovered.plan.accounting.fallback_events.begin(),
         recovered.plan.accounting.fallback_events.end(),"interior_shape_choice_replay")<<'\n';
     require(ok,"shape-choice recovery witness not recovered");
+    require(recovered.shape_replay_hint&& !recovered.shape_replay_hint->second.empty(),
+            "successful replay did not retain its ordering hint");
     for(const auto& a:recovered.plan.interior_blocks) {
         require(a.x>=0&&a.y>=0&&a.x+a.w<=trap.w&&a.y+a.h<=trap.h,"replay escaped board bounds");
         for(const auto& b:recovered.plan.interior_blocks)if(a.name!=b.name)

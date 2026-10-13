@@ -84,6 +84,7 @@ bool Engine::attempt_shape_replays(bool compact) {
     std::deque<Choices> pending;
     std::set<Choices> seen{restrictions};
     const auto budget=in.experiment->shape_choice_replays;
+    const ContinuationKey key{plan.board_w,plan.board_h,plan.punch_free,compact,*in.experiment->interior_order};
     std::size_t executed=0;
     bool truncated=false;
     ShapeChoiceTrace trace;
@@ -95,7 +96,10 @@ bool Engine::attempt_shape_replays(bool compact) {
     try {
         for(;;) {
             trace.clear();shape_replay_trace_started=false;
-            if(attempt_pack(compact)) {cleanup();return true;}
+            if(attempt_pack(compact)) {
+                if(executed)shape_replay_hint=std::make_pair(key,shape_replay_choices);
+                cleanup();return true;
+            }
             // Replay actual legal early choices from the first packing pass.
             // Include preceding choices to explore combinations, but allow
             // subsequent eviction/repair to change them. Deduplicate prefixes.
@@ -118,6 +122,15 @@ bool Engine::attempt_shape_replays(bool compact) {
                 }
             }
             if(executed==budget||pending.empty())break;
+            // Reorder only an already generated prefix: a stale hint cannot
+            // add a candidate, bypass a gate or displace a frontier member.
+            if(shape_replay_hint&&shape_replay_hint->first==key) {
+                const auto preferred=std::find(pending.begin(),pending.end(),shape_replay_hint->second);
+                if(preferred!=pending.end()&&preferred!=pending.begin()) {
+                    std::rotate(pending.begin(),preferred,preferred+1);
+                    fallback("interior_shape_choice_hint");
+                }
+            }
             restore();shape_replay_choices=std::move(pending.front());pending.pop_front();
             ++executed;fallback("interior_shape_choice_replay");
         }

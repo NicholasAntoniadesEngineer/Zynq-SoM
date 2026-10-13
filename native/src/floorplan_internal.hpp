@@ -151,6 +151,8 @@ public:
     // acceptance evidence. Changed geometry is always checked afresh.
     using ContinuationKey=std::tuple<double,double,bool,bool,int>;
     std::optional<std::pair<ContinuationKey,std::size_t>> continuation_hint;
+    // An ordering hint only. Replayed choices are reseated and checked afresh.
+    std::optional<std::pair<ContinuationKey,std::map<std::string,int>>> shape_replay_hint;
 
     std::vector<FloorplanBlock*> blocks();
     const CachedFootprint& footprint(const std::string& key) const;
