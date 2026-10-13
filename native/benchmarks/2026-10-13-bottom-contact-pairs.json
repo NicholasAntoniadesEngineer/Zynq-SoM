@@ -1,0 +1,35 @@
+{
+  "parent_commit": "2a6defc8",
+  "change": "When two independently legal disjoint bottom groups fail combined qualification, derive rigid translations of the second group from actual courtyard collisions against bottom-side or through-hole obstacles. Try four axis contact offsets per collision, deduplicate shifts, then independently recheck complete geometry, local contracts and fanout.",
+  "candidate_order": "Append contact repairs after the existing singles and pairs for each orientation. Unrotated offers remain a prefix when group rotations are enabled. Contact repairs do not recursively become new pair parents.",
+  "numerics": "Translation coordinates use existing accounted 4dp output precision; final rounded geometry is checked, not accepted from unrounded contact calculations.",
+  "tests": {
+    "native_pcb_orientation_contracts": "PASS 3.12s",
+    "log": "native/build/bottom-contact-rigid-tests.log",
+    "previous_combined_candidates": 215,
+    "combined_candidates": 262,
+    "new_contact_candidates": 47,
+    "coverage": "Independent rigid-translation witness against both parent offers, unchanged other group and remaining top positions, mirror/rotation preservation, pad-net identity, local contracts, fanout, pair clearance, deterministic geometry, top-access exclusions and existing through-hole negatives. New candidates observed with group rotations enabled."
+  },
+  "carrier_reference": {
+    "dimensions_mm": [163,153],
+    "unchanged_pcb_sha256": "d954ec91a789f69a1e94a26a9d3a91b279fbc208dff2503cbe8ee4c8eabc199f",
+    "model_seconds": 11.926546209,
+    "diagnostics": "fanout, ratsnest, placement contracts and placement flow PASS; hard_red=0",
+    "log": "native/build/bottom-contact-carrier.log"
+  },
+  "devkit_reference": {
+    "dimensions_mm": [98,98],
+    "unchanged_pcb_sha256": "1b12fecbcbbaa5e6084c2459da93cb144a660ff19805e6e4e3f75f9c22689fdb",
+    "model_seconds": 0.197916417,
+    "diagnostics": "fanout, ratsnest, placement contracts and placement flow PASS; hard_red=0",
+    "log": "native/build/bottom-contact-devkit.log"
+  },
+  "smaller_screens": [
+    {"dimensions_mm": [162,153], "group_rotations": false, "status": "construction_failed", "seconds": 3.8116195, "log": "native/build/bottom-contact-162x153.log"},
+    {"dimensions_mm": [163,152], "group_rotations": false, "status": "construction_failed", "seconds": 10.382548458, "log": "native/build/bottom-contact-163x152.log"},
+    {"dimensions_mm": [162,153], "group_rotations": true, "status": "construction_failed", "seconds": 22.948440292, "log": "native/build/bottom-contact-rotations-162x153.log"},
+    {"dimensions_mm": [163,152], "group_rotations": true, "status": "construction_failed", "seconds": 68.8330885, "log": "native/build/bottom-contact-rotations-163x152.log"}
+  ],
+  "limits": "More verified legal local choices, not a smaller qualified board. Rotated-offer search remains opt-in and substantially more costly in these screens; no default rotation expansion. No full qualification or historical Python timing comparison claimed. Single-run diagnostic timings with uncontrolled concurrency; not speedup measurements. Contact translations cover axis-only escape from current collisions, not all free-space arrangements or joint re-packing."
+}

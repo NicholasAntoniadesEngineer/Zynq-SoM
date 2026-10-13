@@ -326,11 +326,35 @@ void live(const std::filesystem::path& root){
    std::map<std::string,std::size_t> base_indices;
    for(std::size_t i=0;i<base.model().insts.size();++i)base_indices.emplace(base.model().insts[i].ref,i);
    std::set<int> seen_turns;
-   std::size_t pair_candidates=0;
+   std::size_t pair_candidates=0,contact_candidates=0;
    for(std::size_t n=0;n<offers.size();++n) {
     demand(equal(offers[n],group_repeat.geometry.shapes.at("usb_jtag")[n]),"group-only geometry not reproducible");
     if(offers[n].tag.rfind("contract-bottom-pair/",0)==0) {
      ++pair_candidates;
+     if(const auto contact=offers[n].tag.find("/contact/");contact!=std::string::npos) {
+      ++contact_candidates;
+      const auto plus=offers[n].tag.find('+');
+      const auto atag=offers[n].tag.substr(std::string("contract-bottom-pair/").size(),
+          plus-std::string("contract-bottom-pair/").size());
+      const auto btag=offers[n].tag.substr(plus+1,contact-plus-1);
+      const auto a=std::find_if(offers.begin(),offers.end(),[&](const auto& s){return s.tag==atag;});
+      const auto b=std::find_if(offers.begin(),offers.end(),[&](const auto& s){return s.tag==btag;});
+      demand(a!=offers.end()&&b!=offers.end(),"contact repair lost its independently legal parent groups");
+      demand(offers[n].top_off==a->top_off||offers[n].top_off.size()<a->top_off.size(),"contact repair added top parts");
+      std::optional<FloorplanPoint> delta;
+      for(const auto& [ref,xy]:offers[n].bot_off) {
+       if(originals.front().top_off.count(ref)&&b->bot_off.count(ref)) {
+        const auto old=b->bot_off.at(ref);const FloorplanPoint d{xy.first-old.first,xy.second-old.second};
+        if(!delta)delta=d;
+        demand(std::abs(d.first-delta->first)<1e-4&&std::abs(d.second-delta->second)<1e-4,
+               "contact repair distorted a rigid group");
+        demand(offers[n].extra_rot.at(ref)==b->extra_rot.at(ref)&&offers[n].mirror.at(ref)==b->mirror.at(ref),
+               "contact repair changed rotation or chirality");
+       }else demand(xy==a->bot_off.at(ref),"contact repair moved the other bottom group");
+      }
+      for(const auto& [ref,xy]:offers[n].top_off)demand(xy==a->top_off.at(ref),"contact repair moved a remaining top part");
+      demand(delta&&(std::abs(delta->first)>0||std::abs(delta->second)>0),"contact repair did not translate any group");
+     }
      const auto measured=model(offers[n],gc,group_turns.geometry,"usb_jtag");
      demand(check_pcb_placement_contract(measured,"usb_jtag",&f.input.contracts.at("usb_jtag"),gc.board_refs.at("usb_jtag")).ok,
             "combined bottom groups violated local contracts");
@@ -387,6 +411,8 @@ void live(const std::filesystem::path& root){
    }
    demand(seen_turns==std::set<int>{1,2,3},"missing legal group-only quarter turn");
    demand(pair_candidates>0,"no combined bottom-group assignments exercised");
+   demand(contact_candidates>0,"colliding bottom groups yielded no geometry-directed contact repairs");
+   std::cout<<"contact bottom candidates="<<contact_candidates<<'\n';
    std::cout<<"combined bottom candidates="<<pair_candidates<<'\n';
    std::cout<<"carrier independent group rotations="<<offers.size()-originals.size()<<'\n';
    // Synthetic packages: a third disconnected physical pad makes former

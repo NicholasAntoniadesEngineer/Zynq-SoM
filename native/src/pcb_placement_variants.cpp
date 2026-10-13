@@ -191,6 +191,7 @@ void append_contract_group_faces(Context& ctx,Geometry& g,const std::string& she
     std::vector<Shape> single_group;
     // Keep every original offer in its original index before appending turns.
     for(int turn=0;turn<(group_rotations?4:1);++turn) {
+    std::vector<Shape> contact_pairs;
     const auto previous_singles=single_group.size();
     for(const auto& group:*groups) {
         if(group.refs.size()<2||!group.required_top_refs.empty())continue;
@@ -258,8 +259,39 @@ void append_contract_group_faces(Context& ctx,Geometry& g,const std::string& she
             candidate.top_off.erase(ref);candidate.bot_off[ref]=xy;
             candidate.extra_rot[ref]=b.extra_rot.at(ref);candidate.mirror[ref]=b.mirror.at(ref);
         }
-        append_checked(std::move(candidate));
+        if(append_checked(candidate))continue;
+        // Corner-aligned singles can overlap when combined. Derive rigid
+        // translations from actual colliding courtyards, not a sampling grid.
+        const auto placed=model(candidate);
+        std::set<FloorplanPoint> shifts;
+        const auto moved=[&](const std::string& ref){return seed.top_off.count(ref)&&b.bot_off.count(ref);};
+        for(std::size_t bi=0;bi<placed.model().insts.size();++bi) {
+            if(!moved(placed.model().insts[bi].ref))continue;
+            const auto box=placed.courtyard_at(bi);
+            for(std::size_t oi=0;oi<placed.model().insts.size();++oi) {
+                const auto& obstacle=placed.model().insts[oi];
+                if(moved(obstacle.ref)||(obstacle.side!="bottom"&&!has_thru_pads_from_text(obstacle.mod->bytes)))continue;
+                const auto other=placed.courtyard_at(oi);
+                if(box.x0>=other.x1+ctx.clearance||box.x1+ctx.clearance<=other.x0||
+                   box.y0>=other.y1+ctx.clearance||box.y1+ctx.clearance<=other.y0)continue;
+                shifts.emplace(other.x1+ctx.clearance-box.x0,0);
+                shifts.emplace(other.x0-ctx.clearance-box.x1,0);
+                shifts.emplace(0,other.y1+ctx.clearance-box.y0);
+                shifts.emplace(0,other.y0-ctx.clearance-box.y1);
+            }
+        }
+        for(const auto& shift:shifts) {
+            Shape translated=candidate;
+            translated.tag+="/contact/"+std::to_string(shift.first)+"/"+std::to_string(shift.second);
+            for(auto& [ref,xy]:translated.bot_off)if(moved(ref)) {
+                xy.first=placement_bottom_pose_precision4dp(xy.first+shift.first,&ctx.quantization);
+                xy.second=placement_bottom_pose_precision4dp(xy.second+shift.second,&ctx.quantization);
+            }
+            contact_pairs.push_back(std::move(translated));
+        }
     }
+    // Keep each orientation's existing offers ahead of its checked repairs.
+    for(auto& candidate:contact_pairs)append_checked(std::move(candidate));
     }
 }
 
