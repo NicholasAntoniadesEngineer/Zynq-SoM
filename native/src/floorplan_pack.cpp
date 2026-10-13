@@ -371,6 +371,7 @@ bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure,
         for (std::size_t k=0;k<variants->second.size();++k) {
             if(restricted!=owned_shape_choices.end()&&static_cast<int>(k)!=restricted->second)continue;
             const auto& s=variants->second[k];
+            if(in.experiment&&in.experiment->require_bottom_sheets.count(b.name)&&s.side!="bottom")continue;
             auto win=std::make_tuple(-bw,2*bw,-bh,2*bh);
             if (evicted) win=evict_window(evicted->x,evicted->y,evicted->w,evicted->h,evicted->fanout_reach,evicted->fanout_inset,
                 get(chosen,evicted->name),s.w,s.h,s.reach,s.inset,s.comps,clear);
@@ -471,6 +472,7 @@ bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure,
                 if(static_cast<int>(k)==e.shape_idx||
                    (restricted!=owned_shape_choices.end()&&static_cast<int>(k)!=restricted->second))continue;
                 const auto& s=variants->second[k];
+                if(in.experiment&&in.experiment->require_bottom_sheets.count(e.name)&&s.side!="bottom")continue;
                 fallback("interior_reseat_shape_trial");
                 p=near(e,static_cast<int>(k),anchor,s.w,s.h,s.reach,s.inset,side_mask(s.side),s.comps,nullptr);
                 if(!p)continue;
@@ -524,6 +526,7 @@ bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure,
                     if(static_cast<int>(k)==previous||
                        (restricted!=owned_shape_choices.end()&&static_cast<int>(k)!=restricted->second))continue;
                     const auto& s=variants->second[k];
+                    if(in.experiment&&in.experiment->require_bottom_sheets.count(b.name)&&s.side!="bottom")continue;
                     fallback("interior_reseat_incoming_shape_trial");
                     const auto p=near(b,static_cast<int>(k),a,s.w,s.h,s.reach,s.inset,side_mask(s.side),s.comps,&e);
                     if(!p)continue;
@@ -728,6 +731,13 @@ bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure,
                     }
                 }
             }
+        }
+    }
+    if(in.experiment)for(const auto& sheet:in.experiment->require_bottom_sheets) {
+        const auto found=std::find_if(plan.interior_blocks.begin(),plan.interior_blocks.end(),
+            [&](const auto& b){return b.name==sheet;});
+        if(found==plan.interior_blocks.end()||found->side!="bottom") {
+            rejected("required_bottom_side",sheet,compact);return false;
         }
     }
     return true;

@@ -41,6 +41,7 @@ struct Options {
     bool owned_extent_alternatives = false;
     bool owned_face_cohesion = false;
     std::set<std::string> contract_group_face_sheets;
+    std::set<std::string> require_bottom_sheets;
     bool contract_group_rotations = false;
     std::optional<FloorplanPoseRetryLimits> reseat_pose_limits;
     std::optional<std::size_t> joint_states;
@@ -73,6 +74,7 @@ void help() {
         "  [--owned-extent-alternatives off|on] (append bounded extent-first local candidates)\n"
         "  [--owned-face-cohesion off|on] (append initial owner/cap same-face packs)\n"
         "  [--owned-shape SHEET=TAG] (restrict a measured owned candidate; repeat for different sheets)\n"
+        "  [--require-bottom-sheet SHEET] (compact diagnostic: require an already offered bottom-primary shape)\n"
         "  [--outline-mm WIDTHxHEIGHT] (explicit diagnostic outline; skips automatic sizing search)\n"
         "  [--initial-outline-mm WIDTHxHEIGHT] (validated starting candidate for automatic sizing)\n"
         "  [--multiscale-outline off|on] (local axis/diagonal refinement; can miss smaller grid candidates)\n"
@@ -165,6 +167,10 @@ Options parse(int argc, char** argv) {
         else if (arg == "--constraint-first") {
             if (value != "on" && value != "off") throw std::invalid_argument("constraint-first must be off|on");
             out.constraint_first = value == "on";
+        }
+        else if (arg == "--require-bottom-sheet") {
+            if(value.empty()||!out.require_bottom_sheets.insert(value).second)
+                throw std::invalid_argument("require-bottom-sheet requires a unique sheet");
         }
         else if (arg == "--owned-shape") {
             const auto split=value.find('=');
@@ -334,7 +340,7 @@ std::string trial(const PcbPlacementInput& source, bool compact, int run, int ge
                   bool observers = true,
                   bool constraint_first = false,const std::optional<FloorplanPoint>& outline=std::nullopt,bool edge_translation=false,
                   const std::optional<FloorplanPoint>& initial_outline=std::nullopt,
-                  const std::optional<int>& interior_order=std::nullopt,bool multiscale_outline=false,bool edge_feasibility=false,bool owned_selection_trace=false,bool owned_quality_first=false,bool owned_face_cohesion=false,const std::map<std::string,std::string>& owned_shapes={},const std::set<std::string>& contract_group_face_sheets={},bool failed_first_retry=false,bool owned_extent_alternatives=false,bool contract_group_rotations=false,const std::optional<FloorplanPoseRetryLimits>& reseat_pose_limits=std::nullopt,const std::optional<std::size_t>& joint_states=std::nullopt) {
+                  const std::optional<int>& interior_order=std::nullopt,bool multiscale_outline=false,bool edge_feasibility=false,bool owned_selection_trace=false,bool owned_quality_first=false,bool owned_face_cohesion=false,const std::map<std::string,std::string>& owned_shapes={},const std::set<std::string>& contract_group_face_sheets={},bool failed_first_retry=false,bool owned_extent_alternatives=false,bool contract_group_rotations=false,const std::optional<FloorplanPoseRetryLimits>& reseat_pose_limits=std::nullopt,const std::optional<std::size_t>& joint_states=std::nullopt,const std::set<std::string>& require_bottom_sheets={}) {
     const auto copy_start = Clock::now();
     auto input = trial_input(source,compact,outline);
     for(const auto& selected:contract_group_face_sheets)if(std::none_of(input.floorplan.sheets.begin(),input.floorplan.sheets.end(),
@@ -354,6 +360,8 @@ std::string trial(const PcbPlacementInput& source, bool compact, int run, int ge
     floor->owned_extent_alternatives = owned_extent_alternatives;
     floor->owned_face_cohesion = owned_face_cohesion;
     floor->owned_shape_tags=owned_shapes;
+    floor->require_bottom_sheets=require_bottom_sheets;
+    for(const auto& sheet:require_bottom_sheets)std::cout<<"required_bottom_sheet="<<sheet<<'\n';
     floor->contract_group_face_sheets=contract_group_face_sheets;
     floor->contract_group_rotations=contract_group_rotations;
     floor->reseat_pose_limits=reseat_pose_limits;
@@ -473,6 +481,13 @@ std::string trial(const PcbPlacementInput& source, bool compact, int run, int ge
         std::cout << "pcb_emission_diagnostic " << std::quoted(diagnostic) << '\n';
     const auto hash = pcb_sha256(emission.pcb);
     const auto accounting = pcb_placement_accounting(result);
+    for(const auto& sheet:require_bottom_sheets) {
+        std::size_t top=0,bottom=0;
+        for(const auto& part:result.model.insts)if(part.sheet==sheet) {
+            if(part.side=="bottom")++bottom;else ++top;
+        }
+        std::cout<<"required_bottom_result sheet="<<sheet<<" top_parts="<<top<<" bottom_parts="<<bottom<<'\n';
+    }
     print_reseats();
     std::cout << "trial status=constructed_no_acceptance model_seconds=" << model_seconds
         << " pcb_text_emit_seconds=" << emit_seconds << " construction_seconds=" << model_seconds + emit_seconds
@@ -585,7 +600,7 @@ int main(int argc, char** argv) {
             const int generation = options.inputs == "prepared" ? 1 : run;
             for (const bool compact : {false, true}) {
                 if ((compact && options.compact == "off") || (!compact && options.compact == "on")) continue;
-                const auto hash = trial(prepared->input, compact, run, generation, options.observers,options.constraint_first,options.outline,options.edge_translation,options.initial_outline,options.interior_order,options.multiscale_outline,options.edge_feasibility,options.owned_selection_trace,options.owned_quality_first,options.owned_face_cohesion,options.owned_shapes,options.contract_group_face_sheets,options.failed_first_retry,options.owned_extent_alternatives,options.contract_group_rotations,options.reseat_pose_limits,options.joint_states);
+                const auto hash = trial(prepared->input, compact, run, generation, options.observers,options.constraint_first,options.outline,options.edge_translation,options.initial_outline,options.interior_order,options.multiscale_outline,options.edge_feasibility,options.owned_selection_trace,options.owned_quality_first,options.owned_face_cohesion,options.owned_shapes,options.contract_group_face_sheets,options.failed_first_retry,options.owned_extent_alternatives,options.contract_group_rotations,options.reseat_pose_limits,options.joint_states,options.require_bottom_sheets);
                 auto [it, inserted] = first_hash.emplace(compact, hash);
                 if (!inserted && it->second != hash) throw std::runtime_error("repeat PCB bytes changed; investigate input drift/nondeterminism");
                 std::cout << "repeat compact_search=" << compact << " same_as_first=" << (!inserted ? "true" : "first") << '\n';

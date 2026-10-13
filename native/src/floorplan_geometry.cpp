@@ -23,6 +23,12 @@ bool tagged(const SexprList& node, const std::string& tag) {
 
 Engine::Engine(const FloorplanInput& input) : in(input) {
     if (in.experiment) validate_floorplan_experiment(*in.experiment);
+    if(in.experiment)for(const auto& sheet:in.experiment->require_bottom_sheets) {
+        const auto found=in.geometry.shapes.find(sheet);
+        if(!in.compact_search||sheet.empty()||found==in.geometry.shapes.end()||
+           std::none_of(found->second.begin(),found->second.end(),[](const auto& shape){return shape.side=="bottom";}))
+            throw FloorplanError("required bottom sheet has no offered bottom shape: "+sheet);
+    }
     if(in.experiment&&in.experiment->reseat_pose_limits&&!in.compact_search)
         throw FloorplanError("pose retry requires compact search");
     if(in.experiment&&in.experiment->owned_shape_catalogued)

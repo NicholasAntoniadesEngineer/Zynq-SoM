@@ -184,6 +184,25 @@ void synthetic() {
     unmeasured.experiment=plain_observer;
     unchanged(baseline,pack(unmeasured),"unmeasured selection trace changed geometry or work");
     require(unmeasured_events==1,"unmeasured selection trace missing or duplicated");
+    {
+        auto sided=input(2);sided.geometry.shapes["pilot"][1].side="bottom";
+        auto policy=std::make_shared<FloorplanExperiment>();policy->require_bottom_sheets={"pilot"};
+        sided.experiment=policy;
+        const auto bottom=pack(sided);
+        require(bottom.chosen==1&&bottom.plan.interior_blocks[0].side=="bottom",
+                "required bottom experiment silently selected top");
+        unchanged(bottom,pack(sided),"required bottom experiment not reproducible");
+        bool failed=false;try{(void)pack(sided,{1});}catch(const std::runtime_error&){failed=true;}
+        require(failed,"infeasible bottom experiment silently recovered with top");
+        for(int bad=0;bad<3;++bad){
+            auto invalid=sided;
+            if(bad==0)invalid.geometry.shapes["pilot"][1].side="top";
+            if(bad==1)invalid.compact_search=false;
+            if(bad==2){auto unknown=std::make_shared<FloorplanExperiment>();unknown->require_bottom_sheets={"missing"};invalid.experiment=unknown;}
+            bool rejected=false;try{Engine check(invalid);}catch(const FloorplanError&){rejected=true;}
+            require(rejected,"invalid bottom experiment accepted");
+        }
+    }
     for(bool compact:{false,true}) {
         auto many=input(4);many.compact_search=compact;
         // Noncompact seating retains one hit per face, not one per shape.

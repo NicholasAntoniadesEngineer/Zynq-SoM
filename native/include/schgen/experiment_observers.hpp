@@ -81,6 +81,9 @@ struct FloorplanExperiment {
     // Diagnostic candidate restrictions by generated tag, not unstable index.
     // Unknown, ambiguous or unmeasured choices fail; never silently fall back.
     std::map<std::string,std::string> owned_shape_tags;
+    // Controlled downstream packing experiment: require an already offered
+    // bottom-primary shape for these groups. Never creates or validates one.
+    std::set<std::string> require_bottom_sheets;
     // Read-only inventory of tagged shapes with complete measured quality.
     // Registration is not a final-board feasibility or hardware verdict.
     std::function<void(const std::string&,int,const std::string&)> owned_shape_catalogued;
