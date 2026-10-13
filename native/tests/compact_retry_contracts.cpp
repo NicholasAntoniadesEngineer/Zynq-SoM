@@ -507,6 +507,19 @@ void neighbour_retry_contract() {
 extern "C" void __cyg_profile_func_enter(void* fn,void*){if(observing&&fn==reinterpret_cast<void*>(&native_run_overflow_tol))++entries;}
 extern "C" void __cyg_profile_func_exit(void*,void*){}
 void victim_shape_portfolio_contract(){
+    for(bool bottom:{false,true}) {
+        auto in=input();auto config=std::make_shared<FloorplanExperiment>();
+        config->shape_area_first=true;in.experiment=config;
+        Engine e(in);setup(e,Case{70,50,{{16,12,4,0}}});
+        if(bottom)config->require_bottom_sheets.insert("b0");
+        auto& shapes=e.shape_sets[1]["b0"];
+        shapes[1].w=14;shapes[1].h=10;
+        shapes[2].w=8;shapes[2].h=8;
+        shapes[3].w=12;shapes[3].h=8;
+        require(e.attempt_pack_impl(false),"area-first fixture must pack");
+        require(e.plan.interior_blocks.front().shape_idx==(bottom?3:2),
+                "area-first must select smallest eligible envelope and preserve face constraint");
+    }
     using schgen::floorplan_detail::permitted_shape_count;
     for(std::size_t n=0;n<128;++n){
         require(permitted_shape_count(n,std::nullopt)==n,"unrestricted scarcity changed");

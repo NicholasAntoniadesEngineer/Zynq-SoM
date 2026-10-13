@@ -410,13 +410,14 @@ bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure,
             const bool has_quality=in.compact_search && quality!=in.owned_shape_quality.end() &&
                 quality->first.first==b.name;
             const bool observe_selection=in.experiment&&bool(in.experiment->owned_shape_selection_completed);
+            const bool area_first=in.compact_search&&in.experiment&&in.experiment->shape_area_first;
             std::vector<double> evaluated;
-            if (has_quality||observe_selection) { evaluated.reserve(hits.size()); evaluated={incumbent,challenger}; }
+            if (has_quality||observe_selection||area_first) { evaluated.reserve(hits.size()); evaluated={incumbent,challenger}; }
             if (pick_sided_challenger(incumbent,challenger,1e-6)) best=hits[1];
             double selected=best.index==hits[1].index ? challenger:incumbent;
             if (in.compact_search) for (std::size_t i=2;i<hits.size();++i) {
                 const double value=judge(hits[i]);
-                if (has_quality||observe_selection) evaluated.push_back(value);
+                if (has_quality||observe_selection||area_first) evaluated.push_back(value);
                 if (pick_sided_challenger(selected,value,1e-6)) {best=hits[i]; selected=value;}
             }
             if (has_quality) {
@@ -443,6 +444,18 @@ bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure,
                     }
                     const int choice=owned_shape_select_same_pose_quality(in.owned_shape_quality,b.name,alternatives,best.index);
                     for(std::size_t i=0;i<hits.size();++i)if(hits[i].index==choice){best=hits[i];selected=evaluated.at(i);break;}
+                }
+            }
+            if(area_first) {
+                // Rank actual legal offers, never fabricate clearance or face eligibility.
+                // This envelope heuristic does not measure free-space fragmentation.
+                std::optional<OutlineCandidate> rank;
+                for(std::size_t i=0;i<hits.size();++i) {
+                    const auto& h=hits[i];
+                    const OutlineCandidate candidate{block_area(h.w,h.h,counts),h.w,h.h,evaluated.at(i),0};
+                    if(!rank||prefer_outline(candidate,*rank)) {
+                        rank=candidate;best=h;selected=evaluated.at(i);
+                    }
                 }
             }
             if(observe_selection) {

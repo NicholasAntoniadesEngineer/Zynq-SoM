@@ -93,6 +93,15 @@ void profile_option_contracts() {
         if(!rejected)throw std::runtime_error("invalid failed-first retry option accepted");
     }
     bool invalid_trace=false;
+    if(options({"profile","--repo",".","--compact-search","on"}).shape_area_first||
+       !options({"profile","--repo",".","--compact-search","on","--shape-area-first","on"}).shape_area_first)
+        throw std::runtime_error("shape-area-first default/selection mismatch");
+    for(const auto& [mode,value]:std::vector<std::pair<std::string,std::string>>{{"off","on"},{"both","on"},{"on","typo"}}) {
+        bool rejected=false;
+        try{(void)options({"profile","--repo",".","--compact-search",mode,"--shape-area-first",value});}
+        catch(const std::invalid_argument&){rejected=true;}
+        if(!rejected)throw std::runtime_error("invalid shape-area-first option accepted");
+    }
     try{(void)options({"profile","--repo",".","--compact-search","on","--owned-selection-trace","typo"});}
     catch(const std::invalid_argument&){invalid_trace=true;}
     if(!invalid_trace)throw std::runtime_error("invalid owned selection trace accepted");

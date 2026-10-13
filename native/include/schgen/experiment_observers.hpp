@@ -73,6 +73,8 @@ struct FloorplanExperiment {
     bool compact_edge_translation = false;
     bool compact_edge_feasibility = false;
     bool owned_quality_first = false;
+    // Experimental envelope-area ranking of legal shapes; not a feasibility relaxation.
+    bool shape_area_first = false;
     bool owned_extent_alternatives = false;
     bool owned_face_cohesion = false;
     // Canonical order makes multi-sheet expansion independent of CLI order.
