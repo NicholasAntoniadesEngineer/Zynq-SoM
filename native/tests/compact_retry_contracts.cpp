@@ -632,6 +632,8 @@ void victim_shape_portfolio_contract(){
         config->reseat_pose_limits->victim_shapes=true;
         Engine actual(in);prepare(actual);const auto initial=layout(actual.plan);const auto initial_offers=offers(actual);
         const bool ok=actual.attempt_pack(false);
+        require(offers(actual).at("entry")==initial_offers.at("entry"),
+                "shape/pair recovery modified an unrelated side offer");
         require(ok==(original_ok||(branch&&branch->ok)),"shape portfolio omitted or replaced a strategy");
         require(actual.plan.accounting.quantization_engagements==expected_counts&&actual.plan.accounting.fallback_events==expected_events,
                 "shape portfolio lost or duplicated executed work");

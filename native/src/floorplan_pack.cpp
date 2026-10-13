@@ -2,6 +2,7 @@
 #include "native_audit_quantize_internal.hpp"
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <unordered_map>
 #include "pack_refine_internal.hpp"
@@ -639,9 +640,16 @@ bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure,
                 auto& first=*placed[ranked[reverse?j:i]];
                 auto& second=*placed[ranked[reverse?i:j]];
                 const auto saved_b=b,saved_first=first,saved_second=second;
-                const auto saved_chosen=chosen;
-                const auto saved_centers=centers;
-                const auto saved_offers=side_offers;
+                // This trial only writes the three participants' entries.
+                // Do not copy every component list in the board on each pair;
+                // retain absence as well as values for exact rollback.
+                const std::array names{b.name,first.name,second.name};
+                const std::array saved_chosen{save_entry(chosen,names[0]),
+                    save_entry(chosen,names[1]),save_entry(chosen,names[2])};
+                const std::array saved_centers{save_entry(centers,names[0]),
+                    save_entry(centers,names[1]),save_entry(centers,names[2])};
+                const std::array saved_offers{save_entry(side_offers,names[0]),
+                    save_entry(side_offers,names[1]),save_entry(side_offers,names[2])};
                 fallback("interior_reseat_pair_trial");
                 occ_pull(first);occ_pull(second);
                 const bool incoming=seat(b,a,nullptr);
@@ -670,7 +678,11 @@ bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure,
                 if (first_seated) occ_pull(first);
                 if (incoming) occ_pull(b);
                 b=saved_b;first=saved_first;second=saved_second;
-                chosen=saved_chosen;centers=saved_centers;side_offers=saved_offers;
+                for(std::size_t k=0;k<names.size();++k) {
+                    restore_entry(chosen,names[k],saved_chosen[k]);
+                    restore_entry(centers,names[k],saved_centers[k]);
+                    restore_entry(side_offers,names[k],saved_offers[k]);
+                }
                 occ_put(first);occ_put(second);
                 fallback("interior_reseat_pair_rejected");
               }
