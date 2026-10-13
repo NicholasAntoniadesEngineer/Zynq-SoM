@@ -1119,11 +1119,15 @@ void repair_choice_contracts() {
         const std::vector<FloorplanLegalizeVar> seed{{"a",.1,1,{.1,5},.1,5},{"b",.1,1,{.3,5},.3,5}};
         auto quiet=seed,loud=seed;std::vector<std::string> quiet_log,loud_log;QuantizationCounts quiet_work,loud_work;
         const bool quiet_ok=floorplan_legalize_compact_accounted(in,quiet,quiet_log,quiet_work);
-        require(!quiet_ok,"strict output-grid contact fixture must reject");
+        require(quiet_ok,"representable one-tick repair must recover strict output-grid contact");
         in.report_infeasible_cycle=true;
-        require(!floorplan_legalize_compact_accounted(in,loud,loud_log,loud_work),"diagnostics relaxed a strict physical gate");
-        require(quiet_work==loud_work&&quiet[0].x==seed[0].x&&loud[0].x==seed[0].x&&
-            quiet[1].x==seed[1].x&&loud[1].x==seed[1].x,"physical diagnostics changed work or poses");
+        require(floorplan_legalize_compact_accounted(in,loud,loud_log,loud_work),"diagnostics changed strict grid repair");
+        require(quiet_work==loud_work&&quiet[0].x==loud[0].x&&quiet[1].x==loud[1].x,
+            "physical diagnostics changed work or poses");
+        require(quiet[0].x+quiet[0].w+in.clear<=quiet[1].x,
+            "grid repair must satisfy exact forward sum without epsilon");
+        require(quiet[0].x!=seed[0].x||quiet[1].x!=seed[1].x,
+            "grid repair waived contact without moving a coordinate");
         const auto detail=[](const auto& row){return row.find("physical separation: a -> b x 0.30000000000000004 > 0.3")!=std::string::npos;};
         require(std::none_of(quiet_log.begin(),quiet_log.end(),detail)&&std::any_of(loud_log.begin(),loud_log.end(),detail),
             "physical diagnostic lost pair, axis or exact forward boundary");

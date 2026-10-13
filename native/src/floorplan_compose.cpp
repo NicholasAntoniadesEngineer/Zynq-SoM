@@ -372,6 +372,43 @@ public:
             emit_grid();
             exact_ok=exact_holds();
         }
+        // Difference constraints and forward physical sums may associate
+        // decimal-grid arithmetic differently. Try one actual output-grid
+        // step at a movable separation endpoint, never an acceptance epsilon.
+        // Each trial starts from the incumbent and must satisfy every exact
+        // predicate; later child-geometry checks remain authoritative too.
+        if (!exact_ok) {
+            std::set<std::tuple<std::string,bool,bool>> tried;
+            const auto endpoint=[&](const std::string& name,bool x,bool high) {
+                if(name.front()=='#') {
+                    const auto& b=frect.at(name.substr(1));
+                    return x?(high?b.x1:b.x0):(high?b.y1:b.y0);
+                }
+                const auto i=static_cast<std::size_t>(std::lower_bound(names.begin(),names.end(),name)-names.begin());
+                const auto& v=*by_name.at(name);
+                return (x?pos_x[i]:pos_y[i])+(high?(x?v.w:v.h):0.);
+            };
+            for (const auto& sep : seps) {
+                const double lower=endpoint(sep.lo,sep.axis_x,true)+sep.gap;
+                const double upper=endpoint(sep.hi,sep.axis_x,false);
+                if(lower<=upper||lower-upper>.0001)continue;
+                for (bool high : {true,false}) {
+                    const auto& name=high?sep.hi:sep.lo;
+                    if(name.front()=='#')continue;
+                    if(!tried.emplace(name,sep.axis_x,high).second)continue;
+                    const auto i=static_cast<std::size_t>(std::lower_bound(names.begin(),names.end(),name)-names.begin());
+                    auto& coordinate=sep.axis_x?pos_x[i]:pos_y[i];
+                    const double saved=coordinate;
+                    coordinate=legalize_trial_pose_precision4dp(saved+(high?.0001:-.0001),counts);
+                    log.push_back("output-grid trial: "+name+(sep.axis_x?" x ":" y ")+float_text(saved)+" -> "+float_text(coordinate));
+                    exact_ok=coordinate!=saved&&std::isfinite(coordinate)&&exact_holds();
+                    if(exact_ok){emit_grid();log.push_back("output-grid trial accepted by exact predicates");break;}
+                    coordinate=saved;
+                    log.push_back("output-grid trial rejected; incumbent restored");
+                }
+                if(exact_ok)break;
+            }
+        }
         if (!exact_ok) {
             log.push_back("REJECT: final output-grid pose violates physical separation or hard term");
             return false;
