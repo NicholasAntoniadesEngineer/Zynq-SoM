@@ -146,6 +146,7 @@ ThermalNodes thermal_nodes(const PcbModel &m, const PcbEmitPolicy &p, const Uid 
         candidates.insert(candidates.end(), lattice.begin(), lattice.end());
         int n_lattice = 0;
         std::map<std::string, int> vetoes;
+        std::map<std::string, int> preferred_vetoes;
         Points occupied = placed;
         for (std::size_t ci = 0; ci < candidates.size() && chosen.size() < spec.max_vias; ++ci) {
             auto [x, y] = world_turned_point(i.x, i.y, candidates[ci].first, candidates[ci].second,
@@ -169,14 +170,21 @@ ThermalNodes thermal_nodes(const PcbModel &m, const PcbEmitPolicy &p, const Uid 
                     label = hit.label + " [" + (hit.nname.empty() ? "no-net" : hit.nname) + "] @(" +
                             fmt(hit.x, 3, true) + "," + fmt(hit.y, 3, true) + ")";
                 ++vetoes[label];
+                if(ci<spec.via_sites.size())++preferred_vetoes[label];
             }
         }
-        if (n_lattice)
+        if (n_lattice) {
+            std::string preferred_blockers;
+            for(const auto& [label,count]:preferred_vetoes) {
+                if(!preferred_blockers.empty())preferred_blockers+="; ";
+                preferred_blockers+=label+" x"+std::to_string(count);
+            }
             result.diagnostics.push_back(
                 "THERMAL VIA LATTICE: " + i.ref + " (" + i.value + ") seated " +
                 std::to_string(n_lattice) + "/" + std::to_string(chosen.size()) +
                 " via(s) from the exhaustive lattice — curated preferred site(s) blocked "
-                "(registered fallback; drift from datasheet-preferred via geometry)");
+                "(registered fallback; alternative to authored preferred via geometry). Preferred-site blockers: "+preferred_blockers);
+        }
         const ThermalPourNeed *need = nullptr;
         for (const auto &n : p.thermal_credit_needs)
             if (starts(i.value, n.value_prefix) &&

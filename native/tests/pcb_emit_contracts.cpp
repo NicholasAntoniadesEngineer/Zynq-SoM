@@ -95,6 +95,24 @@ void equal(const std::string &got, const std::string &want, const std::string &c
     }
     ++checks;
 }
+void diagnostic_equal(const std::string& got,const std::string& want,
+                      const std::string& context,const fs::path& artifacts) {
+    if(want.rfind("THERMAL VIA LATTICE: ",0)!=0) {
+        equal(got,want,context,artifacts);return;
+    }
+    const std::string marker=". Preferred-site blockers: ";
+    const auto split=got.find(marker);
+    require(split!=std::string::npos&&split+marker.size()<got.size(),
+            context+": missing nonempty preferred-site blocker evidence");
+    auto expected=want;
+    const std::string old_claim="drift from datasheet-preferred via geometry";
+    const auto claim=expected.find(old_claim);
+    require(claim!=std::string::npos,context+": unexpected legacy diagnostic format");
+    expected.replace(claim,old_claim.size(),"alternative to authored preferred via geometry");
+    equal(got.substr(0,split),expected,context+": event facts and corrected provenance",artifacts);
+    require(got.find(" x",split+marker.size())!=std::string::npos,
+            context+": blocker multiplicity missing");
+}
 PcbFootprintPool footprints(const JsonNode &n) {
     PcbFootprintPool pool;
     for (const auto &[k, v] : n.object_value)
@@ -156,7 +174,7 @@ void project(const fs::path &fixtures, const fs::path &output, const std::string
     require(result.diagnostics.size() == field(raw, "diagnostics").array_value.size(),
             name + " diagnostics count");
     for (std::size_t i = 0; i < result.diagnostics.size(); ++i)
-        equal(result.diagnostics[i], field(raw, "diagnostics").array_value[i].string_value,
+        diagnostic_equal(result.diagnostics[i], field(raw, "diagnostics").array_value[i].string_value,
               name + " diagnostic", output);
     std::size_t fallbacks = 0;
     for (const auto &key : result.fallback_events) {
@@ -210,7 +228,7 @@ void mutations(const fs::path &fixtures, const fs::path &output, const std::stri
         require(result.diagnostics.size() == field(row, "diagnostics").array_value.size(),
                 name + " diagnostic count");
         for (std::size_t i = 0; i < result.diagnostics.size(); ++i)
-            equal(result.diagnostics[i], field(row, "diagnostics").array_value[i].string_value,
+            diagnostic_equal(result.diagnostics[i], field(row, "diagnostics").array_value[i].string_value,
                   name + " diagnostic", output);
         require(result.fallback_events.size() ==
                     field(field(row, "fallbacks"), "thermal_via_lattice").number_value,
