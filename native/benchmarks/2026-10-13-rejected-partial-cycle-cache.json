@@ -1,0 +1,22 @@
+{
+  "baseline_commit": "4973de3a",
+  "decision": "Rejected; experimental source restored",
+  "experiment": "Keep the most recent failed negative-cycle certificate per axis and reuse it when its participating separation choices match, even when unrelated graph edges change. Feasible positions retain exact-key caching only.",
+  "tests": {
+    "native_floorplan_contracts": "PASS, 13.55 seconds, including exhaustive small-board coordinate oracle",
+    "native_floorplan_geometry_contracts": "PASS, 0.13 seconds"
+  },
+  "carrier_screen": {
+    "configuration": "Same 162x153 mixed-power 1024-state configuration as 2026-10-13-carrier-joint-budget-screen.json",
+    "log": "native/build/power-flex-cyclememo-162x153.log",
+    "result": "FAIL: no valid layout; four completed outer attempts; failure receipt captured",
+    "construction_seconds": 5.549146833,
+    "first_expanded_neighbour_axis_solves_before": 686,
+    "first_expanded_neighbour_axis_solves_after": 383,
+    "restricted_search_states_before": 47,
+    "restricted_search_states_after": 69
+  },
+  "interpretation": "A valid cached contradiction can select a different conflict than a fresh graph solve, changing subsequent branching. Fewer axis solves alone did not establish improved search quality or runtime. Do not present certificate reuse as search-order-preserving.",
+  "limitations": "One screen, overlapping floorplan tests, uncontrolled cache; no timing speedup/slowdown claim. No full qualification or new incumbent. No constraints changed.",
+  "next_direction": "Investigate edge-placement and shape choices around the actual LCD/RJ45/Ethernet and power-monitor conflicts rather than repeating larger budgets or this cache experiment."
+}
