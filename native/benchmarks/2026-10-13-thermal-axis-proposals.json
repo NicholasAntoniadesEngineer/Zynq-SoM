@@ -12,7 +12,7 @@
       "rectangular pad extents in both orientations",
       "coincident and offset conflict centres",
       "every returned proposal clears the isolated obstacle under the actual checker",
-      "one-micrometre inward move violates clearance, detecting unjustified padding",
+      "0.000001 mm inward move violates clearance, detecting unjustified padding",
       "axis-only movement and deterministic repetition",
       "another unchanged obstacle still blocks the site",
       "unblocked pads and board-edge violations generate no proposals"
