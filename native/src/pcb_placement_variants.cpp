@@ -436,19 +436,21 @@ std::vector<Shape> bottom_shapes(Context &ctx, const Geometry &g, const std::str
         events.push_back("bottom_variant_contract_reject");
         return {};
     }
-    std::set<FloorplanPoint> seen;
     std::vector<Shape> result;
     auto all_top = g.side_of;
     for (const auto &r : g.refs_by_sheet.at(sheet))
         all_top[r] = "top";
     for (bool split : {false, true})
-        for (double aspect : {1., 2.2, 1., .45}) {
+        for (double aspect : {1., 2.2, .45}) {
             auto p = pack_zone(ctx, g, g.refs_by_sheet.at(sheet), aspect, {}, "", face,
                                split ? nullptr : &all_top);
-            if (!seen.insert({placement_shape_key_precision4dp(p.w, &ctx.quantization), placement_shape_key_precision4dp(p.h, &ctx.quantization)}).second)
-                continue;
             std::string a = aspect == 1 ? "1" : aspect == 2.2 ? "2.2" : "0.45";
-            result.push_back(mirror(p, (split ? "bottom-split-a" : "bottom-a") + a));
+            auto candidate=mirror(p, (split ? "bottom-split-a" : "bottom-a") + a);
+            // Equal envelopes need not occupy the same space on each face or
+            // place the same pins. Retain distinct physical arrangements.
+            if(std::none_of(result.begin(),result.end(),[&](const auto& prior) {
+                return same_zone_shape_geometry(prior,candidate);
+            })) result.push_back(std::move(candidate));
         }
     return result;
 }

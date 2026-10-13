@@ -1,0 +1,25 @@
+{
+  "base_commit": "d96f5193",
+  "finding": "The 164x156 bottom-module experiment fails at usb_jtag interior seating, with recovery trials against previously placed power_som, power_mon, hdmi_rx_term, power, usb_pd, ethernet, fmc and uart_bridge. Later bringup group bottom assignment alone cannot repair this prefix failure.",
+  "correction": "Untemplated bottom_shapes deduplicated by rounded outer width/height alone, discarding any equal-envelope but physically different face/offset/rotation/mirror arrangement. Use existing full geometry equality instead. Remove the duplicate aspect=1 pack in each split mode (six pack calls instead of eight).",
+  "tests": {
+    "native_placement_precision_contracts": "PASS 17.84 seconds; independent instrumentation remains active",
+    "native_pcb_orientation_contracts": "PASS 2.36 seconds; new actual bottom generation repeatability, unique geometry and member conservation checks, plus existing equal-envelope distinct-layout and handedness tests",
+    "receipt_review": "Only synthetic expected count row changed: placement_pack_extent_precision4dp 26->22; placement_shape_key_precision4dp 16->0; placement_bottom_pose_precision4dp 11->16 because full geometry comparison prepares every offered mirror before deduplication. All other rows and historical kernel geometry/output fixture unchanged. Initial expected-count failure was investigated, not waived.",
+    "carrier": {
+      "log": "native/build/bottom-geometry-reference.log",
+      "runs": 2,
+      "pcb_sha256": "64b0b4334230a1aaefdf3683dff61c7597b79ff4d8632e509c8992b925534725",
+      "unchanged_and_repeat_identical": true
+    },
+    "devkit": {
+      "log": "native/build/bottom-geometry-devkit.log",
+      "runs": 2,
+      "pcb_sha256": "b6798d4b63d2fddbf9fad24945c151b9420b049b674ad5d637c43bf4a365137f",
+      "unchanged_and_repeat_identical": true
+    },
+    "both_board_screen": "refdes, fanout, ratsnest, placement contract and flow PASS; hard_red=0",
+    "smaller_trial": "native/build/bottom-geometry-164.log: still bounded-search exhausted; correction alone does not recover 164x156"
+  },
+  "scope": "Algorithmic candidate preservation, not a new smaller-board claim. No new full qualification or speedup claim. Existing qualified incumbent retained. Next investigate USB-JTAG prefix seating with alternate preceding choices rather than assuming later bottom groups can free already-required space."
+}

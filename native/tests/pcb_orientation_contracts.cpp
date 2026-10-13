@@ -76,6 +76,20 @@ void unit(){
   g.resolvable[r]="normal";g.bbox_of[r]=*fp->bbox;g.side_of[r]="top";
  }
  Shape seed;seed.w=24;seed.h=18;seed.tag="incumbent";seed.top_off={{"R1",{5,4}}};seed.bot_off={{"R2",{15,11}}};
+ g.side_of["R2"]="bottom";
+ std::vector<std::string> bottom_events;
+ const auto bottom_variants=bottom_shapes(ctx,g,"unit",{},std::nullopt,{},bottom_events);
+ const auto bottom_repeat=bottom_shapes(ctx,g,"unit",{},std::nullopt,{},bottom_events);
+ demand(!bottom_variants.empty()&&bottom_variants.size()==bottom_repeat.size(),"bottom alternatives repeat deterministically");
+ for(std::size_t i=0;i<bottom_variants.size();++i) {
+  const auto& candidate=bottom_variants[i];
+  demand(equal(candidate,bottom_repeat[i]),"bottom variant changes across identical generation");
+  for(const auto& ref:g.refs_by_sheet.at("unit"))
+   demand(candidate.top_off.count(ref)+candidate.bot_off.count(ref)==1,"bottom alternative loses or duplicates member");
+  for(std::size_t j=0;j<i;++j)
+   demand(!same_zone_shape_geometry(candidate,bottom_variants[j]),"bottom alternative repeats physical geometry");
+ }
+ g.side_of["R2"]="top";
  seed.extra_rot={{"R1",90},{"R2",270}};
  for(bool bottom:{false,true}){
   auto s=seed;if(bottom){s.side="bottom";s.mirror["R1"]="mirrored";}
