@@ -185,6 +185,14 @@ bool evict_legal(const Placer &p, const PcbCheckInput &before, const PcbCheckInp
     if (rigid)
         for (const auto &record : check_fanout(after,0).records)
             if (record.starved()) return false;
+    // Body separation is face-aware, but thermal vias penetrate both faces.
+    // A corridor exit must not repair one constraint by consuming another
+    // subject's preferred field. Recompute from actual emitted trial poses;
+    // rejected projections remain in the independent operation accounting.
+    const auto policy=pcb_emit_policy(p.ctx.in.floorplan.project);
+    const auto thermal_before=plan_preferred_thermal_vias(before.model(),policy,&p.ctx.quantization);
+    const auto thermal_after=plan_preferred_thermal_vias(after.model(),policy,&p.ctx.quantization);
+    if (!preserves_preferred_thermal_vias(thermal_before,thermal_after)) return false;
     return true;
 }
 bool evict_bottom_shadow(const Placer &p, const std::string &ref) {

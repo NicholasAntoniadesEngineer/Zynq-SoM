@@ -1,0 +1,33 @@
+{
+  "parent_commit": "c480834e",
+  "defect": "Compact corridor eviction checked face-aware bodies and fanout but could consume opposite-face preferred thermal-via sites.",
+  "fix": "After existing legality checks, recompute preferred thermal fields at emitted trial coordinates and require per-subject nondecrease. No body, ownership, fanout or corridor checks removed. Count actual planner work, including rejected trials.",
+  "regression": {
+    "target": "native_pcb_compact_owned_evict_contracts",
+    "fixture": "Bottom signal pad moves beneath top TLV75725, consuming all three preferred sites while remaining body-legal. Unchanged geometry and recovery are positive controls.",
+    "before_fix": "FAIL at opposite-face corridor eviction may not consume preferred thermal capacity",
+    "after_fix": "PASS, 8.32 seconds",
+    "red_log": "native/build/evict-thermal-red.log",
+    "green_log": "native/build/evict-thermal-green.log"
+  },
+  "reference_construction_checks": {
+    "carrier": {
+      "dimensions_mm": [164, 154],
+      "pcb_sha256": "aa80c90978fffcb7df4c895f9735dc8957d7d67b9e0b45e82b39e2bfc9430319",
+      "unchanged_from_qualified_label_reference": true,
+      "model_seconds": 4.1074905,
+      "emission_seconds": 0.028112708,
+      "log": "native/build/evict-thermal-carrier-reference.log"
+    },
+    "devkit": {
+      "dimensions_mm": [98, 98],
+      "pcb_sha256": "1b12fecbcbbaa5e6084c2459da93cb144a660ff19805e6e4e3f75f9c22689fdb",
+      "unchanged_from_label_construction_reference": true,
+      "model_seconds": 0.192353458,
+      "emission_seconds": 0.008627167,
+      "log": "native/build/evict-thermal-devkit-reference.log"
+    },
+    "both": "Cheap fanout, ratsnest, placement-contract and placement-flow checks PASS; hard_red=0; model/emission non-search fallback events=0"
+  },
+  "limitations": "Not a new full qualification or board-size improvement. Preferred-only planning does not include later escape/lattice copper; full emission gates remain required. The 164x153 thermal repair remains unfinished."
+}
