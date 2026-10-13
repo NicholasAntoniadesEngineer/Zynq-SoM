@@ -489,6 +489,11 @@ std::string trial(const PcbPlacementInput& source, bool compact, int run, int ge
     const auto emit_start = Clock::now();
     const auto emission = render_pcb(result.model, pcb_emit_policy(input.floorplan.project));
     const auto emit_seconds = seconds(emit_start);
+    const auto silk = check_refdes_overlap(emission.document,true);
+    std::cout<<"emission_refdes_check ok="<<silk.ok<<" top_pairs="<<silk.top_pairs.size()
+             <<" bottom_pairs="<<silk.bottom_pairs<<'\n';
+    for(const auto& pair:silk.top_pairs)
+        std::cout<<"emission_refdes_overlap first="<<pair.first<<" second="<<pair.second<<'\n';
     if(thermal_trace) {
         const auto trace_start=Clock::now();
         QuantizationCounts trace_counts;

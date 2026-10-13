@@ -157,7 +157,11 @@ void pcb_stages(Context& c){
         const auto gate=[&](const std::string& name,bool ok,const std::string& report){c.report(name+".txt",report);c.gate(name,ok,report);};
         gate("ratsnest",r.ratsnest.ok,r.ratsnest.summary());gate("placement_mech",r.mechanical.ok,r.mechanical.summary());
         gate("connector_model",r.connector_models.ok,r.connector_models.summary());gate("connector_spacing",r.connector_spacing.ok,r.connector_spacing.summary());
-        gate("refdes_silk",r.refdes.ok,"emitted-board refdes overlaps checked");
+        std::string silk_report="emitted-board refdes overlaps checked: top="+
+            std::to_string(r.refdes.top_pairs.size())+" bottom="+std::to_string(r.refdes.bottom_pairs);
+        for(const auto& pair:r.refdes.top_pairs)
+            silk_report+="\nF.SilkS: "+pair.first+" overlaps "+pair.second;
+        gate("refdes_silk",r.refdes.ok,silk_report);
         gate("placement_contract",r.placement.placement_contract.ok,r.placement.placement_contract.summary());
         gate("placement_flow",r.placement.placement_flow.ok,r.placement.placement_flow.summary());
         gate("contract_coverage",r.placement.coverage_report.violated==0,r.placement.coverage_report.text);
