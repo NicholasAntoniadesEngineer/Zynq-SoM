@@ -1,0 +1,156 @@
+{
+  "source_commit": "523b8492",
+  "scope": "Construction-only bottom eligibility experiment; full acceptance recorded separately",
+  "base_recipe": "2026-10-13-carrier-165x154-qualified.json",
+  "change": "Set bringup_en_modules layer=either and require its bottom-primary shape, retaining test-point top access and existing hardware checks.",
+  "trials": [
+    {
+      "dimensions_mm": [
+        165,
+        153
+      ],
+      "required_bottom": true,
+      "result": "failed",
+      "seconds": 4.024127542,
+      "completed_outer_attempts": 4,
+      "receipt_captured": true,
+      "log": "native/build/bottom-enable-modules-165x153.log"
+    },
+    {
+      "dimensions_mm": [
+        165,
+        153
+      ],
+      "required_bottom": false,
+      "result": "failed",
+      "seconds": 4.251841334,
+      "completed_outer_attempts": 4,
+      "receipt_captured": true,
+      "log": "native/build/bottom-enable-optional-165x153.log"
+    },
+    {
+      "dimensions_mm": [
+        165,
+        154
+      ],
+      "required_bottom": true,
+      "result": "constructed_no_acceptance",
+      "model_seconds": 7.352810375,
+      "top": 418,
+      "bottom": 148,
+      "pcb_sha256": "c71665da750494dd8ae281cbc3fee4014835ff2adab1cc8e44d457e7ba643c20",
+      "log": "native/build/bottom-enable-modules-165x154.log"
+    },
+    {
+      "dimensions_mm": [
+        164,
+        154
+      ],
+      "required_bottom": true,
+      "result": "constructed_no_acceptance",
+      "model_seconds": 4.02405825,
+      "top": 427,
+      "bottom": 139,
+      "pcb_sha256": "02a5180de3b055f2237b8b5f10f589dd45e52c27162dfb27e1f55bcd7ccfbe7f",
+      "log": "native/build/bottom-enable-modules-164x154.log"
+    },
+    {
+      "dimensions_mm": [
+        163,
+        154
+      ],
+      "required_bottom": true,
+      "result": "failed",
+      "seconds": 2.235415542,
+      "completed_outer_attempts": 4,
+      "receipt_captured": true,
+      "log": "native/build/bottom-enable-modules-163x154.log"
+    },
+    {
+      "dimensions_mm": [
+        164,
+        153
+      ],
+      "required_bottom": true,
+      "result": "failed",
+      "seconds": 1.695311458,
+      "completed_outer_attempts": 4,
+      "receipt_captured": true,
+      "log": "native/build/bottom-enable-modules-164x153.log"
+    },
+    {
+      "dimensions_mm": [
+        164,
+        154
+      ],
+      "required_bottom": false,
+      "result": "constructed_no_acceptance_same_hash",
+      "thermal_via_lattice": 6,
+      "log": "native/build/enable-optional-164x154.log"
+    },
+    {
+      "dimensions_mm": [
+        164,
+        154
+      ],
+      "interior_order": 2,
+      "required_bottom": true,
+      "result": "failed",
+      "seconds": 1.228697917,
+      "completed_outer_attempts": 4,
+      "receipt_captured": true,
+      "log": "native/build/enable-order2-164x154.log"
+    },
+    {
+      "dimensions_mm": [
+        164,
+        154
+      ],
+      "additional_bottom_sheet": "bringup_en",
+      "result": "constructed_no_acceptance",
+      "top": 424,
+      "bottom": 142,
+      "pcb_sha256": "21fb877d40c9564ca71dbbae05feb0560a83bfb5610e6c668da44b99c080a9d1",
+      "thermal_via_lattice": 6,
+      "log": "native/build/both-enable-bottom-164x154.log"
+    }
+  ],
+  "interpretation": "Bottom-primary does not require every member on bottom: access-pinned members and split variants retain mixed faces. More bottom components is not the objective; smaller valid area is. Bounded failures are not infeasibility proofs. Timing concurrent/instrumented, not matched performance comparisons.",
+  "full_qualification": {
+    "dimensions_mm": [
+      164,
+      154
+    ],
+    "result": "BOARD FAIL",
+    "mandatory_failure": "fallbacks: thermal_via_lattice fired 6 above reviewed baseline 0",
+    "output": "/private/tmp/carrier-164x154-qualified.KULqz9",
+    "log": "native/build/carrier-164x154-qualification.log",
+    "nonrouting_drc_errors": 0,
+    "unrouted": 499,
+    "thermal": "PASS against current model, not fabrication qualification",
+    "reference_overlaps": {
+      "top": 0,
+      "bottom": 0
+    },
+    "visual_review": "Front and back 3D renders inspected; substantial bottom area remains unused.",
+    "accepted": false
+  },
+  "diagnosis": {
+    "trace_log": "native/build/bottom-enable-thermal-trace.log",
+    "first_observed_stage": "step3_emission",
+    "subject": "U22004",
+    "preferred": 2,
+    "requested": 8,
+    "blockers": [
+      "C21002.1",
+      "C22014.1",
+      "C22017.1",
+      "C22025.1",
+      "L22003.1",
+      "R5010.1",
+      "R5020.1",
+      "R5021.1"
+    ],
+    "interpretation": "Blockage already present immediately after floorplan emission, retained by later movement. Some blockers belong to the same power subsystem, others are opposite-face groups. Counts are alternative-site rejections, not unique missing vias. Cheap emission fallback count was present before full qualification and must be screened before future expensive qualification."
+  }
+}
