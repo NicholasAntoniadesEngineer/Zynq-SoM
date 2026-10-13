@@ -571,7 +571,7 @@ void victim_shape_portfolio_contract(){
                 "scarcity order ignored the single eligible bottom alternative");
     }
     std::size_t preserved=0,recovered=0,failed=0,queries=0,incoming_recovered=0,incoming_queries=0;
-    std::size_t combination_only=0,paired_queries=0,area_queries=0;
+    std::size_t combination_only=0,paired_queries=0,area_queries=0,pose_shape_queries=0,shape_skips=0;
     bool exception_checked=false;
     const Case crowded{70,50,{{29,16,3,4},{12,30,2,0},{30,18,3,2},{31,26,2,3},{7,7,1,3},{31,9,2,1}}};
     for(bool area_first:{false,true})for(bool rotate:{false,true})for(int w=65;w<=85;w+=5)for(int h=45;h<=65;h+=5)for(int order=0;order<3;++order){
@@ -599,6 +599,18 @@ void victim_shape_portfolio_contract(){
             observing=false;
             require(direct.plan.accounting.quantization_engagements.at("run_overflow_tol")==entries,"shape branch operation count");
             branch=Result{ok,direct.plan,offers(direct),entries};
+            Engine skipped(in),skip_repeat(in);prepare(skipped);prepare(skip_repeat);
+            skipped.compact_order=skip_repeat.compact_order=order;
+            const bool skip_ok=skipped.attempt_pack_impl(false,nullptr,{},nullptr,1,nullptr,true,true);
+            require(skip_repeat.attempt_pack_impl(false,nullptr,{},nullptr,1,nullptr,true,true)==skip_ok &&
+                    equal(floorplan_plan_json(skipped.plan),floorplan_plan_json(skip_repeat.plan)) &&
+                    offers(skipped)==offers(skip_repeat),"pose/shape continuation replay is not deterministic");
+            bool shape_since_pose=false;
+            for(const auto& event:skipped.plan.accounting.fallback_events) {
+                if(event=="interior_reseat_pose_trial")shape_since_pose=false;
+                if(event=="interior_reseat_shape_trial")shape_since_pose=true;
+                if(event=="interior_reseat_pose_skip"&&shape_since_pose)++shape_skips;
+            }
             Engine previous(in);prepare(previous);previous.compact_order=order;
             const bool previous_ok=previous.attempt_pack_impl(false,nullptr,{},nullptr,0,nullptr,true,false);
             if(previous_ok)require(ok&&equal(floorplan_plan_json(previous.plan),floorplan_plan_json(direct.plan))&&offers(previous)==offers(direct),"incoming shapes replaced a successful victim strategy");
@@ -636,8 +648,13 @@ void victim_shape_portfolio_contract(){
         // Pass 2 is the only source of incoming-shape queries. A displaced
         // shape query after entering that pass proves paired exploration,
         // rather than two independent earlier strategies being mislabeled.
-        bool incoming_phase=false;
+        bool incoming_phase=false,pose_phase=false;
         for(const auto& event:expected_events) {
+            if(event=="interior_reseat_pose_trial")pose_phase=true;
+            if(event=="interior_reseat_pose_search"||event=="interior_reseat_incoming_shape_trial"||
+               event=="interior_reseat_retry"||event=="interior_reseat_shape_retry"||
+               event=="interior_failed_first_retry"||event=="interior_reseat_pose_resume")pose_phase=false;
+            if(pose_phase&&event=="interior_reseat_shape_trial")++pose_shape_queries;
             if(event=="interior_reseat_incoming_shape_trial")incoming_phase=true;
             if(incoming_phase&&event=="interior_reseat_shape_trial")++paired_queries;
             // A recovered block can be followed by another block's ordinary
@@ -665,6 +682,10 @@ void victim_shape_portfolio_contract(){
     require(combination_only>0,"no witness where both shape strategies succeed but either alone fails");
     require(paired_queries>0,"alternative incoming shapes never tried alternative displaced shapes");
     require(area_queries>0,"area-first corpus did not execute alternative shape recovery");
+    require(pose_shape_queries>0,"alternative incoming poses never reconsidered displaced shapes");
+    require(shape_skips>0,"continuation corpus never skipped a recovered alternative victim shape");
+    std::cout<<"pose/shape combination queries="<<pose_shape_queries<<'\n';
+    std::cout<<"pose/shape continuation skips="<<shape_skips<<'\n';
     {
         auto locked_input=input();auto locked_config=std::make_shared<FloorplanExperiment>();locked_input.experiment=locked_config;
         locked_config->reseat_pose_limits=FloorplanPoseRetryLimits{8,4096};

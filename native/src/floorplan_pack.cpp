@@ -519,13 +519,21 @@ bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure,
         const bool alternatives=in.experiment&&in.experiment->reseat_pose_limits.has_value();
         for(int pass=0;pass<(incoming_shapes?3:(alternatives?2:1));++pass) for (int idx:ranked) {
             auto& e=*placed[idx]; const auto saved_e=e,saved_b=b;
-            // A rejected victim trial can change only the incoming block's
-            // entries. The displaced block's geometry and center change only
-            // on success (the full strategy owns later rollback). Preserve
-            // absence as well as values, including the rejected side offer.
+            // Pose/shape trials can change either participant before a replay
+            // skips the recovery. Preserve absence as well as values for both;
+            // the full strategy owns rollback after later packing failure.
             const auto saved_chosen=save_entry(chosen,b.name);
             const auto saved_center=save_entry(centers,b.name);
             const auto saved_offer=save_entry(side_offers,b.name);
+            const auto saved_e_chosen=save_entry(chosen,e.name);
+            const auto saved_e_center=save_entry(centers,e.name);
+            const auto saved_e_offer=save_entry(side_offers,e.name);
+            const auto restore_displaced=[&] {
+                e=saved_e;
+                restore_entry(chosen,e.name,saved_e_chosen);
+                restore_entry(centers,e.name,saved_e_center);
+                restore_entry(side_offers,e.name,saved_e_offer);
+            };
             FloorplanPoseRetryObservation observation;
             if(pass==1){
                 observation.incoming=b.name;observation.displaced=e.name;
@@ -589,13 +597,15 @@ bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure,
                     fallback("interior_reseat_pose_trial");++observation.attempted;
                     b.x=p.x;b.y=p.y;occ_put(b);centers[b.name]={b.cx(),b.cy()};
                     const auto anchor=pack_anchor(anchor_row(e,centers));
-                    const auto next=near(e,e.shape_idx,anchor,e.w,e.h,e.fanout_reach,e.fanout_inset,
-                                         side_mask(e.side),get(chosen,e.name),nullptr);
+                    // Position and shape recovery are complementary: a new
+                    // incoming pose can open a site only an alternative victim
+                    // shape fits. Keep the original victim shape first.
+                    const auto next=reseat_displaced(e,anchor);
                     if(!next){occ_pull(b);continue;}
                     if(first_recovery&&first_pose_skip){
                         --first_pose_skip;++observation.skipped;
                         fallback("interior_reseat_pose_skip");
-                        occ_pull(b);continue;
+                        occ_pull(b);restore_displaced();continue;
                     }
                     first_recovery=false;
                     if(selected_pose)*selected_pose=true;
@@ -608,7 +618,7 @@ bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure,
             }
             if (ok) { --evict_budget; fallback("interior_reseat_retry"); }
             else {
-                b=saved_b; e=saved_e;
+                b=saved_b; restore_displaced();
                 restore_entry(chosen,b.name,saved_chosen);
                 restore_entry(centers,b.name,saved_center);
                 restore_entry(side_offers,b.name,saved_offer);

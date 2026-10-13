@@ -1,0 +1,31 @@
+{
+  "parent_commit": "75791a58",
+  "defect": "Alternative incoming-position trials tried only the displaced block's current shape, even when victim-shape alternatives were enabled. Two available recovery dimensions were not composed.",
+  "fix": "Reuse original-first displaced-shape reconsideration at each alternative incoming pose. Restore displaced block geometry, selected component geometry, centre and side-offer state when a recovery is skipped or rejected. Preserve all real execution accounting.",
+  "tests": {
+    "native_compact_retry_contracts": "PASS, 5.79 seconds",
+    "log": "native/build/pose-shape-final-tests.log",
+    "alternative_pose_shape_queries": 568,
+    "skipped_alternative_victim_shape_recoveries": 2,
+    "corpus_preserved_incumbents": 227,
+    "corpus_recoveries": 43,
+    "corpus_failures": 30,
+    "coverage": "Instrumented work accounting, deterministic continuation replay, success preservation, full-attempt failure/exception rollback, restricted shapes, face eligibility, and existing incoming/displaced-shape combination witnesses. Corpus totals are coverage, not claims that all recoveries are newly enabled."
+  },
+  "carrier_reference": {
+    "dimensions_mm": [164, 153],
+    "expected_pcb_sha256": "9cf06a9d9574cf3f1dfbb37f675996e99d4bbff389caa257781a415e08f547e0",
+    "log": "native/build/pose-shape-carrier-reference.log"
+  },
+  "devkit_reference": {
+    "dimensions_mm": [98, 98],
+    "expected_pcb_sha256": "1b12fecbcbbaa5e6084c2459da93cb144a660ff19805e6e4e3f75f9c22689fdb",
+    "log": "native/build/pose-shape-devkit-reference.log"
+  },
+  "smaller_trials": [
+    {"dimensions_mm": [164, 152], "result": "bounded construction failure", "seconds": 1.67697125, "completed_outer_attempts": 4, "receipt_captured": true, "log": "native/build/pose-shape-164x152.log"},
+    {"dimensions_mm": [163, 153], "result": "bounded construction failure", "seconds": 2.022885208, "completed_outer_attempts": 4, "receipt_captured": true, "log": "native/build/pose-shape-163x153.log"}
+  ],
+  "reference_results": "Both expected hashes reproduced exactly; cheap fanout/ratsnest/placement-contract/placement-flow checks PASS, hard_red=0 and zero non-search model/emission fallbacks.",
+  "limitations": "No smaller accepted board, no full requalification and no speedup claim. Two smaller cases still fail before thermal recovery. Remaining placement search uses one displaced block at a time; coordinated multi-block relocation remains unexplored."
+}
