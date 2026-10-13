@@ -1059,6 +1059,56 @@ std::pair<double, double> bulk_cap_pose(
     return {pack_bulk_pose_precision4dp(ox, counts), pack_bulk_pose_precision4dp(cy, counts)};
 }
 
+namespace {
+// Search the free-space arrangement only after the fast sampled search fails.
+// At each obstacle Y event, merge forbidden X intervals and choose the closest
+// point in a remaining gap. Unlike rings, this covers narrow unsampled gaps.
+std::optional<ClearLabel> sweep_clear_refdes(const Box4& court, const std::string& ref,
+    double size, const SilkBoxIndex& occupied, const SilkBoxIndex& placed,
+    const Box4& bounds, double pad, QuantizationCounts* counts) {
+    const auto shape=text_box(ref,0,0,size,.15);
+    const double hx=(shape.x1-shape.x0)/2+pad, hy=(shape.y1-shape.y0)/2+pad;
+    const double xmin=bounds.x0+hx, xmax=bounds.x1-hx;
+    const double ymin=bounds.y0+hy, ymax=bounds.y1-hy;
+    if(xmin>xmax || ymin>ymax) return std::nullopt;
+    const double cx=(court.x0+court.x1)/2, cy=(court.y0+court.y1)/2;
+    std::vector<Box4> obstacles=occupied.boxes();
+    const auto& labels=placed.boxes();
+    obstacles.insert(obstacles.end(),labels.begin(),labels.end());
+    std::vector<double> ys{ymin,ymax,std::clamp(cy,ymin,ymax)};
+    for(const auto& b:obstacles) {
+        for(double y:{b.y0-hy,b.y1+hy})
+            if(y>=ymin && y<=ymax) ys.push_back(y);
+    }
+    std::sort(ys.begin(),ys.end());
+    ys.erase(std::unique(ys.begin(),ys.end()),ys.end());
+    std::stable_sort(ys.begin(),ys.end(),[&](double a,double b){return std::abs(a-cy)<std::abs(b-cy);});
+    for(double y:ys) {
+        std::vector<std::pair<double,double>> forbidden;
+        for(const auto& b:obstacles)
+            if(y+hy>b.y0 && y-hy<b.y1 && b.x1+hx>=xmin && b.x0-hx<=xmax)
+                forbidden.emplace_back(b.x0-hx,b.x1+hx);
+        std::sort(forbidden.begin(),forbidden.end());
+        std::vector<double> xs;
+        double left=xmin;
+        for(const auto& [lo,hi]:forbidden) {
+            if(lo>=left) xs.push_back(std::clamp(cx,left,std::min(lo,xmax)));
+            left=std::max(left,hi);
+            if(left>xmax) break;
+        }
+        if(left<=xmax) xs.push_back(std::clamp(cx,left,xmax));
+        std::stable_sort(xs.begin(),xs.end(),[&](double a,double b){return std::abs(a-cx)<std::abs(b-cx);});
+        for(double x:xs) {
+            const auto box=text_box(ref,x,y,size,.15);
+            const Box4 padded{box.x0-pad,box.y0-pad,box.x1+pad,box.y1+pad};
+            if(!occupied.hits(padded,counts) && !placed.hits(padded,counts))
+                return ClearLabel{x,y,box,std::hypot(x-cx,y-cy)};
+        }
+    }
+    return std::nullopt;
+}
+}
+
 RefdesMove place_refdes(
     const Box4& court, const std::string& ref, double size, const Box4& box,
     const SilkBoxIndex& occupied, const SilkBoxIndex& placed,
@@ -1105,6 +1155,13 @@ RefdesMove place_refdes(
                     break;
                 }
             }
+        }
+    }
+    if(cur_pen>0) {
+        if(const auto clear=sweep_clear_refdes(court,ref,new_size,occupied,placed,bounds,box_pad,counts)) {
+            tx=clear->x;
+            ty=clear->y;
+            nbox=clear->box;
         }
     }
     const double dx = tx - fx;
