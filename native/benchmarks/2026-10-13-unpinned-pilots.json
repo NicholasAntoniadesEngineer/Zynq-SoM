@@ -1,0 +1,14 @@
+{
+  "source_commit": "c2a44c0d",
+  "scope": "Bounded construction screening, no candidate accepted",
+  "base_recipe": "2026-10-13-carrier-164x156-qualified.json profiler equivalent with width 163; one run per trial",
+  "trials": [
+    {"released_shape_pins": ["board_aux"],"owned_quality_first": true,"result": "construction_failed","seconds": 2.859659375,"completed_outer_attempts": 4,"failure_receipt_captured": true},
+    {"released_shape_pins": ["bringup_rails"],"owned_quality_first": true,"result": "construction_failed","seconds": 2.300258375,"completed_outer_attempts": 4,"failure_receipt_captured": true},
+    {"released_shape_pins": ["board_aux","bringup_rails"],"owned_quality_first": true,"result": "construction_failed","seconds": 2.295716167,"completed_outer_attempts": 4,"failure_receipt_captured": true},
+    {"released_shape_pins": ["board_aux","bringup_rails"],"owned_quality_first": false,"result": "construction_failed","seconds": 2.294101792,"completed_outer_attempts": 4,"failure_receipt_captured": true}
+  ],
+  "interpretation": "Individual and combined release of pilot pins did not recover this outline under the existing bounded strategy. This does not prove no unpinned solution exists. Disabling owned_quality_first restores estimator-first selection, NOT geometry-first selection.",
+  "next_algorithm_question": "floorplan_pack.cpp seat() ranks legal shape hits primarily by estimated partial wiring cost; area-first outline selection does not change that local decision. Investigate placement-space-aware candidate ranking with independent hardware checks and retained incumbents, rather than treating pin release as exhaustive exploration.",
+  "limitations": "Instrumented single runs, some concurrent, uncontrolled cache state; no performance claim. Qualified 164x156 carrier remains unchanged."
+}
