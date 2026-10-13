@@ -1,0 +1,19 @@
+{
+  "source_commit": "933c255f",
+  "outline_spec": "native/benchmarks/carrier-163x153-combined-bottom.floorplan.json",
+  "recipe": "Qualified 163x153 profiler recipe with only interior-order changed from 3; same prepared schematic and hardware options",
+  "results": [
+    {"interior_order": 0, "status": "construction_failed", "seconds": 17.920160541, "outer_attempts": 4, "receipt_captured": true, "log": "native/build/order-screen-163x153-0.log"},
+    {"interior_order": 1, "status": "construction_failed", "seconds": 7.368164208, "outer_attempts": 4, "receipt_captured": true, "log": "native/build/order-screen-163x153-1.log"},
+    {"interior_order": 2, "status": "construction_failed", "seconds": 3.782029917, "outer_attempts": 4, "receipt_captured": true, "log": "native/build/order-screen-163x153-2.log"}
+  ],
+  "decision": "Retain order 3 and the qualified 163x153 incumbent. Faster failures are not iteration speed improvements for a successful board.",
+  "next_investigation": {
+    "source": "native/src/legalize.cpp joint separation search",
+    "observed_counts": {"axis_solves": 28959, "joint_states": 23133, "unary_domain_probes": 8961},
+    "reference_log": "native/build/near-domain-cache-carrier.log",
+    "hypothesis": "Each search state solves x and sometimes y independently. States differing only in the opposite axis may repeat identical axis problems. Invocation-local caching keyed by the complete active-axis separation assignment could reuse results without pruning states.",
+    "requirements": "Preserve cycle provenance indices, exact positions and qualifiers; count only executed solves; record reuse explicitly; bound storage to the existing search invocation; test negative cycles, output-grid rejection and failure receipts before adoption."
+  },
+  "limitations": "Concurrent single-run diagnostic screens, not timing benchmarks. No physical infeasibility proof, new accepted layout or production policy change."
+}
