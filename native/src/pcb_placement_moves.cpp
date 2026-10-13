@@ -3,6 +3,8 @@
 #include "schgen/thermal_via_planning.hpp"
 #include "schgen/pcb_placement_gates.hpp"
 #include "contract_rigid_groups_internal.hpp"
+#include <iomanip>
+#include <sstream>
 
 namespace schgen::pcb_placement {
 namespace {
@@ -192,10 +194,33 @@ bool evict_legal(const Placer &p, const PcbCheckInput &before, const PcbCheckInp
             // independent final-board acceptance still owns absolute limits.
             const double required=frame==MovementFrame::FinalFrameNonregression
                 ? std::min(p.ctx.clearance,previous) : p.ctx.clearance;
-            if (separation(b,evict_box(after,i))<required)
+            const double actual=separation(b,evict_box(after,i));
+            bool rigid_roundoff=false;
+            if(members.count(s)&&actual<required&&previous>=required) {
+                const auto& old_part=before.model().insts.at(prior.at(r));
+                const auto& old_other=before.model().insts.at(prior.at(s));
+                // Bound cancellation from translating coordinates and taking
+                // differences; this is floating-point error, not a physical
+                // clearance allowance. Only unchanged rigid internal pairs
+                // may inherit their previously legal separation.
+                double scale=1;
+                for(const auto* pair:{&old_part,&old_other,&part,&other})
+                    scale=std::max({scale,std::abs(pair->x),std::abs(pair->y)});
+                const double error=8*std::numeric_limits<double>::epsilon()*scale;
+                rigid_roundoff=old_part.mod==part.mod&&old_other.mod==other.mod&&
+                    old_part.side==part.side&&old_other.side==other.side&&
+                    old_part.rotation==part.rotation&&old_other.rotation==other.rotation&&
+                    std::abs((part.x-other.x)-(old_part.x-old_other.x))<=error&&
+                    std::abs((part.y-other.y)-(old_part.y-old_other.y))<=error&&
+                    previous-actual<=error;
+            }
+            if (actual<required&&!rigid_roundoff) {
+                std::ostringstream detail;
+                detail<<std::setprecision(17)<<":before="<<previous<<":after="<<actual<<":required="<<required;
                 return reject("body_clearance:"+r+":"+s+
                     (previous<p.ctx.clearance
-                        ?":incumbent_below_clearance":":incumbent_clear"));
+                        ?":incumbent_below_clearance":":incumbent_clear")+detail.str());
+            }
         }
     }
     if (!refit_preserves_fanout(before,after)) return reject("fanout_regression");

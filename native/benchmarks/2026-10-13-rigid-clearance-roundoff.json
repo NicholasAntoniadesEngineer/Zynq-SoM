@@ -1,0 +1,30 @@
+{
+  "parent_commit": "5a68bb0a",
+  "measured_defect": "Rejected rigid C20006/C20026 trials report before=0.5, after=0.49999999999998579, required=0.5 mm. Full precision rejection diagnostics distinguish arithmetic cancellation from material clearance loss.",
+  "diagnostic_log": "native/build/thermal-clearance-precision.log",
+  "tests": {
+    "owned_eviction": "PASS 8.24s",
+    "new_coverage": "Decimal courtyard half-width 1.7mm and 3.9mm centre spacing explicitly require a floating cancellation witness over seven translations. Legal rigid shifts pass; a 0.0001mm relative shift still fails. Existing real rounding-loss, THT, external collision, thermal and receipt tests remain active.",
+    "fixture_development": "Initial half-width 1.0 and 1.3 witnesses failed because they did not reproduce cancellation; changed fixture geometry to reproduce the measured decimal-coordinate case, without removing the witness assertion."
+  },
+  "correction": "Only internal moved pairs with unchanged footprint identities, sides, rotations and relative positions within a coordinate-scaled floating-point roundoff bound can inherit their previously legal gap. The gap loss must also fit the same bound (8*double epsilon*coordinate scale). External pairs and material relative-coordinate changes retain the strict comparison. Full final-board hardware gates remain independent.",
+  "candidate_screen": {
+    "pcb_sha256": "4c775af3532a77e8604f874b1771c6f7c1d91d2176075865f2f003ccfe0390e4",
+    "dimensions_mm": [163,153],
+    "top_parts": 394,
+    "bottom_parts": 172,
+    "model_seconds": 17.082923333,
+    "pcb_text_seconds": 0.028381084,
+    "remaining_lattice_events": 1,
+    "change": "C6013 contact group now accepts first rounded y=68.4104 instead of adjacent y=68.4103; regulator movement still encounters real external collisions, including C20003/SW9001 overlap around 3.0631mm.",
+    "log": "native/build/thermal-rigid-roundoff-carrier.log",
+    "accepted_finalist": false
+  },
+  "default_controls": {
+    "carrier_sha256": "d954ec91a789f69a1e94a26a9d3a91b279fbc208dff2503cbe8ee4c8eabc199f",
+    "devkit_sha256": "1b12fecbcbbaa5e6084c2459da93cb144a660ff19805e6e4e3f75f9c22689fdb",
+    "result": "Both reference outputs unchanged",
+    "logs": ["native/build/thermal-rigid-roundoff-reference.log", "native/build/thermal-rigid-roundoff-devkit.log"]
+  },
+  "limits": "Numerical reliability correction, not resolution of the final thermal fallback. Candidate has not been fully requalified. Timings are single-run diagnostics, not a speed comparison."
+}

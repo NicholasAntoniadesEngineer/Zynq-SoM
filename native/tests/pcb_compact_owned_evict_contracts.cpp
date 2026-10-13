@@ -530,6 +530,29 @@ void tests(const PcbPlacementInput& source,const std::filesystem::path& root) {
     }
     {
         Fixture f(source,"bringup_rails",true);
+        f.part("R_A",50,50,"bottom");f.part("R_B",53.9,50,"bottom");
+        for(const auto* ref:{"R_A","R_B"})f.p->ctx.pool[ref]=pcb_check_footprint("decimal-courtyard",
+            "(footprint probe (layer F.Cu) (fp_rect (start -1.7 -1) (end 1.7 1)"
+            " (stroke (width .05) (type default)) (layer F.CrtYd))"
+            " (pad 1 smd rect (at 0 0) (size .2 .2) (layers F.Cu F.Mask)))");
+        const auto before=refit_fanout_geometry(*f.p,nullptr);
+        bool cancellation_witness=false;
+        for(double shift:{.0001,.1,-.1,3.2345,25.0001,-12.0001,-11.9999}) {
+            const PcbStageRefitPoses poses{{"R_A",{50+shift,50,0}},{"R_B",{53.9+shift,50,0}}};
+            const auto translated=refit_fanout_geometry(*f.p,&poses);
+            const auto index=evict_index(translated);
+            const auto a=evict_box(translated,index.at("R_A")),b=evict_box(translated,index.at("R_B"));
+            cancellation_witness|=b.x0-a.x1<.5;
+            require(evict_legal(*f.p,before,translated,{"R_A","R_B"},{},{},false,nullptr,
+                        MovementFrame::FinalFrameNonregression,true),"rigid boundary gap must survive coordinate cancellation");
+            auto loss=poses;std::get<0>(loss.at("R_B"))-=.0001;
+            require(!evict_legal(*f.p,before,refit_fanout_geometry(*f.p,&loss),{"R_A","R_B"},{},{},false,nullptr,
+                        MovementFrame::FinalFrameNonregression,true),"one output-grid tick of real internal clearance loss remains illegal");
+        }
+        require(cancellation_witness,"rigid-pair test must exercise an actual floating-point cancellation rejection");
+    }
+    {
+        Fixture f(source,"bringup_rails",true);
         f.part("R_A",50,50,"bottom");f.part("R_B",54,50,"bottom");
         auto before=refit_fanout_geometry(*f.p,nullptr);
         require(thermal_contact_group(*f.p,before,"R_A",4,0,{})==std::set<std::string>{"R_A","R_B"},
