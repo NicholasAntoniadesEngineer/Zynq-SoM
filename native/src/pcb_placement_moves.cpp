@@ -199,6 +199,63 @@ bool evict_bottom_shadow(const Placer &p, const std::string &ref) {
     return p.side(ref)=="bottom" || (p.geometry.resolvable.count(ref) &&
         has_thru_pads_from_text(p.mod(ref)->bytes));
 }
+void compact_recover_thermal(Placer& p) {
+    const auto locked=independently_locked_owned_members(p);
+    std::vector<Box4> corridors;
+    for (const auto& [ref,connector] : p.som_refs) {
+        (void)connector;
+        if (p.pos.count(ref) && p.geometry.resolvable.count(ref))
+            corridors.push_back(pcb_escape_corridor_board(*p.mod(ref),
+                p.ctx.corridor_grid(25,p.pos.at(ref).first),
+                p.ctx.corridor_grid(25,p.pos.at(ref).second),p.rot(ref),&p.ctx.quantization));
+    }
+    const auto policy=pcb_emit_policy(p.ctx.in.floorplan.project);
+    const auto capacity=[](const auto& fields) {
+        std::size_t total=0;
+        for (const auto& field : fields) total+=field.sites.chosen.size();
+        return total;
+    };
+    const auto event=[&](const std::string& name) {
+        p.out.fallback_events.push_back(name);
+        p.out.placement_accounting.fallback_events.push_back(name);
+    };
+    const auto entry=p.pos;
+    try {
+        // Each accepted iteration strictly increases finite preferred capacity;
+        // rejected candidates are finite, with no physical search-radius limit.
+        for (;;) {
+            const auto before=refit_fanout_geometry(p,nullptr);
+            const auto fields=plan_preferred_thermal_vias(before.model(),policy,&p.ctx.quantization);
+            bool accepted=false;
+            for (const auto& move : thermal_pad_move_candidates(before.model(),policy,fields,&p.ctx.quantization)) {
+                if (locked.count(move.ref) || !evict_movable(p,move.ref)) continue;
+                const auto old=p.pos.at(move.ref);
+                // Try the nearest output-grid point, then the adjacent outward
+                // tick if rounding consumed the mathematically exact clearance.
+                for (int tick : {0,1}) {
+                    const double dx=move.dx+(move.dx==0?0:std::copysign(tick*.0001,move.dx));
+                    const double dy=move.dy+(move.dy==0?0:std::copysign(tick*.0001,move.dy));
+                    PcbStageRefitPoses trial{{move.ref,{
+                        placement_evict_trial_precision4dp(old.first+dx,&p.ctx.quantization),
+                        placement_evict_trial_precision4dp(old.second+dy,&p.ctx.quantization),p.rot(move.ref)}}};
+                    event("thermal_repair_trial");
+                    const auto after=refit_fanout_geometry(p,&trial);
+                    if (evict_legal(p,before,after,{move.ref},{},corridors,false)) {
+                        const auto next=plan_preferred_thermal_vias(after.model(),policy,&p.ctx.quantization);
+                        if (capacity(next)>capacity(fields)) {
+                            const auto& pose=trial.at(move.ref);
+                            p.pos[move.ref]={std::get<0>(pose),std::get<1>(pose)};
+                            event("thermal_repair_moved"); accepted=true; break;
+                        }
+                    }
+                    event("thermal_repair_rejected");
+                }
+                if (accepted) break;
+            }
+            if (!accepted) break;
+        }
+    } catch (...) { p.pos=entry; throw; }
+}
 void compact_evict(Placer &p) {
     // Validate trusted rows before any movement. Ownership does not grant
     // permission to move a fixed/contracted member.
@@ -688,6 +745,7 @@ void Placer::reorder() {
 void Placer::evict() {
     if (ctx.in.floorplan.compact_search) {
         compact_evict(*this);
+        compact_recover_thermal(*this);
         return;
     }
     std::vector<Box4> corridors, through;

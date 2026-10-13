@@ -47,7 +47,18 @@ void ledger_contracts(const JsonNode& reference){
 }
 void registry_contracts(const JsonNode& reference){
     NativeFallbacks f;register_native_fallbacks(f);f.record("seat_node_budget");const auto snap=f.snapshot();f.record("seat_node_budget");f.restore(snap);
-    const auto census=f.census();require(census.size()==get(reference,"census").object_value.size()+23,"historical fallback census plus twenty-three named native recovery events");
+    const auto census=f.census();
+    // Include the three earlier incoming/victim-shape events omitted by the
+    // stale +23 inventory, plus the three new thermal search events.
+    require(census.size()==get(reference,"census").object_value.size()+29,"historical fallback census plus twenty-nine named native recovery events");
+    for (const auto* name : {"interior_reseat_incoming_shape_trial","interior_reseat_shape_retry","interior_reseat_shape_trial"})
+        require(census.at(name)==AuditInteger{},"shape recovery events remain explicitly registered");
+    for (const auto* name : {"thermal_repair_trial","thermal_repair_rejected","thermal_repair_moved"}) {
+        require(census.at(name)==AuditInteger{},"thermal recovery starts with zero events");
+        f.record(name);
+        require(f.census().at(name)==AuditInteger(1),"thermal recovery work is counted");
+    }
+    f.restore(snap);
     require(census.at("legalize_neighbour_retry")==AuditInteger{},"neighbour retry starts with zero events");
     f.record("legalize_neighbour_retry");
     require(f.census().at("legalize_neighbour_retry")==AuditInteger(1),"executed neighbour retry is counted");

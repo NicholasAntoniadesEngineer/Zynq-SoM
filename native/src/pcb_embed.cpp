@@ -279,6 +279,43 @@ std::vector<PreferredThermalField> plan_preferred_thermal_vias(
     }
     return result;
 }
+std::vector<ThermalPadMove> thermal_pad_move_candidates(
+    const PcbCheckModel& model, const PcbEmitPolicy& policy,
+    const std::vector<PreferredThermalField>& fields, QuantizationCounts* counts) {
+    if (std::none_of(fields.begin(),fields.end(),[](const auto& field) {
+            return field.sites.chosen.size()<field.requested;
+        })) return {};
+    const auto obstacles=pcb_emission::thermal_obstacles(model,counts);
+    const auto rule=pcb_emission::thermal_rule(model,policy);
+    std::map<std::string,std::set<std::string>> owners;
+    for (const auto& part : model.insts)
+        for (const auto& pad : scan_mod_pads(part.mod->document))
+            owners[part.ref+"."+std::get<0>(pad)].insert(part.ref);
+    std::set<std::tuple<std::string,double,double>> seen;
+    std::vector<ThermalPadMove> result;
+    for (const auto& field : fields) {
+        if (field.sites.chosen.size()>=field.requested) continue;
+        for (const auto& rejected : field.sites.rejected) {
+            if (!rejected.preferred || rejected.blocker.kind!="obs") continue;
+            const auto found=owners.find(rejected.blocker.label);
+            if (found==owners.end() || found->second.size()!=1) continue;
+            const auto& ref=*found->second.begin();
+            if (ref==field.ref) continue; // Moving the subject also moves its sites.
+            for (const auto& obstacle : obstacles) {
+                if (obstacle.label!=rejected.blocker.label) continue;
+                for (const auto& [x,y] : via_obstacle_axis_exits(
+                        rejected.candidate.first,rejected.candidate.second,rule,obstacle)) {
+                    const double dx=x-obstacle.cx, dy=y-obstacle.cy;
+                    if (seen.emplace(ref,dx,dy).second) result.push_back({ref,dx,dy});
+                }
+            }
+        }
+    }
+    std::stable_sort(result.begin(),result.end(),[](const auto& a,const auto& b) {
+        return std::hypot(a.dx,a.dy)<std::hypot(b.dx,b.dy);
+    });
+    return result;
+}
 bool preserves_preferred_thermal_vias(const std::vector<PreferredThermalField>& before,
                                       const std::vector<PreferredThermalField>& after) {
     if (before.size()!=after.size()) return false;

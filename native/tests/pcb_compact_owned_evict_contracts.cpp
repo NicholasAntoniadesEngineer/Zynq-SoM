@@ -407,6 +407,36 @@ void tests(const PcbPlacementInput& source,const std::filesystem::path& root) {
                 "opposite-face corridor eviction may not consume preferred thermal capacity");
         require(evict_legal(*f.p,after,before,{"R_BLOCKER"},{},{},false),
                 "thermal recovery remains legal");
+        f.p->pos["R_BLOCKER"]={50,50};
+        const auto blocked_pose=f.p->pos;
+        f.p->fixed.insert("R_BLOCKER");
+        compact_recover_thermal(*f.p);
+        require(f.p->pos==blocked_pose,"thermal repair must not move a fixed blocker");
+        f.p->fixed.erase("R_BLOCKER");
+        require(!thermal_pad_move_candidates(after.model(),policy,blocked).empty(),
+                "blocked pad must produce identity-resolved thermal proposals");
+        compact_recover_thermal(*f.p);
+        const auto recovered=plan_preferred_thermal_vias(
+            refit_fanout_geometry(*f.p,nullptr).model(),policy);
+        std::cout<<"thermal repair recovered="<<recovered.front().sites.chosen.size()
+            <<" blocker="<<f.p->pos.at("R_BLOCKER").first<<","<<f.p->pos.at("R_BLOCKER").second
+            <<" events="<<f.p->out.fallback_events.size()<<'\n';
+        require(recovered.front().sites.chosen.size()==3,
+                "production thermal repair must recover preferred sites");
+        require(f.p->pos.at("U_THERMAL")==blocked_pose.at("U_THERMAL"),
+                "thermal subject stays in place while its blocker moves");
+        require(std::count(f.p->out.fallback_events.begin(),f.p->out.fallback_events.end(),
+                           "thermal_repair_moved")>0,"thermal repair must retain accepted work receipts");
+        const auto recovered_pose=f.p->pos;
+        compact_recover_thermal(*f.p);
+        require(f.p->pos==recovered_pose,"complete field must not cause gratuitous movement");
+        import_actual(f);
+        const auto count=[&](const auto* name) {
+            return std::count(f.p->out.fallback_events.begin(),f.p->out.fallback_events.end(),name);
+        };
+        require(count("thermal_repair_trial")==
+                count("thermal_repair_moved")+count("thermal_repair_rejected"),
+                "every executed thermal trial has exactly one terminal outcome");
     }
     l4_corridor_contract(source);
     error_accounting(source);

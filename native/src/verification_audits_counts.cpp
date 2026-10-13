@@ -180,6 +180,7 @@ bool is_board_search_effort(std::string_view name){
         "contract_group_orientation_retry","screened_incumbent_retained",
         "edge_run_translation","legalize_only_compaction","seat_node_budget",
         "cand_cap_truncated","bottom_variant_contract_reject",
+        "thermal_repair_trial","thermal_repair_rejected","thermal_repair_moved",
         "corridor_evict_moved","punch_free_plan_rejected","interior_reseat_retry"};
     return names.count(name)!=0;
 }
