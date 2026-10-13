@@ -216,6 +216,39 @@ bool evict_bottom_shadow(const Placer &p, const std::string &ref) {
     return p.side(ref)=="bottom" || (p.geometry.resolvable.count(ref) &&
         has_thru_pads_from_text(p.mod(ref)->bytes));
 }
+std::set<std::string> thermal_contact_group(const Placer& p,const PcbCheckInput& before,
+        const std::string& ref,double dx,double dy,const std::set<std::string>& locked) {
+    const auto index=evict_index(before);
+    if(!index.count(ref)||locked.count(ref)||!evict_movable(p,ref))return {};
+    const auto sheet=p.ctx.by_ref.at(ref).sheet;
+    std::set<std::string> members{ref};
+    const auto separation=[](Box4 a,Box4 b) {
+        return std::max({a.x0-b.x1,b.x0-a.x1,a.y0-b.y1,b.y0-a.y1});
+    };
+    // Monotone finite closure: each newly displaced neighbour joins the same
+    // rigid translation. This proposes a move only; evict_legal and the final
+    // contract/thermal gates remain authoritative for rounded trial poses.
+    for(bool changed=true;changed;) {
+        changed=false;
+        const auto current=members;
+        for(const auto& moving:current) {
+            const auto i=index.at(moving);const auto& part=before.model().insts.at(i);
+            const auto old=evict_box(before,i);
+            const Box4 moved{old.x0+dx,old.y0+dy,old.x1+dx,old.y1+dy};
+            for(const auto& [other,j]:index) {
+                if(members.count(other))continue;
+                const auto& obstacle=before.model().insts.at(j);
+                if(part.side!=obstacle.side&&!has_thru_pads_from_text(part.mod->bytes)&&
+                   !has_thru_pads_from_text(obstacle.mod->bytes))continue;
+                const auto box=evict_box(before,j);
+                if(separation(moved,box)>=std::min(p.ctx.clearance,separation(old,box)))continue;
+                if(p.ctx.by_ref.at(other).sheet!=sheet||locked.count(other)||!evict_movable(p,other))return {};
+                members.insert(other);changed=true;
+            }
+        }
+    }
+    return members;
+}
 void compact_recover_thermal(Placer& p) {
     const auto locked=independently_locked_owned_members(p);
     std::vector<Box4> corridors;
@@ -238,9 +271,11 @@ void compact_recover_thermal(Placer& p) {
         for (const auto& row : owned_group_placements(*evidence))
             if (p.pos.count(row.owner)) owned_rows.push_back(row);
     }
-    const auto group_options=[&](const std::string& ref) {
+    const auto group_options=[&](const std::string& ref,const PcbCheckInput& before,double dx,double dy) {
         std::vector<std::set<std::string>> options;
         if (!locked.count(ref) && evict_movable(p,ref)) options.push_back({ref});
+        const auto contact=thermal_contact_group(p,before,ref,dx,dy,locked);
+        if(contact.size()>1)options.push_back(contact);
         const auto& sheet=p.ctx.by_ref.at(ref).sheet;
         const auto contract=p.ctx.in.contracts.find(sheet);
         const auto refs=p.ctx.board_refs.find(sheet);
@@ -280,7 +315,7 @@ void compact_recover_thermal(Placer& p) {
             const auto fields=plan_preferred_thermal_vias(before.model(),policy,&p.ctx.quantization);
             bool accepted=false;
             for (const auto& move : thermal_pad_move_candidates(before.model(),policy,fields,&p.ctx.quantization)) {
-              for (const auto& members : group_options(move.ref)) {
+              for (const auto& members : group_options(move.ref,before,move.dx,move.dy)) {
                 const bool grouped=members.size()>1;
                 // Try the nearest output-grid point, then the adjacent outward
                 // tick if rounding consumed the mathematically exact clearance.

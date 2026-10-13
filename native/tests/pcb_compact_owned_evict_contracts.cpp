@@ -499,6 +499,30 @@ void tests(const PcbPlacementInput& source,const std::filesystem::path& root) {
                     .front().sites.chosen.size()==3,"contract-group translation recovers thermal capacity");
         import_actual(f);
     }
+    {
+        Fixture f(source,"bringup_rails",true);
+        f.part("R_A",50,50,"bottom");f.part("R_B",54,50,"bottom");
+        auto before=refit_fanout_geometry(*f.p,nullptr);
+        require(thermal_contact_group(*f.p,before,"R_A",4,0,{})==std::set<std::string>{"R_A","R_B"},
+                "thermal contact closure includes collided neighbour");
+        f.part("R_C",58,50,"bottom");before=refit_fanout_geometry(*f.p,nullptr);
+        require(thermal_contact_group(*f.p,before,"R_A",4,0,{})==std::set<std::string>{"R_A","R_B","R_C"},
+                "thermal contact closure follows transitive collisions");
+        const PcbStageRefitPoses single{{"R_A",{54,50,0}}};
+        const PcbStageRefitPoses translated{{"R_A",{54,50,0}},{"R_B",{58,50,0}},{"R_C",{62,50,0}}};
+        require(!evict_legal(*f.p,before,refit_fanout_geometry(*f.p,&single),{"R_A"},{},{},false,nullptr,
+                    MovementFrame::FinalFrameNonregression),"individual thermal contact move really collides");
+        require(evict_legal(*f.p,before,refit_fanout_geometry(*f.p,&translated),{"R_A","R_B","R_C"},{},{},false,nullptr,
+                    MovementFrame::FinalFrameNonregression,true),"complete rigid contact move passes unchanged geometry gates");
+        f.p->fixed.insert("R_C");
+        require(thermal_contact_group(*f.p,before,"R_A",4,0,{}).empty(),"contact closure cannot move fixed neighbour");
+        f.p->fixed.erase("R_C");
+        require(thermal_contact_group(*f.p,before,"R_A",4,0,{"R_B"}).empty(),"contact closure protects owned members");
+        f.p->ctx.by_ref.at("R_C").sheet="other";
+        require(thermal_contact_group(*f.p,before,"R_A",4,0,{}).empty(),"contact closure cannot absorb another subsystem");
+        require(thermal_contact_group(*f.p,before,"R_A",0,0,{})==std::set<std::string>{"R_A"},
+                "unchanged pose requires no contact expansion");
+    }
     l4_corridor_contract(source);
     error_accounting(source);
     unchanged_ceilings(source,root);

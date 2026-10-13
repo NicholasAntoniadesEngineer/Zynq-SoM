@@ -46,7 +46,7 @@
   },
   "trace": {
     "log": "native/build/power-leftover-thermal-trace.log",
-    "finding": "Cross-subsystem preferred-site blockers include charger C6013/R6003/R6006, sense resistor RS21001 and test points. Independent repairs hit body-clearance conflicts or thermal regression; one RS21001 move accepted. No clearances waived.",
+    "finding": "Cross-subsystem preferred-site blockers include bringup_modules load-switch circuitry C6013/R6003/R6006, sense resistor RS21001 and test points. Independent repairs hit body-clearance conflicts or thermal regression; one RS21001 move accepted. No clearances waived. Earlier charger attribution was incorrect; project_authoring_carrier_bringup_modules.cpp identifies the load-switch ISET and indicator networks.",
     "next": "Investigate coordinated blocker-group translations and stage-level thermal-aware placement; retain failed attempts and enforce actual geometry."
   },
   "limits": "No newly accepted board, no smaller outline, no historical Python timing comparison. The prior qualified reference remains authoritative."
