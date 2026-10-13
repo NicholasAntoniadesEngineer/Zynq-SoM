@@ -1,0 +1,41 @@
+{
+  "parent_commit": "14002308",
+  "finding": "The paired mixed-face power candidate's rightmost top courtyard is status LED D20003 at x=52.8104mm; bottom R20003 reaches x=50.8504mm. The stage builder appends leftover parts in a separate strip, and moving buck stages did not repack this strip.",
+  "implementation": "After explicit placement/v2 mixed-face exploration, append candidates that compact singleton leftovers leftward into courtyard-derived contact positions. Preserve faces, rotations, mirror identities and original offers. Each attempted move reuses unchanged physical-clearance, local-contract and fanout checks. Finite deterministic coordinate descent, not exhaustive packing or a hardware constraint. Quantization work remains independently observed in integration tests.",
+  "local_result": {
+    "old_candidate_dimensions_mm": [53.3604,23.9349],
+    "new_candidate_dimensions_mm": [47.6904,23.9349],
+    "candidate_area_change_percent": -10.625857377380987,
+    "mixed_candidates": 8,
+    "test": "native_pcb_orientation_contracts PASS 4.14s; compacted offers must reduce area, preserve face membership/rotation/mirroring, and only move left. Existing local contracts, electrical bias ownership, external enforcement and scalar accounting assertions retained.",
+    "log": "native/build/power-leftover-contact-tests.log"
+  },
+  "carrier_163x153_screen": {
+    "status": "constructed_no_acceptance",
+    "model_seconds": 13.291132541,
+    "pcb_text_seconds": 0.028374166,
+    "pcb_sha256": "1103bb27f46b0f921554f3f5d2336a369b584eadfcd4be7bcfee45b0caa40fd8",
+    "top_parts": 394,
+    "bottom_parts": 172,
+    "cheap_checks": "fanout, ratsnest, local placement contract and flow pass; hard_red=0",
+    "emission_thermal_via_lattice_events": 4,
+    "accepted": false,
+    "log": "native/build/power-leftover-163x153.log"
+  },
+  "carrier_162x153_screen": {
+    "status": "construction_failed",
+    "elapsed_seconds": 5.447078708,
+    "outer_attempts": 4,
+    "receipt_captured": true,
+    "first_power_choice": "index 12, compacted mixed-face candidate",
+    "log": "native/build/power-leftover-162x153.log"
+  },
+  "default_controls": {
+    "carrier_sha256": "d954ec91a789f69a1e94a26a9d3a91b279fbc208dff2503cbe8ee4c8eabc199f",
+    "devkit_sha256": "1b12fecbcbbaa5e6084c2459da93cb144a660ff19805e6e4e3f75f9c22689fdb",
+    "result": "Both reference outputs unchanged without power face exploration",
+    "logs": ["native/build/power-leftover-default-control.log", "native/build/power-leftover-devkit-control.log"]
+  },
+  "next_step": "Investigate thermal-via fallback geometry and coupled board placement before accepting any new finalist. Smaller block alone does not guarantee a smaller feasible board.",
+  "limitations": "No new qualified carrier, render set, board-area reduction or historical Python comparison. Existing verified reference remains authoritative. Timings are single-run diagnostics, not controlled speedup evidence."
+}

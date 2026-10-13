@@ -367,11 +367,42 @@ void live(const std::filesystem::path& root){
      seed_protrudes=true;
    }
    demand(seed_protrudes,"power enclosure witness no longer exercises an undersized stage envelope");
-   std::size_t power_candidates=0,buck_candidates=0;
+   std::size_t power_candidates=0,buck_candidates=0,compacted_candidates=0;
    for(const auto& candidate:power_split.geometry.shapes.at("power")) {
     if(candidate.tag.rfind("contract-bottom",0)!=0)continue;
     ++power_candidates;
+    const auto suffix=candidate.tag.find("/leftover-contact");
+    if(suffix!=std::string::npos) {
+     ++compacted_candidates;
+     const auto source=std::find_if(power_alternatives.begin(),power_alternatives.end(),[&](const auto& s){
+      return s.tag==candidate.tag.substr(0,suffix);
+     });
+     demand(source!=power_alternatives.end()&&candidate.w*candidate.h<source->w*source->h,
+            "leftover compaction must measurably reduce envelope area");
+     demand(candidate.extra_rot==source->extra_rot&&candidate.mirror==source->mirror,
+            "leftover compaction changed orientation or mirrored identity");
+     for(bool top:{false,true}) {
+      const auto& old=top?source->top_off:source->bot_off;
+      const auto& moved=top?candidate.top_off:candidate.bot_off;
+      demand(old.size()==moved.size(),"leftover compaction changed face membership");
+      for(const auto& [ref,xy]:old)demand(moved.count(ref)&&moved.at(ref).second==xy.second&&moved.at(ref).first<=xy.first,
+             "leftover compaction changed face or made a non-leftward move");
+     }
+    }
     const auto checked=model(candidate,split_power_context,power_split.geometry,"power");
+    if(candidate.tag.rfind("contract-bottom-pair",0)==0) {
+     for(const auto* side:{"top","bottom"}) {
+      double right=-1,bottom=-1;std::string right_ref,bottom_ref;
+      for(std::size_t i=0;i<checked.model().insts.size();++i) {
+       const auto& part=checked.model().insts[i];if(part.side!=side)continue;
+       const auto bounds=checked.courtyard_at(i);
+       if(bounds.x1>right){right=bounds.x1;right_ref=part.ref;}
+       if(bounds.y1>bottom){bottom=bounds.y1;bottom_ref=part.ref;}
+      }
+      std::cout<<"power paired extent side="<<side<<" right="<<right_ref<<":"<<right
+               <<" bottom="<<bottom_ref<<":"<<bottom<<'\n';
+     }
+    }
     demand(check_pcb_placement_contract(checked,"power",&f.input.contracts.at("power"),
              split_power_context.board_refs.at("power")).ok,"mixed power stage violates local hardware contract");
     demand(!candidate.top_off.empty()&&!candidate.bot_off.empty(),"power group offer is not actually mixed-face");
@@ -385,6 +416,7 @@ void live(const std::filesystem::path& root){
    }
    std::cout<<"power mixed candidates="<<power_candidates<<" moved buck stages="<<buck_candidates<<'\n';
    demand(power_candidates>0&&buck_candidates>0,"power stages still have no mixed-face alternatives");
+   demand(compacted_candidates>0,"power leftovers did not yield a smaller checked candidate");
    for(bool unknown_external:{false,true}) {
     auto blocked_input=f.input;
     if(unknown_external)for(auto& [key,value]:blocked_input.contracts.at("power").object_value)

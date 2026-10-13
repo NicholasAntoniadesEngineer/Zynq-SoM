@@ -208,7 +208,7 @@ void append_contract_group_faces(Context& ctx,Geometry& g,const std::string& she
         const auto box=before.courtyard_at(i);boxes.emplace(before.model().insts[i].ref,box);
         old_right=std::max(old_right,box.x1);old_bottom=std::max(old_bottom,box.y1);
     }
-    const auto append_checked=[&](Shape candidate) {
+    const auto qualify=[&](Shape& candidate) {
         const auto checked=model(candidate);double right=0,bottom=0;bool physical=true;
         for(std::size_t i=0;i<checked.model().insts.size();++i) {
             const auto a=checked.courtyard_at(i);right=std::max(right,a.x1);bottom=std::max(bottom,a.y1);
@@ -226,6 +226,10 @@ void append_contract_group_faces(Context& ctx,Geometry& g,const std::string& she
         candidate.h=placement_variant_dimension_precision4dp(bottom+seed.h-old_bottom,&ctx.quantization);
         // Face assignments may help global packing without reducing local area.
         if(!orientation_holds(ctx,g,sheet,candidate)||!check_fanout(model(candidate),0).ok)return false;
+        return true;
+    };
+    const auto append_checked=[&](Shape candidate) {
+        if(!qualify(candidate))return false;
         auto found=g.shapes.find(sheet);
         if(found==g.shapes.end())found=g.shapes.emplace(sheet,std::vector<Shape>{original}).first;
         if(std::none_of(found->second.begin(),found->second.end(),[&](const auto& old){return same_zone_shape_geometry(old,candidate);}))
@@ -338,6 +342,55 @@ void append_contract_group_faces(Context& ctx,Geometry& g,const std::string& she
     }
     // Keep each orientation's existing offers ahead of its checked repairs.
     for(auto& candidate:contact_pairs)append_checked(std::move(candidate));
+    }
+    // Reuse vacated space for unconstrained singleton leftovers. Preserve their
+    // face and orientation (notably service LEDs); every contact move goes
+    // through the same physical, local-contract and fanout gates as new offers.
+    // This is a finite coordinate descent over existing courtyard contacts,
+    // not a sampled grid or a claim of optimal packing.
+    if(schema.kind==JsonKind::String&&schema.string_value=="placement/v2") {
+        const auto found=g.shapes.find(sheet);
+        if(found==g.shapes.end())return;
+        const auto offers=found->second;
+        for(const auto& offer:offers) {
+            if(offer.tag.rfind("contract-bottom",0)!=0)continue;
+            auto compact=offer;
+            std::vector<std::string> leftovers;
+            for(const auto& group:*groups)if(group.refs.size()==1)leftovers.push_back(group.refs.front());
+            std::sort(leftovers.begin(),leftovers.end(),[&](const auto& a,const auto& b){
+                const auto position=[&](const auto& ref){return compact.top_off.count(ref)?compact.top_off.at(ref):compact.bot_off.at(ref);};
+                return std::make_pair(-position(a).first,a)<std::make_pair(-position(b).first,b);
+            });
+            for(const auto& ref:leftovers) {
+                const bool top=compact.top_off.count(ref);
+                const auto measured=model(compact);
+                std::size_t index=0;
+                while(measured.model().insts.at(index).ref!=ref)++index;
+                const auto bounds=measured.courtyard_at(index);
+                std::set<double> shifts{-bounds.x0};
+                for(std::size_t i=0;i<measured.model().insts.size();++i)if(i!=index) {
+                    const auto& obstacle=measured.model().insts[i];
+                    if((obstacle.side=="top")!=top&&!has_thru_pads_from_text(obstacle.mod->bytes))continue;
+                    const auto box=measured.courtyard_at(i);
+                    shifts.insert(box.x1+ctx.clearance-bounds.x0);
+                }
+                for(const auto raw:shifts) {
+                    if(raw>=0)continue;
+                    auto moved=compact;
+                    auto& xy=(top?moved.top_off:moved.bot_off).at(ref);
+                    // Round toward the obstacle-free side of a left contact.
+                    xy.first=placement_bottom_pose_precision4dp(
+                        bottom_contact_shift(xy.first+raw,&ctx.quantization),&ctx.quantization);
+                    if(qualify(moved)&&moved.w*moved.h<=compact.w*compact.h) {
+                        compact=std::move(moved);break;
+                    }
+                }
+            }
+            if(compact.w*compact.h<offer.w*offer.h) {
+                compact.tag=offer.tag+"/leftover-contact";
+                append_checked(std::move(compact));
+            }
+        }
     }
 }
 
