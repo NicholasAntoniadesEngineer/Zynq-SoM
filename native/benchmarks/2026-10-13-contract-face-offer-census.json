@@ -1,0 +1,25 @@
+{
+  "parent_commit": "7f5425a9",
+  "change": "Profiler reports distinct tagged (index,tag) offers and contract-bottom-family offers for every requested sheet, on success and failure. Observation-disabled or missing catalog callbacks report unavailable evidence rather than zero offers. Generation and acceptance logic unchanged.",
+  "observed_requests": {
+    "power": {"tagged_offers": 5, "contract_bottom": 0},
+    "power_som": {"tagged_offers": 4, "contract_bottom": 0},
+    "usb_jtag": {"tagged_offers": 96, "contract_bottom": 92}
+  },
+  "interpretation": "Requested contract-group face expansion does not imply candidates were produced. power and power_som use placement/v2 with external flow/far constraints and power-specific structures; current local grouping accepts lightweight-v0 and orientation eligibility rejects external requirements. power still has its pre-existing whole-sheet bottom offer. These observations do not prove bottom placement physically impossible.",
+  "checks": {
+    "failure": "162x153 exits 1, four outer attempts, retains failure receipts and reports all three requested sheets; native/build/face-offer-report-failure.log",
+    "unobserved": "Same failed request with --observers off reports catalog_unobserved for every sheet, not fabricated zero counts; native/build/face-offer-report-unobserved.log",
+    "success": "163x153 reference exits 0, reports 92 contract-bottom-family offers; native/build/face-offer-report-success.log",
+    "unchanged_reference_pcb_sha256": "d954ec91a789f69a1e94a26a9d3a91b279fbc208dff2503cbe8ee4c8eabc199f",
+    "reference_diagnostics": "fanout, ratsnest, placement contracts and placement flow PASS; hard_red=0"
+  },
+  "independent_review": {
+    "reviewed_commits": ["6b06518f", "928e8dee"],
+    "reviewer": "One bounded gpt-6-astra helper, closed after completion",
+    "result": "No actionable safety/correctness regression identified. Reviewed complete-mask validation, unknown/THT/logical exclusions, physical child projections, final rounded occupancy checks, explicit hard terms and caller acceptance.",
+    "limits": "Static read-only review; no separate test execution or hardware/routing qualification. Supplied reservation completeness and existing evaluator semantics remain dependencies."
+  },
+  "next_work": "Extend power-stage candidate generation with explicit support for its structures and board-level external constraints, rather than repeatedly enabling a currently inapplicable local experiment flag.",
+  "limits": "Diagnostic counts are not candidate acceptance or a new board-size result. No full qualification, timing speedup or historical Python comparison claimed."
+}

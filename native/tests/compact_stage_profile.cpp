@@ -403,8 +403,22 @@ std::string trial(const PcbPlacementInput& source, bool compact, int run, int ge
     std::cout<<"contract_group_rotations="<<contract_group_rotations<<'\n';
     for(const auto& selected:contract_group_face_sheets)std::cout<<"contract_group_face_sheet="<<selected<<'\n';
     for(const auto& [sheet,tag]:owned_shapes)std::cout<<"owned_shape_restriction sheet="<<sheet<<" tag="<<tag<<'\n';
-    if(observers&&owned_selection_trace)floor->owned_shape_catalogued=[](const auto& sheet,int index,const auto& tag){
-        std::cout<<"owned_shape_catalog sheet="<<sheet<<" index="<<index<<" tag="<<std::quoted(tag)<<'\n';
+    std::map<std::string,std::set<std::pair<int,std::string>>> face_offers;
+    if(observers&&(owned_selection_trace||!contract_group_face_sheets.empty()))floor->owned_shape_catalogued=[&](const auto& sheet,int index,const auto& tag){
+        if(contract_group_face_sheets.count(sheet))face_offers[sheet].emplace(index,tag);
+        if(owned_selection_trace)std::cout<<"owned_shape_catalog sheet="<<sheet<<" index="<<index<<" tag="<<std::quoted(tag)<<'\n';
+    };
+    const auto print_face_offers=[&] {
+        for(const auto& sheet:contract_group_face_sheets) {
+            const auto found=face_offers.find(sheet);
+            if(!observers||found==face_offers.end()) {
+                std::cout<<"contract_face_offers sheet="<<sheet<<" status=catalog_unobserved\n";continue;
+            }
+            std::size_t count=0;
+            for(const auto& [index,tag]:found->second){(void)index;if(tag.rfind("contract-bottom",0)==0)++count;}
+            std::cout<<"contract_face_offers sheet="<<sheet<<" tagged_offers="<<found->second.size()
+                     <<" contract_bottom="<<count<<" status="<<(count?"offered":"no_contract_bottom_offers")<<'\n';
+        }
     };
     if(observers&&owned_selection_trace)floor->owned_shape_selection_completed=[event=std::size_t{0}](const std::string& sheet,const auto& alternatives,const auto& quality,int selected) mutable {
         ++event;
@@ -491,6 +505,7 @@ std::string trial(const PcbPlacementInput& source, bool compact, int run, int ge
         std::cout << "trial status=construction_failed elapsed_seconds=" << seconds(start)
             << " completed_outer_attempts=" << (observers?std::to_string(profile.attempts.completed):"unavailable")
             << " receipt_captured=" << failure.captured << " receipt_unavailable=" << failure.unavailable << '\n';
+        print_face_offers();
         if (failure.captured && !failure.unavailable) {
             receipt("failure_prefix", failure.accounting.quantization_engagements);
             for(std::size_t i=0;i<failure.accounting.fallback_events.size();++i)
@@ -499,6 +514,7 @@ std::string trial(const PcbPlacementInput& source, bool compact, int run, int ge
         throw;
     }
     const auto end = Clock::now();
+    print_face_offers();
     if(observers)std::cout<<"edge_search candidates="<<edge_candidates<<" repairs="<<edge_repairs<<'\n';
     if(observers)profile.stages.push_back({"model_return_tail", seconds(profile.mark, end),
         profile.attempts.completed - profile.previous_attempts, profile.attempts.packed - profile.previous_packed, 0});
