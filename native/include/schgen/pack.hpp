@@ -79,6 +79,24 @@ std::vector<std::pair<double, double>> fallback_via_sites(
     double x0, double y0, double x1, double y1, double via_size,
     double pitch, QuantizationCounts* counts = nullptr);
 
+struct ViaSelection {
+    std::vector<std::pair<double, double>> chosen;
+    struct Rejection { bool preferred; ViaBlockHit blocker; };
+    std::vector<Rejection> rejected;
+    std::size_t preferred_examined = 0, lattice_examined = 0, lattice_chosen = 0;
+};
+// Pure geometry planning shared by placement screening and PCB emission.
+// Preferred sites and pour are local, already mirrored; occupied is world-space.
+// No lattice is constructed unless preferred sites are exhausted and permission
+// is explicit. Returning fewer than requested sites is a shortfall, not success.
+ViaSelection select_via_sites(
+    double x, double y, double rotation,
+    const std::vector<std::pair<double, double>>& preferred, const Box4& pour,
+    std::size_t requested, double lattice_pitch, bool allow_lattice,
+    const ViaSiteSpec& rule, const std::vector<ViaObstacle>& obstacles,
+    const std::vector<std::pair<double, double>>& occupied,
+    QuantizationCounts* counts = nullptr);
+
 double overlap_area(const Box4& a, const Box4& b);
 Box4 text_box(const std::string& txt, double x, double y, double size,
               double margin);

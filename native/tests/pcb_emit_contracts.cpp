@@ -323,6 +323,67 @@ void thermal_world_obstacles() {
         "escape copper extent cannot be culled by center distance");
     std::cout << "Thermal world-space obstacle contracts PASS\n";
 }
+void thermal_selection_contracts() {
+    const ViaSiteSpec rule{0, 0, 100, 100, 1, .6, .3, .25, .1, .45, .8};
+    const Box4 pour{-3, -3, 3, 3};
+    const std::vector<std::pair<double, double>> preferred{{0, 0}, {2, 0}};
+    const std::vector<ViaObstacle> blocker{{50, 50, .5, .5, "SIGNAL", 0, "C1.1"}};
+    QuantizationCounts counts;
+    auto selected = select_via_sites(50, 50, 0, preferred, pour, 1, .25, true,
+                                    rule, {}, {}, &counts);
+    require(selected.chosen == std::vector<std::pair<double,double>>{{50,50}} &&
+            selected.preferred_examined == 1 && selected.lattice_examined == 0 && counts.empty(),
+            "sufficient preferred sites do not construct or account an unused lattice");
+    selected = select_via_sites(50, 50, 0, preferred, pour, 2, .25, false,
+                               rule, blocker, {}, &counts);
+    require(selected.chosen.size() == 1 && selected.preferred_examined == 2 &&
+            selected.lattice_examined == 0 && selected.rejected.size() == 1 &&
+            selected.rejected.front().preferred &&
+            selected.rejected.front().blocker.label == "C1.1" && counts.empty(),
+            "preferred-only screening retains shortfall and blocker without fallback");
+    selected = select_via_sites(50, 50, 0, preferred, pour, 2, .25, true,
+                               rule, blocker, {}, &counts);
+    require(selected.chosen.size() == 2 && selected.lattice_chosen == 1 &&
+            selected.lattice_examined > 0 && !counts.empty(),
+            "necessary lattice is executed and accounted");
+    selected = select_via_sites(50,50,0,preferred,pour,2,.25,true,rule,
+                               {{50,50,10,10,"SIGNAL",0,"blanket"}},{});
+    require(selected.chosen.empty() && selected.lattice_chosen == 0 &&
+            selected.preferred_examined == preferred.size() &&
+            selected.lattice_examined == fallback_via_sites(-3,-3,3,3,.6,.25).size() &&
+            selected.rejected.size() == selected.preferred_examined + selected.lattice_examined,
+            "exhausted search preserves every rejection and reports an empty shortfall");
+    // Independent eager reference, also checking source-order rejection receipts.
+    for (int rotation : {0, 90, 180, 270})
+        for (std::size_t requested : {0U, 1U, 2U, 6U}) {
+            auto candidates = preferred;
+            auto lattice = fallback_via_sites(-3, -3, 3, 3, .6, .25);
+            candidates.insert(candidates.end(), lattice.begin(), lattice.end());
+            std::vector<std::pair<double,double>> expected, occupied{{52,50}};
+            std::vector<std::string> rejected;
+            std::size_t examined = 0, lattice_chosen = 0;
+            for (std::size_t j = 0; j < candidates.size() && expected.size() < requested; ++j) {
+                const auto point = world_turned_point(50,50,candidates[j].first,candidates[j].second,rotation,3);
+                const auto hit = via_site_blocker(point.first,point.second,rule,blocker,occupied);
+                ++examined;
+                if (hit.blocked) rejected.push_back(hit.kind + ":" + hit.label);
+                else {
+                    expected.push_back(point);
+                    occupied.push_back(point);
+                    if(j >= preferred.size()) ++lattice_chosen;
+                }
+            }
+            auto actual = select_via_sites(50,50,rotation,preferred,pour,requested,.25,true,
+                                           rule,blocker,{{52,50}});
+            std::vector<std::string> actual_rejected;
+            for (const auto& r : actual.rejected) actual_rejected.push_back(r.blocker.kind+":"+r.blocker.label);
+            require(actual.chosen == expected && actual_rejected == rejected &&
+                    actual.preferred_examined + actual.lattice_examined == examined &&
+                    actual.lattice_chosen == lattice_chosen,
+                    "lazy planning matches independent eager selection and execution receipts");
+        }
+    std::cout << "Thermal selection planning contracts PASS\n";
+}
 void boundaries(const fs::path &fixtures, const fs::path &output) {
     auto raw = parse_json_file((fixtures / "devkit_mini.json").string());
     auto pool = footprints(field(raw, "footprints"));
@@ -407,6 +468,7 @@ int main(int argc, char **argv) {
         mutations(fixtures, output, "unicode_strip.json");
         boundaries(fixtures, output);
         thermal_world_obstacles();
+        thermal_selection_contracts();
         std::cout << "PCB emission: " << checks << " checks passed\n";
         return 0;
     } catch (const std::exception &e) {

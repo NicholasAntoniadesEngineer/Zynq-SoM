@@ -141,38 +141,25 @@ ThermalNodes thermal_nodes(const PcbModel &m, const PcbEmitPolicy &p, const Uid 
             polygons.push_back(corners);
             layers.push_back(l);
         }
-        Points chosen, candidates = spec.via_sites;
-        auto lattice = fallback_via_sites(spec.pour.x0, spec.pour.y0, spec.pour.x1, spec.pour.y1,
-                                          p.thermal_via_size, p.thermal_lattice_pitch, counts);
-        candidates.insert(candidates.end(), lattice.begin(), lattice.end());
-        int n_lattice = 0;
+        auto selection = select_via_sites(i.x, i.y, i.rotation, spec.via_sites, spec.pour,
+            spec.max_vias, p.thermal_lattice_pitch, true, rule, obstacles, placed, counts);
+        const auto& chosen = selection.chosen;
+        const auto n_lattice = selection.lattice_chosen;
+        result.fallback_events.insert(result.fallback_events.end(), n_lattice, "thermal_via_lattice");
         std::map<std::string, int> vetoes;
         std::map<std::string, int> preferred_vetoes;
-        Points occupied = placed;
-        for (std::size_t ci = 0; ci < candidates.size() && chosen.size() < spec.max_vias; ++ci) {
-            auto [x, y] = world_turned_point(i.x, i.y, candidates[ci].first, candidates[ci].second,
-                                             i.rotation, 3);
-            auto hit = via_site_blocker(x, y, rule, obstacles, occupied);
-            if (!hit.blocked) {
-                chosen.emplace_back(x, y);
-                occupied.emplace_back(x, y);
-                if (ci >= spec.via_sites.size()) {
-                    ++n_lattice;
-                    result.fallback_events.push_back("thermal_via_lattice");
-                }
-            } else {
-                std::string label;
-                if (hit.kind == "edge")
-                    label = "Edge.Cuts keep-back";
-                else if (hit.kind == "thermal")
-                    label =
-                        "thermal via @(" + fmt(hit.x, 3, true) + "," + fmt(hit.y, 3, true) + ")";
-                else
-                    label = hit.label + " [" + (hit.nname.empty() ? "no-net" : hit.nname) + "] @(" +
-                            fmt(hit.x, 3, true) + "," + fmt(hit.y, 3, true) + ")";
-                ++vetoes[label];
-                if(ci<spec.via_sites.size())++preferred_vetoes[label];
-            }
+        for (const auto& rejection : selection.rejected) {
+            const auto& hit = rejection.blocker;
+            std::string label;
+            if (hit.kind == "edge")
+                label = "Edge.Cuts keep-back";
+            else if (hit.kind == "thermal")
+                label = "thermal via @(" + fmt(hit.x, 3, true) + "," + fmt(hit.y, 3, true) + ")";
+            else
+                label = hit.label + " [" + (hit.nname.empty() ? "no-net" : hit.nname) + "] @(" +
+                        fmt(hit.x, 3, true) + "," + fmt(hit.y, 3, true) + ")";
+            ++vetoes[label];
+            if (rejection.preferred) ++preferred_vetoes[label];
         }
         if (n_lattice) {
             std::string preferred_blockers;
@@ -209,7 +196,7 @@ ThermalNodes thermal_nodes(const PcbModel &m, const PcbEmitPolicy &p, const Uid 
                     fmt(i.x, 3, true) + "," + fmt(i.y, 3, true) + ") rot " + fmt(i.rotation) +
                     " seated " + std::to_string(count) + "/" + std::to_string(need->min_vias) +
                     " GND vias within " + fmt(need->radius_mm) + " mm; " +
-                    std::to_string(candidates.size()) +
+                    std::to_string(selection.preferred_examined + selection.lattice_examined) +
                     " candidate seats searched (curated + lattice), every other one blocked. Worst "
                     "blockers: " +
                     blockers +

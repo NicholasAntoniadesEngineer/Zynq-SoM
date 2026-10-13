@@ -175,6 +175,37 @@ ViaBlockHit via_site_blocker(
     return ViaBlockHit{};
 }
 
+ViaSelection select_via_sites(
+    double x, double y, double rotation,
+    const std::vector<std::pair<double, double>>& preferred, const Box4& pour,
+    std::size_t requested, double lattice_pitch, bool allow_lattice,
+    const ViaSiteSpec& rule, const std::vector<ViaObstacle>& obstacles,
+    const std::vector<std::pair<double, double>>& occupied,
+    QuantizationCounts* counts) {
+    ViaSelection result;
+    auto used = occupied;
+    auto examine = [&](const auto& candidates, bool is_preferred) {
+        for (const auto& local : candidates) {
+            if (result.chosen.size() == requested) break;
+            auto point = world_turned_point(x, y, local.first, local.second, rotation, 3);
+            if (is_preferred) ++result.preferred_examined;
+            else ++result.lattice_examined;
+            auto hit = via_site_blocker(point.first, point.second, rule, obstacles, used);
+            if (hit.blocked) result.rejected.push_back({is_preferred, std::move(hit)});
+            else {
+                result.chosen.push_back(point);
+                used.push_back(point);
+                if (!is_preferred) ++result.lattice_chosen;
+            }
+        }
+    };
+    examine(preferred, true);
+    if (allow_lattice && result.chosen.size() < requested)
+        examine(fallback_via_sites(pour.x0, pour.y0, pour.x1, pour.y1,
+                                  rule.via_size, lattice_pitch, counts), false);
+    return result;
+}
+
 std::vector<std::pair<double, double>> fallback_via_sites(
     double x0, double y0, double x1, double y1, double via_size,
     double pitch, QuantizationCounts* counts) {

@@ -1,0 +1,31 @@
+{
+  "base_commit": "5a7fa37a",
+  "implementation": "Shared pure select_via_sites geometry kernel, used by thermal emission. Supports preferred-only feasibility screening without PCB serialization. Returns chosen world coordinates, actual preferred/lattice examination counts, every actual rejection and lattice-selected count. Lattice construction is delayed until preferred sites are exhausted and more sites are needed.",
+  "tests": {
+    "native_pcb_emit_contracts": "PASS 0.95 seconds, including frozen both-board emission fixtures",
+    "new": "Preferred success executes no lattice; preferred-only shortfall retains blocker; required lattice records work; fully obstructed exhaustion retains every rejection; 16 independent eager-reference comparisons over quarter turns and requested counts with existing occupied sites",
+    "carrier": {
+      "log": "native/build/thermal-selection-carrier.log",
+      "runs": 2,
+      "pcb_sha256": "e16f6a4bfe5227fbbb94c0e55b3acdb79c1f482eaef0edddde4c4ff4065c8bd8",
+      "repeat_identical": true,
+      "model_seconds": [6.456672375, 6.443874959],
+      "pcb_text_seconds": [0.043618208, 0.041996209],
+      "lattice_rank_operations_before_after": [3255, 2016],
+      "lattice_coordinate_operations_before_after": [6510, 4032],
+      "lattice_axis_operations_before_after": [8, 4],
+      "actual_lattice_fallbacks": 3
+    },
+    "devkit": {
+      "log": "native/build/thermal-selection-devkit.log",
+      "runs": 2,
+      "pcb_sha256": "b6798d4b63d2fddbf9fad24945c151b9420b049b674ad5d637c43bf4a365137f",
+      "repeat_identical": true,
+      "model_seconds": [0.193806042, 0.191422916],
+      "pcb_text_seconds": [0.009103625, 0.008773209]
+    },
+    "both_board_screen": "fanout, ratsnest, placement contracts and flow PASS; hard_red=0"
+  },
+  "scope": "Prepared-input diagnostic screens only. No full acceptance, audit, DRC or render run. Both hashes unchanged from corresponding previous screens. Small uncontrolled timing samples do not establish a speedup; eliminated work is evidenced directly by operation counts. No Python timing comparison claimed.",
+  "remaining": "Integrate preferred-site feasibility or reservations into placement reconsideration; current carrier still has three thermal lattice events and is unqualified. The shared kernel is not itself placement integration or proof of thermal adequacy."
+}
