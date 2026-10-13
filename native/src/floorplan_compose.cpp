@@ -218,6 +218,7 @@ public:
     }
 
     bool run(std::vector<FloorplanLegalizeVar>& movable,bool joint=false) {
+        distance_envelope = joint;
         if (in.index.hard.empty() || movable.empty()) return true;
         std::vector<Box4> seeds, fixed_boxes;
         std::vector<std::string> fixed_names;
@@ -553,7 +554,7 @@ private:
             const auto gr = jr == in.som_j_rects.end() ? seed_or_fixed(g, *hg) : jr->second;
             const auto sp = sm ? std::nullopt : std::optional<FloorplanPoint>{fixed_pose(s)};
             const auto gp = gm ? std::nullopt : std::optional<FloorplanPoint>{fixed_pose(g)};
-            for (const auto& e : near_max_edges(s, g, bound, x, *hs, *hg, sr, gr, sm, gm, sp, gp))
+            for (const auto& e : near_max_edges(s, g, bound, x, *hs, *hg, sr, gr, sm, gm, sp, gp, distance_envelope))
                 out.push_back({{e.src, e.dst, e.cost}, e.perp ? "near_max-perp" : "near_max",
                     in.report_infeasible_cycle?s+" -> "+g:std::string{}});
         }
@@ -710,6 +711,7 @@ private:
         return out;
     }
     bool pad_seed_hulls = false;
+    bool distance_envelope = false;
     bool perpendicular_order = false;
     bool flip_order_differs = false;
     bool reservation_geometry = false;

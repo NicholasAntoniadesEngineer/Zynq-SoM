@@ -670,7 +670,8 @@ std::vector<NearMaxEdge> near_max_edges(
     bool axis_x, const Box4& hull_s, const Box4& hull_g, const Box4& seed_s,
     const Box4& seed_g, bool s_movable, bool g_movable,
     const std::optional<std::pair<double, double>>& pose_s,
-    const std::optional<std::pair<double, double>>& pose_g) {
+    const std::optional<std::pair<double, double>>& pose_g,
+    bool distance_envelope) {
     if (bound < 0.0 || (!s_movable && !g_movable)) {
         return {};
     }
@@ -696,6 +697,26 @@ std::vector<NearMaxEdge> near_max_edges(
     auto c0 = [](const Box4& b, bool use_x) { return use_x ? b.x0 : b.y0; };
     auto c1 = [](const Box4& b, bool use_x) { return use_x ? b.x1 : b.y1; };
     std::vector<NearMaxEdge> out;
+    if (distance_envelope) {
+        // Necessary, not sufficient, bounds on Euclidean box distance. Unlike
+        // the seed-directed corridor these allow diagonal and reversed poses.
+        // The caller MUST qualify the actual distance before accepting output.
+        const double forward = bound + c1(hull_s, axis_x) - c0(hull_g, axis_x);
+        const double backward = bound + c1(hull_g, axis_x) - c0(hull_s, axis_x);
+        if (s_movable && g_movable) {
+            out.push_back({subject, target, forward, false});
+            out.push_back({target, subject, backward, false});
+        } else if (s_movable) {
+            const double f = axis_coord(pose_g, axis_x);
+            out.push_back({subject, "#0", forward - f, false});
+            out.push_back({"#0", subject, backward + f, false});
+        } else {
+            const double f = axis_coord(pose_s, axis_x);
+            out.push_back({"#0", target, forward + f, false});
+            out.push_back({target, "#0", backward - f, false});
+        }
+        return out;
+    }
     if (axis_x == dom_x) {
         const double cost = bound + c1(hlo, dom_x) - c0(hhi, dom_x);
         if (lo_mov && hi_mov) {

@@ -1433,12 +1433,41 @@ void joint_composer_contracts(){
     std::cout<<"joint composer PASS recovered="<<recovered<<" preserved="<<preserved<<" rejected="<<failed<<" pre_compact_failures="<<pre_compact_failures
              <<" plain="<<recovered_modes[0]<<" directional="<<recovered_modes[1]<<" mixed="<<recovered_modes[2]<<" through="<<recovered_modes[3]<<'\n';
 }
+void near_distance_envelope_contracts() {
+    const Box4 a{-1,-2,2,1}, b{-2,-1,1,3};
+    std::size_t valid=0, diagonal=0, outside=0;
+    for (int mode=0;mode<3;++mode) for (int x=-9;x<=9;++x) for (int y=-9;y<=9;++y) {
+        const std::pair<double,double> pa{double(x),double(y)}, pb{1,2};
+        const bool am=mode!=2,bm=mode!=1;
+        const double dx=std::max({0.,pa.first+a.x0-pb.first-b.x1,pb.first+b.x0-pa.first-a.x1});
+        const double dy=std::max({0.,pa.second+a.y0-pb.second-b.y1,pb.second+b.y0-pa.second-a.y1});
+        bool holds=true, corridor=true;
+        for (const bool axis:{false,true}) {
+            const auto check=[&](const auto& edges) {
+                const auto value=[&](const std::string& n) {
+                    if(n=="#0")return 0.;
+                    const auto p=n=="a"?pa:pb;return axis?p.first:p.second;
+                };
+                return std::all_of(edges.begin(),edges.end(),[&](const auto& e){return value(e.dst)-value(e.src)<=e.cost;});
+            };
+            const auto edges=near_max_edges("a","b",5,axis,a,b,{0,0,3,3},{6,0,9,4},am,bm,pa,pb,true);
+            require(edges.size()==2,"distance envelope must bound both directions");
+            holds &= check(edges);
+            corridor &= check(near_max_edges("a","b",5,axis,a,b,{0,0,3,3},{6,0,9,4},am,bm,pa,pb));
+        }
+        require(holds==(dx<=5&&dy<=5),"distance envelope differs from independent axis-gap oracle");
+        if(std::hypot(dx,dy)<=5){++valid;require(holds,"distance envelope excluded a valid proximity");if(!corridor)++diagonal;}
+        else if(holds)++outside;
+    }
+    require(valid&&diagonal&&outside,"proximity tests must exercise valid recovery and unsafe envelope corners");
+}
 }  // namespace
 int main(int argc,char** argv) {
     try {
         const std::filesystem::path dir=argc>1 ? argv[1]:"native/tests/data/floorplan";
         const bool geometry_only=argc>2 && std::string(argv[2])=="--geometry-only";
         repair_choice_contracts();
+        near_distance_envelope_contracts();
         joint_separation_contracts();
         joint_composer_contracts();
         facing_projection_contracts();fixed_face_recovery();

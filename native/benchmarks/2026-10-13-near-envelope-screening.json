@@ -1,5 +1,5 @@
 {
-  "status": "experimental_solver_change_not_accepted_board",
+  "status": "solver_qualified_at_166x156_smaller_165x156_candidate_rejected",
   "base_commit": "82a44c5a6cc1782b68a606d64fe9041756c5526a",
   "change": "Joint repair uses seed-independent necessary axis bounds for near_max; unchanged exact Euclidean and emitted-grid checks still qualify every proposal. Earlier successful strategies remain incumbents.",
   "tests": {
@@ -36,7 +36,14 @@
   "reference_166x156": {
     "log": "native/build/near-envelope-carrier-reference.log",
     "pcb_sha256": "393b5d4c319094b54c3e0389cb04e1664435bffd72d5d3bde26e894de038e5d2",
-    "status": "Changed layout; screening passes fanout, ratsnest, placement and flow; full qualification pending",
+    "status": "Full mandatory qualification PASS, 37 sheets; source audit PASS (69 files, 75 constants, 156 transforms)",
+    "full_output": "/private/tmp/carrier-envelope-reference.vJNzrJ",
+    "full_log": "native/build/carrier-envelope-reference-full.log",
+    "render_review": "Front and bottom inspected; bottom remains sparse. No hardware/fabrication-readiness claim.",
+    "nonrouting_drc_errors": 0,
+    "unrouted": 499,
+    "advisory_failures": ["return_path", "golden", "contract_coverage_lint"],
+    "timing_seconds": {"input": 1.566702, "model": 3.386446, "pcb_text": 0.039699, "render3d": 30.783783, "audit": 112.828150, "measured_scope_total_not_wall": 211.985101},
     "cross_airwire_mm": 15359.2,
     "cross_airwire_budget_mm": 15931,
     "emission_fallbacks": "No named emission fallbacks reported"

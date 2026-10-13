@@ -207,7 +207,8 @@ std::vector<NearMaxEdge> near_max_edges(
     bool axis_x, const Box4& hull_s, const Box4& hull_g, const Box4& seed_s,
     const Box4& seed_g, bool s_movable, bool g_movable,
     const std::optional<std::pair<double, double>>& pose_s,
-    const std::optional<std::pair<double, double>>& pose_g);
+    const std::optional<std::pair<double, double>>& pose_g,
+    bool distance_envelope = false);
 
 std::optional<Box4> predicted_bbox(
     double pose_x, double pose_y, double origin_x, double origin_y,
