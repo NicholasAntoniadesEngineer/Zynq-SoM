@@ -1,0 +1,71 @@
+{
+  "source_commit": "c99657bb",
+  "scope": "Thermal blocker diagnosis and bounded construction screening only",
+  "base_recipe": "164x153 override of carrier-164x154-area-first.floorplan.json, full area-first recipe",
+  "trace": {
+    "log": "native/build/grid-chain-thermal-164x153.log",
+    "first_stage": "step3_emission",
+    "fields": [
+      {
+        "ref": "U20002",
+        "preferred": 7,
+        "requested": 8,
+        "external_blockers": [
+          "R6015.1"
+        ]
+      },
+      {
+        "ref": "U22004",
+        "preferred": 6,
+        "requested": 8,
+        "external_blockers": [
+          "R21001.2",
+          "RS21001.1"
+        ]
+      }
+    ],
+    "interpretation": "Other rejected preferred candidates overlap own-subsystem pads and are expected alternatives. External blockers belong to bringup_modules and power_mon. No post-placement stage creates the initial deficit."
+  },
+  "trials": [
+    {
+      "change": "remove required-bottom power_mon",
+      "result": "construction_failed",
+      "seconds": 1.864114833,
+      "log": "native/build/grid-chain-free-monitor-164x153.log"
+    },
+    {
+      "change": "remove required-bottom bringup_modules",
+      "result": "constructed_no_acceptance",
+      "thermal_via_lattice": 2,
+      "pcb_sha256": "844a007fddc146556083f81cb7ee8fd5a9d5b186450a22689084f33ab29460e1",
+      "log": "native/build/grid-chain-free-modules-164x153.log"
+    },
+    {
+      "change": "remove both required-bottom power_mon and bringup_modules",
+      "result": "construction_failed",
+      "seconds": 1.868009667,
+      "log": "native/build/grid-chain-free-both-164x153.log"
+    },
+    {
+      "change": "remove named bringup_rails shape restriction",
+      "result": "constructed_no_acceptance",
+      "thermal_via_lattice": 3,
+      "pcb_sha256": "c1336a2dd2dda60990dbd911fc832a11fb05d8a3246a50482f033286094538b5",
+      "log": "native/build/grid-chain-free-rails-164x153.log"
+    },
+    {
+      "change": "remove required-bottom bringup_modules and change power_mon soft zone from near power_som to side S",
+      "result": "construction_failed",
+      "seconds": 2.178048958,
+      "log": "native/build/grid-chain-monitor-south-164x153.log"
+    },
+    {
+      "change": "163x154 outline with original required bottom sheets",
+      "result": "construction_failed",
+      "seconds": 2.209113875,
+      "log": "native/build/grid-chain-163x154.log"
+    }
+  ],
+  "interpretation": "No passing new candidate. Individually and jointly releasing face restrictions did not solve the preferred-site conflict. Preferred thermal sites need to be considered during candidate positioning, rather than reserving whole bottom areas or waiving emitted-geometry checks. All trials screened cheaply; no known-failing full qualification launched.",
+  "limitations": "Failure receipts captured for all failed trials; bounded failures are not proofs of infeasibility. Thermal fallback count is an existing reviewed acceptance guard, not a direct temperature measurement. Qualified reference remains 164x154. No fabrication or speedup claim."
+}
