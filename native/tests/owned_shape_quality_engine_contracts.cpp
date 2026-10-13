@@ -173,6 +173,34 @@ void synthetic() {
     observed.experiment=observation;
     unchanged(improved,pack(observed),"read-only observer changed geometry or actual work receipts");
     require(events==1,"selection observer duplicated an event");
+    auto unmeasured=input(2);
+    auto plain_observer=std::make_shared<FloorplanExperiment>();
+    std::size_t unmeasured_events=0;
+    plain_observer->owned_shape_selection_completed=[&](const auto& sheet,const auto& ranks,const auto& qualities,int chosen){
+        ++unmeasured_events;
+        require(sheet=="pilot"&&ranks.size()==2&&chosen==0&&qualities.empty(),
+                "selection trace omitted unmeasured alternatives or invented quality");
+    };
+    unmeasured.experiment=plain_observer;
+    unchanged(baseline,pack(unmeasured),"unmeasured selection trace changed geometry or work");
+    require(unmeasured_events==1,"unmeasured selection trace missing or duplicated");
+    for(bool compact:{false,true}) {
+        auto many=input(4);many.compact_search=compact;
+        // Noncompact seating retains one hit per face, not one per shape.
+        many.geometry.shapes["pilot"][2].side="bottom";
+        many.geometry.shapes["pilot"][3].side="bottom";
+        const auto plain=pack(many);
+        auto trace=std::make_shared<FloorplanExperiment>();
+        std::size_t count=0;
+        trace->owned_shape_selection_completed=[&](const auto&,const auto& ranks,const auto& qualities,int chosen){
+            ++count;
+            require(ranks.size()==(compact?4u:2u)&&chosen==0&&qualities.empty(),
+                    "trace must contain only actually evaluated alternatives");
+        };
+        many.experiment=trace;
+        unchanged(plain,pack(many),"trace performed extra solves or changed selection");
+        require(count==1,"selection trace must report once per comparison");
+    }
     require(catalog==std::vector<std::pair<int,std::string>>{{0,"fixture-0"},{1,"fixture-1"}},"catalog must expose stable registered tags without changing selection");
     catalog.clear();observation->owned_shape_selection_completed={};
     auto missing_catalog_quality=observed;missing_catalog_quality.owned_shape_quality.erase({"pilot",1});

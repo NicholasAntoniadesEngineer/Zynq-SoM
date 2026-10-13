@@ -405,13 +405,14 @@ bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure,
             const auto quality=in.owned_shape_quality.lower_bound({b.name,0});
             const bool has_quality=in.compact_search && quality!=in.owned_shape_quality.end() &&
                 quality->first.first==b.name;
+            const bool observe_selection=in.experiment&&bool(in.experiment->owned_shape_selection_completed);
             std::vector<double> evaluated;
-            if (has_quality) { evaluated.reserve(hits.size()); evaluated={incumbent,challenger}; }
+            if (has_quality||observe_selection) { evaluated.reserve(hits.size()); evaluated={incumbent,challenger}; }
             if (pick_sided_challenger(incumbent,challenger,1e-6)) best=hits[1];
             double selected=best.index==hits[1].index ? challenger:incumbent;
             if (in.compact_search) for (std::size_t i=2;i<hits.size();++i) {
                 const double value=judge(hits[i]);
-                if (has_quality) evaluated.push_back(value);
+                if (has_quality||observe_selection) evaluated.push_back(value);
                 if (pick_sided_challenger(selected,value,1e-6)) {best=hits[i]; selected=value;}
             }
             if (has_quality) {
@@ -439,15 +440,15 @@ bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure,
                     const int choice=owned_shape_select_same_pose_quality(in.owned_shape_quality,b.name,alternatives,best.index);
                     for(std::size_t i=0;i<hits.size();++i)if(hits[i].index==choice){best=hits[i];selected=evaluated.at(i);break;}
                 }
-                if(in.experiment&&in.experiment->owned_shape_selection_completed) {
-                    std::vector<OwnedShapeTieRank> alternatives;
-                    alternatives.reserve(hits.size());
-                    for(std::size_t i=0;i<hits.size();++i) {
-                        const auto& h=hits[i];
-                        alternatives.push_back({h.index,true,h.w,h.h,evaluated.at(i),h.dist_key,h.side});
-                    }
-                    in.experiment->owned_shape_selection_completed(b.name,alternatives,in.owned_shape_quality,best.index);
+            }
+            if(observe_selection) {
+                std::vector<OwnedShapeTieRank> alternatives;
+                alternatives.reserve(evaluated.size());
+                for(std::size_t i=0;i<evaluated.size();++i) {
+                    const auto& h=hits[i];
+                    alternatives.push_back({h.index,true,h.w,h.h,evaluated.at(i),h.dist_key,h.side});
                 }
+                in.experiment->owned_shape_selection_completed(b.name,alternatives,in.owned_shape_quality,best.index);
             }
             side_offers[b.name]={hits[0].side+"(incumbent)/"+
                 (in.compact_search ? "all-shapes":hits[1].side),best.side,best.index,incumbent,

@@ -1,0 +1,25 @@
+{
+  "base_commit": "1f1d163e",
+  "change": "Read-only shape-selection callback also exposes already evaluated alternatives without owned-component quality. No new estimator invocations; noncompact mode exposes only its two evaluated candidates.",
+  "experiment": {
+    "spec": "/private/tmp/carrier-side-eligibility.3wEY2c/monitor.json",
+    "log": "native/build/side-eligibility-monitor-all-shapes.log",
+    "dimensions_mm": [166, 156],
+    "pcb_sha256": "393b5d4c319094b54c3e0389cb04e1664435bffd72d5d3bde26e894de038e5d2",
+    "observer_changed_output": false,
+    "top_parts": 413,
+    "bottom_parts": 153
+  },
+  "power_monitor_event_5": {
+    "scope": "One partial-placement decision, not global board quality or final qualification",
+    "feasible_top_alternatives": 4,
+    "feasible_bottom_alternatives": 4,
+    "chosen_top_index": 0,
+    "chosen_top_estimator": 1194.7743790604156,
+    "best_bottom_index": 6,
+    "best_bottom_estimator": 1202.6240040833129,
+    "inference": "Bottom candidates are offered and seatable here, but lose the greedy partial wiring score. No evidence yet that choosing bottom improves a complete board."
+  },
+  "next_experiment": "Retain or explicitly explore the lower-ranked bottom alternative through downstream packing, then compare complete-board space, airwire, geometry and thermal checks. Do not force arbitrary 50/50 utilisation or relabel missing hardware evidence as PASS.",
+  "validation": "Actual engine tests compare observer-on/off geometry, decisions and operation/fallback receipts for measured and unmeasured candidates; compact four-candidate and noncompact two-evaluation paths included."
+}

@@ -380,12 +380,11 @@ std::string trial(const PcbPlacementInput& source, bool compact, int run, int ge
         ++event;
         for(const auto& rank:alternatives){
             const auto found=quality.find({sheet,rank.index});
-            if(found==quality.end())continue;
-            const auto& q=found->second;
-            if(q.state!=OwnedShapeQualityState::Measured||q.bypass_pad_gaps.empty())continue;
             std::cout<<"owned_selection event="<<event<<" sheet="<<sheet<<" index="<<rank.index<<" chosen="<<(rank.index==selected)
                      <<" width="<<rank.w<<" height="<<rank.h<<" estimator="<<rank.estimator
                      <<" distance_key="<<rank.distance_key<<" side="<<rank.side;
+            if(found==quality.end()) {std::cout<<" owned_quality=unavailable\n";continue;}
+            const auto& q=found->second;
             for(const auto& [cap,gap]:q.bypass_pad_gaps)std::cout<<" gap_"<<cap<<'='<<gap;
             for(const auto& [cap,subject]:q.subjects)std::cout<<" sides_"<<cap<<'='<<subject.owner_side<<'/'<<subject.cap_side;
             std::cout<<'\n';

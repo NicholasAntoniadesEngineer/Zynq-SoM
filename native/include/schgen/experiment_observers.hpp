@@ -88,7 +88,9 @@ struct FloorplanExperiment {
     std::function<void(const std::string&,const std::string&,double,double)> edge_feasibility_rejected;
     // Observes already evaluated feasible alternatives; never runs additional
     // estimators or supplies an acceptance decision. References are borrowed
-    // only for the synchronous callback.
+    // only for the synchronous callback. Includes groups without owned quality;
+    // missing quality is not a feasibility or hardware verdict. Noncompact
+    // selection exposes only its two actually evaluated alternatives.
     std::function<void(const std::string&,const std::vector<OwnedShapeTieRank>&,
                        const OwnedShapeQualityTable&,int)> owned_shape_selection_completed;
     // Diagnostic single-order ablation, independent of compact shape selection:
