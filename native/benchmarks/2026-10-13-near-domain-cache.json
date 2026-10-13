@@ -1,0 +1,33 @@
+{
+  "parent_commit": "1d8d9984",
+  "bottleneck": "Carrier profile: plan_lattice 11.0604 seconds of 11.9258 model seconds; zone generation 0.2033 seconds",
+  "change": "Memoize immutable connector/SoM hard-proximity translation domains by block name and shape index within a single interior packing attempt",
+  "invalidation": "Cache is a local variable recreated every attempt. No occupancy results cached. Actual obstacles and per-retry windows are still checked on every search.",
+  "tests": {
+    "native_compact_retry_contracts": "PASS",
+    "native_floorplan_contracts": "PASS",
+    "log": "native/build/near-domain-cache-final-tests.log",
+    "added_invalidation_test": "Reuse an engine, move its connector from west to east, rerun packing and verify current proximity bounds across normal/reversed terms, selected shapes and side hints",
+    "invalidation_log": "native/build/near-domain-cache-invalidation-tests.log",
+    "invalidation_seconds": 14.19,
+    "cli_and_profiler_relinked": true
+  },
+  "carrier": {
+    "dimensions_mm": [163,153],
+    "unchanged_pcb_sha256": "d954ec91a789f69a1e94a26a9d3a91b279fbc208dff2503cbe8ee4c8eabc199f",
+    "model_seconds": 11.855024666,
+    "pcb_text_seconds": 0.02817675,
+    "baseline_single_run_model_seconds": 11.9258245,
+    "accounting": "All receipt, fallback_count and failure_ lines match the baseline profile exactly",
+    "log": "native/build/near-domain-cache-carrier.log"
+  },
+  "devkit": {
+    "dimensions_mm": [98,98],
+    "unchanged_pcb_sha256": "1b12fecbcbbaa5e6084c2459da93cb144a660ff19805e6e4e3f75f9c22689fdb",
+    "model_seconds": 0.195994125,
+    "pcb_text_seconds": 0.008425,
+    "log": "native/build/near-domain-cache-devkit.log"
+  },
+  "checks": "Both construction replays pass fanout, ratsnest, placement contracts and placement flow, with zero hard-red and nonsearch fallback events",
+  "limits": "No significant speedup established by these uncontrolled single runs. This removes repeated invariant work, not the dominant search branching cost. No new full qualification or historical Python comparison."
+}

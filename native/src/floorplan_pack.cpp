@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <limits>
 #include <unordered_map>
 #include "pack_refine_internal.hpp"
 #include "constraint_order_internal.hpp"
@@ -319,7 +320,16 @@ bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure,
         const auto m=in.compose.metrics.find(name);
         return m==in.compose.metrics.end()?std::nullopt:pad_union_hull(m->second.pad_union);
     };
-    const auto near_domain=[&](const FloorplanBlock& b,int shape_index,auto& win) {
+    // Edge and SoM poses and composition metrics are immutable throughout
+    // this interior attempt. Cache their hard proximity translation domains,
+    // not occupancy results; each retry still checks current obstacles.
+    std::map<std::pair<std::string,int>,std::tuple<double,double,double,double>> near_domains;
+    const auto near_domain=[&](const FloorplanBlock& b,int shape_index,auto& window) {
+        const auto key=std::make_pair(b.name,shape_index);
+        auto found=near_domains.find(key);
+        if(found==near_domains.end()) {
+        const auto infinity=std::numeric_limits<double>::infinity();
+        auto win=std::make_tuple(-infinity,infinity,-infinity,infinity);
         // Hard connector proximity constrains every seating strategy, not
         // only those whose preferred anchor explicitly names that connector.
         for(const auto& term:in.compose.index.hard) {
@@ -353,6 +363,13 @@ bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure,
                 std::get<3>(win)=std::min(std::get<3>(win),domain.y1);
             }
         }
+        found=near_domains.emplace(key,win).first;
+        }
+        const auto& domain=found->second;
+        std::get<0>(window)=std::max(std::get<0>(window),std::get<0>(domain));
+        std::get<1>(window)=std::min(std::get<1>(window),std::get<1>(domain));
+        std::get<2>(window)=std::max(std::get<2>(window),std::get<2>(domain));
+        std::get<3>(window)=std::min(std::get<3>(window),std::get<3>(domain));
     };
     auto near=[&](const FloorplanBlock& b,int shape_index,FloorplanPoint a,double w,double h,Halo reach,Halo inset,int mask,const std::vector<Comp>& comps,
                   const FloorplanBlock* evicted) {

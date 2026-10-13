@@ -677,6 +677,17 @@ void pack_behavior() {
         require(placed.shape_idx==(shaped?1:0),"hard-domain fixture lost selected-shape coverage");
         require(placed.x>=domain.x0&&placed.x<=domain.x1&&placed.y>=domain.y0&&placed.y<=domain.y1,
                 "side hint bypassed hard connector proximity during seating/refinement");
+        if(edge_target) {
+            e.edge_of["connector"]="E";e.plan.edge_blocks.front().edge="E";
+            require(e.attempt_pack(false),"second attempt reused stale connector translation domain");
+            const auto& moved_edge=e.plan.edge_blocks.front();
+            const auto& moved=e.plan.interior_blocks.front();
+            const Box4 moved_target{moved_edge.x+2,moved_edge.y+2,moved_edge.x+8,moved_edge.y+8};
+            const auto moved_domain=near_translation_domain(shaped?Box4{1,1,9,9}:Box4{0,0,10,10},moved_target,5,occ_step);
+            require(moved.x>=moved_domain.x0&&moved.x<=moved_domain.x1&&
+                    moved.y>=moved_domain.y0&&moved.y<=moved_domain.y1,
+                    "hard proximity cache escaped its attempt after moving an edge connector");
+        }
     }
     for(const std::string connected:{"small","large"}) {
         Engine e(in);e.board_size(100,80);
