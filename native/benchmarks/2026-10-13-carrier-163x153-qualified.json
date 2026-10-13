@@ -1,0 +1,42 @@
+{
+  "implementation_commit": "41ea5622",
+  "status": "BOARD PASS, 37 sheets, all mandatory gates PASS",
+  "spec": "native/benchmarks/carrier-163x153-combined-bottom.floorplan.json",
+  "output": "/private/tmp/carrier-163x153-fresh-cli.yycB67",
+  "log": "native/build/carrier-163x153-fresh-cli-qualification.log",
+  "dimensions_mm": [163,153],
+  "area_mm2": 24939,
+  "area_reduction_from_164x153_percent": 0.6097560975609756,
+  "area_reduction_from_168x163_percent": 8.928571428571429,
+  "top_components": 411,
+  "bottom_components": 155,
+  "pcb_sha256": "d954ec91a789f69a1e94a26a9d3a91b279fbc208dff2503cbe8ee4c8eabc199f",
+  "profiler_and_full_board_hash_match": true,
+  "binary_provenance": {
+    "build": "cmake --build native/build/fast --target schgen --parallel 2",
+    "build_log": "native/build/qualified-cli-refresh.log",
+    "schgen_sha256": "224dc2b06de0ff73fb301d09dfd8850f66815e9b385f16ef596ea7ef580221b5",
+    "profiler_sha256": "c0a2ea5fc787bfce16696fc12aec5ef178a18eb04de44f3f675964890476fbb5"
+  },
+  "nonrouting_drc_errors": 0,
+  "unrouted": 499,
+  "reference_silk_overlaps_top_bottom": [0,0],
+  "advisory_failures": ["return_path", "golden", "contract_coverage_lint"],
+  "profile_hard_margins": {"mm_count": 16, "mm_unresolved": 0, "mm_min": 2.07, "degree_count": 2, "degree_unresolved": 0, "degree_min": 14.31},
+  "timings_seconds": {
+    "pcb_input_loading_and_netlist_validation": 1.474054,
+    "pcb_build_model_with_internal_checks": 12.150923,
+    "pcb_text_render": 0.028078,
+    "render3d": 27.967508,
+    "source_audit": 108.978820,
+    "measured_scope_total_not_process_wall": 207.046911
+  },
+  "visual_review": "Eight 3D views generated; front/back inspected. Additional bottom-side IC group visible; interface/service labels retained. Substantial unused bottom area remains.",
+  "command": "native/bin/schgen board --project carrier --compact-placement --shape-area-first --interior-order 3 --failed-first-retry --edge-feasibility --owned-quality-first --owned-face-cohesion --contract-group-face-sheet usb_jtag --floorplan-spec native/benchmarks/carrier-163x153-combined-bottom.floorplan.json --require-bottom-sheet power_mon --require-bottom-sheet bringup_modules --require-bottom-sheet bringup_en_modules --joint-separation-states 1024 --reseat-poses 8 --reseat-frontier 4096 --reseat-continuations 3 --reseat-victim-shapes --owned-shape bringup_rails=bottom-a2.2/r270/owned-pins-forward --owned-shape board_aux=owned-face-a1.000000 --audit-projections 2 --timing -o FRESH_OUTPUT",
+  "failed_experiments": [
+    {"outline_mm": [164,152], "change": "Remove fixed bringup_rails shape selection", "status": "construction_failed", "seconds": 19.581419625, "outer_attempts": 4, "receipt_captured": true, "log": "native/build/combined-neighbour-164x152-free-rails.log"},
+    {"outline_mm": [163,153], "status": "Initial full run failed with stale board CLI", "output": "/private/tmp/carrier-163x153-combined.w7gjIS", "log": "native/build/carrier-163x153-combined-qualification.log", "resolution": "Relinked schgen target, reran to a fresh directory and directly verified emitted PCB hash against profiler"}
+  ],
+  "evidence_correction": "Previous combined-bottom-groups record incorrectly attributed fresh profiler geometry to a full run using an older executable. That qualification claim is withdrawn in the corrected record. This run qualifies the actual new implementation.",
+  "limitations": "Not fabrication-ready; routing excluded and three advisory failures remain. Smaller area costs more model/search time. No historical Python speedup claim. Full devkit requalification and system-wide optimisation remain unfinished."
+}
