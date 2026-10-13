@@ -97,6 +97,15 @@ int main(int argc,char** argv){try{
         {"pcb-stage","--failed-first-retry"}})
         if(run(args).exit_code==0)throw std::runtime_error("invalid failed-first retry option accepted");
     const auto quality=run({"board","--compact-placement","--owned-quality-first"});
+    const auto area=run({"board","--compact-placement","--shape-area-first"});
+    if(area.exit_code||area.stdout_text.find("Local envelope area does not guarantee a smaller board")==std::string::npos||
+       area.stdout_text.find("--shape-area-first VALUE")!=std::string::npos)
+        throw std::runtime_error("shape-area-first help must disclose scope and take no value");
+    for(const auto& args:std::vector<std::vector<std::string>>{
+        {"board","--shape-area-first"},
+        {"board","--compact-placement","--shape-area-first","--shape-area-first"},
+        {"pcb-stage","--shape-area-first"}})
+        if(run(args).exit_code==0)throw std::runtime_error("invalid shape-area-first option accepted");
     if(quality.exit_code||quality.stdout_text.find("May increase inter-block estimate")==std::string::npos)
         throw std::runtime_error("quality-first help must disclose tradeoff");
     const auto extent=run({"board","--compact-placement","--owned-extent-alternatives"});

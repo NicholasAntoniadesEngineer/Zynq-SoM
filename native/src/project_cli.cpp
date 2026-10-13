@@ -68,6 +68,7 @@ struct Options {
     bool edge_feasibility = false;
     bool failed_first_retry = false;
     bool owned_quality_first = false;
+    bool shape_area_first = false;
     bool owned_extent_alternatives = false;
     bool owned_face_cohesion = false;
     std::set<std::string> contract_group_face_sheets;
@@ -135,6 +136,10 @@ Options parse(int argc, char** argv) {
         if(arg=="--owned-quality-first"){
             if(!seen.insert(arg).second)throw ProjectError("duplicate option "+arg);
             out.owned_quality_first=true;continue;
+        }
+        if(arg=="--shape-area-first"){
+            if(!seen.insert(arg).second)throw ProjectError("duplicate option "+arg);
+            out.shape_area_first=true;continue;
         }
         if(arg=="--owned-extent-alternatives"){
             if(!seen.insert(arg).second)throw ProjectError("duplicate option "+arg);
@@ -271,6 +276,7 @@ Options parse(int argc, char** argv) {
         allowed.insert("--reseat-poses");allowed.insert("--reseat-frontier");allowed.insert("--reseat-continuations");
         allowed.insert("--failed-first-retry");
         allowed.insert("--owned-quality-first");
+        allowed.insert("--shape-area-first");
         allowed.insert("--owned-extent-alternatives");
         allowed.insert("--owned-face-cohesion");allowed.insert("--owned-shape");
         allowed.insert("--contract-group-face-sheet");
@@ -340,6 +346,8 @@ Options parse(int argc, char** argv) {
         throw ProjectError("failed-first-retry requires --compact-placement and --interior-order");
     if(out.owned_quality_first&&!out.compact_search)
         throw ProjectError("owned-quality-first requires --compact-placement");
+    if(out.shape_area_first&&!out.compact_search)
+        throw ProjectError("shape-area-first requires --compact-placement");
     if(out.owned_extent_alternatives&&!out.compact_search)
         throw ProjectError("owned-extent-alternatives requires --compact-placement");
     if((out.owned_face_cohesion||!out.owned_shapes.empty()||!out.contract_group_face_sheets.empty()||!out.require_bottom_sheets.empty())&&!out.compact_search)
@@ -377,7 +385,7 @@ std::optional<int> run_project_command(int argc, char** argv) {
         if(options.command=="build"||options.command=="subsystem-new")std::cout<<" NAME";
         else if(experiment_command(options.command)&&options.command!="dump-circuits")std::cout<<(options.command=="w11-sweep"?" MM":" TAG")<<" [SHEET ...]";
         std::cout<<" [options]\nOptions:\n  --help, -h\n";
-        const std::set<std::string> flags={"--no-render","--timing","--cons-only","--allow-missing","--qualified-refs","--no-ngspice","--keep","--compact-placement","--multiscale-outline","--edge-feasibility","--failed-first-retry","--owned-quality-first","--owned-face-cohesion","--owned-extent-alternatives"};
+        const std::set<std::string> flags={"--no-render","--timing","--cons-only","--allow-missing","--qualified-refs","--no-ngspice","--keep","--compact-placement","--multiscale-outline","--edge-feasibility","--failed-first-retry","--owned-quality-first","--shape-area-first","--owned-face-cohesion","--owned-extent-alternatives"};
         for(const auto& option:options.help_options)std::cout<<"  "<<option<<(flags.count(option)?"":" VALUE")<<(option=="--output"?" (alias -o)":"")<<'\n';
         if(options.command=="nets"||options.command=="devkit"||options.command=="board-schematic"||options.command=="pcb-stage")std::cout<<"--output is required.\n";
         if(options.command=="devkit")std::cout<<"Builds the four-sheet example, not the twelve-sheet devkit_mini project.\n";
@@ -388,6 +396,7 @@ std::optional<int> run_project_command(int argc, char** argv) {
         if(options.command=="board")std::cout<<"--audit-projections 1|2: simultaneous source-audit AST projections (default 1). Two trades more memory for potential throughput; audit coverage and source-change checks are unchanged.\n";
         if(options.command=="board")std::cout<<"--reseat-poses N --reseat-frontier N [--reseat-continuations N]: failure-only placement alternatives; both pose/frontier limits required. Continuations revisit early choices after downstream failure and require --interior-order. All hardware checks remain active; limits bound search effort, not feasibility. Requires --compact-placement. --reseat-victim-shapes adds one full alternate-victim-shape strategy only after original strategies fail; requires explicit --interior-order and pose/frontier limits. With --failed-first-retry, also tries combined order/shape recovery; continuations may be enabled together.\n";
         if(options.command=="board")std::cout<<"--owned-quality-first: opt-in same-pose, same-face owned proximity priority; requires --compact-placement. May increase inter-block estimate. No hardware proximity limit is implied; all gates remain active.\n";
+        if(options.command=="board")std::cout<<"--shape-area-first: opt-in area-first legal shape selection and retry order; requires --compact-placement. Local envelope area does not guarantee a smaller board; all gates remain active.\n";
         if(options.command=="board")std::cout<<"--owned-extent-alternatives: append bounded extent-first owned-group candidates; requires --compact-placement. Original alternatives and all gates remain active.\n";
         if(options.command=="board")std::cout<<"--owned-face-cohesion: append owner/cap same-face initial packs, preserving existing candidates.\n--owned-shape SHEET=TAG: restrict a measured candidate by generated tag; unknown, ambiguous or infeasible choices fail without substitution. Requires --compact-placement. All gates remain active.\n";
         if(options.command=="board")std::cout<<"--contract-group-face-sheet SHEET: repeat for multiple sheets; experimental rigid-group bottom candidates, requires --compact-placement. Controlled-net owners and top-access parts remain pinned. No assembly or thermal approval is implied; all gates remain active.\n";
@@ -519,7 +528,7 @@ std::optional<int> run_project_command(int argc, char** argv) {
         build.native_policy = true;
         build.pcb.compact_search = options.compact_search;
         build.pcb.floorplan_spec = options.floorplan_spec;
-        if(options.initial_outline || options.interior_order || options.multiscale_outline || options.edge_feasibility || options.owned_quality_first || options.owned_extent_alternatives || options.owned_face_cohesion || !options.owned_shapes.empty() || !options.contract_group_face_sheets.empty() || !options.require_bottom_sheets.empty() || options.joint_states || options.reseat_pose_limits){
+        if(options.initial_outline || options.interior_order || options.multiscale_outline || options.edge_feasibility || options.owned_quality_first || options.shape_area_first || options.owned_extent_alternatives || options.owned_face_cohesion || !options.owned_shapes.empty() || !options.contract_group_face_sheets.empty() || !options.require_bottom_sheets.empty() || options.joint_states || options.reseat_pose_limits){
             auto experiment=std::make_shared<FloorplanExperiment>();
             experiment->initial_outline=options.initial_outline;
             experiment->interior_order=options.interior_order;
@@ -529,6 +538,7 @@ std::optional<int> run_project_command(int argc, char** argv) {
             experiment->compact_edge_feasibility=options.edge_feasibility;
             experiment->failed_first_retry=options.failed_first_retry;
             experiment->owned_quality_first=options.owned_quality_first;
+            experiment->shape_area_first=options.shape_area_first;
             experiment->owned_extent_alternatives=options.owned_extent_alternatives;
             experiment->owned_face_cohesion=options.owned_face_cohesion;
             experiment->owned_shape_tags=options.owned_shapes;

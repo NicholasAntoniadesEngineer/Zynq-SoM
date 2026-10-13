@@ -11,6 +11,7 @@
 #include "schgen/pcb_placement_gates.hpp"
 #include "schgen/ratsnest_gate.hpp"
 #include "schgen/thermal_via_planning.hpp"
+#include "schgen/verification_audits.hpp"
 #include <charconv>
 #include <cmath>
 #include <chrono>
@@ -23,6 +24,10 @@
 namespace {
 using namespace schgen;
 using Clock = std::chrono::steady_clock;
+std::size_t nonsearch_events(const std::vector<std::string>& events) {
+    return static_cast<std::size_t>(std::count_if(events.begin(),events.end(),
+        [](const auto& name){return !is_board_search_effort(name);}));
+}
 double seconds(Clock::time_point start, Clock::time_point end = Clock::now()) {
     return std::chrono::duration<double>(end - start).count();
 }
@@ -596,7 +601,10 @@ std::string trial(const PcbPlacementInput& source, bool compact, int run, int ge
         << " fanout_ok=" << fanout.ok << " ratsnest_ok=" << ratsnest.ok
         << " placement_contract_ok=" << gates.placement_contract.ok
         << " placement_flow_ok=" << gates.placement_flow.ok
-        << " hard_red=" << gates.composition.hard_red << '\n';
+        << " hard_red=" << gates.composition.hard_red
+        << " model_nonsearch_fallback_events=" << nonsearch_events(accounting.fallback_events)
+        << " emission_nonsearch_fallback_events=" << nonsearch_events(emission.fallback_events)
+        << " fallback_acceptance=UNVERIFIED_requires_project_baseline" << '\n';
     const auto margin_row=[](const PcbComposeMarginStats& group,const char* unit) {
         std::cout<<"hard_margins unit="<<unit<<" measured="<<group.measured
                  <<" unresolved="<<group.unresolved<<" sum="<<group.sum<<" min=";

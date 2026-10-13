@@ -11,6 +11,11 @@
 
 namespace {
 void profile_option_contracts() {
+    if(nonsearch_events({})!=0 ||
+       nonsearch_events({"legalize_joint_retry","legalize_joint_budget"})!=0 ||
+       nonsearch_events({"thermal_via_lattice","legalize_joint_retry","thermal_via_lattice"})!=2 ||
+       nonsearch_events({"legalize_unreviewed_path"})!=1)
+        throw std::runtime_error("profile must expose every non-search event without deduplication or prefix exemptions");
     const auto options = [](std::vector<std::string> args) {
         std::vector<char*> raw;
         for (auto& arg : args) raw.push_back(arg.data());
