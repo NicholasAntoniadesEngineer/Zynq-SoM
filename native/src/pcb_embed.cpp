@@ -63,6 +63,11 @@ ThermalNodes thermal_nodes(const PcbModel &m, const PcbEmitPolicy &p, const Uid 
     auto g = m.net_numbers.find("GND");
     if (g == m.net_numbers.end() || !g->second)
         return out;
+    if (std::none_of(m.insts.begin(), m.insts.end(), [&](const auto &i) {
+            return std::any_of(p.thermal_copper.begin(), p.thermal_copper.end(),
+                [&](const auto &s) { return starts(i.value, s.first); });
+        }))
+        return out;
     std::map<int, std::string> net_names;
     for (const auto &[name, n] : m.net_numbers)
         net_names[n] = name;
@@ -76,6 +81,32 @@ ThermalNodes thermal_nodes(const PcbModel &m, const PcbEmitPolicy &p, const Uid 
                      m.board_h,           p.thermal_via_edge,   p.thermal_via_size,
                      p.thermal_via_drill, p.thermal_via_clear,  p.hole_samenet_pad,
                      p.thermal_via_h2h,   p.thermal_via_spacing};
+    // Through-vias must clear pads on both faces. Footprint origins do not
+    // bound pad extent: connectors and offset-origin footprints can reach far
+    // beyond them. Prepare actual world geometry once, shared by all subjects.
+    std::vector<ViaObstacle> obstacles;
+    for (const auto &other : m.insts) {
+        if (!other.mod)
+            throw PcbEmissionError(other.ref + ": unresolved thermal via obstacle");
+        auto found = scans.find(other.mod.get());
+        if (found == scans.end())
+            found = scans.emplace(other.mod.get(), scan_mod_pads(other.mod->document)).first;
+        for (const auto &[name, x, y, rot, w, h, drill] : found->second) {
+            auto [wx, wy] = world_turned_point(other.x, other.y, x, y, other.rotation, 4);
+            auto [hx, hy] = pad_half_extent(w, h, other.rotation + rot);
+            auto net = other.pad_nets.find(name);
+            obstacles.push_back({wx, wy, hx, hy,
+                                 net == other.pad_nets.end() ? "" : net->second.second,
+                                 drill, other.ref + "." + name});
+        }
+    }
+    for (const auto &c : m.copper)
+        if (c.kind == "via") {
+            auto [x, y] = round_xy(c.x, c.y, 4, counts);
+            double radius = c.size / 2;
+            obstacles.push_back({x, y, radius, radius, net_names[c.net], c.drill,
+                "escape via @(" + fmt(c.x, 3, true) + "," + fmt(c.y, 3, true) + ")"});
+        }
     for (const auto &i : m.insts) {
         auto match = std::find_if(p.thermal_copper.begin(), p.thermal_copper.end(),
                                   [&](const auto &s) { return starts(i.value, s.first); });
@@ -110,36 +141,6 @@ ThermalNodes thermal_nodes(const PcbModel &m, const PcbEmitPolicy &p, const Uid 
             polygons.push_back(corners);
             layers.push_back(l);
         }
-        double reach = 0;
-        for (auto [x, y] : spec.via_sites)
-            reach = std::max({reach, std::abs(x), std::abs(y)});
-        reach += 20;
-        std::vector<ViaObstacle> obstacles;
-        for (const auto &other : m.insts)
-            if (within_reach(other.x, other.y, i.x, i.y, reach)) {
-                if (!other.mod)
-                    throw PcbEmissionError(other.ref + ": unresolved thermal via obstacle");
-                auto found = scans.find(other.mod.get());
-                if (found == scans.end())
-                    found =
-                        scans.emplace(other.mod.get(), scan_mod_pads(other.mod->document)).first;
-                for (const auto &[name, x, y, rot, w, h, drill] : found->second) {
-                    auto [wx, wy] = world_turned_point(other.x, other.y, x, y, other.rotation, 4);
-                    auto [hx, hy] = pad_half_extent(w, h, other.rotation + rot);
-                    auto net = other.pad_nets.find(name);
-                    obstacles.push_back({wx, wy, hx, hy,
-                                         net == other.pad_nets.end() ? "" : net->second.second,
-                                         drill, other.ref + "." + name});
-                }
-            }
-        for (const auto &c : m.copper)
-            if (c.kind == "via" && within_reach(c.x, c.y, i.x, i.y, reach)) {
-                auto [x, y] = round_xy(c.x, c.y, 4, counts);
-                double radius = c.size / 2;
-                obstacles.push_back(
-                    {x, y, radius, radius, net_names[c.net], c.drill,
-                     "escape via @(" + fmt(c.x, 3, true) + "," + fmt(c.y, 3, true) + ")"});
-            }
         Points chosen, candidates = spec.via_sites;
         auto lattice = fallback_via_sites(spec.pour.x0, spec.pour.y0, spec.pour.x1, spec.pour.y1,
                                           p.thermal_via_size, p.thermal_lattice_pitch, counts);

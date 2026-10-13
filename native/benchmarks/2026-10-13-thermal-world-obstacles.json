@@ -1,0 +1,32 @@
+{
+  "base_commit": "fb9580d2",
+  "change": "Replace thermal via obstacle culling by footprint origin plus arbitrary 20 mm reach with world-space pads and escape vias prepared once per emission and shared by all thermal subjects. Preserve source obstacle order, exact collision rules and actual quantization accounting. No obstacle preparation when there are no thermal subjects.",
+  "defect": "A distant footprint origin, distant pad center with large extent, or large escape-via extent could conceal copper intersecting a candidate thermal through-via. The old reach also depended only on preferred sites although lattice candidates occupy the pour.",
+  "tests": {
+    "native_pcb_emit_contracts": "PASS, 0.93 seconds; includes existing carrier/devkit emission fixtures and new physical-geometry cases",
+    "new_cases": "Unobstructed control; same physical blocking pad with two origin offsets, four quarter-turn rotations and both faces (16 cases); wide-pad extent; escape-copper extent. Every blocked case selects the second preferred site without fallback.",
+    "carrier": {
+      "log": "native/build/thermal-world-obstacles-carrier.log",
+      "dimensions_mm": [165, 156],
+      "top": 403,
+      "bottom": 163,
+      "pcb_sha256": "e16f6a4bfe5227fbbb94c0e55b3acdb79c1f482eaef0edddde4c4ff4065c8bd8",
+      "repeat_identical": true,
+      "model_seconds": [6.352365625, 6.387158917],
+      "pcb_text_seconds": [0.042884375, 0.042417750],
+      "screen": "fanout, ratsnest, placement contract and flow PASS; hard_red=0",
+      "unresolved": "Three thermal_via_lattice events remain; not an accepted finalist"
+    },
+    "devkit": {
+      "log": "native/build/thermal-world-obstacles-devkit.log",
+      "dimensions_mm": [98, 98],
+      "pcb_sha256": "b6798d4b63d2fddbf9fad24945c151b9420b049b674ad5d637c43bf4a365137f",
+      "repeat_identical": true,
+      "model_seconds": [0.192554084, 0.191650541],
+      "pcb_text_seconds": [0.009615417, 0.009415375],
+      "screen": "fanout, ratsnest, placement contract and flow PASS; hard_red=0"
+    }
+  },
+  "measurement_scope": "Prepared-input profiler runs, uncontrolled OS cache. No new full build, source audit, DRC or renders. Hashes match previous corresponding runs; no speedup or Python comparison is claimed.",
+  "remaining": "Placement still needs sufficient thermal through-via reservations or thermal-aware candidate feedback. This correction prevents a false-clear obstacle result; it does not solve the observed bottom-side pad conflicts or prove thermal adequacy."
+}

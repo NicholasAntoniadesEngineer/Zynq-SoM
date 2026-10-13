@@ -1,5 +1,6 @@
 #include "schgen/atomic_file.hpp"
 #include "schgen/pcb_emit.hpp"
+#include "../src/pcb_emit_internal.hpp"
 #include <algorithm>
 #include <fstream>
 #include <iostream>
@@ -247,6 +248,81 @@ void mutations(const fs::path &fixtures, const fs::path &output, const std::stri
     }
     std::cout << field(raw, "cases").array_value.size() << " frozen emission mutation cases PASS\n";
 }
+void thermal_world_obstacles() {
+    PcbModel model;
+    model.origin_x = model.origin_y = 0;
+    model.board_w = model.board_h = 200;
+    model.net_numbers = {{"GND", 1}, {"SIGNAL", 2}};
+    PcbCheckInstance subject;
+    subject.ref = "U1";
+    subject.value = "THERMAL_TEST";
+    subject.x = subject.y = 100;
+    subject.mod = pcb_check_footprint("empty", "(footprint empty (layer F.Cu))");
+    model.insts.push_back(subject);
+    auto policy = default_pcb_emit_policy();
+    policy.thermal_credit_needs.clear();
+    policy.thermal_copper = {{"THERMAL_TEST", {{{0, 0}, {4, 0}}, 1,
+        {-5, -5, 5, 5}, {"F.Cu", "B.Cu"}, "synthetic test geometry"}}};
+    auto sites = [&](const PcbModel &m) {
+        PcbEmissionResult result;
+        auto nodes = pcb_emission::thermal_nodes(m, policy,
+            [](const std::string &) { return "00000000-0000-0000-0000-000000000001"; },
+            result, nullptr);
+        require(nodes.vias.size() == 1, "thermal obstacle test emits exactly one via");
+        require(result.fallback_events.empty(), "second preferred site needs no lattice");
+        const auto *at = pcb_emission::child(nodes.vias.front(), "at");
+        require(at != nullptr, "thermal via has coordinates");
+        const auto &values = std::get<SexprList>(at->v);
+        return std::pair{std::get<double>(values.at(1).v), std::get<double>(values.at(2).v)};
+    };
+    require(sites(model) == std::pair{100.0, 100.0}, "unobstructed preferred site");
+    // Identical physical pad, represented with near and distant footprint
+    // origins and quarter turns; both faces block the same through-via.
+    for (const auto &side : {"top", "bottom"})
+        for (int rotation : {0, 90, 180, 270})
+            for (double offset : {0.0, 60.0}) {
+                auto trial = model;
+                auto blocker = subject;
+                blocker.ref = "J1";
+                blocker.value = "BLOCKER";
+                blocker.side = side;
+                blocker.rotation = rotation;
+                const auto delta = world_turned_point(0, 0, offset, 0, rotation, 4);
+                blocker.x -= delta.first;
+                blocker.y -= delta.second;
+                blocker.mod = pcb_check_footprint("offset-pad",
+                    "(footprint offset (layer F.Cu) (pad 1 smd rect (at " +
+                    std::to_string(offset) + " 0) (size 1 1) (layers F.Cu F.Paste F.Mask)))");
+                blocker.pad_nets = {{"1", {2, "SIGNAL"}}};
+                trial.insts.push_back(blocker);
+                require(sites(trial) == std::pair{104.0, 100.0},
+                    "actual pad blocks thermal via independent of origin, rotation and face");
+            }
+    auto wide = model;
+    auto blocker = subject;
+    blocker.ref = "J2";
+    blocker.value = "WIDE_PAD";
+    blocker.x = 40;
+    blocker.mod = pcb_check_footprint("wide-pad",
+        "(footprint wide (layer F.Cu) (pad 1 smd rect (at 0 0)"
+        " (size 120 1) (layers F.Cu F.Paste F.Mask)))");
+    blocker.pad_nets = {{"1", {2, "SIGNAL"}}};
+    wide.insts.push_back(blocker);
+    require(sites(wide) == std::pair{104.0, 100.0},
+        "pad extent, not pad or footprint center, determines collision");
+    auto copper = model;
+    PcbCheckCopper obstacle;
+    obstacle.kind = "via";
+    obstacle.x = 40;
+    obstacle.y = 100;
+    obstacle.size = 120;
+    obstacle.drill = 0.3;
+    obstacle.net = 2;
+    copper.copper.push_back(obstacle);
+    require(sites(copper) == std::pair{104.0, 100.0},
+        "escape copper extent cannot be culled by center distance");
+    std::cout << "Thermal world-space obstacle contracts PASS\n";
+}
 void boundaries(const fs::path &fixtures, const fs::path &output) {
     auto raw = parse_json_file((fixtures / "devkit_mini.json").string());
     auto pool = footprints(field(raw, "footprints"));
@@ -330,6 +406,7 @@ int main(int argc, char **argv) {
         mutations(fixtures, output, "edge_cases.json");
         mutations(fixtures, output, "unicode_strip.json");
         boundaries(fixtures, output);
+        thermal_world_obstacles();
         std::cout << "PCB emission: " << checks << " checks passed\n";
         return 0;
     } catch (const std::exception &e) {
