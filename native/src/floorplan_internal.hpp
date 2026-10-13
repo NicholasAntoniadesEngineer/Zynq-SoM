@@ -11,6 +11,7 @@
 #include "schgen/turn.hpp"
 
 #include <array>
+#include <algorithm>
 #include <memory>
 #include <tuple>
 
@@ -21,6 +22,13 @@ using OutlineCandidate=std::tuple<double,double,double,double,double>; // area,w
 inline bool prefer_outline(const OutlineCandidate& a,const OutlineCandidate& b) {
     return std::tie(std::get<0>(a),std::get<3>(a),std::get<1>(a),std::get<2>(a))<
            std::tie(std::get<0>(b),std::get<3>(b),std::get<1>(b),std::get<2>(b));
+}
+
+inline std::vector<std::size_t> shape_area_trial_order(const std::vector<double>& areas) {
+    std::vector<std::size_t> order;
+    for(std::size_t i=0;i<areas.size();++i)order.push_back(i);
+    std::stable_sort(order.begin(),order.end(),[&](auto a,auto b){return areas[a]<areas[b];});
+    return order;
 }
 
 // Scarcity is the number of permitted choices, not the registry size. A

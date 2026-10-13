@@ -507,6 +507,10 @@ void neighbour_retry_contract() {
 extern "C" void __cyg_profile_func_enter(void* fn,void*){if(observing&&fn==reinterpret_cast<void*>(&native_run_overflow_tol))++entries;}
 extern "C" void __cyg_profile_func_exit(void*,void*){}
 void victim_shape_portfolio_contract(){
+    using schgen::floorplan_detail::shape_area_trial_order;
+    require(shape_area_trial_order({}).empty(),"empty retry catalog must remain empty");
+    require(shape_area_trial_order({8,2,2,6,1})==std::vector<std::size_t>({4,1,2,3,0}),
+            "area-ordered retries must retain every alternative and stable equal-area order");
     for(bool bottom:{false,true}) {
         auto in=input();auto config=std::make_shared<FloorplanExperiment>();
         config->shape_area_first=true;in.experiment=config;
@@ -567,16 +571,24 @@ void victim_shape_portfolio_contract(){
                 "scarcity order ignored the single eligible bottom alternative");
     }
     std::size_t preserved=0,recovered=0,failed=0,queries=0,incoming_recovered=0,incoming_queries=0;
-    std::size_t combination_only=0,paired_queries=0;
+    std::size_t combination_only=0,paired_queries=0,area_queries=0;
     bool exception_checked=false;
     const Case crowded{70,50,{{29,16,3,4},{12,30,2,0},{30,18,3,2},{31,26,2,3},{7,7,1,3},{31,9,2,1}}};
-    for(bool rotate:{false,true})for(int w=65;w<=85;w+=5)for(int h=45;h<=65;h+=5)for(int order=0;order<3;++order){
+    for(bool area_first:{false,true})for(bool rotate:{false,true})for(int w=65;w<=85;w+=5)for(int h=45;h<=65;h+=5)for(int order=0;order<3;++order){
         auto c=crowded;c.w=w;c.h=h;
-        const auto prepare=[&](Engine& e){setup(e,c);if(rotate)for(auto& [name,shapes]:e.shape_sets[1]){
-            (void)name;if(shapes.size()>2)std::swap(shapes[2].w,shapes[2].h);
-        }};
+        const auto prepare=[&](Engine& e){
+            setup(e,c);
+            for(auto& [name,shapes]:e.shape_sets[1]) {
+                (void)name;
+                if(shapes.size()>2) {
+                    if(rotate)std::swap(shapes[2].w,shapes[2].h);
+                    if(area_first)shapes[2].w*=0.8;
+                }
+            }
+        };
         auto in=input();auto config=std::make_shared<FloorplanExperiment>();in.experiment=config;
         config->interior_order=order;config->reseat_pose_limits=FloorplanPoseRetryLimits{8,4096,2};
+        config->shape_area_first=area_first;
         Engine original(in);prepare(original);const bool original_ok=original.attempt_pack(false);
         auto expected_counts=original.plan.accounting.quantization_engagements;
         auto expected_events=original.plan.accounting.fallback_events;
@@ -619,6 +631,7 @@ void victim_shape_portfolio_contract(){
             }
         }
         queries+=std::count(expected_events.begin(),expected_events.end(),"interior_reseat_shape_trial");
+        if(area_first)area_queries+=std::count(expected_events.begin(),expected_events.end(),"interior_reseat_shape_trial");
         incoming_queries+=std::count(expected_events.begin(),expected_events.end(),"interior_reseat_incoming_shape_trial");
         // Pass 2 is the only source of incoming-shape queries. A displaced
         // shape query after entering that pass proves paired exploration,
@@ -651,6 +664,7 @@ void victim_shape_portfolio_contract(){
     require(incoming_recovered&&incoming_queries,"incoming-shape strategy has no tested recovery or work");
     require(combination_only>0,"no witness where both shape strategies succeed but either alone fails");
     require(paired_queries>0,"alternative incoming shapes never tried alternative displaced shapes");
+    require(area_queries>0,"area-first corpus did not execute alternative shape recovery");
     {
         auto locked_input=input();auto locked_config=std::make_shared<FloorplanExperiment>();locked_input.experiment=locked_config;
         locked_config->reseat_pose_limits=FloorplanPoseRetryLimits{8,4096};

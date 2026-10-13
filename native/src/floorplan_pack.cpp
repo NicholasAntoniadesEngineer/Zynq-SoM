@@ -479,12 +479,22 @@ bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure,
     };
     int evict_budget=reseat_evict_budget;
     bool first_recovery=true;
+    const auto shape_order=[&](const auto& variants) {
+        std::vector<std::size_t> order;
+        if(in.compact_search&&in.experiment&&in.experiment->shape_area_first) {
+            std::vector<double> areas;areas.reserve(variants.size());
+            for(const auto& shape:variants)areas.push_back(block_area(shape.w,shape.h,counts));
+            return shape_area_trial_order(areas);
+        }
+        for(std::size_t i=0;i<variants.size();++i)order.push_back(i);
+        return order;
+    };
     auto reseat_displaced=[&](FloorplanBlock& e,FloorplanPoint anchor) {
         auto p=near(e,e.shape_idx,anchor,e.w,e.h,e.fanout_reach,e.fanout_inset,side_mask(e.side),get(chosen,e.name),nullptr);
         if(!p&&victim_shapes) {
             const auto variants=shapes.find(e.name);
             const auto restricted=owned_shape_choices.find(e.name);
-            if(variants!=shapes.end())for(std::size_t k=0;k<variants->second.size();++k) {
+            if(variants!=shapes.end())for(const auto k:shape_order(variants->second)) {
                 if(static_cast<int>(k)==e.shape_idx||
                    (restricted!=owned_shape_choices.end()&&static_cast<int>(k)!=restricted->second))continue;
                 const auto& s=variants->second[k];
@@ -538,7 +548,7 @@ bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure,
                 const auto variants=shapes.find(b.name);
                 const auto restricted=owned_shape_choices.find(b.name);
                 ok=false;
-                if(variants!=shapes.end())for(std::size_t k=0;k<variants->second.size();++k){
+                if(variants!=shapes.end())for(const auto k:shape_order(variants->second)){
                     if(static_cast<int>(k)==previous||
                        (restricted!=owned_shape_choices.end()&&static_cast<int>(k)!=restricted->second))continue;
                     const auto& s=variants->second[k];
