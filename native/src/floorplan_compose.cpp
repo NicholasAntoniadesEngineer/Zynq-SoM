@@ -217,8 +217,9 @@ public:
         return true;
     }
 
-    bool run(std::vector<FloorplanLegalizeVar>& movable,bool joint=false) {
+    bool run(std::vector<FloorplanLegalizeVar>& movable,bool joint=false,bool authored_distance=false) {
         distance_envelope = joint;
+        full_distance_envelope = joint&&authored_distance;
         if (in.index.hard.empty() || movable.empty()) return true;
         std::vector<Box4> seeds, fixed_boxes;
         std::vector<std::string> fixed_names;
@@ -691,9 +692,11 @@ private:
             const auto hg = jr == in.som_j_rects.end() ? hull(g) :
                 std::optional<Box4>{{0, 0, jr->second.x1 - jr->second.x0, jr->second.y1 - jr->second.y0}};
             const double authored = t.bound.value_or(0);
-            // A search margin must not erase a tighter authored requirement.
-            // Use that requirement itself when the heuristic would go negative.
-            const double bound = authored < guard_mm ? authored : authored - guard_mm;
+            // Early strategies seek extra margin, but the final joint fallback
+            // needs the full authored envelope: retaining a heuristic guard
+            // there would exclude physically valid authored-legal placements.
+            // Exact final Euclidean distance remains an acceptance condition.
+            const double bound = full_distance_envelope || authored < guard_mm ? authored : authored - guard_mm;
             const bool sm = by_name.count(s), gm = by_name.count(g);
             if (!hs || !hg || bound < 0 || (!sm && !gm)) continue;
             const auto sr = seed_or_fixed(s, *hs);
@@ -858,6 +861,7 @@ private:
     }
     bool pad_seed_hulls = false;
     bool distance_envelope = false;
+    bool full_distance_envelope = false;
     bool perpendicular_order = false;
     bool flip_order_differs = false;
     bool reservation_geometry = false;
@@ -873,7 +877,8 @@ bool compose_with_bounded_retries(const FloorplanLegalizeInput& input,
     // perpendicular seed order. A final physical-reservation strategy may run
     // after all conservative strategies fail, followed by one strict-facing
     // projection strategy: at most five legacy composer attempts, followed
-    // only when explicitly enabled by one state-bounded joint search.
+    // only when explicitly enabled by state-bounded joint strategies. Full
+    // authored-distance retries run only after margin-seeking strategies fail.
     Composer original(input,movable,log,counts);
     if(original.run(movable))return true;
     Composer alternative(input,movable,log,counts,true);
@@ -920,13 +925,27 @@ bool compose_with_bounded_retries(const FloorplanLegalizeInput& input,
     log.push_back("retry: bounded joint separation choices");
     if(input.joint_retry_started)input.joint_retry_started();
     if(Composer(input,movable,log,counts,false,false,candidate,false).run(movable,true))return true;
-    if(!facing)return false;
     // Projection cuts are sufficient but not necessary. Combine them with
     // joint separation only after the unrestricted strategy fails; never
     // prune its successful incumbents or hide either strategy's work.
-    log.push_back("retry: joint separation with strict facing projection cuts");
+    if(facing) {
+        log.push_back("retry: joint separation with strict facing projection cuts");
+        if(input.joint_retry_started)input.joint_retry_started();
+        if(Composer(input,movable,log,counts,false,false,candidate,true).run(movable,true))return true;
+    }
+    // Extra margin is a preference, not a feasibility requirement. Preserve
+    // successful guarded strategies, then search the full authored envelope.
+    const bool guarded=std::any_of(input.index.hard.begin(),input.index.hard.end(),[](const auto& t){
+        return t.kind=="near_max"&&t.bound&&*t.bound>=guard_mm;
+    });
+    if(!guarded)return false;
+    log.push_back("retry: joint separation with full authored proximity bounds");
     if(input.joint_retry_started)input.joint_retry_started();
-    return Composer(input,movable,log,counts,false,false,candidate,true).run(movable,true);
+    if(Composer(input,movable,log,counts,false,false,candidate,false).run(movable,true,true))return true;
+    if(!facing)return false;
+    log.push_back("retry: full authored proximity with strict facing projection cuts");
+    if(input.joint_retry_started)input.joint_retry_started();
+    return Composer(input,movable,log,counts,false,false,candidate,true).run(movable,true,true);
 }
 }  // namespace
 

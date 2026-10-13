@@ -1196,6 +1196,38 @@ void frozen(const std::filesystem::path& dir,const std::string& name,bool geomet
     require(!load_floorplan_spec((publication.directory/"missing.json").string()),name+": missing optional spec");
 }
 void repair_choice_contracts() {
+    for(bool compact:{false,true})for(bool horizontal:{false,true}) {
+        FloorplanLegalizeInput in;in.board_w=12;in.board_h=6;in.clear=.3;in.compact=compact;
+        in.fixed_rects={{"barrier",{4,0,12,6}}};in.fixed_poses["barrier"]={4,0};
+        in.som_j_rects["som_j1"]={10,2,11,3};
+        in.metrics["v"]={{{"p",1,1}},{{"p",1,1,1,1}},{2,2}};
+        FloorplanPoint seed{1,2};
+        if(horizontal) {
+            std::swap(in.board_w,in.board_h);std::swap(seed.first,seed.second);
+            in.fixed_rects={{"barrier",{0,4,6,12}}};in.fixed_poses["barrier"]={0,4};
+            in.som_j_rects["som_j1"]={2,10,3,11};
+        }
+        in.index.hard.push_back({"near_max","v","v","som_j1",8,"authored distance, no extra search margin",true,{},{}});
+        in.joint_separation_states=64;
+        int starts=0,ends=0;
+        in.joint_retry_started=[&]{++starts;};
+        in.joint_retry_completed=[&](const JointSeparationWork& work,bool){
+            ++ends;require(work.visited<=64,"authored-distance retry exceeded its invocation budget");
+        };
+        std::vector<FloorplanLegalizeVar> vars{{"v",2,2,seed,seed.first,seed.second}};
+        std::vector<std::string> log;
+        require(floorplan_legalize_compact(in,vars,log),"joint distance envelope excluded authored-legal margin band");
+        require(starts==2&&ends==2,"guarded and authored retries lost executed-work accounting");
+        const auto& v=vars.front();
+        const auto target=in.som_j_rects.at("som_j1");
+        const double dx=std::max({0.,target.x0-(v.x+1),v.x+1-target.x1});
+        const double dy=std::max({0.,target.y0-(v.y+1),v.y+1-target.y1});
+        require(std::hypot(dx,dy)<=8&&std::hypot(dx,dy)>4,"margin regression did not use the excluded legal band");
+        require((horizontal?v.y:v.x)+2<=4-in.clear,"margin recovery crossed the physical barrier");
+        in.index.hard.front().bound=7;
+        vars={{"v",2,2,seed,seed.first,seed.second}};log.clear();
+        require(!floorplan_legalize_compact(in,vars,log),"joint distance recovery waived an impossible authored bound");
+    }
     for(const double limit:{1.,2.,3.}) {
         FloorplanLegalizeInput in;in.board_w=30;in.board_h=30;in.clear=.1;
         in.som_j_rects["som_j1"]={10,10,12,12};

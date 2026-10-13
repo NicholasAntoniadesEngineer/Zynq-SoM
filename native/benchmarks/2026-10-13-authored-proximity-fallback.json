@@ -1,0 +1,12 @@
+{
+  "parent_commit":"89008d06",
+  "defect":"Joint search treated a 4mm extra proximity margin as a feasibility restriction, excluding placements satisfying authored hardware bounds.",
+  "fix":"Retain successful margin-seeking joint strategies, then add fully accounted bounded searches using the full authored distance envelope, with and without strict facing cuts where relevant. Exact final Euclidean/hardware qualification remains mandatory.",
+  "regression":{"before":"FAIL: joint distance envelope excluded authored-legal margin band","after":"PASS: both axes/compact modes; independent distance and barrier checks; tighter impossible authored bound rejected; both guarded/authored search callbacks accounted"},
+  "tests":{"native_compact_retry_contracts":"PASS 5.64s","native_floorplan_contracts":"PASS 13.73s","native_floorplan_geometry_contracts":"PASS 0.57s with explicit two-strategy accounting"},
+  "rejected_experiment":"Replacing guarded search outright found the smaller candidate but failed the 163x153 control. Restored guarded-first ordering and retained wider search as a fallback.",
+  "candidate":{"dimensions_mm":[163,152],"top":394,"bottom":172,"pcb_sha256":"413100c05f91a68436c457039752e0e932593e54760e802bed434a547e66dca7","log":"native/build/authored-fallback-163x152.log","status":"Cheap fanout/ratsnest/placement/flow checks PASS, hard_red=0, zero nonsearch fallbacks; full qualification pending","minimum_hard_margin_mm":0.59,"minimum_facing_margin_degrees":47.48},
+  "control":{"dimensions_mm":[163,153],"pcb_sha256":"25bb15ac93e9aea43c83c87cd845656539ce145eb129a9d9bcd1e230b0b91cc8","log":"native/build/authored-fallback-reference.log","status":"Exact qualified PCB hash restored; cheap checks pass"},
+  "other_screen":{"dimensions_mm":[162,153],"log":"native/build/authored-near-162x153.log","status":"REJECTED: fanout and placement-contract checks fail; two emission nonsearch fallback events"},
+  "limitations":"Candidate not yet fully qualified. Diagnostic runs overlapped, no runtime speedup claimed. No hardware bound relaxed. Routing remains out of scope."
+}
