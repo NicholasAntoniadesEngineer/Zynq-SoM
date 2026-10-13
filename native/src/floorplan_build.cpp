@@ -41,7 +41,7 @@ struct BuildPrecision {
     }
 };
 using Inputs=std::vector<std::pair<std::string,JsonNode>>;
-using Winner=std::tuple<double,double,double,double,double>; // area,w,h,estimate,budget
+using Winner=OutlineCandidate;
 Inputs winner_inputs(const Winner& w,QuantizationCounts& counts) {
     const BuildPrecision precision{counts};
     return {{"board_w",jvalue(std::get<1>(w))},{"board_h",jvalue(std::get<2>(w))},
@@ -358,7 +358,7 @@ FloorplanPlan Engine::run() {
                 throw FloorplanError("floorplan: invalid airwire estimate; cannot rank candidate");
             ++tally["accepted"];
             const Winner candidate{precision.area(w*h),w,h,est,budget};
-            if (!best || candidate<*best) { best_plan=plan; best_offers=side_offers; }
+            if (!best || prefer_outline(candidate,*best)) { best_plan=plan; best_offers=side_offers; }
             return candidate;
         };
         const auto seed=in.experiment?in.experiment->initial_outline:std::nullopt;
@@ -383,11 +383,11 @@ FloorplanPlan Engine::run() {
             }
             if (w<h) { ++tally["reject_aspect"]; continue; }
             if (w*h<min_area) { ++tally["reject_min_area"]; continue; }
-            if (auto candidate=evaluate(w,h)) { if (!best || *candidate<*best) best=candidate; break; }
+            if (auto candidate=evaluate(w,h)) { if (!best || prefer_outline(*candidate,*best)) best=candidate; break; }
         }
         if (!best) {
             record_tally();
-            throw FloorplanPackingInfeasible(std::string("floorplan: no accepted candidate on searched outlines (blocks ")+(fit_seen ? "did":"never")+" fit; airwire screening also applies)");
+            throw FloorplanPackingInfeasible(std::string("floorplan: no accepted candidate on searched outlines (blocks ")+(fit_seen ? "did":"never")+" fit; aggregate airwire is advisory)");
         }
         const double w0=std::get<1>(*best),h0=std::get<2>(*best);
         std::vector<double> ws,hs;
@@ -436,8 +436,7 @@ FloorplanPlan Engine::run() {
     if(!conservative_best&&!free_best)
         throw FloorplanPackingInfeasible("floorplan: automatic sizing found no accepted layout under either reservation policy; bounded search exhaustion is not proof of geometric infeasibility");
     Winner best=conservative_best?*conservative_best:*free_best; std::string choice="conservative";
-    if (free_best && (!conservative_best || std::get<0>(*free_best)<std::get<0>(best)-1e-6 ||
-        (std::get<0>(*free_best)<=std::get<0>(best)+1e-6 && std::get<3>(*free_best)<std::get<3>(best)-1e-6))) {
+    if (free_best && (!conservative_best || prefer_outline(*free_best,best))) {
         best=*free_best; choice="free";
     } else {
         restore(conservative); side_offers=offers; fallback("punch_free_plan_rejected");

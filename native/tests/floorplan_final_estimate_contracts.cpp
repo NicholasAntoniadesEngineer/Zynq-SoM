@@ -43,6 +43,20 @@ void verify(const FloorplanInput& input,const FloorplanPlan& result,
 int main(int argc,char** argv) {
     try {
         require(argc==2,"usage: final-estimate REPOSITORY");
+        using floorplan_detail::OutlineCandidate;
+        using floorplan_detail::prefer_outline;
+        const OutlineCandidate smaller{90,10,9,1000000,1},larger{100,10,10,0,1000000};
+        require(prefer_outline(smaller,larger)&&!prefer_outline(larger,smaller),
+                "wire quality must never outrank smaller area");
+        const OutlineCandidate narrow{100,10,10,200,1000},shorter_wire{100,20,5,100,1};
+        require(prefer_outline(shorter_wire,narrow)&&!prefer_outline(narrow,shorter_wire),
+                "equal-area candidates must prefer lower wire estimate before dimensions");
+        auto changed_reference=shorter_wire;std::get<4>(changed_reference)=999999;
+        require(!prefer_outline(shorter_wire,changed_reference)&&!prefer_outline(changed_reference,shorter_wire),
+                "advisory reference must not affect ranking");
+        auto tied=narrow;std::get<3>(tied)=100;
+        require(prefer_outline(tied,shorter_wire)&&!prefer_outline(tied,tied),
+                "dimensions must deterministically break equal quality ties");
         auto fixture=placement_fixture::load(argv[1],"devkit_mini");
         for(bool multiscale:{false,true})for(bool compact:{false,true})for(bool seeded:{false,true}) {
             fixture.input.floorplan.compact_search=compact;

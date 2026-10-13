@@ -12,8 +12,16 @@
 
 #include <array>
 #include <memory>
+#include <tuple>
 
 namespace schgen::floorplan_detail {
+
+// Ranking consumes validated metrics; aggregate wire reference is not a gate.
+using OutlineCandidate=std::tuple<double,double,double,double,double>; // area,w,h,estimate,reference
+inline bool prefer_outline(const OutlineCandidate& a,const OutlineCandidate& b) {
+    return std::tie(std::get<0>(a),std::get<3>(a),std::get<1>(a),std::get<2>(a))<
+           std::tie(std::get<0>(b),std::get<3>(b),std::get<1>(b),std::get<2>(b));
+}
 
 // Scarcity is the number of permitted choices, not the registry size. A
 // selected shape does not retain flexibility from its disallowed alternatives.
