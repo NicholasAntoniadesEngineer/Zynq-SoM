@@ -199,6 +199,9 @@ PcbPlacementObservation capture_pcb_experiment_frame(const PcbExperimentFrame &,
     std::string stage, std::optional<int> moved = std::nullopt);
 struct PcbPlacementExperiment {
     std::function<void(const PcbPlacementObservation &)> checkpoint;
+    // Read-only completed thermal trial: reference, board-space trial pose and
+    // first failed constraint (or "accepted"). No search-policy authority.
+    std::function<void(const std::string&,double,double,const std::string&)> thermal_trial;
 };
 template <class Snapshot>
 void observe_pcb_experiment_checkpoint(const PcbPlacementExperiment *experiment,

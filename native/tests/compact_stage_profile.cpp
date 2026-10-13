@@ -455,6 +455,9 @@ std::string trial(const PcbPlacementInput& source, bool compact, int run, int ge
     };
     if(observers)floor->unscoped_estimate = [&](double) { ++profile.attempts.unscoped_estimates; };
     auto pcb = std::make_shared<PcbPlacementExperiment>();
+    if(observers&&thermal_trace)pcb->thermal_trial=[](const auto& ref,double x,double y,const auto& reason) {
+        std::cout<<"thermal_trial ref="<<ref<<" x="<<x<<" y="<<y<<" result="<<std::quoted(reason)<<'\n';
+    };
     std::vector<PcbPlacementObservation> thermal_snapshots;
     pcb->checkpoint = [&](const auto& row) {
         profile.checkpoint(row);

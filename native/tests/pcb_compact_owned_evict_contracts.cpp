@@ -384,6 +384,14 @@ void l4_corridor_contract(const PcbPlacementInput& source) {
 void tests(const PcbPlacementInput& source,const std::filesystem::path& root) {
     {
         Fixture f(source,"bringup_rails",true);
+        std::vector<std::string> outcomes;
+        auto observer=std::make_shared<PcbPlacementExperiment>();
+        observer->thermal_trial=[&](const auto& ref,double x,double y,const auto& outcome) {
+            require(ref=="R_BLOCKER" && std::isfinite(x) && std::isfinite(y),
+                    "thermal diagnostic carries actual mover and finite trial pose");
+            outcomes.push_back(outcome);
+        };
+        f.in.experiment=observer;
         f.part("U_THERMAL",50,50,"top");
         f.p->ctx.by_ref.at("U_THERMAL").value="TLV75725";
         f.part("R_BLOCKER",60,50,"bottom");
@@ -403,8 +411,10 @@ void tests(const PcbPlacementInput& source,const std::filesystem::path& root) {
                 blocked.front().sites.chosen.empty(),"thermal eviction fixture must consume real preferred sites");
         require(evict_legal(*f.p,before,before,{"R_BLOCKER"},{},{},false),
                 "thermal guard must retain a legal unchanged move");
-        require(!evict_legal(*f.p,before,after,{"R_BLOCKER"},{},{},false),
+        std::string rejection;
+        require(!evict_legal(*f.p,before,after,{"R_BLOCKER"},{},{},false,&rejection),
                 "opposite-face corridor eviction may not consume preferred thermal capacity");
+        require(rejection=="thermal_regression","thermal failure reports the actual constraint");
         require(evict_legal(*f.p,after,before,{"R_BLOCKER"},{},{},false),
                 "thermal recovery remains legal");
         f.p->pos["R_BLOCKER"]={50,50};
@@ -413,6 +423,10 @@ void tests(const PcbPlacementInput& source,const std::filesystem::path& root) {
         compact_recover_thermal(*f.p);
         require(f.p->pos==blocked_pose,"thermal repair must not move a fixed blocker");
         f.p->fixed.erase("R_BLOCKER");
+        // Earlier stages may legally move secondary parts outside this initial
+        // packing allocation. It is not a hardware keepout for thermal repair.
+        f.stage.plan.interior_blocks.front().w=20;
+        f.stage.plan.interior_blocks.front().h=20;
         require(!thermal_pad_move_candidates(after.model(),policy,blocked).empty(),
                 "blocked pad must produce identity-resolved thermal proposals");
         compact_recover_thermal(*f.p);
@@ -437,6 +451,9 @@ void tests(const PcbPlacementInput& source,const std::filesystem::path& root) {
         require(count("thermal_repair_trial")==
                 count("thermal_repair_moved")+count("thermal_repair_rejected"),
                 "every executed thermal trial has exactly one terminal outcome");
+        require(outcomes.size()==static_cast<std::size_t>(count("thermal_repair_trial")) &&
+                std::count(outcomes.begin(),outcomes.end(),"accepted")==count("thermal_repair_moved"),
+                "diagnostic outcomes reconcile with independent execution receipts");
     }
     l4_corridor_contract(source);
     error_accounting(source);

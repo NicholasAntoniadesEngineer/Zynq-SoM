@@ -154,37 +154,45 @@ bool evict_allocated(const Placer &p, const std::string &ref, Box4 b) {
 }
 bool evict_legal(const Placer &p, const PcbCheckInput &before, const PcbCheckInput &after,
                  const std::set<std::string> &members, const EvictRows &rows,
-                 const std::vector<Box4> &corridors, bool rigid) {
+                 const std::vector<Box4> &corridors, bool rigid, std::string* reason=nullptr,
+                 bool retain_allocation=true) {
+    if (reason) reason->clear();
+    const auto reject=[&](const std::string& why) { if(reason)*reason=why; return false; };
     const auto prior=evict_index(before), next=evict_index(after);
-    if (next.size()!=p.pos.size()) return false; // No invisible external obstacles.
+    if (next.size()!=p.pos.size()) return reject("unresolved_geometry");
     for (const auto &row : rows)
         if ((members.count(row.owner)||members.count(row.cap)) &&
             evict_gap(after,next,row)>evict_gap(before,prior,row))
-            return false;
+            return reject("owned_gap:"+row.owner+":"+row.cap);
     const auto separation=[](Box4 a,Box4 b) {
         return std::max({a.x0-b.x1,b.x0-a.x1,a.y0-b.y1,b.y0-a.y1});
     };
     for (const auto &r : members) {
-        if (!evict_movable(p,r)) return false;
+        if (!evict_movable(p,r)) return reject("immovable:"+r);
         const auto &part=after.model().insts.at(next.at(r));
         const auto b=evict_box(after,next.at(r));
         const bool tht=has_thru_pads_from_text(part.mod->bytes);
-        if (b.x0<.6 || b.y0<.6 || b.x1>p.width-.6 || b.y1>p.height-.6 ||
-            !evict_allocated(p,r,b) || ((part.side=="bottom" || tht) && hit(b,corridors)) ||
-            (part.side=="top" && rects_intersect_open(b,p.keepout)))
-            return false;
+        if (b.x0<.6 || b.y0<.6 || b.x1>p.width-.6 || b.y1>p.height-.6)
+            return reject("board_edge:"+r);
+        if (retain_allocation && !evict_allocated(p,r,b)) return reject("allocated_block:"+r+
+            (evict_allocated(p,r,evict_box(before,prior.at(r)))?":incumbent_inside":":incumbent_outside"));
+        if ((part.side=="bottom" || tht) && hit(b,corridors)) return reject("corridor:"+r);
+        if (part.side=="top" && rects_intersect_open(b,p.keepout)) return reject("keepout:"+r);
         for (const auto &[s,i] : next) {
             if (r==s) continue;
             const auto &other=after.model().insts[i];
             if (part.side!=other.side && !tht && !has_thru_pads_from_text(other.mod->bytes))
                 continue;
-            if (separation(b,evict_box(after,i))<p.ctx.clearance) return false;
+            if (separation(b,evict_box(after,i))<p.ctx.clearance)
+                return reject("body_clearance:"+r+":"+s+
+                    (separation(evict_box(before,prior.at(r)),evict_box(before,prior.at(s)))<p.ctx.clearance
+                        ?":incumbent_below_clearance":":incumbent_clear"));
         }
     }
-    if (!refit_preserves_fanout(before,after)) return false;
+    if (!refit_preserves_fanout(before,after)) return reject("fanout_regression");
     if (rigid)
         for (const auto &record : check_fanout(after,0).records)
-            if (record.starved()) return false;
+            if (record.starved()) return reject("rigid_fanout:"+record.ref);
     // Body separation is face-aware, but thermal vias penetrate both faces.
     // A corridor exit must not repair one constraint by consuming another
     // subject's preferred field. Recompute from actual emitted trial poses;
@@ -192,7 +200,7 @@ bool evict_legal(const Placer &p, const PcbCheckInput &before, const PcbCheckInp
     const auto policy=pcb_emit_policy(p.ctx.in.floorplan.project);
     const auto thermal_before=plan_preferred_thermal_vias(before.model(),policy,&p.ctx.quantization);
     const auto thermal_after=plan_preferred_thermal_vias(after.model(),policy,&p.ctx.quantization);
-    if (!preserves_preferred_thermal_vias(thermal_before,thermal_after)) return false;
+    if (!preserves_preferred_thermal_vias(thermal_before,thermal_after)) return reject("thermal_regression");
     return true;
 }
 bool evict_bottom_shadow(const Placer &p, const std::string &ref) {
@@ -240,15 +248,28 @@ void compact_recover_thermal(Placer& p) {
                         placement_evict_trial_precision4dp(old.second+dy,&p.ctx.quantization),p.rot(move.ref)}}};
                     event("thermal_repair_trial");
                     const auto after=refit_fanout_geometry(p,&trial);
-                    if (evict_legal(p,before,after,{move.ref},{},corridors,false)) {
+                    std::string reason;
+                    const auto report=[&](const std::string& outcome) {
+                        if (p.ctx.in.experiment && p.ctx.in.experiment->thermal_trial) {
+                            const auto& pose=trial.at(move.ref);
+                            p.ctx.in.experiment->thermal_trial(move.ref,std::get<0>(pose),std::get<1>(pose),outcome);
+                        }
+                    };
+                    // Packing rectangles are initial allocations, not hardware
+                    // keepouts; earlier breathing may already leave them.
+                    // Independent thermal recovery uses actual final-frame
+                    // obstacles and protected memberships instead of that leash.
+                    if (evict_legal(p,before,after,{move.ref},{},corridors,false,&reason,false)) {
                         const auto next=plan_preferred_thermal_vias(after.model(),policy,&p.ctx.quantization);
                         if (capacity(next)>capacity(fields)) {
                             const auto& pose=trial.at(move.ref);
                             p.pos[move.ref]={std::get<0>(pose),std::get<1>(pose)};
-                            event("thermal_repair_moved"); accepted=true; break;
+                            event("thermal_repair_moved"); report("accepted"); accepted=true; break;
                         }
+                        reason="no_capacity_improvement";
                     }
                     event("thermal_repair_rejected");
+                    report(reason);
                 }
                 if (accepted) break;
             }
