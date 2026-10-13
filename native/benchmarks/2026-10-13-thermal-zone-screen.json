@@ -1,0 +1,51 @@
+{
+  "source_commit": "83cd2d2a",
+  "purpose": "Test whole-group soft-zone and shape alternatives before introducing local thermal-aware movement",
+  "dimensions_mm": [164, 153],
+  "base_recipe": "2026-10-13-interface-label-qualification.json carrier recipe translated to compact_stage_profile; use 164x153 outline, prepared schematic, runs=1, retain all three required-bottom sheets and named owned shapes",
+  "prepared_schematic": "/private/tmp/carrier-166x156-two-pilots.iK3HkI/Zynq_Carrier.kicad_sch",
+  "base_spec": "/private/tmp/carrier-enable-bottom.qNzmxy/floorplan-164x153.json",
+  "trials": [
+    {
+      "change": "Replace power_mon near=power_som with side=N, retain layer=either and required-bottom",
+      "result": "bounded construction failure, not proof of infeasibility",
+      "seconds": 2.1682555,
+      "completed_outer_attempts": 4,
+      "receipt_captured": true,
+      "log": "native/build/thermal-zone-N-164x153.log"
+    },
+    {
+      "change": "Replace power_mon near=power_som with side=W, retain layer=either and required-bottom",
+      "result": "bounded construction failure, not proof of infeasibility",
+      "seconds": 1.474521833,
+      "completed_outer_attempts": 4,
+      "receipt_captured": true,
+      "log": "native/build/thermal-zone-W-164x153.log"
+    },
+    {
+      "change": "Replace power_mon near=power_som with side=E, retain layer=either and required-bottom",
+      "result": "constructed; NOT accepted, three emission non-search fallback events",
+      "model_seconds": 3.265072708,
+      "emission_seconds": 0.028568791,
+      "completed_outer_attempts": 6,
+      "pcb_sha256": "2855ce78bf5896305a1a70e99cb4633a3a956f7de67232619e7528f8e4f0a74a",
+      "log": "native/build/thermal-zone-E-164x153.log"
+    },
+    {
+      "change": "Keep original near preference; add owned-extent-alternatives=on",
+      "result": "constructed; identical PCB to east-preference trial; NOT accepted, three emission non-search fallback events",
+      "model_seconds": 3.296182083,
+      "emission_seconds": 0.028771875,
+      "pcb_sha256": "2855ce78bf5896305a1a70e99cb4633a3a956f7de67232619e7528f8e4f0a74a",
+      "log": "native/build/thermal-extent-164x153.log"
+    }
+  ],
+  "constructed_trial_checks": "fanout, ratsnest, placement contract and flow PASS; hard_red=0; model non-search fallback events=0; not independent full qualification",
+  "thermal_coordinate_evidence": {
+    "log": "native/build/thermal-site-coordinates.log",
+    "U20002": "7/8 preferred sites both initially and at escape_copper. R6015.1 rejection disappears after breathe but capacity remains deficient; do not equate removal of a named blocker with recovery.",
+    "U22004": "6/8 preferred sites initially and at escape_copper; R21001.2 and RS21001.1 reject sites on the opposite side."
+  },
+  "next_action": "Evaluate targeted cross-face pad-aware thermal repair with per-subject capacity checks and all placement/ownership invariants; broad zone changes alone did not recover the smaller candidate.",
+  "limitations": "No new incumbent or board-size improvement. No full build launched for known failing screens. Timings are diagnostic, with N/W concurrently executed, not benchmark speed claims. Qualified 164x154 incumbent retained."
+}
