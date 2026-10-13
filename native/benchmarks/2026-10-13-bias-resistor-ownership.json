@@ -1,0 +1,27 @@
+{
+  "parent_commit": "b0fc1497",
+  "defect": "Power-stage construction assigned bias_r roles to successive buck stages by JSON object iteration order rather than electrical connectivity. Reordering semantically equivalent roles could change resistor ownership.",
+  "correction": "Resolve exactly one declared bias resistor connected to the authored regulator bias pin using invocation-owned pad nets. Missing/empty pin nets, zero or multiple resistor matches, and resistor reuse across buck stages throw PcbZoneInfeasible. No guessed fallback or new hardware limit.",
+  "tests": {
+    "native_pcb_stage_contracts": "PASS 1.21 seconds, both-board stage fixtures and existing mutation suite",
+    "new_coverage": "For power and power_som fixtures on both boards, reverse all role fields and require identical geometry, rotations, dimensions, scalar receipts and fallback events. Missing bias-pin nets and a distinct additional electrically connected bias resistor must fail closed. Single-buck ambiguity fixtures explicitly introduce another resistor."
+  },
+  "carrier_control": {
+    "status": "constructed_no_acceptance",
+    "dimensions_mm": [163,153],
+    "model_seconds": 11.772655166,
+    "pcb_text_seconds": 0.025989875,
+    "pcb_sha256": "d954ec91a789f69a1e94a26a9d3a91b279fbc208dff2503cbe8ee4c8eabc199f",
+    "log": "native/build/bias-owner-carrier-control.log"
+  },
+  "devkit_control": {
+    "status": "constructed_no_acceptance",
+    "dimensions_mm": [98,98],
+    "model_seconds": 0.184314708,
+    "pcb_text_seconds": 0.008045125,
+    "pcb_sha256": "1b12fecbcbbaa5e6084c2459da93cb144a660ff19805e6e4e3f75f9c22689fdb",
+    "log": "native/build/bias-owner-devkit-control.log"
+  },
+  "controls": "Both reference PCB hashes unchanged; fanout, ratsnest, placement contract and flow checks pass; hard_red=0 and no model/emission non-search fallback events.",
+  "limitations": "Corrects stage construction ownership only. Mixed-face contract closure still needs connectivity-informed expansion and repacking. No new smaller board, full qualification, renders or matched Python comparison. Diagnostic timings do not establish speedup."
+}
