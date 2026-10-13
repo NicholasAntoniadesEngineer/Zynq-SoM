@@ -502,8 +502,42 @@ std::vector<Shape> bottom_shapes(Context &ctx, const Geometry &g, const std::str
             p.h = placement_lift_extent_precision4dp(std::max(p.h, my + zone_pad), &ctx.quantization);
         }
         auto shape = mirror(p, "bottom");
-        if (mirror_holds(ctx, g, sheet, shape))
-            return {shape};
+        if (mirror_holds(ctx, g, sheet, shape)) {
+            std::vector<Shape> result{shape};
+            // Templated top offers already include all quarter turns. Give an
+            // eligible bottom template the same directional freedom, retaining
+            // its original offer first. Local contracts are checked here;
+            // external facing/flow remains a board-level acceptance condition.
+            if(ctx.in.floorplan.compact_search) {
+                auto next=shape;
+                for(const auto* suffix:{"/r90","/r180","/r270"}) {
+                    next=turned(next,&ctx.quantization);next.tag=shape.tag+suffix;
+                    auto enclosed=next;
+                    double left=0,top=0,right=next.w,bottom=next.h;
+                    for(const auto* offsets:{&next.top_off,&next.bot_off})for(const auto& [ref,xy]:*offsets) {
+                        const auto key=next.mirror.count(ref)?next.mirror.at(ref):g.resolvable.at(ref);
+                        const auto& mod=ctx.pool.at(key);
+                        if(!mod->bbox)throw PcbZoneInfeasible("bottom template has no courtyard: "+ref);
+                        const auto box=offset_turned_box(*mod->bbox,next.extra_rot.count(ref)?next.extra_rot.at(ref):0,xy.first,xy.second);
+                        left=std::min(left,box.x0);top=std::min(top,box.y0);
+                        right=std::max(right,box.x1);bottom=std::max(bottom,box.y1);
+                    }
+                    // Some stage envelopes omit protruding courtyard margins.
+                    // Rebase the entire rigid group and enclose actual geometry;
+                    // never hide that protrusion with a relaxed boundary check.
+                    const double dx=bottom_contact_shift(-left,&ctx.quantization),dy=bottom_contact_shift(-top,&ctx.quantization);
+                    for(auto* offsets:{&enclosed.top_off,&enclosed.bot_off})for(auto& [ref,xy]:*offsets) {
+                        (void)ref;xy.first=placement_bottom_pose_precision4dp(xy.first+dx,&ctx.quantization);
+                        xy.second=placement_bottom_pose_precision4dp(xy.second+dy,&ctx.quantization);
+                    }
+                    enclosed.w=bottom_contact_shift(right+dx,&ctx.quantization);
+                    enclosed.h=bottom_contact_shift(bottom+dy,&ctx.quantization);
+                    if(orientation_holds(ctx,g,sheet,enclosed)&&std::none_of(result.begin(),result.end(),
+                        [&](const auto& old){return same_zone_shape_geometry(old,enclosed);}))result.push_back(std::move(enclosed));
+                }
+            }
+            return result;
+        }
         events.push_back("bottom_variant_contract_reject");
         return {};
     }

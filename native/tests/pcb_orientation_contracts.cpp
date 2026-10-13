@@ -212,11 +212,12 @@ void live(const std::filesystem::path& root){
  for(const auto* project:{"carrier","devkit_mini"}){
   auto f=placement_fixture::load(root,project);
   auto observed_build=[&]{
-   dimensions=0;coordinates=0;observing=true;auto result=build_pcb_zone_geometry(f.input);observing=false;
+   dimensions=0;coordinates=0;bottom_coordinates=0;observing=true;auto result=build_pcb_zone_geometry(f.input);observing=false;
    const auto count=[&](const std::string& key){const auto p=result.quantization_engagements.find(key);
     return p==result.quantization_engagements.end()?0:p->second;};
    demand(count("placement_turn_dimension_precision4dp")==dimensions&&
           count("placement_turn_offset_precision4dp")==coordinates,"board trial entries missing from receipt");
+   demand(count("placement_bottom_pose_precision4dp")==bottom_coordinates,"bottom enclosure work missing from receipt");
    return result;
   };
   auto before=observed_build();
@@ -249,16 +250,49 @@ void live(const std::filesystem::path& root){
   if(std::string(project)=="carrier")demand(added>0,"compact mode added no real-board alternatives");
   for(const auto& [key,n]:before.quantization_engagements){
    const auto actual=after.quantization_engagements.at(key);
-   demand((key=="placement_turn_dimension_precision4dp"||key=="placement_turn_offset_precision4dp")?
+   demand((key=="placement_turn_dimension_precision4dp"||key=="placement_turn_offset_precision4dp"||key=="placement_bottom_pose_precision4dp")?
     actual>=n:actual==n,"unrelated counter changed");
   }
   for(const auto& [key,n]:after.quantization_engagements){(void)n;
    demand(before.quantization_engagements.count(key)||key=="placement_turn_dimension_precision4dp"||
-    key=="placement_turn_offset_precision4dp","unexpected new engagement");
+    key=="placement_turn_offset_precision4dp"||key=="placement_bottom_pose_precision4dp","unexpected new engagement");
   }
   demand(before.fallback_events==after.fallback_events,"orientation manufactured fallback");
   std::cout<<project<<" appended="<<added<<" incumbent/prefix/old receipts unchanged\n";
   if(std::string(project)=="carrier") {
+   auto power_input=f.input;
+   for(const auto* sheet:{"power","power_som"})power_input.floorplan.spec->interior.at(sheet).layer="either";
+   const auto power_zones=build_pcb_zone_geometry(power_input);
+   Context power_context(power_input);power_context.pool=power_zones.footprints;
+   for(const auto* sheet:{"power","power_som"}) {
+    const auto& offers=power_zones.geometry.shapes.at(sheet);
+    const auto base=std::find_if(offers.begin(),offers.end(),[](const auto& s){return s.tag=="bottom";});
+    demand(base!=offers.end(),"eligible power template has no bottom incumbent");
+    for(int turn=1;turn<=3;++turn) {
+     const auto tag="bottom/r"+std::to_string(turn*90);
+     const auto found=std::find_if(offers.begin(),offers.end(),[&](const auto& s){return s.tag==tag;});
+     demand(found!=offers.end(),"eligible bottom power template missing quarter turn "+tag);
+     const auto measured=model(*found,power_context,power_zones.geometry,sheet);
+     demand(check_pcb_placement_contract(measured,sheet,&power_input.contracts.at(sheet),
+             power_context.board_refs.at(sheet)).ok,"rotated bottom power template violated local contracts");
+     auto expected=*base;for(int t=0;t<turn;++t)expected=turned(expected);
+     const auto ref=expected.top_off.begin()->first;
+     const FloorplanPoint shift{found->top_off.at(ref).first-expected.top_off.at(ref).first,
+                               found->top_off.at(ref).second-expected.top_off.at(ref).second};
+     for(bool primary:{false,true}) {
+      const auto& old=primary?expected.top_off:expected.bot_off;
+      const auto& actual=primary?found->top_off:found->bot_off;
+      demand(old.size()==actual.size(),"power turn changed face assignment");
+      for(const auto& [r,xy]:old)demand(std::abs(actual.at(r).first-xy.first-shift.first)<1e-4&&
+          std::abs(actual.at(r).second-xy.second-shift.second)<1e-4,"power turn distorted rigid offsets");
+     }
+     demand(expected.extra_rot==found->extra_rot&&expected.mirror==found->mirror,"power turn changed mirror binding");
+     for(std::size_t i=0;i<measured.model().insts.size();++i) {
+      const auto b=measured.courtyard_at(i);
+      demand(b.x0>=0&&b.y0>=0&&b.x1<=found->w&&b.y1<=found->h,"power turn clipped actual courtyard");
+     }
+    }
+   }
    auto experiment=std::make_shared<FloorplanExperiment>();
    experiment->contract_group_face_sheets={"hdmi_rx_term"};f.input.floorplan.experiment=experiment;
    const auto near_shapes=build_pcb_zone_geometry(f.input);
