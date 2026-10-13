@@ -773,7 +773,14 @@ bool compose_with_bounded_retries(const FloorplanLegalizeInput& input,
     if(!input.joint_separation_states)return false;
     log.push_back("retry: bounded joint separation choices");
     if(input.joint_retry_started)input.joint_retry_started();
-    return Composer(input,movable,log,counts,false,false,candidate,false).run(movable,true);
+    if(Composer(input,movable,log,counts,false,false,candidate,false).run(movable,true))return true;
+    if(!facing)return false;
+    // Projection cuts are sufficient but not necessary. Combine them with
+    // joint separation only after the unrestricted strategy fails; never
+    // prune its successful incumbents or hide either strategy's work.
+    log.push_back("retry: joint separation with strict facing projection cuts");
+    if(input.joint_retry_started)input.joint_retry_started();
+    return Composer(input,movable,log,counts,false,false,candidate,true).run(movable,true);
 }
 }  // namespace
 

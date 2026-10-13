@@ -232,11 +232,14 @@ void compose_contracts(const std::filesystem::path& dir) {
     require(floorplan_evaluate_terms(base,{}).empty(),"empty term index evaluates without fabricated terms");
 }
 void facing_projection_contracts() {
+    std::size_t combined_runs=0;
+    for(bool joint:{false,true})
     for(const auto [dx,dy]:std::vector<FloorplanPoint>{{1,0},{-1,0},{0,1},{0,-1},{1,1},{-1,1},{1,-1},{-1,-1}})
         for(bool source_moves:{false,true})for(bool compact:{false,true})for(bool both_back:{false,true})for(int target_kind:{0,1,2}) {
             if(both_back&&(dx==0||dy==0))continue;
             if(target_kind&&!source_moves)continue;
             FloorplanLegalizeInput in;in.board_w=in.board_h=60;in.compact=compact;
+            if(joint)in.joint_separation_states=64;
             const FloorplanPoint s{30,30},t{30-10*dx,30+(dx!=0&&dy!=0&&!both_back?5:-10)*dy};
             const std::string target=target_kind==1?"@som":target_kind==2?"som_j1":"target";
             in.metrics["source"].offsets={{"out",1+dx,1+dy},{"in",1-dx,1-dy}};
@@ -250,8 +253,16 @@ void facing_projection_contracts() {
             term.enforced=true;term.require_positive_facing=true;term.out_refs={"out"};in.index.hard={term};
             std::vector<FloorplanLegalizeVar> vars{{moving,2,2,mp,mp.first,mp.second}};
             std::vector<std::string> log;int retries=0;in.facing_retry_started=[&]{++retries;};
+            int joint_starts=0,joint_ends=0;
+            in.joint_retry_started=[&]{++joint_starts;};
+            in.joint_retry_completed=[&](const JointSeparationWork& work,bool){
+                ++joint_ends;
+                require(work.generated<=64&&work.visited<=work.generated,"joint facing strategy exceeded its budget");
+            };
             QuantizationCounts counts;
             const bool accepted=floorplan_legalize_compact_accounted(in,vars,log,counts);
+            require(joint_starts==joint_ends&&joint_starts<=2,"joint facing work boundaries lost");
+            if(joint_starts==2)++combined_runs;
             require(counts.at("legalize_bound_precision4dp")>0&&counts.at("legalize_centroid_precision4dp")>0,
                 "facing retry lost executed projection or centroid work");
             if(!accepted) {
@@ -268,6 +279,7 @@ void facing_projection_contracts() {
             require(floorplan_legalize_compact(in,vars,log)&&retries==0,"valid facing incumbent must skip retry");
             require(vars[0].x==seed[0].x&&vars[0].y==seed[0].y,"valid facing incumbent moved");
         }
+    require(combined_runs>0,"facing fixtures did not execute combined joint strategy");
 }
 void primary_fanout_contracts() {
     // Two 20 mm groups cannot be separated as rectangles on this board, but
