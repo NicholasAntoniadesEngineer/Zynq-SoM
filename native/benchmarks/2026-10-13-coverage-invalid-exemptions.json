@@ -1,0 +1,21 @@
+{
+  "parent_commit": "18cd3079",
+  "defect": "Coverage lint counted free entries with missing reasons and returned PASS whenever ungated was zero, even when malformed, unknown, redundant or duplicate entries were reported",
+  "correction": "Require nonblank string reasons before counting exemptions; retain first duplicate rationale and report duplication; count invalid entries and require both zero ungated parts and zero invalid entries for PASS",
+  "test": {
+    "name": "native_board_pipeline_contracts",
+    "status": "PASS",
+    "seconds": 36.77,
+    "log": "native/build/coverage-invalid-tests.log",
+    "negative_cases": ["null reason", "numeric reason", "boolean reason", "array reason", "object reason", "blank reason", "unknown exempt part despite complete structural coverage", "redundant exempt part despite complete structural coverage", "malformed exemption despite complete structural coverage", "duplicate exemption"],
+    "build_log": "native/build/coverage-invalid-build.log",
+    "board_cli_relinked": true
+  },
+  "advisory_review": {
+    "source_output": "/private/tmp/carrier-163x153-fresh-cli.yycB67",
+    "return_path": "29 fixed SoM contacts exceed the v1 proximity criterion; return_stitch independently passes all 29 with emitted-file parity and worst contact-to-via distance 1.4819 mm. No pinout or gate changes made.",
+    "golden": "Image baseline drift includes schematics as well as board renders. No automatic blessing or waiver performed.",
+    "contract_coverage_lint": "275 structured and 286 ungated parts in the existing carrier report. The new strict exemption checks do not resolve these missing authored constraints."
+  },
+  "limits": "Reporting/acceptance tightening only; no placement algorithm or board geometry change. No new full-board qualification claimed. Advisory coverage work and overall optimisation remain unfinished."
+}

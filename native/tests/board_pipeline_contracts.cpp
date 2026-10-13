@@ -96,6 +96,23 @@ void coverage(){
     require(uncovered.report.find("C42")!=std::string::npos&&uncovered.report.find("redundant")!=std::string::npos,
             "coverage preserves board references and redundant-entry diagnostics");
     rejects([&]{check_board_contract_coverage({sheet,sheet},{},{});},"duplicate sheets cannot hide coverage");
+    for(const auto* why:{"null","42","true","[]","{}","\"   \""}) {
+        const auto invalid=parse_json_text(std::string(R"({"roles":{"U1":"owner","C1":"cap"},"free":[{"ref":"R1","why":)")+why+"}]}");
+        const auto checked=check_board_contract_coverage({sheet},{{sheet.name,invalid}},{});
+        require(!checked.ok()&&checked.free==0&&checked.ungated==1&&checked.invalid_entries==1,
+                "invalid exemption reason hid an uncovered part");
+    }
+    for(const auto* entries:{R"([{"ref":"missing","why":"not a real part"}])",
+                            R"([{"ref":"U1","why":"already structured"}])",R"([{}])"}) {
+        const auto invalid=parse_json_text(std::string(R"({"roles":{"U1":"owner","C1":"cap","R1":"resistor"},"free":)")+entries+"}");
+        const auto checked=check_board_contract_coverage({sheet},{{sheet.name,invalid}},{});
+        require(!checked.ok()&&checked.ungated==0&&checked.invalid_entries==1,
+                "complete structural coverage masked invalid exemption entries");
+    }
+    const auto duplicate=parse_json_text(R"({"roles":{"U1":"owner","C1":"cap"},"free":[{"ref":"R1","why":"one"},{"ref":"R1","why":"two"}]})");
+    const auto duplicate_result=check_board_contract_coverage({sheet},{{sheet.name,duplicate}},{});
+    require(!duplicate_result.ok()&&duplicate_result.free==1&&duplicate_result.invalid_entries==1,
+            "duplicate exemptions silently replaced their rationale");
 }
 struct Temp{fs::path path;Temp(){auto s=(fs::temp_directory_path()/"schgen_pipeline_contract_XXXXXX").string();if(!::mkdtemp(s.data()))throw std::runtime_error("temp");path=s;}~Temp(){std::error_code e;fs::remove_all(path,e);}};
 void golden(const fs::path& root){
