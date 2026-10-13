@@ -17,6 +17,15 @@ namespace schgen::floorplan_detail {
 
 // Scarcity is the number of permitted choices, not the registry size. A
 // selected shape does not retain flexibility from its disallowed alternatives.
+template<class Eligible>
+inline std::size_t permitted_shape_count(std::size_t registered,std::optional<int> selected,
+                                        Eligible eligible) {
+    if(selected)return *selected>=0&&static_cast<std::size_t>(*selected)<registered&&
+        eligible(static_cast<std::size_t>(*selected))?1:0;
+    std::size_t count=0;
+    for(std::size_t index=0;index<registered;++index)if(eligible(index))++count;
+    return count;
+}
 inline std::size_t permitted_shape_count(std::size_t registered,std::optional<int> selected) {
     if(!selected)return registered;
     return *selected>=0&&static_cast<std::size_t>(*selected)<registered?1:0;

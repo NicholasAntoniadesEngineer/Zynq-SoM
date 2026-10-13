@@ -291,8 +291,11 @@ bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure,
                 auto count=[&](const auto* block) {
                     const auto it=shapes.find(block->name);
                     const auto selected=owned_shape_choices.find(block->name);
+                    const bool bottom=in.experiment&&in.experiment->require_bottom_sheets.count(block->name);
+                    const auto choice=selected==owned_shape_choices.end()?std::nullopt:std::optional<int>{selected->second};
+                    if(!bottom)return permitted_shape_count(it==shapes.end()?std::size_t{1}:it->second.size(),choice);
                     return permitted_shape_count(it==shapes.end()?std::size_t{1}:it->second.size(),
-                        selected==owned_shape_choices.end()?std::nullopt:std::optional<int>{selected->second});
+                        choice,[&](std::size_t index){return it!=shapes.end()&&it->second[index].side=="bottom";});
                 };
                 if (count(a)!=count(b)) return count(a)<count(b);
             }

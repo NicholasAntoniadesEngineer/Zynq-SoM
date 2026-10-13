@@ -518,6 +518,17 @@ void victim_shape_portfolio_contract(){
     }
     require(permitted_shape_count(87,72)<permitted_shape_count(2,std::nullopt),
             "pinned large catalog should precede a two-choice group in scarcity order");
+    for(std::size_t n=0;n<=8;++n)for(unsigned mask=0;mask<(1U<<n);++mask) {
+        const auto allowed=[&](std::size_t i){return (mask&(1U<<i))!=0;};
+        std::size_t expected=0;
+        for(std::size_t i=0;i<n;++i)if(allowed(i))++expected;
+        require(permitted_shape_count(n,std::nullopt,allowed)==expected,
+                "face-ineligible shapes inflate scarcity");
+        for(int selected=-1;selected<=static_cast<int>(n);++selected)
+            require(permitted_shape_count(n,selected,allowed)==
+                    (selected>=0&&selected<static_cast<int>(n)&&allowed(selected)?1U:0U),
+                    "pinned choice must also satisfy face restriction");
+    }
     {
         const Case constrained{70,50,{{16,12,2,0},{16,12,4,0}}};
         auto in=input();Engine scarce(in),forced(in);
@@ -528,6 +539,19 @@ void victim_shape_portfolio_contract(){
                 "scarcity integration fixture must pack");
         require(equal(layout(scarce.plan),layout(forced.plan)),
                 "scarcity order did not prioritize the actually single-choice group");
+    }
+    {
+        const Case constrained{70,50,{{16,12,2,0},{16,12,4,0}}};
+        auto in=input();auto config=std::make_shared<FloorplanExperiment>();in.experiment=config;
+        Engine scarce(in),forced(in);setup(scarce,constrained);setup(forced,constrained);
+        config->require_bottom_sheets.insert("b1");
+        scarce.shape_sets[1]["b1"][3].side="top";
+        forced.shape_sets[1]["b1"][3].side="top";
+        scarce.compact_order=2;forced.compact_order=0;
+        require(scarce.attempt_pack_impl(false)&&forced.attempt_pack_impl(false,nullptr,"b1"),
+                "bottom-restricted scarcity integration fixture must pack");
+        require(equal(layout(scarce.plan),layout(forced.plan)),
+                "scarcity order ignored the single eligible bottom alternative");
     }
     std::size_t preserved=0,recovered=0,failed=0,queries=0,incoming_recovered=0,incoming_queries=0;
     std::size_t combination_only=0,paired_queries=0;
