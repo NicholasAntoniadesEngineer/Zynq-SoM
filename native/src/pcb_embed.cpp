@@ -293,6 +293,8 @@ std::vector<ThermalPadMove> thermal_pad_move_candidates(
             owners[part.ref+"."+std::get<0>(pad)].insert(part.ref);
     std::set<std::tuple<std::string,double,double>> seen;
     std::vector<ThermalPadMove> result;
+    std::vector<ThermalPadMove> subject_moves;
+    std::set<std::tuple<std::string,double,double>> subject_seen;
     for (const auto& field : fields) {
         if (field.sites.chosen.size()>=field.requested) continue;
         for (const auto& rejected : field.sites.rejected) {
@@ -307,6 +309,11 @@ std::vector<ThermalPadMove> thermal_pad_move_candidates(
                         rejected.candidate.first,rejected.candidate.second,rule,obstacle)) {
                     const double dx=x-obstacle.cx, dy=y-obstacle.cy;
                     if (seen.emplace(ref,dx,dy).second) result.push_back({ref,dx,dy});
+                    // Equivalent relative displacement with the obstacle held
+                    // still. The caller must move the subject's complete group
+                    // when required and recheck all fields and hardware gates.
+                    if (subject_seen.emplace(field.ref,-dx,-dy).second)
+                        subject_moves.push_back({field.ref,-dx,-dy});
                 }
             }
         }
@@ -314,6 +321,11 @@ std::vector<ThermalPadMove> thermal_pad_move_candidates(
     std::stable_sort(result.begin(),result.end(),[](const auto& a,const auto& b) {
         return std::hypot(a.dx,a.dy)<std::hypot(b.dx,b.dy);
     });
+    std::stable_sort(subject_moves.begin(),subject_moves.end(),[](const auto& a,const auto& b) {
+        return std::hypot(a.dx,a.dy)<std::hypot(b.dx,b.dy);
+    });
+    for(const auto& move:subject_moves)
+        if(seen.emplace(move.ref,move.dx,move.dy).second)result.push_back(move);
     return result;
 }
 bool preserves_preferred_thermal_vias(const std::vector<PreferredThermalField>& before,

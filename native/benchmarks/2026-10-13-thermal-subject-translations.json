@@ -1,0 +1,28 @@
+{
+  "parent_commit": "a1a5d509",
+  "change": "Append inverse thermal-subject translations after existing blocker-axis moves. Derive displacement from the same actual pad/contact geometry, preserve the original proposal prefix, deduplicate without suppressing blocker offers, and retain caller group, rounded geometry, fanout, contract/flow and thermal checks.",
+  "tests": {
+    "owned_eviction": "PASS 8.32s; fixed blocker/partner cannot move, eligible thermal subject moves and recovers all three preferred sites. Original blocker-only scenarios explicitly fix the subject to preserve their intended scope. Independent receipt checks retained.",
+    "pcb_emission": "PASS 0.85s"
+  },
+  "carrier_candidate": {
+    "status": "constructed_no_acceptance",
+    "pcb_sha256": "1940cbfa9c932fa56686741b354ebfab067b8bcd19d7cb6eb97eff09df2a6b4d",
+    "unchanged_from_parent": true,
+    "remaining_emission_lattice_events": 1,
+    "model_seconds": 15.856275959,
+    "pcb_text_seconds": 0.028471958,
+    "thermal_trials": 506,
+    "thermal_rejections": 502,
+    "accepted_repairs": 4,
+    "log": "native/build/thermal-subject-carrier.log",
+    "observation": "Subject-group trials are now evaluated but do not recover the carrier's final event. Rejections include internal C20006/C20026 clearance and external C20003/SW9001 clearance. Investigate the internal pair's rounded before/after separation before deciding whether it is physical or numerical."
+  },
+  "controls": {
+    "carrier_sha256": "d954ec91a789f69a1e94a26a9d3a91b279fbc208dff2503cbe8ee4c8eabc199f",
+    "devkit_sha256": "1b12fecbcbbaa5e6084c2459da93cb144a660ff19805e6e4e3f75f9c22689fdb",
+    "result": "Both default reference outputs unchanged",
+    "logs": ["native/build/thermal-subject-reference.log", "native/build/thermal-subject-devkit.log"]
+  },
+  "limits": "Adds a tested recovery capability, not a demonstrated carrier improvement. Additional failed work is recorded. No new full qualification, smaller outline or historical Python comparison. No clearance gate changed."
+}

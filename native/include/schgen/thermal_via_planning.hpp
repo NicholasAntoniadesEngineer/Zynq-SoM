@@ -15,6 +15,8 @@ struct ThermalPadMove {
 };
 // Proposals only, from rejected preferred sites of deficient subjects. Exact
 // pad identity lookup avoids treating dots in references as separators.
+// Blocker translations precede inverse subject translations; the caller owns
+// rigidity, eligibility and full post-move hardware validation for either.
 std::vector<ThermalPadMove> thermal_pad_move_candidates(
     const PcbCheckModel&, const PcbEmitPolicy&,
     const std::vector<PreferredThermalField>&, QuantizationCounts* = nullptr);

@@ -407,12 +407,13 @@ void tests(const PcbPlacementInput& source,const std::filesystem::path& root) {
         std::vector<std::string> outcomes;
         auto observer=std::make_shared<PcbPlacementExperiment>();
         observer->thermal_trial=[&](const auto& ref,double x,double y,const auto& outcome) {
-            require(ref=="R_BLOCKER" && std::isfinite(x) && std::isfinite(y),
+            require((ref=="R_BLOCKER"||ref=="U_THERMAL") && std::isfinite(x) && std::isfinite(y),
                     "thermal diagnostic carries actual mover and finite trial pose");
             outcomes.push_back(outcome);
         };
         f.in.experiment=observer;
         f.part("U_THERMAL",50,50,"top");
+        f.p->fixed.insert("U_THERMAL"); // blocker-only repair scenarios below
         f.p->ctx.by_ref.at("U_THERMAL").value="TLV75725";
         f.part("R_BLOCKER",60,50,"bottom");
         f.p->ctx.pool["R_BLOCKER"]=pcb_check_footprint("wide-blocker",
@@ -515,6 +516,16 @@ void tests(const PcbPlacementInput& source,const std::filesystem::path& root) {
                 "validated unconstrained singleton may move without dragging unrelated contract parts");
         require(plan_preferred_thermal_vias(refit_fanout_geometry(*f.p,nullptr).model(),policy)
                     .front().sites.chosen.size()==3,"v2 singleton recovers thermal capacity");
+        f.p->pos=singleton_entry;
+        f.p->fixed.insert("R_BLOCKER");
+        f.p->fixed.insert("R_PARTNER");
+        f.p->fixed.erase("U_THERMAL");
+        compact_recover_thermal(*f.p);
+        require(f.p->pos.at("R_BLOCKER")==singleton_entry.at("R_BLOCKER")&&
+                f.p->pos.at("U_THERMAL")!=singleton_entry.at("U_THERMAL"),
+                "thermal subject can move when blocker is fixed");
+        require(plan_preferred_thermal_vias(refit_fanout_geometry(*f.p,nullptr).model(),policy)
+                    .front().sites.chosen.size()==3,"subject translation restores its preferred field");
         import_actual(f);
     }
     {
