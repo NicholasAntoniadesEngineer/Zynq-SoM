@@ -1,0 +1,16 @@
+{
+  "parent_commit": "16c883d9",
+  "defect": "Common-direction projection of a legal exterior seed discarded child-pocket alternatives in joint search. A block could not enter a legal pocket to satisfy a hard proximity term.",
+  "fix": "Only legacy single-direction attempts replace child domains with common-direction group projection. Joint attempts retain exact-offset child domains even for initially separated envelopes.",
+  "regression": {"before":"FAIL: joint solver froze the original child pocket","after":"PASS: 48 combinations of valid-pocket/overlapping/exterior seeds, both faces, axes and directions, compact/noncompact; independent occupancy and hard-term checks. Every case also rejects a solid replacement obstacle without leaking coordinates."},
+  "tests": {"native_compact_retry_contracts":"PASS 5.48s","native_floorplan_contracts":"PASS 13.58s","native_floorplan_geometry_contracts":"PASS 0.64s after expanded solid controls"},
+  "carrier": {
+    "log":"native/build/exterior-pocket-reference.log",
+    "dimensions_mm":[163,153],"top":394,"bottom":172,
+    "pcb_sha256":"25bb15ac93e9aea43c83c87cd845656539ce145eb129a9d9bcd1e230b0b91cc8",
+    "status":"CHANGED from qualified reference; cheap fanout/ratsnest/placement/flow PASS, hard_red=0, zero nonsearch fallback events. Full qualification required before accepting new artifact."
+  },
+  "devkit": {"log":"native/build/exterior-pocket-devkit.log","pcb_sha256":"1b12fecbcbbaa5e6084c2459da93cb144a660ff19805e6e4e3f75f9c22689fdb","status":"Unchanged qualified reference hash; cheap checks pass"},
+  "smaller_screen": {"log":"native/build/exterior-pocket-162x153.log","status":"FAIL: four outer attempts, failure receipt captured","construction_seconds":5.724267},
+  "limitations":"No smaller layout or speedup claimed. Preserve prior qualified carrier artifact; new artifact not yet fully qualified."
+}

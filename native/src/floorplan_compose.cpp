@@ -594,8 +594,11 @@ private:
             return name.front()=='#'?frect.at(key(name)):seed_rect.at(name);
         };
         const auto& a=local_reservations.at(key(low));const auto& b=local_reservations.at(key(high));
-        // Ordinary common-direction projection already represents these seeds.
-        for(bool reverse:{false,true})for(bool x:{true,false}) {
+        // A common direction represents this seed, not every legal placement.
+        // Joint search must also be able to enter a child pocket from outside
+        // the other group's envelope. Only the legacy strategy uses the
+        // cheaper common-direction projection as a replacement domain.
+        if(!joint)for(bool reverse:{false,true})for(bool x:{true,false}) {
             const auto& lo=reverse?high:low;const auto& hi=reverse?low:high;
             const auto& lb=box(lo);const auto& hb=box(hi);
             const double size=x?lb.x1-lb.x0:lb.y1-lb.y0;
