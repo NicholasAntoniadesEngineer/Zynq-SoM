@@ -9,6 +9,7 @@
 #include "schgen/legalize.hpp"
 #include "schgen/validation.hpp"
 #include "schgen/pcb_placement_gates.hpp"
+#include "schgen/ratsnest_gate.hpp"
 #include <charconv>
 #include <cmath>
 #include <chrono>
@@ -510,11 +511,19 @@ std::string trial(const PcbPlacementInput& source, bool compact, int run, int ge
     for (const auto& name : accounting.fallback_events) ++fallback_counts[name];
     for (const auto& [name, count] : fallback_counts)
         std::cout << "fallback_count name=" << name << " count=" << count << '\n';
+    std::map<std::string, std::size_t> emission_fallback_counts;
+    for (const auto& name : emission.fallback_events) ++emission_fallback_counts[name];
+    for (const auto& [name, count] : emission_fallback_counts)
+        std::cout << "emission_fallback_count name=" << name << " count=" << count << '\n';
     const auto diagnostic_start = Clock::now();
     const auto gates = check_pcb_placement_gates(input, result.model);
-    const auto fanout = check_fanout(PcbCheckInput(result.model),0);
+    const PcbCheckInput prepared(result.model);
+    const auto fanout = check_fanout(prepared,0);
+    const auto ratsnest = check_ratsnest(prepared);
     std::cout<<fanout.summary()<<'\n';
+    std::cout<<ratsnest.summary()<<'\n';
     std::cout << "postconstruction_diagnostic seconds=" << seconds(diagnostic_start)
+        << " fanout_ok=" << fanout.ok << " ratsnest_ok=" << ratsnest.ok
         << " placement_contract_ok=" << gates.placement_contract.ok
         << " placement_flow_ok=" << gates.placement_flow.ok
         << " hard_red=" << gates.composition.hard_red << '\n';
