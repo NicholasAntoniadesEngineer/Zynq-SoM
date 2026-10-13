@@ -1,0 +1,34 @@
+{
+  "source_commit": "68510e72",
+  "scope": "Construction-only diagnostic, not full qualification or historical timing comparison",
+  "profiler_sha256": "e0c0bcad8662240d41e92f14574d8edea55f5e6aa984e36000f209cafaa66f5f",
+  "outline_spec_sha256": "7015e3296ac3afa83f417a441953f7dd986a1bd1f1866a9f81674889666838aa",
+  "dimensions_mm": [162, 153],
+  "configuration": "Mixed-face power and USB-JTAG, required bottom power_mon/bringup_modules/bringup_en_modules, board_aux owned-face-a1.000000, bringup_rails bottom-a2.2/r270/owned-pins-forward, interior order 3, area/owned quality/face cohesion/edge feasibility/failed-first enabled, reseat poses 8/frontier 4096/continuations 3/victim shapes on, no shape-choice replays",
+  "runs": [
+    {
+      "joint_states_per_invocation": 1024,
+      "log": "native/build/power-flex-joint1024-162x153.log",
+      "construction_seconds": 5.486698208,
+      "completed_outer_attempts": 4,
+      "result": "FAIL: bounded search found no valid layout",
+      "failure_receipt_captured": true
+    },
+    {
+      "joint_states_per_invocation": 8192,
+      "log": "native/build/power-flex-joint8192-162x153.log",
+      "construction_seconds": 7.600917875,
+      "completed_outer_attempts": 4,
+      "result": "FAIL: bounded search found no valid layout",
+      "failure_receipt_captured": true
+    }
+  ],
+  "findings": [
+    "Interior-neighbour release is already implemented and executed; adding a duplicate release strategy is not justified.",
+    "Restricted-moving-set joint searches finish after 47 states; expanded-neighbour searches still hit the larger cap. Neither budget produces a joint proposal.",
+    "No geometric infeasibility claim follows from these bounded failures.",
+    "Do not increase the production budget based on this experiment. Investigate separation candidate ordering/propagation and edge-placement alternatives instead.",
+    "Preserve the fully qualified 163x153 mixed-face power incumbent. No hardware gate or geometry was changed."
+  ],
+  "limitations": "One diagnostic sample per budget, observers on, OS cache uncontrolled, 8192 executed first. These are construction intervals, not compile/full-build/render/audit timings. No improvement or statistically reliable slowdown is claimed."
+}
