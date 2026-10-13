@@ -64,6 +64,23 @@ void rigid(const Shape& seed,const Shape& result,int turns,const Context& ctx,co
  }
 }
 void unit(){
+ for(double value:{0.,1e-12,.000049,.000051,.1234,.12341,1.23456,999.999999}) {
+  const auto positive=bottom_contact_shift(value),negative=bottom_contact_shift(-value);
+  demand(positive>=value&&negative<=-value&&positive==-negative,
+         "contact quantization moved toward the obstacle or broke reflection symmetry");
+  demand(positive-value<=.000100001,"contact quantization added more than one output step");
+  demand(bottom_contact_shift(positive)==positive,"contact quantization is not idempotent");
+ }
+ QuantizationCounts contact_counts;
+ demand(bottom_contact_shift(.12341,&contact_counts)==.1235&&
+        contact_counts.at("placement_bottom_pose_precision4dp")==2,
+        "outward contact correction lost executed quantization work");
+ for(double bad:{std::numeric_limits<double>::infinity(),-std::numeric_limits<double>::infinity(),
+                 std::numeric_limits<double>::quiet_NaN()}) {
+  bool rejected=false;
+  try{(void)bottom_contact_shift(bad);}catch(const std::invalid_argument&){rejected=true;}
+  demand(rejected,"nonfinite contact translation accepted");
+ }
  PcbPlacementInput input;input.floorplan.compact_search=true;Context ctx(input);Geometry g;
  const std::string bytes="(footprint asymmetric (layer F.Cu) (fp_rect (start -2 -1) (end 3 2) (stroke (width 0.05) (type default)) (layer F.CrtYd)) (pad 1 smd rect (at -1 -.5) (size .4 .6) (layers F.Cu)) (pad 2 smd rect (at 2 .25) (size .8 .4) (layers F.Cu)) (pad 3 smd rect (at .25 1.5) (size .3 .5) (layers F.Cu)))";
  auto fp=pcb_check_footprint("asymmetric.kicad_mod",bytes);

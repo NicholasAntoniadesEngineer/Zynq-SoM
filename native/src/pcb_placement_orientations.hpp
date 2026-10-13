@@ -2,6 +2,9 @@
 #include "pcb_placement_internal.hpp"
 
 namespace schgen::pcb_placement {
+// Round a contact translation outward on the emitted 4dp lattice. Final
+// physical checks still operate on the translated, rounded component geometry.
+double bottom_contact_shift(double, QuantizationCounts* = nullptr);
 // Geometric identity ignores tags and treats absent per-part rotations as zero.
 bool same_zone_shape_geometry(const Shape&, const Shape&);
 void append_distinct_zone_shapes(Shape incumbent, std::vector<Shape>& existing,

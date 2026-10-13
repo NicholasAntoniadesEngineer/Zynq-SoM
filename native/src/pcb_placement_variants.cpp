@@ -4,6 +4,14 @@
 #include "contract_rigid_groups_internal.hpp"
 
 namespace schgen::pcb_placement {
+double bottom_contact_shift(double value,QuantizationCounts* counts) {
+    if(!std::isfinite(value))throw std::invalid_argument("nonfinite bottom contact shift");
+    auto rounded=placement_bottom_pose_precision4dp(value,counts);
+    const auto inward=[&]{return value>0?rounded<value:rounded>value;};
+    if(inward())rounded=placement_bottom_pose_precision4dp(rounded+std::copysign(.0001,value),counts);
+    if(!std::isfinite(rounded)||inward())throw std::overflow_error("bottom contact shift exceeds output precision");
+    return rounded;
+}
 bool same_zone_shape_geometry(const Shape& a, const Shape& b) {
     if (a.w != b.w || a.h != b.h || a.top_off != b.top_off ||
         a.bot_off != b.bot_off || a.side != b.side || a.mirror != b.mirror) return false;
@@ -280,7 +288,9 @@ void append_contract_group_faces(Context& ctx,Geometry& g,const std::string& she
                 shifts.emplace(0,other.y0-ctx.clearance-box.y1);
             }
         }
-        for(const auto& shift:shifts) {
+        for(const auto& raw:shifts) {
+            const FloorplanPoint shift{bottom_contact_shift(raw.first,&ctx.quantization),
+                                      bottom_contact_shift(raw.second,&ctx.quantization)};
             Shape translated=candidate;
             translated.tag+="/contact/"+std::to_string(shift.first)+"/"+std::to_string(shift.second);
             for(auto& [ref,xy]:translated.bot_off)if(moved(ref)) {
