@@ -1,0 +1,54 @@
+{
+  "implementation_commit": "c536eb01",
+  "status": "BOARD PASS, 37 sheets, all mandatory gates PASS",
+  "output": "/private/tmp/carrier-power-flex-qual.bDqp8M",
+  "log": "native/build/power-flex-full-qualification.log",
+  "spec": "native/benchmarks/carrier-163x153-combined-bottom.floorplan.json",
+  "recipe": "Qualified 163x153 carrier recipe from 2026-10-13-carrier-163x153-qualified.json plus --contract-group-face-sheet power. Current schgen relinked before run. Run outside sandbox because KiCad DRC reproducibly crashed inside it. Fresh output directory, --audit-projections 2 --timing.",
+  "dimensions_mm": [163,153],
+  "area_mm2": 24939,
+  "area_reduction_from_168x163_percent": 8.928571428571429,
+  "area_change_from_previous_qualified_carrier_percent": 0,
+  "top_components": 394,
+  "bottom_components": 172,
+  "previous_bottom_components": 155,
+  "pcb_sha256": "a43ec57495e5be75d620686cdc411d5f4835804bec83c928a1e82f19b090a231",
+  "profiler_and_full_board_hash_match": true,
+  "binary_sha256": {
+    "schgen": "00f9b5ed7eeb108e404e71180c16d92cc3c9f5a8a0d1b1b89e9f909f122f23e6",
+    "profiler": "e0c0bcad8662240d41e92f14574d8edea55f5e6aa984e36000f209cafaa66f5f"
+  },
+  "nonrouting_drc_errors": 0,
+  "unrouted": 499,
+  "nonsearch_fallback_events": 0,
+  "thermal": "PASS: 20 devices, zero over-limit, zero unspeced, zero waived; hottest power:U1 Tj 134.8C against reported 140C limit",
+  "advisory_failures": ["return_path", "golden", "contract_coverage_lint"],
+  "profile_hard_margins": {"mm_count":16,"mm_unresolved":0,"mm_min":1.5,"degree_count":2,"degree_unresolved":0,"degree_min":65.8},
+  "timing_seconds": {
+    "pcb_input_loading_and_netlist_validation": 1.481105,
+    "pcb_model": 15.981919,
+    "pcb_text": 0.027938,
+    "render3d": 27.815231,
+    "source_audit": 109.811274,
+    "measured_scope_total_not_process_wall": 212.912096,
+    "caveat": "Control and bounded smaller-board profiling overlapped part of qualification. Diagnostic scope times only; not a controlled speed comparison."
+  },
+  "visual_review": "Eight 3D views generated; front and bottom inspected. Bottom buck group visible; service labels retained; substantial unused underside area remains. No schematic topology changes in this batch.",
+  "implementation": "After validated rigid thermal repair options, try an individual non-owned contract member through the same complete local/board contract, geometry, fanout and thermal checks. Proximity bounds are not rigid equalities. An accepted L20001 move resolves the last preferred-via conflict without changing any limit.",
+  "tests": "Owned-eviction suite PASS 8.36s. New fixture allows a legal individual member move while its partner is immovable and independently checks its contract; a deliberately impossible proximity requirement still prevents movement. Existing rigid, fixed, owned, rounding, THT and receipt tests retained.",
+  "controls": {
+    "devkit": "Unchanged reference PCB 1b12fecbcbbaa5e6084c2459da93cb144a660ff19805e6e4e3f75f9c22689fdb; cheap gates pass; no new full devkit qualification in this batch",
+    "carrier_without_power_face_option": "Changed PCB 2a9f76f3fb22a15fb75ea840b3f5a5e3e679496bcf535f415f04ba07638be2b0 due to one newly permitted repair; cheap gates pass and non-search fallback counts zero. This separate variant was not fully qualified.",
+    "logs": ["native/build/thermal-contract-flex-reference.log", "native/build/thermal-contract-flex-devkit.log"]
+  },
+  "smaller_screen": {
+    "dimensions_mm": [162,153],
+    "shape_choice_replays_per_call": 2,
+    "status": "construction_failed",
+    "elapsed_seconds": 19.5925505,
+    "outer_attempts": 12,
+    "receipt_captured": true,
+    "log": "native/build/power-flex-replay2-162x153.log"
+  },
+  "limitations": "Qualified placement milestone, not completion of the system goal. No new outline reduction, fabrication readiness or matched historical Python speedup claim. Routing excluded; three advisory failures and documented unknown requirements remain. Original qualified reference artifacts are preserved."
+}
