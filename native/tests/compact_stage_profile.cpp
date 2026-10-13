@@ -10,6 +10,7 @@
 #include "schgen/validation.hpp"
 #include "schgen/pcb_placement_gates.hpp"
 #include "schgen/ratsnest_gate.hpp"
+#include "schgen/thermal_via_planning.hpp"
 #include <charconv>
 #include <cmath>
 #include <chrono>
@@ -32,6 +33,7 @@ struct Options {
     std::string project = "carrier", kicad = "kicad-cli", compact, inputs = "prepared";
     int runs = 1;
     bool observers = true;
+    bool thermal_trace = false;
     bool constraint_first = false;
     bool edge_translation = false;
     bool edge_feasibility = false;
@@ -70,6 +72,7 @@ void help() {
         "  [--edge-translation off|on] (opt-in bounded edge repair, requires --compact-search on)\n"
         "  [--edge-feasibility off|on] (constraint-aware initial runs, requires --compact-search on)\n"
         "  [--owned-selection-trace off|on] (read-only multi-alternative selection trace)\n"
+        "  [--thermal-trace off|on] (postconstruction pad-only stage capacity; requires observers)\n"
         "  [--owned-quality-first off|on] (same-pose same-face quality-first experiment)\n"
         "  [--owned-extent-alternatives off|on] (append bounded extent-first local candidates)\n"
         "  [--owned-face-cohesion off|on] (append initial owner/cap same-face packs)\n"
@@ -194,6 +197,10 @@ Options parse(int argc, char** argv) {
             if(value!="on"&&value!="off")throw std::invalid_argument("owned-extent-alternatives must be off|on");
             out.owned_extent_alternatives=value=="on";
         }
+        else if (arg == "--thermal-trace") {
+            if(value!="on"&&value!="off")throw std::invalid_argument("thermal-trace must be off|on");
+            out.thermal_trace=value=="on";
+        }
         else if (arg == "--owned-selection-trace") {
             if(value!="on"&&value!="off")throw std::invalid_argument("owned-selection-trace must be off|on");
             out.owned_selection_trace=value=="on";
@@ -216,6 +223,7 @@ Options parse(int argc, char** argv) {
         throw std::invalid_argument("--repo and explicit --compact-search off|on|both required");
     if (out.inputs != "cold" && out.inputs != "prepared") throw std::invalid_argument("input-mode must be cold|prepared");
     if(!out.observers&&out.owned_selection_trace)throw std::invalid_argument("owned-selection-trace requires observers on");
+    if(!out.observers&&out.thermal_trace)throw std::invalid_argument("thermal-trace requires observers on");
     if (out.constraint_first && out.compact != "on")
         throw std::invalid_argument("constraint-first requires --compact-search on");
     if(out.edge_translation&&out.compact!="on")throw std::invalid_argument("edge-translation requires --compact-search on");
@@ -337,7 +345,7 @@ PcbPlacementInput trial_input(const PcbPlacementInput& source,bool compact,
     return input;
 }
 std::string trial(const PcbPlacementInput& source, bool compact, int run, int generation,
-                  bool observers = true,
+                  bool observers = true, bool thermal_trace = false,
                   bool constraint_first = false,const std::optional<FloorplanPoint>& outline=std::nullopt,bool edge_translation=false,
                   const std::optional<FloorplanPoint>& initial_outline=std::nullopt,
                   const std::optional<int>& interior_order=std::nullopt,bool multiscale_outline=false,bool edge_feasibility=false,bool owned_selection_trace=false,bool owned_quality_first=false,bool owned_face_cohesion=false,const std::map<std::string,std::string>& owned_shapes={},const std::set<std::string>& contract_group_face_sheets={},bool failed_first_retry=false,bool owned_extent_alternatives=false,bool contract_group_rotations=false,const std::optional<FloorplanPoseRetryLimits>& reseat_pose_limits=std::nullopt,const std::optional<std::size_t>& joint_states=std::nullopt,const std::set<std::string>& require_bottom_sheets={}) {
@@ -433,7 +441,11 @@ std::string trial(const PcbPlacementInput& source, bool compact, int run, int ge
     };
     if(observers)floor->unscoped_estimate = [&](double) { ++profile.attempts.unscoped_estimates; };
     auto pcb = std::make_shared<PcbPlacementExperiment>();
-    pcb->checkpoint = [&](const auto& row) { profile.checkpoint(row); };
+    std::vector<PcbPlacementObservation> thermal_snapshots;
+    pcb->checkpoint = [&](const auto& row) {
+        profile.checkpoint(row);
+        if(thermal_trace && row.has_positions) thermal_snapshots.push_back(row);
+    };
     input.floorplan.experiment = floor;
     if(observers)input.experiment = pcb;
     std::cout << "trial run=" << run << " generation=" << generation << " compact_search=" << compact
@@ -477,6 +489,36 @@ std::string trial(const PcbPlacementInput& source, bool compact, int run, int ge
     const auto emit_start = Clock::now();
     const auto emission = render_pcb(result.model, pcb_emit_policy(input.floorplan.project));
     const auto emit_seconds = seconds(emit_start);
+    if(thermal_trace) {
+        const auto trace_start=Clock::now();
+        QuantizationCounts trace_counts;
+        for(const auto& snapshot:thermal_snapshots) {
+            PcbCheckModel model;
+            model.origin_x=result.model.origin_x;
+            model.origin_y=result.model.origin_y;
+            model.board_w=result.model.board_w;
+            model.board_h=result.model.board_h;
+            model.net_numbers=result.model.net_numbers;
+            model.insts=snapshot.instances;
+            // Checkpoints expose actual poses, not historical escape copper.
+            // Keep these explicitly pad-only rather than injecting final vias.
+            for(const auto& field:plan_preferred_thermal_vias(model,pcb_emit_policy(input.floorplan.project),&trace_counts)) {
+                std::cout<<"thermal_stage stage="<<snapshot.stage<<" ref="<<field.ref
+                         <<" preferred="<<field.sites.chosen.size()<<" requested="<<field.requested
+                         <<" copper=not_in_snapshot\n";
+                if(field.sites.chosen.size()<field.requested) {
+                    std::map<std::string,std::size_t> blockers;
+                    for(const auto& rejected:field.sites.rejected)
+                        ++blockers[rejected.blocker.kind+":"+rejected.blocker.label];
+                    for(const auto& [label,count]:blockers)
+                        std::cout<<"thermal_stage_blocker stage="<<snapshot.stage<<" ref="<<field.ref
+                                 <<" label="<<std::quoted(label)<<" count="<<count<<'\n';
+                }
+            }
+        }
+        std::cout<<"thermal_trace seconds="<<seconds(trace_start)<<" scope=postconstruction_no_acceptance\n";
+        receipt("thermal_trace_only",trace_counts);
+    }
     for (const auto& diagnostic : emission.diagnostics)
         std::cout << "pcb_emission_diagnostic " << std::quoted(diagnostic) << '\n';
     const auto hash = pcb_sha256(emission.pcb);
@@ -600,7 +642,7 @@ int main(int argc, char** argv) {
             const int generation = options.inputs == "prepared" ? 1 : run;
             for (const bool compact : {false, true}) {
                 if ((compact && options.compact == "off") || (!compact && options.compact == "on")) continue;
-                const auto hash = trial(prepared->input, compact, run, generation, options.observers,options.constraint_first,options.outline,options.edge_translation,options.initial_outline,options.interior_order,options.multiscale_outline,options.edge_feasibility,options.owned_selection_trace,options.owned_quality_first,options.owned_face_cohesion,options.owned_shapes,options.contract_group_face_sheets,options.failed_first_retry,options.owned_extent_alternatives,options.contract_group_rotations,options.reseat_pose_limits,options.joint_states,options.require_bottom_sheets);
+                const auto hash = trial(prepared->input, compact, run, generation, options.observers,options.thermal_trace,options.constraint_first,options.outline,options.edge_translation,options.initial_outline,options.interior_order,options.multiscale_outline,options.edge_feasibility,options.owned_selection_trace,options.owned_quality_first,options.owned_face_cohesion,options.owned_shapes,options.contract_group_face_sheets,options.failed_first_retry,options.owned_extent_alternatives,options.contract_group_rotations,options.reseat_pose_limits,options.joint_states,options.require_bottom_sheets);
                 auto [it, inserted] = first_hash.emplace(compact, hash);
                 if (!inserted && it->second != hash) throw std::runtime_error("repeat PCB bytes changed; investigate input drift/nondeterminism");
                 std::cout << "repeat compact_search=" << compact << " same_as_first=" << (!inserted ? "true" : "first") << '\n';

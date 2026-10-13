@@ -97,6 +97,19 @@ void unsafe_noncompact_refit(const std::filesystem::path& root) {
     require(before.at("D20001")==after.at("D20001"),
             "unsafe power refit must preserve the incumbent diode pose");
 }
+void thermal_pull(const std::filesystem::path& root) {
+    auto f=placement_fixture::load(root,"carrier");
+    const auto zones=build_pcb_zone_geometry(f.input);
+    Placer p(f.input,zones,f.stage);
+    p.seed();
+    const auto policy=pcb_emit_policy(f.input.floorplan.project);
+    const auto before=plan_preferred_thermal_vias(refit_fanout_geometry(p,nullptr).model(),policy);
+    require(!before.empty(),"carrier pull test must exercise actual thermal subjects");
+    p.l4_pull();
+    const auto after=plan_preferred_thermal_vias(refit_fanout_geometry(p,nullptr).model(),policy);
+    require(preserves_preferred_thermal_vias(before,after),
+            "passive pull cannot consume another subject's preferred through-via capacity");
+}
 }
 int main(int argc, char** argv) {
     try {
@@ -114,6 +127,7 @@ int main(int argc, char** argv) {
         require(refit_preserves_fanout(model(3,3,false,false,false,14), model(2,3,false,false,false,14)), "14-pin exact floor accepted");
         projection(argv[1]);
         unsafe_noncompact_refit(argv[1]);
+        thermal_pull(argv[1]);
         std::cout << "11 refit fanout policies and accounted emission projection PASS\n";
         return 0;
     } catch (const std::exception &e) { std::cerr << e.what() << '\n'; return 1; }

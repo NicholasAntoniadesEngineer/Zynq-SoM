@@ -371,6 +371,9 @@ void Placer::l4_pull() {
             }
         if (!area)
             area = 1;
+        const auto thermal_policy = pcb_emit_policy(ctx.in.floorplan.project);
+        const auto thermal_before = plan_preferred_thermal_vias(
+            refit_fanout_geometry(*this,nullptr).model(),thermal_policy,&ctx.quantization);
         double chosen = 0;
         for (int k = placement_l4_distance_trunc(std::min(dist, 40.), &ctx.quantization); k > 0; --k) {
             double shift = k;
@@ -397,6 +400,16 @@ void Placer::l4_pull() {
                 continue;
             if ((b->x1 - b->x0) * (b->y1 - b->y0) / area > 5)
                 continue;
+            if (!thermal_before.empty()) {
+                PcbStageRefitPoses trial;
+                for (const auto& [ref,xy] : shifted)
+                    trial[ref] = {placement_l4_pose_precision4dp(xy.first,&ctx.quantization),
+                                  placement_l4_pose_precision4dp(xy.second,&ctx.quantization),rot(ref)};
+                const auto thermal_after = plan_preferred_thermal_vias(
+                    refit_fanout_geometry(*this,&trial).model(),thermal_policy,&ctx.quantization);
+                if (!preserves_preferred_thermal_vias(thermal_before,thermal_after))
+                    continue;
+            }
             chosen = shift;
             break;
         }
