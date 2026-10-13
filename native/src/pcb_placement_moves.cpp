@@ -325,6 +325,10 @@ void compact_recover_thermal(Placer& p) {
                 offer({group.refs.begin(),group.refs.end()});
         }
         offer(std::move(whole));
+        // Constraint closure is a useful rigid strategy, not a hardware
+        // equality constraint. After rigid options, try an independently
+        // movable member against all authored bounds in the checked path.
+        if(!locked.count(ref))offer({ref});
         return options;
     };
     const auto capacity=[](const auto& fields) {

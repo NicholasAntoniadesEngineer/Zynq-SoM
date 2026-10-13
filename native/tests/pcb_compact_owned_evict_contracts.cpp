@@ -506,6 +506,24 @@ void tests(const PcbPlacementInput& source,const std::filesystem::path& root) {
                 f.p->pos.at("R_PARTNER")!=group_entry.at("R_PARTNER"),
                 "v2 validated contract groups must receive checked thermal trials");
         f.p->pos=group_entry;
+        f.p->grid_placed.erase("R_PARTNER"); // immovable, but still same physical face
+        compact_recover_thermal(*f.p);
+        require(f.p->pos.at("R_BLOCKER")!=group_entry.at("R_BLOCKER")&&
+                f.p->pos.at("R_PARTNER")==group_entry.at("R_PARTNER"),
+                "contract proximity is not mandatory rigid coupling when a member is immovable");
+        PcbPlacementGatePolicy checked_contracts;
+        checked_contracts.contracts=f.in.contracts;checked_contracts.ref_maps=f.p->ctx.board_refs;
+        checked_contracts.wired_sheets=f.p->ctx.wired;checked_contracts.project_zones.insert(f.sheet);
+        for(const auto& [sheet,gate]:check_all_pcb_placement_contracts(refit_fanout_geometry(*f.p,nullptr),checked_contracts)) {
+            (void)sheet;require(gate.ok,"independent member move must retain the authored proximity contract");
+        }
+        f.p->pos=group_entry;
+        f.in.contracts[f.sheet]=parse_json_text(R"({"contract":"placement/v2","structures":[
+            {"type":"proximity","anchor":"R1","anchor_pins":["1"],"members":["R2"],"max_mm":0.1,"same_side":true}]})");
+        compact_recover_thermal(*f.p);
+        require(f.p->pos==group_entry,"thermal improvement cannot override an unsatisfied proximity requirement");
+        f.p->grid_placed.insert("R_PARTNER");
+        f.p->pos=group_entry;
         f.p->pos["R_PARTNER"]={50,70};
         const auto singleton_entry=f.p->pos;
         f.in.contracts[f.sheet]=parse_json_text(R"({"contract":"placement/v2","structures":[
