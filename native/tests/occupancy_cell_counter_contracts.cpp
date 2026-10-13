@@ -199,6 +199,32 @@ void boundary_frontier() {
         }
     }
 }
+void dense_rounded_frontier() {
+    // Several raw-distance rows share each decimal key, including values on
+    // either side of a binary64 rounding boundary. Larger flush margins keep
+    // multiple ordered buckets live at once without changing the oracle.
+    for(double step:{.025,.05,.075,.1,.2})for(double half:{.05,.15,.5})
+    for(double ax:{std::nextafter(.55,0.),.55,std::nextafter(.55,1.),-1.,2.1}) {
+        Occupancy scene(1.2,1.1,0,.25,0,step,half);
+        scene.add(.35,.25,.2,.3,{},{},1,{});
+        std::vector<std::tuple<double,double,double>> oracle;
+        for(int ix=0;ix<=static_cast<int>(1.2/step);++ix)
+          for(int iy=0;iy<=static_cast<int>(1.1/step);++iy) {
+            const double x=ix*step,y=iy*step;
+            if(!scene.fits_exhaustive(x,y,.1,.15,{},{},1,{}))continue;
+            oracle.emplace_back(py_round(std::abs(x+.05-ax)+std::abs(y+.075-.65),1),x,y);
+          }
+        std::sort(oracle.begin(),oracle.end());
+        QuantizationCounts counts;NearPoseCandidates actual;
+        measured(counts,[&]{actual=scene.place_near_candidates(ax,.65,.1,.15,{},{},1,{},0,1.2,0,1.1,10000,10000,&counts);});
+        require(actual.search_complete&&!actual.budget_exhausted&&actual.poses.size()==oracle.size(),
+                "dense decimal frontier lost legal candidates or completion");
+        for(std::size_t i=0;i<oracle.size();++i)
+            require(actual.poses[i].x==std::get<1>(oracle[i])&&actual.poses[i].y==std::get<2>(oracle[i]),
+                    "dense decimal frontier changed rounded-distance/x/y order");
+        require(counts[names[2]]==actual.frontier_nodes,"dense frontier receipts do not match actual visits");
+    }
+}
 void alternative_poses() {
     for(double step:{.5,1.})for(int mask:{1,2,3})for(double ax:{-1.,3.05,7.}) {
         Occupancy scene(7,6,.1,2,2,step,.05);
@@ -320,6 +346,6 @@ extern "C" void __cyg_profile_func_enter(void* fn,void*) {
     else if(fn==reinterpret_cast<void*>(&schgen::occupancy_axis_count))++entries[5];
 }
 extern "C" void __cyg_profile_func_exit(void*,void*){}
-int main(){try{scalar_contract();map_lifetimes();geometry();threads();boundary_frontier();alternative_poses();child_rejection_cache();changing_blockers_oracle();
+int main(){try{scalar_contract();map_lifetimes();geometry();threads();boundary_frontier();dense_rounded_frontier();alternative_poses();child_rejection_cache();changing_blockers_oracle();
     std::cout<<"occupancy cell counter contracts PASS (independent function-entry proof)\n";
 }catch(const std::exception& e){observing=false;std::cerr<<e.what()<<'\n';return 1;}}

@@ -7,6 +7,7 @@
 #include <cmath>
 #include <cstdint>
 #include <cstring>
+#include <deque>
 #include <limits>
 #include <functional>
 #include <queue>
@@ -744,8 +745,10 @@ std::optional<Pose> Occupancy::place_near_impl(
     }
     std::priority_queue<HeapNode, std::vector<HeapNode>, std::greater<HeapNode>> heap;
     heap.push(HeapNode{xs[0].first + ys[0].first, 0, 0});
-    std::unordered_map<double, std::vector<std::pair<double, double>>> buckets;
-    std::priority_queue<double, std::vector<double>, std::greater<double>> bkeys;
+    // The raw-distance frontier is monotone, and decimal rounding is
+    // monotone too. Rounded keys therefore arrive in order: an ordered queue
+    // replaces both the per-node hash lookup and the second priority queue.
+    std::deque<std::pair<double,std::vector<std::pair<double,double>>>> buckets;
     std::vector<std::pair<double, double>> spare;
     Rejection rejection;
 
@@ -753,15 +756,9 @@ std::optional<Pose> Occupancy::place_near_impl(
         // At the half-step boundary an unseen distance can still round into
         // this bucket (ties to even). Wait until strictly beyond it before
         // selecting by x/y, otherwise a later same-key pose can be skipped.
-        while (!bkeys.empty() && bkeys.top() < thresh) {
-            const double key = bkeys.top();
-            bkeys.pop();
-            auto it = buckets.find(key);
-            if (it == buckets.end()) {
-                continue;
-            }
-            std::vector<std::pair<double, double>> cell = std::move(it->second);
-            buckets.erase(it);
+        while (!buckets.empty() && buckets.front().first < thresh) {
+            std::vector<std::pair<double, double>> cell = std::move(buckets.front().second);
+            buckets.pop_front();
             std::sort(cell.begin(), cell.end());
             for (const auto& [x, y] : cell) {
                 if (fits_indexed(x, y, w, h, reach, inset, mask, comps, counts, &rejection)) {
@@ -795,15 +792,13 @@ std::optional<Pose> Occupancy::place_near_impl(
         const double x = xs[static_cast<std::size_t>(node.i)].second;
         const double y = ys[static_cast<std::size_t>(node.j)].second;
         const double key = occupancy_frontier_key1dp(xcost + ycost, frontier_count);
-        auto bit = buckets.find(key);
-        if (bit == buckets.end()) {
+        if (buckets.empty() || buckets.back().first != key) {
             std::vector<std::pair<double, double>> cell;
             cell.swap(spare);
             cell.emplace_back(x, y);
-            buckets.emplace(key, std::move(cell));
-            bkeys.push(key);
+            buckets.emplace_back(key, std::move(cell));
         } else {
-            bit->second.emplace_back(x, y);
+            buckets.back().second.emplace_back(x, y);
         }
         // Merge sorted rows lazily: each row advances only along y, and its
         // first element introduces the next row. Row minima are ordered by x
