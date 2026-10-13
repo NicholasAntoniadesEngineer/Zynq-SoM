@@ -1,0 +1,19 @@
+{
+  "source_commit":"15bc38a8",
+  "result":"BOARD PASS: all mandatory checks, 37 sheets",
+  "output":"/private/tmp/carrier-exterior-pocket-qual.Lf9xFv",
+  "log":"native/build/exterior-pocket-full-qualification.log",
+  "recipe":"Same mixed-face power recipe as 2026-10-13-carrier-power-flex-qualified.json, fresh output, audit-projections 2, /usr/bin/time -p. No source modifications during qualification.",
+  "schgen_sha256":"1a0ebd85bd065b0dd7a059d28d5bd8ebf579f2db9a01fc1ed1800c38c5707a92",
+  "pcb_sha256":"25bb15ac93e9aea43c83c87cd845656539ce145eb129a9d9bcd1e230b0b91cc8",
+  "dimensions_mm":[163,153],"area_mm2":24939,"top":394,"bottom":172,"total":566,
+  "comparison":"Outline/side counts unchanged. Placement changed; reviewed PCB diff includes approximately 4mm inward group translations. Prior qualified artifact retained.",
+  "hard_margins":{"mm":{"measured":16,"unresolved":0,"minimum":1.5},"degrees":{"measured":2,"unresolved":0,"minimum":68.62,"previous_minimum":65.8}},
+  "drc":{"non_unrouted_errors":0,"unrouted":499},
+  "nonsearch_fallback_events":0,
+  "thermal":"PASS; hottest reported power:U1 Tj134.8C against modeled gate limit140C; this is model-based evidence, not fabrication approval",
+  "advisory_failures":["return_path","golden","contract_coverage_lint"],
+  "timing_seconds":{"process_wall":212.59,"pcb_input_loading_and_netlist_validation":1.466917,"pcb_model_with_internal_checks":16.057359,"pcb_text_emission":0.028262,"render3d":27.711455,"source_audit":109.444919,"measured_scope_total_not_process_wall":211.962236},
+  "visual_review":"Front/back renders inspected. Interface/service labels retained, bottom buck visible, substantial unused underside remains. No schematic topology changes in this solver batch.",
+  "limitations":"Not a smaller outline than the prior qualified carrier. Mandatory PASS does not clear advisory failures or establish routing/fabrication readiness. Compile timing and fully matched historical workload comparison remain incomplete."
+}
