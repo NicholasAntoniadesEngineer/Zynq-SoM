@@ -528,10 +528,38 @@ private:
             // seed-centred restriction, not a complete half-plane solver.
             const double slack=(ax*rx+ay*ry-in.clear)/((ax!=0)+(ay!=0));
             finite(slack,"facing projection slack");
+            double share_x=ax*rx-slack,share_y=ay*ry-slack;
+            if(ax!=0&&ay!=0) {
+                const auto range=[&](const Endpoint& e,const std::string& name,bool x) {
+                    const double local=x?e.local.first:e.local.second;
+                    if(!e.moving) {
+                        const double value=local+(x?e.pose.first:e.pose.second);
+                        return std::make_pair(value,value);
+                    }
+                    const auto* v=by_name.at(name);
+                    return std::make_pair(local+in.clear,
+                        local+(x?in.board_w-v->w:in.board_h-v->h)-in.clear);
+                };
+                const auto capacity=[&](bool x,double a) {
+                    const auto sr=range(*s,term.subject,x),tr=range(*t,term.target(),x);
+                    return a*(a>0?tr.second-sr.first:tr.first-sr.second);
+                };
+                const double max_x=capacity(true,ax),max_y=capacity(false,ay);
+                finite(max_x,"facing x capacity");finite(max_y,"facing y capacity");
+                // Preserve the seed split when possible. Otherwise transfer
+                // projection to the other axis instead of imposing a cut
+                // already contradicted by a board wall. These remain sufficient
+                // half-plane cuts; exact final facing and geometry still decide.
+                const double low=in.clear-max_y;
+                if(low<=max_x) {
+                    share_x=std::clamp(share_x,low,max_x);
+                    share_y=in.clear-share_x;
+                }
+            }
             for(const bool x:{true,false}) {
                 const double a=x?ax:ay;if(a==0)continue;
                 const double local=x?t->local.first-s->local.first:t->local.second-s->local.second;
-                const double share=a*(x?rx:ry)-slack;
+                const double share=x?share_x:share_y;
                 const bool positive=a>0;
                 const auto& source=positive?*t:*s;const auto& dest=positive?*s:*t;
                 double cost=positive?local-share/a:-local+share/a;

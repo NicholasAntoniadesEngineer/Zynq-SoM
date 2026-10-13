@@ -280,6 +280,30 @@ void facing_projection_contracts() {
             require(vars[0].x==seed[0].x&&vars[0].y==seed[0].y,"valid facing incumbent moved");
         }
     require(combined_runs>0,"facing fixtures did not execute combined joint strategy");
+    for(bool swap_axes:{false,true})for(bool flip_x:{false,true})for(bool flip_y:{false,true}) {
+        FloorplanLegalizeInput in;in.board_w=60;in.board_h=100;in.clear=.3;
+        if(swap_axes)std::swap(in.board_w,in.board_h);
+        const auto pose=[&](double x,double y) {
+            if(swap_axes)std::swap(x,y);
+            return FloorplanPoint{flip_x?in.board_w-2-x:x,flip_y?in.board_h-2-y:y};
+        };
+        in.metrics["source"].offsets={{"out",flip_x?0.:2.,flip_y?0.:2.},
+                                    {"in",flip_x?2.:0.,flip_y?2.:0.}};
+        in.metrics["target"].offsets={{"p",1,1}};
+        const auto target=pose(10,10),seed=pose(1,90);
+        in.fixed_poses["target"]=target;
+        in.fixed_rects={{"target",{target.first,target.second,target.first+2,target.second+2}}};
+        FloorplanTerm term;term.kind="facing";term.subject="source";term.target_raw="target";
+        term.enforced=true;term.require_positive_facing=true;term.out_refs={"out"};in.index.hard={term};
+        std::vector<FloorplanLegalizeVar> vars{{"source",2,2,seed,seed.first,seed.second}};
+        std::vector<std::string> log;
+        require(floorplan_legalize_compact(in,vars,log),"seed-centred facing split falsely contradicted board wall");
+        auto poses=in.fixed_poses;poses["source"]={vars.front().x,vars.front().y};
+        require(floorplan_evaluate_terms(in,poses).front().ok,"wall-aware split bypassed exact facing");
+        require(vars.front().x>=in.clear&&vars.front().x+2<=in.board_w-in.clear&&
+                vars.front().y>=in.clear&&vars.front().y+2<=in.board_h-in.clear,
+                "wall-aware split escaped the board");
+    }
 }
 void primary_fanout_contracts() {
     for(bool compact:{false,true})for(bool horizontal:{false,true})for(int face:{1,2}) {
