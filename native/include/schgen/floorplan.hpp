@@ -167,6 +167,9 @@ struct FloorplanLegalizeInput {
     FloorplanTermIndex index;
     std::map<std::string, FloorplanLocalMetrics> metrics;
     std::map<std::string, FloorplanPoint> fixed_poses;
+    // Planar routing-space heuristic, not an authored hardware minimum.
+    // Complete disjoint occupancy masks suppress its pair separation;
+    // explicit hard terms in index are still evaluated independently.
     std::map<std::pair<std::string, std::string>, int> channel_demand;
     std::map<std::string, Box4> som_j_rects;
     double clear = board_decision_policy::floorplan::clear;

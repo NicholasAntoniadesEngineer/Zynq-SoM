@@ -239,10 +239,12 @@ public:
                 const auto& high=in.primary_fanout.at(key(s.hi));
                 // A primary face alone cannot prove disjoint occupancy: a
                 // mixed-face group or THT pad may reserve the opposite face.
-                // Remove only body-clearance separations with complete masks;
-                // wider channel-demand constraints and logical exclusions stay.
+                // Net-count channel widths are planar routing heuristics, not
+                // hardware separation requirements across disjoint faces.
+                // Explicit hard terms remain separate extra edges/qualification;
+                // unknown masks and logical exclusions cannot use this proof.
                 if(low.occupied_mask&&high.occupied_mask&&
-                   !(low.occupied_mask&high.occupied_mask)&&s.gap<=in.clear)continue;
+                   !(low.occupied_mask&high.occupied_mask))continue;
                 if (occ_pair_active(low.mask,low.mask,true,high.mask,high.mask,true)) {
                     const auto gap=[&](bool x) {
                         return std::max(s.gap,fanout_sep(low.reach,low.inset,high.reach,high.inset,x?'E':'S'));

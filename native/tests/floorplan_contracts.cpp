@@ -491,7 +491,20 @@ void primary_fanout_contracts() {
         mixed=disjoint;mixed.primary_fanout["anchor"].occupied_mask=3;
         require(std::abs(run(mixed)-.3)<1e-9,"fixed THT/secondary reservations must not disappear");
         auto channel_faces=disjoint;channel_faces.channel_demand[{"v","anchor"}]=6;
-        require(std::abs(run(channel_faces)-3.2)<1e-9,"disjoint faces retain wider wiring-channel requirement");
+        require(run(channel_faces)<0,"wire-count heuristic blocked proven opposite-face overlap");
+        auto hard_far=channel_faces;
+        hard_far.index.hard.push_back({"far_min","v","v","anchor",100,"explicit separation",true,{},{}});
+        auto rejected_vars=initial;std::vector<std::string> rejected_log;
+        require(!floorplan_legalize_compact(hard_far,rejected_vars,rejected_log),
+                "opposite faces bypassed an explicit hard separation term");
+        require(rejected_vars.front().x==initial.front().x&&rejected_vars.front().y==initial.front().y,
+                "hard separation failure published an invalid placement");
+        channel_faces.primary_fanout["v"].occupied_mask=0;
+        require(std::abs(run(channel_faces)-3.2)<1e-9,"unknown face coverage lost channel separation");
+        channel_faces.primary_fanout["v"].occupied_mask=3;
+        require(std::abs(run(channel_faces)-3.2)<1e-9,"through-hole occupancy lost channel separation");
+        auto same_face_channel=in;same_face_channel.channel_demand[{"v","anchor"}]=6;
+        require(std::abs(run(same_face_channel)-3.2)<1e-9,"same-face channel policy changed");
         auto malformed=disjoint;malformed.primary_fanout["v"].occupied_mask=2;
         throws([&]{run(malformed);},"invalid complete occupancy mask");
         malformed=disjoint;malformed.primary_fanout["v"].occupied_mask=4;
@@ -500,6 +513,8 @@ void primary_fanout_contracts() {
         throws([&]{run(malformed);},"invalid complete occupancy mask");
         auto logical=in;logical.primary_fanout["anchor"].mask=0;
         require(std::abs(run(logical)-.3)<1e-9,"logical exclusions retain nominal clearance");
+        logical.channel_demand[{"v","anchor"}]=6;
+        require(std::abs(run(logical)-3.2)<1e-9,"logical exclusion lost its wider channel gap");
         auto primitive=in;primitive.primary_fanout.clear();
         require(std::abs(run(primitive)-.3)<1e-9,"empty fanout map keeps primitive API");
         auto outset=in;outset.primary_fanout["anchor"].inset={-.5,-.5,-.5,-.5};

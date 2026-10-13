@@ -1,0 +1,31 @@
+{
+  "parent_commit": "8c6151da",
+  "change": "Do not enforce net-count-derived planar channel separation between groups whose complete occupied-face masks are disjoint. Keep independently authored hard terms and final physical validation.",
+  "policy_basis": "Routing is outside the current goal and wire-length estimates must not block compact placement. floorplan_ledger.cpp classifies compose_channel_min_nets/floor/per_net as ASSUME; legalize_build_seps derives this gap from net counts rather than component hardware limits.",
+  "preserved_requirements": "Same-face channel rules, unknown face coverage, through-hole/secondary-face occupancy, logical exclusion rectangles, fanout checks and explicit hard terms. No DRC/ERC or hardware gate disabled.",
+  "tests": {
+    "native_floorplan_contracts": "PASS 14.04s",
+    "log": "native/build/face-channel-final-tests.log",
+    "coverage": "Four approach directions permit overlap only with complete disjoint masks despite six-net demand. Same-face, unknown and mixed/THT coverage retain 3.2mm heuristic spacing. Logical exclusion retains its channel gap. Impossible explicit far_min remains rejected without publishing poses. Existing geometry, facing, independent coordinate oracle and joint accounting tests retained."
+  },
+  "carrier_reference": {
+    "dimensions_mm": [163,153],
+    "unchanged_pcb_sha256": "d954ec91a789f69a1e94a26a9d3a91b279fbc208dff2503cbe8ee4c8eabc199f",
+    "model_seconds": 11.892495167,
+    "log": "native/build/face-channel-carrier.log"
+  },
+  "devkit_reference": {
+    "dimensions_mm": [98,98],
+    "unchanged_pcb_sha256": "1b12fecbcbbaa5e6084c2459da93cb144a660ff19805e6e4e3f75f9c22689fdb",
+    "model_seconds": 0.1947625,
+    "log": "native/build/face-channel-devkit.log"
+  },
+  "smaller_candidate": {
+    "dimensions_mm": [162,153],
+    "status": "construction_failed",
+    "seconds": 3.740556625,
+    "outer_attempts": 4,
+    "log": "native/build/face-channel-162x153.log"
+  },
+  "limits": "Corrects an overconstraint in the tested face-disjoint case; does not claim it was the limiting carrier constraint. No smaller accepted board, new full qualification, speedup or historical Python comparison. Timing is uncontrolled diagnostic data."
+}
