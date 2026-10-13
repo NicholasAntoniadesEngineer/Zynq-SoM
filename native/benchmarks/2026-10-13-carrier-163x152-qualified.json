@@ -1,0 +1,22 @@
+{
+  "source_commit":"9c1b9ff3",
+  "result":"BOARD PASS: all mandatory checks, 37 sheets",
+  "output":"/private/tmp/carrier-authored-near-163x152-qual.rB4Zn9",
+  "log":"native/build/authored-proximity-full-qualification.log",
+  "floorplan_spec":"native/benchmarks/carrier-163x152-authored-proximity.floorplan.json",
+  "recipe":"Same mixed-face power recipe as 2026-10-13-exterior-pocket-qualified.json with the new tracked 163x152 specification. Audit-projections 2; fresh output; source frozen; /usr/bin/time -p.",
+  "schgen_sha256":"39f9f0b260e18b645667e322bd431588d7caf9a9d60f1dc6cd2e7e79f974c342",
+  "pcb_sha256":"413100c05f91a68436c457039752e0e932593e54760e802bed434a547e66dca7",
+  "dimensions_mm":[163,152],"area_mm2":24776,"reference_dimensions_mm":[168,163],"reference_area_mm2":27384,"area_reduction_percent":9.523809523809524,
+  "previous_qualified_dimensions_mm":[163,153],"area_reduction_from_previous_mm2":163,
+  "components":{"top":394,"bottom":172,"total":566},
+  "hard_margins":{"mm":{"measured":16,"unresolved":0,"minimum":0.59,"previous_minimum":1.5},"degrees":{"measured":2,"unresolved":0,"minimum":47.48,"previous_minimum":68.62}},
+  "drc":{"non_unrouted_errors":0,"unrouted":499},
+  "thermal":{"specified_devices":20,"over_limit":0,"unspecified":0,"waived":0,"hottest_device":"power:U1","hottest_tj_c":134.8},
+  "nonsearch_fallback_events":0,
+  "advisory_failures":["return_path","golden","contract_coverage_lint"],
+  "timing_seconds":{"process_wall":204.66,"pcb_input_loading_and_netlist_validation":1.478978,"pcb_model_with_internal_checks":8.051404,"pcb_text_emission":0.027485,"render3d":27.875991,"source_audit":109.368158,"measured_scope_total_not_process_wall":204.048391},
+  "visual_review":"Front/back 3D renders inspected; all eight views generated. Major group reorientation/repositioning visible; service labels retained; bottom remains sparsely occupied. No schematic topology edits in this solver batch.",
+  "tradeoff":"Smaller area consumes previously heuristic extra margin, not an authored hardware waiver. Actual minimum distance/facing margins decrease; prior qualified 168x163 and 163x153 references retained.",
+  "limitations":"Mandatory qualification does not resolve the three advisory failures or establish routing/fabrication readiness. Single full-run timing is not a controlled speedup comparison; fully matched historical workload and compile timing remain outstanding."
+}
