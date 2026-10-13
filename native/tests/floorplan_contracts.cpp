@@ -548,6 +548,30 @@ void output_grid_contracts() {
     vars={{"v",10,10,{20,20.5},20,20.5}};log.clear();
     require(floorplan_legalize_compact(in,vars,log)&&vars[0].y==20.5,
             "genuinely feasible exact equality stays feasible and unchanged");
+    for(bool horizontal:{true,false}) {
+        in={};in.board_w=10;in.board_h=10;in.clear=.1;
+        vars={{"a",.1,.1,{.1,1},.1,1},{"b",.1,.1,{.3,1},.3,1},{"c",.1,.1,{.5,1},.5,1}};
+        if(!horizontal)for(auto& v:vars){std::swap(v.x,v.y);std::swap(v.seed.first,v.seed.second);}
+        for(const auto* name:{"a","b","c"}) {
+            in.primary_fanout[name]={{},{},1,1,std::vector<Comp>{}};
+            in.metrics[name]={{{"p",.05,.05}},{{"p",0,0,.1,.1}},{.1,.1}};
+        }
+        in.index.hard.push_back({"near_max","a","a","c",10,"grid chain",true,{},{}});
+        const auto chain_seed=vars;
+        log.clear();
+        require(floorplan_legalize_compact(in,vars,log),"coupled one-tick contact chain must recover");
+        for(std::size_t i=1;i<vars.size();++i) {
+            const double lo=horizontal?vars[i-1].x:vars[i-1].y,hi=horizontal?vars[i].x:vars[i].y;
+            require(lo+.1+in.clear<=hi,"chain repair must pass exact forward separation");
+        }
+        require(std::any_of(log.begin(),log.end(),[](const auto& s){return s.find("output-grid propagated:")==0;}),
+            "chain fixture did not exercise coupled repair");
+        if(horizontal)in.board_w=.7;else in.board_h=.7;
+        vars=chain_seed;log.clear();
+        require(!floorplan_legalize_compact(in,vars,log),"chain cannot be pushed through a board boundary");
+        for(std::size_t i=0;i<vars.size();++i)
+            require(vars[i].x==chain_seed[i].x&&vars[i].y==chain_seed[i].y,"failed chain must roll back every caller pose");
+    }
 }
 void mutations() {
     FloorplanInput in; in.som.w=10; in.som.h=8;

@@ -1,0 +1,40 @@
+{
+  "base_commit": "16023e40",
+  "change": "Propagate one-tick contact adjustments along a selected axis, moving each movable endpoint at most once. Fixed endpoints, cycles and unresolved contacts terminate the trial. Every failed trial restores the complete axis; exact physical separations, edges, hard terms and final child geometry remain required. Logs and quantization counts include propagation.",
+  "before_test": "New horizontal/vertical three-component contact-chain regression failed before implementation: coupled one-tick contact chain must recover.",
+  "tests": "native_floorplan_contracts includes both-axis recovery, exact forward inequalities, actual propagation, boundary rejection and all-caller-pose rollback",
+  "carrier_reference": {
+    "dimensions_mm": [
+      164,
+      154
+    ],
+    "unchanged_pcb_sha256": "c7d0508671c2881bba1fce01d1b71c8cd19837ec394af6fdd3c3dcf6d9042104",
+    "nonsearch_fallbacks": 0,
+    "log": "native/build/grid-chain-reference.log"
+  },
+  "devkit_reference": {
+    "dimensions_mm": [
+      98,
+      98
+    ],
+    "unchanged_pcb_sha256": "b6798d4b63d2fddbf9fad24945c151b9420b049b674ad5d637c43bf4a365137f",
+    "nonsearch_fallbacks": 0,
+    "log": "native/build/grid-chain-devkit.log"
+  },
+  "smaller_trial": {
+    "dimensions_mm": [
+      164,
+      153
+    ],
+    "result": "constructed_no_acceptance",
+    "model_seconds": 3.268733375,
+    "pcb_sha256": "2b0926386b5a824f14d051983a098f084f4f55fc17c58d97fdf2b825eba35aff",
+    "top": 418,
+    "bottom": 148,
+    "cheap_checks": "fanout, ratsnest geometry, placement contract and flow PASS; hard_red=0",
+    "thermal_via_lattice": 3,
+    "log": "native/build/grid-chain-164x153.log",
+    "accepted": false
+  },
+  "limitations": "Directional one-tick propagation is not a complete coupled solver. Smaller trial is rejected at screening due to thermal fallback baseline; no expensive full qualification launched. Existing incumbent remains qualified only at earlier audited source. No performance or fabrication readiness claim."
+}

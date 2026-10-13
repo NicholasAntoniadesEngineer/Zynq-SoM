@@ -397,13 +397,36 @@ public:
                     if(name.front()=='#')continue;
                     if(!tried.emplace(name,sep.axis_x,high).second)continue;
                     const auto i=static_cast<std::size_t>(std::lower_bound(names.begin(),names.end(),name)-names.begin());
-                    auto& coordinate=sep.axis_x?pos_x[i]:pos_y[i];
+                    auto& axis=sep.axis_x?pos_x:pos_y;
+                    const auto incumbent=axis;
+                    auto& coordinate=axis[i];
                     const double saved=coordinate;
                     coordinate=legalize_trial_pose_precision4dp(saved+(high?.0001:-.0001),counts);
                     log.push_back("output-grid trial: "+name+(sep.axis_x?" x ":" y ")+float_text(saved)+" -> "+float_text(coordinate));
                     exact_ok=coordinate!=saved&&std::isfinite(coordinate)&&exact_holds();
+                    if(!exact_ok&&coordinate!=saved&&std::isfinite(coordinate)) {
+                        // Propagate contact pressure along this axis. Each
+                        // endpoint can move by one tick at most, so cycles or
+                        // fixed anchors terminate rather than drifting poses.
+                        std::set<std::string> moved{name};
+                        bool complete=false;
+                        for(std::size_t step=0;step<=names.size();++step) {
+                            const auto link=std::find_if(seps.begin(),seps.end(),[&](const auto& s){
+                                return s.axis_x==sep.axis_x&&endpoint(s.lo,s.axis_x,true)+s.gap>endpoint(s.hi,s.axis_x,false);
+                            });
+                            if(link==seps.end()){complete=true;break;}
+                            const auto& next=high?link->hi:link->lo;
+                            if(next.front()=='#'||!moved.insert(next).second)break;
+                            const auto j=static_cast<std::size_t>(std::lower_bound(names.begin(),names.end(),next)-names.begin());
+                            const double old=axis[j];
+                            axis[j]=legalize_trial_pose_precision4dp(old+(high?.0001:-.0001),counts);
+                            log.push_back("output-grid propagated: "+next+(sep.axis_x?" x ":" y ")+float_text(old)+" -> "+float_text(axis[j]));
+                            if(axis[j]==old||!std::isfinite(axis[j]))break;
+                        }
+                        exact_ok=complete&&exact_holds();
+                    }
                     if(exact_ok){emit_grid();log.push_back("output-grid trial accepted by exact predicates");break;}
-                    coordinate=saved;
+                    axis=incumbent;
                     log.push_back("output-grid trial rejected; incumbent restored");
                 }
                 if(exact_ok)break;
