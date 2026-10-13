@@ -1,0 +1,170 @@
+{
+  "parent_commit": "498e54ba",
+  "objective": "Test area-reducing aspect ratios and heuristic seed/shape restrictions without changing hardware contracts.",
+  "base_spec": "native/benchmarks/carrier-163x153-combined-bottom.floorplan.json",
+  "base_profiler_command": "native/build/fast/schgen_compact_stage_profile --repo . --project carrier --compact-search on --edge-feasibility on --owned-quality-first on --owned-face-cohesion on --contract-group-face-sheet usb_jtag --require-bottom-sheet power_mon --require-bottom-sheet bringup_modules --require-bottom-sheet bringup_en_modules --joint-separation-states 1024 --reseat-poses 8 --reseat-frontier 4096 --reseat-continuations 3 --reseat-victim-shapes on --owned-shape board_aux=owned-face-a1.000000 --owned-shape bringup_rails=bottom-a2.2/r270/owned-pins-forward --schematic /private/tmp/carrier-166x156-two-pilots.iK3HkI/Zynq_Carrier.kicad_sch --runs 1 --interior-order 3 --failed-first-retry on --shape-area-first on",
+  "reference_area_mm2": 24939,
+  "aspect_candidates": [
+    {
+      "dimensions_mm": [
+        160,
+        155
+      ],
+      "area_mm2": 24800,
+      "area_reduction_percent": 0.5573599582982425,
+      "status": "construction_failed",
+      "seconds": 4.877013,
+      "completed_outer_attempts": 4,
+      "log": "native/build/aspect-screen-160x155.log"
+    },
+    {
+      "dimensions_mm": [
+        165,
+        151
+      ],
+      "area_mm2": 24915,
+      "area_reduction_percent": 0.09623481294358527,
+      "status": "construction_failed",
+      "seconds": 9.527058875,
+      "completed_outer_attempts": 4,
+      "log": "native/build/aspect-screen-165x151.log"
+    },
+    {
+      "dimensions_mm": [
+        166,
+        150
+      ],
+      "area_mm2": 24900,
+      "area_reduction_percent": 0.15638157103332606,
+      "status": "construction_failed",
+      "seconds": 19.889746875,
+      "completed_outer_attempts": 4,
+      "log": "native/build/aspect-screen-166x150.log"
+    },
+    {
+      "dimensions_mm": [
+        158,
+        157
+      ],
+      "area_mm2": 24806,
+      "area_reduction_percent": 0.5333012550623573,
+      "status": "construction_failed",
+      "seconds": 3.883184417,
+      "completed_outer_attempts": 4,
+      "log": "native/build/aspect-screen-158x157.log"
+    }
+  ],
+  "anchor_candidates": [
+    {
+      "dimensions_mm": [
+        162,
+        153
+      ],
+      "spec_delta": {
+        "interior": {
+          "usb_jtag": {
+            "side": "N"
+          }
+        }
+      },
+      "status": "construction_failed",
+      "seconds": 3.731458625,
+      "completed_outer_attempts": 4,
+      "log": "native/build/usb-jtag-anchor-north.log"
+    },
+    {
+      "dimensions_mm": [
+        162,
+        153
+      ],
+      "spec_delta": {
+        "interior": {
+          "usb_jtag": {
+            "near": "usb_jtag_connector"
+          }
+        }
+      },
+      "status": "construction_failed",
+      "seconds": 3.657480334,
+      "completed_outer_attempts": 4,
+      "log": "native/build/usb-jtag-anchor-connector.log"
+    }
+  ],
+  "free_rails_candidates": [
+    {
+      "dimensions_mm": [
+        160,
+        155
+      ],
+      "command_delta": "Remove --owned-shape bringup_rails=bottom-a2.2/r270/owned-pins-forward only",
+      "status": "construction_failed",
+      "seconds": 18.432917917,
+      "completed_outer_attempts": 4,
+      "log": "native/build/aspect-free-rails-160x155.log"
+    },
+    {
+      "dimensions_mm": [
+        165,
+        151
+      ],
+      "command_delta": "Remove --owned-shape bringup_rails=bottom-a2.2/r270/owned-pins-forward only",
+      "status": "construction_failed",
+      "seconds": 3.789209208,
+      "completed_outer_attempts": 4,
+      "log": "native/build/aspect-free-rails-165x151.log"
+    }
+  ],
+  "rejection_counts": [
+    {
+      "name": "aspect-screen-160x155",
+      "rejections": {
+        "interior_seating:bringup_rails": 6,
+        "interior_seating:ethernet": 4,
+        "interior_seating:debug_boot": 2,
+        "interior_seating:usb_jtag": 4
+      }
+    },
+    {
+      "name": "aspect-screen-165x151",
+      "rejections": {
+        "interior_seating:bringup_rails": 8,
+        "interior_seating:usb_jtag": 4,
+        "interior_seating:board_aux": 2,
+        "legalizer": 4
+      }
+    },
+    {
+      "name": "aspect-screen-166x150",
+      "rejections": {
+        "interior_seating:bringup_rails": 8,
+        "interior_seating:usb_jtag": 8
+      }
+    },
+    {
+      "name": "aspect-screen-158x157",
+      "rejections": {
+        "interior_seating:bringup_rails": 8,
+        "interior_seating:ethernet": 4,
+        "interior_seating:usb_jtag": 4
+      }
+    },
+    {
+      "name": "usb-jtag-anchor-north",
+      "rejections": {
+        "legalizer": 8,
+        "interior_seating:bringup_rails": 4,
+        "interior_seating:usb_jtag": 4
+      }
+    },
+    {
+      "name": "usb-jtag-anchor-connector",
+      "rejections": {
+        "legalizer": 8,
+        "interior_seating:bringup_rails": 4,
+        "interior_seating:usb_jtag": 4
+      }
+    }
+  ],
+  "interpretation": "Aspect ratio changes, USB-JTAG north/connector seed attraction, and lifting the forced bringup_rails shape did not recover these outlines. These are failures of the executed placement strategies, not hardware infeasibility proofs. No candidate accepted; retain the qualified 163x153 reference.",
+  "limits": "Single-run construction screens only; no full qualification, speedup or historical Python comparison claimed. Counts include nested retries; do not sum them as distinct outer attempts. Dimensions and heuristic anchor/shape choices changed, not electrical or physical acceptance limits."
+}
