@@ -33,5 +33,14 @@
     "log": "native/build/facing-wall-162x153.log",
     "interpretation": "The restriction is corrected but this search still finds no valid smaller layout. Not a proof of geometric infeasibility."
   },
+  "second_smaller_candidate": {
+    "source_commit": "bbded49b",
+    "dimensions_mm": [163,152],
+    "status": "construction_failed",
+    "elapsed_seconds": 9.589834208,
+    "completed_outer_attempts": 4,
+    "log": "native/build/facing-wall-163x152.log",
+    "interpretation": "Neither neighbouring outline is recovered by wall-aware facing alone. Investigate obstacle-conditioned projection allocation and separation search rather than interpreting a static split failure as hardware infeasibility."
+  },
   "limits": "Construction screens are not full qualification. No new smaller board, speedup, render or historical Python timing comparison claimed. Previously qualified reference PCB bytes are unchanged."
 }
