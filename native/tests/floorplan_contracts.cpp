@@ -280,6 +280,7 @@ void facing_projection_contracts() {
             require(vars[0].x==seed[0].x&&vars[0].y==seed[0].y,"valid facing incumbent moved");
         }
     require(combined_runs>0,"facing fixtures did not execute combined joint strategy");
+    for(bool obstructed:{false,true})
     for(bool swap_axes:{false,true})for(bool flip_x:{false,true})for(bool flip_y:{false,true}) {
         FloorplanLegalizeInput in;in.board_w=60;in.board_h=100;in.clear=.3;
         if(swap_axes)std::swap(in.board_w,in.board_h);
@@ -293,16 +294,35 @@ void facing_projection_contracts() {
         const auto target=pose(10,10),seed=pose(1,90);
         in.fixed_poses["target"]=target;
         in.fixed_rects={{"target",{target.first,target.second,target.first+2,target.second+2}}};
+        if(obstructed) {
+            in.joint_separation_states=64;
+            // A full-span strip blocks the wall-clamped projection but leaves
+            // ample space for the same facing requirement farther inward.
+            if(!swap_axes)in.fixed_rects.push_back({"strip",{flip_x?55.:0.,0,flip_x?60.:5.,100}});
+            else in.fixed_rects.push_back({"strip",{0,flip_y?55.:0.,100,flip_y?60.:5.}});
+        }
         FloorplanTerm term;term.kind="facing";term.subject="source";term.target_raw="target";
         term.enforced=true;term.require_positive_facing=true;term.out_refs={"out"};in.index.hard={term};
         std::vector<FloorplanLegalizeVar> vars{{"source",2,2,seed,seed.first,seed.second}};
         std::vector<std::string> log;
+        int starts=0,ends=0;
+        in.joint_retry_started=[&]{++starts;};
+        in.joint_retry_completed=[&](const JointSeparationWork& work,bool){
+            ++ends;require(work.visited<=64,"obstructed facing exceeded per-strategy state budget");
+        };
         require(floorplan_legalize_compact(in,vars,log),"seed-centred facing split falsely contradicted board wall");
+        require(starts==ends,"obstructed facing lost executed search accounting");
         auto poses=in.fixed_poses;poses["source"]={vars.front().x,vars.front().y};
         require(floorplan_evaluate_terms(in,poses).front().ok,"wall-aware split bypassed exact facing");
         require(vars.front().x>=in.clear&&vars.front().x+2<=in.board_w-in.clear&&
                 vars.front().y>=in.clear&&vars.front().y+2<=in.board_h-in.clear,
                 "wall-aware split escaped the board");
+        if(obstructed) {
+            const double coordinate=swap_axes?vars.front().y:vars.front().x;
+            const bool reflected=swap_axes?flip_y:flip_x;
+            require(reflected?coordinate+2<=55-in.clear:coordinate>=5+in.clear,
+                    "facing recovery crossed the full-span obstacle");
+        }
     }
 }
 void primary_fanout_contracts() {
