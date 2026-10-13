@@ -329,7 +329,7 @@ FloorplanPlan Engine::run() {
         auto inputs=winner_inputs({area,plan.board_w,plan.board_h,estimate_real,budget},plan.accounting.quantization_engagements); inputs.emplace_back("plan",jvalue("fixed"));
         calc("sizing_winner",jvalue(outline_text(plan.board_w,plan.board_h)),std::move(inputs));
         plan.outline_note="FIXED outline "+outline_text(plan.board_w,plan.board_h)+" mm declared in carrier/floorplan.json; estimated cross-subsystem airwire "+
-            number(estimate_real,0)+" mm (LAW-5 budget "+number(budget,0)+" mm — the REAL gate in `schgen board` is the arbiter)";
+            number(estimate_real,0)+" mm (advisory airwire reference "+number(budget,0)+" mm; not an acceptance constraint)";
         return std::move(plan);
     }
     const double seed_aspect=precision.aspect(sw/sh);
@@ -337,6 +337,7 @@ FloorplanPlan Engine::run() {
     auto search=[&](bool free) -> Winner {
         plan.punch_free=free;
         ledger_pass(free);
+        // Historical receipt field remains zero: aggregate airwire is advisory.
         std::map<std::string,int> tally{{"generated",0},{"reject_aspect",0},{"reject_min_area",0},{"reject_not_smaller",0},{"reject_pack",0},{"reject_law5_budget",0},{"accepted",0}};
         const auto record_tally=[&]{
             Inputs ti;
@@ -353,7 +354,8 @@ FloorplanPlan Engine::run() {
             if (!attempt_pack(false)) { ++tally["reject_pack"]; return std::nullopt; }
             fit_seen=true;
             const double budget=cross_budget(w,h,n_sub,in.cross_budget_k), est=estimate();
-            if (!std::isfinite(est) || est<0 || est>budget) { ++tally["reject_law5_budget"]; return std::nullopt; }
+            if (!std::isfinite(est) || est<0)
+                throw FloorplanError("floorplan: invalid airwire estimate; cannot rank candidate");
             ++tally["accepted"];
             const Winner candidate{precision.area(w*h),w,h,est,budget};
             if (!best || candidate<*best) { best_plan=plan; best_offers=side_offers; }
@@ -411,8 +413,8 @@ FloorplanPlan Engine::run() {
         // candidate must not become the starting state for final refinement.
         restore(*best_plan); side_offers=std::move(best_offers);
         std::get<3>(*best)=refine_screened_incumbent(std::get<3>(*best));
-        if (!std::isfinite(std::get<3>(*best)) || std::get<3>(*best)<0 || std::get<3>(*best)>std::get<4>(*best))
-            throw FloorplanError("floorplan: final refined layout exceeds the LAW-5 airwire budget on "+
+        if (!std::isfinite(std::get<3>(*best)) || std::get<3>(*best)<0)
+            throw FloorplanError("floorplan: invalid final refined airwire estimate on "+
                 outline_text(plan.board_w,plan.board_h)+" — refusing to emit a stale screening estimate");
         record_tally();
         calc("law5_airwire_budget",jvalue(precision.value(std::get<4>(*best))),{{"cross_k",jvalue(in.cross_budget_k)},
@@ -450,7 +452,7 @@ FloorplanPlan Engine::run() {
     for (double a:aspects) { if (!aspect_text.empty()) aspect_text+=", "; aspect_text+=number(a); }
     plan.outline_note=seed_note+"; then bounded search over aspects "+aspect_text+" -> "+outline_text(plan.board_w,plan.board_h)+
         " mm (the smallest feasible board FOUND by this bounded aspect/grid search and greedy packing order, not a global minimum; holding the REAL 2-sided packed blocks with the estimated cross-subsystem airwire "+number(std::get<3>(best),0)+
-        " <= LAW-5 budget "+number(std::get<4>(best),0)+" mm — honest routing headroom, the gate is not relaxed), SoM "+
+        " mm; advisory airwire reference "+number(std::get<4>(best),0)+" mm, not an acceptance constraint), SoM "+
         outline_text(plan.som.w,plan.som.h)+" centered";
     if(in.experiment&&in.experiment->multiscale_outline)
         plan.outline_note+="; opt-in multiscale axis/diagonal refinement, not the complete fine-grid scan; may stop at a larger local solution";

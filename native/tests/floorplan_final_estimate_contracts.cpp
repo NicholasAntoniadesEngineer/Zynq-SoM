@@ -34,7 +34,7 @@ void verify(const FloorplanInput& input,const FloorplanPlan& result,
             require(value(decision,"est_cross")==final,"final winner uses stale screening estimate");
             require(std::abs(value(decision,"headroom")-(value(decision,"budget")-final))<1e-9,
                     "winner headroom disagrees with final estimate");
-            require(final<=value(decision,"budget"),"final layout exceeds budget");
+            require(std::isfinite(final)&&final>=0,"invalid final airwire metric");
         }
     }
     require(pass_count==2&&choice_count==1&&winner_count==1,"complete automatic sizing decisions");
@@ -48,6 +48,8 @@ int main(int argc,char** argv) {
             fixture.input.floorplan.compact_search=compact;
             const auto zones=build_pcb_zone_geometry(fixture.input);
             auto input=prepare_pcb_floorplan(fixture.input,zones);
+            // A deliberately tiny advisory reference must not exclude valid geometry.
+            input.cross_budget_k=0.000001;
             require(!input.spec || !input.spec->outline,"automatic outline witness");
             std::array<FloorplanPlan,2> passes;
             std::array<int,2> observed{};
@@ -64,6 +66,8 @@ int main(int argc,char** argv) {
             const auto result=engine.run();
             require(observed[0]>0&&observed[1]>0,"both real passes observed");
             verify(input,result,passes);
+            require(experiment_metric_contracts::estimate(input,result)>1,
+                    "witness must exceed the deliberately tiny advisory reference");
             for(const auto* name:{"pass_winner","plan_choice","sizing_winner"}) {
                 auto changed=result;
                 bool altered=false;

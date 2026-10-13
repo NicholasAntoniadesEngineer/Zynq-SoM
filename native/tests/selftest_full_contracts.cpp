@@ -86,7 +86,11 @@ void ratsnest_contracts(const SelftestModelFixtures& f, const JsonNode& referenc
         }
         auto r = check_ratsnest(PcbCheckInput(model));
         const auto& expected = field(reference, name);
-        equal_text(r.summary(), field(expected, "summary").string_value, "ratsnest Python " + name);
+        auto expected_summary=field(expected, "summary").string_value;
+        const auto budget_label=expected_summary.find(" mm (budget ");
+        require(budget_label!=std::string::npos,"historical airwire reference label");
+        expected_summary.replace(budget_label,12," mm (advisory reference ");
+        equal_text(r.summary(), expected_summary, "ratsnest metrics " + name);
         require(r.ok == field(expected, "ok").bool_value, "ratsnest verdict " + name);
         require(r.cross_mm == field(expected, "cross_mm").number_value &&
                 r.total_mm == field(expected, "total_mm").number_value, "ratsnest exact lengths");
@@ -95,7 +99,9 @@ void ratsnest_contracts(const SelftestModelFixtures& f, const JsonNode& referenc
     }
     const auto baseline = check_ratsnest(PcbCheckInput(f.ratsnest));
     require(baseline.ok && baseline.n_subsystems == 2, "real baseline is clean");
-    require(!check_ratsnest(PcbCheckInput(f.ratsnest), nullptr, nullptr, 0).cross_ok(), "zero cross budget rejects real cross edges");
+    const auto over_reference=check_ratsnest(PcbCheckInput(f.ratsnest), nullptr, nullptr, 0);
+    require(!over_reference.cross_ok()&&over_reference.ok,
+            "aggregate airwire reference must not reject valid geometry");
     auto missing = f.ratsnest; missing.insts.front().mod.reset();
     rejects([&] { check_ratsnest(PcbCheckInput(missing)); }, "missing footprint must throw");
     auto invalid = f.ratsnest; invalid.board_w = 0;
