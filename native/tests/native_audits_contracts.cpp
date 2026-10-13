@@ -49,8 +49,10 @@ void registry_contracts(const JsonNode& reference){
     NativeFallbacks f;register_native_fallbacks(f);f.record("seat_node_budget");const auto snap=f.snapshot();f.record("seat_node_budget");f.restore(snap);
     const auto census=f.census();
     // Include the three earlier incoming/victim-shape events omitted by the
-    // stale +23 inventory, plus the three new thermal search events.
-    require(census.size()==get(reference,"census").object_value.size()+29,"historical fallback census plus twenty-nine named native recovery events");
+    // stale +23 inventory, plus three thermal and three paired search events.
+    require(census.size()==get(reference,"census").object_value.size()+32,"historical fallback census plus thirty-two named native recovery events");
+    for (const auto* name : {"interior_reseat_pair_trial","interior_reseat_pair_rejected","interior_reseat_pair_recovered"})
+        require(census.at(name)==AuditInteger{},"paired relocation events remain explicitly registered");
     for (const auto* name : {"interior_reseat_incoming_shape_trial","interior_reseat_shape_retry","interior_reseat_shape_trial"})
         require(census.at(name)==AuditInteger{},"shape recovery events remain explicitly registered");
     for (const auto* name : {"thermal_repair_trial","thermal_repair_rejected","thermal_repair_moved"}) {

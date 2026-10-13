@@ -629,6 +629,51 @@ bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure,
             if(pass==1&&in.experiment->pose_retry_completed){observation.success=ok;in.experiment->pose_retry_completed(observation);}
             if(ok)return true;
         }
+        // Only after every one-victim pose/shape strategy failed, reconsider
+        // two interior occupants together. Edges remain in occupancy. Both
+        // reseating orders are real trials, not an inference of infeasibility.
+        if (victim_shapes && incoming_shapes && alternatives && evict_budget>=2)
+          for (std::size_t i=0;i<ranked.size();++i)
+            for (std::size_t j=i+1;j<ranked.size();++j)
+              for (bool reverse : {false,true}) {
+                auto& first=*placed[ranked[reverse?j:i]];
+                auto& second=*placed[ranked[reverse?i:j]];
+                const auto saved_b=b,saved_first=first,saved_second=second;
+                const auto saved_chosen=chosen;
+                const auto saved_centers=centers;
+                const auto saved_offers=side_offers;
+                fallback("interior_reseat_pair_trial");
+                occ_pull(first);occ_pull(second);
+                const bool incoming=seat(b,a,nullptr);
+                bool first_seated=false,second_seated=false;
+                if (incoming) {
+                    occ_put(b);centers[b.name]={b.cx(),b.cy()};
+                    const auto one=reseat_displaced(first,pack_anchor(anchor_row(first,centers)));
+                    if (one) {
+                        first.x=one->x;first.y=one->y;occ_put(first);
+                        centers[first.name]={first.cx(),first.cy()};first_seated=true;
+                        const auto two=reseat_displaced(second,pack_anchor(anchor_row(second,centers)));
+                        if (two) {
+                            second.x=two->x;second.y=two->y;occ_put(second);
+                            centers[second.name]={second.cx(),second.cy()};second_seated=true;
+                        }
+                    }
+                }
+                if (second_seated) {
+                    evict_budget-=2;
+                    for (const auto* moved : {&b,&first,&second})
+                        side_offers[moved->name]={moved->side,moved->side,moved->shape_idx,std::nullopt,std::nullopt};
+                    fallback("interior_reseat_pair_recovered");
+                    fallback("interior_reseat_retry");
+                    return true;
+                }
+                if (first_seated) occ_pull(first);
+                if (incoming) occ_pull(b);
+                b=saved_b;first=saved_first;second=saved_second;
+                chosen=saved_chosen;centers=saved_centers;side_offers=saved_offers;
+                occ_put(first);occ_put(second);
+                fallback("interior_reseat_pair_rejected");
+              }
         return false;
     };
     for (auto* b:order) {

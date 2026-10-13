@@ -573,6 +573,7 @@ void victim_shape_portfolio_contract(){
     std::size_t preserved=0,recovered=0,failed=0,queries=0,incoming_recovered=0,incoming_queries=0;
     std::size_t combination_only=0,paired_queries=0,area_queries=0,pose_shape_queries=0,shape_skips=0;
     bool exception_checked=false;
+    std::size_t pair_trials=0,pair_success=0,pair_finalists=0;
     const Case crowded{70,50,{{29,16,3,4},{12,30,2,0},{30,18,3,2},{31,26,2,3},{7,7,1,3},{31,9,2,1}}};
     for(bool area_first:{false,true})for(bool rotate:{false,true})for(int w=65;w<=85;w+=5)for(int h=45;h<=65;h+=5)for(int order=0;order<3;++order){
         auto c=crowded;c.w=w;c.h=h;
@@ -615,10 +616,13 @@ void victim_shape_portfolio_contract(){
             const bool previous_ok=previous.attempt_pack_impl(false,nullptr,{},nullptr,0,nullptr,true,false);
             if(previous_ok)require(ok&&equal(floorplan_plan_json(previous.plan),floorplan_plan_json(direct.plan))&&offers(previous)==offers(direct),"incoming shapes replaced a successful victim strategy");
             else if(ok){
-                ++incoming_recovered;
+                const bool used_pair=std::find(direct.plan.accounting.fallback_events.begin(),
+                    direct.plan.accounting.fallback_events.end(),"interior_reseat_pair_recovered")!=
+                    direct.plan.accounting.fallback_events.end();
+                if(!used_pair)++incoming_recovered;
                 Engine incoming_only(in);prepare(incoming_only);incoming_only.compact_order=order;
                 const bool alone=incoming_only.attempt_pack_impl(false,nullptr,{},nullptr,0,nullptr,false,true);
-                if(!alone)++combination_only;
+                if(!used_pair&&!alone)++combination_only;
             }
             auto delta=direct.plan.accounting.quantization_engagements;delta.erase("entry-sentinel");
             checked_quantization_merge(expected_counts,delta);
@@ -643,6 +647,12 @@ void victim_shape_portfolio_contract(){
             }
         }
         queries+=std::count(expected_events.begin(),expected_events.end(),"interior_reseat_shape_trial");
+        const auto pair_count=[&](const auto* name){return std::count(expected_events.begin(),expected_events.end(),name);};
+        require(pair_count("interior_reseat_pair_trial")==pair_count("interior_reseat_pair_recovered")+
+                pair_count("interior_reseat_pair_rejected"),"completed paired trials lack a terminal outcome");
+        pair_trials+=pair_count("interior_reseat_pair_trial");
+        pair_success+=pair_count("interior_reseat_pair_recovered");
+        if(ok&&pair_count("interior_reseat_pair_recovered"))++pair_finalists;
         if(area_first)area_queries+=std::count(expected_events.begin(),expected_events.end(),"interior_reseat_shape_trial");
         incoming_queries+=std::count(expected_events.begin(),expected_events.end(),"interior_reseat_incoming_shape_trial");
         // Pass 2 is the only source of incoming-shape queries. A displaced
@@ -653,7 +663,9 @@ void victim_shape_portfolio_contract(){
             if(event=="interior_reseat_pose_trial")pose_phase=true;
             if(event=="interior_reseat_pose_search"||event=="interior_reseat_incoming_shape_trial"||
                event=="interior_reseat_retry"||event=="interior_reseat_shape_retry"||
-               event=="interior_failed_first_retry"||event=="interior_reseat_pose_resume")pose_phase=false;
+               event=="interior_failed_first_retry"||event=="interior_reseat_pose_resume"||
+               event=="interior_reseat_pair_trial")pose_phase=false;
+            if(event=="interior_reseat_pair_trial")incoming_phase=false;
             if(pose_phase&&event=="interior_reseat_shape_trial")++pose_shape_queries;
             if(event=="interior_reseat_incoming_shape_trial")incoming_phase=true;
             if(incoming_phase&&event=="interior_reseat_shape_trial")++paired_queries;
@@ -683,6 +695,8 @@ void victim_shape_portfolio_contract(){
     require(paired_queries>0,"alternative incoming shapes never tried alternative displaced shapes");
     require(area_queries>0,"area-first corpus did not execute alternative shape recovery");
     require(pose_shape_queries>0,"alternative incoming poses never reconsidered displaced shapes");
+    require(pair_trials&&pair_success&&pair_finalists,"pair corpus lacks executed trials, recovery or a complete finalist");
+    std::cout<<"paired relocation trials="<<pair_trials<<" recovered="<<pair_success<<" finalists="<<pair_finalists<<'\n';
     require(shape_skips>0,"continuation corpus never skipped a recovered alternative victim shape");
     std::cout<<"pose/shape combination queries="<<pose_shape_queries<<'\n';
     std::cout<<"pose/shape continuation skips="<<shape_skips<<'\n';

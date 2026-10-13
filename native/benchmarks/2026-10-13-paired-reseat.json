@@ -1,0 +1,67 @@
+{
+  "parent_commit": "49729925",
+  "change": "Failure-only relocation of two already-placed interior blocks after single-block pose and shape recovery is exhausted",
+  "scope": {
+    "activation": "Existing victim-shape/incoming-shape recovery with pose alternatives enabled and at least two remaining evictions",
+    "search": "Both reseating orders for every ranked unordered interior pair; existing edge occupancy and hardware checks retained",
+    "accounting": "All trials, rejections, recoveries and executed geometry work retained",
+    "acceptance": "Construction diagnostics are not independent full-board qualification"
+  },
+  "tests": {
+    "native_compact_retry_contracts": {
+      "status": "PASS",
+      "seconds": 6.20,
+      "log": "native/build/pair-reseat-coverage-tests.log",
+      "corpus_cases": 300,
+      "preserved": 227,
+      "recovered": 47,
+      "failed": 26,
+      "previous_recovered": 43,
+      "pair_trials": 253,
+      "pair_recoveries": 4,
+      "complete_pair_finalists": 4,
+      "coverage": "Deterministic replay, incumbent preservation, operation accounting, failed-attempt and exception rollback; completed pair trials reconcile with terminal events"
+    },
+    "native_policy_audits_contracts": {
+      "status": "PASS",
+      "seconds": 44.08,
+      "contracts": 722,
+      "log": "native/build/pair-reseat-final-tests.log"
+    }
+  },
+  "reference_construction": [
+    {
+      "project": "carrier",
+      "dimensions_mm": [164, 153],
+      "top": 418,
+      "bottom": 148,
+      "model_seconds": 3.978301292,
+      "pcb_text_seconds": 0.028035084,
+      "pcb_sha256": "9cf06a9d9574cf3f1dfbb37f675996e99d4bbff389caa257781a415e08f547e0",
+      "unchanged_reference": true,
+      "log": "native/build/pair-reseat-carrier-reference.log"
+    },
+    {
+      "project": "devkit_mini",
+      "dimensions_mm": [98, 98],
+      "top": 105,
+      "bottom": 55,
+      "model_seconds": 0.190203708,
+      "pcb_text_seconds": 0.007898458,
+      "pcb_sha256": "1b12fecbcbbaa5e6084c2459da93cb144a660ff19805e6e4e3f75f9c22689fdb",
+      "unchanged_reference": true,
+      "log": "native/build/pair-reseat-devkit-reference.log"
+    }
+  ],
+  "reference_checks": "Both references: fanout, ratsnest, placement contracts and placement flow pass; zero hard-red and model/emission nonsearch fallback events. No new full qualification claimed.",
+  "failed_carrier_screens": [
+    {"dimensions_mm": [164, 152], "seconds": 6.499318542, "outer_attempts": 4, "receipt_captured": true, "log": "native/build/pair-reseat-164x152.log"},
+    {"dimensions_mm": [163, 153], "seconds": 2.670307375, "outer_attempts": 4, "receipt_captured": true, "log": "native/build/pair-reseat-163x153.log"}
+  ],
+  "limitations": [
+    "No smaller carrier recovered; failure is not proof of infeasibility.",
+    "Exhaustive paired retries increase failed-search cost. Prior diagnostic runs took 1.67697125 and 2.022885208 seconds respectively; these single runs are not a controlled performance benchmark.",
+    "Synthetic recovery demonstrates additional search capability, not a carrier speedup or fabrication readiness.",
+    "Historical matched Python comparison remains separate and unfinished."
+  ]
+}
