@@ -1,0 +1,22 @@
+{
+  "source_code_commit": "f2ce60be",
+  "result": "BOARD PASS, 12 sheets; applicable mandatory checks pass",
+  "output": "/private/tmp/devkit-area-first-qualified.ImUqcu",
+  "log": "native/build/devkit-area-first-qualification.log",
+  "command": "native/bin/schgen board --project devkit_mini --multiscale-outline --audit-projections 2 --timing -o FRESH_OUTPUT",
+  "dimensions_mm": [98,98],
+  "top_parts": 105,
+  "bottom_parts": 55,
+  "pcb_sha256": "b6798d4b63d2fddbf9fad24945c151b9420b049b674ad5d637c43bf4a365137f",
+  "unchanged_from_previous_qualified": true,
+  "nonrouting_drc_errors": 0,
+  "unrouted": 408,
+  "reference_overlaps": {"top": 0,"bottom": 0},
+  "source_audit": "PASS: 69 C++ files, 75 constants, 156 registered transforms",
+  "advisory_failures": ["return_path","golden","contract_coverage_lint"],
+  "inapplicable_skips": {"manual": "project lacks required bringup subsystems", "scfw": "project lacks required bringup, usb_pd and board_services subsystems"},
+  "timing_seconds": {"input_loading_and_netlist": 0.746121,"pcb_model": 0.200845,"pcb_text": 0.008965,"render3d": 18.141175,"source_audit": 114.594516,"measured_scope_total_not_process_wall": 169.613478},
+  "visual_review": "Inspected current 3d_top.png and 3d_bottom.png; perimeter interfaces and SoM reservation visible, substantial bottom space unused. No claim all eight rendered views individually inspected.",
+  "limitations": "Unrouted design, not fabrication ready. These timings are not a matched historical Python comparison. Carrier algorithm work and full goal audit remain incomplete.",
+  "carrier_rotation_review": "Generic external-contract rotation exclusion is not sufficient to explain HDMI clashes: pcb_placement_zones.cpp supplies the templated group's four rigid orientations. pcb_orientation_contracts.cpp verifies their preservation and hard near_max metrics. No eligibility filter was removed based only on the generic helper."
+}
