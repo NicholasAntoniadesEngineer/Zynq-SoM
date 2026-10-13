@@ -258,7 +258,7 @@ public:
                 // reservations, not a net-count channel around both envelopes.
                 // Exact child clearance/fanout and hard-term checks remain.
                 if(reservation_geometry&&reservation_pair(key(s.lo),key(s.hi))) {
-                    if(auto pocket=reservation_seed_seps(sep.lo,sep.hi)) {
+                    if(auto pocket=reservation_seed_seps(sep.lo,sep.hi,joint)) {
                         for(const auto& child:*pocket) {
                             seps.push_back(child.front());
                             if(joint)domains.push_back(child);
@@ -588,7 +588,7 @@ private:
         const auto& low=in.primary_fanout.at(a);const auto& high=in.primary_fanout.at(b);
         return low.mask&&high.mask&&!(low.mask&high.mask)&&low.children&&high.children;
     }
-    std::optional<std::vector<std::vector<RepairSep>>> reservation_seed_seps(const std::string& low,const std::string& high) const {
+    std::optional<std::vector<std::vector<RepairSep>>> reservation_seed_seps(const std::string& low,const std::string& high,bool joint) const {
         const auto key=[](const std::string& name){return name.front()=='#'?name.substr(1):name;};
         const auto box=[&](const std::string& name)->const Box4& {
             return name.front()=='#'?frect.at(key(name)):seed_rect.at(name);
@@ -617,12 +617,14 @@ private:
                 RepairSep sep{x,lo,hi,bound-(x?lb.x1-lb.x0:lb.y1-lb.y0),false};
                 sep.projected_gap=true;domain.push_back(sep);
             }
-            // Do not infer a safe direction for overlapping seed geometry.
-            if(!witness)return std::nullopt;
+            // A legacy single-direction attempt needs a seed witness. Joint
+            // search can repair an overlapping seed through the complete
+            // disjunction; none of these alternatives certifies the seed.
+            if(!witness&&!joint)return std::nullopt;
             // Keep the legacy seed witness first. Joint search may choose
             // another correctly offset child direction to enter a different
             // pocket; exact physical qualification still checks every child.
-            std::rotate(domain.begin(),domain.begin()+*witness,domain.begin()+*witness+1);
+            if(witness)std::rotate(domain.begin(),domain.begin()+*witness,domain.begin()+*witness+1);
             result.push_back(std::move(domain));
         }
         if(result.empty())return std::nullopt;

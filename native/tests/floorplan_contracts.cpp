@@ -329,7 +329,7 @@ void primary_fanout_contracts() {
     // A legal seed pocket need not be the pocket satisfying electrical terms.
     // Joint search must be able to cross a child obstacle without pretending
     // that the final placement may overlap it.
-    for(bool compact:{false,true})for(int face:{1,2})for(bool horizontal:{false,true})for(bool reverse:{false,true}) {
+    for(bool compact:{false,true})for(int face:{1,2})for(bool horizontal:{false,true})for(bool reverse:{false,true})for(bool overlapping_seed:{false,true}) {
         FloorplanLegalizeInput in;in.board_w=42;in.board_h=22;in.clear=.3;in.compact=compact;
         in.fixed_rects={{"a",{1,1,41,21}}};in.fixed_poses["a"]={1,1};
         const double target=reverse?10.:30.;
@@ -338,6 +338,7 @@ void primary_fanout_contracts() {
         in.index.hard.push_back({"near_max","b","b","a",1,"alternate pocket",true,{},{}});
         std::vector<Comp> posts{{0,0,2,20,3},{19,0,2,20,3},{38,0,2,20,3}};
         FloorplanPoint seed{reverse?26.:6.,6},goal{reverse?6.:26.,6};
+        if(overlapping_seed)seed.first=16;
         if(horizontal) {
             std::swap(in.board_w,in.board_h);
             in.fixed_rects={{"a",{1,1,21,41}}};
@@ -350,8 +351,8 @@ void primary_fanout_contracts() {
         in.primary_fanout["b"]={{},{},opposite,opposite,std::vector<Comp>{}};
         Occupancy physical(in.board_w,in.board_h,.3,2,1,1,.05);
         physical.add(1,1,horizontal?20:40,horizontal?40:20,{},{},face,posts);
-        require(physical.fits_exhaustive(seed.first,seed.second,10,10,{},{},opposite,{})&&
-                physical.fits_exhaustive(goal.first,goal.second,10,10,{},{},opposite,{}),"both pocket fixtures must independently fit");
+        require(physical.fits_exhaustive(seed.first,seed.second,10,10,{},{},opposite,{})!=overlapping_seed&&
+                physical.fits_exhaustive(goal.first,goal.second,10,10,{},{},opposite,{}),"seed and destination pocket geometry disagree with fixture");
         std::vector<FloorplanLegalizeVar> vars{{"b",10,10,seed,seed.first,seed.second}};
         std::vector<std::string> log;in.joint_separation_states=64;
         require(floorplan_legalize_compact(in,vars,log),"joint solver froze the original child pocket");
