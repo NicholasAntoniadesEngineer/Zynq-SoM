@@ -178,9 +178,9 @@ void append_contract_group_faces(Context& ctx,Geometry& g,const std::string& she
             for(const auto& pin:net.pins)if(!pin.ref.empty()&&pin.ref.front()!='#')
                 pinned.insert(ctx.board_refs.at(sheet).at(pin.ref));
         }
-    const auto groups=contract_rigid_groups(contract->second,ctx.board_refs.at(sheet),pinned,true);
-    if(!groups)return;
     const auto stage=ctx.stage_input(sheet,g);
+    const auto groups=contract_rigid_groups(contract->second,ctx.board_refs.at(sheet),pinned,true,&stage.pad_nets);
+    if(!groups)return;
     std::map<std::string,decltype(PcbCheckInstance::pad_nets)> pad_nets;
     // Match final emission: unconnected physical pads still count toward the
     // fanout tier. An empty map would silently skip every multi-pin subject.

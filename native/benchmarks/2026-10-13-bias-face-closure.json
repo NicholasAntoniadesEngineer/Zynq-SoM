@@ -1,0 +1,28 @@
+{
+  "parent_commit": "fb562588",
+  "change": "Mixed-face power-stage closure now joins a declared bias resistor to the regulator whose authored bias pin shares its pad net. Missing, ambiguous or reused ownership suppresses candidate expansion, preserving original offers. Thermal-move callers without electrical evidence retain their previous closure.",
+  "tests": {
+    "native_pcb_orientation_contracts": "PASS 3.57s; real U1/R11 and U2/R13 group membership, missing and ambiguous nets rejected, every emitted power candidate retains regulator/resistor face membership, existing gate and independent accounting coverage",
+    "rigid_groups_only": "PASS 1452 assertions"
+  },
+  "smaller_carrier_screen": {
+    "dimensions_mm": [162,153],
+    "status": "construction_failed",
+    "elapsed_seconds": 3.981955042,
+    "outer_attempts": 4,
+    "receipt_captured": true,
+    "power_mixed_offers": 4,
+    "power_offer_dimensions_mm": [53.3604,23.9349],
+    "log": "native/build/bias-face-162x153.log",
+    "conclusion": "Completing bias ownership alone does not shrink the mixed-face envelope. Remaining stage geometry must be repacked; failure does not establish infeasibility."
+  },
+  "control_logs": ["native/build/bias-face-163x153.log", "native/build/bias-face-devkit.log"],
+  "controls": {
+    "carrier_pcb_sha256": "d954ec91a789f69a1e94a26a9d3a91b279fbc208dff2503cbe8ee4c8eabc199f",
+    "devkit_pcb_sha256": "1b12fecbcbbaa5e6084c2459da93cb144a660ff19805e6e4e3f75f9c22689fdb",
+    "carrier_model_seconds": 12.82909675,
+    "devkit_model_seconds": 0.190691167,
+    "result": "Both reference hashes unchanged; fanout/ratsnest/placement contract/flow pass, hard_red=0. Construction-only diagnostics, not new full qualification or controlled speedup measurements."
+  },
+  "limitations": "No new smaller accepted layout, full qualification or historical Python timing claim. Search grouping is not a new hardware requirement."
+}

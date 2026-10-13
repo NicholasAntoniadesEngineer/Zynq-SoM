@@ -29,7 +29,8 @@ struct ContractRigidGroup {
 // Unsupported or malformed constraints return no partition, never free parts.
 inline std::optional<std::vector<ContractRigidGroup>> contract_rigid_groups(
         const JsonNode& contract,const std::map<std::string,std::string>& board_refs,
-        const std::set<std::string>& required_top,bool power_stages=false) {
+        const std::set<std::string>& required_top,bool power_stages=false,
+        const std::map<std::pair<std::string,std::string>,std::string>* pad_nets=nullptr) {
     if(contract.kind!=JsonKind::Object||board_refs.empty())return std::nullopt;
     const auto* schema=object_field(contract,"contract");
     if(!schema||schema->kind!=JsonKind::String)return std::nullopt;
@@ -242,6 +243,29 @@ inline std::optional<std::vector<ContractRigidGroup>> contract_rigid_groups(
                 // for distances between independently movable stages.
                 if(!v2)connect(*anchor,*ref);
             }
+        }
+    }
+    // Complete the authored bias-cap ownership using electrical evidence.
+    // Do not infer ownership from role ordering, reference numbers or shared
+    // supply rails. Only the explicitly authored regulator bias pin qualifies.
+    if(v2&&pad_nets) {
+        const auto* roles=object_field(contract,"roles");
+        std::set<std::string> assigned;
+        for(const auto& structure:structures->array_value) {
+            const auto* type=object_field(structure,"type");
+            if(type->string_value!="bias_cap")continue;
+            const auto ic=resolve(object_field(structure,"ic"));
+            const auto* pin=object_field(structure,"pin");
+            const auto owner=pad_nets->find({*ic,pin->string_value});
+            if(!roles||owner==pad_nets->end()||owner->second.empty())return std::nullopt;
+            std::set<std::string> matches;
+            for(const auto& [local,role]:roles->object_value)if(role.string_value=="bias_r") {
+                const auto& ref=board_refs.at(local);
+                for(const auto& [pad,net]:*pad_nets)
+                    if(pad.first==ref&&net==owner->second)matches.insert(ref);
+            }
+            if(matches.size()!=1||!assigned.insert(*matches.begin()).second)return std::nullopt;
+            connect(*ic,*matches.begin());
         }
     }
     std::set<std::string> visited;

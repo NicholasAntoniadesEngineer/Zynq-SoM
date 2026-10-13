@@ -1,5 +1,6 @@
 #include "pcb_placement_orientations.hpp"
 #include "pcb_placement_fixture.hpp"
+#include "contract_rigid_groups_internal.hpp"
 #include "schgen/pcb_placement_gates.hpp"
 #include <array>
 #include <atomic>
@@ -336,6 +337,26 @@ void live(const std::filesystem::path& root){
    for(std::size_t i=0;i<power_originals.size();++i)
     demand(equal(power_originals[i],power_alternatives[i]),"power expansion changed an existing shape index");
    Context split_power_context(f.input);split_power_context.pool=power_split.footprints;
+   const auto ownership_input=split_power_context.stage_input("power",power_split.geometry);
+   const auto& ownership_refs=split_power_context.board_refs.at("power");
+   const auto ownership_groups=contract_rigid_groups(f.input.contracts.at("power"),ownership_refs,{},true,&ownership_input.pad_nets);
+   demand(ownership_groups.has_value(),"electrical power closure missing");
+   for(const auto& [ic,resistor]:std::vector<std::pair<std::string,std::string>>{{"U1","R11"},{"U2","R13"}}) {
+    const auto owner_ref=ownership_refs.at(ic);
+    const auto group=std::find_if(ownership_groups->begin(),ownership_groups->end(),[&](const auto& item){
+     return std::find(item.refs.begin(),item.refs.end(),owner_ref)!=item.refs.end();
+    });
+    demand(group!=ownership_groups->end()&&std::find(group->refs.begin(),group->refs.end(),ownership_refs.at(resistor))!=group->refs.end(),
+           "bias resistor not joined to its electrical owner");
+   }
+   for(bool ambiguous:{false,true}) {
+    auto nets=ownership_input.pad_nets;
+    const auto owner=std::make_pair(ownership_refs.at("U1"),std::string("1"));
+    if(ambiguous)nets[{ownership_refs.at("R13"),"2"}]=nets.at(owner);
+    else nets.erase(owner);
+    demand(!contract_rigid_groups(f.input.contracts.at("power"),ownership_refs,{},true,&nets),
+           "mixed-face ownership guessed through missing or ambiguous electrical evidence");
+   }
    const auto original_power_model=model(power_originals.front(),split_power_context,power_split.geometry,"power");
    demand(check_pcb_placement_contract(original_power_model,"power",&f.input.contracts.at("power"),
           split_power_context.board_refs.at("power")).ok,"power seed no longer passes its local contract");
@@ -356,6 +377,11 @@ void live(const std::filesystem::path& root){
     demand(!candidate.top_off.empty()&&!candidate.bot_off.empty(),"power group offer is not actually mixed-face");
     for(const auto* local:{"U1","U2"})
      if(candidate.bot_off.count(split_power_context.board_refs.at("power").at(local)))++buck_candidates;
+    for(const auto& [ic,resistor]:std::vector<std::pair<std::string,std::string>>{{"U1","R11"},{"U2","R13"}}) {
+     const auto& refs=split_power_context.board_refs.at("power");
+     demand(candidate.bot_off.count(refs.at(ic))==candidate.bot_off.count(refs.at(resistor)),
+            "mixed-face buck left its electrically owned bias resistor on another face");
+    }
    }
    std::cout<<"power mixed candidates="<<power_candidates<<" moved buck stages="<<buck_candidates<<'\n';
    demand(power_candidates>0&&buck_candidates>0,"power stages still have no mixed-face alternatives");
