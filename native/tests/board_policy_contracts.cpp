@@ -20,7 +20,8 @@ const NativeLedgerDeclaration& declaration(const NativeBoardPolicy& p,const std:
 void metadata(const fs::path& root){
     const auto reference=parse_json_file((root/"native/tests/data/board_policy/python_reference.json").string());
     const auto actual=floorplan_ledger_policy();std::vector<std::string> assumptions;std::vector<FloorplanLedgerPolicy> calcs;
-    for(const auto& d:actual){if(d.kind=="ASSUME")assumptions.push_back(d.name);else calcs.push_back(d);require(!d.basis.empty(),"authored basis retained");}
+    for(const auto& d:actual){if(d.kind=="ASSUME")assumptions.push_back(d.name);else calcs.push_back(d);require(!d.basis.empty(),"authored basis retained");
+        require(d.basis.size()<=88,"ledger import basis limit exceeded: "+d.name);}
     auto expected_assumptions=strings(field(reference,"assumptions"));
     const std::set<std::string> retired{"placeholder_aspect","placeholder_min","placeholder_max","zone_step","som_side_band","via_size","via_clearance","stack_thickness"};
     std::vector<std::string> migrated_assumptions;
