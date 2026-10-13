@@ -95,7 +95,7 @@ Options parse(int argc, char** argv) {
     std::set<std::string> seen;
     for (int i = 1; i < argc; ++i) {
         const std::string arg = argv[i];
-        if (!seen.insert(arg).second && arg!="--owned-shape" && arg!="--contract-group-face-sheet") throw std::invalid_argument("duplicate option: " + arg);
+        if (!seen.insert(arg).second && arg!="--owned-shape" && arg!="--contract-group-face-sheet" && arg!="--require-bottom-sheet") throw std::invalid_argument("duplicate option: " + arg);
         if (i + 1 == argc) throw std::invalid_argument("missing value: " + arg);
         const std::string value = argv[++i];
         if (arg == "--repo") out.repo = value;

@@ -24,6 +24,17 @@ void profile_option_contracts() {
     if(options({"profile","--repo",".","--compact-search","on","--owned-shape","board_aux=tag"}).owned_shapes.at("board_aux")!="tag")
         throw std::runtime_error("owned shape restriction lost tag");
     const auto multiple=options({"profile","--repo",".","--compact-search","on","--owned-shape","board_aux=tag","--owned-shape","bringup_rails=tag2"});
+    const auto bottom=options({"profile","--repo",".","--compact-search","on",
+        "--require-bottom-sheet","power_mon","--require-bottom-sheet","bringup_modules"});
+    if(bottom.require_bottom_sheets!=std::set<std::string>{"power_mon","bringup_modules"})
+        throw std::runtime_error("distinct bottom requirements must coexist");
+    for(const auto& args:std::vector<std::vector<std::string>>{
+        {"profile","--repo",".","--compact-search","on","--require-bottom-sheet","power_mon","--require-bottom-sheet","power_mon"},
+        {"profile","--repo",".","--compact-search","on","--require-bottom-sheet",""},
+        {"profile","--repo",".","--compact-search","on","--thermal-trace","on","--observers","off"}}) {
+        bool rejected=false;try{(void)options(args);}catch(const std::invalid_argument&){rejected=true;}
+        if(!rejected)throw std::runtime_error("invalid bottom requirement or thermal trace accepted");
+    }
     if(multiple.owned_shapes!=std::map<std::string,std::string>{{"board_aux","tag"},{"bringup_rails","tag2"}})
         throw std::runtime_error("distinct subsystem shape restrictions must coexist");
     if(!options({"profile","--repo",".","--compact-search","off"}).observers||

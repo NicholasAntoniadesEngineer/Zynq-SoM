@@ -3,7 +3,7 @@
     "w": 165,
     "h": 156
   },
-  "_comment": "Unqualified controlled bottom-power-monitor experiment; use --require-bottom-sheet power_mon in compact profiler. Thermal-via fallback debt remains.",
+  "_comment": "Qualified 165x156 incumbent with the complete recipe in 2026-10-13-carrier-165x156-qualified.json. Requires --require-bottom-sheet power_mon; a floorplan file alone is not acceptance. Historical failed experiments remain recorded separately.",
   "edges": {
     "N": [
       "microsd",
