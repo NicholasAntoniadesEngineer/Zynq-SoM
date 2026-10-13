@@ -3,8 +3,25 @@
 #include <cstdint>
 #include <cstring>
 #include <cmath>
+#include <algorithm>
 
 namespace schgen::floorplan_detail {
+// Diversify failure-only replay before spending its frontier on rotations of
+// the same face. Keep the accepted/initial choice first and every legal offer.
+inline std::vector<int> face_diverse_replay_indices(const std::vector<SeatShapeHit>& hits,
+                                                   const SeatShapeHit& best) {
+    std::vector<int> indices{best.index};
+    for(const auto& hit:hits)if(hit.index!=best.index)indices.push_back(hit.index);
+    const auto opposite=std::find_if(hits.begin(),hits.end(),[&](const auto& hit){
+        return hit.index!=best.index&&
+            ((best.side=="top"&&hit.side=="bottom")||(best.side=="bottom"&&hit.side=="top"));
+    });
+    if(opposite!=hits.end()) {
+        const auto found=std::find(indices.begin()+1,indices.end(),opposite->index);
+        std::rotate(indices.begin()+1,found,found+1);
+    }
+    return indices;
+}
 // This is cache eligibility, NOT replacement validation. Unusual inputs still
 // execute the original query and retain its validation/failed-prefix behavior.
 inline bool cacheable_query_geometry(const SeatShapeCand& c) {

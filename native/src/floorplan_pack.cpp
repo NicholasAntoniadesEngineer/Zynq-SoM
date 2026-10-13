@@ -559,8 +559,7 @@ bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure,
                 }
             }
             if(trace_choices&&traced_choices.insert(b.name).second) {
-                std::vector<int> indices{best.index};
-                for(const auto& h:hits)if(h.index!=best.index)indices.push_back(h.index);
+                auto indices=face_diverse_replay_indices(hits,best);
                 shape_replay_trace->emplace_back(b.name,std::move(indices));
             }
             if(observe_selection) {

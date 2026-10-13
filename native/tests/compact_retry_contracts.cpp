@@ -1,5 +1,6 @@
 #include "floorplan_internal.hpp"
 #include "native_audit_quantize_internal.hpp"
+#include "pack_refine_internal.hpp"
 #include <algorithm>
 #include <iostream>
 #include <stdexcept>
@@ -790,6 +791,16 @@ void combined_order_shape_contract(){
     std::cout<<"combined order/shape PASS attempts="<<combined_attempts<<" recovered="<<recovered<<" failures="<<failed_cases<<'\n';
 }
 void shape_choice_replay_contract() {
+    const auto hit=[](int index,const char* side){SeatShapeHit h;h.index=index;h.side=side;return h;};
+    const std::vector<SeatShapeHit> face_hits{hit(0,"top"),hit(1,"top"),hit(2,"top"),hit(3,"bottom"),hit(4,"bottom")};
+    require(floorplan_detail::face_diverse_replay_indices(face_hits,face_hits[0])==std::vector<int>({0,3,1,2,4}),
+            "same-face rotations starved the opposite-face first retry");
+    require(floorplan_detail::face_diverse_replay_indices(face_hits,face_hits[4])==std::vector<int>({4,0,1,2,3}),
+            "bottom incumbent did not retain a top-face retry or lost an offer");
+    require(floorplan_detail::face_diverse_replay_indices({face_hits[0],face_hits[1],face_hits[2]},face_hits[1])==std::vector<int>({1,0,2}),
+            "single-face retry order changed");
+    require(floorplan_detail::face_diverse_replay_indices({face_hits[3]},face_hits[3])==std::vector<int>({3}),
+            "singleton replay fabricated an alternative");
     auto in=input();auto config=std::make_shared<FloorplanExperiment>();
     config->interior_order=0;in.experiment=config;
     const Case roomy{80,70,{{8,6,2,100},{7,5,2,1}}};
