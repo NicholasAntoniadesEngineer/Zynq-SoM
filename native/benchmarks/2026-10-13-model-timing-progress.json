@@ -1,0 +1,16 @@
+{
+  "status": "Partial: exact historical carrier measurement still running when recorded",
+  "python_commit": "0e9bbc913bab77f9cd228940db2a332d25d6bfa1",
+  "cpp_commit": "2aedaaa1",
+  "historical_export": "/private/tmp/zynq-timing-0e9bbc-20261013.AgVdVx",
+  "historical_provenance": "Fresh git archive of exact commit; no historical source edits; dirty archived worktree untouched",
+  "environment": "macOS 26.6.2 build 25G83 arm64; Python 3.14.3; KiCad 10.0.2",
+  "python_scope": "pcb.build_model(two_side=True), then pcb.emit_pcb to fresh file. Imports outside interval; model includes its input loading. No full audit, DRC or render.",
+  "cpp_scope": "Compact-stage profiler observers off. Input phases reported separately; model and in-memory PCB text emission timed separately. No full audit, DRC or render. Current qualified recipe per board.",
+  "samples": {
+    "python_devkit": {"model_seconds":18.926306249923073,"emission_seconds":0.13576075003948063,"process_wall_seconds":19.55,"dimensions_mm":[100,100],"instances":152,"log":"native/build/timing-0e9bbc-devkit-model-only.log"},
+    "cpp_devkit": {"model_seconds":0.182655333,"emission_seconds":0.008051125,"process_wall_seconds":1.04,"dimensions_mm":[98,98],"instances":160,"log":"native/build/timing-current-devkit-model-only.log"},
+    "cpp_carrier": {"model_seconds":14.795610375,"emission_seconds":0.026649292,"process_wall_seconds":16.57,"dimensions_mm":[163,153],"instances":566,"log":"native/build/timing-current-carrier-model-only.log"}
+  },
+  "limitations": "Not a matched-input language-only comparison. Historical and current electrical designs/placement policies differ. Python emission writes a file; C++ emission produces text in memory. Native input loading must not be omitted when comparing generation intervals. Single sequential measurements, uncontrolled OS cache; no percentages claimed yet. Compile, full generation and render/audit comparison still outstanding."
+}

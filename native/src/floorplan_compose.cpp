@@ -260,8 +260,8 @@ public:
                 if(reservation_geometry&&reservation_pair(key(s.lo),key(s.hi))) {
                     if(auto pocket=reservation_seed_seps(sep.lo,sep.hi)) {
                         for(const auto& child:*pocket) {
-                            seps.push_back(child);
-                            if(joint)domains.push_back({child});
+                            seps.push_back(child.front());
+                            if(joint)domains.push_back(child);
                         }
                         continue;
                     }
@@ -588,7 +588,7 @@ private:
         const auto& low=in.primary_fanout.at(a);const auto& high=in.primary_fanout.at(b);
         return low.mask&&high.mask&&!(low.mask&high.mask)&&low.children&&high.children;
     }
-    std::optional<std::vector<RepairSep>> reservation_seed_seps(const std::string& low,const std::string& high) const {
+    std::optional<std::vector<std::vector<RepairSep>>> reservation_seed_seps(const std::string& low,const std::string& high) const {
         const auto key=[](const std::string& name){return name.front()=='#'?name.substr(1):name;};
         const auto box=[&](const std::string& name)->const Box4& {
             return name.front()=='#'?frect.at(key(name)):seed_rect.at(name);
@@ -601,25 +601,29 @@ private:
             const double size=x?lb.x1-lb.x0:lb.y1-lb.y0;
             if((x?hb.x0-lb.x0:hb.y0-lb.y0)>=size+reservation_gap(lo,hi,x))return std::nullopt;
         }
-        std::vector<RepairSep> result;
+        std::vector<std::vector<RepairSep>> result;
         for(const auto& first:a)for(const auto& second:b) {
             if(!occ_pair_active(first.mask,first.pmask,first.main,second.mask,second.pmask,second.main))continue;
-            std::optional<RepairSep> witness;
+            std::optional<std::size_t> witness;
+            std::vector<RepairSep> domain;
             for(bool reverse:{false,true})for(bool x:{true,false}) {
-                if(witness)continue;
                 const auto& l=reverse?second:first;const auto& h=reverse?first:second;
                 const auto& lo=reverse?high:low;const auto& hi=reverse?low:high;
                 const auto& lb=box(lo);const auto& hb=box(hi);
                 const double bound=(x?l.x+l.w-h.x:l.y+l.h-h.y)+
                     std::max(in.clear,fanout_sep(l.reach,l.inset,h.reach,h.inset,x?'E':'S'));
                 finite(bound,"child separation witness");
-                if((x?hb.x0-lb.x0:hb.y0-lb.y0)<bound)continue;
+                if(!witness&&(x?hb.x0-lb.x0:hb.y0-lb.y0)>=bound)witness=domain.size();
                 RepairSep sep{x,lo,hi,bound-(x?lb.x1-lb.x0:lb.y1-lb.y0),false};
-                sep.projected_gap=true;witness=sep;
+                sep.projected_gap=true;domain.push_back(sep);
             }
             // Do not infer a safe direction for overlapping seed geometry.
             if(!witness)return std::nullopt;
-            result.push_back(*witness);
+            // Keep the legacy seed witness first. Joint search may choose
+            // another correctly offset child direction to enter a different
+            // pocket; exact physical qualification still checks every child.
+            std::rotate(domain.begin(),domain.begin()+*witness,domain.begin()+*witness+1);
+            result.push_back(std::move(domain));
         }
         if(result.empty())return std::nullopt;
         return result;
