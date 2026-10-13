@@ -71,6 +71,7 @@ const PcbEmitPolicy &default_pcb_emit_policy() {
 }
 PcbEmitPolicy pcb_emit_policy(const ProjectConfig &c) {
     auto p = default_pcb_emit_policy();
+    p.interface_reference_labels_only = true;
     p.header_descriptions = c.header_desc;
     p.switch_descriptions = c.switch_desc;
     p.model_overrides = project_pcb_model_overrides();

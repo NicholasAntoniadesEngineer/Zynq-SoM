@@ -357,6 +357,37 @@ void thermal_world_obstacles() {
     }
     std::cout << "Thermal world-space obstacle contracts PASS\n";
 }
+void interface_label_contracts() {
+    auto policy=pcb_emit_policy(ProjectConfig{});
+    require(policy.interface_reference_labels_only,"project boards must use interface-only reference labels");
+    PcbFootprintInst part;
+    part.value="100n";part.side="top";
+    part.mod=pcb_check_footprint("label-fixture",R"((footprint "label-fixture" (layer "F.Cu")
+      (property "Reference" "REF**" (at 0 0) (layer "F.SilkS") (effects (font (size 1 1) (thickness 0.15))))
+      (property "Value" "old" (at 0 2) (layer "F.Fab") (effects (font (size 1 1) (thickness 0.15))))
+      (pad "1" smd rect (at 0 0) (size 1 1) (layers "F.Cu" "F.Paste" "F.Mask"))))");
+    for(const auto& [ref,fp,visible]:std::vector<std::tuple<std::string,std::string,bool>>{
+        {"R1","Resistor_SMD:R_0603",false},{"C1","Capacitor_SMD:C_0603",false},
+        {"U1","Package_SO:SOIC-8",false},{"Q1","Package_TO_SOT_SMD:SOT-23",false},
+        {"L1","Inductor_SMD:L_0603",false},{"D1","Diode_SMD:D_SOD-123",false},
+        {"J1","custom:port",true},{"SW1","custom:switch",true},{"TP1","custom:probe",true},
+        {"D2","LED_SMD:LED_0603",true},{"JP1","Jumper:SolderJumper",true},
+        {"BT1","Battery:Holder",true},{"FID1","Fiducial:Fiducial",true},
+        {"H1","MountingHole:Hole",true},{"F1","Fuse:Holder",true}}) {
+        part.ref=ref;part.footprint=fp;
+        require(pcb_emission::interface_label_part(part,policy)==visible,"interface label classification "+ref);
+        for(const auto* side:{"top","bottom"}) {
+            part.side=side;
+            const auto embedded=pcb_emission::embed(part,policy,[](const auto&){return std::string("00000000-0000-0000-0000-000000000001");});
+            const auto pcb=pcb_emission::node("kicad_pcb",{embedded});
+            const auto refs=collect_refdes_props(pcb,1);
+            require(refs.empty()!=visible,"emitted reference visibility "+ref+" "+side);
+            const auto bytes=sexpr_dumps(embedded);
+            require(bytes.find(ref)!=std::string::npos&&bytes.find("100n")!=std::string::npos&&bytes.find("pad")!=std::string::npos,
+                "hidden labels must retain identity, value and copper");
+        }
+    }
+}
 void thermal_selection_contracts() {
     const ViaSiteSpec rule{0, 0, 100, 100, 1, .6, .3, .25, .1, .45, .8};
     const Box4 pour{-3, -3, 3, 3};
@@ -506,6 +537,7 @@ int main(int argc, char **argv) {
         boundaries(fixtures, output);
         thermal_world_obstacles();
         thermal_selection_contracts();
+        interface_label_contracts();
         std::cout << "PCB emission: " << checks << " checks passed\n";
         return 0;
     } catch (const std::exception &e) {

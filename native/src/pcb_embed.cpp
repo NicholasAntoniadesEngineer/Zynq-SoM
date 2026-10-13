@@ -3,6 +3,17 @@
 #include "schgen/thermal_via_planning.hpp"
 
 namespace schgen::pcb_emission {
+bool interface_label_part(const PcbFootprintInst& i,const PcbEmitPolicy& p) {
+    if(lookup(p.connector_mating_faces,i.value)||lookup(p.header_descriptions,i.ref)||
+       lookup(p.switch_descriptions,i.ref))return true;
+    const auto digit=i.ref.find_first_of("0123456789");
+    const auto prefix=i.ref.substr(0,digit);
+    for(const auto* name:{"J","P","TP","SW","JP","BT","LED","FID","H"})
+        if(prefix==name)return true;
+    for(const auto* family:{"Connector","TestPoint","Button_Switch","Switch","Jumper", "LED_","Display","Battery","Fuse","MountingHole","Fiducial"})
+        if(i.footprint.find(family)!=std::string::npos)return true;
+    return false;
+}
 Box4 courtyard(const PcbFootprintInst &i) {
     if (!i.mod || !i.mod->bbox)
         throw PcbEmissionError(i.ref + ": missing footprint courtyard geometry");
@@ -54,6 +65,7 @@ Sexpr embed(const PcbFootprintInst &i, const PcbEmitPolicy &p, const Uid &uid) {
     bool hide = lookup(p.connector_mating_faces, i.value) || lookup(p.header_descriptions, i.ref) ||
                 lookup(p.switch_descriptions, i.ref) ||
                 i.footprint.find("TestPoint") != std::string::npos;
+    if(p.interface_reference_labels_only)hide=!interface_label_part(i,p);
     return embed_footprint_decorate(std::move(doc), i.ref, i.value, i.rotation, hide, nets,
                                     inherited, uid);
 }
