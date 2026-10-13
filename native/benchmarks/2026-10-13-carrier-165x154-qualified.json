@@ -1,0 +1,47 @@
+{
+  "source_commit": "0de7a101",
+  "result": "BOARD PASS: all mandatory gates, 37 sheets",
+  "output": "/private/tmp/carrier-165x154-qualified.FpKvDF",
+  "log": "native/build/carrier-165x154-qualification.log",
+  "pcb_sha256": "abcef06aa00eb91e20e55ef9a1bbaa297e122ba43e6e904cc214187f00422a50",
+  "dimensions_mm": [
+    165,
+    154
+  ],
+  "area_mm2": 25410,
+  "previous_qualified_mm": [
+    164,
+    156
+  ],
+  "original_reference_mm": [
+    168,
+    163
+  ],
+  "area_reduction_vs_previous_percent": 0.6801125703564728,
+  "area_reduction_vs_original_percent": 7.208588957055214,
+  "top_parts": 397,
+  "bottom_parts": 169,
+  "reference_overlaps": {
+    "top": 0,
+    "bottom": 0
+  },
+  "nonrouting_drc_errors": 0,
+  "unrouted": 499,
+  "source_audit": "PASS: 69 C++ files, 75 constants, 156 registered transforms",
+  "advisory_failures": [
+    "return_path",
+    "golden",
+    "contract_coverage_lint"
+  ],
+  "timing_seconds": {
+    "input_loading_and_netlist": 1.479166,
+    "pcb_model": 7.047423,
+    "pcb_text": 0.039444,
+    "render3d": 28.931352,
+    "source_audit": 110.834743,
+    "measured_scope_total_not_process_wall": 208.224625
+  },
+  "visual_review": "Inspected front and back 3D renders. Bottom population remains concentrated and much of that face remains unused. No fabrication-readiness claim.",
+  "command": "native/bin/schgen board --project carrier --compact-placement --interior-order 3 --failed-first-retry --edge-feasibility --owned-quality-first --owned-face-cohesion --contract-group-face-sheet usb_jtag --floorplan-spec native/benchmarks/carrier-165x154-bottom-modules.floorplan.json --require-bottom-sheet power_mon --require-bottom-sheet bringup_modules --joint-separation-states 1024 --reseat-poses 8 --reseat-frontier 4096 --reseat-continuations 3 --reseat-victim-shapes --owned-shape bringup_rails=bottom-a2.2/r270/owned-pins-forward --owned-shape board_aux=owned-face-a1.000000 --audit-projections 2 --timing -o FRESH_OUTPUT",
+  "limitations": "Qualified against implemented mandatory checks, not proof of complete hardware correctness. Routing out of scope. Advisory failures remain open. Matched historical timings and wider goal remain incomplete. Smaller area takes priority over aggregate wire length and modest generation-time differences."
+}

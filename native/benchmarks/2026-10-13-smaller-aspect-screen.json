@@ -1,0 +1,12 @@
+{
+  "source_commit": "0de7a101",
+  "scope": "Prepared-input construction screening, not acceptance",
+  "recipe": "2026-10-13-carrier-164x156-qualified.json profiler equivalent with stated outline overrides; pinned pilots and hardware constraints retained",
+  "trials": [
+    {"dimensions_mm": [165,154],"area_mm2": 25410,"result": "constructed_no_acceptance","model_seconds": [7.020313125,7.131434458],"pcb_text_seconds": [0.039824666,0.038908209],"pcb_sha256": "abcef06aa00eb91e20e55ef9a1bbaa297e122ba43e6e904cc214187f00422a50","identical_repeats": true,"top": 397,"bottom": 169,"cheap_checks": "fanout, ratsnest geometry, placement contract, placement flow, zero reference overlaps PASS"},
+    {"dimensions_mm": [166,153],"area_mm2": 25398,"result": "construction_failed","seconds": 4.185120334,"completed_outer_attempts": 4,"failure_receipt_captured": true},
+    {"dimensions_mm": [165,153],"area_mm2": 25245,"result": "construction_failed","seconds": 6.048155334,"completed_outer_attempts": 4,"failure_receipt_captured": true}
+  ],
+  "interpretation": "The wider but shorter 165x154 outline reduces area below the qualified 164x156 incumbent. It is only a candidate until independent full qualification completes. Other bounded failures do not prove infeasibility.",
+  "limitations": "Some screening ran concurrently, timing is instrumented and cache state uncontrolled. No speedup or fabrication-readiness claim."
+}
