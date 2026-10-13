@@ -110,6 +110,16 @@ int main(int argc,char** argv){try{
     if(run({"board","--compact-placement","--owned-face-cohesion","--owned-shape","board_aux=tag","--owned-shape","bringup_rails=tag2"}).exit_code)
         throw std::runtime_error("valid named candidate help failed");
     const auto groups=run({"board","--compact-placement","--contract-group-face-sheet","usb_jtag"});
+    const auto bottom=run({"board","--compact-placement","--require-bottom-sheet","power_mon","--require-bottom-sheet","board_aux"});
+    if(bottom.exit_code || bottom.stdout_text.find("Does not create eligibility")==std::string::npos)
+        throw std::runtime_error("bottom requirement options/help rejected");
+    for(const auto& args:std::vector<std::vector<std::string>>{
+        {"board","--require-bottom-sheet","power_mon"},
+        {"board","--compact-placement","--require-bottom-sheet"},
+        {"board","--compact-placement","--require-bottom-sheet",""},
+        {"board","--compact-placement","--require-bottom-sheet","power_mon","--require-bottom-sheet","power_mon"},
+        {"pcb-stage","--require-bottom-sheet","power_mon"}})
+        if(!run(args).exit_code)throw std::runtime_error("invalid bottom requirement accepted");
     if(groups.exit_code||groups.stdout_text.find("No assembly or thermal approval is implied")==std::string::npos)
         throw std::runtime_error("contract-group help must disclose qualification limits");
     if(run({"board","--compact-placement","--contract-group-face-sheet","usb_jtag","--contract-group-face-sheet","power"}).exit_code)

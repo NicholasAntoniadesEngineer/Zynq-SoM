@@ -71,6 +71,7 @@ struct Options {
     bool owned_extent_alternatives = false;
     bool owned_face_cohesion = false;
     std::set<std::string> contract_group_face_sheets;
+    std::set<std::string> require_bottom_sheets;
     std::map<std::string,std::string> owned_shapes;
     std::optional<std::pair<double,double>> initial_outline;
     std::optional<fs::path> floorplan_spec;
@@ -112,6 +113,13 @@ Options parse(int argc, char** argv) {
         if(arg=="--owned-face-cohesion"){
             if(!seen.insert(arg).second)throw ProjectError("duplicate option "+arg);
             out.owned_face_cohesion=true;continue;
+        }
+        if(arg=="--require-bottom-sheet"){
+            if(++i==argc||std::string(argv[i]).empty()||std::string(argv[i]).front()=='-')
+                throw ProjectError("require-bottom-sheet requires SHEET");
+            if(!out.require_bottom_sheets.insert(argv[i]).second)
+                throw ProjectError("duplicate require-bottom-sheet "+std::string(argv[i]));
+            seen.insert(arg);continue;
         }
         if(arg=="--contract-group-face-sheet"){
             if(++i==argc||std::string(argv[i]).empty()||std::string(argv[i]).front()=='-')
@@ -266,6 +274,7 @@ Options parse(int argc, char** argv) {
         allowed.insert("--owned-extent-alternatives");
         allowed.insert("--owned-face-cohesion");allowed.insert("--owned-shape");
         allowed.insert("--contract-group-face-sheet");
+        allowed.insert("--require-bottom-sheet");
         allowed.insert("--initial-outline-mm");
         allowed.insert("--floorplan-spec");
         allowed.insert("--interior-order");
@@ -333,7 +342,7 @@ Options parse(int argc, char** argv) {
         throw ProjectError("owned-quality-first requires --compact-placement");
     if(out.owned_extent_alternatives&&!out.compact_search)
         throw ProjectError("owned-extent-alternatives requires --compact-placement");
-    if((out.owned_face_cohesion||!out.owned_shapes.empty()||!out.contract_group_face_sheets.empty())&&!out.compact_search)
+    if((out.owned_face_cohesion||!out.owned_shapes.empty()||!out.contract_group_face_sheets.empty()||!out.require_bottom_sheets.empty())&&!out.compact_search)
         throw ProjectError("owned face/shape selection requires --compact-placement");
     return out;
 }
@@ -382,6 +391,7 @@ std::optional<int> run_project_command(int argc, char** argv) {
         if(options.command=="board")std::cout<<"--owned-extent-alternatives: append bounded extent-first owned-group candidates; requires --compact-placement. Original alternatives and all gates remain active.\n";
         if(options.command=="board")std::cout<<"--owned-face-cohesion: append owner/cap same-face initial packs, preserving existing candidates.\n--owned-shape SHEET=TAG: restrict a measured candidate by generated tag; unknown, ambiguous or infeasible choices fail without substitution. Requires --compact-placement. All gates remain active.\n";
         if(options.command=="board")std::cout<<"--contract-group-face-sheet SHEET: repeat for multiple sheets; experimental rigid-group bottom candidates, requires --compact-placement. Controlled-net owners and top-access parts remain pinned. No assembly or thermal approval is implied; all gates remain active.\n";
+        if(options.command=="board")std::cout<<"--require-bottom-sheet SHEET: require an already eligible bottom-side shape; repeat for multiple sheets. Requires --compact-placement. Does not create eligibility or waive hardware checks.\n";
         if(options.command=="board")std::cout<<"--floorplan-spec PATH: read an explicit candidate specification without editing the project default.\n--interior-order 0|1|2|3: use a single connectivity/area/scarcity/constraint order; no alternate-order retries unless explicitly enabled. Diagnostic strategy selection, not cached acceptance. All gates remain active.\n--failed-first-retry: one opt-in failed-block-first restart after interior seating failure; requires --compact-placement and --interior-order. Successful incumbents are retained. Final geometry and hard-term checks remain mandatory.\n";
         if(options.command=="chir-rung"||options.command=="w11-sweep")std::cout<<"Publishes board artifacts; restores input spec and fallback baseline. Diagnostic pass=False is not a successful board gate.\n";
         return 0;
@@ -509,7 +519,7 @@ std::optional<int> run_project_command(int argc, char** argv) {
         build.native_policy = true;
         build.pcb.compact_search = options.compact_search;
         build.pcb.floorplan_spec = options.floorplan_spec;
-        if(options.initial_outline || options.interior_order || options.multiscale_outline || options.edge_feasibility || options.owned_quality_first || options.owned_extent_alternatives || options.owned_face_cohesion || !options.owned_shapes.empty() || !options.contract_group_face_sheets.empty() || options.joint_states || options.reseat_pose_limits){
+        if(options.initial_outline || options.interior_order || options.multiscale_outline || options.edge_feasibility || options.owned_quality_first || options.owned_extent_alternatives || options.owned_face_cohesion || !options.owned_shapes.empty() || !options.contract_group_face_sheets.empty() || !options.require_bottom_sheets.empty() || options.joint_states || options.reseat_pose_limits){
             auto experiment=std::make_shared<FloorplanExperiment>();
             experiment->initial_outline=options.initial_outline;
             experiment->interior_order=options.interior_order;
@@ -523,6 +533,7 @@ std::optional<int> run_project_command(int argc, char** argv) {
             experiment->owned_face_cohesion=options.owned_face_cohesion;
             experiment->owned_shape_tags=options.owned_shapes;
             experiment->contract_group_face_sheets=options.contract_group_face_sheets;
+            experiment->require_bottom_sheets=options.require_bottom_sheets;
             build.pcb.experiment=std::move(experiment);
         }
         build.extraction.kicad_cli = options.kicad_cli;
