@@ -282,6 +282,29 @@ void facing_projection_contracts() {
     require(combined_runs>0,"facing fixtures did not execute combined joint strategy");
 }
 void primary_fanout_contracts() {
+    for(bool compact:{false,true})for(bool horizontal:{false,true})for(int face:{1,2}) {
+        FloorplanLegalizeInput in;in.board_w=in.board_h=22;in.clear=.3;
+        in.compact=compact;
+        in.fixed_rects={{"a",{1,1,21,21}}};in.fixed_poses["a"]={1,1};
+        in.metrics["a"]={{{"p",10,10}},{{"p",0,0,20,20}},{20,20}};
+        in.metrics["b"]={{{"p",5,5}},{{"p",0,0,10,10}},{10,10}};
+        in.index.hard.push_back({"near_max","b","b","a",100,"pocket witness",true,{},{}});
+        std::vector<Comp> posts{{0,0,2,20,3},{18,0,2,20,3}};
+        if(horizontal)for(auto& post:posts){std::swap(post.dx,post.dy);std::swap(post.w,post.h);}
+        const int opposite=face==1?2:1;
+        in.primary_fanout["a"]={{},{},face,3,posts};
+        in.primary_fanout["b"]={{},{},opposite,opposite,std::vector<Comp>{}};
+        Occupancy physical(22,22,.3,2,1,1,.05);physical.add(1,1,20,20,{},{},face,posts);
+        require(physical.fits_exhaustive(6,6,10,10,{},{},opposite,{}),"pocket seed must independently fit");
+        std::vector<FloorplanLegalizeVar> vars{{"b",10,10,{6,6},6,6}};
+        std::vector<std::string> log;in.joint_separation_states=64;
+        require(floorplan_legalize_compact(in,vars,log),"exactly feasible child pocket rejected by group projection");
+        require(physical.fits_exhaustive(vars[0].x,vars[0].y,10,10,{},{},opposite,{}),"pocket result must independently fit");
+        auto blocked=in;blocked.primary_fanout["a"].children=std::vector<Comp>{{0,0,20,20,3}};
+        vars={{"b",10,10,{6,6},6,6}};log.clear();
+        require(!floorplan_legalize_compact(blocked,vars,log),"solid through-hole reservation must still reject");
+        require(vars[0].x==6&&vars[0].y==6,"failed pocket trial must restore caller placement");
+    }
     // Two 20 mm groups cannot be separated as rectangles on this board, but
     // sparse reservations on their opposite faces interlock with 1 mm gaps.
     for(int direction=0;direction<4;++direction)for(bool compact:{false,true}) {

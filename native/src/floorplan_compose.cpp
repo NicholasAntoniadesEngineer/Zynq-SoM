@@ -253,6 +253,13 @@ public:
                         gap(!sep.axis_x);
                 }
                 if(reservation_geometry&&s.gap<=in.clear&&reservation_pair(key(s.lo),key(s.hi))) {
+                    if(auto pocket=reservation_seed_seps(sep.lo,sep.hi)) {
+                        for(const auto& child:*pocket) {
+                            seps.push_back(child);
+                            if(joint)domains.push_back({child});
+                        }
+                        continue;
+                    }
                     sep.projected_gap=true;
                     sep.gap=reservation_gap(sep.lo,sep.hi,sep.axis_x);
                     sep.flipped_gap=sep.reverse_on_flip?
@@ -486,6 +493,42 @@ private:
         if(in.primary_fanout.empty())return false;
         const auto& low=in.primary_fanout.at(a);const auto& high=in.primary_fanout.at(b);
         return low.mask&&high.mask&&!(low.mask&high.mask)&&low.children&&high.children;
+    }
+    std::optional<std::vector<RepairSep>> reservation_seed_seps(const std::string& low,const std::string& high) const {
+        const auto key=[](const std::string& name){return name.front()=='#'?name.substr(1):name;};
+        const auto box=[&](const std::string& name)->const Box4& {
+            return name.front()=='#'?frect.at(key(name)):seed_rect.at(name);
+        };
+        const auto& a=local_reservations.at(key(low));const auto& b=local_reservations.at(key(high));
+        // Ordinary common-direction projection already represents these seeds.
+        for(bool reverse:{false,true})for(bool x:{true,false}) {
+            const auto& lo=reverse?high:low;const auto& hi=reverse?low:high;
+            const auto& lb=box(lo);const auto& hb=box(hi);
+            const double size=x?lb.x1-lb.x0:lb.y1-lb.y0;
+            if((x?hb.x0-lb.x0:hb.y0-lb.y0)>=size+reservation_gap(lo,hi,x))return std::nullopt;
+        }
+        std::vector<RepairSep> result;
+        for(const auto& first:a)for(const auto& second:b) {
+            if(!occ_pair_active(first.mask,first.pmask,first.main,second.mask,second.pmask,second.main))continue;
+            std::optional<RepairSep> witness;
+            for(bool reverse:{false,true})for(bool x:{true,false}) {
+                if(witness)continue;
+                const auto& l=reverse?second:first;const auto& h=reverse?first:second;
+                const auto& lo=reverse?high:low;const auto& hi=reverse?low:high;
+                const auto& lb=box(lo);const auto& hb=box(hi);
+                const double bound=(x?l.x+l.w-h.x:l.y+l.h-h.y)+
+                    std::max(in.clear,fanout_sep(l.reach,l.inset,h.reach,h.inset,x?'E':'S'));
+                finite(bound,"child separation witness");
+                if((x?hb.x0-lb.x0:hb.y0-lb.y0)<bound)continue;
+                RepairSep sep{x,lo,hi,bound-(x?lb.x1-lb.x0:lb.y1-lb.y0),false};
+                sep.projected_gap=true;witness=sep;
+            }
+            // Do not infer a safe direction for overlapping seed geometry.
+            if(!witness)return std::nullopt;
+            result.push_back(*witness);
+        }
+        if(result.empty())return std::nullopt;
+        return result;
     }
     double reservation_gap(const std::string& low,const std::string& high,bool x) const {
         // Linear raw-offset bounds propose a pose only. Child positions are
