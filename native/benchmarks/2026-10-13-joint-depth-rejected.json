@@ -1,0 +1,30 @@
+{
+  "parent_commit": "b4624ce2",
+  "experiment": "Replace the joint search FIFO queue with a LIFO stack. Reverse each newly generated sibling suffix so ascending conflict/domain order remains preferred. Keep generated-state cap, deduplication, unary filtering, cycle certificates and qualification unchanged.",
+  "decision": "REJECTED and source changes removed: no observed carrier compaction and more axis work.",
+  "tests": {
+    "existing_floorplan_suite": "PASS 13.81s",
+    "additional_coordinated_fixture": "FAIL at 64 states; removed from the production suite because it is an unachieved algorithmic capability, not an existing contract",
+    "fixture_reproduction": "Sixteen unit-size movable blocks on 20x20, eight independent (a_i,b_i) domains containing X-forward or Y-forward zero-gap separation. Qualification requires y[b_i]>=y[a_i]+1 for every pair. Feasible all-Y assignment exists, but this DFS traversal still fails to reach it within 64 generated states.",
+    "failure_log": "native/build/joint-depth-final-tests.log",
+    "lesson": "LIFO alone does not prevent revisiting combinations that undo earlier useful choices; a depth-first label does not establish effective coordinated search."
+  },
+  "carrier_163x153": {
+    "unchanged_pcb_sha256": "d954ec91a789f69a1e94a26a9d3a91b279fbc208dff2503cbe8ee4c8eabc199f",
+    "baseline_axis_solves": 19247,
+    "experiment_axis_solves": 29442,
+    "baseline_joint_states": 23133,
+    "experiment_joint_states": 26511,
+    "baseline_proposals": 681,
+    "experiment_proposals": 371,
+    "experiment_model_seconds": 11.881368375,
+    "log": "native/build/joint-depth-carrier.log"
+  },
+  "smaller_candidates": [
+    {"dimensions_mm": [162,153], "status": "construction_failed", "seconds": 3.841924208, "outer_attempts": 4, "log": "native/build/joint-depth-162x153.log"},
+    {"dimensions_mm": [163,152], "status": "construction_failed", "seconds": 10.092391375, "outer_attempts": 4, "log": "native/build/joint-depth-163x152.log"}
+  ],
+  "limits": "Concurrent diagnostic single runs are not timing benchmarks. No smaller board or hardware infeasibility proof. No full qualification, devkit replay or historical Python comparison claimed for rejected code.",
+  "restoration": "CLI, profiler and floorplan test explicitly relinked with unchanged production source. Floorplan suite PASS 13.73s; native/build/joint-depth-revert-tests.log.",
+  "next_direction": "Investigate representation of legal group shapes and obstacle-conditioned placements before spending more work on generic queue-order changes. Contract-group bottom placement currently offers only four bounding-box corner alignments per rotation before combining individually valid groups."
+}
