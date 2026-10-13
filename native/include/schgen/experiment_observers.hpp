@@ -75,6 +75,9 @@ struct FloorplanExperiment {
     bool owned_quality_first = false;
     // Experimental envelope-area ranking of legal shapes; not a feasibility relaxation.
     bool shape_area_first = false;
+    // Failure-only full-attempt replays of early legal shape choices. Bounds
+    // additional attempts, not hardware feasibility or total solver work.
+    std::size_t shape_choice_replays = 0;
     bool owned_extent_alternatives = false;
     bool owned_face_cohesion = false;
     // Canonical order makes multi-sheet expansion independent of CLI order.

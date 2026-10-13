@@ -9,6 +9,16 @@ int main(int argc,char** argv){try{
         args.insert(args.end(),{"--help","--repo","/nonexistent/seed-help-must-not-read"});
         return schgen::run_process(args);
     };
+    if(run({"board","--compact-placement","--interior-order","3","--shape-choice-replays","8"}).exit_code)
+        throw std::runtime_error("valid shape-choice replay option rejected");
+    for(const auto& args:std::vector<std::vector<std::string>>{
+        {"board","--shape-choice-replays","8"},
+        {"board","--compact-placement","--shape-choice-replays","8"},
+        {"board","--compact-placement","--interior-order","3","--shape-choice-replays","0"},
+        {"board","--compact-placement","--interior-order","3","--shape-choice-replays","2x"},
+        {"board","--compact-placement","--interior-order","3","--shape-choice-replays","8","--shape-choice-replays","8"},
+        {"pcb-stage","--shape-choice-replays","8"}})
+        if(!run(args).exit_code)throw std::runtime_error("invalid shape-choice replay option accepted");
     const std::vector<std::string> reseat{"board","--compact-placement","--interior-order","3","--reseat-poses","8","--reseat-frontier","4096","--reseat-continuations","3"};
     const auto reseat_help=run(reseat);
     auto shape_args=reseat;shape_args.push_back("--reseat-victim-shapes");

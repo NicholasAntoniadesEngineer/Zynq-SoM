@@ -789,7 +789,121 @@ void combined_order_shape_contract(){
     require(combined_attempts&&failed_cases&&exception_verified,"combined fixture missed execution, rollback or exception");
     std::cout<<"combined order/shape PASS attempts="<<combined_attempts<<" recovered="<<recovered<<" failures="<<failed_cases<<'\n';
 }
+void shape_choice_replay_contract() {
+    auto in=input();auto config=std::make_shared<FloorplanExperiment>();
+    config->interior_order=0;in.experiment=config;
+    const Case roomy{80,70,{{8,6,2,100},{7,5,2,1}}};
+    Engine baseline(in);setup(baseline,roomy);require(baseline.attempt_pack(false),"roomy control failed");
+    config->shape_choice_replays=16;
+    Engine unchanged(in);setup(unchanged,roomy);require(unchanged.attempt_pack(false),"replay displaced success");
+    require(equal(floorplan_plan_json(baseline.plan),floorplan_plan_json(unchanged.plan))&&
+            offers(baseline)==offers(unchanged),"successful incumbent or accounting changed");
+    // Two independently selectable early blocks plus a genuinely impossible
+    // final block: all four side combinations must execute before exhaustion.
+    const Case impossible{80,70,{{8,6,2,100},{7,5,2,1}},true};
+    Engine failed(in);setup(failed,impossible);const auto initial=layout(failed.plan);
+    const auto initial_offers=offers(failed);
+    std::vector<std::map<std::string,int>> executed_prefixes;
+    config->stage_rejected=[&](const auto&){executed_prefixes.push_back(failed.shape_replay_choices);};
+    entries=0;observing=true;require(!failed.attempt_pack(false),"oversized terminal accepted");observing=false;
+    config->stage_rejected={};
+    const auto& events=failed.plan.accounting.fallback_events;
+    require(std::count(events.begin(),events.end(),"interior_shape_choice_replay")==3,
+            "two-choice replay must explore combined alternatives, not isolated switches only");
+    require(entries==4&&failed.plan.accounting.quantization_engagements.at("run_overflow_tol")==entries,
+            "replay lost or invented actual scalar work");
+    require(equal(initial,layout(failed.plan))&&initial_offers==offers(failed)&&
+            failed.owned_shape_choices.empty()&&!failed.shape_replay_trace,
+            "exhaustion leaked plan, offers, restrictions or borrowed trace");
+    require(std::count(events.begin(),events.end(),"interior_shape_choice_budget")==0,
+            "complete prefix exhaustion incorrectly claimed a budget cutoff");
+    // Re-run each observed prefix as an isolated ordinary attempt. Sum every
+    // receipt, not merely a selected counter or the successful final attempt.
+    config->shape_choice_replays=0;
+    QuantizationCounts expected{{"entry-sentinel",19}};
+    std::vector<std::string> expected_events{"entry-fallback"};
+    require(executed_prefixes.size()==4,"missing completed prefix observations");
+    for(std::size_t i=0;i<executed_prefixes.size();++i) {
+        Engine isolated(in);setup(isolated,impossible);isolated.shape_replay_choices=executed_prefixes[i];
+        require(!isolated.attempt_pack(false),"isolated impossible prefix accepted");
+        auto delta=isolated.plan.accounting.quantization_engagements;delta.erase("entry-sentinel");
+        checked_quantization_merge(expected,delta);
+        if(i)expected_events.push_back("interior_shape_choice_replay");
+        const auto& isolated_events=isolated.plan.accounting.fallback_events;
+        expected_events.insert(expected_events.end(),isolated_events.begin()+1,isolated_events.end());
+    }
+    require(failed.plan.accounting.quantization_engagements==expected&&events==expected_events,
+            "replay aggregate differs from independently executed prefix receipts");
+    config->shape_choice_replays=1;
+    Engine capped(in);setup(capped,impossible);require(!capped.attempt_pack(false),"capped impossible fixture accepted");
+    require(std::count(capped.plan.accounting.fallback_events.begin(),capped.plan.accounting.fallback_events.end(),
+                       "interior_shape_choice_budget")==1,"unexplored branches lost budget receipt");
+    config->shape_choice_replays=2;
+    const Case many_shapes{80,70,{{8,6,6,100},{7,5,2,1}},true};
+    Engine fair(in);setup(fair,many_shapes);
+    std::vector<std::map<std::string,int>> replayed;
+    std::map<std::string,int> root_choices;
+    config->owned_shape_selection_completed=[&](const auto& name,const auto&,const auto&,int chosen){
+        if(fair.shape_replay_choices.empty())root_choices.emplace(name,chosen);
+    };
+    config->stage_rejected=[&](const auto&){replayed.push_back(fair.shape_replay_choices);};
+    require(!fair.attempt_pack(false),"fair-frontier terminal accepted");config->stage_rejected={};
+    config->owned_shape_selection_completed={};
+    require(replayed.size()==3&&replayed[0].empty()&&replayed[1].size()==1&&replayed[1].at("b0")!=root_choices.at("b0")&&
+            replayed[2].at("b0")==root_choices.at("b0")&&replayed[2].at("b1")!=root_choices.at("b1"),
+            "shape-rich first block starved the next block's first alternative");
+    config->shape_choice_replays=1;
+    // Existing hard shape restrictions must remain hard and survive rollback.
+    Engine pinned(in);setup(pinned,impossible);pinned.owned_shape_choices={{"b0",1},{"b1",1}};
+    require(!pinned.attempt_pack(false)&&pinned.owned_shape_choices==std::map<std::string,int>{{"b0",1},{"b1",1}},
+            "replay relaxed caller restrictions");
+    require(std::count(pinned.plan.accounting.fallback_events.begin(),pinned.plan.accounting.fallback_events.end(),
+                       "interior_shape_choice_replay")==0,"replayed a restricted singleton");
+    Engine interrupted(in);setup(interrupted,impossible);
+    config->stage_rejected=[&](const auto&){
+        if(std::count(interrupted.plan.accounting.fallback_events.begin(),interrupted.plan.accounting.fallback_events.end(),
+                      "interior_shape_choice_replay"))throw std::runtime_error("shape replay stop");
+    };
+    bool propagated=false;entries=0;observing=true;
+    try{(void)interrupted.attempt_pack(false);}catch(const std::runtime_error& e){propagated=std::string(e.what())=="shape replay stop";}
+    observing=false;config->stage_rejected={};
+    require(propagated&&equal(initial,layout(interrupted.plan))&&initial_offers==offers(interrupted)&&
+            interrupted.owned_shape_choices.empty()&&!interrupted.shape_replay_trace,
+            "interrupted replay swallowed exception or leaked state");
+    require(entries==2&&interrupted.plan.accounting.quantization_engagements.at("run_overflow_tol")==entries,
+            "exception lost executed replay work");
+    config->shape_choice_replays=32;
+    const Case trap{70,50,{{29,16,3,4},{12,30,2,0},{30,18,3,2},{31,26,2,3},{7,7,1,3},{31,9,2,1}}};
+    config->shape_choice_replays=0;
+    Engine trapped(in);setup(trapped,trap);require(!trapped.attempt_pack(false),"recovery control no longer fails");
+    config->shape_choice_replays=32;
+    Engine recovered(in);setup(recovered,trap);
+    const bool ok=recovered.attempt_pack(false);
+    std::cout<<"shape-choice recovery witness="<<ok<<" replays="<<std::count(recovered.plan.accounting.fallback_events.begin(),
+        recovered.plan.accounting.fallback_events.end(),"interior_shape_choice_replay")<<'\n';
+    require(ok,"shape-choice recovery witness not recovered");
+    for(const auto& a:recovered.plan.interior_blocks) {
+        require(a.x>=0&&a.y>=0&&a.x+a.w<=trap.w&&a.y+a.h<=trap.h,"replay escaped board bounds");
+        for(const auto& b:recovered.plan.interior_blocks)if(a.name!=b.name)
+            require(a.side!=b.side||a.x+a.w<=b.x||b.x+b.w<=a.x||a.y+a.h<=b.y||b.y+b.h<=a.y,
+                    "replay accepted overlapping same-face rectangles");
+    }
+    Engine repeated(in);setup(repeated,trap);require(repeated.attempt_pack(false)&&
+        equal(floorplan_plan_json(recovered.plan),floorplan_plan_json(repeated.plan))&&offers(recovered)==offers(repeated),
+        "replay changed deterministic output or accounting");
+    config->shape_choice_replays=2;
+    auto hard=in;FloorplanTerm term;term.kind="far_min";term.sheet="b0";term.subject="b0";term.target_raw="b1";term.bound=1000;term.enforced=true;
+    hard.compose.index.hard={term,{"near_max","b0","b0","b1",100,"test",true,{},{}}};
+    hard.compose.wired_participants.insert("b0");
+    for(const auto* name:{"b0","b1"}) {
+        hard.compose.metrics[name]={{{"U1",1,1}},{{"U1",0,0,2,2}},{8,6}};
+        hard.compose.shape_metrics[{name,1}]=hard.compose.metrics[name];
+    }
+    Engine constrained(hard);setup(constrained,roomy);
+    require(!constrained.attempt_pack(false),"shape replay bypassed impossible authored hardware distance");
+}
 int main(){try{
+    shape_choice_replay_contract();
     check("canonical",{80,70,{{8,6,2,1},{7,5,2,0}}},0);
     check("area-wins",{70,50,{{29,16,3,4},{12,30,2,0},{30,18,3,2},{31,26,2,3},{7,7,1,3},{31,9,2,1}}},1);
     check("constrained-wins",{70,60,{{9,16,1,0},{18,27,2,1},{25,14,2,0},{11,29,1,1},{27,30,1,1},{31,7,1,0},{30,18,3,1}}},2);

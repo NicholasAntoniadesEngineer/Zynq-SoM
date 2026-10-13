@@ -69,6 +69,7 @@ struct Options {
     bool failed_first_retry = false;
     bool owned_quality_first = false;
     bool shape_area_first = false;
+    std::size_t shape_choice_replays=0;
     bool owned_extent_alternatives = false;
     bool owned_face_cohesion = false;
     std::set<std::string> contract_group_face_sheets;
@@ -148,6 +149,15 @@ Options parse(int argc, char** argv) {
         if(arg=="--edge-feasibility"){
             if(!seen.insert(arg).second)throw ProjectError("duplicate option "+arg);
             out.edge_feasibility=true;continue;
+        }
+        if(arg=="--shape-choice-replays"){
+            if(!seen.insert(arg).second)throw ProjectError("duplicate option "+arg);
+            if(++i==argc)throw ProjectError("shape-choice-replays requires a positive integer");
+            const std::string value=argv[i];std::size_t n=0;
+            const auto parsed=std::from_chars(value.data(),value.data()+value.size(),n);
+            if(parsed.ec!=std::errc{}||parsed.ptr!=value.data()+value.size()||!n)
+                throw ProjectError("shape-choice-replays requires a positive integer");
+            out.shape_choice_replays=n;continue;
         }
         if(arg=="--joint-separation-states"){
             if(!seen.insert(arg).second)throw ProjectError("duplicate option "+arg);
@@ -273,6 +283,7 @@ Options parse(int argc, char** argv) {
         allowed.insert("--multiscale-outline");
         allowed.insert("--edge-feasibility");
         allowed.insert("--joint-separation-states");
+        allowed.insert("--shape-choice-replays");
         allowed.insert("--reseat-poses");allowed.insert("--reseat-frontier");allowed.insert("--reseat-continuations");
         allowed.insert("--failed-first-retry");
         allowed.insert("--owned-quality-first");
@@ -342,6 +353,8 @@ Options parse(int argc, char** argv) {
         throw ProjectError("edge-feasibility requires --compact-placement");
     if(out.joint_states&&!out.compact_search)
         throw ProjectError("joint-separation-states requires --compact-placement");
+    if(out.shape_choice_replays&&(!out.compact_search||!out.interior_order))
+        throw ProjectError("shape-choice-replays requires --compact-placement and --interior-order");
     if(out.failed_first_retry&&(!out.compact_search||!out.interior_order))
         throw ProjectError("failed-first-retry requires --compact-placement and --interior-order");
     if(out.owned_quality_first&&!out.compact_search)
@@ -393,6 +406,7 @@ std::optional<int> run_project_command(int argc, char** argv) {
         if(options.command=="board")std::cout<<"--multiscale-outline: opt-in bounded axis/diagonal refinement; may stop at a larger local solution. Use a validated starting candidate when available. All gates remain active; fixed outlines conflict.\n";
         if(options.command=="board")std::cout<<"--edge-feasibility: opt-in sequential clearance-aware initial edge runs; requires --compact-placement. Not a complete joint solver. Rounded poses are rechecked; all gates remain active.\n";
         if(options.command=="board")std::cout<<"--joint-separation-states N: opt-in failure-only coupled-axis search, with interior-neighbour translation after constrained-only solves fail. N bounds each joint search, not total build work; hardware-fixed obstacles and all gates remain active. Requires --compact-placement.\n";
+        if(options.command=="board")std::cout<<"--shape-choice-replays N: failure-only alternative shape/side prefixes. N bounds additional attempts per packing call, not total build work; successful incumbents and every hardware gate remain unchanged. Requires --compact-placement and --interior-order.\n";
         if(options.command=="board")std::cout<<"--audit-projections 1|2: simultaneous source-audit AST projections (default 1). Two trades more memory for potential throughput; audit coverage and source-change checks are unchanged.\n";
         if(options.command=="board")std::cout<<"--reseat-poses N --reseat-frontier N [--reseat-continuations N]: failure-only placement alternatives; both pose/frontier limits required. Continuations revisit early choices after downstream failure and require --interior-order. All hardware checks remain active; limits bound search effort, not feasibility. Requires --compact-placement. --reseat-victim-shapes adds one full alternate-victim-shape strategy only after original strategies fail; requires explicit --interior-order and pose/frontier limits. With --failed-first-retry, also tries combined order/shape recovery; continuations may be enabled together.\n";
         if(options.command=="board")std::cout<<"--owned-quality-first: opt-in same-pose, same-face owned proximity priority; requires --compact-placement. May increase inter-block estimate. No hardware proximity limit is implied; all gates remain active.\n";
@@ -533,6 +547,7 @@ std::optional<int> run_project_command(int argc, char** argv) {
             experiment->initial_outline=options.initial_outline;
             experiment->interior_order=options.interior_order;
             experiment->joint_separation_states=options.joint_states;
+            experiment->shape_choice_replays=options.shape_choice_replays;
             experiment->reseat_pose_limits=options.reseat_pose_limits;
             experiment->multiscale_outline=options.multiscale_outline;
             experiment->compact_edge_feasibility=options.edge_feasibility;

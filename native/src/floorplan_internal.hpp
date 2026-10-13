@@ -133,6 +133,10 @@ public:
     std::array<std::map<std::string, std::vector<Shape>>, 2> shape_sets;
     std::map<std::string, SideOffer> side_offers;
     std::map<std::string,int> owned_shape_choices;
+    using ShapeChoiceTrace=std::vector<std::pair<std::string,std::vector<int>>>;
+    ShapeChoiceTrace* shape_replay_trace=nullptr;
+    bool shape_replay_trace_started=false;
+    std::map<std::string,int> shape_replay_choices;
     std::vector<CrossPart> cross_parts;
     std::vector<CrossNet> cross_nets;
     std::map<std::string, std::vector<std::size_t>> nets_by_sheet;
@@ -168,6 +172,7 @@ public:
                                 bool thru_only = false) const;
     void board_size(double w, double h);
     bool attempt_pack(bool compact);
+    bool attempt_shape_replays(bool compact);
     bool attempt_pack_impl(bool compact,bool* order_independent_failure=nullptr,
                            const std::string& promote={},std::string* failed_subject=nullptr,
                            std::size_t first_pose_skip=0,bool* selected_pose=nullptr,

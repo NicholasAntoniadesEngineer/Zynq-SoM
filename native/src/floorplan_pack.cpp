@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <deque>
 #include <limits>
 #include <unordered_map>
 #include "pack_refine_internal.hpp"
@@ -71,7 +72,65 @@ PackAnchorIn Engine::anchor_row(const FloorplanBlock& b,
     return a;
 }
 
+bool Engine::attempt_shape_replays(bool compact) {
+    const auto entry=plan;
+    const auto offers=side_offers;
+    const auto restrictions=shape_replay_choices;
+    const auto restore=[&] {
+        auto accounting=std::move(plan.accounting);
+        plan=entry;plan.accounting=std::move(accounting);side_offers=offers;
+    };
+    using Choices=std::map<std::string,int>;
+    std::deque<Choices> pending;
+    std::set<Choices> seen{restrictions};
+    const auto budget=in.experiment->shape_choice_replays;
+    std::size_t executed=0;
+    bool truncated=false;
+    ShapeChoiceTrace trace;
+    shape_replay_trace=&trace;
+    const auto cleanup=[&] {
+        shape_replay_trace=nullptr;shape_replay_trace_started=false;
+        shape_replay_choices=restrictions;
+    };
+    try {
+        for(;;) {
+            trace.clear();shape_replay_trace_started=false;
+            if(attempt_pack(compact)) {cleanup();return true;}
+            // Replay actual legal early choices from the first packing pass.
+            // Include preceding choices to explore combinations, but allow
+            // subsequent eviction/repair to change them. Deduplicate prefixes.
+            // Round-robin alternative rank across decisions: a shape-rich
+            // early block must not consume the entire frontier before a later
+            // block receives even its first alternative.
+            std::size_t alternatives=0;
+            for(const auto& decision:trace)alternatives=std::max(alternatives,decision.second.size());
+            for(std::size_t i=1;i<alternatives;++i) {
+                auto prefix=shape_replay_choices;
+                for(const auto& [sheet,indices]:trace) {
+                  if(i<indices.size()) {
+                    auto child=prefix;child[sheet]=indices[i];
+                    if(!seen.count(child)) {
+                        if(pending.size()>=budget-executed)truncated=true;
+                        else {seen.insert(child);pending.push_back(std::move(child));}
+                    }
+                  }
+                  prefix[sheet]=indices.front();
+                }
+            }
+            if(executed==budget||pending.empty())break;
+            restore();shape_replay_choices=std::move(pending.front());pending.pop_front();
+            ++executed;fallback("interior_shape_choice_replay");
+        }
+        if(truncated||!pending.empty())fallback("interior_shape_choice_budget");
+        restore();cleanup();return false;
+    } catch(...) {restore();cleanup();throw;}
+}
+
 bool Engine::attempt_pack(bool compact) {
+    if(in.experiment&&in.experiment->shape_choice_replays&&!shape_replay_trace) {
+        validate_floorplan_experiment(*in.experiment);
+        return attempt_shape_replays(compact);
+    }
     return run_floorplan_experiment_attempt(in.experiment.get(), plan.punch_free,
         [&] {
             if(in.experiment && in.experiment->interior_order) {
@@ -176,6 +235,10 @@ bool Engine::attempt_pack(bool compact) {
 bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure,
                               const std::string& promote,std::string* failed_subject,
                               std::size_t first_pose_skip,bool* selected_pose,bool victim_shapes,bool incoming_shapes) {
+    const bool trace_choices=shape_replay_trace&&!shape_replay_trace_started;
+    if(shape_replay_trace)shape_replay_trace_started=true;
+    std::set<std::string> traced_choices;
+    std::set<std::string> initial_shape_choices;
     if(selected_pose)*selected_pose=false;
     if(order_independent_failure)*order_independent_failure=true;
     // Borrow only for this synchronous invocation; never attach a sink to
@@ -389,8 +452,14 @@ bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure,
         }
         std::vector<SeatShapeCand> cands;
         const auto restricted=owned_shape_choices.find(b.name);
+        // Replay an early choice, not a new hardware restriction. Later
+        // eviction/repair is free to change it; caller restrictions remain
+        // enforced independently throughout the whole attempt.
+        const auto replay=shape_replay_choices.find(b.name);
+        const bool first_choice=replay!=shape_replay_choices.end()&&initial_shape_choices.insert(b.name).second;
         for (std::size_t k=0;k<variants->second.size();++k) {
             if(restricted!=owned_shape_choices.end()&&static_cast<int>(k)!=restricted->second)continue;
+            if(first_choice&&replay!=shape_replay_choices.end()&&static_cast<int>(k)!=replay->second)continue;
             const auto& s=variants->second[k];
             if(in.experiment&&in.experiment->require_bottom_sheets.count(b.name)&&s.side!="bottom")continue;
             auto win=std::make_tuple(-bw,2*bw,-bh,2*bh);
@@ -475,6 +544,11 @@ bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure,
                         rank=candidate;best=h;selected=evaluated.at(i);
                     }
                 }
+            }
+            if(trace_choices&&traced_choices.insert(b.name).second) {
+                std::vector<int> indices{best.index};
+                for(const auto& h:hits)if(h.index!=best.index)indices.push_back(h.index);
+                shape_replay_trace->emplace_back(b.name,std::move(indices));
             }
             if(observe_selection) {
                 std::vector<OwnedShapeTieRank> alternatives;

@@ -31,6 +31,8 @@ Engine::Engine(const FloorplanInput& input) : in(input) {
     }
     if(in.experiment&&in.experiment->reseat_pose_limits&&!in.compact_search)
         throw FloorplanError("pose retry requires compact search");
+    if(in.experiment&&in.experiment->shape_choice_replays&&!in.compact_search)
+        throw FloorplanError("shape-choice replay requires compact search");
     if(in.experiment&&in.experiment->owned_shape_catalogued)
         for(const auto& [sheet,shapes]:in.geometry.shapes)for(std::size_t i=0;i<shapes.size();++i){
             if(!shapes[i].tag.empty())
@@ -333,7 +335,7 @@ std::vector<Box4> Engine::som_keepouts() const {
 void Engine::fallback(const std::string& name) {
     static const std::set<std::string> joint{"legalize_neighbour_retry","legalize_joint_retry","legalize_joint_state","legalize_joint_axis","legalize_joint_axis_reuse","legalize_joint_proposal","legalize_joint_reject","legalize_joint_budget","legalize_joint_domain_probe","legalize_joint_domain_reject"};
     static const std::set<std::string> allowed{"interior_reseat_pose_hint","interior_reseat_pose_resume","interior_reseat_pose_skip","interior_reseat_pose_search","interior_reseat_pose_trial","interior_reseat_pose_budget","interior_reseat_pose_cap","interior_failed_first_retry","legalize_only_compaction","punch_free_plan_rejected","interior_reseat_retry","edge_run_translation","screened_incumbent_retained","legalize_reservation_retry","legalize_facing_retry"};
-    static const std::set<std::string> shapes{"interior_reseat_shape_retry","interior_reseat_shape_trial","interior_reseat_incoming_shape_trial",
+    static const std::set<std::string> shapes{"interior_shape_choice_replay","interior_shape_choice_budget","interior_reseat_shape_retry","interior_reseat_shape_trial","interior_reseat_incoming_shape_trial",
         "interior_reseat_pair_trial","interior_reseat_pair_rejected","interior_reseat_pair_recovered"};
     if (!allowed.count(name)&&!joint.count(name)&&!shapes.count(name)) throw std::logic_error("floorplan: unregistered fallback " + repr(name));
     plan.accounting.fallback_events.push_back(name);

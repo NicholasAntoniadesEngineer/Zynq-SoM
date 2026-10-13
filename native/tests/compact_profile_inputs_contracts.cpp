@@ -98,6 +98,14 @@ void profile_option_contracts() {
         if(!rejected)throw std::runtime_error("invalid failed-first retry option accepted");
     }
     bool invalid_trace=false;
+    if(options({"profile","--repo",".","--compact-search","on","--interior-order","3","--shape-choice-replays","8"}).shape_choice_replays!=8)
+        throw std::runtime_error("shape replay limit lost");
+    for(const auto* value:{"0","-1","1.5","8x","999999999999999999999999999"}) {
+        bool rejected=false;
+        try{(void)options({"profile","--repo",".","--compact-search","on","--interior-order","3","--shape-choice-replays",value});}
+        catch(const std::invalid_argument&){rejected=true;}
+        if(!rejected)throw std::runtime_error("invalid shape replay limit accepted");
+    }
     if(options({"profile","--repo",".","--compact-search","on"}).shape_area_first||
        !options({"profile","--repo",".","--compact-search","on","--shape-area-first","on"}).shape_area_first)
         throw std::runtime_error("shape-area-first default/selection mismatch");

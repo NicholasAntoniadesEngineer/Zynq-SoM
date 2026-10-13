@@ -45,6 +45,8 @@ ManufacturingPipelineInput native_board_pipeline_metadata(){
         {"legalize_joint_budget","plan_lattice","Joint separation search omitted unexplored states at its generation cap; not an infeasibility proof."},
         {"interior_reseat_pose_skip","plan_lattice","One locally feasible recovery choice skipped during deterministic replay of the first recovery. This is a branch exclusion, not a geometry rejection."},
         {"interior_failed_first_retry","plan_lattice","One opt-in failed-block-first restart of an explicit order; count every attempt and retain rejected work without weakening geometry or hard terms."},
+        {"interior_shape_choice_replay","plan_lattice","One failure-only full packing attempt with an alternative legal shape-choice prefix; all geometry and hardware gates remain active."},
+        {"interior_shape_choice_budget","plan_lattice","Unexplored shape-choice prefixes remain after a failed bounded replay search; no infeasibility claim."},
         {"facing_replan_retry","plan_lattice","One multiscale strict-facing replan after a resolved final facing failure; retain valid incumbents and all prior model/screening work, including failed retries."},
         {"legalize_reservation_retry","plan_lattice","One failure-only child-reservation geometry solve. Count every attempt; retain all earlier work and exact final collision gates."},
         {"legalize_facing_retry","plan_lattice","One failure-only strict-facing projection solve. Count every attempt; preserve accepted incumbents and final exact gates."},
