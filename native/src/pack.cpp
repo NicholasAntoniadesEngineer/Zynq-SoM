@@ -175,6 +175,38 @@ ViaBlockHit via_site_blocker(
     return ViaBlockHit{};
 }
 
+std::vector<std::pair<double,double>> via_obstacle_axis_exits(
+    double vx, double vy, const ViaSiteSpec& spec, const ViaObstacle& obstacle) {
+    if (via_site_blocker(vx,vy,spec,{obstacle},{}).kind!="obs") return {};
+    const double clearance=obstacle.nname=="GND"
+        ? spec.via_drill/2+spec.hole_samenet : spec.via_size/2+spec.via_clear;
+    const double drill=obstacle.drill>0
+        ? spec.via_drill/2+obstacle.drill/2+spec.via_h2h : 0;
+    const auto reach=[](double radius,double orthogonal) {
+        return orthogonal>=radius ? 0.0
+            : std::sqrt(std::max(0.0,(radius-orthogonal)*(radius+orthogonal)));
+    };
+    std::vector<std::pair<double,double>> result;
+    for (bool horizontal : {true,false}) {
+        const double along=horizontal?vx:vy, across=horizontal?vy:vx;
+        const double centre=horizontal?obstacle.cy:obstacle.cx;
+        const double half_along=horizontal?obstacle.hx:obstacle.hy;
+        const double half_across=horizontal?obstacle.hy:obstacle.hx;
+        const double orthogonal=std::abs(across-centre);
+        const double pad_gap=std::max(0.0,orthogonal-half_across);
+        const double pad_reach=pad_gap>=clearance ? 0.0
+            : half_along+reach(clearance,pad_gap);
+        const double distance=std::max(pad_reach,reach(drill,orthogonal));
+        for (double sign : {-1.0,1.0}) {
+            // Step outward by one representable value, not a hardware margin.
+            const double target=std::nextafter(along+sign*distance,
+                sign*std::numeric_limits<double>::infinity());
+            result.emplace_back(horizontal?target:centre,horizontal?centre:target);
+        }
+    }
+    return result;
+}
+
 ViaSelection select_via_sites(
     double x, double y, double rotation,
     const std::vector<std::pair<double, double>>& preferred, const Box4& pour,

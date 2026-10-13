@@ -75,6 +75,12 @@ ViaBlockHit via_site_blocker(
     const std::vector<ViaObstacle>& obstacles,
     const std::vector<std::pair<double, double>>& chosen);
 
+// Four axis-only obstacle-centre proposals, derived from the same pad/drill
+// clearance rules as via_site_blocker. Not movement permission: callers must
+// quantize/recheck the complete trial geometry and preserve all other sites.
+std::vector<std::pair<double,double>> via_obstacle_axis_exits(
+    double vx, double vy, const ViaSiteSpec&, const ViaObstacle&);
+
 std::vector<std::pair<double, double>> fallback_via_sites(
     double x0, double y0, double x1, double y1, double via_size,
     double pitch, QuantizationCounts* counts = nullptr);

@@ -249,6 +249,41 @@ void mutations(const fs::path &fixtures, const fs::path &output, const std::stri
     }
     std::cout << field(raw, "cases").array_value.size() << " frozen emission mutation cases PASS\n";
 }
+void thermal_axis_exits() {
+    ViaSiteSpec spec;
+    spec.board_w=spec.board_h=200;
+    spec.via_size=.6; spec.via_drill=.3; spec.via_clear=.25;
+    spec.hole_samenet=.1; spec.via_h2h=.45;
+    for (const auto& net : {"GND","SIGNAL"})
+        for (double drill : {0.0,.8})
+            for (bool turned : {false,true})
+                for (double offset : {0.0,.2}) {
+                    ViaObstacle obstacle{100+offset,100+offset,
+                        turned?.1:.8,turned?.8:.1,net,drill,"R1.1"};
+                    const auto exits=via_obstacle_axis_exits(100,100,spec,obstacle);
+                    require(exits.size()==4,"blocked pad has four deterministic axis exits");
+                    require(exits==via_obstacle_axis_exits(100,100,spec,obstacle),
+                            "thermal axis proposals repeat exactly");
+                    for (const auto& [x,y] : exits) {
+                        auto moved=obstacle; moved.cx=x; moved.cy=y;
+                        require(x==obstacle.cx || y==obstacle.cy,"exit moves only one axis");
+                        require(!via_site_blocker(100,100,spec,{moved},{}).blocked,
+                                "axis exit clears both pad and drill using actual rule");
+                        auto inward=moved;
+                        if (x!=obstacle.cx) inward.cx += x<100 ? .000001 : -.000001;
+                        else inward.cy += y<100 ? .000001 : -.000001;
+                        require(via_site_blocker(100,100,spec,{inward},{}).blocked,
+                                "axis proposal follows the clearance boundary, not an arbitrary padding");
+                        require(via_site_blocker(100,100,spec,{moved,obstacle},{}).blocked,
+                                "clearing one blocker is not permission to ignore another");
+                    }
+                }
+    ViaObstacle distant{110,110,.5,.5,"SIGNAL",0,"R2.1"};
+    require(via_obstacle_axis_exits(100,100,spec,distant).empty(),
+            "unblocked pads do not generate gratuitous moves");
+    require(via_obstacle_axis_exits(-1,100,spec,distant).empty(),
+            "pad movement cannot fix a board-edge violation");
+}
 void thermal_world_obstacles() {
     PcbModel model;
     model.origin_x = model.origin_y = 0;
@@ -536,6 +571,7 @@ int main(int argc, char **argv) {
         mutations(fixtures, output, "unicode_strip.json");
         boundaries(fixtures, output);
         thermal_world_obstacles();
+        thermal_axis_exits();
         thermal_selection_contracts();
         interface_label_contracts();
         std::cout << "PCB emission: " << checks << " checks passed\n";
