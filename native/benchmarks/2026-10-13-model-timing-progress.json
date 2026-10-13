@@ -1,5 +1,5 @@
 {
-  "status": "Partial: exact historical carrier measurement still running when recorded",
+  "status": "All four model/emission measurements completed; full build/render/audit and matched-input language comparison remain incomplete",
   "python_commit": "0e9bbc913bab77f9cd228940db2a332d25d6bfa1",
   "cpp_commit": "2aedaaa1",
   "historical_export": "/private/tmp/zynq-timing-0e9bbc-20261013.AgVdVx",
@@ -8,9 +8,80 @@
   "python_scope": "pcb.build_model(two_side=True), then pcb.emit_pcb to fresh file. Imports outside interval; model includes its input loading. No full audit, DRC or render.",
   "cpp_scope": "Compact-stage profiler observers off. Input phases reported separately; model and in-memory PCB text emission timed separately. No full audit, DRC or render. Current qualified recipe per board.",
   "samples": {
-    "python_devkit": {"model_seconds":18.926306249923073,"emission_seconds":0.13576075003948063,"process_wall_seconds":19.55,"dimensions_mm":[100,100],"instances":152,"log":"native/build/timing-0e9bbc-devkit-model-only.log"},
-    "cpp_devkit": {"model_seconds":0.182655333,"emission_seconds":0.008051125,"process_wall_seconds":1.04,"dimensions_mm":[98,98],"instances":160,"log":"native/build/timing-current-devkit-model-only.log"},
-    "cpp_carrier": {"model_seconds":14.795610375,"emission_seconds":0.026649292,"process_wall_seconds":16.57,"dimensions_mm":[163,153],"instances":566,"log":"native/build/timing-current-carrier-model-only.log"}
+    "python_devkit": {
+      "model_seconds": 18.926306249923073,
+      "emission_seconds": 0.13576075003948063,
+      "process_wall_seconds": 19.55,
+      "dimensions_mm": [
+        100,
+        100
+      ],
+      "instances": 152,
+      "log": "native/build/timing-0e9bbc-devkit-model-only.log"
+    },
+    "cpp_devkit": {
+      "model_seconds": 0.182655333,
+      "emission_seconds": 0.008051125,
+      "process_wall_seconds": 1.04,
+      "dimensions_mm": [
+        98,
+        98
+      ],
+      "instances": 160,
+      "log": "native/build/timing-current-devkit-model-only.log",
+      "input_phase_seconds": {
+        "circuit_load": 0.004051958,
+        "circuit_validate": 0.155076667,
+        "link": 0.000746875,
+        "netlist_extract": 0.634164792,
+        "board_input_resolve": 0.034370416
+      }
+    },
+    "cpp_carrier": {
+      "model_seconds": 14.795610375,
+      "emission_seconds": 0.026649292,
+      "process_wall_seconds": 16.57,
+      "dimensions_mm": [
+        163,
+        153
+      ],
+      "instances": 566,
+      "log": "native/build/timing-current-carrier-model-only.log",
+      "input_phase_seconds": {
+        "circuit_load": 0.011596875,
+        "circuit_validate": 0.269642375,
+        "link": 0.001099791,
+        "netlist_extract": 1.382369459,
+        "board_input_resolve": 0.042970458
+      }
+    },
+    "python_carrier": {
+      "model_seconds": 311.1214120000368,
+      "emission_seconds": 0.42614275007508695,
+      "process_wall_seconds": 312.6,
+      "dimensions_mm": [
+        168,
+        163
+      ],
+      "instances": 569,
+      "log": "native/build/timing-0e9bbc-carrier-model-only.log"
+    }
   },
-  "limitations": "Not a matched-input language-only comparison. Historical and current electrical designs/placement policies differ. Python emission writes a file; C++ emission produces text in memory. Native input loading must not be omitted when comparing generation intervals. Single sequential measurements, uncontrolled OS cache; no percentages claimed yet. Compile, full generation and render/audit comparison still outstanding."
+  "limitations": "Revision-to-revision diagnostic, NOT matched-input or language-only speedup. Different hardware designs, placement policies, and internal checks. Python emit writes a file; C++ emits in-memory text. Native input loading INCLUDED in comparative totals. Imports and miscellaneous process work excluded from scope totals, process wall separately retained. Historical input is pre-generated schematic from the exact archive; current schematic from qualified artifacts. Compile/full schematic generation/render/full audit timings still outstanding.",
+  "revision_comparison": [
+    {
+      "project": "carrier",
+      "python_input_model_emission_seconds": 311.5475547501119,
+      "cpp_input_model_emission_seconds": 16.529938625,
+      "change_percent": -94.6942486394225
+    },
+    {
+      "project": "devkit",
+      "python_input_model_emission_seconds": 19.062066999962553,
+      "cpp_input_model_emission_seconds": 1.019117166,
+      "change_percent": -94.6536901480726
+    }
+  ],
+  "formula": "100 * (C++ scope seconds - Python scope seconds) / Python scope seconds",
+  "sampling": "One sequential sample per revision/board. No compilation or heavy tests during measured processes; light source inspection/editing only. OS caches/background load uncontrolled."
 }
