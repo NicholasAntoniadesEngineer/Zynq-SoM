@@ -108,6 +108,233 @@ void rigid_group_contracts(const std::filesystem::path& root) {
     auto unknown=pinned;unknown.insert("pcb/MISSING");
     require(!contract_rigid_groups(contract,refs,unknown),"unknown mandatory-top owner must reject");
 }
+void power_rigid_group_contracts(const std::filesystem::path& root) {
+    using pcb_placement::contract_rigid_groups;
+    const auto edit=[](JsonNode& node,const std::string& key)->JsonNode& {
+        for(auto& [name,value]:node.object_value)if(name==key)return value;
+        throw std::runtime_error("missing power mutation key "+key);
+    };
+    const auto erase=[](JsonNode& node,const std::string& key) {
+        auto& values=node.object_value;
+        values.erase(std::remove_if(values.begin(),values.end(),[&](const auto& kv){return kv.first==key;}),values.end());
+    };
+    const auto group_of=[](const auto& groups,const std::string& ref)->const pcb_placement::ContractRigidGroup& {
+        for(const auto& group:groups)if(std::find(group.refs.begin(),group.refs.end(),"pcb/"+ref)!=group.refs.end())return group;
+        throw std::runtime_error("missing power rigid-group witness "+ref);
+    };
+    const auto qualified=[](std::vector<std::string> refs) {
+        for(auto& ref:refs)ref="pcb/"+ref;
+        std::sort(refs.begin(),refs.end());return refs;
+    };
+    for(const std::string sheet:{"power","power_som"}) {
+        const auto path=sheet=="power"?"subsystems/power/placement_contract.json":
+            "carrier/subsystems/power_som/placement_contract.json";
+        const auto contract=parse_json_file((root/path).string());
+        const auto circuit=parse_json_file((root/"carrier/subsystems"/sheet/"circuit.json").string());
+        std::map<std::string,std::string> refs;
+        for(const auto& part:field(circuit,"parts").array_value)
+            refs.emplace(string(part,"ref"),"pcb/"+string(part,"ref"));
+        const std::string owner=sheet=="power"?"U1":"U4";
+        const std::set<std::string> pinned{"pcb/"+owner};
+        const auto groups=contract_rigid_groups(contract,refs,pinned,true);
+        require(bool(groups),sheet+" real v2 contract must partition when opted in");
+        require(!contract_rigid_groups(contract,refs,pinned)&&!contract_rigid_groups(contract,refs,pinned,false),
+                sheet+" v2 must remain unsupported for default/explicit-false thermal callers");
+        const std::vector<std::string> first=sheet=="power"?
+            std::vector<std::string>{"U1","C1","C25","C2","C3","C5","C6","C26","L1","R1","R2","C27","R12","C4","C24","C28","R10"}:
+            std::vector<std::string>{"U4","C14","C25","C15","C16","C18","C19","L3","R14","R15","C21","R19","C17","C22","C23","R18"};
+        require(group_of(*groups,owner).refs==qualified(first),sheet+" exact buck closure");
+        require(group_of(*groups,owner).required_top_refs==std::vector<std::string>{"pcb/"+owner},"top owner propagates within its stage");
+        std::set<std::string> staged(first.begin(),first.end());
+        if(sheet=="power") {
+            const std::vector<std::string> second{"U2","C7","C29","C8","C30","C10","C11","L2","R4","R5","C23","R15","C9","C31","C32","R14"};
+            require(group_of(*groups,"U2").refs==qualified(second),"foreign FB minima must not fuse buck stages");
+            require(group_of(*groups,"U3").refs==qualified({"U3","C12","C13"}),"LDO stage closure");
+            require(group_of(*groups,"U2").required_top_refs.empty()&&group_of(*groups,"U3").required_top_refs.empty(),
+                    "same_side must not propagate a top pin across independent owners");
+            staged.insert(second.begin(),second.end());staged.insert({"U3","C12","C13"});
+        }
+        std::set<std::string> covered;
+        for(const auto& group:*groups)for(const auto& ref:group.refs)
+            require(covered.insert(ref).second,"power partition overlaps");
+        require(covered.size()==refs.size(),"power partition must include every mapped part");
+        for(const auto& [local,board]:refs)if(!staged.count(local))
+            require(group_of(*groups,local).refs==std::vector<std::string>{board},"unconstrained parts remain singleton: "+local);
+        auto reversed=contract;
+        std::reverse(edit(reversed,"structures").array_value.begin(),edit(reversed,"structures").array_value.end());
+        require(contract_rigid_groups(reversed,refs,pinned,true)==groups,"power structure order must not change partition");
+        auto duplicate=contract;
+        edit(duplicate,"structures").array_value.push_back(field(contract,"structures").array_value.front());
+        require(contract_rigid_groups(duplicate,refs,pinned,true)==groups,"repeated power structures are idempotent");
+
+        // Check each branch alone so another structure cannot hide a missing edge.
+        const std::map<std::string,std::vector<std::string>> own_fields{
+            {"hot_loop",{"caps"}},{"bulk_in",{"caps"}},{"bulk_out",{"caps","inductor"}},
+            {"sw_node",{"inductor"}},{"fb_cluster",{"members","own_inductor"}},
+            {"boot",{"cap"}},{"vcc_cap",{"cap"}},{"bias_cap",{"cap"}},
+            {"rt_r",{"resistor"}},{"ldo_stage",{"cin","cout"}}
+        };
+        for(const auto& structure:field(contract,"structures").array_value) {
+            const auto type=string(structure,"type");
+            auto only=contract;edit(only,"structures").array_value={structure};
+            const auto isolated=contract_rigid_groups(only,refs,{},true);
+            require(bool(isolated),"isolated valid power structure: "+type);
+            if(type!="same_side") {
+                auto lightweight=only;edit(lightweight,"contract").string_value="placement/lightweight-v0";
+                edit(lightweight,"external")=parse_json_text("{}");
+                require(!contract_rigid_groups(lightweight,refs,{})&&!contract_rigid_groups(lightweight,refs,{},true),
+                        "power structures require the v2 schema: "+type);
+            }
+            if(type=="same_side")require(isolated->size()==refs.size(),"same_side alone must not join owners");
+            else {
+                std::vector<std::string> expected{string(structure,"ic")};
+                for(const auto& key:own_fields.at(type)) {
+                    const auto& value=field(structure,key);
+                    if(value.kind==JsonKind::Array)for(const auto& ref:value.array_value)expected.push_back(ref.string_value);
+                    else expected.push_back(value.string_value);
+                }
+                require(group_of(*isolated,string(structure,"ic")).refs==qualified(expected),"isolated own-member closure: "+type);
+                require(isolated->size()==refs.size()-expected.size()+1,"only own members joined: "+type);
+            }
+            const auto reject=[&](const JsonNode& changed,const std::string& why) {
+                auto bad=only;edit(bad,"structures").array_value={changed};
+                require(!contract_rigid_groups(bad,refs,{},true),type+" must reject "+why);
+            };
+            auto extra=structure;extra.object_value.emplace_back("future_limit",parse_json_text("1"));
+            reject(extra,"unknown field");
+            extra=structure;extra.object_value.push_back(structure.object_value.front());
+            reject(extra,"duplicate field");
+            extra=structure;edit(extra,"type").string_value="future_stage";reject(extra,"unknown type");
+            for(const auto& [key,value]:structure.object_value) {
+                auto bad=structure;edit(bad,key)=parse_json_text("null");reject(bad,"null "+key);
+                bad=structure;edit(bad,key)=parse_json_text("{}");reject(bad,"object "+key);
+                if(key!="same_side"&&key!="basis") {
+                    bad=structure;erase(bad,key);reject(bad,"missing "+key);
+                }
+                if(value.kind==JsonKind::Number) {
+                    for(double n:{-1.0,std::numeric_limits<double>::infinity(),-std::numeric_limits<double>::infinity(),
+                                  std::numeric_limits<double>::quiet_NaN()}) {
+                        bad=structure;edit(bad,key).number_value=n;reject(bad,"invalid numeric "+key);
+                    }
+                    bad=structure;edit(bad,key)=parse_json_text("\"1\"");reject(bad,"string bound "+key);
+                    bad=structure;edit(bad,key).number_value=0;
+                    if(key.rfind("max",0)==0)reject(bad,"zero maximum "+key);
+                    else {
+                        auto zero=only;edit(zero,"structures").array_value={bad};
+                        require(bool(contract_rigid_groups(zero,refs,{},true)),"zero minimum must be valid: "+key);
+                    }
+                } else if(value.kind==JsonKind::String&&key!="basis") {
+                    bad=structure;edit(bad,key).string_value="";reject(bad,"empty "+key);
+                    if(refs.count(value.string_value)) {
+                        bad=structure;edit(bad,key).string_value="MISSING";reject(bad,"unknown ref "+key);
+                    }
+                } else if(value.kind==JsonKind::Array) {
+                    bad=structure;edit(bad,key).array_value.clear();reject(bad,"empty "+key);
+                    bad=structure;edit(bad,key).array_value.front()=parse_json_text("42");reject(bad,"bad array element "+key);
+                    if(key=="caps"||key=="members"||key=="ics") {
+                        bad=structure;edit(bad,key).array_value.front().string_value="MISSING";reject(bad,"unknown member "+key);
+                    }
+                }
+            }
+            if(type=="hot_loop") {
+                auto bad=structure;erase(bad,"basis");reject(bad,"missing required basis");
+                for(const auto* pair:{R"([])",R"(["8"])",R"(["8","9","10"])",R"(["8",9])",R"(["8",""])"}) {
+                    bad=structure;edit(bad,"pin_pairs").array_value.front()=parse_json_text(pair);reject(bad,"malformed pin pair");
+                }
+            }
+            if(type=="fb_cluster") {
+                auto no_foreign=only;
+                for(const auto* key:{"foreign_ic","foreign_inductor","foreign_sw_pin","min_to_foreign_sw_mm"})
+                    erase(edit(no_foreign,"structures").array_value.front(),key);
+                require(contract_rigid_groups(no_foreign,refs,{},true)==isolated,"foreign tuple is optional and adds no edges");
+                if(object_field(structure,"foreign_ic")) {
+                    auto distant=only;
+                    edit(edit(distant,"structures").array_value.front(),"min_to_foreign_sw_mm").number_value=1e9;
+                    require(contract_rigid_groups(distant,refs,{},true)==isolated,
+                            "even an unqualified foreign bound must neither merge nor qualify stages");
+                }
+                // A lone foreign field cannot silently become an unchecked bound.
+                for(const auto* tuple:{R"({"foreign_ic":"U4"})",R"({"foreign_inductor":"L3"})",
+                                      R"({"foreign_sw_pin":"10"})",R"({"min_to_foreign_sw_mm":5})"}) {
+                    auto partial=no_foreign;
+                    edit(partial,"structures").array_value.front().object_value.push_back(parse_json_text(tuple).object_value.front());
+                    require(!contract_rigid_groups(partial,refs,{},true),"partial foreign tuple must reject");
+                }
+            }
+        }
+        // External data grants no edges or qualification. Only its known syntax
+        // is checked here; project targets cannot resolve against local part refs.
+        for(const auto* ext:{R"({})",R"({"flow":["elsewhere","@som"],"downstream":"@som","output_roles":["cout_bulk"],"far":[{"what":"ethernet.line_side","min_mm":0}],"near_max":[{"other":"@som","max_mm":4}],"media_faces_near_max":true})"}) {
+            auto changed=contract;edit(changed,"external")=parse_json_text(ext);
+            require(contract_rigid_groups(changed,refs,pinned,true)==groups,"known external syntax must not change grouping");
+        }
+        auto no_external=contract;erase(no_external,"external");
+        require(contract_rigid_groups(no_external,refs,pinned,true)==groups,"external object is optional");
+        for(const auto* ext:{R"(null)",R"([])",R"({"future":true})",R"({"flow":"power"})",R"({"flow":[""]})",
+                            R"({"downstream":[]})",R"({"downstream":""})",R"({"output_roles":[1]})",
+                            R"({"media_faces_near_max":1})",R"({"far":{}})",R"({"far":[1]})",
+                            R"({"far":[{"min_mm":2}]})",R"({"far":[{"what":"x","min_mm":-1}]})",
+                            R"({"far":[{"what":"x","min_mm":2,"basis":false}]})",
+                            R"({"near_max":[{"other":"x","max_mm":0}]})",R"({"near_max":[{"other":"x","max_mm":"2"}]})",
+                            R"({"near_max":[{"other":"x","max_mm":2,"unknown":1}]})"}) {
+            auto bad=contract;edit(bad,"external")=parse_json_text(ext);
+            require(!contract_rigid_groups(bad,refs,pinned,true),"malformed external must reject: "+std::string(ext));
+        }
+        for(const auto* key:{"far","near_max"}) {
+            auto bad=contract;
+            edit(bad,"external")=parse_json_text(key==std::string("far")?R"({"far":[{"what":"x","min_mm":1}]})":
+                R"({"near_max":[{"other":"x","max_mm":1}]})");
+            auto& row=edit(edit(bad,"external"),key).array_value.front();
+            edit(row,key==std::string("far")?"min_mm":"max_mm").number_value=std::numeric_limits<double>::infinity();
+            require(!contract_rigid_groups(bad,refs,pinned,true),"nonfinite external bound must reject");
+        }
+        auto bad=contract;edit(bad,"stage_order").array_value.front().string_value="MISSING";
+        require(!contract_rigid_groups(bad,refs,pinned,true),"unknown stage_order ref must reject");
+        bad=contract;edit(bad,"roles").object_value.emplace_back("MISSING",parse_json_text("\"buck_ic\""));
+        require(!contract_rigid_groups(bad,refs,pinned,true),"unknown role ref must reject");
+        bad=contract;edit(bad,"structures").array_value.clear();
+        require(!contract_rigid_groups(bad,refs,pinned,true),"empty v2 structures must reject");
+        bad=contract;edit(bad,"contract").string_value="placement/v3";
+        require(!contract_rigid_groups(bad,refs,pinned,true),"opt-in must not accept unknown schemas");
+        bad=contract;bad.object_value.emplace_back("external",parse_json_text("{}"));
+        require(!contract_rigid_groups(bad,refs,pinned,true),"duplicate v2 root fields must reject");
+        bad=contract;bad.object_value.emplace_back("unhandled_hardware_rule",parse_json_text("{}"));
+        require(!contract_rigid_groups(bad,refs,pinned,true),"unknown v2 root constraints must reject");
+        auto aliases=refs;aliases["alias"]="pcb/"+owner;
+        require(!contract_rigid_groups(contract,aliases,pinned,true),"v2 aliased board identity must reject");
+        require(!contract_rigid_groups(contract,refs,{"pcb/MISSING"},true),"v2 unknown top owner must reject");
+    }
+    // Lightweight callers retain all prior closure, including min_from. The v2
+    // caller instead rechecks between-stage minima after each candidate move.
+    auto proximity=parse_json_text(R"({"contract":"placement/lightweight-v0","structures":[
+        {"type":"proximity","anchor":"U1","members":["C1"],"max_mm":2,"min_from":[{"part":"U2","pin":"10","min_mm":1}]},
+        {"type":"proximity","anchor":"U2","members":["C2"],"max_mm":2},
+        {"type":"same_side","ics":["U1","U2"]}]})");
+    const std::map<std::string,std::string> refs{{"U1","pcb/U1"},{"U2","pcb/U2"},{"C1","pcb/C1"},{"C2","pcb/C2"}};
+    const auto original=contract_rigid_groups(proximity,refs,{});
+    require(original&&original->size()==1&&contract_rigid_groups(proximity,refs,{},true)==original,
+            "opting in must not alter lightweight semantics");
+    auto external=proximity;external.object_value.emplace_back("external",parse_json_text(R"({"flow":["a","b"]})"));
+    require(!contract_rigid_groups(external,refs,{})&&!contract_rigid_groups(external,refs,{},true),
+            "lightweight external remains rejected even with opt-in");
+    edit(proximity,"contract").string_value="placement/v2";
+    const auto separate=contract_rigid_groups(proximity,refs,{},true);
+    require(separate&&separate->size()==2,"v2 proximity minimum alone must not join stages");
+    require(group_of(*separate,"U1").refs==qualified({"U1","C1"})&&
+            group_of(*separate,"U2").refs==qualified({"U2","C2"}),"v2 proximity/same_side own closure");
+    auto bad=proximity;
+    edit(edit(bad,"structures").array_value.front(),"min_from").array_value.front().object_value.emplace_back("future",parse_json_text("1"));
+    require(!contract_rigid_groups(bad,refs,{},true),"unknown v2 minimum field must reject");
+    for(const auto* away:{R"([{"part":"MISSING","min_mm":1}])",R"([{"part":"U2","min_mm":-1}])",
+                          R"([{"part":"U2","min_mm":1,"pin":2}])"}) {
+        bad=proximity;edit(edit(bad,"structures").array_value.front(),"min_from")=parse_json_text(away);
+        require(!contract_rigid_groups(bad,refs,{},true),"malformed v2 proximity minimum must reject");
+    }
+    auto transitive=proximity;
+    edit(transitive,"structures").array_value.push_back(parse_json_text(R"({"type":"proximity","anchor":"C1","members":["U2"],"max_mm":3})"));
+    const auto joined=contract_rigid_groups(transitive,refs,{},true);
+    require(joined&&joined->size()==1,"explicit own-member overlap must still join transitively in v2");
+}
 void same(const J &a, const J &b, const std::string &path) {
     require(a.kind == b.kind, path + " type");
     if (a.kind == JsonKind::Object) {
@@ -302,11 +529,18 @@ int main(int argc, char **argv) {
         std::string mode = argc == 3 ? argv[2] : "--production";
         if (argc < 2 || argc > 3 ||
             (mode != "--zones-only" && mode != "--production" && mode != "--placed-only" &&
-             mode != "--single"))
+             mode != "--single" && mode != "--rigid-groups-only"))
             throw std::runtime_error(
-                "repo root [--zones-only|--production|--placed-only|--single]");
+                "repo root [--zones-only|--production|--placed-only|--single|--rigid-groups-only]");
+        if(mode=="--rigid-groups-only") {
+            rigid_group_contracts(argv[1]);
+            power_rigid_group_contracts(argv[1]);
+            std::cout << "PCB rigid groups: " << checks << " assertions passed\n";
+            return 0;
+        }
         constraint_merge_contracts();
         rigid_group_contracts(argv[1]);
+        power_rigid_group_contracts(argv[1]);
         for (const auto &name : {"carrier", "devkit_mini"}) {
             run(argv[1], name, mode);
             if (mode == "--production")

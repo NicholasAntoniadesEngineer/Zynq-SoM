@@ -34,7 +34,30 @@ void append_distinct_zone_shapes(Shape incumbent,std::vector<Shape>& existing,
             existing.push_back(candidate);
 }
 namespace {
-bool orientation_eligible(const Context& ctx, const Geometry& g, const std::string& sheet) {
+Shape enclose_courtyards(Context& ctx,const Geometry& g,const Shape& source) {
+    auto enclosed=source;
+    double left=0,top=0,right=source.w,bottom=source.h;
+    for(const auto* offsets:{&source.top_off,&source.bot_off})for(const auto& [ref,xy]:*offsets) {
+        const auto key=source.mirror.count(ref)?source.mirror.at(ref):g.resolvable.at(ref);
+        const auto& mod=ctx.pool.at(key);
+        if(!mod->bbox)throw PcbZoneInfeasible("template has no courtyard: "+ref);
+        const auto box=offset_turned_box(*mod->bbox,source.extra_rot.count(ref)?source.extra_rot.at(ref):0,xy.first,xy.second);
+        left=std::min(left,box.x0);top=std::min(top,box.y0);
+        right=std::max(right,box.x1);bottom=std::max(bottom,box.y1);
+    }
+    // Keep the rigid arrangement; enclose measured geometry rather than
+    // weakening boundary checks when the stage envelope omitted a margin.
+    const double dx=bottom_contact_shift(-left,&ctx.quantization),dy=bottom_contact_shift(-top,&ctx.quantization);
+    for(auto* offsets:{&enclosed.top_off,&enclosed.bot_off})for(auto& [ref,xy]:*offsets) {
+        (void)ref;xy.first=placement_bottom_pose_precision4dp(xy.first+dx,&ctx.quantization);
+        xy.second=placement_bottom_pose_precision4dp(xy.second+dy,&ctx.quantization);
+    }
+    enclosed.w=bottom_contact_shift(right+dx,&ctx.quantization);
+    enclosed.h=bottom_contact_shift(bottom+dy,&ctx.quantization);
+    return enclosed;
+}
+bool orientation_eligible(const Context& ctx, const Geometry& g, const std::string& sheet,
+                          bool board_checked_external=false) {
     if (!ctx.in.floorplan.compact_search) return false;
     if (ctx.in.floorplan.spec && ctx.in.floorplan.spec->edge_of().count(sheet)) return false;
     // External direction/near/flow targets require board-level reasoning.
@@ -43,7 +66,16 @@ bool orientation_eligible(const Context& ctx, const Geometry& g, const std::stri
     if (contract != ctx.in.contracts.end()) {
         const auto& external = optional(contract->second, "external");
         if (external.kind != JsonKind::Null &&
-            !(external.kind == JsonKind::Object && external.object_value.empty())) return false;
+            !(external.kind == JsonKind::Object && external.object_value.empty())) {
+            // Only explicit face-group exploration may defer these terms to
+            // the board-level compose/final gates, and only for wired sheets.
+            // Ordinary orientation expansion retains its local-only policy.
+            const auto& schema=optional(contract->second,"contract");
+            if(!board_checked_external||!ctx.wired.count(sheet)||schema.kind!=JsonKind::String||
+               schema.string_value!="placement/v2"||external.kind!=JsonKind::Object)return false;
+            const std::set<std::string> supported{"flow","downstream","output_roles","far","near_max","media_faces_near_max"};
+            for(const auto& [key,value]:external.object_value){(void)value;if(!supported.count(key))return false;}
+        }
     }
     for (const auto& ref : g.refs_by_sheet.at(sheet)) {
         const auto& part = ctx.by_ref.at(ref);
@@ -124,14 +156,18 @@ void append_rigid_zone_orientations(Context& ctx, Geometry& g, const std::string
     }
     if (variants.size() > originals.size()) g.shapes[sheet] = std::move(variants);
 }
-void append_contract_group_faces(Context& ctx,Geometry& g,const std::string& sheet,const Shape& seed,
+void append_contract_group_faces(Context& ctx,Geometry& g,const std::string& sheet,const Shape& original,
                                  bool group_rotations) {
     // Local geometry candidates, not hardware qualification. Preserve the
     // incumbent and explore four deterministic alignments per eligible
     // contract-connected group/orientation. Final board gates remain authoritative.
-    if(!orientation_eligible(ctx,g,sheet)||seed.side!="top"||!orientation_holds(ctx,g,sheet,seed))return;
+    if(!orientation_eligible(ctx,g,sheet,true)||original.side!="top")return;
     const auto contract=ctx.in.contracts.find(sheet);
     if(contract==ctx.in.contracts.end())return;
+    const auto& schema=optional(contract->second,"contract");
+    const auto seed=schema.kind==JsonKind::String&&schema.string_value=="placement/v2"
+        ?enclose_courtyards(ctx,g,original):original;
+    if(!orientation_holds(ctx,g,sheet,seed))return;
     std::set<std::string> pinned;
     for(const auto& ref:g.refs_by_sheet.at(sheet))
         if(face_top(ctx.by_ref.at(ref))||has_thru_pads_from_text(ctx.pool.at(g.resolvable.at(ref))->bytes))pinned.insert(ref);
@@ -142,7 +178,7 @@ void append_contract_group_faces(Context& ctx,Geometry& g,const std::string& she
             for(const auto& pin:net.pins)if(!pin.ref.empty()&&pin.ref.front()!='#')
                 pinned.insert(ctx.board_refs.at(sheet).at(pin.ref));
         }
-    const auto groups=contract_rigid_groups(contract->second,ctx.board_refs.at(sheet),pinned);
+    const auto groups=contract_rigid_groups(contract->second,ctx.board_refs.at(sheet),pinned,true);
     if(!groups)return;
     const auto stage=ctx.stage_input(sheet,g);
     std::map<std::string,decltype(PcbCheckInstance::pad_nets)> pad_nets;
@@ -191,7 +227,7 @@ void append_contract_group_faces(Context& ctx,Geometry& g,const std::string& she
         // Face assignments may help global packing without reducing local area.
         if(!orientation_holds(ctx,g,sheet,candidate)||!check_fanout(model(candidate),0).ok)return false;
         auto found=g.shapes.find(sheet);
-        if(found==g.shapes.end())found=g.shapes.emplace(sheet,std::vector<Shape>{seed}).first;
+        if(found==g.shapes.end())found=g.shapes.emplace(sheet,std::vector<Shape>{original}).first;
         if(std::none_of(found->second.begin(),found->second.end(),[&](const auto& old){return same_zone_shape_geometry(old,candidate);}))
             found->second.push_back(std::move(candidate));
         return true;
@@ -512,26 +548,7 @@ std::vector<Shape> bottom_shapes(Context &ctx, const Geometry &g, const std::str
                 auto next=shape;
                 for(const auto* suffix:{"/r90","/r180","/r270"}) {
                     next=turned(next,&ctx.quantization);next.tag=shape.tag+suffix;
-                    auto enclosed=next;
-                    double left=0,top=0,right=next.w,bottom=next.h;
-                    for(const auto* offsets:{&next.top_off,&next.bot_off})for(const auto& [ref,xy]:*offsets) {
-                        const auto key=next.mirror.count(ref)?next.mirror.at(ref):g.resolvable.at(ref);
-                        const auto& mod=ctx.pool.at(key);
-                        if(!mod->bbox)throw PcbZoneInfeasible("bottom template has no courtyard: "+ref);
-                        const auto box=offset_turned_box(*mod->bbox,next.extra_rot.count(ref)?next.extra_rot.at(ref):0,xy.first,xy.second);
-                        left=std::min(left,box.x0);top=std::min(top,box.y0);
-                        right=std::max(right,box.x1);bottom=std::max(bottom,box.y1);
-                    }
-                    // Some stage envelopes omit protruding courtyard margins.
-                    // Rebase the entire rigid group and enclose actual geometry;
-                    // never hide that protrusion with a relaxed boundary check.
-                    const double dx=bottom_contact_shift(-left,&ctx.quantization),dy=bottom_contact_shift(-top,&ctx.quantization);
-                    for(auto* offsets:{&enclosed.top_off,&enclosed.bot_off})for(auto& [ref,xy]:*offsets) {
-                        (void)ref;xy.first=placement_bottom_pose_precision4dp(xy.first+dx,&ctx.quantization);
-                        xy.second=placement_bottom_pose_precision4dp(xy.second+dy,&ctx.quantization);
-                    }
-                    enclosed.w=bottom_contact_shift(right+dx,&ctx.quantization);
-                    enclosed.h=bottom_contact_shift(bottom+dy,&ctx.quantization);
+                    auto enclosed=enclose_courtyards(ctx,g,next);
                     if(orientation_holds(ctx,g,sheet,enclosed)&&std::none_of(result.begin(),result.end(),
                         [&](const auto& old){return same_zone_shape_geometry(old,enclosed);}))result.push_back(std::move(enclosed));
                 }

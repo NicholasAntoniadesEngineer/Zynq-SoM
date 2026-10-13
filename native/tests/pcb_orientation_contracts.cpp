@@ -328,6 +328,55 @@ void live(const std::filesystem::path& root){
           "actual mixed-face scalar operations differ from receipt");
    experiment->contract_group_face_sheets={"power_mon"};
    const auto monitor=build_pcb_zone_geometry(f.input);
+   experiment->contract_group_face_sheets={"power"};
+   const auto power_split=build_pcb_zone_geometry(f.input);
+   const auto& power_originals=after.geometry.shapes.at("power");
+   const auto& power_alternatives=power_split.geometry.shapes.at("power");
+   demand(power_alternatives.size()>=power_originals.size(),"power expansion removed incumbent offers");
+   for(std::size_t i=0;i<power_originals.size();++i)
+    demand(equal(power_originals[i],power_alternatives[i]),"power expansion changed an existing shape index");
+   Context split_power_context(f.input);split_power_context.pool=power_split.footprints;
+   const auto original_power_model=model(power_originals.front(),split_power_context,power_split.geometry,"power");
+   demand(check_pcb_placement_contract(original_power_model,"power",&f.input.contracts.at("power"),
+          split_power_context.board_refs.at("power")).ok,"power seed no longer passes its local contract");
+   bool seed_protrudes=false;
+   for(std::size_t i=0;i<original_power_model.model().insts.size();++i) {
+    const auto box=original_power_model.courtyard_at(i);
+    if(box.x0<0||box.y0<0||box.x1>power_originals.front().w||box.y1>power_originals.front().h)
+     seed_protrudes=true;
+   }
+   demand(seed_protrudes,"power enclosure witness no longer exercises an undersized stage envelope");
+   std::size_t power_candidates=0,buck_candidates=0;
+   for(const auto& candidate:power_split.geometry.shapes.at("power")) {
+    if(candidate.tag.rfind("contract-bottom",0)!=0)continue;
+    ++power_candidates;
+    const auto checked=model(candidate,split_power_context,power_split.geometry,"power");
+    demand(check_pcb_placement_contract(checked,"power",&f.input.contracts.at("power"),
+             split_power_context.board_refs.at("power")).ok,"mixed power stage violates local hardware contract");
+    demand(!candidate.top_off.empty()&&!candidate.bot_off.empty(),"power group offer is not actually mixed-face");
+    for(const auto* local:{"U1","U2"})
+     if(candidate.bot_off.count(split_power_context.board_refs.at("power").at(local)))++buck_candidates;
+   }
+   std::cout<<"power mixed candidates="<<power_candidates<<" moved buck stages="<<buck_candidates<<'\n';
+   demand(power_candidates>0&&buck_candidates>0,"power stages still have no mixed-face alternatives");
+   for(bool unknown_external:{false,true}) {
+    auto blocked_input=f.input;
+    if(unknown_external)for(auto& [key,value]:blocked_input.contracts.at("power").object_value)
+     if(key=="external") {JsonNode unknown;unknown.kind=JsonKind::Bool;unknown.bool_value=true;
+       value.object_value.emplace_back("unsupported_direction",unknown);}
+    Context blocked(blocked_input);blocked.pool=after.footprints;
+    demand(blocked.wired.count("power"),"power enforcement fixture is not wired");
+    if(!unknown_external)blocked.wired.erase("power");
+    auto geometry=after.geometry;
+    append_contract_group_faces(blocked,geometry,"power",power_originals.front());
+    demand(geometry.shapes.at("power").size()==power_originals.size(),
+           "power expansion accepted unknown or unenforced external requirements");
+   }
+   const auto power_prepared=prepare_pcb_floorplan(f.input,power_split);
+   for(const auto* kind:{"flow_hop","facing","far_min"})
+    demand(std::any_of(power_prepared.compose.index.hard.begin(),power_prepared.compose.index.hard.end(),
+        [&](const auto& term){return term.sheet=="power"&&term.kind==kind&&term.enforced;}),
+        std::string("mixed-face power lost an enforced external requirement: ")+kind);
    experiment->contract_group_face_sheets={"usb_jtag","power_mon","power"};
    bottom_coordinates=0;variant_dimensions=0;observing=true;
    const auto combined=build_pcb_zone_geometry(f.input);observing=false;
@@ -337,7 +386,7 @@ void live(const std::filesystem::path& root){
    demand(monitor.geometry.shapes.at("power_mon").size()>after.geometry.shapes.at("power_mon").size(),
           "second selected sheet contributed no candidates");
    for(const auto& [name,actual]:combined.geometry.shapes){
-    const auto& expected=(name=="usb_jtag"?split:name=="power_mon"?monitor:after).geometry.shapes.at(name);
+    const auto& expected=(name=="usb_jtag"?split:name=="power_mon"?monitor:name=="power"?power_split:after).geometry.shapes.at(name);
     demand(actual.size()==expected.size(),"multi-sheet altered unrelated offer count: "+name);
     for(std::size_t i=0;i<actual.size();++i)demand(equal(actual[i],expected[i]),"multi-sheet offers differ from independent sheet: "+name);
    }
@@ -354,7 +403,7 @@ void live(const std::filesystem::path& root){
     const auto p=result.quantization_engagements.find(key);return p==result.quantization_engagements.end()?std::size_t{}:p->second;
    };
    for(const auto& [key,n]:combined.quantization_engagements)
-    demand(n+count(after,key)==count(split,key)+count(monitor,key),"multi-sheet work differs from independent per-sheet deltas: "+key);
+    demand(n+2*count(after,key)==count(split,key)+count(monitor,key)+count(power_split,key),"multi-sheet work differs from independent per-sheet deltas: "+key);
    experiment->contract_group_face_sheets.insert("missing-sheet");bool unknown=false;
    try{(void)build_pcb_zone_geometry(f.input);}catch(const PcbZoneInfeasible&){unknown=true;}
    demand(unknown,"unknown additional sheet must not be silently ignored");
