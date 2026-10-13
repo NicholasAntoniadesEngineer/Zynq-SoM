@@ -35,6 +35,7 @@ void register_native_fallbacks(NativeFallbacks& r){
     r.declare({"legalize_joint_domain_reject","plan_lattice","One directional choice excluded by an actual unary negative cycle; unprobed choices remain eligible."});
     r.declare({"legalize_joint_state","plan_lattice","One visited joint separation assignment, including rejected work."});
     r.declare({"legalize_joint_axis","plan_lattice","One actual axis solver invocation in joint separation search."});
+    r.declare({"legalize_joint_axis_reuse","plan_lattice","One invocation-local reuse of an identical axis problem, including its cycle certificate; no solver work fabricated."});
     r.declare({"legalize_joint_proposal","plan_lattice","One two-axis proposal submitted to existing hard-term, geometry and output-grid gates."});
     r.declare({"legalize_joint_reject","plan_lattice","One proposal rejected by final qualification; no invented negative-cycle pruning."});
     r.declare({"legalize_joint_budget","plan_lattice","Joint separation search omitted unexplored states at its generation cap; not an infeasibility proof."});

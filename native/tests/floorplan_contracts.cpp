@@ -1325,7 +1325,7 @@ void joint_separation_contracts() {
     };
     const std::vector<std::vector<RepairSep>> domains{domain("a","b"),domain("a","#obstacle"),domain("b","#obstacle")};
     const auto apart=[](double ax,double ay,double bx,double by){return ax+3<=bx||bx+3<=ax||ay+3<=by||by+3<=ay;};
-    std::size_t solved=0,impossible=0,capped=0;
+    std::size_t solved=0,impossible=0,capped=0,reused_axes=0;
     for(int w=5;w<=9;++w)for(int h=5;h<=9;++h){
         // Integer dimensions, gaps and bounds give integral difference-system
         // solutions. Exhaustive coordinate enumeration is independent of the
@@ -1337,13 +1337,14 @@ void joint_separation_contracts() {
         for(std::size_t budget:{1u,4u,16u,64u}){
             const auto run=[&]{return legalize_joint_separations({"a","b"},{2,2},{2,2},w,h,0,domains,{{"obstacle",{2,2,4,4}}},{},{},budget);};
             const auto r=run(),repeat=run();
-            require(r.generated<=budget&&r.visited<=r.generated&&r.visited>0&&r.axis_solves>=r.visited&&r.axis_solves<=2*r.visited,
+            reused_axes+=r.axis_cache_hits;
+            require(r.generated<=budget&&r.visited<=r.generated&&r.visited>0&&r.axis_solves+r.axis_cache_hits>=r.visited&&r.axis_solves+r.axis_cache_hits<=2*r.visited,
                 "joint search exceeded generated-state budget or miscounted axis probes");
             require(r.domain_probes<=budget&&r.domain_rejections<=r.domain_probes&&
                     r.domain_probes==repeat.domain_probes&&r.domain_rejections==repeat.domain_rejections,
                     "unary pruning exceeded independent probe cap or lost reproducibility");
             require(r.ok==repeat.ok&&r.complete==repeat.complete&&r.budget_exhausted==repeat.budget_exhausted&&
-                r.generated==repeat.generated&&r.visited==repeat.visited&&r.axis_solves==repeat.axis_solves&&r.choices==repeat.choices&&r.x==repeat.x&&r.y==repeat.y,
+                r.generated==repeat.generated&&r.visited==repeat.visited&&r.axis_solves==repeat.axis_solves&&r.axis_cache_hits==repeat.axis_cache_hits&&r.choices==repeat.choices&&r.x==repeat.x&&r.y==repeat.y,
                 "joint search is not reproducible");
             if(budget==64)require(r.ok==oracle&&!r.budget_exhausted&&(r.ok||r.complete),"complete domain search disagrees with coordinate oracle");
             if(r.ok){
@@ -1370,6 +1371,8 @@ void joint_separation_contracts() {
         }
     }
     require(solved&&impossible&&capped,"joint oracle missed a success, exhausted search or capped search");
+    require(reused_axes>0,"joint oracle did not exercise reused axis certificates");
+    std::cout<<"joint axis cache hits="<<reused_axes<<'\n';
     const std::vector<std::vector<RepairSep>> directional{{{true,"a","b",1},{false,"a","b",3},{false,"b","a",5}}};
     const auto reversed=legalize_joint_separations({"a","b"},{2,2},{2,2},4,12,0,directional,{}, {},{{"a","#0",-8},{"#0","b",0}},4);
     require(reversed.ok&&reversed.choices==std::vector<std::size_t>{2}&&reversed.y[0]>=reversed.y[1]+7,

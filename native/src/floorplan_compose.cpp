@@ -303,6 +303,7 @@ public:
             }catch(...){if(in.joint_retry_completed)in.joint_retry_completed(work,false);throw;}
             log.push_back("joint separation: generated="+std::to_string(work.generated)+" visited="+std::to_string(work.visited)+
                 " axes="+std::to_string(work.axis_solves)+" proposals="+std::to_string(work.qualifications)+
+                " axis_reuse="+std::to_string(work.axis_cache_hits)+
                 " domain_probes="+std::to_string(work.domain_probes)+" domain_rejections="+std::to_string(work.domain_rejections)+
                 " rejected="+std::to_string(work.qualification_rejections)+" capped="+std::to_string(work.budget_exhausted));
             if(in.joint_retry_completed)in.joint_retry_completed(work,accepted);

@@ -50,7 +50,8 @@ void registry_contracts(const JsonNode& reference){
     const auto census=f.census();
     // Include the three earlier incoming/victim-shape events omitted by the
     // stale +23 inventory, plus three thermal and three paired search events.
-    require(census.size()==get(reference,"census").object_value.size()+32,"historical fallback census plus thirty-two named native recovery events");
+    require(census.size()==get(reference,"census").object_value.size()+33,"historical fallback census plus thirty-three named native recovery events");
+    require(census.at("legalize_joint_axis_reuse")==AuditInteger{},"axis reuse must be explicitly registered");
     for (const auto* name : {"interior_reseat_pair_trial","interior_reseat_pair_rejected","interior_reseat_pair_recovered"})
         require(census.at(name)==AuditInteger{},"paired relocation events remain explicitly registered");
     for (const auto* name : {"interior_reseat_incoming_shape_trial","interior_reseat_shape_retry","interior_reseat_shape_trial"})

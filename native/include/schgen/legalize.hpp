@@ -268,6 +268,7 @@ struct JointSeparationWork {
     bool budget_exhausted=false;
     std::size_t qualifications=0,qualification_rejections=0;
     std::size_t domain_probes=0,domain_rejections=0;
+    std::size_t axis_cache_hits=0;
 };
 struct JointSeparationResult : JointSeparationWork {
     // complete means a failed search exhausted the supplied finite domains;

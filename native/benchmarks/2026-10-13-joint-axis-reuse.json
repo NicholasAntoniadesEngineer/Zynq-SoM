@@ -1,0 +1,37 @@
+{
+  "parent_commit": "4cedd5ee",
+  "change": "Invocation-local memoization of identical active-axis separation assignments; inactive choices use positional sentinels, preserving negative-cycle separation indices",
+  "accounting": "Actual solver calls and cache hits are separate registered events. Visited search states and final qualification attempts are not skipped. Unary probes remain independently counted.",
+  "storage": "At most two axis entries per visited state, bounded by the existing invocation state limit. Cached results discard complete named separation copies. No cross-invocation cache or stale geometry reuse.",
+  "tests": {
+    "native_compact_retry_contracts_seconds": 5.83,
+    "native_policy_audits_contracts_seconds": 44.62,
+    "native_floorplan_contracts_seconds": 14.16,
+    "status": "All PASS",
+    "log": "native/build/axis-reuse-tests.log",
+    "coverage": "Exhaustive small-layout coordinate oracle across budgets, required cache-hit witness, deterministic counts/positions, directional and projected gaps, negative cycles, exceptions and complete/capped failure distinction"
+  },
+  "carrier": {
+    "dimensions_mm": [163,153],
+    "unchanged_pcb_sha256": "d954ec91a789f69a1e94a26a9d3a91b279fbc208dff2503cbe8ee4c8eabc199f",
+    "previous_axis_solves": 28959,
+    "actual_axis_solves": 19247,
+    "axis_cache_hits": 9712,
+    "solver_calls_avoided_percent": 33.53706965019511,
+    "unchanged_joint_states": 23133,
+    "unchanged_proposals": 681,
+    "unchanged_qualification_rejections": 678,
+    "other_accounting": "All 302 receipt lines and all fallback_count lines except axis execution/reuse match the preceding reference exactly",
+    "model_seconds": 11.55018675,
+    "previous_diagnostic_model_seconds": 11.855024666,
+    "log": "native/build/axis-reuse-carrier.log"
+  },
+  "devkit": {
+    "dimensions_mm": [98,98],
+    "unchanged_pcb_sha256": "1b12fecbcbbaa5e6084c2459da93cb144a660ff19805e6e4e3f75f9c22689fdb",
+    "model_seconds": 0.196133375,
+    "log": "native/build/axis-reuse-devkit.log"
+  },
+  "reference_checks": "Both replays pass fanout, ratsnest, placement contracts and placement flow; no hard-red or nonsearch fallback events. Board CLI and profiler explicitly rebuilt.",
+  "limits": "Avoided solver calls are measured, but single-run uncontrolled timing does not establish a large runtime speedup. Cache lookup/result-copy and remaining search costs persist. No new full qualification or historical Python comparison claimed."
+}

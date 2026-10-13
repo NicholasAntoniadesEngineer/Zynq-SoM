@@ -770,6 +770,7 @@ bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure,
             li.joint_retry_completed=[&](const JointSeparationWork& work,bool ok){
                 for(std::size_t i=0;i<work.visited;++i)fallback("legalize_joint_state");
                 for(std::size_t i=0;i<work.axis_solves;++i)fallback("legalize_joint_axis");
+                for(std::size_t i=0;i<work.axis_cache_hits;++i)fallback("legalize_joint_axis_reuse");
                 for(std::size_t i=0;i<work.domain_probes;++i)fallback("legalize_joint_domain_probe");
                 for(std::size_t i=0;i<work.domain_rejections;++i)fallback("legalize_joint_domain_reject");
                 for(std::size_t i=0;i<work.qualifications;++i)fallback("legalize_joint_proposal");

@@ -10,6 +10,7 @@
 #include <cstdint>
 #include <cstdio>
 #include <limits>
+#include <map>
 #include <set>
 #include <stdexcept>
 #include <tuple>
@@ -1358,6 +1359,10 @@ JointSeparationResult legalize_joint_separations(
     // disables further filtering; it must not exclude untested directions.
     std::vector<std::vector<int>> unary;
     for(const auto& domain:domains)unary.emplace_back(domain.size(),0);
+    // An inactive-axis choice contributes no edge. Keep its domain position
+    // as a sentinel so cached negative-cycle indices retain their provenance.
+    // All dimensions, walls and extra edges are immutable for this invocation.
+    std::map<std::pair<bool,std::vector<std::size_t>>,RepairAxisResult> axis_cache;
     for(std::size_t head=0;head<queue.size();++head){
         // Copy before scheduling children; queue reallocation must not leave a
         // borrowed current-state reference dangling.
@@ -1368,6 +1373,13 @@ JointSeparationResult legalize_joint_separations(
             seps.push_back(std::move(s));
         }
         const auto solve=[&](bool axis_x){
+            auto key=choices;
+            for(std::size_t i=0;i<seps.size();++i)if(seps[i].axis_x!=axis_x)key[i]=domains[i].size();
+            const auto cache_key=std::make_pair(axis_x,std::move(key));
+            if(const auto found=axis_cache.find(cache_key);found!=axis_cache.end()) {
+                ++out.axis_cache_hits;
+                auto result=found->second;result.seps=seps;return result;
+            }
             const auto& sizes=axis_x?widths:heights;
             std::vector<SepSpec> specs;specs.reserve(seps.size());
             for(const auto& s:seps)specs.push_back({s.axis_x,s.lo,s.hi,s.gap});
@@ -1376,6 +1388,11 @@ JointSeparationResult legalize_joint_separations(
             ++out.axis_solves;
             auto result=legalize_repair_axis(axis_x,names,sizes,axis_x?board_w:board_h,clear,seps,fixed,axis_x?extra_x:extra_y,0);
             for(const double p:result.pos)if(!std::isfinite(p))throw std::overflow_error("joint separation search: nonfinite solver position");
+            auto cached=result;
+            // Only positions and cycle certificates are reused. Avoid retaining
+            // a complete copy of every named separation in every cache entry.
+            std::vector<RepairSep>{}.swap(cached.seps);
+            axis_cache.emplace(cache_key,std::move(cached));
             return result;
         };
         auto x=solve(true);
