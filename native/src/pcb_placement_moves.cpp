@@ -1,6 +1,8 @@
 #include "pcb_placement_internal.hpp"
 #include "schgen/pcb_emit.hpp"
 #include "schgen/thermal_via_planning.hpp"
+#include "schgen/pcb_placement_gates.hpp"
+#include "contract_rigid_groups_internal.hpp"
 
 namespace schgen::pcb_placement {
 namespace {
@@ -129,19 +131,19 @@ double evict_gap(const PcbCheckInput &input, const EvictIndex &index, const Owne
     return std::hypot(std::max({0.,a.x0-b.x1,b.x0-a.x1}),
                       std::max({0.,a.y0-b.y1,b.y0-a.y1}));
 }
-bool evict_movable(const Placer &p, const std::string &r) {
+bool evict_movable(const Placer &p, const std::string &r, bool checked_contract_group=false) {
     if (!p.grid_placed.count(r) || p.fixed.count(r) || p.som_refs.count(r) ||
         !p.geometry.resolvable.count(r) || !p.geometry.bbox_of.count(r) ||
-        p.geometry.conn_edge.count(r) || p.contract_members.count(r) ||
+        p.geometry.conn_edge.count(r) || (!checked_contract_group && p.contract_members.count(r)) ||
         std::find(p.geometry.mh_refs.begin(),p.geometry.mh_refs.end(),r)!=p.geometry.mh_refs.end())
         return false;
     const auto &part = p.ctx.by_ref.at(r);
     // Context builds l4_exempt from wired sheets and external zone targets,
     // not board references. Match l4_pull's sheet-keyed eligibility.
-    return !p.ctx.l4_exempt.count(part.sheet) &&
+    return (checked_contract_group || !p.ctx.l4_exempt.count(part.sheet)) &&
         part.sheet.rfind("som_j",0)!=0 && part.sheet!="som_decoupling" &&
         part.footprint.find("Fiducial")==std::string::npos &&
-        !(p.ctx.wired.count(part.sheet) && p.ctx.in.contracts.count(part.sheet));
+        (checked_contract_group || !(p.ctx.wired.count(part.sheet) && p.ctx.in.contracts.count(part.sheet)));
 }
 bool evict_allocated(const Placer &p, const std::string &ref, Box4 b) {
     // No new leash radius: the existing allocated block is the authority.
@@ -156,7 +158,7 @@ enum class MovementFrame { CorridorAllocation, FinalFrameNonregression };
 bool evict_legal(const Placer &p, const PcbCheckInput &before, const PcbCheckInput &after,
                  const std::set<std::string> &members, const EvictRows &rows,
                  const std::vector<Box4> &corridors, bool rigid, std::string* reason=nullptr,
-                 MovementFrame frame=MovementFrame::CorridorAllocation) {
+                 MovementFrame frame=MovementFrame::CorridorAllocation, bool checked_contract_group=false) {
     if (reason) reason->clear();
     const auto reject=[&](const std::string& why) { if(reason)*reason=why; return false; };
     const auto prior=evict_index(before), next=evict_index(after);
@@ -169,7 +171,7 @@ bool evict_legal(const Placer &p, const PcbCheckInput &before, const PcbCheckInp
         return std::max({a.x0-b.x1,b.x0-a.x1,a.y0-b.y1,b.y0-a.y1});
     };
     for (const auto &r : members) {
-        if (!evict_movable(p,r)) return reject("immovable:"+r);
+        if (!evict_movable(p,r,checked_contract_group)) return reject("immovable:"+r);
         const auto &part=after.model().insts.at(next.at(r));
         const auto b=evict_box(after,next.at(r));
         const bool tht=has_thru_pads_from_text(part.mod->bytes);
@@ -225,6 +227,41 @@ void compact_recover_thermal(Placer& p) {
                 p.ctx.corridor_grid(25,p.pos.at(ref).second),p.rot(ref),&p.ctx.quantization));
     }
     const auto policy=pcb_emit_policy(p.ctx.in.floorplan.project);
+    PcbPlacementGatePolicy contracts;
+    contracts.contracts=p.ctx.in.contracts;
+    contracts.ref_maps=p.ctx.board_refs;
+    contracts.wired_sheets=p.ctx.wired;
+    EvictRows owned_rows;
+    for (const auto& [sheet,refs] : p.ctx.board_refs) { (void)refs; contracts.project_zones.insert(sheet); }
+    for (const auto& [sheet,evidence] : p.ctx.in.owned_groups) {
+        (void)sheet;
+        for (const auto& row : owned_group_placements(*evidence))
+            if (p.pos.count(row.owner)) owned_rows.push_back(row);
+    }
+    const auto group_options=[&](const std::string& ref) {
+        std::vector<std::set<std::string>> options;
+        if (!locked.count(ref) && evict_movable(p,ref)) options.push_back({ref});
+        const auto& sheet=p.ctx.by_ref.at(ref).sheet;
+        const auto contract=p.ctx.in.contracts.find(sheet);
+        const auto refs=p.ctx.board_refs.find(sheet);
+        if (contract==p.ctx.in.contracts.end() || refs==p.ctx.board_refs.end()) return options;
+        const auto groups=contract_rigid_groups(contract->second,refs->second,{});
+        if (!groups) return options; // Unsupported constraints grant no new movement permission.
+        const auto offer=[&](std::set<std::string> group) {
+            if (group.size()<2 || std::find(options.begin(),options.end(),group)!=options.end()) return;
+            if (std::all_of(group.begin(),group.end(),[&](const auto& r) {
+                    return p.pos.count(r) && evict_movable(p,r,true);
+                })) options.push_back(std::move(group));
+        };
+        std::set<std::string> whole;
+        for (const auto& group : *groups) {
+            whole.insert(group.refs.begin(),group.refs.end());
+            if (std::find(group.refs.begin(),group.refs.end(),ref)!=group.refs.end())
+                offer({group.refs.begin(),group.refs.end()});
+        }
+        offer(std::move(whole));
+        return options;
+    };
     const auto capacity=[](const auto& fields) {
         std::size_t total=0;
         for (const auto& field : fields) total+=field.sites.chosen.size();
@@ -243,16 +280,20 @@ void compact_recover_thermal(Placer& p) {
             const auto fields=plan_preferred_thermal_vias(before.model(),policy,&p.ctx.quantization);
             bool accepted=false;
             for (const auto& move : thermal_pad_move_candidates(before.model(),policy,fields,&p.ctx.quantization)) {
-                if (locked.count(move.ref) || !evict_movable(p,move.ref)) continue;
-                const auto old=p.pos.at(move.ref);
+              for (const auto& members : group_options(move.ref)) {
+                const bool grouped=members.size()>1;
                 // Try the nearest output-grid point, then the adjacent outward
                 // tick if rounding consumed the mathematically exact clearance.
                 for (int tick : {0,1}) {
                     const double dx=move.dx+(move.dx==0?0:std::copysign(tick*.0001,move.dx));
                     const double dy=move.dy+(move.dy==0?0:std::copysign(tick*.0001,move.dy));
-                    PcbStageRefitPoses trial{{move.ref,{
+                    PcbStageRefitPoses trial;
+                    for (const auto& ref : members) {
+                        const auto old=p.pos.at(ref);
+                        trial[ref]={
                         placement_evict_trial_precision4dp(old.first+dx,&p.ctx.quantization),
-                        placement_evict_trial_precision4dp(old.second+dy,&p.ctx.quantization),p.rot(move.ref)}}};
+                        placement_evict_trial_precision4dp(old.second+dy,&p.ctx.quantization),p.rot(ref)};
+                    }
                     event("thermal_repair_trial");
                     const auto after=refit_fanout_geometry(p,&trial);
                     std::string reason;
@@ -266,12 +307,23 @@ void compact_recover_thermal(Placer& p) {
                     // keepouts; earlier breathing may already leave them.
                     // Independent thermal recovery uses actual final-frame
                     // obstacles and protected memberships instead of that leash.
-                    if (evict_legal(p,before,after,{move.ref},{},corridors,false,&reason,
-                            MovementFrame::FinalFrameNonregression)) {
+                    bool legal=evict_legal(p,before,after,members,owned_rows,corridors,false,&reason,
+                            MovementFrame::FinalFrameNonregression,grouped);
+                    if (legal && grouped) {
+                        auto model=after.model();
+                        model.som_core=som_core_rect(p.plan.som_x,p.plan.som_y,p.plan.som.w,p.plan.som.h,25,25,.03);
+                        const PcbCheckInput checked(std::move(model));
+                        for (const auto& [sheet,result] : check_all_pcb_placement_contracts(checked,contracts))
+                            if (!result.ok) { legal=false; reason="contract:"+sheet; break; }
+                        if (legal && !check_pcb_placement_flow(checked,contracts,nullptr,&p.ctx.quantization).ok) {
+                            legal=false; reason="external_contract_flow";
+                        }
+                    }
+                    if (legal) {
                         const auto next=plan_preferred_thermal_vias(after.model(),policy,&p.ctx.quantization);
                         if (capacity(next)>capacity(fields)) {
-                            const auto& pose=trial.at(move.ref);
-                            p.pos[move.ref]={std::get<0>(pose),std::get<1>(pose)};
+                            for (const auto& [ref,pose] : trial)
+                                p.pos[ref]={std::get<0>(pose),std::get<1>(pose)};
                             event("thermal_repair_moved"); report("accepted"); accepted=true; break;
                         }
                         reason="no_capacity_improvement";
@@ -280,6 +332,8 @@ void compact_recover_thermal(Placer& p) {
                     report(reason);
                 }
                 if (accepted) break;
+              }
+              if (accepted) break;
             }
             if (!accepted) break;
         }

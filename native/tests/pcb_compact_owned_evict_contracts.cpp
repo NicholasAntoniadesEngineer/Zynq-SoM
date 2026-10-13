@@ -474,6 +474,30 @@ void tests(const PcbPlacementInput& source,const std::filesystem::path& root) {
         require(outcomes.size()==static_cast<std::size_t>(count("thermal_repair_trial")) &&
                 std::count(outcomes.begin(),outcomes.end(),"accepted")==count("thermal_repair_moved"),
                 "diagnostic outcomes reconcile with independent execution receipts");
+        f.p->pos["R_BLOCKER"]={50,50};
+        f.part("R_PARTNER",50,56,"bottom");
+        f.p->ctx.by_ref.at("U_THERMAL").sheet="thermal_subject";
+        f.p->ctx.board_refs[f.sheet]={{"R1","R_BLOCKER"},{"R2","R_PARTNER"}};
+        f.in.contracts[f.sheet]=parse_json_text(R"({"contract":"placement/lightweight-v0","structures":[
+            {"type":"proximity","anchor":"R1","anchor_pins":["1"],"members":["R2"],"max_mm":10,"same_side":true}]})");
+        f.p->ctx.wired.insert(f.sheet);
+        f.p->contract_members.insert("R_BLOCKER");
+        f.p->contract_members.insert("R_PARTNER");
+        const auto group_entry=f.p->pos;
+        f.p->fixed.insert("R_PARTNER");
+        compact_recover_thermal(*f.p);
+        require(f.p->pos==group_entry,"fixed member cannot be moved by contract-group association");
+        f.p->fixed.erase("R_PARTNER");
+        compact_recover_thermal(*f.p);
+        require(f.p->pos.at("R_BLOCKER")!=group_entry.at("R_BLOCKER") &&
+                f.p->pos.at("R_PARTNER")!=group_entry.at("R_PARTNER"),
+                "protected thermal blocker must recover by moving its complete contract group");
+        const auto a=f.p->pos.at("R_BLOCKER"), b=f.p->pos.at("R_PARTNER");
+        require(a.first==b.first && b.second-a.second==6,
+                "contract-group translation preserves the internal arrangement");
+        require(plan_preferred_thermal_vias(refit_fanout_geometry(*f.p,nullptr).model(),policy)
+                    .front().sites.chosen.size()==3,"contract-group translation recovers thermal capacity");
+        import_actual(f);
     }
     l4_corridor_contract(source);
     error_accounting(source);
