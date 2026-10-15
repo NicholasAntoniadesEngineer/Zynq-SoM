@@ -33,7 +33,7 @@ std::vector<NativeCircuitDump> prepare_native_circuit_dumps(const ProjectPaths &
     const std::string &project, ProjectAuthoringInput input) {
     std::vector<NativeCircuitDump> result;
     for (const auto &factory : factories(paths, project, std::move(input)))
-        result.push_back(prepare_native_circuit_dump(factory.circuit(), paths.subsystems_dir/factory.name/(factory.name+".py")));
+        result.push_back(prepare_native_circuit_dump(factory.circuit(), paths.subsystems_dir/factory.name/(factory.name+".cpp")));
     return result;
 }
 void publish_native_circuit_dump(const NativeCircuitDump &dump) {
@@ -43,7 +43,7 @@ void publish_native_circuit_dump(const NativeCircuitDump &dump) {
 std::string run_dump_circuits(const ProjectPaths &paths, const std::string &project, ProjectAuthoringInput input) {
     std::vector<std::filesystem::path> written;
     for (const auto &factory : factories(paths, project, std::move(input))) {
-        const auto dump = prepare_native_circuit_dump(factory.circuit(), paths.subsystems_dir/factory.name/(factory.name+".py"));
+        const auto dump = prepare_native_circuit_dump(factory.circuit(), paths.subsystems_dir/factory.name/(factory.name+".cpp"));
         publish_native_circuit_dump(dump); written.push_back(dump.path);
     }
     std::string output;

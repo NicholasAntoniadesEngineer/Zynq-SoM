@@ -1,5 +1,6 @@
 #include "pcb_placement_fixture.hpp"
 #include "historical_input_contracts.hpp"
+#include "direct_enable_reference.hpp"
 #include "schgen/experiment_tools.hpp"
 #include "../src/experiment_tools_internal.hpp"
 #include "experiment_metric_contracts.hpp"
@@ -454,6 +455,33 @@ void catalogs(const std::filesystem::path &root) {
                     const auto bytes = prepare_native_circuit_dump(projected, handle).bytes;
                     return bytes.size()==number(e,"bytes") && pcb_sha256(bytes)==string(e,"sha256");
                 });
+            } else if(string(e,"name")=="power_som") {
+                // Retain the independent historical serializer hash, then apply
+                // only the reviewed direct-enable delta to its immutable IR.
+                const auto oracle=parse_json_file((root/"native/tests/data/authoring"/
+                    (std::string("gate_")+project+".json")).string());
+                const auto& packages=field(oracle,"packages").array_value;
+                const auto found=std::find_if(packages.begin(),packages.end(),[](const auto& p){return string(p,"name")=="power_som";});
+                require(found!=packages.end(),"independent power_som oracle exists");
+                const auto old=parse_circuit_ir(field(*found,"circuit"));
+                const auto handle=paths.subsystems_dir/"power_som/power_som.cpp";
+                const auto original=prepare_native_circuit_dump(old,handle);
+                require(original.bytes.size()==number(e,"bytes")&&pcb_sha256(original.bytes)==string(e,"sha256"),
+                        "immutable power_som serializer byte oracle");
+                const auto current=direct_enable_reference::project(old);
+                const auto wanted=prepare_native_circuit_dump(current,handle);
+                require(dump.path==wanted.path&&dump.bytes==wanted.bytes,"complete reviewed power_som dump bytes");
+                for(int mutation=0;mutation<3;++mutation){
+                    auto changed=current;
+                    if(mutation==0)changed.title+="_drift";
+                    if(mutation==1)changed.parts.front().value+="_drift";
+                    if(mutation==2)for(auto& net:changed.nets)for(auto& pin:net.pins)
+                        if(pin.ref=="U4"&&pin.pin=="7")pin.pin="99";
+                    bool rejected=false;
+                    try{rejected=prepare_native_circuit_dump(changed,handle).bytes!=dump.bytes;}
+                    catch(const std::runtime_error&){rejected=true;}
+                    require(rejected,"serializer comparison rejects unrelated/direct-enable mutation");
+                }
             } else {
                 require(dump.bytes.size()==number(e,"bytes") && pcb_sha256(dump.bytes)==string(e,"sha256"),std::string(project)+" independent dump bytes "+string(e,"name"));
             }
@@ -479,12 +507,14 @@ void catalogs(const std::filesystem::path &root) {
 } // namespace
 int main(int argc,char **argv) {
     try {
-        if(argc<2||argc>3)throw std::runtime_error("usage: experiment_tools_contracts ROOT [--live]");
+        if(argc<2||argc>3||(argc==3&&std::string(argv[2])!="--live"&&std::string(argv[2])!="--catalogs"))
+            throw std::runtime_error("usage: experiment_tools_contracts ROOT [--live|--catalogs]");
         unit(argv[1]);
         if(argc==3 && std::string(argv[2])=="--live") {
             for(const auto *name:{"carrier","devkit_mini"})probes(argv[1],name);
             catalogs(argv[1]);
         }
+        if(argc==3&&std::string(argv[2])=="--catalogs")catalogs(argv[1]);
         std::cout<<"experiment tools: "<<checks<<" assertions passed\n";
     } catch(const std::exception &e){std::cerr<<e.what()<<'\n';return 1;}
 }
