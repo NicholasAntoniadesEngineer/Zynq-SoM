@@ -525,6 +525,22 @@ std::string trial(const PcbPlacementInput& source, bool compact, int run, int ge
         throw;
     }
     const auto end = Clock::now();
+    // Read existing board-space stage records after the timed construction.
+    // This exposes connector-only jumps without adding solver callbacks/work.
+    if(observers) {
+        const auto before=result.stages.find("l4_pull"),after=result.stages.find("edge_seat");
+        if(before!=result.stages.end()&&after!=result.stages.end())
+            for(const auto& [ref,pose]:after->second) {
+                const auto previous=before->second.find(ref);
+                if(previous!=before->second.end()&&previous->second!=pose)
+                    std::cout<<"edge_seat_move ref="<<ref<<" coordinates=board"
+                             <<" from_x="<<std::get<0>(previous->second)<<" from_y="<<std::get<1>(previous->second)
+                             <<" to_x="<<std::get<0>(pose)<<" to_y="<<std::get<1>(pose)<<'\n';
+            }
+    }
+    if(observers)for(const auto& block:result.floorplan.plan.edge_blocks)
+        std::cout<<"edge_assignment sheet="<<block.name<<" edge="<<block.edge
+                 <<" x="<<block.x<<" y="<<block.y<<" w="<<block.w<<" h="<<block.h<<'\n';
     print_face_offers();
     if(observers)std::cout<<"edge_search candidates="<<edge_candidates<<" repairs="<<edge_repairs<<'\n';
     if(observers)profile.stages.push_back({"model_return_tail", seconds(profile.mark, end),
