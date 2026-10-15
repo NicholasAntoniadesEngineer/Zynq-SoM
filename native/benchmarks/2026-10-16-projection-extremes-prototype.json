@@ -23,7 +23,8 @@
     "timing_limit": "Concurrent full-suite activity; not a controlled timing comparison"
   },
   "transformed_matrix": {
-    "source": "facing_projection_matrix.cpp",
+    "source_at_experiment": "facing_projection_matrix.cpp",
+    "maintained_test_source": "../tests/facing_projection_contracts.cpp",
     "cases": 32,
     "production_known_feasible_misses": 16,
     "prototype_known_feasible_misses": 0,

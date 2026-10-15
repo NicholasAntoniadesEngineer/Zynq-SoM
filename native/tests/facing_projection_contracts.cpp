@@ -1,5 +1,5 @@
-// Standalone regression candidate for the isolated projection prototype.
-#include "floorplan_internal.hpp"
+// Independent geometry and failure-accounting requirements for facing recovery.
+#include "../src/floorplan_internal.hpp"
 #include <iostream>
 #include <stdexcept>
 using namespace schgen;
@@ -72,7 +72,7 @@ int main(){try {
             demand(settled[0].x==vars[0].x&&settled[0].y==vars[0].y&&starts==0&&ends==0,
                    "valid incumbent moved or unnecessarily entered joint retry");
             for(const auto& line:settled_log)
-                demand(line.find("diagnostic facing allocation")==std::string::npos,"valid incumbent entered projection fallback");
+                demand(line.find("capacity allocation")==std::string::npos,"valid incumbent entered projection fallback");
         }
         ++tested;
     }

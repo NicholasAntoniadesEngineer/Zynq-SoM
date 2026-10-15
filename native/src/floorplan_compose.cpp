@@ -155,12 +155,14 @@ struct TaggedEdge {
     std::string source{};
 };
 
+enum class FacingAllocation { seed, y_capacity, x_capacity };
 class Composer {
 public:
     Composer(const FloorplanLegalizeInput& input,
              const std::vector<FloorplanLegalizeVar>& variables,
              std::vector<std::string>& output_log, QuantizationCounts* counts = nullptr,
-             bool pad_seed_hulls = false, bool perpendicular_order = false,bool reservation_geometry=false,bool facing_cuts=false)
+             bool pad_seed_hulls = false, bool perpendicular_order = false,bool reservation_geometry=false,bool facing_cuts=false,
+             FacingAllocation allocation=FacingAllocation::seed)
         : in(input), log(output_log), counts(counts), fixed(input.fixed_poses), pad_seed_hulls(pad_seed_hulls), perpendicular_order(perpendicular_order), reservation_geometry(reservation_geometry) {
         for (const auto& v : variables) {
             if (v.name.empty() || v.name.front() == '#' || !by_name.emplace(v.name, &v).second)
@@ -204,7 +206,7 @@ public:
             out.push_back({0,0,w,h,body.reach,body.inset,body.mask,body.mask,true});
             for(const auto& c:*body.children)out.push_back({c.dx,c.dy,c.w,c.h,c.reach,c.inset,c.mask,body.mask,false});
         }
-        if(facing_cuts)build_facing_cuts();
+        if(facing_cuts)build_facing_cuts(allocation);
     }
 
     bool changed_flip_order() const {return flip_order_differs;}
@@ -500,7 +502,7 @@ private:
     std::vector<RepairSep> seps;
     std::map<std::string,std::vector<Rect>> local_reservations;
     std::vector<TaggedEdge> facing_x,facing_y;
-    void build_facing_cuts() {
+    void build_facing_cuts(FacingAllocation allocation) {
         struct Endpoint { FloorplanPoint local,pose; bool moving; };
         const auto endpoint=[&](const std::string& name)->std::optional<Endpoint> {
             if(name=="@som")return Endpoint{{(in.som_core_page.x0+in.som_core_page.x1)/2-in.origin.first,
@@ -565,7 +567,12 @@ private:
                 // half-plane cuts; exact final facing and geometry still decide.
                 const double low=projection_margin-max_y;
                 if(low<=max_x) {
-                    share_x=std::clamp(share_x,low,max_x);
+                    // A seed-centred split can exclude a legal pocket behind
+                    // an obstacle. Failure-only retries explore the two ends
+                    // of the board-feasible allocation interval, without
+                    // relaxing the total projection or exact final checks.
+                    share_x=allocation==FacingAllocation::y_capacity?low:
+                        allocation==FacingAllocation::x_capacity?max_x:std::clamp(share_x,low,max_x);
                     share_y=projection_margin-share_x;
                 }
             }
@@ -957,6 +964,27 @@ bool compose_with_bounded_retries(const FloorplanLegalizeInput& input,
     if(input.joint_retry_started)input.joint_retry_started();
     return Composer(input,movable,log,counts,false,false,candidate,true).run(movable,true,true);
 }
+bool compose_with_facing_extremes(const FloorplanLegalizeInput& input,
+        std::vector<FloorplanLegalizeVar>& movable,std::vector<std::string>& log,
+        QuantizationCounts* counts=nullptr) {
+    if(!input.joint_separation_states)return false;
+    const bool facing=std::any_of(input.index.hard.begin(),input.index.hard.end(),[](const auto& t) {
+        return t.kind=="facing"&&t.enforced&&t.require_positive_facing;
+    });
+    if(!facing)return false;
+    // Only reached after the complete original portfolio failed. Each trial
+    // receives the caller's state budget, reports all actual work through the
+    // existing joint callbacks and preserves the caller's poses on rejection.
+    // Extreme allocations add opportunities, not a complete half-plane solver.
+    for(const auto allocation:{FacingAllocation::y_capacity,FacingAllocation::x_capacity}) {
+        log.push_back(allocation==FacingAllocation::y_capacity?
+            "retry: joint facing Y-capacity allocation":"retry: joint facing X-capacity allocation");
+        if(input.joint_retry_started)input.joint_retry_started();
+        if(Composer(input,movable,log,counts,false,false,!input.primary_fanout.empty(),true,allocation)
+                .run(movable,true,true))return true;
+    }
+    return false;
+}
 }  // namespace
 
 std::vector<FloorplanTermEval> floorplan_evaluate_terms(
@@ -969,12 +997,14 @@ std::vector<FloorplanTermEval> floorplan_evaluate_terms(
 bool floorplan_legalize_compact(const FloorplanLegalizeInput& input,
         std::vector<FloorplanLegalizeVar>& movable, std::vector<std::string>& log) {
     validate(input);
-    return compose_with_bounded_retries(input, movable, log);
+    if(compose_with_bounded_retries(input, movable, log))return true;
+    return compose_with_facing_extremes(input,movable,log);
 }
 bool floorplan_legalize_compact_accounted(const FloorplanLegalizeInput& input,
         std::vector<FloorplanLegalizeVar>& movable, std::vector<std::string>& log,
         QuantizationCounts& counts) {
     validate(input);
-    return compose_with_bounded_retries(input, movable, log, &counts);
+    if(compose_with_bounded_retries(input, movable, log, &counts))return true;
+    return compose_with_facing_extremes(input,movable,log,&counts);
 }
 }  // namespace schgen

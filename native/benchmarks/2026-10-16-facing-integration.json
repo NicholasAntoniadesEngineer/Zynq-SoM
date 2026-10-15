@@ -1,0 +1,33 @@
+{
+  "implementation_base": "9d506722",
+  "change": "Integrate failure-only Y-capacity and X-capacity facing allocation retries after the complete existing composer portfolio fails. Joint search must be enabled; each attempt uses the caller's state budget and existing work callbacks. All exact final checks remain active.",
+  "regression": {
+    "new_test": "native_facing_projection_contracts",
+    "matrix_cases": 32,
+    "baseline_known_feasible_misses": 16,
+    "integrated_known_feasible_misses": 0,
+    "requirements": "Axis/reflection symmetry, compact and noncompact, opposing directions rejected, failed caller poses preserved, independent board/obstacle/facing checks, deterministic work/geometry/logs, paired bounded joint callbacks and unchanged successful incumbents",
+    "targeted_tests": "PASS 6/6: facing projection, floorplan, floorplan precision, legalize accounting, model failure receipts, native policy audits",
+    "targeted_seconds": 81.78,
+    "build": "All native targets rebuilt successfully",
+    "log": "native/build/facing-integration-tests.log",
+    "scope": "The separate 275/275 full-suite pass precedes this solver integration. Six targeted tests are not a new complete-suite result."
+  },
+  "carrier": {
+    "dimensions_mm": [162,151],
+    "top": 331,
+    "bottom": 235,
+    "pcb_sha256": "8aae8efbb2dee1c37cc61dc1b91e832b9ed6e4c7c47a17fc78b73c1a44f8d231",
+    "non_timing_transcript": "All 12244 lines identical to face-cache-after.log, including candidate decisions and ordered work receipts",
+    "accounting": "All 123 search-total counters exactly sum attempt counters",
+    "log": "native/build/facing-integration-162x151.log"
+  },
+  "devkit": {
+    "dimensions_mm": [98,98],
+    "top": 105,
+    "bottom": 55,
+    "pcb_sha256": "1b12fecbcbbaa5e6084c2459da93cb144a660ff19805e6e4e3f75f9c22689fdb",
+    "log": "native/build/facing-integration-devkit.log"
+  },
+  "limits": "Repairs known feasible misses; not a complete coupled half-plane solver. No smaller carrier accepted. Both-board construction checks preserve published PCB hashes, but full pipelines/renders were not rerun for this exact integration. No matched Python performance claim."
+}
