@@ -157,7 +157,7 @@ void append_rigid_zone_orientations(Context& ctx, Geometry& g, const std::string
     if (variants.size() > originals.size()) g.shapes[sheet] = std::move(variants);
 }
 void append_contract_group_faces(Context& ctx,Geometry& g,const std::string& sheet,const Shape& original,
-                                 bool group_rotations) {
+                                 bool group_rotations, bool vertical_compaction) {
     // Local geometry candidates, not hardware qualification. Preserve the
     // incumbent and explore four deterministic alignments per eligible
     // contract-connected group/orientation. Final board gates remain authoritative.
@@ -373,20 +373,27 @@ void append_contract_group_faces(Context& ctx,Geometry& g,const std::string& she
     if(schema.kind==JsonKind::String&&schema.string_value=="placement/v2") {
         const auto found=g.shapes.find(sheet);
         if(found==g.shapes.end())return;
-        const auto offers=found->second;
+        // Each pass retains its parents. The optional y pass explores both
+        // original offers and accepted x-compacted offers without duplication
+        // of the geometry/contract/fanout qualification rules.
+        for(bool vertical:{false,true}) {
+        if(vertical&&!vertical_compaction)break;
+        const auto coordinate=[&](const FloorplanPoint& xy){return vertical?xy.second:xy.first;};
+        const auto low=[&](const Box4& b){return vertical?b.y0:b.x0;};
+        const auto high=[&](const Box4& b){return vertical?b.y1:b.x1;};
+        const auto offers=g.shapes.at(sheet);
         for(const auto& offer:offers) {
             if(offer.tag.rfind("contract-bottom",0)!=0)continue;
             auto compact=offer;
             std::vector<std::string> leftovers;
             for(const auto& group:*groups)if(group.refs.size()==1)leftovers.push_back(group.refs.front());
-            // Only these singletons can move, and this pass changes x only.
-            // If a fixed member already owns the rightmost courtyard extent,
-            // no sequence of left contacts can reduce the envelope area. Avoid
+            // Only these singletons can move, along one axis. If a fixed
+            // member already owns that extent, contacts cannot reduce area. Avoid
             // constructing and checking candidates that cannot be published.
             const auto extent_model=model(offer);
             double rightmost=0,fixed_rightmost=0;
             for(std::size_t i=0;i<extent_model.model().insts.size();++i) {
-                const auto right=extent_model.courtyard_at(i).x1;
+                const auto right=high(extent_model.courtyard_at(i));
                 rightmost=std::max(rightmost,right);
                 if(std::find(leftovers.begin(),leftovers.end(),extent_model.model().insts[i].ref)==leftovers.end())
                     fixed_rightmost=std::max(fixed_rightmost,right);
@@ -394,7 +401,7 @@ void append_contract_group_faces(Context& ctx,Geometry& g,const std::string& she
             if(fixed_rightmost>=rightmost)continue;
             std::sort(leftovers.begin(),leftovers.end(),[&](const auto& a,const auto& b){
                 const auto position=[&](const auto& ref){return compact.top_off.count(ref)?compact.top_off.at(ref):compact.bot_off.at(ref);};
-                return std::make_pair(-position(a).first,a)<std::make_pair(-position(b).first,b);
+                return std::make_pair(-coordinate(position(a)),a)<std::make_pair(-coordinate(position(b)),b);
             });
             for(const auto& ref:leftovers) {
                 const bool top=compact.top_off.count(ref);
@@ -402,29 +409,31 @@ void append_contract_group_faces(Context& ctx,Geometry& g,const std::string& she
                 std::size_t index=0;
                 while(measured.model().insts.at(index).ref!=ref)++index;
                 const auto bounds=measured.courtyard_at(index);
-                std::set<double> shifts{-bounds.x0};
+                std::set<double> shifts{-low(bounds)};
                 for(std::size_t i=0;i<measured.model().insts.size();++i)if(i!=index) {
                     const auto& obstacle=measured.model().insts[i];
                     if((obstacle.side=="top")!=top&&!has_thru_pads_from_text(obstacle.mod->bytes))continue;
                     const auto box=measured.courtyard_at(i);
-                    shifts.insert(box.x1+ctx.clearance-bounds.x0);
+                    shifts.insert(high(box)+ctx.clearance-low(bounds));
                 }
                 for(const auto raw:shifts) {
                     if(raw>=0)continue;
                     auto moved=compact;
                     auto& xy=(top?moved.top_off:moved.bot_off).at(ref);
-                    // Round toward the obstacle-free side of a left contact.
-                    xy.first=placement_bottom_pose_precision4dp(
-                        bottom_contact_shift(xy.first+raw,&ctx.quantization),&ctx.quantization);
+                    // Round toward the obstacle-free side of the contact.
+                    auto& value=vertical?xy.second:xy.first;
+                    value=placement_bottom_pose_precision4dp(
+                        bottom_contact_shift(value+raw,&ctx.quantization),&ctx.quantization);
                     if(qualify(moved)&&moved.w*moved.h<=compact.w*compact.h) {
                         compact=std::move(moved);break;
                     }
                 }
             }
             if(compact.w*compact.h<offer.w*offer.h) {
-                compact.tag=offer.tag+"/leftover-contact";
+                compact.tag=offer.tag+(vertical?"/leftover-y-contact":"/leftover-contact");
                 append_checked(std::move(compact));
             }
+        }
         }
     }
 }

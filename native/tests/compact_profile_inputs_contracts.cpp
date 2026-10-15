@@ -105,12 +105,15 @@ void profile_option_contracts() {
     const auto combination=search_strategy("extent+estimator-first");
     if(!combination.owned_extent_alternatives.value_or(false)||combination.shape_area_first!=false)
         throw std::runtime_error("combined model-search strategy lost an override");
+    if(!search_strategy("vertical+extent").vertical_compaction)
+        throw std::runtime_error("vertical search-strategy override lost");
     for(const auto& args:std::vector<std::vector<std::string>>{
         {"profile","--repo",".","--compact-search","on","--search-strategy","unknown"},
         {"profile","--repo",".","--compact-search","on","--search-strategy","extent+"},
         {"profile","--repo",".","--compact-search","on","--search-strategy","extent+extent"},
         {"profile","--repo",".","--compact-search","on","--search-strategy","area-first+estimator-first"},
         {"profile","--repo",".","--compact-search","on","--search-strategy","extent+rotations"},
+        {"profile","--repo",".","--compact-search","on","--search-strategy","vertical"},
         {"profile","--repo",".","--compact-search","on","--search-strategy","extent+area-first","--search-strategy","area-first+extent"},
         {"profile","--repo",".","--compact-search","off","--search-strategy","extent"},
         {"profile","--repo",".","--compact-search","on","--search-strategy","rotations"},

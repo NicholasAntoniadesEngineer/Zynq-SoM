@@ -9,6 +9,7 @@
 #include "schgen/legalize.hpp"
 #include "schgen/validation.hpp"
 #include "schgen/pcb_placement_gates.hpp"
+#include "schgen/pcb_placement_search.hpp"
 #include "schgen/ratsnest_gate.hpp"
 #include "schgen/thermal_via_planning.hpp"
 #include "schgen/verification_audits.hpp"
@@ -70,6 +71,7 @@ PcbPlacementSearchStrategy search_strategy(const std::string& text) {
         const auto token=text.substr(begin,end==std::string::npos?end:end-begin);
         if(!seen.insert(token).second)throw std::invalid_argument("duplicate search-strategy component: "+token);
         if(token=="extent")result.owned_extent_alternatives=true;
+        else if(token=="vertical")result.vertical_compaction=true;
         else if(token=="rotations")result.contract_group_rotations=true;
         else if(token=="area-first"||token=="estimator-first") {
             if(result.shape_area_first)throw std::invalid_argument("conflicting search-strategy rankings");
@@ -81,7 +83,7 @@ PcbPlacementSearchStrategy search_strategy(const std::string& text) {
     return result;
 }
 void help() {
-    std::cout << "  [--search-strategy extent|rotations|area-first|estimator-first] (join with + for combined strategies; repeat; baseline retained; no acceptance)\n";
+    std::cout << "  [--search-strategy extent|rotations|vertical|area-first|estimator-first] (join with + for combined strategies; repeat; baseline retained; no acceptance)\n";
     std::cout << "    Each strategy starts from baseline settings; repeated options are not cumulative. search_total includes every attempt and screening.\n";
     std::cout << "  [--shape-area-first on|off] (experimental legal-shape envelope ranking; compact on required)\n";
     std::cout << "  [--contract-group-face-sheet SHEET] (repeat for multiple sheets; experimental rigid-group face candidates)\n";
@@ -136,6 +138,7 @@ Options parse(int argc, char** argv) {
             for(const auto& prior:out.search_strategies) {
                 const auto existing=search_strategy(prior);
                 if(proposed.shape_area_first==existing.shape_area_first&&
+                   proposed.vertical_compaction==existing.vertical_compaction&&
                    proposed.owned_extent_alternatives==existing.owned_extent_alternatives&&
                    proposed.contract_group_rotations==existing.contract_group_rotations)
                     throw std::invalid_argument("duplicate search-strategy: "+value);
@@ -280,8 +283,8 @@ Options parse(int argc, char** argv) {
         if(out.thermal_trace||out.owned_selection_trace)
             throw std::invalid_argument("search-strategy requires per-model thermal/selection traces off");
         for(const auto& name:out.search_strategies)
-            if(search_strategy(name).contract_group_rotations.value_or(false)&&out.contract_group_face_sheets.empty())
-                throw std::invalid_argument("rotations search-strategy requires contract-group-face-sheet");
+            if((search_strategy(name).contract_group_rotations.value_or(false)||search_strategy(name).vertical_compaction)&&out.contract_group_face_sheets.empty())
+                throw std::invalid_argument("rotations/vertical search-strategy requires contract-group-face-sheet");
     }
     if(!out.observers&&out.owned_selection_trace)throw std::invalid_argument("owned-selection-trace requires observers on");
     if(!out.observers&&out.thermal_trace)throw std::invalid_argument("thermal-trace requires observers on");

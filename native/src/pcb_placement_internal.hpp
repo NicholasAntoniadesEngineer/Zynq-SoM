@@ -8,6 +8,9 @@
 #include "schgen/placement_precision.hpp"
 
 namespace schgen::pcb_placement {
+// Search-only zone expansion; ordinary public construction leaves it off.
+PcbZoneResult build_zones_for_search(const PcbPlacementInput&, bool vertical_compaction,
+                                    ExecutionFailureReceipt*);
 using namespace pcb_stage;
 using Geometry = FloorplanZoneGeometry;
 using Shape = FloorplanZoneShape;

@@ -2,6 +2,7 @@
 #include "pcb_placement_orientations.hpp"
 #include "schgen/pcb_placement_gates.hpp"
 #include "schgen/ratsnest_gate.hpp"
+#include "schgen/pcb_placement_search.hpp"
 
 namespace schgen::pcb_placement {
 namespace {
@@ -220,13 +221,14 @@ FloorplanInput prepare_pcb_floorplan(const PcbPlacementInput &input, const PcbZo
     checked_quantization_merge(result.accounting.quantization_engagements, zones.quantization_engagements);
     return result;
 }
-static PcbPlacementResult build_pcb_model_once(const PcbPlacementInput &input, ExecutionFailureReceipt* failure) {
+static PcbPlacementResult build_pcb_model_once(const PcbPlacementInput &input, ExecutionFailureReceipt* failure,
+                                               bool vertical_compaction) {
     // Each child failure owns only its operation, except floorplan which
     // explicitly inherits planning-zone accounting. Keep that transfer visible.
     ExecutionFailureReceipt child;
     ExecutionAccounting completed;
     try {
-    auto zones = build_pcb_zone_geometry(input,&child);
+    auto zones = pcb_placement::build_zones_for_search(input,vertical_compaction,&child);
     completed={zones.quantization_engagements,zones.fallback_events};
     observe_pcb_experiment_checkpoint(input.experiment.get(), [] {
         PcbPlacementObservation row;
@@ -360,9 +362,10 @@ FloorplanSpec pcb_edge_replan_spec(const FloorplanSpec& original,const Floorplan
     spec.ordered_edges=spec.edges;
     return spec;
 }
-PcbPlacementResult build_pcb_model(const PcbPlacementInput& input,ExecutionFailureReceipt* failure) {
+static PcbPlacementResult build_pcb_model_strategy(const PcbPlacementInput& input,ExecutionFailureReceipt* failure,
+                                                   bool vertical_compaction) {
     ExecutionFailureReceipt first;
-    try {return build_pcb_model_once(input,&first);}
+    try {return build_pcb_model_once(input,&first,vertical_compaction);}
     catch(const PcbEdgeGeometryMismatch& mismatch) {
         // One full-geometry retry, never recursive and never a geometry waiver.
         // The first receipt already owns its input seed, zones, packing and
@@ -374,11 +377,14 @@ PcbPlacementResult build_pcb_model(const PcbPlacementInput& input,ExecutionFailu
         retry.floorplan.accounting.quantization_engagements=first.accounting.quantization_engagements;
         retry.floorplan.accounting.fallback_events=first.accounting.fallback_events;
         retry.floorplan.accounting.fallback_events.push_back("edge_geometry_replan_retry");
-        return build_pcb_model_once(retry,failure);
+        return build_pcb_model_once(retry,failure,vertical_compaction);
     } catch(...) {
         if(failure)*failure=first;
         throw;
     }
+}
+PcbPlacementResult build_pcb_model(const PcbPlacementInput& input,ExecutionFailureReceipt* failure) {
+    return build_pcb_model_strategy(input,failure,false);
 }
 PcbPlacementSearchResult search_pcb_models(const PcbPlacementInput& input,
     const std::vector<PcbPlacementSearchStrategy>& strategies,ExecutionFailureReceipt* failure) {
@@ -409,7 +415,7 @@ PcbPlacementSearchResult search_pcb_models(const PcbPlacementInput& input,
             trial.floorplan.accounting.fallback_events.clear();
             PcbPlacementSearchAttempt record;
             std::optional<PcbPlacementResult> candidate;
-            try {candidate=build_pcb_model(trial,&child);}
+            try {candidate=build_pcb_model_strategy(trial,&child,attempt&&strategies[attempt-1].vertical_compaction);}
             catch(const FloorplanPackingInfeasible& error) {record.detail=error.what();}
             catch(const PcbZoneInfeasible& error) {record.detail=error.what();}
             if(!candidate) {

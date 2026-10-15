@@ -387,6 +387,37 @@ void live(const std::filesystem::path& root){
    }
    demand(som_buck_bottom,"SoM power candidates never move the buck stage");
    demand(som_contact_offers>0,"colliding SoM single group has no checked contact repairs");
+   const auto som_vertical=build_zones_for_search(f.input,true,nullptr);
+   const auto& vertical_offers=som_vertical.geometry.shapes.at("power_som");
+   demand(vertical_offers.size()>som_offers.size(),"vertical compaction yielded no SoM power alternative");
+   for(std::size_t i=0;i<som_offers.size();++i)
+    demand(equal(som_offers[i],vertical_offers[i]),"vertical compaction rewrote an incumbent offer");
+   Context vertical_context(f.input);vertical_context.pool=som_vertical.footprints;
+   std::size_t vertical_count=0;
+   for(const auto& candidate:vertical_offers) {
+    const auto suffix=candidate.tag.find("/leftover-y-contact");
+    if(suffix==std::string::npos)continue;
+    ++vertical_count;
+    const auto parent=std::find_if(vertical_offers.begin(),vertical_offers.end(),[&](const auto& s){
+     return s.tag==candidate.tag.substr(0,suffix);
+    });
+    demand(parent!=vertical_offers.end()&&candidate.w*candidate.h<parent->w*parent->h,
+           "vertical compaction did not improve its parent's area");
+    demand(candidate.mirror==parent->mirror&&candidate.extra_rot==parent->extra_rot,
+           "vertical compaction changed rotation or chirality");
+    for(bool top:{false,true}) {
+     const auto& before=top?parent->top_off:parent->bot_off;
+     const auto& after=top?candidate.top_off:candidate.bot_off;
+     demand(before.size()==after.size(),"vertical compaction changed face membership");
+     for(const auto& [ref,xy]:before)demand(after.count(ref)&&after.at(ref).first==xy.first&&after.at(ref).second<=xy.second,
+            "vertical compaction moved left/right or changed face");
+    }
+    const auto checked=model(candidate,vertical_context,som_vertical.geometry,"power_som");
+    demand(check_pcb_placement_contract(checked,"power_som",&f.input.contracts.at("power_som"),
+           vertical_context.board_refs.at("power_som")).ok&&check_fanout(checked,0).ok,
+           "vertical candidate failed independent contract/fanout checks");
+   }
+   demand(vertical_count>0,"vertical compaction regression witness disappeared");
    const auto som_prepared=prepare_pcb_floorplan(f.input,som_split);
    for(const auto* kind:{"flow_hop","facing","far_min"})
     demand(std::any_of(som_prepared.compose.index.hard.begin(),som_prepared.compose.index.hard.end(),

@@ -3,6 +3,7 @@
 #include "schgen/native_audit_state.hpp"
 #include "schgen/pcb_emit.hpp"
 #include "schgen/pcb_placement_gates.hpp"
+#include "schgen/pcb_placement_search.hpp"
 #include "schgen/stage_precision.hpp"
 #include "schgen/placement_precision.hpp"
 #include "schgen/precision_ops.hpp"
