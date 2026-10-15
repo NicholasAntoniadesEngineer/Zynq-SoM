@@ -6,6 +6,7 @@ namespace schgen {
 PcbZoneResult pcb_placement::build_zones_for_search(const PcbPlacementInput &in, bool vertical_compaction,
                                                   ExecutionFailureReceipt* failure) {
     using namespace pcb_placement;
+    vertical_compaction=vertical_compaction||(in.floorplan.experiment&&in.floorplan.experiment->vertical_compaction);
     Context ctx(in);
     PcbZoneResult out;
     ExecutionFailureReceipt child;

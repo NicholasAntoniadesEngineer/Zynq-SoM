@@ -1,6 +1,7 @@
 #include "pcb_placement_orientations.hpp"
 #include "pcb_placement_fixture.hpp"
 #include "contract_rigid_groups_internal.hpp"
+#include "floorplan_internal.hpp"
 #include "schgen/pcb_placement_gates.hpp"
 #include <array>
 #include <atomic>
@@ -215,6 +216,141 @@ void unit(){
  bool invalid_suffix=false;
  try {append_rigid_zone_orientations(ctx,g,"unit",sparse,suffix_count+1);}catch(const PcbZoneInfeasible&){invalid_suffix=true;}
  demand(invalid_suffix&&ctx.quantization.empty(),"invalid suffix did not fail before work");
+ // One independently movable component is not less eligible than a larger
+ // connected group. Keep the service-access component fixed on top.
+ input.contracts["unit"]=parse_json_text(R"({"contract":"placement/v2","structures":[{"type":"same_side","ics":["A"]}]})");
+ auto single=seed;single.extra_rot.clear();single.bot_off.clear();
+ single.top_off={{"R1",{5,4}},{"R2",{15,11}}};
+ ctx.by_ref["R2"].lib_id="Switch:SW_SPST";
+ g.shapes.clear();append_contract_group_faces(ctx,g,"unit",single);
+ demand(g.shapes.count("unit")&&g.shapes.at("unit").size()>1,
+        "independent singleton was excluded by group cardinality");
+ demand(equal(g.shapes.at("unit").front(),single),"singleton exploration replaced incumbent");
+ for(const auto& candidate:g.shapes.at("unit")) {
+  if(candidate.tag.rfind("contract-bottom",0)!=0)continue;
+  demand(candidate.bot_off.count("R1")&&candidate.top_off.count("R2")&&
+         !candidate.bot_off.count("R2"),"singleton exploration moved top-access part");
+  const auto checked=model(candidate,ctx,g);
+  demand(check_pcb_placement_contract(checked,"unit",&input.contracts.at("unit"),ctx.board_refs.at("unit")).ok&&
+         check_fanout(checked,0).ok,"singleton failed independent geometry/contract/fanout check");
+  for(std::size_t i=0;i<checked.model().insts.size();++i) {
+   const auto bounds=checked.courtyard_at(i);
+   demand(bounds.x0>=0&&bounds.y0>=0&&bounds.x1<=candidate.w&&bounds.y1<=candidate.h,
+          "singleton courtyard escaped candidate envelope");
+  }
+  const auto moved=std::find_if(checked.model().insts.begin(),checked.model().insts.end(),
+      [](const auto& inst){return inst.ref=="R1";});
+  demand(moved!=checked.model().insts.end()&&handed(model(single,ctx,g),0)*
+         handed(checked,static_cast<std::size_t>(moved-checked.model().insts.begin()))<0,
+         "singleton bottom move lost chirality");
+ }
+ const auto singleton_once=g.shapes.at("unit");
+ append_contract_group_faces(ctx,g,"unit",single);
+ demand(g.shapes.at("unit").size()==singleton_once.size(),"singleton replay accumulated duplicate offers");
+ for(std::size_t i=0;i<singleton_once.size();++i)
+  demand(equal(g.shapes.at("unit")[i],singleton_once[i]),"singleton replay changed deterministic order");
+ input.contracts["unit"]=parse_json_text(R"({"contract":"placement/v2","structures":[{"type":"proximity","anchor":"A","members":["B"],"max_mm":30,"same_side":true}]})");
+ g.shapes.clear();append_contract_group_faces(ctx,g,"unit",single);
+ demand(g.shapes.empty(),"singleton face exploration split a group pinned by service access");
+ // The same connected group becomes eligible when no member needs top access.
+ // There is no stationary remainder: that is not a reason to reject the move.
+ ctx.by_ref["R2"].lib_id="Device:R";
+ g.shapes.clear();append_contract_group_faces(ctx,g,"unit",single,true);
+ demand(g.shapes.count("unit")&&g.shapes.at("unit").size()==5,
+        "whole-sheet group must offer all four bottom orientations plus incumbent");
+ PcbZoneResult whole_zones;whole_zones.geometry=g;whole_zones.footprints=ctx.pool;
+ std::size_t whole_index=0;
+ for(const auto& candidate:g.shapes.at("unit")) {
+  const auto index=whole_index++;
+  if(candidate.tag.rfind("contract-bottom",0)!=0)continue;
+  demand(candidate.side=="bottom"&&candidate.top_off.size()==2&&candidate.bot_off.empty()&&candidate.mirror.size()==2,
+         "whole-sheet face move lost members or mirror binding");
+  const auto checked=model(candidate,ctx,g);
+  const auto bound=bind_pcb_zone_shapes(whole_zones,{{"unit",static_cast<int>(index)}});
+  for(const auto& [ref,key]:candidate.mirror)
+   demand(bound.side_of.at(ref)=="bottom"&&bound.resolvable.at(ref)==key&&bound.mirror_refs.count(ref),
+          "whole-sheet binding lost physical bottom face or mirrored footprint");
+  demand(check_pcb_placement_contract(checked,"unit",&input.contracts.at("unit"),ctx.board_refs.at("unit")).ok&&
+         check_fanout(checked,0).ok,"whole-sheet group failed contract/fanout checks");
+  for(std::size_t i=0;i<checked.model().insts.size();++i) {
+   const auto bounds=checked.courtyard_at(i);
+   demand(bounds.x0>=0&&bounds.y0>=0&&bounds.x1<=candidate.w&&bounds.y1<=candidate.h,
+          "whole-sheet bottom rotation clipped a courtyard");
+   demand(handed(model(single,ctx,g),i)*handed(checked,i)<0,
+          "whole-sheet bottom rotation lost chirality");
+  }
+ }
+ const auto whole_once=g.shapes.at("unit");
+ append_contract_group_faces(ctx,g,"unit",single,true);
+ demand(g.shapes.at("unit").size()==whole_once.size(),"whole-sheet replay accumulated duplicates");
+ for(std::size_t i=0;i<whole_once.size();++i)
+  demand(equal(g.shapes.at("unit")[i],whole_once[i]),"whole-sheet replay changed deterministic order");
+ // Exercise the real selector with these generated offers, not a separately
+ // manufactured bottom flag. Physical geometry and binding are checked above.
+ FloorplanInput selection;selection.som.w=selection.som.h=8;
+ selection.module_offset=FloorplanPoint{0,0};selection.compact_search=true;
+ selection.geometry.shapes["unit"]=whole_once;
+ for(const auto& [key,footprint]:ctx.pool)
+  selection.footprints[key]={footprint->source,footprint->document};
+ auto required=std::make_shared<FloorplanExperiment>();required->require_bottom_sheets={"unit"};
+ selection.experiment=required;
+ floorplan_detail::Engine selector(selection);selector.board_size(80,70);selector.plan.punch_free=true;
+ FloorplanBlock block;block.name="unit";block.kind="interior";block.zone="E";
+ block.w=single.w;block.h=single.h;
+ selector.plan.interior_blocks.push_back(block);selector.zbox["unit"]={single.w,single.h};
+ for(const auto& candidate:whole_once)
+  selector.shape_sets[1]["unit"].push_back({candidate.w,candidate.h,{},{},candidate.side,{}});
+ demand(selector.attempt_pack_impl(false),"generated whole-bottom offers cannot satisfy required-bottom selection");
+ const auto& placed=selector.plan.interior_blocks.at(0);
+ demand(placed.shape_idx>0&&placed.side=="bottom"&&whole_once.at(placed.shape_idx).side=="bottom",
+        "required-bottom selector did not choose a generated bottom-primary offer");
+ // Opposite-face empty space is not physical occupancy. Reserve separate
+ // courtyards while retaining each component's fanout and THT punches.
+ FloorplanInput granular;granular.som.w=granular.som.h=8;granular.compact_search=true;
+ std::string device="(footprint test (layer F.Cu) (fp_rect (start -1 -1) (end 1 1) (stroke (width .05) (type default)) (layer F.CrtYd))";
+ for(int pin=1;pin<=8;++pin)device+=" (pad \""+std::to_string(pin)+"\" smd rect (at 0 0) (size .2 .2) (layers F.Cu))";
+ device+=" (pad \"9\" thru_hole circle (at 0 0) (size .8 .8) (drill .4) (layers *.Cu *.Mask)))";
+ const auto device_fp=pcb_check_footprint("test.kicad_mod",device);
+ granular.footprints["test"]={device_fp->source,device_fp->document};
+ for(const auto* ref:{"U1","U2"}) {
+  granular.geometry.resolvable[ref]="test";granular.geometry.bbox_of[ref]=*device_fp->bbox;
+ }
+ for(const auto* primary:{"top","bottom"}) {
+  Shape islands;islands.w=24;islands.h=5;islands.side=primary;
+  islands.bot_off={{"U1",{2,2}},{"U2",{20,2}}};
+  granular.experiment.reset();floorplan_detail::Engine union_engine(granular);
+  QuantizationCounts united_counts,split_counts;
+  const auto united=union_engine.zone_components(islands,true,&united_counts);
+  auto policy=std::make_shared<FloorplanExperiment>();policy->granular_minor_occupancy=true;
+  granular.experiment=policy;floorplan_detail::Engine split_engine(granular);
+  const auto split=split_engine.zone_components(islands,true,&split_counts);
+  demand(united.size()==3&&split.size()==4,"granular minority occupancy lost court or THT punch");
+  const int face=std::string(primary)=="top"?2:1;
+  demand(split[0].mask==face&&split[1].mask==face&&split[2].mask==3&&split[3].mask==3,
+         "granular occupancy has incorrect physical face masks");
+  demand(split[0].w*split[0].h+split[1].w*split[1].h<united[0].w*united[0].h,
+         "granular minority occupancy did not release empty space");
+  for(std::size_t i=0;i<2;++i) {
+   demand(split[i].reach.w>0&&split[i].reach.e>0&&split[i].reach.n>0&&split[i].reach.s>0,
+          "granular occupancy discarded individual fanout halo");
+   demand(split[i+2].dx==united[i+1].dx&&split[i+2].dy==united[i+1].dy&&
+          split[i+2].w==united[i+1].w&&split[i+2].h==united[i+1].h,
+          "granular occupancy changed through-hole punches");
+  }
+  demand(split_counts.at("pack_zone_component_precision4dp")==16&&
+         united_counts.at("pack_zone_component_precision4dp")==12,
+         "granular occupancy dropped executed component quantization work");
+  Occupancy coarse_grid(30,12,.2,2,3,1,.05),fine_grid(30,12,.2,2,3,1,.05);
+  const int primary_mask=face==1?2:1;
+  coarse_grid.add(0,0,24,5,{},{},primary_mask,united);
+  fine_grid.add(0,0,24,5,{},{},primary_mask,split);
+  demand(!coarse_grid.fits_exhaustive(10,2,1,1,{},{},face,{})&&
+          fine_grid.fits_exhaustive(10,2,1,1,{},{},face,{}),
+         "granular occupancy did not permit the physically empty opposite-face gap");
+  demand(!fine_grid.fits_exhaustive(2,2,.2,.2,{},{},face,{})&&
+         !fine_grid.fits_exhaustive(3.25,2,.2,.2,{},{},face,{}),
+         "granular occupancy lost body or fanout collision rejection");
+ }
 }
 void live(const std::filesystem::path& root){
  for(const auto* project:{"carrier","devkit_mini"}){
@@ -389,6 +525,16 @@ void live(const std::filesystem::path& root){
    demand(som_contact_offers>0,"colliding SoM single group has no checked contact repairs");
    const auto som_vertical=build_zones_for_search(f.input,true,nullptr);
    const auto& vertical_offers=som_vertical.geometry.shapes.at("power_som");
+   auto direct_input=f.input;
+   auto direct_policy=std::make_shared<FloorplanExperiment>(*experiment);
+   direct_policy->vertical_compaction=true;direct_input.floorplan.experiment=direct_policy;
+   const auto direct_vertical=build_pcb_zone_geometry(direct_input);
+   const auto& direct_offers=direct_vertical.geometry.shapes.at("power_som");
+   demand(direct_offers.size()==vertical_offers.size()&&
+          direct_vertical.quantization_engagements==som_vertical.quantization_engagements,
+          "full-build vertical policy differs from search strategy geometry or work");
+   for(std::size_t i=0;i<vertical_offers.size();++i)
+    demand(equal(direct_offers[i],vertical_offers[i]),"full-build vertical policy changes search candidate geometry");
    demand(vertical_offers.size()>som_offers.size(),"vertical compaction yielded no SoM power alternative");
    for(std::size_t i=0;i<som_offers.size();++i)
     demand(equal(som_offers[i],vertical_offers[i]),"vertical compaction rewrote an incumbent offer");

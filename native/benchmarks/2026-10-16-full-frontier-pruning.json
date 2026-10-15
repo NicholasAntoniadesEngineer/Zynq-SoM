@@ -1,0 +1,35 @@
+{
+  "source_parent": "d606207b",
+  "change": "Stop neighbour enumeration after an eligible unseen state has actually been omitted at the joint-search queue ceiling. Continue solving and qualifying every already queued state. A full queue alone never implies budget exhaustion.",
+  "reason": "CPU sampling of granular minority occupancy identified joint-separation neighbour processing as a major cost. After the queue is capped, generating more neighbours cannot change any queued state or its qualification.",
+  "tests": {
+    "native_floorplan_contracts": {"status": "PASS", "seconds": 13.34, "coverage": "independent exhaustive coordinate oracle, bounded/complete search distinction, deterministic work receipts, 4096-choice capped-domain success in a later queued state and complete rejection of queued states without a false completeness claim"},
+    "native_policy_audits_contracts": {"status": "PASS", "seconds": 47.00}
+  },
+  "screens": [
+    {"recipe": "published carrier recipe at 163x151", "status": "constructed_no_acceptance", "model_seconds": 16.811922958, "emit_seconds": 0.028411167, "pcb_sha256": "8ba5fe760fa5ac529cd107cf7fa70945f7e7276b60e03f0e98b4ddc4d6ffc397", "log": "native/build/carrier-full-frontier-release-recipe.log"},
+    {"outline_mm": [163,151], "strategies": ["baseline","granular-minor"], "status": "baseline_retained_after_challenger_construction_failure", "model_portfolio_seconds": 52.048962458, "emit_seconds": 0.028920666, "pcb_sha256": "8413109a3f1b1a87bd8e13ab77f7f9f0a8c9e610d49fb5ef6dbc5b431b662c1e", "aggregate_counter_keys_verified_against_attempt_sums": 125, "log": "native/build/carrier-granular-minor-pruned-163x151.log"},
+    {"outline_mm": [163,150], "strategies": ["baseline","granular-minor"], "status": "search_failed", "elapsed_seconds": 33.220070375, "completed_outer_attempts": 8, "receipt_captured": true, "aggregate_counter_keys_verified_against_attempt_sums": 74, "accounting_and_ordered_fallbacks_identical_to_unpatched_run": true, "unpatched_elapsed_seconds": 33.206500333, "log": "native/build/carrier-granular-minor-pruned-163x150.log"},
+    {"project": "devkit_mini", "status": "constructed_no_acceptance", "model_seconds": 0.183337042, "emit_seconds": 0.008281875, "pcb_sha256": "1b12fecbcbbaa5e6084c2459da93cb144a660ff19805e6e4e3f75f9c22689fdb", "log": "native/build/devkit-full-frontier.log"}
+  ],
+  "unpatched_163x151_comparison": {
+    "status": "completed_baseline_retained_after_challenger_failure",
+    "model_portfolio_seconds": 508.704973209,
+    "patched_model_portfolio_seconds": 52.048962458,
+    "observed_percent_change": -89.76834015801613,
+    "pcb_sha256": "8413109a3f1b1a87bd8e13ab77f7f9f0a8c9e610d49fb5ef6dbc5b431b662c1e",
+    "quantized_operation_totals_identical": true,
+    "attempt_outcomes_and_incumbent_identical": true,
+    "domain_probe_events_before_after": [8792,8716],
+    "domain_rejection_events_before_after": [1998,1970],
+    "all_other_fallback_event_order_identical": true,
+    "session_handle": 26331,
+    "process": 80206,
+    "verified_elapsed_at_last_process_snapshot": "07:29",
+    "verified_cpu_time": "7:26.42",
+    "verified_cpu_percent": 99.1,
+    "log": "native/build/carrier-granular-minor-163x151.log",
+    "completion": "Original session exited zero. The saved CPU snapshot above is historical. Fewer probe/rejection events reflect work no longer executed after the queue was capped; no executed work was dropped from receipts."
+  },
+  "limitations": ["Observed timing reduction is for this C++ search portfolio, not Python migration or generation-only timing", "Overlapping single runs are not controlled performance measurements", "No smaller accepted carrier; granular challenger still fails", "Expanded carrier baseline is a construction-screen candidate, not the published qualified board", "All hardware checks and state ceilings remain unchanged"]
+}

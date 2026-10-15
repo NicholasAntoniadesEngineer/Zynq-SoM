@@ -1623,6 +1623,26 @@ void joint_separation_contracts() {
         [](const auto&,const auto&,const auto&){return false;});
     require(!rejected.ok&&rejected.complete&&rejected.x.empty()&&receipt.qualifications==4&&receipt.qualification_rejections==4,
         "all-rejected qualification published a proposal or misreported exhaustion");
+    // Filling the queue is not proof of omitted work, but once a genuinely
+    // unseen eligible neighbour is omitted, only the queued states can matter.
+    // A later queued state must still be allowed to succeed after that event.
+    const std::vector<std::vector<RepairSep>> wide_domain{
+        std::vector<RepairSep>(4096,RepairSep{true,"a","b",1})};
+    std::vector<std::size_t> visited_choices;
+    const auto queued_success=legalize_joint_separations({"a","b"},{2,2},{2,2},10,10,0,
+        wide_domain,{}, {},{},3,&receipt,[&](const auto& choices,const auto&,const auto&){
+            visited_choices.push_back(choices[0]);return choices[0]==2;
+        });
+    require(queued_success.ok&&queued_success.budget_exhausted&&!queued_success.complete&&
+            visited_choices==std::vector<std::size_t>{0,1,2}&&receipt.generated==3&&receipt.visited==3&&
+            receipt.qualifications==3&&receipt.qualification_rejections==2&&receipt.domain_probes==3,
+            "full frontier pruning skipped queued work or changed its actual receipt");
+    const auto queued_failure=legalize_joint_separations({"a","b"},{2,2},{2,2},10,10,0,
+        wide_domain,{}, {},{},3,&receipt,[](const auto&,const auto&,const auto&){return false;});
+    require(!queued_failure.ok&&!queued_failure.complete&&queued_failure.budget_exhausted&&
+            receipt.generated==3&&receipt.visited==3&&receipt.qualifications==3&&
+            receipt.qualification_rejections==3&&receipt.domain_probes==3,
+            "full frontier rejection lost queued work or falsely claimed completeness");
     throws([&]{legalize_joint_separations({"a","b"},{2,2},{2,2},10,10,0,qualify_domain,{}, {},{},4,&receipt,
         [](const auto&,const auto&,const auto&)->bool{throw std::runtime_error("qualifier stop");});},"qualifier stop");
     require(receipt.visited==1&&receipt.axis_solves==2&&receipt.qualifications==1&&receipt.qualification_rejections==0,

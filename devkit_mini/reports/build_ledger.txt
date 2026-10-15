@@ -239,4 +239,4 @@ STEP   census
   CALC   fallback_engagement[corridor_evict_moved] = 8             firings    <- stage=corridor_eviction ceiling=observational  ::  count of times this registered degraded path bound
   CALC   fallback_engagement[interior_reseat_retry] = 20            firings    <- stage=plan_lattice ceiling=observational  ::  count of times this registered degraded path bound
   CALC   fallback_engagement[punch_free_plan_rejected] = 1             firings    <- stage=plan_lattice ceiling=observational  ::  count of times this registered degraded path bound
-  CALC   register_silence               = 68            registrations <- quantize_registered=156 quantize_engaged=130 fallback_registered=46 fallback_fired=4  ::  registered - engaged = declared machinery this build never used
+  CALC   register_silence               = 69            registrations <- quantize_registered=156 quantize_engaged=130 fallback_registered=47 fallback_fired=4  ::  registered - engaged = declared machinery this build never used

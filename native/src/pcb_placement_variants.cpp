@@ -196,7 +196,7 @@ void append_contract_group_faces(Context& ctx,Geometry& g,const std::string& she
             i.ref=ref;i.sheet=sheet;i.value=p.value;i.footprint=p.footprint;
             if(const auto pins=pad_nets.find(ref);pins!=pad_nets.end())i.pad_nets=pins->second;
             i.x=xy.first;i.y=xy.second;i.rotation=s.extra_rot.count(ref)?s.extra_rot.at(ref):0;
-            i.side=offsets==&s.top_off?"top":"bottom";i.mirror=s.mirror.count(ref);
+            i.side=offsets==&s.top_off?s.side:(s.side=="top"?"bottom":"top");i.mirror=s.mirror.count(ref);
             i.mod=ctx.pool.at(i.mirror?s.mirror.at(ref):g.resolvable.at(ref));m.insts.push_back(std::move(i));
         }
         return PcbCheckInput(std::move(m));
@@ -230,6 +230,13 @@ void append_contract_group_faces(Context& ctx,Geometry& g,const std::string& she
     };
     const auto append_checked=[&](Shape candidate) {
         if(!qualify(candidate))return false;
+        // The packing selector uses the primary face to enforce a requested
+        // bottom sheet. Canonicalize an entirely bottom-side candidate without
+        // changing physical positions, rotations or mirrored documents.
+        if(candidate.side=="top"&&candidate.top_off.empty()&&!candidate.bot_off.empty()) {
+            candidate.side="bottom";
+            candidate.top_off.swap(candidate.bot_off);
+        }
         auto found=g.shapes.find(sheet);
         if(found==g.shapes.end())found=g.shapes.emplace(sheet,std::vector<Shape>{original}).first;
         if(std::none_of(found->second.begin(),found->second.end(),[&](const auto& old){return same_zone_shape_geometry(old,candidate);}))
@@ -275,7 +282,10 @@ void append_contract_group_faces(Context& ctx,Geometry& g,const std::string& she
     std::vector<Shape> contact_singles;
     const auto previous_singles=single_group.size();
     for(const auto& group:*groups) {
-        if(group.refs.size()<2||!group.required_top_refs.empty())continue;
+        // A singleton is a valid connected group too. Cardinality is not a
+        // face requirement; pinned access/through-hole/high-speed membership
+        // and the complete candidate checks below decide eligibility.
+        if(group.refs.empty()||!group.required_top_refs.empty())continue;
         bool eligible=true;
         std::vector<Box4> moved_boxes,remaining_boxes;
         for(const auto& ref:group.refs) {
@@ -286,7 +296,7 @@ void append_contract_group_faces(Context& ctx,Geometry& g,const std::string& she
         for(const auto& [ref,box]:boxes)
             if(!std::binary_search(group.refs.begin(),group.refs.end(),ref))remaining_boxes.push_back(box);
         const auto moving=boxes_union(moved_boxes),remaining=boxes_union(remaining_boxes);
-        if(!moving||!remaining)continue;
+        if(!moving)continue;
         try {
             for(const auto& ref:group.refs) {
                 const auto key=g.resolvable.at(ref),mk="@mirror/"+key;
@@ -302,9 +312,13 @@ void append_contract_group_faces(Context& ctx,Geometry& g,const std::string& she
         const double original_width=moving->x1-moving->x0,original_height=moving->y1-moving->y0;
         const double width=turn%2?original_height:original_width;
         const double height=turn%2?original_width:original_height;
-        for(const auto target:std::vector<FloorplanPoint>{{remaining->x0,remaining->y0},
+        // A whole-sheet connected group has no stationary rectangle to align
+        // against. Normalize its physical bounds instead of silently excluding
+        // it. All original offsets, pin ownership and face checks still apply.
+        const auto targets=remaining?std::vector<FloorplanPoint>{{remaining->x0,remaining->y0},
                 {remaining->x1-width,remaining->y0},{remaining->x0,remaining->y1-height},
-                {remaining->x1-width,remaining->y1-height}}) {
+                {remaining->x1-width,remaining->y1-height}}:std::vector<FloorplanPoint>{{0,0}};
+        for(const auto target:targets) {
             Shape candidate=seed;
             candidate.tag="contract-bottom/"+group.refs.front()+"/"+std::to_string(target.first)+"/"+std::to_string(target.second);
             if(turn)candidate.tag+="/group-r"+std::to_string(90*turn);
@@ -404,7 +418,8 @@ void append_contract_group_faces(Context& ctx,Geometry& g,const std::string& she
                 return std::make_pair(-coordinate(position(a)),a)<std::make_pair(-coordinate(position(b)),b);
             });
             for(const auto& ref:leftovers) {
-                const bool top=compact.top_off.count(ref);
+                const bool primary=compact.top_off.count(ref);
+                const bool top=primary?(compact.side=="top"):(compact.side!="top");
                 const auto measured=model(compact);
                 std::size_t index=0;
                 while(measured.model().insts.at(index).ref!=ref)++index;
@@ -419,7 +434,7 @@ void append_contract_group_faces(Context& ctx,Geometry& g,const std::string& she
                 for(const auto raw:shifts) {
                     if(raw>=0)continue;
                     auto moved=compact;
-                    auto& xy=(top?moved.top_off:moved.bot_off).at(ref);
+                    auto& xy=(primary?moved.top_off:moved.bot_off).at(ref);
                     // Round toward the obstacle-free side of the contact.
                     auto& value=vertical?xy.second:xy.first;
                     value=placement_bottom_pose_precision4dp(

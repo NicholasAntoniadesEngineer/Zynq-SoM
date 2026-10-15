@@ -1416,7 +1416,15 @@ JointSeparationResult legalize_joint_separations(
         // Any feasible assignment must change at least one separation in this
         // actual negative cycle. Keep every alternative for those pairs; hard
         // edges and walls are not softened. A hard-only cycle closes this node.
-        for(const auto i:conflicting)for(std::size_t choice=0;choice<domains.at(i).size();++choice){
+        // Once an eligible unseen neighbour has been omitted at the state
+        // ceiling, no further neighbour can be queued. Still solve/qualify all
+        // already queued states above, but stop copying and probing neighbours
+        // that cannot affect their results. Do not infer exhaustion merely
+        // from a full queue: all remaining neighbours might be seen or ruled out.
+        if(out.budget_exhausted)continue;
+        for(const auto i:conflicting) {
+        if(out.budget_exhausted)break;
+        for(std::size_t choice=0;choice<domains.at(i).size();++choice){
             if(choice==choices[i])continue;
             auto next=choices;next[i]=choice;
             if(seen.count(next))continue;
@@ -1436,8 +1444,9 @@ JointSeparationResult legalize_joint_separations(
                 if(status<0)++out.domain_rejections;
             }
             if(status<0)continue;
-            if(out.generated==max_states){out.budget_exhausted=true;continue;}
+            if(out.generated==max_states){out.budget_exhausted=true;break;}
             seen.insert(next);queue.push_back(std::move(next));++out.generated;
+        }
         }
     }
     out.complete=!out.budget_exhausted;return out;
