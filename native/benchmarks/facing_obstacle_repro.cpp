@@ -30,6 +30,18 @@ int main() {
     auto poses=in.fixed_poses;poses["source"]={x,y};
     if(!floorplan_evaluate_terms(in,poses).front().ok)return 5;
     std::cout<<"accepted="<<accepted<<" independently_valid_witness=34,10\n";
+    if(accepted) {
+        const auto& v=vars.front();
+        if(v.x<in.clear||v.y<in.clear||v.x+v.w>in.board_w-in.clear||v.y+v.h>in.board_h-in.clear)return 6;
+        for(const auto& [name,b]:in.fixed_rects) {
+            (void)name;
+            if(!(v.x>=b.x1+in.clear||v.x+v.w+in.clear<=b.x0||
+                 v.y>=b.y1+in.clear||v.y+v.h+in.clear<=b.y0))return 7;
+        }
+        poses["source"]={v.x,v.y};
+        if((30-v.x)+(30-v.y)<=0||!floorplan_evaluate_terms(in,poses).front().ok)return 8;
+        std::cout<<"independently_checked_solution="<<v.x<<","<<v.y<<'\n';
+    } else if(vars.front().x!=40||vars.front().y!=40)return 9;
     for(const auto& line:log)std::cout<<line<<'\n';
     // A known feasible miss must remain a diagnostic failure, not green proof.
     return accepted?0:1;

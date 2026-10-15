@@ -1,0 +1,26 @@
+{
+  "production_source": "9d506722",
+  "status": "Isolated diagnostic prototype, NOT integrated or production-qualified",
+  "patch": "2026-10-16-projection-extremes-prototype.patch",
+  "mechanism": "Retain every original successful composer result. Only after all existing strategies fail, and joint search is explicitly enabled, try Y-dominant then X-dominant feasible facing projection allocations. Each attempt uses the caller's joint-state budget, full authored proximity bounds, existing exact acceptance checks and actual joint retry callbacks. Reservation geometry is enabled only when supplied.",
+  "counterexample": {
+    "source": "facing_obstacle_repro.cpp",
+    "production_exit": 1,
+    "prototype_exit": 0,
+    "prototype_solution": [40,0.3],
+    "independent_checks": "Returned pose fits board, clears every obstacle, has positive facing dot product and passes public exact facing evaluation. Failure must preserve seed.",
+    "floating_point": "Prototype object compiled with -O2 -ffp-contract=off; linked ahead of unchanged production static archive into separate diagnostic binaries. Full regression executables untouched.",
+    "local_log": "native/build/facing-obstacle-extremes-strict.log"
+  },
+  "carrier_screen": {
+    "outline_mm": [162,150],
+    "strategies": "baseline plus granular-minor+vertical+estimator-first, release face-sheet set plus fmc",
+    "result": "Both failed; no new incumbent or smaller accepted board",
+    "elapsed_seconds": 15.217283334,
+    "outer_attempts": 8,
+    "accounting": "All 82 aggregate quantization counters equal summed attempt counters; failure receipt captured",
+    "local_log": "native/build/projection-extremes-strict-162x150.log",
+    "timing_limit": "Concurrent full-suite activity; not a controlled timing comparison"
+  },
+  "remaining": "Integrate only with reflected/axis-swapped, contradictory, unchanged-incumbent and independent callback/operation-accounting regressions. Test combined constraints; two global extreme allocations do not constitute a complete half-plane solver. Preserve failures; do not infer carrier success from the synthetic recovery."
+}
