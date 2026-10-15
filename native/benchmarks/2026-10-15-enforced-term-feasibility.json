@@ -1,0 +1,38 @@
+{
+  "source_base": "ed29c8f7",
+  "change": "Feasibility-only legalizer checks evaluate enforced terms rather than measuring every advisory term and discarding its result. Public diagnostic evaluation still includes every term; validation still checks every input term.",
+  "regression": "Adding 128 contradictory advisory facing terms must leave poses, decision logs and actual operation receipts identical. Full diagnostics must expose all 129 terms and advisory failures. Promoting one contradiction to enforced must reject atomically even when stored in the soft index bucket. The work-equality assertion failed before the production change and passes afterward.",
+  "tests": [
+    "native_floorplan_contracts PASS",
+    "native_floorplan_geometry_contracts PASS",
+    "native_floorplan_precision_contracts PASS (independent operation accounting)",
+    "native_compact_retry_contracts PASS",
+    "native_pcb_compact_strict_facing_contracts PASS",
+    "native_policy_audits_contracts PASS"
+  ],
+  "real_failed_carrier_screen": {
+    "recipe": "160x153 free-bringup_rails case from 2026-10-15-facing-projection-clearance.json; same parameters before and after",
+    "outcome": "construction_failed in four outer attempts, failure receipt captured",
+    "fallback_event_stream_identical": true,
+    "all_stage_rejection_details_identical": true,
+    "changed_operation_counts": {
+      "legalize_bbox_precision4dp": {"before":26576,"after":21744,"change_percent":-18.181818181818183},
+      "legalize_position_precision4dp": {"before":791176,"after":754936,"change_percent":-4.580523170571403}
+    },
+    "all_other_reported_operation_counts_identical": true,
+    "before_seconds":44.536984584,
+    "after_seconds":44.311951708,
+    "timing_limit":"One sample under concurrent local load; not evidence of a wall-time speedup. Operation counts are deterministic evidence of less work.",
+    "logs":["native/build/carrier-160x153-lattice-facing.log","native/build/carrier-160x153-enforced-only.log"]
+  },
+  "coupled_orientation_screens_before_change": [
+    {"option":"power=t180","result":"construction_failed","seconds":49.086516834,"outer_attempts":4,"receipt_captured":true,"log":"native/build/carrier-160x153-power-halfturn-coupled.log"},
+    {"option":"power=t180, power_som=t180","result":"construction_failed","seconds":49.929336083,"outer_attempts":4,"receipt_captured":true,"log":"native/build/carrier-160x153-paired-halfturn-coupled.log"}
+  ],
+  "current_outputs": {
+    "carrier_163x151_sha256":"8ba5fe760fa5ac529cd107cf7fa70945f7e7276b60e03f0e98b4ddc4d6ffc397",
+    "devkit_98x98_sha256":"1b12fecbcbbaa5e6084c2459da93cb144a660ff19805e6e4e3f75f9c22689fdb",
+    "both_match_published":true
+  },
+  "limits":"No smaller accepted carrier, full-suite rerun, fresh full build/render qualification or Python timing comparison. Production acceptance and hardware limits unchanged. Continue coupled orientation/occupancy investigation; failed screens do not prove infeasibility."
+}

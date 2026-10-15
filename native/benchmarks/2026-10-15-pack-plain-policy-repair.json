@@ -1,0 +1,16 @@
+{
+  "source_base": "d2d1d947",
+  "defect": "The plain-packing test rendered a frozen historical model with today's interface-only label policy, then compared it to the immutable older full-label PCB bytes.",
+  "change": "Match the frozen emission input by setting interface_reference_labels_only=false only for the frozen-model render, as already done by output_precision_contracts. Production label policy is unchanged.",
+  "preserved": [
+    "Exact complete historical PCB-byte comparison for BOTH boards",
+    "Current model physical and structural requirements",
+    "Repeated current model/plan determinism",
+    "Independent measured precision-entry receipts and missing/incremented receipt mutations",
+    "Fallback-event determinism and report replay accounting"
+  ],
+  "test": "native_pack_plain_board_contracts",
+  "result": "PASS",
+  "seconds": 13.99,
+  "limits": "Full integrated suite not rerun. Two previously reported failures remain unresolved: native_pcb_refit_fanout_contracts and native_geometry_cli_apply_contracts."
+}

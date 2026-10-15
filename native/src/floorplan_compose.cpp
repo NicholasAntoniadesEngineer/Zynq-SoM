@@ -89,10 +89,12 @@ void validate(const FloorplanLegalizeInput& in) {
 }
 
 std::vector<FloorplanTermEval> evaluate(const FloorplanLegalizeInput& in,
-                                       const FloorplanOffsets& poses, QuantizationCounts* counts = nullptr) {
+                                       const FloorplanOffsets& poses, QuantizationCounts* counts = nullptr,
+                                       bool enforced_only = false) {
     std::vector<const FloorplanTerm*> terms;
     std::vector<EvalTermIn> rows;
     for (const auto* group : {&in.index.hard, &in.index.soft}) for (const auto& t : *group) {
+        if(enforced_only&&!t.enforced)continue;
         terms.push_back(&t);
         rows.push_back({t.kind, t.subject, t.target(), t.bound.value_or(0), t.bound.has_value(), t.out_refs});
     }
@@ -526,13 +528,18 @@ private:
             const double norm=std::hypot(dx,dy);if(norm==0)continue;
             finite(norm,"facing direction norm");
             const double ax=dx/norm,ay=dy/norm;
+            // Facing requires a positive direction, not clear mm of projected
+            // distance. Reserve one emitted coordinate-lattice step per active
+            // axis for rounding; physical board/obstacle clearances remain in
+            // their own bounds, and the exact facing gate still decides.
+            const double projection_margin=.0001*(std::abs(ax)+std::abs(ay));
             const double rx=t->pose.first+t->local.first-s->pose.first-s->local.first;
             const double ry=t->pose.second+t->local.second-s->pose.second-s->local.second;
             // Split the dot-product slack between the active axes. Each
             // static cut preserves its share independently, so later Y moves
             // cannot invalidate the X contribution. This is a sufficient,
             // seed-centred restriction, not a complete half-plane solver.
-            const double slack=(ax*rx+ay*ry-in.clear)/((ax!=0)+(ay!=0));
+            const double slack=(ax*rx+ay*ry-projection_margin)/((ax!=0)+(ay!=0));
             finite(slack,"facing projection slack");
             double share_x=ax*rx-slack,share_y=ay*ry-slack;
             if(ax!=0&&ay!=0) {
@@ -556,10 +563,10 @@ private:
                 // projection to the other axis instead of imposing a cut
                 // already contradicted by a board wall. These remain sufficient
                 // half-plane cuts; exact final facing and geometry still decide.
-                const double low=in.clear-max_y;
+                const double low=projection_margin-max_y;
                 if(low<=max_x) {
                     share_x=std::clamp(share_x,low,max_x);
-                    share_y=in.clear-share_x;
+                    share_y=projection_margin-share_x;
                 }
             }
             for(const bool x:{true,false}) {
@@ -855,7 +862,10 @@ private:
         auto poses = fixed;
         for (std::size_t i = 0; i < names.size(); ++i)
             poses[names[i]] = {legalize_trial_pose_precision4dp(pos_x[i], counts), legalize_trial_pose_precision4dp(pos_y[i], counts)};
-        auto out = evaluate(in, poses, counts);
+        // Feasibility consumes only enforced terms. Public diagnostics still
+        // evaluate every term; do not repeatedly measure advisory rows merely
+        // to discard them here during each rejected search proposal.
+        auto out = evaluate(in, poses, counts, true);
         out.erase(std::remove_if(out.begin(), out.end(), [](const auto& e) { return !e.term.enforced || e.ok; }), out.end());
         return out;
     }

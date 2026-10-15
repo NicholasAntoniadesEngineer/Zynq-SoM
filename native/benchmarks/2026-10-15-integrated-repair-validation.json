@@ -1,0 +1,23 @@
+{
+  "source_revision": "7b1c02d3",
+  "full_suite": {
+    "command": "ctest --test-dir native/build/fast --parallel 2 --output-on-failure --output-junit integrated-post-repairs.xml",
+    "passed": 274,
+    "failed": 1,
+    "total": 275,
+    "seconds": 960.04,
+    "log": "2026-10-15-integrated-post-repairs.log",
+    "failure": "native_pcb_compact_owned_evict_contracts: map::at on retired corridor_evict_moved ceiling"
+  },
+  "followup": {
+    "production_code_changed": false,
+    "defect": "The generic-ratchet regression assumed corridor_evict_moved must remain in current board baselines. Successful search effort is observational and no longer included in those mandatory ceilings.",
+    "correction": "Honor the generic ratchet's absent-name zero semantics; separately verify actual board acceptance preserves measured move counts as search effort and rejects an unmovable obstruction without publishing a baseline.",
+    "preserved": "All thermal, corridor, ownership, rounded geometry, rollback, operation accounting and generic ratchet cases execute unchanged; both authoritative baseline files remain byte-identical.",
+    "test": "native_pcb_compact_owned_evict_contracts",
+    "result": "PASS",
+    "seconds": 9.19
+  },
+  "interpretation": "Full run 274/275 followed by the sole failing test repaired and passing. Not a claim of a second all-green full-suite run. All previously identified regression failures have now been exercised successfully.",
+  "remaining_goal": "Further carrier algorithm/space-use improvements, hardware constraint qualification and matched-input timing against Python 0e9bbc913bab77f9cd228940db2a332d25d6bfa1 remain. Advisory board failures and fabrication/routing limitations are unchanged."
+}

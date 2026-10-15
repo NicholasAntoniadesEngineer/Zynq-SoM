@@ -1,0 +1,23 @@
+{
+  "source_base": "eb717b33",
+  "defect": "Strict-facing recovery required physical component clearance as a minimum positive directional projection. The independent final gate requires positive direction, not that extra projected distance. This falsely excluded a legal narrow pocket.",
+  "reproduction": "A 2x2 group lies in a pocket whose x range is [5,5.5], between fixed obstacles with 0.3 mm clearance. Its right-facing output can face the downstream target when x<5.2. The old recovery required x<=4.9 and rejected the feasible pocket. The regression failed before the production change.",
+  "change": "Replace clearance in facing-only split/capacity equations with a rounding margin derived from the existing 0.0001 mm emitted lattice and normalized direction components. Keep physical clearance in board/obstacle bounds, conservative bound rounding, exact positive-facing acceptance, all retries and incumbent preservation.",
+  "tests": {
+    "native_floorplan_contracts": "PASS; includes 16 narrow-pocket variants over axis swap, reflection, compact mode, feasible/backward-only target. Rejection must preserve the incumbent.",
+    "native_floorplan_geometry_contracts": "PASS",
+    "native_pcb_compact_strict_facing_contracts": "PASS",
+    "native_compact_retry_contracts": "PASS",
+    "native_floorplan_precision_contracts": "PASS; independent operation accounting retained",
+    "native_policy_audits_contracts": "PASS in 43.79 seconds"
+  },
+  "current_board_construction": {
+    "carrier": {"dimensions_mm":[163,151],"top":398,"bottom":168,"pcb_sha256":"8ba5fe760fa5ac529cd107cf7fa70945f7e7276b60e03f0e98b4ddc4d6ffc397","matches_published":true},
+    "devkit_mini": {"dimensions_mm":[98,98],"top":105,"bottom":55,"pcb_sha256":"1b12fecbcbbaa5e6084c2459da93cb144a660ff19805e6e4e3f75f9c22689fdb","matches_published":true}
+  },
+  "smaller_screens": [
+    {"change":"Before solver correction, free bringup_rails at 160x153 plus power_som=t180","result":"construction_failed","seconds":44.0410695,"outer_attempts":4,"failure_receipt_captured":true,"log":"native/build/carrier-160x153-power-halfturn.log"},
+    {"change":"Corrected solver, free bringup_rails at 160x153 without forced power_som tag","result":"construction_failed","seconds":44.536984584,"outer_attempts":4,"failure_receipt_captured":true,"log":"native/build/carrier-160x153-lattice-facing.log"}
+  ],
+  "limits": "No smaller board accepted; these screens do not prove infeasibility. Current PCB bytes unchanged, so existing renders remain applicable, but no new full build/render qualification or full-suite rerun was performed for this code change. Concurrent diagnostic timings are not performance comparisons. A separable facing split remains incomplete; coupled directional/occupancy search is still a candidate for improvement."
+}

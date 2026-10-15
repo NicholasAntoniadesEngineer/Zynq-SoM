@@ -1,0 +1,15 @@
+{
+  "source_base": "9f7e48b8",
+  "diagnosis": "The old test assumed D20001 must stay at its pre-refit pose. Captured actual checkpoints show all 112 fanout subjects healthy both before and after the current refit; the moved diode is not evidence of starvation.",
+  "change": "Compare real breathe/refit_facing checkpoints per subject, preserve thermal capacity, and require rejection of a controlled real-board diode move onto a healthy foreign same-side subject.",
+  "preserved": [
+    "All 11 synthetic fanout policy cases including count-neutral starvation swaps",
+    "Independent emission projection and exact operation receipts",
+    "Full noncompact placement final fanout gate",
+    "Passive-pull preferred thermal-via preservation"
+  ],
+  "test": "native_pcb_refit_fanout_contracts",
+  "result": "PASS",
+  "seconds": 3.47,
+  "limits": "Test correction only; no production acceptance policy, hardware limit or reference layout changed. Full integrated suite not yet rerun."
+}
