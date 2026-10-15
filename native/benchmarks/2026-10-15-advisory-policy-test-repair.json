@@ -1,0 +1,18 @@
+{
+  "source_base": "fa3d11cc",
+  "scope": "Repair the historical floorplan policy comparison without restoring an aggregate wirelength veto or changing production accounting",
+  "reviewed_commits": ["8ad5d9f3", "f2ce60be"],
+  "cause": "The immutable 83-row policy prefix retained two pre-advisory descriptions. Current code deliberately reports airwire as advisory and its retired rejection count as zero.",
+  "repair": "In the test-only historical projection, require each current description exactly once with exact reviewed wording, then restore only its historical basis string for comparison. All other declaration fields and immutable files remain unchanged.",
+  "negative_coverage": "Mutating either current description is rejected before historical projection",
+  "validation": {
+    "command": "ctest --test-dir native/build/fast -R '^native_(buried_policy|output_pack_registry|legalize_accounting|floorplan_fixed_choice|floorplan|pack_grid_precision|legalize_registry|output_precision|placement_precision|producer_accounting|precision_accounting|placement_precision_registry|stage_precision|floorplan_precision)_contracts$' --parallel 2 --output-on-failure",
+    "targets_rebuilt": true,
+    "passed": 14,
+    "failed": 0,
+    "elapsed_seconds": 76.35,
+    "includes": "Independent precision-function entry counting, exact receipt import and overflow checks, physical verification on both boards, deterministic repeated current-input plans and receipt mutation rejection",
+    "full_suite_rerun": false
+  },
+  "remaining": "Eight other release-suite failures remain unresolved; no new layout improvement or completion claim"
+}

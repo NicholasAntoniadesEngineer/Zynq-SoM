@@ -101,6 +101,12 @@ void inherited_accounting(){
             "equal fixed free trial restores conservative plan without discarding executed precision work");
 }
 void boards(const std::filesystem::path& root,const std::filesystem::path& data,bool capture){
+    for(const std::string name:{"outline_candidates","law5_airwire_budget"}){
+        auto altered=floorplan_ledger_policy();
+        for(auto& row:altered)if(row.name==name)row.basis+=" unreviewed";
+        rejects([&]{(void)buried_policy_fixture::prior_policy(altered);},
+                "historical projection must reject unreviewed advisory metadata");
+    }
     std::ostringstream current_policy;policy(current_policy);
     for(const auto* file:{"legacy_output.txt","fixed_legacy.txt"}) {
         const auto historical=placement_fixture::read(data/file);

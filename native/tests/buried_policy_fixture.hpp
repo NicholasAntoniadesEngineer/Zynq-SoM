@@ -21,6 +21,21 @@ inline const std::array<Addition,7> additions{{
 inline void demand(bool ok){if(!ok)throw std::runtime_error("buried policy additive provenance mismatch");}
 inline bool bits(double a,double b){return std::memcmp(&a,&b,sizeof a)==0;}
 inline std::vector<schgen::FloorplanLedgerPolicy> prior_policy(std::vector<schgen::FloorplanLedgerPolicy> rows){
+    // 8ad5d9f3/f2ce60be deliberately removed the aggregate airwire veto.
+    // Validate the exact current description before projecting prose only for
+    // historical comparison. Production metadata and acceptance stay advisory.
+    const std::array<std::array<const char*,3>,2> wording{{
+        {{"outline_candidates","candidate outcomes; retired reject_law5_budget is always zero",
+          "every candidate outline this pass judged, and why each was dropped"}},
+        {{"law5_airwire_budget","advisory airwire reference, not a hardware or acceptance constraint",
+          "LAW-5 budget at the winning outline of this pass"}}
+    }};
+    for(const auto& entry:wording){
+        auto found=rows.end();std::size_t count=0;
+        for(auto i=rows.begin();i!=rows.end();++i)if(i->name==entry[0]){found=i;++count;}
+        demand(count==1&&found->basis==entry[1]);
+        found->basis=entry[2];
+    }
     for(const auto& e:additions){
         auto found=rows.end();std::size_t count=0;
         for(auto i=rows.begin();i!=rows.end();++i)if(i->name==e.name){found=i;++count;}
