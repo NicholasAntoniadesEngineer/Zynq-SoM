@@ -491,6 +491,46 @@ void catalogs(const std::filesystem::path &root) {
         auto report=run_dump_circuits(output_paths,project);
         require(report.size()>0 && report.find("dumped "+std::to_string(prepared.size())+" circuit.json files\n")!=std::string::npos,"catalog publication report");
         for(const auto &dump:prepared) require(read(output_paths.subsystems_dir/dump.path.parent_path().filename()/"circuit.json")==dump.bytes,"explicit isolated catalog publication bytes");
+        for(int escape=0;escape<4;++escape){
+            Temporary inside,outside;
+            auto unsafe=paths;unsafe.repository_root=inside.path;
+            unsafe.subsystems_dir=inside.path/project/"subsystems";
+            const auto sentinel=outside.path/"sentinel.json";
+            experiment_detail::publish(sentinel,"untouched");
+            if(escape==0)unsafe.subsystems_dir=outside.path/"new-output";
+            if(escape==1)unsafe.subsystems_dir=inside.path/".."/outside.path.filename()/"new-output";
+            if(escape==2){
+                std::filesystem::create_directory_symlink(outside.path,inside.path/"redirect");
+                unsafe.subsystems_dir=inside.path/"redirect"/"new-output";
+            }
+            if(escape==3){
+                const auto last=unsafe.subsystems_dir/prepared.back().path.parent_path().filename();
+                std::filesystem::create_directories(last);
+                std::filesystem::create_symlink(sentinel,last/"circuit.json");
+            }
+            bool rejected=false;
+            try{(void)run_dump_circuits(unsafe,project);}
+            catch(const ProjectError& e){rejected=std::string(e.what()).find("outside repository")!=std::string::npos;}
+            require(rejected,"reject outside catalog destination before publication");
+            require(read(sentinel)=="untouched","rejected dump must preserve outside file");
+            require(!std::filesystem::exists(outside.path/"new-output"),"rejected dump must not create outside directories");
+            require(!std::filesystem::exists(unsafe.subsystems_dir/prepared.front().path.parent_path().filename()/"circuit.json"),
+                    "late invalid destination must not publish earlier circuits");
+        }
+        // Existing aliases wholly within the repository are legitimate, and
+        // the repository root itself may also be selected through a symlink.
+        Temporary aliases;
+        std::filesystem::create_directory(aliases.path/"actual");
+        std::filesystem::create_directory_symlink(aliases.path/"actual",aliases.path/"root-link");
+        std::filesystem::create_directory(aliases.path/"actual"/"data");
+        std::filesystem::create_directory_symlink(aliases.path/"actual"/"data",aliases.path/"actual"/"data-link");
+        auto aliased=paths;aliased.repository_root=aliases.path/"root-link";
+        aliased.subsystems_dir=aliased.repository_root/"data-link"/project/"subsystems";
+        require(run_dump_circuits(aliased,project).find("dumped "+std::to_string(prepared.size()))!=std::string::npos,
+                "contained aliases and symlinked repository root accepted");
+        for(const auto& dump:prepared)
+            require(read(aliases.path/"actual"/"data"/project/"subsystems"/dump.path.parent_path().filename()/"circuit.json")==dump.bytes,
+                    "contained alias publication preserves canonical bytes");
         // A late publication failure must not erase earlier successful writes.
         Temporary blocked;
         output_paths.repository_root=blocked.path;output_paths.subsystems_dir=blocked.path/project/"subsystems";

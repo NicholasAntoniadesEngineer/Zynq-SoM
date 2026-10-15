@@ -20,6 +20,17 @@ NativeCircuitDump prepare_native_circuit_dump(const CircuitSheetIr &circuit, con
     return {experiment_circuit_json_path(handle), render_experiment_json(document, 2, false) + "\n"};
 }
 namespace {
+std::filesystem::path checked_dump_relative(const ProjectPaths& paths,const std::filesystem::path& path) {
+    namespace fs=std::filesystem;
+    const auto root=fs::absolute(paths.repository_root).lexically_normal();
+    const auto destination=fs::absolute(path).lexically_normal();
+    const auto relative=destination.lexically_relative(root);
+    const auto resolved=fs::weakly_canonical(destination).lexically_relative(fs::weakly_canonical(root));
+    const auto outside=[](const fs::path& value){return value.empty()||value=="."||*value.begin()=="..";};
+    if(outside(relative)||outside(resolved))
+        throw ProjectError("dump path is outside repository: "+path.string());
+    return relative;
+}
 std::vector<CarrierPackageFactory> factories(const ProjectPaths &paths, const std::string &project, ProjectAuthoringInput input) {
     if (input.project_root.empty()) input.project_root = paths.project_root;
     if (!input.context.pins) input.context.pins = make_authoring_context(paths.repository_root).pins;
@@ -41,15 +52,22 @@ void publish_native_circuit_dump(const NativeCircuitDump &dump) {
     experiment_detail::publish(dump.path, dump.bytes);
 }
 std::string run_dump_circuits(const ProjectPaths &paths, const std::string &project, ProjectAuthoringInput input) {
+    const auto declarations=factories(paths,project,std::move(input));
+    // Validate the complete destination inventory before creating directories
+    // or publishing any circuit. Follow existing symlinks as well as '..'.
+    for(const auto& factory:declarations)
+        (void)checked_dump_relative(paths,paths.subsystems_dir/factory.name/"circuit.json");
     std::vector<std::filesystem::path> written;
-    for (const auto &factory : factories(paths, project, std::move(input))) {
+    for (const auto &factory : declarations) {
         const auto dump = prepare_native_circuit_dump(factory.circuit(), paths.subsystems_dir/factory.name/(factory.name+".cpp"));
+        // Recheck immediately before publication; this is not an atomic
+        // filesystem sandbox against concurrent hostile path replacement.
+        (void)checked_dump_relative(paths,dump.path);
         publish_native_circuit_dump(dump); written.push_back(dump.path);
     }
     std::string output;
     for (const auto &path : written) {
-        const auto relative = path.lexically_relative(paths.repository_root);
-        if (relative.empty() || *relative.begin() == "..") throw ProjectError("dump path is outside repository: " + path.string());
+        const auto relative = checked_dump_relative(paths,path);
         output += relative.generic_string() + "\n";
     }
     return output + "dumped " + std::to_string(written.size()) + " circuit.json files\n";
