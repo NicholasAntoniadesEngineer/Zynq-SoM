@@ -65,8 +65,13 @@ int main(int argc,char** argv){try{
 
   // Independently frozen complete emitted PCB bytes, not a new candidate golden.
   const auto frozenModel=pcb_model_from_json(f.model,f.expected_pool);
+  auto historicalPolicy=pcb_emit_policy(f.input.floorplan.project);
+  // This capture predates the requested interface-only reference labels.
+  // Use its actual emission input; current model construction above still
+  // exercises today's policy, requirements, determinism and exact receipts.
+  historicalPolicy.interface_reference_labels_only=false;
   QuantizationCounts emittedCounts;begin();
-  const auto emission=render_pcb(frozenModel,pcb_emit_policy(f.input.floorplan.project),&emittedCounts);
+  const auto emission=render_pcb(frozenModel,historicalPolicy,&emittedCounts);
   receipt(emittedCounts,end());
   const auto frozen=placement_fixture::read(std::filesystem::path(argv[1])/"native/tests/data/output_precision_legacy.txt");
   const auto boardStart=frozen.find(std::string("BOARD ")+project+'\n');
