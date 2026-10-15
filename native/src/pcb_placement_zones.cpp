@@ -11,6 +11,9 @@ PcbZoneResult pcb_placement::build_zones_for_search(const PcbPlacementInput &in,
     PcbZoneResult out;
     ExecutionFailureReceipt child;
     try {
+    if(in.floorplan.experiment&&in.floorplan.experiment->dual_primary_reservations&&
+       (!in.floorplan.compact_search||!in.floorplan.experiment->granular_minor_occupancy))
+        throw std::invalid_argument("dual primary reservations require compact mode and granular minority occupancy");
     if(vertical_compaction&&(!in.floorplan.compact_search||!in.floorplan.experiment||
                             in.floorplan.experiment->contract_group_face_sheets.empty()))
         throw std::invalid_argument("vertical compaction requires compact mode and explicit contract-group sheets");
@@ -240,6 +243,19 @@ PcbZoneResult pcb_placement::build_zones_for_search(const PcbPlacementInput &in,
             append_owned_face_zone_shapes(ctx,out,sheet,shape(p,"base"),
                 !templated&&!edge&&!conn_rot.count(sheet)&&!sheet_edges.count(sheet)&&!connector_class.count(sheet),
                 layers[sheet]!="bottom",eligible,faces[sheet],&child);
+        if(in.floorplan.experiment&&in.floorplan.experiment->dual_primary_reservations&&!edge) {
+            auto found=g.shapes.find(sheet);
+            if(found!=g.shapes.end()) {
+                const auto count=found->second.size();
+                for(std::size_t i=0;i<count;++i)
+                    if(auto candidate=opposite_primary_reservation(found->second[i])) {
+                        candidate->reservation_source_index=i;
+                        if(std::none_of(found->second.begin(),found->second.end(),[&](const auto& old){
+                            return same_zone_shape_geometry(old,*candidate);
+                        }))found->second.push_back(std::move(*candidate));
+                    }
+            }
+        }
         g.top_off[sheet] = p.top;
         g.bot_off[sheet] = p.bottom;
         g.zone_box[sheet] = {p.w, p.h};
@@ -271,6 +287,14 @@ FloorplanZoneGeometry bind_pcb_zone_shapes(const PcbZoneResult &zones,
             throw PcbZoneInfeasible("apply_chosen_shapes: " + sheet + " chose unregistered shape " +
                                     std::to_string(index));
         const auto &s = variants->second[index];
+        if(s.reservation_source_index) {
+            const auto source=*s.reservation_source_index;
+            if(source>=static_cast<std::size_t>(index))
+                throw PcbZoneInfeasible("reservation rebase must reference an earlier shape");
+            const auto expected=opposite_primary_reservation(variants->second.at(source));
+            if(!expected||!same_zone_shape_geometry(*expected,s))
+                throw PcbZoneInfeasible("reservation rebase changed physical geometry");
+        }
         if(s.side!="top"&&s.side!="bottom")throw PcbZoneInfeasible("apply_chosen_shapes: invalid primary face");
         for (const auto *offsets : {&g.top_off[sheet], &g.bot_off[sheet]})
             for (const auto &[r, p] : *offsets) {
@@ -288,11 +312,11 @@ FloorplanZoneGeometry bind_pcb_zone_shapes(const PcbZoneResult &zones,
             for(const auto& [r,p]:s.bot_off){(void)p;g.side_of[r]="bottom";}
         }
         if (s.side == "bottom") {
-            if (s.mirror.size() != s.top_off.size())
+            if (!s.reservation_source_index&&s.mirror.size() != s.top_off.size())
                 throw PcbZoneInfeasible("bottom primary pack and mirror map disagree");
             for (const auto &[r, p] : s.top_off) {
                 (void)p;
-                if (!s.mirror.count(r))
+                if (!s.reservation_source_index&&!s.mirror.count(r))
                     throw PcbZoneInfeasible("bottom primary member has no mirrored document: " + r);
                 g.side_of[r] = "bottom";
             }

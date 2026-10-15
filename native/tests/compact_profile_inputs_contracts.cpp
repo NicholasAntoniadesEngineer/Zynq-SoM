@@ -110,8 +110,13 @@ void profile_option_contracts() {
     if(!search_strategy("granular-minor+vertical").granular_minor_occupancy)
         throw std::runtime_error("granular minority occupancy strategy lost");
     (void)options({"profile","--repo",".","--compact-search","on","--search-strategy","granular-minor"});
+    if(!search_strategy("granular-minor+dual-primary").dual_primary_reservations)
+        throw std::runtime_error("dual primary reservation strategy override lost");
+    (void)options({"profile","--repo",".","--compact-search","on","--search-strategy","granular-minor","--search-strategy","granular-minor+dual-primary"});
     for(const auto& args:std::vector<std::vector<std::string>>{
         {"profile","--repo",".","--compact-search","on","--search-strategy","unknown"},
+        {"profile","--repo",".","--compact-search","on","--search-strategy","dual-primary"},
+        {"profile","--repo",".","--compact-search","on","--search-strategy","dual-primary+granular-minor","--search-strategy","granular-minor+dual-primary"},
         {"profile","--repo",".","--compact-search","on","--search-strategy","extent+"},
         {"profile","--repo",".","--compact-search","on","--search-strategy","extent+extent"},
         {"profile","--repo",".","--compact-search","on","--search-strategy","area-first+estimator-first"},

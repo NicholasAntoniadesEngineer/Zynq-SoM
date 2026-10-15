@@ -404,6 +404,7 @@ PcbPlacementSearchResult search_pcb_models(const PcbPlacementInput& input,
                 if(strategy.owned_extent_alternatives)policy->owned_extent_alternatives=*strategy.owned_extent_alternatives;
                 if(strategy.contract_group_rotations)policy->contract_group_rotations=*strategy.contract_group_rotations;
                 if(strategy.granular_minor_occupancy)policy->granular_minor_occupancy=true;
+                if(strategy.dual_primary_reservations)policy->dual_primary_reservations=true;
                 if(strategy.shape_choice_replays)policy->shape_choice_replays=*strategy.shape_choice_replays;
                 trial.floorplan.experiment=std::move(policy);
             }

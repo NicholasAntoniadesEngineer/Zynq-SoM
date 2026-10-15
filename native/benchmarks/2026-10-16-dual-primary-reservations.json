@@ -1,0 +1,43 @@
+{
+  "source_base": "bebba602",
+  "source_delta": "Opt-in dual-primary reservation strategy; component physical faces, coordinates, rotations and source footprint documents unchanged",
+  "mechanism": "Append opposite primary-relative representations, retaining every existing offer/index. Each appended shape references an earlier source offer. Binding independently checks exact geometric equivalence before accepting a legacy unmirrored bottom member in the new representation. Individual minority-face fanout and both-face through-hole reservations remain active.",
+  "activation": "compact-stage profiler --search-strategy granular-minor+vertical+estimator-first+dual-primary; compact mode and granular-minor required",
+  "default": "Disabled. Not exposed as a full-board release option, not a demonstrated compaction improvement.",
+  "tests": {
+    "orientation_and_profile_inputs": "2/2 PASS, 28.45 seconds; real power_som mixed-face models, unchanged physical faces/documents/pad nets/poses, round-trip representation, prefix/index preservation, source binding, tampered-pose rejection, invalid option combinations",
+    "floorplan_accounting_failure_receipts": "3/3 PASS, 37.02 seconds",
+    "logs": ["native/build/dual-primary-tests.log", "native/build/dual-primary-regression.log"],
+    "initial_failure": "The first test found existing mixed-face offers include legacy bottom members without explicit mirrored documents. Requiring complete mirror maps excluded every power_som offer. The revised implementation preserves these existing documents, and checks provenance/equivalence at binding instead of synthesizing mirrors. Final tests pass."
+  },
+  "screens": [
+    {
+      "outline_mm": [162, 151],
+      "log": "native/build/dual-primary-final-162x151.log",
+      "strategies": ["baseline: construction_failed", "granular-minor+vertical+estimator-first: incumbent", "granular-minor+vertical+estimator-first+dual-primary: construction_failed"],
+      "model_seconds_all_three_strategies": 78.589979917,
+      "aggregate_counter_keys_reconciled_against_attempts": 123,
+      "retained_pcb_sha256": "8aae8efbb2dee1c37cc61dc1b91e832b9ed6e4c7c47a17fc78b73c1a44f8d231"
+    },
+    {
+      "outline_mm": [162, 150],
+      "log": "native/build/dual-primary-final-162x150.log",
+      "strategies": ["baseline: construction_failed", "granular-minor+vertical+estimator-first: construction_failed", "granular-minor+vertical+estimator-first+dual-primary: construction_failed"],
+      "elapsed_seconds_all_three_strategies": 97.431882,
+      "completed_outer_attempts": 12,
+      "failure_receipt_captured": true,
+      "failure_receipt_unavailable": false,
+      "aggregate_counter_keys_reconciled_against_attempts": 82
+    }
+  ],
+  "devkit_regression": {
+    "log": "native/build/dual-primary-devkit-regression.log",
+    "dimensions_mm": [98, 98],
+    "top_bottom": [105, 55],
+    "pcb_sha256": "1b12fecbcbbaa5e6084c2459da93cb144a660ff19805e6e4e3f75f9c22689fdb",
+    "result": "Unchanged published PCB, default strategy. Not a new full pipeline qualification."
+  },
+  "reproduction": "Use carrier_command in 2026-10-16-courtyard-coverage.json and append --search-strategy granular-minor+vertical+estimator-first+dual-primary. For the smaller screen replace --outline-mm 162x151 with --outline-mm 162x150.",
+  "limitations": "Concurrent screens are not controlled timing comparisons. Failure is not proof of geometric infeasibility. No new board release, smaller accepted board, hardware waiver or fabrication readiness claim.",
+  "next": "Investigate component-level primary reservations and their fanout/through-hole/keepout integration. Reversing which face receives a full envelope alone did not resolve the constrained packing."
+}

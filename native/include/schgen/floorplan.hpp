@@ -93,6 +93,9 @@ struct FloorplanZoneShape {
     FloorplanRotations extra_rot;
     std::string tag, side = "top";
     std::map<std::string, std::string> mirror;  // board ref -> footprint key
+    // Earlier offer whose physical geometry is identical after swapping only
+    // primary-relative maps. Binding independently verifies this provenance.
+    std::optional<std::size_t> reservation_source_index;
 };
 struct FloorplanZoneGeometry {
     std::map<std::string, FloorplanPoint> zone_box;
