@@ -275,7 +275,10 @@ void append_contract_group_faces(Context& ctx,Geometry& g,const std::string& she
     std::vector<Shape> contact_singles;
     const auto previous_singles=single_group.size();
     for(const auto& group:*groups) {
-        if(group.refs.size()<2||!group.required_top_refs.empty())continue;
+        // A singleton is a valid connected group too. Cardinality is not a
+        // face requirement; pinned access/through-hole/high-speed membership
+        // and the complete candidate checks below decide eligibility.
+        if(group.refs.empty()||!group.required_top_refs.empty())continue;
         bool eligible=true;
         std::vector<Box4> moved_boxes,remaining_boxes;
         for(const auto& ref:group.refs) {

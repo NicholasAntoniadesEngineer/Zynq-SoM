@@ -215,6 +215,42 @@ void unit(){
  bool invalid_suffix=false;
  try {append_rigid_zone_orientations(ctx,g,"unit",sparse,suffix_count+1);}catch(const PcbZoneInfeasible&){invalid_suffix=true;}
  demand(invalid_suffix&&ctx.quantization.empty(),"invalid suffix did not fail before work");
+ // One independently movable component is not less eligible than a larger
+ // connected group. Keep the service-access component fixed on top.
+ input.contracts["unit"]=parse_json_text(R"({"contract":"placement/v2","structures":[{"type":"same_side","ics":["A"]}]})");
+ auto single=seed;single.extra_rot.clear();single.bot_off.clear();
+ single.top_off={{"R1",{5,4}},{"R2",{15,11}}};
+ ctx.by_ref["R2"].lib_id="Switch:SW_SPST";
+ g.shapes.clear();append_contract_group_faces(ctx,g,"unit",single);
+ demand(g.shapes.count("unit")&&g.shapes.at("unit").size()>1,
+        "independent singleton was excluded by group cardinality");
+ demand(equal(g.shapes.at("unit").front(),single),"singleton exploration replaced incumbent");
+ for(const auto& candidate:g.shapes.at("unit")) {
+  if(candidate.tag.rfind("contract-bottom",0)!=0)continue;
+  demand(candidate.bot_off.count("R1")&&candidate.top_off.count("R2")&&
+         !candidate.bot_off.count("R2"),"singleton exploration moved top-access part");
+  const auto checked=model(candidate,ctx,g);
+  demand(check_pcb_placement_contract(checked,"unit",&input.contracts.at("unit"),ctx.board_refs.at("unit")).ok&&
+         check_fanout(checked,0).ok,"singleton failed independent geometry/contract/fanout check");
+  for(std::size_t i=0;i<checked.model().insts.size();++i) {
+   const auto bounds=checked.courtyard_at(i);
+   demand(bounds.x0>=0&&bounds.y0>=0&&bounds.x1<=candidate.w&&bounds.y1<=candidate.h,
+          "singleton courtyard escaped candidate envelope");
+  }
+  const auto moved=std::find_if(checked.model().insts.begin(),checked.model().insts.end(),
+      [](const auto& inst){return inst.ref=="R1";});
+  demand(moved!=checked.model().insts.end()&&handed(model(single,ctx,g),0)*
+         handed(checked,static_cast<std::size_t>(moved-checked.model().insts.begin()))<0,
+         "singleton bottom move lost chirality");
+ }
+ const auto singleton_once=g.shapes.at("unit");
+ append_contract_group_faces(ctx,g,"unit",single);
+ demand(g.shapes.at("unit").size()==singleton_once.size(),"singleton replay accumulated duplicate offers");
+ for(std::size_t i=0;i<singleton_once.size();++i)
+  demand(equal(g.shapes.at("unit")[i],singleton_once[i]),"singleton replay changed deterministic order");
+ input.contracts["unit"]=parse_json_text(R"({"contract":"placement/v2","structures":[{"type":"proximity","anchor":"A","members":["B"],"max_mm":30,"same_side":true}]})");
+ g.shapes.clear();append_contract_group_faces(ctx,g,"unit",single);
+ demand(g.shapes.empty(),"singleton face exploration split a group pinned by service access");
 }
 void live(const std::filesystem::path& root){
  for(const auto* project:{"carrier","devkit_mini"}){
