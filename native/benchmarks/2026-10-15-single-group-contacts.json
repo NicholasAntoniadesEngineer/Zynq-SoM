@@ -1,0 +1,26 @@
+{
+  "source_base": "8fb2ea40",
+  "change": "Share collision-derived rigid contact translations between paired and single bottom groups. Failed single corner alignments now receive the same finite one-step repair exploration as pairs, with full local physical/contract/fanout qualification. Repairs are deduplicated as offers, retain incumbents, and are not recursively multiplied into pair exploration.",
+  "tests": "native_pcb_orientation_contracts and native_policy_audits_contracts pass. Real SoM-power regression requires contact offers, lower area than the previous corner-only bottom envelope, rigid mirrored membership, service access, physical envelope/clearance, local contracts, fanout, and preserved enforced external terms. Existing independent operation-accounting and deterministic multi-sheet/rotation cases remain enabled.",
+  "local_offers": {
+    "power_before_after": [16,26],
+    "power_som_before_after": [5,7],
+    "usb_jtag_before_after": [96,96],
+    "powersom_old_bottom_mm": [24.4399,40.4904],
+    "powersom_best_new_bottom_mm": [24.4399,24.1702],
+    "powersom_other_new_bottom_mm": [26.6499,24.1702],
+    "meaning": "Approximately 40.3 percent smaller local bottom-candidate envelope, not a smaller accepted board."
+  },
+  "current_board_screen": {
+    "carrier_sha256": "8ba5fe760fa5ac529cd107cf7fa70945f7e7276b60e03f0e98b4ddc4d6ffc397",
+    "devkit_sha256": "1b12fecbcbbaa5e6084c2459da93cb144a660ff19805e6e4e3f75f9c22689fdb",
+    "published_geometry_unchanged": true,
+    "carrier_log": "native/build/carrier-powersom-single-contact.log",
+    "devkit_log": "native/build/devkit-single-contact.log"
+  },
+  "smaller_screens": [
+    {"outline_mm":[160,153],"recipe":"previous powersom-face-screen recipe with free bringup_rails","result":"construction_failed","seconds":46.233960959,"outer_attempts":4,"receipt_captured":true,"log":"native/build/carrier-powersom-single-contact-160x153.log"},
+    {"outline_mm":[160,153],"recipe":"same, plus --offered-shape power_som=contract-bottom/C22014/0.550000/4.800000/contact/0.000000/-0.520000","result":"construction_failed","seconds":57.177248375,"outer_attempts":4,"receipt_captured":true,"seating_rejections":["debug_boot","bringup_rails"],"log":"native/build/carrier-powersom-single-contact-forced-160x153.log"}
+  ],
+  "limits": "No new full-board finalist, no full-suite run, no hardware limit relaxation. Single concurrent samples are diagnostic timings, not speedup evidence. One-step contacts do not constitute complete packing search. Coupled candidate selection and regrouping remain future work; failures do not prove infeasibility."
+}

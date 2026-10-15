@@ -1,0 +1,26 @@
+{
+  "source": "f97f8205",
+  "purpose": "Identify whether enabling SoM-power bottom groups improves carrier packing without changing hardware constraints.",
+  "recipe": "Release carrier recipe in docs/RELEASE-2026-10-15.md through schgen_compact_stage_profile, plus --contract-group-face-sheet power_som; runs=1. Smaller-outline screen removes the bringup_rails owned-shape restriction.",
+  "catalog": {
+    "power_som_total": 5,
+    "power_som_bottom": 1,
+    "bottom_tag": "contract-bottom/C22014/0.550000/21.120200",
+    "asbuilt_mm": [23.9349, 24.1702],
+    "bottom_offer_mm": [24.4399, 40.4904],
+    "interpretation": "The new local face offer increases the envelope; more bottom-side components alone do not establish smaller board area. Single-group offers currently use four corner alignments, whereas pair candidates also receive collision-derived contact translations. Investigate contact generation for single groups next; no proof yet that this will improve the carrier."
+  },
+  "screens": [
+    {"outline_mm":[163,151],"restriction":"release pins","result":"constructed_no_acceptance","construction_seconds":13.638038624,"pcb_sha256":"8ba5fe760fa5ac529cd107cf7fa70945f7e7276b60e03f0e98b4ddc4d6ffc397","top":398,"bottom":168,"log":"native/build/carrier-powersom-face-incumbent.log"},
+    {"outline_mm":[160,153],"restriction":"free bringup_rails","result":"construction_failed","seconds":44.125658041,"outer_attempts":4,"receipt_captured":true,"log":"native/build/carrier-powersom-face-160x153.log"},
+    {"outline_mm":[163,151],"restriction":"release pins plus exact bottom_tag above for power_som","result":"construction_failed","seconds":3.086684917,"outer_attempts":4,"receipt_captured":true,"rejected_subjects":["fmc","usb_jtag"],"log":"native/build/carrier-powersom-face-forced.log"}
+  ],
+  "selection_trace": "native/build/carrier-powersom-face-catalog.log",
+  "preceding_unpublished_screens": [
+    {"outline_mm":[160,153],"offered_shapes":{"power":"turned","power_som":"turned"},"bringup_rails":"free","seconds":33.99462275,"result":"construction_failed","outer_attempts":4,"receipt_captured":true},
+    {"outline_mm":[160,153],"offered_shapes":{"power":"t270","power_som":"t270"},"bringup_rails":"free","seconds":15.794316333,"result":"construction_failed","outer_attempts":4,"receipt_captured":true},
+    {"outline_mm":[164,149],"bringup_rails":"release pin","seconds":16.560082084,"result":"construction_failed","outer_attempts":4,"receipt_captured":true},
+    {"outline_mm":[165,148],"bringup_rails":"release pin","seconds":10.280897625,"result":"construction_failed","outer_attempts":4,"receipt_captured":true}
+  ],
+  "limits": "Construction screening only, not independent full-board acceptance. Single concurrent samples are not timing comparisons. No smaller accepted carrier, no hardware-limit changes, and no proof of infeasibility. Published incumbent remains unchanged."
+}

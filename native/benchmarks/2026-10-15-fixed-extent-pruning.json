@@ -1,0 +1,24 @@
+{
+  "source_base": "4e2bfbcb",
+  "retained_change": "Skip x-only singleton contact compaction when a nonmoving member already owns the maximal courtyard x extent. The pass cannot reduce width, cannot change height, and publishes only strict envelope-area reductions. No legal published offer is removed by this necessary-condition test.",
+  "verification": {
+    "native_pcb_orientation_contracts": "PASS 5.02 seconds; includes deterministic offer geometry, real local hardware/fanout checks, contact improvements, and independent operation accounting",
+    "native_policy_audits_contracts": "PASS",
+    "all_catalog_and_selection_trace_lines_identical": true,
+    "carrier_pcb_sha256": "8ba5fe760fa5ac529cd107cf7fa70945f7e7276b60e03f0e98b4ddc4d6ffc397",
+    "changed_actual_zone_operation_counts": {
+      "placement_bottom_pose_precision4dp": {"before":6165,"after":6086},
+      "placement_variant_dimension_precision4dp": {"before":434,"after":370}
+    },
+    "other_operation_counts_identical": true,
+    "before_log": "native/build/carrier-powersom-single-contact.log",
+    "after_log": "native/build/carrier-fixed-extent-prune.log",
+    "timing_caveat": "Concurrent single samples show no demonstrated wall-time gain; this is deterministic evidence of reduced redundant operations, not a percentage improvement in total runtime."
+  },
+  "failed_experiments": [
+    {"recipe":"free both board_aux and bringup_rails owned-shape pins; enable owned-extent-alternatives; otherwise powersom face recipe","outline_mm":[163,150],"result":"construction_failed","seconds":16.472534167,"outer_attempts":4,"receipt_captured":true,"log":"native/build/carrier-free-pilots-163x150.log"},
+    {"recipe":"same free-pilot recipe","outline_mm":[160,153],"result":"construction_failed","seconds":50.487760709,"outer_attempts":4,"receipt_captured":true,"log":"native/build/carrier-free-pilots-160x153.log"},
+    {"recipe":"release pins at 163x151, exploratory y-only singleton contact descent on original and x-compacted power offers","result":"construction_failed","seconds":7.89649375,"outer_attempts":4,"receipt_captured":true,"power_offers":26,"power_som_offers":8,"previous_power_som_offers":7,"log":"native/build/carrier-vertical-contact-catalog.log","disposition":"Exploratory implementation removed. No additional power offers; one extra SoM-power offer regressed the successful global construction. Do not enable broader local expansion without solving global candidate/incumbent retention."}
+  ],
+  "limits": "No smaller accepted board, new full qualification, timing comparison against Python, or full-suite run. Local offer retention alone does not guarantee global search retains a feasible layout. Continue investigating inter-stage candidate selection, not simply adding offers or increasing search work."
+}

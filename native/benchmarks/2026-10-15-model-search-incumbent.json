@@ -1,0 +1,31 @@
+{
+  "source_base": "13d10851",
+  "implementation": "search_pcb_models: opt-in core API builds a baseline and each explicit search-policy strategy once from the same hardware inputs, retaining the best complete screened model. Default board generation is unchanged.",
+  "invariants": [
+    "Strategy overrides cannot change circuits, contracts, caller shape/face restrictions or outline specification.",
+    "Independent placement gates, enforced compose results, fanout, off-board checks and finite ranking values screen each constructed candidate.",
+    "Ranking is area, width, height, cross-wire length. Wiring length is a tie-break, not an acceptance ceiling. Exact ties retain the incumbent.",
+    "Typed construction infeasibility is recorded; other exceptions propagate. Missing/unrepresentable receipts cannot become an apparently complete aggregate.",
+    "Each attempt retains its actual construction/screening accounting. The returned aggregate, not the selected model's subset, owns portfolio work.",
+    "The caller input-preparation prefix is owned once, including when the baseline fails before floorplan preparation.",
+    "No historical model loading, implicit extra strategies, publication, or gate waivers."
+  ],
+  "tests": {
+    "native_model_failure_receipt_contracts": "PASS 37.86 seconds",
+    "native_policy_audits_contracts": "PASS 45.61 seconds",
+    "new_real_devkit_cases": [
+      "baseline independently screens successfully",
+      "injected challenger construction failure retains byte-identical baseline PCB",
+      "independent observed primitive calls match complete portfolio receipt",
+      "per-attempt sum equals aggregate including fallback sequence",
+      "unexpected challenger exception propagates with completed baseline and failed prefix",
+      "identical candidate does not replace incumbent",
+      "caller prefix counted once on success and early failure",
+      "all-failed attempts return no incumbent",
+      "caller policy ownership unchanged",
+      "overflow marks receipt unavailable rather than publishing a partial total"
+    ]
+  },
+  "remaining_integration": "API is exercised by actual-model tests but not yet invoked by the CLI/profiler optimisation workflow. Add explicit bounded strategy selection there, preserve aggregate accounting at downstream import boundaries, and test a natural expanded-catalog carrier regression. Screening does not replace full electrical, source, DRC, thermal, assembly or rendering qualification.",
+  "limits": "No smaller carrier, new qualified board, performance claim, Python comparison, or complete suite run. Existing output files are untouched. This is the core incumbent-retention implementation, not completion of the overall search integration or long-running goal."
+}

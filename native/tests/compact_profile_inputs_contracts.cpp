@@ -98,6 +98,31 @@ void profile_option_contracts() {
         if(!rejected)throw std::runtime_error("invalid failed-first retry option accepted");
     }
     bool invalid_trace=false;
+    const auto portfolio=options({"profile","--repo",".","--compact-search","on",
+        "--search-strategy","extent","--search-strategy","estimator-first"});
+    if(portfolio.search_strategies!=std::vector<std::string>{"extent","estimator-first"})
+        throw std::runtime_error("explicit portfolio strategy order lost");
+    const auto combination=search_strategy("extent+estimator-first");
+    if(!combination.owned_extent_alternatives.value_or(false)||combination.shape_area_first!=false)
+        throw std::runtime_error("combined model-search strategy lost an override");
+    if(!search_strategy("vertical+extent").vertical_compaction)
+        throw std::runtime_error("vertical search-strategy override lost");
+    for(const auto& args:std::vector<std::vector<std::string>>{
+        {"profile","--repo",".","--compact-search","on","--search-strategy","unknown"},
+        {"profile","--repo",".","--compact-search","on","--search-strategy","extent+"},
+        {"profile","--repo",".","--compact-search","on","--search-strategy","extent+extent"},
+        {"profile","--repo",".","--compact-search","on","--search-strategy","area-first+estimator-first"},
+        {"profile","--repo",".","--compact-search","on","--search-strategy","extent+rotations"},
+        {"profile","--repo",".","--compact-search","on","--search-strategy","vertical"},
+        {"profile","--repo",".","--compact-search","on","--search-strategy","extent+area-first","--search-strategy","area-first+extent"},
+        {"profile","--repo",".","--compact-search","off","--search-strategy","extent"},
+        {"profile","--repo",".","--compact-search","on","--search-strategy","rotations"},
+        {"profile","--repo",".","--compact-search","on","--search-strategy","extent","--search-strategy","extent"},
+        {"profile","--repo",".","--compact-search","on","--search-strategy","extent","--thermal-trace","on"},
+        {"profile","--repo",".","--compact-search","on","--search-strategy","extent","--owned-selection-trace","on"}}) {
+        bool rejected=false;try{(void)options(args);}catch(const std::invalid_argument&){rejected=true;}
+        if(!rejected)throw std::runtime_error("ambiguous/invalid model portfolio accepted");
+    }
     if(options({"profile","--repo",".","--compact-search","on","--interior-order","3","--shape-choice-replays","8"}).shape_choice_replays!=8)
         throw std::runtime_error("shape replay limit lost");
     for(const auto* value:{"0","-1","1.5","8x","999999999999999999999999999"}) {

@@ -3,12 +3,16 @@
 #include "schgen/board_decision_policy.hpp"
 
 namespace schgen {
-PcbZoneResult build_pcb_zone_geometry(const PcbPlacementInput &in, ExecutionFailureReceipt* failure) {
+PcbZoneResult pcb_placement::build_zones_for_search(const PcbPlacementInput &in, bool vertical_compaction,
+                                                  ExecutionFailureReceipt* failure) {
     using namespace pcb_placement;
     Context ctx(in);
     PcbZoneResult out;
     ExecutionFailureReceipt child;
     try {
+    if(vertical_compaction&&(!in.floorplan.compact_search||!in.floorplan.experiment||
+                            in.floorplan.experiment->contract_group_face_sheets.empty()))
+        throw std::invalid_argument("vertical compaction requires compact mode and explicit contract-group sheets");
     if(in.floorplan.experiment)for(const auto& selected:in.floorplan.experiment->contract_group_face_sheets) {
         if(!in.floorplan.compact_search||!ctx.board_refs.count(selected))
             throw PcbZoneInfeasible("contract-group face candidates require compact mode and a known sheet: "+selected);
@@ -229,7 +233,8 @@ PcbZoneResult build_pcb_zone_geometry(const PcbPlacementInput &in, ExecutionFail
                 !templated && !edge && !conn_rot.count(sheet) &&
                 !sheet_edges.count(sheet) && !connector_class.count(sheet), &child);
         if(in.floorplan.experiment&&in.floorplan.experiment->contract_group_face_sheets.count(sheet))
-            append_contract_group_faces(ctx,g,sheet,shape(p,"base"),in.floorplan.experiment->contract_group_rotations);
+            append_contract_group_faces(ctx,g,sheet,shape(p,"base"),in.floorplan.experiment->contract_group_rotations,
+                                        vertical_compaction);
         if(in.floorplan.experiment&&in.floorplan.experiment->owned_face_cohesion)
             append_owned_face_zone_shapes(ctx,out,sheet,shape(p,"base"),
                 !templated&&!edge&&!conn_rot.count(sheet)&&!sheet_edges.count(sheet)&&!connector_class.count(sheet),
@@ -248,6 +253,9 @@ PcbZoneResult build_pcb_zone_geometry(const PcbPlacementInput &in, ExecutionFail
         capture_execution_failure(failure,std::move(prefix),&child);
         throw;
     }
+}
+PcbZoneResult build_pcb_zone_geometry(const PcbPlacementInput &in,ExecutionFailureReceipt* failure) {
+    return pcb_placement::build_zones_for_search(in,false,failure);
 }
 FloorplanZoneGeometry bind_pcb_zone_shapes(const PcbZoneResult &zones,
                                            const std::map<std::string, int> &chosen) {

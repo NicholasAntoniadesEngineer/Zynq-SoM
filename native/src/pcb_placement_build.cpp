@@ -1,6 +1,8 @@
 #include "pcb_placement_internal.hpp"
 #include "pcb_placement_orientations.hpp"
 #include "schgen/pcb_placement_gates.hpp"
+#include "schgen/ratsnest_gate.hpp"
+#include "schgen/pcb_placement_search.hpp"
 
 namespace schgen::pcb_placement {
 namespace {
@@ -219,13 +221,14 @@ FloorplanInput prepare_pcb_floorplan(const PcbPlacementInput &input, const PcbZo
     checked_quantization_merge(result.accounting.quantization_engagements, zones.quantization_engagements);
     return result;
 }
-static PcbPlacementResult build_pcb_model_once(const PcbPlacementInput &input, ExecutionFailureReceipt* failure) {
+static PcbPlacementResult build_pcb_model_once(const PcbPlacementInput &input, ExecutionFailureReceipt* failure,
+                                               bool vertical_compaction) {
     // Each child failure owns only its operation, except floorplan which
     // explicitly inherits planning-zone accounting. Keep that transfer visible.
     ExecutionFailureReceipt child;
     ExecutionAccounting completed;
     try {
-    auto zones = build_pcb_zone_geometry(input,&child);
+    auto zones = pcb_placement::build_zones_for_search(input,vertical_compaction,&child);
     completed={zones.quantization_engagements,zones.fallback_events};
     observe_pcb_experiment_checkpoint(input.experiment.get(), [] {
         PcbPlacementObservation row;
@@ -359,9 +362,10 @@ FloorplanSpec pcb_edge_replan_spec(const FloorplanSpec& original,const Floorplan
     spec.ordered_edges=spec.edges;
     return spec;
 }
-PcbPlacementResult build_pcb_model(const PcbPlacementInput& input,ExecutionFailureReceipt* failure) {
+static PcbPlacementResult build_pcb_model_strategy(const PcbPlacementInput& input,ExecutionFailureReceipt* failure,
+                                                   bool vertical_compaction) {
     ExecutionFailureReceipt first;
-    try {return build_pcb_model_once(input,&first);}
+    try {return build_pcb_model_once(input,&first,vertical_compaction);}
     catch(const PcbEdgeGeometryMismatch& mismatch) {
         // One full-geometry retry, never recursive and never a geometry waiver.
         // The first receipt already owns its input seed, zones, packing and
@@ -373,9 +377,90 @@ PcbPlacementResult build_pcb_model(const PcbPlacementInput& input,ExecutionFailu
         retry.floorplan.accounting.quantization_engagements=first.accounting.quantization_engagements;
         retry.floorplan.accounting.fallback_events=first.accounting.fallback_events;
         retry.floorplan.accounting.fallback_events.push_back("edge_geometry_replan_retry");
-        return build_pcb_model_once(retry,failure);
+        return build_pcb_model_once(retry,failure,vertical_compaction);
     } catch(...) {
         if(failure)*failure=first;
+        throw;
+    }
+}
+PcbPlacementResult build_pcb_model(const PcbPlacementInput& input,ExecutionFailureReceipt* failure) {
+    return build_pcb_model_strategy(input,failure,false);
+}
+PcbPlacementSearchResult search_pcb_models(const PcbPlacementInput& input,
+    const std::vector<PcbPlacementSearchStrategy>& strategies,ExecutionFailureReceipt* failure) {
+    PcbPlacementSearchResult out;
+    std::optional<std::tuple<double,double,double,double>> best;
+    ExecutionFailureReceipt child;
+    ExecutionAccounting pending;
+    try {
+        for(std::size_t attempt=0;attempt<=strategies.size();++attempt) {
+            auto trial=input;
+            if(attempt) {
+                auto policy=input.floorplan.experiment
+                    ?std::make_shared<FloorplanExperiment>(*input.floorplan.experiment)
+                    :std::make_shared<FloorplanExperiment>();
+                const auto& strategy=strategies[attempt-1];
+                if(strategy.shape_area_first)policy->shape_area_first=*strategy.shape_area_first;
+                if(strategy.owned_extent_alternatives)policy->owned_extent_alternatives=*strategy.owned_extent_alternatives;
+                if(strategy.contract_group_rotations)policy->contract_group_rotations=*strategy.contract_group_rotations;
+                if(strategy.shape_choice_replays)policy->shape_choice_replays=*strategy.shape_choice_replays;
+                trial.floorplan.experiment=std::move(policy);
+            }
+            child={};pending={};
+            // Own the caller prefix here, including an early zone failure
+            // before a model has reached floorplan's seed import boundary.
+            if(!attempt)pending={input.floorplan.accounting.quantization_engagements,
+                                input.floorplan.accounting.fallback_events};
+            trial.floorplan.accounting.quantization_engagements.clear();
+            trial.floorplan.accounting.fallback_events.clear();
+            PcbPlacementSearchAttempt record;
+            std::optional<PcbPlacementResult> candidate;
+            try {candidate=build_pcb_model_strategy(trial,&child,attempt&&strategies[attempt-1].vertical_compaction);}
+            catch(const FloorplanPackingInfeasible& error) {record.detail=error.what();}
+            catch(const PcbZoneInfeasible& error) {record.detail=error.what();}
+            if(!candidate) {
+                if(!child.captured||child.unavailable) {
+                    invalidate_execution_failure(&child);
+                    throw std::runtime_error("model search: construction failure has no complete receipt");
+                }
+                append_execution_accounting(pending,child.accounting,&child);child={};
+                record.status="construction_failed";
+            } else {
+                try {append_execution_accounting(pending,pcb_placement_accounting(*candidate),&child);}
+                catch(const std::overflow_error&) {invalidate_execution_failure(&child);throw;}
+                const auto gates=check_pcb_placement_gates(trial,candidate->model,&pending.quantization_engagements);
+                const PcbCheckInput checked(candidate->model);
+                const auto fanout=check_fanout(checked,0);
+                const auto ratsnest=check_ratsnest(checked);
+                const auto& m=candidate->model;
+                const double area=m.board_w*m.board_h;
+                if(!gates.ok()||gates.composition.hard_red||!fanout.ok||!ratsnest.off_board.empty()||
+                   !std::isfinite(area)||m.board_w<=0||m.board_h<=0||
+                   !std::isfinite(ratsnest.cross_mm)||ratsnest.cross_mm<0) {
+                    record.status="screen_rejected";
+                    record.detail="placement/compose/fanout/bounds or finite-ranking screen failed";
+                } else {
+                    const auto rank=std::make_tuple(area,m.board_w,m.board_h,ratsnest.cross_mm);
+                    if(!best||rank<*best) {
+                        best=rank;out.incumbent=std::move(candidate);out.incumbent_attempt=attempt;
+                        record.status="incumbent";
+                    } else record.status="not_improved";
+                }
+            }
+            record.accounting=pending;
+            append_execution_accounting(out.accounting,pending,&child);pending={};
+            out.attempts.push_back(std::move(record));
+        }
+        return out;
+    } catch(const std::overflow_error&) {
+        invalidate_execution_failure(failure);
+        throw;
+    } catch(...) {
+        if(child.unavailable)invalidate_execution_failure(failure);
+        else {
+            append_execution_accounting(out.accounting,pending,failure);
+            capture_execution_failure(failure,std::move(out.accounting),&child);
+        }
         throw;
     }
 }

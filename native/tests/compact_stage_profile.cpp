@@ -9,6 +9,7 @@
 #include "schgen/legalize.hpp"
 #include "schgen/validation.hpp"
 #include "schgen/pcb_placement_gates.hpp"
+#include "schgen/pcb_placement_search.hpp"
 #include "schgen/ratsnest_gate.hpp"
 #include "schgen/thermal_via_planning.hpp"
 #include "schgen/verification_audits.hpp"
@@ -59,8 +60,31 @@ struct Options {
     std::optional<int> interior_order;
     std::optional<FloorplanPoint> outline;
     std::optional<FloorplanPoint> initial_outline;
+    std::vector<std::string> search_strategies;
 };
+PcbPlacementSearchStrategy search_strategy(const std::string& text) {
+    PcbPlacementSearchStrategy result;
+    std::set<std::string> seen;
+    std::size_t begin=0;
+    for(;;) {
+        const auto end=text.find('+',begin);
+        const auto token=text.substr(begin,end==std::string::npos?end:end-begin);
+        if(!seen.insert(token).second)throw std::invalid_argument("duplicate search-strategy component: "+token);
+        if(token=="extent")result.owned_extent_alternatives=true;
+        else if(token=="vertical")result.vertical_compaction=true;
+        else if(token=="rotations")result.contract_group_rotations=true;
+        else if(token=="area-first"||token=="estimator-first") {
+            if(result.shape_area_first)throw std::invalid_argument("conflicting search-strategy rankings");
+            result.shape_area_first=token=="area-first";
+        } else throw std::invalid_argument("unknown search-strategy component: "+token);
+        if(end==std::string::npos)break;
+        begin=end+1;
+    }
+    return result;
+}
 void help() {
+    std::cout << "  [--search-strategy extent|rotations|vertical|area-first|estimator-first] (join with + for combined strategies; repeat; baseline retained; no acceptance)\n";
+    std::cout << "    Each strategy starts from baseline settings; repeated options are not cumulative. search_total includes every attempt and screening.\n";
     std::cout << "  [--shape-area-first on|off] (experimental legal-shape envelope ranking; compact on required)\n";
     std::cout << "  [--contract-group-face-sheet SHEET] (repeat for multiple sheets; experimental rigid-group face candidates)\n";
     std::cout << "  [--contract-group-rotations on|off] (requires contract-group-face-sheet)\n";
@@ -105,10 +129,22 @@ Options parse(int argc, char** argv) {
     std::set<std::string> seen;
     for (int i = 1; i < argc; ++i) {
         const std::string arg = argv[i];
-        if (!seen.insert(arg).second && arg!="--owned-shape" && arg!="--offered-shape" && arg!="--contract-group-face-sheet" && arg!="--require-bottom-sheet") throw std::invalid_argument("duplicate option: " + arg);
+        if (!seen.insert(arg).second && arg!="--owned-shape" && arg!="--offered-shape" && arg!="--contract-group-face-sheet" && arg!="--require-bottom-sheet" && arg!="--search-strategy") throw std::invalid_argument("duplicate option: " + arg);
         if (i + 1 == argc) throw std::invalid_argument("missing value: " + arg);
         const std::string value = argv[++i];
         if (arg == "--repo") out.repo = value;
+        else if(arg=="--search-strategy") {
+            const auto proposed=search_strategy(value);
+            for(const auto& prior:out.search_strategies) {
+                const auto existing=search_strategy(prior);
+                if(proposed.shape_area_first==existing.shape_area_first&&
+                   proposed.vertical_compaction==existing.vertical_compaction&&
+                   proposed.owned_extent_alternatives==existing.owned_extent_alternatives&&
+                   proposed.contract_group_rotations==existing.contract_group_rotations)
+                    throw std::invalid_argument("duplicate search-strategy: "+value);
+            }
+            out.search_strategies.push_back(value);
+        }
         else if (arg == "--schematic") out.schematic = value;
         else if (arg == "--floorplan-spec") {
             if(value.empty())throw std::invalid_argument("floorplan-spec requires a nonempty path");
@@ -242,6 +278,14 @@ Options parse(int argc, char** argv) {
     if (out.repo.empty() || (out.compact != "off" && out.compact != "on" && out.compact != "both"))
         throw std::invalid_argument("--repo and explicit --compact-search off|on|both required");
     if (out.inputs != "cold" && out.inputs != "prepared") throw std::invalid_argument("input-mode must be cold|prepared");
+    if(!out.search_strategies.empty()) {
+        if(out.compact!="on")throw std::invalid_argument("search-strategy requires compact on");
+        if(out.thermal_trace||out.owned_selection_trace)
+            throw std::invalid_argument("search-strategy requires per-model thermal/selection traces off");
+        for(const auto& name:out.search_strategies)
+            if((search_strategy(name).contract_group_rotations.value_or(false)||search_strategy(name).vertical_compaction)&&out.contract_group_face_sheets.empty())
+                throw std::invalid_argument("rotations/vertical search-strategy requires contract-group-face-sheet");
+    }
     if(!out.observers&&out.owned_selection_trace)throw std::invalid_argument("owned-selection-trace requires observers on");
     if(!out.observers&&out.thermal_trace)throw std::invalid_argument("thermal-trace requires observers on");
     if (out.constraint_first && out.compact != "on")
@@ -373,7 +417,7 @@ std::string trial(const PcbPlacementInput& source, bool compact, int run, int ge
                   bool observers = true, bool thermal_trace = false,
                   bool constraint_first = false,const std::optional<FloorplanPoint>& outline=std::nullopt,bool edge_translation=false,
                   const std::optional<FloorplanPoint>& initial_outline=std::nullopt,
-                  const std::optional<int>& interior_order=std::nullopt,bool multiscale_outline=false,bool edge_feasibility=false,bool owned_selection_trace=false,bool owned_quality_first=false,bool owned_face_cohesion=false,const std::map<std::string,std::string>& owned_shapes={},const std::set<std::string>& contract_group_face_sheets={},bool failed_first_retry=false,bool owned_extent_alternatives=false,bool contract_group_rotations=false,const std::optional<FloorplanPoseRetryLimits>& reseat_pose_limits=std::nullopt,const std::optional<std::size_t>& joint_states=std::nullopt,const std::set<std::string>& require_bottom_sheets={},bool shape_area_first=false,std::size_t shape_choice_replays=0,const std::map<std::string,std::string>& offered_shapes={}) {
+                  const std::optional<int>& interior_order=std::nullopt,bool multiscale_outline=false,bool edge_feasibility=false,bool owned_selection_trace=false,bool owned_quality_first=false,bool owned_face_cohesion=false,const std::map<std::string,std::string>& owned_shapes={},const std::set<std::string>& contract_group_face_sheets={},bool failed_first_retry=false,bool owned_extent_alternatives=false,bool contract_group_rotations=false,const std::optional<FloorplanPoseRetryLimits>& reseat_pose_limits=std::nullopt,const std::optional<std::size_t>& joint_states=std::nullopt,const std::set<std::string>& require_bottom_sheets={},bool shape_area_first=false,std::size_t shape_choice_replays=0,const std::map<std::string,std::string>& offered_shapes={},const std::vector<std::string>& search_strategies={}) {
     const auto copy_start = Clock::now();
     auto input = trial_input(source,compact,outline);
     for(const auto& selected:contract_group_face_sheets)if(std::none_of(input.floorplan.sheets.begin(),input.floorplan.sheets.end(),
@@ -426,6 +470,10 @@ std::string trial(const PcbPlacementInput& source, bool compact, int run, int ge
         if(owned_selection_trace)std::cout<<"owned_shape_catalog sheet="<<sheet<<" index="<<index<<" tag="<<std::quoted(tag)<<'\n';
     };
     const auto print_face_offers=[&] {
+        if(!search_strategies.empty()) {
+            std::cout<<"contract_face_offers status=unavailable reason=multi_strategy_catalogs_require_separate_scope\n";
+            return;
+        }
         for(const auto& sheet:contract_group_face_sheets) {
             const auto found=face_offers.find(sheet);
             if(!observers||found==face_offers.end()) {
@@ -515,11 +563,37 @@ std::string trial(const PcbPlacementInput& source, bool compact, int run, int ge
     const auto start = Clock::now();
     profile.mark = start;
     PcbPlacementResult result;
-    try { result = build_pcb_model(input, &failure); }
+    std::optional<ExecutionAccounting> search_accounting;
+    try {
+        if(search_strategies.empty())result=build_pcb_model(input,&failure);
+        else {
+            std::vector<PcbPlacementSearchStrategy> strategies;
+            for(const auto& name:search_strategies)strategies.push_back(search_strategy(name));
+            auto search=search_pcb_models(input,strategies,&failure);
+            for(std::size_t i=0;i<search.attempts.size();++i) {
+                const auto& attempt=search.attempts[i];
+                std::cout<<"search_attempt index="<<i<<" strategy="<<(i?search_strategies.at(i-1):"baseline")
+                         <<" status="<<attempt.status<<" detail="<<std::quoted(attempt.detail)<<'\n';
+                receipt("search_attempt_"+std::to_string(i),attempt.accounting.quantization_engagements);
+                for(std::size_t event=0;event<attempt.accounting.fallback_events.size();++event)
+                    std::cout<<"search_fallback attempt="<<i<<" index="<<event
+                             <<" name="<<attempt.accounting.fallback_events[event]<<'\n';
+            }
+            search_accounting=std::move(search.accounting);
+            receipt("search_total",search_accounting->quantization_engagements);
+            if(!search.incumbent) {
+                failure.captured=true;failure.accounting=*search_accounting;
+                throw std::runtime_error("model search produced no screened incumbent");
+            }
+            std::cout<<"search_incumbent attempt="<<*search.incumbent_attempt
+                     <<" scope=screened_model_not_full_board_acceptance\n";
+            result=std::move(*search.incumbent);
+        }
+    }
     catch (...) {
         print_reseats();
         if(observers)std::cout<<"edge_search candidates="<<edge_candidates<<" repairs="<<edge_repairs<<'\n';
-        std::cout << "trial status=construction_failed elapsed_seconds=" << seconds(start)
+        std::cout << "trial status=" << (search_strategies.empty()?"construction_failed":"search_failed") << " elapsed_seconds=" << seconds(start)
             << " completed_outer_attempts=" << (observers?std::to_string(profile.attempts.completed):"unavailable")
             << " receipt_captured=" << failure.captured << " receipt_unavailable=" << failure.unavailable << '\n';
         print_face_offers();
@@ -531,6 +605,8 @@ std::string trial(const PcbPlacementInput& source, bool compact, int run, int ge
         throw;
     }
     const auto end = Clock::now();
+    if(search_accounting)std::cout<<"timing_scope model_seconds=all_strategy_construction_screening_and_diagnostic_output"
+        <<" model_total_receipt=selected_construction_only search_total_receipt=all_attempts_and_screening\n";
     // Read existing board-space stage records after the timed construction.
     // This exposes connector-only jumps without adding solver callbacks/work.
     if(observers) {
@@ -721,7 +797,7 @@ int main(int argc, char** argv) {
             const int generation = options.inputs == "prepared" ? 1 : run;
             for (const bool compact : {false, true}) {
                 if ((compact && options.compact == "off") || (!compact && options.compact == "on")) continue;
-                const auto hash = trial(prepared->input, compact, run, generation, options.observers,options.thermal_trace,options.constraint_first,options.outline,options.edge_translation,options.initial_outline,options.interior_order,options.multiscale_outline,options.edge_feasibility,options.owned_selection_trace,options.owned_quality_first,options.owned_face_cohesion,options.owned_shapes,options.contract_group_face_sheets,options.failed_first_retry,options.owned_extent_alternatives,options.contract_group_rotations,options.reseat_pose_limits,options.joint_states,options.require_bottom_sheets,options.shape_area_first,options.shape_choice_replays,options.offered_shapes);
+                const auto hash = trial(prepared->input, compact, run, generation, options.observers,options.thermal_trace,options.constraint_first,options.outline,options.edge_translation,options.initial_outline,options.interior_order,options.multiscale_outline,options.edge_feasibility,options.owned_selection_trace,options.owned_quality_first,options.owned_face_cohesion,options.owned_shapes,options.contract_group_face_sheets,options.failed_first_retry,options.owned_extent_alternatives,options.contract_group_rotations,options.reseat_pose_limits,options.joint_states,options.require_bottom_sheets,options.shape_area_first,options.shape_choice_replays,options.offered_shapes,options.search_strategies);
                 auto [it, inserted] = first_hash.emplace(compact, hash);
                 if (!inserted && it->second != hash) throw std::runtime_error("repeat PCB bytes changed; investigate input drift/nondeterminism");
                 std::cout << "repeat compact_search=" << compact << " same_as_first=" << (!inserted ? "true" : "first") << '\n';

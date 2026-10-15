@@ -3,6 +3,7 @@
 #include "schgen/native_audit_state.hpp"
 #include "schgen/pcb_emit.hpp"
 #include "schgen/pcb_placement_gates.hpp"
+#include "schgen/pcb_placement_search.hpp"
 #include "schgen/stage_precision.hpp"
 #include "schgen/placement_precision.hpp"
 #include "schgen/precision_ops.hpp"
@@ -250,6 +251,73 @@ void facing_aggregate_overflow(const std::filesystem::path& root){
                 std::string(project)+": completed model aggregation overflow must not publish a smaller prefix");
     }
 }
+void model_search(const std::filesystem::path& root){
+    auto fixture=placement_fixture::load(root,"devkit_mini");
+    auto policy=std::make_shared<FloorplanExperiment>();policy->multiscale_outline=true;
+    fixture.input.floorplan.experiment=policy;
+    const auto baseline=search_pcb_models(fixture.input,{});
+    require(baseline.incumbent&&baseline.incumbent_attempt==0&&baseline.attempts.size()==1,
+            "model-search baseline failed independent screening");
+    const auto original=render_pcb(baseline.incumbent->model,pcb_emit_policy(fixture.input.floorplan.project)).pcb;
+    auto observer=std::make_shared<PcbPlacementExperiment>();
+    std::size_t starts=0;
+    observer->checkpoint=[&](const PcbPlacementObservation& row){
+        if(row.stage=="zone_pack"&&++starts==2)throw FloorplanPackingInfeasible("injected challenger infeasible");
+    };
+    fixture.input.experiment=observer;
+    begin();const auto retained=search_pcb_models(fixture.input,{{}});observing=false;
+    require(starts==2&&retained.incumbent&&retained.incumbent_attempt==0&&retained.attempts.size()==2&&
+            retained.attempts[1].status=="construction_failed"&&
+            retained.attempts[1].detail=="injected challenger infeasible",
+            "failed challenger displaced incumbent or lost failure detail");
+    verify(retained.accounting,"complete model portfolio");
+    ExecutionAccounting sum;
+    for(const auto& row:retained.attempts)append_execution_accounting(sum,row.accounting);
+    require(sum.quantization_engagements==retained.accounting.quantization_engagements&&
+            sum.fallback_events==retained.accounting.fallback_events,"portfolio receipts lost or duplicated an attempt");
+    require(render_pcb(retained.incumbent->model,pcb_emit_policy(fixture.input.floorplan.project)).pcb==original,
+            "failed challenger changed retained board geometry");
+    starts=0;
+    observer->checkpoint=[&](const PcbPlacementObservation& row){
+        if(row.stage=="zone_pack"&&++starts==2)throw Injected();
+    };
+    ExecutionFailureReceipt failure;bool propagated=false;
+    begin();try{(void)search_pcb_models(fixture.input,{{}},&failure);}catch(const Injected&){propagated=true;}
+    observing=false;require(propagated&&failure.captured&&!failure.unavailable,
+            "model portfolio swallowed unexpected exception or lost its completed baseline");
+    verify(failure.accounting,"model portfolio exception");
+    fixture.input.experiment.reset();
+    const auto repeated=search_pcb_models(fixture.input,{{}});
+    require(repeated.incumbent_attempt==0&&repeated.attempts.at(1).status=="not_improved",
+            "equal candidate unnecessarily replaced complete incumbent");
+    fixture.input.floorplan.accounting.quantization_engagements["stage_root_pose_precision4dp"]+=7;
+    const auto seeded=search_pcb_models(fixture.input,{{}});
+    auto expected=repeated.accounting.quantization_engagements;
+    checked_quantization_add(expected,"stage_root_pose_precision4dp",7);
+    require(seeded.accounting.quantization_engagements==expected,
+            "portfolio counted the once-executed caller prefix more than once");
+    observer->checkpoint=[](const PcbPlacementObservation& row){
+        if(row.stage=="zone_pack")throw FloorplanPackingInfeasible("all candidates infeasible");
+    };
+    fixture.input.experiment=observer;
+    const auto none=search_pcb_models(fixture.input,{{}});
+    require(!none.incumbent&&!none.incumbent_attempt&&none.attempts.size()==2&&
+            none.attempts[0].status=="construction_failed"&&none.attempts[1].status=="construction_failed",
+            "all-failed search fabricated an incumbent");
+    const auto unseeded=none.accounting.quantization_engagements.at("stage_root_pose_precision4dp")-7;
+    fixture.input.floorplan.accounting.quantization_engagements["stage_root_pose_precision4dp"]-=7;
+    const auto none_again=search_pcb_models(fixture.input,{{}});
+    require(none_again.accounting.quantization_engagements.at("stage_root_pose_precision4dp")==unseeded,
+            "early baseline failure dropped or repeated caller seed");
+    require(fixture.input.floorplan.experiment==policy,"model search mutated caller policy ownership");
+    observer->checkpoint=[](const PcbPlacementObservation& row){
+        if(row.stage=="zone_pack")throw std::overflow_error("unrepresentable candidate receipt");
+    };
+    failure={};bool overflowed=false;
+    try{(void)search_pcb_models(fixture.input,{{}},&failure);}catch(const std::overflow_error&){overflowed=true;}
+    require(overflowed&&failure.unavailable&&!failure.captured,
+            "overflow published an apparently complete model-search receipt");
+}
 void constructor_failure(const std::filesystem::path& root){
     auto fixture=placement_fixture::load(root,"devkit_mini");
     auto input=fixture.input.floorplan;input.som.w=0;
@@ -282,4 +350,4 @@ void invalid_stage(const std::filesystem::path& root){
 }
 extern "C" void __cyg_profile_func_enter(void* f,void*){if(!observing)return;for(std::size_t i=0;i<ops.size();++i)if(f==ops[i].address){++entries[i];break;}}
 extern "C" void __cyg_profile_func_exit(void*,void*){}
-int main(int argc,char** argv){try{require(argc==2,"repo path required");facing_aggregate_overflow(argv[1]);facing_retry(argv[1]);contract_retry(argv[1]);overflow();constructor_failure(argv[1]);owning_overflow(argv[1]);invalid_stage(argv[1]);for(bool two_side:{true,false}){checkpoints(argv[1],two_side);floorplan_failure(argv[1],two_side);success(argv[1],two_side);}std::cout<<"model failure receipts PASS\n";}catch(const std::exception& e){observing=false;std::cerr<<e.what()<<'\n';return 1;}}
+int main(int argc,char** argv){try{require(argc==2,"repo path required");model_search(argv[1]);facing_aggregate_overflow(argv[1]);facing_retry(argv[1]);contract_retry(argv[1]);overflow();constructor_failure(argv[1]);owning_overflow(argv[1]);invalid_stage(argv[1]);for(bool two_side:{true,false}){checkpoints(argv[1],two_side);floorplan_failure(argv[1],two_side);success(argv[1],two_side);}std::cout<<"model failure receipts PASS\n";}catch(const std::exception& e){observing=false;std::cerr<<e.what()<<'\n';return 1;}}
