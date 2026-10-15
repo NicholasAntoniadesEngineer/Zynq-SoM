@@ -1,6 +1,7 @@
 #include "pcb_placement_internal.hpp"
 #include "pcb_placement_orientations.hpp"
 #include "schgen/pcb_placement_gates.hpp"
+#include "schgen/ratsnest_gate.hpp"
 
 namespace schgen::pcb_placement {
 namespace {
@@ -376,6 +377,84 @@ PcbPlacementResult build_pcb_model(const PcbPlacementInput& input,ExecutionFailu
         return build_pcb_model_once(retry,failure);
     } catch(...) {
         if(failure)*failure=first;
+        throw;
+    }
+}
+PcbPlacementSearchResult search_pcb_models(const PcbPlacementInput& input,
+    const std::vector<PcbPlacementSearchStrategy>& strategies,ExecutionFailureReceipt* failure) {
+    PcbPlacementSearchResult out;
+    std::optional<std::tuple<double,double,double,double>> best;
+    ExecutionFailureReceipt child;
+    ExecutionAccounting pending;
+    try {
+        for(std::size_t attempt=0;attempt<=strategies.size();++attempt) {
+            auto trial=input;
+            if(attempt) {
+                auto policy=input.floorplan.experiment
+                    ?std::make_shared<FloorplanExperiment>(*input.floorplan.experiment)
+                    :std::make_shared<FloorplanExperiment>();
+                const auto& strategy=strategies[attempt-1];
+                if(strategy.shape_area_first)policy->shape_area_first=*strategy.shape_area_first;
+                if(strategy.owned_extent_alternatives)policy->owned_extent_alternatives=*strategy.owned_extent_alternatives;
+                if(strategy.contract_group_rotations)policy->contract_group_rotations=*strategy.contract_group_rotations;
+                if(strategy.shape_choice_replays)policy->shape_choice_replays=*strategy.shape_choice_replays;
+                trial.floorplan.experiment=std::move(policy);
+            }
+            child={};pending={};
+            // Own the caller prefix here, including an early zone failure
+            // before a model has reached floorplan's seed import boundary.
+            if(!attempt)pending={input.floorplan.accounting.quantization_engagements,
+                                input.floorplan.accounting.fallback_events};
+            trial.floorplan.accounting.quantization_engagements.clear();
+            trial.floorplan.accounting.fallback_events.clear();
+            PcbPlacementSearchAttempt record;
+            std::optional<PcbPlacementResult> candidate;
+            try {candidate=build_pcb_model(trial,&child);}
+            catch(const FloorplanPackingInfeasible& error) {record.detail=error.what();}
+            catch(const PcbZoneInfeasible& error) {record.detail=error.what();}
+            if(!candidate) {
+                if(!child.captured||child.unavailable) {
+                    invalidate_execution_failure(&child);
+                    throw std::runtime_error("model search: construction failure has no complete receipt");
+                }
+                append_execution_accounting(pending,child.accounting,&child);child={};
+                record.status="construction_failed";
+            } else {
+                try {append_execution_accounting(pending,pcb_placement_accounting(*candidate),&child);}
+                catch(const std::overflow_error&) {invalidate_execution_failure(&child);throw;}
+                const auto gates=check_pcb_placement_gates(trial,candidate->model,&pending.quantization_engagements);
+                const PcbCheckInput checked(candidate->model);
+                const auto fanout=check_fanout(checked,0);
+                const auto ratsnest=check_ratsnest(checked);
+                const auto& m=candidate->model;
+                const double area=m.board_w*m.board_h;
+                if(!gates.ok()||gates.composition.hard_red||!fanout.ok||!ratsnest.off_board.empty()||
+                   !std::isfinite(area)||m.board_w<=0||m.board_h<=0||
+                   !std::isfinite(ratsnest.cross_mm)||ratsnest.cross_mm<0) {
+                    record.status="screen_rejected";
+                    record.detail="placement/compose/fanout/bounds or finite-ranking screen failed";
+                } else {
+                    const auto rank=std::make_tuple(area,m.board_w,m.board_h,ratsnest.cross_mm);
+                    if(!best||rank<*best) {
+                        best=rank;out.incumbent=std::move(candidate);out.incumbent_attempt=attempt;
+                        record.status="incumbent";
+                    } else record.status="not_improved";
+                }
+            }
+            record.accounting=pending;
+            append_execution_accounting(out.accounting,pending,&child);pending={};
+            out.attempts.push_back(std::move(record));
+        }
+        return out;
+    } catch(const std::overflow_error&) {
+        invalidate_execution_failure(failure);
+        throw;
+    } catch(...) {
+        if(child.unavailable)invalidate_execution_failure(failure);
+        else {
+            append_execution_accounting(out.accounting,pending,failure);
+            capture_execution_failure(failure,std::move(out.accounting),&child);
+        }
         throw;
     }
 }
