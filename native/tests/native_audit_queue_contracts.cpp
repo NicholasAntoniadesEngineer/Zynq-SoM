@@ -38,7 +38,25 @@ void parity(const fs::path& root,const std::vector<CppAuditSource>& manifest,Cpp
 int compiler(int argc,char** argv){
     const fs::path file=argv[argc-1];const auto root=file.parent_path();
     const auto name=file.stem().string();const auto contents=read(file);
-    bool ast=false;for(int i=1;i<argc;++i)ast|=std::string(argv[i])=="-ast-dump=json";
+    bool ast=false,dependencies=false;fs::path dependency_file;
+    for(int i=1;i<argc;++i){const std::string arg=argv[i];
+        ast|=arg=="-ast-dump=json";dependencies|=arg=="-M";
+        if(arg=="-MF"&&i+1<argc)dependency_file=argv[++i];
+    }
+    std::string record="schgen_audit_deps: ";
+    for(const char c:file.string()){
+        if(c==' '||c=='\t'||c=='#')record+='\\';
+        if(c=='$')record+='$';
+        record+=c;
+    }
+    record+='\n';
+    // The queue/error fixtures target AST and macro compilation. Dependency
+    // discovery must support the current protocol without triggering them.
+    if(dependencies){std::cout<<record;return 0;}
+    if(name=="queuefail_first"||name=="queuefail_second"){
+        std::cerr<<"deliberate queue failure "<<name<<'\n';return 15;
+    }
+    if(name=="unneeded")put(root/"unneeded.started","");
     if(name=="timeout"){std::this_thread::sleep_for(std::chrono::seconds(2));return 0;}
     if(name=="badast"&&ast){std::cout<<"{broken";return 0;}
     if(name=="badpre"&&!ast){std::cerr<<"deliberate preprocessor failure\n";return 12;}
@@ -53,7 +71,8 @@ int compiler(int argc,char** argv){
         }
         fs::remove(active);
     }
-    if(!ast){std::cout<<"# 1 "<<std::quoted(file.string())<<"\n#define POLICY 7\n";return 0;}
+    if(!ast){if(!dependency_file.empty())put(dependency_file,record);
+        std::cout<<"# 1 "<<std::quoted(file.string())<<"\n#define POLICY 7\n";return 0;}
     std::cout<<"{\"kind\":\"TranslationUnitDecl\",\"inner\":[{\"kind\":\"FunctionDecl\",\"name\":"<<std::quoted(name)
         <<",\"type\":{\"qualType\":\"double (double)\"},\"loc\":{\"file\":"<<std::quoted(file.string())<<",\"offset\":0},\"inner\":[{\"kind\":\"CompoundStmt\",\"inner\":[";
     std::vector<std::size_t> offsets{0};
@@ -107,6 +126,15 @@ int main(int argc,char** argv){try{
     put(root/"timeout.cpp","");fake.timeout=std::chrono::milliseconds(100);
     (void)error([&]{scan_cpp_audit_sources(root,{{"one.cpp"},{"timeout.cpp"}},fake);});
     fake.timeout=std::chrono::seconds(10);
+    for(const auto* name:{"queuefail_first","queuefail_second","unneeded"})put(root/(std::string(name)+".cpp"),"");
+    const std::vector<CppAuditSource> fail_fast{{"queuefail_first.cpp"},{"queuefail_second.cpp"},{"unneeded.cpp"}};
+    const auto old_failure=error([&]{scan_cpp_audit_sources_reference(root,fail_fast,fake);});
+    // The frozen batch implementation also stops between failed batches. Use
+    // the current implementation's observable launch marker to require no
+    // suffix work, without depending on the relative timing of two failures.
+    fs::remove(root/"unneeded.started");
+    need(error([&]{scan_cpp_audit_sources(root,fail_fast,fake);})==old_failure,"fail-fast changed earliest manifest failure");
+    need(!fs::exists(root/"unneeded.started"),"compiler suffix launched after a decisive failure");
     for(const auto* name:{"slow","fast","third"})put(root/(std::string(name)+".cpp"),"queue");
     const std::vector<CppAuditSource> queued{{"slow.cpp"},{"fast.cpp"},{"third.cpp"}};
     need(error([&]{scan_cpp_audit_sources_reference(root,queued,fake);}).find("fixed batch barrier")!=std::string::npos,"liveness test did not reject old batch scheduler");

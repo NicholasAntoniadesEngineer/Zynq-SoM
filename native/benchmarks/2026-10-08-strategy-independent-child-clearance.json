@@ -1,0 +1,47 @@
+{
+  "base_commit": "02236178",
+  "change": "Compute minority-face fanout clearance and bound its spatial interaction envelope in every search mode. Physical geometry must not depend on whether compact search is selected.",
+  "supersedes": "The child-halo experiment deferred in 2026-10-08-default-fanout-rotation.json is now retained as a correctness fix. Automatic search remains an explicitly unresolved runtime defect; the correction is not reverted to preserve its old clearance error.",
+  "tests": {
+    "transformed_corner_matrix": "4056 checks; default/compact, both faces, arbitrary rotations, mirrored and through-hole footprints; unsafe admission rejected and safe controls retained",
+    "spatial_bound": "Both search modes include implicit shape-zero minority-child reach and negative inset in the broad-phase bound",
+    "immutable_real_fixture": "SW7002/C10005 1.32 mm gap is rejected against the existing 2 mm requirement in default and compact modes; zero-halo mutant admits it; translated safe control passes. Fixture bytes unchanged.",
+    "targeted_ctest_seconds": {"native_floorplan_base_rotation_contracts": 0.50, "native_pcb_child_halo_frozen_contracts": 0.46, "native_connector_incumbent_contracts": 0.49, "native_floorplan_contracts": 14.00},
+    "status": "PASS",
+    "invocation_error": "A subsequent manual frozen-test invocation mistakenly passed the data directory rather than the fixture file and failed the fixture hash check. The registered CTest invocation with compact_sw7002_geometry_8212.txt was rerun and passed; no fixture was changed."
+  },
+  "screens": {
+    "default_fixed_carrier": {"outline_mm": [168,163], "model_seconds": 0.924595584, "top": 393, "bottom": 176, "reseats": 13, "ceiling": 18, "hard_red": 0, "minimum_margin": 3.06, "margin_sum": 955.24, "pcb_sha256": "9310d975f4ef23d71e9c154f74a46a8ca46366d4f52568ba1c22a31992ffc8c5"},
+    "compact_fixed_carrier": {"outline_mm": [168,160], "order": 3, "model_seconds": 3.086341917, "top": 438, "bottom": 131, "reseats": 10, "pcb_sha256": "91e3a4bb8c1e216fb7f86d4c8ae526635b0d2e216414602de7391c5d3d748fa5", "pcb_and_all_scalar_and_fallback_receipts_match_previous_qualification": true},
+    "default_seeded_devkit": {"outline_mm": [98,98], "model_seconds": 0.110946250, "top": 106, "bottom": 57, "reseats": 6, "pcb_sha256": "cfa0305491d9c4a771adb130b04c4aec6cc2894542391a5c7c9dca3a68bca3cf", "pcb_and_fallback_counts_match_previous_qualification": true},
+    "all_three_placement_and_flow_contracts": "PASS"
+  },
+  "rejected_search_experiment": {
+    "strategy": "Default geometry, seeded 168x163, single constraint-first order 3",
+    "model_seconds": 4.789215458, "result_outline_mm": [169,160],
+    "outer_attempts": 2362, "packed_attempts": 16, "distinct_outline_punch_keys": 2276,
+    "reseats": 150, "ceiling": 18, "status": "REJECTED_RUNTIME_CONSTRAINT",
+    "pcb_sha256": "afed74cf5f2747bde4870c39b10c2b728789210e4bcb5c216b80c6e637e5c721",
+    "log": "native/build/carrier-child-clearance-order3.log",
+    "finding": "Ordering alone does not bound total search work. No default order, ceiling or event accounting was changed."
+  },
+  "full_qualification": {
+    "command": "native/bin/schgen board --project carrier --floorplan-spec native/benchmarks/carrier-168x163-face-clearance.floorplan.json --timing -o OUTPUT",
+    "configuration": "Semantic comparison against carrier/floorplan.json confirms only outline changes, excluding its descriptive _comment",
+    "output": "/private/tmp/carrier-face-clearance.fwEPJm",
+    "log": "native/build/carrier-face-clearance-qualification.log",
+    "exit_code": 0, "board_ok": true, "complete": true, "all_mandatory_gates": "PASS",
+    "sheets": 37, "rendered_views": 8, "non_unrouted_drc_errors": 0, "unrouted": 499,
+    "front_back_visually_inspected": true, "reseats": 13,
+    "process_wall_seconds": 239.53, "measured_scope_total_seconds": 238.978502,
+    "model_with_internal_checks_seconds": 0.988283,
+    "authoring_audit_seconds": 15.861501, "source_audit_seconds": 153.340812,
+    "sheet_parallel_checks_and_render_wall_seconds": 24.895747,
+    "pcb_drc_seconds": 1.486141, "render3d_seconds": 28.059478,
+    "verdict_sha256": "2dad7b07f0bd65f8d7718991eb1bb8f770f62022bdb0e34df69404ce2c8b13ab",
+    "front_png_sha256": "c4adb3ebd15cc41afbb4bd0dd33fe735ad008a36d6a28e4e33d87a1bebd005ae",
+    "back_png_sha256": "508d25fcfc503ab242dedd255d405feb7921d59e9233c81221f307ff25c933bb",
+    "remaining_nonmandatory_failures": ["return_path", "golden", "contract_coverage_lint"]
+  },
+  "limits": ["Fixed-outline construction excludes automatic sizing; not a matched speedup comparison", "Automatic carrier search still exceeds the retry ratchet", "Original 168x163 PCB remains an immutable non-regression reference; this is a separately qualified changed candidate at the same dimensions", "No routing or fabrication-readiness claim", "Bottom utilisation and authoritative hardware unknowns still need work", "Full goal remains incomplete"]
+}

@@ -1,10 +1,9 @@
-#include "ledger_accounting_fixture.hpp"
 #include "pack_plain_observer.hpp"
 #include "schgen/pcb_emit.hpp"
 #include "schgen/pcb_placement_gates.hpp"
 #include "pack_plain_adapter_contracts.hpp"
-#include "placement_precision_fixture.hpp"
 #include "pcb_placement_fixture.hpp"
+#include "pcb_placement_requirements.hpp"
 #include "schgen/native_audit_state.hpp"
 #include <cmath>
 #include <cstring>
@@ -39,11 +38,27 @@ int main(int argc,char** argv){try{
   begin();auto result=build_pcb_model(f.input);auto entries=end();
   const auto q=pcb_placement_accounting(result);
   receipt(q.quantization_engagements,entries);
-  auto plan=result.floorplan.plan;
-  plan.accounting.quantization_engagements=placement_precision_fixture::select(select(plan.accounting.quantization_engagements,false),false);
-  plan.accounting.quantization_engagements=ledger_accounting_fixture::before_initial_receipt_fix(plan.accounting.quantization_engagements);
-  legacy<<project<<'\n';node(pcb_model_json(result.model));node(floorplan_plan_json(plan));
-  for(const auto& [n,v]:ledger_accounting_fixture::before_initial_receipt_fix(placement_precision_fixture::select(select(q.quantization_engagements,false),false)))legacy<<std::quoted(n)<<' '<<v<<'\n';
+  const auto checked=[](bool ok,const std::string& why){if(!ok)throw std::runtime_error(why);};
+  const auto zones=build_pcb_zone_geometry(f.input);
+  placement_requirements_test::structure(f.input,zones,result,checked);
+  placement_requirements_test::physical(f.input,result.model,checked);
+  legacy.str("");legacy.clear();node(pcb_model_json(result.model));node(floorplan_plan_json(result.floorplan.plan));
+  const auto first=legacy.str();
+  begin();const auto repeated=build_pcb_model(f.input);const auto repeated_entries=end();
+  const auto repeated_counts=pcb_placement_accounting(repeated);
+  receipt(repeated_counts.quantization_engagements,repeated_entries);
+  require(entries==repeated_entries&&q.quantization_engagements==repeated_counts.quantization_engagements&&
+          q.fallback_events==repeated_counts.fallback_events,"current operation/fallback receipts are not reproducible");
+  legacy.str("");legacy.clear();node(pcb_model_json(repeated.model));node(floorplan_plan_json(repeated.floorplan.plan));
+  require(first==legacy.str(),"current model/plan is not reproducible");
+  for(const auto& [key,count]:entries){
+   (void)count;
+   for(bool erase:{false,true}){
+    auto bad=q.quantization_engagements;if(erase)bad.erase(key);else ++bad[key];
+    bool rejected=false;try{receipt(bad,entries);}catch(const std::runtime_error&){rejected=true;}
+    require(rejected,"corrupted plain precision receipt escaped independent observer");
+   }
+  }
   for(const auto& [n,v]:entries)std::cerr<<project<<" entry "<<n<<' '<<v<<'\n';
   begin();auto again=pcb_placement_accounting(result);
   require(end().empty()&&again.quantization_engagements==q.quantization_engagements,"replay created work");
@@ -68,7 +83,6 @@ int main(int argc,char** argv){try{
   require(end().empty()&&retained==verificationCounts,"report replay manufactured counts");
 
  }
- require(legacy.str()==placement_fixture::read(std::filesystem::path(argv[1])/"native/tests/data/pack_geometry_precision/legacy-board-output.txt"),"frozen geometry14 board bytes and old counts changed");
- std::cerr<<"plain18 actual board/verification/emission receipts and frozen full bytes PASS\n";
+ std::cerr<<"plain18 current board requirements/reproducibility, independent receipts and frozen emitted PCB bytes PASS\n";
  return 0;
 }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}

@@ -1,0 +1,20 @@
+{
+  "source_commit": "15854cc4",
+  "reference": "Qualified carrier 163x153, PCB d954ec91a789f69a1e94a26a9d3a91b279fbc208dff2503cbe8ee4c8eabc199f",
+  "input_recipe": "Same profiler options as qualified reference, changing only outline and explicitly listed options. Specs copied from carrier-163x153-combined-bottom.floorplan.json with outline replacement; other hardware policies unchanged.",
+  "screens": [
+    {"outline_mm": [162,153], "status": "construction_failed", "seconds": 3.622288042, "outer_attempts": 4, "receipt_captured": true, "log": "native/build/next-outline-162x153.log"},
+    {"outline_mm": [163,152], "status": "construction_failed", "seconds": 9.743523291, "outer_attempts": 4, "receipt_captured": true, "log": "native/build/next-outline-163x152.log"},
+    {"outline_mm": [162,153], "joint_states": 4096, "status": "construction_failed", "seconds": 4.230846958, "outer_attempts": 4, "receipt_captured": true, "log": "native/build/next-outline-162x153-joint4096.log"},
+    {"outline_mm": [162,153], "additional_face_sheets": ["power", "power_som"], "status": "construction_failed", "seconds": 3.4901405, "outer_attempts": 4, "receipt_captured": true, "log": "native/build/next-outline-162x153-power-groups.log"}
+  ],
+  "observations": [
+    "162x153 reaches both legalizer and interior-seating failures; subjects include bringup_rails and usb_jtag.",
+    "163x152 fails interior seating, including board_services, bringup_rails and fmc.",
+    "Some 162x153 joint searches exhaust 1024 states with no proposal; raising to 4096 still yields no proposal in those traces.",
+    "Other strict-facing branches terminate without reaching the cap. One recorded power_som branch requires x >=161.5595 from facing toward @som but x <=137.5298 from the wall. This is contradictory for that selected shape/branch, not proof the whole outline is infeasible.",
+    "Adding contract-group face candidates for power and power_som does not recover this outline."
+  ],
+  "decision": "Retain the qualified 163x153 incumbent and existing default search budget. Investigate upstream shape/orientation choices and facing projection interactions rather than repeating wider-budget campaigns.",
+  "limits": "No new full qualification because no screen passed. Single diagnostic timings with some concurrent runs; no performance comparison or minimum-board-size claim."
+}

@@ -1,0 +1,15 @@
+{
+  "scope": "Carrier BOM regression for reviewed C1/C5 corrections; no production, circuit or historical BOM bytes changed",
+  "predecessor": "eed58095",
+  "campaign": "Serial tests 130 through 188 passed, including real KiCad pipeline, single-sheet, design-rule, netlist and schematic checks. Test 189 then failed its old manufacturing BOM comparison.",
+  "finding": "carrier/manufacturing/bom_jlc.csv is a historical committed artifact containing board_aux C1 and C5 as 100n/0603/C14663. Current circuit uses C1 10u/0805/C15850 and C5 100p/0603/C14858.",
+  "verification": [
+    "Strict reviewed-input projection reproduces the entire historical BOM byte-for-byte; no unrelated row differences",
+    "Current BOM contains each reviewed capacitor reference exactly once with exact value, footprint and LCSC identity",
+    "Current filter creates exactly one extra BOM grouping",
+    "Reverting either capacitor value is rejected before historical projection",
+    "Existing quoting, ordering, exclusions, missing-evidence, empty-header and 37-sheet census tests retained"
+  ],
+  "result": "native_bom_contracts PASS 0.48 s; git diff --check PASS",
+  "limitations": "Committed manufacturing BOM remains historical, not an accepted current manufacturing package. Refreshing and qualifying the complete output package remains part of the goal. This test does not establish hardware readiness or complete suite acceptance."
+}

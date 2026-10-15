@@ -1,4 +1,5 @@
 #include "pcb_placement_fixture.hpp"
+#include "pcb_placement_requirements.hpp"
 #include "ledger_accounting_fixture.hpp"
 #include "floorplan_precision_fixture.hpp"
 #include "output_precision_fixture.hpp"
@@ -174,6 +175,23 @@ void full_board(std::ostream& out,const std::filesystem::path& root,const std::s
     begin();const auto result=build_pcb_model(fixture.input);
     const auto receipt=pcb_placement_accounting(result);
     end(receipt.quantization_engagements,"full board "+name,&out);
+#ifndef OUTPUT_PRECISION_LEGACY
+    for(std::size_t i=0;i<names.size();++i)if(entries[i]){
+        for(bool erase:{false,true}){
+            auto bad=receipt.quantization_engagements;if(erase)bad.erase(names[i]);else ++bad[names[i]];
+            bool rejected=false;try{end(bad,"corrupted full board");}catch(const std::runtime_error&){rejected=true;}
+            require(rejected,"corrupted output precision receipt escaped independent observer");
+        }
+    }
+    const auto zones=build_pcb_zone_geometry(fixture.input);
+    placement_requirements_test::structure(fixture.input,zones,result,require);
+    placement_requirements_test::physical(fixture.input,result.model,require);
+    // Repeated current output retains all receipts and decisions; never strip
+    // a new operation merely to resemble the historical optimiser.
+    for(const auto& [key,count]:receipt.quantization_engagements)out<<std::quoted(key)<<' '<<count<<'\n';
+    for(const auto& event:receipt.fallback_events)out<<std::quoted(event)<<'\n';
+    floorplan_precision_fixture::node(out,floorplan_plan_json(result.floorplan.plan));
+#endif
     floorplan_precision_fixture::node(out,pcb_model_json(result.model));
     bytes(out,"full svg",result.floorplan.documents.svg);
     bytes(out,"full markdown",result.floorplan.documents.markdown);
@@ -277,8 +295,25 @@ int main(int argc,char** argv){try{
     std::ostringstream out;out<<std::hexfloat;
     board(out,argv[1],"carrier");board(out,argv[1],"devkit_mini");
     const bool full=(argc>=3&&std::string(argv[argc-1])=="--full");
+#ifndef OUTPUT_PRECISION_LEGACY
+    if(argc>=3&&std::string(argv[2])!="--full"){
+        const auto frozen=placement_fixture::read(argv[2]);
+        const auto boundary=frozen.find("full board carrier legacy_py_round_entries ");
+        require(out.str()==frozen.substr(0,boundary),"immutable fixed-input rendering bytes/counts differ");
+    }
+    if(full){
+        std::ostringstream first,second;first<<std::hexfloat;second<<std::hexfloat;
+        for(auto* stream:{&first,&second}){
+            full_board(*stream,argv[1],"carrier");full_board(*stream,argv[1],"devkit_mini");
+        }
+        require(first.str()==second.str(),"current full-board output and actual receipts are not reproducible");
+        out<<first.str();
+    }
+    if(argc<3||std::string(argv[2])=="--full")std::cout<<out.str();
+#else
     if(full){full_board(out,argv[1],"carrier");full_board(out,argv[1],"devkit_mini");}
     if(argc>=3&&std::string(argv[2])!="--full")require(out.str()==placement_fixture::read(argv[2]),"original baseline bytes/counts differ");
     else std::cout<<out.str();
+#endif
     return 0;
 }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}

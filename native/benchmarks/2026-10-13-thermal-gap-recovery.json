@@ -1,0 +1,37 @@
+{
+  "parent_commit": "c9f08bd8",
+  "finding": "Thermal recovery required the nominal body separation immediately, unlike the earlier breathing stage's existing-gap nonregression rule. R6016/R6021 already had a gap below that nominal movement threshold.",
+  "change": "Final-frame thermal movement requires each gap to remain at least min(nominal clearance, incumbent gap). It cannot worsen an undersized gap or create one from a previously sufficient gap. Absolute independent board acceptance checks are unchanged. Corridor-allocation movement retains its previous policy.",
+  "tests": {
+    "target": "native_pcb_compact_owned_evict_contracts",
+    "result": "PASS, 8.32 seconds",
+    "coverage_added": ["allow improvement of an existing tight gap", "reject worsening of an existing tight gap", "allow full nominal-gap recovery", "reject a newly undersized gap", "retain corridor-allocation policy"],
+    "log": "native/build/thermal-gap-tests.log"
+  },
+  "candidate": {
+    "dimensions_mm": [164, 153],
+    "pcb_sha256": "694ce5f338fb74d01a01956260c199bf13b3d09befa8ddd3688ce4ce4a66f237",
+    "thermal_trials": 4,
+    "thermal_rejected": 3,
+    "thermal_moved": 1,
+    "move": "R6016 accepted at board-space x=101.889, y=45.478; nearest-grid proposal did not improve capacity, adjacent outward tick recovered the site",
+    "U20002_preferred": [8, 8],
+    "U22004_preferred": [6, 8],
+    "emission_nonsearch_fallbacks_before": 3,
+    "emission_nonsearch_fallbacks_after": 2,
+    "model_seconds": 3.422112334,
+    "emission_seconds": 0.02789075,
+    "cheap_checks": "fanout/ratsnest/placement-contract/placement-flow PASS, hard_red=0",
+    "log": "native/build/thermal-gap-164x153.log",
+    "acceptance": "NOT accepted; two thermal fallback events remain"
+  },
+  "carrier_reference": {
+    "dimensions_mm": [164, 154],
+    "pcb_sha256": "aa80c90978fffcb7df4c895f9735dc8957d7d67b9e0b45e82b39e2bfc9430319",
+    "unchanged": true,
+    "log": "native/build/thermal-gap-reference.log"
+  },
+  "remaining_blocker": "U22004 preferred sites are blocked by the wired power_mon sheet's R21001/RS21001 pads. Independent movement is disallowed by sheet/contract protection. Its proximity/same-side contracts suggest considering a complete rigid-group translation with external constraints checked, not detaching shunts or waiving thermal requirements.",
+  "devkit_reference": "98x98 unchanged, SHA256 1b12fecbcbbaa5e6084c2459da93cb144a660ff19805e6e4e3f75f9c22689fdb; cheap checks PASS, no non-search fallbacks; native/build/thermal-gap-devkit.log",
+  "limitations": "Improved screening candidate only; no new full qualification or smaller accepted board. Existing tight-gap preservation is not proof of hardware adequacy. Full independent board acceptance remains necessary. No speedup claim."
+}

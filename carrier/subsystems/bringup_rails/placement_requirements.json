@@ -1,0 +1,12 @@
+{
+  "schema": "schgen.placement-requirements/1",
+  "sheet": "bringup_rails",
+  "status": "typed runtime ownership/access checks; qualitative proximity and access envelopes unverified",
+  "ownership": [
+    {"owner": "U1", "pin": "24", "pin_name": "VCC", "cap": "C1", "cap_pin": "1", "return_pin": "2", "rail": "+3V3_SC", "return_net": "GND", "value": "100n", "role": "supply_bypass"}
+  ],
+  "access": {"top_face_switches": ["SW1", "SW2", "SW3", "SW4", "SW5", "SW6"], "actuation_envelope": "unverified; existing top-face gate is not an access-envelope proof"},
+  "proximity": {"numeric_limit_mm": null, "status": "blocked: TI specifies capacitors as close as possible, not a numerical maximum"},
+  "side": "No new same-side mandate: TI describes multilayer layouts but does not give a categorical side requirement.",
+  "sources": ["https://www.ti.com/lit/ds/symlink/tca9535.pdf"]
+}

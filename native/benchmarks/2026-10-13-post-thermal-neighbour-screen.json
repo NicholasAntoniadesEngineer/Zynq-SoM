@@ -1,0 +1,100 @@
+{
+  "source_commit": "81ded0ef",
+  "base_spec": "native/benchmarks/carrier-164x153-thermal-recovery.floorplan.json",
+  "spec_generation": "Copy base spec unchanged except outline.w and outline.h; scratch copies at /private/tmp/carrier-thermal-neighbours.QuTIZx. No physical constraint edits.",
+  "base_command": "native/build/fast/schgen_compact_stage_profile --repo . --project carrier --compact-search on --edge-feasibility on --owned-quality-first on --owned-face-cohesion on --contract-group-face-sheet usb_jtag --require-bottom-sheet power_mon --require-bottom-sheet bringup_modules --require-bottom-sheet bringup_en_modules --joint-separation-states 1024 --reseat-poses 8 --reseat-frontier 4096 --reseat-continuations 3 --reseat-victim-shapes on --owned-shape board_aux=owned-face-a1.000000 --owned-shape bringup_rails=bottom-a2.2/r270/owned-pins-forward --schematic /private/tmp/carrier-166x156-two-pilots.iK3HkI/Zynq_Carrier.kicad_sch --runs 1 --interior-order 3 --failed-first-retry on --shape-area-first on --floorplan-spec CANDIDATE_SPEC",
+  "trials": [
+    {
+      "dimensions_mm": [
+        164,
+        152
+      ],
+      "changes": {},
+      "result": "bounded construction failure, not proof of infeasibility",
+      "elapsed_seconds": 1.519817833,
+      "completed_outer_attempts": 4,
+      "receipt_captured": true,
+      "receipt_unavailable": false,
+      "log": "native/build/thermal-neighbour-164x152.log"
+    },
+    {
+      "dimensions_mm": [
+        163,
+        153
+      ],
+      "changes": {},
+      "result": "bounded construction failure, not proof of infeasibility",
+      "elapsed_seconds": 2.000748916,
+      "completed_outer_attempts": 4,
+      "receipt_captured": true,
+      "receipt_unavailable": false,
+      "log": "native/build/thermal-neighbour-163x153.log"
+    },
+    {
+      "dimensions_mm": [
+        162,
+        154
+      ],
+      "changes": {},
+      "result": "bounded construction failure, not proof of infeasibility",
+      "elapsed_seconds": 2.730502208,
+      "completed_outer_attempts": 4,
+      "receipt_captured": true,
+      "receipt_unavailable": false,
+      "log": "native/build/thermal-neighbour-162x154.log"
+    },
+    {
+      "dimensions_mm": [
+        163,
+        153
+      ],
+      "changes": {
+        "joint_separation_states": 4096
+      },
+      "result": "bounded construction failure, not proof of infeasibility",
+      "elapsed_seconds": 3.271893959,
+      "completed_outer_attempts": 4,
+      "receipt_captured": true,
+      "receipt_unavailable": false,
+      "log": "native/build/thermal-neighbour-163x153-joint4096.log"
+    },
+    {
+      "dimensions_mm": [
+        164,
+        152
+      ],
+      "changes": {
+        "interior_order": 2
+      },
+      "result": "bounded construction failure, not proof of infeasibility",
+      "elapsed_seconds": 0.797267792,
+      "completed_outer_attempts": 4,
+      "receipt_captured": true,
+      "receipt_unavailable": false,
+      "log": "native/build/thermal-neighbour-164x152-order2.log"
+    },
+    {
+      "dimensions_mm": [
+        164,
+        152
+      ],
+      "changes": {
+        "contract_group_rotations": true
+      },
+      "result": "bounded construction failure, not proof of infeasibility",
+      "elapsed_seconds": 3.232090083,
+      "completed_outer_attempts": 4,
+      "receipt_captured": true,
+      "receipt_unavailable": false,
+      "log": "native/build/thermal-neighbour-164x152-rotations.log"
+    }
+  ],
+  "observations": [
+    "164x152 default order: repeated USB-JTAG/FMC interior seating failures before thermal repair.",
+    "163x153 larger joint budget: some axis searches exhaust at 4096 states without proposals, while other searches terminate uncapped; there is no infeasibility proof.",
+    "164x152 scarcity order: failures shift to hdmi_rx_term/power, not a successful alternative.",
+    "Rotation-enabled retry also fails; existing supported shape/orientation expansion alone does not yield a smaller finalist."
+  ],
+  "decision": "Retain independently qualified 164x153 incumbent. Investigate coupled seating/shape allocation and bottom-side utilisation, not a blanket execution-budget increase. No expensive full qualification launched for these known construction failures.",
+  "limitations": "Readouts are diagnostic elapsed construction times, with paired trials run concurrently; no benchmark speedup claim. These six bounded samples do not exhaust possible layouts or establish a hardware size limit. Full goal remains incomplete."
+}

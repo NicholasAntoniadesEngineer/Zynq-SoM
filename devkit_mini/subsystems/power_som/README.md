@@ -6,9 +6,8 @@ The dedicated step-down converter that feeds the SoM's `VIN` pin. The SoM is a
 `+VIN_SYS -> +5V_SOM` (5 V class) and `som_conn_gen` binds `J1.VIN -> +5V_SOM`.
 
 This is a **carrier-LOCAL** subsystem: it wires the carrier's real net names
-directly (no abstract interface / `META` bind contract), folded into the
-`<name>/<name>.py` package layout with the same 4-artifact parity as the generic
-`subsystems/<name>/` library.
+directly (no abstract interface / `META` bind contract). Its maintained authoring
+implementation is `native/src/project_authoring_devkit_mini_power_som.cpp`.
 
 ## Interface
 
@@ -21,17 +20,18 @@ carrier nets directly:
 | `+5V_SOM`  | output | buck OUTPUT, **always-on**, the SoM VIN supply (`som_conn_gen` binds `J1.VIN` here) + BIAS tie |
 | `GND`      | return | return + the LM61460 heat path (PGND1/PGND2/AGND on the GND pour) |
 
-Every other net (`EN_5V_SOM`, `SW_5V_SOM`, `BOOT_5V_SOM`, `FB_5V_SOM`,
+Every other net (`SW_5V_SOM`, `BOOT_5V_SOM`, `FB_5V_SOM`,
 `PG_5V_SOM`, `RT_5V_SOM`, `BIAS_5V_SOM`, `CFF_5V_SOM`, `U4_VCC`) is internal to
-this stage. Cross-sheet rails merge by name with `power.py`.
+this stage. Cross-sheet rails merge by name with the `power` subsystem.
 
 ## Design
 
-- **Buck (`U4` = LM61460AANRJRR).** TI 3-42 V / 6 A synchronous buck in VQFN-HR
-  (RJR "HotRod") — the same EP-equivalent part as `power.py` U1/U2. At the
+- **Buck (`U4` = LM61460AANRJRR).** TI 3-36 V / 6 A synchronous buck in VQFN-HR
+  (RJR "HotRod") — the same part as `power` U1/U2. At the
   +5V_SOM ~2 A load the 6 A rating gives 67% headroom, and its PGND1/PGND2 + SW
-  pads soldered to the GND pour form the exposed-pad-equivalent heat path
-  (pour-aware ~30 C/W -> Tj ~99 C, well under the 140 C guard). U4 draws its
+  pads contribute to heat removal, but **SW must remain on its switched net,
+  never on GND**. Prior estimated junction temperatures are not layout-qualified
+  thermal evidence. U4 draws its
   faithful `parts/LM61460AANRJRR/` dossier symbol (pins by number: 1 BIAS,
   2 VCC, 3 AGND, 4 FB, 5 PGOOD, 6 RT, 7 EN/SYNC, 8 VIN1, 9 PGND1, 10 SW,
   11 PGND2, 12 VIN2, 13 RBOOT, 14 CBOOT).
@@ -44,16 +44,15 @@ this stage. Cross-sheet rails merge by name with `power.py`.
   contract the buck runs near 100% duty and passes ~4.7-4.8 V (inside the
   4.2-5 V window); after the 20 V contract it regulates ~4.65 V.
 
-- **PWR-1 — EN clamp.** The always-on EN strap must enable the buck at the
-  4.75 V default-USB contract AND never exceed the EN recommended-max at the
-  21 V (20 V +5%) contract. A plain divider can't do both, so: `R12` = 10k
-  series `+VIN_SYS -> EN`, `D5` = MMSZ5231B 5.1 V zener `EN -> GND`, `C20` =
-  100 nF EN bypass. At low VIN the zener is off and EN ~= VIN (sure enable); at
-  high VIN the zener clamps EN to ~5.0 V (R12 absorbs VIN - Vz). EN stays inside
-  [~1.3, 5.5] V across 4.75-21 V. The LM61460 EN/SYNC pin has no internal clamp
-  and abs-max 42 V, so this is more than sufficient. The schgen spice gate
-  re-derives EN from the netlist (finding the EN/SYNC pin by name) and fails if
-  EN ever leaves [1.5, 5.5] V.
+- **PWR-1 — direct VIN enable.** U4.7 now shares `+VIN_SYS` with VIN1/VIN2
+  (pins 8/12), the self-start arrangement described in
+  [TI SNVSBD5D section 8.3.1](https://www.ti.com/lit/ds/symlink/lm61460.pdf).
+  The inherited TPS54302-era R12/D5/C20 network is removed, including its
+  external RC delay/filter. No external enable-delay requirement was identified;
+  input decoupling and internal UVLO/soft-start are retained. The native check
+  proves unique net ownership only, not input-envelope, startup-time or transient
+  performance. Those require separate qualification; this is not fabrication
+  readiness. No device voltage limit was relaxed.
 
 - **FB divider.** Vref = 1.0 V, so `Vout = 1.0 * (1 + Rtop/Rbot)`. `R14/R15` =
   47.5k/13k -> **4.654 V nom** (WC-corner [4.582, 4.728] V, inside the SoM
@@ -82,9 +81,6 @@ this stage. Cross-sheet rails merge by name with `power.py`.
 |-----|-------|----------|------|
 | U4  | LM61460AANRJRR | LM61460AANRJRR | C2864505 |
 | L3  | 10uH | Device:L (SWPA8040S100MT) | C37429 |
-| R12 | 10k | Device:R | C25804 |
-| D5  | MMSZ5231B | Device:D_Zener | C85181 |
-| C20 | 100n | Device:C | C14663 |
 | C14 | 100n | Device:C | C14663 |
 | C25 | 100n | Device:C | C14663 |
 | C15 | 10u | Device:C | C13585 |
@@ -105,9 +101,13 @@ this stage. Cross-sheet rails merge by name with `power.py`.
 
 ## Build & test
 
-`test_power_som.py` checks model completeness, the decap/EP slice, ratings, the
-FB-divider invariant, the LM61460 heat path, and the SPICE-passive match.
+The native commands distinguish circuit completeness from electrical
+qualification. The SPICE report labels the direct enable check as netlist
+topology, not an analog voltage calculation. Structural or topology PASS alone
+does not qualify operating margins or transients.
 
 ```bash
-PYTHONPATH=. python3 -m pytest devkit_mini/subsystems/power_som/test_power_som.py -q
+native/bin/schgen circuit-check --project devkit_mini power_som
+native/bin/schgen spice --project devkit_mini power_som --no-ngspice
+ctest --test-dir native/build/fast --output-on-failure -R '^native_(spice|board_pipeline)_contracts$'
 ```

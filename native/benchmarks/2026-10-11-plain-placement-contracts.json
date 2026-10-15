@@ -1,0 +1,20 @@
+{
+  "scope": "Plain18 current-board regression requirements; no production or frozen fixture changes",
+  "predecessor": "d126f388",
+  "initial_failure": "native_pack_plain_board_contracts completed both-board receipt and frozen-model emission checks, then rejected obsolete historical optimizer model/plan/count bytes",
+  "replacement": [
+    "Source-derived identity and physical placement requirements for both current generated boards",
+    "Complete current model/plan reproducibility on repeated identical inputs",
+    "All current aggregate operation counts and fallback events repeat exactly",
+    "Plain18 receipts checked against actual independently instrumented calls on both runs",
+    "Each observed operation tested with an erased and incremented receipt; both must reject"
+  ],
+  "retained": [
+    "Complete byte-exact emitted PCB comparison from immutable frozen input models for BOTH boards",
+    "Existing primitive adapter checks",
+    "Independent emission and placement-verifier operation accounting",
+    "Cached reporting and receipt replay must not manufacture work"
+  ],
+  "result": "native_pack_plain_board_contracts PASS 16.42 s; git diff --check PASS",
+  "limitations": "Test time is not a generation benchmark. Not full-suite acceptance, real KiCad qualification or hardware readiness evidence."
+}

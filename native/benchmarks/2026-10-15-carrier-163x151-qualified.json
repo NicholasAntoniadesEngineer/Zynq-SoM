@@ -1,0 +1,33 @@
+{
+  "source_commit": "1e53a2e5",
+  "result": "BOARD PASS: all mandatory checks, 37 sheets",
+  "output": "/private/tmp/carrier-163x151-qual.6vQhqd",
+  "log": "native/build/carrier-163x151-full-qualification.log",
+  "floorplan_spec": "native/benchmarks/carrier-163x151-authored-proximity.floorplan.json",
+  "recipe": "Same mixed-face power recipe as 2026-10-13-carrier-163x152-qualified.json with this 163x151 specification. Audit-projections 2; fresh output; rebuilt CLI; production source frozen; /usr/bin/time -p. No concurrent heavy work during full qualification.",
+  "schgen_sha256": "19fb4a020966b7bc988ffee3aa75f52452c72154d26a08a28aacb9ee002687ed",
+  "pcb_sha256": "d8dea4b5049968b2fdcb385a17cb19c9e8d5257bd2afa297b1467600f2690e5e",
+  "dimensions_mm": [163,151],
+  "area_mm2": 24613,
+  "reference_dimensions_mm": [168,163],
+  "reference_area_mm2": 27384,
+  "area_reduction_percent": 10.119047619047619,
+  "previous_qualified_dimensions_mm": [163,152],
+  "area_reduction_from_previous_mm2": 163,
+  "components": {"top":398,"bottom":168,"total":566},
+  "hard_margins": {"mm":{"measured":16,"unresolved":0,"minimum":1.59,"previous_minimum":0.59},"degrees":{"measured":2,"unresolved":0,"minimum":47.48,"previous_minimum":47.48}},
+  "drc": {"non_unrouted_errors":0,"unrouted":499},
+  "thermal": {"specified_devices":20,"over_limit":0,"unspecified":0,"waived":0,"hottest_device":"power:U1","hottest_tj_c":134.8},
+  "nonsearch_fallback_events": 0,
+  "advisory_failures": ["return_path","golden","contract_coverage_lint"],
+  "timing_seconds": {"process_wall":220.59,"pcb_input_loading_and_netlist_validation":1.536366,"pcb_model_with_internal_checks":15.514141,"pcb_text_emission":0.028051,"render3d":29.024882,"source_audit":111.260346,"measured_scope_total_not_process_wall":219.844889},
+  "visual_review": "All eight 3D views generated; top and bottom inspected. Interface labels retained. Four more components on top than previous reference; underside remains sparsely occupied. No schematic topology changes in this batch.",
+  "tradeoff": "Smaller accepted area and improved minimum hard distance margin, but model construction took longer than the previous single full run. Bottom component count decreased; maximising count alone is not the area objective. No speedup claim.",
+  "rejected_order_experiments": {
+    "outline_mm": [162,153],
+    "basis": "Start from consistent HDMI north-edge regeneration; move HDMI after microSD, after PD input, or to the rightmost end, retaining other connector order and hardware constraints.",
+    "logs": ["native/build/edge-order-hdmi-after-microsd.log","native/build/edge-order-hdmi-after-pd.log","native/build/edge-order-hdmi-right.log"],
+    "result": "All three exhausted bounded interior packing with four completed outer attempts and captured available failure receipts. Not evidence of geometric infeasibility; no expensive qualification run on rejected candidates."
+  },
+  "limitations": "Three advisory failures remain; routing excluded, not fabrication ready. Prior verified references retained. Both-board matched historical workload/compile comparisons and wider system optimisation remain outstanding."
+}

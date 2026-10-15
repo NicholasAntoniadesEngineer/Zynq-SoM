@@ -1,0 +1,31 @@
+{
+  "source_commit": "c69f995a",
+  "output": "/private/tmp/carrier-thermal-pull-qualified.4iFdgR",
+  "log": "native/build/carrier-thermal-pull-full.log",
+  "result": "FAIL, 37 sheets; candidate not accepted",
+  "dimensions_mm": [165,156],
+  "top": 403,
+  "bottom": 163,
+  "pcb_sha256": "590f6963839290500abdf86ee507a3b0c2a5abb4beb6fde44bccec84d6083cc6",
+  "mandatory_failures": ["refdes_silk", "pcb_geometry (aggregate)"],
+  "diagnosis": "Exactly one F.SilkS reference pair overlaps: C17003 and R32005. Zero bottom reference overlaps. Reproduced through independent check_refdes_overlap on the profiler's emitted document, native/build/thermal-pull-silk-screen.log. Existing full pipeline report omitted the pair names; reporting and cheap screening now include them.",
+  "passed_evidence": {
+    "source_audit": "69 C++ files, 75 constants, 156 registered transforms PASS",
+    "drc": "0 non-routing errors, 499 unrouted",
+    "thermal_lattice_events": 0,
+    "fallback_gate": "PASS",
+    "thermal": "PASS under the existing simplified model; not fabrication or thermal sign-off",
+    "cross_subsystem_airwire_mm": 14428.9
+  },
+  "advisory_failures": ["return_path", "golden", "contract_coverage_lint"],
+  "timing_seconds": {
+    "input_loading": 1.522239,
+    "model": 6.450227,
+    "pcb_text": 0.041649,
+    "render3d": 29.882931,
+    "source_audit": 113.637460,
+    "measured_scope_total_not_wall": 213.400314
+  },
+  "visual_review": "Inspected renders/3d_top.png and renders/3d_bottom.png. Bottom power-monitor group is present; bottom remains substantially underused. Images do not establish hardware safety or label clearance.",
+  "next": "Correct reference-label placement, preserving visible references and unchanged overlap criteria, then repeat qualification. No hardware gate waiver, no acceptance claim, no matched Python timing comparison yet."
+}

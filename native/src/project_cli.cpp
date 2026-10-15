@@ -8,6 +8,7 @@
 #include "schgen/subsystem_build.hpp"
 #include "schgen/example_devkit.hpp"
 #include "schgen/experiment_tools.hpp"
+#include "schgen/experiment_observers.hpp"
 #include "schgen/net_contract.hpp"
 #include "schgen/pcb_drc.hpp"
 #include "schgen/subsystem_scaffold.hpp"
@@ -39,6 +40,7 @@
 #include "schgen/process.hpp"
 
 #include <algorithm>
+#include <charconv>
 #include <filesystem>
 #include <fstream>
 #include <iterator>
@@ -60,6 +62,24 @@ struct Options {
     std::vector<std::string> subsystems;
     bool allow_missing = false, qualified_refs = false, no_ngspice = false, keep = false;
     bool no_render = false, timing = false, conservative_only = false;
+    std::size_t audit_projection_slots=1;
+    bool compact_search = false;
+    bool multiscale_outline = false;
+    bool edge_feasibility = false;
+    bool failed_first_retry = false;
+    bool owned_quality_first = false;
+    bool shape_area_first = false;
+    std::size_t shape_choice_replays=0;
+    bool owned_extent_alternatives = false;
+    bool owned_face_cohesion = false;
+    std::set<std::string> contract_group_face_sheets;
+    std::set<std::string> require_bottom_sheets;
+    std::map<std::string,std::string> owned_shapes;
+    std::optional<std::pair<double,double>> initial_outline;
+    std::optional<fs::path> floorplan_spec;
+    std::optional<int> interior_order;
+    std::optional<std::size_t> joint_states;
+    std::optional<FloorplanPoseRetryLimits> reseat_pose_limits;
     bool help = false;
     std::set<std::string> help_options;
     long long quantity = 1, minimum_stock = 50;
@@ -78,6 +98,103 @@ Options parse(int argc, char** argv) {
         const std::string arg = argv[i];
         if (project_command(arg) && out.command.empty()) { out.command = arg; continue; }
         if(arg=="--help"||arg=="-h"){out.help=true;continue;}
+        if(arg=="--audit-projections"){
+            if(!seen.insert(arg).second)throw ProjectError("duplicate option "+arg);
+            if(++i==argc||(std::string(argv[i])!="1"&&std::string(argv[i])!="2"))
+                throw ProjectError("audit-projections requires 1 or 2");
+            out.audit_projection_slots=std::string(argv[i])=="2"?2:1;continue;
+        }
+        if(arg=="--owned-shape"){
+            if(++i==argc)throw ProjectError("owned-shape requires SHEET=TAG");
+            const std::string value=argv[i];const auto split=value.find('=');
+            if(split==std::string::npos||split==0||split+1==value.size()||value.find('=',split+1)!=std::string::npos||
+               !out.owned_shapes.emplace(value.substr(0,split),value.substr(split+1)).second)
+                throw ProjectError("owned-shape requires unique SHEET=TAG");
+            seen.insert(arg);continue;
+        }
+        if(arg=="--owned-face-cohesion"){
+            if(!seen.insert(arg).second)throw ProjectError("duplicate option "+arg);
+            out.owned_face_cohesion=true;continue;
+        }
+        if(arg=="--require-bottom-sheet"){
+            if(++i==argc||std::string(argv[i]).empty()||std::string(argv[i]).front()=='-')
+                throw ProjectError("require-bottom-sheet requires SHEET");
+            if(!out.require_bottom_sheets.insert(argv[i]).second)
+                throw ProjectError("duplicate require-bottom-sheet "+std::string(argv[i]));
+            seen.insert(arg);continue;
+        }
+        if(arg=="--contract-group-face-sheet"){
+            if(++i==argc||std::string(argv[i]).empty()||std::string(argv[i]).front()=='-')
+                throw ProjectError("contract-group-face-sheet requires SHEET");
+            if(!out.contract_group_face_sheets.insert(argv[i]).second)
+                throw ProjectError("duplicate contract-group-face-sheet "+std::string(argv[i]));
+            seen.insert(arg);continue;
+        }
+        if(arg=="--failed-first-retry"){
+            if(!seen.insert(arg).second)throw ProjectError("duplicate option "+arg);
+            out.failed_first_retry=true;continue;
+        }
+        if(arg=="--owned-quality-first"){
+            if(!seen.insert(arg).second)throw ProjectError("duplicate option "+arg);
+            out.owned_quality_first=true;continue;
+        }
+        if(arg=="--shape-area-first"){
+            if(!seen.insert(arg).second)throw ProjectError("duplicate option "+arg);
+            out.shape_area_first=true;continue;
+        }
+        if(arg=="--owned-extent-alternatives"){
+            if(!seen.insert(arg).second)throw ProjectError("duplicate option "+arg);
+            out.owned_extent_alternatives=true;continue;
+        }
+        if(arg=="--edge-feasibility"){
+            if(!seen.insert(arg).second)throw ProjectError("duplicate option "+arg);
+            out.edge_feasibility=true;continue;
+        }
+        if(arg=="--shape-choice-replays"){
+            if(!seen.insert(arg).second)throw ProjectError("duplicate option "+arg);
+            if(++i==argc)throw ProjectError("shape-choice-replays requires a positive integer");
+            const std::string value=argv[i];std::size_t n=0;
+            const auto parsed=std::from_chars(value.data(),value.data()+value.size(),n);
+            if(parsed.ec!=std::errc{}||parsed.ptr!=value.data()+value.size()||!n)
+                throw ProjectError("shape-choice-replays requires a positive integer");
+            out.shape_choice_replays=n;continue;
+        }
+        if(arg=="--joint-separation-states"){
+            if(!seen.insert(arg).second)throw ProjectError("duplicate option "+arg);
+            if(++i==argc)throw ProjectError("joint-separation-states requires a positive integer");
+            const std::string value=argv[i];std::size_t n=0;
+            const auto parsed=std::from_chars(value.data(),value.data()+value.size(),n);
+            if(parsed.ec!=std::errc{}||parsed.ptr!=value.data()+value.size()||!n)
+                throw ProjectError("joint-separation-states requires a positive integer");
+            FloorplanExperiment experiment;experiment.joint_separation_states=n;
+            validate_floorplan_experiment(experiment);out.joint_states=n;continue;
+        }
+        if(arg=="--reseat-victim-shapes"){
+            if(!seen.insert(arg).second)throw ProjectError("duplicate option "+arg);
+            if(!out.reseat_pose_limits)out.reseat_pose_limits.emplace();
+            out.reseat_pose_limits->victim_shapes=true;continue;
+        }
+        if(arg=="--reseat-poses"||arg=="--reseat-frontier"||arg=="--reseat-continuations"){
+            if(!seen.insert(arg).second)throw ProjectError("duplicate option "+arg);
+            if(++i==argc)throw ProjectError("reseat limits require positive integers");
+            const std::string value=argv[i];std::size_t n=0;
+            const auto parsed=std::from_chars(value.data(),value.data()+value.size(),n);
+            if(parsed.ec!=std::errc{}||parsed.ptr!=value.data()+value.size()||!n)
+                throw ProjectError("reseat limits require positive integers");
+            if(!out.reseat_pose_limits)out.reseat_pose_limits.emplace();
+            if(arg=="--reseat-poses")out.reseat_pose_limits->poses=n;
+            else if(arg=="--reseat-frontier")out.reseat_pose_limits->frontier_nodes=n;
+            else out.reseat_pose_limits->continuations=n;
+            continue;
+        }
+        if(arg=="--multiscale-outline"){
+            if(!seen.insert(arg).second)throw ProjectError("duplicate option "+arg);
+            out.multiscale_outline=true;continue;
+        }
+        if(arg=="--compact-placement"){
+            if(!seen.insert(arg).second)throw ProjectError("duplicate option "+arg);
+            out.compact_search=true;continue;
+        }
         if(arg=="--cons-only"){
             if(!seen.insert(arg).second)throw ProjectError("duplicate option "+arg);
             out.conservative_only=true;continue;
@@ -99,7 +216,8 @@ Options parse(int argc, char** argv) {
         if (arg == "--repo" || arg == "--project" || arg == "--som" ||
             arg == "--contract" || arg == "--output" || arg == "-o" ||
             arg == "--xdc" || arg == "--refs" || arg == "--kicad-cli" || arg == "--pcb" ||
-            arg == "--subsystem" || arg == "--qty" || arg == "--min-stock") {
+            arg == "--subsystem" || arg == "--qty" || arg == "--min-stock" || arg == "--initial-outline-mm" ||
+            arg == "--floorplan-spec" || arg == "--interior-order") {
             if (++i == argc) throw std::runtime_error("missing value for " + arg);
             const std::string key = arg == "-o" ? "--output" : arg;
             if (arg != "--subsystem" && !seen.insert(key).second)
@@ -114,7 +232,31 @@ Options parse(int argc, char** argv) {
             else if (arg == "--xdc") out.xdc = value;
             else if (arg == "--pcb") out.pcb = value;
             else if (arg == "--refs") out.refs = value;
+            else if (arg == "--floorplan-spec") out.floorplan_spec = value;
+            else if (arg == "--interior-order") {
+                int order = 0;
+                const auto parsed = std::from_chars(value.data(), value.data()+value.size(), order);
+                if (parsed.ec != std::errc{} || parsed.ptr != value.data()+value.size() || order < 0 || order > 3)
+                    throw ProjectError("interior-order must be an integer in [0,3]");
+                out.interior_order = order;
+            }
             else if (arg == "--kicad-cli") out.kicad_cli = value;
+            else if (arg == "--initial-outline-mm") {
+                const auto split=value.find('x');
+                if(split==std::string::npos || split==0 || split+1==value.size() || value.find('x',split+1)!=std::string::npos)
+                    throw ProjectError("initial-outline-mm must be WIDTHxHEIGHT");
+                const auto dimension=[](const std::string& text){
+                    double number=0;
+                    const auto parsed=std::from_chars(text.data(),text.data()+text.size(),number);
+                    if(parsed.ec!=std::errc{} || parsed.ptr!=text.data()+text.size())
+                        throw ProjectError("invalid initial-outline-mm dimension");
+                    return number;
+                };
+                FloorplanExperiment experiment;
+                experiment.initial_outline={{dimension(value.substr(0,split)),dimension(value.substr(split+1))}};
+                validate_floorplan_experiment(experiment);
+                out.initial_outline=experiment.initial_outline;
+            }
             else if (arg == "--qty" || arg == "--min-stock") {
                 std::size_t used = 0;
                 const auto number = std::stoll(value, &used);
@@ -135,6 +277,24 @@ Options parse(int argc, char** argv) {
         allowed.erase("--output");allowed.insert("--kicad-cli");
         if(out.command=="w12-stageprobe")allowed.insert("--cons-only");
     } else if (out.command == "board") {
+        allowed.insert("--audit-projections");
+        allowed.insert("--reseat-victim-shapes");
+        allowed.insert("--compact-placement");
+        allowed.insert("--multiscale-outline");
+        allowed.insert("--edge-feasibility");
+        allowed.insert("--joint-separation-states");
+        allowed.insert("--shape-choice-replays");
+        allowed.insert("--reseat-poses");allowed.insert("--reseat-frontier");allowed.insert("--reseat-continuations");
+        allowed.insert("--failed-first-retry");
+        allowed.insert("--owned-quality-first");
+        allowed.insert("--shape-area-first");
+        allowed.insert("--owned-extent-alternatives");
+        allowed.insert("--owned-face-cohesion");allowed.insert("--owned-shape");
+        allowed.insert("--contract-group-face-sheet");
+        allowed.insert("--require-bottom-sheet");
+        allowed.insert("--initial-outline-mm");
+        allowed.insert("--floorplan-spec");
+        allowed.insert("--interior-order");
         allowed.insert("--no-render"); allowed.insert("--timing"); allowed.insert("--kicad-cli");
     } else if (out.command == "build" || out.command == "devkit") {
         allowed.insert("--no-render"); allowed.insert("--kicad-cli");
@@ -160,6 +320,7 @@ Options parse(int argc, char** argv) {
     } else if (out.command == "model3d-check") {
         // Checks the selected project's real model inventory.
     } else if (out.command == "board-schematic" || out.command == "selftest" || out.command == "pcb-stage" || out.command == "assembly" || out.command == "ratsnest") {
+        if(out.command=="pcb-stage")allowed.insert("--compact-placement");
         allowed.insert("--kicad-cli");
         if (out.command == "selftest") allowed.insert("--keep");
     } else if (out.command == "thermal" || out.command == "powertree" || out.command == "part-rules") {
@@ -182,6 +343,28 @@ Options parse(int argc, char** argv) {
         if (!allowed.count(key)) throw std::runtime_error(key + " is not valid for " + out.command);
     }
     out.help_options=std::move(allowed);
+    if(out.reseat_pose_limits){
+        if(!out.compact_search)throw ProjectError("reseat limits require --compact-placement");
+        FloorplanExperiment experiment;experiment.reseat_pose_limits=out.reseat_pose_limits;
+        experiment.interior_order=out.interior_order;experiment.failed_first_retry=out.failed_first_retry;
+        validate_floorplan_experiment(experiment);
+    }
+    if(out.edge_feasibility&&!out.compact_search)
+        throw ProjectError("edge-feasibility requires --compact-placement");
+    if(out.joint_states&&!out.compact_search)
+        throw ProjectError("joint-separation-states requires --compact-placement");
+    if(out.shape_choice_replays&&(!out.compact_search||!out.interior_order))
+        throw ProjectError("shape-choice-replays requires --compact-placement and --interior-order");
+    if(out.failed_first_retry&&(!out.compact_search||!out.interior_order))
+        throw ProjectError("failed-first-retry requires --compact-placement and --interior-order");
+    if(out.owned_quality_first&&!out.compact_search)
+        throw ProjectError("owned-quality-first requires --compact-placement");
+    if(out.shape_area_first&&!out.compact_search)
+        throw ProjectError("shape-area-first requires --compact-placement");
+    if(out.owned_extent_alternatives&&!out.compact_search)
+        throw ProjectError("owned-extent-alternatives requires --compact-placement");
+    if((out.owned_face_cohesion||!out.owned_shapes.empty()||!out.contract_group_face_sheets.empty()||!out.require_bottom_sheets.empty())&&!out.compact_search)
+        throw ProjectError("owned face/shape selection requires --compact-placement");
     return out;
 }
 std::vector<std::string> refs(const std::string& text) {
@@ -215,10 +398,24 @@ std::optional<int> run_project_command(int argc, char** argv) {
         if(options.command=="build"||options.command=="subsystem-new")std::cout<<" NAME";
         else if(experiment_command(options.command)&&options.command!="dump-circuits")std::cout<<(options.command=="w11-sweep"?" MM":" TAG")<<" [SHEET ...]";
         std::cout<<" [options]\nOptions:\n  --help, -h\n";
-        const std::set<std::string> flags={"--no-render","--timing","--cons-only","--allow-missing","--qualified-refs","--no-ngspice","--keep"};
+        const std::set<std::string> flags={"--no-render","--timing","--cons-only","--allow-missing","--qualified-refs","--no-ngspice","--keep","--compact-placement","--multiscale-outline","--edge-feasibility","--failed-first-retry","--owned-quality-first","--shape-area-first","--owned-face-cohesion","--owned-extent-alternatives"};
         for(const auto& option:options.help_options)std::cout<<"  "<<option<<(flags.count(option)?"":" VALUE")<<(option=="--output"?" (alias -o)":"")<<'\n';
         if(options.command=="nets"||options.command=="devkit"||options.command=="board-schematic"||options.command=="pcb-stage")std::cout<<"--output is required.\n";
         if(options.command=="devkit")std::cout<<"Builds the four-sheet example, not the twelve-sheet devkit_mini project.\n";
+        if(options.command=="board")std::cout<<"--initial-outline-mm WIDTHxHEIGHT: re-evaluate a starting candidate, then continue bounded optimisation. Not a fixed outline or cached acceptance; conflicts with a fixed project outline. All gates remain active.\n";
+        if(options.command=="board")std::cout<<"--multiscale-outline: opt-in bounded axis/diagonal refinement; may stop at a larger local solution. Use a validated starting candidate when available. All gates remain active; fixed outlines conflict.\n";
+        if(options.command=="board")std::cout<<"--edge-feasibility: opt-in sequential clearance-aware initial edge runs; requires --compact-placement. Not a complete joint solver. Rounded poses are rechecked; all gates remain active.\n";
+        if(options.command=="board")std::cout<<"--joint-separation-states N: opt-in failure-only coupled-axis search, with interior-neighbour translation after constrained-only solves fail. N bounds each joint search, not total build work; hardware-fixed obstacles and all gates remain active. Requires --compact-placement.\n";
+        if(options.command=="board")std::cout<<"--shape-choice-replays N: failure-only alternative shape/side prefixes. N bounds additional attempts per packing call, not total build work; successful incumbents and every hardware gate remain unchanged. Requires --compact-placement and --interior-order.\n";
+        if(options.command=="board")std::cout<<"--audit-projections 1|2: simultaneous source-audit AST projections (default 1). Two trades more memory for potential throughput; audit coverage and source-change checks are unchanged.\n";
+        if(options.command=="board")std::cout<<"--reseat-poses N --reseat-frontier N [--reseat-continuations N]: failure-only placement alternatives; both pose/frontier limits required. Continuations revisit early choices after downstream failure and require --interior-order. All hardware checks remain active; limits bound search effort, not feasibility. Requires --compact-placement. --reseat-victim-shapes adds one full alternate-victim-shape strategy only after original strategies fail; requires explicit --interior-order and pose/frontier limits. With --failed-first-retry, also tries combined order/shape recovery; continuations may be enabled together.\n";
+        if(options.command=="board")std::cout<<"--owned-quality-first: opt-in same-pose, same-face owned proximity priority; requires --compact-placement. May increase inter-block estimate. No hardware proximity limit is implied; all gates remain active.\n";
+        if(options.command=="board")std::cout<<"--shape-area-first: opt-in area-first legal shape selection and retry order; requires --compact-placement. Local envelope area does not guarantee a smaller board; all gates remain active.\n";
+        if(options.command=="board")std::cout<<"--owned-extent-alternatives: append bounded extent-first owned-group candidates; requires --compact-placement. Original alternatives and all gates remain active.\n";
+        if(options.command=="board")std::cout<<"--owned-face-cohesion: append owner/cap same-face initial packs, preserving existing candidates.\n--owned-shape SHEET=TAG: restrict a measured candidate by generated tag; unknown, ambiguous or infeasible choices fail without substitution. Requires --compact-placement. All gates remain active.\n";
+        if(options.command=="board")std::cout<<"--contract-group-face-sheet SHEET: repeat for multiple sheets; experimental rigid-group bottom candidates, requires --compact-placement. Controlled-net owners and top-access parts remain pinned. No assembly or thermal approval is implied; all gates remain active.\n";
+        if(options.command=="board")std::cout<<"--require-bottom-sheet SHEET: require an already eligible bottom-side shape; repeat for multiple sheets. Requires --compact-placement. Does not create eligibility or waive hardware checks.\n";
+        if(options.command=="board")std::cout<<"--floorplan-spec PATH: read an explicit candidate specification without editing the project default.\n--interior-order 0|1|2|3: use a single connectivity/area/scarcity/constraint order; no alternate-order retries unless explicitly enabled. Diagnostic strategy selection, not cached acceptance. All gates remain active.\n--failed-first-retry: one opt-in failed-block-first restart after interior seating failure; requires --compact-placement and --interior-order. Successful incumbents are retained. Final geometry and hard-term checks remain mandatory.\n";
         if(options.command=="chir-rung"||options.command=="w11-sweep")std::cout<<"Publishes board artifacts; restores input spec and fallback baseline. Diagnostic pass=False is not a successful board gate.\n";
         return 0;
     }
@@ -341,7 +538,29 @@ std::optional<int> run_project_command(int argc, char** argv) {
         build.output_root = options.output;
         build.no_render = options.no_render;
         build.timing = options.timing;
+        build.audit.projection_slots = options.audit_projection_slots;
         build.native_policy = true;
+        build.pcb.compact_search = options.compact_search;
+        build.pcb.floorplan_spec = options.floorplan_spec;
+        if(options.initial_outline || options.interior_order || options.multiscale_outline || options.edge_feasibility || options.owned_quality_first || options.shape_area_first || options.owned_extent_alternatives || options.owned_face_cohesion || !options.owned_shapes.empty() || !options.contract_group_face_sheets.empty() || !options.require_bottom_sheets.empty() || options.joint_states || options.reseat_pose_limits){
+            auto experiment=std::make_shared<FloorplanExperiment>();
+            experiment->initial_outline=options.initial_outline;
+            experiment->interior_order=options.interior_order;
+            experiment->joint_separation_states=options.joint_states;
+            experiment->shape_choice_replays=options.shape_choice_replays;
+            experiment->reseat_pose_limits=options.reseat_pose_limits;
+            experiment->multiscale_outline=options.multiscale_outline;
+            experiment->compact_edge_feasibility=options.edge_feasibility;
+            experiment->failed_first_retry=options.failed_first_retry;
+            experiment->owned_quality_first=options.owned_quality_first;
+            experiment->shape_area_first=options.shape_area_first;
+            experiment->owned_extent_alternatives=options.owned_extent_alternatives;
+            experiment->owned_face_cohesion=options.owned_face_cohesion;
+            experiment->owned_shape_tags=options.owned_shapes;
+            experiment->contract_group_face_sheets=options.contract_group_face_sheets;
+            experiment->require_bottom_sheets=options.require_bottom_sheets;
+            build.pcb.experiment=std::move(experiment);
+        }
         build.extraction.kicad_cli = options.kicad_cli;
         const auto result = run_board_pipeline(paths, build);
         std::cout << result.report();
@@ -441,7 +660,9 @@ std::optional<int> run_project_command(int argc, char** argv) {
     }
     if (options.command == "assembly" || options.command == "ratsnest") {
         if (!options.subsystems.empty()) throw ProjectError(options.command + " requires the complete project");
-        const auto stage = prepare_board_pcb(paths, {options.kicad_cli});
+        BoardInputOptions pcb_options;
+        pcb_options.compact_search=options.compact_search;
+        const auto stage = prepare_board_pcb(paths, {options.kicad_cli}, pcb_options);
         const auto directory = options.output.empty() ? paths.project_root : options.output;
         if (options.command == "ratsnest") {
             const auto result = run_ratsnest_documents(stage.placement.model, directory);
@@ -467,7 +688,9 @@ std::optional<int> run_project_command(int argc, char** argv) {
     if (options.command == "pcb-stage") {
         if (options.output.empty()) throw ProjectError("pcb-stage requires --output DIRECTORY");
         if (!options.subsystems.empty()) throw ProjectError("pcb-stage requires the complete project, not selected sheets");
-        const auto stage = prepare_board_pcb(paths, {options.kicad_cli});
+        BoardInputOptions pcb_options;
+        pcb_options.compact_search=options.compact_search;
+        const auto stage = prepare_board_pcb(paths, {options.kicad_cli},pcb_options);
         publish_board_pcb(stage, options.output);
         for (const auto& diagnostic : stage.emission.diagnostics) std::cout << diagnostic << '\n';
         std::cout << "PCB STAGE: constructed " << stage.placement.model.insts.size()

@@ -72,9 +72,17 @@ Model3dGeometry measure_model3d(const std::string& footprint,const std::string& 
     auto rz=std::fmod(xyz(clause,"rotate",{0,0,0})[2],360); if (rz<0) rz+=360;
     const auto off=xyz(clause,"offset",{0,0,0}); const double unit=wrl?2.54:1;
     double w=((*b)[2]-(*b)[0])*unit*std::abs(scale[0]),h=((*b)[3]-(*b)[1])*unit*std::abs(scale[1]);
-    const double cx=((*b)[0]+(*b)[2])/2*unit*std::abs(scale[0]),cy=((*b)[1]+(*b)[3])/2*unit*std::abs(scale[1]);
+    // Extents use absolute scale, but the center must retain reflection signs.
+    const double cx=((*b)[0]+(*b)[2])/2*unit*scale[0],cy=((*b)[1]+(*b)[3])/2*unit*scale[1];
     const double th=rz*(std::acos(-1.0)/180),rcx=cx*std::cos(th)+cy*std::sin(th),rcy=-cx*std::sin(th)+cy*std::cos(th);
     if (std::fmod(rz,180)==90) std::swap(w,h);
+    else if(std::fmod(rz,90)!=0) {
+        // Axis-aligned envelope of all four transformed rectangle corners.
+        // Keep exact quarter-turn extents rather than introducing trig noise.
+        const double cosine=std::abs(std::cos(th)),sine=std::abs(std::sin(th));
+        const double rotated_w=w*cosine+h*sine;
+        h=w*sine+h*cosine;w=rotated_w;
+    }
     g.model_xy=Pair{w,h}; g.model_box=Model3dBox{off[0]+rcx-w/2,off[1]+rcy-h/2,off[0]+rcx+w/2,off[1]+rcy+h/2};
     for (const auto v:*g.model_box) if (!std::isfinite(v)) throw std::runtime_error("non-finite transformed model geometry");
     if (g.fab_xy && g.fab_xy->first>0 && g.fab_xy->second>0) {

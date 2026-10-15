@@ -110,7 +110,24 @@ PcbStageResult Engine::hot_zone() {
     for (const auto &[r, v] : optional(in.contract, "roles").object_value)
         if (v.string_value == "bias_r")
             bias.push_back(r);
-    std::size_t bias_index = 0;
+    std::set<std::string> assigned_bias;
+    const auto bias_for = [&](const std::string& ic,const std::string& pin) {
+        const auto owner=in.pad_nets.find({ic,pin});
+        if(owner==in.pad_nets.end()||owner->second.empty())
+            throw PcbZoneInfeasible(in.sheet+": missing bias-pin net for "+ic);
+        std::set<std::string> matches;
+        for(const auto& local:bias) {
+            const auto ref=resolve(local);
+            for(const auto& [pad,net]:in.pad_nets)
+                if(pad.first==ref&&net==owner->second)matches.insert(ref);
+        }
+        if(matches.size()!=1)
+            throw PcbZoneInfeasible(in.sheet+": expected one electrically connected bias resistor for "+ic);
+        const auto ref=*matches.begin();
+        if(!assigned_bias.insert(ref).second)
+            throw PcbZoneInfeasible(in.sheet+": shared bias resistor between buck stages: "+ref);
+        return ref;
+    };
     std::vector<Parts> stages;
     std::vector<bool> bucks;
     for (const auto &ic : strings(in.contract, "stage_order")) {
@@ -131,7 +148,7 @@ PcbStageResult Engine::hot_zone() {
                     bo = &s;
             const auto &pairs = field(hl, "pin_pairs").array_value;
             auto bp = strings(boot, "pins");
-            if (pairs.size() != 2 || bp.size() != 2 || bias_index >= bias.size())
+            if (pairs.size() != 2 || bp.size() != 2)
                 throw PcbZoneInfeasible(in.sheet + ": incomplete buck recipe");
             auto p1 = strings(pairs[0]), p2 = strings(pairs[1]);
             if (p1.size() != 2 || p2.size() != 2)
@@ -153,7 +170,7 @@ PcbStageResult Engine::hot_zone() {
                                   bo ? refs(*bo, "caps") : std::vector<std::string>{},
                                   resolve(text(sw, "inductor")), refs(fb, "members"),
                                   resolve(text(boot, "cap")), resolve(text(vcc, "cap")),
-                                  resolve(bias[bias_index++]), resolve(text(bc, "cap")),
+                                  bias_for(b, text(bc, "pin")), resolve(text(bc, "cap")),
                                   resolve(text(rt, "resistor")), pins));
             bucks.push_back(true);
         } else if (role == "ldo_ic") {

@@ -96,6 +96,23 @@ void coverage(){
     require(uncovered.report.find("C42")!=std::string::npos&&uncovered.report.find("redundant")!=std::string::npos,
             "coverage preserves board references and redundant-entry diagnostics");
     rejects([&]{check_board_contract_coverage({sheet,sheet},{},{});},"duplicate sheets cannot hide coverage");
+    for(const auto* why:{"null","42","true","[]","{}","\"   \""}) {
+        const auto invalid=parse_json_text(std::string(R"({"roles":{"U1":"owner","C1":"cap"},"free":[{"ref":"R1","why":)")+why+"}]}");
+        const auto checked=check_board_contract_coverage({sheet},{{sheet.name,invalid}},{});
+        require(!checked.ok()&&checked.free==0&&checked.ungated==1&&checked.invalid_entries==1,
+                "invalid exemption reason hid an uncovered part");
+    }
+    for(const auto* entries:{R"([{"ref":"missing","why":"not a real part"}])",
+                            R"([{"ref":"U1","why":"already structured"}])",R"([{}])"}) {
+        const auto invalid=parse_json_text(std::string(R"({"roles":{"U1":"owner","C1":"cap","R1":"resistor"},"free":)")+entries+"}");
+        const auto checked=check_board_contract_coverage({sheet},{{sheet.name,invalid}},{});
+        require(!checked.ok()&&checked.ungated==0&&checked.invalid_entries==1,
+                "complete structural coverage masked invalid exemption entries");
+    }
+    const auto duplicate=parse_json_text(R"({"roles":{"U1":"owner","C1":"cap"},"free":[{"ref":"R1","why":"one"},{"ref":"R1","why":"two"}]})");
+    const auto duplicate_result=check_board_contract_coverage({sheet},{{sheet.name,duplicate}},{});
+    require(!duplicate_result.ok()&&duplicate_result.free==1&&duplicate_result.invalid_entries==1,
+            "duplicate exemptions silently replaced their rationale");
 }
 struct Temp{fs::path path;Temp(){auto s=(fs::temp_directory_path()/"schgen_pipeline_contract_XXXXXX").string();if(!::mkdtemp(s.data()))throw std::runtime_error("temp");path=s;}~Temp(){std::error_code e;fs::remove_all(path,e);}};
 void golden(const fs::path& root){
@@ -146,6 +163,34 @@ void isolated_ratchet(){
     const auto published=read(output);
     result=check_fallback_ratchet({{"fallback",AuditInteger(4)}},source,output);
     require(!result.ok&&read(output)==published,"failed isolated rerun rewrote previous evidence");
+}
+void board_search_accounting(){
+    Temp tmp;const auto source=tmp.path/"committed.json",output=tmp.path/"isolated.json";
+    publish_text(source,fallback_baseline_text({{"interior_reseat_retry",18},{"thermal_via_lattice",0}}));
+    const auto original=read(source);
+    AuditCounts census{{"interior_reseat_retry",200},{"legalize_joint_state",1000000},
+                       {"legalize_joint_budget",7},{"thermal_via_lattice",0}};
+    auto result=check_board_fallbacks(census,source,output);
+    require(result.ok&&result.n_names==1&&result.search_effort.size()==3,
+            "search growth does not reject a board or contaminate mandatory counts");
+    require(result.search_effort.at("legalize_joint_state")==AuditInteger(1000000)&&
+            result.summary().find("legalize_joint_budget: 7")!=std::string::npos,
+            "actual work and exhausted searches remain visible without ceilings");
+    require(read(source)==original,"search classification never rewrites committed baseline");
+    require(!load_fallback_baseline(output)->count("interior_reseat_retry"),
+            "output baseline does not publish obsolete search ceilings");
+    census["thermal_via_lattice"]=1;
+    result=check_board_fallbacks(census,source,output);
+    require(!result.ok&&result.search_effort.size()==3,"search observations cannot mask non-search regression");
+    census["thermal_via_lattice"]=0;census["legalize_unreviewed_path"]=1;
+    require(!check_board_fallbacks(census,source,output).ok,"new legalize names fail closed, not prefix-exempted");
+    census.erase("legalize_unreviewed_path");census["assembly_generation_failed"]=1;
+    require(!check_board_fallbacks(census,source,output).ok,"assembly failure remains mandatory");
+    census.erase("assembly_generation_failed");census["corridor_stray_unmovable"]=1;
+    require(!check_board_fallbacks(census,source,output).ok,"unresolved corridor obstruction remains mandatory");
+    census.erase("corridor_stray_unmovable");census["legalize_joint_state"]=-1;
+    rejects([&]{check_board_fallbacks(census,source,output);},"negative search accounting rejected");
+    rejects([&]{check_board_fallbacks({},tmp.path/"missing",output);},"no automatic board acceptance baseline pinning");
 }
 void failed_inputs(const fs::path& root){
     Temp tmp;ProjectPaths p;p.repository_root=root;p.project_root=tmp.path/"source";p.subsystems_dir=p.project_root/"subsystems";p.sheet_index_file=p.project_root/"sheet_index.json";
@@ -226,12 +271,41 @@ void live_electrical(const fs::path& root){
     require(c.result.gates.size()==10,"composed electrical family executes every report");
     for(const auto& g:c.result.gates)if(g.mandatory)require(g.status==BoardGateStatus::passed,"live devkit electrical gate "+g.name+": "+g.report);
     require(c.power&&c.testpoints&&c.spice,"computed results retained for dependent docs; no recomputation required");
+    Context no_checks(paths,o);electrical_stages(no_checks);
+    const auto uncovered=std::find_if(no_checks.result.gates.begin(),no_checks.result.gates.end(),[](const auto& g){return g.name=="spice";});
+    require(uncovered!=no_checks.result.gates.end()&&uncovered->mandatory&&uncovered->status==BoardGateStatus::failed&&
+            uncovered->report.find("SPICE GATE: UNVERIFIED (0 checks)")!=std::string::npos,
+            "board pipeline accepted missing SPICE coverage or concealed its reason");
+    // Passing live-board checks must not mask one detected, unmodelled clamp.
+    auto unsupported_options=o;unsupported_options.output_root=tmp.path/"unsupported-model";
+    Context unsupported(paths,unsupported_options);unsupported.circuits=c.circuits;
+    const auto fixture=parse_json_file((root/"native/tests/data/spice/046_buck_en_unknown_zener.json").string());
+    for(const auto& sheet:field(fixture,"sheets").array_value)
+        unsupported.circuits.push_back({field(sheet,"name").string_value,{},decode_intermediate_circuit_ir(field(sheet,"circuit"))});
+    electrical_stages(unsupported);
+    const auto missing_model=std::find_if(unsupported.result.gates.begin(),unsupported.result.gates.end(),[](const auto& g){return g.name=="spice";});
+    require(missing_model!=unsupported.result.gates.end()&&missing_model->mandatory&&missing_model->status==BoardGateStatus::failed&&
+            missing_model->report.find("SPICE unverified: sheet_buck:D1 zener UNKNOWN")!=std::string::npos&&!unsupported.spice,
+            "board pipeline published partial SPICE success despite an unmodelled clamp");
 }
 void authored_inputs(const fs::path& root){
     require(open_part_catalog((root/"native/catalog.bin").string()),"open repository part catalog");
     for(const auto* project:{"carrier","devkit_mini"}){
         const auto paths=resolve_project_paths(root,fs::path(project));
         auto authored=author_board_pipeline_inputs(paths);
+        const auto power_som=std::find_if(authored.circuits.begin(),authored.circuits.end(),[](const auto& s){return s.name=="power_som";});
+        require(power_som!=authored.circuits.end(),"missing always-on buck");
+        for(const auto* ref:{"R12","D5","C20"}){
+            require(std::none_of(power_som->circuit.parts.begin(),power_som->circuit.parts.end(),[&](const auto& p){return p.ref==ref;}),"obsolete enable component reintroduced");
+            for(const auto& net:power_som->circuit.nets)require(std::none_of(net.pins.begin(),net.pins.end(),[&](const auto& p){return p.ref==ref;}),"obsolete enable component has dangling pins");
+        }
+        for(const auto* number:{"7","8","12"}){
+            std::size_t count=0;
+            for(const auto& net:power_som->circuit.nets)for(const auto& pin:net.pins)if(pin.ref=="U4"&&pin.pin==number){
+                require(net.name=="+VIN_SYS"&&net.net_class=="power","always-on EN/VIN not on the post-shunt input rail");++count;
+            }
+            require(count==1,"always-on pin ownership is not unique");
+        }
         const auto reference=load_project_circuits(paths);
         require(authored.circuits.size()==reference.size(),"live native authoring sheet census");
         for(const auto& expected:reference){
@@ -274,7 +348,7 @@ int main(int argc,char** argv){
         if(argc<2||argc>3)throw std::runtime_error("usage: board_pipeline_contracts REPOSITORY [--live-kicad]");
         const fs::path root=argv[1];
         const auto reference=parse_json_file((root/"native/tests/data/board_pipeline/python_reference.json").string());
-        cc(field(reference,"cc"));ledger();policy(reference);coverage();golden(root);isolated_ratchet();
+        cc(field(reference,"cc"));ledger();policy(reference);coverage();golden(root);isolated_ratchet();board_search_accounting();
         failed_inputs(root);purity_precondition(root);live_electrical(root);authored_inputs(root);
         if(argc==3){
             if(std::string(argv[2])!="--live-kicad")throw std::runtime_error("unknown mode");

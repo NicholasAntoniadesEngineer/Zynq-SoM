@@ -1,0 +1,31 @@
+{
+  "source_commit": "6e38060c",
+  "output": "/private/tmp/carrier-silk-qualified.ML3Myr",
+  "log": "native/build/carrier-silk-full.log",
+  "result": "BOARD PASS, all mandatory checks, 37 sheets",
+  "pcb_sha256": "64b0b4334230a1aaefdf3683dff61c7597b79ff4d8632e509c8992b925534725",
+  "dimensions_mm": [165,156],
+  "area_mm2": 25740,
+  "original_reference_mm": [168,163],
+  "previous_qualified_mm": [166,156],
+  "top_parts": 403,
+  "bottom_parts": 163,
+  "thermal_lattice_events": 0,
+  "top_reference_overlaps": 0,
+  "bottom_reference_overlaps": 0,
+  "drc_nonrouting_errors": 0,
+  "unrouted": 499,
+  "source_audit": "PASS: 69 C++ files, 75 constants, 156 registered transforms",
+  "advisory_failures": ["return_path", "golden", "contract_coverage_lint"],
+  "timing_seconds": {
+    "pcb_input_loading": 1.561826,
+    "pcb_model": 6.516735,
+    "pcb_text": 0.041642,
+    "render3d": 29.961739,
+    "source_audit": 113.516724,
+    "measured_scope_total_not_process_wall": 213.139910
+  },
+  "visual_review": "Inspected 3d_top.png and 3d_bottom.png. C17003/R32005 labels now separated; bottom power-monitor group present. Considerable bottom area remains unused. All 8 3D views generated; no claim all views were individually inspected.",
+  "command": "native/bin/schgen board --project carrier --compact-placement --interior-order 3 --edge-feasibility --owned-quality-first --owned-face-cohesion --contract-group-face-sheet usb_jtag --floorplan-spec native/benchmarks/carrier-165x156-bottom-monitor.floorplan.json --require-bottom-sheet power_mon --joint-separation-states 1024 --reseat-poses 8 --reseat-frontier 4096 --reseat-continuations 3 --reseat-victim-shapes --owned-shape bringup_rails=bottom-a2.2/r270/owned-pins-forward --owned-shape board_aux=owned-face-a1.000000 --audit-projections 2 --timing -o FRESH_OUTPUT",
+  "limitations": "Verified mandatory-gate incumbent, not fabrication readiness. Thermal model and unverified qualitative hardware margins still have limitations; routing is out of scope. Both-board matched Python timing comparison, broader algorithm/performance optimisation, deeper bottom-side utilisation and overall requirement audit remain unfinished. Devkit had targeted repeatability/emission regressions, not a new full qualification in this batch."
+}

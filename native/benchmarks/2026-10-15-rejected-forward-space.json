@@ -1,0 +1,32 @@
+{
+  "source_commit": "95ee4fb8",
+  "experiment": "During initial area-first shape selection, copy current occupancy, add each currently legal shape, and probe future groups with their actual face masks, component reservations, authored near domains and caller-selected shape/face restrictions. Preserve the original choice if no alternative passes; do not treat unsuccessful probes as infeasibility proofs. Repair trials retain their own ordering.",
+  "next_group_only": {
+    "candidate_log": "native/build/forward-space-163x150.log",
+    "candidate_result": "FAIL bounded packing, 4 completed outer attempts, captured available receipt",
+    "candidate_probes": 184,
+    "candidate_alternative_selections": 0,
+    "reference_log": "native/build/forward-space-reference.log",
+    "reference_result": "Qualified 163x151 PCB hash unchanged, postconstruction gates pass",
+    "reference_probes": 332,
+    "reference_model_seconds": 18.640378083,
+    "compact_retry_contracts": "PASS 5.74s"
+  },
+  "each_remaining_group_individually": {
+    "candidate_log": "native/build/forward-all-163x150.log",
+    "candidate_result": "FAIL bounded packing, 4 completed outer attempts, captured available receipt",
+    "candidate_probes": 440,
+    "candidate_alternative_selections": 16,
+    "reference_log": "native/build/forward-all-reference.log",
+    "reference_result": "Qualified 163x151 PCB hash unchanged, postconstruction gates pass",
+    "reference_probes": 664,
+    "reference_alternative_selections": 18,
+    "reference_model_seconds": 21.397799417
+  },
+  "reference_hash": "d8dea4b5049968b2fdcb385a17cb19c9e8d5257bd2afa297b1467600f2690e5e",
+  "decision": "REJECTED as a default: no area improvement demonstrated. Fully reverted prototype, including both added fallback registrations/classification entries, and rebuilt profiler and retry-test binaries. Production source is unchanged from parent.",
+  "setup_failure": "Initial runs rejected the new fallback before packing; added both audit-registry and engine allow-list entries before collecting the recorded results. No numerical/physical gate relaxed.",
+  "timing_caveat": "Reference and candidate screens overlapped, sometimes with tests; these are diagnostic elapsed times, not a controlled speed comparison.",
+  "inference": "The sample does not support single-step or independent remaining-group feasibility as a useful primary ranking. Mutually competing group domains and multi-group packing remain unresolved; this is not proof that forward checking cannot help with a different strategy.",
+  "next_direction": "Use actual remaining-domain scarcity or coupled group placement, with incumbent preservation, rather than repeating these independent lookahead campaigns. Qualified carrier remains 163x151; full goal incomplete."
+}

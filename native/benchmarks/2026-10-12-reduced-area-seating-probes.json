@@ -1,0 +1,113 @@
+{
+  "base_commit": "7b6468df",
+  "purpose": "Prioritise area reduction and locate the earliest rejection before choosing the next algorithm change.",
+  "reference": {
+    "dimensions_mm": [
+      165,
+      158
+    ],
+    "area_mm2": 26070,
+    "qualification": "2026-10-12-victim-shape-portfolio.json"
+  },
+  "outlines": [
+    {
+      "dimensions_mm": [
+        164,
+        159
+      ],
+      "area_mm2": 26076,
+      "interpretation": "Width trade-off only: 6 mm2 larger than reference, not area reduction."
+    },
+    {
+      "dimensions_mm": [
+        164,
+        158
+      ],
+      "area_mm2": 25912,
+      "area_change_percent": -0.60606060606061
+    },
+    {
+      "dimensions_mm": [
+        165,
+        157
+      ],
+      "area_mm2": 25905,
+      "area_change_percent": -0.6329113924050667
+    }
+  ],
+  "recipe": {
+    "base_spec": "native/benchmarks/carrier-165x158-continuation.floorplan.json",
+    "spec_changes": "Only outline.w and outline.h; comment identifies unqualified screening.",
+    "schematic": "/private/tmp/carrier-165x158-qualified.Wd9GT7/Zynq_Carrier.kicad_sch",
+    "common": "Prepared carrier, compact on, order 3, edge feasibility on, owned quality and face cohesion on, USB-JTAG contract groups, no pinned owned shape, joint states 1024, reseat poses 8/frontier 4096.",
+    "variants": {
+      "power-groups-164x159": "Add contract-group-face-sheet power and power_som; continuations 3; victim-shapes off.",
+      "area-*": "Continuations 3; victim-shapes on.",
+      "power-group-rotations-165x157": "Add power and power_som contract groups and contract-group-rotations on; continuations 3; victim-shapes on.",
+      "area-failed-first-*": "Failed-first retry on; no continuation option; victim-shapes on."
+    }
+  },
+  "screens": [
+    {
+      "log": "native/build/carrier-power-groups-164x159.log",
+      "result": "PROFILE_FAILED_NO_ACCEPTANCE: floorplan: bounded placement search found no valid layout for the requested fixed outline 164x159 under either reservation policy; this does not prove geometric infeasibility.",
+      "measurement": "trial status=construction_failed elapsed_seconds=2.8666803330000001 completed_outer_attempts=4 receipt_captured=1 receipt_unavailable=0",
+      "distinct_rejections": [
+        "stage_rejection width=164 height=159 stage=legalizer subject=\"\" compact=1 punch_free=0 order=3",
+        "stage_rejection width=164 height=159 stage=legalizer subject=\"\" compact=1 punch_free=1 order=3"
+      ]
+    },
+    {
+      "log": "native/build/carrier-area-164x158.log",
+      "result": "PROFILE_FAILED_NO_ACCEPTANCE: floorplan: bounded placement search found no valid layout for the requested fixed outline 164x158 under either reservation policy; this does not prove geometric infeasibility.",
+      "measurement": "trial status=construction_failed elapsed_seconds=0.77217250000000004 completed_outer_attempts=4 receipt_captured=1 receipt_unavailable=0",
+      "distinct_rejections": [
+        "stage_rejection width=164 height=158 stage=interior_seating subject=\"usb_jtag\" compact=1 punch_free=0 order=3",
+        "stage_rejection width=164 height=158 stage=interior_seating subject=\"usb_jtag\" compact=1 punch_free=1 order=3"
+      ]
+    },
+    {
+      "log": "native/build/carrier-area-165x157.log",
+      "result": "PROFILE_FAILED_NO_ACCEPTANCE: floorplan: bounded placement search found no valid layout for the requested fixed outline 165x157 under either reservation policy; this does not prove geometric infeasibility.",
+      "measurement": "trial status=construction_failed elapsed_seconds=3.101221292 completed_outer_attempts=4 receipt_captured=1 receipt_unavailable=0",
+      "distinct_rejections": [
+        "stage_rejection width=165 height=157 stage=interior_seating subject=\"bringup_modules\" compact=1 punch_free=0 order=3",
+        "stage_rejection width=165 height=157 stage=interior_seating subject=\"bringup_modules\" compact=1 punch_free=1 order=3"
+      ]
+    },
+    {
+      "log": "native/build/carrier-power-group-rotations-165x157.log",
+      "result": "PROFILE_FAILED_NO_ACCEPTANCE: floorplan: bounded placement search found no valid layout for the requested fixed outline 165x157 under either reservation policy; this does not prove geometric infeasibility.",
+      "measurement": "trial status=construction_failed elapsed_seconds=3.439666667 completed_outer_attempts=4 receipt_captured=1 receipt_unavailable=0",
+      "distinct_rejections": [
+        "stage_rejection width=165 height=157 stage=interior_seating subject=\"bringup_modules\" compact=1 punch_free=0 order=3",
+        "stage_rejection width=165 height=157 stage=interior_seating subject=\"bringup_modules\" compact=1 punch_free=1 order=3"
+      ]
+    },
+    {
+      "log": "native/build/carrier-area-failed-first-164x158.log",
+      "result": "PROFILE_FAILED_NO_ACCEPTANCE: floorplan: bounded placement search found no valid layout for the requested fixed outline 164x158 under either reservation policy; this does not prove geometric infeasibility.",
+      "measurement": "trial status=construction_failed elapsed_seconds=0.81360970899999996 completed_outer_attempts=4 receipt_captured=1 receipt_unavailable=0",
+      "distinct_rejections": [
+        "stage_rejection width=164 height=158 stage=interior_seating subject=\"usb_jtag\" compact=1 punch_free=0 order=3",
+        "stage_rejection width=164 height=158 stage=interior_seating subject=\"usb_pd\" compact=1 punch_free=0 order=3",
+        "stage_rejection width=164 height=158 stage=interior_seating subject=\"usb_jtag\" compact=1 punch_free=1 order=3",
+        "stage_rejection width=164 height=158 stage=interior_seating subject=\"usb_pd\" compact=1 punch_free=1 order=3"
+      ]
+    },
+    {
+      "log": "native/build/carrier-area-failed-first-165x157.log",
+      "result": "PROFILE_FAILED_NO_ACCEPTANCE: floorplan: bounded placement search found no valid layout for the requested fixed outline 165x157 under either reservation policy; this does not prove geometric infeasibility.",
+      "measurement": "trial status=construction_failed elapsed_seconds=3.40588975 completed_outer_attempts=4 receipt_captured=1 receipt_unavailable=0",
+      "distinct_rejections": [
+        "stage_rejection width=165 height=157 stage=interior_seating subject=\"bringup_modules\" compact=1 punch_free=0 order=3",
+        "stage_rejection width=165 height=157 stage=interior_seating subject=\"usb_jtag\" compact=1 punch_free=0 order=3",
+        "stage_rejection width=165 height=157 stage=interior_seating subject=\"bringup_modules\" compact=1 punch_free=1 order=3",
+        "stage_rejection width=165 height=157 stage=interior_seating subject=\"usb_jtag\" compact=1 punch_free=1 order=3"
+      ]
+    }
+  ],
+  "conclusion": "No candidate accepted. Power-facing violations dominate the 164x159 legalizer trace, but that outline is not an area reduction. The genuinely smaller outlines fail earlier in interior seating: USB-JTAG at 164x158 and bringup_modules at 165x157. Failure-directed ordering changes the failed subject to USB-PD or USB-JTAG, without solving the board. Target joint seating/shape choices before spending more on facing or joint-separation budgets.",
+  "next": "The alternative-position retry first selects one incoming shape through seat(), then enumerates positions only for that shape. Existing victim-shape recovery adds victim alternatives, but not a joint incoming-shape/position portfolio. Investigate preserving original paths while exploring other registered incoming shapes and multiple displaced blocks. Keep hardware constraints, explicit shape selections, failed-attempt receipts and incumbent preservation.",
+  "limits": "Construction-only single-run screens; no new full builds or renders because no finalist passed. Cached inputs and timing environment uncontrolled. No physical infeasibility, speedup or Python comparison claim. Logs are local artifacts; inputs and configuration are described for reproduction. No production source changes."
+}

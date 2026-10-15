@@ -1,0 +1,38 @@
+{
+  "base_commit": "ef503117",
+  "purpose": "Integrate bounded alternative incoming positions into failure-only single-victim recovery, retaining ordinary incumbents and every executed receipt.",
+  "policy": {
+    "default": "off; experimental API and compact_stage_profile only",
+    "activation": "FloorplanExperiment.reseat_pose_limits; profiler --reseat-poses N --reseat-frontier N, both required with compact search",
+    "search": "Only after every ordinary single-victim trial fails, repeat ranked victims and enumerate legal incoming positions for the selected shape. Skip the original position already tried. Relocate each victim using its unchanged selected shape and existing collision/proximity predicates. Preserve the existing successful-eviction budget.",
+    "bounds": "Per-query returned-pose and visited-frontier limits, not a global wall-time limit. Result-capped does not prove another legal position exists. An exhausted search budget is not a proof of geometric infeasibility.",
+    "accounting": "Four declared events distinguish executed victim reconsideration, actual alternative-position trials, frontier exhaustion and result limits. All actual precision operations are retained, including rejected candidates. Side-comparison estimates are cleared after a changed position makes them stale.",
+    "transaction": "Explicit-order recovery restores entry layout and side offers on terminal failure or exception, retaining actual failed-prefix accounting. Ordinary success is preserved without running the new pass."
+  },
+  "tests": {
+    "fixtures": "Four existing synthetic cases plus a bounded 5-by-5 set of neighboring outlines; three explicit orders and two frontier budgets. Tests assert successful recovery, independent same-face rectangle non-overlap/bounds, ordinary incumbent preservation, deterministic callback-independent results, query limits and receipt equivalence.",
+    "observed": {"searches":162,"alternative_trials":351,"frontier_limits":52,"result_limits":52,"complete_recoveries":3},
+    "rollback": "Throw from the first recovery observer and separately exhaust a failed explicit-order search; verify restored layout/side offers and exact executed receipts. Shared validator rejects invalid limits; Engine rejects noncompact activation.",
+    "registry": "Independent metadata test explicitly names all four events; no historical fallback ceilings changed.",
+    "unit_log": "native/build/pose-retry-expanded-unit.log",
+    "suite_log": "native/build/pose-retry-final-tests.log",
+    "suites_passed": ["native_compact_retry_contracts","native_floorplan_contracts","native_output_pack_registry_contracts","native_occupancy_cell_counter_contracts","native_occupancy_precision_contracts","native_board_policy_contracts","native_experiment_observer_contracts"]
+  },
+  "reference_construction": [
+    {"board":"carrier","outline_mm":[166,159],"parts":569,"top":416,"bottom":153,"recovery_enabled":true,"pcb_sha256":"b9389efa52adf30b1d94cad1ede3a4387bacd53802f7babb5da07dd6306cff76","all_receipt_and_fallback_count_rows_unchanged":true,"model_seconds":2.947347208,"text_seconds":0.037798167,"log":"native/build/carrier-pose-retry-final-reference.log"},
+    {"board":"devkit_mini","outline_mm":[98,98],"parts":163,"top":106,"bottom":57,"recovery_enabled":false,"pcb_sha256":"cfa0305491d9c4a771adb130b04c4aec6cc2894542391a5c7c9dca3a68bca3cf","all_receipt_and_fallback_count_rows_unchanged":true,"model_seconds":0.199614166,"text_seconds":0.009632333,"log":"native/build/devkit-pose-retry-final-reference.log"}
+  ],
+  "carrier_campaign": {
+    "common": "Prepared carrier schematic from /private/tmp/carrier-qualified-oct12.SwxP7c/Zynq_Carrier.kicad_sch; explicit policy native/benchmarks/carrier-166x159-contract-groups.floorplan.json; interior order 3; edge feasibility, owned quality-first and face cohesion enabled; contract-group face sheet usb_jtag; board_aux shape owned-face-fixed/a2.2/owned-pins-forward. Independent group rotations and extent alternatives disabled.",
+    "narrow_limits": {"poses":8,"frontier":4096},
+    "narrow_results": [
+      {"outline_mm":[165,159],"usb_jtag_recovered":true,"rejection":"legalizer: HDMI RX termination proximity conflicts with USB-JTAG separation","failed_construction_seconds":0.684952458,"log":"native/build/carrier-pose-retry-final-165x159.log"},
+      {"outline_mm":[166,158],"usb_jtag_recovered":true,"rejection":"legalizer: HDMI RX termination proximity conflicts with USB-JTAG separation","failed_construction_seconds":0.679816334,"log":"native/build/carrier-pose-retry-final-166x158.log"},
+      {"outline_mm":[167,157],"usb_jtag_recovered":true,"rejection":"later interior seating: bringup_modules","failed_construction_seconds":0.942905,"log":"native/build/carrier-pose-retry-final-167x157.log"},
+      {"outline_mm":[168,156],"usb_jtag_recovered":true,"rejection":"later interior seating: board_aux","failed_construction_seconds":0.842378083,"log":"native/build/carrier-pose-retry-final-168x156.log"}
+    ],
+    "wider_followup": {"poses":32,"frontier":32768,"outlines_mm":[[167,157],[168,156]],"result":"Same later seating blockers. No accepted smaller board. Logs carrier-pose-retry-wide-167x157.log and carrier-pose-retry-wide-168x156.log under native/build.","failed_construction_seconds":[1.334592125,1.185425334]},
+    "receipts": "Each rejected screen records two completed outer attempts, receipt_captured=1 and receipt_unavailable=0. Local recovery success is not global acceptance."
+  },
+  "acceptance_and_next_step": "No smaller board promoted. Experimental mode remains disabled by default. This demonstrates local recovery, not a carrier speedup or full qualification. These construction-only timings include observers and uncontrolled OS caches; they exclude source audit, DRC, rendering and publication and are not historical Python comparisons. Both reference PCB hashes and accounting match the preceding commit. Next investigate retaining bounded placement alternatives across downstream hard-constraint failures rather than merely raising pose caps. Routing, fabrication readiness and overall goal completion are not claimed."
+}

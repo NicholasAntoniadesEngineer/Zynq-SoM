@@ -1,0 +1,34 @@
+{
+  "scope": "Construction screening only; no fresh full audit, DRC or renders",
+  "base_commit": "46dc6675",
+  "change": "Scarcity order intersects selected shape and required-bottom eligibility; unrestricted catalogs retain constant-time counting.",
+  "tests": {
+    "native_compact_retry_contracts": "PASS, 5.10 seconds",
+    "coverage": "All eligibility masks for catalogs of sizes 0 through 8, valid and invalid pinned indices; actual Engine ordering matches explicitly promoting the one-bottom-choice group."
+  },
+  "carrier_reference": {
+    "recipe": "2026-10-13-carrier-165x156-qualified.json; profiler interior-order 3, prepared schematic, runs 2",
+    "pcb_sha256": "64b0b4334230a1aaefdf3683dff61c7597b79ff4d8632e509c8992b925534725",
+    "unchanged_both_runs": true,
+    "model_seconds": [6.536463042, 6.5423325],
+    "pcb_text_seconds": [0.04137075, 0.040391],
+    "cheap_diagnostics": "PASS: fanout, ratsnest, placement contract, placement flow, reference overlaps"
+  },
+  "devkit_reference": {
+    "recipe": "profiler compact-search off, multiscale-outline on, prepared schematic, runs 2",
+    "pcb_sha256": "b6798d4b63d2fddbf9fad24945c151b9420b049b674ad5d637c43bf4a365137f",
+    "unchanged_both_runs": true,
+    "model_seconds": [0.203308125, 0.204372458],
+    "pcb_text_seconds": [0.009049041, 0.008793292],
+    "cheap_diagnostics": "PASS: fanout, ratsnest, placement contract, placement flow, reference overlaps"
+  },
+  "smaller_trial": {
+    "recipe": "carrier-165x156-bottom-modules.floorplan.json with width 164; same reference pilots, bottom power_mon and bringup_modules; interior-order 2; joint separation 1024, reseat poses 8, frontier 4096, continuations 3, victim shapes on",
+    "result": "bounded construction search failed; not proof of geometric infeasibility",
+    "elapsed_seconds": 0.549872125,
+    "completed_outer_attempts": 4,
+    "failure_receipt_captured": true,
+    "promoted": false
+  },
+  "limitations": "No layout improvement claimed from this ordering correction. Timings are instrumented construction, not full builds or matched Python comparisons."
+}

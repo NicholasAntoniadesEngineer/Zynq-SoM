@@ -1,0 +1,21 @@
+{
+  "base_commit": "f4ddee97",
+  "strategy": "Opt-in profiler --shape-area-first on ranks legal shape offers by rounded envelope area, then estimated wiring, then dimensions; stable offer order breaks remaining ties. It does not measure face-specific free-space fragmentation.",
+  "status": "Experimental only; no production default change or accepted smaller board",
+  "recovery_followup": {
+    "base_commit": "db370d35",
+    "change": "Area-order both incoming and displaced replacement-shape trials; preserve all alternatives and successful existing placements, stable ties retain registry order.",
+    "tests": "native_compact_retry_contracts PASS, 5.86 seconds; corpus now includes enabled/disabled strategies, varied shape areas, independent replay accounting, rollback, preserved incumbents and deterministic repeats",
+    "trial": {"outline_mm": [163,156],"pilot_shape_pins": false,"result": "construction_failed","seconds": 4.641200208,"completed_outer_attempts": 4,"failure_receipt_captured": true},
+    "interpretation": "Consistent fallback ordering still did not recover this smaller candidate; no speedup or smaller-board improvement claimed."
+  },
+  "tests": {"native_compact_profile_inputs_contracts": "PASS, 30.77 seconds", "native_compact_retry_contracts": "PASS, 5.35 seconds; actual Engine fixture verifies minimum eligible envelope and required-bottom filtering"},
+  "trials": [
+    {"outline_mm": [163,156],"pilot_shape_pins": false,"result": "construction_failed","seconds": 4.650094292,"completed_outer_attempts": 4,"failure_receipt_captured": true},
+    {"outline_mm": [164,155],"pilot_shape_pins": true,"result": "construction_failed","seconds": 3.636760209,"completed_outer_attempts": 4,"failure_receipt_captured": true}
+  ],
+  "recipe": "Profiler equivalent of 2026-10-13-carrier-164x156-qualified.json with the stated outline and pin changes, --shape-area-first on, one run each",
+  "default_reference": {"outline_mm": [164,156],"shape_area_first": false,"pcb_sha256": "1d6c598565b9daa6cca454fe7352b1b25604b46174d949a5e428b290dbc8dbba","unchanged": true,"cheap_checks": "fanout, ratsnest geometry, placement contract and flow PASS; hard_red=0"},
+  "interpretation": "Local envelope minimization alone did not recover either smaller outline under this bounded search. It must not replace the qualified incumbent. Investigate residual face-aware space and downstream constrained-group feasibility rather than inferring global feasibility from envelope area.",
+  "limitations": "Single-run instrumented screening; some concurrent work and uncontrolled cache state, no speedup claim, no fresh full qualification. Actual ranking-area quantization uses the existing counted block_area operation. All executed failure receipts retained in native/build/shape-area-163.log and native/build/shape-area-164x155.log."
+}

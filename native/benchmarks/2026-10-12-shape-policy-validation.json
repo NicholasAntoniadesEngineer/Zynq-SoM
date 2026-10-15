@@ -1,0 +1,59 @@
+{
+  "base_commit": "7f764f02",
+  "changes": [
+    {
+      "issue": "Physical alternate shape silently replaced by base geometry when its sheet had no registered variants.",
+      "fix": "Retain every nonzero requested shape index, keep existing range checks for registered variant tables, and require a prepared offset for every participating physical zone part. Missing geometry raises a named FloorplanError instead of substituting the base pose. Abstract packing fixtures without physical cross parts remain supported.",
+      "tests": "Negative, positive and large unavailable indices; full and selected-sheet estimates; ordinary and impedance net classes; valid base estimate after each rejected selection.",
+      "negative_control": "New test fails on original code: expected error containing no prepared geometry for U1001; 0.55s.",
+      "negative_log": "native/build/missing-shape-negative-tests.log"
+    },
+    {
+      "issue": "The stricter free-pass error boundary from 15f8c2b9 exposed a compatibility regression: conservative-only diagnostics intentionally threw generic FloorplanError to exclude the free pass.",
+      "fix": "Introduce FloorplanReservationExcluded for that explicit policy exclusion. Fixed and automatic optional-pass boundaries recover only typed packing infeasibility or typed reservation exclusion; unrelated FloorplanError failures still propagate.",
+      "tests": "Observer test requires the specific policy type and unchanged message before work. Fixed/automatic fixtures naturally selecting the free pass instead choose the conservative pass under explicit policy, with no free-pass callback and exact independently observed fallback receipt. Existing runtime/domain failure transport and typed packing rejection tests remain active.",
+      "initial_regression_log": "native/build/missing-shape-tests.log"
+    }
+  ],
+  "verification": {
+    "passed_suites": [
+      "native_floorplan_contracts",
+      "native_compact_retry_contracts",
+      "native_experiment_tools_contracts",
+      "native_experiment_observer_contracts",
+      "native_floorplan_fallback_scope_contracts"
+    ],
+    "all_pass": true,
+    "wall_seconds": 38.85,
+    "log": "native/build/shape-policy-tests.log"
+  },
+  "construction_references": [
+    {
+      "board": "carrier compact",
+      "outline_mm": [
+        166,
+        159
+      ],
+      "pcb_sha256": "b9389efa52adf30b1d94cad1ede3a4387bacd53802f7babb5da07dd6306cff76",
+      "unchanged": true,
+      "contract_pass": true,
+      "flow_pass": true,
+      "hard_red": 0,
+      "log": "native/build/carrier-shape-policy-reference.log"
+    },
+    {
+      "board": "devkit_mini multiscale",
+      "outline_mm": [
+        98,
+        98
+      ],
+      "pcb_sha256": "cfa0305491d9c4a771adb130b04c4aec6cc2894542391a5c7c9dca3a68bca3cf",
+      "unchanged": true,
+      "contract_pass": true,
+      "flow_pass": true,
+      "hard_red": 0,
+      "log": "native/build/devkit-shape-policy-reference.log"
+    }
+  ],
+  "limits": "Focused regression suites and one construction screen per current reference, not a new full board/audit/render qualification, reproducibility campaign or performance comparison. No fallback ceilings or hardware acceptance limits changed. Experimental 165x159 carrier remains unaccepted; wider goal remains open."
+}

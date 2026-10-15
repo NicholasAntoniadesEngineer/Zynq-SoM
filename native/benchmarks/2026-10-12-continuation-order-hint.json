@@ -1,0 +1,44 @@
+{
+  "base_commit":"e34e9a5a",
+  "purpose":"Reduce repeated failed placement/legalizer prefixes by reordering bounded continuation branches, without reusing geometry verdicts or bypassing validation.",
+  "implementation":{
+    "default":"Disabled. FloorplanPoseRetryLimits.reuse_continuation / profiler --reseat-reuse on requires a positive continuation budget.",
+    "lifetime":"One advisory ordinal held by a single Engine instance. No shared state, persistent cache, stored occupancy, accepted geometry or verdict reuse.",
+    "scope":"Hint matches exact board width/height, reservation policy, compaction mode and interior order. Out-of-budget or mismatched hints are ignored. Other geometry may have changed: all geometry and downstream checks run afresh, so the hint is only ordering advice, never cached evidence.",
+    "order":"Always execute branch zero first and preserve its complete success. After failure with a selectable recovery, try the remembered successful continuation, then every remaining ordinal in ascending order within the existing cap. No duplicate branches. An empty high hint does not prune lower ordinals.",
+    "learning":"Update the ordinal only after a complete attempt_pack_impl success, including its downstream legalizer and exact placement checks. This does not imply whole-board qualification. Ordinary successes are never replaced.",
+    "accounting":"Record interior_reseat_pose_hint only when the preferred ordinal actually changes executed retry order. All resumed attempts, skipped local choices, precision work and failed gates remain recorded. No fallback ceiling changes."
+  },
+  "controlled_experiment":{
+    "board":"carrier",
+    "outline_mm":[165,159],
+    "workload":"Same prepared schematic, explicit floorplan, shapes and profile options as 2026-10-12-pose-continuation.json. Poses=8, frontier=4096, continuations=3. Only reseat-reuse differs.",
+    "run_order":["off","on","on","off"],
+    "measurement":"Four serial profiler processes, no concurrent agent build/test work. Same host and binary; OS caches uncontrolled and diagnostic observers enabled. Model generation only, excluding preparation, text emission, compile, source audit, DRC, renders and publication.",
+    "model_seconds_off":[7.701134708,7.742361292],
+    "model_seconds_on":[5.292780875,5.286253375],
+    "mean_seconds_off":7.721748,
+    "mean_seconds_on":5.289517125,
+    "mean_change_percent":-31.498449250092076,
+    "pcb_sha256_all_four":"36bb6af616d4a3b6ab6186a5d3d80be78417b6433fc1a68d966ecce83caa977c",
+    "parts":569,"top":420,"bottom":149,
+    "placement_contract_and_flow_checks_pass_all_four":true,
+    "full_attempt_replays":{"off":24,"on":12},
+    "reseating_events":{"off":68,"on":44},
+    "legalize_facing_retries":{"off":52,"on":28},
+    "hint_events_on":6,
+    "logs":["native/build/carrier-continuation-hint-off.log","native/build/carrier-continuation-hint-on.log"],
+    "limits":"Small paired sample, not a general end-to-end speed claim or Python comparison. This smaller candidate remains experimental and exceeds existing fallback ceilings (reseating ceiling 18). No full board qualification or new renders were run."
+  },
+  "tests":{
+    "independent_oracle":"58 finite cases including adversarial late failures, three orders, ten hint states. Independently permute the bounded branch list and compare wrapper result, complete layout, side offers, actual instrumented scalar entries, quantization receipts and ordered fallback events.",
+    "coverage":"No hint; unchanged ascending hint; reordered hint; out-of-budget hint; mismatched width, height, reservation policy, compact mode and order; a valid high ordinal with no available local choice, followed by required lower branches. Positive ordinary incumbents remain untouched. Existing failed/exceptional rollback and invalid-policy tests retained; reuse without continuation budget rejected.",
+    "suite_log":"native/build/continuation-hint-tests.log",
+    "suites":["native_compact_retry_contracts","native_floorplan_contracts","native_board_policy_contracts","native_experiment_observer_contracts"]
+  },
+  "reference_preservation":[
+    {"board":"carrier","outline_mm":[166,159],"reuse_enabled":true,"pcb_sha256":"b9389efa52adf30b1d94cad1ede3a4387bacd53802f7babb5da07dd6306cff76","all_receipt_and_fallback_count_rows_unchanged":true,"log":"native/build/carrier-continuation-hint-reference.log"},
+    {"board":"devkit_mini","outline_mm":[98,98],"reuse_enabled":false,"pcb_sha256":"cfa0305491d9c4a771adb130b04c4aec6cc2894542391a5c7c9dca3a68bca3cf","all_receipt_and_fallback_count_rows_unchanged":true,"log":"native/build/devkit-continuation-hint-reference.log"}
+  ],
+  "next_step":"Investigate why the original local recovery ranks globally infeasible choices first, and reduce repeated whole-model candidate evaluation without weakening independent acceptance/accounting. The qualified 166x159 reference remains retained. No accepted smaller carrier or fabrication-readiness claim; overall goal incomplete."
+}

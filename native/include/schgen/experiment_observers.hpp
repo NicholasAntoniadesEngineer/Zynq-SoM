@@ -1,12 +1,14 @@
 #pragma once
 
 #include "schgen/pcb_checks.hpp"
+#include "schgen/owned_shape_quality.hpp"
 
 #include <functional>
 #include <set>
 #include <utility>
 
 namespace schgen {
+struct JointSeparationWork;
 struct FloorplanInput;
 struct FloorplanPlan;
 
@@ -19,11 +21,105 @@ struct FloorplanAttemptObservation {
     bool packed = false, punch_free = false;
     std::optional<double> estimate;
 };
+struct FloorplanReseatObservation {
+    double w=0,h=0;
+    std::string incoming,displaced;
+    bool incoming_seated=false,displaced_reseated=false,punch_free=false;
+    int order=0;
+};
+struct FloorplanRejectionObservation {
+    double w=0,h=0;
+    std::string stage,subject;
+    bool compact=false,punch_free=false;
+    int order=0;
+    std::vector<std::string> diagnostics;
+};
+struct FloorplanPoseRetryLimits {
+    std::size_t poses=0,frontier_nodes=0;
+    // Capped full-attempt replays of the first recovered choice after later
+    // failure. Zero preserves nearest successful recovery behavior.
+    std::size_t continuations=0;
+    // Advisory ordering only; never reuse a geometry verdict or omit a gate.
+    bool reuse_continuation=false;
+    // Additional full strategy after the pose portfolio fails; when combined
+    // with failed_first_retry, also try shapes in the failure-directed order.
+    bool victim_shapes=false;
+};
+struct FloorplanPoseRetryObservation {
+    std::string incoming,displaced;
+    std::size_t generated=0,frontier_nodes=0,attempted=0,skipped=0;
+    bool budget_exhausted=false,result_capped=false,success=false;
+};
 struct FloorplanExperiment {
     // Null keeps the native ordinary-net cost unchanged. Impedance-controlled
     // nets always retain their normal cost. Zero is a valid experiment value.
     std::optional<double> ordinary_via_mm;
     bool conservative_only = false;
+    // Opt-in compact-search candidate; legacy orders remain fallback choices.
+    // Invocation-owned so independent/concurrent solves cannot change each other.
+    bool compact_constraint_first = false;
+    // Failure-directed restart of an explicit order, plus its shape-recovery
+    // combination when enabled. Compatible with prior continuation attempts.
+    bool failed_first_retry = false;
+    // Failure-only second victim pass; never replaces a successful ordinary
+    // placement/reseat. Both per-query limits are explicit invocation inputs.
+    std::optional<FloorplanPoseRetryLimits> reseat_pose_limits;
+    std::function<void(const FloorplanPoseRetryObservation&)> pose_retry_completed;
+    // Also permits one compact/noncompact retry with interior neighbours
+    // movable after the constrained-participant-only solves have failed.
+    // Hardware-fixed obstacles remain fixed; successful incumbents are kept.
+    std::optional<std::size_t> joint_separation_states;
+    std::function<void(const JointSeparationWork&,bool)> joint_retry_completed;
+    bool compact_edge_translation = false;
+    bool compact_edge_feasibility = false;
+    bool owned_quality_first = false;
+    // Experimental envelope-area ranking of legal shapes; not a feasibility relaxation.
+    bool shape_area_first = false;
+    // Failure-only full-attempt replays of early legal shape choices. Bounds
+    // additional attempts, not hardware feasibility or total solver work.
+    std::size_t shape_choice_replays = 0;
+    bool owned_extent_alternatives = false;
+    bool owned_face_cohesion = false;
+    // Canonical order makes multi-sheet expansion independent of CLI order.
+    std::set<std::string> contract_group_face_sheets;
+    bool contract_group_rotations = false;
+    // Diagnostic candidate restrictions by generated tag, not unstable index.
+    // Unknown, ambiguous or unmeasured choices fail; never silently fall back.
+    std::map<std::string,std::string> owned_shape_tags;
+    // Controlled downstream packing experiment: require an already offered
+    // bottom-primary shape for these groups. Never creates or validates one.
+    std::set<std::string> require_bottom_sheets;
+    // Read-only inventory of all tagged shapes, including mixed-face contract
+    // candidates without owned quality. Registration neither supplies missing
+    // quality nor proves final-board feasibility or permits tag restriction.
+    std::function<void(const std::string&,int,const std::string&)> owned_shape_catalogued;
+    std::function<void(std::size_t,std::size_t,std::size_t)> edge_feasibility_completed;
+    std::function<void(const std::string&,const std::string&,double,double)> edge_feasibility_rejected;
+    // Observes already evaluated feasible alternatives; never runs additional
+    // estimators or supplies an acceptance decision. References are borrowed
+    // only for the synchronous callback. Includes groups without owned quality;
+    // missing quality is not a feasibility or hardware verdict. Noncompact
+    // selection exposes only its two actually evaluated alternatives.
+    std::function<void(const std::string&,const std::vector<OwnedShapeTieRank>&,
+                       const OwnedShapeQualityTable&,int)> owned_shape_selection_completed;
+    // Diagnostic single-order ablation, independent of compact shape selection:
+    // 0 connectivity, 1 area, 2 shape scarcity, 3 hard-constraint incidence.
+    // No alternate-order retries unless failed_first_retry is explicitly set.
+    std::optional<int> interior_order;
+    // Optional starting candidate, re-evaluated under each reservation policy.
+    // Never a fixed outline, cached proof or permission to bypass any gate.
+    std::optional<std::pair<double,double>> initial_outline;
+    // Opt-in local axis/diagonal multiscale refinement, not a global optimum.
+    // Retains the screened incumbent and every executed retry; no gate waiver.
+    bool multiscale_outline = false;
+    // Completed bounded edge searches, including unsuccessful candidates.
+    std::function<void(std::size_t, char, double)> edge_translation_completed;
+    // Every completed victim trial, including failed trials. Successful-event
+    // accounting is unchanged; this trace is not a gate or a substitute receipt.
+    std::function<void(const FloorplanReseatObservation&)> reseat_completed;
+    // Each executed failed stage, including compact/noncompact legalizer
+    // retries. An event is not necessarily the final outer-attempt result.
+    std::function<void(const FloorplanRejectionObservation&)> stage_rejected;
     std::function<void(const FloorplanAttemptObservation &)> attempt_completed;
     std::function<void(double)> unscoped_estimate;
 };
@@ -107,6 +203,9 @@ PcbPlacementObservation capture_pcb_experiment_frame(const PcbExperimentFrame &,
     std::string stage, std::optional<int> moved = std::nullopt);
 struct PcbPlacementExperiment {
     std::function<void(const PcbPlacementObservation &)> checkpoint;
+    // Read-only completed thermal trial: reference, board-space trial pose and
+    // first failed constraint (or "accepted"). No search-policy authority.
+    std::function<void(const std::string&,double,double,const std::string&)> thermal_trial;
 };
 template <class Snapshot>
 void observe_pcb_experiment_checkpoint(const PcbPlacementExperiment *experiment,

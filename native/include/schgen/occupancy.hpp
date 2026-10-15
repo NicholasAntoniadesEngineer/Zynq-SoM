@@ -24,6 +24,10 @@ struct Comp {
     double w = 0.0;
     double h = 0.0;
     int mask = 0;
+    // Physical child-face fanout, in the same W/E/N/S frame as this rectangle.
+    // Legacy/punch producers retain zero fields and their existing receipts.
+    Halo reach{};
+    Halo inset{};
 };
 
 struct Pose {
@@ -31,6 +35,13 @@ struct Pose {
     double y = 0.0;
     double w = 0.0;
     double h = 0.0;
+};
+
+struct NearPoseCandidates {
+    std::vector<Pose> poses;
+    std::size_t frontier_nodes = 0;
+    bool budget_exhausted = false;
+    bool search_complete = false;
 };
 
 struct CellKey {
@@ -81,9 +92,35 @@ public:
                                    int mask, const std::vector<Comp>& comps,
                                    double win_x0, double win_x1,
                                    double win_y0, double win_y1, QuantizationCounts* counts = nullptr) const;
+    // Ordered legal alternatives for bounded reconsideration. Both limits must
+    // be positive. Reaching a limit is not proof that the remaining domain is
+    // infeasible. Only fully ordered distance buckets are returned; occupancy
+    // is never changed and all executed scalar work remains in counts.
+    NearPoseCandidates place_near_candidates(double ax, double ay, double w, double h,
+                                   const Halo& reach, const Halo& inset,
+                                   int mask, const std::vector<Comp>& comps,
+                                   double win_x0, double win_x1, double win_y0, double win_y1,
+                                   std::size_t max_poses, std::size_t max_frontier_nodes,
+                                   QuantizationCounts* counts = nullptr) const;
     std::size_t rect_count() const { return rects_.size(); }
 
 private:
+    std::optional<Pose> place_near_impl(double ax, double ay, double w, double h,
+                                   const Halo& reach, const Halo& inset,
+                                   int mask, const std::vector<Comp>& comps,
+                                   double win_x0, double win_x1, double win_y0, double win_y1,
+                                   QuantizationCounts* counts, NearPoseCandidates* alternatives,
+                                   std::size_t max_poses, std::size_t max_frontier_nodes) const;
+    // Borrowed only for one immutable place_near invocation; never retained in
+    // Occupancy across edits, copies or changes to the candidate's children.
+    struct Rejection {
+        const Rect* obstacle = nullptr;
+        const Comp* child = nullptr;
+    };
+    bool fits_indexed(double x, double y, double w, double h,
+                      const Halo& reach, const Halo& inset, int mask,
+                      const std::vector<Comp>& comps, QuantizationCounts* counts,
+                      Rejection* rejection) const;
     void add_one(double x, double y, double w, double h, const Halo& reach,
                  const Halo& inset, int mask, int pmask, bool main, QuantizationCounts* counts);
     void remove_one(double x, double y, double w, double h, const Halo& reach,
@@ -94,7 +131,8 @@ private:
     bool query_hashed_cells(double x, double y, double w, double h,
                             const Halo& qh, const Halo& reach,
                             const Halo& inset, int qmask, int qpmask,
-                            bool qmain, QuantizationCounts* counts) const;
+                            bool qmain, QuantizationCounts* counts,
+                            const Rect** obstacle = nullptr) const;
 
     double board_w_;
     double board_h_;

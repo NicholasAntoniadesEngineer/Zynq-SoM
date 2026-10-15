@@ -10,5 +10,7 @@ double pack_shelf_extent_precision4dp(double value, QuantizationCounts* counts =
 int pack_control_fit_trunc(double value, QuantizationCounts* counts = nullptr);
 double pack_control_pose_precision4dp(double value, QuantizationCounts* counts = nullptr);
 double pack_edge_pose_precision4dp(double value, QuantizationCounts* counts = nullptr);
+// Integer tick index on the 1e-4 mm grid, not a millimetre coordinate.
+double pack_edge_lower_tick_ceil(double value, QuantizationCounts* counts = nullptr);
 double pack_hf_cap_pose_precision4dp(double value, QuantizationCounts* counts = nullptr);
 }

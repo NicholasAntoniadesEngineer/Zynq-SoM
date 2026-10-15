@@ -1,0 +1,16 @@
+{
+  "status":"rejected_connector_relative_anchor_experiments",
+  "base_commit":"5f66fada",
+  "scope":"Investigate moving USB-JTAG earlier through existing declared placement policy, without widening the legalizer's movable set.",
+  "candidate_spec":"native/benchmarks/carrier-167x159-jtag-near-connector.floorplan.json",
+  "policy":"South-interleaved 167x159 experiment plus USB-JTAG near its own connector. Final saved variant uses existing inboard exclusive-pull mechanism and the same optimisation weight 60 used by UART/PD seating. This is not a new hardware distance requirement or accepted design policy.",
+  "screens":[
+    {"variant":"near-only (before adding pull)","order":3,"log":"native/build/carrier-jtag-near-connector-screen.log","seconds":0.387833542,"exit_code":1,"failure":"legalizer: hdmi_rx_term separation flipped onto already-solved X axis in compact and noncompact modes"},
+    {"variant":"saved inboard exclusive pull","order":3,"log":"native/build/carrier-jtag-inboard-screen.log","seconds":0.389646583,"exit_code":1,"failure":"same legalizer conflict; executed operation receipts changed, confirming policy affected actual work"},
+    {"variant":"saved inboard exclusive pull","order":0,"log":"native/build/carrier-jtag-inboard-order0-screen.log","seconds":0.328733458,"exit_code":1,"failure":"interior_seating subject=power before legalizer"}
+  ],
+  "common_command":"native/build/fast/schgen_compact_stage_profile --repo . --project carrier --compact-search on --interior-order ORDER --floorplan-spec native/benchmarks/carrier-167x159-jtag-near-connector.floorplan.json --runs 1 --input-mode prepared --edge-feasibility on --owned-quality-first on --owned-face-cohesion on --owned-shape board_aux=owned-face-fixed/a2.2/owned-pins-forward --schematic /private/tmp/carrier-owned-fixed-qualified.Z1zLPo/Zynq_Carrier.kicad_sch",
+  "movement_review":"The composer moves the intersection of hard-term participants and compose.wired_participants (from Context.l4_exempt), leaving other packed interiors fixed. Per-part eviction has separate, more restrictive eligibility. No change to either permission path was made. The constraint-first order globally sorts by hard incidence/area; normal order retains its earlier tiering for exclusive pulls.",
+  "decision":"Do not promote these hints or enlarge movement permissions merely to remove a failure. Preserve the accepted 168x159 reference. Further work should reserve space for constrained groups jointly with neighbours rather than continue isolated hint tuning.",
+  "limitations":["Three bounded screens are not an infeasibility proof.","No full qualification repeated for rejected constructions.","The saved candidate remains experimental, and the near-only case is described here for reconstruction.","No accepted area/runtime improvement or fabrication-readiness claim."]
+}

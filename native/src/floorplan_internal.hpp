@@ -11,9 +11,41 @@
 #include "schgen/turn.hpp"
 
 #include <array>
+#include <algorithm>
 #include <memory>
+#include <tuple>
 
 namespace schgen::floorplan_detail {
+
+// Ranking consumes validated metrics; aggregate wire reference is not a gate.
+using OutlineCandidate=std::tuple<double,double,double,double,double>; // area,w,h,estimate,reference
+inline bool prefer_outline(const OutlineCandidate& a,const OutlineCandidate& b) {
+    return std::tie(std::get<0>(a),std::get<3>(a),std::get<1>(a),std::get<2>(a))<
+           std::tie(std::get<0>(b),std::get<3>(b),std::get<1>(b),std::get<2>(b));
+}
+
+inline std::vector<std::size_t> shape_area_trial_order(const std::vector<double>& areas) {
+    std::vector<std::size_t> order;
+    for(std::size_t i=0;i<areas.size();++i)order.push_back(i);
+    std::stable_sort(order.begin(),order.end(),[&](auto a,auto b){return areas[a]<areas[b];});
+    return order;
+}
+
+// Scarcity is the number of permitted choices, not the registry size. A
+// selected shape does not retain flexibility from its disallowed alternatives.
+template<class Eligible>
+inline std::size_t permitted_shape_count(std::size_t registered,std::optional<int> selected,
+                                        Eligible eligible) {
+    if(selected)return *selected>=0&&static_cast<std::size_t>(*selected)<registered&&
+        eligible(static_cast<std::size_t>(*selected))?1:0;
+    std::size_t count=0;
+    for(std::size_t index=0;index<registered;++index)if(eligible(index))++count;
+    return count;
+}
+inline std::size_t permitted_shape_count(std::size_t registered,std::optional<int> selected) {
+    if(!selected)return registered;
+    return *selected>=0&&static_cast<std::size_t>(*selected)<registered?1:0;
+}
 
 using board_decision_policy::floorplan::clear;
 inline constexpr double edge_margin = 10, mh_corner = 10;
@@ -32,6 +64,7 @@ inline constexpr double affinity_floor = .05;
 inline constexpr int reseat_evict_budget = 3, refine_span = 40;
 
 bool starts(const std::string& value, const std::string& prefix);
+std::set<std::string> deferred_connector_names(const std::string& expectation);
 std::string number(double value, int precision = -1);
 std::string repr(const std::string& value);
 JsonNode jvalue(const std::string& value);
@@ -99,6 +132,11 @@ public:
     std::array<std::map<FloorplanShapeKey, std::vector<Comp>>, 2> components;
     std::array<std::map<std::string, std::vector<Shape>>, 2> shape_sets;
     std::map<std::string, SideOffer> side_offers;
+    std::map<std::string,int> owned_shape_choices;
+    using ShapeChoiceTrace=std::vector<std::pair<std::string,std::vector<int>>>;
+    ShapeChoiceTrace* shape_replay_trace=nullptr;
+    bool shape_replay_trace_started=false;
+    std::map<std::string,int> shape_replay_choices;
     std::vector<CrossPart> cross_parts;
     std::vector<CrossNet> cross_nets;
     std::map<std::string, std::vector<std::size_t>> nets_by_sheet;
@@ -107,6 +145,14 @@ public:
     int n_sub = 0, n_impedance = 0;
     std::string impedance_classes;
     FloorplanPoint offset{};
+    // Per-attempt search state, never persisted into project policy.
+    int compact_order = 0;
+    // Single invocation-owned search-order hint, never cached geometry or
+    // acceptance evidence. Changed geometry is always checked afresh.
+    using ContinuationKey=std::tuple<double,double,bool,bool,int>;
+    std::optional<std::pair<ContinuationKey,std::size_t>> continuation_hint;
+    // An ordering hint only. Replayed choices are reseated and checked afresh.
+    std::optional<std::pair<ContinuationKey,std::map<std::string,int>>> shape_replay_hint;
 
     std::vector<FloorplanBlock*> blocks();
     const CachedFootprint& footprint(const std::string& key) const;
@@ -117,17 +163,23 @@ public:
     void initialize();
     void prepare_geometry();
     void prepare_cross();
+    double packing_area_bound(bool free);
     double estimate(const std::vector<const FloorplanBlock*>& blocks,
                     const std::string& only_sheet = {});
     double estimate();
-    std::pair<Halo, Halo> fanout(const FloorplanZoneShape& shape, bool base);
+    std::pair<Halo, Halo> fanout(const FloorplanZoneShape& shape);
     std::vector<Comp> zone_components(const FloorplanZoneShape& shape,
                                       bool pad_punch, QuantizationCounts* counts) const;
     std::vector<Box4> pad_boxes(const std::string& key, double rotation,
                                 bool thru_only = false) const;
     void board_size(double w, double h);
     bool attempt_pack(bool compact);
-    bool attempt_pack_impl(bool compact);
+    bool attempt_shape_replays(bool compact);
+    bool attempt_pack_impl(bool compact,bool* order_independent_failure=nullptr,
+                           const std::string& promote={},std::string* failed_subject=nullptr,
+                           std::size_t first_pose_skip=0,bool* selected_pose=nullptr,
+                           bool victim_shapes=false,bool incoming_shapes=false);
+    double refine_screened_incumbent(double incumbent_estimate);
     void choose_connector_shapes();
     PackAnchorIn anchor_row(const FloorplanBlock& b,
                             const std::map<std::string, FloorplanPoint>& centers) const;

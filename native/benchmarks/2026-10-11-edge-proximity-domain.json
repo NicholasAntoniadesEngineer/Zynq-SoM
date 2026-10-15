@@ -1,0 +1,60 @@
+{
+  "base_commit": "454a4e83",
+  "change": "Apply necessary hard near_max translation domains to fixed edge connector targets during interior seating, shape trials, eviction and refinement, alongside existing SoM connector domains. Use selected local pad hulls translated by final edge poses, not body envelopes. Missing geometry leaves evaluation to later gates; moving interior targets are not frozen.",
+  "acceptance_unchanged": "The one-grid-cell search guard only bounds exploration. Exact final distance and physical checks retain their existing limits. No hardware requirement is relaxed.",
+  "tests": {
+    "coverage": "16 actual Engine fixtures: SoM or edge target, top shape zero or forced bottom shape one with distinct pad hull, and each E/N/S/W preferred anchor. Isolate seating/refinement from legalization.",
+    "negative_control": "Disabling only the new edge domain fails native_floorplan_contracts: side hint bypassed hard connector proximity during seating/refinement.",
+    "negative_log": "native/build/edge-domain-negative-tests.log",
+    "restored_final": "native_floorplan_contracts and native_model_failure_receipt_contracts both pass, 13.69 seconds total test wall time.",
+    "final_log": "native/build/edge-domain-final-tests.log"
+  },
+  "screens": [
+    {
+      "board": "carrier compact qualified configuration",
+      "outline_mm": [166,159],
+      "model_seconds": [2.687831292,2.736980792],
+      "text_emit_seconds": [0.034204542,0.033739375],
+      "pcb_sha256": "4d1432b252230cbfc6e7342de7f0e431a0f12dc16d7d26ebd08fe0a67508bab1",
+      "same_as_qualified_reference": true,
+      "top": 416, "bottom": 153,
+      "contract_pass": true, "flow_pass": true, "hard_red": 0,
+      "hard_margin_min": 4.07, "hard_margin_sum": 887.46,
+      "log": "native/build/carrier-edge-domain.log"
+    },
+    {
+      "board": "devkit_mini multiscale qualified configuration",
+      "outline_mm": [98,98],
+      "model_seconds": [0.428344292,0.426253125],
+      "text_emit_seconds": [0.008851667,0.0084445],
+      "pcb_sha256": "cfa0305491d9c4a771adb130b04c4aec6cc2894542391a5c7c9dca3a68bca3cf",
+      "same_as_qualified_reference": true,
+      "top": 106, "bottom": 57,
+      "contract_pass": true, "flow_pass": true, "hard_red": 0,
+      "hard_margin_min": 38.28, "hard_margin_sum": 147.52,
+      "log": "native/build/devkit-edge-domain.log"
+    },
+    {
+      "board": "carrier ordinary reference",
+      "outline_mm": [168,163],
+      "model_seconds": [7.110384959],
+      "text_emit_seconds": [0.03146675],
+      "pcb_sha256": "9310d975f4ef23d71e9c154f74a46a8ca46366d4f52568ba1c22a31992ffc8c5",
+      "same_as_reference": true,
+      "top": 393, "bottom": 176,
+      "contract_pass": true, "flow_pass": true, "hard_red": 0,
+      "hard_margin_min": 3.06, "hard_margin_sum": 955.24,
+      "log": "native/build/carrier-edge-domain-default.log"
+    }
+  ],
+  "smaller_screen": {
+    "outline_mm": [165,159],
+    "accepted": false,
+    "failure": "usb_jtag interior seating",
+    "failure_seconds": 0.2982575,
+    "outer_attempts": 2,
+    "failure_receipt_captured": true,
+    "log": "native/build/carrier-edge-domain-165x159.log"
+  },
+  "limitations": "Construction screens and targeted tests, not new complete audit/render qualification. Timing samples may overlap targeted tests and are not a controlled speed comparison. No smaller board or speed improvement demonstrated. Current-layout equality is a non-regression observation, not a requirement for future optimization. Historical Python workload comparison remains outstanding."
+}

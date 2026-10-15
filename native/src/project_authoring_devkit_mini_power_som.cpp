@@ -9,14 +9,11 @@ CircuitSheetIr devkit_mini_power_som(const SubsystemMeta& meta, const AuthoringC
         p.ref = "U4";
         c.use_part("LM61460AANRJRR", p);
     }
-    c.net("+VIN_SYS", {"U4.8", "U4.12"}, std::nullopt);
+    // SNVSBD5D 8.3.1: direct VIN enable gives the required always-on self-start.
+    // No external EN delay is specified; input filtering and internal UVLO/
+    // soft-start remain. This does not qualify input transients or timing.
+    c.net("+VIN_SYS", {"U4.7", "U4.8", "U4.12"}, std::nullopt);
     c.net("GND", {"U4.9", "U4.11", "U4.3"}, std::nullopt);
-    c.part("R12", "Device:R", "10k", "Resistor_SMD:R_0603_1608Metric", {{"LCSC", "C25804"}});
-    c.part("D5", "Device:D_Zener", "MMSZ5231B", "Diode_SMD:D_SOD-123", {{"LCSC", "C85181"}});
-    c.part("C20", "Device:C", "100n", "Capacitor_SMD:C_0603_1608Metric", {{"LCSC", "C14663"}});
-    c.net("+VIN_SYS", {"R12.1"}, std::nullopt);
-    c.net("EN_5V_SOM", {"U4.7", "R12.2", "D5.1", "C20.1"}, std::nullopt);
-    c.net("GND", {"D5.2", "C20.2"}, std::nullopt);
     c.part("C14", "Device:C", "100n", "Capacitor_SMD:C_0603_1608Metric", {{"LCSC", "C14663"}});
     c.net("+VIN_SYS", {"C14.1"}, std::nullopt);
     c.net("GND", {"C14.2"}, std::nullopt);

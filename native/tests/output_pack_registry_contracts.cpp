@@ -13,7 +13,7 @@
 #include <iostream>
 namespace {
 using namespace schgen;
-const std::array<std::string,25> names{{"floorplan_svg_extent_trunc",
+const std::array<std::string,26> names{{"floorplan_svg_extent_trunc",
     "floorplan_svg_grid_trunc",
     "floorplan_svg_coordinate_precision1dp",
     "pcb_project_integer_trunc",
@@ -37,8 +37,8 @@ const std::array<std::string,25> names{{"floorplan_svg_extent_trunc",
     "pack_control_fit_trunc",
     "pack_control_pose_precision4dp",
     "pack_edge_pose_precision4dp",
-    "pack_hf_cap_pose_precision4dp"}};
-const std::array<void*,25> addresses{{reinterpret_cast<void*>(&floorplan_svg_extent_trunc),
+    "pack_hf_cap_pose_precision4dp","pack_edge_lower_tick_ceil"}};
+const std::array<void*,26> addresses{{reinterpret_cast<void*>(&floorplan_svg_extent_trunc),
     reinterpret_cast<void*>(&floorplan_svg_grid_trunc),
     reinterpret_cast<void*>(&floorplan_svg_coordinate_precision1dp),
     reinterpret_cast<void*>(&pcb_project_integer_trunc),
@@ -62,8 +62,8 @@ const std::array<void*,25> addresses{{reinterpret_cast<void*>(&floorplan_svg_ext
     reinterpret_cast<void*>(&pack_control_fit_trunc),
     reinterpret_cast<void*>(&pack_control_pose_precision4dp),
     reinterpret_cast<void*>(&pack_edge_pose_precision4dp),
-    reinterpret_cast<void*>(&pack_hf_cap_pose_precision4dp)}};
-std::array<std::size_t,25> entries{};
+    reinterpret_cast<void*>(&pack_hf_cap_pose_precision4dp),reinterpret_cast<void*>(&pack_edge_lower_tick_ceil)}};
+std::array<std::size_t,26> entries{};
 bool observing=false;
 void require(bool ok,const std::string& why){if(!ok)throw std::runtime_error(why);}
 std::uint64_t bits(double x){std::uint64_t result;std::memcpy(&result,&x,sizeof result);return result;}
@@ -75,7 +75,7 @@ QuantizationCounts end(){
 }
 void registry(){
     NativeQuantizations q;register_native_quantizations(q);
-    const auto ds=q.declarations();require(ds.size()==155,"122 prior plus9 search plus18 plain plus6 grid");
+    const auto ds=q.declarations();require(ds.size()==156,"122 prior plus9 search plus18 plain plus6 grid plus1 edge tick");
     for(const auto& path:{"native/src/output_precision.cpp","native/src/pack_precision.cpp"}){
         for(const auto& sources:{native_board_policy_audit_sources(),board_pipeline_audit_sources()})
             require(std::count_if(sources.begin(),sources.end(),[&](const auto& source){return source.path==path;})==1,
@@ -93,6 +93,7 @@ void registry(){
             if(i==2){args={x,46.,6.};expected=svg_map(x,46.,6.);}
             else if(i<2||i==21)expected=static_cast<double>(static_cast<int>(x));
             else if(i==3)expected=std::trunc(x);
+            else if(i==25)expected=std::ceil(x*10000.);
             else{
                 const int digits=i==8||i==10?1:i==9?2:i==5||i==6||i==7||i==12?3:4;
                 expected=py_round(x,digits);

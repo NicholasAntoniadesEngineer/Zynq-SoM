@@ -1,0 +1,113 @@
+{
+  "parent_commit": "7e36716c",
+  "change": "Replace the rounded-distance bucket hash map plus second priority queue in Occupancy::place_near_impl with an ordered deque. Raw frontier distances and exact decimal rounding are monotone, so bucket keys already arrive sorted.",
+  "invariants": "Preserve raw frontier visitation, rounding calls, strict half-step flush condition, x/y ordering within each bucket, collision predicates, budget/result-cap semantics, accounting and emitted geometry. No legal candidate pruning or hardware policy changes.",
+  "tests": {
+    "suites": {
+      "native_occupancy_child_halo_contracts": 0.48,
+      "native_compact_retry_contracts": 5.39,
+      "native_occupancy_cell_counter_contracts": 0.46,
+      "native_occupancy_precision_contracts": 7.94
+    },
+    "status": "All PASS; subsequently expanded dense frontier tests also PASS.",
+    "logs": [
+      "native/build/occupancy-bucket-tests.log",
+      "native/build/occupancy-bucket-dense-tests.log"
+    ],
+    "new_coverage": "75 dense-grid combinations: five steps, three conservative flush margins, and five anchors including adjacent binary64 values around a decimal boundary. Enumerate every physically legal pose independently, sort by rounded Manhattan distance/x/y, compare complete returned sequences and independently observed scalar receipts. Existing child/THT masks, bounded search and changing-blocker oracles remain covered."
+  },
+  "benchmark": {
+    "baseline_cpp_commit": "7e36716c",
+    "baseline_binary": "/private/tmp/occupancy-bucket-bench.ZHCgoU/profile-before",
+    "baseline_binary_sha256": "bfbc9e27d51aead9f1ebdb023c4a39eea385e85b207924a7021c7dd152e6e765",
+    "candidate_binary": "/private/tmp/occupancy-bucket-bench.ZHCgoU/profile-after",
+    "candidate_binary_sha256": "17007ccd6b55402a2a095e4dfb7a7e58214e6e7b965ec1928a4f09d6db1f331a",
+    "design": "Three serial pairs for each board; orders before-after, after-before, before-after. Same executable target/compiler configuration, repository inputs, schematic input, host and CLI options. No agent build/test process ran concurrently during these pairs. Other host load was not controlled.",
+    "carrier_args": "--repo . --project carrier --compact-search on --edge-feasibility on --owned-quality-first on --owned-face-cohesion on --contract-group-face-sheet usb_jtag --require-bottom-sheet power_mon --require-bottom-sheet bringup_modules --require-bottom-sheet bringup_en_modules --joint-separation-states 1024 --reseat-poses 8 --reseat-frontier 4096 --reseat-continuations 3 --reseat-victim-shapes on --owned-shape board_aux=owned-face-a1.000000 --owned-shape bringup_rails=bottom-a2.2/r270/owned-pins-forward --schematic /private/tmp/carrier-166x156-two-pilots.iK3HkI/Zynq_Carrier.kicad_sch --runs 1 --interior-order 3 --failed-first-retry on --shape-area-first on --floorplan-spec native/benchmarks/carrier-163x153-combined-bottom.floorplan.json",
+    "devkit_args": "--repo . --project devkit_mini --compact-search off --multiscale-outline on --schematic /private/tmp/devkit-two-projections.uH3KcT/Zynq_Carrier.kicad_sch --runs 1",
+    "carrier": {
+      "pairs": [
+        {
+          "trial": 1,
+          "order": "before-after",
+          "before_model_seconds": 11.933679583,
+          "after_model_seconds": 11.909982292,
+          "before_text_seconds": 0.026268834,
+          "after_text_seconds": 0.027978833,
+          "before_log": "native/build/occupancy-bucket-before-1.log",
+          "after_log": "native/build/occupancy-bucket-after-1.log"
+        },
+        {
+          "trial": 2,
+          "order": "after-before",
+          "before_model_seconds": 12.72065775,
+          "after_model_seconds": 12.026021791,
+          "before_text_seconds": 0.027604292,
+          "after_text_seconds": 0.02749375,
+          "before_log": "native/build/occupancy-bucket-before-2.log",
+          "after_log": "native/build/occupancy-bucket-after-2.log"
+        },
+        {
+          "trial": 3,
+          "order": "before-after",
+          "before_model_seconds": 12.392345042,
+          "after_model_seconds": 12.309105,
+          "before_text_seconds": 0.027744125,
+          "after_text_seconds": 0.029064834,
+          "before_log": "native/build/occupancy-bucket-before-3.log",
+          "after_log": "native/build/occupancy-bucket-after-3.log"
+        }
+      ],
+      "median_before_model_seconds": 12.392345042,
+      "median_after_model_seconds": 12.026021791,
+      "median_change_percent": -2.9560446368985205,
+      "receipt_lines_compared": 154
+    },
+    "devkit": {
+      "pairs": [
+        {
+          "trial": 1,
+          "order": "before-after",
+          "before_model_seconds": 0.19032025,
+          "after_model_seconds": 0.190289666,
+          "before_text_seconds": 0.007750917,
+          "after_text_seconds": 0.007800042,
+          "before_log": "native/build/occupancy-bucket-devkit-before-1.log",
+          "after_log": "native/build/occupancy-bucket-devkit-after-1.log"
+        },
+        {
+          "trial": 2,
+          "order": "after-before",
+          "before_model_seconds": 0.186929917,
+          "after_model_seconds": 0.1848525,
+          "before_text_seconds": 0.007286792,
+          "after_text_seconds": 0.007773875,
+          "before_log": "native/build/occupancy-bucket-devkit-before-2.log",
+          "after_log": "native/build/occupancy-bucket-devkit-after-2.log"
+        },
+        {
+          "trial": 3,
+          "order": "before-after",
+          "before_model_seconds": 0.189201708,
+          "after_model_seconds": 0.184004,
+          "before_text_seconds": 0.007661875,
+          "after_text_seconds": 0.007863042,
+          "before_log": "native/build/occupancy-bucket-devkit-before-3.log",
+          "after_log": "native/build/occupancy-bucket-devkit-after-3.log"
+        }
+      ],
+      "median_before_model_seconds": 0.189201708,
+      "median_after_model_seconds": 0.1848525,
+      "median_change_percent": -2.298714977773876,
+      "receipt_lines_compared": 118
+    }
+  },
+  "equivalence": {
+    "carrier_pcb_sha256": "d954ec91a789f69a1e94a26a9d3a91b279fbc208dff2503cbe8ee4c8eabc199f",
+    "devkit_pcb_sha256": "1b12fecbcbbaa5e6084c2459da93cb144a660ff19805e6e4e3f75f9c22689fdb",
+    "receipts": "All model_total quantization receipts and fallback event totals match exactly across all six runs for each board: 154 carrier rows, 118 devkit rows. Successful profiler logs expose event totals, not complete fallback sequence order.",
+    "cheap_checks": "All 12 runs PASS fanout, ratsnest, placement contract and placement flow; hard_red=0; model/emission nonsearch fallback events=0."
+  },
+  "limitations": "Modest observed model-time change with run-to-run variability; not a guaranteed speedup or full build/render/audit/compile timing. Text-emission times are separately recorded, including slower samples. No board area change or new full qualification. This compares two C++ versions only; the requested historical Python comparison remains outstanding.",
+  "next_work": "Investigate whether provably blocked occupancy intervals can avoid enumerating rejected lattice nodes while preserving all feasible poses, exact contact boundaries, face/child geometry and honest operation accounting. Profile CPU cost rather than infer time from scalar-call volume alone."
+}

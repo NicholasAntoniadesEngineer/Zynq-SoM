@@ -60,7 +60,8 @@ bool ground(const CircuitNetIr& n){return n.net_class=="ground";}
 bool power(const CircuitNetIr& n){return n.net_class=="power";}
 bool signal(const CircuitNetIr& n){return n.net_class=="signal"||n.net_class=="port";}
 std::string resistor_description(const Passive& p){return p.ref+"="+g(p.value)+"R";}
-void auto_dividers(const std::string& sheet,const SpiceIndex& idx,SpiceResult& out,const PowerPolicy& policy) {
+void auto_dividers(const std::string& sheet,const SpiceIndex& idx,SpiceResult& out,const PowerPolicy& policy,
+                   std::set<std::string>& extracted_named) {
     for(const auto& net:idx.c.nets) {
         if(!signal(net))continue;const auto& rs=idx.on(net.name);if(rs.size()!=2)continue;
         const auto tops=select(rs,[](const auto& n){return power(n)||source_override(n.name);});const auto bots=select(rs,ground);
@@ -71,14 +72,14 @@ void auto_dividers(const std::string& sheet,const SpiceIndex& idx,SpiceResult& o
         const auto prefix=src.name+" -["+resistor_description(top)+"]- "+net.name+" -["+resistor_description(bot)+"]- GND @ ";
         if(named==named_dividers().end()) {
             const double v=volts(src.name,policy);if(v==0)continue;
-            out.checks.push_back({"divider "+net.name,sheet,"divider",prefix+g(v)+" V (informational, no named threshold)",py_round(v*ratio,4),"V",{}, {},"analytic",{}});continue;
+            out.checks.push_back({"divider "+net.name,sheet,"divider",prefix+g(v)+" V (informational, no named threshold)",v*ratio,"V",{}, {},"analytic",{}});continue;
         }
         const bool source_ok=src.name==named->source;
+        if(!source_ok)throw ModelCheckError("required divider "+net.name+": source "+src.name+", expected "+named->source);
+        extracted_named.insert(net.name);
         for(const auto& sub:named->checks) {
             auto v=sub.volts;auto tag=sub.tag;
-            if(!source_ok){v=volts(src.name,policy);tag+="; SOURCE IS "+src.name+" ("+g(v)+" V), expected "+named->source;}
-            out.checks.push_back({"divider "+net.name+" ["+tag+"]",sheet,"divider",prefix+g(v)+" V: "+named->why,py_round(v*ratio,4),"V",sub.lo,sub.hi,"analytic",{}});
-            if(!source_ok)break;
+            out.checks.push_back({"divider "+net.name+" ["+tag+"]",sheet,"divider",prefix+g(v)+" V: "+named->why,v*ratio,"V",sub.lo,sub.hi,"analytic",{}});
         }
     }
 }
@@ -97,7 +98,7 @@ void rc_networks(const std::string& sheet,const SpiceIndex& idx,SpiceResult& out
         else continue;
         double farads=0;std::vector<std::string> refs;for(const auto& cap:caps){farads+=cap.value;refs.push_back(cap.ref);}
         out.checks.push_back({"RC "+net.name,sheet,"rc","debounce/reset ramp: "+src+" with "+join(refs,"+")+"="+g(farads*1e9)+"n -> tau must mask >=0.2 ms bounce, release <20 ms",
-            py_round(ohms*farads*1e3,3),"ms",0.2,20.0,"analytic",{}});
+            ohms*farads*1e3,"ms",0.2,20.0,"analytic",{}});
     }
 }
 void sy7201_iset(const std::string& sheet,const SpiceIndex& idx,SpiceResult& out) {
@@ -105,27 +106,27 @@ void sy7201_iset(const std::string& sheet,const SpiceIndex& idx,SpiceResult& out
         if(!starts(p->value,"SY7201"))continue;std::vector<std::string> pins{"?"};
         for(const auto& alias:p->pin_names)if(alias.name=="FB"){pins=alias.numbers;break;}
         const CircuitNetIr* fb=nullptr;for(const auto& pin:pins){fb=idx.net(ref,pin);if(fb)break;}
-        if(!fb){out.notes.push_back("NOTE: "+sheet+":"+ref+" SY7201 FB pin not netted");continue;}
+        if(!fb)throw ModelCheckError("SPICE unverified: "+sheet+":"+ref+" SY7201 FB pin not netted");
         const auto rs=select(idx.on(fb->name),ground);
-        if(rs.empty()){out.notes.push_back("NOTE: "+sheet+":"+ref+" SY7201 ISET resistor not found on "+fb->name);continue;}
-        const auto& r=rs[0];out.checks.push_back({"SY7201 ISET ("+r.ref+")",sheet,"iset","I_LED = 0.2 V / "+g(r.value)+"R; panel-class window 125-150 mA (lcd_backlight.md)",py_round(divide(0.2,r.value)*1e3,1),"mA",125.0,150.0,"analytic",{}});
+        if(rs.empty())throw ModelCheckError("SPICE unverified: "+sheet+":"+ref+" SY7201 ISET resistor not found on "+fb->name);
+        const auto& r=rs[0];out.checks.push_back({"SY7201 ISET ("+r.ref+")",sheet,"iset","I_LED = 0.2 V / "+g(r.value)+"R; panel-class window 125-150 mA (lcd_backlight.md)",divide(0.2,r.value)*1e3,"mA",125.0,150.0,"analytic",{}});
     }
 }
 void buck_fb(const std::string& sheet,const SpiceIndex& idx,const std::vector<PowerReg>& regs,SpiceResult& out,const PowerPolicy& policy) {
     for(const auto& reg:regs) {
         if(reg.kind!="buck")continue;std::optional<double> vref;
         for(const auto& [prefix,v]:std::vector<std::pair<std::string,double>>{{"TPS54302",vref_tps54302},{"LMR33630",1.0},{"LM61460",1.0}})if(starts(reg.value,prefix)){vref=v;break;}
-        if(!vref){out.notes.push_back("NOTE: "+sheet+":"+reg.ref+" ("+reg.value+") has no FB_VREF entry — FB divider unchecked");continue;}
+        if(!vref)throw ModelCheckError("SPICE unverified: "+sheet+":"+reg.ref+" ("+reg.value+") has no FB_VREF entry — FB divider unchecked");
         const CircuitNetIr* fb=nullptr;std::vector<Passive> tops,bots;
         for(const auto& net:idx.c.nets) {
             if(net.net_class!="signal"||std::none_of(net.pins.begin(),net.pins.end(),[&](const auto& p){return p.ref==reg.ref;}))continue;
             auto t=select(idx.on(net.name),[&](const auto& other){return other.name==reg.vout;});auto b=select(idx.on(net.name),ground);
             if(!t.empty()&&!b.empty()){fb=&net;tops=std::move(t);bots=std::move(b);break;}
         }
-        if(!fb){out.notes.push_back("NOTE: "+sheet+":"+reg.ref+" FB divider not found");continue;}
+        if(!fb)throw ModelCheckError("SPICE unverified: "+sheet+":"+reg.ref+" FB divider not found");
         const auto& t=tops[0];const auto& b=bots[0];const double value=*vref*(1+divide(t.value,b.value)),nominal=rail_volts(reg.vout,policy).value_or(0);
         out.checks.push_back({reg.value+" FB ("+reg.vout+")",sheet,"fb_divider","Vout = "+(*vref==1?"1.0":g(*vref))+" * (1 + "+t.ref+"/"+b.ref+" = "+g(t.value)+"/"+g(b.value)+") vs nominal "+g(nominal)+" V +/-3%",
-            py_round(value,4),"V",nominal*0.97,nominal*1.03,"analytic",{}});
+            value,"V",nominal*0.97,nominal*1.03,"analytic",{}});
     }
 }
 std::string en_pin(const CircuitPartIr& part) {
@@ -133,73 +134,123 @@ std::string en_pin(const CircuitPartIr& part) {
 }
 void en_clamp(const std::string& sheet,const SpiceIndex& idx,const std::vector<PowerReg>& regs,SpiceResult& out,const PowerPolicy& policy) {
     for(const auto& reg:regs) {
-        if(reg.kind!="buck")continue;const auto* en=idx.net(reg.ref,en_pin(*idx.parts.at(reg.ref)));
+        if(reg.kind!="buck")continue;
+        // SNVSBD5D 8.3.1 explicitly supports EN/SYNC tied to VIN for self-start.
+        // Bind the actual pins of the reviewed part, not a possibly stale alias
+        // or a same-named net. This verifies connectivity only, not VIN bounds,
+        // startup timing, transients or regulator operation.
+        if(starts(reg.value,"LM61460")){
+            const auto* en=idx.net(reg.ref,"7");const auto* vin1=idx.net(reg.ref,"8");const auto* vin2=idx.net(reg.ref,"12");
+            const auto unique=[&](const std::string& number){
+                std::size_t count=0;
+                for(const auto& net:idx.c.nets)for(const auto& pin:net.pins)if(pin.ref==reg.ref&&pin.pin==number)++count;
+                return count==1;
+            };
+            if(reg.value=="LM61460AANRJRR"&&en&&power(*en)&&en==vin1&&en==vin2&&unique("7")&&unique("8")&&unique("12")){
+                out.engine="analytic spot checks + netlist topology";
+                out.checks.push_back({"LM61460 direct VIN enable ("+reg.ref+")",sheet,"enable_topology",
+                    "SNVSBD5D 8.3.1 self-start topology: EN/SYNC pin 7 and VIN pins 8/12 share one power net; connectivity only, not input-envelope or transient qualification",
+                    1,"match",1.0,1.0,"netlist topology",{}});
+                continue;
+            }
+            // This named always-on rail must not lose the missing-model
+            // receipt merely because its series resistor or EN wire disappears.
+            if(reg.vout=="+5V_SOM"){
+                out.unverified.push_back("SPICE unverified: "+sheet+":"+reg.ref+" ("+reg.value+") enable network needs a device-specific model; TPS54302 assumptions do not apply");
+                continue;
+            }
+        }
+        const auto* en=idx.net(reg.ref,en_pin(*idx.parts.at(reg.ref)));
         if(!en||en->net_class!="signal")continue;const auto series=select(idx.on(en->name),power);
         std::vector<std::pair<std::string,std::string>> zeners;
         for(const auto& [ref,p]:idx.parts)if(ends(p->lib_id,":D_Zener")) {
             const auto a=idx.net(ref,"1"),b=idx.net(ref,"2");if(!a||!b)continue;
             if((a->name==en->name||b->name==en->name)&&(ground(*a)||ground(*b)))zeners.emplace_back(ref,p->value);
         }
-        if(series.empty())continue;const auto& r=series[0];const auto& rail=*r.other;const double v=rail_volts(rail.name,policy).value_or(0);
+        if(series.empty())continue;
+        // These equations and limits come from TPS54302 SLVSDG6C, not from
+        // the generic buck topology. In particular LM61460 SNVSBD5D has its
+        // own EN/SYNC characteristics and a typical-only input-current entry.
+        // Do not turn that missing qualified model into a different IC's PASS.
+        if(!starts(reg.value,"TPS54302")){
+            out.unverified.push_back("SPICE unverified: "+sheet+":"+reg.ref+" ("+reg.value+") enable network needs a device-specific model; TPS54302 assumptions do not apply");
+            continue;
+        }
+        const auto& r=series[0];const auto& rail=*r.other;const double v=rail_volts(rail.name,policy).value_or(0);
         if(zeners.empty()) {
             const auto bots=select(idx.on(en->name),ground);double ceiling;std::string topo;
             if(!bots.empty()){const auto& b=bots[0];ceiling=divide(21.0*b.value,r.value+b.value);topo="divider "+resistor_description(r)+"/"+resistor_description(b);}
             else{ceiling=21.0-en_ihys*r.value;topo="series "+resistor_description(r)+" only (no shunt)";}
-            out.checks.push_back({"EN clamp ceiling ("+reg.ref+")",sheet,"en_clamp",rail.name+"="+g(v)+"V EN strap "+topo+", NO clamp zener: EN at VIN=21.0V must stay <= the EN recommended-max 5.5V (TPS54302 has NO internal EN clamp — SLVSDG6C; PWR-1)",py_round(ceiling,3),"V",{},5.5,"analytic",{}});continue;
+            out.checks.push_back({"EN clamp ceiling ("+reg.ref+")",sheet,"en_clamp",rail.name+"="+g(v)+"V EN strap "+topo+", NO clamp zener: EN at VIN=21.0V must stay <= the EN recommended-max 5.5V (TPS54302 has NO internal EN clamp — SLVSDG6C; PWR-1)",ceiling,"V",{},5.5,"analytic",{}});continue;
         }
         const auto& [zref,zval]=zeners[0];
-        if(!starts(zval,"MMSZ5231B")&&!starts(zval,"BZT52C5V1")){out.notes.push_back("NOTE: "+sheet+":"+zref+" zener "+zval+" has no modelled Vz — EN clamp not checked");continue;}
+        if(!starts(zval,"MMSZ5231B")&&!starts(zval,"BZT52C5V1"))throw ModelCheckError("SPICE unverified: "+sheet+":"+zref+" zener "+zval+" has no modelled Vz — EN clamp not checked");
         auto en_at=[&](double vin,double test){const double knee=test-zener_izt*zener_zzt,open=vin-en_ihys*r.value;if(open<=knee)return open;
             const double iz=divide(vin-test+zener_izt*zener_zzt-r.value*en_ihys,r.value+zener_zzt);return test+(iz-zener_izt)*zener_zzt;};
         const double turnon=std::min(en_at(4.75,4.845),en_at(4.75,5.355)),ceiling=en_at(21.0,5.355);
         const auto pre=rail.name+"="+g(v)+"V -["+resistor_description(r)+"]- EN, "+zref+"="+zval+" zener->GND: EN at VIN=";
-        out.checks.push_back({"EN clamp turn-on ("+reg.ref+")",sheet,"en_clamp",pre+"4.75V (5V contract low) must exceed enable+margin 1.5V (threshold 1.21V typ, SLVSDG6C) so the always-on buck is sure to start",py_round(turnon,3),"V",1.5,{},"analytic",{}});
-        out.checks.push_back({"EN clamp ceiling ("+reg.ref+")",sheet,"en_clamp",pre+"21.0V (20V+5%) worst-case (Vz 5.355V) must stay <= the EN recommended-max 5.5V (no internal clamp, I_hys 1.55uA only — SLVSDG6C)",py_round(ceiling,3),"V",{},5.5,"analytic",{}});
+        out.checks.push_back({"EN clamp turn-on ("+reg.ref+")",sheet,"en_clamp",pre+"4.75V (5V contract low) must exceed enable+margin 1.5V (threshold 1.21V typ, SLVSDG6C) so the always-on buck is sure to start",turnon,"V",1.5,{},"analytic",{}});
+        out.checks.push_back({"EN clamp ceiling ("+reg.ref+")",sheet,"en_clamp",pre+"21.0V (20V+5%) worst-case (Vz 5.355V) must stay <= the EN recommended-max 5.5V (no internal clamp, I_hys 1.55uA only — SLVSDG6C)",ceiling,"V",{},5.5,"analytic",{}});
     }
 }
 void boot0(const std::string& sheet,const SpiceIndex& idx,SpiceResult& out) {
     if(std::none_of(idx.c.nets.begin(),idx.c.nets.end(),[](const auto& n){return n.name=="BOOT0_SET";}))return;
     const auto rs=select(idx.on("BOOT0_SET"),power);if(rs.empty())return;const auto& r=rs[0];
     out.checks.push_back({"BOOT0 strap VIH",sheet,"divider","DIP closed: 3.3 V through "+resistor_description(r)+" vs the SoM 1k5 pull-down (contract) -> must exceed STM32 VIH = 0.7*VDD = "+f(stm32_vih,2)+" V",
-        py_round(divide(stm32_vdd*1500,1500+r.value),3),"V",stm32_vih,stm32_vdd,"analytic",{}});
+        divide(stm32_vdd*1500,1500+r.value),"V",stm32_vih,stm32_vdd,"analytic",{}});
+}
+std::string reported_value(const SpiceCheck& check){
+    const auto compact=g(check.value);
+    // Do not print a rejected voltage as exactly equal to its stated limit.
+    if((check.lo&&check.value<*check.lo&&compact==g(*check.lo))||
+       (check.hi&&check.value>*check.hi&&compact==g(*check.hi)))return fmt(check.value,17);
+    return compact;
 }
 }  // namespace
 
 bool SpiceCheck::ok() const {
+    if(!std::isfinite(value)||(lo&&!std::isfinite(*lo))||(hi&&!std::isfinite(*hi))||
+       (spice_value&&!std::isfinite(*spice_value))||(lo&&hi&&*lo>*hi))return false;
     if(lo&&value<*lo-1e-9)return false;if(hi&&value>*hi+1e-9)return false;
-    if(spice_value&&value!=0&&std::abs(*spice_value-value)>0.01*std::abs(value))return false;return true;
+    if(spice_value&&std::abs(*spice_value-value)>0.01*std::abs(value))return false;return true;
 }
 std::vector<std::string> SpiceResult::errors() const {
-    std::vector<std::string> out;for(const auto& c:checks)if(!c.ok())out.push_back(c.sheet+":"+c.name+" = "+g(c.value)+" "+c.unit+" outside ["+(c.lo?g(*c.lo):"")+" .. "+(c.hi?g(*c.hi):"")+"] "+c.unit+" — "+c.detail+(c.spice_value?"; ngspice="+g(*c.spice_value):""));return out;
+    auto out=unverified;
+    if(checks.empty())out.push_back("No supported analytic checks were extracted; electrical behavior is unverified.");
+    for(const auto& c:checks)if(!c.ok())out.push_back(c.sheet+":"+c.name+" = "+reported_value(c)+" "+c.unit+" outside ["+(c.lo?g(*c.lo):"")+" .. "+(c.hi?g(*c.hi):"")+"] "+c.unit+" — "+c.detail+(c.spice_value?"; ngspice="+g(*c.spice_value):""));return out;
 }
-bool SpiceResult::ok() const{return std::all_of(checks.begin(),checks.end(),[](const auto& c){return c.ok();});}
+bool SpiceResult::ok() const{return unverified.empty()&&!checks.empty()&&std::all_of(checks.begin(),checks.end(),[](const auto& c){return c.ok();});}
 SpiceResult extract_spice_checks(const std::vector<ProjectCircuit>& sheets,const PowerPolicy& policy) {
-    SpiceResult out;std::set<std::string> nets;
+    SpiceResult out;std::set<std::string> nets,extracted_named;
     for(const auto& sheet:sheets) {
         const SpiceIndex index(sheet.circuit);for(const auto& n:sheet.circuit.nets)nets.insert(n.name);
         // The shared pure detection stage does not run unrelated load/thermal
         // analysis or alter the original spice extraction's failure boundary.
-        auto_dividers(sheet.name,index,out,policy);rc_networks(sheet.name,index,out);sy7201_iset(sheet.name,index,out);
-        const auto regs=detect_power_regulators({sheet},policy).regs;
-        buck_fb(sheet.name,index,regs,out,policy);en_clamp(sheet.name,index,regs,out,policy);boot0(sheet.name,index,out);
+        auto_dividers(sheet.name,index,out,policy,extracted_named);rc_networks(sheet.name,index,out);sy7201_iset(sheet.name,index,out);
+        const auto detected=detect_power_regulators({sheet},policy);
+        for(const auto& error:detected.errors)out.unverified.push_back("SPICE unverified: regulator detection: "+error);
+        buck_fb(sheet.name,index,detected.regs,out,policy);en_clamp(sheet.name,index,detected.regs,out,policy);boot0(sheet.name,index,out);
     }
     for(const auto& named:named_dividers()) {
-        const bool found=std::any_of(out.checks.begin(),out.checks.end(),[&](const auto& c){return c.name.find(named.net)!=std::string::npos;});
-        if(!found&&nets.count(named.net))out.notes.push_back("NOTE: named divider "+named.net+" exists but was not extracted — check the topology ("+named.why+")");
+        if(!extracted_named.count(named.net)&&nets.count(named.net))
+            throw ModelCheckError("required divider "+named.net+": topology could not be extracted");
     }return out;
 }
 std::string spice_report(const SpiceResult& r,bool present) {
     std::vector<std::string> lines{"schgen spice / analytic spot-check gate",std::string(64,'='),"","engine: "+r.engine};
     if(!present)lines.push_back("ngspice: NOT INSTALLED (brew install ngspice) — the closed-form analytic layer IS the gate; every check below is an exact linear-network solution, not an approximation. ngspice adds an independent recompute when present.");
     lines.push_back("");lines.push_back("checks ("+std::to_string(r.checks.size())+"):");
-    for(const auto& c:r.checks){lines.push_back("  ["+std::string(c.ok()?"PASS":"FAIL")+"] "+c.sheet+": "+c.name+" = "+g(c.value)+" "+c.unit+" (limits "+(c.lo?g(*c.lo):"")+" .. "+(c.hi?g(*c.hi):"")+" "+c.unit+"; "+c.engine+")"+(c.spice_value?"  ngspice="+g(*c.spice_value):""));lines.push_back("         "+c.detail);}
+    for(const auto& c:r.checks){lines.push_back("  ["+std::string(c.ok()?"PASS":"FAIL")+"] "+c.sheet+": "+c.name+" = "+reported_value(c)+" "+c.unit+" (limits "+(c.lo?g(*c.lo):"")+" .. "+(c.hi?g(*c.hi):"")+" "+c.unit+"; "+c.engine+")"+(c.spice_value?"  ngspice="+g(*c.spice_value):""));lines.push_back("         "+c.detail);}
     if(!r.notes.empty()){lines.push_back("");for(const auto& n:r.notes)lines.push_back("  "+n);}
     lines.push_back("");const auto errors=r.errors();
     if(errors.empty())lines.push_back("errors: none");else{lines.push_back("ERRORS ("+std::to_string(errors.size())+"):");for(const auto& e:errors)lines.push_back("  ERROR: "+e);}
-    lines.push_back("");lines.push_back("SPICE GATE: "+std::string(r.ok()?"PASS":"FAIL")+" ("+std::to_string(r.checks.size())+" checks)");return join(lines);
+    const bool failed=std::any_of(r.checks.begin(),r.checks.end(),[](const auto& c){return !c.ok();});
+    lines.push_back("");lines.push_back("SPICE GATE: "+std::string(failed?"FAIL":r.checks.empty()||!r.unverified.empty()?"UNVERIFIED":"PASS")+" ("+std::to_string(r.checks.size())+" checks)");return join(lines);
 }
 JsonNode spice_result_json(const SpiceResult& r) {
     auto checks=arr();for(const auto& c:r.checks)checks.array_value.push_back(obj({{"name",j(c.name)},{"sheet",j(c.sheet)},{"kind",j(c.kind)},{"detail",j(c.detail)},{"value",j(c.value)},{"unit",j(c.unit)},{"lo",opt(c.lo)},{"hi",opt(c.hi)},{"engine",j(c.engine)},{"spice_value",opt(c.spice_value)},{"ok",j(c.ok())}}));
-    return obj({{"checks",checks},{"notes",strings(r.notes)},{"engine",j(r.engine)},{"errors",strings(r.errors())},{"ok",j(r.ok())},{"n_checks",j(double(r.checks.size()))}});
+    auto out=obj({{"checks",checks},{"notes",strings(r.notes)},{"engine",j(r.engine)},{"errors",strings(r.errors())},{"ok",j(r.ok())},{"n_checks",j(double(r.checks.size()))}});
+    if(!r.unverified.empty())out.object_value.emplace_back("unverified",strings(r.unverified));
+    return out;
 }
 }  // namespace schgen

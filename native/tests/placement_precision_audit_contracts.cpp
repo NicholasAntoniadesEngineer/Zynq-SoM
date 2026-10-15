@@ -24,6 +24,9 @@ int main(int argc,char** argv){try{
     }
     const auto after=scan(argv[argc-1],consumers);
     if(after.n_files!=6||!after.quantization.empty())throw std::runtime_error("raw placement consumer boundary remains");
+    const auto owned=scan(argv[argc-1],{{"native/src/pcb_owned_groups.cpp"}});
+    if(owned.n_files!=1||!owned.quantization.empty()||!owned.constants.empty())
+        throw std::runtime_error("unregistered owned-group precision or policy storage remains");
     const auto scalar=scan(argv[argc-1],{{"native/src/placement_precision.cpp"}});
     if(scalar.n_files!=1||!scalar.constants.empty())throw std::runtime_error("scalar census missing or acquired policy storage");
     std::set<std::string> expected;

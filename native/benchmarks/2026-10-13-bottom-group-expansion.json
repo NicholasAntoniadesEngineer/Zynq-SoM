@@ -1,0 +1,34 @@
+{
+  "base_commit": "809148f3",
+  "intent": "Investigate additional bottom-side use without weakening connector, controlled-net, mirroring or placement gates. Individual and combined trials preserve the qualified power_mon requirement.",
+  "tooling_defect_fixed": "Profiler global duplicate-option guard incorrectly rejected multiple distinct --require-bottom-sheet options before its per-sheet uniqueness validation. Permit repetition, retain duplicate-value rejection. Actual parser/loader contracts PASS 31.70 seconds.",
+  "promising_candidate": {
+    "spec": "native/benchmarks/carrier-165x156-bottom-modules.floorplan.json",
+    "recipe_delta_from_qualified": "Use this spec and append --require-bottom-sheet bringup_modules to the complete command in 2026-10-13-carrier-165x156-qualified.json",
+    "log": "native/build/bottom-group-modules-repeat.log",
+    "runs": 2,
+    "pcb_sha256": "07516ae5b43a04137626490c49f71ab3a51488fa6c66d8a7b148c49afd83479b",
+    "repeat_identical": true,
+    "dimensions_mm": [165,156],
+    "top": 393,
+    "bottom": 173,
+    "bringup_modules_top_bottom": [20,51],
+    "power_mon_top_bottom": [0,10],
+    "interpretation": "Primary bottom shape retains required top-access members; it is not a promise every member moves to bottom.",
+    "cross_subsystem_mm": 14482.9,
+    "qualified_cross_subsystem_mm": 14428.9,
+    "total_airwire_mm": 21490.3,
+    "qualified_total_airwire_mm": 21591.9,
+    "screen": "Zero top/bottom refdes overlaps and emission fallbacks; fanout, ratsnest, placement contract and flow PASS; hard_red=0",
+    "model_seconds": [6.571138042,6.543760917],
+    "pcb_text_seconds": [0.039571250,0.037461875],
+    "status": "Unqualified alternative. Same area, ten additional bottom parts, slightly higher cross-subsystem but lower total airwire. Do not replace the qualified incumbent based solely on bottom count."
+  },
+  "failed_searches": [
+    {"variant":"bringup_en_modules plus power_mon bottom at 165x156", "log":"native/build/bottom-group-bringup_en_modules.log", "seconds":4.250609917},
+    {"variant":"bringup_modules plus power_mon bottom at 164x156", "log":"native/build/bottom-group-modules-164.log", "seconds":1.208365459},
+    {"variant":"both bringup groups plus power_mon bottom at 165x156", "log":"native/build/bottom-group-combined-165.log", "seconds":3.321362833}
+  ],
+  "failure_scope": "Each completed four outer attempts with captured failure receipts. Fixed-outline bounded search exhaustion is not proof of geometric infeasibility. Temporary complete specs remain at /private/tmp/carrier-bottom-groups.Qc5OIq; their only policy changes are stated here.",
+  "next": "Examine why the extra bottom candidate does not shrink the outline: group reservation bounds, top-retained members and search ordering. Qualify only a justified finalist. No full audit/render or Python comparison performed in this batch."
+}

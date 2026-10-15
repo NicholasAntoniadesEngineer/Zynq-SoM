@@ -1,0 +1,33 @@
+{
+  "scope": "Prevent PCB construction from a failed schematic and retain emission diagnostics",
+  "root_cause": "The board pipeline checked that a schematic result existed, not that it passed. The failed power_som sheet was absent from the root hierarchy, while PCB placement still included its components. Incomplete extracted connectivity produced seven thermal-via fallback events on U22004.",
+  "controlled_probe": {
+    "policy": "carrier compact; interior-order 3; edge-feasibility; owned-quality-first; owned-face-cohesion; usb_jtag contract-group face; board_aux owned-face-fixed/a2.2/owned-pins-forward; carrier-166x159-contract-groups.floorplan.json",
+    "changed_variable": "Root schematic: failed 36-sheet hierarchy versus freshly built and gated complete 37-sheet hierarchy",
+    "hardware": "Same pending direct-VIN-enable authoring changes in both probes",
+    "incomplete_root": {
+      "thermal_via_lattice": 7,
+      "affected_part": "U22004 LM61460AANRJRR; 7 of 8 vias used lattice",
+      "pcb_sha256": "dbdd60b3d38684e1d2fe1a4cc23a48586117558794fc245804ce7f2d99fd1355"
+    },
+    "complete_root": {
+      "schematic_gate": "PASS, 37 sheets; root ERC errors 0",
+      "emission_fallback_events": 0,
+      "pcb_sha256": "031da411516efe7785e532cf57c7f4847cbb181ad59979cb376e9bc8b896da44"
+    },
+    "both_probes": {"width_mm":166,"height_mm":159,"instances":566,"top":413,"bottom":153,"model_fallback_events":129},
+    "acceptance": "Construction-only diagnostic probes, not full board acceptance; no limits raised and no layout policy change"
+  },
+  "implementation": [
+    "Reject PCB stage unless the current schematic result and link both pass",
+    "Include explicit per-sheet failures in BoardSchematicResult::ok",
+    "Publish emitter diagnostics for standalone PCB and full-board builds",
+    "Print emitter diagnostics outside the measured emission interval in the profiling harness"
+  ],
+  "tests": {
+    "native_board_live_contracts": "PASS; both boards, incomplete-hierarchy rejection, repeated construction, publication and independent geometry checks",
+    "native_board_schematic_contracts": "PASS",
+    "ctest_wall_seconds": 31.41
+  },
+  "remaining": "Requalify complete both-board build/render pipelines before accepting pending hardware changes"
+}

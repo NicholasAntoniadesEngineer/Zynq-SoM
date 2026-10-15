@@ -144,9 +144,9 @@ std::string fallback_baseline_text(const AuditCounts& counts){
 FallbackAuditResult check_fallback_ratchet(const AuditCounts& census,const std::filesystem::path& path){
     return check_fallback_ratchet(census,path,path);
 }
-FallbackAuditResult check_fallback_ratchet(const AuditCounts& census,const std::filesystem::path& path,
-                                         const std::filesystem::path& output){
-    const auto baseline=load_fallback_baseline(path);FallbackAuditResult r;r.n_names=census.size();
+static FallbackAuditResult check_fallback_counts(const AuditCounts& census,const std::optional<AuditCounts>& baseline,
+                                                const std::filesystem::path& path,const std::filesystem::path& output){
+    FallbackAuditResult r;r.n_names=census.size();
     for(const auto& [name,v]:census){(void)name;if(v.nonzero())++r.n_fired;}
     if(!baseline){model_checks::publish(output,fallback_baseline_text(census));r.pinned=true;return r;}
     for(const auto& [name,count]:census){const auto found=baseline->find(name);const AuditInteger ceiling=found==baseline->end()?AuditInteger{}:found->second;
@@ -157,8 +157,60 @@ FallbackAuditResult check_fallback_ratchet(const AuditCounts& census,const std::
             model_checks::publish(output,fallback_baseline_text(lowered));
     }return r;
 }
+FallbackAuditResult check_fallback_ratchet(const AuditCounts& census,const std::filesystem::path& path,
+                                         const std::filesystem::path& output){
+    return check_fallback_counts(census,load_fallback_baseline(path),path,output);
+}
+bool is_board_search_effort(std::string_view name){
+    // These paths explore or reject candidates without relaxing final hardware
+    // checks. Their counts measure work, not electrical/physical correctness.
+    // Keep explicit membership: a new path needs review before becoming advisory.
+    static const std::set<std::string_view> names={
+        "interior_shape_choice_hint","interior_shape_choice_replay","interior_shape_choice_budget",
+        "interior_reseat_incoming_shape_trial",
+        "interior_reseat_pair_trial","interior_reseat_pair_rejected","interior_reseat_pair_recovered",
+        "interior_reseat_shape_retry","interior_reseat_shape_trial",
+        "legalize_reservation_retry","legalize_facing_retry",
+        "interior_reseat_pose_search","interior_reseat_pose_trial",
+        "interior_reseat_pose_budget","interior_reseat_pose_cap",
+        "interior_reseat_pose_resume","interior_reseat_pose_hint",
+        "interior_reseat_pose_skip","interior_failed_first_retry",
+        "legalize_joint_retry","legalize_neighbour_retry",
+        "legalize_joint_domain_probe","legalize_joint_domain_reject",
+        "legalize_joint_state","legalize_joint_axis","legalize_joint_axis_reuse","legalize_joint_proposal",
+        "legalize_joint_reject","legalize_joint_budget","facing_replan_retry",
+        "contract_group_orientation_retry","edge_geometry_replan_retry","screened_incumbent_retained",
+        "edge_run_translation","legalize_only_compaction","seat_node_budget",
+        "cand_cap_truncated","bottom_variant_contract_reject",
+        "thermal_repair_trial","thermal_repair_rejected","thermal_repair_moved",
+        "corridor_evict_moved","punch_free_plan_rejected","interior_reseat_retry"};
+    return names.count(name)!=0;
+}
+FallbackAuditResult check_board_fallbacks(const AuditCounts& census,const std::filesystem::path& baseline,
+                                        const std::filesystem::path& output){
+    // Unlike first-run baseline discovery, board acceptance requires reviewed
+    // evidence for non-search paths. Missing evidence cannot pin a failure PASS.
+    auto ceilings=load_fallback_baseline(baseline);
+    if(!ceilings)throw std::invalid_argument("board fallback baseline missing or invalid");
+    for(auto it=ceilings->begin();it!=ceilings->end();){
+        if(is_board_search_effort(it->first))it=ceilings->erase(it);else ++it;
+    }
+    AuditCounts mandatory,search;
+    for(const auto& [name,count]:census){
+        if(count<AuditInteger{})throw std::invalid_argument("negative board event count: "+name);
+        (is_board_search_effort(name)?search:mandatory).emplace(name,count);
+    }
+    auto result=check_fallback_counts(mandatory,ceilings,baseline,output);
+    result.search_effort=std::move(search);
+    return result;
+}
 std::string FallbackAuditResult::summary()const{
     std::vector<std::string> lines={"FALLBACK RATCHET: "+std::string(ok?"PASS":"FAIL")+" — "+std::to_string(n_names)+" registered paths, "+std::to_string(n_fired)+" firing"+(pinned?" (baseline PINNED this build)":"")};
-    for(const auto& r:regressions)lines.push_back("  REGRESSION: "+r);return model_checks::join(lines);
+    for(const auto& r:regressions)lines.push_back("  REGRESSION: "+r);
+    if(!search_effort.empty()){
+        lines.push_back("SEARCH EFFORT: observational, no acceptance ceiling; counts include rejected work. Exhaustion is not proof of infeasibility. Hardware gates remain independent.");
+        for(const auto& [name,count]:search_effort)lines.push_back("  "+name+": "+count.str());
+    }
+    return model_checks::join(lines);
 }
 } // namespace schgen

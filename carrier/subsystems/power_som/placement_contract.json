@@ -22,10 +22,7 @@
     "C22": "vcc_cap",
     "R17": "bias_r",
     "C23": "bias_cap",
-    "R18": "rt_r",
-    "R12": "en_series",
-    "D5": "en_zener",
-    "C20": "en_cap"
+    "R18": "rt_r"
   },
   "structures": [
     {
@@ -134,21 +131,6 @@
       "pin": "6",
       "max_pad_to_pin_mm": 3.0,
       "basis": "SNVSBD5D 8.3.5, 11.1|judgment:3.0"
-    },
-    {
-      "type": "proximity",
-      "anchor": "U4",
-      "anchor_pins": [
-        "7"
-      ],
-      "members": [
-        "R12",
-        "D5",
-        "C20"
-      ],
-      "max_mm": 6.0,
-      "same_side": true,
-      "basis": "SNVSBD5D 9.2.2.2 (EN clamp, PWR-1)|judgment:6.0"
     },
     {
       "type": "same_side",

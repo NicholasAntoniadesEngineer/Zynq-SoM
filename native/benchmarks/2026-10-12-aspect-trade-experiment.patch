@@ -1,0 +1,143 @@
+diff --git a/native/src/floorplan_build.cpp b/native/src/floorplan_build.cpp
+index 2b5a4925..6a388205 100644
+--- a/native/src/floorplan_build.cpp
++++ b/native/src/floorplan_build.cpp
+@@ -395,8 +395,7 @@ FloorplanPlan Engine::run() {
+             checked_quantization_add(plan.accounting.quantization_engagements, "outline_fine_grid");
+             hs.push_back(fine_shrink(h0,k));
+         }
+-        auto visit=[&](int i,int j) {
+-            const double w=ws[static_cast<std::size_t>(i)],h=hs[static_cast<std::size_t>(j)];
++        auto visit_dimensions=[&](double w,double h) {
+             ++tally["generated"];
+             if (w<=0 || h<=0 || w<h) { ++tally["reject_aspect"]; return false; }
+             if (w*h>=std::get<1>(*best)*std::get<2>(*best)-1e-6) { ++tally["reject_not_smaller"]; return false; }
+@@ -404,9 +403,22 @@ FloorplanPlan Engine::run() {
+             if (auto candidate=evaluate(w,h)) { best=candidate;return true; }
+             return false;
+         };
++        auto visit=[&](int i,int j) {
++            return visit_dimensions(ws[static_cast<std::size_t>(i)],hs[static_cast<std::size_t>(j)]);
++        };
+         if(in.experiment&&in.experiment->multiscale_outline)
+             multiscale_outline_indices(refine_span,visit);
+         else for(int i=0;i<=refine_span;++i)for(int j=0;j<=refine_span;++j)visit(i,j);
++        if(in.experiment&&in.experiment->multiscale_outline) {
++            const double trade_w=std::get<1>(*best),trade_h=std::get<2>(*best);
++            multiscale_outline_trade_indices(refine_span,[&](int i,int j) {
++                checked_quantization_add(plan.accounting.quantization_engagements,"outline_fine_grid");
++                const double w=fine_shrink(trade_w,i);
++                checked_quantization_add(plan.accounting.quantization_engagements,"outline_fine_grid");
++                const double h=fine_shrink(trade_h,j);
++                return visit_dimensions(w,h);
++            });
++        }
+         // Keep the screened layout, not just its dimensions. A later failed
+         // candidate must not become the starting state for final refinement.
+         restore(*best_plan); side_offers=std::move(best_offers);
+@@ -453,7 +465,7 @@ FloorplanPlan Engine::run() {
+         " <= LAW-5 budget "+number(std::get<4>(best),0)+" mm — honest routing headroom, the gate is not relaxed), SoM "+
+         outline_text(plan.som.w,plan.som.h)+" centered";
+     if(in.experiment&&in.experiment->multiscale_outline)
+-        plan.outline_note+="; opt-in multiscale axis/diagonal refinement, not the complete fine-grid scan; may stop at a larger local solution";
++        plan.outline_note+="; opt-in multiscale axis/diagonal and area-reducing aspect-trade refinement, not exhaustive search; may stop at a larger local solution";
+     if(in.experiment&&in.experiment->initial_outline) {
+         const auto [w,h]=*in.experiment->initial_outline;
+         plan.outline_note+="; supplied initial candidate "+outline_text(w,h)+
+diff --git a/native/src/multiscale_outline_internal.hpp b/native/src/multiscale_outline_internal.hpp
+index c6eadef8..4b862662 100644
+--- a/native/src/multiscale_outline_internal.hpp
++++ b/native/src/multiscale_outline_internal.hpp
+@@ -1,5 +1,6 @@
+ #pragma once
+ #include <array>
++#include <set>
+ #include <stdexcept>
+ #include <utility>
+ 
+@@ -24,4 +25,34 @@ template<class Visit> void multiscale_outline_indices(int span,Visit&& visit) {
+         }
+     }
+ }
++
++// A small additional portfolio around the incumbent after shrink refinement.
++// Negative indices expand one dimension. Visit owns strict area improvement
++// and physical feasibility; an unsuccessful trial cannot move the anchor.
++// One sweep per scale keeps cost at most seven queries per scale, independent
++// of feasibility islands. This is a search-effort window, not a physical limit.
++template<class Visit> void multiscale_outline_trade_indices(int span,Visit&& visit) {
++    if(span<0)throw std::invalid_argument("negative outline refinement span");
++    if(span==0)return;
++    int stride=1;
++    while(stride<=span/2)stride*=2;
++    int best_i=0,best_j=0;
++    std::set<std::pair<int,int>> seen{{0,0}};
++    for(;stride>0;stride/=2) {
++        const int i=best_i,j=best_j;
++        // Use wide arithmetic so twice the stride and signed window offsets
++        // remain defined even for a caller-provided INT_MAX span.
++        const long long s=stride;
++        for(const auto& [di,dj]:std::array<std::pair<long long,long long>,7>{{
++                {-s,s},{s,-s},{-s,2*s},{2*s,-s},{s,0},{0,s},{s,s}}}) {
++            const auto ni=i+di,nj=j+dj;
++            if(ni < -static_cast<long long>(span)||ni>span||
++               nj < -static_cast<long long>(span)||nj>span)continue;
++            const auto point=std::pair{static_cast<int>(ni),static_cast<int>(nj)};
++            if(seen.insert(point).second&&visit(point.first,point.second)) {
++                best_i=point.first;best_j=point.second;
++            }
++        }
++    }
++}
+ }
+diff --git a/native/tests/initial_outline_contracts.cpp b/native/tests/initial_outline_contracts.cpp
+index ef31a0bd..4414ee71 100644
+--- a/native/tests/initial_outline_contracts.cpp
++++ b/native/tests/initial_outline_contracts.cpp
+@@ -69,10 +69,46 @@ void multiscale_contracts() {
+     catch(const std::invalid_argument&){threw=true;}
+     require(threw&&calls==1,"negative span reached candidate callback");
+ }
++void trade_contracts() {
++    for(int span=0;span<=64;++span)for(int seed=0;seed<7;++seed) {
++        const auto run=[&] {
++            std::vector<std::pair<int,int>> calls;
++            std::set<std::pair<int,int>> unique;
++            int area=165*158;
++            floorplan_detail::multiscale_outline_trade_indices(span,[&](int i,int j) {
++                require(i>=-span&&i<=span&&j>=-span&&j<=span,"trade left search window");
++                require(unique.emplace(i,j).second,"trade repeated a candidate");
++                calls.emplace_back(i,j);
++                const int candidate=(165-i)*(158-j);
++                if(candidate<area&&(i+j+seed)%7!=0) {area=candidate;return true;}
++                return false;
++            });
++            int levels=0;for(int s=span;s>0;s/=2)++levels;
++            require(calls.size()<=static_cast<std::size_t>(7*levels),"trade exceeded declared work bound");
++            return calls;
++        };
++        require(run()==run(),"trade schedule not reproducible");
++    }
++    bool recovered=false;
++    floorplan_detail::multiscale_outline_trade_indices(40,[&](int i,int j) {
++        if(i==-1&&j==2){recovered=true;return true;}return false;
++    });
++    require(recovered,"failed shrink/large trades pruned wider-shorter feasible island");
++    int calls=0;bool threw=false;
++    try{floorplan_detail::multiscale_outline_trade_indices(40,[&](int,int)->bool{++calls;throw std::runtime_error("injected");});}
++    catch(const std::runtime_error&){threw=true;}
++    require(threw&&calls==1,"trade swallowed or retried callback error");
++    threw=false;
++    try{floorplan_detail::multiscale_outline_trade_indices(-1,[&](int,int){++calls;return false;});}
++    catch(const std::invalid_argument&){threw=true;}
++    require(threw&&calls==1,"negative trade span reached callback");
++    floorplan_detail::multiscale_outline_trade_indices(std::numeric_limits<int>::max(),[](int,int){return false;});
++}
+ }
+ int main(){try{
+     objective_bound();
+     multiscale_contracts();
++    trade_contracts();
+     for(bool multiscale:{false,true})for(const auto dimensions:{FloorplanPoint{100,100},FloorplanPoint{30,30}}) {
+         auto in=fixture();auto observer=std::make_shared<FloorplanExperiment>();
+         observer->initial_outline=dimensions;observer->multiscale_outline=multiscale;in.experiment=observer;

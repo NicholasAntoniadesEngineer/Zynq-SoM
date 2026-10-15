@@ -1,0 +1,109 @@
+{
+  "code_commit": "4352fe25",
+  "method": "Warm incremental CLI build, then fresh full carrier and devkit builds sequentially. No agent compilation, tests or candidate campaigns overlapped the timed board runs. One sample per board; OS/tool caches and unrelated host background activity uncontrolled. Front/back renders inspected after both runs ended.",
+  "environment": {"os": "macOS 26.6.2 (25G83)", "architecture": "arm64", "compiler": "Apple clang 21.0.0 (clang-2100.3.34.2)", "kicad": "10.0.2"},
+  "compile": {
+    "command": "CCACHE_DIR=$PWD/native/build/compiler-cache CCACHE_BASEDIR=$PWD cmake --build native/build/fast --target schgen --parallel 2",
+    "wall_seconds": 2.67,
+    "user_seconds": 3.27,
+    "sys_seconds": 1.55,
+    "scope": "Warm incremental build with ccache enabled, including relink after a header-comment change; NOT a clean compile or cold-cache benchmark",
+    "log": "native/build/integrated-oct12-compile.log"
+  },
+  "carrier": {
+    "command": "native/bin/schgen board --project carrier --compact-placement --interior-order 3 --edge-feasibility --owned-quality-first --owned-face-cohesion --contract-group-face-sheet usb_jtag --owned-shape board_aux=owned-face-fixed/a2.2/owned-pins-forward --floorplan-spec native/benchmarks/carrier-166x159-contract-groups.floorplan.json --timing -o OUTPUT",
+    "output": "/private/tmp/carrier-integrated-oct12.OleyaM",
+    "log": "native/build/carrier-integrated-oct12.log",
+    "log_sha256": "21a95dffa66b0e4a7bdcd6d48ef7105f572183dacf56bed8196bd69d347efa94",
+    "exit_code": 0, "board_ok": true, "complete": true, "sheets": 37,
+    "mandatory_failures": [],
+    "advisory_failures": ["return_path", "golden", "contract_coverage_lint"],
+    "outline_mm": [166, 159], "area_mm2": 26394,
+    "reference_instances": {"top": 416, "bottom": 153},
+    "cpl_entries": {"top": 354, "bottom": 153, "note": "CPL population is a subset of all PCB instances; do not conflate these counts"},
+    "pcb_sha256": "b9389efa52adf30b1d94cad1ede3a4387bacd53802f7babb5da07dd6306cff76",
+    "identical_to_qualified_reference": true,
+    "non_unrouted_drc_errors": 0, "unrouted": 499,
+    "hard_red": 0,
+    "hard_spatial_margins": {"unit": "mm", "measured": 16, "unresolved": 0, "sum": 822.35, "min": 4.07},
+    "hard_facing_margins": {"unit": "degrees", "measured": 2, "unresolved": 0, "sum": 65.11, "min": 13.15},
+    "source_policy": "PASS: 69 C++ files, 75 constants, 156 registered transforms",
+    "renders": 8,
+    "visually_inspected": ["renders/3d_top.png", "renders/3d_bottom.png"],
+    "image_sha256": {
+      "3d_top.png": "e12bb08cef526b22a3ed61f1053190654d58c5535901a0f6cf63fa379bcf2fa4",
+      "3d_bottom.png": "96b85f4041487c122b906643537e7d90c6473221e900be2d03065a55087500a9"
+    },
+    "visual_observation": "Top SoM reserve remains clear; perimeter connectors and controls retained. Bottom USB/JTAG and decoupling groups remain localized, with substantial unused bottom area. Empty visual area is not evidence of permitted relocation or assembly clearance.",
+    "timings_seconds": {
+      "process_wall": 254.51, "measured_scope": 254.153642,
+      "authoring_audit": 18.749072,
+      "sheet_parallel_checks_and_render_wall": 25.912035,
+      "pcb_input_loading_and_netlist_validation": 1.504029,
+      "pcb_build_model_with_internal_checks": 2.895937,
+      "pcb_text_emission": 0.035914,
+      "pcb_drc": 1.628419,
+      "render3d": 29.950226,
+      "source_audit": 159.927271
+    }
+  },
+  "devkit_mini": {
+    "command": "native/bin/schgen board --project devkit_mini --multiscale-outline --timing -o OUTPUT",
+    "output": "/private/tmp/devkit-integrated-oct12.4FG2Ve",
+    "log": "native/build/devkit-integrated-oct12.log",
+    "log_sha256": "b8020b84ebc879b068a1c51d13ec07b968d90c3f6e4ef674be6e01490a1e6a4a",
+    "exit_code": 0, "board_ok": true, "complete": true, "sheets": 12,
+    "mandatory_failures": [],
+    "mandatory_skips": {
+      "manual": "project has no bringup_rails, bringup_en, bringup_en_modules, bringup_modules",
+      "scfw": "project has no bringup_en, bringup_modules, bringup_rails, usb_pd, board_services, bringup_en_modules"
+    },
+    "advisory_failures": ["return_path", "golden", "contract_coverage_lint"],
+    "outline_mm": [98, 98], "area_mm2": 9604,
+    "reference_instances": {"top": 106, "bottom": 57},
+    "cpl_entries": {"top": 84, "bottom": 57},
+    "pcb_sha256": "cfa0305491d9c4a771adb130b04c4aec6cc2894542391a5c7c9dca3a68bca3cf",
+    "identical_to_qualified_reference": true,
+    "non_unrouted_drc_errors": 0, "unrouted": 413,
+    "renders": 8,
+    "visually_inspected": ["renders/3d_top.png", "renders/3d_bottom.png"],
+    "image_sha256": {
+      "3d_top.png": "16ee7633765cca1ad8b07d70e30312ac5cb412a6e067dab03078281f3416a1f9",
+      "3d_bottom.png": "d1a175d973c4644188a5bfb3d5ad2ebd318bf5411982f5ab628aaf8ede1d78c7"
+    },
+    "visual_observation": "Top SoM reserve remains clear, with perimeter power, UART and debug access. Bottom passives and shunts remain sparse; no visual difference implies or establishes routing/fabrication readiness.",
+    "timings_seconds": {
+      "process_wall": 214.98, "measured_scope": 214.892405,
+      "authoring_audit": 18.864427,
+      "sheet_parallel_checks_and_render_wall": 8.573356,
+      "pcb_input_loading_and_netlist_validation": 0.691952,
+      "pcb_build_model_with_internal_checks": 0.192022,
+      "pcb_text_emission": 0.009013,
+      "pcb_drc": 1.332017,
+      "render3d": 18.019568,
+      "source_audit": 159.573420
+    }
+  },
+  "historical_revision_comparison": {
+    "python_commit": "0e9bbc913bab77f9cd228940db2a332d25d6bfa1",
+    "baseline_record": "2026-10-08-timing-summary.json",
+    "matched_hardware_inputs": false,
+    "matched_audit_workloads": false,
+    "percentage_formula": "100 * (cpp_seconds - python_seconds) / python_seconds",
+    "carrier": {"python_wall_seconds": 717.95, "python_exit_code": 0, "cpp_wall_seconds": 254.51, "change_percent": -64.55045615989972},
+    "devkit_mini": {"python_wall_seconds": 75.06, "python_exit_code": 1, "cpp_wall_seconds": 214.98, "change_percent": 186.41087130295762},
+    "limitations": [
+      "Revision-to-revision totals only, not language-only speedups. Python was not rerun in this batch.",
+      "Both requested eight HQ 1600x1200 3D views and schematic renders; hardware inputs, validation coverage and scheduling differ.",
+      "Historical carrier is 168x163; current is 166x159 with design corrections. Historical devkit is 100x100 with 152 parts and failed gates; current is 98x98 with 163 parts.",
+      "Historical phase spans overlap; no unsupported exclusive Python generation/render/audit comparison is inferred."
+    ]
+  },
+  "remaining_risks": [
+    "No smaller carrier accepted in this batch; this qualifies integrated correctness changes on existing references.",
+    "Known advisory failures remain on both boards; no failure was waived or unknown relabeled PASS.",
+    "Qualitative assembly, height, thermal, decoupling/access requirements remain unverified as documented by placement_requirements_unverified.txt.",
+    "Not routed and not fabrication-ready.",
+    "A fresh complete CTest campaign, clean compile timing and genuinely matched-input historical comparison remain incomplete."
+  ]
+}

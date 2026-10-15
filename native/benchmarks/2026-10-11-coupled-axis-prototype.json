@@ -1,0 +1,13 @@
+{
+  "status":"prototype_rejected_production_restored",
+  "base_commit":"bc061b01",
+  "hypothesis":"After Y repair adds an X separation, bounded coupled X/Y re-solving may recover the rejected carrier without changing constraints.",
+  "prototype":"Repeat existing repair-X, repair-Y and seed descent up to existing repair_max=16; detect repeated complete separation/position states. Revalidate both axes before acceptance. Also experimentally retain flips from failed axis solves in logs.",
+  "carrier_result":{"log":"native/build/carrier-coupled-axis-screen.log","outline_mm":[167,159],"spec":"native/benchmarks/carrier-167x159-south-interleaved.floorplan.json","exit_code":1,"construction_seconds":0.399749417,"compact_and_noncompact":"Both reach coupled-axis pass 2, then INFEASIBLE x: negative cycle. No complete board produced."},
+  "regression_result_before_revert":{"passed":0,"failed":2,"log":"native/build/coupled-axis-tests.log","first_failures":["infeasible_obstacle: Python decision log","compose decision log"],"interpretation":"The additional failed-flip log reporting changed historical logs. Tests stopped at those mismatches, so they did not establish broader prototype correctness. No oracle was weakened to hide this."},
+  "finding":"legalize_repair_axis selects the first flippable separation on a negative cycle, moves it to the opposite axis and marks it nonflippable. Re-solving the resulting committed choices cannot reconsider an earlier greedy choice. The motivating carrier remains cyclic with those choices. This does not prove the hardware or all alternative separation assignments infeasible.",
+  "decision":"Reverted the entire prototype with apply_patch; git diff --exit-code confirmed floorplan_compose.cpp exactly restored. Rebuilt profiler and regression binaries. No extra repeated-solve cost or changed log contract retained in production.",
+  "restored_tests":{"passed":2,"failed":0,"seconds":31.89,"log":"native/build/coupled-axis-restored-tests.log","names":["native_floorplan_contracts","native_legalize_accounting_contracts"]},
+  "next_direction":"A useful coupled repair needs bounded branching over alternative eligible separation choices from saved states, with explicit cycle detection, actual-work accounting, preserved incumbent and final geometry verification. Merely increasing repair limits or unlocking all flips risks oscillation and is not justified.",
+  "limitations":["One motivating carrier case tested; no generalized effectiveness claim.","No candidate accepted, full build rerun, board-area improvement or speedup.","Preserved all qualified references and unchanged acceptance gates."]
+}

@@ -1,0 +1,28 @@
+{
+  "parent_commit": "2aedaaa1",
+  "defect": "Joint legalization retained singleton domains for seed-satisfied child reservation witnesses, preventing exploration of another legal pocket for an unchanged shape and face.",
+  "fix": "Each active child-pair now supplies four correctly offset directed separation alternatives to joint search, with the original seed witness first. Legacy attempts retain that witness. Exact output occupancy, hard terms and accounting remain mandatory.",
+  "regression": {
+    "fixture": "Three through-hole posts divide a fixed opposite-face group into two legal pockets. A hard point-pad proximity requires moving the bottom group from its initial pocket into the other.",
+    "before": "FAIL: joint solver froze the original child pocket",
+    "after": "PASS: 16 combinations of compact/noncompact, top/bottom, x/y and direction; both pockets independently fit exhaustive occupancy, final geometry and hard proximity checked",
+    "suites": "native_compact_retry_contracts PASS 5.58s; native_floorplan_contracts PASS 13.48s; expanded native_floorplan_geometry_contracts PASS 0.61s. Existing solid-reservation rejection retained."
+  },
+  "carrier_control": {
+    "log": "native/build/child-pocket-reference.log",
+    "pcb_sha256": "a43ec57495e5be75d620686cdc411d5f4835804bec83c928a1e82f19b090a231",
+    "dimensions_mm": [163,153], "top": 394, "bottom": 172,
+    "result": "Unchanged qualified reference hash; cheap fanout/ratsnest/contract/flow checks pass, hard_red=0, zero nonsearch model/emission fallbacks"
+  },
+  "devkit_control": {
+    "log": "native/build/child-pocket-devkit.log",
+    "pcb_sha256": "1b12fecbcbbaa5e6084c2459da93cb144a660ff19805e6e4e3f75f9c22689fdb",
+    "result": "Unchanged qualified reference hash; same cheap checks pass, hard_red=0, zero nonsearch model/emission fallbacks"
+  },
+  "smaller_screen": {
+    "log": "native/build/child-pocket-162x153.log",
+    "result": "FAIL: no valid layout; four outer attempts; failure receipt captured",
+    "construction_seconds": 5.641253959
+  },
+  "limitations": "Fix proven by independent regression, not by a smaller real carrier. No new full board qualification or speedup claim; screening overlapped tests. Historical timing remains separately in progress."
+}

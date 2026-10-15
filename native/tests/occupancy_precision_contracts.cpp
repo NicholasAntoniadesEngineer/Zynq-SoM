@@ -1,5 +1,6 @@
 #include "schgen/occupancy.hpp"
 #include "schgen/pack_refine.hpp"
+#include "schgen/floorplan.hpp"
 #include "pcb_placement_fixture.hpp"
 #include "occupancy_precision_fixture.hpp"
 #include "schgen/native_audit_state.hpp"
@@ -84,6 +85,59 @@ template<class F> QuantizationCounts measured(QuantizationCounts& counts,F actio
     require(counts==expected,"exported counter delta differs from independent function entries");return delta;
 }
 template<class F> void rejects(F action){bool failed=false;try{action();}catch(const std::exception&){failed=true;}require(failed,"invalid scalar accepted");}
+void refinement_window_contracts(){
+    using Window=std::tuple<double,double,double,double>;
+    for(int face:{1,2}) {
+        Occupancy o(20,20,.1,2,1,1,.05);
+        RefineBlock b;b.name="bounded";b.x=4;b.y=3;b.w=2;b.h=2;b.mask=face;
+        b.comps={{.25,.25,.5,.5,3-face}};
+        b.anchor.zone_ax=17;b.anchor.zone_ay=15;b.anchor.zone_w=1;
+        o.add(b.x,b.y,b.w,b.h,b.reach,b.inset,b.mask,b.comps);
+        const auto rects=o.rect_count();
+        const auto free=refine_pack_passes(o,{b},{},3,20,20);
+        require(free.poses.front().first>5&&free.poses.front().second>4,
+            "unbounded witness must actually leave the seating domain");
+        b.translation_window=Window{3,5,2,4};
+        QuantizationCounts counts;
+        RefineResult bounded;
+        measured(counts,[&]{bounded=refine_pack_passes(o,{b},{},3,20,20,&counts);});
+        require(bounded.poses.front()==std::make_pair(5.,4.),"closed translation bounds lost during refinement");
+        const auto repeat=refine_pack_passes(o,{b},{},3,20,20);
+        require(repeat.poses==bounded.poses&&repeat.passes==bounded.passes,"window refinement not reproducible");
+        require(o.rect_count()==rects,"refinement changed caller occupancy");
+        for(const Window bad:{Window{6,5,2,4},Window{3,5,4,2},Window{3,5,2,INFINITY},
+                              Window{NAN,5,2,4},Window{0,1,0,1}}) {
+            b.translation_window=bad;QuantizationCounts rejected;bool threw=false;
+            measured(rejected,[&]{try{(void)refine_pack_passes(o,{b},{},3,20,20,&rejected);}
+                catch(const std::invalid_argument&){threw=true;}});
+            require(threw&&rejected.empty(),"invalid domain/seed must reject before occupancy operations");
+        }
+        o.remove(b.x,b.y,b.w,b.h,b.reach,b.inset,b.mask,b.comps);
+        b.x=4.25;b.y=3.25;b.translation_window=Window{b.x,b.x,b.y,b.y};
+        o.add(b.x,b.y,b.w,b.h,b.reach,b.inset,b.mask,b.comps);
+        QuantizationCounts no_grid;
+        measured(no_grid,[&]{const auto r=refine_pack_passes(o,{b},{},3,20,20,&no_grid);
+            require(r.poses.front()==std::make_pair(b.x,b.y)&&r.passes==1,
+                "empty grid intersection must retain the valid off-grid incumbent");});
+    }
+}
+void reservation_retry_accounting(){
+    FloorplanLegalizeInput in;in.board_w=25;in.board_h=25;
+    in.fixed_rects={{"a",{.5,.5,20.5,20.5}}};in.fixed_poses["a"]={.5,.5};
+    for(const auto* name:{"a","b"})in.metrics[name]={{{"p",10,10}},{{"p",0,0,20,20}},{20,20}};
+    in.index.hard.push_back({"near_max","b","b","a",100,"reservation accounting",true,{},{}});
+    in.primary_fanout["a"]={{},{},1,3,std::vector<Comp>{{0,0,3,20,2}}};
+    in.primary_fanout["b"]={{},{},2,3,std::vector<Comp>{{17,0,3,20,1}}};
+    std::size_t retries=0;in.reservation_retry_started=[&]{++retries;};
+    std::vector<FloorplanLegalizeVar> vars{{"b",20,20,{4.5,.5},4.5,.5}};
+    std::vector<std::string> log;QuantizationCounts counts;
+    for(auto& n:entries)n=0;observing=true;bool ok=false;
+    try{ok=floorplan_legalize_compact_accounted(in,vars,log,counts);}catch(...){observing=false;throw;}
+    observing=false;
+    require(ok&&retries==1&&entries[0]>0,"physical retry accounting witness did not execute");
+    for(int i=0;i<6;++i){const auto it=counts.find(names[i]);
+        require((it==counts.end()?0:it->second)==entries[i],"physical retry occupancy receipt differs from actual entries");}
+}
 void frontier_slots(){
     QuantizationCounts direct,slotted;
     OccupancyFrontierSlot slot(&slotted);
@@ -232,7 +286,8 @@ void ownership_and_rejections(){
     measured(second,[&]{require(!copy.fits_hashed(-1,0,1,1,{},{},1,{},&second),"boundary rejection expected");});
     auto blocked=Occupancy(6,6,0,2,1,1,.05);blocked.add(0,0,6,6,{},{},1,{});
     const auto failure=measured(second,[&]{require(!blocked.place_near(3,3,1,1,{},{},1,{},0,6,0,6,&second),"fully blocked search accepted");});
-    require(failure.at(names[5])==2&&failure.at(names[2])>1&&failure.at(names[4])>4,"failed search work lost");
+    require(failure.at(names[5])==2&&failure.at(names[2])==36&&failure.at(names[4])==4,
+            "failed search must visit 36 cells but reuse its first blocking rectangle");
     Occupancy empty(6,6,0,2,1,1,.05);SeatShapeCand cand;cand.w=1;cand.h=1;cand.mask=1;cand.side="top";cand.win_x1=6;cand.win_y1=6;
     auto loser=cand;loser.index=9;auto oversized=cand;oversized.w=7;
     const auto ranking=measured(second,[&]{const auto hits=seat_shape_sides(empty,3,3,{cand,loser,oversized},6,6,0,&second);
@@ -246,11 +301,11 @@ void ownership_and_rejections(){
     RefineBlock b;b.name="blocked";b.w=7;b.h=1;b.mask=1;b.anchor.zone_w=1;b.anchor.zone_ax=3;b.anchor.zone_ay=3;
     const auto refinement=measured(second,[&]{const auto r=refine_pack_passes(blocked,{b},{},1,6,6,&second);
         require(r.passes==1&&r.poses==std::vector<std::pair<double,double>>{{0,0}},"failed refinement moved geometry");});
-    require(refinement.at(names[5])==2&&refinement.at(names[2])>0,"failed refinement work lost");
+    require(refinement.at(names[5])==2&&!refinement.count(names[2]),"oversized refinement counts axes but cannot execute frontier work");
 }
 void registry_and_boards(const std::filesystem::path& root){
     NativeQuantizations registry;register_native_quantizations(registry);
-    require(registry.declarations().size()==155,"122 prior plus9 search plus18 plain plus6 grid operations");
+    require(registry.declarations().size()==156,"122 prior plus9 search plus18 plain plus6 grid plus1 edge tick operations");
     for(int i=0;i<6;++i){
         const auto declarations=registry.declarations();
         const auto d=std::find_if(declarations.begin(),declarations.end(),[&](const auto& row){return row.name==names[i];});
@@ -311,7 +366,7 @@ int main(int argc,char** argv){try{
     // from the candidate: /private/tmp/occupancy-agent1.5BMaTe/proof/before.digest.
     require(pure==0xfee57f87ab3a0aa5ULL,"pre-extraction geometry digest drift");
 #ifndef OCCUPANCY_LEGACY_PROBE
-    frontier_slots();scalars();ownership_and_rejections();QuantizationCounts counts;
+    refinement_window_contracts();reservation_retry_accounting();frontier_slots();scalars();ownership_and_rejections();QuantizationCounts counts;
     measured(counts,[&]{require(geometry(&counts)==pure,"accounting changed geometry bits");});
     require(counts.at(names[0])>0&&counts.at(names[2])>0&&counts.at(names[3])>0&&counts.at(names[4])>0&&counts.at(names[5])>0,"live geometry path omitted precision family");
     if(argc==2)registry_and_boards(argv[1]);

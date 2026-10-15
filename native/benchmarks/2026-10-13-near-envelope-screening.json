@@ -1,0 +1,53 @@
+{
+  "status": "solver_qualified_at_166x156_smaller_165x156_candidate_rejected",
+  "base_commit": "82a44c5a6cc1782b68a606d64fe9041756c5526a",
+  "change": "Joint repair uses seed-independent necessary axis bounds for near_max; unchanged exact Euclidean and emitted-grid checks still qualify every proposal. Earlier successful strategies remain incumbents.",
+  "tests": {
+    "native_floorplan_contracts": "PASS, native/build/near-envelope-contracts-final.log",
+    "new_oracle": "1083 coordinate/mobility combinations; independent axis-gap oracle; valid diagonal recovery and unsafe square-envelope corners exercised",
+    "carrier_reproducibility": "Two identical 165x156 PCB hashes: 18207d36b021212bcea0b9a7672128c72d4d52d1277b0263bc6efd4d2b553981",
+    "devkit_regression": "Two unchanged 98x98 PCB hashes: b6798d4b63d2fddbf9fad24945c151b9420b049b674ad5d637c43bf4a365137f"
+  },
+  "carrier_165x156": {
+    "unpinned_rail": "Construction recovered but fanout failed with seven starved parts; rejected",
+    "pinned_rail": "Screening passed placement and fanout, but FULL BUILD FAILED; not promoted",
+    "full_output": "/private/tmp/carrier-near-envelope-qualified.5DZ9o9",
+    "full_log": "native/build/carrier-near-envelope-full.log",
+    "mandatory_failures": ["ratsnest", "pcb_geometry (aggregate includes ratsnest)", "fallbacks: three thermal_via_lattice events above baseline zero"],
+    "cross_airwire_mm": 16557.7,
+    "cross_airwire_budget_mm": 15883,
+    "nonrouting_drc_errors": 0,
+    "unrouted": 499,
+    "hdmi_term_to_som_j2_gap_mm": 6.91,
+    "authored_near_bound_mm": 10,
+    "authored_bound_provenance": "placement_contract.json explicitly labels 10 mm judgment, not a verified datasheet maximum",
+    "top": 413,
+    "bottom": 153,
+    "timing_caveat": "Diagnostic runs overlapped other development/build work; no controlled performance claim or historical Python comparison"
+  },
+  "side_eligibility_166x156": {
+    "recipe_directory": "/private/tmp/carrier-side-eligibility.3wEY2c",
+    "monitor": "Constructed, placement/fanout passed, bottom count unchanged at 153; PCB identical to a subsequent same-code reference with no added eligibility. No demonstrated effect from this option.",
+    "som-power": "Construction search exhausted; not proof of geometric infeasibility",
+    "combined": "Construction search exhausted; not proof of geometric infeasibility",
+    "logs": "native/build/side-eligibility-{monitor,som-power,combined}.log",
+    "next_investigation": "Shape availability, top-area classifier, group ordering and incumbent preservation when enabling additional bottom candidates; retain hardware checks"
+  },
+  "reference_166x156": {
+    "log": "native/build/near-envelope-carrier-reference.log",
+    "pcb_sha256": "393b5d4c319094b54c3e0389cb04e1664435bffd72d5d3bde26e894de038e5d2",
+    "status": "Full mandatory qualification PASS, 37 sheets; source audit PASS (69 files, 75 constants, 156 transforms)",
+    "full_output": "/private/tmp/carrier-envelope-reference.vJNzrJ",
+    "full_log": "native/build/carrier-envelope-reference-full.log",
+    "render_review": "Front and bottom inspected; bottom remains sparse. No hardware/fabrication-readiness claim.",
+    "nonrouting_drc_errors": 0,
+    "unrouted": 499,
+    "advisory_failures": ["return_path", "golden", "contract_coverage_lint"],
+    "timing_seconds": {"input": 1.566702, "model": 3.386446, "pcb_text": 0.039699, "render3d": 30.783783, "audit": 112.828150, "measured_scope_total_not_wall": 211.985101},
+    "cross_airwire_mm": 15359.2,
+    "cross_airwire_budget_mm": 15931,
+    "emission_fallbacks": "No named emission fallbacks reported"
+  },
+  "screening_correction": "Profiler now reports ratsnest gate and named emission fallback counts separately from model fallback counts, before expensive qualification. Re-screening independently reproduced full-build cross-airwire 16557.7 mm and three thermal_via_lattice events on the rejected 165x156 candidate. Devkit passes new screening. PROFILE_COMPLETE_NO_ACCEPTANCE remains diagnostic only.",
+  "residual_risks": "No accepted smaller board, no routing/fabrication readiness, no authoritative qualification of all proximity/access requirements. Unary-conflict-cache prototype removed after zero observed hits; its prior diagnostic logs retained."
+}

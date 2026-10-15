@@ -1,0 +1,25 @@
+{
+  "source_commit": "4558ef9d",
+  "status": "experimental_candidate_not_integrated_or_qualified",
+  "diagnosis": {
+    "167x163_default": "south pmod_expansion exceeds edge margin; shifting left fails required fanout boundary",
+    "168x162_default": "usb_jtag exhausts seat candidates and bounded reseat attempts",
+    "168x159_compact_constraint_first": "camera/hdmi_tx cross-edge fanout conflict, not SoM overlap"
+  },
+  "candidate": {
+    "algorithm": "Only on invalid edge geometry, try translating each entire edge run N/E/S/W by -0.25,+0.25,-0.5,+0.5,-1,+1,-2,+2 mm. Preserve internal relative poses. Require directional fanout boundary margins, edge body margins, no SoM keepout overlap and cross-edge fanout clearance. Restore original edge poses if none succeeds.",
+    "winning_translation": {"edge":"W","along_edge_mm":-0.5},
+    "outline_mm": [168,159],
+    "area_mm2": 26712,
+    "reference_outline_mm": [168,163],
+    "reference_area_mm2": 27384,
+    "area_reduction_percent": 2.45398773,
+    "conservative_floorplan_fits": true,
+    "free_floorplan_fits": true,
+    "complete_model_physical_helper_pass": true,
+    "complete_model_reseats": 10,
+    "physical_scope": ["placement contract", "placement flow", "composition", "mechanical", "connector spacing", "fanout", "ratsnest", "escape lanes", "return stitch", "emitted escape-copper parity"]
+  },
+  "limitations": ["Private diagnostic code only; production selection unchanged", "No general algorithm contract tests or independently validated new search accounting yet", "No repeatability campaign, both-board regression, full source audit, KiCad DRC or rendered-image review", "Fixed-outline workload, not automatic-search timing comparison or evidence of automatic-search retry reduction", "No global optimum or hardware qualification claim"],
+  "scratch_evidence": ["native/build/neighbor-rejection-detail.log", "native/build/neighbor-edge-shift-bounded.log", "native/build/neighbor-rejection-pack.cpp", "native/build/edge-shift-physical.cpp", "native/build/edge-shift-physical.log"]
+}

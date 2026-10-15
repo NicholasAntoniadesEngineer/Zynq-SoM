@@ -1,0 +1,19 @@
+{
+  "base_commit": "5a648c30",
+  "hypothesis": "The generic blanket ban on externally constrained groups prevents useful HDMI/UART alternatives.",
+  "prototype": "Allow explicitly selected wired groups with only finite nonnegative near_max bounds and resolved targets into generic orientation and contract-group candidate generation. Preserve actual external terms, local contract checks and per-shape metrics.",
+  "disposition": "Removed after no additional HDMI or UART offers were demonstrated. Production candidate-generation source restored; retain regression coverage and evidence only.",
+  "finding": "The templated stage builder already supplies four HDMI rigid orientations independently of generic orientation eligibility. Its external-contract exclusion must not be mistaken for a ban on all alternative HDMI orientations. Lifting that exclusion alone did not resolve smaller-board placement.",
+  "regression_coverage": "Both-board orientation suite; HDMI incumbent offers preserved, actual shape metrics transported, HDMI near_max to som_j2 remains enforced at frozen-fixture bound 10 mm, UART near_max to usb_uart_connector remains enforced at frozen-fixture bound 40 mm. These tests verify transport, not authoritative physical justification of those numeric bounds. No maximum candidate count imposed.",
+  "screens": [
+    {"selection": ["usb_jtag", "hdmi_rx_term"], "outline_mm": [164,159], "result": "construction_failed", "seconds": 1.25065925, "log": "native/build/carrier-hdmi-near-164x159-probe.log"},
+    {"selection": ["usb_jtag", "hdmi_rx_term"], "outline_mm": [165,158], "result": "construction_failed", "seconds": 0.391826417, "log": "native/build/carrier-hdmi-near-165x158-probe.log"},
+    {"selection": ["usb_jtag", "hdmi_rx_term"], "outline_mm": [165,159], "result": "constructed_no_acceptance", "model_seconds": 2.867054959, "emit_seconds": 0.04255575, "log": "native/build/carrier-hdmi-near-165x159-probe.log"},
+    {"selection": ["usb_jtag", "uart_bridge"], "outline_mm": [164,159], "result": "construction_failed", "seconds": 1.224293125, "log": "native/build/carrier-uart-near-164x159-probe.log"},
+    {"selection": ["usb_jtag", "uart_bridge"], "outline_mm": [165,158], "result": "construction_failed", "seconds": 0.395890917, "log": "native/build/carrier-uart-near-165x158-probe.log"},
+    {"selection": ["usb_jtag", "uart_bridge"], "outline_mm": [165,159], "result": "constructed_no_acceptance", "model_seconds": 2.820888417, "emit_seconds": 0.038033959, "log": "native/build/carrier-uart-near-165x159-probe.log"}
+  ],
+  "successful_screen_geometry": {"pcb_sha256": "24ac25bfe6cb2ea6477a01b195b5ca78070ccff3bb2640f12d5b8f7275da5c64", "top": 413, "bottom": 153, "hard_red": 0},
+  "scope": "Six single-run prepared-input construction screens. No new full qualification, smaller board, controlled speedup or Python timing comparison. Search exhaustion is not geometric infeasibility.",
+  "next": "Investigate joint shape selection and translation, including floating-point separation endpoint construction. Review authored judgment bounds against hardware evidence separately; neither an inherited heuristic nor a search effort limit establishes a physical minimum board size. Preserve valid incumbents and retain all actual search-work receipts."
+}

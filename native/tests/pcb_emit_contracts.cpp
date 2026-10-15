@@ -1,5 +1,7 @@
 #include "schgen/atomic_file.hpp"
 #include "schgen/pcb_emit.hpp"
+#include "schgen/thermal_via_planning.hpp"
+#include "../src/pcb_emit_internal.hpp"
 #include <algorithm>
 #include <fstream>
 #include <iostream>
@@ -95,6 +97,24 @@ void equal(const std::string &got, const std::string &want, const std::string &c
     }
     ++checks;
 }
+void diagnostic_equal(const std::string& got,const std::string& want,
+                      const std::string& context,const fs::path& artifacts) {
+    if(want.rfind("THERMAL VIA LATTICE: ",0)!=0) {
+        equal(got,want,context,artifacts);return;
+    }
+    const std::string marker=". Preferred-site blockers: ";
+    const auto split=got.find(marker);
+    require(split!=std::string::npos&&split+marker.size()<got.size(),
+            context+": missing nonempty preferred-site blocker evidence");
+    auto expected=want;
+    const std::string old_claim="drift from datasheet-preferred via geometry";
+    const auto claim=expected.find(old_claim);
+    require(claim!=std::string::npos,context+": unexpected legacy diagnostic format");
+    expected.replace(claim,old_claim.size(),"alternative to authored preferred via geometry");
+    equal(got.substr(0,split),expected,context+": event facts and corrected provenance",artifacts);
+    require(got.find(" x",split+marker.size())!=std::string::npos,
+            context+": blocker multiplicity missing");
+}
 PcbFootprintPool footprints(const JsonNode &n) {
     PcbFootprintPool pool;
     for (const auto &[k, v] : n.object_value)
@@ -156,7 +176,7 @@ void project(const fs::path &fixtures, const fs::path &output, const std::string
     require(result.diagnostics.size() == field(raw, "diagnostics").array_value.size(),
             name + " diagnostics count");
     for (std::size_t i = 0; i < result.diagnostics.size(); ++i)
-        equal(result.diagnostics[i], field(raw, "diagnostics").array_value[i].string_value,
+        diagnostic_equal(result.diagnostics[i], field(raw, "diagnostics").array_value[i].string_value,
               name + " diagnostic", output);
     std::size_t fallbacks = 0;
     for (const auto &key : result.fallback_events) {
@@ -210,7 +230,7 @@ void mutations(const fs::path &fixtures, const fs::path &output, const std::stri
         require(result.diagnostics.size() == field(row, "diagnostics").array_value.size(),
                 name + " diagnostic count");
         for (std::size_t i = 0; i < result.diagnostics.size(); ++i)
-            equal(result.diagnostics[i], field(row, "diagnostics").array_value[i].string_value,
+            diagnostic_equal(result.diagnostics[i], field(row, "diagnostics").array_value[i].string_value,
                   name + " diagnostic", output);
         require(result.fallback_events.size() ==
                     field(field(row, "fallbacks"), "thermal_via_lattice").number_value,
@@ -228,6 +248,244 @@ void mutations(const fs::path &fixtures, const fs::path &output, const std::stri
               output);
     }
     std::cout << field(raw, "cases").array_value.size() << " frozen emission mutation cases PASS\n";
+}
+void thermal_axis_exits() {
+    ViaSiteSpec spec;
+    spec.board_w=spec.board_h=200;
+    spec.via_size=.6; spec.via_drill=.3; spec.via_clear=.25;
+    spec.hole_samenet=.1; spec.via_h2h=.45;
+    for (const auto& net : {"GND","SIGNAL"})
+        for (double drill : {0.0,.8})
+            for (bool turned : {false,true})
+                for (double offset : {0.0,.2}) {
+                    ViaObstacle obstacle{100+offset,100+offset,
+                        turned?.1:.8,turned?.8:.1,net,drill,"R1.1"};
+                    const auto exits=via_obstacle_axis_exits(100,100,spec,obstacle);
+                    require(exits.size()==4,"blocked pad has four deterministic axis exits");
+                    require(exits==via_obstacle_axis_exits(100,100,spec,obstacle),
+                            "thermal axis proposals repeat exactly");
+                    for (const auto& [x,y] : exits) {
+                        auto moved=obstacle; moved.cx=x; moved.cy=y;
+                        require(x==obstacle.cx || y==obstacle.cy,"exit moves only one axis");
+                        require(!via_site_blocker(100,100,spec,{moved},{}).blocked,
+                                "axis exit clears both pad and drill using actual rule");
+                        auto inward=moved;
+                        if (x!=obstacle.cx) inward.cx += x<100 ? .000001 : -.000001;
+                        else inward.cy += y<100 ? .000001 : -.000001;
+                        require(via_site_blocker(100,100,spec,{inward},{}).blocked,
+                                "axis proposal follows the clearance boundary, not an arbitrary padding");
+                        require(via_site_blocker(100,100,spec,{moved,obstacle},{}).blocked,
+                                "clearing one blocker is not permission to ignore another");
+                    }
+                }
+    ViaObstacle distant{110,110,.5,.5,"SIGNAL",0,"R2.1"};
+    require(via_obstacle_axis_exits(100,100,spec,distant).empty(),
+            "unblocked pads do not generate gratuitous moves");
+    require(via_obstacle_axis_exits(-1,100,spec,distant).empty(),
+            "pad movement cannot fix a board-edge violation");
+}
+void thermal_world_obstacles() {
+    PcbModel model;
+    model.origin_x = model.origin_y = 0;
+    model.board_w = model.board_h = 200;
+    model.net_numbers = {{"GND", 1}, {"SIGNAL", 2}};
+    PcbCheckInstance subject;
+    subject.ref = "U1";
+    subject.value = "THERMAL_TEST";
+    subject.x = subject.y = 100;
+    subject.mod = pcb_check_footprint("empty", "(footprint empty (layer F.Cu))");
+    model.insts.push_back(subject);
+    auto policy = default_pcb_emit_policy();
+    policy.thermal_credit_needs.clear();
+    policy.thermal_copper = {{"THERMAL_TEST", {{{0, 0}, {4, 0}}, 1,
+        {-5, -5, 5, 5}, {"F.Cu", "B.Cu"}, "synthetic test geometry"}}};
+    auto sites = [&](const PcbModel &m) {
+        PcbEmissionResult result;
+        auto nodes = pcb_emission::thermal_nodes(m, policy,
+            [](const std::string &) { return "00000000-0000-0000-0000-000000000001"; },
+            result, nullptr);
+        require(nodes.vias.size() == 1, "thermal obstacle test emits exactly one via");
+        require(result.fallback_events.empty(), "second preferred site needs no lattice");
+        const auto *at = pcb_emission::child(nodes.vias.front(), "at");
+        require(at != nullptr, "thermal via has coordinates");
+        const auto &values = std::get<SexprList>(at->v);
+        const auto xy = std::pair{std::get<double>(values.at(1).v), std::get<double>(values.at(2).v)};
+        const auto planned = plan_preferred_thermal_vias(m,policy);
+        require(planned.size()==1 && planned.front().ref=="U1" &&
+                planned.front().sites.chosen==std::vector<std::pair<double,double>>{xy},
+                "preferred-only model plan agrees with independently emitted via");
+        return xy;
+    };
+    require(sites(model) == std::pair{100.0, 100.0}, "unobstructed preferred site");
+    // Identical physical pad, represented with near and distant footprint
+    // origins and quarter turns; both faces block the same through-via.
+    for (const auto &side : {"top", "bottom"})
+        for (int rotation : {0, 90, 180, 270})
+            for (double offset : {0.0, 60.0}) {
+                auto trial = model;
+                auto blocker = subject;
+                blocker.ref = "J1";
+                blocker.value = "BLOCKER";
+                blocker.side = side;
+                blocker.rotation = rotation;
+                const auto delta = world_turned_point(0, 0, offset, 0, rotation, 4);
+                blocker.x -= delta.first;
+                blocker.y -= delta.second;
+                blocker.mod = pcb_check_footprint("offset-pad",
+                    "(footprint offset (layer F.Cu) (pad 1 smd rect (at " +
+                    std::to_string(offset) + " 0) (size 1 1) (layers F.Cu F.Paste F.Mask)))");
+                blocker.pad_nets = {{"1", {2, "SIGNAL"}}};
+                trial.insts.push_back(blocker);
+                require(sites(trial) == std::pair{104.0, 100.0},
+                    "actual pad blocks thermal via independent of origin, rotation and face");
+            }
+    auto wide = model;
+    auto blocker = subject;
+    blocker.ref = "J2";
+    blocker.value = "WIDE_PAD";
+    blocker.x = 40;
+    blocker.mod = pcb_check_footprint("wide-pad",
+        "(footprint wide (layer F.Cu) (pad 1 smd rect (at 0 0)"
+        " (size 120 1) (layers F.Cu F.Paste F.Mask)))");
+    blocker.pad_nets = {{"1", {2, "SIGNAL"}}};
+    wide.insts.push_back(blocker);
+    require(sites(wide) == std::pair{104.0, 100.0},
+        "pad extent, not pad or footprint center, determines collision");
+    auto copper = model;
+    PcbCheckCopper obstacle;
+    obstacle.kind = "via";
+    obstacle.x = 40;
+    obstacle.y = 100;
+    obstacle.size = 120;
+    obstacle.drill = 0.3;
+    obstacle.net = 2;
+    copper.copper.push_back(obstacle);
+    require(sites(copper) == std::pair{104.0, 100.0},
+        "escape copper extent cannot be culled by center distance");
+    auto missing_ground = model;
+    missing_ground.net_numbers.erase("GND");
+    rejects([&] { plan_preferred_thermal_vias(missing_ground,policy); }, "resolved GND");
+    const auto initial = plan_preferred_thermal_vias(model,policy);
+    require(preserves_preferred_thermal_vias(initial,initial), "identical thermal field preserved");
+    auto lost = initial;
+    lost.front().sites.chosen.clear();
+    require(!preserves_preferred_thermal_vias(initial,lost), "losing a preferred site rejects trial");
+    require(preserves_preferred_thermal_vias(lost,initial), "recovering preferred site is allowed");
+    require(!preserves_preferred_thermal_vias(initial,{}), "missing subject cannot pass");
+    auto two = initial;
+    two.push_back(initial.front());
+    two.back().ref="U2";
+    auto traded = two;
+    traded.front().sites.chosen.clear();
+    traded.back().sites.chosen.push_back({101,101});
+    require(!preserves_preferred_thermal_vias(two,traded), "aggregate site count cannot hide a subject loss");
+    std::reverse(two.begin(),two.end());
+    require(preserves_preferred_thermal_vias(two,two), "subject order does not alter preservation");
+    auto mirrored = model;
+    mirrored.insts.front().mirror = true;
+    mirrored.insts.front().side = "bottom";
+    policy.thermal_copper.front().second.via_sites = {{1,2}};
+    for (int rotation : {0,90,180,270}) {
+        mirrored.insts.front().rotation=rotation;
+        require(sites(mirrored)==world_turned_point(100,100,1,-2,rotation,3),
+                "preferred plan and emitter mirror local sites before rotation");
+    }
+    std::cout << "Thermal world-space obstacle contracts PASS\n";
+}
+void interface_label_contracts() {
+    auto policy=pcb_emit_policy(ProjectConfig{});
+    require(policy.interface_reference_labels_only,"project boards must use interface-only reference labels");
+    PcbFootprintInst part;
+    part.value="100n";part.side="top";
+    part.mod=pcb_check_footprint("label-fixture",R"((footprint "label-fixture" (layer "F.Cu")
+      (property "Reference" "REF**" (at 0 0) (layer "F.SilkS") (effects (font (size 1 1) (thickness 0.15))))
+      (property "Value" "old" (at 0 2) (layer "F.Fab") (effects (font (size 1 1) (thickness 0.15))))
+      (pad "1" smd rect (at 0 0) (size 1 1) (layers "F.Cu" "F.Paste" "F.Mask"))))");
+    for(const auto& [ref,fp,visible]:std::vector<std::tuple<std::string,std::string,bool>>{
+        {"R1","Resistor_SMD:R_0603",false},{"C1","Capacitor_SMD:C_0603",false},
+        {"U1","Package_SO:SOIC-8",false},{"Q1","Package_TO_SOT_SMD:SOT-23",false},
+        {"L1","Inductor_SMD:L_0603",false},{"D1","Diode_SMD:D_SOD-123",false},
+        {"J1","custom:port",true},{"SW1","custom:switch",true},{"TP1","custom:probe",true},
+        {"D2","LED_SMD:LED_0603",true},{"JP1","Jumper:SolderJumper",true},
+        {"BT1","Battery:Holder",true},{"FID1","Fiducial:Fiducial",true},
+        {"H1","MountingHole:Hole",true},{"F1","Fuse:Holder",true}}) {
+        part.ref=ref;part.footprint=fp;
+        require(pcb_emission::interface_label_part(part,policy)==visible,"interface label classification "+ref);
+        for(const auto* side:{"top","bottom"}) {
+            part.side=side;
+            const auto embedded=pcb_emission::embed(part,policy,[](const auto&){return std::string("00000000-0000-0000-0000-000000000001");});
+            const auto pcb=pcb_emission::node("kicad_pcb",{embedded});
+            const auto refs=collect_refdes_props(pcb,1);
+            require(refs.empty()!=visible,"emitted reference visibility "+ref+" "+side);
+            const auto bytes=sexpr_dumps(embedded);
+            require(bytes.find(ref)!=std::string::npos&&bytes.find("100n")!=std::string::npos&&bytes.find("pad")!=std::string::npos,
+                "hidden labels must retain identity, value and copper");
+        }
+    }
+}
+void thermal_selection_contracts() {
+    const ViaSiteSpec rule{0, 0, 100, 100, 1, .6, .3, .25, .1, .45, .8};
+    const Box4 pour{-3, -3, 3, 3};
+    const std::vector<std::pair<double, double>> preferred{{0, 0}, {2, 0}};
+    const std::vector<ViaObstacle> blocker{{50, 50, .5, .5, "SIGNAL", 0, "C1.1"}};
+    QuantizationCounts counts;
+    auto selected = select_via_sites(50, 50, 0, preferred, pour, 1, .25, true,
+                                    rule, {}, {}, &counts);
+    require(selected.chosen == std::vector<std::pair<double,double>>{{50,50}} &&
+            selected.preferred_examined == 1 && selected.lattice_examined == 0 && counts.empty(),
+            "sufficient preferred sites do not construct or account an unused lattice");
+    selected = select_via_sites(50, 50, 0, preferred, pour, 2, .25, false,
+                               rule, blocker, {}, &counts);
+    require(selected.chosen.size() == 1 && selected.preferred_examined == 2 &&
+            selected.lattice_examined == 0 && selected.rejected.size() == 1 &&
+            selected.rejected.front().preferred &&
+            selected.rejected.front().blocker.label == "C1.1" && counts.empty(),
+            "preferred-only screening retains shortfall and blocker without fallback");
+    selected = select_via_sites(50, 50, 0, preferred, pour, 2, .25, true,
+                               rule, blocker, {}, &counts);
+    require(selected.chosen.size() == 2 && selected.lattice_chosen == 1 &&
+            selected.lattice_examined > 0 && !counts.empty(),
+            "necessary lattice is executed and accounted");
+    selected = select_via_sites(50,50,0,preferred,pour,2,.25,true,rule,
+                               {{50,50,10,10,"SIGNAL",0,"blanket"}},{});
+    require(selected.chosen.empty() && selected.lattice_chosen == 0 &&
+            selected.preferred_examined == preferred.size() &&
+            selected.lattice_examined == fallback_via_sites(-3,-3,3,3,.6,.25).size() &&
+            selected.rejected.size() == selected.preferred_examined + selected.lattice_examined,
+            "exhausted search preserves every rejection and reports an empty shortfall");
+    // Independent eager reference, also checking source-order rejection receipts.
+    for (int rotation : {0, 90, 180, 270})
+        for (std::size_t requested : {0U, 1U, 2U, 6U}) {
+            auto candidates = preferred;
+            auto lattice = fallback_via_sites(-3, -3, 3, 3, .6, .25);
+            candidates.insert(candidates.end(), lattice.begin(), lattice.end());
+            std::vector<std::pair<double,double>> expected, occupied{{52,50}};
+            std::vector<std::string> rejected;
+            std::vector<std::pair<double,double>> rejected_points;
+            std::size_t examined = 0, lattice_chosen = 0;
+            for (std::size_t j = 0; j < candidates.size() && expected.size() < requested; ++j) {
+                const auto point = world_turned_point(50,50,candidates[j].first,candidates[j].second,rotation,3);
+                const auto hit = via_site_blocker(point.first,point.second,rule,blocker,occupied);
+                ++examined;
+                if (hit.blocked) {rejected.push_back(hit.kind + ":" + hit.label);rejected_points.push_back(point);}
+                else {
+                    expected.push_back(point);
+                    occupied.push_back(point);
+                    if(j >= preferred.size()) ++lattice_chosen;
+                }
+            }
+            auto actual = select_via_sites(50,50,rotation,preferred,pour,requested,.25,true,
+                                           rule,blocker,{{52,50}});
+            std::vector<std::string> actual_rejected;
+            std::vector<std::pair<double,double>> actual_rejected_points;
+            for (const auto& r : actual.rejected) actual_rejected_points.push_back(r.candidate);
+            for (const auto& r : actual.rejected) actual_rejected.push_back(r.blocker.kind+":"+r.blocker.label);
+            require(actual.chosen == expected && actual_rejected == rejected && actual_rejected_points==rejected_points &&
+                    actual.preferred_examined + actual.lattice_examined == examined &&
+                    actual.lattice_chosen == lattice_chosen,
+                    "lazy planning matches independent eager selection and execution receipts");
+        }
+    std::cout << "Thermal selection planning contracts PASS\n";
 }
 void boundaries(const fs::path &fixtures, const fs::path &output) {
     auto raw = parse_json_file((fixtures / "devkit_mini.json").string());
@@ -312,6 +570,10 @@ int main(int argc, char **argv) {
         mutations(fixtures, output, "edge_cases.json");
         mutations(fixtures, output, "unicode_strip.json");
         boundaries(fixtures, output);
+        thermal_world_obstacles();
+        thermal_axis_exits();
+        thermal_selection_contracts();
+        interface_label_contracts();
         std::cout << "PCB emission: " << checks << " checks passed\n";
         return 0;
     } catch (const std::exception &e) {

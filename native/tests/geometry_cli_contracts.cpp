@@ -2,6 +2,7 @@
 #include "schgen/atomic_file.hpp"
 
 #include <algorithm>
+#include <cmath>
 #include <fstream>
 #include <cstdlib>
 #include <iostream>
@@ -186,9 +187,14 @@ void live(const fs::path& repo, const fs::path& work, const JsonNode& reference,
     require(dry.first == 0 && dry.second.find("applying") == dry.second.npos, "healthy dry-run does not force intent edit");
     require(!fs::exists(work / "dry/Zynq_Carrier.kicad_pcb"), "dry-run never runs board publication");
     const auto measured = invoke("compose", work / "measure", {"--measure"});
-    require(measured.first == 0 && measured.second.find("100x100") != measured.second.npos, "fresh real devkit dimensions");
+    require(measured.first == 0 && measured.second.find("compose: board ") != measured.second.npos, "fresh real devkit measurement output");
     const auto ledger = parse_json_file((work / "measure/reports/compose_ledger.json").string());
     const auto& record = field(ledger.array_value.back(), "ledger");
+    const auto& board=field(record,"board");
+    const double width=field(board,"w").number_value,height=field(board,"h").number_value;
+    require(std::isfinite(width)&&std::isfinite(height)&&width>0&&height>0&&
+        width*height<=98.*98.&&field(board,"area_mm2").number_value==std::nearbyint(width*height*10)/10,
+        "fresh devkit measured dimensions invalid or qualified area regressed");
     require(field(field(record, "flow_gate"), "ok").bool_value, "real placement-flow gate passes");
     require(field(field(record, "law5"), "ok").bool_value, "real ratsnest gate passes");
     require(snapshot(project) == before, "floorplan/export/measure/dry-run preserve every source byte and cached poison");

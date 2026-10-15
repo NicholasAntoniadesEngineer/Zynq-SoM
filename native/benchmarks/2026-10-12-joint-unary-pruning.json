@@ -1,0 +1,58 @@
+{
+  "schema": 1,
+  "base_commit": "8731b873",
+  "scope": "Bounded invocation-local rejection of impossible directional choices in the opt-in joint composer",
+  "algorithm": {
+    "proof": "Before enqueueing an unseen assignment, test its changed directional separation alone with unchanged board walls and hard-axis edges. Only an actual negative cycle excludes that choice from all combinations.",
+    "cache": "Invocation-local tri-state per domain/choice: untested, not ruled out, impossible. A feasible unary probe never qualifies a full assignment.",
+    "budget": "At most max_states additional unary axis solves, separately counted from assignment axis_solves. Once this probe limit is reached, untested alternatives remain eligible; no untested choice is pruned.",
+    "incumbent": "An initially feasible assignment performs zero unary probes; ordinary composer successes still bypass joint search.",
+    "accounting": "New legalize_joint_domain_probe and legalize_joint_domain_reject receipts. Existing assignment receipts retain their meaning. No fallback ceilings relaxed."
+  },
+  "tests": {
+    "command": "ctest --test-dir native/build/fast --output-on-failure -R '^native_(floorplan|compact_retry|board_policy)_contracts$'",
+    "passed": 3,
+    "failed": 0,
+    "seconds": 24.11,
+    "coordinate_oracle_campaign": {
+      "cases": "25 board dimensions times state budgets 1, 4, 16, 64",
+      "before": {"solved": 21, "complete_infeasible": 4, "capped": 75},
+      "after": {"solved": 42, "complete_infeasible": 8, "capped": 50},
+      "interpretation": "Better bounded search coverage on these fixtures, not a general runtime speedup or carrier size gain"
+    },
+    "additional_coverage": [
+      "Nine independent exhaustive-coordinate cases with directional hard bounds",
+      "Two-state success after two unary rejections; unprobed final direction remains eligible at probe cap",
+      "Signed projected reservation gap preserved",
+      "Unary edge-preparation overflow retains executed root receipt without inventing a probe",
+      "Deterministic bounded probe/rejection counts",
+      "All 145 composer recoveries and 179 exact incumbent successes retained"
+    ]
+  },
+  "carrier_screens": {
+    "options": "Same prepared-input common options as 2026-10-12-joint-composer-integration.json; no reseat continuations",
+    "trials": [
+      {"outline_mm": [165, 159], "state_limit": 128, "searches": 4, "states_per_search": 128, "assignment_axes_per_search": 220, "unary_axes_per_search": 61, "unary_rejections_per_search": 20},
+      {"outline_mm": [166, 158], "state_limit": 128, "searches": 4, "states_per_search": 128, "assignment_axes_per_search": 219, "unary_axes_per_search": 59, "unary_rejections_per_search": 18},
+      {"outline_mm": [165, 159], "state_limit": 512, "searches": 4, "states_per_search": 512, "assignment_axes_per_search": 756, "unary_axes_per_search": 108, "unary_rejections_per_search": 34}
+    ],
+    "result": "All searches capped with zero proposals; both smaller outlines still fail construction. No infeasibility proof and no smaller accepted carrier.",
+    "independent_receipt_check": "512-state observer totals match failure fallback receipts: 4 searches, 2048 states, 3024 assignment-axis solves, 432 unary-axis solves, 136 unary rejections and 4 budget events."
+  },
+  "discarded_experiments": [
+    {"strategy": "Depth-first assignment queue without unary pruning", "outline_mm": [165, 159], "state_limit": 128, "searches": 4, "assignment_axes_per_search": 170, "proposals": 0, "result": "Capped; reverted"},
+    {"strategy": "Depth-first queue combined with unary pruning", "outline_mm": [165, 159], "state_limit": 128, "searches": 4, "assignment_axes_per_search": 158, "unary_axes_per_search": 128, "unary_rejections_per_search": 48, "proposals": 0, "result": "Capped; queue change reverted"}
+  ],
+  "references": {
+    "carrier": {"dimensions_mm": [166, 159], "top": 416, "bottom": 153, "pcb_sha256": "b9389efa52adf30b1d94cad1ede3a4387bacd53802f7babb5da07dd6306cff76"},
+    "devkit_mini": {"dimensions_mm": [98, 98], "top": 106, "bottom": 57, "pcb_sha256": "cfa0305491d9c4a771adb130b04c4aec6cc2894542391a5c7c9dca3a68bca3cf"},
+    "result": "PCB hashes and every receipt/fallback_count row unchanged from previous joint integration references; construction screens, not fresh full qualifications"
+  },
+  "limitations": [
+    "Extra probes increase total solver work on the failed carrier trials; no carrier speedup claimed",
+    "Timing during concurrent regression checks is not a controlled benchmark",
+    "Full audits, renders and matched Python timing comparison not rerun in this batch",
+    "No unknown hardware requirement declared PASS; no routing or fabrication-readiness claim"
+  ],
+  "next_direction": "Investigate conflict learning or partial-assignment propagation to avoid enumerating many combinations of independently repairable conflicts; do not simply keep raising the same search cap."
+}

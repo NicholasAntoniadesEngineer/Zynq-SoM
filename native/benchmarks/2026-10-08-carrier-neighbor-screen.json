@@ -1,0 +1,14 @@
+{
+  "source_commit": "61f8c410",
+  "scope": "Bounded cold-start fixed-outline screening; no board acceptance",
+  "project": "carrier",
+  "candidates": [
+    {"width_mm":167,"height_mm":163,"compact":false,"construction_failure_seconds":0.158461959,"rejection":"edge run margin","conservative_fit":false,"free_fit":false},
+    {"width_mm":168,"height_mm":162,"compact":false,"construction_failure_seconds":0.189402250,"rejection":"interior seat candidates exhausted, including reseat attempts","conservative_fit":false,"free_fit":false},
+    {"width_mm":168,"height_mm":159,"compact":true,"constraint_first":true,"construction_failure_seconds":0.210677667,"rejection":"edge/SoM overlap or cross-edge fanout (combined gate, not yet disambiguated)","conservative_fit":false,"free_fit":false}
+  ],
+  "method": "Current compact_stage_profile fixed-outline runs; separate private Engine probe creates fresh state per outline and reservation policy. Private floorplan_pack instrumentation reports rejection source lines without changing predicates.",
+  "interpretation": "Both reservation policies reject each tested neighbour. Interior ordering alone cannot fix the early edge failures. The default height neighbour reaches interior placement and warrants separate diagnosis.",
+  "limitations": ["Single diagnostic timing samples; not matched Python timings or speedup claims", "Not proof of global infeasibility", "No DRC, source audit, rendering or publication", "Fixed-outline production path exits on conservative failure; private probe explicitly exercises the other policy"],
+  "scratch_evidence": ["native/build/carrier-neighbor-167x163.log", "native/build/carrier-neighbor-168x162.log", "native/build/carrier-neighbor-168x159-compact.log", "native/build/carrier-policy-neighbor.cpp", "native/build/neighbor-rejection-pack.cpp", "native/build/neighbor-rejection.log"]
+}

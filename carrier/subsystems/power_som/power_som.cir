@@ -7,13 +7,13 @@
 * small-signal DC model here; this subckt captures the PASSIVE network whose
 * elements span TWO carrier external nets — the per-VIN-pin HF input bypass, the
 * input bulk and the output bulk — which is what the local test and any
-* board-level .op reason about. The regulator control passives (BOOT/VCC/BIAS/EN
-* clamp/FB divider + feedforward) terminate on PRIVATE control nodes and so are
+* board-level .op reason about. The regulator control passives (BOOT/VCC/BIAS/
+* FB divider + feedforward) terminate on PRIVATE control nodes and so are
 * NOT subckt elements; they are documented below for completeness.
 *
-* Values mirror carrier/subsystems/power_som/power_som.py one-for-one (parse_si
-* compatible); test_cir_passives_match_netlist enforces equality against the
-* external-spanning netlist caps:
+* Values mirror native/src/project_authoring_carrier_power_som.cpp.
+* This retained passive-only model does not qualify startup or transients.
+* External-spanning netlist caps:
 *   C14 100n  VIN1/PGND1 HF bypass   (+VIN_SYS -> GND)
 *   C25 100n  VIN2/PGND2 HF bypass   (+VIN_SYS -> GND)
 *   C15 10u   input bulk             (+VIN_SYS -> GND)
@@ -24,10 +24,11 @@
 * The remaining passives terminate on a PRIVATE (buck control) node and are NOT
 * subckt elements — documented here for completeness:
 *   C17 100n  BOOT cap (SW_5V_SOM <-> BOOT_5V_SOM)   C22 1u  VCC bypass (U4_VCC->GND)
-*   C23 1u    BIAS bypass (BIAS_5V_SOM -> GND)        C20 100n EN bypass (EN_5V_SOM->GND)
+*   C23 1u    BIAS bypass (BIAS_5V_SOM -> GND)
 *   C21 22p   FB feedforward (+5V_SOM -> CFF_5V_SOM)  R19 1k  RFF (CFF_5V_SOM->FB)
 *   R14/R15  47.5k/13k FB divider (-> FB_5V_SOM, 4.654 V)
-*   R12 10k  EN series (+VIN_SYS->EN)  D5 MMSZ5231B 5.1 V EN zener (EN->GND)
+*   EN/SYNC pin 7 directly joins VIN1/VIN2 on +VIN_SYS (SNVSBD5D 8.3.1).
+*   The inherited R12/D5/C20 clamp/filter is no longer fitted.
 *   R17 10R  BIAS series (+5V_SOM->BIAS)  R18 22k RT (fSW)  D4/R16  PG LED + 1k
 *   L3 10uH  buck inductor (SW_5V_SOM -> +5V_SOM)
 *

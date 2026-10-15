@@ -1,0 +1,52 @@
+{
+  "base_commit": "6887ebe0",
+  "defect": "A failed fixed-outline conservative whole-body reservation aborted before trying the existing face-aware pad-punch reservation. This converted a conservative search restriction into a prerequisite for feasible two-sided placement.",
+  "change": "Try both reservation policies independently after typed packing failure or explicit reservation exclusion. Restore entry layout but retain all failed work; preserve successful conservative incumbents on ties. Propagate unrelated exceptions. Reject nonfinite or negative estimates. Missing conservative estimates are recorded as unavailable, not invented zero-cost successes.",
+  "tests": {
+    "native_floorplan_contracts": "PASS 15.33 seconds",
+    "native_cpp_source_audits": "58 contracts passed",
+    "physical_witness": "30x30 outline, 20x20 module and 12x8 bottom block: whole-body reservation fails; face-aware reservation succeeds. Independently checks exact physical occupancy, shape/side identity, bounds and estimate.",
+    "accounting": "Recovered run matches the sum of independently executed failed and successful attempts; deterministic full receipt/layout replay.",
+    "negative_cases": "Top-only variant still fails both policies. Observer errors propagate immediately without another policy attempt. Existing fixed ties and automatic-search regression cases pass."
+  },
+  "carrier_incumbent_screen": {
+    "log": "native/build/carrier-fixed-free-recovery-incumbent.log",
+    "outline_mm": [165,159],
+    "top": 413,
+    "bottom": 153,
+    "pcb_sha256": "24ac25bfe6cb2ea6477a01b195b5ca78070ccff3bb2640f12d5b8f7275da5c64",
+    "placement_contract_ok": true,
+    "placement_flow_ok": true,
+    "hard_red": 0,
+    "outer_attempts_before": 7,
+    "outer_attempts_after": 8,
+    "joint_states_before": 1418,
+    "joint_states_after": 1802,
+    "joint_axis_solves_before": 2173,
+    "joint_axis_solves_after": 2777,
+    "interpretation": "Identical qualified incumbent geometry. One formerly suppressed failed reservation pass now executes before orientation expansion. Increased measured work is disclosed, not suppressed or called a speedup."
+  },
+  "devkit_screen": {
+    "log": "native/build/devkit-fixed-free-recovery-incumbent.log",
+    "outline_mm": [98,98],
+    "top": 105,
+    "bottom": 55,
+    "pcb_sha256": "b6798d4b63d2fddbf9fad24945c151b9420b049b674ad5d637c43bf4a365137f",
+    "interpretation": "Unchanged PCB hash. Construction screen only, not a fresh full qualification."
+  },
+  "smaller_carrier_screens": [
+    {
+      "outline_mm": [164,159],
+      "log": "native/build/carrier-fixed-free-recovery-164x159.log",
+      "result": "Rejected under both reservation policies; joint separation and final facing checks remain unresolved."
+    },
+    {
+      "outline_mm": [165,158],
+      "log": "native/build/carrier-fixed-free-recovery-165x158.log",
+      "result": "Rejected under both reservation policies at USB-JTAG interior seating."
+    }
+  ],
+  "screen_configuration": "Prepared current schematic, explicit interior order 3, edge-feasibility, owned-quality-first, owned-face-cohesion, USB-JTAG contract-group face candidates, board_aux owned-face-fixed/a2.2/owned-pins-forward, carrier-165x159-failed-first.floorplan.json, joint-separation-states 128; outline-mm overrides for smaller probes.",
+  "limitations": "No smaller carrier accepted. These are bounded-search failures, not impossibility proofs. No new full board build or matched Python timing claim. Prior 165x159 carrier qualification remains the geometry reference; hardware unknowns and fabrication limitations persist.",
+  "next": "Automatic sizing has the analogous conservative-first prerequisite. Correct and test it separately; also investigate safe search ordering/prepared reuse to avoid repeated failed policies without excluding feasible alternatives."
+}

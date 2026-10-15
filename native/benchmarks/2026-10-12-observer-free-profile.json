@@ -1,0 +1,35 @@
+{
+  "base_commit": "44e1854b",
+  "changes": [
+    "Add --observers on|off to the construction profiler. Default remains on. Off installs no diagnostic callbacks or PCB checkpoint observer, retains experiment policy and production receipts, and explicitly reports observer counts unavailable rather than zero.",
+    "Allow repeated --owned-shape for distinct sheets as already documented. Continue rejecting duplicate sheet restrictions, malformed values and repeated singleton options.",
+    "Correct the policy-audit regression's stale six-event census to seven explicitly named native recovery events, testing zero initialization and recording of facing_replan_retry. No fallback ceiling changed."
+  ],
+  "tests": {
+    "profile_inputs": "PASS: actual loader, multi-sheet option parsing, invalid observer option rejection, identical observed/unobserved carrier PCB and every production receipt/fallback line; disabled mode must not publish fabricated stage or attempt observations.",
+    "profile_log": "native/build/profile-observer-mode-tests.log",
+    "policy_audit": "PASS: 708 contracts, including real C++ source mutations.",
+    "policy_log": "native/build/facing-replan-audit-tests.log"
+  },
+  "reference_checks": [
+    {
+      "board": "carrier compact",
+      "outline_mm": [166,159],
+      "runs": 2,
+      "pcb_sha256": "b9389efa52adf30b1d94cad1ede3a4387bacd53802f7babb5da07dd6306cff76",
+      "observer_off_log": "native/build/carrier-observer-free-reference.log",
+      "observer_on_log": "native/build/carrier-facing-replan-reference.log",
+      "every_receipt_and_fallback_line_identical": true
+    },
+    {
+      "board": "devkit multiscale",
+      "outline_mm": [98,98],
+      "runs": 2,
+      "pcb_sha256": "cfa0305491d9c4a771adb130b04c4aec6cc2894542391a5c7c9dca3a68bca3cf",
+      "observer_off_log": "native/build/devkit-observer-free-reference.log",
+      "observer_on_log": "native/build/devkit-facing-replan-reference.log",
+      "every_receipt_and_fallback_line_identical": true
+    }
+  ],
+  "limits": "These are correctness checks, not controlled timings: full regression tests ran concurrently. Observer-free model timing still includes production internal checks and floorplan documents, excludes input loading/copy, subsequent diagnostic gates, DRC, rendering and source audits. This does not establish a C++/Python speedup or matched hardware workloads. The ongoing complete regression run initially found the stale policy census; its corrected binary passed separately. Production generator code remained unchanged throughout this batch."
+}

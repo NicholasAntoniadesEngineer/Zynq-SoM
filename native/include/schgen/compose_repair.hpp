@@ -30,6 +30,9 @@ struct ComposeAcceptance {
     bool ok = true;
     std::vector<std::string> reasons;
 };
+// Fail closed on missing/duplicate terms, lost enforcement and unresolved
+// rebuilt hard/target measurements. This comparison supplements, not replaces,
+// the complete rebuilt-board gates required by the apply workflow.
 ComposeAcceptance accept_compose_repair(const ComposeDocument &before, const ComposeDocument &after,
     const std::set<ComposeTermKey> &targets = {}, bool allow_area_growth = false);
 
@@ -49,7 +52,8 @@ struct ComposeCandidate {
     ComposeSpecEdit edit;
     ComposeDocument edited;
     std::vector<FloorplanTermEval> evaluations;
-    double area = 0., aggregate_margin = 0.;
+    double area = 0.;
+    std::optional<double> minimum_distance_mm, minimum_facing_degrees;
     int soft_red = 0;
     std::vector<std::string> spilled;
     std::string error;
@@ -58,6 +62,8 @@ ComposeCandidate evaluate_compose_candidate(const PcbPlacementInput &, const Com
     const ComposeSpecEdit &, const FloorplanTermIndex &,
     const std::optional<std::set<std::string>> &valid_names = std::nullopt);
 // Ranking is policy only. It does not turn predictions into rebuilt-board proof.
+// Lexicographic: soft RED count, area, minimum spatial margin, minimum angular
+// margin, edit description. Margins are never added across incompatible units.
 struct ComposeRanking {
     std::vector<ComposeCandidate> ranked;
     std::string output;

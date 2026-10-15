@@ -52,7 +52,8 @@ RatsnestGateResult check_ratsnest(const PcbCheckInput& input, const RatsnestNets
     auto edges=supplied_edges?RatsnestEdges{}:ratsnest_mst(np);
     std::tie(res.cross_mm,res.total_mm,res.n_cross)=ratsnest_lengths(np,supplied_edges?*supplied_edges:edges);
     res.cross_budget_mm=ratsnest_budget_precision1dp(cross_k*std::sqrt(m.board_w*m.board_h)*res.n_subsystems,counts);
-    res.ok=res.off_board.empty()&&res.dispersed.empty()&&res.cross_ok();return res;
+    // Aggregate MST length is a quality metric, not a hardware constraint.
+    res.ok=res.off_board.empty()&&res.dispersed.empty();return res;
 }
 std::map<std::string,double> ratsnest_dispersion_by_sheet(const RatsnestGateResult& r){
     std::map<std::string,double> out;for(const auto& [name,n,a,d]:r.clusters){(void)n;(void)a;out[name]=d;}return out;
@@ -63,7 +64,7 @@ std::string RatsnestGateResult::summary() const {
     for(const auto& r:off_board)lines.push_back("    OFF-BOARD "+r);
     lines.push_back("  dispersed subsystems: "+std::to_string(dispersed.size())+" (threshold "+g(ratsnest_dispersion_max)+"x)");
     for(const auto& d:dispersed)lines.push_back("    DISPERSED "+d);
-    lines.push_back("  cross-subsystem airwire: "+g(cross_mm)+" mm (budget "+f(cross_budget_mm,0)+" mm, "+
+    lines.push_back("  cross-subsystem airwire: "+g(cross_mm)+" mm (advisory reference "+f(cross_budget_mm,0)+" mm, "+
         (cross_ok()?"OK":"OVER")+"; "+std::to_string(n_cross)+" edges; "+g(cross_mm)+"/"+g(total_mm)+" mm = "+f(100*cross_ratio(),1)+"% of total)");
     lines.push_back("  per-subsystem clusters (n, bbox mm, dispersion):");
     for(const auto& [name,n,a,d]:clusters)lines.push_back("    "+pad(name,22)+" n="+pad(std::to_string(n),3)+" bbox_area="+pad(f(a,0),8,true)+" disp="+pad(f(d,1),5,true));

@@ -50,6 +50,31 @@ void index_boundaries() {
     must_reject([&] { tiny.add(valid); });
     if (!tiny.boxes().empty()) throw std::runtime_error("overflowed division inserted box");
 }
+void unsampled_gap() {
+    SilkBoxIndex occupied(8),placed(8);
+    const Box4 bounds{0,0,10,10},court{4,4,6,6};
+    // A real free rectangle between the fixed ring/orbit sample positions.
+    for(const auto& b:std::vector<Box4>{{0,0,6.8,10},{9.4,0,10,10},
+                                      {6.8,0,9.4,6.8},{6.8,8.4,9.4,10}})
+        occupied.add(b);
+    const auto sampled=place_clear_label(4,4,6,6,"R1",1,occupied,&placed,bounds);
+    if(occupied.pen(sampled.box)==0)throw std::runtime_error("fixture must defeat sampled search");
+    const auto result=place_refdes(court,"R1",1,text_box("R1",5,5,1,.15),
+        occupied,placed,bounds,5,5,1,0,.8,.02,8,1e-9,.5,{});
+    const auto emitted=text_box("R1",5+result.local_x,5+result.local_y,result.size,.15);
+    if(!result.moved || occupied.hits(emitted) || placed.hits(emitted) ||
+       emitted.x0<0 || emitted.y0<0 || emitted.x1>10 || emitted.y1>10)
+        throw std::runtime_error("free-space search missed unsampled legal label gap");
+    const auto repeat=place_refdes(court,"R1",1,text_box("R1",5,5,1,.15),
+        occupied,placed,bounds,5,5,1,0,.8,.02,8,1e-9,.5,{});
+    if(result.local_x!=repeat.local_x || result.local_y!=repeat.local_y || result.size!=repeat.size)
+        throw std::runtime_error("free-space label placement not deterministic");
+    placed.add(bounds);
+    const auto impossible=place_refdes(court,"R1",1,text_box("R1",5,5,1,.15),
+        occupied,placed,bounds,5,5,1,0,.8,.02,8,1e-9,.5,{});
+    if(!placed.hits(impossible.add_box))
+        throw std::runtime_error("fully occupied board must not manufacture a clear label");
+}
 const JsonNode &field(const JsonNode &n, const std::string &key) {
     const auto *v = object_field(n, key);
     if (!v)
@@ -110,6 +135,7 @@ int main(int argc, char **argv) {
         if (argc != 2)
             throw std::runtime_error("usage: pack_silk_contracts CASES_JSON");
         index_boundaries();
+        unsampled_gap();
         const auto data = parse_json_file(argv[1]);
         if (field(data, "schema").string_value != "schgen.pack_silk.python/1" ||
             field(data, "cases").array_value.size() != 34)

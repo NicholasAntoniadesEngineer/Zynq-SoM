@@ -684,6 +684,43 @@ std::pair<Sexpr, int> hide_undersom_bottom_refs(
 
 namespace {
 
+void footprint_arc_extrema(const SexprList& arc,std::vector<double>& xs,std::vector<double>& ys) {
+    const auto point=[&](const char* name){const auto* p=find_tagged_child(arc,name);
+        if(!p||p->size()<3||!is_number((*p)[1])||!is_number((*p)[2]))
+            throw std::runtime_error("footprint_bbox: malformed three-point arc");
+        const double x=std::get<double>((*p)[1].v),y=std::get<double>((*p)[2].v);
+        if(!std::isfinite(x)||!std::isfinite(y))throw std::runtime_error("footprint_bbox: nonfinite arc");
+        return std::pair<long double,long double>{x,y};
+    };
+    const auto s=point("start"),m=point("mid"),e=point("end");
+    // Translate and scale before solving the circumcenter. Squaring absolute
+    // coordinates is both translation-sensitive and liable to overflow.
+    const auto ux=m.first-s.first,uy=m.second-s.second,vx=e.first-s.first,vy=e.second-s.second;
+    const auto scale=std::max({std::abs(ux),std::abs(uy),std::abs(vx),std::abs(vy)});
+    if(!std::isfinite(scale)||scale==0)throw std::runtime_error("footprint_bbox: degenerate arc");
+    const auto ax=ux/scale,ay=uy/scale,bx=vx/scale,by=vy/scale;
+    const auto cross=ax*by-ay*bx;
+    if(cross==0)throw std::runtime_error("footprint_bbox: collinear arc");
+    const auto aa=ax*ax+ay*ay,bb=bx*bx+by*by;
+    const auto cx=(aa*by-bb*ay)/(2*cross),cy=(ax*bb-bx*aa)/(2*cross);
+    const auto radius=std::hypot(cx,cy),tau=2*std::acos(-1.L);
+    if(!std::isfinite(radius))throw std::runtime_error("footprint_bbox: unrepresentable arc radius");
+    const auto positive=[&](long double a){a=std::fmod(a,tau);return a<0?a+tau:a;};
+    const auto start=std::atan2(-cy,-cx),end=std::atan2(by-cy,bx-cx);
+    const bool ccw=cross>0;
+    const auto sweep=positive(ccw?end-start:start-end);
+    for(int quadrant=0;quadrant<4;++quadrant){
+        const auto angle=quadrant*tau/4;
+        if(positive(ccw?angle-start:start-angle)>sweep)continue;
+        // Cardinal coordinates are exact, avoiding sin(pi) residuals.
+        const auto dx=quadrant==0?radius:quadrant==2?-radius:0;
+        const auto dy=quadrant==1?radius:quadrant==3?-radius:0;
+        const double x=static_cast<double>(s.first+(cx+dx)*scale),y=static_cast<double>(s.second+(cy+dy)*scale);
+        if(!std::isfinite(x)||!std::isfinite(y))throw std::runtime_error("footprint_bbox: unrepresentable arc extent");
+        xs.push_back(x);ys.push_back(y);
+    }
+}
+
 void footprint_bbox_walk(const SexprList& node, std::vector<double>* xs,
                          std::vector<double>* ys) {
     for (const Sexpr& child : node) {
@@ -706,6 +743,8 @@ void footprint_bbox_walk(const SexprList& node, std::vector<double>* xs,
             if (layer.find("CrtYd") == std::string::npos) {
                 continue;
             }
+            if(is_sym(sub[0],"fp_arc")&&find_tagged_child(sub,"mid"))
+                footprint_arc_extrema(sub,*xs,*ys);
             if (is_sym(sub[0], "fp_circle")) {
                 const SexprList* ctr = find_tagged_child(sub, "center");
                 const SexprList* end = find_tagged_child(sub, "end");

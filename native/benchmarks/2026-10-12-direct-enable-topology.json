@@ -1,0 +1,28 @@
+{
+  "base_commit": "d286870b",
+  "scope": "Verified checker support for a prospective direct-enable circuit, plus a regulator-detection false-PASS correction. Live board authoring and hardware are unchanged.",
+  "supported_topology": {
+    "part": "LM61460AANRJRR",
+    "requirements": "EN/SYNC pin 7 and VIN pins 8 and 12 each occur exactly once and belong to the same power-net object. Names alone, duplicate membership or another package identity are insufficient.",
+    "source": "TI SNVSBD5D section 8.3.1; official PDF reviewed in 2026-10-12-enable-device-qualification.json",
+    "meaning": "A Boolean connectivity match, not a voltage estimate or input-envelope/startup/transient qualification. The result uses the netlist-topology engine and a match unit; generated test plans show it separately from analog bench measurements."
+  },
+  "additional_defect_fixed": "Removing VIN1 allowed regulator detection to omit the device. Previously extract_spice_checks discarded those detection errors, permitting an unrelated divider to supply aggregate PASS. Detection errors now produce retained unverified reasons. Removing the series resistor or EN connection from the named always-on LM61460 rail also cannot silently remove its missing-model receipt.",
+  "tests": {
+    "red_before_fix": "With the topology path present but detection failures still discarded, mutation 1 (missing VIN1 plus a valid unrelated divider) unexpectedly passed.",
+    "candidate": "In-memory power_som fixture with R12/D5/C20 removed and EN pin 7 connected to VIN; no on-disk hardware file changed",
+    "adversarial": "Nine missing/miswired/duplicated pin mutations, each tested in both sheet orders alongside a valid unrelated divider; unreviewed package, non-power source, same-name distinct net objects, deleted series resistor, and valid reversed net order. Existing TPS54302 and both historical board fixture contracts remain tested.",
+    "passed": ["native_spice_contracts", "native_board_pipeline_contracts", "native_firmware_docs_contracts"],
+    "three_suite_seconds": 44.49,
+    "final_testplan_suite_seconds": 3.41,
+    "failed_after_fixes": 0,
+    "testplan": "Topology success/failure appears explicitly outside the analog measurement table. Existing generated-document fixtures remain checked."
+  },
+  "current_boards": "Both live analytic CLI runs still exit 1, UNVERIFIED, with 15 carrier and 9 devkit completed checks. Their reports compare byte-identical to d286870b's corrected reports. No full board qualification, layout improvement, timing claim or hardware safety certification is asserted.",
+  "implementation_followup": {
+    "candidate_review": "TI supports direct VIN enable for self-start. The retained clamp originated in the earlier TPS54302 design. Before adoption, review the loss of the inherited RC filter and startup/sequencing effects; input supply and transient qualification remain separate obligations.",
+    "affected_sources": ["native/src/project_authoring_carrier_power_som.cpp", "native/src/project_authoring_devkit_mini_power_som.cpp", "native/src/component_basis_registry.cpp", "carrier/subsystems/power_som/circuit.json", "devkit_mini/subsystems/power_som/circuit.json", "carrier/subsystems/power_som/placement_contract.json", "carrier/subsystems/power_som/power_som.cir", "devkit_mini/subsystems/power_som/power_som.cir"],
+    "constraints": "Update references only for actually removed hardware; preserve all remaining hot-loop, feedback, supply, mechanical and runtime gates. Independently qualify both resulting boards and inspect schematics/front/back renders."
+  },
+  "goal_status": "Incomplete; checker support is not adoption or qualification of a revised board."
+}

@@ -1,0 +1,78 @@
+{
+  "base_commit": "0a73d5ed",
+  "scope": "Bounded failure-only legalization using complete selected child-face reservations. A general mixed-face capability improvement; not a newly qualified smaller carrier or fabrication approval.",
+  "implementation": {
+    "input": "Optional complete child reservation vectors accompany each primary body. Absent is unknown, not empty. Validate finite geometry/halos, positive dimensions, masks and agreement with the complete occupied-face union.",
+    "search": "Retain all existing conservative strategies and successful incumbents. After they fail, at most one additional composer solve uses actual entity projection bounds for opposite-primary-face pairs. Relevant movable pairs only; logical keepouts and wider wiring-channel requirements retain conservative separation.",
+    "projection": "An origin-separation bound minus primary width/height is a signed relative-entity adjustment, not a negative physical clearance. RepairSep marks this explicitly; ordinary negative flipped gaps and all nonfinite flipped gaps still reject. Directional fanout and axis-specific offsets are transported through repair flips.",
+    "numerical_acceptance": "Raw local offsets propose linear bounds only. Final global child positions execute the existing occupancy 4-decimal quantization and exact pairs_hold check, in addition to hard terms, board constraints, output-grid checks and caller physical validation. No acceptance epsilon or clearance waiver is added.",
+    "reuse": "Prepare immutable local reservation arrays once per physical retry, not for each pair/axis. Global quantized geometry is rebuilt and accounted at actual final validation.",
+    "accounting": "The registered legalize_reservation_retry event records every attempted physical retry before it executes, including rejection. Prior solver work and diagnostics remain in the receipt. No baseline ceilings were raised."
+  },
+  "tests": {
+    "mixed_face_witness": "Two 20x20 mm groups interlock on a 25x25 mm board using sparse opposite-face strips. Whole-zone rectangles reject; the physical retry accepts in all four relative directions, both compact and legalize-only modes. Independent exhaustive occupancy checks each result.",
+    "adversarial": [
+      "A full secondary-face obstacle remains infeasible after exactly one physical retry, without publishing a changed pose.",
+      "Roomy conservative incumbents return without executing the retry.",
+      "Child-mask census mismatch rejects.",
+      "Ordinary negative flipped gap rejects; typed signed projection survives an actual flip; nonfinite projection still rejects.",
+      "Independent instrumented occupancy function entries match retry receipt counts; actual final child quantization executes."
+    ],
+    "policy_run": {
+      "pass": true,
+      "suites": ["native_policy_audits_contracts","native_floorplan_contracts","native_occupancy_precision_contracts","native_board_policy_contracts"],
+      "seconds": 67.39,
+      "scope_note": "Before the final per-solve immutable-array reuse change; policy declarations were unchanged afterward.",
+      "log": "native/build/reservation-final-tests.log",
+      "log_sha256": "f44f16e8d258bf153764646fc0900844353dd46ba3042c4366eee1194c1b9e71"
+    },
+    "final_integrated_run": {
+      "pass": true,
+      "cases": [
+        {"suite":"native_model_failure_receipt_contracts","seconds":9.76},
+        {"suite":"native_pcb_placement_contracts","seconds":34.79,"assertions":311902},
+        {"suite":"native_floorplan_contracts","seconds":14.67,"checks":25923},
+        {"suite":"native_occupancy_precision_contracts","seconds":8.82,"checks":3557}
+      ],
+      "seconds": 68.05,
+      "log": "native/build/reservation-integrated-tests.log",
+      "log_sha256": "5bed7c8c3c4f70900d578df18c30992860bb88820bcb7bc09ec3a6067c0556e6"
+    }
+  },
+  "finalist_nonregression_screens": {
+    "configuration_reference": "Same qualified carrier/devkit profiler arguments and schematics recorded in 2026-10-11-disjoint-face-legalization.json, two prepared-input runs each.",
+    "scope": "Construction-only model/PCB-text screens, not full source audits, DRC or new renders. Observer overhead included and OS cache uncontrolled.",
+    "carrier": {
+      "dimensions_mm": [166,159],
+      "top_bottom": [416,153],
+      "pcb_sha256_both_runs": "4d1432b252230cbfc6e7342de7f0e431a0f12dc16d7d26ebd08fe0a67508bab1",
+      "model_seconds": [2.94941175,2.963650042],
+      "pcb_text_seconds": [0.037080834,0.035938875],
+      "placement_contract_ok": true,
+      "placement_flow_ok": true,
+      "hard_red": 0,
+      "hard_margin_min_sum": [4.07,887.46],
+      "physical_retries": 0,
+      "receipts": "All receipt/fallback rows exactly match native/build/carrier-face-aware-final-screen.log, two runs each.",
+      "log": "native/build/carrier-reservation-incumbent.log"
+    },
+    "devkit_mini": {
+      "dimensions_mm": [98,98],
+      "top_bottom": [106,57],
+      "pcb_sha256_both_runs": "cfa0305491d9c4a771adb130b04c4aec6cc2894542391a5c7c9dca3a68bca3cf",
+      "model_seconds": [0.509823417,0.54620825],
+      "pcb_text_seconds": [0.009403542,0.00914875],
+      "placement_contract_ok": true,
+      "placement_flow_ok": true,
+      "hard_red": 0,
+      "hard_margin_min_sum": [38.28,147.52],
+      "physical_retries": 0,
+      "log": "native/build/devkit-reservation-incumbent.log"
+    }
+  },
+  "smaller_carrier_screens": [
+    {"outline_mm":[165,159],"accepted":false,"model_failure_seconds":0.621341542,"outer_attempts":2,"physical_retries":4,"failure_receipt_captured":true},
+    {"outline_mm":[166,158],"accepted":false,"model_failure_seconds":0.62891375,"outer_attempts":2,"physical_retries":4,"failure_receipt_captured":true}
+  ],
+  "limitations": "The real smaller carrier still fails coupled-axis repair: HDMI termination/USB-JTAG separations and other fixed obstacles remain incompatible with the selected repair path. This is not a global infeasibility proof. Projection bounds impose a uniform entity-pair order per axis and can conservatively miss interleaved solutions. Whole-group same-primary-face reservations stay intact. No current carrier size improvement or general speedup is claimed; full placement suite time fell from 161.06 to 34.79 s across runs, but that is not a controlled build benchmark. Matched Python comparisons and other goal outcomes remain incomplete."
+}

@@ -12,9 +12,9 @@ ComposeCommandResult run_compose_command(const ComposeCommandOptions &options,co
     const auto initial=host.build_model();auto before=measure_compose_ledger(initial.input,initial.model,measurement_counts);
     if(!options.repair) {
         write_compose_ledger(before,"measure",paths.ledger_json,paths.ledger_markdown);
-        const auto &b=required(before.data,"board"),&agg=required(before.data,"aggregate_hard_margin");
+        const auto &b=required(before.data,"board");
         const auto &triggers=required(before.data,"repair_triggers").array_value;
-        emit("compose: board "+fmt(jnum(required(b,"w")))+"x"+fmt(jnum(required(b,"h")))+" = "+scalar(before,required(b,"area_mm2"),"/board/area_mm2")+" mm^2; hard margin sum "+scalar(before,required(agg,"sum"),"/aggregate_hard_margin/sum")+" / min "+scalar(before,required(agg,"min"),"/aggregate_hard_margin/min")+" mm; "+std::to_string(triggers.size())+" trigger(s) -> "+paths.ledger_json.string()+"\n");
+        emit("compose: board "+fmt(jnum(required(b,"w")))+"x"+fmt(jnum(required(b,"h")))+" = "+scalar(before,required(b,"area_mm2"),"/board/area_mm2")+" mm^2; "+margin_summary(before,before.data,"")+"; "+std::to_string(triggers.size())+" trigger(s) -> "+paths.ledger_json.string()+"\n");
         for(const auto &t:triggers)emit("  TRIGGER: "+jstr(t)+"\n");
         for(const auto &s:required(before.data,"seat_consistency").array_value)emit("  SEAT-CONSISTENCY: "+jstr(s)+"\n");
         return result;

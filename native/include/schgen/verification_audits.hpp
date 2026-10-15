@@ -33,6 +33,7 @@ struct FallbackAuditResult {
     bool ok = true, pinned = false;
     std::size_t n_names = 0, n_fired = 0;
     std::vector<std::string> regressions;
+    AuditCounts search_effort;
     std::string summary() const;
 };
 // Caller resolves the project baseline path. Absent/corrupt baseline pins the
@@ -45,6 +46,11 @@ FallbackAuditResult check_fallback_ratchet(const AuditCounts&, const std::filesy
 // Failed checks never publish; successful runs cannot relax the source ceiling.
 FallbackAuditResult check_fallback_ratchet(const AuditCounts&, const std::filesystem::path& baseline,
                                          const std::filesystem::path& output);
+// Explicitly reviewed search events are observations, not board defects.
+// Unknown names remain subject to the mandatory ratchet, never prefix-matched.
+bool is_board_search_effort(std::string_view name);
+FallbackAuditResult check_board_fallbacks(const AuditCounts&, const std::filesystem::path& baseline,
+                                        const std::filesystem::path& output);
 
 struct LedgerAuditDeclaration {
     std::string name;

@@ -1,0 +1,80 @@
+{
+  "base_commit": "be1667d2",
+  "finding": "owned_shape_select_same_pose_quality returned the incumbent immediately whenever any bypass owner/cap pair was on opposite faces. This prohibited quality-first preference even for an alternative with identical owner/cap faces, group pose, envelope, bulk gaps and fanout. Existing primary-rank tie dominance already permitted comparison of such matching subjects.",
+  "change": "Remove only that blanket opposite-face veto. Require the existing exact subject identity (including both faces), pose/envelope/zone side, equal bulk gaps, equal valid fanout evidence and complete finite nonnegative measurements. Prefer strictly Pareto-improved bypass planar gaps; existing full-board gates remain authoritative. No new layer permission, clearance limit or electrical PASS condition.",
+  "tests": {
+    "engine_assertions": 213,
+    "owned_shape_quality_engine_contracts": "PASS 0.07s",
+    "compact_retry_contracts": "PASS 3.68s",
+    "floorplan_contracts": "PASS 13.93s",
+    "new_cases": "Unchanged opposite-face subject pairs can improve; a candidate changing capacitor face in either direction cannot acquire this preference. Existing position, dimension, identity, bulk, worsening bypass, fanout and rejected-evidence mutations still reject."
+  },
+  "candidate": {
+    "dimensions_mm": [
+      166,
+      156
+    ],
+    "area_mm2": 25896,
+    "top": 420,
+    "bottom": 146,
+    "pcb_sha256": "77c47a7031e32ada657819501fc92e49293f5dd500f30bd8056bd4ce2809c04e",
+    "supply_bypass": {
+      "subject": "bringup_rails U1.24 VCC -> C1.1 100n",
+      "before_planar_gap_mm": 39.763742275953106,
+      "after_planar_gap_mm": 17.38374876608669,
+      "change_percent": -56.28241264253588,
+      "faces": "bottom/top unchanged",
+      "old_165x158_gap_mm": 8.0298,
+      "status": "UNVERIFIED; no reviewed numeric maximum. Improved surrogate, not proven electrical performance."
+    },
+    "estimated_cross_mm": 15826.8,
+    "before_estimated_cross_mm": 15822.8,
+    "estimator_headroom_mm": 104.5,
+    "screen_log": "native/build/carrier-166x156-unchanged-face-quality.log"
+  },
+  "regressions": {
+    "carrier_165x158": {
+      "pcb_sha256": "c2c501eb87f3fb492a35160c41ccd7cc7c19c922df0013b25a394c36fd0eeecf",
+      "result": "Unchanged retained PCB; placement/flow diagnostics PASS.",
+      "log": "native/build/carrier-165x158-unchanged-face-quality.log"
+    },
+    "devkit": {
+      "pcb_sha256": "b6798d4b63d2fddbf9fad24945c151b9420b049b674ad5d637c43bf4a365137f",
+      "result": "Unchanged qualified PCB; compact off/multiscale on; placement/flow diagnostics PASS.",
+      "log": "native/build/devkit-unchanged-face-quality.log"
+    }
+  },
+  "full_build": {
+    "output": "/private/tmp/carrier-166x156-planar-quality.NRCCCg",
+    "log": "native/build/carrier-166x156-planar-quality-full.log",
+    "recipe": "carrier-166x156.floorplan.json; compact placement; order 3; edge feasibility; owned quality/face cohesion; USB-JTAG contract groups; joint states 1024; poses 8/frontier 4096/continuations 3; audit projections 2. No pinned shape or victim-shape option.",
+    "status": "BOARD PASS 37 sheets; all mandatory gates PASS",
+    "source_audit": "69 C++ files, 75 constants, 156 registered transforms PASS",
+    "drc": {
+      "non_unrouted_errors": 0,
+      "unrouted": 499
+    },
+    "advisory_failures": [
+      "return_path",
+      "golden",
+      "contract_coverage_lint"
+    ],
+    "emitted_placement_requirement": "17.3837 mm bottom/top, UNVERIFIED, independently reported after emission; agrees with candidate local quality.",
+    "renders": {
+      "front_back_inspected": true,
+      "top_sha256": "f74cec157f09b7727a65c2971aea7eb06ea9bcb6ee78737a5230202cff334a13",
+      "bottom_sha256": "427a3aa29c8dd5392ed9d2fc6f2769c234fdea73a8620884713a32db2c6f22f8"
+    },
+    "timings_seconds": {
+      "measured_scope_total_not_process_wall": 197.61627,
+      "input_netlist": 1.454042,
+      "pcb_model": 4.549274,
+      "pcb_text": 0.036952,
+      "render3d": 28.31151,
+      "source_audit": 106.872696
+    }
+  },
+  "decision": "Retain the selector improvement, but do not promote this board over the retained 165x158 carrier: bypass gap is still worse than 8.03 mm. Other qualitative access, assembly and proximity evidence remains unverified. No fabrication-readiness claim.",
+  "next": "Investigate a separately retained quality-prioritised full strategy across already legal shape/pose alternatives, with incumbent preservation, rather than letting an aggregate wire estimate override a supply-bypass trade-off. Existing comparison deliberately excludes changed faces and envelopes; do not turn their exclusion into an asserted physical impossibility.",
+  "measurement_limits": "Single full build and screening runs, uncontrolled caches and some concurrent targeted work. No compile timing, matched Python comparison or runtime speedup claim. Full goal incomplete."
+}

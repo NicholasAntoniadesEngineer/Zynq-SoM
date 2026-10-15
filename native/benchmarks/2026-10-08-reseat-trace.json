@@ -1,0 +1,29 @@
+{
+  "base_commit": "18a73d9f",
+  "scope": "Invocation-owned diagnostic observation; no placement-policy or retry-ceiling change",
+  "input_correction": "Profiler accepts --schematic so current circuits can be paired with the freshly qualified schematic instead of stale stored project output. Freshness remains explicit caller responsibility.",
+  "schematic": "/private/tmp/carrier-ref-board.ccIYvU/Zynq_Carrier.kicad_sch",
+  "profile_arguments": "--repo REPO --project carrier --compact-search off --runs 1 --schematic SCHEMATIC --kicad-cli /Applications/KiCad/KiCad.app/Contents/MacOS/kicad-cli",
+  "default_carrier": {
+    "completed_victim_trials": 2152,
+    "successful_reseats": 28,
+    "failed_victim_trials": 2124,
+    "dimensions_mm": [168,163],
+    "pcb_sha256": "8d93efb96783a53ec53a83b830f1d8987f10ca6d86a2246999783fb9ddcf7417",
+    "matches_recent_full_qualification_pcb": true,
+    "observation": "Repeated successes displace bringup_modules for usb_jtag and board_services, and power_mon for power. Same dimensions also occur in connector/finalization trials; they must not be assumed identical cache keys.",
+    "log": "native/build/carrier-reseat-trace.log",
+    "log_sha256": "148f050569c7041bdb794d46e1b4ed62eb6d6cfe3daf15503e6807880bccd406"
+  },
+  "fixed_outline_failure_control": {
+    "outline_mm": [168,162],
+    "exit_code": 1,
+    "completed_victim_trials_retained": 11,
+    "receipt_captured": true,
+    "receipt_unavailable": false,
+    "log": "native/build/carrier-reseat-failure-trace.log",
+    "log_sha256": "50f1b1edc3d6aa0bf9f39ba56726c0151d3d93333da930e6dc92d0ec506dade9"
+  },
+  "verification": "compact_retry contracts PASS: observing and non-observing runs retain identical full plans, side offers, quantization and fallback receipts; synthetic success and failure both observed; throwing observer propagates and restores compact wrapper state",
+  "limitations": ["No speedup claim", "Reseat ceiling still fails at 28 versus 18", "Diagnostic construction is not full qualification", "No historical Python timing comparison"]
+}

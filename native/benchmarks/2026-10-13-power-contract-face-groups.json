@@ -1,0 +1,40 @@
+{
+  "parent_commit": "d344a256",
+  "change": "Opt-in mixed-face exploration supports placement/v2 power-stage constraint closures, with validated board-enforced external terms. Ordinary orientation and thermal-move callers retain their existing eligibility. Shared courtyard enclosure rigidly rebases protruding template geometry before candidate checks.",
+  "safety": "Unknown schemas/fields, malformed references and constraints fail closed. Foreign-stage minimum distances do not union independent stages; unchanged local geometry checks enforce them after moves. External flow/facing/far requirements remain board-level constraints. Existing candidate prefix remains intact. These are search offers, not hardware qualification.",
+  "tests": {
+    "rigid_groups_only": "PASS: 1452 assertions against real power/power_som contracts and adversarial mutations",
+    "native_pcb_orientation_contracts": "PASS: 3.54 seconds; four mixed-face power candidates, including two buck-moving candidates; local contracts, board requirements, incumbent preservation and independent scalar accounting checked"
+  },
+  "carrier_power_face_screen": {
+    "dimensions_mm": [163, 153],
+    "status": "constructed_no_acceptance",
+    "model_seconds": 12.720184084,
+    "pcb_text_seconds": 0.027194125,
+    "pcb_sha256": "d954ec91a789f69a1e94a26a9d3a91b279fbc208dff2503cbe8ee4c8eabc199f",
+    "reference_unchanged": true,
+    "top_parts": 411,
+    "bottom_parts": 155,
+    "cheap_checks": "fanout, ratsnest, placement contract and flow pass; hard_red=0",
+    "log": "native/build/power-v2-carrier-163x153.log"
+  },
+  "devkit_control": {
+    "dimensions_mm": [98, 98],
+    "status": "constructed_no_acceptance",
+    "model_seconds": 0.179425209,
+    "pcb_text_seconds": 0.007760375,
+    "pcb_sha256": "1b12fecbcbbaa5e6084c2459da93cb144a660ff19805e6e4e3f75f9c22689fdb",
+    "reference_unchanged": true,
+    "cheap_checks": "fanout, ratsnest, placement contract and flow pass; hard_red=0",
+    "log": "native/build/power-v2-devkit-control.log"
+  },
+  "smaller_screen": {
+    "dimensions_mm": [162, 153],
+    "status": "construction_failed",
+    "model_seconds": 3.969295583,
+    "log": "native/build/power-v2-carrier-162x153.log",
+    "observation": "Four new power offers are available but all retain a 53.3604 by 23.9349 mm envelope. Face reassignment alone does not compact the remaining top geometry. This search failure is not proof of geometric infeasibility."
+  },
+  "follow_up": "Investigate pin-owned completion and repacking of stage groups. pcb_stage_power.cpp currently associates bias resistors to buck stages by roles iteration order, whereas the new closure only includes authored structure edges. Replace incidental ordering with evidenced pin ownership before expanding grouping. Also investigate consistent actual courtyard envelope accounting across old and new offers.",
+  "limitations": "No smaller accepted board, full qualification, render campaign or historical Python timing comparison in this batch. Existing verified incumbent retained. Runtime samples are diagnostics, not controlled speedup measurements."
+}

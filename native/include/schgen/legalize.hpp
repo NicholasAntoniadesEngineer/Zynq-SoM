@@ -2,6 +2,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <functional>
 #include <optional>
 #include <string>
 #include <tuple>
@@ -206,7 +207,8 @@ std::vector<NearMaxEdge> near_max_edges(
     bool axis_x, const Box4& hull_s, const Box4& hull_g, const Box4& seed_s,
     const Box4& seed_g, bool s_movable, bool g_movable,
     const std::optional<std::pair<double, double>>& pose_s,
-    const std::optional<std::pair<double, double>>& pose_g);
+    const std::optional<std::pair<double, double>>& pose_g,
+    bool distance_envelope = false);
 
 std::optional<Box4> predicted_bbox(
     double pose_x, double pose_y, double origin_x, double origin_y,
@@ -226,6 +228,13 @@ struct RepairSep {
     std::string hi;
     double gap = 0.0;
     bool flippable = true;
+    // Optional directional gap for the other axis and its selected order.
+    // A repair flip must carry geometry, not reuse the old face's requirement.
+    std::optional<double> flipped_gap = std::nullopt;
+    bool reverse_on_flip = false;
+    // Entity projections encode origin separation minus primary width/height.
+    // Their adjustment may be negative; physical entity clearances are not.
+    bool projected_gap = false;
 };
 
 struct RepairAxisResult {
@@ -234,13 +243,62 @@ struct RepairAxisResult {
     std::vector<RepairSep> seps;
     std::vector<std::tuple<std::string, std::string, bool>> flips;
     std::string fail;
+    // Eligible choices at each executed flip, in deterministic cycle order.
+    // This is evidence for a caller-bounded search, not extra executed work.
+    std::vector<std::size_t> choice_counts;
+    // Actual terminal Bellman-Ford witness, in returned cycle order. Empty on
+    // success or repair-budget exhaustion; never a reconstructed proxy.
+    std::vector<NamedEdge> infeasible_cycle;
+    std::vector<std::string> infeasible_cycle_origins; // parallel provenance
+    std::vector<int> infeasible_cycle_separations; // input separation index, or -1
 };
 
+// At most repair_max separation flips. A zero budget still checks feasibility;
+// exhausted results contain only executed flips, never speculative positions.
 RepairAxisResult legalize_repair_axis(
     bool axis_x, const std::vector<std::string>& names,
     const std::vector<double>& sizes, double span, double clear,
     const std::vector<RepairSep>& seps_in,
     const std::vector<std::pair<std::string, Box4>>& frects,
-    const std::vector<NamedEdge>& extra, int repair_max);
+    const std::vector<NamedEdge>& extra, int repair_max,
+    const std::vector<std::size_t>& choice_path = {});
+
+struct JointSeparationWork {
+    std::size_t generated=0,visited=0,axis_solves=0;
+    bool budget_exhausted=false;
+    std::size_t qualifications=0,qualification_rejections=0;
+    std::size_t domain_probes=0,domain_rejections=0;
+    std::size_t axis_cache_hits=0;
+};
+struct JointSeparationResult : JointSeparationWork {
+    // complete means a failed search exhausted the supplied finite domains;
+    // false on success. budget_exhausted records any omitted unexplored states.
+    bool ok=false,complete=false;
+    std::vector<std::size_t> choices;
+    std::vector<double> x,y;
+};
+// Each domain supplies explicitly legal directional alternatives for ONE pair;
+// index zero is the incumbent. Gaps are supplied, never inferred by reversing a
+// directional halo. Search only the finite supplied linear systems. Returned
+// poses still require independent physical/hard-term/output-grid validation;
+// axis feasibility uses the existing Bellman-Ford numerical tolerance.
+// max_states bounds generated DISTINCT states (including the initial state),
+// not just visited nodes. No speculative pose is published on failure. Limits
+// above size_t max/2 are rejected so axis-probe accounting cannot wrap. Optional
+// invocation-owned work receipt is replaced with actual work even on exception.
+// Additionally at most max_states unary axis probes reject directions that
+// contradict walls/hard edges even alone. They are counted separately from
+// assignment axis_solves; unprobed directions remain eligible.
+// Optional synchronous qualifier may reject a linear proposal; then all domain
+// alternatives remain eligible. Exhausting those proposals is not a proof that
+// no other continuous pose for an assignment could satisfy that qualifier.
+JointSeparationResult legalize_joint_separations(
+    const std::vector<std::string>& names,const std::vector<double>& widths,
+    const std::vector<double>& heights,double board_w,double board_h,double clear,
+    const std::vector<std::vector<RepairSep>>& domains,
+    const std::vector<std::pair<std::string,Box4>>& fixed,
+    const std::vector<NamedEdge>& extra_x,const std::vector<NamedEdge>& extra_y,
+    std::size_t max_states,JointSeparationWork* receipt=nullptr,
+    const std::function<bool(const std::vector<std::size_t>&,const std::vector<double>&,const std::vector<double>&)>& qualify={});
 
 }  // namespace schgen

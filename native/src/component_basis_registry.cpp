@@ -113,9 +113,12 @@ const ComponentBasisPolicy& default_component_basis_policy() {
         DECL("carrier.board_aux.iset", "13k", "ohm", "SY6280 current limit ILIM = 6800/13k = 523 mA, over the 200 mA QWIIC budget. LCSC C22797.", "datasheet", false);
         DECL("carrier.board_aux.en_pulldown", "100k", "ohm", "Holds EN_AUX low so the gate is OFF at power-up until a human closes SW1 pos 1 (constraint C1). LCSC C25803.", "datasheet", false);
         DECL("carrier.board_aux.decap", "100n", "F", "SY6280 and PCA9306 per-pin bypass. LCSC C14663.", "datasheet", false);
+        DECL("carrier.board_aux.in_reservoir", "10u", "F", "SY6280 Rev.1.0E p.7 strongly recommends a 10uF ceramic VIN-to-GND supply filter for hot-plug droop and ringing. Nominal 10uF, 0805 25 V X5R, LCSC C15850; effective capacitance under DC bias is not established here.", "datasheet", false);
+        DECL("carrier.board_aux.reference_filter", "100p", "F", "TI SCPS113O 11.1 specifies a 100pF filter near VREF2. Samsung CL10C101JB8NNNC, 0603 50 V C0G +/-5%, LCSC C14858. This filter and its reference-current limiter do not qualify power-transition isolation.", "datasheet", false);
         DECL("carrier.board_aux.out_bulk", "10u", "F", "Hold-up on the gated +3V3_AUX rail for the 200 mA QWIIC load. The SY6280 datasheet recommends an output cap and only the 100n was fitted (audit 2026-06-19); its soft-start tolerates 10u. 0805 25 V, LCSC C15850.", "datasheet", false);
         DECL("carrier.board_aux.led_ballast", "330R", "ohm", "KT-0603R status LED ballast, ~3.9 mA from +3V3_AUX. LCSC C23138.", "datasheet", false);
-        DECL("carrier.board_aux.iso_en_pullup", "100k", "ohm", "Ties the PCA9306 EN to +3V3_AUX so the switch OPENS whenever the gated rail is down — that isolation is what stops the powered-down peripherals back-powering the always-on trunk through their ESD diodes (LAW 0). LCSC C25803.", "datasheet", false);
+        // Identifier retained for historical binding trace; R4 now biases VREF2, not EN.
+        DECL("carrier.board_aux.iso_en_pullup", "100k", "ohm", "R4 limits the PCA9306 VREF2 reference current from +3V3_AUX; EN directly follows AUX in switch mode. TI SCPS113O 8.1.5/8.1.8 permits separate enable control and lower reference resistance than 200k with increased bias current. Retained 100k C25803. Startup, shutdown and reverse rail isolation remain unqualified.", "policy", false);
         DECL("carrier.board_aux.bus_pullup", "4k7", "ohm", "AUX-side I2C pulls to the gated rail; the PCA9306 requires pulls on BOTH sides. LCSC C23162.", "datasheet", false);
         DECL("carrier.board_aux.i2c_speed", "400000", "Hz", "Fast-mode on both sides of the isolator.", "datasheet", true);
         DECL("carrier.board_qwiic.i2c_speed", "400000", "Hz", "Fast-mode AUX_I2C.", "datasheet", true);
@@ -172,7 +175,6 @@ const ComponentBasisPolicy& default_component_basis_policy() {
         DECL("carrier.power_mon.supply_bulk", "10u", "F", "Shared +3V3_SC bulk for both monitors. LCSC C15850.", "datasheet", false);
         DECL("carrier.power_mon.alert_pullup", "10k", "ohm", "Defined-high pull for the wire-ORed open-drain CRITICAL outputs. LCSC C25804.", "datasheet", false);
         DECL("carrier.power_mon.i2c_speed", "400000", "Hz", "Fast-mode I2C on the shared STM32_I2C2 trunk. Bus pull-ups live on usb_pd/bringup, never duplicated here.", "datasheet", true);
-        DECL("carrier.power_som.en_series_r", "10k", "ohm", "PWR-1 EN clamp, series +VIN_SYS -> EN. At low VIN the zener is off and the 1.55 uA hysteresis through 10k is under 16 uV, so EN tracks VIN and the buck surely enables at the 4.75 V default-USB contract; at high VIN this resistor absorbs VIN - Vz. LCSC C25804.", "datasheet", false);
         DECL("carrier.power_som.input_bulk", "10u", "F", "SNVSBD5D 9.2.2.5 input bulk, 50 V-class 1206 for the 21 V worst-case +VIN_SYS rail. LCSC C13585.", "datasheet", false);
         DECL("carrier.power_som.input_hf", "100n", "F", "SNVSBD5D 9.2.2.5 MANDATORY per-VIN-pin HF cap — one at VIN1/PGND1 and one at VIN2/PGND2, not one shared. LCSC C14663.", "datasheet", false);
         DECL("carrier.power_som.vcc_bypass", "1u", "F", "VCC internal-LDO bypass (SNVSBD5D). LCSC C15849.", "datasheet", false);
@@ -187,7 +189,6 @@ const ComponentBasisPolicy& default_component_basis_policy() {
         DECL("carrier.power_som.ff_cap", "22p", "F", "CFF across the FB top (SNVSBD5D 9.2.2.10). LCSC C1653.", "datasheet", false);
         DECL("carrier.power_som.ff_series_r", "1k", "ohm", "RFF series damp for the feedforward cap (SNVSBD5D 9.2.2.10, applicable because VOUT 4.65 V < 14 V). LCSC C21190.", "datasheet", false);
         DECL("carrier.power_som.pg_led_r", "1k", "ohm", "KT-0603R power-good LED ballast, ~3 mA. LCSC C21190.", "datasheet", false);
-        DECL("carrier.power_som.en_bypass", "100n", "F", "EN node bypass for the PWR-1 clamp. LCSC C14663.", "datasheet", false);
         DECL("carrier.som_decoupling.bulk", "22u", "F", "Charge reservoir at the DF40 power-pin entry, 25 V X5R 0805 (LCSC C45783), reusing a carrier-stocked ratings-verified MLCC.", "datasheet", false);
         DECL("carrier.som_decoupling.hf", "100n", "F", "High-frequency bypass at the DF40 power-pin entry, 50 V X7R 0603 (LCSC C14663).", "datasheet", false);
         DECL("carrier.user_io.led_r_high_vf", "200R", "ohm", "Ballast for the three high-Vf colours (green C12624 / blue C2288 / white C2290, Vf ~3.1 V). The rail is only 3.3 V, so the drop across the ballast is 3.3 - Vf: on 1k they would draw (3.3-3.1)/1k = 0.2 mA and be invisible. 200R gives ~1 mA at the 3.1 V corner up to 3.5 mA at the white 2.6 V corner, never over the 5 mA LED rating. LCSC C8218 (audit io_misc-1).", "datasheet", false);
@@ -205,7 +206,6 @@ const ComponentBasisPolicy& default_component_basis_policy() {
         DECL("devkit_mini.power_mon.supply_bulk", "10u", "F", "Shared +3V3_SC bulk for both monitors. LCSC C15850.", "datasheet", false);
         DECL("devkit_mini.power_mon.alert_pullup", "10k", "ohm", "Defined-high pull for the wire-ORed open-drain CRITICAL outputs. LCSC C25804.", "datasheet", false);
         DECL("devkit_mini.power_mon.i2c_speed", "400000", "Hz", "Fast-mode I2C on the shared STM32_I2C2 trunk. This devkit omits the carrier's bringup_rails sheet, so debug_boot owns the bus pull-ups.", "datasheet", true);
-        DECL("devkit_mini.power_som.en_series_r", "10k", "ohm", "PWR-1 EN clamp, series +VIN_SYS -> EN. At low VIN the zener is off and the 1.55 uA hysteresis through 10k is under 16 uV, so EN tracks VIN and the buck surely enables at the 4.75 V default-USB contract; at high VIN this resistor absorbs VIN - Vz. LCSC C25804.", "datasheet", false);
         DECL("devkit_mini.power_som.input_bulk", "10u", "F", "SNVSBD5D 9.2.2.5 input bulk, 50 V-class 1206 for the 21 V worst-case +VIN_SYS rail. LCSC C13585.", "datasheet", false);
         DECL("devkit_mini.power_som.input_hf", "100n", "F", "SNVSBD5D 9.2.2.5 MANDATORY per-VIN-pin HF cap — one at VIN1/PGND1 and one at VIN2/PGND2, not one shared. LCSC C14663.", "datasheet", false);
         DECL("devkit_mini.power_som.vcc_bypass", "1u", "F", "VCC internal-LDO bypass (SNVSBD5D). LCSC C15849.", "datasheet", false);
@@ -220,7 +220,6 @@ const ComponentBasisPolicy& default_component_basis_policy() {
         DECL("devkit_mini.power_som.ff_cap", "22p", "F", "CFF across the FB top (SNVSBD5D 9.2.2.10). LCSC C1653.", "datasheet", false);
         DECL("devkit_mini.power_som.ff_series_r", "1k", "ohm", "RFF series damp for the feedforward cap (SNVSBD5D 9.2.2.10, applicable because VOUT 4.65 V < 14 V). LCSC C21190.", "datasheet", false);
         DECL("devkit_mini.power_som.pg_led_r", "1k", "ohm", "KT-0603R power-good LED ballast, ~3 mA. LCSC C21190.", "datasheet", false);
-        DECL("devkit_mini.power_som.en_bypass", "100n", "F", "EN node bypass for the PWR-1 clamp. LCSC C14663.", "datasheet", false);
         DECL("devkit_mini.som_decoupling.bulk", "22u", "F", "Charge reservoir at the DF40 power-pin entry, 25 V X5R 0805 (LCSC C45783), reusing a carrier-stocked ratings-verified MLCC.", "datasheet", false);
         DECL("devkit_mini.som_decoupling.hf", "100n", "F", "High-frequency bypass at the DF40 power-pin entry, 50 V X7R 0603 (LCSC C14663).", "datasheet", false);
 #undef DECL
@@ -392,7 +391,7 @@ const ComponentBasisPolicy& default_component_basis_policy() {
             {"library", "usbc_otg", "R2", "value", "subsystems.OTG_CC_RP", "Device:R"},
             {"library", "usbc_otg", "R4", "value", "subsystems.OTG_ID_STRAP", "Device:R"},
             {"carrier", "board_aux", "R1", "value", "carrier.board_aux.iset", "Device:R"},
-            {"carrier", "board_aux", "C1", "value", "carrier.board_aux.decap", "Device:C"},
+            {"carrier", "board_aux", "C1", "value", "carrier.board_aux.in_reservoir", "Device:C"},
             {"carrier", "board_aux", "C2", "value", "carrier.board_aux.decap", "Device:C"},
             {"carrier", "board_aux", "C3", "value", "carrier.board_aux.out_bulk", "Device:C"},
             {"carrier", "board_aux", "R2", "value", "carrier.board_aux.en_pulldown", "Device:R"},
@@ -401,7 +400,7 @@ const ComponentBasisPolicy& default_component_basis_policy() {
             {"carrier", "board_aux", "R4", "value", "carrier.board_aux.iso_en_pullup", "Device:R"},
             {"carrier", "board_aux", "R5", "value", "carrier.board_aux.bus_pullup", "Device:R"},
             {"carrier", "board_aux", "R6", "value", "carrier.board_aux.bus_pullup", "Device:R"},
-            {"carrier", "board_aux", "C5", "value", "carrier.board_aux.decap", "Device:C"},
+            {"carrier", "board_aux", "C5", "value", "carrier.board_aux.reference_filter", "Device:C"},
             {"carrier", "board_services", "C1", "value", "carrier.board_services.decap", "Device:C"},
             {"carrier", "board_services", "R1", "value", "carrier.board_services.int_pullup", "Device:R"},
             {"carrier", "board_services", "C2", "value", "carrier.board_services.decap", "Device:C"},
@@ -542,8 +541,6 @@ const ComponentBasisPolicy& default_component_basis_policy() {
             {"carrier", "power_mon", "C2", "value", "carrier.power_mon.supply_hf", "Device:C"},
             {"carrier", "power_mon", "C3", "value", "carrier.power_mon.supply_bulk", "Device:C"},
             {"carrier", "power_mon", "R1", "value", "carrier.power_mon.alert_pullup", "Device:R"},
-            {"carrier", "power_som", "R12", "value", "carrier.power_som.en_series_r", "Device:R"},
-            {"carrier", "power_som", "C20", "value", "carrier.power_som.en_bypass", "Device:C"},
             {"carrier", "power_som", "C14", "value", "carrier.power_som.input_hf", "Device:C"},
             {"carrier", "power_som", "C25", "value", "carrier.power_som.input_hf", "Device:C"},
             {"carrier", "power_som", "C15", "value", "carrier.power_som.input_bulk", "Device:C"},
@@ -604,8 +601,6 @@ const ComponentBasisPolicy& default_component_basis_policy() {
             {"devkit_mini", "power_mon", "C2", "value", "devkit_mini.power_mon.supply_hf", "Device:C"},
             {"devkit_mini", "power_mon", "C3", "value", "devkit_mini.power_mon.supply_bulk", "Device:C"},
             {"devkit_mini", "power_mon", "R1", "value", "devkit_mini.power_mon.alert_pullup", "Device:R"},
-            {"devkit_mini", "power_som", "R12", "value", "devkit_mini.power_som.en_series_r", "Device:R"},
-            {"devkit_mini", "power_som", "C20", "value", "devkit_mini.power_som.en_bypass", "Device:C"},
             {"devkit_mini", "power_som", "C14", "value", "devkit_mini.power_som.input_hf", "Device:C"},
             {"devkit_mini", "power_som", "C25", "value", "devkit_mini.power_som.input_hf", "Device:C"},
             {"devkit_mini", "power_som", "C15", "value", "devkit_mini.power_som.input_bulk", "Device:C"},

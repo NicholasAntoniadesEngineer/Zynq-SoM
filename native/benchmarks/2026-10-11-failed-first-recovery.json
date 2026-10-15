@@ -1,0 +1,169 @@
+{
+  "base_commit": "12c050d8",
+  "status": "Opt-in experimental search implemented and tested. The smaller board is NOT an accepted finalist: full qualification fails the unchanged fallback ratchet.",
+  "motivation": "At 165x159 the corrected estimator still fails USB-JTAG interior seating. Earlier fixed global orders and eviction searches did not recover it. Failure-directed ordering gives a blocked subsystem first access to space without changing its parts, side permissions, keepouts or hard terms.",
+  "implementation": "--failed-first-retry requires compact mode and an explicit interior order in both CLIs. After interior seating failure, restart once from the entry snapshot with that blocked block first and all other relative order retained. Do not retry an already-first blocked block, edge failure, legalizer failure, exception, or successful incumbent. Restore layout/offers/order on terminal failure and exceptions, preserving all executed accounting. Record interior_failed_first_retry before execution. Defaults and existing single-order ablations unchanged.",
+  "bounds": "At most one additional internal pack attempt per explicitly selected-order invocation, not one per whole build. Final candidate executed eight recoveries across ten observed outer attempts; eight outer attempts packed and two failed. All attempts remain in receipts.",
+  "tests": {
+    "independent_trials": "16 fixtures (four cases by four order strategies), comparing wrapper results, complete layout, side offers, cumulative scalar counts, fallback execution order and trial counts against independently run original/reordered trials. Six recovery cases, four actual rescues, seven preserved successful incumbents. Additional interrupted-recovery exception rollback and invalid-option checks. Enabled-recovery edge failures, with and without edge translation, execute only the original trial and preserve exact accounting.",
+    "negative_control": "Temporarily disabling recovery in the wrapper test fails the independent observed-two-trial assertion; 0.53 seconds. Removed after verification.",
+    "negative_log": "native/build/failed-first-negative-tests.log",
+    "passed_suites": [
+      "native_compact_retry_contracts",
+      "native_compact_profile_inputs_contracts",
+      "native_initial_outline_cli_contracts",
+      "native_board_policy_contracts",
+      "native_policy_audits_contracts",
+      "native_model_failure_receipt_contracts",
+      "native_floorplan_contracts"
+    ],
+    "coverage_note": "Six suites passed in the seven-suite run (46.59s); board-policy fixture had an obsolete registry-size expectation. Updating the explicit expected new fallback declaration and rerunning board-policy plus recovery passed (6.72s). The production gate/ratchet was not weakened. Final recovery assertions rerun after negative-control removal.",
+    "logs": [
+      "native/build/failed-first-final-tests.log",
+      "native/build/failed-first-contract-recheck.log",
+      "native/build/failed-first-restored-tests.log",
+      "native/build/failed-first-exception-safety-tests.log",
+      "native/build/failed-first-edge-tests.log"
+    ]
+  },
+  "candidate": {
+    "outline_mm": [
+      165,
+      159
+    ],
+    "area_mm2": 26235,
+    "top": 420,
+    "bottom": 149,
+    "instances": 569,
+    "pcb_sha256": "5cd18c892b9341a5a169ff1b5b57e9ed71954edab033d0dfa61bcbb9872a0628",
+    "repeated_construction_equal": true,
+    "full_qualification_pcb_equal": true,
+    "model_seconds": [
+      2.825998833,
+      2.822737791
+    ],
+    "text_emit_seconds": [
+      0.035243583,
+      0.034503334
+    ],
+    "hard_red": 0,
+    "hard_margin_min": 4.07,
+    "hard_margin_sum": 893.72,
+    "estimated_cross": 15933.1,
+    "budget": 16035.2,
+    "headroom": 102.2,
+    "comparison": {
+      "reference_mm": [
+        166,
+        159
+      ],
+      "reference_area_mm2": 26394,
+      "area_change_mm2": -159,
+      "area_change_percent": -0.6024096385542133,
+      "reference_estimated_cross": 15617.9,
+      "estimate_change_percent": 2.01819706874804,
+      "reference_headroom": 465.8
+    },
+    "tradeoff": "Smaller area but higher wiring proxy, less score headroom and four fewer bottom-side parts. Not a Pareto improvement over the retained 166x159 candidate. The heuristic is not a routing/SI prediction.",
+    "log": "native/build/carrier-failed-first-final.log"
+  },
+  "qualification": {
+    "output": "/private/tmp/carrier-failed-first-oct11.dHmj5X",
+    "command": "native/bin/schgen board --project carrier --compact-placement --interior-order 3 --failed-first-retry --edge-feasibility --owned-quality-first --owned-face-cohesion --contract-group-face-sheet usb_jtag --owned-shape board_aux=owned-face-fixed/a2.2/owned-pins-forward --floorplan-spec native/benchmarks/carrier-165x159-failed-first.floorplan.json --timing -o OUTPUT",
+    "board_ok": false,
+    "complete": true,
+    "process_exit": 1,
+    "sheets": 37,
+    "mandatory_failure": "fallbacks",
+    "other_mandatory_gates": "PASS",
+    "fallback_regressions": {
+      "interior_failed_first_retry": {
+        "actual": 8,
+        "ceiling": 0
+      },
+      "interior_reseat_retry": {
+        "actual": 20,
+        "ceiling": 18
+      },
+      "legalize_facing_retry": {
+        "actual": 4,
+        "ceiling": 0
+      },
+      "legalize_reservation_retry": {
+        "actual": 4,
+        "ceiling": 0
+      }
+    },
+    "baseline_unchanged": "carrier/reports/fallback_baseline.json",
+    "advisory_failures": [
+      "return_path",
+      "golden",
+      "contract_coverage_lint"
+    ],
+    "non_unrouted_drc_errors": 0,
+    "unrouted": 499,
+    "source_audit": {
+      "files": 69,
+      "constants": 75,
+      "registered_transforms": 156,
+      "status": "PASS"
+    },
+    "render_views": 8,
+    "inspected": [
+      "3d_top.png",
+      "3d_bottom.png"
+    ],
+    "visual_observations": "SoM top reservation remains visibly clear. USB-JTAG U28004 and its capacitors are on top in this candidate, unlike the 166x159 mixed-face candidate. Retain explicit UNVERIFIED proximity/access/assembly reports; images are not fabrication or thermal proof.",
+    "times_seconds": {
+      "process_wall": 259.9,
+      "measured_scope": 259.828806,
+      "authoring_audit": 17.940933,
+      "sheet_parallel_checks_and_render_wall": 28.437092,
+      "input_loading": 1.542307,
+      "pcb_model": 2.973633,
+      "pcb_text_emit": 0.037166,
+      "pcb_drc": 1.658191,
+      "render3d": 30.684006,
+      "source_audit": 162.586305
+    },
+    "timing_scope": "Single complete failed qualification, no concurrent compilation/tests. Phase subset not additive whole-process decomposition. No clean compile timing, controlled speedup claim, or matched Python comparison.",
+    "log": "native/build/carrier-failed-first-qualification.log",
+    "log_sha256": "a4366c1b220f795641ec78d977aeb9b2516d6e7a36e0293206455a556de888a9",
+    "verdict_sha256": "87656b5eed6fbb0acb86f34ba3a45ea6842ce068036f23fa5ee2784dc57a961b",
+    "post_run_changes": "An explanatory header comment was corrected and selected-order assignment moved after snapshot allocation so allocation failure cannot leak order state. Normal search behavior is unchanged; targeted tests were rerun. No second full qualification."
+  },
+  "references": [
+    {
+      "board": "carrier compact recovery disabled",
+      "outline_mm": [
+        166,
+        159
+      ],
+      "pcb_sha256": "b9389efa52adf30b1d94cad1ede3a4387bacd53802f7babb5da07dd6306cff76",
+      "unchanged": true,
+      "log": "native/build/carrier-failed-first-off-reference.log"
+    },
+    {
+      "board": "ordinary carrier",
+      "outline_mm": [
+        168,
+        163
+      ],
+      "pcb_sha256": "9310d975f4ef23d71e9c154f74a46a8ca46366d4f52568ba1c22a31992ffc8c5",
+      "unchanged": true,
+      "log": "native/build/carrier-failed-first-ordinary-reference.log"
+    },
+    {
+      "board": "devkit_mini multiscale",
+      "outline_mm": [
+        98,
+        98
+      ],
+      "pcb_sha256": "cfa0305491d9c4a771adb130b04c4aec6cc2894542391a5c7c9dca3a68bca3cf",
+      "unchanged": true,
+      "runs": 2,
+      "log": "native/build/devkit-failed-first-reference.log"
+    }
+  ],
+  "remaining": "Do not bless this candidate or lift ceilings merely to pass it. Investigate how discovered ordering/geometry can improve initial search and avoid unnecessary failing retries while preserving every executed event. All broader hardware-evidence, migration review, both-board matched Python timing and integrated-goal requirements remain open. Routing out of scope; no fabrication-readiness claim."
+}

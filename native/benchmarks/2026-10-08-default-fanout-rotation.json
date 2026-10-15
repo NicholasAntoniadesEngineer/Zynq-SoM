@@ -1,0 +1,45 @@
+{
+  "base_commit": "5b975ef0",
+  "change": "Use connector plus extra rotation for all fanout shapes, including default base shapes; remove obsolete base-mode argument.",
+  "red_test": {"name": "native_floorplan_base_rotation_contracts", "seconds": 0.53, "failure": "inset axis=0 got=1 expected=4; member inset differs from independent actual corners"},
+  "targeted_tests": {
+    "native_floorplan_base_rotation_contracts": {"status": "PASS", "seconds": 0.49, "checks": 3328},
+    "native_pcb_child_halo_frozen_contracts": {"status": "PASS", "seconds": 0.44, "checks": 94},
+    "native_connector_incumbent_contracts": {"status": "PASS", "seconds": 0.48},
+    "native_floorplan_contracts": {"status": "PASS", "seconds": 13.84, "checks": 25424}
+  },
+  "reference_screens": [
+    {"project": "carrier", "strategy": "default seeded", "outline_mm": [168,163], "model_seconds": 5.230126333, "top": 393, "bottom": 176, "reseats": 17, "pcb_sha256": "8d93efb96783a53ec53a83b830f1d8987f10ca6d86a2246999783fb9ddcf7417"},
+    {"project": "carrier", "strategy": "compact fixed order 3", "outline_mm": [168,160], "model_seconds": 3.112673542, "top": 438, "bottom": 131, "reseats": 10, "pcb_sha256": "91e3a4bb8c1e216fb7f86d4c8ae526635b0d2e216414602de7391c5d3d748fa5"},
+    {"project": "devkit", "strategy": "default seeded", "outline_mm": [98,98], "model_seconds": 0.112034708, "top": 106, "bottom": 57, "reseats": 6, "pcb_sha256": "cfa0305491d9c4a771adb130b04c4aec6cc2894542391a5c7c9dca3a68bca3cf"}
+  ],
+  "reference_comparison": "All three PCB hashes and every printed scalar receipt and fallback count match previous qualified references. Placement contracts and flow pass; hard-red count zero. No speedup claimed.",
+  "full_cli_qualification": {
+    "command": "native/bin/schgen board --project carrier --compact-placement --interior-order 3 --floorplan-spec native/benchmarks/carrier-168x160-constraint-first.floorplan.json --timing -o OUTPUT",
+    "output": "/private/tmp/carrier-rotation-cli.FNNgid",
+    "log": "native/build/carrier-rotation-cli-qualification.log",
+    "exit_code": 0, "board_ok": true, "complete": true, "all_mandatory_gates": "PASS",
+    "sheets": 37, "rendered_views": 8, "non_unrouted_drc_errors": 0, "unrouted": 499,
+    "fallback_registry_paths": 11, "firing_paths": 2,
+    "verdict_sha256": "164afca2a75af18c34eb34243eabcbf740aae5c7bc16b3490c514afc0afcc936",
+    "scope_total_seconds_not_process_wall": 241.566937,
+    "authoring_audit_seconds": 15.846511, "source_audit_seconds": 153.618602,
+    "sheet_parallel_checks_and_render_wall_seconds": 24.807779,
+    "pcb_model_with_internal_checks_seconds": 3.340772, "render3d_seconds": 27.994370,
+    "front_back_visually_inspected": true,
+    "front_png_sha256": "e16e104593740c25be61e2068ed86c0033938d55441434a93cfb5d789ba0680d",
+    "back_png_sha256": "0dacd409d4f94fdc89b214ff6e22c3b5b118b9193abafcd929015d2f693da812",
+    "remaining_nonmandatory_failures": ["return_path", "golden", "contract_coverage_lint"]
+  },
+  "rejected_secondary_experiment": {
+    "change": "Apply compact minority-face child halos and maximum reach to default mode too",
+    "disposition": "REVERTED; default minority-face clearance remains unresolved",
+    "correctness_evidence": "Independent transformed-corner matrix catches missing reach. Immutable real SW7002/C10005 witness has 1.32 mm gap versus 2 mm requirement; positive-halo admission rejects it, zero-halo mutant accepts it.",
+    "carrier_default_model_seconds": 5.299380417,
+    "carrier_default_reseats": 32, "reseat_ceiling": 18,
+    "carrier_default_pcb_sha256": "9310d975f4ef23d71e9c154f74a46a8ca46366d4f52568ba1c22a31992ffc8c5",
+    "compact_carrier_and_devkit_unchanged": true,
+    "reason": "Exceeds unchanged runtime retry ceiling. Needs bounded search correction, not a waived gate or hidden retry accounting."
+  },
+  "limits": ["No fabrication readiness or routing claim", "Hardware unknowns and existing advisories remain", "Full CLI qualification closes the earlier API-only qualification gap for this candidate", "Fresh renders visually checked, not claimed byte-identical", "Correctness correction, not goal completion"]
+}

@@ -1,0 +1,37 @@
+{
+  "base_commit": "85a43bc2",
+  "decision": "Reject and remove the ASCII word-scanning prototype. The full production scanner shows no useful improvement; retain only the independent byte and refill-boundary regression tests.",
+  "prototype": {
+    "source_git_blob": "d3d9949af6b97b9204dd8ca9c0f6e41707b25660",
+    "description": "Unaligned-safe memcpy of eight string bytes; reject high bits, bytes below ASCII space, quotes and backslashes using word predicates, falling back to the unchanged scalar decoder. No schema, dependency, visitor, compiler or memory-bound changes.",
+    "retained_in_production": false
+  },
+  "measurement": {
+    "scope": "Fresh complete production source census, not a board build, compilation measurement or Python comparison",
+    "method": "Control rebuilt from the exact HEAD parser and copied before rebuilding the candidate. Sequential control then candidate, same current source files, flags, manifest and two workers. No concurrent agent builds or tests. OS caches and external host load uncontrolled. One sample each; no claim of statistically meaningful regression.",
+    "manifest": "native_board_policy_audit_sources, all 69 entries",
+    "control_seconds": 160.399337,
+    "candidate_seconds": 160.488274,
+    "change_percent": 0.0554472367,
+    "control_sampled_aggregate_peak_bytes": 2876899328,
+    "candidate_sampled_aggregate_peak_bytes": 2875768832,
+    "ordered_census_equal": true,
+    "census_sha256": "93a913359d73a09b57216e875d00c9425a256eb0dbe3754b395fa0d24b841d6c",
+    "constants": 75,
+    "functions": 992,
+    "quantization_sites": 317,
+    "logs": [
+      {"path": "native/build/audit-ascii-full-control.log", "sha256": "45da545e2d86a82845a02a4bcc90ae12e123768074a407aaced13dc3cd2b9191"},
+      {"path": "native/build/audit-ascii-full-candidate.log", "sha256": "eef42757ca84ee19b497fc65976c671f3009c5d2d8ad18053d03f958e7c8425f"}
+    ]
+  },
+  "retained_tests": {
+    "new_coverage": "All 256 raw byte values at 16 positions in retained and discarded strings, independent generic-parser projection oracle for valid ASCII and mandatory rejection otherwise. Escapes, Unicode and invalid bytes around the 65536-byte stream refill. Both memory and stream paths and complete accounting remain checked.",
+    "passed": ["native_audit_ast_pipe_contracts", "native_audit_ast_pipe_census_contracts", "native_audit_ast_projection_contracts", "native_parallel_audit_contracts", "native_audit_ast_projection_census"],
+    "candidate_suite_seconds": 13.76,
+    "restored_production_suite_seconds": 14.73,
+    "failed": 0
+  },
+  "next_direction": "Do not repeat ASCII-scanner micro-optimization without new profiling evidence. Investigate reduced compiler-output or safely reusable audit evidence as separate architectural work; preserve fresh dependency and source-mutation validation. Carrier placement and hardware qualification remain outstanding goal work.",
+  "qualification": "No production code, hardware, layout or acceptance threshold changed. Both-board build/render evidence at 85a43bc2 remains applicable; it was not rerun for this test-only change. Overall goal remains incomplete."
+}

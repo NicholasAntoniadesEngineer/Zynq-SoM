@@ -1,5 +1,10 @@
 # Frozen floorplan contracts
 
+Documentation-only refresh (2026-10-03): the Markdown electrical source paths
+and the two carrier HDMI note citations now name the current native C++ producers.
+Only those expected text fields were updated; captured geometry, inputs, historical
+Python provenance, and timings remain unchanged.
+
 Captured on 2026-09-18 by temporary, inline execution of the original
 `schgen/generate/floorplan.py` orchestration (last changed in `44b76af6`). Its existing native kernels were
 enabled. No new Python source was added, and the native floorplan implementation
@@ -209,3 +214,37 @@ page frame, and `origin` is its translation from board-local coordinates.
 The full builder derives its channel demand from the circuit nets as Python
 did; `FloorplanLegalizeInput::channel_demand` is used by direct compose calls.
 Report rendering and seed export require no Python bindings or fixture access.
+
+### Actual-work event correction (2026-10-03)
+
+The historical Python provenance above remains historical evidence, not a claim
+that its fallback receipt was complete. Its pass/connector snapshot rollback
+contradicted the event registry's explicit every-candidate/per-compact-pack
+contract. The native correction retains all executed fallback calls, including
+rejected free passes, rejected connector trials and incumbent repacks. It does
+not change placement, search, electrical intent, or runtime ratchet ceilings.
+
+`native_floorplan_fallback_scope_contracts` compiles unchanged current geometry
+with an isolated GNU/Clang Itanium-ABI function observer. Entry counts and the
+ordered event identities captured at exits independently prove receipt scope.
+Both natural auto and fixed free-pass winners use explicitly labeled test-only
+receipt sentinels; frozen defaults and post-fallback injected failure cases use
+real fallback work. The public failure transport preserves incoming prefixes,
+including duplicates and same-name events, exactly once and in order. The tiny
+fixed winner also proves the separately corrected conservative estimate ledger
+input (`native_floorplan_fixed_choice_contracts`).
+
+Only expected event arrays and their array lengths were refreshed in the two
+floorplan JSON fixtures and the frozen outputs under floorplan_precision (auto
+and fixed), stage_precision, legalize_accounting, pack_precision_legacy.txt,
+pack_geometry_precision, pack_search_precision, and placement_precision. Every
+other payload byte is preserved; original provenance text and timings are not
+relabeled. Search9's immutable payload SHA pin is updated, not removed, and its
+fixture-mutation test still rejects a changed payload. The event-only reviewed
+SHA256 list is in `fallback_event_refresh.sha256` beside this note.
+
+Frozen default receipts now count carrier retry=37 and compaction=14, and devkit
+retry=74; fixed devkit retry=6. These are test expectations, NOT new ceilings.
+The runtime ceilings remain carrier 18/2 and devkit 35: those honest default
+counts therefore fail their ratchets. Current live counts must be measured on
+their actual inputs; historical or frozen counts do not supply a multiplier.

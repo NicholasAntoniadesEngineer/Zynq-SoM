@@ -16,7 +16,9 @@ struct Model3dGeometry {
     std::optional<std::string> misfit, misplaced;
 };
 // Legacy XY point-envelope measurement, NOT a STEP solid/VRML scene evaluator.
-// Preserves the gate's 2.54-mm WRL units, quarter-turn bounds and fit thresholds.
+// Bounds planar Z rotation and signed XY scale of the measured envelope.
+// Retains legacy 2.54-mm WRL units, zero-scale fallback and fit thresholds.
+// X/Y tilt and nested scene/solid transforms are not evaluated here.
 Model3dGeometry measure_model3d(const std::string& footprint,
                               const std::string& clause,
                               const std::string& model_text,

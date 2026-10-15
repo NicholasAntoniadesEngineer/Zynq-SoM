@@ -1,0 +1,70 @@
+{
+  "source_commit": "f2982052",
+  "purpose": "Test freely selectable bottom power-template orientations without forcing power or power_som bottom.",
+  "recipe_base": "native/build/fast/schgen_compact_stage_profile --repo . --project carrier --compact-search on --edge-feasibility on --owned-quality-first on --owned-face-cohesion on --contract-group-face-sheet usb_jtag --require-bottom-sheet power_mon --require-bottom-sheet bringup_modules --require-bottom-sheet bringup_en_modules --joint-separation-states 1024 --reseat-poses 8 --reseat-frontier 4096 --reseat-continuations 3 --reseat-victim-shapes on --owned-shape board_aux=owned-face-a1.000000 --owned-shape bringup_rails=bottom-a2.2/r270/owned-pins-forward --schematic /private/tmp/carrier-166x156-two-pilots.iK3HkI/Zynq_Carrier.kicad_sch --runs 1 --interior-order 3 --failed-first-retry on --shape-area-first on",
+  "spec_source": "native/benchmarks/carrier-163x153-combined-bottom.floorplan.json",
+  "spec_delta": "For free-power screens only set interior.power_som.layer=either; power already has layer=either. Set outline dimensions as listed. No hardware constraints modified.",
+  "screens": [
+    {
+      "dimensions_mm": [
+        162,
+        153
+      ],
+      "spec": "/private/tmp/carrier-aspect-screen.3noxv0/power-som-either-162x153.json",
+      "extra_flags": "--owned-selection-trace on",
+      "status": "construction_failed",
+      "seconds": 4.451347083,
+      "outer_attempts": 4,
+      "log": "native/build/power-free-turns-162x153.log",
+      "first_power_som_choice": "bottom/r180"
+    },
+    {
+      "dimensions_mm": [
+        163,
+        153
+      ],
+      "spec": "/private/tmp/carrier-aspect-screen.3noxv0/power-som-either-163x153.json",
+      "extra_flags": "--owned-selection-trace on",
+      "status": "construction_failed",
+      "seconds": 8.440849541,
+      "outer_attempts": 4,
+      "log": "native/build/power-free-turns-163x153.log",
+      "first_power_som_choice": "bottom",
+      "first_power_som_estimator": 348.3340769765799
+    },
+    {
+      "dimensions_mm": [
+        162,
+        153
+      ],
+      "spec": "/private/tmp/carrier-aspect-screen.3noxv0/power-som-either-162x153.json",
+      "recipe_delta": "Remove --shape-area-first on; no selection trace.",
+      "status": "construction_failed",
+      "seconds": 8.053386083,
+      "outer_attempts": 4,
+      "log": "native/build/power-free-wire-ranking-162x153.log"
+    }
+  ],
+  "control": {
+    "spec": "native/benchmarks/carrier-163x153-combined-bottom.floorplan.json",
+    "extra_flags": "--owned-selection-trace on",
+    "status": "constructed_no_acceptance",
+    "model_seconds": 12.072728125,
+    "pcb_text_seconds": 0.026138458,
+    "pcb_sha256": "d954ec91a789f69a1e94a26a9d3a91b279fbc208dff2503cbe8ee4c8eabc199f",
+    "top": 411,
+    "bottom": 155,
+    "first_power_som_choice": "turned",
+    "first_power_som_estimator": 357.9527190451253,
+    "cheap_checks": "fanout, ratsnest, placement contract and placement flow PASS; hard_red=0; model/emission nonsearch fallback events=0",
+    "log": "native/build/power-free-turns-control.log"
+  },
+  "findings": [
+    "Both power blocks expose bottom, bottom/r90, bottom/r180 and bottom/r270. The new offers are evaluated, not merely catalogued.",
+    "Expanding power_som side eligibility loses the successful reference search path even though its old top offers remain. This is search incompleteness, not evidence of geometric impossibility.",
+    "The first power_som bottom choice at 163x153 has a lower estimator score than the control's first top choice, but fails downstream. The lower local estimate does not establish global packing feasibility.",
+    "Observed failed stages include interior seating (usb_jtag, usb_pd) and legalization. A reported USB-JTAG/HDMI cycle combines HDMI-to-SoM proximity with a chosen separation direction; it does not establish an electrical relationship between USB-JTAG and HDMI."
+  ],
+  "next_algorithm_work": "Add and test failure-directed reconsideration of early shape/side choices, with invocation-local snapshots, explicit execution accounting and accepted-incumbent retention. Do not hardcode power_som top or treat this failed screen as proof that bottom power is unsafe.",
+  "limitations": "Diagnostic single runs, not performance comparisons or full qualification. No smaller accepted layout. No default/spec changes adopted. All failed work remains in logs; no gates waived. Historical Python comparison remains outstanding."
+}

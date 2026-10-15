@@ -1,0 +1,21 @@
+{
+  "source_commit": "b1c53212",
+  "scope": "162x153 carrier construction diagnostics; no accepted layout or full qualification",
+  "base_configuration": "1024-state mixed-power recipe in 2026-10-13-carrier-joint-budget-screen.json; all hardware gates retained",
+  "experiments": [
+    {"change": "West order camera/lcd/rj45_connector, same west membership", "log": "native/build/west-camera-lcd-rj45.log", "result": "FAIL", "construction_seconds": 14.75209825, "outer_attempts": 4},
+    {"change": "West order rj45_connector/camera/lcd, same west membership", "log": "native/build/west-rj45-camera-lcd.log", "result": "FAIL", "construction_seconds": 7.222832208, "outer_attempts": 4},
+    {"change": "Original order plus contract-group-face-sheet power_som", "log": "native/build/power-som-flex-162x153.log", "result": "FAIL", "construction_seconds": 5.597326458, "outer_attempts": 4},
+    {"change": "Additionally allow power_som layer either; selection trace enabled", "log": "native/build/power-som-flex-either-162x153.log", "result": "FAIL", "construction_seconds": 7.689322375, "outer_attempts": 4},
+    {"change": "Same either-layer configuration, require-bottom-sheet power_som", "log": "native/build/power-som-required-bottom-162x153.log", "result": "FAIL", "construction_seconds": 6.559829041, "outer_attempts": 4},
+    {"change": "Additionally request owned-shape power_som=bottom", "log": "native/build/power-som-forced-bottom-162x153.log", "result": "REJECTED BEFORE SEARCH: shape lacks owned-quality measurement", "construction_seconds": 0.449530792, "outer_attempts": 0}
+  ],
+  "findings": [
+    "Changing connector order changes downstream failures but neither tested order finds a valid smaller layout. These bounded failures do not prove geometric infeasibility.",
+    "power_som offers four whole-bottom rotations and one mixed-face contract-bottom/C22014/0.550000/21.120200 alternative. The original trace selects top asbuilt; offering bottom alone does not imply selection.",
+    "require-bottom-sheet filters shapes during selection and reseating, not merely final acceptance. Its failed run therefore genuinely explored bottom-only power_som choices.",
+    "owned-shape is a measured-owned-variant control, not a general selector for every catalogued tag. Its rejection is not a geometry failure; use require-bottom-sheet for the side experiment.",
+    "No production source changed; qualified 163x153 mixed-face incumbent preserved."
+  ],
+  "limitations": "Single samples; first two screens overlapped, OS cache uncontrolled, observer scopes differ. Timings are diagnostics only, not a matched performance comparison. Failure receipts captured for all runs. No historical Python comparison or fabrication-readiness claim."
+}

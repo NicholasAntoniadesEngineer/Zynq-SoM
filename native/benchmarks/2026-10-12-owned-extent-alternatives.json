@@ -1,0 +1,38 @@
+{
+  "base_commit": "3599d166",
+  "change": "Opt-in extent-first owned-group alternatives preserve the existing nearest-pad forward/reverse candidates. Two bounded extent sweeps use whole-group envelope area, member-to-origin extent to escape masked-envelope ties, then pad gap and deterministic coordinates. Each eligible member/sweep checks at most 256 poses. Final independent geometry and original pad-gap non-regression checks remain mandatory.",
+  "activation": "board --compact-placement --owned-extent-alternatives; diagnostic profiler --compact-search on --owned-extent-alternatives on. Default off; independent of owned-quality-first.",
+  "permissions": "No new side, rotation or movement permissions. Owners, bulk capacitors, fixed refs and top-access restrictions remain unchanged. No invented numerical hardware proximity limits.",
+  "accounting": "All executed scalar calls retained, including duplicate and rejected trials. Result reports actual trial checks and exhausted per-member budgets; adapter publishes them in search diagnostics. An unexecuted 257th pose is not counted.",
+  "local_proof": {
+    "nearest_group_area_mm2": 1625,
+    "extent_group_area_mm2": 1500,
+    "area_change_percent": -7.6923076923,
+    "checks": "Fresh final geometry, no overlap or bound violation, identical nets/sides/rotations, no original owned pad gap increase, retained proximity incumbents, deterministic declaration permutation, exact scalar counts and explicit exhausted-search receipts.",
+    "owned_group_assertions": 3900,
+    "expanded_adversarial_log": "native/build/owned-extent-adversarial-tests.log",
+    "expanded_adversarial_coverage": "Extent alternatives also exercised with opposite sides, through-hole obstacles, all quadrant rotations, sub-grid rounding boundaries and translated coordinate frames.",
+    "live_adapter_assertions": 3821,
+    "live_extent_candidates_emitted": true
+  },
+  "regressions": {
+    "four_suites_passed": ["native_pcb_owned_groups_contracts", "native_pcb_owned_groups_adapter_contracts", "native_pcb_owned_groups_adapter_audit_contracts", "native_initial_outline_cli_contracts"],
+    "wall_seconds": 8.84,
+    "log": "native/build/owned-extent-acceptance-tests.log",
+    "additional_precision_source_suite": {"name":"native_placement_precision_source_contracts","status":"PASS","seconds":33.29,"log":"native/build/owned-extent-precision-tests.log"}
+  },
+  "construction_screens": [
+    {"board":"carrier locked reference", "extent":true, "outline_mm":[166,159], "top":416,"bottom":153,"model_seconds":2.689675875,"pcb_text_seconds":0.033640541,
+     "pcb_sha256":"b9389efa52adf30b1d94cad1ede3a4387bacd53802f7babb5da07dd6306cff76","same_as_qualified_reference":true,"log":"native/build/carrier-owned-extent-reference.log"},
+    {"board":"carrier unrestricted shape control", "extent":false, "outline_mm":[166,159], "top":412,"bottom":157,"model_seconds":3.499654542,"pcb_text_seconds":0.032924458,
+     "pcb_sha256":"7326e4389313f28465519c5b1c834f9bc5343c80fa6998e8578128bf0fc0770c","log":"native/build/carrier-owned-extent-control.log"},
+    {"board":"carrier unrestricted shape candidate", "extent":true, "outline_mm":[166,159], "top":412,"bottom":157,"model_seconds":3.931918375,"pcb_text_seconds":0.033054917,
+     "pcb_sha256":"7326e4389313f28465519c5b1c834f9bc5343c80fa6998e8578128bf0fc0770c","same_as_matched_control":true,"log":"native/build/carrier-owned-extent-unrestricted.log"},
+    {"board":"devkit unaffected multiscale control", "extent":false,"outline_mm":[98,98],"top":106,"bottom":57,"model_seconds":0.176755042,"pcb_text_seconds":0.008527958,
+     "pcb_sha256":"cfa0305491d9c4a771adb130b04c4aec6cc2894542391a5c7c9dca3a68bca3cf","same_as_qualified_reference":true,"log":"native/build/devkit-owned-extent-verified.log"}
+  ],
+  "screen_results": "All completed screens pass placement-contract/flow diagnostics with zero hard composition RED. Neither carrier screen demonstrates a smaller whole board. Unrestricted carrier changes relative to the locked reference already occur with extent OFF and must not be attributed to this feature.",
+  "failed_work": "Initial synthetic fixture had a fixed overlap and was corrected. Simple extent ranking and then revisiting with distance-first ties failed the valid masked-envelope test; member extent tie-breaking resolved it. First devkit screen used a nonexistent schematic filename and failed before construction; rerun used the verified Zynq_Carrier.kicad_sch path. Initial precision-test target name was corrected after Ninja rejected it.",
+  "decision": "Retain as a bounded opt-in capability with a concrete local compactness proof, not as the default or an accepted smaller carrier. Current matched carrier showed extra work without a board change; investigate layout bottlenecks beyond these two pilots before broadening campaigns.",
+  "limits": "Single construction samples with uncontrolled caches/load and diagnostic overhead; no speedup or historical Python comparison. No new complete board qualification, DRC or rendered finalist. Qualitative proximity, assembly/thermal unknowns, hardware qualification and overall goal remain incomplete."
+}

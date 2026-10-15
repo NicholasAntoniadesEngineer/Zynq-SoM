@@ -1,0 +1,16 @@
+{
+  "parent_commit": "3e553d89",
+  "change": "Joint child-reservation search can repair an overlapping seed using its four exact-offset directional alternatives. Legacy one-direction attempts still require an actually satisfied seed witness. Seed geometry is never treated as accepted geometry.",
+  "regression": "Expanded pocket tests cover 32 combinations: valid versus overlapping seed, both faces, both axes, both directions, compact/noncompact. Independent occupancy verifies the intended seed collision status and legal destination; final occupancy and hard proximity must pass. Existing solid-reservation negative controls retained.",
+  "tests": {
+    "native_compact_retry_contracts": "PASS 5.81 seconds",
+    "native_floorplan_contracts": "PASS 13.86 seconds",
+    "native_floorplan_geometry_contracts": "PASS 0.18 seconds"
+  },
+  "controls": {
+    "carrier": {"log":"native/build/overlap-pocket-reference.log","pcb_sha256":"a43ec57495e5be75d620686cdc411d5f4835804bec83c928a1e82f19b090a231","dimensions_mm":[163,153],"top":394,"bottom":172},
+    "devkit": {"log":"native/build/overlap-pocket-devkit.log","pcb_sha256":"1b12fecbcbbaa5e6084c2459da93cb144a660ff19805e6e4e3f75f9c22689fdb","dimensions_mm":[98,98],"top":105,"bottom":55}
+  },
+  "control_result": "Both reproduce qualified reference hashes; cheap fanout/ratsnest/placement/flow checks pass; hard_red=0; zero model/emission nonsearch fallbacks.",
+  "limitations": "No new smaller board, full qualification or speedup demonstrated by this fix. Timing comparison evidence is separate."
+}

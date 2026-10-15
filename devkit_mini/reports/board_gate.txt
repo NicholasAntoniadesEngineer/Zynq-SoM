@@ -224,7 +224,7 @@ board netlist gate
   ok   rail '+VIN': 1 net, 7 pins across 2 sheet(s) [pd_input, power_mon]
   ok   rail '+VIN_SYS': 1 net, 15 pins across 3 sheet(s) [power, power_mon, power_som]
   ok   rail 'CHASSIS_GND': 1 net, 12 pins across 3 sheet(s) [mechanical, pd_input, usb_uart_connector]
-  ok   rail 'GND': 1 net, 185 pins across 11 sheet(s) [debug_boot, pd_input, power, power_mon, power_som, som_decoupling, som_j1, som_j2, som_j3, uart_bridge, usb_uart_connector]
+  ok   rail 'GND': 1 net, 183 pins across 11 sheet(s) [debug_boot, pd_input, power, power_mon, power_som, som_decoupling, som_j1, som_j2, som_j3, uart_bridge, usb_uart_connector]
   (info) undriven-input PORT check: 1 input-bearing PORT nets examined (27 expect-deferred)
 BOARD GATE: PASS — every linked net merged across sheets
   (info) root ERC errors: 0

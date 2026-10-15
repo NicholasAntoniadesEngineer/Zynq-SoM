@@ -382,13 +382,13 @@ bool compile_part_catalog(const std::string& parts_dir,
     }
 }
 
-bool open_part_catalog(const std::string& catalog_path) {
+static bool open_catalog_file(CatalogFile& catalog, const std::string& catalog_path) {
     try {
-        if (g_catalog.map_base != nullptr && g_catalog.file_path == catalog_path) {
+        if (catalog.map_base != nullptr && catalog.file_path == catalog_path) {
             return true;
         }
-        if (g_catalog.map_base != nullptr) {
-            g_catalog.release();
+        if (catalog.map_base != nullptr) {
+            catalog.release();
         }
         const int fd = open(catalog_path.c_str(), O_RDONLY);
         if (fd < 0) {
@@ -410,20 +410,24 @@ bool open_part_catalog(const std::string& catalog_path) {
             close(fd);
             throw std::runtime_error(std::string("mmap failed: ") + std::strerror(errno));
         }
-        g_catalog.file_desc = fd;
-        g_catalog.map_base = static_cast<uint8_t*>(mapped);
-        g_catalog.map_size = static_cast<std::size_t>(st.st_size);
-        g_catalog.file_path = catalog_path;
-        validate_header(g_catalog.map_base, g_catalog.map_size);
+        catalog.file_desc = fd;
+        catalog.map_base = static_cast<uint8_t*>(mapped);
+        catalog.map_size = static_cast<std::size_t>(st.st_size);
+        catalog.file_path = catalog_path;
+        validate_header(catalog.map_base, catalog.map_size);
         return true;
     } catch (const std::exception& exc) {
         try {
-            g_catalog.release();
+            catalog.release();
         } catch (...) {
             std::abort();
         }
         throw std::runtime_error(std::string("catalog open failed: ") + exc.what());
     }
+}
+
+bool open_part_catalog(const std::string& catalog_path) {
+    return open_catalog_file(g_catalog, catalog_path);
 }
 
 bool close_part_catalog() {
@@ -434,16 +438,16 @@ bool close_part_catalog() {
     }
 }
 
-CatalogPart lookup_part_catalog(const std::string& mpn) {
+static CatalogPart lookup_catalog_file(const CatalogFile& catalog, const std::string& mpn) {
     try {
-        if (g_catalog.map_base == nullptr) {
+        if (catalog.map_base == nullptr) {
             throw std::runtime_error("catalog is not open");
         }
         if (mpn.empty()) {
             throw std::runtime_error("mpn must not be empty");
         }
-        const uint8_t* data = g_catalog.map_base;
-        const std::size_t size = g_catalog.map_size;
+        const uint8_t* data = catalog.map_base;
+        const std::size_t size = catalog.map_size;
         const uint32_t part_count = read_u32(data, 12, size);
         const uint32_t hash_slots = read_u32(data, 24, size);
         const uint32_t string_bytes = read_u32(data, 28, size);
@@ -513,6 +517,26 @@ CatalogPart lookup_part_catalog(const std::string& mpn) {
         return part;
     } catch (const std::exception& exc) {
         throw std::runtime_error(std::string("catalog lookup failed: ") + exc.what());
+    }
+}
+
+CatalogPart lookup_part_catalog(const std::string& mpn) {
+    return lookup_catalog_file(g_catalog, mpn);
+}
+
+std::vector<CatalogPart> read_part_catalog(const std::string& catalog_path,
+                                         const std::vector<std::string>& mpns) {
+    CatalogFile catalog;
+    try {
+        open_catalog_file(catalog, catalog_path);
+        std::vector<CatalogPart> result;
+        result.reserve(mpns.size());
+        for (const auto& mpn : mpns) result.push_back(lookup_catalog_file(catalog, mpn));
+        catalog.release();
+        return result;
+    } catch (...) {
+        try { catalog.release(); } catch (...) { std::abort(); }
+        throw;
     }
 }
 

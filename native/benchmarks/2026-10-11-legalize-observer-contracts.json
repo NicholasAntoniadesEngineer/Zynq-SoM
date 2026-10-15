@@ -1,0 +1,22 @@
+{
+  "scope": "Legalization accounting regression reliability; no production algorithm or hardware changes",
+  "predecessor": "f9d3225c",
+  "regression_progress": {
+    "native_geometry_cli_apply_contracts": "PASS 266.12 s: real apply, deliberately failed mandatory gates, exact source rollback",
+    "tests_98_through_102": "PASS",
+    "test_103_initial_failure": "Frozen historical board operation counts no longer describe the current optimizer"
+  },
+  "defect": "The unqualified end(const QuantizationCounts&) helper competed with std::end through ADL. Mutable map arguments selected std::end and bypassed the intended observation check.",
+  "repair": "Rename the helper verify_entries at every call site. Compare current whole-board receipts against instrumented scalar entries, repeat each current configuration, verify physical/source requirements, and reject erased or incremented receipt entries.",
+  "coverage": [
+    "Carrier and devkit two-sided, devkit single-sided, devkit fixed 100x100 outline",
+    "Immutable numerical kernel and synthetic compose geometry/decision/count prefix retained",
+    "Independent actual scalar entries and legacy pose entries",
+    "Current model/plan and all aggregate operation/fallback receipt reproducibility",
+    "Floorplan owns legalization work exactly once; downstream stages do not duplicate it",
+    "Missing/invented receipt negative controls; overflow, failed-prefix and invocation isolation checks retained"
+  ],
+  "negative_control": "New corrupt-receipt test failed before helper rename: missing or invented legalization work escaped independent observer",
+  "verification": "native_legalize_accounting_contracts PASS 17.04 s after repair; git diff --check PASS",
+  "limitations": "Not full-suite acceptance, live KiCad qualification, a performance benchmark or hardware readiness evidence. Remaining regression campaign continues."
+}

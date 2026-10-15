@@ -1,0 +1,39 @@
+{
+  "base_commit": "fcd86c17",
+  "cause": "Stage snapshots show U20001/U20002 each have 8/8 preferred sites after seed (step3_emission). l4_pull reduces these to 6/8 and 7/8 by moving bringup_modules bottom passives beneath the power regulators. Later stages retain the shortfall. This is not an initial packing or facing-refit failure.",
+  "before_log": "native/build/thermal-stage-carrier.log",
+  "fix": "Check each geometrically eligible l4 pull candidate using the shared preferred-site planner at actual rounded emission coordinates. If any thermal subject loses capacity, continue to a shorter candidate; do not ban bottom parts or reserve every possible site. Trial geometry and executed precision work remain accounted. Existing board acceptance checks are unchanged.",
+  "trace": "Opt-in profiler --thermal-trace on captures immutable stage poses, computes capacity after timed construction/emission, and labels snapshots pad-only (no historical escape copper supplied). Diagnostic counts are separate. Snapshot-copy overhead remains in observer-enabled construction timing.",
+  "tests": {
+    "native_pcb_refit_fanout_contracts": "PASS 3.74 seconds, including actual carrier passive-pull preservation",
+    "native_pcb_emit_contracts": "PASS 0.86 seconds",
+    "carrier": {
+      "log": "native/build/thermal-pull-carrier.log",
+      "runs": 2,
+      "dimensions_mm": [165,156],
+      "top": 403,
+      "bottom": 163,
+      "pcb_sha256": "590f6963839290500abdf86ee507a3b0c2a5abb4beb6fde44bccec84d6083cc6",
+      "repeat_identical": true,
+      "thermal_lattice_events_before_after": [3,0],
+      "all_emission_fallback_events": 0,
+      "cross_subsystem_airwire_mm": 14428.9,
+      "cross_subsystem_budget_mm": 15883,
+      "model_seconds": [6.306909583,6.181398917],
+      "pcb_text_seconds": [0.039739792,0.038523334],
+      "screen": "fanout, ratsnest, placement contract, placement flow PASS; hard_red=0"
+    },
+    "devkit": {
+      "log": "native/build/thermal-pull-devkit.log",
+      "runs": 2,
+      "pcb_sha256": "b6798d4b63d2fddbf9fad24945c151b9420b049b674ad5d637c43bf4a365137f",
+      "repeat_identical": true,
+      "unchanged_from_before": true,
+      "model_seconds": [0.202460916,0.203067375],
+      "pcb_text_seconds": [0.009326125,0.008782250],
+      "screen": "fanout, ratsnest, placement contract, placement flow PASS; hard_red=0"
+    }
+  },
+  "acceptance": "Promising carrier candidate, NOT fully qualified. Needs full board build, independent audits/DRC, front/back renders and review. Current full CLI must expose the profiler's required-bottom-sheet policy to reproduce this exact candidate. No new speedup claim or Python comparison.",
+  "recipe": "Use 2026-10-13-bottom-monitor-experiment.json recipe with --thermal-trace on. This observation mode does not change placement policy."
+}

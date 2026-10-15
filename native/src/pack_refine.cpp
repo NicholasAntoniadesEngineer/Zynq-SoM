@@ -1,13 +1,17 @@
 #include "schgen/pack_refine.hpp"
+#include "pack_refine_internal.hpp"
 
 #include "schgen/occupancy.hpp"
 #include "schgen/occupancy_precision.hpp"
 
 #include <cmath>
+#include <algorithm>
+#include <limits>
 #include <stdexcept>
 #include <unordered_map>
 #include <utility>
 #include <vector>
+#include <array>
 
 namespace schgen {
 namespace {
@@ -55,6 +59,13 @@ RefineResult refine_pack_passes(
     if (max_passes < 1) {
         throw std::runtime_error("refine_pack_passes: max_passes required");
     }
+    for(const auto& block:blocks)if(block.translation_window) {
+        const auto [x0,x1,y0,y1]=*block.translation_window;
+        if(!std::isfinite(x0)||!std::isfinite(x1)||!std::isfinite(y0)||!std::isfinite(y1)||x0>x1||y0>y1)
+            throw std::invalid_argument("refine_pack_passes: invalid translation window");
+        if(!std::isfinite(block.x)||!std::isfinite(block.y)||block.x<x0||block.x>x1||block.y<y0||block.y>y1)
+            throw std::invalid_argument("refine_pack_passes: incumbent outside translation window");
+    }
     Occupancy working = occupancy;
     working.set_board(board_w, board_h);
     auto centers = start_centers;
@@ -70,10 +81,12 @@ RefineResult refine_pack_passes(
                            block.inset, block.mask, block.comps, counts);
             rebuild_anchor(block.anchor, block, centers);
             const auto anchor = pack_anchor(block.anchor);
+            const auto [x0,x1,y0,y1]=block.translation_window.value_or(std::make_tuple(wx0,wx1,wy0,wy1));
             auto hit = working.place_near(anchor.first, anchor.second, block.w,
                                           block.h, block.reach, block.inset,
-                                          block.mask, block.comps, wx0, wx1,
-                                          wy0, wy1, counts);
+                                          block.mask, block.comps,
+                                          std::max(wx0,x0),std::min(wx1,x1),
+                                          std::max(wy0,y0),std::min(wy1,y1),counts);
             if (!hit.has_value()) {
                 working.add(block.x, block.y, block.w, block.h, block.reach,
                             block.inset, block.mask, block.comps, counts);
@@ -103,30 +116,91 @@ RefineResult refine_pack_passes(
     return out;
 }
 
-std::vector<SeatShapeHit> seat_shape_sides(
+static std::vector<SeatShapeHit> seat_shapes(
     const Occupancy& occupancy, double anchor_x, double anchor_y,
     const std::vector<SeatShapeCand>& cands, double board_w, double board_h,
-    double clear, QuantizationCounts* counts) {
-    Occupancy working = occupancy;
-    working.set_board(board_w, board_h);
+    double clear, QuantizationCounts* counts, bool keep_all, bool board_is_current=false) {
+    // The public adapters permit a board-size override and must retain their
+    // private resized copy. Floorplan packing already constructed this exact
+    // board: its synchronous, read-only search can borrow the occupancy grid.
+    std::optional<Occupancy> resized;
+    if (!board_is_current) {
+        resized.emplace(occupancy);
+        resized->set_board(board_w, board_h);
+    }
+    const Occupancy& working=resized ? *resized:occupancy;
     std::vector<std::string> side_order;
     std::unordered_map<std::string, SeatShapeHit> best;
+    std::vector<SeatShapeHit> all;
+    struct QueryResult {
+        const SeatShapeCand* cand;
+        std::optional<Pose> pose;
+        std::array<std::size_t,4> executed;
+    };
+    // These are observations of the three scalars executed by place_near,
+    // never receipt writes. Re-execute a hit if it could mask a current counter
+    // overflow; the original scalar then throws with its actual failed prefix.
+    const auto query_counts=[&] {
+        std::array<std::size_t,4> out{};
+        if (counts) {
+            std::size_t i=0;
+            for (const auto* name:{"occupancy_axis_count","occupancy_frontier_key1dp","occupancy_cell_index","occupancy_shape_key4dp"}) {
+                const auto p=counts->find(name);
+                if (p!=counts->end()) out[i]=p->second;
+                ++i;
+            }
+        }
+        return out;
+    };
+    const bool cache_scope=board_is_current&&std::isfinite(anchor_x)&&std::isfinite(anchor_y)
+        &&std::isfinite(board_w)&&std::isfinite(board_h)&&std::isfinite(clear)
+        &&board_w>0&&board_h>0&&clear>=0;
+    // The remaining complete-key inputs (anchor, board and occupancy including
+    // reservations/grid settings) are invariant during THIS synchronous call.
+    // Never share results across calls, occupancy edits, maps or threads. Side
+    // and index label estimator alternatives, not occupancy queries: keep them.
+    std::vector<QueryResult> queries;
     for (const auto& cand : cands) {
         if (cand.w > board_w - 2.0 * clear || cand.h > board_h - 2.0 * clear) {
             continue;
         }
-        auto pos = working.place_near(anchor_x, anchor_y, cand.w, cand.h,
-                                      cand.reach, cand.inset, cand.mask,
-                                      cand.comps, cand.win_x0, cand.win_x1,
-                                      cand.win_y0, cand.win_y1, counts);
+        auto prior=queries.end();
+        const bool cacheable=cache_scope&&floorplan_detail::cacheable_query_geometry(cand);
+        const auto before=cacheable ? query_counts():std::array<std::size_t,4>{};
+        if (cacheable) prior=std::find_if(queries.begin(),queries.end(),[&](const auto& q) {
+            return floorplan_detail::same_query_geometry(cand,*q.cand);
+        });
+        if (prior!=queries.end()) for (std::size_t i=0;i<before.size();++i)
+            if (prior->executed[i]>std::numeric_limits<std::size_t>::max()-before[i]) {
+                prior=queries.end(); break;
+            }
+        // A successful hit still calls the shape scalar below. Preserve the
+        // original query prefix if that mandatory scalar is already exhausted.
+        if (prior!=queries.end()&&prior->pose&&before[3]==std::numeric_limits<std::size_t>::max())
+            prior=queries.end();
+        std::optional<Pose> pos;
+        if (prior!=queries.end()) pos=prior->pose;
+        else {
+            pos=working.place_near(anchor_x, anchor_y, cand.w, cand.h,
+                                  cand.reach, cand.inset, cand.mask,
+                                  cand.comps, cand.win_x0, cand.win_x1,
+                                  cand.win_y0, cand.win_y1, counts);
+            // Store completed successes AND misses. Exceptions propagate with
+            // their actual executed prefix; no saved-work receipts are added.
+            if (cacheable) {
+                auto executed=query_counts();
+                for (std::size_t i=0;i<executed.size();++i) executed[i]-=before[i];
+                queries.push_back({&cand,pos,executed});
+            }
+        }
         if (!pos.has_value()) {
             continue;
         }
         const double dist = std::fabs(pos->x + cand.w / 2.0 - anchor_x)
             + std::fabs(pos->y + cand.h / 2.0 - anchor_y);
         const double dist_key = occupancy_shape_key4dp(dist, counts);
-        auto found = best.find(cand.side);
-        if (found != best.end()) {
+        auto found = keep_all ? best.end() : best.find(cand.side);
+        if (!keep_all && found != best.end()) {
             if (dist_key > found->second.dist_key) {
                 continue;
             }
@@ -134,7 +208,7 @@ std::vector<SeatShapeHit> seat_shape_sides(
                 && cand.index >= found->second.index) {
                 continue;
             }
-        } else {
+        } else if (!keep_all && found == best.end()) {
             side_order.push_back(cand.side);
         }
         SeatShapeHit hit;
@@ -148,14 +222,67 @@ std::vector<SeatShapeHit> seat_shape_sides(
         hit.inset = cand.inset;
         hit.comps = cand.comps;
         hit.dist_key = dist_key;
-        best[cand.side] = std::move(hit);
+        if (keep_all) all.push_back(std::move(hit));
+        else best[cand.side] = std::move(hit);
     }
+    if (keep_all) return all;
     std::vector<SeatShapeHit> out;
     out.reserve(side_order.size());
     for (const auto& side : side_order) {
         out.push_back(best[side]);
     }
     return out;
+}
+
+std::vector<SeatShapeHit> seat_shape_sides(const Occupancy& occupancy,
+    double anchor_x, double anchor_y, const std::vector<SeatShapeCand>& cands,
+    double board_w, double board_h, double clear, QuantizationCounts* counts) {
+    return seat_shapes(occupancy,anchor_x,anchor_y,cands,board_w,board_h,clear,counts,false);
+}
+std::vector<SeatShapeHit> seat_shape_candidates(const Occupancy& occupancy,
+    double anchor_x, double anchor_y, const std::vector<SeatShapeCand>& cands,
+    double board_w, double board_h, double clear, QuantizationCounts* counts) {
+    return seat_shapes(occupancy,anchor_x,anchor_y,cands,board_w,board_h,clear,counts,true);
+}
+
+namespace floorplan_detail {
+// Internal bridge used only with the board dimensions of the supplied grid.
+// No reference or search result cache survives this call or an occupancy edit.
+std::vector<SeatShapeHit> seat_shape_sides_on_current_board(const Occupancy& occupancy,
+    double anchor_x, double anchor_y, const std::vector<SeatShapeCand>& cands,
+    double board_w, double board_h, double clear, QuantizationCounts* counts) {
+    return seat_shapes(occupancy,anchor_x,anchor_y,cands,board_w,board_h,clear,counts,false,true);
+}
+std::vector<SeatShapeHit> seat_shape_candidates_on_current_board(const Occupancy& occupancy,
+    double anchor_x, double anchor_y, const std::vector<SeatShapeCand>& cands,
+    double board_w, double board_h, double clear, QuantizationCounts* counts) {
+    return seat_shapes(occupancy,anchor_x,anchor_y,cands,board_w,board_h,clear,counts,true,true);
+}
+} // namespace floorplan_detail
+
+double packing_area_lower_bound(const std::vector<std::vector<PackingAreaOption>>& bodies,
+                               int top_mask, int bottom_mask) {
+    if (top_mask<=0 || bottom_mask<=0 || (top_mask&bottom_mask))
+        throw std::invalid_argument("packing area requires disjoint face masks");
+    double top=0, bottom=0, combined=0;
+    for (const auto& body:bodies) {
+        if (body.empty()) throw std::invalid_argument("packing body has no variants");
+        double t=std::numeric_limits<double>::infinity(),b=t,total=t;
+        for (const auto& option:body) {
+            if (!std::isfinite(option.area) || option.area<0 || option.mask<=0 ||
+                (option.mask&~(top_mask|bottom_mask)))
+                throw std::invalid_argument("invalid packing area variant");
+            const double ta=(option.mask&top_mask) ? option.area:0;
+            const double ba=(option.mask&bottom_mask) ? option.area:0;
+            t=std::min(t,ta); b=std::min(b,ba); total=std::min(total,ta+ba);
+        }
+        top+=t; bottom+=b; combined+=total;
+    }
+    // The minimum load of each individual face and half the minimum total
+    // load are necessary bounds, never a claim that rectangles can be packed.
+    const double result=std::max({top,bottom,combined/2});
+    if (!std::isfinite(result)) throw std::overflow_error("packing area overflow");
+    return result;
 }
 
 }  // namespace schgen

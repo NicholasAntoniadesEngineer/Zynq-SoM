@@ -1,0 +1,51 @@
+{
+  "parent_commit": "e9e8cd54",
+  "change": "Snapshot only the three participants' chosen components, centres and side offers during paired relocation, preserving missing entries on rollback",
+  "reason": "seat and reseat_displaced only mutate these entries; copying every block's component list per pair is unnecessary",
+  "search_space_changed": false,
+  "hardware_checks_changed": false,
+  "tests": {
+    "native_compact_retry_contracts": "PASS",
+    "seconds": 5.65,
+    "log": "native/build/pair-scoped-snapshot-final-tests.log",
+    "added_assertion": "Unrelated side offer remains unchanged across every portfolio case",
+    "pair_trials": 253,
+    "pair_recoveries": 4,
+    "complete_pair_finalists": 4,
+    "corpus_preserved": 227,
+    "corpus_recovered": 47,
+    "corpus_failed": 26
+  },
+  "carrier_failure_replay": {
+    "dimensions_mm": [164, 152],
+    "status": "construction_failed",
+    "seconds": 5.915423625,
+    "previous_single_run_seconds": 6.499318542,
+    "outer_attempts": 4,
+    "receipt_captured": true,
+    "identical_failure_trace_lines": 2389,
+    "comparison": "diff of all lines beginning failure_ in pair-reseat-164x152.log and pair-scoped-snapshot-164x152.log is empty",
+    "log": "native/build/pair-scoped-snapshot-164x152.log",
+    "timing_caveat": "Single diagnostic runs, uncontrolled OS cache/load; not a statistically established speedup"
+  },
+  "reference_replays": [
+    {
+      "project": "carrier",
+      "dimensions_mm": [164, 153],
+      "model_seconds": 3.846568625,
+      "pcb_text_seconds": 0.026667625,
+      "unchanged_pcb_sha256": "9cf06a9d9574cf3f1dfbb37f675996e99d4bbff389caa257781a415e08f547e0",
+      "log": "native/build/pair-scoped-snapshot-carrier.log"
+    },
+    {
+      "project": "devkit_mini",
+      "dimensions_mm": [98, 98],
+      "model_seconds": 0.193654,
+      "pcb_text_seconds": 0.007505583,
+      "unchanged_pcb_sha256": "1b12fecbcbbaa5e6084c2459da93cb144a660ff19805e6e4e3f75f9c22689fdb",
+      "log": "native/build/pair-scoped-snapshot-devkit.log"
+    }
+  ],
+  "reference_checks": "Both references pass fanout, ratsnest, placement contracts and placement flow; zero hard-red and model/emission nonsearch fallback events",
+  "limits": "Construction-only checks, no new full qualification or smaller carrier. Historical Python comparison remains unfinished."
+}

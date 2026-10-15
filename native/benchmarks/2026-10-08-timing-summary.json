@@ -1,0 +1,40 @@
+{
+  "status": "All four full commands finished; current C++ boards remain unqualified due to retry ceilings",
+  "comparison": "Revision-to-revision, NOT identical hardware inputs or a language-only benchmark",
+  "python_commit": "0e9bbc913bab77f9cd228940db2a332d25d6bfa1",
+  "cpp_commit": "baf4d769",
+  "environment_and_devkit_details": "2026-10-08-devkit-full-revision-timing.json",
+  "sampling": "One sequential sample per command, same host and KiCad; no concurrent agent compilation/tests; OS caches/background activity uncontrolled",
+  "render_workload": "Both revisions requested eight high-quality opaque 3D views at 1600x1200, plus schematic renders",
+  "full_command_wall_seconds": {
+    "carrier": {"python":717.95,"cpp":248.45,"change_percent":-65.39452608120342,"python_exit":0,"cpp_exit":1},
+    "devkit_mini": {"python":75.06,"cpp":205.46,"change_percent":173.7276845190514,"python_exit":1,"cpp_exit":1}
+  },
+  "percentage_formula": "100 * (cpp - python) / python",
+  "carrier_python": {
+    "working_directory": "/private/tmp/zynq-baseline-0e9bbc.munEeX",
+    "command": "/usr/bin/time -p /opt/homebrew/bin/python3 -B -u -m schgen --project carrier board --timing",
+    "user_seconds":1042.44,"system_seconds":37.56,
+    "result": "PASS historical gates; not fabrication qualification",
+    "sheets":37,"dimensions_mm":[168,163],"components":{"top":393,"bottom":176,"total":569},
+    "historical_mixed_phase_seconds":{"sheets":23.03,"hierarchy_erc_cc":46.84,"gates_documents":14.60,"pcb_drc_ratsnest_law5":603.35,"si_manifest_golden_including_3d":28.33},
+    "log":"native/build/timing-0e9bbc-carrier-full.log",
+    "log_sha256":"a753193c4d5602388444d3d680abdcf863cd94dbd0563fa96486c091b43abf4c"
+  },
+  "carrier_cpp": {
+    "command": "/usr/bin/time -p native/bin/schgen board --project carrier -o /private/tmp/zynq-cpp-carrier-baf4d769.dIRBOW --timing --kicad-cli /Applications/KiCad/KiCad.app/Contents/MacOS/kicad-cli",
+    "user_seconds":732.80,"system_seconds":54.25,"complete":true,
+    "mandatory_failures":["interior_reseat_retry: 28 > committed ceiling 18"],
+    "advisory_failures":["return_path","golden","contract_coverage_lint"],
+    "source_audit":"PASS: 69 files, 75 constants, 156 transforms",
+    "sheets":37,"dimensions_mm":[168,163],"area_mm2":27384,"components":{"top":393,"bottom":176,"total":569},
+    "drc":{"non_unrouted":0,"unrouted":499},
+    "exclusive_seconds":{"authoring_audit":16.970848,"source_audit":155.504448,"pcb_model_with_internal_checks":7.628400,"pcb_text_emission":0.031896,"render3d":27.974741,"sheet_parallel_checks_and_render":24.527415,"measured_scope_total_not_process_wall":248.285898},
+    "log":"native/build/timing-baf4d769-carrier-full.log",
+    "log_sha256":"387d74ef4d54f29a506db9c07ca865d5995c1e4b0d7fcbfae7c5a8a75d2900e5",
+    "pcb_sha256":"8d93efb96783a53ec53a83b830f1d8987f10ca6d86a2246999783fb9ddcf7417",
+    "verdict_sha256":"f12515601e3012e34cd2995fc09a57329597cade5f8cfcc2988d79a4e4798462"
+  },
+  "visual_review":"Inspected front and back PNGs of both current boards. Carrier top is dense; bottom has large unused regions. Devkit bottom is sparse with reserved core space. Component counts do not measure occupied area. Renders do not qualify thermal, assembly height or electrical behaviour.",
+  "limitations":["Carrier reference-bias schematic differs despite unchanged dimensions/counts", "Devkit historical 152 components at 100x100 mm versus current 163 at 98x98 mm", "Audit coverage and scheduling differ", "Historical phase spans overlap background PCB work; documentation regenerates floorplan. Do not subtract mixed spans to claim audit-free generation or render times", "Incremental C++ compile was 2.28 seconds; no clean-compile measurement", "Both current commands failed retry gates; no accepted compact finalist or fabrication-readiness claim", "Logs/output directories are local ephemeral evidence; hashes and measurements retained here"]
+}

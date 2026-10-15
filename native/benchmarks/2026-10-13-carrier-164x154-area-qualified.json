@@ -1,0 +1,84 @@
+{
+  "source_commit": "2afd6dee",
+  "result": "BOARD PASS: all mandatory gates, 37 sheets",
+  "output": "/private/tmp/carrier-164x154-area-qualified.IG5otz",
+  "log": "native/build/carrier-164x154-area-qualification.log",
+  "pcb_sha256": "c7d0508671c2881bba1fce01d1b71c8cd19837ec394af6fdd3c3dcf6d9042104",
+  "dimensions_mm": [
+    164,
+    154
+  ],
+  "area_mm2": 25256,
+  "original_reference_mm": [
+    168,
+    163
+  ],
+  "previous_qualified_mm": [
+    165,
+    154
+  ],
+  "area_reduction_vs_original_percent": 7.770961145194274,
+  "area_reduction_vs_previous_percent": 0.6060606060606061,
+  "top_parts": 418,
+  "bottom_parts": 148,
+  "reference_overlaps": {
+    "top": 0,
+    "bottom": 0
+  },
+  "nonrouting_drc_errors": 0,
+  "unrouted": 499,
+  "source_audit": "PASS: 69 C++ files, 75 constants, 156 registered transforms",
+  "fallback_ratchet": "PASS: 3 registered non-search paths, zero firing",
+  "advisory_failures": [
+    "return_path",
+    "golden",
+    "contract_coverage_lint"
+  ],
+  "timing_seconds": {
+    "input_loading_and_netlist": 1.438747,
+    "pcb_model": 4.136152,
+    "pcb_text": 0.034759,
+    "render3d": 28.173696,
+    "source_audit": 108.421879,
+    "measured_scope_total_not_process_wall": 199.92647
+  },
+  "visual_review": "Front and back 3D renders inspected. Eight views generated. Bottom population remains concentrated; much bottom area remains unused. Not fabrication-ready.",
+  "command": "native/bin/schgen board --project carrier --compact-placement --shape-area-first --interior-order 3 --failed-first-retry --edge-feasibility --owned-quality-first --owned-face-cohesion --contract-group-face-sheet usb_jtag --floorplan-spec native/benchmarks/carrier-164x154-area-first.floorplan.json --require-bottom-sheet power_mon --require-bottom-sheet bringup_modules --require-bottom-sheet bringup_en_modules --joint-separation-states 1024 --reseat-poses 8 --reseat-frontier 4096 --reseat-continuations 3 --reseat-victim-shapes --owned-shape bringup_rails=bottom-a2.2/r270/owned-pins-forward --owned-shape board_aux=owned-face-a1.000000 --audit-projections 2 --timing -o FRESH_OUTPUT",
+  "devkit_regression": {
+    "scope": "Construction only, not new full qualification; matches existing qualified hash",
+    "dimensions_mm": [
+      98,
+      98
+    ],
+    "pcb_sha256": "b6798d4b63d2fddbf9fad24945c151b9420b049b674ad5d637c43bf4a365137f",
+    "model_seconds": 0.200816167,
+    "pcb_text_seconds": 0.009076291,
+    "cheap_checks": "all PASS, hard_red=0, zero model/emission non-search fallbacks",
+    "log": "native/build/area-cli-devkit-regression.log"
+  },
+  "smaller_trials": [
+    {
+      "dimensions_mm": [
+        164,
+        153
+      ],
+      "result": "bounded construction failed",
+      "seconds": 4.184547667,
+      "completed_outer_attempts": 4,
+      "receipt_captured": true,
+      "log": "native/build/enable-area-first-164x153.log"
+    },
+    {
+      "dimensions_mm": [
+        163,
+        154
+      ],
+      "result": "bounded construction failed",
+      "seconds": 2.900853542,
+      "completed_outer_attempts": 4,
+      "receipt_captured": true,
+      "log": "native/build/enable-area-first-163x154.log"
+    }
+  ],
+  "limitations": "Mandatory-check incumbent only; unknown/unmodeled hardware limitations and advisory failures remain. Smaller bounded failures do not prove infeasibility. Routing out of scope. Matched historical Python timings and full goal audit incomplete. No speedup claim from concurrent instrumented measurements."
+}

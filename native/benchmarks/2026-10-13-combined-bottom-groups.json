@@ -1,0 +1,53 @@
+{
+  "parent_commit": "19a71d34",
+  "change": "Combine disjoint contract-connected group face assignments; independently check the full combination for occupancy, contracts and fanout",
+  "search": "Deterministic unordered pairs of individually valid group placements. Existing single offers retained; group orientation passes append new combinations without repeating earlier pairs. Not an exhaustive arbitrary-number group search.",
+  "tests": {
+    "native_pcb_orientation_contracts": "PASS",
+    "seconds": 2.75,
+    "combined_candidates_with_rotations": 215,
+    "coverage": "Both movable USB-JTAG owners present on bottom; independent bottom-courtyard separation, net identity, local contracts and fanout; deterministic candidates/accounting; pinned, chirality, protruding-copper and starved-fanout negatives retained",
+    "log": "native/build/face-pair-final-tests.log"
+  },
+  "carrier_qualification": {
+    "output": "/private/tmp/carrier-face-pair-qualified.Mcmw5j",
+    "log": "native/build/face-pair-qualification.log",
+    "status": "WITHDRAWN as qualification of this change: stale board CLI emitted previous reference. Its mandatory gates passed, but this does not qualify combined-group code.",
+    "dimensions_mm": [164,153],
+    "area_mm2": 25092,
+    "top_components": 418,
+    "bottom_components": 148,
+    "previous_bottom_components": 148,
+    "pcb_sha256": "9cf06a9d9574cf3f1dfbb37f675996e99d4bbff389caa257781a415e08f547e0",
+    "correction": "The ad2ce6b3 hash and 411/155 population came from the freshly linked profiler, not this full run. Direct file hashing revealed the mismatch. Always build the schgen target and compare emitted PCB hashes before claiming profiler/full-run parity.",
+    "nonrouting_drc_errors": 0,
+    "unrouted": 499,
+    "advisory_failures": ["return_path", "golden", "contract_coverage_lint"],
+    "timings_seconds": {
+      "pcb_input_loading_and_netlist_validation": 1.482865,
+      "pcb_build_model_with_internal_checks": 3.578577,
+      "pcb_text_render": 0.028397,
+      "render3d": 27.831177,
+      "source_audit": 108.857684,
+      "measured_scope_total_not_process_wall": 198.491402
+    },
+    "visual_review": "Front/back inspected; eight 3D views generated for the old reference. These renders do not demonstrate the combined-group change.",
+    "recipe": "Same command as 2026-10-13-carrier-164x153-thermal-qualified.json, output /private/tmp/carrier-face-pair-qualified.Mcmw5j"
+  },
+  "smaller_carrier_screen": {
+    "dimensions_mm": [164,152],
+    "status": "construction_failed",
+    "seconds": 14.505278375,
+    "outer_attempts": 4,
+    "failure_receipt_captured": true,
+    "log": "native/build/face-pair-164x152.log",
+    "cost": "More candidates increase failed-search cost; previous diagnostic runs were approximately six seconds. No speedup claimed."
+  },
+  "devkit_reference": {
+    "dimensions_mm": [98,98],
+    "unchanged_pcb_sha256": "1b12fecbcbbaa5e6084c2459da93cb144a660ff19805e6e4e3f75f9c22689fdb",
+    "log": "native/build/face-pair-devkit-reference.log",
+    "checks": "Construction, fanout, ratsnest, placement contract and placement flow pass; zero hard-red and nonsearch fallback events; not a new full devkit qualification"
+  },
+  "limits": "Not fabrication-ready. Routing excluded. Further board compaction, search-efficiency improvements and matched historical Python comparison remain unfinished."
+}

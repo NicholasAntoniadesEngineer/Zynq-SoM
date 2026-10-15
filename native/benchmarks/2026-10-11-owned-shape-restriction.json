@@ -1,0 +1,48 @@
+{
+  "status": "pipeline_qualified_opt_in_candidate_with_bulk_spacing_tradeoff_not_promoted",
+  "base_commit": "125e7c19",
+  "implementation": "Opt-in measured owned-shape restriction by unique generated tag. Resolve original shape indices without renumbering. Unknown, ambiguous, unmeasured or infeasible choices fail rather than silently substituting another shape. All existing checks, operation counts and fallback events remain active. Exposed through profiler and full board CLI; default policy unchanged.",
+  "tests": {"passed":4,"failed":0,"seconds":23.26,"log":"native/build/owned-shape-final-tests.log","coverage":["actual engine forced selection","infeasible restriction cannot fall back","unknown/ambiguous/unmeasured rejection","compact-only validation","real owned pilot","CLI and profiler syntax/duplicate/unsupported options"]},
+  "screen": {
+    "selected_tag": "board_aux=owned-face-a1.000000",
+    "log": "native/build/carrier-owned-face-top-final.log",
+    "model_seconds": [2.338729791,2.34192325],
+    "emit_seconds": [0.031501958,0.030765917],
+    "identical_repeats": true,
+    "pcb_sha256": "ebf1c2f5d781e2c349d1d96963ef6d2f6a34a507f99e5f2068a4ae025a7052ff",
+    "dimensions_mm": [168,159],
+    "area_mm2": 26712,
+    "top_bottom_components": [420,149],
+    "hard_red": 0,
+    "hard_margin_min_sum": [4.07,893.91],
+    "nonzero_fallbacks": {"cand_cap_truncated":116,"interior_reseat_retry":10,"punch_free_plan_rejected":1},
+    "final_pad_gap_mm": {"C1001":3.306973974,"C1002":6.8100045,"C1003_bulk":11.3052025,"C1004":3.335203,"C1005":5.056199299,"C7001":6.8005955},
+    "bypass_faces": "board_aux top/top; bringup_rails bottom/bottom",
+    "bulk_faces": "top/bottom",
+    "hardware_proximity_status": "UNVERIFIED",
+    "tradeoff": "All four board_aux bypass members improve projected pad gaps and share their owner's face, but C1003 bulk gap increases from 6.57761 to 11.3052025 mm. This is not Pareto dominance or hardware acceptance. Preserve the prior qualified reference. Component count is not area utilisation."
+  },
+  "alternative_screen": {
+    "selected_tag": "board_aux=owned-face-a1.000000/bottom",
+    "log": "native/build/carrier-owned-face-bottom-restricted.log",
+    "model_seconds": 2.442892458,
+    "top_bottom_components": [421,148],
+    "pcb_sha256": "8a208ac4f87a0ae99af3dca0bcaf743c966cd18c9f3cf3c3370f746f84bc23b8",
+    "qualification": "Not fully qualified; one preliminary screen only."
+  },
+  "qualification": {
+    "command":"native/bin/schgen board --project carrier --compact-placement --interior-order 3 --edge-feasibility --owned-quality-first --owned-face-cohesion --owned-shape board_aux=owned-face-a1.000000 --floorplan-spec native/benchmarks/carrier-168x159-initial-edge.floorplan.json --timing -o /private/tmp/carrier-owned-face-qualified.NzPSQd",
+    "output":"/private/tmp/carrier-owned-face-qualified.NzPSQd",
+    "log":"native/build/carrier-owned-face-qualification.log",
+    "exit_code":0,"board_ok":true,"complete":true,"sheets":37,
+    "mandatory_nonpass":[],"advisory_failures":["return_path","golden","contract_coverage_lint"],
+    "non_unrouted_drc_errors":0,"unrouted":499,
+    "matches_screen_pcb":true,
+    "verdict_sha256":"57655dd4c94139894af07edf7cd948a4e4ff616f1849d5b60e2f6cf9ffb55635",
+    "views_rendered":8,"top_bottom_inspected":true,
+    "render_observations":"board_aux owner ICs and four bypass capacitors now appear together on top near the battery/aux controls. C1003 remains isolated on the bottom. Central module reservation and edge access remain visually consistent; bottom remains sparse. Visual inspection does not establish electrical or assembly safety.",
+    "fallback_ceilings_unchanged":true
+  },
+  "timing_seconds":{"compile":null,"wall":245.19,"measured_scope":245.124839,"authoring_audit":16.568562,"source_audit":155.054867,"sheet_checks_and_render_wall":25.629066,"pcb_input_loading_and_netlist_validation":1.448129,"model_with_internal_checks":2.504,"pcb_text_emission":0.032499,"drc":1.588257,"render3d":28.95353},
+  "limitations": ["Restricted selection is experimental, not a general automatic multi-objective strategy.","No board area improvement over 168x159 reference.","No new full devkit qualification in this batch.","No matched historical Python speed comparison or clean compile timing in this batch.","Hardware proximity, assembly, height, thermal and model-fit unknowns remain. Routing out of scope; not fabrication ready."]
+}

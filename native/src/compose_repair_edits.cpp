@@ -113,13 +113,39 @@ ComposeAcceptance accept_compose_repair(const ComposeDocument &before,const Comp
     const auto &a0=required(required(before.data,"board"),"area_mm2"),&a1=required(required(after.data,"board"),"area_mm2");
     if(jnum(a1)>jnum(a0)+1e-6&&!allow_area_growth)reasons.push_back("area grew "+scalar(before,a0,"/board/area_mm2")+" -> "+scalar(after,a1,"/board/area_mm2")+" mm^2 (A' <= A violated)");
     using Indexed=std::pair<const JsonNode *,std::size_t>;
-    auto term_map=[](const ComposeDocument &d){std::map<ComposeTermKey,Indexed> out;const auto &a=opt(d.data,"terms").array_value;for(std::size_t i=0;i<a.size();++i)out[key(a[i])]={&a[i],i};return out;};
-    const auto tb=term_map(before),ta=term_map(after);
+    auto term_map=[&](const ComposeDocument &d,const std::string& stage){
+        std::map<ComposeTermKey,Indexed> out;
+        const auto &terms=opt(d.data,"terms");
+        if(terms.kind!=JsonKind::Array){reasons.push_back(stage+" term evidence missing or malformed");return out;}
+        for(std::size_t i=0;i<terms.array_value.size();++i){const auto k=key(terms.array_value[i]);
+            if(!out.emplace(k,Indexed{&terms.array_value[i],i}).second)
+                reasons.push_back(stage+" duplicate term "+key_repr(k));
+        }return out;
+    };
+    const auto tb=term_map(before,"before"),ta=term_map(after,"rebuilt");
+    for(const auto& k:targets)if(!tb.count(k)||!ta.count(k))reasons.push_back("target evidence missing "+key_repr(k));
+    // Repair must retain the evidence population, not improve its score by
+    // dropping a constraint or changing it from enforced to advisory. Rebuilt
+    // hard terms also need finite measurements even when their ok flag is true.
+    for(const auto& [k,row]:ta)if(truth(opt(*row.first,"enforced"))||targets.count(k)){
+        for(const auto* name:{"measured","bound","margin"}){const auto& value=opt(*row.first,name);
+            if(value.kind!=JsonKind::Number||!std::isfinite(value.number_value))
+                reasons.push_back("rebuilt "+key_repr(k)+" has unresolved or invalid "+name);
+        }
+    }
     const auto floor=floors();
     for(const auto &[k,brow]:tb) {
-        auto it=ta.find(k);if(it==ta.end())continue;
+        auto it=ta.find(k);if(it==ta.end()){reasons.push_back("rebuilt term missing "+key_repr(k));continue;}
         const auto &b=*brow.first,&a=*it->second.first,&bm=required(b,"margin"),&am=required(a,"margin");
+        if(truth(opt(b,"enforced"))&&!truth(opt(a,"enforced")))reasons.push_back("rebuilt term lost enforcement "+key_repr(k));
         if(bm.kind==JsonKind::Null||am.kind==JsonKind::Null)continue;
+        if(bm.kind!=JsonKind::Number||!std::isfinite(bm.number_value)){
+            reasons.push_back("before "+key_repr(k)+" has invalid margin");continue;
+        }
+        if(am.kind!=JsonKind::Number||!std::isfinite(am.number_value)){
+            if(!truth(opt(a,"enforced"))&&!targets.count(k))reasons.push_back("rebuilt "+key_repr(k)+" has unresolved or invalid margin");
+            continue;
+        }
         const double bv=jnum(bm),av=jnum(am);
         const auto change=" ("+scalar(before,bm,"/terms/"+std::to_string(brow.second)+"/margin")+" -> "+scalar(after,am,"/terms/"+std::to_string(it->second.second)+"/margin")+")";
         const auto keytext=key_repr(k);

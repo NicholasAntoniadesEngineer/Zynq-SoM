@@ -1,0 +1,23 @@
+{
+  "parent_commit": "736a608e",
+  "experiment": "Append diagonal translations formed from each blocker's existing x/y thermal contact exits, retaining sorted axis proposals first. All existing rounded geometry, contract and thermal checks remained active.",
+  "decision": "Rejected; production source and test experiment fully restored, binaries rebuilt",
+  "restored_tests": "owned eviction PASS 8.10s; PCB emission PASS 0.90s",
+  "candidate_result": {
+    "pcb_sha256": "1940cbfa9c932fa56686741b354ebfab067b8bcd19d7cb6eb97eff09df2a6b4d",
+    "same_as_parent": true,
+    "remaining_emission_lattice_events": 1,
+    "model_seconds": 16.383428875,
+    "pcb_text_seconds": 0.02917475,
+    "repair_trials_parent": 338,
+    "repair_trials_experiment": 706,
+    "repair_rejections_parent": 334,
+    "repair_rejections_experiment": 702,
+    "accepted_repairs_both": 4,
+    "log": "native/build/thermal-diagonal-carrier.log"
+  },
+  "test_result": "Existing owned-eviction suite passed. Experimental exact-contact emission assertion failed because transformed/rounded copper can consume boundary clearance; production outward-tick trials remain necessary. The unsuccessful experimental test and implementation were removed, not treated as passing evidence.",
+  "failure_evidence": "RS21001 diagonal group trials reject on neighbouring user-I/O components (including C21001 versus R33003), thermal regression or no capacity improvement. No new accepted pose.",
+  "next_direction": "Explore moving the thermally constrained regulator group relative to blockers, or reserve thermal geometry earlier in placement. Additional blocker-axis combinations alone did not solve the conflict.",
+  "limits": "Single-run wall scope samples are not controlled speedup measurements. No changed production layout, new qualification or historical Python comparison."
+}

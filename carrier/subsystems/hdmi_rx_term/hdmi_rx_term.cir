@@ -10,7 +10,7 @@
 * termination, so each single-ended line needs the standard 50 ohm-to-AVCC
 * source termination (49.9 ohm 1%). AVCC == +3V3 == VCCO_33.
 *
-* Values mirror carrier/subsystems/hdmi_rx_term/hdmi_rx_term.py one-for-one:
+* Values match the native-authored circuit and its retained circuit.json:
 *   R1..R8 49.9R  one per TMDS line, to AVCC
 *   C1 100n + C2 1u  AVCC bank-local bypass to GND
 *

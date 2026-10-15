@@ -59,6 +59,36 @@ selftest and every configured native CTest, requiring complete passing JUnit
 evidence. It does not build its selected test directory or waive failing gates.
 Unsupported commands fail.
 
+The `spice` command requires at least one supported analytic check before it
+can pass. Empty coverage reports `UNVERIFIED (0 checks)` and exits nonzero;
+the mandatory board SPICE gate also fails closed for that case. A nonempty
+passing report proves only its listed spot checks, not coverage of every
+selected circuit or signal-integrity behavior. Dedicated native identity
+contracts cover retained passive models such as HDMI termination separately.
+For the existing named-divider contracts, a present net with unextractable
+topology or the wrong source rail is an error even if other checks pass.
+Likewise, detected regulators with missing feedback/current-setting topology,
+an unsupported feedback reference, or an unmodelled enable-clamp zener fail
+extraction with `SPICE unverified`. Other passing checks cannot certify these
+missing models; the diagnostic is not a claim that the physical circuit fails.
+Enable equations are device-specific: the existing TPS54302 model must not
+qualify LM61460 or another buck family. Unsupported enable networks are retained
+as explicit `unverified` reasons in the result/JSON and test plan, with a nonzero
+CLI exit and failed mandatory board gate, while other completed checks remain
+available. The former `power_som` clamp network remains **UNVERIFIED** in the
+historical fixtures; current authoring uses the direct-enable arrangement below.
+A separately supported LM61460AANRJRR self-start topology requires uniquely
+netted pins 7 (EN/SYNC), 8 (VIN1) and 12 (VIN2) on the same power net. Its check
+is explicitly a connectivity result, not a voltage-envelope, startup-timing or
+transient claim. Missing regulator-detection evidence also makes the aggregate
+unverified instead of disappearing behind unrelated checks. Both live boards
+use this direct connection without the old R12/D5/C20 clamp/filter. Input
+envelope, startup timing and transient qualification remain separate obligations.
+Analytic checks retain full calculated precision for acceptance, JSON and
+simulator comparisons, including dividers, RC timing, current setting,
+regulator feedback, enable clamps and boot straps. Decimal display rounding
+must not hide violations.
+
 `subsystem-new NAME` creates a C++ source/header/test package with retained
 README, SPICE and JSON metadata. It never overwrites an existing destination.
 New packages are opt-in with `-DSCHGEN_SUBSYSTEM_PACKAGES='name;another'`;
@@ -96,6 +126,23 @@ compose measures, ranks repairs with `--repair --dry-run`, or applies a repair
 subject to full board gates and rollback on failure. Their ordinary, live-KiCad
 and apply contracts are registered in CTest. This is not a claim of complete
 source-audit or whole-board acceptance.
+
+For faster automatic outline iteration, `board --multiscale-outline` opts into
+bounded power-of-two axis/diagonal refinement instead of the complete fine-grid
+scan. It can miss smaller solutions and is deliberately not the default. Supply
+a known good starting size with `--initial-outline-mm`; that candidate is
+revalidated, never treated as cached acceptance. Fixed outlines conflict with
+this option. Actual attempts, retries and fallbacks remain accounted, and no
+acceptance gate or retry limit is relaxed. For example:
+
+```sh
+native/bin/schgen board --project carrier --compact-placement --interior-order 3 --initial-outline-mm 168x160 --multiscale-outline --timing -o /tmp/carrier-multiscale
+native/bin/schgen board --project devkit_mini --multiscale-outline --timing -o /tmp/devkit-multiscale
+```
+
+These are experiment configurations, not fabrication-readiness claims. See
+`benchmarks/2026-10-08-multiscale-outline-qualification.json` for qualification,
+timing scope, and the rejected unseeded carrier area regression.
 
 ```sh
 native/bin/schgen project-check --project carrier
@@ -210,6 +257,123 @@ golden-drift and coverage findings remain visible; neither board is fully routed
 or claimed fabrication-ready. Coverage lint uses every wired-sheet part,
 including unplaced parts. Successful migration does not certify every historical
 hardware or generated-firmware design decision.
+
+`board --audit-projections 2` opts into two simultaneous source-audit AST
+projections; the default is one to retain the lower-memory path. Both settings
+scan the complete manifest and retain dependency-change detection, deterministic
+census order and failure propagation. In a paired 49-file measurement, audit time
+fell from 130.07 s to 88.05 s while sampled process-tree peak memory rose from
+2.87 GB to 4.32 GB. These are single-run audit measurements, not whole-build or
+Python-comparison speedups. Use `--audit-projections 1` on memory-constrained runs.
+That paired benchmark uses the 49-file pipeline manifest; the integrated native
+policy audit includes additional sources (69 files in the qualified builds).
+
+The qualified 165x158 carrier alternative is reproducible with
+`benchmarks/carrier-165x158-continuation.floorplan.json`, compact placement,
+interior order 3, edge feasibility, owned quality/face cohesion, USB-JTAG
+contract-group candidates, `--joint-separation-states 1024 --reseat-poses 8
+--reseat-frontier 4096 --reseat-continuations 3`, and **no** pinned `--owned-shape`.
+Both reseat pose/frontier limits are required; continuation replays require an
+explicit interior order and cannot be combined with failed-first retry. These
+limits control computation, not physical feasibility. The 165x159 reference is
+retained: the smaller alternative uses more search and has a higher cross-wire
+estimate. See `benchmarks/2026-10-12-carrier-165x158-qualification.json` for the
+full gate, rendering, quality and unresolved-risk evidence.
+
+`--reseat-victim-shapes` is an opt-in additional recovery strategy for `board`
+(profiler: `--reseat-victim-shapes on`). It requires compact placement, an explicit
+interior order, and both pose/frontier limits. The unchanged original strategy,
+including its configured continuation attempts, runs first. Only after failure
+does one separate full attempt allow a displaced subsystem to try its other
+registered shapes when its existing shape cannot be reseated. Explicit shape
+selections and final hardware checks still apply. Rejected attempts restore the
+entry layout and offers but retain actual operation and fallback receipts.
+After the original victim/position trials are exhausted for an incoming block,
+the extra strategy also tries the nearest legal pose of its other registered
+shapes, with the same explicit shape-selection restrictions. Incoming-shape
+queries have a separate `interior_reseat_incoming_shape_trial` receipt. This
+does not enumerate all positions for all shapes or displace multiple victims.
+Alternative incoming shapes now also try legal alternative displaced shapes;
+previously that phase held the displaced shape fixed. Every additional query
+retains its existing shape-trial receipt. Interaction contracts include a
+fixture where either strategy alone fails but their combination succeeds,
+plus a mutation test that detects removal of paired exploration. The current
+150-case set has no additional recoveries from the paired-query extension;
+it adds ten exercised queries, not a demonstrated board-size improvement.
+Eight carrier factorial screens and two paired extensions are recorded in
+`benchmarks/2026-10-12-shape-interaction-screening.json`. All smaller-board
+screens failed under their tested settings; that does not establish that
+other combinations cannot help. Keep correctness tests distinct from search
+experiments, and retain configuration-specific negative results for reuse.
+Continuation retries can now be combined with `--failed-first-retry`. After
+the original, continuation, failed-first and shape-only attempts fail, enabling
+both failed-first and shape recovery also tries shapes in the failure-directed
+order. This extra full attempt records both existing strategy events; they
+describe two enabled strategy dimensions, not two solver invocations. Actual
+solver work remains independently counted. This is not a complete Cartesian
+search: continuation replay still applies to the original-order strategy.
+The 300-case composition tests compare independent attempts, enforce geometry,
+check reproducibility, and verify failed/exception rollback without dropping
+executed work. See `benchmarks/2026-10-12-composed-recovery.json` for the current
+negative carrier screens and explicit qualification limits.
+Scarcity order (`--interior-order 2`) counts permitted shapes rather than the
+entire registry: a pinned group has one choice, even if many unselected shapes
+exist. Property and placement-level contracts cover this distinction; restoring
+the previous registry-size comparison fails the integration test. Six further
+order/recovery screens and the corrected screens remain unsuccessful at
+165x156, so this is a correctness fix to the search heuristic, not an area win.
+The integrated code passed a fresh full 166x156 carrier build and source audit;
+see `benchmarks/2026-10-12-permitted-shape-scarcity.json` for scope and timings.
+This is not exhaustive shape/pose search: the additional strategy currently
+selects the first locally valid victim shape. It preserves the 165x158 carrier
+candidate in screening but has not recovered 164x159; leave it off for the
+qualified recipe above to avoid extra search cost without a demonstrated gain.
+
+`benchmarks/carrier-166x156.floorplan.json` is a **trade-off candidate, not a
+replacement for the retained carrier**. Using the original continuation recipe
+without `--reseat-victim-shapes`, the initial build passed the full mandatory
+pipeline at 25,896 mm² and an estimated cross-wire length of 15,822.8 mm, but
+bringup_rails U1.24–C1.1 planar pad gap increased from 8.03 to 39.76 mm.
+The quality-first selector now compares existing opposite-face pairs when
+their owner/cap faces, pose, envelope, bulk gaps and fanout remain identical.
+It reduces that gap to 17.38 mm (still bottom/top), with a 15,826.8 mm estimate
+and another full mandatory-gate PASS. The bypass requirement still remains
+UNVERIFIED; this is planar proximity, not proof of routed loop quality. Lower
+aggregate area/wire length does not establish acceptable bypass placement.
+See `benchmarks/2026-10-12-incoming-shapes-and-aspect-ratio.json` for the
+qualification, unresolved trade-off and separately tested recovery change.
+The subsequent selector correction and validation are recorded in
+`benchmarks/2026-10-12-unchanged-face-planar-quality.json`.
+
+The subsequent **two-pilot 166x156 candidate** passes the full mandatory
+pipeline with bringup_rails U1.24–C1.1 at 6.8006 mm, bottom/bottom, while
+preserving the five rounded board_aux proximity measurements of the retained
+165x158 board. Reproduce with the continuation recipe above, replacing its
+floorplan spec with `benchmarks/carrier-166x156.floorplan.json` and adding
+`--owned-shape bringup_rails=bottom-a2.2/r270/owned-pins-forward`
+and `--owned-shape board_aux=owned-face-a1.000000` (no victim-shapes option).
+These are explicit experimental selections, not new mandatory shape rules.
+The profiler's owned-selection trace now includes a read-only catalog of
+registered, measured shape tags; registration does not imply board feasibility.
+Evidence: `benchmarks/2026-10-12-two-pilot-carrier-qualification.json`.
+This is 0.6674% less area than 165x158, but 1 mm wider; retain both incumbents.
+Qualitative bypass/access requirements remain UNVERIFIED, and the three
+existing advisory failures remain. No routing or fabrication readiness is implied.
+Search caps, discrete shape portfolios and shrink-only refinement neighborhoods
+are algorithm choices to challenge, not evidence of physical impossibility.
+Next selection work must explore area-improving aspect-ratio trades and measured
+pilot quality without requiring these hand-selected tags or relaxing hardware gates.
+
+An additional multiscale aspect-trade stage was tested and **not retained**:
+the original coarse search already discovers 166x156 from a 165x158 seed with
+`benchmarks/carrier-two-pilot-auto.floorplan.json` and the two tags above.
+The extra stage added 56 failed packing attempts with the same PCB. See
+`benchmarks/2026-10-12-aspect-trade-screening.json` and its archived experiment
+patch. This rejects redundant work, not alternative aspect ratios: portrait
+156x165 and 152x168 probes failed at rail-group seating, not a proven physical
+limit. Future algorithms need not preserve historical outputs, search ceilings,
+or implementation choices. Historical boards remain comparison evidence;
+acceptance rests on hardware correctness, quality, reliability and measured work.
 
 Firmware source provenance now reads canonical circuit JSON and compiled factory
 registrations rather than checking for Python constructors. Independent source

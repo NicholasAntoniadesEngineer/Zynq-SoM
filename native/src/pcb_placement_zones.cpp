@@ -1,4 +1,5 @@
 #include "pcb_placement_internal.hpp"
+#include "pcb_placement_orientations.hpp"
 #include "schgen/board_decision_policy.hpp"
 
 namespace schgen {
@@ -8,6 +9,10 @@ PcbZoneResult build_pcb_zone_geometry(const PcbPlacementInput &in, ExecutionFail
     PcbZoneResult out;
     ExecutionFailureReceipt child;
     try {
+    if(in.floorplan.experiment)for(const auto& selected:in.floorplan.experiment->contract_group_face_sheets) {
+        if(!in.floorplan.compact_search||!ctx.board_refs.count(selected))
+            throw PcbZoneInfeasible("contract-group face candidates require compact mode and a known sheet: "+selected);
+    }
     auto &g = out.geometry;
     std::set<std::string> edges;
     std::map<std::string, std::set<std::string>> faces;
@@ -184,18 +189,28 @@ PcbZoneResult build_pcb_zone_geometry(const PcbPlacementInput &in, ExecutionFail
             if (!edge && !conn_rot.count(sheet)) {
                 std::set<FloorplanPoint> seen{{placement_shape_key_precision4dp(p.w, &ctx.quantization), placement_shape_key_precision4dp(p.h, &ctx.quantization)}};
                 std::vector<Shape> variants;
+                std::vector<Shape> same_box_alternatives;
                 for (double aspect : {2.2, 1., .45}) {
                     auto v = pack_zone(ctx, g, refs, aspect);
-                    if (seen.insert({placement_shape_key_precision4dp(v.w, &ctx.quantization), placement_shape_key_precision4dp(v.h, &ctx.quantization)}).second)
-                        variants.push_back(shape(v, aspect == 2.2 ? "a2.2"
+                    const bool new_box=seen.insert({placement_shape_key_precision4dp(v.w, &ctx.quantization), placement_shape_key_precision4dp(v.h, &ctx.quantization)}).second;
+                    if(!new_box&&!in.floorplan.compact_search)continue;
+                    auto candidate=shape(v, aspect == 2.2 ? "a2.2"
                                                     : aspect == 1 ? "a1"
-                                                                  : "a0.45"));
+                                                                  : "a0.45");
+                    if (new_box)
+                        variants.push_back(std::move(candidate));
+                    else if(in.floorplan.compact_search)
+                        same_box_alternatives.push_back(std::move(candidate));
                 }
                 if (eligible) {
                     auto bottom = bottom_shapes(ctx, g, sheet, faces[sheet], std::nullopt, {},
                                                 out.fallback_events);
                     variants.insert(variants.end(), bottom.begin(), bottom.end());
                 }
+                // Preserve legacy unrotated offers/indices; append newly retained
+                // arrangements instead of inserting them ahead of incumbents.
+                if(!same_box_alternatives.empty())
+                    append_distinct_zone_shapes(shape(p,"base"),variants,same_box_alternatives);
                 if (!variants.empty()) {
                     variants.insert(variants.begin(), shape(p, "base"));
                     g.shapes[sheet] = std::move(variants);
@@ -206,6 +221,19 @@ PcbZoneResult build_pcb_zone_geometry(const PcbPlacementInput &in, ExecutionFail
                     g.shapes[sheet] = {shape(p, "asbuilt"), *mirror};
             }
         }
+        if (in.floorplan.compact_search && !edge && !conn_rot.count(sheet) &&
+            !sheet_edges.count(sheet) && !connector_class.count(sheet))
+            append_rigid_zone_orientations(ctx, g, sheet, shape(p, "base"));
+        if (in.floorplan.compact_search)
+            append_owned_group_zone_shapes(ctx, out, sheet, shape(p, "base"),
+                !templated && !edge && !conn_rot.count(sheet) &&
+                !sheet_edges.count(sheet) && !connector_class.count(sheet), &child);
+        if(in.floorplan.experiment&&in.floorplan.experiment->contract_group_face_sheets.count(sheet))
+            append_contract_group_faces(ctx,g,sheet,shape(p,"base"),in.floorplan.experiment->contract_group_rotations);
+        if(in.floorplan.experiment&&in.floorplan.experiment->owned_face_cohesion)
+            append_owned_face_zone_shapes(ctx,out,sheet,shape(p,"base"),
+                !templated&&!edge&&!conn_rot.count(sheet)&&!sheet_edges.count(sheet)&&!connector_class.count(sheet),
+                layers[sheet]!="bottom",eligible,faces[sheet],&child);
         g.top_off[sheet] = p.top;
         g.bot_off[sheet] = p.bottom;
         g.zone_box[sheet] = {p.w, p.h};
@@ -234,6 +262,7 @@ FloorplanZoneGeometry bind_pcb_zone_shapes(const PcbZoneResult &zones,
             throw PcbZoneInfeasible("apply_chosen_shapes: " + sheet + " chose unregistered shape " +
                                     std::to_string(index));
         const auto &s = variants->second[index];
+        if(s.side!="top"&&s.side!="bottom")throw PcbZoneInfeasible("apply_chosen_shapes: invalid primary face");
         for (const auto *offsets : {&g.top_off[sheet], &g.bot_off[sheet]})
             for (const auto &[r, p] : *offsets) {
                 (void)p;
@@ -243,6 +272,12 @@ FloorplanZoneGeometry bind_pcb_zone_shapes(const PcbZoneResult &zones,
         g.top_off[sheet] = s.top_off;
         g.bot_off[sheet] = s.bot_off;
         g.zone_extra_rot.insert(s.extra_rot.begin(), s.extra_rot.end());
+        if(s.side=="top") {
+            // A selected shape may carry an explicitly different soft side
+            // assignment. Bind its physical faces, not the original heuristic.
+            for(const auto& [r,p]:s.top_off){(void)p;g.side_of[r]="top";}
+            for(const auto& [r,p]:s.bot_off){(void)p;g.side_of[r]="bottom";}
+        }
         if (s.side == "bottom") {
             if (s.mirror.size() != s.top_off.size())
                 throw PcbZoneInfeasible("bottom primary pack and mirror map disagree");
@@ -256,11 +291,15 @@ FloorplanZoneGeometry bind_pcb_zone_shapes(const PcbZoneResult &zones,
                 (void)p;
                 g.side_of[r] = "top";
             }
-            for (const auto &[r, key] : s.mirror) {
-                g.resolvable[r] = key;
-                g.bbox_of[r] = footprint_bbox(zones.footprints.at(key)->document, 3);
-                g.mirror_refs.insert(r);
-            }
+        }
+        // Mixed-face top-primary variants also carry mirrored bottom members.
+        // Bind the selected document independently of the primary pack face.
+        for (const auto &[r, key] : s.mirror) {
+            if(g.side_of.at(r)!="bottom"||(!s.top_off.count(r)&&!s.bot_off.count(r)))
+                throw PcbZoneInfeasible("mirrored member is not a selected bottom-side part: "+r);
+            g.resolvable[r] = key;
+            g.bbox_of[r] = footprint_bbox(zones.footprints.at(key)->document, 3);
+            g.mirror_refs.insert(r);
         }
     }
     return g;

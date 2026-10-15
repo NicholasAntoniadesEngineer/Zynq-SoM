@@ -1,0 +1,20 @@
+{
+  "source_commit": "2a60ac62",
+  "scope": "Prepared-input construction screening; not full qualification",
+  "recipe": "2026-10-13-carrier-164x156-qualified.json profiler equivalent, overriding height to 155 mm; single run per candidate",
+  "trials": [
+    {"dimensions_mm": [164,155],"contract_group_rotations": false,"result": "construction_failed","seconds": 2.546818709,"completed_outer_attempts": 4,"failure_receipt_captured": true},
+    {"dimensions_mm": [164,155],"contract_group_rotations": true,"result": "construction_failed","seconds": 4.166726792,"completed_outer_attempts": 4,"failure_receipt_captured": true}
+  ],
+  "observations": "Unrotated attempt includes USB-JTAG seating, HDMI termination near-max/separation negative cycle, and later hard-facing failures. Adding contract-group rotations did not yield a constructed candidate. These bounded failures do not establish geometric infeasibility; hardware constraints were not changed.",
+  "devkit_repeatability": {
+    "recipe": "compact-search off, multiscale-outline on, prepared schematic, runs 2",
+    "dimensions_mm": [98,98],
+    "pcb_sha256": "b6798d4b63d2fddbf9fad24945c151b9420b049b674ad5d637c43bf4a365137f",
+    "unchanged_both_runs": true,
+    "model_seconds": [0.204949417,0.203266792],
+    "pcb_text_seconds": [0.009645334,0.008812458],
+    "quick_checks": "fanout, ratsnest geometry, placement contract and flow PASS, hard_red=0"
+  },
+  "limitations": "Single-run carrier screening, uncontrolled machine/cache state. No performance comparison claimed. Full devkit qualification tracked separately."
+}

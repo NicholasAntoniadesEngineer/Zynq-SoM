@@ -1,0 +1,31 @@
+{
+  "base_commit": "d4471f23",
+  "finding": "The fanout gate classified any package with at least 40 pads OR a som_j<number> sheet as DF40. This exempted unrelated dense packages both as subjects and as obstacles to other subjects. The same shortcut existed in the historical Python baseline and the C++ breathe pass; this is a corrected inherited design decision, not a newly discovered migration divergence.",
+  "change": "Require BOTH the existing SoM-connector sheet namespace and minimum pad count for that exemption. Use the shared predicate for breathe crowding and guard subjects. Keep all fanout distances and failure ratchets unchanged. Add explicit fanout output to construction-only profiling.",
+  "frozen_carrier_fixture": {
+    "old_checked_subjects": 110,
+    "new_checked_subjects": 112,
+    "starved": 0,
+    "new_subjects": [
+      {"ref":"J11001", "sheet":"fmc", "pads":40, "clearance_mm":2.97, "existing_requirement_mm":2.0},
+      {"ref":"J15001", "sheet":"lcd", "pads":42, "clearance_mm":4.247, "existing_requirement_mm":2.0}
+    ],
+    "expected_report_change": "Only the checked-subject count changed in the carrier fanout fixture. The other seven carrier report snapshots and all eight devkit report snapshots remain unchanged.",
+    "adversarial_verification": "Move a foreign resistor onto each of these actual packages, matching its face: the package is explicitly recorded as starved and the gate rejects. Synthetic 39-, 40-, 64- and 100-pad non-SoM packages are independently tested as both subjects and crowders. Malformed namespace and low-pad-count namespace cases do not receive the exemption.",
+    "log": "native/build/df40-live-package-tests.log",
+    "assertions": 198
+  },
+  "regressions": {
+    "passed": ["native_pcb_breathe_clearance_contracts", "native_pcb_breathe_sheet_exemption_contracts", "native_pcb_breathe_owned_groups_contracts", "native_compact_breathe_tht_contracts", "native_breathe_occupancy_contracts", "native_pcb_placement_contracts", "native_pcb_checks_contracts", "native_pcb_orientation_contracts", "native_placement_precision_source_contracts", "native_board_policy_migration_contracts"],
+    "failed": 0,
+    "seconds": 93.24,
+    "log": "native/build/df40-final-tests.log",
+    "production_cli_rebuilt": true
+  },
+  "current_board_screens": [
+    {"board":"carrier", "outline_mm":[166,159], "checked_subjects":112, "starved":0, "pcb_sha256":"b9389efa52adf30b1d94cad1ede3a4387bacd53802f7babb5da07dd6306cff76", "unchanged_geometry":true, "log":"native/build/carrier-strict-df40-screen.log"},
+    {"board":"devkit_mini", "outline_mm":[98,98], "checked_subjects":17, "starved":0, "pcb_sha256":"cfa0305491d9c4a771adb130b04c4aec6cc2894542391a5c7c9dca3a68bca3cf", "unchanged_geometry":true, "log":"native/build/devkit-strict-df40-screen.log"}
+  ],
+  "limits": "The exemption remains an existing namespace/pad-count policy, not manufacturer identity verification. The existing clearance policy is not a routing or fabrication-readiness proof. Both construction screens also pass placement-contract/flow diagnostics with zero hard RED, but do not replace full qualification. No new layout-size or speedup claim; historical Python timing comparisons were not rerun. Overall goal remains incomplete.",
+  "next_layout_work": "Earlier victim-reshape prototypes already failed downstream legalization. Review their recorded constraints before further packing changes; do not repeat unchanged campaigns."
+}

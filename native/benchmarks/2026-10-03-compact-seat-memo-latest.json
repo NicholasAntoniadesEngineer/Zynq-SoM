@@ -1,0 +1,80 @@
+{
+  "baseline_commit": "821226b5fcae6744c6af1e0a0d837a3e37c5abae",
+  "candidate_commit": "51ba61d85cab6cf333c7b4137bf7cee0e89c6185",
+  "scope": "Latest carrier compact model construction; query reuse only, no later eviction or documentation changes in this executable",
+  "baseline_source": "/private/tmp/carrier-8212-compact-gates.bhqoJl/reports/board_verdicts.json",
+  "candidate_log": "/private/tmp/carrier-8212-seat-memo-profile.log",
+  "candidate_log_sha256": "246419e24abe3959d63b4d4de79680932fe7442508e283836736b85257b70655",
+  "invocation": "native/build/fast/schgen_compact_stage_profile --repo REPOSITORY --project carrier --compact-search on --input-mode prepared --runs 1 --kicad-cli /Applications/KiCad/KiCad.app/Contents/MacOS/kicad-cli",
+  "inputs": {
+    "compact_capable": true,
+    "owned_groups": 2,
+    "circuits": 37,
+    "nets": 582,
+    "footprints": 70
+  },
+  "geometry": {
+    "same_pcb_sha256": "3e2856ebb4807a4d3470b33780c40cc660c8c7c762cfd5ea2e90e0b2f6a1a98f",
+    "dimensions_mm": [
+      170,
+      165
+    ],
+    "instances": 569,
+    "top": 425,
+    "bottom": 144
+  },
+  "occupancy_actual_calls": {
+    "occupancy_axis_count": {
+      "before": 1114452,
+      "after": 1035440,
+      "removed": 79012
+    },
+    "occupancy_cell_index": {
+      "before": 10312518948,
+      "after": 9502591256,
+      "removed": 809927692
+    },
+    "occupancy_component_precision4dp": {
+      "before": 997430,
+      "after": 997430,
+      "removed": 0
+    },
+    "occupancy_frontier_key1dp": {
+      "before": 2816886026,
+      "after": 2612629026,
+      "removed": 204257000
+    },
+    "occupancy_reach_precision4dp": {
+      "before": 1925,
+      "after": 1925,
+      "removed": 0
+    },
+    "occupancy_shape_key4dp": {
+      "before": 410359,
+      "after": 410359,
+      "removed": 0
+    }
+  },
+  "cell_call_change_percent": -7.853829855576427,
+  "candidate_work": {
+    "completed_outer_attempts": 3097,
+    "packed": 45,
+    "rejected": 3052,
+    "punch_free": 1571,
+    "distinct_outline_punch_keys": 2983,
+    "unscoped_estimate_callbacks": 45,
+    "fallback_total": 273
+  },
+  "observed_seconds_not_controlled_comparison": {
+    "baseline_model": 362.068517,
+    "candidate_model": 341.500351792,
+    "candidate_pcb_text_emit": 0.034562083
+  },
+  "limitations": [
+    "Full board baseline versus construction-only diagnostic candidate. The listed occupancy scalars execute in model construction; board-wide totals must not generally be equated to model-only totals.",
+    "No latency speedup claim: unequal harnesses, concurrent host load and a single run. Operation reductions and PCB identity are the evidence.",
+    "Candidate does not rerun independent final-board gates. The byte-identical baseline PCB is rejected for SW7002 fanout and its search exceeds the retry ceiling.",
+    "Fallback total remains 273, but this profiler reports no per-name or ordered-event digest; equality of each event sequence is not established by this run.",
+    "No new accepted compact board, rendered images, compile timing or historical Python comparison. The accepted carrier remains168x163mm."
+  ]
+}

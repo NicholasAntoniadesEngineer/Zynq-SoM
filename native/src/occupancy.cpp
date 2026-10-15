@@ -7,6 +7,7 @@
 #include <cmath>
 #include <cstdint>
 #include <cstring>
+#include <deque>
 #include <limits>
 #include <functional>
 #include <queue>
@@ -72,6 +73,18 @@ struct HeapNode {
         return j > o.j;
     }
 };
+
+bool indexed_conflict(double x, double y, double w, double h,
+                      const Halo& reach, const Halo& inset, int mask,
+                      int parent_mask, bool main, const Rect& r, double clear) {
+    if (!occ_pair_active(mask, parent_mask, main, r.mask, r.pmask, r.main))
+        return false;
+    const char ax = x <= r.x ? 'E' : 'W';
+    const char ay = y <= r.y ? 'S' : 'N';
+    const double gx = std::max(clear, fanout_sep(reach, inset, r.reach, r.inset, ax));
+    const double gy = std::max(clear, fanout_sep(reach, inset, r.reach, r.inset, ay));
+    return !boxes_separated(x, y, w, h, r.x, r.y, r.w, r.h, gx, gy);
+}
 
 }  // namespace
 
@@ -314,15 +327,14 @@ std::vector<Rect> pairs_entity(double x, double y, double w, double h,
     main.pmask = mask;
     main.main = true;
     entity.push_back(main);
-    const Halo zero{};
     for (const Comp& comp : comps) {
         Rect child;
         child.x = occupancy_component_precision4dp(x + comp.dx, counts);
         child.y = occupancy_component_precision4dp(y + comp.dy, counts);
         child.w = comp.w;
         child.h = comp.h;
-        child.reach = zero;
-        child.inset = zero;
+        child.reach = comp.reach;
+        child.inset = comp.inset;
         child.mask = comp.mask;
         child.pmask = mask;
         child.main = false;
@@ -494,10 +506,11 @@ void Occupancy::add_one(double x, double y, double w, double h,
     }
     const Rect rect{x, y, w, h, reach, inset, mask, pmask, main};
     const double b = bucket_;
-    const int iy0 = occupancy_cell_index(y - h4.n - clear_, b, counts);
-    const int iy1 = occupancy_cell_index(y + h + h4.s + clear_, b, counts);
-    const int ix0 = occupancy_cell_index(x - h4.w - clear_, b, counts);
-    const int ix1 = occupancy_cell_index(x + w + h4.e + clear_, b, counts);
+    OccupancyCellSlot cell_count(counts);
+    const int iy0 = occupancy_cell_index(y - h4.n - clear_, b, cell_count);
+    const int iy1 = occupancy_cell_index(y + h + h4.s + clear_, b, cell_count);
+    const int ix0 = occupancy_cell_index(x - h4.w - clear_, b, cell_count);
+    const int ix1 = occupancy_cell_index(x + w + h4.e + clear_, b, cell_count);
     rects_.push_back(rect);
     for (std::int64_t ix = ix0; ix <= ix1; ++ix) {
         for (std::int64_t iy = iy0; iy <= iy1; ++iy) {
@@ -517,10 +530,11 @@ void Occupancy::remove_one(double x, double y, double w, double h,
     }
     const Halo h4 = halo4(reach, inset);
     const double b = bucket_;
-    const int iy0 = occupancy_cell_index(y - h4.n - clear_, b, counts);
-    const int iy1 = occupancy_cell_index(y + h + h4.s + clear_, b, counts);
-    const int ix0 = occupancy_cell_index(x - h4.w - clear_, b, counts);
-    const int ix1 = occupancy_cell_index(x + w + h4.e + clear_, b, counts);
+    OccupancyCellSlot cell_count(counts);
+    const int iy0 = occupancy_cell_index(y - h4.n - clear_, b, cell_count);
+    const int iy1 = occupancy_cell_index(y + h + h4.s + clear_, b, cell_count);
+    const int ix0 = occupancy_cell_index(x - h4.w - clear_, b, cell_count);
+    const int ix1 = occupancy_cell_index(x + w + h4.e + clear_, b, cell_count);
     rects_.erase(it);
     for (std::int64_t ix = ix0; ix <= ix1; ++ix) {
         for (std::int64_t iy = iy0; iy <= iy1; ++iy) {
@@ -541,10 +555,9 @@ void Occupancy::remove_one(double x, double y, double w, double h,
 void Occupancy::add(double x, double y, double w, double h, const Halo& reach,
                     const Halo& inset, int mask, const std::vector<Comp>& comps, QuantizationCounts* counts) {
     add_one(x, y, w, h, reach, inset, mask, mask, true, counts);
-    const Halo zero{};
     for (const Comp& c : comps) {
         add_one(occupancy_component_precision4dp(x + c.dx, counts), occupancy_component_precision4dp(y + c.dy, counts), c.w, c.h,
-                zero, zero, c.mask, mask, false, counts);
+                c.reach, c.inset, c.mask, mask, false, counts);
     }
 }
 
@@ -552,10 +565,9 @@ void Occupancy::remove(double x, double y, double w, double h,
                        const Halo& reach, const Halo& inset, int mask,
                        const std::vector<Comp>& comps, QuantizationCounts* counts) {
     remove_one(x, y, w, h, reach, inset, mask, mask, true, counts);
-    const Halo zero{};
     for (const Comp& c : comps) {
         remove_one(occupancy_component_precision4dp(x + c.dx, counts), occupancy_component_precision4dp(y + c.dy, counts), c.w, c.h,
-                   zero, zero, c.mask, mask, false, counts);
+                   c.reach, c.inset, c.mask, mask, false, counts);
     }
 }
 
@@ -587,12 +599,14 @@ bool Occupancy::body_clear(double x, double y, double w, double h,
 bool Occupancy::query_hashed_cells(double x, double y, double w, double h,
                                    const Halo& qh, const Halo& reach,
                                    const Halo& inset, int qmask, int qpmask,
-                                   bool qmain, QuantizationCounts* counts) const {
+                                   bool qmain, QuantizationCounts* counts,
+                                   const Rect** obstacle) const {
     const double b = bucket_;
-    const int iy0 = occupancy_cell_index(y - qh.n, b, counts);
-    const int iy1 = occupancy_cell_index(y + h + qh.s, b, counts);
-    const int ix0 = occupancy_cell_index(x - qh.w, b, counts);
-    const int ix1 = occupancy_cell_index(x + w + qh.e, b, counts);
+    OccupancyCellSlot cell_count(counts);
+    const int iy0 = occupancy_cell_index(y - qh.n, b, cell_count);
+    const int iy1 = occupancy_cell_index(y + h + qh.s, b, cell_count);
+    const int ix0 = occupancy_cell_index(x - qh.w, b, cell_count);
+    const int ix1 = occupancy_cell_index(x + w + qh.e, b, cell_count);
     for (std::int64_t ix = ix0; ix <= ix1; ++ix) {
         for (std::int64_t iy = iy0; iy <= iy1; ++iy) {
             auto it = cells_.find(CellKey{static_cast<int>(ix), static_cast<int>(iy)});
@@ -600,17 +614,8 @@ bool Occupancy::query_hashed_cells(double x, double y, double w, double h,
                 continue;
             }
             for (const Rect& r : it->second) {
-                if (!occ_pair_active(qmask, qpmask, qmain,
-                                     r.mask, r.pmask, r.main)) {
-                    continue;
-                }
-                const char ax = x <= r.x ? 'E' : 'W';
-                const char ay = y <= r.y ? 'S' : 'N';
-                const double gx = std::max(clear_,
-                    fanout_sep(reach, inset, r.reach, r.inset, ax));
-                const double gy = std::max(clear_,
-                    fanout_sep(reach, inset, r.reach, r.inset, ay));
-                if (!boxes_separated(x, y, w, h, r.x, r.y, r.w, r.h, gx, gy)) {
+                if (indexed_conflict(x, y, w, h, reach, inset, qmask, qpmask, qmain, r, clear_)) {
+                    if (obstacle) *obstacle = &r;
                     return false;
                 }
             }
@@ -629,11 +634,10 @@ bool Occupancy::fits_exhaustive(double x, double y, double w, double h,
     if (!body_clear(x, y, w, h, reach, inset, mask, mask, true, false, nullptr)) {
         return false;
     }
-    const Halo zero{};
     for (const Comp& c : comps) {
         const double cx0 = x + c.dx;
         const double cy0 = y + c.dy;
-        if (!body_clear(cx0, cy0, c.w, c.h, zero, zero, c.mask, mask, false,
+        if (!body_clear(cx0, cy0, c.w, c.h, c.reach, c.inset, c.mask, mask, false,
                         false, nullptr)) {
             return false;
         }
@@ -644,20 +648,37 @@ bool Occupancy::fits_exhaustive(double x, double y, double w, double h,
 bool Occupancy::fits_hashed(double x, double y, double w, double h,
                             const Halo& reach, const Halo& inset, int mask,
                             const std::vector<Comp>& comps, QuantizationCounts* counts) const {
+    return fits_indexed(x, y, w, h, reach, inset, mask, comps, counts, nullptr);
+}
+
+bool Occupancy::fits_indexed(double x, double y, double w, double h,
+                            const Halo& reach, const Halo& inset, int mask,
+                            const std::vector<Comp>& comps, QuantizationCounts* counts,
+                            Rejection* rejection) const {
     if (x < clear_ || y < clear_ || x + w > board_w_ - clear_
         || y + h > board_h_ - clear_) {
         return false;
     }
-    if (!body_clear(x, y, w, h, reach, inset, mask, mask, true, true, counts)) {
+    if (rejection && rejection->obstacle) {
+        const Comp* c = rejection->child;
+        if (indexed_conflict(c ? x+c->dx : x, c ? y+c->dy : y,
+                             c ? c->w : w, c ? c->h : h,
+                             c ? c->reach : reach, c ? c->inset : inset,
+                             c ? c->mask : mask, mask, !c, *rejection->obstacle, clear_))
+            return false;
+    }
+    const Rect* obstacle = nullptr;
+    if (!query_hashed_cells(x, y, w, h, halo4(reach,inset), reach, inset, mask,
+                            mask, true, counts, rejection ? &obstacle : nullptr)) {
+        if (rejection) *rejection = {obstacle, nullptr};
         return false;
     }
-    const Halo zero{};
-    const Halo z4{};
     for (const Comp& c : comps) {
         const double cx0 = x + c.dx;
         const double cy0 = y + c.dy;
-        if (!query_hashed_cells(cx0, cy0, c.w, c.h, z4, zero, zero, c.mask,
-                                mask, false, counts)) {
+        if (!query_hashed_cells(cx0, cy0, c.w, c.h, halo4(c.reach,c.inset), c.reach, c.inset, c.mask,
+                                mask, false, counts, rejection ? &obstacle : nullptr)) {
+            if (rejection) *rejection = {obstacle, &c};
             return false;
         }
     }
@@ -668,6 +689,30 @@ std::optional<Pose> Occupancy::place_near(
     double ax, double ay, double w, double h, const Halo& reach,
     const Halo& inset, int mask, const std::vector<Comp>& comps,
     double win_x0, double win_x1, double win_y0, double win_y1, QuantizationCounts* counts) const {
+    return place_near_impl(ax,ay,w,h,reach,inset,mask,comps,
+                          win_x0,win_x1,win_y0,win_y1,counts,nullptr,0,0);
+}
+
+NearPoseCandidates Occupancy::place_near_candidates(
+    double ax,double ay,double w,double h,const Halo& reach,const Halo& inset,
+    int mask,const std::vector<Comp>& comps,double win_x0,double win_x1,double win_y0,double win_y1,
+    std::size_t max_poses,std::size_t max_frontier_nodes,QuantizationCounts* counts) const {
+    if(!max_poses||!max_frontier_nodes)
+        throw std::invalid_argument("place_near_candidates requires positive result and frontier limits");
+    if(!std::isfinite(ax)||!std::isfinite(ay)||!std::isfinite(w)||!std::isfinite(h)||w<=0||h<=0||
+       !std::isfinite(win_x0)||!std::isfinite(win_x1)||!std::isfinite(win_y0)||!std::isfinite(win_y1))
+        throw std::invalid_argument("place_near_candidates requires finite query coordinates and positive dimensions");
+    NearPoseCandidates result;
+    (void)place_near_impl(ax,ay,w,h,reach,inset,mask,comps,
+                        win_x0,win_x1,win_y0,win_y1,counts,&result,max_poses,max_frontier_nodes);
+    return result;
+}
+
+std::optional<Pose> Occupancy::place_near_impl(
+    double ax,double ay,double w,double h,const Halo& reach,const Halo& inset,
+    int mask,const std::vector<Comp>& comps,double win_x0,double win_x1,double win_y0,double win_y1,
+    QuantizationCounts* counts,NearPoseCandidates* alternatives,
+    std::size_t max_poses,std::size_t max_frontier_nodes) const {
     const double s = step_;
     const int nx = occupancy_axis_count(board_w_, s, counts);
     const int ny = occupancy_axis_count(board_h_, s, counts);
@@ -679,44 +724,52 @@ std::optional<Pose> Occupancy::place_near(
     ys.reserve(static_cast<std::size_t>(ny));
     for (int ix = 0; ix < nx; ++ix) {
         const double xv = ix * s;
-        if (win_x0 <= xv && xv <= win_x1) {
+        // These are the exact axis-separable boundary predicates used by
+        // fits_hashed. Omit impossible cells before building the frontier;
+        // relative ordering of every potentially legal pose is unchanged.
+        if (win_x0 <= xv && xv <= win_x1 && !(xv < clear_ || xv + w > board_w_ - clear_)) {
             xs.emplace_back(std::abs(xv + hw - ax), xv);
         }
     }
     for (int iy = 0; iy < ny; ++iy) {
         const double yv = iy * s;
-        if (win_y0 <= yv && yv <= win_y1) {
+        if (win_y0 <= yv && yv <= win_y1 && !(yv < clear_ || yv + h > board_h_ - clear_)) {
             ys.emplace_back(std::abs(yv + hh - ay), yv);
         }
     }
     std::sort(xs.begin(), xs.end());
     std::sort(ys.begin(), ys.end());
     if (xs.empty() || ys.empty()) {
+        if(alternatives)alternatives->search_complete=true;
         return std::nullopt;
     }
     std::priority_queue<HeapNode, std::vector<HeapNode>, std::greater<HeapNode>> heap;
     heap.push(HeapNode{xs[0].first + ys[0].first, 0, 0});
-    std::unordered_map<double, std::vector<std::pair<double, double>>> buckets;
-    std::priority_queue<double, std::vector<double>, std::greater<double>> bkeys;
+    // The raw-distance frontier is monotone, and decimal rounding is
+    // monotone too. Rounded keys therefore arrive in order: an ordered queue
+    // replaces both the per-node hash lookup and the second priority queue.
+    std::deque<std::pair<double,std::vector<std::pair<double,double>>>> buckets;
     std::vector<std::pair<double, double>> spare;
+    Rejection rejection;
 
     auto flush = [&](double thresh) -> std::optional<Pose> {
-        while (!bkeys.empty() && bkeys.top() <= thresh) {
-            const double key = bkeys.top();
-            bkeys.pop();
-            auto it = buckets.find(key);
-            if (it == buckets.end()) {
-                continue;
-            }
-            std::vector<std::pair<double, double>> cell = std::move(it->second);
-            buckets.erase(it);
+        // At the half-step boundary an unseen distance can still round into
+        // this bucket (ties to even). Wait until strictly beyond it before
+        // selecting by x/y, otherwise a later same-key pose can be skipped.
+        while (!buckets.empty() && buckets.front().first < thresh) {
+            std::vector<std::pair<double, double>> cell = std::move(buckets.front().second);
+            buckets.pop_front();
             std::sort(cell.begin(), cell.end());
             for (const auto& [x, y] : cell) {
-                if (fits_hashed(x, y, w, h, reach, inset, mask, comps, counts)) {
+                if (fits_indexed(x, y, w, h, reach, inset, mask, comps, counts, &rejection)) {
+                    if(alternatives){
+                        alternatives->poses.push_back({x,y,w,h});
+                        if(alternatives->poses.size()<max_poses)continue;
+                    }
                     return Pose{x, y, w, h};
                 }
             }
-            // Retain capacity only after every candidate in this bucket fails.
+            // Retain capacity after every candidate in this bucket is visited.
             // No coordinates or legality results survive into the next bucket.
             cell.clear();
             spare.swap(cell);
@@ -726,6 +779,12 @@ std::optional<Pose> Occupancy::place_near(
 
     OccupancyFrontierSlot frontier_count(counts);
     while (!heap.empty()) {
+        if(alternatives){
+            if(alternatives->frontier_nodes==max_frontier_nodes){
+                alternatives->budget_exhausted=true;return std::nullopt;
+            }
+            ++alternatives->frontier_nodes;
+        }
         const HeapNode node = heap.top();
         heap.pop();
         const double xcost = xs[static_cast<std::size_t>(node.i)].first;
@@ -733,15 +792,13 @@ std::optional<Pose> Occupancy::place_near(
         const double x = xs[static_cast<std::size_t>(node.i)].second;
         const double y = ys[static_cast<std::size_t>(node.j)].second;
         const double key = occupancy_frontier_key1dp(xcost + ycost, frontier_count);
-        auto bit = buckets.find(key);
-        if (bit == buckets.end()) {
+        if (buckets.empty() || buckets.back().first != key) {
             std::vector<std::pair<double, double>> cell;
             cell.swap(spare);
             cell.emplace_back(x, y);
-            buckets.emplace(key, std::move(cell));
-            bkeys.push(key);
+            buckets.emplace_back(key, std::move(cell));
         } else {
-            bit->second.emplace_back(x, y);
+            buckets.back().second.emplace_back(x, y);
         }
         // Merge sorted rows lazily: each row advances only along y, and its
         // first element introduces the next row. Row minima are ordered by x
@@ -765,6 +822,7 @@ std::optional<Pose> Occupancy::place_near(
     if (auto hit = flush(INFINITY)) {
         return hit;
     }
+    if(alternatives)alternatives->search_complete=true;
     return std::nullopt;
 }
 
@@ -785,7 +843,7 @@ std::tuple<double, double, double, double> evict_window(
     erects.push_back(ERect{ex, ey, ew, eh, e_reach, e_inset});
     const Halo zero{};
     for (const Comp& c : e_comps) {
-        erects.push_back(ERect{ex + c.dx, ey + c.dy, c.w, c.h, zero, zero});
+        erects.push_back(ERect{ex + c.dx, ey + c.dy, c.w, c.h, c.reach, c.inset});
     }
     double g = clear;
     const Halo reaches[2] = {rch, zero};
@@ -798,6 +856,9 @@ std::tuple<double, double, double, double> evict_window(
                                            r.inset, axis));
             }
         }
+        for (const Comp& c : cc)
+            for (char axis : axes)
+                g = std::max(g, fanout_sep(c.reach,c.inset,r.reach,r.inset,axis));
     }
     double ex_lo = w;
     double ex_hi = 0.0;

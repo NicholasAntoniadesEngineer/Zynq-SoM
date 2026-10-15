@@ -1,0 +1,144 @@
+{
+  "schema_version": 1,
+  "base_commit": "7da88909",
+  "finding": "Scarcity order counted every registered shape even when an explicit selection permitted only one. Corrected to count only permitted choices.",
+  "scope": "Interior order 2 only; no hardware gate or shape restriction relaxed.",
+  "before_screens": [
+    {
+      "order": 0,
+      "recovery": "off",
+      "log": "native/build/order-interaction-165x156-0-off.log",
+      "model_seconds": 0.732264708,
+      "failure_subjects": [
+        "power"
+      ],
+      "result": "bounded search failed",
+      "receipt_captured": true
+    },
+    {
+      "order": 0,
+      "recovery": "on",
+      "log": "native/build/order-interaction-165x156-0-on.log",
+      "model_seconds": 1.282997041,
+      "failure_subjects": [
+        "power"
+      ],
+      "result": "bounded search failed",
+      "receipt_captured": true
+    },
+    {
+      "order": 1,
+      "recovery": "off",
+      "log": "native/build/order-interaction-165x156-1-off.log",
+      "model_seconds": 0.769207417,
+      "failure_subjects": [
+        "ethernet",
+        "power_mon"
+      ],
+      "result": "bounded search failed",
+      "receipt_captured": true
+    },
+    {
+      "order": 1,
+      "recovery": "on",
+      "log": "native/build/order-interaction-165x156-1-on.log",
+      "model_seconds": 2.115467375,
+      "failure_subjects": [
+        "ethernet",
+        "power_mon"
+      ],
+      "result": "bounded search failed",
+      "receipt_captured": true
+    },
+    {
+      "order": 2,
+      "recovery": "off",
+      "log": "native/build/order-interaction-165x156-2-off.log",
+      "model_seconds": 1.506851167,
+      "failure_subjects": [
+        "bringup_rails",
+        "usb_jtag"
+      ],
+      "result": "bounded search failed",
+      "receipt_captured": true
+    },
+    {
+      "order": 2,
+      "recovery": "on",
+      "log": "native/build/order-interaction-165x156-2-on.log",
+      "model_seconds": 3.296098083,
+      "failure_subjects": [
+        "bringup_rails",
+        "usb_jtag"
+      ],
+      "result": "bounded search failed",
+      "receipt_captured": true
+    }
+  ],
+  "matched_options": "Same inputs as 2026-10-12-shape-interaction-screening.json: 165x156, unpinned rail, pinned board_aux, varied order/recovery; all other options held.",
+  "after_screens": [
+    {
+      "order": 2,
+      "recovery": "off",
+      "log": "native/build/scarcity-corrected-165x156-2-off.log",
+      "model_seconds": 0.654046292,
+      "result": "bounded search failed"
+    },
+    {
+      "order": 2,
+      "recovery": "on",
+      "log": "native/build/scarcity-corrected-165x156-2-on.log",
+      "model_seconds": 1.149401,
+      "result": "bounded search failed at usb_jtag under both reservation policies"
+    }
+  ],
+  "interpretation": "Corrected choice counts change the search path and fail faster in these samples, but do not establish a smaller valid carrier. No performance percentage claim from single diagnostic samples; caches and concurrent development work uncontrolled.",
+  "tests": {
+    "property": "Registry sizes 0..127, every valid pin counts as one; absent restriction retains count; invalid selections count zero.",
+    "integration": "Pinned four-variant group must be placed as a single-choice group before a two-choice group; compared against independently forced constrained-first placement.",
+    "mutation": {
+      "log": "native/build/scarcity-mutation.log",
+      "change": "Restore raw registry-size comparison only, leaving counting helper tests unchanged.",
+      "exit": 1,
+      "failure": "scarcity order did not prioritize the actually single-choice group",
+      "restored": true
+    }
+  },
+  "devkit_regression": {
+    "log": "native/build/devkit-scarcity-regression.log",
+    "runs": 2,
+    "dimensions_mm": [98, 98],
+    "pcb_sha256": "b6798d4b63d2fddbf9fad24945c151b9420b049b674ad5d637c43bf4a365137f",
+    "matches_qualified_reference": true,
+    "scope": "Construction and current-input reproducibility, not a fresh full devkit qualification."
+  },
+  "qualification": {
+    "output": "/private/tmp/carrier-paired-recovery-qualified.sfn1uL",
+    "log": "native/build/carrier-paired-recovery-full.log",
+    "recipe": "board --project carrier --compact-placement --interior-order 3 --edge-feasibility --owned-quality-first --owned-face-cohesion --contract-group-face-sheet usb_jtag --floorplan-spec native/benchmarks/carrier-166x156.floorplan.json --joint-separation-states 1024 --reseat-poses 8 --reseat-frontier 4096 --reseat-continuations 3 --reseat-victim-shapes --owned-shape bringup_rails=bottom-a2.2/r270/owned-pins-forward --owned-shape board_aux=owned-face-a1.000000 --audit-projections 2 --timing -o FRESH_OUTPUT",
+    "mandatory_gates": "PASS: 37 sheets",
+    "source_audit": "PASS: 69 C++ files, 75 constants, 156 registered transforms",
+    "pcb_sha256": "99bd6a1dddb8f94f314f8b0d775ccc894ef84556e82ab70159360fa071470a5e",
+    "dimensions_mm": [
+      166,
+      156
+    ],
+    "non_routing_drc_errors": 0,
+    "unrouted": 499,
+    "front_back_render_inspection": true,
+    "advisory_failures": [
+      "return_path",
+      "golden",
+      "contract_coverage_lint"
+    ],
+    "timing_seconds": {
+      "pcb_inputs": 1.446605,
+      "pcb_model": 3.650148,
+      "pcb_text": 0.037179,
+      "render3d": 28.301345,
+      "source_audit": 105.960838,
+      "scope_total_not_process_wall": 195.346591
+    },
+    "limitations": "Full build qualifies the integrated code and existing order-3 recipe; not proof of a newly accepted order-2 carrier. Qualitative hardware requirements remain unverified. No fabrication readiness claim."
+  }
+}

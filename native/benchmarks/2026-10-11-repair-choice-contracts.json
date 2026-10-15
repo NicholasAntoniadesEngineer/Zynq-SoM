@@ -1,0 +1,9 @@
+{
+  "status":"tested_explicit_axis_choices_default_path_preserved",
+  "base_commit":"b9b82a28",
+  "implementation":"legalize_repair_axis accepts an optional deterministic choice path. At each encountered negative cycle, enumerate unique eligible flippable separations in existing cycle-edge order, report their count and execute exactly the selected flip. Missing path entries choose index zero, preserving the existing greedy behaviour. Invalid executed choices throw; no silent substitution. No extra solve or automatic alternative attempt is introduced.",
+  "tests":{"passed":2,"failed":0,"seconds":32.00,"log":"native/build/repair-choice-tests.log","names":["native_floorplan_contracts","native_legalize_accounting_contracts"],"new_coverage":["two distinct eligible branches each solve their axis","default versus explicit first choice","repeated alternative determinism","exact eligible-choice count","one flip only and retained constraints","directional gap swap and flip lock","out-of-range choice rejection","caller input immutability"]},
+  "integration_scope":"Existing composer calls retain the empty/default path. Historical primitive decisions, current board requirements and independent actual operation counts pass unchanged. No alternative branch is automatically used in board construction yet.",
+  "next_step":"Integrate a bounded saved-state coupled-axis search which uses the reported choice counts to reconsider earlier greedy decisions, retains the ordinary successful path and records every actual retry/failure. Require final physical and hard-term validation.",
+  "limitations":["Foundation for backtracking, not an implemented whole-board improvement.","Unused choice-path suffixes are not executed; this supports planned prefixes whose later decisions may not be reached.","Existing per-axis budget semantics are retained; no claim of exhaustive search.","No new accepted board, full qualification or performance improvement claimed."]
+}

@@ -1,0 +1,129 @@
+{
+  "status": "full_carrier_qualified_and_exact_audit_field_dispatch_improved",
+  "qualification": {
+    "commit": "aba2e180",
+    "output": "/private/tmp/carrier-repair-qualified.DEp5XC",
+    "log": "native/build/carrier-repair-qualification.log",
+    "exit_code": 0,
+    "board_ok": true,
+    "complete": true,
+    "all_mandatory_pass": true,
+    "sheets": 37,
+    "pcb_sha256": "03b934e20ef3cc7ef5dfc01695a9ce923f75f248b277e3e7cb8345144080493b",
+    "verdict_sha256": "4c50b441b1cc7a74084f2f7860bc82219c48d277f97294fa965ee6bc0e64263f",
+    "outline_mm": [
+      168,
+      159
+    ],
+    "top_bottom": [
+      420,
+      149
+    ],
+    "source_audit": {
+      "files": 69,
+      "constants": 75,
+      "registered_transforms": 156,
+      "status": "PASS"
+    },
+    "non_unrouted_drc_errors": 0,
+    "unrouted": 499,
+    "renders": 8,
+    "inspected": [
+      "renders/3d_top.png",
+      "renders/3d_bottom.png"
+    ],
+    "visual_notes": "Same qualified PCB. Top populated around a clear central SoM reservation; bottom still sparse, with mirrored connector holes and bottom groups visible. Existing XT60 model/footprint mismatch and hardware unknowns not resolved by render inspection.",
+    "advisory_failures": [
+      "return_path",
+      "golden",
+      "contract_coverage_lint"
+    ],
+    "fallbacks": {
+      "cand_cap_truncated": 116,
+      "interior_reseat_retry": 12,
+      "punch_free_plan_rejected": 1
+    },
+    "seconds": {
+      "compile": null,
+      "process_wall": 243.81,
+      "measured_scope": 243.728225,
+      "authoring_audit": 15.935654,
+      "source_audit": 155.231549,
+      "sheet_parallel_checks_and_render_wall": 25.243842,
+      "pcb_input_loading_and_netlist_validation": 1.452882,
+      "pcb_model_with_internal_checks": 2.543315,
+      "pcb_text_emission": 0.032885,
+      "pcb_drc": 1.572679,
+      "render3d": 28.609921
+    }
+  },
+  "smaller_outline": {
+    "outline_mm": [
+      168,
+      158
+    ],
+    "log": "native/build/carrier-repair-168x158.log",
+    "seconds": 0.373462959,
+    "result": "Rejected facing power->power_som (-87.7392) and power_som->@som (-3.3154); no gate relaxed."
+  },
+  "parser_change": {
+    "implementation": "Exact switch on string_view length, followed by full string equality, replaces scanning 28 field names. Retained-field set, JSON validation, duplicate checking, visitor and macro handling unchanged.",
+    "input": {
+      "source": "native/src/floorplan_compose.cpp",
+      "bytes": 2230111900,
+      "inner_nodes": 1432508,
+      "retained_values": 12367138,
+      "json_values": 22916197
+    },
+    "protocol": "One frozen Clang AST; sequential stream reads in separate processes. Two original runs, two candidate runs, then rebuilt original control. No concurrent builds or tests during measurements; uncontrolled OS cache. Original control remains slower. Same ordered census files compared with cmp.",
+    "original_parse_seconds": [
+      2.94281,
+      2.86355,
+      2.8342
+    ],
+    "candidate_parse_seconds": [
+      2.68407,
+      2.67883
+    ],
+    "median_parse_change_percent": -6.359239405632877,
+    "original_total_seconds": [
+      3.17491,
+      3.10906,
+      3.07342
+    ],
+    "candidate_total_seconds": [
+      2.92073,
+      2.91604
+    ],
+    "exact_census": {
+      "files": 1,
+      "constants": 0,
+      "functions": 35,
+      "quantization_sites": 0,
+      "equal": true,
+      "note": "This real translation unit has no local numeric policy constants or quantization sites. Adversarial live-compiler tests independently exercise those detectors."
+    },
+    "tests": {
+      "names": [
+        "native_audit_ast_projection_contracts",
+        "native_audit_ast_projection_census"
+      ],
+      "passed": 2,
+      "failed": 0,
+      "log": "native/build/audit-key-final-tests.log",
+      "coverage": "Exact field-set membership, prefixes/neighbours/extensions/embedded NULs, malformed JSON, duplicate keys, streams and real compiler census parity."
+    },
+    "logs": [
+      "native/build/audit-key-baseline-1.log",
+      "native/build/audit-key-baseline-2.log",
+      "native/build/audit-key-candidate-1.log",
+      "native/build/audit-key-candidate-2.log",
+      "native/build/audit-key-control.log"
+    ],
+    "limitations": [
+      "Single-TU microbenchmark with small repetition count; no new whole-source-audit or full-board speedup claimed.",
+      "Full qualification above precedes this parser-only change. CLI rebuilt and parser/census tests rerun; expensive board qualification not repeated.",
+      "No matched Python comparison, clean compile measurement, smaller accepted board or fabrication-readiness claim."
+    ]
+  }
+}

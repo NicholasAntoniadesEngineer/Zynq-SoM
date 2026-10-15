@@ -75,9 +75,35 @@ ViaBlockHit via_site_blocker(
     const std::vector<ViaObstacle>& obstacles,
     const std::vector<std::pair<double, double>>& chosen);
 
+// Four axis-only obstacle-centre proposals, derived from the same pad/drill
+// clearance rules as via_site_blocker. Not movement permission: callers must
+// quantize/recheck the complete trial geometry and preserve all other sites.
+std::vector<std::pair<double,double>> via_obstacle_axis_exits(
+    double vx, double vy, const ViaSiteSpec&, const ViaObstacle&);
+
 std::vector<std::pair<double, double>> fallback_via_sites(
     double x0, double y0, double x1, double y1, double via_size,
     double pitch, QuantizationCounts* counts = nullptr);
+
+struct ViaSelection {
+    std::vector<std::pair<double, double>> chosen;
+    // Candidate is the actual rounded world point tested, not the obstacle
+    // centre stored in blocker. Retain it for geometry-directed reconsideration.
+    struct Rejection { bool preferred; ViaBlockHit blocker; std::pair<double,double> candidate; };
+    std::vector<Rejection> rejected;
+    std::size_t preferred_examined = 0, lattice_examined = 0, lattice_chosen = 0;
+};
+// Pure geometry planning shared by placement screening and PCB emission.
+// Preferred sites and pour are local, already mirrored; occupied is world-space.
+// No lattice is constructed unless preferred sites are exhausted and permission
+// is explicit. Returning fewer than requested sites is a shortfall, not success.
+ViaSelection select_via_sites(
+    double x, double y, double rotation,
+    const std::vector<std::pair<double, double>>& preferred, const Box4& pour,
+    std::size_t requested, double lattice_pitch, bool allow_lattice,
+    const ViaSiteSpec& rule, const std::vector<ViaObstacle>& obstacles,
+    const std::vector<std::pair<double, double>>& occupied,
+    QuantizationCounts* counts = nullptr);
 
 double overlap_area(const Box4& a, const Box4& b);
 Box4 text_box(const std::string& txt, double x, double y, double size,
@@ -113,8 +139,13 @@ private:
 
 class BreatheGrid {
 public:
+    enum class Mode { Assignment, Counted };
     BreatheGrid(double board_w, double board_h, double cell, double origin_x,
-                double origin_y, QuantizationCounts* counts = nullptr);
+                double origin_y, QuantizationCounts* counts = nullptr,
+                Mode mode = Mode::Assignment);
+    // Assignment retains the historical Boolean raster API. In Counted mode,
+    // 1 adds one owner and 0 removes one owner; overlapping reservations remain.
+    // A removal underflow or addition overflow rejects the whole stamp.
     void stamp(const Box4& box, int val, QuantizationCounts* counts = nullptr);
     bool free(const Box4& box, QuantizationCounts* counts = nullptr) const;
 
@@ -124,7 +155,8 @@ private:
     double cell_ = 0.0;
     double origin_x_ = 0.0;
     double origin_y_ = 0.0;
-    std::vector<std::uint8_t> cells_;
+    Mode mode_ = Mode::Assignment;
+    std::vector<std::uint32_t> cells_;
 };
 
 struct ClearLabel {

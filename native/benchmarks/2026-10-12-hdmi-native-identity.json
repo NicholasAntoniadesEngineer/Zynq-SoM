@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "base_commit": "cd2b4a15",
+  "finding": "The HDMI termination README still instructed running a removed Python test. The native analytic SPICE command reports PASS (0 checks) for this network, so it does not substantiate the described passive census/identity coverage.",
+  "changes": [
+    "Extended native_carrier_spice_identity_contracts from board_aux alone to include the live native-authored HDMI termination circuit and retained .cir model",
+    "Independent expected census: R1-R8 each 49.9 ohm, exact eight TMDS lanes to AVCC, C1 100n and C2 1u from AVCC to GND; component types, references, counts and terminal ownership checked",
+    "Adversarial missing component/model row, incorrect rail/value/type, swapped lane and matching-but-wrong circuit/model value cases must fail",
+    "Preserved existing board_aux identity and mutation coverage",
+    "Replaced obsolete HDMI Python commands/source references with native commands and explicitly documented the zero-analytic-check limitation"
+  ],
+  "verified_commands": [
+    "native/bin/schgen circuit-check --project carrier hdmi_rx_term",
+    "ctest --test-dir native/build/fast --output-on-failure -R '^native_(carrier_spice_identity|floorplan)_contracts$'"
+  ],
+  "numeric_note": "Independent capacitance literals permit at most four relative machine epsilons for SI decimal multiplication; this is representation error allowance, not component tolerance or a relaxed hardware constraint.",
+  "limitations": [
+    "Structural/electrical identity checks are not transient or signal-integrity simulation, routing validation, or physical placement proof",
+    "The analytic SPICE extractor itself was not changed; zero-check coverage is disclosed rather than treated as tested",
+    "Other active subsystem READMEs still contain obsolete Python test commands; repository-wide documentation migration is incomplete",
+    "No schematic connectivity, component values, placement constraints or board layout changed; SPICE edit is a source-reference comment only"
+  ]
+}

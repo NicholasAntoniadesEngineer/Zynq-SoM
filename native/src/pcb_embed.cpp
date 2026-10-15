@@ -1,7 +1,19 @@
 #include "pcb_emit_internal.hpp"
 #include "schgen/embed_fp.hpp"
+#include "schgen/thermal_via_planning.hpp"
 
 namespace schgen::pcb_emission {
+bool interface_label_part(const PcbFootprintInst& i,const PcbEmitPolicy& p) {
+    if(lookup(p.connector_mating_faces,i.value)||lookup(p.header_descriptions,i.ref)||
+       lookup(p.switch_descriptions,i.ref))return true;
+    const auto digit=i.ref.find_first_of("0123456789");
+    const auto prefix=i.ref.substr(0,digit);
+    for(const auto* name:{"J","P","TP","SW","JP","BT","LED","FID","H"})
+        if(prefix==name)return true;
+    for(const auto* family:{"Connector","TestPoint","Button_Switch","Switch","Jumper", "LED_","Display","Battery","Fuse","MountingHole","Fiducial"})
+        if(i.footprint.find(family)!=std::string::npos)return true;
+    return false;
+}
 Box4 courtyard(const PcbFootprintInst &i) {
     if (!i.mod || !i.mod->bbox)
         throw PcbEmissionError(i.ref + ": missing footprint courtyard geometry");
@@ -53,29 +65,68 @@ Sexpr embed(const PcbFootprintInst &i, const PcbEmitPolicy &p, const Uid &uid) {
     bool hide = lookup(p.connector_mating_faces, i.value) || lookup(p.header_descriptions, i.ref) ||
                 lookup(p.switch_descriptions, i.ref) ||
                 i.footprint.find("TestPoint") != std::string::npos;
+    if(p.interface_reference_labels_only)hide=!interface_label_part(i,p);
     return embed_footprint_decorate(std::move(doc), i.ref, i.value, i.rotation, hide, nets,
                                     inherited, uid);
 }
 
-ThermalNodes thermal_nodes(const PcbModel &m, const PcbEmitPolicy &p, const Uid &uid,
-                           PcbEmissionResult &result, QuantizationCounts* counts) {
-    ThermalNodes out;
-    auto g = m.net_numbers.find("GND");
-    if (g == m.net_numbers.end() || !g->second)
-        return out;
+std::vector<ViaObstacle> thermal_obstacles(const PcbCheckModel &m, QuantizationCounts* counts) {
     std::map<int, std::string> net_names;
     for (const auto &[name, n] : m.net_numbers)
         net_names[n] = name;
     // Scan each immutable source once per render, never cache by a mutable path.
     using Pads = decltype(scan_mod_pads(Sexpr{}));
     std::map<const PcbCheckFootprint *, Pads> scans;
+    // Through-vias must clear pads on both faces. Footprint origins do not
+    // bound pad extent: connectors and offset-origin footprints can reach far
+    // beyond them. Prepare actual world geometry once, shared by all subjects.
+    std::vector<ViaObstacle> obstacles;
+    for (const auto &other : m.insts) {
+        if (!other.mod)
+            throw PcbEmissionError(other.ref + ": unresolved thermal via obstacle");
+        auto found = scans.find(other.mod.get());
+        if (found == scans.end())
+            found = scans.emplace(other.mod.get(), scan_mod_pads(other.mod->document)).first;
+        for (const auto &[name, x, y, rot, w, h, drill] : found->second) {
+            auto [wx, wy] = world_turned_point(other.x, other.y, x, y, other.rotation, 4);
+            auto [hx, hy] = pad_half_extent(w, h, other.rotation + rot);
+            auto net = other.pad_nets.find(name);
+            obstacles.push_back({wx, wy, hx, hy,
+                                 net == other.pad_nets.end() ? "" : net->second.second,
+                                 drill, other.ref + "." + name});
+        }
+    }
+    for (const auto &c : m.copper)
+        if (c.kind == "via") {
+            auto [x, y] = round_xy(c.x, c.y, 4, counts);
+            double radius = c.size / 2;
+            obstacles.push_back({x, y, radius, radius, net_names[c.net], c.drill,
+                "escape via @(" + fmt(c.x, 3, true) + "," + fmt(c.y, 3, true) + ")"});
+        }
+    return obstacles;
+}
+ViaSiteSpec thermal_rule(const PcbCheckModel &m, const PcbEmitPolicy &p) {
+    return {m.origin_x, m.origin_y, m.board_w, m.board_h, p.thermal_via_edge,
+            p.thermal_via_size, p.thermal_via_drill, p.thermal_via_clear,
+            p.hole_samenet_pad, p.thermal_via_h2h, p.thermal_via_spacing};
+}
+bool has_thermal_subjects(const PcbCheckModel& m, const PcbEmitPolicy& p) {
+    return std::any_of(m.insts.begin(), m.insts.end(), [&](const auto &i) {
+        return std::any_of(p.thermal_copper.begin(), p.thermal_copper.end(),
+            [&](const auto &s) { return starts(i.value, s.first); });
+    });
+}
+ThermalNodes thermal_nodes(const PcbModel &m, const PcbEmitPolicy &p, const Uid &uid,
+                           PcbEmissionResult &result, QuantizationCounts* counts) {
+    ThermalNodes out;
+    auto g = m.net_numbers.find("GND");
+    if (g == m.net_numbers.end() || !g->second || !has_thermal_subjects(m, p))
+        return out;
+    const auto obstacles = thermal_obstacles(m, counts);
+    const auto rule = thermal_rule(m, p);
     std::vector<Points> polygons;
     std::vector<std::string> layers;
     Points placed;
-    ViaSiteSpec rule{m.origin_x,          m.origin_y,           m.board_w,
-                     m.board_h,           p.thermal_via_edge,   p.thermal_via_size,
-                     p.thermal_via_drill, p.thermal_via_clear,  p.hole_samenet_pad,
-                     p.thermal_via_h2h,   p.thermal_via_spacing};
     for (const auto &i : m.insts) {
         auto match = std::find_if(p.thermal_copper.begin(), p.thermal_copper.end(),
                                   [&](const auto &s) { return starts(i.value, s.first); });
@@ -110,73 +161,38 @@ ThermalNodes thermal_nodes(const PcbModel &m, const PcbEmitPolicy &p, const Uid 
             polygons.push_back(corners);
             layers.push_back(l);
         }
-        double reach = 0;
-        for (auto [x, y] : spec.via_sites)
-            reach = std::max({reach, std::abs(x), std::abs(y)});
-        reach += 20;
-        std::vector<ViaObstacle> obstacles;
-        for (const auto &other : m.insts)
-            if (within_reach(other.x, other.y, i.x, i.y, reach)) {
-                if (!other.mod)
-                    throw PcbEmissionError(other.ref + ": unresolved thermal via obstacle");
-                auto found = scans.find(other.mod.get());
-                if (found == scans.end())
-                    found =
-                        scans.emplace(other.mod.get(), scan_mod_pads(other.mod->document)).first;
-                for (const auto &[name, x, y, rot, w, h, drill] : found->second) {
-                    auto [wx, wy] = world_turned_point(other.x, other.y, x, y, other.rotation, 4);
-                    auto [hx, hy] = pad_half_extent(w, h, other.rotation + rot);
-                    auto net = other.pad_nets.find(name);
-                    obstacles.push_back({wx, wy, hx, hy,
-                                         net == other.pad_nets.end() ? "" : net->second.second,
-                                         drill, other.ref + "." + name});
-                }
-            }
-        for (const auto &c : m.copper)
-            if (c.kind == "via" && within_reach(c.x, c.y, i.x, i.y, reach)) {
-                auto [x, y] = round_xy(c.x, c.y, 4, counts);
-                double radius = c.size / 2;
-                obstacles.push_back(
-                    {x, y, radius, radius, net_names[c.net], c.drill,
-                     "escape via @(" + fmt(c.x, 3, true) + "," + fmt(c.y, 3, true) + ")"});
-            }
-        Points chosen, candidates = spec.via_sites;
-        auto lattice = fallback_via_sites(spec.pour.x0, spec.pour.y0, spec.pour.x1, spec.pour.y1,
-                                          p.thermal_via_size, p.thermal_lattice_pitch, counts);
-        candidates.insert(candidates.end(), lattice.begin(), lattice.end());
-        int n_lattice = 0;
+        auto selection = select_via_sites(i.x, i.y, i.rotation, spec.via_sites, spec.pour,
+            spec.max_vias, p.thermal_lattice_pitch, true, rule, obstacles, placed, counts);
+        const auto& chosen = selection.chosen;
+        const auto n_lattice = selection.lattice_chosen;
+        result.fallback_events.insert(result.fallback_events.end(), n_lattice, "thermal_via_lattice");
         std::map<std::string, int> vetoes;
-        Points occupied = placed;
-        for (std::size_t ci = 0; ci < candidates.size() && chosen.size() < spec.max_vias; ++ci) {
-            auto [x, y] = world_turned_point(i.x, i.y, candidates[ci].first, candidates[ci].second,
-                                             i.rotation, 3);
-            auto hit = via_site_blocker(x, y, rule, obstacles, occupied);
-            if (!hit.blocked) {
-                chosen.emplace_back(x, y);
-                occupied.emplace_back(x, y);
-                if (ci >= spec.via_sites.size()) {
-                    ++n_lattice;
-                    result.fallback_events.push_back("thermal_via_lattice");
-                }
-            } else {
-                std::string label;
-                if (hit.kind == "edge")
-                    label = "Edge.Cuts keep-back";
-                else if (hit.kind == "thermal")
-                    label =
-                        "thermal via @(" + fmt(hit.x, 3, true) + "," + fmt(hit.y, 3, true) + ")";
-                else
-                    label = hit.label + " [" + (hit.nname.empty() ? "no-net" : hit.nname) + "] @(" +
-                            fmt(hit.x, 3, true) + "," + fmt(hit.y, 3, true) + ")";
-                ++vetoes[label];
-            }
+        std::map<std::string, int> preferred_vetoes;
+        for (const auto& rejection : selection.rejected) {
+            const auto& hit = rejection.blocker;
+            std::string label;
+            if (hit.kind == "edge")
+                label = "Edge.Cuts keep-back";
+            else if (hit.kind == "thermal")
+                label = "thermal via @(" + fmt(hit.x, 3, true) + "," + fmt(hit.y, 3, true) + ")";
+            else
+                label = hit.label + " [" + (hit.nname.empty() ? "no-net" : hit.nname) + "] @(" +
+                        fmt(hit.x, 3, true) + "," + fmt(hit.y, 3, true) + ")";
+            ++vetoes[label];
+            if (rejection.preferred) ++preferred_vetoes[label];
         }
-        if (n_lattice)
+        if (n_lattice) {
+            std::string preferred_blockers;
+            for(const auto& [label,count]:preferred_vetoes) {
+                if(!preferred_blockers.empty())preferred_blockers+="; ";
+                preferred_blockers+=label+" x"+std::to_string(count);
+            }
             result.diagnostics.push_back(
                 "THERMAL VIA LATTICE: " + i.ref + " (" + i.value + ") seated " +
                 std::to_string(n_lattice) + "/" + std::to_string(chosen.size()) +
                 " via(s) from the exhaustive lattice — curated preferred site(s) blocked "
-                "(registered fallback; drift from datasheet-preferred via geometry)");
+                "(registered fallback; alternative to authored preferred via geometry). Preferred-site blockers: "+preferred_blockers);
+        }
         const ThermalPourNeed *need = nullptr;
         for (const auto &n : p.thermal_credit_needs)
             if (starts(i.value, n.value_prefix) &&
@@ -200,7 +216,7 @@ ThermalNodes thermal_nodes(const PcbModel &m, const PcbEmitPolicy &p, const Uid 
                     fmt(i.x, 3, true) + "," + fmt(i.y, 3, true) + ") rot " + fmt(i.rotation) +
                     " seated " + std::to_string(count) + "/" + std::to_string(need->min_vias) +
                     " GND vias within " + fmt(need->radius_mm) + " mm; " +
-                    std::to_string(candidates.size()) +
+                    std::to_string(selection.preferred_examined + selection.lattice_examined) +
                     " candidate seats searched (curated + lattice), every other one blocked. Worst "
                     "blockers: " +
                     blockers +
@@ -233,3 +249,97 @@ ThermalNodes thermal_nodes(const PcbModel &m, const PcbEmitPolicy &p, const Uid 
     return out;
 }
 } // namespace schgen::pcb_emission
+
+namespace schgen {
+std::vector<PreferredThermalField> plan_preferred_thermal_vias(
+    const PcbCheckModel& m, const PcbEmitPolicy& p, QuantizationCounts* counts) {
+    using namespace pcb_emission;
+    std::vector<PreferredThermalField> result;
+    if (!has_thermal_subjects(m,p)) return result;
+    const auto ground = m.net_numbers.find("GND");
+    if (ground == m.net_numbers.end() || !ground->second)
+        throw PcbEmissionError("thermal planning requires a resolved GND net");
+    const auto obstacles = thermal_obstacles(m,counts);
+    const auto rule = thermal_rule(m,p);
+    Points occupied;
+    for (const auto& i : m.insts) {
+        const auto match = std::find_if(p.thermal_copper.begin(),p.thermal_copper.end(),
+            [&](const auto& s) { return starts(i.value,s.first); });
+        if (match == p.thermal_copper.end()) continue;
+        auto spec = match->second;
+        if (spec.via_sites.empty()) throw PcbEmissionError(i.ref+": thermal copper requires preferred via sites");
+        if (i.mirror) {
+            for (auto& xy : spec.via_sites) xy.second = -xy.second;
+            spec.pour = {spec.pour.x0,-spec.pour.y1,spec.pour.x1,-spec.pour.y0};
+        }
+        auto sites = select_via_sites(i.x,i.y,i.rotation,spec.via_sites,spec.pour,
+            spec.max_vias,p.thermal_lattice_pitch,false,rule,obstacles,occupied,counts);
+        occupied.insert(occupied.end(),sites.chosen.begin(),sites.chosen.end());
+        result.push_back({i.ref,spec.max_vias,std::move(sites)});
+    }
+    return result;
+}
+std::vector<ThermalPadMove> thermal_pad_move_candidates(
+    const PcbCheckModel& model, const PcbEmitPolicy& policy,
+    const std::vector<PreferredThermalField>& fields, QuantizationCounts* counts) {
+    if (std::none_of(fields.begin(),fields.end(),[](const auto& field) {
+            return field.sites.chosen.size()<field.requested;
+        })) return {};
+    const auto obstacles=pcb_emission::thermal_obstacles(model,counts);
+    const auto rule=pcb_emission::thermal_rule(model,policy);
+    std::map<std::string,std::set<std::string>> owners;
+    for (const auto& part : model.insts)
+        for (const auto& pad : scan_mod_pads(part.mod->document))
+            owners[part.ref+"."+std::get<0>(pad)].insert(part.ref);
+    std::set<std::tuple<std::string,double,double>> seen;
+    std::vector<ThermalPadMove> result;
+    std::vector<ThermalPadMove> subject_moves;
+    std::set<std::tuple<std::string,double,double>> subject_seen;
+    for (const auto& field : fields) {
+        if (field.sites.chosen.size()>=field.requested) continue;
+        for (const auto& rejected : field.sites.rejected) {
+            if (!rejected.preferred || rejected.blocker.kind!="obs") continue;
+            const auto found=owners.find(rejected.blocker.label);
+            if (found==owners.end() || found->second.size()!=1) continue;
+            const auto& ref=*found->second.begin();
+            if (ref==field.ref) continue; // Moving the subject also moves its sites.
+            for (const auto& obstacle : obstacles) {
+                if (obstacle.label!=rejected.blocker.label) continue;
+                for (const auto& [x,y] : via_obstacle_axis_exits(
+                        rejected.candidate.first,rejected.candidate.second,rule,obstacle)) {
+                    const double dx=x-obstacle.cx, dy=y-obstacle.cy;
+                    if (seen.emplace(ref,dx,dy).second) result.push_back({ref,dx,dy});
+                    // Equivalent relative displacement with the obstacle held
+                    // still. The caller must move the subject's complete group
+                    // when required and recheck all fields and hardware gates.
+                    if (subject_seen.emplace(field.ref,-dx,-dy).second)
+                        subject_moves.push_back({field.ref,-dx,-dy});
+                }
+            }
+        }
+    }
+    std::stable_sort(result.begin(),result.end(),[](const auto& a,const auto& b) {
+        return std::hypot(a.dx,a.dy)<std::hypot(b.dx,b.dy);
+    });
+    std::stable_sort(subject_moves.begin(),subject_moves.end(),[](const auto& a,const auto& b) {
+        return std::hypot(a.dx,a.dy)<std::hypot(b.dx,b.dy);
+    });
+    for(const auto& move:subject_moves)
+        if(seen.emplace(move.ref,move.dx,move.dy).second)result.push_back(move);
+    return result;
+}
+bool preserves_preferred_thermal_vias(const std::vector<PreferredThermalField>& before,
+                                      const std::vector<PreferredThermalField>& after) {
+    if (before.size()!=after.size()) return false;
+    std::map<std::string,const PreferredThermalField*> prior;
+    for (const auto& field : before)
+        if (!prior.emplace(field.ref,&field).second) return false;
+    for (const auto& field : after) {
+        const auto old = prior.find(field.ref);
+        if (old==prior.end() || field.requested!=old->second->requested ||
+            field.sites.chosen.size()<old->second->sites.chosen.size()) return false;
+        prior.erase(old);
+    }
+    return prior.empty();
+}
+}

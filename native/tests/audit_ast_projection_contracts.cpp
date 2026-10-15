@@ -58,6 +58,20 @@ JsonNode projected(const std::string& input,const std::string& source="fixture",
 }
 void contracts(){
     for(const auto& field:schema)require(audit_ast_projection_keeps_field(field),"schema field missing: "+field);
+    // Exact membership, including neighbours, prefixes and embedded NULs;
+    // lookup optimisations must not turn an unknown spelling into a field.
+    for(const auto& field:schema){
+        for(std::size_t length=0;length<=field.size();++length){
+            const auto prefix=field.substr(0,length);
+            require(audit_ast_projection_keeps_field(prefix)==bool(schema.count(prefix)),"field prefix membership");
+        }
+        for(const auto& candidate:{field+"x",field+std::string(1,'\0'),"x"+field})
+            require(audit_ast_projection_keeps_field(candidate)==bool(schema.count(candidate)),"field extension membership");
+        for(std::size_t i=0;i<field.size();++i)for(const char delta:{-1,1}){
+            auto candidate=field;candidate[i]=char(candidate[i]+delta);
+            require(audit_ast_projection_keeps_field(candidate)==bool(schema.count(candidate)),"field neighbour membership");
+        }
+    }
     for(const auto* field:{"line","col","end","spellingLoc","tokLen","isUsed","valueCategory","definitionData","unknown"})require(!audit_ast_projection_keeps_field(field),"unused field retained");
     const std::string ast=R"JSON({"unused":{"deep":[1,true,null,{"inner":["ignored"]}]},"inner":[{"parentDeclContextId":"0xparent","kind":"CXXMethodDecl","id":"0xmethod","mangledName":"_Zmethod","loc":{"offset":12,"line":2,"col":1,"includedFrom":{"file":"header.hpp"}},"type":{"qualType":"double (double)","desugaredQualType":"double (double)","typeAliasDeclId":"unused"},"isImplicit":false,"inner":[{"range":{"end":{"offset":99},"begin":{"offset":14,"expansionLoc":{"offset":18,"file":"main.cpp"},"spellingLoc":{"offset":999}}},"kind":"DeclRefExpr","referencedDecl":{"kind":"VarDecl","id":"0xvar","name":"α😀","type":{"qualType":"const double"}}}]},{"name":"","kind":"NamespaceDecl","id":"0xanon"}],"kind":"TranslationUnitDecl","id":"0xroot"})JSON";
     AuditAstProjectionStats stats;
@@ -99,8 +113,48 @@ void contracts(){
     const auto wide=std::string("{\"unused\":\"")+std::string(8*1024*1024,'a')+"\",\"kind\":\"TranslationUnitDecl\"}";
     const auto wide_node=projected(wide,"large skipped string",&stats);
     require(wide_node.object_value.size()==1&&stats.retained_values==2&&stats.json_values==3,"large unknown string has no DOM payload");
+    std::string discarded_array="{\"unknown\":[";
+    for(int i=0;i<10000;++i){if(i)discarded_array+=',';discarded_array+="null";}
+    discarded_array+="],\"kind\":\"TranslationUnitDecl\"}";
+    const auto skipped=projected(discarded_array,"large discarded array",&stats);
+    same(strip(parse_json_text(discarded_array)),skipped);
+    require(stats.json_values==10003&&stats.retained_values==2&&stats.discarded_fields==1,
+        "every discarded array element remains validated and counted");
+    discarded_array.replace(discarded_array.find("null"),4,"1e9999");
+    rejected(discarded_array);
 }
 void streaming_boundaries(){
+    // Every byte in every word lane, retained and discarded, with short tails
+    // and across the stream refill. Non-ASCII singletons are invalid UTF-8.
+    for(const auto* key:{"name","unknown"})for(std::size_t lane=0;lane<16;++lane)
+        for(unsigned byte=0;byte<256;++byte){
+            const auto prefix=std::string("{\"")+key+"\":\""+std::string(lane,'a');
+            const auto input=prefix+static_cast<char>(byte)+std::string(24,'z')+"\"}";
+            const bool ordinary=byte>=32&&byte<128&&byte!='"'&&byte!='\\';
+            if(ordinary)same(strip(parse_json_text(input)),projected(input));
+            else rejected(input);
+        }
+    for(std::size_t n=65515;n<65545;++n)for(const auto* key:{"name","unknown"}){
+        const auto prefix=std::string("{\"")+key+"\":\""+std::string(n,'a');
+        for(const auto* tail:{"\\\"", "\\\\", "α", "😀", "\\u0000"}){
+            const auto input=prefix+tail+"end\"}";
+            same(strip(parse_json_text(input)),projected(input));
+        }
+        for(const char byte:{'\0','\n',static_cast<char>(0x80)})
+            rejected(prefix+byte+"end\"}");
+    }
+    // Word-sized whitespace fast paths must neither overread a short tail nor
+    // accept any non-JSON whitespace byte hidden inside an indentation run.
+    for(std::size_t n:{0u,1u,7u,8u,9u,15u,16u,17u,65535u,65536u,65537u}) {
+        const auto padding=std::string(n,' ');
+        const auto valid=padding+"\t\r\n {\"kind\" "+padding+": \"TranslationUnitDecl\"}"+padding;
+        AuditAstProjectionStats stats;
+        same(strip(parse_json_text(valid)),projected(valid,"whitespace words",&stats));
+        require(stats.input_bytes==valid.size(),"whitespace byte accounting changed");
+        for(const char c:{'\v','\f','\0',static_cast<char>(0xa0)})
+            rejected(padding+std::string(1,c)+"null");
+        rejected(padding);
+    }
     const std::vector<std::string> valid={
         R"({"name":"\uD83D\uDE00α😀\\\"","unknown":"\uD834\uDD1E","loc":{"offset":-123.45678e+12}})",
         R"({"inner":[true,false,null,1.7976931348623157e308],"kind":"TranslationUnitDecl"})",

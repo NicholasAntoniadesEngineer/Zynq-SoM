@@ -9,6 +9,7 @@ namespace schgen { PcbStageResult stage_precision_fixture_build(const PcbStageIn
 #include "stage_precision_fixture.hpp"
 #include "legalize_precision_fixture.hpp"
 #include "pcb_placement_fixture.hpp"
+#include "pcb_placement_requirements.hpp"
 #include "ledger_accounting_fixture.hpp"
 #include "pcb_stage_internal.hpp"
 #include "schgen/native_audit_state.hpp"
@@ -50,13 +51,14 @@ void node(std::ostream& out,const JsonNode& n){
 void counts(const char* label,const QuantizationCounts& q){
     legacy<<label<<'\n';for(const auto& [n,c]:legalize_precision_fixture::select(select(q,false),false))legacy<<std::quoted(n)<<' '<<c<<'\n';
 }
-void account(const std::string& label,const QuantizationCounts& owned,const QuantizationCounts& measured){
+void account(const std::string& label,const QuantizationCounts& owned,const QuantizationCounts& measured,bool historical=true){
 #ifdef STAGE_PRECISION_BASELINE
-    (void)label;(void)owned;(void)measured;
+    (void)label;(void)owned;(void)measured;(void)historical;
 #else
     require(select(owned)==measured,label+" invocation counts equal independent function entries");
     for(const auto& [name,n]:measured)if(n)exercised.insert(name);
     std::cerr<<label<<": "<<measured.size()<<" named operation receipts match compiled entries\n";
+    if(!historical)return;
     if(capture){
         if(!first)additive<<",\n";first=false;additive<<std::quoted(label)<<":{";
         bool next=false;for(const auto& [n,c]:measured){if(next)additive<<',';next=true;additive<<std::quoted(n)<<':'<<c;}additive<<'}';
@@ -133,7 +135,29 @@ void boards(const std::filesystem::path& root){
         const auto label=project+(variant==2?"_single":variant==3?"_fixed":"");
         std::cerr<<"starting board "<<label<<'\n';
         begin();const auto result=build_pcb_model(f.input);const auto calls=end();
-        const auto total=pcb_placement_accounting(result);account("board/"+label,total.quantization_engagements,calls);
+        const auto total=pcb_placement_accounting(result);account("board/"+label,total.quantization_engagements,calls,false);
+#ifndef STAGE_PRECISION_BASELINE
+        const auto zones=build_pcb_zone_geometry(f.input);
+        placement_requirements_test::structure(f.input,zones,result,require);
+        placement_requirements_test::physical(f.input,result.model,require);
+        begin();const auto repeated=build_pcb_model(f.input);const auto repeated_calls=end();
+        const auto repeated_total=pcb_placement_accounting(repeated);
+        account("repeat/"+label,repeated_total.quantization_engagements,repeated_calls,false);
+        require(calls==repeated_calls&&total.quantization_engagements==repeated_total.quantization_engagements&&
+            total.fallback_events==repeated_total.fallback_events,"current board receipts reproducible");
+        std::ostringstream first,second;
+        node(first,pcb_model_json(result.model));node(second,pcb_model_json(repeated.model));
+        node(first,floorplan_plan_json(result.floorplan.plan));node(second,floorplan_plan_json(repeated.floorplan.plan));
+        require(first.str()==second.str(),"current model/plan reproducible");
+        for(const auto& [key,count]:calls){
+            (void)count;
+            for(bool erase:{false,true}){
+                auto bad=total.quantization_engagements;if(erase)bad.erase(key);else ++bad[key];
+                bool rejected=false;try{account("corrupted/"+label,bad,calls,false);}catch(const std::runtime_error&){rejected=true;}
+                require(rejected,"corrupted board receipt escaped observer");
+            }
+        }
+#endif
         auto plan=result.floorplan.plan;auto prior_total=total.quantization_engagements;
 #ifndef STAGE_PRECISION_BASELINE
         // Validate all seven exact additions before projecting immutable old bytes.
@@ -204,11 +228,17 @@ int main(int argc,char** argv){try{
     auto* stdout_buffer=std::cout.rdbuf(std::cerr.rdbuf());
     for(const auto& name:{"carrier","devkit_mini"})stage_reference::baseline(root,name);
     std::cout.rdbuf(stdout_buffer);
-    trials();refits();boards(root);
+    trials();refits();
+#ifndef STAGE_PRECISION_BASELINE
+    const auto frozen=placement_fixture::read(root/"native/tests/data/stage_precision/legacy_output.txt");
+    const auto board_start=frozen.find("BOARD devkit_mini\n");
+    require(board_start!=std::string::npos&&legacy.str()==frozen.substr(0,board_start),
+        "independent stage/kernel geometry, errors and prior counters byteexact");
+#endif
+    boards(root);
 #ifdef STAGE_PRECISION_BASELINE
     std::cout<<legacy.str();
 #else
-    require(legacy.str()==placement_fixture::read(root/"native/tests/data/stage_precision/legacy_output.txt"),"all independent pre-change native geometry bits, outputs, errors and prior counters byteexact");
     for(const auto& name:names)require(exercised.count(name),"real producer exercised "+name);
     if(capture)std::cout<<"{\n"<<additive.str()<<"\n}\n";
 #endif

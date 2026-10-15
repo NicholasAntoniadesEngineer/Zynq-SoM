@@ -59,6 +59,7 @@ inline void erase_metadata(ComposeDocument &d,const std::string &p) {
 std::string quote(const std::string &);
 std::string repr(const std::string &);
 std::string scalar(const ComposeDocument &,const JsonNode &,const std::string &);
+std::string margin_summary(const ComposeDocument&,const JsonNode& ledger,const std::string& base);
 inline ComposeTermKey key(const JsonNode &t) {return {str(t,"kind"),str(t,"subject"),str(t,"target")};}
 inline ComposeTermKey key(const FloorplanTerm &t) {return {t.kind,t.subject,t.target_raw};}
 inline std::string key_repr(const ComposeTermKey &k) {return "("+repr(std::get<0>(k))+", "+repr(std::get<1>(k))+", "+repr(std::get<2>(k))+")";}

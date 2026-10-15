@@ -22,6 +22,7 @@ struct PcbModelOverride {
     double rotation_z = 0;
 };
 struct PcbEmitPolicy {
+    bool interface_reference_labels_only = false;
     ProjectStrings footprint_aliases, connector_mating_faces;
     ProjectStrings connector_descriptions, header_descriptions, switch_descriptions;
     std::vector<std::pair<std::string, PcbThermalCopperSpec>> thermal_copper;

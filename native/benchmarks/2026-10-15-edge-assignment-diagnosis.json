@@ -1,0 +1,25 @@
+{
+  "parent_commit": "0cd2a8f2",
+  "change": "Profiler reports edge assignments and connector seating movement from existing stage records, after timed model construction. No production solver change.",
+  "finding": "162x153 packs hdmi_tx on N while zone connector geometry remains S. edge_seat moves J14001 alone from board y=23.6364 to y=147.8337 (124.1973mm). Final connector-companion pad distance exceeds 126mm and fails authored proximity checks. This is an inter-stage edge/geometry mismatch, not proof of outline infeasibility.",
+  "failed_candidate": {
+    "log": "native/build/edge-assignment-162x153.log",
+    "pcb_sha256": "ade65042a8e4d6f40ab7e5f2ecccf24ba45be84642c44548687bbecfa7d21b95",
+    "matches_prior_rejected_candidate": true,
+    "fanout_ok": false,
+    "placement_contract_ok": false,
+    "emission_nonsearch_fallbacks": 2
+  },
+  "qualified_reference_control": {
+    "dimensions_mm": [163,152],
+    "log": "native/build/edge-assignment-reference.log",
+    "pcb_sha256": "413100c05f91a68436c457039752e0e932593e54760e802bed434a547e66dca7",
+    "matches_qualified_reference": true,
+    "fanout_ratsnest_placement_flow_checks": "PASS",
+    "hard_red": 0,
+    "nonsearch_fallbacks": 0
+  },
+  "verification": "Profiler rebuilt successfully; both candidate and reference retain exact previous PCB hashes. git diff --check passes. Full qualification not repeated for diagnostic-only code.",
+  "next_work": "Carry edge-specific group geometry and orientation consistently through packing and placement. Simply changing connector edge metadata is insufficient: group bounds, companion geometry and facing must agree before packing. Preserve final independent checks and add a deliberate spill regression.",
+  "limitations": "Root cause identified, not repaired. No smaller carrier accepted; thermal fallback issues also remain on the rejected candidate. No speedup claim or fabrication-readiness claim."
+}

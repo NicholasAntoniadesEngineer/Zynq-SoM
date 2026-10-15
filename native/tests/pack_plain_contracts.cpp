@@ -33,7 +33,7 @@ const std::array<Op,18> ops{{
 }};
 int main(){try{
  NativeQuantizations registry;register_native_quantizations(registry);
- require(registry.declarations().size()==155);
+ require(registry.declarations().size()==156);
  const auto declarations=registry.declarations();
  for(std::size_t i=0;i<ops.size();++i){
   const auto& name=plain_fixture::names[i];const auto& op=ops[i];

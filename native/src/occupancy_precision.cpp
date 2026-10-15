@@ -52,8 +52,26 @@ double occupancy_shape_key4dp(double distance, QuantizationCounts* counts) {
     return py_round(distance, 4);
 }
 
-int occupancy_cell_index(double coordinate, double bucket, QuantizationCounts* counts) {
-    if (counts) checked_quantization_add(*counts, "occupancy_cell_index");
+int occupancy_cell_index(double coordinate, double bucket, OccupancyCellCounter counts) {
+    if (counts.counts_) {
+        static const std::string key = "occupancy_cell_index";
+        auto* value = counts.slot_ ? counts.slot_->value_ : nullptr;
+        if (!value) {
+            const auto found = counts.counts_->find(key);
+            if (found == counts.counts_->end()) {
+                const auto inserted = counts.counts_->emplace(key, 1);
+                if (counts.slot_) counts.slot_->value_ = &inserted.first->second;
+            } else {
+                value = &found->second;
+                if (counts.slot_) counts.slot_->value_ = value;
+            }
+        }
+        if (value) {
+            if (*value == std::numeric_limits<std::size_t>::max())
+                throw std::overflow_error("quantization counter overflow: " + key);
+            ++*value;
+        }
+    }
     if (!std::isfinite(coordinate) || !std::isfinite(bucket) || bucket == 0)
         throw std::invalid_argument("occupancy_cell_index: finite coordinate and finite nonzero bucket required");
     const double cell = std::floor(coordinate / bucket);

@@ -34,4 +34,14 @@ using ProcessStdoutConsumer=std::function<void(std::istream&)>;
 // with run_process. The child timeout does not impose a parser execution timeout.
 ProcessConsumedResult run_process_consume_stdout(const std::vector<std::string>& argv,
     const ProcessStdoutConsumer&,std::chrono::milliseconds timeout=std::chrono::milliseconds{30000});
+// Speculative, bounded pipe transport for transactional parsers ONLY. Consumer
+// may run before child exit/UTF-8 validation; it must keep all state private and
+// publish nothing. Success commits only after complete output validation and
+// child exit 0. Early return/throw drains stdout; timeout/process errors precede
+// stdout UTF-8, stderr UTF-8, nonzero exit, then consumer failure. On nonzero exit
+// any speculative consumer failure is suppressed. All direct children are
+// reaped and the isolated child group is cancelled before returning/throwing.
+// Existing run_process_consume_stdout semantics are unchanged.
+ProcessConsumedResult run_process_transactional_stdout(const std::vector<std::string>& argv,
+    const ProcessStdoutConsumer&,std::chrono::milliseconds timeout=std::chrono::milliseconds{30000});
 }  // namespace schgen

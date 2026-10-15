@@ -2,8 +2,15 @@
 #include "native_audit_quantize_internal.hpp"
 
 #include <algorithm>
+#include <array>
 #include <cmath>
+#include <deque>
+#include <limits>
 #include <unordered_map>
+#include "pack_refine_internal.hpp"
+#include "constraint_order_internal.hpp"
+#include "edge_translation_internal.hpp"
+#include "near_translation_domain_internal.hpp"
 
 namespace schgen::floorplan_detail {
 namespace {
@@ -14,6 +21,16 @@ template<class Map> const typename Map::mapped_type& get(const Map& map, const t
 }
 char edge_char(const std::string& edge) { return edge.empty() ? '\0' : edge.front(); }
 void pose(FloorplanBlock& b, const Pose& p) { b.x=p.x; b.y=p.y; b.w=p.w; b.h=p.h; }
+template<class Map> auto save_entry(const Map& map,const typename Map::key_type& key) {
+    const auto it=map.find(key);
+    return it==map.end() ? std::optional<typename Map::mapped_type>{}
+                        : std::optional<typename Map::mapped_type>{it->second};
+}
+template<class Map> void restore_entry(Map& map,const typename Map::key_type& key,
+                                      const std::optional<typename Map::mapped_type>& saved) {
+    if(saved)map.insert_or_assign(key,*saved);
+    else map.erase(key);
+}
 }  // namespace
 
 PackAnchorIn Engine::anchor_row(const FloorplanBlock& b,
@@ -32,6 +49,14 @@ PackAnchorIn Engine::anchor_row(const FloorplanBlock& b,
     } else {
         const char z=b.zone=="N" || b.zone=="E" || b.zone=="S" || b.zone=="W" ? b.zone.front() : 'E';
         std::tie(a.zone_ax,a.zone_ay)=zone_anchor(z,plan.som_x,plan.som_y,plan.som.w,plan.som.h,plan.board_w,plan.board_h);
+        // SoM connectors are not edge blocks. Honour their explicit near
+        // anchors using the actual connector rectangle, not the E fallback.
+        for(const auto& jack:plan.som.js)
+            if(!jack.ref.empty()&&jack.ref.front()=='J'&&b.zone=="@som_j"+jack.ref.substr(1)) {
+                a.zone_ax=plan.som_x+jack.x+jack.w/2;
+                a.zone_ay=plan.som_y+jack.y+jack.h/2;
+                break;
+            }
     }
     if (b.pull) {
         a.exclusive=b.pull->exclusive; a.inboard=b.pull->face=="inboard"; a.pull_weight=b.pull->weight;
@@ -47,18 +72,197 @@ PackAnchorIn Engine::anchor_row(const FloorplanBlock& b,
     return a;
 }
 
+bool Engine::attempt_shape_replays(bool compact) {
+    const auto entry=plan;
+    const auto offers=side_offers;
+    const auto restrictions=shape_replay_choices;
+    const auto restore=[&] {
+        auto accounting=std::move(plan.accounting);
+        plan=entry;plan.accounting=std::move(accounting);side_offers=offers;
+    };
+    using Choices=std::map<std::string,int>;
+    std::deque<Choices> pending;
+    std::set<Choices> seen{restrictions};
+    const auto budget=in.experiment->shape_choice_replays;
+    const ContinuationKey key{plan.board_w,plan.board_h,plan.punch_free,compact,*in.experiment->interior_order};
+    std::size_t executed=0;
+    bool truncated=false;
+    ShapeChoiceTrace trace;
+    shape_replay_trace=&trace;
+    const auto cleanup=[&] {
+        shape_replay_trace=nullptr;shape_replay_trace_started=false;
+        shape_replay_choices=restrictions;
+    };
+    try {
+        for(;;) {
+            trace.clear();shape_replay_trace_started=false;
+            if(attempt_pack(compact)) {
+                if(executed)shape_replay_hint=std::make_pair(key,shape_replay_choices);
+                cleanup();return true;
+            }
+            // Replay actual legal early choices from the first packing pass.
+            // Include preceding choices to explore combinations, but allow
+            // subsequent eviction/repair to change them. Deduplicate prefixes.
+            // Round-robin alternative rank across decisions: a shape-rich
+            // early block must not consume the entire frontier before a later
+            // block receives even its first alternative.
+            std::size_t alternatives=0;
+            for(const auto& decision:trace)alternatives=std::max(alternatives,decision.second.size());
+            for(std::size_t i=1;i<alternatives;++i) {
+                auto prefix=shape_replay_choices;
+                for(const auto& [sheet,indices]:trace) {
+                  if(i<indices.size()) {
+                    auto child=prefix;child[sheet]=indices[i];
+                    if(!seen.count(child)) {
+                        if(pending.size()>=budget-executed)truncated=true;
+                        else {seen.insert(child);pending.push_back(std::move(child));}
+                    }
+                  }
+                  prefix[sheet]=indices.front();
+                }
+            }
+            if(executed==budget||pending.empty())break;
+            // Reorder only an already generated prefix: a stale hint cannot
+            // add a candidate, bypass a gate or displace a frontier member.
+            if(shape_replay_hint&&shape_replay_hint->first==key) {
+                const auto preferred=std::find(pending.begin(),pending.end(),shape_replay_hint->second);
+                if(preferred!=pending.end()&&preferred!=pending.begin()) {
+                    std::rotate(pending.begin(),preferred,preferred+1);
+                    fallback("interior_shape_choice_hint");
+                }
+            }
+            restore();shape_replay_choices=std::move(pending.front());pending.pop_front();
+            ++executed;fallback("interior_shape_choice_replay");
+        }
+        if(truncated||!pending.empty())fallback("interior_shape_choice_budget");
+        restore();cleanup();return false;
+    } catch(...) {restore();cleanup();throw;}
+}
+
 bool Engine::attempt_pack(bool compact) {
+    if(in.experiment&&in.experiment->shape_choice_replays&&!shape_replay_trace) {
+        validate_floorplan_experiment(*in.experiment);
+        return attempt_shape_replays(compact);
+    }
     return run_floorplan_experiment_attempt(in.experiment.get(), plan.punch_free,
-        [&] { return attempt_pack_impl(compact); }, [&](bool packed) {
+        [&] {
+            if(in.experiment && in.experiment->interior_order) {
+                validate_floorplan_experiment(*in.experiment);
+                const int saved_order=compact_order;
+                const bool recovery=in.compact_search&&in.experiment->failed_first_retry;
+                const bool transactional=recovery||in.experiment->reseat_pose_limits.has_value()||in.experiment->joint_separation_states.has_value();
+                const auto start=transactional?std::optional{plan}:std::nullopt;
+                const auto offers=transactional?std::optional{side_offers}:std::nullopt;
+                const auto restore=[&] {
+                    auto accounting=std::move(plan.accounting);
+                    plan=*start;plan.accounting=std::move(accounting);side_offers=*offers;
+                };
+                compact_order=*in.experiment->interior_order;
+                try {
+                    std::string failed;
+                    bool selected_pose=false;
+                    bool order_independent_failure=false;
+                    bool ok=attempt_pack_impl(compact,&order_independent_failure,{},recovery?&failed:nullptr,0,&selected_pose);
+                    const auto continuations=in.experiment->reseat_pose_limits?
+                        in.experiment->reseat_pose_limits->continuations:0;
+                    const bool reuse=in.experiment->reseat_pose_limits&&in.experiment->reseat_pose_limits->reuse_continuation;
+                    const ContinuationKey key{plan.board_w,plan.board_h,plan.punch_free,compact,compact_order};
+                    const std::size_t preferred=reuse&&continuation_hint&&continuation_hint->first==key&&
+                        continuation_hint->second<=continuations?continuation_hint->second:0;
+                    const bool can_replay=selected_pose;
+                    std::optional<std::size_t> exhausted;
+                    for(std::size_t replay=0;!ok&&can_replay&&replay<continuations;++replay){
+                        // Permute, never prune: preferred, then the remaining
+                        // ascending ordinals. A stale high hint may be empty;
+                        // lower ordinals must still run before exhaustion.
+                        const auto branch=preferred>1?(replay==0?preferred:
+                            (replay<preferred?replay:replay+1)):replay+1;
+                        if(exhausted&&branch>=*exhausted)break;
+                        restore();
+                        if(preferred>1&&replay==0)fallback("interior_reseat_pose_hint");
+                        fallback("interior_reseat_pose_resume");
+                        ok=attempt_pack_impl(compact,nullptr,{},nullptr,branch,&selected_pose);
+                        if(!selected_pose)exhausted=branch;
+                        if(ok&&reuse)continuation_hint=std::make_pair(key,branch);
+                    }
+                    if(!ok&&recovery&&!failed.empty()) {
+                        restore();
+                        fallback("interior_failed_first_retry");
+                        ok=attempt_pack_impl(compact,nullptr,failed);
+                        if(ok)plan.composition.push_back("failure-directed order: "+failed+" first");
+                    }
+                    if(!ok&&!order_independent_failure&&in.experiment->reseat_pose_limits&&in.experiment->reseat_pose_limits->victim_shapes) {
+                        restore();
+                        fallback("interior_reseat_shape_retry");
+                        ok=attempt_pack_impl(compact,nullptr,{},nullptr,0,nullptr,true,true);
+                        if(!ok&&recovery&&!failed.empty()) {
+                            // Enabling both strategies must also explore their
+                            // interaction, not merely two isolated attempts.
+                            restore();
+                            fallback("interior_failed_first_retry");
+                            fallback("interior_reseat_shape_retry");
+                            ok=attempt_pack_impl(compact,nullptr,failed,nullptr,0,nullptr,true,true);
+                            if(ok)plan.composition.push_back("failure-directed shape recovery: "+failed+" first");
+                        }
+                    }
+                    if(!ok&&transactional)restore();
+                    compact_order=saved_order;
+                    return ok;
+                } catch(...) {if(transactional)restore();compact_order=saved_order;throw;}
+            }
+            if (!in.compact_search) return attempt_pack_impl(compact);
+            const auto start=plan;
+            const auto offers=side_offers;
+            // Each alternative starts identically. The optional constraint-first
+            // candidate retains every legacy order as a fallback, never pruning.
+            const bool constraint_first = in.experiment && in.experiment->compact_constraint_first;
+            for (int order : {3,0,1,2}) {
+                if (order == 3 && !constraint_first) continue;
+                auto accounting=std::move(plan.accounting);
+                plan=start; plan.accounting=std::move(accounting);
+                side_offers=offers; compact_order=order;
+                try {
+                    bool order_independent_failure=false;
+                    if (attempt_pack_impl(compact,&order_independent_failure)) {compact_order=0;return true;}
+                    // Interior ordering cannot change edge placement, its
+                    // bounded translations or edge/SoM feasibility. All orders
+                    // start from the same snapshot; do not repeat that failure.
+                    if(order_independent_failure)break;
+                } catch (...) {
+                    compact_order=0;
+                    auto failed_accounting=std::move(plan.accounting);
+                    plan=start;plan.accounting=std::move(failed_accounting);
+                    side_offers=offers;
+                    throw;
+                }
+            }
+            compact_order=0;
+            auto accounting=std::move(plan.accounting);
+            plan=start;plan.accounting=std::move(accounting);side_offers=offers;
+            return false;
+        }, [&](bool packed) {
             return FloorplanAttemptObservation{plan.board_w, plan.board_h, packed,
                                                plan.punch_free, std::nullopt};
         });
 }
-bool Engine::attempt_pack_impl(bool compact) {
+bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure,
+                              const std::string& promote,std::string* failed_subject,
+                              std::size_t first_pose_skip,bool* selected_pose,bool victim_shapes,bool incoming_shapes) {
+    const bool trace_choices=shape_replay_trace&&!shape_replay_trace_started;
+    if(shape_replay_trace)shape_replay_trace_started=true;
+    std::set<std::string> traced_choices;
+    std::set<std::string> initial_shape_choices;
+    if(selected_pose)*selected_pose=false;
+    if(order_independent_failure)*order_independent_failure=true;
     // Borrow only for this synchronous invocation; never attach a sink to
     // occupancy geometry or candidate copies. Rejected trials remain counted.
     auto* const counts=&plan.accounting.quantization_engagements;
     const double bw=plan.board_w,bh=plan.board_h;
+    const auto rejected=[&](const std::string& stage,const std::string& subject,bool phase_compact,
+                            const std::vector<std::string>& diagnostics=std::vector<std::string>{}) {
+        if(in.experiment&&in.experiment->stage_rejected)
+            in.experiment->stage_rejected({bw,bh,stage,subject,phase_compact,plan.punch_free,compact_order,diagnostics});
+    };
     const int policy=plan.punch_free ? 1:0;
     const auto& shapes=shape_sets[policy];
     const auto& co=components[policy];
@@ -76,8 +280,19 @@ bool Engine::attempt_pack_impl(bool compact) {
     }
     std::vector<PackEdgeJack> jacks;
     for (const auto& j:plan.som.js) jacks.push_back({j.ref,plan.som_x+j.x,plan.som_y+j.y});
+    const bool initial_feasibility=in.compact_search&&in.experiment&&in.experiment->compact_edge_feasibility;
+    const auto initial_keepouts=initial_feasibility?som_keepouts():std::vector<Box4>{};
     const auto packed=pack_edges(edge_rows,jacks,{bw,bh,edge_margin,edge_inset,clear,cable_gap,overmold_gap,affinity_floor,
-                                                plan.som_x,plan.som_y,plan.som.w,plan.som.h}, counts);
+                                                plan.som_x,plan.som_y,plan.som.w,plan.som.h}, counts,
+                                                initial_feasibility?&initial_keepouts:nullptr);
+    if(initial_feasibility&&in.experiment->edge_feasibility_completed)
+        in.experiment->edge_feasibility_completed(packed.feasibility_runs,packed.feasibility_intervals,packed.feasibility_rejections);
+    if(initial_feasibility&&!packed.rejection_reason.empty()&&in.experiment->edge_feasibility_rejected)
+        in.experiment->edge_feasibility_rejected(packed.rejected_edge,packed.rejection_reason,
+            packed.feasible_start_low,packed.feasible_start_high);
+    // A bounded spill can leave blocks unplaced. Never retain their poses or
+    // edge labels from an earlier outline, or pass an empty label downstream.
+    if (packed.poses.size()!=plan.edge_blocks.size()) return false;
     for (auto& b:plan.edge_blocks) for (const auto& p:packed.poses) if (p.name==b.name) { b.edge=p.edge; b.x=p.x; b.y=p.y; break; }
     plan.spilled=packed.spilled;
     std::vector<std::tuple<char,double,double,double,double>> run_rows;
@@ -88,10 +303,27 @@ bool Engine::attempt_pack_impl(bool compact) {
         edge_boxes.push_back({b.x,b.y,b.x+b.w,b.y+b.h});
         fanout_rows.push_back({b.x,b.y,b.w,b.h,b.fanout_reach,b.fanout_inset,edge_char(b.edge)});
     }
+    if(in.compact_search&&in.experiment&&in.experiment->compact_edge_translation) {
+        const auto shifted=translate_edge_runs(fanout_rows,som_keepouts(),bw,bh,edge_margin,clear,counts);
+        if(shifted.moved_edge) {
+            for(std::size_t i=0;i<plan.edge_blocks.size();++i) {
+                auto& b=plan.edge_blocks[i];b.x=shifted.blocks[i].x;b.y=shifted.blocks[i].y;
+                run_rows[i]={edge_char(b.edge),b.x,b.y,b.w,b.h};
+                edge_boxes[i]={b.x,b.y,b.x+b.w,b.y+b.h};
+            }
+            fanout_rows=shifted.blocks;
+            fallback("edge_run_translation");
+        }
+        if(in.experiment->edge_translation_completed)
+            in.experiment->edge_translation_completed(shifted.candidates,shifted.moved_edge,shifted.shift);
+        // Opt-in search is fail-closed, including same-edge clearance checks.
+        if(!shifted.valid)return false;
+    }
     checked_quantization_add(plan.accounting.quantization_engagements, "run_overflow_tol");
     if (!edge_runs_margin_ok(run_rows,bw,bh,edge_margin,native_run_overflow_tol())) return false;
     const auto som_rects=som_keepouts();
     if (rects_overlap_any(edge_boxes,som_rects,1e-6) || !cross_edge_fanout_hold(fanout_rows,clear)) return false;
+    if(order_independent_failure)*order_independent_failure=false;
     const int som_mask=plan.punch_free ? occ_top:occ_punch, edge_mask=som_mask;
     const Pose som_occ{plan.som_x-som_pad,plan.som_y-som_pad,plan.som.w+2*som_pad,plan.som.h+2*som_pad};
     std::vector<Comp> som_comps;
@@ -127,85 +359,446 @@ bool Engine::attempt_pack_impl(bool compact) {
     }
     std::vector<FloorplanBlock*> order,placed;
     for (int i:pack_interior_order(names,tiers,connections,areas)) order.push_back(&plan.interior_blocks[i]);
+    const bool alternate_order=in.compact_search || (in.experiment && in.experiment->interior_order);
+    if (alternate_order && compact_order == 3) {
+        sort_constraint_first(order, in.compose.index, zbox);
+    } else if (alternate_order && compact_order) {
+        // Stable ties retain the established connectivity/priority ordering.
+        std::stable_sort(order.begin(),order.end(),[&](const auto* a,const auto* b) {
+            if (compact_order==2) {
+                auto count=[&](const auto* block) {
+                    const auto it=shapes.find(block->name);
+                    const auto selected=owned_shape_choices.find(block->name);
+                    const bool bottom=in.experiment&&in.experiment->require_bottom_sheets.count(block->name);
+                    const auto choice=selected==owned_shape_choices.end()?std::nullopt:std::optional<int>{selected->second};
+                    if(!bottom)return permitted_shape_count(it==shapes.end()?std::size_t{1}:it->second.size(),choice);
+                    return permitted_shape_count(it==shapes.end()?std::size_t{1}:it->second.size(),
+                        choice,[&](std::size_t index){return it!=shapes.end()&&it->second[index].side=="bottom";});
+                };
+                if (count(a)!=count(b)) return count(a)<count(b);
+            }
+            const auto awh=zbox.at(a->name),bwh=zbox.at(b->name);
+            return awh.first*awh.second>bwh.first*bwh.second;
+        });
+    }
+    if(!promote.empty()) {
+        const auto found=std::find_if(order.begin(),order.end(),[&](const auto* b){return b->name==promote;});
+        if(found!=order.end())std::rotate(order.begin(),found,found+1);
+    }
     std::map<std::string,std::vector<Comp>> chosen;
     auto occ_put=[&](const FloorplanBlock& b){occ.add(b.x,b.y,b.w,b.h,b.fanout_reach,b.fanout_inset,side_mask(b.side),get(chosen,b.name),counts);};
     auto occ_pull=[&](const FloorplanBlock& b){occ.remove(b.x,b.y,b.w,b.h,b.fanout_reach,b.fanout_inset,side_mask(b.side),get(chosen,b.name),counts);};
-    auto near=[&](FloorplanPoint a,double w,double h,Halo reach,Halo inset,int mask,const std::vector<Comp>& comps,
+    const auto selected_hull=[&](const std::string& name,int shape_index)->std::optional<Box4> {
+        if(shape_index) {
+            const auto m=in.compose.shape_metrics.find({name,shape_index});
+            return m==in.compose.shape_metrics.end()?std::nullopt:pad_union_hull(m->second.pad_union);
+        }
+        const auto m=in.compose.metrics.find(name);
+        return m==in.compose.metrics.end()?std::nullopt:pad_union_hull(m->second.pad_union);
+    };
+    // Edge and SoM poses and composition metrics are immutable throughout
+    // this interior attempt. Cache their hard proximity translation domains,
+    // not occupancy results; each retry still checks current obstacles.
+    std::map<std::pair<std::string,int>,std::tuple<double,double,double,double>> near_domains;
+    const auto near_domain=[&](const FloorplanBlock& b,int shape_index,auto& window) {
+        const auto key=std::make_pair(b.name,shape_index);
+        auto found=near_domains.find(key);
+        if(found==near_domains.end()) {
+        const auto infinity=std::numeric_limits<double>::infinity();
+        auto win=std::make_tuple(-infinity,infinity,-infinity,infinity);
+        // Hard connector proximity constrains every seating strategy, not
+        // only those whose preferred anchor explicitly names that connector.
+        for(const auto& term:in.compose.index.hard) {
+            if(term.kind!="near_max"||!term.bound)continue;
+            // Pad-to-pad distance is symmetric even though authored terms
+            // retain a subject/target direction for diagnostics.
+            const auto other=term.subject==b.name?term.target():
+                (term.target()==b.name?term.subject:std::string{});
+            if(other.empty())continue;
+            const auto hull=selected_hull(b.name,shape_index);if(!hull)continue;
+            std::optional<Box4> target;
+            for(const auto& jack:plan.som.js) {
+                if(jack.ref.empty()||jack.ref.front()!='J'||other!="som_j"+jack.ref.substr(1))continue;
+                target=Box4{plan.som_x+jack.x,plan.som_y+jack.y,
+                    plan.som_x+jack.x+jack.w,plan.som_y+jack.y+jack.h};
+                break;
+            }
+            // Edge blocks have their final poses before interior seating.
+            // Use their actual selected pad geometry, not the body envelope.
+            if(!target)for(const auto& edge:plan.edge_blocks)if(edge.name==other) {
+                if(const auto local=selected_hull(edge.name,edge.shape_idx))
+                    target=Box4{edge.x+local->x0,edge.y+local->y0,
+                                edge.x+local->x1,edge.y+local->y1};
+                break;
+            }
+            if(target) {
+                const auto domain=near_translation_domain(*hull,*target,*term.bound,occ_step);
+                std::get<0>(win)=std::max(std::get<0>(win),domain.x0);
+                std::get<1>(win)=std::min(std::get<1>(win),domain.x1);
+                std::get<2>(win)=std::max(std::get<2>(win),domain.y0);
+                std::get<3>(win)=std::min(std::get<3>(win),domain.y1);
+            }
+        }
+        found=near_domains.emplace(key,win).first;
+        }
+        const auto& domain=found->second;
+        std::get<0>(window)=std::max(std::get<0>(window),std::get<0>(domain));
+        std::get<1>(window)=std::min(std::get<1>(window),std::get<1>(domain));
+        std::get<2>(window)=std::max(std::get<2>(window),std::get<2>(domain));
+        std::get<3>(window)=std::min(std::get<3>(window),std::get<3>(domain));
+    };
+    auto near=[&](const FloorplanBlock& b,int shape_index,FloorplanPoint a,double w,double h,Halo reach,Halo inset,int mask,const std::vector<Comp>& comps,
                   const FloorplanBlock* evicted) {
         std::tuple<double,double,double,double> win{-bw,2*bw,-bh,2*bh};
         if (evicted) win=evict_window(evicted->x,evicted->y,evicted->w,evicted->h,evicted->fanout_reach,evicted->fanout_inset,
                                      get(chosen,evicted->name),w,h,reach,inset,comps,clear);
+        near_domain(b,shape_index,win);
         return occ.place_near(a.first,a.second,w,h,reach,inset,mask,comps,std::get<0>(win),std::get<1>(win),std::get<2>(win),std::get<3>(win),counts);
     };
     auto seat=[&](FloorplanBlock& b,FloorplanPoint a,const FloorplanBlock* evicted) {
         const auto variants=shapes.find(b.name);
         if (variants==shapes.end()) {
             const auto& cc=get(co,{b.name,0});
-            const auto p=near(a,b.w,b.h,b.fanout_reach,b.fanout_inset,occ_top,cc,evicted);
+            const auto p=near(b,0,a,b.w,b.h,b.fanout_reach,b.fanout_inset,occ_top,cc,evicted);
             if (!p) return false;
             b.shape_idx=0; b.side="top"; chosen[b.name]=cc; pose(b,*p); return true;
         }
         std::vector<SeatShapeCand> cands;
+        const auto restricted=owned_shape_choices.find(b.name);
+        // Replay an early choice, not a new hardware restriction. Later
+        // eviction/repair is free to change it; caller restrictions remain
+        // enforced independently throughout the whole attempt.
+        const auto replay=shape_replay_choices.find(b.name);
+        const bool first_choice=replay!=shape_replay_choices.end()&&initial_shape_choices.insert(b.name).second;
         for (std::size_t k=0;k<variants->second.size();++k) {
+            if(restricted!=owned_shape_choices.end()&&static_cast<int>(k)!=restricted->second)continue;
+            if(first_choice&&replay!=shape_replay_choices.end()&&static_cast<int>(k)!=replay->second)continue;
             const auto& s=variants->second[k];
+            if(in.experiment&&in.experiment->require_bottom_sheets.count(b.name)&&s.side!="bottom")continue;
             auto win=std::make_tuple(-bw,2*bw,-bh,2*bh);
             if (evicted) win=evict_window(evicted->x,evicted->y,evicted->w,evicted->h,evicted->fanout_reach,evicted->fanout_inset,
                 get(chosen,evicted->name),s.w,s.h,s.reach,s.inset,s.comps,clear);
+            near_domain(b,static_cast<int>(k),win);
             cands.push_back({static_cast<int>(k),s.w,s.h,s.reach,s.inset,side_mask(s.side),s.side,s.comps,
                 std::get<0>(win),std::get<1>(win),std::get<2>(win),std::get<3>(win)});
         }
-        auto hits=seat_shape_sides(occ,a.first,a.second,cands,bw,bh,clear,counts);
+        auto hits=in.compact_search
+            ? seat_shape_candidates_on_current_board(occ,a.first,a.second,cands,bw,bh,clear,counts)
+            : seat_shape_sides_on_current_board(occ,a.first,a.second,cands,bw,bh,clear,counts);
         if (hits.empty()) return false;
         std::sort(hits.begin(),hits.end(),[](const auto& a,const auto& b){return std::tie(a.dist_key,a.index)<std::tie(b.dist_key,b.index);});
         auto best=hits.front();
         if (hits.size()==1) side_offers[b.name]={best.side,best.side,best.index,std::nullopt,std::nullopt};
         else {
+            // Membership is invariant across this block's shape trials. Only
+            // b's pose/shape changes; estimate consumes these borrowed pointers
+            // synchronously. Prepare once, not once per competing shape.
+            std::vector<const FloorplanBlock*> partial;
+            partial.reserve(plan.edge_blocks.size()+placed.size()+1);
+            for (const auto& e:plan.edge_blocks) partial.push_back(&e);
+            partial.insert(partial.end(),placed.begin(),placed.end());
+            partial.push_back(&b);
             auto judge=[&](const SeatShapeHit& h) {
                 const auto saved=b;
                 pose(b,{h.x,h.y,h.w,h.h}); b.shape_idx=h.index; b.side=h.side;
-                std::vector<const FloorplanBlock*> partial;
-                for (const auto& e:plan.edge_blocks) partial.push_back(&e);
-                partial.insert(partial.end(),placed.begin(),placed.end()); partial.push_back(&b);
                 double value;
                 try { value=estimate(partial,b.name); } catch (...) { b=saved; throw; }
                 b=saved; return value;
             };
             const double incumbent=judge(hits[0]),challenger=judge(hits[1]);
+            const auto quality=in.owned_shape_quality.lower_bound({b.name,0});
+            const bool has_quality=in.compact_search && quality!=in.owned_shape_quality.end() &&
+                quality->first.first==b.name;
+            const bool observe_selection=in.experiment&&bool(in.experiment->owned_shape_selection_completed);
+            const bool area_first=in.compact_search&&in.experiment&&in.experiment->shape_area_first;
+            std::vector<double> evaluated;
+            if (has_quality||observe_selection||area_first) { evaluated.reserve(hits.size()); evaluated={incumbent,challenger}; }
             if (pick_sided_challenger(incumbent,challenger,1e-6)) best=hits[1];
-            side_offers[b.name]={hits[0].side+"(incumbent)/"+hits[1].side,best.side,best.index,incumbent,challenger};
+            double selected=best.index==hits[1].index ? challenger:incumbent;
+            if (in.compact_search) for (std::size_t i=2;i<hits.size();++i) {
+                const double value=judge(hits[i]);
+                if (has_quality||observe_selection||area_first) evaluated.push_back(value);
+                if (pick_sided_challenger(selected,value,1e-6)) {best=hits[i]; selected=value;}
+            }
+            if (has_quality) {
+                // Preserve the primary estimator decision, then compare the
+                // complete exact-rank bucket. Pareto dominance is NOT a sort
+                // comparator and a running incumbent can discard a survivor.
+                const OwnedShapeTieRank primary{best.index,true,best.w,best.h,
+                                               selected,best.dist_key,best.side};
+                std::vector<OwnedShapeTieRank> bucket;
+                for (std::size_t i=0;i<hits.size();++i) {
+                    const auto& h=hits[i];
+                    OwnedShapeTieRank rank{h.index,true,h.w,h.h,evaluated.at(i),h.dist_key,h.side};
+                    if (owned_shape_same_primary_rank(rank,primary)) bucket.push_back(rank);
+                }
+                const auto winner=owned_shape_select_tied_bucket(true,in.owned_shape_quality,b.name,bucket);
+                if (winner) for (std::size_t i=0;i<hits.size();++i) if (hits[i].index==*winner) {
+                    best=hits[i]; selected=evaluated.at(i); break;
+                }
+                if(in.experiment&&in.experiment->owned_quality_first) {
+                    std::vector<OwnedShapeLocatedRank> alternatives;
+                    for(std::size_t i=0;i<hits.size();++i){
+                        const auto& h=hits[i];
+                        alternatives.push_back({{h.index,true,h.w,h.h,evaluated.at(i),h.dist_key,h.side},h.x,h.y});
+                    }
+                    const int choice=owned_shape_select_same_pose_quality(in.owned_shape_quality,b.name,alternatives,best.index);
+                    for(std::size_t i=0;i<hits.size();++i)if(hits[i].index==choice){best=hits[i];selected=evaluated.at(i);break;}
+                }
+            }
+            if(area_first) {
+                // Rank actual legal offers, never fabricate clearance or face eligibility.
+                // This envelope heuristic does not measure free-space fragmentation.
+                std::optional<OutlineCandidate> rank;
+                for(std::size_t i=0;i<hits.size();++i) {
+                    const auto& h=hits[i];
+                    const OutlineCandidate candidate{block_area(h.w,h.h,counts),h.w,h.h,evaluated.at(i),0};
+                    if(!rank||prefer_outline(candidate,*rank)) {
+                        rank=candidate;best=h;selected=evaluated.at(i);
+                    }
+                }
+            }
+            if(trace_choices&&traced_choices.insert(b.name).second) {
+                auto indices=face_diverse_replay_indices(hits,best);
+                shape_replay_trace->emplace_back(b.name,std::move(indices));
+            }
+            if(observe_selection) {
+                std::vector<OwnedShapeTieRank> alternatives;
+                alternatives.reserve(evaluated.size());
+                for(std::size_t i=0;i<evaluated.size();++i) {
+                    const auto& h=hits[i];
+                    alternatives.push_back({h.index,true,h.w,h.h,evaluated.at(i),h.dist_key,h.side});
+                }
+                in.experiment->owned_shape_selection_completed(b.name,alternatives,in.owned_shape_quality,best.index);
+            }
+            side_offers[b.name]={hits[0].side+"(incumbent)/"+
+                (in.compact_search ? "all-shapes":hits[1].side),best.side,best.index,incumbent,
+                in.compact_search ? selected:challenger};
+            if (in.compact_search && std::all_of(hits.begin(),hits.end(),[&](const auto& h){return h.side==hits[0].side;}))
+                side_offers[b.name]={best.side,best.side,best.index,std::nullopt,std::nullopt};
         }
         pose(b,{best.x,best.y,best.w,best.h}); b.shape_idx=best.index; b.side=best.side;
         b.fanout_reach=best.reach; b.fanout_inset=best.inset; b.area=block_area(b.w,b.h, counts); chosen[b.name]=best.comps;
         return true;
     };
     int evict_budget=reseat_evict_budget;
+    bool first_recovery=true;
+    const auto shape_order=[&](const auto& variants) {
+        std::vector<std::size_t> order;
+        if(in.compact_search&&in.experiment&&in.experiment->shape_area_first) {
+            std::vector<double> areas;areas.reserve(variants.size());
+            for(const auto& shape:variants)areas.push_back(block_area(shape.w,shape.h,counts));
+            return shape_area_trial_order(areas);
+        }
+        for(std::size_t i=0;i<variants.size();++i)order.push_back(i);
+        return order;
+    };
+    auto reseat_displaced=[&](FloorplanBlock& e,FloorplanPoint anchor) {
+        auto p=near(e,e.shape_idx,anchor,e.w,e.h,e.fanout_reach,e.fanout_inset,side_mask(e.side),get(chosen,e.name),nullptr);
+        if(!p&&victim_shapes) {
+            const auto variants=shapes.find(e.name);
+            const auto restricted=owned_shape_choices.find(e.name);
+            if(variants!=shapes.end())for(const auto k:shape_order(variants->second)) {
+                if(static_cast<int>(k)==e.shape_idx||
+                   (restricted!=owned_shape_choices.end()&&static_cast<int>(k)!=restricted->second))continue;
+                const auto& s=variants->second[k];
+                if(in.experiment&&in.experiment->require_bottom_sheets.count(e.name)&&s.side!="bottom")continue;
+                fallback("interior_reseat_shape_trial");
+                p=near(e,static_cast<int>(k),anchor,s.w,s.h,s.reach,s.inset,side_mask(s.side),s.comps,nullptr);
+                if(!p)continue;
+                e.shape_idx=static_cast<int>(k);e.side=s.side;e.w=s.w;e.h=s.h;
+                e.fanout_reach=s.reach;e.fanout_inset=s.inset;e.area=block_area(s.w,s.h,counts);
+                chosen[e.name]=s.comps;
+                side_offers[e.name]={e.side,e.side,e.shape_idx,std::nullopt,std::nullopt};
+                break;
+            }
+        }
+        return p;
+    };
     auto retry=[&](FloorplanBlock& b,FloorplanPoint a) {
         if (evict_budget<1) return false;
         std::vector<std::tuple<double,double,double,double,std::string>> ranks;
         for (const auto* p:placed) ranks.emplace_back(p->x,p->y,p->w,p->h,p->name);
-        for (int idx:reseat_rank(a.first,a.second,ranks)) {
+        const auto ranked=reseat_rank(a.first,a.second,ranks);
+        const bool alternatives=in.experiment&&in.experiment->reseat_pose_limits.has_value();
+        for(int pass=0;pass<(incoming_shapes?3:(alternatives?2:1));++pass) for (int idx:ranked) {
             auto& e=*placed[idx]; const auto saved_e=e,saved_b=b;
-            const auto saved_chosen=chosen;
-            const auto saved_centers=centers;
+            // Pose/shape trials can change either participant before a replay
+            // skips the recovery. Preserve absence as well as values for both;
+            // the full strategy owns rollback after later packing failure.
+            const auto saved_chosen=save_entry(chosen,b.name);
+            const auto saved_center=save_entry(centers,b.name);
+            const auto saved_offer=save_entry(side_offers,b.name);
+            const auto saved_e_chosen=save_entry(chosen,e.name);
+            const auto saved_e_center=save_entry(centers,e.name);
+            const auto saved_e_offer=save_entry(side_offers,e.name);
+            const auto restore_displaced=[&] {
+                e=saved_e;
+                restore_entry(chosen,e.name,saved_e_chosen);
+                restore_entry(centers,e.name,saved_e_center);
+                restore_entry(side_offers,e.name,saved_e_offer);
+            };
+            FloorplanPoseRetryObservation observation;
+            if(pass==1){
+                observation.incoming=b.name;observation.displaced=e.name;
+                fallback("interior_reseat_pose_search");
+            }
             occ_pull(e);
             bool ok=seat(b,a,&e);
-            if (ok) {
+            const bool incoming_seated=ok;
+            if (ok && !pass) {
                 occ_put(b); centers[b.name]={b.cx(),b.cy()};
                 const auto anchor=pack_anchor(anchor_row(e,centers));
-                const auto p=near(anchor,e.w,e.h,e.fanout_reach,e.fanout_inset,side_mask(e.side),get(chosen,e.name),nullptr);
+                const auto p=reseat_displaced(e,anchor);
                 if (!p) { ok=false; occ_pull(b); }
                 else { e.x=p->x; e.y=p->y; occ_put(e); centers[e.name]={e.cx(),e.cy()}; }
             }
-            if (ok) { --evict_budget; fallback("interior_reseat_retry"); return true; }
-            b=saved_b; e=saved_e; chosen=saved_chosen; centers=saved_centers; occ_put(e);
+            else if(ok&&pass==2) {
+                // Every original victim and position trial failed. Explore
+                // other incoming shapes without replacing a successful path.
+                const int previous=b.shape_idx;
+                const auto variants=shapes.find(b.name);
+                const auto restricted=owned_shape_choices.find(b.name);
+                ok=false;
+                if(variants!=shapes.end())for(const auto k:shape_order(variants->second)){
+                    if(static_cast<int>(k)==previous||
+                       (restricted!=owned_shape_choices.end()&&static_cast<int>(k)!=restricted->second))continue;
+                    const auto& s=variants->second[k];
+                    if(in.experiment&&in.experiment->require_bottom_sheets.count(b.name)&&s.side!="bottom")continue;
+                    fallback("interior_reseat_incoming_shape_trial");
+                    const auto p=near(b,static_cast<int>(k),a,s.w,s.h,s.reach,s.inset,side_mask(s.side),s.comps,&e);
+                    if(!p)continue;
+                    b.shape_idx=static_cast<int>(k);b.side=s.side;b.fanout_reach=s.reach;b.fanout_inset=s.inset;
+                    pose(b,*p);b.area=block_area(b.w,b.h,counts);chosen[b.name]=s.comps;
+                    occ_put(b);centers[b.name]={b.cx(),b.cy()};
+                    const auto anchor=pack_anchor(anchor_row(e,centers));
+                    // Alternative incoming and displaced shapes must be
+                    // considered together, not only as isolated changes.
+                    const auto next=reseat_displaced(e,anchor);
+                    if(!next){occ_pull(b);continue;}
+                    e.x=next->x;e.y=next->y;occ_put(e);centers[e.name]={e.cx(),e.cy()};
+                    side_offers[b.name]={b.side,b.side,b.shape_idx,std::nullopt,std::nullopt};
+                    ok=true;break;
+                }
+            }
+            else if(ok) {
+                const auto first=FloorplanPoint{b.x,b.y};
+                auto win=evict_window(e.x,e.y,e.w,e.h,e.fanout_reach,e.fanout_inset,get(chosen,e.name),
+                                     b.w,b.h,b.fanout_reach,b.fanout_inset,get(chosen,b.name),clear);
+                near_domain(b,b.shape_idx,win);
+                const auto limits=*in.experiment->reseat_pose_limits;
+                const auto poses=occ.place_near_candidates(a.first,a.second,b.w,b.h,b.fanout_reach,b.fanout_inset,
+                    side_mask(b.side),get(chosen,b.name),std::get<0>(win),std::get<1>(win),std::get<2>(win),std::get<3>(win),
+                    limits.poses,limits.frontier_nodes,counts);
+                observation.generated=poses.poses.size();observation.frontier_nodes=poses.frontier_nodes;
+                observation.budget_exhausted=poses.budget_exhausted;
+                observation.result_capped=!poses.search_complete&&!poses.budget_exhausted;
+                if(observation.budget_exhausted)fallback("interior_reseat_pose_budget");
+                if(observation.result_capped)fallback("interior_reseat_pose_cap");
+                ok=false;
+                for(const auto& p:poses.poses) {
+                    if(p.x==first.first&&p.y==first.second)continue; // ordinary pass already tried it
+                    fallback("interior_reseat_pose_trial");++observation.attempted;
+                    b.x=p.x;b.y=p.y;occ_put(b);centers[b.name]={b.cx(),b.cy()};
+                    const auto anchor=pack_anchor(anchor_row(e,centers));
+                    // Position and shape recovery are complementary: a new
+                    // incoming pose can open a site only an alternative victim
+                    // shape fits. Keep the original victim shape first.
+                    const auto next=reseat_displaced(e,anchor);
+                    if(!next){occ_pull(b);continue;}
+                    if(first_recovery&&first_pose_skip){
+                        --first_pose_skip;++observation.skipped;
+                        fallback("interior_reseat_pose_skip");
+                        occ_pull(b);restore_displaced();continue;
+                    }
+                    first_recovery=false;
+                    if(selected_pose)*selected_pose=true;
+                    e.x=next->x;e.y=next->y;occ_put(e);centers[e.name]={e.cx(),e.cy()};
+                    // The earlier score compared different poses. Do not keep
+                    // that stale estimate as evidence for this recovered pose.
+                    side_offers[b.name]={b.side,b.side,b.shape_idx,std::nullopt,std::nullopt};
+                    ok=true;break;
+                }
+            }
+            if (ok) { --evict_budget; fallback("interior_reseat_retry"); }
+            else {
+                b=saved_b; restore_displaced();
+                restore_entry(chosen,b.name,saved_chosen);
+                restore_entry(centers,b.name,saved_center);
+                restore_entry(side_offers,b.name,saved_offer);
+                occ_put(e);
+            }
+            if(in.experiment&&in.experiment->reseat_completed)
+                in.experiment->reseat_completed({bw,bh,b.name,e.name,incoming_seated,ok,plan.punch_free,compact_order});
+            if(pass==1&&in.experiment->pose_retry_completed){observation.success=ok;in.experiment->pose_retry_completed(observation);}
+            if(ok)return true;
         }
+        // Only after every one-victim pose/shape strategy failed, reconsider
+        // two interior occupants together. Edges remain in occupancy. Both
+        // reseating orders are real trials, not an inference of infeasibility.
+        if (victim_shapes && incoming_shapes && alternatives && evict_budget>=2)
+          for (std::size_t i=0;i<ranked.size();++i)
+            for (std::size_t j=i+1;j<ranked.size();++j)
+              for (bool reverse : {false,true}) {
+                auto& first=*placed[ranked[reverse?j:i]];
+                auto& second=*placed[ranked[reverse?i:j]];
+                const auto saved_b=b,saved_first=first,saved_second=second;
+                // This trial only writes the three participants' entries.
+                // Do not copy every component list in the board on each pair;
+                // retain absence as well as values for exact rollback.
+                const std::array names{b.name,first.name,second.name};
+                const std::array saved_chosen{save_entry(chosen,names[0]),
+                    save_entry(chosen,names[1]),save_entry(chosen,names[2])};
+                const std::array saved_centers{save_entry(centers,names[0]),
+                    save_entry(centers,names[1]),save_entry(centers,names[2])};
+                const std::array saved_offers{save_entry(side_offers,names[0]),
+                    save_entry(side_offers,names[1]),save_entry(side_offers,names[2])};
+                fallback("interior_reseat_pair_trial");
+                occ_pull(first);occ_pull(second);
+                const bool incoming=seat(b,a,nullptr);
+                bool first_seated=false,second_seated=false;
+                if (incoming) {
+                    occ_put(b);centers[b.name]={b.cx(),b.cy()};
+                    const auto one=reseat_displaced(first,pack_anchor(anchor_row(first,centers)));
+                    if (one) {
+                        first.x=one->x;first.y=one->y;occ_put(first);
+                        centers[first.name]={first.cx(),first.cy()};first_seated=true;
+                        const auto two=reseat_displaced(second,pack_anchor(anchor_row(second,centers)));
+                        if (two) {
+                            second.x=two->x;second.y=two->y;occ_put(second);
+                            centers[second.name]={second.cx(),second.cy()};second_seated=true;
+                        }
+                    }
+                }
+                if (second_seated) {
+                    evict_budget-=2;
+                    for (const auto* moved : {&b,&first,&second})
+                        side_offers[moved->name]={moved->side,moved->side,moved->shape_idx,std::nullopt,std::nullopt};
+                    fallback("interior_reseat_pair_recovered");
+                    fallback("interior_reseat_retry");
+                    return true;
+                }
+                if (first_seated) occ_pull(first);
+                if (incoming) occ_pull(b);
+                b=saved_b;first=saved_first;second=saved_second;
+                for(std::size_t k=0;k<names.size();++k) {
+                    restore_entry(chosen,names[k],saved_chosen[k]);
+                    restore_entry(centers,names[k],saved_centers[k]);
+                    restore_entry(side_offers,names[k],saved_offers[k]);
+                }
+                occ_put(first);occ_put(second);
+                fallback("interior_reseat_pair_rejected");
+              }
         return false;
     };
     for (auto* b:order) {
         std::tie(b->w,b->h)=zbox.at(b->name); b->area=block_area(b->w,b->h, counts);
         const auto a=pack_anchor(anchor_row(*b,centers));
         if (seat(*b,a,nullptr)) { occ_put(*b); centers[b->name]={b->cx(),b->cy()}; }
-        else if (!retry(*b,a)) return false;
+        else if (!retry(*b,a)) {
+            if(failed_subject&&b!=order.front())*failed_subject=b->name;
+            rejected("interior_seating",b->name,compact);return false;
+        }
         placed.push_back(b);
     }
     std::vector<RefineBlock> refine;
@@ -214,6 +807,10 @@ bool Engine::attempt_pack_impl(bool compact) {
         row.name=b->name; row.x=b->x; row.y=b->y; row.w=b->w; row.h=b->h;
         row.reach=b->fanout_reach; row.inset=b->fanout_inset; row.mask=side_mask(b->side); row.comps=get(chosen,b->name);
         row.anchor=anchor_row(*b,centers); row.aff_named=get(affinity,b->name);
+        const auto unrestricted=std::make_tuple(-bw,2*bw,-bh,2*bh);
+        auto win=unrestricted;
+        near_domain(*b,b->shape_idx,win);
+        if(win!=unrestricted)row.translation_window=win;
         if (b->pull && !b->pull->exclusive) row.pull_to=b->pull->to;
         refine.push_back(std::move(row));
     }
@@ -238,36 +835,136 @@ bool Engine::attempt_pack_impl(bool compact) {
             if (participants.count(b.name) && in.compose.wired_participants.count(b.name)) movable.insert(b.name);
         if (!movable.empty()) {
             li.fixed_rects.emplace_back("som",legalize_som_rect(plan.som_x,plan.som_y,plan.som.w,plan.som.h,som_pad));
-            for (const auto& c:corners) li.fixed_rects.emplace_back("corner@"+number(c.x0)+","+number(c.y0),c);
+            const auto occupied_faces=[](int primary,const std::vector<Comp>& children) {
+                for(const auto& child:children)primary|=child.mask;
+                return primary;
+            };
+            li.primary_fanout["som"]={{},{},som_mask,occupied_faces(som_mask,som_comps),som_comps};
+            for (const auto& c:corners) {
+                const auto name="corner@"+number(c.x0)+","+number(c.y0);
+                li.fixed_rects.emplace_back(name,c);
+                li.primary_fanout[name]={{},{},occ_punch,occ_punch,std::vector<Comp>{}};
+            }
+            for (const auto& b:plan.edge_blocks)
+                li.primary_fanout[b.name]={b.fanout_reach,b.fanout_inset,edge_mask,occupied_faces(edge_mask,get(edge_comps,b.name)),get(edge_comps,b.name)};
+            for (const auto& b:plan.interior_blocks)
+                li.primary_fanout[b.name]={b.fanout_reach,b.fanout_inset,side_mask(b.side),occupied_faces(side_mask(b.side),get(chosen,b.name)),get(chosen,b.name)};
+            li.reservation_retry_started=[&]{fallback("legalize_reservation_retry");};
+            li.facing_retry_started=[&]{fallback("legalize_facing_retry");};
+            if(in.experiment)li.joint_separation_states=in.experiment->joint_separation_states;
+            li.joint_retry_started=[&]{fallback("legalize_joint_retry");};
+            li.joint_retry_completed=[&](const JointSeparationWork& work,bool ok){
+                for(std::size_t i=0;i<work.visited;++i)fallback("legalize_joint_state");
+                for(std::size_t i=0;i<work.axis_solves;++i)fallback("legalize_joint_axis");
+                for(std::size_t i=0;i<work.axis_cache_hits;++i)fallback("legalize_joint_axis_reuse");
+                for(std::size_t i=0;i<work.domain_probes;++i)fallback("legalize_joint_domain_probe");
+                for(std::size_t i=0;i<work.domain_rejections;++i)fallback("legalize_joint_domain_reject");
+                for(std::size_t i=0;i<work.qualifications;++i)fallback("legalize_joint_proposal");
+                for(std::size_t i=0;i<work.qualification_rejections;++i)fallback("legalize_joint_reject");
+                if(work.budget_exhausted)fallback("legalize_joint_budget");
+                if(in.experiment&&in.experiment->joint_retry_completed)in.experiment->joint_retry_completed(work,ok);
+            };
             auto fix=[&](const FloorplanBlock& b){li.fixed_rects.emplace_back(b.name,Box4{b.x,b.y,b.x+b.w,b.y+b.h}); li.fixed_poses[b.name]={b.x,b.y};};
             for (const auto& b:plan.edge_blocks) fix(b);
             for (const auto& b:plan.interior_blocks) if (!movable.count(b.name)) fix(b);
             li.fixed_rects.insert(li.fixed_rects.end(),in.compose.corridors.begin(),in.compose.corridors.end());
+            for (const auto& [name, box]:in.compose.corridors) {
+                (void)box;
+                li.primary_fanout[name]={}; // Logical corridor: retain its existing exclusion gap.
+            }
             li.som_core_page=som_core_rect(plan.som_x,plan.som_y,plan.som.w,plan.som.h,in.origin.first,in.origin.second,.03);
             std::vector<std::tuple<std::string,double,double,double,double>> rows;
             for (const auto& j:plan.som.js) rows.emplace_back(j.ref,j.x,j.y,j.w,j.h);
             for (const auto& [n,x0,y0,x1,y1]:som_jack_rects(plan.som_x,plan.som_y,rows)) li.som_j_rects[n]={x0,y0,x1,y1};
             const auto orig=plan.interior_blocks;
-            auto legalize=[&](bool do_compact) {
+            bool compaction_attempted=false;
+            auto legalize=[&](bool do_compact,bool release_neighbours=false) {
                 plan.interior_blocks=orig;
+                auto active=li;
+                compaction_attempted=false;
+                active.compaction_started=[&]{compaction_attempted=true;};
+                auto moving=movable;
+                if(release_neighbours) {
+                    // Interior placement is a search decision, not a fixed
+                    // hardware obstacle. Keep edge connectors, SoM, corridors
+                    // and keepouts fixed; jointly translate selected interior
+                    // shapes without changing their geometry or constraints.
+                    fallback("legalize_neighbour_retry");
+                    for(const auto& b:orig) {moving.insert(b.name);active.fixed_poses.erase(b.name);}
+                    active.fixed_rects.erase(std::remove_if(active.fixed_rects.begin(),active.fixed_rects.end(),
+                        [&](const auto& row){return moving.count(row.first);}),active.fixed_rects.end());
+                }
                 std::vector<FloorplanLegalizeVar> vars;
-                for (const auto& b:plan.interior_blocks) if (movable.count(b.name)) vars.push_back({b.name,b.w,b.h,{b.x,b.y},b.x,b.y});
-                std::vector<std::string> log; li.compact=do_compact;
-                if (!floorplan_legalize_compact_accounted(li,vars,log,plan.accounting.quantization_engagements)) return false;
+                for (const auto& b:plan.interior_blocks) if (moving.count(b.name)) vars.push_back({b.name,b.w,b.h,{b.x,b.y},b.x,b.y});
+                std::vector<std::string> log; active.compact=do_compact;
+                if(release_neighbours)log.push_back("retry: jointly translate interior neighbours; hardware-fixed obstacles retained");
+                active.report_infeasible_cycle=in.experiment&&bool(in.experiment->stage_rejected);
+                if (!floorplan_legalize_compact_accounted(active,vars,log,plan.accounting.quantization_engagements)) {
+                    rejected("legalizer","",do_compact,log);return false;
+                }
                 for (auto& b:plan.interior_blocks) for (const auto& v:vars) if (v.name==b.name) { b.x=v.x; b.y=v.y; break; }
                 std::vector<PairsBlock> ints,edges;
                 for (const auto& b:plan.interior_blocks) ints.push_back({b.x,b.y,b.w,b.h,b.fanout_reach,b.fanout_inset,side_mask(b.side),get(chosen,b.name)});
                 for (const auto& b:plan.edge_blocks) edges.push_back({b.x,b.y,b.w,b.h,b.fanout_reach,b.fanout_inset,edge_mask,get(edge_comps,b.name)});
-                if (!pairs_hold_from_layout(ints,edges,som_occ.x,som_occ.y,som_occ.w,som_occ.h,som_mask,som_comps,bw,bh,mh_corner,occ_punch,clear,counts)) return false;
+                if (!pairs_hold_from_layout(ints,edges,som_occ.x,som_occ.y,som_occ.w,som_occ.h,som_mask,som_comps,bw,bh,mh_corner,occ_punch,clear,counts)) {
+                    rejected("post_legalizer_geometry","",do_compact,log);return false;
+                }
                 plan.composition=std::move(log); return true;
             };
             if (!legalize(compact)) {
-                if (!(compact && legalize(false))) return false;
-                fallback("legalize_only_compaction");
+                // Before compaction starts, compact and noncompact inputs run
+                // the identical search. Do not repeat a proven common failure.
+                // Scope duplicate-elision to the opt-in joint portfolio;
+                // ordinary callers retain their existing execution policy.
+                if (compact && (!li.joint_separation_states||compaction_attempted) && legalize(false)) fallback("legalize_only_compaction");
+                else {
+                    // Opt-in, failure-only, at most two neighbourhood solves.
+                    // Never replace an already accepted incumbent or erase
+                    // failed trial accounting when expanding the moving set.
+                    if(!li.joint_separation_states||movable.size()==orig.size())return false;
+                    if(!legalize(compact,true)) {
+                        if(!(compact&&compaction_attempted&&legalize(false,true)))return false;
+                        fallback("legalize_only_compaction");
+                    }
+                }
             }
         }
     }
+    if(in.experiment)for(const auto& sheet:in.experiment->require_bottom_sheets) {
+        const auto found=std::find_if(plan.interior_blocks.begin(),plan.interior_blocks.end(),
+            [&](const auto& b){return b.name==sheet;});
+        if(found==plan.interior_blocks.end()||found->side!="bottom") {
+            rejected("required_bottom_side",sheet,compact);return false;
+        }
+    }
     return true;
+}
+
+double Engine::refine_screened_incumbent(double incumbent_estimate) {
+    if (!std::isfinite(incumbent_estimate) || incumbent_estimate<0)
+        throw FloorplanError("floorplan: invalid screened incumbent estimate");
+    auto incumbent=plan;
+    auto offers=side_offers;
+    auto restore=[&] {
+        // Rejected work is still real work; never rewind the execution ledger.
+        auto accounting=std::move(plan.accounting);
+        plan=std::move(incumbent); plan.accounting=std::move(accounting); side_offers=std::move(offers);
+    };
+    try {
+        if (attempt_pack(true)) {
+            choose_connector_shapes();
+            const double refined=estimate();
+            if (std::isfinite(refined) && refined>=0 && refined<=incumbent_estimate) return refined;
+        }
+    } catch (...) {
+        restore();
+        throw; // An exception is not an infeasible candidate or permission to continue.
+    }
+    restore();
+    fallback("screened_incumbent_retained");
+    // Re-evaluate the selected layout, including its real scalar accounting and
+    // observer event; no stale screening estimate is published as a new result.
+    return estimate();
 }
 
 void Engine::choose_connector_shapes() {
@@ -279,13 +976,25 @@ void Engine::choose_connector_shapes() {
         if (shapes==in.geometry.shapes.end() || shapes->second.size()<2) continue;
         auto& b=*std::find_if(plan.edge_blocks.begin(),plan.edge_blocks.end(),[&](const auto& x){return x.name==name;});
         const double base=estimate();
-        const auto reach=b.fanout_reach,inset=b.fanout_inset;
-        const auto events=plan.accounting.fallback_events;
-        std::tie(b.fanout_reach,b.fanout_inset)=fanout(shapes->second[1],false); b.shape_idx=1;
-        if (attempt_pack(true) && estimate()<base-1e-6) continue;
-        b.fanout_reach=reach; b.fanout_inset=inset; b.shape_idx=0;
-        if (!attempt_pack(true)) throw FloorplanError("floorplan: restoring the incumbent pack after rejecting "+name+"'s mirror shape failed — the deterministic re-pack must reproduce the accepted board");
-        plan.accounting.fallback_events=events;
+        auto incumbent=plan;
+        auto offers=side_offers;
+        const auto restore_incumbent=[&] {
+            auto accounting=std::move(plan.accounting);
+            plan=std::move(incumbent); plan.accounting=std::move(accounting);
+            side_offers=std::move(offers);
+        };
+        try {
+            std::tie(b.fanout_reach,b.fanout_inset)=fanout(shapes->second[1]); b.shape_idx=1;
+            if (attempt_pack(true) && estimate()<base-1e-6) continue;
+        } catch (...) {
+            restore_incumbent();
+            throw;
+        }
+        // attempt_pack mutates plan and side_offers; its compact_order is reset
+        // before returning. Occupancy/placement/legalizer scratch is local.
+        // Restore the complete accepted state, retaining ALL executed trial
+        // accounting. No restoration pack ran, so none is counted or observed.
+        restore_incumbent();
     }
 }
 }  // namespace schgen::floorplan_detail

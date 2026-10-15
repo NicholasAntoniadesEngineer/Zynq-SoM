@@ -1,0 +1,30 @@
+{
+  "parent_commit": "271a4c45",
+  "change": "Eligible templated bottom-side blocks gain three checked quarter-turn offers in compact mode, preserving the original bottom offer. Rotated groups are rigidly rebased and their declared envelope expanded to contain actual courtyard extents before unchanged local contract/boundary checks.",
+  "root_cause": "Top templates already receive four orientations. Bottom templates returned only their mirror. The generic orientation helper excludes external contracts, so it could not supply missing power-stage turns. A naive extension was then rejected by a real 0.15mm U20003 courtyard protrusion beyond the template envelope despite all 20 local power structures passing.",
+  "safety": "Existing layer/connector/controlled-net eligibility remains unchanged. All offsets on both faces translate together; rotations, mirrored footprint identities and net ownership are retained. Extents round outward. External flow/facing, thermal and full board checks remain downstream acceptance conditions.",
+  "tests": {
+    "native_pcb_orientation_contracts": "PASS 3.24s",
+    "log": "native/build/power-bottom-accounting-tests.log",
+    "coverage": "Explicit carrier power and power_som either-layer fixtures require bottom/r90, bottom/r180 and bottom/r270. Independently check local contracts, rigid offsets up to common translation, unchanged face membership and mirror binding, every final courtyard inside the advertised envelope, and exact bottom quantization observer/receipt equality. Existing orientation, pin-net, chirality, eligibility and incumbent tests pass."
+  },
+  "carrier_reference": {
+    "dimensions_mm": [163,153],
+    "unchanged_pcb_sha256": "d954ec91a789f69a1e94a26a9d3a91b279fbc208dff2503cbe8ee4c8eabc199f",
+    "model_seconds": 12.60534875,
+    "log": "native/build/power-bottom-enclose-reference.log"
+  },
+  "devkit_reference": {
+    "dimensions_mm": [98,98],
+    "unchanged_pcb_sha256": "1b12fecbcbbaa5e6084c2459da93cb144a660ff19805e6e4e3f75f9c22689fdb",
+    "model_seconds": 0.192629958,
+    "log": "native/build/power-bottom-enclose-devkit.log"
+  },
+  "screening": {
+    "prechange_power_forced_bottom": {"163x153_seconds": 7.49810125, "162x153_seconds": 8.66925375, "status": "both construction_failed", "logs": ["native/build/power-bottom-reference.log", "native/build/power-bottom-162x153.log"]},
+    "prechange_power_som_forced_bottom": {"163x153_seconds": 8.226752667, "162x153_seconds": 1.962696375, "status": "both construction_failed", "spec_delta": "Set interior.power_som.layer=either", "logs": ["native/build/power-som-bottom-163x153.log", "native/build/power-som-bottom-162x153.log"]},
+    "prechange_power_som_either_unforced": {"162x153_seconds": 3.072877625, "status": "construction_failed", "log": "native/build/power-som-either-162x153.log"},
+    "postchange_power_som_forced_bottom": {"162x153_seconds": 3.697895709, "status": "construction_failed", "outer_attempts": 4, "log": "native/build/power-bottom-enclose-162x153.log"}
+  },
+  "limits": "Whole-template orientation support, not general mixed-face power-stage partitioning. No new smaller accepted board or full qualification; qualified reference PCB outputs unchanged. Diagnostic single-run timings are not speedup evidence or a historical Python comparison."
+}

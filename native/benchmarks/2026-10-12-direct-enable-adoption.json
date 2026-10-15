@@ -1,0 +1,58 @@
+{
+  "base_commit": "4fda67dd",
+  "scope": "Adopt direct VIN enable for the always-on LM61460AANRJRR SoM supply on both boards; integrated native qualification, not fabrication readiness",
+  "hardware_decision": {
+    "source": "TI SNVSBD5D section 8.3.1; https://www.ti.com/lit/ds/symlink/lm61460.pdf",
+    "reviewed_pdf_sha256": "2c8a0bf340c70aa3ac29e586146804d7651822e14bee0897f6415ee9e56be84d",
+    "change": "Connect U4.7 EN/SYNC to the same +VIN_SYS net as VIN1/VIN2 pins 8/12. Remove inherited TPS54302-era R12/D5/C20 clamp/filter and their obsolete value bindings and proximity structure. All other power-stage connectivity and physical limits retained.",
+    "tradeoff": "External RC delay/filter is removed intentionally. No external enable-delay requirement was identified. Input decoupling and internal UVLO/soft-start remain. Direct self-start is manufacturer-supported; this is not proof of input-envelope, startup-time or transient margins.",
+    "check_meaning": "Unique pin ownership and exact supported topology only, explicitly separated from analog measurements in test plans. Unsupported historical enable networks remain UNVERIFIED."
+  },
+  "tests": {
+    "passed": ["native_component_basis_contracts", "native_board_pipeline_contracts", "native_firmware_docs_contracts", "native_spice_contracts"],
+    "ctest_wall_seconds": 52.33,
+    "historical_fixtures": "Immutable originals retained. Only the exact retired component bindings and obsolete enable rows receive explicit, counted test-view exceptions; production results are never restored to old PASS rows.",
+    "additional": "Both-board live geometry/publication tests and schematic template/connectivity regression tests passed in the preceding two commits."
+  },
+  "carrier": {
+    "output": "/private/tmp/carrier-direct-enable-full-fixed-oct12",
+    "command_options": "--project carrier --compact-placement --interior-order 3 --edge-feasibility --owned-quality-first --owned-face-cohesion --contract-group-face-sheet usb_jtag --owned-shape board_aux=owned-face-fixed/a2.2/owned-pins-forward --floorplan-spec native/benchmarks/carrier-166x159-contract-groups.floorplan.json --timing",
+    "exit_code": 0, "sheets": 37, "board_ok": true,
+    "width_mm":166, "height_mm":159, "area_mm2":26394,
+    "instances":566, "top":413, "bottom":153,
+    "pcb_sha256":"031da411516efe7785e532cf57c7f4847cbb181ad59979cb376e9bc8b896da44",
+    "verdict_sha256":"9b86eab2f50a66a0baf5b8c6d70d865930d9b5388421a913fdcddea2954965f6",
+    "non_unrouted_drc_errors":0, "unrouted":499, "thermal_via_lattice":0,
+    "hard_composition_violations":0,
+    "spatial_margins":{"measured":16,"unresolved":0,"sum_mm":821.95,"min_mm":4.07},
+    "angular_margins":{"measured":2,"unresolved":0,"sum_degrees":69.01,"min_degrees":12.88},
+    "cross_subsystem_airwire_mm":15525.1,
+    "observed_seconds":{"process_wall":272.25,"pipeline_scope":271.640171,"authoring_audit":18.884710,"sheet_checks_and_render_parallel_wall":27.513400,"board_schematic":6.154639,"pcb_input":1.498855,"pcb_model":3.661545,"pcb_text_emission":0.035997,"pcb_drc":1.878025,"render3d":38.953755,"source_audit":164.458895},
+    "top_image_sha256":"1a36b0f5bbb7ea2804f5bbaec4db124fcee3201b56f3a91f8918915c7d9eeeac",
+    "bottom_image_sha256":"4eb58b8d03ded6916f0e653488e1a86014ff663c44dad35abd0de1e8c1bf99b7"
+  },
+  "devkit_mini": {
+    "output":"/private/tmp/devkit-direct-enable-full-fixed-oct12",
+    "command_options":"--project devkit_mini --multiscale-outline --timing",
+    "exit_code":0,"sheets":12,"board_ok":true,
+    "width_mm":98,"height_mm":98,"area_mm2":9604,
+    "instances":160,"top":105,"bottom":55,
+    "pcb_sha256":"b6798d4b63d2fddbf9fad24945c151b9420b049b674ad5d637c43bf4a365137f",
+    "verdict_sha256":"afcbc719f2bdbdc1061a7d2966762da8a7377d4c590f3f41dca190b5ef7b9828",
+    "non_unrouted_drc_errors":0,"unrouted":408,"thermal_via_lattice":0,
+    "cross_subsystem_airwire_mm":1512.4,
+    "observed_seconds":{"process_wall":232.61,"pipeline_scope":232.554050,"authoring_audit":21.634179,"sheet_checks_and_render_parallel_wall":8.643352,"board_schematic":2.703664,"pcb_input":0.706221,"pcb_model":0.193583,"pcb_text_emission":0.009118,"pcb_drc":1.185516,"render3d":24.237529,"source_audit":167.123018},
+    "top_image_sha256":"f284d4dd53b569a12f46a5cf2b8e8087d66e204489a120051df7b23257a514ee",
+    "bottom_image_sha256":"019a5c5faea7dc27f6cd864c04dc4b1042c128056c6aecbadfddb2697b74d312"
+  },
+  "visual_review":"Eight 3D views produced per board; front/back inspected on both, changed carrier power_som schematic inspected. SoM top keepout, perimeter connector access and mounting holes remain visually clear; no inference that unused bottom area is automatically legal for arbitrary parts.",
+  "timing_limits":"Runs overlapped each other and targeted tests on the same host. These are qualification observations, not isolated performance benchmarks. Compile time was not measured for this change. Mixed sheet rendering/check stages are not mislabeled generation-only. No new Python speedup claim; matched comparison against 0e9bbc913bab77f9cd228940db2a332d25d6bfa1 remains outstanding.",
+  "residuals":[
+    "Existing advisory return_path, golden and contract_coverage_lint failures remain on both boards; none waived or blessed.",
+    "Devkit manual/scfw explicitly SKIP absent carrier-only features under existing policy.",
+    "Board dimensions unchanged; three fewer parts per board, not a newly smaller accepted outline.",
+    "Routing remains out of scope; unrouted connections are retained explicitly.",
+    "Input envelope, startup/transient margins, assembly/height and thermal model assumptions remain separate qualification obligations; no fabrication-readiness claim.",
+    "Goal incomplete: broader algorithms, smaller hardware-safe carrier and matched historical timings still require work."
+  ]
+}

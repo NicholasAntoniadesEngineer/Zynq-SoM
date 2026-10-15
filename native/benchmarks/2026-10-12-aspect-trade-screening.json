@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "base_commit": "2e6c0149",
+  "decision": "Rejected production integration: additional aspect-trade refinement performed more work with no carrier improvement. Archived experimental implementation for evidence, not enabled code.",
+  "experiment_patch": "2026-10-12-aspect-trade-experiment.patch",
+  "strategy": "After existing multiscale shrinking, test seven signed axis/diagonal/aspect-trade directions per power-of-two scale inside the existing refinement window. Preserve incumbent; require strictly lower area and all existing checks.",
+  "matched_carrier_inputs": {
+    "floorplan_spec": "carrier-two-pilot-auto.floorplan.json",
+    "initial_outline_mm": [165, 158],
+    "owned_shapes": {"bringup_rails": "bottom-a2.2/r270/owned-pins-forward", "board_aux": "owned-face-a1.000000"},
+    "options": "--compact-search on --interior-order 3 --edge-feasibility on --owned-quality-first on --owned-face-cohesion on --contract-group-face-sheet usb_jtag --multiscale-outline on --joint-separation-states 1024 --reseat-poses 8 --reseat-frontier 4096 --reseat-continuations 3 --observers on --runs 1",
+    "schematic": "/private/tmp/carrier-166x156-two-pilots.iK3HkI/Zynq_Carrier.kicad_sch"
+  },
+  "comparison": {
+    "without_added_stage": {"model_seconds": 23.100085708, "generated_per_reservation_policy": 85, "rejected_pack_per_policy": 61, "accepted_per_policy": 8, "log": "native/build/carrier-no-aspect-trade-from-165x158.log"},
+    "with_added_stage": {"model_seconds": 33.885590708, "generated_per_reservation_policy": 125, "rejected_pack_per_policy": 89, "accepted_per_policy": 8, "log": "native/build/carrier-aspect-trade-from-165x158.log"},
+    "both_dimensions_mm": [166, 156],
+    "both_pcb_sha256": "99bd6a1dddb8f94f314f8b0d775ccc894ef84556e82ab70159360fa071470a5e",
+    "interpretation": "Original coarse search already reaches the smaller carrier; shrink-only local refinement does not imply globally shrink-only search. Added stage contributed 56 rejected packing attempts across two policies and no accepted improvement.",
+    "timing_caveat": "Single diagnostic samples with other development work active, uncontrolled OS caches; not a controlled performance benchmark or Python comparison. Decision also supported by exact work receipts, not timing alone."
+  },
+  "experimental_full_build": {
+    "output": "/private/tmp/carrier-aspect-trade-qualified.HeJAp9",
+    "log": "native/build/carrier-aspect-trade-full.log",
+    "mandatory_gates": "PASS: 37 sheets",
+    "source_audit": "PASS: 69 C++ files, 75 constants, 156 registered transforms",
+    "advisory_failures": ["return_path", "golden", "contract_coverage_lint"],
+    "front_back_renders_inspected": true,
+    "timing_seconds": {"pcb_inputs": 1.433390, "pcb_model": 34.957522, "pcb_text": 0.036431, "render3d": 28.282909, "source_audit": 107.219088, "scope_total_not_process_wall": 227.864635},
+    "status": "Qualification of the experimental snapshot, not a claim that the reverted code remains enabled. Same PCB as previously qualified two-pilot carrier; qualitative hardware requirements still UNVERIFIED."
+  },
+  "other_screens": [
+    {"log": "native/build/carrier-two-pilot-aspect-trade-screen.log", "initial_outline_mm": [166, 156], "result": "Same qualified PCB; incumbent preserved."},
+    {"log": "native/build/carrier-aspect-trade-screen.log", "result": "Default project edge ordering, not the qualified recipe: 168x159 mm. Not a matched algorithm comparison."},
+    {"log": "native/build/devkit-aspect-trade-screen.log", "result": "Two runs: unchanged 98x98 mm, 105 top / 55 bottom, PCB b6798d4b63d2fddbf9fad24945c151b9420b049b674ad5d637c43bf4a365137f."},
+    {"log": "native/build/carrier-portrait-156x165.log", "elapsed_seconds": 0.415290042, "result": "Bounded interior seating failed at bringup_rails under both reservation policies; receipts captured."},
+    {"log": "native/build/carrier-portrait-152x168.log", "elapsed_seconds": 0.433141333, "result": "Bounded interior seating failed at bringup_rails under both reservation policies; receipts captured."}
+  ],
+  "retained_test_improvement": "Floorplan precision contracts independently observe actual solver invocations and require corresponding retry receipts, rather than requiring a historical carrier retry. Physical, determinism and accounting checks retained.",
+  "next_direction": "Improve group-shape/pose selection and edge-order exploration rather than adding unconditional outline trials. Challenge landscape-only sizing and heuristic screening as algorithm choices; these failed probes do not prove physical impossibility. No legacy output or algorithm-ceiling compatibility requirement; retain historical outcomes as evidence, not constraints."
+}

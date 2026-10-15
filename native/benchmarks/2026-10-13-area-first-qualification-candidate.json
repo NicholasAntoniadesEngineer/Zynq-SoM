@@ -1,0 +1,25 @@
+{
+  "base_commit": "05a92c96",
+  "change": "Expose existing experimental shape_area_first strategy to full board CLI; no search algorithm or hardware check changes. Profiler final diagnostic now includes model/emission non-search event counts using shared reviewed classification; counts are not acceptance without project baseline.",
+  "candidate": {
+    "dimensions_mm": [
+      164,
+      154
+    ],
+    "recipe": "2026-10-13-enable-bottom-screen.json required-bottom recipe plus --shape-area-first",
+    "model_seconds": 4.124206917,
+    "pcb_sha256": "c7d0508671c2881bba1fce01d1b71c8cd19837ec394af6fdd3c3dcf6d9042104",
+    "top": 418,
+    "bottom": 148,
+    "thermal_via_lattice": 0,
+    "cheap_checks": "fanout, ratsnest geometry, placement contract, placement flow PASS; hard_red=0",
+    "log": "native/build/enable-area-first-164x154.log",
+    "accepted": false
+  },
+  "control": {
+    "change": "owned_quality_first off",
+    "result": "same PCB hash and six thermal lattice fallback events as failing candidate",
+    "log": "native/build/enable-wire-first-164x154.log"
+  },
+  "limitations": "Area-first local envelope selection does not guarantee global board-area improvement. Candidate requires independent full qualification and visual review; timings instrumented and concurrent, not matched speedup evidence."
+}

@@ -1,4 +1,6 @@
 #include "pcb_placement_internal.hpp"
+#include "pcb_placement_orientations.hpp"
+#include "schgen/pcb_placement_gates.hpp"
 
 namespace schgen::pcb_placement {
 namespace {
@@ -10,9 +12,15 @@ FloorplanTermIndex term_index(const Context &ctx) {
         if (fresh)
             return;
         auto &old = p->second;
-        if (t.bound && (!old.bound || *t.bound < *old.bound))
+        // Conjunction keeps the strongest requirement: upper limits shrink,
+        // but minimum clearances grow. Keep its authored justification too.
+        if (t.bound && (!old.bound ||
+                       (t.kind == "far_min" ? *t.bound > *old.bound : *t.bound < *old.bound))) {
             old.bound = t.bound;
+            old.basis = t.basis;
+        }
         old.enforced = old.enforced || t.enforced;
+        old.require_positive_facing = old.require_positive_facing || t.require_positive_facing;
         if (old.output_roles.empty())
             old.output_roles = t.output_roles;
         if (old.out_refs.empty())
@@ -44,6 +52,7 @@ FloorplanTermIndex term_index(const Context &ctx) {
             t.target_raw = target;
             t.basis = basis;
             t.enforced = ctx.wired.count(sheet);
+            t.require_positive_facing = ctx.in.floorplan.compact_search && t.enforced && kind == "facing";
             return t;
         };
         const auto basis = text(contract, "contract", "?");
@@ -149,6 +158,11 @@ FloorplanInput prepare_pcb_floorplan(const PcbPlacementInput &input, const PcbZo
     Context ctx(input);
     FloorplanInput result = input.floorplan;
     result.geometry = zones.geometry;
+    // Replace caller seed with the matching zone invocation; never carry stale
+    // quality across shape indices or enable it in the default path.
+    result.owned_shape_quality.clear();
+    if (input.floorplan.compact_search)
+        result.owned_shape_quality = zones.owned_shape_quality;
     for (const auto &[key, fp] : zones.footprints) {
         if (!fp)
             throw PcbZoneInfeasible("null footprint: " + key);
@@ -205,7 +219,7 @@ FloorplanInput prepare_pcb_floorplan(const PcbPlacementInput &input, const PcbZo
     checked_quantization_merge(result.accounting.quantization_engagements, zones.quantization_engagements);
     return result;
 }
-PcbPlacementResult build_pcb_model(const PcbPlacementInput &input, ExecutionFailureReceipt* failure) {
+static PcbPlacementResult build_pcb_model_once(const PcbPlacementInput &input, ExecutionFailureReceipt* failure) {
     // Each child failure owns only its operation, except floorplan which
     // explicitly inherits planning-zone accounting. Keep that transfer visible.
     ExecutionFailureReceipt child;
@@ -218,37 +232,150 @@ PcbPlacementResult build_pcb_model(const PcbPlacementInput &input, ExecutionFail
         row.stage = "zone_pack";
         return row;
     });
-    // The authored floorplan sizes against the normal two-face offers even
-    // when the caller requests the legacy top-preferred emission option.
-    // Placement then binds that solve to its independently constructed zones.
-    // Keeping these inputs distinct preserves build_model(two_side=False).
-    auto planning = input;
-    planning.two_side = true;
-    auto planning_zones = input.two_side ? zones : build_pcb_zone_geometry(planning,&child);
-    if(!input.two_side)append_execution_accounting(completed,{planning_zones.quantization_engagements,planning_zones.fallback_events},&child);
+    // Solve the same face assignment and shape offers that placement consumes.
+    // Sizing a top-preferred request with smaller two-face zones can publish
+    // overlapping parts when the plan is rebound to the larger emitted zones.
     FloorplanInput prepared;
-    try { prepared=prepare_pcb_floorplan(planning, planning_zones); }
+    try { prepared=prepare_pcb_floorplan(input, zones); }
     catch (const std::overflow_error&) { invalidate_execution_failure(&child);throw; }
     // generate_floorplan guarantees its failure receipt includes prepared's
     // seed even if the engine rejects during construction. Do not count that
     // same planning zone again at the parent boundary.
-    completed=input.two_side ? ExecutionAccounting{} : ExecutionAccounting{zones.quantization_engagements,zones.fallback_events};
-    auto floorplan = generate_floorplan(prepared,&child);
+    completed=ExecutionAccounting{};
+    FloorplanStage floorplan;
+    try {floorplan = generate_floorplan(prepared,&child);}
+    catch(const FloorplanPackingInfeasible&) {
+        const auto experiment=input.floorplan.experiment;
+        if(!experiment||experiment->contract_group_face_sheets.empty()||!child.captured||child.unavailable)throw;
+        struct Expansion {std::string sheet;FloorplanZoneShape seed;std::size_t index,old_size;};
+        std::vector<Expansion> selected;
+        for(const auto& sheet:experiment->contract_group_face_sheets){
+            const auto found=zones.geometry.shapes.find(sheet);
+            if(found==zones.geometry.shapes.end())continue;
+            const auto& offers=found->second;
+            const auto first=std::find_if(offers.begin(),offers.end(),[](const auto& s){return s.tag.rfind("contract-bottom/",0)==0;});
+            if(first!=offers.end())selected.push_back({sheet,offers.front(),static_cast<std::size_t>(first-offers.begin()),offers.size()});
+        }
+        if(selected.empty())throw;
+        // The first failed receipt already owns original zone/caller work.
+        completed=std::move(child.accounting);child={};
+        completed.fallback_events.push_back("contract_group_orientation_retry");
+        pcb_placement::Context expansion(input);expansion.pool=zones.footprints;
+        bool changed=false;
+        // Expand each eligible suffix in canonical sheet order, then replan
+        // once with all offers together. Count the complete failed prefix and
+        // every expansion, including a throw after earlier sheets succeeded.
+        try {for(const auto& choice:selected){
+            pcb_placement::append_rigid_zone_orientations(expansion,zones.geometry,choice.sheet,choice.seed,choice.index);
+            changed|=zones.geometry.shapes.at(choice.sheet).size()!=choice.old_size;
+        }}
+        catch(...) {append_execution_accounting(completed,{expansion.quantization,{}},&child);throw;}
+        append_execution_accounting(completed,{expansion.quantization,{}},&child);
+        if(!changed)throw;
+        prepared=prepare_pcb_floorplan(input,zones);
+        // Replace the repeated seed: count original work exactly once, then
+        // all new rotation and search work, including rejected alternatives.
+        prepared.accounting.quantization_engagements=completed.quantization_engagements;
+        prepared.accounting.fallback_events=completed.fallback_events;
+        completed={};
+        floorplan=generate_floorplan(prepared,&child); // At most one retry.
+    }
     append_execution_accounting(completed,{floorplan.plan.accounting.quantization_engagements,floorplan.plan.accounting.fallback_events},&child);
     append_execution_accounting(completed,floorplan.documents.accounting,&child);
     observe_pcb_experiment_checkpoint(input.experiment.get(), [&] {
         PcbPlacementObservation row;
         row.stage = "plan_lattice";
-        // The original probe measures the placement zones before shape binding,
-        // including the distinct top-preferred zones when two_side is false.
+        // Measure the same placement zones before shape binding.
         row.plan = measure_floorplan_experiment_plan(prepare_pcb_floorplan(input, zones), floorplan.plan);
         return row;
     });
-    return place_pcb_model_accounted(input, zones, floorplan, input.two_side
-        ? PcbZoneAccountingOwnership::IncludedInFloorplan
-        : PcbZoneAccountingOwnership::SeparateFromFloorplan,&child);
+    auto result=place_pcb_model_accounted(input, zones, floorplan,
+        PcbZoneAccountingOwnership::IncludedInFloorplan,&child);
+    const auto experiment=input.floorplan.experiment;
+    if(input.floorplan.compact_search || !experiment || !experiment->multiscale_outline ||
+       std::none_of(prepared.compose.index.hard.begin(),prepared.compose.index.hard.end(),
+           [](const auto& t){return t.kind=="facing"&&t.enforced&&!t.require_positive_facing;}))
+        return result;
+
+    // Preserve successful incumbents. Only a resolved final facing failure
+    // justifies the one stricter placement trial; unknown inputs never PASS.
+    // Placement has already executed. An unrepresentable aggregate cannot
+    // be reported as the earlier, smaller floorplan-only failure prefix.
+    try {completed=pcb_placement_accounting(result);}
+    catch(const std::overflow_error&){invalidate_execution_failure(&child);throw;}
+    child={};
+    ExecutionAccounting screening;
+    PcbPlacementFlowResult flow;
+    try {
+        flow=check_pcb_placement_flow(PcbCheckInput(result.model),pcb_placement_gate_policy(input),
+            nullptr,&screening.quantization_engagements);
+    } catch(...) {append_execution_accounting(completed,screening,&child);throw;}
+    append_execution_accounting(completed,screening,&child);
+    append_execution_accounting(result.placement_accounting,screening,&child);
+    if(!flow.facing_fail || !flow.unresolved.empty())return result;
+
+    // A late half-turn may be unsafe even when its facing direction is right.
+    // Reuse the prepared zones, but solve the actual positive-facing terms
+    // before placement. Never discard the original model's executed work.
+    for(auto& term:prepared.compose.index.hard)
+        if(term.kind=="facing"&&term.enforced)term.require_positive_facing=true;
+    completed.fallback_events.push_back("facing_replan_retry");
+    prepared.accounting.quantization_engagements=completed.quantization_engagements;
+    prepared.accounting.fallback_events=completed.fallback_events;
+    completed={};child={};
+    floorplan=generate_floorplan(prepared,&child); // One retry; no recursion.
+    append_execution_accounting(completed,{floorplan.plan.accounting.quantization_engagements,
+        floorplan.plan.accounting.fallback_events},&child);
+    append_execution_accounting(completed,floorplan.documents.accounting,&child);
+    observe_pcb_experiment_checkpoint(input.experiment.get(), [&] {
+        PcbPlacementObservation row;row.stage="plan_lattice";
+        row.plan=measure_floorplan_experiment_plan(prepared,floorplan.plan);return row;
+    });
+    return place_pcb_model_accounted(input, zones, floorplan,
+        PcbZoneAccountingOwnership::IncludedInFloorplan,&child);
     } catch (...) {
         capture_execution_failure(failure,std::move(completed),&child);
+        throw;
+    }
+}
+FloorplanSpec pcb_edge_replan_spec(const FloorplanSpec& original,const FloorplanPlan& plan) {
+    auto spec=original;
+    spec.edges.clear();
+    spec.ordered_edges.clear();
+    std::map<std::string,std::vector<std::pair<double,std::string>>> runs;
+    std::set<std::string> names;
+    for(const auto& block:plan.edge_blocks) {
+        if(block.edge.size()!=1||std::string("NESW").find(block.edge)==std::string::npos||
+           !names.insert(block.name).second||!std::isfinite(block.x)||!std::isfinite(block.y))
+            throw PcbZoneInfeasible("edge replan requires unique blocks with finite poses and valid edges");
+        runs[block.edge].emplace_back(block.edge=="N"||block.edge=="S"?block.x:block.y,block.name);
+    }
+    for(const auto& entry:original.edge_of())
+        if(!names.count(entry.first))throw PcbZoneInfeasible("edge replan lost declared block: "+entry.first);
+    for(auto& [edge,run]:runs) {
+        std::sort(run.begin(),run.end());
+        for(const auto& item:run)spec.edges[edge].push_back(item.second);
+    }
+    spec.ordered_edges=spec.edges;
+    return spec;
+}
+PcbPlacementResult build_pcb_model(const PcbPlacementInput& input,ExecutionFailureReceipt* failure) {
+    ExecutionFailureReceipt first;
+    try {return build_pcb_model_once(input,&first);}
+    catch(const PcbEdgeGeometryMismatch& mismatch) {
+        // One full-geometry retry, never recursive and never a geometry waiver.
+        // The first receipt already owns its input seed, zones, packing and
+        // rejected placement. Transfer it, rather than adding that seed twice.
+        if(failure)*failure=first;
+        if(!first.captured||first.unavailable)throw;
+        auto retry=input;
+        retry.floorplan.spec=mismatch.retry_spec;
+        retry.floorplan.accounting.quantization_engagements=first.accounting.quantization_engagements;
+        retry.floorplan.accounting.fallback_events=first.accounting.fallback_events;
+        retry.floorplan.accounting.fallback_events.push_back("edge_geometry_replan_retry");
+        return build_pcb_model_once(retry,failure);
+    } catch(...) {
+        if(failure)*failure=first;
         throw;
     }
 }

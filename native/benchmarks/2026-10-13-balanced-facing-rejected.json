@@ -1,0 +1,36 @@
+{
+  "parent_commit": "331f047d",
+  "experiment": "After both existing joint strategies fail, try one additional joint strategy with each diagonal facing projection split at the midpoint of its wall-feasible interval. Skip identical cuts and preserve all start/completion callbacks and exact final checks.",
+  "decision": "REJECTED: production implementation removed; obstacle regression cases retained for the existing solver.",
+  "reason": "No observed board recovery; proposed synthetic recovery fixtures also pass through existing strategies. The explicit assertion requiring a new-strategy witness failed. Extra work is not justified by current evidence.",
+  "tests_during_experiment": {
+    "initial_floorplan_suite": "PASS in 14.23 seconds",
+    "stronger_witness_assertion": "FAIL: obstructed fixtures never exercised balanced facing recovery",
+    "log": "native/build/facing-balanced-final-tests.log",
+    "lesson": "A passing feasibility fixture does not show the new algorithm caused recovery. Require an executed-strategy witness and a baseline comparison."
+  },
+  "carrier_163x153": {
+    "unchanged_pcb_sha256": "d954ec91a789f69a1e94a26a9d3a91b279fbc208dff2503cbe8ee4c8eabc199f",
+    "baseline_joint_states": 23133,
+    "experiment_joint_states": 33541,
+    "baseline_axis_solves": 19247,
+    "experiment_axis_solves": 25616,
+    "baseline_joint_strategies": 35,
+    "experiment_joint_strategies": 51,
+    "unchanged_joint_proposals": 681,
+    "baseline_model_seconds": 11.011984417,
+    "experiment_model_seconds": 12.024123459,
+    "log": "native/build/facing-balanced-carrier.log"
+  },
+  "smaller_candidates": [
+    {"dimensions_mm": [162,153], "status": "construction_failed", "seconds": 3.904672458, "outer_attempts": 4, "log": "native/build/facing-balanced-162x153.log"},
+    {"dimensions_mm": [163,152], "status": "construction_failed", "seconds": 10.042512375, "outer_attempts": 4, "log": "native/build/facing-balanced-163x152.log"}
+  ],
+  "devkit": {
+    "unchanged_pcb_sha256": "1b12fecbcbbaa5e6084c2459da93cb144a660ff19805e6e4e3f75f9c22689fdb",
+    "model_seconds": 0.193228417,
+    "log": "native/build/facing-balanced-devkit.log"
+  },
+  "limits": "Single-run uncontrolled construction timings, not independent full qualification or historical Python comparisons. Failed searches do not prove geometric infeasibility. Extra midpoint strategies are not a substitute for obstacle-conditioned or coupled-axis reasoning.",
+  "retained_tests": "Eight mirrored/axis-swapped full-span obstacle cases additionally check board containment, exact facing, obstacle separation and paired joint callbacks. Original production solver rebuilt: compact retry PASS 5.94s, floorplan PASS 13.97s. See native/build/facing-balanced-revert-tests.log."
+}

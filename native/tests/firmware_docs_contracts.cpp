@@ -1,10 +1,12 @@
 #include "schgen/firmware_docs.hpp"
 #include "schgen/design_rules.hpp"
 #include "schgen/process.hpp"
+#include "spice_historical_precision.hpp"
 #include <algorithm>
 #include <cmath>
 #include <fstream>
 #include <iostream>
+#include <iomanip>
 #include <iterator>
 #include <map>
 #include <regex>
@@ -488,7 +490,52 @@ int main(int argc,char** argv) {
             std::vector<CircuitSheetIr> circuits;for(const auto& sc:in.sheets)circuits.push_back(sc.circuit);
             const auto coverage=check_testpoint_coverage(circuits);ProjectStrings native_probes;
             for(const auto& [net,locations]:coverage.have){std::string joined;for(const auto& loc:locations){if(!joined.empty())joined+=", ";joined+=loc;}native_probes.emplace_back(net,joined);}
-            exact(render_test_plan(in,extract_spice_checks(in.sheets),native_probes),dir/"TEST_PLAN.md",scratch/name/"native-TEST_PLAN.md",sources);
+            const auto raw_spice=extract_spice_checks(in.sheets);
+            const auto raw_plan=render_test_plan(in,raw_spice,native_probes);
+            require(raw_spice.unverified.empty()&&raw_spice.ok()&&raw_plan.find("Netlist topology (not a bench measurement): [PASS] power_som: LM61460 direct VIN enable (U4)")!=std::string::npos,
+                    "test plan lost the reviewed direct-enable topology");
+            auto partial=raw_spice;partial.unverified.push_back("unqualified device sentinel");
+            const auto partial_plan=render_test_plan(in,partial,native_probes);
+            require(!partial.ok()&&partial_plan.find("UNVERIFIED electrical models")!=std::string::npos&&partial_plan.find(partial.unverified.front())!=std::string::npos,
+                    "test plan concealed missing device-specific qualification");
+            auto topology_result=raw_spice;
+            topology_result.checks.push_back({"topology sentinel", "power_som", "enable_topology", "connectivity only", 1,"match",1.0,1.0,"netlist topology",{}});
+            const auto topology_plan=render_test_plan(in,topology_result,native_probes);
+            require(topology_plan.find("Netlist topology (not a bench measurement): [PASS] power_som: topology sentinel")!=std::string::npos&&
+                    topology_plan.find("topology sentinel |")==std::string::npos,
+                    "topology proof was offered as an analog bench measurement");
+            topology_result.checks.back().value=0;
+            require(render_test_plan(in,topology_result,native_probes).find("[FAIL] power_som: topology sentinel")!=std::string::npos,
+                    "test plan hid a failed topology check");
+            auto historical_spice=raw_spice;std::size_t joined_checks=0;
+            const auto topology_count=historical_spice.checks.size();
+            historical_spice.checks.erase(std::remove_if(historical_spice.checks.begin(),historical_spice.checks.end(),[](const auto& c){return c.kind=="enable_topology"&&c.sheet=="power_som";}),historical_spice.checks.end());
+            require(topology_count-historical_spice.checks.size()==1,"exactly one current topology check replaces the old enable calculations");
+            historical_spice.engine=sp.engine; // Historical format oracle only.
+            for(auto& check:historical_spice.checks){
+                const auto old=std::find_if(sp.checks.begin(),sp.checks.end(),[&](const auto& c){return c.name==check.name&&c.sheet==check.sheet;});
+                const auto scale=historical_spice_scale(check);
+                require(old!=sp.checks.end()&&std::abs(std::round(check.value*scale)/scale-old->value)<1e-12,
+                        "calculation changed beyond removed historical rounding");
+                const auto row=raw_plan.find(" "+check.name+" |");
+                if(row!=std::string::npos){
+                    std::ostringstream measured;measured<<std::setprecision(6)<<check.value;
+                    require(raw_plan.substr(row,raw_plan.find('\n',row)-row).find(" | "+measured.str()+" "+check.unit+" |")!=std::string::npos,
+                            "test plan did not join the full-precision analytic value");++joined_checks;
+                }
+                check.value=old->value;
+            }
+            require(joined_checks>0,"live native test plan missed analytic precision coverage");
+            // Reconstruct only the historical presentation for the old format
+            // oracle. Those two invalid device-specific calculations are never
+            // restored to the production result or its published test plan.
+            std::size_t obsolete=0;
+            for(const auto& old:sp.checks)if(old.kind=="en_clamp"&&old.sheet=="power_som"){
+                historical_spice.checks.push_back(old);++obsolete;
+            }
+            require(obsolete==2,"expected precisely two obsolete enable checks in the frozen document");
+            historical_spice.unverified.clear();
+            exact(render_test_plan(in,historical_spice,native_probes),dir/"TEST_PLAN.md",scratch/name/"native-TEST_PLAN.md",sources);
             const auto native_power=analyze_power(in.sheets);
             exact(render_power_sequence_svg(build_power_sequence(in.sheets,native_power),native_power.ok()),dir/"power_sequence.svg",scratch/name/"native-power_sequence.svg",sources);
             if(argc==4){
@@ -496,7 +543,8 @@ int main(int argc,char** argv) {
                 const auto loaded=load_firmware_docs_input(paths);
                 check_stm32(loaded.stm32,field(snapshot,"stm32"));
                 // Source comments intentionally migrate to independently frozen
-                // native provenance; every hardware byte still matches the old IR.
+                // native provenance. The firmware interface is unchanged by
+                // the separately tested power-supply enable topology change.
                 std::string actual;for(const auto& source:loaded.firmware_sources)actual+=source+'\n';
                 require(actual==reviewed,"live native provenance differs from reviewed inventory");
                 require(render_firmware_contract(loaded)==render_firmware_contract(in),"live hardware loader parity");

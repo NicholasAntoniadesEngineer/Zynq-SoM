@@ -1,0 +1,12 @@
+{
+  "base_commit": "debb3be8",
+  "hypothesis": "When incoming-first eviction fails, relocate one displaced group before placing the incoming group. Keep the displaced group's old occupancy reserved during its relocation search, then release it and seat the incoming group in the freed region. Preserve selected shapes, hard proximity domains and normal incumbents; no recursive eviction.",
+  "scope": "Temporary failure-only prototype after all ordinary victim trials. Construction-only screens using the qualified carrier spec, order 3, existing USB-JTAG contract-group candidates and fixed board_aux owned shape. No hardware limits changed. No full qualification or runtime speed claim.",
+  "results": [
+    {"outline_mm":[165,159],"accepted":false,"failure":"usb_jtag interior seating","failure_seconds":0.306261083,"outer_attempts":2,"receipt_captured":true,"log":"native/build/carrier-preclear-165x159.log"},
+    {"outline_mm":[164,160],"accepted":false,"failure":"usb_jtag interior seating","failure_seconds":0.316903917,"outer_attempts":2,"receipt_captured":true,"log":"native/build/carrier-preclear-164x160.log"},
+    {"outline_mm":[163,161],"accepted":false,"failure":"usb_jtag interior seating","failure_seconds":0.322078875,"outer_attempts":2,"receipt_captured":true,"log":"native/build/carrier-preclear-163x161.log"}
+  ],
+  "decision": "Rejected and removed. No useful smaller-board outcome to justify adding another retry strategy. Production sources restored exactly to debb3be8 before the full build/regression sweep.",
+  "limitations": "Outer receipts capture attempted construction work, but the prototype was not integrated as a distinct production fallback strategy or independently unit-qualified. No observed failure proves global packing infeasibility. Accepted carrier remains 166x159 mm."
+}

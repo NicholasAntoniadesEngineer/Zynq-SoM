@@ -1,0 +1,14 @@
+{
+  "base_commit": "d773e019",
+  "change": "After unrestricted joint separation fails, try joint separation with existing sufficient strict-facing projection cuts. Preserve unrestricted successes, run both under separately recorded existing per-strategy bounds, retain all work receipts.",
+  "tests": "native_floorplan_contracts PASS 14.62 seconds; extended facing corpus executes combined strategy, validates exact hard terms, preserves valid incumbents and failed caller state, verifies paired start/completion callbacks and each 64-state test bound",
+  "carrier_163x156": {"recipe": "qualified 164x156 recipe with width 163 and same pinned pilots", "result": "construction_failed", "seconds": 3.021097083, "completed_outer_attempts": 4, "failure_receipt_captured": true},
+  "carrier_reference": {"dimensions_mm": [164,156], "pcb_sha256": "1d6c598565b9daa6cca454fe7352b1b25604b46174d949a5e428b290dbc8dbba", "unchanged": true, "quick_checks": "fanout, ratsnest geometry, placement contract and flow PASS; hard_red=0"},
+  "review_followup": {
+    "status": "Source-level counterexample, native reproduction not yet executed",
+    "suspect": "floorplan_compose.cpp reservation_gap takes maximum over all active child pairs in one direction, potentially excluding pockets requiring different separation directions per child pair",
+    "fixture": "22x22 board, clearance 0.3. Fixed top-primary A at (1,1), 20x20, THT children local (0,0,2,20,mask3) and (18,0,2,20,mask3). Bottom-primary B at (6,6),10x10, explicit empty children. Hard near_max100 to A. Exact occupancy should fit between posts; projected group separation may reject all directions.",
+    "limits": "Do not attribute USB-JTAG/HDMI failures to this until selected child geometry proves it. Existing single-child interlocking tests do not cover this pocket."
+  },
+  "limitations": "No smaller layout or speedup claimed. No fresh full audit or renders for this source change."
+}

@@ -1,0 +1,11 @@
+{
+  "status":"tested_read_only_diagnostic_identifies_south_run_limit",
+  "base_commit":"1a8e96ba",
+  "implementation":"Expose the first rejected sequential edge, reason and admissible start-domain endpoints. Reasons distinguish run span including endpoint reach, per-member fanout domain, blocked obstacle intervals and final rounded-geometry rejection. No geometry, tolerance, search order, acceptance condition or scalar call changed.",
+  "tests":{"passed":2,"failed":0,"seconds":0.49,"log":"native/build/edge-rejection-tests.log","coverage":["existing edge direction/feasibility geometry and operation contracts","success has no rejection","whole-domain obstacle rejection","oversized endpoint-reach run rejection","rounded geometry rejected on all four edges"]},
+  "test_correction":"An initial test expected per-member fanout-domain failure for a single block with excessive endpoint reach. Inspection showed endpoint reach already participates in the earlier run-span domain; corrected that expectation without changing solver behaviour.",
+  "carrier_167x159":{"log":"native/build/carrier-edge-rejection-diagnostic.log","exit_code":1,"edge":"S","reason":"run_span","start_low_mm":11.7501,"start_high_mm":10.980800000000016,"domain_deficit_mm":0.7693,"executed_failure_receipts_identical_to_prior_screen":true},
+  "carrier_168x159":{"log":"native/build/carrier-edge-diagnostic-invariance.log","exit_code":0,"pcb_sha256":"03b934e20ef3cc7ef5dfc01695a9ce923f75f248b277e3e7cb8345144080493b","matches_fully_qualified_reference":true,"all_receipts_identical_to_prior_screen":true},
+  "next_direction":"Examine the south-edge run's component spans, separation requirements and eligible orientation/ordering alternatives. Interior retries cannot repair its current negative start domain. Preserve hardware access/reach constraints; do not shrink margins simply to pass.",
+  "limitations":["Sequential rejection is not a global infeasibility proof.","The per-member fanout-domain branch is exposed but not separately forced by the new fixtures.","No layout, board-area or runtime improvement claimed from diagnostics alone.","Full qualification was not repeated for byte-identical output and operation receipts."]
+}

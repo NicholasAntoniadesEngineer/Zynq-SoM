@@ -1,0 +1,45 @@
+{
+  "base_commit": "92a11e19",
+  "change": "Replace the single optional contract-group sheet with a canonical set. Board and profile CLIs accept repeated --contract-group-face-sheet for distinct sheets. Generate every eligible sheet's offers; after packing failure, expand eligible suffix orientations together and perform one combined replan. Keep successful incumbents and complete failed/partial-expansion accounting.",
+  "validation": "Reject duplicate CLI names and every unknown additional sheet. Existing compact-mode, geometry, controlled-net, connector/top-access and external-contract eligibility checks remain active. Selecting an ineligible sheet does not weaken its restrictions or suppress eligible sheets.",
+  "tests": {
+    "native_pcb_orientation_contracts": "PASS 2.03 seconds",
+    "native_initial_outline_cli_contracts": "PASS 0.90 seconds",
+    "native_model_failure_receipt_contracts": "PASS 27.51 seconds",
+    "native_cpp_source_audits": "58 contracts passed",
+    "multi_sheet_geometry": "USB-JTAG and power-monitor combined offers equal independent per-sheet offers; second sheet contributes actual candidates; unrelated and ineligible power-sheet geometry unchanged; reordering selections reproduces geometry and receipts.",
+    "operation_accounting": "Independent instrumented scalar entries equal reported counts. Combined per-operation work equals the sum of single-sheet runs minus their common baseline.",
+    "recovery": "Single- and multi-sheet success, exhausted recovery, injected exceptions and invalid specifications preserve complete receipts. One orientation-retry event per combined wave, not per sheet.",
+    "test_correction": "Injected packing failures now reject both reservation passes before expecting parent orientation recovery. This follows the previous two-policy fixes; the old one-pass expectation no longer exercised the intended path."
+  },
+  "screens": [
+    {
+      "name": "carrier_single_sheet_regression",
+      "log": "native/build/carrier-multigroup-single-regression.log",
+      "outline_mm": [165,159],
+      "pcb_sha256": "24ac25bfe6cb2ea6477a01b195b5ca78070ccff3bb2640f12d5b8f7275da5c64",
+      "result": "Unchanged qualified-reference geometry; 413 top, 153 bottom."
+    },
+    {
+      "name": "devkit_no_selection_regression",
+      "log": "native/build/devkit-multigroup-regression.log",
+      "outline_mm": [98,98],
+      "pcb_sha256": "b6798d4b63d2fddbf9fad24945c151b9420b049b674ad5d637c43bf4a365137f",
+      "result": "Unchanged geometry; placement/flow checks pass, hard_red=0; 105 top, 55 bottom."
+    },
+    {
+      "name": "carrier_multi_sheet_164x159",
+      "log": "native/build/carrier-multigroup-164x159-probe.log",
+      "selection": ["usb_jtag", "power_mon"],
+      "result": "Rejected under both reservation policies. No smaller-board acceptance."
+    },
+    {
+      "name": "carrier_multi_sheet_165x158",
+      "log": "native/build/carrier-multigroup-165x158-probe.log",
+      "selection": ["usb_jtag", "power_mon"],
+      "result": "Rejected under both reservation policies. No smaller-board acceptance."
+    }
+  ],
+  "scope": "Construction screens, not new full qualification or matched timing comparison. No claim of fabrication readiness; hardware unknowns persist.",
+  "next_restriction": "orientation_eligible rejects every sheet with external contracts. This includes important power and HDMI-related groups. Investigate candidate generation backed by actual board-level constraint evaluation rather than treating all external relationships as an unconditional reason to forbid alternatives. Do not remove those relationships."
+}

@@ -1,0 +1,31 @@
+{
+  "base_commit": "4e20fe3c",
+  "decision": "Reject and remove the coupled-repair prototypes. Eleven construction-only screens produced no accepted smaller carrier. Do not add permanent retry cost or widen production search limits on this evidence.",
+  "configuration": "Same qualified carrier schematic and native/benchmarks/carrier-166x159-contract-groups.floorplan.json. Prepared inputs, compact search, edge feasibility, owned quality/cohesion, contract-group face candidates for usb_jtag, board_aux=owned-face-fixed/a2.2/owned-pins-forward. Single order 3 except the explicitly listed order portfolio. Each screen executes the existing two outer attempts and captures the failure receipt.",
+  "joint_repair_prototypes": {
+    "mechanism": "Depth-first bounded state search over separation configurations. Probe both axes with zero flips; if either fails, use the exact one-flip primitive to generate the current negative cycle's eligible alternatives. Every candidate rechecks both axes. No accepted positions unless both probes and the unchanged downstream checks succeed.",
+    "relative_order_extension": "Also branch to reversed perpendicular order and reversed same-axis order, locking each changed separation. Preserve conservative directional clearance bounds; use selected reservation projections where applicable. Candidate-generation and visited-state counts are bounded.",
+    "results": [
+      {"outline_mm":[165,159],"variant":"axis flips only","state_cap":16,"visited_per_composer":[2,4],"failure_seconds":0.565502042,"log":"native/build/carrier-joint-repair-165x159.log","sha256":"c996a3aa824a6cb7417b7ca362fa58607e9087e9d27d851768a9d91711ce400a"},
+      {"outline_mm":[165,159],"variant":"relative order alternatives","state_cap":16,"visited_per_composer":[16],"failure_seconds":0.564895875,"log":"native/build/carrier-joint-orders-165x159.log","sha256":"57a83bb869e23c8f2fb6fa4031f1da5ed8809ba3f99f20896fb98aad64db0110"},
+      {"outline_mm":[165,159],"variant":"relative order alternatives","state_cap":64,"visited_per_composer":[64],"failure_seconds":0.592456542,"log":"native/build/carrier-joint64-165x159.log","sha256":"ea034bfa11d42b0f30078bc5362577a3c8185195656999871f2f80e9dc009eb8"},
+      {"outline_mm":[166,158],"variant":"relative order alternatives","state_cap":64,"visited_per_composer":[64],"failure_seconds":0.600503208,"log":"native/build/carrier-joint64-166x158.log","sha256":"742f9e19a3a1b5a10fd6a26a748663e9becf632e47d8238d85e1c2a52e3b6259"},
+      {"outline_mm":[165,159],"variant":"relative order alternatives plus diagnostic USB-JTAG mover","state_cap":64,"visited_per_composer":[64],"failure_seconds":0.600157042,"log":"native/build/carrier-joint-blocker-165x159.log","sha256":"6c18465f9b6f28079fe22f8435355138a48422234a24b38171e4f084f286e286"}
+    ],
+    "finding": "The ordinary family has just one eligible flip at each encountered cycle. Expanding relative orders opens a larger search but exhausts the tested bounds without acceptance. These are restricted heuristic failures, not proofs of global infeasibility.",
+    "qualification_limit": "Diagnostic prototypes only: branch events printed in logs, not integrated into the production fallback registry or independently unit-qualified. No full board acceptance claimed; all prototype code and board-specific exceptions removed."
+  },
+  "restored_production_order_portfolio": [
+    {"outline_mm":[165,159],"order":0,"failure":"power interior seating in both outer attempts","failure_seconds":0.428577417,"log":"native/build/carrier-current-order0-165x159.log"},
+    {"outline_mm":[165,159],"order":1,"failure":"power_mon seating, then legalizer conflicts including HDMI termination/SoM and UART/motor PWM","failure_seconds":0.495585125,"log":"native/build/carrier-current-order1-165x159.log"},
+    {"outline_mm":[165,159],"order":2,"failure":"bringup_rails then usb_jtag interior seating","failure_seconds":0.62012475,"log":"native/build/carrier-current-order2-165x159.log"}
+  ],
+  "restored_production_aspect_trades": [
+    {"outline_mm":[164,160],"area_mm2":26240,"failure":"bringup_modules interior seating","failure_seconds":0.519140292,"log":"native/build/carrier-aspect-trade-164x160.log"},
+    {"outline_mm":[163,161],"area_mm2":26243,"failure":"legalizer","failure_seconds":0.560040917,"log":"native/build/carrier-aspect-trade-163x161.log"},
+    {"outline_mm":[162,162],"area_mm2":26244,"failure":"board_aux interior seating","failure_seconds":0.560742791,"log":"native/build/carrier-aspect-trade-162x162.log"}
+  ],
+  "restoration": "git diff confirms floorplan_compose.cpp and floorplan_pack.cpp exactly match the committed implementation; normal CLI and profiler rebuilt. Reuse both-board accepted-incumbent evidence from 2026-10-11-repair-budget-boundary.json because production code and hardware inputs are unchanged. No redundant full audits or renders run.",
+  "next_direction": "Investigate group-shape flexibility and early feasibility-aware seating; do not repeatedly extend the same coupled-axis state budget. Current accepted carrier remains 166x159 mm (26394 mm2).",
+  "limits": "All reported times are failed model construction intervals with observer overhead, not board build or Python comparison timings. No hardware limits waived, new finalist qualified or fabrication readiness claimed. The sustained goal remains incomplete."
+}

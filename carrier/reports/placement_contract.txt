@@ -78,7 +78,7 @@ PLACEMENT-CONTRACT GATE (power_mon): PASS (contract=yes, 9 structures)
   unresolved refs: 0
   violations: 0
 
-PLACEMENT-CONTRACT GATE (power_som): PASS (contract=yes, 11 structures)
+PLACEMENT-CONTRACT GATE (power_som): PASS (contract=yes, 10 structures)
   fails: hot_loop=0 same_side=0 bulk=0 bulk_out=0 sw_node=0 fb=0 boot=0 vcc=0 bias=0 rt=0 ldo=0 proximity=0 unknown=0
   unresolved refs: 0
   violations: 0

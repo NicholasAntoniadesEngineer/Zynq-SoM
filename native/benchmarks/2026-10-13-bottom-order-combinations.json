@@ -1,0 +1,31 @@
+{
+  "source_commit": "a628d48e",
+  "scope": "Bounded construction screening, not full acceptance",
+  "recipe": {
+    "project": "carrier",
+    "floorplan_base": "carrier-165x156-bottom-modules.floorplan.json",
+    "outline_override_mm": [164, 156],
+    "compact_search": true,
+    "edge_feasibility": true,
+    "owned_quality_first": true,
+    "owned_face_cohesion": true,
+    "contract_group_face_sheet": "usb_jtag",
+    "require_bottom_sheets": ["power_mon", "bringup_modules"],
+    "owned_shapes": {"board_aux": "owned-face-a1.000000", "bringup_rails": "bottom-a2.2/r270/owned-pins-forward"},
+    "joint_separation_states": 1024,
+    "reseat_poses": 8,
+    "reseat_frontier": 4096,
+    "reseat_continuations": 3,
+    "reseat_victim_shapes": true,
+    "failed_first_retry": true,
+    "runs_each": 1
+  },
+  "trials": [
+    {"interior_order": 0, "result": "construction_failed", "seconds": 2.243710833, "completed_outer_attempts": 4, "failure_receipt_captured": true},
+    {"interior_order": 1, "result": "construction_failed", "seconds": 1.765968833, "completed_outer_attempts": 4, "failure_receipt_captured": true},
+    {"interior_order": 2, "result": "construction_failed", "seconds": 1.216608291, "completed_outer_attempts": 4, "failure_receipt_captured": true}
+  ],
+  "interpretation": "Combined failure-first and victim-shape retries were actually exercised, rather than inferred from individual failures. None produced a candidate to qualify. This does not prove geometric infeasibility. The earlier order-3 combined candidate constructed but failed the wiring-length quality budget; no gate was waived.",
+  "budget_semantics": "The ratsnest cross budget is a placement-quality proxy: cross_k * sqrt(board area) * subsystem count (ratsnest_gate.cpp), not a physical electrical infeasibility proof. Reducing the wiring proxy without sacrificing physical or electrical constraints remains required.",
+  "timing_limitations": "Instrumented, single-run screening with concurrent processes; no speedup comparison."
+}

@@ -1,0 +1,37 @@
+{
+  "parent_commit": "cb867607",
+  "finding": "Contract-group bottom-side candidates were discarded unless their local union envelope area strictly decreased. This excludes valid assignments that free top-side occupancy without shrinking the group envelope.",
+  "change": "Retain physically valid distinct face candidates independent of local envelope area; board-level selection still chooses among candidates",
+  "unchanged_constraints": "Pinned/top-access parts, through-hole occupancy, mirroring, geometry, placement contracts, fanout and final board checks",
+  "test": {
+    "name": "native_pcb_orientation_contracts",
+    "status": "PASS",
+    "seconds": 2.35,
+    "nonshrinking_face_witnesses": 4,
+    "carrier_contract_group_candidates_including_turns": 32,
+    "new_assertion": "Nonshrinking candidates must reduce top component count and increase bottom count; at least one must exist",
+    "retained_coverage": "Pinned owner/access preservation, pad-net identity, independent mirrored pad geometry, binder identity, determinism, fanout starvation, protruding copper, rigid rotations and devkit regressions",
+    "log": "native/build/face-area-final-tests.log"
+  },
+  "screens": {
+    "base": "Use carrier profiler recipe from 2026-10-13-paired-reseat.json context and qualified 164x153 recipe, changing outline to 164x152; prepared schematic /private/tmp/carrier-166x156-two-pilots.iK3HkI/Zynq_Carrier.kicad_sch",
+    "before_change": [
+      {"additional_face_sheets": ["power", "power_som"], "status": "construction_failed", "seconds": 6.011128458, "log": "native/build/bottom-expand-power-164x152.log"},
+      {"additional_face_sheets": ["hdmi_rx_term"], "status": "construction_failed", "seconds": 6.026567292, "log": "native/build/bottom-expand-hdmi-164x152.log"}
+    ],
+    "after_change": {
+      "additional_face_sheets": ["power", "power_som", "hdmi_rx_term"],
+      "status": "construction_failed",
+      "seconds": 5.781107333,
+      "outer_attempts": 4,
+      "failure_receipt_captured": true,
+      "log": "native/build/face-area-expanded-164x152.log"
+    }
+  },
+  "reference_checks": {
+    "carrier": {"dimensions_mm": [164, 153], "unchanged_pcb_sha256": "9cf06a9d9574cf3f1dfbb37f675996e99d4bbff389caa257781a415e08f547e0", "log": "native/build/face-area-carrier-reference.log"},
+    "devkit": {"dimensions_mm": [98, 98], "unchanged_pcb_sha256": "1b12fecbcbbaa5e6084c2459da93cb144a660ff19805e6e4e3f75f9c22689fdb", "log": "native/build/face-area-devkit-reference.log"},
+    "scope": "Construction, fanout, ratsnest, placement contract and placement flow checks pass; zero hard-red and model/emission nonsearch fallback events. No new full qualification."
+  },
+  "limits": "No smaller carrier or measured global utilisation improvement yet. Different screening options and uncontrolled timing environment preclude a speedup comparison. Routing and fabrication readiness are not established."
+}

@@ -1,0 +1,47 @@
+{
+  "status": "exact_rejection_witness_and_explicit_som_anchor_corrected_no_smaller_finalist",
+  "base_commit": "0eeb5433",
+  "diagnostics": {
+    "implementation": "Retain the actual terminal Bellman-Ford cycle edges and their separation/wall/extra-edge provenance. Compose reports them only when rejection observation is enabled. Reuse already-computed near edges and annotate matching authored subjects/targets; do not solve or quantize again.",
+    "log": "native/build/carrier-165x159-cycle-labelled.log",
+    "witness": [
+      "hdmi_rx_term - #0 <= 110.59 [near_max hdmi_rx_term -> som_j2]",
+      "#0 - hdmi_rx_term <= -142.901 [separation #usb_jtag -> hdmi_rx_term]"
+    ],
+    "contradiction_mm": 32.311,
+    "interpretation": "In the legalizer frame, the hard near-SoM constraint requires y <= 110.59 while the repaired separation from the selected fixed USB-JTAG placement requires y >= 142.901. These selected constraints cannot both hold. This is not a proof that every layout on this outline is infeasible.",
+    "all_failure_receipt_and_event_rows_match_pre_diagnostic_run": true
+  },
+  "anchor_correction": {
+    "defect": "Explicit near: som_j2 was parsed into @som_j2 but anchor_row searched only perimeter edge blocks; unmatched names silently used the E zone. SoM connectors are not edge blocks.",
+    "fix": "Resolve explicit @som_jN targets using the actual SoM connector rectangle center. Do not pretend these are perimeter connectors or alter hard proximity limits.",
+    "scope_limit": "This specifically resolves SoM connectors; it does not claim to resolve every unplaced interior near target or force a hard-domain seat.",
+    "screen_spec": "native/benchmarks/carrier-165x159-term-near-som.floorplan.json",
+    "before_log": "native/build/carrier-165x159-term-near-som.log",
+    "after_log": "native/build/carrier-165x159-term-near-som-fixed.log",
+    "result": "Both screens still reject with the same cycle. Fixing the hint is necessary semantic correctness, but insufficient to overcome the packing/repair interaction.",
+    "after_seconds": 0.556474791,
+    "completed_outer_attempts": 2,
+    "failure_receipt_captured": true
+  },
+  "tests": {
+    "name": "native_floorplan_contracts",
+    "log": "native/build/som-target-anchor-tests.log",
+    "passed": true,
+    "seconds": 13.14,
+    "coverage": "Both-board actual SoM connector anchor centers and non-perimeter classification; terminal locked-cycle exact edges, provenance, closed balance and independently negative cost sum; no stale cycle on success or unexecuted exhaustion; existing floorplan physical, determinism and publication requirements."
+  },
+  "incumbent": {
+    "log": "native/build/carrier-cycle-anchor-incumbent.log",
+    "runs": 2,
+    "outline_mm": [166,159],
+    "pcb_sha256": "4d1432b252230cbfc6e7342de7f0e431a0f12dc16d7d26ebd08fe0a67508bab1",
+    "matches_qualified_geometry": true,
+    "all_receipt_and_fallback_rows_match_previous_screen": true,
+    "placement_contract_ok": true,
+    "placement_flow_ok": true,
+    "hard_red": 0,
+    "construction_seconds": [2.635268959,2.625907084]
+  },
+  "limits": "No hardware limits waived and no new board promoted. Short screens are not a matched Python timing comparison or speedup evidence. Full earlier qualification remains tied to its recorded revision; current geometry and counts match it."
+}

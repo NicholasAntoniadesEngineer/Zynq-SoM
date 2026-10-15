@@ -61,12 +61,14 @@ void legalizer(){
     rejects<std::overflow_error>([&]{run({1},{2},q);},"legalizer source rejects overflow before snap");
     // Existing independent fixture deliberately reverts compaction after snaps.
     FloorplanLegalizeInput in;in.board_w=100;in.board_h=100;in.som_core_page={65,65,85,85};in.compact=true;
+    std::size_t compactions=0;in.compaction_started=[&]{++compactions;};
     for(const auto& name:{"a","b"})in.metrics[name]={{{"p",5,5}},{{"p",0,0,10,10}},{10,10}};
     in.index.hard.push_back({"flow_hop","a","a","b",{},"test",true,{},{}});
     in.index.hard.push_back({"far_min","a","a","b",30.,"test",true,{},{}});
     std::vector<FloorplanLegalizeVar> vars{{"a",10,10,{5,5},5,5},{"b",10,10,{60,5},60,5}};
     std::vector<std::string> log;q.clear();calls={};
     require(floorplan_legalize_compact_accounted(in,vars,log,q),"reverted compact solve remains feasible");
+    require(compactions==1,"reverted compaction must still report its executed pass");
     require(std::find(log.begin(),log.end(),"compaction REVERTED (would break a hard term or separation)")!=log.end(),"actual compact trial reverted");
     require(!q.empty()&&q.at("legalize_pose_quantum")>0,"reverted trial retains engagements");measured(q,calls,"reverted compaction");
 }
@@ -104,7 +106,8 @@ void ownership(){
 }
 void live(const std::filesystem::path& root,const std::string& name){
     auto f=placement_fixture::load(root,name);const auto zones=build_pcb_zone_geometry(f.input);
-    pcb_placement::Placer p(f.input,zones,f.stage);p.seed();
+    const auto stage=generate_floorplan(prepare_pcb_floorplan(f.input,zones));
+    pcb_placement::Placer p(f.input,zones,stage);p.seed();
     auto step=[&](const std::string& label,auto action){
         const auto before=p.ctx.quantization;calls={};action();const auto observed=calls;
         auto delta=p.ctx.quantization;for(const auto& [k,v]:before)delta[k]-=v;
@@ -113,12 +116,17 @@ void live(const std::filesystem::path& root,const std::string& name){
     step("l4",[&]{p.l4_pull();});p.checkpoint("l4_pull");
     step("edge",[&]{p.edge_seat();});p.checkpoint("edge_seat");
     step("breathe-A",[&]{p.breathe("A");});step("breathe-B",[&]{p.breathe("B");});p.checkpoint("breathe");
+    const auto before_refit_grid=count(p.ctx.quantization,"fixed_part_grid");
     step("refit",[&]{p.refit();});p.checkpoint("refit_facing");
+    if(name=="devkit_mini")require(count(p.ctx.quantization,"fixed_part_grid")>before_refit_grid,
+        "devkit refit fan-out trials execute and retain real projected-coordinate work");
     step("reorder",[&]{p.reorder();});p.checkpoint("reorder");step("evict",[&]{p.evict();});
     p.checkpoint("corridor_eviction"); // same freeze boundary as production
     std::size_t fixed_coordinates=0;for(const auto& [r,key]:p.geometry.resolvable){(void)key;if(!p.grid_placed.count(r))fixed_coordinates+=2;}
+    const auto before_emission_grid=count(p.ctx.quantization,"fixed_part_grid");
     step("instantiate",[&]{p.instantiate();});
-    require(count(p.ctx.quantization,"fixed_part_grid")==fixed_coordinates,name+" exactly two coordinate snaps per non-grid-placed instance");
+    require(count(p.ctx.quantization,"fixed_part_grid")==before_emission_grid+fixed_coordinates,
+        name+" emission adds exactly two coordinate snaps per non-grid-placed instance, retaining all trial work");
     require(count(p.ctx.quantization,"breathe_anchor_grid")>0,name+" actual breathing trials occurred");
     // Production exports after escape(), so the manual receipt must include it.
     step("escape",[&]{p.escape();});
@@ -126,7 +134,7 @@ void live(const std::filesystem::path& root,const std::string& name){
     std::ostringstream manual_model,production_model;
     floorplan_precision_fixture::node(manual_model,pcb_model_json(p.out.model));
     floorplan_precision_fixture::node(production_model,pcb_model_json(result.model));
-    require(manual_model.str()==production_model.str(),name+" frozen-stage manual geometry matches production");
+    require(manual_model.str()==production_model.str(),name+" current-plan manual stage geometry matches production");
     require(result.zone_accounting_ownership==PcbZoneAccountingOwnership::IncludedInFloorplan,name+" production normal ownership explicit");
     require(result.placement_accounting.quantization_engagements==p.ctx.quantization,name+" every placement-local engagement exported");
     auto legacy=result.zone_accounting.fallback_events;legacy.insert(legacy.end(),result.placement_accounting.fallback_events.begin(),result.placement_accounting.fallback_events.end());
@@ -135,9 +143,9 @@ void live(const std::filesystem::path& root,const std::string& name){
     NativeQuantizations q;NativeFallbacks fallbacks;register_native_quantizations(q);register_native_fallbacks(fallbacks);NativeAccountingInbox inbox(q,fallbacks);
     require(inbox.merge_once("actual-build",total)&&!inbox.merge_once("actual-build",total),name+" final aggregate imports once with no replay math");
     if(name=="devkit_mini"){
-        f.input.two_side=false;calls={};const auto single=build_pcb_model(f.input);const auto separate=calls;
-        require(single.zone_accounting_ownership==PcbZoneAccountingOwnership::SeparateFromFloorplan,"top-preferred build exposes separate actual zone solve");
-        const auto all=pcb_placement_accounting(single);measured(all.quantization_engagements,separate,"top-preferred two-zone aggregate");
+        f.input.two_side=false;calls={};const auto single=build_pcb_model(f.input);const auto single_calls=calls;
+        require(single.zone_accounting_ownership==PcbZoneAccountingOwnership::IncludedInFloorplan,"top-preferred build plans and emits the same owned zone solve");
+        const auto all=pcb_placement_accounting(single);measured(all.quantization_engagements,single_calls,"top-preferred shared-zone aggregate");
     }
 }
 } // namespace

@@ -31,6 +31,7 @@ PcbPlacementInput load_board_inputs(const ProjectPaths& paths,
     floor.regulators = analyze_power(circuits).regs;
     floor.module_offset = options.module_offset;
     floor.place_clear = options.place_clear;
+    floor.compact_search = options.compact_search;
     floor.experiment = options.experiment;
     result.two_side = options.two_side;
     result.netlist = netlist;
@@ -139,6 +140,8 @@ PcbPlacementInput load_board_inputs(const ProjectPaths& paths,
         if (!fs::is_regular_file(dossier)) throw std::runtime_error(ref + ": cannot resolve return-path footprint dossier");
         result.return_path_footprints.emplace(ref, snapshot(dossier));
     }
+    if (options.compact_search)
+        result.owned_groups = resolve_owned_group_inputs(paths, circuits, result);
     return result;
 }
 }

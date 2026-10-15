@@ -22,6 +22,21 @@ void Placer::breathe(const std::string &phase) {
         checked_quantization_add(ctx.quantization,retreat_label);return breathe_retreat_steps(distance,breathe_step_mm);
     };
     double pc = ctx.clearance;
+    const bool compact = ctx.in.floorplan.compact_search;
+    std::map<std::string, std::string> declared_owner;
+    if (compact)
+        for (const auto &[sheet, evidence] : ctx.in.owned_groups) {
+            if (!evidence)
+                throw std::runtime_error("breathe: null trusted ownership for " + sheet);
+            for (const auto &row : owned_group_placements(*evidence)) {
+                if (!pos.count(row.owner) && !pos.count(row.cap))
+                    continue;
+                if (!pos.count(row.owner) || !pos.count(row.cap) ||
+                    ctx.by_ref.at(row.owner).sheet != sheet || ctx.by_ref.at(row.cap).sheet != sheet ||
+                    row.owner == row.cap || !declared_owner.emplace(row.cap, row.owner).second)
+                    throw std::runtime_error("breathe: incomplete or inconsistent owned group in " + sheet);
+            }
+        }
     std::vector<std::string> movable, fixed_parts;
     std::set<std::string> contracted;
     for (const auto &[sheet, p] : origins) {
@@ -42,14 +57,65 @@ void Placer::breathe(const std::string &phase) {
                          geometry.conn_edge.count(r) || b.sheet == "som_decoupling" ||
                          b.footprint.find("Fiducial") != std::string::npos ||
                          contracted.count(b.sheet) || contract_members.count(r) ||
-                         ctx.l4_exempt.count(r);
+                         // Context stores wired/near-target SHEET names. Keep
+                         // the frozen default path; compact ownership-aware
+                         // breathing must not move an exempt sheet indirectly.
+                         ctx.l4_exempt.count(compact ? b.sheet : r);
         (immovable ? fixed_parts : movable).push_back(r);
+    }
+    if (compact && !declared_owner.empty()) {
+        std::set<std::string> locked(fixed_parts.begin(), fixed_parts.end());
+        // A relationship grants no extra movement permission. If either end
+        // is fixed, freeze its connected group rather than moving it indirectly
+        // or detaching its capacitor and assigning it to a nearer subject.
+        for (const auto &[cap, owner] : declared_owner) {
+            (void)cap;
+            if (!locked.count(owner) && pins(owner) < 3) locked.insert(owner);
+        }
+        bool changed;
+        do {
+            changed = false;
+            for (const auto &[cap, owner] : declared_owner)
+                if (locked.count(cap) || locked.count(owner)) {
+                    changed |= locked.insert(cap).second;
+                    changed |= locked.insert(owner).second;
+                }
+        } while (changed);
+        movable.erase(std::remove_if(movable.begin(), movable.end(), [&](const auto &r) {
+            if (!locked.count(r)) return false;
+            fixed_parts.push_back(r);
+            return true;
+        }), movable.end());
     }
     if (movable.empty())
         return;
-    BreatheGrid top(width, height, .25, 25, 25, &ctx.quantization), bottom(width, height, .25, 25, 25, &ctx.quantization);
+    // Trial search must not clear a fixed reservation or another component's
+    // raster halo when temporarily removing the group being considered.
+    // Retain the accepted default layout until this path has full-board proof.
+    const auto grid_mode = ctx.in.floorplan.compact_search
+        ? BreatheGrid::Mode::Counted : BreatheGrid::Mode::Assignment;
+    BreatheGrid top(width, height, .25, 25, 25, &ctx.quantization, grid_mode),
+        bottom(width, height, .25, 25, 25, &ctx.quantization, grid_mode);
     auto grid = [&](const std::string &r) -> BreatheGrid & {
         return side(r) == "bottom" ? bottom : top;
+    };
+    auto opposite_grid = [&](const std::string &r) -> BreatheGrid & {
+        return side(r) == "bottom" ? top : bottom;
+    };
+    std::set<std::string> through;
+    for (const auto &[r, p] : pos) {
+        (void)p;
+        if (geometry.resolvable.count(r) && geometry.bbox_of.count(r) &&
+            has_thru_pads_from_text(mod(r)->bytes))
+            through.insert(r);
+    }
+    // The own-face movable halo remains pc/2; a through-hole reservation
+    // remains the full pc on the opposite face, at the same physical pose.
+    auto stamp_movable = [&](const std::string &r, int value) {
+        const auto b = box(r, pos.at(r));
+        grid(r).stamp(grow_rect(b, pc / 2), value, &ctx.quantization);
+        if (compact && through.count(r))
+            opposite_grid(r).stamp(grow_rect(b, pc), value, &ctx.quantization);
     };
     auto page_keepout = offset_rect(keepout, 25, 25);
     for (auto *g : {&top, &bottom}) {
@@ -69,8 +135,11 @@ void Placer::breathe(const std::string &phase) {
         if (geometry.bbox_of.count(r) && geometry.resolvable.count(r))
             grid(r).stamp(grow_rect(box(r, pos.at(r)), pc), 1, &ctx.quantization);
     for (const auto &[r, p] : pos)
-        if (side(r) == "top" && geometry.resolvable.count(r) && geometry.bbox_of.count(r) &&
-            has_thru_pads_from_text(mod(r)->bytes))
+        if (compact) {
+            if (through.count(r))
+                opposite_grid(r).stamp(grow_rect(box(r, p), pc), 1, &ctx.quantization);
+        } else if (side(r) == "top" && geometry.resolvable.count(r) && geometry.bbox_of.count(r) &&
+                   has_thru_pads_from_text(mod(r)->bytes))
             bottom.stamp(grow_rect(box(r, p), pc), 1, &ctx.quantization);
     std::map<std::string, std::vector<std::string>> by_sheet;
     for (const auto &r : movable) {
@@ -89,13 +158,19 @@ void Placer::breathe(const std::string &phase) {
     for (const auto &[sheet, refs] : by_sheet) {
         std::vector<std::string> subjects;
         for (const auto &r : refs)
-            if (pins(r) >= 3)
+            if (pins(r) >= 3 && !declared_owner.count(r))
                 subjects.push_back(r);
         if (subjects.empty())
             continue;
         std::map<std::string, std::set<std::string>> assigned;
         for (const auto &r : refs)
-            if (pins(r) < 3) {
+            if (pins(r) < 3 || declared_owner.count(r)) {
+                if (const auto owner = declared_owner.find(r); owner != declared_owner.end()) {
+                    if (std::find(subjects.begin(), subjects.end(), owner->second) == subjects.end())
+                        throw std::runtime_error("breathe: owned member lacks an eligible anchor: " + r);
+                    assigned[owner->second].insert(r);
+                    continue;
+                }
                 auto best = *std::min_element(
                     subjects.begin(), subjects.end(), [&](const auto &a, const auto &b) {
                         auto p = pos.at(r), pa = pos.at(a), pb = pos.at(b);
@@ -132,12 +207,14 @@ void Placer::breathe(const std::string &phase) {
         area[sheet] = total ? total : 1;
         disp[sheet] = (b.x1 - b.x0) * (b.y1 - b.y0) / area[sheet];
     }
-    auto leash = [&](const Group &g, FloorplanPoint delta) {
+    auto leash = [&](const Group &g, FloorplanPoint delta, const Offsets *rounded = nullptr) {
         const auto &refs = by_sheet.at(g.sheet);
         std::vector<FloorplanPoint> points;
         for (const auto &r : refs) {
             auto p = pos.at(r);
-            if (g.members.count(r)) {
+            if (rounded && g.members.count(r)) {
+                p = rounded->at(r);
+            } else if (g.members.count(r)) {
                 p.first += delta.first;
                 p.second += delta.second;
             }
@@ -159,10 +236,7 @@ void Placer::breathe(const std::string &phase) {
                 side(r) != side(anchor) || som_refs.count(r))
                 continue;
             const auto &part = ctx.by_ref.at(r);
-            bool df40 = part.sheet.size() > 5 && part.sheet.rfind("som_j", 0) == 0 &&
-                        std::all_of(part.sheet.begin() + 5, part.sheet.end(),
-                                    [](char c) { return c >= '0' && c <= '9'; });
-            if (df40 || pins(r) >= board_decision_policy::df40_min_pins || part.footprint.find("Fiducial") != std::string::npos ||
+            if (pcb_is_df40_part(part.sheet,pins(r)) || part.footprint.find("Fiducial") != std::string::npos ||
                 is_testpoint_ref(r) || (part.sheet == sheet && cp(r)))
                 continue;
             out.push_back(box(r, p));
@@ -187,14 +261,18 @@ void Placer::breathe(const std::string &phase) {
         if (!geometry.bbox_of.count(r) || !geometry.resolvable.count(r) || som_refs.count(r))
             continue;
         int n = pins(r);
-        if (n >= 3 && n < board_decision_policy::df40_min_pins && need(n) > pc + 1e-9)
+        if (n >= 3 && !pcb_is_df40_part(ctx.by_ref.at(r).sheet,n) && need(n) > pc + 1e-9)
             guards.push_back(r);
     }
-    auto free = [&](const Group &g, FloorplanPoint delta) {
+    auto free = [&](const Group &g, FloorplanPoint delta, const Offsets *rounded = nullptr) {
         for (const auto &r : g.members) {
             auto old = pos.at(r);
-            auto b = box(r, {old.first + delta.first, old.second + delta.second});
+            auto b = box(r, rounded ? rounded->at(r) :
+                         FloorplanPoint{old.first + delta.first, old.second + delta.second});
             if (!grid(r).free(grow_rect(b, pc / 2), &ctx.quantization))
+                return false;
+            if (compact && through.count(r) &&
+                !opposite_grid(r).free(grow_rect(b, pc), &ctx.quantization))
                 return false;
             for (const auto &s : guards) {
                 if (g.members.count(s) || side(r) != side(s))
@@ -211,6 +289,23 @@ void Placer::breathe(const std::string &phase) {
                 if (new_clear < std::min(need(pins(r)), old_clear) - breathe_epsilon_mm)
                     return false;
             }
+            if (rounded) {
+                // Per-member rounding is not a rigid translation. The grid
+                // deliberately omits this group while testing it, so check
+                // internal separation too, including mixed-face THT members.
+                const auto margin = [](Box4 a, Box4 other) {
+                    return std::max({a.x0-other.x1, other.x0-a.x1,
+                                     a.y0-other.y1, other.y0-a.y1});
+                };
+                for (const auto &s : g.members) {
+                    if (s >= r || (side(r) != side(s) &&
+                                   !through.count(r) && !through.count(s)))
+                        continue;
+                    const double before = margin(box(r, old), box(s, pos.at(s)));
+                    if (margin(b, box(s, rounded->at(s))) < std::min(pc, before))
+                        return false;
+                }
+            }
         }
         return true;
     };
@@ -219,6 +314,29 @@ void Placer::breathe(const std::string &phase) {
         return FloorplanPoint{
             delta_precision(ctx.fixed_grid(25 + p.first + delta.first, "breathe_anchor_grid") - 25 - p.first),
             delta_precision(ctx.fixed_grid(25 + p.second + delta.second, "breathe_anchor_grid") - 25 - p.second)};
+    };
+    // A raster is a search accelerator, not the physical clearance oracle.
+    // In assignment mode removing one group can erase a shared obstacle cell;
+    // independent coordinate rounding can also break a rigid group. Validate
+    // the whole proposed commit against exact boxes on both physical faces.
+    // Existing undersized gaps are not made worse by this optimisation pass.
+    const auto preserves_clearance = [&](const Offsets &candidate) {
+        const auto margin = [](Box4 a, Box4 b) {
+            return std::max({a.x0-b.x1, b.x0-a.x1, a.y0-b.y1, b.y0-a.y1});
+        };
+        for (const auto &[r, next] : candidate) {
+            if (!geometry.bbox_of.count(r) || !geometry.resolvable.count(r)) continue;
+            const auto before = box(r, pos.at(r)), after = box(r, next);
+            for (const auto &[s, old] : pos) {
+                if (s == r || (candidate.count(s) && s < r) ||
+                    !geometry.bbox_of.count(s) || !geometry.resolvable.count(s) ||
+                    (side(r) != side(s) && !through.count(r) && !through.count(s))) continue;
+                const auto other = candidate.find(s);
+                if (margin(after, box(s, other == candidate.end() ? old : other->second)) <
+                    std::min(pc, margin(before, box(s, old)))) return false;
+            }
+        }
+        return true;
     };
     for (const auto &g : groups) {
         auto fb = foreign(g.anchor, g.members);
@@ -244,7 +362,7 @@ void Placer::breathe(const std::string &phase) {
                 directions.push_back(d);
         }
         for (const auto &r : g.members)
-            grid(r).stamp(grow_rect(box(r, pos.at(r)), pc / 2), 0, &ctx.quantization);
+            stamp_movable(r, 0);
         FloorplanPoint best{0, 0};
         double best_clear = cur;
         bool won = false;
@@ -286,15 +404,24 @@ void Placer::breathe(const std::string &phase) {
                         }
                     }
             }
-            if (commit && *commit != FloorplanPoint{0, 0})
+            if (commit && *commit != FloorplanPoint{0, 0}) {
+                Offsets rounded;
                 for (const auto &r : g.members) {
                     auto p = pos.at(r);
-                    pos[r] = {commit_precision(p.first + commit->first),
-                              commit_precision(p.second + commit->second)};
+                    const FloorplanPoint next{commit_precision(p.first + commit->first),
+                                              commit_precision(p.second + commit->second)};
+                    rounded.emplace(r, next);
                 }
+                // Keep the incumbent if the final rounded geometry is unsafe;
+                // all trial/rounding receipts above still describe actual work.
+                if ((!compact || (free(g, {0, 0}, &rounded) && leash(g, {0, 0}, &rounded))) &&
+                    preserves_clearance(rounded))
+                    for (const auto &[r, p] : rounded)
+                        pos[r] = p;
+            }
         }
         for (const auto &r : g.members)
-            grid(r).stamp(grow_rect(box(r, pos.at(r)), pc / 2), 1, &ctx.quantization);
+            stamp_movable(r, 1);
     }
     for (const auto &[sheet, refs] : by_sheet) {
         if (refs.size() <= 3)
@@ -304,9 +431,15 @@ void Placer::breathe(const std::string &phase) {
             boxes.push_back(box(r, pos.at(r)));
         auto b = *boxes_union(boxes);
         double d = (b.x1 - b.x0) * (b.y1 - b.y0) / area.at(sheet);
-        if (d > std::max(8., disp.at(sheet)) + breathe_epsilon_mm)
-            for (const auto &r : refs)
-                pos[r] = seed.at(r);
+        if (d > std::max(8., disp.at(sheet)) + breathe_epsilon_mm) {
+            // Other sheets may now occupy a moved part's vacated halo.
+            // Reject the complete pass in both modes: a partial rollback
+            // would invalidate already accepted physical-clearance checks.
+            // Local grids are discarded; actual-work receipts remain.
+            for (const auto &[r, p] : seed)
+                pos[r] = p;
+            return;
+        }
     }
 }
 } // namespace schgen::pcb_placement

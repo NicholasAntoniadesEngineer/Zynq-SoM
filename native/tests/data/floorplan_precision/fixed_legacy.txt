@@ -1139,13 +1139,18 @@ PLAN devkit_mini_fixed
 "text" 3 "  CALC   sizing_winner                  = 100x100       mm         <- board_w=100 board_h=100 area=10000 est_cross=1551.5 budget=2400 headroom=848.5 plan=fixed  ::  headroom = budget - est_cross"
 
 
-"fallback_events" 4 9 3 "cand_cap_truncated"
+"fallback_events" 4 14 3 "cand_cap_truncated"
 3 "cand_cap_truncated"
 3 "cand_cap_truncated"
 3 "cand_cap_truncated"
 3 "cand_cap_truncated"
 3 "cand_cap_truncated"
 3 "cand_cap_truncated"
+3 "interior_reseat_retry"
+3 "interior_reseat_retry"
+3 "interior_reseat_retry"
+3 "interior_reseat_retry"
+3 "interior_reseat_retry"
 3 "interior_reseat_retry"
 3 "punch_free_plan_rejected"
 

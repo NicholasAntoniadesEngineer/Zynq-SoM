@@ -1,0 +1,68 @@
+{
+  "base_commit": "02f394fc",
+  "change": "PCA9306 switch-mode reference current limiting and local 100pF filter; no added parts or footprint-size changes",
+  "hardware": {
+    "R4": "100k C25803, +3V3_AUX to VREF2 on AUX_ISO_REF, formerly on EN",
+    "EN": "directly follows +3V3_AUX; not connected to the filtered reference node",
+    "C5": "100pF C14858 (Samsung CL10C101JB8NNNC, 50V C0G +/-5%, 0603), VREF2 to GND; formerly 100nF C14663 on AUX",
+    "sources": [
+      "https://www.ti.com/lit/ds/symlink/pca9306.pdf",
+      "https://product.samsungsem.com/cn/mlcc/CL10C101JB8NNN.do",
+      "https://www.lcsc.com/product-detail/Multilayer-Ceramic-Capacitors-MLCC-SMD-SMT_Samsung-Electro-Mechanics-CL10C101JB8NNNC_C14858.html"
+    ],
+    "qualified_scope": "Explicit reference-current path and filter topology, BOM identity, connectivity, pin/footprint identity and generated schematic checks",
+    "unqualified": ["Startup/shutdown and reverse rail sequencing isolation", "Bus state at enable", "Generic voltage checker cannot resolve resistor-fed C5 reference node; explicit UNSPEC retained"]
+  },
+  "tests": {
+    "passed": ["board_aux_c1", "carrier_surface_requirements", "carrier_spice_identity", "component_basis", "model_checks", "example_devkit"],
+    "negative_controls": ["Independently frozen original reference wiring rejected", "EN-only resistance change does not fix original defect", "Rating waiver and mutable metadata cannot hide original defect", "Missing reference filter rejected by decoupling check", "Obsolete C5 value and BOM code rejected"],
+    "historical_fixtures_regenerated": false
+  },
+  "full_carrier": {
+    "command": "native/bin/schgen board --project carrier -o /private/tmp/carrier-ref-board.ccIYvU --timing --kicad-cli /Applications/KiCad/KiCad.app/Contents/MacOS/kicad-cli",
+    "output": "/private/tmp/carrier-ref-board.ccIYvU",
+    "log": "native/build/carrier-reference-bias-qualification.log",
+    "exit_code": 1,
+    "complete": true,
+    "board_ok": false,
+    "sheets": 37,
+    "sheet_netlist_erc_visual": "PASS",
+    "source_audit": "PASS: 69 C++ files, 75 constants, 156 registered transforms",
+    "spice": "PASS: 17 checks; not active PCA9306 transient simulation",
+    "dimensions_mm": [168,163],
+    "area_mm2": 27384,
+    "instances": 569,
+    "top_instances": 393,
+    "bottom_instances": 176,
+    "side_counts_are_not_area_utilisation": true,
+    "independent_geometry": "PASS",
+    "pilot_pin_net_ownership": "PASS",
+    "drc_non_unrouted_errors": 0,
+    "drc_unrouted": 499,
+    "mandatory_failure": "interior_reseat_retry 28 exceeds committed ceiling 18; not waived or raised",
+    "advisory_failures": ["return_path", "golden", "contract_coverage_lint"],
+    "model_warning": "XT60PW-M body misfit remains unqualified; current F.Fab inference does not establish a faithful body envelope",
+    "reviewed_images": ["renders/3d_top.png", "renders/3d_bottom.png", "standalone corrected board_aux schematic"],
+    "visual_observation": "Top remains dense; bottom retains substantial unused space. Renders are not assembly-envelope or fabrication qualification.",
+    "timing_seconds": {
+      "authoring_audit": 19.058006,
+      "sheet_parallel_checks_and_render_wall": 27.220319,
+      "pcb_input_loading_and_netlist_validation": 1.539817,
+      "pcb_build_model_with_internal_checks": 7.770662,
+      "pcb_text_emit": 0.032379,
+      "pcb_drc": 1.528079,
+      "render3d": 30.379064,
+      "source_audit": 159.141040,
+      "all_measured_exclusive_intervals": 260.329518
+    },
+    "timing_scope": "Single full default-carrier run, no concurrent compile/test workload. Measured intervals are not process wall; compile excluded. Not compact-search workload or matched historical Python comparison.",
+    "sha256": {
+      "pcb": "8d93efb96783a53ec53a83b830f1d8987f10ca6d86a2246999783fb9ddcf7417",
+      "verdict": "82fb21846e244e552fbf64297ba726cb6674dd9af2c9a1776768ea10a203a111",
+      "top": "e8ffdc2447d268d72b244b6507ec6f1541e4fa357b6f2cd3eb31e32941f0bec0",
+      "bottom": "4d4be0537b8cac37787da60c495a14199d46f7e410d108dc1a14564ed0ecfc80",
+      "log": "8461d37ebd4cd70a6edea9539cfd940ea714568bb9be99a705cd4263068aa150"
+    }
+  },
+  "limitations": ["Not full goal acceptance", "Not fabrication readiness", "Routing deferred", "Matched both-board Python timing comparison remains outstanding", "No claim that this batch reduced placement retry counts"]
+}

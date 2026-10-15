@@ -1,0 +1,746 @@
+SHAPE bringup_rails 56 34.823999999999998 19.280000000000001 bottom "bottom-a1/r270/owned-pins-forward"
+PART C7001 1 24.224 17.25 90 0 0 1 -1.48 -0.72999999999999998 1.48 0.72999999999999998
+PART C7002 1 33.543999999999997 5.4900000000000002 90 0 0 1 -1.48 -0.72999999999999998 1.48 0.72999999999999998
+PART C7003 1 33.543999999999997 2.0299999999999998 90 0 0 1 -1.48 -0.72999999999999998 1.48 0.72999999999999998
+PART C7004 1 31.584 8.9499999999999993 90 0 0 1 -1.48 -0.72999999999999998 1.48 0.72999999999999998
+PART R7001 1 31.584 5.4900000000000002 90 0 1 1 -1.48 -0.72999999999999998 1.48 0.72999999999999998
+PART R7002 1 31.584 2.0299999999999998 90 0 1 1 -1.48 -0.72999999999999998 1.48 0.72999999999999998
+PART R7003 1 29.623999999999999 8.9499999999999993 90 0 1 1 -1.48 -0.72999999999999998 1.48 0.72999999999999998
+PART R7004 1 29.623999999999999 5.4900000000000002 90 0 1 1 -1.48 -0.72999999999999998 1.48 0.72999999999999998
+PART R7005 1 29.623999999999999 2.0299999999999998 90 0 1 1 -1.48 -0.72999999999999998 1.48 0.72999999999999998
+PART R7006 1 27.664000000000001 8.9499999999999993 90 0 1 1 -1.48 -0.72999999999999998 1.48 0.72999999999999998
+PART R7007 1 27.664000000000001 5.4900000000000002 90 0 1 1 -1.48 -0.72999999999999998 1.48 0.72999999999999998
+PART R7008 1 27.664000000000001 2.0299999999999998 90 0 1 1 -1.48 -0.72999999999999998 1.48 0.72999999999999998
+PART R7009 1 25.704000000000001 8.9499999999999993 90 0 1 1 -1.48 -0.72999999999999998 1.48 0.72999999999999998
+PART U7001 1 30.425999999999998 14.83 90 0 2 1 -3.8999999999999999 -3.8479999999999999 3.8999999999999999 3.8479999999999999
+PART SW7001 0 18.422000000000001 15.390000000000001 270 0 3 0 -3.3399999999999999 -4.5720000000000001 3.3399999999999999 4.5720000000000001
+PART SW7002 0 29.658999999999999 12.859999999999999 270 0 4 0 -5.8700000000000001 -4.6150000000000002 5.8700000000000001 4.6150000000000002
+PART SW7003 0 9.75 15.23 270 0 5 0 -3.5 -2.5499999999999998 3.5 2.5499999999999998
+PART SW7004 0 9.75 6.6799999999999997 270 0 5 0 -3.5 -2.5499999999999998 3.5 2.5499999999999998
+PART SW7005 0 3.1000000000000001 15.23 270 0 5 0 -3.5 -2.5499999999999998 3.5 2.5499999999999998
+PART SW7006 0 18.422000000000001 7.1600000000000001 270 0 3 0 -3.3399999999999999 -4.5720000000000001 3.3399999999999999 4.5720000000000001
+PART TP7001 0 33.024000000000001 5.2400000000000002 270 0 6 0 -1.25 -1.25 1.25 1.25
+PART TP7002 0 33.024000000000001 2.2400000000000002 270 0 6 0 -1.25 -1.25 1.25 1.25
+PART TP7003 0 30.024000000000001 5.2400000000000002 270 0 6 0 -1.25 -1.25 1.25 1.25
+ENDSHAPE
+SHAPE ethernet 0 25.2576 21.745000000000001 top "asbuilt"
+PART C10001 1 7.8499999999999996 19.145 90 0 7 0 -2.2999999999999998 -1.1499999999999999 2.2999999999999998 1.1499999999999999
+PART C10002 1 2.3500000000000001 14.175000000000001 180 0 7 0 -2.2999999999999998 -1.1499999999999999 2.2999999999999998 1.1499999999999999
+PART C10003 1 2.3500000000000001 7.2050000000000001 180 0 7 0 -2.2999999999999998 -1.1499999999999999 2.2999999999999998 1.1499999999999999
+PART C10004 1 2.3500000000000001 2.2349000000000001 180 0 7 0 -2.2999999999999998 -1.1499999999999999 2.2999999999999998 1.1499999999999999
+PART C10005 1 9.3499999999999996 1.2 180 0 7 0 -2.2999999999999998 -1.1499999999999999 2.2999999999999998 1.1499999999999999
+PART R10001 1 3.3500000000000001 16.645 180 0 8 0 -1.48 -0.72999999999999998 1.48 0.72999999999999998
+PART R10002 1 3.3500000000000001 11.675000000000001 180 0 8 0 -1.48 -0.72999999999999998 1.48 0.72999999999999998
+PART R10003 1 3.3500000000000001 9.7050000000000001 180 0 8 0 -1.48 -0.72999999999999998 1.48 0.72999999999999998
+PART R10004 1 3.3500000000000001 4.7348999999999997 180 0 8 0 -1.48 -0.72999999999999998 1.48 0.72999999999999998
+PART T10001 1 15.1776 9.6999999999999993 90 0 9 0 -6.5999999999999996 -9.7799999999999994 6.5999999999999996 9.7799999999999994
+ENDSHAPE
+FP 7 "C_1206_3216Metric.kicad_mod" fc8ab0c9cc9d83cdb5c32bb9244bdd72bf90fd46ce79f4be056bc20288d66263 -2.2999999999999998 -1.1499999999999999 2.2999999999999998 1.1499999999999999 2 0
+PAD "(pad
+	\"1\"
+	smd
+	roundrect
+	(at -1.475 0)
+	(size 1.15 1.8)
+	(layers \"F.Cu\" \"F.Mask\" \"F.Paste\")
+	(roundrect_rratio 0.217391)
+)"
+PAD "(pad
+	\"2\"
+	smd
+	roundrect
+	(at 1.475 0)
+	(size 1.15 1.8)
+	(layers \"F.Cu\" \"F.Mask\" \"F.Paste\")
+	(roundrect_rratio 0.217391)
+)"
+ENDFP
+FP 8 "R_0603_1608Metric.kicad_mod" 048b26eacd95fd10cc311eb6d8369dbc7318c07fd2428f4f7a00ef656c1cf6a1 -1.48 -0.72999999999999998 1.48 0.72999999999999998 2 0
+PAD "(pad
+	\"1\"
+	smd
+	roundrect
+	(at -0.825 0)
+	(size 0.8 0.95)
+	(layers \"F.Cu\" \"F.Mask\" \"F.Paste\")
+	(roundrect_rratio 0.25)
+)"
+PAD "(pad
+	\"2\"
+	smd
+	roundrect
+	(at 0.825 0)
+	(size 0.8 0.95)
+	(layers \"F.Cu\" \"F.Mask\" \"F.Paste\")
+	(roundrect_rratio 0.25)
+)"
+ENDFP
+FP 6 "TestPoint_Pad_D1.5mm.kicad_mod" 15d1a768a632a734b47a23185cbe7ff78d2610ffaf0312136ca7dc41d3411c04 -1.25 -1.25 1.25 1.25 1 0
+PAD "(pad
+	\"1\"
+	smd
+	circle
+	(at 0 0)
+	(size 1.5 1.5)
+	(layers \"F.Cu\" \"F.Mask\")
+	(uuid \"8a03cd79-fadf-4c81-9b59-724c470e191a\")
+)"
+ENDFP
+FP 3 "DSHP04TSGER.kicad_mod" f5062eb33b1be1f44903f181c37b4cc1d6450d8b8c9c2d297a8499a14e70c921 -3.3399999999999999 -4.5720000000000001 3.3399999999999999 4.5720000000000001 8 0
+PAD "(pad
+	\"6\"
+	smd
+	rect
+	(at 0.635 -3.81)
+	(size 0.762 1.524)
+	(layers \"F.Cu\" \"F.Paste\" \"F.Mask\")
+)"
+PAD "(pad
+	\"3\"
+	smd
+	rect
+	(at 0.635 3.81)
+	(size 0.762 1.524)
+	(layers \"F.Cu\" \"F.Paste\" \"F.Mask\")
+)"
+PAD "(pad
+	\"2\"
+	smd
+	rect
+	(at -0.635 3.81)
+	(size 0.762 1.524)
+	(layers \"F.Cu\" \"F.Paste\" \"F.Mask\")
+)"
+PAD "(pad
+	\"7\"
+	smd
+	rect
+	(at -0.635 -3.81)
+	(size 0.762 1.524)
+	(layers \"F.Cu\" \"F.Paste\" \"F.Mask\")
+)"
+PAD "(pad
+	\"8\"
+	smd
+	rect
+	(at -1.905 -3.81)
+	(size 0.762 1.524)
+	(layers \"F.Cu\" \"F.Paste\" \"F.Mask\")
+)"
+PAD "(pad
+	\"1\"
+	smd
+	rect
+	(at -1.905 3.81)
+	(size 0.762 1.524)
+	(layers \"F.Cu\" \"F.Paste\" \"F.Mask\")
+)"
+PAD "(pad
+	\"4\"
+	smd
+	rect
+	(at 1.905 3.81)
+	(size 0.762 1.524)
+	(layers \"F.Cu\" \"F.Paste\" \"F.Mask\")
+)"
+PAD "(pad
+	\"5\"
+	smd
+	rect
+	(at 1.905 -3.81)
+	(size 0.762 1.524)
+	(layers \"F.Cu\" \"F.Paste\" \"F.Mask\")
+)"
+ENDFP
+FP 4 "DSHP08TSGER.kicad_mod" 4d5c29bd3270868bb80f26f3f736b4a55ac3242ca2f932dd1b936826425ff01b -5.8700000000000001 -4.6150000000000002 5.8700000000000001 4.6150000000000002 16 0
+PAD "(pad
+	\"1\"
+	smd
+	rect
+	(at -4.445 3.815)
+	(size 0.759993 1.599997)
+	(layers \"F.Cu\" \"F.Paste\" \"F.Mask\")
+)"
+PAD "(pad
+	\"2\"
+	smd
+	rect
+	(at -3.175 3.815)
+	(size 0.759993 1.599997)
+	(layers \"F.Cu\" \"F.Paste\" \"F.Mask\")
+)"
+PAD "(pad
+	\"3\"
+	smd
+	rect
+	(at -1.905 3.815)
+	(size 0.759993 1.599997)
+	(layers \"F.Cu\" \"F.Paste\" \"F.Mask\")
+)"
+PAD "(pad
+	\"4\"
+	smd
+	rect
+	(at -0.635 3.815)
+	(size 0.759993 1.599997)
+	(layers \"F.Cu\" \"F.Paste\" \"F.Mask\")
+)"
+PAD "(pad
+	\"5\"
+	smd
+	rect
+	(at 0.635 3.815)
+	(size 0.759993 1.599997)
+	(layers \"F.Cu\" \"F.Paste\" \"F.Mask\")
+)"
+PAD "(pad
+	\"6\"
+	smd
+	rect
+	(at 1.905 3.815)
+	(size 0.759993 1.599997)
+	(layers \"F.Cu\" \"F.Paste\" \"F.Mask\")
+)"
+PAD "(pad
+	\"7\"
+	smd
+	rect
+	(at 3.175 3.815)
+	(size 0.759993 1.599997)
+	(layers \"F.Cu\" \"F.Paste\" \"F.Mask\")
+)"
+PAD "(pad
+	\"8\"
+	smd
+	rect
+	(at 4.445 3.815)
+	(size 0.759993 1.599997)
+	(layers \"F.Cu\" \"F.Paste\" \"F.Mask\")
+)"
+PAD "(pad
+	\"9\"
+	smd
+	rect
+	(at -4.445 -3.815)
+	(size 0.759993 1.599997)
+	(layers \"F.Cu\" \"F.Paste\" \"F.Mask\")
+)"
+PAD "(pad
+	\"10\"
+	smd
+	rect
+	(at -3.175 -3.815)
+	(size 0.759993 1.599997)
+	(layers \"F.Cu\" \"F.Paste\" \"F.Mask\")
+)"
+PAD "(pad
+	\"11\"
+	smd
+	rect
+	(at -1.905 -3.815)
+	(size 0.759993 1.599997)
+	(layers \"F.Cu\" \"F.Paste\" \"F.Mask\")
+)"
+PAD "(pad
+	\"12\"
+	smd
+	rect
+	(at -0.635 -3.815)
+	(size 0.759993 1.599997)
+	(layers \"F.Cu\" \"F.Paste\" \"F.Mask\")
+)"
+PAD "(pad
+	\"13\"
+	smd
+	rect
+	(at 0.635 -3.815)
+	(size 0.759993 1.599997)
+	(layers \"F.Cu\" \"F.Paste\" \"F.Mask\")
+)"
+PAD "(pad
+	\"14\"
+	smd
+	rect
+	(at 1.905 -3.815)
+	(size 0.759993 1.599997)
+	(layers \"F.Cu\" \"F.Paste\" \"F.Mask\")
+)"
+PAD "(pad
+	\"15\"
+	smd
+	rect
+	(at 3.175 -3.815)
+	(size 0.759993 1.599997)
+	(layers \"F.Cu\" \"F.Paste\" \"F.Mask\")
+)"
+PAD "(pad
+	\"16\"
+	smd
+	rect
+	(at 4.445 -3.815)
+	(size 0.759993 1.599997)
+	(layers \"F.Cu\" \"F.Paste\" \"F.Mask\")
+)"
+ENDFP
+FP 9 "HX5008NLT.kicad_mod" ca474808dc4127696c999e207387e61712476a29d286604d8e241b1898754d69 -6.5999999999999996 -9.7799999999999994 6.5999999999999996 9.7799999999999994 24 0
+PAD "(pad
+	\"1\"
+	smd
+	rect
+	(at -5.445 8.8275)
+	(size 0.640004 1.905)
+	(layers \"F.Cu\" \"F.Paste\" \"F.Mask\")
+)"
+PAD "(pad
+	\"2\"
+	smd
+	rect
+	(at -4.4549 8.8275)
+	(size 0.640004 1.905)
+	(layers \"F.Cu\" \"F.Paste\" \"F.Mask\")
+)"
+PAD "(pad
+	\"3\"
+	smd
+	rect
+	(at -3.4651 8.8275)
+	(size 0.640004 1.905)
+	(layers \"F.Cu\" \"F.Paste\" \"F.Mask\")
+)"
+PAD "(pad
+	\"4\"
+	smd
+	rect
+	(at -2.475 8.8275)
+	(size 0.640004 1.905)
+	(layers \"F.Cu\" \"F.Paste\" \"F.Mask\")
+)"
+PAD "(pad
+	\"5\"
+	smd
+	rect
+	(at -1.4849 8.8275)
+	(size 0.640004 1.905)
+	(layers \"F.Cu\" \"F.Paste\" \"F.Mask\")
+)"
+PAD "(pad
+	\"6\"
+	smd
+	rect
+	(at -0.495 8.8275)
+	(size 0.640004 1.905)
+	(layers \"F.Cu\" \"F.Paste\" \"F.Mask\")
+)"
+PAD "(pad
+	\"7\"
+	smd
+	rect
+	(at 0.495 8.8275)
+	(size 0.640004 1.905)
+	(layers \"F.Cu\" \"F.Paste\" \"F.Mask\")
+)"
+PAD "(pad
+	\"8\"
+	smd
+	rect
+	(at 1.4849 8.8275)
+	(size 0.640004 1.905)
+	(layers \"F.Cu\" \"F.Paste\" \"F.Mask\")
+)"
+PAD "(pad
+	\"9\"
+	smd
+	rect
+	(at 2.475 8.8275)
+	(size 0.640004 1.905)
+	(layers \"F.Cu\" \"F.Paste\" \"F.Mask\")
+)"
+PAD "(pad
+	\"10\"
+	smd
+	rect
+	(at 3.4651 8.8275)
+	(size 0.640004 1.905)
+	(layers \"F.Cu\" \"F.Paste\" \"F.Mask\")
+)"
+PAD "(pad
+	\"11\"
+	smd
+	rect
+	(at 4.4549 8.8275)
+	(size 0.640004 1.905)
+	(layers \"F.Cu\" \"F.Paste\" \"F.Mask\")
+)"
+PAD "(pad
+	\"12\"
+	smd
+	rect
+	(at 5.445 8.8275)
+	(size 0.640004 1.905)
+	(layers \"F.Cu\" \"F.Paste\" \"F.Mask\")
+)"
+PAD "(pad
+	\"13\"
+	smd
+	rect
+	(at 5.445 -8.8276)
+	(size 0.640004 1.905)
+	(layers \"F.Cu\" \"F.Paste\" \"F.Mask\")
+)"
+PAD "(pad
+	\"14\"
+	smd
+	rect
+	(at 4.4549 -8.8276)
+	(size 0.640004 1.905)
+	(layers \"F.Cu\" \"F.Paste\" \"F.Mask\")
+)"
+PAD "(pad
+	\"15\"
+	smd
+	rect
+	(at 3.4651 -8.8276)
+	(size 0.640004 1.905)
+	(layers \"F.Cu\" \"F.Paste\" \"F.Mask\")
+)"
+PAD "(pad
+	\"16\"
+	smd
+	rect
+	(at 2.475 -8.8276)
+	(size 0.640004 1.905)
+	(layers \"F.Cu\" \"F.Paste\" \"F.Mask\")
+)"
+PAD "(pad
+	\"17\"
+	smd
+	rect
+	(at 1.4849 -8.8276)
+	(size 0.640004 1.905)
+	(layers \"F.Cu\" \"F.Paste\" \"F.Mask\")
+)"
+PAD "(pad
+	\"18\"
+	smd
+	rect
+	(at 0.495 -8.8276)
+	(size 0.640004 1.905)
+	(layers \"F.Cu\" \"F.Paste\" \"F.Mask\")
+)"
+PAD "(pad
+	\"19\"
+	smd
+	rect
+	(at -0.495 -8.8276)
+	(size 0.640004 1.905)
+	(layers \"F.Cu\" \"F.Paste\" \"F.Mask\")
+)"
+PAD "(pad
+	\"20\"
+	smd
+	rect
+	(at -1.4849 -8.8276)
+	(size 0.640004 1.905)
+	(layers \"F.Cu\" \"F.Paste\" \"F.Mask\")
+)"
+PAD "(pad
+	\"21\"
+	smd
+	rect
+	(at -2.475 -8.8276)
+	(size 0.640004 1.905)
+	(layers \"F.Cu\" \"F.Paste\" \"F.Mask\")
+)"
+PAD "(pad
+	\"22\"
+	smd
+	rect
+	(at -3.4651 -8.8276)
+	(size 0.640004 1.905)
+	(layers \"F.Cu\" \"F.Paste\" \"F.Mask\")
+)"
+PAD "(pad
+	\"23\"
+	smd
+	rect
+	(at -4.4549 -8.8276)
+	(size 0.640004 1.905)
+	(layers \"F.Cu\" \"F.Paste\" \"F.Mask\")
+)"
+PAD "(pad
+	\"24\"
+	smd
+	rect
+	(at -5.445 -8.8276)
+	(size 0.640004 1.905)
+	(layers \"F.Cu\" \"F.Paste\" \"F.Mask\")
+)"
+ENDFP
+FP 5 "TS-1187A-B-A-B.kicad_mod" 1b435c4a1963042cc1f794a9f0b2fa82ec426507bc7157aef983d2e7f170fe86 -3.5 -2.5499999999999998 3.5 2.5499999999999998 4 0
+PAD "(pad
+	\"1\"
+	smd
+	rect
+	(at -3 -1.8499)
+	(size 0.999998 0.750011)
+	(layers \"F.Cu\" \"F.Paste\" \"F.Mask\")
+)"
+PAD "(pad
+	\"2\"
+	smd
+	rect
+	(at 3 -1.8499)
+	(size 0.999998 0.750011)
+	(layers \"F.Cu\" \"F.Paste\" \"F.Mask\")
+)"
+PAD "(pad
+	\"3\"
+	smd
+	rect
+	(at -3 1.8499)
+	(size 0.999998 0.750011)
+	(layers \"F.Cu\" \"F.Paste\" \"F.Mask\")
+)"
+PAD "(pad
+	\"4\"
+	smd
+	rect
+	(at 3 1.8499)
+	(size 0.999998 0.750011)
+	(layers \"F.Cu\" \"F.Paste\" \"F.Mask\")
+)"
+ENDFP
+FP 0 "Capacitor_SMD__C_0603_1608Metric.kicad_mod" 59cea700b4716b5442b15ba19e3f467bb0e0fa50084b9dcce72b8fd22678f1a9 -1.48 -0.72999999999999998 1.48 0.72999999999999998 2 0
+PAD "(pad
+	\"1\"
+	smd
+	roundrect
+	(at -0.775 0)
+	(size 0.9 0.95)
+	(layers \"F.Cu\" \"F.Mask\" \"F.Paste\")
+	(roundrect_rratio 0.25)
+)"
+PAD "(pad
+	\"2\"
+	smd
+	roundrect
+	(at 0.775 0)
+	(size 0.9 0.95)
+	(layers \"F.Cu\" \"F.Mask\" \"F.Paste\")
+	(roundrect_rratio 0.25)
+)"
+ENDFP
+FP 1 "Resistor_SMD__R_0603_1608Metric.kicad_mod" 7c3d23c2cfe1729f14b6d84ac86985498abd9e0afe498662f68ec99b987c777a -1.48 -0.72999999999999998 1.48 0.72999999999999998 2 0
+PAD "(pad
+	\"1\"
+	smd
+	roundrect
+	(at -0.825 0)
+	(size 0.8 0.95)
+	(layers \"F.Cu\" \"F.Mask\" \"F.Paste\")
+	(roundrect_rratio 0.25)
+)"
+PAD "(pad
+	\"2\"
+	smd
+	roundrect
+	(at 0.825 0)
+	(size 0.8 0.95)
+	(layers \"F.Cu\" \"F.Mask\" \"F.Paste\")
+	(roundrect_rratio 0.25)
+)"
+ENDFP
+FP 2 "TCA9535PWR__TCA9535PWR.kicad_mod" 78bf8a996ea3d01b31290fc39c4351e2e33528dd0d54a419e3a53cdce76428a3 -3.8999999999999999 -3.8479999999999999 3.8999999999999999 3.8479999999999999 24 0
+PAD "(pad
+	\"6\"
+	smd
+	rect
+	(at -0.3249 -3.0226)
+	(size 0.399999 1.650009)
+	(layers \"F.Cu\" \"F.Paste\" \"F.Mask\")
+)"
+PAD "(pad
+	\"5\"
+	smd
+	rect
+	(at -0.9749 -3.0226)
+	(size 0.399999 1.650009)
+	(layers \"F.Cu\" \"F.Paste\" \"F.Mask\")
+)"
+PAD "(pad
+	\"4\"
+	smd
+	rect
+	(at -1.6248 -3.0226)
+	(size 0.399999 1.650009)
+	(layers \"F.Cu\" \"F.Paste\" \"F.Mask\")
+)"
+PAD "(pad
+	\"3\"
+	smd
+	rect
+	(at -2.2748 -3.0226)
+	(size 0.399999 1.650009)
+	(layers \"F.Cu\" \"F.Paste\" \"F.Mask\")
+)"
+PAD "(pad
+	\"2\"
+	smd
+	rect
+	(at -2.9248 -3.0226)
+	(size 0.399999 1.650009)
+	(layers \"F.Cu\" \"F.Paste\" \"F.Mask\")
+)"
+PAD "(pad
+	\"1\"
+	smd
+	rect
+	(at -3.5748 -3.0226)
+	(size 0.399999 1.650009)
+	(layers \"F.Cu\" \"F.Paste\" \"F.Mask\")
+)"
+PAD "(pad
+	\"7\"
+	smd
+	rect
+	(at 0.3249 -3.0226)
+	(size 0.399999 1.650009)
+	(layers \"F.Cu\" \"F.Paste\" \"F.Mask\")
+)"
+PAD "(pad
+	\"12\"
+	smd
+	rect
+	(at 3.5748 -3.0226)
+	(size 0.399999 1.650009)
+	(layers \"F.Cu\" \"F.Paste\" \"F.Mask\")
+)"
+PAD "(pad
+	\"11\"
+	smd
+	rect
+	(at 2.9251 -3.0226)
+	(size 0.399999 1.650009)
+	(layers \"F.Cu\" \"F.Paste\" \"F.Mask\")
+)"
+PAD "(pad
+	\"10\"
+	smd
+	rect
+	(at 2.2751 -3.0226)
+	(size 0.399999 1.650009)
+	(layers \"F.Cu\" \"F.Paste\" \"F.Mask\")
+)"
+PAD "(pad
+	\"9\"
+	smd
+	rect
+	(at 1.6251 -3.0226)
+	(size 0.399999 1.650009)
+	(layers \"F.Cu\" \"F.Paste\" \"F.Mask\")
+)"
+PAD "(pad
+	\"8\"
+	smd
+	rect
+	(at 0.9751 -3.0226)
+	(size 0.399999 1.650009)
+	(layers \"F.Cu\" \"F.Paste\" \"F.Mask\")
+)"
+PAD "(pad
+	\"20\"
+	smd
+	rect
+	(at -0.9749 3.0226)
+	(size 0.399999 1.650009)
+	(layers \"F.Cu\" \"F.Paste\" \"F.Mask\")
+)"
+PAD "(pad
+	\"21\"
+	smd
+	rect
+	(at -1.6248 3.0226)
+	(size 0.399999 1.650009)
+	(layers \"F.Cu\" \"F.Paste\" \"F.Mask\")
+)"
+PAD "(pad
+	\"22\"
+	smd
+	rect
+	(at -2.2748 3.0226)
+	(size 0.399999 1.650009)
+	(layers \"F.Cu\" \"F.Paste\" \"F.Mask\")
+)"
+PAD "(pad
+	\"23\"
+	smd
+	rect
+	(at -2.9248 3.0226)
+	(size 0.399999 1.650009)
+	(layers \"F.Cu\" \"F.Paste\" \"F.Mask\")
+)"
+PAD "(pad
+	\"24\"
+	smd
+	rect
+	(at -3.5748 3.0226)
+	(size 0.399999 1.650009)
+	(layers \"F.Cu\" \"F.Paste\" \"F.Mask\")
+)"
+PAD "(pad
+	\"19\"
+	smd
+	rect
+	(at -0.3249 3.0226)
+	(size 0.399999 1.650009)
+	(layers \"F.Cu\" \"F.Paste\" \"F.Mask\")
+)"
+PAD "(pad
+	\"13\"
+	smd
+	rect
+	(at 3.5748 3.0226)
+	(size 0.399999 1.650009)
+	(layers \"F.Cu\" \"F.Paste\" \"F.Mask\")
+)"
+PAD "(pad
+	\"14\"
+	smd
+	rect
+	(at 2.9251 3.0226)
+	(size 0.399999 1.650009)
+	(layers \"F.Cu\" \"F.Paste\" \"F.Mask\")
+)"
+PAD "(pad
+	\"15\"
+	smd
+	rect
+	(at 2.2751 3.0226)
+	(size 0.399999 1.650009)
+	(layers \"F.Cu\" \"F.Paste\" \"F.Mask\")
+)"
+PAD "(pad
+	\"16\"
+	smd
+	rect
+	(at 1.6251 3.0226)
+	(size 0.399999 1.650009)
+	(layers \"F.Cu\" \"F.Paste\" \"F.Mask\")
+)"
+PAD "(pad
+	\"17\"
+	smd
+	rect
+	(at 0.9751 3.0226)
+	(size 0.399999 1.650009)
+	(layers \"F.Cu\" \"F.Paste\" \"F.Mask\")
+)"
+PAD "(pad
+	\"18\"
+	smd
+	rect
+	(at 0.3249 3.0226)
+	(size 0.399999 1.650009)
+	(layers \"F.Cu\" \"F.Paste\" \"F.Mask\")
+)"
+ENDFP

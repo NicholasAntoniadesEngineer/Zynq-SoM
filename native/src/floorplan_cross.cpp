@@ -151,14 +151,15 @@ double Engine::estimate(const std::vector<const FloorplanBlock*>& blocks, const 
         return estimate_pad_precision(value);
     };
     std::map<std::string,const FloorplanBlock*> by_name;
-    std::map<std::string,int> selected, bottom;
+    std::map<std::string,int> selected;
     for (const auto* b:blocks) {
         by_name[b->name]=b;
-        if (b->shape_idx && in.geometry.shapes.count(b->name)) {
-            const auto& variants=in.geometry.shapes.at(b->name);
-            if (b->shape_idx<0 || static_cast<std::size_t>(b->shape_idx)>=variants.size()) throw FloorplanError("floorplan: shape index out of range for "+b->name);
+        if (b->shape_idx) {
+            const auto variants=in.geometry.shapes.find(b->name);
+            if (variants!=in.geometry.shapes.end() &&
+                (b->shape_idx<0 || static_cast<std::size_t>(b->shape_idx)>=variants->second.size()))
+                throw FloorplanError("floorplan: shape index out of range for "+b->name);
             selected[b->name]=b->shape_idx;
-            if (variants[b->shape_idx].side=="bottom") bottom[b->name]=b->shape_idx;
         }
     }
     const std::array<FloorplanPoint,4> corners{{{mh_inset,mh_inset},{plan.board_w-mh_inset,mh_inset},
@@ -172,7 +173,14 @@ double Engine::estimate(const std::vector<const FloorplanBlock*>& blocks, const 
             const auto block=by_name.find(part.key);
             if (block==by_name.end()) continue;
             const int k=get(selected,part.key);
-            const auto d=k ? part.shape_offsets.at(k) : part.offset;
+            auto d=part.offset;
+            if(k) {
+                const auto prepared=part.shape_offsets.find(k);
+                if(prepared==part.shape_offsets.end())
+                    throw FloorplanError("floorplan: selected shape "+std::to_string(k)+" of "+part.sheet+
+                                         " has no prepared geometry for "+part.ref);
+                d=prepared->second;
+            }
             x=position_precision(position_precision(in.origin.first+block->second->x)+d.first);
             y=position_precision(position_precision(in.origin.second+block->second->y)+d.second);
         } else if (part.owner==CrossPart::Owner::SomJack) {
@@ -211,9 +219,17 @@ double Engine::estimate(const std::vector<const FloorplanBlock*>& blocks, const 
             const auto pad=pad_by_name.find(pin.pin);
             if (pad==pad_by_name.end()) continue;
             const auto added=sheet_ids.emplace(p.sheet,static_cast<int>(sheet_ids.size()));
-            if (added.second) flags.push_back(bottom.count(p.sheet) ? 1:0);
+            if (added.second) flags.push_back(0);
             int side=p.base_side=="top" ? 0:1;
-            if (bottom.count(p.sheet)) side=in.geometry.shapes.at(p.sheet)[bottom.at(p.sheet)].top_off.count(p.ref) ? 1:0;
+            const auto chosen=selected.find(p.sheet);
+            if(p.owner==CrossPart::Owner::Zone&&chosen!=selected.end()) {
+                const auto& shape=in.geometry.shapes.at(p.sheet).at(chosen->second);
+                const bool primary=shape.top_off.count(p.ref)!=0;
+                side=(shape.side=="top")==primary?0:1;
+            }
+            // A top-primary mixed group can still place this pin on B.Cu.
+            // Mark actual endpoints, not the nominal primary face of a zone.
+            if(side)flags.at(static_cast<std::size_t>(added.first->second))=1;
             for (const auto& [rx,ry]:pad->second) points.emplace_back(pad_precision(positions[pin.part]->first+rx),
                 pad_precision(positions[pin.part]->second+ry),added.first->second,side);
         }

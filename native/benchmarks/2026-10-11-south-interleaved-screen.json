@@ -1,0 +1,15 @@
+{
+  "status":"experimental_policy_rejected_after_edge_feasibility",
+  "commit":"609a1f87",
+  "candidate_spec":"native/benchmarks/carrier-167x159-south-interleaved.floorplan.json",
+  "policy_change":"Explicit south order hdmi_tx,pmod,hdmi_rx,pmod_expansion instead of hdmi_tx,hdmi_rx,pmod,pmod_expansion. All policy other than outline, explanatory comment and edge_order.S is semantically identical to the preserved 168x159 candidate spec (verified with jq equality). Project defaults untouched.",
+  "common_command":"native/build/fast/schgen_compact_stage_profile --repo . --project carrier --compact-search on --interior-order ORDER --floorplan-spec native/benchmarks/carrier-167x159-south-interleaved.floorplan.json --runs 1 --input-mode prepared --edge-feasibility on --owned-quality-first on --owned-face-cohesion on --owned-shape board_aux=owned-face-fixed/a2.2/owned-pins-forward --schematic /private/tmp/carrier-owned-fixed-qualified.Z1zLPo/Zynq_Carrier.kicad_sch",
+  "screens":[
+    {"outline_mm":[167,159],"order":3,"exit_code":1,"construction_failure_seconds":0.373612542,"edge_runs":4,"edge_intervals":4,"edge_rejections":0,"receipt_captured":true,"log":"native/build/carrier-south-interleaved-screen.log"},
+    {"outline_mm":[167,159],"order":0,"exit_code":1,"construction_failure_seconds":0.333382291,"receipt_captured":true,"log":"native/build/carrier-south-interleaved-order0-screen.log"},
+    {"outline_mm":[166,160],"extra_arguments":"--outline-mm 166x160","order":3,"exit_code":1,"construction_failure_seconds":0.389932833,"edge_runs":4,"edge_intervals":4,"edge_rejections":0,"receipt_captured":true,"log":"native/build/carrier-south-interleaved-166x160-screen.log"}
+  ],
+  "finding":"An explicitly changed south-edge order removes the earlier run-span rejection at narrower widths without reducing any gap rule. It does not yield a complete packed board in these three bounded screens. Successful reseat observations alone do not establish the final failure reason; later interior seating, legalisation and post-legalisation physical checks need distinct failure evidence.",
+  "decision":"Retain only as an experimental input and failed-campaign record. Do not promote, render or describe as a smaller accepted board. Preserve qualified 168x159 output and all gate/fallback baselines.",
+  "limitations":["Not exhaustive search or a hardware infeasibility proof.","Cable/assembly suitability of interleaved connectors has not been independently qualified.","No runtime improvement or fabrication-readiness claim."]
+}

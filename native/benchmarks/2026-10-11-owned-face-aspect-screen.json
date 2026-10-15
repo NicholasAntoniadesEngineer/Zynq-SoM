@@ -1,0 +1,41 @@
+{
+  "status": "bounded_existing_aspect_screen_rejected_no_promotion",
+  "commit": "2fb362e3",
+  "question": "Can another existing same-face packing aspect remove the qualified square candidate's worsened shared-bulk spacing while retaining bypass improvements and the 168x159 outline?",
+  "common_command": "native/build/fast/schgen_compact_stage_profile --repo . --project carrier --compact-search on --interior-order 3 --outline-mm 168x159 --runs 1 --input-mode prepared --edge-feasibility on --owned-quality-first on --owned-face-cohesion on --owned-shape TAG --schematic /private/tmp/carrier-owned-quality-qualified.eD59Wc/Zynq_Carrier.kicad_sch",
+  "wide_top": {
+    "tag": "board_aux=owned-face-a2.200000",
+    "log": "native/build/carrier-owned-face-wide-screen.log",
+    "exit_code": 0,
+    "model_seconds": 2.475049041,
+    "pcb_sha256": "66496fcbbd7a9a4d72d8540e2f3fe2c67154e325acc38cb55aa515119a499a65",
+    "dimensions_mm": [168,159],
+    "top_bottom_components": [420,149],
+    "placement_contract_ok": true,
+    "placement_flow_ok": true,
+    "hard_red": 0,
+    "hard_margin_min_sum": [4.07,893.91],
+    "pad_gaps_mm": {"C1001":12.009419547,"C1002":2.9100045,"C1003_bulk":7.260775345,"C1004":7.328860852,"C1005":12.620492805,"C7001":6.8005955},
+    "decision": "Reject before expensive qualification: bulk remains worse than the preserved reference (6.57761 mm), and C1001/C1005 are worse than both that reference and the square coherent candidate. No general proximity acceptance inferred from planar gaps."
+  },
+  "narrow_top": {
+    "tag": "board_aux=owned-face-a0.450000",
+    "log": "native/build/carrier-owned-face-narrow-screen.log",
+    "exit_code": 1,
+    "failure_seconds": 0.345059875,
+    "completed_outer_attempts": 1,
+    "receipt_captured": true,
+    "failure": "REAL 2-sided packed blocks do not fit fixed outline 168x159"
+  },
+  "narrow_bottom": {
+    "tag": "board_aux=owned-face-a0.450000/bottom",
+    "log": "native/build/carrier-owned-face-narrow-bottom-screen.log",
+    "exit_code": 1,
+    "failure_seconds": 0.366864083,
+    "completed_outer_attempts": 1,
+    "receipt_captured": true,
+    "failure": "REAL 2-sided packed blocks do not fit fixed outline 168x159"
+  },
+  "architectural_finding": "Changing soft capacitor sides before generic packing also rearranges owners and unchanged-side output bulk. The later owned-group constructor moves only bypass capacitors, fixing owners and output bulk, so it cannot repair that bulk displacement. Repeated aspect tuning does not address this coupling. Investigate owner-relative group construction that accounts for the full declared group and explicitly preserves bulk relationships; do not silently grant shared bulk a bypass objective or movement permission.",
+  "limitations": ["Three bounded screens, not an exhaustive infeasibility proof.","Failed constructions retained their executed-prefix receipts and did not substitute another shape.","No expensive qualification or render repeated for rejected candidates.","No source, default policy, gate or fallback baseline changed.","The prior qualified reference and opt-in square candidate remain preserved.","No hardware-safe proximity or fabrication-readiness claim."]
+}

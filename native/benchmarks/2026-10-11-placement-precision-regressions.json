@@ -1,0 +1,16 @@
+{
+  "scope": "Placement precision current-board contracts; no production or historical fixture modifications",
+  "predecessor": "936b0b2d",
+  "initial_failure": "Historical independent receipt board/devkit_mini differed from current optimizer work; actual instrumented receipts matched",
+  "changes": [
+    "Keep immutable synthetic placement kernel geometry and prior operation counts exact",
+    "Keep the rejected-eviction fixture and its explicit 72 rejected-coordinate operation assertion",
+    "Check current source identity, physical placement and actual stage-to-model consistency",
+    "Repeat carrier/devkit two-sided, devkit single-sided and devkit fixed-outline builds",
+    "Require exact current model, plan and all checkpoint geometry equality, plus complete operation/fallback receipt reproducibility",
+    "Observe real scalar calls independently; corrupted receipts with each executed operation erased or incremented must reject",
+    "Retain zone/placement/floorplan exactly-once ownership and no-work-on-replay assertions"
+  ],
+  "result": "native_placement_precision_contracts PASS 16.85 s; git diff --check PASS",
+  "limitations": "No language-speed or hardware-readiness claim; regression campaign and broader goal remain incomplete. Test uses C++ fixtures without a Python runtime."
+}

@@ -182,6 +182,7 @@ inline Fixture load(const std::filesystem::path &root, const std::string &projec
             FloorplanBlock block;
             block.name = string(b, "name");
             block.kind = string(b, "kind");
+            if(std::string(key)=="edge_blocks")block.edge=string(b,"edge");
             block.x = number(b, "x");
             block.y = number(b, "y");
             block.w = number(b, "w");

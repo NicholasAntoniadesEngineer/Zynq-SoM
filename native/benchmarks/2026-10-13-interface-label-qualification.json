@@ -1,0 +1,45 @@
+{
+  "source_commit": "2e19fc4f",
+  "change": "Project PCB emission hides ordinary reference silkscreen while retaining user-facing interface and service references. Schematic labels and PCB identities remain unchanged.",
+  "retained_classes": ["connectors", "switches", "test points", "jumpers", "LEDs and displays", "battery and fuse holders", "mounting holes", "fiducials"],
+  "carrier": {
+    "result": "BOARD PASS: all mandatory checks, 37 sheets",
+    "output": "/private/tmp/carrier-interface-labels.hqOZZZ",
+    "log": "native/build/carrier-interface-labels.log",
+    "recipe": "Same command as 2026-10-13-carrier-164x154-area-qualified.json with fresh output directory",
+    "pcb_sha256": "aa80c90978fffcb7df4c895f9735dc8957d7d67b9e0b45e82b39e2bfc9430319",
+    "dimensions_mm": [164, 154],
+    "area_mm2": 25256,
+    "area_change_from_label_policy_percent": 0,
+    "reference_overlaps": {"top": 0, "bottom": 0},
+    "nonrouting_drc_errors": 0,
+    "unrouted": 499,
+    "nonsearch_fallbacks_firing": 0,
+    "advisory_failures": ["return_path", "golden", "contract_coverage_lint"],
+    "timing_seconds": {
+      "input_loading_and_netlist": 1.461347,
+      "pcb_model": 4.192148,
+      "pcb_text": 0.027729,
+      "render3d": 27.685020,
+      "source_audit": 108.365138,
+      "measured_scope_total_not_process_wall": 198.569832
+    },
+    "visual_review": "Front and bottom 3D renders inspected; ordinary references hidden, interface references and functional descriptions retained. Eight views generated."
+  },
+  "tests": {
+    "native_pcb_emit_contracts": "PASS, 0.94 seconds; top/bottom classification fixtures verify retained identity, value and pads",
+    "log": "native/build/interface-label-tests.log"
+  },
+  "devkit": {
+    "scope": "Construction and cheap checks only; not a new full qualification",
+    "log": "native/build/interface-label-devkit.log",
+    "dimensions_mm": [98, 98],
+    "top_parts": 105,
+    "bottom_parts": 55,
+    "pcb_sha256": "1b12fecbcbbaa5e6084c2459da93cb144a660ff19805e6e4e3f75f9c22689fdb",
+    "model_seconds": 0.191664042,
+    "pcb_text_seconds": 0.008054667,
+    "cheap_checks": "PASS: fanout, ratsnest, placement contract and flow; hard_red=0; zero model/emission non-search fallbacks"
+  },
+  "limitations": "Labels are emitted after placement, so this change improves legibility without reducing board dimensions. Routing remains out of scope, advisory failures remain, and fabrication readiness is not claimed. No historical Python speed comparison is established by this run."
+}

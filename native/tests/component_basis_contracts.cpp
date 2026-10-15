@@ -20,28 +20,83 @@ int main(int argc, char** argv) {
         const auto& policy = default_component_basis_policy();
         const auto fixture = parse_json_file((root/"native/tests/data/component_basis/python_basis.json").string());
         require(live.size() == 66 && policy.sheets.size() == 66,"complete live coverage");
-        require(policy.declarations.size() == 214 && policy.uses.size() == 685,"expectation coverage");
+        require(policy.declarations.size() == 212 && policy.uses.size() == 681,"expectation coverage");
+        const std::vector<std::string> retired={"carrier.power_som.en_series_r","carrier.power_som.en_bypass","devkit_mini.power_som.en_series_r","devkit_mini.power_som.en_bypass"};
+        std::size_t reviewed_basis_corrections = 0,retired_declarations=0,retired_uses=0;
         for(const auto& row : at(fixture,"declarations").array_value) {
             const auto& a = row.array_value;
             const auto it = std::find_if(policy.declarations.begin(),policy.declarations.end(),
                 [&](const auto& d) { return d.name == a[0].string_value; });
+            if(std::find(retired.begin(),retired.end(),a[0].string_value)!=retired.end()){
+                require(it==policy.declarations.end(),"removed enable component kept a stale declaration");
+                ++retired_declarations;continue;
+            }
             require(it != policy.declarations.end(),"missing independently captured declaration");
             const auto value = a[1].kind == JsonKind::Number ? std::to_string(static_cast<int>(a[1].number_value)) : a[1].string_value;
+            if(it->name == "carrier.board_aux.iso_en_pullup") {
+                ++reviewed_basis_corrections;
+                require(a[3].string_value == "Ties the PCA9306 EN to +3V3_AUX so the switch OPENS whenever the gated rail is down — that isolation is what stops the powered-down peripherals back-powering the always-on trunk through their ESD diodes (LAW 0). LCSC C25803." &&
+                    a[4].string_value == "datasheet", "original unsupported isolation claim changed");
+                require(it->value == value && it->unit == a[2].string_value && !it->numeric &&
+                    it->klass == "policy" && it->basis ==
+                    "R4 limits the PCA9306 VREF2 reference current from +3V3_AUX; EN directly follows AUX in switch mode. TI SCPS113O 8.1.5/8.1.8 permits separate enable control and lower reference resistance than 200k with increased bias current. Retained 100k C25803. Startup, shutdown and reverse rail isolation remain unqualified.",
+                    "reviewed isolation uncertainty must not become a datasheet approval");
+                continue;
+            }
             require(it->value == value && it->unit == a[2].string_value &&
                 it->basis == a[3].string_value && it->klass == a[4].string_value &&
                 it->numeric == (a[1].kind == JsonKind::Number),"declaration differs from original Python");
         }
+        require(reviewed_basis_corrections == 1, "exactly one reviewed basis correction");
+        require(retired_declarations==4,"exactly four retired enable declarations");
         auto result = audit_component_basis(live);
+        std::size_t reviewed_migrations = 0;
         for(const auto& row : at(fixture,"components").array_value) {
             const auto& a=row.array_value;
             if(a[5].string_value.empty()) continue; // numeric catalog identity, not a magnitude
+            if(std::find(retired.begin(),retired.end(),a[5].string_value)!=retired.end()){
+                require(std::none_of(policy.uses.begin(),policy.uses.end(),[&](const auto& u){return u.scope==a[0].string_value&&u.sheet==a[1].string_value&&u.target==a[2].string_value;}),
+                        "removed enable part kept a stale value binding");
+                ++retired_uses;continue;
+            }
+            // Preserve the historical trace: only this independently reviewed
+            // hardware correction may differ from its original binding.
+            const bool c1 = a[0].string_value == "carrier" &&
+                a[1].string_value == "board_aux" && a[2].string_value == "C1";
+            const bool c5 = a[0].string_value == "carrier" &&
+                a[1].string_value == "board_aux" && a[2].string_value == "C5";
+            if(c1) {
+                ++reviewed_migrations;
+                require(a[3].string_value == "Device:C" && a[4].string_value == "100n" &&
+                    a[5].string_value == "carrier.board_aux.decap", "original C1 trace changed");
+            }
+            if(c5) {
+                ++reviewed_migrations;
+                require(a[3].string_value=="Device:C"&&a[4].string_value=="100n"&&
+                    a[5].string_value=="carrier.board_aux.decap","original C5 trace changed");
+            }
             const auto match=std::find_if(policy.uses.begin(),policy.uses.end(),[&](const auto& u) {
                 return u.scope==a[0].string_value && u.sheet==a[1].string_value &&
                     u.target==a[2].string_value && u.attribute=="value" &&
-                    u.declaration==a[5].string_value && u.type==a[3].string_value;
+                    u.declaration==(c1 ? "carrier.board_aux.in_reservoir" : c5 ? "carrier.board_aux.reference_filter" : a[5].string_value) &&
+                    u.type==a[3].string_value;
             });
             require(match!=policy.uses.end(),"obligation differs from independent Python trace");
         }
+        require(reviewed_migrations == 2, "exactly two reviewed capacitor migrations");
+        require(retired_uses==4,"exactly four retired enable uses");
+        const auto filter=std::find_if(policy.declarations.begin(),policy.declarations.end(),
+            [](const auto& d){return d.name=="carrier.board_aux.reference_filter";});
+        require(filter!=policy.declarations.end()&&filter->value=="100p"&&filter->unit=="F"&&
+            filter->klass=="datasheet"&&!filter->numeric&&filter->basis==
+            "TI SCPS113O 11.1 specifies a 100pF filter near VREF2. Samsung CL10C101JB8NNNC, 0603 50 V C0G +/-5%, LCSC C14858. This filter and its reference-current limiter do not qualify power-transition isolation.","reviewed reference-filter basis");
+        const auto reservoir = std::find_if(policy.declarations.begin(),policy.declarations.end(),
+            [](const auto& d) { return d.name == "carrier.board_aux.in_reservoir"; });
+        require(reservoir != policy.declarations.end(), "missing input reservoir declaration");
+        require(reservoir->value == "10u" && reservoir->unit == "F" &&
+            reservoir->klass == "datasheet" && !reservoir->numeric &&
+            reservoir->basis == "SY6280 Rev.1.0E p.7 strongly recommends a 10uF ceramic VIN-to-GND supply filter for hot-plug droop and ringing. Nominal 10uF, 0805 25 V X5R, LCSC C15850; effective capacitance under DC bias is not established here.",
+            "reviewed input reservoir specification changed");
         for(const auto& row : at(fixture,"policies").array_value) {
             const auto& a=row.array_value;
             require(std::any_of(policy.uses.begin(),policy.uses.end(),[&](const auto& u) {
@@ -51,7 +106,27 @@ int main(int argc, char** argv) {
             }),"port obligation differs from independent Python trace");
         }
         require(result.ok(), component_basis_report(result));
-        require(result.n_files == 66 && result.n_registered == 214 && result.n_sites == 685,"audit counts");
+        require(result.n_files == 66 && result.n_registered == 212 && result.n_sites == 681,"audit counts");
+        {
+            auto old_c1 = live;
+            auto& aux = std::find_if(old_c1.begin(),old_c1.end(),[](const auto& x) {
+                return x.scope == "carrier" && x.sheet == "board_aux"; })->circuit;
+            auto& c1 = *std::find_if(aux.parts.begin(),aux.parts.end(),[](const auto& x) { return x.ref == "C1"; });
+            require(c1.value == "10u", "live C1 nominal value");
+            c1.value = "100n";
+            require(!audit_component_basis(old_c1).ok(), "accepted obsolete C1 value");
+            auto old_binding = policy;
+            auto& use = *std::find_if(old_binding.uses.begin(),old_binding.uses.end(),[](const auto& u) {
+                return u.scope == "carrier" && u.sheet == "board_aux" && u.target == "C1"; });
+            use.declaration = "carrier.board_aux.decap";
+            require(!audit_component_basis(live,{"library","carrier","devkit_mini"},old_binding).ok(),
+                "accepted obsolete C1 binding");
+            auto missing = policy;
+            missing.declarations.erase(std::remove_if(missing.declarations.begin(),missing.declarations.end(),
+                [](const auto& d) { return d.name == "carrier.board_aux.in_reservoir"; }),missing.declarations.end());
+            require(!audit_component_basis(live,{"library","carrier","devkit_mini"},missing).ok(),
+                "accepted missing reservoir declaration");
+        }
         // Mutate EVERY real obligation, not synthetic-only facsimiles. The
         // independently captured registry must detect each live construction drift.
         for(const auto& use : policy.uses) {

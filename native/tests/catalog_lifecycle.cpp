@@ -88,6 +88,40 @@ int main(int argc, char** argv) {
         require(read(parts) == part_bytes, "part rebuild is not deterministic");
         schgen::close_part_catalog();
 
+        // Snapshot reads must work without a global authoring session and must
+        // not replace one, even on malformed input or a failed later lookup.
+        const auto snapshot = schgen::read_part_catalog(parts, {"SY6280AAC"});
+        require(snapshot.size() == 1 && snapshot.front().mpn == "SY6280AAC",
+                "independent closed-catalog lookup failed");
+        bool still_closed = false;
+        try { (void)schgen::part_catalog_count(); }
+        catch (const std::runtime_error&) { still_closed = true; }
+        require(still_closed, "snapshot read leaked a global catalog session");
+        schgen::open_part_catalog(parts);
+        const auto independent = (tmp.path / "independent.bin").string();
+        schgen::write_atomic_file(independent, part_bytes);
+        require(schgen::read_part_catalog(independent, {"SY6280AAC"}).front().pins.size() ==
+                snapshot.front().pins.size(), "independent snapshot changed pins");
+        // Replace the backing pathname; the caller's mapped session must stay
+        // pinned while fresh independent reads see the malformed replacement.
+        schgen::write_atomic_file(parts, {0});
+        for (const auto& file : {parts, (tmp.path / "missing.bin").string()}) {
+            bool rejected = false;
+            try { (void)schgen::read_part_catalog(file, {"SY6280AAC"}); }
+            catch (const std::runtime_error&) { rejected = true; }
+            require(rejected, "invalid independent catalog accepted");
+            require(schgen::part_catalog_count() == part_count &&
+                    schgen::lookup_part_catalog("SY6280AAC").pins.size() == snapshot.front().pins.size(),
+                    "failed snapshot replaced the caller's global session");
+        }
+        bool unknown = false;
+        try { (void)schgen::read_part_catalog(independent, {"SY6280AAC", "__missing_part__"}); }
+        catch (const std::runtime_error&) { unknown = true; }
+        require(unknown, "partially resolved batch must not succeed");
+        require(schgen::read_part_catalog(independent, {"SY6280AAC"}).size() == 1,
+                "failed batch poisoned next independent reader");
+        schgen::close_part_catalog();
+
         const auto circuits = (tmp.path / "circuits.bin").string();
         const auto source = (repo / "carrier/subsystems").string();
         schgen::compile_circuit_catalog(source, circuits);

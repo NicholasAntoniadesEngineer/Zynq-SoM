@@ -1,0 +1,16 @@
+{
+  "date": "2026-10-08",
+  "base_commit": "473240df",
+  "discovery": "Serial verification passed tests 34 through 61 then stopped at test 62, which required the current carrier PCB to equal the old checked-in board byte-for-byte.",
+  "api_change": "prepare_board_pcb accepts an optional explicit schematic path. Omission preserves project-root behaviour; an explicit file is always freshly extracted, and a missing explicit file fails with its path diagnostic rather than falling back.",
+  "live_contract": "Both projects author fresh schematic inputs using persistent reference bands, then run two fresh public PCB preparations. Current board dimensions and PCB bytes must repeat exactly. Area may not exceed 168x163 carrier / 98x98 devkit references. Published PCB, project and floorplan documents must equal current generated content. Frozen design rules remain exact.",
+  "geometry": "Independent existing verify_pcb_geometry aggregate must pass with unchanged zero fanout baseline. Reports from repeated builds must match. Moving a component off-board must fail. Fixed SoM return-path debt remains visible; a missing emitted board must fail. No production hardware gate relaxed.",
+  "verification": {
+    "full_configured_build": "PASS",
+    "native_board_live_contracts": "PASS both boards",
+    "seconds": 28.62,
+    "initial_current_input_run_seconds": 28.68
+  },
+  "scope_limits": "This is native geometry/publication integration coverage, not external KiCad DRC, whole-board gates, a new full render qualification, or fabrication readiness. Historical emitted-board/report byte equality was intentionally replaced, not regenerated. Full suite remains in progress.",
+  "goal_complete": false
+}

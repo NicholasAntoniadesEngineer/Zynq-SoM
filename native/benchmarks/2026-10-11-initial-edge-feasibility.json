@@ -1,0 +1,51 @@
+{
+  "status": "experimental_candidate_not_fully_qualified",
+  "base_commit": "30870b99",
+  "purpose": "Choose the nearest clearance-feasible initial connector-run start, rather than choose an unsafe start and repair it afterward.",
+  "algorithm": {
+    "default_unchanged": true,
+    "opt_in": "schgen_compact_stage_profile --edge-feasibility on (requires --compact-search on)",
+    "method": "For each run in N/E/S/W order, subtract open collision intervals from its closed margin domain and choose the legal point nearest the affinity-weighted preferred start; lower coordinate breaks ties. Recheck actual rounded geometry independently.",
+    "constraints": ["previously seated cross-edge fanout", "all supplied body keepouts", "each connector's fanout margins", "existing within-run spacing", "actual rounded same-edge and cross-edge clearance"],
+    "limitations": ["Sequential run decisions are not a complete joint solver.", "A rounded unsafe boundary is rejected; no additional quantized-boundary search yet.", "Keepout checks use strict non-overlap (zero tolerance), conservatively stronger than the outer check.", "This option is not yet exposed through the full board CLI."],
+    "accounting": "All executed quantization calls remain counted, including rejected geometry; initial runs, generated collision intervals and rejected runs are observed separately. The existing edge-translation repair implementation and fallback accounting are unchanged."
+  },
+  "verification": {
+    "targeted_ctest": {"passed": 6, "failed": 0, "seconds": 51.24, "log": "native/build/edge-feasibility-tests.log"},
+    "independent_accounting_followup": {"passed": 1, "failed": 0, "seconds": 0.43, "log": "native/build/edge-feasibility-count-tests.log"},
+    "tests": ["native_compact_profile_inputs_contracts", "native_floorplan_contracts", "native_floorplan_geometry_contracts", "native_pack_plain_board_contracts", "native_edge_translation_contracts", "native_pack_precision_contracts"],
+    "coverage": ["44550 dyadic interval-oracle comparisons including reversed obstacle order", "8208 collision-interval comparisons against the physical clearance predicate", "isolated feasible points and open boundaries", "overflow-distance and subnormal cases", "nonfinite/inverted inputs", "four edge orientations", "rounded unsafe boundary rejection", "independently instrumented quantization counts for accepted and rejected initial poses", "existing bounded repair tests unchanged", "default carrier and devkit packing regression coverage"]
+  },
+  "carrier_screen": {
+    "command": "native/build/fast/schgen_compact_stage_profile --repo . --project carrier --compact-search on --interior-order 3 --outline-mm 168x159 --runs 2 --input-mode prepared --edge-feasibility on --schematic /private/tmp/carrier-multiscale-qualified.gpzmOW/Zynq_Carrier.kicad_sch",
+    "log": "native/build/carrier-initial-edge-168x159-final.log",
+    "width_mm": 168,
+    "height_mm": 159,
+    "area_mm2": 26712,
+    "qualified_incumbent_mm": [168, 160],
+    "area_change_percent_vs_qualified_incumbent": -0.625,
+    "preserved_reference_mm": [168, 163],
+    "top_components": 425,
+    "bottom_components": 144,
+    "total_components": 569,
+    "pcb_sha256": "06b36274ba38429aeb1d8c7657ebfe01d0926fb52fa49ac8157d92491abb6997",
+    "model_seconds": [2.999975333, 3.017923],
+    "pcb_text_emission_seconds": [0.0315605, 0.031846625],
+    "construction_seconds": [3.031535833, 3.049769625],
+    "repeat_pcb_identical": true,
+    "initial_runs_per_model": 40,
+    "collision_intervals_per_model": 50,
+    "initial_rejections_per_model": 0,
+    "edge_translation_candidates": 0,
+    "edge_translation_repairs": 0,
+    "fallback_counts": {"cand_cap_truncated": 116, "interior_reseat_retry": 10, "punch_free_plan_rejected": 1},
+    "placement_contract_ok": true,
+    "placement_flow_ok": true,
+    "hard_red": 0,
+    "hard_margin_min": 4.07,
+    "hard_margin_sum": 893.91,
+    "comparison_note": "Prior bounded repair screen in 2026-10-11-carrier-edge-feasibility-screen.json had 270 repair candidates and 10 applied repair fallbacks, violating its zero ceiling. This is a different initial layout, not relabeled or uncounted repair. No fallback baseline was changed.",
+    "timing_scope": "Prepared current C++ inputs, model construction and PCB text emission only. Not compilation, source audit, DRC, full board build, rendering, or the historical Python comparison. Two samples do not establish a speedup.",
+    "pending": ["full current source/design audits", "full pipeline qualification and DRC", "front/back renders and inspection", "integrated hardware requirement review", "full board CLI access with policy tests", "matched historical Python timing work"]
+  }
+}

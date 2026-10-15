@@ -1,0 +1,20 @@
+{
+  "policy": "User priority: smaller board area dominates aggregate airwire length. Aggregate airwire reference is advisory, not an acceptance constraint; hardware-specific constraints remain mandatory.",
+  "changes": ["Automatic sizing no longer excludes finite nonnegative over-reference airwire estimates", "Final refinement retains actual airwire metrics without imposing the aggregate reference", "Ratsnest geometry verdict retains off-board and dispersion checks; cross length is reported as advisory"],
+  "tests": {"native_selftest_full_contracts": "PASS, including over-reference valid geometry and existing off-board/dispersed negative controls", "native_floorplan_final_estimate_contracts": "PASS with deliberately tiny reference, all eight compact/multiscale/seed combinations"},
+  "screened_candidate": {
+    "recipe": "2026-10-13-bottom-order-combinations.json with interior_order=3",
+    "dimensions_mm": [164,156],
+    "top": 397,
+    "bottom": 169,
+    "pcb_sha256": "1d6c598565b9daa6cca454fe7352b1b25604b46174d949a5e428b290dbc8dbba",
+    "identical_runs": 2,
+    "cross_airwire_mm": 17244.5,
+    "advisory_reference_mm": 15835,
+    "model_seconds": [4.820806375,4.790217417],
+    "pcb_text_seconds": [0.03654675,0.035270208],
+    "quick_checks": "PASS: fanout, ratsnest geometry, placement contract, placement flow, zero reference overlaps",
+    "acceptance": "NOT YET QUALIFIED: full audit, DRC and renders still required"
+  },
+  "limitations": "No fabrication readiness or matched Python speedup claimed. A previously failed aggregate quality gate was reclassified at explicit user direction; the prior failure evidence remains unchanged."
+}

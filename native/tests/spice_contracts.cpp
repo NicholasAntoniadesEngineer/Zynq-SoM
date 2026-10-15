@@ -1,9 +1,14 @@
 #include "schgen/spice.hpp"
 #include "schgen/process.hpp"
+#include "spice_historical_precision.hpp"
 #include <chrono>
+#include <cmath>
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
+#include <iomanip>
+#include <limits>
+#include <sstream>
 #include <stdexcept>
 #include <sys/stat.h>
 #include <thread>
@@ -27,6 +32,264 @@ void same(const JsonNode& a,const JsonNode& b,const std::string& path) {
 }
 std::optional<double> number(const JsonNode& n,const std::string& key){const auto& v=field(n,key);return v.kind==JsonKind::Null?std::nullopt:std::optional<double>(v.number_value);}
 SpiceResult runnable(){SpiceResult out;out.checks.push_back({"divider TEST","sheet","divider","+3V3 -[R1=10000R]- TEST -[R2=10000R]- GND @ 3.3 V",1.65,"V",0.0,3.3,"analytic",{}});return out;}
+const std::string no_coverage="No supported analytic checks were extracted; electrical behavior is unverified.";
+std::string coverage_report(std::string historical){
+    for(const auto& replacement:std::vector<std::pair<std::string,std::string>>{
+            {"errors: none","ERRORS (1):\n  ERROR: "+no_coverage},
+            {"SPICE GATE: PASS (0 checks)","SPICE GATE: UNVERIFIED (0 checks)"}}){
+        const auto at=historical.find(replacement.first);
+        require(at!=std::string::npos&&historical.find(replacement.first,at+1)==std::string::npos,"unexpected historical empty-coverage report");
+        historical.replace(at,replacement.first.size(),replacement.second);
+    }
+    return historical;
+}
+void empty_coverage(){
+    auto empty=extract_spice_checks({});
+    require(empty.checks.empty()&&!empty.ok()&&empty.errors()==std::vector<std::string>{no_coverage},"empty extraction was accepted");
+    empty.notes.push_back("informational note is not a check");
+    require(!empty.ok(),"notes supplied nonexistent check coverage");
+    for(bool installed:{false,true}){
+        const auto report=spice_report(empty,installed);
+        require(report.find("SPICE GATE: UNVERIFIED (0 checks)")!=std::string::npos&&report.find("SPICE GATE: PASS")==std::string::npos,
+                "empty report claimed PASS");
+    }
+    const auto encoded=spice_result_json(empty);
+    require(!field(encoded,"ok").bool_value&&field(encoded,"n_checks").number_value==0&&field(encoded,"errors").array_value.size()==1,
+            "JSON concealed missing coverage");
+    require(runnable().ok(),"valid positive coverage was rejected");
+    auto partial=runnable();partial.unverified={"missing device-specific model"};
+    require(!partial.ok()&&partial.errors()==partial.unverified,"partial model coverage was accepted");
+    const auto partial_json=spice_result_json(partial);
+    require(!field(partial_json,"ok").bool_value&&field(partial_json,"unverified").array_value.size()==1,"JSON hid unverified coverage");
+    require(spice_report(partial,false).find("SPICE GATE: UNVERIFIED")!=std::string::npos,"partial report claimed PASS");
+    partial.checks.front().value=10;
+    require(partial.errors().size()==2&&spice_report(partial,false).find("SPICE GATE: FAIL")!=std::string::npos,"unverified coverage concealed a real failed calculation");
+}
+const std::string lm61460_unverified="SPICE unverified: sheet_power_som:U4 (LM61460AANRJRR) enable network needs a device-specific model; TPS54302 assumptions do not apply";
+void correct_wrong_device_fixture(JsonNode& expected){
+    JsonNode reasons;reasons.kind=JsonKind::Array;JsonNode reason;reason.kind=JsonKind::String;reason.string_value=lm61460_unverified;reasons.array_value.push_back(reason);
+    for(auto& [key,value]:expected.object_value){
+        if(key=="checks"){
+            const auto before=value.array_value.size();
+            value.array_value.erase(std::remove_if(value.array_value.begin(),value.array_value.end(),[](const auto& check){return field(check,"kind").string_value=="en_clamp";}),value.array_value.end());
+            require(before-value.array_value.size()==2,"expected exactly two wrong-device checks in frozen fixture");
+        }
+        if(key=="n_checks")value.number_value-=2;
+        if(key=="ok")value.bool_value=false;
+        if(key=="errors")value=reasons;
+    }
+    expected.object_value.emplace_back("unverified",reasons);
+}
+std::vector<ProjectCircuit> fixture_sheets(const std::filesystem::path& path){
+    const auto row=parse_json_file(path.string());std::vector<ProjectCircuit> sheets;
+    for(const auto& sc:field(row,"sheets").array_value)
+        sheets.push_back({field(sc,"name").string_value,{},decode_intermediate_circuit_ir(field(sc,"circuit"))});
+    return sheets;
+}
+void rejects_divider(const std::vector<ProjectCircuit>& sheets,const std::string& expected){
+    bool rejected=false;
+    try{(void)extract_spice_checks(sheets);}catch(const ModelCheckError& error){
+        require(error.what()==expected,"extraction diagnostic mismatch: "+std::string(error.what()));rejected=true;
+    }
+    require(rejected,"extraction silently accepted unsupported topology/source/model");
+}
+void required_divider_coverage(const std::filesystem::path& dir){
+    auto unrelated=fixture_sheets(dir/"015_INFORMATIONAL_10k_10k.json");
+    require(extract_spice_checks(unrelated).ok(),"unrelated coverage fixture must pass alone");
+    for(auto& net:unrelated[0].circuit.nets)if(net.name=="INFORMATIONAL")net.name="HDMI_RX_5V_DET_suffix";
+    require(extract_spice_checks(unrelated).ok(),"prefix-lookalike generic divider must remain independently valid");
+    auto broken=fixture_sheets(dir/"022_named_not_extracted.json");
+    auto combined=broken;combined.insert(combined.end(),unrelated.begin(),unrelated.end());
+    rejects_divider(combined,"required divider HDMI_RX_5V_DET: topology could not be extracted");
+    std::reverse(combined.begin(),combined.end());
+    rejects_divider(combined,"required divider HDMI_RX_5V_DET: topology could not be extracted");
+    auto wrong=fixture_sheets(dir/"021_wrong_named_source.json");
+    for(auto& net:wrong[0].circuit.nets)if(net.name=="+VIN")net.name="+3V3";
+    // Half of 3.3 V lies below the old upper-only check, but the rail is wrong.
+    rejects_divider(wrong,"required divider HDMI_RX_5V_DET: source +3V3, expected HDMI_RX_5V");
+}
+const std::vector<std::pair<std::string,std::string>> unsupported_models={
+    {"038_sy7201_invalid.json","SPICE unverified: sheet_sy7201:U1 SY7201 ISET resistor not found on FB"},
+    {"039_sy7201_no_fb_alias.json","SPICE unverified: sheet_sy7201:U1 SY7201 FB pin not netted"},
+    {"046_buck_en_unknown_zener.json","SPICE unverified: sheet_buck:D1 zener UNKNOWN has no modelled Vz — EN clamp not checked"},
+    {"049_buck_missing_fb.json","SPICE unverified: sheet_buck:U1 FB divider not found"}
+};
+void incomplete_model_coverage(const std::filesystem::path& dir){
+    const auto unrelated=fixture_sheets(dir/"015_INFORMATIONAL_10k_10k.json");
+    for(const auto& [file,message]:unsupported_models){
+        const auto broken=fixture_sheets(dir/file);
+        rejects_divider(broken,message);
+        auto combined=broken;combined.insert(combined.end(),unrelated.begin(),unrelated.end());
+        rejects_divider(combined,message);
+        std::reverse(combined.begin(),combined.end());rejects_divider(combined,message);
+    }
+    // A custom detection policy does not supply a voltage-reference model.
+    auto policy=default_power_policy();
+    const auto known=std::find_if(policy.regulators.begin(),policy.regulators.end(),[](const auto& entry){return entry.first=="TPS54302";});
+    require(known!=policy.regulators.end()&&known->second.kind=="buck","custom buck fixture needs the known buck pin mapping");
+    const auto spec=known->second;
+    policy.regulators.insert(policy.regulators.begin(),{"UNMODELLED_BUCK",spec});
+    auto sheets=fixture_sheets(dir/"040_buck_45k3_10k.json");
+    for(auto& part:sheets.front().circuit.parts)if(part.ref=="U1")part.value="UNMODELLED_BUCK";
+    sheets.insert(sheets.end(),unrelated.begin(),unrelated.end());
+    for(int order=0;order<2;++order){
+        bool rejected=false;
+        try{(void)extract_spice_checks(sheets,policy);}catch(const ModelCheckError& error){
+            require(std::string(error.what())=="SPICE unverified: sheet_buck:U1 (UNMODELLED_BUCK) has no FB_VREF entry — FB divider unchecked","unknown-reference diagnostic");rejected=true;
+        }
+        require(rejected,"positive checks hid an unknown regulator reference model");
+        std::reverse(sheets.begin(),sheets.end());
+    }
+}
+void divider_threshold_precision(const std::filesystem::path& dir){
+    const auto decimal=[](double value){std::ostringstream out;out<<std::setprecision(17)<<value;return out.str();};
+    for(bool upper:{false,true})for(double delta:{-4e-5,-1e-7,0.,1e-7,4e-5}){
+        const double limit=upper?3.465:2.,source=upper?5.25:4.75,target=limit+delta;
+        auto sheets=fixture_sheets(dir/"003_HDMI_RX_5V_DET_10k_10k.json");
+        for(auto& part:sheets[0].circuit.parts)part.value=decimal((part.ref=="R1"?source-target:target)*10000);
+        const auto result=extract_spice_checks(sheets);
+        const auto check=std::find_if(result.checks.begin(),result.checks.end(),[&](const auto& c){
+            return upper?(c.hi&&*c.hi==limit):(c.lo&&*c.lo==limit);
+        });
+        require(check!=result.checks.end(),"threshold fixture lost required check");
+        require(check->ok()==(upper?delta<=0:delta>=0),"pre-acceptance voltage rounding concealed a threshold violation");
+        require(std::abs(check->value-target)<=8*std::numeric_limits<double>::epsilon()*target,"analytic voltage lost calculation precision");
+        const auto encoded=spice_result_json(result);
+        const auto index=static_cast<std::size_t>(check-result.checks.begin());
+        require(field(field(encoded,"checks").array_value[index],"value").number_value==check->value,"JSON dropped acceptance precision");
+        if(!check->ok()&&std::abs(delta)<1e-6)
+            require(spice_report(result,false).find("= "+decimal(check->value)+" V")!=std::string::npos,
+                    "report rounded a failed voltage to the displayed limit");
+    }
+}
+void direct_enable_topology(const std::filesystem::path& dir){
+    const auto board=fixture_sheets(dir/"001_carrier.json");
+    const auto found=std::find_if(board.begin(),board.end(),[](const auto& s){return s.name=="sheet_power_som";});
+    require(found!=board.end(),"missing always-on source fixture");
+    auto candidate=*found;
+    const auto removed=[](const std::string& ref){return ref=="R12"||ref=="D5"||ref=="C20";};
+    candidate.circuit.parts.erase(std::remove_if(candidate.circuit.parts.begin(),candidate.circuit.parts.end(),[&](const auto& p){return removed(p.ref);}),candidate.circuit.parts.end());
+    for(auto& net:candidate.circuit.nets){
+        net.pins.erase(std::remove_if(net.pins.begin(),net.pins.end(),[&](const auto& p){return removed(p.ref)||(p.ref=="U4"&&p.pin=="7");}),net.pins.end());
+        if(net.name=="+VIN_SYS")net.pins.push_back({"U4","7"});
+    }
+    candidate.circuit.nets.erase(std::remove_if(candidate.circuit.nets.begin(),candidate.circuit.nets.end(),[](const auto& net){return net.pins.empty();}),candidate.circuit.nets.end());
+    const auto valid=extract_spice_checks({candidate});
+    require(valid.ok()&&valid.unverified.empty(),"documented direct VIN enable topology was not recognized");
+    require(std::count_if(valid.checks.begin(),valid.checks.end(),[](const auto& c){return c.kind=="enable_topology"&&c.value==1&&c.unit=="match"&&c.engine=="netlist topology"&&c.detail.find("connectivity only")!=std::string::npos;})==1,"missing scoped topology evidence");
+    const auto unrelated=fixture_sheets(dir/"015_INFORMATIONAL_10k_10k.json");
+    for(int mutation=0;mutation<9;++mutation){
+        auto broken=candidate;
+        const std::string pin=mutation%3==0?"7":mutation%3==1?"8":"12";
+        if(mutation<6)for(auto& net:broken.circuit.nets)
+            net.pins.erase(std::remove_if(net.pins.begin(),net.pins.end(),[&](const auto& p){return p.ref=="U4"&&p.pin==pin;}),net.pins.end());
+        if(mutation>=3)for(auto& net:broken.circuit.nets)if(net.net_class=="ground")net.pins.push_back({"U4",pin});
+        for(bool reverse:{false,true}){
+            auto combined=unrelated;combined.push_back(broken);if(reverse)std::reverse(combined.begin(),combined.end());
+            const auto result=extract_spice_checks(combined);
+            require(!result.ok()&&!result.unverified.empty(),"positive checks hid missing/miswired/duplicate enable or VIN pin, mutation "+std::to_string(mutation));
+            require(std::none_of(result.checks.begin(),result.checks.end(),[](const auto& c){return c.kind=="enable_topology";}),"invalid connectivity retained topology PASS");
+        }
+    }
+    auto missing_resistor=*found;
+    missing_resistor.circuit.parts.erase(std::remove_if(missing_resistor.circuit.parts.begin(),missing_resistor.circuit.parts.end(),[](const auto& p){return p.ref=="R12";}),missing_resistor.circuit.parts.end());
+    auto combined=unrelated;combined.push_back(missing_resistor);
+    require(!extract_spice_checks(combined).ok(),"deleting the series resistor concealed the unsupported always-on enable network");
+    auto reordered=candidate;std::reverse(reordered.circuit.nets.begin(),reordered.circuit.nets.end());
+    require(extract_spice_checks({reordered}).ok(),"valid topology depends on net ordering");
+    for(int mutation=0;mutation<3;++mutation){
+        auto broken=candidate;
+        if(mutation==0)for(auto& part:broken.circuit.parts)if(part.ref=="U4")part.value="LM61460_UNREVIEWED_PACKAGE";
+        if(mutation==1)for(auto& net:broken.circuit.nets)if(net.name=="+VIN_SYS")net.net_class="signal";
+        if(mutation==2){
+            for(auto& net:broken.circuit.nets)net.pins.erase(std::remove_if(net.pins.begin(),net.pins.end(),[](const auto& p){return p.ref=="U4"&&p.pin=="7";}),net.pins.end());
+            broken.circuit.nets.push_back({"+VIN_SYS","power",{{"U4","7"}}});
+        }
+        auto witness=unrelated;witness.push_back(broken);const auto result=extract_spice_checks(witness);
+        require(!result.ok()&&!result.unverified.empty(),"unreviewed package, non-power source or same-name distinct net supplied topology proof");
+    }
+}
+SpiceResult historical_analytic_view(const SpiceResult& raw,const JsonNode& expected){
+    auto view=raw;const auto& old=field(expected,"checks").array_value;
+    require(old.size()==raw.checks.size(),"historical analytic check census changed");
+    for(std::size_t i=0;i<old.size();++i){
+        const auto& check=raw.checks[i];
+        const auto scale=historical_spice_scale(check);
+        const double rounded=field(old[i],"value").number_value;
+        require(std::abs(std::round(check.value*scale)/scale-rounded)<1e-12,
+                "raw result differs from historical rounded calculation");
+        require(check.ok()==field(old[i],"ok").bool_value,"raw calculation changed a frozen fixture verdict");
+        // Only this legacy comparison view is rounded. Actual gate values,
+        // JSON and simulator comparisons retain full calculation precision.
+        view.checks[i].value=rounded;
+    }
+    return view;
+}
+void remaining_threshold_precision(const std::filesystem::path& dir){
+    struct Case {const char* file;const char* ref;const char* prefix;int formula;double limit,step;bool upper;};
+    const std::vector<Case> cases{
+        {"027_rc_False_100n.json","R1","RC ",0,.2,.001,false},
+        {"027_rc_False_100n.json","R1","RC ",0,20,.001,true},
+        {"035_sy7201_1.5R.json","R1","SY7201 ISET",1,125,.1,false},
+        {"035_sy7201_1.5R.json","R1","SY7201 ISET",1,150,.1,true},
+        {"040_buck_45k3_10k.json","R1","TPS54302DDCR FB",2,3.201,.0001,false},
+        {"040_buck_45k3_10k.json","R1","TPS54302DDCR FB",2,3.399,.0001,true},
+        {"043_buck_en_unclamped.json","R3","EN clamp ceiling",3,5.5,.001,true},
+        {"045_buck_en_zener.json","R3","EN clamp turn-on",4,1.5,.001,false},
+        {"045_buck_en_zener.json","R3","EN clamp ceiling",5,5.5,.001,true},
+        {"032_boot0_100.json","R1","BOOT0 strap VIH",6,2.31,.001,false}
+    };
+    std::size_t hidden=0;
+    for(const auto& test:cases)for(double delta:{-.4*test.step,-1e-7,0.,1e-7,.4*test.step}){
+        const double target=test.limit+delta;
+        double resistance=0;
+        switch(test.formula){
+        case 0: resistance=target*10000;break; // tau/ms, C=100nF
+        case 1: resistance=200/target;break; // 0.2V / R in mA
+        case 2: resistance=(target/.596-1)*10000;break; // feedback bottom 10k
+        case 3: resistance=(21-target)/1.55e-6;break;
+        case 4: resistance=(4.75-target)/1.55e-6;break; // below zener knee
+        case 5: resistance=(21-target)/((target-(5.355-.02*17))/17+1.55e-6);break;
+        case 6: resistance=1500*(3.3/target-1);break;
+        default: throw std::runtime_error("unknown threshold fixture");
+        }
+        auto sheets=fixture_sheets(dir/test.file);std::ostringstream value;value<<std::setprecision(17)<<resistance;
+        bool changed=false;for(auto& part:sheets[0].circuit.parts)if(part.ref==test.ref){part.value=value.str();changed=true;}
+        require(changed,"threshold fixture resistor missing");
+        const auto result=extract_spice_checks(sheets);
+        const auto found=std::find_if(result.checks.begin(),result.checks.end(),[&](const auto& c){return c.name.rfind(test.prefix,0)==0;});
+        require(found!=result.checks.end(),"threshold extraction missing "+std::string(test.prefix));
+        const bool inside=test.upper?delta<=0:delta>=0;
+        require(found->ok()==inside,"rounded acceptance at "+std::string(test.prefix));
+        require(std::abs(found->value-target)<=32*std::numeric_limits<double>::epsilon()*std::max(1.,target),
+                "raw calculation precision lost at "+std::string(test.prefix));
+        if(!inside){auto rounded=*found;rounded.value=std::round(rounded.value/test.step)*test.step;
+            require(rounded.ok(),"negative control no longer demonstrates rounded false pass");++hidden;}
+    }
+    require(hidden==20,"all twenty near-boundary rounded false passes must be rejected");
+}
+void numeric_safety() {
+    for (const auto bad : {std::numeric_limits<double>::quiet_NaN(),
+                           std::numeric_limits<double>::infinity(),
+                           -std::numeric_limits<double>::infinity()}) {
+        for (int field = 0; field < 4; ++field) {
+            auto check = runnable().checks.front();
+            if (field == 0) check.value = bad;
+            else if (field == 1) check.lo = bad;
+            else if (field == 2) check.hi = bad;
+            else check.spice_value = bad;
+            require(!check.ok(), "non-finite calculation/limit/measurement accepted");
+        }
+    }
+    SpiceCheck zero;
+    zero.value = 0; zero.spice_value = 99;
+    require(!zero.ok(), "zero analytic prediction accepted unrelated simulated voltage");
+    zero.spice_value = std::numeric_limits<double>::denorm_min();
+    require(!zero.ok(), "zero prediction silently acquired an absolute error tolerance");
+    zero.spice_value = -0.; require(zero.ok(), "signed-zero agreement rejected");
+    zero.spice_value.reset(); zero.value = 1; zero.lo = 1 + 1e-10; zero.hi = 1;
+    require(!zero.ok(), "reversed limits hidden by comparison tolerance");
+}
 }
 int main(int argc,char** argv) {
     if(argc==3&&std::string(argv[1])=="-b") {
@@ -37,38 +300,135 @@ int main(int argc,char** argv) {
         if(test=="invalid_utf8"){std::cout<<char(0xff)<<"mid = 1.65\n";return 0;}
         if(test=="unicode_measurement"){std::cout<<"mid\u00a0=\u2003١.٦٥\n";return 0;}
         if(test=="malformed_measurement"){std::cout<<"mid = 1-2\n";return 0;}
+        if(test=="nan_measurement"){std::cout<<"mid = nan\n";return 0;}
+        if(test=="overflow_measurement"){std::cout<<"mid = 1e999\n";return 0;}
+        if(test=="duplicate_measurement"){std::cout<<"mid = 1.65\nmid = 1.65\n";return 0;}
+        if(test=="substring_measurement"){std::cout<<"not_mid = 1.65\n";return 0;}
+        if(test=="trailing_measurement"){std::cout<<"mid = 1.65\nmid = malformed value\n";return 0;}
+        if(test=="missing_success"){std::cout<<"no measurement\n";return 0;}
+        if(test=="precise_measurement"){std::cout<<"mid = 1.65004\n";return 0;}
+        if(test=="small_measurement"){std::cout<<"mid = 0.00001\n";return 0;}
         if(test=="sleep"){std::this_thread::sleep_for(std::chrono::seconds(5));return 0;}
         if(test=="argv"){std::cout<<argv[2];return 0;}
         std::cout<<"no measurement\n";return 3;
     }
     try {
         require(argc==2,"usage: spice_contracts <fixture-directory>");const std::filesystem::path dir(argv[1]);
+        numeric_safety();empty_coverage();required_divider_coverage(dir);incomplete_model_coverage(dir);divider_threshold_precision(dir);remaining_threshold_precision(dir);direct_enable_topology(dir);
         const auto manifest=parse_json_file((dir/"manifest.json").string());std::size_t passed=0,live=0;
-        const auto ngspice=ngspice_available();
+        const auto ngspice=ngspice_available();std::size_t corrected_empty=0,corrected_required=0,corrected_models=0,corrected_device=0;
         for(const auto& file:field(manifest,"cases").array_value) {
             const auto row=parse_json_file((dir/file.string_value).string());std::vector<ProjectCircuit> sheets;
             for(const auto& sc:field(row,"sheets").array_value)sheets.push_back({field(sc,"name").string_value,{},decode_intermediate_circuit_ir(field(sc,"circuit"))});
+            const auto unsupported=std::find_if(unsupported_models.begin(),unsupported_models.end(),[&](const auto& entry){return entry.first==file.string_value;});
+            if(unsupported!=unsupported_models.end()){
+                require(field(field(row,"expected"),"ok").bool_value,"historical unsupported model was not falsely green");
+                rejects_divider(sheets,unsupported->second);++corrected_models;++passed;continue;
+            }
+            if(file.string_value=="021_wrong_named_source.json"||file.string_value=="022_named_not_extracted.json"){
+                rejects_divider(sheets,file.string_value=="021_wrong_named_source.json"
+                    ?"required divider HDMI_RX_5V_DET: source +VIN, expected HDMI_RX_5V"
+                    :"required divider HDMI_RX_5V_DET: topology could not be extracted");
+                ++corrected_required;++passed;continue;
+            }
             const auto* error=object_field(row,"error");std::optional<SpiceResult> result;
             try{result=extract_spice_checks(sheets);}
             catch(const ModelCheckError& e){require(error!=nullptr,file.string_value+": unexpected error "+e.what());require(field(*error,"message").string_value==e.what(),file.string_value+": diagnostic differs "+e.what());}
             require(bool(result)==!bool(error),file.string_value+": expected error presence differs");
-            if(result){same(spice_result_json(*result),field(row,"expected"),file.string_value);require(spice_report(*result,false)==field(row,"report_absent").string_value,file.string_value+": absent report differs");require(spice_report(*result,true)==field(row,"report_present").string_value,file.string_value+": present report differs");
-                if(const auto* expected=object_field(row,"ngspice");expected&&ngspice){SpiceRunOptions opts;opts.executable=ngspice;run_ngspice_crosschecks(*result,opts);same(spice_result_json(*result),*expected,file.string_value+".ngspice");require(spice_report(*result,true)==field(row,"ngspice_report").string_value,file.string_value+": live ngspice report differs");++live;}
+            if(result){
+                auto expected=field(row,"expected");
+                auto absent=field(row,"report_absent").string_value,present=field(row,"report_present").string_value;
+                const bool wrong_device=file.string_value=="001_carrier.json"||file.string_value=="002_devkit.json";
+                if(wrong_device){
+                    require(result->unverified==std::vector<std::string>{lm61460_unverified}&&!result->ok(),"live-family fixture failed to identify its missing model");
+                    correct_wrong_device_fixture(expected);++corrected_device;
+                }
+                if(result->checks.empty()){
+                    require(field(expected,"ok").bool_value&&field(expected,"n_checks").number_value==0&&field(expected,"errors").array_value.empty(),
+                            "unexpected frozen empty-coverage correction");
+                    for(auto& [key,value]:expected.object_value){
+                        if(key=="ok")value.bool_value=false;
+                        if(key=="errors"){JsonNode message;message.kind=JsonKind::String;message.string_value=no_coverage;value.array_value.push_back(message);}
+                    }
+                    absent=coverage_report(absent);present=coverage_report(present);++corrected_empty;
+                }
+                const auto analytic_view=historical_analytic_view(*result,expected);
+                same(spice_result_json(analytic_view),expected,file.string_value);
+                if(wrong_device){
+                    for(bool installed:{false,true}){
+                        const auto report=spice_report(*result,installed);
+                        require(report.find("SPICE GATE: UNVERIFIED")!=std::string::npos&&report.find(lm61460_unverified)!=std::string::npos&&
+                                report.find("SLVSDG6C")==std::string::npos,"report retained another device's model or hid missing qualification");
+                    }
+                }else{
+                    require(spice_report(analytic_view,false)==absent,file.string_value+": absent report differs");
+                    require(spice_report(analytic_view,true)==present,file.string_value+": present report differs");
+                }
+                if(const auto* frozen=object_field(row,"ngspice");frozen&&ngspice){
+                    auto current_expected=*frozen;if(wrong_device)correct_wrong_device_fixture(current_expected);
+                    const auto* expected=&current_expected;
+                    SpiceRunOptions opts;opts.executable=ngspice;run_ngspice_crosschecks(*result,opts);
+                    auto historical_view=historical_analytic_view(*result,*expected);
+                    const auto& old_checks=field(*expected,"checks").array_value;
+                    require(old_checks.size()==result->checks.size(),"historical simulation check count");
+                    for(std::size_t i=0;i<old_checks.size();++i) {
+                        require(result->checks[i].ok()==field(old_checks[i],"ok").bool_value,
+                                "raw measurement changed historical check verdict");
+                        const auto old=number(old_checks[i],"spice_value");
+                        if(old) {
+                            require(result->checks[i].spice_value &&
+                                    std::abs(*result->checks[i].spice_value-*old)<=0.00005000001,
+                                    "raw measurement differs beyond frozen four-decimal precision");
+                            // Only the historical presentation lost this precision.
+                            // Production values and verdicts remain unmodified.
+                            historical_view.checks[i].spice_value=old;
+                        }
+                    }
+                    same(spice_result_json(historical_view),*expected,file.string_value+".ngspice");
+                    if(wrong_device){
+                        require(!result->ok()&&result->unverified==std::vector<std::string>{lm61460_unverified}&&
+                                spice_report(*result,true).find("SPICE GATE: UNVERIFIED")!=std::string::npos,
+                                "ngspice cross-checks concealed missing device-specific qualification");
+                    }else require(spice_report(historical_view,true)==field(row,"ngspice_report").string_value,file.string_value+": historical ngspice report differs");
+                    ++live;
+                }
             }
             ++passed;
         }
+        require(corrected_empty==3&&corrected_required==2&&corrected_models==4&&corrected_device==2,"exact historical coverage and model corrections required");
         const auto boundaries=parse_json_file((dir/"boundaries.json").string());
+        std::size_t corrected_zero_cases = 0;
         for(const auto& row:boundaries.array_value) {
             const auto& c=field(row,"check");SpiceCheck value;
             value.value=field(c,"value").number_value;value.lo=number(c,"lo");value.hi=number(c,"hi");value.spice_value=number(c,"spice_value");
-            require(value.ok()==field(row,"ok").bool_value,"comparison tolerance boundary differs");
+            if(value.value==0 && value.spice_value && *value.spice_value!=0) {
+                require(*value.spice_value==99 && !value.lo && !value.hi && field(row,"ok").bool_value,
+                        "unexpected frozen zero-check correction");
+                require(!value.ok(),"historical zero-vs-99V false pass retained");
+                ++corrected_zero_cases;
+            } else require(value.ok()==field(row,"ok").bool_value,"comparison tolerance boundary differs");
         }
+        require(corrected_zero_cases==1,"exact historical zero-check correction required");
         const auto executable=std::filesystem::absolute(argv[0]);SpiceRunOptions opts;opts.executable=executable;
-        for(const auto* mode:{"value","nonzero_value","disagreement","no_measurement","unicode_measurement"}) {
+        for(const auto* mode:{"value","disagreement","unicode_measurement"}) {
             ::setenv("SCHGEN_SELFTEST_PROCESS_MODE",mode,1);auto result=runnable();run_ngspice_crosschecks(result,opts);
-            if(std::string(mode)=="no_measurement"){require(!result.checks[0].spice_value,"no-output run fabricated a value");require(result.notes.size()==1,"no-runnable note missing");}
-            else {require(result.checks[0].spice_value.has_value(),"executable output was ignored");require(result.ok()==(std::string(mode)!="disagreement"),"1% agreement gate altered");}
+            require(result.checks[0].spice_value.has_value(),"executable output was ignored");require(result.ok()==(std::string(mode)!="disagreement"),"1% agreement gate altered");
         }
+        for(const auto* mode:{"nonzero_value","no_measurement","missing_success","nan_measurement",
+                              "overflow_measurement","duplicate_measurement","substring_measurement","trailing_measurement"}) {
+            ::setenv("SCHGEN_SELFTEST_PROCESS_MODE",mode,1);
+            bool rejected=false;
+            try{auto result=runnable();run_ngspice_crosschecks(result,opts);}
+            catch(const ModelCheckError&){rejected=true;}
+            catch(const ProcessError&){rejected=true;}
+            require(rejected,std::string("untrustworthy simulator result accepted: ")+mode);
+        }
+        ::setenv("SCHGEN_SELFTEST_PROCESS_MODE","precise_measurement",1);
+        auto precise=runnable();run_ngspice_crosschecks(precise,opts);
+        require(precise.checks.front().spice_value==1.65004,"measurement precision discarded before validation");
+        ::setenv("SCHGEN_SELFTEST_PROCESS_MODE","small_measurement",1);
+        auto small=runnable();small.checks.front().value=0;run_ngspice_crosschecks(small,opts);
+        require(small.checks.front().spice_value==0.00001&&!small.ok(),"rounded simulation falsely agrees with zero");
         ::setenv("SCHGEN_SELFTEST_PROCESS_MODE","argv",1);const auto command=run_process({executable.string(),"-b","literal ; $HOME $(false) `false`"});require(command.stdout_text=="literal ; $HOME $(false) `false`","process arguments passed through shell");
         ::setenv("SCHGEN_SELFTEST_PROCESS_MODE","sleep",1);opts.timeout=std::chrono::milliseconds(20);bool timed_out=false;
         try{auto result=runnable();run_ngspice_crosschecks(result,opts);}catch(const ProcessTimeout&){timed_out=true;}

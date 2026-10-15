@@ -1,0 +1,39 @@
+{
+  "base_commit": "7180ce84",
+  "defect": "Early seating/refinement clipped hard near_max domains only when the interior block was the term subject, despite final bbox-gap evaluation being symmetric. Equivalent edge-to-interior terms bypassed these necessary search constraints.",
+  "correction": "Resolve the other endpoint whether the moving block is subject or target. Continue restricting domains only for known fixed SoM or edge connector geometry; never freeze a movable interior endpoint. Final acceptance limits and gates are unchanged.",
+  "tests": {
+    "coverage": "24 Engine seating/refinement fixtures: existing 16 forward cases and 8 reversed fixed-edge cases, across four preferred anchor directions and two selected top/bottom shapes. Assert exact forward/reverse pose equivalence for fixed-edge cases.",
+    "negative_control": "Reintroducing subject-only handling fails with: reversing a symmetric proximity term changes seating/refinement.",
+    "negative_log": "native/build/symmetric-domain-negative-tests.log",
+    "final_log": "native/build/symmetric-domain-final-tests.log",
+    "final_result": "native_floorplan_contracts and native_model_failure_receipt_contracts both pass; 14.16 seconds total test wall time."
+  },
+  "screens": [
+    {
+      "board": "carrier compact qualified configuration",
+      "outline_mm": [166,159],
+      "model_seconds": [2.832464208,2.777726709],
+      "text_emit_seconds": [0.035481917,0.035045584],
+      "pcb_sha256": "4d1432b252230cbfc6e7342de7f0e431a0f12dc16d7d26ebd08fe0a67508bab1",
+      "unchanged_reference_and_reproducible": true,
+      "top": 416, "bottom": 153,
+      "contract_pass": true, "flow_pass": true, "hard_red": 0,
+      "hard_margin_min": 4.07, "hard_margin_sum": 887.46,
+      "log": "native/build/carrier-symmetric-domain.log"
+    },
+    {
+      "board": "devkit_mini multiscale qualified configuration",
+      "outline_mm": [98,98],
+      "model_seconds": [0.4326735,0.438985792],
+      "text_emit_seconds": [0.00942125,0.008921167],
+      "pcb_sha256": "cfa0305491d9c4a771adb130b04c4aec6cc2894542391a5c7c9dca3a68bca3cf",
+      "unchanged_reference_and_reproducible": true,
+      "top": 106, "bottom": 57,
+      "contract_pass": true, "flow_pass": true, "hard_red": 0,
+      "hard_margin_min": 38.28, "hard_margin_sum": 147.52,
+      "log": "native/build/devkit-symmetric-domain.log"
+    }
+  ],
+  "limitations": "Targeted construction and regression checks, not full audit/render qualification. Samples overlap other work and are not controlled performance evidence. No smaller-board or speed improvement claimed. The full long-running goal remains incomplete."
+}

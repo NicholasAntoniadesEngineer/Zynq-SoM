@@ -1,0 +1,46 @@
+{
+  "parent_commit": "170f6e0e",
+  "change": "Redistribute a strict-facing cut's required projection between axes when the seed-centred split exceeds an axis's board-wall capacity. Retain sufficient cuts, safe output-lattice rounding and exact final qualification.",
+  "scope": "Handles both moving and fixed endpoints and signed direction components. This is not a complete coupled half-plane solver; interactions with other blocks can still defeat its static split.",
+  "tests": {
+    "native_compact_retry_contracts_seconds": 5.45,
+    "native_floorplan_contracts_seconds": 13.81,
+    "status": "PASS",
+    "log": "native/build/facing-wall-final-tests.log",
+    "new_coverage": "Eight axis-swapped/mirrored wall-conflict fixtures; require successful placement, exact facing and board containment. Existing direction, incumbent and joint-search contracts retained."
+  },
+  "carrier_reference": {
+    "dimensions_mm": [163,153],
+    "pcb_sha256": "d954ec91a789f69a1e94a26a9d3a91b279fbc208dff2503cbe8ee4c8eabc199f",
+    "unchanged_pcb": true,
+    "top": 411,
+    "bottom": 155,
+    "model_seconds": 11.011984417,
+    "log": "native/build/facing-wall-carrier.log"
+  },
+  "devkit_reference": {
+    "dimensions_mm": [98,98],
+    "pcb_sha256": "1b12fecbcbbaa5e6084c2459da93cb144a660ff19805e6e4e3f75f9c22689fdb",
+    "unchanged_pcb": true,
+    "model_seconds": 0.184348125,
+    "log": "native/build/facing-wall-devkit.log"
+  },
+  "smaller_candidate": {
+    "dimensions_mm": [162,153],
+    "status": "construction_failed",
+    "elapsed_seconds": 3.56325825,
+    "completed_outer_attempts": 4,
+    "log": "native/build/facing-wall-162x153.log",
+    "interpretation": "The restriction is corrected but this search still finds no valid smaller layout. Not a proof of geometric infeasibility."
+  },
+  "second_smaller_candidate": {
+    "source_commit": "bbded49b",
+    "dimensions_mm": [163,152],
+    "status": "construction_failed",
+    "elapsed_seconds": 9.589834208,
+    "completed_outer_attempts": 4,
+    "log": "native/build/facing-wall-163x152.log",
+    "interpretation": "Neither neighbouring outline is recovered by wall-aware facing alone. Investigate obstacle-conditioned projection allocation and separation search rather than interpreting a static split failure as hardware infeasibility."
+  },
+  "limits": "Construction screens are not full qualification. No new smaller board, speedup, render or historical Python timing comparison claimed. Previously qualified reference PCB bytes are unchanged."
+}

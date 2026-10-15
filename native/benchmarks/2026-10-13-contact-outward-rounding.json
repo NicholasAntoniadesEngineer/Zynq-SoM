@@ -1,0 +1,37 @@
+{
+  "parent_commit": "640d524e",
+  "change": "Quantize contact translations away from the collision before rounding component positions. If nearest rounding reduces the requested magnitude, advance one 0.0001mm output step and re-quantize. Reject nonfinite or unrepresentable results; final physical checks remain unchanged.",
+  "accounting": "Every executed quantization uses the existing placement_bottom_pose_precision4dp boundary, including corrective rounding and later component-coordinate rounding.",
+  "tests": {
+    "native_pcb_orientation_contracts": "PASS 3.14s",
+    "log": "native/build/contact-round-tests.log",
+    "coverage": "Signed rounding bounds, reflection symmetry, output-step bound, idempotence, correction accounting, nonfinite rejection, plus integrated rigid-group, clearance, chirality, contract, fanout and net-identity checks.",
+    "contact_candidates_before": 47,
+    "contact_candidates_after": 51,
+    "combined_candidates_before": 262,
+    "combined_candidates_after": 266,
+    "interpretation": "Four additional distinct legal local placements recovered in the rotation-enabled fixture; candidate sets are not asserted to be strict supersets because contact coordinates are corrected."
+  },
+  "carrier_reference": {
+    "dimensions_mm": [163,153],
+    "unchanged_pcb_sha256": "d954ec91a789f69a1e94a26a9d3a91b279fbc208dff2503cbe8ee4c8eabc199f",
+    "model_seconds": 11.890036167,
+    "log": "native/build/contact-round-carrier.log"
+  },
+  "devkit_reference": {
+    "dimensions_mm": [98,98],
+    "unchanged_pcb_sha256": "1b12fecbcbbaa5e6084c2459da93cb144a660ff19805e6e4e3f75f9c22689fdb",
+    "model_seconds": 0.195862958,
+    "log": "native/build/contact-round-devkit.log"
+  },
+  "reference_diagnostics": "Both replays pass fanout, ratsnest, placement contracts and placement flow; hard_red=0 and no nonsearch fallback events.",
+  "smaller_candidate": {
+    "dimensions_mm": [162,153],
+    "group_rotations": true,
+    "status": "construction_failed",
+    "seconds": 22.917778291,
+    "outer_attempts": 4,
+    "log": "native/build/contact-round-162x153.log"
+  },
+  "limits": "No newly qualified board or timing speedup claimed. Rotation-enabled 163x152 not rerun after its preceding expensive failure; this change's only new smaller-outline screen is 162x153. Diagnostic timings are single uncontrolled runs, not historical Python comparisons."
+}

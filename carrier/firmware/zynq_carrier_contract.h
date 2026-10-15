@@ -2,23 +2,49 @@
  * zynq_carrier_contract.h -- Zynq carrier <-> SoM STM32 system-controller
  * hardware contract.  GENERATED -- DO NOT EDIT.
  *
- * generated-by: schgen firmware (schgen/firmware.py)
- * regenerate:   PYTHONPATH=. python -m schgen firmware
+ * generated-by: native/bin/schgen firmware (native/src/firmware_docs.cpp)
+ * regenerate:   native/bin/schgen firmware --project PROJECT_DIR
+ * Run from the repository root; replace PROJECT_DIR with your project path.
  * sources:
- *   carrier/som_interface.json
- *   som/Zynq_SoM.kicad_sch (U9 pin map, live kicad-cli extraction)
- *   carrier/subsystems/power.py
- *   carrier/subsystems/power_mon/power_mon.py
- *   carrier/subsystems/bringup_rails/bringup_rails.py
- *   carrier/subsystems/bringup_en/bringup_en.py
- *   carrier/subsystems/bringup_en_modules/bringup_en_modules.py
- *   carrier/subsystems/bringup_modules/bringup_modules.py
- *   carrier/subsystems/debug_boot/debug_boot.py
- *   carrier/subsystems/board_aux/board_aux.py
- *   carrier/subsystems/board_services/board_services.py
- *   carrier/research/debug_boot_pmod.md (BOOTSEL decode, SWD reservation)
- *   carrier/research/power_mon.md (I2C address map)
- *   carrier/research/bringup_power_gating.md (EN-cell semantics, GPIO plan)
+ *   /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/carrier/som_interface.json
+ *   /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/som/Zynq_SoM.kicad_sch (U9 pin map, live kicad-cli extraction)
+ *   /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/carrier/subsystems/board_aux/circuit.json
+ *   /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/carrier/subsystems/board_qwiic/circuit.json
+ *   /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/carrier/subsystems/board_services/circuit.json
+ *   /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/carrier/subsystems/bringup_en/circuit.json
+ *   /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/carrier/subsystems/bringup_en_modules/circuit.json
+ *   /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/carrier/subsystems/bringup_modules/circuit.json
+ *   /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/carrier/subsystems/bringup_rails/circuit.json
+ *   /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/carrier/subsystems/camera/circuit.json
+ *   /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/carrier/subsystems/debug_boot/circuit.json
+ *   /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/carrier/subsystems/ethernet/circuit.json
+ *   /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/carrier/subsystems/fmc/circuit.json
+ *   /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/carrier/subsystems/hdmi_rx/circuit.json
+ *   /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/carrier/subsystems/hdmi_rx_term/circuit.json
+ *   /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/carrier/subsystems/hdmi_tx/circuit.json
+ *   /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/carrier/subsystems/lcd/circuit.json
+ *   /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/carrier/subsystems/mechanical/circuit.json
+ *   /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/carrier/subsystems/microsd/circuit.json
+ *   /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/carrier/subsystems/motor_pwm/circuit.json
+ *   /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/carrier/subsystems/motor_sense/circuit.json
+ *   /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/carrier/subsystems/pd_input/circuit.json
+ *   /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/carrier/subsystems/pmod/circuit.json
+ *   /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/carrier/subsystems/pmod_expansion/circuit.json
+ *   /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/carrier/subsystems/power/circuit.json
+ *   /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/carrier/subsystems/power_mon/circuit.json
+ *   /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/carrier/subsystems/power_som/circuit.json
+ *   /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/carrier/subsystems/rj45_connector/circuit.json
+ *   /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/carrier/subsystems/som_decoupling/circuit.json
+ *   /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/carrier/subsystems/som_j1/circuit.json
+ *   /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/carrier/subsystems/som_j2/circuit.json
+ *   /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/carrier/subsystems/som_j3/circuit.json
+ *   /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/carrier/subsystems/uart_bridge/circuit.json
+ *   /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/carrier/subsystems/usb_jtag/circuit.json
+ *   /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/carrier/subsystems/usb_jtag_connector/circuit.json
+ *   /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/carrier/subsystems/usb_pd/circuit.json
+ *   /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/carrier/subsystems/usb_uart_connector/circuit.json
+ *   /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/carrier/subsystems/usbc_otg/circuit.json
+ *   /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/carrier/subsystems/user_io/circuit.json
  *
  * system controller: SoM U9 = STM32G431CBUx
  * All GPIO port/pin values are extracted LIVE from the SoM
@@ -158,7 +184,7 @@
 #define ZC_I2C_BITBANG_SCL_GPIO_PORT 'A'   /* STM32_I2C2_SCL = STM32_DAC2, J1.55 */
 #define ZC_I2C_BITBANG_SCL_GPIO_PIN 5U
 
-/* ---- Rail bring-up sequence (derived from the power.py regulator     */
+/* ---- Rail bring-up sequence (derived from power/circuit.json's regulator */
 /*      chain: each stage feeds the next) + EN-cell mapping             */
 /* EN semantics (bringup_en): EN = DIP AND override; override is a VETO  */
 /* -- drive LOW to force a rail OFF; Hi-Z/HIGH leaves the DIP in charge. */

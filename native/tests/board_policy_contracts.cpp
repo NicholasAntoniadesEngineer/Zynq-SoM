@@ -20,7 +20,8 @@ const NativeLedgerDeclaration& declaration(const NativeBoardPolicy& p,const std:
 void metadata(const fs::path& root){
     const auto reference=parse_json_file((root/"native/tests/data/board_policy/python_reference.json").string());
     const auto actual=floorplan_ledger_policy();std::vector<std::string> assumptions;std::vector<FloorplanLedgerPolicy> calcs;
-    for(const auto& d:actual){if(d.kind=="ASSUME")assumptions.push_back(d.name);else calcs.push_back(d);require(!d.basis.empty(),"authored basis retained");}
+    for(const auto& d:actual){if(d.kind=="ASSUME")assumptions.push_back(d.name);else calcs.push_back(d);require(!d.basis.empty(),"authored basis retained");
+        require(d.basis.size()<=88,"ledger import basis limit exceeded: "+d.name);}
     auto expected_assumptions=strings(field(reference,"assumptions"));
     const std::set<std::string> retired{"placeholder_aspect","placeholder_min","placeholder_max","zone_step","som_side_band","via_size","via_clearance","stack_thickness"};
     std::vector<std::string> migrated_assumptions;
@@ -55,9 +56,43 @@ void metadata(const fs::path& root){
     const auto stages=native_board_pipeline_metadata();const auto& es=field(reference,"stages").array_value;require(stages.stages.size()==es.size(),"stage census");
     for(std::size_t i=0;i<es.size();++i){const auto& s=stages.stages[i];const auto& e=es[i].array_value;require(s.name==e[0].string_value&&s.domain==e[1].string_value&&s.may_move==e[2].bool_value&&s.tracked==e[3].bool_value,"independent stage order/domain/movement policy");require(!s.validated_by.empty()&&!s.desc.empty(),"stage proof/description nonempty");}
     const auto fb=parse_json_file((root/"native/tests/data/verification_audits/python_state.json").string());
-    const auto& ef=field(fb,"fallbacks").array_value;require(ef.size()==stages.fallbacks.size(),"independent fallback population");
+    const auto& ef=field(fb,"fallbacks").array_value;require(ef.size()+26==stages.fallbacks.size(),"historical fallbacks plus twenty-six independently declared native recovery events");
     NativeFallbacks f;register_native_fallbacks(f);
     for(const auto& entry:ef){const auto name=field(entry,"name").string_value;auto hit=std::find_if(stages.fallbacks.begin(),stages.fallbacks.end(),[&](const auto& d){return d.name==name;});require(hit!=stages.fallbacks.end(),"independent fallback name");require(hit->stage==field(entry,"stage").string_value&&!hit->meaning.empty(),"independent fallback stage");f.record(hit->name);}
+    const auto edge=std::find_if(stages.fallbacks.begin(),stages.fallbacks.end(),[](const auto& d){return d.name=="edge_run_translation";});
+    require(edge!=stages.fallbacks.end()&&edge->stage=="plan_lattice"&&!edge->meaning.empty(),"native edge-translation fallback metadata");
+    f.record("edge_run_translation");
+    const auto retained=std::find_if(stages.fallbacks.begin(),stages.fallbacks.end(),[](const auto& d){return d.name=="screened_incumbent_retained";});
+    require(retained!=stages.fallbacks.end()&&retained->stage=="plan_lattice"&&!retained->meaning.empty(),"incumbent retention fallback metadata");
+    f.record("screened_incumbent_retained");
+    const auto retry=std::find_if(stages.fallbacks.begin(),stages.fallbacks.end(),[](const auto& d){return d.name=="contract_group_orientation_retry";});
+    require(retry!=stages.fallbacks.end()&&retry->stage=="plan_lattice"&&!retry->meaning.empty(),"contract retry fallback metadata");
+    f.record("contract_group_orientation_retry");
+    const auto reservations=std::find_if(stages.fallbacks.begin(),stages.fallbacks.end(),[](const auto& d){return d.name=="legalize_reservation_retry";});
+    require(reservations!=stages.fallbacks.end()&&reservations->stage=="plan_lattice"&&!reservations->meaning.empty(),"reservation retry fallback metadata");
+    f.record("legalize_reservation_retry");
+    const auto facing=std::find_if(stages.fallbacks.begin(),stages.fallbacks.end(),[](const auto& d){return d.name=="legalize_facing_retry";});
+    require(facing!=stages.fallbacks.end()&&facing->stage=="plan_lattice"&&!facing->meaning.empty(),"facing retry fallback metadata");
+    f.record("legalize_facing_retry");
+    const auto failed_first=std::find_if(stages.fallbacks.begin(),stages.fallbacks.end(),[](const auto& d){return d.name=="interior_failed_first_retry";});
+    require(failed_first!=stages.fallbacks.end()&&failed_first->stage=="plan_lattice"&&!failed_first->meaning.empty(),"failed-first retry fallback metadata");
+    f.record("interior_failed_first_retry");
+    const auto neighbours=std::find_if(stages.fallbacks.begin(),stages.fallbacks.end(),[](const auto& d){return d.name=="legalize_neighbour_retry";});
+    require(neighbours!=stages.fallbacks.end()&&neighbours->stage=="plan_lattice"&&!neighbours->meaning.empty(),"neighbour retry metadata");
+    f.record("legalize_neighbour_retry");
+    for(const std::string name:{"interior_reseat_shape_retry","interior_reseat_shape_trial","interior_reseat_incoming_shape_trial"}){
+        const auto row=std::find_if(stages.fallbacks.begin(),stages.fallbacks.end(),[&](const auto& d){return d.name==name;});
+        require(row!=stages.fallbacks.end()&&row->stage=="plan_lattice"&&!row->meaning.empty(),"shape recovery metadata");
+        f.record(name);
+    }
+    for(const std::string name:{"interior_reseat_pose_search","interior_reseat_pose_trial","interior_reseat_pose_budget","interior_reseat_pose_cap","interior_reseat_pose_resume","interior_reseat_pose_skip","interior_reseat_pose_hint","legalize_joint_retry","legalize_joint_state","legalize_joint_axis","legalize_joint_proposal","legalize_joint_reject","legalize_joint_budget","legalize_joint_domain_probe","legalize_joint_domain_reject"}){
+        const auto row=std::find_if(stages.fallbacks.begin(),stages.fallbacks.end(),[&](const auto& d){return d.name==name;});
+        require(row!=stages.fallbacks.end()&&row->stage=="plan_lattice"&&!row->meaning.empty(),"bounded pose recovery metadata: "+name);
+        f.record(name);
+    }
+    const auto replan=std::find_if(stages.fallbacks.begin(),stages.fallbacks.end(),[](const auto& d){return d.name=="facing_replan_retry";});
+    require(replan!=stages.fallbacks.end()&&replan->stage=="plan_lattice"&&!replan->meaning.empty(),"strict-facing replan metadata");
+    f.record("facing_replan_retry");
     for(const auto& [name,count]:f.census())require(count==AuditInteger(1),"metadata matches live fallback registry: "+name);
     NativeQuantizations q;register_native_quantizations(q);require(stages.quantization.size()==q.declarations().size(),"current transform metadata census");
     for(const auto& [name,count]:q.engagements())require(!count.nonzero(),"metadata collection never executes "+name);

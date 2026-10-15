@@ -1,0 +1,20 @@
+{
+  "base_commit": "ec3be644",
+  "hypothesis": "Recovery should explore legal shapes of a displaced subsystem, not only translate its previously chosen shape.",
+  "confirmed_restriction": "Engine::attempt_pack_impl retry calls near with the displaced block's current shape_idx, dimensions, side and chosen components in both ordinary and alternative-position passes.",
+  "prototype": "Within the opt-in pose-recovery configuration, after ordinary fixed-shape victim relocation fails, try each other existing victim shape in index order. Respect explicit owned_shape_choices and near_domain. Commit the first occupancy-valid variant, updating dimensions, side, reach, inset, area, chosen components and side offer. Leave final legalizer checks unchanged.",
+  "carrier_screen": {
+    "recipe": "Same prepared 165x158 workload and both preferences on as 2026-10-12-carrier-preference-probes.json; joint states 1024, poses 8, frontier 4096, continuations 3.",
+    "log": "native/build/carrier-victim-shapes-165x158.log",
+    "result": "FAIL: neither reservation policy produced a valid layout. The original implementation succeeds for these inputs.",
+    "first_reported_conflict": "USB-JTAG versus HDMI termination: selected y separation requires HDMI y >= 139.8402 while its near_max-derived upper bound is 109.835. This is a conflict in this selected branch, not global physical infeasibility."
+  },
+  "independent_regression_check": {
+    "command": "native/build/fast/schgen_compact_retry_contracts",
+    "prototype": "FAIL: pose recovery replaced an ordinary incumbent or its receipts",
+    "restored_source": "PASS: all compact retry contracts, including independent operation/receipt checks, rollback, incumbent preservation, deterministic alternative-pose recovery and continuation checks"
+  },
+  "disposition": "Prototype removed; no production source change retained. Existing regression tests caught the loss of the original path. Do not infer that alternate victim shapes are useless: this disproves greedy insertion at this point in the search.",
+  "next_design_requirement": "Explore victim shape changes as additional transactional branches after preserving the original full strategy, not as replacements before later original victim trials or continuation paths. Restore both blocks' geometry, chosen components, centers and offers on rejected branches; retain every executed attempt in accounting. Evaluate downstream legality before claiming success and keep valid incumbents.",
+  "scope": "No new qualified board, smaller-outline claim, timing improvement or Python comparison. Local log is not a committed fixture. Full goal remains active."
+}

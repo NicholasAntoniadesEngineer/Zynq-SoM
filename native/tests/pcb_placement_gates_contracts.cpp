@@ -4,6 +4,7 @@
 #include <cmath>
 #include <iostream>
 #include <limits>
+#include <sstream>
 
 namespace {
 using namespace placement_fixture;
@@ -247,7 +248,28 @@ J &edit(J &n, const std::string &key) {
 }
 void compose_equal(const PcbComposeReport &got, const J &row, const std::string &name) {
     same(evals_json(got.evaluations), field(row, "evals"), name + "/evals");
-    same(text(got.text()), field(row, "report"), name + "/report");
+    // Preserve every historical term/verdict/report byte except the invalid
+    // mixed-unit summary. Frozen expectations are not rewritten from production.
+    const auto without_summary=[&](const std::string& report,const std::string& prefix,int expected){
+        std::istringstream input(report);std::string line,out;int removed=0;
+        while(std::getline(input,line)) {
+            if(line.rfind(prefix,0)==0)++removed;else out+=line+'\n';
+        }
+        require(removed==expected,name+" exact summary replacement boundary");return out;
+    };
+    require(without_summary(got.text(),"  hard margins (",2)==
+            without_summary(field(row,"report").string_value,"  aggregate hard margin:",1),name+" unchanged non-summary report");
+    for(bool angular:{false,true}) {
+        std::size_t measured=0,unresolved=0;double sum=0;std::optional<double> minimum;
+        for(const auto& e:got.evaluations)if(e.term.enforced&&(e.term.kind=="facing")==angular) {
+            if(e.note=="UNRESOLVED"||!std::isfinite(e.margin)){++unresolved;continue;}
+            ++measured;sum+=e.margin;if(!minimum||e.margin<*minimum)minimum=e.margin;
+        }
+        const auto& actual=angular?got.hard_margins.facing_degrees:got.hard_margins.distance_mm;
+        require(actual.measured==measured&&actual.unresolved==unresolved&&
+                actual.minimum.has_value()==minimum.has_value()&&std::abs(actual.sum-sum)<=.00500001&&
+                (!minimum||std::abs(*actual.minimum-*minimum)<=.00500001),name+" unit-separated oracle evaluations");
+    }
     same(array({strings_json(got.unmanaged), strings_json(got.managed)}), field(row, "intrusions"),
          name + "/intrusions");
     std::vector<J> cross;
@@ -446,6 +468,32 @@ void typed_guards() {
         }
         require(rejected, why);
     };
+    const auto margin=[](const std::string& kind,double value,bool enforced=true,const std::string& note="") {
+        FloorplanTerm term;term.kind=kind;term.enforced=enforced;
+        return FloorplanTermEval{term,0,0,value,value>=0,note};
+    };
+    const auto grouped=pcb_compose_hard_margins({margin("near_max",3.25),margin("far_min",-1.25),
+        margin("facing",.5),margin("facing",-90,true,"UNRESOLVED"),margin("facing",999,false),
+        margin("flow_hop",INFINITY),margin("near_max",NAN)});
+    require(grouped.distance_mm.measured==2&&grouped.distance_mm.unresolved==2&&
+            grouped.distance_mm.sum==2&&grouped.distance_mm.minimum== -1.25,
+            "linear margins retain actual failures without angles or unresolved sentinels");
+    require(grouped.facing_degrees.measured==1&&grouped.facing_degrees.unresolved==1&&
+            grouped.facing_degrees.sum==.5&&grouped.facing_degrees.minimum==.5,
+            "finite unresolved facing sentinel and advisory terms are not measurements");
+    const auto empty=pcb_compose_hard_margins({});
+    require(!empty.distance_mm.minimum&&!empty.facing_degrees.minimum&&
+            empty.distance_mm.measured==0&&empty.facing_degrees.measured==0,"absent margin is not zero clearance");
+    require(pcb_compose_hard_margins({margin("near_max",0)}).distance_mm.minimum==0,
+            "measured zero slack remains distinct from absent margin");
+    reject([&]{pcb_compose_hard_margins({margin("unknown",1)});},"unknown margin unit rejected");
+    reject([&]{pcb_compose_hard_margins({margin("far_min",std::numeric_limits<double>::max()),
+        margin("far_min",std::numeric_limits<double>::max())});},"unrepresentable summary rejected");
+    PcbComposeReport unit_report;unit_report.hard_margins=grouped;
+    const auto unit_text=unit_report.text();
+    require(unit_text.find("hard margins (mm): measured 2, unresolved 2, sum 2.0, min -1.25")!=std::string::npos&&
+            unit_text.find("hard margins (degrees): measured 1, unresolved 1, sum 0.5, min 0.5")!=std::string::npos,
+            "report labels measured populations and actual units");
     require(pcb_compose_evidence(J{}).corridors.empty(), "missing prior sidecar stays empty");
     auto bad =
         object({{"t1_constraints",

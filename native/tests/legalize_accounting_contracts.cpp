@@ -1,4 +1,5 @@
 #include "pcb_placement_fixture.hpp"
+#include "pcb_placement_requirements.hpp"
 #include "floorplan_precision_fixture.hpp"
 #include "stage_precision_fixture.hpp"
 #ifndef LEGALIZE_LEGACY_PROBE
@@ -36,7 +37,9 @@ bool added(const std::string& name){return std::find(names.begin(),names.end(),n
 QuantizationCounts legacy(QuantizationCounts q){for(const auto* n:names)q.erase(n);return stage_precision_fixture::select(q,false);}
 QuantizationCounts additions(const QuantizationCounts& q){auto a=q;for(auto i=a.begin();i!=a.end();)if(!added(i->first))i=a.erase(i);else ++i;return a;}
 void begin(){entries={};pose_entries=0;observing=true;}
-void end(const QuantizationCounts& q){observing=false;
+// Do not call this `end`: mutable std::map arguments would select std::end
+// through ADL instead of checking the observation.
+void verify_entries(const QuantizationCounts& q){observing=false;
 #ifdef LEGALIZE_PERFORMANCE_PROBE
     (void)q;
 #else
@@ -62,7 +65,7 @@ void scalars(){
         const auto expected=py_round(x,4),actual=op(x,&counts);
         require(std::isnan(expected)?std::isnan(actual):bits(actual)==bits(expected),"scalar bit semantics");
     }
-    end(counts);
+    verify_entries(counts);
     const auto saved=counts;
     for(const auto op:operations)op(1.23455,nullptr);
     require(counts==saved,"null sink inherited invocation state");
@@ -75,16 +78,16 @@ void scalars(){
     QuantizationCounts first,second;
     const std::vector<std::tuple<std::string,double,double>> offsets{{"p",1.23455,-2.34565}};
     const auto pure=predicted_centroid(1,2,3,4,offsets,nullptr);
-    begin();const auto a=predicted_centroid(1,2,3,4,offsets,nullptr,&first);end(first);const auto keep=first;
-    begin();const auto b=predicted_centroid(1,2,3,4,offsets,nullptr,&second);end(second);
+    begin();const auto a=predicted_centroid(1,2,3,4,offsets,nullptr,&first);verify_entries(first);const auto keep=first;
+    begin();const auto b=predicted_centroid(1,2,3,4,offsets,nullptr,&second);verify_entries(second);
     require(a==pure&&b==pure&&first==keep&&second==first,"explicit invocation isolation");
     require(first==QuantizationCounts{{names[0],2},{names[1],2}},"one component then centroid has separate rounds");
     QuantizationCounts skipped;const std::vector<std::string> no_refs;
-    begin();require(!predicted_centroid(1,2,3,4,offsets,&no_refs,&skipped),"empty filter");end(skipped);
+    begin();require(!predicted_centroid(1,2,3,4,offsets,&no_refs,&skipped),"empty filter");verify_entries(skipped);
     require(skipped.empty(),"filtered coordinates fabricate work");
     QuantizationCounts failed;bool rejected=false;begin();
     try{predicted_bbox(1,2,3,4,offsets,{{"p",0,0,1,1},{"missing",0,0,1,1}},&failed);}
-    catch(const std::runtime_error&){rejected=true;}end(failed);
+    catch(const std::runtime_error&){rejected=true;}verify_entries(failed);
     require(rejected&&failed==QuantizationCounts{{names[0],2}},"failure retains only executed scalar prefix");
 }
 #endif
@@ -112,8 +115,48 @@ void kernels(std::ostream& out){
         {{"a",{1.23455,2.34565}},{"b",{4.56785,7.89015}}},{{"a",offsets,pads},{"b",offsets,pads}},terms,
         guarded?std::vector<std::pair<std::string,double>>{{"a",2.5}}:std::vector<std::pair<std::string,double>>{},
         {{"som_j1",{1.23455,2.34565,20,30}}},25,25 SINK));
-    end(counts);print_counts(out,counts);
+    verify_entries(counts);print_counts(out,counts);
 }
+#ifndef LEGALIZE_LEGACY_PROBE
+void pad_retry_accounting(){
+    for(const bool impossible:{false,true}) {
+        FloorplanLegalizeInput in;in.board_w=60;in.board_h=60;in.clear=.25;in.compact=true;
+        in.metrics["v"]={{{"p",18.5,1.5}},{{"p",18,1,19,2}},{20,20}};
+        in.som_j_rects["som_j1"]={38,30,39,31};
+        in.index.hard.push_back({"near_max","v","v","som_j1",impossible?7.:13.,"retry witness",true,{},{}});
+        in.fixed_rects={{"west",{0,0,19.75,60}},{"east",{40.25,0,60,60}},
+                        {"north",{0,0,60,19.75}},{"south",{0,40.25,60,60}}};
+        std::vector<FloorplanLegalizeVar> vars{{"v",20,20,{20,20},20,20}};
+        std::vector<std::string> log;QuantizationCounts counts;begin();
+        const bool ok=floorplan_legalize_compact_accounted(in,vars,log,counts);
+        verify_entries(counts);
+        require(ok!=impossible,"retry witness feasibility");
+        require(vars[0].x==20&&vars[0].y==20,"retry must preserve accepted or rejected caller pose");
+        require(std::count(log.begin(),log.end(),"retry: near constraints use selected pad-hull axes")==1,
+            "executed retry missing or unbounded");
+        require(!counts.empty(),"retry observation must not be vacuous");
+    }
+}
+void perpendicular_retry_accounting(){
+    for(const bool impossible:{false,true}) {
+        FloorplanLegalizeInput in;in.board_w=60;in.board_h=60;in.compact=true;
+        in.metrics["v"]={{{"p",5,5}},{{"p",0,0,10,10}},{10,10}};
+        in.som_j_rects["som_j1"]={25,42,26,43};
+        in.index.hard.push_back({"near_max","v","v","som_j1",5,"perpendicular retry",true,{},{}});
+        in.fixed_rects={{"obstacle",{20,20,30,30}}};
+        if(impossible)in.fixed_rects.push_back({"lower",{0,35,60,60}});
+        std::vector<FloorplanLegalizeVar> vars{{"v",10,10,{5,30},5,30}};
+        std::vector<std::string> log;QuantizationCounts counts;begin();
+        const bool ok=floorplan_legalize_compact_accounted(in,vars,log,counts);
+        verify_entries(counts);
+        require(ok!=impossible,"perpendicular retry feasibility");
+        require(std::count(log.begin(),log.end(),"retry: flipped separations follow perpendicular seed order")==1,
+            "perpendicular retry receipt must be bounded and present");
+        if(impossible)require(vars[0].x==5&&vars[0].y==30,"failed perpendicular retry mutated caller");
+        require(!counts.empty(),"perpendicular accounting must be nonvacuous");
+    }
+}
+#endif
 void compose(std::ostream& out,const std::filesystem::path& root){
     using namespace placement_fixture;
     const auto fixture=parse_json_file((root/"native/tests/data/floorplan/compose.json").string());
@@ -131,7 +174,7 @@ void compose(std::ostream& out,const std::filesystem::path& root){
         }
         std::vector<FloorplanLegalizeVar> vars{{"a",10,10,{5,5},5,5},{"b",10,10,{60,5},60,5}};
         std::vector<std::string> log;QuantizationCounts counts;begin();
-        const auto ok=floorplan_legalize_compact_accounted(in,vars,log,counts);end(counts);
+        const auto ok=floorplan_legalize_compact_accounted(in,vars,log,counts);verify_entries(counts);
         require(ok==field(row,"ok").bool_value,"compose feasibility");require(log==strings(field(row,"log")),"compose decision log");
         out<<string(row,"name")<<' '<<ok<<'\n';for(const auto& v:vars)out<<v.name<<' '<<v.x<<' '<<v.y<<'\n';
         for(const auto& line:log)out<<line<<'\n';print_counts(out,counts);
@@ -142,19 +185,35 @@ void compose(std::ostream& out,const std::filesystem::path& root){
     }
 }
 void boards(std::ostream& out,const std::filesystem::path& root){
-#ifndef LEGALIZE_LEGACY_PROBE
-    // Captured from independently instrumented scalar entries, then checked
-    // against producer receipts and the immutable pre-extraction output.
-    const std::array<std::array<std::size_t,7>,4> expected{{
-        {{26880,640,1024,0,64,192,488}},{{91664,3400,2992,408,408,1224,1694}},
-        {{26880,640,1024,0,64,192,488}},{{5040,120,192,0,12,36,72}}}};
-#endif
     for(int v=0;v<4;++v){auto fixture=placement_fixture::load(root,v==1?"carrier":"devkit_mini");fixture.input.two_side=v!=2;
         if(v==3){if(!fixture.input.floorplan.spec)fixture.input.floorplan.spec=FloorplanSpec{};fixture.input.floorplan.spec->outline=std::make_pair(100.,100.);}
-        begin();auto result=build_pcb_model(fixture.input);const auto total=pcb_placement_accounting(result);end(total.quantization_engagements);
+        begin();auto result=build_pcb_model(fixture.input);const auto total=pcb_placement_accounting(result);verify_entries(total.quantization_engagements);
 #ifndef LEGALIZE_LEGACY_PROBE
-        QuantizationCounts pinned;for(std::size_t i=0;i<names.size();++i)if(expected[v][i])pinned[names[i]]=expected[v][i];
-        require(additions(total.quantization_engagements)==pinned,"independent additive board count fixture changed");
+        // Each run's receipts must match independently instrumented entries,
+        // not work counts frozen before optimiser improvements.
+        const auto zones=build_pcb_zone_geometry(fixture.input);
+        placement_requirements_test::structure(fixture.input,zones,result,require);
+        placement_requirements_test::physical(fixture.input,result.model,require);
+        const auto observed=entries;const auto observed_pose=pose_entries;
+        begin();const auto repeated=build_pcb_model(fixture.input);
+        const auto repeated_total=pcb_placement_accounting(repeated);verify_entries(repeated_total.quantization_engagements);
+        require(entries==observed&&pose_entries==observed_pose&&
+            repeated_total.quantization_engagements==total.quantization_engagements&&
+            repeated_total.fallback_events==total.fallback_events,"current board work is not reproducible");
+        std::ostringstream first,second;first<<std::hexfloat;second<<std::hexfloat;
+        floorplan_precision_fixture::node(first,pcb_model_json(result.model));
+        floorplan_precision_fixture::node(second,pcb_model_json(repeated.model));
+        floorplan_precision_fixture::node(first,floorplan_plan_json(result.floorplan.plan));
+        floorplan_precision_fixture::node(second,floorplan_plan_json(repeated.floorplan.plan));
+        require(first.str()==second.str(),"current board model/plan is not reproducible");
+        if(!additions(total.quantization_engagements).empty()){
+            const auto key=additions(total.quantization_engagements).begin()->first;
+            for(bool erase:{false,true}){
+                auto bad=total.quantization_engagements;if(erase)bad.erase(key);else ++bad[key];
+                bool rejected=false;try{verify_entries(bad);}catch(const std::runtime_error&){rejected=true;}
+                require(rejected,"missing or invented legalization work escaped independent observer");
+            }
+        }
 #endif
         require(additions(total.quantization_engagements)==additions(result.floorplan.plan.accounting.quantization_engagements),"floorplan owns new work exactly once");
         require(additions(result.zone_accounting.quantization_engagements).empty()&&additions(result.placement_accounting.quantization_engagements).empty(),"no duplicated downstream work");
@@ -174,7 +233,7 @@ void boards(std::ostream& out,const std::filesystem::path& root){
         out<<render_floorplan_ledger(prior_plan);floorplan_precision_fixture::node(out,export_floorplan_spec(prior_plan));
         print_counts(out,prior_total);print_counts(out,result.zone_accounting.quantization_engagements);print_counts(out,result.placement_accounting.quantization_engagements);
         std::cerr<<"board "<<v<<" additive";for(const auto& [n,k]:additions(total.quantization_engagements))std::cerr<<' '<<n<<'='<<k;std::cerr<<'\n';
-        begin();const auto a=render_floorplan_ledger(result.floorplan.plan),b=render_floorplan_ledger(result.floorplan.plan);end({});require(a==b,"cached rendering changed");
+        begin();const auto a=render_floorplan_ledger(result.floorplan.plan),b=render_floorplan_ledger(result.floorplan.plan);verify_entries({});require(a==b,"cached rendering changed");
     }
 }
 }
@@ -188,7 +247,7 @@ extern "C" void __cyg_profile_func_exit(void*,void*){}
 int main(int argc,char** argv){try{
     require(argc==2||argc==3,"repo [baseline]");std::ostringstream out;out<<std::hexfloat;
 #ifndef LEGALIZE_LEGACY_PROBE
-    scalars();
+    scalars();pad_retry_accounting();perpendicular_retry_accounting();
 #endif
     kernels(out);compose(out,argv[1]);
     if(argc==3&&std::string(argv[2])=="--kernels-only"){
@@ -196,6 +255,12 @@ int main(int argc,char** argv){try{
         require(out.str()==baseline.substr(0,baseline.find("BOARD 0\n")),"pre-change kernel/compose output drift");
         std::cerr<<"legalize accounting kernel/compose contracts PASS\n";return 0;
     }
+#ifndef LEGALIZE_LEGACY_PROBE
+    const auto baseline=placement_fixture::read(std::filesystem::path(argv[1])/"native/tests/data/legalize_accounting/legacy_output.txt");
+    require(out.str()==baseline.substr(0,baseline.find("BOARD 0\n")),"immutable kernel/compose geometry and receipts drift");
+    std::ostringstream board_output;boards(board_output,argv[1]);
+    if(argc==3)require(out.str()==placement_fixture::read(argv[2]).substr(0,placement_fixture::read(argv[2]).find("BOARD 0\n")),"supplied kernel/compose baseline drift");
+#else
     boards(out,argv[1]);
     if(argc==3)require(out.str()==placement_fixture::read(argv[2]),"pre-change geometry/decisions/legacy counts drift");
     else {
@@ -205,5 +270,6 @@ int main(int argc,char** argv){try{
         require(out.str()==placement_fixture::read(std::filesystem::path(argv[1])/"native/tests/data/legalize_accounting/legacy_output.txt"),"immutable pre-change geometry/decisions/legacy counts drift");
 #endif
     }
+#endif
     std::cerr<<"legalize accounting contracts PASS\n";return 0;
 }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}

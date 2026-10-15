@@ -1,0 +1,40 @@
+{
+  "parent_commit": "831fd14e",
+  "finding": "All 16 independent repair proposals were initially rejected by the allocated-block rectangle, while R6016's incumbent final-frame geometry was already outside that initial allocation.",
+  "change": "Thermal recovery now checks actual final-frame geometry without requiring containment in the obsolete initial packing rectangle. Corridor eviction retains its own allocation policy. No board-edge, body-clearance, corridor, keepout, membership, ownership, fanout or thermal preservation check removed.",
+  "diagnostics": "Optional completed-trial callback reports actual reference, board-space trial pose and first failed constraint. Allocation/body diagnostics distinguish already-violated incumbent assumptions. Profiler --thermal-trace enables output.",
+  "tests": {
+    "native_pcb_compact_owned_evict_contracts": "PASS, 8.31 seconds",
+    "coverage": "Thermal recovery outside initial allocation; fixed blocker protection; full preferred-field recovery; no-op on complete field; thermal-regression reason; observer results reconcile with independently imported trial/move/rejection receipts",
+    "log": "native/build/thermal-final-frame-tests.log"
+  },
+  "smaller_candidate": {
+    "dimensions_mm": [164, 153],
+    "accepted_moves": 0,
+    "rejected_trials": 16,
+    "first_failure_counts": {
+      "body_clearance:R6016:R6011:incumbent_clear": 4,
+      "body_clearance:R6016:R6021:incumbent_below_clearance": 12
+    },
+    "remaining_emission_nonsearch_fallbacks": 3,
+    "pcb_sha256": "2855ce78bf5896305a1a70e99cb4633a3a956f7de67232619e7528f8e4f0a74a",
+    "initial_rejection_log": "native/build/thermal-allocation-164x153.log",
+    "final_rejection_log": "native/build/thermal-final-frame-diagnostic.log"
+  },
+  "carrier_reference": {
+    "dimensions_mm": [164, 154],
+    "pcb_sha256": "aa80c90978fffcb7df4c895f9735dc8957d7d67b9e0b45e82b39e2bfc9430319",
+    "unchanged": true,
+    "log": "native/build/thermal-final-frame-reference.log"
+  },
+  "devkit_reference": {
+    "dimensions_mm": [98, 98],
+    "pcb_sha256": "1b12fecbcbbaa5e6084c2459da93cb144a660ff19805e6e4e3f75f9c22689fdb",
+    "unchanged": true,
+    "log": "native/build/thermal-final-frame-devkit.log"
+  },
+  "reference_checks": "Both: cheap fanout/ratsnest/placement-contract/placement-flow PASS, hard_red=0, zero non-search model/emission fallbacks",
+  "observer_parity": "Observers disabled: same 164x153 PCB hash and 16 trial/rejection events; native/build/thermal-diagnostic-off-164x153.log",
+  "next_action": "Inspect R6016/R6021 incumbent gap versus the actual final-board rule and test coordinated movement; do not equate a pre-existing below-threshold gap with permission to worsen it.",
+  "limitations": "No smaller-board improvement or new full qualification. Diagnostics report first failures, not all possible failures. Prior allocation mismatch does not prove every other placement restriction is unjustified."
+}

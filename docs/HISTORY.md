@@ -1,5 +1,1056 @@
 # carrier — project HISTORY (archived planning logs)
 
+## 2026-10-08 — validated initial-outline search option
+
+Automatic sizing accepts an invocation-owned `initial_outline` candidate,
+exposed by diagnostic `--initial-outline-mm WIDTHxHEIGHT`. It is re-evaluated
+under each reservation policy using real packing and the current airwire budget.
+Invalid dimensions/area and conflicts with fixed-outline mode reject explicitly;
+an infeasible seed does not suppress the ordinary search. Once an incumbent is
+validated, opt-in coarse growth stops where area cannot improve. Bounded fine
+refinement and final-layout budget checks remain; the seed is not a fixed result
+or a cached proof. Notes disclose seed provenance and changed refinement coverage.
+
+Starting from the previously screened 168×159 candidate produced the same carrier
+PCB hash `ccaa5061f105825b678b090e27e467fca710da871a7bd112ac17dab27cd7d3f1`.
+Construction-only sample was 91.8982 s versus the preceding unseeded 142.2229 s;
+outer attempts fell 2390→2226, edge candidates 64616→59276, applied repairs
+424→372 and reseats 476→417. These are single uncontrolled samples, with some
+test compilation overlapping the seeded run, not statistical or Python speedup
+evidence. The seed is extra input and changes bounded search coverage.
+Retry ceilings and full qualification remain unresolved.
+
+New C++ contracts verify actual seed evaluation for both policies, failed-seed
+fallback, continued size reduction, invalid/fixed-input rejection, source
+isolation and repeatable actual accounting. Independent current-layout budget
+and final-estimate checks now cover seeded/unseeded default and compact devkit
+solves. Three focused suites pass in 13.00 s. Evidence:
+`native/build/carrier-seeded-edge-search.log`.
+
+## 2026-10-08 — automatic edge-translation search and invariant rejection pruning
+
+The opt-in automatic search finds the same 168×159 carrier as the fixed-outline
+screen, including PCB hash `ccaa5061f105825b678b090e27e467fca710da871a7bd112ac17dab27cd7d3f1`.
+Its first sample took 134.8906 s construction-only, with 2390 outer attempts,
+220136 edge candidates, 424 applied edge repairs and 476 reseats. This expensive
+result is not qualified; existing retry ceilings remain unchanged.
+
+The packer now distinguishes edge-phase rejection from interior-order-dependent
+failure. Reordering interior blocks cannot alter edge placement, translation or
+edge/SoM feasibility when every retry starts from the same snapshot. Such a
+failure ends the current order loop after its first real attempt; no skipped
+work is counted. Independent direct-attempt tests verify exact accounting,
+single observed edge evaluation, callback counts and complete state restoration,
+with and without constraint-first ordering and edge translation. Existing
+interior failures still exercise all intended orders. Three targeted integration,
+retry and ordering suites passed in 9.44 s.
+The matched-command rerun retained identical PCB bytes, all 2390 outer outcomes,
+424 applied repairs and 476 reseats, while edge candidates fell to 64616
+(70.65% fewer). Wall time was 142.2229 s versus 134.8906 s in single uncontrolled
+samples: no wall-time speedup is established. The expensive interior/reseat work
+is unchanged. Logs: `native/build/carrier-auto-edge-translation.log` and
+`native/build/carrier-auto-edge-shortcircuit.log`.
+
+## 2026-10-08 — opt-in edge translation integrated into native placement
+
+The invocation-owned `compact_edge_translation` option now calls the tested
+bounded helper in the real floorplan packer. It is off by default and only runs
+for compact search. Every applied repair records the declared
+`edge_run_translation` fallback, even when later work rejects the attempt.
+Completed helper searches report actual candidate counts; coordinate operations
+remain in existing independent quantization receipts. The helper is explicitly
+included in board source-audit scope; no fallback baseline or ceiling is raised.
+The diagnostic CLI exposes `--edge-translation on` with compact-only validation.
+
+Real carrier integration at fixed 168×159 with constraint-first ordering passes
+the broad physical helper. Two construction samples took 4.4780/4.4423 s and
+produced identical PCB hash
+`ccaa5061f105825b678b090e27e467fca710da871a7bd112ac17dab27cd7d3f1`:
+425 top / 144 bottom, 569 instances, 270 edge candidates and 10 applied repairs.
+The tracked integration test requires the option-off witness to reject, matches
+observer repairs to actual fallback events, checks source isolation, and runs
+the broad physical requirements. A fixed 98×98 devkit opt-in screen passes with
+zero edge candidates/repairs (106 top / 57 bottom). These are fixed-outline
+construction workloads, not automatic-search or Python speedup comparisons.
+Automatic candidate selection, full audits/DRC, render review and qualification
+of the new fallback policy remain outstanding; the 168×159 board is experimental.
+Validation: five focused helper/retry/incumbent/fallback/input groups passed;
+the extended real-input integration test passed in 9.01 s and native policy-audit
+contracts in 44.48 s. Final board metadata/provider checks passed 1100 assertions
+(without the optional compiler-wide mode).
+
+## 2026-10-08 — project rounded edge runs onto safe output coordinates
+
+Edge runs now use the previous emitted coordinate, body span and required gap
+as the next exact lower bound. If ordinary 4dp rounding violates that bound,
+the packer projects upward onto the same grid and rechecks the actual forward
+expression; no epsilon weakens clearance. Every real quantizer call remains
+accounted. A run crossing its far fanout boundary is rejected with missing poses,
+which the owning floorplan rejects; no coordinates are silently clipped.
+
+A 400-case four-edge decimal-offset sweep fails before and passes after the fix.
+The existing spill witness now has enough north-edge fanout capacity (102 mm,
+not 100 mm); a separate 100 mm witness explicitly requires rejection and retained
+coordinate accounting. Default carrier screening still yields 168×163, 393 top /
+176 bottom instances and 28 reseats; its updated PCB hash is
+`1c24c469e558022bedb7975bbe97b5011cf849f209f5988a117bfbdb1e7c14bf`.
+Construction-only sample 11.5451 s is not a matched speedup claim.
+
+The stricter translation helper now reproduces 168×159 through a -0.5 mm west
+run shift (27 bounded candidates per successful helper call), with the complete
+placement model passing the broad physical helper. Translation remains private
+and unintegrated; full board audit/DRC/render qualification remains outstanding.
+Scratch evidence: `native/build/carrier-safe-edge-auto.log` and
+`native/build/helper-safe-edge-physical.log`.
+Edge-direction, edge-translation, pack-precision and placement contracts pass;
+floorplan contracts pass in 24.36 s after replacing the old overflowing-run pose
+assertion with rejection-state preservation (feasible frozen poses retained).
+
+## 2026-10-08 — bounded translation contracts expose edge rounding inconsistency
+
+Added an internal, not-yet-integrated edge translation helper with a maximum of
+32 candidates, immutable source geometry, strict fanout/body boundary checks,
+SoM keepouts, same-/cross-edge clearance and preservation of existing run gaps.
+Every attempted shifted coordinate uses the accounted 4dp scalar. Focused C++
+tests independently observe scalar calls for success/failure, all four edge
+orientations, stable incumbents, failed-search restoration, grouped moves,
+nonfinite/invalid inputs, fanout boundaries and same-edge overlap.
+
+The stricter helper does not yet reproduce the private 168×159 candidate: the
+original north USB-JTAG/USB-UART run fails its exact forward fanout inequality
+by floating-point roundoff (about 1.4e-14 mm). This is a numerical consistency
+issue, not evidence of a meaningful manufacturing clearance deficit. The
+original private experiment only rechecked cross-edge pairs. A captured
+rounding witness is now covered; do not loosen the predicate to promote the
+candidate. Correct edge coordinate projection before production integration.
+No existing solver path is changed by this helper-only commit.
+
+## 2026-10-08 — promising bounded edge-translation candidate
+
+Detailed private tracing identifies south PMOD run overflow at 167×163,
+USB-JTAG seating failure at default 168×162, and camera/HDMI cross-edge fanout
+conflict at compact 168×159. A bounded whole-edge translation experiment preserves
+within-edge spacing and checks directional fanout boundary margins, body margins,
+SoM keepouts and cross-edge clearance. A west-edge shift of -0.5 mm allows the
+168×159 compact constraint-first carrier to complete the full placement model and
+pass the broad physical helper, with 10 recorded reseats. Its area is 2.454% below
+the 168×163 reference. This is private candidate evidence, not production promotion
+or full hardware qualification. General contracts, accounted production search,
+regressions and final audits/renders remain necessary. Automatic-search behaviour
+and timing are not inferred from this fixed-outline screen. See
+`native/benchmarks/2026-10-08-carrier-edge-shift-screen.json`.
+
+## 2026-10-08 — bounded carrier neighbour screening
+
+Three one-millimetre neighbour probes failed before full construction: default
+167×163 at edge-run margins, default 168×162 at interior seating/reseat exhaustion,
+and compact constraint-first 168×159 at the combined edge/SoM overlap or cross-edge
+fanout gate. Independent fresh Engine trials confirm both reservation policies
+reject each neighbour; the fixed-outline wrapper alone stops at conservative
+failure. No gates were relaxed and no boards were published. Interior-order
+experiments cannot repair the two early edge failures; these need edge-geometry
+diagnosis instead. This is bounded search evidence, not global infeasibility.
+See `native/benchmarks/2026-10-08-carrier-neighbor-screen.json`.
+
+## 2026-10-08 — exception-safe connector incumbent preservation
+
+Connector alternatives restored the accepted plan on ordinary rejection but not
+when packing or subsequent estimation threw. The candidate transaction now
+restores the complete accepted plan and side offers on exceptions, retains all
+executed accounting, and rethrows the original error without a restoration pack.
+New default/compact tests inject failures after actual trial completion and during
+challenger estimation, mutate both plan and offer state, independently observe
+scalar/fallback calls, and verify prepared-state preservation. The tests fail on
+the prior implementation. Connector-incumbent, compact-retry and constraint-order
+contracts pass after the fix. This is failure-path reliability work, not a claimed
+board-size or performance improvement.
+
+## 2026-10-08 — cold-start carrier screening and current-edge fanout correctness
+
+Bounded learned-conflict ordering and a baseline-first retry variant both produced
+a worse 178×160 carrier with 67 reseats; neither is integrated. Their receipt is
+`native/benchmarks/2026-10-08-carrier-conflict-screening.json`. Adding a local
+fallback does not itself prove whole-search non-regression: coarse winners set
+the refinement window, and a newly discovered previous-edge dependency also
+affects these runs. These causes must not be conflated.
+
+The diagnostic profiler now accepts `--outline-mm WIDTHxHEIGHT`, cloning the
+input and overriding only its outline. This skips automatic sizing for controlled
+placement experiments without changing the source policy file or publishing a
+board. Finite-positive parsing, malformed inputs, missing spec, source isolation,
+edge ordering and repeatability are tested. All results remain explicitly
+construction-only, not acceptance or global-minimum claims.
+
+Cold starts at the known feasible 168×163 carrier outline initially failed.
+`pack_edges` chose horizontal/vertical fanout from stale `current_edge` labels
+instead of the edge currently being placed. It now uses the actual destination
+edge, including after spills. Fresh, stale, mixed-label and spilled-edge witnesses
+pass; the old implementation fails the new directional-gap witness. Bounded
+spills leaving connectors unplaced now reject before consuming empty or stale
+poses. No occupancy/clearance gate is relaxed.
+
+The repaired cold-start default carrier repeats the current PCB at 168×163 in
+1.2781/1.2780 s construction-only samples; compact constraint-first repeats its
+168×160 PCB in 4.7366/4.7354 s. The automatic default search sample took 11.5819 s.
+These are different workloads, not a speedup or Python comparison: fixed outlines
+deliberately omit the sizing search. Scoped placement/flow/composition checks
+pass; the tested model geometry is unchanged from the existing screened boards.
+Five focused input/edge/floorplan/placement/receipt CTest groups pass in 64.83 s.
+The pack-precision suite initially failed its historical whole-board snapshot.
+Its exact fixed-operand primitive prefix remains checked against the unchanged
+fixture; current carrier/devkit operation counts remain independently observed
+at scalar function entry. Added negative checks reject missing and invented
+calls, and receipt replay must still perform no work. Whole-board geometry is
+covered by the source/physical placement and floorplan contracts, not historical
+optimiser coordinates. Precision, edge-direction and profiler-input suites pass
+together in 17.46 s (precision 13.02 s).
+Post-commit `be3a3a21` default carrier (168×163) and devkit (98×98) also
+pass the broader in-memory physical helper: placement/flow/composition,
+mechanical and connector clearance, zero-error fanout, ratsnest budget,
+escape lanes, return stitching and emitted escape-copper parity. Carrier still
+records 28 reseats and devkit 50; their retry ceilings remain unresolved.
+These checks do not include full source audit, KiCad DRC or image rendering.
+Full current-board source audits, DRC and render qualification remain outstanding.
+
+## 2026-10-07 — carrier reseat diagnosis; reject broad area-first ordering
+
+Carrier-only tracing reconciles all 28 default reseats: USB-JTAG displaces
+bringup_modules nine times, board_services displaces it eight times, power
+displaces power_mon six times and user_io four times, and board_services
+displaces power_som once. These include losing outline trials and both punch
+policies, not only final-board movement. The traced baseline matches the current
+uninstrumented carrier PCB hash.
+
+A single controlled private candidate retained face-anchor/exclusive-pull tiers
+but prioritised area before connectivity within each tier. It regressed from
+168×163 to 177×162 mm and from 28 to 152 reseats. Scoped placement/flow/composition
+checks passed, but it was rejected without expensive DRC or rendering; production
+ordering and board artifacts are unchanged. The saved screening receipt is
+`native/benchmarks/2026-10-07-carrier-reseat-order-screen.json`. The next algorithm
+direction is bounded conflict-aware reconsideration rather than broad largest-
+first sorting. Carrier optimisation is the primary lane; devkit remains shared-
+correctness regression coverage.
+
+## 2026-10-07 — conservative output-grid bounds at fixed separators
+
+The remaining four default carrier compaction rejections shared one captured
+FMC/power-monitor boundary: the legalizer used `45 - 1.45 - height`, but the
+physical checker required `y + height + 1.45 <= 45`. Floating-point association
+made the rounded 31.3865 mm pose fail. Composer now projects fixed-separator
+bounds onto its existing four-decimal output grid and tests the exact forward
+physical inequality, stepping one grid tick inward only when needed. The
+captured case uses 31.3864 mm. No tolerance or clearance is weakened. Quantization
+calls use the existing counted bound operation; no work is hidden. Final rounded
+poses are rechecked against separations, graph constraints and hard terms before
+caller state changes. Movable-pair bounds are not incorrectly treated as fixed.
+
+The captured upper bound, mirrored lower bound, an empty grid interval with an
+active hard term, unchanged feasible equality and rejection rollback pass. An
+old-Composer negative executable fails the exact forward inequality. A review
+caught the first empty-interval fixture bypassing composition with an empty term
+set; the corrected fixture executes the solver and rejects as required. Seven
+other focused regression groups passed, then both updated floorplan groups
+passed in 21.97 s. The primitive/geometry slice passes 13,151 checks.
+
+Fresh default and constraint-first compact constructions of both current boards
+pass the wider physical suite used above. Default carrier remains 168×163 mm,
+28 reseats, now zero legalize-only compactions (previously four). Compact carrier
+remains 168×160 with 247 reseats and zero such compactions. Both devkit modes stay
+98×98 with 50/22 reseats respectively and zero such compactions. Existing retry
+ceilings still fail for default devkit and both carrier modes; this is not full
+board acceptance. Source audits, DRC, renders and matched historical timing
+qualification are still required for any accepted changed board.
+
+## 2026-10-07 — validate whole floorplans against current requirements
+
+The remaining whole-solver golden test rejected the improved devkit solely at
+the changed SoM X coordinate. It now checks source block identity/population,
+selected shape dimensions, face, fanout reach/inset, connector edge, board bounds,
+module placement policy, decoupling geometry, primary/child physical occupancy,
+and independent current-geometry winner estimate/budget/headroom. Same-input
+repeatability still requires exact current plan, accounting, documents and seed;
+publication must match those generated documents. Corrupt populations, dimensions,
+positions, duplicate blocks, module collisions, NaN outline and stale estimates
+must reject. Instrumented receipt suites retain actual-work checks; no executed
+count is removed from production accounting. Immutable historical primitive,
+geometry and formatter operands still receive their exact regression checks.
+All five focused floorplan/geometry/final-estimate/receipt/scope CTest groups
+pass in 37.28 s. This replaces the stale whole-solver acceptance noted below;
+it does not waive any board audit or hardware requirement.
+
+## 2026-10-07 — carry selected primary fanout into legalizer separations
+
+The composer previously compacted against nominal/channel rectangle gaps while
+the final physical checker correctly required selected-shape directional fanout.
+Captured devkit failures included a 0.3 mm SoM/power gap requiring 1.0 mm, a
+0.3 mm corner/power gap requiring 1.7 mm, and an axis repair that retained
+0.3 mm instead of the UART's 1.7501 mm requirement. Selected primary reach,
+inset and occupancy masks now accompany packing rectangles into composition.
+Each active pair uses the larger of its existing gap and directional fanout;
+axis repair transports the other axis's requirement. Logical corridors retain
+their existing exclusion rule. Empty primitive inputs preserve legacy behavior.
+The final full occupancy checker, fallback limits and actual-work accounting
+remain authoritative and unchanged; minority/child geometry is not approximated
+away by the new primary constraint.
+
+Ten focused CTest groups passed (40.93 s plus 18.48 s), including placement
+requirements, geometry, selected-estimate, connector restoration, ordering,
+retry receipts, scope accounting and compact corridor protection. The extended
+geometry slice passes 13,142 checks; an old-Composer negative build fails the
+new directional-gap witness. Tests exercise four directions, insets (including
+negative ones), opposite faces, two-face punches, logical exclusions, existing
+channel gaps, malformed transport and an independently constructed axis flip.
+
+Fresh current-input default and constraint-first compact constructions of both
+boards pass the scoped physical suite (placement/flow/composition, mechanical,
+connector spacing, zero fanout failures, ratsnest, escape lanes and emitted
+return-stitch/copper). Default devkit improves from 100×100 to 98×98 mm, 3.96%
+less area, and reseats fall 72→50. Experimental compact devkit remains 98×98,
+reseats 28→22 and legalize-only compactions 4→0. Compact carrier remains 168×160,
+reseats remain 247 but legalize-only compactions fall 10→0. Default carrier
+remains 168×163, 28 reseats, with legalize-only compactions 8→4. Thus default
+and carrier retry ceilings are still not met; this is not full acceptance.
+No full source audit, DRC or renders were run for these changed boards. Screening
+timings are not matched statistical benchmarks or historical Python comparisons.
+The separate legacy whole-solver golden test currently rejects the improved
+devkit SoM coordinate (24 versus historical 25); its historical-pose acceptance
+still needs replacement with current requirements. The immutable geometry and
+formatter slice above remains passing. A bounded read-only review found no
+concrete correctness defect in this change.
+
+## 2026-10-07 — separate placement requirements from historical coordinates
+
+(Autonomous, per owner clarification.) Placement integration now validates
+source part/pin/net identity, actual selected footprint/mirror documents,
+source-fixed mounting/module poses, stage populations, independently recounted
+movement ledgers, model transport and same-input repeatability. Final geometry
+must pass placement/flow, enforced composition, mechanical/connector spacing,
+fanout, ratsnest, escape lanes and return-stitch/emitted-copper checks. Historical
+coordinates, face choices, movement counts and model bytes are not optimisation
+acceptance criteria. Immutable PCB/design-rule formatter operands remain exact;
+the separate floorplan geometry/formatter slice is now registered in CTest.
+
+Positive current carrier and devkit two-sided constructions pass; the suite
+checks 191,020 assertions including corrupt identity/population/stage/mirror
+controls, reversed connectors and deleted return copper. The preserved primitive
+floorplan slice passes 13,053 checks. Combined CTest passes in 35.83 s.
+
+The new checks expose an existing defect in the legacy top-preferred devkit
+fixture: U6004 and Q4001 are fanout-starved by foreign passives. That constructor
+case is explicitly NOT physically accepted: its existing negative verdict must
+remain, new offenders/other physical failures reject, and no hardware checker is
+waived. A future genuinely valid result may pass normally. The carrier's legacy
+unregistered top-preferred shape case remains a rejection test. These diagnostic
+constructor cases do not imply either single-face manufacturing readiness or
+completion of the broader board optimisation goal.
+
+## 2026-10-07 — compare and report the final refined floorplan estimate
+
+(Autonomous, per full-autonomy directive.) Automatic outline search previously
+kept the screening estimate after final packing/refinement and connector-shape
+selection. A current compact devkit witness reported 1,518 mm although the
+selected plan independently measured 1,500.3 mm. Each automatic pass now measures
+its actual final plan, rechecks the existing airwire budget, and uses that result
+for pass comparison, winner/headroom records and the outline explanation. A
+post-refinement budget failure rejects rather than publishing stale evidence.
+The extra actual estimator calls remain accounted; no prior counters are erased.
+
+An independent current-geometry oracle checks both default and compact automatic
+passes, selected winner/headroom and mutated ledger values. It fails against the
+old implementation. All five focused groups pass in 19.33 s, including fixed
+choice, receipt, connector-incumbent and experiment-tool regressions. The main
+native executable has also been rebuilt.
+
+Fresh construction-only screening passes placement/flow and enforced composition
+for both boards in default and constraint-first compact modes. PCB hashes remain
+unchanged by this calculation correction: carrier default 6eee26aa..., compact
+4eac006f...; devkit default c55c0857..., compact ed606c3e.... The separate fallback
+ceilings still fail; this is neither a full audit/render nor accepted publication.
+
+## 2026-10-07 — prevent compact passive pulls from creating corridor obstructions
+
+(Autonomous, per full-autonomy directive.) A traced devkit failure originated in
+L4 pull, not eviction: C5003 moved from (23.668,75.25) to (37.7348,64.0194),
+intersecting the J9002 escape corridor while leaving its power_mon allocation.
+Legacy L4 omitted corridor obstacles at 0.5 mm clearance and zero module offset,
+although compact eviction always protected them. Compact L4 now includes those
+same corridors regardless of that legacy condition. Default behaviour is intact;
+no movement permission, corridor boundary or eviction constraint was relaxed.
+
+A synthetic regression at the exact policy boundary still permits useful legal
+pulling, rejects the old corridor-crossing behaviour, and preserves the default
+control. It fails with the old condition and passes with the correction. Four
+focused contract groups pass in 33.39 s, including live ownership and current
+metric reports. Current compact devkit construction now completes for both
+baseline and constraint-first ordering, with placement/flow passing and zero
+enforced composition failures. Both are 98x98 mm / 106 top / 57 bottom; the
+constraint-first sample took 1.524 s construction, baseline 1.392 s. These are
+single diagnostic timings, not audited builds or controlled speed comparisons.
+Constraint-first devkit still has four legalize-only events against ceiling zero
+(28 reseats against ceiling 35); baseline has 44 reseats and four compactions.
+
+Carrier constraint-first screening remains 168x160 mm with identical PCB
+4eac006ff246d778b83e61a01573920963cc26d83824340641fab45cc9a4f16c,
+passing scoped placement checks, and unchanged 247/10 retry/compaction events.
+No candidate is published or claimed fully accepted; full audits/renders and
+the remaining fallback failures still need work.
+
+## 2026-10-07 — validate current optimisation metrics without freezing old poses
+
+(Autonomous, per owner clarification.) Experiment stage-probe acceptance now
+recomputes reports from actual checkpoint geometry and the selected current
+plan, rather than requiring the historical optimiser's coordinates and metrics.
+A separate heap-based spanning-tree oracle checks lengths/cross-sheet costs;
+source-authoritative part, net, physical pin multiplicity and population checks
+prevent geometry or identity corruption from certifying itself. Frozen-stage
+movement and fixed-part invariants remain checked. Bounds reports are reconciled
+against observed executed attempts instead of old search counts.
+
+Historical formatter hashes, primitive measurement fixtures and all 39 immutable
+variant-cost vectors remain exact on their original operands. No fixtures or
+hardware validators were altered. Mutations reject incorrect reported metrics,
+tags, geometry, identity, missing/duplicate instances and simultaneous deletion
+of a physical pad and its net entry. The focused live test passes 155,839
+assertions; parent CTest independently passes in 14.79 s. This repairs the stale
+stage-probe oracle, not the separate historical placement/render contracts or
+overall board acceptance failures.
+
+## 2026-10-07 — reproducible constraint-first candidate without global solver state
+
+(Autonomous, per full-autonomy directive.) The saved constraint-first prototype
+is now a bounded, invocation-owned experiment, not a production default change.
+Enforced hard-term incidence sorts both endpoints (self once), then nominal
+area, retaining stable ties and all three original fallback orders. No hidden
+thread-local schedule or observer is introduced. The construction profiler's
+explicit --constraint-first on option requires --compact-search on and records
+the selection, actual fallback counts and separately timed placement diagnostics.
+
+Four focused contract groups pass (3.99 s): independent per-attempt receipts,
+rollback on failed/throwing trials, invocation isolation, noncompact behaviour,
+connector incumbent restoration under the new order, hard/soft/self/tie rules,
+and profile option/input contracts. No pruning or validator ceiling changes.
+
+Current carrier screening constructs 168x160 mm / 438 top / 131 bottom in
+70.207 s, including PCB text but excluding input preparation, audits/renders and
+postconstruction diagnostics. Placement/flow pass and hard composition red=0.
+Actual reseats 247 and legalize-only compactions 10 still exceed ceilings 18/2:
+the candidate is NOT accepted or published. This one instrumented run is not a
+controlled speedup or Python comparison. The devkit compact candidate and the
+current compact baseline both fail at the same ownership-preserving C5003
+corridor eviction, after 2,140 completed outer attempts; failure receipts are
+retained. Default generation is unchanged. The screening receipt records these
+failures rather than substituting a successful run from a different mode.
+
+## 2026-10-07 — restore accepted connector state without redundant packing
+
+(Autonomous, per full-autonomy directive.) Rejected connector mirror trials now
+restore the complete saved plan and side offers instead of packing the accepted
+orientation again. All actual trial accounting survives restoration; no executed
+fallback is removed or replayed. Accepted trials and exception transport retain
+their existing paths. Invocation-local packing scratch needs no restoration.
+
+Seven focused CTest groups pass (17.02 s), covering independent instrumentation,
+default/compact rejection, full persistent state, duplicate receipt prefixes,
+failed trials, exceptions and public failure receipts. The new contract fails
+against the original implementation because it observes the extra repack.
+
+A saved single same-input instrumented carrier construction compares 2,192 to
+2,186 normal attempts, unchanged 2,153 failed attempts, reseats 37 to 28 and
+legalize-only compactions 14 to 8. Construction was 15.20 versus 14.52 seconds;
+this is not a repeated benchmark or a Python comparison. Model/PCB, layout,
+decision ledger and independent placement requirements agree in that comparison.
+No historical coordinate equality is required by the new contract. The actual
+28/8 fallback counts still exceed the unchanged 18/2 ceilings; no full-board
+acceptance, fresh full audit/render, or completion of the long goal is claimed.
+
+## 2026-10-07 — exact breathing clearance and lean optimisation workflow
+
+(Autonomous, per full-autonomy directive.) Both placement modes now check exact
+interacting member boxes before accepting rounded breathing moves, including
+opposite-face through-hole occupancy. Dispersion rejection restores the complete
+pass, not one sheet whose former space may now contain another moved group.
+Actual trial receipts survive rejection. The live 0.500-to-0.477 mm test-point
+clearance regression is prevented; live owned-candidate construction passes.
+
+An independent frozen-input regression checks both boards, both modes and both
+face assignments: 1,228,830 assertions, including 1,217,424 pair comparisons.
+The old implementation fails 32 physical comparisons and two receipt checks;
+the correction passes. Frozen witnesses include a real 0.500-to-0.490 mm loss
+as well as conservative rejection of floating-point-scale reductions. These
+frozen witnesses are distinct from the live 0.477 mm case. Synthetic tests also
+exercise rounded internal gaps, opposite-face SMD independence and atomic
+rollback. No existing violation is treated as proof of an acceptable board.
+
+Final full carrier validation/render and devkit no-render validation pass all
+mandatory gates except the pre-existing actual-work fallback ceilings. Carrier
+PCB SHA256 is 6eee26aa28eefb9e736490417d9e0e876f7294a64a9ef0a8e34d237902e0dfa4;
+devkit remains c55c085789a3d262a6bb9233bd73cb2d4e7f5b0bba425c5ddebf4f9ced2314c2.
+No generated artifact set is accepted or published by this checkpoint.
+
+Owner clarification: historical placement bytes, coordinates, estimates and
+search paths are NOT optimisation acceptance criteria. Different valid layouts
+are expected; preserve electrical/hardware constraints and measure quality and
+performance. Seeded exploration may produce multiple candidates, with recorded
+configuration for reproduction. Legacy placement/probe expectations remain
+known test failures pending replacement by substantive requirement checks, not
+automatic fixture regeneration or weakened hardware validators.
+
+Owner-approved resource policy: one lead plus one bounded worker; checkpoint
+other lanes without deleting their work. Finish existing patches before new
+research. Use scoped implementation workers and reserve deeper research for
+specific difficult questions. C++ performs candidate exploration and cheap
+screening; full audits/renders qualify finalists. Every investigation needs a
+hypothesis, bounded experiment and stopping condition. This changes execution
+discipline, not the full long-term goal or its correctness requirements.
+
+## 2026-10-07 — qualify the auxiliary input reservoir and preserve historical input oracles
+
+(Autonomous, per full-autonomy directive.) Board_aux C1 now follows the SY6280
+Rev. 1.0E page 7 recommendation for a nominal 10uF ceramic input reservoir:
+0805 / CL21A106KAYNNNE / C15850, replacing 100nF / 0603 / C14663. This is a
+manufacturer recommendation, not an absolute-minimum or DC-bias qualification.
+The netlist, pin/NC identities, remaining capacitors and PCA9306 topology stay
+unchanged. PCA9306 startup/bias/isolation qualification remains open. The
+compiled ownership declaration, SPICE companion, derived circuit and independent
+component-basis obligation now agree with the new part.
+
+Tests independently freeze the original 18 references and every pin/net/NC,
+exercise capacitor and basis mutations, and compare historical input IR after
+checking and projecting only C1's three reviewed identity fields. The original
+migration fixtures are unchanged. RTC footprint comparison likewise permits
+only the three literal zero-length courtyard records removed in 529c196a;
+pads, surviving edges, models and all other bytes remain exact. The actual
+compact profiler is checked for the reviewed C1 identity and 36 board_aux plus
+24 bringup_rails owned alternatives, including redistribution mutations.
+
+The private pre-clearance snapshot passes all four repaired input/profiler
+contracts. On the current clearance-fix working tree, eight of nine focused
+hardware/input groups pass; the experiment-tools test reaches a separate
+historical placement metric mismatch (16031 versus 16030.8). That is retained
+as a failure pending explicit qualification of the placement correction, not
+silenced by this hardware/input checkpoint.
+
+Fresh carrier generation checks all 37 sheets and passes electrical, physical
+placement, DRC (zero non-unrouted errors), component basis and source policy.
+The C1 schematic and top/bottom board views were inspected. Overall acceptance
+is still FAIL: actual retry/compaction counts 37/14 exceed unchanged 18/2
+ceilings. The 12-sheet devkit similarly retains its exact c55c0857 PCB and fails
+the unchanged 35-retry ceiling with 74 actual retries. No new PCB/render set is
+published as an accepted incumbent; no smaller-board or overall-goal completion
+is claimed. Generated artifact refresh and the distinct breathing correction
+remain separate work.
+
+## 2026-10-03 — use actual connector rotation for compact base envelopes
+
+(Autonomous, per full-autonomy directive.) Compact base-zone fanout now adds
+the connector and extra rotations, matching emitted members and compound
+children. It previously replaced the connector rotation with the extra angle,
+including replacing 90 degrees with zero. The non-compact legacy branch remains
+unchanged; no reach, inset, face-mask exemption or clearance is relaxed.
+
+An independent corner-transform oracle exercises both faces, asymmetric mirrored
+footprints, SMT/through-hole bodies, both punch policies and non-orthogonal
+rotations. Eight physical witnesses show the old code admitting a 1.5 mm member
+gap against 2 mm while the correction rejects it; the 2.5 mm safe control stays
+legal. The implicit shape-zero construction path is also covered. All 3,316
+checks pass, and the corrected default/frozen regression consumers remain exact.
+Full source auditing passed in the pending-C1 rendered carrier run. This fixes
+a compact geometry defect, not the outstanding retry ceilings or whole-board
+acceptance of a smaller candidate. Hardware and current-render refreshes remain
+separate work.
+
+## 2026-10-03 — retain rejected-attempt work and the true conservative estimate
+
+(Autonomous, per full-autonomy directive.) Fallback receipts now retain every
+executed event across conservative/free-pass selection, rejected connector-shape
+trials and incumbent repacks. Only layout rolls back. An independent compiled
+function-entry/exit observer checks ordered identities, duplicate/upstream
+prefixes, both winning policies, fixed/automatic outlines and failure transport.
+The fixed-outline choice ledger also retains the actual conservative estimate
+instead of reporting the free winner's estimate twice. No geometry, selection
+predicate, retry limit, event name or runtime ceiling changes in this correction.
+
+Eleven targeted regression groups pass (72.69 s), including both permanent new
+contracts and nine strict historical consumers. Ten fixture payloads received
+an exact preimage-checked event-array-only update, including array lengths;
+independent reparse verifies every non-event byte is unchanged. SHA guards and
+mutation tests remain enforced. Historical hashes remain documented beside
+explicit current hashes. Private preimages are backed up at
+/private/tmp/fallback-parent-preimages-20261003 and recoverable from Git.
+
+This exposes existing ratchet debt rather than waiving it: frozen carrier now
+counts 37 retries/14 compactions against ceilings 18/2, frozen devkit counts 74
+retries against 35. These are expectations for accurate reporting, not raised
+ceilings or accepted board results. Fresh live counts and reduction experiments
+are separate work. C1 hardware/compact rotation work remains a separate pending
+change; no whole-goal completion or new accepted smaller outline is claimed.
+
+Private current-input construction profiles now confirm actual carrier default
+counts 37/14, compact 284/14, and devkit default 74/0 (retry/compaction).
+Default emitted PCB hashes are unchanged by the accounting correction. Compact
+devkit fails at C5003's corridor exit, preserving 44 retries/4 compactions in
+its failure prefix; it does not produce a completed PCB. Input/core/harness
+identities, timing scope and limits are recorded in
+native/benchmarks/2026-10-03-live-fallback-census.json. The earlier 283-call
+compact trace used the old capacitor and is not a same-input baseline.
+
+## 2026-10-03 — preserve minority-face fanout through compound occupancy
+
+(Autonomous, per full-autonomy directive.) Compact zone construction now measures
+the minority-face clearance envelope from actual rotated/mirrored member boxes
+in the child rectangle's frame. Compound children carry reach/inset through
+insertion, removal, hashed/exhaustive predicates, decomposition, edge copies,
+eviction windows and exact memo keys. Spatial reach bounds include both punch
+policies. Zero defaults preserve existing default/punch producers. Main envelopes
+and parent-face exemptions are retained, not relaxed to obtain a smaller board.
+
+After a complete ABI rebuild, 28 selected regression groups passed, including
+both-board exact default outputs and the frozen 170x165 mm SW7002 seed. The old
+seed still reproduces its original PCB when explicitly forced, but the corrected
+occupancy rejects it; zeroing the child's halos admits it again. Expanded
+fractional/nextafter, signed-inset and face-mask properties pass 47,959 checks in
+both the strict optimized and AddressSanitizer/UndefinedBehaviorSanitizer builds.
+These predicates share semantics; their agreement alone is not a universal
+physical-member proof. The targeted archived seed provides independent physical
+failure evidence, and broader mixed-face/rotation qualification continues.
+
+A fresh devkit no-render run passes all applicable mandatory gates and retains
+PCB SHA256 c55c085789a3d262a6bb9233bd73cb2d4e7f5b0bba425c5ddebf4f9ced2314c2.
+It reports zero non-unrouted DRC errors and 413 unrouted connections. Return-path
+and contract-coverage advisories remain; renders were skipped. Model time is
+0.713364 s, source audit 157.956189 s, whole process 192.19 s under concurrent
+load: validation timings, not a controlled speed comparison. The fresh compact
+carrier run is separate and not yet acceptance evidence at this commit.
+
+Follow-up full carrier validation at cd907481 now passes fanout (110 subjects,
+zero starved), final PCB geometry, ownership requirements and the complete source
+audit; non-unrouted DRC errors remain zero. The generated PCB changes to SHA256
+58e93145df3e04cd4cb3ebcc59ee5f531286ffb76eb55c7da6e8e83ea2eb190e.
+Its outline remains 170x165 mm and the mandatory fallback gate still rejects
+151 reported reseats against 18. Thus it does not replace the 168x163 incumbent.
+The reported receipts still precede the independently identified fallback-event
+rollback correction; no claim of complete executed-event counts is made.
+Both runs, hashes, timings and scope limits are recorded in
+native/benchmarks/2026-10-03-child-halo-board-validation.json.
+
+The permanent SW7002 regression now loads an immutable, SHA-pinned projection
+of the archived shapes, member boxes and complete footprint pad nodes. It calls
+the real geometry producers rather than supplying a preconstructed child halo.
+Its 94 checks cover the actual bad gap, both punch policies, safe control,
+rotations, zero-halo mutation and default receipts without relying on today's
+hardware. This permits intentional hardware changes without rewriting historical
+goldens. The full archived-board replay executable, source, plan and original PCB
+hash remain unchanged as an explicit historical-input diagnostic. Both permanent
+child-halo test groups pass after integration.
+
+## 2026-10-03 — ownership-safe compact corridor repair
+
+Compact final-frame corridor eviction now tries an independently legal move,
+then a rigid connected ownership-group translation when every member is movable.
+Trials use emitted coordinates and actual courtyard/pad extents; they preserve
+named owner/cap gaps, allocated blocks, hardware exclusions, same-face/THT
+clearance and fanout. Top-side through-hole parts participate in both obstruction
+scans. An unresolved obstruction rejects the invocation with atomic pose rollback;
+executed work and registered per-part movement/rejection events remain counted.
+No new fallback names or increased ceilings were introduced. Compact breathing
+also checks L4 exemptions by sheet, matching their actual Context representation.
+
+Seven integrated movement/placement/manufacturing contract groups passed, plus
+the board-policy contracts. Archived-plan replay still produces the exact
+experimental PCB hash: this movement change does not repair the SW7002 failure
+already present at seed emission. Full-board acceptance remains unproven.
+
+The prior documentation refresh's Search9 board hash guard is now pinned to its
+reviewed prose-only bytes; helper, edge and board hash-mutation tests and the
+full two-board output comparison pass. Historical capture hashes are retained
+alongside explicit current fixture provenance.
+
+## 2026-10-03 — compact query reuse and complete post-pipe validation
+
+(Autonomous, per full-autonomy directive.) Reuse exact duplicate occupancy
+queries only inside a single compact seat-search invocation. The occupancy,
+anchor and board are invariant there; the key preserves every varying geometry
+field, ordered children and scalar bits. All estimator alternatives and their
+shape-key operations remain. Malformed inputs bypass reuse, exceptions are not
+cached, and counter-overflow risk re-executes the real query. No saved-work counts
+are injected into the ledger. Public/default searches retain their old behavior.
+Seven integrated contract groups passed, including both-board exact output,
+frozen floorplan/occupancy precision and independent query-accounting oracles.
+The private pre-strict-facing carrier census removed 288,715,276 actual cell
+checks with byte-identical PCB output; a fresh latest-state profile is separate
+evidence, not implied by that older run. Raw cell-counter microbenchmark pairs
+and their slower null-sink cases are preserved in native/benchmarks.
+
+Complete no-render board runs at 821226b5 prove the transactional AST auditor
+passes both 68-file source audits. Devkit passes all mandatory gates. The compact
+carrier remains rejected: SW7002 has 1.320 mm fanout clearance against 2 mm, and
+154 interior reseats exceed the ceiling of 18. Its experimental 170x165 mm board
+does not replace the accepted 168x163 mm incumbent. Power-facing and non-unrouted
+DRC pass; advisory findings and skipped rendering remain explicitly reported.
+The receipt in native/benchmarks/2026-10-03-ast-pipe-board-validation.json records
+hashes and timings. Concurrent validation timings are not a controlled speed
+comparison; no historical Python result was relabeled or remeasured.
+
+Latest-state follow-up at 51ba61d8 reproduced the exact experimental PCB hash
+and 170x165 mm outline. Actual cell calls fell from 10,312,518,948 to
+9,502,591,256 (809,927,692 fewer; 7.85%), while every successful shape-key call
+remained (410,359). The recorded model times, 362.07 and 341.50 seconds, used
+different harnesses under concurrent load and are not a controlled speedup.
+See native/benchmarks/2026-10-03-compact-seat-memo-latest.json for full scope.
+
+The SW7002 failure was independently reproduced from the exact saved plan and
+final PCB hash. Its 1.32 mm gap to C10005 exists at initial emission and is
+unchanged through every subsequent movement stage. The bottom-primary mixed
+shape carries the top minority face as a child reservation with zero fanout
+reach/inset; the actual occupancy predicate therefore accepts this illegal
+pair. Correcting child geometry transport, rather than a hand-tuned component
+translation or disabling the owned alternative, is the next implementation.
+
+Documentation provenance is also corrected at its C++ producers: fresh output
+cites native sources and describes the outline as the smallest feasible result
+found by the bounded aspect/grid search and greedy order, not a global minimum.
+Only exact prose and embedded Markdown length fields changed in reference
+fixtures; geometry, operation receipts and historical timing provenance remain.
+
+## 2026-10-03 — overlap compiler output with transactional AST parsing
+
+The source auditor now parses through a bounded stdout pipe while Clang emits
+its AST. The existing generic post-exit stdout consumer is unchanged. Parsed
+state stays private until complete output validation and successful child exit;
+parser errors cannot mask later invalid UTF-8, compiler failure or timeout.
+Early parser return/failure still drains output and joins the child reaper.
+The compiler worker count remains two. One per-scan projection slot limits
+simultaneously retained ASTs through semantic visitation; waiting compilers use
+pipe backpressure. No AST fields, semantic checks, macro preprocessing, manifest
+coverage, registry checks or ledger checks were removed or cached.
+
+Parent integration repeated three alternating-order pairs on four actual source
+files. All six full ordered censuses are byte-identical (4 files, 218 function
+identities, 32 quantization sites). Median elapsed time was 20.845902 s before
+and 13.539726 s after, a 35.05% reduction; the largest paired sampled aggregate
+RSS increase was 171.86 MiB. Raw rows, census hash, baseline hash, reproduction
+target and limitations are recorded in
+`native/benchmarks/2026-10-03-ast-pipe-subset.json`. The independent pre-pipe C++
+auditor is vendored and hash-checked at configure time, with no build-time Git
+or network dependency. These are subset measurements under a concurrent host,
+not full-audit/board or historical-Python speed claims.
+
+Transport proofs cover error precedence, malformed/partial output, child/parser
+overlap, draining, timeout, reaping, closed stdio and concurrent descriptor
+inheritance. Linux uses atomic close-on-exec pipe creation to close a potential
+older-glibc inheritance race; its runtime branch remains unverified on this Mac.
+The isolated transport suite also passed ASan/UBSan. Whole-board validation and
+timings remain separate from these focused source/transport contracts.
+
+## 2026-10-03 — owned-quality selection, inter-stage protection and strict facing
+
+Compact packing now transports actual zone-quality evidence and considers the
+complete set of equally ranked feasible shapes. It removes strictly dominated
+per-capacitor gap vectors, then selects the lowest surviving stable shape index.
+Primary dimensions, estimator, anchor distance and face must match exactly;
+ownership identities, pin/net roles, sides, bulk gap and fanout evidence must
+remain compatible. Missing/rejected evidence is not a zero score. Dominance is
+not used as a sort comparator or a running-incumbent fold, both of which can
+give inconsistent three-way results. Sheets without quality evidence skip the
+additional ranking work. No hardware distance limit or movement permission is
+inferred from these optimization measurements.
+
+Actual-engine regressions cover dominated originals, invalid/missing evidence,
+default parity and the three-way frontier. The two-pilot complete pack proof
+elects a bringup_rails owned alternative (34 -> 60) with unchanged dimensions;
+board_aux retains shape 11. This is not a smaller accepted carrier. Compact L4
+pull and reorder now exclude declared ownership endpoints from independent
+movement or interchangeable-capacitor swaps; unrelated parts in the same sheet
+remain eligible. Corridor eviction still needs a separate ownership correction.
+
+An archived failing carrier proved the selected power shape's metrics exactly
+match the actual seed, breathed and guarded-refit poses. Its negative facing
+dot was nevertheless accepted by the composer's L4-deferral rule. Compact
+compiled hard-facing terms now explicitly require the normal facing check,
+including legalize(false) fallback. Other guard semantics and default behavior
+remain unchanged. The reproduced term rejects with unchanged geometry; this
+does not assert that the full search has found a legal replacement.
+
+Occupancy cell-index accounting now borrows a lazy counter slot for one four-call
+query/update scope. Every actual scalar entry still performs its checked increment
+before validation. No query, count, geometry or candidate is fabricated or cached.
+Independent entry, overflow-prefix, map-lifetime and threaded tests pass, as do
+the 3,381 frozen occupancy contracts and geometry digest. Six interleaved counted
+query microbenchmark pairs measured 0.250–0.261 s before and 0.109–0.111 s after,
+with identical geometry and 10,006,324 entries each; the null-sink control was
+1–5% slower. These concurrent-host microbenchmarks are not board-build speedups.
+
+The stage profiler previously loaded default-only inputs before toggling compact
+search, which would omit the new owned alternatives. It now resolves compact
+inputs for on/both mode, labels that preparation, and has a loader regression
+requiring both ownership groups and all 56 alternatives. Earlier profiles from
+before owned-group integration must not be used as measurements of that workload.
+
+The current default carrier PCB independently matches the previously validated
+8509 build byte-for-byte (SHA-256 8437ddd4fbcf012c800bed70a1b6968c0d09444b00c9e816390dfc5946360633).
+The live-reference mismatch was traced completely to the earlier `529c196a`
+RV-3028 footprint fix: restoring only that old footprint reproduces every byte
+of the old board. The reference now removes its three zero-length courtyard
+segments and updates seven consequent graphic UUIDs. No placement, electrical,
+outline or valid graphical geometry changed; devkit and all sixteen strict
+report references already matched. The unchanged two-board live test passed
+against this isolated artifact correction. No new
+whole-board compact acceptance, audited timing comparison or rendered finalist
+is claimed by this implementation batch.
+
+Integrated validation: a full ABI rebuild completed; all 22 selected ownership,
+quality, profile-input, strict-facing, compose, occupancy, precision-source and
+frozen-placement CTests passed (168.60 s concurrent wall time, not a benchmark).
+The unchanged two-board live-reference test then passed in the shared checkout
+(32.03 s). The archived actual-carrier strict-facing replay also passed. The
+complete compact search remains a separate construction/acceptance exercise.
+
+## 2026-10-03 — standalone compact input catalog isolation
+
+The first integrated standalone compact `pcb-stage` invocation exposed a hidden
+global-catalog precondition in the ownership adapter: circuit JSON loading does
+not open the authoring catalog. Unit tests had inadvertently satisfied that
+precondition. The adapter now reads independently scoped, owned catalog snapshots
+from the project paths; it neither depends on nor replaces the caller's global
+authoring session. The existing mapped-file reader and decoder are shared, not
+duplicated. Closed-session loader regression and catalog lifecycle tests pass,
+including missing/malformed files, failed partial batches, preserved existing
+mapped readers and fresh reads after atomic replacement. No board geometry or
+hardware requirement was changed by this correction.
+
+The earlier default devkit validation at `a14031a1` is recorded separately in
+`native/benchmarks/2026-10-03-owned-adapter-devkit-validation.json`: 12 sheets,
+successful no-render board aggregation, zero non-unrouted DRC errors and a passing
+68-file source audit. Advisory failures and skipped outputs remain explicit;
+this is not compact-carrier acceptance or a controlled performance comparison.
+
+## 2026-10-03 — production owned-group alternatives and bounded copy removal
+
+Wired the validated pilot ownership into compact board inputs and zone generation
+(autonomous, per full-autonomy directive). Missing manifests or disagreement
+with independent compiled requirements, live circuits, catalog pins or extracted
+hierarchy connectivity reject the input. Opaque immutable evidence grants no
+new side or movement permission. Every original shape/index is retained; local
+owned alternatives are appended without recursively searching their outputs.
+
+Integrated adapter tests pass 2,702 checks: 76 original pilot shapes retained,
+56 alternatives appended, all 132 shapes measured, and exactly 160,480 additional
+registered pose operations counted, including rejected searches. Shape metadata
+distinguishes measured/rejected/not-applicable evidence and retains named-terminal
+roles and sides. Same-size quality selection remains a separate integration.
+
+A new real-input/synthetic-pose regression first proved that breathing attached
+a declared bypass capacitor to a nearer wrong owner. Compact breathing now
+preserves declared membership across faces and propagates existing fixed-member
+constraints through the group. Twelve movement/fixed-face cases pass, together
+with default pose/count parity and partial/null evidence rejection. Other stages
+must still be reviewed for independent capacitor movement or slot exchange;
+this change alone does not guarantee final near-pin placement.
+
+Removed redundant occupancy-grid copies from compact shape seating. The public
+resizing adapters retain their copies; the internal synchronous read-only path
+borrows the grid already constructed with the current board dimensions. A shared
+internal declaration prevents signature drift. Isolated paired profiling on
+base `4df6db6e` removed 11,619 copies / 1,423,407 rectangle-record copies while
+retaining identical PCB bytes, receipts, candidate outcomes and fallback sequence.
+This is operation-count evidence, not a latency claim under concurrent workload.
+The 2.961 billion cell-index operations and 139-versus-18 reseat failure remain;
+the newer owned-alternative workload has not yet been profiled end to end.
+
+Nine integrated CTests passed after rebuilding affected consumers: owned adapter,
+adapter compiler census, owned breathing, through-hole/rounding breathing,
+borrowed-grid differential contracts, retry receipts, frozen default placement,
+policy closure and placement precision census. No full compact build acceptance,
+rendered-board improvement, new hardware limit or routing completion is claimed.
+
+## 2026-10-03 — compact placement clearance and owned-group foundations
+
+Follow-up: the committed foundation at `8509df14` passed a complete default
+carrier build with `--no-render`: 37 sheets, all mandatory gates PASS, zero
+non-unrouted DRC errors, zero starved fanout subjects, fallback ratchet PASS,
+and the expanded 67-file source audit PASS. Its separate validation receipt is
+`native/benchmarks/2026-10-03-placement-foundation-validation.json`. Existing
+advisory return-path/golden/coverage findings remain, and images were skipped.
+Measured scopes under concurrent work are not a controlled speed comparison.
+
+Traced the compact USB JTAG regression to `refit_facing`, not breathing: rotating
+power moves D20001 near U28002, changing its gap from 2.9263347 to 1.8700 mm
+against a 2.0 mm requirement. Compact refits now compare each subject using the
+unchanged final fanout checker on actual emitted/rounded coordinates. A repaired
+subject cannot compensate for newly starving another. Failed trials preserve
+all incumbent poses and actual work counts. Four integrated CTests pass (fanout
+policy/projection, existing facing tests, frozen placement and compiler precision
+census), and the archived candidate replay passes on the combined breathe fixes.
+Rejecting this turn leaves the candidate's power-facing requirement unresolved;
+the candidate is still rejected until a compatible seat/shape is found.
+
+Continued the existing optimisation goal (autonomous, per full-autonomy
+directive). The accepted default remains unchanged; these compact-mode fixes
+are not a new whole-board acceptance or a board-area improvement.
+
+Through-hole reservations now occupy the opposite face symmetrically, including
+bottom-mounted parts. Moving groups remove and restore both reservations with
+counted ownership. Dispersion rejection restores the entire compact breathing
+pass: restoring only one sheet could place it into space another sheet had
+legitimately entered. Real Placer tests cover both directions, fixed/moving THT,
+vacated/new shadows, mixed-side groups, rejection and atomic rollback.
+
+An additional reproduced defect showed a legal 0.500001 mm internal gap becoming
+0.499960 mm after final per-member rounding. Compact commits now stage the actual
+rounded poses and recheck occupancy, fanout protection, leash and internal
+same-face/THT separation before accepting any member. Rejected commits retain
+all actual-work counts. Opposite-face SMD pairs do not gain a false coupling.
+Frozen default placement still matches its independent reference exactly.
+
+Integrated a bounded, explicitly owned capacitor-group constructor and its unit
+and live-footprint contracts. It preserves owners, fixed members, output bulk,
+existing sides/rotations and nets; only explicitly permitted bypass capacitors
+move. Final geometry, not translated cached boxes, determines acceptance and
+reported pad gaps. Six live pilot declarations yield three local alternatives;
+mechanical and fanout nonregression checks pass in the original board context.
+The local extents do not shrink. This constructor is not yet selected by the
+production zone search, and qualitative proximity/access remain UNVERIFIED.
+
+Added the constructor to both independently declared source-audit manifests;
+the policy contract first exposed the missing second entry and then passed.
+Compiler census confirms no unregistered precision or policy storage in the
+new constructor. Six focused CTests passed (clearance, occupancy, constructor,
+live pilots, frozen placement and precision census); policy and strengthened
+rounding regressions are separately checked. Full board gates/renders must be
+rerun on the integrated search changes before replacing the incumbent.
+
+## 2026-10-01 — calculation and model-identity corrections
+
+Found and reproduced inherited SPICE validation false passes (autonomous, per
+full-autonomy directive): non-finite numbers could satisfy comparisons; a zero
+analytic prediction accepted a 99 V simulator result; nonzero process exits or
+missing measurements could leave apparently successful analytic checks. The new
+regression failed against the prior implementation before correction.
+
+The gate now rejects non-finite values/limits and reversed intervals, enforces
+agreement at zero, requires successful simulator execution and exactly one valid
+node-voltage row, and retains simulator precision rather than rounding it before
+validation. Missing, ambiguous, malformed, overflowed and substring-only readings
+are rejected. Frozen fixtures remain unchanged: the one historical zero-vs-99 V
+false pass is explicitly rejected, and live simulator comparisons distinguish
+old four-decimal presentation from the full-precision validation result.
+Fifty frozen cases, nine tolerance vectors and seven live ngspice cases pass.
+Live carrier/devkit SPICE gates pass 17/11 checks with 7/5 simulated dividers.
+This is focused calculation validation, not a new complete board/render acceptance.
+
+Also corrected board_aux.cir's stale C3/C4/C5 identities to match the live C++
+factory: C3 is 10u AUX bulk, C4 is 100n VREF1 bypass and C5 is 100n VREF2 bypass.
+The eleven-resistor/capacitor identity test first rejected the old model at C3,
+then passed the correction and ownership mutations. Its independent aggregate
+comparison confirms the passive network is electrically unchanged by relabeling.
+The board's analytic gate uses live C++ circuits, not this passive reference deck;
+the identity test does not claim full active-device simulation coverage.
+
+## 2026-10-01 — two-sided placement sprint started
+
+Owner requested execution on `codex/two-sided-layout`, explicitly including
+placement/orientation algorithms and excluding routing. Autonomous decision:
+introduce `--compact-placement` as a controlled board/pcb-stage experiment,
+retaining the verified default solver as the comparison. New search work must
+pass independent emitted-board gates before any smaller result is accepted.
+The first candidate-retention/face-area-bound experiment constructed all 569
+carrier footprints in 18.68 s at the unchanged 168 x 163 mm outline; this is
+construction evidence only, not a size improvement or complete board verdict.
+Orientation, hardware requirements and independent verification are separate
+workstreams. No electrical requirements or mechanical gates are relaxed.
+
+Integrated opt-in rigid group turns and independently observed retry contracts
+(autonomous, per full-autonomy directive). Existing shape indices and default
+geometry remain intact. The carrier gains 22 legal orientation alternatives;
+connector-locked/external-direction groups remain excluded. Four integrated
+CTest contracts pass: orientation/chirality, bounded retry/rollback accounting,
+frozen placement precision, and frozen floorplan. Removing the unused per-face
+shortlist from all-shape mode avoids redundant member-vector copies; focused
+retention/rejection contracts pass. The combined construction experiment still
+produces 569 footprints on 168 x 163 mm. These are not whole-board acceptance or
+performance-improvement claims; full independent gates and rendered review are
+still required before publishing a replacement layout.
+
+Integration correction: the early `pcb-stage --compact-placement` runs above
+accepted but did not forward the flag. Their 168 x 163 mm outputs and timings
+are default-construction observations, NOT compact-algorithm experiments.
+Forwarding is now corrected. The actual compact full pipeline constructs
+169 x 162 mm but FAILS acceptance: power_som facing, fanout, and reseat fallback
+ratchet regress. Sandboxed KiCad DRC crashed; an unsandboxed rerun completed and
+identified seven malformed-courtyard errors on U3002. This candidate is rejected;
+the 168 x 163 mm accepted baseline remains the incumbent. Source/ledger checks
+completed; this run deliberately omitted final image rendering.
+Independent exception injection also exposed partially retained layout/offers
+after a throw. Compact attempts now restore entry state while preserving exact
+failed-prefix accounting and the original exception, without retrying it.
+
+The corrected standalone CLI now emits the same PCB SHA-256 as the full compact
+pipeline (`8cfe52cd653ad3faf6f4646d09d341e17f5e1d3ebd05c221f084374bd416544f`).
+Subsequent eligibility corrections distinguish the exact stock probe pad from
+mating connectors and deduplicate absent/zero effective rotations without
+rewriting incumbents. Orientation and frozen-regression tests pass. The broader
+105-orientation candidate constructs 168 x 163 mm in 108.00 s (construction-only,
+concurrent engineering workload, not a controlled performance comparison); its
+PCB differs from baseline and has not passed full acceptance. More alternatives
+alone have not improved area or speed, so profiling and constraint-aware search
+remain required.
+
+Added explicit supply-pin/capacitor ownership and top-switch requirements for
+board_aux/bringup_rails, with an integrated mandatory pipeline hook and
+missing-gate closure. Focused checker, real-hook synthetic integration and
+aggregation closure tests pass. Qualitative proximity and access envelopes
+remain UNVERIFIED in a separate report, never new movement permissions.
+Whole-board no-render validation of this hook passed for carrier (37 sheets)
+and devkit (12 sheets). Measured pipeline scopes were 272.38 s and 271.38 s,
+including source audit 203.52 s and 235.01 s respectively; these are not process
+wall timings or controlled benchmark comparisons. Existing advisory return-path,
+golden and coverage findings remain. Hard ownership checks are not a proximity
+approval: bringup U1.24 to C1.1 measures 39.76 mm on opposite faces; the five
+board_aux owned pad gaps range from 4.13 to 15.74 mm.
+
+Integrated narrowly tested corrections (autonomous, per full-autonomy directive):
+reject ambiguous physical catalog pin numbers; omit exactly zero-length imported
+courtyard edges; resolve the compact refit's virtual @som target and preserve
+the asymmetric courtyard reservation during its turn. Independent KiCad tests
+of the courtyard correction cover eight face/quarter-turn combinations. A matched
+copy of the rejected candidate changes from seven malformed-courtyard errors to
+zero, with all other violations and 499 unconnected items identical. This does
+not resolve its other placement failures or make it an accepted candidate.
+
+Added a reproducible construction-only profiler. Two prepared-input runs measured
+baseline model construction at 15.90/15.63 s and compact at 111.41/110.75 s, both
+168 x 163 mm. Occupancy cell-index calls rose from approximately 470 million to
+2.961 billion; search optimisation is necessary, not an optional polish.
+Added counted occupancy in the compact spacing pass: removing a group's raster
+halo must retain overlapping keepouts and other component reservations. The
+legacy assignment API/default placement remains available for baseline comparison.
+Focused overlap/multiplicity/atomic-removal tests accompany this change; combined
+validation and complete compact acceptance are still pending. An early whole
+CTest run was deliberately interrupted for integration after six successful tests;
+it is not recorded as a complete suite pass.
+
+Committed/pushed hard requirement integration as `558f99c6` and the courtyard
+repair as `529c196a`. Parent correction tests passed 6/6, requirement pipeline
+and closure tests 2/2, importer tests 2/2, and changed packing/placement source
+contracts 2/2. Counted-grid copy isolation and observed quantizer accounting also
+pass. Fresh combined compact reports now show zero non-unrouted DRC errors and
+placement-flow PASS at 168 x 163 mm. The candidate remains rejected: U28002 has
+1.870 mm foreign-part gap against a 2 mm requirement, and interior_reseat_retry
+fires 139 times against the existing ceiling of 18. The complete no-render run
+finished with BOARD FAIL for these fanout/aggregate-geometry/fallback gates;
+source/ledger and quantization census pass. Its measured scope was 364.78 s,
+including 202.66 s source audit (not process wall or a controlled benchmark).
+The four search/retry/orientation/frozen-floorplan contracts also pass after
+integration. Experimental opt-in code is retained as an explicitly unaccepted
+search workbench, not a promoted default or an area/performance improvement.
+
+Retired three staged-only migration worker leftovers after matching their
+documented provenance: verification-audit Python sample JSONs and the private
+component-basis shell runner. They were not part of the merged migration.
+Exact backups remain in `/private/tmp/schgen-sprint-retired.YTkF4n`; the two JSON
+hashes match `verification_audits_INTEGRATION.md`. Native component-basis,
+copper-debt, policy-audit and Python-free-tree tests pass after removal (4/4).
+
 ## 2026-10-01 — clean C++ migration acceptance
 
 Completed isolated fresh Release compilation and sequential full-render board

@@ -54,8 +54,10 @@ BoardCoverageLintResult check_board_contract_coverage(const std::vector<CircuitS
         for(const auto& part:sheet.parts){if(!parts.emplace(part.ref,&part).second)throw ProjectError("duplicate coverage part: "+part.ref);names.insert(part.ref);}
         for(const auto& entry:array(opt(contract,"free"))){const auto* ref=entry.kind==JsonKind::Object?object_field(entry,"ref"):nullptr;
             if(!ref||ref->kind!=JsonKind::String){notes.push_back("free entry "+representation(entry)+" is not {'ref','why'}");continue;}
-            const auto& v=opt(entry,"why");const auto why=verification::strip(!truth(v)?"":v.kind==JsonKind::String?v.string_value:representation(v));
-            if(why.empty())notes.push_back("free "+ref->string_value+": missing 'why'");free[ref->string_value]=why;free_names.insert(ref->string_value);}
+            const auto& v=opt(entry,"why");const auto why=v.kind==JsonKind::String?verification::strip(v.string_value):std::string{};
+            if(why.empty()){notes.push_back("free "+ref->string_value+": missing or invalid 'why'");continue;}
+            if(!free.emplace(ref->string_value,why).second)notes.push_back("free "+ref->string_value+": duplicate entry");
+            free_names.insert(ref->string_value);}
         for(const auto& ref:sorted_refs(free_names)){if(!names.count(ref))notes.push_back("free "+repr(ref)+" names no part on this sheet");
             else if(structured.count(ref))notes.push_back("free "+repr(ref)+" is already STRUCTURED (redundant)");else used.insert(ref);}
         std::map<std::string,std::set<std::string>> nets;for(const auto& net:sheet.nets)for(const auto& pin:net.pins)nets[pin.ref].insert(net.name);
@@ -66,11 +68,13 @@ BoardCoverageLintResult check_board_contract_coverage(const std::vector<CircuitS
             const auto mapping=ref_maps.find(sheet.name);std::string board="?";if(mapping!=ref_maps.end()){const auto it=mapping->second.find(ref);if(it!=mapping->second.end())board=it->second;}
             const auto& value=parts.at(ref)->value;detail.push_back("    UNGATED "+pad(ref,6)+" -> "+pad(board,8)+" "+pad(value.empty()?"?":value,22)+" nets: "+net_text);}
         for(const auto& ref:sorted_refs(used))detail.push_back("    FREE    "+pad(ref,6)+" — "+free.at(ref));
-        std::sort(notes.begin(),notes.end());for(const auto& note:notes)detail.push_back("    NOTE    "+note);
+        out.invalid_entries+=notes.size();
+        std::sort(notes.begin(),notes.end());for(const auto& note:notes)detail.push_back("    INVALID "+note);
         detail.insert(detail.begin(),pad(sheet.name,20)+" parts="+pad(std::to_string(parts.size()),3,true)+"  structured="+pad(std::to_string(nstructured),3,true)+"  free="+pad(std::to_string(used.size()),2,true)+"  UNGATED="+pad(std::to_string(nungated),3,true)+(contract.kind==JsonKind::Null?"  (no contract)":""));
         lines.emplace(sheet.name,std::move(detail));++out.sheets;out.parts+=parts.size();out.structured+=nstructured;out.free+=used.size();out.ungated+=nungated;
     }
     out.report="CONTRACT COVERAGE LINT — every wired-sheet part in >=1 contract structure or explicitly free\nCONTRACT COVERAGE LINT ("+std::string(enforce?"HARD":"advisory")+"): "+std::to_string(out.sheets)+" sheets, "+std::to_string(out.parts)+" parts — "+std::to_string(out.structured)+" structured / "+std::to_string(out.free)+" free / "+std::to_string(out.ungated)+" UNGATED\n";
+    if(out.invalid_entries)out.report+="Invalid coverage entries: "+std::to_string(out.invalid_entries)+"\n";
     for(const auto& [name,ls]:lines){(void)name;out.report+='\n'+join(ls,"\n");}return out;
 }
 }

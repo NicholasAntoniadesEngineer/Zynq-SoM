@@ -23,6 +23,42 @@ bool tagged(const SexprList& node, const std::string& tag) {
 
 Engine::Engine(const FloorplanInput& input) : in(input) {
     if (in.experiment) validate_floorplan_experiment(*in.experiment);
+    if(in.experiment)for(const auto& sheet:in.experiment->require_bottom_sheets) {
+        const auto found=in.geometry.shapes.find(sheet);
+        if(!in.compact_search||sheet.empty()||found==in.geometry.shapes.end()||
+           std::none_of(found->second.begin(),found->second.end(),[](const auto& shape){return shape.side=="bottom";}))
+            throw FloorplanError("required bottom sheet has no offered bottom shape: "+sheet);
+    }
+    if(in.experiment&&in.experiment->reseat_pose_limits&&!in.compact_search)
+        throw FloorplanError("pose retry requires compact search");
+    if(in.experiment&&in.experiment->shape_choice_replays&&!in.compact_search)
+        throw FloorplanError("shape-choice replay requires compact search");
+    if(in.experiment&&in.experiment->owned_shape_catalogued)
+        for(const auto& [sheet,shapes]:in.geometry.shapes)for(std::size_t i=0;i<shapes.size();++i){
+            if(!shapes[i].tag.empty())
+                in.experiment->owned_shape_catalogued(sheet,static_cast<int>(i),shapes[i].tag);
+        }
+    if(in.experiment&&!in.experiment->owned_shape_tags.empty()) {
+        if(!in.compact_search)throw FloorplanError("owned shape selection requires compact search");
+        for(const auto& [sheet,tag]:in.experiment->owned_shape_tags) {
+            const auto found=in.geometry.shapes.find(sheet);
+            int selected=-1;
+            if(sheet.empty()||tag.empty()||found==in.geometry.shapes.end())
+                throw FloorplanError("owned shape selection: unknown sheet or empty tag");
+            for(std::size_t i=0;i<found->second.size();++i)if(found->second[i].tag==tag){
+                if(selected!=-1)throw FloorplanError("owned shape selection: ambiguous tag for "+sheet);
+                selected=static_cast<int>(i);
+            }
+            const auto q=in.owned_shape_quality.find({sheet,selected});
+            if(selected<0||q==in.owned_shape_quality.end()||!owned_shape_quality_comparable(q->second,q->second))
+                throw FloorplanError("owned shape selection: unknown or unmeasured tag for "+sheet);
+            owned_shape_choices.emplace(sheet,selected);
+        }
+    }
+    if(in.experiment&&in.experiment->multiscale_outline&&in.spec&&in.spec->outline)
+        throw FloorplanError("multiscale outline search conflicts with a fixed outline");
+    if(in.experiment&&in.experiment->initial_outline&&in.spec&&in.spec->outline)
+        throw FloorplanError("experiment: initial outline requires automatic sizing, not a fixed outline");
     plan.som = in.som;
     plan.som_source = in.som_source;
     plan.accounting = in.accounting;
@@ -153,12 +189,12 @@ std::vector<Box4> Engine::pad_boxes(const std::string& key, double rot, bool thr
     return boxes;
 }
 
-std::pair<Halo, Halo> Engine::fanout(const FloorplanZoneShape& shape, bool base) {
+std::pair<Halo, Halo> Engine::fanout(const FloorplanZoneShape& shape) {
     auto rotations = in.geometry.conn_rot;
-    // Legacy base-zone path overwrites extra rotations; variants add them.
-    // This asymmetry is intentional for byte-exact migration.
+    // Every shape must match emitted members and occupancy children. A base
+    // shape is not permission to replace the connector rotation with extra.
     for (const auto& [ref, extra] : shape.extra_rot)
-        rotations[ref] = base ? extra : rotation(rotations[ref] + extra);
+        rotations[ref] = rotation(rotations[ref] + extra);
     std::vector<std::tuple<double,double,double,double,double,double,double,int>> rows;
     for (const auto* offsets : {&shape.top_off, &shape.bot_off}) {
         for (const auto& [ref, offset_xy] : *offsets) {
@@ -203,7 +239,28 @@ std::vector<Comp> Engine::zone_components(const FloorplanZoneShape& shape, bool 
             }
         }
     }
-    return zone_components_assemble(minor, punches, shape.side == "bottom" ? occ_top : occ_bottom, occ_punch, counts);
+    auto children=zone_components_assemble(minor, punches, shape.side == "bottom" ? occ_top : occ_bottom, occ_punch, counts);
+    if (!minor.empty()) {
+        // The first assembled child is the minority-face courtyard union.
+        // Its halo must be measured in that rectangle's frame, not attached
+        // solely to the opposite-face primary body. Rotations/mirroring are
+        // already resolved by courtyard(); no pre-rotation halo is copied.
+        auto& child=children.front();
+        std::vector<std::tuple<double,double,double,double,double,double,double,int>> rows;
+        for (const auto& [r,xy]:shape.bot_off) {
+            auto key=get(shape.mirror,r);
+            if (key.empty()) key=get(in.geometry.resolvable,r);
+            if (key.empty() || is_testpoint_ref(r) ||
+                std::filesystem::path(in.footprints.at(key).source).stem().string().find("Fiducial")!=std::string::npos) continue;
+            if (const auto box=courtyard(r,xy))
+                rows.emplace_back(box->x0-child.dx,box->y0-child.dy,0,0,
+                    box->x1-box->x0,box->y1-box->y0,0,footprint(key).pins);
+        }
+        const auto members=zone_fanout_members_rows_accounted(rows,min_subject_pins,
+            {{2,.20},{8,1.50}},2.0,counts);
+        std::tie(child.reach,child.inset)=zone_fanout_reach(child.w,child.h,members,min_subject_pins,counts);
+    }
+    return children;
 }
 
 void Engine::prepare_geometry() {
@@ -222,7 +279,7 @@ void Engine::prepare_geometry() {
         base.w = zbox.at(b->name).first; base.h = zbox.at(b->name).second;
         base.top_off = get(zg.top_off, b->name); base.bot_off = get(zg.bot_off, b->name);
         base.extra_rot = zg.zone_extra_rot;
-        if (zg.zone_box.count(b->name)) std::tie(b->fanout_reach,b->fanout_inset) = fanout(base, true);
+        if (zg.zone_box.count(b->name)) std::tie(b->fanout_reach,b->fanout_inset) = fanout(base);
         for (int policy : {1,0}) {
             auto& co = components[policy];
             if (zg.zone_box.count(b->name)) co[{b->name,0}] = zone_components(base, policy != 0, &plan.accounting.quantization_engagements);
@@ -235,7 +292,7 @@ void Engine::prepare_geometry() {
             sets.push_back({base.w,base.h,b->fanout_reach,b->fanout_inset,"top",get(co,{b->name,0})});
             for (std::size_t k=1; k<variants->second.size(); ++k) {
                 const auto& s = variants->second[k];
-                const auto ri = fanout(s, false);
+                const auto ri = fanout(s);
                 sets.push_back({s.w,s.h,ri.first,ri.second,s.side,get(co,{b->name,static_cast<int>(k)})});
             }
         }
@@ -244,6 +301,12 @@ void Engine::prepare_geometry() {
     for (const auto* b : blocks()) bound(b->fanout_reach,b->fanout_inset);
     for (const auto& [name, variants] : shape_sets[1]) {
         (void)name; for (const auto& s : variants) bound(s.reach,s.inset);
+    }
+    // Cover both courtyard-punch and pad-punch policies, including shapes not
+    // present in the interior variant table, regardless of search strategy.
+    for (const auto& policy:components) for (const auto& [key,children]:policy) {
+        (void)key;
+        for (const auto& child:children) bound(child.reach,child.inset);
     }
     const auto dec = sheets.find("som_decoupling");
     if (dec != sheets.end()) {
@@ -270,8 +333,11 @@ std::vector<Box4> Engine::som_keepouts() const {
     return som_keepout_rects(plan.som_x,plan.som_y,plan.som.w,plan.som.h,som_pad,jacks,som_seat_band);
 }
 void Engine::fallback(const std::string& name) {
-    static const std::set<std::string> allowed{"legalize_only_compaction","punch_free_plan_rejected","interior_reseat_retry"};
-    if (!allowed.count(name)) throw std::logic_error("floorplan: unregistered fallback " + repr(name));
+    static const std::set<std::string> joint{"legalize_neighbour_retry","legalize_joint_retry","legalize_joint_state","legalize_joint_axis","legalize_joint_axis_reuse","legalize_joint_proposal","legalize_joint_reject","legalize_joint_budget","legalize_joint_domain_probe","legalize_joint_domain_reject"};
+    static const std::set<std::string> allowed{"interior_reseat_pose_hint","interior_reseat_pose_resume","interior_reseat_pose_skip","interior_reseat_pose_search","interior_reseat_pose_trial","interior_reseat_pose_budget","interior_reseat_pose_cap","interior_failed_first_retry","legalize_only_compaction","punch_free_plan_rejected","interior_reseat_retry","edge_run_translation","screened_incumbent_retained","legalize_reservation_retry","legalize_facing_retry"};
+    static const std::set<std::string> shapes{"interior_shape_choice_hint","interior_shape_choice_replay","interior_shape_choice_budget","interior_reseat_shape_retry","interior_reseat_shape_trial","interior_reseat_incoming_shape_trial",
+        "interior_reseat_pair_trial","interior_reseat_pair_rejected","interior_reseat_pair_recovered"};
+    if (!allowed.count(name)&&!joint.count(name)&&!shapes.count(name)) throw std::logic_error("floorplan: unregistered fallback " + repr(name));
     plan.accounting.fallback_events.push_back(name);
 }
 double Engine::quantize(const std::string& name, double value) {

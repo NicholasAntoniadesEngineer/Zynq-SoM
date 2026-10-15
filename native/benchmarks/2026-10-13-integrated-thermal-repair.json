@@ -1,0 +1,37 @@
+{
+  "parent_commit": "d6acdb3e",
+  "change": "Compact placement runs independent thermal pad recovery after corridor eviction. Proposals use physical pad identities, output-grid trial poses and per-subject thermal preservation. Fixed, contracted and independently locked owned members remain protected.",
+  "termination": "Finite proposals per state; every accepted move strictly increases the finite total preferred-site capacity without reducing any subject. No radius ceiling or hardware-rule relaxation.",
+  "accounting": "thermal_repair_trial, thermal_repair_rejected and thermal_repair_moved explicitly registered as search effort. Actual projection/planning work retained. Fixture imports receipts and verifies every completed trial has one terminal outcome.",
+  "tests": {
+    "native_pcb_compact_owned_evict_contracts": "PASS, 8.40 seconds, including actual recovery of three preferred sites, fixed blocker negative control, stationary thermal subject, completed-field no-op and receipt reconciliation",
+    "native_pcb_emit_contracts": "PASS, 0.89 seconds",
+    "native_policy_audits_contracts": "PASS, 44.09 seconds; corrected stale event inventory to include three existing incoming/victim-shape events as well as three new thermal events; explicit registration assertions retained",
+    "policy_audit_log": "native/build/thermal-repair-accounting-tests.log",
+    "logs": ["native/build/thermal-repair-receipt-tests.log", "native/build/thermal-repair-final-tests.log"]
+  },
+  "smaller_candidate": {
+    "dimensions_mm": [164, 153],
+    "result": "NOT accepted: all 16 generated movement trials rejected; zero accepted moves; three emission thermal fallback events remain",
+    "pcb_sha256": "2855ce78bf5896305a1a70e99cb4633a3a956f7de67232619e7528f8e4f0a74a",
+    "model_seconds": 3.448228,
+    "emission_seconds": 0.029333292,
+    "log": "native/build/thermal-repair-final-164x153.log"
+  },
+  "carrier_reference": {
+    "dimensions_mm": [164, 154],
+    "pcb_sha256": "aa80c90978fffcb7df4c895f9735dc8957d7d67b9e0b45e82b39e2bfc9430319",
+    "unchanged": true,
+    "model_seconds": 4.156284,
+    "log": "native/build/thermal-repair-reference.log"
+  },
+  "devkit_reference": {
+    "dimensions_mm": [98, 98],
+    "pcb_sha256": "1b12fecbcbbaa5e6084c2459da93cb144a660ff19805e6e4e3f75f9c22689fdb",
+    "unchanged": true,
+    "model_seconds": 0.189252541,
+    "log": "native/build/thermal-repair-devkit-reference.log"
+  },
+  "reference_checks": "Both references: cheap fanout/ratsnest/placement-contract/placement-flow checks PASS, hard_red=0, no non-search model/emission fallback events",
+  "limitations": "Not new full board qualification. No smaller-board or speedup claim. Independent single-pad moves do not cover coupled moves or temporary neutral-capacity states; whole-group thermal recovery remains unexplored. Final escape/lattice copper still needs independent emission checks."
+}

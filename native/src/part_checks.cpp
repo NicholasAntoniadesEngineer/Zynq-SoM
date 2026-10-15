@@ -92,7 +92,8 @@ const PartRatingsTable& default_part_ratings() {
         {"C7562", {"ic", std::nullopt, std::nullopt, std::nullopt, std::nullopt, std::nullopt, 85.0, 6.5, "M24C02 EEPROM abs-max Vcc 6.5V"}},
         {"C129895", {"ic", std::nullopt, std::nullopt, std::nullopt, std::nullopt, std::nullopt, 85.0, 6.5, "24AA025E48 EEPROM+MAC abs-max Vcc 6.5V"}},
         {"C3019759", {"ic", std::nullopt, std::nullopt, std::nullopt, std::nullopt, std::nullopt, 85.0, 5.5, "RV-3028-C7 RTC 1.1-5.5V"}},
-        {"C201665", {"ic", std::nullopt, std::nullopt, std::nullopt, std::nullopt, std::nullopt, 85.0, 5.5, "TPD12S016 HDMI ESD/level-shift 4.5-5.5V"}}
+        {"C201665", {"ic", std::nullopt, std::nullopt, std::nullopt, std::nullopt, std::nullopt, 85.0, 5.5, "TPD12S016 HDMI ESD/level-shift 4.5-5.5V"}},
+        {"C14858", {"mlcc", 50.0, std::nullopt, std::nullopt, "±5%", "C0G", 125.0, std::nullopt, "Samsung CL10C101JB8NNNC 100pF 50V C0G 0603; product.samsungsem.com/cn/mlcc/CL10C101JB8NNN.do"}}
     };
     return table;
 }
@@ -140,6 +141,26 @@ PartCheckResult analyze_part_rules(const std::vector<ProjectCircuit>& sheets,con
     for(auto sc:order) {
         ModelSheetIndex idx(sc->circuit);
         for(const auto& [ref,part]:idx.parts) {
+            // Catalog-specific pinout, independent of mutable display value or
+            // alias metadata. SCPS113O 8.1.2/10: different supply nets must not
+            // be bridged by the reference FET without current limiting. Equal
+            // nominal voltages do not establish identical power sequencing.
+            if(part->lib_id=="PCA9306DCUR:PCA9306DCUR") {
+                const auto* v1=idx.net(ref,"2");
+                const auto* v2=idx.net(ref,"7");
+                if(v1&&v2&&v1->name!=v2->name) {
+                    const auto rail=rail_volts(v2->name,power_policy);
+                    if(rail&&*rail>0) {
+                        ++res.checked;
+                        // No waiver: this is an observed direct connection,
+                        // not a voltage-rating advisory or a transient model.
+                        res.findings.push_back("PCA9306_REFERENCE "+sc->name+":"+ref+
+                            ": VREF2 directly on "+v2->name+" with VREF1 on "+v1->name+
+                            "; missing reference current limiting (TI SCPS113O 8.1.2/10). "
+                            "EN resistance does not limit this path; power sequencing remains unqualified.");
+                    }
+                }
+            }
             auto r=ratings_for_part(*part,ratings);auto key=sc->name+":"+ref,lcsc=field(*part,"LCSC");
             if(!r){if(!trim(lcsc).empty())res.unspecced.push_back(key+" ("+part->value+", LCSC "+lcsc+") — no ratings row");continue;}
             if((r->kind=="mlcc"||r->kind=="elec"||r->kind=="tant"||r->kind=="film")&&r->v_max&&*r->v_max!=0) {

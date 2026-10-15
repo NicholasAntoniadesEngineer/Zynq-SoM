@@ -1,0 +1,32 @@
+{
+  "schema": 1,
+  "base_commit": "cd2b4a15",
+  "purpose": "Screen more fundamental search-order and partial-assignment alternatives without increasing the previously tested state caps",
+  "common_options": "Same prepared carrier, outline 165x159 and options as 2026-10-12-joint-unary-pruning.json; reseat poses 8/frontier 4096; no continuations",
+  "experiments": [
+    {
+      "strategy": "Learn actual negative-cycle choice clauses; prioritize pending assignments with fewer known violated clauses, then greater depth, then stable insertion order",
+      "state_limit": 128,
+      "searches": 4,
+      "per_search": {"generated": 128, "visited": 128, "assignment_axes": 156, "unary_axes": 128, "unary_rejections": 48, "proposals": 0},
+      "log": "native/build/carrier-joint-learned-128.log"
+    },
+    {
+      "strategy": "Try incumbent first, then lazy partial assignments: solve hard edges plus assigned directions; branch the first unresolved pair with no satisfied direction; depth-first stable alternatives",
+      "state_limit": 128,
+      "searches": 4,
+      "per_search": {"generated": 128, "visited": 128, "assignment_axes": 231, "unary_axes": 128, "unary_rejections": 39, "proposals": 0},
+      "log": "native/build/carrier-joint-partial-128.log"
+    },
+    {
+      "strategy": "Same lazy partial-assignment prototype at the prior 512-state comparison cap",
+      "state_limit": 512,
+      "searches": 4,
+      "per_search": {"generated": 512, "visited": 512, "assignment_axes": 862, "unary_axes": 232, "unary_rejections": 63, "proposals": 0},
+      "log": "native/build/carrier-joint-partial-512.log"
+    }
+  ],
+  "result": "All searches capped, all carrier constructions failed. Neither prototype retained. legalize.cpp restored exactly to cd2b4a15 and binaries rebuilt. These experiments did not prove geometric infeasibility.",
+  "limitations": "No accepted candidate, no full qualification, no controlled performance comparison. Partial-assignment prototype was screened, not promoted as a generally verified solver.",
+  "follow_up": "Avoid repeating these unchanged campaigns. Inspect upstream layout choices and constraint interactions; unconstrained Bellman-Ford corner poses and first-pair partial branching do not yet provide useful carrier proposals."
+}

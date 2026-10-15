@@ -1,0 +1,91 @@
+{
+  "base_commit": "f2b0fad5",
+  "change": "Opt-in --reseat-victim-shapes adds one transactional full strategy after the unchanged original strategy and configured continuations fail. Original successful strategies are returned before the new branch. Edge failures independent of interior shapes do not trigger a redundant retry.",
+  "scope": "Existing registered victim shapes only; explicit shape selections and final hardware checks retained. The new branch selects the first locally valid shape. This is additional search coverage, not exhaustive global shape/pose optimization.",
+  "accounting": "interior_reseat_shape_retry records each executed full branch; interior_reseat_shape_trial records each alternative victim-shape relocation query. Rejected work survives layout rollback.",
+  "tests": {
+    "synthetic_cases": 150,
+    "preserved_successes": 102,
+    "newly_recovered": 29,
+    "still_failed": 19,
+    "alternative_queries": 108,
+    "coverage": "Same-side rotations and face changes; independent rectangle bounds/overlap checks; original-portfolio plus direct-branch accounting oracle; instrumented scalar operation counts; repeated deterministic results; failed and exceptional rollback; invariant edge failures; CLI option validation and fallback registration.",
+    "ctest": {
+      "native_compact_retry_contracts": "PASS 3.64s (final edge-pruning change included)",
+      "native_initial_outline_cli_contracts": "PASS 1.80s (final CLI)",
+      "native_floorplan_contracts": "PASS 13.53s before final invariant-edge skip",
+      "native_cpp_auditor_contracts": "PASS 13.52s; auditor fixture contracts, not a full live board source audit",
+      "native_board_policy_contracts": "PASS 5.77s",
+      "native_board_pipeline_contracts": "PASS 35.56s"
+    }
+  },
+  "screens": {
+    "carrier_165x158": {
+      "result": "PASS construction diagnostics; unchanged qualified PCB",
+      "pcb_sha256": "c2c501eb87f3fb492a35160c41ccd7cc7c19c922df0013b25a394c36fd0eeecf",
+      "model_seconds": 7.207028333,
+      "estimated_cross_mm": 16429.7,
+      "shape_strategy_retries": 4,
+      "shape_queries": 355,
+      "log": "native/build/carrier-victim-shape-portfolio-165x158.log"
+    },
+    "carrier_164x159": {
+      "result": "FAIL bounded search; not an infeasibility proof",
+      "shape_strategy_retries": 4,
+      "shape_queries": 200,
+      "log": "native/build/carrier-victim-shape-portfolio-164x159.log",
+      "input": "165x158 continuation spec with only outline changed to 164x159; order 3, joint states 1024, poses 8/frontier 4096/continuations 3; both preferences on, USB-JTAG contract groups, no pinned owned shape."
+    },
+    "devkit_matched": {
+      "result": "PASS construction diagnostics; unchanged qualified PCB",
+      "compact_search": false,
+      "multiscale_outline": true,
+      "pcb_sha256": "b6798d4b63d2fddbf9fad24945c151b9420b049b674ad5d637c43bf4a365137f",
+      "model_seconds": 0.173692667,
+      "log": "native/build/devkit-victim-shape-matched-regression.log"
+    },
+    "devkit_nonmatched": {
+      "result": "PASS construction diagnostics with compact search enabled, but different configuration and PCB; not used as non-regression comparison",
+      "pcb_sha256": "a6f4c7fbbac13f349c1dc374bdde30d35f4b892060810d3d7ca16b348d95f74b",
+      "log": "native/build/devkit-victim-shape-default-regression.log"
+    }
+  },
+  "limits": "Single-run screening times with uncontrolled caches and some concurrent compilation/testing. No speedup claim or Python comparison. No smaller carrier recovered. Keep the option off for the established qualified recipe unless exploring an otherwise failing candidate. Required routing and unresolved hardware evidence remain outside these screen results.",
+  "qualification": {
+    "status": "BOARD PASS; 37 sheets; all mandatory gates PASS",
+    "output": "/private/tmp/carrier-victim-shape-qualification.QCUTH1",
+    "log": "native/build/carrier-victim-shape-full-qualification.log",
+    "recipe": "Qualified 165x158 continuation recipe plus --reseat-victim-shapes --audit-projections 2 --timing.",
+    "pcb_sha256": "c2c501eb87f3fb492a35160c41ccd7cc7c19c922df0013b25a394c36fd0eeecf",
+    "drc": {
+      "non_unrouted_errors": 0,
+      "unrouted": 499
+    },
+    "source_audit": {
+      "files": 69,
+      "constants": 75,
+      "registered_transforms": 156,
+      "status": "PASS reported by ledger and quantize_census gates; native_policy.txt is the earlier provider-only receipt"
+    },
+    "advisory_failures": [
+      "return_path",
+      "golden",
+      "contract_coverage_lint"
+    ],
+    "unresolved": "Qualitative proximity, actuation/access and assembly/height evidence remain UNVERIFIED. No routing or fabrication readiness claim.",
+    "renders": {
+      "front_back_inspected": true,
+      "top_sha256": "7d1956f5acce024adb9202fa5f3fb8985372140e3ef79e779a36ff8914e7af20",
+      "bottom_sha256": "4ec756f079bb9474b31aaf757f399b05ebfaa1e9eb7aefe407b2fbac93839017"
+    },
+    "timings_seconds": {
+      "measured_scope_total_not_wall": 202.651412,
+      "input_netlist": 1.48029,
+      "pcb_model": 7.844267,
+      "pcb_text": 0.034581,
+      "render3d": 28.473244,
+      "source_audit": 108.23949
+    },
+    "timing_scope": "No matched old/new timing trial, compile measurement or Python comparison in this batch."
+  }
+}

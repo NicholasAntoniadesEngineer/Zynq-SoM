@@ -56,7 +56,7 @@ std::vector<FloorplanNote> build_floorplan_notes(const FloorplanPlan& plan,const
         if (values.count("HDMI-019S")) {
             const auto n=std::to_string(pairs(c,"tmds_pair"));
             add(b.name,n+" TMDS pairs 100R; companion IC at connector",
-                n+" TMDS pairs at 100R differential, intra-pair skew <= 0.15 mm (constraints.py); place "+
+                n+" TMDS pairs at 100R differential, intra-pair skew <= 0.15 mm (native/src/constraints.cpp); place "+
                 first_value(c,{"TPD12S","M24C"},"the companion IC")+" directly behind the receptacle so all pairs pass straight through.");
         }
         if (b.name=="ethernet" || has_value(c,"HX5008"))

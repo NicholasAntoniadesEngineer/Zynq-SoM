@@ -1,0 +1,112 @@
+{
+  "parent_commit": "c7ae4368",
+  "change": "Opt-in --shape-choice-replays N: failure-only replay of early legal shape/side choices, including combinations. Round-robin alternative rank prevents a shape-rich early block from consuming the frontier before later decisions get an alternative. Initial-seat hints do not become permanent restrictions during later eviction/repair.",
+  "budget": "N is additional full packing attempts per attempt_pack call, not per board build. Root attempt is additional to N. Queue capacity is limited to remaining executions; discarded/unexplored prefixes produce an explicit budget event on failure. Successful original attempts are retained without replay.",
+  "accounting": {
+    "events": [
+      "interior_shape_choice_replay",
+      "interior_shape_choice_budget"
+    ],
+    "classification": "Search effort, not hardware waiver. Record replay before execution; keep every failed attempt's accounting through restoration and exceptions."
+  },
+  "tests": {
+    "suites": {
+      "native_compact_profile_inputs_contracts": 29.88,
+      "native_compact_retry_contracts": 6.13,
+      "native_policy_audits_contracts": 45.97,
+      "native_floorplan_contracts": 14.38,
+      "native_initial_outline_cli_contracts": 2.11
+    },
+    "status": "All five PASS against final production code; subsequently expanded retry tests also PASS.",
+    "suite_log": "native/build/shape-choice-qualified-tests.log",
+    "final_retry_log": "native/build/shape-choice-accounting-tests.log",
+    "coverage": [
+      "Successful incumbent and complete receipts unchanged.",
+      "Previously failing fixed-order packing fixture recovered with one replay; independent same-face overlap/bounds and repeatability checks.",
+      "Two binary choices with impossible final block execute all four combinations, including combined changes.",
+      "Every aggregate quantization count and fallback event equals a sum of separately executed observed prefixes; independent scalar observer also agrees.",
+      "Budget cutoff, caller restrictions, rollback of layout/offers/hints/borrowed trace, exception propagation and interrupted-work accounting.",
+      "Shape-rich first decision does not starve the next decision's first alternative.",
+      "Impossible enforced hardware separation still rejected by composition with resolved pad geometry.",
+      "CLI and profiler reject invalid configuration and integer limits. New events explicitly registered and audited."
+    ]
+  },
+  "review": {
+    "agent": "Euclid",
+    "model": "gpt-6-astra",
+    "scope": "Read-only bounded review of replay state, rollback, accounting and caller restrictions.",
+    "result": "No concrete bugs found. First-pass-only trace is a search-coverage limitation, not proof of infeasibility."
+  },
+  "recipe_base": "native/build/fast/schgen_compact_stage_profile --repo . --project carrier --compact-search on --edge-feasibility on --owned-quality-first on --owned-face-cohesion on --contract-group-face-sheet usb_jtag --require-bottom-sheet power_mon --require-bottom-sheet bringup_modules --require-bottom-sheet bringup_en_modules --joint-separation-states 1024 --reseat-poses 8 --reseat-frontier 4096 --reseat-continuations 3 --reseat-victim-shapes on --owned-shape board_aux=owned-face-a1.000000 --owned-shape bringup_rails=bottom-a2.2/r270/owned-pins-forward --schematic /private/tmp/carrier-166x156-two-pilots.iK3HkI/Zynq_Carrier.kicad_sch --runs 1 --interior-order 3 --failed-first-retry on --shape-area-first on",
+  "spec_delta": "Set interior.power_som.layer=either in the reference floorplan; power was already either. No hardware constraints modified.",
+  "carrier_expanded_choices": {
+    "outline_mm": [
+      163,
+      153
+    ],
+    "spec": "/private/tmp/carrier-aspect-screen.3noxv0/power-som-either-163x153.json",
+    "before": "construction_failed; see 2026-10-13-free-power-choice-screen.json",
+    "extra_flags": "--shape-choice-replays 8",
+    "after": "constructed_no_acceptance",
+    "model_seconds": 81.827055291,
+    "pcb_text_seconds": 0.029787,
+    "pcb_sha256": "d954ec91a789f69a1e94a26a9d3a91b279fbc208dff2503cbe8ee4c8eabc199f",
+    "top": 411,
+    "bottom": 155,
+    "replays": 46,
+    "budget_events": 5,
+    "cheap_checks": "fanout, ratsnest, placement contract, placement flow PASS; hard_red=0; no model/emission nonsearch fallback events",
+    "log": "native/build/shape-choice-hints-carrier-163x153.log"
+  },
+  "smaller_screen": {
+    "outline_mm": [
+      162,
+      153
+    ],
+    "extra_flags": "--shape-choice-replays 8",
+    "status": "construction_failed",
+    "elapsed_seconds": 61.0148485,
+    "outer_attempts": 36,
+    "receipt_captured": true,
+    "log": "native/build/shape-choice-hints-carrier-162x153.log"
+  },
+  "controls": {
+    "carrier": {
+      "outline_mm": [
+        163,
+        153
+      ],
+      "recipe": "Unchanged reference spec and recipe; replay option omitted",
+      "model_seconds": 12.951911125,
+      "pcb_sha256": "d954ec91a789f69a1e94a26a9d3a91b279fbc208dff2503cbe8ee4c8eabc199f",
+      "log": "native/build/shape-choice-carrier-control.log"
+    },
+    "devkit": {
+      "outline_mm": [
+        98,
+        98
+      ],
+      "model_seconds": 0.20358275,
+      "pcb_sha256": "1b12fecbcbbaa5e6084c2459da93cb144a660ff19805e6e4e3f75f9c22689fdb",
+      "log": "native/build/shape-choice-devkit-control.log"
+    },
+    "cheap_checks": "Both controls PASS fanout/ratsnest/placement contract/flow, hard_red=0. Hashes match qualified reference PCBs."
+  },
+  "rejected_prototypes": [
+    {
+      "strategy": "Permanent prefix restrictions; first block fills frontier",
+      "status": "163x153 expanded choices construction_failed",
+      "seconds": 71.415212208,
+      "outer_attempts": 36,
+      "log": "native/build/shape-choice-carrier-163x153.log"
+    },
+    {
+      "strategy": "Permanent prefix restrictions; fair frontier",
+      "status": "163x153 expanded choices construction_failed",
+      "seconds": 44.797344125,
+      "outer_attempts": 36,
+      "log": "native/build/shape-choice-fair-carrier-163x153.log"
+    }
+  ],
+  "limitations": "A reliability improvement, not a board-size or speed improvement. No new full qualification/renders; exact reference PCB hashes and cheap checks do not qualify every new search path. Different screens/tests overlapped, so single-run elapsed figures are diagnostics, not controlled speed comparisons. First packing pass supplies candidate traces; bounded prefix exhaustion is not geometric infeasibility. Keep opt-in pending better search efficiency; no default configuration changed. Python timing comparison remains outstanding."
+}

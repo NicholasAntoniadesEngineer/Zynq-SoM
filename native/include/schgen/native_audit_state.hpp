@@ -137,6 +137,15 @@ private:
     std::uint64_t quantize_epoch_=0,fallback_epoch_=0;
 };
 
+struct CppAuditTiming {
+    std::string source;
+    // Visitor includes post-AST consistency checks and AST destruction;
+    // preprocessing includes its consistency checks and macro interpretation.
+    // Global final snapshot checks and census merge are outside these phases.
+    double dependency_seconds=0, snapshot_seconds=0, ast_seconds=0,
+        visitor_seconds=0, preprocessing_seconds=0, final_dependency_seconds=0;
+    double first_byte_seconds=0, projection_wait_seconds=0, parsing_seconds=0;
+};
 struct CppAuditOptions {
     std::string compiler="clang++";
     std::vector<std::string> flags; // same include paths/defines/target as build
@@ -144,6 +153,15 @@ struct CppAuditOptions {
     // Bound concurrent full translation-unit scans. Census order is always
     // manifest order, independent of worker completion. One is the serial path.
     std::size_t workers=2;
+    // Memory/throughput choice, not an audit-coverage limit. Waiting compilers
+    // retain bounded pipe backpressure; each slot holds at most one full AST.
+    std::size_t projection_slots=1;
+    // Optional diagnostics, published in manifest order only after success.
+    // Per-file elapsed phases overlap between workers; do not sum as wall time.
+    // ast_seconds includes compiler, pipe/projection wait and AST parsing.
+    // The three AST subphases are nested, not additional time. Parsing includes
+    // pipe input waits; these elapsed measurements do not identify CPU usage.
+    std::vector<CppAuditTiming>* timings=nullptr;
 };
 struct CppAuditSource { std::string path; }; // repo-relative .cpp OR header
 struct CppAuditConstant { std::string symbol, site; bool buried=false; };
@@ -159,6 +177,9 @@ struct CppSourceCensus {
 // are elided; overloaded functions are not eligible for ambiguous registration.
 // Explicit manifest is mandatory, every file must exist. Headers are audited
 // as standalone C++ TUs. Included files must also be listed to own coverage.
+// Compiler-reported dependencies are checked for observed byte/graph changes
+// across the scan, including newly appearing includes before publication.
+// These consistency guards do not provide an atomic snapshot or a cache key.
 CppSourceCensus scan_cpp_audit_sources(const std::filesystem::path& root,
     const std::vector<CppAuditSource>&,const CppAuditOptions& = {});
 struct NativeAuditResult {

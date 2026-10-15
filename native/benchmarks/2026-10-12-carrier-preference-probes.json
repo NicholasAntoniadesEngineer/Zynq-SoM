@@ -1,0 +1,61 @@
+{
+  "base_commit": "9efd7dfb",
+  "purpose": "Challenge placement preferences rather than treating them or search exhaustion as hardware requirements.",
+  "workload": {
+    "project": "carrier",
+    "board_mm": [165, 158],
+    "input_mode": "prepared",
+    "schematic": "/private/tmp/carrier-165x158-qualified.Wd9GT7/Zynq_Carrier.kicad_sch",
+    "floorplan": "native/benchmarks/carrier-165x158-continuation.floorplan.json",
+    "common_options": "--compact-search on --runs 1 --interior-order 3 --edge-feasibility on --contract-group-face-sheet usb_jtag --joint-separation-states 1024 --reseat-poses 8 --reseat-frontier 4096 --reseat-continuations 3",
+    "owned_shape": "not pinned"
+  },
+  "screens": [
+    {
+      "variant": "quality-first off; face-cohesion on",
+      "model_seconds": 5.59520725,
+      "estimated_cross_mm": 16429.7,
+      "top": 413, "bottom": 153,
+      "pcb_sha256": "c2c501eb87f3fb492a35160c41ccd7cc7c19c922df0013b25a394c36fd0eeecf",
+      "log": "native/build/carrier-165x158-quality-off.log"
+    },
+    {
+      "variant": "quality-first on; face-cohesion off",
+      "model_seconds": 5.426208584,
+      "estimated_cross_mm": 16407.0,
+      "top": 407, "bottom": 159,
+      "pcb_sha256": "8e3a8694593f66b1454a883c8f2cafc8843e099ecdc8b692bfaebe9b3ae24381",
+      "log": "native/build/carrier-165x158-cohesion-off.log"
+    },
+    {
+      "variant": "quality-first off; face-cohesion off",
+      "model_seconds": 5.454979292,
+      "estimated_cross_mm": 16407.0,
+      "top": 407, "bottom": 159,
+      "pcb_sha256": "8e3a8694593f66b1454a883c8f2cafc8843e099ecdc8b692bfaebe9b3ae24381",
+      "log": "native/build/carrier-165x158-both-off.log"
+    },
+    {
+      "variant": "quality-first and face-cohesion on; experimental demand-weighted group-centroid pulls",
+      "prototype": "Append each resolved channel-demand endpoint pair n times to the non-seed legalizer hop list, retaining existing flow hops and all final constraints. Does not resolve missing endpoints, including absent @som entries.",
+      "model_seconds": 5.602185542,
+      "estimated_cross_mm": 16467.2,
+      "top": 413, "bottom": 153,
+      "pcb_sha256": "24810e141c79bba5c918bf4b517d8d65496ca4ecb2e7a7c18b8f8496d4597b27",
+      "log": "native/build/carrier-165x158-connectivity-pull.log",
+      "disposition": "Rejected: estimator worsened by 37.5 mm. Prototype removed. Group-centroid attraction is not the pad-level quality objective."
+    },
+    {
+      "variant": "restored source; quality-first and face-cohesion on",
+      "model_seconds": 5.59012525,
+      "estimated_cross_mm": 16429.7,
+      "top": 413, "bottom": 153,
+      "pcb_sha256": "c2c501eb87f3fb492a35160c41ccd7cc7c19c922df0013b25a394c36fd0eeecf",
+      "log": "native/build/carrier-165x158-connectivity-pull-reversal.log"
+    }
+  ],
+  "validation": "All five screens finished with placement_contract_ok=1, placement_flow_ok=1, hard_red=0. These are construction diagnostics, not new full board qualification. Restored source reproduces the previously qualified PCB hash.",
+  "interpretation": "Removing face cohesion improves the estimate by 22.7 mm (about 0.14%) at unchanged area, with six more bottom-side components. Keep this candidate available for a broader quality comparison; no qualified incumbent replacement yet. Quality-first switch is inert for these specific outcomes, not proven redundant generally.",
+  "measurement_limits": "Single sequential runs, uncontrolled OS cache, diagnostic observers enabled. No timing speedup claim, compile/render/audit timing or matched Python comparison. Estimate is not routed wire length. Logs are local build artifacts, not durable committed fixtures.",
+  "constraint_policy": "For each restrictive rule, identify authoritative hardware evidence, conservative margin, heuristic preference or compute safeguard. Challenge unsupported margins and preferences with independently checked alternatives. Search exhaustion means unresolved, not infeasible. Preserve genuine electrical/mechanical checks and expose unknown requirements rather than asserting PASS. Future search should compare valid alternatives against the actual quality objective and retain incumbents, not just optimize a surrogate."
+}

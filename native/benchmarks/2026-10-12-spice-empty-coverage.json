@@ -1,0 +1,28 @@
+{
+  "schema": 1,
+  "base_commit": "4195e22c",
+  "defect": "SpiceResult::ok used vacuous all_of and reported PASS when no analytic checks were extracted. This propagated to CLI exit status, JSON and the mandatory board gate.",
+  "correction": "Require nonempty coverage for ok(); add an explicit missing-coverage diagnostic; render UNVERIFIED (0 checks). CLI and mandatory board gate fail closed without adding exemptions or changing any electrical limits.",
+  "verification": {
+    "ctest_command": "ctest --test-dir native/build/fast --output-on-failure -R '^native_(spice|board_pipeline|firmware_docs)_contracts$'",
+    "passed": 3,
+    "failed": 0,
+    "seconds": 44.48,
+    "spice_suite": "50 frozen cases, nine tolerance vectors, seven live ngspice cases and 3993 exact checks",
+    "historical_corrections": "Seven frozen cases with empty checks and historical ok=true now explicitly require false and UNVERIFIED; all other expected JSON/report content remains checked. Original historical fixtures are preserved.",
+    "adversarial_coverage": "Empty extraction, notes-only results, both ngspice-availability report modes, JSON coverage/verdict, and mandatory board integration with no circuits",
+    "live_commands": [
+      {"command": "native/bin/schgen spice --project carrier hdmi_rx_term --no-ngspice", "checks": 0, "verdict": "UNVERIFIED", "exit_code": 1},
+      {"command": "native/bin/schgen spice --project carrier --no-ngspice", "checks": 17, "verdict": "PASS", "exit_code": 0},
+      {"command": "native/bin/schgen spice --project devkit_mini --no-ngspice", "checks": 11, "verdict": "PASS", "exit_code": 0}
+    ],
+    "production_cli_rebuilt": true
+  },
+  "limits": [
+    "Positive spot-check coverage is not proof that every selected subsystem or electrical behavior is tested",
+    "The HDMI network still has no extracted analytic spot checks; the separate native passive-identity contract supplies structural coverage, not signal-integrity simulation",
+    "No board layout, hard placement constraint, component value or acceptance threshold changed",
+    "Full rendering/source audits and matched Python performance comparisons were not rerun for this reporting correction"
+  ],
+  "remaining_migration_follow_up": "A scoped search found 43 subsystem README files under carrier/subsystems, devkit_mini/subsystems and subsystems containing python/pytest/PYTHONPATH command references. Their replacement commands and actual C++ requirement coverage need verification; do not merely replace text or claim migration complete."
+}

@@ -1,0 +1,76 @@
+{
+  "base_commit": "c328cbb4",
+  "goal": "Challenge search restrictions against a smaller carrier without changing final electrical or physical acceptance.",
+  "common": "Prepared qualified carrier schematic; compact placement; edge-feasibility, owned-quality-first and owned-face-cohesion; USB-JTAG contract-group face candidates; carrier-165x159-failed-first.floorplan.json with diagnostic outline override. Unless stated otherwise: interior order 3, pinned board_aux owned-face-fixed/a2.2/owned-pins-forward and joint state count 128.",
+  "probes": [
+    {
+      "name": "authored_near_bounds_164x159",
+      "change": "Temporary removal of compose.guard_mm=4 from solver near_max bounds; authored final bounds unchanged.",
+      "log": "native/build/carrier-authored-near-164x159-probe.log",
+      "result": "FAIL; facing constraints still reject candidates under both reservation policies."
+    },
+    {
+      "name": "authored_near_bounds_165x159",
+      "log": "native/build/carrier-authored-near-165x159-probe.log",
+      "result": "Construction screen passes placement/flow checks with hard_red=0; no smaller board.",
+      "pcb_sha256": "22e84d467d3313252f728d7b1e41b84fa8918b0f2430ba82edfb269e5b7d34fe",
+      "estimated_cross_mm": 15893.8,
+      "qualification": "Different geometry, not fully qualified or adopted."
+    },
+    {
+      "name": "joint_facing_164x159_128",
+      "change": "Temporary strict-facing projection cuts enabled inside the joint separation strategy.",
+      "log": "native/build/carrier-joint-facing-164x159-probe.log",
+      "result": "FAIL; joint search exhausted; final reported search submitted zero complete proposals."
+    },
+    {
+      "name": "joint_facing_164x159_1024",
+      "log": "native/build/carrier-joint-facing-164x159-1024-probe.log",
+      "result": "FAIL; increased search count still produces no complete proposals in final reported searches."
+    },
+    {
+      "name": "unpinned_board_aux_164x159",
+      "change": "Restored production solver, removed owned-shape restriction.",
+      "log": "native/build/carrier-unpinned-164x159-probe.log",
+      "result": "FAIL at legalization under both reservation policies."
+    },
+    {
+      "name": "unpinned_extent_rotations_164x159",
+      "change": "Also enable owned extent alternatives and contract-group rotations.",
+      "log": "native/build/carrier-unpinned-extent-164x159-probe.log",
+      "result": "FAIL at legalization under both reservation policies."
+    },
+    {
+      "name": "order_0_164x159",
+      "log": "native/build/carrier-order-0-164x159-probe.log",
+      "result": "FAIL at USB-JTAG seating."
+    },
+    {
+      "name": "order_1_164x159",
+      "log": "native/build/carrier-order-1-164x159-probe.log",
+      "result": "FAIL at Ethernet seating."
+    },
+    {
+      "name": "order_2_164x159",
+      "log": "native/build/carrier-order-2-164x159-probe.log",
+      "result": "FAIL at power seating."
+    },
+    {
+      "name": "joint_4096_164x159",
+      "change": "Production solver with 32 times the earlier per-search state count.",
+      "log": "native/build/carrier-joint-4096-164x159-probe.log",
+      "result": "FAIL under both reservation policies; final two reported searches rejected all 1549 and 1214 complete proposals respectively.",
+      "observed_failure_seconds": 8.588841208,
+      "executed_fallback_events": 112572,
+      "receipt_captured": true
+    }
+  ],
+  "conclusions": [
+    "Neither inherited search counts nor the extra proximity margin are physical feasibility proofs; all failures remain bounded-search outcomes.",
+    "More search states alone did not resolve this candidate. Do not repeat these configurations without changed evidence or solver logic.",
+    "The single-sheet contract-group-face interface restricts combined changes: experiment_observers.hpp stores one optional string, CLI rejects repeated flags, zone generation selects one sheet and orientation recovery expands that one sheet.",
+    "Next investigate joint changes across eligible groups with explicit hardware qualification and preserved incumbents/accounting, rather than continuing scalar search-count increases."
+  ],
+  "retained_changes": "Evidence only. Both solver prototypes removed and production profiler rebuilt. No geometry, tolerance, hardware requirement or runtime gate changed.",
+  "limitations": "Construction screens only; no full renders/audits for new geometry and no matched Python comparison. Qualified 165x159 carrier remains unchanged; no fabrication-readiness claim."
+}

@@ -1,0 +1,40 @@
+{
+  "base_commit": "5a6c0288",
+  "status": "REJECTED; experimental implementation removed, production source restored exactly to base commit",
+  "hypothesis": "Global hard-constraint ordering disrupted module-face and exclusive connector priorities. Preserve those tiers, then prioritise enforced hard-constraint incidence within each tier while retaining canonical connectivity/area/name order for equal incidence.",
+  "reproduction": {
+    "implementation": "After canonical pack_interior_order, stable_sort by (existing tier ascending, hard_constraint_incidence descending). Incidence uses the existing helper, counting both distinct endpoints of enforced hard terms and ignoring soft/NA terms. Do not use area as a new tie-break; stable ties retain the full canonical order.",
+    "temporary_option": "Experimental single interior-order 4 selected this sort; no alternative-order retries. This option is NOT retained in production.",
+    "command_template": "native/build/fast/schgen_compact_stage_profile --repo REPO --project carrier --compact-search off --runs 1 --interior-order 4 [--outline-mm 168x162] --schematic /private/tmp/carrier-ref-board.ccIYvU/Zynq_Carrier.kicad_sch --kicad-cli /Applications/KiCad/KiCad.app/Contents/MacOS/kicad-cli",
+    "test": "Expanded single-order instrumented oracle and new tier/constraint/stable-tie unit case passed, including failed-prefix accounting and exception order restoration. Existing constraint-order contracts also passed."
+  },
+  "fixed_outline": {
+    "dimensions_mm": [168,162],
+    "result": "Actual packing failed; no model emitted",
+    "log": "native/build/carrier-tiered-order-fixed.log",
+    "log_sha256": "95d1ad44b68fee001a1c738e67ce32ce34e2f9f657a49c1f142948fe90f4ddc3"
+  },
+  "automatic_outline": {
+    "dimensions_mm": [174,161],
+    "area_mm2": 28014,
+    "reference_area_mm2": 27384,
+    "top": 417,
+    "bottom": 152,
+    "successful_reseats": 86,
+    "reference_successful_reseats": 28,
+    "placement_contract_ok": true,
+    "placement_flow_ok": true,
+    "hard_red": 0,
+    "hard_margin_min": 4.33,
+    "estimated_wiring_mm_rounded": 15721.8,
+    "wiring_budget_mm_rounded": 16570,
+    "headroom_mm_rounded": 848.2,
+    "model_seconds_single_sample": 6.726334083,
+    "timing_interpretation": "Different layout and search work; not an equivalent-workload speedup claim",
+    "pcb_sha256": "dd7c8d4e13640f6e9338752e104efae81d53e8122958eafb99ebfd93a096d107",
+    "log": "native/build/carrier-tiered-order-auto.log",
+    "log_sha256": "920b4980486f246f99a08935405e3c4a6d701a020af887d9fffe319e318cc1a2"
+  },
+  "decision": "Reject on area and retry regressions before expensive full qualification. Do not promote more static priority rules based on raw hard-term counts; revisit geometry-aware grouping/placement choices and measured pipeline bottlenecks instead.",
+  "limitations": ["No full qualification or fabrication claim", "No historical Python comparison", "Baseline retry ceiling remains unresolved"]
+}

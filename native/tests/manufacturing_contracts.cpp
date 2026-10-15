@@ -1,6 +1,8 @@
 #include "schgen/assembly_documents.hpp"
 #include "schgen/manufacturing_checks.hpp"
 #include "schgen/atomic_file.hpp"
+#include "schgen/board_policy.hpp"
+#include "historical_input_contracts.hpp"
 #include <algorithm>
 #include <cstdlib>
 #include <fstream>
@@ -58,7 +60,37 @@ void project(const fs::path& root,const fs::path& scratch,const std::string& nam
     const auto run_path=output/"si-run";write(run_path/"rules.kicad_dru","(version 1)\n# preserve caller rule\n");const auto run=run_si_constraints(sheets,paths.project_root/"research/si_spec.json",run_path/"rules.kicad_dru",run_path/"SI.md");require(run.verdict.ok,"SI run checks real model");require(read(run.md)==render_si_markdown(si)&&read(run.dru)==render_si_design_rules(si,"(version 1)\n# preserve caller rule\n"),"SI run publishes rules and Markdown");throws([&]{run_si_constraints(sheets,paths.project_root/"research/si_spec.json",run.md,run.md);},"distinct");
     auto in=prepare_manufacturing_manifest(sheets,stm32(field(input,"stm32")),ManufacturingXdc{5,{35,34,35},std::nullopt},"xc7z020clg400-1",{12.34565,7});
     for(const auto& a:field(input,"artifacts").array_value)in.artifacts.push_back({str(a,"path"),str(a,"sha256")});
-    exact(render_manufacturing_manifest(in),fixture/"manifest.json",output/"manifest.json");
+    auto historical=in;
+    for(auto& sheet:historical.sheets)sheet.circuit=historical_input_contracts::project(sheet.circuit,name);
+    auto reviewed_expected=read(fixture/"manifest.json");
+    const auto replace_once=[&](const std::string& before,const std::string& after){
+        const auto pos=reviewed_expected.find(before);
+        require(pos!=std::string::npos&&reviewed_expected.find(before,pos+before.size())==std::string::npos,
+                "unique reviewed manifest preimage: "+before);
+        reviewed_expected.replace(pos,before.size(),after);
+    };
+    // d2a1ec20 adopted direct VIN enable on both boards: R12/D5/C20
+    // disappeared, removing three parts and one unique BOM group. Keep the
+    // original oracle immutable and constrain the exact reviewed delta.
+    const auto enable_sheet=std::find_if(in.sheets.begin(),in.sheets.end(),[](const auto& s){return s.circuit.name=="power_som";});
+    require(enable_sheet!=in.sheets.end(),"direct-enable power_som sheet present");
+    for(const auto* ref:{"R12","D5","C20"})
+        require(std::none_of(enable_sheet->circuit.parts.begin(),enable_sheet->circuit.parts.end(),[&](const auto& p){return p.ref==ref;}),
+                "removed enable network must not reappear: "+std::string(ref));
+    replace_once(name=="carrier"?"\"lines\": 105":"\"lines\": 43",name=="carrier"?"\"lines\": 104":"\"lines\": 42");
+    replace_once(name=="carrier"?"\"parts\": 502":"\"parts\": 136",name=="carrier"?"\"parts\": 499":"\"parts\": 133");
+    require(render_manufacturing_manifest(historical)==reviewed_expected,"manifest differs beyond reviewed direct-enable removal");
+    auto current_expected=reviewed_expected;
+    if(name=="carrier") {
+        // The reviewed 100p/C14858 reference filter adds one BOM group;
+        // part count and every other manifest byte remain unchanged.
+        const std::string before="\"lines\": 104",after="\"lines\": 105";
+        const auto pos=current_expected.find(before);
+        require(pos!=std::string::npos&&current_expected.find(before,pos+before.size())==std::string::npos,"unique historical BOM-line preimage");
+        current_expected.replace(pos,before.size(),after);
+    }
+    const auto current_manifest=render_manufacturing_manifest(in);write(output/"manifest.json",current_manifest);
+    require(current_manifest==current_expected,"current manifest differs beyond reviewed reference-filter BOM group");
     std::cout<<name<<": SI and live-analysis manifest exact\n";
     const auto images=render_assembly_images(m,plan);const auto expected=parse_json_file((fixture/"images.json").string()).array_value;check_images(images,expected,output,name);
     std::cout<<name<<": "<<images.size()<<" assembly PNGs exact\n";
@@ -96,6 +128,16 @@ void mutations(const fs::path& root,const fs::path& scratch){
     std::cout<<"frozen assembly/SI mutants and publication/error contracts passed\n";
 }
 void misc(const fs::path& root,const fs::path& scratch){
+    const auto native_pipeline=render_manufacturing_pipeline(native_board_pipeline_metadata());
+    require(native_pipeline.find(".py")==std::string::npos,"live native pipeline documentation has no obsolete Python source paths");
+    for(const auto* source:{"native/src/board_policy_metadata.cpp","native/src/native_audit_registry.cpp",
+                           "native/src/native_cpp_audits.cpp","native/src/verification_audits_counts.cpp"}) {
+        require(native_pipeline.find(source)!=std::string::npos,"live pipeline cites native authority: "+std::string(source));
+        require(fs::is_regular_file(root/source),"cited native authority exists: "+std::string(source));
+    }
+    auto native_output=scratch/"native-GEOMETRY_PIPELINE.md";
+    require(run_manufacturing_pipeline(native_board_pipeline_metadata(),native_output).second &&
+            read(native_output)==native_pipeline,"live native pipeline publication exact");
     const auto fixtures=root/"native/tests/data/manufacturing";auto pipeline=manufacturing_pipeline_from_json(parse_json_file((fixtures/"pipeline.json").string()));exact(render_manufacturing_pipeline(pipeline),fixtures/"pipeline.md",scratch/"pipeline.md");
     for(const auto& row:parse_json_file((fixtures/"fab.json").string()).array_value){const auto& n=field(row,"demand");ManufacturingBoardDemand d;auto get=[&](const std::string& k)->std::optional<double>{const auto& v=field(n,k);return v.kind==JsonKind::Null?std::nullopt:std::optional<double>(v.number_value);};d.min_trace_mm=get("min_trace_mm");d.min_clearance_mm=get("min_clearance_mm");d.min_drill_mm=get("min_drill_mm");d.min_via_dia_mm=get("min_via_dia_mm");d.min_via_annular_mm=get("min_via_annular_mm");d.min_hole_to_hole_mm=get("min_hole_to_hole_mm");d.pro_via_annular_mm=get("pro_via_annular_mm");d.n_segments=static_cast<std::size_t>(num(n,"n_segments"));d.n_vias=static_cast<std::size_t>(num(n,"n_vias"));d.n_drills=static_cast<std::size_t>(num(n,"n_drills"));const auto r=check_manufacturing_fab(d);require(r.ok==field(row,"ok").bool_value,"fab verdict");require(r.report()==str(row,"report"),"fab exact report: "+str(row,"name"));require(r.errors==strings(field(row,"errors")),"fab errors");}
     require(!assembly_verdict(JsonNode{},root).first,"absent assembly must fail");

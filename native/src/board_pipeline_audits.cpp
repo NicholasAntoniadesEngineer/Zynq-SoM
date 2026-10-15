@@ -6,6 +6,8 @@ namespace schgen {
 std::vector<CppAuditSource> board_pipeline_audit_sources(){
     std::vector<CppAuditSource> out;
     for(const auto* name:{"quantize.cpp","native_audit_quantize.cpp","floorplan_internal.hpp","floorplan_geometry.cpp","floorplan_cross.cpp","floorplan_pack.cpp","floorplan_compose.cpp","floorplan_build.cpp","floorplan_notes.cpp","floorplan_svg.cpp","floorplan_md.cpp","pcb_stage_internal.hpp","pcb_stage_geometry.cpp","pcb_stage_search.cpp","pcb_stage_power.cpp","pcb_stage_zone.cpp","pcb_placement_internal.hpp","pcb_placement_inputs.cpp","pcb_placement_pack.cpp","pcb_placement_variants.cpp","pcb_placement_zones.cpp","pcb_placement_model.cpp","pcb_placement_moves.cpp","pcb_placement_breathe.cpp","pcb_placement_build.cpp","pcb_escape_internal.hpp","pcb_escape_copper.cpp","pcb_escape_plan.cpp","pcb_escape_model.cpp","pcb_escape_triage.cpp","pcb_embed.cpp","pcb_emit.cpp","pcb_project.cpp","pcb_silk.cpp","legalize.cpp","occupancy.cpp","pack.cpp","ratsnest_gate.cpp"})out.push_back({std::string("native/src/")+name});
+    out.push_back({"native/src/pcb_owned_groups.cpp"});
+    out.push_back({"native/src/pcb_owned_groups_adapter.cpp"});
     out.push_back({"native/src/legalize_precision.cpp"});
     out.push_back({"native/src/stage_precision.cpp"});
     out.push_back({"native/src/placement_precision.cpp"});
@@ -93,13 +95,13 @@ void record_pipeline_after(Context& c,const fs::path& baseline){
     std::size_t nq=0,nf=0;c.ledger.open_step("census");
     for(const auto& [name,n]:q)if(n.nonzero()){++nq;const auto& d=qdefs.at(name);c.ledger.calc("quantize_engagement",text(n.str()),{{"klass",text(d.proof_class)},{"value",text(d.value.substr(0,std::min<std::size_t>(60,d.value.find('\n'))))}},name);}
     for(const auto& [name,n]:fb)if(n.nonzero()){++nf;if(!stages.count(name))throw ProjectError("missing live fallback stage metadata "+name);
-        c.ledger.calc("fallback_engagement",text(n.str()),{{"stage",text(stages.at(name))},{"ceiling",text(!ceiling?"-1":ceiling->count(name)?ceiling->at(name).str():"0")}},name);}
+        c.ledger.calc("fallback_engagement",text(n.str()),{{"stage",text(stages.at(name))},{"ceiling",text(is_board_search_effort(name)?"observational":!ceiling?"-1":ceiling->count(name)?ceiling->at(name).str():"0")}},name);}
     c.ledger.calc("register_silence",number(q.size()-nq+fb.size()-nf),{{"quantize_registered",number(q.size())},{"quantize_engaged",number(nq)},{"fallback_registered",number(fb.size())},{"fallback_fired",number(nf)}});c.ledger.close_step("census");
 }
 }
 void audit_stages(Context& c){
     const auto fb=c.options.fallback_baseline.empty()?c.paths.reports_dir/"fallback_baseline.json":c.options.fallback_baseline;
-    c.attempt("fallbacks",[&]{if(!c.pcb)throw ProjectError("census producer did not finish");const auto r=check_fallback_ratchet(c.fallbacks.census(),fb,c.reports/"fallback_baseline.json");c.report("fallbacks.txt",r.summary());c.gate("fallbacks",r.ok,r.summary());});
+    c.attempt("fallbacks",[&]{if(!c.pcb)throw ProjectError("census producer did not finish");const auto r=check_board_fallbacks(c.fallbacks.census(),fb,c.reports/"fallback_baseline.json");c.report("fallbacks.txt",r.summary());c.gate("fallbacks",r.ok,r.summary());});
     bool imported=false;
     c.attempt("ledger_import",[&]{
         if(c.options.ledger_declarations.empty())throw ProjectError("reviewed native ledger declarations are required; scanner output cannot supply them");

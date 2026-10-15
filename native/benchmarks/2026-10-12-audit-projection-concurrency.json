@@ -1,0 +1,52 @@
+{
+  "base_commit": "fd011475",
+  "implementation": "CppAuditOptions.projection_slots selects one or two invocation-local mutex stripes. Locks span AST parsing, visiting and destruction. Compiler workers, bounded pipe backpressure, ordered census merge, source/header snapshots, final dependency-graph rediscovery and exception propagation remain intact. No persistent cache.",
+  "interface": "schgen board --audit-projections 1|2. Default remains one for lower memory use. Reject invalid, duplicate and non-board CLI uses; API rejects projection counts exceeding worker capacity.",
+  "paired_full_manifest": {
+    "tool": "schgen_audit_ast_pipe_census pipe-profile|pipe-profile-two ROOT OUTPUT --board-manifest",
+    "files": 49, "compiler": "/usr/bin/clang++", "workers": 2,
+    "one_projection_seconds": 130.074476,
+    "two_projection_seconds": 88.053249,
+    "time_change_percent": -32.30551318922862,
+    "one_projection_sampled_tree_peak_bytes": 2873327616,
+    "two_projection_sampled_tree_peak_bytes": 4323213312,
+    "sampled_peak_change_percent": 50.46015943070239,
+    "census_sha256_both": "f546c5bd39d315a88b57dd911c6cc55ff14d89209d9e7d98e19befe052d1b342",
+    "constants": 32, "functions": 903, "quantization_sites": 272,
+    "logs": ["native/build/audit-full-one-projection.log","native/build/audit-full-two-projections.log"],
+    "scope": "Single sequential paired experiment with identical compiler/manifest/inputs and no competing test or build processes launched by this agent. Sampled process-tree memory may miss instantaneous peaks. This is an audit-only observation, not a confidence interval, whole-build speedup or Python comparison."
+  },
+  "tests": {
+    "native_audit_ast_pipe_census_contracts": "PASS 5.33 seconds; exact reference/serial/parallel censuses, one/two projection slots, malformed output, compiler/parser failures, timeout and invalid slot settings",
+    "native_parallel_audit_contracts": "PASS 3.66 seconds; two-projection source/header mutations, dependency-graph changes, error ordering, queue lifecycle and worker limits",
+    "native_initial_outline_cli_contracts": "PASS 1.90 seconds including new option values, missing arguments, duplicates and command scope",
+    "native_cpp_source_audits": "58 contracts passed"
+  },
+  "full_builds": [
+    {
+      "project": "carrier", "directory": "/private/tmp/carrier-two-projections.YMKQjh",
+      "log": "native/build/carrier-two-projections-full.log", "exit_code": 0, "board_status": "PASS", "sheets": 37,
+      "options": "--compact-placement --interior-order 3 --edge-feasibility --owned-quality-first --owned-face-cohesion --contract-group-face-sheet usb_jtag --owned-shape board_aux=owned-face-fixed/a2.2/owned-pins-forward --floorplan-spec native/benchmarks/carrier-165x159-failed-first.floorplan.json --joint-separation-states 128 --audit-projections 2 --timing",
+      "dimensions_mm": [165,159], "area_mm2": 26235,
+      "pcb_sha256": "24ac25bfe6cb2ea6477a01b195b5ca78070ccff3bb2640f12d5b8f7275da5c64",
+      "timings_seconds": {"measured_scopes_not_process_wall":196.276038,"pcb_input_netlist":1.491332,"pcb_model":2.734281,"pcb_text":0.036762,"renders_3d":28.271025,"source_audit":107.190484},
+      "drc_non_unrouted_errors": 0, "unrouted": 499,
+      "top_render_sha256": "85cd837e529faeab9824767f340305781711292eda3dee67cd40e7d3f3bd3c19",
+      "bottom_render_sha256": "b0cc6bb09c47fd667ec4349aa2dcf23ae817dbf4b3981fd7b05b9720966d1138"
+    },
+    {
+      "project": "devkit_mini", "directory": "/private/tmp/devkit-two-projections.uH3KcT",
+      "log": "native/build/devkit-two-projections-full.log", "exit_code": 0, "board_status": "PASS", "sheets": 12,
+      "options": "--multiscale-outline --audit-projections 2 --timing",
+      "dimensions_mm": [98,98], "area_mm2": 9604,
+      "pcb_sha256": "b6798d4b63d2fddbf9fad24945c151b9420b049b674ad5d637c43bf4a365137f",
+      "timings_seconds": {"measured_scopes_not_process_wall":158.536584,"pcb_input_netlist":0.659502,"pcb_model":0.181889,"pcb_text":0.008742,"renders_3d":16.743261,"source_audit":107.353235},
+      "drc_non_unrouted_errors": 0, "unrouted": 408,
+      "top_render_sha256": "6ff8767fe5b4b020f8ec632e20a39ad4cf00ef234be6a864808c5936900b58f8",
+      "bottom_render_sha256": "295776cf3bfbf6bedc9f0ff49af685a516e07667a6b2d87fa5c7764670c9526b",
+      "existing_skips": "manual and scfw are marked mandatory/SKIP because their required subsystems are absent; statuses/reasons match the previous devkit full-build verdicts. No new waiver."
+    }
+  ],
+  "visual_review": "Both builds generated eight 3D views. Inspected top/bottom views of each: module outlines, connector access regions, through-hole locations and opposite-face populations remain visually consistent with reference geometry. Images do not prove unknown assembly/height/thermal constraints.",
+  "residual_risks": "Both PCBs match prior reference hashes. Return-path, golden-render and contract-coverage advisory FAILs remain; qualitative placement requirements remain UNVERIFIED. No routing, new board shrink, fabrication-readiness claim, matched Python benchmark or whole-goal completion."
+}

@@ -1,0 +1,78 @@
+{
+  "status": "166x159_finalist_passes_all_mandatory_gates_hardware_unknowns_remain",
+  "code_commit": "dcde74a5",
+  "qualified_incumbent_mm": [167,159],
+  "incumbent_evidence": "native/benchmarks/2026-10-11-contract-group-faces.json",
+  "screen_method": "Three sequential prepared-input trials; override only outline on carrier-167x159-south-interleaved.floorplan.json. Use compact mode, order 3, edge feasibility, owned quality first, face cohesion, contract-group-face-sheet usb_jtag, and board_aux=owned-face-fixed/a2.2/owned-pins-forward. No concurrent builds or tests.",
+  "screens": [
+    {
+      "outline_mm": [166,159],
+      "log": "native/build/carrier-contract-face-166x159-screen.log",
+      "construction_seconds": 2.729250667,
+      "model_seconds": 2.695309625,
+      "pcb_text_seconds": 0.033941042,
+      "pcb_sha256": "4d1432b252230cbfc6e7342de7f0e431a0f12dc16d7d26ebd08fe0a67508bab1",
+      "placement_contract_ok": true,
+      "placement_flow_ok": true,
+      "hard_red": 0,
+      "hard_margin_min_mm": 4.07,
+      "hard_margin_sum_mm": 887.46,
+      "top": 416,
+      "bottom": 153
+    },
+    {
+      "outline_mm": [166,158],
+      "log": "native/build/carrier-contract-face-166x158-screen.log",
+      "elapsed_seconds": 0.373893834,
+      "status": "construction_failed",
+      "receipt_captured": true,
+      "reason": "Legalizer: stale X separation after axis repair, then perpendicular-order retry produces a Y negative cycle."
+    },
+    {
+      "outline_mm": [165,159],
+      "log": "native/build/carrier-contract-face-165x159-screen.log",
+      "elapsed_seconds": 0.367307750,
+      "status": "construction_failed",
+      "receipt_captured": true,
+      "reason": "Legalizer: stale X separation after axis repair, then perpendicular-order retry produces a Y negative cycle."
+    }
+  ],
+  "finalist_spec": "native/benchmarks/carrier-166x159-contract-groups.floorplan.json",
+  "qualification": {
+    "output": "/private/tmp/carrier-contract-finalist.PuuvCD",
+    "log": "native/build/carrier-contract-finalist-qualification.log",
+    "command": "native/bin/schgen board --project carrier --compact-placement --interior-order 3 --edge-feasibility --owned-quality-first --owned-face-cohesion --contract-group-face-sheet usb_jtag --owned-shape board_aux=owned-face-fixed/a2.2/owned-pins-forward --floorplan-spec native/benchmarks/carrier-166x159-contract-groups.floorplan.json --timing -o OUTPUT",
+    "board_ok": true,
+    "complete": true,
+    "all_mandatory_gates_pass": true,
+    "schematic_sheets": 37,
+    "pcb_matches_screen": true,
+    "verdict_sha256": "e6a7666fc0cd5ada6d5bdb5c68784c72bcdac30dcc1898225211ad94d307391c",
+    "non_unrouted_drc_errors": 0,
+    "unrouted": 499,
+    "source_audit": "PASS: 69 C++ files, 75 constants, 156 registered transforms",
+    "advisory_failures": ["return_path", "golden", "contract_coverage_lint"],
+    "renders": 8,
+    "inspected": ["renders/3d_top.png", "renders/3d_bottom.png"],
+    "visual_observation": "Relocated USB-JTAG group remains on the bottom, central SoM reserve clear, top controls and perimeter connectors retained. Several interior placements change from the 167 mm candidate. Existing model-size limitations and assembly/thermal/return-path unknowns remain.",
+    "area_mm2": 26394,
+    "area_reduction_from_168x159_percent": 1.1904761905,
+    "area_reduction_from_168x163_percent": 3.6152497809,
+    "fallbacks": {"cand_cap_truncated":116,"interior_reseat_retry":12,"punch_free_plan_rejected":1},
+    "timings_seconds": {
+      "process_wall": 240.96,
+      "measured_scope": 240.897227,
+      "compile": null,
+      "authoring_audit": 16.159817,
+      "sheet_parallel_checks_and_render_wall": 25.124062,
+      "pcb_input_loading_and_netlist_validation": 1.437362,
+      "pcb_build_model_with_internal_checks": 2.844640,
+      "pcb_text_emission": 0.034633,
+      "pcb_drc": 1.552051,
+      "render3d": 28.995395,
+      "source_audit": 151.661200
+    },
+    "timing_limits": "One uncontended complete pipeline run; compile was not timed. Listed phases are a subset, not an additive whole. No matched Python comparison or runtime speedup claim."
+  },
+  "limits": "Bounded local candidate screen, not global optimality or fabrication readiness. No failed candidate promoted; no constraint thresholds changed."
+}

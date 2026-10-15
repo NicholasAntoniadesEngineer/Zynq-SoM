@@ -1,0 +1,36 @@
+{
+  "base_commit": "b919a7fa",
+  "change": "Prune primary-body boundary failures before occupancy frontier construction; retain complete half-step tie buckets",
+  "project": "carrier",
+  "options": {"compact_search": true, "constraint_first": true, "edge_translation": true, "initial_outline_mm": [168,159], "outline": "auto", "runs": 1},
+  "command": "native/build/fast/schgen_compact_stage_profile --repo $PWD --project carrier --compact-search on --constraint-first on --edge-translation on --initial-outline-mm 168x159 --runs 1 --kicad-cli /Applications/KiCad/KiCad.app/Contents/MacOS/kicad-cli",
+  "before": {"construction_seconds": 91.898174709, "frontier_calls": 1015363044, "cell_index_calls": 3007313556, "log": "native/build/carrier-seeded-edge-search.log"},
+  "after": {"construction_seconds": 73.580469625, "frontier_calls": 729761888, "cell_index_calls": 3007313556, "log": "native/build/carrier-boundary-frontier-search.log"},
+  "unchanged_result": {
+    "dimensions_mm": [168,159], "top": 425, "bottom": 144, "instances": 569,
+    "outer_attempts": 2226, "packed": 12, "rejected": 2214,
+    "edge_candidates": 59276, "edge_repairs": 372, "reseats": 417,
+    "pcb_sha256": "ccaa5061f105825b678b090e27e467fca710da871a7bd112ac17dab27cd7d3f1",
+    "placement_contract_ok": true, "placement_flow_ok": true, "hard_red": 0,
+    "hard_margin_min": 4.07, "hard_margin_sum": 893.92
+  },
+  "regression_checks": {
+    "targeted_suites_passed": ["occupancy_cell_counter", "occupancy_precision", "occupancy_child_halo", "breathe_occupancy", "compact_profile_inputs", "initial_outline", "floorplan_final_estimate"],
+    "independent_cartesian_scenarios": 486,
+    "carrier_fixed_finalist_physical_checks": "PASS via compact_profile_inputs; not full acceptance",
+    "devkit_seeded_auto": {
+      "seed_mm": [98,98], "dimensions_mm": [98,98], "top": 106, "bottom": 57,
+      "construction_seconds": [0.323830001,0.325787541],
+      "pcb_sha256_both_runs": "fca4d528b046a2604117226739c6cb61ef2b47907a667746c3cf48dd290477ac",
+      "placement_contract_ok_both_runs": true, "placement_flow_ok_both_runs": true, "hard_red_both_runs": 0,
+      "log": "native/build/devkit-boundary-frontier-search.log"
+    }
+  },
+  "acceptance": false,
+  "limitations": [
+    "Single samples, not statistically controlled: the earlier sample overlapped test compilation; no compilation or test suite overlapped the new sample",
+    "Construction only; input preparation, rendering and full audit excluded; not the required historical Python comparison",
+    "Real-board frontier half-width includes a safety epsilon; exact-half-width tie correction is separately exercised by the Cartesian oracle",
+    "No full audit/DRC/render qualification; existing retry ceilings remain unchanged"
+  ]
+}

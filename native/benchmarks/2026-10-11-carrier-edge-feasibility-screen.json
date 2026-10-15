@@ -1,0 +1,39 @@
+{
+  "base_commit": "ed5799a2",
+  "scope": "Bounded construction-only carrier outline screen, not board acceptance",
+  "input": {
+    "schematic": "/private/tmp/carrier-multiscale-qualified.gpzmOW/Zynq_Carrier.kicad_sch",
+    "provenance": "Qualified 4940b7f0-era input. Carrier hardware and placement implementation unchanged since then; intervening production changes affect explicit schematic selection and source audit stability only.",
+    "mode": "Current C++ circuits/link/input validation, actual KiCad netlist extraction; compact placement, single interior order 3, fixed diagnostic outlines. Prepared repetitions reuse parsed input only."
+  },
+  "no_edge_translation": [
+    {"outline_mm": [168,159], "status": "CONSTRUCTION_FAILED", "model_seconds": 0.203206416},
+    {"outline_mm": [167,160], "status": "CONSTRUCTION_FAILED", "model_seconds": 0.211343},
+    {"outline_mm": [169,159], "status": "CONSTRUCTION_FAILED", "model_seconds": 0.202399167},
+    {"outline_mm": [170,158], "status": "CONSTRUCTION_FAILED", "model_seconds": 0.213120292}
+  ],
+  "failure_accounting": "Each failed probe completed one outer attempt and retained its executed failure-prefix receipt; unavailable=false. These failures do not establish a physical minimum.",
+  "edge_translation_candidate": {
+    "outline_mm": [168,159],
+    "area_mm2": 26712,
+    "area_reduction_from_qualified_168x160_mm2": 168,
+    "model_seconds": [3.337151833,3.245789541,3.253477],
+    "top": 425,
+    "bottom": 144,
+    "components": 569,
+    "pcb_sha256": "9b6425ed47ea12a70dff6a626b3842deb91581a97cdc1213ea8c020a3f02c61e",
+    "repeated_pcb_bytes_equal": true,
+    "placement_contract_ok": true,
+    "placement_flow_ok": true,
+    "hard_red": 0,
+    "hard_margin_min": 4.07,
+    "hard_margin_sum": 893.92,
+    "translation_candidates": 270,
+    "applied_repairs": 10,
+    "every_repair": "W edge, -0.5 mm along the run; 27 translation candidates evaluated per applied repair",
+    "fallback_counts": {"cand_cap_truncated":116,"edge_run_translation":10,"interior_reseat_retry":10,"punch_free_plan_rejected":1},
+    "acceptance": "NOT ACCEPTED. edge_run_translation has an absent-name ceiling of zero in the committed fallback policy. No ceiling, gate, hardware constraint or current default was changed. No full DRC, source audit or board renders performed for this candidate."
+  },
+  "tool_improvement": "Profiler now prints each actual edge translation's candidate count, edge and signed displacement; previously only aggregate counts were visible. Two-repeat probe verified this output without changing candidate PCB bytes or receipts.",
+  "next_algorithm_direction": "Investigate clearance-aware initial run placement: compute legal start positions from neighbouring edge/SoM geometry and choose the nearest feasible affinity target. Current pack_edges clamps the weighted target only to its own edge range; cross-edge feasibility is checked later. Do not hide or relabel executed repair events, promote this diagnostic candidate, or assume geometry gates from this screen establish hardware safety."
+}

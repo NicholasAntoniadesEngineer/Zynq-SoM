@@ -1,0 +1,19 @@
+{
+  "scope": "Schematic box-buck placement correction, not board acceptance",
+  "defect": "Right-facing regulator control pins on power/ground nets were omitted by the box-buck template. Direct EN/SYNC-to-VIN on LM61460 therefore failed the independent power-island connectivity gate after eight futile page expansions.",
+  "correction": "Place an explicit collision-checked rail stub for a right-facing power/ground pin, preserving power-island rejection and historical signal/port handling.",
+  "tests": {
+    "native_schematic_place_templates_contracts": "PASS; 76 contracts, including 66 immutable originals and direct-VIN positive/missing-power negative mutations",
+    "native_schematic_route_contracts": "PASS",
+    "ctest_wall_seconds": 1.40,
+    "carrier_power_som_changed_worktree": "BUILD PASS; connectivity, extracted netlist, ERC and visual gates PASS; rendered schematic inspected",
+    "devkit_power_som_changed_worktree": "BUILD PASS; connectivity, extracted netlist, ERC and visual gates PASS"
+  },
+  "qualification_boundaries": {
+    "hardware_adoption": "Separate uncommitted direct-enable hardware changes are not qualified by this template commit.",
+    "carrier_full_run_before_template_fix": "FAIL: missing power_som sheet, sandboxed KiCad DRC crash, thermal_via_lattice 7 versus ceiling 0. Original failure receipts retained under /private/tmp/carrier-direct-enable-qual.SZJU3t.",
+    "independent_drc_same_pcb": "Sandboxed retry reproduced Swift array-index crash. Unsandboxed retry PASS: 0 errors, 217 total findings, 499 unconnected/unrouted. Does not clear the other failed gates.",
+    "routing": "Out of scope",
+    "fabrication_ready": false
+  }
+}

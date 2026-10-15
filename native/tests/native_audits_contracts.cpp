@@ -47,12 +47,40 @@ void ledger_contracts(const JsonNode& reference){
 }
 void registry_contracts(const JsonNode& reference){
     NativeFallbacks f;register_native_fallbacks(f);f.record("seat_node_budget");const auto snap=f.snapshot();f.record("seat_node_budget");f.restore(snap);
-    const auto census=f.census();require(census.size()==get(reference,"census").object_value.size(),"native fallback registry owns all captured paths");
+    const auto census=f.census();
+    // Include the three earlier incoming/victim-shape events omitted by the
+    // stale +23 inventory, plus three thermal and three paired search events.
+    require(census.size()==get(reference,"census").object_value.size()+36,"historical fallback census plus thirty-six named native recovery events");
+    require(census.at("legalize_joint_axis_reuse")==AuditInteger{},"axis reuse must be explicitly registered");
+    for (const auto* name : {"interior_reseat_pair_trial","interior_reseat_pair_rejected","interior_reseat_pair_recovered"})
+        require(census.at(name)==AuditInteger{},"paired relocation events remain explicitly registered");
+    for (const auto* name : {"interior_reseat_incoming_shape_trial","interior_reseat_shape_retry","interior_reseat_shape_trial"})
+        require(census.at(name)==AuditInteger{},"shape recovery events remain explicitly registered");
+    for (const auto* name : {"thermal_repair_trial","thermal_repair_rejected","thermal_repair_moved"}) {
+        require(census.at(name)==AuditInteger{},"thermal recovery starts with zero events");
+        f.record(name);
+        require(f.census().at(name)==AuditInteger(1),"thermal recovery work is counted");
+    }
+    f.restore(snap);
+    require(census.at("legalize_neighbour_retry")==AuditInteger{},"neighbour retry starts with zero events");
+    f.record("legalize_neighbour_retry");
+    require(f.census().at("legalize_neighbour_retry")==AuditInteger(1),"executed neighbour retry is counted");
+    f.restore(snap);
+    require(census.at("facing_replan_retry")==AuditInteger{},"facing replan starts with zero events");
+    f.record("facing_replan_retry");
+    require(f.census().at("facing_replan_retry")==AuditInteger(1),"executed facing replan is counted");
+    f.restore(snap);
+    require(census.at("interior_failed_first_retry")==AuditInteger{},"failed-first retry starts with zero events");
+    require(census.at("legalize_facing_retry")==AuditInteger{},"facing retry starts with zero events");
+    require(census.at("legalize_reservation_retry")==AuditInteger{},"reservation retry starts with zero events");
+    require(census.at("contract_group_orientation_retry")==AuditInteger{},"contract retry starts with zero events");
+    require(census.at("edge_run_translation")==AuditInteger{},"opt-in translation starts with zero events");
+    require(census.at("screened_incumbent_retained")==AuditInteger{},"incumbent retention starts with zero events");
     for(const auto& [name,v]:get(reference,"census").object_value)require(census.at(name)==AuditInteger(std::int64_t(v.number_value)),"independent rollback census "+name);
     rejects([&]{f.record("not-registered");},"unknown fallback is an error");rejects([&]{register_native_fallbacks(f);},"duplicate fallback registration fails");
     rejects([&]{f.restore({"not-registered"});},"bad restore fails before state mutation");require(f.snapshot()==snap,"failed restore preserves events");
     f.reset();require(f.census().at("seat_node_budget")==AuditInteger{},"fallback reset keeps zero registrations");
-    NativeQuantizations q;register_native_quantizations(q);require(q.declarations().size()==155,"122 prior plus9 search plus18 plain plus6 grid operations");
+    NativeQuantizations q;register_native_quantizations(q);require(q.declarations().size()==156,"122 prior plus9 search plus18 plain plus6 grid plus1 edge tick operations");
     rejects([&]{register_native_quantizations(q);},"duplicate transform registration fails");
     const std::vector<double> values={-100.13,-2.5,-0.635,-0.25,0,0.05,0.635,1.2345,83.15};
     for(double value:values){
@@ -147,7 +175,7 @@ void source_contracts(const fs::path& root,const fs::path& scratch){
     // source. All raw operations must be inside an explicitly registered body.
     CppAuditOptions live;live.workers=1;live.flags={"-I"+(root/"native/include").string()};
     const auto census=scan_cpp_audit_sources(root,{{"native/include/schgen/quantize.hpp"},{"native/src/quantize.cpp"},{"native/src/native_audit_quantize.cpp"},{"native/src/precision_ops.cpp"},{"native/src/occupancy_precision.cpp"},{"native/src/legalize_precision.cpp"},{"native/src/stage_precision.cpp"},{"native/src/placement_precision.cpp"},{"native/src/output_precision.cpp"},{"native/src/pack_precision.cpp"},{"native/src/pack_geometry_precision.cpp"},{"native/src/pack_search_precision.cpp"},{"native/src/pack_plain_precision.cpp"},{"native/src/pack_grid_precision.cpp"}},live);
-    require(census.constants.size()==8&&census.functions.size()==158,"actual native quantize/precision declarations are scanned");
+    require(census.constants.size()==8&&census.functions.size()==159,"actual native quantize/precision declarations including edge tick ceiling are scanned");
     NativeQuantizations all;register_native_quantizations(all);
     NativeLedger live_ledger;
     const std::vector<std::pair<std::string,double>> constants={{"kGridMm",fixed_part_grid(1.3)},{"kHalfMm",som_pose_half_mm(0.7)},{"kCreditMm",quant_credit(0)},

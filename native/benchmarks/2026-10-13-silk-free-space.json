@@ -1,0 +1,28 @@
+{
+  "base_commit": "85e1050a",
+  "defect": "Ring/orbit label sampling exhausted its candidates and returned the least-penetrating result, leaving C17003/R32005 overlapping on the 165x156 carrier despite available free space.",
+  "change": "When sampled search and size alternatives still overlap, sweep obstacle-edge Y events and merge forbidden X intervals to locate an on-board free gap. Verify the candidate with the existing spatial index. Preserve label visibility, minimum font policy, margins and final overlap gate. No path/name-dependent cache or board-specific label exception.",
+  "tests": {
+    "native_pack_silk_contracts": "PASS 0.46 seconds; includes an unsampled legal gap with shrinking disabled, deterministic repetition, completely occupied board, existing index boundaries and frozen kernel fixtures",
+    "native_pcb_emit_contracts": "PASS 0.46 seconds; existing emission fixtures unchanged",
+    "carrier": {
+      "log": "native/build/silk-sweep-carrier.log",
+      "pcb_sha256": "64b0b4334230a1aaefdf3683dff61c7597b79ff4d8632e509c8992b925534725",
+      "repeat_identical": true,
+      "top_reference_overlaps": 0,
+      "bottom_reference_overlaps": 0,
+      "emission_fallbacks": 0,
+      "model_seconds": [6.474601209,6.511481042],
+      "pcb_text_seconds": [0.041710667,0.040646208],
+      "other_screens": "fanout, ratsnest, placement contract and flow PASS; hard_red=0; 165x156, top403/bottom163 unchanged"
+    },
+    "devkit": {
+      "log": "native/build/silk-sweep-devkit.log",
+      "pcb_sha256": "b6798d4b63d2fddbf9fad24945c151b9420b049b674ad5d637c43bf4a365137f",
+      "repeat_identical_and_unchanged": true,
+      "top_reference_overlaps": 0,
+      "bottom_reference_overlaps": 0
+    }
+  },
+  "remaining": "Repeat full carrier qualification and inspect updated renders. Diagnostic screening does not prove full acceptance; no new Python comparison or speedup claim."
+}

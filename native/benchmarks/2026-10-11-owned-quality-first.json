@@ -1,0 +1,77 @@
+{
+  "status": "pipeline_qualified_opt_in_quality_improvement_not_hardware_proximity_acceptance",
+  "base_commit": "b75a9222",
+  "strategy": "Among feasible same-position, same-dimension, same-face alternatives, consider only strict per-cap proximity improvements over the ordinary winner, with identical trusted subjects, bulk gaps and fanout count. Reject priority for opposite-face bypass relationships. Compute the entire nondominated improving frontier, then choose minimum existing estimator/distance/index. No numerical tie band or proximity threshold is introduced.",
+  "default_unchanged": true,
+  "tests": {
+    "core_and_profile": {"passed": 3, "failed": 0, "seconds": 22.28, "log": "native/build/quality-first-tests.log"},
+    "cli": {"passed": 1, "failed": 0, "seconds": 1.47, "log": "native/build/quality-first-cli-tests.log"},
+    "coverage": ["all 24 frontier input permutations", "changed position/dimensions/side rejected", "foreign owner, worsened bulk/proximity/fanout and rejected evidence retain incumbent", "cross-face projected gap cannot receive quality priority", "duplicate candidate rejection", "actual engine geometry/accounting invariance when already optimal", "real pilot selection", "invalid/default CLI and profiler options"]
+  },
+  "screen": {
+    "command": "native/build/fast/schgen_compact_stage_profile --repo . --project carrier --compact-search on --interior-order 3 --outline-mm 168x159 --runs 2 --input-mode prepared --edge-feasibility on --owned-quality-first on --owned-selection-trace on --schematic /private/tmp/carrier-initial-edge-qualified.oZRoap/Zynq_Carrier.kicad_sch",
+    "log": "native/build/carrier-quality-first-screen.log",
+    "repeated_identical_pcb": true,
+    "model_seconds_including_trace": [3.134677542,3.105303542],
+    "placement_contract_ok": true,
+    "placement_flow_ok": true,
+    "hard_red": 0,
+    "hard_margin_min_sum": [4.07,893.91]
+  },
+  "qualification": {
+    "command": "native/bin/schgen board --project carrier --compact-placement --interior-order 3 --edge-feasibility --owned-quality-first --floorplan-spec native/benchmarks/carrier-168x159-initial-edge.floorplan.json --timing -o /private/tmp/carrier-owned-quality-qualified.eD59Wc",
+    "output": "/private/tmp/carrier-owned-quality-qualified.eD59Wc",
+    "log": "native/build/carrier-owned-quality-qualification.log",
+    "exit_code": 0,
+    "board_ok": true,
+    "complete": true,
+    "mandatory_nonpass": [],
+    "advisory_failures": ["return_path","golden","contract_coverage_lint"],
+    "sheets": 37,
+    "dimensions_mm": [168,159],
+    "area_mm2": 26712,
+    "top_bottom_components": [425,144],
+    "non_unrouted_drc_errors": 0,
+    "unrouted": 499,
+    "pcb_sha256": "f7ad4f0339b96c1439d8b601e7ffa9dc4c12ee08529eb5982451058a7d8d949a",
+    "matches_screen": true,
+    "verdict_sha256": "347217946f07be3a1c27e16b9b494268ce42459d3aca74cf1ed02c8bddb5b363",
+    "nonzero_fallbacks": {"cand_cap_truncated":116,"interior_reseat_retry":10,"punch_free_plan_rejected":1},
+    "fallback_ceilings_unchanged": true,
+    "views_rendered": 8,
+    "top_bottom_inspected": true,
+    "render_observations": "C7001 moves near the upper-left side of U7001 in the bottom render. Top layout, edge connector access and central SoM reservation remain visually consistent. Bottom remains sparse. Inspection does not establish assembly or electrical loop suitability.",
+    "pcb_diff_review": "C7001 moves from (153.28,85.33) to (161.476,76.6502), keeping bottom/270-degree orientation. The downstream resistor reorder swaps R7006/R7007 at y=85.33/88.79; C7001 and U7001 silk labels are repositioned. Full gates cover the resulting board, not just the local candidate."
+  },
+  "measured_improvement": {
+    "subject": "bringup_rails U1.24 -> C1.1 (board U7001.24 -> C7001.1)",
+    "before_planar_pad_gap_mm": 8.0298005,
+    "after_planar_pad_gap_mm": 6.8005955,
+    "final_independent_report_mm": 6.8006,
+    "gap_change_percent": -15.308039097608946,
+    "owner_cap_sides": "bottom/bottom",
+    "hardware_proximity_status": "UNVERIFIED, no reviewed numeric maximum",
+    "local_estimator_tradeoff_percent_at_trace_event_10": 0.06686248688566239,
+    "board_aux": "Unchanged; its opposite-face relationships intentionally receive no quality-first preference."
+  },
+  "timing_seconds": {
+    "compile": null,
+    "wall": 268.62,
+    "measured_scope": 268.539268,
+    "authoring_audit": 21.413895,
+    "source_audit": 166.798748,
+    "sheet_checks_and_render_wall": 28.841769,
+    "model_with_internal_checks": 3.266177,
+    "pcb_text_emission": 0.033726,
+    "drc": 1.691373,
+    "render3d": 30.977146
+  },
+  "limitations": [
+    "Full wall time increased from the previous single run's 244.84 seconds; audits/rendering also increased. No speedup claim or causal timing attribution from these samples.",
+    "Compile succeeded but was not independently timed. Historical matched Python comparison remains separate and incomplete.",
+    "Previously qualified carrier/default and devkit artifacts remain preserved. No fresh full devkit qualification in this batch.",
+    "This changes candidate selection, not generic initial packing or owner/cap side assignment. Those structural issues still limit improvement.",
+    "Hardware proximity, access, height, assembly and related unknowns remain unresolved; advisory failures are not hidden or waived.",
+    "Routing is out of scope. Not fabrication ready. Goal remains incomplete."
+  ]
+}

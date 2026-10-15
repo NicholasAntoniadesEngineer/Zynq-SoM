@@ -1,0 +1,34 @@
+{
+  "parent_commit": "b0b1b410",
+  "change": "On a typed edge-geometry mismatch, regenerate all zone geometry from the selected edge assignments and actual run order, then repack and place once. The retry cannot recursively retry another mismatch; all final physical/electrical gates remain required.",
+  "scope": "Failure-only whole-group regeneration; valid incumbents follow the unchanged path. This is not yet a broad edge-assignment/order search portfolio.",
+  "tests": {
+    "placed_only_contracts": "PASS 152764 assertions across both boards; log native/build/edge-replan-placed-contracts.log",
+    "native_pcb_placement_contracts": "PASS 31.18s: edge assignment/order transport, retained outline/interior policy, input immutability, malformed-edge/nonfinite/duplicate/missing-block rejection, typed mismatch transport and both-board production regressions",
+    "fixture_correction": "Historical fixture loader previously omitted each edge block's edge field; now reads the recorded field rather than leaving it empty.",
+    "diff_check": "PASS"
+  },
+  "independent_accounting": {
+    "first_attempt_log": "native/build/edge-guard-rejection.log",
+    "independent_retry_log": "native/build/edge-replan-independent.log",
+    "combined_log": "native/build/edge-replan-162x153.log",
+    "operation_counter_keys": 86,
+    "counter_sum_differences": 0,
+    "first_events": 12122,
+    "second_events": 11740,
+    "combined_events": 23863,
+    "exact_event_sequence": "first attempt + edge_geometry_replan_retry + independent second attempt",
+    "method": "Independent retry specification reconstructed from the saved packed edge assignments and geometric run order, not from the integrated retry receipt. Full logs parsed without truncation for the event comparison."
+  },
+  "candidate": {
+    "dimensions_mm": [162,153],
+    "completed_outer_attempts": 10,
+    "result": "REJECTED: first attempt edge mismatch, second attempt bounded packing exhaustion. Available failure receipt includes both. No geometrically invalid board emitted and no smaller board accepted."
+  },
+  "controls": {
+    "carrier": {"dimensions_mm":[163,152],"pcb_sha256":"413100c05f91a68436c457039752e0e932593e54760e802bed434a547e66dca7","log":"native/build/edge-replan-reference.log"},
+    "devkit": {"dimensions_mm":[98,98],"pcb_sha256":"1b12fecbcbbaa5e6084c2459da93cb144a660ff19805e6e4e3f75f9c22689fdb","log":"native/build/edge-replan-devkit.log"},
+    "result": "Exact previously qualified hashes; fanout/ratsnest/placement/flow diagnostics pass, hard_red=0, zero nonsearch fallbacks. Full qualification not repeated."
+  },
+  "limitations": "Successful recovery to a newly qualified board is not yet demonstrated. Diagnostic runs overlapped tests; no performance comparison claimed. Next: explore consistent edge orders/assignments and qualify promising candidates. Routing out of scope; no fabrication-readiness claim."
+}

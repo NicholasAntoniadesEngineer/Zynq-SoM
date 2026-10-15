@@ -1,0 +1,137 @@
+{
+  "kind": "Occupancy cell-counter microbenchmark, not board latency",
+  "baseline_commit": "8a33a77b8250c1a254cb45dc80caa46f9eb5fd90",
+  "candidate_patch_sha256": "f0932b15f24fa7dad21077ef1aefbbaf0b08a7207b05aa2b2b1a1ac96b549bd4",
+  "integrated_counter_commit": "226bfb8346eadf0d59e59d4e6b1f3ef99fec279d",
+  "source": "occupancy_cell_counter/",
+  "iterations_per_trial": 1000000,
+  "untimed_warmup_iterations_per_mode": 10000,
+  "original_log": "/private/tmp/occupancy-cell-slot.dp03HP/proof/query-bench.log",
+  "pairs": [
+    {
+      "counted": 1,
+      "trial": 0,
+      "order": "old-new",
+      "reference_seconds": 0.257135584,
+      "candidate_seconds": 0.110046916,
+      "ratio": 0.427972334,
+      "digest": "14232918909567527723",
+      "cell_entries": 10006324
+    },
+    {
+      "counted": 1,
+      "trial": 1,
+      "order": "new-old",
+      "reference_seconds": 0.255963291,
+      "candidate_seconds": 0.109430333,
+      "ratio": 0.427523543,
+      "digest": "14232918909567527723",
+      "cell_entries": 10006324
+    },
+    {
+      "counted": 1,
+      "trial": 2,
+      "order": "old-new",
+      "reference_seconds": 0.260880083,
+      "candidate_seconds": 0.110838542,
+      "ratio": 0.424863948,
+      "digest": "14232918909567527723",
+      "cell_entries": 10006324
+    },
+    {
+      "counted": 1,
+      "trial": 3,
+      "order": "new-old",
+      "reference_seconds": 0.250121417,
+      "candidate_seconds": 0.109436667,
+      "ratio": 0.437534172,
+      "digest": "14232918909567527723",
+      "cell_entries": 10006324
+    },
+    {
+      "counted": 1,
+      "trial": 4,
+      "order": "old-new",
+      "reference_seconds": 0.250836,
+      "candidate_seconds": 0.110526917,
+      "ratio": 0.440634187,
+      "digest": "14232918909567527723",
+      "cell_entries": 10006324
+    },
+    {
+      "counted": 1,
+      "trial": 5,
+      "order": "new-old",
+      "reference_seconds": 0.253180833,
+      "candidate_seconds": 0.110165709,
+      "ratio": 0.435126576,
+      "digest": "14232918909567527723",
+      "cell_entries": 10006324
+    },
+    {
+      "counted": 0,
+      "trial": 0,
+      "order": "old-new",
+      "reference_seconds": 0.052978875,
+      "candidate_seconds": 0.054450125,
+      "ratio": 1.0277705,
+      "digest": "14232918909567527723",
+      "cell_entries": 0
+    },
+    {
+      "counted": 0,
+      "trial": 1,
+      "order": "new-old",
+      "reference_seconds": 0.051946583,
+      "candidate_seconds": 0.052815166,
+      "ratio": 1.0167207,
+      "digest": "14232918909567527723",
+      "cell_entries": 0
+    },
+    {
+      "counted": 0,
+      "trial": 2,
+      "order": "old-new",
+      "reference_seconds": 0.051936875,
+      "candidate_seconds": 0.052719791,
+      "ratio": 1.01507438,
+      "digest": "14232918909567527723",
+      "cell_entries": 0
+    },
+    {
+      "counted": 0,
+      "trial": 3,
+      "order": "new-old",
+      "reference_seconds": 0.053447792,
+      "candidate_seconds": 0.053891542,
+      "ratio": 1.00830249,
+      "digest": "14232918909567527723",
+      "cell_entries": 0
+    },
+    {
+      "counted": 0,
+      "trial": 4,
+      "order": "old-new",
+      "reference_seconds": 0.051943167,
+      "candidate_seconds": 0.054386208,
+      "ratio": 1.04703296,
+      "digest": "14232918909567527723",
+      "cell_entries": 0
+    },
+    {
+      "counted": 0,
+      "trial": 5,
+      "order": "new-old",
+      "reference_seconds": 0.052699583,
+      "candidate_seconds": 0.053225208,
+      "ratio": 1.00997399,
+      "digest": "14232918909567527723",
+      "cell_entries": 0
+    }
+  ],
+  "limitations": [
+    "Concurrent host load was not controlled; this is not a full-board performance comparison.",
+    "Null-sink runs were slower in all six pairs, by approximately 0.83–4.70%; they are retained, not discarded.",
+    "Both implementations compared complete operation receipt maps and geometry digests; raw counters measure actual calls, not estimated savings."
+  ]
+}

@@ -1,0 +1,45 @@
+{
+  "base_commit": "9a976827",
+  "defect": "legalize_repair_axis iterated from zero through repair_max inclusive and performed a flip after every infeasible probe. A zero budget executed one flip; the configured sixteen-flip limit could execute seventeen before reporting exhaustion.",
+  "correction": "After checking feasibility and true terminal infeasibility, reject an exhausted flip budget before selecting or executing another flip. Keep one final feasibility probe after the last allowed flip. choice_counts and flips now describe only executed work. No policy limit raised.",
+  "negative_control": {
+    "confirmed": true,
+    "failure": "floorplan contracts: zero repair budget executed a flip",
+    "log": "native/build/repair-budget-negative-tests.log",
+    "log_sha256": "eb72f5e5717372a75b1c7a713bd09d96ded70cfe7650cd655bbaa760c8359ffe"
+  },
+  "regressions": {
+    "cases": [
+      "Zero budget on an infeasible but repairable axis leaves separation states, flips and executed-choice accounting untouched.",
+      "Two independent cycles across budgets zero through three require exactly two flips; exhaustion does not publish positions or false terminal infeasibility evidence.",
+      "An already feasible axis still passes with a zero repair budget.",
+      "Seventeen independent cycles exhaust at exactly sixteen flips under the production policy value; a seventeen-flip budget solves them."
+    ],
+    "failure_receipt_and_policy_suites_pass": true,
+    "receipt_policy_seconds": 15.15,
+    "receipt_policy_log": "native/build/repair-budget-receipt-tests.log",
+    "receipt_policy_log_sha256": "5e979b08ea78207d2f36df33e78494bce43c4727d2ee39108b248b5b4f05af67",
+    "final_floorplan_verification": "PASS",
+    "floorplan_seconds": 13.66,
+    "floorplan_log": "native/build/repair-budget-final-tests.log",
+    "floorplan_log_sha256": "3f9c037059310d18a678fab331b1e921d7f0e155d812a2013d2baebb5639cb9c"
+  },
+  "incumbent_screens": {
+    "scope": "One prepared-input construction per board, no full audit, DRC or renders. Exact prior accepted PCB hashes; placement contract and flow checks pass with zero hard-red terms. Times include observer overhead and uncontrolled OS cache, not a speed comparison.",
+    "carrier": {
+      "dimensions_mm": [166,159], "top_bottom": [416,153],
+      "pcb_sha256": "4d1432b252230cbfc6e7342de7f0e431a0f12dc16d7d26ebd08fe0a67508bab1",
+      "model_seconds": 2.722116875, "pcb_text_seconds": 0.034051375,
+      "hard_margin_min_sum": [4.07,887.46],
+      "log": "native/build/carrier-repair-budget.log"
+    },
+    "devkit_mini": {
+      "dimensions_mm": [98,98], "top_bottom": [106,57],
+      "pcb_sha256": "cfa0305491d9c4a771adb130b04c4aec6cc2894542391a5c7c9dca3a68bca3cf",
+      "model_seconds": 0.428612959, "pcb_text_seconds": 0.008828459,
+      "hard_margin_min_sum": [38.28,147.52],
+      "log": "native/build/devkit-repair-budget.log"
+    }
+  },
+  "limitations": "This corrects bounded-work semantics, a prerequisite for controlled coupled-axis exploration. It does not yet implement coupled-axis backtracking, qualify a smaller carrier, or complete the sustained goal."
+}

@@ -1,0 +1,44 @@
+{
+  "base_commit": "a7fd502c",
+  "change": "For noncompact multiscale builds only, screen the completed model's facing requirements. Preserve a valid incumbent; after a resolved facing failure, reuse prepared geometry for exactly one positive-facing replan. Unresolved inputs do not trigger recovery or become PASS.",
+  "accounting": "Retain all first-model, screening and second-solve work. Declare facing_replan_retry before execution. Independent instrumented scalar-entry counts verify successful carrier recovery, interrupted second solve and unchanged devkit; mutation tests reject missing and duplicated work.",
+  "regression_closed": "native_floorplan_precision_contracts carrier_multiscale previously failed after the unsafe fan-out refit was rejected. It now passes unchanged physical requirements, including facing, fan-out, mechanical, connector, composition, ratsnest, escape and return-stitch checks. Two identical current-input builds reproduce output and receipts.",
+  "verification": {
+    "production_cli_rebuilt": true,
+    "tests_passed": 7,
+    "tests_failed": 0,
+    "wall_seconds": 64.29,
+    "log": "native/build/facing-replan-integration-tests.log",
+    "suites": ["native_pcb_placement_contracts", "native_model_failure_receipt_contracts", "native_placement_precision_contracts", "native_pcb_refit_fanout_contracts", "native_board_policy_contracts", "native_pcb_compact_strict_facing_contracts", "native_floorplan_precision_contracts"]
+  },
+  "additional_pipeline_verification": {
+    "tested_commit": "e6bb5db7",
+    "tests_passed": 5,
+    "tests_failed": 0,
+    "wall_seconds": 54.17,
+    "log": "native/build/facing-replan-pipeline-tests.log",
+    "suites": ["native_board_pipeline_contracts", "native_board_pipeline_live_contracts", "native_carrier_requirements_pipeline_contracts", "native_placement_metadata_contracts", "native_floorplan_fallback_scope_contracts"],
+    "scope": "Freshly rebuilt pipeline, live KiCad schematic, electrical, fallback-scope and metadata contracts; not a full board qualification."
+  },
+  "reference_screens": [
+    {
+      "board": "carrier compact",
+      "outline_mm": [166,159],
+      "top": 416,
+      "bottom": 153,
+      "runs": 2,
+      "unchanged_pcb_sha256": "b9389efa52adf30b1d94cad1ede3a4387bacd53802f7babb5da07dd6306cff76",
+      "log": "native/build/carrier-facing-replan-reference.log"
+    },
+    {
+      "board": "devkit_mini multiscale",
+      "outline_mm": [98,98],
+      "top": 106,
+      "bottom": 57,
+      "runs": 2,
+      "unchanged_pcb_sha256": "cfa0305491d9c4a771adb130b04c4aec6cc2894542391a5c7c9dca3a68bca3cf",
+      "log": "native/build/devkit-facing-replan-reference.log"
+    }
+  ],
+  "limits": "Focused regressions and construction screens, not a fresh complete CTest run or full board/audit/render qualification. No speedup claim. No hardware limits or fallback ceilings changed: a new facing_replan_retry event remains above the zero baseline if exercised in full qualification. Historical Python matched comparisons and broader goal outcomes remain incomplete."
+}

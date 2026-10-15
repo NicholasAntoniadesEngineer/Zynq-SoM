@@ -1,0 +1,66 @@
+{
+  "schema": 1,
+  "base_commit": "9cca4cc3",
+  "scope": "Opt-in bounded joint-axis separation search after all existing composer strategies fail; no acceptance ratchet changes",
+  "implementation": {
+    "configuration": "FloorplanExperiment.joint_separation_states / profiler --joint-separation-states N; disabled by default",
+    "qualification": "Shared final hard-term, output-grid, physical separation and selected child-reservation checks; rejected linear proposals continue without inventing negative-cycle evidence",
+    "directional_gaps": "Recomputed for each ordering and axis, including opposite-face child reservation projections",
+    "publication": "Candidate only published after qualification and completion observer succeed; explicit-order engine failure restores entry layout and side offers",
+    "accounting": "Actual search states, axis solves, qualification proposals/rejections and exhausted budget imported into fallback receipts, including exception prefixes; imported counts are grouped, not an interleaved low-level event timeline"
+  },
+  "validation": {
+    "command": "ctest --test-dir native/build/fast --output-on-failure -R '^native_(floorplan|compact_retry|board_policy)_contracts$'",
+    "passed": 3,
+    "failed": 0,
+    "seconds": 23.91,
+    "production_cli_rebuilt": true,
+    "composer_fixtures": {
+      "cases": 324,
+      "legacy_successes_preserved_exactly": 179,
+      "recovered": 145,
+      "recovered_plain": 34,
+      "recovered_directional_fanout": 45,
+      "recovered_mixed_face_child": 33,
+      "recovered_through_hole_child": 33,
+      "checks": "Independent board bounds and directional physical clearances, evaluated hard terms, unchanged successful incumbent poses/logs/accounting, throwing observer rollback"
+    },
+    "kernel_qualifier": "Continue after rejection; exhaust all finite proposals without publishing pose; throwing qualifier retains executed work but no invented rejection verdict",
+    "both_board_reference_screens": {
+      "carrier": {
+        "dimensions_mm": [166, 159],
+        "top": 416,
+        "bottom": 153,
+        "pcb_sha256": "b9389efa52adf30b1d94cad1ede3a4387bacd53802f7babb5da07dd6306cff76",
+        "joint_state_limit": 128,
+        "joint_retries": 0,
+        "log": "native/build/carrier-joint-reference.log"
+      },
+      "devkit_mini": {
+        "dimensions_mm": [98, 98],
+        "top": 106,
+        "bottom": 57,
+        "pcb_sha256": "cfa0305491d9c4a771adb130b04c4aec6cc2894542391a5c7c9dca3a68bca3cf",
+        "log": "native/build/devkit-joint-reference.log"
+      },
+      "result": "Both PCB hashes and every receipt/fallback_count row unchanged from continuation-hint reference screens; construction only, not fresh full audit/render qualification"
+    }
+  },
+  "smaller_carrier_screens": {
+    "common_options": "--project carrier --compact-search on --input-mode prepared --runs 1 --interior-order 3 --edge-feasibility on --owned-quality-first on --owned-face-cohesion on --contract-group-face-sheet usb_jtag --owned-shape board_aux=owned-face-fixed/a2.2/owned-pins-forward --floorplan-spec native/benchmarks/carrier-166x159-contract-groups.floorplan.json --reseat-poses 8 --reseat-frontier 4096",
+    "schematic": "/private/tmp/carrier-qualified-oct12.SwxP7c/Zynq_Carrier.kicad_sch",
+    "trials": [
+      {"outline_mm": [165, 159], "state_limit": 128, "searches": 4, "states_per_search": 128, "axis_solves_per_search": 182, "proposals": 0, "result": "capped, construction failed"},
+      {"outline_mm": [166, 158], "state_limit": 128, "searches": 4, "states_per_search": 128, "axis_solves_per_search": 181, "proposals": 0, "result": "capped, construction failed"},
+      {"outline_mm": [165, 159], "state_limit": 512, "searches": 4, "states_per_search": 512, "axis_solves_per_search": 693, "proposals": 0, "result": "capped, construction failed"}
+    ],
+    "independent_accounting_crosscheck": "512-state trial observer totals equal failure fallback receipts: 4 searches, 2048 states, 2772 axis solves, 4 budget events, zero proposals/rejections",
+    "conclusion": "No smaller carrier accepted. A larger cap alone did not reach a feasible proposal; investigate sound hard-bound domain pruning before further budget increases. A capped search does not prove infeasibility."
+  },
+  "limitations": [
+    "Finite assignment exhaustion with nonlinear qualification is not proof that no other continuous pose satisfies the requirements",
+    "No fresh full board audits or renders in this batch",
+    "No whole-build, compile-time, or matched Python performance claim",
+    "Hardware limits previously unverified remain unverified; routing and fabrication readiness are out of scope"
+  ]
+}

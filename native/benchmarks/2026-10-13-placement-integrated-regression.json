@@ -1,0 +1,22 @@
+{
+  "source_commit": "928e8deeee0836032aa633e57b1d401053dfa5f5",
+  "scope": "Rebuilt integrated regression targets after contact-placement, outward-rounding and face-aware channel-policy changes. No source changes during verification.",
+  "status": "Seven selected suites PASS",
+  "tests_seconds": {
+    "native_compact_retry_contracts": 5.99,
+    "native_policy_audits_contracts": 44.53,
+    "native_floorplan_contracts": 13.73,
+    "native_pcb_orientation_contracts": 3.22,
+    "native_pcb_compact_owned_evict_contracts": 8.40,
+    "native_pcb_emit_contracts": 0.90,
+    "native_board_pipeline_contracts": 36.71
+  },
+  "logs": ["native/build/placement-integrated-build.log", "native/build/placement-integrated-tests.log", "native/build/placement-pipeline-build.log", "native/build/placement-pipeline-tests.log"],
+  "coverage": "Combined verification of retry/fallback accounting, policy/source-audit contracts, independent floorplan oracles and hard constraints, orientation/chirality and bottom-group geometry, eviction transactions, PCB emission and pipeline gate/timing semantics.",
+  "limits": "Selected suites, not all 274 registered tests and not new full board acceptance or fabrication qualification. Test durations are not board-build timings. Current accepted reference PCB parity is recorded separately in mixed-face-channel-recovery evidence.",
+  "timing_comparison_recheck": {
+    "python_worktree_commit_verified": "0e9bbc913bab77f9cd228940db2a332d25d6bfa1",
+    "historical_report": "native/benchmarks/2026-10-08-timing-summary.json",
+    "status": "Still incomplete for the current goal: old C++ full commands failed, current workloads differ, and historical mixed phases cannot be subtracted to infer audit-free generation. No old percentage reused as a current speedup claim."
+  }
+}

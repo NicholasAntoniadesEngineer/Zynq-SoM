@@ -1,0 +1,44 @@
+{
+  "base_commit": "d3a986ca",
+  "scope": "Temporary construction-only failure-path experiments, using the qualified 166x159 carrier configuration with only outline overridden: compact search, order 3, edge feasibility, owned quality first, face cohesion, USB-JTAG rigid contract-group candidates and board_aux=owned-face-fixed/a2.2/owned-pins-forward. No acceptance threshold changed. All prototype source changes removed afterward.",
+  "mechanism": "After ordinary one-victim recovery fails, remove two nearby previously placed blocks, seat the incoming block against remaining occupancy, then relocate both victims with their selected shapes unchanged. Try both relocation orders. Require at least two remaining successful-eviction budget units, debit two on success. Restore incoming/victim poses, chosen geometry, centers, side offers and occupancy on rejected trials. No recursive eviction.",
+  "experiments": [
+    {
+      "variant": "nearest four victims, at most 12 ordered pair trials per recovery",
+      "results": [
+        {"outline_mm":[165,159],"failure":"usb_jtag interior seating","failure_seconds":0.512032875,"log":"native/build/carrier-paired-reseat-165x159.log"},
+        {"outline_mm":[166,158],"failure":"usb_jtag interior seating","failure_seconds":0.552933583,"log":"native/build/carrier-paired-reseat-166x158.log"},
+        {"outline_mm":[164,160],"failure":"usb_jtag interior seating","failure_seconds":0.538837834,"log":"native/build/carrier-paired-reseat-164x160.log"}
+      ]
+    },
+    {
+      "variant": "nearest eight victims, at most 56 ordered pair trials per recovery, with per-pair diagnostic observations",
+      "outline_mm": [165,159],
+      "pair_observations_across_two_outer_attempts": 46,
+      "incoming_seated_observations": 30,
+      "pair_success_observations": 2,
+      "successful_pair": "hdmi_rx_term then power_som, to make room for usb_jtag",
+      "failure": "Legalizer Y negative cycle: hdmi_rx_term <= 110.59 from proximity to som_j2, but hdmi_rx_term >= 142.901 from USB-JTAG separation. Compact/noncompact and child-reservation retries retain the conflict.",
+      "failure_seconds": 1.114001125,
+      "log": "native/build/carrier-paired-reseat-wide-165x159.log"
+    },
+    {
+      "variant": "eight-victim candidate set plus stricter search window using max(0, authored near_max bound - existing legalizer 4 mm guard)",
+      "outline_mm": [165,159],
+      "failure": "Same HDMI termination/USB-JTAG Y negative cycle. Stricter necessary search window did not resolve cross-stage ordering conflict.",
+      "failure_seconds": 1.09761875,
+      "log": "native/build/carrier-paired-reseat-guard-165x159.log"
+    },
+    {
+      "variant": "eight-victim candidate set with original search windows; allow all wired interior groups, not only hard-term participants, to move in legalization",
+      "outline_mm": [165,159],
+      "failure": "Separation solve succeeds but final hard facing checks reject power->power_som (margin -86.2533) and power_som->@som (margin -2.5153).",
+      "failure_seconds": 1.098951791,
+      "log": "native/build/carrier-paired-reseat-movers-165x159.log"
+    }
+  ],
+  "receipts": "All six screens failed, captured failure receipts, and executed two outer attempts. Eight-victim diagnostics emit every executed paired trial; four-victim runs lack distinct per-pair observations. Prototype retry strategies were not integrated into the production fallback registry or independently unit-qualified.",
+  "conclusion": "Pair relocation can cross the seating barrier, but does not produce an accepted smaller board. Broadly allowing blockers to move exposes a facing-constraint failure rather than solving the complete system. Composer::extra currently emits near_max edges only; hard facing is evaluated after solving. Prioritize a coupled constraint formulation or orientation-preserving bounded search, not more eviction breadth or relaxed acceptance.",
+  "restoration": "floorplan_pack.cpp restored exactly to HEAD and production profiler rebuilt. CLI production binary was never replaced by these prototypes. Qualified carrier remains 166x159 mm; full qualification in 2026-10-11-integrated-board-qualification.json remains the current production evidence.",
+  "limits": "No global infeasibility proof, no performance improvement, no accepted candidate and no hardware requirement waived. Timings are failed model construction only, not build/audit/render times."
+}

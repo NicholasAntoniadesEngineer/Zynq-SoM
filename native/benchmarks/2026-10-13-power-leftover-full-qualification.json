@@ -1,0 +1,53 @@
+{
+  "source_commit": "18f84388",
+  "output": "/private/tmp/carrier-power-leftover-qual.HvKjuN",
+  "log": "native/build/power-leftover-full-qualification.log",
+  "recipe": "163x153 qualified carrier recipe with additional --contract-group-face-sheet power; current schgen explicitly relinked before run; --audit-projections 2 --timing",
+  "board_status": "FAIL; not accepted",
+  "dimensions_mm": [163,153],
+  "top_parts": 394,
+  "bottom_parts": 172,
+  "pcb_sha256": "1103bb27f46b0f921554f3f5d2336a369b584eadfcd4be7bcfee45b0caa40fd8",
+  "mandatory_failures_in_original_run": ["pcb_drc tool crash: SwiftNativeNSArray array index out of range", "fallbacks: thermal_via_lattice 4 > committed ceiling 0"],
+  "independent_drc_retry": {
+    "sandboxed": "Repeated same crash, shell exit 133",
+    "outside_sandbox": "exit 0; board hash unchanged",
+    "report": "/private/tmp/carrier-power-leftover-qual.HvKjuN/reports/drc-unsandboxed-retry.json",
+    "nonrouting_errors": 0,
+    "warnings": 210,
+    "unconnected": 499,
+    "warning_counts": {"lib_footprint_issues":107,"silk_edge_clearance":34,"silk_over_copper":20,"silk_overlap":24,"text_height":25},
+    "interpretation": "Crash reproduced in sandbox and resolved outside it. Independent DRC result supplements but does not rewrite the original failed build report."
+  },
+  "thermal": {
+    "status": "PASS: 20 devices, zero over-limit, zero unspeced, zero waived",
+    "hottest_device": "power:U1",
+    "junction_temperature_C": 134.8,
+    "reported_limit_C": 140.0,
+    "reported_margin_C": 5.2,
+    "buck_vias": "U20001/U20002/U22004 each have 8 GND vias within 5.2mm, emitted local front/back pours and inner ground plane verified",
+    "lattice_events": {"U20001":1,"U20002":1,"U22004":2},
+    "interpretation": "1/8 lattice diagnostic means one of eight vias uses an alternate checked site, not a one-via thermal shortfall. Thermal credit passes, but fallback ceiling still fails. No ceiling changed."
+  },
+  "other_results": "37 sheet checks; placement requirements, independent PCB geometry, assembly, return-stitch, 3D model coverage and native policy audit PASS. Existing return_path, golden and contract_coverage_lint advisories FAIL.",
+  "renders": {
+    "front": "renders/3d_top.png",
+    "back": "renders/3d_bottom.png",
+    "review": "Both inspected: moved buck and additional bottom-side passives visible; service labels retained. Visual review does not establish routing or fabrication readiness."
+  },
+  "timing_seconds": {
+    "pcb_input_loading_and_netlist_validation": 1.471603,
+    "pcb_model": 14.529773,
+    "pcb_text": 0.030384,
+    "render3d": 27.974108,
+    "source_audit": 109.627048,
+    "measured_scope_total_not_wall": 210.478989,
+    "caveat": "Thermal trace profiler ran concurrently during part of qualification; these are diagnostic scope times, not a matched speed comparison."
+  },
+  "trace": {
+    "log": "native/build/power-leftover-thermal-trace.log",
+    "finding": "Cross-subsystem preferred-site blockers include bringup_modules load-switch circuitry C6013/R6003/R6006, sense resistor RS21001 and test points. Independent repairs hit body-clearance conflicts or thermal regression; one RS21001 move accepted. No clearances waived. Earlier charger attribution was incorrect; project_authoring_carrier_bringup_modules.cpp identifies the load-switch ISET and indicator networks.",
+    "next": "Investigate coordinated blocker-group translations and stage-level thermal-aware placement; retain failed attempts and enforce actual geometry."
+  },
+  "limits": "No newly accepted board, no smaller outline, no historical Python timing comparison. The prior qualified reference remains authoritative."
+}

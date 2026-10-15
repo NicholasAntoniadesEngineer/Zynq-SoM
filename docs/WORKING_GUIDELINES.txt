@@ -18,6 +18,9 @@ CURRENT OWNER AMENDMENTS (2026-09 migration):
     describe the old implementation, not permission to retain it indefinitely.
   - Work on the existing perf-native migration branch; commit proven changes
     in reasonably large coherent batches. Preserve unrelated uncommitted work.
+  - October 1: migration is merged to master. New placement sprint runs on
+    codex/two-sided-layout. Prioritize carrier compactness with hardware-safe
+    two-sided placement and orientation search; routing is explicitly deferred.
   - At most FIVE active subagents going forward (supersedes the historical
     three-agent ceiling). Existing idle agents need not be closed.
   - Electrical, visual and source-policy gates remain mandatory; never claim

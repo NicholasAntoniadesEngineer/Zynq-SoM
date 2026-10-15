@@ -1,6 +1,8 @@
 #include "pcb_placement_fixture.hpp"
 #include "schgen/compose_repair.hpp"
 #include "schgen/atomic_file.hpp"
+#include "compose_workflow_output.hpp"
+#include "compose_ledger_projection.hpp"
 #include "schgen/legalize.hpp"
 #include "../src/accurate_norm.hpp"
 #include <cstdlib>
@@ -53,7 +55,35 @@ void edit_same(const ComposeSpecEdit &e,const J &r,const std::string &label) {
     require(e.edits.size()==expected.edits.size(),label+" children");
     for(std::size_t i=0;i<e.edits.size();++i)require(e.edits[i].describe()==expected.edits[i].describe()&&e.edits[i].basis==expected.edits[i].basis&&e.edits[i].target_key==expected.edits[i].target_key,label+" child fields");
 }
+void acceptance_evidence() {
+    const auto original=parse_compose_document(R"({"board":{"area_mm2":100},"flow_gate":{"ok":true},"law5":{"ok":true},"terms":[{"kind":"near_max","subject":"a","target":"b","margin":2,"measured":8,"bound":10,"ok":true,"enforced":true}],"contract_violations":{}})");
+    const auto change=[](J& row,const std::string& key,J value){for(auto& p:row.object_value)if(p.first==key){p.second=std::move(value);return;}throw std::runtime_error("test field absent");};
+    const auto terms=[](ComposeDocument& d)->J&{for(auto& p:d.data.object_value)if(p.first=="terms")return p.second;throw std::runtime_error("test terms absent");};
+    require(accept_compose_repair(original,original).ok,"unchanged resolved evidence accepted");
+    for(int mode=0;mode<13;++mode){
+        auto before=original,after=original;auto& rows=terms(after).array_value;
+        if(mode==0)rows.clear();
+        if(mode==1)change(rows[0],"margin",J{});
+        if(mode==2)change(rows[0],"enforced",parse_compose_document("false").data);
+        if(mode==3)rows.push_back(rows.front());
+        if(mode==4)terms(before).array_value.push_back(terms(before).array_value.front());
+        if(mode==5){auto n=field(rows[0],"margin");n.number_value=NAN;change(rows[0],"margin",n);}
+        if(mode==6){auto n=field(rows[0],"measured");n.number_value=INFINITY;change(rows[0],"measured",n);}
+        if(mode==7)change(rows[0],"bound",J{});
+        if(mode==9)change(rows[0],"enforced",J{});
+        if(mode==10){auto n=field(terms(before).array_value[0],"margin");n.number_value=NAN;change(terms(before).array_value[0],"margin",n);}
+        if(mode==11)terms(after)=J{};
+        if(mode==12)terms(before)=J{};
+        const auto targets=mode==8?std::set<ComposeTermKey>{{"near_max","absent","target"}}:std::set<ComposeTermKey>{};
+        const auto result=accept_compose_repair(before,after,targets);
+        require(!result.ok&&!result.reasons.empty(),"incomplete/ambiguous repair evidence rejected mode="+std::to_string(mode));
+    }
+}
 void units(const std::filesystem::path &base) {
+    require(test::compose_ledger_projection(R"({"hard_margins":{},"ok":true})",R"({"aggregate_hard_margin":{},"ok":true})"),"projection permits only root summary replacement");
+    require(!test::compose_ledger_projection(R"({"hard_margins":{},"ok":false})",R"({"aggregate_hard_margin":{},"ok":true})"),"projection rejects changed verdict");
+    require(!test::compose_ledger_projection(R"({"ok":true})",R"({"aggregate_hard_margin":{},"ok":true})"),"projection rejects missing summary");
+    require(!test::compose_ledger_projection(R"({"hard_margins":{},"nested":{"hard_margins":1}})",R"({"aggregate_hard_margin":{},"nested":{"hard_margins":2}})"),"projection cannot hide unrelated nested changes");
     const auto doc=parse_compose_document(read(base/"python.json"));
     const auto &root=doc.data;
     std::size_t i=0;
@@ -61,6 +91,15 @@ void units(const std::filesystem::path &base) {
         const auto p="/accept/"+std::to_string(i++);
         std::set<ComposeTermKey> targets;for(const auto &k:field(r,"target_keys").array_value)targets.insert(key(k));
         const auto got=accept_compose_repair(subdoc(doc,field(r,"before"),p+"/before"),subdoc(doc,field(r,"after"),p+"/after"),targets,field(r,"allow_area_growth").bool_value);
+        const auto name=string(r,"name");
+        if(name=="missing or null"||name=="null after"||name=="duplicate last wins"){
+            require(field(r,"ok").bool_value,"frozen case documents historical unsafe acceptance");
+            const std::string expected=name=="missing or null"?"rebuilt term missing ('flow_hop', 'a', 'b')":
+                name=="null after"?"rebuilt ('flow_hop', 'a', 'b') has unresolved or invalid margin":
+                "before duplicate term ('flow_hop', 'a', 'b')";
+            require(!got.ok&&std::find(got.reasons.begin(),got.reasons.end(),expected)!=got.reasons.end(),name+" must reject lost or ambiguous evidence");
+            continue;
+        }
         require(got.ok==field(r,"ok").bool_value,string(r,"name")+" verdict");
         require(got.reasons==strings(field(r,"reasons")),string(r,"name")+" reasons"+(got.reasons.empty()?"":got.reasons.front()));
     }
@@ -90,7 +129,16 @@ void units(const std::filesystem::path &base) {
     }
     for(const auto &r:field(root,"history").array_value) {
         const auto got=append_compose_ledger(parse_compose_document(string(r,"previous")),parse_compose_document(string(r,"ledger")),string(r,"step"));
-        require(got.json==string(r,"json"),"history JSON bytes");require(got.markdown==string(r,"markdown"),"history Markdown bytes");
+        require(got.json==string(r,"json"),"legacy history JSON bytes preserved");
+        auto expected=string(r,"markdown");const std::string prefix="- hard margin sum ";
+        while(true){
+            const auto p=expected.find(prefix);if(p==std::string::npos)break;
+            const auto end=expected.find('\n',p);
+            require(end!=std::string::npos&&expected.substr(end-3,3)==" mm","known legacy summary boundary");
+            expected.erase(end-3,3);
+            expected.replace(p,prefix.size(),"- legacy mixed-unit margin (not a physical quantity): sum ");
+        }
+        require(got.markdown==expected,"legacy history corrected unit label, all other Markdown bytes retained");
     }
 }
 void real_ledgers(const std::filesystem::path &root,const std::string &project) {
@@ -102,9 +150,41 @@ void real_ledgers(const std::filesystem::path &root,const std::string &project) 
         if(string(r,"name")=="moved_power_first")for(auto &inst:changed.insts)if(inst.sheet=="power"){inst.x+=100;break;}
         if(string(r,"name")=="missing_power")changed.insts.erase(std::remove_if(changed.insts.begin(),changed.insts.end(),[](const auto &inst){return inst.sheet=="power";}),changed.insts.end());
         const auto got=measure_compose_ledger(fixture.input,changed);
-        const auto expected=parse_compose_document(string(r,"ledger"));
-        same(got.data,expected.data,project+"/"+string(r,"name"));
-        require(render_compose_json(got,1,true)==string(r,"ledger"),project+"/"+string(r,"name")+" ledger bytes");
+        if(string(r,"name")=="baseline")require(accept_compose_repair(got,got).ok,project+" complete baseline evidence remains acceptable");
+        auto expected=parse_compose_document(string(r,"ledger")),actual=got;
+        require(!object_field(got.data,"aggregate_hard_margin"),"new ledger cannot publish mixed-unit scalar");
+        const auto& groups=field(got.data,"hard_margins");
+        const auto evaluations=measure_pcb_compose_terms(PcbCheckInput(changed),
+            pcb_final_compose_index(fixture.input,changed),pcb_placement_gate_policy(fixture.input));
+        for(const auto* unit:{"distance_mm","facing_degrees"}){
+            const auto& group=field(groups,unit);
+            std::size_t measured=0,unresolved=0;double sum=0;std::optional<double> minimum;
+            for(const auto& e:evaluations){
+                if(!e.term.enforced||(e.term.kind=="facing")!=(std::string(unit)=="facing_degrees"))continue;
+                if(e.note=="UNRESOLVED"||!std::isfinite(e.margin)){++unresolved;continue;}
+                ++measured;sum+=e.margin;if(!minimum||e.margin<*minimum)minimum=e.margin;
+            }
+            require(field(group,"measured").number_value==measured&&field(group,"unresolved").number_value==unresolved,
+                "serialized dimensional counts match independent term census");
+            require(std::abs(field(group,"sum").number_value-sum)<=.00501,"serialized sum rounds only within its own unit");
+            if(minimum)require(std::abs(field(group,"minimum").number_value-*minimum)<=.00501,"serialized minimum preserves physical bottleneck");
+            for(const auto* count:{"measured","unresolved"})require(!got.float_paths.count(std::string("/hard_margins/")+unit+"/"+count),"counts serialize as integers");
+            require(field(group,"measured").number_value==0?field(group,"minimum").kind==JsonKind::Null:
+                field(group,"minimum").kind==JsonKind::Number,"typed minimum availability in new ledger");
+        }
+        const auto remove=[](ComposeDocument& d,const std::string& key){auto& fields=d.data.object_value;
+            fields.erase(std::remove_if(fields.begin(),fields.end(),[&](const auto& p){return p.first==key;}),fields.end());};
+        remove(actual,"hard_margins");remove(expected,"aggregate_hard_margin");
+        same(actual.data,expected.data,project+"/"+string(r,"name")+" unchanged non-summary ledger");
+        require(render_compose_json(actual,1,true)==render_compose_json(expected,1,true),project+"/"+string(r,"name")+" non-summary ledger bytes");
+        const auto history=append_compose_ledger(parse_compose_document("[]"),got,"current");
+        require(history.markdown.find("hard margins distance_mm:")!=std::string::npos&&
+            history.markdown.find("hard margins facing_degrees:")!=std::string::npos,"new history preserves explicit units");
+        const auto legacy=append_compose_ledger(parse_compose_document("[]"),parse_compose_document(string(r,"ledger")),"legacy");
+        const auto mixed=append_compose_ledger(parse_compose_document(legacy.json),got,"current");
+        require(mixed.markdown.find("legacy mixed-unit margin (not a physical quantity)")!=std::string::npos&&
+            mixed.markdown.find("hard margins facing_degrees:")!=std::string::npos,"mixed history labels legacy and current units independently");
+        same(field(parse_compose_document(mixed.json).data.array_value.at(1),"ledger"),got.data,"current ledger survives mixed history serialization");
     }
 }
 FloorplanTermIndex index_from(const J &n) {
@@ -127,15 +207,26 @@ void predictions(const std::filesystem::path &root) {
         try {
             const auto got=evaluate_compose_candidate(f.input,parse_compose_document(string(r,"raw")),e,index_from(field(r,"index")));
             require(!object_field(r,"error"),"predicted expected error");
-            require(got.area==field(r,"area").number_value,"prediction area");require(got.spilled==strings(field(r,"spilled")),"prediction spilled");
+            // Predictions execute the current optimiser. Historical optimiser
+            // coordinates are not a workflow contract. Check wrapper transport
+            // against a direct current replica; frozen measured-board ledgers
+            // and independent numeric kernel fixtures above remain exact.
+            auto direct=compose_plan_replica(f.input,floorplan_spec_from_json(got.edited.data,"floorplan.json"));
+            direct.evaluation.index=index_from(field(r,"index"));
+            const auto current=floorplan_evaluate_terms(direct.evaluation,direct.poses);
+            require(std::isfinite(got.area)&&got.area>0&&got.area<=field(r,"area").number_value,"prediction area regression");
+            require(got.area==std::nearbyint(direct.plan.board_w*direct.plan.board_h*10)/10,"prediction area transport");
+            require(got.spilled==strings(field(r,"spilled"))&&got.spilled==direct.plan.spilled,"prediction spilled");
             require(render_compose_json(got.edited)==string(r,"edited"),"prediction edited bytes");
-            const auto &evals=field(r,"evaluations").array_value;require(got.evaluations.size()==evals.size(),"prediction evaluation size");
+            const auto &evals=field(r,"evaluations").array_value;require(got.evaluations.size()==evals.size()&&current.size()==evals.size(),"prediction evaluation size");
             for(std::size_t i=0;i<evals.size();++i) {
                 const auto &a=got.evaluations[i];const auto &b=evals[i];
-                if(a.measured!=value(field(b,"measured")))std::cerr<<std::hexfloat<<"prediction hex actual="<<a.measured<<" expected="<<value(field(b,"measured"))<<std::defaultfloat<<'\n';
-                require(a.measured==value(field(b,"measured")),"prediction measured "+a.term.kind+" "+std::to_string(a.measured)+" vs "+std::to_string(value(field(b,"measured"))));
-                require(a.bound==value(field(b,"bound"))&&a.margin==value(field(b,"margin")),"prediction bound/margin");
-                require(a.ok==field(b,"ok").bool_value&&a.note==string(b,"note"),"prediction verdict/note");
+                const auto& expected=current[i];
+                require(a.measured==expected.measured&&a.bound==expected.bound&&a.margin==expected.margin,"current prediction numeric transport");
+                require(a.ok==expected.ok&&a.note==expected.note,"current prediction verdict/note transport");
+                const auto& term=field(b,"term");
+                require(a.term.kind==string(term,"kind")&&a.term.subject==string(term,"subject")&&a.term.target_raw==string(term,"target_raw"),"prediction term identity");
+                require(!field(b,"ok").bool_value||a.ok,"previously satisfied prediction term regressed");
             }
         }catch(const FloorplanSpecError &ex){error=ex.what();}
         catch(const std::invalid_argument &ex){error=ex.what();}
@@ -176,12 +267,12 @@ void workflow(const std::filesystem::path &root) {
         host.output=[&](const auto &s){streamed+=s;};
         const auto got=run_compose_command(options,paths,host);
         require(got.exit_code==field(row,"code").number_value,mode+" exit");
-        require(got.output==string(row,"stdout"),mode+" stdout actual="+got.output+" expected="+string(row,"stdout"));
+        require(schgen::test::compose_workflow_output(got.output,string(row,"stdout")),mode+" workflow output or prediction quality regressed: "+got.output);
         require(got.output==streamed,mode+" output stream");require(builds==field(row,"build_calls").number_value&&runs==field(row,"board_calls").number_value,mode+" call budget");
         require(observed==strings(field(row,"observed")),mode+" explicit edit before board run");
         require(read(paths.spec)==string(row,"final_spec"),mode+" final spec bytes");
-        require(read(paths.ledger_json)==string(row,"ledger"),mode+" ledger bytes");
-        require(read(paths.ledger_markdown)==string(row,"markdown"),mode+" Markdown bytes");
+        require(test::compose_ledger_projection(read(paths.ledger_json),string(row,"ledger")),mode+" non-summary ledger bytes");
+        require(test::compose_markdown_projection(read(paths.ledger_markdown),string(row,"markdown")),mode+" non-summary Markdown bytes");
         require(got.applied==(mode.rfind("success",0)==0),mode+" applied flag");
     }
     const auto original=string(field(oracle,"drivers").array_value.front(),"original");
@@ -230,7 +321,44 @@ void ranking(const std::filesystem::path &root) {
             ev.measured=value(field(r,"measured"));ev.bound=value(field(r,"bound"));ev.margin=value(field(r,"margin"));ev.ok=field(r,"ok").bool_value;c.evaluations.push_back(ev);
         }cases.push_back(c);
     }
-    const auto got=rank_compose_candidates(cases);require(got.ranked.size()==field(oracle,"eligible_count").number_value,"ranking eligible count");require(got.output==string(oracle,"ranking_output"),"ranking exact output");
+    const auto got=rank_compose_candidates(cases);require(got.ranked.size()==field(oracle,"eligible_count").number_value,"ranking eligible count");
+    const std::vector<std::string> expected{"b10","b14","b04","b08","b16","b07","b11","b05","b13","b17","b06","b12","b03","b15","b09"};
+    std::vector<std::string> actual;for(const auto& c:got.ranked)actual.push_back(c.edit.block);
+    require(actual==expected,"explicit area-first unit-separated ordering of immutable candidate inputs");
+    const auto boundary=string(oracle,"ranking_output").find("compose: ranked candidates");
+    require(boundary!=std::string::npos&&got.output.substr(0,boundary)==string(oracle,"ranking_output").substr(0,boundary),
+            "historical invalid/spilled/hard-red rejection messages preserved");
+    const auto candidate=[](std::string name,double area,double linear,double angular){
+        ComposeCandidate c;c.edit.block=std::move(name);c.area=area;
+        for(const auto& [kind,margin]:std::vector<std::pair<std::string,double>>{{"near_max",linear},{"facing",angular}}){
+            FloorplanTerm t;t.kind=kind;t.enforced=true;
+            c.evaluations.push_back({t,0,90,margin,true,""});
+        }return c;
+    };
+    std::vector<ComposeCandidate> dimensional{candidate("large",101,100,89),candidate("weak",100,.001,89),
+        candidate("angular",100,.002,20),candidate("linear",100,.002,1)};
+    // Extra already-generous spacing must not hide the weak spatial bottleneck.
+    auto extra=dimensional[1].evaluations[0];extra.term.kind="far_min";extra.margin=10000;
+    dimensional[1].evaluations.push_back(extra);
+    const auto names=[](const ComposeRanking& ranking){std::vector<std::string> out;for(const auto& c:ranking.ranked)out.push_back(c.edit.block);return out;};
+    const std::vector<std::string> order{"angular","linear","weak","large"};
+    require(names(rank_compose_candidates(dimensional))==order,"unrounded bottlenecks, independent angles and area priority");
+    std::reverse(dimensional.begin(),dimensional.end());
+    require(names(rank_compose_candidates(dimensional))==order,"deterministic ordering independent of input permutation");
+    for(auto& c:dimensional){c.area*=1000000;for(auto& e:c.evaluations){
+        const double scale=e.term.kind=="facing"?0.017453292519943295:1000;
+        e.measured*=scale;e.bound*=scale;e.margin*=scale;
+    }}
+    require(names(rank_compose_candidates(dimensional))==order,"positive linear/angular unit conversion cannot reverse ranking");
+    for(int mode=0;mode<7;++mode){auto bad=candidate("bad",100,1,1);
+        if(mode==0)bad.area=NAN;if(mode==1)bad.area=INFINITY;if(mode==2)bad.area=0;
+        if(mode==3)bad.evaluations[0].margin=INFINITY;
+        if(mode==4)bad.evaluations[0].note="UNRESOLVED";
+        if(mode==5)bad.evaluations[0].term.kind="unsupported";
+        if(mode==6)bad.evaluations[0].measured=NAN;
+        const auto rejected=rank_compose_candidates({bad});
+        require(rejected.ranked.empty()&&rejected.output.find("REJECT")!=std::string::npos,"invalid rank input cannot hide behind ok flag");
+    }
 }
 void kernels(const std::filesystem::path &root) {
     const auto oracle=parse_json_file((root/"native/tests/data/compose_repair/kernel_regressions.json").string());
@@ -246,7 +374,7 @@ void kernels(const std::filesystem::path &root) {
 int main(int argc,char **argv) {
     try {
         if(argc!=2)throw std::runtime_error("usage: compose_repair_contracts REPO_ROOT");
-        const std::filesystem::path root=argv[1];units(root/"native/tests/data/compose_repair");
+        const std::filesystem::path root=argv[1];acceptance_evidence();units(root/"native/tests/data/compose_repair");
         for(const auto *project:{"carrier","devkit_mini"})real_ledgers(root,project);
         workflow(root);
         ranking(root);

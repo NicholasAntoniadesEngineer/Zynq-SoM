@@ -282,3 +282,12 @@ captured characters as literal UTF-8 and checks rendered output byte-for-byte.
 The packaging harness above uses the previously copied core archive; parent
 integration should also run the current shared JSON contracts. No shared JSON,
 firmware RTC or FMC EEPROM document source was changed by this slice.
+
+## Documentation source-path refresh (2026-10-03)
+
+The generated prose in `pipeline.md` now cites the current native C++ stage,
+quantization, fallback, census, and ratchet implementations. Its table data still
+comes from the historical `pipeline.json` capture, including the historical Python
+assembly incident description. The native-metadata rendering has a separate
+no-obsolete-Python-path and exact-publication contract. Historical captures and
+timings have not been relabeled as native measurements.

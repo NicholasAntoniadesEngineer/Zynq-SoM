@@ -1,0 +1,41 @@
+{
+  "source_commit": "5cf90176",
+  "result": "BOARD PASS: all mandatory checks, 37 sheets",
+  "output": "/private/tmp/carrier-164x153-thermal-qualified.d695cm",
+  "log": "native/build/carrier-164x153-thermal-qualification.log",
+  "pcb_sha256": "9cf06a9d9574cf3f1dfbb37f675996e99d4bbff389caa257781a415e08f547e0",
+  "dimensions_mm": [164, 153],
+  "area_mm2": 25092,
+  "area_reduction_vs_original_percent": 8.369851007887819,
+  "area_reduction_vs_previous_percent": 0.649350649350644,
+  "original_reference_mm": [168, 163],
+  "previous_qualified_mm": [164, 154],
+  "top_parts": 418,
+  "bottom_parts": 148,
+  "thermal_repair": {"trials": 18, "rejected": 15, "accepted_movements": 3},
+  "nonsearch_fallback_paths_firing": 0,
+  "nonrouting_drc_errors": 0,
+  "unrouted": 499,
+  "reference_overlaps": {"top": 0, "bottom": 0},
+  "advisory_failures": ["return_path", "golden", "contract_coverage_lint"],
+  "timing_seconds": {
+    "input_loading_and_netlist": 1.478756,
+    "pcb_model": 3.587184,
+    "pcb_text": 0.028227,
+    "render3d": 28.071121,
+    "source_audit": 108.798146,
+    "measured_scope_total_not_process_wall": 197.944085
+  },
+  "visual_review": "Front/back 3D renders inspected; eight views generated. Interface/service silkscreen retained, ordinary references hidden. Bottom population remains concentrated and substantial bottom area remains unused.",
+  "command": "native/bin/schgen board --project carrier --compact-placement --shape-area-first --interior-order 3 --failed-first-retry --edge-feasibility --owned-quality-first --owned-face-cohesion --contract-group-face-sheet usb_jtag --floorplan-spec native/benchmarks/carrier-164x153-thermal-recovery.floorplan.json --require-bottom-sheet power_mon --require-bottom-sheet bringup_modules --require-bottom-sheet bringup_en_modules --joint-separation-states 1024 --reseat-poses 8 --reseat-frontier 4096 --reseat-continuations 3 --reseat-victim-shapes --owned-shape bringup_rails=bottom-a2.2/r270/owned-pins-forward --owned-shape board_aux=owned-face-a1.000000 --audit-projections 2 --timing -o FRESH_OUTPUT",
+  "implementation": "Thermal repair tries supported lightweight contract closure groups and whole-sheet groups as rigid translations. Hardware-fixed members remain immovable. Actual emitted poses must pass owned-gap/body/corridor/keepout/fanout/per-subject thermal checks, all placed internal contracts and external placement-flow checks before committing.",
+  "tests": {
+    "native_pcb_compact_owned_evict_contracts": "PASS, 8.16 seconds; fixed member negative control, actual protected-group movement, unchanged internal arrangement, thermal recovery and imported accounting",
+    "log": "native/build/thermal-group-final-tests.log"
+  },
+  "reference_regressions": {
+    "carrier_164x154": "Construction hash aa80c90978fffcb7df4c895f9735dc8957d7d67b9e0b45e82b39e2bfc9430319 unchanged; cheap checks PASS, zero non-search fallbacks; native/build/thermal-group-reference.log",
+    "devkit_98x98": "Construction hash 1b12fecbcbbaa5e6084c2459da93cb144a660ff19805e6e4e3f75f9c22689fdb unchanged; cheap checks PASS, zero non-search fallbacks; native/build/thermal-group-devkit.log"
+  },
+  "limitations": "Not fabrication-ready. Routing excluded; advisory failures remain. This is one qualified smaller incumbent, not completion of system-wide optimisation or proof of minimum size. Full devkit requalification and matched historical Python timings remain outside this run. No speedup claim from diagnostic timings."
+}

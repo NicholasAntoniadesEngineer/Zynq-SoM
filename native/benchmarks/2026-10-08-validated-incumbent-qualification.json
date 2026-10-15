@@ -1,0 +1,27 @@
+{
+  "source_commit":"cb86fa7fddca355cf1360c5208329efb968abeb8",
+  "method":"Explicit starting dimensions are independently packed and estimated under each reservation policy; ordinary bounded search/refinement continues. No cached layout or accepted verdict, no gate changes, all executed retries retained.",
+  "production_default_changed":false,
+  "cli_integration":{"option":"schgen board --initial-outline-mm WIDTHxHEIGHT","carrier_example":"native/bin/schgen board --project carrier --initial-outline-mm 168x163 --timing -o OUTPUT","devkit_example":"native/bin/schgen board --project devkit_mini --initial-outline-mm 98x98 --timing -o OUTPUT","verification":"6/6 targeted CTest suites passed in 2.17 seconds: initial-outline CLI, initial-outline solver, final-estimate, general help, board help and audit-bypass rejection. The full builds below used identical BoardPipelineOptions through the C++ API before the CLI adapter was added; no redundant full CLI rerun claimed."},
+  "scope_warning":"These are seeded API builds, not proof that the unseeded CLI default is repaired. Smaller carrier and unresolved hardware qualification remain outstanding.",
+  "screening":{
+    "carrier":{"seed_mm":[168,163],"model_seconds":[5.261610541,5.272822166,5.292480167],"reseats":17,"ceiling":18,"previous_reseats":28,"repeatability":"Both repeated PCB hashes and complete printed scalar/fallback receipts match","pcb_sha256":"8d93efb96783a53ec53a83b830f1d8987f10ca6d86a2246999783fb9ddcf7417","hard_red":0,"hard_margin_min_mm":3.06},
+    "devkit_mini":{"seed_mm":[98,98],"model_seconds":[0.113059791],"reseats":6,"ceiling":35,"previous_reseats":50,"pcb_sha256":"cfa0305491d9c4a771adb130b04c4aec6cc2894542391a5c7c9dca3a68bca3cf"},
+    "logs_sha256":{"native/build/carrier-validated-incumbent.log":"1b59278bf0fc1fb8a26949c80a01a8b14c6223f7669d942ef24faac5828c6754","native/build/carrier-incumbent-repeat.log":"7b2dca8c635aea2c6c411db67725398dd19b0eeda1ec897450c5a25a98f4a347","native/build/devkit-validated-incumbent.log":"dd968d0c5935a1e2b998ddd59cf4bf5c441fbde6c3c0cb900e73b6d9ca3b86fe"},
+    "command":"schgen_compact_stage_profile --repo REPO --project BOARD --compact-search off --initial-outline-mm WxH --runs N --schematic FRESH_SCHEMATIC"
+  },
+  "full_qualification":{
+    "runner":"native/build/qualify-incumbent.cpp",
+    "runner_sha256":"29a8e01d32f134010863df698dd167ba880895d8326b0b633314c98105988416",
+    "entry_point":"run_board_pipeline; native_policy=true, timing=true, no_render=false, compact_search=false, only experiment.initial_outline set",
+    "carrier":{"output":"/private/tmp/carrier-incumbent-cb86fa7f.mh9dgw","exit_code":0,"complete":true,"board_ok":true,"sheets":37,"views_3d":8,"dimensions_mm":[168,163],"area_mm2":27384,"top":393,"bottom":176,"wall_seconds":244.801,"exclusive_seconds":{"authoring_audit":16.100857,"source_audit":155.017417,"pcb_build_model_with_internal_checks":5.700003,"render3d":27.953383,"sheet_parallel_checks_and_render_wall":24.236540},"mandatory_failures":[],"advisory_failures":["return_path","golden","contract_coverage_lint"],"verdict_sha256":"e8ad21e7d310c31df87452fc8ff8008a2c6d447cc6e0688dc9f0f15964ee0e0d","visual_review":"Inspected front/back renders; same dense top and sparse bottom as reference. No new layout change; not proof of thermal/assembly suitability."},
+    "devkit_mini":{"output":"/private/tmp/devkit-incumbent-cb86fa7f.t7YocZ","exit_code":0,"complete":true,"board_ok":true,"sheets":12,"views_3d":8,"dimensions_mm":[98,98],"area_mm2":9604,"top":106,"bottom":57,"wall_seconds":204.014,"exclusive_seconds":{"authoring_audit":17.039575,"source_audit":153.881651,"pcb_build_model_with_internal_checks":0.115289,"render3d":16.584091,"sheet_parallel_checks_and_render_wall":7.520489},"mandatory_failures":[],"advisory_failures":["return_path","golden","contract_coverage_lint"],"skipped":["manual and scfw: required bringup/service packages are absent from this project; pre-existing applicability skips, not waived failures"],"verdict_sha256":"34910cffb7addeb8c98e97334865d01cae85b3e13d44d943957e8d498914dd52","visual_review":"Inspected front/back renders. Geometry matches the reference, including reserved SoM region and sparse bottom. No fabrication or thermal qualification inferred."}
+  },
+  "mainline_integration":{
+    "actual_mainline_name":"master (there is no main branch)",
+    "remote_master_and_perf_native":"ebcf7c4e4fcffdf6146784fedaa2792a1c81993d",
+    "verification":"git ls-remote verified both live remote heads. Local master and perf-native match; git merge-base --is-ancestor succeeds for perf-native -> master and master -> current HEAD. No refs changed."
+  },
+  "remaining_risks":["Seed is opt-in; unseeded defaults remain unchanged and were not made green by this work", "No smaller accepted carrier", "Sparse bottom utilisation", "Existing advisory failures remain visible", "PCA9306 transient/isolation and capacitor-bias requirements remain incompletely qualified", "XT60 model-body mismatch warning remains; inspected model checker also needs arbitrary-angle bounds correction", "Routing is out of scope; no fabrication-readiness claim"],
+  "comparison_note":"Not another matched Python benchmark. Historical baseline remains exclusively 0e9bbc913bab77f9cd228940db2a332d25d6bfa1; prior both-board revision comparison and its non-equivalence disclosures remain in 2026-10-08-timing-summary.json."
+}

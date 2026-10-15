@@ -1,0 +1,31 @@
+{
+  "parent_commit": "82939467",
+  "change": "Thermal repair proposes the finite transitive closure of same-subsystem movable neighbours collided with by a proposed rigid translation. Individual trials remain first. Locked owned endpoints, fixed/contract-protected parts and cross-subsystem collisions reject this additional proposal. Face-aware geometry, rounded final poses, fanout, ownership, all placement contracts, external flow and thermal nonregression remain checked before acceptance.",
+  "tests": {
+    "native_pcb_compact_owned_evict_contracts": "PASS 8.61s",
+    "new_coverage": "Direct/transitive contact closure; fixed, owned and cross-subsystem rejection; unchanged pose; independently demonstrate individual collision and successful complete rigid translation through production geometry gates. Existing thermal repair, final-frame, independent receipt and exception tests retained."
+  },
+  "carrier_candidate": {
+    "dimensions_mm": [163,153],
+    "top_parts": 394,
+    "bottom_parts": 172,
+    "model_seconds": 13.889514667,
+    "pcb_text_seconds": 0.027143542,
+    "pcb_sha256": "f241e18659644dc5db21647ad3f76c8e9eeeb15b2529932fcadc1249867bac13",
+    "emission_lattice_events_before": 4,
+    "emission_lattice_events_after": 2,
+    "accepted_moves": ["C6013 contact group", "RS21001", "R6006 contact group"],
+    "remaining_lattice_subjects": ["U20001", "U20002"],
+    "cheap_checks": "fanout/ratsnest/local placement contract/flow pass; hard_red=0; no non-search model fallbacks",
+    "log": "native/build/thermal-contact-closure-carrier.log",
+    "accepted_finalist": false
+  },
+  "controls": {
+    "carrier_pcb_sha256": "d954ec91a789f69a1e94a26a9d3a91b279fbc208dff2503cbe8ee4c8eabc199f",
+    "devkit_pcb_sha256": "1b12fecbcbbaa5e6084c2459da93cb144a660ff19805e6e4e3f75f9c22689fdb",
+    "result": "Both reference PCB hashes unchanged; cheap gates pass and non-search model/emission fallback counts remain zero",
+    "logs": ["native/build/thermal-contact-closure-reference.log", "native/build/thermal-contact-closure-devkit.log"],
+    "scope": "Default carrier and devkit construction controls; separate from opt-in mixed-face power candidate"
+  },
+  "limits": "Still two emission events above the committed zero ceiling. No new full qualification/renders or smaller outline. Earlier full qualification belongs to parent candidate only. Diagnostic runtimes are not controlled comparisons; historical Python comparison remains outstanding."
+}

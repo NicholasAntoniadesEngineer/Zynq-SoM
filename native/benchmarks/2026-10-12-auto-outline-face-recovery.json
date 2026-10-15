@@ -1,0 +1,36 @@
+{
+  "base_commit": "4ce4fdf4",
+  "change": "Automatic sizing now tries face-aware reservations after conservative search exhaustion, instead of requiring a conservative winner. Layout restoration retains all executed accounting. An exhausted pass publishes its candidate tally before the other policy runs. Unknown estimates are explicitly unavailable; unrelated exceptions propagate.",
+  "tests": {
+    "floorplan_contracts": "PASS 14.71 seconds",
+    "source_audits": "58 contracts passed",
+    "witness": "20x20 module, 12x8 bottom alternative, zero projected-gap requirement, automatic sizing with an explicitly evaluated 30x30 starting candidate. Whole-body two-face reservation cannot satisfy the requirement; face-aware placement can.",
+    "independent_checks": [
+      "Source block/shape/side identity, physical occupancy and bounds",
+      "Bottom side and projected overlap/touching satisfy the test requirement without changing it",
+      "Both conservative and free pack calls independently observed; receipt equals their sum",
+      "Exhausted first-pass tally retained with zero accepts; second pass has accepted candidates",
+      "Deterministic complete layout and receipt replay",
+      "Removing the bottom variant fails under both policies",
+      "Unexpected observer exception stops immediately rather than triggering fallback"
+    ],
+    "existing_coverage": "Existing carrier/devkit floorplan regression fixtures and incumbent/tie tests pass."
+  },
+  "devkit_screen": {
+    "log": "native/build/devkit-auto-face-recovery-incumbent.log",
+    "outline_mm": [98,98],
+    "top": 105,
+    "bottom": 55,
+    "pcb_sha256": "b6798d4b63d2fddbf9fad24945c151b9420b049b674ad5d637c43bf4a365137f",
+    "placement_contract_ok": true,
+    "placement_flow_ok": true,
+    "hard_red": 0,
+    "qualification": "Unchanged construction-screen geometry, not a fresh full build."
+  },
+  "rejected_experiment": {
+    "hypothesis": "An early near_max-to-module translation domain might make unseeded shape/face selection discover the same feasible arrangement.",
+    "result": "Unseeded fixture still exhausted both policies. The prototype did not establish a working solution and was removed; no domain change retained.",
+    "remaining_issue": "Do not mistake this seeded recovery regression for comprehensive search completeness. Shape/face choice, positioning and downstream constraints still need joint reconsideration."
+  },
+  "scope": "No geometry gate or hardware requirement was weakened. No new smaller carrier, fresh full qualification, or matched Python speedup is claimed. The 165x159 qualified carrier remains the reference."
+}

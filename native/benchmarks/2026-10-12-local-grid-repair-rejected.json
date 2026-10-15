@@ -1,0 +1,28 @@
+{
+  "base_commit":"276193be",
+  "experiment":"After a joint proposal fails strict final separation by at most 0.0001 mm, try moving its high endpoint +0.0001 mm, then its low endpoint -0.0001 mm. Requantize and rerun all existing hard-term, edge, physical and reservation checks without repeating optional compaction. Restore the proposal after failed trials.",
+  "scope":"Temporary diagnostic prototype only; not an accepted implementation. Extra trials were printed in diagnostic logs and scalar quantizations were recorded, but no production retry-event registration was added.",
+  "log":"native/build/carrier-local-grid-repair-probe.log",
+  "result":{
+    "dimensions_mm":[165,159],"instances":566,"top":413,"bottom":153,
+    "pcb_sha256":"24ac25bfe6cb2ea6477a01b195b5ca78070ccff3bb2640f12d5b8f7275da5c64",
+    "initial_checks":"Placement and flow PASS, hard RED 0; same eventual PCB as the existing experimental candidate",
+    "successful_reseats":{"before":14,"prototype":22,"committed_ceiling":18},
+    "joint_states":{"before":1418,"prototype":1684},
+    "joint_axis_solves":{"before":2173,"prototype":2534},
+    "joint_proposals":{"before":121,"prototype":68},
+    "joint_qualification_rejections":{"before":116,"prototype":58},
+    "neighbour_retries":{"before":9,"prototype":12},
+    "observed_model_seconds":3.031208042,
+    "timing_warning":"Single diagnostic sample, not controlled A/B timing evidence"
+  },
+  "mechanism":"An earlier local recovery can change later search branches without improving the final layout. Moving USB-JTAG left creates a new neighbour conflict: bringup_en -> usb_jtag requires 47.2548 while the moved coordinate is 47.2547. Moving HDMI right can fail a different final constraint. Isolated one-coordinate repair is insufficient; do not infer that an individual numerical violation can always be repaired independently.",
+  "retained":false,
+  "restoration":"Removed all local-nudge prototype changes. No hardware gate, performance ceiling, default geometry or accepted incumbent changed.",
+  "policy_review":{
+    "current_rule":"verification_audits_counts.cpp gives every event absent from the committed baseline a zero ceiling. This conflates a new explicitly selected search strategy with increased fallback use in the old strategy.",
+    "decision_requested":"Whether a separately reviewed, measured execution budget may be established for the new strategy while preserving the old strategy's ceilings and all hardware checks.",
+    "authority":"Question sent to user; no approval assumed and no budget changes implemented."
+  },
+  "next":"Retain the 166x159 qualified incumbent. Do not keep adding isolated nudge variants. A numerical repair must jointly respect the connected separation and hard-bound system, retain existing feasible proposals, and record every executed trial. New-strategy budget policy remains a separate decision from hardware correctness."
+}

@@ -277,6 +277,45 @@ void baseline(const std::filesystem::path &root, const std::string &name) {
         require(result.rotations.size() == er.object_value.size(), context + " rotations count");
         for (const auto &[r, v] : er.object_value)
             require(result.rotations.at(r) == v.number_value, context + " rotation " + r);
+        if(in.sheet=="power"||in.sheet=="power_som") {
+            auto reordered=in;
+            auto& roles=edit(reordered.contract,"roles").object_value;
+            std::reverse(roles.begin(),roles.end());
+            const auto reversed=build_pcb_stage_zone(reordered);
+            require(reversed.top==result.top&&reversed.bottom==result.bottom&&
+                    reversed.rotations==result.rotations&&reversed.w==result.w&&reversed.h==result.h,
+                    context+" role order must not change electrical stage ownership");
+            require(reversed.quantization_engagements==result.quantization_engagements&&
+                    reversed.fallback_events==result.fallback_events,
+                    context+" reordered roles retain actual work receipts");
+            const auto& structures=field(in.contract,"structures").array_value;
+            const auto bc=std::find_if(structures.begin(),structures.end(),[](const auto& s){
+                return field(s,"type").string_value=="bias_cap";
+            });
+            require(bc!=structures.end(),context+" bias fixture exists");
+            const auto owner=std::make_pair(in.board_refs.at(field(*bc,"ic").string_value),field(*bc,"pin").string_value);
+            const auto net=in.pad_nets.at(owner);
+            for(const bool ambiguous:{false,true}) {
+                auto broken=in;
+                if(!ambiguous)broken.pad_nets.erase(owner);
+                else {
+                    // Also covers the single-buck fixture: introduce a second
+                    // declared candidate, not merely another pad of one resistor.
+                    bool added=false;
+                    for(auto& [local,role]:edit(broken.contract,"roles").object_value)
+                        if(local.front()=='R'&&role.string_value!="bias_r") {
+                            role.string_value="bias_r";
+                            broken.pad_nets[{in.board_refs.at(local),"1"}]=net;
+                            added=true;break;
+                        }
+                    require(added,context+" ambiguous fixture has distinct second resistor");
+                }
+                bool rejected=false;
+                try{(void)build_pcb_stage_zone(broken);}
+                catch(const PcbZoneInfeasible& e){rejected=std::string(e.what()).find("bias")!=std::string::npos;}
+                require(rejected,context+" missing/ambiguous bias ownership must fail closed");
+            }
+        }
         std::cout << context << ": complete Python zone parity\n";
     }
     if (name == "carrier") {

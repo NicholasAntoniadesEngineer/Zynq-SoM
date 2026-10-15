@@ -1,0 +1,33 @@
+{
+  "parent_commit": "6b06518f",
+  "change": "Allow the existing exact selected-child reservation strategy for opposite primary faces even when net-count channel demand exceeds ordinary clearance. Replace the broad envelope channel with actual active child-pair clearance/fanout projections, including joint alternatives. Exact final occupancy and hard-term checks remain mandatory.",
+  "scope": "Only complete selected reservations with disjoint primary masks qualify. Unknown geometry, same-face primary bodies and logical exclusions retain their conservative behavior. This is routing-heuristic correction, not a hardware-rule waiver.",
+  "red_green": {
+    "fixture": "Existing independently feasible mixed-face interlocking geometry in four directions and two compact modes, extended with 12-net demand and flow_hop instead of near_max (near_max suppresses the channel heuristic).",
+    "before": "FAIL: one bounded reservation retry must recover the interlocking layout; native/build/mixed-channel-red-tests.log",
+    "after": "PASS full native_floorplan_contracts in 13.91s; native/build/mixed-channel-final-tests.log",
+    "negative_control": "A full opposite-face obstacle still rejects without mutating caller placement, in all new wired cases. Independent exhaustive occupancy validates every recovered pose.",
+    "incumbent_control": "The original roomy near-adjacency control is retained explicitly; changing its policy to flow_hop did not preserve the premise that the conservative strategy accepts without a retry."
+  },
+  "carrier_reference": {
+    "dimensions_mm": [163,153],
+    "unchanged_pcb_sha256": "d954ec91a789f69a1e94a26a9d3a91b279fbc208dff2503cbe8ee4c8eabc199f",
+    "model_seconds": 12.234502083,
+    "log": "native/build/mixed-channel-carrier.log"
+  },
+  "devkit_reference": {
+    "dimensions_mm": [98,98],
+    "unchanged_pcb_sha256": "1b12fecbcbbaa5e6084c2459da93cb144a660ff19805e6e4e3f75f9c22689fdb",
+    "model_seconds": 0.19097875,
+    "log": "native/build/mixed-channel-devkit.log"
+  },
+  "reference_checks": "Both fanout, ratsnest, placement contract and placement flow diagnostics PASS; hard_red=0 and no nonsearch fallback events.",
+  "smaller_candidate": {
+    "dimensions_mm": [162,153],
+    "status": "construction_failed",
+    "seconds": 3.842200167,
+    "outer_attempts": 4,
+    "log": "native/build/mixed-channel-162x153.log"
+  },
+  "limits": "New recovery is proved by red/green synthetic physical fixtures, not by a smaller qualified carrier. Current reference outputs unchanged. No new full qualification, timing speedup or historical Python comparison claimed."
+}

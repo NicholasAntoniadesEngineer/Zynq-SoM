@@ -60,10 +60,20 @@ std::string render_test_plan(const FirmwareDocsInput& in,const SpiceResult& resu
     if(const auto* mods=sheet(in,"bringup_modules"))optional_section([&]{for(const auto& g:module_gates(*mods))stages.emplace(g.rail_out,g.module=="USER_LED"?3:4);});
     stages.emplace("BOOT0_SET",5);stages.emplace("STM32_NRST",5);stages["+3V3_AUX"]=6;stages.emplace("HDMI_RX_5V",4);stages.emplace("HDMI_RX_5V_DET",4);
     using Row=std::pair<std::optional<std::string>,const SpiceCheck*>;std::map<int,std::vector<Row>> rows;
-    for(const auto& ch:result.checks) {auto net=check_net(ch);int stage=net&&stages.count(*net)?stages.at(*net):2;rows[stage].emplace_back(net,&ch);}
+    for(const auto& ch:result.checks) {
+        if(ch.kind=="enable_topology")continue;
+        auto net=check_net(ch);int stage=net&&stages.count(*net)?stages.at(*net):2;rows[stage].emplace_back(net,&ch);
+    }
     for(auto& [stage,rs]:rows){(void)stage;std::stable_sort(rs.begin(),rs.end(),[](const Row& a,const Row& b){return std::make_pair(a.first.value_or("~"),a.second->name)<std::make_pair(b.first.value_or("~"),b.second->name);});}
     const std::vector<std::string> titles{"Stage 0 — power-off continuity","Stage 1 — first power: PD + always-on +3V3_SC domain","Stage 2 — rails, one DIP at a time","Stage 3 — user IO","Stage 4 — module load switches","Stage 5 — boot modes, JTAG, SWD","Stage 6 — board services (+3V3_AUX): ID-EEPROM, RTC, watchdog, QWIIC"};
     std::ostringstream o;o<<testplan_intro<<"Source spice gate: "<<result.checks.size()<<" checks, "<<result.engine<<".\n"<<testplan_electrical;
+    if(!result.unverified.empty()){
+        o<<"\n**UNVERIFIED electrical models — this test plan does not qualify these circuits:**\n\n";
+        for(const auto& reason:result.unverified)o<<"- "<<reason<<'\n';
+        o<<'\n';
+    }
+    for(const auto& check:result.checks)if(check.kind=="enable_topology")
+        o<<"\nNetlist topology (not a bench measurement): ["<<(check.ok()?"PASS":"FAIL")<<"] "<<check.sheet<<": "<<check.name<<" — "<<check.detail<<"\n";
     for(int st=0;st<7;++st) {
         if(!rows.count(st)||rows.at(st).empty())continue;const auto& rs=rows.at(st);
         o<<"### "<<titles[st]<<'\n'<<testplan_columns;

@@ -1,0 +1,12 @@
+{
+  "base_commit":"cce83489",
+  "change":"Skip remaining interior orders only after order-independent edge rejection",
+  "project":"carrier",
+  "options":{"compact_search":true,"constraint_first":true,"edge_translation":true,"outline":"auto","input_mode":"prepared","runs":1},
+  "before":{"construction_seconds":134.890594584,"edge_candidates":220136,"edge_repairs":424,"reseats":476},
+  "after":{"construction_seconds":142.222942792,"edge_candidates":64616,"edge_repairs":424,"reseats":476},
+  "unchanged":{"dimensions_mm":[168,159],"top":425,"bottom":144,"instances":569,"outer_attempts":2390,"packed":28,"rejected":2362,"pcb_sha256":"ccaa5061f105825b678b090e27e467fca710da871a7bd112ac17dab27cd7d3f1","placement_contract_ok":true,"placement_flow_ok":true,"hard_red":0},
+  "interpretation":"Automatic sizing discovers the fixed-outline candidate. Pruning demonstrably eliminates repeated edge work but single uncontrolled timing samples establish no wall-time improvement. Interior reseat work remains unchanged and above its existing ceiling.",
+  "accepted":false,
+  "limitations":["No timing statistics or thermal/cache control","No Python comparison","No full source audit, KiCad DRC or rendered review","No fallback baseline or ceiling changed"]
+}

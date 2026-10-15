@@ -4,20 +4,33 @@
 #include <charconv>
 #include <cmath>
 #include <cstdint>
+#include <cstring>
 #include <istream>
 #include <stdexcept>
 #include <vector>
 
 namespace schgen {
 bool audit_ast_projection_keeps_field(std::string_view key) {
-    // Preserve every field read by the visitor, plus declaration-chain identity.
-    static constexpr std::array<std::string_view,28> fields{{
-        "begin", "castKind", "constexpr", "desugaredQualType", "expansionLoc",
-        "file", "hasInClassInitializer", "id", "includedFrom", "init", "inner",
-        "isImplicit", "kind", "loc", "mangledName", "name", "offset", "opcode",
-        "parentDeclContextId", "previousDecl", "qualType", "range", "referencedDecl",
-        "scopedEnumTag", "storageClass", "type", "value", "isInvalid"}};
-    return std::find(fields.begin(),fields.end(),key)!=fields.end();
+    // Exact length dispatch avoids scanning the entire field set for every
+    // compiler object key. Unknown spellings and embedded NULs still reject.
+    switch(key.size()) {
+    case 2: return key=="id";
+    case 3: return key=="loc";
+    case 4: return key=="file"||key=="init"||key=="kind"||key=="name"||key=="type";
+    case 5: return key=="begin"||key=="inner"||key=="range"||key=="value";
+    case 6: return key=="offset"||key=="opcode";
+    case 8: return key=="castKind"||key=="qualType";
+    case 9: return key=="constexpr"||key=="isInvalid";
+    case 10: return key=="isImplicit";
+    case 11: return key=="mangledName";
+    case 12: return key=="expansionLoc"||key=="includedFrom"||key=="previousDecl"||key=="storageClass";
+    case 13: return key=="scopedEnumTag";
+    case 14: return key=="referencedDecl";
+    case 17: return key=="desugaredQualType";
+    case 19: return key=="parentDeclContextId";
+    case 21: return key=="hasInClassInitializer";
+    default: return false;
+    }
 }
 namespace {
 // Most Clang objects have only a handful of fields. Keep their decoded keys
@@ -85,7 +98,24 @@ private:
     char peek(){const auto c=input_.chunk();if(c.empty())fail("unexpected end of JSON");return c.front();}
     char take(){const auto c=peek();input_.advance(1);return c;}
     static bool white(char c){return c==' '||c=='\t'||c=='\r'||c=='\n';}
-    void space(){for(;;){const auto v=input_.chunk();std::size_t i=0;while(i<v.size()&&white(v[i]))++i;input_.advance(i);if(i<v.size()||v.empty())return;}}
+    void space(){
+        for(;;){
+            const auto v=input_.chunk();std::size_t i=0;
+            while(i<v.size()){
+                // Clang indentation dominates large JSON dumps. Read complete
+                // words only within this chunk; memcpy permits unaligned input
+                // without aliasing assumptions. All other bytes use the exact
+                // JSON whitespace predicate, including across stream refills.
+                if(v.size()-i>=sizeof(std::uint64_t)){
+                    std::uint64_t word;std::memcpy(&word,v.data()+i,sizeof word);
+                    if(word==UINT64_C(0x2020202020202020)){i+=sizeof word;continue;}
+                }
+                if(!white(v[i]))break;
+                ++i;
+            }
+            input_.advance(i);if(i<v.size()||v.empty())return;
+        }
+    }
     bool consume(char c){if(!end()&&peek()==c){input_.advance(1);return true;}return false;}
     void expect(char c){space();if(!consume(c))fail(std::string("expected '")+c+"'");}
     static bool digit(char c){return c>='0'&&c<='9';}

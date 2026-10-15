@@ -1,0 +1,28 @@
+{
+  "base_commit": "d24fb327",
+  "status": "private_candidates_rejected_no_production_order_change",
+  "project": "carrier",
+  "compact_search": false,
+  "runs": 1,
+  "baseline": {"width_mm":168,"height_mm":163,"reseats":28},
+  "learned_order": {
+    "rule": "Track successful subject/victim reseats separately for each punch policy. Before an attempt, promote the subject of the highest-count observed pair (at least two observations) immediately before its victim, only within the same existing priority tier. Lexical pair order breaks ties; only one promotion per attempt.",
+    "width_mm":178,"height_mm":160,"reseats":67,
+    "construction_seconds_single_instrumented_sample":7.616656874,
+    "pcb_sha256":"0f964913c2184b0f24b98a2b9bf7e6bd1e9802a8ab0bc1d7f9ce6f454682027c"
+  },
+  "fallback_only": {
+    "rule": "Try original order first. After rejection, restore entry layout and offers while retaining actual accounting; try the learned order once. Learn only from original-order trials. Restore on terminal rejection.",
+    "width_mm":178,"height_mm":160,"reseats":67,
+    "construction_seconds_single_instrumented_sample":14.412010583,
+    "pcb_sha256":"0f964913c2184b0f24b98a2b9bf7e6bd1e9802a8ab0bc1d7f9ce6f454682027c"
+  },
+  "scoped_checks_both_candidates": {"placement_contract_ok":true,"placement_flow_ok":true,"composition_hard_red":0},
+  "finding": "Preserving the original order as an attempt fallback did not preserve the best final outline. New coarse candidates can change the refinement window; separately, cold-start testing exposed previous-edge-dependent connector geometry. The runs do not isolate those two causes. Fix the geometry state dependence before attributing the whole regression to search-window effects. Combined search should explicitly retain the incumbent rather than assume greedy fallback guarantees non-regression.",
+  "next_action": "Use explicit fixed-outline screening to separate packing effects from coarse/refinement-window effects. Cold-start trials exposed stale current_edge use in directional connector spacing; correct that prerequisite before further ordering campaigns.",
+  "limitations": [
+    "Private single-model executables used process-local learned state. This is not suitable for production integration, concurrency, or repeated model calls; production would require invocation-owned state and isolation contracts.",
+    "No full physical suite, DRC, source audit, renders or accepted board publication ran for these rejected candidates.",
+    "Single instrumented timings are diagnostic only; no statistical speedup or Python comparison is claimed."
+  ]
+}

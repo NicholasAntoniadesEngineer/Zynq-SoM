@@ -1,9 +1,14 @@
 # Zynq-SoM
 
 A Zynq-7000 system-on-module + carrier board, with `schgen` — a netlist-first
-KiCad schematic **and PCB** generator migrating to C++ netlist definitions
-into electrically-proven, hand-drawn-quality schematics and a placed,
-DRC-clean board (component placement, 3D models, multi-angle renders).
+KiCad schematic **and PCB** generator using C++ netlist definitions
+to produce checked schematics and placed boards with component models and
+multi-angle renders. Routing is deferred; these are not fabrication-ready boards.
+
+The current published placement review is a **163×151 mm carrier** and
+**98×98 mm devkit**. See the [release generation recipe and limitations](docs/RELEASE-2026-10-15.md)
+to reproduce the committed images; the default commands below do not select
+the carrier's qualified compact-placement recipe.
 
 ## Native build and test entry point
 

@@ -1,0 +1,36 @@
+{
+  "base_commit": "325465df",
+  "defect": "Board composition reporting added facing margins in degrees to spatial margins in millimetres, then labeled the sum and minimum mm. Unresolved facing's finite -90 sentinel was also included as a measured margin.",
+  "change": "Replace the mixed-unit reporting API with distinct distance_mm and facing_degrees summaries, each with measured/unresolved populations, sum and optional minimum. Empty/fully unresolved groups have no minimum. Non-finite margins and explicit UNRESOLVED sentinels are not measurements. Unsupported kinds and sum overflow reject. The construction profiler emits explicitly unit-labeled summaries.",
+  "verification": {
+    "independent_gate_assertions": 56011,
+    "targeted_suites_passed": 4,
+    "targeted_suites_failed": 0,
+    "wall_seconds": 59.88,
+    "log": "native/build/unit-margin-integration-tests.log",
+    "suites": ["native_floorplan_precision_contracts", "native_pcb_placement_contracts", "native_pcb_placement_gates_contracts", "native_compact_profile_inputs_contracts"],
+    "oracle_integrity": "Frozen historical files unchanged. Every term evaluation, verdict, intrusion and airwire result remains exact. Only the old invalid summary line is excluded from historical report comparison; the two new summaries are independently checked against those exact evaluations and hand-computed unit/adversarial cases.",
+    "adversarial_cases": ["mixed degree/mm margins", "negative measured slack", "finite unresolved facing sentinel", "NaN and infinite margins", "advisory exclusion", "absent versus measured zero margin", "unknown units", "overflow"],
+    "production_cli_rebuilt": true
+  },
+  "current_reference_screens": [
+    {
+      "board": "carrier compact", "outline_mm": [166,159],
+      "pcb_sha256": "b9389efa52adf30b1d94cad1ede3a4387bacd53802f7babb5da07dd6306cff76",
+      "identical_to_last_qualified": true,
+      "distance_mm": {"measured":16,"unresolved":0,"sum":822.35,"minimum":4.07},
+      "facing_degrees": {"measured":2,"unresolved":0,"sum":65.11,"minimum":13.15},
+      "log": "native/build/carrier-unit-margin-reference.log"
+    },
+    {
+      "board": "devkit multiscale", "outline_mm": [98,98],
+      "pcb_sha256": "cfa0305491d9c4a771adb130b04c4aec6cc2894542391a5c7c9dca3a68bca3cf",
+      "identical_to_last_qualified": true,
+      "distance_mm": {"measured":2,"unresolved":0,"sum":98.55,"minimum":38.28},
+      "facing_degrees": {"measured":1,"unresolved":0,"sum":48.97,"minimum":48.97},
+      "log": "native/build/devkit-unit-margin-reference.log"
+    }
+  ],
+  "remaining_related_work": "The separate compose-repair ledger and candidate ranking also use mixed-unit aggregate margins. Those consumers use a different API and are not corrected by this batch. Repair ordering must be redesigned explicitly and tested for dimensional consistency, rather than silently substituting a new scalar. Prior commentary that the issue was reporting-only was too narrow.",
+  "limits": "No placement rule, acceptance threshold, fallback ceiling or layout changed. Construction screens are not a new full board qualification or controlled timing comparison. The overall engineering goal remains incomplete."
+}

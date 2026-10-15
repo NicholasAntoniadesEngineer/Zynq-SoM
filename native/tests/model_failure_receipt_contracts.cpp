@@ -16,7 +16,9 @@ namespace {
 using namespace schgen;
 struct Injected : std::runtime_error { Injected():std::runtime_error("injected checkpoint failure"){} };
 struct Op {const char* name;void* address;};
-const std::array<Op,8> ops{{
+const std::array<Op,10> ops{{
+ {"placement_turn_dimension_precision4dp",reinterpret_cast<void*>(&placement_turn_dimension_precision4dp)},
+ {"placement_turn_offset_precision4dp",reinterpret_cast<void*>(&placement_turn_offset_precision4dp)},
  {"stage_root_pose_precision4dp",reinterpret_cast<void*>(&stage_root_pose_precision4dp)},
  {"stage_hot_extent_precision4dp",reinterpret_cast<void*>(&stage_hot_extent_precision4dp)},
  {"placement_bottom_pose_precision4dp",reinterpret_cast<void*>(&placement_bottom_pose_precision4dp)},
@@ -27,7 +29,7 @@ const std::array<Op,8> ops{{
  {"escape_copper_precision4dp",reinterpret_cast<void*>(&escape_copper_precision4dp)}
 }};
 thread_local bool observing=false;
-thread_local std::array<std::size_t,8> entries{};
+thread_local std::array<std::size_t,10> entries{};
 void begin(){entries={};observing=true;}
 void require(bool b,const std::string& m){if(!b)throw std::runtime_error(m);}
 void verify(const ExecutionAccounting& receipt,const std::string& label){
@@ -116,6 +118,66 @@ void success(const std::filesystem::path& root,bool two_side){
         late.accounting.fallback_events==total.fallback_events,"late failed prefix equals complete successful receipt exactly");
     inbox(late.accounting);
 }
+void contract_retry(const std::filesystem::path& root){
+ for(bool multiple:{false,true})for(int mode:{0,1,2,3}) {
+    auto fixture=placement_fixture::load(root,"carrier");
+    fixture.input.floorplan.compact_search=true;
+    fixture.input.floorplan.spec=load_floorplan_spec((root/"native/benchmarks/carrier-168x159-initial-edge.floorplan.json").string());
+    fixture.input.floorplan.spec->outline=FloorplanPoint{168,163};
+    auto observer=std::make_shared<FloorplanExperiment>();
+    observer->contract_group_face_sheets={"usb_jtag"};
+    if(multiple)observer->contract_group_face_sheets.insert({"power_mon","power"});
+    observer->compact_edge_feasibility=true;observer->interior_order=3;
+    int attempts=0;
+    observer->attempt_completed=[&](const FloorplanAttemptObservation&){
+        ++attempts;
+        if(mode==2)throw Injected();
+        if(mode==3)throw FloorplanSpecError("controlled invalid specification");
+        // Both reservation policies now execute before the parent orientation
+        // retry. Reject both to exercise that retry, not just its first pass.
+        if(mode==1||attempts<=2)throw FloorplanPackingInfeasible("controlled packing rejection");
+    };
+    fixture.input.floorplan.experiment=observer;
+    ExecutionFailureReceipt failure;ExecutionAccounting receipt;bool failed=false;
+    begin();
+    try {receipt=pcb_placement_accounting(build_pcb_model(fixture.input,&failure));}
+    catch(const FloorplanPackingInfeasible& e){failed=true;receipt=failure.accounting;if(mode==0)std::cerr<<e.what()<<'\n';}
+    catch(const Injected&){failed=true;receipt=failure.accounting;}
+    catch(const FloorplanSpecError&){failed=true;receipt=failure.accounting;}
+    observing=false;
+    require(failed==(mode!=0),"controlled retry success/failure outcome");
+    require(mode==0?!failure.captured:failure.captured,"retry receipt ownership");
+    verify(receipt,"contract orientation retry mode "+std::to_string(mode));inbox(receipt);
+    const auto events=std::count(receipt.fallback_events.begin(),receipt.fallback_events.end(),"contract_group_orientation_retry");
+    require(events==(mode>=2?0:1),"retry event missing, duplicated, or recorded for non-packing error");
+    if(mode!=0)require(attempts==(mode>=2?1:4),"retry exceeded one additional two-policy solve");
+ }
+}
+void facing_retry(const std::filesystem::path& root){
+    for(int mode:{0,1,2}){
+        auto fixture=placement_fixture::load(root,mode==2?"devkit_mini":"carrier");
+        auto observer=std::make_shared<FloorplanExperiment>();
+        observer->multiscale_outline=true;
+        bool second_solve=false;
+        // Witness a new solve after actual first-model emission, without
+        // invoking diagnostic snapshots or trusting the production receipt.
+        observer->attempt_completed=[&](const FloorplanAttemptObservation&){
+            if(entries[5]){second_solve=true;if(mode==1)throw Injected();}
+        };
+        fixture.input.floorplan.experiment=observer;
+        ExecutionFailureReceipt failure;ExecutionAccounting receipt;bool injected=false;
+        begin();
+        try{receipt=pcb_placement_accounting(build_pcb_model(fixture.input,&failure));}
+        catch(const Injected&){injected=true;receipt=failure.accounting;}
+        observing=false;
+        require(injected==(mode==1)&&failure.captured==(mode==1),"facing retry preserves original exception and receipt ownership");
+        require(second_solve==(mode!=2),"valid incumbent must not replan; failing carrier must replan");
+        require(std::count(receipt.fallback_events.begin(),receipt.fallback_events.end(),"facing_replan_retry")==
+                (mode==2?0:1),"one facing retry event including interrupted solve");
+        verify(receipt,"facing retry mode "+std::to_string(mode));
+        inbox(receipt);reject_receipt_mutations(receipt);
+    }
+}
 void overflow(){
     ExecutionFailureReceipt sink;sink.captured=true;sink.accounting.quantization_engagements["real"]=3;
     ExecutionFailureReceipt child;child.captured=true;child.accounting.quantization_engagements["real"]=1;
@@ -127,26 +189,44 @@ void overflow(){
 }
 void owning_overflow(const std::filesystem::path& root){
     auto fixture=placement_fixture::load(root,"devkit_mini");
+    fixture.input.two_side=false;
     const auto planning_zones=build_pcb_zone_geometry(fixture.input);
     const std::string key="stage_root_pose_precision4dp";
     const auto n=planning_zones.quantization_engagements.at(key);
     require(n>0,"owning overflow requires actual completed stage work");
-    fixture.input.two_side=false;
-    // Planning zones merge safely up to MAX. The subsequent successful-child
-    // merge with the independent top-preferred zones is unrepresentable.
+    // A single shared planning/emission zone is counted once, including in
+    // top-preferred mode. Exact MAX is valid; MAX+1 must never yield a receipt.
     fixture.input.floorplan.accounting.quantization_engagements[key]=std::numeric_limits<std::size_t>::max()-n;
-    auto planning=fixture.input;planning.two_side=true;
-    const auto prepared=prepare_pcb_floorplan(planning,planning_zones);
+    const auto prepared=prepare_pcb_floorplan(fixture.input,planning_zones);
     require(prepared.accounting.quantization_engagements.at(key)==std::numeric_limits<std::size_t>::max(),"prepare succeeds at exact maximum");
     const auto stage=generate_floorplan(prepared);
     require(stage.plan.accounting.quantization_engagements.at(key)==std::numeric_limits<std::size_t>::max(),"successful child retains exact maximum");
+    ExecutionFailureReceipt exact_failure;
+    const auto exact=build_pcb_model(fixture.input,&exact_failure);
+    require(pcb_placement_accounting(exact).quantization_engagements.at(key)==std::numeric_limits<std::size_t>::max()&&
+            !exact_failure.captured&&!exact_failure.unavailable,"shared zone at MAX is counted once without phantom overflow");
+    ++fixture.input.floorplan.accounting.quantization_engagements[key];
     ExecutionFailureReceipt failure;bool rejected=false;
     try{(void)build_pcb_model(fixture.input,&failure);}catch(const std::overflow_error&){rejected=true;}
-    require(rejected&&failure.unavailable&&!failure.captured&&failure.accounting.quantization_engagements.empty(),"owning model rejects successful-child merge overflow without a partial receipt");
+    require(rejected&&failure.unavailable&&!failure.captured&&failure.accounting.quantization_engagements.empty(),"owning model rejects zone merge overflow without a partial receipt");
     NativeQuantizations q;NativeFallbacks f;register_native_quantizations(q);register_native_fallbacks(f);
     NativeAccountingInbox in(q,f);const auto before=q.engagements();
     if(failure.captured)in.merge_once("pcb/placement",failure.accounting);
     require(q.engagements()==before,"pipeline import condition skips unavailable model receipt");
+}
+void facing_aggregate_overflow(const std::filesystem::path& root){
+    for(const auto* project:{"devkit_mini","carrier"}){
+        auto fixture=placement_fixture::load(root,project);
+        auto mode=std::make_shared<FloorplanExperiment>();mode->multiscale_outline=true;
+        fixture.input.floorplan.experiment=mode;
+        fixture.input.floorplan.accounting.quantization_engagements["placement_emission_pose_precision4dp"]=
+            std::numeric_limits<std::size_t>::max();
+        ExecutionFailureReceipt failure;bool rejected=false;
+        try{(void)build_pcb_model(fixture.input,&failure);}catch(const std::overflow_error&){rejected=true;}
+        require(rejected&&failure.unavailable&&!failure.captured&&
+                failure.accounting.quantization_engagements.empty()&&failure.accounting.fallback_events.empty(),
+                std::string(project)+": completed model aggregation overflow must not publish a smaller prefix");
+    }
 }
 void constructor_failure(const std::filesystem::path& root){
     auto fixture=placement_fixture::load(root,"devkit_mini");
@@ -180,4 +260,4 @@ void invalid_stage(const std::filesystem::path& root){
 }
 extern "C" void __cyg_profile_func_enter(void* f,void*){if(!observing)return;for(std::size_t i=0;i<ops.size();++i)if(f==ops[i].address){++entries[i];break;}}
 extern "C" void __cyg_profile_func_exit(void*,void*){}
-int main(int argc,char** argv){try{require(argc==2,"repo path required");overflow();constructor_failure(argv[1]);owning_overflow(argv[1]);invalid_stage(argv[1]);for(bool two_side:{true,false}){checkpoints(argv[1],two_side);floorplan_failure(argv[1],two_side);success(argv[1],two_side);}std::cout<<"model failure receipts PASS\n";}catch(const std::exception& e){observing=false;std::cerr<<e.what()<<'\n';return 1;}}
+int main(int argc,char** argv){try{require(argc==2,"repo path required");facing_aggregate_overflow(argv[1]);facing_retry(argv[1]);contract_retry(argv[1]);overflow();constructor_failure(argv[1]);owning_overflow(argv[1]);invalid_stage(argv[1]);for(bool two_side:{true,false}){checkpoints(argv[1],two_side);floorplan_failure(argv[1],two_side);success(argv[1],two_side);}std::cout<<"model failure receipts PASS\n";}catch(const std::exception& e){observing=false;std::cerr<<e.what()<<'\n';return 1;}}

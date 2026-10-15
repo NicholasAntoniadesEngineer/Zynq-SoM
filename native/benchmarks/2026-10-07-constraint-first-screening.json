@@ -1,0 +1,42 @@
+{
+  "status": "experimental_not_accepted",
+  "source_base": "4cd2e094",
+  "source_delta": "Invocation-owned compact_constraint_first option; hard-incidence then area ordering before the three existing fallback orders. Connector incumbent reuse is included.",
+  "command_template": "native/build/fast/schgen_compact_stage_profile --repo REPOSITORY --project PROJECT --compact-search on --constraint-first OPTION --input-mode prepared --runs 1 --kicad-cli /Applications/KiCad/KiCad.app/Contents/MacOS/kicad-cli",
+  "timing_scope": "One instrumented construction per configuration; model includes floorplan documents, placement and escape, followed by PCB text emission. Input preparation and postconstruction diagnostics are separate. No audits, DRC, full renders or compile timings. Host contention and caches uncontrolled. No statistical speedup or historical Python comparison.",
+  "carrier_constraint_first": {
+    "construction_completed": true,
+    "model_seconds": 70.171462583,
+    "pcb_text_seconds": 0.035515917,
+    "construction_seconds": 70.2069785,
+    "dimensions_mm": [168, 160],
+    "instances": 569,
+    "top": 438,
+    "bottom": 131,
+    "outer_attempts": 2400,
+    "packed_outer_attempts": 26,
+    "rejected_outer_attempts": 2374,
+    "reseat_retries": 247,
+    "legalize_only_compactions": 10,
+    "unchanged_reseat_ceiling": 18,
+    "unchanged_compaction_ceiling": 2,
+    "placement_contract_ok": true,
+    "placement_flow_ok": true,
+    "enforced_composition_failures": 0,
+    "hard_margin_min_mm": 3.56,
+    "pcb_sha256": "4eac006ff246d778b83e61a01573920963cc26d83824340641fab45cc9a4f16c",
+    "accepted": false
+  },
+  "devkit_mini": {
+    "constraint_first": {"construction_completed": false, "failure_elapsed_seconds": 1.527404334, "completed_outer_attempts": 2140},
+    "baseline_order": {"construction_completed": false, "failure_elapsed_seconds": 1.327866583, "completed_outer_attempts": 2140},
+    "both_errors": "compact eviction: no legal ownership-preserving corridor exit for C5003",
+    "both_failure_receipts_captured": true,
+    "accepted": false
+  },
+  "production_source_sha256": {
+    "native/src/floorplan_pack.cpp": "e73ca5869e26217a19acaf854070694de538738af374242cce3f563a75e4a7be",
+    "native/src/constraint_order_internal.hpp": "d2c1e3991f0d39ba38fd7a1dd49bb0ee4d7444623e4b397a1fb09139360e94a3",
+    "native/src/pcb_placement_breathe.cpp": "c71382eeda940ec6ca477ecbb02d2e592c31153b38a7ebc2afbd489204083658"
+  }
+}

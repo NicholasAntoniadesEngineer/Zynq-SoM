@@ -5,17 +5,45 @@
 
 #include <algorithm>
 #include <cmath>
+#include <limits>
 #include <tuple>
 
 namespace schgen {
 void validate_floorplan_experiment(const FloorplanExperiment &experiment) {
+    if(experiment.reseat_pose_limits && experiment.reseat_pose_limits->victim_shapes &&
+       !experiment.interior_order)
+        throw FloorplanError("experiment: victim-shape recovery requires an explicit interior order");
+    if(experiment.joint_separation_states&&(!*experiment.joint_separation_states||*experiment.joint_separation_states>std::numeric_limits<std::size_t>::max()/2))
+        throw FloorplanError("experiment: invalid joint separation state limit");
+    if(experiment.reseat_pose_limits &&
+       (experiment.reseat_pose_limits->poses<2 || !experiment.reseat_pose_limits->frontier_nodes))
+        throw FloorplanError("experiment: pose retry requires at least two poses and a positive frontier budget");
+    if(experiment.reseat_pose_limits && experiment.reseat_pose_limits->continuations &&
+       !experiment.interior_order)
+        throw FloorplanError("experiment: pose continuations require an explicit order");
+    if(experiment.reseat_pose_limits && experiment.reseat_pose_limits->reuse_continuation &&
+       !experiment.reseat_pose_limits->continuations)
+        throw FloorplanError("experiment: continuation reuse requires a positive continuation budget");
+    if(experiment.failed_first_retry&&!experiment.interior_order)
+        throw FloorplanError("experiment: failed-first retry requires an explicit interior order");
+    if(experiment.shape_choice_replays&&!experiment.interior_order)
+        throw FloorplanError("experiment: shape-choice replays require an explicit interior order");
+    if(experiment.interior_order && (*experiment.interior_order<0 || *experiment.interior_order>3))
+        throw FloorplanError("experiment: interior order must be in [0,3]");
+    if(experiment.interior_order && experiment.compact_constraint_first)
+        throw FloorplanError("experiment: single interior order conflicts with constraint-first portfolio");
+    if(experiment.initial_outline) {
+        const auto [w,h]=*experiment.initial_outline;
+        if(!std::isfinite(w)||!std::isfinite(h)||w<=0||h<=0||!std::isfinite(w*h))
+            throw FloorplanError("experiment: initial outline must have finite positive dimensions and area");
+    }
     if (experiment.ordinary_via_mm &&
         (!std::isfinite(*experiment.ordinary_via_mm) || *experiment.ordinary_via_mm < 0))
         throw FloorplanError("experiment: ordinary via cost must be finite and nonnegative");
 }
 void require_floorplan_experiment_policy(const FloorplanExperiment &experiment, bool punch_free) {
     if (experiment.conservative_only && punch_free)
-        throw FloorplanError("w12 probe: conservative-only forced");
+        throw FloorplanReservationExcluded("w12 probe: conservative-only forced");
 }
 double floorplan_experiment_via_cost(const FloorplanExperiment *experiment, bool impedance,
                                    double normal_cost) {

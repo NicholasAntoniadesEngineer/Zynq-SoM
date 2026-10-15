@@ -1,0 +1,28 @@
+{
+  "parent_commit": "4dda68a9",
+  "change": "Failure-only shape replay promotes the first legal opposite-side offer ahead of same-side rotations. Initial winner, all candidate indices, hardware gates, finite budget and prefix accounting remain intact. No new candidate is fabricated.",
+  "tests": {
+    "native_compact_retry_contracts": "PASS, 5.52 seconds; new opposite-side/single-side/singleton ordering checks plus existing combined-prefix, independent accounting, exception rollback, incumbent and impossible-constraint tests"
+  },
+  "controls": {
+    "carrier": {
+      "log": "native/build/face-diverse-reference.log",
+      "dimensions_mm": [163,153], "top": 394, "bottom": 172,
+      "pcb_sha256": "a43ec57495e5be75d620686cdc411d5f4835804bec83c928a1e82f19b090a231",
+      "result": "Matches fully qualified mixed-power reference; cheap fanout/ratsnest/placement/flow checks pass, hard_red=0, zero model/emission nonsearch fallbacks"
+    },
+    "devkit": {
+      "log": "native/build/face-diverse-devkit.log",
+      "dimensions_mm": [98,98], "top": 105, "bottom": 55,
+      "pcb_sha256": "1b12fecbcbbaa5e6084c2459da93cb144a660ff19805e6e4e3f75f9c22689fdb",
+      "result": "Matches qualified reference; same cheap checks pass, hard_red=0, zero model/emission nonsearch fallbacks"
+    }
+  },
+  "smaller_screen": {
+    "dimensions_mm": [162,153], "replays_per_pack": 2,
+    "log": "native/build/face-diverse-replay2-162x153.log",
+    "result": "FAIL: no valid layout, 12 completed outer attempts, failure receipt captured",
+    "construction_seconds": 25.23174625
+  },
+  "limitations": "Concurrent screening/tests, uncontrolled cache: not a timing comparison. No smaller layout or speedup demonstrated. Controls are construction checks against prior full qualifications, not new full audits. Routing and fabrication readiness remain out of scope."
+}

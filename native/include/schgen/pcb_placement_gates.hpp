@@ -97,11 +97,21 @@ std::vector<FloorplanTermEval> measure_pcb_compose_terms(const PcbCheckInput &,
 using PcbCrossAirwires = std::map<std::pair<std::string, std::string>, std::pair<int, double>>;
 PcbCrossAirwires pcb_cross_airwires_by_pair(const PcbCheckModel &, const RatsnestNets * = nullptr,
                                             const RatsnestEdges * = nullptr);
+struct PcbComposeMarginStats {
+    std::size_t measured = 0, unresolved = 0;
+    double sum = 0;
+    std::optional<double> minimum;
+};
+struct PcbComposeMargins {
+    PcbComposeMarginStats distance_mm, facing_degrees;
+};
+// Summaries are descriptive, not a scalar ranking across incompatible units.
+PcbComposeMargins pcb_compose_hard_margins(const std::vector<FloorplanTermEval>&);
 struct PcbComposeReport {
     FloorplanTermIndex index;
     std::vector<FloorplanTermEval> evaluations;
     int hard_red = 0, soft_red = 0;
-    double hard_margin_sum = 0, hard_margin_min = 0;
+    PcbComposeMargins hard_margins;
     std::size_t n_corridors = 0;
     std::vector<std::string> unmanaged, managed;
     PcbCrossAirwires cross_airwires;

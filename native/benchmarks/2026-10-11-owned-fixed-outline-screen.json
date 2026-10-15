@@ -1,0 +1,13 @@
+{
+  "status":"rejected_bounded_outline_screens_reference_preserved",
+  "commit":"f5831582",
+  "common_command":"native/build/fast/schgen_compact_stage_profile --repo . --project carrier --compact-search on --interior-order ORDER --outline-mm OUTLINE --runs 1 --input-mode prepared --edge-feasibility on --owned-quality-first on --owned-face-cohesion on --owned-shape board_aux=owned-face-fixed/a2.2/owned-pins-forward --schematic /private/tmp/carrier-owned-fixed-qualified.Z1zLPo/Zynq_Carrier.kicad_sch",
+  "screens":[
+    {"outline_mm":[168,158],"interior_order":3,"exit_code":1,"construction_failure_seconds":0.392202875,"edge_feasibility":{"runs":4,"intervals":5,"rejected":0},"receipt_captured":true,"completed_outer_attempts":1,"log":"native/build/carrier-owned-fixed-168x158-screen.log"},
+    {"outline_mm":[167,159],"interior_order":3,"exit_code":1,"construction_failure_seconds":0.197207167,"edge_feasibility":{"runs":3,"intervals":2,"rejected":1},"receipt_captured":true,"completed_outer_attempts":1,"log":"native/build/carrier-owned-fixed-167x159-screen.log"},
+    {"outline_mm":[168,158],"interior_order":0,"exit_code":1,"construction_failure_seconds":0.297612375,"edge_feasibility":{"runs":4,"intervals":5,"rejected":0},"receipt_captured":true,"completed_outer_attempts":1,"log":"native/build/carrier-owned-fixed-168x158-order0-screen.log"}
+  ],
+  "finding":"The width reduction fails initial edge feasibility before interior ordering. The height reduction passes initial edge feasibility but fails later packing under both tested orders. Order-3 diagnostics show multiple attempted USB-JTAG reseats, including a successful power_som displacement, but the overall attempt still fails. Do not infer a unique final blocker from the last reseat event alone.",
+  "decision":"No outline change promoted, no fallback baseline raised, no expensive full qualification repeated. Preserve the fully qualified 168x159 fixed-owner result. Owner/bypass locality alone does not remove edge-run and global interior-packing limits.",
+  "limitations":["Failure is specific to these bounded strategies; not an infeasibility proof or global minimum claim.","Screen failure seconds exclude input preparation and cannot be compared with full build wall time.","All three failure prefixes were captured; no alternate-order work is hidden.","Hardware uncertainties and existing advisory failures remain unchanged."]
+}

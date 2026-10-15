@@ -1,9 +1,11 @@
 #include "floorplan_internal.hpp"
 #include "schgen/precision_ops.hpp"
+#include "multiscale_outline_internal.hpp"
 
 #include <algorithm>
 #include <cmath>
-#include <regex>
+#include <locale>
+#include <string_view>
 
 namespace schgen::floorplan_detail {
 namespace {
@@ -39,7 +41,7 @@ struct BuildPrecision {
     }
 };
 using Inputs=std::vector<std::pair<std::string,JsonNode>>;
-using Winner=std::tuple<double,double,double,double,double>; // area,w,h,estimate,budget
+using Winner=OutlineCandidate;
 Inputs winner_inputs(const Winner& w,QuantizationCounts& counts) {
     const BuildPrecision precision{counts};
     return {{"board_w",jvalue(std::get<1>(w))},{"board_h",jvalue(std::get<2>(w))},
@@ -52,6 +54,51 @@ void add_weight(std::vector<std::pair<std::string,double>>& rows,const std::stri
     rows.emplace_back(key,w);
 }
 }  // namespace
+
+std::set<std::string> deferred_connector_names(const std::string& expectation) {
+    // These are literal identifiers, not a user-supplied pattern. Match the
+    // previous ECMAScript word boundaries without instantiating a regex engine
+    // in every compile/source audit of this translation unit. Retain the C++
+    // locale's alphanumeric classification (including non-ASCII byte facets).
+    const std::locale locale;
+    const auto& characters=std::use_facet<std::ctype<char>>(locale);
+    const auto word=[&](char c){return c=='_' || characters.is(std::ctype_base::alnum,c);};
+    std::set<std::string> result;
+    for(const std::string_view name:{"rj45_connector","usb_uart_connector"}) {
+        for(auto at=expectation.find(name);at!=std::string::npos;at=expectation.find(name,at+name.size())) {
+            const auto end=at+name.size();
+            if((at==0 || !word(expectation[at-1])) &&
+               (end==expectation.size() || !word(expectation[end]))) {
+                result.emplace(name);break;
+            }
+        }
+    }
+    return result;
+}
+
+double Engine::packing_area_bound(bool free) {
+    const int reserved=free ? occ_top:occ_punch;
+    const auto& sets=shape_sets[free ? 1:0];
+    std::vector<std::vector<PackingAreaOption>> bodies{
+        {{plan.som.w*plan.som.h,reserved}}};
+    for(const auto* b:blocks()) {
+        const auto variants=sets.find(b->name);
+        std::vector<PackingAreaOption> options;
+        if(b->kind=="interior" && variants!=sets.end()) {
+            for(const auto& s:variants->second)
+                options.push_back({s.w*s.h,side_mask(s.side)});
+        } else {
+            const auto wh=zbox.at(b->name);
+            options.push_back({wh.first*wh.second,b->kind=="edge" ? reserved:occ_top});
+        }
+        bodies.push_back(std::move(options));
+    }
+    // Both normal and expanded shape selection can use opposite faces. Summing
+    // all primary areas is not a necessary bound for either two-sided mode.
+    // Child punches and clearances can only tighten feasibility; packing still
+    // checks them independently after this conservative area filter.
+    return packing_area_lower_bound(bodies,occ_top,occ_bottom);
+}
 
 void Engine::initialize() {
     std::vector<std::string> sheet_names;
@@ -76,7 +123,6 @@ void Engine::initialize() {
         zone_refs[sc.name].insert(p->ref);
         const auto wh=part_dims(p->footprint); raw_area+=wh.first*wh.second;
     }
-    const std::regex deferred_re(R"(\b(rj45|usb_uart)_connector\b)");
     for (const auto& [name,sc]:sheets) {
         auto parts=zone_parts(*sc);
         if ((starts(name,"som_j") || name=="som_decoupling") && parts.empty()) continue;
@@ -86,9 +132,10 @@ void Engine::initialize() {
             const auto wh=part_dims(p->footprint); b.conns.push_back({p->ref,p->value,wh.first,wh.second});
         }
         std::set<std::string> reserved;
-        for (const auto& pt:sc->port_types)
-            for (auto m=std::sregex_iterator(pt.expect.begin(),pt.expect.end(),deferred_re);m!=std::sregex_iterator();++m)
-                reserved.insert(m->str());
+        for (const auto& pt:sc->port_types) {
+            const auto names=deferred_connector_names(pt.expect);
+            reserved.insert(names.begin(),names.end());
+        }
         b.reserved.assign(reserved.begin(),reserved.end());
         const bool is_edge=spec_edges.count(name) || ((!b.conns.empty() || !b.reserved.empty()) && !spec.interior.count(name));
         b.kind=is_edge ? "edge":"interior";
@@ -237,35 +284,52 @@ FloorplanPlan Engine::run() {
     for (auto* b:blocks()) pristine[b->name]={b->shape_idx,b->fanout_reach,b->fanout_inset};
     auto reset_shapes=[&] { for (auto* b:blocks()) std::tie(b->shape_idx,b->fanout_reach,b->fanout_inset)=pristine.at(b->name); };
     auto restore=[&](const FloorplanPlan& saved) {
-        // Candidate decisions and quantization engagements describe ALL work;
-        // only layout and the caller-managed fallback event snapshot roll back.
+        // Decisions, quantization engagements and fallback events describe ALL
+        // executed work, including rejected candidates. Restore only layout.
         auto accounting=std::move(plan.accounting); plan=saved; plan.accounting=std::move(accounting);
     };
-    const auto entry_events=plan.accounting.fallback_events;
     if (in.spec && in.spec->outline) {
         board_size(in.spec->outline->first,in.spec->outline->second);
         auto fixed=[&](bool free) {
             plan.punch_free=free;
-            if (!attempt_pack(true)) throw FloorplanError("floorplan: the REAL 2-sided packed blocks do not fit the fixed outline "+
-                outline_text(plan.board_w,plan.board_h)+" declared in carrier/floorplan.json — enlarge it or use \"outline\":\"auto\"");
-            choose_connector_shapes(); return estimate();
+            if (!attempt_pack(true)) throw FloorplanPackingInfeasible("floorplan: bounded placement search found no valid layout for the requested fixed outline "+
+                outline_text(plan.board_w,plan.board_h)+"; this does not prove geometric infeasibility. Reconsider group shapes, poses or allocation; a larger outline is one option, not a demonstrated requirement.");
+            choose_connector_shapes();
+            const double value=estimate();
+            if(!std::isfinite(value)||value<0)throw FloorplanError("floorplan: invalid fixed-outline estimate");
+            return value;
         };
-        reset_shapes(); double estimate_real=fixed(false);
+        // A conservative reservation is a search policy, not a prerequisite
+        // for the face-aware policy. Failure must not suppress the latter.
+        const auto entry=plan;const auto entry_offers=side_offers;
+        reset_shapes();
+        std::optional<double> conservative_estimate;
+        try { conservative_estimate=fixed(false); }
+        catch (const FloorplanPackingInfeasible&) { restore(entry);side_offers=entry_offers; }
+        catch (const FloorplanReservationExcluded&) { restore(entry);side_offers=entry_offers; }
         const auto conservative=plan; const auto offers=side_offers;
-        plan.accounting.fallback_events=entry_events; reset_shapes();
+        reset_shapes();
         std::optional<double> free_est;
-        try { free_est=fixed(true); } catch (const FloorplanError&) {}
-        if (free_est && *free_est<estimate_real-1e-6) estimate_real=*free_est;
-        else { restore(conservative); side_offers=offers; plan.accounting.fallback_events=conservative.accounting.fallback_events; fallback("punch_free_plan_rejected"); }
+        try { free_est=fixed(true); }
+        catch (const FloorplanPackingInfeasible&) {}
+        catch (const FloorplanReservationExcluded&) {}
+        if(!conservative_estimate&&!free_est)
+            throw FloorplanPackingInfeasible("floorplan: bounded placement search found no valid layout for the requested fixed outline "+
+                outline_text(plan.board_w,plan.board_h)+" under either reservation policy; this does not prove geometric infeasibility.");
+        double estimate_real=free_est.value_or(0.0);
+        if(conservative_estimate&&(!free_est||*free_est>=*conservative_estimate-1e-6)) {
+            estimate_real=*conservative_estimate;
+            restore(conservative); side_offers=offers; fallback("punch_free_plan_rejected");
+        }
         const double area=precision.area(plan.board_w*plan.board_h);
         const double budget=cross_budget(plan.board_w,plan.board_h,n_sub,in.cross_budget_k);
-        calc("plan_choice",jvalue("fixed"),{{"conservative_area",jvalue(area)},{"conservative_est",jvalue(precision.value(estimate_real))},
+        calc("plan_choice",jvalue(conservative_estimate?"fixed":"fixed-free-recovery"),{{"conservative_area",conservative_estimate?jvalue(area):jvalue("unavailable")},{"conservative_est",conservative_estimate?jvalue(precision.value(*conservative_estimate)):jvalue("unavailable")},
             {"free_area",jvalue(area)},{"free_est",jvalue(free_est ? precision.value(*free_est):0.0)}});
         ledger_sides();
         auto inputs=winner_inputs({area,plan.board_w,plan.board_h,estimate_real,budget},plan.accounting.quantization_engagements); inputs.emplace_back("plan",jvalue("fixed"));
         calc("sizing_winner",jvalue(outline_text(plan.board_w,plan.board_h)),std::move(inputs));
         plan.outline_note="FIXED outline "+outline_text(plan.board_w,plan.board_h)+" mm declared in carrier/floorplan.json; estimated cross-subsystem airwire "+
-            number(estimate_real,0)+" mm (LAW-5 budget "+number(budget,0)+" mm — the REAL gate in `schgen board` is the arbiter)";
+            number(estimate_real,0)+" mm (advisory airwire reference "+number(budget,0)+" mm; not an acceptance constraint)";
         return std::move(plan);
     }
     const double seed_aspect=precision.aspect(sw/sh);
@@ -273,38 +337,58 @@ FloorplanPlan Engine::run() {
     auto search=[&](bool free) -> Winner {
         plan.punch_free=free;
         ledger_pass(free);
+        // Historical receipt field remains zero: aggregate airwire is advisory.
         std::map<std::string,int> tally{{"generated",0},{"reject_aspect",0},{"reject_min_area",0},{"reject_not_smaller",0},{"reject_pack",0},{"reject_law5_budget",0},{"accepted",0}};
+        const auto record_tally=[&]{
+            Inputs ti;
+            for(const auto* key:{"generated","reject_aspect","reject_min_area","reject_not_smaller","reject_pack","reject_law5_budget","accepted"})
+                ti.emplace_back(key,jvalue(tally.at(key)));
+            calc("outline_candidates",jvalue(tally.at("generated")),std::move(ti),"sizing.pass");
+        };
         std::optional<Winner> best; bool fit_seen=false;
-        double min_area=plan.som.w*plan.som.h;
-        const auto& sets=shape_sets[free ? 1:0];
-        for (const auto& [name,wh]:zbox) {
-            double area=wh.first*wh.second;
-            const auto variants=sets.find(name);
-            if (variants!=sets.end()) {
-                area=variants->second.front().w*variants->second.front().h;
-                for (const auto& s:variants->second) area=std::min(area,s.w*s.h);
-            }
-            min_area+=area;
-        }
+        std::optional<FloorplanPlan> best_plan;
+        std::map<std::string,SideOffer> best_offers;
+        const double min_area=packing_area_bound(free);
         auto evaluate=[&](double w,double h) -> std::optional<Winner> {
             board_size(w,h);
             if (!attempt_pack(false)) { ++tally["reject_pack"]; return std::nullopt; }
             fit_seen=true;
             const double budget=cross_budget(w,h,n_sub,in.cross_budget_k), est=estimate();
-            if (est>budget) { ++tally["reject_law5_budget"]; return std::nullopt; }
-            ++tally["accepted"]; return Winner{precision.area(w*h),w,h,est,budget};
+            if (!std::isfinite(est) || est<0)
+                throw FloorplanError("floorplan: invalid airwire estimate; cannot rank candidate");
+            ++tally["accepted"];
+            const Winner candidate{precision.area(w*h),w,h,est,budget};
+            if (!best || prefer_outline(candidate,*best)) { best_plan=plan; best_offers=side_offers; }
+            return candidate;
         };
+        const auto seed=in.experiment?in.experiment->initial_outline:std::nullopt;
+        if(seed) {
+            const auto [w,h]=*seed;++tally["generated"];
+            if(w<h)++tally["reject_aspect"];
+            else if(w*h<min_area)++tally["reject_min_area"];
+            else best=evaluate(w,h);
+        }
         for (double aspect:aspects) for (int k=0;k<80;++k) {
             checked_quantization_add(plan.accounting.quantization_engagements, "outline_grow_step");
             const double grow=outline_grow(k);
             const double w=quantize("outline_snap_up",sw+grow*(aspect/seed_aspect));
             const double h=quantize("outline_snap_up",sh+grow);
             ++tally["generated"];
+            // Growth and candidate-area quantization are monotonic. Once this
+            // aspect is strictly worse in the actual primary objective, later
+            // dimensions cannot win. Retain equal rounded areas: width/height
+            // and estimate remain meaningful tie-breaks, including seeded runs.
+            if(best&&precision.area(w*h)>std::get<0>(*best)) {
+                ++tally["reject_not_smaller"];break;
+            }
             if (w<h) { ++tally["reject_aspect"]; continue; }
             if (w*h<min_area) { ++tally["reject_min_area"]; continue; }
-            if (auto candidate=evaluate(w,h)) { if (!best || *candidate<*best) best=candidate; break; }
+            if (auto candidate=evaluate(w,h)) { if (!best || prefer_outline(*candidate,*best)) best=candidate; break; }
         }
-        if (!best) throw FloorplanError(std::string("floorplan: could not fit all REAL packed blocks under the LAW-5 airwire budget on any searched outline (blocks ")+(fit_seen ? "did":"never")+" fit)");
+        if (!best) {
+            record_tally();
+            throw FloorplanPackingInfeasible(std::string("floorplan: no accepted candidate on searched outlines (blocks ")+(fit_seen ? "did":"never")+" fit; aggregate airwire is advisory)");
+        }
         const double w0=std::get<1>(*best),h0=std::get<2>(*best);
         std::vector<double> ws,hs;
         for (int k=0;k<=refine_span;++k) {
@@ -313,48 +397,69 @@ FloorplanPlan Engine::run() {
             checked_quantization_add(plan.accounting.quantization_engagements, "outline_fine_grid");
             hs.push_back(fine_shrink(h0,k));
         }
-        for (double w:ws) for (double h:hs) {
+        auto visit=[&](int i,int j) {
+            const double w=ws[static_cast<std::size_t>(i)],h=hs[static_cast<std::size_t>(j)];
             ++tally["generated"];
-            if (w<=0 || h<=0 || w<h) { ++tally["reject_aspect"]; continue; }
-            if (w*h>=std::get<1>(*best)*std::get<2>(*best)-1e-6) { ++tally["reject_not_smaller"]; continue; }
-            if (w*h<min_area) { ++tally["reject_min_area"]; continue; }
-            if (auto candidate=evaluate(w,h)) best=candidate;
-        }
-        board_size(std::get<1>(*best),std::get<2>(*best));
-        if (!attempt_pack(true)) throw FloorplanError("floorplan: the winning outline "+outline_text(plan.board_w,plan.board_h)+" failed the final compact re-pack — refusing to emit a stale layout");
-        choose_connector_shapes();
-        Inputs ti;
-        for (const auto* key:{"generated","reject_aspect","reject_min_area","reject_not_smaller","reject_pack","reject_law5_budget","accepted"}) ti.emplace_back(key,jvalue(tally.at(key)));
-        calc("outline_candidates",jvalue(tally.at("generated")),std::move(ti),"sizing.pass");
+            if (w<=0 || h<=0 || w<h) { ++tally["reject_aspect"]; return false; }
+            if (w*h>=std::get<1>(*best)*std::get<2>(*best)-1e-6) { ++tally["reject_not_smaller"]; return false; }
+            if (w*h<min_area) { ++tally["reject_min_area"]; return false; }
+            if (auto candidate=evaluate(w,h)) { best=candidate;return true; }
+            return false;
+        };
+        if(in.experiment&&in.experiment->multiscale_outline)
+            multiscale_outline_indices(refine_span,visit);
+        else for(int i=0;i<=refine_span;++i)for(int j=0;j<=refine_span;++j)visit(i,j);
+        // Keep the screened layout, not just its dimensions. A later failed
+        // candidate must not become the starting state for final refinement.
+        restore(*best_plan); side_offers=std::move(best_offers);
+        std::get<3>(*best)=refine_screened_incumbent(std::get<3>(*best));
+        if (!std::isfinite(std::get<3>(*best)) || std::get<3>(*best)<0)
+            throw FloorplanError("floorplan: invalid final refined airwire estimate on "+
+                outline_text(plan.board_w,plan.board_h)+" — refusing to emit a stale screening estimate");
+        record_tally();
         calc("law5_airwire_budget",jvalue(precision.value(std::get<4>(*best))),{{"cross_k",jvalue(in.cross_budget_k)},
             {"board_w",jvalue(plan.board_w)},{"board_h",jvalue(plan.board_h)},{"n_subsystems",jvalue(n_sub)}},"sizing.pass");
         calc("pass_winner",jvalue(outline_text(plan.board_w,plan.board_h)),winner_inputs(*best,plan.accounting.quantization_engagements),"sizing.pass");
         return *best;
     };
-    reset_shapes(); const Winner conservative_best=search(false);
+    const auto entry=plan;const auto entry_offers=side_offers;
+    reset_shapes();std::optional<Winner> conservative_best;
+    try { conservative_best=search(false); }
+    catch (const FloorplanPackingInfeasible&) { restore(entry);side_offers=entry_offers; }
+    catch (const FloorplanReservationExcluded&) { restore(entry);side_offers=entry_offers; }
     const auto conservative=plan; const auto offers=side_offers;
-    plan.accounting.fallback_events=entry_events; reset_shapes();
+    reset_shapes();
     std::optional<Winner> free_best;
-    try { free_best=search(true); } catch (const FloorplanError&) {}
-    Winner best=conservative_best; std::string choice="conservative";
-    if (free_best && (std::get<0>(*free_best)<std::get<0>(best)-1e-6 ||
-        (std::get<0>(*free_best)<=std::get<0>(best)+1e-6 && std::get<3>(*free_best)<std::get<3>(best)-1e-6))) {
+    try { free_best=search(true); }
+    catch (const FloorplanPackingInfeasible&) {}
+    catch (const FloorplanReservationExcluded&) {}
+    if(!conservative_best&&!free_best)
+        throw FloorplanPackingInfeasible("floorplan: automatic sizing found no accepted layout under either reservation policy; bounded search exhaustion is not proof of geometric infeasibility");
+    Winner best=conservative_best?*conservative_best:*free_best; std::string choice="conservative";
+    if (free_best && (!conservative_best || prefer_outline(*free_best,best))) {
         best=*free_best; choice="free";
     } else {
-        restore(conservative); side_offers=offers; plan.accounting.fallback_events=conservative.accounting.fallback_events; fallback("punch_free_plan_rejected");
+        restore(conservative); side_offers=offers; fallback("punch_free_plan_rejected");
     }
-    calc("plan_choice",jvalue(choice),{{"conservative_area",jvalue(std::get<0>(conservative_best))},
-        {"conservative_est",jvalue(precision.value(std::get<3>(conservative_best)))},
+    calc("plan_choice",jvalue(choice),{{"conservative_area",conservative_best?jvalue(std::get<0>(*conservative_best)):jvalue("unavailable")},
+        {"conservative_est",conservative_best?jvalue(precision.value(std::get<3>(*conservative_best))):jvalue("unavailable")},
         {"free_area",jvalue(free_best ? std::get<0>(*free_best):0.0)},{"free_est",jvalue(free_best ? precision.value(std::get<3>(*free_best)):0.0)}});
     ledger_sides();
     auto wi=winner_inputs(best,plan.accounting.quantization_engagements); wi.emplace_back("plan",jvalue(choice));
     calc("sizing_winner",jvalue(outline_text(plan.board_w,plan.board_h)),std::move(wi));
     std::string aspect_text;
     for (double a:aspects) { if (!aspect_text.empty()) aspect_text+=", "; aspect_text+=number(a); }
-    plan.outline_note=seed_note+"; then SMALLEST-AREA search over aspects "+aspect_text+" -> "+outline_text(plan.board_w,plan.board_h)+
-        " mm (the smallest board holding the REAL 2-sided packed blocks with the estimated cross-subsystem airwire "+number(std::get<3>(best),0)+
-        " <= LAW-5 budget "+number(std::get<4>(best),0)+" mm — honest routing headroom, the gate is not relaxed), SoM "+
+    plan.outline_note=seed_note+"; then bounded search over aspects "+aspect_text+" -> "+outline_text(plan.board_w,plan.board_h)+
+        " mm (the smallest feasible board FOUND by this bounded aspect/grid search and greedy packing order, not a global minimum; holding the REAL 2-sided packed blocks with the estimated cross-subsystem airwire "+number(std::get<3>(best),0)+
+        " mm; advisory airwire reference "+number(std::get<4>(best),0)+" mm, not an acceptance constraint), SoM "+
         outline_text(plan.som.w,plan.som.h)+" centered";
+    if(in.experiment&&in.experiment->multiscale_outline)
+        plan.outline_note+="; opt-in multiscale axis/diagonal refinement, not the complete fine-grid scan; may stop at a larger local solution";
+    if(in.experiment&&in.experiment->initial_outline) {
+        const auto [w,h]=*in.experiment->initial_outline;
+        plan.outline_note+="; supplied initial candidate "+outline_text(w,h)+
+            " mm was independently re-evaluated; bounded refinement coverage depends on the incumbent";
+    }
     return std::move(plan);
 }
 }  // namespace schgen::floorplan_detail

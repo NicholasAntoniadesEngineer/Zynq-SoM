@@ -1,0 +1,22 @@
+{
+  "parent_commit": "aad3506e",
+  "implementation": "via_obstacle_axis_exits: derive four axis-only obstacle-centre proposals from the same pad-edge and drill-centre clearance rules as via_site_blocker",
+  "purpose": "Geometric candidate kernel for targeted opposite-side thermal repair, avoiding arbitrary search radii or padding",
+  "tests": {
+    "target": "native_pcb_emit_contracts",
+    "result": "PASS, 0.88 seconds",
+    "log": "native/build/thermal-axis-tests.log",
+    "coverage": [
+      "GND hole-to-pad clearance versus non-GND via-to-pad clearance",
+      "drill hole-to-hole clearance with and without drilled obstacles",
+      "rectangular pad extents in both orientations",
+      "coincident and offset conflict centres",
+      "every returned proposal clears the isolated obstacle under the actual checker",
+      "0.000001 mm inward move violates clearance, detecting unjustified padding",
+      "axis-only movement and deterministic repetition",
+      "another unchanged obstacle still blocks the site",
+      "unblocked pads and board-edge violations generate no proposals"
+    ]
+  },
+  "limitations": "Candidate generation only, not wired into production placement yet. Returned positions require emitted-grid projection and complete board legality checks. No new accepted layout or performance claim. Existing board output unchanged by this uncalled kernel."
+}

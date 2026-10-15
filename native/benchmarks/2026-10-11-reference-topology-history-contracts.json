@@ -1,0 +1,18 @@
+{
+  "date": "2026-10-11",
+  "base_commit": "8329ff83",
+  "recovery": "Previous serial suite process no longer existed. Saved CTest log proves placement test 65 passed 311691 assertions in 152.24 seconds; suite stopped at board-input test 66 on its obsolete C1-only historical adapter.",
+  "reviewed_commit": "18a73d9ff0bd67c8def4c72e73ba93e39c4266de",
+  "delta": "PCA9306 EN follows +3V3_AUX; R4 feeds VREF2/AUX_ISO_REF; C5 is 100p C14858 on VREF2 instead of 100n C14663 on the rail.",
+  "test_change": "Historical-input adapter validates the independent complete current pin/reference/NC oracle, exact C5 identity and BOM, and exact ordered preimages of both affected nets before projecting only the reviewed changes back into the immutable migration oracle. All other IR remains visible to the existing full comparison.",
+  "negative_controls": "Retains twelve capacitor/unrelated mutation checks and adds five C5 value/BOM/footprint/duplicate mutations plus four VREF2/EN/R4/C5 pin mutations. Cross-project isolation remains checked.",
+  "tests": {
+    "native_compact_profile_inputs_contracts": 17.03,
+    "native_board_inputs_contracts": 0.69,
+    "native_authoring_gates_contracts": 0.82,
+    "native_experiment_tools_contracts": 11.38,
+    "result": "4/4 PASS; all shared adapter consumers rebuilt and tested",
+    "total_seconds": 29.93
+  },
+  "limitations": "No production hardware change, historical fixture rewrite or gate waiver. This confirms reviewed source identity, not startup/shutdown, reverse-power or isolation qualification. Full suite and overall goal remain incomplete."
+}

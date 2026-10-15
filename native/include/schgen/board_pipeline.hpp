@@ -131,9 +131,9 @@ std::string board_png_average_hash(const std::filesystem::path&);
 BoardGoldenResult check_board_golden(const std::filesystem::path& renders,bool bless=false,
     const std::filesystem::path& baseline={});
 struct BoardCoverageLintResult {
-    std::size_t sheets=0,parts=0,structured=0,free=0,ungated=0;
+    std::size_t sheets=0,parts=0,structured=0,free=0,ungated=0,invalid_entries=0;
     std::string report;
-    bool ok() const { return ungated==0; }
+    bool ok() const { return ungated==0&&invalid_entries==0; }
 };
 // Checks the explicitly supplied wired-sheet IR, even if no footprints placed.
 // Missing contracts expose ungated parts; no implicit filesystem/package load.

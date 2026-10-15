@@ -1,0 +1,94 @@
+{
+  "source_commit": "cd907481d2a4aa5fa972798d648613a482a00672",
+  "executable_sha256": "c43e41fee115009811a224b8dc33b79a715e390f35affc361550a727f828400d",
+  "scope": "Full no-render board validation after compound child fanout correction; no accelerator or fallback-scope correction applied",
+  "command_template": "native/bin/schgen board --repo REPOSITORY --project PROJECT [--compact-placement for carrier] --no-render --timing --kicad-cli /Applications/KiCad/KiCad.app/Contents/MacOS/kicad-cli --output ISOLATED_OUTPUT",
+  "regressions": {
+    "all_targets_abi_rebuilt": true,
+    "selected_ctest_groups_passed": 28,
+    "selected_ctest_wall_seconds": 96.93,
+    "expanded_child_properties_checks": 47959,
+    "expanded_child_properties_optimized": "PASS",
+    "expanded_child_properties_asan_ubsan": "PASS",
+    "archived_unsafe_seed": "Exact old PCB reproduced by forced placement; corrected occupancy rejects pair; zero-child-halo negative witness admits pair"
+  },
+  "runs": [
+    {
+      "project": "carrier",
+      "compact": true,
+      "output_directory": "/private/tmp/carrier-child-halo-gates.F4UAQf",
+      "complete": true,
+      "board_ok": false,
+      "sheets": 37,
+      "dimensions_mm": [170, 165],
+      "retained_incumbent_dimensions_mm": [168, 163],
+      "fanout_subjects": 110,
+      "fanout_starved": 0,
+      "fanout_gate": "PASS",
+      "pcb_geometry_gate": "PASS",
+      "placement_requirements_gate": "PASS, hard ownership/identity/top-switch scope only",
+      "non_unrouted_drc_errors": 0,
+      "unrouted_connections": 499,
+      "source_audit": "PASS: 68 C++ files, 75 constants, 155 registered transforms",
+      "mandatory_failures": ["fallbacks"],
+      "fallbacks": {
+        "cand_cap_truncated": 116,
+        "interior_reseat_retry": 151,
+        "legalize_only_compaction": 2,
+        "punch_free_plan_rejected": 1,
+        "corridor_evict_moved": 0,
+        "corridor_stray_unmovable": 0
+      },
+      "retry_ceiling": 18,
+      "advisory_failures": ["return_path", "golden", "contract_coverage_lint"],
+      "skipped": ["sheet_render", "render3d"],
+      "seconds": {
+        "process_wall": 578.01,
+        "pcb_input_loading_and_netlist_validation": 1.486732,
+        "pcb_build_model_with_internal_checks": 369.099356,
+        "pcb_text_render": 0.033381,
+        "source_audit": 155.720745,
+        "sum_measured_scopes_not_process_wall": 577.947019
+      },
+      "sha256": {
+        "pcb": "58e93145df3e04cd4cb3ebcc59ee5f531286ffb76eb55c7da6e8e83ea2eb190e",
+        "log": "64f46ae13ab7d881dbe20e3af4e81cdaf055e3e57a6edb357ce52769d82494f6",
+        "board_verdicts": "3e23824fc3c61023a21c94b958db449983dfa6976f9b910cafdda7c74117bb65"
+      }
+    },
+    {
+      "project": "devkit_mini",
+      "compact": false,
+      "output_directory": "/private/tmp/devkit-child-halo-gates.nMiMes",
+      "complete": true,
+      "board_ok": true,
+      "sheets": 12,
+      "non_unrouted_drc_errors": 0,
+      "unrouted_connections": 413,
+      "mandatory_failures": [],
+      "advisory_failures": ["return_path", "contract_coverage_lint"],
+      "skipped_renders": ["sheet_render", "render3d"],
+      "not_applicable": ["manual", "scfw"],
+      "seconds": {
+        "process_wall": 192.19,
+        "pcb_input_loading_and_netlist_validation": 0.676742,
+        "pcb_build_model_with_internal_checks": 0.713364,
+        "pcb_text_render": 0.009089,
+        "source_audit": 157.956189,
+        "sum_measured_scopes_not_process_wall": 192.136198
+      },
+      "sha256": {
+        "pcb": "c55c085789a3d262a6bb9233bd73cb2d4e7f5b0bba425c5ddebf4f9ced2314c2",
+        "log": "7ecb8f66e8199ddefe9d8a8a6aa0d1feadf5bdac17204ab069dd536e26353917",
+        "board_verdicts": "bef86b014484808205525835b859d0451eac15794157687fc72e61792f19749f"
+      }
+    }
+  ],
+  "limitations": [
+    "The carrier remains rejected by its retry ceiling; no accepted smaller board or reviewed new renders.",
+    "These are validation timings under concurrent host load, not a controlled before/after performance comparison. No clean compile timing was measured.",
+    "Fallback receipts retain the existing snapshot behavior; independent review has demonstrated omitted executed events on rejected search paths. Correcting that defect is separate pending work, so these are reported receipts, not a claim of complete executed-event counts.",
+    "Property agreement between hashed and exhaustive predicates does not independently prove shared exemptions safe for every physical shape. Broader rotation/mirroring qualification continues.",
+    "Historical Python timing comparisons remain pinned only to 0e9bbc913bab77f9cd228940db2a332d25d6bfa1; none was rerun here. Routing remains out of scope."
+  ]
+}

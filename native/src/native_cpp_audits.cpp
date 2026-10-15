@@ -1,17 +1,28 @@
 #include "schgen/native_audit_state.hpp"
 #include "schgen/process.hpp"
 #include "schgen/audit_ast_projection.hpp"
+#include "schgen/audit_ast_process.hpp"
 #include "verification_internal.hpp"
 #include "verification_audits_unicode.hpp"
+#include "audit_dependencies_internal.hpp"
+#include "audit_parallel_internal.hpp"
 #include <cctype>
 #include <cstring>
-#include <future>
-#include <atomic>
-#include <exception>
+#include <memory>
+#include <array>
+#include <unistd.h>
 
 namespace schgen {
 namespace {
 const JsonNode empty;
+struct DependencyScratch {
+    std::filesystem::path path;
+    DependencyScratch(){auto p=(std::filesystem::temp_directory_path()/"schgen_audit_deps_XXXXXX").string();
+        if(!::mkdtemp(p.data()))throw AuditSyntaxError("native audit: cannot create dependency scratch");path=p;}
+    ~DependencyScratch(){std::error_code ignored;std::filesystem::remove_all(path,ignored);}
+    DependencyScratch(const DependencyScratch&)=delete;
+    DependencyScratch& operator=(const DependencyScratch&)=delete;
+};
 const JsonNode& get(const JsonNode& n,const std::string& key){if(n.kind!=JsonKind::Object)return empty;const auto* p=object_field(n,key);return p?*p:empty;}
 std::string text(const JsonNode& n,const std::string& key){return get(n,key).string_value;}
 const std::vector<JsonNode>& children(const JsonNode& n){return get(n,"inner").array_value;}
@@ -248,9 +259,12 @@ CppSourceCensus scan_cpp_audit_sources(const std::filesystem::path& root,const s
     if(files.empty())throw std::invalid_argument("native source audit requires a nonempty decision-file manifest");
     if(options.compiler.empty())throw std::invalid_argument("native source audit requires a compiler");
     if(options.workers<1||options.workers>4)throw std::invalid_argument("native source audit workers must be between 1 and 4");
+    if(options.projection_slots<1||options.projection_slots>2||options.projection_slots>options.workers)
+        throw std::invalid_argument("native source audit projection slots must be 1 or 2 and not exceed workers");
     CppSourceCensus result;std::set<std::string> unique;
     // Validate the whole explicit manifest before launching compiler work.
     std::vector<std::filesystem::path> relative_paths;
+    std::vector<std::string> source_snapshots;
     for(const auto& file:files){
         const auto relative=std::filesystem::path(file.path).lexically_normal();
         if(relative.is_absolute()||relative.empty()||*relative.begin()=="..")throw std::invalid_argument("native audit manifest paths must be root-relative");
@@ -258,29 +272,94 @@ CppSourceCensus scan_cpp_audit_sources(const std::filesystem::path& root,const s
         const auto path=std::filesystem::absolute(root/relative).lexically_normal();
         if(!std::filesystem::is_regular_file(path))throw std::runtime_error("native audit source is missing/not a file: "+path.string());
         relative_paths.push_back(relative);
+        source_snapshots.push_back(model_checks::read(path));
     }
+    // Bind source-offset interpretation and both compiler passes to the same
+    // observed source contents. This is not a transitive-input cache key or a
+    // filesystem snapshot: edits restored between checks remain undetectable.
+    const auto unchanged=[&](std::size_t index){
+        const auto path=std::filesystem::absolute(root/relative_paths[index]).lexically_normal();
+        if(model_checks::read(path)!=source_snapshots[index])
+            throw AuditSyntaxError(path.string()+": source changed during audit");
+    };
+    // Share immutable byte snapshots across TUs, including system/transitive
+    // headers. Per-TU graph comparison also detects newly appearing includes.
+    // This is observed consistency, not an atomic filesystem snapshot/cache.
+    std::mutex dependencies_mutex;
+    std::map<std::filesystem::path,std::shared_ptr<const std::string>> dependencies;
+    std::vector<std::set<std::filesystem::path>> dependency_graphs(files.size());
+    using Dependency=std::pair<std::filesystem::path,std::shared_ptr<const std::string>>;
+    const auto unchanged_dependencies=[](const auto& watched) {
+        for(const auto& [path,bytes]:watched)
+            if(!std::filesystem::is_regular_file(path)||model_checks::read(path)!=*bytes)
+                throw AuditSyntaxError(path.string()+": dependency changed during audit");
+    };
+    const auto discover_dependencies=[&](const std::filesystem::path& path) {
+        std::vector<std::string> command{options.compiler};command.insert(command.end(),options.flags.begin(),options.flags.end());
+        command.insert(command.end(),{"-std=c++17","-ffp-contract=off","-x","c++","-M","-MT","schgen_audit_deps",path.string()});
+        const auto discovered=run_process(command,options.timeout);
+        if(discovered.exit_code!=0)throw AuditSyntaxError(path.string()+": C++ dependency discovery failed\n"+discovered.stderr_text);
+        auto graph=audit_detail::dependency_paths(discovered.stdout_text);
+        if(!graph.count(path))throw AuditSyntaxError(path.string()+": compiler dependency graph omitted source");
+        return graph;
+    };
+    // Invocation-local, bounded projection stripes; no shared cache or DOM
+    // queue. Preserve the compiler-worker and transactional dependency checks.
+    std::array<std::mutex,2> projection_slots;
+    std::vector<CppAuditTiming> timings(files.size());
+    using Clock=std::chrono::steady_clock;
+    const auto elapsed=[](Clock::time_point start){return std::chrono::duration<double>(Clock::now()-start).count();};
     const auto scan_one=[&](std::size_t index){
         const auto& relative=relative_paths[index];
         const auto path=std::filesystem::absolute(root/relative).lexically_normal();
+        unchanged(index);
+        auto& timing=timings[index];timing.source=relative.generic_string();
+        auto start=Clock::now();const auto graph=discover_dependencies(path);
+        timing.dependency_seconds=elapsed(start);start=Clock::now();
+        std::vector<Dependency> watched;
+        for(const auto& dependency:graph) {
+            if(!std::filesystem::is_regular_file(dependency))throw AuditSyntaxError("native audit dependency is missing/not a file: "+dependency.string());
+            auto bytes=std::make_shared<const std::string>(model_checks::read(dependency));
+            std::lock_guard<std::mutex> guard(dependencies_mutex);
+            const auto [it,added]=dependencies.emplace(dependency,bytes);
+            if(!added&&*it->second!=*bytes)throw AuditSyntaxError(dependency.string()+": dependency changed during audit");
+            watched.push_back(*it);
+        }
+        unchanged(index);unchanged_dependencies(watched);
+        timing.snapshot_seconds=elapsed(start);start=Clock::now();
         std::vector<std::string> command{options.compiler};command.insert(command.end(),options.flags.begin(),options.flags.end());
         command.insert(command.end(),{"-std=c++17","-ffp-contract=off","-x","c++","-fsyntax-only","-Xclang","-ast-dump=json",path.string()});
-        JsonNode ast;
-        const auto compiled=run_process_consume_stdout(command,[&](std::istream& input){
-            ast=parse_audit_ast_projection(input,path.string()+" compiler AST");
-        },options.timeout);
-        if(compiled.exit_code!=0)throw AuditSyntaxError(path.string()+": C++ compiler failed ("+std::to_string(compiled.exit_code)+")\n"+compiled.stderr_text);
+        std::unique_lock<std::mutex> projection_lock(projection_slots[index%options.projection_slots],std::defer_lock);
+        AuditAstProcessTiming ast_timing;
+        auto compiled=run_audit_ast_process(command,path.string()+" compiler AST",options.timeout,projection_lock,&ast_timing);
+        timing.first_byte_seconds=ast_timing.first_byte_seconds;
+        timing.projection_wait_seconds=ast_timing.projection_wait_seconds;
+        timing.parsing_seconds=ast_timing.parsing_seconds;
+        timing.ast_seconds=elapsed(start);start=Clock::now();
+        if(compiled.process.exit_code!=0)throw AuditSyntaxError(path.string()+": C++ compiler failed ("+std::to_string(compiled.process.exit_code)+")\n"+compiled.process.stderr_text);
+        unchanged(index);unchanged_dependencies(watched);
+        JsonNode ast=std::move(*compiled.ast);
         if(text(ast,"kind")!="TranslationUnitDecl")throw AuditSyntaxError(path.string()+": compiler did not return a translation-unit AST");
         CppSourceCensus local;
-        Visitor visitor{relative.generic_string(),path.string(),model_checks::read(path),local,{},{},{},{},{}};
+        Visitor visitor{relative.generic_string(),path.string(),source_snapshots[index],local,{},{},{},{},{}};
         visitor.index_lines();visitor.index(ast);visitor.visit(ast);visitor.finish();
+        ast=JsonNode{};projection_lock.unlock();
+        timing.visitor_seconds=elapsed(start);start=Clock::now();
         // Clang's JSON AST contains macro *expansions*, not definitions. Keep
         // object-like numeric policy macros visible using its preprocessor,
         // with the same target/defines/includes and compiler line markers.
         command={options.compiler};command.insert(command.end(),options.flags.begin(),options.flags.end());
-        command.insert(command.end(),{"-std=c++17","-ffp-contract=off","-x","c++","-E","-dD",path.string()});
+        DependencyScratch scratch;
+        const auto dependency_file=scratch.path/"dependencies.d";
+        command.insert(command.end(),{"-std=c++17","-ffp-contract=off","-x","c++","-E","-dD","-MD","-MF",dependency_file.string(),"-MT","schgen_audit_deps",path.string()});
         const auto expanded=run_process(command,options.timeout);
         if(expanded.exit_code!=0)throw AuditSyntaxError(path.string()+": C++ preprocessing failed\n"+expanded.stderr_text);
+        unchanged(index);unchanged_dependencies(watched);
+        if(audit_detail::dependency_paths(model_checks::read(dependency_file))!=graph)
+            throw AuditSyntaxError(path.string()+": dependency graph changed during audit");
         macros(expanded.stdout_text,path,relative.generic_string(),local);
+        timing.preprocessing_seconds=elapsed(start);
+        dependency_graphs[index]=graph;
         local.n_files=1;
         return local;
     };
@@ -290,31 +369,23 @@ CppSourceCensus scan_cpp_audit_sources(const std::filesystem::path& root,const s
         result.quantization.insert(result.quantization.end(),local.quantization.begin(),local.quantization.end());
         result.n_files+=local.n_files;
     };
-    if(options.workers==1||files.size()==1){
-        for(std::size_t i=0;i<files.size();++i)merge(scan_one(i));
-    }else{
-        std::atomic<std::size_t> next{0};
-        std::vector<CppSourceCensus> completed(files.size());
-        std::vector<std::exception_ptr> failed(files.size());
-        std::vector<std::future<void>> workers;
-        for(std::size_t w=0;w<std::min(files.size(),options.workers);++w)
-            workers.push_back(std::async(std::launch::async,[&]{
-                for(;;){
-                    const auto i=next.fetch_add(1,std::memory_order_relaxed);
-                    if(i>=files.size())return;
-                    try{completed[i]=scan_one(i);}
-                    catch(...){failed[i]=std::current_exception();}
-                }
-            }));
-        // All work remains joined and bounded. A slow TU no longer prevents an
-        // idle worker from taking the next TU. Publish in manifest order only,
-        // and rethrow the earliest manifest-index error, not the fastest error.
-        for(auto& worker:workers)worker.get();
-        for(std::size_t i=0;i<files.size();++i){
-            if(failed[i])std::rethrow_exception(failed[i]);
-            merge(std::move(completed[i]));
-        }
-    }
+    std::vector<CppSourceCensus> completed(files.size());
+    audit_detail::for_each_input(files.size(),options.workers,[&](std::size_t i){completed[i]=scan_one(i);});
+    for(auto& census:completed)merge(std::move(census));
+    for(std::size_t i=0;i<files.size();++i)unchanged(i);
+    unchanged_dependencies(dependencies);
+    // An absent __has_include target is not a file snapshot. Re-resolve every
+    // graph before publication, including TUs completed before a later edit.
+    audit_detail::for_each_input(files.size(),options.workers,[&](std::size_t i) {
+        const auto path=std::filesystem::absolute(root/relative_paths[i]).lexically_normal();
+        const auto start=Clock::now();
+        if(discover_dependencies(path)!=dependency_graphs[i])
+            throw AuditSyntaxError(path.string()+": dependency graph changed during audit");
+        timings[i].final_dependency_seconds=elapsed(start);
+    });
+    for(std::size_t i=0;i<files.size();++i)unchanged(i);
+    unchanged_dependencies(dependencies);
+    if(options.timings)*options.timings=std::move(timings);
     return result;
 }
 NativeAuditResult check_native_audits(const CppSourceCensus& census,const NativeLedger& ledger,const NativeQuantizations& quantize){

@@ -1,0 +1,10 @@
+{
+  "base_commit": "fbd1c731",
+  "defect": "A physically clear pocket between through-hole children was rejected because group projection demanded a single common separation direction for all active child pairs.",
+  "reproduction": "Native exact Occupancy::fits_exhaustive accepted the 22x22 fixture while floorplan_legalize_compact rejected it before this patch; native_floorplan_contracts failed with 'exactly feasible child pocket rejected by group projection'.",
+  "correction": "When no common-direction seed projection holds, retain independently witnessed seed separation directions for each active child pair. Keep normal common-direction handling otherwise. All final rounded geometry, hard constraints, halos and child occupancy remain independently checked.",
+  "coverage": "Native floorplan contracts PASS 14.72 seconds, including both primary-face assignments, horizontal/vertical through-hole pockets, compaction on/off, and solid-obstacle rejection with caller rollback.",
+  "carrier_reference": {"dimensions_mm": [164,156],"pcb_sha256": "1d6c598565b9daa6cca454fe7352b1b25604b46174d949a5e428b290dbc8dbba","unchanged": true,"quick_checks": "fanout, ratsnest geometry, placement contract, placement flow PASS; hard_red=0"},
+  "smaller_trial": {"dimensions_mm": [163,156],"recipe": "qualified 164x156 recipe with width 163","result": "construction_failed","seconds": 3.082669875,"completed_outer_attempts": 4,"failure_receipt_captured": true},
+  "limitations": "This correction represents already-clear seed pockets; it does not discover arbitrary new pockets. No attribution of USB-JTAG/HDMI failures to this defect, no smaller-board or timing improvement claimed, no fresh full audit/render qualification."
+}

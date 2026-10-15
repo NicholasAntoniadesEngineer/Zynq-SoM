@@ -1,6 +1,7 @@
 #pragma once
 #include "schgen/execution_failure.hpp"
 #include "schgen/board_decision_policy.hpp"
+#include "schgen/owned_shape_quality.hpp"
 
 #include "schgen/circuit.hpp"
 #include "schgen/execution_accounting.hpp"
@@ -24,6 +25,7 @@
 #include <vector>
 
 namespace schgen {
+struct JointSeparationWork;
 struct FloorplanExperiment;
 
 // Millimetres throughout. Box4 is x0,y0,x1,y1; Pose is x,y,width,height.
@@ -65,6 +67,17 @@ class FloorplanSpecError : public FloorplanError {
 public:
     using FloorplanError::FloorplanError;
 };
+// Exhausted packing search, not malformed input or infrastructure failure.
+class FloorplanPackingInfeasible : public FloorplanError {
+public:
+    using FloorplanError::FloorplanError;
+};
+// An explicitly requested diagnostic policy excludes a reservation pass;
+// distinct from both exhausted packing search and malformed/failing inputs.
+class FloorplanReservationExcluded : public FloorplanError {
+public:
+    using FloorplanError::FloorplanError;
+};
 
 // A resolved footprint is parsed once. Providers retain the exact document,
 // including duplicate/unnumbered pads and mirrored variants; consumers must not
@@ -102,6 +115,9 @@ struct FloorplanTerm {
     std::string basis;
     bool enforced = false;
     std::vector<std::string> output_roles, out_refs;
+    // Compact hard-facing terms cannot defer their sign check to a later gate.
+    // Transport with the term so legalize(false) fallback retains enforcement.
+    bool require_positive_facing = false;
     std::string target() const;
 };
 struct FloorplanTermIndex {
@@ -132,6 +148,18 @@ struct FloorplanLegalizeVar {
     FloorplanPoint seed{};
     double x = 0.0, y = 0.0;
 };
+struct FloorplanPrimaryFanout {
+    Halo reach{}, inset{};
+    // Occupancy face mask. Zero denotes a logical exclusion rectangle, not
+    // a primary physical body; its existing nominal separation still applies.
+    int mask = 0;
+    // Complete union of primary and selected child reservation faces.
+    // Zero means unknown: retain conservative rectangle separation.
+    int occupied_mask = 0;
+    // Complete selected reservations, not an arbitrary subset. Absent keeps
+    // conservative geometry; an engaged empty vector proves no children.
+    std::optional<std::vector<Comp>> children = std::nullopt;
+};
 struct FloorplanLegalizeInput {
     double board_w = 0.0, board_h = 0.0;
     Box4 som_core_page;
@@ -139,11 +167,27 @@ struct FloorplanLegalizeInput {
     FloorplanTermIndex index;
     std::map<std::string, FloorplanLocalMetrics> metrics;
     std::map<std::string, FloorplanPoint> fixed_poses;
+    // Planar routing-space heuristic, not an authored hardware minimum.
+    // Complete disjoint occupancy masks suppress its pair separation;
+    // explicit hard terms in index are still evaluated independently.
     std::map<std::pair<std::string, std::string>, int> channel_demand;
     std::map<std::string, Box4> som_j_rects;
     double clear = board_decision_policy::floorplan::clear;
     bool compact = false;
     FloorplanPoint origin{25.0, 25.0};
+    // Empty preserves the rectangle-only primitive API. When supplied, cover
+    // every movable/fixed rectangle with its selected primary geometry.
+    std::map<std::string, FloorplanPrimaryFanout> primary_fanout;
+    bool report_infeasible_cycle = false; // diagnostic only; no extra solve
+    std::function<void()> reservation_retry_started;
+    std::function<void()> facing_retry_started;
+    std::optional<std::size_t> joint_separation_states;
+    std::function<void()> joint_retry_started;
+    std::function<void(const JointSeparationWork&,bool)> joint_retry_completed;
+    // Called only when the optional compaction pass actually begins. Absence
+    // of this event across a failed solve proves disabling compaction cannot
+    // change that execution; callers may omit an otherwise duplicate retry.
+    std::function<void()> compaction_started;
 };
 
 // Compose consumes resolved, selected-shape metrics. A rejected candidate
@@ -240,10 +284,13 @@ struct FloorplanInput {
     std::optional<FloorplanPoint> module_offset;  // explicit env/CLI override
     double cross_budget_k = 3.0;
     double place_clear = 0.5;  // explicit SCHGEN_PLACE_CLEAR equivalent
+    // Opt-in compact-placement search; independent final board gates unchanged.
+    bool compact_search = false;
     // Prior native zone-stage accounting is retained, not reset by sizing.
     FloorplanAccounting accounting;
     // Null by default: no observation snapshots or experiment parameter changes.
     std::shared_ptr<const FloorplanExperiment> experiment;
+    OwnedShapeQualityTable owned_shape_quality; // compact zone snapshot, stable sheet/index keys
 };
 
 FloorplanSpec floorplan_spec_from_json(

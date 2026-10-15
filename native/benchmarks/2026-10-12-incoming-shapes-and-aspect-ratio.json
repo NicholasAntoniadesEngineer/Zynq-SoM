@@ -1,0 +1,103 @@
+{
+  "base_commit": "4eb760a8",
+  "implementation": "The opt-in victim-shape full strategy now adds an incoming-shape pass only after its original victim/position trials fail. It queries the nearest legal pose of each other permitted registered incoming shape, then attempts to reseat the displaced block. Original successful strategies remain untouched. Every new query has an interior_reseat_incoming_shape_trial receipt.",
+  "coverage": {
+    "new_incoming_recoveries": 1,
+    "incoming_queries": 51,
+    "original_successes_preserved": 102,
+    "total_shape_recoveries": 30,
+    "still_failed": 18,
+    "scope": "150 synthetic configurations including rotated shapes and opposite faces; original-victim-strategy direct comparison; independent rectangle checks; accounting and determinism; failed/exception rollback; explicit shape-choice restrictions. Existing compact retry, CLI and policy contracts pass.",
+    "limits": "Nearest position per extra shape, not all poses and not multiple-victim displacement. Full board below does not need the new opt-in path."
+  },
+  "screens": {
+    "reduced_outlines": [
+      {
+        "dimensions_mm": [
+          164,
+          158
+        ],
+        "result": "FAIL",
+        "log": "native/build/carrier-incoming-shape-164x158.log"
+      },
+      {
+        "dimensions_mm": [
+          165,
+          157
+        ],
+        "result": "FAIL",
+        "log": "native/build/carrier-incoming-shape-165x157.log"
+      }
+    ],
+    "aspect_candidate": {
+      "dimensions_mm": [
+        166,
+        156
+      ],
+      "area_mm2": 25896,
+      "reference_area_mm2": 26070,
+      "area_change_percent": -0.6674338319907935,
+      "estimated_cross_mm": 15822.8,
+      "reference_estimated_cross_mm": 16429.7,
+      "estimated_cross_change_percent": -3.6939201567892432,
+      "estimator_headroom_mm": 108.5,
+      "top": 420,
+      "bottom": 146,
+      "instances": 566,
+      "pcb_sha256": "e24a0f323cc154e20faa2c112c3df802aaf2acdd4bdf75bcdeb4f9437d51d879",
+      "attribution": "Same PCB with and without the opt-in shape-recovery strategy. Improvement comes from aspect ratio, not evidence of an incoming-shape algorithm gain on this board.",
+      "repeat_model_seconds": [
+        4.30864525,
+        4.310235625
+      ],
+      "repeat_hashes_equal": true,
+      "logs": [
+        "native/build/carrier-incoming-shape-166x156.log",
+        "native/build/carrier-166x156-original-portfolio.log",
+        "native/build/carrier-166x156-repeat-quality.log"
+      ]
+    },
+    "devkit": {
+      "pcb_sha256": "b6798d4b63d2fddbf9fad24945c151b9420b049b674ad5d637c43bf4a365137f",
+      "result": "Unchanged qualified PCB with compact search off and multiscale outline on; construction diagnostics PASS.",
+      "log": "native/build/devkit-incoming-shape-regression.log"
+    }
+  },
+  "full_build": {
+    "output": "/private/tmp/carrier-166x156-qualification.iK76QH",
+    "log": "native/build/carrier-166x156-full-qualification.log",
+    "recipe": "carrier-166x156.floorplan.json; compact placement, order 3, edge feasibility, owned quality/face cohesion, USB-JTAG contract groups, joint states 1024, poses 8/frontier 4096/continuations 3, audit projections 2. No pinned shape; no reseat-victim-shapes.",
+    "status": "BOARD PASS 37 sheets; every mandatory gate PASS",
+    "source_audit": "PASS: 69 C++ files, 75 constants, 156 registered transforms",
+    "drc": {
+      "non_unrouted_errors": 0,
+      "unrouted": 499
+    },
+    "advisory_failures": [
+      "return_path",
+      "golden",
+      "contract_coverage_lint"
+    ],
+    "timings_seconds": {
+      "measured_scope_total_not_wall": 196.312309,
+      "input_netlist": 1.451852,
+      "pcb_model": 4.523937,
+      "pcb_text": 0.036856,
+      "render3d": 28.190913,
+      "source_audit": 106.428465
+    },
+    "renders": {
+      "top_bottom_inspected": true,
+      "top_sha256": "d10d6d28bccacd199c5ba9a47c552a21d85000d73346c687fa9ac4bfa2f85d17",
+      "bottom_sha256": "3dda12a7759a84a1e42c3b77624feee2a84061ed165295878f5f4046b3a4da14"
+    }
+  },
+  "decision": {
+    "promoted": false,
+    "reason": "Render inspection and runtime placement requirement report reveal bringup_rails U1.24 VCC to its C1.1 100n supply bypass gap worsens from 8.0298 mm bottom/bottom to 39.7637 mm bottom/top. No authoritative numeric maximum is specified; the requirement correctly remains UNVERIFIED, not PASS. Retain previous incumbents. A lower global estimator does not settle this hardware trade-off.",
+    "quality_trace": "Event 12 selects shape 36 (gap 39.7637423, partial estimator 1621.1451). Shape 62 offers gap 17.3837488 with the same printed bounds/distance key but partial estimator 1624.4018; shape 59 offers gap 6.8005955 with different dimensions and partial estimator 1679.4482. These are local offers, not independently qualified full layouts; investigate exact pose/comparability/fanout before changing selection.",
+    "next": "Prioritise bypass-aware shape selection and pin-owned group coherence. Separately extend fine outline refinement to width/height trade-offs: floorplan_build.cpp currently derives both dimensions only through fine_shrink of the initial incumbent, excluding direct moves like 165x158 to 166x156.",
+    "unresolved": "Qualitative proximity, access and assembly envelopes remain unverified. Routing is out of scope. No fabrication readiness claim."
+  },
+  "measurement_limits": "Single full build plus prepared-input screens, uncontrolled caches and some concurrent targeted tests. No matched timing A/B, compile measurement, Python comparison or speedup claim. Overall goal not complete."
+}

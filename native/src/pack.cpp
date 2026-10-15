@@ -175,6 +175,69 @@ ViaBlockHit via_site_blocker(
     return ViaBlockHit{};
 }
 
+std::vector<std::pair<double,double>> via_obstacle_axis_exits(
+    double vx, double vy, const ViaSiteSpec& spec, const ViaObstacle& obstacle) {
+    if (via_site_blocker(vx,vy,spec,{obstacle},{}).kind!="obs") return {};
+    const double clearance=obstacle.nname=="GND"
+        ? spec.via_drill/2+spec.hole_samenet : spec.via_size/2+spec.via_clear;
+    const double drill=obstacle.drill>0
+        ? spec.via_drill/2+obstacle.drill/2+spec.via_h2h : 0;
+    const auto reach=[](double radius,double orthogonal) {
+        return orthogonal>=radius ? 0.0
+            : std::sqrt(std::max(0.0,(radius-orthogonal)*(radius+orthogonal)));
+    };
+    std::vector<std::pair<double,double>> result;
+    for (bool horizontal : {true,false}) {
+        const double along=horizontal?vx:vy, across=horizontal?vy:vx;
+        const double centre=horizontal?obstacle.cy:obstacle.cx;
+        const double half_along=horizontal?obstacle.hx:obstacle.hy;
+        const double half_across=horizontal?obstacle.hy:obstacle.hx;
+        const double orthogonal=std::abs(across-centre);
+        const double pad_gap=std::max(0.0,orthogonal-half_across);
+        const double pad_reach=pad_gap>=clearance ? 0.0
+            : half_along+reach(clearance,pad_gap);
+        const double distance=std::max(pad_reach,reach(drill,orthogonal));
+        for (double sign : {-1.0,1.0}) {
+            // Step outward by one representable value, not a hardware margin.
+            const double target=std::nextafter(along+sign*distance,
+                sign*std::numeric_limits<double>::infinity());
+            result.emplace_back(horizontal?target:centre,horizontal?centre:target);
+        }
+    }
+    return result;
+}
+
+ViaSelection select_via_sites(
+    double x, double y, double rotation,
+    const std::vector<std::pair<double, double>>& preferred, const Box4& pour,
+    std::size_t requested, double lattice_pitch, bool allow_lattice,
+    const ViaSiteSpec& rule, const std::vector<ViaObstacle>& obstacles,
+    const std::vector<std::pair<double, double>>& occupied,
+    QuantizationCounts* counts) {
+    ViaSelection result;
+    auto used = occupied;
+    auto examine = [&](const auto& candidates, bool is_preferred) {
+        for (const auto& local : candidates) {
+            if (result.chosen.size() == requested) break;
+            auto point = world_turned_point(x, y, local.first, local.second, rotation, 3);
+            if (is_preferred) ++result.preferred_examined;
+            else ++result.lattice_examined;
+            auto hit = via_site_blocker(point.first, point.second, rule, obstacles, used);
+            if (hit.blocked) result.rejected.push_back({is_preferred, std::move(hit), point});
+            else {
+                result.chosen.push_back(point);
+                used.push_back(point);
+                if (!is_preferred) ++result.lattice_chosen;
+            }
+        }
+    };
+    examine(preferred, true);
+    if (allow_lattice && result.chosen.size() < requested)
+        examine(fallback_via_sites(pour.x0, pour.y0, pour.x1, pour.y1,
+                                  rule.via_size, lattice_pitch, counts), false);
+    return result;
+}
+
 std::vector<std::pair<double, double>> fallback_via_sites(
     double x0, double y0, double x1, double y1, double via_size,
     double pitch, QuantizationCounts* counts) {
@@ -422,8 +485,10 @@ bool SilkBoxIndex::hits(const Box4& gb, QuantizationCounts* counts) const {
 }
 
 BreatheGrid::BreatheGrid(double board_w, double board_h, double cell,
-                         double origin_x, double origin_y, QuantizationCounts* counts)
-    : cell_(cell), origin_x_(origin_x), origin_y_(origin_y) {
+                         double origin_x, double origin_y, QuantizationCounts* counts, Mode mode)
+    : cell_(cell), origin_x_(origin_x), origin_y_(origin_y), mode_(mode) {
+    if (mode != Mode::Assignment && mode != Mode::Counted)
+        throw std::invalid_argument("BreatheGrid: invalid occupancy mode");
     if (!std::isfinite(cell) || cell <= 0.0 ||
         !std::isfinite(origin_x) || !std::isfinite(origin_y)) {
         throw std::runtime_error("BreatheGrid: cell required");
@@ -441,6 +506,8 @@ BreatheGrid::BreatheGrid(double board_w, double board_h, double cell,
 }
 
 void BreatheGrid::stamp(const Box4& box, int val, QuantizationCounts* counts) {
+    if (mode_ == Mode::Counted && val != 0 && val != 1)
+        throw std::invalid_argument("BreatheGrid: counted stamp requires add/remove");
     if (!(box.x0 <= box.x1 && box.y0 <= box.y1))
         throw std::invalid_argument("BreatheGrid: ordered box required");
     const int c0 = breathe_stamp_index((box.x0 - origin_x_) / cell_, counts);
@@ -454,14 +521,30 @@ void BreatheGrid::stamp(const Box4& box, int val, QuantizationCounts* counts) {
     const int rr0 = std::max(0, r0);
     const int cc1 = std::min(nx_ - 1, c1);
     const int rr1 = std::min(ny_ - 1, r1);
-    const std::uint8_t v = val ? 1 : 0;
+    const std::uint32_t v = val ? 1 : 0;
+    // Validate every touched cell before mutation. Otherwise a late underflow
+    // could erase earlier owners and leave a partially changed occupancy map.
+    if (mode_ == Mode::Counted)
+        for (int r = rr0; r <= rr1; ++r) {
+            const auto base = static_cast<std::size_t>(r) * static_cast<std::size_t>(nx_);
+            for (int c = cc0; c <= cc1; ++c) {
+                const auto current = cells_.at(base + static_cast<std::size_t>(c));
+                if (!v && current == 0)
+                    throw std::underflow_error("BreatheGrid: removing unoccupied cell");
+                if (v && current == std::numeric_limits<std::uint32_t>::max())
+                    throw std::overflow_error("BreatheGrid: occupancy count overflow");
+            }
+        }
     // Clipped indices are nonnegative and strictly less than the checked
     // extents. Their size_t product/sum is below the allocated nx*ny; using
     // size_t here also avoids the old signed-int row-product overflow.
     for (int r = rr0; r <= rr1; ++r) {
         const auto base = static_cast<std::size_t>(r) * static_cast<std::size_t>(nx_);
         for (int c = cc0; c <= cc1; ++c) {
-            cells_.at(base + static_cast<std::size_t>(c)) = v;
+            auto& current = cells_.at(base + static_cast<std::size_t>(c));
+            if (mode_ == Mode::Assignment) current = v;
+            else if (v) ++current;
+            else --current;
         }
     }
 }
@@ -798,7 +881,8 @@ std::vector<Comp> edge_components(char edge, double block_x, double block_y,
             }
         }
         out.push_back(Comp{pack_edge_component_precision4dp(c.dx, counts), pack_edge_component_precision4dp(c.dy, counts),
-                           pack_edge_component_precision4dp(c.w, counts), pack_edge_component_precision4dp(c.h, counts), c.mask});
+                           pack_edge_component_precision4dp(c.w, counts), pack_edge_component_precision4dp(c.h, counts), c.mask,
+                           c.reach, c.inset});
     }
     return out;
 }
@@ -1007,6 +1091,56 @@ std::pair<double, double> bulk_cap_pose(
     return {pack_bulk_pose_precision4dp(ox, counts), pack_bulk_pose_precision4dp(cy, counts)};
 }
 
+namespace {
+// Search the free-space arrangement only after the fast sampled search fails.
+// At each obstacle Y event, merge forbidden X intervals and choose the closest
+// point in a remaining gap. Unlike rings, this covers narrow unsampled gaps.
+std::optional<ClearLabel> sweep_clear_refdes(const Box4& court, const std::string& ref,
+    double size, const SilkBoxIndex& occupied, const SilkBoxIndex& placed,
+    const Box4& bounds, double pad, QuantizationCounts* counts) {
+    const auto shape=text_box(ref,0,0,size,.15);
+    const double hx=(shape.x1-shape.x0)/2+pad, hy=(shape.y1-shape.y0)/2+pad;
+    const double xmin=bounds.x0+hx, xmax=bounds.x1-hx;
+    const double ymin=bounds.y0+hy, ymax=bounds.y1-hy;
+    if(xmin>xmax || ymin>ymax) return std::nullopt;
+    const double cx=(court.x0+court.x1)/2, cy=(court.y0+court.y1)/2;
+    std::vector<Box4> obstacles=occupied.boxes();
+    const auto& labels=placed.boxes();
+    obstacles.insert(obstacles.end(),labels.begin(),labels.end());
+    std::vector<double> ys{ymin,ymax,std::clamp(cy,ymin,ymax)};
+    for(const auto& b:obstacles) {
+        for(double y:{b.y0-hy,b.y1+hy})
+            if(y>=ymin && y<=ymax) ys.push_back(y);
+    }
+    std::sort(ys.begin(),ys.end());
+    ys.erase(std::unique(ys.begin(),ys.end()),ys.end());
+    std::stable_sort(ys.begin(),ys.end(),[&](double a,double b){return std::abs(a-cy)<std::abs(b-cy);});
+    for(double y:ys) {
+        std::vector<std::pair<double,double>> forbidden;
+        for(const auto& b:obstacles)
+            if(y+hy>b.y0 && y-hy<b.y1 && b.x1+hx>=xmin && b.x0-hx<=xmax)
+                forbidden.emplace_back(b.x0-hx,b.x1+hx);
+        std::sort(forbidden.begin(),forbidden.end());
+        std::vector<double> xs;
+        double left=xmin;
+        for(const auto& [lo,hi]:forbidden) {
+            if(lo>=left) xs.push_back(std::clamp(cx,left,std::min(lo,xmax)));
+            left=std::max(left,hi);
+            if(left>xmax) break;
+        }
+        if(left<=xmax) xs.push_back(std::clamp(cx,left,xmax));
+        std::stable_sort(xs.begin(),xs.end(),[&](double a,double b){return std::abs(a-cx)<std::abs(b-cx);});
+        for(double x:xs) {
+            const auto box=text_box(ref,x,y,size,.15);
+            const Box4 padded{box.x0-pad,box.y0-pad,box.x1+pad,box.y1+pad};
+            if(!occupied.hits(padded,counts) && !placed.hits(padded,counts))
+                return ClearLabel{x,y,box,std::hypot(x-cx,y-cy)};
+        }
+    }
+    return std::nullopt;
+}
+}
+
 RefdesMove place_refdes(
     const Box4& court, const std::string& ref, double size, const Box4& box,
     const SilkBoxIndex& occupied, const SilkBoxIndex& placed,
@@ -1053,6 +1187,13 @@ RefdesMove place_refdes(
                     break;
                 }
             }
+        }
+    }
+    if(cur_pen>0) {
+        if(const auto clear=sweep_clear_refdes(court,ref,new_size,occupied,placed,bounds,box_pad,counts)) {
+            tx=clear->x;
+            ty=clear->y;
+            nbox=clear->box;
         }
     }
     const double dx = tx - fx;

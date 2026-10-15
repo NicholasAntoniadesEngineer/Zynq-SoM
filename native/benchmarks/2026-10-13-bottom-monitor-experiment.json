@@ -1,0 +1,35 @@
+{
+  "base_commit": "91736d44",
+  "status": "SCREENED_ONLY_NOT_QUALIFIED",
+  "strategy": "Explicit require_bottom_sheets restricts already offered bottom-primary shapes. It does not add eligibility or waive final checks. Unknown/unoffered groups and noncompact use reject; a final side check prevents fallback to top.",
+  "profile_option": "--require-bottom-sheet power_mon",
+  "recipe": "schgen_compact_stage_profile --repo . --project carrier --compact-search on --interior-order 3 --edge-feasibility on --owned-quality-first on --owned-face-cohesion on --contract-group-face-sheet usb_jtag --floorplan-spec native/benchmarks/carrier-165x156-bottom-monitor.floorplan.json --require-bottom-sheet power_mon --joint-separation-states 1024 --reseat-poses 8 --reseat-frontier 4096 --reseat-continuations 3 --reseat-victim-shapes on --owned-shape board_aux=owned-face-a1.000000 --owned-shape bringup_rails=bottom-a2.2/r270/owned-pins-forward --schematic /private/tmp/carrier-166x156-two-pilots.iK3HkI/Zynq_Carrier.kicad_sch --runs 2",
+  "at_166x156": {
+    "log": "native/build/required-bottom-monitor.log",
+    "cross_airwire_mm": 15034.4,
+    "reference_cross_airwire_mm": 15359.2,
+    "top": 403,
+    "bottom": 163,
+    "emission_thermal_via_lattice_events": 3
+  },
+  "at_165x156": {
+    "log": "native/build/required-bottom-monitor-repeat.log",
+    "pcb_sha256": "e16f6a4bfe5227fbbb94c0e55b3acdb79c1f482eaef0edddde4c4ff4065c8bd8",
+    "repeats_identical": 2,
+    "cross_airwire_mm": 14416.3,
+    "top": 403,
+    "bottom": 163,
+    "power_monitor_top": 0,
+    "power_monitor_bottom": 10,
+    "fanout_ok": true,
+    "ratsnest_ok": true,
+    "placement_contract_ok": true,
+    "placement_flow_ok": true,
+    "hard_red": 0,
+    "emission_thermal_via_lattice_events": 3,
+    "model_seconds_diagnostic_only": [6.461120709, 6.467619416]
+  },
+  "tests": "native_owned_shape_quality_engine_contracts PASS: required side selected, repeatable, unavailable/unknown/noncompact rejection, infeasible bottom cannot silently recover on top",
+  "inference": "A locally worse partial wiring estimate need not imply a worse complete-board estimate. Retaining another face option can help downstream packing; this is one case, not proof of a universal bottom preference.",
+  "remaining": "No full qualification or renders for these candidates. Thermal-via fallback count violates the existing baseline; investigate actual geometry and preferred-site policy without waiving hardware checks. Area utilisation, routing suitability and fabrication readiness are not established."
+}

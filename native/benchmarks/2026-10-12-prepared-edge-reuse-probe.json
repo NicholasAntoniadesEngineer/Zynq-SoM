@@ -1,0 +1,25 @@
+{
+  "base_commit": "4056835a",
+  "hypothesis": "Reuse the wall/separation graph built by joint-search overflow validation instead of reconstructing it inside each axis solve and unary probe.",
+  "prototype": "Private repair_axis_prepared helper takes invocation-owned validated edges. Legacy public entry rebuilds normally; prepared edges are never reused after a separation flip. No cross-invocation cache or gate changes.",
+  "disposition": "Rejected and production source restored. Eliminating duplicate graph construction did not improve end-to-end carrier model time in this A/B/A screen.",
+  "measurement": {
+    "workload": "Prepared carrier inputs, 165x159 mm, three runs per block, compact search, interior order 3, edge feasibility, owned quality and face cohesion, USB-JTAG contract-group candidates, board_aux owned-face-fixed/a2.2/owned-pins-forward, joint separation states 128.",
+    "schematic": "/private/tmp/carrier-search-policy-165x159.sulhoA/Zynq_Carrier.kicad_sch",
+    "floorplan": "native/benchmarks/carrier-165x159-failed-first.floorplan.json",
+    "before_model_seconds": [2.602468292,2.595469625,2.605478916],
+    "prototype_model_seconds": [2.637914292,2.630104917,2.643371458],
+    "reverted_model_seconds": [2.597518417,2.576387458,2.583483167],
+    "logs": ["native/build/carrier-prepared-edges-before.log","native/build/carrier-prepared-edges-after.log","native/build/carrier-prepared-edges-reversal.log"],
+    "interpretation": "Prototype median is about 1.36% slower than initial baseline and 2.11% slower than reversed baseline. Small sequential samples, not a confidence interval; no speedup claim. Tests and audits finished before the measured prototype block."
+  },
+  "correctness": {
+    "carrier_pcb_sha256_all_nine_runs": "24ac25bfe6cb2ea6477a01b195b5ca78070ccff3bb2640f12d5b8f7275da5c64",
+    "joint_receipts": "All joint_retry lines identical between initial and prototype blocks.",
+    "prototype_devkit_pcb_sha256": "b6798d4b63d2fddbf9fad24945c151b9420b049b674ad5d637c43bf4a365137f",
+    "prototype_tests": {"native_floorplan_contracts": "PASS 15.33s including independently rebuilt graph cross-check", "native_model_failure_receipt_contracts": "PASS 25.94s", "native_cpp_source_audits": "58 contracts passed"},
+    "retained_test": "For every successful independent-oracle fixture, rebuild both selected axis graphs through the standalone repair API and compare their positions against the joint solution."
+  },
+  "scope": "C++ implementation experiment only; no Python comparison, new full board qualification or smaller-board claim.",
+  "next": "Prioritise larger measured costs, especially source-audit AST projection, rather than accumulating solver micro-optimisations with no demonstrated end-to-end benefit."
+}

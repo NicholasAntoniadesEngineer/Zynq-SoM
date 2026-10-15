@@ -1,0 +1,40 @@
+{
+  "base_commit": "6a2abad9",
+  "change": "Failure-only output-grid repair: try one 0.0001 mm coordinate step at a movable endpoint of a violated physical separation no larger than one tick. Deduplicate endpoint/axis/direction. Recheck all physical separations, difference edges and hard terms without tolerance relaxation; later child geometry and full qualification remain mandatory. Failed trials restore the incumbent. Logs and existing quantization accounting retain executed trials.",
+  "motivation": "Observed power_som->power forward sum 87.42960000000001 > 87.4296. Synthetic .1+.1+.1 > .3 reproduced representable contact that previously rejected.",
+  "tests": {
+    "native_floorplan_contracts": "PASS, 13.95 s; actual forward-sum repair and diagnostic-mode parity; existing impossible-grid rollback and boundary tests retained"
+  },
+  "carrier_regression": {
+    "dimensions_mm": [
+      164,
+      154
+    ],
+    "pcb_sha256": "c7d0508671c2881bba1fce01d1b71c8cd19837ec394af6fdd3c3dcf6d9042104",
+    "unchanged": true,
+    "cheap_checks": "PASS with zero non-search fallbacks",
+    "log": "native/build/grid-repair-reference.log"
+  },
+  "devkit_regression": {
+    "dimensions_mm": [
+      98,
+      98
+    ],
+    "pcb_sha256": "b6798d4b63d2fddbf9fad24945c151b9420b049b674ad5d637c43bf4a365137f",
+    "unchanged": true,
+    "cheap_checks": "PASS with zero non-search fallbacks",
+    "log": "native/build/grid-repair-devkit.log"
+  },
+  "smaller_trial": {
+    "dimensions_mm": [
+      164,
+      153
+    ],
+    "result": "still bounded construction failure",
+    "seconds": 3.271950792,
+    "completed_outer_attempts": 4,
+    "receipt_captured": true,
+    "log": "native/build/grid-repair-164x153.log"
+  },
+  "limitations": "Single-coordinate repair is incomplete when multiple endpoints must move together. Not an infeasibility proof, no new smaller incumbent, no new full audit or fabrication-readiness claim. Timings instrumented and concurrent, not speedup evidence."
+}

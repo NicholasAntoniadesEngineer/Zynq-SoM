@@ -1,0 +1,30 @@
+{
+  "base_commit":"e9e5a5c6",
+  "scope":"Diagnose coupled separation/proximity conflicts on the first recovered 165x159 carrier placement. No candidate promotion or waiver.",
+  "retained_change":{
+    "diagnostics":"When report_infeasible_cycle is enabled, expand each failing separation origin into its named fixed/moving seed rectangles and exact separation gap. Fixed endpoints collapsed to #0 in the difference graph no longer hide the actual obstructing geometry.",
+    "behavior":"Only diagnostic log construction changes. Solver branches, limits, placement acceptance, geometry and precision operations are unchanged.",
+    "test":"Independently impossible 20x20 board fully occupied by a fixed obstacle, with a 2x2 movable at [10,10,12,12]. Assert rejection in quiet and verbose modes; exact named fixed/movable rectangles present only in verbose logs; identical poses and quantization counts.",
+    "suites_passed":["native_compact_retry_contracts","native_floorplan_contracts"],
+    "test_seconds":18.12,
+    "test_log":"native/build/compose-cycle-tests.log"
+  },
+  "observed_original_conflict":{
+    "usb_jtag_seed_bounds_mm":[50,110,79.1402,142.246],
+    "hdmi_rx_term_seed_bounds_mm":[81,113,92.805,120.805],
+    "flipped_y_gap_mm":0.6549999999999999,
+    "hdmi_y_required_min_mm":142.901,
+    "hdmi_y_near_bound_max_mm":110.59,
+    "meaning":"Horizontal separation is flipped to put HDMI below USB-JTAG, contradicting the near-SoM bound. This proves this selected separation system is infeasible, not that the board or all possible arrangements are infeasible.",
+    "log":"native/build/carrier-compose-cycle-geometry.log"
+  },
+  "bounded_experiments_removed":[
+    {"strategy":"After existing composer strategies fail, try opposite-to-seed perpendicular ordering of all flipped separations, retaining final physical and hard-term checks.","result":"Fails: a Y repair adds a separation on the already-solved X axis; final edge consistency rejects it.","failed_construction_seconds":0.626679625,"log":"native/build/carrier-opposite-flip-prototype.log"},
+    {"strategy":"Same opposite-order retry with at most two additional alternating X/Y consistency sweeps.","result":"Fails: HDMI X must be <=47.845 from the connector escape reservation and >=113.3 from the mechanical exclusion.","failed_construction_seconds":0.689967958,"log":"native/build/carrier-opposite-flip-coupled.log"},
+    {"strategy":"Reverse only the first separation pair identified by the original failed repair, retaining the two bounded cross-axis rechecks and all final gates.","result":"Fails: HDMI X must be <=78.1 from the perpendicular near-SoM constraint and >=113.3 from the mechanical exclusion.","failed_construction_seconds":0.673528416,"log":"native/build/carrier-opposite-flip-targeted.log"}
+  ],
+  "experiment_controls":"Prepared input, same explicit 166x159 policy with 165x159 override and carrier shape/face settings as the preceding continuation experiments. Poses=8 and frontier=4096; continuations disabled to isolate repair of the first recovery choice. Each failed screen records two completed outer attempts and a captured failure receipt. Prototype retry and coupled-sweep events were explicitly logged; they were not added to production fallback metadata or independently qualified. Timings are failed construction diagnostics, not performance gains.",
+  "restoration":"All temporary alternate-repair branches and members removed. Production CLI and profiler rebuilt; only failure-diagnostic logging and its tests remain changed.",
+  "restored_candidate_check":{"pcb_sha256":"36bb6af616d4a3b6ab6186a5d3d80be78417b6433fc1a68d966ecce83caa977c","matches_previous_candidate":true,"all_receipt_and_fallback_count_rows_unchanged":true,"placement_contract_ok":true,"placement_flow_ok":true,"log":"native/build/carrier-compose-cycle-restored.log","qualification":"Construction-only; still not an accepted smaller board."},
+  "next_direction":"Do not repeat these three strategies on this seed. Multiple coupled separation choices need reconsideration together, or earlier placement needs to reserve a constraint-compatible slot. Single greedy flip-direction changes do not establish a globally usable layout. Preserve the 166x159 qualified reference; the earlier 165x159 continuation candidate remains experimental and exceeds fallback ceilings. No routing or fabrication-readiness claim."
+}

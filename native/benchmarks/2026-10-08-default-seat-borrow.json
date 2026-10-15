@@ -1,0 +1,27 @@
+{
+  "base_commit": "44c9b178",
+  "change": "Default placement borrows the current occupancy grid instead of copying it for each shape search. Identical geometry queries may be reused only within that synchronous call. Best-per-side selection is unchanged; public board-override adapters retain copying semantics.",
+  "workload": "carrier default model construction and PCB text emission; prepared inputs; three sequential runs per binary; identical freshly generated schematic and current circuits; no simultaneous compilation or tests",
+  "command": "native/build/fast/schgen_compact_stage_profile --repo REPO --project carrier --compact-search off --runs 3 --schematic /private/tmp/carrier-ref-board.ccIYvU/Zynq_Carrier.kicad_sch --kicad-cli /Applications/KiCad/KiCad.app/Contents/MacOS/kicad-cli",
+  "before_model_seconds": [8.13261775,8.17540825,8.042253333],
+  "after_model_seconds": [7.768974792,7.840169167,7.815158584],
+  "median_model_change_percent": -3.903529905853498,
+  "before_pcb_text_seconds": [0.033964041,0.033846917,0.032387083],
+  "after_pcb_text_seconds": [0.033957041,0.033442584,0.031901958],
+  "dimensions_mm": [168,163],
+  "components": {"top":393,"bottom":176,"total":569},
+  "all_six_pcb_sha256": "8d93efb96783a53ec53a83b830f1d8987f10ca6d86a2246999783fb9ddcf7417",
+  "operation_counts_and_reseat_trace": "Unchanged across all three paired runs, including failed trials. No duplicate geometry queries were eliminated in this workload; the measured change removes grid-copy overhead.",
+  "before_log": "native/build/default-seat-before.log",
+  "before_log_sha256": "67c12fc3a59cbd10ec680504e80026a8eb89fd2576a120d9421028ee98b93fed",
+  "after_log": "native/build/default-seat-after.log",
+  "after_log_sha256": "c74cd4f33c1be86201c5c6da1f75d23f554ec3b15a01e473d9806811e9e802ad",
+  "targeted_tests": ["compact_seat_memo_contracts", "compact_pack_borrow_contracts", "compact_retry_contracts", "producer_accounting_contracts", "pcb_placement_gates_contracts"],
+  "both_board_regression": "native_pcb_placement_contracts PASS (93.20s): carrier and devkit, two-sided and top-preferred, physical/structural acceptance, negative mutations and same-input reproducibility",
+  "limitations": [
+    "Small sequential before/after sample, not randomized; OS cache uncontrolled and observer overhead included.",
+    "No full build, render, source audit or fabrication qualification in this measurement.",
+    "No historical Python comparison; compile and input preparation excluded from model times.",
+    "Carrier still has 28 successful reseat fallbacks against ceiling 18. No gate was waived or relaxed."
+  ]
+}
