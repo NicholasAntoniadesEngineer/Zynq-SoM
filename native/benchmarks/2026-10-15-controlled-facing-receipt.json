@@ -1,0 +1,27 @@
+{
+  "source_base": "9c843598",
+  "scope": "Restore genuine successful/interrupted facing retry accounting coverage while retaining current valid incumbents",
+  "fixture": {
+    "change": "In a test-owned carrier input only, change exactly one power_som external directional role from cout_bulk to cin_bulk",
+    "meaning": "A synthetic directional placement requirement, not a proposed electrical or hardware contract change",
+    "execution": "Real production final-flow screening triggers strict replanning; no acceptance predicate, geometry result or receipt is mocked",
+    "unchanged_inputs": "Both normal carrier and devkit fixtures remain explicit no-retry cases"
+  },
+  "coverage": [
+    "Successful strict-facing replan witnessed after independently observed first-model emission",
+    "Final returned model independently rechecked for nonzero facing coverage, zero facing failures and no unresolved inputs",
+    "Exception injected during second solve preserves original exception and completed-work failure receipt",
+    "Exactly one facing_replan_retry event for successful and interrupted retries, zero for each normal incumbent",
+    "Independent instrumented precision entries agree with every receipt; missing and doubled work rejected",
+    "Existing overflow, nested failure, checkpoint, orientation retry and accounting import checks retained"
+  ],
+  "validation": {
+    "command": "ctest --test-dir native/build/fast -R '^native_model_failure_receipt_contracts$' --output-on-failure",
+    "rebuilt_target": "schgen_model_failure_receipt_contracts",
+    "passed": 1,
+    "failed": 0,
+    "elapsed_seconds": 56.66,
+    "full_suite_rerun": false
+  },
+  "remaining": "Seven other release-suite failures remain unresolved; no production change or overall completion claim"
+}

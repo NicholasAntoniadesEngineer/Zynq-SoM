@@ -2,6 +2,7 @@
 #include "schgen/experiment_observers.hpp"
 #include "schgen/native_audit_state.hpp"
 #include "schgen/pcb_emit.hpp"
+#include "schgen/pcb_placement_gates.hpp"
 #include "schgen/stage_precision.hpp"
 #include "schgen/placement_precision.hpp"
 #include "schgen/precision_ops.hpp"
@@ -154,8 +155,21 @@ void contract_retry(const std::filesystem::path& root){
  }
 }
 void facing_retry(const std::filesystem::path& root){
-    for(int mode:{0,1,2}){
+    for(int mode:{0,1,2,3}){
         auto fixture=placement_fixture::load(root,mode==2?"devkit_mini":"carrier");
+        if(mode<2){
+            // Test-only alternative directional group creates a genuine final
+            // facing failure followed by a strict replan. No hardware contract
+            // is edited, and the production checker supplies the retry verdict.
+            std::size_t changed=0;
+            for(auto& [key,external]:fixture.input.contracts.at("power_som").object_value)
+                if(key=="external")for(auto& [field,value]:external.object_value)
+                    if(field=="output_roles")for(auto& role:value.array_value){
+                        require(role.string_value=="cout_bulk","directional fixture preimage");
+                        role.string_value="cin_bulk";++changed;
+                    }
+            require(changed==1,"exactly one test-only directional role changed");
+        }
         auto observer=std::make_shared<FloorplanExperiment>();
         observer->multiscale_outline=true;
         bool second_solve=false;
@@ -166,17 +180,24 @@ void facing_retry(const std::filesystem::path& root){
         };
         fixture.input.floorplan.experiment=observer;
         ExecutionFailureReceipt failure;ExecutionAccounting receipt;bool injected=false;
+        std::optional<PcbPlacementResult> result;
         begin();
-        try{receipt=pcb_placement_accounting(build_pcb_model(fixture.input,&failure));}
+        try{result=build_pcb_model(fixture.input,&failure);receipt=pcb_placement_accounting(*result);}
         catch(const Injected&){injected=true;receipt=failure.accounting;}
         observing=false;
         require(injected==(mode==1)&&failure.captured==(mode==1),"facing retry preserves original exception and receipt ownership");
-        require(second_solve==(mode!=2),"valid incumbent must not replan; failing carrier must replan: mode="+
+        require(second_solve==(mode<2),"valid incumbent must not replan; controlled failure must replan: mode="+
             std::to_string(mode)+" observed_second_solve="+std::to_string(second_solve));
         require(std::count(receipt.fallback_events.begin(),receipt.fallback_events.end(),"facing_replan_retry")==
-                (mode==2?0:1),"one facing retry event including interrupted solve");
+                (mode<2?1:0),"one facing retry event including interrupted solve");
         verify(receipt,"facing retry mode "+std::to_string(mode));
         inbox(receipt);reject_receipt_mutations(receipt);
+        if(result){
+            const auto flow=check_pcb_placement_flow(PcbCheckInput(result->model),
+                pcb_placement_gate_policy(fixture.input));
+            require(flow.facing_checked>0&&flow.facing_fail==0&&flow.unresolved.empty(),
+                    "successful retry or retained incumbent must resolve final facing");
+        }
     }
 }
 void overflow(){
