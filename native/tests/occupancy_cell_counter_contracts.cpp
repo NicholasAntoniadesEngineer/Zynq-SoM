@@ -266,6 +266,21 @@ void alternative_poses() {
         if(large)++rescued;
     }
     require(rescued>0&&scene.rect_count()==0,"alternative exploration failed to recover or mutated its incumbent");
+    // Small shifts can be essential: requiring an entire footprint of
+    // separation between retry poses would erase the only recovery here.
+    Occupancy narrow(6,2,0,2,0,1,.05);
+    QuantizationCounts narrow_counts;
+    NearPoseCandidates local;
+    measured(narrow_counts,[&]{local=narrow.place_near_candidates(3,1,2,2,{},{},1,{},1,2,0,0,8,100,&narrow_counts);});
+    require(local.poses.size()==2&&local.poses[0].x==2&&local.poses[1].x==1,
+            "local adjustment domain lost its nearest or sub-footprint alternative");
+    for(std::size_t i=0;i<local.poses.size();++i){
+        auto branch=narrow;const auto& p=local.poses[i];branch.add(p.x,p.y,p.w,p.h,{},{},1,{});
+        const auto displaced=branch.place_near(4,1,2,2,{},{},1,{},3,3,0,0);
+        require(bool(displaced)==(i==1),"sub-footprint move must uniquely recover constrained neighbour");
+        if(displaced)require(p.x+p.w<=displaced->x,"local recovery overlaps its displaced neighbour");
+    }
+    require(narrow.rect_count()==0,"local recovery trials mutated their shared incumbent");
     QuantizationCounts invalid;
     for(const auto limits:std::vector<std::pair<std::size_t,std::size_t>>{{0,1},{1,0}}) {
         const auto failure=outcome([&]{(void)scene.place_near_candidates(5,2,2,2,{},{},1,{},0,8,1,1,limits.first,limits.second,&invalid);return 0;});

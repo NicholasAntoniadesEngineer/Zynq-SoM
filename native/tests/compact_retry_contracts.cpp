@@ -319,6 +319,7 @@ void alternative_pose_retry_contract(){
         require(result.ok==repeat.ok&&equal(floorplan_plan_json(result.plan),floorplan_plan_json(repeat.plan))&&result.side==repeat.side,
                 "pose retry not reproducible or callback changed behavior");
     }
+    std::cout<<"pose coverage searches="<<searches<<" attempts="<<attempts<<" exhausted="<<exhausted<<" capped="<<capped<<" recovered="<<recovered<<'\n';
     require(searches>0&&attempts>0&&exhausted>0&&capped>0&&recovered>0,"pose recovery fixtures missed successful, attempted or limited searches");
     std::size_t replays=0,skips=0,replay_recovered=0,hints=0,empty_hints=0;
     std::optional<std::pair<Case,int>> interrupted_case;
