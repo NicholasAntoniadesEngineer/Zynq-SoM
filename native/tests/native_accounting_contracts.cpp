@@ -53,9 +53,11 @@ void inbox_contracts(){
     NativeAccountingBatch b{{{"som_pose_half_mm",2},{"placeholder_zone_half_mm",4},{"fixed_part_grid",6},
         {"outline_snap_up",8},{"outline_grow_step",10},{"outline_fine_grid",82},{"est_via_cost",12},{"run_overflow_tol",14},
         {"quant_credit",16},{"snap_erosion_bound",18},{"snap_erosion_pad",20},{"seat_slide",22}},
-        {"legalize_only_compaction","punch_free_plan_rejected","interior_reseat_retry","cand_cap_truncated","seat_node_budget","bottom_variant_contract_reject","corridor_evict_moved","corridor_stray_unmovable"}};
+        {"legalize_only_compaction","punch_free_plan_rejected","interior_reseat_retry","cand_cap_truncated","seat_node_budget","bottom_variant_contract_reject","corridor_evict_moved","corridor_stray_unmovable","edge_geometry_replan_retry"}};
     require(inbox.merge_once("build/physical/1",b),"first actual call aggregate imported");
     const auto initial_q=q.engagements(),initial_f=f.census();
+    require(initial_f.at("edge_geometry_replan_retry")==AuditInteger(1)&&
+            f.snapshot()==b.fallback_events,"edge-geometry retry receipt lost count or ordered provenance");
     require(!inbox.merge_once("build/physical/1",b),"cached/doc replay is not counted twice");
     require(q.engagements()==initial_q&&f.census()==initial_f,"replay leaves totals exact");
     auto changed=b;changed.quantization_engagements["quant_credit"]++;

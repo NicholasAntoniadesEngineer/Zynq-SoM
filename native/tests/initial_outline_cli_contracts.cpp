@@ -9,6 +9,17 @@ int main(int argc,char** argv){try{
         args.insert(args.end(),{"--help","--repo","/nonexistent/seed-help-must-not-read"});
         return schgen::run_process(args);
     };
+    if(run({"board","--compact-placement","--granular-minor-occupancy","--vertical-compaction",
+            "--contract-group-face-sheet","power"}).exit_code)
+        throw std::runtime_error("full-build granular/vertical strategy options rejected");
+    for(const auto& args:std::vector<std::vector<std::string>>{
+        {"board","--granular-minor-occupancy"},
+        {"board","--vertical-compaction"},
+        {"board","--compact-placement","--vertical-compaction"},
+        {"pcb-stage","--compact-placement","--granular-minor-occupancy"},
+        {"board","--compact-placement","--granular-minor-occupancy","--granular-minor-occupancy"},
+        {"board","--compact-placement","--contract-group-face-sheet","power","--vertical-compaction","--vertical-compaction"}})
+        if(!run(args).exit_code)throw std::runtime_error("invalid full-build strategy options accepted");
     if(run({"board","--compact-placement","--interior-order","3","--shape-choice-replays","8"}).exit_code)
         throw std::runtime_error("valid shape-choice replay option rejected");
     for(const auto& args:std::vector<std::vector<std::string>>{

@@ -69,11 +69,18 @@ void metadata(const fs::path& root){
         {"legalize_joint_axis_reuse", "plan_lattice"},
         {"interior_shape_choice_replay", "plan_lattice"},
         {"interior_shape_choice_budget", "plan_lattice"},
-        {"interior_shape_choice_hint", "plan_lattice"}};
+        {"interior_shape_choice_hint", "plan_lattice"},
+        {"edge_geometry_replan_retry", "plan_lattice"}};
     const auto& ef=field(fb,"fallbacks").array_value;
     require(ef.size()+26+additional_recovery.size()==stages.fallbacks.size(),
             "historical fallbacks plus independently declared native recovery events");
     NativeFallbacks f;register_native_fallbacks(f);
+    std::set<std::string> live_labels;
+    for(const auto& entry:stages.fallbacks)
+        require(live_labels.insert(entry.name).second,"duplicate live fallback metadata");
+    for(const auto& [name,count]:f.census()) {
+        (void)count;require(live_labels.count(name)!=0,"registered fallback missing live pipeline stage metadata");
+    }
     for(const auto& entry:ef){const auto name=field(entry,"name").string_value;auto hit=std::find_if(stages.fallbacks.begin(),stages.fallbacks.end(),[&](const auto& d){return d.name==name;});require(hit!=stages.fallbacks.end(),"independent fallback name");require(hit->stage==field(entry,"stage").string_value&&!hit->meaning.empty(),"independent fallback stage");f.record(hit->name);}
     const auto edge=std::find_if(stages.fallbacks.begin(),stages.fallbacks.end(),[](const auto& d){return d.name=="edge_run_translation";});
     require(edge!=stages.fallbacks.end()&&edge->stage=="plan_lattice"&&!edge->meaning.empty(),"native edge-translation fallback metadata");

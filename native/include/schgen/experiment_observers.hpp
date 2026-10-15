@@ -86,6 +86,7 @@ struct FloorplanExperiment {
     // Reserve minority-face courtyards individually, including their own
     // fanout halos, instead of reserving empty space in their bounding union.
     bool granular_minor_occupancy = false;
+    bool vertical_compaction = false;
     // Diagnostic candidate restrictions by generated tag, not unstable index.
     // Unknown, ambiguous or unmeasured choices fail; never silently fall back.
     std::map<std::string,std::string> owned_shape_tags;

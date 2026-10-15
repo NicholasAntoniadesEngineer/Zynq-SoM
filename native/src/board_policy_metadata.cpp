@@ -52,6 +52,7 @@ ManufacturingPipelineInput native_board_pipeline_metadata(){
         {"legalize_reservation_retry","plan_lattice","One failure-only child-reservation geometry solve. Count every attempt; retain all earlier work and exact final collision gates."},
         {"legalize_facing_retry","plan_lattice","One failure-only strict-facing projection solve. Count every attempt; preserve accepted incumbents and final exact gates."},
         {"contract_group_orientation_retry","plan_lattice","One opt-in suffix orientation expansion after typed packing infeasibility. Preserve failed work, count attempts even on rejection, never replace a successful initial plan."},
+        {"edge_geometry_replan_retry","plan_lattice","One full model rebuild after typed selected-edge geometry mismatch, regenerating zones from selected edge assignments/order. Preserve the first attempt's receipt and require all final geometry and hardware gates; never recursively retry."},
         {"edge_run_translation","plan_lattice","Opt-in bounded translation repaired an invalid edge arrangement. Count all applied repairs, including later rejected candidates; no clearance waiver."},
         {"screened_incumbent_retained","plan_lattice","Final refinement failed or worsened the screened layout. Restore the actual incumbent and side offers; retain all trial accounting and re-evaluate its estimate."},
         {"legalize_only_compaction","plan_lattice","Compact placement broke a pair floor; retain the rechecked legalize-only candidate. Count each affected compact-pack invocation."},

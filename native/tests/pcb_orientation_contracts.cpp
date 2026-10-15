@@ -525,6 +525,16 @@ void live(const std::filesystem::path& root){
    demand(som_contact_offers>0,"colliding SoM single group has no checked contact repairs");
    const auto som_vertical=build_zones_for_search(f.input,true,nullptr);
    const auto& vertical_offers=som_vertical.geometry.shapes.at("power_som");
+   auto direct_input=f.input;
+   auto direct_policy=std::make_shared<FloorplanExperiment>(*experiment);
+   direct_policy->vertical_compaction=true;direct_input.floorplan.experiment=direct_policy;
+   const auto direct_vertical=build_pcb_zone_geometry(direct_input);
+   const auto& direct_offers=direct_vertical.geometry.shapes.at("power_som");
+   demand(direct_offers.size()==vertical_offers.size()&&
+          direct_vertical.quantization_engagements==som_vertical.quantization_engagements,
+          "full-build vertical policy differs from search strategy geometry or work");
+   for(std::size_t i=0;i<vertical_offers.size();++i)
+    demand(equal(direct_offers[i],vertical_offers[i]),"full-build vertical policy changes search candidate geometry");
    demand(vertical_offers.size()>som_offers.size(),"vertical compaction yielded no SoM power alternative");
    for(std::size_t i=0;i<som_offers.size();++i)
     demand(equal(som_offers[i],vertical_offers[i]),"vertical compaction rewrote an incumbent offer");
