@@ -336,6 +336,31 @@ void live(const std::filesystem::path& root){
           "actual mixed-face scalar operations differ from receipt");
    experiment->contract_group_face_sheets={"power_mon"};
    const auto monitor=build_pcb_zone_geometry(f.input);
+   experiment->contract_group_face_sheets={"power_som"};
+   const auto som_split=build_pcb_zone_geometry(f.input);
+   Context som_context(f.input);som_context.pool=som_split.footprints;
+   const auto& som_originals=after.geometry.shapes.at("power_som");
+   const auto& som_offers=som_split.geometry.shapes.at("power_som");
+   demand(som_offers.size()>som_originals.size(),"SoM power has no additional face offers");
+   for(std::size_t i=0;i<som_originals.size();++i)
+    demand(equal(som_originals[i],som_offers[i]),"SoM power expansion changed an incumbent");
+   bool som_buck_bottom=false;
+   for(const auto& candidate:som_offers) {
+    if(candidate.tag.rfind("contract-bottom",0)!=0)continue;
+    const auto checked=model(candidate,som_context,som_split.geometry,"power_som");
+    demand(check_pcb_placement_contract(checked,"power_som",&f.input.contracts.at("power_som"),
+           som_context.board_refs.at("power_som")).ok,"SoM power face offer violates its local contract");
+    demand(check_fanout(checked,0).ok,"SoM power face offer starves physical-pad fanout");
+    som_buck_bottom|=candidate.bot_off.count(som_context.board_refs.at("power_som").at("U4"))!=0;
+    for(const auto& inst:checked.model().insts)
+     if(face_top(som_context.by_ref.at(inst.ref)))demand(inst.side=="top","SoM service access moved underneath");
+   }
+   demand(som_buck_bottom,"SoM power candidates never move the buck stage");
+   const auto som_prepared=prepare_pcb_floorplan(f.input,som_split);
+   for(const auto* kind:{"flow_hop","facing","far_min"})
+    demand(std::any_of(som_prepared.compose.index.hard.begin(),som_prepared.compose.index.hard.end(),
+        [&](const auto& term){return term.sheet=="power_som"&&term.kind==kind&&term.enforced;}),
+        std::string("SoM power expansion lost an enforced board constraint: ")+kind);
    experiment->contract_group_face_sheets={"power"};
    const auto power_split=build_pcb_zone_geometry(f.input);
    const auto& power_originals=after.geometry.shapes.at("power");
