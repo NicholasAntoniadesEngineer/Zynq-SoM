@@ -171,7 +171,8 @@ void facing_retry(const std::filesystem::path& root){
         catch(const Injected&){injected=true;receipt=failure.accounting;}
         observing=false;
         require(injected==(mode==1)&&failure.captured==(mode==1),"facing retry preserves original exception and receipt ownership");
-        require(second_solve==(mode!=2),"valid incumbent must not replan; failing carrier must replan");
+        require(second_solve==(mode!=2),"valid incumbent must not replan; failing carrier must replan: mode="+
+            std::to_string(mode)+" observed_second_solve="+std::to_string(second_solve));
         require(std::count(receipt.fallback_events.begin(),receipt.fallback_events.end(),"facing_replan_retry")==
                 (mode==2?0:1),"one facing retry event including interrupted solve");
         verify(receipt,"facing retry mode "+std::to_string(mode));
