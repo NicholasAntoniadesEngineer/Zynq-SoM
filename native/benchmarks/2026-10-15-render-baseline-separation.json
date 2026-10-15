@@ -1,0 +1,21 @@
+{
+  "source_base": "1315356b",
+  "scope": "Historical render baseline versus current generated board images",
+  "defect": "The test rejected any current PCB/image change beyond two old model/courtyard repairs, enforcing a retired layout despite the optimisation objective.",
+  "preserved": [
+    "Pinned original PCB SHA-256",
+    "Exact model-only repair reversal and courtyard correction hash",
+    "Duplicate/obsolete model-clause rejection on current PCB",
+    "Unchanged committed historical golden map",
+    "Zero-distance historical image hashes against their original Git scene"
+  ],
+  "current_checks": [
+    "Every historical carrier image path still exists and decodes with nonuniform content",
+    "Corrupt PNG negative case must be rejected",
+    "Current geometry and live all-view rendering remain separate mandatory tests, not historical byte-equality checks"
+  ],
+  "test": "native_render_baseline_contracts",
+  "result": "PASS",
+  "seconds": 7.06,
+  "limits": "No full-suite rerun or new layout qualification; three previously reported regression failures remain unresolved. No golden blessing or tolerance relaxation."
+}
