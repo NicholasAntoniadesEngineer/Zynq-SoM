@@ -286,7 +286,11 @@ void append_contract_group_faces(Context& ctx,Geometry& g,const std::string& she
                 const auto key=g.resolvable.at(ref),mk="@mirror/"+key;
                 candidate.mirror[ref]=mk;
             }
-            if(append_checked(candidate))single_group.push_back(std::move(candidate));
+            // Coincident corner alignments can produce the same single-group
+            // geometry repeatedly. Do not multiply those aliases into the
+            // pair search; retain the first representative and every distinct
+            // pose/face/mirror/rotation, not merely distinct envelope sizes.
+            if(append_checked(candidate))append_distinct_zone_shapes(seed,single_group,{candidate});
         }
     }
     // Combine disjoint connected groups, not arbitrary individual components.

@@ -189,6 +189,13 @@ void unit(){
  std::vector<Shape> alias{sparse};alias.shrink_to_fit();
  append_distinct_zone_shapes(alias.front(),alias,alternatives);
  demand(alias.size()==6&&equal(alias.front(),sparse),"append invalidated a borrowed incumbent");
+ // Pair-search inputs arrive one corner alignment at a time. Coincident
+ // alignments must not multiply pair work, while a different rotation stays.
+ std::vector<Shape> pair_inputs;
+ for(const auto& candidate:{side_changed,side_changed,rotated_changed,side_changed})
+  append_distinct_zone_shapes(sparse,pair_inputs,{candidate});
+ demand(pair_inputs.size()==2&&equal(pair_inputs[0],side_changed)&&equal(pair_inputs[1],rotated_changed),
+        "pair input dedup must retain first representatives and distinct rotations");
  g.shapes["unit"]={sparse,explicit_zero};append_rigid_zone_orientations(ctx,g,"unit",sparse);
  demand(g.shapes.at("unit").size()==5,"equivalent old zeros generated duplicate new variants");
  demand(equal(g.shapes.at("unit")[0],sparse)&&equal(g.shapes.at("unit")[1],explicit_zero),

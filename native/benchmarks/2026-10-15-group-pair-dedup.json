@@ -1,0 +1,20 @@
+{
+  "parent_commit": "f0a86a88",
+  "change": "Keep geometrically distinct single-group moves before pair generation. Coincident corner aliases retain their first representative; pose, face, mirror and rotation differences remain. Existing candidate qualification still executes; this removes redundant pair inputs, not hardware checks.",
+  "tests": "Orientation contracts cover candidate identity, distinct equal-envelope layouts, group rotations and pair combinations; a new incremental pair-input alias test covers first-representative preservation. Both-board diagnostic controls retain their exact qualified PCB hashes.",
+  "controls": {
+    "carrier": {"dimensions_mm":[163,151],"pcb_sha256":"d8dea4b5049968b2fdcb385a17cb19c9e8d5257bd2afa297b1467600f2690e5e","log":"native/build/group-dedup-reference.log"},
+    "devkit": {"dimensions_mm":[98,98],"pcb_sha256":"1b12fecbcbbaa5e6084c2459da93cb144a660ff19805e6e4e3f75f9c22689fdb","log":"native/build/group-dedup-devkit.log"},
+    "result": "Fanout, ratsnest, placement-contract and flow diagnostics pass; hard_red=0; zero nonsearch fallbacks. No new full qualification."
+  },
+  "prechange_failed_screens": {
+    "dimensions_mm": [163,150],
+    "baseline": {"seconds":16.461783208,"log":"native/build/next-163x150.log"},
+    "additional_power_som_group_faces": {"seconds":16.415905666,"log":"native/build/next-163x150-power-som.log"},
+    "scarcity_first_order_2": {"seconds":1.563038459,"log":"native/build/next-163x150-scarcity.log"},
+    "expanded_group_rotations": {"seconds":276.409553167,"log":"native/build/next-163x150-group-rotations.log"},
+    "result": "All exhausted bounded packing with four completed outer attempts and available failure receipts. Expanded rotation run used the pre-dedup executable and overlapped later build/tests; diagnostic times are not controlled speed comparisons."
+  },
+  "bottom_side_findings": "Whole-sheet bottom eligibility rejects seated connector classes and impedance-controlled nets without an emitted bottom reference plane. Mixed-face group generation instead pins service/through-hole/high-speed members and offers eligible independent contract groups. Envelope-area ranking does not measure face-specific free-space fragmentation, which remains a useful next investigation.",
+  "limitations": "No runtime speedup quantified for dedup; no smaller board accepted. The expensive expanded-rotation campaign is not promoted to the standard recipe. Routing and fabrication readiness remain out of scope."
+}
