@@ -19,6 +19,20 @@
     ],
     "frozen_oracles_modified": false
   },
+  "next_outline_screen": {
+    "source_commit": "315289b7",
+    "dimensions_mm": [163, 150],
+    "specification": "/private/tmp/carrier-next-outlines.QKynPr/163x150.json",
+    "log": "native/build/current-corridor-163x150.log",
+    "result": "No valid layout found by bounded placement search under either reservation policy; not proof of geometric infeasibility.",
+    "construction_seconds": 17.413728291,
+    "completed_outer_attempts": 4,
+    "failure_receipt_captured": true,
+    "executed_fallback_events_recorded": 4694,
+    "accepted": false,
+    "expensive_qualification_run": false,
+    "incumbent": "163x151 qualified carrier retained"
+  },
   "qualification": {
     "commands": "Full board commands from docs/RELEASE-2026-10-15.md, with separate temporary output directories; unchanged hardware and search options.",
     "carrier": {
