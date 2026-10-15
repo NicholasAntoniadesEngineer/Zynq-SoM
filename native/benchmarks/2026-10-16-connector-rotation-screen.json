@@ -13,6 +13,11 @@
     "message": "hard red after legalization: facing power->power_som margin -7.5276; facing power_som->@som margin -71.4822"
   },
   "interpretation": "Adding legal group rotations alone did not resolve the smaller board. Repeated identical facing failures warrant checking which endpoints remain fixed during each composer invocation before spending more work on wider separation frontiers. Fixed-endpoint diagnosis is a hypothesis, not established by repeated margins alone.",
+  "followup_source_trace": {
+    "fixed_endpoint_hypothesis": "Not supported for the power subjects in this carrier solve: carrier/project.json includes power and power_som in wired_sheets; Context copies wired to l4_exempt; prepare_pcb_floorplan copies that to wired_participants; floorplan_pack makes interior facing participants movable. @som remains fixed, but the power_som subject can move.",
+    "next_algorithm_target": "build_facing_cuts in floorplan_compose.cpp allocates a strict 2D facing half-plane to separate sufficient X/Y shares. Board-wall capacity adjustment exists, but the shares are still seed-centred and can exclude valid combined motions. Investigate alternate share allocations or coupled projection against exact final checks, rather than an unsupported fixed/fixed early rejection.",
+    "limit": "Source trace rules out the blanket fixed-subject explanation; it does not prove the half-plane split caused every observed candidate failure. No constraint was removed or changed."
+  },
   "timing_limit": "Diagnostic observation overlapped native rebuild/regression activity; not a controlled performance comparison",
   "log": "native/build/connector-rotations-162x150.log",
   "accepted_reference": "Published 162x151 board remains unchanged",
