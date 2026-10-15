@@ -1,0 +1,17 @@
+{
+  "source_base": "39d2ae5d",
+  "change": "Explicit component-only physical reservation support in the floorplan legalizer; no board packer activates it yet",
+  "motivation": "The occupancy kernel can check a zero-mask envelope with physical child rectangles. The legalizer previously rejected that complete representation and only used child-level separations for opposite-primary groups. This prevented primary-face interlocking even when all actual component rectangles fit.",
+  "contract": "component_only requires mask zero, nonempty complete child reservations, an exact nonzero occupied-face census, zero parent halos and children contained within the declared envelope. Child fanout stays attached to each rectangle. Logical exclusions remain distinct and conservative. Every attempt uses child geometry and final qualification, including cases with no hard electrical terms.",
+  "positive_witness": "Two 10x6 envelopes overlap on a 15x8 board with 0.3 clearance; each contains two 2x2 components, at local (0,0)/(8,0) versus (0,3)/(8,3). The complete physical decomposition fits; treating both envelopes as solid cannot fit them side-by-side or vertically.",
+  "tests": {
+    "native_component_reservation_contracts": "PASS: interlocking same-face components, indexed/exhaustive agreement, same-face collision rejection, disjoint-face acceptance, through-hole rejection on either face, fanout, removal, repeat poses/logs/accounting, malformed census/missing children/out-of-envelope rejection, logical keepout rejection, failed-solve incumbent preservation",
+    "native_floorplan_contracts": "PASS",
+    "native_legalize_accounting_contracts": "PASS",
+    "combined_seconds": 15.52,
+    "log": "native/build/component-reservation-tests.log"
+  },
+  "test_driven_correction": "Initial negative tests caught a no-hard-terms early return which falsely accepted impossible component bodies and logical keepouts in the new mode. Component-only requests now run physical qualification even without hard electrical terms; both negative tests pass.",
+  "limits": "This is kernel/legalizer infrastructure, not an integrated carrier improvement or a new board qualification. No placement constraint was waived. No published board or master release changed.",
+  "next": "Thread the explicit representation through selected primary-face component generation, occupancy insertion/removal, reseating and final-pair checks; preserve individual fanout, both-face THT punches, connector/mechanical protections and incumbents. Then screen the carrier before expensive qualification."
+}

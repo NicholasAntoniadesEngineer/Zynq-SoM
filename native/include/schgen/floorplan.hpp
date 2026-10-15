@@ -153,8 +153,9 @@ struct FloorplanLegalizeVar {
 };
 struct FloorplanPrimaryFanout {
     Halo reach{}, inset{};
-    // Occupancy face mask. Zero denotes a logical exclusion rectangle, not
-    // a primary physical body; its existing nominal separation still applies.
+    // Occupancy face mask. Zero normally denotes a logical exclusion rectangle
+    // with nominal separation; component_only explicitly selects a physical
+    // child decomposition instead (validated below, never inferred from zero).
     int mask = 0;
     // Complete union of primary and selected child reservation faces.
     // Zero means unknown: retain conservative rectangle separation.
@@ -162,6 +163,9 @@ struct FloorplanPrimaryFanout {
     // Complete selected reservations, not an arbitrary subset. Absent keeps
     // conservative geometry; an engaged empty vector proves no children.
     std::optional<std::vector<Comp>> children = std::nullopt;
+    // Explicit complete physical decomposition: mask must be zero, children
+    // nonempty and occupied_mask their exact union. Not a logical keepout.
+    bool component_only = false;
 };
 struct FloorplanLegalizeInput {
     double board_w = 0.0, board_h = 0.0;

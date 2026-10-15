@@ -43,8 +43,11 @@ void validate(const FloorplanLegalizeInput& in) {
         if (name.empty() || name.front() == '#' || body.mask < 0 || body.mask > 3)
             throw FloorplanError("floorplan compose: invalid primary fanout identity/mask " + name);
         if(body.occupied_mask<0||body.occupied_mask>3||
-           (body.occupied_mask&&(!body.mask||(body.occupied_mask&body.mask)!=body.mask)))
+           (body.occupied_mask&&((!body.mask&&!body.component_only)||(body.occupied_mask&body.mask)!=body.mask)))
             throw FloorplanError("floorplan compose: invalid complete occupancy mask " + name);
+        if(body.component_only&&
+           (body.mask||!body.occupied_mask||!body.children||body.children->empty()))
+            throw FloorplanError("floorplan compose: incomplete component-only reservations "+name);
         if(body.children) {
             int faces=body.mask;
             for(const auto& child:*body.children) {
@@ -54,11 +57,15 @@ void validate(const FloorplanLegalizeInput& in) {
                 for(const auto& h:{child.reach,child.inset})for(double v:{h.w,h.e,h.n,h.s})finite(v,name+" child fanout");
                 faces|=child.mask;
             }
-            if(!body.mask||faces!=body.occupied_mask)
+            if((!body.mask&&!body.component_only)||faces!=body.occupied_mask)
                 throw FloorplanError("floorplan compose: child reservation face census mismatch "+name);
         }
         for (const auto& halo : {body.reach, body.inset})
-            for (double value : {halo.w, halo.e, halo.n, halo.s}) finite(value, name + " primary fanout");
+            for (double value : {halo.w, halo.e, halo.n, halo.s}) {
+                finite(value, name + " primary fanout");
+                if(body.component_only&&value!=0)
+                    throw FloorplanError("floorplan compose: component-only fanout must belong to children "+name);
+            }
     }
     for (const auto& [name, m] : in.metrics) {
         point(m.zone_wh, name);
@@ -197,11 +204,19 @@ public:
                     throw FloorplanError("floorplan compose: unknown primary fanout " + name);
             }
         }
+        // A decomposed physical body must never pass through a coarse-only
+        // solve/qualification, even when its envelopes happen not to overlap.
+        reservation_geometry=reservation_geometry||std::any_of(in.primary_fanout.begin(),in.primary_fanout.end(),
+            [](const auto& entry){return entry.second.component_only;});
+        this->reservation_geometry=reservation_geometry;
         if(reservation_geometry)for(const auto& [name,body]:in.primary_fanout)if(body.children) {
             const auto variable=by_name.find(name);
             const auto box=variable==by_name.end()?frect.at(name):seed_rect.at(name);
             const double w=variable==by_name.end()?box.x1-box.x0:variable->second->w;
             const double h=variable==by_name.end()?box.y1-box.y0:variable->second->h;
+            if(body.component_only)for(const auto& c:*body.children)
+                if(c.dx<0||c.dy<0||c.dx+c.w>w||c.dy+c.h>h)
+                    throw FloorplanError("floorplan compose: component outside declared envelope "+name);
             auto& out=local_reservations[name];out.reserve(1+body.children->size());
             out.push_back({0,0,w,h,body.reach,body.inset,body.mask,body.mask,true});
             for(const auto& c:*body.children)out.push_back({c.dx,c.dy,c.w,c.h,c.reach,c.inset,c.mask,body.mask,false});
@@ -238,7 +253,9 @@ public:
     bool run(std::vector<FloorplanLegalizeVar>& movable,bool joint=false,bool authored_distance=false) {
         distance_envelope = joint;
         full_distance_envelope = joint&&authored_distance;
-        if (in.index.hard.empty() || movable.empty()) return true;
+        if (movable.empty() || (in.index.hard.empty()&&
+            std::none_of(in.primary_fanout.begin(),in.primary_fanout.end(),
+                [](const auto& entry){return entry.second.component_only;}))) return true;
         std::vector<Box4> seeds, fixed_boxes;
         std::vector<std::string> fixed_names;
         for (const auto& name : names) seeds.push_back(seed_rect.at(name));
@@ -615,7 +632,8 @@ private:
     bool reservation_pair(const std::string& a,const std::string& b) const {
         if(in.primary_fanout.empty())return false;
         const auto& low=in.primary_fanout.at(a);const auto& high=in.primary_fanout.at(b);
-        return low.mask&&high.mask&&!(low.mask&high.mask)&&low.children&&high.children;
+        return low.occupied_mask&&high.occupied_mask&&low.children&&high.children&&
+            (low.component_only||high.component_only||(low.mask&&high.mask&&!(low.mask&high.mask)));
     }
     std::optional<std::vector<std::vector<RepairSep>>> reservation_seed_seps(const std::string& low,const std::string& high,bool joint) const {
         const auto key=[](const std::string& name){return name.front()=='#'?name.substr(1):name;};
@@ -932,8 +950,8 @@ bool compose_with_bounded_retries(const FloorplanLegalizeInput& input,
             if(ai==input.primary_fanout.end())continue;
             const auto& a=ai->second;
             for(const auto& [bn,b]:input.primary_fanout) {
-                (void)bn;
-                if(a.mask&&b.mask&&!(a.mask&b.mask)&&a.children&&b.children&&
+                if(bn==v.name)continue;
+                if((a.component_only||b.component_only||(a.mask&&b.mask&&!(a.mask&b.mask)))&&a.children&&b.children&&
                    (a.occupied_mask&b.occupied_mask))return true;
             }
         }
