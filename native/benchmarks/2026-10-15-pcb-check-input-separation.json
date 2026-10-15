@@ -1,0 +1,16 @@
+{
+  "source_base": "f8b53bf5",
+  "defect": "PCB checker contracts read the refreshed placed boards but compared against old-layout reports and reused fixed historical SoM coordinates",
+  "repair": "Run complete report and mutation checks on both immutable historical PCB/escape inputs and current published PCB/escape inputs. Derive current module bounds from the emitted perimeter, rejecting unexpected line inventory. Preserve all historical report files unchanged.",
+  "historical": "All eight exact historical report comparisons and all existing physical/interface mutations pass for both boards",
+  "current": "Published reports match reconstructed current geometry, except fanout row ordering at nearly equal slack: current fanout must pass its hard typed gate and all deliberate crowding mutations. Current return, escape, connector, plane, net/hash and refdes mutation tests remain active.",
+  "validation": {
+    "rebuilt_target": "schgen_pcb_checks_contracts",
+    "command": "ctest --test-dir native/build/fast -R '^native_pcb_checks_contracts$' --output-on-failure",
+    "passed": 1,
+    "failed": 0,
+    "full_repository_suite_rerun": false
+  },
+  "limits": "Test reconstruction assumes the generator's five top-level module F.SilkS lines and fixed 25 mm board origin; these assumptions fail closed rather than silently accepting a different emission format. This is not fabrication qualification.",
+  "remaining": "Five other release-suite failures remain unresolved. No production algorithm or accepted layout changed."
+}
