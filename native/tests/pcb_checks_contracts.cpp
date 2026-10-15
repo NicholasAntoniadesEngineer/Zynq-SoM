@@ -68,9 +68,16 @@ struct Live {
     std::vector<ProjectCircuit> sheets;
     std::map<std::string,PcbCheckFootprintPtr> pool,return_footprints;
 };
-Live load_live(const fs::path& root,const std::string& project){
+Live load_live(const fs::path& root,const std::string& project,bool historical){
     Live live;auto dir=root/project;live.board={"Zynq_Carrier.kicad_pcb",sexpr_loads(read(dir/"Zynq_Carrier.kicad_pcb"))};live.iface_bytes=read(dir/"som_interface.json");live.iface=load_som_interface(dir/"som_interface.json");live.mapping=link_mapping_from_json(parse_json_file((dir/"som_mapping.json").string()));auto config=parse_json_file((dir/"project.json").string());live.population=pcb_escape_population_from_json(field(config,"escape"));auto block=parse_json_file((dir/"escape_block.json").string());live.model.escape_plan=pcb_escape_plan_from_json(block);live.model.escape_interface_sha256=field(field(block,"escape_meta"),"som_interface_sha256").string_value;
     auto index=parse_json_file((dir/"sheet_index.json").string());std::map<int,std::string> bands;for(const auto& [name,n]:index.object_value)bands[static_cast<int>(n.number_value)]=name;
+    if(historical){
+        const auto frozen=parse_json_file((root/"native/tests/data/pcb_emit"/(project+".json")).string());
+        const auto& model=field(frozen,"model");
+        live.board.document=sexpr_loads(read(root/"native/tests/data/pcb_emit"/(project+".kicad_pcb")));
+        live.model.escape_plan=pcb_escape_plan_from_json(field(model,"escape_plan"));
+        live.model.escape_interface_sha256=field(field(model,"escape_meta"),"som_interface_sha256").string_value;
+    }
     for(const auto& [band,name]:bands){(void)band;auto path=dir/"subsystems"/name/"circuit.json";if(fs::exists(path))live.sheets.push_back({name,path,load_circuit_json(path)});}
     auto footprint=[&](const std::string& id){auto it=live.pool.find(id);if(it!=live.pool.end())return it->second;auto colon=id.find(':');auto lib=id.substr(0,colon),name=id.substr(colon+1);fs::path path=root/"parts"/name/(name+".kicad_mod");if(!fs::exists(path))for(const auto& base:{fs::path("/Applications/KiCad/KiCad.app/Contents/SharedSupport/footprints"),fs::path("/usr/share/kicad/footprints"),fs::path("/usr/local/share/kicad/footprints")}){auto candidate=base/(lib+".pretty")/(name+".kicad_mod");if(fs::exists(candidate)){path=candidate;break;}}auto fp=pcb_check_footprint(path.string(),read(path));live.pool[id]=fp;return fp;};
     double xmax=25,ymax=25;
@@ -87,6 +94,22 @@ Live load_live(const fs::path& root,const std::string& project){
     live.model.board_w=xmax-25;live.model.board_h=ymax-25;
     // Pinned module-body geometry from the existing project placement contract.
     live.model.som_core=project=="carrier"?Box4{73.23,90.93,124.77,134.07}:Box4{49.23,53.43,100.77,96.57};
+    if(!historical){
+        // Recover the current emitted module perimeter, not its old position.
+        Box4 core{INFINITY,INFINITY,-INFINITY,-INFINITY};std::size_t lines=0;
+        for(const auto& n:ls(live.board.document))if(tag(n,"gr_line")){
+            const auto layer=sub(n,"layer");
+            if(!layer||atom(ls(*layer)[1])!="F.SilkS")continue;
+            ++lines;
+            for(const auto* key:{"start","end"}){
+                const auto p=sub(n,key);require(p!=nullptr,"module outline line endpoint");
+                core.x0=std::min(core.x0,num(*p,1));core.x1=std::max(core.x1,num(*p,1));
+                core.y0=std::min(core.y0,num(*p,2));core.y1=std::max(core.y1,num(*p,2));
+            }
+        }
+        require(lines==5&&core.x1>core.x0&&core.y1>core.y0,"four module perimeter lines and chamfer required");
+        live.model.som_core=core;
+    }
     for(const auto& [ref,conn]:live.iface.connectors){(void)conn;live.return_footprints[ref]=footprint("DF40C-100DS-0.4V_51:DF40C-100DS-0.4V_51");}
     for(const auto& [name,net]:live.model.net_numbers){(void)net;if(!name.empty()&&name[0]=='+')live.model.netclass_of[name]="POWER";}
     PcbCheckInput prepared(live.model);std::map<std::string,std::size_t> plugs;for(std::size_t i=0;i<live.model.insts.size();++i){auto s=live.model.insts[i].sheet;if(s=="som_j1"||s=="som_j2"||s=="som_j3")plugs["J"+s.substr(5)]=i;}
@@ -106,8 +129,22 @@ Live load_live(const fs::path& root,const std::string& project){
 std::map<std::string,ReturnStitchClass> triage(const ReturnPathResult& v1,const LinkMapping& mapping){
     std::map<std::string,ReturnStitchClass> out;for(const auto& v:v1.violations){auto it=mapping.function_map.find(v.net);auto fn=it==mapping.function_map.end()?v.net:it->second;int rank=2;std::string klass="LOW";if(std::regex_match(fn,std::regex("HDMI_RX_(D[0-9]|CLK)_[PN]|ZYNQ_HDMI_TX_TMDS_([0-9]|CLK)_[PN]"))){rank=0;klass="GENUINE";}else if(fn.compare(0,4,"FMC_")==0){rank=1;klass="MODERATE";}else require(std::regex_match(fn,std::regex("IO_.*|LCD_CTP_.*|PMODX?_IO[0-9]|DBG_UART_.*|ZYNQ_PS_UART0_.*|HDMI_RX_CEC|ESC_PWM_IN[0-9]")),"curated fixture triage "+fn);out[v.net]={rank,klass,fn};}return out;
 }
-void real_project(const fs::path& root,const std::string& name){
-    auto live=load_live(root,name);PcbCheckInput input(live.model);auto fixture=root/"native/tests/data/pcb_checks";auto snapshot=[&](const std::string& gate,const std::string& report){equal(report+"\n",read(fixture/(name+"_"+gate+".txt")),name+" "+gate);};
+void real_project(const fs::path& root,const std::string& name,bool historical){
+    // Emitted decimal poses may reorder equally tight fanout rows. Historical
+    // report bytes stay pinned; current fanout uses the hard typed verdict and
+    // the unchanged crowding mutations below, not a floating-point tie order.
+    auto live=load_live(root,name,historical);
+    PcbCheckInput input(live.model);
+    auto fixture=root/"native/tests/data/pcb_checks";
+    auto snapshot=[&](const std::string& gate,const std::string& report){
+        if(!historical&&gate=="fanout"){
+            const auto result=check_fanout(input,0);
+            require(result.ok&&!result.records.empty(),name+" current fanout hard gate");
+            return;
+        }
+        const auto path=historical?fixture/(name+"_"+gate+".txt"):root/name/"reports"/(gate+".txt");
+        equal(report+"\n",read(path),name+(historical?" historical ":" current ")+gate);
+    };
     auto v1=check_return_path(live.iface,live.return_footprints);require(!v1.ok&&v1.n_pairs==69&&v1.n_pair_contacts==138&&v1.n_fail()==29&&v1.worst_distance==4,name+" pinned v1 failure");auto expected=read(fixture/(name+"_return_path.txt"));equal(v1.summary()+"\n",expected.substr(expected.find("RETURN-PATH GATE")),name+" return-path exact report");
     snapshot("connector_model",check_connector_models(live.model).summary());snapshot("connector_spacing",check_connector_spacing(input).summary());snapshot("placement_mech",check_placement_mech(input).summary());snapshot("fanout",check_fanout(input,0).summary());snapshot("rail_ampacity",analyze_rail_ampacity(live.sheets,live.iface,live.mapping).report());
     snapshot("escape_lanes",check_escape_lanes(live.model,live.population,live.iface_bytes).summary());auto classes=triage(v1,live.mapping);auto stitch=check_return_stitch(input,v1,classes,live.iface_bytes,&live.board);require(stitch.ok,stitch.summary());snapshot("return_stitch",stitch.summary());require(check_refdes_overlap(live.board.document).ok,name+" emitted refdes baseline");
@@ -151,4 +188,4 @@ void real_project(const fs::path& root,const std::string& name){
     std::cout<<name<<": eight exact report snapshots and real PCB/interface mutations passed\n";
 }
 }
-int main(int argc,char** argv){try{fs::path root=argc>1?argv[1]:fs::current_path();synthetic();real_project(root,"carrier");real_project(root,"devkit_mini");std::cout<<"PCB checks: "<<checks<<" independent contracts passed\n";return 0;}catch(const std::exception& e){std::cerr<<"PCB checks contract FAILED: "<<e.what()<<"\n";return 1;}}
+int main(int argc,char** argv){try{fs::path root=argc>1?argv[1]:fs::current_path();synthetic();for(bool historical:{true,false})for(const auto* project:{"carrier","devkit_mini"})real_project(root,project,historical);std::cout<<"PCB checks: "<<checks<<" independent contracts passed\n";return 0;}catch(const std::exception& e){std::cerr<<"PCB checks contract FAILED: "<<e.what()<<"\n";return 1;}}

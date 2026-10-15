@@ -1,0 +1,26 @@
+{
+  "source_base": "071fdeb1",
+  "scope": "Repair two release-regression tests against current published inputs without modifying production behavior or golden files",
+  "review": {
+    "bom": "18778526 regenerated the manufacturing BOM. The test incorrectly projected current capacitor identities back to historical values before comparing with that current publication.",
+    "project_totals": "d2a1ec20 removed power_som R12, D5, C20 and EN_5V_SOM from both boards. Expected parts/nets decrease by exactly three/one; ports and NC totals remain unchanged.",
+    "manifest": "Native board_pipeline_documents.cpp publishes the live XDC device identifier XC7Z020-CLG484, without the historical manifest's parenthetical schematic prose."
+  },
+  "coverage": [
+    "Compare current BOM bytes against the committed publication for BOTH boards",
+    "Independently check complete included-part inventory: unique qualified reference, value, footprint and supplier code",
+    "Reject removed references, duplicate references, changed values, footprints and supplier codes on each board",
+    "Retain exact synthetic CSV escaping/grouping/exclusion tests and reviewed carrier capacitor mutation checks",
+    "Require absent retired clamp parts and private net; require each U4 EN/VIN endpoint exactly once on +VIN_SYS",
+    "Retain exact circuit/catalog comparison, port/NC totals and manifest checks"
+  ],
+  "validation": {
+    "command": "ctest --test-dir native/build/fast -R '^native_(project|bom|board_policy|firmware_provenance)_contracts$' --output-on-failure",
+    "rebuilt_targets": ["schgen_project_contracts", "schgen_bom_contracts"],
+    "passed": 4,
+    "failed": 0,
+    "elapsed_seconds": 6.31,
+    "full_suite_rerun": false
+  },
+  "remaining": "Ten other release-suite failures remain unresolved. No new board qualification, hardware-limit approval, performance or goal-completion claim."
+}

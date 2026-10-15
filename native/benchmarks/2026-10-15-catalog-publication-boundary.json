@@ -1,0 +1,24 @@
+{
+  "source_base": "e2d948b5",
+  "defect": "run_dump_circuits checked lexical repository containment only after writing every file, allowing rejected outside paths to have already created or overwritten files; symlink escapes were not checked",
+  "repair": "Preflight every destination against normalized absolute and weakly canonical repository paths before any publication. Revalidate each path immediately before writing. Keep existing explicit partial-write behavior for later ordinary I/O failures.",
+  "tests_both_boards": [
+    "Direct external output directory rejected without creating files",
+    "Parent traversal rejected without creating files",
+    "Parent-directory symlink escaping repository rejected without creating files",
+    "Last circuit path symlink to outside sentinel rejected before any earlier circuit is published; sentinel unchanged",
+    "Contained output alias and symlinked repository root accepted with complete byte-identical publication",
+    "Existing ordinary late-I/O-error contract retains earlier successfully published files"
+  ],
+  "validation": {
+    "rebuilt_target": "schgen_experiment_tools_contracts",
+    "command": "ctest --test-dir native/build/fast -R '^native_experiment_tools_contracts$' --output-on-failure",
+    "passed": 1,
+    "failed": 0,
+    "elapsed_seconds": 9.29,
+    "includes": "Full unit, placement probe and both-board catalog suite",
+    "full_repository_suite_rerun": false
+  },
+  "limits": "This is pre-write validation, not an atomic sandbox against concurrent hostile symlink replacement. It does not change the unrestricted single-dump publication API, which has no repository-root argument.",
+  "remaining": "Six release-suite failures remain unresolved. No new layout or speed improvement claimed."
+}

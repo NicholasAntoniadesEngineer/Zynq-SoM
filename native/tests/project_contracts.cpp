@@ -464,13 +464,34 @@ void repository_contracts(Suite& suite, const fs::path& repo) {
             }
             // Devkit adds two bus terminations and nine probe pads; its debug
             // sheet now owns five additional exported nets (two I2C, three probes).
-            require(parts == (carrier ? 564u : 158u) && nets == (carrier ? 818u : 326u)
+            // d2a1ec20 removed the three-part EN clamp and its private net on
+            // both boards. Check that precise topology, not only lower totals.
+            const auto power_som=std::find_if(sheets.begin(),sheets.end(),
+                [](const auto& s){return s.name=="power_som";});
+            require(power_som!=sheets.end(),"missing always-on SoM supply");
+            for(const std::string ref:{"R12","D5","C20"})
+                require(std::none_of(power_som->circuit.parts.begin(),power_som->circuit.parts.end(),
+                    [&](const auto& p){return p.ref==ref;}),"retired EN clamp part restored: "+ref);
+            for(const std::string pin:{"7","8","12"}){
+                std::size_t hits=0;
+                for(const auto& net:power_som->circuit.nets){
+                    require(net.name!="EN_5V_SOM","retired EN net restored");
+                    for(const auto& endpoint:net.pins)if(endpoint.ref=="U4"&&endpoint.pin==pin){
+                        require(net.name=="+VIN_SYS","SoM EN and VIN pins must share input supply");
+                        ++hits;
+                    }
+                }
+                require(hits==1,"SoM supply endpoint must occur exactly once");
+            }
+            require(parts == (carrier ? 561u : 155u) && nets == (carrier ? 817u : 325u)
                     && ports == (carrier ? 387u : 51u) && nc == (carrier ? 130u : 55u), "real IR totals changed");
             const auto index = load_sheet_index(paths);
             require(index.size() == expected.size() && extend_sheet_index(index, expected).unseen.empty(), "stable sheet bands diverged");
             require(index.front() == std::make_pair(expected.front(), int32_t(1)), "first sheet band changed");
             const auto manifest = load_project_manifest(paths);
-            require(manifest.device == "XC7Z020-CLG484 (U2 on the SoM)" && !manifest.artifacts.empty(), "real manifest missing");
+            // Native publication uses the live XDC device identifier, not the
+            // old Python manifest's identifier plus schematic prose.
+            require(manifest.device == "XC7Z020-CLG484" && !manifest.artifacts.empty(), "real manifest missing");
             for (const auto& artifact : manifest.artifacts) require(artifact.sha256.size() == 64, "manifest artifact hash dropped");
             for (const std::string key : {"bom", "rails", "gpio_map", "i2c_map", "xdc", "testpoints"}) require(object_field(manifest.raw, key), "manifest lost " + key);
             require(read(paths.project_file) == config_before && read(paths.sheet_index_file) == index_before, "repository metadata changed");

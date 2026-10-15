@@ -1,6 +1,7 @@
 #include "schgen/authoring_gates.hpp"
 #include "schgen/project_authoring.hpp"
 #include "historical_input_contracts.hpp"
+#include "direct_enable_reference.hpp"
 #include <algorithm>
 #include <fstream>
 #include <iostream>
@@ -336,8 +337,30 @@ int main(int argc,char** argv) {
             for(const auto& p:at(fixture,"packages").array_value) {
                 auto f=std::find_if(factories.begin(),factories.end(),[&](const auto& x){return x.name==at(p,"name").string_value;});
                 require(f!=factories.end(),"missing native project factory");
+                auto expected=at(p,"circuit");
+                if(f->name=="power_som"){
+                    expected=authored_circuit_json(direct_enable_reference::project(parse_circuit_ir(expected)));
+                    for(int mutation=0;mutation<4;++mutation){
+                        auto changed=f->circuit();
+                        if(mutation==0)changed.parts.front().value+="_drift";
+                        if(mutation==1)changed.title+="_drift";
+                        if(mutation==2)for(auto& n:changed.nets)for(auto& pin:n.pins)
+                            if(pin.ref=="U4"&&pin.pin=="7")pin.pin="8";
+                        if(mutation==3){const auto copy=changed.parts.front();changed.parts.push_back(copy);}
+                        require(!authoring_json_equal(authored_circuit_json(changed),expected),
+                                "direct-enable oracle accepted unrelated or enable mutation");
+                    }
+                    for(int mutation=0;mutation<3;++mutation){
+                        auto old=parse_circuit_ir(at(p,"circuit"));
+                        if(mutation==0)for(auto& part:old.parts)if(part.ref=="D5")part.value="other";
+                        if(mutation==1)for(auto& n:old.nets)for(auto& pin:n.pins)if(pin.ref=="R12")pin.pin="3";
+                        if(mutation==2)for(auto& n:old.nets)if(n.name=="EN_5V_SOM")n.pins.push_back({"U4","99"});
+                        bool rejected=false;try{(void)direct_enable_reference::project(old);}catch(const std::runtime_error&){rejected=true;}
+                        require(rejected,"historical projection accepted unreviewed preimage");
+                    }
+                }
                 historical_input_contracts::check(f->circuit(), project, [&](const auto& projected) {
-                    return authoring_json_equal(authored_circuit_json(projected), at(p,"circuit"));
+                    return authoring_json_equal(authored_circuit_json(projected), expected);
                 });
             }
             auto r=check_carrier_structure(root/project/"subsystems",root/"subsystems",factories);

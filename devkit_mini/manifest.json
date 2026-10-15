@@ -38,7 +38,7 @@
     },
     {
       "path": "firmware/zynq_carrier_contract.h",
-      "sha256": "4b4e31d14f9a35908a9525afe3174d1afdb971940b6d3781bae12d5cc801aaa1"
+      "sha256": "5ec26524ea7c5fdcab9b3c9fd30d06f188a44d25748fdd4318ffdc8e1722bb1c"
     },
     {
       "path": "fpga/Zynq_Carrier_pins.xdc",
@@ -81,6 +81,10 @@
       "sha256": "342020aa1ee8a2e72d3e178b100c4d5cfaeca949cc10d3b19733b49b44265578"
     },
     {
+      "path": "reports/build_ledger.txt",
+      "sha256": "dc1256c62ba703c63b9344b2b4cab388989f369bc3d335aae0f459054ef0d99e"
+    },
+    {
       "path": "reports/carrier_structure.txt",
       "sha256": "73c9ca05489f5702d943ad9c6975d4087e34015f92b0db58eba01dcc6c4945a8"
     },
@@ -101,6 +105,10 @@
       "sha256": "7cbb195e568847ef65d866f4e3374daa75599b03a51838a908c3607ceea293c5"
     },
     {
+      "path": "reports/contract_coverage_lint.txt",
+      "sha256": "8a4f7064610ae054fc3dec0b7918aa7df8f85acd9a82bd32b0880cb06b15a191"
+    },
+    {
       "path": "reports/copper_debt.txt",
       "sha256": "4e3369ea756b28e6f566024d7aa859dc65aee22c80afe3be5231ae41b0ba8810"
     },
@@ -117,6 +125,10 @@
       "sha256": "f546c7b97549f53f61d1e06702825e8029c0b60e1e249d3276e35f9aae968f03"
     },
     {
+      "path": "reports/fallbacks.txt",
+      "sha256": "cf6803ecaca8cc3230241626d3724d56cc51dcef91d6ecd5878b7c732dfd046c"
+    },
+    {
       "path": "reports/fanout.txt",
       "sha256": "e768cbc713bf711acdea99365af01c8903a3ab5c7307fec70d277072745ffdb9"
     },
@@ -127,6 +139,14 @@
     {
       "path": "reports/footprint_pads.txt",
       "sha256": "c4da5f2ba404d3275d2b0b5f4bf10e1f0f882c8bf431d6a570d34863bdc0f806"
+    },
+    {
+      "path": "reports/gates.txt",
+      "sha256": "38d6c54a1e349de6cde60e15e8c5e86dd4662847ae0465e1e0d0e31682924df3"
+    },
+    {
+      "path": "reports/golden.txt",
+      "sha256": "d2ef88b90078d93e1824258450b07599cb9dd75b68f33afeaf5475e6ba272d9e"
     },
     {
       "path": "reports/link_report.txt",
@@ -181,6 +201,10 @@
       "sha256": "f23994d4757d61a16b0abf6959e2aac1bf32fdbe28b7218cb12515bd548469d2"
     },
     {
+      "path": "reports/quantize_census.txt",
+      "sha256": "6d9d76863e8d2be1194c085255bff4aa4c12c3dbfcf873f10cd253753247b915"
+    },
+    {
       "path": "reports/rail_ampacity.txt",
       "sha256": "ed5a80df4e69c2a9a63b6ca2d2ba39799b5d7c74de251abcea5d3fb0b74b6009"
     },
@@ -218,7 +242,7 @@
     },
     {
       "path": "reports/thermal.txt",
-      "sha256": "c5ce9815f2f8af031fa03c0e5b41dd70c023725d5b37c4afc0778be30963bc5c"
+      "sha256": "4e553ffd257ab82d3f3f09c35c854a2dcd1b6d9f46b7cae52eaaf06840c1fb9d"
     },
     {
       "path": "schematic/debug_boot.kicad_sch",

@@ -1,5 +1,6 @@
 #include "schgen/firmware_provenance.hpp"
 #include "schgen/firmware_docs.hpp"
+#include "schgen/experiment_tools.hpp"
 
 #include <algorithm>
 #include <fstream>
@@ -100,13 +101,26 @@ void project(const fs::path& repo, const std::string& name) {
     rejects([&] { native_firmware_sources(isolated); }, "missing source file");
     write(json, "{bad json");
     rejects([&] { native_firmware_sources(isolated); }, "expected string");
-    auto renamed = bytes;
-    const std::string original_name = "\"name\": \"power\"";
-    const auto name_offset = renamed.find(original_name);
-    require(name_offset != std::string::npos, "canonical fixture power name");
-    renamed.replace(name_offset, original_name.size(), "\"name\": \"wrong_sheet\"");
-    write(json, renamed);
-    rejects([&] { native_firmware_sources(isolated); }, "canonical circuit name mismatch for power");
+    // Mutate the semantic root field, not a formatting-dependent substring.
+    // Exercise each spelling through the actual provenance reader, including
+    // acceptance of the correct name before rejection of the wrong name.
+    const auto document = parse_compose_document(bytes);
+    require(require_string(document.data, "name", false, "fixture") == "power",
+            "canonical fixture power name");
+    for (const int indent : {-1, 0, 2}) {
+        write(json, render_experiment_json(document, indent));
+        require(text(native_firmware_sources(isolated)) == expected,
+                "JSON formatting changed native provenance");
+        auto renamed = document;
+        std::size_t changed = 0;
+        for (auto& [key, value] : renamed.data.object_value) if (key == "name") {
+            value.string_value = "wrong_sheet";
+            ++changed;
+        }
+        require(changed == 1, "mutate exactly one top-level circuit name");
+        write(json, render_experiment_json(renamed, indent));
+        rejects([&] { native_firmware_sources(isolated); }, "canonical circuit name mismatch for power");
+    }
     write(json, bytes);
     const auto builder = scratch.path / "native/src/subsystem_authoring_power.cpp";
     const auto source = read(builder);

@@ -1,0 +1,24 @@
+{
+  "source_base": "0703a0ab",
+  "scope": "Restore full experiment-tool regression and remove synthetic Python filenames from native catalog publication",
+  "changes": [
+    "For both power_som dumps, verify the immutable historical circuit still emits the original byte count and SHA-256, then apply the exact reviewed direct-enable transformation and compare complete current dump bytes",
+    "Retain all other historical dump hashes, current publication roundtrips and late-write failure checks",
+    "Reject altered title, component identity and enable pin in the reviewed current dump; malformed pins may fail before serialization",
+    "Native catalog preparation/publication now passes .cpp handles; output paths and valid bytes are unchanged",
+    "Add --catalogs test mode for focused unit/catalog checks while retaining all existing --live coverage; reject unknown test options"
+  ],
+  "validation": {
+    "rebuilt_target": "schgen_experiment_tools_contracts",
+    "focused_command": "native/build/fast/schgen_experiment_tools_contracts REPOSITORY --catalogs",
+    "focused_assertions": 563,
+    "published_sheets": {"carrier": 37, "devkit_mini": 12},
+    "full_target_command": "ctest --test-dir native/build/fast -R '^native_experiment_tools_contracts$' --output-on-failure",
+    "passed": 1,
+    "failed": 0,
+    "elapsed_seconds": 10.45,
+    "full_repository_suite_rerun": false
+  },
+  "followup": "run_dump_circuits currently checks repository containment after publication; inspect pre-write path validation separately",
+  "remaining": "Six other release-suite failures remain unresolved; no full qualification or goal-completion claim"
+}

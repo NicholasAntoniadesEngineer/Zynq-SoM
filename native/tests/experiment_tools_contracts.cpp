@@ -1,5 +1,6 @@
 #include "pcb_placement_fixture.hpp"
 #include "historical_input_contracts.hpp"
+#include "direct_enable_reference.hpp"
 #include "schgen/experiment_tools.hpp"
 #include "../src/experiment_tools_internal.hpp"
 #include "experiment_metric_contracts.hpp"
@@ -454,6 +455,33 @@ void catalogs(const std::filesystem::path &root) {
                     const auto bytes = prepare_native_circuit_dump(projected, handle).bytes;
                     return bytes.size()==number(e,"bytes") && pcb_sha256(bytes)==string(e,"sha256");
                 });
+            } else if(string(e,"name")=="power_som") {
+                // Retain the independent historical serializer hash, then apply
+                // only the reviewed direct-enable delta to its immutable IR.
+                const auto oracle=parse_json_file((root/"native/tests/data/authoring"/
+                    (std::string("gate_")+project+".json")).string());
+                const auto& packages=field(oracle,"packages").array_value;
+                const auto found=std::find_if(packages.begin(),packages.end(),[](const auto& p){return string(p,"name")=="power_som";});
+                require(found!=packages.end(),"independent power_som oracle exists");
+                const auto old=parse_circuit_ir(field(*found,"circuit"));
+                const auto handle=paths.subsystems_dir/"power_som/power_som.cpp";
+                const auto original=prepare_native_circuit_dump(old,handle);
+                require(original.bytes.size()==number(e,"bytes")&&pcb_sha256(original.bytes)==string(e,"sha256"),
+                        "immutable power_som serializer byte oracle");
+                const auto current=direct_enable_reference::project(old);
+                const auto wanted=prepare_native_circuit_dump(current,handle);
+                require(dump.path==wanted.path&&dump.bytes==wanted.bytes,"complete reviewed power_som dump bytes");
+                for(int mutation=0;mutation<3;++mutation){
+                    auto changed=current;
+                    if(mutation==0)changed.title+="_drift";
+                    if(mutation==1)changed.parts.front().value+="_drift";
+                    if(mutation==2)for(auto& net:changed.nets)for(auto& pin:net.pins)
+                        if(pin.ref=="U4"&&pin.pin=="7")pin.pin="99";
+                    bool rejected=false;
+                    try{rejected=prepare_native_circuit_dump(changed,handle).bytes!=dump.bytes;}
+                    catch(const std::runtime_error&){rejected=true;}
+                    require(rejected,"serializer comparison rejects unrelated/direct-enable mutation");
+                }
             } else {
                 require(dump.bytes.size()==number(e,"bytes") && pcb_sha256(dump.bytes)==string(e,"sha256"),std::string(project)+" independent dump bytes "+string(e,"name"));
             }
@@ -463,6 +491,46 @@ void catalogs(const std::filesystem::path &root) {
         auto report=run_dump_circuits(output_paths,project);
         require(report.size()>0 && report.find("dumped "+std::to_string(prepared.size())+" circuit.json files\n")!=std::string::npos,"catalog publication report");
         for(const auto &dump:prepared) require(read(output_paths.subsystems_dir/dump.path.parent_path().filename()/"circuit.json")==dump.bytes,"explicit isolated catalog publication bytes");
+        for(int escape=0;escape<4;++escape){
+            Temporary inside,outside;
+            auto unsafe=paths;unsafe.repository_root=inside.path;
+            unsafe.subsystems_dir=inside.path/project/"subsystems";
+            const auto sentinel=outside.path/"sentinel.json";
+            experiment_detail::publish(sentinel,"untouched");
+            if(escape==0)unsafe.subsystems_dir=outside.path/"new-output";
+            if(escape==1)unsafe.subsystems_dir=inside.path/".."/outside.path.filename()/"new-output";
+            if(escape==2){
+                std::filesystem::create_directory_symlink(outside.path,inside.path/"redirect");
+                unsafe.subsystems_dir=inside.path/"redirect"/"new-output";
+            }
+            if(escape==3){
+                const auto last=unsafe.subsystems_dir/prepared.back().path.parent_path().filename();
+                std::filesystem::create_directories(last);
+                std::filesystem::create_symlink(sentinel,last/"circuit.json");
+            }
+            bool rejected=false;
+            try{(void)run_dump_circuits(unsafe,project);}
+            catch(const ProjectError& e){rejected=std::string(e.what()).find("outside repository")!=std::string::npos;}
+            require(rejected,"reject outside catalog destination before publication");
+            require(read(sentinel)=="untouched","rejected dump must preserve outside file");
+            require(!std::filesystem::exists(outside.path/"new-output"),"rejected dump must not create outside directories");
+            require(!std::filesystem::exists(unsafe.subsystems_dir/prepared.front().path.parent_path().filename()/"circuit.json"),
+                    "late invalid destination must not publish earlier circuits");
+        }
+        // Existing aliases wholly within the repository are legitimate, and
+        // the repository root itself may also be selected through a symlink.
+        Temporary aliases;
+        std::filesystem::create_directory(aliases.path/"actual");
+        std::filesystem::create_directory_symlink(aliases.path/"actual",aliases.path/"root-link");
+        std::filesystem::create_directory(aliases.path/"actual"/"data");
+        std::filesystem::create_directory_symlink(aliases.path/"actual"/"data",aliases.path/"actual"/"data-link");
+        auto aliased=paths;aliased.repository_root=aliases.path/"root-link";
+        aliased.subsystems_dir=aliased.repository_root/"data-link"/project/"subsystems";
+        require(run_dump_circuits(aliased,project).find("dumped "+std::to_string(prepared.size()))!=std::string::npos,
+                "contained aliases and symlinked repository root accepted");
+        for(const auto& dump:prepared)
+            require(read(aliases.path/"actual"/"data"/project/"subsystems"/dump.path.parent_path().filename()/"circuit.json")==dump.bytes,
+                    "contained alias publication preserves canonical bytes");
         // A late publication failure must not erase earlier successful writes.
         Temporary blocked;
         output_paths.repository_root=blocked.path;output_paths.subsystems_dir=blocked.path/project/"subsystems";
@@ -479,12 +547,14 @@ void catalogs(const std::filesystem::path &root) {
 } // namespace
 int main(int argc,char **argv) {
     try {
-        if(argc<2||argc>3)throw std::runtime_error("usage: experiment_tools_contracts ROOT [--live]");
+        if(argc<2||argc>3||(argc==3&&std::string(argv[2])!="--live"&&std::string(argv[2])!="--catalogs"))
+            throw std::runtime_error("usage: experiment_tools_contracts ROOT [--live|--catalogs]");
         unit(argv[1]);
         if(argc==3 && std::string(argv[2])=="--live") {
             for(const auto *name:{"carrier","devkit_mini"})probes(argv[1],name);
             catalogs(argv[1]);
         }
+        if(argc==3&&std::string(argv[2])=="--catalogs")catalogs(argv[1]);
         std::cout<<"experiment tools: "<<checks<<" assertions passed\n";
     } catch(const std::exception &e){std::cerr<<e.what()<<'\n';return 1;}
 }

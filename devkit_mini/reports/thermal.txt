@@ -5,7 +5,7 @@ model: Tj = Ta + Pd*RthJA ; Ta = 50 C ; FAIL when Tj > Tj_max - 10 C margin
   Pd(LDO) = (Vin-Vout)*Iout ; Pd(buck) = (1/eff-1)*Vout*Iout, eff=0.85 ; Pd(switch/eFuse) = Iout^2*Rds_on
   RthJA = bare JEDEC, unless '*' = pour-aware effective RthJA (EP/power pads -> GND copper + vias; basis cited below)
   pour credits are granted ONLY against copper VERIFIED in the emitted board
-  emitted-copper evidence source: /private/tmp/zynq-release-3e80dbfc-devkit/Zynq_Carrier.kicad_pcb
+  emitted-copper evidence source: devkit_mini/Zynq_Carrier.kicad_pcb
 
   device                 package                  kind        in->out               Iout/A   Pd/mW   RthJA    Tj/C   limit   mgn/C  verdict
   -----------------------------------------------------------------------------------------------------------------------------------------

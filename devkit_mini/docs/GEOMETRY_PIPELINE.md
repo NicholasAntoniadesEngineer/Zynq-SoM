@@ -193,9 +193,9 @@ Every alternate path is a NAMED event. The board gate (`check_board_fallbacks` i
 |------|-------|---------|---------|---------|
 | `assembly_generation_failed` | assembly_docs | 0 | 0 | Current-board assembly generation threw; the pipeline must fail and must not treat an older document as current evidence. |
 | `bottom_variant_contract_reject` | zone_pack | 0 | 0 | An eligible bottom variant failed its mirrored contract or required lifting a load-bearing contract member; do not offer that shape. |
-| `cand_cap_truncated` | zone_pack | 116 | 7 | Ranked candidate list exceeded its cap; discard the tail and count this truncating generation call. |
+| `cand_cap_truncated` | zone_pack | 0 | 0 | Ranked candidate list exceeded its cap; discard the tail and count this truncating generation call. |
 | `contract_group_orientation_retry` | plan_lattice | 0 | 0 | One opt-in suffix orientation expansion after typed packing infeasibility. Preserve failed work, count attempts even on rejection, never replace a successful initial plan. |
-| `corridor_evict_moved` | corridor_eviction | 0 | 8 | One event per part whose pose changes in an accepted final-frame DF40 corridor repair, including members of a rigid owned group. Executed relocations remain counted if a later failure rolls the invocation back. |
+| `corridor_evict_moved` | corridor_eviction | 0 | 0 | One event per part whose pose changes in an accepted final-frame DF40 corridor repair, including members of a rigid owned group. Executed relocations remain counted if a later failure rolls the invocation back. |
 | `corridor_stray_unmovable` | corridor_eviction | 0 | 0 | A final-frame DF40 corridor obstruction has no permitted legal exit or remains after repair. Default retains the stray for escape coexistence proof or failure; compact rejects explicitly and rolls geometry back. Malformed input and accounting errors are not this fallback. |
 | `edge_run_translation` | plan_lattice | 0 | 0 | Opt-in bounded translation repaired an invalid edge arrangement. Count all applied repairs, including later rejected candidates; no clearance waiver. |
 | `facing_replan_retry` | plan_lattice | 0 | 0 | One multiscale strict-facing replan after a resolved final facing failure; retain valid incumbents and all prior model/screening work, including failed retries. |
@@ -211,7 +211,7 @@ Every alternate path is a NAMED event. The board gate (`check_board_fallbacks` i
 | `interior_reseat_pose_search` | plan_lattice | 0 | 0 | One opt-in victim reconsideration after every ordinary victim trial failed; counts even when incoming seating or bounded enumeration fails. |
 | `interior_reseat_pose_skip` | plan_lattice | 0 | 0 | One locally feasible recovery choice skipped during deterministic replay of the first recovery. This is a branch exclusion, not a geometry rejection. |
 | `interior_reseat_pose_trial` | plan_lattice | 0 | 0 | One executed alternative incoming pose and fixed-shape victim relocation trial. Rejected and accepted trials are retained. |
-| `interior_reseat_retry` | plan_lattice | 18 | 35 | Bounded eviction and reseating found a legal interior placement after greedy seating failed. Count successful retry episodes across all candidates. |
+| `interior_reseat_retry` | plan_lattice | 0 | 0 | Bounded eviction and reseating found a legal interior placement after greedy seating failed. Count successful retry episodes across all candidates. |
 | `interior_reseat_shape_retry` | plan_lattice | 0 | 0 | One opt-in full victim-shape strategy after the original pose portfolio failed; retain all work and final gates. |
 | `interior_reseat_shape_trial` | plan_lattice | 0 | 0 | One actual alternative victim-shape relocation query after its original shape failed; retain rejected and successful queries. |
 | `interior_shape_choice_budget` | plan_lattice | 0 | 0 | Unexplored shape-choice prefixes remain after a failed bounded replay search; no infeasibility claim. |
@@ -228,9 +228,9 @@ Every alternate path is a NAMED event. The board gate (`check_board_fallbacks` i
 | `legalize_joint_retry` | plan_lattice | 0 | 0 | One opt-in joint separation search after existing composer strategies fail. |
 | `legalize_joint_state` | plan_lattice | 0 | 0 | One visited joint separation assignment, including rejected work. |
 | `legalize_neighbour_retry` | plan_lattice | 0 | 0 | One failure-only interior-neighbour translation retry with explicit joint search budget. Hardware-fixed obstacles and all final checks remain; record failed and successful attempts. |
-| `legalize_only_compaction` | plan_lattice | 2 | 0 | Compact placement broke a pair floor; retain the rechecked legalize-only candidate. Count each affected compact-pack invocation. |
+| `legalize_only_compaction` | plan_lattice | 0 | 0 | Compact placement broke a pair floor; retain the rechecked legalize-only candidate. Count each affected compact-pack invocation. |
 | `legalize_reservation_retry` | plan_lattice | 0 | 0 | One failure-only child-reservation geometry solve. Count every attempt; retain all earlier work and exact final collision gates. |
-| `punch_free_plan_rejected` | plan_lattice | 1 | 1 | The free-punch candidate was infeasible or failed strict area/estimate improvement; retain the conservative plan and its fallback snapshot. |
+| `punch_free_plan_rejected` | plan_lattice | 0 | 0 | The free-punch candidate was infeasible or failed strict area/estimate improvement; retain the conservative plan and its fallback snapshot. |
 | `screened_incumbent_retained` | plan_lattice | 0 | 0 | Final refinement failed or worsened the screened layout. Restore the actual incumbent and side offers; retain all trial accounting and re-evaluate its estimate. |
 | `seat_node_budget` | zone_pack | 0 | 0 | Template DFS exhausted its node budget without finding a placement; the widening search may retry. This is not proof that the pad is infeasible. |
 | `thermal_repair_moved` | corridor_eviction | 0 | 0 | One accepted movement strictly improves preferred capacity without reducing any subject or relaxing hardware checks. |

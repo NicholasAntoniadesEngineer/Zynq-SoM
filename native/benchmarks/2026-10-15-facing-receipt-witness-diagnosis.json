@@ -1,0 +1,21 @@
+{
+  "source_base": "d478c8d8",
+  "scope": "Diagnose the remaining model failure-receipt regression without weakening retry coverage",
+  "baseline": {
+    "command": "ctest --test-dir native/build/fast -R '^native_model_failure_receipt_contracts$' --output-on-failure",
+    "rebuilt": true,
+    "elapsed_seconds": 11.07,
+    "result": "mode=0 observed_second_solve=0",
+    "meaning": "The current carrier fixture completes without an independently observed post-emission solve; the test assumed it must retry. This result does not prove broken receipt aggregation."
+  },
+  "rejected_experiment": {
+    "hypothesis": "Reintroduce the historical corridor rectangles as explicit caller reservations only in the retry witness to recover a genuine facing failure",
+    "first_attempt": "Rejected duplicate fixed name escape:J1:N; dynamic current corridors already own these names",
+    "corrected_attempt": "Distinct caller-prefixed reservation names accepted, but mode=0 still observed no second solve",
+    "corrected_elapsed_seconds": 10.62,
+    "action": "Removed prototype completely; production sidecar independence and test assertions retained"
+  },
+  "retained_change": "Failure diagnostic identifies test mode and independently observed second-solve flag",
+  "next_action": "Construct a controlled physical facing-failure witness and retain both successful and interrupted retry accounting checks plus valid-incumbent no-retry coverage. Do not make retries optional and thereby silently lose coverage.",
+  "remaining": "This test remains failing. Eight release-suite failures remain unresolved."
+}
