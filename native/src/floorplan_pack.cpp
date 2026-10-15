@@ -248,6 +248,10 @@ bool Engine::attempt_pack(bool compact) {
 bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure,
                               const std::string& promote,std::string* failed_subject,
                               std::size_t first_pose_skip,bool* selected_pose,bool victim_shapes,bool incoming_shapes) {
+    if(in.experiment)for(const auto& [sheet,tag]:in.experiment->offered_shape_tags)
+        if(std::none_of(plan.interior_blocks.begin(),plan.interior_blocks.end(),
+                        [name=sheet](const auto& block){return block.name==name;}))
+            throw FloorplanError("offered shape selection requires an interior block: "+sheet);
     const bool trace_choices=shape_replay_trace&&!shape_replay_trace_started;
     if(shape_replay_trace)shape_replay_trace_started=true;
     std::set<std::string> traced_choices;

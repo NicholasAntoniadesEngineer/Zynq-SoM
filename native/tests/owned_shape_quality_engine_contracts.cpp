@@ -154,6 +154,40 @@ void synthetic() {
         bool rejected=false;try{(void)pack(bad);}catch(const FloorplanError&){rejected=true;}
         require(rejected,"invalid candidate restriction accepted");
     }
+    auto offered=input(2);
+    auto offered_options=std::make_shared<FloorplanExperiment>();
+    offered_options->offered_shape_tags={{"pilot","fixture-1"}};
+    offered.experiment=offered_options;
+    require(pack(offered).chosen==1&&offered.owned_shape_quality.empty(),
+            "standard shape restriction ignored or invented owned quality");
+    bool offered_unseated=false;
+    try{(void)pack(offered,{1});}catch(const std::runtime_error& e){offered_unseated=std::string(e.what())=="actual engine fixture did not pack";}
+    require(offered_unseated,"infeasible offered shape silently fell back");
+    for(bool edge:{false,true}) {
+        Engine absent(offered);
+        if(edge){FloorplanBlock b;b.name="pilot";b.kind="edge";absent.plan.edge_blocks.push_back(b);}
+        bool rejected=false;try{(void)absent.attempt_pack_impl(false);}catch(const FloorplanError&){rejected=true;}
+        require(rejected,"non-interior offered restriction silently ignored");
+    }
+    for(int mutation=0;mutation<7;++mutation){
+        auto bad=offered;
+        auto options=std::make_shared<FloorplanExperiment>(*offered_options);bad.experiment=options;
+        if(mutation==0)options->offered_shape_tags={{"unknown","fixture-1"}};
+        if(mutation==1)options->offered_shape_tags["pilot"]="missing";
+        if(mutation==2)bad.geometry.shapes["pilot"][0].tag="fixture-1";
+        if(mutation==3)options->offered_shape_tags["pilot"]="";
+        if(mutation==4)bad.compact_search=false;
+        if(mutation==5){
+            options->owned_shape_tags={{"pilot","fixture-1"}};
+            bad.owned_shape_quality[ {"pilot",1} ]=quality(2,4);
+        }
+        if(mutation==6){
+            bad.geometry.shapes["pilot"][0].side="bottom";
+            options->require_bottom_sheets={"pilot"};
+        }
+        bool rejected=false;try{(void)pack(bad);}catch(const FloorplanError&){rejected=true;}
+        require(rejected,"invalid offered shape restriction accepted");
+    }
     auto quality_first=in;auto strategy=std::make_shared<FloorplanExperiment>();strategy->owned_quality_first=true;
     quality_first.experiment=strategy;
     unchanged(improved,pack(quality_first),"quality-first engine path changed an already optimal fixture or work receipts");

@@ -86,6 +86,10 @@ struct FloorplanExperiment {
     // Diagnostic candidate restrictions by generated tag, not unstable index.
     // Unknown, ambiguous or unmeasured choices fail; never silently fall back.
     std::map<std::string,std::string> owned_shape_tags;
+    // Diagnostic restriction to any uniquely tagged, already offered shape.
+    // No owned-quality claim; normal physical checks still apply. Must not
+    // overlap owned_shape_tags or contradict require_bottom_sheets.
+    std::map<std::string,std::string> offered_shape_tags;
     // Controlled downstream packing experiment: require an already offered
     // bottom-primary shape for these groups. Never creates or validates one.
     std::set<std::string> require_bottom_sheets;

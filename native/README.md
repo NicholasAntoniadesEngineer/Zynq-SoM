@@ -354,7 +354,16 @@ floorplan spec with `benchmarks/carrier-166x156.floorplan.json` and adding
 and `--owned-shape board_aux=owned-face-a1.000000` (no victim-shapes option).
 These are explicit experimental selections, not new mandatory shape rules.
 The profiler's owned-selection trace now includes a read-only catalog of
-registered, measured shape tags; registration does not imply board feasibility.
+all registered shape tags; registration does not imply measured owned quality
+or board feasibility.
+For controlled profiling of ordinary offered rotations, use
+`--offered-shape power_som=turned` (repeat for different sheets). Unlike
+`--owned-shape`, this selector makes no owned-quality claim: it requires a
+unique existing interior-group tag, compact search, and no overlapping owned selector or
+contradictory required-bottom selection. Restrictions remain active through
+placement retries; normal geometry and hardware acceptance still apply.
+This option is diagnostic in `schgen_compact_stage_profile`, not a production
+board default or a way to fabricate an unavailable orientation.
 Evidence: `benchmarks/2026-10-12-two-pilot-carrier-qualification.json`.
 This is 0.6674% less area than 165x158, but 1 mm wider; retain both incumbents.
 Qualitative bypass/access requirements remain UNVERIFIED, and the three

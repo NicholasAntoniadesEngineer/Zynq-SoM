@@ -892,7 +892,16 @@ void shape_choice_replay_contract() {
             "shape-rich first block starved the next block's first alternative");
     config->shape_choice_replays=1;
     // Existing hard shape restrictions must remain hard and survive rollback.
-    Engine pinned(in);setup(pinned,impossible);pinned.owned_shape_choices={{"b0",1},{"b1",1}};
+    auto tagged=in;
+    auto tagged_config=std::make_shared<FloorplanExperiment>(*config);
+    tagged.experiment=tagged_config;
+    for(const auto* name:{"b0","b1"}) {
+        FloorplanZoneShape a;a.w=8;a.h=6;a.tag="first";
+        auto b=a;b.tag="second";b.side="bottom";
+        tagged.geometry.shapes[name]={a,b};
+        tagged_config->offered_shape_tags[name]="second";
+    }
+    Engine pinned(tagged);setup(pinned,impossible);
     require(!pinned.attempt_pack(false)&&pinned.owned_shape_choices==std::map<std::string,int>{{"b0",1},{"b1",1}},
             "replay relaxed caller restrictions");
     require(std::count(pinned.plan.accounting.fallback_events.begin(),pinned.plan.accounting.fallback_events.end(),
