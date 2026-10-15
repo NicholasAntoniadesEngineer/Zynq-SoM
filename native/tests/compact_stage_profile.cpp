@@ -13,6 +13,7 @@
 #include "schgen/ratsnest_gate.hpp"
 #include "schgen/thermal_via_planning.hpp"
 #include "schgen/verification_audits.hpp"
+#include "courtyard_area_diagnostic.hpp"
 #include <charconv>
 #include <cmath>
 #include <chrono>
@@ -728,6 +729,23 @@ std::string trial(const PcbPlacementInput& source, bool compact, int run, int ge
     const auto diagnostic_start = Clock::now();
     const auto gates = check_pcb_placement_gates(input, result.model);
     const PcbCheckInput prepared(result.model);
+    // Postconstruction evidence only; never a free-space or acceptance claim.
+    // Actual final poses may have been refit after the floorplan reservation.
+    std::cout<<"courtyard_coverage scope=final_same_face_courtyards_vs_plan_envelopes"
+             <<" excludes=fanout_clearance_through_hole_access reusable_area=UNVERIFIED\n";
+    for(const auto& block:result.floorplan.plan.interior_blocks) {
+        std::vector<Box4> primary,opposite;
+        for(std::size_t i=0;i<result.model.insts.size();++i) {
+            const auto& part=result.model.insts[i];
+            if(part.sheet==block.name)
+                (part.side==block.side?primary:opposite).push_back(prepared.courtyard_at(i));
+        }
+        std::cout<<"courtyard_coverage sheet="<<block.name<<" primary_side="<<block.side
+                 <<" envelope_mm2="<<block.w*block.h
+                 <<" primary_union_mm2="<<courtyard_diagnostic::union_area(primary)
+                 <<" opposite_union_mm2="<<courtyard_diagnostic::union_area(opposite)
+                 <<" primary_parts="<<primary.size()<<" opposite_parts="<<opposite.size()<<'\n';
+    }
     const auto fanout = check_fanout(prepared,0);
     const auto ratsnest = check_ratsnest(prepared);
     std::cout<<fanout.summary()<<'\n';
