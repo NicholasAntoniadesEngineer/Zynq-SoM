@@ -126,10 +126,10 @@ STEP   census
   CALC   quantize_engagement[escape_scan_precision3dp] = 29            calls      <- klass=pre-proof value=round(value, 3)  ::  count of calls that ran this registered transform
   CALC   quantize_engagement[escape_width_precision4dp] = 293           calls      <- klass=pre-proof value=round(value, 4)  ::  count of calls that ran this registered transform
   CALC   quantize_engagement[est_via_cost] = 542           calls      <- klass=pre-proof value={impedance: 2 legs * 2 layers * (0.6 + 2 * 0.25) + 2 legs *   ::  count of calls that ran this registered transform
-  CALC   quantize_engagement[estimate_pad_precision] = 4865514       calls      <- klass=pre-proof value=round(value, 3)  ::  count of calls that ran this registered transform
-  CALC   quantize_engagement[estimate_position_precision] = 7430284       calls      <- klass=pre-proof value=round(value, 4)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[estimate_pad_precision] = 5092794       calls      <- klass=pre-proof value=round(value, 3)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[estimate_position_precision] = 7701804       calls      <- klass=pre-proof value=round(value, 4)  ::  count of calls that ran this registered transform
   CALC   quantize_engagement[evict_corridor_grid] = 12            calls      <- klass=pre-proof value=round(round(round((origin + v) / 1.27) * 1.27, 4) - origin,   ::  count of calls that ran this registered transform
-  CALC   quantize_engagement[fixed_part_grid] = 84132         calls      <- klass=proof-preserving value=round(round(v / 1.27) * 1.27, 4)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[fixed_part_grid] = 88052         calls      <- klass=proof-preserving value=round(round(v / 1.27) * 1.27, 4)  ::  count of calls that ran this registered transform
   CALC   quantize_engagement[floorplan_candidate_area_precision1dp] = 1             calls      <- klass=pre-proof value=round(value, 1)  ::  count of calls that ran this registered transform
   CALC   quantize_engagement[floorplan_ledger_dimension_precision4dp] = 4             calls      <- klass=pre-proof value=round(value, 4)  ::  count of calls that ran this registered transform
   CALC   quantize_engagement[floorplan_ledger_display_precision4dp] = 266           calls      <- klass=pre-proof value=round(value, 4)  ::  count of calls that ran this registered transform
@@ -150,14 +150,14 @@ STEP   census
   CALC   quantize_engagement[legalize_position_precision4dp] = 15736         calls      <- klass=pre-proof value=round(value, 4)  ::  count of calls that ran this registered transform
   CALC   quantize_engagement[legalize_trial_pose_precision4dp] = 224           calls      <- klass=re-validated value=round(value, 4)  ::  count of calls that ran this registered transform
   CALC   quantize_engagement[mechanical_direction_component] = 32            calls      <- klass=pre-proof value=int(round(value, 0))  ::  count of calls that ran this registered transform
-  CALC   quantize_engagement[occupancy_axis_count] = 80492         calls      <- klass=pre-proof value=int(extent / step) + 1  ::  count of calls that ran this registered transform
-  CALC   quantize_engagement[occupancy_cell_index] = 53797312      calls      <- klass=pre-proof value=int(floor(coordinate / bucket))  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[occupancy_axis_count] = 82916         calls      <- klass=pre-proof value=int(extent / step) + 1  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[occupancy_cell_index] = 57590080      calls      <- klass=pre-proof value=int(floor(coordinate / bucket))  ::  count of calls that ran this registered transform
   CALC   quantize_engagement[occupancy_component_precision4dp] = 25158         calls      <- klass=pre-proof value=round(value, 4)  ::  count of calls that ran this registered transform
-  CALC   quantize_engagement[occupancy_frontier_key1dp] = 236619860     calls      <- klass=pre-proof value=round(distance, 1)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[occupancy_frontier_key1dp] = 250673036     calls      <- klass=pre-proof value=round(distance, 1)  ::  count of calls that ran this registered transform
   CALC   quantize_engagement[occupancy_reach_precision4dp] = 28            calls      <- klass=pre-proof value=round(value, 4)  ::  count of calls that ran this registered transform
-  CALC   quantize_engagement[occupancy_shape_key4dp] = 5807          calls      <- klass=pre-proof value=round(distance, 4)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[occupancy_shape_key4dp] = 6087          calls      <- klass=pre-proof value=round(distance, 4)  ::  count of calls that ran this registered transform
   CALC   quantize_engagement[pack_band_sort_precision4dp] = 198           calls      <- klass=pre-proof value=round(value, 4)  ::  count of calls that ran this registered transform
-  CALC   quantize_engagement[pack_block_area_precision1dp] = 11218         calls      <- klass=pre-proof value=round(value, 1)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[pack_block_area_precision1dp] = 12458         calls      <- klass=pre-proof value=round(value, 1)  ::  count of calls that ran this registered transform
   CALC   quantize_engagement[pack_box_coordinate_precision] = 2676          calls      <- klass=pre-proof value=round(value, digits)  ::  count of calls that ran this registered transform
   CALC   quantize_engagement[pack_bulk_pose_precision4dp] = 12            calls      <- klass=pre-proof value=round(value, 4)  ::  count of calls that ran this registered transform
   CALC   quantize_engagement[pack_centroid_coordinate_precision] = 72            calls      <- klass=pre-proof value=round(value, digits)  ::  count of calls that ran this registered transform
@@ -169,7 +169,7 @@ STEP   census
   CALC   quantize_engagement[pack_edge_component_precision4dp] = 3936          calls      <- klass=pre-proof value=round(value, 4)  ::  count of calls that ran this registered transform
   CALC   quantize_engagement[pack_edge_lower_tick_ceil] = 28            calls      <- klass=pre-proof value=ceil(value * 10000)  ::  count of calls that ran this registered transform
   CALC   quantize_engagement[pack_edge_pose_precision4dp] = 868           calls      <- klass=pre-proof value=round(value, 4)  ::  count of calls that ran this registered transform
-  CALC   quantize_engagement[pack_fanout_reach_precision4dp] = 26144         calls      <- klass=pre-proof value=round(value, 4)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[pack_fanout_reach_precision4dp] = 26784         calls      <- klass=pre-proof value=round(value, 4)  ::  count of calls that ran this registered transform
   CALC   quantize_engagement[pack_halfturn_origin_precision] = 110           calls      <- klass=pre-proof value=round(value, digits)  ::  count of calls that ran this registered transform
   CALC   quantize_engagement[pack_hf_cap_pose_precision4dp] = 6             calls      <- klass=pre-proof value=round(value, 4)  ::  count of calls that ran this registered transform
   CALC   quantize_engagement[pack_isolation_bound_precision3dp] = 16            calls      <- klass=pre-proof value=round(value, 3)  ::  count of calls that ran this registered transform
@@ -187,17 +187,17 @@ STEP   census
   CALC   quantize_engagement[pack_som_cell_precision4dp] = 324           calls      <- klass=pre-proof value=round(value, 4)  ::  count of calls that ran this registered transform
   CALC   quantize_engagement[pack_som_component_pose_precision4dp] = 288           calls      <- klass=pre-proof value=round(value, 4)  ::  count of calls that ran this registered transform
   CALC   quantize_engagement[pack_som_diameter_precision4dp] = 8             calls      <- klass=pre-proof value=round(value, 4)  ::  count of calls that ran this registered transform
-  CALC   quantize_engagement[pack_som_grid_precision0dp] = 5793          calls      <- klass=pre-proof value=round(value, 0)  ::  count of calls that ran this registered transform
-  CALC   quantize_engagement[pack_som_grid_trunc] = 5793          calls      <- klass=pre-proof value=int(value)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[pack_som_grid_precision0dp] = 6073          calls      <- klass=pre-proof value=round(value, 0)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[pack_som_grid_trunc] = 6073          calls      <- klass=pre-proof value=int(value)  ::  count of calls that ran this registered transform
   CALC   quantize_engagement[pack_xy_coordinate_precision] = 20            calls      <- klass=pre-proof value=round(value, digits)  ::  count of calls that ran this registered transform
-  CALC   quantize_engagement[pack_zone_component_precision4dp] = 10264         calls      <- klass=pre-proof value=round(value, 4)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[pack_zone_component_precision4dp] = 10424         calls      <- klass=pre-proof value=round(value, 4)  ::  count of calls that ran this registered transform
   CALC   quantize_engagement[pcb_project_class_precision4dp] = 28            calls      <- klass=pre-proof value=round(value, 4)  ::  count of calls that ran this registered transform
   CALC   quantize_engagement[pcb_project_integer_trunc] = 53            calls      <- klass=pre-proof value=trunc(value)  ::  count of calls that ran this registered transform
   CALC   quantize_engagement[pcb_silk_position_precision3dp] = 70            calls      <- klass=pre-proof value=round(value, 3)  ::  count of calls that ran this registered transform
   CALC   quantize_engagement[pcb_silk_stroke_precision3dp] = 35            calls      <- klass=pre-proof value=round(value, 3)  ::  count of calls that ran this registered transform
   CALC   quantize_engagement[placeholder_zone_half_mm] = 4             calls      <- klass=pre-proof value=round(round(v * 2) / 2, 1)  ::  count of calls that ran this registered transform
   CALC   quantize_engagement[placement_behind_pose_precision4dp] = 4             calls      <- klass=pre-proof value=round(value, 4)  ::  count of calls that ran this registered transform
-  CALC   quantize_engagement[placement_bottom_pose_precision4dp] = 3275          calls      <- klass=pre-proof value=round(value, 4)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[placement_bottom_pose_precision4dp] = 5689          calls      <- klass=pre-proof value=round(value, 4)  ::  count of calls that ran this registered transform
   CALC   quantize_engagement[placement_connector_pose_precision4dp] = 2             calls      <- klass=pre-proof value=round(value, 4)  ::  count of calls that ran this registered transform
   CALC   quantize_engagement[placement_edge_seat_precision4dp] = 32            calls      <- klass=pre-proof value=round(value, 4)  ::  count of calls that ran this registered transform
   CALC   quantize_engagement[placement_emission_pose_precision4dp] = 248192        calls      <- klass=pre-proof value=round(value, 4)  ::  count of calls that ran this registered transform
@@ -213,8 +213,8 @@ STEP   census
   CALC   quantize_engagement[placement_shape_key_precision4dp] = 64            calls      <- klass=pre-proof value=round(value, 4)  ::  count of calls that ran this registered transform
   CALC   quantize_engagement[placement_turn_dimension_precision4dp] = 678           calls      <- klass=pre-proof value=round(value, 4)  ::  count of calls that ran this registered transform
   CALC   quantize_engagement[placement_turn_offset_precision4dp] = 16500         calls      <- klass=pre-proof value=round(value, 4)  ::  count of calls that ran this registered transform
-  CALC   quantize_engagement[placement_variant_dimension_precision4dp] = 216           calls      <- klass=pre-proof value=round(value, 4)  ::  count of calls that ran this registered transform
-  CALC   quantize_engagement[quant_credit] = 11834         calls      <- klass=proof-preserving value=v + 0.05  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[placement_variant_dimension_precision4dp] = 364           calls      <- klass=pre-proof value=round(value, 4)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[quant_credit] = 12130         calls      <- klass=proof-preserving value=v + 0.05  ::  count of calls that ran this registered transform
   CALC   quantize_engagement[ratsnest_area_precision1dp] = 33            calls      <- klass=pre-proof value=round(value, 1)  ::  count of calls that ran this registered transform
   CALC   quantize_engagement[ratsnest_budget_precision1dp] = 1             calls      <- klass=pre-proof value=round(value, 1)  ::  count of calls that ran this registered transform
   CALC   quantize_engagement[ratsnest_dispersion_precision2dp] = 33            calls      <- klass=pre-proof value=round(value, 2)  ::  count of calls that ran this registered transform
@@ -263,7 +263,7 @@ STEP   census
   CALC   fallback_engagement[interior_reseat_pose_trial] = 269           firings    <- stage=plan_lattice ceiling=observational  ::  count of times this registered degraded path bound
   CALC   fallback_engagement[interior_reseat_retry] = 28            firings    <- stage=plan_lattice ceiling=observational  ::  count of times this registered degraded path bound
   CALC   fallback_engagement[interior_reseat_shape_retry] = 12            firings    <- stage=plan_lattice ceiling=observational  ::  count of times this registered degraded path bound
-  CALC   fallback_engagement[interior_reseat_shape_trial] = 2980          firings    <- stage=plan_lattice ceiling=observational  ::  count of times this registered degraded path bound
+  CALC   fallback_engagement[interior_reseat_shape_trial] = 3940          firings    <- stage=plan_lattice ceiling=observational  ::  count of times this registered degraded path bound
   CALC   fallback_engagement[legalize_facing_retry] = 4             firings    <- stage=plan_lattice ceiling=observational  ::  count of times this registered degraded path bound
   CALC   fallback_engagement[legalize_joint_axis] = 8             firings    <- stage=plan_lattice ceiling=observational  ::  count of times this registered degraded path bound
   CALC   fallback_engagement[legalize_joint_proposal] = 4             firings    <- stage=plan_lattice ceiling=observational  ::  count of times this registered degraded path bound
