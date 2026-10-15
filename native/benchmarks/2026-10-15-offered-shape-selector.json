@@ -40,5 +40,12 @@
     "final_guard": "Screens preceded the final non-interior-target validation guard; power_som is an interior target, so the guard does not change these cases. Final tests rebuilt after the guard."
   },
   "defaults": "No new default shape restrictions or candidate generation. CLI option is profiler-only; production board defaults and master imagery remain unchanged.",
+  "final_selection_guard": {
+    "reviewed_base_commit": "1dc56ebe",
+    "change": "After placement, refinement and legalization, independently resolve the selected block index against the original offered tag. Reject mismatches with required_offered_shape stage and subject; do not trust the mutable restriction-index map as acceptance evidence.",
+    "mutation_test": "Corrupt the resolved restriction index from requested fixture-1 to fixture-0 before real engine packing. The geometry can fit, but final tag verification rejects it and records the pilot subject.",
+    "verification": "native_owned_shape_quality_engine_contracts and native_compact_retry_contracts: 2/2 PASS in 5.93 seconds",
+    "scope": "Floorplan completion invariant, not a claim of new full-board hardware qualification or smaller dimensions. Default runs without offered restrictions perform no additional tag checks."
+  },
   "remaining": "No smaller board accepted, full source audit/build/render not repeated. Continue coupled shape/pose/legalization work; overall goal incomplete."
 }

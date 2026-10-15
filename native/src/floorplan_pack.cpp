@@ -935,6 +935,16 @@ bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure,
             }
         }
     }
+    if(in.experiment)for(const auto& [sheet,tag]:in.experiment->offered_shape_tags) {
+        const auto found=std::find_if(plan.interior_blocks.begin(),plan.interior_blocks.end(),
+            [name=sheet](const auto& b){return b.name==name;});
+        const auto& variants=in.geometry.shapes.at(sheet);
+        if(found==plan.interior_blocks.end()||found->shape_idx<0||
+           static_cast<std::size_t>(found->shape_idx)>=variants.size()||
+           variants[static_cast<std::size_t>(found->shape_idx)].tag!=tag) {
+            rejected("required_offered_shape",sheet,compact);return false;
+        }
+    }
     if(in.experiment)for(const auto& sheet:in.experiment->require_bottom_sheets) {
         const auto found=std::find_if(plan.interior_blocks.begin(),plan.interior_blocks.end(),
             [&](const auto& b){return b.name==sheet;});

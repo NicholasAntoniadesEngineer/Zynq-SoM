@@ -53,10 +53,11 @@ FloorplanInput input(int variants) {
     return in;
 }
 struct Result { FloorplanPlan plan; Offers side; int chosen; };
-Result pack(const FloorplanInput& in, const std::set<int>& infeasible = {}) {
+Result pack(const FloorplanInput& in, const std::set<int>& infeasible = {}, bool corrupt_restriction=false) {
     // Same minimal actual-engine setup style as compact_retry_contracts.
     // No wrapper/reimplemented selector, mock estimator or comparator sorting.
     Engine e(in); e.board_size(80, 70); e.plan.punch_free = true;
+    if(corrupt_restriction)e.owned_shape_choices["pilot"]=0;
     FloorplanBlock b; b.name = "pilot"; b.kind = "interior"; b.zone = "E";
     b.w = 8; b.h = 6; b.x = -11; b.y = -13;
     e.plan.interior_blocks.push_back(b); e.zbox[b.name] = {8, 6};
@@ -163,6 +164,15 @@ void synthetic() {
     bool offered_unseated=false;
     try{(void)pack(offered,{1});}catch(const std::runtime_error& e){offered_unseated=std::string(e.what())=="actual engine fixture did not pack";}
     require(offered_unseated,"infeasible offered shape silently fell back");
+    std::vector<FloorplanRejectionObservation> restriction_rejections;
+    offered_options->stage_rejected=[&](const auto& event){restriction_rejections.push_back(event);};
+    bool drift_rejected=false;
+    try{(void)pack(offered,{},true);}catch(const std::runtime_error& e){drift_rejected=std::string(e.what())=="actual engine fixture did not pack";}
+    require(drift_rejected&&!restriction_rejections.empty()&&
+            restriction_rejections.back().stage=="required_offered_shape"&&
+            restriction_rejections.back().subject=="pilot",
+            "final selected shape drift escaped independent tag check or rejection receipt");
+    offered_options->stage_rejected={};
     for(bool edge:{false,true}) {
         Engine absent(offered);
         if(edge){FloorplanBlock b;b.name="pilot";b.kind="edge";absent.plan.edge_blocks.push_back(b);}
