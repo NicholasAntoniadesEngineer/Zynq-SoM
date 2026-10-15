@@ -79,23 +79,62 @@ void projection(const std::filesystem::path& root) {
                 "trial geometry matches independently projected emission geometry");
     }
 }
-void unsafe_noncompact_refit(const std::filesystem::path& root) {
+void noncompact_refit_contract(const std::filesystem::path& root) {
     auto f=placement_fixture::load(root,"carrier");
     auto mode=std::make_shared<FloorplanExperiment>();mode->multiscale_outline=true;
     f.input.floorplan.experiment=mode;
     const auto zones=build_pcb_zone_geometry(f.input);
     auto prepared=prepare_pcb_floorplan(f.input,zones);
-    // Deliberately recreate the earlier solver boundary, where facing was
-    // deferred. This is an unsafe candidate fixture, not board acceptance.
+    // Exercise the deferred-facing boundary. Whether a particular refit is
+    // unsafe depends on current geometry, not a frozen component pose.
     for(auto& term:prepared.compose.index.hard)term.require_positive_facing=false;
     const auto stage=generate_floorplan(prepared);
+    std::map<std::string,std::vector<PcbCheckInstance>> frames;
+    auto observer=std::make_shared<PcbPlacementExperiment>();
+    observer->checkpoint=[&](const auto& row){
+        if(row.stage=="breathe"||row.stage=="refit_facing")frames[row.stage]=row.instances;
+    };
+    f.input.experiment=observer;
     const auto placed=place_pcb_model(f.input,zones,stage);
     const auto fanout=check_fanout(PcbCheckInput(placed.model),0);
     require(fanout.ok,"noncompact adapter accepted a refit that newly starves a foreign subject");
-    const auto& before=placed.stages.at("breathe");
-    const auto& after=placed.stages.at("refit_facing");
-    require(before.at("D20001")==after.at("D20001"),
-            "unsafe power refit must preserve the incumbent diode pose");
+    auto before_model=placed.model,after_model=placed.model;
+    before_model.insts=frames.at("breathe");after_model.insts=frames.at("refit_facing");
+    const PcbCheckInput before(before_model),after(after_model);
+    const auto before_fanout=check_fanout(before,0),after_fanout=check_fanout(after,0);
+    require(!before_fanout.records.empty()&&before_fanout.records.size()==after_fanout.records.size(),
+            "actual refit must preserve a nonempty fanout subject population");
+    std::map<std::string,PcbFanoutRecord> prior;
+    for(const auto& row:before_fanout.records)prior.emplace(row.ref,row);
+    for(const auto& row:after_fanout.records){
+        const auto& old=prior.at(row.ref);
+        require(!row.starved()||(old.starved()&&row.clearance>=old.clearance),
+                "actual refit must not create or worsen starvation for any subject");
+    }
+    const auto policy=pcb_emit_policy(f.input.floorplan.project);
+    require(preserves_preferred_thermal_vias(plan_preferred_thermal_vias(before_model,policy),
+                                           plan_preferred_thermal_vias(after_model,policy)),
+            "actual refit must preserve preferred thermal capacity");
+    // Controlled negative case on the real checkpoint geometry: place the
+    // diode on a healthy foreign subject, rather than assuming the optimiser
+    // will forever offer the same unsafe pose from an old layout.
+    auto crowded=after_model;
+    auto diode=std::find_if(crowded.insts.begin(),crowded.insts.end(),[](const auto& i){return i.ref=="D20001";});
+    require(diode!=crowded.insts.end(),"real diode mutation subject exists");
+    bool witnessed=false;
+    for(const auto& row:after_fanout.records){
+        if(row.starved())continue;
+        const auto subject=std::find_if(crowded.insts.begin(),crowded.insts.end(),[&](const auto& i){return i.ref==row.ref;});
+        if(subject==crowded.insts.end()||subject->sheet==diode->sheet||subject->side!=diode->side)continue;
+        diode->x=subject->x;diode->y=subject->y;
+        const PcbCheckInput trial(crowded);
+        const auto mutated=check_fanout(trial,0);
+        const auto harmed=std::find_if(mutated.records.begin(),mutated.records.end(),[&](const auto& r){return r.ref==row.ref;});
+        if(harmed==mutated.records.end()||!harmed->starved())continue;
+        require(!refit_preserves_fanout(after,trial),"real-board newly starved subject must reject refit");
+        witnessed=true;break;
+    }
+    require(witnessed,"controlled real-board starvation mutation must execute");
 }
 void thermal_pull(const std::filesystem::path& root) {
     auto f=placement_fixture::load(root,"carrier");
@@ -126,7 +165,7 @@ int main(int argc, char** argv) {
         require(!refit_preserves_fanout(model(2.9263,3,false,false,false,14), model(1.87,3,false,false,false,14)), "USB JTAG 14-pin floor cannot regress");
         require(refit_preserves_fanout(model(3,3,false,false,false,14), model(2,3,false,false,false,14)), "14-pin exact floor accepted");
         projection(argv[1]);
-        unsafe_noncompact_refit(argv[1]);
+        noncompact_refit_contract(argv[1]);
         thermal_pull(argv[1]);
         std::cout << "11 refit fanout policies and accounted emission projection PASS\n";
         return 0;
