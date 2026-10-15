@@ -232,6 +232,37 @@ void compose_contracts(const std::filesystem::path& dir) {
     require(floorplan_evaluate_terms(base,{}).empty(),"empty term index evaluates without fabricated terms");
 }
 void facing_projection_contracts() {
+    for(bool swap_axes:{false,true})for(bool reflect:{false,true})for(bool compact:{false,true})for(bool feasible:{false,true}) {
+        // Physical clearance is not a minimum directional projection. A
+        // narrow legal pocket can face a target with less than clear mm of
+        // positive projection, while remaining strictly below 90 degrees.
+        FloorplanLegalizeInput in;in.board_w=in.board_h=10;in.clear=.3;in.compact=compact;
+        in.joint_separation_states=64;
+        const auto transformed=[&](Box4 b){
+            if(reflect){const double lo=10-b.x1;b.x1=10-b.x0;b.x0=lo;}
+            if(swap_axes){std::swap(b.x0,b.y0);std::swap(b.x1,b.y1);}return b;
+        };
+        in.fixed_rects={{"left",transformed({0,0,4.7,10})},{"right",transformed({7.8,0,10,10})}};
+        const double target=feasible?6.2:5.9;
+        const auto core=transformed({target-.1,0,target+.1,2});
+        in.som_core_page={core.x0+in.origin.first,core.y0+in.origin.second,
+                          core.x1+in.origin.first,core.y1+in.origin.second};
+        const double out=reflect?0:2,input=reflect?2:0;
+        if(swap_axes)in.metrics["source"].offsets={{"out",1,out},{"in",1,input}};
+        else in.metrics["source"].offsets={{"out",out,1},{"in",input,1}};
+        FloorplanTerm term;term.kind="facing";term.subject="source";term.target_raw="@som";
+        term.enforced=true;term.require_positive_facing=true;term.out_refs={"out"};in.index.hard={term};
+        const auto seed=transformed({5.3,5,7.3,7});
+        std::vector<FloorplanLegalizeVar> vars{{"source",2,2,{seed.x0,seed.y0},seed.x0,seed.y0}};
+        std::vector<std::string> log;
+        require(floorplan_legalize_compact(in,vars,log)==feasible,"facing recovery must distinguish the legal narrow pocket from a backwards-only pocket");
+        if(!feasible){require(vars[0].x==seed.x0&&vars[0].y==seed.y0,"failed directional recovery must preserve its incumbent");continue;}
+        double coordinate=swap_axes?vars[0].y:vars[0].x;
+        if(reflect)coordinate=8-coordinate;
+        require(coordinate>=5&&coordinate<5.2,"facing recovery must use the legal narrow pocket");
+        require(floorplan_evaluate_terms(in,{{"source",{vars[0].x,vars[0].y}}}).front().ok,
+                "narrow-pocket facing recovery bypassed the exact positive-direction gate");
+    }
     std::size_t combined_runs=0;
     for(bool joint:{false,true})
     for(const auto [dx,dy]:std::vector<FloorplanPoint>{{1,0},{-1,0},{0,1},{0,-1},{1,1},{-1,1},{1,-1},{-1,-1}})
