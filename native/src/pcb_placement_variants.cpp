@@ -379,6 +379,19 @@ void append_contract_group_faces(Context& ctx,Geometry& g,const std::string& she
             auto compact=offer;
             std::vector<std::string> leftovers;
             for(const auto& group:*groups)if(group.refs.size()==1)leftovers.push_back(group.refs.front());
+            // Only these singletons can move, and this pass changes x only.
+            // If a fixed member already owns the rightmost courtyard extent,
+            // no sequence of left contacts can reduce the envelope area. Avoid
+            // constructing and checking candidates that cannot be published.
+            const auto extent_model=model(offer);
+            double rightmost=0,fixed_rightmost=0;
+            for(std::size_t i=0;i<extent_model.model().insts.size();++i) {
+                const auto right=extent_model.courtyard_at(i).x1;
+                rightmost=std::max(rightmost,right);
+                if(std::find(leftovers.begin(),leftovers.end(),extent_model.model().insts[i].ref)==leftovers.end())
+                    fixed_rightmost=std::max(fixed_rightmost,right);
+            }
+            if(fixed_rightmost>=rightmost)continue;
             std::sort(leftovers.begin(),leftovers.end(),[&](const auto& a,const auto& b){
                 const auto position=[&](const auto& ref){return compact.top_off.count(ref)?compact.top_off.at(ref):compact.bot_off.at(ref);};
                 return std::make_pair(-position(a).first,a)<std::make_pair(-position(b).first,b);
