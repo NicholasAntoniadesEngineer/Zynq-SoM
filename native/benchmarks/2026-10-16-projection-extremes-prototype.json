@@ -22,5 +22,14 @@
     "local_log": "native/build/projection-extremes-strict-162x150.log",
     "timing_limit": "Concurrent full-suite activity; not a controlled timing comparison"
   },
-  "remaining": "Integrate only with reflected/axis-swapped, contradictory, unchanged-incumbent and independent callback/operation-accounting regressions. Test combined constraints; two global extreme allocations do not constitute a complete half-plane solver. Preserve failures; do not infer carrier success from the synthetic recovery."
+  "transformed_matrix": {
+    "source": "facing_projection_matrix.cpp",
+    "cases": 32,
+    "production_known_feasible_misses": 16,
+    "prototype_known_feasible_misses": 0,
+    "checks": "Axis swap, both reflections, compaction on/off, opposing strict-facing contradiction; independent board/obstacle/direction checks, exact term evaluation, failure atomicity, deterministic geometry/logs/operation counts and paired budget-bounded joint callbacks. Already-valid noncompact incumbents skip joint fallback and retain their pose.",
+    "logs": ["native/build/facing-projection-matrix-baseline.log", "native/build/facing-projection-matrix.log"]
+  },
+  "existing_floorplan_contracts": "Isolated prototype linked ahead of the unchanged core archive passed all 37249 checks in the existing floorplan contract executable, including joint separation oracle and frozen board fixtures. Local log: native/build/floorplan-contracts-extremes.log.",
+  "remaining": "Integrate the new matrix into the maintained test suite and verify independent scalar-observer accounting plus source audits. Test combined constraints; two global extreme allocations do not constitute a complete half-plane solver. Preserve failures; do not infer carrier success from the synthetic recovery."
 }
