@@ -2,7 +2,10 @@
 #include "schgen/authoring.hpp"
 #include "historical_input_contracts.hpp"
 #include <algorithm>
+#include <cstdlib>
+#include <fstream>
 #include <iostream>
+#include <unistd.h> // Darwin declares ::mkdtemp here, as used by other native tests.
 
 namespace {
 std::size_t checks = 0;
@@ -14,6 +17,94 @@ const schgen::JsonNode& field(const schgen::JsonNode& n, const std::string& key)
     const auto* p = schgen::object_field(n, key);
     if (!p) throw std::runtime_error("missing fixture field " + key);
     return *p;
+}
+struct SidecarOverlay {
+    std::filesystem::path path;
+    SidecarOverlay() {
+        auto pattern = (std::filesystem::temp_directory_path() / "board-input-sidecar.XXXXXX").string();
+        if (!::mkdtemp(pattern.data())) throw std::runtime_error("cannot create sidecar overlay");
+        path = pattern;
+    }
+    SidecarOverlay(const SidecarOverlay&) = delete;
+    SidecarOverlay& operator=(const SidecarOverlay&) = delete;
+    ~SidecarOverlay() {
+        std::error_code error;
+        std::filesystem::remove_all(path, error);
+    }
+};
+void sidecar_independence(const schgen::ProjectPaths& paths,
+        const std::vector<schgen::ProjectCircuit>& circuits, const schgen::LinkResult& link,
+        const schgen::KicadNetlist& nets) {
+    using namespace schgen;
+    namespace fs = std::filesystem;
+    SidecarOverlay overlay;
+    // Keep explicit source paths (including libraries and contracts) unchanged.
+    // Only project-root-relative reads need links; never link generated output.
+    auto isolated = paths;
+    isolated.project_root = overlay.path;
+    for (const auto* name : {"floorplan.json", "som_mapping.json", "research/si_spec.json"}) {
+        const auto source = paths.project_root / name;
+        if (!fs::exists(source)) continue;
+        const auto destination = overlay.path / name;
+        fs::create_directories(destination.parent_path());
+        fs::create_symlink(source, destination);
+    }
+    const auto sidecar = overlay.path / "escape_block.json";
+    require(!fs::exists(sidecar), "overlay starts without generated sidecar");
+    const auto baseline = load_board_inputs(isolated, circuits, link, nets);
+    require(baseline.floorplan.compose.corridors.empty(), "missing sidecar leaves raw corridors empty");
+    auto check = [&](const std::string& state) {
+        const auto actual = load_board_inputs(isolated, circuits, link, nets);
+        const auto context = paths.project_root.filename().string() + "/" + state;
+        const auto& a = actual.floorplan;
+        const auto& b = baseline.floorplan;
+        require(a.compose.corridors.empty(), context + ": generated corridors ignored");
+        require(authoring_json_equal(a.project.raw, b.project.raw) && a.sheet_index == b.sheet_index,
+                context + ": project policy and sheet order unchanged");
+        require(a.sheets.size() == b.sheets.size(), context + ": sheet count unchanged");
+        for (std::size_t i = 0; i < a.sheets.size(); ++i)
+            require(authoring_json_equal(authored_circuit_json(a.sheets[i]), authored_circuit_json(b.sheets[i])),
+                    context + ": authored circuit unchanged");
+        require(actual.netlist.size() == nets.size(), context + ": caller netlist count unchanged");
+        for (std::size_t i = 0; i < nets.size(); ++i) {
+            require(actual.netlist[i].first == nets[i].first && actual.netlist[i].second.size() == nets[i].second.size(),
+                    context + ": caller net unchanged");
+            for (std::size_t j = 0; j < nets[i].second.size(); ++j)
+                require(actual.netlist[i].second[j].ref == nets[i].second[j].ref &&
+                        actual.netlist[i].second[j].pin == nets[i].second[j].pin,
+                        context + ": caller connectivity unchanged");
+        }
+        require(actual.interface_bytes == baseline.interface_bytes &&
+                som_interface_json(actual.som_interface) == som_interface_json(baseline.som_interface) &&
+                actual.function_map == baseline.function_map, context + ": interface and mapping unchanged");
+        require(a.footprint_of == b.footprint_of && a.courtyard_dims == b.courtyard_dims &&
+                actual.footprints.size() == baseline.footprints.size(), context + ": footprint resolution unchanged");
+        for (const auto& [key, footprint] : baseline.footprints)
+            require(actual.footprints.at(key)->bytes == footprint->bytes, context + ": footprint bytes unchanged");
+        require(actual.return_path_footprints.size() == baseline.return_path_footprints.size(),
+                context + ": return geometry count unchanged");
+        for (const auto& [ref, footprint] : baseline.return_path_footprints)
+            require(actual.return_path_footprints.at(ref)->bytes == footprint->bytes,
+                    context + ": return geometry unchanged");
+        require(actual.two_side == baseline.two_side && a.module_offset == b.module_offset &&
+                a.place_clear == b.place_clear && a.compact_search == b.compact_search && a.origin == b.origin,
+                context + ": placement options unchanged");
+    };
+    check("missing");
+    for (const auto& [state, contents] : std::vector<std::pair<std::string, std::string>>{
+            {"stale", R"({"t1_constraints":{"corridors":{"Z:stale":{"rect":[9000,9001,9999,9998]},"A:stale":{"rect":[-9000,-9001,-8000,-8001]}}},"escape_meta":{"coexistence":[{"ref":"STALE","sheet":"power","verdict":"FAIL"}]}})"},
+            {"invalid-json", "{not valid JSON"},
+            {"invalid-corridors", R"({"t1_constraints":{"corridors":[]}})"},
+            {"invalid-rectangle", R"({"t1_constraints":{"corridors":{"bad":{"rect":[1,"bad",3]}}}})"}}) {
+        std::ofstream output(sidecar, std::ios::binary | std::ios::trunc);
+        output << contents;
+        output.close();
+        require(!output.fail(), "write isolated " + state + " sidecar");
+        check(state);
+    }
+    require(fs::remove(sidecar), "remove only isolated generated sidecar");
+    check("missing-after-malformed");
+    require(baseline.floorplan.compose.corridors.empty(), "earlier input snapshot remains unchanged");
 }
 const std::string rtc_id = "RV-3028-C7-32.768kHz-1ppm-TA-QC:RV-3028-C7-32.768kHz-1ppm-TA-QC";
 std::string zero_court_line(const std::string& point) {
@@ -79,22 +170,40 @@ int main(int argc, char** argv) {
                     "caller extracted netlist must not be replaced");
             const auto reference = parse_json_file((root / "native/tests/data/floorplan" / (std::string(project) + ".json")).string());
             const auto& expected = field(reference, "input");
-            const auto& corridors = field(field(expected, "compose"), "corridors").array_value;
-            require(input.floorplan.compose.corridors.size() == corridors.size(), "prior corridor count");
-            for (std::size_t i = 0; i < corridors.size(); ++i) {
-                const auto& values = corridors[i].array_value;
-                const auto& actual = input.floorplan.compose.corridors[i];
-                require(actual.first == values[0].string_value &&
-                    actual.second.x0 == values[1].number_value && actual.second.y0 == values[2].number_value &&
-                    actual.second.x1 == values[3].number_value && actual.second.y1 == values[4].number_value,
-                    "sorted live corridor in floorplan coordinates");
-            }
-            require(object_field(input.prior_escape_sidecar, "escape_meta") != nullptr,
-                    "same source snapshot preserves coexistence records");
+            require(input.floorplan.compose.corridors.empty(), "generated prior corridors leaked into board inputs");
             require(input.floorplan.sheets.size() == field(expected, "sheets").array_value.size(), "live sheet count");
             for (std::size_t i = 0; i < input.floorplan.sheets.size(); ++i) {
                 const auto& live = input.floorplan.sheets[i];
-                const auto& frozen = field(expected,"sheets").array_value[i];
+                auto frozen = field(expected,"sheets").array_value[i];
+                if(live.name=="power_som") {
+                    // d2a1ec20: explicitly project the immutable historical
+                    // enable network to the reviewed direct-VIN topology.
+                    auto original=parse_circuit_ir(frozen);
+                    const auto retired=[](const std::string& ref){return ref=="R12"||ref=="D5"||ref=="C20";};
+                    require(std::count_if(original.parts.begin(),original.parts.end(),[&](const auto& p){return retired(p.ref);})==3,
+                            "historical enable network has exactly three retired parts");
+                    original.parts.erase(std::remove_if(original.parts.begin(),original.parts.end(),[&](const auto& p){return retired(p.ref);}),original.parts.end());
+                    bool enable=false,vin=false;
+                    for(auto& net:original.nets){
+                        if(net.name=="EN_5V_SOM"){
+                            std::vector<std::string> pins;for(const auto& p:net.pins)pins.push_back(p.ref+"."+p.pin);
+                            require(pins==std::vector<std::string>({"U4.7","R12.2","D5.1","C20.1"}),"historical EN topology preimage");
+                            enable=true;
+                        }
+                        net.pins.erase(std::remove_if(net.pins.begin(),net.pins.end(),[&](const auto& p){return retired(p.ref)||(p.ref=="U4"&&p.pin=="7");}),net.pins.end());
+                        if(net.name=="+VIN_SYS"){net.pins.insert(net.pins.begin(),{"U4","7"});vin=true;}
+                    }
+                    require(enable&&vin,"historical enable/VIN nets present");
+                    original.nets.erase(std::remove_if(original.nets.begin(),original.nets.end(),[](const auto& n){return n.name=="EN_5V_SOM";}),original.nets.end());
+                    frozen=authored_circuit_json(original);
+                    for(int mutation=0;mutation<3;++mutation){
+                        auto changed=live;
+                        if(mutation==0)changed.parts.front().value+="_drift";
+                        if(mutation==1)changed.title+="_drift";
+                        if(mutation==2)for(auto& n:changed.nets)for(auto& p:n.pins)if(p.ref=="U4"&&p.pin=="7")p.pin="8";
+                        require(!authoring_json_equal(authored_circuit_json(changed),frozen),"direct-enable projection hid unrelated/enable mutation");
+                    }
+                }
                 historical_input_contracts::check(live, project, [&](const auto& projected) {
                     return authoring_json_equal(authored_circuit_json(projected), frozen);
                 });
@@ -102,8 +211,19 @@ int main(int argc, char** argv) {
             require(input.floorplan.som.w == field(field(expected,"som"),"w").number_value &&
                     input.floorplan.som.h == field(field(expected,"som"),"h").number_value, "live SoM outline");
             std::size_t corrected_footprints = 0;
+            std::size_t retired_footprints = 0;
             for (const auto& [id, key] : field(expected,"footprint_of").object_value) {
                 const auto live = input.floorplan.footprint_of.find(id);
+                // d2a1ec20 removed the sole SOD-123 user, power_som D5.
+                // Only this reviewed retirement may be absent from the oracle.
+                if (id == "Diode_SMD:D_SOD-123") {
+                    for (const auto& sheet : input.floorplan.sheets)
+                        for (const auto& part : sheet.parts)
+                            require(part.footprint != id, "retired diode footprint still requested");
+                    require(live == input.floorplan.footprint_of.end(), "retired diode footprint still loaded");
+                    ++retired_footprints;
+                    continue;
+                }
                 require(live != input.floorplan.footprint_of.end(), "resolve " + id);
                 const auto& frozen = field(field(field(expected,"footprints"),key.string_value),"text").string_value;
                 const auto& bytes = input.footprints.at(live->second)->bytes;
@@ -111,6 +231,7 @@ int main(int argc, char** argv) {
                     "independent exact footprint " + id);
                 if (id == rtc_id) { ++corrected_footprints; footprint_mutations(bytes, frozen); }
             }
+            require(retired_footprints == 1, "exact reviewed footprint retirement scope");
             require(corrected_footprints == (std::string(project) == "carrier" ? 1u : 0u),
                 "exact reviewed footprint correction scope");
             for (const auto& [id, value] : field(expected,"courtyard_dims").object_value) {
@@ -127,6 +248,7 @@ int main(int argc, char** argv) {
             require(!variant.two_side && variant.floorplan.place_clear == 0.75 &&
                     variant.floorplan.module_offset == changed.module_offset, "explicit caller policy retained");
             require(input.two_side && input.floorplan.place_clear == 0.5, "prior snapshot stays unchanged");
+            sidecar_independence(paths, circuits, link, nets);
         }
         std::cout << "Board inputs: " << checks << " live-source contracts passed\n";
         return 0;

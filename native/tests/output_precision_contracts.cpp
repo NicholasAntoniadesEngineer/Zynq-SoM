@@ -70,6 +70,22 @@ void bytes(std::ostream& out,const std::string& name,const std::string& text){
     // Exact bytes (including diagnostic spelling), not parsed/reformatted JSON.
     out<<name<<' '<<text.size()<<'\n'<<text<<'\n';
 }
+// The legacy transcript mixes emitted bytes with implementation-work counts.
+// Current work is checked against independent function-entry observers in end(),
+// not against how often the old implementation called its generic round helper.
+// Preserve those counts in the transcript; normalise only for byte-oracle comparison.
+std::string rendered_evidence(std::string text){
+    for(const auto* label:{"svg","silk","project","nets","ratsnest supplied","ratsnest owned","escape copper","escape plan"}){
+        const auto prefix=std::string("\n")+label+" legacy_py_round_entries ";
+        std::size_t at=0;
+        while((at=text.find(prefix,at))!=std::string::npos){
+            at+=prefix.size();const auto end=text.find('\n',at);
+            require(end!=std::string::npos&&end>at&&text.find_first_not_of("0123456789",at)>=end,"invalid round-count transcript");
+            text.replace(at,end-at,"observed");at+=8;
+        }
+    }
+    return text;
+}
 PcbEscapeInput escape_input(const placement_fixture::Fixture& f,const PcbModel& m){
     auto v1=check_return_path(f.input.som_interface,f.input.return_path_footprints);
     std::map<std::string,PcbEscapeSignalClass> triage;
@@ -84,23 +100,35 @@ PcbEscapeInput escape_input(const placement_fixture::Fixture& f,const PcbModel& 
 void rats(std::ostream& out,const RatsnestGateResult& r){
     out<<r.ok<<' '<<r.cross_mm<<' '<<r.total_mm<<' '<<r.cross_budget_mm<<' '<<r.n_cross<<'\n';
     for(const auto& [name,n,a,d]:r.clusters)out<<std::quoted(name)<<' '<<n<<' '<<a<<' '<<d<<'\n';
-    bytes(out,"ratsnest report",r.summary());
+    auto report=r.summary();
+    // The historical wording called this advisory reference a budget. Verify
+    // the current wording, then project only that reviewed narrative change.
+    const auto advisory=report.find("(advisory reference ");
+    require(advisory!=std::string::npos,"ratsnest must label the wire reference advisory");
+    report.replace(advisory,std::string("(advisory reference ").size(),"(budget ");
+    bytes(out,"ratsnest report",report);
 }
 void board(std::ostream& out,const std::filesystem::path& root,const std::string& name){
     auto f=placement_fixture::load(root,name);
     const auto model=pcb_model_from_json(f.model,f.expected_pool);
     auto policy=pcb_emit_policy(f.input.floorplan.project);
+    // This immutable rendering baseline predates service-only PCB labels.
+    // Match its explicit input policy; live full-board construction below
+    // still uses the current production policy and checks reproducibility.
+    policy.interface_reference_labels_only=false;
     out<<"BOARD "<<name<<'\n';
     QuantizationCounts counts;
-    // The placement fixture's supplied plan intentionally omits authoring-only
-    // edge/connector metadata. Use its frozen notes for this rendering probe;
-    // --full below separately constructs complete live notes and documents.
+    // The immutable rendering oracle was captured with a supplied plan whose
+    // loader omitted edge metadata. Reproduce that explicit legacy input here;
+    // the corrected fixture loader and live --full path retain real edges.
+    auto rendering_plan=f.stage.plan;
+    for(auto& block:rendering_plan.edge_blocks)block.edge.clear();
     const auto floor=parse_json_file((root/"native/tests/data/floorplan"/(name+".json")).string());
     std::vector<FloorplanNote> notes;
     for(const auto& n:placement_fixture::field(placement_fixture::field(floor,"expected"),"notes").array_value)
         notes.push_back({static_cast<int>(placement_fixture::number(n,"n")),placement_fixture::string(n,"block"),
                          placement_fixture::string(n,"short"),placement_fixture::string(n,"long")});
-    begin();auto svg=render_floorplan_svg(f.stage.plan,notes SINK);end(counts,"svg",&out);
+    begin();auto svg=render_floorplan_svg(rendering_plan,notes SINK);end(counts,"svg",&out);
     bytes(out,"svg",svg);
     counts.clear();begin();auto emission=render_pcb(model,policy SINK);end(counts,"silk",&out);
     bytes(out,"pcb",emission.pcb);
@@ -205,6 +233,11 @@ void full_board(std::ostream& out,const std::filesystem::path& root,const std::s
     const auto svg=output_precision_fixture::select(result.floorplan.documents.accounting.quantization_engagements);
     const auto escape=output_precision_fixture::select(result.placement_accounting.quantization_engagements);
     auto total=svg;checked_quantization_merge(total,escape);
+    // Current-pose corridor derivation now executes output-precision boundaries
+    // in floorplanning too. Include that distinct owner, not just emission.
+    checked_quantization_merge(total,output_precision_fixture::select(result.floorplan.plan.accounting.quantization_engagements));
+    if(result.zone_accounting_ownership==PcbZoneAccountingOwnership::SeparateFromFloorplan)
+        checked_quantization_merge(total,output_precision_fixture::select(result.zone_accounting.quantization_engagements));
     require(total==output_precision_fixture::select(receipt.quantization_engagements),"receipt owners overlap or omit work");
     begin();const auto again=pcb_placement_accounting(result);end({},"aggregate replay");
     require(again.quantization_engagements==receipt.quantization_engagements,"aggregate replay changed counts");
@@ -299,7 +332,14 @@ int main(int argc,char** argv){try{
     if(argc>=3&&std::string(argv[2])!="--full"){
         const auto frozen=placement_fixture::read(argv[2]);
         const auto boundary=frozen.find("full board carrier legacy_py_round_entries ");
-        require(out.str()==frozen.substr(0,boundary),"immutable fixed-input rendering bytes/counts differ");
+        const auto actual=rendered_evidence(out.str()),expected=rendered_evidence(frozen.substr(0,boundary));
+        require(rendered_evidence(out.str()+"corrupted")!=expected,"rendered-byte mutation escaped comparison");
+        if(actual!=expected){
+            const auto diff=std::mismatch(actual.begin(),actual.end(),expected.begin(),expected.end());
+            const auto at=static_cast<std::size_t>(diff.first-actual.begin());
+            throw std::runtime_error("immutable fixed-input rendering bytes/counts differ at "+std::to_string(at)+
+                " actual="+actual.substr(at,200)+" expected="+expected.substr(at,200));
+        }
     }
     if(full){
         std::ostringstream first,second;first<<std::hexfloat;second<<std::hexfloat;

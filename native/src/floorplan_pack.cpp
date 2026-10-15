@@ -867,8 +867,9 @@ bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure,
             auto fix=[&](const FloorplanBlock& b){li.fixed_rects.emplace_back(b.name,Box4{b.x,b.y,b.x+b.w,b.y+b.h}); li.fixed_poses[b.name]={b.x,b.y};};
             for (const auto& b:plan.edge_blocks) fix(b);
             for (const auto& b:plan.interior_blocks) if (!movable.count(b.name)) fix(b);
-            li.fixed_rects.insert(li.fixed_rects.end(),in.compose.corridors.begin(),in.compose.corridors.end());
-            for (const auto& [name, box]:in.compose.corridors) {
+            const auto corridors=current_escape_corridors();
+            li.fixed_rects.insert(li.fixed_rects.end(),corridors.begin(),corridors.end());
+            for (const auto& [name, box]:corridors) {
                 (void)box;
                 li.primary_fanout[name]={}; // Logical corridor: retain its existing exclusion gap.
             }

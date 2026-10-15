@@ -138,6 +138,14 @@ public:
     bool shape_replay_trace_started=false;
     std::map<std::string,int> shape_replay_choices;
     std::vector<CrossPart> cross_parts;
+    struct EscapeRow {
+        std::string name;
+        FloorplanPoint offset;
+        double rotation=0,lo=0,hi=0;
+        int row=0;
+        ContactGeom contacts;
+    };
+    std::vector<EscapeRow> escape_rows;
     std::vector<CrossNet> cross_nets;
     std::map<std::string, std::vector<std::size_t>> nets_by_sheet;
     std::map<std::string, Box4> connector_pad_boxes;
@@ -163,6 +171,8 @@ public:
     void initialize();
     void prepare_geometry();
     void prepare_cross();
+    void prepare_escape_rows();
+    std::vector<std::pair<std::string,Box4>> current_escape_corridors();
     double packing_area_bound(bool free);
     double estimate(const std::vector<const FloorplanBlock*>& blocks,
                     const std::string& only_sheet = {});

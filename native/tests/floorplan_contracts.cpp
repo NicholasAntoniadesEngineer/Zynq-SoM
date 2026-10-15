@@ -126,8 +126,8 @@ FloorplanInput input(const J& n) {
     in.compose.index.hard=terms(field(index,"hard")); in.compose.index.soft=terms(field(index,"soft")); in.compose.index.na=terms(field(index,"na"));
     for (const auto& [k,v]:field(co,"metrics").object_value) in.compose.metrics[k]=metrics(v);
     for (const auto& row:field(co,"shape_metrics").array_value) in.compose.shape_metrics[{str(row,"sheet"),static_cast<int>(num(row,"index"))}]=metrics(field(row,"metrics"));
-    for (const auto& v:field(co,"corridors").array_value) in.compose.corridors.emplace_back(v.array_value[0].string_value,
-        Box4{v.array_value[1].number_value,v.array_value[2].number_value,v.array_value[3].number_value,v.array_value[4].number_value});
+    // Do not replay generated prior-run reservations into the current solver.
+    // The immutable fixture retains them for independent geometry comparisons.
     for (const auto& s:strings(field(co,"wired_participants"))) in.compose.wired_participants.insert(s);
     in.accounting.fallback_events=strings(field(n,"zone_events"));
     if (const auto* counts=object_field(n,"zone_quant")) for (const auto& [k,v]:counts->object_value)

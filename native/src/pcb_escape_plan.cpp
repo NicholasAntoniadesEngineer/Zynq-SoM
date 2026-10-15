@@ -3,6 +3,19 @@
 
 namespace schgen {
 using namespace pcb_escape;
+Box4 pcb_escape_row_corridor(const ContactGeom& contacts,double lo,double hi,int row,
+                            double x,double y,double rotation,QuantizationCounts* counts) {
+    if((row!=-1&&row!=1)||!std::isfinite(lo)||!std::isfinite(hi)||lo>hi||
+       !std::isfinite(x)||!std::isfinite(y)||!std::isfinite(rotation))
+        throw PcbEscapeError("invalid escape row corridor geometry");
+    const auto [tip,escape_v]=escape_lane_extents(contacts.row_v,contacts.half_h,lane_handle);
+    const auto a=uv_to_board(x,y,lo-.5,signed_mag(tip,row),rotation);
+    const auto b=uv_to_board(x,y,hi+.5,signed_mag(escape_v+.3,row),rotation);
+    return {escape_corridor_precision4dp(std::min(a.first,b.first),counts),
+            escape_corridor_precision4dp(std::min(a.second,b.second),counts),
+            escape_corridor_precision4dp(std::max(a.first,b.first),counts),
+            escape_corridor_precision4dp(std::max(a.second,b.second),counts)};
+}
 PcbEscapePlanResult build_pcb_escape_plan(const PcbEscapeInput &input, QuantizationCounts* counts) {
     const auto &m = input.model();
     const auto conns = prepare_connectors(m, counts);
@@ -82,13 +95,8 @@ PcbEscapePlanResult build_pcb_escape_plan(const PcbEscapeInput &input, Quantizat
         }
         for (const auto &[sign, entries] : rows) {
             double lo = std::get<0>(entries.front()), hi = std::get<0>(entries.back());
-            auto a = board(inst, lo - .5, signed_mag(tip, sign));
-            auto b = board(inst, hi + .5, signed_mag(escape_v + .3, sign));
             plan.corridors[ref + (sign > 0 ? ":S" : ":N")] = {
-                {escape_corridor_precision4dp(std::min(a.first, b.first), counts),
-                 escape_corridor_precision4dp(std::min(a.second, b.second), counts),
-                 escape_corridor_precision4dp(std::max(a.first, b.first), counts),
-                 escape_corridor_precision4dp(std::max(a.second, b.second), counts)},
+                pcb_escape_row_corridor(c.contacts,lo,hi,sign,inst.x,inst.y,inst.rotation,counts),
                 "DF40 escape-lane corridor (T2) — composition legalizer must keep parts + zones "
                 "out"};
         }

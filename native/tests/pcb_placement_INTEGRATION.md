@@ -15,7 +15,8 @@ Public entry points are in `schgen/pcb_placement.hpp`,
 1. `build_pcb_zone_geometry(input)` derives the complete zone and shape offers.
 2. `prepare_pcb_floorplan(input, zones)` derives the live compose term index,
    local/per-shape metrics, channel demands, impedance classes and participants.
-   It retains the caller's prior escape corridors, not precomputed compose data.
+   Escape reservations are derived from current connector/pad geometry and the
+   current snapped SoM pose; generated prior-run sidecars are not inputs.
 3. `build_pcb_model(input)` owns that preparation, the native floorplan solve,
    shape binding and every subsequent placement stage through escape copper.
 4. `place_pcb_model(input, zones, stage)` is the lower-level alternative when
