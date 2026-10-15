@@ -1,38 +1,38 @@
-LAW-5 RATSNEST GATE: PASS (board 163 x 151 mm)
+LAW-5 RATSNEST GATE: PASS (board 162 x 151 mm)
   off-board parts: 0
   dispersed subsystems: 0 (threshold 9x)
-  cross-subsystem airwire: 17130.5 mm (advisory reference 15532 mm, OVER; 397 edges; 17130.5/24100.4 mm = 71.1% of total)
+  cross-subsystem airwire: 16750 mm (advisory reference 15484 mm, OVER; 401 edges; 16750/23774.3 mm = 70.5% of total)
   per-subsystem clusters (n, bbox mm, dispersion):
     som_decoupling         n=18  bbox_area=     813 disp=  8.8
-    board_aux              n=18  bbox_area=     736 disp=  4.8
-    user_io                n=17  bbox_area=     787 disp=  4.0
+    bringup_en             n=15  bbox_area=     461 disp=  4.6
     lcd                    n=20  bbox_area=    1121 disp=  3.7
     pmod_expansion         n=15  bbox_area=    1271 disp=  3.5
+    usb_jtag               n=19  bbox_area=     880 disp=  3.4
     fmc                    n=8   bbox_area=    1109 disp=  3.1
     power_mon              n=10  bbox_area=     302 disp=  3.1
-    power_som              n=20  bbox_area=     556 disp=  2.9
+    board_services         n=9   bbox_area=    1084 disp=  3.0
     usbc_otg               n=12  bbox_area=     577 disp=  2.9
     motor_pwm              n=13  bbox_area=     825 disp=  2.8
+    power                  n=51  bbox_area=    1245 disp=  2.8
     camera                 n=13  bbox_area=     522 disp=  2.6
     pd_input               n=13  bbox_area=     578 disp=  2.6
-    debug_boot             n=10  bbox_area=     787 disp=  2.5
-    power                  n=51  bbox_area=    1112 disp=  2.5
+    power_som              n=20  bbox_area=     486 disp=  2.5
     uart_bridge            n=10  bbox_area=     164 disp=  2.4
-    usb_jtag               n=19  bbox_area=     549 disp=  2.1
     usb_pd                 n=6   bbox_area=      78 disp=  2.1
+    user_io                n=17  bbox_area=     408 disp=  2.0
     hdmi_rx_term           n=10  bbox_area=      86 disp=  2.0
+    debug_boot             n=10  bbox_area=     595 disp=  1.9
     hdmi_rx                n=10  bbox_area=     491 disp=  1.9
     microsd                n=15  bbox_area=     639 disp=  1.9
     usb_jtag_connector     n=6   bbox_area=     207 disp=  1.8
     pmod                   n=26  bbox_area=    1038 disp=  1.8
-    board_services         n=9   bbox_area=     641 disp=  1.8
-    hdmi_tx                n=12  bbox_area=     540 disp=  1.8
+    hdmi_tx                n=12  bbox_area=     530 disp=  1.7
     board_qwiic            n=2   bbox_area=      76 disp=  1.7
     rj45_connector         n=3   bbox_area=     534 disp=  1.7
     motor_sense            n=10  bbox_area=    1286 disp=  1.6
     ethernet               n=10  bbox_area=     533 disp=  1.6
     usb_uart_connector     n=5   bbox_area=     157 disp=  1.5
-    bringup_rails          n=23  bbox_area=     636 disp=  1.4
-    bringup_en             n=15  bbox_area=     120 disp=  1.2
+    bringup_en_modules     n=54  bbox_area=     504 disp=  1.4
+    bringup_rails          n=23  bbox_area=     635 disp=  1.3
     bringup_modules        n=71  bbox_area=     451 disp=  1.2
-    bringup_en_modules     n=54  bbox_area=     323 disp=  0.9
+    board_aux              n=18  bbox_area=     177 disp=  1.2

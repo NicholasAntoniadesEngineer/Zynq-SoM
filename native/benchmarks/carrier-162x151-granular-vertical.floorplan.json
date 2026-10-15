@@ -3,7 +3,7 @@
     "w": 162,
     "h": 151
   },
-  "_comment": "162x151 construction-screen candidate from granular minority occupancy + vertical compaction + estimator-first; full qualification pending. Hardware constraints unchanged.",
+  "_comment": "162x151 release placement from granular minority occupancy + vertical compaction + estimator-first; full 37-sheet pipeline and source audit passed on 2026-10-16. See docs/RELEASE-2026-10-16.md for reproduction and remaining advisory/routing limitations. Hardware constraints unchanged.",
   "edges": {
     "N": [
       "microsd",

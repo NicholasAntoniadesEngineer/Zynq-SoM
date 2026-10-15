@@ -1,7 +1,7 @@
 golden renders: DRIFT (explicit --bless to accept):
-3d_persp: drift 16/256 bits
-3d_persp_rear: drift 16/256 bits
-3d_top: drift 23/256 bits
+3d_persp: drift 14/256 bits
+3d_persp_rear: drift 24/256 bits
+3d_top: drift 17/256 bits
 board_aux: drift 44/256 bits
 bringup_en_modules: drift 16/256 bits
 bringup_rails: drift 28/256 bits

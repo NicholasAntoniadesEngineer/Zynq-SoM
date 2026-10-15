@@ -5,8 +5,8 @@ KiCad schematic **and PCB** generator using C++ netlist definitions
 to produce checked schematics and placed boards with component models and
 multi-angle renders. Routing is deferred; these are not fabrication-ready boards.
 
-The current published placement review is a **163×151 mm carrier** and
-**98×98 mm devkit**. See the [release generation recipe and limitations](docs/RELEASE-2026-10-15.md)
+The current published placement review is a **162×151 mm carrier** and
+**98×98 mm devkit**. See the [release generation recipe and limitations](docs/RELEASE-2026-10-16.md)
 to reproduce the committed images; the default commands below do not select
 the carrier's qualified compact-placement recipe.
 
