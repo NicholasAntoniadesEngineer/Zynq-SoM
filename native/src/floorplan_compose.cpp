@@ -210,6 +210,20 @@ public:
     }
 
     bool changed_flip_order() const {return flip_order_differs;}
+    bool same_facing_cuts(const Composer& other) const {
+        // Compare exact emitted constraints, not allocation names or epsilon
+        // proximity. A failed run can mutate positions and separation choices,
+        // but these constructor-built facing cuts remain immutable.
+        for(const bool x:{true,false}) {
+            const auto& a=x?facing_x:facing_y;
+            const auto& b=x?other.facing_x:other.facing_y;
+            if(a.size()!=b.size())return false;
+            for(std::size_t i=0;i<a.size();++i)
+                if(a[i].edge.src!=b[i].edge.src||a[i].edge.dst!=b[i].edge.dst||
+                   a[i].edge.cost!=b[i].edge.cost)return false;
+        }
+        return true;
+    }
     bool same_near_axes(const Composer& other) const {
         for(const bool x:{true,false}) {
             const auto a=extra(x),b=other.extra(x);
@@ -976,12 +990,17 @@ bool compose_with_facing_extremes(const FloorplanLegalizeInput& input,
     // receives the caller's state budget, reports all actual work through the
     // existing joint callbacks and preserves the caller's poses on rejection.
     // Extreme allocations add opportunities, not a complete half-plane solver.
+    std::optional<Composer> previous;
     for(const auto allocation:{FacingAllocation::y_capacity,FacingAllocation::x_capacity}) {
+        Composer candidate(input,movable,log,counts,false,false,!input.primary_fanout.empty(),true,allocation);
+        // Keep the actual preparation work, but neither execute nor report a
+        // duplicate solver attempt (e.g. a purely axial facing requirement).
+        if(previous&&candidate.same_facing_cuts(*previous))continue;
         log.push_back(allocation==FacingAllocation::y_capacity?
             "retry: joint facing Y-capacity allocation":"retry: joint facing X-capacity allocation");
         if(input.joint_retry_started)input.joint_retry_started();
-        if(Composer(input,movable,log,counts,false,false,!input.primary_fanout.empty(),true,allocation)
-                .run(movable,true,true))return true;
+        if(candidate.run(movable,true,true))return true;
+        previous.emplace(std::move(candidate));
     }
     return false;
 }

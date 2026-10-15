@@ -76,6 +76,25 @@ int main(){try {
         }
         ++tested;
     }
+    for(bool vertical:{false,true}) {
+        FloorplanLegalizeInput in;in.board_w=in.board_h=60;in.joint_separation_states=64;
+        in.metrics["source"].offsets={{"out",vertical?1.:2.,vertical?2.:1.},
+                                    {"in",vertical?1.:0.,vertical?0.:1.}};
+        in.metrics["target"].offsets={{"p",1,1}};
+        in.fixed_poses["target"]={30,30};in.fixed_rects={{"target",{30,30,32,32}}};
+        FloorplanTerm term;term.kind="facing";term.subject="source";term.target_raw="target";
+        term.enforced=true;term.require_positive_facing=true;term.out_refs={"out"};in.index.hard={term};
+        term.out_refs={"in"};in.index.hard.push_back(term);
+        int starts=0,ends=0;
+        in.joint_retry_started=[&]{++starts;};
+        in.joint_retry_completed=[&](const JointSeparationWork&,bool){++ends;};
+        std::vector<FloorplanLegalizeVar> vars{{"source",2,2,{20,20},20,20}};
+        std::vector<std::string> log;
+        demand(!floorplan_legalize_compact(in,vars,log),"axial contradiction accepted");
+        int allocations=0;for(const auto& line:log)if(line.find("capacity allocation")!=std::string::npos)++allocations;
+        demand(allocations==1&&starts==3&&ends==starts,"identical allocation constraints repeated a solver trial or lost work boundaries");
+        demand(vars[0].x==20&&vars[0].y==20,"deduplicated failure changed seed");
+    }
     std::cout<<"cases="<<tested<<" known_feasible_misses="<<misses<<"\n";
     return misses?1:0;
 }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 2;}}

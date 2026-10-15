@@ -1,0 +1,21 @@
+{
+  "source_base": "04928a63",
+  "change": "Compare exact constructor-built facing edges between the two failure-only capacity allocations. If endpoints and bounds match on both axes, skip the second solver trial. Retain actual preparation counters; emit retry log and callbacks only for executed solves.",
+  "regression": {
+    "before": "New axial-contradiction test failed on the previous implementation",
+    "after": "Both horizontal and vertical contradictions execute one distinct capacity solve, not two; three total joint starts match three completions, and rejected poses remain unchanged",
+    "existing_matrix": "All 32 symmetry/compaction/contradiction cases still pass, with successful incumbents preserved",
+    "tests": "Facing projection, floorplan and independent legalize accounting: 3/3 PASS in 15.41 seconds; native policy audits: PASS in 44.91 seconds",
+    "logs": ["native/build/facing-dedup-before-tests.log", "native/build/facing-dedup-tests.log", "native/build/facing-dedup-audits.log"]
+  },
+  "carrier_screen": {
+    "dimensions_mm": [161,151],
+    "strategy": "Baseline plus granular-minor+vertical+estimator-first; release face sheets plus fmc",
+    "status": "Both failed construction; no accepted smaller board and no proof of infeasibility",
+    "elapsed_seconds": 13.106246166,
+    "completed_outer_attempts": 8,
+    "accounting": "All 73 aggregate counters exactly sum per-attempt work; failure receipt captured",
+    "log": "native/build/facing-dedup-161x151.log"
+  },
+  "limits": "No controlled wall-time speedup claimed. Four targeted test results are not a new complete-suite result. Published 162x151 carrier remains the accepted reference."
+}
