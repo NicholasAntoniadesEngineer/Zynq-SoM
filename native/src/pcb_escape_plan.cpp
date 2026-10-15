@@ -11,10 +11,14 @@ Box4 pcb_escape_row_corridor(const ContactGeom& contacts,double lo,double hi,int
     const auto [tip,escape_v]=escape_lane_extents(contacts.row_v,contacts.half_h,lane_handle);
     const auto a=uv_to_board(x,y,lo-.5,signed_mag(tip,row),rotation);
     const auto b=uv_to_board(x,y,hi+.5,signed_mag(escape_v+.3,row),rotation);
-    return {escape_corridor_precision4dp(std::min(a.first,b.first),counts),
-            escape_corridor_precision4dp(std::min(a.second,b.second),counts),
-            escape_corridor_precision4dp(std::max(a.first,b.first),counts),
-            escape_corridor_precision4dp(std::max(a.second,b.second),counts)};
+    // Opposite corners alone bound a rectangle only at orthogonal rotations.
+    // At arbitrary legal angles either other corner can provide an extremum.
+    const auto c=uv_to_board(x,y,lo-.5,signed_mag(escape_v+.3,row),rotation);
+    const auto d=uv_to_board(x,y,hi+.5,signed_mag(tip,row),rotation);
+    return {escape_corridor_precision4dp(std::min({a.first,b.first,c.first,d.first}),counts),
+            escape_corridor_precision4dp(std::min({a.second,b.second,c.second,d.second}),counts),
+            escape_corridor_precision4dp(std::max({a.first,b.first,c.first,d.first}),counts),
+            escape_corridor_precision4dp(std::max({a.second,b.second,c.second,d.second}),counts)};
 }
 PcbEscapePlanResult build_pcb_escape_plan(const PcbEscapeInput &input, QuantizationCounts* counts) {
     const auto &m = input.model();

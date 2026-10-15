@@ -1,0 +1,32 @@
+{
+  "base_commit": "d0ff8a59",
+  "defect": "The escape corridor rectangle used only two opposite transformed corners. At non-orthogonal rotations those corners do not define the axis-aligned bounds, so reserved area could be underestimated.",
+  "fix": "Transform all four local corners before computing extrema; retain the established four-decimal output boundaries and four-operation accounting.",
+  "scope": "Shared escape geometry correctness. Does not expand legal board orientations, change hardware policy, or claim a smaller accepted carrier.",
+  "tests": {
+    "rotated_cases": 74,
+    "rows": [-1, 1],
+    "degrees": "-180 through 360 inclusive, step 15",
+    "independent_oracle": "Explicit local rectangle corners transformed by trigonometric equations; extrema compared within established 4dp rounding error.",
+    "old_shortcut_rejected_cases": 60,
+    "command": "ctest --test-dir native/build/fast -R '^native_(floorplan_escape_corridors|pcb_escape|output_precision)_contracts$' --output-on-failure -j 2",
+    "passed": 3,
+    "failed": 0,
+    "wall_seconds": 18.32,
+    "negative_control_rerun": "Corridor test rebuilt after adding old-shortcut negative control; PASS in 0.59 seconds.",
+    "unchanged_evidence": "Both-board frozen orthogonal escape-plan bytes and current full-model precision/determinism tests pass; no golden regeneration."
+  },
+  "search_investigation": {
+    "source_log": "native/build/current-corridor-163x150.log",
+    "usb_jtag_contract_bottom_offers": 92,
+    "usb_jtag_tagged_offers": 96,
+    "interpretation": "Bottom variants are offered; the failed search is not explained by a globally disabled bottom face. Offered variants do not prove a feasible continuation exists.",
+    "failure_prefix_frontier_key_operations": 281126437,
+    "failure_prefix_occupancy_cell_operations": 77394588,
+    "next_direction": "Investigate repeated occupancy queries and remaining-domain rejection before increasing search budgets; retain useful local reseats and independent executed-work accounting.",
+    "performance_claim": "Operation counts identify investigation targets, not measured CPU attribution or a demonstrated speedup."
+  },
+  "full_board_build_repeated": false,
+  "release_outputs_replaced": false,
+  "remaining": "Broader placement, compaction, hardware qualification and matched historical timing goals remain incomplete."
+}
