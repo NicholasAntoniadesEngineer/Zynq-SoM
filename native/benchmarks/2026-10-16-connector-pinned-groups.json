@@ -1,0 +1,39 @@
+{
+  "source_base": "e68ac343",
+  "change": "Replace sheet-wide connector exclusion for explicit contract-group face exploration with connector-connected group pinning. Whole-sheet rotations and edge-assigned sheets remain excluded. Connector coordinates, face, rotation and mirroring remain unchanged; no implicit envelope translation and no singleton compaction of connectors.",
+  "hardware_policy": "Existing connectivity closure, controlled-net pinning, through-hole occupancy, local contracts, courtyard and fanout qualification remain active. No connector access requirement or electrical bound removed.",
+  "live_fmc": {
+    "old_offers": 4,
+    "new_offers": 10,
+    "meaning": "Six new alternatives move the independent regulator group to bottom while preserving header J1's pose. Existing offer prefix retained.",
+    "regression": "C++ live carrier fixture independently checks header identity/pose, regulator bottom membership, local contract and fanout. Both-board orientation regressions pass."
+  },
+  "tests": {
+    "native_pcb_orientation_contracts": "PASS 4.27 seconds",
+    "adversarial": "Connector-linked group remains pinned; ordinary sheet rotation stays excluded; protruding connector seed is rejected instead of implicitly translated; connector cannot move during x/y leftover compaction.",
+    "build": "schgen, schgen_compact_stage_profile and schgen_pcb_orientation_contracts rebuilt successfully"
+  },
+  "screens": [
+    {
+      "dimensions_mm": [162,151],
+      "strategy": "baseline plus granular-minor+vertical+estimator-first, adding fmc to release face-sheet set",
+      "status": "Combined strategy retains published incumbent; baseline fails",
+      "pcb_sha256": "8aae8efbb2dee1c37cc61dc1b91e832b9ed6e4c7c47a17fc78b73c1a44f8d231",
+      "top": 331,
+      "bottom": 235,
+      "minimum_measured_margin_mm": 4.25,
+      "minimum_measured_margin_degrees": 11.8,
+      "model_portfolio_seconds": 21.458714,
+      "log": "native/build/connector-fmc-162x151.log"
+    },
+    {
+      "dimensions_mm": [162,150],
+      "status": "No incumbent from either strategy; not proof of physical infeasibility",
+      "elapsed_seconds": 14.123951083,
+      "completed_outer_attempts": 8,
+      "receipt_captured": true,
+      "log": "native/build/connector-fmc-162x150.log"
+    }
+  ],
+  "limits": "Opt-in additional search opportunities, not a smaller accepted board or speed improvement. Single diagnostic timings are not controlled performance comparisons. No new full-board qualification or exhaustive suite run claimed; published master outputs remain unchanged."
+}

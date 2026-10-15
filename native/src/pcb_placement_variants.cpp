@@ -56,6 +56,17 @@ Shape enclose_courtyards(Context& ctx,const Geometry& g,const Shape& source) {
     enclosed.h=bottom_contact_shift(bottom+dy,&ctx.quantization);
     return enclosed;
 }
+bool connector_anchor(const Context& ctx,const Geometry& g,const std::string& ref) {
+    const auto& part=ctx.by_ref.at(ref);
+    const bool probe_pad=part.lib_id=="Connector:TestPoint"&&
+        part.footprint=="TestPoint:TestPoint_Pad_D1.5mm";
+    return g.conn_rot.count(ref)||g.conn_edge.count(ref)||edge_family(part.value)||
+        connector_value(part.value)||ref_prefix(ref)=="J"||
+        (part.lib_id.find("Connector")!=std::string::npos&&!probe_pad)||
+        part.footprint.find("PinHeader")!=std::string::npos||
+        part.footprint.find("PinSocket")!=std::string::npos||
+        part.footprint.find("DF40")!=std::string::npos;
+}
 bool orientation_eligible(const Context& ctx, const Geometry& g, const std::string& sheet,
                           bool board_checked_external=false) {
     if (!ctx.in.floorplan.compact_search) return false;
@@ -77,19 +88,10 @@ bool orientation_eligible(const Context& ctx, const Geometry& g, const std::stri
             for(const auto& [key,value]:external.object_value){(void)value;if(!supported.count(key))return false;}
         }
     }
-    for (const auto& ref : g.refs_by_sheet.at(sheet)) {
-        const auto& part = ctx.by_ref.at(ref);
-        // This exact authored stock pad is a probe target, not a mating
-        // connector. Keep all other connector tests and top-access checks.
-        const bool probe_pad = part.lib_id == "Connector:TestPoint" &&
-            part.footprint == "TestPoint:TestPoint_Pad_D1.5mm";
-        if (g.conn_rot.count(ref) || g.conn_edge.count(ref) ||
-            edge_family(part.value) || connector_value(part.value) || ref_prefix(ref) == "J" ||
-            (part.lib_id.find("Connector") != std::string::npos && !probe_pad) ||
-            part.footprint.find("PinHeader") != std::string::npos ||
-            part.footprint.find("PinSocket") != std::string::npos ||
-            part.footprint.find("DF40") != std::string::npos) return false;
-    }
+    // A connector forbids rotating the entire sheet, not moving an independent
+    // group. Face exploration pins connector-connected groups below instead.
+    if(!board_checked_external)for(const auto& ref:g.refs_by_sheet.at(sheet))
+        if(connector_anchor(ctx,g,ref))return false;
     return true;
 }
 bool orientation_holds(const Context& ctx, const Geometry& g, const std::string& sheet,
@@ -165,7 +167,12 @@ void append_contract_group_faces(Context& ctx,Geometry& g,const std::string& she
     const auto contract=ctx.in.contracts.find(sheet);
     if(contract==ctx.in.contracts.end())return;
     const auto& schema=optional(contract->second,"contract");
-    const auto seed=schema.kind==JsonKind::String&&schema.string_value=="placement/v2"
+    std::set<std::string> connector_anchors;
+    for(const auto& ref:g.refs_by_sheet.at(sheet))
+        if(connector_anchor(ctx,g,ref))connector_anchors.insert(ref);
+    // Enclosing a protruding seed translates every member. Never translate a
+    // connector anchor implicitly: such sheets need a valid original envelope.
+    const auto seed=connector_anchors.empty()&&schema.kind==JsonKind::String&&schema.string_value=="placement/v2"
         ?enclose_courtyards(ctx,g,original):original;
     if(!orientation_holds(ctx,g,sheet,seed))return;
     // Footprints (including mirrored documents) are immutable during this
@@ -179,7 +186,7 @@ void append_contract_group_faces(Context& ctx,Geometry& g,const std::string& she
         through_hole.emplace(mod.get(),result);
         return result;
     };
-    std::set<std::string> pinned;
+    std::set<std::string> pinned=connector_anchors;
     for(const auto& ref:g.refs_by_sheet.at(sheet))
         if(face_top(ctx.by_ref.at(ref))||has_through_hole(ctx.pool.at(g.resolvable.at(ref))))pinned.insert(ref);
     for(const auto& sc:ctx.in.floorplan.sheets)if(sc.name==sheet)
@@ -411,7 +418,8 @@ void append_contract_group_faces(Context& ctx,Geometry& g,const std::string& she
             if(offer.tag.rfind("contract-bottom",0)!=0)continue;
             auto compact=offer;
             std::vector<std::string> leftovers;
-            for(const auto& group:*groups)if(group.refs.size()==1)leftovers.push_back(group.refs.front());
+            for(const auto& group:*groups)if(group.refs.size()==1&&!connector_anchors.count(group.refs.front()))
+                leftovers.push_back(group.refs.front());
             // Only these singletons can move, along one axis. If a fixed
             // member already owns that extent, contacts cannot reduce area. Avoid
             // constructing and checking candidates that cannot be published.
