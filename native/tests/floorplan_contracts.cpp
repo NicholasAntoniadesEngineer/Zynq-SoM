@@ -262,6 +262,27 @@ void facing_projection_contracts() {
         require(coordinate>=5&&coordinate<5.2,"facing recovery must use the legal narrow pocket");
         require(floorplan_evaluate_terms(in,{{"source",{vars[0].x,vars[0].y}}}).front().ok,
                 "narrow-pocket facing recovery bypassed the exact positive-direction gate");
+        if(!swap_axes&&!reflect&&compact&&feasible) {
+            const auto initial=std::vector<FloorplanLegalizeVar>{{"source",2,2,{seed.x0,seed.y0},seed.x0,seed.y0}};
+            auto plain=initial,noisy=initial;auto advisory=in;
+            auto soft=term;soft.enforced=false;soft.require_positive_facing=false;soft.out_refs={"in"};
+            advisory.index.soft.assign(128,soft);
+            QuantizationCounts plain_counts,noisy_counts;std::vector<std::string> plain_log,noisy_log;
+            require(floorplan_legalize_compact_accounted(in,plain,plain_log,plain_counts)&&
+                    floorplan_legalize_compact_accounted(advisory,noisy,noisy_log,noisy_counts),
+                    "advisory failures must not reject a valid facing recovery");
+            require(plain[0].x==noisy[0].x&&plain[0].y==noisy[0].y&&plain_log==noisy_log,
+                    "advisory-only rows must not alter feasibility decisions");
+            require(plain_counts==noisy_counts,"feasibility checks must not repeatedly measure discarded advisory terms");
+            const auto report=floorplan_evaluate_terms(advisory,{{"source",{noisy[0].x,noisy[0].y}}});
+            require(report.size()==129&&report.front().ok&&!report.back().ok,
+                    "full diagnostics must still evaluate and expose all advisory failures");
+            advisory.index.soft.front().enforced=true;
+            auto rejected=initial;std::vector<std::string> rejected_log;
+            require(!floorplan_legalize_compact(advisory,rejected,rejected_log)&&
+                    rejected[0].x==initial[0].x&&rejected[0].y==initial[0].y,
+                    "an enforced contradiction must reject atomically regardless of its index bucket");
+        }
     }
     std::size_t combined_runs=0;
     for(bool joint:{false,true})

@@ -89,10 +89,12 @@ void validate(const FloorplanLegalizeInput& in) {
 }
 
 std::vector<FloorplanTermEval> evaluate(const FloorplanLegalizeInput& in,
-                                       const FloorplanOffsets& poses, QuantizationCounts* counts = nullptr) {
+                                       const FloorplanOffsets& poses, QuantizationCounts* counts = nullptr,
+                                       bool enforced_only = false) {
     std::vector<const FloorplanTerm*> terms;
     std::vector<EvalTermIn> rows;
     for (const auto* group : {&in.index.hard, &in.index.soft}) for (const auto& t : *group) {
+        if(enforced_only&&!t.enforced)continue;
         terms.push_back(&t);
         rows.push_back({t.kind, t.subject, t.target(), t.bound.value_or(0), t.bound.has_value(), t.out_refs});
     }
@@ -860,7 +862,10 @@ private:
         auto poses = fixed;
         for (std::size_t i = 0; i < names.size(); ++i)
             poses[names[i]] = {legalize_trial_pose_precision4dp(pos_x[i], counts), legalize_trial_pose_precision4dp(pos_y[i], counts)};
-        auto out = evaluate(in, poses, counts);
+        // Feasibility consumes only enforced terms. Public diagnostics still
+        // evaluate every term; do not repeatedly measure advisory rows merely
+        // to discard them here during each rejected search proposal.
+        auto out = evaluate(in, poses, counts, true);
         out.erase(std::remove_if(out.begin(), out.end(), [](const auto& e) { return !e.term.enforced || e.ok; }), out.end());
         return out;
     }
