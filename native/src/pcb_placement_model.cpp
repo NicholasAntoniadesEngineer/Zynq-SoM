@@ -101,6 +101,17 @@ void Placer::checkpoint(const std::string &name, bool page) {
     observe_checkpoint(name);
 }
 void Placer::seed() {
+    // Edge-conditioned zones include connector orientation and companion
+    // offsets. A packer's spill is not a geometry transform: seating only the
+    // connector on its authored edge would tear the group apart. Require the
+    // caller to regenerate and repack the whole group for the selected edge.
+    // Run within the accounted placement stage so rejection has a receipt.
+    for (const auto& block : plan.edge_blocks)
+        for (const auto& [ref, edge] : geometry.conn_edge)
+            if (ctx.by_ref.at(ref).sheet == block.name && edge != block.edge)
+                throw PcbZoneInfeasible("edge geometry mismatch: " + block.name + " " + ref +
+                    " prepared=" + edge + " packed=" + block.edge +
+                    "; regenerate edge-conditioned zones and repack before placement");
     out.stages["zone_pack"] = {};
     out.stages["plan_lattice"] = {};
     out.stages["shape_bind"] = {};

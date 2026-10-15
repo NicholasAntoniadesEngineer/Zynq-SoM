@@ -449,6 +449,40 @@ void run(const std::filesystem::path &root, const std::string &name, const std::
     }
     if (mode == "--zones-only")
         return;
+    // A spill must not move a connector independently of the group for which
+    // its offsets and orientation were prepared. Exercise every wrong edge,
+    // using the live geometry rather than a hard-coded board/reference name.
+    if(!single) {
+        std::size_t mismatches=0;
+        for(const auto& entry:zones.geometry.conn_edge) {
+            const auto& ref=entry.first;
+            const auto& edge=entry.second;
+            const auto sheet=std::find_if(zones.geometry.refs_by_sheet.begin(),
+                zones.geometry.refs_by_sheet.end(),[&](const auto& row){
+                    return std::find(row.second.begin(),row.second.end(),ref)!=row.second.end();
+                });
+            require(sheet!=zones.geometry.refs_by_sheet.end(),"edge connector belongs to a sheet");
+            for(const auto* wrong:{"N","E","S","W"}) {
+                if(edge==wrong)continue;
+                auto bad=f.stage;
+                const auto block=std::find_if(bad.plan.edge_blocks.begin(),bad.plan.edge_blocks.end(),
+                    [&](const auto& b){return b.name==sheet->first;});
+                require(block!=bad.plan.edge_blocks.end(),"edge connector has a planned block");
+                block->edge=wrong;
+                ExecutionFailureReceipt failure;
+                bool rejected=false;
+                try {place_pcb_model_accounted(f.input,zones,bad,
+                    PcbZoneAccountingOwnership::IncludedInFloorplan,&failure);}
+                catch(const PcbZoneInfeasible& e) {
+                    rejected=std::string(e.what()).find("edge geometry mismatch:")!=std::string::npos;
+                }
+                require(rejected,"mismatched edge geometry must reject before connector seating");
+                require(failure.captured&&!failure.unavailable,"edge rejection retains failure receipt");
+                ++mismatches;
+            }
+        }
+        require(mismatches>0,"edge mismatch negative cases exercised");
+    }
     auto result = (mode == "--production" || single) ? build_pcb_model(f.input)
                                                      : place_pcb_model(f.input, zones, f.stage);
     // Historical coordinates are valid renderer operands, not an optimisation
@@ -494,6 +528,9 @@ void run(const std::filesystem::path &root, const std::string &name, const std::
     if(!single) {
         auto fixture_policy=pcb_emit_policy(f.input.floorplan.project);
         fixture_policy.model_overrides.clear();
+        // This immutable renderer operand predates interface-only silkscreen.
+        // Current generated boards below still use the current project policy.
+        fixture_policy.interface_reference_labels_only=false;
         require(render_pcb(expected,fixture_policy).pcb==
                     read(root/"native/tests/data/pcb_emit"/(name+".kicad_pcb")),
                 name+" immutable model still renders exact historical PCB bytes");

@@ -1,0 +1,28 @@
+{
+  "parent_commit": "84126ee9",
+  "change": "Reject a packed edge block whose connector's prepared edge differs, before seeding any component poses. A spill cannot silently tear a connector away from its companions. This guard does not implement alternate-edge regeneration/search.",
+  "tests": {
+    "native_pcb_placement_contracts": "PASS 30.39s, including wrong N/E/S/W assignments for both boards' edge connectors, captured available rejection receipts, current same-input determinism and physical checks",
+    "fixture_correction": "Immutable historical PCB renderer assertion now explicitly uses its historical reference-label policy. Current-board rendering and repeatability continue using the new interface-only policy. No golden bytes replaced.",
+    "diff_check": "PASS"
+  },
+  "rejected_spill": {
+    "log": "native/build/edge-guard-rejection.log",
+    "dimensions_mm": [162,153],
+    "result": "Rejected before seating: hdmi_tx J14001 prepared=S packed=N",
+    "failure_receipt": "captured and available",
+    "completed_outer_attempts": 6
+  },
+  "edge_consistent_experiment": {
+    "log": "native/build/edge-consistent-hdmi-north.log",
+    "change": "Move hdmi_tx to the first N entry in both edges and edge_order in the 162x153 specification; regenerate zones from that specification",
+    "result": "Bounded packing search exhausted both reservation policies, 4 completed outer attempts, captured available receipt. Not proof of geometric infeasibility.",
+    "setup_correction": "Initial experiment was rejected before search because edge_order still listed hdmi_tx on S; corrected before the recorded packing experiment."
+  },
+  "controls": {
+    "carrier": {"dimensions_mm":[163,152],"pcb_sha256":"413100c05f91a68436c457039752e0e932593e54760e802bed434a547e66dca7","log":"native/build/edge-guard-reference.log"},
+    "devkit": {"dimensions_mm":[98,98],"pcb_sha256":"1b12fecbcbbaa5e6084c2459da93cb144a660ff19805e6e4e3f75f9c22689fdb","log":"native/build/edge-guard-devkit.log"},
+    "result": "Both exact qualified PCB hashes retained; fanout, ratsnest, placement-contract and flow diagnostics pass; hard_red=0; no nonsearch fallbacks. Not fresh full qualification."
+  },
+  "remaining_work": "Integrate alternate-edge group regeneration and repacking, with independent operation accounting and failure receipts, rather than relying on geometrically invalid spill success. Explore edge orders jointly. No new smaller carrier accepted and no fabrication readiness claimed."
+}
