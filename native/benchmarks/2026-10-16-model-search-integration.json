@@ -1,0 +1,37 @@
+{
+  "source_base": "f86310fc",
+  "change": "Diagnostic profiler invokes search_pcb_models through explicit repeatable --search-strategy options. Each strategy starts from baseline settings; + combines overrides in one attempt. Default board commands remain unchanged.",
+  "options": ["extent", "rotations", "area-first", "estimator-first", "extent+estimator-first"],
+  "reporting": "Per-attempt statuses, counter receipts and complete ordered fallback events; search_total is the entire portfolio including screening. Existing model_total remains selected construction only. Search timing explicitly includes all strategies, screening and diagnostic output. Unscoped per-model thermal/selection traces are rejected; multi-strategy catalog summaries are not misrepresented as one catalog.",
+  "tests": {
+    "native_compact_profile_inputs_contracts": "PASS 28.24 seconds",
+    "parser_cases": "Ordered strategies and combined overrides; reject unknown/empty/duplicate components, conflicting rankings, semantically duplicate combinations, missing rotation prerequisites and ambiguous trace scopes."
+  },
+  "carrier_natural_failure_retention": {
+    "recipe": "powersom face recipe at 163x151 with release pilot pins; --search-strategy estimator-first --search-strategy extent",
+    "attempts": ["baseline: incumbent", "estimator-first: construction_failed", "extent: not_improved"],
+    "selected_attempt": 0,
+    "pcb_sha256": "8ba5fe760fa5ac529cd107cf7fa70945f7e7276b60e03f0e98b4ddc4d6ffc397",
+    "aggregate_counter_keys_verified_against_attempt_sums": 125,
+    "recorded_ordered_fallback_events": 14447,
+    "log": "native/build/carrier-model-search-integrated-v2.log"
+  },
+  "all_failed_case": {
+    "recipe": "same baseline at 163x150; --search-strategy estimator-first",
+    "attempts": ["baseline: construction_failed", "estimator-first: construction_failed"],
+    "result": "search_failed, no incumbent, exit 1",
+    "completed_outer_attempts": 8,
+    "receipt_captured": true,
+    "aggregate_counter_keys_verified_against_attempt_sums_and_failure_prefix": 74,
+    "log": "native/build/carrier-model-search-all-failed.log"
+  },
+  "combined_repeat": {
+    "recipe": "release-pinned powersom face recipe at 163x151; --search-strategy extent+estimator-first --runs 2",
+    "both_runs": "baseline retained after naturally failing combined challenger",
+    "same_pcb": true,
+    "same_aggregate_counter_receipts": true,
+    "same_complete_fallback_sequence": true,
+    "log": "native/build/carrier-model-search-combined-repeat.log"
+  },
+  "limits": "This is diagnostic workflow integration, not publication or complete board qualification. The original removed vertical-compaction experiment was not reintroduced. No smaller accepted carrier, default production strategy change, full-suite run or matched Python timing comparison. Natural failure retention and repeatability are verified; performance gains are not claimed."
+}
