@@ -17,6 +17,37 @@ void require(bool p, const std::string &message) {
 void exact(double a, double b, const std::string &context) {
     require(a == b, context + " actual " + std::to_string(a) + " expected " + std::to_string(b));
 }
+void edge_replan_contracts() {
+    FloorplanSpec original;
+    original.outline=FloorplanPoint{100,80};original.source="edge-replan-test";
+    original.edges={{"S",{"a","b"}},{"W",{"c"}}};
+    original.ordered_edges=original.edges;
+    original.interior["inside"].layer="bottom";
+    FloorplanPlan plan;
+    FloorplanBlock a,b,c;
+    a.name="a";a.edge="N";a.x=30;
+    b.name="b";b.edge="N";b.x=10;
+    c.name="c";c.edge="E";c.y=5;
+    plan.edge_blocks={a,c,b};
+    const auto spec=pcb_edge_replan_spec(original,plan);
+    require(spec.edges.at("N")==std::vector<std::string>{"b","a"},"replan keeps actual run order");
+    require(spec.edges.at("E")==std::vector<std::string>{"c"}&&spec.edges.size()==2,"replan moves all spilled groups");
+    require(spec.ordered_edges==spec.edges,"replan synchronizes edge-order membership");
+    require(spec.outline==original.outline&&spec.source==original.source&&
+            spec.interior.at("inside").layer==original.interior.at("inside").layer,
+            "edge replan preserves outline and interior policy");
+    require(original.edges.at("S")==std::vector<std::string>{"a","b"},"replan leaves caller input untouched");
+    for(int bad=0;bad<4;++bad) {
+        auto broken=plan;
+        if(bad==0)broken.edge_blocks[0].edge="invalid";
+        if(bad==1)broken.edge_blocks[0].x=std::numeric_limits<double>::quiet_NaN();
+        if(bad==2)broken.edge_blocks.push_back(a);
+        if(bad==3)broken.edge_blocks.pop_back();
+        bool rejected=false;
+        try{(void)pcb_edge_replan_spec(original,broken);}catch(const PcbZoneInfeasible&){rejected=true;}
+        require(rejected,"malformed replan must not drop or duplicate geometry");
+    }
+}
 void constraint_merge_contracts() {
     for (bool hard : {false, true}) for (bool reverse : {false, true})
         for (bool minimum : {false, true}) {
@@ -473,8 +504,10 @@ void run(const std::filesystem::path &root, const std::string &name, const std::
                 bool rejected=false;
                 try {place_pcb_model_accounted(f.input,zones,bad,
                     PcbZoneAccountingOwnership::IncludedInFloorplan,&failure);}
-                catch(const PcbZoneInfeasible& e) {
+                catch(const PcbEdgeGeometryMismatch& e) {
                     rejected=std::string(e.what()).find("edge geometry mismatch:")!=std::string::npos;
+                    require(e.retry_spec.edge_of().at(sheet->first)==wrong,
+                        "typed rejection transports selected edge for whole-group regeneration");
                 }
                 require(rejected,"mismatched edge geometry must reject before connector seating");
                 require(failure.captured&&!failure.unavailable,"edge rejection retains failure receipt");
@@ -575,6 +608,7 @@ int main(int argc, char **argv) {
             std::cout << "PCB rigid groups: " << checks << " assertions passed\n";
             return 0;
         }
+        edge_replan_contracts();
         constraint_merge_contracts();
         rigid_group_contracts(argv[1]);
         power_rigid_group_contracts(argv[1]);

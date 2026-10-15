@@ -219,7 +219,7 @@ FloorplanInput prepare_pcb_floorplan(const PcbPlacementInput &input, const PcbZo
     checked_quantization_merge(result.accounting.quantization_engagements, zones.quantization_engagements);
     return result;
 }
-PcbPlacementResult build_pcb_model(const PcbPlacementInput &input, ExecutionFailureReceipt* failure) {
+static PcbPlacementResult build_pcb_model_once(const PcbPlacementInput &input, ExecutionFailureReceipt* failure) {
     // Each child failure owns only its operation, except floorplan which
     // explicitly inherits planning-zone accounting. Keep that transfer visible.
     ExecutionFailureReceipt child;
@@ -335,6 +335,47 @@ PcbPlacementResult build_pcb_model(const PcbPlacementInput &input, ExecutionFail
         PcbZoneAccountingOwnership::IncludedInFloorplan,&child);
     } catch (...) {
         capture_execution_failure(failure,std::move(completed),&child);
+        throw;
+    }
+}
+FloorplanSpec pcb_edge_replan_spec(const FloorplanSpec& original,const FloorplanPlan& plan) {
+    auto spec=original;
+    spec.edges.clear();
+    spec.ordered_edges.clear();
+    std::map<std::string,std::vector<std::pair<double,std::string>>> runs;
+    std::set<std::string> names;
+    for(const auto& block:plan.edge_blocks) {
+        if(block.edge.size()!=1||std::string("NESW").find(block.edge)==std::string::npos||
+           !names.insert(block.name).second||!std::isfinite(block.x)||!std::isfinite(block.y))
+            throw PcbZoneInfeasible("edge replan requires unique blocks with finite poses and valid edges");
+        runs[block.edge].emplace_back(block.edge=="N"||block.edge=="S"?block.x:block.y,block.name);
+    }
+    for(const auto& entry:original.edge_of())
+        if(!names.count(entry.first))throw PcbZoneInfeasible("edge replan lost declared block: "+entry.first);
+    for(auto& [edge,run]:runs) {
+        std::sort(run.begin(),run.end());
+        for(const auto& item:run)spec.edges[edge].push_back(item.second);
+    }
+    spec.ordered_edges=spec.edges;
+    return spec;
+}
+PcbPlacementResult build_pcb_model(const PcbPlacementInput& input,ExecutionFailureReceipt* failure) {
+    ExecutionFailureReceipt first;
+    try {return build_pcb_model_once(input,&first);}
+    catch(const PcbEdgeGeometryMismatch& mismatch) {
+        // One full-geometry retry, never recursive and never a geometry waiver.
+        // The first receipt already owns its input seed, zones, packing and
+        // rejected placement. Transfer it, rather than adding that seed twice.
+        if(failure)*failure=first;
+        if(!first.captured||first.unavailable)throw;
+        auto retry=input;
+        retry.floorplan.spec=mismatch.retry_spec;
+        retry.floorplan.accounting.quantization_engagements=first.accounting.quantization_engagements;
+        retry.floorplan.accounting.fallback_events=first.accounting.fallback_events;
+        retry.floorplan.accounting.fallback_events.push_back("edge_geometry_replan_retry");
+        return build_pcb_model_once(retry,failure);
+    } catch(...) {
+        if(failure)*failure=first;
         throw;
     }
 }

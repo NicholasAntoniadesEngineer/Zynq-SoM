@@ -179,7 +179,7 @@ bool is_board_search_effort(std::string_view name){
         "legalize_joint_domain_probe","legalize_joint_domain_reject",
         "legalize_joint_state","legalize_joint_axis","legalize_joint_axis_reuse","legalize_joint_proposal",
         "legalize_joint_reject","legalize_joint_budget","facing_replan_retry",
-        "contract_group_orientation_retry","screened_incumbent_retained",
+        "contract_group_orientation_retry","edge_geometry_replan_retry","screened_incumbent_retained",
         "edge_run_translation","legalize_only_compaction","seat_node_budget",
         "cand_cap_truncated","bottom_variant_contract_reject",
         "thermal_repair_trial","thermal_repair_rejected","thermal_repair_moved",

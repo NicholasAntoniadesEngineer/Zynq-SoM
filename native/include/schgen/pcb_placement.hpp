@@ -4,6 +4,15 @@
 #include "schgen/pcb_owned_groups_adapter.hpp"
 
 namespace schgen {
+// A packed spill needs a new edge-conditioned zone solve, not a connector-only
+// translation. The retry specification preserves non-edge policy verbatim.
+FloorplanSpec pcb_edge_replan_spec(const FloorplanSpec&, const FloorplanPlan&);
+class PcbEdgeGeometryMismatch : public PcbZoneInfeasible {
+  public:
+    FloorplanSpec retry_spec;
+    PcbEdgeGeometryMismatch(const std::string& message, FloorplanSpec spec)
+        : PcbZoneInfeasible(message), retry_spec(std::move(spec)) {}
+};
 struct PcbPlacementExperiment;
 struct PcbPlacementInput {
     FloorplanInput floorplan;
