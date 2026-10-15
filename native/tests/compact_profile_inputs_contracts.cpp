@@ -107,6 +107,9 @@ void profile_option_contracts() {
         throw std::runtime_error("combined model-search strategy lost an override");
     if(!search_strategy("vertical+extent").vertical_compaction)
         throw std::runtime_error("vertical search-strategy override lost");
+    if(!search_strategy("granular-minor+vertical").granular_minor_occupancy)
+        throw std::runtime_error("granular minority occupancy strategy lost");
+    (void)options({"profile","--repo",".","--compact-search","on","--search-strategy","granular-minor"});
     for(const auto& args:std::vector<std::vector<std::string>>{
         {"profile","--repo",".","--compact-search","on","--search-strategy","unknown"},
         {"profile","--repo",".","--compact-search","on","--search-strategy","extent+"},
@@ -115,6 +118,7 @@ void profile_option_contracts() {
         {"profile","--repo",".","--compact-search","on","--search-strategy","extent+rotations"},
         {"profile","--repo",".","--compact-search","on","--search-strategy","vertical"},
         {"profile","--repo",".","--compact-search","on","--search-strategy","extent+area-first","--search-strategy","area-first+extent"},
+        {"profile","--repo",".","--compact-search","on","--search-strategy","granular-minor+extent","--search-strategy","extent+granular-minor"},
         {"profile","--repo",".","--compact-search","off","--search-strategy","extent"},
         {"profile","--repo",".","--compact-search","on","--search-strategy","rotations"},
         {"profile","--repo",".","--compact-search","on","--search-strategy","extent","--search-strategy","extent"},

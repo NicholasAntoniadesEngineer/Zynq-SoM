@@ -6,6 +6,7 @@ namespace schgen {
 // shape/face restrictions remain the same for every attempt.
 struct PcbPlacementSearchStrategy {
     bool vertical_compaction = false;
+    bool granular_minor_occupancy = false;
     std::optional<bool> shape_area_first, owned_extent_alternatives, contract_group_rotations;
     std::optional<std::size_t> shape_choice_replays;
 };

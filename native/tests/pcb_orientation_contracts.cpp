@@ -304,6 +304,53 @@ void unit(){
  const auto& placed=selector.plan.interior_blocks.at(0);
  demand(placed.shape_idx>0&&placed.side=="bottom"&&whole_once.at(placed.shape_idx).side=="bottom",
         "required-bottom selector did not choose a generated bottom-primary offer");
+ // Opposite-face empty space is not physical occupancy. Reserve separate
+ // courtyards while retaining each component's fanout and THT punches.
+ FloorplanInput granular;granular.som.w=granular.som.h=8;granular.compact_search=true;
+ std::string device="(footprint test (layer F.Cu) (fp_rect (start -1 -1) (end 1 1) (stroke (width .05) (type default)) (layer F.CrtYd))";
+ for(int pin=1;pin<=8;++pin)device+=" (pad \""+std::to_string(pin)+"\" smd rect (at 0 0) (size .2 .2) (layers F.Cu))";
+ device+=" (pad \"9\" thru_hole circle (at 0 0) (size .8 .8) (drill .4) (layers *.Cu *.Mask)))";
+ const auto device_fp=pcb_check_footprint("test.kicad_mod",device);
+ granular.footprints["test"]={device_fp->source,device_fp->document};
+ for(const auto* ref:{"U1","U2"}) {
+  granular.geometry.resolvable[ref]="test";granular.geometry.bbox_of[ref]=*device_fp->bbox;
+ }
+ for(const auto* primary:{"top","bottom"}) {
+  Shape islands;islands.w=24;islands.h=5;islands.side=primary;
+  islands.bot_off={{"U1",{2,2}},{"U2",{20,2}}};
+  granular.experiment.reset();floorplan_detail::Engine union_engine(granular);
+  QuantizationCounts united_counts,split_counts;
+  const auto united=union_engine.zone_components(islands,true,&united_counts);
+  auto policy=std::make_shared<FloorplanExperiment>();policy->granular_minor_occupancy=true;
+  granular.experiment=policy;floorplan_detail::Engine split_engine(granular);
+  const auto split=split_engine.zone_components(islands,true,&split_counts);
+  demand(united.size()==3&&split.size()==4,"granular minority occupancy lost court or THT punch");
+  const int face=std::string(primary)=="top"?2:1;
+  demand(split[0].mask==face&&split[1].mask==face&&split[2].mask==3&&split[3].mask==3,
+         "granular occupancy has incorrect physical face masks");
+  demand(split[0].w*split[0].h+split[1].w*split[1].h<united[0].w*united[0].h,
+         "granular minority occupancy did not release empty space");
+  for(std::size_t i=0;i<2;++i) {
+   demand(split[i].reach.w>0&&split[i].reach.e>0&&split[i].reach.n>0&&split[i].reach.s>0,
+          "granular occupancy discarded individual fanout halo");
+   demand(split[i+2].dx==united[i+1].dx&&split[i+2].dy==united[i+1].dy&&
+          split[i+2].w==united[i+1].w&&split[i+2].h==united[i+1].h,
+          "granular occupancy changed through-hole punches");
+  }
+  demand(split_counts.at("pack_zone_component_precision4dp")==16&&
+         united_counts.at("pack_zone_component_precision4dp")==12,
+         "granular occupancy dropped executed component quantization work");
+  Occupancy coarse_grid(30,12,.2,2,3,1,.05),fine_grid(30,12,.2,2,3,1,.05);
+  const int primary_mask=face==1?2:1;
+  coarse_grid.add(0,0,24,5,{},{},primary_mask,united);
+  fine_grid.add(0,0,24,5,{},{},primary_mask,split);
+  demand(!coarse_grid.fits_exhaustive(10,2,1,1,{},{},face,{})&&
+          fine_grid.fits_exhaustive(10,2,1,1,{},{},face,{}),
+         "granular occupancy did not permit the physically empty opposite-face gap");
+  demand(!fine_grid.fits_exhaustive(2,2,.2,.2,{},{},face,{})&&
+         !fine_grid.fits_exhaustive(3.25,2,.2,.2,{},{},face,{}),
+         "granular occupancy lost body or fanout collision rejection");
+ }
 }
 void live(const std::filesystem::path& root){
  for(const auto* project:{"carrier","devkit_mini"}){

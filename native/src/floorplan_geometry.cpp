@@ -260,7 +260,30 @@ std::vector<Comp> Engine::zone_components(const FloorplanZoneShape& shape, bool 
             }
         }
     }
-    auto children=zone_components_assemble(minor, punches, shape.side == "bottom" ? occ_top : occ_bottom, occ_punch, counts);
+    const int minor_mask=shape.side=="bottom"?occ_top:occ_bottom;
+    if(in.compact_search&&in.experiment&&in.experiment->granular_minor_occupancy) {
+        std::vector<Comp> children;
+        for(const auto& [ref,xy]:shape.bot_off)if(const auto box=courtyard(ref,xy)) {
+            auto one=zone_components_assemble({*box},{},minor_mask,occ_punch,counts);
+            auto& child=one.front();
+            auto key=get(shape.mirror,ref);
+            if(key.empty())key=get(in.geometry.resolvable,ref);
+            if(!key.empty()&&!is_testpoint_ref(ref)&&
+               std::filesystem::path(in.footprints.at(key).source).stem().string().find("Fiducial")==std::string::npos) {
+                const auto members=zone_fanout_members_rows_accounted(
+                    {{box->x0-child.dx,box->y0-child.dy,0,0,box->x1-box->x0,box->y1-box->y0,0,footprint(key).pins}},
+                    min_subject_pins,{{2,.20},{8,1.50}},2.0,counts);
+                std::tie(child.reach,child.inset)=zone_fanout_reach(child.w,child.h,members,min_subject_pins,counts);
+            }
+            children.push_back(child);
+        }
+        // Through-hole occupancy still pierces both faces, independently of
+        // how the opposite-face courtyard reservations are partitioned.
+        auto through=zone_components_assemble({},punches,minor_mask,occ_punch,counts);
+        children.insert(children.end(),through.begin(),through.end());
+        return children;
+    }
+    auto children=zone_components_assemble(minor, punches, minor_mask, occ_punch, counts);
     if (!minor.empty()) {
         // The first assembled child is the minority-face courtyard union.
         // Its halo must be measured in that rectangle's frame, not attached
