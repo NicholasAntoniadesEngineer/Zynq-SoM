@@ -1,6 +1,7 @@
 #include "pcb_placement_orientations.hpp"
 #include "pcb_placement_fixture.hpp"
 #include "contract_rigid_groups_internal.hpp"
+#include "floorplan_internal.hpp"
 #include "schgen/pcb_placement_gates.hpp"
 #include <array>
 #include <atomic>
@@ -262,7 +263,7 @@ void unit(){
  for(const auto& candidate:g.shapes.at("unit")) {
   const auto index=whole_index++;
   if(candidate.tag.rfind("contract-bottom",0)!=0)continue;
-  demand(candidate.top_off.empty()&&candidate.bot_off.size()==2&&candidate.mirror.size()==2,
+  demand(candidate.side=="bottom"&&candidate.top_off.size()==2&&candidate.bot_off.empty()&&candidate.mirror.size()==2,
          "whole-sheet face move lost members or mirror binding");
   const auto checked=model(candidate,ctx,g);
   const auto bound=bind_pcb_zone_shapes(whole_zones,{{"unit",static_cast<int>(index)}});
@@ -284,6 +285,25 @@ void unit(){
  demand(g.shapes.at("unit").size()==whole_once.size(),"whole-sheet replay accumulated duplicates");
  for(std::size_t i=0;i<whole_once.size();++i)
   demand(equal(g.shapes.at("unit")[i],whole_once[i]),"whole-sheet replay changed deterministic order");
+ // Exercise the real selector with these generated offers, not a separately
+ // manufactured bottom flag. Physical geometry and binding are checked above.
+ FloorplanInput selection;selection.som.w=selection.som.h=8;
+ selection.module_offset=FloorplanPoint{0,0};selection.compact_search=true;
+ selection.geometry.shapes["unit"]=whole_once;
+ for(const auto& [key,footprint]:ctx.pool)
+  selection.footprints[key]={footprint->source,footprint->document};
+ auto required=std::make_shared<FloorplanExperiment>();required->require_bottom_sheets={"unit"};
+ selection.experiment=required;
+ floorplan_detail::Engine selector(selection);selector.board_size(80,70);selector.plan.punch_free=true;
+ FloorplanBlock block;block.name="unit";block.kind="interior";block.zone="E";
+ block.w=single.w;block.h=single.h;
+ selector.plan.interior_blocks.push_back(block);selector.zbox["unit"]={single.w,single.h};
+ for(const auto& candidate:whole_once)
+  selector.shape_sets[1]["unit"].push_back({candidate.w,candidate.h,{},{},candidate.side,{}});
+ demand(selector.attempt_pack_impl(false),"generated whole-bottom offers cannot satisfy required-bottom selection");
+ const auto& placed=selector.plan.interior_blocks.at(0);
+ demand(placed.shape_idx>0&&placed.side=="bottom"&&whole_once.at(placed.shape_idx).side=="bottom",
+        "required-bottom selector did not choose a generated bottom-primary offer");
 }
 void live(const std::filesystem::path& root){
  for(const auto* project:{"carrier","devkit_mini"}){

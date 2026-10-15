@@ -1,0 +1,23 @@
+{
+  "source_parent": "cfc1ff09",
+  "defect": "All-bottom contract alternatives retained top-primary storage, so require_bottom_sheets rejected them despite their physical face assignment.",
+  "fix": "After qualification, canonicalize all-bottom offers to bottom-primary storage without changing coordinates, rotations or mirrored documents. Local model construction and singleton compaction now resolve physical faces relative to primary side.",
+  "tests": {
+    "native_pcb_orientation_contracts": {"status": "PASS", "seconds": 6.86, "coverage": "real Engine selection from generated whole-bottom offers under require_bottom_sheets, mirrored binding, physical bounds, chirality and deterministic replay plus existing real-board regressions"},
+    "native_owned_shape_quality_engine_contracts": {"status": "PASS", "seconds": 0.51},
+    "native_policy_audits_contracts": {"status": "PASS", "seconds": 44.81},
+    "initial_test_failure": "New selector fixture omitted its resolved mirrored footprints. Supplied actual generated footprint documents and reran successfully; no production check was weakened."
+  },
+  "screens": [
+    {"recipe": "published carrier recipe at 163x151", "status": "constructed_no_acceptance", "model_seconds": 16.62247175, "emit_seconds": 0.028442166, "pcb_sha256": "8ba5fe760fa5ac529cd107cf7fa70945f7e7276b60e03f0e98b4ddc4d6ffc397", "log": "native/build/carrier-bottom-primary-release-recipe.log"},
+    {"recipe": "carrier 163x151 with additional power_som and power_mon face exploration", "status": "constructed_no_acceptance", "model_seconds": 16.562465833, "emit_seconds": 0.02708175, "pcb_sha256": "8413109a3f1b1a87bd8e13ab77f7f9f0a8c9e610d49fb5ef6dbc5b431b662c1e", "top": 398, "bottom": 168, "hard_red": 0, "fanout_ok": true, "placement_contract_ok": true, "placement_flow_ok": true, "minimum_measured_mm_margin": 4.25, "log": "native/build/carrier-bottom-primary.log"},
+    {"recipe": "same expanded carrier recipe at 163x150 with bringup_rails pin removed", "status": "construction_failed", "elapsed_seconds": 18.551431458, "completed_outer_attempts": 4, "receipt_captured": true, "receipt_unavailable": false, "log": "native/build/carrier-bottom-primary-163x150.log"},
+    {"recipe": "devkit compact-search off, multiscale-outline on", "status": "constructed_no_acceptance", "model_seconds": 0.183293458, "emit_seconds": 0.008060875, "pcb_sha256": "1b12fecbcbbaa5e6084c2459da93cb144a660ff19805e6e4e3f75f9c22689fdb", "log": "native/build/devkit-bottom-primary.log"}
+  ],
+  "limitations": [
+    "Expanded carrier recipe now selects a different PCB, not yet fully qualified or accepted as the release board.",
+    "No demonstrated area reduction or additional selected bottom parts; 163x150 still fails bounded search.",
+    "Published carrier recipe and devkit reproduce existing PCB hashes.",
+    "Single-run overlapping timings are observations, not speedup claims or Python comparisons."
+  ]
+}
