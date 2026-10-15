@@ -1,0 +1,25 @@
+{
+  "source_commit": "5a5829ac",
+  "experiment": "Replace shape-area-first's whole-group envelope area with max(top child bounding-envelope area, bottom child bounding-envelope area), both for initial legal-offer ranking and victim-shape retry order. Through-hole children contribute to both faces; empty/unknown reservations retain the original envelope. All geometry and hardware checks unchanged.",
+  "unit_result": "Experimental compact retry contracts PASS 5.75s, including cross-face versus same-face spans, through-hole occupancy, unknown reservation fallback and translation invariance. Passing kernel tests did not imply integration success.",
+  "screens": {
+    "qualified_reference_163x151": {"result":"FAIL bounded packing, 4 completed outer attempts, available failure receipt","log":"native/build/face-envelope-reference.log"},
+    "candidate_163x150": {"result":"FAIL bounded packing, 4 completed outer attempts, available failure receipt","log":"native/build/face-envelope-163x150.log"}
+  },
+  "decision": "REJECTED. Restored production ranking exactly, removed experimental helper/tests, and rebuilt profiler and retry-test executables. No new default, fallback strategy or hardware exemption retained.",
+  "restored_reference": {
+    "log":"native/build/face-envelope-restored-reference.log",
+    "pcb_sha256":"d8dea4b5049968b2fdcb385a17cb19c9e8d5257bd2afa297b1467600f2690e5e",
+    "result":"Exact qualified 163x151 PCB restored; fanout, ratsnest, placement-contract and flow diagnostics PASS, hard_red=0, no nonsearch fallback events"
+  },
+  "additional_combined_search": {
+    "configuration":"Restored production recipe, 163x150 outline, two shape-choice prefix replays",
+    "log":"native/build/next-163x150-shape-replays.log",
+    "result":"FAIL bounded packing, 12 completed outer attempts, available failure receipt",
+    "elapsed_diagnostic_seconds":37.396146416,
+    "timing_caveat":"Overlapped restored-reference diagnostic; not a speed comparison"
+  },
+  "interpretation":"Local face-envelope compactness alone is not a reliable ranking of the space left for later groups. Reference failures moved toward FMC, HDMI RX termination and Ethernet seating. This does not show that two-sided placement is ineffective or that 163x150 is physically impossible.",
+  "next_direction":"Measure residual face-specific feasible space for constrained remaining groups or bounded lookahead, rather than replacing global-fit behavior with a local area scalar. Preserve promising incumbents and independently qualify any smaller finalist.",
+  "limitations":"No new smaller board accepted; qualified reference remains 163x151. No full qualification repeated for the restored identical source/PCB. Broad goal remains incomplete."
+}
