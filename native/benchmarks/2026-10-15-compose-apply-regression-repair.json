@@ -1,0 +1,25 @@
+{
+  "source_base": "a247fc09",
+  "diagnoses": [
+    "Candidate ranking was healthy: the test searched for retired aggregate-margin wording after commit 3451928a separated spatial, angular and area units.",
+    "After correcting that assertion, both real failed builds reverted their floorplan edits. The test then failed because an empty retry baseline no longer rejects observational search work; all three mandatory non-search fallback paths had zero firings."
+  ],
+  "changes": [
+    "Require ranked candidate output with explicit mm, degrees and mm^2 units.",
+    "Replace the obsolete zero-search-ceiling negative case with invalid required fallback-baseline data and assert its exact diagnostic."
+  ],
+  "preserved": [
+    "Real native factories and private KiCad extraction despite poisoned cached transports",
+    "Actual eligible edit followed by complete board execution",
+    "Missing package collateral remains a mandatory failure",
+    "Invalid fallback evidence remains a mandatory failure",
+    "Missing trusted clang++ remains a mandatory source-audit failure",
+    "Exact original floorplan restoration and entire project snapshot equality",
+    "No ACCEPTED output after build rejection and no shared carrier baseline mutation"
+  ],
+  "test": "native_geometry_cli_apply_contracts",
+  "result": "PASS",
+  "seconds": 246.20,
+  "execution": "Part of the two-worker integrated-post-repairs CTest run; all other tests still running at evidence capture.",
+  "limits": "No production policy or hardware limit changed. This proves apply rollback behavior, not board fabrication readiness or completion of the full optimisation goal."
+}

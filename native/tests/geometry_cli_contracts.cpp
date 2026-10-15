@@ -211,20 +211,25 @@ void live(const fs::path& repo, const fs::path& work, const JsonNode& reference,
 })");
     const auto candidates = invoke("compose", work / "candidates", {"--repair", "--dry-run"});
     require(candidates.first == 0 && candidates.second.find("AddPull power_mon") != candidates.second.npos, "real mutated contract produces actual candidates");
-    require(candidates.second.find("predicted agg-hard-margin") != candidates.second.npos, "at least one actual candidate is eligible");
+    require(candidates.second.find(": predicted min margin ") != candidates.second.npos &&
+            candidates.second.find(" mm / ") != candidates.second.npos &&
+            candidates.second.find(" degrees, area ") != candidates.second.npos &&
+            candidates.second.find(" mm^2") != candidates.second.npos,
+            "at least one ranked candidate reports separate spatial, angular and area units");
     const auto spec_bytes = read(project / "floorplan.json");
     // Bounded negative proof, NOT full-board acceptance: the actual compiler
     // is unavailable in both cases and its mandatory audit must fail closed.
     // KiCad is selected by its trusted absolute path; real ngspice stays usable.
     WithoutAuditCompiler tools(work / "tools-without-audit-compiler");
     // Two additional independent full-pipeline hard failures after an eligible edit:
-    // missing local package collateral, then a zero-ceiling fallback ratchet.
+    // missing local package collateral, then invalid required fallback evidence.
+    // Search effort is observational, so a zero retry ceiling is not a failure.
     const auto collateral = project / "subsystems/power_som/README.md";
     fs::rename(collateral, project / "retained-power-som-README.txt");
     for (const auto* failure : {"carrier_structure", "fallbacks"}) {
         if (std::string(failure) == "fallbacks") {
             fs::rename(project / "retained-power-som-README.txt", collateral);
-            write(project / "reports/fallback_baseline.json", "{\"counts\":{}}\n");
+            write(project / "reports/fallback_baseline.json", "INVALID REQUIRED BASELINE\n");
         }
         const auto unchanged = snapshot(project);
         const auto output = work / (std::string("apply-") + failure);
@@ -239,6 +244,9 @@ void live(const fs::path& repo, const fs::path& work, const JsonNode& reference,
         require(!field(verdict, "board_ok").bool_value, "actual full-board verdict fails");
         const auto& gates = field(verdict, "gates");
         require(field(field(gates, failure), "status").string_value == "FAIL" && field(field(gates, failure), "mandatory").bool_value, "deliberately mutated mandatory gate is not waived");
+        if(std::string(failure)=="fallbacks")
+            require(field(field(gates,failure),"report").string_value.find("board fallback baseline missing or invalid")!=std::string::npos,
+                    "invalid required fallback evidence causes the rejection, not search effort");
         require(field(field(gates, "native_policy"), "status").string_value == "PASS", "apply ran reviewed native policy");
         const auto& audit = field(gates, "quantize_census");
         require(field(audit, "status").string_value == "FAIL" && field(audit, "mandatory").bool_value, "missing trusted compiler is a mandatory failure");
