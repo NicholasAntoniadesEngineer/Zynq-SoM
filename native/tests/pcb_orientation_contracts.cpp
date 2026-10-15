@@ -345,6 +345,7 @@ void live(const std::filesystem::path& root){
    for(std::size_t i=0;i<som_originals.size();++i)
     demand(equal(som_originals[i],som_offers[i]),"SoM power expansion changed an incumbent");
    bool som_buck_bottom=false;
+   std::size_t som_contact_offers=0;
    for(const auto& candidate:som_offers) {
     if(candidate.tag.rfind("contract-bottom",0)!=0)continue;
     const auto checked=model(candidate,som_context,som_split.geometry,"power_som");
@@ -354,8 +355,38 @@ void live(const std::filesystem::path& root){
     som_buck_bottom|=candidate.bot_off.count(som_context.board_refs.at("power_som").at("U4"))!=0;
     for(const auto& inst:checked.model().insts)
      if(face_top(som_context.by_ref.at(inst.ref)))demand(inst.side=="top","SoM service access moved underneath");
+    if(candidate.tag.find("/contact/")!=std::string::npos) {
+     ++som_contact_offers;
+     demand(candidate.w*candidate.h<24.4399*40.4904,
+            "SoM contact repair did not improve the original corner-only bottom envelope");
+     std::optional<FloorplanPoint> translation;
+     for(const auto& [ref,xy]:candidate.bot_off) {
+      const auto old=som_originals.front().top_off.find(ref);
+      if(old==som_originals.front().top_off.end())continue;
+      const FloorplanPoint delta{xy.first+old->second.first,xy.second-old->second.second};
+      if(!translation)translation=delta;
+      demand(std::abs(delta.first-translation->first)<1.1e-4&&
+             std::abs(delta.second-translation->second)<1.1e-4,
+             "single-group contact repair distorted mirrored rigid membership");
+     }
+     demand(translation.has_value(),"single-group contact repair moved no original top components");
+     for(std::size_t i=0;i<checked.model().insts.size();++i) {
+      const auto a=checked.courtyard_at(i);
+      demand(a.x0>=0&&a.y0>=0&&a.x1<=candidate.w&&a.y1<=candidate.h,
+             "single-group contact repair escaped its envelope");
+      for(std::size_t j=0;j<i;++j) {
+       const auto& pi=checked.model().insts[i];const auto& pj=checked.model().insts[j];
+       if(pi.side!=pj.side&&!has_thru_pads_from_text(pi.mod->bytes)&&!has_thru_pads_from_text(pj.mod->bytes))continue;
+       const auto b=checked.courtyard_at(j);
+       demand(a.x0>=b.x1+som_context.clearance||a.x1+som_context.clearance<=b.x0||
+              a.y0>=b.y1+som_context.clearance||a.y1+som_context.clearance<=b.y0,
+              "single-group contact repair violates physical courtyard clearance");
+      }
+     }
+    }
    }
    demand(som_buck_bottom,"SoM power candidates never move the buck stage");
+   demand(som_contact_offers>0,"colliding SoM single group has no checked contact repairs");
    const auto som_prepared=prepare_pcb_floorplan(f.input,som_split);
    for(const auto* kind:{"flow_hop","facing","far_min"})
     demand(std::any_of(som_prepared.compose.index.hard.begin(),som_prepared.compose.index.hard.end(),

@@ -236,10 +236,43 @@ void append_contract_group_faces(Context& ctx,Geometry& g,const std::string& she
             found->second.push_back(std::move(candidate));
         return true;
     };
+    const auto contact_repairs=[&](const Shape& candidate,const auto& moved) {
+        std::vector<Shape> repairs;
+        const auto placed=model(candidate);
+        std::set<FloorplanPoint> shifts;
+        for(std::size_t bi=0;bi<placed.model().insts.size();++bi) {
+            if(!moved(placed.model().insts[bi].ref))continue;
+            const auto box=placed.courtyard_at(bi);
+            for(std::size_t oi=0;oi<placed.model().insts.size();++oi) {
+                const auto& obstacle=placed.model().insts[oi];
+                if(moved(obstacle.ref)||(obstacle.side!="bottom"&&!has_thru_pads_from_text(obstacle.mod->bytes)))continue;
+                const auto other=placed.courtyard_at(oi);
+                if(box.x0>=other.x1+ctx.clearance||box.x1+ctx.clearance<=other.x0||
+                   box.y0>=other.y1+ctx.clearance||box.y1+ctx.clearance<=other.y0)continue;
+                shifts.emplace(other.x1+ctx.clearance-box.x0,0);
+                shifts.emplace(other.x0-ctx.clearance-box.x1,0);
+                shifts.emplace(0,other.y1+ctx.clearance-box.y0);
+                shifts.emplace(0,other.y0-ctx.clearance-box.y1);
+            }
+        }
+        for(const auto& raw:shifts) {
+            const FloorplanPoint shift{bottom_contact_shift(raw.first,&ctx.quantization),
+                                      bottom_contact_shift(raw.second,&ctx.quantization)};
+            Shape translated=candidate;
+            translated.tag+="/contact/"+std::to_string(shift.first)+"/"+std::to_string(shift.second);
+            for(auto& [ref,xy]:translated.bot_off)if(moved(ref)) {
+                xy.first=placement_bottom_pose_precision4dp(xy.first+shift.first,&ctx.quantization);
+                xy.second=placement_bottom_pose_precision4dp(xy.second+shift.second,&ctx.quantization);
+            }
+            repairs.push_back(std::move(translated));
+        }
+        return repairs;
+    };
     std::vector<Shape> single_group;
     // Keep every original offer in its original index before appending turns.
     for(int turn=0;turn<(group_rotations?4:1);++turn) {
     std::vector<Shape> contact_pairs;
+    std::vector<Shape> contact_singles;
     const auto previous_singles=single_group.size();
     for(const auto& group:*groups) {
         if(group.refs.size()<2||!group.required_top_refs.empty())continue;
@@ -291,6 +324,16 @@ void append_contract_group_faces(Context& ctx,Geometry& g,const std::string& she
             // pair search; retain the first representative and every distinct
             // pose/face/mirror/rotation, not merely distinct envelope sizes.
             if(append_checked(candidate))append_distinct_zone_shapes(seed,single_group,{candidate});
+            else {
+                // A single group can collide with existing bottom parts or
+                // through-hole occupancy just as a pair can. Explore one-step
+                // courtyard contacts, preserving the entire group's rigid pose.
+                // Do not recursively multiply repairs into the pair campaign.
+                auto repairs=contact_repairs(candidate,[&](const std::string& ref){
+                    return std::binary_search(group.refs.begin(),group.refs.end(),ref);
+                });
+                for(auto& repair:repairs)contact_singles.push_back(std::move(repair));
+            }
         }
     }
     // Combine disjoint connected groups, not arbitrary individual components.
@@ -314,38 +357,13 @@ void append_contract_group_faces(Context& ctx,Geometry& g,const std::string& she
         if(append_checked(candidate))continue;
         // Corner-aligned singles can overlap when combined. Derive rigid
         // translations from actual colliding courtyards, not a sampling grid.
-        const auto placed=model(candidate);
-        std::set<FloorplanPoint> shifts;
         const auto moved=[&](const std::string& ref){return seed.top_off.count(ref)&&b.bot_off.count(ref);};
-        for(std::size_t bi=0;bi<placed.model().insts.size();++bi) {
-            if(!moved(placed.model().insts[bi].ref))continue;
-            const auto box=placed.courtyard_at(bi);
-            for(std::size_t oi=0;oi<placed.model().insts.size();++oi) {
-                const auto& obstacle=placed.model().insts[oi];
-                if(moved(obstacle.ref)||(obstacle.side!="bottom"&&!has_thru_pads_from_text(obstacle.mod->bytes)))continue;
-                const auto other=placed.courtyard_at(oi);
-                if(box.x0>=other.x1+ctx.clearance||box.x1+ctx.clearance<=other.x0||
-                   box.y0>=other.y1+ctx.clearance||box.y1+ctx.clearance<=other.y0)continue;
-                shifts.emplace(other.x1+ctx.clearance-box.x0,0);
-                shifts.emplace(other.x0-ctx.clearance-box.x1,0);
-                shifts.emplace(0,other.y1+ctx.clearance-box.y0);
-                shifts.emplace(0,other.y0-ctx.clearance-box.y1);
-            }
-        }
-        for(const auto& raw:shifts) {
-            const FloorplanPoint shift{bottom_contact_shift(raw.first,&ctx.quantization),
-                                      bottom_contact_shift(raw.second,&ctx.quantization)};
-            Shape translated=candidate;
-            translated.tag+="/contact/"+std::to_string(shift.first)+"/"+std::to_string(shift.second);
-            for(auto& [ref,xy]:translated.bot_off)if(moved(ref)) {
-                xy.first=placement_bottom_pose_precision4dp(xy.first+shift.first,&ctx.quantization);
-                xy.second=placement_bottom_pose_precision4dp(xy.second+shift.second,&ctx.quantization);
-            }
-            contact_pairs.push_back(std::move(translated));
-        }
+        auto repairs=contact_repairs(candidate,moved);
+        for(auto& repair:repairs)contact_pairs.push_back(std::move(repair));
     }
     // Keep each orientation's existing offers ahead of its checked repairs.
     for(auto& candidate:contact_pairs)append_checked(std::move(candidate));
+    for(auto& candidate:contact_singles)append_checked(std::move(candidate));
     }
     // Reuse vacated space for unconstrained singleton leftovers. Preserve their
     // face and orientation (notably service LEDs); every contact move goes
