@@ -251,6 +251,39 @@ void unit(){
  input.contracts["unit"]=parse_json_text(R"({"contract":"placement/v2","structures":[{"type":"proximity","anchor":"A","members":["B"],"max_mm":30,"same_side":true}]})");
  g.shapes.clear();append_contract_group_faces(ctx,g,"unit",single);
  demand(g.shapes.empty(),"singleton face exploration split a group pinned by service access");
+ // The same connected group becomes eligible when no member needs top access.
+ // There is no stationary remainder: that is not a reason to reject the move.
+ ctx.by_ref["R2"].lib_id="Device:R";
+ g.shapes.clear();append_contract_group_faces(ctx,g,"unit",single,true);
+ demand(g.shapes.count("unit")&&g.shapes.at("unit").size()==5,
+        "whole-sheet group must offer all four bottom orientations plus incumbent");
+ PcbZoneResult whole_zones;whole_zones.geometry=g;whole_zones.footprints=ctx.pool;
+ std::size_t whole_index=0;
+ for(const auto& candidate:g.shapes.at("unit")) {
+  const auto index=whole_index++;
+  if(candidate.tag.rfind("contract-bottom",0)!=0)continue;
+  demand(candidate.top_off.empty()&&candidate.bot_off.size()==2&&candidate.mirror.size()==2,
+         "whole-sheet face move lost members or mirror binding");
+  const auto checked=model(candidate,ctx,g);
+  const auto bound=bind_pcb_zone_shapes(whole_zones,{{"unit",static_cast<int>(index)}});
+  for(const auto& [ref,key]:candidate.mirror)
+   demand(bound.side_of.at(ref)=="bottom"&&bound.resolvable.at(ref)==key&&bound.mirror_refs.count(ref),
+          "whole-sheet binding lost physical bottom face or mirrored footprint");
+  demand(check_pcb_placement_contract(checked,"unit",&input.contracts.at("unit"),ctx.board_refs.at("unit")).ok&&
+         check_fanout(checked,0).ok,"whole-sheet group failed contract/fanout checks");
+  for(std::size_t i=0;i<checked.model().insts.size();++i) {
+   const auto bounds=checked.courtyard_at(i);
+   demand(bounds.x0>=0&&bounds.y0>=0&&bounds.x1<=candidate.w&&bounds.y1<=candidate.h,
+          "whole-sheet bottom rotation clipped a courtyard");
+   demand(handed(model(single,ctx,g),i)*handed(checked,i)<0,
+          "whole-sheet bottom rotation lost chirality");
+  }
+ }
+ const auto whole_once=g.shapes.at("unit");
+ append_contract_group_faces(ctx,g,"unit",single,true);
+ demand(g.shapes.at("unit").size()==whole_once.size(),"whole-sheet replay accumulated duplicates");
+ for(std::size_t i=0;i<whole_once.size();++i)
+  demand(equal(g.shapes.at("unit")[i],whole_once[i]),"whole-sheet replay changed deterministic order");
 }
 void live(const std::filesystem::path& root){
  for(const auto* project:{"carrier","devkit_mini"}){

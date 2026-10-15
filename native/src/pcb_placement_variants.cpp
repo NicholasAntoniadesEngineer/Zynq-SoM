@@ -289,7 +289,7 @@ void append_contract_group_faces(Context& ctx,Geometry& g,const std::string& she
         for(const auto& [ref,box]:boxes)
             if(!std::binary_search(group.refs.begin(),group.refs.end(),ref))remaining_boxes.push_back(box);
         const auto moving=boxes_union(moved_boxes),remaining=boxes_union(remaining_boxes);
-        if(!moving||!remaining)continue;
+        if(!moving)continue;
         try {
             for(const auto& ref:group.refs) {
                 const auto key=g.resolvable.at(ref),mk="@mirror/"+key;
@@ -305,9 +305,13 @@ void append_contract_group_faces(Context& ctx,Geometry& g,const std::string& she
         const double original_width=moving->x1-moving->x0,original_height=moving->y1-moving->y0;
         const double width=turn%2?original_height:original_width;
         const double height=turn%2?original_width:original_height;
-        for(const auto target:std::vector<FloorplanPoint>{{remaining->x0,remaining->y0},
+        // A whole-sheet connected group has no stationary rectangle to align
+        // against. Normalize its physical bounds instead of silently excluding
+        // it. All original offsets, pin ownership and face checks still apply.
+        const auto targets=remaining?std::vector<FloorplanPoint>{{remaining->x0,remaining->y0},
                 {remaining->x1-width,remaining->y0},{remaining->x0,remaining->y1-height},
-                {remaining->x1-width,remaining->y1-height}}) {
+                {remaining->x1-width,remaining->y1-height}}:std::vector<FloorplanPoint>{{0,0}};
+        for(const auto target:targets) {
             Shape candidate=seed;
             candidate.tag="contract-bottom/"+group.refs.front()+"/"+std::to_string(target.first)+"/"+std::to_string(target.second);
             if(turn)candidate.tag+="/group-r"+std::to_string(90*turn);

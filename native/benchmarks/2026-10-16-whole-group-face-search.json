@@ -1,0 +1,22 @@
+{
+  "source_parent": "6e77f512",
+  "change": "Allow an unpinned whole-sheet contract-connected group to move to the bottom even when no stationary remainder exists. Normalize actual courtyard bounds; retain all incumbent offers and checks.",
+  "scope": "Explicit contract-group exploration only; not removal of hardware constraints or fabrication qualification.",
+  "tests": {
+    "native_pcb_orientation_contracts": {"status": "PASS", "seconds": 6.47, "coverage": "four whole-group bottom orientations, all-member mirrored binding, physical-face binding, courtyard enclosure, contract and fanout checks, chirality, deterministic idempotence; existing carrier/devkit regressions"},
+    "native_policy_audits_contracts": {"status": "PASS", "seconds": 45.53}
+  },
+  "screens": [
+    {"project": "carrier", "recipe": "163x151 published profile recipe plus power_som and power_mon face exploration; bringup_rails and board_aux pinned", "status": "constructed_no_acceptance", "model_seconds": 17.247468083, "emit_seconds": 0.029564333, "pcb_sha256": "8ba5fe760fa5ac529cd107cf7fa70945f7e7276b60e03f0e98b4ddc4d6ffc397", "log": "native/build/carrier-whole-group-face.log"},
+    {"project": "carrier", "recipe": "same profile, 163x150, bringup_rails pin removed", "status": "construction_failed", "elapsed_seconds": 14.200164084, "completed_outer_attempts": 4, "receipt_captured": true, "receipt_unavailable": false, "log": "native/build/carrier-whole-group-face-163x150.log"},
+    {"project": "devkit_mini", "recipe": "compact-search off, multiscale-outline on", "status": "constructed_no_acceptance", "model_seconds": 0.1958485, "emit_seconds": 0.008634333, "pcb_sha256": "1b12fecbcbbaa5e6084c2459da93cb144a660ff19805e6e4e3f75f9c22689fdb", "log": "native/build/devkit-whole-group-face.log"}
+  ],
+  "limitations": [
+    "The whole-group positive witness is synthetic; no resulting carrier area or utilisation improvement is claimed.",
+    "Carrier screen also enables power_mon exploration; this is combined-strategy screening, not isolated performance attribution.",
+    "Single runs overlap other work and cannot establish a speedup.",
+    "The smaller-board search failed; that does not prove physical infeasibility.",
+    "No full new render/qualification campaign: successful screens reproduce published PCB hashes.",
+    "Impedance-controlled components remain pinned: current zone validation explicitly reports that B.Cu has no emitted reference plane. Changing that restriction requires stackup and signal-integrity evidence, not simply deleting the check."
+  ]
+}
