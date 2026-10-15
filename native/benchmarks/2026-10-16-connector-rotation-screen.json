@@ -1,0 +1,20 @@
+{
+  "source_commit": "9d506722",
+  "dimensions_mm": [162,150],
+  "workload": "Carrier release face sheets plus fmc; baseline followed by granular-minor+vertical+estimator-first+rotations; interior order 3, failed-first retry, joint states 1024, reseat poses 8/frontier 4096/continuations 3/victim shapes enabled",
+  "status": "Both strategies failed construction; no incumbent, not proof of geometric infeasibility",
+  "elapsed_seconds": 70.318689916,
+  "completed_outer_attempts": 8,
+  "receipt_captured": true,
+  "receipt_unavailable": false,
+  "accounting_check": "All 82 search-total quantization counters exactly equal summed per-attempt counters",
+  "repeated_rejections": {
+    "count": 586,
+    "message": "hard red after legalization: facing power->power_som margin -7.5276; facing power_som->@som margin -71.4822"
+  },
+  "interpretation": "Adding legal group rotations alone did not resolve the smaller board. Repeated identical facing failures warrant checking which endpoints remain fixed during each composer invocation before spending more work on wider separation frontiers. Fixed-endpoint diagnosis is a hypothesis, not established by repeated margins alone.",
+  "timing_limit": "Diagnostic observation overlapped native rebuild/regression activity; not a controlled performance comparison",
+  "log": "native/build/connector-rotations-162x150.log",
+  "accepted_reference": "Published 162x151 board remains unchanged",
+  "integrated_regression": "Full native target rebuild completed and full CTest suite started separately at this source revision. Its eventual result is not implied by this screen."
+}
