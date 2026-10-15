@@ -10,7 +10,6 @@
 #include <deque>
 #include <limits>
 #include <functional>
-#include <queue>
 #include <stdexcept>
 #include <string>
 #include <tuple>
@@ -71,6 +70,33 @@ struct HeapNode {
         if (d != o.d) return d > o.d;
         if (i != o.i) return i > o.i;
         return j > o.j;
+    }
+};
+
+// A row successor is never earlier than its current head. Replace that head
+// with one downward pass instead of doing a pop followed by a push.
+class FrontierHeap {
+    std::vector<HeapNode> nodes_;
+public:
+    bool empty() const { return nodes_.empty(); }
+    const HeapNode& top() const { return nodes_.front(); }
+    void push(HeapNode node) {
+        nodes_.push_back(node);
+        std::push_heap(nodes_.begin(),nodes_.end(),std::greater<HeapNode>{});
+    }
+    void pop() {
+        std::pop_heap(nodes_.begin(),nodes_.end(),std::greater<HeapNode>{});
+        nodes_.pop_back();
+    }
+    void replace_top(HeapNode node) {
+        std::size_t parent=0;
+        while(parent<nodes_.size()/2) {
+            std::size_t child=parent*2+1;
+            if(child+1<nodes_.size()&&nodes_[child]>nodes_[child+1])++child;
+            if(!(node>nodes_[child]))break;
+            nodes_[parent]=nodes_[child];parent=child;
+        }
+        nodes_[parent]=node;
     }
 };
 
@@ -743,7 +769,7 @@ std::optional<Pose> Occupancy::place_near_impl(
         if(alternatives)alternatives->search_complete=true;
         return std::nullopt;
     }
-    std::priority_queue<HeapNode, std::vector<HeapNode>, std::greater<HeapNode>> heap;
+    FrontierHeap heap;
     heap.push(HeapNode{xs[0].first + ys[0].first, 0, 0});
     // The raw-distance frontier is monotone, and decimal rounding is
     // monotone too. Rounded keys therefore arrive in order: an ordered queue
@@ -786,7 +812,6 @@ std::optional<Pose> Occupancy::place_near_impl(
             ++alternatives->frontier_nodes;
         }
         const HeapNode node = heap.top();
-        heap.pop();
         const double xcost = xs[static_cast<std::size_t>(node.i)].first;
         const double ycost = ys[static_cast<std::size_t>(node.j)].first;
         const double x = xs[static_cast<std::size_t>(node.i)].second;
@@ -804,15 +829,17 @@ std::optional<Pose> Occupancy::place_near_impl(
         // first element introduces the next row. Row minima are ordered by x
         // cost, so this visits the same (distance, i, j) order as the two-way
         // frontier without a hash allocation/lookup for every visited cell.
+        if (node.j + 1 < static_cast<int>(ys.size())) {
+            heap.replace_top(HeapNode{xs[static_cast<std::size_t>(node.i)].first
+                                   + ys[static_cast<std::size_t>(node.j + 1)].first,
+                               node.i, node.j + 1});
+        } else {
+            heap.pop();
+        }
         if (node.j == 0 && node.i + 1 < static_cast<int>(xs.size())) {
             heap.push(HeapNode{xs[static_cast<std::size_t>(node.i + 1)].first
                                    + ys[static_cast<std::size_t>(node.j)].first,
                                node.i + 1, node.j});
-        }
-        if (node.j + 1 < static_cast<int>(ys.size())) {
-            heap.push(HeapNode{xs[static_cast<std::size_t>(node.i)].first
-                                   + ys[static_cast<std::size_t>(node.j + 1)].first,
-                               node.i, node.j + 1});
         }
         const double frontier = heap.empty() ? INFINITY : heap.top().d;
         if (auto hit = flush(frontier - frontier_half_)) {

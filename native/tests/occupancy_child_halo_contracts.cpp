@@ -38,6 +38,23 @@ void frontier_rejection_properties() {
                     "limited frontier changed accepted prefix");
     }
 }
+void frontier_shape_properties() {
+    // Include singleton rows/columns, uneven row lengths and many equal keys.
+    for(int width:{1,2,3,7})for(int height:{1,2,6,11})for(double anchor:{0.,2.5,9.05}) {
+        Occupancy grid(width,height,0,2,3,1,.05);
+        std::vector<std::tuple<double,double,double>> expected;
+        for(int x=0;x<width;++x)for(int y=0;y<height;++y)
+            expected.emplace_back(py_round(std::abs(x+.5-anchor)+std::abs(y+.5-anchor),1),x,y);
+        std::sort(expected.begin(),expected.end());
+        const auto all=grid.place_near_candidates(anchor,anchor,1,1,{},{},1,{},
+                                                 0,width,0,height,1000,1000);
+        require(all.search_complete&&all.frontier_nodes==expected.size(),"frontier lost a row successor");
+        require(all.poses.size()==expected.size(),"frontier result count changed");
+        for(std::size_t i=0;i<expected.size();++i)
+            require(all.poses[i].x==std::get<1>(expected[i])&&all.poses[i].y==std::get<2>(expected[i]),
+                    "frontier replacement changed independent exhaustive ordering");
+    }
+}
 void fractional_hash_properties() {
     // Stored children round absolute coordinates; query children deliberately
     // do not. Compare the two actual predicates, not a rounded-query oracle.
@@ -114,5 +131,5 @@ void properties() {
             halo(got[n].comps[0].reach,expected[n].comps[0].reach),"halo-distinct result changed");
 }
 }
-int main(){try{frontier_rejection_properties();properties();fractional_hash_properties();std::cout<<"PASS child halo contracts checks="<<checks<<'\n';return 0;}
+int main(){try{frontier_shape_properties();frontier_rejection_properties();properties();fractional_hash_properties();std::cout<<"PASS child halo contracts checks="<<checks<<'\n';return 0;}
 catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}

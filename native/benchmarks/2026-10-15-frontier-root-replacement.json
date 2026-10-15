@@ -1,0 +1,44 @@
+{
+  "base_commit": "2ed6b796",
+  "status": "accepted model-search optimisation; broader goal incomplete",
+  "profile": {
+    "command": "sample schgen_compact_stage_profile 5 1 -mayDie -file native/build/carrier-cpu-sample.txt",
+    "samples_main_thread": 3851,
+    "top_of_stack_place_near_impl": 1563,
+    "top_of_stack_py_round": 344,
+    "top_of_stack_fits_indexed": 175,
+    "sample_sha256": "f6b74382d2893a496034cc1aaef178b59650ba9bc2f1a50f1516e7d683ae0988",
+    "caveat": "Five-second sampled window, not whole-process CPU attribution. Inlined heap work appears within place_near_impl. Sampled run timings are not the performance comparison."
+  },
+  "implementation": "For each sorted frontier row, replace its popped head with its next element using one downward heap pass. Use normal removal at row exhaustion and insertion when introducing a new row. Preserve the same distance/i/j comparator, rounded-distance buckets, collision predicates and node budgets.",
+  "measurements": {
+    "workload": "Carrier 163x151, compact-stage profile with release options from docs/RELEASE-2026-10-15.md, current tracked schematic, observer enabled, two runs with prepared inputs reused",
+    "baseline_log": "native/build/frontier-prefilter-serial-restored.log",
+    "candidate_log": "native/build/frontier-replace-serial.log",
+    "baseline_model_seconds": [14.718278833, 14.775648292],
+    "candidate_model_seconds": [13.381970459, 13.386083541],
+    "mean_model_reduction_percent": 9.242150472,
+    "pcb_sha256_all_runs": "8ba5fe760fa5ac529cd107cf7fa70945f7e7276b60e03f0e98b4ddc4d6ffc397",
+    "all_model_receipts_identical": true,
+    "frontier_ranking_calls_each_run": 236619860,
+    "cell_index_calls_each_run": 53797312,
+    "limitations": "Small sequential local sample with uncontrolled OS caches and host activity; no task builds/tests intentionally overlapped timed runs. Model construction only, not total board, render, audit, or historical Python timing."
+  },
+  "tests": {
+    "initial": "occupancy precision, child halo, compact retry: 3/3 PASS, 8.27 seconds",
+    "expanded": "output precision, PCB placement, child halo: 3/3 PASS, 28.77 seconds",
+    "new_cases": "48 board-shape/anchor combinations including singleton rows/columns and tied keys; compare every pose against independent exhaustive distance/x/y ordering and exact frontier count.",
+    "retained_cases": "27 collision/mask/anchor combinations with exhaustive legal-position oracle, bounded prefix and node-budget checks.",
+    "both_boards": "PCB placement and full current output-precision contracts pass; historical output oracles unchanged."
+  },
+  "smaller_outline_screen": {
+    "dimensions_mm": [163,150],
+    "log": "native/build/frontier-replace-163x150.log",
+    "result": "No valid layout found in bounded search; no geometric infeasibility claim",
+    "seconds": 15.463404083,
+    "completed_outer_attempts": 4,
+    "all_failure_prefix_counts_and_fallback_events_identical_to_baseline": true,
+    "timing_caveat": "Overlapped regressions; not a speed comparison."
+  },
+  "qualification_scope": "Reuse earlier 163x151 full-build geometry evidence for the byte-identical PCB; no new full build, source audit, renders or fabrication qualification claimed. Master release unchanged."
+}
