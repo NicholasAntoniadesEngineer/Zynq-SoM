@@ -1,0 +1,16 @@
+{
+  "source_commit": "90df0644",
+  "outline_mm": [162,150],
+  "common": "Carrier release recipe; explicit usb_jtag,power,power_som,power_mon,fmc face sheets; baseline plus granular-minor+vertical+estimator-first; all existing hardware gates retained; joint states 1024, reseat poses 8/frontier 4096/continuations 3/victim shapes",
+  "runs": [
+    {"order":0,"meaning":"connectivity/priority","shape_choice_replays":0,"elapsed_seconds":60.942799208,"outer_attempts":8,"log":"native/build/order-0-162x150.log"},
+    {"order":1,"meaning":"area first","shape_choice_replays":0,"elapsed_seconds":20.513263458,"outer_attempts":8,"log":"native/build/order-1-162x150.log"},
+    {"order":2,"meaning":"fewest permitted shapes, then area","shape_choice_replays":0,"elapsed_seconds":4.907328208,"outer_attempts":8,"log":"native/build/order-2-162x150.log"},
+    {"order":2,"meaning":"fewest permitted shapes with early-choice reconsideration","shape_choice_replays":4,"elapsed_seconds":22.263385042,"outer_attempts":40,"log":"native/build/order-2-replays4-162x150.log"}
+  ],
+  "result": "Both strategies failed construction in every run. No accepted candidate; not proof of physical infeasibility. Replay exhaustion remains explicitly reported, not hidden as exhaustive search.",
+  "accounting": "Every run captured a failure receipt. All 73 search-total operation counters in each run exactly equal summed per-attempt counters.",
+  "timing_limit": "Overlapping diagnostic runs, not controlled speed comparisons or full build timings",
+  "next_investigation": "Inspect coarse primary-face reservations: zone_components currently partitions minority-face courtyards while primary placement still reserves a subsystem envelope. Quantify potentially empty reserved area and determine what can be released without losing fanout, through-hole or functional constraints. This is a hypothesis to test, not an established cause of these failures.",
+  "accepted_reference": "162x151 published carrier unchanged"
+}
