@@ -5,7 +5,9 @@
 #include <fstream>
 #include <iostream>
 #include <iterator>
+#include <map>
 #include <stdexcept>
+#include <tuple>
 
 namespace {
 void require(bool test, const char* message) {
@@ -17,6 +19,25 @@ schgen::CircuitPartIr part(std::string ref, std::string value, std::string footp
     result.ref = std::move(ref); result.value = std::move(value);
     result.footprint = std::move(footprint); result.fields = std::move(fields);
     return result;
+}
+void inventory(const std::vector<schgen::CircuitSheetIr>& sheets, const schgen::BomOutput& bom) {
+    using Identity = std::tuple<std::string,std::string,std::string>;
+    std::map<std::string,Identity> expected, actual;
+    for(const auto& sheet:sheets) for(const auto& p:sheet.parts) {
+        std::string lcsc; bool excluded=false;
+        for(const auto& field:p.fields) {
+            if(field.key=="LCSC")lcsc=field.value;
+            if(field.key=="BOM"&&field.value=="exclude")excluded=true;
+        }
+        if(!excluded)require(expected.emplace(sheet.name+":"+p.ref,
+            Identity{p.value,p.footprint,lcsc}).second,"duplicate input BOM reference");
+    }
+    for(const auto& row:bom.rows) {
+        require(!row.refs.empty(),"empty BOM group");
+        for(const auto& ref:row.refs)require(actual.emplace(ref,
+            Identity{row.value,row.footprint,row.lcsc}).second,"duplicate output BOM reference");
+    }
+    require(actual==expected,"BOM must contain each included part exactly once with its complete identity");
 }
 }
 int main(int argc, char** argv) {
@@ -46,22 +67,37 @@ int main(int argc, char** argv) {
         a.parts = {part("R1", "line\nbreak", "tab\t", {{"BOM", "EXCLUDE"}})};
         require(schgen::generate_bom({a}).csv.find("\"line\nbreak\",a:R1,tab\t,\r\n") !=
                     std::string::npos, "newline CSV cell or exact BOM exclude policy");
-        if (argc == 2) {
-            const auto paths = schgen::resolve_project_paths(argv[1], "carrier");
+        if (argc == 2) for(const std::string project:{"carrier","devkit_mini"}) {
+            const auto paths = schgen::resolve_project_paths(argv[1], project);
             std::vector<schgen::CircuitSheetIr> sheets;
             for (const auto& circuit : schgen::load_project_circuits(paths)) sheets.push_back(circuit.circuit);
             std::ifstream file(paths.project_root / "manufacturing/bom_jlc.csv", std::ios::binary);
-            require(file.good(), "cannot read real carrier BOM baseline");
+            require(file.good(), "cannot read published board BOM");
             const std::string golden((std::istreambuf_iterator<char>(file)), {});
             const auto real = schgen::generate_bom(sheets);
-            // The committed manufacturing reference predates the reviewed C1
-            // bulk capacitor and C5 reference-filter corrections. Keep that
-            // oracle immutable; validate the precise current identities before
-            // projecting ONLY those reviewed input changes for comparison.
+            // This is a regenerated publication, not an immutable historical
+            // oracle (18778526 refreshed both boards). Compare current inputs
+            // directly, then independently verify every included part identity.
+            require(real.csv==golden,"published BOM differs from current circuit inputs");
+            inventory(sheets,real);
+            require(!real.rows.empty()&&!real.rows.front().refs.empty(),"real BOM mutation preimage");
+            for(int mutation=0;mutation<5;++mutation){
+                auto changed=real;
+                if(mutation==0)changed.rows.front().refs.erase(changed.rows.front().refs.begin());
+                if(mutation==1){const auto copy=changed.rows.front().refs.front();changed.rows.front().refs.push_back(copy);}
+                if(mutation==2)changed.rows.front().value+="_drift";
+                if(mutation==3)changed.rows.front().footprint+="_drift";
+                if(mutation==4)changed.rows.front().lcsc+="_drift";
+                bool rejected=false;try{inventory(sheets,changed);}catch(const std::runtime_error&){rejected=true;}
+                require(rejected,"independent BOM inventory accepted a missing, duplicate or altered part");
+            }
+            require(real.missing_footprints.empty(), "board contains unplaceable BOM rows");
+            require(sheets.size() == (project=="carrier"?37u:12u), "board BOM omitted circuits");
+            if(project!="carrier")continue;
+            // Retain the reviewed capacitor identities and negative checks,
+            // but do not compare projected old inputs with current publication.
             auto historical=sheets;
             for(auto& sheet:historical)sheet=historical_input_contracts::project(sheet,"carrier");
-            require(schgen::generate_bom(historical).csv==golden,
-                    "carrier BOM differs beyond reviewed capacitor changes");
             const auto identity=[&](const char* ref,const char* value,const char* footprint,const char* lcsc){
                 std::size_t found=0;
                 for(const auto& row:real.rows)for(const auto& actual:row.refs)if(actual==ref){
@@ -82,8 +118,6 @@ int main(int argc, char** argv) {
                 catch(const std::runtime_error&){rejected=true;}
                 require(rejected,"reverted capacitor BOM must not pass historical projection");
             }
-            require(real.missing_footprints.empty(), "carrier contains unplaceable BOM rows");
-            require(sheets.size() == 37, "carrier BOM omitted circuits");
         }
         std::cout << "BOM native contracts passed\n";
         return 0;
