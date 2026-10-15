@@ -94,6 +94,9 @@ struct PcbEscapeCopperResult {
 // retained, not caller-overridable relaxations. Primitive geometry/ladder/seat
 // APIs are the existing native pack.hpp functions.
 ContactGeom pcb_escape_contact_geometry(const PcbCheckFootprint &, QuantizationCounts* counts = nullptr);
+// Shared current-pose row reservation for composition and emitted escape plans.
+Box4 pcb_escape_row_corridor(const ContactGeom&, double lo, double hi, int row,
+                            double x, double y, double rotation, QuantizationCounts* = nullptr);
 Box4 pcb_escape_corridor_local(const PcbCheckFootprint &);
 Box4 pcb_escape_corridor_board(const PcbCheckFootprint &, double x, double y, double rotation, QuantizationCounts* counts = nullptr);
 PcbEscapeCopperResult build_pcb_escape_copper(const PcbEscapeInput &, QuantizationCounts* = nullptr);

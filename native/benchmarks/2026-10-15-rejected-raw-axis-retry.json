@@ -1,0 +1,39 @@
+{
+  "base_commit": "bcec28da",
+  "status": "prototype removed; no demonstrated recovery",
+  "hypothesis": "Joint axis solving produces coordinates before seed-attraction descent. If descent breaks a non-axis hardware term, independently qualify the original coordinates before rejecting the separation state.",
+  "prototype": "Within Composer joint qualification, retain the original x/y arrays. Preserve the existing descended success path; only after rejection, and only if descent moved coordinates, restore x/y and call the same edge and finish checks. Log each retry and retain actual quantization accounting.",
+  "carrier_screen": {
+    "recipe": "160x153 free-rails trial from 2026-10-15-smaller-aspect-screen.json",
+    "log": "native/build/axis-incumbent-160x153.log",
+    "result": "construction_failed",
+    "seconds": 44.596092667,
+    "completed_outer_attempts": 4,
+    "failure_receipt_captured": true,
+    "raw_axis_retries": 604,
+    "all_retry_rejections": "facing power_som->@som",
+    "facing_margin_degrees_histogram": {
+      "-55.0225": 572,
+      "-56.2292": 20,
+      "-57.191": 4,
+      "-56.4473": 4,
+      "-56.4836": 2,
+      "-55.6116": 2
+    }
+  },
+  "synthetic_tests": {
+    "prototype_floorplan_contracts": "PASS; 37194 checks",
+    "joint_composer_cases": "145 recovered, 179 preserved, no rejected cases; raw-axis fallback never exercised in this corpus",
+    "interpretation": "Existing green tests do not provide a positive recovery witness for the new fallback.",
+    "restored_floorplan_contracts": "PASS 12.49 seconds; profiler and tests rebuilt after reverting prototype"
+  },
+  "orientation_probe_setup_failures": [
+    {"extra_option": "--owned-shape power_som=turned", "seconds": 0.417812167, "completed_outer_attempts": 0, "log": "native/build/power-facing-turned-160x153.log"},
+    {"extra_option": "--owned-shape power_som=t270", "seconds": 0.409113875, "completed_outer_attempts": 0, "log": "native/build/power-facing-t270-160x153.log"}
+  ],
+  "setup_failure_cause": "The shape catalogue lists standard power_som rotations asbuilt/turned/t180/t270, but owned_shape_tags intentionally requires comparable owned-group quality measurements. Standard rotations lack them. Both probes rejected before placement; neither is evidence against those orientations.",
+  "next_step": "Add a separately named diagnostic selector for ordinary already-offered shape tags, with unique-tag and sheet validation, no invented owned-quality measurements, no bypass of hardware acceptance, and restriction preservation through retries. Then test power_som quarter turns on the concrete smaller-outline case.",
+  "decision": "Do not add 604 unproductive qualification retries to the default strategy. Retain existing solver and hardware checks. Selected orientation remains a hypothesis, not a proven root cause.",
+  "timing_caveat": "Diagnostic single run with some overlapping local build/test work; not a performance comparison.",
+  "qualified_incumbent": "163x151 unchanged; no new full build, renders, smaller accepted layout or fabrication claim"
+}

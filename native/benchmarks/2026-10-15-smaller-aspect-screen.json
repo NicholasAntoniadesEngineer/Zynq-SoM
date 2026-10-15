@@ -1,0 +1,25 @@
+{
+  "source_commit": "e170612f",
+  "status": "construction screening only; no smaller finalist accepted",
+  "base_recipe": "2026-10-15-current-unpinned-pilots.json base_command, but use tracked native/benchmarks/carrier-163x151-authored-proximity.floorplan.json and add --outline-mm as below. Preserve all other options and hardware checks.",
+  "incumbent": {"dimensions_mm": [163,151], "area_mm2": 24613},
+  "trials": [
+    {"outline_mm": "162x151", "area_mm2": 24462, "seconds": 4.522649916, "log": "native/build/carrier-aspect-162x151.log", "stages": ["interior_seating"], "subjects": ["fmc", "hdmi_rx_term", "usb_jtag"]},
+    {"outline_mm": "161x152", "area_mm2": 24472, "seconds": 4.513721084, "log": "native/build/carrier-aspect-161x152.log", "stages": ["interior_seating"], "subjects": ["fmc", "hdmi_rx_term", "usb_jtag"]},
+    {"outline_mm": "160x153", "area_mm2": 24480, "seconds": 7.485783875, "log": "native/build/carrier-aspect-160x153.log", "stages": ["interior_seating"], "subjects": ["bringup_rails", "debug_boot", "usb_jtag"]},
+    {"outline_mm": "160x153", "remove_shape_pins": ["bringup_rails"], "seconds": 44.216478458, "log": "native/build/carrier-aspect-160x153-free-rails.log", "stages": ["interior_seating", "legalizer"]},
+    {"outline_mm": "160x153", "remove_shape_pins": ["bringup_rails", "board_aux"], "seconds": 48.479293833, "log": "native/build/carrier-aspect-160x153-free-pilots.log", "stages": ["interior_seating", "legalizer"]}
+  ],
+  "all_results": "construction_failed, four completed outer attempts, captured failure receipts; no geometric infeasibility claim",
+  "finding": "Unlike 163x150, the 160x153 aspect ratio reaches bringup_rails before initial seating failure. Releasing that pilot shape lets some branches complete initial seating and reach constraint legalization. Pin release therefore interacts with board aspect and cannot be dismissed globally from its 163x150 result.",
+  "legalizer_evidence": [
+    "x-edge unsatisfied after axis solve (sep #0|power_mon); repair flip landed on an already-solved axis",
+    "x-edge unsatisfied after axis solve (sep uart_bridge|power); repair flip landed on an already-solved axis",
+    "hard red after legalization: facing power_som->@som margin -56.2292",
+    "joint separation generated=1024 visited=1024 axes=1372 proposals=302 axis_reuse=292 domain_probes=1024 domain_rejections=343 rejected=302 capped=1"
+  ],
+  "retry_code_review": "Shape replay deliberately restricts only the initial choice; displaced and incoming shape repair may subsequently change it. That flexibility alone is not a demonstrated defect and was not removed.",
+  "next_direction": "Use the 160x153 free-rails case as a concrete coupled axis/facing regression candidate. Inspect whether joint separation can preserve valid directional power geometry while resolving competing occupancy domains. Do not remove facing or separation checks merely to accept the candidate.",
+  "timing_scope": "Sequential single-run failed construction diagnostics, uncontrolled host/cache; not a successful build speed comparison.",
+  "publication": "No full builds/renders for failed candidates, no output replacement, no fabrication-readiness claim. Qualified 163x151 incumbent preserved."
+}

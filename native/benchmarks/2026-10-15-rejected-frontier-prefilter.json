@@ -1,0 +1,31 @@
+{
+  "base_commit": "a4bc4028",
+  "status": "prototype rejected; production code and accounting expectations restored",
+  "hypothesis": "Use the last known blocking rectangle to reject frontier nodes before decimal ranking and bucket insertion, while still advancing and charging every frontier node.",
+  "prototype": "In Occupancy::place_near_impl, before occupancy_frontier_key1dp, call indexed_conflict using rejection.obstacle and its optional child geometry. Skip only bucket insertion for proven collisions. Retain heap successors and flush, frontier node limits and all acceptance predicates.",
+  "correctness": {
+    "targeted_tests_passed": ["native_occupancy_precision_contracts", "native_occupancy_child_halo_contracts", "native_compact_retry_contracts", "native_output_precision_contracts", "native_pcb_placement_contracts"],
+    "all_carrier_runs_pcb_sha256": "8ba5fe760fa5ac529cd107cf7fa70945f7e7276b60e03f0e98b4ddc4d6ffc397",
+    "new_retained_property_test": "27 combinations of obstacle/query face masks and anchors; independently enumerate legal lattice positions with exhaustive collision checking, sort by distance/x/y, compare complete results and bounded-search prefixes. Assert rejected nodes still consume the ten-node frontier limit.",
+    "restored_production_property_test": "PASS 0.53 seconds"
+  },
+  "measurements": {
+    "workload": "163x151 carrier, options from 2026-10-15-current-escape-corridors.json qualification, compact-stage profiler, observer enabled, same schematic and authored floorplan; construction only, not full acceptance",
+    "baseline_initial_model_seconds": 13.791501042,
+    "prototype_initial_model_seconds": 14.487386375,
+    "initial_caveat": "Other local builds/tests overlapped; not used to infer speedup.",
+    "serial_prototype_model_seconds": [14.753210, 14.762140541],
+    "serial_restored_model_seconds": [14.718278833, 14.775648292],
+    "serial_conditions": "Two runs each, same process prepared inputs reused, prototype followed by restored baseline; no intentionally overlapping task tests/builds during serial runs. OS caches and external host activity uncontrolled; small sample.",
+    "baseline_frontier_ranking_calls": 236619860,
+    "prototype_frontier_ranking_calls": 144262720,
+    "baseline_cell_index_calls": 53797312,
+    "prototype_cell_index_calls": 48410812,
+    "logs": ["native/build/frontier-prefilter-before.log", "native/build/frontier-prefilter-after.log", "native/build/frontier-prefilter-serial-after.log", "native/build/frontier-prefilter-serial-restored.log"]
+  },
+  "decision": "Ranking calls fell approximately 39%, but serial model times are effectively unchanged. Do not retain additional per-node predicate complexity without a demonstrated throughput gain. Operation counts are not a substitute for measured performance.",
+  "next_direction": "Profile heap/frontier traversal and candidate-domain volume; seek removal of whole provably impossible regions or repeated queries rather than adding a second collision probe per node.",
+  "smaller_board_accepted": false,
+  "full_build_or_renders_repeated": false,
+  "historical_python_comparison": false
+}

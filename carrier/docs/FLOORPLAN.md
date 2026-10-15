@@ -23,7 +23,7 @@ SoM outline: **50 x 42 mm**. The DF40 mezzanine connectors sit on the SoM's bott
 
 Derived board: **163 x 151 mm**; SoM origin at **(46.5, 60.5)** (centered). All coordinates below are board-frame mm, origin top-left, +y down (KiCad convention).
 
-Outline derivation: FIXED outline 163x151 mm declared in carrier/floorplan.json; estimated cross-subsystem airwire 17570 mm (advisory airwire reference 15532 mm; not an acceptance constraint).
+Outline derivation: FIXED outline 163x151 mm declared in carrier/floorplan.json; estimated cross-subsystem airwire 17566 mm (advisory airwire reference 15532 mm; not an acceptance constraint).
 
 ## Edge connectors (pinned to edges by their mating direction)
 
@@ -58,7 +58,7 @@ Outline derivation: FIXED outline 163x151 mm declared in carrier/floorplan.json;
 | debug_boot | N | (110, 108, 31.58 x 16.25) | 10 | 513.2 | (14) |
 | ethernet | @rj45_connector | (29, 33, 25.2576 x 21.745) | 10 | 549.2 | (15) |
 | fmc | S | (110, 25, 18.685 x 61.63) | 8 | 1151.6 | (16) |
-| hdmi_rx_term | S | (76, 109, 7.805 x 11.805) | 10 | 92.1 |  |
+| hdmi_rx_term | S | (76, 106.335, 7.805 x 11.805) | 10 | 92.1 |  |
 | mechanical | E | (1, 12, 13 x 13) | 4 | 169 |  |
 | power | E | (62, 34, 47.6904 x 23.9349) | 51 | 1141.5 | (17) |
 | power_mon | @power_som | (83.6365, 31.9435, 12.1635 x 26.7565) | 10 | 325.5 | (18) |

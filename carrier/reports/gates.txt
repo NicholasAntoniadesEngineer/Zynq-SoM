@@ -787,7 +787,7 @@ errors: none
 LINK: PASS (0 errors, 1 warnings)
 constraints: PASS — layout rules and net-class CSV published
 diagram: PASS — block diagram published
-board_schematic: PASS — board: emitted /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/carrier/Zynq_Carrier.kicad_sch (+37 sub-sheets, root labels bind ports by canonical name)
+board_schematic: PASS — board: emitted /private/tmp/zynq-release-3e80dbfc-carrier/Zynq_Carrier.kicad_sch (+37 sub-sheets, root labels bind ports by canonical name)
 board netlist gate
 ============================================================
   ok   port 'AUX_I2C_SCL': 1 net, 6 pins across 3 sheet(s) [board_aux, board_qwiic, board_services]
@@ -1639,7 +1639,7 @@ pcb_drc: PASS — 0 non-unrouted errors; 499 unrouted (expected);
 ratsnest: PASS — LAW-5 RATSNEST GATE: PASS (board 163 x 151 mm)
   off-board parts: 0
   dispersed subsystems: 0 (threshold 9x)
-  cross-subsystem airwire: 17126.4 mm (advisory reference 15532 mm, OVER; 397 edges; 17126.4/24096.3 mm = 71.1% of total)
+  cross-subsystem airwire: 17130.5 mm (advisory reference 15532 mm, OVER; 397 edges; 17130.5/24100.4 mm = 71.1% of total)
   per-subsystem clusters (n, bbox mm, dispersion):
     som_decoupling         n=18  bbox_area=     813 disp=  8.8
     board_aux              n=18  bbox_area=     736 disp=  4.8
@@ -1863,7 +1863,7 @@ placement_flow: PASS — PLACEMENT-FLOW GATE: PASS (9 external contract(s); boar
     flow usb_pd->power: 18.71mm / 122.2mm budget
     flow usb_pd->power: 18.71mm / 122.2mm budget
     near_max ethernet to rj45_connector: 1.58mm gap / <= 20mm
-    near_max hdmi_rx_term to som_j2: 8.41mm gap / <= 10mm
+    near_max hdmi_rx_term to som_j2: 5.74mm gap / <= 10mm
     near_max motor_sense to motor_pwm: 1.80mm gap / <= 20mm
     near_max uart_bridge to usb_uart_connector: 2.85mm gap / <= 40mm
     near_max usb_pd to pd_input: 2.38mm gap / <= 10mm
@@ -1892,7 +1892,7 @@ contract_coverage: PASS (advisory) — CONTRACT COVERAGE: 23 wired(gated) / 0 in
   usb_uart_connector     WIRED-gated      4 chk  0 viol  
   usbc_otg               WIRED-gated      9 chk  0 viol  
 floorplan_composition: PASS (advisory) — FLOORPLAN COMPOSITION (T1): 18 hard / 1 soft terms; hard RED 0, soft RED 0 (advisory)
-  hard margins (mm): measured 16, unresolved 0, sum 799.1, min 1.59 (informational)
+  hard margins (mm): measured 16, unresolved 0, sum 801.76, min 4.25 (informational)
   hard margins (degrees): measured 2, unresolved 0, sum 121.69, min 47.48 (informational)
   hard terms:
     HARD facing power->power_som: 15.79 vs 90.00 (margin +74.21) ok [facing/output_roles [placement/v2]] dot=+1101.74
@@ -1909,7 +1909,7 @@ floorplan_composition: PASS (advisory) — FLOORPLAN COMPOSITION (T1): 18 hard /
     HARD flow_hop power_mon->power_som: 73.91 vs 122.17 (margin +48.26) ok [flow chain [placement/v2]]
     HARD flow_hop usb_pd->power: 18.71 vs 122.17 (margin +103.45) ok [flow chain [placement/v2]]
     HARD near_max ethernet->rj45_connector: 1.58 vs 20.00 (margin +18.41) ok [Pulse v7 p.1 <=25mm part-to-part|judgment:20.0 edge-gap proxy (D11)]
-    HARD near_max hdmi_rx_term->som_j2: 8.41 vs 10.00 (margin +1.59) ok [XAPP460 p.23 (term AT the receiver) — island at the SoM mezzanine bank-33 RX escape|judgment:10.0 edge-gap (D11)]
+    HARD near_max hdmi_rx_term->som_j2: 5.74 vs 10.00 (margin +4.25) ok [XAPP460 p.23 (term AT the receiver) — island at the SoM mezzanine bank-33 RX escape|judgment:10.0 edge-gap (D11)]
     HARD near_max motor_sense->motor_pwm: 1.80 vs 20.00 (margin +18.20) ok [judgment:20.0 (D9) — motor telemetry beside the PWM out]
     HARD near_max uart_bridge->usb_uart_connector: 2.85 vs 40.00 (margin +37.15) ok [judgment:10.0 (D11 edge-gap) — CP2102N's USB DP/DM pair terminates at the UART USB-C; measured 365mm of cross-board airwire (avg 122mm) with the block anchored mid-board and a STALE floorplan near-intent pointing at rj45_connector]
     HARD near_max usb_pd->pd_input: 2.38 vs 10.00 (margin +7.62) ok [judgment:10.0 (D11 edge-gap metric) — keep the CC net short end-to-end; onsemi numbers no inter-part CC-run length]
@@ -1921,7 +1921,7 @@ floorplan_composition: PASS (advisory) — FLOORPLAN COMPOSITION (T1): 18 hard /
     power | power_mon: 14 airwires (154.0 mm) -> corridor >= 4.8 mm
     bringup_en_modules | bringup_modules: 10 airwires (1076.4 mm) -> corridor >= 4.0 mm
     ethernet | rj45_connector: 9 airwires (218.2 mm) -> corridor >= 3.8 mm
-    hdmi_rx | hdmi_rx_term: 8 airwires (227.8 mm) -> corridor >= 3.6 mm
+    hdmi_rx | hdmi_rx_term: 8 airwires (247.4 mm) -> corridor >= 3.6 mm
     bringup_modules | fmc: 6 airwires (48.5 mm) -> corridor >= 3.2 mm
 return_stitch: PASS — RETURN-STITCH GATE (return-path v2): PASS (radius 2.0 mm, HARD, class-blind)
   remediation set (v1-failing contacts): 29
@@ -2071,10 +2071,10 @@ fanout: PASS — FAN-OUT CLEARANCE GATE (D13, report-first ratchet): PASS
     ok      U6010     bringup_modules    5pin clr=1.550 need=1.50 slack=+0.050
     ok      D36002    motor_pwm          6pin clr=1.550 need=1.50 slack=+0.050
 pcb_geometry: PASS — independent final-board gates complete
-assembly: PASS — ASSEMBLY: 4 steps + 34 phases, 561 parts -> carrier/manufacturing/ASSEMBLY.md + carrier/renders/assembly (38 PNGs)
-ratsnest_images: PASS (advisory) — ratsnest: carrier/renders/ratsnest_top.png + carrier/renders/ratsnest_bottom.png + carrier/docs/RATSNEST.svg
+assembly: PASS — ASSEMBLY: 4 steps + 34 phases, 561 parts -> manufacturing/ASSEMBLY.md + renders/assembly (38 PNGs)
+ratsnest_images: PASS (advisory) — ratsnest: renders/ratsnest_top.png + renders/ratsnest_bottom.png + docs/RATSNEST.svg
   board 163 x 151 mm  (top 398 / bottom 168)
-  airwires: 24096.3 mm total, 17126.4 mm cross-subsystem (397 edges, 71.1% of length)
+  airwires: 24100.4 mm total, 17130.5 mm cross-subsystem (397 edges, 71.1% of length)
 
 thermal: PASS — schgen per-device thermal (Tj) gate
 ==============================================================================
@@ -2083,7 +2083,7 @@ model: Tj = Ta + Pd*RthJA ; Ta = 50 C ; FAIL when Tj > Tj_max - 10 C margin
   Pd(LDO) = (Vin-Vout)*Iout ; Pd(buck) = (1/eff-1)*Vout*Iout, eff=0.85 ; Pd(switch/eFuse) = Iout^2*Rds_on
   RthJA = bare JEDEC, unless '*' = pour-aware effective RthJA (EP/power pads -> GND copper + vias; basis cited below)
   pour credits are granted ONLY against copper VERIFIED in the emitted board
-  emitted-copper evidence source: carrier/Zynq_Carrier.kicad_pcb
+  emitted-copper evidence source: /private/tmp/zynq-release-3e80dbfc-carrier/Zynq_Carrier.kicad_pcb
 
   device                 package                  kind        in->out               Iout/A   Pd/mW   RthJA    Tj/C   limit   mgn/C  verdict
   -----------------------------------------------------------------------------------------------------------------------------------------
@@ -2184,7 +2184,7 @@ CD-08  Under-SoM decoupling fanout vias   [PARTIAL]
   risk:    until those vias land the 18 bottom caps decouple nothing (no path from B.Cu pads to the rails) — a routing-wave item, but the prose reads as if the path exists
 
 COPPER DEBT: 8 entries — 4 emitted, 2 partial, 2 unemitted, 0 unmeasured (report-only)
-cpl: PASS (advisory) — /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/carrier/manufacturing/Zynq_Carrier_cpl.csv
+cpl: PASS (advisory) — /private/tmp/zynq-release-3e80dbfc-carrier/manufacturing/Zynq_Carrier_cpl.csv
 fab_profile: PASS — FAB PROFILE GATE  (JLCPCB standard 4-layer (1oz))
   source: JLCPCB PCB Manufacturing & Assembly Capabilities (jlcpcb.com/capabilities/pcb-capabilities) + JLCPCB via/annular Q&A; retrieved 2026-07
 
@@ -2224,8 +2224,8 @@ unmatched: none — every custom footprint has a model
 
 MISFIT (1) — model resolves but does NOT match the footprint body (LAW):
   XT60PW-M: model 18.1x15.5 mm vs footprint body 0.5x7.2 mm (ratio 36.19,2.15 outside [0.5,2.0])
-render3d: PASS (advisory) — 3D RENDERS: 8 view(s) -> /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/carrier/renders/3d_top.png, /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/carrier/renders/3d_bottom.png, /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/carrier/renders/3d_left.png, /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/carrier/renders/3d_right.png, /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/carrier/renders/3d_front.png, /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/carrier/renders/3d_back.png, /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/carrier/renders/3d_persp.png, /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/carrier/renders/3d_persp_rear.png (VISUAL-verify: LAW 1)
-gallery: PASS — GALLERY: 37 sheets -> README.md + carrier/README.md (unchanged)
+render3d: PASS (advisory) — 3D RENDERS: 8 view(s) -> /private/tmp/zynq-release-3e80dbfc-carrier/renders/3d_top.png, /private/tmp/zynq-release-3e80dbfc-carrier/renders/3d_bottom.png, /private/tmp/zynq-release-3e80dbfc-carrier/renders/3d_left.png, /private/tmp/zynq-release-3e80dbfc-carrier/renders/3d_right.png, /private/tmp/zynq-release-3e80dbfc-carrier/renders/3d_front.png, /private/tmp/zynq-release-3e80dbfc-carrier/renders/3d_back.png, /private/tmp/zynq-release-3e80dbfc-carrier/renders/3d_persp.png, /private/tmp/zynq-release-3e80dbfc-carrier/renders/3d_persp_rear.png (VISUAL-verify: LAW 1)
+gallery: PASS — GALLERY: 37 sheets -> zynq-release-3e80dbfc-carrier/README.md (zynq-release-3e80dbfc-carrier/README.md)
 si: PASS — SI constraints: 37 diff pairs, 10 length-match groups emitted — every declared pair covered.
 manifest: PASS — current artifacts hashed after SI publication
 golden: FAIL (advisory) — golden renders: DRIFT (explicit --bless to accept):
@@ -2589,15 +2589,15 @@ SEARCH EFFORT: observational, no acceptance ceiling; counts include rejected wor
   interior_shape_choice_hint: 0
   interior_shape_choice_replay: 0
   legalize_facing_retry: 4
-  legalize_joint_axis: 5960
-  legalize_joint_axis_reuse: 5128
-  legalize_joint_budget: 8
-  legalize_joint_domain_probe: 688
-  legalize_joint_domain_reject: 208
+  legalize_joint_axis: 8
+  legalize_joint_axis_reuse: 0
+  legalize_joint_budget: 0
+  legalize_joint_domain_probe: 0
+  legalize_joint_domain_reject: 0
   legalize_joint_proposal: 4
   legalize_joint_reject: 0
-  legalize_joint_retry: 12
-  legalize_joint_state: 8196
+  legalize_joint_retry: 4
+  legalize_joint_state: 4
   legalize_neighbour_retry: 0
   legalize_only_compaction: 0
   legalize_reservation_retry: 4
@@ -2615,71 +2615,71 @@ pipeline_doc: PASS — updated
 === board native exclusive timing (wall s; audits included) ===
 Nested scopes pause parents; parallel batches use launch/join wall time, never summed worker spans.
 Scope: pipeline entry through build-ledger publication; excludes final summary publications and caller/process setup. Mixed stages remain mixed; not a generation-only total.
-pipeline_setup_and_other: 0.669218
-inputs: 0.008377
-authoring_audit: 17.436452
-authoring_guard_reporting_and_recheck: 0.000769
-input_factory_generation_and_ir_conversion: 0.291385
-input_circuit_validation: 0.018662
-input_publication: 1.453212
-subsystem_structure: 0.061047
-carrier_structure: 0.048305
-sheet_prepare_other: 0.006134
-sheet_electrical_validation: 0.003209
-sheet_place_route_with_internal_checks: 0.106717
-sheet_cc_validation: 0.006430
-sheet_emit_and_publish: 0.042668
-sheet_visual_validation: 0.015866
-sheet_parallel_checks_and_render_wall: 27.388782
-symbol_law: 0.054430
-link: 0.053808
-constraints: 0.023424
-diagram: 0.023645
-board_schematic: 7.395847
-bom_footprints: 0.010788
-power_tree: 0.043550
-rail_ampacity: 0.046154
-testpoints: 0.051979
-design_rules: 0.053298
-part_rules: 0.012629
-bom_values: 0.044295
-footprint_pads: 0.054466
-pin_completeness: 0.014025
-spice: 0.125109
-pcb: 0.214853
-pcb_input_loading_and_netlist_validation: 1.501789
-pcb_build_model_with_internal_checks: 15.093259
-pcb_render: 0.028387
-placement_requirements: 0.001921
-pcb_drc: 1.642419
-pcb_geometry: 0.398742
-assembly: 1.680601
-ratsnest_images: 1.992894
-thermal: 0.056417
-copper_debt: 0.080402
-cpl: 0.271898
-fab_profile: 0.040636
+pipeline_setup_and_other: 0.008322
+inputs: 0.001815
+authoring_audit: 19.079950
+authoring_guard_reporting_and_recheck: 0.000317
+input_factory_generation_and_ir_conversion: 0.311032
+input_circuit_validation: 0.015797
+input_publication: 0.018804
+subsystem_structure: 0.004251
+carrier_structure: 0.012578
+sheet_prepare_other: 0.006943
+sheet_electrical_validation: 0.003503
+sheet_place_route_with_internal_checks: 0.121187
+sheet_cc_validation: 0.007290
+sheet_emit_and_publish: 0.047761
+sheet_visual_validation: 0.017168
+sheet_parallel_checks_and_render_wall: 30.862474
+symbol_law: 0.000744
+link: 0.002332
+constraints: 0.001466
+diagram: 0.002576
+board_schematic: 6.219169
+bom_footprints: 0.000312
+power_tree: 0.002422
+rail_ampacity: 0.000545
+testpoints: 0.000588
+design_rules: 0.001647
+part_rules: 0.002111
+bom_values: 0.001429
+footprint_pads: 0.009907
+pin_completeness: 0.000852
+spice: 0.099278
+pcb: 0.004563
+pcb_input_loading_and_netlist_validation: 1.500444
+pcb_build_model_with_internal_checks: 13.807650
+pcb_render: 0.028520
+placement_requirements: 0.001660
+pcb_drc: 1.574818
+pcb_geometry: 0.037192
+assembly: 0.429560
+ratsnest_images: 0.654802
+thermal: 0.026553
+copper_debt: 0.040388
+cpl: 0.239118
+fab_profile: 0.027199
 stage_movement: 0.000002
-xdc: 0.965768
-vivado: 0.037174
-devicetree: 0.022242
-firmware: 0.942637
-manual: 0.058171
-scfw: 0.421838
-testplan: 0.008661
-power_sequence: 0.038284
-floorplan: 0.000547
-model3d: 1.908544
-render3d: 29.181111
-gallery: 0.001607
-si: 0.042280
-manifest: 0.110924
-golden: 1.571552
-contract_coverage_lint: 0.037252
-fallbacks: 0.000490
-ledger_import: 0.001030
-quantize_census: 0.003429
-source_audit: 116.844869
-pipeline_doc: 0.002272
-MEASURED SCOPE TOTAL (not process wall): 230.769583
+xdc: 0.929578
+vivado: 0.000219
+devicetree: 0.000763
+firmware: 0.929305
+manual: 0.000738
+scfw: 0.002164
+testplan: 0.000385
+power_sequence: 0.000270
+floorplan: 0.000343
+model3d: 1.875410
+render3d: 32.902535
+gallery: 0.001044
+si: 0.001506
+manifest: 0.114657
+golden: 1.593076
+contract_coverage_lint: 0.001854
+fallbacks: 0.000612
+ledger_import: 0.001074
+quantize_census: 0.000256
+source_audit: 137.918835
+pipeline_doc: 0.001330
+MEASURED SCOPE TOTAL (not process wall): 251.512993
 BOARD: PASS (37 sheets)

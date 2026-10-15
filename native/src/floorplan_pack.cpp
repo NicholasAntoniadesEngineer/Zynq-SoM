@@ -248,6 +248,10 @@ bool Engine::attempt_pack(bool compact) {
 bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure,
                               const std::string& promote,std::string* failed_subject,
                               std::size_t first_pose_skip,bool* selected_pose,bool victim_shapes,bool incoming_shapes) {
+    if(in.experiment)for(const auto& [sheet,tag]:in.experiment->offered_shape_tags)
+        if(std::none_of(plan.interior_blocks.begin(),plan.interior_blocks.end(),
+                        [name=sheet](const auto& block){return block.name==name;}))
+            throw FloorplanError("offered shape selection requires an interior block: "+sheet);
     const bool trace_choices=shape_replay_trace&&!shape_replay_trace_started;
     if(shape_replay_trace)shape_replay_trace_started=true;
     std::set<std::string> traced_choices;
@@ -867,8 +871,9 @@ bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure,
             auto fix=[&](const FloorplanBlock& b){li.fixed_rects.emplace_back(b.name,Box4{b.x,b.y,b.x+b.w,b.y+b.h}); li.fixed_poses[b.name]={b.x,b.y};};
             for (const auto& b:plan.edge_blocks) fix(b);
             for (const auto& b:plan.interior_blocks) if (!movable.count(b.name)) fix(b);
-            li.fixed_rects.insert(li.fixed_rects.end(),in.compose.corridors.begin(),in.compose.corridors.end());
-            for (const auto& [name, box]:in.compose.corridors) {
+            const auto corridors=current_escape_corridors();
+            li.fixed_rects.insert(li.fixed_rects.end(),corridors.begin(),corridors.end());
+            for (const auto& [name, box]:corridors) {
                 (void)box;
                 li.primary_fanout[name]={}; // Logical corridor: retain its existing exclusion gap.
             }
@@ -928,6 +933,16 @@ bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure,
                     }
                 }
             }
+        }
+    }
+    if(in.experiment)for(const auto& [sheet,tag]:in.experiment->offered_shape_tags) {
+        const auto found=std::find_if(plan.interior_blocks.begin(),plan.interior_blocks.end(),
+            [name=sheet](const auto& b){return b.name==name;});
+        const auto& variants=in.geometry.shapes.at(sheet);
+        if(found==plan.interior_blocks.end()||found->shape_idx<0||
+           static_cast<std::size_t>(found->shape_idx)>=variants.size()||
+           variants[static_cast<std::size_t>(found->shape_idx)].tag!=tag) {
+            rejected("required_offered_shape",sheet,compact);return false;
         }
     }
     if(in.experiment)for(const auto& sheet:in.experiment->require_bottom_sheets) {

@@ -1,0 +1,51 @@
+{
+  "base_commit": "83372c90",
+  "change": "Add diagnostic FloorplanExperiment.offered_shape_tags and compact-stage profiler --offered-shape SHEET=TAG. Resolve a unique already-offered interior-group shape without requiring or inventing owned-group quality measurements. Reuse existing enforced shape restrictions throughout initial seating, ordering and repair.",
+  "validation": "Reject unknown sheet/tag, empty tag, duplicate tag, noncompact mode, overlap with owned_shape_tags, contradiction with required-bottom face, and targets absent from interior blocks. Existing owned selector still rejects unmeasured quality.",
+  "tests": {
+    "command": "ctest --test-dir native/build/fast -R '^native_(owned_shape_quality_engine|compact_retry|pcb_placement)_contracts$' --output-on-failure -j 2",
+    "passed": 3,
+    "failed": 0,
+    "seconds": 28.39,
+    "coverage": "Select an unmeasured ordinary candidate without modifying quality; reject invalid or non-interior targets; fail rather than fall back when selected geometry cannot fit; actual replay fixture resolves tags through the public experiment input and preserves restrictions through failure rollback; both-board production placement regressions remain green.",
+    "cli_checks": "Malformed assignment, duplicate sheet, compact-off mode and overlap with owned selector all exit 1 with explicit diagnostics.",
+    "build_correction": "Initial non-interior guard used a captured structured binding unsupported by C++17; changed to an explicit init-capture, rebuilt and passed final suite. No language standard relaxation."
+  },
+  "screens": {
+    "recipe": "160x153 free-rails trial from 2026-10-15-smaller-aspect-screen.json, adding one --offered-shape option below",
+    "trials": [
+      {
+        "option": "power_som=turned",
+        "result": "construction_failed",
+        "seconds": 44.724799750,
+        "outer_attempts": 4,
+        "failure_receipt_captured": true,
+        "log": "native/build/offered-power-turned-160x153.log",
+        "failure_stages": ["interior_seating", "legalizer"],
+        "example_rejection": "facing power_som->@som margin -56.2292"
+      },
+      {
+        "option": "power_som=t270",
+        "result": "construction_failed",
+        "seconds": 58.443256834,
+        "outer_attempts": 4,
+        "failure_receipt_captured": true,
+        "log": "native/build/offered-power-t270-160x153.log",
+        "failure_stages": ["interior_seating"],
+        "subjects": ["bringup_rails", "debug_boot"]
+      }
+    ],
+    "scope": "These now exercise actual placement, unlike the previous owned-selector setup failures. Neither standard quarter-turn alone recovers this outline. They do not prove infeasibility or justify dropping a hardware check.",
+    "timing_caveat": "Single diagnostic runs overlapped local tests/builds. Not performance evidence.",
+    "final_guard": "Screens preceded the final non-interior-target validation guard; power_som is an interior target, so the guard does not change these cases. Final tests rebuilt after the guard."
+  },
+  "defaults": "No new default shape restrictions or candidate generation. CLI option is profiler-only; production board defaults and master imagery remain unchanged.",
+  "final_selection_guard": {
+    "reviewed_base_commit": "1dc56ebe",
+    "change": "After placement, refinement and legalization, independently resolve the selected block index against the original offered tag. Reject mismatches with required_offered_shape stage and subject; do not trust the mutable restriction-index map as acceptance evidence.",
+    "mutation_test": "Corrupt the resolved restriction index from requested fixture-1 to fixture-0 before real engine packing. The geometry can fit, but final tag verification rejects it and records the pilot subject.",
+    "verification": "native_owned_shape_quality_engine_contracts and native_compact_retry_contracts: 2/2 PASS in 5.93 seconds",
+    "scope": "Floorplan completion invariant, not a claim of new full-board hardware qualification or smaller dimensions. Default runs without offered restrictions perform no additional tag checks."
+  },
+  "remaining": "No smaller board accepted, full source audit/build/render not repeated. Continue coupled shape/pose/legalization work; overall goal incomplete."
+}

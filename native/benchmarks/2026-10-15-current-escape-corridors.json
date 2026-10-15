@@ -1,0 +1,77 @@
+{
+  "status": "qualified reliability correction; overall optimisation goal remains incomplete",
+  "base_commit": "daa0eb9d",
+  "defect": "Board input loading consumed generated escape_block.json rectangles from the previous placement. Regeneration could change the next placement with unchanged authored inputs.",
+  "causal_evidence": "2026-10-15-rejected-separated-reseat-poses.json",
+  "correction": "Prepare netted connector row spans from current circuit and footprint geometry, then derive snapped reservations at the current trial SoM position. Share the exact corridor geometry helper with emitted escape planning. Preserve explicit caller constraints; never read generated sidecars as board inputs.",
+  "tests": {
+    "command": "ctest --test-dir native/build/fast -R '^native_(board_inputs|floorplan_escape_corridors|floorplan|floorplan_geometry|pcb_placement|pcb_escape|output_precision|compact_retry)_contracts$' --output-on-failure -j 2",
+    "passed": 8,
+    "failed": 0,
+    "wall_seconds": 37.40,
+    "additional_corridor_checks": "Explicit caller reservations preserved and missing connector footprint rejected; rebuilt and passed in 0.60 seconds.",
+    "sidecar_independence": "Both boards: missing, stale, invalid JSON, malformed corridor object, malformed rectangle, then missing again. Authored circuits, footprints, policies, interface and caller netlist unchanged.",
+    "geometry": "Six rows per board agree with independent frozen emitted evidence; off-grid translation, restoration and precision-operation ownership checked.",
+    "historical_fixture_repairs": [
+      "Do not feed frozen generated corridors into current floorplanning; keep frozen evidence for independent comparison.",
+      "Project only reviewed d2a1ec20 direct-VIN enable topology and its sole retired SOD-123 footprint; reject unrelated circuit mutations.",
+      "Use explicit historical label/edge inputs for immutable rendering comparison. Project reviewed advisory wording only. Check current precision work against independent observers, not historical generic-round call counts. Include the new floorplan accounting owner."
+    ],
+    "frozen_oracles_modified": false
+  },
+  "next_outline_screen": {
+    "source_commit": "315289b7",
+    "dimensions_mm": [163, 150],
+    "specification": "/private/tmp/carrier-next-outlines.QKynPr/163x150.json",
+    "log": "native/build/current-corridor-163x150.log",
+    "result": "No valid layout found by bounded placement search under either reservation policy; not proof of geometric infeasibility.",
+    "construction_seconds": 17.413728291,
+    "completed_outer_attempts": 4,
+    "failure_receipt_captured": true,
+    "executed_fallback_events_recorded": 4694,
+    "accepted": false,
+    "expensive_qualification_run": false,
+    "incumbent": "163x151 qualified carrier retained"
+  },
+  "qualification": {
+    "commands": "Full board commands from docs/RELEASE-2026-10-15.md, with separate temporary output directories; unchanged hardware and search options.",
+    "carrier": {
+      "output": "/private/tmp/carrier-current-corridors.NqFVlB",
+      "log": "native/build/current-corridor-carrier-full.log",
+      "mandatory_result": "PASS, 37 sheets",
+      "dimensions_mm": [163, 151],
+      "parts_top_bottom": [398, 168],
+      "pcb_sha256": "8ba5fe760fa5ac529cd107cf7fa70945f7e7276b60e03f0e98b4ddc4d6ffc397",
+      "change_from_published_release": "hdmi_rx_term moves -2.665 mm in Y; no component removal or board expansion",
+      "non_unrouted_drc_errors": 0,
+      "unrouted_items": 499,
+      "renders": 8,
+      "wall_seconds": 216.76,
+      "model_seconds": 14.457524,
+      "render_seconds": 28.631100,
+      "source_audit_seconds": 112.544813
+    },
+    "devkit": {
+      "output": "/private/tmp/devkit-current-corridors.eM9DDj",
+      "log": "native/build/current-corridor-devkit-full.log",
+      "mandatory_result": "PASS, 12 sheets",
+      "dimensions_mm": [98, 98],
+      "parts_top_bottom": [105, 55],
+      "pcb_sha256": "1b12fecbcbbaa5e6084c2459da93cb144a660ff19805e6e4e3f75f9c22689fdb",
+      "change_from_published_release": "PCB byte-identical",
+      "non_unrouted_drc_errors": 0,
+      "unrouted_items": 408,
+      "renders": 8,
+      "wall_seconds": 170.23,
+      "model_seconds": 0.198702,
+      "render_seconds": 17.561601,
+      "source_audit_seconds": 115.764466
+    },
+    "visual_review": "Front/top and bottom views inspected for both boards; devkit retains a sparsely populated underside, so further compaction remains work rather than a claimed result.",
+    "timing_caveat": "Single-run observations with overlapping local tests/builds; not controlled performance comparisons or matched historical Python benchmarks.",
+    "remaining_advisory_failures": ["return_path", "golden", "contract_coverage_lint"],
+    "routing_complete": false,
+    "fabrication_readiness_claimed": false,
+    "publication": "Master release remains 97d221e9. This correction is on codex/two-sided-layout; temporary qualified outputs do not replace published release imagery."
+  }
+}

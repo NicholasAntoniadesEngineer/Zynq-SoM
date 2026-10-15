@@ -55,6 +55,27 @@ Engine::Engine(const FloorplanInput& input) : in(input) {
             owned_shape_choices.emplace(sheet,selected);
         }
     }
+    if(in.experiment&&!in.experiment->offered_shape_tags.empty()) {
+        if(!in.compact_search)throw FloorplanError("offered shape selection requires compact search");
+        for(const auto& [sheet,tag]:in.experiment->offered_shape_tags) {
+            if(in.experiment->owned_shape_tags.count(sheet))
+                throw FloorplanError("offered and owned shape selections overlap: "+sheet);
+            const auto found=in.geometry.shapes.find(sheet);
+            if(sheet.empty()||tag.empty()||found==in.geometry.shapes.end())
+                throw FloorplanError("offered shape selection: unknown sheet or empty tag");
+            int selected=-1;
+            for(std::size_t i=0;i<found->second.size();++i)if(found->second[i].tag==tag){
+                if(selected!=-1)throw FloorplanError("offered shape selection: ambiguous tag for "+sheet);
+                selected=static_cast<int>(i);
+            }
+            if(selected<0)throw FloorplanError("offered shape selection: unknown tag for "+sheet);
+            if(in.experiment->require_bottom_sheets.count(sheet)&&found->second[selected].side!="bottom")
+                throw FloorplanError("offered shape selection contradicts required bottom face: "+sheet);
+            // Reuse the same enforced index restrictions in initial seating,
+            // ordering, displaced/incoming retries and paired recovery.
+            owned_shape_choices.emplace(sheet,selected);
+        }
+    }
     if(in.experiment&&in.experiment->multiscale_outline&&in.spec&&in.spec->outline)
         throw FloorplanError("multiscale outline search conflicts with a fixed outline");
     if(in.experiment&&in.experiment->initial_outline&&in.spec&&in.spec->outline)

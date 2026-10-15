@@ -1,5 +1,5 @@
 FLOORPLAN COMPOSITION (T1): 18 hard / 1 soft terms; hard RED 0, soft RED 0 (advisory)
-  hard margins (mm): measured 16, unresolved 0, sum 799.1, min 1.59 (informational)
+  hard margins (mm): measured 16, unresolved 0, sum 801.76, min 4.25 (informational)
   hard margins (degrees): measured 2, unresolved 0, sum 121.69, min 47.48 (informational)
   hard terms:
     HARD facing power->power_som: 15.79 vs 90.00 (margin +74.21) ok [facing/output_roles [placement/v2]] dot=+1101.74
@@ -16,7 +16,7 @@ FLOORPLAN COMPOSITION (T1): 18 hard / 1 soft terms; hard RED 0, soft RED 0 (advi
     HARD flow_hop power_mon->power_som: 73.91 vs 122.17 (margin +48.26) ok [flow chain [placement/v2]]
     HARD flow_hop usb_pd->power: 18.71 vs 122.17 (margin +103.45) ok [flow chain [placement/v2]]
     HARD near_max ethernet->rj45_connector: 1.58 vs 20.00 (margin +18.41) ok [Pulse v7 p.1 <=25mm part-to-part|judgment:20.0 edge-gap proxy (D11)]
-    HARD near_max hdmi_rx_term->som_j2: 8.41 vs 10.00 (margin +1.59) ok [XAPP460 p.23 (term AT the receiver) — island at the SoM mezzanine bank-33 RX escape|judgment:10.0 edge-gap (D11)]
+    HARD near_max hdmi_rx_term->som_j2: 5.74 vs 10.00 (margin +4.25) ok [XAPP460 p.23 (term AT the receiver) — island at the SoM mezzanine bank-33 RX escape|judgment:10.0 edge-gap (D11)]
     HARD near_max motor_sense->motor_pwm: 1.80 vs 20.00 (margin +18.20) ok [judgment:20.0 (D9) — motor telemetry beside the PWM out]
     HARD near_max uart_bridge->usb_uart_connector: 2.85 vs 40.00 (margin +37.15) ok [judgment:10.0 (D11 edge-gap) — CP2102N's USB DP/DM pair terminates at the UART USB-C; measured 365mm of cross-board airwire (avg 122mm) with the block anchored mid-board and a STALE floorplan near-intent pointing at rj45_connector]
     HARD near_max usb_pd->pd_input: 2.38 vs 10.00 (margin +7.62) ok [judgment:10.0 (D11 edge-gap metric) — keep the CC net short end-to-end; onsemi numbers no inter-part CC-run length]
@@ -28,5 +28,5 @@ FLOORPLAN COMPOSITION (T1): 18 hard / 1 soft terms; hard RED 0, soft RED 0 (advi
     power | power_mon: 14 airwires (154.0 mm) -> corridor >= 4.8 mm
     bringup_en_modules | bringup_modules: 10 airwires (1076.4 mm) -> corridor >= 4.0 mm
     ethernet | rj45_connector: 9 airwires (218.2 mm) -> corridor >= 3.8 mm
-    hdmi_rx | hdmi_rx_term: 8 airwires (227.8 mm) -> corridor >= 3.6 mm
+    hdmi_rx | hdmi_rx_term: 8 airwires (247.4 mm) -> corridor >= 3.6 mm
     bringup_modules | fmc: 6 airwires (48.5 mm) -> corridor >= 3.2 mm

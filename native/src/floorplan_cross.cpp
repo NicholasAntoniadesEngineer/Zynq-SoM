@@ -1,6 +1,7 @@
 #include "floorplan_internal.hpp"
 #include "schgen/board_schematic.hpp"
 #include "schgen/precision_ops.hpp"
+#include "schgen/pcb_escape.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -15,6 +16,7 @@ template<class Map> typename Map::mapped_type get(const Map& m, const typename M
 }  // namespace
 
 void Engine::prepare_cross() {
+    prepare_escape_rows();
     const auto& zg = in.geometry;
     auto rotations = zg.conn_rot;
     for (const auto& [ref, extra] : zg.zone_extra_rot) rotations[ref] = rotated(rotations[ref]+extra);
@@ -136,6 +138,52 @@ void Engine::prepare_cross() {
         const auto box=boxes_union(pad_boxes(cross_parts[p->second].footprint,get(rotations,ref)));
         if (box) connector_pad_boxes[ref]=*box;
     }
+}
+
+void Engine::prepare_escape_rows() {
+    escape_rows.clear();
+    for(const auto& sheet:in.sheets) {
+        if(sheet.name.size()!=6||!starts(sheet.name,"som_j"))continue;
+        const auto ref="J"+sheet.name.substr(5);
+        const auto jack=std::find_if(plan.som.js.begin(),plan.som.js.end(),[&](const auto& j){return j.ref==ref;});
+        for(const auto& part:sheet.parts) {
+            if(part.ref!=ref)continue;
+            const auto key=resolved(part);
+            if(!key||jack==plan.som.js.end())throw FloorplanError("missing current escape connector geometry: "+sheet.name);
+            const auto& source=in.footprints.at(*key);
+            const auto fp=pcb_check_footprint(source.source,sexpr_dumps(source.document),source.document);
+            const auto contacts=pcb_escape_contact_geometry(*fp,&plan.accounting.quantization_engagements);
+            std::set<std::string> netted;
+            for(const auto& net:sheet.nets)for(const auto& pin:net.pins)if(pin.ref==ref)netted.insert(pin.pin);
+            // Match the emitted escape planner's named-pad resolution (last
+            // occurrence wins), including footprints with duplicate pad IDs.
+            std::map<std::string,FloorplanPoint> pad_positions;
+            for(const auto& p:fp->pads)if(!std::get<0>(p).empty())
+                pad_positions[std::get<0>(p)]={std::get<2>(p),std::get<3>(p)};
+            std::map<int,std::vector<double>> rows;
+            for(const auto& [pad,xy]:pad_positions)if(netted.count(pad)) {
+                const int row=pad_row_sign(xy.second,.5);
+                if(row)rows[row].push_back(xy.first);
+            }
+            for(const auto& [row,positions]:rows){
+                const auto [lo,hi]=std::minmax_element(positions.begin(),positions.end());
+                escape_rows.push_back({"escape:"+ref+(row>0?":S":":N"),{jack->x,jack->y},
+                    jack->w<jack->h?90.0:0.0,*lo,*hi,row,contacts});
+            }
+        }
+    }
+}
+std::vector<std::pair<std::string,Box4>> Engine::current_escape_corridors() {
+    auto result=in.compose.corridors; // Explicit caller constraints, never generated history.
+    for(const auto& row:escape_rows){
+        const auto x=quantize("fixed_part_grid",in.origin.first+plan.som_x+row.offset.first);
+        const auto y=quantize("fixed_part_grid",in.origin.second+plan.som_y+row.offset.second);
+        const auto box=pcb_escape_row_corridor(row.contacts,row.lo,row.hi,row.row,x,y,row.rotation,
+            &plan.accounting.quantization_engagements);
+        result.emplace_back(row.name,Box4{box.x0-in.origin.first,box.y0-in.origin.second,
+                                         box.x1-in.origin.first,box.y1-in.origin.second});
+    }
+    return result;
 }
 
 double Engine::estimate(const std::vector<const FloorplanBlock*>& blocks, const std::string& only_sheet) {

@@ -1,0 +1,53 @@
+{
+  "source_commit": "4f4c5888",
+  "scope": "Current-geometry carrier compaction screening; no accepted smaller layout",
+  "motivation": "The previous unpinned-pilot campaign predates current-pose escape reservations, smaller reference outline and subsequent search improvements. Test individual and combined search restrictions on the actual current implementation rather than infer feasibility from the old campaign.",
+  "base_command": "native/build/fast/schgen_compact_stage_profile --repo . --project carrier --compact-search on --edge-feasibility on --owned-quality-first on --owned-face-cohesion on --contract-group-face-sheet usb_jtag --contract-group-face-sheet power --require-bottom-sheet power_mon --require-bottom-sheet bringup_modules --require-bottom-sheet bringup_en_modules --joint-separation-states 1024 --reseat-poses 8 --reseat-frontier 4096 --reseat-continuations 3 --reseat-victim-shapes on --owned-shape board_aux=owned-face-a1.000000 --owned-shape bringup_rails=bottom-a2.2/r270/owned-pins-forward --schematic carrier/Zynq_Carrier.kicad_sch --runs 1 --interior-order 3 --failed-first-retry on --shape-area-first on --floorplan-spec /private/tmp/carrier-next-outlines.QKynPr/163x150.json",
+  "spec_reconstruction": "native/benchmarks/carrier-163x151-authored-proximity.floorplan.json with outline.h=150; comment changed to Unqualified next-height screen.",
+  "trials": [
+    {
+      "remove_shape_pins": ["board_aux"],
+      "seconds": 15.249149833,
+      "outer_attempts": 4,
+      "log": "native/build/current-unpin-aux.log"
+    },
+    {
+      "remove_shape_pins": ["bringup_rails"],
+      "seconds": 15.446874167,
+      "outer_attempts": 4,
+      "log": "native/build/current-unpin-rails.log"
+    },
+    {
+      "remove_shape_pins": ["board_aux", "bringup_rails"],
+      "seconds": 15.604728083,
+      "outer_attempts": 4,
+      "log": "native/build/current-unpin-both.log"
+    },
+    {
+      "remove_shape_pins": ["board_aux", "bringup_rails"],
+      "extra_options": "--shape-choice-replays 2 --owned-selection-trace on",
+      "seconds": 34.564867583,
+      "outer_attempts": 12,
+      "recorded_shape_replays": 8,
+      "recorded_replay_budget_events": 4,
+      "log": "native/build/current-unpin-replay.log"
+    },
+    {
+      "remove_shape_pins": ["board_aux", "bringup_rails"],
+      "extra_options": "--require-bottom-sheet power",
+      "seconds": 3.593600458,
+      "outer_attempts": 4,
+      "log": "native/build/current-unpin-power-bottom.log"
+    }
+  ],
+  "all_results": "construction_failed; failure receipt captured, no acceptance or geometric infeasibility claim",
+  "observations": [
+    "Individual and combined pilot pin releases preserve the baseline failure fallback event sequence exactly. This does not establish that these restrictions are harmless for every strategy or outline.",
+    "Selection trace has no board_aux or bringup_rails entries. It only reports multi-hit selections, so absence alone is not proof a block was never visited.",
+    "The first traced power decision chooses a 47.6904x23.9349 top offer while a 53.3604x23.9349 bottom offer exists. The local area heuristic can prefer a smaller top envelope despite bottom-side capacity; the forced-bottom control still fails, so that choice alone is not the solution.",
+    "Bottom-power control includes failed FMC reseats against power and HDMI termination. Failures describe this bounded strategy, not an inherent electrical relationship or impossible board geometry."
+  ],
+  "next_direction": "Investigate early placement continuation feasibility and FMC/USB-JTAG remaining translation domains, including joint side/shape/pose changes, instead of further tuning the later pilot pins alone.",
+  "qualification": "No expensive full builds or renders were run for failed candidates. Qualified 163x151 carrier and master release are preserved.",
+  "timing_caveat": "Sequential single-run screening, uncontrolled OS cache; timings describe failed-search cost, not successful build performance or comparison to historical Python."
+}

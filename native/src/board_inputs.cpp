@@ -35,29 +35,8 @@ PcbPlacementInput load_board_inputs(const ProjectPaths& paths,
     floor.experiment = options.experiment;
     result.two_side = options.two_side;
     result.netlist = netlist;
-    const auto prior_escape = paths.project_root / "escape_block.json";
-    if (fs::exists(prior_escape)) {
-        result.prior_escape_sidecar = parse_json_file(prior_escape.string());
-        const auto* constraints = object_field(result.prior_escape_sidecar, "t1_constraints");
-        const auto* corridors = constraints ? object_field(*constraints, "corridors") : nullptr;
-        if (corridors) {
-            if (corridors->kind != JsonKind::Object)
-                throw std::runtime_error("escape corridors must be an object: " + prior_escape.string());
-            std::map<std::string, Box4> sorted;
-            for (const auto& [name, value] : corridors->object_value) {
-                const auto* rect = object_field(value, "rect");
-                if (!rect || rect->kind != JsonKind::Array || rect->array_value.size() != 4)
-                    throw std::runtime_error("escape corridor requires four coordinates: " + name);
-                for (const auto& coordinate : rect->array_value)
-                    if (coordinate.kind != JsonKind::Number || !std::isfinite(coordinate.number_value))
-                        throw std::runtime_error("escape corridor requires finite coordinates: " + name);
-                const auto& r = rect->array_value;
-                sorted.emplace("escape:" + name, Box4{r[0].number_value - 25, r[1].number_value - 25,
-                                                      r[2].number_value - 25, r[3].number_value - 25});
-            }
-            floor.compose.corridors.assign(sorted.begin(), sorted.end());
-        }
-    }
+    // escape_block.json is generated output, never a placement input. Current
+    // connector/pad geometry supplies reservations during each floorplan trial.
     std::set<std::string> footprint_ids, names;
     for (const auto& sheet : circuits) {
         floor.sheets.push_back(sheet.circuit);

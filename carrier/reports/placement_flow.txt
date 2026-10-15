@@ -18,7 +18,7 @@ PLACEMENT-FLOW GATE: PASS (9 external contract(s); board_area=24613mm^2, flow_bu
     flow usb_pd->power: 18.71mm / 122.2mm budget
     flow usb_pd->power: 18.71mm / 122.2mm budget
     near_max ethernet to rj45_connector: 1.58mm gap / <= 20mm
-    near_max hdmi_rx_term to som_j2: 8.41mm gap / <= 10mm
+    near_max hdmi_rx_term to som_j2: 5.74mm gap / <= 10mm
     near_max motor_sense to motor_pwm: 1.80mm gap / <= 20mm
     near_max uart_bridge to usb_uart_connector: 2.85mm gap / <= 40mm
     near_max usb_pd to pd_input: 2.38mm gap / <= 10mm

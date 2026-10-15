@@ -25,7 +25,6 @@ struct PcbPlacementInput {
     std::map<std::string, PcbCheckFootprintPtr> return_path_footprints;
     std::string interface_bytes;
     ProjectStrings function_map;
-    JsonNode prior_escape_sidecar; // same snapshot supplies corridors and T2 coexistence
     bool two_side = true;
     std::shared_ptr<const PcbPlacementExperiment> experiment;
     TrustedOwnedGroupInputs owned_groups; // compact-only, validated board inputs

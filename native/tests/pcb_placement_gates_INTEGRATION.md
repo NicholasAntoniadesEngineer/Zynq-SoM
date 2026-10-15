@@ -62,8 +62,8 @@ dependency is introduced in production.
 
 ## Exact loader/evidence contract
 
-The parent's existing `PcbPlacementInput` is sufficient; no new loader/schema
-is needed beyond the already added `prior_escape_sidecar`:
+The existing `PcbPlacementInput` supplies authored/current geometry. Generated
+`escape_block.json` is output, not a placement dependency:
 
 - `floorplan.sheets`: all ordered canonical circuits, with original local refs,
   declared footprint IDs and nets. Do not filter this input to placed parts.
@@ -78,9 +78,9 @@ is needed beyond the already added `prior_escape_sidecar`:
 - `floorplan.project.wired_sheets`: the actual enforcement set. Project zone
   membership comes from the canonical circuits, not just currently placed refs.
 - `floorplan.spec`: current authored near-intent terms, including advisory ones.
-- `prior_escape_sidecar`: immutable raw parsed `escape_block.json`, or JSON null
-  when absent. It must not be replaced with the new model's result before the
-  floorplan solve.
+- Floorplan escape reservations are derived from the current connector pad rows
+  and snapped current SoM pose, using the same row-corridor primitive as the
+  emitted escape plan. They are recalculated for each composition attempt.
 
 `pcb_compose_evidence(sidecar, origin)` parses the following exact fields:
 
@@ -98,14 +98,12 @@ Missing ref/sheet default to an empty string; missing verdict defaults to `?`,
 as in Python. A malformed/nonfinite/inverted rectangle is rejected explicitly.
 No `conn` or `basis` coexistence fields are needed for this reporter.
 
-The parent loader should retain the raw prior sidecar **and** provide its sorted
-translated corridors in `floorplan.compose.corridors` for solving. Final
-generation has different timing: original `emit.py` writes the newly generated
-escape sidecar before calling `compose_report`. Therefore the production
-overload uses `pcb_compose_evidence(model)`, combining
+The loader must not feed previous-run corridor coordinates back into placement.
+The production reporting overload uses `pcb_compose_evidence(model)`, combining
 `model.escape_plan_record.t1_constraints` and `model.escape_meta.coexistence`
 without writing a file. For a deliberate report against prior evidence use
-`pcb_compose_evidence(live_input.prior_escape_sidecar)` and the explicit overload.
+`pcb_compose_evidence(explicit_sidecar)` and the explicit overload. Such
+diagnostic evidence does not become a production placement input.
 
 ## Preserved enforcement semantics
 

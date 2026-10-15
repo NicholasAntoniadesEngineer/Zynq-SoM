@@ -92,12 +92,8 @@ inline Fixture load(const std::filesystem::path &root, const std::string &projec
         floor.regulators.push_back(std::move(reg));
     }
     floor.si_pairs = parse_signal_specs(field(in, "si_spec"));
-    for (const auto &row : field(field(in, "compose"), "corridors").array_value) {
-        const auto &a = row.array_value;
-        floor.compose.corridors.push_back(
-            {a[0].string_value,
-             {a[1].number_value, a[2].number_value, a[3].number_value, a[4].number_value}});
-    }
+    // Historical generated corridors remain in the immutable oracle, but are
+    // no longer placement inputs. Derive reservations from current geometry.
     for (const auto &[key, doc] : field(in, "footprints").object_value) {
         std::string source = string(doc, "source"), bytes = string(doc, "text");
         for (const auto &[path, other] : field(emit, "footprints").object_value)

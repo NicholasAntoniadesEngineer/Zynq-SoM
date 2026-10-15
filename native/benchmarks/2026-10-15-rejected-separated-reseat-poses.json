@@ -1,0 +1,39 @@
+{
+  "base_commit": "97d221e97cbd029bce036a557baea882616a5604",
+  "experiment": "Replace the nearest-eight retry pose prefix with a footprint-separated greedy sample, preserving the first legal nearest pose. Traverse the same distance-ordered frontier, suppressing candidates when abs(dx)<group_width AND abs(dy)<group_height relative to any already selected pose. Keep existing 8-result/4096-frontier limits and all geometry/hardware checks.",
+  "integration": "Enabled only at floorplan_pack.cpp's existing incoming-pose reseat query. Ordinary place_near and other occupancy calls unchanged. Public experimental selection mode and its test were removed after rejection.",
+  "synthetic_tests": {
+    "occupancy_independent_counter_and_legality_contracts": "PASS, including added separated-pose legality, incumbent and synthetic greedy-trap recovery checks",
+    "compact_retry_contracts": "FAIL: required result-cap scenario no longer exercised; no assertion removed or relaxed",
+    "retry_coverage": {"searches":134,"attempted_poses":17,"budget_exhaustions":52,"result_caps":0,"recovered_fixtures":7},
+    "interpretation": "The failed assertion is missing scenario coverage, not proof that all recoveries failed. Real-board regression below independently rejects this variant. Retain detailed coverage counts in the production test output for future diagnosis."
+  },
+  "carrier_screens": [
+    {"dimensions_mm":[163,150],"result":"construction_failed","seconds":17.23544175,"completed_outer_attempts":4,"failure_receipt_available":true,"log":"native/build/separated-poses-163x150.log"},
+    {"dimensions_mm":[163,151],"result":"construction_failed","seconds":11.577731292,"completed_outer_attempts":4,"failure_receipt_available":true,"log":"native/build/separated-poses-reference.log"}
+  ],
+  "screen_recipe": "schgen_compact_stage_profile --repo . --project carrier --compact-search on --edge-feasibility on --owned-quality-first on --owned-face-cohesion on --contract-group-face-sheet usb_jtag --contract-group-face-sheet power --require-bottom-sheet power_mon --require-bottom-sheet bringup_modules --require-bottom-sheet bringup_en_modules --joint-separation-states 1024 --reseat-poses 8 --reseat-frontier 4096 --reseat-continuations 3 --reseat-victim-shapes on --owned-shape board_aux=owned-face-a1.000000 --owned-shape bringup_rails=bottom-a2.2/r270/owned-pins-forward --schematic /private/tmp/carrier-166x156-two-pilots.iK3HkI/Zynq_Carrier.kicad_sch --runs 1 --interior-order 3 --failed-first-retry on --shape-area-first on --floorplan-spec SPEC",
+  "reference_spec": "native/benchmarks/carrier-163x151-authored-proximity.floorplan.json",
+  "smaller_spec": "/private/tmp/carrier-next-outlines.QKynPr/163x150.json",
+  "observations": [
+    "On the accepted-outline experiment, FMC displacing hdmi_rx_term generated only one pose after 2310 frontier nodes; that pose had already been attempted by the ordinary pass.",
+    "USB-JTAG displacing FMC generated only one pose before exhausting 4096 frontier nodes, again with zero new pose attempts.",
+    "Whole-envelope separation is too coarse for these constrained windows. A future diverse search must retain local adjustment candidates, not discard them in favour of large translations."
+  ],
+  "restored_checks": {
+    "ctest": "native_compact_retry_contracts PASS 5.91 s; native_occupancy_cell_counter_contracts PASS 0.43 s, including new sub-footprint-only recovery fixture",
+    "restored_retry_coverage": {"searches":162,"attempted_poses":351,"budget_exhaustions":52,"result_caps":52,"recovered_fixtures":3},
+    "current_sidecar_profile_hash": "8ba5fe760fa5ac529cd107cf7fa70945f7e7276b60e03f0e98b4ddc4d6ffc397",
+    "current_sidecar_result": "Constructed 163x151, 398 top / 168 bottom, fanout and ratsnest checks PASS. Diagnostic construction only, not full acceptance. Same hash with historical or freshly generated schematic input."
+  },
+  "new_reliability_finding": {
+    "cause": "board_inputs.cpp reads t1_constraints.corridors from the previous generated escape_block.json and subtracts the fixed 25 mm emission origin. floorplan_pack.cpp uses those previous-run boxes as fixed composition obstacles. board_pipeline_pcb.cpp then overwrites the same sidecar with current geometry. Thus generated output feeds the next build's placement input.",
+    "controlled_test": "Temporarily replaced ONLY the loaded composition corridor list with the six pre-release corridor rectangles from commit 8aaaad46, retaining all current code, configuration, circuits and the freshly generated schematic. Result returned exactly to the published PCB hash d8dea4b5049968b2fdcb385a17cb19c9e8d5257bd2afa297b1467600f2690e5e. All diagnostic overrides were removed afterwards.",
+    "observed_difference": "Current sidecar moved the hdmi_rx_term footprint group by -2.665 mm in board Y compared with the published PCB; the emitted diff contained only footprint at-coordinate changes.",
+    "control_log": "native/build/prerelease-corridor-control.log",
+    "current_log": "native/build/separated-poses-restored-current-schematic.log",
+    "next_action": "Derive composition corridors from current connector/pad geometry before legalisation, sharing geometry with pcb_escape_plan.cpp rather than consuming last-run absolute positions. Preserve physical corridor checks and accounting. Add first-build/rebuild, stale-sidecar and changed-outline regressions. Do not simply delete corridor reservations or bless output drift.",
+    "status": "Confirmed generated-artifact feedback; correction pending. This is separate from the rejected candidate-diversity experiment. Published outputs remain untouched."
+  },
+  "decision": "REJECTED. Production algorithm restored; no full rendering/audit spent on failed screens. This does not establish that either outline is geometrically infeasible. No improvement or timing speedup claimed. The published 163x151 carrier remains the incumbent."
+}
