@@ -1,0 +1,638 @@
+Internal ctest changing into directory: /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/native/build/fast
+Test project /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/native/build/fast
+        Start  99: native_geometry_cli_apply_contracts
+        Start  98: native_geometry_cli_live_contracts
+  1/275 Test  #98: native_geometry_cli_live_contracts .................   Passed  116.71 sec
+        Start 155: native_board_pipeline_live_contracts
+  2/275 Test  #99: native_geometry_cli_apply_contracts ................***Failed  141.35 sec
+geometry CLI FAILED after 466: at least one actual candidate is eligible
+
+        Start  51: native_render_models_live_contracts
+  3/275 Test #155: native_board_pipeline_live_contracts ...............   Passed   47.75 sec
+        Start 125: native_output_precision_source_contracts
+  4/275 Test  #51: native_render_models_live_contracts ................***Failed   26.24 sec
+288 historical geometry inputs with corrected 45-degree oracle, OBJ bytes, 62 real footprints, 154 asset hashes and mutations pass
+poppler/error: May not be a PDF file (continuing anyway)
+poppler/error: Couldn't find trailer dictionary
+poppler/error: Couldn't find trailer dictionary
+poppler/error: Couldn't read xref table
+8 independent rotated/cropped multi-page PDF cases pass
+carrier current_input_sha256=d8dea4b5049968b2fdcb385a17cb19c9e8d5257bd2afa297b1467600f2690e5e
+FAIL: native raster differs structurally from independent Python render: mean=13.8166, max=93.6837
+
+        Start 136: native_stage_precision_source_contracts
+  5/275 Test #136: native_stage_precision_source_contracts ............   Passed   20.19 sec
+        Start 156: native_single_sheet_live
+  6/275 Test #125: native_output_precision_source_contracts ...........   Passed   24.59 sec
+        Start  86: native_selftest_full_contracts
+  7/275 Test #156: native_single_sheet_live ...........................   Passed   21.86 sec
+        Start 117: native_pack_plain_source_contracts
+  8/275 Test #117: native_pack_plain_source_contracts .................   Passed   15.52 sec
+        Start  49: native_subsystem_scaffold_build_contracts
+  9/275 Test  #49: native_subsystem_scaffold_build_contracts ..........   Passed   32.65 sec
+        Start 148: native_buried_policy_contracts
+ 10/275 Test  #86: native_selftest_full_contracts .....................   Passed   72.93 sec
+        Start 214: native_subsystem_check_cli
+ 11/275 Test #148: native_buried_policy_contracts .....................   Passed   16.73 sec
+        Start 215: native_carrier_check_cli
+ 12/275 Test #214: native_subsystem_check_cli .........................   Passed   19.81 sec
+        Start 216: native_devkit_check_cli
+ 13/275 Test #215: native_carrier_check_cli ...........................   Passed   19.20 sec
+        Start 109: native_pack_search_board
+ 14/275 Test #216: native_devkit_check_cli ............................   Passed   18.61 sec
+        Start 142: native_regression_cli_contracts
+ 15/275 Test #109: native_pack_search_board ...........................   Passed   15.09 sec
+        Start 120: native_pack_grid_precision_source_contracts
+ 16/275 Test #142: native_regression_cli_contracts ....................   Passed   13.66 sec
+        Start 116: native_pack_plain_board_contracts
+ 17/275 Test #120: native_pack_grid_precision_source_contracts ........   Passed   16.90 sec
+        Start  22: native_pcb_owned_groups_live_contracts
+ 18/275 Test #116: native_pack_plain_board_contracts ..................***Failed   18.15 sec
+carrier entry pack_band_sort_precision4dp 198
+carrier entry pack_block_area_precision1dp 42312
+carrier entry pack_contact_column_precision4dp 900
+carrier entry pack_fanout_reach_precision4dp 2032
+carrier entry pack_halfturn_origin_precision 116
+carrier entry pack_isolation_bound_precision3dp 8
+carrier entry pack_ladder_coordinate_precision4dp 90
+carrier entry pack_named_center_precision 804
+carrier entry pack_plane_bound_precision3dp 4
+carrier entry pack_redundancy_candidate_precision6dp 1
+carrier entry pack_rotated_origin_precision 60
+carrier entry pack_row_extent_precision4dp 58
+complete frozen emitted PCB bytes changed
+
+        Start 129: native_output_precision_contracts
+ 19/275 Test  #22: native_pcb_owned_groups_live_contracts .............   Passed   22.33 sec
+        Start 119: native_pack_grid_precision_boards
+ 20/275 Test #129: native_output_precision_contracts ..................   Passed   22.38 sec
+        Start  38: native_floorplan_fallback_scope_contracts
+ 21/275 Test #119: native_pack_grid_precision_boards ..................   Passed    7.89 sec
+        Start 135: native_stage_precision_contracts
+ 22/275 Test  #38: native_floorplan_fallback_scope_contracts ..........   Passed   10.99 sec
+        Start 122: native_pack_geometry_board_contracts
+ 23/275 Test #135: native_stage_precision_contracts ...................   Passed   16.05 sec
+        Start  94: native_render_project_base_contracts
+ 24/275 Test #122: native_pack_geometry_board_contracts ...............   Passed   14.51 sec
+        Start 147: native_example_devkit_live_contracts
+ 25/275 Test  #94: native_render_project_base_contracts ...............   Passed    9.19 sec
+        Start   5: native_owned_shape_quality_live_contracts
+ 26/275 Test #147: native_example_devkit_live_contracts ...............   Passed   11.23 sec
+        Start 105: native_legalize_accounting_contracts
+ 27/275 Test   #5: native_owned_shape_quality_live_contracts ..........   Passed   12.18 sec
+        Start 126: native_pack_precision_source_contracts
+ 28/275 Test #126: native_pack_precision_source_contracts .............   Passed    9.06 sec
+        Start 152: native_experiment_tools_contracts
+ 29/275 Test #105: native_legalize_accounting_contracts ...............   Passed   17.59 sec
+        Start   2: native_owned_shape_quality_engine_live_contracts
+ 30/275 Test #152: native_experiment_tools_contracts ..................***Failed   12.96 sec
+carrier: 39 immutable variant cost vectors passed
+carrier: independent complete stage report passed
+devkit_mini: independent complete stage report passed
+carrier independent dump bytes power_som
+
+        Start  34: native_compose_measure_accounting_contracts
+ 31/275 Test   #2: native_owned_shape_quality_engine_live_contracts ...   Passed    9.34 sec
+        Start  17: native_pcb_owned_groups_adapter_audit_contracts
+ 32/275 Test  #34: native_compose_measure_accounting_contracts ........   Passed    3.97 sec
+        Start 124: native_pack_geometry_source_contracts
+ 33/275 Test  #17: native_pcb_owned_groups_adapter_audit_contracts ....   Passed    7.37 sec
+        Start  16: native_pcb_owned_groups_adapter_contracts
+ 34/275 Test #124: native_pack_geometry_source_contracts ..............   Passed    7.38 sec
+        Start  79: native_authoring_purity_contracts
+ 35/275 Test  #79: native_authoring_purity_contracts ..................   Passed    6.00 sec
+        Start 106: native_legalize_registry_contracts
+ 36/275 Test  #16: native_pcb_owned_groups_adapter_contracts ..........   Passed   10.24 sec
+        Start 143: native_regression_rc_smoke
+ 37/275 Test #106: native_legalize_registry_contracts .................   Passed    8.37 sec
+        Start 179: native_schematic_visual_render_corrections
+ 38/275 Test #143: native_regression_rc_smoke .........................   Passed    5.82 sec
+        Start  45: native_compose_repair_contracts
+ 39/275 Test #179: native_schematic_visual_render_corrections .........   Passed    5.07 sec
+        Start   6: native_pcb_compact_owned_moves_contracts
+ 40/275 Test  #45: native_compose_repair_contracts ....................   Passed    5.42 sec
+        Start 140: native_connector_precision_contracts
+ 41/275 Test #140: native_connector_precision_contracts ...............   Passed    8.96 sec
+        Start  72: native_render_baseline_contracts
+ 42/275 Test  #72: native_render_baseline_contracts ...................***Failed    0.68 sec
+board changed beyond reviewed physical-model and courtyard repairs
+
+        Start 128: native_pack_precision_contracts
+ 43/275 Test   #6: native_pcb_compact_owned_moves_contracts ...........   Passed   10.65 sec
+        Start  50: native_render_models_contracts
+ 44/275 Test #128: native_pack_precision_contracts ....................   Passed    8.03 sec
+        Start 145: native_net_contract_contracts
+ 45/275 Test  #50: native_render_models_contracts .....................   Passed    8.97 sec
+        Start 139: native_precision_accounting_contracts
+ 46/275 Test #145: native_net_contract_contracts ......................   Passed    5.21 sec
+        Start 134: native_placement_precision_source_contracts
+ 47/275 Test #139: native_precision_accounting_contracts ..............   Passed    9.03 sec
+        Start  64: native_board_live_contracts
+ 48/275 Test  #64: native_board_live_contracts ........................   Passed   35.36 sec
+        Start 153: native_experiment_observer_contracts
+ 49/275 Test #134: native_placement_precision_source_contracts ........   Passed   51.22 sec
+        Start  62: native_policy_audits_contracts
+ 50/275 Test #153: native_experiment_observer_contracts ...............   Passed   23.51 sec
+        Start 154: native_board_pipeline_contracts
+ 51/275 Test  #62: native_policy_audits_contracts .....................   Passed   48.75 sec
+        Start 141: native_floorplan_precision_contracts
+ 52/275 Test #141: native_floorplan_precision_contracts ...............***Failed    0.56 sec
+Floorplan precision FAILED: immutable 83-row floorplan policy prefix
+
+        Start  67: native_pcb_placement_contracts
+ 53/275 Test #154: native_board_pipeline_contracts ....................   Passed   41.20 sec
+        Start  27: native_compact_profile_inputs_contracts
+ 54/275 Test  #67: native_pcb_placement_contracts .....................   Passed   41.59 sec
+        Start 131: native_placement_precision_contracts
+ 55/275 Test  #27: native_compact_profile_inputs_contracts ............   Passed   40.02 sec
+        Start  36: native_model_failure_receipt_contracts
+ 56/275 Test  #36: native_model_failure_receipt_contracts .............***Failed    6.91 sec
+valid incumbent must not replan; failing carrier must replan
+
+        Start  54: native_producer_accounting_contracts
+ 57/275 Test #131: native_placement_precision_contracts ...............   Passed   17.28 sec
+        Start  20: native_footprint_arc_bounds_contracts
+ 58/275 Test  #20: native_footprint_arc_bounds_contracts ..............   Passed    0.43 sec
+        Start 150: native_cpp_auditor_contracts
+ 59/275 Test  #54: native_producer_accounting_contracts ...............   Passed   15.77 sec
+        Start  60: native_ratsnest_documents_contracts
+ 60/275 Test  #60: native_ratsnest_documents_contracts ................   Passed    2.83 sec
+        Start  14: native_pcb_breathe_sheet_exemption_contracts
+ 61/275 Test #150: native_cpp_auditor_contracts .......................   Passed   20.86 sec
+        Start 138: native_occupancy_precision_contracts
+ 62/275 Test  #14: native_pcb_breathe_sheet_exemption_contracts .......   Passed   11.78 sec
+        Start  87: native_deferred_connector_contracts
+ 63/275 Test  #87: native_deferred_connector_contracts ................   Passed    0.64 sec
+        Start 104: native_native_cpp_enum_contracts
+ 64/275 Test #104: native_native_cpp_enum_contracts ...................   Passed    1.47 sec
+        Start  13: native_pcb_breathe_clearance_contracts
+ 65/275 Test  #13: native_pcb_breathe_clearance_contracts .............   Passed    3.76 sec
+        Start  15: native_pcb_breathe_owned_groups_contracts
+ 66/275 Test #138: native_occupancy_precision_contracts ...............   Passed    8.45 sec
+        Start 149: native_board_policy_migration_contracts
+ 67/275 Test #149: native_board_policy_migration_contracts ............   Passed    8.14 sec
+        Start  32: native_carrier_requirements_pipeline_contracts
+ 68/275 Test  #32: native_carrier_requirements_pipeline_contracts .....   Passed    0.72 sec
+        Start  95: native_process_contracts
+ 69/275 Test  #15: native_pcb_breathe_owned_groups_contracts ..........   Passed   10.46 sec
+        Start 170: native_schematic_grid_receipts
+ 70/275 Test #170: native_schematic_grid_receipts .....................   Passed    0.48 sec
+        Start 144: native_doc_consistency_contracts
+ 71/275 Test  #95: native_process_contracts ...........................   Passed    1.40 sec
+        Start  25: native_compact_facing_contracts
+ 72/275 Test #144: native_doc_consistency_contracts ...................   Passed    0.86 sec
+        Start  26: native_part_courtyard_contracts
+ 73/275 Test  #25: native_compact_facing_contracts ....................   Passed    0.75 sec
+        Start  73: native_si_units_contracts
+ 74/275 Test  #26: native_part_courtyard_contracts ....................   Passed    0.61 sec
+        Start 108: native_pack_search_defined_edge
+ 75/275 Test  #73: native_si_units_contracts ..........................   Passed    0.66 sec
+        Start 103: native_precision_ops_contracts
+ 76/275 Test #108: native_pack_search_defined_edge ....................   Passed    0.72 sec
+        Start 107: native_pack_search_helper
+ 77/275 Test #103: native_precision_ops_contracts .....................   Passed    0.79 sec
+        Start 123: native_pack_geometry_negative_contracts
+ 78/275 Test #107: native_pack_search_helper ..........................   Passed    0.81 sec
+        Start 112: native_pack_search_adapters
+ 79/275 Test #123: native_pack_geometry_negative_contracts ............   Passed    0.81 sec
+        Start 115: native_pack_plain_contracts
+ 80/275 Test #112: native_pack_search_adapters ........................   Passed    0.82 sec
+        Start   4: native_owned_shape_quality_contracts
+ 81/275 Test #115: native_pack_plain_contracts ........................   Passed    0.84 sec
+        Start  53: native_copper_debt_contracts
+ 82/275 Test   #4: native_owned_shape_quality_contracts ...............   Passed    0.84 sec
+        Start  75: native_authoring_context_contracts
+ 83/275 Test  #53: native_copper_debt_contracts .......................   Passed    1.34 sec
+        Start 110: native_pack_search_negative
+ 84/275 Test  #75: native_authoring_context_contracts .................   Passed    0.93 sec
+        Start  21: native_pcb_owned_groups_contracts
+ 85/275 Test #110: native_pack_search_negative ........................   Passed    0.42 sec
+        Start  56: native_constraint_order_contracts
+ 86/275 Test  #21: native_pcb_owned_groups_contracts ..................   Passed    0.83 sec
+        Start  33: native_placement_requirements_closure_contracts
+ 87/275 Test  #33: native_placement_requirements_closure_contracts ....   Passed    1.04 sec
+        Start  93: native_audit_ast_pipe_census_contracts
+ 88/275 Test  #56: native_constraint_order_contracts ..................   Passed    6.07 sec
+        Start  78: native_authoring_purity_dispatch_contracts
+ 89/275 Test  #78: native_authoring_purity_dispatch_contracts .........   Passed    0.43 sec
+        Start  74: native_downstream_i2c_contracts
+ 90/275 Test  #74: native_downstream_i2c_contracts ....................   Passed    0.46 sec
+        Start  80: native_authoring_purity_config_contracts
+ 91/275 Test  #80: native_authoring_purity_config_contracts ...........   Passed    0.43 sec
+        Start  39: native_floorplan_fixed_choice_contracts
+ 92/275 Test  #39: native_floorplan_fixed_choice_contracts ............   Passed    0.48 sec
+        Start 182: native_validation_contracts
+ 93/275 Test  #93: native_audit_ast_pipe_census_contracts .............   Passed    6.86 sec
+        Start  83: native_placement_metadata_contracts
+ 94/275 Test #182: native_validation_contracts ........................   Passed    0.79 sec
+        Start  84: native_subsystem_authoring_contracts
+ 95/275 Test  #83: native_placement_metadata_contracts ................   Passed    0.45 sec
+        Start  28: native_edge_direction_contracts
+ 96/275 Test  #84: native_subsystem_authoring_contracts ...............   Passed    0.75 sec
+        Start  18: native_pcb_refit_fanout_contracts
+ 97/275 Test  #28: native_edge_direction_contracts ....................   Passed    0.87 sec
+        Start  96: native_part_import_contracts
+ 98/275 Test  #96: native_part_import_contracts .......................   Passed    1.16 sec
+        Start 132: native_placement_precision_registry_contracts
+ 99/275 Test #132: native_placement_precision_registry_contracts ......   Passed    0.63 sec
+        Start   7: native_pcb_compact_owned_evict_contracts
+100/275 Test  #18: native_pcb_refit_fanout_contracts ..................***Failed    3.84 sec
+unsafe power refit must preserve the incumbent diode pose
+
+        Start  30: native_board_aux_c1_contracts
+101/275 Test  #30: native_board_aux_c1_contracts ......................   Passed    0.82 sec
+        Start  92: native_audit_ast_pipe_contracts
+102/275 Test  #92: native_audit_ast_pipe_contracts ....................   Passed    4.24 sec
+        Start 121: native_pack_geometry_contracts
+103/275 Test #121: native_pack_geometry_contracts .....................   Passed    0.45 sec
+        Start   8: native_compact_pack_borrow_contracts
+104/275 Test   #8: native_compact_pack_borrow_contracts ...............   Passed    0.47 sec
+        Start  58: native_pcb_placement_gates_contracts
+105/275 Test  #58: native_pcb_placement_gates_contracts ...............   Passed    0.65 sec
+        Start   9: native_compact_seat_memo_contracts
+106/275 Test   #9: native_compact_seat_memo_contracts .................   Passed    0.42 sec
+        Start  29: native_compact_search_contracts
+107/275 Test  #29: native_compact_search_contracts ....................   Passed    0.46 sec
+        Start  76: native_authoring_guard_contracts
+108/275 Test  #76: native_authoring_guard_contracts ...................   Passed    0.43 sec
+        Start  59: native_gallery_diagram_contracts
+109/275 Test  #59: native_gallery_diagram_contracts ...................   Passed    0.55 sec
+        Start 169: native_schematic_place_chain_contracts
+110/275 Test   #7: native_pcb_compact_owned_evict_contracts ...........   Passed   10.67 sec
+        Start  12: native_pcb_child_halo_frozen_contracts
+111/275 Test #169: native_schematic_place_chain_contracts .............   Passed    0.60 sec
+        Start  85: native_authoring_gates_contracts
+112/275 Test  #12: native_pcb_child_halo_frozen_contracts .............   Passed    0.51 sec
+        Start 187: native_project_contracts
+113/275 Test  #85: native_authoring_gates_contracts ...................***Failed    0.87 sec
+carrier:power_som differs beyond reviewed capacitor/reference-topology deltas from immutable historical input
+
+        Start 200: native_circuit_semantic_contracts
+114/275 Test #187: native_project_contracts ...........................***Failed    0.94 sec
+real repository carrier: real IR totals changed
+real repository devkit_mini: real IR totals changed
+project contracts: 58 passed, 2 failed
+
+        Start 159: native_verification_contracts
+115/275 Test #200: native_circuit_semantic_contracts ..................   Passed    0.70 sec
+        Start 181: native_symbols_contracts
+116/275 Test #159: native_verification_contracts ......................   Passed    0.77 sec
+        Start 189: native_project_catalog_contracts
+117/275 Test #181: native_symbols_contracts ...........................   Passed    0.80 sec
+        Start 157: native_firmware_provenance_contracts
+118/275 Test #189: native_project_catalog_contracts ...................   Passed    0.81 sec
+        Start 162: native_constraints_contracts
+119/275 Test #157: native_firmware_provenance_contracts ...............***Failed    0.81 sec
+canonical fixture power name
+
+        Start 191: native_bom_contracts
+120/275 Test #162: native_constraints_contracts .......................   Passed    0.79 sec
+        Start  48: native_subsystem_scaffold_contracts
+121/275 Test #191: native_bom_contracts ...............................***Failed    0.80 sec
+carrier BOM differs beyond reviewed capacitor changes
+
+        Start 171: native_schematic_place_pages_contracts
+122/275 Test  #48: native_subsystem_scaffold_contracts ................   Passed    0.84 sec
+        Start 176: native_netlist_gate_contracts
+123/275 Test #171: native_schematic_place_pages_contracts .............   Passed    0.90 sec
+        Start 173: native_design_rules_contracts
+124/275 Test #176: native_netlist_gate_contracts ......................   Passed    0.88 sec
+        Start 185: native_devicetree_contracts
+125/275 Test #173: native_design_rules_contracts ......................   Passed    0.81 sec
+        Start 184: native_project_outputs_contracts
+126/275 Test #185: native_devicetree_contracts ........................   Passed    0.76 sec
+        Start 186: native_link_contracts
+127/275 Test #184: native_project_outputs_contracts ...................   Passed    0.80 sec
+        Start 201: native_xdc_contracts
+128/275 Test #186: native_link_contracts ..............................   Passed    0.81 sec
+        Start 167: native_schematic_place_fanout_contracts
+129/275 Test #201: native_xdc_contracts ...............................   Passed    0.80 sec
+        Start  61: native_procurement_contracts
+130/275 Test #167: native_schematic_place_fanout_contracts ............   Passed    0.84 sec
+        Start  11: native_floorplan_base_rotation_contracts
+131/275 Test  #61: native_procurement_contracts .......................   Passed    0.82 sec
+        Start 158: native_firmware_docs_contracts
+132/275 Test  #11: native_floorplan_base_rotation_contracts ...........   Passed    0.81 sec
+        Start 205: native_rounding
+133/275 Test #205: native_rounding ....................................   Passed    0.84 sec
+        Start 188: native_som_interface_contracts
+134/275 Test #188: native_som_interface_contracts .....................   Passed    0.88 sec
+        Start 172: native_schematic_place_core_contracts
+135/275 Test #172: native_schematic_place_core_contracts ..............   Passed    0.77 sec
+        Start 190: native_vivado_contracts
+136/275 Test #190: native_vivado_contracts ............................   Passed    0.78 sec
+        Start 180: native_schematic_contracts
+137/275 Test #180: native_schematic_contracts .........................   Passed    0.87 sec
+        Start 166: native_selftest_contracts
+138/275 Test #166: native_selftest_contracts ..........................   Passed    0.81 sec
+        Start  37: native_floorplan_receipt_contracts
+139/275 Test  #37: native_floorplan_receipt_contracts .................   Passed    0.83 sec
+        Start 161: native_model_checks_contracts
+140/275 Test #161: native_model_checks_contracts ......................   Passed    0.58 sec
+        Start 127: native_edge_translation_contracts
+141/275 Test #127: native_edge_translation_contracts ..................   Passed    0.46 sec
+        Start 204: native_catalog_lifecycle
+142/275 Test #158: native_firmware_docs_contracts .....................   Passed    7.63 sec
+        Start 203: native_placement_search
+143/275 Test #204: native_catalog_lifecycle ...........................   Passed    0.84 sec
+        Start  31: native_carrier_surface_requirements_contracts
+144/275 Test #203: native_placement_search ............................   Passed    0.81 sec
+        Start 183: native_devkit_design_contracts
+145/275 Test  #31: native_carrier_surface_requirements_contracts ......   Passed    0.97 sec
+        Start 202: native_numeric_contracts
+146/275 Test #183: native_devkit_design_contracts .....................   Passed    0.86 sec
+        Start  70: native_json_unicode_contracts
+147/275 Test #202: native_numeric_contracts ...........................   Passed    0.68 sec
+        Start  40: native_connector_incumbent_contracts
+148/275 Test  #70: native_json_unicode_contracts ......................   Passed    0.80 sec
+        Start 151: native_board_policy_contracts
+149/275 Test  #40: native_connector_incumbent_contracts ...............   Passed    0.86 sec
+        Start  55: native_compact_retry_contracts
+150/275 Test #151: native_board_policy_contracts ......................***Failed    1.04 sec
+Native board policy: historical fallbacks plus twenty-six independently declared native recovery events
+
+        Start  52: native_component_basis_contracts
+151/275 Test  #52: native_component_basis_contracts ...................   Passed    1.60 sec
+        Start  57: native_pcb_drc_contracts
+152/275 Test  #57: native_pcb_drc_contracts ...........................   Passed    0.41 sec
+        Start  68: native_board_inputs_contracts
+153/275 Test  #68: native_board_inputs_contracts ......................   Passed    1.27 sec
+        Start  43: native_floorplan_final_estimate_contracts
+154/275 Test  #55: native_compact_retry_contracts .....................   Passed    5.04 sec
+        Start 146: native_example_devkit_contracts
+155/275 Test #146: native_example_devkit_contracts ....................   Passed    0.28 sec
+        Start   1: native_owned_shape_quality_engine_contracts
+156/275 Test   #1: native_owned_shape_quality_engine_contracts ........   Passed    0.02 sec
+        Start 101: native_parallel_audit_contracts
+157/275 Test  #43: native_floorplan_final_estimate_contracts ..........   Passed    3.02 sec
+        Start  44: native_python_free_tree_contracts
+158/275 Test  #44: native_python_free_tree_contracts ..................   Passed    0.77 sec
+        Start 133: native_pcb_orientation_contracts
+159/275 Test #101: native_parallel_audit_contracts ....................   Passed    4.24 sec
+        Start 118: native_pack_grid_precision_contracts
+160/275 Test #118: native_pack_grid_precision_contracts ...............   Passed    0.11 sec
+        Start  69: native_manufacturing_contracts
+161/275 Test  #69: native_manufacturing_contracts .....................   Passed    1.61 sec
+        Start 194: native_design_rules_carrier
+162/275 Test #194: native_design_rules_carrier ........................   Passed    0.35 sec
+        Start 193: native_electrical_carrier
+163/275 Test #133: native_pcb_orientation_contracts ...................   Passed    4.28 sec
+        Start  10: native_occupancy_child_halo_contracts
+164/275 Test #193: native_electrical_carrier ..........................   Passed    0.34 sec
+        Start   3: native_pcb_compact_strict_facing_contracts
+165/275 Test  #10: native_occupancy_child_halo_contracts ..............   Passed    0.42 sec
+        Start  46: native_compose_kernel_contracts
+166/275 Test   #3: native_pcb_compact_strict_facing_contracts .........   Passed    0.75 sec
+        Start  41: native_floorplan_escape_corridors_contracts
+167/275 Test  #46: native_compose_kernel_contracts ....................   Passed    0.79 sec
+        Start 178: native_schematic_visual_corrections
+168/275 Test #178: native_schematic_visual_corrections ................   Passed    0.04 sec
+        Start  97: native_geometry_cli_contracts
+169/275 Test  #97: native_geometry_cli_contracts ......................   Passed    0.12 sec
+        Start 111: native_pack_search_header
+170/275 Test  #41: native_floorplan_escape_corridors_contracts ........   Passed    0.89 sec
+        Start  88: native_floorplan_contracts
+171/275 Test #111: native_pack_search_header ..........................   Passed    0.65 sec
+        Start  65: native_pcb_escape_contracts
+172/275 Test  #65: native_pcb_escape_contracts ........................   Passed    0.99 sec
+        Start 213: native_initial_outline_cli_contracts
+173/275 Test #213: native_initial_outline_cli_contracts ...............   Passed    1.98 sec
+        Start  66: native_pcb_stage_contracts
+174/275 Test  #66: native_pcb_stage_contracts .........................   Passed    1.24 sec
+        Start 271: native_compose_help
+175/275 Test #271: native_compose_help ................................   Passed    0.01 sec
+        Start  71: native_authoring_values_contracts
+176/275 Test  #71: native_authoring_values_contracts ..................   Passed    0.40 sec
+        Start 198: native_design_rules_devkit_mini
+177/275 Test #198: native_design_rules_devkit_mini ....................   Passed    0.20 sec
+        Start 197: native_electrical_devkit_mini
+178/275 Test #197: native_electrical_devkit_mini ......................   Passed    0.20 sec
+        Start 177: native_schematic_route_contracts
+179/275 Test #177: native_schematic_route_contracts ...................   Passed    0.84 sec
+        Start  24: native_breathe_occupancy_contracts
+180/275 Test  #24: native_breathe_occupancy_contracts .................   Passed    0.41 sec
+        Start  23: native_carrier_spice_identity_contracts
+181/275 Test  #23: native_carrier_spice_identity_contracts ............   Passed    0.55 sec
+        Start 130: native_output_pack_registry_contracts
+182/275 Test #130: native_output_pack_registry_contracts ..............   Passed    0.60 sec
+        Start  42: native_initial_outline_contracts
+183/275 Test  #42: native_initial_outline_contracts ...................   Passed    0.55 sec
+        Start 164: native_board_schematic_contracts
+184/275 Test #164: native_board_schematic_contracts ...................   Passed    0.61 sec
+        Start 174: native_design_rules_reject_missing_pullups
+185/275 Test #174: native_design_rules_reject_missing_pullups .........   Passed    0.14 sec
+        Start 168: native_schematic_place_templates_contracts
+186/275 Test #168: native_schematic_place_templates_contracts .........   Passed    1.03 sec
+        Start 160: native_spice_contracts
+187/275 Test #160: native_spice_contracts .............................   Passed    0.87 sec
+        Start  19: native_compact_breathe_tht_contracts
+188/275 Test  #19: native_compact_breathe_tht_contracts ...............   Passed    0.50 sec
+        Start  47: native_legalize_precision_contracts
+189/275 Test  #47: native_legalize_precision_contracts ................   Passed    0.41 sec
+        Start  63: native_pack_silk_contracts
+190/275 Test  #63: native_pack_silk_contracts .........................   Passed    0.42 sec
+        Start 100: native_audit_ast_projection_contracts
+191/275 Test #100: native_audit_ast_projection_contracts ..............   Passed    0.67 sec
+        Start 102: native_audit_ast_projection_census
+192/275 Test  #88: native_floorplan_contracts .........................   Passed   13.09 sec
+        Start 137: native_occupancy_cell_counter_contracts
+193/275 Test #102: native_audit_ast_projection_census .................   Passed    0.54 sec
+        Start 114: native_pack_search_fixture_mutation
+194/275 Test #114: native_pack_search_fixture_mutation ................   Passed    0.05 sec
+        Start  89: native_floorplan_geometry_contracts
+195/275 Test  #89: native_floorplan_geometry_contracts ................   Passed    0.14 sec
+        Start  90: native_pcb_emit_contracts
+196/275 Test #137: native_occupancy_cell_counter_contracts ............   Passed    0.72 sec
+        Start 264: native_scfw_help
+197/275 Test #264: native_scfw_help ...................................   Passed    0.01 sec
+        Start  91: native_pcb_checks_contracts
+198/275 Test  #90: native_pcb_emit_contracts ..........................   Passed    1.07 sec
+        Start 192: native_project_carrier
+199/275 Test  #91: native_pcb_checks_contracts ........................***Failed    0.94 sec
+PCB checks contract FAILED: carrier connector_spacing differs at byte 47
+actual: 3 x 151 mm)
+  same-edge overmold connector pairs: 8 (0 too tight)
+    OK  J14001    <-> J18001    HDMI-019S|1  gap=  6.14mm along x (need >= 3mm)
+    OK  J12001    <-> J18002    HDMI-019S|1  gap= 10.02mm along x (need >= 3mm)
+    OK  J12001    <-> J19001    HDMI-019S|1  gap= 24.05mm along x (need >=
+expect: 8 x 163 mm)
+  same-edge overmold connector pairs: 7 (0 too tight)
+    OK  J12001    <-> J18001    HDMI-019S|1  gap=  9.27mm along x (need >= 3mm)
+    OK  J12001    <-> J14001    HDMI-019S    gap= 24.84mm along x (need >= 18mm)
+    OK  J12001    <-> J18002    HDMI-019S|1  gap= 31.23mm along x (need >
+
+        Start 195: native_testpoints_carrier
+200/275 Test #192: native_project_carrier .............................   Passed    0.02 sec
+        Start 234: native_link_help
+201/275 Test #195: native_testpoints_carrier ..........................   Passed    0.02 sec
+        Start 256: native_part-rules_help
+202/275 Test #234: native_link_help ...................................   Passed    0.01 sec
+        Start 231: native_vivado_help
+203/275 Test #256: native_part-rules_help .............................   Passed    0.01 sec
+        Start 270: native_floorplan_help
+204/275 Test #231: native_vivado_help .................................   Passed    0.01 sec
+        Start 238: native_board-schematic_help
+205/275 Test #270: native_floorplan_help ..............................   Passed    0.01 sec
+        Start 242: native_render3d_help
+206/275 Test #238: native_board-schematic_help ........................   Passed    0.01 sec
+        Start 229: native_som-interface_help
+207/275 Test #242: native_render3d_help ...............................   Passed    0.01 sec
+        Start 243: native_board-step_help
+208/275 Test #229: native_som-interface_help ..........................   Passed    0.01 sec
+        Start 244: native_model3d-check_help
+209/275 Test #243: native_board-step_help .............................   Passed    0.01 sec
+        Start 246: native_ratsnest_help
+210/275 Test #244: native_model3d-check_help ..........................   Passed    0.01 sec
+        Start 226: native_selftest_help
+211/275 Test #246: native_ratsnest_help ...............................   Passed    0.01 sec
+        Start 249: native_si-constraints_help
+212/275 Test #226: native_selftest_help ...............................   Passed    0.01 sec
+        Start 199: native_testpoints_devkit_mini
+213/275 Test #249: native_si-constraints_help .........................   Passed    0.01 sec
+        Start 258: native_footprint-pads_help
+214/275 Test #199: native_testpoints_devkit_mini ......................   Passed    0.01 sec
+        Start 248: native_diagram_help
+215/275 Test #258: native_footprint-pads_help .........................   Passed    0.01 sec
+        Start 236: native_design-rules_help
+216/275 Test #248: native_diagram_help ................................   Passed    0.01 sec
+        Start 257: native_bom-values_help
+217/275 Test #236: native_design-rules_help ...........................   Passed    0.01 sec
+        Start 233: native_bom_help
+218/275 Test #257: native_bom-values_help .............................   Passed    0.01 sec
+        Start 260: native_symbol-law_help
+219/275 Test #233: native_bom_help ....................................   Passed    0.01 sec
+        Start 261: native_spice_help
+220/275 Test #260: native_symbol-law_help .............................   Passed    0.01 sec
+        Start 254: native_powertree_help
+221/275 Test #261: native_spice_help ..................................   Passed    0.01 sec
+        Start 267: native_subsystem-check_help
+222/275 Test #254: native_powertree_help ..............................   Passed    0.01 sec
+        Start 230: native_xdc_help
+223/275 Test #267: native_subsystem-check_help ........................   Passed    0.01 sec
+        Start 255: native_thermal_help
+224/275 Test #230: native_xdc_help ....................................   Passed    0.01 sec
+        Start 272: native_part_import_help
+225/275 Test #255: native_thermal_help ................................   Passed    0.01 sec
+        Start 228: native_circuit-check_help
+226/275 Test #272: native_part_import_help ............................   Passed    0.01 sec
+        Start 252: native_preflight_help
+227/275 Test #228: native_circuit-check_help ..........................   Passed    0.01 sec
+        Start 232: native_fpga_help
+228/275 Test #252: native_preflight_help ..............................   Passed    0.01 sec
+        Start 251: native_manifest_help
+229/275 Test #232: native_fpga_help ...................................   Passed    0.01 sec
+        Start 239: native_pcb-stage_help
+230/275 Test #251: native_manifest_help ...............................   Passed    0.01 sec
+        Start 247: native_gallery_help
+231/275 Test #239: native_pcb-stage_help ..............................   Passed    0.01 sec
+        Start 268: native_carrier-check_help
+232/275 Test #247: native_gallery_help ................................   Passed    0.01 sec
+        Start 241: native_subsystem-new_help
+233/275 Test #268: native_carrier-check_help ..........................   Passed    0.01 sec
+        Start 253: native_constraints_help
+234/275 Test #253: native_constraints_help ............................   Passed    0.01 sec
+        Start 237: native_testpoints_help
+235/275 Test #241: native_subsystem-new_help ..........................   Passed    0.01 sec
+        Start 269: native_check_help
+236/275 Test #237: native_testpoints_help .............................   Passed    0.01 sec
+        Start 227: native_project-check_help
+237/275 Test #269: native_check_help ..................................   Passed    0.01 sec
+        Start 250: native_fab-profile_help
+238/275 Test #250: native_fab-profile_help ............................   Passed    0.01 sec
+        Start 240: native_pcb-drc_help
+239/275 Test #227: native_project-check_help ..........................   Passed    0.01 sec
+        Start 262: native_firmware_help
+240/275 Test #240: native_pcb-drc_help ................................   Passed    0.01 sec
+        Start 265: native_testplan_help
+241/275 Test #262: native_firmware_help ...............................   Passed    0.01 sec
+        Start 245: native_assembly_help
+242/275 Test #265: native_testplan_help ...............................   Passed    0.01 sec
+        Start 263: native_manual_help
+243/275 Test #245: native_assembly_help ...............................   Passed    0.01 sec
+        Start 235: native_devicetree_help
+244/275 Test #263: native_manual_help .................................   Passed    0.01 sec
+        Start 266: native_power-sequence_help
+245/275 Test #235: native_devicetree_help .............................   Passed    0.01 sec
+        Start 259: native_pin-completeness_help
+246/275 Test #266: native_power-sequence_help .........................   Passed    0.01 sec
+        Start 223: native_w12-bound_help
+247/275 Test #259: native_pin-completeness_help .......................   Passed    0.01 sec
+        Start 196: native_project_devkit_mini
+248/275 Test #223: native_w12-bound_help ..............................   Passed    0.01 sec
+        Start 224: native_w12-stageprobe_help
+249/275 Test #196: native_project_devkit_mini .........................   Passed    0.01 sec
+        Start 221: native_chir-rung_help
+250/275 Test #224: native_w12-stageprobe_help .........................   Passed    0.01 sec
+        Start 222: native_w11-sweep_help
+251/275 Test #221: native_chir-rung_help ..............................   Passed    0.01 sec
+        Start 225: native_dump-circuits_help
+252/275 Test #222: native_w11-sweep_help ..............................   Passed    0.01 sec
+        Start 220: native_nets_help
+253/275 Test #225: native_dump-circuits_help ..........................   Passed    0.01 sec
+        Start 218: native_build_help
+254/275 Test #220: native_nets_help ...................................   Passed    0.01 sec
+        Start 219: native_devkit_help
+255/275 Test #218: native_build_help ..................................   Passed    0.01 sec
+        Start 217: native_board_help
+256/275 Test #219: native_devkit_help .................................   Passed    0.01 sec
+        Start 165: native_board_schematic_requires_output
+257/275 Test #217: native_board_help ..................................   Passed    0.01 sec
+        Start 175: native_design_rules_reject_som_option
+258/275 Test #175: native_design_rules_reject_som_option ..............   Passed    0.01 sec
+        Start 211: native_self_check
+259/275 Test #165: native_board_schematic_requires_output .............   Passed    0.02 sec
+        Start 274: native_reject_self_check_args
+260/275 Test #211: native_self_check ..................................   Passed    0.01 sec
+        Start 275: native_reject_missing_catalog_args
+261/275 Test #274: native_reject_self_check_args ......................   Passed    0.01 sec
+        Start 206: native_sexpr
+262/275 Test #275: native_reject_missing_catalog_args .................   Passed    0.01 sec
+        Start 207: native_routing
+263/275 Test #206: native_sexpr .......................................   Passed    0.01 sec
+        Start 209: native_placement_limits
+264/275 Test #207: native_routing .....................................   Passed    0.01 sec
+        Start 273: native_reject_board
+265/275 Test #209: native_placement_limits ............................   Passed    0.01 sec
+        Start 210: native_ratsnest
+266/275 Test #273: native_reject_board ................................   Passed    0.01 sec
+        Start 208: native_seating
+267/275 Test #210: native_ratsnest ....................................   Passed    0.01 sec
+        Start 212: native_help
+268/275 Test #208: native_seating .....................................   Passed    0.01 sec
+        Start 163: native_mirror_contracts
+269/275 Test #212: native_help ........................................   Passed    0.01 sec
+270/275 Test #163: native_mirror_contracts ............................   Passed    0.43 sec
+        Start  82: native_authoring_purity_census
+271/275 Test  #82: native_authoring_purity_census .....................   Passed  109.61 sec
+        Start  77: native_authoring_guard_live_contracts
+272/275 Test  #77: native_authoring_guard_live_contracts ..............   Passed   35.43 sec
+        Start 113: native_pack_search_source
+273/275 Test #113: native_pack_search_source ..........................   Passed   13.41 sec
+        Start  81: native_authoring_purity_closure
+274/275 Test  #81: native_authoring_purity_closure ....................   Passed   18.37 sec
+        Start  35: native_audit_queue_contracts
+275/275 Test  #35: native_audit_queue_contracts .......................   Passed   11.53 sec
+
+95% tests passed, 14 tests failed out of 275
+
+Label Time Summary:
+live-kicad    = 488.45 sec*proc (10 tests)
+
+Total Test time (real) = 933.53 sec
+
+The following tests FAILED:
+	 18 - native_pcb_refit_fanout_contracts (Failed)
+	 36 - native_model_failure_receipt_contracts (Failed)
+	 51 - native_render_models_live_contracts (Failed)      live-kicad
+	 72 - native_render_baseline_contracts (Failed)
+	 85 - native_authoring_gates_contracts (Failed)
+	 91 - native_pcb_checks_contracts (Failed)
+	 99 - native_geometry_cli_apply_contracts (Failed)      live-kicad
+	116 - native_pack_plain_board_contracts (Failed)
+	141 - native_floorplan_precision_contracts (Failed)
+	151 - native_board_policy_contracts (Failed)
+	152 - native_experiment_tools_contracts (Failed)
+	157 - native_firmware_provenance_contracts (Failed)
+	187 - native_project_contracts (Failed)
+	191 - native_bom_contracts (Failed)
+Errors while running CTest

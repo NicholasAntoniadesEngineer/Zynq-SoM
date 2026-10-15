@@ -381,7 +381,7 @@ errors: none
 LINK: PASS (0 errors, 5 warnings)
 constraints: PASS — layout rules and net-class CSV published
 diagram: PASS — block diagram published
-board_schematic: PASS — board: emitted /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/devkit_mini/Zynq_Carrier.kicad_sch (+12 sub-sheets, root labels bind ports by canonical name)
+board_schematic: PASS — board: emitted /private/tmp/zynq-release-3e80dbfc-devkit/Zynq_Carrier.kicad_sch (+12 sub-sheets, root labels bind ports by canonical name)
 board netlist gate
 ============================================================
   ok   port 'EN_1V8': 1 net, 2 pins across 1 sheet(s) [power]
@@ -1138,8 +1138,8 @@ fanout: PASS — FAN-OUT CLEARANCE GATE (D13, report-first ratchet): PASS
     ok      J3001     pd_input          16pin clr=2.050 need=2.00 slack=+0.050
     ok      U5001     power_mon         17pin clr=2.050 need=2.00 slack=+0.050
 pcb_geometry: PASS — independent final-board gates complete
-assembly: PASS — ASSEMBLY: 4 steps + 10 phases, 155 parts -> devkit_mini/manufacturing/ASSEMBLY.md + devkit_mini/renders/assembly (14 PNGs)
-ratsnest_images: PASS (advisory) — ratsnest: devkit_mini/renders/ratsnest_top.png + devkit_mini/renders/ratsnest_bottom.png + devkit_mini/docs/RATSNEST.svg
+assembly: PASS — ASSEMBLY: 4 steps + 10 phases, 155 parts -> manufacturing/ASSEMBLY.md + renders/assembly (14 PNGs)
+ratsnest_images: PASS (advisory) — ratsnest: renders/ratsnest_top.png + renders/ratsnest_bottom.png + docs/RATSNEST.svg
   board 98 x 98 mm  (top 105 / bottom 55)
   airwires: 3557.8 mm total, 1512.4 mm cross-subsystem (76 edges, 42.5% of length)
 
@@ -1150,7 +1150,7 @@ model: Tj = Ta + Pd*RthJA ; Ta = 50 C ; FAIL when Tj > Tj_max - 10 C margin
   Pd(LDO) = (Vin-Vout)*Iout ; Pd(buck) = (1/eff-1)*Vout*Iout, eff=0.85 ; Pd(switch/eFuse) = Iout^2*Rds_on
   RthJA = bare JEDEC, unless '*' = pour-aware effective RthJA (EP/power pads -> GND copper + vias; basis cited below)
   pour credits are granted ONLY against copper VERIFIED in the emitted board
-  emitted-copper evidence source: devkit_mini/Zynq_Carrier.kicad_pcb
+  emitted-copper evidence source: /private/tmp/zynq-release-3e80dbfc-devkit/Zynq_Carrier.kicad_pcb
 
   device                 package                  kind        in->out               Iout/A   Pd/mW   RthJA    Tj/C   limit   mgn/C  verdict
   -----------------------------------------------------------------------------------------------------------------------------------------
@@ -1231,7 +1231,7 @@ CD-08  Under-SoM decoupling fanout vias   [PARTIAL]
   risk:    until those vias land the 18 bottom caps decouple nothing (no path from B.Cu pads to the rails) — a routing-wave item, but the prose reads as if the path exists
 
 COPPER DEBT: 8 entries — 3 emitted, 2 partial, 3 unemitted, 0 unmeasured (report-only)
-cpl: PASS (advisory) — /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/devkit_mini/manufacturing/Zynq_Carrier_cpl.csv
+cpl: PASS (advisory) — /private/tmp/zynq-release-3e80dbfc-devkit/manufacturing/Zynq_Carrier_cpl.csv
 fab_profile: PASS — FAB PROFILE GATE  (JLCPCB standard 4-layer (1oz))
   source: JLCPCB PCB Manufacturing & Assembly Capabilities (jlcpcb.com/capabilities/pcb-capabilities) + JLCPCB via/annular Q&A; retrieved 2026-07
 
@@ -1271,8 +1271,8 @@ unmatched: none — every custom footprint has a model
 
 MISFIT (1) — model resolves but does NOT match the footprint body (LAW):
   XT60PW-M: model 18.1x15.5 mm vs footprint body 0.5x7.2 mm (ratio 36.19,2.15 outside [0.5,2.0])
-render3d: PASS (advisory) — 3D RENDERS: 8 view(s) -> /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/devkit_mini/renders/3d_top.png, /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/devkit_mini/renders/3d_bottom.png, /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/devkit_mini/renders/3d_left.png, /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/devkit_mini/renders/3d_right.png, /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/devkit_mini/renders/3d_front.png, /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/devkit_mini/renders/3d_back.png, /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/devkit_mini/renders/3d_persp.png, /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/devkit_mini/renders/3d_persp_rear.png (VISUAL-verify: LAW 1)
-gallery: PASS — GALLERY: 12 sheets -> devkit_mini/README.md (unchanged)
+render3d: PASS (advisory) — 3D RENDERS: 8 view(s) -> /private/tmp/zynq-release-3e80dbfc-devkit/renders/3d_top.png, /private/tmp/zynq-release-3e80dbfc-devkit/renders/3d_bottom.png, /private/tmp/zynq-release-3e80dbfc-devkit/renders/3d_left.png, /private/tmp/zynq-release-3e80dbfc-devkit/renders/3d_right.png, /private/tmp/zynq-release-3e80dbfc-devkit/renders/3d_front.png, /private/tmp/zynq-release-3e80dbfc-devkit/renders/3d_back.png, /private/tmp/zynq-release-3e80dbfc-devkit/renders/3d_persp.png, /private/tmp/zynq-release-3e80dbfc-devkit/renders/3d_persp_rear.png (VISUAL-verify: LAW 1)
+gallery: PASS — GALLERY: 12 sheets -> zynq-release-3e80dbfc-devkit/README.md (zynq-release-3e80dbfc-devkit/README.md)
 si: PASS — SI constraints: 7 diff pairs, 4 length-match groups emitted — every declared pair covered.
 manifest: PASS — current artifacts hashed after SI publication
 golden: FAIL (advisory) — golden renders: DRIFT (explicit --bless to accept):
@@ -1457,71 +1457,71 @@ pipeline_doc: PASS — updated
 === board native exclusive timing (wall s; audits included) ===
 Nested scopes pause parents; parallel batches use launch/join wall time, never summed worker spans.
 Scope: pipeline entry through build-ledger publication; excludes final summary publications and caller/process setup. Mixed stages remain mixed; not a generation-only total.
-pipeline_setup_and_other: 0.054973
-inputs: 0.001074
-authoring_audit: 18.321998
-authoring_guard_reporting_and_recheck: 0.000235
-input_factory_generation_and_ir_conversion: 0.174243
-input_circuit_validation: 0.005743
-input_publication: 0.208419
-subsystem_structure: 0.037804
-carrier_structure: 0.033232
-sheet_prepare_other: 0.001754
-sheet_electrical_validation: 0.001053
-sheet_place_route_with_internal_checks: 0.024653
-sheet_cc_validation: 0.002315
-sheet_emit_and_publish: 0.013807
-sheet_visual_validation: 0.004837
-sheet_parallel_checks_and_render_wall: 9.955784
-symbol_law: 0.019189
-link: 0.029140
-constraints: 0.053739
-diagram: 0.058731
-board_schematic: 3.075240
-bom_footprints: 0.020183
-power_tree: 0.037655
-rail_ampacity: 0.033282
-testpoints: 0.022376
-design_rules: 0.035604
-part_rules: 0.034023
-bom_values: 0.032161
-footprint_pads: 0.044371
-pin_completeness: 0.029043
-spice: 0.093402
-pcb: 0.188847
-pcb_input_loading_and_netlist_validation: 0.681035
-pcb_build_model_with_internal_checks: 0.184251
-pcb_render: 0.008025
-placement_requirements: 0.000592
-pcb_drc: 1.318916
-pcb_geometry: 0.321336
-assembly: 0.556944
-ratsnest_images: 0.523953
-thermal: 0.065523
-copper_debt: 0.180916
-cpl: 0.222144
-fab_profile: 0.039008
+pipeline_setup_and_other: 0.003513
+inputs: 0.000820
+authoring_audit: 19.220961
+authoring_guard_reporting_and_recheck: 0.000274
+input_factory_generation_and_ir_conversion: 0.171333
+input_circuit_validation: 0.007315
+input_publication: 0.007109
+subsystem_structure: 0.022382
+carrier_structure: 0.004319
+sheet_prepare_other: 0.002147
+sheet_electrical_validation: 0.001273
+sheet_place_route_with_internal_checks: 0.025749
+sheet_cc_validation: 0.002509
+sheet_emit_and_publish: 0.015273
+sheet_visual_validation: 0.005107
+sheet_parallel_checks_and_render_wall: 11.951418
+symbol_law: 0.000171
+link: 0.001033
+constraints: 0.000590
+diagram: 0.000569
+board_schematic: 3.007752
+bom_footprints: 0.000215
+power_tree: 0.001000
+rail_ampacity: 0.000174
+testpoints: 0.000248
+design_rules: 0.000703
+part_rules: 0.000734
+bom_values: 0.001224
+footprint_pads: 0.005687
+pin_completeness: 0.000543
+spice: 0.095533
+pcb: 0.003422
+pcb_input_loading_and_netlist_validation: 0.736171
+pcb_build_model_with_internal_checks: 0.184374
+pcb_render: 0.008277
+placement_requirements: 0.000430
+pcb_drc: 1.295196
+pcb_geometry: 0.012525
+assembly: 0.080774
+ratsnest_images: 0.125014
+thermal: 0.007905
+copper_debt: 0.127837
+cpl: 0.226083
+fab_profile: 0.008820
 stage_movement: 0.000002
-xdc: 0.945101
-vivado: 0.029493
-devicetree: 0.020223
-firmware: 0.988892
+xdc: 0.950872
+vivado: 0.000295
+devicetree: 0.000607
+firmware: 0.940433
 manual: 0.000001
 scfw: 0.000001
-testplan: 0.038346
-power_sequence: 0.026431
-floorplan: 0.000715
-model3d: 1.823161
-render3d: 18.146181
-gallery: 0.000734
-si: 0.035240
-manifest: 0.067581
-golden: 0.519383
-contract_coverage_lint: 0.005723
-fallbacks: 0.000362
-ledger_import: 0.000855
-quantize_census: 0.632050
-source_audit: 117.115117
-pipeline_doc: 0.028515
-MEASURED SCOPE TOTAL (not process wall): 177.175657
+testplan: 0.000250
+power_sequence: 0.000198
+floorplan: 0.000360
+model3d: 1.814204
+render3d: 21.565868
+gallery: 0.000429
+si: 0.000717
+manifest: 0.013730
+golden: 0.537755
+contract_coverage_lint: 0.000572
+fallbacks: 0.000500
+ledger_import: 0.000752
+quantize_census: 0.000426
+source_audit: 126.022320
+pipeline_doc: 0.000794
+MEASURED SCOPE TOTAL (not process wall): 189.225591
 BOARD: PASS (12 sheets)

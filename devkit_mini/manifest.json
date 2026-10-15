@@ -38,7 +38,7 @@
     },
     {
       "path": "firmware/zynq_carrier_contract.h",
-      "sha256": "5ec26524ea7c5fdcab9b3c9fd30d06f188a44d25748fdd4318ffdc8e1722bb1c"
+      "sha256": "4b4e31d14f9a35908a9525afe3174d1afdb971940b6d3781bae12d5cc801aaa1"
     },
     {
       "path": "fpga/Zynq_Carrier_pins.xdc",
@@ -81,10 +81,6 @@
       "sha256": "342020aa1ee8a2e72d3e178b100c4d5cfaeca949cc10d3b19733b49b44265578"
     },
     {
-      "path": "reports/build_ledger.txt",
-      "sha256": "f85b4780e8e7335a9d936a8ea80a171e1a4c8abe6a1ffea5658b71a5256fc23c"
-    },
-    {
       "path": "reports/carrier_structure.txt",
       "sha256": "73c9ca05489f5702d943ad9c6975d4087e34015f92b0db58eba01dcc6c4945a8"
     },
@@ -103,10 +99,6 @@
     {
       "path": "reports/contract_coverage.txt",
       "sha256": "7cbb195e568847ef65d866f4e3374daa75599b03a51838a908c3607ceea293c5"
-    },
-    {
-      "path": "reports/contract_coverage_lint.txt",
-      "sha256": "9576efc18aa613a7d84c15ff2189067fb50adc1553099dba05c8942b24427101"
     },
     {
       "path": "reports/copper_debt.txt",
@@ -135,10 +127,6 @@
     {
       "path": "reports/footprint_pads.txt",
       "sha256": "c4da5f2ba404d3275d2b0b5f4bf10e1f0f882c8bf431d6a570d34863bdc0f806"
-    },
-    {
-      "path": "reports/gates.txt",
-      "sha256": "ce02948c9f77ddc8f456aa4e860207cacb5ba222d264eb530411e7894eea4ad2"
     },
     {
       "path": "reports/link_report.txt",
@@ -193,10 +181,6 @@
       "sha256": "f23994d4757d61a16b0abf6959e2aac1bf32fdbe28b7218cb12515bd548469d2"
     },
     {
-      "path": "reports/quantize_census.txt",
-      "sha256": "c7f9252db8ac997f76e28336d9706cbd50f09f6eaf51786f3bdf1b5348a36d7a"
-    },
-    {
       "path": "reports/rail_ampacity.txt",
       "sha256": "ed5a80df4e69c2a9a63b6ca2d2ba39799b5d7c74de251abcea5d3fb0b74b6009"
     },
@@ -234,7 +218,7 @@
     },
     {
       "path": "reports/thermal.txt",
-      "sha256": "4e553ffd257ab82d3f3f09c35c854a2dcd1b6d9f46b7cae52eaaf06840c1fb9d"
+      "sha256": "c5ce9815f2f8af031fa03c0e5b41dd70c023725d5b37c4afc0778be30963bc5c"
     },
     {
       "path": "schematic/debug_boot.kicad_sch",

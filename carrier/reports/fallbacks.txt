@@ -25,15 +25,15 @@ SEARCH EFFORT: observational, no acceptance ceiling; counts include rejected wor
   interior_shape_choice_hint: 0
   interior_shape_choice_replay: 0
   legalize_facing_retry: 4
-  legalize_joint_axis: 5960
-  legalize_joint_axis_reuse: 5128
-  legalize_joint_budget: 8
-  legalize_joint_domain_probe: 688
-  legalize_joint_domain_reject: 208
+  legalize_joint_axis: 8
+  legalize_joint_axis_reuse: 0
+  legalize_joint_budget: 0
+  legalize_joint_domain_probe: 0
+  legalize_joint_domain_reject: 0
   legalize_joint_proposal: 4
   legalize_joint_reject: 0
-  legalize_joint_retry: 12
-  legalize_joint_state: 8196
+  legalize_joint_retry: 4
+  legalize_joint_state: 4
   legalize_neighbour_retry: 0
   legalize_only_compaction: 0
   legalize_reservation_retry: 4
