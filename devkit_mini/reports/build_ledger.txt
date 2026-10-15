@@ -136,12 +136,12 @@ STEP   census
   CALC   quantize_engagement[gceil]     = 507           calls      <- klass=pre-proof value=gceil(value, unit)  ::  count of calls that ran this registered transform
   CALC   quantize_engagement[gfloor]    = 75            calls      <- klass=pre-proof value=gfloor(value, unit)  ::  count of calls that ran this registered transform
   CALC   quantize_engagement[gsnap]     = 139           calls      <- klass=pre-proof value=gsnap(value, unit)  ::  count of calls that ran this registered transform
-  CALC   quantize_engagement[legalize_bbox_precision4dp] = 704           calls      <- klass=pre-proof value=round(value, 4)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[legalize_bbox_precision4dp] = 352           calls      <- klass=pre-proof value=round(value, 4)  ::  count of calls that ran this registered transform
   CALC   quantize_engagement[legalize_bound_precision4dp] = 2184          calls      <- klass=pre-proof value=round(value, 4)  ::  count of calls that ran this registered transform
   CALC   quantize_engagement[legalize_centroid_precision4dp] = 440           calls      <- klass=pre-proof value=round(value, 4)  ::  count of calls that ran this registered transform
   CALC   quantize_engagement[legalize_margin_precision4dp] = 132           calls      <- klass=pre-proof value=round(value, 4)  ::  count of calls that ran this registered transform
   CALC   quantize_engagement[legalize_pose_quantum] = 96            calls      <- klass=re-validated value=round(round(v / 0.5) * 0.5, 4)  ::  count of calls that ran this registered transform
-  CALC   quantize_engagement[legalize_position_precision4dp] = 17688         calls      <- klass=pre-proof value=round(value, 4)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[legalize_position_precision4dp] = 14784         calls      <- klass=pre-proof value=round(value, 4)  ::  count of calls that ran this registered transform
   CALC   quantize_engagement[legalize_trial_pose_precision4dp] = 256           calls      <- klass=re-validated value=round(value, 4)  ::  count of calls that ran this registered transform
   CALC   quantize_engagement[mechanical_direction_component] = 4             calls      <- klass=pre-proof value=int(round(value, 0))  ::  count of calls that ran this registered transform
   CALC   quantize_engagement[occupancy_axis_count] = 1680          calls      <- klass=pre-proof value=int(extent / step) + 1  ::  count of calls that ran this registered transform
