@@ -1,0 +1,45 @@
+{
+  "source_base": "81183523",
+  "change": "Cache through-hole classification by actual immutable footprint document within one contract-group face exploration invocation. No cross-call cache or filename-based reuse.",
+  "scope": "C++ search iteration performance, not Python comparison or complete board-build time",
+  "workload": "carrier 162x151; baseline plus granular-minor+vertical+estimator-first; release face sheets usb_jtag,power,power_som,power_mon; interior-order 3; shape-area-first baseline; failed-first-retry; joint states 1024; reseat poses 8/frontier 4096/continuations 3/victim shapes; board_aux owned-face-a1.000000; one run",
+  "model_seconds_before": 20.136480334,
+  "model_seconds_after": 17.852217875,
+  "timing_limit": "Single sequential observations with compilation/test activity overlapping parts of the runs; not a controlled or statistically established speedup.",
+  "equivalence": {
+    "non_timing_transcript_lines": 12244,
+    "identical": true,
+    "comparison": "Removed lines containing seconds= and input/trial-start/stage-interval timing lines; all remaining output, including ordered fallback events, quantization counts and candidate decisions, compared exactly.",
+    "pcb_sha256": "8aae8efbb2dee1c37cc61dc1b91e832b9ed6e4c7c47a17fc78b73c1a44f8d231",
+    "dimensions_mm": [162,151],
+    "top_components": 331,
+    "bottom_components": 235
+  },
+  "tests": {
+    "native_pcb_orientation_contracts": "PASS, 4.25 seconds; includes both live board fixtures, through-hole collision checks and new same-context changed-document eligibility regression",
+    "build": "schgen, schgen_compact_stage_profile and schgen_pcb_orientation_contracts rebuilt successfully"
+  },
+  "logs": {
+    "before": "native/build/face-cache-before.log",
+    "before_sha256": "30c0d7edc0db2ed7149eddeee404f145ca9b457b9c1b45713d21298a307df8c3",
+    "after": "native/build/face-cache-after.log",
+    "after_sha256": "a8f477c06d253bdf8ddbf229b44c486349488113a934069743b279b9ca486a90"
+  },
+  "smaller_outline_screen": {
+    "dimensions_mm": [161,151],
+    "status": "No incumbent from baseline or combined strategy; not proof of physical infeasibility",
+    "elapsed_seconds": 10.937160791,
+    "completed_outer_attempts": 8,
+    "failure_receipt_captured": true,
+    "log": "native/build/carrier-granular-161x151.log"
+  },
+  "shorter_outline_screen": {
+    "dimensions_mm": [162,150],
+    "status": "No incumbent from baseline or combined strategy; not proof of physical infeasibility",
+    "elapsed_seconds": 11.527215541,
+    "completed_outer_attempts": 8,
+    "failure_receipt_captured": true,
+    "log": "native/build/carrier-granular-162x150.log"
+  },
+  "qualification_limit": "No new layout accepted; published 162x151 full-pipeline qualification remains the reference. This cache change has targeted regression and construction-screen equivalence evidence, not a newly rerun complete pipeline or exhaustive test suite."
+}

@@ -250,6 +250,28 @@ void unit(){
  for(std::size_t i=0;i<singleton_once.size();++i)
   demand(equal(g.shapes.at("unit")[i],singleton_once[i]),"singleton replay changed deterministic order");
  input.contracts["unit"]=parse_json_text(R"({"contract":"placement/v2","structures":[{"type":"proximity","anchor":"A","members":["B"],"max_mm":30,"same_side":true}]})");
+ // A connector pins its own group, not an unrelated group on the same sheet.
+ const auto connector_contract=input.contracts.at("unit");
+ input.contracts["unit"]=parse_json_text(R"({"contract":"placement/v2","structures":[{"type":"same_side","ics":["A"]}]})");
+ ctx.by_ref["R2"].lib_id="Connector_Generic:Conn_01x03";
+ g.shapes.clear();append_rigid_zone_orientations(ctx,g,"unit",single);
+ demand(g.shapes.empty(),"connector sheet gained whole-sheet rotations");
+ append_contract_group_faces(ctx,g,"unit",single,true,true);
+ demand(g.shapes.count("unit")&&g.shapes.at("unit").size()>1,
+        "connector blocked an independent bottom group");
+ for(const auto& candidate:g.shapes.at("unit")) {
+  demand(candidate.top_off.at("R2")==single.top_off.at("R2")&&
+         !candidate.bot_off.count("R2")&&!candidate.mirror.count("R2")&&
+         (!candidate.extra_rot.count("R2")||candidate.extra_rot.at("R2")==0),
+         "connector pose changed during face exploration or leftover compaction");
+ }
+ auto protruding_connector=single;protruding_connector.top_off["R2"]={0,0};
+ g.shapes.clear();append_contract_group_faces(ctx,g,"unit",protruding_connector,true,true);
+ demand(g.shapes.empty(),"connector was implicitly translated to enclose a protruding seed");
+ input.contracts["unit"]=connector_contract;
+ g.shapes.clear();append_contract_group_faces(ctx,g,"unit",single,true,true);
+ demand(g.shapes.empty(),"connector-connected group moved to bottom");
+ ctx.by_ref["R2"].lib_id="Switch:SW_SPST";
  g.shapes.clear();append_contract_group_faces(ctx,g,"unit",single);
  demand(g.shapes.empty(),"singleton face exploration split a group pinned by service access");
  // The same connected group becomes eligible when no member needs top access.
@@ -438,6 +460,28 @@ void live(const std::filesystem::path& root){
     }
    }
    auto experiment=std::make_shared<FloorplanExperiment>();
+   experiment->contract_group_face_sheets={"fmc"};f.input.floorplan.experiment=experiment;
+   const auto fmc_shapes=build_pcb_zone_geometry(f.input);
+   const auto& old_fmc=after.geometry.shapes.at("fmc");
+   const auto& new_fmc=fmc_shapes.geometry.shapes.at("fmc");
+   std::cout<<"FMC connector-pinned offers="<<new_fmc.size()<<" before="<<old_fmc.size()<<'\n';
+   demand(new_fmc.size()>old_fmc.size(),"FMC independent regulator group has no bottom alternatives");
+   Context fmc_context(f.input);fmc_context.pool=fmc_shapes.footprints;
+   const auto connector=fmc_context.board_refs.at("fmc").at("J1");
+   const auto regulator=fmc_context.board_refs.at("fmc").at("U1");
+   for(std::size_t i=0;i<old_fmc.size();++i)
+    demand(equal(old_fmc[i],new_fmc[i]),"FMC incumbent prefix changed");
+   for(std::size_t i=old_fmc.size();i<new_fmc.size();++i) {
+    const auto& candidate=new_fmc[i];
+    demand(candidate.top_off.at(connector)==old_fmc.front().top_off.at(connector)&&
+           !candidate.bot_off.count(connector)&&!candidate.mirror.count(connector),
+           "FMC header pose changed while regulator moved");
+    demand(candidate.bot_off.count(regulator),"FMC new offer did not move independent regulator");
+    const auto checked=model(candidate,fmc_context,fmc_shapes.geometry,"fmc");
+    demand(check_pcb_placement_contract(checked,"fmc",&f.input.contracts.at("fmc"),
+              fmc_context.board_refs.at("fmc")).ok&&check_fanout(checked,0).ok,
+           "FMC alternative violates local contract or fanout");
+   }
    experiment->contract_group_face_sheets={"hdmi_rx_term"};f.input.floorplan.experiment=experiment;
    const auto near_shapes=build_pcb_zone_geometry(f.input);
    const auto& old_near=after.geometry.shapes.at("hdmi_rx_term");
@@ -926,6 +970,21 @@ void live(const std::filesystem::path& root){
    append_contract_group_faces(blocked_context,blocked_geometry,"usb_jtag",variants.front());
    append_contract_group_faces(blocked_context,blocked_geometry,"usb_jtag",variants.front(),true);
    demand(blocked_geometry.shapes.at("usb_jtag").size()==prefix.size(),"pinned owners still generated bottom candidates");
+   // Reuse the context and filenames across invocations, but replace the
+   // physical documents: through-hole classification must not outlive a call.
+   auto hole_context=candidate_context;auto hole_geometry=after.geometry;
+   append_contract_group_faces(hole_context,hole_geometry,"usb_jtag",variants.front());
+   demand(hole_geometry.shapes.at("usb_jtag").size()>prefix.size(),"through-hole cache test did not warm eligible candidates");
+   for(const auto* owner:{"U2","U4"}) {
+    const auto ref=hole_context.board_refs.at("usb_jtag").at(owner);
+    const auto key=hole_geometry.resolvable.at(ref);
+    const auto fp=hole_context.pool.at(key);auto text=fp->bytes;
+    text.insert(text.rfind(')')," (pad \"CACHE_PROBE\" np_thru_hole circle (at 0 0) (size 0.1 0.1) (drill 0.1) (layers \"*.Cu\" \"*.Mask\"))");
+    hole_context.pool[key]=pcb_check_footprint(fp->source,text);
+   }
+   hole_geometry=after.geometry;
+   append_contract_group_faces(hole_context,hole_geometry,"usb_jtag",variants.front());
+   demand(hole_geometry.shapes.at("usb_jtag").size()==prefix.size(),"changed through-hole documents reused stale face eligibility");
    // An unconnected copper pad is still physical occupancy. Keep the authored
    // courtyard unchanged, so a courtyard-only gate cannot detect this escape.
    auto protruding_context=candidate_context;auto protruding_geometry=after.geometry;

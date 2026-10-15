@@ -1,0 +1,79 @@
+--- native/src/floorplan_compose.cpp	2026-10-15 23:21:58
++++ native/build/floorplan_compose_extremes.cpp	2026-10-16 01:13:41
+@@ -160,7 +160,7 @@
+     Composer(const FloorplanLegalizeInput& input,
+              const std::vector<FloorplanLegalizeVar>& variables,
+              std::vector<std::string>& output_log, QuantizationCounts* counts = nullptr,
+-             bool pad_seed_hulls = false, bool perpendicular_order = false,bool reservation_geometry=false,bool facing_cuts=false)
++             bool pad_seed_hulls = false, bool perpendicular_order = false,bool reservation_geometry=false,bool facing_cuts=false,int projection_policy=0)
+         : in(input), log(output_log), counts(counts), fixed(input.fixed_poses), pad_seed_hulls(pad_seed_hulls), perpendicular_order(perpendicular_order), reservation_geometry(reservation_geometry) {
+         for (const auto& v : variables) {
+             if (v.name.empty() || v.name.front() == '#' || !by_name.emplace(v.name, &v).second)
+@@ -204,7 +204,7 @@
+             out.push_back({0,0,w,h,body.reach,body.inset,body.mask,body.mask,true});
+             for(const auto& c:*body.children)out.push_back({c.dx,c.dy,c.w,c.h,c.reach,c.inset,c.mask,body.mask,false});
+         }
+-        if(facing_cuts)build_facing_cuts();
++        if(facing_cuts)build_facing_cuts(projection_policy);
+     }
+ 
+     bool changed_flip_order() const {return flip_order_differs;}
+@@ -500,7 +500,7 @@
+     std::vector<RepairSep> seps;
+     std::map<std::string,std::vector<Rect>> local_reservations;
+     std::vector<TaggedEdge> facing_x,facing_y;
+-    void build_facing_cuts() {
++    void build_facing_cuts(int projection_policy) {
+         struct Endpoint { FloorplanPoint local,pose; bool moving; };
+         const auto endpoint=[&](const std::string& name)->std::optional<Endpoint> {
+             if(name=="@som")return Endpoint{{(in.som_core_page.x0+in.som_core_page.x1)/2-in.origin.first,
+@@ -565,7 +565,7 @@
+                 // half-plane cuts; exact final facing and geometry still decide.
+                 const double low=projection_margin-max_y;
+                 if(low<=max_x) {
+-                    share_x=std::clamp(share_x,low,max_x);
++                    share_x=projection_policy==1?low:projection_policy==2?max_x:std::clamp(share_x,low,max_x);
+                     share_y=projection_margin-share_x;
+                 }
+             }
+@@ -956,6 +956,21 @@
+     log.push_back("retry: full authored proximity with strict facing projection cuts");
+     if(input.joint_retry_started)input.joint_retry_started();
+     return Composer(input,movable,log,counts,false,false,candidate,true).run(movable,true,true);
++}
++bool projection_extremes(const FloorplanLegalizeInput& input,
++        std::vector<FloorplanLegalizeVar>& movable,std::vector<std::string>& log,
++        QuantizationCounts* counts=nullptr) {
++    if(!input.joint_separation_states)return false;
++    const bool facing=std::any_of(input.index.hard.begin(),input.index.hard.end(),[](const auto& t) {
++        return t.kind=="facing"&&t.enforced&&t.require_positive_facing;
++    });
++    if(!facing)return false;
++    for(int allocation:{1,2}) {
++        log.push_back("retry: diagnostic facing allocation "+std::to_string(allocation));
++        if(input.joint_retry_started)input.joint_retry_started();
++        if(Composer(input,movable,log,counts,false,false,!input.primary_fanout.empty(),true,allocation).run(movable,true,true))return true;
++    }
++    return false;
+ }
+ }  // namespace
+ 
+@@ -969,12 +984,15 @@
+ bool floorplan_legalize_compact(const FloorplanLegalizeInput& input,
+         std::vector<FloorplanLegalizeVar>& movable, std::vector<std::string>& log) {
+     validate(input);
+-    return compose_with_bounded_retries(input, movable, log);
++    if(compose_with_bounded_retries(input, movable, log))return true;
++    return projection_extremes(input,movable,log);
+ }
+ bool floorplan_legalize_compact_accounted(const FloorplanLegalizeInput& input,
+         std::vector<FloorplanLegalizeVar>& movable, std::vector<std::string>& log,
+         QuantizationCounts& counts) {
+     validate(input);
+-    return compose_with_bounded_retries(input, movable, log, &counts);
++    if(compose_with_bounded_retries(input, movable, log, &counts))return true;
++    return projection_extremes(input,movable,log,&counts);
+ }
+ }  // namespace schgen
++
+
