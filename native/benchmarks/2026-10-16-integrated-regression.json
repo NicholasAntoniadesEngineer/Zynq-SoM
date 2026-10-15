@@ -1,0 +1,14 @@
+{
+  "implementation_commit": "9d506722",
+  "later_changes_during_run": "Benchmark evidence and standalone diagnostic sources only; maintained generator and regression executables unchanged",
+  "build": "Complete native target rebuild succeeded",
+  "command": "ctest --test-dir native/build/fast --output-on-failure -j 2",
+  "result": "PASS",
+  "passed": 275,
+  "failed": 0,
+  "elapsed_seconds": 972.14,
+  "live_kicad_tests": 10,
+  "tests_log": "native/build/integrated-9d506722-tests.log",
+  "compile_log": "native/build/integrated-9d506722-compile.log",
+  "scope": "Integrated production state including connector-pinned group exploration and call-local footprint caching. Does NOT include the isolated facing-projection prototype. Full-suite success does not establish fabrication readiness, optimal carrier layout or completion of the broader goal."
+}
