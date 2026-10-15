@@ -334,7 +334,10 @@ void unchanged_ceilings(const PcbPlacementInput& source,const std::filesystem::p
         const auto at=check_fallback_ratchet(*ceiling,baseline,out);
         require(at.ok && !at.pinned,"unchanged existing ceilings did not pass");
         auto above=*ceiling;
-        const auto moved=std::stoll(ceiling->at("corridor_evict_moved").str());
+        // The generic ratchet defaults absent names to zero. Board acceptance
+        // separately classifies successful search moves as observational.
+        const auto found=ceiling->find("corridor_evict_moved");
+        const auto moved=found==ceiling->end()?0:std::stoll(found->second.str());
         above["corridor_evict_moved"]=AuditInteger(moved+1);
         const auto failout=scratch/(std::string(project)+"-exceeded.json");
         require(!check_fallback_ratchet(above,baseline,failout).ok &&
@@ -344,7 +347,16 @@ void unchanged_ceilings(const PcbPlacementInput& source,const std::filesystem::p
                 !check_fallback_ratchet(above,baseline,failout).ok,"unmovable zero ceiling waived");
         if(std::string(project)=="carrier")
             require(!check_fallback_ratchet(actual_counts,baseline,failout).ok,
-                    "real rigid relocation bypassed carrier zero moved ceiling");
+                    "generic ratchet must still reject a count beyond an absent zero ceiling");
+        const auto board_out=scratch/(std::string(project)+"-board.json");
+        const auto board=check_board_fallbacks(actual_counts,baseline,board_out);
+        require(board.ok&&!board.pinned&&board.search_effort.at("corridor_evict_moved")==actual_counts.at("corridor_evict_moved"),
+                "board acceptance must retain actual move counts without treating search effort as failure");
+        auto obstructed=actual_counts;obstructed["corridor_stray_unmovable"]=AuditInteger(1);
+        const auto obstruction_out=scratch/(std::string(project)+"-obstructed.json");
+        require(!check_board_fallbacks(obstructed,baseline,obstruction_out).ok&&
+                !std::filesystem::exists(obstruction_out),
+                "unmovable obstruction remains a mandatory board failure and cannot publish a new baseline");
         require(read_bytes(baseline)==bytes,"authoritative baseline bytes changed");
     }
     std::cout<<"RATCHET unchanged source ceilings; isolated outputs "<<scratch<<'\n';
