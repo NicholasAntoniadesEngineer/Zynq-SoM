@@ -1,0 +1,23 @@
+{
+  "source_base": "e64ff494",
+  "scope": "Two independently diagnosed test defects from the 275-test release run; no production changes or golden updates",
+  "firmware_provenance": {
+    "cause": "Negative test searched pretty-printed JSON text; published canonical IR is compact",
+    "repair": "Parse the document and mutate exactly one root name field; accept correct and reject wrong circuit names through the real reader in three JSON formats for both boards",
+    "retained": "Missing and malformed files, constructor independence, native factory provenance, symlink and unsafe-path checks"
+  },
+  "board_policy": {
+    "cause": "Expected inventory omitted ten native recovery events introduced by five reviewed commits",
+    "reviewed_commits": ["831fd14e", "e9e8cd54", "15854cc4", "82e5b5a2", "7e36716c"],
+    "repair": "Explicit names and stages, unique declaration checks, nonempty descriptions, and live registry census checks for every addition"
+  },
+  "validation": {
+    "command": "ctest --test-dir native/build/fast -R '^native_(board_policy|firmware_provenance)_contracts$' --output-on-failure",
+    "rebuilt_targets": ["schgen_board_policy_contracts", "schgen_firmware_provenance_contracts"],
+    "passed": 2,
+    "failed": 0,
+    "elapsed_seconds": 6.01,
+    "full_suite_rerun": false
+  },
+  "remaining": "Twelve other failures from the release run remain unresolved; no overall green-suite or goal-completion claim"
+}

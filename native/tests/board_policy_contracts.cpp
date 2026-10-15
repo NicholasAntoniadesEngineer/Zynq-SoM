@@ -56,7 +56,23 @@ void metadata(const fs::path& root){
     const auto stages=native_board_pipeline_metadata();const auto& es=field(reference,"stages").array_value;require(stages.stages.size()==es.size(),"stage census");
     for(std::size_t i=0;i<es.size();++i){const auto& s=stages.stages[i];const auto& e=es[i].array_value;require(s.name==e[0].string_value&&s.domain==e[1].string_value&&s.may_move==e[2].bool_value&&s.tracked==e[3].bool_value,"independent stage order/domain/movement policy");require(!s.validated_by.empty()&&!s.desc.empty(),"stage proof/description nonempty");}
     const auto fb=parse_json_file((root/"native/tests/data/verification_audits/python_state.json").string());
-    const auto& ef=field(fb,"fallbacks").array_value;require(ef.size()+26==stages.fallbacks.size(),"historical fallbacks plus twenty-six independently declared native recovery events");
+    // Reviewed additions: thermal recovery (831fd14e), paired relocation
+    // (e9e8cd54), axis reuse (15854cc4),
+    // shape-prefix replay (82e5b5a2) and ordering hints (7e36716c).
+    const std::vector<std::pair<std::string,std::string>> additional_recovery{
+        {"thermal_repair_trial", "corridor_eviction"},
+        {"thermal_repair_rejected", "corridor_eviction"},
+        {"thermal_repair_moved", "corridor_eviction"},
+        {"interior_reseat_pair_trial", "plan_lattice"},
+        {"interior_reseat_pair_rejected", "plan_lattice"},
+        {"interior_reseat_pair_recovered", "plan_lattice"},
+        {"legalize_joint_axis_reuse", "plan_lattice"},
+        {"interior_shape_choice_replay", "plan_lattice"},
+        {"interior_shape_choice_budget", "plan_lattice"},
+        {"interior_shape_choice_hint", "plan_lattice"}};
+    const auto& ef=field(fb,"fallbacks").array_value;
+    require(ef.size()+26+additional_recovery.size()==stages.fallbacks.size(),
+            "historical fallbacks plus independently declared native recovery events");
     NativeFallbacks f;register_native_fallbacks(f);
     for(const auto& entry:ef){const auto name=field(entry,"name").string_value;auto hit=std::find_if(stages.fallbacks.begin(),stages.fallbacks.end(),[&](const auto& d){return d.name==name;});require(hit!=stages.fallbacks.end(),"independent fallback name");require(hit->stage==field(entry,"stage").string_value&&!hit->meaning.empty(),"independent fallback stage");f.record(hit->name);}
     const auto edge=std::find_if(stages.fallbacks.begin(),stages.fallbacks.end(),[](const auto& d){return d.name=="edge_run_translation";});
@@ -93,6 +109,14 @@ void metadata(const fs::path& root){
     const auto replan=std::find_if(stages.fallbacks.begin(),stages.fallbacks.end(),[](const auto& d){return d.name=="facing_replan_retry";});
     require(replan!=stages.fallbacks.end()&&replan->stage=="plan_lattice"&&!replan->meaning.empty(),"strict-facing replan metadata");
     f.record("facing_replan_retry");
+    for(const auto& [name,stage]:additional_recovery){
+        require(std::count_if(stages.fallbacks.begin(),stages.fallbacks.end(),
+            [name=name](const auto& d){return d.name==name;})==1,"unique recovery metadata: "+name);
+        const auto row=std::find_if(stages.fallbacks.begin(),stages.fallbacks.end(),
+            [name=name](const auto& d){return d.name==name;});
+        require(row->stage==stage&&!row->meaning.empty(),"recovery stage and meaning: "+name);
+        f.record(name);
+    }
     for(const auto& [name,count]:f.census())require(count==AuditInteger(1),"metadata matches live fallback registry: "+name);
     NativeQuantizations q;register_native_quantizations(q);require(stages.quantization.size()==q.declarations().size(),"current transform metadata census");
     for(const auto& [name,count]:q.engagements())require(!count.nonzero(),"metadata collection never executes "+name);
