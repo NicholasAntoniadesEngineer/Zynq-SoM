@@ -802,6 +802,22 @@ void shape_choice_replay_contract() {
             "single-face retry order changed");
     require(floorplan_detail::face_diverse_replay_indices({face_hits[3]},face_hits[3])==std::vector<int>({3}),
             "singleton replay fabricated an alternative");
+    auto mixed_hits=face_hits;
+    for(auto& h:mixed_hits){h.side="top";h.comps={{0,0,2,3,1},{2,0,1,3,1}};}
+    mixed_hits[3].comps[1].mask=2;
+    mixed_hits[4].comps[1].mask=3;
+    require(floorplan_detail::face_diverse_replay_indices(mixed_hits,mixed_hits[0])==std::vector<int>({0,3,1,2,4}),
+            "primary top label hid a mixed-face retry behind top-only rotations");
+    // Geometry and component ordering are not face-assignment diversity.
+    std::reverse(mixed_hits[1].comps.begin(),mixed_hits[1].comps.end());
+    mixed_hits[1].comps[0].dx=19;mixed_hits[2].comps[0].w=8;
+    require(floorplan_detail::face_diverse_replay_indices(mixed_hits,mixed_hits[0])==std::vector<int>({0,3,1,2,4}),
+            "same-face geometry displaced an actual mixed-face retry");
+    require(floorplan_detail::face_diverse_replay_indices(mixed_hits,mixed_hits[3])==std::vector<int>({3,0,1,2,4}),
+            "mixed-face incumbent lost top-only retry or an available offer");
+    auto through_only=mixed_hits;through_only[3].comps[1].mask=1;
+    require(floorplan_detail::face_diverse_replay_indices(through_only,through_only[0])==std::vector<int>({0,4,1,2,3}),
+            "through-hole occupancy was conflated with top-only assignment");
     auto in=input();auto config=std::make_shared<FloorplanExperiment>();
     config->interior_order=0;in.experiment=config;
     const Case roomy{80,70,{{8,6,2,100},{7,5,2,1}}};

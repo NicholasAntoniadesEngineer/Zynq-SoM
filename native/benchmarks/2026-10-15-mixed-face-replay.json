@@ -1,0 +1,18 @@
+{
+  "source_base": "e7340f1e",
+  "defect": "Failure-only replay diversity inspected only primary side. Mixed top/bottom candidates can retain side=top, hiding their occupancy change behind top-only rotations.",
+  "change": "Compare primary side plus counts of top-only, bottom-only and through-hole child reservations. Move the first differing profile immediately after the incumbent; retain all other legal hits and their relative order. No candidate generation, acceptance, default replay budget or hardware limits change.",
+  "tests": {
+    "native_compact_retry_contracts": "PASS 5.21 seconds; added mixed-face, child-order/geometry invariance, reverse incumbent and through-hole cases. Existing atomic rollback, deterministic retries and independent complete operation/fallback accounting remain enabled.",
+    "native_policy_audits_contracts": "PASS 45.86 seconds"
+  },
+  "recipe": "powersom-face-screen recipe with release board_aux and bringup_rails pins; current single-contact generator; optional --shape-choice-replays 4",
+  "screens": [
+    {"outline_mm":[163,150],"replays":0,"result":"construction_failed","seconds":16.254755583,"outer_attempts":4,"receipt_captured":true,"log":"native/build/carrier-contact-163x150.log"},
+    {"outline_mm":[163,150],"replays":0,"forced_shape":"power_som=contract-bottom/C22014/0.550000/4.800000/contact/0.000000/-0.520000","result":"construction_failed","seconds":6.90980325,"outer_attempts":4,"receipt_captured":true,"log":"native/build/carrier-contact-forced-163x150.log"},
+    {"outline_mm":[163,150],"replays":4,"result":"construction_failed","seconds":40.666443875,"outer_attempts":20,"receipt_captured":true,"log":"native/build/carrier-contact-face-replays-163x150.log"},
+    {"outline_mm":[163,151],"replays":4,"result":"constructed_no_acceptance","construction_seconds":47.877041667,"pcb_sha256":"8ba5fe760fa5ac529cd107cf7fa70945f7e7276b60e03f0e98b4ddc4d6ffc397","top":398,"bottom":168,"log":"native/build/carrier-contact-face-replays-incumbent.log"}
+  ],
+  "decision": "Keep replay opt-in: extra executed work did not improve these board results. The structural diversity correction makes this search more meaningful, but is not evidence of better board area or iteration speed.",
+  "limits": "Occupancy counts are a coarse retry-priority heuristic, not identity-aware equivalence, complete search, or physical qualification. Equal counts can represent different group assignments; all offers are retained. Concurrent single samples are diagnostic, not controlled performance comparisons. No smaller accepted board and no full-suite or finalist build/render qualification."
+}

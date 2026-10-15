@@ -4,20 +4,34 @@
 #include <cstring>
 #include <cmath>
 #include <algorithm>
+#include <array>
+#include <tuple>
 
 namespace schgen::floorplan_detail {
 // Diversify failure-only replay before spending its frontier on rotations of
-// the same face. Keep the accepted/initial choice first and every legal offer.
+// the same face-occupancy profile. Mixed-face shapes retain a primary side label,
+// so also classify their child occupancy. Counts are orientation/order invariant;
+// this is retry diversity, not geometric equivalence or hardware permission.
+// Keep the accepted/initial choice first and every legal offer.
 inline std::vector<int> face_diverse_replay_indices(const std::vector<SeatShapeHit>& hits,
                                                    const SeatShapeHit& best) {
     std::vector<int> indices{best.index};
     for(const auto& hit:hits)if(hit.index!=best.index)indices.push_back(hit.index);
-    const auto opposite=std::find_if(hits.begin(),hits.end(),[&](const auto& hit){
-        return hit.index!=best.index&&
-            ((best.side=="top"&&hit.side=="bottom")||(best.side=="bottom"&&hit.side=="top"));
+    const auto signature=[](const SeatShapeHit& hit) {
+        std::array<std::size_t,3> faces{};
+        for(const auto& child:hit.comps) {
+            if(child.mask==1)++faces[0];
+            else if(child.mask==2)++faces[1];
+            else if(child.mask==3)++faces[2];
+        }
+        return std::make_tuple(hit.side,faces);
+    };
+    const auto incumbent=signature(best);
+    const auto different=std::find_if(hits.begin(),hits.end(),[&](const auto& hit){
+        return hit.index!=best.index&&signature(hit)!=incumbent;
     });
-    if(opposite!=hits.end()) {
-        const auto found=std::find(indices.begin()+1,indices.end(),opposite->index);
+    if(different!=hits.end()) {
+        const auto found=std::find(indices.begin()+1,indices.end(),different->index);
         std::rotate(indices.begin()+1,found,found+1);
     }
     return indices;
