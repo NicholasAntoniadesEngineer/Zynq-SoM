@@ -1,6 +1,7 @@
 #include "schgen/board_inputs.hpp"
 #include "schgen/authoring.hpp"
 #include "historical_input_contracts.hpp"
+#include "direct_enable_reference.hpp"
 #include <algorithm>
 #include <cstdlib>
 #include <fstream>
@@ -178,24 +179,7 @@ int main(int argc, char** argv) {
                 if(live.name=="power_som") {
                     // d2a1ec20: explicitly project the immutable historical
                     // enable network to the reviewed direct-VIN topology.
-                    auto original=parse_circuit_ir(frozen);
-                    const auto retired=[](const std::string& ref){return ref=="R12"||ref=="D5"||ref=="C20";};
-                    require(std::count_if(original.parts.begin(),original.parts.end(),[&](const auto& p){return retired(p.ref);})==3,
-                            "historical enable network has exactly three retired parts");
-                    original.parts.erase(std::remove_if(original.parts.begin(),original.parts.end(),[&](const auto& p){return retired(p.ref);}),original.parts.end());
-                    bool enable=false,vin=false;
-                    for(auto& net:original.nets){
-                        if(net.name=="EN_5V_SOM"){
-                            std::vector<std::string> pins;for(const auto& p:net.pins)pins.push_back(p.ref+"."+p.pin);
-                            require(pins==std::vector<std::string>({"U4.7","R12.2","D5.1","C20.1"}),"historical EN topology preimage");
-                            enable=true;
-                        }
-                        net.pins.erase(std::remove_if(net.pins.begin(),net.pins.end(),[&](const auto& p){return retired(p.ref)||(p.ref=="U4"&&p.pin=="7");}),net.pins.end());
-                        if(net.name=="+VIN_SYS"){net.pins.insert(net.pins.begin(),{"U4","7"});vin=true;}
-                    }
-                    require(enable&&vin,"historical enable/VIN nets present");
-                    original.nets.erase(std::remove_if(original.nets.begin(),original.nets.end(),[](const auto& n){return n.name=="EN_5V_SOM";}),original.nets.end());
-                    frozen=authored_circuit_json(original);
+                    frozen=authored_circuit_json(direct_enable_reference::project(parse_circuit_ir(frozen)));
                     for(int mutation=0;mutation<3;++mutation){
                         auto changed=live;
                         if(mutation==0)changed.parts.front().value+="_drift";

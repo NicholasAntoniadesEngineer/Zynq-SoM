@@ -1,0 +1,19 @@
+{
+  "source_base": "618a12fe",
+  "scope": "Restore complete authoring regression comparison after reviewed d2a1ec20 direct-VIN enable change; immutable historical JSON remains untouched",
+  "change": "Share a test-only forward projection between authoring gates and board-input contracts. Require exact identities of the three retired parts, exact retired-pin connectivity, unique enable/supply nets and no extra enable consumers before applying the reviewed transformation. Preserve every unlisted IR field for complete comparison.",
+  "negative_coverage": {
+    "live_mutations_per_board": ["regulator identity", "sheet title", "EN pin changed to VIN pin", "duplicate part"],
+    "historical_mutations_per_board": ["retired zener identity", "retired resistor pin", "unreviewed enable consumer"],
+    "retained": "Existing board-input mutations, all native authoring package checks and historical board_aux identity/topology checks"
+  },
+  "validation": {
+    "command": "ctest --test-dir native/build/fast -R '^native_(authoring_gates|board_inputs|bom|project)_contracts$' --output-on-failure",
+    "rebuilt_targets": ["schgen_authoring_gates_contracts", "schgen_board_inputs_contracts"],
+    "passed": 4,
+    "failed": 0,
+    "elapsed_seconds": 1.67,
+    "full_suite_rerun": false
+  },
+  "remaining": "Nine other release-suite failures remain unresolved. No production behavior, hardware constraints or accepted board geometry changed."
+}
