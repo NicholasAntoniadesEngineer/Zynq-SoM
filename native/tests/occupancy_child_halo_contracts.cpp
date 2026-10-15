@@ -12,6 +12,32 @@ using namespace schgen;
 std::size_t checks=0;
 void require(bool ok,const char* why){++checks;if(!ok)throw std::runtime_error(why);}
 bool halo(Halo a,Halo b){return a.w==b.w&&a.e==b.e&&a.n==b.n&&a.s==b.s;}
+void frontier_rejection_properties() {
+    for(int stored_mask:{1,2,3})for(int mask:{1,2,3})for(double anchor:{2.,5.05,8.}) {
+        Occupancy grid(12,12,.25,2,3,1,.05);
+        grid.add(3,3,4,4,{.5,1,.25,.75},{},stored_mask,
+                 {{-.5,1,2,1,stored_mask==1?2:1,{1,.25,.5,.75},{}}});
+        const std::vector<Comp> children{{1,-.5,1,1,mask==1?2:1,{.25,.75,1,.5},{}}};
+        std::vector<std::tuple<double,double,double>> expected;
+        for(int x=0;x<12;++x)for(int y=0;y<12;++y)
+            if(grid.fits_exhaustive(x,y,2,2,{},{},mask,children))
+                expected.emplace_back(py_round(std::abs(x+1-anchor)+std::abs(y+1-anchor),1),x,y);
+        std::sort(expected.begin(),expected.end());
+        const auto all=grid.place_near_candidates(anchor,anchor,2,2,{},{},mask,children,
+                                                 0,12,0,12,200,1000);
+        require(all.search_complete&&!all.budget_exhausted,"exhaustive frontier did not finish");
+        require(all.poses.size()==expected.size(),"early rejection lost or added a legal pose");
+        for(std::size_t i=0;i<expected.size();++i)
+            require(all.poses[i].x==std::get<1>(expected[i])&&all.poses[i].y==std::get<2>(expected[i]),
+                    "early rejection changed independent distance/x/y ordering");
+        const auto limited=grid.place_near_candidates(anchor,anchor,2,2,{},{},mask,children,
+                                                     0,12,0,12,200,10);
+        require(limited.budget_exhausted&&limited.frontier_nodes==10,"rejected nodes escaped frontier budget");
+        for(std::size_t i=0;i<limited.poses.size();++i)
+            require(limited.poses[i].x==all.poses[i].x&&limited.poses[i].y==all.poses[i].y,
+                    "limited frontier changed accepted prefix");
+    }
+}
 void fractional_hash_properties() {
     // Stored children round absolute coordinates; query children deliberately
     // do not. Compare the two actual predicates, not a rounded-query oracle.
@@ -88,5 +114,5 @@ void properties() {
             halo(got[n].comps[0].reach,expected[n].comps[0].reach),"halo-distinct result changed");
 }
 }
-int main(){try{properties();fractional_hash_properties();std::cout<<"PASS child halo contracts checks="<<checks<<'\n';return 0;}
+int main(){try{frontier_rejection_properties();properties();fractional_hash_properties();std::cout<<"PASS child halo contracts checks="<<checks<<'\n';return 0;}
 catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}
