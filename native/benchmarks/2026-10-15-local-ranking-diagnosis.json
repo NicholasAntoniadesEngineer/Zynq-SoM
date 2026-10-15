@@ -1,0 +1,25 @@
+{
+  "source": "94f9eae5",
+  "question": "Why can an additional locally legal shape displace a globally feasible construction?",
+  "observed_divergence": {
+    "log": "native/build/carrier-vertical-contact-catalog.log",
+    "selection_event": 2,
+    "sheet": "power_som",
+    "prior_selected": {"tag":"asbuilt","index":0,"width":23.9349,"height":24.1702,"estimator":319.07143071638291},
+    "experimental_selected": {"tag":"contract-bottom/C22014/0.550000/4.800000/contact/0.000000/-0.520000/leftover-y-contact","index":7,"width":24.4399,"height":23.6502,"estimator":321.40219873394358},
+    "interpretation": "Area-first ranking prioritises a slightly smaller local rectangle despite a worse estimator. Neither local area nor this estimator measures future global feasibility. Appending offers preserves indices but not the greedy selection path. The experimental vertical pass remains removed."
+  },
+  "alternative_ranking_screens": [
+    {"recipe":"powersom face recipe, release pilot pins, --shape-area-first off","outline_mm":[163,150],"result":"construction_failed","seconds":3.332909833,"outer_attempts":4,"receipt_captured":true,"log":"native/build/carrier-estimator-first-163x150.log"},
+    {"recipe":"powersom face recipe, free bringup_rails, --shape-area-first off","outline_mm":[160,153],"result":"construction_failed","seconds":55.081016541,"outer_attempts":4,"receipt_captured":true,"log":"native/build/carrier-estimator-first-160x153.log"}
+  ],
+  "architecture_findings": [
+    "floorplan_pack.cpp seat ranks local legal hits; optional area-first ranking overrides the estimator winner.",
+    "The same shape_area_first option also changes displaced/incoming recovery shape order. These whole-run experiments do not isolate initial selection from recovery ordering.",
+    "attempt_shape_replays explores initial-choice prefixes with a finite frontier and preserves all executed receipts, but it does not possess a previously feasible complete plan from a different offer catalog.",
+    "refine_screened_incumbent and outline search preserve already screened layouts within their search; this is distinct from retaining a layout across catalog expansion.",
+    "build_pcb_model_once's failure-only orientation expansion adds offers and replans; it cannot recover a successful pre-expansion plan if that plan was never constructed in the current invocation."
+  ],
+  "next_engineering_target": "Establish a same-input complete-plan incumbent before expanded-catalog optimisation, or supply a verified same-input incumbent to the search. Compare complete feasible candidates, retain the incumbent on failure, and account for both strategy runs. Do not replace this with a hardcoded historical board or weaker gates. Add a regression where offer expansion changes the greedy winner and would otherwise lose feasibility.",
+  "limits": "Diagnosis and two failed screens, not an implemented incumbent portfolio or proof of infeasibility. Ranking experiment does not isolate individual effects. No smaller accepted board, timing-speedup claim, default-policy change or fresh full qualification."
+}
