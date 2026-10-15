@@ -926,6 +926,21 @@ void live(const std::filesystem::path& root){
    append_contract_group_faces(blocked_context,blocked_geometry,"usb_jtag",variants.front());
    append_contract_group_faces(blocked_context,blocked_geometry,"usb_jtag",variants.front(),true);
    demand(blocked_geometry.shapes.at("usb_jtag").size()==prefix.size(),"pinned owners still generated bottom candidates");
+   // Reuse the context and filenames across invocations, but replace the
+   // physical documents: through-hole classification must not outlive a call.
+   auto hole_context=candidate_context;auto hole_geometry=after.geometry;
+   append_contract_group_faces(hole_context,hole_geometry,"usb_jtag",variants.front());
+   demand(hole_geometry.shapes.at("usb_jtag").size()>prefix.size(),"through-hole cache test did not warm eligible candidates");
+   for(const auto* owner:{"U2","U4"}) {
+    const auto ref=hole_context.board_refs.at("usb_jtag").at(owner);
+    const auto key=hole_geometry.resolvable.at(ref);
+    const auto fp=hole_context.pool.at(key);auto text=fp->bytes;
+    text.insert(text.rfind(')')," (pad \"CACHE_PROBE\" np_thru_hole circle (at 0 0) (size 0.1 0.1) (drill 0.1) (layers \"*.Cu\" \"*.Mask\"))");
+    hole_context.pool[key]=pcb_check_footprint(fp->source,text);
+   }
+   hole_geometry=after.geometry;
+   append_contract_group_faces(hole_context,hole_geometry,"usb_jtag",variants.front());
+   demand(hole_geometry.shapes.at("usb_jtag").size()==prefix.size(),"changed through-hole documents reused stale face eligibility");
    // An unconnected copper pad is still physical occupancy. Keep the authored
    // courtyard unchanged, so a courtyard-only gate cannot detect this escape.
    auto protruding_context=candidate_context;auto protruding_geometry=after.geometry;

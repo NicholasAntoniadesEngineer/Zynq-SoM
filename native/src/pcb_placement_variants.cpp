@@ -168,9 +168,20 @@ void append_contract_group_faces(Context& ctx,Geometry& g,const std::string& she
     const auto seed=schema.kind==JsonKind::String&&schema.string_value=="placement/v2"
         ?enclose_courtyards(ctx,g,original):original;
     if(!orientation_holds(ctx,g,sheet,seed))return;
+    // Footprints (including mirrored documents) are immutable during this
+    // invocation. Cache by the actual document, not by reference or filename;
+    // subsequent calls with changed inputs must classify their own documents.
+    std::map<const PcbCheckFootprint*,bool> through_hole;
+    const auto has_through_hole=[&](const PcbCheckFootprintPtr& mod) {
+        const auto found=through_hole.find(mod.get());
+        if(found!=through_hole.end())return found->second;
+        const bool result=has_thru_pads_from_text(mod->bytes);
+        through_hole.emplace(mod.get(),result);
+        return result;
+    };
     std::set<std::string> pinned;
     for(const auto& ref:g.refs_by_sheet.at(sheet))
-        if(face_top(ctx.by_ref.at(ref))||has_thru_pads_from_text(ctx.pool.at(g.resolvable.at(ref))->bytes))pinned.insert(ref);
+        if(face_top(ctx.by_ref.at(ref))||has_through_hole(ctx.pool.at(g.resolvable.at(ref))))pinned.insert(ref);
     for(const auto& sc:ctx.in.floorplan.sheets)if(sc.name==sheet)
         for(const auto& net:sc.nets) {
             const auto nc=ctx.netclass_of.find(net.name);
@@ -215,7 +226,7 @@ void append_contract_group_faces(Context& ctx,Geometry& g,const std::string& she
             physical&=a.x0>=0&&a.y0>=0;
             for(std::size_t j=0;j<i;++j) {
                 const auto& pi=checked.model().insts[i];const auto& pj=checked.model().insts[j];
-                if(pi.side!=pj.side&&!has_thru_pads_from_text(pi.mod->bytes)&&!has_thru_pads_from_text(pj.mod->bytes))continue;
+                if(pi.side!=pj.side&&!has_through_hole(pi.mod)&&!has_through_hole(pj.mod))continue;
                 const auto b=checked.courtyard_at(j);
                 if(a.x0<b.x1+ctx.clearance&&a.x1+ctx.clearance>b.x0&&
                    a.y0<b.y1+ctx.clearance&&a.y1+ctx.clearance>b.y0)physical=false;
@@ -252,7 +263,7 @@ void append_contract_group_faces(Context& ctx,Geometry& g,const std::string& she
             const auto box=placed.courtyard_at(bi);
             for(std::size_t oi=0;oi<placed.model().insts.size();++oi) {
                 const auto& obstacle=placed.model().insts[oi];
-                if(moved(obstacle.ref)||(obstacle.side!="bottom"&&!has_thru_pads_from_text(obstacle.mod->bytes)))continue;
+                if(moved(obstacle.ref)||(obstacle.side!="bottom"&&!has_through_hole(obstacle.mod)))continue;
                 const auto other=placed.courtyard_at(oi);
                 if(box.x0>=other.x1+ctx.clearance||box.x1+ctx.clearance<=other.x0||
                    box.y0>=other.y1+ctx.clearance||box.y1+ctx.clearance<=other.y0)continue;
@@ -427,7 +438,7 @@ void append_contract_group_faces(Context& ctx,Geometry& g,const std::string& she
                 std::set<double> shifts{-low(bounds)};
                 for(std::size_t i=0;i<measured.model().insts.size();++i)if(i!=index) {
                     const auto& obstacle=measured.model().insts[i];
-                    if((obstacle.side=="top")!=top&&!has_thru_pads_from_text(obstacle.mod->bytes))continue;
+                    if((obstacle.side=="top")!=top&&!has_through_hole(obstacle.mod))continue;
                     const auto box=measured.courtyard_at(i);
                     shifts.insert(high(box)+ctx.clearance-low(bounds));
                 }
