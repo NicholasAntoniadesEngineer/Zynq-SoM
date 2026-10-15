@@ -13,14 +13,23 @@
     {"project": "devkit_mini", "status": "constructed_no_acceptance", "model_seconds": 0.183337042, "emit_seconds": 0.008281875, "pcb_sha256": "1b12fecbcbbaa5e6084c2459da93cb144a660ff19805e6e4e3f75f9c22689fdb", "log": "native/build/devkit-full-frontier.log"}
   ],
   "unpatched_163x151_comparison": {
-    "status": "still_running_at_checkpoint",
+    "status": "completed_baseline_retained_after_challenger_failure",
+    "model_portfolio_seconds": 508.704973209,
+    "patched_model_portfolio_seconds": 52.048962458,
+    "observed_percent_change": -89.76834015801613,
+    "pcb_sha256": "8413109a3f1b1a87bd8e13ab77f7f9f0a8c9e610d49fb5ef6dbc5b431b662c1e",
+    "quantized_operation_totals_identical": true,
+    "attempt_outcomes_and_incumbent_identical": true,
+    "domain_probe_events_before_after": [8792,8716],
+    "domain_rejection_events_before_after": [1998,1970],
+    "all_other_fallback_event_order_identical": true,
     "session_handle": 26331,
     "process": 80206,
     "verified_elapsed_at_last_process_snapshot": "07:29",
     "verified_cpu_time": "7:26.42",
     "verified_cpu_percent": 99.1,
     "log": "native/build/carrier-granular-minor-163x151.log",
-    "instruction": "Poll existing handle; preserve final receipt. Do not infer terminal failure or restart from this checkpoint."
+    "completion": "Original session exited zero. The saved CPU snapshot above is historical. Fewer probe/rejection events reflect work no longer executed after the queue was capped; no executed work was dropped from receipts."
   },
-  "limitations": ["No final speed ratio until original run terminates and results/receipts can be compared", "Overlapping single runs are not controlled performance measurements", "No smaller accepted carrier; granular challenger still fails", "Expanded carrier baseline is a construction-screen candidate, not the published qualified board", "All hardware checks and state ceilings remain unchanged"]
+  "limitations": ["Observed timing reduction is for this C++ search portfolio, not Python migration or generation-only timing", "Overlapping single runs are not controlled performance measurements", "No smaller accepted carrier; granular challenger still fails", "Expanded carrier baseline is a construction-screen candidate, not the published qualified board", "All hardware checks and state ceilings remain unchanged"]
 }

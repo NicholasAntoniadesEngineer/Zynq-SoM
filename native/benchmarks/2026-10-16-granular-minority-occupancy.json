@@ -12,15 +12,17 @@
     {"outline_mm": [163,150], "strategies": ["baseline","granular-minor"], "status": "search_failed", "elapsed_seconds": 33.206500333, "completed_outer_attempts": 8, "receipt_captured": true, "verified_aggregate_counter_keys": 74, "log": "native/build/carrier-granular-minor-163x150.log"},
     {"project": "devkit_mini", "strategy": "default compact-off multiscale", "status": "constructed_no_acceptance", "model_seconds": 0.183695292, "emit_seconds": 0.008311958, "pcb_sha256": "1b12fecbcbbaa5e6084c2459da93cb144a660ff19805e6e4e3f75f9c22689fdb", "log": "native/build/devkit-granular-default.log"}
   ],
-  "pending_screen": {
+  "completed_163x151_screen": {
     "outline_mm": [163,151], "strategies": ["baseline","granular-minor"],
-    "status": "running_at_checkpoint_not_acceptance",
+    "status": "completed_baseline_retained_after_granular_challenger_failed",
+    "model_portfolio_seconds": 508.704973209,
+    "pcb_sha256": "8413109a3f1b1a87bd8e13ab77f7f9f0a8c9e610d49fb5ef6dbc5b431b662c1e",
     "log": "native/build/carrier-granular-minor-163x151.log",
     "process_at_checkpoint": 80206,
     "session_handle": 26331,
-    "observations": "Authoritatively live via execution handle and ps; 97.5% CPU at elapsed 2:56. Three-second sample captured 2314 main-thread samples all within joint-separation legalization. Repeated power_som facing rejections remain enforced.",
+    "observations": "Original session subsequently exited zero; process fields describe the historical running checkpoint. Three-second sample captured 2314 main-thread samples all within joint-separation legalization. Repeated power_som facing rejections remained enforced.",
     "profile": "native/build/granular-minor-cpu-sample.txt",
     "next_investigation": "legalize_joint_separations keeps enumerating and copying neighbour choice vectors even after generated reaches max_states. Review resource accounting and completeness semantics before optimising."
   },
-  "limitations": ["No smaller accepted carrier demonstrated", "No fabrication readiness or full new qualification claimed", "Failure receipts were independently checked: each aggregate counter equals the sum of per-attempt counters", "Overlapping single-run times are not controlled speedups", "Pending screen must be polled, not assumed failed or restarted"]
+  "limitations": ["No smaller accepted carrier demonstrated", "No fabrication readiness or full new qualification claimed", "Failure receipts were independently checked: each aggregate counter equals the sum of per-attempt counters", "Overlapping single-run times are not controlled speedups", "Subsequent full-frontier pruning addresses the observed CPU cost; see companion evidence"]
 }
