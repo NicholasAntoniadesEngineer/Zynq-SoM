@@ -2,14 +2,24 @@
  * zynq_carrier_contract.h -- Zynq carrier <-> SoM STM32 system-controller
  * hardware contract.  GENERATED -- DO NOT EDIT.
  *
- * generated-by: schgen firmware (schgen/firmware.py)
- * regenerate:   PYTHONPATH=. python -m schgen firmware
+ * generated-by: native/bin/schgen firmware (native/src/firmware_docs.cpp)
+ * regenerate:   native/bin/schgen firmware --project PROJECT_DIR
+ * Run from the repository root; replace PROJECT_DIR with your project path.
  * sources:
- *   devkit_mini/som_interface.json
- *   som/Zynq_SoM.kicad_sch (U9 pin map, live kicad-cli extraction)
- *   devkit_mini/subsystems/power.py
- *   devkit_mini/subsystems/power_mon/power_mon.py
- *   devkit_mini/subsystems/debug_boot/debug_boot.py
+ *   /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/devkit_mini/som_interface.json
+ *   /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/som/Zynq_SoM.kicad_sch (U9 pin map, live kicad-cli extraction)
+ *   /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/devkit_mini/subsystems/debug_boot/circuit.json
+ *   /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/devkit_mini/subsystems/mechanical/circuit.json
+ *   /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/devkit_mini/subsystems/pd_input/circuit.json
+ *   /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/devkit_mini/subsystems/power/circuit.json
+ *   /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/devkit_mini/subsystems/power_mon/circuit.json
+ *   /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/devkit_mini/subsystems/power_som/circuit.json
+ *   /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/devkit_mini/subsystems/som_decoupling/circuit.json
+ *   /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/devkit_mini/subsystems/som_j1/circuit.json
+ *   /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/devkit_mini/subsystems/som_j2/circuit.json
+ *   /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/devkit_mini/subsystems/som_j3/circuit.json
+ *   /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/devkit_mini/subsystems/uart_bridge/circuit.json
+ *   /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/devkit_mini/subsystems/usb_uart_connector/circuit.json
  * absent on this project (their sections are omitted):
  *   bringup_rails, bringup_en, bringup_en_modules, bringup_modules, usb_pd, board_services
  *
@@ -147,7 +157,7 @@
 #define ZC_I2C_BITBANG_SCL_GPIO_PORT 'A'   /* STM32_I2C2_SCL = STM32_DAC2, J1.55 */
 #define ZC_I2C_BITBANG_SCL_GPIO_PIN 5U
 
-/* ---- Rail bring-up sequence (derived from the power.py regulator     */
+/* ---- Rail bring-up sequence (derived from power/circuit.json's regulator */
 /*      chain: each stage feeds the next) + EN-cell mapping             */
 /* EN semantics (bringup_en): EN = DIP AND override; override is a VETO  */
 /* -- drive LOW to force a rail OFF; Hi-Z/HIGH leaves the DIP in charge. */

@@ -2,7 +2,7 @@
   "artifacts": [
     {
       "path": "Zynq_Carrier.kicad_pcb",
-      "sha256": "c55c085789a3d262a6bb9233bd73cb2d4e7f5b0bba425c5ddebf4f9ced2314c2"
+      "sha256": "1b12fecbcbbaa5e6084c2459da93cb144a660ff19805e6e4e3f75f9c22689fdb"
     },
     {
       "path": "Zynq_Carrier.kicad_pro",
@@ -10,19 +10,19 @@
     },
     {
       "path": "Zynq_Carrier.kicad_sch",
-      "sha256": "fc57380a5dc1c78bc1063a3e8189f8815f95c008cbffd6eb6a5e1fdb14488341"
+      "sha256": "39042161356bbacf3880ba04146328863d7ab362d5d3272688d14175f6d3e8bf"
     },
     {
       "path": "docs/FLOORPLAN.md",
-      "sha256": "e9d9af49f788b758bc559de10f18a42259fb8918f7c554aaa122132ad67ea425"
+      "sha256": "747fce901502a3dcd63efb6d24763781526c2179a0f1cbd4c597b77e59052ee4"
     },
     {
       "path": "docs/FLOORPLAN.svg",
-      "sha256": "4f3be4be786dd09a994200686715faab6a04cef8afcdf3429d546e38e62b46c1"
+      "sha256": "742c03d98af76847de444a5300449bf689d818924b4c0eb8cec8dfebb866d1b4"
     },
     {
       "path": "docs/RATSNEST.svg",
-      "sha256": "0bc875b98ef28e59e3a13332958ff11cbaf416aa62777b1a14c53c6224bc9ec8"
+      "sha256": "67b6f8a7af1f268d867d2051dd147341d840eca1c2be23483a778f36ab4d6e6c"
     },
     {
       "path": "docs/block_diagram.svg",
@@ -38,7 +38,7 @@
     },
     {
       "path": "firmware/zynq_carrier_contract.h",
-      "sha256": "335432a253dde75cd2d36de5d25a75f333d08a603e6c9fab83588fdfaa0fa513"
+      "sha256": "5ec26524ea7c5fdcab9b3c9fd30d06f188a44d25748fdd4318ffdc8e1722bb1c"
     },
     {
       "path": "fpga/Zynq_Carrier_pins.xdc",
@@ -50,7 +50,7 @@
     },
     {
       "path": "manufacturing/Zynq_Carrier_cpl.csv",
-      "sha256": "0205fbb761e19c79ec739d4aa3fb810f952c7ffac1b70094ee2eafceb80c9cb6"
+      "sha256": "86f8b5a142d53e34ddc53308d494e89df4cffe14b69efc41aefaf75cdadc42b5"
     },
     {
       "path": "manufacturing/Zynq_Carrier_pcb.kicad_dru",
@@ -58,7 +58,7 @@
     },
     {
       "path": "manufacturing/bom_jlc.csv",
-      "sha256": "851fd38ed191f1064c3e8b209b04c451cfd3bf7d2205c753e4761540bba7fdb8"
+      "sha256": "5f24731909e2089968d6f45497aacd03ffa93019ca5a0b79b53c5310fa99724c"
     },
     {
       "path": "manufacturing/layout_constraints.csv",
@@ -69,12 +69,16 @@
       "sha256": "f3ffe1c669f842b42bde660ac4af4843d5eda6ed0a5056a8f7c5eda5af87472f"
     },
     {
+      "path": "reports/authoring_purity.txt",
+      "sha256": "1eff6e5742c2236cb6def01bd653230ad8477674c7094da7caea98e69796f201"
+    },
+    {
       "path": "reports/board_gate.txt",
-      "sha256": "f166a9bc7d89dfcff678ea3bca05e1eb5e874bedf630a8361b0812bea76ff4b2"
+      "sha256": "5c6d34755e4c6fef2c7f7ad3c90f89e15eef7a614c51257e689d916f8864ed92"
     },
     {
       "path": "reports/bom_values.txt",
-      "sha256": "9b6c10824dd01b8c2067cc5dc560ecdfbc7c5bffc3373630ec72553bddd81d60"
+      "sha256": "342020aa1ee8a2e72d3e178b100c4d5cfaeca949cc10d3b19733b49b44265578"
     },
     {
       "path": "reports/build_ledger.txt",
@@ -82,11 +86,11 @@
     },
     {
       "path": "reports/carrier_structure.txt",
-      "sha256": "5f632b5a293940b032c183198dcf094d442eabe58b7f789b5749c5bef4aafa08"
+      "sha256": "73c9ca05489f5702d943ad9c6975d4087e34015f92b0db58eba01dcc6c4945a8"
     },
     {
       "path": "reports/cc_gate.txt",
-      "sha256": "a3f28bb6ecb6c2b11280133768b2c73773d005e1275b7aaedeb16bc1259d4394"
+      "sha256": "1fcb1bbde1edba70487d4a9e7dda158b8e546fe4904bf721bf849effd77899c0"
     },
     {
       "path": "reports/connector_model.txt",
@@ -94,7 +98,7 @@
     },
     {
       "path": "reports/connector_spacing.txt",
-      "sha256": "c7908a01b5541ca4d6492d3de3ea09ed263de267b24a5c7aa75a2925fb8b39b0"
+      "sha256": "aa1223eb7c69b8cceb4a83c34830ba7d273f25e240990b587bf7a681a216c3e5"
     },
     {
       "path": "reports/contract_coverage.txt",
@@ -106,7 +110,7 @@
     },
     {
       "path": "reports/copper_debt.txt",
-      "sha256": "b2067f7f62f54dca1f1a0e23515cf75471e5f8debfaf62108e607cf4797814dd"
+      "sha256": "4e3369ea756b28e6f566024d7aa859dc65aee22c80afe3be5231ae41b0ba8810"
     },
     {
       "path": "reports/design_rules.txt",
@@ -122,15 +126,15 @@
     },
     {
       "path": "reports/fanout.txt",
-      "sha256": "8c8ac08a06ccd26803c56f4b2c2ac2229f205715394846d2290677215ac02fb3"
+      "sha256": "e768cbc713bf711acdea99365af01c8903a3ab5c7307fec70d277072745ffdb9"
     },
     {
       "path": "reports/floorplan_composition.txt",
-      "sha256": "d4127d4653575010fec58c1b995bb875c6552677a57f9d3200054923b67c3b29"
+      "sha256": "696df9aa317347f7ba53ab535f150d27fbd75ef03cc96ccf402947e13a282758"
     },
     {
       "path": "reports/footprint_pads.txt",
-      "sha256": "d4a0a19559e45e3671f603ffa4db7fdb9733a16dd0cdfd997dec42a1e97e7815"
+      "sha256": "c4da5f2ba404d3275d2b0b5f4bf10e1f0f882c8bf431d6a570d34863bdc0f806"
     },
     {
       "path": "reports/gates.txt",
@@ -145,12 +149,24 @@
       "sha256": "0efaacb19d68b5bc250d72c9f669e7bd90de4040c2008432a4a29fc6a7cfc4e1"
     },
     {
+      "path": "reports/native_policy.txt",
+      "sha256": "3165bc873a472f74716fc60f601f3096d3f942a2f39fbb1bcc11da46193745f8"
+    },
+    {
       "path": "reports/part_rules.txt",
-      "sha256": "8284b0bcd8fb867d358a5e1825927af5c6357f05e0224ac246d9382f414a5a5b"
+      "sha256": "b019b46ef435a99276ad9b538cc28cbc4eb596d4ced713d453ea15dfad02cdb7"
+    },
+    {
+      "path": "reports/pcb_drc.txt",
+      "sha256": "de34863917d92cf5a3e520158c1944246759b2bf4d3972286d0f97a0c756c4f8"
+    },
+    {
+      "path": "reports/pcb_emission.txt",
+      "sha256": "339d66e512e0f00fbd4b75783d9fb91bd5fc8d308a1d66aebf52472206c064f9"
     },
     {
       "path": "reports/pin_completeness.txt",
-      "sha256": "5606b4de7de1792d0c179ebe2bc4064a1f57c8b36e42678f982a62238b80b5eb"
+      "sha256": "1522a287e8ebba7ea69e42c84ce67c92cf497c0f9d329991606cb360b26c145f"
     },
     {
       "path": "reports/placement_contract.txt",
@@ -158,11 +174,19 @@
     },
     {
       "path": "reports/placement_flow.txt",
-      "sha256": "728e37e434616a85efe6f5b8e659512bfe40167906ab489b70833ae03fdacc89"
+      "sha256": "f1d3a9e686a17c485ab20eaa8e46b4a560be019c8cb6b9a62c4fd99ad6afa7f7"
     },
     {
       "path": "reports/placement_mech.txt",
-      "sha256": "160c8855e6b966343866572571795044b9cd2bc9ae69c3905b90d1702792bd77"
+      "sha256": "3ddab3129dd3f4114578de83b85619acec3959c61478d2d50fb027227b9d670e"
+    },
+    {
+      "path": "reports/placement_requirements.txt",
+      "sha256": "955da96961175639389d8350c1fda648092072b25727ad0720b8775338bd76c1"
+    },
+    {
+      "path": "reports/placement_requirements_unverified.txt",
+      "sha256": "955da96961175639389d8350c1fda648092072b25727ad0720b8775338bd76c1"
     },
     {
       "path": "reports/power_tree.txt",
@@ -178,11 +202,15 @@
     },
     {
       "path": "reports/ratsnest.txt",
-      "sha256": "b0506d20d6d858d4a56344968222076f425ce4afbc9db17bb3656241657566c4"
+      "sha256": "ef5e13e3967a504a832f2c3b44c81004bb60c9dfdba0afd0ee880bb397e7cb02"
+    },
+    {
+      "path": "reports/refdes_silk.txt",
+      "sha256": "65295f38ebf91888258e177deb4d8dff870018dfdf4c05d311afee21c49cd973"
     },
     {
       "path": "reports/return_path.txt",
-      "sha256": "37c69a6c2548850f05c90f197d5e45ed70400ff3a703555f6133c6e849013106"
+      "sha256": "b1ac12b37c32be84e163ef4164850224f514beff3de207725dbc9a164e0b35d6"
     },
     {
       "path": "reports/return_stitch.txt",
@@ -190,11 +218,11 @@
     },
     {
       "path": "reports/spice.txt",
-      "sha256": "5cce8523ee69a863e70cc914dfb337cc5fda9c4adf9c9d697f00131895a76ca4"
+      "sha256": "8d51ce4e01deb230840b66acddd27fece99b194518fd015f6065c993c4cb2af2"
     },
     {
       "path": "reports/subsystem_structure.txt",
-      "sha256": "65a3367691ddd491d588552d7dc08e3bc3988ca3fea6ab930c485f3780c68ad5"
+      "sha256": "ca7667136b81c2f90c04ef8e41946cc99ff9851b0e1ea9f6cbcb2def4b032642"
     },
     {
       "path": "reports/symbol_law.txt",
@@ -210,61 +238,61 @@
     },
     {
       "path": "schematic/debug_boot.kicad_sch",
-      "sha256": "c0fb74a2017cb697beb1990cd0f94376f9d1f842c73a1e8773ad52970fe30c8b"
+      "sha256": "a5b08367213b6b7f23035b85a31858821c4d23e443859ffe2fb5c8e4d27f6e5e"
     },
     {
       "path": "schematic/mechanical.kicad_sch",
-      "sha256": "032faefd74b17d6747b7999e466929514d3983d805656809e633d46a099aa0e5"
+      "sha256": "92275dc29e4b45102260136e244e3432dc6d08d8f2a1fed897b0cb060328ab7b"
     },
     {
       "path": "schematic/pd_input.kicad_sch",
-      "sha256": "a45714aa4d5b3b7ca77aad4b4921795c19945878d4a24f73c6c015dcb165b8d2"
+      "sha256": "21a2a8230138bab6d3f2b4ad6abec3fbf8bcc81b960eb6c93c5a25305648f1c0"
     },
     {
       "path": "schematic/power.kicad_sch",
-      "sha256": "77f30b77e52a3040b03f40b0549a7dcb595004e72d993fd8c0199ec6b9646e93"
+      "sha256": "5d838216bfe49b5ac612356766af989f91bed727a01928aa9519a1fd078e6d27"
     },
     {
       "path": "schematic/power_mon.kicad_sch",
-      "sha256": "eca02c0a827b0ff3897d0a926b5537eb231ed609eb4601032f1e0f54befbd49b"
+      "sha256": "19dff4157960912f3381a633d7d39fbde1bf68e30c11a9a145528d4b410345d0"
     },
     {
       "path": "schematic/power_som.kicad_sch",
-      "sha256": "1b07590e4ef882df5ea08f73a8701ffa222a3a6dfa981ef75c6de62ae9cb53de"
+      "sha256": "325887346f43e4c091efbaca31b9bbefc8f66ab6186a98b70092e7a0715d7f97"
     },
     {
       "path": "schematic/som_decoupling.kicad_sch",
-      "sha256": "7b0b2e8e96f07e38ed1e382078b1ef82573c84c25c91ffe7e9d754e873719f7e"
+      "sha256": "ab7f47e0197523e5cb3e3d68a932d6c28a018b788e65508d0db1c698108082bf"
     },
     {
       "path": "schematic/som_j1.kicad_sch",
-      "sha256": "6bf254a8d4d439efbf8445ca2f9d208d182c336e5cfc57bf99f52559509aa8e5"
+      "sha256": "dd752ca886fd5a8c3f99dd1e05f1daf77988529bc2792fc6eb56a472171d318e"
     },
     {
       "path": "schematic/som_j2.kicad_sch",
-      "sha256": "bdc786b4230631da3239a7bcbfd86924325b7524788bd7c18f1bb9cd8a4885ca"
+      "sha256": "cf89b111562699eaaa5c60412ddeee687bb8daf5873c79f1240e46973f4b4368"
     },
     {
       "path": "schematic/som_j3.kicad_sch",
-      "sha256": "6a50471a5cdd283f9b8cf2c8720456a4fa097a1a6b23cd4003923d8102e7634e"
+      "sha256": "9ede1a9fbbf0a2862a5db0c3aa99c3eb1faeeffb18c690ee3174b71fba6433f3"
     },
     {
       "path": "schematic/uart_bridge.kicad_sch",
-      "sha256": "80c3ec0055c918601b23871c948a58a93cf6fdf0b74fcace10e9eaac0c28fb5d"
+      "sha256": "82abc5320bbba9019d00835f6345ff2ffba4fd3628c536d39d8801459a5293b0"
     },
     {
       "path": "schematic/usb_uart_connector.kicad_sch",
-      "sha256": "c23d0389092bee2381df0509017e5919429888d9faa24f509961d5f651827e7e"
+      "sha256": "626ab68a22afdc7d5ee1370fd346456021960155d3ff151838008ecea84f0c03"
     }
   ],
   "bom": {
     "cost": null,
     "extended": null,
-    "lines": 43,
+    "lines": 42,
     "missing": [],
-    "parts": 136
+    "parts": 133
   },
-  "device": "XC7Z020-CLG484 (U2 on the SoM)",
+  "device": "XC7Z020-CLG484",
   "gpio_map": [
     {
       "j_pins": [
@@ -591,10 +619,10 @@
   },
   "xdc": {
     "banks": [
-      "13",
-      "33",
-      "34",
-      "35"
+      13,
+      33,
+      34,
+      35
     ],
     "pins": 156
   }

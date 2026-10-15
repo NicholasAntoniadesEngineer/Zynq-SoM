@@ -1,11 +1,218 @@
 CONTRACT COVERAGE LINT — every wired-sheet part in >=1 contract structure or explicitly free
-CONTRACT COVERAGE LINT (advisory): 23 sheets, 319 parts — 278 structured / 0 free / 41 UNGATED
+CONTRACT COVERAGE LINT (advisory): 37 sheets, 561 parts — 275 structured / 0 free / 286 UNGATED
 
+board_aux            parts= 18  structured=  0  free= 0  UNGATED= 18  (no contract)
+    UNGATED C1     -> C1001    10u                    nets: +3V3, GND
+    UNGATED C2     -> C1002    100n                   nets: +3V3_AUX, GND
+    UNGATED C3     -> C1003    10u                    nets: +3V3_AUX, GND
+    UNGATED C4     -> C1004    100n                   nets: +3V3_SC, GND
+    UNGATED C5     -> C1005    100p                   nets: AUX_ISO_REF, GND
+    UNGATED D1     -> D1001    red                    nets: +3V3_AUX, BS_PG_AUX
+    UNGATED R1     -> R1001    13k                    nets: BS_ISET_AUX, GND
+    UNGATED R2     -> R1002    100k                   nets: EN_AUX, GND
+    UNGATED R3     -> R1003    330R                   nets: BS_PG_AUX, GND
+    UNGATED R4     -> R1004    100k                   nets: +3V3_AUX, AUX_ISO_REF
+    UNGATED R5     -> R1005    4k7                    nets: +3V3_AUX, AUX_I2C_SCL
+    UNGATED R6     -> R1006    4k7                    nets: +3V3_AUX, AUX_I2C_SDA
+    UNGATED SW1    -> SW1001   DSHP04TSGER            nets: +3V3, EN_AUX
+    UNGATED TP1    -> TP1001   +3V3_AUX               nets: +3V3_AUX
+    UNGATED TP2    -> TP1002   AUX_I2C_SCL            nets: AUX_I2C_SCL
+    UNGATED TP3    -> TP1003   AUX_I2C_SDA            nets: AUX_I2C_SDA
+    UNGATED U1     -> U1001    SY6280AAC              nets: +3V3, +3V3_AUX, BS_ISET_AUX, EN_AUX, GND
+    UNGATED U2     -> U1002    PCA9306DCUR            nets: +3V3_AUX, +3V3_SC, AUX_I2C_SCL, AUX_I2C_SDA, AUX_ISO_REF, GND (+2 more)
 board_qwiic          parts=  2  structured=  2  free= 0  UNGATED=  0
+board_services       parts=  9  structured=  0  free= 0  UNGATED=  9  (no contract)
+    UNGATED BT1    -> BT3001   KH-CR1220-2            nets: GND, V_RTC_BAT
+    UNGATED C1     -> C3001    100n                   nets: +3V3_AUX, GND
+    UNGATED C2     -> C3002    100n                   nets: +3V3_AUX, GND
+    UNGATED C3     -> C3003    100n                   nets: +3V3_AUX, GND
+    UNGATED R1     -> R3001    10k                    nets: +3V3_AUX, RTC_INT_N
+    UNGATED R2     -> R3002    1k                     nets: WATCHDOG_KICK, WDI_AUX
+    UNGATED U1     -> U3001    24AA025E48T-I/OT       nets: +3V3_AUX, AUX_I2C_SCL, AUX_I2C_SDA, GND
+    UNGATED U2     -> U3002    RV-3028-C7-32.768kHz-1ppm-TA-QC nets: +3V3_AUX, AUX_I2C_SCL, AUX_I2C_SDA, GND, RTC_INT_N, V_RTC_BAT
+    UNGATED U3     -> U3003    TPS3823-33DBVR         nets: +3V3_AUX, GND, WATCHDOG_RST_N, WDI_AUX
+bringup_en           parts= 15  structured=  0  free= 0  UNGATED= 15  (no contract)
+    UNGATED C1     -> C4001    100n                   nets: +3V3_SC, GND
+    UNGATED C2     -> C4002    100n                   nets: +3V3_SC, GND
+    UNGATED C3     -> C4003    100n                   nets: +3V3_SC, GND
+    UNGATED R1     -> R4001    100k                   nets: BU_DIP_5V0, GND
+    UNGATED R2     -> R4002    100k                   nets: +3V3_SC, STM32_RAIL_EN_5V0
+    UNGATED R3     -> R4003    100k                   nets: BU_DIP_3V3, GND
+    UNGATED R4     -> R4004    100k                   nets: +3V3_SC, STM32_RAIL_EN_3V3
+    UNGATED R5     -> R4005    100k                   nets: BU_DIP_1V8, GND
+    UNGATED R6     -> R4006    100k                   nets: +3V3_SC, STM32_RAIL_EN_1V8
+    UNGATED TP1    -> TP4001   EN_5V0                 nets: EN_5V0
+    UNGATED TP2    -> TP4002   EN_3V3                 nets: EN_3V3
+    UNGATED TP3    -> TP4003   EN_1V8                 nets: EN_1V8
+    UNGATED U1     -> U4001    SN74LVC1G08            nets: +3V3_SC, BU_DIP_5V0, EN_5V0, GND, STM32_RAIL_EN_5V0
+    UNGATED U2     -> U4002    SN74LVC1G08            nets: +3V3_SC, BU_DIP_3V3, EN_3V3, GND, STM32_RAIL_EN_3V3
+    UNGATED U3     -> U4003    SN74LVC1G08            nets: +3V3_SC, BU_DIP_1V8, EN_1V8, GND, STM32_RAIL_EN_1V8
+bringup_en_modules   parts= 54  structured=  0  free= 0  UNGATED= 54  (no contract)
+    UNGATED C1     -> C5001    100n                   nets: +3V3_SC, GND
+    UNGATED C2     -> C5002    100n                   nets: +3V3_SC, GND
+    UNGATED C3     -> C5003    100n                   nets: +3V3_SC, GND
+    UNGATED C4     -> C5004    100n                   nets: +3V3_SC, GND
+    UNGATED C5     -> C5005    100n                   nets: +3V3_SC, GND
+    UNGATED C6     -> C5006    100n                   nets: +3V3_SC, GND
+    UNGATED C7     -> C5007    100n                   nets: +3V3_SC, GND
+    UNGATED C8     -> C5008    100n                   nets: +3V3_SC, GND
+    UNGATED C9     -> C5009    100n                   nets: +3V3_SC, GND
+    UNGATED C10    -> C5010    100n                   nets: +3V3_SC, GND
+    UNGATED C11    -> C5011    100n                   nets: +3V3_SC, GND
+    UNGATED R1     -> R5001    100k                   nets: BU_DIP_HDMI_TX, GND
+    UNGATED R2     -> R5002    100k                   nets: +3V3_SC, BU_OVR_HDMI_TX
+    UNGATED R3     -> R5003    100k                   nets: BU_DIP_HDMI_RX, GND
+    UNGATED R4     -> R5004    100k                   nets: +3V3_SC, BU_OVR_HDMI_RX
+    UNGATED R5     -> R5005    100k                   nets: BU_DIP_LCD, GND
+    UNGATED R6     -> R5006    100k                   nets: +3V3_SC, BU_OVR_LCD
+    UNGATED R7     -> R5007    100k                   nets: BU_DIP_CAM, GND
+    UNGATED R8     -> R5008    100k                   nets: +3V3_SC, BU_OVR_CAM
+    UNGATED R9     -> R5009    100k                   nets: BU_DIP_SD, GND
+    UNGATED R10    -> R5010    100k                   nets: +3V3_SC, BU_OVR_SD
+    UNGATED R11    -> R5011    100k                   nets: BU_DIP_USB, GND
+    UNGATED R12    -> R5012    100k                   nets: +3V3_SC, BU_OVR_USB
+    UNGATED R13    -> R5013    100k                   nets: BU_DIP_PMOD, GND
+    UNGATED R14    -> R5014    100k                   nets: +3V3_SC, BU_OVR_PMOD
+    UNGATED R15    -> R5015    100k                   nets: BU_DIP_USER_LED, GND
+    UNGATED R16    -> R5016    100k                   nets: +3V3_SC, BU_OVR_USER_LED
+    UNGATED R17    -> R5017    100k                   nets: BU_DIP_SPARE, GND
+    UNGATED R18    -> R5018    100k                   nets: BU_DIP_HDMI_TX_5V, GND
+    UNGATED R19    -> R5019    100k                   nets: +3V3_SC, BU_OVR_HDMI_TX_5V
+    UNGATED R20    -> R5020    100k                   nets: BU_DIP_LCD_5V, GND
+    UNGATED R21    -> R5021    100k                   nets: +3V3_SC, BU_OVR_LCD_5V
+    UNGATED TP1    -> TP5001   EN_HDMI_TX             nets: EN_HDMI_TX
+    UNGATED TP2    -> TP5002   EN_HDMI_RX             nets: EN_HDMI_RX
+    UNGATED TP3    -> TP5003   EN_LCD                 nets: EN_LCD
+    UNGATED TP4    -> TP5004   EN_CAM                 nets: EN_CAM
+    UNGATED TP5    -> TP5005   EN_SD                  nets: EN_SD
+    UNGATED TP6    -> TP5006   EN_USB                 nets: EN_USB
+    UNGATED TP7    -> TP5007   EN_PMOD                nets: EN_PMOD
+    UNGATED TP8    -> TP5008   EN_USER_LED            nets: EN_USER_LED
+    UNGATED TP9    -> TP5009   EN_LCD_BL              nets: EN_LCD_BL
+    UNGATED TP10   -> TP5010   EN_HDMI_TX_5V          nets: EN_HDMI_TX_5V
+    UNGATED TP11   -> TP5011   EN_LCD_5V              nets: EN_LCD_5V
+    UNGATED U1     -> U5001    SN74LVC1G08            nets: +3V3_SC, BU_DIP_HDMI_TX, BU_OVR_HDMI_TX, EN_HDMI_TX, GND
+    UNGATED U2     -> U5002    SN74LVC1G08            nets: +3V3_SC, BU_DIP_HDMI_RX, BU_OVR_HDMI_RX, EN_HDMI_RX, GND
+    UNGATED U3     -> U5003    SN74LVC1G08            nets: +3V3_SC, BU_DIP_LCD, BU_OVR_LCD, EN_LCD, GND
+    UNGATED U4     -> U5004    SN74LVC1G08            nets: +3V3_SC, BU_DIP_CAM, BU_OVR_CAM, EN_CAM, GND
+    UNGATED U5     -> U5005    SN74LVC1G08            nets: +3V3_SC, BU_DIP_SD, BU_OVR_SD, EN_SD, GND
+    UNGATED U6     -> U5006    SN74LVC1G08            nets: +3V3_SC, BU_DIP_USB, BU_OVR_USB, EN_USB, GND
+    UNGATED U7     -> U5007    SN74LVC1G08            nets: +3V3_SC, BU_DIP_PMOD, BU_OVR_PMOD, EN_PMOD, GND
+    UNGATED U8     -> U5008    SN74LVC1G08            nets: +3V3_SC, BU_DIP_USER_LED, BU_OVR_USER_LED, EN_USER_LED, GND
+    UNGATED U9     -> U5009    SN74LVC1G08            nets: +3V3_SC, BU_DIP_SPARE, BU_OVR_LCD_BL, EN_LCD_BL, GND
+    UNGATED U10    -> U5010    SN74LVC1G08            nets: +3V3_SC, BU_DIP_HDMI_TX_5V, BU_OVR_HDMI_TX_5V, EN_HDMI_TX_5V, GND
+    UNGATED U11    -> U5011    SN74LVC1G08            nets: +3V3_SC, BU_DIP_LCD_5V, BU_OVR_LCD_5V, EN_LCD_5V, GND
+bringup_modules      parts= 71  structured=  0  free= 0  UNGATED= 71  (no contract)
+    UNGATED C1     -> C6001    100n                   nets: +3V3, GND
+    UNGATED C2     -> C6002    100n                   nets: +3V3_HDMI_TX, GND
+    UNGATED C3     -> C6003    100n                   nets: +3V3, GND
+    UNGATED C4     -> C6004    100n                   nets: +3V3_HDMI_RX, GND
+    UNGATED C5     -> C6005    100n                   nets: +3V3, GND
+    UNGATED C6     -> C6006    100n                   nets: +3V3_LCD, GND
+    UNGATED C7     -> C6007    100n                   nets: +3V3, GND
+    UNGATED C8     -> C6008    100n                   nets: +3V3_CAM, GND
+    UNGATED C9     -> C6009    100n                   nets: +3V3, GND
+    UNGATED C10    -> C6010    100n                   nets: +3V3_SD, GND
+    UNGATED C11    -> C6011    100n                   nets: +5V, GND
+    UNGATED C12    -> C6012    100n                   nets: +5V_USB, GND
+    UNGATED C13    -> C6013    100n                   nets: +3V3, GND
+    UNGATED C14    -> C6014    100n                   nets: +3V3_PMOD, GND
+    UNGATED C15    -> C6015    100n                   nets: +3V3, GND
+    UNGATED C16    -> C6016    100n                   nets: +3V3_USER_LED, GND
+    UNGATED C17    -> C6017    100n                   nets: +5V, GND
+    UNGATED C18    -> C6018    100n                   nets: +5V_HDMI_TX, GND
+    UNGATED C19    -> C6019    100n                   nets: +5V, GND
+    UNGATED C20    -> C6020    100n                   nets: +5V_LCD, GND
+    UNGATED D1     -> D6001    red                    nets: +3V3_HDMI_TX, BU_PG_HDMI_TX
+    UNGATED D2     -> D6002    red                    nets: +3V3_HDMI_RX, BU_PG_HDMI_RX
+    UNGATED D3     -> D6003    red                    nets: +3V3_LCD, BU_PG_LCD
+    UNGATED D4     -> D6004    red                    nets: +3V3_CAM, BU_PG_CAM
+    UNGATED D5     -> D6005    red                    nets: +3V3_SD, BU_PG_SD
+    UNGATED D6     -> D6006    red                    nets: +5V_USB, BU_PG_USB
+    UNGATED D7     -> D6007    red                    nets: +3V3_PMOD, BU_PG_PMOD
+    UNGATED D8     -> D6008    red                    nets: +3V3_USER_LED, BU_PG_USER_LED
+    UNGATED D9     -> D6009    red                    nets: +5V_HDMI_TX, BU_PG_HDMI_TX_5V
+    UNGATED D10    -> D6010    red                    nets: +5V_LCD, BU_PG_LCD_5V
+    UNGATED R1     -> R6001    13k                    nets: BU_ISET_HDMI_TX, GND
+    UNGATED R2     -> R6002    330R                   nets: BU_PG_HDMI_TX, GND
+    UNGATED R3     -> R6003    13k                    nets: BU_ISET_HDMI_RX, GND
+    UNGATED R4     -> R6004    330R                   nets: BU_PG_HDMI_RX, GND
+    UNGATED R5     -> R6005    6.8k                   nets: BU_ISET_LCD, GND
+    UNGATED R6     -> R6006    330R                   nets: BU_PG_LCD, GND
+    UNGATED R7     -> R6007    13k                    nets: BU_ISET_CAM, GND
+    UNGATED R8     -> R6008    330R                   nets: BU_PG_CAM, GND
+    UNGATED R9     -> R6009    6.8k                   nets: BU_ISET_SD, GND
+    UNGATED R10    -> R6010    330R                   nets: BU_PG_SD, GND
+    UNGATED R11    -> R6011    6.8k                   nets: BU_ISET_USB, GND
+    UNGATED R12    -> R6012    1k                     nets: BU_PG_USB, GND
+    UNGATED R13    -> R6013    13k                    nets: BU_ISET_PMOD, GND
+    UNGATED R14    -> R6014    330R                   nets: BU_PG_PMOD, GND
+    UNGATED R15    -> R6015    13k                    nets: BU_ISET_USER_LED, GND
+    UNGATED R16    -> R6016    330R                   nets: BU_PG_USER_LED, GND
+    UNGATED R17    -> R6017    13k                    nets: BU_ISET_HDMI_TX_5V, GND
+    UNGATED R18    -> R6018    1k                     nets: BU_PG_HDMI_TX_5V, GND
+    UNGATED R19    -> R6019    6.8k                   nets: BU_ISET_LCD_5V, GND
+    UNGATED R20    -> R6020    1k                     nets: BU_PG_LCD_5V, GND
+    UNGATED R21    -> R6021    10k                    nets: +3V3_SD, GND
+    UNGATED TP1    -> TP6001   +3V3_HDMI_TX           nets: +3V3_HDMI_TX
+    UNGATED TP2    -> TP6002   +3V3_HDMI_RX           nets: +3V3_HDMI_RX
+    UNGATED TP3    -> TP6003   +3V3_LCD               nets: +3V3_LCD
+    UNGATED TP4    -> TP6004   +3V3_CAM               nets: +3V3_CAM
+    UNGATED TP5    -> TP6005   +3V3_SD                nets: +3V3_SD
+    UNGATED TP6    -> TP6006   +5V_USB                nets: +5V_USB
+    UNGATED TP7    -> TP6007   +3V3_PMOD              nets: +3V3_PMOD
+    UNGATED TP8    -> TP6008   +3V3_USER_LED          nets: +3V3_USER_LED
+    UNGATED TP9    -> TP6009   +5V_HDMI_TX            nets: +5V_HDMI_TX
+    UNGATED TP10   -> TP6010   +5V_LCD                nets: +5V_LCD
+    UNGATED U1     -> U6001    SY6280AAC              nets: +3V3, +3V3_HDMI_TX, BU_ISET_HDMI_TX, EN_HDMI_TX, GND
+    UNGATED U2     -> U6002    SY6280AAC              nets: +3V3, +3V3_HDMI_RX, BU_ISET_HDMI_RX, EN_HDMI_RX, GND
+    UNGATED U3     -> U6003    SY6280AAC              nets: +3V3, +3V3_LCD, BU_ISET_LCD, EN_LCD, GND
+    UNGATED U4     -> U6004    SY6280AAC              nets: +3V3, +3V3_CAM, BU_ISET_CAM, EN_CAM, GND
+    UNGATED U5     -> U6005    SY6280AAC              nets: +3V3, +3V3_SD, BU_ISET_SD, EN_SD, GND
+    UNGATED U6     -> U6006    SY6280AAC              nets: +5V, +5V_USB, BU_ISET_USB, EN_USB, GND
+    UNGATED U7     -> U6007    SY6280AAC              nets: +3V3, +3V3_PMOD, BU_ISET_PMOD, EN_PMOD, GND
+    UNGATED U8     -> U6008    SY6280AAC              nets: +3V3, +3V3_USER_LED, BU_ISET_USER_LED, EN_USER_LED, GND
+    UNGATED U9     -> U6009    SY6280AAC              nets: +5V, +5V_HDMI_TX, BU_ISET_HDMI_TX_5V, EN_HDMI_TX_5V, GND
+    UNGATED U10    -> U6010    SY6280AAC              nets: +5V, +5V_LCD, BU_ISET_LCD_5V, EN_LCD_5V, GND
+bringup_rails        parts= 23  structured=  0  free= 0  UNGATED= 23  (no contract)
+    UNGATED C1     -> C7001    100n                   nets: +3V3_SC, GND
+    UNGATED C2     -> C7002    100n                   nets: GND, PL_BTN0
+    UNGATED C3     -> C7003    100n                   nets: GND, PL_BTN1
+    UNGATED C4     -> C7004    100n                   nets: GND, STM32_NRST
+    UNGATED R1     -> R7001    100k                   nets: BU_OVR_LCD_BL, GND
+    UNGATED R2     -> R7002    100k                   nets: BU_P16, GND
+    UNGATED R3     -> R7003    100k                   nets: BU_P17, GND
+    UNGATED R4     -> R7004    4k7                    nets: +3V3_SC, STM32_I2C2_SCL
+    UNGATED R5     -> R7005    4k7                    nets: +3V3_SC, STM32_I2C2_SDA
+    UNGATED R6     -> R7006    10k                    nets: +3V3_SC, SC_INT_N
+    UNGATED R7     -> R7007    10k                    nets: +3V3, PL_BTN0
+    UNGATED R8     -> R7008    10k                    nets: +3V3, PL_BTN1
+    UNGATED R9     -> R7009    10k                    nets: GND, PUDC_34
+    UNGATED SW1    -> SW7001   DSHP04TSGER            nets: +3V3_SC, BU_DIP_1V8, BU_DIP_3V3, BU_DIP_5V0, BU_DIP_USER_LED
+    UNGATED SW2    -> SW7002   DSHP08TSGER            nets: +3V3_SC, BU_DIP_CAM, BU_DIP_HDMI_RX, BU_DIP_HDMI_TX, BU_DIP_LCD, BU_DIP_PMOD (+3 more)
+    UNGATED SW3    -> SW7003   TS-1187A-B-A-B         nets: GND, PL_BTN0
+    UNGATED SW4    -> SW7004   TS-1187A-B-A-B         nets: GND, PL_BTN1
+    UNGATED SW5    -> SW7005   TS-1187A-B-A-B         nets: GND, STM32_NRST
+    UNGATED SW6    -> SW7006   DSHP04TSGER            nets: +3V3_SC, BU_DIP_HDMI_TX_5V, BU_DIP_LCD_5V
+    UNGATED TP1    -> TP7001   +3V3_SC                nets: +3V3_SC
+    UNGATED TP2    -> TP7002   STM32_I2C2_SDA         nets: STM32_I2C2_SDA
+    UNGATED TP3    -> TP7003   STM32_I2C2_SCL         nets: STM32_I2C2_SCL
+    UNGATED U1     -> U7001    TCA9535PWR             nets: +3V3_SC, BU_OVR_CAM, BU_OVR_HDMI_RX, BU_OVR_HDMI_TX, BU_OVR_HDMI_TX_5V, BU_OVR_LCD (+15 more)
 camera               parts= 13  structured= 10  free= 0  UNGATED=  3
     UNGATED TP1    -> TP8001   CAM_SCL                nets: CAM_SCL
     UNGATED TP2    -> TP8002   CAM_SDA                nets: CAM_SDA
     UNGATED TP3    -> TP8003   CAM_EN                 nets: CAM_EN
+debug_boot           parts= 10  structured=  0  free= 0  UNGATED= 10  (no contract)
+    UNGATED J1     -> J9001    878311420              nets: +3V3, GND, ZYNQ_TCK, ZYNQ_TDI, ZYNQ_TDO, ZYNQ_TMS
+    UNGATED J2     -> J9002    HX_JN1.27-2x5          nets: +3V3_SC, GND, STM32_GPIO5, STM32_GPIO6, STM32_NRST
+    UNGATED R1     -> R9001    4k7                    nets: +3V3, ZYNQ_TMS
+    UNGATED R2     -> R9002    4k7                    nets: +3V3, ZYNQ_TDI
+    UNGATED R3     -> R9003    100R                   nets: +3V3_SC, BOOT0_SET
+    UNGATED R4     -> R9004    10k                    nets: +3V3_SC, STM32_GPIO7
+    UNGATED R5     -> R9005    10k                    nets: +3V3_SC, STM32_GPIO8
+    UNGATED R6     -> R9006    10k                    nets: +3V3_SC, BOOT_SPARE
+    UNGATED SW1    -> SW9001   DIP-4                  nets: BOOT0_SET, BOOT_SPARE, GND, STM32_BOOT0, STM32_GPIO7, STM32_GPIO8
+    UNGATED SW2    -> SW9002   RESET                  nets: GND, STM32_NRST
 ethernet             parts= 10  structured= 10  free= 0  UNGATED=  0
 fmc                  parts=  8  structured=  7  free= 0  UNGATED=  1
     UNGATED TP1    -> TP11001  +2V5_VADJ              nets: +2V5_VADJ
@@ -19,6 +226,11 @@ lcd                  parts= 20  structured= 17  free= 0  UNGATED=  3
     UNGATED TP1    -> TP15001  +5V_LCD                nets: +5V_LCD
     UNGATED TP2    -> TP15002  LCD_CTP_SDA            nets: LCD_CTP_SDA
     UNGATED TP3    -> TP15003  LCD_CTP_SCL            nets: LCD_CTP_SCL
+mechanical           parts=  4  structured=  0  free= 0  UNGATED=  4  (no contract)
+    UNGATED H1     -> H34001   MountingHole_M3        nets: CHASSIS_GND
+    UNGATED H2     -> H34002   MountingHole_M3        nets: CHASSIS_GND
+    UNGATED H3     -> H34003   MountingHole_M3        nets: CHASSIS_GND
+    UNGATED H4     -> H34004   MountingHole_M3        nets: CHASSIS_GND
 microsd              parts= 15  structured= 13  free= 0  UNGATED=  2
     UNGATED TP1    -> TP16001  SDIO_CMD               nets: SDIO_CMD
     UNGATED TP2    -> TP16002  SDIO_CLK               nets: SDIO_CLK
@@ -47,10 +259,39 @@ power                parts= 51  structured= 38  free= 0  UNGATED= 13
     UNGATED TP3    -> TP20003  +1V8                   nets: +1V8
     UNGATED TP4    -> TP20004  GND                    nets: GND
 power_mon            parts= 10  structured= 10  free= 0  UNGATED=  0
-power_som            parts= 23  structured= 20  free= 0  UNGATED=  3
+power_som            parts= 20  structured= 17  free= 0  UNGATED=  3
     UNGATED D4     -> D22004   red                    nets: +5V_SOM, PG_5V_SOM
     UNGATED R16    -> R22016   1k                     nets: GND, PG_5V_SOM
     UNGATED TP1    -> TP22001  +5V_SOM                nets: +5V_SOM
+rj45_connector       parts=  3  structured=  0  free= 0  UNGATED=  3  (no contract)
+    UNGATED J1     -> J23001   KH-5224-8P8C-D         nets: CHASSIS_GND, ETH_LINE_MDI_0_N, ETH_LINE_MDI_0_P, ETH_LINE_MDI_1_N, ETH_LINE_MDI_1_P, ETH_LINE_MDI_2_N (+6 more)
+    UNGATED R1     -> R23001   330R                   nets: +3V3, RJ45_LED_L
+    UNGATED R2     -> R23002   330R                   nets: +3V3, RJ45_LED_R
+som_decoupling       parts= 18  structured=  0  free= 0  UNGATED= 18  (no contract)
+    UNGATED C1     -> C35001   22u                    nets: +5V_SOM, GND
+    UNGATED C2     -> C35002   22u                    nets: +5V_SOM, GND
+    UNGATED C3     -> C35003   100n                   nets: +5V_SOM, GND
+    UNGATED C4     -> C35004   100n                   nets: +5V_SOM, GND
+    UNGATED C5     -> C35005   100n                   nets: +5V_SOM, GND
+    UNGATED C6     -> C35006   100n                   nets: +5V_SOM, GND
+    UNGATED C7     -> C35007   22u                    nets: +3V3, GND
+    UNGATED C8     -> C35008   22u                    nets: +3V3, GND
+    UNGATED C9     -> C35009   100n                   nets: +3V3, GND
+    UNGATED C10    -> C35010   100n                   nets: +3V3, GND
+    UNGATED C11    -> C35011   100n                   nets: +3V3, GND
+    UNGATED C12    -> C35012   100n                   nets: +3V3, GND
+    UNGATED C13    -> C35013   22u                    nets: +3V3_SC, GND
+    UNGATED C14    -> C35014   22u                    nets: +3V3_SC, GND
+    UNGATED C15    -> C35015   100n                   nets: +3V3_SC, GND
+    UNGATED C16    -> C35016   100n                   nets: +3V3_SC, GND
+    UNGATED C17    -> C35017   100n                   nets: +3V3_SC, GND
+    UNGATED C18    -> C35018   100n                   nets: +3V3_SC, GND
+som_j1               parts=  1  structured=  0  free= 0  UNGATED=  1  (no contract)
+    UNGATED J1     -> J24001   DF40C-100DP-0.4V(51)   nets: +3V3_SC, +5V_SOM, ETH_LED1, ETH_LED2, ETH_PHY_MDI0_N, ETH_PHY_MDI0_P (+55 more)
+som_j2               parts=  1  structured=  0  free= 0  UNGATED=  1  (no contract)
+    UNGATED J2     -> J25002   DF40C-100DP-0.4V(51)   nets: +3V3, DBG_UART_RXD, DBG_UART_TXD, ESC_BUF_OE_N, ESC_FAULT_N, ESC_PWM_IN0 (+68 more)
+som_j3               parts=  1  structured=  0  free= 0  UNGATED=  1  (no contract)
+    UNGATED J3     -> J26003   DF40C-100DP-0.4V(51)   nets: +2V5_VADJ, +3V3, CAM_CLK_N, CAM_CLK_P, CAM_D0_N, CAM_D0_P (+71 more)
 uart_bridge          parts= 10  structured=  8  free= 0  UNGATED=  2
     UNGATED TP1    -> TP27001  ZYNQ_PS_UART0_TXD      nets: ZYNQ_PS_UART0_TXD
     UNGATED TP2    -> TP27002  ZYNQ_PS_UART0_RXD      nets: ZYNQ_PS_UART0_RXD
@@ -65,3 +306,21 @@ usb_pd               parts=  6  structured=  6  free= 0  UNGATED=  0
 usb_uart_connector   parts=  5  structured=  5  free= 0  UNGATED=  0
 usbc_otg             parts= 12  structured= 11  free= 0  UNGATED=  1
     UNGATED TP1    -> TP32001  VBUS_OUT_EN            nets: VBUS_OUT_EN
+user_io              parts= 17  structured=  0  free= 0  UNGATED= 17  (no contract)
+    UNGATED C1     -> C33001   100n                   nets: +3V3_USER_LED, GND
+    UNGATED D1     -> D33001   red                    nets: +3V3_USER_LED, USER_LED1_K
+    UNGATED D2     -> D33002   green                  nets: +3V3_USER_LED, USER_LED2_K
+    UNGATED D3     -> D33003   blue                   nets: +3V3_USER_LED, USER_LED3_K
+    UNGATED D4     -> D33004   white                  nets: +3V3_USER_LED, USER_LED4_K
+    UNGATED R1     -> R33001   1k                     nets: IO_25_13, USER_LED1_K
+    UNGATED R2     -> R33002   200R                   nets: IO_L6_P_13, USER_LED2_K
+    UNGATED R3     -> R33003   200R                   nets: IO_L24_P_13, USER_LED3_K
+    UNGATED R4     -> R33004   200R                   nets: IO_L24_N_13, USER_LED4_K
+    UNGATED R5     -> R33005   10k                    nets: +3V3, IO_L15_P_13
+    UNGATED R6     -> R33006   10k                    nets: +3V3, IO_L19_P_13
+    UNGATED R7     -> R33007   10k                    nets: +3V3, IO_L21_P_13
+    UNGATED R8     -> R33008   10k                    nets: +3V3, IO_L22_P_13
+    UNGATED SW1    -> SW33001  USER                   nets: GND, IO_L15_P_13
+    UNGATED SW2    -> SW33002  USER                   nets: GND, IO_L19_P_13
+    UNGATED SW3    -> SW33003  USER                   nets: GND, IO_L21_P_13
+    UNGATED SW4    -> SW33004  USER                   nets: GND, IO_L22_P_13

@@ -1,5 +1,4 @@
-REPORT-ONLY: the SoM pinout is FIXED — v1's contact-level verdict is a design fact of the mated interface, remediated carrier-side by the RETURN-STITCH copper (see return_stitch.txt). Nothing claims 'return path fixed'.
-
+REPORT-ONLY: fixed SoM interface; remediation judged by return_stitch.
 RETURN-PATH GATE (HS pairs): FAIL (K=2 contact steps)
   HS pairs crossing DF40s : 69
   HS-pair contacts        : 138

@@ -1,6 +1,6 @@
 # Assembly order — devkit_mini
 
-Board 100 x 100 mm. 158 placed parts (101 top / 57 bottom); 5 fiducials are bare-copper marks, excluded from every phase and step.
+Board 98 x 98 mm. 155 placed parts (100 top / 55 bottom); 5 fiducials are bare-copper marks, excluded from every phase and step.
 Section A is the staged hand-assembly + bring-up order; section B is the PCBA process order. Every part appears in exactly one phase and exactly one step.
 
 ## A. Incremental bring-up order
@@ -10,7 +10,7 @@ Section A is the staged hand-assembly + bring-up order; section B is the PCBA pr
 | 1 | power entry (pd_input) | 13 | verify +VBUS_IN at TP3001; verify +VIN at TP3002 |
 | 2 | power_mon | 13 | — |
 | 3 | power | 54 | verify +5V at TP4001; verify +3V3 at TP4002; verify +1V8 at TP4003 |
-| 4 | power_som | 23 | verify +5V_SOM at TP6001 |
+| 4 | power_som | 20 | verify +5V_SOM at TP6001 |
 | 5 | SoM interface (som_decoupling, som_j1, som_j2, som_j3) | 21 | — |
 | 6 | SoM module mate | 0 | boot/debug via debug_boot: J1001 (JTAG), J1002 (SWD), SW1001 (BOOT: DFU BSEL BSEL), SW1002 (RST) |
 | 7 | debug_boot | 15 | — |
@@ -136,7 +136,7 @@ CHECKPOINT: verify +1V8 at TP4003
 
 ![phase 4](../renders/assembly/phase_04_power_som.png)
 
-23 parts (5 top / 18 bottom)
+20 parts (4 top / 16 bottom)
 
 | ref | value | package | sheet |
 |---|---|---|---|
@@ -146,15 +146,12 @@ CHECKPOINT: verify +1V8 at TP4003
 | C6017 | 100n | C_0603_1608Metric | power_som |
 | C6018 | 22u | C_0805_2012Metric | power_som |
 | C6019 | 22u | C_0805_2012Metric | power_som |
-| C6020 | 100n | C_0603_1608Metric | power_som |
 | C6021 | 22p | C_0603_1608Metric | power_som |
 | C6022 | 1u | C_0603_1608Metric | power_som |
 | C6023 | 1u | C_0603_1608Metric | power_som |
 | C6025 | 100n | C_0603_1608Metric | power_som |
 | D6004 | red | LED_0603_1608Metric | power_som |
-| D6005 | MMSZ5231B | D_SOD-123 | power_som |
 | L6003 | 10uH | SWPA8040S100MT | power_som |
-| R6012 | 10k | R_0603_1608Metric | power_som |
 | R6014 | 47.5k | R_0603_1608Metric | power_som |
 | R6015 | 13k | R_0603_1608Metric | power_som |
 | R6016 | 1k | R_0603_1608Metric | power_som |
@@ -280,7 +277,7 @@ CHECKPOINT: boot/debug via debug_boot: J1001 (JTAG), J1002 (SWD), SW1001 (BOOT: 
 
 ![step 1](../renders/assembly/step_1_bottom_smd.png)
 
-57 parts (0 top / 57 bottom)
+55 parts (0 top / 55 bottom)
 
 | ref | value | package | sheet |
 |---|---|---|---|
@@ -293,7 +290,6 @@ CHECKPOINT: boot/debug via debug_boot: J1001 (JTAG), J1002 (SWD), SW1001 (BOOT: 
 | C6017 | 100n | C_0603_1608Metric | power_som |
 | C6018 | 22u | C_0805_2012Metric | power_som |
 | C6019 | 22u | C_0805_2012Metric | power_som |
-| C6020 | 100n | C_0603_1608Metric | power_som |
 | C6021 | 22p | C_0603_1608Metric | power_som |
 | C6022 | 1u | C_0603_1608Metric | power_som |
 | C6023 | 1u | C_0603_1608Metric | power_som |
@@ -330,7 +326,6 @@ CHECKPOINT: boot/debug via debug_boot: J1001 (JTAG), J1002 (SWD), SW1001 (BOOT: 
 | R4008 | 100k | R_0603_1608Metric | power |
 | R4009 | 330R | R_0603_1608Metric | power |
 | R5001 | 10k | R_0603_1608Metric | power_mon |
-| R6012 | 10k | R_0603_1608Metric | power_som |
 | R6014 | 47.5k | R_0603_1608Metric | power_som |
 | R6015 | 13k | R_0603_1608Metric | power_som |
 | R6016 | 1k | R_0603_1608Metric | power_som |
@@ -346,7 +341,7 @@ CHECKPOINT: boot/debug via debug_boot: J1001 (JTAG), J1002 (SWD), SW1001 (BOOT: 
 
 ![step 2](../renders/assembly/step_2_top_smd.png)
 
-90 parts (90 top / 0 bottom)
+89 parts (89 top / 0 bottom)
 
 | ref | value | package | sheet |
 |---|---|---|---|
@@ -386,7 +381,6 @@ CHECKPOINT: boot/debug via debug_boot: J1001 (JTAG), J1002 (SWD), SW1001 (BOOT: 
 | D4002 | red | LED_0603_1608Metric | power |
 | D4003 | red | LED_0603_1608Metric | power |
 | D6004 | red | LED_0603_1608Metric | power_som |
-| D6005 | MMSZ5231B | D_SOD-123 | power_som |
 | L4001 | 10uH | SWPA8040S100MT | power |
 | L4002 | 10uH | SWPA8040S100MT | power |
 | L6003 | 10uH | SWPA8040S100MT | power_som |
@@ -441,7 +435,7 @@ CHECKPOINT: boot/debug via debug_boot: J1001 (JTAG), J1002 (SWD), SW1001 (BOOT: 
 | U11001 | CP2102N-A02 | CP2102N-A02-GQFN24R | uart_bridge |
 | U12001 | USBLC6-2SC6 | USBLC6-2SC6 | usb_uart_connector |
 
-NOTES: diode polarity (D3001, D4001, D4002, D4003, D6004, D6005): cathode per silkscreen
+NOTES: diode polarity (D3001, D4001, D4002, D4003, D6004): cathode per silkscreen
 NOTES: pin-1 orientation (11 parts, U/Q refs): dot per silkscreen
 
 ### Step 3 — Through-hole (short-to-tall)

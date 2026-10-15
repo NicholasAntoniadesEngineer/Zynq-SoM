@@ -1,0 +1,15 @@
+PLACEMENT REQUIREMENTS board_aux: UNVERIFIED
+U1.5 -> C1.1 planar_pad_box_gap_mm=3.30697 sides=top/top UNVERIFIED proximity
+U1.1 -> C2.1 planar_pad_box_gap_mm=6.81 sides=top/top UNVERIFIED proximity
+U1.1 -> C3.1 planar_pad_box_gap_mm=11.3052 sides=top/bottom UNVERIFIED proximity
+U2.2 -> C4.1 planar_pad_box_gap_mm=3.3352 sides=top/top UNVERIFIED proximity
+U2.7 -> C5.1 planar_pad_box_gap_mm=5.0562 sides=top/top UNVERIFIED proximity
+UNVERIFIED Qualitative near-pin placement: no reviewed numeric maximum; measurement is not acceptance.
+UNVERIFIED Actuation/access envelope and assembly obstruction clearance unverified.
+UNVERIFIED No new movement/side permission; preserve all existing placement gates and restrictions.
+PLACEMENT REQUIREMENTS bringup_rails: UNVERIFIED
+U1.24 -> C1.1 planar_pad_box_gap_mm=6.8006 sides=bottom/bottom UNVERIFIED proximity
+UNVERIFIED Qualitative near-pin placement: no reviewed numeric maximum; measurement is not acceptance.
+UNVERIFIED Actuation/access envelope and assembly obstruction clearance unverified.
+UNVERIFIED No new movement/side permission; preserve all existing placement gates and restrictions.
+
