@@ -6,6 +6,17 @@
 #include "schgen/model3d.hpp"
 
 namespace schgen::board_pipeline_detail {
+void golden_stage(Context& c){
+    c.attempt("golden",[&]{
+        if(c.options.no_render){
+            const std::string reason="--no-render: no current-run visual comparison; existing images and baseline left unchanged";
+            c.report("golden.txt","SKIP: "+reason);
+            c.status("golden",BoardGateStatus::skipped,reason);return;
+        }
+        const auto r=check_board_golden(c.renders,c.options.bless,c.paths.project_root/"renders/golden.json");
+        c.report("golden.txt",r.summary());c.gate("golden",r.match,r.summary());
+    });
+}
 void document_stages(Context& c){
     std::optional<SomZynq> live;std::optional<XdcInput> xi;std::optional<XdcOutput> xo;
     c.attempt("xdc",[&]{live=extract_som_zynq(c.paths.som_schematic,"U2",{"J1","J2","J3"},c.options.extraction);
@@ -47,7 +58,7 @@ void document_stages(Context& c){
         if(c.xdc)in.device=c.xdc->device;run_manufacturing_manifest(in,c.out,c.out/"manifest.json");
         c.manifest_input=std::move(in);
         c.gate("manifest",true,"artifacts hashed after SI; final reports rehashed at publication");});
-    c.attempt("golden",[&]{const auto r=check_board_golden(c.renders,c.options.bless,c.paths.project_root/"renders/golden.json");c.report("golden.txt",r.summary());c.gate("golden",r.match,r.summary());});
+    golden_stage(c);
     c.attempt("contract_coverage_lint",[&]{
         if(!c.pcb)throw ProjectError("authored PCB contracts unavailable for coverage lint");
         const auto policy=pcb_placement_gate_policy(c.pcb->inputs);

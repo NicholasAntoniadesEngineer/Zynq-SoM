@@ -116,6 +116,25 @@ void coverage(){
 }
 struct Temp{fs::path path;Temp(){auto s=(fs::temp_directory_path()/"schgen_pipeline_contract_XXXXXX").string();if(!::mkdtemp(s.data()))throw std::runtime_error("temp");path=s;}~Temp(){std::error_code e;fs::remove_all(path,e);}};
 void golden(const fs::path& root){
+    {
+        Temp empty;publish_text(empty.path/"golden.json","{}\n");
+        const auto result=check_board_golden(empty.path);
+        require(!result.match&&!result.blessed&&!result.drift.empty(),"empty images and empty baseline cannot pass");
+        require(result.summary().find("UNAVAILABLE")!=std::string::npos,"empty comparison explains missing evidence rather than suggesting blessing");
+        rejects([&]{check_board_golden(empty.path,true);},"empty images cannot be blessed");
+        require(read(empty.path/"golden.json")=="{}\n","empty blessing preserves baseline");
+        ProjectPaths paths;paths.repository_root=root;paths.project_root=empty.path/"source";
+        BoardPipelineOptions options;options.output_root=empty.path/"output";options.no_render=true;options.bless=true;
+        Context c(paths,options);
+        publish_text(c.renders/"stale.png","not a current render");
+        publish_text(c.renders/"golden.json","existing baseline");
+        golden_stage(c);
+        require(c.result.gates.size()==1&&c.result.gates.front().name=="golden"&&
+                c.result.gates.front().status==BoardGateStatus::skipped,"no-render reports explicit skip even with stale files and bless");
+        require(read(c.renders/"golden.json")=="existing baseline"&&read(c.renders/"stale.png")=="not a current render",
+                "no-render never blesses or alters old imagery");
+        require(read(c.reports/"golden.txt").find("SKIP:")==0,"golden report discloses missing current evidence");
+    }
     Temp tmp;const auto reference=parse_json_file((root/"native/tests/data/board_pipeline/golden_reference.json").string());
     for(const auto& sample:field(reference,"cases").array_value){
         const auto w=static_cast<unsigned>(field(sample,"w").number_value),h=static_cast<unsigned>(field(sample,"h").number_value);

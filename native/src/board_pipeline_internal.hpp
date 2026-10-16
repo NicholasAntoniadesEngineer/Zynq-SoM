@@ -73,6 +73,7 @@ void schematic_stage(Context&);
 void electrical_stages(Context&);
 void pcb_stages(Context&);
 void document_stages(Context&);
+void golden_stage(Context&);
 void audit_stages(Context&);
 void publish_final_reports(Context&);
 } // namespace schgen::board_pipeline_detail
