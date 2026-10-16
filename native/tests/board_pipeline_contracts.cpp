@@ -192,6 +192,40 @@ void board_search_accounting(){
     rejects([&]{check_board_fallbacks(census,source,output);},"negative search accounting rejected");
     rejects([&]{check_board_fallbacks({},tmp.path/"missing",output);},"no automatic board acceptance baseline pinning");
 }
+void final_manifest(const fs::path& root){
+    Temp tmp;ProjectPaths p;p.repository_root=root;p.project_root=tmp.path/"source";
+    BoardPipelineOptions o;o.output_root=tmp.path/"out";
+    Context c(p,o);c.manifest_input=ManufacturingManifestInput{};
+    c.gate("manifest",true,"prepared");
+    publish_text(c.reports/"gates.txt","old run");
+    run_manufacturing_manifest(*c.manifest_input,c.out,c.out/"manifest.json");
+    c.report("late_audit.txt","new evidence");c.result.timing_seconds={{"fixture",1.25}};
+    publish_final_reports(c);
+    const auto check=[&]{
+        const auto doc=parse_json_file((c.out/"manifest.json").string());bool gates=false,late=false;
+        for(const auto& a:field(doc,"artifacts").array_value){
+            const auto name=field(a,"path").string_value;
+            require(field(a,"sha256").string_value==pcb_sha256(read(c.out/name)),"final manifest hashes current artifact "+name);
+            gates|=name=="reports/gates.txt";late|=name=="reports/late_audit.txt";
+        }
+        require(gates&&late,"final manifest includes summary and late audit");
+    };
+    check();const auto first=read(c.out/"manifest.json");
+    publish_final_reports(c);require(read(c.out/"manifest.json")==first,"unchanged final publication is deterministic");
+    c.result.timing_seconds={{"fixture",2.5}};publish_final_reports(c);check();
+    require(read(c.out/"manifest.json")!=first,"changed final summary rehashed");
+    o.output_root=tmp.path/"failed";Context failed(p,o);
+    failed.manifest_input=ManufacturingManifestInput{};failed.gate("manifest",true,"prepared");
+    fs::create_directory(failed.out/"manifest.json");
+    publish_final_reports(failed);
+    const auto& last=failed.result.gates.back();
+    require(last.name=="manifest.completion"&&last.mandatory&&last.status==BoardGateStatus::failed,
+            "final manifest publication failure is mandatory");
+    require(read(failed.reports/"gates.txt").find("manifest.completion: FAIL")!=std::string::npos,
+            "final report discloses manifest publication failure");
+    require(!field(parse_json_file((failed.reports/"board_verdicts.json").string()),"board_ok").bool_value,
+            "manifest publication failure cannot publish a passing verdict");
+}
 void failed_inputs(const fs::path& root){
     Temp tmp;ProjectPaths p;p.repository_root=root;p.project_root=tmp.path/"source";p.subsystems_dir=p.project_root/"subsystems";p.sheet_index_file=p.project_root/"sheet_index.json";
     SymbolLibrary library(root);auto broken=selftest_rc_fixture();broken.nets.clear();
@@ -349,7 +383,7 @@ int main(int argc,char** argv){
         const fs::path root=argv[1];
         const auto reference=parse_json_file((root/"native/tests/data/board_pipeline/python_reference.json").string());
         cc(field(reference,"cc"));ledger();policy(reference);coverage();golden(root);isolated_ratchet();board_search_accounting();
-        failed_inputs(root);purity_precondition(root);live_electrical(root);authored_inputs(root);
+        final_manifest(root);failed_inputs(root);purity_precondition(root);live_electrical(root);authored_inputs(root);
         if(argc==3){
             if(std::string(argv[2])!="--live-kicad")throw std::runtime_error("unknown mode");
             live_schematic(root);

@@ -38,6 +38,7 @@ struct Context {
     std::optional<SpiceResult> spice;
     std::optional<FirmwareDocsInput> firmware;
     std::optional<ManufacturingXdc> xdc;
+    std::optional<ManufacturingManifestInput> manifest_input;
     NativeLedger ledger;
     NativeQuantizations quantizations;
     NativeFallbacks fallbacks;
@@ -73,4 +74,5 @@ void electrical_stages(Context&);
 void pcb_stages(Context&);
 void document_stages(Context&);
 void audit_stages(Context&);
+void publish_final_reports(Context&);
 } // namespace schgen::board_pipeline_detail
