@@ -246,6 +246,23 @@ public:
         }
         return true;
     }
+    bool full_authored_bounds_differ() {
+        // These edges depend on immutable metrics and seed/fixed poses, not
+        // search results. Compare actual emitted constraints, not term labels
+        // or similar-looking failed search counters. Count all preparation.
+        const bool old_distance=distance_envelope,old_full=full_distance_envelope;
+        distance_envelope=true;
+        const auto key=[&](bool full) {
+            full_distance_envelope=full;
+            std::vector<std::tuple<bool,std::string,std::string,std::string,double>> result;
+            for(const bool x:{true,false})for(const auto& e:extra(x))
+                result.emplace_back(x,e.kind,e.edge.src,e.edge.dst,e.edge.cost);
+            return result;
+        };
+        const auto guarded=key(false),authored=key(true);
+        distance_envelope=old_distance;full_distance_envelope=old_full;
+        return guarded!=authored;
+    }
 
     bool run(std::vector<FloorplanLegalizeVar>& movable,bool joint=false,bool authored_distance=false) {
         distance_envelope = joint;
@@ -989,6 +1006,11 @@ bool compose_with_bounded_retries(const FloorplanLegalizeInput& input,
         return t.kind=="near_max"&&t.bound&&*t.bound>=guard_mm;
     });
     if(!guarded)return false;
+    Composer proximity_probe(input,movable,log,counts,false,false,candidate,false);
+    if(!proximity_probe.full_authored_bounds_differ()) {
+        log.push_back("skip: full authored proximity emits identical moving constraints");
+        return false;
+    }
     log.push_back("retry: joint separation with full authored proximity bounds");
     if(input.joint_retry_started)input.joint_retry_started();
     if(Composer(input,movable,log,counts,false,false,candidate,false).run(movable,true,true))return true;

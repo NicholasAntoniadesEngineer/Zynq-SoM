@@ -94,6 +94,20 @@ int main(){try {
         int allocations=0;for(const auto& line:log)if(line.find("capacity allocation")!=std::string::npos)++allocations;
         demand(allocations==1&&starts==3&&ends==starts,"identical allocation constraints repeated a solver trial or lost work boundaries");
         demand(vars[0].x==20&&vars[0].y==20,"deduplicated failure changed seed");
+        // A guarded proximity term between fixed endpoints changes no moving
+        // constraint. It must not cause both joint solves to run a second time.
+        FloorplanTerm fixed_near;fixed_near.kind="near_max";fixed_near.subject="target";
+        fixed_near.target_raw="target";fixed_near.bound=5;fixed_near.enforced=true;
+        in.index.hard.push_back(fixed_near);
+        in.metrics["target"].pad_union={{"p",0,0,2,2}};
+        starts=ends=0;log.clear();
+        demand(!floorplan_legalize_compact(in,vars,log)&&starts==3&&ends==starts,
+               "fixed-only proximity repeated equivalent full-envelope solves");
+        in.index.hard.back().subject="source";
+        in.metrics["source"].pad_union={{"out",0,0,2,2}};
+        starts=ends=0;log.clear();
+        demand(!floorplan_legalize_compact(in,vars,log)&&starts==5&&ends==starts,
+               "distinct moving proximity bounds were incorrectly deduplicated");
     }
     {
         FloorplanLegalizeInput in;in.board_w=in.board_h=60;in.clear=.3;in.compact=true;in.joint_separation_states=64;
