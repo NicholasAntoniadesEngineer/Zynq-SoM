@@ -1,0 +1,250 @@
+{
+  "source_base": "7411ac30",
+  "source_delta": "Read-only postconstruction courtyard-union diagnostic and independent C++ tests",
+  "scope": "Final same-face courtyard unions compared with original interior block envelope areas; not clipped intersection and not reusable area. Mechanical sheet has distributed fixed parts outside its nominal block. Placement may refit final poses after reservation.",
+  "exclusions": [
+    "fanout",
+    "clearance",
+    "through-hole occupancy on opposite face",
+    "connector/mechanical access",
+    "thermal and assembly constraints"
+  ],
+  "acceptance": "Both emitted PCB hashes match the fully qualified publication. These profiling runs are not new full-board qualifications or controlled timings.",
+  "tests": [
+    "native_courtyard_area_contracts PASS: 1000 independent grid unions and transformed cases, duplicate/degenerate/invalid inputs",
+    "native_compact_profile_inputs_contracts PASS (27.97 seconds)"
+  ],
+  "carrier_command": "native/build/fast/schgen_compact_stage_profile --repo . --project carrier --compact-search on --edge-feasibility on --owned-quality-first on --owned-face-cohesion on --contract-group-face-sheet usb_jtag --contract-group-face-sheet power --contract-group-face-sheet power_som --contract-group-face-sheet power_mon --require-bottom-sheet power_mon --require-bottom-sheet bringup_modules --require-bottom-sheet bringup_en_modules --joint-separation-states 1024 --reseat-poses 8 --reseat-frontier 4096 --reseat-continuations 3 --reseat-victim-shapes on --owned-shape board_aux=owned-face-a1.000000 --schematic carrier/Zynq_Carrier.kicad_sch --runs 1 --interior-order 3 --failed-first-retry on --shape-area-first on --floorplan-spec native/benchmarks/carrier-162x151-granular-vertical.floorplan.json --outline-mm 162x151 --search-strategy granular-minor+vertical+estimator-first",
+  "devkit_command": "native/build/fast/schgen_compact_stage_profile --repo . --project devkit_mini --compact-search off --schematic devkit_mini/Zynq_Carrier.kicad_sch --multiscale-outline on --runs 1",
+  "next_action": "Trace selected power_som and bringup_rails primary-relative shape offsets through reservation binding and final face assignment. Then prototype component-level primary reservations only with matching fanout, through-hole and final geometry checks; preserve qualified incumbent.",
+  "measurements": {
+    "native/build/courtyard-area-carrier.log": {
+      "log_sha256": "0d94792771eed1bb005e3fb2b8cea7cf32de0212844468631fd709d27b65c24f",
+      "trial": "trial status=constructed_no_acceptance model_seconds=17.643184125000001 pcb_text_emit_seconds=0.029413333999999999 construction_seconds=17.672597459000002 board_w=162 board_h=151 top=331 bottom=235 instances=566 pcb_sha256=8aae8efbb2dee1c37cc61dc1b91e832b9ed6e4c7c47a17fc78b73c1a44f8d231",
+      "rows": [
+        {
+          "sheet": "board_aux",
+          "primary_side": "top",
+          "envelope_mm2": 208.72334,
+          "primary_union_mm2": 120.6540199999996,
+          "opposite_union_mm2": 32.59359999999988,
+          "primary_parts": 11,
+          "opposite_parts": 7
+        },
+        {
+          "sheet": "board_services",
+          "primary_side": "top",
+          "envelope_mm2": 515.51766,
+          "primary_union_mm2": 341.1542639999999,
+          "opposite_union_mm2": 21.60799999999999,
+          "primary_parts": 4,
+          "opposite_parts": 5
+        },
+        {
+          "sheet": "bringup_en",
+          "primary_side": "top",
+          "envelope_mm2": 118.08,
+          "primary_union_mm2": 60.569999999999965,
+          "opposite_union_mm2": 38.894400000000054,
+          "primary_parts": 6,
+          "opposite_parts": 9
+        },
+        {
+          "sheet": "bringup_en_modules",
+          "primary_side": "bottom",
+          "envelope_mm2": 556.8689999999999,
+          "primary_union_mm2": 291.63119999999975,
+          "opposite_union_mm2": 68.75,
+          "primary_parts": 43,
+          "opposite_parts": 11
+        },
+        {
+          "sheet": "bringup_modules",
+          "primary_side": "bottom",
+          "envelope_mm2": 508.68474,
+          "primary_union_mm2": 277.9026000000001,
+          "opposite_union_mm2": 105.71600000000007,
+          "primary_parts": 51,
+          "opposite_parts": 20
+        },
+        {
+          "sheet": "bringup_rails",
+          "primary_side": "bottom",
+          "envelope_mm2": 671.40672,
+          "primary_union_mm2": 116.20960000000002,
+          "opposite_union_mm2": 356.3740399999998,
+          "primary_parts": 14,
+          "opposite_parts": 9
+        },
+        {
+          "sheet": "debug_boot",
+          "primary_side": "top",
+          "envelope_mm2": 513.175,
+          "primary_union_mm2": 288.0369199999989,
+          "opposite_union_mm2": 25.92960000000017,
+          "primary_parts": 4,
+          "opposite_parts": 6
+        },
+        {
+          "sheet": "ethernet",
+          "primary_side": "top",
+          "envelope_mm2": 549.2265120000001,
+          "primary_union_mm2": 328.37839999999994,
+          "opposite_union_mm2": 0,
+          "primary_parts": 10,
+          "opposite_parts": 0
+        },
+        {
+          "sheet": "fmc",
+          "primary_side": "top",
+          "envelope_mm2": 1151.55655,
+          "primary_union_mm2": 358.7956999999996,
+          "opposite_union_mm2": 0,
+          "primary_parts": 8,
+          "opposite_parts": 0
+        },
+        {
+          "sheet": "hdmi_rx_term",
+          "primary_side": "top",
+          "envelope_mm2": 92.138025,
+          "primary_union_mm2": 43.21600000000015,
+          "opposite_union_mm2": 0,
+          "primary_parts": 10,
+          "opposite_parts": 0
+        },
+        {
+          "sheet": "mechanical",
+          "primary_side": "top",
+          "envelope_mm2": 169,
+          "primary_union_mm2": 218.7164000000001,
+          "opposite_union_mm2": 0,
+          "primary_parts": 9,
+          "opposite_parts": 0
+        },
+        {
+          "sheet": "power",
+          "primary_side": "bottom",
+          "envelope_mm2": 1273.58560296,
+          "primary_union_mm2": 386.51039999999955,
+          "opposite_union_mm2": 59.57279999999984,
+          "primary_parts": 39,
+          "opposite_parts": 12
+        },
+        {
+          "sheet": "power_mon",
+          "primary_side": "bottom",
+          "envelope_mm2": 325.45268775,
+          "primary_union_mm2": 98.47207999999995,
+          "opposite_union_mm2": 0,
+          "primary_parts": 10,
+          "opposite_parts": 0
+        },
+        {
+          "sheet": "power_som",
+          "primary_side": "top",
+          "envelope_mm2": 644.13341298,
+          "primary_union_mm2": 10.57159999999995,
+          "opposite_union_mm2": 180.3072000000002,
+          "primary_parts": 2,
+          "opposite_parts": 18
+        },
+        {
+          "sheet": "uart_bridge",
+          "primary_side": "top",
+          "envelope_mm2": 181.30790000000002,
+          "primary_union_mm2": 68.1335999999997,
+          "opposite_union_mm2": 0,
+          "primary_parts": 10,
+          "opposite_parts": 0
+        },
+        {
+          "sheet": "usb_jtag",
+          "primary_side": "top",
+          "envelope_mm2": 923.3706592000001,
+          "primary_union_mm2": 236.60811999999976,
+          "opposite_union_mm2": 26.04879999999979,
+          "primary_parts": 15,
+          "opposite_parts": 4
+        },
+        {
+          "sheet": "usb_pd",
+          "primary_side": "top",
+          "envelope_mm2": 84.09039999999999,
+          "primary_union_mm2": 37.64040000000006,
+          "opposite_union_mm2": 0,
+          "primary_parts": 6,
+          "opposite_parts": 0
+        },
+        {
+          "sheet": "user_io",
+          "primary_side": "top",
+          "envelope_mm2": 454.206,
+          "primary_union_mm2": 160.08639999999983,
+          "opposite_union_mm2": 38.894400000000005,
+          "primary_parts": 8,
+          "opposite_parts": 9
+        }
+      ]
+    },
+    "native/build/courtyard-area-devkit.log": {
+      "log_sha256": "b2d3603a8fb2b9f690e7d6956e46200d6a96a517e136bd67e72e0e7f31e3cf66",
+      "trial": "trial status=constructed_no_acceptance model_seconds=0.179454541 pcb_text_emit_seconds=0.0078683750000000004 construction_seconds=0.18732291600000001 board_w=98 board_h=98 top=105 bottom=55 instances=160 pcb_sha256=1b12fecbcbbaa5e6084c2459da93cb144a660ff19805e6e4e3f75f9c22689fdb",
+      "rows": [
+        {
+          "sheet": "debug_boot",
+          "primary_side": "top",
+          "envelope_mm2": 720.5435,
+          "primary_union_mm2": 306.78692000000024,
+          "opposite_union_mm2": 34.57280000000003,
+          "primary_parts": 7,
+          "opposite_parts": 8
+        },
+        {
+          "sheet": "mechanical",
+          "primary_side": "top",
+          "envelope_mm2": 169,
+          "primary_union_mm2": 218.90520000000012,
+          "opposite_union_mm2": 0,
+          "primary_parts": 9,
+          "opposite_parts": 0
+        },
+        {
+          "sheet": "power",
+          "primary_side": "top",
+          "envelope_mm2": 1323.37019496,
+          "primary_union_mm2": 443.22520000000026,
+          "opposite_union_mm2": 21.608000000000008,
+          "primary_parts": 49,
+          "opposite_parts": 5
+        },
+        {
+          "sheet": "power_mon",
+          "primary_side": "top",
+          "envelope_mm2": 131.082536,
+          "primary_union_mm2": 69.23115200000001,
+          "opposite_union_mm2": 47.99092799999994,
+          "primary_parts": 5,
+          "opposite_parts": 8
+        },
+        {
+          "sheet": "power_som",
+          "primary_side": "top",
+          "envelope_mm2": 255.71,
+          "primary_union_mm2": 104.5316000000001,
+          "opposite_union_mm2": 86.34720000000014,
+          "primary_parts": 4,
+          "opposite_parts": 16
+        },
+        {
+          "sheet": "uart_bridge",
+          "primary_side": "top",
+          "envelope_mm2": 181.30790000000002,
+          "primary_union_mm2": 68.13360000000009,
+          "opposite_union_mm2": 0,
+          "primary_parts": 10,
+          "opposite_parts": 0
+        }
+      ]
+    }
+  }
+}

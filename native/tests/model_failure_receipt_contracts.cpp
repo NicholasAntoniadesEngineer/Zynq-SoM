@@ -265,6 +265,19 @@ void model_search(const std::filesystem::path& root){
         if(row.stage=="zone_pack"&&++starts==2)throw FloorplanPackingInfeasible("injected challenger infeasible");
     };
     fixture.input.experiment=observer;
+    for(int kind=0;kind<3;++kind) {
+        auto invalid=fixture.input;
+        auto requested=std::make_shared<FloorplanExperiment>(*policy);
+        requested->contract_group_face_sheets={"power_som"};invalid.floorplan.experiment=requested;
+        invalid.floorplan.compact_search=kind!=0;
+        PcbPlacementSearchStrategy strategy;strategy.component_primary_sheets={kind==1?"unknown":"power_som"};
+        if(kind==2)strategy.component_primary_reservations=true;
+        ExecutionFailureReceipt invalid_receipt;bool rejected=false;
+        try{(void)search_pcb_models(invalid,{strategy},&invalid_receipt);}catch(const std::invalid_argument&){rejected=true;}
+        require(rejected&&starts==0&&invalid_receipt.captured&&!invalid_receipt.unavailable&&
+                invalid_receipt.accounting.quantization_engagements.empty()&&invalid_receipt.accounting.fallback_events.empty(),
+                "invalid scoped search executed construction or lost its empty failure receipt");
+    }
     begin();const auto retained=search_pcb_models(fixture.input,{{}});observing=false;
     require(starts==2&&retained.incumbent&&retained.incumbent_attempt==0&&retained.attempts.size()==2&&
             retained.attempts[1].status=="construction_failed"&&

@@ -4,6 +4,24 @@
 #include "contract_rigid_groups_internal.hpp"
 
 namespace schgen::pcb_placement {
+std::optional<Shape> opposite_primary_reservation(const Shape& source) {
+    if(source.top_off.empty()||source.bot_off.empty())return std::nullopt;
+    if(source.side!="top"&&source.side!="bottom")throw std::invalid_argument("invalid reservation primary face");
+    const auto& bottom=source.side=="top"?source.bot_off:source.top_off;
+    // Keep even legacy unmirrored bottom members exactly as supplied. Never
+    // synthesize a mirrored document merely to change reservation ownership.
+    for(const auto& [ref,key]:source.mirror)
+        if(!bottom.count(ref)||key.empty())return std::nullopt;
+    for(const auto& [ref,xy]:bottom) {
+        (void)xy;
+        if(source.top_off.count(ref)&&source.bot_off.count(ref))return std::nullopt;
+    }
+    auto result=source;
+    result.side=source.side=="top"?"bottom":"top";
+    result.top_off.swap(result.bot_off);
+    result.tag+="/opposite-primary";
+    return result;
+}
 double bottom_contact_shift(double value,QuantizationCounts* counts) {
     if(!std::isfinite(value))throw std::invalid_argument("nonfinite bottom contact shift");
     auto rounded=placement_bottom_pose_precision4dp(value,counts);

@@ -393,6 +393,15 @@ PcbPlacementSearchResult search_pcb_models(const PcbPlacementInput& input,
     ExecutionFailureReceipt child;
     ExecutionAccounting pending;
     try {
+        for(const auto& strategy:strategies)if(strategy.component_primary_reservations||!strategy.component_primary_sheets.empty()) {
+            if(strategy.component_primary_reservations&&!strategy.component_primary_sheets.empty())
+                throw std::invalid_argument("component primary reservations cannot mix all-sheet and scoped selection");
+            if(!input.floorplan.compact_search||!input.floorplan.experiment||input.floorplan.experiment->contract_group_face_sheets.empty())
+                throw std::invalid_argument("component primary reservations require compact mode and explicit contract-group sheets");
+            for(const auto& sheet:strategy.component_primary_sheets)
+                if(!input.floorplan.experiment->contract_group_face_sheets.count(sheet))
+                    throw std::invalid_argument("component primary sheet is not an explicit contract-group sheet: "+sheet);
+        }
         for(std::size_t attempt=0;attempt<=strategies.size();++attempt) {
             auto trial=input;
             if(attempt) {
@@ -404,6 +413,11 @@ PcbPlacementSearchResult search_pcb_models(const PcbPlacementInput& input,
                 if(strategy.owned_extent_alternatives)policy->owned_extent_alternatives=*strategy.owned_extent_alternatives;
                 if(strategy.contract_group_rotations)policy->contract_group_rotations=*strategy.contract_group_rotations;
                 if(strategy.granular_minor_occupancy)policy->granular_minor_occupancy=true;
+                if(strategy.dual_primary_reservations)policy->dual_primary_reservations=true;
+                if(strategy.component_primary_reservations||!strategy.component_primary_sheets.empty()) {
+                    policy->component_reservation_sheets=strategy.component_primary_sheets.empty()
+                        ?policy->contract_group_face_sheets:strategy.component_primary_sheets;
+                }
                 if(strategy.shape_choice_replays)policy->shape_choice_replays=*strategy.shape_choice_replays;
                 trial.floorplan.experiment=std::move(policy);
             }

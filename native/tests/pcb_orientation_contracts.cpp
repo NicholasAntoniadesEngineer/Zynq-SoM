@@ -372,6 +372,17 @@ void unit(){
   demand(!fine_grid.fits_exhaustive(2,2,.2,.2,{},{},face,{})&&
          !fine_grid.fits_exhaustive(3.25,2,.2,.2,{},{},face,{}),
          "granular occupancy lost body or fanout collision rejection");
+  auto primary_islands=islands;primary_islands.top_off=primary_islands.bot_off;primary_islands.bot_off.clear();
+  const auto primary_children=split_engine.zone_components(primary_islands,true,&split_counts,true);
+  demand(primary_children.size()==4&&primary_children[0].mask==primary_mask&&
+         primary_children[1].mask==primary_mask&&primary_children[2].mask==3&&primary_children[3].mask==3,
+         "component-primary producer lost physical faces or THT punches");
+  Occupancy primary_grid(30,12,.2,2,3,1,.05);
+  primary_grid.add(0,0,24,5,{},{},0,primary_children);
+  demand(primary_grid.fits_exhaustive(10,2,1,1,{},{},primary_mask,{})&&
+         !primary_grid.fits_exhaustive(2,2,.2,.2,{},{},primary_mask,{})&&
+         !primary_grid.fits_exhaustive(3.25,2,.2,.2,{},{},primary_mask,{}),
+         "component-primary producer lost gap reuse, body or fanout protection");
  }
 }
 void live(const std::filesystem::path& root){
@@ -521,6 +532,62 @@ void live(const std::filesystem::path& root){
    Context som_context(f.input);som_context.pool=som_split.footprints;
    const auto& som_originals=after.geometry.shapes.at("power_som");
    const auto& som_offers=som_split.geometry.shapes.at("power_som");
+   experiment->component_reservation_sheets={"power_som"};
+   const auto prepared_components=prepare_pcb_floorplan(f.input,som_split);
+   floorplan_detail::Engine component_engine(prepared_components);component_engine.initialize();component_engine.prepare_geometry();
+   demand(!component_engine.component_shapes.empty(),"real power_som offers have no eligible component reservations");
+   for(const auto& key:component_engine.component_shapes) {
+    demand(key.first=="power_som"&&component_engine.reservation_mask(key.first,key.second,"top")==0,
+           "component reservation selection escaped requested sheet");
+    for(const int policy:{0,1}) {
+     const auto& physical=component_engine.components[policy].at(key);
+     demand(!physical.empty(),"eligible component candidate lost its children");
+    }
+   }
+   experiment->component_reservation_sheets.clear();
+   std::size_t rebased=0;
+   for(const auto& candidate:som_offers)if(auto other=opposite_primary_reservation(candidate)) {
+    ++rebased;
+    const auto roundtrip=opposite_primary_reservation(*other);
+    demand(roundtrip&&same_zone_shape_geometry(candidate,*roundtrip),"primary rebase is not an involution");
+    const auto original_model=model(candidate,som_context,som_split.geometry,"power_som");
+    const auto alternate_model=model(*other,som_context,som_split.geometry,"power_som");
+    for(const auto& a:original_model.model().insts) {
+     const auto b=std::find_if(alternate_model.model().insts.begin(),alternate_model.model().insts.end(),
+                             [&](const auto& part){return part.ref==a.ref;});
+     demand(b!=alternate_model.model().insts.end()&&a.x==b->x&&a.y==b->y&&a.rotation==b->rotation&&
+            a.mod==b->mod&&a.side==b->side&&a.mirror==b->mirror&&a.pad_nets==b->pad_nets,
+            "reservation rebase changed physical geometry, face or connectivity");
+    }
+    auto invalid=candidate;invalid.mirror["not-a-member"]="unknown";
+    demand(!opposite_primary_reservation(invalid),"foreign mirrored member accepted");
+    auto one_face=candidate;one_face.bot_off.clear();
+    demand(!opposite_primary_reservation(one_face),"single-face pack rebased");
+   }
+   demand(rebased>0,"no real mixed-face reservation rebase tested");
+   experiment->dual_primary_reservations=true;
+   bool invalid_primary=false;
+   try{(void)build_pcb_zone_geometry(f.input);}catch(const std::invalid_argument&){invalid_primary=true;}
+   demand(invalid_primary,"dual primary mode accepted without granular occupancy");
+   experiment->granular_minor_occupancy=true;
+   const auto dual=build_pcb_zone_geometry(f.input);
+   const auto& dual_offers=dual.geometry.shapes.at("power_som");
+   demand(dual_offers.size()>som_offers.size(),"dual primary offers not propagated through zone build");
+   for(std::size_t i=0;i<som_offers.size();++i)
+    demand(equal(som_offers[i],dual_offers[i]),"dual primary changed existing candidate/index");
+   for(std::size_t i=som_offers.size();i<dual_offers.size();++i) {
+    const auto bound=bind_pcb_zone_shapes(dual,{{"power_som",static_cast<int>(i)}});
+    const auto physical=model(dual_offers[i],som_context,dual.geometry,"power_som");
+    for(const auto& part:physical.model().insts)
+     demand(bound.side_of.at(part.ref)==part.side,"bound reservation changed a physical face");
+    auto corrupt=dual;
+    corrupt.geometry.shapes.at("power_som")[i].top_off.begin()->second.first+=1;
+    bool rejected=false;
+    try{(void)bind_pcb_zone_shapes(corrupt,{{"power_som",static_cast<int>(i)}});}
+    catch(const PcbZoneInfeasible&){rejected=true;}
+    demand(rejected,"modified physical pose accepted as a reservation-only rebase");
+   }
+   experiment->dual_primary_reservations=false;experiment->granular_minor_occupancy=false;
    demand(som_offers.size()>som_originals.size(),"SoM power has no additional face offers");
    for(std::size_t i=0;i<som_originals.size();++i)
     demand(equal(som_originals[i],som_offers[i]),"SoM power expansion changed an incumbent");

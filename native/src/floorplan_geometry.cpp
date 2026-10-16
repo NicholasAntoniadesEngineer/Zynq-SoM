@@ -233,7 +233,7 @@ std::pair<Halo, Halo> Engine::fanout(const FloorplanZoneShape& shape) {
         zone_fanout_members_rows_accounted(rows, min_subject_pins, {{2,.20},{8,1.50}},2.0,
             &plan.accounting.quantization_engagements), min_subject_pins, &plan.accounting.quantization_engagements);
 }
-std::vector<Comp> Engine::zone_components(const FloorplanZoneShape& shape, bool pad_punch, QuantizationCounts* counts) const {
+std::vector<Comp> Engine::zone_components(const FloorplanZoneShape& shape, bool pad_punch, QuantizationCounts* counts, bool primary_components) const {
     auto rotations = in.geometry.conn_rot;
     for (const auto& [r, extra] : shape.extra_rot) rotations[r] = rotation(rotations[r] + extra);
     auto courtyard = [&](const std::string& r, FloorplanPoint xy) -> std::optional<Box4> {
@@ -261,10 +261,13 @@ std::vector<Comp> Engine::zone_components(const FloorplanZoneShape& shape, bool 
         }
     }
     const int minor_mask=shape.side=="bottom"?occ_top:occ_bottom;
-    if(in.compact_search&&in.experiment&&in.experiment->granular_minor_occupancy) {
+    if(primary_components||(in.compact_search&&in.experiment&&in.experiment->granular_minor_occupancy)) {
         std::vector<Comp> children;
-        for(const auto& [ref,xy]:shape.bot_off)if(const auto box=courtyard(ref,xy)) {
-            auto one=zone_components_assemble({*box},{},minor_mask,occ_punch,counts);
+        for(const auto* offsets:{&shape.top_off,&shape.bot_off}) {
+        if(offsets==&shape.top_off&&!primary_components)continue;
+        for(const auto& [ref,xy]:*offsets)if(const auto box=courtyard(ref,xy)) {
+            const int mask=offsets==&shape.top_off?side_mask(shape.side):minor_mask;
+            auto one=zone_components_assemble({*box},{},mask,occ_punch,counts);
             auto& child=one.front();
             auto key=get(shape.mirror,ref);
             if(key.empty())key=get(in.geometry.resolvable,ref);
@@ -276,6 +279,8 @@ std::vector<Comp> Engine::zone_components(const FloorplanZoneShape& shape, bool 
                 std::tie(child.reach,child.inset)=zone_fanout_reach(child.w,child.h,members,min_subject_pins,counts);
             }
             children.push_back(child);
+        }
+        else if(primary_components)throw FloorplanError("component reservation has no courtyard: "+ref);
         }
         // Through-hole occupancy still pierces both faces, independently of
         // how the opposite-face courtyard reservations are partitioned.
@@ -309,6 +314,7 @@ std::vector<Comp> Engine::zone_components(const FloorplanZoneShape& shape, bool 
 
 void Engine::prepare_geometry() {
     const auto& zg = in.geometry;
+    component_shapes.clear();
     zbox = zg.zone_box;
     for (const auto& [name, wh] : zbox)
         if (!std::isfinite(wh.first) || !std::isfinite(wh.second) || wh.first < 0 || wh.second < 0)
@@ -323,23 +329,48 @@ void Engine::prepare_geometry() {
         base.w = zbox.at(b->name).first; base.h = zbox.at(b->name).second;
         base.top_off = get(zg.top_off, b->name); base.bot_off = get(zg.bot_off, b->name);
         base.extra_rot = zg.zone_extra_rot;
+        const bool requested=in.compact_search&&in.experiment&&
+            in.experiment->component_reservation_sheets.count(b->name)&&b->kind=="interior";
+        const auto make_components=[&](const FloorplanZoneShape& s,int index,bool pad) {
+            if(requested&&!s.top_off.empty()) {
+                auto physical=zone_components(s,pad,&plan.accounting.quantization_engagements,true);
+                const auto other=zone_components(s,!pad,&plan.accounting.quantization_engagements,true);
+                // Missing members must never be hidden behind an empty group.
+                std::set<std::string> members;
+                for(const auto* offsets:{&s.top_off,&s.bot_off})for(const auto& [ref,xy]:*offsets){(void)xy;members.insert(ref);}
+                const auto expected=get(zg.refs_by_sheet,b->name);
+                const bool complete=members.size()==s.top_off.size()+s.bot_off.size()&&
+                    members==std::set<std::string>(expected.begin(),expected.end());
+                const auto inside=[&](const auto& c){
+                    return c.dx>=0&&c.dy>=0&&c.dx+c.w<=s.w&&c.dy+c.h<=s.h;
+                };
+                const bool contained=std::all_of(physical.begin(),physical.end(),inside)&&
+                    std::all_of(other.begin(),other.end(),inside);
+                if(complete&&contained&&!physical.empty()) {
+                    component_shapes.insert({b->name,index});return physical;
+                }
+            }
+            return zone_components(s,pad,&plan.accounting.quantization_engagements);
+        };
         if (zg.zone_box.count(b->name)) std::tie(b->fanout_reach,b->fanout_inset) = fanout(base);
         for (int policy : {1,0}) {
             auto& co = components[policy];
-            if (zg.zone_box.count(b->name)) co[{b->name,0}] = zone_components(base, policy != 0, &plan.accounting.quantization_engagements);
+            if (zg.zone_box.count(b->name)) co[{b->name,0}] = make_components(base,0,policy!=0);
             const auto variants = zg.shapes.find(b->name);
             if (variants == zg.shapes.end()) continue;
             for (std::size_t k=1; k<variants->second.size(); ++k)
-                co[{b->name,static_cast<int>(k)}] = zone_components(variants->second[k], policy != 0, &plan.accounting.quantization_engagements);
+                co[{b->name,static_cast<int>(k)}] = make_components(variants->second[k],static_cast<int>(k),policy!=0);
             if (b->kind == "edge" || variants->second.size() < 2) continue;
             auto& sets = shape_sets[policy][b->name];
+            if(component_shapes.count({b->name,0}))b->fanout_reach=b->fanout_inset={};
             sets.push_back({base.w,base.h,b->fanout_reach,b->fanout_inset,"top",get(co,{b->name,0})});
             for (std::size_t k=1; k<variants->second.size(); ++k) {
                 const auto& s = variants->second[k];
-                const auto ri = fanout(s);
+                const auto ri = component_shapes.count({b->name,static_cast<int>(k)})?std::pair<Halo,Halo>{}:fanout(s);
                 sets.push_back({s.w,s.h,ri.first,ri.second,s.side,get(co,{b->name,static_cast<int>(k)})});
             }
         }
+        if(component_shapes.count({b->name,0}))b->fanout_reach=b->fanout_inset={};
     }
     auto bound = [&](Halo r, Halo i) { max_reach = std::max({max_reach,r.w,r.e,r.n,r.s,-i.w,-i.e,-i.n,-i.s}); };
     for (const auto* b : blocks()) bound(b->fanout_reach,b->fanout_inset);

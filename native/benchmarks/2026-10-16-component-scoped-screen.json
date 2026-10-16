@@ -1,0 +1,46 @@
+{
+  "source_base": "7b6ec8b5",
+  "source_delta": "Scoped component-primary search selection; preflight validation and lossless diagnostic receipt references",
+  "command": "native/build/fast/schgen_compact_stage_profile --repo . --project carrier --compact-search on --edge-feasibility on --owned-quality-first on --owned-face-cohesion on --contract-group-face-sheet usb_jtag --contract-group-face-sheet power --contract-group-face-sheet power_som --contract-group-face-sheet power_mon --require-bottom-sheet power_mon --require-bottom-sheet bringup_modules --require-bottom-sheet bringup_en_modules --joint-separation-states 1024 --reseat-poses 8 --reseat-frontier 4096 --reseat-continuations 3 --reseat-victim-shapes on --owned-shape board_aux=owned-face-a1.000000 --schematic carrier/Zynq_Carrier.kicad_sch --runs 1 --interior-order 3 --failed-first-retry on --shape-area-first on --floorplan-spec native/benchmarks/carrier-162x151-granular-vertical.floorplan.json --outline-mm 162x150 --search-strategy granular-minor+vertical+estimator-first --search-strategy granular-minor+vertical+estimator-first+component-primary:usb_jtag --search-strategy granular-minor+vertical+estimator-first+component-primary:power_som --search-strategy granular-minor+vertical+estimator-first+component-primary:usb_jtag+component-primary:power_som",
+  "screen": {
+    "outline_mm": [
+      162,
+      150
+    ],
+    "strategies": [
+      "baseline",
+      "granular-minor+vertical+estimator-first",
+      "granular-minor+vertical+estimator-first+component-primary:usb_jtag",
+      "granular-minor+vertical+estimator-first+component-primary:power_som",
+      "granular-minor+vertical+estimator-first+component-primary:usb_jtag+component-primary:power_som"
+    ],
+    "result": "All five failed construction. No screened incumbent; not proof of geometric infeasibility.",
+    "elapsed_seconds": 116.089370041,
+    "completed_outer_attempts": 20,
+    "aggregate_counter_keys_reconciled": 82,
+    "ordered_fallback_events": 446719,
+    "failure_receipt_captured": true,
+    "failure_receipt_unavailable": false,
+    "log": "native/build/component-scoped-162x150.log.gz",
+    "decompressed_sha256": "05b5571bf9f79540fe1f8d2b7c286c132c6661b18843918e318ba8247555099d"
+  },
+  "diagnostic_improvement": {
+    "finding": "Search fallback events and the aggregate failure fallback events were exactly identical, including order; every one was printed twice.",
+    "duplicate_lines": 446719,
+    "duplicate_bytes": 25626617,
+    "change": "Retain every search_fallback event once. Print an explicit aggregate alias only after exact event-vector and operation-counter equality. Mismatches, unavailable receipts and nonsearch failures retain full output.",
+    "smoke_log": "native/build/component-scoped-alias-smoke.log",
+    "smoke": "80x80 deliberately infeasible carrier: failure captured, 234 events referenced, exit 1 expected. This is a diagnostic failure-path test, not an optimisation candidate.",
+    "disk": "Original 54 MiB log losslessly compressed to approximately 2.5 MiB; decompressed SHA-256 verified identical."
+  },
+  "tests": {
+    "scoped_inputs_and_failure_receipts": "2/2 PASS, 36.36 seconds. Invalid modes, unknown scoped sheets and mixed all/scoped requests rejected before any model checkpoint with captured empty-work receipt.",
+    "receipt_alias_inputs": "PASS, 28.98 seconds. Exact match accepted; event-order mismatch, counter mismatch, uncaptured/unavailable/missing receipts rejected.",
+    "logs": [
+      "native/build/component-scoped-final-tests.log",
+      "native/build/component-scoped-alias-tests.log"
+    ]
+  },
+  "limitations": "No board improvement, no new full qualification and no controlled timing speedup claim. Valid-request solver behaviour is unchanged by preflight checks and diagnostic aliasing. No published board changed.",
+  "next": "The scoped decomposition trials did not remove coupled power-facing/legalization conflicts. Investigate the actual constraints and search proposals; do not simply enlarge budgets or waive authored requirements."
+}

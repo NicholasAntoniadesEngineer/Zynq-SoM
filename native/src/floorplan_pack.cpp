@@ -390,8 +390,8 @@ bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure,
         if(found!=order.end())std::rotate(order.begin(),found,found+1);
     }
     std::map<std::string,std::vector<Comp>> chosen;
-    auto occ_put=[&](const FloorplanBlock& b){occ.add(b.x,b.y,b.w,b.h,b.fanout_reach,b.fanout_inset,side_mask(b.side),get(chosen,b.name),counts);};
-    auto occ_pull=[&](const FloorplanBlock& b){occ.remove(b.x,b.y,b.w,b.h,b.fanout_reach,b.fanout_inset,side_mask(b.side),get(chosen,b.name),counts);};
+    auto occ_put=[&](const FloorplanBlock& b){occ.add(b.x,b.y,b.w,b.h,b.fanout_reach,b.fanout_inset,reservation_mask(b.name,b.shape_idx,b.side),get(chosen,b.name),counts);};
+    auto occ_pull=[&](const FloorplanBlock& b){occ.remove(b.x,b.y,b.w,b.h,b.fanout_reach,b.fanout_inset,reservation_mask(b.name,b.shape_idx,b.side),get(chosen,b.name),counts);};
     const auto selected_hull=[&](const std::string& name,int shape_index)->std::optional<Box4> {
         if(shape_index) {
             const auto m=in.compose.shape_metrics.find({name,shape_index});
@@ -463,7 +463,7 @@ bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure,
         const auto variants=shapes.find(b.name);
         if (variants==shapes.end()) {
             const auto& cc=get(co,{b.name,0});
-            const auto p=near(b,0,a,b.w,b.h,b.fanout_reach,b.fanout_inset,occ_top,cc,evicted);
+            const auto p=near(b,0,a,b.w,b.h,b.fanout_reach,b.fanout_inset,reservation_mask(b.name,0,"top"),cc,evicted);
             if (!p) return false;
             b.shape_idx=0; b.side="top"; chosen[b.name]=cc; pose(b,*p); return true;
         }
@@ -483,7 +483,7 @@ bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure,
             if (evicted) win=evict_window(evicted->x,evicted->y,evicted->w,evicted->h,evicted->fanout_reach,evicted->fanout_inset,
                 get(chosen,evicted->name),s.w,s.h,s.reach,s.inset,s.comps,clear);
             near_domain(b,static_cast<int>(k),win);
-            cands.push_back({static_cast<int>(k),s.w,s.h,s.reach,s.inset,side_mask(s.side),s.side,s.comps,
+            cands.push_back({static_cast<int>(k),s.w,s.h,s.reach,s.inset,reservation_mask(b.name,static_cast<int>(k),s.side),s.side,s.comps,
                 std::get<0>(win),std::get<1>(win),std::get<2>(win),std::get<3>(win)});
         }
         auto hits=in.compact_search
@@ -598,7 +598,7 @@ bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure,
         return order;
     };
     auto reseat_displaced=[&](FloorplanBlock& e,FloorplanPoint anchor) {
-        auto p=near(e,e.shape_idx,anchor,e.w,e.h,e.fanout_reach,e.fanout_inset,side_mask(e.side),get(chosen,e.name),nullptr);
+        auto p=near(e,e.shape_idx,anchor,e.w,e.h,e.fanout_reach,e.fanout_inset,reservation_mask(e.name,e.shape_idx,e.side),get(chosen,e.name),nullptr);
         if(!p&&victim_shapes) {
             const auto variants=shapes.find(e.name);
             const auto restricted=owned_shape_choices.find(e.name);
@@ -608,7 +608,7 @@ bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure,
                 const auto& s=variants->second[k];
                 if(in.experiment&&in.experiment->require_bottom_sheets.count(e.name)&&s.side!="bottom")continue;
                 fallback("interior_reseat_shape_trial");
-                p=near(e,static_cast<int>(k),anchor,s.w,s.h,s.reach,s.inset,side_mask(s.side),s.comps,nullptr);
+                p=near(e,static_cast<int>(k),anchor,s.w,s.h,s.reach,s.inset,reservation_mask(e.name,static_cast<int>(k),s.side),s.comps,nullptr);
                 if(!p)continue;
                 e.shape_idx=static_cast<int>(k);e.side=s.side;e.w=s.w;e.h=s.h;
                 e.fanout_reach=s.reach;e.fanout_inset=s.inset;e.area=block_area(s.w,s.h,counts);
@@ -670,7 +670,7 @@ bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure,
                     const auto& s=variants->second[k];
                     if(in.experiment&&in.experiment->require_bottom_sheets.count(b.name)&&s.side!="bottom")continue;
                     fallback("interior_reseat_incoming_shape_trial");
-                    const auto p=near(b,static_cast<int>(k),a,s.w,s.h,s.reach,s.inset,side_mask(s.side),s.comps,&e);
+                    const auto p=near(b,static_cast<int>(k),a,s.w,s.h,s.reach,s.inset,reservation_mask(b.name,static_cast<int>(k),s.side),s.comps,&e);
                     if(!p)continue;
                     b.shape_idx=static_cast<int>(k);b.side=s.side;b.fanout_reach=s.reach;b.fanout_inset=s.inset;
                     pose(b,*p);b.area=block_area(b.w,b.h,counts);chosen[b.name]=s.comps;
@@ -692,7 +692,7 @@ bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure,
                 near_domain(b,b.shape_idx,win);
                 const auto limits=*in.experiment->reseat_pose_limits;
                 const auto poses=occ.place_near_candidates(a.first,a.second,b.w,b.h,b.fanout_reach,b.fanout_inset,
-                    side_mask(b.side),get(chosen,b.name),std::get<0>(win),std::get<1>(win),std::get<2>(win),std::get<3>(win),
+                    reservation_mask(b.name,b.shape_idx,b.side),get(chosen,b.name),std::get<0>(win),std::get<1>(win),std::get<2>(win),std::get<3>(win),
                     limits.poses,limits.frontier_nodes,counts);
                 observation.generated=poses.poses.size();observation.frontier_nodes=poses.frontier_nodes;
                 observation.budget_exhausted=poses.budget_exhausted;
@@ -809,7 +809,7 @@ bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure,
     for (const auto* b:order) {
         RefineBlock row;
         row.name=b->name; row.x=b->x; row.y=b->y; row.w=b->w; row.h=b->h;
-        row.reach=b->fanout_reach; row.inset=b->fanout_inset; row.mask=side_mask(b->side); row.comps=get(chosen,b->name);
+        row.reach=b->fanout_reach; row.inset=b->fanout_inset; row.mask=reservation_mask(b->name,b->shape_idx,b->side); row.comps=get(chosen,b->name);
         row.anchor=anchor_row(*b,centers); row.aff_named=get(affinity,b->name);
         const auto unrestricted=std::make_tuple(-bw,2*bw,-bh,2*bh);
         auto win=unrestricted;
@@ -852,7 +852,7 @@ bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure,
             for (const auto& b:plan.edge_blocks)
                 li.primary_fanout[b.name]={b.fanout_reach,b.fanout_inset,edge_mask,occupied_faces(edge_mask,get(edge_comps,b.name)),get(edge_comps,b.name)};
             for (const auto& b:plan.interior_blocks)
-                li.primary_fanout[b.name]={b.fanout_reach,b.fanout_inset,side_mask(b.side),occupied_faces(side_mask(b.side),get(chosen,b.name)),get(chosen,b.name)};
+                li.primary_fanout[b.name]={b.fanout_reach,b.fanout_inset,reservation_mask(b.name,b.shape_idx,b.side),occupied_faces(reservation_mask(b.name,b.shape_idx,b.side),get(chosen,b.name)),get(chosen,b.name),component_shapes.count({b.name,b.shape_idx})!=0};
             li.reservation_retry_started=[&]{fallback("legalize_reservation_retry");};
             li.facing_retry_started=[&]{fallback("legalize_facing_retry");};
             if(in.experiment)li.joint_separation_states=in.experiment->joint_separation_states;
@@ -909,7 +909,7 @@ bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure,
                 }
                 for (auto& b:plan.interior_blocks) for (const auto& v:vars) if (v.name==b.name) { b.x=v.x; b.y=v.y; break; }
                 std::vector<PairsBlock> ints,edges;
-                for (const auto& b:plan.interior_blocks) ints.push_back({b.x,b.y,b.w,b.h,b.fanout_reach,b.fanout_inset,side_mask(b.side),get(chosen,b.name)});
+                for (const auto& b:plan.interior_blocks) ints.push_back({b.x,b.y,b.w,b.h,b.fanout_reach,b.fanout_inset,reservation_mask(b.name,b.shape_idx,b.side),get(chosen,b.name)});
                 for (const auto& b:plan.edge_blocks) edges.push_back({b.x,b.y,b.w,b.h,b.fanout_reach,b.fanout_inset,edge_mask,get(edge_comps,b.name)});
                 if (!pairs_hold_from_layout(ints,edges,som_occ.x,som_occ.y,som_occ.w,som_occ.h,som_mask,som_comps,bw,bh,mh_corner,occ_punch,clear,counts)) {
                     rejected("post_legalizer_geometry","",do_compact,log);return false;

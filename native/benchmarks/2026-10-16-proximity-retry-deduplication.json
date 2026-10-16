@@ -1,0 +1,27 @@
+{
+  "source_base": "0e24b0ac",
+  "change": "Skip full-authored proximity joint retries only when their emitted moving constraints exactly match guarded constraints; count comparison preparation.",
+  "regression": {
+    "before": "New fixed-only proximity case failed: five solves instead of three.",
+    "after": "Fixed-only case uses three solves; distinct moving proximity constraints retain five solves.",
+    "tests": "facing_projection and model_failure_receipt: 2/2 PASS, 36.42 seconds",
+    "earlier_targeted_tests": "floorplan, facing_projection and legalize_accounting: 3/3 PASS, 14.92 seconds"
+  },
+  "carrier_screen": {
+    "outline_mm": [162, 150],
+    "strategies": "baseline, granular-minor+vertical+estimator-first, granular-minor+vertical+estimator-first+component-primary",
+    "accepted": false,
+    "elapsed_seconds": 84.419167958,
+    "completed_outer_attempts": 12,
+    "receipt_captured": true,
+    "receipt_unavailable": false,
+    "fallback_events": 312542,
+    "limit": "Concurrent screening run, not a controlled speed comparison. No smaller carrier or carrier speedup is established."
+  },
+  "logs": [
+    "native/build/proximity-dedup-before-tests.log",
+    "native/build/proximity-dedup-tests.log",
+    "native/build/proximity-dedup-final-tests.log",
+    "native/build/proximity-dedup-components-162x150.log"
+  ]
+}
