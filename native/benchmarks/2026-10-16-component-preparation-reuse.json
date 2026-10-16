@@ -1,0 +1,37 @@
+{
+  "source_base": "bc2d0cbd",
+  "change": "Prepare each shape's pad-punch and courtyard-punch component geometry once, validate both, then move the checked children into their respective occupancy tables. Reuse is invocation-local; no persistent cache or invalidation assumptions.",
+  "live_carrier_preparation": {
+    "fixture": "pcb_orientation_contracts: carrier power_som component reservations",
+    "counted_operations_before": 35427,
+    "counted_operations_after": 31647,
+    "reduction_percent": 10.67,
+    "limit": "Operation-count reduction in this preparation fixture, not an end-to-end timing speedup."
+  },
+  "tests": {
+    "geometry": "Every selected component shape under both policies matches direct kernel results, including rectangles, face masks and all fanout margins.",
+    "invalidation": "A fresh engine with incomplete member census rejects component-only eligibility and retains solid reservations.",
+    "targeted": "floorplan, legalize_accounting, model_failure_receipt, pcb_orientation: 4/4 PASS in 36.45 seconds; expanded orientation test separately rebuilt and passed.",
+    "policy_audit": "PASS in 46.99 seconds"
+  },
+  "screens": {
+    "carrier": {
+      "strategies": "baseline; granular-minor+vertical+estimator-first; granular-minor+vertical+estimator-first+component-primary",
+      "outline_mm": [162, 151],
+      "top": 331,
+      "bottom": 235,
+      "pcb_sha256": "8aae8efbb2dee1c37cc61dc1b91e832b9ed6e4c7c47a17fc78b73c1a44f8d231",
+      "construction_seconds": 83.513712083,
+      "reconciled_accounting_counters": 123
+    },
+    "devkit": {
+      "outline_mm": [98, 98],
+      "top": 105,
+      "bottom": 55,
+      "pcb_sha256": "1b12fecbcbbaa5e6084c2459da93cb144a660ff19805e6e4e3f75f9c22689fdb",
+      "construction_seconds": 0.197743833
+    },
+    "limit": "Model screens under concurrent load, not full independent qualification or controlled performance comparisons. No new board geometry or smaller accepted carrier. Published release hashes retained."
+  },
+  "logs": "native/build/component-preparation-{before,after,after-tests,audit,carrier,devkit}.log"
+}

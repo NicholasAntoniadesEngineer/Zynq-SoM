@@ -536,14 +536,39 @@ void live(const std::filesystem::path& root){
    const auto prepared_components=prepare_pcb_floorplan(f.input,som_split);
    floorplan_detail::Engine component_engine(prepared_components);component_engine.initialize();component_engine.prepare_geometry();
    demand(!component_engine.component_shapes.empty(),"real power_som offers have no eligible component reservations");
+   std::size_t preparation_ops=0;
+   for(const auto& [name,n]:component_engine.plan.accounting.quantization_engagements){(void)name;preparation_ops+=n;}
+   std::cout<<"component_preparation_operations="<<preparation_ops<<'\n';
    for(const auto& key:component_engine.component_shapes) {
     demand(key.first=="power_som"&&component_engine.reservation_mask(key.first,key.second,"top")==0,
            "component reservation selection escaped requested sheet");
     for(const int policy:{0,1}) {
      const auto& physical=component_engine.components[policy].at(key);
      demand(!physical.empty(),"eligible component candidate lost its children");
+     auto shape=prepared_components.geometry.shapes.at(key.first).at(key.second);
+     if(key.second==0) {
+      shape={};const auto wh=prepared_components.geometry.zone_box.at(key.first);
+      shape.w=wh.first;shape.h=wh.second;
+      shape.top_off=prepared_components.geometry.top_off.at(key.first);
+      shape.bot_off=prepared_components.geometry.bot_off.at(key.first);
+      shape.extra_rot=prepared_components.geometry.zone_extra_rot;
+     }
+     const auto reference=component_engine.zone_components(shape,policy!=0,nullptr,true);
+     demand(physical.size()==reference.size(),"prepared component count differs from direct kernel");
+     const auto signature=[](const Comp& c){return std::make_tuple(c.dx,c.dy,c.w,c.h,c.mask,
+         c.reach.w,c.reach.e,c.reach.n,c.reach.s,c.inset.w,c.inset.e,c.inset.n,c.inset.s);};
+     for(std::size_t j=0;j<physical.size();++j)
+      demand(signature(physical[j])==signature(reference[j]),"prepared courtyard, punch or fanout differs from direct kernel");
     }
    }
+   auto incomplete_components=prepared_components;
+   incomplete_components.geometry.refs_by_sheet.at("power_som").pop_back();
+   floorplan_detail::Engine incomplete_engine(incomplete_components);
+   incomplete_engine.initialize();incomplete_engine.prepare_geometry();
+   demand(incomplete_engine.component_shapes.empty(),"incomplete member census reused eligible component state");
+   for(const auto& key:component_engine.component_shapes)
+    demand(incomplete_engine.reservation_mask(key.first,key.second,"top")==floorplan_detail::occ_top,
+           "ineligible candidate lost its solid reservation");
    experiment->component_reservation_sheets.clear();
    std::size_t rebased=0;
    for(const auto& candidate:som_offers)if(auto other=opposite_primary_reservation(candidate)) {
