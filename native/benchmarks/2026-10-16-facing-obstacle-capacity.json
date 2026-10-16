@@ -1,0 +1,18 @@
+{
+  "source_base": "9d817ef6",
+  "defect": "Facing projection capacity used board walls alone. A full-span obstacle made the assumed extreme allocation physically unavailable, while seed allocation also excluded a known legal inset pocket.",
+  "before": "Expanded 64-case matrix reported 16 independently witnessed feasible-layout misses.",
+  "fix": "Propagate open forbidden pose intervals from fixed full-span primary rectangles before computing axis projection capacities. Shared-face solid rectangles only; opposite-face and component-only envelopes cannot establish these restrictions. Exact-clearance contacts remain available. No extra retries or weaker acceptance checks.",
+  "tests": {
+    "expanded_matrix": "128 cases, zero known-feasible misses; swaps/reflections, compact/noncompact modes, ordinary and face-aware occupancy including an overlapping opposite-face obstacle, strict contradictions, deterministic poses/logs/counts, callback balance and failed-incumbent preservation",
+    "targeted": "facing_projection, floorplan, legalize_accounting and model_failure_receipt: 4/4 PASS in 35.74 seconds; final expanded matrix separately rebuilt and passed",
+    "policy_audit": "PASS in 44.93 seconds"
+  },
+  "model_screens": {
+    "carrier_162x151": {"constructed": true, "top": 331, "bottom": 235, "construction_seconds": 17.975647958, "reconciled_counters": 123, "pcb_sha256": "8aae8efbb2dee1c37cc61dc1b91e832b9ed6e4c7c47a17fc78b73c1a44f8d231"},
+    "carrier_162x150": {"constructed": false, "elapsed_seconds": 11.641846042, "completed_outer_attempts": 8, "reconciled_counters": 82, "receipt_captured": true},
+    "devkit_98x98": {"constructed": true, "top": 105, "bottom": 55, "construction_seconds": 0.186727917, "pcb_sha256": "1b12fecbcbbaa5e6084c2459da93cb144a660ff19805e6e4e3f75f9c22689fdb"},
+    "limits": "Concurrent model screens, not full publication or controlled speed comparisons. Published PCB hashes retained; no smaller carrier established. Capacity propagation is conservative, not a complete half-plane solver."
+  },
+  "logs": "native/build/facing-inset-{before,final,after-tests,audit,carrier-162x151,carrier-162x150,devkit}.log"
+}

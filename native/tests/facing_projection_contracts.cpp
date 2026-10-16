@@ -7,7 +7,8 @@ void demand(bool ok,const char* why){if(!ok)throw std::runtime_error(why);}
 int main(){try {
     int tested=0,misses=0;
     for(bool swap:{false,true})for(bool fx:{false,true})for(bool fy:{false,true})
-    for(bool compact:{false,true})for(bool contradictory:{false,true}) {
+    for(bool compact:{false,true})for(bool contradictory:{false,true})for(bool inset_pocket:{false,true})
+    for(bool face_aware:{false,true}) {
         FloorplanLegalizeInput in;in.board_w=in.board_h=60;in.clear=.3;
         in.compact=compact;in.joint_separation_states=64;
         const auto box=[&](Box4 b) {
@@ -23,6 +24,13 @@ int main(){try {
         in.fixed_poses["target"]=target;
         in.fixed_rects={{"target",box({30,30,32,32})},
                         {"strip",box({0,0,33,28})},{"column",box({0,28,28,60})}};
+        if(inset_pocket)in.fixed_rects.emplace_back("inset_strip",box({0,0,60,8}));
+        if(face_aware) {
+            for(const auto& [name,b]:in.fixed_rects){(void)b;in.primary_fanout[name]={{},{},1,1,std::vector<Comp>{}};}
+            in.primary_fanout["source"]={{},{},1,1,std::vector<Comp>{}};
+            in.fixed_rects.emplace_back("opposite_strip",box({0,0,60,55}));
+            in.primary_fanout["opposite_strip"]={{},{},2,2,std::vector<Comp>{}};
+        }
         FloorplanTerm term;term.kind="facing";term.subject="source";term.target_raw="target";
         term.enforced=true;term.require_positive_facing=true;term.out_refs={"out"};in.index.hard={term};
         if(contradictory){term.out_refs={"in"};in.index.hard.push_back(term);}
@@ -30,7 +38,7 @@ int main(){try {
             const auto [x,y]=p;
             if(x<in.clear||y<in.clear||x+2>60-in.clear||y+2>60-in.clear)return false;
             for(const auto& [name,b]:in.fixed_rects) {
-                (void)name;
+                if(face_aware&&!(in.primary_fanout.at(name).mask&1))continue;
                 if(!(x>=b.x1+in.clear||x+2+in.clear<=b.x0||y>=b.y1+in.clear||y+2+in.clear<=b.y0))return false;
             }
             return true;
