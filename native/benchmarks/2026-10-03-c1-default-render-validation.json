@@ -1,0 +1,39 @@
+{
+  "source_base": "8f520c18",
+  "source_delta": "C1 10uF input reservoir, independent component-basis declaration, compact base-rotation correction; before fallback-scope correction or nearest-seat acceleration",
+  "executable_sha256": "58152fb42752776e64f4332c2107386275fd32d66e709535f81d3e4383b63699",
+  "command": "native/bin/schgen board --repo REPOSITORY --project carrier --output ISOLATED_OUTPUT --kicad-cli /Applications/KiCad/KiCad.app/Contents/MacOS/kicad-cli --timing",
+  "output_directory": "/private/tmp/carrier-c1-qualified-render.YT3Mg4",
+  "complete": true,
+  "board_ok": true,
+  "sheets": 37,
+  "dimensions_mm": [168, 163],
+  "non_unrouted_drc_errors": 0,
+  "unrouted_connections": 499,
+  "fanout_subjects": 110,
+  "fanout_starved": 0,
+  "advisory_failures": ["return_path", "golden", "contract_coverage_lint"],
+  "source_audit": "PASS: 68 C++ files, 75 constants, 155 registered transforms",
+  "reported_retry_count": 18,
+  "reported_compaction_count": 2,
+  "accounting_limit": "These reported events predate the known discarded-attempt receipt correction; they do not measure every executed fallback call.",
+  "regression_limit": "The live-board owned-candidate test rejects both alternatives because the prepared fixed TP1003/SW1001 gap is 0.477mm against its 0.5mm requirement. Separately, the real compact loader offers 60 alternatives (board_aux 36, bringup_rails 24), not the old asserted 56. These are distinct issues; default board PASS does not resolve the stricter live-zone gap.",
+  "hardware_limit": "Nominal capacitance only; effective capacitance under DC bias and PCA9306 startup/isolation qualification remain open. Routing is deferred.",
+  "seconds": {
+    "process_wall": 252.65,
+    "authoring_audit": 16.776024,
+    "sheet_parallel_checks_and_render_wall": 24.634470,
+    "pcb_input_loading_and_netlist_validation": 1.445538,
+    "pcb_build_model_with_internal_checks": 11.904750,
+    "pcb_text_render": 0.032959,
+    "render3d": 28.423952,
+    "source_audit": 155.197631,
+    "sum_measured_scopes_not_process_wall": 252.585906
+  },
+  "timing_limit": "One validation run under concurrent load, not a controlled speed comparison or compile measurement; mixed stages retain their internal checks.",
+  "sha256": {
+    "pcb": "c173669ef17404a63c6c5473c0ebfb040ce02e402b1398e4de2a6005db1b2d74",
+    "log": "2d7798c24929d60cfb8d3ab21fbb569dc8f29b9b49aa320a38e2a5160d802eb6",
+    "board_verdicts": "979309d54c0ab0cfec6f8a954d68c24ea619caef9cc6336e342d502fbb0ffb60"
+  }
+}
