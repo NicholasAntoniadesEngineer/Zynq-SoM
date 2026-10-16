@@ -163,6 +163,10 @@ public:
     std::optional<std::pair<ContinuationKey,std::map<std::string,int>>> shape_replay_hint;
 
     std::vector<FloorplanBlock*> blocks();
+    std::set<FloorplanShapeKey> component_shapes;
+    int reservation_mask(const std::string& sheet,int index,const std::string& side) const {
+        return component_shapes.count({sheet,index})?0:side_mask(side);
+    }
     const CachedFootprint& footprint(const std::string& key) const;
     std::optional<std::string> resolved(const CircuitPartIr& part) const;
     FloorplanPoint part_dims(const std::string& footprint) const;
@@ -179,7 +183,7 @@ public:
     double estimate();
     std::pair<Halo, Halo> fanout(const FloorplanZoneShape& shape);
     std::vector<Comp> zone_components(const FloorplanZoneShape& shape,
-                                      bool pad_punch, QuantizationCounts* counts) const;
+                                      bool pad_punch, QuantizationCounts* counts, bool primary_components=false) const;
     std::vector<Box4> pad_boxes(const std::string& key, double rotation,
                                 bool thru_only = false) const;
     void board_size(double w, double h);

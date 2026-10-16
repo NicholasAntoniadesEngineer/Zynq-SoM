@@ -85,11 +85,15 @@ double Engine::packing_area_bound(bool free) {
         const auto variants=sets.find(b->name);
         std::vector<PackingAreaOption> options;
         if(b->kind=="interior" && variants!=sets.end()) {
-            for(const auto& s:variants->second)
-                options.push_back({s.w*s.h,side_mask(s.side)});
+            for(std::size_t i=0;i<variants->second.size();++i) {
+                const auto& s=variants->second[i];
+                // An envelope is not solid area in component-only mode.
+                // Zero is a sound loose bound, not a free-space estimate.
+                options.push_back({component_shapes.count({b->name,static_cast<int>(i)})?0:s.w*s.h,side_mask(s.side)});
+            }
         } else {
             const auto wh=zbox.at(b->name);
-            options.push_back({wh.first*wh.second,b->kind=="edge" ? reserved:occ_top});
+            options.push_back({component_shapes.count({b->name,0})?0:wh.first*wh.second,b->kind=="edge" ? reserved:occ_top});
         }
         bodies.push_back(std::move(options));
     }

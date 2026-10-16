@@ -405,6 +405,11 @@ PcbPlacementSearchResult search_pcb_models(const PcbPlacementInput& input,
                 if(strategy.contract_group_rotations)policy->contract_group_rotations=*strategy.contract_group_rotations;
                 if(strategy.granular_minor_occupancy)policy->granular_minor_occupancy=true;
                 if(strategy.dual_primary_reservations)policy->dual_primary_reservations=true;
+                if(strategy.component_primary_reservations) {
+                    if(policy->contract_group_face_sheets.empty())
+                        throw std::invalid_argument("component primary reservations require explicit contract-group sheets");
+                    policy->component_reservation_sheets=policy->contract_group_face_sheets;
+                }
                 if(strategy.shape_choice_replays)policy->shape_choice_replays=*strategy.shape_choice_replays;
                 trial.floorplan.experiment=std::move(policy);
             }

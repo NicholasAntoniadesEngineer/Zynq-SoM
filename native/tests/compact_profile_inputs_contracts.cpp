@@ -112,6 +112,8 @@ void profile_option_contracts() {
     (void)options({"profile","--repo",".","--compact-search","on","--search-strategy","granular-minor"});
     if(!search_strategy("granular-minor+dual-primary").dual_primary_reservations)
         throw std::runtime_error("dual primary reservation strategy override lost");
+    if(!search_strategy("component-primary").component_primary_reservations)
+        throw std::runtime_error("component primary reservation strategy override lost");
     (void)options({"profile","--repo",".","--compact-search","on","--search-strategy","granular-minor","--search-strategy","granular-minor+dual-primary"});
     for(const auto& args:std::vector<std::vector<std::string>>{
         {"profile","--repo",".","--compact-search","on","--search-strategy","unknown"},

@@ -372,6 +372,17 @@ void unit(){
   demand(!fine_grid.fits_exhaustive(2,2,.2,.2,{},{},face,{})&&
          !fine_grid.fits_exhaustive(3.25,2,.2,.2,{},{},face,{}),
          "granular occupancy lost body or fanout collision rejection");
+  auto primary_islands=islands;primary_islands.top_off=primary_islands.bot_off;primary_islands.bot_off.clear();
+  const auto primary_children=split_engine.zone_components(primary_islands,true,&split_counts,true);
+  demand(primary_children.size()==4&&primary_children[0].mask==primary_mask&&
+         primary_children[1].mask==primary_mask&&primary_children[2].mask==3&&primary_children[3].mask==3,
+         "component-primary producer lost physical faces or THT punches");
+  Occupancy primary_grid(30,12,.2,2,3,1,.05);
+  primary_grid.add(0,0,24,5,{},{},0,primary_children);
+  demand(primary_grid.fits_exhaustive(10,2,1,1,{},{},primary_mask,{})&&
+         !primary_grid.fits_exhaustive(2,2,.2,.2,{},{},primary_mask,{})&&
+         !primary_grid.fits_exhaustive(3.25,2,.2,.2,{},{},primary_mask,{}),
+         "component-primary producer lost gap reuse, body or fanout protection");
  }
 }
 void live(const std::filesystem::path& root){
@@ -521,6 +532,19 @@ void live(const std::filesystem::path& root){
    Context som_context(f.input);som_context.pool=som_split.footprints;
    const auto& som_originals=after.geometry.shapes.at("power_som");
    const auto& som_offers=som_split.geometry.shapes.at("power_som");
+   experiment->component_reservation_sheets={"power_som"};
+   const auto prepared_components=prepare_pcb_floorplan(f.input,som_split);
+   floorplan_detail::Engine component_engine(prepared_components);component_engine.initialize();component_engine.prepare_geometry();
+   demand(!component_engine.component_shapes.empty(),"real power_som offers have no eligible component reservations");
+   for(const auto& key:component_engine.component_shapes) {
+    demand(key.first=="power_som"&&component_engine.reservation_mask(key.first,key.second,"top")==0,
+           "component reservation selection escaped requested sheet");
+    for(const int policy:{0,1}) {
+     const auto& physical=component_engine.components[policy].at(key);
+     demand(!physical.empty(),"eligible component candidate lost its children");
+    }
+   }
+   experiment->component_reservation_sheets.clear();
    std::size_t rebased=0;
    for(const auto& candidate:som_offers)if(auto other=opposite_primary_reservation(candidate)) {
     ++rebased;

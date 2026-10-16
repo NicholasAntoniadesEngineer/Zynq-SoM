@@ -1,0 +1,42 @@
+{
+  "source_base": "ed9ccc79",
+  "source_delta": "Experimental component-primary reservation integration through floorplan preparation, all seating/reseat paths, refinement, legalization and final pair checks",
+  "activation": "Append --search-strategy granular-minor+vertical+estimator-first+component-primary to carrier_command in 2026-10-16-courtyard-coverage.json. Only explicitly requested contract-group sheets are considered. Existing strategies and candidates remain available.",
+  "eligibility": "Per-shape exact reference membership and complete courtyard geometry, with both courtyard and pad-punch representations contained by the envelope. Ineligible legacy candidates retain their solid reservation. Edge blocks remain solid. Each physical courtyard retains its own fanout, and through-hole punches reserve both faces. Eligible parent halos and occupancy masks are zero; their physical children remain active.",
+  "area_bound": "Eligible envelopes contribute zero to the area-only lower bound: deliberately loose, but sound. Treating the entire envelope as occupied area could incorrectly prune interlocking layouts. A union-based tighter bound remains future work.",
+  "tests": {
+    "native_pcb_orientation_contracts": "PASS after correcting the diagnostic test to invoke prepare_geometry after initialize: 4.64 seconds. Both primary faces, empty-gap reuse, body/fanout/THT protection, real power_som eligible shapes and both punch policies.",
+    "native_component_reservation_contracts": "PASS",
+    "native_compact_profile_inputs_contracts": "PASS",
+    "floorplan_legalize_accounting_model_failure_receipts": "3/3 PASS, 37.32 seconds",
+    "logs": ["native/build/component-primary-tests.log", "native/build/component-primary-orientation-tests.log", "native/build/component-primary-regression.log"]
+  },
+  "screens": [
+    {
+      "outline_mm": [162,151],
+      "log": "native/build/component-primary-162x151.log",
+      "result": "Baseline failed; granular-minor+vertical+estimator-first incumbent retained; added component-primary strategy failed construction",
+      "seconds_all_three_strategies": 80.438590875,
+      "aggregate_counter_keys_reconciled": 123,
+      "retained_pcb_sha256": "8aae8efbb2dee1c37cc61dc1b91e832b9ed6e4c7c47a17fc78b73c1a44f8d231"
+    },
+    {
+      "outline_mm": [162,150],
+      "log": "native/build/component-primary-162x150.log",
+      "result": "All three strategies failed construction; no accepted incumbent",
+      "seconds_all_three_strategies": 74.882832209,
+      "completed_outer_attempts": 12,
+      "failure_receipt_captured": true,
+      "failure_receipt_unavailable": false,
+      "aggregate_counter_keys_reconciled": 82
+    }
+  ],
+  "devkit_default_regression": {
+    "log": "native/build/component-primary-devkit-regression.log",
+    "dimensions_mm": [98,98],
+    "top_bottom": [105,55],
+    "pcb_sha256": "1b12fecbcbbaa5e6084c2459da93cb144a660ff19805e6e4e3f75f9c22689fdb"
+  },
+  "limitations": "Not enabled by default, not a new accepted board, not full pipeline qualification. Concurrent timings are not controlled performance comparisons. A failed search does not prove geometric infeasibility. Master and published imagery remain unchanged.",
+  "next": "Isolate component-reservation subsystem combinations and inspect downstream selection/legalization failures rather than increasing budgets or assuming every decomposed envelope improves the greedy incumbent."
+}

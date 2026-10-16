@@ -75,6 +75,7 @@ PcbPlacementSearchStrategy search_strategy(const std::string& text) {
         else if(token=="vertical")result.vertical_compaction=true;
         else if(token=="granular-minor")result.granular_minor_occupancy=true;
         else if(token=="dual-primary")result.dual_primary_reservations=true;
+        else if(token=="component-primary")result.component_primary_reservations=true;
         else if(token=="rotations")result.contract_group_rotations=true;
         else if(token=="area-first"||token=="estimator-first") {
             if(result.shape_area_first)throw std::invalid_argument("conflicting search-strategy rankings");
@@ -91,6 +92,7 @@ void help() {
     std::cout << "  [--search-strategy extent|rotations|vertical|granular-minor|dual-primary|area-first|estimator-first] (join with + for combined strategies; repeat; baseline retained; no acceptance)\n";
     std::cout << "    Each strategy starts from baseline settings; repeated options are not cumulative. search_total includes every attempt and screening.\n";
     std::cout << "    dual-primary requires granular-minor; swaps reservation roles, never physical component faces.\n";
+    std::cout << "    component-primary decomposes eligible primary envelopes on explicit contract-group sheets.\n";
     std::cout << "  [--shape-area-first on|off] (experimental legal-shape envelope ranking; compact on required)\n";
     std::cout << "  [--contract-group-face-sheet SHEET] (repeat for multiple sheets; experimental rigid-group face candidates)\n";
     std::cout << "  [--contract-group-rotations on|off] (requires contract-group-face-sheet)\n";
@@ -147,6 +149,7 @@ Options parse(int argc, char** argv) {
                    proposed.vertical_compaction==existing.vertical_compaction&&
                    proposed.granular_minor_occupancy==existing.granular_minor_occupancy&&
                    proposed.dual_primary_reservations==existing.dual_primary_reservations&&
+                   proposed.component_primary_reservations==existing.component_primary_reservations&&
                    proposed.owned_extent_alternatives==existing.owned_extent_alternatives&&
                    proposed.contract_group_rotations==existing.contract_group_rotations)
                     throw std::invalid_argument("duplicate search-strategy: "+value);

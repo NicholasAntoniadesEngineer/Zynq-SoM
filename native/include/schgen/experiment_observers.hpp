@@ -87,6 +87,7 @@ struct FloorplanExperiment {
     // fanout halos, instead of reserving empty space in their bounding union.
     bool granular_minor_occupancy = false;
     bool dual_primary_reservations = false;
+    std::set<std::string> component_reservation_sheets;
     bool vertical_compaction = false;
     // Diagnostic candidate restrictions by generated tag, not unstable index.
     // Unknown, ambiguous or unmeasured choices fail; never silently fall back.
