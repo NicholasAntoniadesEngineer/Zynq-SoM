@@ -95,6 +95,54 @@ int main(){try {
         demand(allocations==1&&starts==3&&ends==starts,"identical allocation constraints repeated a solver trial or lost work boundaries");
         demand(vars[0].x==20&&vars[0].y==20,"deduplicated failure changed seed");
     }
-    std::cout<<"cases="<<tested<<" known_feasible_misses="<<misses<<"\n";
+    {
+        FloorplanLegalizeInput in;in.board_w=in.board_h=60;in.clear=.3;in.compact=true;in.joint_separation_states=64;
+        in.fixed_poses["target"]={30,30};in.metrics["target"].offsets={{"p",1,1}};
+        in.fixed_rects={{"target",{30,30,32,32}},{"a_strip",{0,0,33,28}},
+            {"a_column",{0,28,28,60}},{"b_strip",{0,0,28,33}},{"b_row",{28,0,60,28}}};
+        for(const auto& name:{"a","b"}) {
+            in.metrics[name].offsets={{"out",2,2},{"in",0,0}};
+            FloorplanTerm term;term.kind="facing";term.subject=name;term.target_raw="target";
+            term.enforced=true;term.require_positive_facing=true;term.out_refs={"out"};in.index.hard.push_back(term);
+        }
+        for(const auto& [name,mask]:std::vector<std::pair<std::string,int>>{
+            {"a",1},{"b",2},{"target",3},{"a_strip",1},{"a_column",1},{"b_strip",2},{"b_row",2}})
+            in.primary_fanout[name]={{},{},mask,mask,std::vector<Comp>{}};
+        const auto valid=[&](const std::vector<FloorplanLegalizeVar>& vars) {
+            Occupancy occ(60,60,.3,2,0,1,.05);
+            for(const auto& [name,b]:in.fixed_rects)
+                occ.add(b.x0,b.y0,b.x1-b.x0,b.y1-b.y0,{},{},in.primary_fanout.at(name).mask,{});
+            auto poses=in.fixed_poses;
+            for(const auto& v:vars) {
+                const int face=in.primary_fanout.at(v.name).mask;
+                if(!occ.fits_exhaustive(v.x,v.y,2,2,{},{},face,{}))return false;
+                occ.add(v.x,v.y,2,2,{},{},face,{});poses[v.name]={v.x,v.y};
+                if((30-v.x)+(30-v.y)<=0)return false;
+            }
+            for(const auto& row:floorplan_evaluate_terms(in,poses))if(!row.ok)return false;
+            return true;
+        };
+        demand(valid({{"a",2,2,{40,.3},40,.3},{"b",2,2,{.3,40},.3,40}}),"mixed allocation witness invalid");
+        const std::vector<FloorplanLegalizeVar> seed{{"a",2,2,{40,40},40,40},{"b",2,2,{40,40},40,40}};
+        int starts=0,ends=0;
+        in.joint_retry_started=[&]{++starts;};
+        in.joint_retry_completed=[&](const JointSeparationWork& w,bool){++ends;demand(w.generated<=64&&w.visited<=w.generated,"mixed allocation exceeded work budget");};
+        auto vars=seed;std::vector<std::string> log;QuantizationCounts counts;
+        demand(floorplan_legalize_compact_accounted(in,vars,log,counts)&&valid(vars),"mixed per-term facing allocations missed a known feasible layout");
+        demand(starts==ends,"mixed allocation lost a completion callback");
+        const auto original_starts=starts;starts=ends=0;
+        auto repeated=seed;std::vector<std::string> repeated_log;QuantizationCounts repeated_counts;
+        demand(floorplan_legalize_compact_accounted(in,repeated,repeated_log,repeated_counts)&&valid(repeated)&&
+               log==repeated_log&&counts==repeated_counts&&starts==ends&&starts==original_starts,
+               "mixed allocation receipts or callbacks not reproducible");
+        for(std::size_t i=0;i<vars.size();++i)demand(vars[i].x==repeated[i].x&&vars[i].y==repeated[i].y,"mixed poses not reproducible");
+        std::reverse(in.index.hard.begin(),in.index.hard.end());vars=seed;log.clear();
+        demand(floorplan_legalize_compact(in,vars,log)&&valid(vars),"mixed allocation depends on facing term order");
+        auto contradiction=in.index.hard.front();contradiction.out_refs={"in"};in.index.hard.push_back(contradiction);
+        vars=seed;log.clear();demand(!floorplan_legalize_compact(in,vars,log),"mixed allocation accepted a strict contradiction");
+        demand(starts==ends,"mixed contradiction lost a completion callback");
+        for(std::size_t i=0;i<vars.size();++i)demand(vars[i].x==seed[i].x&&vars[i].y==seed[i].y,"mixed failure mutated seed");
+    }
+    std::cout<<"cases="<<tested<<" known_feasible_misses="<<misses<<" mixed_per_term_case=PASS\n";
     return misses?1:0;
 }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 2;}}

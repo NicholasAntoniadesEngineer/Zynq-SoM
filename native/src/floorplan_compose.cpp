@@ -169,7 +169,8 @@ public:
              const std::vector<FloorplanLegalizeVar>& variables,
              std::vector<std::string>& output_log, QuantizationCounts* counts = nullptr,
              bool pad_seed_hulls = false, bool perpendicular_order = false,bool reservation_geometry=false,bool facing_cuts=false,
-             FacingAllocation allocation=FacingAllocation::seed)
+             FacingAllocation allocation=FacingAllocation::seed,
+             std::optional<std::size_t> flipped_facing=std::nullopt)
         : in(input), log(output_log), counts(counts), fixed(input.fixed_poses), pad_seed_hulls(pad_seed_hulls), perpendicular_order(perpendicular_order), reservation_geometry(reservation_geometry) {
         for (const auto& v : variables) {
             if (v.name.empty() || v.name.front() == '#' || !by_name.emplace(v.name, &v).second)
@@ -221,23 +222,19 @@ public:
             out.push_back({0,0,w,h,body.reach,body.inset,body.mask,body.mask,true});
             for(const auto& c:*body.children)out.push_back({c.dx,c.dy,c.w,c.h,c.reach,c.inset,c.mask,body.mask,false});
         }
-        if(facing_cuts)build_facing_cuts(allocation);
+        if(facing_cuts)build_facing_cuts(allocation,flipped_facing);
     }
 
     bool changed_flip_order() const {return flip_order_differs;}
-    bool same_facing_cuts(const Composer& other) const {
+    using FacingCutKey=std::vector<std::tuple<bool,std::string,std::string,double>>;
+    FacingCutKey facing_cut_key() const {
         // Compare exact emitted constraints, not allocation names or epsilon
         // proximity. A failed run can mutate positions and separation choices,
         // but these constructor-built facing cuts remain immutable.
-        for(const bool x:{true,false}) {
-            const auto& a=x?facing_x:facing_y;
-            const auto& b=x?other.facing_x:other.facing_y;
-            if(a.size()!=b.size())return false;
-            for(std::size_t i=0;i<a.size();++i)
-                if(a[i].edge.src!=b[i].edge.src||a[i].edge.dst!=b[i].edge.dst||
-                   a[i].edge.cost!=b[i].edge.cost)return false;
-        }
-        return true;
+        FacingCutKey result;
+        for(const bool x:{true,false})for(const auto& e:x?facing_x:facing_y)
+            result.emplace_back(x,e.edge.src,e.edge.dst,e.edge.cost);
+        return result;
     }
     bool same_near_axes(const Composer& other) const {
         for(const bool x:{true,false}) {
@@ -533,7 +530,7 @@ private:
     std::vector<RepairSep> seps;
     std::map<std::string,std::vector<Rect>> local_reservations;
     std::vector<TaggedEdge> facing_x,facing_y;
-    void build_facing_cuts(FacingAllocation allocation) {
+    void build_facing_cuts(FacingAllocation allocation,std::optional<std::size_t> flipped_facing) {
         struct Endpoint { FloorplanPoint local,pose; bool moving; };
         const auto endpoint=[&](const std::string& name)->std::optional<Endpoint> {
             if(name=="@som")return Endpoint{{(in.som_core_page.x0+in.som_core_page.x1)/2-in.origin.first,
@@ -550,8 +547,12 @@ private:
             if(pose==fixed.end())return std::nullopt;
             return Endpoint{*center,pose->second,false};
         };
+        std::size_t term_index=0;
         for(const auto& term:in.index.hard) {
             if(term.kind!="facing"||!term.enforced||!term.require_positive_facing)continue;
+            const auto selected=flipped_facing&&*flipped_facing==term_index
+                ?(allocation==FacingAllocation::y_capacity?FacingAllocation::x_capacity:FacingAllocation::y_capacity):allocation;
+            ++term_index;
             const auto s=endpoint(term.subject),t=endpoint(term.target());
             const auto metric=in.metrics.find(term.subject);
             if(!s||!t||(!s->moving&&!t->moving)||metric==in.metrics.end())continue;
@@ -602,8 +603,8 @@ private:
                     // an obstacle. Failure-only retries explore the two ends
                     // of the board-feasible allocation interval, without
                     // relaxing the total projection or exact final checks.
-                    share_x=allocation==FacingAllocation::y_capacity?low:
-                        allocation==FacingAllocation::x_capacity?max_x:std::clamp(share_x,low,max_x);
+                    share_x=selected==FacingAllocation::y_capacity?low:
+                        selected==FacingAllocation::x_capacity?max_x:std::clamp(share_x,low,max_x);
                     share_y=projection_margin-share_x;
                 }
             }
@@ -1008,17 +1009,26 @@ bool compose_with_facing_extremes(const FloorplanLegalizeInput& input,
     // receives the caller's state budget, reports all actual work through the
     // existing joint callbacks and preserves the caller's poses on rejection.
     // Extreme allocations add opportunities, not a complete half-plane solver.
-    std::optional<Composer> previous;
-    for(const auto allocation:{FacingAllocation::y_capacity,FacingAllocation::x_capacity}) {
-        Composer candidate(input,movable,log,counts,false,false,!input.primary_fanout.empty(),true,allocation);
+    std::vector<std::pair<FacingAllocation,std::optional<std::size_t>>> allocations{
+        {FacingAllocation::y_capacity,std::nullopt},{FacingAllocation::x_capacity,std::nullopt}};
+    const std::size_t terms=std::count_if(input.index.hard.begin(),input.index.hard.end(),[](const auto& t){
+        return t.kind=="facing"&&t.enforced&&t.require_positive_facing;
+    });
+    // Linear one-term deviations, not an exponential Cartesian campaign.
+    // With two facing relationships this covers both mixed allocations.
+    if(terms>1)for(const auto base:{FacingAllocation::y_capacity,FacingAllocation::x_capacity})
+        for(std::size_t term=0;term<terms;++term)allocations.emplace_back(base,term);
+    std::set<Composer::FacingCutKey> seen;
+    for(const auto& [allocation,flipped]:allocations) {
+        Composer candidate(input,movable,log,counts,false,false,!input.primary_fanout.empty(),true,allocation,flipped);
         // Keep the actual preparation work, but neither execute nor report a
         // duplicate solver attempt (e.g. a purely axial facing requirement).
-        if(previous&&candidate.same_facing_cuts(*previous))continue;
-        log.push_back(allocation==FacingAllocation::y_capacity?
-            "retry: joint facing Y-capacity allocation":"retry: joint facing X-capacity allocation");
+        if(!seen.insert(candidate.facing_cut_key()).second)continue;
+        log.push_back(std::string(allocation==FacingAllocation::y_capacity?
+            "retry: joint facing Y-capacity allocation":"retry: joint facing X-capacity allocation")+
+            (flipped?" with opposite allocation for term "+std::to_string(*flipped):""));
         if(input.joint_retry_started)input.joint_retry_started();
         if(candidate.run(movable,true,true))return true;
-        previous.emplace(std::move(candidate));
     }
     return false;
 }

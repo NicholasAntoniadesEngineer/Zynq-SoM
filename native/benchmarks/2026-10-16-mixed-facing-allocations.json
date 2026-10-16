@@ -1,0 +1,23 @@
+{
+  "source_base": "b1d5925e",
+  "correction": "Failure-only facing allocation fallback now explores one-term deviations from global X/Y capacity allocations, deduplicating exact ordered cut signatures before solver execution",
+  "counterexample": "Two movable 2x2 groups on opposite faces of a 60x60 board share a target at (30,30). Face-specific strip/column obstacles force one source into an X-constrained pocket and the other into a Y-constrained pocket. Witnesses (40,0.3) and (0.3,40) satisfy independent occupancy and strict positive facing checks. Neither uniform allocation solves both relationships.",
+  "before": "The added known-feasible regression failed on b1d5925e: mixed per-term facing allocations missed a known feasible layout. Log native/build/mixed-facing-before-tests.log.",
+  "after": "Known-feasible mixed case passes, including reversed term order, identical-input pose/log/count reproducibility, balanced callbacks, work bounds, and rejection of added opposing direction with unchanged seed on failure. Existing 32-case symmetry matrix and axial dedup tests pass.",
+  "work_policy": "Original successful paths are preserved. After all prior strategies fail, at most 2+2n allocation descriptions are prepared for n>1 strict facing terms; duplicate exact cut sequences do not execute or report a solver attempt. Every actual preparation remains counted and every executed solve retains the caller's state bound and start/completion callbacks. This is linear exploration, not a complete half-plane solver.",
+  "tests": {
+    "floorplan_facing_legalize_accounting": "3/3 PASS, 15.28 seconds",
+    "expanded_facing_and_model_failure_receipts": "2/2 PASS, 35.38 seconds",
+    "final_facing_and_native_policy_audits": "2/2 PASS, 47.76 seconds",
+    "logs": ["native/build/mixed-facing-tests.log", "native/build/mixed-facing-final-tests.log", "native/build/mixed-facing-audit-tests.log"]
+  },
+  "screens": [
+    {"outline_mm": [162,151], "log": "native/build/mixed-facing-162x151.log", "result": "granular-minor+vertical+estimator-first incumbent retained; PCB unchanged", "seconds_all_strategies": 17.774798875, "aggregate_counter_keys_reconciled": 123},
+    {"outline_mm": [162,150], "log": "native/build/mixed-facing-162x150.log", "result": "both strategies failed construction", "seconds_all_strategies": 11.824157084, "outer_attempts": 8, "aggregate_counter_keys_reconciled": 82},
+    {"outline_mm": [162,150], "log": "native/build/mixed-facing-components-162x150.log", "result": "baseline, granular/vertical, and combined component-primary strategies all failed construction", "seconds_all_strategies": 86.290843, "outer_attempts": 12, "aggregate_counter_keys_reconciled": 82}
+  ],
+  "carrier_pcb_sha256": "8aae8efbb2dee1c37cc61dc1b91e832b9ed6e4c7c47a17fc78b73c1a44f8d231",
+  "devkit_regression": {"log": "native/build/mixed-facing-devkit.log", "dimensions_mm": [98,98], "top_bottom": [105,55], "pcb_sha256": "1b12fecbcbbaa5e6084c2459da93cb144a660ff19805e6e4e3f75f9c22689fdb"},
+  "reproduction": "Use carrier_command in 2026-10-16-courtyard-coverage.json; substitute --outline-mm 162x150 for smaller screens. The combined screen appends --search-strategy granular-minor+vertical+estimator-first+component-primary.",
+  "limits": "No smaller accepted carrier and no new full-board qualification. No hardware gate was waived. Concurrent timings are not controlled performance comparisons. Failure is not proof of geometric infeasibility. Published master and imagery are unchanged."
+}
