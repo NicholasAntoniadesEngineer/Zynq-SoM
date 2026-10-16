@@ -11,6 +11,20 @@
 
 namespace {
 void profile_option_contracts() {
+    ExecutionFailureReceipt failure;failure.captured=true;
+    failure.accounting.quantization_engagements={{"work",2}};
+    failure.accounting.fallback_events={"first","second"};
+    std::optional<ExecutionAccounting> printed=failure.accounting;
+    if(!search_receipt_covers_failure(failure,printed))throw std::runtime_error("exact printed receipt cannot be referenced");
+    for(int mismatch=0;mismatch<5;++mismatch) {
+        auto changed=failure;auto prior=printed;
+        if(mismatch==0)changed.captured=false;
+        if(mismatch==1)changed.unavailable=true;
+        if(mismatch==2)prior.reset();
+        if(mismatch==3)prior->quantization_engagements["work"]=3;
+        if(mismatch==4)std::reverse(prior->fallback_events.begin(),prior->fallback_events.end());
+        if(search_receipt_covers_failure(changed,prior))throw std::runtime_error("nonidentical receipt aliased");
+    }
     if(nonsearch_events({})!=0 ||
        nonsearch_events({"legalize_joint_retry","legalize_joint_budget"})!=0 ||
        nonsearch_events({"thermal_via_lattice","legalize_joint_retry","thermal_via_lattice"})!=2 ||
@@ -114,9 +128,16 @@ void profile_option_contracts() {
         throw std::runtime_error("dual primary reservation strategy override lost");
     if(!search_strategy("component-primary").component_primary_reservations)
         throw std::runtime_error("component primary reservation strategy override lost");
+    if(search_strategy("component-primary:usb_jtag+component-primary:power_som").component_primary_sheets!=
+       std::set<std::string>{"usb_jtag","power_som"})
+        throw std::runtime_error("scoped component primary selection lost");
+    (void)options({"profile","--repo",".","--compact-search","on","--search-strategy","component-primary:usb_jtag","--search-strategy","component-primary:power_som"});
     (void)options({"profile","--repo",".","--compact-search","on","--search-strategy","granular-minor","--search-strategy","granular-minor+dual-primary"});
     for(const auto& args:std::vector<std::vector<std::string>>{
         {"profile","--repo",".","--compact-search","on","--search-strategy","unknown"},
+        {"profile","--repo",".","--compact-search","on","--search-strategy","component-primary:"},
+        {"profile","--repo",".","--compact-search","on","--search-strategy","component-primary+component-primary:usb_jtag"},
+        {"profile","--repo",".","--compact-search","on","--search-strategy","component-primary:usb_jtag+component-primary:power_som","--search-strategy","component-primary:power_som+component-primary:usb_jtag"},
         {"profile","--repo",".","--compact-search","on","--search-strategy","dual-primary"},
         {"profile","--repo",".","--compact-search","on","--search-strategy","dual-primary+granular-minor","--search-strategy","granular-minor+dual-primary"},
         {"profile","--repo",".","--compact-search","on","--search-strategy","extent+"},

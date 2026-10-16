@@ -9,6 +9,7 @@ struct PcbPlacementSearchStrategy {
     bool granular_minor_occupancy = false;
     bool dual_primary_reservations = false;
     bool component_primary_reservations = false;
+    std::set<std::string> component_primary_sheets;
     std::optional<bool> shape_area_first, owned_extent_alternatives, contract_group_rotations;
     std::optional<std::size_t> shape_choice_replays;
 };

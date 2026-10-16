@@ -26,6 +26,12 @@
 namespace {
 using namespace schgen;
 using Clock = std::chrono::steady_clock;
+bool search_receipt_covers_failure(const ExecutionFailureReceipt& failure,
+                                  const std::optional<ExecutionAccounting>& printed_search) {
+    return failure.captured&&!failure.unavailable&&printed_search&&
+        failure.accounting.quantization_engagements==printed_search->quantization_engagements&&
+        failure.accounting.fallback_events==printed_search->fallback_events;
+}
 std::size_t nonsearch_events(const std::vector<std::string>& events) {
     return static_cast<std::size_t>(std::count_if(events.begin(),events.end(),
         [](const auto& name){return !is_board_search_effort(name);}));
@@ -76,6 +82,11 @@ PcbPlacementSearchStrategy search_strategy(const std::string& text) {
         else if(token=="granular-minor")result.granular_minor_occupancy=true;
         else if(token=="dual-primary")result.dual_primary_reservations=true;
         else if(token=="component-primary")result.component_primary_reservations=true;
+        else if(token.rfind("component-primary:",0)==0) {
+            const auto sheet=token.substr(std::string("component-primary:").size());
+            if(sheet.empty())throw std::invalid_argument("component-primary requires a nonempty sheet");
+            result.component_primary_sheets.insert(sheet);
+        }
         else if(token=="rotations")result.contract_group_rotations=true;
         else if(token=="area-first"||token=="estimator-first") {
             if(result.shape_area_first)throw std::invalid_argument("conflicting search-strategy rankings");
@@ -86,6 +97,8 @@ PcbPlacementSearchStrategy search_strategy(const std::string& text) {
     }
     if(result.dual_primary_reservations&&!result.granular_minor_occupancy)
         throw std::invalid_argument("dual-primary strategy requires granular-minor");
+    if(result.component_primary_reservations&&!result.component_primary_sheets.empty())
+        throw std::invalid_argument("component-primary cannot mix all-sheet and scoped selection");
     return result;
 }
 void help() {
@@ -93,6 +106,7 @@ void help() {
     std::cout << "    Each strategy starts from baseline settings; repeated options are not cumulative. search_total includes every attempt and screening.\n";
     std::cout << "    dual-primary requires granular-minor; swaps reservation roles, never physical component faces.\n";
     std::cout << "    component-primary decomposes eligible primary envelopes on explicit contract-group sheets.\n";
+    std::cout << "    component-primary:SHEET restricts this to named sheets; join several with + for combinations.\n";
     std::cout << "  [--shape-area-first on|off] (experimental legal-shape envelope ranking; compact on required)\n";
     std::cout << "  [--contract-group-face-sheet SHEET] (repeat for multiple sheets; experimental rigid-group face candidates)\n";
     std::cout << "  [--contract-group-rotations on|off] (requires contract-group-face-sheet)\n";
@@ -150,6 +164,7 @@ Options parse(int argc, char** argv) {
                    proposed.granular_minor_occupancy==existing.granular_minor_occupancy&&
                    proposed.dual_primary_reservations==existing.dual_primary_reservations&&
                    proposed.component_primary_reservations==existing.component_primary_reservations&&
+                   proposed.component_primary_sheets==existing.component_primary_sheets&&
                    proposed.owned_extent_alternatives==existing.owned_extent_alternatives&&
                    proposed.contract_group_rotations==existing.contract_group_rotations)
                     throw std::invalid_argument("duplicate search-strategy: "+value);
@@ -610,7 +625,10 @@ std::string trial(const PcbPlacementInput& source, bool compact, int run, int ge
         print_face_offers();
         if (failure.captured && !failure.unavailable) {
             receipt("failure_prefix", failure.accounting.quantization_engagements);
-            for(std::size_t i=0;i<failure.accounting.fallback_events.size();++i)
+            if(search_receipt_covers_failure(failure,search_accounting))
+                std::cout<<"failure_fallback_alias source=search_fallback order=attempt_then_index events="
+                         <<failure.accounting.fallback_events.size()<<" exact_accounting_match=1\n";
+            else for(std::size_t i=0;i<failure.accounting.fallback_events.size();++i)
                 std::cout<<"failure_fallback index="<<i<<" name="<<failure.accounting.fallback_events[i]<<'\n';
         }
         throw;
