@@ -1,6 +1,6 @@
 # Assembly order — carrier
 
-Board 162 x 151 mm. 561 placed parts (326 top / 235 bottom); 5 fiducials are bare-copper marks, excluded from every phase and step.
+Board 162 x 150.5 mm. 561 placed parts (344 top / 217 bottom); 5 fiducials are bare-copper marks, excluded from every phase and step.
 Section A is the staged hand-assembly + bring-up order; section B is the PCBA process order. Every part appears in exactly one phase and exactly one step.
 
 ## A. Incremental bring-up order
@@ -160,7 +160,7 @@ CHECKPOINT: verify +1V8 at TP20003
 
 ![phase 4](../renders/assembly/phase_04_power_som.png)
 
-20 parts (2 top / 18 bottom)
+20 parts (19 top / 1 bottom)
 
 | ref | value | package | sheet |
 |---|---|---|---|
@@ -854,7 +854,7 @@ CHECKPOINT: verify +5V_DBG at TP29001
 
 ![phase 31](../renders/assembly/phase_31_usb_jtag.png)
 
-19 parts (15 top / 4 bottom)
+19 parts (16 top / 3 bottom)
 
 | ref | value | package | sheet |
 |---|---|---|---|
@@ -946,7 +946,7 @@ CHECKPOINT: verify +3V3_DBG at TP28001
 
 ![step 1](../renders/assembly/step_1_bottom_smd.png)
 
-235 parts (0 top / 235 bottom)
+217 parts (0 top / 217 bottom)
 
 | ref | value | package | sheet |
 |---|---|---|---|
@@ -1018,19 +1018,7 @@ CHECKPOINT: verify +3V3_DBG at TP28001
 | C21001 | 100n | C_0603_1608Metric | power_mon |
 | C21002 | 100n | C_0603_1608Metric | power_mon |
 | C21003 | 10u | C_0805_2012Metric | power_mon |
-| C22014 | 100n | C_0603_1608Metric | power_som |
-| C22015 | 10u | C_1206_3216Metric | power_som |
-| C22016 | 10u | C_1206_3216Metric | power_som |
-| C22017 | 100n | C_0603_1608Metric | power_som |
-| C22018 | 22u | C_0805_2012Metric | power_som |
-| C22019 | 22u | C_0805_2012Metric | power_som |
-| C22021 | 22p | C_0603_1608Metric | power_som |
-| C22022 | 1u | C_0603_1608Metric | power_som |
-| C22023 | 1u | C_0603_1608Metric | power_som |
-| C22025 | 100n | C_0603_1608Metric | power_som |
-| C28001 | 1u | C_0603_1608Metric | usb_jtag |
-| C28002 | 10u | C_0805_2012Metric | usb_jtag |
-| C28003 | 100n | C_0603_1608Metric | usb_jtag |
+| C28007 | 100n | C_0603_1608Metric | usb_jtag |
 | C33001 | 100n | C_0603_1608Metric | user_io |
 | C35001 | 22u | C_0805_2012Metric | som_decoupling |
 | C35002 | 22u | C_0805_2012Metric | som_decoupling |
@@ -1052,7 +1040,6 @@ CHECKPOINT: verify +3V3_DBG at TP28001
 | C35018 | 100n | C_0603_1608Metric | som_decoupling |
 | L20001 | 10uH | SWPA8040S100MT | power |
 | L20002 | 10uH | SWPA8040S100MT | power |
-| L22003 | 10uH | SWPA8040S100MT | power_som |
 | Q20001 | AO3400A | SOT-23 | power |
 | R1001 | 13k | R_0603_1608Metric | board_aux |
 | R1002 | 100k | R_0603_1608Metric | board_aux |
@@ -1136,14 +1123,10 @@ CHECKPOINT: verify +3V3_DBG at TP28001
 | R20014 | 22k | R_0603_1608Metric | power |
 | R20015 | 1k | R_0603_1608Metric | power |
 | R21001 | 10k | R_0603_1608Metric | power_mon |
-| R22014 | 47.5k | R_0603_1608Metric | power_som |
-| R22015 | 13k | R_0603_1608Metric | power_som |
 | R22016 | 1k | R_0603_1608Metric | power_som |
-| R22017 | 10R | R_0603_1608Metric | power_som |
-| R22018 | 22k | R_0603_1608Metric | power_som |
-| R22019 | 1k | R_0603_1608Metric | power_som |
 | R23001 | 330R | R_0603_1608Metric | rj45_connector |
 | R23002 | 330R | R_0603_1608Metric | rj45_connector |
+| R28004 | 100k | R_0603_1608Metric | usb_jtag |
 | R33001 | 1k | R_0603_1608Metric | user_io |
 | R33002 | 200R | R_0603_1608Metric | user_io |
 | R33003 | 200R | R_0603_1608Metric | user_io |
@@ -1183,16 +1166,15 @@ CHECKPOINT: verify +3V3_DBG at TP28001
 | U20003 | AP2112K-1.8 | SOT-23-5 | power |
 | U21001 | INA3221AIRGVR | INA3221AIRGVR | power_mon |
 | U21002 | INA3221AIRGVR | INA3221AIRGVR | power_mon |
-| U22004 | LM61460AANRJRR | LM61460AANRJRR | power_som |
-| U28004 | AP2112K-3.3TRG1 | AP2112K-3.3TRG1 | usb_jtag |
+| U28002 | SN74LVC125ADR | SN74LVC125ADR | usb_jtag |
 
-NOTES: pin-1 orientation (30 parts, U/Q refs): dot per silkscreen
+NOTES: pin-1 orientation (29 parts, U/Q refs): dot per silkscreen
 
 ### Step 2 — Top-side SMD (paste + reflow)
 
 ![step 2](../renders/assembly/step_2_top_smd.png)
 
-299 parts (299 top / 0 bottom)
+317 parts (317 top / 0 bottom)
 
 | ref | value | package | sheet |
 |---|---|---|---|
@@ -1242,14 +1224,26 @@ NOTES: pin-1 orientation (30 parts, U/Q refs): dot per silkscreen
 | C19003 | 100n | C_0603_1608Metric | pmod_expansion |
 | C19004 | 100n | C_0603_1608Metric | pmod_expansion |
 | C19005 | 10u | C_0805_2012Metric | pmod_expansion |
+| C22014 | 100n | C_0603_1608Metric | power_som |
+| C22015 | 10u | C_1206_3216Metric | power_som |
+| C22016 | 10u | C_1206_3216Metric | power_som |
+| C22017 | 100n | C_0603_1608Metric | power_som |
+| C22018 | 22u | C_0805_2012Metric | power_som |
+| C22019 | 22u | C_0805_2012Metric | power_som |
+| C22021 | 22p | C_0603_1608Metric | power_som |
+| C22022 | 1u | C_0603_1608Metric | power_som |
+| C22023 | 1u | C_0603_1608Metric | power_som |
+| C22025 | 100n | C_0603_1608Metric | power_som |
 | C27001 | 100n | C_0603_1608Metric | uart_bridge |
 | C27002 | 10u | C_0805_2012Metric | uart_bridge |
 | C27003 | 100n | C_0603_1608Metric | uart_bridge |
 | C27004 | 100n | C_0603_1608Metric | uart_bridge |
+| C28001 | 1u | C_0603_1608Metric | usb_jtag |
+| C28002 | 10u | C_0805_2012Metric | usb_jtag |
+| C28003 | 100n | C_0603_1608Metric | usb_jtag |
 | C28004 | 100n | C_0603_1608Metric | usb_jtag |
 | C28005 | 16p | C_0603_1608Metric | usb_jtag |
 | C28006 | 16p | C_0603_1608Metric | usb_jtag |
-| C28007 | 100n | C_0603_1608Metric | usb_jtag |
 | C29001 | 10u | C_0805_2012Metric | usb_jtag_connector |
 | C30001 | 100n | C_0603_1608Metric | usb_pd |
 | C30002 | 10u | C_0805_2012Metric | usb_pd |
@@ -1293,6 +1287,7 @@ NOTES: pin-1 orientation (30 parts, U/Q refs): dot per silkscreen
 | D36002 | SRV05-4 | SOT-23-6 | motor_pwm |
 | D37001 | SMBJ28A | SMBJ28A | motor_sense |
 | L15001 | 10uH | SWPA4030S100MT | lcd |
+| L22003 | 10uH | SWPA8040S100MT | power_som |
 | R8001 | 100R | R_0603_1608Metric | camera |
 | R8002 | 100R | R_0603_1608Metric | camera |
 | R8003 | 100R | R_0603_1608Metric | camera |
@@ -1357,13 +1352,17 @@ NOTES: pin-1 orientation (30 parts, U/Q refs): dot per silkscreen
 | R20007 | 1k | R_0603_1608Metric | power |
 | R20008 | 100k | R_0603_1608Metric | power |
 | R20009 | 330R | R_0603_1608Metric | power |
+| R22014 | 47.5k | R_0603_1608Metric | power_som |
+| R22015 | 13k | R_0603_1608Metric | power_som |
+| R22017 | 10R | R_0603_1608Metric | power_som |
+| R22018 | 22k | R_0603_1608Metric | power_som |
+| R22019 | 1k | R_0603_1608Metric | power_som |
 | R27001 | 1k | R_0603_1608Metric | uart_bridge |
 | R27002 | 22k1 | R_0603_1608Metric | uart_bridge |
 | R27003 | 47k5 | R_0603_1608Metric | uart_bridge |
 | R28001 | 10k | R_0603_1608Metric | usb_jtag |
 | R28002 | 10k | R_0603_1608Metric | usb_jtag |
 | R28003 | 10k | R_0603_1608Metric | usb_jtag |
-| R28004 | 100k | R_0603_1608Metric | usb_jtag |
 | R29001 | 5.1k | R_0603_1608Metric | usb_jtag_connector |
 | R29002 | 5.1k | R_0603_1608Metric | usb_jtag_connector |
 | R31001 | 5.1k | R_0603_1608Metric | usb_uart_connector |
@@ -1483,9 +1482,10 @@ NOTES: pin-1 orientation (30 parts, U/Q refs): dot per silkscreen
 | U19001 | SY6280AAC | SY6280AAC | pmod_expansion |
 | U19002 | TPD4E1U06 | TPD4E1U06DBVR | pmod_expansion |
 | U19003 | TPD4E1U06 | TPD4E1U06DBVR | pmod_expansion |
+| U22004 | LM61460AANRJRR | LM61460AANRJRR | power_som |
 | U27001 | CP2102N-A02 | CP2102N-A02-GQFN24R | uart_bridge |
 | U28001 | CH347T | CH347T | usb_jtag |
-| U28002 | SN74LVC125ADR | SN74LVC125ADR | usb_jtag |
+| U28004 | AP2112K-3.3TRG1 | AP2112K-3.3TRG1 | usb_jtag |
 | U29001 | USBLC6-2SC6 | USBLC6-2SC6 | usb_jtag_connector |
 | U30001 | FUSB302BMPX | WQFN-14-1EP_2.5x2.5mm_P0.5mm_EP1.45x1.45mm | usb_pd |
 | U31001 | USBLC6-2SC6 | USBLC6-2SC6 | usb_uart_connector |
@@ -1498,7 +1498,7 @@ NOTES: pin-1 orientation (30 parts, U/Q refs): dot per silkscreen
 
 NOTES: diode polarity (25 parts, D refs): cathode per silkscreen
 NOTES: electrolytic polarity (C37004): positive mark per silkscreen
-NOTES: pin-1 orientation (41 parts, U/Q refs): dot per silkscreen
+NOTES: pin-1 orientation (42 parts, U/Q refs): dot per silkscreen
 
 ### Step 3 — Through-hole (short-to-tall)
 
