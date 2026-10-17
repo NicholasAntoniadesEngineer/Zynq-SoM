@@ -198,6 +198,25 @@ void board_search_accounting(){
     require(read(source)==original,"search classification never rewrites committed baseline");
     require(!load_fallback_baseline(output)->count("interior_reseat_retry"),
             "output baseline does not publish obsolete search ceilings");
+    const std::vector<std::string> pair_pose_events{
+        "interior_reseat_pair_pose_search","interior_reseat_pair_pose_trial",
+        "interior_reseat_pair_pose_budget","interior_reseat_pair_pose_cap",
+        "interior_reseat_pair_pose_recovered"};
+    for(const auto& name:pair_pose_events)census[name]=210;
+    result=check_board_fallbacks(census,source,output);
+    require(result.ok&&result.n_names==1&&result.search_effort.size()==8,
+            "bounded paired-pose exploration remains observational, including exhausted searches");
+    for(const auto& name:pair_pose_events){
+        require(result.search_effort.at(name)==AuditInteger(210)&&
+                result.summary().find(name+": 210")!=std::string::npos,
+                "every paired-pose event remains reported without loss");
+        require(!load_fallback_baseline(output)->count(name),"search events never become acceptance ceilings");
+    }
+    census["thermal_via_lattice"]=1;
+    require(!check_board_fallbacks(census,source,output).ok,
+            "paired-pose exploration cannot mask a genuine degraded-path regression");
+    for(const auto& name:pair_pose_events)census.erase(name);
+    require(read(source)==original,"paired-pose classification preserves committed ceilings");
     census["thermal_via_lattice"]=1;
     result=check_board_fallbacks(census,source,output);
     require(!result.ok&&result.search_effort.size()==3,"search observations cannot mask non-search regression");
