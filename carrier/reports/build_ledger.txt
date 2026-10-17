@@ -153,7 +153,7 @@ STEP   census
   CALC   quantize_engagement[occupancy_axis_count] = 267702        calls      <- klass=pre-proof value=int(extent / step) + 1  ::  count of calls that ran this registered transform
   CALC   quantize_engagement[occupancy_cell_index] = 389399056     calls      <- klass=pre-proof value=int(floor(coordinate / bucket))  ::  count of calls that ran this registered transform
   CALC   quantize_engagement[occupancy_component_precision4dp] = 257006        calls      <- klass=pre-proof value=round(value, 4)  ::  count of calls that ran this registered transform
-  CALC   quantize_engagement[occupancy_frontier_key1dp] = 1302079271    calls      <- klass=pre-proof value=round(distance, 1)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[occupancy_frontier_key1dp] = 60168084      calls      <- klass=pre-proof value=round(distance, 1)  ::  count of calls that ran this registered transform
   CALC   quantize_engagement[occupancy_reach_precision4dp] = 48            calls      <- klass=pre-proof value=round(value, 4)  ::  count of calls that ran this registered transform
   CALC   quantize_engagement[occupancy_shape_key4dp] = 13415         calls      <- klass=pre-proof value=round(distance, 4)  ::  count of calls that ran this registered transform
   CALC   quantize_engagement[pack_band_sort_precision4dp] = 198           calls      <- klass=pre-proof value=round(value, 4)  ::  count of calls that ran this registered transform

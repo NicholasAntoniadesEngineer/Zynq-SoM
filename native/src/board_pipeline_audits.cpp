@@ -17,6 +17,7 @@ std::vector<CppAuditSource> board_pipeline_audit_sources(){
     out.push_back({"native/src/pack_search_precision.cpp"});
     out.push_back({"native/src/pack_plain_precision.cpp"});
     out.push_back({"native/src/pack_grid_precision.cpp"});
+    out.push_back({"native/src/occupancy_axis_order_internal.hpp"});
     return out;
 }
 void import_board_floorplan_ledger(NativeLedger& ledger,const FloorplanAccounting& accounting,

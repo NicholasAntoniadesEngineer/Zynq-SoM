@@ -2617,78 +2617,78 @@ SEARCH EFFORT: observational, no acceptance ceiling; counts include rejected wor
   thermal_repair_rejected: 206
   thermal_repair_trial: 211
 ledger_import: PASS — actual floorplan decisions imported once; no geometry replay
-quantize_census: PASS — NATIVE POLICY AUDIT: PASS — 69 C++ files, 75 constants, 156 registered transforms
-ledger: PASS — NATIVE POLICY AUDIT: PASS — 69 C++ files, 75 constants, 156 registered transforms
+quantize_census: PASS — NATIVE POLICY AUDIT: PASS — 70 C++ files, 75 constants, 156 registered transforms
+ledger: PASS — NATIVE POLICY AUDIT: PASS — 70 C++ files, 75 constants, 156 registered transforms
 pipeline_doc: PASS — unchanged
 
 === board native exclusive timing (wall s; audits included) ===
 Nested scopes pause parents; parallel batches use launch/join wall time, never summed worker spans.
 Scope: pipeline entry through build-ledger publication; excludes final summary publications and caller/process setup. Mixed stages remain mixed; not a generation-only total.
-pipeline_setup_and_other: 0.005915
-inputs: 0.002113
-authoring_audit: 17.185939
-authoring_guard_reporting_and_recheck: 0.001194
-input_factory_generation_and_ir_conversion: 0.278886
-input_circuit_validation: 0.017035
-input_publication: 0.011015
-subsystem_structure: 0.004104
-carrier_structure: 0.011892
-sheet_prepare_other: 0.005614
-sheet_electrical_validation: 0.003274
-sheet_place_route_with_internal_checks: 0.106114
-sheet_cc_validation: 0.006419
-sheet_emit_and_publish: 0.042355
-sheet_visual_validation: 0.016279
-sheet_parallel_checks_and_render_wall: 25.118818
-symbol_law: 0.000294
-link: 0.001720
-constraints: 0.001529
-diagram: 0.001741
-board_schematic: 5.989604
-bom_footprints: 0.000507
-power_tree: 0.002088
-rail_ampacity: 0.000342
-testpoints: 0.000448
-design_rules: 0.001524
-part_rules: 0.001902
-bom_values: 0.001597
-footprint_pads: 0.009788
-pin_completeness: 0.000887
-spice: 0.080849
-pcb: 0.026736
-pcb_input_loading_and_netlist_validation: 1.441529
-pcb_build_model_with_internal_checks: 93.912736
-pcb_render: 0.028772
-placement_requirements: 0.001821
-pcb_drc: 1.401204
-pcb_geometry: 0.043945
-assembly: 0.430056
-ratsnest_images: 0.676581
-thermal: 0.028815
-copper_debt: 0.039331
-cpl: 0.236131
-fab_profile: 0.027438
-stage_movement: 0.000001
-xdc: 0.900043
-vivado: 0.000263
-devicetree: 0.000658
-firmware: 0.868358
-manual: 0.000758
-scfw: 0.002671
-testplan: 0.000353
-power_sequence: 0.000369
-floorplan: 0.000348
-model3d: 1.732055
-render3d: 27.630025
-gallery: 0.001523
-si: 0.000915
-manifest: 0.038668
-golden: 1.521240
-contract_coverage_lint: 0.001373
-fallbacks: 0.000446
-ledger_import: 0.000777
-quantize_census: 0.000526
-source_audit: 109.247000
-pipeline_doc: 0.001378
-MEASURED SCOPE TOTAL (not process wall): 289.156629
+pipeline_setup_and_other: 0.005760
+inputs: 0.001631
+authoring_audit: 15.704314
+authoring_guard_reporting_and_recheck: 0.001162
+input_factory_generation_and_ir_conversion: 0.265508
+input_circuit_validation: 0.007099
+input_publication: 0.011031
+subsystem_structure: 0.003986
+carrier_structure: 0.011047
+sheet_prepare_other: 0.005338
+sheet_electrical_validation: 0.002995
+sheet_place_route_with_internal_checks: 0.098534
+sheet_cc_validation: 0.005998
+sheet_emit_and_publish: 0.039771
+sheet_visual_validation: 0.015271
+sheet_parallel_checks_and_render_wall: 25.310158
+symbol_law: 0.000255
+link: 0.001598
+constraints: 0.001191
+diagram: 0.001628
+board_schematic: 5.970390
+bom_footprints: 0.000334
+power_tree: 0.001805
+rail_ampacity: 0.000348
+testpoints: 0.000413
+design_rules: 0.001505
+part_rules: 0.001633
+bom_values: 0.001198
+footprint_pads: 0.003958
+pin_completeness: 0.000754
+spice: 0.076714
+pcb: 0.025833
+pcb_input_loading_and_netlist_validation: 1.459978
+pcb_build_model_with_internal_checks: 80.399420
+pcb_render: 0.027693
+placement_requirements: 0.001600
+pcb_drc: 1.419822
+pcb_geometry: 0.043041
+assembly: 0.422219
+ratsnest_images: 0.667256
+thermal: 0.025816
+copper_debt: 0.038534
+cpl: 0.229626
+fab_profile: 0.026508
+stage_movement: 0.000002
+xdc: 0.861288
+vivado: 0.000343
+devicetree: 0.000649
+firmware: 0.861716
+manual: 0.000734
+scfw: 0.002560
+testplan: 0.000516
+power_sequence: 0.000409
+floorplan: 0.000354
+model3d: 1.675421
+render3d: 27.609651
+gallery: 0.001095
+si: 0.000899
+manifest: 0.035997
+golden: 1.506183
+contract_coverage_lint: 0.001329
+fallbacks: 0.000241
+ledger_import: 0.000774
+quantize_census: 0.000313
+source_audit: 109.601965
+pipeline_doc: 0.001007
+MEASURED SCOPE TOTAL (not process wall): 274.504121
 BOARD: PASS (37 sheets)

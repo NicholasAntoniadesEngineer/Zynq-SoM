@@ -3,6 +3,7 @@
 #include "floorplan_internal.hpp"
 #include "board_policy_ledger_reference.hpp"
 #include <cmath>
+#include <fstream>
 #include <iostream>
 #include <limits>
 #include <set>
@@ -188,6 +189,9 @@ void providers(const fs::path& root){
     }
     const auto files=native_board_policy_audit_sources();std::set<std::string> names;for(const auto& f:files){require(names.insert(f.path).second&&fs::is_regular_file(root/f.path),"explicit unique existing decision file: "+f.path);require(f.path.find(".py")==f.path.npos,"no Python source audit input");}
     for(const auto& f:board_pipeline_audit_sources())require(names.count(f.path),"host minimum audit scope retained");
+    for(const auto& manifest:{files,board_pipeline_audit_sources()})
+        require(std::count_if(manifest.begin(),manifest.end(),[](const auto& f){return f.path=="native/src/occupancy_axis_order_internal.hpp";})==1,
+                "axis-order implementation header owns audit coverage exactly once");
     for(const auto& d:policy.ledger_declarations)for(const auto& cover:d.covers)require(names.count(cover.substr(0,cover.find("::"))),"covered symbol owner included");
     auto bad=in;bad.place_clear=-1;rejects([&]{make_native_board_policy(paths,bad);},"negative clearance rejects");bad=in;bad.cross_budget_k=std::numeric_limits<double>::infinity();rejects([&]{make_native_board_policy(paths,bad);},"nonfinite cross coefficient rejects");
     BoardPipelineOptions options;options.output_root="keep-output";options.fallback_baseline="keep-fallback";options.fanout_baseline="keep-fanout";options.no_render=true;options.pcb.place_clear=.73;options.audit.compiler="keep-clang";options.audit.flags={"-DKEEP_CALLER=1"};options.audit.timeout=std::chrono::milliseconds{321};
@@ -209,6 +213,31 @@ void defects(){
     bad=c;bad.constants.clear();bad.functions.insert("policy.cpp::mover");require(!check_native_audits(bad,l,q).ok,"deleted storage leaves stale cover");
 }
 void compiler_contract(const fs::path& root){
+    // Included headers are not decision owners in their includer's census.
+    // Scan the real helper explicitly, then mutate only a scratch copy to
+    // prove newly introduced policy and rounding cannot hide in this header.
+    {
+        const std::string owner="native/src/occupancy_axis_order_internal.hpp";
+        const auto census=scan_cpp_audit_sources(root,{{owner}});
+        const auto function=owner+"::schgen::occupancy_detail::order_axis";
+        require(census.functions.count(function)==1,"real axis-order definition is visible");
+        NativeLedger empty_ledger;NativeQuantizations empty_quantizations;
+        require(check_native_audits(census,empty_ledger,empty_quantizations).ok,"axis ordering introduces no unregistered policy");
+        std::ifstream input(root/owner);
+        std::string code((std::istreambuf_iterator<char>(input)),std::istreambuf_iterator<char>());
+        require(bool(input)&&!code.empty(),"read actual axis-order implementation");
+        const auto position=code.find("    const auto pivot=");
+        require(position!=std::string::npos,"axis-order mutation anchor exists");
+        code.insert(position,"    constexpr double unreviewed_axis_margin=0.125;\n"
+            "    if(!axis.empty())axis.front().first=__builtin_floor(axis.front().first+unreviewed_axis_margin);\n");
+        Temp scratch;fs::create_directories(scratch.path/"native/src");publish_text(scratch.path/owner,code);
+        const auto mutated=scan_cpp_audit_sources(scratch.path,{{owner}});
+        require(std::any_of(mutated.constants.begin(),mutated.constants.end(),[&](const auto& c){return c.symbol==function+"::unreviewed_axis_margin";}),
+                "unreviewed axis policy mutation remains visible");
+        require(std::any_of(mutated.quantization.begin(),mutated.quantization.end(),[&](const auto& q){return q.function==function&&q.detector=="raw-round";}),
+                "axis rounding mutation remains visible");
+        require(!check_native_audits(mutated,empty_ledger,empty_quantizations).ok,"axis policy and rounding mutation fails audit");
+    }
     Temp temp;publish_text(temp.path/"policy.cpp","namespace policy { constexpr double edge_margin=10.; double apply(double v){ return v+edge_margin; } }\n");
     NativeLedger l;NativeLedgerDeclaration d;d.name="margin";d.kind="ASSUME";d.step="floorplan.sizing";d.source="policy";d.basis="Reviewed edge margin";d.covers={"policy.cpp::policy::edge_margin"};d.resolve=[]{return floorplan_detail::jvalue(10.);};l.declare(d);l.open_step("floorplan.sizing");l.close_step("floorplan.sizing");NativeQuantizations q;
     require(check_native_audits(temp.path,{{"policy.cpp"}},l,q).ok,"real compiler accepts covered policy");

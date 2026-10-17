@@ -1,0 +1,28 @@
+{
+  "source_commit": "2c95fc167218409b5dbb1b2101241bf4baf018e8",
+  "scope": "Fresh Release production schgen executable compilation and link, measured separately from configuration, catalog generation, dependencies, tests, board generation, rendering and audits.",
+  "build_directory": "/private/tmp/zynq-clean-compile-20261018.cLLtfK",
+  "configure_command": "cmake -S native -B /private/tmp/zynq-clean-compile-20261018.cLLtfK -G Ninja -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF -DSCHGEN_BUILD_PYTHON=OFF -DCMAKE_CXX_COMPILER_LAUNCHER= -DCMAKE_OSX_DEPLOYMENT_TARGET=26.6 -DCMAKE_OSX_SYSROOT=/Library/Developer/CommandLineTools/SDKs/MacOSX27.0.sdk -DSCHGEN_MANUFACTURING_ZLIB_PREFIX=/Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/native/build/deps/zlib-ng -DSCHGEN_LIBCLANG=/Library/Developer/CommandLineTools/usr/lib/libclang.dylib",
+  "timed_command": "/usr/bin/time -p cmake --build /private/tmp/zynq-clean-compile-20261018.cLLtfK --target schgen --parallel 2",
+  "environment": {"compiler":"Apple clang 21.0.0 (clang-2100.3.34.2)","target":"arm64-apple-darwin25.6.0","sdk":"MacOSX27.0.sdk","deployment_target":"26.6","build_type":"Release (-O3 -DNDEBUG)","translation_units":253,"compiler_launcher":"disabled","reused_objects":false,"prebuilt_dependencies":"existing verified zlib-ng and installed system libraries"},
+  "clean": {"exit_code":0,"wall_seconds":128.88,"user_seconds":244.99,"system_seconds":9.89},
+  "immediate_no_change_rebuild": {"exit_code":0,"wall_seconds":0.03,"user_seconds":0.01,"system_seconds":0.01,"result":"ninja: no work to do","meaning":"Not an edited-source incremental compile measurement"},
+  "binary_sha256":"02b1c306fcd6cb3822a77465c8684829104d5f2dcd4ecd808a7519cb1cc54f1a",
+  "smoke": {"kernel_self_check":"PASS","carrier_project_check":"PASS: 37 circuits, 561 circuit parts, 817 nets","devkit_project_check":"PASS: 12 circuits, 155 circuit parts, 325 nets","limits":"Project input checks, not full board gates. Circuit part counts exclude additional PCB-only items."},
+  "slowest_compile_steps_seconds": [
+    {"source":"component_basis_registry.cpp","seconds":3.701},
+    {"source":"pack.cpp","seconds":3.162},
+    {"source":"floorplan_pack.cpp","seconds":3.073},
+    {"source":"pcb_placement_moves.cpp","seconds":2.795},
+    {"source":"power_checks.cpp","seconds":2.614}
+  ],
+  "step_timing_semantics":"Ninja elapsed task times overlap across the two workers; do not sum as process-wall time. This run does not isolate header parsing from optimization/code generation.",
+  "logs": {
+    "native/build/clean-compile-20261018-configure.log":"474628338348828aa340200db566d89a4242d44b100394a94eb600f0b81262f2",
+    "native/build/clean-compile-20261018.log":"3dc0cdf4ff0bc256976f27d3dfbadd942784e307827e8c47b0407f62debce066",
+    "native/build/noop-compile-20261018.log":"58c693bd5cd20a89b00edfdc3b066e7ebc5c6f7619872679963ce0bcf86098e6",
+    "native/build/clean-compile-20261018-smoke.log":"ee7e25151be25469bd84bf701f429289e4fc424e457c1d67a2b25a0cbe2e8e70"
+  },
+  "operational_note":"The current CMake target publishes native/bin/schgen in the source tree. No competing build ran. The fresh directory is retained because the binary's authoring audit configuration references its compile commands. It occupies approximately 67 MB. A future rebuild must regenerate matching toolchain provenance before removing this directory.",
+  "limitations":"One sample, no OS cache flush, no CPU-heavy concurrent agent jobs. No Python compile percentage: historical baseline is interpreted and this metric is not comparable to board execution. No full-suite or new board qualification claim. Previous board timings predate the audit-header coverage correction."
+}

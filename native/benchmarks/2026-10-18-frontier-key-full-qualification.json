@@ -1,0 +1,33 @@
+{
+  "source_commit":"28db2edcdef39d31163478cfafae5e85aef0d3c8",
+  "scope":"Full sequential board pipelines after exact frontier-key reuse and explicit axis-header audit coverage; no source edits or concurrent agent build/campaign during execution",
+  "build":"cmake --build native/build/fast --parallel 2 --target schgen: PASS",
+  "commands":"October 18 release reproduction settings in docs/RELEASE-2026-10-16.md, prefixed with /usr/bin/time -p, with isolated --output native/build/frontier-key-full-carrier or native/build/frontier-key-full-devkit. Rendering and all mandatory audits enabled.",
+  "carrier": {
+    "exit_code":0,"board_ok":true,"complete":true,"sheets":37,
+    "wall_seconds":276.72,"user_seconds":799.94,"system_seconds":68.64,
+    "stage_seconds":{"authoring_audit":16.148868,"source_audit":110.064623,"pcb_model_with_internal_checks":80.803321,"sheet_parallel_checks_and_render":25.399477,"render3d":27.617093,"measured_scope_not_process_wall":276.016803},
+    "dimensions_mm":[162,150.5],"parts":{"total":566,"top":349,"bottom":217},
+    "pcb_sha256":"d1dcca5723a788338e72db784272cc0a5a53017eba5174b4dd8c3f09a4068957",
+    "manifest_artifacts":99,"manifest_hash_mismatches":0,"png_files":119,"invalid_png_headers_or_dimensions":0,
+    "drc":{"non_unrouted_errors":0,"unrouted":499},
+    "log":"native/build/frontier-key-full-carrier.log",
+    "log_sha256":"a43a6c52b72ffadda152905faee28b396f130c1b6a61c5f7e48217e40845367c"
+  },
+  "devkit_mini": {
+    "exit_code":0,"board_ok":true,"complete":true,"sheets":12,
+    "wall_seconds":161.57,"user_seconds":556.02,"system_seconds":42.72,
+    "stage_seconds":{"authoring_audit":17.288681,"source_audit":110.119637,"pcb_model_with_internal_checks":0.147658,"sheet_parallel_checks_and_render":7.949912,"render3d":16.785309,"measured_scope_not_process_wall":161.489065},
+    "dimensions_mm":[98,98],"parts":{"total":160,"top":105,"bottom":55},
+    "pcb_sha256":"1b12fecbcbbaa5e6084c2459da93cb144a660ff19805e6e4e3f75f9c22689fdb",
+    "manifest_artifacts":73,"manifest_hash_mismatches":0,"png_files":45,"invalid_png_headers_or_dimensions":0,
+    "drc":{"non_unrouted_errors":0,"unrouted":408},
+    "log":"native/build/frontier-key-full-devkit.log",
+    "log_sha256":"8e62748109c3a90ca4a6445f9d55902c44e424a76fbcf3c97a3af1c6ed5676cd"
+  },
+  "visual_review":"Fresh top and bottom 3D renders of both boards inspected. PCB hashes match the qualified incumbent; no new smaller outline or improved physical layout claimed by this performance change.",
+  "prior_current_revision_reference":"2026-10-18-full-revision-timing.json: carrier 289.24 wall / 93.912736 model seconds; devkit 160.85 wall / 0.163090 model seconds. Single samples, not a controlled statistical speedup claim; output paths and axis-header audit coverage differ.",
+  "advisory_failures_both_boards":["return_path","golden","contract_coverage_lint"],
+  "residual_risks":"Existing qualitative near-pin proximity and actuation/access/assembly requirements remain UNVERIFIED where authoritative numeric evidence is absent. Routing and fabrication qualification remain out of scope. No failures waived or golden baselines blessed.",
+  "limits":"Not a new exhaustive CTest run, migration completion audit or matched-input Python comparison. Existing Python baseline comparison limitations remain. Compile excluded from board wall times. Isolated outputs and raw logs remain local; master publication unchanged."
+}

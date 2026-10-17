@@ -1,0 +1,22 @@
+{
+  "base_commit":"53e1bb1e",
+  "scope":"Independent catalogue coverage probe followed by an eager three-group expansion experiment. Production expansion rejected and reverted; the diagnostic is retained.",
+  "probe":"For each existing non-leftover contract-bottom-pair or contract-bottom-repaired-pair, combine a non-leftover single whose moved seed-top references are disjoint. Preserve each group's offsets/rotation/mirror. Independently check envelope, same-face/through-hole courtyard clearance, physical-pad fanout and local placement contracts; compare geometry to the current catalogue.",
+  "before":{"power":{"disjoint":318,"locally_valid_witnesses":186,"missing":186},"usb_jtag":{"disjoint":0,"locally_valid_witnesses":0,"missing":0}},
+  "experimental_implementation":"One finite pair-plus-single pass before leftover compaction, appending through the existing physical/contract/fanout qualifier and geometry deduplication. Fixed two experimentally exposed issues: skip canonical all-bottom parents in top-primary map composition, and do not reconsume leftover compaction outputs on replay. No recursive triple feedback.",
+  "experimental_tests":{"orientation":"PASS","model_failure_receipt":"PASS","wall_seconds":32.54,"power_mixed_candidates":224,"missing_triple_witnesses":0},
+  "carrier_162x150p5": {
+    "constructed":true,"construction_seconds":123.851504,
+    "prior_same_recipe_seconds":106.488636209,
+    "pcb_sha256":"d1dcca5723a788338e72db784272cc0a5a53017eba5174b4dd8c3f09a4068957",
+    "parts":{"total":566,"top":349,"bottom":217},
+    "interpretation":"Preserved qualified geometry but did not use extra candidates to improve the selected layout; roughly 16.3% slower in this single diagnostic comparison, not a controlled statistical estimate."
+  },
+  "carrier_162x150":{"constructed":false,"elapsed_seconds":46.638869375,"completed_outer_attempts":8,"receipt_captured":true,"baseline":"construction_failed","granular_minor_vertical_estimator_first":"construction_failed","interpretation":"Search failure, not proof of geometric infeasibility"},
+  "screen_recipe":"Same connectivity-first carrier compact_stage_profile recipe as 2026-10-18-frontier-key-reuse.json, changing only the experimental eager expansion and outline to 162x150 for the tighter screen.",
+  "logs":["native/build/three-group-probe.log","native/build/three-group-final-tests.log","native/build/three-group-carrier.log","native/build/three-group-162x150.log"],
+  "decision":"Do not add all 186 valid combinations to every production search when the measured screen buys no smaller layout and slows the incumbent case. Keep the independent coverage diagnostic as evidence for a selective or failure-directed strategy, not a claim that existing two-group coverage is sufficient.",
+  "restored_production_check":{"native_pcb_orientation_contracts":"PASS","wall_seconds":7.64,"production_diff":"none"},
+  "next_direction":"Generate additional disjoint-group moves only when their affected footprint/face envelope can address a failed placement or improve a retained incumbent. Explicitly handle all-bottom primary-map canonicalization and finite compaction replay before integrating such a strategy.",
+  "limits":"No full-board acceptance or new hardware qualification; no source/placement changes retained. Local validity is not complete board feasibility. Counts can include equivalent witnesses through different parent combinations. No claim of globally optimal packing."
+}

@@ -21,6 +21,13 @@ thread_local std::array<std::size_t,6> entries{};
 const char* names[]={"occupancy_component_precision4dp","occupancy_reach_precision4dp",
     "occupancy_frontier_key1dp","occupancy_shape_key4dp","occupancy_cell_index","occupancy_axis_count"};
 void require(bool p,const char* why) {if(!p)throw std::runtime_error(why);}
+std::size_t distinct_distance_prefix(std::vector<double> distances,std::size_t nodes){
+    std::sort(distances.begin(),distances.end());
+    require(nodes<=distances.size(),"visited frontier exceeds independent lattice");
+    std::size_t unique=0;
+    for(std::size_t i=0;i<nodes;++i)if(i==0||distances[i]!=distances[i-1])++unique;
+    return unique;
+}
 static_assert(!std::is_copy_constructible_v<OccupancyCellSlot>);
 static_assert(!std::is_move_constructible_v<OccupancyCellSlot>);
 
@@ -172,7 +179,7 @@ void boundary_frontier() {
     Occupancy blocked(6,6,1,2,1,1,.05);blocked.add(0,0,6,6,{},{},1,{});
     QuantizationCounts counts;
     measured(counts,[&]{require(!blocked.place_near(3,3,2,2,{},{},1,{},-1,7,-1,7,&counts),"blocked lattice unexpectedly fits");});
-    require(counts.at(names[2])==9,"only x/y 1..3 can satisfy the body boundary, so exactly nine frontier calls");
+    require(counts.at(names[2])==3,"nine legal-boundary cells have exactly three distinct raw distances");
     require(counts.at(names[4])==4,"one blocking body should need one spatial lookup, not nine");
     QuantizationCounts oversized;
     measured(oversized,[&]{require(!blocked.place_near(3,3,5,2,{},{},1,{},-1,7,-1,7,&oversized),"oversized body unexpectedly fits");});
@@ -208,9 +215,11 @@ void dense_rounded_frontier() {
         Occupancy scene(1.2,1.1,0,.25,0,step,half);
         scene.add(.35,.25,.2,.3,{},{},1,{});
         std::vector<std::tuple<double,double,double>> oracle;
+        std::vector<double> distances;
         for(int ix=0;ix<=static_cast<int>(1.2/step);++ix)
           for(int iy=0;iy<=static_cast<int>(1.1/step);++iy) {
             const double x=ix*step,y=iy*step;
+            if(x+.1<=1.2&&y+.15<=1.1)distances.push_back(std::abs(x+.05-ax)+std::abs(y+.075-.65));
             if(!scene.fits_exhaustive(x,y,.1,.15,{},{},1,{}))continue;
             oracle.emplace_back(py_round(std::abs(x+.05-ax)+std::abs(y+.075-.65),1),x,y);
           }
@@ -222,7 +231,8 @@ void dense_rounded_frontier() {
         for(std::size_t i=0;i<oracle.size();++i)
             require(actual.poses[i].x==std::get<1>(oracle[i])&&actual.poses[i].y==std::get<2>(oracle[i]),
                     "dense decimal frontier changed rounded-distance/x/y order");
-        require(counts[names[2]]==actual.frontier_nodes,"dense frontier receipts do not match actual visits");
+        require(actual.frontier_nodes==distances.size()&&counts[names[2]]==distinct_distance_prefix(distances,actual.frontier_nodes),
+                "dense frontier nodes and unique-distance calls differ from independent lattice");
     }
 }
 void alternative_poses() {
@@ -231,8 +241,11 @@ void alternative_poses() {
         const std::vector<Comp> children{{-.25,.5,.5,.5,2}};
         scene.add(3,2,1,2,{.1,.2,.3,.1},{},1,{{.25,-.5,.5,.5,3}});
         std::vector<std::tuple<double,double,double>> oracle;
+        std::vector<double> distances;
         for(int ix=0;ix<=static_cast<int>(7/step);++ix)for(int iy=0;iy<=static_cast<int>(6/step);++iy) {
             const double x=ix*step,y=iy*step;
+            if(x>=.5&&x<=6&&y>=.5&&y<=5&&x+1<=6.9&&y+1<=5.9)
+                distances.push_back(std::abs(x+.5-ax)+std::abs(y+.5-2.65));
             if(x<.5||x>6||y<.5||y>5||!scene.fits_exhaustive(x,y,1,1,{},{},mask,children))continue;
             oracle.emplace_back(occupancy_frontier_key1dp(std::abs(x+.5-ax)+std::abs(y+.5-2.65)),x,y);
         }
@@ -251,7 +264,8 @@ void alternative_poses() {
                 require(result.poses[i].x==std::get<1>(oracle[i])&&result.poses[i].y==std::get<2>(oracle[i]),"alternative list differs from exhaustive ordered prefix");
             if(result.search_complete)require(!result.budget_exhausted&&result.poses.size()==oracle.size(),"incomplete domain reported exhausted");
             if(result.budget_exhausted)require(!result.search_complete&&result.frontier_nodes==budget,"budget status lost executed frontier work");
-            require(counts[names[2]]==result.frontier_nodes,"alternative frontier count differs from actual precision calls");
+            require(counts[names[2]]==distinct_distance_prefix(distances,result.frontier_nodes),
+                    "bounded frontier unique-distance calls differ from independent prefix");
             if(budget==10000)require(!result.budget_exhausted&&result.poses.size()==std::min(limit,oracle.size()),"large budget lost legal alternatives");
         }
     }
@@ -304,6 +318,15 @@ void alternative_poses() {
         require(complete.poses.empty()&&!complete.budget_exhausted&&complete.search_complete&&complete.frontier_nodes==9,
                 "exhaustive empty result must certify the queried lattice only");
     });
+    require(complete_counts.at(names[2])==5,
+            "nine nodes with five exact distances must execute five rounded-key calls");
+    QuantizationCounts tied_counts;
+    measured(tied_counts,[&]{
+        const auto tied=blocked.place_near_candidates(5,2,2,2,{},{},1,{},0,8,1,1,4,3,&tied_counts);
+        require(tied.frontier_nodes==3&&tied.budget_exhausted&&!tied.search_complete&&tied.poses.empty(),
+                "memoized distance keys must not refund or skip frontier nodes");
+    });
+    require(tied_counts.at(names[2])==2,"three tied frontier nodes must execute two scalar calls");
     std::cout<<"bounded alternative poses PASS (ordered oracle, exact receipts, greedy-trap recovery)\n";
 }
 void child_rejection_cache() {
@@ -311,7 +334,7 @@ void child_rejection_cache() {
     const std::vector<Comp> children{{0,0,2,2,1}};
     QuantizationCounts counts;
     measured(counts,[&]{require(!blocked.place_near(3,3,2,2,{},{},2,children,-1,7,-1,7,&counts),"opposite-face child obstruction missed");});
-    require(counts.at(names[2])==9&&counts.at(names[4])==8,
+    require(counts.at(names[2])==3&&counts.at(names[4])==8,
             "child rejection must reuse its exact offset/mask after the initial body+child lookup");
     QuantizationCounts repeated;
     measured(repeated,[&]{require(!blocked.place_near(3,3,2,2,{},{},2,children,-1,7,-1,7,&repeated),"repeat lost obstruction");});

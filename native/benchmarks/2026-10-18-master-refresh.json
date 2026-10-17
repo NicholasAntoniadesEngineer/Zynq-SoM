@@ -1,0 +1,26 @@
+{
+  "source_commit": "8948c412",
+  "build": "cmake --build native/build/fast --parallel 2 --target schgen: PASS",
+  "scope": "Sequential full pipelines into tracked project outputs; current October 18 release reproduction commands, all mandatory audits and rendering enabled",
+  "carrier": {
+    "exit_code": 0, "board_ok": true, "complete": true, "sheets": 37,
+    "wall_seconds": 275.18, "user_seconds": 800.25, "system_seconds": 67.69,
+    "dimensions_mm": [162, 150.5], "fresh_pngs": 119,
+    "manifest_artifacts": 103, "manifest_hash_mismatches": 0,
+    "pcb_sha256": "d1dcca5723a788338e72db784272cc0a5a53017eba5174b4dd8c3f09a4068957",
+    "log": "native/build/master-refresh-carrier.log",
+    "log_sha256": "c7b646efbf5833ebdeae377f15bc00bfd215b8df4d723be8488a9bb7442aac08"
+  },
+  "devkit_mini": {
+    "exit_code": 0, "board_ok": true, "complete": true, "sheets": 12,
+    "wall_seconds": 161.03, "user_seconds": 555.87, "system_seconds": 42.42,
+    "dimensions_mm": [98, 98], "fresh_pngs": 45,
+    "manifest_artifacts": 73, "manifest_hash_mismatches": 0,
+    "pcb_sha256": "1b12fecbcbbaa5e6084c2459da93cb144a660ff19805e6e4e3f75f9c22689fdb",
+    "log": "native/build/master-refresh-devkit.log",
+    "log_sha256": "9429ad7557423c625c6048007a9586746fce3a30959fd202ae9a827f2f432054"
+  },
+  "image_verification": "164 current release PNGs have fresh timestamps, valid PNG signatures and positive dimensions; top/bottom 3D views of both boards visually inspected. 41 historical carrier experiment PNGs excluded from refresh count.",
+  "advisory_failures_both_boards": ["return_path", "golden", "contract_coverage_lint"],
+  "limits": "Compile excluded from pipeline wall times. No new exhaustive CTest run or matched-input Python comparison. Routing excluded; no fabrication readiness or broader goal completion claimed. Unknown hardware requirements remain unverified."
+}

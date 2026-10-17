@@ -661,12 +661,17 @@ void live(const std::filesystem::path& root){
    demand(som_contact_offers>0,"colliding SoM single group has no checked contact repairs");
    // Independently combine a repaired single with a disjoint single. This
    // probes catalogue coverage, not board acceptance or routing feasibility.
+   // The optional pair-plus-single diagnostic reports missing triple offers;
+   // it is deliberately not an assertion that triple coverage is complete.
+   // See 2026-10-18-three-group-screen.json for the rejected eager expansion.
    const auto probe_repaired_pairs=[&](const auto& offers,const auto& originals,
-       const auto& context,const auto& zones,const std::string& probe_sheet) {
+       const auto& context,const auto& zones,const std::string& probe_sheet,bool triples=false) {
    std::size_t repaired_pair_witnesses=0,repaired_pair_disjoint=0,missing=0;
    for(const auto& a:offers) {
-    if(a.tag.rfind("contract-bottom/",0)!=0||a.tag.find("/contact/")==std::string::npos||
-       a.tag.find("/leftover")!=std::string::npos)continue;
+    if(a.tag.find("/leftover")!=std::string::npos)continue;
+    if(triples) {
+     if(a.tag.rfind("contract-bottom-pair/",0)!=0&&a.tag.rfind("contract-bottom-repaired-pair/",0)!=0)continue;
+    } else if(a.tag.rfind("contract-bottom/",0)!=0||a.tag.find("/contact/")==std::string::npos)continue;
     for(const auto& b:offers) {
      if(b.tag.rfind("contract-bottom/",0)!=0||b.tag.find("/leftover")!=std::string::npos)continue;
      auto combined=a;bool disjoint=true,moved=false;
@@ -701,10 +706,12 @@ void live(const std::filesystem::path& root){
      }
     }
    }
-   std::cout<<"repaired single pair sheet="<<probe_sheet<<" witnesses="<<repaired_pair_witnesses
+   std::cout<<(triples?"three-group probe sheet=":"repaired single pair sheet=")<<probe_sheet<<" witnesses="<<repaired_pair_witnesses
             <<" disjoint="<<repaired_pair_disjoint<<" missing="<<missing<<'\n';
-   if(probe_sheet=="power")demand(repaired_pair_witnesses>0,"power fixture lost repaired pair coverage");
-   demand(missing==0,"legal repaired-single combinations missing from catalogue");
+   if(!triples) {
+    if(probe_sheet=="power")demand(repaired_pair_witnesses>0,"power fixture lost repaired pair coverage");
+    demand(missing==0,"legal repaired-single combinations missing from catalogue");
+   }
    };
    probe_repaired_pairs(som_offers,som_originals,som_context,som_split,"power_som");
    const auto som_vertical=build_zones_for_search(f.input,true,nullptr);
@@ -763,6 +770,7 @@ void live(const std::filesystem::path& root){
     demand(equal(power_originals[i],power_alternatives[i]),"power expansion changed an existing shape index");
    Context split_power_context(f.input);split_power_context.pool=power_split.footprints;
    probe_repaired_pairs(power_alternatives,power_originals,split_power_context,power_split,"power");
+   probe_repaired_pairs(power_alternatives,power_originals,split_power_context,power_split,"power",true);
    auto replay_geometry=power_split.geometry;
    append_contract_group_faces(split_power_context,replay_geometry,"power",power_originals.front());
    demand(replay_geometry.shapes.at("power").size()==power_alternatives.size(),
@@ -919,6 +927,7 @@ void live(const std::filesystem::path& root){
    std::set<int> seen_turns;
    std::size_t pair_candidates=0,contact_candidates=0;
    probe_repaired_pairs(offers,originals,gc,group_turns,"usb_jtag");
+   probe_repaired_pairs(offers,originals,gc,group_turns,"usb_jtag",true);
    for(std::size_t n=0;n<offers.size();++n) {
     demand(equal(offers[n],group_repeat.geometry.shapes.at("usb_jtag")[n]),"group-only geometry not reproducible");
     if(offers[n].tag.rfind("contract-bottom-pair/",0)==0) {
