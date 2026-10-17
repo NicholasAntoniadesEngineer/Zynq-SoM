@@ -1,0 +1,45 @@
+{
+  "base_commit":"4affd6c1",
+  "implementation":"Reuse the pure rounded key only for consecutive exactly equal raw distances within one place_near invocation. No approximate equality, cross-query state, skipped candidates, changed tie ordering or refunded frontier nodes. Precision receipts count actual scalar entries; all executed retry/fallback work remains recorded.",
+  "discarded_experiment": {
+    "idea":"Remember two blocking pairs instead of one",
+    "result":"Reverted: spatial queries decreased but every tested strip case was slower in this microbenchmark",
+    "mean_time_change_percent_for_1_2_4_16_strips":[0.5085871525,1.337179626,0.9324263062,0.5736178245],
+    "log":"native/build/rejection-benchmark-alternating.log"
+  },
+  "microbenchmark": {
+    "source":"native/benchmarks/occupancy-rejection-benchmark.cpp",
+    "configuration":"C++17 -O3 -ffp-contract=off, occupancy.cpp + occupancy_precision.cpp + quantize.cpp; 320 fully blocked nearest-position searches per strip count; four alternating before/after rounds",
+    "strips":[1,2,4,16],
+    "before_mean_seconds":[0.190776,0.19370325,0.1961295,0.2004405],
+    "after_mean_seconds":[0.16508675,0.16087775,0.16189675,0.1681865],
+    "change_percent":[-13.4656612991,-16.9462825224,-17.4541565649,-16.0915583428],
+    "rounded_key_calls_per_case":{"before":6696000,"after":51520},
+    "spatial_index_calls":"unchanged for every case",
+    "log":"native/build/frontier-key-benchmark-alternating.log",
+    "limits":"Synthetic failed searches, not full-board timings; one host, OS cache uncontrolled, first sample includes warm-up effects. The output field named frontier counts scalar calls, not visited nodes."
+  },
+  "carrier": {
+    "recipe":"Same profile as 2026-10-18-collision-gap-reuse.json: interior-order 0, 162x150.5 outline, granular-minor+vertical+estimator-first challenger, all previous physical policies retained",
+    "construction_seconds":106.488636209,
+    "prior_diagnostic_seconds":128.620472292,
+    "time_change_percent":-17.2070866236,
+    "timing_limit":"One current sample versus an earlier diagnostic; not a contemporaneous controlled end-to-end speedup claim. Includes failed strategy, successful challenger and diagnostic output; excludes audit/DRC/full render.",
+    "search_rounded_key_calls":{"before":2010549785,"after":93603980,"reduction_percent":95.3443590058},
+    "receipt_check":"636 receipt lines in each run; every line other than occupancy_frontier_key1dp is byte-identical, preserving all other scalar operation counts",
+    "dimensions_mm":[162,150.5],"top":349,"bottom":217,"instances":566,
+    "pcb_sha256":"d1dcca5723a788338e72db784272cc0a5a53017eba5174b4dd8c3f09a4068957",
+    "log":"native/build/frontier-key-carrier.log",
+    "log_sha256":"9738bcd809eb99b05fcf35faa7e3166f9032f52b0d0b5d9840597b0ad097bdf3"
+  },
+  "devkit": {
+    "construction_seconds":0.232942209,"dimensions_mm":[98,98],"top":105,"bottom":55,"instances":160,
+    "pcb_sha256":"1b12fecbcbbaa5e6084c2459da93cb144a660ff19805e6e4e3f75f9c22689fdb",
+    "log":"native/build/frontier-key-devkit.log",
+    "log_sha256":"72cb43f5cd81bb346d764e28cfb60c7dd821d3039b1aed2561ea937d473496a0"
+  },
+  "targeted_tests":{"occupancy_cell_counter":"PASS","occupancy_precision":"PASS","occupancy_child_halo":"PASS","wall_seconds":6.50},
+  "additional_tests":{"model_failure_receipt":"PASS","policy_audits":"PASS","wall_seconds":45.41},
+  "new_test_evidence":"Independent sorted raw-distance lattice verifies unique-distance call counts for dense fractional steps, nextafter rounding boundaries, partial budgets and complete searches. Function-entry instrumentation independently reconciles receipts. Nine nodes/five distances and a three-node/two-call cutoff explicitly prove cache hits do not alter the search budget. Existing ordered exhaustive-pose oracles remain unchanged.",
+  "limits":"Construction hashes are regression evidence, not new full-board acceptance. Exhaustive suite and full pipelines remain to be rerun. No routing/fabrication claim; no master publication."
+}

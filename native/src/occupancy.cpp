@@ -819,6 +819,7 @@ std::optional<Pose> Occupancy::place_near_impl(
     };
 
     OccupancyFrontierSlot frontier_count(counts);
+    std::optional<std::pair<double,double>> last_distance_key;
     while (!heap.empty()) {
         if(alternatives){
             if(alternatives->frontier_nodes==max_frontier_nodes){
@@ -831,7 +832,14 @@ std::optional<Pose> Occupancy::place_near_impl(
         const double ycost = ys[static_cast<std::size_t>(node.j)].first;
         const double x = xs[static_cast<std::size_t>(node.i)].second;
         const double y = ys[static_cast<std::size_t>(node.j)].second;
-        const double key = occupancy_frontier_key1dp(xcost + ycost, frontier_count);
+        const double distance = xcost + ycost;
+        // Consecutive equal raw distances have the same pure rounded key.
+        // Reuse only exact equality within this immutable query. Every heap
+        // node still consumes the frontier budget; count only scalar calls
+        // actually executed, not cache hits or hypothetical repeated work.
+        if(!last_distance_key || last_distance_key->first!=distance)
+            last_distance_key=std::make_pair(distance,occupancy_frontier_key1dp(distance,frontier_count));
+        const double key = last_distance_key->second;
         if (buckets.empty() || buckets.back().first != key) {
             std::vector<std::pair<double, double>> cell;
             cell.swap(spare);
