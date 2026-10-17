@@ -16,6 +16,7 @@ struct PcbPlacementSearchStrategy {
 struct PcbPlacementSearchAttempt {
     std::string status, detail;
     ExecutionAccounting accounting; // actual construction + independent screening
+    std::set<std::string> rejected_subjects; // observed search hints, not causal blockers
 };
 struct PcbPlacementSearchResult {
     std::optional<PcbPlacementResult> incumbent;

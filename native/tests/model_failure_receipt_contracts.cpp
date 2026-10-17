@@ -262,7 +262,7 @@ void model_search(const std::filesystem::path& root){
     auto observer=std::make_shared<PcbPlacementExperiment>();
     std::size_t starts=0;
     observer->checkpoint=[&](const PcbPlacementObservation& row){
-        if(row.stage=="zone_pack"&&++starts==2)throw FloorplanPackingInfeasible("injected challenger infeasible");
+        if(row.stage=="zone_pack"&&++starts==2)throw FloorplanPackingInfeasible("injected challenger infeasible",{"power","logic"});
     };
     fixture.input.experiment=observer;
     for(int kind=0;kind<3;++kind) {
@@ -283,6 +283,9 @@ void model_search(const std::filesystem::path& root){
             retained.attempts[1].status=="construction_failed"&&
             retained.attempts[1].detail=="injected challenger infeasible",
             "failed challenger displaced incumbent or lost failure detail");
+    require(retained.attempts[0].rejected_subjects.empty()&&
+            retained.attempts[1].rejected_subjects==std::set<std::string>{"logic","power"},
+            "search retains typed failure hints without attributing challenger failures to incumbent");
     verify(retained.accounting,"complete model portfolio");
     ExecutionAccounting sum;
     for(const auto& row:retained.attempts)append_execution_accounting(sum,row.accounting);

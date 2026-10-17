@@ -264,6 +264,7 @@ bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure,
     const double bw=plan.board_w,bh=plan.board_h;
     const auto rejected=[&](const std::string& stage,const std::string& subject,bool phase_compact,
                             const std::vector<std::string>& diagnostics=std::vector<std::string>{}) {
+        if(!subject.empty())rejected_subjects.insert(subject);
         if(in.experiment&&in.experiment->stage_rejected)
             in.experiment->stage_rejected({bw,bh,stage,subject,phase_compact,plan.punch_free,compact_order,diagnostics});
     };

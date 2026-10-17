@@ -431,7 +431,9 @@ PcbPlacementSearchResult search_pcb_models(const PcbPlacementInput& input,
             PcbPlacementSearchAttempt record;
             std::optional<PcbPlacementResult> candidate;
             try {candidate=build_pcb_model_strategy(trial,&child,attempt&&strategies[attempt-1].vertical_compaction);}
-            catch(const FloorplanPackingInfeasible& error) {record.detail=error.what();}
+            catch(const FloorplanPackingInfeasible& error) {
+                record.detail=error.what();record.rejected_subjects=error.rejected_subjects;
+            }
             catch(const PcbZoneInfeasible& error) {record.detail=error.what();}
             if(!candidate) {
                 if(!child.captured||child.unavailable) {

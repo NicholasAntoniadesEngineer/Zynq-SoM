@@ -70,7 +70,14 @@ public:
 // Exhausted packing search, not malformed input or infrastructure failure.
 class FloorplanPackingInfeasible : public FloorplanError {
 public:
-    using FloorplanError::FloorplanError;
+    explicit FloorplanPackingInfeasible(const std::string& message,
+                                       std::set<std::string> subjects = {})
+        : FloorplanError(message), rejected_subjects(std::move(subjects)) {}
+    // Subjects of observed failed seating/required-shape checks across ALL
+    // attempted policies and outlines. These are search hints, not a proof
+    // that these sheets caused a collision or that other sheets cannot help.
+    // Empty means no named rejection was observed, not that a layout exists.
+    std::set<std::string> rejected_subjects;
 };
 // An explicitly requested diagnostic policy excludes a reservation pass;
 // distinct from both exhausted packing search and malformed/failing inputs.

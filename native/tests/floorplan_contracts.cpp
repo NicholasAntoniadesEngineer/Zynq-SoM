@@ -990,6 +990,37 @@ void fixed_face_recovery(){
     same(floorplan_plan_json(auto_recovered),floorplan_plan_json(build_floorplan(automatic)),"deterministic automatic face recovery");
     auto top_only=automatic;top_only.geometry.shapes.erase("logic");
     throws([&]{build_floorplan(top_only);},"under either reservation policy");
+    const auto check_subjects=[&](FloorplanInput failing) {
+        auto observer=std::make_shared<FloorplanExperiment>();
+        if(failing.experiment)*observer=*failing.experiment;
+        std::set<std::string> seen;std::array<bool,2> policies{};
+        observer->stage_rejected=[&](const auto& row){
+            if(!row.subject.empty())seen.insert(row.subject);
+            policies[row.punch_free?1:0]=true;
+        };
+        failing.experiment=observer;
+        ExecutionFailureReceipt observed,unobserved;
+        std::set<std::string> reported;std::string message;bool caught=false;
+        try{(void)build_floorplan(failing,&observed);}
+        catch(const FloorplanPackingInfeasible& error){
+            caught=true;reported=error.rejected_subjects;message=error.what();
+        }
+        require(caught&&seen==std::set<std::string>{"logic"}&&reported==seen,
+                "terminal typed failure retains independently observed named rejections");
+        require(policies[0]&&policies[1],"failure subjects survive both reservation policies");
+        observer->stage_rejected={};caught=false;
+        try{(void)build_floorplan(failing,&unobserved);}
+        catch(const FloorplanPackingInfeasible& error){
+            caught=true;
+            require(error.rejected_subjects==reported&&error.what()==message,
+                    "typed subjects do not depend on optional diagnostic callback");
+        }
+        require(caught&&observed.captured&&unobserved.captured&&
+                observed.accounting.quantization_engagements==unobserved.accounting.quantization_engagements&&
+                observed.accounting.fallback_events==unobserved.accounting.fallback_events,
+                "subject collection preserves executed work and ordered fallback receipts");
+    };
+    check_subjects(top_only);
     int auto_interrupted=0;
     seeded->stage_rejected=[&](const auto&){++auto_interrupted;throw std::runtime_error("automatic reservation observer stopped");};
     throws([&]{build_floorplan(automatic);},"automatic reservation observer stopped");
@@ -997,6 +1028,9 @@ void fixed_face_recovery(){
     in.spec->interior["logic"].side="top";
     in.geometry.shapes.erase("logic");
     throws([&]{build_floorplan(in);},"under either reservation policy");
+    check_subjects(in);
+    require(FloorplanPackingInfeasible("unnamed rejection").rejected_subjects.empty(),
+            "message-only failure must not invent a rejected subject");
 }
 void cross_behavior() {
     FloorplanInput in;in.som.w=20;in.som.h=20;
