@@ -1,0 +1,49 @@
+{
+  "source_commit": "52c9e715",
+  "base_command": "native/build/fast/schgen_compact_stage_profile --repo . --project carrier --compact-search on --edge-feasibility on --owned-quality-first on --owned-face-cohesion on --contract-group-face-sheet usb_jtag --contract-group-face-sheet power --contract-group-face-sheet power_som --contract-group-face-sheet power_mon --require-bottom-sheet power_mon --require-bottom-sheet bringup_modules --require-bottom-sheet bringup_en_modules --joint-separation-states 1024 --reseat-poses 8 --reseat-frontier 4096 --reseat-continuations 3 --reseat-victim-shapes on --owned-shape board_aux=owned-face-a1.000000 --schematic carrier/Zynq_Carrier.kicad_sch --runs 1 --interior-order 0 --failed-first-retry on --shape-area-first on --floorplan-spec native/benchmarks/carrier-162x151-granular-vertical.floorplan.json --outline-mm 162x150.5 --search-strategy granular-minor+vertical+estimator-first",
+  "runs": [
+    {
+      "outline_mm": [
+        162,
+        150
+      ],
+      "seconds": 64.630105583,
+      "exit_code": 1,
+      "outer_attempts": 8,
+      "reconciled_counters": 73,
+      "rejections": {
+        "usb_jtag": 16,
+        "fmc": 6,
+        "power": 10
+      },
+      "log": "native/build/connectivity-162x150.log"
+    },
+    {
+      "outline_mm": [
+        161.5,
+        150.5
+      ],
+      "seconds": 82.566932292,
+      "exit_code": 1,
+      "outer_attempts": 8,
+      "reconciled_counters": 82,
+      "rejections": {
+        "usb_jtag": 10,
+        "fmc": 8,
+        "power": 10,
+        "legalizer": 8
+      },
+      "log": "native/build/connectivity-161p5x150p5.log"
+    }
+  ],
+  "interpretation": "Both failed without a screened incumbent; no geometric infeasibility claimed. Retain the fully qualified 162x150.5 candidate.",
+  "profile": {
+    "command": "sample 88381 5 10 -file native/build/connectivity-cpu-sample.txt",
+    "samples": 418,
+    "log_sha256": "9b2bbe5e870eb4019c71c8eda1913f944cc56bd5d255abf1e1202ff98b5ce7d1",
+    "observation": "Sampled stacks are within floorplan construction, with substantial place_near_impl, frontier-key, occupancy-fit and coordinate sorting activity. One short phase sample, not whole-run attribution or a proven speedup.",
+    "code_target": "native/src/occupancy.cpp: Occupancy::place_near_impl builds and sorts separable axis costs for each query.",
+    "next_experiment": "Test whether axis coordinate ordering can exploit its unimodal distance sequence without comparison sorting. Require an independent std::sort oracle covering equal distances, rounded plateaus, anchors outside the board and varying clipped windows; preserve frontier ordering and actual operation receipts."
+  },
+  "limits": "Two concurrent model screens; first sampled for five seconds. Timings are diagnostic, not controlled performance comparisons. No new full build or render warranted for rejected candidates. Published reference and master untouched."
+}
