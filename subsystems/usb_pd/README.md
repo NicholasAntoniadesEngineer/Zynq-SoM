@@ -1,5 +1,24 @@
 # usb_pd — FUSB302B USB Type-C / Power-Delivery sink PHY
 
+## Placement evidence review — 2026-10-18
+
+The former external `near_max` of 10 mm was a project judgment measured between
+subsystem pad envelopes, not a specified CC trace-length limit. It is no longer
+a hard placement acceptance condition. The carrier retains its `near: pd_input`
+intent and inlet pull; the composition report measures this as advisory proximity.
+All six local placement structures and the external flow chain remain unchanged.
+This narrowly changes the external heuristic, not every judgment-based local rule.
+
+Reviewed sources: [onsemi FUSB302B/D, Rev. 5](https://www.onsemi.com/pdf/datasheet/fusb302b-d.pdf)
+and [onsemi AN-5086/D, Rev. 2](https://www.onsemi.com/pub/Collateral/AN-5086-D.PDF).
+The reference circuit and application note discuss CC capacitance and protection;
+the latter gives a 200–600 pF receiver-capacitance range. No 10 mm inter-part
+edge-gap limit was found in these documents. That absence does not establish that
+arbitrarily long CC routing is safe. A subsystem envelope gap is neither routed
+length nor total capacitance. CC parasitics, protection, routing and communication
+qualification remain **UNVERIFIED** until checked against the applicable design
+and specification. An advisory placement result is not an electrical PASS.
+
 A project-agnostic, self-contained schgen subsystem providing the onsemi
 FUSB302BMPX USB Type-C / PD sink front-end with its datasheet bypass network and
 CC analog filters. It is the PD controller for a Type-C receptacle: it owns CC

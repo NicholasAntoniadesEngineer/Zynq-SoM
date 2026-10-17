@@ -1,0 +1,27 @@
+{
+  "base_commit": "ebbed5ac",
+  "reviewed_sources": [
+    {"url": "https://www.onsemi.com/pdf/datasheet/fusb302b-d.pdf", "revision": "August 2021 Rev. 5", "scope": "FUSB302B reference circuit and component recommendations; extracted text searches found no layout or length matches."},
+    {"url": "https://www.onsemi.com/pub/Collateral/AN-5086-D.PDF", "revision": "September 2017 Rev. 2", "scope": "CC protection and 200-600 pF receiver-capacitance discussion; no 10 mm inter-part edge-gap specification found."}
+  ],
+  "decision": "Remove only the project-judgment external near_max usb_pd->pd_input 10 mm cutoff. Retain the carrier's near intent/pull as advisory preference. Do not globally downgrade judgment-based local constraints or claim arbitrary CC routing is safe.",
+  "semantic_diff_verification": "Compared parsed contract to Git baseline: deleting external.near_max is the only semantic change. All six local structures, roles, citations, stage order and flow chain are identical.",
+  "regression": {"native_pcb_orientation_contracts": "PASS", "seconds": 7.55, "coverage": "Live reviewed contract/spec imported into C++ preparation: no hard USB-PD inlet near_max, explicit non-enforced near_intent retained, six local structures present; existing orientation/geometry suite still runs."},
+  "isolated_policy_screen": {
+    "recipe": "Same carrier 162x150 eight-pose recipe as 2026-10-18-recovery-opportunity-screen.json; restored production algorithm, no failure-set reconstruction patch.",
+    "exit_code": 1,
+    "elapsed_seconds": 70.729587125,
+    "outer_attempts": 8,
+    "both_strategies": "construction_failed",
+    "baseline_rejected_subjects": ["power", "usb_jtag"],
+    "challenger_rejected_subjects": ["board_services", "fmc", "power", "usb_jtag"],
+    "receipt_captured": true,
+    "receipt_unavailable": false,
+    "exact_accounting_match": true,
+    "fallback_events": 71937,
+    "log": "native/build/usb-pd-advisory-162x150.log"
+  },
+  "unverified": "Actual routed CC capacitance, protection coordination, signal integrity and communication compliance. Subsystem pad-envelope gap is neither routed trace length nor electrical qualification. Advisory proximity success is not electrical PASS.",
+  "next_step": "Test the corrected policy together with the saved failure-set reconstruction experiment; independently validate expanded accounting semantics before integration. Requalify accepted incumbents/finalists with both-board checks and renders.",
+  "limits": "No smaller accepted carrier or new full qualification. Published master untouched. Single diagnostic timing, not a speedup claim."
+}
