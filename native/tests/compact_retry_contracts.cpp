@@ -576,6 +576,7 @@ void victim_shape_portfolio_contract(){
     std::size_t combination_only=0,paired_queries=0,area_queries=0,pose_shape_queries=0,shape_skips=0;
     bool exception_checked=false;
     std::size_t pair_trials=0,pair_success=0,pair_finalists=0;
+    std::size_t pair_pose_queries=0,pair_pose_trials=0,pair_pose_recovered=0;
     const Case crowded{70,50,{{29,16,3,4},{12,30,2,0},{30,18,3,2},{31,26,2,3},{7,7,1,3},{31,9,2,1}}};
     for(bool area_first:{false,true})for(bool rotate:{false,true})for(int w=65;w<=85;w+=5)for(int h=45;h<=65;h+=5)for(int order=0;order<3;++order){
         auto c=crowded;c.w=w;c.h=h;
@@ -656,6 +657,13 @@ void victim_shape_portfolio_contract(){
                 pair_count("interior_reseat_pair_rejected"),"completed paired trials lack a terminal outcome");
         pair_trials+=pair_count("interior_reseat_pair_trial");
         pair_success+=pair_count("interior_reseat_pair_recovered");
+        pair_pose_queries+=pair_count("interior_reseat_pair_pose_search");
+        pair_pose_trials+=pair_count("interior_reseat_pair_pose_trial");
+        pair_pose_recovered+=pair_count("interior_reseat_pair_pose_recovered");
+        require(pair_count("interior_reseat_pair_pose_trial")<=8*pair_count("interior_reseat_pair_pose_search"),
+                "pair position trials exceeded caller pose limit");
+        require(pair_count("interior_reseat_pair_pose_recovered")<=pair_count("interior_reseat_pair_recovered"),
+                "pair position recovery lacks completed pair success");
         if(ok&&pair_count("interior_reseat_pair_recovered"))++pair_finalists;
         if(area_first)area_queries+=std::count(expected_events.begin(),expected_events.end(),"interior_reseat_shape_trial");
         incoming_queries+=std::count(expected_events.begin(),expected_events.end(),"interior_reseat_incoming_shape_trial");
@@ -700,6 +708,40 @@ void victim_shape_portfolio_contract(){
     require(area_queries>0,"area-first corpus did not execute alternative shape recovery");
     require(pose_shape_queries>0,"alternative incoming poses never reconsidered displaced shapes");
     require(pair_trials&&pair_success&&pair_finalists,"pair corpus lacks executed trials, recovery or a complete finalist");
+    std::cout<<"paired pose queries="<<pair_pose_queries<<" trials="<<pair_pose_trials<<" recovered="<<pair_pose_recovered<<'\n';
+    {
+        // Frozen witness from a bounded deterministic fixture exploration.
+        const Case probe{65,55,{{31,22,2,0},{25,17,3,2},{10,26,3,0},
+            {29,32,3,3},{9,15,1,1},{19,28,2,1},{10,29,1,4}}};
+        auto in=input();auto config=std::make_shared<FloorplanExperiment>();in.experiment=config;
+        config->interior_order=0;
+        config->reseat_pose_limits=FloorplanPoseRetryLimits{8,4096,2};
+        Engine e(in);setup(e,probe);
+        const bool ok=e.attempt_pack_impl(false,nullptr,{},nullptr,0,nullptr,true,true);
+        const auto& events=e.plan.accounting.fallback_events;
+        const auto recovered_count=std::count(events.begin(),events.end(),"interior_reseat_pair_pose_recovered");
+        std::cout<<"pair pose frozen witness packed="<<ok<<" recovered="<<recovered_count<<'\n';
+        require(ok&&recovered_count,"two-victim position witness did not recover a complete layout");
+        pair_pose_recovered+=recovered_count;
+        const auto& blocks=e.plan.interior_blocks;
+        const double clearance=floorplan_detail::clear;
+        for(std::size_t i=0;i<blocks.size();++i) {
+            const auto& a=blocks[i];
+            require(a.x>=clearance&&a.y>=clearance&&a.x+a.w+clearance<=probe.w&&a.y+a.h+clearance<=probe.h,
+                    "pair pose witness violates board clearance");
+            for(std::size_t j=0;j<i;++j) {
+                const auto& b=blocks[j];
+                require(a.side!=b.side||a.x+a.w+clearance<=b.x||b.x+b.w+clearance<=a.x||
+                        a.y+a.h+clearance<=b.y||b.y+b.h+clearance<=a.y,
+                        "pair pose witness violates same-face clearance");
+            }
+        }
+        Engine repeat(in);setup(repeat,probe);
+        require(repeat.attempt_pack_impl(false,nullptr,{},nullptr,0,nullptr,true,true)&&
+                equal(floorplan_plan_json(e.plan),floorplan_plan_json(repeat.plan))&&offers(e)==offers(repeat),
+                "pair pose witness geometry/accounting/offers not reproducible");
+    }
+    require(pair_pose_queries&&pair_pose_trials&&pair_pose_recovered,"pair corpus lacks alternative-pose queries, trials or recovery");
     std::cout<<"paired relocation trials="<<pair_trials<<" recovered="<<pair_success<<" finalists="<<pair_finalists<<'\n';
     require(shape_skips>0,"continuation corpus never skipped a recovered alternative victim shape");
     std::cout<<"pose/shape combination queries="<<pose_shape_queries<<'\n';

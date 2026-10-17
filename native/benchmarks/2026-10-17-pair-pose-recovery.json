@@ -1,0 +1,22 @@
+{
+  "source_base": "81671de1",
+  "change": "When nearest-first two-victim recovery cannot seat the second victim, enumerate alternative legal positions for the first victim's selected shape using the existing caller pose/frontier limits. Retain rollback, exact occupancy checks and all executed search events.",
+  "proof": {
+    "fixture": "65x55 board; seven blocks frozen in compact_retry_contracts from deterministic exploration seed 89",
+    "before": "With only the new alternative-pose branch disabled, the frozen fixture fails to pack (packed=0, recovered=0).",
+    "after": "The fixture packs, records pair-pose recovery, passes independent board/same-face clearance checks and repeats identical geometry, offers and accounting.",
+    "old_corpus": "103 pair-pose queries and 707 additional trials had no recoveries in the pre-existing crowded corpus; this prompted the separate frozen witness rather than weakening the assertion.",
+    "accounting": "Five named events registered in engine, runtime registry and stage metadata: search, trial, budget, cap, recovered. Tests bound trials by caller pose limit and require completed pair outcomes."
+  },
+  "tests": {
+    "integration": "compact_retry, model_failure_receipt and policy_audits: 3/3 PASS in 52.19 seconds",
+    "final_clearance": "Expanded compact_retry executable rebuilt and passed with independent clearance assertions"
+  },
+  "model_screens": {
+    "carrier_reference": {"outline_mm": [162,151], "top": 331, "bottom": 235, "construction_seconds": 19.823674625, "reconciled_counters": 123, "pcb_sha256": "8aae8efbb2dee1c37cc61dc1b91e832b9ed6e4c7c47a17fc78b73c1a44f8d231"},
+    "devkit": {"outline_mm": [98,98], "top": 105, "bottom": 55, "construction_seconds": 0.195953708, "pcb_sha256": "1b12fecbcbbaa5e6084c2459da93cb144a660ff19805e6e4e3f75f9c22689fdb"},
+    "smaller_carrier": {"outline_mm": [162,150.5], "status": "search_failed_no_incumbent", "elapsed_seconds": 38.744203958, "completed_outer_attempts": 8, "receipt_captured": true, "reconciled_counters": 82},
+    "limits": "Concurrent model screens, not full release qualification or controlled timing comparisons. No smaller carrier or end-to-end speedup established; published models unchanged."
+  },
+  "logs": "native/build/pair-pose-{before,clearance,verified-tests,carrier-reference,carrier-162x150p5,devkit}.log"
+}

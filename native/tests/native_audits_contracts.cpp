@@ -49,11 +49,13 @@ void registry_contracts(const JsonNode& reference){
     NativeFallbacks f;register_native_fallbacks(f);f.record("seat_node_budget");const auto snap=f.snapshot();f.record("seat_node_budget");f.restore(snap);
     const auto census=f.census();
     // Include the three earlier incoming/victim-shape events omitted by the
-    // stale +23 inventory, plus three thermal and three paired search events.
-    require(census.size()==get(reference,"census").object_value.size()+37,"historical fallback census plus thirty-seven named native recovery events");
+    // stale +23 inventory, thermal/paired search and bounded pair-pose events.
+    require(census.size()==get(reference,"census").object_value.size()+42,"historical fallback census plus forty-two named native recovery events");
     require(census.at("edge_geometry_replan_retry")==AuditInteger{},"edge-geometry replan must be explicitly registered at zero");
     require(census.at("legalize_joint_axis_reuse")==AuditInteger{},"axis reuse must be explicitly registered");
-    for (const auto* name : {"interior_reseat_pair_trial","interior_reseat_pair_rejected","interior_reseat_pair_recovered"})
+    for (const auto* name : {"interior_reseat_pair_trial","interior_reseat_pair_rejected","interior_reseat_pair_recovered",
+        "interior_reseat_pair_pose_search","interior_reseat_pair_pose_trial","interior_reseat_pair_pose_budget",
+        "interior_reseat_pair_pose_cap","interior_reseat_pair_pose_recovered"})
         require(census.at(name)==AuditInteger{},"paired relocation events remain explicitly registered");
     for (const auto* name : {"interior_reseat_incoming_shape_trial","interior_reseat_shape_retry","interior_reseat_shape_trial"})
         require(census.at(name)==AuditInteger{},"shape recovery events remain explicitly registered");
