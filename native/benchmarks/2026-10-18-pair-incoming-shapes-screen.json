@@ -1,0 +1,30 @@
+{
+  "base_commit": "69f25b61",
+  "experiment": "For each displaced pair/order, try the existing scored incoming shape first, then each other permitted incoming shape at its nearest legal position. Rerun both victim reseatings and existing first-victim position alternatives; restore all three participants and map entries between failed trials. Preserve shape/side restrictions and actual work receipts.",
+  "recipe": "Same carrier 162x150 screen as 2026-10-18-paired-shape-screen.json; only experimental incoming-shape pair enumeration differs. Eight positions, 4096 frontier nodes, three continuations, connectivity-first ordering; baseline plus granular-minor+vertical+estimator-first.",
+  "tests": {"native_compact_retry_contracts": "PASS", "seconds": 3.85, "limits": "Existing suite only; no dedicated successful carrier or new coupled-shape acceptance witness."},
+  "screen": {
+    "exit_code": 1,
+    "elapsed_seconds": 103.581479291,
+    "outer_attempts": 8,
+    "both_strategies": "construction_failed",
+    "both_rejected_subject_sets": ["fmc", "power", "usb_jtag"],
+    "receipt_captured": true,
+    "receipt_unavailable": false,
+    "exact_accounting_match": true,
+    "fallback_events": 174683,
+    "pair_trials": 10848,
+    "pair_recoveries": 6,
+    "pair_rejections": 10842,
+    "pair_position_queries": 4904,
+    "pair_position_trials": 23184,
+    "incoming_shape_trials": 10548,
+    "victim_shape_trials": 108503,
+    "log": "native/build/pair-incoming-shapes-162x150.log"
+  },
+  "prior_eight_pose_reference": {"pair_trials": 982, "pair_recoveries": 6, "pair_position_queries": 127, "pair_position_trials": 620},
+  "decision": "Revert. Nearly eleven times as many pair trials did not recover another pair or produce a smaller board. Do not add this default cost based on the current evidence.",
+  "restoration": {"production_source_diff": "none", "profiler_rebuilt": true, "native_compact_retry_contracts": "PASS", "ctest_total_seconds": 3.32},
+  "next_direction": "Stop expanding the same one/two-victim neighbourhood on this outline. Investigate an earlier region-level or multi-group reconstruction strategy informed by the observed failed subjects, retaining a full incumbent and independent work receipts. This is a proposed next strategy, not implemented capability or proof of the cause.",
+  "limits": "Single diagnostic sample; no global infeasibility proof, smaller accepted layout, full qualification, production search change or goal completion."
+}
