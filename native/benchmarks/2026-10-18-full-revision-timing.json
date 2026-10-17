@@ -1,0 +1,45 @@
+{
+  "scope": "Four sequential full-board commands, including all normal rendering and audits. Revision-to-revision comparison, NOT identical hardware inputs or a language-only benchmark.",
+  "python_commit": "0e9bbc913bab77f9cd228940db2a332d25d6bfa1",
+  "cpp_generator_commit": "bc8bc648523608c6257a1a3a457cac3ada0c0b05",
+  "cpp_release_outputs_commit": "49f7ca04f2073236120218d30811fa3b078d3cab",
+  "environment": {"os":"macOS 26.6.2 (25G83)","kicad":"10.0.2","python":"3.14.3","host":"same local host for all runs"},
+  "sampling": "One sample each, order Python carrier, C++ carrier, C++ devkit, Python devkit. No concurrent agent builds/tests. OS caches and unrelated background activity uncontrolled. No source edits in baseline export.",
+  "baseline_directory": "/private/tmp/zynq-timing-0e9bbc-20261018.eTA0GS",
+  "baseline_preparation": "git archive of the exact Python commit extracted into a fresh temporary directory; Python invoked with -B",
+  "python_command": "/usr/bin/time -p /opt/homebrew/bin/python3 -B -u -m schgen --project PROJECT board --timing",
+  "cpp_commands": "October 18 reproduction settings in docs/RELEASE-2026-10-16.md, prefixed with /usr/bin/time -p; default project output directories, no --no-render",
+  "render_workload": "Both revisions request eight high-quality opaque 1600x1200 3D views and per-sheet renders. Other image and audit workloads are revision-dependent.",
+  "percentage_formula": "100 * (cpp - python) / python",
+  "carrier": {
+    "python": {"wall_seconds":704.45,"user_seconds":1028.13,"system_seconds":38.67,"exit_code":0,"sheets":37,"dimensions_mm":[168,163],"components":{"total":569,"top":393,"bottom":176}},
+    "cpp": {"wall_seconds":289.24,"user_seconds":813.54,"system_seconds":68.18,"exit_code":0,"sheets":37,"dimensions_mm":[162,150.5],"components":{"total":566,"top":349,"bottom":217}},
+    "wall_change_percent": -58.94101781531691,
+    "cpp_stage_seconds": {"authoring_audit":17.185939,"source_audit":109.247000,"pcb_model_with_internal_checks":93.912736,"pcb_input_loading_and_netlist_validation":1.441529,"pcb_text_emission":0.028772,"render3d":27.630025,"sheet_parallel_checks_and_render":25.118818,"measured_scope_total_not_process_wall":289.156629},
+    "python_mixed_phase_seconds": {"pcb_drc_ratsnest_law5":591.10,"hierarchy_erc_cc":46.20,"si_manifest_golden_including_3d":28.30,"sheets":23.18,"gates_documents":13.83},
+    "python_log":"native/build/timing-20261018-python-carrier.log",
+    "python_log_sha256":"0d35d6d24536b2f1ceede9deeb97ad9e414833650e0980f59bfb6867b208a7a6",
+    "cpp_log":"native/build/release-20261018-carrier.log",
+    "cpp_log_sha256":"da00535d5a7efebc7b6fd28accc4cb2db8a6755864285b2454bddc1d155a0053"
+  },
+  "devkit_mini": {
+    "python": {"wall_seconds":74.96,"user_seconds":274.87,"system_seconds":16.01,"exit_code":1,"sheets":12,"dimensions_mm":[100,100],"components":{"total":152,"top":97,"bottom":55},"mandatory_failures":["testpoints: 9/23 required covered, 5 waived in historical source","design_rules: 2 findings, 2 waived in historical source"]},
+    "cpp": {"wall_seconds":160.85,"user_seconds":553.50,"system_seconds":42.61,"exit_code":0,"sheets":12,"dimensions_mm":[98,98],"components":{"total":160,"top":105,"bottom":55}},
+    "wall_change_percent":114.5811099252935,
+    "cpp_stage_seconds": {"authoring_audit":17.239781,"source_audit":109.362036,"pcb_model_with_internal_checks":0.163090,"pcb_input_loading_and_netlist_validation":0.660883,"pcb_text_emission":0.007778,"render3d":16.717228,"sheet_parallel_checks_and_render":8.037920,"measured_scope_total_not_process_wall":160.780118},
+    "python_mixed_phase_seconds": {"pcb_drc_ratsnest_law5":27.67,"hierarchy_erc_cc":11.89,"si_manifest_golden_including_3d":18.12,"sheets":7.97,"gates_documents":8.21},
+    "python_log":"native/build/timing-20261018-python-devkit.log",
+    "python_log_sha256":"2a2d677252dd0568a8496d143166db017af3b4723bae3852b1a5b35ceef8e563",
+    "cpp_log":"native/build/release-20261018-devkit.log",
+    "cpp_log_sha256":"6a1d5dd32f4db00d1304fab7fad270fd63743539d1d25dcdf027c83820d2a3b4"
+  },
+  "current_validation": "Both C++ commands passed mandatory gates and source audits. Advisory return_path, golden and contract_coverage_lint failures remain. Zero non-unrouted DRC errors; 499 carrier/408 devkit unrouted connections. Not fabrication readiness.",
+  "limitations": [
+    "Hardware designs, placement strategies, audit implementations and coverage differ; not a matched-input speedup claim.",
+    "Historical phase spans overlap background PCB work and combine audits/rendering/generation. Do not subtract these spans to fabricate historical audit-free timings.",
+    "Current sheet stage combines KiCad checks and rendering; PCB model stage includes internal checks. No pure-generation total is established.",
+    "Compile time was not measured in these commands; a fresh clean compilation measurement remains outstanding.",
+    "Logs and isolated baseline are local ephemeral evidence; hashes and measured values are retained here."
+  ],
+  "next_performance_work": "Source audit dominates the current devkit run. Investigate reusable source census with complete compiler/flags/transitive-dependency invalidation, while rerunning live board ledger/census comparisons; do not cache board gate verdicts. Existing dependency snapshots are invocation-local and explicitly not a persistent cache key."
+}
