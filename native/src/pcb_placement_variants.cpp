@@ -415,6 +415,29 @@ void append_contract_group_faces(Context& ctx,Geometry& g,const std::string& she
     for(auto& candidate:contact_pairs)append_checked(std::move(candidate));
     for(auto& candidate:contact_singles)append_checked(std::move(candidate));
     }
+    // A repaired single is still a legal group move. Combine it with one
+    // disjoint single after the original catalogue is complete. Snapshot only
+    // singles: never recursively feed pairs or their repairs back into search.
+    if(const auto found=g.shapes.find(sheet);found!=g.shapes.end()) {
+        std::vector<Shape> singles;
+        for(const auto& offer:found->second)
+            if(offer.tag.rfind("contract-bottom/",0)==0&&
+               offer.tag.find("/leftover")==std::string::npos)singles.push_back(offer);
+        for(std::size_t i=0;i<singles.size();++i)for(std::size_t j=i+1;j<singles.size();++j) {
+            const auto& a=singles[i];const auto& b=singles[j];
+            if(a.tag.find("/contact/")==std::string::npos&&b.tag.find("/contact/")==std::string::npos)continue;
+            bool disjoint=true,moved=false;
+            Shape candidate=a;
+            for(const auto& [ref,xy]:b.bot_off)if(seed.top_off.count(ref)) {
+                if(!a.top_off.count(ref)){disjoint=false;break;}
+                candidate.top_off.erase(ref);candidate.bot_off[ref]=xy;
+                candidate.extra_rot[ref]=b.extra_rot.at(ref);candidate.mirror[ref]=b.mirror.at(ref);moved=true;
+            }
+            if(!disjoint||!moved)continue;
+            candidate.tag="contract-bottom-repaired-pair/"+a.tag+"+"+b.tag;
+            append_checked(std::move(candidate));
+        }
+    }
     // Reuse vacated space for unconstrained singleton leftovers. Preserve their
     // face and orientation (notably service LEDs); every contact move goes
     // through the same physical, local-contract and fanout gates as new offers.

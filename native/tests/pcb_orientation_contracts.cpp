@@ -659,6 +659,54 @@ void live(const std::filesystem::path& root){
    }
    demand(som_buck_bottom,"SoM power candidates never move the buck stage");
    demand(som_contact_offers>0,"colliding SoM single group has no checked contact repairs");
+   // Independently combine a repaired single with a disjoint single. This
+   // probes catalogue coverage, not board acceptance or routing feasibility.
+   const auto probe_repaired_pairs=[&](const auto& offers,const auto& originals,
+       const auto& context,const auto& zones,const std::string& probe_sheet) {
+   std::size_t repaired_pair_witnesses=0,repaired_pair_disjoint=0,missing=0;
+   for(const auto& a:offers) {
+    if(a.tag.rfind("contract-bottom/",0)!=0||a.tag.find("/contact/")==std::string::npos||
+       a.tag.find("/leftover")!=std::string::npos)continue;
+    for(const auto& b:offers) {
+     if(b.tag.rfind("contract-bottom/",0)!=0||b.tag.find("/leftover")!=std::string::npos)continue;
+     auto combined=a;bool disjoint=true,moved=false;
+     for(const auto& [ref,xy]:b.bot_off)if(originals.front().top_off.count(ref)) {
+      if(!a.top_off.count(ref)){disjoint=false;break;}
+      combined.top_off.erase(ref);combined.bot_off[ref]=xy;
+      combined.extra_rot[ref]=b.extra_rot.at(ref);combined.mirror[ref]=b.mirror.at(ref);moved=true;
+     }
+     if(!disjoint||!moved)continue;
+     ++repaired_pair_disjoint;
+     combined.w=std::max(a.w,b.w);combined.h=std::max(a.h,b.h);
+     const auto checked=model(combined,context,zones.geometry,probe_sheet);
+     bool physical=true;
+     for(std::size_t i=0;i<checked.model().insts.size();++i) {
+      const auto x=checked.courtyard_at(i);
+      physical&=x.x0>=0&&x.y0>=0&&x.x1<=combined.w&&x.y1<=combined.h;
+      for(std::size_t j=0;j<i;++j) {
+       const auto& pi=checked.model().insts[i];const auto& pj=checked.model().insts[j];
+       if(pi.side!=pj.side&&!has_thru_pads_from_text(pi.mod->bytes)&&!has_thru_pads_from_text(pj.mod->bytes))continue;
+       const auto y=checked.courtyard_at(j);
+       physical&=x.x0>=y.x1+context.clearance||x.x1+context.clearance<=y.x0||
+                 x.y0>=y.y1+context.clearance||x.y1+context.clearance<=y.y0;
+      }
+     }
+     if(physical&&check_fanout(checked,0).ok&&check_pcb_placement_contract(checked,probe_sheet,
+         &f.input.contracts.at(probe_sheet),context.board_refs.at(probe_sheet)).ok) {
+      ++repaired_pair_witnesses;
+      if(std::none_of(offers.begin(),offers.end(),[&](const auto& offered){
+       return offered.side==combined.side&&offered.top_off==combined.top_off&&
+           offered.bot_off==combined.bot_off&&offered.extra_rot==combined.extra_rot&&offered.mirror==combined.mirror;
+      }))++missing;
+     }
+    }
+   }
+   std::cout<<"repaired single pair sheet="<<probe_sheet<<" witnesses="<<repaired_pair_witnesses
+            <<" disjoint="<<repaired_pair_disjoint<<" missing="<<missing<<'\n';
+   if(probe_sheet=="power")demand(repaired_pair_witnesses>0,"power fixture lost repaired pair coverage");
+   demand(missing==0,"legal repaired-single combinations missing from catalogue");
+   };
+   probe_repaired_pairs(som_offers,som_originals,som_context,som_split,"power_som");
    const auto som_vertical=build_zones_for_search(f.input,true,nullptr);
    const auto& vertical_offers=som_vertical.geometry.shapes.at("power_som");
    auto direct_input=f.input;
@@ -713,6 +761,14 @@ void live(const std::filesystem::path& root){
    for(std::size_t i=0;i<power_originals.size();++i)
     demand(equal(power_originals[i],power_alternatives[i]),"power expansion changed an existing shape index");
    Context split_power_context(f.input);split_power_context.pool=power_split.footprints;
+   probe_repaired_pairs(power_alternatives,power_originals,split_power_context,power_split,"power");
+   auto replay_geometry=power_split.geometry;
+   append_contract_group_faces(split_power_context,replay_geometry,"power",power_originals.front());
+   demand(replay_geometry.shapes.at("power").size()==power_alternatives.size(),
+          "repaired-pair replay recursively expanded existing offers");
+   for(std::size_t i=0;i<power_alternatives.size();++i)
+    demand(equal(replay_geometry.shapes.at("power")[i],power_alternatives[i]),
+           "repaired-pair replay changed offer order or physical geometry");
    const auto ownership_input=split_power_context.stage_input("power",power_split.geometry);
    const auto& ownership_refs=split_power_context.board_refs.at("power");
    const auto ownership_groups=contract_rigid_groups(f.input.contracts.at("power"),ownership_refs,{},true,&ownership_input.pad_nets);
@@ -861,6 +917,7 @@ void live(const std::filesystem::path& root){
    for(std::size_t i=0;i<base.model().insts.size();++i)base_indices.emplace(base.model().insts[i].ref,i);
    std::set<int> seen_turns;
    std::size_t pair_candidates=0,contact_candidates=0;
+   probe_repaired_pairs(offers,originals,gc,group_turns,"usb_jtag");
    for(std::size_t n=0;n<offers.size();++n) {
     demand(equal(offers[n],group_repeat.geometry.shapes.at("usb_jtag")[n]),"group-only geometry not reproducible");
     if(offers[n].tag.rfind("contract-bottom-pair/",0)==0) {
