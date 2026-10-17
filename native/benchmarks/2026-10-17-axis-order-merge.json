@@ -1,0 +1,53 @@
+{
+  "base_commit": "1df9aeaf",
+  "change": "Order unimodal absolute-distance axis costs by reversing the decreasing prefix, repairing equal-cost plateaus, and merging with the increasing suffix. Retain lexicographic cost/coordinate ordering; no persistent cache or search pruning.",
+  "proof": {
+    "oracle_cases": 2103,
+    "oracle": "Independent std::sort on empty/single/explicit plateau and generated axes spanning five steps, seven anchors, four half extents, three clipped starts and five lengths.",
+    "coverage": "Includes anchors far outside the board and floating-point distance plateaus; existing geometry digest, precision-operation observers, exception paths and model failure receipts pass.",
+    "tests": "occupancy_precision, policy_audits and model_failure_receipt: 3/3 PASS in 47.06s"
+  },
+  "microbenchmark": {
+    "source": "native/benchmarks/axis-order-benchmark.cpp",
+    "command": "c++ -std=c++17 -O3 -I native/src native/benchmarks/axis-order-benchmark.cpp -o native/build/axis-order-benchmark && native/build/axis-order-benchmark",
+    "workload": "64 axes x 320 coordinates x 200 repetitions per method, four alternating-order rounds; identical input copying and checksum consumption.",
+    "sort_seconds": [
+      0.0253688,
+      0.017764,
+      0.0156825,
+      0.0143431
+    ],
+    "merge_seconds": [
+      0.0092515,
+      0.00880529,
+      0.00658296,
+      0.00671079
+    ],
+    "sort_mean": 0.0182896,
+    "merge_mean": 0.007837635,
+    "change_percent": -57.14703984778235
+  },
+  "model_screens": {
+    "carrier": {
+      "mm": [
+        162,
+        150.5
+      ],
+      "top": 349,
+      "bottom": 217,
+      "construction_seconds": 138.394373333,
+      "pcb_sha256": "d1dcca5723a788338e72db784272cc0a5a53017eba5174b4dd8c3f09a4068957",
+      "receipt_entries_identical_to_previous": 636
+    },
+    "devkit": {
+      "mm": [
+        98,
+        98
+      ],
+      "construction_seconds": 0.190804,
+      "pcb_sha256": "1b12fecbcbbaa5e6084c2459da93cb144a660ff19805e6e4e3f75f9c22689fdb"
+    }
+  },
+  "limits": "The microbenchmark improvement is not an end-to-end speedup. Full carrier duration was similar to the earlier diagnostic run; conditions are not a controlled paired comparison. No fresh full build/render, because accepted geometry is identical. Broader goal incomplete.",
+  "logs": "native/build/axis-order-{tests,benchmark,carrier,devkit}.log"
+}

@@ -2,6 +2,7 @@
 
 #include "schgen/quantize.hpp"
 #include "schgen/occupancy_precision.hpp"
+#include "occupancy_axis_order_internal.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -763,8 +764,8 @@ std::optional<Pose> Occupancy::place_near_impl(
             ys.emplace_back(std::abs(yv + hh - ay), yv);
         }
     }
-    std::sort(xs.begin(), xs.end());
-    std::sort(ys.begin(), ys.end());
+    occupancy_detail::order_axis(xs);
+    occupancy_detail::order_axis(ys);
     if (xs.empty() || ys.empty()) {
         if(alternatives)alternatives->search_complete=true;
         return std::nullopt;

@@ -3,6 +3,7 @@
 #include "schgen/floorplan.hpp"
 #include "pcb_placement_fixture.hpp"
 #include "occupancy_precision_fixture.hpp"
+#include "../src/occupancy_axis_order_internal.hpp"
 #include "schgen/native_audit_state.hpp"
 #ifndef OCCUPANCY_LEGACY_PROBE
 #include "schgen/occupancy_precision.hpp"
@@ -21,6 +22,21 @@ namespace {
 using namespace schgen;
 std::size_t checks=0;
 void require(bool value,const char* why){++checks;if(!value)throw std::runtime_error(why);}
+void axis_order_contracts(){
+    const auto verify=[](std::vector<std::pair<double,double>> axis){
+        auto expected=axis;std::sort(expected.begin(),expected.end());
+        occupancy_detail::order_axis(axis);
+        require(axis==expected,"unimodal axis differs from independent comparison sort");
+    };
+    verify({});verify({{0,0}});
+    verify({{3,0},{3,1},{2,2},{2,3},{0,4},{0,5},{2,6},{2,7},{3,8}});
+    for(double step:{.01,.1,.3,1.,3.25})for(double anchor:{-1e18,-100.,0.,.05,3.,50.,1e18})
+      for(double half:{0.,.15,2.,50.})for(int first:{0,1,37})for(int n:{0,1,2,17,257}) {
+        std::vector<std::pair<double,double>> axis;
+        for(int i=first;i<first+n;++i){const double x=i*step;axis.emplace_back(std::abs(x+half-anchor),x);}
+        verify(axis);
+      }
+}
 std::uint64_t bits(double value){std::uint64_t out;std::memcpy(&out,&value,sizeof out);return out;}
 struct Digest {
     std::uint64_t value=14695981039346656037ULL;
@@ -357,6 +373,7 @@ extern "C" void __cyg_profile_func_enter(void* fn,void*){
 extern "C" void __cyg_profile_func_exit(void*,void*){}
 #endif
 int main(int argc,char** argv){try{
+    axis_order_contracts();
     if(argc>2)throw std::runtime_error("usage: occupancy_precision_contracts [repo]");
 #ifndef OCCUPANCY_LEGACY_PROBE
     concurrent_keys_and_overflow();
