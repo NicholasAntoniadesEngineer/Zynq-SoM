@@ -22,6 +22,15 @@
     "exact_accounting_match": true,
     "log": "native/build/failure-subject-carrier-162x150.log"
   },
+  "retry_transport_followup": {
+    "base_commit": "6b15d722",
+    "defect": "A terminal orientation retry replaced the first solve error, dropping its subjects. Typed failures originating in callbacks also lost subjects at reservation-policy catch boundaries.",
+    "correction": "Union typed subjects at fixed/automatic policy boundaries and into a failed orientation retry; retain the terminal error message and complete existing execution accounting.",
+    "regressions": "Distinct controlled subjects in both fixed and automatic reservation policies; four distinct subjects across both policies before and after orientation expansion, tested with one and multiple eligible sheets. Existing independent work accounting, incumbent preservation and unexpected-error tests remain active.",
+    "tests": {"native_model_failure_receipt_contracts_seconds": 30.18, "native_floorplan_contracts_seconds": 9.66, "passed": 2, "failed": 0},
+    "log": "native/build/failure-subject-union-tests.log",
+    "limits": "No new carrier sizing screen or full qualification performed for this evidence-transport correction. Earlier screen observations remain historical, not a claim of exhaustive subjects under the corrected transport."
+  },
   "next_direction": "Use subject hints to prioritise targeted expansion or rearrangement, not to exclude other sheets. FMC appears only in the alternative strategy, reinforcing the need to handle interactions rather than eagerly expanding power alone.",
   "limits": "No new accepted smaller board, full board qualification or exhaustive test run. Published master images unchanged. Goal remains incomplete."
 }

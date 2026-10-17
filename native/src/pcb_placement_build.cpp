@@ -247,7 +247,7 @@ static PcbPlacementResult build_pcb_model_once(const PcbPlacementInput &input, E
     completed=ExecutionAccounting{};
     FloorplanStage floorplan;
     try {floorplan = generate_floorplan(prepared,&child);}
-    catch(const FloorplanPackingInfeasible&) {
+    catch(const FloorplanPackingInfeasible& initial_failure) {
         const auto experiment=input.floorplan.experiment;
         if(!experiment||experiment->contract_group_face_sheets.empty()||!child.captured||child.unavailable)throw;
         struct Expansion {std::string sheet;FloorplanZoneShape seed;std::size_t index,old_size;};
@@ -281,7 +281,12 @@ static PcbPlacementResult build_pcb_model_once(const PcbPlacementInput &input, E
         prepared.accounting.quantization_engagements=completed.quantization_engagements;
         prepared.accounting.fallback_events=completed.fallback_events;
         completed={};
-        floorplan=generate_floorplan(prepared,&child); // At most one retry.
+        try {floorplan=generate_floorplan(prepared,&child);} // At most one retry.
+        catch(FloorplanPackingInfeasible& retry_failure) {
+            retry_failure.rejected_subjects.insert(initial_failure.rejected_subjects.begin(),
+                                                   initial_failure.rejected_subjects.end());
+            throw;
+        }
     }
     append_execution_accounting(completed,{floorplan.plan.accounting.quantization_engagements,floorplan.plan.accounting.fallback_events},&child);
     append_execution_accounting(completed,floorplan.documents.accounting,&child);

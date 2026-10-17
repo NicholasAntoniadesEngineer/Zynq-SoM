@@ -1031,6 +1031,25 @@ void fixed_face_recovery(){
     check_subjects(in);
     require(FloorplanPackingInfeasible("unnamed rejection").rejected_subjects.empty(),
             "message-only failure must not invent a rejected subject");
+    for(bool fixed:{false,true}) {
+        auto trial=in;if(!fixed)trial.spec->outline.reset();
+        auto transport=std::make_shared<FloorplanExperiment>();
+        std::size_t calls=0;
+        transport->attempt_completed=[&](const auto& row){
+            ++calls;
+            throw FloorplanPackingInfeasible("controlled policy rejection",
+                    {row.punch_free?"free-subject":"conservative-subject"});
+        };
+        trial.experiment=transport;bool caught=false;
+        try{(void)build_floorplan(trial);}
+        catch(const FloorplanPackingInfeasible& error){
+            caught=true;
+            require(error.rejected_subjects.count("free-subject")&&
+                    error.rejected_subjects.count("conservative-subject"),
+                    "terminal failure unions distinct typed subjects from both policies");
+        }
+        require(caught&&calls==2,"both policy failures propagated exactly once");
+    }
 }
 void cross_behavior() {
     FloorplanInput in;in.som.w=20;in.som.h=20;
