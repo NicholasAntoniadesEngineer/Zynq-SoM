@@ -1,0 +1,23 @@
+{
+  "base_commit": "72ca8aeb",
+  "experiment_patch": "failure-set-reconstruction-experiment.patch",
+  "implementation": "After existing strategies fail, snapshot observed rejected subjects, stably promote them together and rebuild once per sorted subject as leader. Preserve accounting during layout rollback and retain all physical checks. No dynamic additions to the current retry snapshot.",
+  "recipe": "Same carrier 162x150 recipe as 2026-10-18-pair-incoming-shapes-screen.json; only failure-set reconstruction differs.",
+  "screen": {
+    "exit_code": 1,
+    "elapsed_seconds": 65.322894917,
+    "outer_attempts": 8,
+    "legalizer_rejections": 2,
+    "receipt_captured": true,
+    "receipt_unavailable": false,
+    "exact_accounting_match": true,
+    "fallback_events": 66383,
+    "log": "native/build/failure-set-rebuild-162x150.log"
+  },
+  "diagnostic": "Unlike recent screens, two placements reached legalization. Logs contain 1272 repeated rejected proposals with near_max usb_pd->pd_input margin -0.1732, plus two each at -0.2498 and -3.7054; counts are log entries, not unique geometric states. Other axis-cycle and bounded-search failures remain.",
+  "constraint_source": "subsystems/usb_pd/placement_contract.json external.near_max sets max_mm 10.0 and explicitly calls its basis judgment:10.0 (D11 edge-gap metric), noting onsemi provides no inter-part CC-run length. This is source evidence of the project's stated basis, not independent manufacturer verification.",
+  "tests": "Experimental compact_retry suite fails the existing at-most-two failed-first-attempt oracle. This is not a passing regression result; integrating an expanded strategy requires independently verifying its revised work scope rather than deleting the assertion.",
+  "decision": "Preserve exact experiment as a checked-applicable patch, not enabled production code. Restore production and its passing recovery tests. Investigate whether the judgment-based proximity limit should be advisory under the user's wiring-length policy before more search expansion; do not silently waive a hardware requirement.",
+  "restoration": {"production_source_diff": "none", "profiler_rebuilt": true, "native_compact_retry_contracts": "PASS"},
+  "limits": "No accepted smaller board, no integrated new strategy, no hardware limit relaxed, no full qualification or goal completion."
+}
