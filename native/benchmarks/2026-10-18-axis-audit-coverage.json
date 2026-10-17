@@ -1,0 +1,10 @@
+{
+  "base_commit": "8e43e4b0",
+  "finding": "occupancy_axis_order_internal.hpp introduced in e8868b9d was absent from both explicit decision-source audit manifests. Included-header dependency checks detect edits but do not grant decision ownership in the includer's census.",
+  "correction": "Register the helper exactly once in both board_pipeline_audit_sources and native_board_policy_audit_sources. No placement or hardware check changes.",
+  "regression": "Metadata asserts both manifests own the header. A real compiler scan locates order_axis and passes its clean census; a scratch-only mutation inside order_axis adds an unreviewed numeric constant and __builtin_floor. Both findings are independently asserted and the mutated census fails the audit.",
+  "build": "PASS: schgen_board_policy_contracts, schgen_native_audits_contracts, schgen_occupancy_precision_contracts and schgen_audit_ast_pipe_census",
+  "tests": {"passed":3,"failed":0,"wall_seconds":45.04,"names":["native_board_policy_contracts","native_policy_audits_contracts","native_occupancy_precision_contracts"]},
+  "logs": ["native/build/axis-audit-coverage-compile.log","native/build/axis-audit-coverage-tests.log"],
+  "limitations": "Targeted verification, not a new exhaustive suite or full-board build. No performance improvement claimed. Source audit caching remains unimplemented; dependency snapshots alone are not a safe reusable cache key. Master release is unchanged."
+}

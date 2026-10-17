@@ -93,7 +93,7 @@ std::vector<CppAuditSource> native_board_policy_audit_sources(){
         "pcb_placement_breathe.cpp","pcb_placement_build.cpp","pcb_escape_internal.hpp",
         "pcb_escape_copper.cpp","pcb_escape_plan.cpp","pcb_escape_model.cpp","pcb_escape_triage.cpp",
         "pcb_embed.cpp","pcb_emit.cpp","pcb_project.cpp","pcb_silk.cpp","legalize.cpp",
-        "occupancy.cpp","pack.cpp","pack_edges.cpp","pack_anchor.cpp","pack_refine.cpp",
+        "occupancy.cpp","occupancy_axis_order_internal.hpp","pack.cpp","pack_edges.cpp","pack_anchor.cpp","pack_refine.cpp",
         "ratsnest_gate.cpp","accurate_norm.hpp","pcb_checks_placement.cpp"})out.push_back({std::string("native/src/")+name});
     for(const auto* name:{"floorplan.hpp","ratsnest_gate.hpp","pack.hpp","occupancy.hpp",
         "legalize.hpp","pack_edges.hpp","pack_anchor.hpp","pack_refine.hpp","pcb_stage_templates.hpp",
