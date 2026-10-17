@@ -1,0 +1,48 @@
+{
+  "base_commit": "e162c940",
+  "rejected_experiment": {
+    "change": "Invocation-local exact proposal qualification-result cache",
+    "power_variant_dimension_operations_before": 1958,
+    "power_variant_dimension_operations_after": 1940,
+    "decision": "Removed: only 18 fewer dimension-quantization operations (~0.92% of this counter), insufficient evidence to justify key-copying/map overhead. This counter is not total work or CPU time.",
+    "logs": "native/build/qualification-reuse-{before,after}.log"
+  },
+  "retained_change": "Resolve all courtyard geometry first, then reject immediately on the first out-of-bounds courtyard or physical clearance collision. Resolving all members preserves missing-geometry exceptions. Valid-candidate dimension calculations and qualification gates remain unchanged.",
+  "tests": {
+    "passed": 3,
+    "seconds": 47.32,
+    "suites": [
+      "pcb_orientation",
+      "policy_audits",
+      "model_failure_receipt"
+    ],
+    "power_mixed_candidates": 125,
+    "power_repaired_pair_witnesses": 72,
+    "missing_witnesses": 0,
+    "power_variant_dimension_operations": 1958
+  },
+  "model_screens": {
+    "carrier": {
+      "mm": [
+        162,
+        151
+      ],
+      "top": 331,
+      "bottom": 235,
+      "construction_seconds": 26.16851275,
+      "pcb_sha256": "8aae8efbb2dee1c37cc61dc1b91e832b9ed6e4c7c47a17fc78b73c1a44f8d231"
+    },
+    "devkit": {
+      "mm": [
+        98,
+        98
+      ],
+      "top": 105,
+      "bottom": 55,
+      "construction_seconds": 0.196059584,
+      "pcb_sha256": "1b12fecbcbbaa5e6084c2459da93cb144a660ff19805e6e4e3f75f9c22689fdb"
+    }
+  },
+  "limits": "No controlled before/after CPU measurement, no end-to-end speedup claimed, no fresh full-board qualification. Reference PCB bytes unchanged; smaller-board improvement remains unproven.",
+  "logs": "native/build/early-rejection-{final-tests,carrier,devkit}.log"
+}

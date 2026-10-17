@@ -755,6 +755,7 @@ void live(const std::filesystem::path& root){
         std::string("SoM power expansion lost an enforced board constraint: ")+kind);
    experiment->contract_group_face_sheets={"power"};
    const auto power_split=build_pcb_zone_geometry(f.input);
+   std::cout<<"power_variant_dimensions="<<power_split.quantization_engagements.at("placement_variant_dimension_precision4dp")<<'\n';
    const auto& power_originals=after.geometry.shapes.at("power");
    const auto& power_alternatives=power_split.geometry.shapes.at("power");
    demand(power_alternatives.size()>=power_originals.size(),"power expansion removed incumbent offers");

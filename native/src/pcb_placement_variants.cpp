@@ -245,19 +245,22 @@ void append_contract_group_faces(Context& ctx,Geometry& g,const std::string& she
         old_right=std::max(old_right,box.x1);old_bottom=std::max(old_bottom,box.y1);
     }
     const auto qualify=[&](Shape& candidate) {
-        const auto checked=model(candidate);double right=0,bottom=0;bool physical=true;
+        const auto checked=model(candidate);double right=0,bottom=0;
+        // Resolve every courtyard before pruning. A collision must not hide a
+        // malformed later member whose missing geometry should still throw.
+        std::vector<Box4> courtyards;courtyards.reserve(checked.model().insts.size());
+        for(std::size_t i=0;i<checked.model().insts.size();++i)courtyards.push_back(checked.courtyard_at(i));
         for(std::size_t i=0;i<checked.model().insts.size();++i) {
-            const auto a=checked.courtyard_at(i);right=std::max(right,a.x1);bottom=std::max(bottom,a.y1);
-            physical&=a.x0>=0&&a.y0>=0;
+            const auto a=courtyards[i];right=std::max(right,a.x1);bottom=std::max(bottom,a.y1);
+            if(!(a.x0>=0&&a.y0>=0))return false;
             for(std::size_t j=0;j<i;++j) {
                 const auto& pi=checked.model().insts[i];const auto& pj=checked.model().insts[j];
                 if(pi.side!=pj.side&&!has_through_hole(pi.mod)&&!has_through_hole(pj.mod))continue;
-                const auto b=checked.courtyard_at(j);
+                const auto b=courtyards[j];
                 if(a.x0<b.x1+ctx.clearance&&a.x1+ctx.clearance>b.x0&&
-                   a.y0<b.y1+ctx.clearance&&a.y1+ctx.clearance>b.y0)physical=false;
+                   a.y0<b.y1+ctx.clearance&&a.y1+ctx.clearance>b.y0)return false;
             }
         }
-        if(!physical)return false;
         candidate.w=placement_variant_dimension_precision4dp(right+seed.w-old_right,&ctx.quantization);
         candidate.h=placement_variant_dimension_precision4dp(bottom+seed.h-old_bottom,&ctx.quantization);
         // Face assignments may help global packing without reducing local area.
