@@ -1,0 +1,39 @@
+{
+  "base_commit": "e8868b9d",
+  "change": "Cache four directional fanout gaps for the last proven colliding body/child pair within one immutable place_near query. Rechecks retain exact boxes_separated arithmetic and the coordinate-dependent direction choice. No cross-query cache.",
+  "tests": {
+    "new_exhaustive_queries": 144,
+    "coverage": "Primary masks 0/1/2/3, child masks 1/2/3, asymmetric reach/inset, four inside/outside anchors; exhaustive rounded-distance oracle before and after copy/removal and rechecking original occupancy.",
+    "targeted_suites": [
+      "occupancy_precision",
+      "policy_audits",
+      "model_failure_receipt"
+    ],
+    "passed": 3,
+    "seconds": 45.61
+  },
+  "model_screens": {
+    "carrier": {
+      "mm": [
+        162,
+        150.5
+      ],
+      "top": 349,
+      "bottom": 217,
+      "construction_seconds": 128.620472292,
+      "previous_diagnostic_seconds": 138.394373333,
+      "pcb_sha256": "d1dcca5723a788338e72db784272cc0a5a53017eba5174b4dd8c3f09a4068957",
+      "receipt_entries_identical": 636
+    },
+    "devkit": {
+      "mm": [
+        98,
+        98
+      ],
+      "construction_seconds": 0.186167167,
+      "pcb_sha256": "1b12fecbcbbaa5e6084c2459da93cb144a660ff19805e6e4e3f75f9c22689fdb"
+    }
+  },
+  "limits": "One diagnostic run per revision, not a controlled repeated performance comparison. Both PCB hashes unchanged; no new full publication or fabrication claim. Changes remain on dedicated branch.",
+  "logs": "native/build/collision-gap-{compile,tests,carrier,devkit}.log"
+}

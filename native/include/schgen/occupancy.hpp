@@ -116,6 +116,7 @@ private:
     struct Rejection {
         const Rect* obstacle = nullptr;
         const Comp* child = nullptr;
+        Halo gaps;
     };
     bool fits_indexed(double x, double y, double w, double h,
                       const Halo& reach, const Halo& inset, int mask,

@@ -1,0 +1,49 @@
+{
+  "base_commit": "2c77eae6",
+  "change": "Combine independently qualified contact-repaired single-group bottom placements with one disjoint single, after original catalogue generation; exclude leftover-compacted variants and never recurse through pairs.",
+  "proof": {
+    "negative_control": "Native orientation test on prior production code found 72 physically legal combinations absent from the power catalogue and failed.",
+    "after": "All 72 witnessed combinations present; 90 disjoint combinations screened independently, 18 rejected by geometry/contracts/fanout. power_som and usb_jtag fixtures offered no disjoint repaired-single combinations.",
+    "checks": "Independent courtyard/through-hole clearance, containment, local contract and fanout checks; catalogue replay retains count, ordered geometry and incumbents. Existing orientation/chirality/net identity/negative cases retained.",
+    "catalogue_growth": "Power mixed candidates 39 to 125; includes downstream singleton compaction of new pairs. No optimality or performance improvement claimed."
+  },
+  "tests": {
+    "orientation_and_audits": "3 targeted tests passed in 46.28s; model receipt executable from that run was subsequently explicitly relinked and rerun.",
+    "relinked_receipts": "PASS 37.93s"
+  },
+  "screens": {
+    "carrier_reference": {
+      "mm": [
+        162,
+        151
+      ],
+      "top": 331,
+      "bottom": 235,
+      "seconds": 26.729980001,
+      "pcb_sha256": "8aae8efbb2dee1c37cc61dc1b91e832b9ed6e4c7c47a17fc78b73c1a44f8d231",
+      "reconciled_counters": 123
+    },
+    "devkit": {
+      "mm": [
+        98,
+        98
+      ],
+      "top": 105,
+      "bottom": 55,
+      "seconds": 0.196520958,
+      "pcb_sha256": "1b12fecbcbbaa5e6084c2459da93cb144a660ff19805e6e4e3f75f9c22689fdb"
+    },
+    "smaller_carrier": {
+      "mm": [
+        162,
+        150.5
+      ],
+      "result": "no screened incumbent",
+      "seconds": 50.292313875,
+      "outer_attempts": 8,
+      "reconciled_counters": 82
+    }
+  },
+  "limitations": "Concurrent construction-only screens; no controlled timing comparison or fresh full qualification. Published PCB geometry unchanged. Increased catalogue costs require further profiling; no smaller board established.",
+  "logs": "native/build/repaired-pair-{before,after,final-tests,receipt-tests,carrier-reference,carrier-smaller,devkit}.log"
+}

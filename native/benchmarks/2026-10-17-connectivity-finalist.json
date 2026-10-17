@@ -1,0 +1,67 @@
+{
+  "source_commit": "f7a20d1e",
+  "base_profile_command": "native/build/fast/schgen_compact_stage_profile --repo . --project carrier --compact-search on --edge-feasibility on --owned-quality-first on --owned-face-cohesion on --contract-group-face-sheet usb_jtag --contract-group-face-sheet power --contract-group-face-sheet power_som --contract-group-face-sheet power_mon --require-bottom-sheet power_mon --require-bottom-sheet bringup_modules --require-bottom-sheet bringup_en_modules --joint-separation-states 1024 --reseat-poses 8 --reseat-frontier 4096 --reseat-continuations 3 --reseat-victim-shapes on --owned-shape board_aux=owned-face-a1.000000 --schematic carrier/Zynq_Carrier.kicad_sch --runs 1 --interior-order 3 --failed-first-retry on --shape-area-first on --floorplan-spec native/benchmarks/carrier-162x151-granular-vertical.floorplan.json --outline-mm 162x150.5 --search-strategy granular-minor+vertical+estimator-first",
+  "screens": [
+    {
+      "change": "--interior-order 0",
+      "seconds": 139.977442625,
+      "result": "constructed screened incumbent",
+      "reconciled_counters": 126
+    },
+    {
+      "change": "--interior-order 2",
+      "seconds": 15.939850958,
+      "result": "no incumbent",
+      "reconciled_counters": 73
+    },
+    {
+      "change": "remove --owned-shape board_aux=owned-face-a1.000000",
+      "seconds": 53.432996041,
+      "result": "no incumbent",
+      "reconciled_counters": 82
+    }
+  ],
+  "finalist": {
+    "dimensions_mm": [
+      162,
+      150.5
+    ],
+    "area_mm2": 24381,
+    "reference_mm": [
+      162,
+      151
+    ],
+    "area_saved_mm2": 81,
+    "area_change_percent": -0.3311258278145712,
+    "top": 349,
+    "bottom": 217,
+    "instances": 566,
+    "pcb_sha256": "d1dcca5723a788338e72db784272cc0a5a53017eba5174b4dd8c3f09a4068957",
+    "full_build_exit_code": 0,
+    "sheets_passed": 37,
+    "source_audit": "PASS",
+    "drc_non_unrouted": 0,
+    "unrouted": 499,
+    "images": 119,
+    "manifest_artifacts": 99,
+    "manifest_hash_mismatches": 0,
+    "visual_inspection": "Top and bottom 3D renders inspected; visual inspection is not fabrication qualification.",
+    "advisory_failures": [
+      "return_path",
+      "golden",
+      "contract_coverage_lint"
+    ]
+  },
+  "command": "native/bin/schgen board --project carrier --compact-placement --interior-order 0 --failed-first-retry --edge-feasibility --owned-quality-first --owned-face-cohesion --contract-group-face-sheet usb_jtag --contract-group-face-sheet power --contract-group-face-sheet power_som --contract-group-face-sheet power_mon --floorplan-spec native/benchmarks/carrier-162x150p5-connectivity.floorplan.json --require-bottom-sheet power_mon --require-bottom-sheet bringup_modules --require-bottom-sheet bringup_en_modules --joint-separation-states 1024 --reseat-poses 8 --reseat-frontier 4096 --reseat-continuations 3 --reseat-victim-shapes --owned-shape board_aux=owned-face-a1.000000 --granular-minor-occupancy --vertical-compaction --audit-projections 2 --timing --output native/build/carrier-162x150p5-connectivity-output",
+  "timings": {
+    "full_rebuild": "PASS; no wall timing captured",
+    "pipeline_measured_scope_seconds": 300.513784,
+    "pcb_model_seconds": 99.360411,
+    "render3d_seconds": 28.173576,
+    "sheet_parallel_checks_and_render_wall_seconds": 25.234739,
+    "source_audit_seconds": 113.420513,
+    "note": "Separate measured scopes, not process wall or a matched Python comparison. Model profiler includes an unsuccessful baseline strategy absent from the single-strategy full build."
+  },
+  "remaining": "Published release and master unchanged. Routing excluded; no fabrication claim. Broader hardware evidence, performance and historical comparison goals remain incomplete.",
+  "logs": "native/build/{order-0-162x150p5,order-2-162x150p5,unpinned-aux-162x150p5,connectivity-finalist-full,connectivity-finalist-compile}.log"
+}

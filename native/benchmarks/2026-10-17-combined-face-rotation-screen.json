@@ -1,0 +1,47 @@
+{
+  "source_commit": "b5035923",
+  "scope": "Construction-only carrier screens; no full board qualification or published output replacement.",
+  "base_command": "native/build/fast/schgen_compact_stage_profile --repo . --project carrier --compact-search on --edge-feasibility on --owned-quality-first on --owned-face-cohesion on --contract-group-face-sheet usb_jtag --contract-group-face-sheet power --contract-group-face-sheet power_som --contract-group-face-sheet power_mon --require-bottom-sheet power_mon --require-bottom-sheet bringup_modules --require-bottom-sheet bringup_en_modules --joint-separation-states 1024 --reseat-poses 8 --reseat-frontier 4096 --reseat-continuations 3 --reseat-victim-shapes on --owned-shape board_aux=owned-face-a1.000000 --schematic carrier/Zynq_Carrier.kicad_sch --runs 1 --interior-order 3 --failed-first-retry on --shape-area-first on --floorplan-spec native/benchmarks/carrier-162x151-granular-vertical.floorplan.json --outline-mm 162x150.5 --search-strategy granular-minor+vertical+estimator-first",
+  "runs": [
+    {
+      "change": "--require-bottom-sheet usb_jtag",
+      "log": "native/build/early-bottom-usb-162x150p5.log",
+      "exit_code": 1,
+      "seconds": 0.333857084,
+      "outer_attempts": 0,
+      "result": "Input rejected: required bottom sheet has no offered bottom shape: usb_jtag"
+    },
+    {
+      "change": "--require-bottom-sheet power_som",
+      "log": "native/build/early-bottom-power-162x150p5.log",
+      "exit_code": 1,
+      "seconds": 0.33337875,
+      "outer_attempts": 0,
+      "result": "Input rejected: required bottom sheet has no offered bottom shape: power_som"
+    },
+    {
+      "change": "Replace strategy with granular-minor+vertical+rotations+estimator-first",
+      "log": "native/build/combined-rotations-162x150p5.log",
+      "exit_code": 1,
+      "seconds": 101.478080875,
+      "outer_attempts": 8,
+      "result": "No screened incumbent",
+      "receipt_counters_reconciled": 82,
+      "rejections": {
+        "fmc": 8,
+        "usb_jtag": 17,
+        "ethernet": 4,
+        "legalizer": 4,
+        "debug_boot": 1
+      }
+    }
+  ],
+  "interpretation": [
+    "Required-bottom-sheet restricts primary reservation side. Contract-group bottom offers can retain top-primary reservations with physical components on both faces. The two input rejections are not infeasibility evidence and did not exercise placement.",
+    "Adding group rotations to granular-minor, vertical compaction and estimator-first did not resolve 162x150.5 under this search recipe. Different rejection subjects are not proof of quality improvement.",
+    "Initial two probes ran concurrently; timing is not a controlled speed comparison. Search-level receipt reconciliation applies only to the completed portfolio, not pre-search input errors.",
+    "Code inspection found contact-repaired single-group variants are appended to the offered catalogue after pair generation, but are not included in single_group for future disjoint group combinations. This is a search-coverage hypothesis, not yet a demonstrated defect or a reason to increase budgets."
+  ],
+  "next": "Construct a C++ witness where one bottom group requires a contact repair and a disjoint second bottom move is needed jointly; independently qualify combined geometry and measure catalogue growth before changing production enumeration.",
+  "published_reference": "Carrier remains 162x151; devkit remains 98x98. Master release unchanged."
+}

@@ -3,6 +3,7 @@
 #include "schgen/floorplan.hpp"
 #include "pcb_placement_fixture.hpp"
 #include "occupancy_precision_fixture.hpp"
+#include "../src/occupancy_axis_order_internal.hpp"
 #include "schgen/native_audit_state.hpp"
 #ifndef OCCUPANCY_LEGACY_PROBE
 #include "schgen/occupancy_precision.hpp"
@@ -21,6 +22,48 @@ namespace {
 using namespace schgen;
 std::size_t checks=0;
 void require(bool value,const char* why){++checks;if(!value)throw std::runtime_error(why);}
+void axis_order_contracts(){
+    const auto verify=[](std::vector<std::pair<double,double>> axis){
+        auto expected=axis;std::sort(expected.begin(),expected.end());
+        occupancy_detail::order_axis(axis);
+        require(axis==expected,"unimodal axis differs from independent comparison sort");
+    };
+    verify({});verify({{0,0}});
+    verify({{3,0},{3,1},{2,2},{2,3},{0,4},{0,5},{2,6},{2,7},{3,8}});
+    for(double step:{.01,.1,.3,1.,3.25})for(double anchor:{-1e18,-100.,0.,.05,3.,50.,1e18})
+      for(double half:{0.,.15,2.,50.})for(int first:{0,1,37})for(int n:{0,1,2,17,257}) {
+        std::vector<std::pair<double,double>> axis;
+        for(int i=first;i<first+n;++i){const double x=i*step;axis.emplace_back(std::abs(x+half-anchor),x);}
+        verify(axis);
+      }
+}
+void remembered_collision_contracts(){
+    for(int mask:{0,1,2,3})for(int child_mask:{1,2,3})for(double anchor:{-3.,2.25,6.,15.}) {
+        Occupancy o(10,9,.1,3,2,.5,.05);
+        o.add(3,2,3,4,{.2,.6,.3,.8},{.1,.2,.05,.1},1,{});
+        o.add(6,1,2,6,{.5,.1,.7,.2},{.2,.05,.1,.1},2,{});
+        o.add(1,6,1,1,{},{},3,{});
+        const Halo reach{.7,.2,.9,.3},inset{.1,.05,.2,.1};
+        const std::vector<Comp> children{{-.5,.75,.5,.75,child_mask,{.3,.8,.2,.6},{.1,.2,.1,.1}}};
+        const auto check=[&](const Occupancy& occupancy){
+            std::vector<std::tuple<double,double,double>> legal;
+            for(int ix=0;ix<20;++ix)for(int iy=0;iy<18;++iy){
+                const double x=ix*.5,y=iy*.5;
+                if(occupancy.fits_exhaustive(x,y,1.5,1,reach,inset,mask,children))
+                    legal.emplace_back(py_round(std::abs(x+.75-anchor)+std::abs(y+.5-anchor),1),x,y);
+            }
+            std::sort(legal.begin(),legal.end());
+            const auto actual=occupancy.place_near(anchor,anchor,1.5,1,reach,inset,mask,children,0,10,0,9);
+            require(actual.has_value()==!legal.empty(),"remembered collision changed feasibility");
+            if(actual)require(actual->x==std::get<1>(legal.front())&&actual->y==std::get<2>(legal.front()),
+                              "remembered collision changed exhaustive nearest pose");
+        };
+        check(o);
+        auto changed=o;
+        changed.remove(3,2,3,4,{.2,.6,.3,.8},{.1,.2,.05,.1},1,{});
+        check(changed);check(o);
+    }
+}
 std::uint64_t bits(double value){std::uint64_t out;std::memcpy(&out,&value,sizeof out);return out;}
 struct Digest {
     std::uint64_t value=14695981039346656037ULL;
@@ -357,6 +400,8 @@ extern "C" void __cyg_profile_func_enter(void* fn,void*){
 extern "C" void __cyg_profile_func_exit(void*,void*){}
 #endif
 int main(int argc,char** argv){try{
+    axis_order_contracts();
+    remembered_collision_contracts();
     if(argc>2)throw std::runtime_error("usage: occupancy_precision_contracts [repo]");
 #ifndef OCCUPANCY_LEGACY_PROBE
     concurrent_keys_and_overflow();

@@ -1,0 +1,25 @@
+{
+  "source_commit": "394b43fff2ca8ef6651d336228efcf28640f0a28",
+  "scope": "Complete all-target native rebuild and exhaustive registered CTest suite after repaired group combinations, candidate rejection, unimodal axis ordering and remembered collision-gap reuse.",
+  "compile": {
+    "command": "CCACHE_DIR=\"$PWD/native/build/compiler-cache\" CCACHE_BASEDIR=\"$PWD\" cmake --build native/build/fast --parallel 2",
+    "exit_code": 0,
+    "log": "native/build/integrated-20261018-compile.log",
+    "sha256": "db2c9502f6cb24cb6109540ef02f4b9f44351285cf7807de4496a496a13ca47c",
+    "wall_timing": "not captured; not a clean-compile timing claim"
+  },
+  "tests": {
+    "command": "ctest --test-dir native/build/fast --output-on-failure -j 2 --no-tests=error",
+    "exit_code": 0,
+    "passed": 278,
+    "failed": 0,
+    "excluded": 0,
+    "wall_seconds": 931.83,
+    "live_kicad_tests": 10,
+    "live_kicad_summed_process_seconds": 583.23,
+    "log": "native/build/integrated-20261018-tests.log",
+    "sha256": "9c2f768b2e95ae4d860b1b73bb18c54ea671cf1e48caeb26f7ecaacd03230db3"
+  },
+  "integrity": "No source changes or competing agent build/campaign during test execution. Tracked worktree clean at completion. git ls-files '*.py' '*.pyc' 'requirements*.txt' 'pyproject.toml' returned no paths; this filename census alone is not a complete dependency audit.",
+  "limits": "Not a completion audit, new hardware qualification or a timing comparison. Matched Python comparisons, broader hardware evidence, further compact placement and end-to-end performance remain outstanding. Master release unchanged."
+}

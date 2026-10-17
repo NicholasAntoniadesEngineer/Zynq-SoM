@@ -245,19 +245,22 @@ void append_contract_group_faces(Context& ctx,Geometry& g,const std::string& she
         old_right=std::max(old_right,box.x1);old_bottom=std::max(old_bottom,box.y1);
     }
     const auto qualify=[&](Shape& candidate) {
-        const auto checked=model(candidate);double right=0,bottom=0;bool physical=true;
+        const auto checked=model(candidate);double right=0,bottom=0;
+        // Resolve every courtyard before pruning. A collision must not hide a
+        // malformed later member whose missing geometry should still throw.
+        std::vector<Box4> courtyards;courtyards.reserve(checked.model().insts.size());
+        for(std::size_t i=0;i<checked.model().insts.size();++i)courtyards.push_back(checked.courtyard_at(i));
         for(std::size_t i=0;i<checked.model().insts.size();++i) {
-            const auto a=checked.courtyard_at(i);right=std::max(right,a.x1);bottom=std::max(bottom,a.y1);
-            physical&=a.x0>=0&&a.y0>=0;
+            const auto a=courtyards[i];right=std::max(right,a.x1);bottom=std::max(bottom,a.y1);
+            if(!(a.x0>=0&&a.y0>=0))return false;
             for(std::size_t j=0;j<i;++j) {
                 const auto& pi=checked.model().insts[i];const auto& pj=checked.model().insts[j];
                 if(pi.side!=pj.side&&!has_through_hole(pi.mod)&&!has_through_hole(pj.mod))continue;
-                const auto b=checked.courtyard_at(j);
+                const auto b=courtyards[j];
                 if(a.x0<b.x1+ctx.clearance&&a.x1+ctx.clearance>b.x0&&
-                   a.y0<b.y1+ctx.clearance&&a.y1+ctx.clearance>b.y0)physical=false;
+                   a.y0<b.y1+ctx.clearance&&a.y1+ctx.clearance>b.y0)return false;
             }
         }
-        if(!physical)return false;
         candidate.w=placement_variant_dimension_precision4dp(right+seed.w-old_right,&ctx.quantization);
         candidate.h=placement_variant_dimension_precision4dp(bottom+seed.h-old_bottom,&ctx.quantization);
         // Face assignments may help global packing without reducing local area.
@@ -414,6 +417,29 @@ void append_contract_group_faces(Context& ctx,Geometry& g,const std::string& she
     // Keep each orientation's existing offers ahead of its checked repairs.
     for(auto& candidate:contact_pairs)append_checked(std::move(candidate));
     for(auto& candidate:contact_singles)append_checked(std::move(candidate));
+    }
+    // A repaired single is still a legal group move. Combine it with one
+    // disjoint single after the original catalogue is complete. Snapshot only
+    // singles: never recursively feed pairs or their repairs back into search.
+    if(const auto found=g.shapes.find(sheet);found!=g.shapes.end()) {
+        std::vector<Shape> singles;
+        for(const auto& offer:found->second)
+            if(offer.tag.rfind("contract-bottom/",0)==0&&
+               offer.tag.find("/leftover")==std::string::npos)singles.push_back(offer);
+        for(std::size_t i=0;i<singles.size();++i)for(std::size_t j=i+1;j<singles.size();++j) {
+            const auto& a=singles[i];const auto& b=singles[j];
+            if(a.tag.find("/contact/")==std::string::npos&&b.tag.find("/contact/")==std::string::npos)continue;
+            bool disjoint=true,moved=false;
+            Shape candidate=a;
+            for(const auto& [ref,xy]:b.bot_off)if(seed.top_off.count(ref)) {
+                if(!a.top_off.count(ref)){disjoint=false;break;}
+                candidate.top_off.erase(ref);candidate.bot_off[ref]=xy;
+                candidate.extra_rot[ref]=b.extra_rot.at(ref);candidate.mirror[ref]=b.mirror.at(ref);moved=true;
+            }
+            if(!disjoint||!moved)continue;
+            candidate.tag="contract-bottom-repaired-pair/"+a.tag+"+"+b.tag;
+            append_checked(std::move(candidate));
+        }
     }
     // Reuse vacated space for unconstrained singleton leftovers. Preserve their
     // face and orientation (notably service LEDs); every contact move goes

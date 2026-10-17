@@ -2,6 +2,7 @@
 
 #include "schgen/quantize.hpp"
 #include "schgen/occupancy_precision.hpp"
+#include "occupancy_axis_order_internal.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -687,16 +688,30 @@ bool Occupancy::fits_indexed(double x, double y, double w, double h,
     }
     if (rejection && rejection->obstacle) {
         const Comp* c = rejection->child;
-        if (indexed_conflict(c ? x+c->dx : x, c ? y+c->dy : y,
-                             c ? c->w : w, c ? c->h : h,
-                             c ? c->reach : reach, c ? c->inset : inset,
-                             c ? c->mask : mask, mask, !c, *rejection->obstacle, clear_))
+        const double cx=c?x+c->dx:x,cy=c?y+c->dy:y;
+        const auto& r=*rejection->obstacle;
+        // This pair already conflicted in this immutable query. Its masks,
+        // dimensions and directional gaps cannot change between grid poses.
+        const double gx=cx<=r.x?rejection->gaps.e:rejection->gaps.w;
+        const double gy=cy<=r.y?rejection->gaps.s:rejection->gaps.n;
+        if (!boxes_separated(cx,cy,c?c->w:w,c?c->h:h,r.x,r.y,r.w,r.h,gx,gy))
             return false;
     }
+    const auto remember=[&](const Rect* obstacle,const Comp* child) {
+        if(!rejection)return;
+        const auto& r=*obstacle;
+        const auto& a=child?child->reach:reach;
+        const auto& b=child?child->inset:inset;
+        *rejection={obstacle,child,{
+            std::max(clear_,fanout_sep(a,b,r.reach,r.inset,'W')),
+            std::max(clear_,fanout_sep(a,b,r.reach,r.inset,'E')),
+            std::max(clear_,fanout_sep(a,b,r.reach,r.inset,'N')),
+            std::max(clear_,fanout_sep(a,b,r.reach,r.inset,'S'))}};
+    };
     const Rect* obstacle = nullptr;
     if (!query_hashed_cells(x, y, w, h, halo4(reach,inset), reach, inset, mask,
                             mask, true, counts, rejection ? &obstacle : nullptr)) {
-        if (rejection) *rejection = {obstacle, nullptr};
+        remember(obstacle,nullptr);
         return false;
     }
     for (const Comp& c : comps) {
@@ -704,7 +719,7 @@ bool Occupancy::fits_indexed(double x, double y, double w, double h,
         const double cy0 = y + c.dy;
         if (!query_hashed_cells(cx0, cy0, c.w, c.h, halo4(c.reach,c.inset), c.reach, c.inset, c.mask,
                                 mask, false, counts, rejection ? &obstacle : nullptr)) {
-            if (rejection) *rejection = {obstacle, &c};
+            remember(obstacle,&c);
             return false;
         }
     }
@@ -763,8 +778,8 @@ std::optional<Pose> Occupancy::place_near_impl(
             ys.emplace_back(std::abs(yv + hh - ay), yv);
         }
     }
-    std::sort(xs.begin(), xs.end());
-    std::sort(ys.begin(), ys.end());
+    occupancy_detail::order_axis(xs);
+    occupancy_detail::order_axis(ys);
     if (xs.empty() || ys.empty()) {
         if(alternatives)alternatives->search_complete=true;
         return std::nullopt;
