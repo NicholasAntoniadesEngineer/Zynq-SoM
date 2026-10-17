@@ -1,0 +1,24 @@
+{
+  "source_base": "4eda0cf1",
+  "observed_defect": "Both committed release manifests had exactly one stale artifact hash: reports/gates.txt. The manifest ran before final audit, ledger and summary publication.",
+  "fix": "Retain the validated manufacturing input and rehash artifacts after final report publication. A failed final manifest write creates a mandatory manifest.completion failure and republishes failure verdicts.",
+  "tests": {
+    "targeted": "board_pipeline and manufacturing contracts: 2/2 PASS in 36.93 seconds",
+    "coverage": [
+      "Every final artifact hash matches bytes on disk",
+      "Late audit and final summary are included",
+      "Unchanged publication is deterministic",
+      "Changed timing summary is rehashed",
+      "Forced manifest write failure is mandatory and appears in final text and JSON verdicts"
+    ]
+  },
+  "timing_scope": "The final rehash is part of final publication, outside the existing measured pipeline scopes. Scope totals remain explicitly not process-wall times.",
+  "isolated_runs": {
+    "carrier": {"board_pass": true, "sheets": 37, "verified_artifacts": 99, "stale_hashes": 0, "measured_scope_seconds": 194.395107, "source_audit_seconds": 123.262730},
+    "devkit": {"board_pass": true, "sheets": 12, "verified_artifacts": 73, "stale_hashes": 0, "measured_scope_seconds": 166.465699, "source_audit_seconds": 124.268533},
+    "geometry": "Both PCB hashes exactly match the published release. Zero non-unrouted DRC errors; carrier/devkit retain 499/408 unrouted connections.",
+    "risks": "Existing return_path and contract_coverage_lint advisory failures remain. No-render devkit golden stage reports PASS for zero sheets; this is not visual validation and needs a separate reporting correction. Carrier golden drift remains advisory."
+  },
+  "logs": "native/build/final-manifest-{compile,tests,carrier,devkit}.log",
+  "release_limit": "Validation uses isolated outputs with --no-render. Existing published images and master are not changed by this fix."
+}

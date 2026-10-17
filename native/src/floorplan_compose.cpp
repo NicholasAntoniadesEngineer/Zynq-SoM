@@ -601,8 +601,34 @@ private:
                         return std::make_pair(value,value);
                     }
                     const auto* v=by_name.at(name);
-                    return std::make_pair(local+in.clear,
-                        local+(x?in.board_w-v->w:in.board_h-v->h)-in.clear);
+                    const double lo=in.clear,hi=(x?in.board_w-v->w:in.board_h-v->h)-in.clear;
+                    const double other_lo=in.clear,other_hi=(x?in.board_h-v->h:in.board_w-v->w)-in.clear;
+                    std::vector<std::pair<double,double>> blocked;
+                    for(const auto& [fixed_name,b]:frect) {
+                        if(!in.primary_fanout.empty()) {
+                            const auto& a=in.primary_fanout.at(name);
+                            const auto& f=in.primary_fanout.at(fixed_name);
+                            // Only an actual shared-face primary rectangle
+                            // proves a full strip blocked. Component-only
+                            // envelopes and opposite faces may contain pockets.
+                            if(a.component_only||f.component_only||!(a.mask&f.mask))continue;
+                        }
+                        const double cross_lo=(x?b.y0-v->h:b.x0-v->w)-in.clear;
+                        const double cross_hi=(x?b.y1:b.x1)+in.clear;
+                        if(cross_lo<other_lo&&cross_hi>other_hi)
+                            blocked.emplace_back((x?b.x0-v->w:b.y0-v->h)-in.clear,
+                                                 (x?b.x1:b.y1)+in.clear);
+                    }
+                    std::sort(blocked.begin(),blocked.end());
+                    double lower=lo,upper=hi;
+                    // Collision intervals are open: exact-clearance contact
+                    // remains available. Overlapping strips are propagated in
+                    // order without excluding an isolated legal contact point.
+                    for(const auto& [a,b]:blocked)if(a<lower&&lower<b)lower=b;
+                    for(auto it=blocked.rbegin();it!=blocked.rend();++it)
+                        if(it->first<upper&&upper<it->second)upper=it->first;
+                    if(lower>upper){lower=lo;upper=hi;} // No feasibility claim; the solver still rejects.
+                    return std::make_pair(local+lower,local+upper);
                 };
                 const auto capacity=[&](bool x,double a) {
                     const auto sr=range(*s,term.subject,x),tr=range(*t,term.target(),x);

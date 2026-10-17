@@ -1,0 +1,17 @@
+{
+  "source_base": "49e85066",
+  "observed_defect": "The isolated no-render devkit build reported golden PASS for zero sheets. A no-render run could also inspect or bless stale output images.",
+  "changes": [
+    "Pipeline golden stage explicitly reports SKIP under --no-render, without inspecting or blessing existing images.",
+    "Standalone golden comparison never matches an empty current image set, even against an empty baseline.",
+    "Empty image sets cannot be blessed, and the existing baseline is preserved.",
+    "Empty-result summaries explain missing evidence rather than suggesting blessing as a remedy."
+  ],
+  "tests": {
+    "result": "board_pipeline and policy_audits contracts: 2/2 PASS in 47.56 seconds",
+    "new_cases": "empty/empty comparison, empty blessing rejection and baseline preservation, no-render plus bless with stale corrupt imagery, explicit skipped gate and text report",
+    "retained_cases": "nonempty matching, 12/13-bit comparison boundary, new/missing images, corrupt PNG and malformed baseline rejection, explicit isolated blessing provenance"
+  },
+  "logs": "native/build/golden-evidence-final-{compile,tests}.log",
+  "limits": "No new full board builds or renders for this reporting-only change. Existing images, golden baselines and master remain unchanged. No smaller-board or speedup claim."
+}

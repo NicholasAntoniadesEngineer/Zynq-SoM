@@ -1274,7 +1274,7 @@ MISFIT (1) — model resolves but does NOT match the footprint body (LAW):
 render3d: PASS (advisory) — 3D RENDERS: 8 view(s) -> /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/devkit_mini/renders/3d_top.png, /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/devkit_mini/renders/3d_bottom.png, /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/devkit_mini/renders/3d_left.png, /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/devkit_mini/renders/3d_right.png, /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/devkit_mini/renders/3d_front.png, /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/devkit_mini/renders/3d_back.png, /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/devkit_mini/renders/3d_persp.png, /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/devkit_mini/renders/3d_persp_rear.png (VISUAL-verify: LAW 1)
 gallery: PASS — GALLERY: 12 sheets -> devkit_mini/README.md (unchanged)
 si: PASS — SI constraints: 7 diff pairs, 4 length-match groups emitted — every declared pair covered.
-manifest: PASS — current artifacts hashed after SI publication
+manifest: PASS — artifacts hashed after SI; final reports rehashed at publication
 golden: FAIL (advisory) — golden renders: DRIFT (explicit --bless to accept):
 3d_back: NEW sheet (no golden)
 3d_bottom: NEW sheet (no golden)
@@ -1415,6 +1415,11 @@ SEARCH EFFORT: observational, no acceptance ceiling; counts include rejected wor
   facing_replan_retry: 0
   interior_failed_first_retry: 0
   interior_reseat_incoming_shape_trial: 0
+  interior_reseat_pair_pose_budget: 0
+  interior_reseat_pair_pose_cap: 0
+  interior_reseat_pair_pose_recovered: 0
+  interior_reseat_pair_pose_search: 0
+  interior_reseat_pair_pose_trial: 0
   interior_reseat_pair_recovered: 0
   interior_reseat_pair_rejected: 0
   interior_reseat_pair_trial: 0
@@ -1458,71 +1463,71 @@ pipeline_doc: PASS — unchanged
 === board native exclusive timing (wall s; audits included) ===
 Nested scopes pause parents; parallel batches use launch/join wall time, never summed worker spans.
 Scope: pipeline entry through build-ledger publication; excludes final summary publications and caller/process setup. Mixed stages remain mixed; not a generation-only total.
-pipeline_setup_and_other: 0.003038
-inputs: 0.001187
-authoring_audit: 21.152554
-authoring_guard_reporting_and_recheck: 0.000395
-input_factory_generation_and_ir_conversion: 0.243620
-input_circuit_validation: 0.003245
-input_publication: 0.003979
-subsystem_structure: 0.024698
-carrier_structure: 0.006157
-sheet_prepare_other: 0.003209
-sheet_electrical_validation: 0.001465
-sheet_place_route_with_internal_checks: 0.026282
+pipeline_setup_and_other: 0.002711
+inputs: 0.000706
+authoring_audit: 18.755160
+authoring_guard_reporting_and_recheck: 0.000389
+input_factory_generation_and_ir_conversion: 0.195616
+input_circuit_validation: 0.003013
+input_publication: 0.004801
+subsystem_structure: 0.023208
+carrier_structure: 0.005102
+sheet_prepare_other: 0.002545
+sheet_electrical_validation: 0.001297
+sheet_place_route_with_internal_checks: 0.159545
 sheet_cc_validation: 0.002460
-sheet_emit_and_publish: 0.017599
-sheet_visual_validation: 0.005337
-sheet_parallel_checks_and_render_wall: 13.080874
-symbol_law: 0.000320
-link: 0.001530
-constraints: 0.000945
-diagram: 0.000765
-board_schematic: 3.868995
-bom_footprints: 0.000337
-power_tree: 0.001154
-rail_ampacity: 0.000271
-testpoints: 0.000343
-design_rules: 0.000752
-part_rules: 0.000724
-bom_values: 0.000886
-footprint_pads: 0.003844
-pin_completeness: 0.000632
-spice: 0.086574
-pcb: 0.004166
-pcb_input_loading_and_netlist_validation: 0.902167
-pcb_build_model_with_internal_checks: 0.178572
-pcb_render: 0.008418
-placement_requirements: 0.000578
-pcb_drc: 1.978156
-pcb_geometry: 0.016016
-assembly: 0.082310
-ratsnest_images: 0.132889
-thermal: 0.008601
-copper_debt: 0.172338
-cpl: 0.333419
-fab_profile: 0.009248
-stage_movement: 0.000001
-xdc: 1.746527
-vivado: 0.000339
-devicetree: 0.000651
-firmware: 1.075588
+sheet_emit_and_publish: 0.016359
+sheet_visual_validation: 0.005182
+sheet_parallel_checks_and_render_wall: 11.541812
+symbol_law: 0.000261
+link: 0.001055
+constraints: 0.000645
+diagram: 0.000743
+board_schematic: 3.795441
+bom_footprints: 0.000262
+power_tree: 0.001240
+rail_ampacity: 0.000246
+testpoints: 0.000284
+design_rules: 0.000681
+part_rules: 0.000795
+bom_values: 0.000627
+footprint_pads: 0.001723
+pin_completeness: 0.000442
+spice: 0.076283
+pcb: 0.003826
+pcb_input_loading_and_netlist_validation: 0.722507
+pcb_build_model_with_internal_checks: 0.177032
+pcb_render: 0.008337
+placement_requirements: 0.000464
+pcb_drc: 1.614574
+pcb_geometry: 0.013777
+assembly: 0.087292
+ratsnest_images: 0.156150
+thermal: 0.008321
+copper_debt: 0.166325
+cpl: 0.265580
+fab_profile: 0.009104
+stage_movement: 0.000002
+xdc: 1.034727
+vivado: 0.000458
+devicetree: 0.000750
+firmware: 1.419018
 manual: 0.000001
-scfw: 0.000015
-testplan: 0.000447
-power_sequence: 0.000235
-floorplan: 0.000326
-model3d: 2.360115
-render3d: 21.120754
-gallery: 0.000508
-si: 0.000583
-manifest: 0.014841
-golden: 0.528322
-contract_coverage_lint: 0.000626
-fallbacks: 0.000382
-ledger_import: 0.000761
-quantize_census: 0.000816
-source_audit: 146.795587
-pipeline_doc: 0.001979
-MEASURED SCOPE TOTAL (not process wall): 216.020459
+scfw: 0.000001
+testplan: 0.000397
+power_sequence: 0.000272
+floorplan: 0.000509
+model3d: 2.086461
+render3d: 18.610100
+gallery: 0.000619
+si: 0.000911
+manifest: 0.012760
+golden: 0.511673
+contract_coverage_lint: 0.000583
+fallbacks: 0.000253
+ledger_import: 0.000702
+quantize_census: 0.000609
+source_audit: 123.235165
+pipeline_doc: 0.001455
+MEASURED SCOPE TOTAL (not process wall): 184.751348
 BOARD: PASS (12 sheets)

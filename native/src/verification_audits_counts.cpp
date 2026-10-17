@@ -169,6 +169,8 @@ bool is_board_search_effort(std::string_view name){
         "interior_shape_choice_hint","interior_shape_choice_replay","interior_shape_choice_budget",
         "interior_reseat_incoming_shape_trial",
         "interior_reseat_pair_trial","interior_reseat_pair_rejected","interior_reseat_pair_recovered",
+        "interior_reseat_pair_pose_search","interior_reseat_pair_pose_trial",
+        "interior_reseat_pair_pose_budget","interior_reseat_pair_pose_cap","interior_reseat_pair_pose_recovered",
         "interior_reseat_shape_retry","interior_reseat_shape_trial",
         "legalize_reservation_retry","legalize_facing_retry",
         "interior_reseat_pose_search","interior_reseat_pose_trial",

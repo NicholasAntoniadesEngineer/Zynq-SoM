@@ -763,7 +763,8 @@ bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure,
                 bool first_seated=false,second_seated=false;
                 if (incoming) {
                     occ_put(b);centers[b.name]={b.cx(),b.cy()};
-                    const auto one=reseat_displaced(first,pack_anchor(anchor_row(first,centers)));
+                    const auto first_anchor=pack_anchor(anchor_row(first,centers));
+                    const auto one=reseat_displaced(first,first_anchor);
                     if (one) {
                         first.x=one->x;first.y=one->y;occ_put(first);
                         centers[first.name]={first.cx(),first.cy()};first_seated=true;
@@ -771,6 +772,37 @@ bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure,
                         if (two) {
                             second.x=two->x;second.y=two->y;occ_put(second);
                             centers[second.name]={second.cx(),second.cy()};second_seated=true;
+                        }
+                        if(!second_seated) {
+                            // The nearest first-victim pose may consume the
+                            // second victim's only pocket. Reconsider positions
+                            // of this already selected legal shape before
+                            // rejecting the pair; retain the caller's limits.
+                            occ_pull(first);first_seated=false;
+                            auto win=std::make_tuple(-bw,2*bw,-bh,2*bh);
+                            near_domain(first,first.shape_idx,win);
+                            const auto limits=*in.experiment->reseat_pose_limits;
+                            fallback("interior_reseat_pair_pose_search");
+                            const auto poses=occ.place_near_candidates(first_anchor.first,first_anchor.second,
+                                first.w,first.h,first.fanout_reach,first.fanout_inset,
+                                reservation_mask(first.name,first.shape_idx,first.side),get(chosen,first.name),
+                                std::get<0>(win),std::get<1>(win),std::get<2>(win),std::get<3>(win),
+                                limits.poses,limits.frontier_nodes,counts);
+                            if(poses.budget_exhausted)fallback("interior_reseat_pair_pose_budget");
+                            if(!poses.search_complete&&!poses.budget_exhausted)fallback("interior_reseat_pair_pose_cap");
+                            for(const auto& p:poses.poses) {
+                                if(p.x==one->x&&p.y==one->y)continue;
+                                fallback("interior_reseat_pair_pose_trial");
+                                first.x=p.x;first.y=p.y;occ_put(first);first_seated=true;
+                                centers[first.name]={first.cx(),first.cy()};
+                                const auto next=reseat_displaced(second,pack_anchor(anchor_row(second,centers)));
+                                if(next) {
+                                    second.x=next->x;second.y=next->y;occ_put(second);
+                                    centers[second.name]={second.cx(),second.cy()};second_seated=true;
+                                    fallback("interior_reseat_pair_pose_recovered");break;
+                                }
+                                occ_pull(first);first_seated=false;
+                            }
                         }
                     }
                 }

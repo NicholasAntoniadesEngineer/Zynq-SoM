@@ -6,6 +6,17 @@
 #include "schgen/model3d.hpp"
 
 namespace schgen::board_pipeline_detail {
+void golden_stage(Context& c){
+    c.attempt("golden",[&]{
+        if(c.options.no_render){
+            const std::string reason="--no-render: no current-run visual comparison; existing images and baseline left unchanged";
+            c.report("golden.txt","SKIP: "+reason);
+            c.status("golden",BoardGateStatus::skipped,reason);return;
+        }
+        const auto r=check_board_golden(c.renders,c.options.bless,c.paths.project_root/"renders/golden.json");
+        c.report("golden.txt",r.summary());c.gate("golden",r.match,r.summary());
+    });
+}
 void document_stages(Context& c){
     std::optional<SomZynq> live;std::optional<XdcInput> xi;std::optional<XdcOutput> xo;
     c.attempt("xdc",[&]{live=extract_som_zynq(c.paths.som_schematic,"U2",{"J1","J2","J3"},c.options.extraction);
@@ -44,8 +55,10 @@ void document_stages(Context& c){
     c.attempt("manifest",[&]{if(!c.power||!c.testpoints||!c.firmware)throw ProjectError("power/coverage/live STM32 facts unavailable");
         ManufacturingManifestInput in;in.sheets=c.circuits;in.power=*c.power;in.stm32=c.firmware->stm32;in.xdc=c.xdc;
         in.coverage={c.testpoints->covered(),c.testpoints->required.size(),c.testpoints->waived.size()};
-        if(c.xdc)in.device=c.xdc->device;run_manufacturing_manifest(in,c.out,c.out/"manifest.json");c.gate("manifest",true,"current artifacts hashed after SI publication");});
-    c.attempt("golden",[&]{const auto r=check_board_golden(c.renders,c.options.bless,c.paths.project_root/"renders/golden.json");c.report("golden.txt",r.summary());c.gate("golden",r.match,r.summary());});
+        if(c.xdc)in.device=c.xdc->device;run_manufacturing_manifest(in,c.out,c.out/"manifest.json");
+        c.manifest_input=std::move(in);
+        c.gate("manifest",true,"artifacts hashed after SI; final reports rehashed at publication");});
+    golden_stage(c);
     c.attempt("contract_coverage_lint",[&]{
         if(!c.pcb)throw ProjectError("authored PCB contracts unavailable for coverage lint");
         const auto policy=pcb_placement_gate_policy(c.pcb->inputs);

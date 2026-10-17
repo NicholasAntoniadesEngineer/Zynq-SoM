@@ -53,6 +53,26 @@ void Context::status(const std::string& name,BoardGateStatus s,const std::string
 }
 void Context::gate(const std::string& name,bool ok,const std::string& value){status(name,ok?BoardGateStatus::passed:BoardGateStatus::failed,value);}
 void Context::report(const std::string& name,const std::string& value){publish_text(reports/name,value+"\n");}
+void publish_final_reports(Context& c) {
+    const auto reports=[&] {
+        publish_text(c.reports/"gates.txt",c.result.report());
+        publish_text(c.reports/"board_verdicts.json",board_pipeline_verdict_json(c.result));
+        publish_text(c.reports/"experiment_verdicts.json",board_pipeline_experiment_json(c.result));
+    };
+    reports();
+    // Report publication is outside the measured pipeline scope. Hash the
+    // final bytes, including late audits/ledger/timings, not the previous run.
+    // The manifest excludes itself, so no self-hash or timing cycle is needed.
+    if(c.manifest_input) {
+        try { run_manufacturing_manifest(*c.manifest_input,c.out,c.out/"manifest.json"); }
+        catch(const std::bad_alloc&) { throw; }
+        catch(const std::exception& e) {
+            c.report("manifest.completion.txt",std::string("FAIL: ")+e.what());
+            c.gate("manifest.completion",false,e.what());
+            reports();
+        }
+    }
+}
 }
 namespace schgen {
 namespace {
@@ -142,9 +162,7 @@ BoardPipelineResult run_board_pipeline(const ProjectPaths& p,const BoardPipeline
             c.geometry->ratsnest.cross_mm,model.n_top,model.n_bottom};}
     c.report("build_ledger.txt",c.result.ledger);
     pipeline.finish();c.result.timing_seconds=std::move(timing_rows);
-    publish_text(c.reports/"gates.txt",c.result.report());
-    publish_text(c.reports/"board_verdicts.json",board_pipeline_verdict_json(c.result));
-    publish_text(c.reports/"experiment_verdicts.json",board_pipeline_experiment_json(c.result));
+    publish_final_reports(c);
     return std::move(c.result);
 }
 }

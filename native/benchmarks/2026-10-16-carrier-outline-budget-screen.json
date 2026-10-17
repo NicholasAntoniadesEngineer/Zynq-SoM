@@ -1,0 +1,109 @@
+{
+  "source_commit": "d9b4b5be",
+  "reference": {
+    "outline_mm": [
+      162,
+      151
+    ],
+    "area_mm2": 24462
+  },
+  "common_command": "native/build/fast/schgen_compact_stage_profile --repo . --project carrier --compact-search on --edge-feasibility on --owned-quality-first on --owned-face-cohesion on --contract-group-face-sheet usb_jtag --contract-group-face-sheet power --contract-group-face-sheet power_som --contract-group-face-sheet power_mon --require-bottom-sheet power_mon --require-bottom-sheet bringup_modules --require-bottom-sheet bringup_en_modules --joint-separation-states 1024 --reseat-poses 8 --reseat-frontier 4096 --reseat-continuations 3 --reseat-victim-shapes on --owned-shape board_aux=owned-face-a1.000000 --schematic carrier/Zynq_Carrier.kicad_sch --runs 1 --interior-order 3 --failed-first-retry on --shape-area-first on --floorplan-spec native/benchmarks/carrier-162x151-granular-vertical.floorplan.json --outline-mm 162x151 --search-strategy granular-minor+vertical+estimator-first",
+  "variation": "Replace only --outline-mm with each listed outline; the final run additionally replaces --reseat-poses 8 with 32. Authored policy and all checks unchanged.",
+  "screens": [
+    {
+      "outline_mm": [
+        163,
+        149
+      ],
+      "area_mm2": 24287,
+      "elapsed_seconds": 24.991425334,
+      "receipt_counters": 74,
+      "log": "native/build/carrier-aspect-163x149.log",
+      "status": "search_failed_no_incumbent",
+      "completed_outer_attempts": 8,
+      "receipt_captured": true,
+      "receipt_unavailable": false,
+      "aggregate_counters_match_attempt_sums": true
+    },
+    {
+      "outline_mm": [
+        164,
+        148
+      ],
+      "area_mm2": 24272,
+      "elapsed_seconds": 32.470398375,
+      "receipt_counters": 83,
+      "log": "native/build/carrier-aspect-164x148.log",
+      "status": "search_failed_no_incumbent",
+      "completed_outer_attempts": 8,
+      "receipt_captured": true,
+      "receipt_unavailable": false,
+      "aggregate_counters_match_attempt_sums": true
+    },
+    {
+      "outline_mm": [
+        162,
+        150.5
+      ],
+      "area_mm2": 24381,
+      "elapsed_seconds": 35.8859815,
+      "receipt_counters": 82,
+      "log": "native/build/carrier-aspect-162x150p5.log",
+      "status": "search_failed_no_incumbent",
+      "completed_outer_attempts": 8,
+      "receipt_captured": true,
+      "receipt_unavailable": false,
+      "aggregate_counters_match_attempt_sums": true
+    },
+    {
+      "outline_mm": [
+        161.5,
+        151
+      ],
+      "area_mm2": 24386.5,
+      "elapsed_seconds": 11.156416792,
+      "receipt_counters": 73,
+      "log": "native/build/carrier-aspect-161p5x151.log",
+      "status": "search_failed_no_incumbent",
+      "completed_outer_attempts": 8,
+      "receipt_captured": true,
+      "receipt_unavailable": false,
+      "aggregate_counters_match_attempt_sums": true
+    },
+    {
+      "outline_mm": [
+        162,
+        150.5
+      ],
+      "area_mm2": 24381,
+      "reseat_poses": 32,
+      "elapsed_seconds": 36.927328625,
+      "receipt_counters": 82,
+      "log": "native/build/carrier-aspect-162x150p5-poses32.log",
+      "status": "search_failed_no_incumbent",
+      "completed_outer_attempts": 8,
+      "receipt_captured": true,
+      "receipt_unavailable": false,
+      "aggregate_counters_match_attempt_sums": true
+    }
+  ],
+  "paired_pose_budget_observation": {
+    "poses": [
+      8,
+      32
+    ],
+    "rejection_counts_in_both": {
+      "usb_jtag_seating": 17,
+      "fmc_seating": 8,
+      "ethernet_seating": 4,
+      "legalizer": 6
+    },
+    "fallback_events": [
+      115929,
+      119684
+    ],
+    "decision": "No default budget increase: additional actual work did not improve this outcome."
+  },
+  "next_investigation": "floorplan_pack.cpp two-victim recovery calls reseat_displaced once for the first victim, then once for the second. Test whether alternative first-victim poses can recover cases where the nearest first pose blocks the second. This is a hypothesis, not a proven carrier fix.",
+  "limits": "Concurrent single-run model screens, not controlled timing comparisons or proof of physical infeasibility. No new accepted layout, full qualification, or renders. Existing 162x151 release retained."
+}

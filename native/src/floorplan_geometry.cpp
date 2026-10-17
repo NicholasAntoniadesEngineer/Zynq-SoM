@@ -331,10 +331,14 @@ void Engine::prepare_geometry() {
         base.extra_rot = zg.zone_extra_rot;
         const bool requested=in.compact_search&&in.experiment&&
             in.experiment->component_reservation_sheets.count(b->name)&&b->kind=="interior";
-        const auto make_components=[&](const FloorplanZoneShape& s,int index,bool pad) {
+        const auto prepare_components=[&](const FloorplanZoneShape& s,int index) {
+            const FloorplanShapeKey key{b->name,index};
             if(requested&&!s.top_off.empty()) {
-                auto physical=zone_components(s,pad,&plan.accounting.quantization_engagements,true);
-                const auto other=zone_components(s,!pad,&plan.accounting.quantization_engagements,true);
+                // Eligibility depends on both occupancy policies. Prepare each
+                // exactly once, then retain those very same checked children.
+                // This reuse is confined to this shape in this invocation.
+                auto physical=zone_components(s,true,&plan.accounting.quantization_engagements,true);
+                auto other=zone_components(s,false,&plan.accounting.quantization_engagements,true);
                 // Missing members must never be hidden behind an empty group.
                 std::set<std::string> members;
                 for(const auto* offsets:{&s.top_off,&s.bot_off})for(const auto& [ref,xy]:*offsets){(void)xy;members.insert(ref);}
@@ -347,22 +351,26 @@ void Engine::prepare_geometry() {
                 const bool contained=std::all_of(physical.begin(),physical.end(),inside)&&
                     std::all_of(other.begin(),other.end(),inside);
                 if(complete&&contained&&!physical.empty()) {
-                    component_shapes.insert({b->name,index});return physical;
+                    component_shapes.insert(key);
+                    components[1][key]=std::move(physical);
+                    components[0][key]=std::move(other);
+                    return;
                 }
             }
-            return zone_components(s,pad,&plan.accounting.quantization_engagements);
+            for(const int policy:{1,0})
+                components[policy][key]=zone_components(s,policy!=0,&plan.accounting.quantization_engagements);
         };
         if (zg.zone_box.count(b->name)) std::tie(b->fanout_reach,b->fanout_inset) = fanout(base);
+        if (zg.zone_box.count(b->name)) prepare_components(base,0);
+        if(component_shapes.count({b->name,0}))b->fanout_reach=b->fanout_inset={};
+        const auto variants = zg.shapes.find(b->name);
+        if (variants == zg.shapes.end()) continue;
+        for (std::size_t k=1; k<variants->second.size(); ++k)
+            prepare_components(variants->second[k],static_cast<int>(k));
         for (int policy : {1,0}) {
             auto& co = components[policy];
-            if (zg.zone_box.count(b->name)) co[{b->name,0}] = make_components(base,0,policy!=0);
-            const auto variants = zg.shapes.find(b->name);
-            if (variants == zg.shapes.end()) continue;
-            for (std::size_t k=1; k<variants->second.size(); ++k)
-                co[{b->name,static_cast<int>(k)}] = make_components(variants->second[k],static_cast<int>(k),policy!=0);
             if (b->kind == "edge" || variants->second.size() < 2) continue;
             auto& sets = shape_sets[policy][b->name];
-            if(component_shapes.count({b->name,0}))b->fanout_reach=b->fanout_inset={};
             sets.push_back({base.w,base.h,b->fanout_reach,b->fanout_inset,"top",get(co,{b->name,0})});
             for (std::size_t k=1; k<variants->second.size(); ++k) {
                 const auto& s = variants->second[k];
@@ -370,7 +378,6 @@ void Engine::prepare_geometry() {
                 sets.push_back({s.w,s.h,ri.first,ri.second,s.side,get(co,{b->name,static_cast<int>(k)})});
             }
         }
-        if(component_shapes.count({b->name,0}))b->fanout_reach=b->fanout_inset={};
     }
     auto bound = [&](Halo r, Halo i) { max_reach = std::max({max_reach,r.w,r.e,r.n,r.s,-i.w,-i.e,-i.n,-i.s}); };
     for (const auto* b : blocks()) bound(b->fanout_reach,b->fanout_inset);
@@ -411,7 +418,9 @@ void Engine::fallback(const std::string& name) {
     static const std::set<std::string> joint{"legalize_neighbour_retry","legalize_joint_retry","legalize_joint_state","legalize_joint_axis","legalize_joint_axis_reuse","legalize_joint_proposal","legalize_joint_reject","legalize_joint_budget","legalize_joint_domain_probe","legalize_joint_domain_reject"};
     static const std::set<std::string> allowed{"interior_reseat_pose_hint","interior_reseat_pose_resume","interior_reseat_pose_skip","interior_reseat_pose_search","interior_reseat_pose_trial","interior_reseat_pose_budget","interior_reseat_pose_cap","interior_failed_first_retry","legalize_only_compaction","punch_free_plan_rejected","interior_reseat_retry","edge_run_translation","screened_incumbent_retained","legalize_reservation_retry","legalize_facing_retry"};
     static const std::set<std::string> shapes{"interior_shape_choice_hint","interior_shape_choice_replay","interior_shape_choice_budget","interior_reseat_shape_retry","interior_reseat_shape_trial","interior_reseat_incoming_shape_trial",
-        "interior_reseat_pair_trial","interior_reseat_pair_rejected","interior_reseat_pair_recovered"};
+        "interior_reseat_pair_trial","interior_reseat_pair_rejected","interior_reseat_pair_recovered",
+        "interior_reseat_pair_pose_search","interior_reseat_pair_pose_trial","interior_reseat_pair_pose_budget",
+        "interior_reseat_pair_pose_cap","interior_reseat_pair_pose_recovered"};
     if (!allowed.count(name)&&!joint.count(name)&&!shapes.count(name)) throw std::logic_error("floorplan: unregistered fallback " + repr(name));
     plan.accounting.fallback_events.push_back(name);
 }

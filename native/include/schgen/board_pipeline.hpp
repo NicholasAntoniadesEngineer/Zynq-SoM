@@ -128,6 +128,7 @@ std::string board_png_average_hash(const std::filesystem::path&);
 // Advisory comparison. Only explicit bless writes golden.json, including when
 // the baseline is absent. Corrupt baselines/PNGs throw; no discrepancy waiver.
 // An external baseline is read-only; explicit blessing always writes to renders.
+// Empty current renders never match and cannot be blessed.
 BoardGoldenResult check_board_golden(const std::filesystem::path& renders,bool bless=false,
     const std::filesystem::path& baseline={});
 struct BoardCoverageLintResult {

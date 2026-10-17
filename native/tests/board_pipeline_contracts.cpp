@@ -116,6 +116,25 @@ void coverage(){
 }
 struct Temp{fs::path path;Temp(){auto s=(fs::temp_directory_path()/"schgen_pipeline_contract_XXXXXX").string();if(!::mkdtemp(s.data()))throw std::runtime_error("temp");path=s;}~Temp(){std::error_code e;fs::remove_all(path,e);}};
 void golden(const fs::path& root){
+    {
+        Temp empty;publish_text(empty.path/"golden.json","{}\n");
+        const auto result=check_board_golden(empty.path);
+        require(!result.match&&!result.blessed&&!result.drift.empty(),"empty images and empty baseline cannot pass");
+        require(result.summary().find("UNAVAILABLE")!=std::string::npos,"empty comparison explains missing evidence rather than suggesting blessing");
+        rejects([&]{check_board_golden(empty.path,true);},"empty images cannot be blessed");
+        require(read(empty.path/"golden.json")=="{}\n","empty blessing preserves baseline");
+        ProjectPaths paths;paths.repository_root=root;paths.project_root=empty.path/"source";
+        BoardPipelineOptions options;options.output_root=empty.path/"output";options.no_render=true;options.bless=true;
+        Context c(paths,options);
+        publish_text(c.renders/"stale.png","not a current render");
+        publish_text(c.renders/"golden.json","existing baseline");
+        golden_stage(c);
+        require(c.result.gates.size()==1&&c.result.gates.front().name=="golden"&&
+                c.result.gates.front().status==BoardGateStatus::skipped,"no-render reports explicit skip even with stale files and bless");
+        require(read(c.renders/"golden.json")=="existing baseline"&&read(c.renders/"stale.png")=="not a current render",
+                "no-render never blesses or alters old imagery");
+        require(read(c.reports/"golden.txt").find("SKIP:")==0,"golden report discloses missing current evidence");
+    }
     Temp tmp;const auto reference=parse_json_file((root/"native/tests/data/board_pipeline/golden_reference.json").string());
     for(const auto& sample:field(reference,"cases").array_value){
         const auto w=static_cast<unsigned>(field(sample,"w").number_value),h=static_cast<unsigned>(field(sample,"h").number_value);
@@ -179,6 +198,25 @@ void board_search_accounting(){
     require(read(source)==original,"search classification never rewrites committed baseline");
     require(!load_fallback_baseline(output)->count("interior_reseat_retry"),
             "output baseline does not publish obsolete search ceilings");
+    const std::vector<std::string> pair_pose_events{
+        "interior_reseat_pair_pose_search","interior_reseat_pair_pose_trial",
+        "interior_reseat_pair_pose_budget","interior_reseat_pair_pose_cap",
+        "interior_reseat_pair_pose_recovered"};
+    for(const auto& name:pair_pose_events)census[name]=210;
+    result=check_board_fallbacks(census,source,output);
+    require(result.ok&&result.n_names==1&&result.search_effort.size()==8,
+            "bounded paired-pose exploration remains observational, including exhausted searches");
+    for(const auto& name:pair_pose_events){
+        require(result.search_effort.at(name)==AuditInteger(210)&&
+                result.summary().find(name+": 210")!=std::string::npos,
+                "every paired-pose event remains reported without loss");
+        require(!load_fallback_baseline(output)->count(name),"search events never become acceptance ceilings");
+    }
+    census["thermal_via_lattice"]=1;
+    require(!check_board_fallbacks(census,source,output).ok,
+            "paired-pose exploration cannot mask a genuine degraded-path regression");
+    for(const auto& name:pair_pose_events)census.erase(name);
+    require(read(source)==original,"paired-pose classification preserves committed ceilings");
     census["thermal_via_lattice"]=1;
     result=check_board_fallbacks(census,source,output);
     require(!result.ok&&result.search_effort.size()==3,"search observations cannot mask non-search regression");
@@ -191,6 +229,40 @@ void board_search_accounting(){
     census.erase("corridor_stray_unmovable");census["legalize_joint_state"]=-1;
     rejects([&]{check_board_fallbacks(census,source,output);},"negative search accounting rejected");
     rejects([&]{check_board_fallbacks({},tmp.path/"missing",output);},"no automatic board acceptance baseline pinning");
+}
+void final_manifest(const fs::path& root){
+    Temp tmp;ProjectPaths p;p.repository_root=root;p.project_root=tmp.path/"source";
+    BoardPipelineOptions o;o.output_root=tmp.path/"out";
+    Context c(p,o);c.manifest_input=ManufacturingManifestInput{};
+    c.gate("manifest",true,"prepared");
+    publish_text(c.reports/"gates.txt","old run");
+    run_manufacturing_manifest(*c.manifest_input,c.out,c.out/"manifest.json");
+    c.report("late_audit.txt","new evidence");c.result.timing_seconds={{"fixture",1.25}};
+    publish_final_reports(c);
+    const auto check=[&]{
+        const auto doc=parse_json_file((c.out/"manifest.json").string());bool gates=false,late=false;
+        for(const auto& a:field(doc,"artifacts").array_value){
+            const auto name=field(a,"path").string_value;
+            require(field(a,"sha256").string_value==pcb_sha256(read(c.out/name)),"final manifest hashes current artifact "+name);
+            gates|=name=="reports/gates.txt";late|=name=="reports/late_audit.txt";
+        }
+        require(gates&&late,"final manifest includes summary and late audit");
+    };
+    check();const auto first=read(c.out/"manifest.json");
+    publish_final_reports(c);require(read(c.out/"manifest.json")==first,"unchanged final publication is deterministic");
+    c.result.timing_seconds={{"fixture",2.5}};publish_final_reports(c);check();
+    require(read(c.out/"manifest.json")!=first,"changed final summary rehashed");
+    o.output_root=tmp.path/"failed";Context failed(p,o);
+    failed.manifest_input=ManufacturingManifestInput{};failed.gate("manifest",true,"prepared");
+    fs::create_directory(failed.out/"manifest.json");
+    publish_final_reports(failed);
+    const auto& last=failed.result.gates.back();
+    require(last.name=="manifest.completion"&&last.mandatory&&last.status==BoardGateStatus::failed,
+            "final manifest publication failure is mandatory");
+    require(read(failed.reports/"gates.txt").find("manifest.completion: FAIL")!=std::string::npos,
+            "final report discloses manifest publication failure");
+    require(!field(parse_json_file((failed.reports/"board_verdicts.json").string()),"board_ok").bool_value,
+            "manifest publication failure cannot publish a passing verdict");
 }
 void failed_inputs(const fs::path& root){
     Temp tmp;ProjectPaths p;p.repository_root=root;p.project_root=tmp.path/"source";p.subsystems_dir=p.project_root/"subsystems";p.sheet_index_file=p.project_root/"sheet_index.json";
@@ -349,7 +421,7 @@ int main(int argc,char** argv){
         const fs::path root=argv[1];
         const auto reference=parse_json_file((root/"native/tests/data/board_pipeline/python_reference.json").string());
         cc(field(reference,"cc"));ledger();policy(reference);coverage();golden(root);isolated_ratchet();board_search_accounting();
-        failed_inputs(root);purity_precondition(root);live_electrical(root);authored_inputs(root);
+        final_manifest(root);failed_inputs(root);purity_precondition(root);live_electrical(root);authored_inputs(root);
         if(argc==3){
             if(std::string(argv[2])!="--live-kicad")throw std::runtime_error("unknown mode");
             live_schematic(root);

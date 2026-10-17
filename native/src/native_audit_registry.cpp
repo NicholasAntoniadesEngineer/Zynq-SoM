@@ -21,6 +21,11 @@ void register_native_fallbacks(NativeFallbacks& r){
     r.declare({"interior_reseat_pair_trial","plan_lattice","One failure-only two-interior-block relocation trial after single-block strategies fail; both reseating orders count."});
     r.declare({"interior_reseat_pair_rejected","plan_lattice","One completed two-block relocation trial failed; restore participant geometry, occupancy, centres and side offers while retaining actual work."});
     r.declare({"interior_reseat_pair_recovered","plan_lattice","One two-block relocation trial seated the incoming and both displaced blocks without relaxing placement constraints."});
+    r.declare({"interior_reseat_pair_pose_search","plan_lattice","One bounded first-victim position query after the nearest two-victim relocation blocked the second victim."});
+    r.declare({"interior_reseat_pair_pose_trial","plan_lattice","One actual alternative first-victim pose followed by a second-victim reseating query; retain rejected work."});
+    r.declare({"interior_reseat_pair_pose_budget","plan_lattice","A first-victim position query exhausted its frontier budget; this is not proof of infeasibility."});
+    r.declare({"interior_reseat_pair_pose_cap","plan_lattice","A first-victim position query reached its result cap; unvisited positions remain possible."});
+    r.declare({"interior_reseat_pair_pose_recovered","plan_lattice","An alternative first-victim pose seated the second victim without relaxing physical constraints."});
     r.declare({"legalize_reservation_retry","plan_lattice","One selected child-reservation geometry solve after conservative composer strategies fail. Preserve successful incumbents and all failed work; record every attempted retry, successful or not. Final exact reservation collision and hard-term gates remain mandatory."});
     r.declare({"legalize_facing_retry","plan_lattice","One failure-only strict-facing projection solve after existing strategies fail. Count every executed attempt and retain failed work. Final exact physical and hard-term checks remain mandatory."});
     r.declare({"interior_reseat_pose_search","plan_lattice","One opt-in victim reconsideration after every ordinary victim trial failed; counts even when incoming seating or bounded enumeration fails."});
