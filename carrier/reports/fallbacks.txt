@@ -9,6 +9,11 @@ SEARCH EFFORT: observational, no acceptance ceiling; counts include rejected wor
   facing_replan_retry: 0
   interior_failed_first_retry: 16
   interior_reseat_incoming_shape_trial: 353
+  interior_reseat_pair_pose_budget: 14
+  interior_reseat_pair_pose_cap: 30
+  interior_reseat_pair_pose_recovered: 0
+  interior_reseat_pair_pose_search: 44
+  interior_reseat_pair_pose_trial: 210
   interior_reseat_pair_recovered: 15
   interior_reseat_pair_rejected: 220
   interior_reseat_pair_trial: 235
@@ -21,7 +26,7 @@ SEARCH EFFORT: observational, no acceptance ceiling; counts include rejected wor
   interior_reseat_pose_trial: 364
   interior_reseat_retry: 31
   interior_reseat_shape_retry: 16
-  interior_reseat_shape_trial: 1876
+  interior_reseat_shape_trial: 2506
   interior_shape_choice_budget: 0
   interior_shape_choice_hint: 0
   interior_shape_choice_replay: 0

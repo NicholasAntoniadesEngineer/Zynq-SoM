@@ -149,10 +149,10 @@ STEP   census
   CALC   quantize_engagement[legalize_position_precision4dp] = 29904         calls      <- klass=pre-proof value=round(value, 4)  ::  count of calls that ran this registered transform
   CALC   quantize_engagement[legalize_trial_pose_precision4dp] = 560           calls      <- klass=re-validated value=round(value, 4)  ::  count of calls that ran this registered transform
   CALC   quantize_engagement[mechanical_direction_component] = 32            calls      <- klass=pre-proof value=int(round(value, 0))  ::  count of calls that ran this registered transform
-  CALC   quantize_engagement[occupancy_axis_count] = 48378         calls      <- klass=pre-proof value=int(extent / step) + 1  ::  count of calls that ran this registered transform
-  CALC   quantize_engagement[occupancy_cell_index] = 58273932      calls      <- klass=pre-proof value=int(floor(coordinate / bucket))  ::  count of calls that ran this registered transform
-  CALC   quantize_engagement[occupancy_component_precision4dp] = 105702        calls      <- klass=pre-proof value=round(value, 4)  ::  count of calls that ran this registered transform
-  CALC   quantize_engagement[occupancy_frontier_key1dp] = 170280892     calls      <- klass=pre-proof value=round(distance, 1)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[occupancy_axis_count] = 50146         calls      <- klass=pre-proof value=int(extent / step) + 1  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[occupancy_cell_index] = 60039272      calls      <- klass=pre-proof value=int(floor(coordinate / bucket))  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[occupancy_component_precision4dp] = 111022        calls      <- klass=pre-proof value=round(value, 4)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[occupancy_frontier_key1dp] = 178139743     calls      <- klass=pre-proof value=round(distance, 1)  ::  count of calls that ran this registered transform
   CALC   quantize_engagement[occupancy_reach_precision4dp] = 40            calls      <- klass=pre-proof value=round(value, 4)  ::  count of calls that ran this registered transform
   CALC   quantize_engagement[occupancy_shape_key4dp] = 5908          calls      <- klass=pre-proof value=round(distance, 4)  ::  count of calls that ran this registered transform
   CALC   quantize_engagement[pack_band_sort_precision4dp] = 198           calls      <- klass=pre-proof value=round(value, 4)  ::  count of calls that ran this registered transform
@@ -252,6 +252,10 @@ STEP   census
   CALC   fallback_engagement[edge_geometry_replan_retry] = 1             firings    <- stage=plan_lattice ceiling=observational  ::  count of times this registered degraded path bound
   CALC   fallback_engagement[interior_failed_first_retry] = 16            firings    <- stage=plan_lattice ceiling=observational  ::  count of times this registered degraded path bound
   CALC   fallback_engagement[interior_reseat_incoming_shape_trial] = 353           firings    <- stage=plan_lattice ceiling=observational  ::  count of times this registered degraded path bound
+  CALC   fallback_engagement[interior_reseat_pair_pose_budget] = 14            firings    <- stage=plan_lattice ceiling=observational  ::  count of times this registered degraded path bound
+  CALC   fallback_engagement[interior_reseat_pair_pose_cap] = 30            firings    <- stage=plan_lattice ceiling=observational  ::  count of times this registered degraded path bound
+  CALC   fallback_engagement[interior_reseat_pair_pose_search] = 44            firings    <- stage=plan_lattice ceiling=observational  ::  count of times this registered degraded path bound
+  CALC   fallback_engagement[interior_reseat_pair_pose_trial] = 210           firings    <- stage=plan_lattice ceiling=observational  ::  count of times this registered degraded path bound
   CALC   fallback_engagement[interior_reseat_pair_recovered] = 15            firings    <- stage=plan_lattice ceiling=observational  ::  count of times this registered degraded path bound
   CALC   fallback_engagement[interior_reseat_pair_rejected] = 220           firings    <- stage=plan_lattice ceiling=observational  ::  count of times this registered degraded path bound
   CALC   fallback_engagement[interior_reseat_pair_trial] = 235           firings    <- stage=plan_lattice ceiling=observational  ::  count of times this registered degraded path bound
@@ -260,6 +264,6 @@ STEP   census
   CALC   fallback_engagement[interior_reseat_pose_trial] = 364           firings    <- stage=plan_lattice ceiling=observational  ::  count of times this registered degraded path bound
   CALC   fallback_engagement[interior_reseat_retry] = 31            firings    <- stage=plan_lattice ceiling=observational  ::  count of times this registered degraded path bound
   CALC   fallback_engagement[interior_reseat_shape_retry] = 16            firings    <- stage=plan_lattice ceiling=observational  ::  count of times this registered degraded path bound
-  CALC   fallback_engagement[interior_reseat_shape_trial] = 1876          firings    <- stage=plan_lattice ceiling=observational  ::  count of times this registered degraded path bound
+  CALC   fallback_engagement[interior_reseat_shape_trial] = 2506          firings    <- stage=plan_lattice ceiling=observational  ::  count of times this registered degraded path bound
   CALC   fallback_engagement[legalize_reservation_retry] = 8             firings    <- stage=plan_lattice ceiling=observational  ::  count of times this registered degraded path bound
-  CALC   register_silence               = 50            registrations <- quantize_registered=156 quantize_engaged=139 fallback_registered=47 fallback_fired=14  ::  registered - engaged = declared machinery this build never used
+  CALC   register_silence               = 51            registrations <- quantize_registered=156 quantize_engaged=139 fallback_registered=52 fallback_fired=18  ::  registered - engaged = declared machinery this build never used

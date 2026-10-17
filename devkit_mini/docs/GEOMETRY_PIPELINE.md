@@ -202,6 +202,11 @@ Every alternate path is a NAMED event. The board gate (`check_board_fallbacks` i
 | `facing_replan_retry` | plan_lattice | 0 | 0 | One multiscale strict-facing replan after a resolved final facing failure; retain valid incumbents and all prior model/screening work, including failed retries. |
 | `interior_failed_first_retry` | plan_lattice | 0 | 0 | One opt-in failed-block-first restart of an explicit order; count every attempt and retain rejected work without weakening geometry or hard terms. |
 | `interior_reseat_incoming_shape_trial` | plan_lattice | 0 | 0 | One alternative incoming-shape nearest-position query after all original victim/pose trials fail; every executed query is retained. |
+| `interior_reseat_pair_pose_budget` | plan_lattice | 0 | 0 | A first-victim position query exhausted its frontier budget; this is not proof of infeasibility. |
+| `interior_reseat_pair_pose_cap` | plan_lattice | 0 | 0 | A first-victim position query reached its result cap; unvisited positions remain possible. |
+| `interior_reseat_pair_pose_recovered` | plan_lattice | 0 | 0 | An alternative first-victim pose seated the second victim without relaxing physical constraints. |
+| `interior_reseat_pair_pose_search` | plan_lattice | 0 | 0 | One bounded first-victim position query after the nearest two-victim relocation blocked the second victim. |
+| `interior_reseat_pair_pose_trial` | plan_lattice | 0 | 0 | One actual alternative first-victim pose followed by a second-victim reseating query; retain rejected work. |
 | `interior_reseat_pair_recovered` | plan_lattice | 0 | 0 | One two-block relocation trial seated the incoming and both displaced blocks without relaxing placement constraints. |
 | `interior_reseat_pair_rejected` | plan_lattice | 0 | 0 | One completed two-block relocation trial failed; restore participant geometry, occupancy, centres and side offers while retaining actual work. |
 | `interior_reseat_pair_trial` | plan_lattice | 0 | 0 | One failure-only two-interior-block relocation trial after single-block strategies fail; both reseating orders count. |

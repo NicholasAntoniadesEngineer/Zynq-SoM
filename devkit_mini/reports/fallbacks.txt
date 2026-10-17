@@ -9,6 +9,11 @@ SEARCH EFFORT: observational, no acceptance ceiling; counts include rejected wor
   facing_replan_retry: 0
   interior_failed_first_retry: 0
   interior_reseat_incoming_shape_trial: 0
+  interior_reseat_pair_pose_budget: 0
+  interior_reseat_pair_pose_cap: 0
+  interior_reseat_pair_pose_recovered: 0
+  interior_reseat_pair_pose_search: 0
+  interior_reseat_pair_pose_trial: 0
   interior_reseat_pair_recovered: 0
   interior_reseat_pair_rejected: 0
   interior_reseat_pair_trial: 0
