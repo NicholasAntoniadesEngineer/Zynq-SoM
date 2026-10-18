@@ -190,4 +190,11 @@ inline Fixture load(const std::filesystem::path &root, const std::string &projec
         }
     return f;
 }
+// Explicit opt-in for current-board integration tests; frozen snapshots and
+// legacy probes retain load() and their original contracts unchanged.
+inline void reviewed_power_policy(schgen::PcbPlacementInput& input,
+                                  const std::filesystem::path& root) {
+    input.contracts.at("power")=schgen::parse_json_file(
+        (root/"subsystems/power/placement_contract.json").string());
+}
 } // namespace placement_fixture

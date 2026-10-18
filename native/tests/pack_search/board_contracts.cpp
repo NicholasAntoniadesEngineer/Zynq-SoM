@@ -26,6 +26,7 @@ int main(int argc,char** argv){try{
  if(argc!=2)throw std::runtime_error("frozen fixture root required");
  for(const std::string name:{"carrier","devkit_mini"}){
   auto f=placement_fixture::load(argv[1],name);
+  placement_fixture::reviewed_power_policy(f.input,argv[1]);
   search_proof::begin();auto result=build_pcb_model(f.input);
   auto accounting=pcb_placement_accounting(result);
   std::cout<<name<<'\n';finish(accounting.quantization_engagements,name+" placement");

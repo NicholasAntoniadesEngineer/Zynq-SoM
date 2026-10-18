@@ -131,6 +131,9 @@ void boards(const std::filesystem::path& root){
     for(int variant=0;variant<4;++variant){
         const std::string project=variant==1?"carrier":"devkit_mini";
         auto f=placement_fixture::load(root,project);f.input.two_side=variant!=2;
+#ifndef STAGE_PRECISION_BASELINE
+        placement_fixture::reviewed_power_policy(f.input,root);
+#endif
         if(variant==3){if(!f.input.floorplan.spec)f.input.floorplan.spec=FloorplanSpec{};f.input.floorplan.spec->outline=std::make_pair(100.,100.);}
         const auto label=project+(variant==2?"_single":variant==3?"_fixed":"");
         std::cerr<<"starting board "<<label<<'\n';

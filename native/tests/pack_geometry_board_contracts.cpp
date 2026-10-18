@@ -89,6 +89,7 @@ int main(int argc,char** argv){try{
 #endif
  for(const auto* project:{"carrier","devkit_mini"}){
   auto f=placement_fixture::load(argv[1],project);
+  placement_fixture::reviewed_power_policy(f.input,argv[1]);
   begin();auto result=build_pcb_model(f.input);auto entries=end();
   const auto q=pcb_placement_accounting(result);
   receipt(q.quantization_engagements,entries);

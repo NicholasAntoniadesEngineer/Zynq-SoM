@@ -75,6 +75,7 @@ void exact_receipt(const QuantizationCounts& owned,const QuantizationCounts& obs
 }
 void board_receipt(const std::filesystem::path& root,const std::string& project){
     auto fixture=placement_fixture::load(root,project);
+    placement_fixture::reviewed_power_policy(fixture.input,root);
     begin();const auto result=build_pcb_model(fixture.input);const auto observed=end();
     const auto poses=pose_entries;
     const auto total=pcb_placement_accounting(result);

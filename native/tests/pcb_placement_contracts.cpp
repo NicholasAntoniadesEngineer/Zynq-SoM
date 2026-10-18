@@ -434,6 +434,7 @@ void geometry(const PcbZoneResult &zones, const J &expected, const std::string &
 }
 void run(const std::filesystem::path &root, const std::string &name, const std::string &mode) {
     auto f = load(root, name);
+    reviewed_power_policy(f.input,root);
     const bool single = mode == "--single";
     if(name=="carrier"&&!single) {
         // A two-sided search must not move the whole USB bridge zone onto an

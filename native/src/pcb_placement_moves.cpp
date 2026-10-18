@@ -159,7 +159,14 @@ bool refit_preserves_clearance(const PcbCheckInput& before, const PcbCheckInput&
         if((!a.moved&&!b.moved)||(a.side!=b.side&&!a.through&&!b.through))continue;
         // Fanout exemptions are not physical collision exemptions. Preserve
         // pre-existing tight local geometry, but never introduce/worsen it.
-        if(separation(a.new_box,b.new_box)<std::min(clearance,separation(a.old_box,b.old_box)))
+        double scale=1;
+        for(const auto box:{a.old_box,a.new_box,b.old_box,b.new_box})
+            scale=std::max({scale,std::abs(box.x0),std::abs(box.x1),std::abs(box.y0),std::abs(box.y1)});
+        // Bound floating arithmetic noise from transformed endpoints and gap
+        // subtraction; this is not a physical clearance allowance. In
+        // particular a 0.0001 mm emitted-grid loss remains a rejection.
+        const double roundoff=8*std::numeric_limits<double>::epsilon()*scale;
+        if(separation(a.new_box,b.new_box)+roundoff<std::min(clearance,separation(a.old_box,b.old_box)))
             return false;
     }
     return true;

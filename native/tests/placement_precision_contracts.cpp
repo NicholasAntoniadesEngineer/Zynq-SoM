@@ -197,6 +197,9 @@ void boards(const std::filesystem::path& root){
         const std::string project=variant==1?"carrier":"devkit_mini";
         const std::string label=project+(variant==2?"_single":variant==3?"_fixed":"");
         auto f=placement_fixture::load(root,project);f.input.two_side=variant!=2;
+#ifndef PLACEMENT_PRECISION_BASELINE
+        placement_fixture::reviewed_power_policy(f.input,root);
+#endif
         if(variant==3){if(!f.input.floorplan.spec)f.input.floorplan.spec=FloorplanSpec{};f.input.floorplan.spec->outline=std::make_pair(100.,100.);}
         std::cerr<<"board "<<label<<'\n';
         begin();const auto zones=build_pcb_zone_geometry(f.input);const auto zone_calls=end();

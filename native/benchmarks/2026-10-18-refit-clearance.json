@@ -9,7 +9,7 @@
   "tests": {
     "focused_refit": "PASS 4.39s: explicit fanout-exempt collision witness, same/opposite faces, THT, exact and sub-clearance, absent subjects, tight-geometry non-regression, emission projection, noncompact boundary and thermal pull",
     "related": "Owned eviction, placement gates and source-policy audits PASS. Initial accounting fixture failed because the archived power-centroid gate relied on an unsafe refit. Current-board accounting now loads the reviewed live power contract; historical kernel/compose baseline unchanged. Accounting rerun PASS 7.68s, independently instrumented and repeatable.",
-    "complete_suite": "Full rebuild PASS; complete 278-test suite running at evidence creation. No complete-suite pass claimed. Log native/build/refit-full-tests.log; exec session 46239."
+    "complete_suite": "Subsequently completed: 265/278 PASS, 13 failures in 812.98 seconds. See 2026-10-18-refit-roundoff-verification.json for numerical correction, justified fixture updates and targeted rechecks. No clean full-suite pass claimed for this source revision."
   },
   "carrier": {
     "output": "native/build/carrier-162x150-refit-clearance", "exit_code": 0,
