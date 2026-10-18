@@ -119,6 +119,7 @@ void boards(const std::filesystem::path& root,const std::filesystem::path& data,
         if(multiscale&&variant==3)continue; // Fixed outlines deliberately reject search modes.
         const auto project=variant==1?"carrier":"devkit_mini";const auto name=std::string(project)+(variant==2?"_single":variant==3?"_fixed":"")+(multiscale?"_multiscale":"");
         auto fixture=placement_fixture::load(root,project);fixture.input.two_side=variant!=2;
+        placement_fixture::reviewed_power_policy(fixture.input,root);
         if(multiscale){auto mode=std::make_shared<FloorplanExperiment>();mode->multiscale_outline=true;fixture.input.floorplan.experiment=mode;}
         if(variant==3){if(!fixture.input.floorplan.spec)fixture.input.floorplan.spec=FloorplanSpec{};fixture.input.floorplan.spec->outline=std::make_pair(100.,100.);}
         begin();const auto result=build_pcb_model(fixture.input);const auto observed=end();const auto total=pcb_placement_accounting(result);

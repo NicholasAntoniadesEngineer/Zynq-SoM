@@ -200,6 +200,9 @@ void board(std::ostream& out,const std::filesystem::path& root,const std::string
 }
 void full_board(std::ostream& out,const std::filesystem::path& root,const std::string& name){
     auto fixture=placement_fixture::load(root,name);
+#ifndef OUTPUT_PRECISION_LEGACY
+    placement_fixture::reviewed_power_policy(fixture.input,root);
+#endif
     begin();const auto result=build_pcb_model(fixture.input);
     const auto receipt=pcb_placement_accounting(result);
     end(receipt.quantization_engagements,"full board "+name,&out);

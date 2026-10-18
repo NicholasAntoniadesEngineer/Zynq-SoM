@@ -164,6 +164,7 @@ void contract_retry(const std::filesystem::path& root){
 void facing_retry(const std::filesystem::path& root){
     for(int mode:{0,1,2,3}){
         auto fixture=placement_fixture::load(root,mode==2?"devkit_mini":"carrier");
+        placement_fixture::reviewed_power_policy(fixture.input,root);
         if(mode<2){
             // Test-only alternative directional group creates a genuine final
             // facing failure followed by a strict replan. No hardware contract

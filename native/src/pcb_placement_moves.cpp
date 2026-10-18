@@ -133,6 +133,44 @@ double evict_gap(const PcbCheckInput &input, const EvictIndex &index, const Owne
     return std::hypot(std::max({0.,a.x0-b.x1,b.x0-a.x1}),
                       std::max({0.,a.y0-b.y1,b.y0-a.y1}));
 }
+bool refit_preserves_clearance(const PcbCheckInput& before, const PcbCheckInput& after,
+                               double clearance) {
+    const auto old_index=evict_index(before), new_index=evict_index(after);
+    if(old_index.size()!=new_index.size())return false;
+    struct Body { Box4 old_box, new_box; std::string side; bool through, moved; };
+    std::vector<Body> bodies;
+    for(const auto& [ref,i]:old_index) {
+        const auto found=new_index.find(ref);
+        if(found==new_index.end())return false;
+        const auto& a=before.model().insts[i];
+        const auto& b=after.model().insts[found->second];
+        if(a.side!=b.side||a.mod!=b.mod||a.mirror!=b.mirror)return false;
+        bodies.push_back({evict_box(before,i),evict_box(after,found->second),a.side,
+            std::any_of(a.mod->pads.begin(),a.mod->pads.end(),[](const auto& pad) {
+                return std::get<1>(pad)=="thru_hole"||std::get<1>(pad)=="np_thru_hole";
+            }),
+            a.x!=b.x||a.y!=b.y||a.rotation!=b.rotation});
+    }
+    const auto separation=[](Box4 a,Box4 b) {
+        return std::max({a.x0-b.x1,b.x0-a.x1,a.y0-b.y1,b.y0-a.y1});
+    };
+    for(std::size_t i=0;i<bodies.size();++i)for(std::size_t j=i+1;j<bodies.size();++j) {
+        const auto& a=bodies[i];const auto& b=bodies[j];
+        if((!a.moved&&!b.moved)||(a.side!=b.side&&!a.through&&!b.through))continue;
+        // Fanout exemptions are not physical collision exemptions. Preserve
+        // pre-existing tight local geometry, but never introduce/worsen it.
+        double scale=1;
+        for(const auto box:{a.old_box,a.new_box,b.old_box,b.new_box})
+            scale=std::max({scale,std::abs(box.x0),std::abs(box.x1),std::abs(box.y0),std::abs(box.y1)});
+        // Bound floating arithmetic noise from transformed endpoints and gap
+        // subtraction; this is not a physical clearance allowance. In
+        // particular a 0.0001 mm emitted-grid loss remains a rejection.
+        const double roundoff=8*std::numeric_limits<double>::epsilon()*scale;
+        if(separation(a.new_box,b.new_box)+roundoff<std::min(clearance,separation(a.old_box,b.old_box)))
+            return false;
+    }
+    return true;
+}
 bool evict_movable(const Placer &p, const std::string &r, bool checked_contract_group=false) {
     if (!p.grid_placed.count(r) || p.fixed.count(r) || p.som_refs.count(r) ||
         !p.geometry.resolvable.count(r) || !p.geometry.bbox_of.count(r) ||
@@ -810,6 +848,7 @@ void Placer::refit(ExecutionFailureReceipt* failure) {
         if (result.poses) {
             const auto before = refit_fanout_geometry(*this, nullptr);
             const auto after = refit_fanout_geometry(*this, &*result.poses);
+            if (!refit_preserves_clearance(before, after, ctx.clearance)) continue;
             if (!refit_preserves_fanout(before, after)) continue;
             const auto policy = pcb_emit_policy(ctx.in.floorplan.project);
             const auto thermal_before = plan_preferred_thermal_vias(before.model(),policy,&ctx.quantization);

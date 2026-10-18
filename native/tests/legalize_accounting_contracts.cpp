@@ -186,6 +186,11 @@ void compose(std::ostream& out,const std::filesystem::path& root){
 }
 void boards(std::ostream& out,const std::filesystem::path& root){
     for(int v=0;v<4;++v){auto fixture=placement_fixture::load(root,v==1?"carrier":"devkit_mini");fixture.input.two_side=v!=2;
+#ifndef LEGALIZE_LEGACY_PROBE
+        // Current-board work accounting uses the reviewed live policy. The
+        // archived centroid gate formerly relied on a physically unsafe refit.
+        fixture.input.contracts.at("power")=parse_json_file((root/"subsystems/power/placement_contract.json").string());
+#endif
         if(v==3){if(!fixture.input.floorplan.spec)fixture.input.floorplan.spec=FloorplanSpec{};fixture.input.floorplan.spec->outline=std::make_pair(100.,100.);}
         begin();auto result=build_pcb_model(fixture.input);const auto total=pcb_placement_accounting(result);verify_entries(total.quantization_engagements);
 #ifndef LEGALIZE_LEGACY_PROBE

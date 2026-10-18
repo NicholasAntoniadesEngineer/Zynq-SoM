@@ -39,6 +39,41 @@ PcbCheckInput model(double a_gap, double b_gap, bool opposite = false,
     }
     return PcbCheckInput(std::move(m));
 }
+void physical_clearance() {
+    // Reproduce the policy gap: a test pad is intentionally exempt from
+    // fanout crowding, but must still collide with actual component bodies.
+    auto witness=model(2,2).model();witness.insts[1].ref="TP1";
+    const PcbCheckInput safe(witness);
+    witness.insts[1].x=1;
+    const PcbCheckInput shorted(witness);
+    require(refit_preserves_fanout(safe,shorted),"fanout exemption witness changed");
+    require(!refit_preserves_clearance(safe,shorted,.5),"fanout-exempt test pad created a short");
+    for(bool opposite:{false,true})for(bool through:{false,true}) {
+        auto source=model(2,2,opposite).model();
+        source.insts[0].ref="TP1";
+        if(through)source.insts[0].mod=pcb_check_footprint("through.kicad_mod",
+            "(footprint through (layer F.Cu)"
+            " (fp_rect (start -1 -1) (end 1 1) (stroke (width 0.05) (type default)) (layer F.CrtYd))"
+            " (pad 1 thru_hole circle (at 0 0) (size 1 1) (drill 0.5) (layers *.Cu *.Mask)))");
+        const PcbCheckInput before(source);
+        auto trial=source;trial.insts[0].x=3;
+        require(refit_preserves_clearance(before,PcbCheckInput(trial),.5)==(opposite&&!through),
+                "testpoint collision must reject on same face or through-hole occupancy");
+        trial=source;trial.insts[0].x=1.5;
+        require(refit_preserves_clearance(before,PcbCheckInput(trial),.5),"exact clearance rejected");
+        trial.insts[0].x=1.5001;
+        require(refit_preserves_clearance(before,PcbCheckInput(trial),.5)==(opposite&&!through),
+                "sub-clearance move was accepted");
+        trial=source;trial.insts.pop_back();
+        require(!refit_preserves_clearance(before,PcbCheckInput(trial),.5),"missing subject accepted");
+    }
+    auto source=model(.1,2).model();const PcbCheckInput before(source);
+    require(refit_preserves_clearance(before,before,.5),"unchanged tight geometry rejected");
+    auto trial=source;trial.insts[0].x=-.1;
+    require(refit_preserves_clearance(before,PcbCheckInput(trial),.5),"tight geometry improvement rejected");
+    trial.insts[0].x=.1;
+    require(!refit_preserves_clearance(before,PcbCheckInput(trial),.5),"tight geometry worsened");
+}
 void projection(const std::filesystem::path& root) {
     auto f = placement_fixture::load(root,"carrier");
     const auto zones = build_pcb_zone_geometry(f.input);
@@ -153,6 +188,7 @@ void thermal_pull(const std::filesystem::path& root) {
 int main(int argc, char** argv) {
     try {
         if(argc!=2) return 2;
+        physical_clearance();
         require(refit_preserves_fanout(model(2,2), model(1.5,2)), "exact floor accepted");
         require(!refit_preserves_fanout(model(2,2), model(1.485,2)), "new starvation rejected");
         require(!refit_preserves_fanout(model(1,2), model(2,1)), "count-neutral starvation swap rejected");

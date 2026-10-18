@@ -1,24 +1,24 @@
-PLACEMENT-FLOW GATE: PASS (9 external contract(s); board_area=24381mm^2, flow_budget=121.9mm)
+PLACEMENT-FLOW GATE: PASS (9 external contract(s); board_area=24300mm^2, flow_budget=121.8mm)
   fails: flow=0/7 facing=0/2 far=0/5 near_max=0/4
   unresolved: 0
   violations: 0
   advisory preferences (not hardware qualification): 1
-    ADVISORY facing power->power_som: preference NOT satisfied (angle=172.9deg; not hardware qualification) [Reviewed 2026-10-18: all-component centroid direction changes when unrelated test points move; it is a placement preference, not a hardware limit. SNVSBD5D Rev. D section 11.1 requires local loop/layout and power-path quality, not a 90-degree subsystem-centroid cutoff. See native/benchmarks/2026-10-18-facing-centroid-review.json; routing and parasitics remain unverified.]
+    ADVISORY facing power->power_som: preference NOT satisfied (angle=123.9deg; not hardware qualification) [Reviewed 2026-10-18: all-component centroid direction changes when unrelated test points move; it is a placement preference, not a hardware limit. SNVSBD5D Rev. D section 11.1 requires local loop/layout and power-path quality, not a 90-degree subsystem-centroid cutoff. See native/benchmarks/2026-10-18-facing-centroid-review.json; routing and parasitics remain unverified.]
   detail: 18
-    facing power->power_som: dot=-713.95 angle=172.9deg (output@(146.9735, 35.295) zone@(144.3707, 49.7198) down@(141.7202, 98.7359))
-    facing power_som->@som: dot=+563.90 angle=19.2deg (output@(129.025, 96.4601) zone@(141.7202, 98.7359) down@(96.0, 106.0))
-    far ethernet vs power: 86.95mm / >= 10mm
-    far motor_sense vs power: 35.90mm / >= 10mm
-    far motor_sense vs power_som: 46.58mm / >= 10mm
-    far power vs ethernet.line_side: 86.95mm / >= 10mm
-    far power_som vs ethernet.line_side: 88.11mm / >= 10mm
-    flow camera->@som: 68.02mm / 121.9mm budget
-    flow hdmi_tx->@som: 71.74mm / 121.9mm budget
-    flow pd_input->usb_pd: 17.06mm / 121.9mm budget
-    flow power->power_som: 49.09mm / 121.9mm budget
-    flow power_mon->power_som: 14.52mm / 121.9mm budget
-    flow usb_pd->power: 39.20mm / 121.9mm budget
-    flow usb_pd->power: 39.20mm / 121.9mm budget
+    facing power->power_som: dot=-82.41 angle=123.9deg (output@(71.8782, 162.8752) zone@(74.481, 148.4504) down@(67.2602, 141.4343))
+    facing power_som->@som: dot=+284.22 angle=61.1deg (output@(79.9554, 143.7101) zone@(67.2602, 141.4343) down@(96.0, 106.0))
+    far ethernet vs power: 82.23mm / >= 10mm
+    far motor_sense vs power: 130.01mm / >= 10mm
+    far motor_sense vs power_som: 131.63mm / >= 10mm
+    far power vs ethernet.line_side: 82.23mm / >= 10mm
+    far power_som vs ethernet.line_side: 74.22mm / >= 10mm
+    flow camera->@som: 68.02mm / 121.8mm budget
+    flow hdmi_tx->@som: 71.74mm / 121.8mm budget
+    flow pd_input->usb_pd: 29.04mm / 121.8mm budget
+    flow power->power_som: 10.07mm / 121.8mm budget
+    flow power_mon->power_som: 67.05mm / 121.8mm budget
+    flow usb_pd->power: 86.57mm / 121.8mm budget
+    flow usb_pd->power: 86.57mm / 121.8mm budget
     near_max ethernet to rj45_connector: 1.58mm gap / <= 20mm
     near_max hdmi_rx_term to som_j2: 6.51mm gap / <= 10mm
     near_max motor_sense to motor_pwm: 1.80mm gap / <= 20mm

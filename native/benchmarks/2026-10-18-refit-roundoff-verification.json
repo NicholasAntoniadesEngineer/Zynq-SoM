@@ -1,0 +1,42 @@
+{
+  "parent_commit": "5cbbf3ec",
+  "source_sha256": "302f83cc1931558715cddc846c12c3a0b0286770048d084442e961bd672e3c94",
+  "finding": "Original compact-facing regression rejected C22018/C22019 exact-contact rotation because 0.5 mm became 0.49999999999998579 mm. This was an arithmetic defect in the new guard, not a physically invalid test. Added coordinate-scale machine-roundoff bound, not a fixed hardware clearance allowance. Actual 0.0001 mm clearance losses remain rejected by adversarial coverage.",
+  "test_review": "Initially proposed policy updates were withdrawn and original tests rerun with only the numerical fix. Original compact-facing and compose-repair tests passed unchanged. Eleven carrier current-board tests still failed the archived mandatory power centroid rule; only those now explicitly load the reviewed live power policy. Frozen snapshots/kernel baselines are untouched. Existing accounting independence, repeatability and controlled strict power_som retry coverage remain.",
+  "initial_complete_suite": {
+    "total": 278, "passed": 265, "failed": 13, "seconds": 812.98,
+    "log": "native/build/refit-full-tests.log",
+    "sha256": "b3aa7dd2d322da930dffa68f384c2ae546783aae6b4148242d3cd1d6c4217fff"
+  },
+  "final_targeted_tests": {
+    "total": 15, "passed": 15, "failed": 0, "seconds": 98.65,
+    "scope": "All thirteen initial failures plus refit-clearance and source-policy-audit contracts. Full native rebuild passed. Not represented as one clean full 278-test run on final source.",
+    "log": "native/build/refit-final-retests.log",
+    "sha256": "f00bf00e028a36979a3a7048ff2b514a0f993e58d32023d9dc103de999b1daef"
+  },
+  "carrier": {
+    "output": "native/build/carrier-162x150-refit-roundoff",
+    "exit_code": 0, "sheets": 37, "dimensions_mm": [162,150],
+    "parts": 566, "top": 345, "bottom": 221,
+    "pcb_sha256": "632231ec9bcea0b616f943dd9df7f47510eb1044c741b94e4f44e4aae7aa59a7",
+    "geometry_matches_previous_refit_clearance_qualification": true,
+    "non_unrouted_drc_errors": 0, "unrouted": 499,
+    "hard_red": 0, "soft_red": 1,
+    "wall_seconds": 269.41, "model_seconds": 67.951782,
+    "render3d_seconds": 29.509962, "source_audit_seconds": 111.781336,
+    "manifest_artifacts": 99, "hash_mismatches": 0, "valid_pngs": 119,
+    "log_sha256": "bd23f686b56b01ef8cd2e51d028486c2a63322cb9f3fd101085f77eab7605d2a",
+    "visual_review": "Front/back physical review reused from identical PCB in 2026-10-18-refit-clearance.json; freshly generated PNG signatures and dimensions verified."
+  },
+  "devkit": {
+    "scope": "Model screen only; reuse prior full qualification for exact unchanged PCB bytes, not a new full pipeline claim.",
+    "dimensions_mm": [98,98], "parts": 160, "top": 105, "bottom": 55,
+    "model_seconds": 0.123490541,
+    "pcb_sha256": "1b12fecbcbbaa5e6084c2459da93cb144a660ff19805e6e4e3f75f9c22689fdb",
+    "full_qualification_reference": "2026-10-18-master-advisory-release.json",
+    "model_checks": "fanout, ratsnest, local placement contracts and placement flow true; hard_red=0",
+    "log": "native/build/devkit-refit-roundoff-screen.log",
+    "log_sha256": "e88dcbf3762992820292f769b227b093929b262afa717212db8c58968d1bf41f"
+  },
+  "limits": "Published master unchanged. Carrier retains advisory facing/composition, return_path, golden and coverage findings. Unknown hardware requirements remain unverified; routing excluded; not fabrication readiness or overall goal completion. Concurrent timings are not controlled Python comparisons."
+}

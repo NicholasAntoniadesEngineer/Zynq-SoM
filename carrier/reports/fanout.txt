@@ -6,7 +6,7 @@ FAN-OUT CLEARANCE GATE (D13, report-first ratchet): PASS
     (none)
   (tightest PASSING subjects:)
     ok      J29001    usb_jtag_connector  16pin clr=2.050 need=2.00 slack=+0.050
-    ok      SW7001    bringup_rails      8pin clr=1.550 need=1.50 slack=+0.050
     ok      SW7003    bringup_rails      4pin clr=1.550 need=1.50 slack=+0.050
     ok      SW7004    bringup_rails      4pin clr=1.550 need=1.50 slack=+0.050
-    ok      U31001    usb_uart_connector   6pin clr=1.550 need=1.50 slack=+0.050
+    ok      U4002     bringup_en         5pin clr=1.550 need=1.50 slack=+0.050
+    ok      U4003     bringup_en         5pin clr=1.550 need=1.50 slack=+0.050

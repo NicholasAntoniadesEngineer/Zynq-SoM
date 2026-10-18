@@ -53,6 +53,7 @@ void registry(){
 }
 void live(const std::filesystem::path& root,const std::string& board,bool single,bool capture,bool& first){
     const auto name=board+(single?"_single":"");auto fixture=load(root,board);if(single)fixture.input.two_side=false;
+    reviewed_power_policy(fixture.input,root);
     begin();auto result=build_pcb_model(fixture.input);const auto measured=end();
     const auto total=pcb_placement_accounting(result);
     require(select(total.quantization_engagements,true)==measured,name+" exported new counters equal independent compiled function entries");
