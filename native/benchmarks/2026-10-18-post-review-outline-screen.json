@@ -34,6 +34,6 @@
     "rejected_hypothesis": "The same_side list U4/U1/U2/Y1 does NOT merge all ICs into a single face group: contract_rigid_groups_internal.hpp explicitly treats these as independent owners; pcb_placement_contract_gate.cpp likewise checks each owner with its own members. Do not remove that contract based on the list's appearance.",
     "next": "Measure which owner-group offers are actually generated and rejected, and review the specific USB top-face policy against hardware evidence before any relaxation. Preserve local bypass/crystal requirements and unresolved routing/return-path risks. Do not substitute more outline scans for understanding candidate coverage."
   },
-  "integration": "An exhaustive 278-test run on unchanged source was started separately in native/build/reviewed-facing-integrated-tests.log. It was still running when this screen evidence was recorded; no final result or new full-suite PASS claimed here.",
+  "integration": "The initially pending exhaustive run completed 278/278 PASS on unchanged source in 845.07 seconds. See 2026-10-18-reviewed-facing-integrated-suite.json for the full log hash and scope.",
   "limits": "No accepted layout changed and no expensive full build/render launched for failed screens. Master unchanged; goal remains incomplete."
 }
