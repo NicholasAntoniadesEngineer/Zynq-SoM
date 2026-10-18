@@ -1,0 +1,34 @@
+{
+  "source_commit": "7947da6f",
+  "diagnostic_source": "native/benchmarks/facing_centroid_sensitivity.cpp",
+  "diagnostic": {
+    "cases": 8, "axis_reflections": 4,
+    "regulator_position": [10,10], "output_position": [12,10], "load_position": [20,20],
+    "testpoint_initial": [10,11], "testpoint_moved": [10,30],
+    "result": "Current final flow gate changes from no facing violation to one facing violation in all four reflections when only the non-output test point moves.",
+    "unchanged_regulator_anchored_dot": 20,
+    "unchanged_output_load_distance_squared": 164,
+    "log": "native/build/facing-centroid-sensitivity.log",
+    "log_sha256": "2ade5021a694f4ac7ccdf55a6c82fcf8d173c3c40ee92e194847b73a50c3490d",
+    "scope": "Invokes the actual check_pcb_placement_flow implementation with explicit policy and model origins. No footprints or routing supplied; not a physically qualified board. The anchored dot is a diagnostic control, not a proposed hardware acceptance metric."
+  },
+  "implementation_findings": {
+    "centroid": "FinalGeometry in pcb_placement_flow_gate.cpp averages all instance origins by sheet, without regard to electrical role or face.",
+    "gate": "The output-role centroid must have positive dot product toward the downstream centroid; zero/negative fails the final flow gate.",
+    "planner": "pcb_placement_build.cpp derives enforced facing terms from external.downstream/output_roles and wired membership. Reported basis is facing/output_roles [placement/v2], not a physical limit citation.",
+    "history": "226bfb83 aligned compact planner checks with the final hard gate after a negative-facing layout had been accepted by guarded planner semantics. That was a consistency repair, not evidence that an all-component centroid is a physically invariant acceptance rule."
+  },
+  "hardware_review": {
+    "url": "https://www.ti.com/lit/ds/symlink/lm61460.pdf",
+    "document": "SNVSBD5D Rev. D, July 2022, section 11.1 page 47",
+    "observation": "The layout guidance covers local switching loops, bypass/boot/feedback geometry, ground plane, wide/direct power paths, thermal copper and small SW area. It does not specify the tested all-component-centroid 90-degree cutoff. Other devices and requirements need their own review."
+  },
+  "next_change_requirements": [
+    "Represent any reviewed heuristic as an explicit advisory with provenance; do not silently drop failures or change every contract at once.",
+    "Keep unresolved roles/geometry visibly UNRESOLVED and preserve required local hot-loop, capacitor, feedback, clearance and connectivity checks.",
+    "Keep planner, final flow gate, composition reporting, work receipts and tests consistent with the same declared policy.",
+    "Preserve physical connector-access/orientation constraints; centroid-based subsystem preference is a different concept.",
+    "Screen candidate layouts and fully qualify accepted finalists; routing, parasitics and thermal performance cannot be inferred from a centroid metric."
+  ],
+  "limits": "No production policy or acceptance rule changed in this commit. No new smaller board or fabrication-readiness claim."
+}
