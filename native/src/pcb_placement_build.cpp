@@ -29,7 +29,7 @@ FloorplanTermIndex term_index(const Context &ctx) {
             old.out_refs = t.out_refs;
     };
     const std::set<std::string> known{"flow", "downstream", "output_roles",
-                                      "far",  "near_max",   "media_faces_near_max"};
+                                      "far",  "near_max",   "media_faces_near_max", "facing_advisory_basis"};
     std::set<std::string> names;
     for (const auto &sc : ctx.in.floorplan.sheets)
         names.insert(sc.name);
@@ -71,10 +71,15 @@ FloorplanTermIndex term_index(const Context &ctx) {
             t.bound = number(n, "min_mm");
             add(t);
         }
+        const auto advisory_basis=pcb_facing_advisory_basis(contract);
         auto downstream = text(ext, "downstream");
         auto roles = strings(ext, "output_roles");
         if (!downstream.empty() && !roles.empty()) {
             auto t = make("facing", sheet, downstream, "facing/output_roles [" + basis + "]");
+            if(advisory_basis) {
+                t.enforced=false;t.require_positive_facing=false;
+                t.basis="ADVISORY centroid preference: "+*advisory_basis;
+            }
             t.output_roles = roles;
             std::set<std::string> refs;
             for (const auto &[ref, role] : optional(contract, "roles").object_value)

@@ -111,7 +111,7 @@ std::vector<FloorplanTermEval> evaluate(const FloorplanLegalizeInput& in,
     std::vector<std::size_t> strict_indices, guarded_indices;
     for (std::size_t i = 0; i < terms.size(); ++i) {
         const auto& t = *terms[i];
-        const bool strict = t.kind == "facing" && t.enforced && t.require_positive_facing;
+        const bool strict = t.kind == "facing" && (!t.enforced || t.require_positive_facing);
         (strict ? strict_rows : guarded_rows).push_back(rows[i]);
         (strict ? strict_indices : guarded_indices).push_back(i);
     }
@@ -130,7 +130,9 @@ std::vector<FloorplanTermEval> evaluate(const FloorplanLegalizeInput& in,
             for (std::size_t i = 0; i < guarded_indices.size(); ++i)
                 values[guarded_indices[i]] = evaluated[i];
         }
-        // Only strict facing loses L4 deferral. Far/flow guards remain intact.
+        // Strict facing and advisory measurements lose L4 deferral: an advisory
+        // must report its real negative value, not a guarded false-green.
+        // Far/flow guards remain intact.
         // Evaluate each row once and import actual work even on rejection.
         const auto evaluated = evaluate_terms(in.board_w, in.board_h, in.som_core_page,
             {poses.begin(), poses.end()}, metrics, strict_rows, {},

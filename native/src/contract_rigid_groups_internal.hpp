@@ -67,11 +67,11 @@ inline std::optional<std::vector<ContractRigidGroup>> contract_rigid_groups(
         if(!v2) {
             if(!(external->kind==JsonKind::Object&&external->object_value.empty()))return std::nullopt;
         } else {
-            if(!keys(*external,{"flow","downstream","output_roles","far","near_max","media_faces_near_max"}))return std::nullopt;
+            if(!keys(*external,{"flow","downstream","output_roles","far","near_max","media_faces_near_max","facing_advisory_basis"}))return std::nullopt;
             for(const auto& [key,value]:external->object_value) {
                 if(key=="flow"||key=="output_roles") {
                     if(!texts(&value,false))return std::nullopt;
-                } else if(key=="downstream") {
+                } else if(key=="downstream"||key=="facing_advisory_basis") {
                     if(!text(&value))return std::nullopt;
                 } else if(key=="media_faces_near_max") {
                     if(value.kind!=JsonKind::Bool)return std::nullopt;

@@ -439,9 +439,17 @@ void live(const std::filesystem::path& root){
   if(std::string(project)=="carrier") {
    auto reviewed=f.input;
    reviewed.contracts.at("usb_pd")=parse_json_file((root/"subsystems/usb_pd/placement_contract.json").string());
+   reviewed.contracts.at("power")=parse_json_file((root/"subsystems/power/placement_contract.json").string());
    reviewed.floorplan.spec=load_floorplan_spec((root/"carrier/floorplan.json").string());
    const auto reviewed_zones=build_pcb_zone_geometry(reviewed);
    const auto reviewed_plan=prepare_pcb_floorplan(reviewed,reviewed_zones);
+   demand(std::none_of(reviewed_plan.compose.index.hard.begin(),reviewed_plan.compose.index.hard.end(),
+       [](const auto& t){return t.kind=="facing"&&t.subject=="power";}),
+       "reviewed power centroid preference must not be a hard hardware bound");
+   demand(std::any_of(reviewed_plan.compose.index.soft.begin(),reviewed_plan.compose.index.soft.end(),
+       [](const auto& t){return t.kind=="facing"&&t.subject=="power"&&!t.enforced&&!t.require_positive_facing&&
+                               t.basis.find("ADVISORY")!=std::string::npos;}),
+       "reviewed power centroid preference must remain explicit in the soft ledger");
    demand(std::none_of(reviewed_plan.compose.index.hard.begin(),reviewed_plan.compose.index.hard.end(),
        [](const auto& t){return t.kind=="near_max"&&t.subject=="usb_pd"&&t.target_raw=="pd_input";}),
        "judgment-based CC edge-gap must not become a hard hardware limit");

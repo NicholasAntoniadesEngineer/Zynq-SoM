@@ -9,6 +9,23 @@ abstract port/rail names and a consuming board binds them to real nets.
 
 ## Interface
 
+### Reviewed external orientation preference
+
+The `power` → `power_som` all-component-centroid facing metric is explicitly
+advisory (`external.facing_advisory_basis`). Moving only a test point can reverse
+this metric without moving the regulator, output capacitor or load. Its value
+and any unsatisfied preference remain visible in placement-flow and composition
+reports; missing output roles or geometry remain errors.
+
+[LM61460 SNVSBD5D, section 11.1, page 47](https://www.ti.com/lit/ds/symlink/lm61460.pdf)
+specifies local switching-loop, bypass, feedback, ground-plane, power-path and
+thermal layout requirements, not a 90-degree relationship between subsystem
+centroids. Local placement structures, connectivity, flow-hop and separation
+checks are unchanged. This policy does not qualify routing, parasitics, thermal
+performance or fabrication readiness. Evidence and a reproducible C++ witness:
+`native/benchmarks/2026-10-18-facing-centroid-review.json` and
+`native/benchmarks/facing_centroid_sensitivity.cpp`.
+
 `power.circuit(meta)` builds the netlist with abstract names. A consuming project
 passes one standard `Meta` dict (`schgen.core.subsystem.Meta`); `meta=None` keeps
 the abstract names so `test_power.py` runs offline. Keys read:

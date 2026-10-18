@@ -302,6 +302,7 @@
       "power_som"
     ],
     "downstream": "power_som",
+    "facing_advisory_basis": "Reviewed 2026-10-18: all-component centroid direction changes when unrelated test points move; it is a placement preference, not a hardware limit. SNVSBD5D Rev. D section 11.1 requires local loop/layout and power-path quality, not a 90-degree subsystem-centroid cutoff. See native/benchmarks/2026-10-18-facing-centroid-review.json; routing and parasitics remain unverified.",
     "output_roles": [
       "cout_bulk"
     ],

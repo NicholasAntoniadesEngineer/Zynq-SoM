@@ -542,6 +542,43 @@ void typed_guards() {
     validate_pcb_contract_pins("test", contract, parts);
     ++checks;
 }
+void advisory_facing_policy() {
+    PcbPlacementGatePolicy policy;policy.wired_sheets={"source"};policy.project_zones={"source","load"};
+    const auto contract=[](const std::string& extra){return parse_json_text(
+        "{\"contract\":\"placement/v2\",\"roles\":{\"C1\":\"cout_bulk\"},\"external\":{"
+        "\"downstream\":\"load\",\"output_roles\":[\"cout_bulk\"]"+extra+"}}");};
+    policy.ref_maps["source"]={{"C1","C1"}};
+    PcbCheckModel model;model.board_w=model.board_h=60;
+    for(const auto& row:std::vector<std::tuple<std::string,std::string,double,double>>{
+        {"U1","source",10,10},{"C1","source",12,10},{"TP1","source",10,30},{"LOAD","load",20,20}}) {
+        PcbCheckInstance i;i.ref=std::get<0>(row);i.sheet=std::get<1>(row);
+        i.x=std::get<2>(row);i.y=std::get<3>(row);
+        i.mod=pcb_check_footprint("synthetic","(footprint x (pad 1 smd rect (at 0 0) (size 1 1)))");
+        model.insts.push_back(i);
+    }
+    policy.contracts["source"]=contract("");
+    const auto hard=check_pcb_placement_flow(PcbCheckInput(model),policy);
+    require(!hard.ok&&hard.facing_fail==1&&hard.advisories.empty(),"unreviewed facing silently relaxed");
+    const std::string advisory=",\"facing_advisory_basis\":\"reviewed centroid sensitivity witness\"";
+    policy.contracts["source"]=contract(advisory);
+    const auto soft=check_pcb_placement_flow(PcbCheckInput(model),policy);
+    require(soft.ok&&soft.facing_fail==0&&soft.advisories.size()==1&&soft.terms.size()==1&&
+            !soft.terms[0].ok&&soft.terms[0].advisory,"negative preference lost or reported as satisfied");
+    require(soft.summary().find("preference NOT satisfied")!=std::string::npos&&
+            soft.summary().find("not hardware qualification")!=std::string::npos,"advisory not visibly reported");
+    auto missing=model;missing.insts.erase(missing.insts.begin()+1);
+    const auto unresolved=check_pcb_placement_flow(PcbCheckInput(missing),policy);
+    require(!unresolved.ok&&!unresolved.unresolved.empty(),"missing advisory geometry was waived");
+    policy.contracts["source"]=contract(advisory+",\"far\":[{\"what\":\"load\",\"min_mm\":100}]");
+    const auto separated=check_pcb_placement_flow(PcbCheckInput(model),policy);
+    require(!separated.ok&&separated.far_fail==1,"advisory facing relaxed another hard constraint");
+    for(const std::string bad:{"\"\"","\"   \"","false","12","[]"}) {
+        policy.contracts["source"]=contract(",\"facing_advisory_basis\":"+bad);
+        bool rejected=false;try{(void)check_pcb_placement_flow(PcbCheckInput(model),policy);}
+        catch(const std::invalid_argument&){rejected=true;}
+        require(rejected,"invalid advisory provenance accepted");
+    }
+}
 } // namespace
 int main(int argc, char **argv) {
     try {
@@ -550,6 +587,7 @@ int main(int argc, char **argv) {
         synthetic(argv[1]);
         adversarial(argv[1]);
         typed_guards();
+        advisory_facing_policy();
         baseline(argv[1], "carrier");
         baseline(argv[1], "devkit_mini");
         std::cout << "PCB independent placement gates: " << checks << " assertions passed\n";
