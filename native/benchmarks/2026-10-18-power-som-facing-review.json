@@ -1,0 +1,41 @@
+{
+  "parent_commit": "a880d30a",
+  "scope": "Carrier power_som -> @som centroid preference only. No other contract is reclassified.",
+  "hardware_source": {
+    "url": "https://www.ti.com/lit/ds/symlink/lm61460.pdf",
+    "document": "SNVSBD5D Rev. D, July 2022, section 11.1 page 47",
+    "review": "Guidance addresses local switching loops, bypass/boot/feedback geometry, ground planes, wide/direct power paths, thermal copper and SW area. It does not specify an all-component subsystem-centroid 90-degree cutoff toward the SoM body. Routing, parasitics and thermal performance cannot be established by this angle."
+  },
+  "counterexample": {
+    "test": "power_som_centroid_policy in native/tests/pcb_placement_gates_contracts.cpp",
+    "uses_actual_contract": "carrier/subsystems/power_som/placement_contract.json",
+    "regulator": [10,10], "output_capacitors": [[12,10],[12,10]], "som_center": [20,20],
+    "testpoint_initial": [10,11], "testpoint_moved": [10,30],
+    "cases": 8, "axis_reflections": 4,
+    "result": "Strict policy fails only after unrelated TP movement in all four reflections. Regulator, output capacitors and SoM are unchanged. Reviewed policy retains the unsatisfied measurement as advisory; missing SoM geometry still fails.",
+    "limit": "Isolated centroid diagnostic without footprint geometry; not a physically qualified board."
+  },
+  "change": {
+    "contract_sha256": "6ad19206c75555f05760dd651530ae93824acd822b83910a07f03873ec9bdbfb",
+    "policy": "Added explicit facing_advisory_basis with review provenance; planner and final gate use the existing shared policy mechanism.",
+    "independent_diff_check": "Parsed HEAD and changed contracts, removed the new advisory field, and asserted exact JSON equality. Local structures, roles, hot-loop/bypass/feedback checks, flow and far checks are untouched.",
+    "limits": "A negative angle is not relabeled satisfied. Existing unresolved-role/geometry failures are retained. No new substitute angle or distance threshold invented."
+  },
+  "verification": {
+    "placement_gate_assertions": 56046,
+    "gate_log_sha256": "94a62fd5910f21f3d0eda0cc0d30ba8cd0301a755d0007b8916195bb3c864e14",
+    "targeted_suites": 8, "passed": 8, "failed": 0, "seconds": 44.37,
+    "log": "native/build/power-som-policy-regressions.log",
+    "log_sha256": "a4ca7131255eebf23bcedb86f264609def9c3159aa5344766418e50ccdd96564",
+    "scope": "Placement gates, source-policy audits, floorplan, failure receipts, legalize/precision accounting, compact facing and refit-clearance. Not an exhaustive native suite."
+  },
+  "screen": {
+    "dimensions_mm": [161,150], "parts": 566, "top": 345, "bottom": 221,
+    "model_seconds": 61.320769208,
+    "pcb_sha256": "2c5fe226dccd5427554e3c9e3fa9c916bcfa93b8d81ad18a9a05d19c8c769f43",
+    "checks": "fanout, ratsnest, local placement contracts and flow true; hard_red=0",
+    "log": "native/build/power-som-advisory-161x150-screen.log",
+    "log_sha256": "82dc1432a50203a9dc5575e8f98a8a34357a2f27b5b8851e6ecec374079b0ee1",
+    "acceptance": "Screen only. Independent full qualification PASS is recorded in 2026-10-18-carrier-161x150-qualification.json. No controlled speedup or matched Python comparison claimed."
+  }
+}
