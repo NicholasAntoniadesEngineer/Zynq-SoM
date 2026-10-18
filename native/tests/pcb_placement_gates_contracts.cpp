@@ -542,6 +542,39 @@ void typed_guards() {
     validate_pcb_contract_pins("test", contract, parts);
     ++checks;
 }
+void flow_outline_sensitivity_witness() {
+    // Diagnostic for the existing global heuristic, not a hardware requirement
+    // or a qualified board. Shrinking empty outline area changes its verdict
+    // even though every component and pad stays in exactly the same place.
+    PcbPlacementGatePolicy policy;policy.wired_sheets={"source"};
+    policy.project_zones={"source","load"};
+    policy.contracts["source"]=parse_json_text(
+        R"({"contract":"placement/v2","external":{"flow":["source","load"]}})");
+    PcbCheckModel model;model.board_w=model.board_h=120;
+    for(const auto& row:std::vector<std::pair<std::string,double>>{{"source",10},{"load",50}}) {
+        PcbCheckInstance i;i.ref=row.first;i.sheet=row.first;i.x=row.second;i.y=10;
+        i.mod=pcb_check_footprint("outline-witness","(footprint x (pad 1 smd rect (at 0 0) (size 1 1)))");
+        i.pad_nets={{"1",{1,"SUPPLY"}}};model.insts.push_back(i);
+    }
+    const PcbCheckInput large_input(model);
+    const auto large=check_pcb_placement_flow(large_input,policy);
+    model.board_w=model.board_h=60;
+    const PcbCheckInput small_input(model);
+    const auto small=check_pcb_placement_flow(small_input,policy);
+    require(large.ok&&!small.ok&&small.flow_fail==1,"outline-sensitivity diagnostic no longer matches current policy; review its replacement");
+    require(large.terms.size()==1&&small.terms.size()==1&&large.terms[0].measured==40&&small.terms[0].measured==40,
+            "outline witness changed component distance");
+    require(large.flow_budget_mm==42&&small.flow_budget_mm==21,"outline witness budget calculation incorrect");
+    for(std::size_t i=0;i<model.insts.size();++i) {
+        const auto a=large_input.geometry_at(i).pad_boxes.at("1"),b=small_input.geometry_at(i).pad_boxes.at("1");
+        require(a.x0==b.x0&&a.x1==b.x1&&a.y0==b.y0&&a.y1==b.y1&&b.x0>=0&&b.y0>=0&&b.x1<=60&&b.y1<=60,
+                "outline witness moved pads or violated the smaller outline");
+    }
+    model.insts.pop_back();
+    const auto missing=check_pcb_placement_flow(PcbCheckInput(model),policy);
+    require(!missing.ok&&!missing.unresolved.empty(),"missing flow endpoint must remain an independent rejection");
+    std::cout<<"flow outline sensitivity: identical 40mm endpoints; 120mm outline PASS/42mm budget; 60mm outline FAIL/21mm budget\n";
+}
 void advisory_facing_policy() {
     PcbPlacementGatePolicy policy;policy.wired_sheets={"source"};policy.project_zones={"source","load"};
     const auto contract=[](const std::string& extra){return parse_json_text(
@@ -653,6 +686,7 @@ int main(int argc, char **argv) {
         synthetic(argv[1]);
         adversarial(argv[1]);
         typed_guards();
+        flow_outline_sensitivity_witness();
         advisory_facing_policy();
         power_som_centroid_policy(argv[1]);
         baseline(argv[1], "carrier");

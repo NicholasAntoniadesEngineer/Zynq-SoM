@@ -28,7 +28,7 @@
   "experiment": {
     "outline_mm": [160,150], "strategy": "granular-minor+vertical+estimator-first+rotations",
     "log": "native/build/top-group-turn-160x150-screen.log",
-    "status": "RUNNING at checkpoint; no acceptance claimed",
+    "status": "INTENTIONALLY INTERRUPTED at 19m47s (exit 130); no acceptance claimed. Final diagnostic receipt: 2026-10-18-flow-outline-review.json",
     "observed": "Some attempts reached the legalizer and were rejected by flow_hop power->power_som margin -7.8769; other attempts still failed seating. This is not proof of global infeasibility.",
     "provenance": "Exploratory binary before final top-only early-return repair. Do not present as a qualification of the final binary."
   },

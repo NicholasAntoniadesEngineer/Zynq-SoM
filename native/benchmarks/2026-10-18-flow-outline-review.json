@@ -1,0 +1,33 @@
+{
+  "base_commit": "b1d2b239",
+  "finding": "The current flow-hop acceptance limit is a global board-size-derived centroid heuristic, not an authored trace-length bound. Its formula is 0.35*sqrt(board_w*board_h)+som_diagonal (legalize.cpp::flow_budget). term_index in pcb_placement_build.cpp hardens wired flow chains; both legalize.cpp and pcb_placement_flow_gate.cpp enforce the derived limit.",
+  "witness": {
+    "component_positions_mm": [[10,10],[50,10]], "distance_mm": 40,
+    "large_outline_mm": [120,120], "large_budget_mm": 42, "large_verdict": "PASS",
+    "small_outline_mm": [60,60], "small_budget_mm": 21, "small_verdict": "FAIL",
+    "invariants": "Identical part/pad geometry and supply net; both pads remain inside the smaller board. No SoM detour geometry. Removing the load endpoint independently produces UNRESOLVED and failure.",
+    "scope": "Synthetic diagnostic of current acceptance policy, not an electrically qualified design or a hardware limit. This test documents the defect and must evolve with its reviewed replacement, not freeze the heuristic as a requirement."
+  },
+  "verification": {
+    "test": "native_pcb_placement_gates_contracts", "result": "PASS", "assertions": 56284, "seconds": 0.65,
+    "log": "native/build/flow-outline-witness-tests.log", "sha256": "c57cf03890e10bd725ee04c1775199e2dc72043addbcc359517339c173a9a582",
+    "test_source_sha256": "6e678740fdbce204c3115f41de7b77afc6e816857664c6fa2b8d936f6cd42c47"
+  },
+  "rotation_campaign": {
+    "session": 49369, "pid": 10802, "terminal": true, "exit_code": 130,
+    "termination": "Explicit SIGINT after live process inspection at 19m47s, 99.7% CPU. Stopped for measured search-cost regression/resource efficiency; not a timeout inference or a claim of geometric infeasibility. No replacement run launched.",
+    "log": "native/build/top-group-turn-160x150-screen.log",
+    "log_sha256": "e89f620f80c5f9725745901caabdde2e8acd41b123d354641479141a1b11f72c",
+    "log_bytes": 190616, "recorded_outer_rejections": 31, "recorded_legalizer_rejections": 2,
+    "observed_flow_margins_mm": [-7.8769,-11.6291,-8.2979],
+    "accounting": "Interrupted diagnostic stream only. Buffered tail and final aggregate operation/fallback receipts are unavailable; recorded rejection counts are not a complete executed-attempt count. Not an accepted candidate or a failure-accounting qualification.",
+    "provenance": "Exploratory binary before top-only early-return repair, target deduplication and exact net-cost caching. Do not attribute its timing or outcome to the latest source."
+  },
+  "next_change_requirements": [
+    "Separate heuristic centroid-distance preference from hardware acceptance; retain its measured value and honest unsatisfied status, not a fabricated PASS.",
+    "Preserve hard unresolved/missing/ambiguous endpoint failures and explicitly authored physical constraints, including local electrical geometry, connector access, keepouts, clearance, near_max and far limits pending their own evidence review.",
+    "Retain flow connectivity intent in optimisation scoring rather than deleting it when removing the derived acceptance cutoff. Audit planner, legalizer and emitted-board checks together.",
+    "Use bounded, quality-informed candidate proposals before repeating the expensive broad rotation campaign. Qualify any smaller finalist independently."
+  ],
+  "limits": "No acceptance policy changed in this batch. No new smaller board, full build or imagery claimed. Goal remains incomplete; published master unchanged."
+}

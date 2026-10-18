@@ -36,7 +36,7 @@
     "log": "native/build/cross-cost-memo-devkit.log", "sha256": "67ba8200174ae6f3d5f75ccd557c95df66bb593da450c2922eded34167b689d4"
   },
   "remaining_investigation": {
-    "experiment": "Original pre-fix 160x150 screen remains live at checkpoint; preserve session 49369 and do not restart because observation expires. No finalist accepted.",
+    "experiment": "Original pre-fix 160x150 screen intentionally interrupted at 19m47s, exit 130. Session 49369 is terminal; do not poll or restart it. See 2026-10-18-flow-outline-review.json. No finalist accepted.",
     "flow_budget": "legalize.cpp computes 0.35*sqrt(board_w*board_h)+som_diagonal. Wired flow_hop terms use this centroid-distance budget as a hard condition. Some experimental legalizer attempts failed power->power_som by 7.8769 mm. This is a board-size-derived heuristic, not an authored trace-length limit. Review its physical justification and interaction with the smaller-board priority; no policy change made here."
   },
   "limits": "Targeted regression and model screens only, not a fresh exhaustive suite or full physical qualification. No new release imagery or master change. Routing excluded; unknown hardware requirements remain unverified."
