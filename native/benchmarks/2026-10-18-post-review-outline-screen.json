@@ -1,0 +1,39 @@
+{
+  "source_commit": "d70748a9",
+  "reference": "Qualified 161x150 carrier in 2026-10-18-carrier-161x150-qualification.json; unchanged by this experiment",
+  "common_options": "Carrier compact profile; interior order 0; failed-first retry; edge feasibility; owned-quality-first and owned-face-cohesion; contract-group-face sheets usb_jtag/power/power_som/power_mon; required bottom power_mon/bringup_modules/bringup_en_modules; joint states 1024; reseat poses 8/frontier 4096/continuations 3/victim shapes; board_aux owned-face-a1.000000; shape-area-first; carrier-161x150-reviewed-facing.floorplan.json; one run per case",
+  "runs": [
+    {
+      "outline_mm": [160,150], "strategy": "granular-minor+vertical+estimator-first",
+      "exit_code": 1, "screened_incumbent": false, "seconds": 86.946867459,
+      "completed_outer_attempts": 14, "fallback_events": 51931, "independent_accounting_match": true,
+      "observed_seating_rejections": ["usb_jtag", "fmc", "power", "board_services"],
+      "log": "native/build/reviewed-facing-160x150-screen.log",
+      "sha256": "bc788e4caa353436aae4bc21a5f95ce3d07569d3950cfe5178a62aa13a7846df"
+    },
+    {
+      "outline_mm": [161,149], "strategy": "granular-minor+vertical+estimator-first",
+      "exit_code": 1, "screened_incumbent": false, "seconds": 24.756927541,
+      "completed_outer_attempts": 8, "fallback_events": 21165, "independent_accounting_match": true,
+      "observed_seating_rejections": ["usb_jtag", "fmc", "power"],
+      "log": "native/build/reviewed-facing-161x149-screen.log",
+      "sha256": "0492511e81a4b38f397406b28753719c9fa2090adc91980aad07daee7a6c79b0"
+    },
+    {
+      "outline_mm": [160,150], "strategy": "granular-minor+vertical+rotations+estimator-first",
+      "exit_code": 1, "screened_incumbent": false, "seconds": 159.025096584,
+      "completed_outer_attempts": 8, "fallback_events": 83506, "independent_accounting_match": true,
+      "observed_seating_rejections": ["usb_jtag", "fmc", "power"],
+      "log": "native/build/reviewed-facing-160x150-rotations-screen.log",
+      "sha256": "a49759ca49930852b0c2a49d19323b6b8d6aaf29e5b31daa1915b0655253b56e"
+    }
+  ],
+  "interpretation": "Further outline reductions currently fail during seating, not at the reviewed centroid-facing rule. Added group rotations alone did not recover a candidate. These bounded searches do not prove geometric infeasibility. Subjects name observed failures, not proven root causes. Timings overlap other screens/full regression tests and are not controlled performance comparisons.",
+  "constraint_review": {
+    "confirmed": "pcb_placement_variants.cpp append_contract_group_faces pins references on nets with differential geometry. For actual USB-JTAG inputs, DBG_USB_DP/DM are 90-ohm usb_hs_pair ports on CH347T U1 pins 17/16. Its own contract-connected support group is consequently not offered on the bottom face.",
+    "rejected_hypothesis": "The same_side list U4/U1/U2/Y1 does NOT merge all ICs into a single face group: contract_rigid_groups_internal.hpp explicitly treats these as independent owners; pcb_placement_contract_gate.cpp likewise checks each owner with its own members. Do not remove that contract based on the list's appearance.",
+    "next": "Measure which owner-group offers are actually generated and rejected, and review the specific USB top-face policy against hardware evidence before any relaxation. Preserve local bypass/crystal requirements and unresolved routing/return-path risks. Do not substitute more outline scans for understanding candidate coverage."
+  },
+  "integration": "An exhaustive 278-test run on unchanged source was started separately in native/build/reviewed-facing-integrated-tests.log. It was still running when this screen evidence was recorded; no final result or new full-suite PASS claimed here.",
+  "limits": "No accepted layout changed and no expensive full build/render launched for failed screens. Master unchanged; goal remains incomplete."
+}
