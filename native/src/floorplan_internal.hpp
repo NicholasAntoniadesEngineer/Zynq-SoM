@@ -191,6 +191,9 @@ public:
     double packing_area_bound(bool free);
     double estimate(const std::vector<const FloorplanBlock*>& blocks,
                     const std::string& only_sheet = {});
+    // Validation-only preparation returns no score and emits no cost observer.
+    std::optional<double> evaluate_estimate(const std::vector<const FloorplanBlock*>& blocks,
+                                           const std::string& only_sheet, bool score);
     double estimate();
     std::pair<Halo, Halo> fanout(const FloorplanZoneShape& shape);
     std::vector<Comp> zone_components(const FloorplanZoneShape& shape,

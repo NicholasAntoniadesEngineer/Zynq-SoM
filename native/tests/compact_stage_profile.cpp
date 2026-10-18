@@ -88,6 +88,11 @@ PcbPlacementSearchStrategy search_strategy(const std::string& text) {
             result.component_primary_sheets.insert(sheet);
         }
         else if(token=="rotations")result.contract_group_rotations=true;
+        else if(token.rfind("rotations:",0)==0) {
+            const auto sheet=token.substr(std::string("rotations:").size());
+            if(sheet.empty())throw std::invalid_argument("rotations requires a nonempty sheet");
+            result.contract_group_rotation_sheets.insert(sheet);
+        }
         else if(token=="area-first"||token=="estimator-first") {
             if(result.shape_area_first)throw std::invalid_argument("conflicting search-strategy rankings");
             result.shape_area_first=token=="area-first";
@@ -95,6 +100,8 @@ PcbPlacementSearchStrategy search_strategy(const std::string& text) {
         if(end==std::string::npos)break;
         begin=end+1;
     }
+    if(result.contract_group_rotations.value_or(false)&&!result.contract_group_rotation_sheets.empty())
+        throw std::invalid_argument("group rotations cannot mix all-sheet and scoped selection");
     if(result.dual_primary_reservations&&!result.granular_minor_occupancy)
         throw std::invalid_argument("dual-primary strategy requires granular-minor");
     if(result.component_primary_reservations&&!result.component_primary_sheets.empty())
@@ -102,7 +109,7 @@ PcbPlacementSearchStrategy search_strategy(const std::string& text) {
     return result;
 }
 void help() {
-    std::cout << "  [--search-strategy extent|rotations|vertical|granular-minor|dual-primary|area-first|estimator-first] (join with + for combined strategies; repeat; baseline retained; no acceptance)\n";
+    std::cout << "  [--search-strategy extent|rotations|rotations:SHEET|vertical|granular-minor|dual-primary|area-first|estimator-first] (join with + for combined strategies; repeat; baseline retained; no acceptance)\n";
     std::cout << "    Each strategy starts from baseline settings; repeated options are not cumulative. search_total includes every attempt and screening.\n";
     std::cout << "    dual-primary requires granular-minor; swaps reservation roles, never physical component faces.\n";
     std::cout << "    component-primary decomposes eligible primary envelopes on explicit contract-group sheets.\n";
@@ -165,6 +172,7 @@ Options parse(int argc, char** argv) {
                    proposed.dual_primary_reservations==existing.dual_primary_reservations&&
                    proposed.component_primary_reservations==existing.component_primary_reservations&&
                    proposed.component_primary_sheets==existing.component_primary_sheets&&
+                   proposed.contract_group_rotation_sheets==existing.contract_group_rotation_sheets&&
                    proposed.owned_extent_alternatives==existing.owned_extent_alternatives&&
                    proposed.contract_group_rotations==existing.contract_group_rotations)
                     throw std::invalid_argument("duplicate search-strategy: "+value);
@@ -308,9 +316,14 @@ Options parse(int argc, char** argv) {
         if(out.compact!="on")throw std::invalid_argument("search-strategy requires compact on");
         if(out.thermal_trace||out.owned_selection_trace)
             throw std::invalid_argument("search-strategy requires per-model thermal/selection traces off");
-        for(const auto& name:out.search_strategies)
-            if((search_strategy(name).contract_group_rotations.value_or(false)||search_strategy(name).vertical_compaction)&&out.contract_group_face_sheets.empty())
+        for(const auto& name:out.search_strategies) {
+            const auto strategy=search_strategy(name);
+            if((strategy.contract_group_rotations.value_or(false)||strategy.vertical_compaction)&&out.contract_group_face_sheets.empty())
                 throw std::invalid_argument("rotations/vertical search-strategy requires contract-group-face-sheet");
+            for(const auto& sheet:strategy.contract_group_rotation_sheets)
+                if(!out.contract_group_face_sheets.count(sheet))
+                    throw std::invalid_argument("rotation sheet requires explicit contract-group-face-sheet: "+sheet);
+        }
     }
     if(!out.observers&&out.owned_selection_trace)throw std::invalid_argument("owned-selection-trace requires observers on");
     if(!out.observers&&out.thermal_trace)throw std::invalid_argument("thermal-trace requires observers on");

@@ -112,6 +112,17 @@ void profile_option_contracts() {
         if(!rejected)throw std::runtime_error("invalid failed-first retry option accepted");
     }
     bool invalid_trace=false;
+    if(search_strategy("rotations:usb_jtag+rotations:power").contract_group_rotation_sheets!=
+       std::set<std::string>{"usb_jtag","power"})
+        throw std::runtime_error("scoped rotation selection lost");
+    (void)options({"profile","--repo",".","--compact-search","on","--contract-group-face-sheet","usb_jtag",
+        "--contract-group-face-sheet","power","--search-strategy","rotations:usb_jtag","--search-strategy","rotations:power"});
+    for(const auto& strategy:std::vector<std::string>{"rotations:","rotations+rotations:usb_jtag","rotations:missing"}) {
+        bool rejected=false;
+        try{(void)options({"profile","--repo",".","--compact-search","on","--contract-group-face-sheet","usb_jtag","--search-strategy",strategy});}
+        catch(const std::invalid_argument&){rejected=true;}
+        if(!rejected)throw std::runtime_error("invalid scoped rotation accepted");
+    }
     const auto portfolio=options({"profile","--repo",".","--compact-search","on",
         "--search-strategy","extent","--search-strategy","estimator-first"});
     if(portfolio.search_strategies!=std::vector<std::string>{"extent","estimator-first"})
@@ -135,6 +146,7 @@ void profile_option_contracts() {
     (void)options({"profile","--repo",".","--compact-search","on","--search-strategy","granular-minor","--search-strategy","granular-minor+dual-primary"});
     for(const auto& args:std::vector<std::vector<std::string>>{
         {"profile","--repo",".","--compact-search","on","--search-strategy","unknown"},
+        {"profile","--repo",".","--compact-search","on","--contract-group-face-sheet","usb_jtag","--contract-group-face-sheet","power","--search-strategy","rotations:usb_jtag+rotations:power","--search-strategy","rotations:power+rotations:usb_jtag"},
         {"profile","--repo",".","--compact-search","on","--search-strategy","component-primary:"},
         {"profile","--repo",".","--compact-search","on","--search-strategy","component-primary+component-primary:usb_jtag"},
         {"profile","--repo",".","--compact-search","on","--search-strategy","component-primary:usb_jtag+component-primary:power_som","--search-strategy","component-primary:power_som+component-primary:usb_jtag"},

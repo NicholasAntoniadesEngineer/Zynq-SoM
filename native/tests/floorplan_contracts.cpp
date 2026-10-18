@@ -1103,6 +1103,11 @@ void cross_behavior() {
         e.plan.accounting.quantization_engagements.clear();
         require(e.estimate()==5,"warm net cost changed estimate");
         const auto warm_counts=e.plan.accounting.quantization_engagements;
+        e.plan.accounting.quantization_engagements.clear();e.cross_cost_memo.clear();
+        const std::vector<const FloorplanBlock*> validation_blocks{&e.plan.interior_blocks[0],&e.plan.interior_blocks[1]};
+        require(!e.evaluate_estimate(validation_blocks,"",false),"validation-only must not fabricate a score");
+        require(e.cross_cost_memo.empty(),"validation-only must not compute/cache MST costs");
+        require(e.plan.accounting.quantization_engagements==warm_counts,"validation-only must preserve all endpoint operations");
         e.cross_cost_memo.clear();e.plan.accounting.quantization_engagements.clear();
         require(e.estimate()==5&&e.plan.accounting.quantization_engagements==warm_counts,
                 "net-cost reuse skipped endpoint validation/accounting");
@@ -1129,6 +1134,7 @@ void cross_behavior() {
             throws([&]{(void)e.estimate();},"no prepared geometry for U1001");
             const std::vector<const FloorplanBlock*> selected{&e.plan.interior_blocks[0],&e.plan.interior_blocks[1]};
             throws([&]{(void)e.estimate(selected,"sink");},"no prepared geometry for U1001");
+            throws([&]{(void)e.evaluate_estimate(selected,"sink",false);},"no prepared geometry for U1001");
         }
         e.plan.interior_blocks[0].shape_idx=0;
         require(e.estimate()==5,"base geometry remains valid after rejected selections");

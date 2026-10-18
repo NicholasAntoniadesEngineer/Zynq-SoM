@@ -1,0 +1,26 @@
+{
+  "source_commit": "36642f5e4029138c4c9e89b628e1ee686a93c33d",
+  "status": "Diagnostic opportunity measured; no optimisation implemented or speedup claimed",
+  "trace": {
+    "log": "native/build/area-first-estimate-opportunity.log",
+    "log_sha256": "ca334d0f3f694f1411e9757c4b3065d6b564814b072fae9c87937ad6fdc02125",
+    "exit_code": 1,
+    "elapsed_seconds": 11.271268208,
+    "completed_outer_attempts": 4,
+    "selection_events": 345,
+    "scored_offers": 7972,
+    "potential_avoidable_costs": 3901,
+    "usb_jtag_scored_offers": 6176,
+    "usb_jtag_potential_avoidable_costs": 2916,
+    "classification": "Per selection event, multiply printed width and height, find minimum area, count strictly larger offers after the first two. The first two are retained because side-offer reporting consumes their scores. Printed dimensions have limited precision, so these are diagnostic opportunity counts, not proof of exact pruning eligibility.",
+    "configuration": "One carrier trial with prepared input, compact-search, edge-feasibility, owned-quality-first, owned-face-cohesion, contract-group-face-sheet usb_jtag/power/power_som/power_mon, bottom-required power_mon/bringup_modules/bringup_en_modules, joint states 1024, reseat poses 8/frontier4096/continuations3/victim-shapes, board_aux=owned-face-a1.000000, order0, failed-first-retry, shape-area-first, reviewed 161x150 floorplan and owned-selection-trace. No search-strategy because current CLI disallows strategy campaigns with selection tracing.",
+    "limitation": "Unlike the qualified reference, this trace lacks granular-minor and vertical strategy options. It failed seating at 161x150 and is not a reference-board regression or geometric impossibility proof. No accepted layout or production speedup inferred."
+  },
+  "review": {
+    "waste": "floorplan_pack evaluates exact costs for every legal hit, runs quality tie selection, then area-first overrides that choice using area/cost/width/height. Strictly larger-area offers cannot win the final rank.",
+    "required_safety": "Engine::estimate also validates shape indices and prepared endpoint geometry. Skipping the whole estimator could hide malformed geometry. Separate endpoint preparation/validation from pure MST scoring; retain executed-coordinate accounting and unresolved-geometry failures.",
+    "observer_contract": "When owned_shape_selection_completed is installed, continue computing every reported score. Do not emit fabricated zero/infinite estimates for skipped work. Estimate observers must describe actual computed estimates only.",
+    "test_plan": "Compare pruned and complete-observer ranking on identical inputs, including equal-area ties, asymmetric faces, invalid dominated geometry, exact coordinate-operation receipts and reported incumbent/selected values. Test both board regressions and measure end-to-end cost before adoption."
+  },
+  "goal_status": "Active; smaller-board search and performance work remain. Published master release is not overall goal completion."
+}

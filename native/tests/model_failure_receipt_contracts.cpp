@@ -272,13 +272,18 @@ void model_search(const std::filesystem::path& root){
         if(row.stage=="zone_pack"&&++starts==2)throw FloorplanPackingInfeasible("injected challenger infeasible",{"power","logic"});
     };
     fixture.input.experiment=observer;
-    for(int kind=0;kind<3;++kind) {
+    for(int kind=0;kind<6;++kind) {
         auto invalid=fixture.input;
         auto requested=std::make_shared<FloorplanExperiment>(*policy);
         requested->contract_group_face_sheets={"power_som"};invalid.floorplan.experiment=requested;
-        invalid.floorplan.compact_search=kind!=0;
+        invalid.floorplan.compact_search=kind!=0&&kind!=3;
         PcbPlacementSearchStrategy strategy;strategy.component_primary_sheets={kind==1?"unknown":"power_som"};
         if(kind==2)strategy.component_primary_reservations=true;
+        if(kind>=3) {
+            strategy.component_primary_sheets.clear();
+            strategy.contract_group_rotation_sheets={kind==4?"unknown":"power_som"};
+            if(kind==5)strategy.contract_group_rotations=true;
+        }
         ExecutionFailureReceipt invalid_receipt;bool rejected=false;
         try{(void)search_pcb_models(invalid,{strategy},&invalid_receipt);}catch(const std::invalid_argument&){rejected=true;}
         require(rejected&&starts==0&&invalid_receipt.captured&&!invalid_receipt.unavailable&&
