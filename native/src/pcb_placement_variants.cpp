@@ -446,9 +446,7 @@ void append_contract_group_faces(Context& ctx,Geometry& g,const std::string& she
     // through the same physical, local-contract and fanout gates as new offers.
     // This is a finite coordinate descent over existing courtyard contacts,
     // not a sampled grid or a claim of optimal packing.
-    if(schema.kind==JsonKind::String&&schema.string_value=="placement/v2") {
-        const auto found=g.shapes.find(sheet);
-        if(found==g.shapes.end())return;
+    if(schema.kind==JsonKind::String&&schema.string_value=="placement/v2"&&g.shapes.count(sheet)) {
         // Each pass retains its parents. The optional y pass explores both
         // original offers and accepted x-compacted offers without duplication
         // of the geometry/contract/fanout qualification rules.
@@ -512,6 +510,55 @@ void append_contract_group_faces(Context& ctx,Geometry& g,const std::string& she
                 append_checked(std::move(compact));
             }
         }
+        }
+    }
+    // A required top face is not a required orientation. Explore rigid turns
+    // of top-pinned functional groups independently of the bottom assignments.
+    // Snapshot parents once: keep every incumbent and avoid recursive expansion.
+    if(group_rotations) {
+        const auto found=g.shapes.find(sheet);
+        const auto parents=found==g.shapes.end()?std::vector<Shape>{seed}:found->second;
+        for(const auto& group:*groups) {
+            if(group.refs.empty()||group.required_top_refs.empty())continue;
+            if(std::any_of(group.refs.begin(),group.refs.end(),[&](const auto& ref){
+                return connector_anchors.count(ref)||has_through_hole(ctx.pool.at(g.resolvable.at(ref)));
+            }))continue;
+            for(const auto& parent:parents) {
+                if(parent.tag.rfind("contract-top-turn/",0)==0)continue;
+                if(parent.side!="top"||std::any_of(group.refs.begin(),group.refs.end(),[&](const auto& ref){
+                    return !parent.top_off.count(ref)||parent.mirror.count(ref);
+                }))continue;
+                const auto checked=model(parent);std::optional<Box4> bounds;
+                for(std::size_t i=0;i<checked.model().insts.size();++i)
+                    if(std::binary_search(group.refs.begin(),group.refs.end(),checked.model().insts[i].ref)) {
+                        const auto b=checked.courtyard_at(i);
+                        if(!bounds)bounds=b;
+                        else {bounds->x0=std::min(bounds->x0,b.x0);bounds->y0=std::min(bounds->y0,b.y0);
+                              bounds->x1=std::max(bounds->x1,b.x1);bounds->y1=std::max(bounds->y1,b.y1);}
+                    }
+                if(!bounds)continue;
+                const double width=bounds->x1-bounds->x0,height=bounds->y1-bounds->y0;
+                for(int turn=1;turn<4;++turn) {
+                    const double w=turn%2?height:width,h=turn%2?width:height;
+                    const std::vector<FloorplanPoint> targets{{bounds->x0,bounds->y0},
+                        {bounds->x1-w,bounds->y0},{bounds->x0,bounds->y1-h},{bounds->x1-w,bounds->y1-h}};
+                    for(std::size_t alignment=0;alignment<targets.size();++alignment) {
+                        Shape candidate=parent;
+                        candidate.tag="contract-top-turn/"+group.refs.front()+"/r"+std::to_string(90*turn)+
+                            "/a"+std::to_string(alignment)+"/from/"+parent.tag;
+                        for(const auto& ref:group.refs) {
+                            const auto xy=parent.top_off.at(ref);
+                            FloorplanPoint local{xy.first-bounds->x0,xy.second-bounds->y0};
+                            double local_w=width,local_h=height;
+                            for(int t=0;t<turn;++t){local={local.second,local_w-local.first};std::swap(local_w,local_h);}
+                            candidate.top_off[ref]={placement_bottom_pose_precision4dp(local.first+targets[alignment].first,&ctx.quantization),
+                                placement_bottom_pose_precision4dp(local.second+targets[alignment].second,&ctx.quantization)};
+                            candidate.extra_rot[ref]=normalize((parent.extra_rot.count(ref)?parent.extra_rot.at(ref):0)+90*turn);
+                        }
+                        append_checked(std::move(candidate));
+                    }
+                }
+            }
         }
     }
 }
