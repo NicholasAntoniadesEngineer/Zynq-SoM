@@ -1,40 +1,40 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1448 1023" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="11">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1448 1020" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="11">
 <defs><pattern id="keepout" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="6" stroke="#dc2626" stroke-width="1.2"/></pattern></defs>
-<rect width="1448" height="1023" fill="white"/>
+<rect width="1448" height="1020" fill="white"/>
 <text x="46.0" y="26" font-size="16" font-weight="bold">carrier floorplan — SUGGESTION, not constraint</text>
 <text x="46.0" y="44" fill="#6b7280">to scale; derived from the netlists + som/Zynq_SoM.kicad_pcb — regenerate with `schgen floorplan`; the user owns the outline (PLAN.md round 2)</text>
-<rect x="46.0" y="64.0" width="972" height="903" fill="#fcfcfd" stroke="#111827" stroke-width="2" stroke-dasharray="9,5"/>
-<line x1="106.0" y1="64.0" x2="106.0" y2="967.0" stroke="#eceef1" stroke-width="1"/>
+<rect x="46.0" y="64.0" width="972" height="900" fill="#fcfcfd" stroke="#111827" stroke-width="2" stroke-dasharray="9,5"/>
+<line x1="106.0" y1="64.0" x2="106.0" y2="964.0" stroke="#eceef1" stroke-width="1"/>
 <text x="106.0" y="60.0" fill="#9ca3af" font-size="8" text-anchor="middle">10</text>
-<line x1="166.0" y1="64.0" x2="166.0" y2="967.0" stroke="#eceef1" stroke-width="1"/>
+<line x1="166.0" y1="64.0" x2="166.0" y2="964.0" stroke="#eceef1" stroke-width="1"/>
 <text x="166.0" y="60.0" fill="#9ca3af" font-size="8" text-anchor="middle">20</text>
-<line x1="226.0" y1="64.0" x2="226.0" y2="967.0" stroke="#eceef1" stroke-width="1"/>
+<line x1="226.0" y1="64.0" x2="226.0" y2="964.0" stroke="#eceef1" stroke-width="1"/>
 <text x="226.0" y="60.0" fill="#9ca3af" font-size="8" text-anchor="middle">30</text>
-<line x1="286.0" y1="64.0" x2="286.0" y2="967.0" stroke="#eceef1" stroke-width="1"/>
+<line x1="286.0" y1="64.0" x2="286.0" y2="964.0" stroke="#eceef1" stroke-width="1"/>
 <text x="286.0" y="60.0" fill="#9ca3af" font-size="8" text-anchor="middle">40</text>
-<line x1="346.0" y1="64.0" x2="346.0" y2="967.0" stroke="#eceef1" stroke-width="1"/>
+<line x1="346.0" y1="64.0" x2="346.0" y2="964.0" stroke="#eceef1" stroke-width="1"/>
 <text x="346.0" y="60.0" fill="#9ca3af" font-size="8" text-anchor="middle">50</text>
-<line x1="406.0" y1="64.0" x2="406.0" y2="967.0" stroke="#eceef1" stroke-width="1"/>
+<line x1="406.0" y1="64.0" x2="406.0" y2="964.0" stroke="#eceef1" stroke-width="1"/>
 <text x="406.0" y="60.0" fill="#9ca3af" font-size="8" text-anchor="middle">60</text>
-<line x1="466.0" y1="64.0" x2="466.0" y2="967.0" stroke="#eceef1" stroke-width="1"/>
+<line x1="466.0" y1="64.0" x2="466.0" y2="964.0" stroke="#eceef1" stroke-width="1"/>
 <text x="466.0" y="60.0" fill="#9ca3af" font-size="8" text-anchor="middle">70</text>
-<line x1="526.0" y1="64.0" x2="526.0" y2="967.0" stroke="#eceef1" stroke-width="1"/>
+<line x1="526.0" y1="64.0" x2="526.0" y2="964.0" stroke="#eceef1" stroke-width="1"/>
 <text x="526.0" y="60.0" fill="#9ca3af" font-size="8" text-anchor="middle">80</text>
-<line x1="586.0" y1="64.0" x2="586.0" y2="967.0" stroke="#eceef1" stroke-width="1"/>
+<line x1="586.0" y1="64.0" x2="586.0" y2="964.0" stroke="#eceef1" stroke-width="1"/>
 <text x="586.0" y="60.0" fill="#9ca3af" font-size="8" text-anchor="middle">90</text>
-<line x1="646.0" y1="64.0" x2="646.0" y2="967.0" stroke="#eceef1" stroke-width="1"/>
+<line x1="646.0" y1="64.0" x2="646.0" y2="964.0" stroke="#eceef1" stroke-width="1"/>
 <text x="646.0" y="60.0" fill="#9ca3af" font-size="8" text-anchor="middle">100</text>
-<line x1="706.0" y1="64.0" x2="706.0" y2="967.0" stroke="#eceef1" stroke-width="1"/>
+<line x1="706.0" y1="64.0" x2="706.0" y2="964.0" stroke="#eceef1" stroke-width="1"/>
 <text x="706.0" y="60.0" fill="#9ca3af" font-size="8" text-anchor="middle">110</text>
-<line x1="766.0" y1="64.0" x2="766.0" y2="967.0" stroke="#eceef1" stroke-width="1"/>
+<line x1="766.0" y1="64.0" x2="766.0" y2="964.0" stroke="#eceef1" stroke-width="1"/>
 <text x="766.0" y="60.0" fill="#9ca3af" font-size="8" text-anchor="middle">120</text>
-<line x1="826.0" y1="64.0" x2="826.0" y2="967.0" stroke="#eceef1" stroke-width="1"/>
+<line x1="826.0" y1="64.0" x2="826.0" y2="964.0" stroke="#eceef1" stroke-width="1"/>
 <text x="826.0" y="60.0" fill="#9ca3af" font-size="8" text-anchor="middle">130</text>
-<line x1="886.0" y1="64.0" x2="886.0" y2="967.0" stroke="#eceef1" stroke-width="1"/>
+<line x1="886.0" y1="64.0" x2="886.0" y2="964.0" stroke="#eceef1" stroke-width="1"/>
 <text x="886.0" y="60.0" fill="#9ca3af" font-size="8" text-anchor="middle">140</text>
-<line x1="946.0" y1="64.0" x2="946.0" y2="967.0" stroke="#eceef1" stroke-width="1"/>
+<line x1="946.0" y1="64.0" x2="946.0" y2="964.0" stroke="#eceef1" stroke-width="1"/>
 <text x="946.0" y="60.0" fill="#9ca3af" font-size="8" text-anchor="middle">150</text>
-<line x1="1006.0" y1="64.0" x2="1006.0" y2="967.0" stroke="#eceef1" stroke-width="1"/>
+<line x1="1006.0" y1="64.0" x2="1006.0" y2="964.0" stroke="#eceef1" stroke-width="1"/>
 <text x="1006.0" y="60.0" fill="#9ca3af" font-size="8" text-anchor="middle">160</text>
 <line x1="46.0" y1="124.0" x2="1018.0" y2="124.0" stroke="#eceef1" stroke-width="1"/>
 <text x="40.0" y="127.0" fill="#9ca3af" font-size="8" text-anchor="end">10</text>
@@ -64,32 +64,32 @@
 <text x="40.0" y="847.0" fill="#9ca3af" font-size="8" text-anchor="end">130</text>
 <line x1="46.0" y1="904.0" x2="1018.0" y2="904.0" stroke="#eceef1" stroke-width="1"/>
 <text x="40.0" y="907.0" fill="#9ca3af" font-size="8" text-anchor="end">140</text>
-<text x="46.0" y="983.0" fill="#6b7280">derived outline 162 x 150.5 mm (SoM + connector bands + component area + perimeter keepout)</text>
-<rect x="754.0" y="322.0" width="68.52" height="109.662" rx="3" fill="#f9fafb" stroke="#374151" stroke-width="1.4"/>
-<text x="788.3" y="376.8" text-anchor="middle" font-size="11.0" font-weight="bold">board_aux</text>
-<text x="788.3" y="386.8" text-anchor="middle" font-size="7.5" fill="#6b7280">18p</text>
+<text x="46.0" y="980.0" fill="#6b7280">derived outline 162 x 150 mm (SoM + connector bands + component area + perimeter keepout)</text>
+<rect x="886.0" y="712.0" width="68.52" height="109.662" rx="3" fill="#f9fafb" stroke="#374151" stroke-width="1.4"/>
+<text x="920.3" y="766.8" text-anchor="middle" font-size="11.0" font-weight="bold">board_aux</text>
+<text x="920.3" y="776.8" text-anchor="middle" font-size="7.5" fill="#6b7280">18p</text>
 <rect x="942.2" y="180.6" width="66.8106" height="41.9994" rx="3" fill="#eff6ff" stroke="#1e3a8a" stroke-width="1.4"/>
 <text x="975.6" y="201.6" text-anchor="middle" font-size="8.9" font-weight="bold">board_qwiic</text>
 <text x="975.6" y="211.6" text-anchor="middle" font-size="7.5" fill="#6b7280">2p</text>
-<rect x="208.0" y="400.0" width="93.222" height="199.08" rx="3" fill="#f9fafb" stroke="#374151" stroke-width="1.4"/>
-<text x="254.6" y="499.5" text-anchor="middle" font-size="10.0" font-weight="bold">board_services</text>
-<text x="254.6" y="509.5" text-anchor="middle" font-size="7.5" fill="#6b7280">9p</text>
+<rect x="208.0" y="436.0" width="93.222" height="199.08" rx="3" fill="#f9fafb" stroke="#374151" stroke-width="1.4"/>
+<text x="254.6" y="535.5" text-anchor="middle" font-size="10.0" font-weight="bold">board_services</text>
+<text x="254.6" y="545.5" text-anchor="middle" font-size="7.5" fill="#6b7280">9p</text>
 <rect x="640.0" y="586.0" width="86.4" height="49.2" rx="3" fill="#ecfdf5" stroke="#047857" stroke-width="1.4"/>
 <text x="683.2" y="610.6" text-anchor="middle" font-size="11.0" font-weight="bold">bringup_en</text>
 <text x="683.2" y="620.6" text-anchor="middle" font-size="7.5" fill="#6b7280">15p</text>
-<rect x="826.0" y="376.0" width="80.22" height="236.7" rx="3" fill="#ecfdf5" stroke="#047857" stroke-width="1.4"/>
-<text x="866.1" y="494.3" text-anchor="middle" font-size="7.0" font-weight="bold">bringup_en_modules</text>
-<text x="866.1" y="504.3" text-anchor="middle" font-size="7.5" fill="#6b7280">54p</text>
-<rect x="154.0" y="604.0" width="74.478" height="245.88" rx="3" fill="#ecfdf5" stroke="#047857" stroke-width="1.4"/>
-<text x="191.2" y="726.9" text-anchor="middle" font-size="7.4" font-weight="bold">bringup_modules</text>
-<text x="191.2" y="736.9" text-anchor="middle" font-size="7.5" fill="#6b7280">71p</text>
-<circle cx="154" cy="604" r="7" fill="white" stroke="#111827" stroke-width="1.2"/>
-<text x="154" y="607" text-anchor="middle" font-size="9" font-weight="bold">12</text>
-<rect x="712.0" y="706.0" width="248.1" height="101.364" rx="3" fill="#ecfdf5" stroke="#047857" stroke-width="1.4"/>
-<text x="836.1" y="756.7" text-anchor="middle" font-size="11.0" font-weight="bold">bringup_rails</text>
-<text x="836.1" y="766.7" text-anchor="middle" font-size="7.5" fill="#6b7280">23p</text>
-<circle cx="712" cy="706" r="7" fill="white" stroke="#111827" stroke-width="1.2"/>
-<text x="712" y="709" text-anchor="middle" font-size="9" font-weight="bold">13</text>
+<rect x="712.0" y="292.0" width="45.12" height="512.16" rx="3" fill="#ecfdf5" stroke="#047857" stroke-width="1.4"/>
+<text x="734.6" y="548.1" text-anchor="middle" font-size="7.0" font-weight="bold">bringup_en_modules</text>
+<text x="734.6" y="558.1" text-anchor="middle" font-size="7.5" fill="#6b7280">54p</text>
+<rect x="760.0" y="604.0" width="112.98" height="170.034" rx="3" fill="#ecfdf5" stroke="#047857" stroke-width="1.4"/>
+<text x="816.5" y="689.0" text-anchor="middle" font-size="11.0" font-weight="bold">bringup_modules</text>
+<text x="816.5" y="699.0" text-anchor="middle" font-size="7.5" fill="#6b7280">71p</text>
+<circle cx="760" cy="604" r="7" fill="white" stroke="#111827" stroke-width="1.2"/>
+<text x="760" y="607" text-anchor="middle" font-size="9" font-weight="bold">12</text>
+<rect x="772.0" y="334.0" width="101.364" height="248.1" rx="3" fill="#ecfdf5" stroke="#047857" stroke-width="1.4"/>
+<text x="822.7" y="458.0" text-anchor="middle" font-size="11.0" font-weight="bold">bringup_rails</text>
+<text x="822.7" y="468.0" text-anchor="middle" font-size="7.5" fill="#6b7280">23p</text>
+<circle cx="772" cy="334" r="7" fill="white" stroke="#111827" stroke-width="1.2"/>
+<text x="772" y="337" text-anchor="middle" font-size="9" font-weight="bold">13</text>
 <rect x="55.0" y="644.8" width="96.1806" height="174.451" rx="3" fill="#eff6ff" stroke="#1e3a8a" stroke-width="1.4"/>
 <rect x="55.0" y="669.6" width="39.3" height="124.8" fill="#bfdbfe" stroke="#1e3a8a" stroke-width="1.2"/>
 <text x="100.1" y="732.0" text-anchor="middle" font-size="11.0" font-weight="bold" transform="rotate(-90 100.1 732.0)">camera</text>
@@ -107,17 +107,17 @@
 <text x="295.8" y="337.2" text-anchor="middle" font-size="7.5" fill="#6b7280">10p</text>
 <circle cx="220" cy="262" r="7" fill="white" stroke="#111827" stroke-width="1.2"/>
 <text x="220" y="265" text-anchor="middle" font-size="9" font-weight="bold">15</text>
-<rect x="382.0" y="298.0" width="369.78" height="112.11" rx="3" fill="#f9fafb" stroke="#374151" stroke-width="1.4"/>
-<text x="566.9" y="354.1" text-anchor="middle" font-size="11.0" font-weight="bold">fmc</text>
-<text x="566.9" y="364.1" text-anchor="middle" font-size="7.5" fill="#6b7280">8p</text>
-<circle cx="382" cy="298" r="7" fill="white" stroke="#111827" stroke-width="1.2"/>
-<text x="382" y="301" text-anchor="middle" font-size="9" font-weight="bold">16</text>
-<rect x="480.2" y="857.8" width="143.787" height="100.216" rx="3" fill="#eff6ff" stroke="#1e3a8a" stroke-width="1.4"/>
-<rect x="507.0" y="888.2" width="90.18" height="69.78" fill="#bfdbfe" stroke="#1e3a8a" stroke-width="1.2"/>
-<text x="552.1" y="907.9" text-anchor="middle" font-size="11.0" font-weight="bold">hdmi_rx</text>
-<text x="552.1" y="917.9" text-anchor="middle" font-size="7.5" fill="#6b7280">10p</text>
-<circle cx="480.2" cy="857.8" r="7" fill="white" stroke="#111827" stroke-width="1.2"/>
-<text x="480.2" y="860.8" text-anchor="middle" font-size="9" font-weight="bold">10</text>
+<rect x="652.0" y="214.0" width="112.11" height="369.78" rx="3" fill="#f9fafb" stroke="#374151" stroke-width="1.4"/>
+<text x="708.1" y="398.9" text-anchor="middle" font-size="11.0" font-weight="bold">fmc</text>
+<text x="708.1" y="408.9" text-anchor="middle" font-size="7.5" fill="#6b7280">8p</text>
+<circle cx="652" cy="214" r="7" fill="white" stroke="#111827" stroke-width="1.2"/>
+<text x="652" y="217" text-anchor="middle" font-size="9" font-weight="bold">16</text>
+<rect x="480.2" y="854.8" width="143.787" height="100.216" rx="3" fill="#eff6ff" stroke="#1e3a8a" stroke-width="1.4"/>
+<rect x="507.0" y="885.2" width="90.18" height="69.78" fill="#bfdbfe" stroke="#1e3a8a" stroke-width="1.2"/>
+<text x="552.1" y="904.9" text-anchor="middle" font-size="11.0" font-weight="bold">hdmi_rx</text>
+<text x="552.1" y="914.9" text-anchor="middle" font-size="7.5" fill="#6b7280">10p</text>
+<circle cx="480.2" cy="854.8" r="7" fill="white" stroke="#111827" stroke-width="1.2"/>
+<text x="480.2" y="857.8" text-anchor="middle" font-size="9" font-weight="bold">10</text>
 <rect x="436.0" y="700.5" width="70.83" height="46.83" rx="3" fill="#f9fafb" stroke="#374151" stroke-width="1.4"/>
 <text x="471.4" y="724.0" text-anchor="middle" font-size="8.7" font-weight="bold">hdmi_rx_term</text>
 <text x="471.4" y="734.0" text-anchor="middle" font-size="7.5" fill="#6b7280">10p</text>
@@ -133,9 +133,9 @@
 <text x="134.1" y="509.0" text-anchor="middle" font-size="7.5" fill="#6b7280" transform="rotate(-90 134.1 509.0)">20p</text>
 <circle cx="55" cy="375" r="7" fill="white" stroke="#111827" stroke-width="1.2"/>
 <text x="55" y="378" text-anchor="middle" font-size="9" font-weight="bold">7</text>
-<rect x="886.0" y="778.0" width="78" height="78" rx="3" fill="#f9fafb" stroke="#374151" stroke-width="1.4"/>
-<text x="925.0" y="817.0" text-anchor="middle" font-size="11.0" font-weight="bold">mechanical</text>
-<text x="925.0" y="827.0" text-anchor="middle" font-size="7.5" fill="#6b7280">4p</text>
+<rect x="154.0" y="646.0" width="78" height="78" rx="3" fill="#f9fafb" stroke="#374151" stroke-width="1.4"/>
+<text x="193.0" y="685.0" text-anchor="middle" font-size="11.0" font-weight="bold">mechanical</text>
+<text x="193.0" y="695.0" text-anchor="middle" font-size="7.5" fill="#6b7280">4p</text>
 <rect x="331.9" y="73.0" width="116.846" height="181.78" rx="3" fill="#eff6ff" stroke="#1e3a8a" stroke-width="1.4"/>
 <rect x="344.0" y="73.0" width="92.76" height="90.3" fill="#bfdbfe" stroke="#1e3a8a" stroke-width="1.2"/>
 <text x="390.3" y="163.9" text-anchor="middle" font-size="11.0" font-weight="bold">microsd</text>
@@ -156,32 +156,32 @@
 <text x="523.9" y="149.1" text-anchor="middle" font-size="7.5" fill="#6b7280">13p</text>
 <circle cx="450.6" cy="73" r="7" fill="white" stroke="#111827" stroke-width="1.2"/>
 <text x="450.6" y="76" text-anchor="middle" font-size="9" font-weight="bold">3</text>
-<rect x="211.6" y="870.5" width="250.59" height="87.504" rx="3" fill="#eff6ff" stroke="#1e3a8a" stroke-width="1.4"/>
-<rect x="232.2" y="879.8" width="94.44" height="78.24" fill="#bfdbfe" stroke="#1e3a8a" stroke-width="1.2"/>
-<rect x="347.2" y="879.8" width="94.44" height="78.24" fill="#bfdbfe" stroke="#1e3a8a" stroke-width="1.2"/>
-<text x="336.9" y="914.2" text-anchor="middle" font-size="11.0" font-weight="bold">pmod</text>
-<text x="336.9" y="924.2" text-anchor="middle" font-size="7.5" fill="#6b7280">26p</text>
-<circle cx="211.6" cy="870.5" r="7" fill="white" stroke="#111827" stroke-width="1.2"/>
-<text x="211.6" y="873.5" text-anchor="middle" font-size="9" font-weight="bold">9</text>
-<rect x="642.0" y="831.7" width="236.61" height="126.318" rx="3" fill="#eff6ff" stroke="#1e3a8a" stroke-width="1.4"/>
-<rect x="713.1" y="879.8" width="94.44" height="78.24" fill="#bfdbfe" stroke="#1e3a8a" stroke-width="1.2"/>
-<text x="760.3" y="894.8" text-anchor="middle" font-size="11.0" font-weight="bold">pmod_expansion</text>
-<text x="760.3" y="904.8" text-anchor="middle" font-size="7.5" fill="#6b7280">15p</text>
-<circle cx="642" cy="831.7" r="7" fill="white" stroke="#111827" stroke-width="1.2"/>
-<text x="642" y="834.7" text-anchor="middle" font-size="9" font-weight="bold">11</text>
-<rect x="612.9" y="119.6" width="320.162" height="143.609" rx="3" fill="#ecfdf5" stroke="#047857" stroke-width="1.4"/>
-<text x="773.0" y="191.4" text-anchor="middle" font-size="11.0" font-weight="bold">power</text>
-<text x="773.0" y="201.4" text-anchor="middle" font-size="7.5" fill="#6b7280">51p</text>
-<circle cx="612.9" cy="119.6" r="7" fill="white" stroke="#111827" stroke-width="1.2"/>
-<text x="612.9" y="122.6" text-anchor="middle" font-size="9" font-weight="bold">17</text>
-<rect x="595.0" y="466.0" width="160.539" height="72.981" rx="3" fill="#ecfdf5" stroke="#047857" stroke-width="1.4"/>
-<text x="675.2" y="502.5" text-anchor="middle" font-size="11.0" font-weight="bold">power_mon</text>
-<text x="675.2" y="512.5" text-anchor="middle" font-size="7.5" fill="#6b7280">10p</text>
-<circle cx="595" cy="466" r="7" fill="white" stroke="#111827" stroke-width="1.2"/>
-<text x="595" y="469" text-anchor="middle" font-size="9" font-weight="bold">18</text>
-<rect x="664.0" y="436.0" width="143.609" height="145.021" rx="3" fill="#ecfdf5" stroke="#047857" stroke-width="1.4"/>
-<text x="735.8" y="508.5" text-anchor="middle" font-size="11.0" font-weight="bold">power_som</text>
-<text x="735.8" y="518.5" text-anchor="middle" font-size="7.5" fill="#6b7280">20p</text>
+<rect x="211.6" y="867.5" width="250.59" height="87.504" rx="3" fill="#eff6ff" stroke="#1e3a8a" stroke-width="1.4"/>
+<rect x="232.2" y="876.8" width="94.44" height="78.24" fill="#bfdbfe" stroke="#1e3a8a" stroke-width="1.2"/>
+<rect x="347.2" y="876.8" width="94.44" height="78.24" fill="#bfdbfe" stroke="#1e3a8a" stroke-width="1.2"/>
+<text x="336.9" y="911.2" text-anchor="middle" font-size="11.0" font-weight="bold">pmod</text>
+<text x="336.9" y="921.2" text-anchor="middle" font-size="7.5" fill="#6b7280">26p</text>
+<circle cx="211.6" cy="867.5" r="7" fill="white" stroke="#111827" stroke-width="1.2"/>
+<text x="211.6" y="870.5" text-anchor="middle" font-size="9" font-weight="bold">9</text>
+<rect x="642.0" y="828.7" width="236.61" height="126.318" rx="3" fill="#eff6ff" stroke="#1e3a8a" stroke-width="1.4"/>
+<rect x="713.1" y="876.8" width="94.44" height="78.24" fill="#bfdbfe" stroke="#1e3a8a" stroke-width="1.2"/>
+<text x="760.3" y="891.8" text-anchor="middle" font-size="11.0" font-weight="bold">pmod_expansion</text>
+<text x="760.3" y="901.8" text-anchor="middle" font-size="7.5" fill="#6b7280">15p</text>
+<circle cx="642" cy="828.7" r="7" fill="white" stroke="#111827" stroke-width="1.2"/>
+<text x="642" y="831.7" text-anchor="middle" font-size="9" font-weight="bold">11</text>
+<rect x="172.0" y="753.8" width="319.262" height="143.609" rx="3" fill="#ecfdf5" stroke="#047857" stroke-width="1.4"/>
+<text x="331.6" y="825.6" text-anchor="middle" font-size="11.0" font-weight="bold">power</text>
+<text x="331.6" y="835.6" text-anchor="middle" font-size="7.5" fill="#6b7280">51p</text>
+<circle cx="172" cy="753.8" r="7" fill="white" stroke="#111827" stroke-width="1.2"/>
+<text x="172" y="756.8" text-anchor="middle" font-size="9" font-weight="bold">17</text>
+<rect x="585.5" y="431.0" width="72.981" height="160.539" rx="3" fill="#ecfdf5" stroke="#047857" stroke-width="1.4"/>
+<text x="622.0" y="511.3" text-anchor="middle" font-size="11.0" font-weight="bold">power_mon</text>
+<text x="622.0" y="521.3" text-anchor="middle" font-size="7.5" fill="#6b7280">10p</text>
+<circle cx="585.5" cy="431" r="7" fill="white" stroke="#111827" stroke-width="1.2"/>
+<text x="585.5" y="434" text-anchor="middle" font-size="9" font-weight="bold">18</text>
+<rect x="238.3" y="688.0" width="143.609" height="145.021" rx="3" fill="#ecfdf5" stroke="#047857" stroke-width="1.4"/>
+<text x="310.1" y="760.5" text-anchor="middle" font-size="11.0" font-weight="bold">power_som</text>
+<text x="310.1" y="770.5" text-anchor="middle" font-size="7.5" fill="#6b7280">20p</text>
 <rect x="55.0" y="249.9" width="162.12" height="116.4" rx="3" fill="#eff6ff" stroke="#1e3a8a" stroke-width="1.4"/>
 <text x="136.1" y="308.1" text-anchor="middle" font-size="11.0" font-weight="bold">rj45_connector</text>
 <text x="136.1" y="318.1" text-anchor="middle" font-size="7.5" fill="#6b7280">3p</text>
@@ -190,20 +190,20 @@
 <text x="846.4" y="244.3" text-anchor="middle" font-size="7.5" fill="#6b7280">10p</text>
 <circle cx="814" cy="184" r="7" fill="white" stroke="#111827" stroke-width="1.2"/>
 <text x="814" y="187" text-anchor="middle" font-size="9" font-weight="bold">19</text>
-<rect x="232.0" y="688.0" width="193.476" height="171.811" rx="3" fill="#f9fafb" stroke="#374151" stroke-width="1.4"/>
-<text x="328.7" y="773.9" text-anchor="middle" font-size="11.0" font-weight="bold">usb_jtag</text>
-<text x="328.7" y="783.9" text-anchor="middle" font-size="7.5" fill="#6b7280">19p</text>
+<rect x="454.0" y="226.0" width="193.476" height="174.841" rx="3" fill="#f9fafb" stroke="#374151" stroke-width="1.4"/>
+<text x="550.7" y="313.4" text-anchor="middle" font-size="11.0" font-weight="bold">usb_jtag</text>
+<text x="550.7" y="323.4" text-anchor="middle" font-size="7.5" fill="#6b7280">19p</text>
 <rect x="761.2" y="73.0" width="65.9286" height="107.605" rx="3" fill="#eff6ff" stroke="#1e3a8a" stroke-width="1.4"/>
 <rect x="767.3" y="73.0" width="53.82" height="47.1" fill="#bfdbfe" stroke="#1e3a8a" stroke-width="1.2"/>
 <text x="794.2" y="126.8" text-anchor="middle" font-size="7.0" font-weight="bold">usb_jtag_connector</text>
 <text x="794.2" y="136.8" text-anchor="middle" font-size="7.5" fill="#6b7280">6p</text>
 <circle cx="761.2" cy="73" r="7" fill="white" stroke="#111827" stroke-width="1.2"/>
 <text x="761.2" y="76" text-anchor="middle" font-size="9" font-weight="bold">5</text>
-<rect x="508.0" y="207.0" width="49.08" height="61.68" rx="3" fill="#f9fafb" stroke="#374151" stroke-width="1.4"/>
-<text x="532.5" y="237.8" text-anchor="middle" font-size="11.0" font-weight="bold">usb_pd</text>
-<text x="532.5" y="247.8" text-anchor="middle" font-size="7.5" fill="#6b7280">6p</text>
-<circle cx="508" cy="207" r="7" fill="white" stroke="#111827" stroke-width="1.2"/>
-<text x="508" y="210" text-anchor="middle" font-size="9" font-weight="bold">20</text>
+<rect x="400.0" y="262.0" width="49.08" height="61.68" rx="3" fill="#f9fafb" stroke="#374151" stroke-width="1.4"/>
+<text x="424.5" y="292.8" text-anchor="middle" font-size="11.0" font-weight="bold">usb_pd</text>
+<text x="424.5" y="302.8" text-anchor="middle" font-size="7.5" fill="#6b7280">6p</text>
+<circle cx="400" cy="262" r="7" fill="white" stroke="#111827" stroke-width="1.2"/>
+<text x="400" y="265" text-anchor="middle" font-size="9" font-weight="bold">20</text>
 <rect x="835.9" y="73.0" width="65.9286" height="75.8046" rx="3" fill="#eff6ff" stroke="#1e3a8a" stroke-width="1.4"/>
 <rect x="841.9" y="73.0" width="53.82" height="47.1" fill="#bfdbfe" stroke="#1e3a8a" stroke-width="1.2"/>
 <text x="868.8" y="110.9" text-anchor="middle" font-size="7.0" font-weight="bold">usb_uart_connector</text>
@@ -230,8 +230,8 @@
 <text x="448.0" y="658.5" text-anchor="middle" font-size="10" font-weight="bold" fill="white">J2</text>
 <rect x="328.7" y="490.6" width="22.68" height="118.8" fill="#92400e"/>
 <text x="340.0" y="553.5" text-anchor="middle" font-size="10" font-weight="bold" fill="white" transform="rotate(-90 340.0 553.5)">J3</text>
-<line x1="46.0" y1="997.0" x2="166.0" y2="997.0" stroke="#111827" stroke-width="3"/>
-<text x="106.0" y="1011.0" text-anchor="middle" fill="#6b7280">20 mm</text>
+<line x1="46.0" y1="994.0" x2="166.0" y2="994.0" stroke="#111827" stroke-width="3"/>
+<text x="106.0" y="1008.0" text-anchor="middle" fill="#6b7280">20 mm</text>
 <text x="1048" y="68" font-size="13" font-weight="bold">placement notes (derived)</text>
 <circle cx="1056" cy="86" r="8" fill="white" stroke="#111827" stroke-width="1.2"/>
 <text x="1056" y="89" text-anchor="middle" font-size="9" font-weight="bold">1</text>

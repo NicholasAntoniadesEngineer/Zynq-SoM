@@ -1,0 +1,40 @@
+{
+  "source_commit": "43e5f2d8",
+  "generator_sha256": "4d9b94fcafea51115717ec39daae46d2504ccbb7fc1c4f6ee5e6563a53cd4fe9",
+  "build": {
+    "result": "PASS complete native target rebuild",
+    "log": "native/build/refit-release-compile.log",
+    "sha256": "dc3a6540b0e7350c31651a19a8ad446e8eaa998418d2a89d9755509e95e05966"
+  },
+  "tests": {
+    "passed": 15, "failed": 0, "seconds": 92.37,
+    "scope": "All thirteen previously failing suites plus refit-clearance and source-policy audits. Not a fresh exhaustive 278-test run; full prior history in 2026-10-18-refit-roundoff-verification.json.",
+    "log": "native/build/refit-release-tests.log",
+    "sha256": "2f2b84431cad48fec880190021dafce35ae9e1be1e1bb550d78f597b7b320d46"
+  },
+  "carrier": {
+    "board_ok": true, "complete": true, "exit_code": 0, "sheets": 37,
+    "dimensions_mm": [162,150], "parts": 566, "top": 345, "bottom": 221,
+    "pcb_sha256": "632231ec9bcea0b616f943dd9df7f47510eb1044c741b94e4f44e4aae7aa59a7",
+    "wall_seconds": 282.46, "render3d_seconds": 29.997725, "source_audit_seconds": 110.612057,
+    "fresh_pngs": 119, "manifest_artifacts": 103, "hash_mismatches": 0,
+    "non_unrouted_drc_errors": 0, "unrouted_connections": 499,
+    "advisory_failures": ["floorplan_composition", "return_path", "golden", "contract_coverage_lint"],
+    "log": "native/build/refit-release-carrier.log",
+    "log_sha256": "e47d1573bae927442225591f4d88ed4731e7323d693247ee294faf6b7561a9d2"
+  },
+  "devkit_mini": {
+    "board_ok": true, "complete": true, "exit_code": 0, "sheets": 12,
+    "dimensions_mm": [98,98], "parts": 160, "top": 105, "bottom": 55,
+    "pcb_sha256": "1b12fecbcbbaa5e6084c2459da93cb144a660ff19805e6e4e3f75f9c22689fdb",
+    "wall_seconds": 185.74, "render3d_seconds": 20.721176, "source_audit_seconds": 122.013059,
+    "fresh_pngs": 45, "manifest_artifacts": 73, "hash_mismatches": 0,
+    "non_unrouted_drc_errors": 0, "unrouted_connections": 408,
+    "advisory_failures": ["return_path", "golden", "contract_coverage_lint"],
+    "log": "native/build/refit-release-devkit.log",
+    "log_sha256": "4d15734efd20768812e2e32e3d6206752a21aaadb102f3829d948bb807c7da96"
+  },
+  "image_verification": "All 164 current release PNGs regenerated after pipeline start; independently checked PNG signatures, positive dimensions and freshness. Both boards front/back views visually inspected. All 176 manifest hashes independently matched. Historical experiment images excluded; byte-identical regenerated files retain Git blobs.",
+  "scope": "Both full pipelines generated directly into tracked board release paths, all mandatory checks and audits enabled. Carrier order 0 with carrier-162x150-advisory-facing.floorplan.json and documented release options. Concurrent builds, tests and pipelines: timings are not isolated benchmarks or matched Python comparisons.",
+  "limits": "Advisory findings remain visible. Unknown hardware requirements remain unverified. Routing excluded; not fabrication readiness or overall optimisation goal completion."
+}
