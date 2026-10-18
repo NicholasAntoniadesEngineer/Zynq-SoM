@@ -1,0 +1,47 @@
+{
+  "status": "Qualified for publication: both full pipelines PASS; all 278 tests have passing evidence after correcting one test-only exception expectation",
+  "source_commit": "66dfabd1",
+  "base_commit": "92bc0def",
+  "changes": "Scoped contract-group rotation exploration, including CLI validation, unambiguous strategy overrides, independent geometry/accounting tests, and zero-work invalid-strategy failure receipts. Existing release recipes do not enable rotation exploration. Includes previously committed area-first cost pruning.",
+  "build": {"status": "PASS", "log": "native/build/scoped-release-build.log", "sha256": "cb303df72e890e5a6920ab449c3140114a3f2f2b3a5754653ec00ee32de76227"},
+  "tests": {
+    "status": "Full suite: 277/278 PASS in 900.08 seconds. The new invalid-scope test expected PcbZoneInfeasible rather than the documented invalid_argument. Corrected only its catch type; production code unchanged. Direct retest and CTest --rerun-failed both PASS. No excluded tests or waived assertions.",
+    "log": "native/build/scoped-release-tests.log",
+    "sha256": "e264f968a105d48d12da8313946cd933623aa5f15bd450c5317f1c30ff19fe88",
+    "ctest_rerun_log": "native/build/scoped-release-rerun-tests.log",
+    "ctest_rerun_status": "1/1 PASS, exit 0, 33.85 seconds",
+    "ctest_rerun_sha256": "43f123377d83b25eb346f03e40e73ca7174863f4bc1fd2efe454f6fa3136567a",
+    "direct_retest_sha256": "a327a9594b3adca3ee859df3fa1965f5a061e06bf0c5b5f41dada94545b1695e"
+  },
+  "carrier": {
+    "status": "PASS, exit 0, 37 sheets",
+    "output": "native/build/scoped-release-carrier",
+    "log_sha256": "242eff229944eb16acc11a2418090c08a56120904ac58b9261c0160a9a883389",
+    "wall_seconds": 297.69,
+    "render3d_seconds": 35.017704,
+    "source_audit_seconds": 132.545479,
+    "dimensions_mm": [161,150],
+    "pcb_sha256": "2c5fe226dccd5427554e3c9e3fa9c916bcfa93b8d81ad18a9a05d19c8c769f43",
+    "manifest_entries_verified": 99,
+    "pngs_regenerated_and_validated": 119,
+    "advisory_failures": ["floorplan_composition","return_path","golden","contract_coverage_lint"]
+  },
+  "devkit_mini": {
+    "status": "PASS, exit 0, 12 sheets",
+    "output": "native/build/scoped-release-devkit",
+    "log_sha256": "f12080eb3b90060aae3bc41561be34090e36f334b12626e839ed64e36dbccff8",
+    "wall_seconds": 214.22,
+    "render3d_seconds": 21.222820,
+    "source_audit_seconds": 146.011975,
+    "dimensions_mm": [98,98],
+    "pcb_sha256": "1b12fecbcbbaa5e6084c2459da93cb144a660ff19805e6e4e3f75f9c22689fdb",
+    "manifest_entries_verified": 73,
+    "pngs_regenerated_and_validated": 45,
+    "advisory_failures": ["return_path","golden","contract_coverage_lint"],
+    "explicit_not_applicable": ["manual: required bringup subsystems absent", "scfw: required controller/bringup subsystems absent"]
+  },
+  "visual_review": "Fresh front and back 3D images inspected for both boards. No obvious visual regression; two-sided component placement and selective labels retained. Both PCB hashes exactly match the previous qualified release. All PNG headers and positive dimensions validated. Fresh isolated output directories were used.",
+  "publication_policy": "Copy generated outputs only after full suite passes. Preserve authored root READMEs, local KiCad settings and pre-existing documents; no deletion. Reverify destination manifest hashes. Commit source and imagery, merge to master with --no-ff, push both branches without force.",
+  "destination_verification": "Copied generated outputs after all 278 tests had passing evidence. Rechecked carrier 99/99 and devkit 73/73 manifest hashes with zero mismatches. Both authored README hashes unchanged. All 164 PNGs regenerated; byte-identical images reuse existing Git blobs. Firmware changes are isolated-generation provenance paths only.",
+  "limits": "Concurrent process timings are not controlled benchmarks or matched Python comparisons. No new smaller-board result, routing qualification, fabrication readiness or overall optimisation-goal completion claimed. Advisory failures remain disclosed, not waived. Scoped rotation exploration is opt-in."
+}
