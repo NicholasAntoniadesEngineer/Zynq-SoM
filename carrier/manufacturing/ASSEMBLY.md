@@ -1,6 +1,6 @@
 # Assembly order — carrier
 
-Board 162 x 150.5 mm. 561 placed parts (344 top / 217 bottom); 5 fiducials are bare-copper marks, excluded from every phase and step.
+Board 162 x 150.5 mm. 561 placed parts (340 top / 221 bottom); 5 fiducials are bare-copper marks, excluded from every phase and step.
 Section A is the staged hand-assembly + bring-up order; section B is the PCBA process order. Every part appears in exactly one phase and exactly one step.
 
 ## A. Incremental bring-up order
@@ -854,7 +854,7 @@ CHECKPOINT: verify +5V_DBG at TP29001
 
 ![phase 31](../renders/assembly/phase_31_usb_jtag.png)
 
-19 parts (16 top / 3 bottom)
+19 parts (12 top / 7 bottom)
 
 | ref | value | package | sheet |
 |---|---|---|---|
@@ -946,7 +946,7 @@ CHECKPOINT: verify +3V3_DBG at TP28001
 
 ![step 1](../renders/assembly/step_1_bottom_smd.png)
 
-217 parts (0 top / 217 bottom)
+221 parts (0 top / 221 bottom)
 
 | ref | value | package | sheet |
 |---|---|---|---|
@@ -1018,6 +1018,9 @@ CHECKPOINT: verify +3V3_DBG at TP28001
 | C21001 | 100n | C_0603_1608Metric | power_mon |
 | C21002 | 100n | C_0603_1608Metric | power_mon |
 | C21003 | 10u | C_0805_2012Metric | power_mon |
+| C28001 | 1u | C_0603_1608Metric | usb_jtag |
+| C28002 | 10u | C_0805_2012Metric | usb_jtag |
+| C28003 | 100n | C_0603_1608Metric | usb_jtag |
 | C28007 | 100n | C_0603_1608Metric | usb_jtag |
 | C33001 | 100n | C_0603_1608Metric | user_io |
 | C35001 | 22u | C_0805_2012Metric | som_decoupling |
@@ -1167,14 +1170,15 @@ CHECKPOINT: verify +3V3_DBG at TP28001
 | U21001 | INA3221AIRGVR | INA3221AIRGVR | power_mon |
 | U21002 | INA3221AIRGVR | INA3221AIRGVR | power_mon |
 | U28002 | SN74LVC125ADR | SN74LVC125ADR | usb_jtag |
+| U28004 | AP2112K-3.3TRG1 | AP2112K-3.3TRG1 | usb_jtag |
 
-NOTES: pin-1 orientation (29 parts, U/Q refs): dot per silkscreen
+NOTES: pin-1 orientation (30 parts, U/Q refs): dot per silkscreen
 
 ### Step 2 — Top-side SMD (paste + reflow)
 
 ![step 2](../renders/assembly/step_2_top_smd.png)
 
-317 parts (317 top / 0 bottom)
+313 parts (313 top / 0 bottom)
 
 | ref | value | package | sheet |
 |---|---|---|---|
@@ -1238,9 +1242,6 @@ NOTES: pin-1 orientation (29 parts, U/Q refs): dot per silkscreen
 | C27002 | 10u | C_0805_2012Metric | uart_bridge |
 | C27003 | 100n | C_0603_1608Metric | uart_bridge |
 | C27004 | 100n | C_0603_1608Metric | uart_bridge |
-| C28001 | 1u | C_0603_1608Metric | usb_jtag |
-| C28002 | 10u | C_0805_2012Metric | usb_jtag |
-| C28003 | 100n | C_0603_1608Metric | usb_jtag |
 | C28004 | 100n | C_0603_1608Metric | usb_jtag |
 | C28005 | 16p | C_0603_1608Metric | usb_jtag |
 | C28006 | 16p | C_0603_1608Metric | usb_jtag |
@@ -1485,7 +1486,6 @@ NOTES: pin-1 orientation (29 parts, U/Q refs): dot per silkscreen
 | U22004 | LM61460AANRJRR | LM61460AANRJRR | power_som |
 | U27001 | CP2102N-A02 | CP2102N-A02-GQFN24R | uart_bridge |
 | U28001 | CH347T | CH347T | usb_jtag |
-| U28004 | AP2112K-3.3TRG1 | AP2112K-3.3TRG1 | usb_jtag |
 | U29001 | USBLC6-2SC6 | USBLC6-2SC6 | usb_jtag_connector |
 | U30001 | FUSB302BMPX | WQFN-14-1EP_2.5x2.5mm_P0.5mm_EP1.45x1.45mm | usb_pd |
 | U31001 | USBLC6-2SC6 | USBLC6-2SC6 | usb_uart_connector |
@@ -1498,7 +1498,7 @@ NOTES: pin-1 orientation (29 parts, U/Q refs): dot per silkscreen
 
 NOTES: diode polarity (25 parts, D refs): cathode per silkscreen
 NOTES: electrolytic polarity (C37004): positive mark per silkscreen
-NOTES: pin-1 orientation (42 parts, U/Q refs): dot per silkscreen
+NOTES: pin-1 orientation (41 parts, U/Q refs): dot per silkscreen
 
 ### Step 3 — Through-hole (short-to-tall)
 

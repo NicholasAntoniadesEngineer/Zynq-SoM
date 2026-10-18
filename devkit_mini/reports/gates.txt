@@ -959,6 +959,8 @@ placement_flow: PASS — PLACEMENT-FLOW GATE: PASS (2 external contract(s); boar
     far power vs ethernet.line_side: n/a — 'ethernet' not a subsystem of this project
     flow usb_pd->power: n/a — usb_pd not a subsystem of this project
   violations: 0
+  advisory preferences (not hardware qualification): 1
+    ADVISORY facing power->power_som: preference satisfied (angle=39.4deg; not hardware qualification) [Reviewed 2026-10-18: all-component centroid direction changes when unrelated test points move; it is a placement preference, not a hardware limit. SNVSBD5D Rev. D section 11.1 requires local loop/layout and power-path quality, not a 90-degree subsystem-centroid cutoff. See native/benchmarks/2026-10-18-facing-centroid-review.json; routing and parasitics remain unverified.]
   detail: 3
     facing power->power_som: dot=+427.55 angle=39.4deg (output@(64.6178, 98.08) zone@(60.1333, 111.1389) down@(94.209, 90.1007))
     flow power->power_som: 40.05mm / 101.6mm budget
@@ -968,14 +970,14 @@ contract_coverage: PASS (advisory) — CONTRACT COVERAGE: 4 wired(gated) / 0 ine
   power                  WIRED-gated     20 chk  0 viol  
   uart_bridge            WIRED-gated      6 chk  0 viol  
   usb_uart_connector     WIRED-gated      4 chk  0 viol  
-floorplan_composition: PASS (advisory) — FLOORPLAN COMPOSITION (T1): 3 hard / 1 soft terms; hard RED 0, soft RED 0 (advisory)
+floorplan_composition: PASS (advisory) — FLOORPLAN COMPOSITION (T1): 2 hard / 2 soft terms; hard RED 0, soft RED 0 (advisory)
   hard margins (mm): measured 2, unresolved 0, sum 99.79, min 38.28 (informational)
-  hard margins (degrees): measured 1, unresolved 0, sum 50.64, min 50.64 (informational)
+  hard margins (degrees): measured 0, unresolved 0, sum 0.0, min unavailable (informational)
   hard terms:
-    HARD facing power->power_som: 39.36 vs 90.00 (margin +50.64) ok [facing/output_roles [placement/v2]] dot=+427.55
     HARD flow_hop power->power_som: 40.05 vs 101.56 (margin +61.51) ok [flow chain [placement/v2]]
     HARD near_max uart_bridge->usb_uart_connector: 1.72 vs 40.00 (margin +38.28) ok [judgment:10.0 (D11 edge-gap) — CP2102N's USB DP/DM pair terminates at the UART USB-C; measured 365mm of cross-board airwire (avg 122mm) with the block anchored mid-board and a STALE floorplan near-intent pointing at rj45_connector]
   soft terms (advisory ledger — repair triggers, never gates):
+    soft facing power->power_som: 39.36 vs 90.00 (margin +50.64) ok [ADVISORY centroid preference: Reviewed 2026-10-18: all-component centroid direction changes when unrelated test points move; it is a placement preference, not a hardware limit. SNVSBD5D Rev. D section 11.1 requires local loop/layout and power-path quality, not a 90-degree subsystem-centroid cutoff. See native/benchmarks/2026-10-18-facing-centroid-review.json; routing and parasitics remain unverified.] dot=+427.55
     soft near_intent power_mon->power_som: 18.66 vs 0.00 (margin +0.00) ok [carrier/floorplan.json near-intent (advisory)] advisory
   n/a terms (endpoint subsystem not instantiated by this project — project-scoped resolution):
     n/a far_min power->ethernet.line_side [judgment:10.0 — buck switching node vs Ethernet MDI/magnetics analog line side; datasheet silent on inter-subsystem spacing (SNVSBD5D covers intra-stage only)]
@@ -1463,71 +1465,71 @@ pipeline_doc: PASS — unchanged
 === board native exclusive timing (wall s; audits included) ===
 Nested scopes pause parents; parallel batches use launch/join wall time, never summed worker spans.
 Scope: pipeline entry through build-ledger publication; excludes final summary publications and caller/process setup. Mixed stages remain mixed; not a generation-only total.
-pipeline_setup_and_other: 0.003664
-inputs: 0.000694
-authoring_audit: 18.182543
-authoring_guard_reporting_and_recheck: 0.000460
-input_factory_generation_and_ir_conversion: 0.342744
-input_circuit_validation: 0.002994
-input_publication: 0.004964
-subsystem_structure: 0.020954
-carrier_structure: 0.004756
-sheet_prepare_other: 0.002322
-sheet_electrical_validation: 0.001231
-sheet_place_route_with_internal_checks: 0.024779
-sheet_cc_validation: 0.002399
-sheet_emit_and_publish: 0.015319
-sheet_visual_validation: 0.005041
-sheet_parallel_checks_and_render_wall: 10.978529
-symbol_law: 0.000230
-link: 0.000947
-constraints: 0.000796
-diagram: 0.000634
-board_schematic: 3.495705
-bom_footprints: 0.000238
-power_tree: 0.001231
-rail_ampacity: 0.000182
-testpoints: 0.000341
-design_rules: 0.000657
-part_rules: 0.000619
-bom_values: 0.000620
-footprint_pads: 0.001825
-pin_completeness: 0.000452
-spice: 0.069380
-pcb: 0.004387
-pcb_input_loading_and_netlist_validation: 0.871222
-pcb_build_model_with_internal_checks: 0.179435
-pcb_render: 0.008389
-placement_requirements: 0.000906
-pcb_drc: 1.533534
-pcb_geometry: 0.014819
-assembly: 0.083280
-ratsnest_images: 0.126669
-thermal: 0.008143
-copper_debt: 0.126370
-cpl: 0.259188
-fab_profile: 0.009017
+pipeline_setup_and_other: 0.002737
+inputs: 0.000701
+authoring_audit: 19.535318
+authoring_guard_reporting_and_recheck: 0.000418
+input_factory_generation_and_ir_conversion: 0.181619
+input_circuit_validation: 0.003219
+input_publication: 0.004224
+subsystem_structure: 0.021754
+carrier_structure: 0.006065
+sheet_prepare_other: 0.001993
+sheet_electrical_validation: 0.001273
+sheet_place_route_with_internal_checks: 0.024858
+sheet_cc_validation: 0.002428
+sheet_emit_and_publish: 0.015691
+sheet_visual_validation: 0.005016
+sheet_parallel_checks_and_render_wall: 12.200218
+symbol_law: 0.000333
+link: 0.001011
+constraints: 0.002721
+diagram: 0.000889
+board_schematic: 3.927795
+bom_footprints: 0.000269
+power_tree: 0.001059
+rail_ampacity: 0.000260
+testpoints: 0.000297
+design_rules: 0.000712
+part_rules: 0.000797
+bom_values: 0.000785
+footprint_pads: 0.003365
+pin_completeness: 0.000526
+spice: 0.084061
+pcb: 0.004559
+pcb_input_loading_and_netlist_validation: 0.969848
+pcb_build_model_with_internal_checks: 0.168127
+pcb_render: 0.011020
+placement_requirements: 0.000685
+pcb_drc: 1.635685
+pcb_geometry: 0.013902
+assembly: 0.082835
+ratsnest_images: 0.139041
+thermal: 0.008060
+copper_debt: 0.141376
+cpl: 0.401417
+fab_profile: 0.008970
 stage_movement: 0.000002
-xdc: 1.353348
-vivado: 0.000432
-devicetree: 0.000896
-firmware: 0.983620
+xdc: 1.567066
+vivado: 0.000392
+devicetree: 0.000670
+firmware: 1.153729
 manual: 0.000001
 scfw: 0.000001
-testplan: 0.000314
-power_sequence: 0.000199
-floorplan: 0.000352
-model3d: 2.270974
-render3d: 18.273170
-gallery: 0.000695
-si: 0.000687
-manifest: 0.013077
-golden: 0.509818
-contract_coverage_lint: 0.000590
-fallbacks: 0.000259
-ledger_import: 0.000706
-quantize_census: 0.000282
-source_audit: 112.295807
-pipeline_doc: 0.001313
-MEASURED SCOPE TOTAL (not process wall): 172.099151
+testplan: 0.000363
+power_sequence: 0.000287
+floorplan: 0.000510
+model3d: 2.550100
+render3d: 21.275305
+gallery: 0.000441
+si: 0.000874
+manifest: 0.016907
+golden: 0.522104
+contract_coverage_lint: 0.000647
+fallbacks: 0.000251
+ledger_import: 0.000758
+quantize_census: 0.000342
+source_audit: 137.742442
+pipeline_doc: 0.001323
+MEASURED SCOPE TOTAL (not process wall): 204.452455
 BOARD: PASS (12 sheets)

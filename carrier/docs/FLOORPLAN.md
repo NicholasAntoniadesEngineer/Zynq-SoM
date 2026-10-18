@@ -23,7 +23,7 @@ SoM outline: **50 x 42 mm**. The DF40 mezzanine connectors sit on the SoM's bott
 
 Derived board: **162 x 150.5 mm**; SoM origin at **(46, 60)** (centered). All coordinates below are board-frame mm, origin top-left, +y down (KiCad convention).
 
-Outline derivation: FIXED outline 162x150.5 mm declared in carrier/floorplan.json; estimated cross-subsystem airwire 15243 mm (advisory airwire reference 15458 mm; not an acceptance constraint).
+Outline derivation: FIXED outline 162x150.5 mm declared in carrier/floorplan.json; estimated cross-subsystem airwire 16164 mm (advisory airwire reference 15458 mm; not an acceptance constraint).
 
 ## Edge connectors (pinned to edges by their mating direction)
 
@@ -49,24 +49,24 @@ Outline derivation: FIXED outline 162x150.5 mm declared in carrier/floorplan.jso
 
 | sheet | anchor | block (x, y, w x h) | parts | est mm2 | notes |
 |---|---|---|---|---|---|
-| board_aux | E | (87, 112, 11.42 x 18.277) | 18 | 208.7 |  |
-| board_services | W | (140, 108, 21.06 x 22.8) | 9 | 480.2 |  |
-| bringup_en | E | (20, 98, 23.4 x 5.2) | 15 | 121.7 |  |
-| bringup_en_modules | E | (18, 104, 85.36 x 7.52) | 54 | 641.9 |  |
-| bringup_modules | E | (58, 112, 28.339 x 18.83) | 71 | 533.6 | (12) |
-| bringup_rails | E | (26, 55, 16.894 x 41.35) | 23 | 698.6 | (13) |
-| debug_boot | N | (104, 108, 31.58 x 16.25) | 10 | 513.2 | (14) |
+| board_aux | E | (118, 43, 11.42 x 18.277) | 18 | 208.7 |  |
+| board_services | W | (27, 56, 15.537 x 33.18) | 9 | 515.5 |  |
+| bringup_en | E | (99, 87, 14.4 x 8.2) | 15 | 118.1 |  |
+| bringup_en_modules | E | (130, 52, 13.37 x 39.45) | 54 | 527.4 |  |
+| bringup_modules | E | (18, 90, 12.413 x 40.98) | 71 | 508.7 | (12) |
+| bringup_rails | E | (111, 107, 41.35 x 16.894) | 23 | 698.6 | (13) |
+| debug_boot | N | (78, 105, 31.58 x 16.25) | 10 | 513.2 | (14) |
 | ethernet | @rj45_connector | (29, 33, 25.2576 x 21.745) | 10 | 549.2 | (15) |
 | fmc | S | (56, 39, 61.63 x 18.685) | 8 | 1151.6 | (16) |
 | hdmi_rx_term | S | (65, 106.09, 11.805 x 7.805) | 10 | 92.1 |  |
-| mechanical | E | (118, 48, 13 x 13) | 4 | 169 |  |
-| power | E | (109.11, 32, 23.9349 x 53.3605) | 51 | 1277.2 | (17) |
-| power_mon | @power_som | (79.3325, 35.4565, 28.3775 x 12.1635) | 10 | 345.2 | (18) |
-| power_som | E | (103, 61.3, 23.9349 x 24.1702) | 20 | 578.5 |  |
+| mechanical | E | (140, 119, 13 x 13) | 4 | 169 |  |
+| power | E | (94.4913, 9.27, 53.3604 x 23.9349) | 51 | 1277.2 | (17) |
+| power_mon | @power_som | (91.4935, 67, 26.7565 x 12.1635) | 10 | 325.5 | (18) |
+| power_som | E | (103, 62, 23.9349 x 24.1702) | 20 | 578.5 |  |
 | uart_bridge | @usb_uart_connector | (128, 20, 10.805 x 16.78) | 10 | 181.3 | (19) |
-| usb_jtag | E | (32, 104, 32.246 x 29.1402) | 19 | 939.7 |  |
-| usb_pd | @pd_input | (75, 24, 8.18 x 10.28) | 6 | 84.1 | (20) |
-| user_io | S | (18, 104, 9.3 x 44.44) | 17 | 413.3 | (21) |
+| usb_jtag | E | (31, 104, 32.246 x 28.6352) | 19 | 923.4 |  |
+| usb_pd | @pd_input | (77, 23.8264, 8.18 x 10.28) | 6 | 84.1 | (20) |
+| user_io | S | (2, 12, 24.82 x 18.3) | 17 | 454.2 | (21) |
 
 ## Routing constraint classes (JLC04161H-7628 — from native/src/constraints.cpp)
 
