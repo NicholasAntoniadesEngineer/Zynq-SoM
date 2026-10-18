@@ -1,0 +1,13 @@
+{
+  "source_commit": "d8ac1dd4",
+  "command": "ctest --test-dir native/build/fast --output-on-failure -j 2",
+  "exit_code": 0,
+  "passed": 278,
+  "failed": 0,
+  "excluded": 0,
+  "wall_seconds": 834.62,
+  "log": "native/build/direct-scan-full-suite.log",
+  "log_sha256": "f622862bb0815f87b8e93b1b4ece18a3f3d7ea53d5f4b8ddf45d6b2d07f88447",
+  "scope": "Complete rebuilt native suite including live KiCad and source-policy checks. Repository source and binaries remained unchanged throughout. Separately linked obstacle-union prototypes ran from a temporary directory; elapsed time is not an isolated performance benchmark.",
+  "limits": "This result qualifies the direct-nearest-scan revision, not the later obstacle-union prototype or completion of the broader hardware/layout goal."
+}
