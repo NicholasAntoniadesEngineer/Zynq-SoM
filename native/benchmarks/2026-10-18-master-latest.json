@@ -1,0 +1,26 @@
+{
+  "source_commit": "eb6a6d78",
+  "build": "cmake --build native/build/fast --parallel 2 --target schgen: PASS (up to date)",
+  "scope": "Full concurrent carrier and devkit pipelines into tracked outputs, all mandatory audits and rendering enabled; October 18 release commands with carrier order 0 and carrier-162x150p5-connectivity.floorplan.json",
+  "carrier": {
+    "exit_code": 0, "board_ok": true, "complete": true, "sheets": 37,
+    "wall_seconds": 497.64, "user_seconds": 1021.94, "system_seconds": 60.99,
+    "dimensions_mm": [162, 150.5], "fresh_pngs": 119,
+    "manifest_artifacts": 103, "manifest_hash_mismatches": 0,
+    "pcb_sha256": "d1dcca5723a788338e72db784272cc0a5a53017eba5174b4dd8c3f09a4068957",
+    "log": "native/build/master-latest-carrier.log",
+    "log_sha256": "55d08acc7f461803bc14a0ac6104f91aa9a360565743aec44093495df8c5f34f"
+  },
+  "devkit_mini": {
+    "exit_code": 0, "board_ok": true, "complete": true, "sheets": 12,
+    "wall_seconds": 172.18, "user_seconds": 560.00, "system_seconds": 38.42,
+    "dimensions_mm": [98, 98], "fresh_pngs": 45,
+    "manifest_artifacts": 73, "manifest_hash_mismatches": 0,
+    "pcb_sha256": "1b12fecbcbbaa5e6084c2459da93cb144a660ff19805e6e4e3f75f9c22689fdb",
+    "log": "native/build/master-latest-devkit.log",
+    "log_sha256": "2492567cdc426a352c1aecdfa1bf70d54c6df0cbb05c2ee68224acb1ef6670dd"
+  },
+  "verification": "164 PNGs modified after pipeline launch at 2026-10-18T00:19:05Z, valid PNG signatures and positive dimensions; both boards top/bottom renders inspected. All 176 artifact hashes independently matched. Historical experiment images excluded.",
+  "advisory_failures_both_boards": ["return_path", "golden", "contract_coverage_lint"],
+  "limits": "Concurrent timings are not controlled comparisons. Known carrier search slowdown remains. No new exhaustive CTest run or matched Python comparison. No fabrication readiness or broader goal completion claimed. Unknown hardware requirements remain unverified."
+}

@@ -2,47 +2,47 @@ FALLBACK RATCHET: PASS — 3 registered paths, 0 firing
 SEARCH EFFORT: observational, no acceptance ceiling; counts include rejected work. Exhaustion is not proof of infeasibility. Hardware gates remain independent.
   bottom_variant_contract_reject: 0
   cand_cap_truncated: 232
-  contract_group_orientation_retry: 0
+  contract_group_orientation_retry: 2
   corridor_evict_moved: 0
   edge_geometry_replan_retry: 1
   edge_run_translation: 0
   facing_replan_retry: 0
-  interior_failed_first_retry: 24
-  interior_reseat_incoming_shape_trial: 608
-  interior_reseat_pair_pose_budget: 62
-  interior_reseat_pair_pose_cap: 90
+  interior_failed_first_retry: 40
+  interior_reseat_incoming_shape_trial: 2503
+  interior_reseat_pair_pose_budget: 93
+  interior_reseat_pair_pose_cap: 144
   interior_reseat_pair_pose_recovered: 0
-  interior_reseat_pair_pose_search: 152
-  interior_reseat_pair_pose_trial: 685
-  interior_reseat_pair_recovered: 6
-  interior_reseat_pair_rejected: 1528
-  interior_reseat_pair_trial: 1534
+  interior_reseat_pair_pose_search: 237
+  interior_reseat_pair_pose_trial: 1079
+  interior_reseat_pair_recovered: 17
+  interior_reseat_pair_rejected: 2812
+  interior_reseat_pair_trial: 2829
   interior_reseat_pose_budget: 0
-  interior_reseat_pose_cap: 50
+  interior_reseat_pose_cap: 80
   interior_reseat_pose_hint: 0
   interior_reseat_pose_resume: 0
-  interior_reseat_pose_search: 378
+  interior_reseat_pose_search: 734
   interior_reseat_pose_skip: 0
-  interior_reseat_pose_trial: 350
-  interior_reseat_retry: 28
-  interior_reseat_shape_retry: 24
-  interior_reseat_shape_trial: 5641
+  interior_reseat_pose_trial: 566
+  interior_reseat_retry: 58
+  interior_reseat_shape_retry: 40
+  interior_reseat_shape_trial: 19818
   interior_shape_choice_budget: 0
   interior_shape_choice_hint: 0
   interior_shape_choice_replay: 0
-  legalize_facing_retry: 20
-  legalize_joint_axis: 61605
-  legalize_joint_axis_reuse: 45491
-  legalize_joint_budget: 90
-  legalize_joint_domain_probe: 26088
-  legalize_joint_domain_reject: 10075
-  legalize_joint_proposal: 5333
-  legalize_joint_reject: 5327
-  legalize_joint_retry: 118
-  legalize_joint_state: 93343
-  legalize_neighbour_retry: 7
+  legalize_facing_retry: 36
+  legalize_joint_axis: 136503
+  legalize_joint_axis_reuse: 97262
+  legalize_joint_budget: 197
+  legalize_joint_domain_probe: 58784
+  legalize_joint_domain_reject: 22714
+  legalize_joint_proposal: 12140
+  legalize_joint_reject: 12134
+  legalize_joint_retry: 246
+  legalize_joint_state: 203912
+  legalize_neighbour_retry: 15
   legalize_only_compaction: 0
-  legalize_reservation_retry: 20
+  legalize_reservation_retry: 38
   punch_free_plan_rejected: 2
   screened_incumbent_retained: 0
   seat_node_budget: 0
