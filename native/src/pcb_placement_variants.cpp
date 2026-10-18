@@ -543,6 +543,11 @@ void append_contract_group_faces(Context& ctx,Geometry& g,const std::string& she
                     const std::vector<FloorplanPoint> targets{{bounds->x0,bounds->y0},
                         {bounds->x1-w,bounds->y0},{bounds->x0,bounds->y1-h},{bounds->x1-w,bounds->y1-h}};
                     for(std::size_t alignment=0;alignment<targets.size();++alignment) {
+                        // A half-turn preserves envelope dimensions, so all
+                        // four corner alignments often coincide. Retain their
+                        // first representative before transforming/checking;
+                        // do not repeat identical work or its scalar receipts.
+                        if(std::find(targets.begin(),targets.begin()+alignment,targets[alignment])!=targets.begin()+alignment)continue;
                         Shape candidate=parent;
                         candidate.tag="contract-top-turn/"+group.refs.front()+"/r"+std::to_string(90*turn)+
                             "/a"+std::to_string(alignment)+"/from/"+parent.tag;

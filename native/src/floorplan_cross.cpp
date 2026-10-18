@@ -254,6 +254,7 @@ double Engine::estimate(const std::vector<const FloorplanBlock*>& blocks, const 
     std::vector<std::size_t> net_indices;
     if (only_sheet.empty()) { net_indices.resize(cross_nets.size()); std::iota(net_indices.begin(),net_indices.end(),0); }
     else net_indices=get(nets_by_sheet,only_sheet);
+    cross_cost_memo.resize(cross_nets.size());
     double cross=0;
     for (const auto index:net_indices) {
         const auto& net=cross_nets[index];
@@ -281,7 +282,16 @@ double Engine::estimate(const std::vector<const FloorplanBlock*>& blocks, const 
             for (const auto& [rx,ry]:pad->second) points.emplace_back(pad_precision(positions[pin.part]->first+rx),
                 pad_precision(positions[pin.part]->second+ry),added.first->second,side);
         }
-        cross+=cross_net_cost(points,net.via_cost,flags);
+        auto& memo=cross_cost_memo[index];
+        // Prepare and validate every endpoint above even on a hit; scalar
+        // receipts still describe all executed coordinate work. Reuse only
+        // the pure MST/cross-face cost with its complete ordered input key.
+        if(!memo.valid||memo.via_cost!=net.via_cost||memo.flags!=flags||memo.points!=points) {
+            const double value=cross_net_cost(points,net.via_cost,flags);
+            memo.points=std::move(points);memo.flags=std::move(flags);
+            memo.via_cost=net.via_cost;memo.value=value;memo.valid=true;
+        }
+        cross+=memo.value;
     }
     observe_floorplan_experiment_estimate(in.experiment.get(), cross, only_sheet.empty());
     return cross;
