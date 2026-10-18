@@ -1,0 +1,42 @@
+{
+  "base_commit": "aad47347",
+  "combined_screen": {
+    "patch": "failure-set-reconstruction-experiment.patch",
+    "recipe": "Same carrier 162x150 eight-pose screen as prior failure-set reconstruction, now with reviewed USB-PD advisory policy.",
+    "exit_code": 1,
+    "elapsed_seconds": 87.905870833,
+    "outer_attempts": 8,
+    "both_strategies": "construction_failed",
+    "repeated_legalizer_rejection": "facing power->power_som; axis cycles also remain. No USB-PD 10 mm hard cutoff is restored or substituted.",
+    "receipt_captured": true,
+    "receipt_unavailable": false,
+    "exact_accounting_match": true,
+    "fallback_events": 95538,
+    "log": "native/build/reconstruction-advisory-162x150.log"
+  },
+  "production_restoration": "Reconstruction experiment reverted; profiler rebuilt from production sources before reference checks. No algorithm source diff retained.",
+  "carrier_reference": {
+    "recipe": "Production algorithm, same screen recipe at 162x150.5; baseline then granular-minor+vertical+estimator-first.",
+    "exit_code": 0,
+    "baseline": "construction_failed",
+    "challenger": "screened incumbent",
+    "model_seconds_all_strategies": 308.223634542,
+    "pcb_text_emit_seconds": 0.028535166,
+    "construction_seconds": 308.252169708,
+    "dimensions_mm": [162,150.5],
+    "parts": {"total":566,"top":349,"bottom":217},
+    "pcb_sha256": "d1dcca5723a788338e72db784272cc0a5a53017eba5174b4dd8c3f09a4068957",
+    "diagnostics": {"fanout_ok":true,"ratsnest_ok":true,"placement_contract_ok":true,"placement_flow_ok":true,"hard_red":0},
+    "log": "native/build/usb-pd-advisory-incumbent.log"
+  },
+  "devkit_reference": {
+    "exit_code":0,"construction_seconds":0.240322749,
+    "dimensions_mm":[98,98],"parts":{"total":160,"top":105,"bottom":55},
+    "pcb_sha256":"1b12fecbcbbaa5e6084c2459da93cb144a660ff19805e6e4e3f75f9c22689fdb",
+    "diagnostics":{"fanout_ok":true,"ratsnest_ok":true,"placement_contract_ok":true,"placement_flow_ok":true,"hard_red":0},
+    "log":"native/build/usb-pd-advisory-devkit.log"
+  },
+  "interpretation": "Both reference PCB hashes remain unchanged, but carrier search cost increased materially relative to the prior roughly 106-second diagnostic. Single samples and briefly overlapping devkit screening are not a controlled statistical comparison. Do not claim the reviewed policy made search faster.",
+  "next_direction": "Profile the failed baseline and retain useful advisory proximity guidance without recreating an unjustified hard cutoff. Preserve complete screened incumbents across search strategies. Reconstruction alone does not resolve the coupled power-facing constraint.",
+  "limits": "Diagnostic model screens only: no new DRC, full source audit, full board qualification or rendering. Routed CC requirements remain unverified. No smaller accepted board, publication change or goal completion."
+}
