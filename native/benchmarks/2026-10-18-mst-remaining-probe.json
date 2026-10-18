@@ -1,0 +1,18 @@
+{
+  "status": "REJECTED; no production MST change",
+  "hypothesis": "Avoid scanning vertices already in the tree and fuse distance update with next-vertex selection, retaining ascending remaining indices and exact strict-improvement ties.",
+  "source": "/private/tmp/zynq-mst-probe.2YtQ6k/probe.cpp",
+  "source_sha256": "4c5cb662c6ff17d333bfb3568d69f04f21524dca418b86b006a0b4e9de570893",
+  "compile": "clang++ -std=c++17 -O3 -ffp-contract=off -Wall -Wextra -Werror probe.cpp -o probe",
+  "reference": "Direct C++ transcription of native/src/legalize.cpp::mst_manhattan at 570d04f6; no Python dependency.",
+  "validation": {"identical_edge_sequence_cases": 15266, "seed": "0x45052171", "coverage": "Empty/singleton, sizes 2..128, integer-lattice ties and duplicates, reversed input, reflected/transposed coordinates; infinity/NaN witnesses retain existing low-level behaviour. Three further benchmark-size sequences matched."},
+  "timings": [
+    {"vertices": 128, "repeats": 78, "reference_seconds": 0.00104746, "remaining_seconds": 0.00252071},
+    {"vertices": 512, "repeats": 19, "reference_seconds": 0.00456533, "remaining_seconds": 0.00940979},
+    {"vertices": 1024, "repeats": 9, "reference_seconds": 0.0108789, "remaining_seconds": 0.0152968}
+  ],
+  "log": "native/build/mst-remaining-probe.log",
+  "log_sha256": "f88b67c05738ea04902970f45edb947fe01879336ba3c9dfbbb7789db95423a0",
+  "scope": "Isolated diagnostic microbenchmark while the unrelated integrated regression suite ran. All measured sizes slower in two runs; not an end-to-end benchmark. Fewer source-level iterations did not establish a speedup, so the proposal was rejected.",
+  "next_direction": "Investigate avoiding irrelevant exact estimates under area-first ranking, rather than replacing this MST kernel without evidence. Preserve exact ranking, observer semantics and operation accounting."
+}

@@ -123,6 +123,39 @@ J flow_json(const PcbPlacementFlowResult &r) {
                    {"terms", array(terms)},
                    {"summary", text(r.summary())}});
 }
+bool same_flow(const PcbPlacementFlowResult& got,J expected,const std::string& where) {
+    // Retain frozen measurements and every non-flow requirement. Only finite
+    // heuristic-distance failures change classification; unresolved endpoints
+    // must retain the original failure. Historical report prose is not policy.
+    auto mutable_field=[&](const std::string& key)->J& {
+        for(auto& [k,v]:expected.object_value)if(k==key)return v;
+        throw std::runtime_error("missing expected flow field "+key);
+    };
+    std::vector<std::string> distance_failures;
+    for(const auto& term:field(expected,"terms").array_value)
+        if(string(term,"kind")=="flow"&&field(term,"measured").kind==JsonKind::Number&&!field(term,"ok").bool_value)
+            distance_failures.push_back("flow "+string(term,"subject")+"->"+string(term,"target")+": ");
+    auto& violations=mutable_field("violations").array_value;
+    const auto before=violations.size();
+    violations.erase(std::remove_if(violations.begin(),violations.end(),[&](const auto& v){
+        return v.string_value.find("mm budget (FLOW_K=")!=std::string::npos&&
+            std::any_of(distance_failures.begin(),distance_failures.end(),[&](const auto& prefix){return v.string_value.rfind(prefix,0)==0;});
+    }),violations.end());
+    require(before-violations.size()==distance_failures.size(),where+" independently classified distance failures");
+    mutable_field("flow_fail").number_value-=distance_failures.size();
+    const bool ok=violations.empty()&&field(expected,"unresolved").array_value.empty();
+    mutable_field("ok")=boolean(ok);
+    auto actual=flow_json(got);
+    for(auto* row:{&expected,&actual})row->object_value.erase(std::remove_if(row->object_value.begin(),row->object_value.end(),
+        [](const auto& entry){return entry.first=="summary";}),row->object_value.end());
+    same(actual,expected,where);
+    for(const auto& term:got.terms)if(term.kind=="flow") {
+        require(term.advisory==std::isfinite(term.measured),where+" heuristic distance marked advisory only when resolved");
+        if(std::isfinite(term.measured))require(got.summary().find("not a trace-length or hardware limit")!=std::string::npos,
+            where+" advisory provenance visible");
+    }
+    return ok;
+}
 J term_json(const FloorplanTerm &t) {
     return object({{"kind", text(t.kind)},
                    {"sheet", text(t.sheet)},
@@ -234,7 +267,7 @@ void synthetic(const std::filesystem::path &root) {
                 p.ref_maps[s] = mapping(v);
             auto names = strings(field(c, "zones"));
             p.project_zones.insert(names.begin(), names.end());
-            same(flow_json(check_pcb_placement_flow(in, p, &p.contracts)), field(c, "expected"),
+            same_flow(check_pcb_placement_flow(in, p, &p.contracts), field(c, "expected"),
                  name);
         }
     }
@@ -278,6 +311,32 @@ void compose_equal(const PcbComposeReport &got, const J &row, const std::string 
             array({array({text(p.first), text(p.second)}), array({num(v.first), num(v.second)})}));
     same(array(cross), field(row, "cross"), name + "/cross");
 }
+void generated_compose_equal(const PcbComposeReport& current,const PcbComposeReport& historical,const std::string& where) {
+    require(current.evaluations.size()==historical.evaluations.size(),where+" retains every evaluated term");
+    auto expected_na=historical.index.na;
+    for(auto& term:expected_na)if(term.kind=="flow_hop") {
+        term.prefer_short_flow=term.enforced;term.enforced=false;
+        require(term.basis.rfind("flow chain",0)==0,where+" unexpected historical flow provenance");
+        term.basis.replace(0,std::string("flow chain").size(),"ADVISORY board-size-derived flow preference");
+    }
+    same(index_json(FloorplanTermIndex{{},{},current.index.na}),index_json(FloorplanTermIndex{{},{},expected_na}),where+" retains project scope");
+    for(std::size_t i=0;i<expected_na.size();++i)
+        require(current.index.na[i].prefer_short_flow==expected_na[i].prefer_short_flow,where+" NA intent provenance");
+    int hard_red=0,soft_red=0;
+    for(const auto& old:historical.evaluations) {
+        const auto found=std::find_if(current.evaluations.begin(),current.evaluations.end(),[&](const auto& e){
+            return e.term.kind==old.term.kind&&e.term.subject==old.term.subject&&e.term.target()==old.term.target();
+        });
+        require(found!=current.evaluations.end(),where+" lost term");
+        if(old.term.kind=="flow_hop") {
+            require(!found->term.enforced&&found->term.prefer_short_flow==old.term.enforced,where+" preference differs from wired scope");
+            require(found->measured==old.measured&&found->bound==old.bound&&found->margin==old.margin&&found->ok==old.ok,
+                    where+" changed measured geometry or hid negative preference");
+        }else same(evals_json({*found}),evals_json({old}),where+" non-flow requirement");
+        if(!old.ok)++((old.term.kind!="flow_hop"&&old.term.enforced)?hard_red:soft_red);
+    }
+    require(current.hard_red==hard_red&&current.soft_red==soft_red,where+" red classification");
+}
 void adversarial(const std::filesystem::path &root) {
     auto raw =
         parse_json_file((root / "native/tests/data/pcb_placement_gates/adversarial.json").string());
@@ -308,13 +367,13 @@ void adversarial(const std::filesystem::path &root) {
         auto index = index_from(field(field(row, "compose"), "index"));
         auto gates = check_pcb_placement_gates(input, policy, index, evidence);
         same(contract_json(gates.placement_contract), field(row, "wired_result"), name + "/wired");
-        same(flow_json(gates.placement_flow), field(row, "flow"), name + "/flow");
+        const bool expected_flow_ok=same_flow(gates.placement_flow, field(row, "flow"), name + "/flow");
         auto &report = gates.coverage_report;
         same(array({text(report.text), num(report.wired), num(report.met), num(report.violated)}),
              field(row, "coverage_report"), name + "/coverage report");
         compose_equal(gates.composition, field(row, "compose"), name + "/compose");
         require(gates.ok() == (field(field(row, "wired_result"), "ok").bool_value &&
-                               field(field(row, "flow"), "ok").bool_value),
+                               expected_flow_ok),
                 name + " aggregate verdict retains hard/advisory policy");
     }
     std::cout << "25 independent hard/advisory, corridor and exact-boundary mutations passed\n";
@@ -351,7 +410,7 @@ void baseline(const std::filesystem::path &root, const std::string &project) {
          field(raw, "coverage_report"), project + "/coverage_report");
     same(contract_json(check_pcb_wired_contracts(input, policy)), field(raw, "wired_result"),
          project + "/wired");
-    same(flow_json(check_pcb_placement_flow(input, policy)), field(raw, "flow"), project + "/flow");
+    same_flow(check_pcb_placement_flow(input, policy), field(raw, "flow"), project + "/flow");
     validate_pcb_contract_pins(policy);
     ++checks;
     for (const auto &c : field(raw, "pin_cases").array_value) {
@@ -405,16 +464,16 @@ void baseline(const std::filesystem::path &root, const std::string &project) {
             compose_equal(full.composition, row, project + "/complete composition");
             same(contract_json(full.placement_contract), field(raw, "wired_result"),
                  project + "/complete wired");
-            same(flow_json(full.placement_flow), field(raw, "flow"), project + "/complete flow");
+            same_flow(full.placement_flow, field(raw, "flow"), project + "/complete flow");
             require(full.ok() == (full.placement_contract.ok && full.placement_flow.ok),
                     "original verdict policy");
             require(report_pcb_composition(input, index, policy, current).text() == got.text(),
                     project + " current model matches just-emitted sidecar evidence");
             auto production = check_pcb_placement_gates(f.input, model);
-            compose_equal(production.composition, row, project + "/production overload");
+            generated_compose_equal(production.composition,got,project+"/production");
             same(contract_json(production.placement_contract), field(raw, "wired_result"),
                  project + "/production wired");
-            same(flow_json(production.placement_flow), field(raw, "flow"),
+            same_flow(production.placement_flow, field(raw, "flow"),
                  project + "/production flow");
         }
     }
@@ -434,9 +493,10 @@ void baseline(const std::filesystem::path &root, const std::string &project) {
                                          [](const auto &i) { return i.sheet == "power"; }),
                           m.insts.end());
         auto index = pcb_final_compose_index(f.input, m);
-        same(index_json(index), field(row, "index"), project + "/placed scope/" + name);
-        compose_equal(report_pcb_composition(PcbCheckInput(m), index, policy, evidence), row,
-                      project + "/scoped report/" + name);
+        const auto historical=report_pcb_composition(PcbCheckInput(m),index_from(field(row,"index")),policy,evidence);
+        compose_equal(historical,row,project+"/frozen scoped measurements/"+name);
+        generated_compose_equal(report_pcb_composition(PcbCheckInput(m),index,policy,evidence),historical,
+                                project+"/scoped report/"+name);
     }
     auto recomputed = parse_json_file(
         (root / "native/tests/data/pcb_placement_gates" / (project + "_recomputed.json")).string());
@@ -541,6 +601,41 @@ void typed_guards() {
     parts.at("U1").mod.reset();
     validate_pcb_contract_pins("test", contract, parts);
     ++checks;
+}
+void flow_outline_sensitivity_witness() {
+    // Diagnostic for the existing global heuristic, not a hardware requirement
+    // or a qualified board. Shrinking empty outline area changes its verdict
+    // even though every component and pad stays in exactly the same place.
+    PcbPlacementGatePolicy policy;policy.wired_sheets={"source"};
+    policy.project_zones={"source","load"};
+    policy.contracts["source"]=parse_json_text(
+        R"({"contract":"placement/v2","external":{"flow":["source","load"]}})");
+    PcbCheckModel model;model.board_w=model.board_h=120;
+    for(const auto& row:std::vector<std::pair<std::string,double>>{{"source",10},{"load",50}}) {
+        PcbCheckInstance i;i.ref=row.first;i.sheet=row.first;i.x=row.second;i.y=10;
+        i.mod=pcb_check_footprint("outline-witness","(footprint x (pad 1 smd rect (at 0 0) (size 1 1)))");
+        i.pad_nets={{"1",{1,"SUPPLY"}}};model.insts.push_back(i);
+    }
+    const PcbCheckInput large_input(model);
+    const auto large=check_pcb_placement_flow(large_input,policy);
+    model.board_w=model.board_h=60;
+    const PcbCheckInput small_input(model);
+    const auto small=check_pcb_placement_flow(small_input,policy);
+    require(large.ok&&small.ok&&small.flow_fail==0,"empty outline area must not reject unchanged physical geometry");
+    require(large.terms[0].ok&&!small.terms[0].ok&&large.terms[0].advisory&&small.terms[0].advisory,
+            "negative heuristic comparison must remain visible, not a fabricated PASS");
+    require(large.terms.size()==1&&small.terms.size()==1&&large.terms[0].measured==40&&small.terms[0].measured==40,
+            "outline witness changed component distance");
+    require(large.flow_budget_mm==42&&small.flow_budget_mm==21,"outline witness budget calculation incorrect");
+    for(std::size_t i=0;i<model.insts.size();++i) {
+        const auto a=large_input.geometry_at(i).pad_boxes.at("1"),b=small_input.geometry_at(i).pad_boxes.at("1");
+        require(a.x0==b.x0&&a.x1==b.x1&&a.y0==b.y0&&a.y1==b.y1&&b.x0>=0&&b.y0>=0&&b.x1<=60&&b.y1<=60,
+                "outline witness moved pads or violated the smaller outline");
+    }
+    model.insts.pop_back();
+    const auto missing=check_pcb_placement_flow(PcbCheckInput(model),policy);
+    require(!missing.ok&&!missing.unresolved.empty(),"missing flow endpoint must remain an independent rejection");
+    std::cout<<"flow outline policy: identical 40mm endpoints accepted on both outlines; 21mm heuristic preference remains unsatisfied\n";
 }
 void advisory_facing_policy() {
     PcbPlacementGatePolicy policy;policy.wired_sheets={"source"};policy.project_zones={"source","load"};
@@ -653,6 +748,7 @@ int main(int argc, char **argv) {
         synthetic(argv[1]);
         adversarial(argv[1]);
         typed_guards();
+        flow_outline_sensitivity_witness();
         advisory_facing_policy();
         power_som_centroid_policy(argv[1]);
         baseline(argv[1], "carrier");

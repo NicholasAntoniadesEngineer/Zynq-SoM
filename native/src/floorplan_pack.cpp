@@ -855,7 +855,8 @@ bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure,
         std::unordered_map<std::string,FloorplanPoint>(centers.begin(),centers.end()),16,bw,bh,counts);
     for (std::size_t i=0;i<order.size();++i) { order[i]->x=refined.poses[i].first; order[i]->y=refined.poses[i].second; }
 
-    if (!in.compose.index.hard.empty()) {
+    if (!in.compose.index.hard.empty()||std::any_of(in.compose.index.soft.begin(),in.compose.index.soft.end(),
+            [](const auto& t){return t.prefer_short_flow;})) {
         FloorplanLegalizeInput li;
         li.board_w=bw; li.board_h=bh; li.index=in.compose.index; li.metrics=in.compose.metrics;
         li.channel_demand=channel_demand; li.clear=clear; li.origin=in.origin;
@@ -865,7 +866,8 @@ bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure,
             li.metrics[b.name]=m->second;
         }
         std::set<std::string> participants,movable;
-        for (const auto& t:li.index.hard) if (t.kind=="flow_hop" || t.kind=="near_max" || t.kind=="facing") {
+        for(const auto* terms:{&li.index.hard,&li.index.soft})for (const auto& t:*terms)
+          if ((terms==&li.index.hard&&(t.kind=="flow_hop" || t.kind=="near_max" || t.kind=="facing"))||t.prefer_short_flow) {
             participants.insert(t.subject); participants.insert(t.target());
         }
         for (const auto& b:plan.interior_blocks)

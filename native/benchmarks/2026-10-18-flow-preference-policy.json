@@ -1,0 +1,58 @@
+{
+  "base_commit": "570d04f6",
+  "status": "QUALIFIED; complete rebuilt integrated suite passed 278/278 without exclusions",
+  "remaining_integration": [
+    "Both isolated board pipelines and image verification passed; publish qualified outputs and fulfill requested no-fast-forward master merge/push. The broader layout optimisation goal remains incomplete."
+  ],
+  "review_reference": "2026-10-18-flow-outline-review.json",
+  "policy": "Generated external flow chains are optimisation preferences, not acceptance limits derived from empty board area. FloorplanTerm::prefer_short_flow explicitly carries active wired intent independently of enforced. Unwired flow remains inert. Compact descent retains active flow attraction. Emitted flow terms retain their actual measured distance, reference and satisfied/unsatisfied value, marked advisory. Missing endpoints remain mandatory unresolved failures. Explicit near/far/local physical constraints are unchanged.",
+  "source_sha256": {
+    "native/src/pcb_placement_flow_gate.cpp": "175cd957bee45aa9eebb282fb1056b5d4c499988cb4570907ef844011fd0a9a5",
+    "native/src/pcb_placement_build.cpp": "7fc5b35f20203e4df2e7d366b330fdf84767d5697c7637f1ed0860ff7ce8531a",
+    "native/src/floorplan_compose.cpp": "80158b3ae8342f54601e81329cf32f1a9623e0ae8118cee2b88b11e4924303fc",
+    "native/src/floorplan_pack.cpp": "454c198253b76c224f272c3fca0d3c47090735765e09b497229d7034d22e525c",
+    "native/include/schgen/floorplan.hpp": "ea8c08b1519da92c0934508b98a95dcb2f59b02b46ef670d70cec5043679f932",
+    "native/src/compose_repair_measure.cpp": "7452e3f184f596f101e6529b81470f38a6ab6e00c869b7790e42cdc670704a03",
+    "native/src/compose_repair_edits.cpp": "675c5732281118a300869ead58d92df079ed361b76cf93f064ebb48653e68818",
+    "native/tests/compose_ledger_projection.hpp": "446acbd1800e492e4115345cd584a9661d0a719593ec660899227ef78db00393"
+  },
+  "verification": {
+    "build": "Complete native build PASS; native/build/flow-preference-build-final.log; subsequent changed test targets rebuilt successfully.",
+    "targeted": "Floorplan, independent placement gates, compact strict-facing, final-estimate and source-accounting suites each passed. Initial new-test failures were a noncompact attraction expectation and frozen flow-classification text; repaired by explicit current-policy assertions, preserving frozen numerical and non-flow requirements.",
+    "coverage": "Identical 40mm pad geometry on 120x120 and 60x60 outlines now accepted; smaller-outline heuristic remains false/advisory. Missing load stays unresolved. Fixed-barrier test proves compact flow attraction remains active without rejecting an unattainable heuristic reference, obstacles and authored near_max still reject, and unwired/noncompact behaviour remains inert. Frozen synthetic/adversarial numerical measurements and non-flow requirements retained; generated term classification and scope checked independently.",
+    "integrated": {"status": "TERMINAL_FAILED", "passed": 275, "failed": 3, "seconds": 858.50, "log": "native/build/flow-preference-integrated-tests.log", "log_sha256": "94f7fc3eef48213be617af7376e5740658f9ab6f471186172e6177b2aef98936", "command": "ctest --test-dir native/build/fast --parallel 2 --output-on-failure", "note": "Before repair-planner/ledger/orientation fixes. Failed accounting, repair, orientation. Do not poll old session or claim a current full pass."},
+    "repair_followup": {"orientation": "PASS complete suite, 33.26 seconds; hard facing/far constraints retained, active soft flow required, hard generated flow forbidden", "repair": "Initial follow-up FAIL historical gate-term schema comparison; superseded by ledger_policy below.", "log": "native/build/flow-preference-repair-targeted.log", "log_sha256": "aa73ae2f8369a7772f21bbafe31ffcdadd1e0763329ddab3e53cb1184da8946b"},
+    "ledger_policy": {"status": "PASS repair and accounting suites, 2.68 seconds", "coverage": "Frozen fixtures unchanged. Explicit expected-only translation of generated flow classification, ordering and repair triggers; exact measurements, numeric spellings, unresolved failures and non-flow decisions retained. Negative tests reject changed distance/reference/margin/enforcement, advisory missing-endpoint waiver, deleted unresolved/violation/physical-trigger evidence and falsified verdict. Existing workflow call budgets, accounting accumulation, overflow, rollback and output checks all pass.", "log": "native/build/flow-preference-ledger-policy-tests.log", "log_sha256": "9ee21e8db14695b3cbcb1c76ecad7422525bdd2848902daecd85c95b2e63f487"},
+    "integrated_rebuild": {"status": "PASS", "log": "native/build/flow-preference-integrated-rebuild.log", "log_sha256": "6cf479622dac26e0d5038dc1be670f20343045ff782bbf4ee95394c75c9fd822"},
+    "qualification": {"status": "TERMINAL PASS", "passed": 278, "failed": 0, "seconds": 908.14, "log": "native/build/flow-preference-qualified-integrated-tests.log", "log_sha256": "ca0a6973813ec9c4bcb999e1ea6e70248d9f10b0433673ec9fdbd54281d95a6a", "command": "ctest --test-dir native/build/fast --parallel 2 --output-on-failure", "note": "Complete suite on stable rebuilt source, no exclusions. Session 8591 exited 0; do not repoll or restart."}
+  },
+  "carrier_reference": {
+    "exit_code": 0, "dimensions_mm": [161,150], "parts": 566, "top": 345, "bottom": 221,
+    "model_seconds": 66.491275041,
+    "pcb_sha256": "2c5fe226dccd5427554e3c9e3fa9c916bcfa93b8d81ad18a9a05d19c8c769f43",
+    "fanout_ok": true, "ratsnest_ok": true, "placement_contract_ok": true, "placement_flow_ok": true, "hard_red": 0,
+    "log": "native/build/flow-preference-carrier-reference.log", "log_sha256": "3cf1ff309cf41c88d27fa83e0e80b6a79eb677f436bcef46d7c941ed03c1eda2"
+  },
+  "devkit_reference": {
+    "exit_code": 0, "dimensions_mm": [98,98], "parts": 160, "top": 105, "bottom": 55,
+    "model_seconds": 0.116571167,
+    "pcb_sha256": "1b12fecbcbbaa5e6084c2459da93cb144a660ff19805e6e4e3f75f9c22689fdb",
+    "fanout_ok": true, "ratsnest_ok": true, "placement_contract_ok": true, "placement_flow_ok": true, "hard_red": 0,
+    "log": "native/build/flow-preference-devkit-screen.log", "log_sha256": "c184f6ae984dd13e3745cc4114ea51a879f4d119de11fc2db715bdc25a9c0a05"
+  },
+  "smaller_screen": {
+    "outline_mm": [160,150], "strategy": "granular-minor+vertical+estimator-first (no rotations)",
+    "exit_code": 1, "elapsed_seconds": 89.502065375, "completed_outer_attempts": 14,
+    "fallback_events": 51931, "exact_accounting_match": true,
+    "result": "No screened incumbent; seating failures persist. Same fallback-event count as the earlier non-rotation screen; this policy correction alone does not solve the smaller layout.",
+    "log": "native/build/flow-preference-160x150-screen.log", "log_sha256": "0da49423393f12a208bfe226018738a0d7a19541b14e34d49355ba47e82ab85d"
+  },
+  "area_first_screen": {
+    "outline_mm": [160,150], "strategy": "granular-minor+vertical+area-first (no rotations)",
+    "exit_code": 1, "elapsed_seconds": 25.417653292, "completed_outer_attempts": 8,
+    "fallback_events": 15424, "exact_accounting_match": true,
+    "result": "No screened incumbent; distinct ranking strategy failed with fewer recorded attempts. Not a controlled performance comparison or geometric impossibility proof.",
+    "log": "native/build/flow-preference-area-first-160x150.log", "log_sha256": "dfa70be9d6503501103f826c7d42688cd0e294472337815e8c26ad0a41b19e10"
+  },
+  "limits": "Model screens, not new full-pipeline qualification or release imagery. Concurrent timings are not controlled performance comparisons. Both reference PCB hashes unchanged. Published master untouched. No new smaller board or fabrication readiness claimed."
+}

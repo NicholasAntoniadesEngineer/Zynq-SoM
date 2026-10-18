@@ -274,6 +274,15 @@ void unit(){
  ctx.by_ref["R2"].lib_id="Switch:SW_SPST";
  g.shapes.clear();append_contract_group_faces(ctx,g,"unit",single);
  demand(g.shapes.empty(),"singleton face exploration split a group pinned by service access");
+ append_contract_group_faces(ctx,g,"unit",single,true);
+ demand(g.shapes.count("unit")&&g.shapes.at("unit").size()>1,"top access incorrectly forbids same-face rotation");
+ const auto top_once=g.shapes.at("unit");
+ for(const auto& candidate:top_once)
+  demand(candidate.bot_off.empty()&&candidate.mirror.empty(),"top-pinned synthetic group changed face or chirality");
+ append_contract_group_faces(ctx,g,"unit",single,true);
+ demand(g.shapes.at("unit").size()==top_once.size(),"top-turn replay recursively expanded candidates");
+ for(std::size_t i=0;i<top_once.size();++i)
+  demand(equal(g.shapes.at("unit")[i],top_once[i]),"top-turn replay rewrote incumbent order or geometry");
  // The same connected group becomes eligible when no member needs top access.
  // There is no stationary remainder: that is not a reason to reject the move.
  ctx.by_ref["R2"].lib_id="Device:R";
@@ -778,7 +787,13 @@ void live(const std::filesystem::path& root){
    }
    demand(vertical_count>0,"vertical compaction regression witness disappeared");
    const auto som_prepared=prepare_pcb_floorplan(f.input,som_split);
-   for(const auto* kind:{"flow_hop","facing","far_min"})
+   demand(std::any_of(som_prepared.compose.index.soft.begin(),som_prepared.compose.index.soft.end(),
+       [](const auto& term){return term.sheet=="power_som"&&term.kind=="flow_hop"&&!term.enforced&&term.prefer_short_flow;}),
+       "SoM power expansion lost active flow preference");
+   demand(std::none_of(som_prepared.compose.index.hard.begin(),som_prepared.compose.index.hard.end(),
+       [](const auto& term){return term.sheet=="power_som"&&term.kind=="flow_hop";}),
+       "SoM power expansion hardened heuristic flow preference");
+   for(const auto* kind:{"facing","far_min"})
     demand(std::any_of(som_prepared.compose.index.hard.begin(),som_prepared.compose.index.hard.end(),
         [&](const auto& term){return term.sheet=="power_som"&&term.kind==kind&&term.enforced;}),
         std::string("SoM power expansion lost an enforced board constraint: ")+kind);
@@ -894,7 +909,13 @@ void live(const std::filesystem::path& root){
            "power expansion accepted unknown or unenforced external requirements");
    }
    const auto power_prepared=prepare_pcb_floorplan(f.input,power_split);
-   for(const auto* kind:{"flow_hop","facing","far_min"})
+   demand(std::any_of(power_prepared.compose.index.soft.begin(),power_prepared.compose.index.soft.end(),
+       [](const auto& term){return term.sheet=="power"&&term.kind=="flow_hop"&&!term.enforced&&term.prefer_short_flow;}),
+       "mixed-face power lost active flow preference");
+   demand(std::none_of(power_prepared.compose.index.hard.begin(),power_prepared.compose.index.hard.end(),
+       [](const auto& term){return term.sheet=="power"&&term.kind=="flow_hop";}),
+       "mixed-face power hardened heuristic flow preference");
+   for(const auto* kind:{"facing","far_min"})
     demand(std::any_of(power_prepared.compose.index.hard.begin(),power_prepared.compose.index.hard.end(),
         [&](const auto& term){return term.sheet=="power"&&term.kind==kind&&term.enforced;}),
         std::string("mixed-face power lost an enforced external requirement: ")+kind);
@@ -947,11 +968,62 @@ void live(const std::filesystem::path& root){
    std::map<std::string,std::size_t> base_indices;
    for(std::size_t i=0;i<base.model().insts.size();++i)base_indices.emplace(base.model().insts[i].ref,i);
    std::set<int> seen_turns;
-   std::size_t pair_candidates=0,contact_candidates=0;
+   std::size_t pair_candidates=0,contact_candidates=0,top_turn_candidates=0,mixed_top_turn_candidates=0,multi_part_top_turns=0,usb_core_turns=0;
    probe_repaired_pairs(offers,originals,gc,group_turns,"usb_jtag");
    probe_repaired_pairs(offers,originals,gc,group_turns,"usb_jtag",true);
    for(std::size_t n=0;n<offers.size();++n) {
     demand(equal(offers[n],group_repeat.geometry.shapes.at("usb_jtag")[n]),"group-only geometry not reproducible");
+    if(offers[n].tag.rfind("contract-top-turn/",0)==0) {
+     ++top_turn_candidates;
+     const auto& offer=offers[n];const auto from=offer.tag.find("/from/");
+     demand(from!=std::string::npos,"top turn missing parent identity");
+     const auto parent=std::find_if(offers.begin(),offers.end(),[&](const auto& s){return s.tag==offer.tag.substr(from+6);});
+     demand(parent!=offers.end(),"top turn lost parent incumbent");
+     demand(parent->tag.rfind("contract-top-turn/",0)!=0,"top turns recursively expanded");
+     demand(offer.bot_off==parent->bot_off&&offer.mirror==parent->mirror&&offer.side==parent->side,
+            "top turn changed bottom assignment or chirality");
+     if(!offer.bot_off.empty())++mixed_top_turn_candidates;
+     const auto start=offer.tag.find("/r");const int turns=std::stoi(offer.tag.substr(start+2))/90;
+     const auto transform=[&](FloorplanPoint p){for(int t=0;t<turns;++t)p={p.second,-p.first};return p;};
+     const auto old_model=model(*parent,gc,group_turns.geometry,"usb_jtag");
+     const auto measured=model(offer,gc,group_turns.geometry,"usb_jtag");
+     demand(check_pcb_placement_contract(measured,"usb_jtag",&f.input.contracts.at("usb_jtag"),gc.board_refs.at("usb_jtag")).ok,
+            "top turn violated local contract");
+     demand(check_fanout(measured,0).ok,"top turn starved fanout");
+     std::optional<FloorplanPoint> delta;std::size_t moved=0;
+     for(std::size_t i=0;i<measured.model().insts.size();++i) {
+      const auto& part=measured.model().insts[i];const auto& old=old_model.model().insts[i];
+      demand(part.ref==old.ref&&part.side==old.side&&part.mirror==old.mirror&&part.pad_nets==old.pad_nets,
+             "top turn changed identity, net or physical face");
+      const auto box=measured.courtyard_at(i);
+      demand(box.x0>=0&&box.y0>=0&&box.x1<=offer.w&&box.y1<=offer.h,"top turn escaped envelope");
+      for(std::size_t j=0;j<i;++j) {
+       const auto& other=measured.model().insts[j];
+       if(part.side!=other.side&&!has_thru_pads_from_text(part.mod->bytes)&&!has_thru_pads_from_text(other.mod->bytes))continue;
+       const auto b=measured.courtyard_at(j);
+       demand(box.x1+gc.clearance<=b.x0||b.x1+gc.clearance<=box.x0||
+              box.y1+gc.clearance<=b.y0||b.y1+gc.clearance<=box.y0,"top turn violated face-aware clearance");
+      }
+      if(part.rotation==old.rotation) {
+       demand(part.x==old.x&&part.y==old.y,"top turn translated stationary member");continue;
+      }
+      ++moved;demand(part.side=="top"&&!part.mirror,"top turn rotated a bottom part");
+      if(part.ref==gc.board_refs.at("usb_jtag").at("U1"))++usb_core_turns;
+      demand(normalize(part.rotation-old.rotation)==90*turns,"top turn used inconsistent angles");
+      const auto origin=transform({old.x,old.y});const FloorplanPoint shift{part.x-origin.first,part.y-origin.second};
+      if(!delta)delta=shift;
+      demand(std::abs(shift.first-delta->first)<1.1e-4&&std::abs(shift.second-delta->second)<1.1e-4,
+             "top turn distorted rigid group");
+      for(const auto& [pin,box]:old_model.geometry_at(i).pad_boxes) {
+       const auto expected=transform(rect_center(box));const auto actual=rect_center(measured.geometry_at(i).pad_boxes.at(pin));
+       demand(std::abs(actual.first-expected.first-shift.first)<1e-8&&
+              std::abs(actual.second-expected.second-shift.second)<1e-8,"top turn pad transform incorrect");
+      }
+     }
+     demand(moved>0,"top turn did not move a member");
+     if(moved>1)++multi_part_top_turns;
+     continue;
+    }
     if(offers[n].tag.rfind("contract-bottom-pair/",0)==0) {
      ++pair_candidates;
      if(const auto contact=offers[n].tag.find("/contact/");contact!=std::string::npos) {
@@ -1035,6 +1107,9 @@ void live(const std::filesystem::path& root){
    demand(seen_turns==std::set<int>{1,2,3},"missing legal group-only quarter turn");
    demand(pair_candidates>0,"no combined bottom-group assignments exercised");
    demand(contact_candidates>0,"colliding bottom groups yielded no geometry-directed contact repairs");
+   demand(multi_part_top_turns>0&&mixed_top_turn_candidates>0,"top turns missing rigid multi-part or mixed-face alternatives");
+   demand(usb_core_turns>0,"top turns did not unlock the USB high-speed owner group");
+   std::cout<<"top group turns="<<top_turn_candidates<<" mixed-face="<<mixed_top_turn_candidates<<" USB core="<<usb_core_turns<<'\n';
    std::cout<<"contact bottom candidates="<<contact_candidates<<'\n';
    std::cout<<"combined bottom candidates="<<pair_candidates<<'\n';
    std::cout<<"carrier independent group rotations="<<offers.size()-originals.size()<<'\n';
@@ -1150,7 +1225,12 @@ void live(const std::filesystem::path& root){
    auto blocked_geometry=after.geometry;
    append_contract_group_faces(blocked_context,blocked_geometry,"usb_jtag",variants.front());
    append_contract_group_faces(blocked_context,blocked_geometry,"usb_jtag",variants.front(),true);
-   demand(blocked_geometry.shapes.at("usb_jtag").size()==prefix.size(),"pinned owners still generated bottom candidates");
+   for(std::size_t i=prefix.size();i<blocked_geometry.shapes.at("usb_jtag").size();++i) {
+    const auto& candidate=blocked_geometry.shapes.at("usb_jtag")[i];
+    demand(candidate.tag.rfind("contract-top-turn/",0)==0,"pinned owners still generated bottom candidates");
+    for(const auto* owner:{"U1","U2","U4"})
+     demand(candidate.top_off.count(blocked_context.board_refs.at("usb_jtag").at(owner)),"top requirement violated by a rigid turn");
+   }
    // Reuse the context and filenames across invocations, but replace the
    // physical documents: through-hole classification must not outlive a call.
    auto hole_context=candidate_context;auto hole_geometry=after.geometry;

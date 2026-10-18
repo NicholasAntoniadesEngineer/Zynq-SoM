@@ -149,6 +149,15 @@ public:
     };
     std::vector<EscapeRow> escape_rows;
     std::vector<CrossNet> cross_nets;
+    struct CrossCostMemo {
+        std::vector<std::tuple<double,double,int,int>> points;
+        std::vector<std::uint8_t> flags;
+        double via_cost=0,value=0;
+        bool valid=false;
+    };
+    // One exact last-input entry per net, scoped to this Engine/solve. Never
+    // reuse by shape index or bounding box: actual pin poses and faces matter.
+    std::vector<CrossCostMemo> cross_cost_memo;
     std::map<std::string, std::vector<std::size_t>> nets_by_sheet;
     std::map<std::string, Box4> connector_pad_boxes;
     double far_ceil = 0, max_reach = 0, raw_area = 0;

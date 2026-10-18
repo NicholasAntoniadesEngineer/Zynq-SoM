@@ -10,7 +10,7 @@ JsonNode flow(const PcbPlacementFlowResult &r,bool budget) {
     auto out=jo({{"ok",jb(r.ok)}});
     if(budget)set(out,"flow_budget_mm",j(r.flow_budget_mm));
     set(out,"violations",sorted_strings(r.violations));set(out,"unresolved",sorted_strings(r.unresolved));
-    auto terms=ja();for(const auto &t:r.terms)terms.array_value.push_back(jo({{"kind",j(t.kind)},{"subject",j(t.subject)},{"target",j(t.target)},{"measured",rounded(t.measured,4)},{"bound",j(t.bound)},{"ok",jb(t.ok)}}));
+    auto terms=ja();for(const auto &t:r.terms)terms.array_value.push_back(jo({{"kind",j(t.kind)},{"subject",j(t.subject)},{"target",j(t.target)},{"measured",rounded(t.measured,4)},{"bound",j(t.bound)},{"ok",jb(t.ok)},{"advisory",jb(t.advisory)}}));
     set(out,"terms",terms);return out;
 }
 std::vector<std::string> seats(const FloorplanTermIndex &index,const std::optional<FloorplanSpec> &spec) {
@@ -44,7 +44,9 @@ ComposeDocument measure_compose_ledger(const PcbPlacementInput &input,const PcbM
             auto name=t.kind=="flow_hop"?"flow":t.kind=="far_min"?"far":t.kind;
             triggers.push_back(name+" "+t.subject+"->"+t.target_raw+": margin "+fmt(e.margin,2,true)+(t.kind=="facing"?"deg":"")+" < floor "+pyfloat(f->second));
         }
-        if(!e.ok&&!t.enforced&&t.kind!="near_intent")triggers.push_back("ADVISORY-RED "+t.kind+" "+t.subject+"->"+t.target_raw+": "+fmt(e.measured,2,true)+" vs "+fmt(e.bound,2,true)+" (repair-before-wire blocker)");
+        // Board-size-derived flow references rank placement quality; exceeding
+        // one is not evidence of a hardware fault or a repair obligation.
+        if(!e.ok&&!t.enforced&&t.kind!="near_intent"&&t.kind!="flow_hop")triggers.push_back("ADVISORY-RED "+t.kind+" "+t.subject+"->"+t.target_raw+": "+fmt(e.measured,2,true)+" vs "+fmt(e.bound,2,true)+" (repair-before-wire blocker)");
     }
     set(d.data,"terms",terms);
     const auto margins=pcb_compose_hard_margins(evaluations);

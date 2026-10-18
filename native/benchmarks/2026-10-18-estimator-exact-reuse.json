@@ -1,0 +1,43 @@
+{
+  "base_commit": "45cf3e69",
+  "changes": [
+    "Skip coincident same-face group corner targets before transformation and qualification, preserving first representative and every distinct offered pose.",
+    "Cache one exact last cross-net cost per net within each Engine. Complete ordered point tuples, sheet face flags and via cost form the key; changed endpoints, membership, side or via cost recompute. All endpoint preparation, validation and scalar accounting still execute. No hardware check or search policy weakened."
+  ],
+  "profiling": {
+    "process": "live pre-optimisation 160x150 rotations experiment, PID 10802",
+    "sample_seconds": 1, "sampled_stacks": 768, "mst_manhattan_stacks": 415,
+    "scope": "Point-in-time CPU sample, not a whole-run profile or universal attribution. The process was alive at 9m43s, 100% CPU; sampled physical footprint 2.4 GB, peak 4.2 GB.",
+    "log": "native/build/top-group-turn-search-sample.txt",
+    "sha256": "546a89b5d47e0c82561424da4ea1d810bb164d77eb999d50cd0326406351eca7"
+  },
+  "build": {"result": "PASS complete native rebuild", "log": "native/build/cross-cost-memo-build.log", "sha256": "33a45f6fc4c0de02bb1508da10c3f5b29abe4896a060cb729ede280b7f73ff9c"},
+  "tests": {
+    "passed": 5, "failed": 0, "seconds": 47.67,
+    "suites": ["native_floorplan_contracts", "native_floorplan_final_estimate_contracts", "native_floorplan_fixed_choice_contracts", "native_pcb_orientation_contracts", "native_pack_search_source"],
+    "log": "native/build/cross-cost-memo-tests.log", "sha256": "469812f6d8b765f4f6b9dcf429f3849393779ef763a59c8a7ab16d0362b1f82d",
+    "coverage": "Warm versus cold accounting, coordinate mutation/restoration, via cost changes, primary and physical side differences, omitted endpoints/partial calls, invalid selected shapes still reject, fresh engines see changed footprint inputs. Orientation fixture retains 6834 top-turn offers, 6774 mixed-face and 2614 USB-core alternatives after deduplication."
+  },
+  "dense_net_followup": {
+    "passed": true, "test_seconds": 4.47, "endpoints": 128, "repeats": 200,
+    "forced_recompute_seconds": 0.00363067, "warm_reuse_seconds": 0.00117862,
+    "scope": "Synthetic repeated identical estimates in one process, exact equality and coordinate-receipt equality asserted. Diagnostic timings without a pass/fail timing threshold; not an end-to-end speedup claim.",
+    "log": "native/build/cross-cost-memo-dense-tests.log", "sha256": "f4dee02539519ae5c10e9b8ac1059eccb4f469c19b5f3710ae50f7b1055683d6"
+  },
+  "carrier": {
+    "dimensions_mm": [161,150], "model_seconds": 63.736511,
+    "pcb_sha256": "2c5fe226dccd5427554e3c9e3fa9c916bcfa93b8d81ad18a9a05d19c8c769f43",
+    "log": "native/build/cross-cost-memo-carrier.log", "sha256": "439692b90dab12f50beca6f922ccb419cb5f89a5d5e35e220bd49f3a1ba24d13",
+    "comparison": "Previous normal screen 63.263883791 seconds. No measured end-to-end speedup; concurrent workloads differ. Exact published PCB retained."
+  },
+  "devkit": {
+    "dimensions_mm": [98,98], "model_seconds": 0.12501625,
+    "pcb_sha256": "1b12fecbcbbaa5e6084c2459da93cb144a660ff19805e6e4e3f75f9c22689fdb",
+    "log": "native/build/cross-cost-memo-devkit.log", "sha256": "67ba8200174ae6f3d5f75ccd557c95df66bb593da450c2922eded34167b689d4"
+  },
+  "remaining_investigation": {
+    "experiment": "Original pre-fix 160x150 screen intentionally interrupted at 19m47s, exit 130. Session 49369 is terminal; do not poll or restart it. See 2026-10-18-flow-outline-review.json. No finalist accepted.",
+    "flow_budget": "legalize.cpp computes 0.35*sqrt(board_w*board_h)+som_diagonal. Wired flow_hop terms use this centroid-distance budget as a hard condition. Some experimental legalizer attempts failed power->power_som by 7.8769 mm. This is a board-size-derived heuristic, not an authored trace-length limit. Review its physical justification and interaction with the smaller-board priority; no policy change made here."
+  },
+  "limits": "Targeted regression and model screens only, not a fresh exhaustive suite or full physical qualification. No new release imagery or master change. Routing excluded; unknown hardware requirements remain unverified."
+}

@@ -8,6 +8,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <chrono>
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
@@ -230,6 +231,31 @@ void compose_contracts(const std::filesystem::path& dir) {
     throws([&]{floorplan_legalize_compact(changed,vars,log);},"nonpositive movable dimensions");
     require(log.empty(),"malformed compose inputs never append acceptance logs");
     require(floorplan_evaluate_terms(base,{}).empty(),"empty term index evaluates without fabricated terms");
+}
+void flow_preference_contracts() {
+    for(bool compact:{false,true}) {
+        FloorplanLegalizeInput in;in.board_w=80;in.board_h=20;in.compact=compact;in.clear=.3;
+        in.fixed_rects={{"barrier",{8,0,58,20}}};
+        for(const auto* name:{"a","b"})in.metrics[name]={{{"pin",1,1}},{{"pin",0,0,2,2}},{2,2}};
+        FloorplanTerm flow;flow.kind="flow_hop";flow.subject="a";flow.target_raw="b";
+        in.index.soft={flow};
+        const std::vector<FloorplanLegalizeVar> seed{{"a",2,2,{5,5},5,5},{"b",2,2,{65,5},65,5}};
+        auto inert=seed;std::vector<std::string> log;
+        require(floorplan_legalize_compact(in,inert,log)&&inert[0].x==5&&inert[1].x==65,"unwired flow intent must remain inert");
+        in.index.soft.front().prefer_short_flow=true;
+        auto active=seed;log.clear();
+        require(floorplan_legalize_compact(in,active,log),"unsatisfied flow preference rejected physically legal pockets");
+        require(compact?active[1].x-active[0].x<60:active[1].x-active[0].x==60,
+                "flow attraction must apply in compact mode without changing noncompact semantics");
+        require(active[0].x+2+.3<=8&&active[1].x>=58+.3,"flow preference crossed a hard obstacle");
+        const auto measured=floorplan_evaluate_terms(in,{{"a",{active[0].x,active[0].y}},{"b",{active[1].x,active[1].y}}});
+        require(measured.size()==1&&!measured[0].ok&&measured[0].margin<0,"negative flow preference hidden or relabelled satisfied");
+        auto near=flow;near.kind="near_max";near.bound=2;near.enforced=true;in.index.hard={near};
+        auto rejected=seed;log.clear();
+        require(!floorplan_legalize_compact(in,rejected,log),"flow preference weakened authored physical proximity");
+        in.index.soft.front().kind="near_max";
+        throws([&]{auto vars=seed;std::vector<std::string> logs;(void)floorplan_legalize_compact(in,vars,logs);},"flow preference on non-flow term");
+    }
 }
 void facing_projection_contracts() {
     for(bool swap_axes:{false,true})for(bool reflect:{false,true})for(bool compact:{false,true})for(bool feasible:{false,true}) {
@@ -1073,8 +1099,22 @@ void cross_behavior() {
         FloorplanBlock a,b;a.name="source";b.name="sink";a.w=a.h=b.w=b.h=2;b.x=3;b.y=4;
         e.plan.interior_blocks={a,b};
         require(e.estimate()==5,"hand-computed 3-4-5 cross-subsystem MST");
+        require(e.cross_cost_memo.size()==1&&e.cross_cost_memo.front().valid,"estimator did not retain exact net cost");
+        e.plan.accounting.quantization_engagements.clear();
+        require(e.estimate()==5,"warm net cost changed estimate");
+        const auto warm_counts=e.plan.accounting.quantization_engagements;
+        e.cross_cost_memo.clear();e.plan.accounting.quantization_engagements.clear();
+        require(e.estimate()==5&&e.plan.accounting.quantization_engagements==warm_counts,
+                "net-cost reuse skipped endpoint validation/accounting");
+        e.plan.interior_blocks[1].x=6;e.plan.interior_blocks[1].y=8;
+        require(e.estimate()==10,"net-cost memo ignored changed endpoint coordinates");
+        e.plan.interior_blocks[1]=b;
+        require(e.estimate()==5,"net-cost memo failed restored coordinates");
         e.plan.interior_blocks[1].shape_idx=1;e.plan.interior_blocks[1].side="bottom";
         require(std::abs(e.estimate()-(impedance?12.6:7.2))<1e-12,"actual selected-bottom topology charges correct via class");
+        const double via=e.cross_nets.front().via_cost;e.cross_nets.front().via_cost=via+1;
+        require(std::abs(e.estimate()-(impedance?13.6:8.2))<1e-12,"net-cost memo ignored changed via cost");
+        e.cross_nets.front().via_cost=via;
         e.plan.interior_blocks[1].shape_idx=2;e.plan.interior_blocks[1].side="top";
         require(std::abs(e.estimate()-(impedance?12.6:7.2))<1e-12,"top-primary alternate must charge its physical bottom pin transition");
         e.plan.interior_blocks[1].shape_idx=3;e.plan.interior_blocks[1].side="bottom";
@@ -1097,6 +1137,32 @@ void cross_behavior() {
         Engine base(base_bottom);base.prepare_cross();base.plan.interior_blocks={a,b};
         require(std::abs(base.estimate()-(impedance?12.6:7.2))<1e-12,"base bottom endpoint must charge its transition without selecting a variant");
     }
+    // A high-fanout synthetic net exercises ordered MST input, not just the
+    // two-endpoint shortcut. Compare cache-on with forced recomputation and
+    // identical accounting; timings are diagnostic, never a test threshold.
+    Engine dense(in);dense.prepare_cross();
+    FloorplanBlock source,sink;source.name="source";sink.name="sink";sink.x=20;sink.y=30;
+    dense.plan.interior_blocks={source,sink};
+    for(std::size_t i=0;i<126;++i) {
+        auto part=dense.cross_parts.at(i%2);
+        part.offset={static_cast<double>((i*13)%37),static_cast<double>((i*17)%41)};
+        dense.cross_nets.front().pins.push_back({dense.cross_parts.size(),"1"});
+        dense.cross_parts.push_back(std::move(part));
+    }
+    const auto expected=dense.estimate();std::array<double,2> seconds{};
+    std::array<QuantizationCounts,2> receipts;
+    for(int mode=0;mode<2;++mode) {
+        dense.plan.accounting.quantization_engagements.clear();
+        const auto start=std::chrono::steady_clock::now();
+        for(int repeat=0;repeat<200;++repeat) {
+            if(!mode)dense.cross_cost_memo.clear();
+            require(dense.estimate()==expected,"dense net memo differs from exact recomputation");
+        }
+        seconds[mode]=std::chrono::duration<double>(std::chrono::steady_clock::now()-start).count();
+        receipts[mode]=dense.plan.accounting.quantization_engagements;
+    }
+    require(receipts[0]==receipts[1],"dense net memo changed executed coordinate receipts");
+    std::cout<<"dense-net memo 128 endpoints x200 cold_seconds="<<seconds[0]<<" warm_seconds="<<seconds[1]<<'\n';
     // Change the source document, not the already-captured expected points.
     auto changed=in;
     changed.footprints["one"].document=sexpr_loads(R"((footprint "one" (fp_rect (start -1 -1) (end 1 1) (layer "F.CrtYd") (width 0.05)) (pad "missing" smd rect (at 0 0) (size 1 1))))");
@@ -1844,7 +1910,7 @@ int main(int argc,char** argv) {
         near_distance_envelope_contracts();
         joint_separation_contracts();
         joint_composer_contracts();
-        facing_projection_contracts();fixed_face_recovery();
+        flow_preference_contracts();facing_projection_contracts();fixed_face_recovery();
         compose_contracts(dir);primary_fanout_contracts();output_grid_contracts();mutations();pack_behavior();cross_behavior();frozen(dir,"devkit_mini",geometry_only);frozen(dir,"carrier",geometry_only);
         std::cout<<"floorplan contracts: "<<checks<<" checks passed"<<(geometry_only ? " (geometry/estimator slice)":"")<<"\n";
         return 0;

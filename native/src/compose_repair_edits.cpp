@@ -75,6 +75,7 @@ std::vector<ComposeSpecEdit> propose_compose_repairs(ComposeDocument &ledger,con
     for(std::size_t i=0;i<terms.size();++i) {
         const auto &t=terms[i],&margin=opt(t,"margin");const auto kindname=str(t,"kind");
         auto f=floor.find(kindname);if(f==floor.end())continue;
+        if(kindname=="flow_hop"&&!truth(opt(t,"enforced")))continue;
         if(truth(required(t,"ok"))&&!(truth(opt(t,"enforced"))&&margin.kind!=JsonKind::Null&&jnum(margin)<f->second))continue;
         const auto subj=str(t,"subject"),target=str(t,"target"),tgt=target.substr(0,target.find('.'));
         const auto tkey=key(t);

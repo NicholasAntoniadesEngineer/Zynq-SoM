@@ -79,7 +79,42 @@ void acceptance_evidence() {
         require(!result.ok&&!result.reasons.empty(),"incomplete/ambiguous repair evidence rejected mode="+std::to_string(mode));
     }
 }
+void flow_preference_repairs() {
+    const auto raw=parse_compose_document(R"({"edges":{"N":["connector"]},"interior":{"source":{},"load":{}}})");
+    const auto ledger=[](const std::string& kind,const std::string& subject,bool enforced){
+        return parse_compose_document("{\"terms\":[{\"kind\":\""+kind+"\",\"subject\":\""+subject+
+            "\",\"target\":\"load\",\"margin\":-20,\"ok\":false,\"enforced\":"+(enforced?"true":"false")+"}]}");
+    };
+    for(const auto* subject:{"source","connector"}) {
+        auto preference=ledger("flow_hop",subject,false);
+        const auto original=field(preference.data,"terms");
+        require(propose_compose_repairs(preference,raw,{}).empty(),"flow preference cannot demand a repair");
+        require(field(preference.data,"intent_gated").array_value.empty(),"flow preference cannot demand an edge intent");
+        same(field(preference.data,"terms"),original,"flow preference measurements remain visible");
+        auto hard=ledger("flow_hop",subject,true);
+        const auto repairs=propose_compose_repairs(hard,raw,{});
+        require(std::string(subject)=="source"?!repairs.empty():!field(hard.data,"intent_gated").array_value.empty(),
+            "explicit hard flow remains actionable");
+    }
+    auto near=ledger("near_max","source",true);
+    require(!propose_compose_repairs(near,raw,{}).empty(),"physical proximity remains actionable");
+    std::cout<<"flow preference repair policy: passed\n";
+}
 void units(const std::filesystem::path &base) {
+    const std::string historic=R"({"aggregate_hard_margin":{},"terms":[{"kind":"flow_hop","subject":"a","target":"b","basis":"flow chain [test]","enforced":true,"measured":40.0,"bound":21.0,"margin":-19.0,"ok":false}],"repair_triggers":["flow a->b: margin -19.0 < floor 10.0","keep physical failure"],"flow_gate":{"ok":false,"unresolved":["missing endpoint"],"violations":["missing endpoint"],"terms":[{"kind":"flow","measured":null,"ok":false}]}})";
+    const std::string current=R"({"hard_margins":{},"terms":[{"kind":"flow_hop","subject":"a","target":"b","basis":"ADVISORY board-size-derived flow preference [test]","enforced":false,"measured":40.0,"bound":21.0,"margin":-19.0,"ok":false}],"repair_triggers":["keep physical failure"],"flow_gate":{"ok":false,"unresolved":["missing endpoint"],"violations":["missing endpoint"],"terms":[{"kind":"flow","measured":null,"ok":false,"advisory":false}]}})";
+    require(test::compose_ledger_projection(current,historic),"explicit heuristic-policy translation accepted");
+    for(const auto& [from,to]:std::vector<std::pair<std::string,std::string>>{
+        {"40.0","41.0"},{"21.0","22.0"},{"-19.0","-18.0"},
+        {"\"enforced\":false","\"enforced\":true"},{"\"advisory\":false","\"advisory\":true"},
+        {"\"unresolved\":[\"missing endpoint\"]","\"unresolved\":[]"},
+        {"\"violations\":[\"missing endpoint\"]","\"violations\":[]"},
+        {"\"repair_triggers\":[\"keep physical failure\"]","\"repair_triggers\":[]"},
+        {"\"ok\":false","\"ok\":true"}}) {
+        auto changed=current;const auto pos=changed.find(from);require(pos!=std::string::npos,"mutation has an exact target");
+        changed.replace(pos,from.size(),to);
+        require(!test::compose_ledger_projection(changed,historic),"policy translation rejects unrelated mutation: "+from);
+    }
     require(test::compose_ledger_projection(R"({"hard_margins":{},"ok":true})",R"({"aggregate_hard_margin":{},"ok":true})"),"projection permits only root summary replacement");
     require(!test::compose_ledger_projection(R"({"hard_margins":{},"ok":false})",R"({"aggregate_hard_margin":{},"ok":true})"),"projection rejects changed verdict");
     require(!test::compose_ledger_projection(R"({"ok":true})",R"({"aggregate_hard_margin":{},"ok":true})"),"projection rejects missing summary");
@@ -150,8 +185,20 @@ void real_ledgers(const std::filesystem::path &root,const std::string &project) 
         if(string(r,"name")=="moved_power_first")for(auto &inst:changed.insts)if(inst.sheet=="power"){inst.x+=100;break;}
         if(string(r,"name")=="missing_power")changed.insts.erase(std::remove_if(changed.insts.begin(),changed.insts.end(),[](const auto &inst){return inst.sheet=="power";}),changed.insts.end());
         const auto got=measure_compose_ledger(fixture.input,changed);
+        for(const auto* gate:{"flow_gate","advisory_gate"})
+            for(const auto& term:field(field(got.data,gate),"terms").array_value) {
+                if(string(term,"kind")!="flow")continue;
+                const auto& measured=field(term,"measured");
+                const bool resolved=measured.kind==JsonKind::Number&&std::isfinite(measured.number_value);
+                require(field(term,"advisory").bool_value==resolved,
+                    "resolved flow is advisory; missing endpoints remain hard failures");
+            }
+        for(const auto& trigger:field(got.data,"repair_triggers").array_value)
+            require(trigger.string_value.rfind("ADVISORY-RED flow_hop ",0)!=0&&
+                    trigger.string_value.rfind("flow ",0)!=0,
+                    "generated flow preferences must not become repair obligations");
         if(string(r,"name")=="baseline")require(accept_compose_repair(got,got).ok,project+" complete baseline evidence remains acceptable");
-        auto expected=parse_compose_document(string(r,"ledger")),actual=got;
+        auto expected=test::flow_policy_oracle(parse_compose_document(string(r,"ledger"))),actual=got;
         require(!object_field(got.data,"aggregate_hard_margin"),"new ledger cannot publish mixed-unit scalar");
         const auto& groups=field(got.data,"hard_margins");
         const auto evaluations=measure_pcb_compose_terms(PcbCheckInput(changed),
@@ -374,7 +421,7 @@ void kernels(const std::filesystem::path &root) {
 int main(int argc,char **argv) {
     try {
         if(argc!=2)throw std::runtime_error("usage: compose_repair_contracts REPO_ROOT");
-        const std::filesystem::path root=argv[1];acceptance_evidence();units(root/"native/tests/data/compose_repair");
+        const std::filesystem::path root=argv[1];acceptance_evidence();flow_preference_repairs();units(root/"native/tests/data/compose_repair");
         for(const auto *project:{"carrier","devkit_mini"})real_ledgers(root,project);
         workflow(root);
         ranking(root);

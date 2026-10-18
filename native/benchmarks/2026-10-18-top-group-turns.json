@@ -1,0 +1,37 @@
+{
+  "base_commit": "44b1bd9c",
+  "implementation": "Opt-in contract_group_rotations now offers independent same-face turns of required-top groups over a fixed snapshot of existing face assignments. Connector-connected and through-hole groups remain stationary. Incumbents are preserved; no recursive top-turn expansion. Every candidate uses existing geometry, local contract and fanout qualification. Board-level checks remain authoritative.",
+  "source_sha256": "5d8fde583b9faf5dfc036b25318c9b83ad924edf3113c2de9d339e78e255f1b3",
+  "test_sha256": "39843705e54a2893e1e6c2de3748a91856da5d3a3c7875ea6852e1fdbf7620a2",
+  "build": {
+    "result": "PASS complete native build",
+    "log": "native/build/top-group-turn-complete-build.log",
+    "sha256": "8666bd248684407e7f6f48f3af4c30d7b9461ab1b9091669c2dc6e389f1682d8"
+  },
+  "tests": {
+    "passed": 4, "failed": 0, "seconds": 50.07,
+    "suites": ["native_pcb_orientation_contracts", "native_pcb_placement_gates_contracts", "native_pack_search_source", "native_floorplan_contracts"],
+    "log": "native/build/top-group-turn-complete-tests.log",
+    "sha256": "4c1f1ed12594d6646d23f88bb672b6225960b5555a906d1e540c279483d41ed0",
+    "coverage": "Independent rigid/pad transforms without reflection, unchanged nets/face/mirror and stationary members, face-aware courtyard clearance and bounds, local contracts/fanout, deterministic geometry and operation receipts, mixed top-turn/bottom-group combinations, explicit USB U1 owner rotations, connector anchoring, synthetic top-only group availability and repeated-call idempotence. Existing through-hole and unconnected-pad rejection coverage retained.",
+    "scope": "Targeted batch, not a new exhaustive 278-test run."
+  },
+  "usb_catalog": {
+    "top_turn_offers": 6834, "mixed_face_offers": 6774, "usb_core_rotated_offers": 2614,
+    "scope": "Orientation fixture including propagated whole-sheet alternatives, not accepted boards or necessarily unique global layouts. Broad offer growth requires further performance evaluation; opt-in only."
+  },
+  "normal_path_regressions": {
+    "carrier": {"dimensions_mm": [161,150], "model_seconds": 63.263883791, "pcb_sha256": "2c5fe226dccd5427554e3c9e3fa9c916bcfa93b8d81ad18a9a05d19c8c769f43", "log": "native/build/top-group-turn-carrier-reference.log", "log_sha256": "5e1140567fda18512bec42f42f5d6871778559016e55311e0cc3d2a2606b2067"},
+    "devkit": {"dimensions_mm": [98,98], "model_seconds": 0.121517458, "pcb_sha256": "1b12fecbcbbaa5e6084c2459da93cb144a660ff19805e6e4e3f75f9c22689fdb", "log": "native/build/top-group-turn-devkit-screen.log", "log_sha256": "9fefa18708aceb78154e58e3fb17e0e3e32baaff93318c116b61c5d4ff5abd78"},
+    "scope": "Model screens with experimental rotations disabled, both exact released PCB hashes. Executed before final top-only early-return repair, which only unlocks the enabled experiment. Concurrent timings, not controlled benchmarks or full qualification."
+  },
+  "experiment": {
+    "outline_mm": [160,150], "strategy": "granular-minor+vertical+estimator-first+rotations",
+    "log": "native/build/top-group-turn-160x150-screen.log",
+    "status": "INTENTIONALLY INTERRUPTED at 19m47s (exit 130); no acceptance claimed. Final diagnostic receipt: 2026-10-18-flow-outline-review.json",
+    "observed": "Some attempts reached the legalizer and were rejected by flow_hop power->power_som margin -7.8769; other attempts still failed seating. This is not proof of global infeasibility.",
+    "provenance": "Exploratory binary before final top-only early-return repair. Do not present as a qualification of the final binary."
+  },
+  "corrections_during_testing": "Initial test incorrectly required every top group to have multiple parts; replaced with per-candidate nonempty movement and aggregate multi-part plus explicit USB-core coverage. Synthetic replay test then caught an older bottom-compaction early return that skipped top-only sheets; corrected the control flow without changing hardware rules.",
+  "limits": "No new smaller board accepted. Published master and release imagery unchanged. Experimental breadth may increase runtime; do not enable by default until quality/cost is demonstrated. Routing and fabrication qualification remain out of scope."
+}
