@@ -12,6 +12,44 @@ using namespace schgen;
 std::size_t checks=0;
 void require(bool ok,const char* why){++checks;if(!ok)throw std::runtime_error(why);}
 bool halo(Halo a,Halo b){return a.w==b.w&&a.e==b.e&&a.n==b.n&&a.s==b.s;}
+void eviction_region_properties() {
+    // A removal can only enable a previously blocked pose if it conflicted
+    // with the removed entity. Check that every such pose is inside the
+    // proposed region using independent pair decomposition/collision tests.
+    // Include protruding children on both faces and asymmetric signed insets.
+    std::size_t affected=0,unaffected=0;
+    for(int stored_mask:{1,2,3})for(int query_mask:{1,2,3})
+      for(double offset:{-3.,0.,3.})for(bool asymmetric:{false,true}) {
+        const Halo stored_reach=asymmetric?Halo{.25,2.,.75,1.5}:Halo{};
+        const Halo stored_inset=asymmetric?Halo{-.5,.25,1.,-.25}:Halo{};
+        const Halo query_reach=asymmetric?Halo{1.5,.25,2.,.5}:Halo{};
+        const Halo query_inset=asymmetric?Halo{.75,-.5,.25,-.75}:Halo{};
+        const std::vector<Comp> stored{{offset,-1.5,2,1,stored_mask==1?2:1,
+                                     {1.25,.5,2.,.25},{-.25,.75,-.5,.25}}};
+        const std::vector<Comp> query{{-offset,2.,1,2,query_mask==1?2:1,
+                                     {.5,1.75,.25,1.25},{.25,-.25,.5,-.5}}};
+        const auto region=evict_window(12,11,3,4,stored_reach,stored_inset,stored,
+                                       2,3,query_reach,query_inset,query,.3);
+        const auto obstacle=pairs_entity(12,11,3,4,stored_reach,stored_inset,stored_mask,stored);
+        Occupancy empty(32,32,.3,2,3,.5,.05),occupied=empty;
+        occupied.add(12,11,3,4,stored_reach,stored_inset,stored_mask,stored);
+        for(int ix=0;ix<64;++ix)for(int iy=0;iy<64;++iy) {
+            const double x=ix*.5,y=iy*.5;
+            if(!empty.fits_exhaustive(x,y,2,3,query_reach,query_inset,query_mask,query))continue;
+            const auto candidate=pairs_entity(x,y,2,3,query_reach,query_inset,query_mask,query);
+            const bool separated=pairs_hold({obstacle,candidate},2,.3);
+            require(occupied.fits_exhaustive(x,y,2,3,query_reach,query_inset,query_mask,query)==separated,
+                    "eviction oracle disagrees with actual occupied-board geometry");
+            if(separated){++unaffected;continue;}
+            ++affected;
+            require(x>=std::get<0>(region)&&x<=std::get<1>(region)&&
+                    y>=std::get<2>(region)&&y<=std::get<3>(region),
+                    "eviction region excludes a pose enabled by removal");
+        }
+    }
+    require(affected>0&&unaffected>0,"eviction property must exercise blocked and unblocked poses");
+    std::cout<<"eviction_region affected="<<affected<<" unaffected="<<unaffected<<'\n';
+}
 void frontier_rejection_properties() {
     for(int stored_mask:{1,2,3})for(int mask:{1,2,3})for(double anchor:{2.,5.05,8.}) {
         Occupancy grid(12,12,.25,2,3,1,.05);
@@ -131,5 +169,5 @@ void properties() {
             halo(got[n].comps[0].reach,expected[n].comps[0].reach),"halo-distinct result changed");
 }
 }
-int main(){try{frontier_shape_properties();frontier_rejection_properties();properties();fractional_hash_properties();std::cout<<"PASS child halo contracts checks="<<checks<<'\n';return 0;}
+int main(){try{eviction_region_properties();frontier_shape_properties();frontier_rejection_properties();properties();fractional_hash_properties();std::cout<<"PASS child halo contracts checks="<<checks<<'\n';return 0;}
 catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}

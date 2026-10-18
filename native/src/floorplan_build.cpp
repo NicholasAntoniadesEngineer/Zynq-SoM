@@ -297,7 +297,7 @@ FloorplanPlan Engine::run() {
         auto fixed=[&](bool free) {
             plan.punch_free=free;
             if (!attempt_pack(true)) throw FloorplanPackingInfeasible("floorplan: bounded placement search found no valid layout for the requested fixed outline "+
-                outline_text(plan.board_w,plan.board_h)+"; this does not prove geometric infeasibility. Reconsider group shapes, poses or allocation; a larger outline is one option, not a demonstrated requirement.");
+                outline_text(plan.board_w,plan.board_h)+"; this does not prove geometric infeasibility. Reconsider group shapes, poses or allocation; a larger outline is one option, not a demonstrated requirement.",rejected_subjects);
             choose_connector_shapes();
             const double value=estimate();
             if(!std::isfinite(value)||value<0)throw FloorplanError("floorplan: invalid fixed-outline estimate");
@@ -309,17 +309,22 @@ FloorplanPlan Engine::run() {
         reset_shapes();
         std::optional<double> conservative_estimate;
         try { conservative_estimate=fixed(false); }
-        catch (const FloorplanPackingInfeasible&) { restore(entry);side_offers=entry_offers; }
+        catch (const FloorplanPackingInfeasible& error) {
+            rejected_subjects.insert(error.rejected_subjects.begin(),error.rejected_subjects.end());
+            restore(entry);side_offers=entry_offers;
+        }
         catch (const FloorplanReservationExcluded&) { restore(entry);side_offers=entry_offers; }
         const auto conservative=plan; const auto offers=side_offers;
         reset_shapes();
         std::optional<double> free_est;
         try { free_est=fixed(true); }
-        catch (const FloorplanPackingInfeasible&) {}
+        catch (const FloorplanPackingInfeasible& error) {
+            rejected_subjects.insert(error.rejected_subjects.begin(),error.rejected_subjects.end());
+        }
         catch (const FloorplanReservationExcluded&) {}
         if(!conservative_estimate&&!free_est)
             throw FloorplanPackingInfeasible("floorplan: bounded placement search found no valid layout for the requested fixed outline "+
-                outline_text(plan.board_w,plan.board_h)+" under either reservation policy; this does not prove geometric infeasibility.");
+                outline_text(plan.board_w,plan.board_h)+" under either reservation policy; this does not prove geometric infeasibility.",rejected_subjects);
         double estimate_real=free_est.value_or(0.0);
         if(conservative_estimate&&(!free_est||*free_est>=*conservative_estimate-1e-6)) {
             estimate_real=*conservative_estimate;
@@ -391,7 +396,7 @@ FloorplanPlan Engine::run() {
         }
         if (!best) {
             record_tally();
-            throw FloorplanPackingInfeasible(std::string("floorplan: no accepted candidate on searched outlines (blocks ")+(fit_seen ? "did":"never")+" fit; aggregate airwire is advisory)");
+            throw FloorplanPackingInfeasible(std::string("floorplan: no accepted candidate on searched outlines (blocks ")+(fit_seen ? "did":"never")+" fit; aggregate airwire is advisory)",rejected_subjects);
         }
         const double w0=std::get<1>(*best),h0=std::get<2>(*best);
         std::vector<double> ws,hs;
@@ -429,16 +434,21 @@ FloorplanPlan Engine::run() {
     const auto entry=plan;const auto entry_offers=side_offers;
     reset_shapes();std::optional<Winner> conservative_best;
     try { conservative_best=search(false); }
-    catch (const FloorplanPackingInfeasible&) { restore(entry);side_offers=entry_offers; }
+    catch (const FloorplanPackingInfeasible& error) {
+        rejected_subjects.insert(error.rejected_subjects.begin(),error.rejected_subjects.end());
+        restore(entry);side_offers=entry_offers;
+    }
     catch (const FloorplanReservationExcluded&) { restore(entry);side_offers=entry_offers; }
     const auto conservative=plan; const auto offers=side_offers;
     reset_shapes();
     std::optional<Winner> free_best;
     try { free_best=search(true); }
-    catch (const FloorplanPackingInfeasible&) {}
+    catch (const FloorplanPackingInfeasible& error) {
+        rejected_subjects.insert(error.rejected_subjects.begin(),error.rejected_subjects.end());
+    }
     catch (const FloorplanReservationExcluded&) {}
     if(!conservative_best&&!free_best)
-        throw FloorplanPackingInfeasible("floorplan: automatic sizing found no accepted layout under either reservation policy; bounded search exhaustion is not proof of geometric infeasibility");
+        throw FloorplanPackingInfeasible("floorplan: automatic sizing found no accepted layout under either reservation policy; bounded search exhaustion is not proof of geometric infeasibility",rejected_subjects);
     Winner best=conservative_best?*conservative_best:*free_best; std::string choice="conservative";
     if (free_best && (!conservative_best || prefer_outline(*free_best,best))) {
         best=*free_best; choice="free";

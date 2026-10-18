@@ -1,0 +1,32 @@
+{
+  "base_commit": "293833be",
+  "experiment": "After first-victim position alternatives fail to seat the second victim, try each other allowed first-victim shape at its nearest legal position and reseat the second victim. Retain caller-owned shape/side restrictions, physical checks and actual work accounting. No extra pose enumeration per new shape.",
+  "recipe": "Carrier 162x150 recipe in 2026-10-18-recovery-opportunity-screen.json, eight poses and 4096 frontier nodes, baseline plus granular-minor+vertical+estimator-first.",
+  "tests": {"native_compact_retry_contracts": "PASS", "seconds": 3.59, "limits": "Existing rollback, geometry, determinism and work-accounting suite; not a dedicated acceptance witness for the added branch or full-board qualification."},
+  "screen": {
+    "exit_code": 1,
+    "elapsed_seconds": 46.842673125,
+    "outer_attempts": 8,
+    "both_strategies": "construction_failed",
+    "both_rejected_subject_sets": ["fmc", "power", "usb_jtag"],
+    "receipt_captured": true,
+    "receipt_unavailable": false,
+    "exact_accounting_match": true,
+    "fallback_events": 20885,
+    "log": "native/build/paired-shape-162x150.log"
+  },
+  "comparison_to_prior_eight_pose_screen": {
+    "shape_trials_before": 10282,
+    "shape_trials_after": 16145,
+    "additional_shape_trials": 5863,
+    "pair_trials_before_and_after": 982,
+    "pair_recoveries_before_and_after": 6,
+    "pair_rejections_before_and_after": 976,
+    "pair_position_queries_before_and_after": 127,
+    "pair_position_trials_before_and_after": 620
+  },
+  "decision": "Revert the experiment: it executed additional shape work but recovered no additional pair and produced no smaller board. Do not turn this into default overhead on the evidence available.",
+  "restoration": {"production_source_diff": "none", "profiler_rebuilt": true, "native_compact_retry_contracts": "PASS", "seconds": 3.58},
+  "next_direction": "Investigate the incoming group's selected shape/pose in pair recovery; it is chosen before testing both displaced groups, and changing that upstream choice may be necessary. Existing results do not prove physical infeasibility.",
+  "limits": "Single diagnostic timing, not a statistical speed comparison. No new accepted layout, no production algorithm change retained, no fabrication readiness or goal completion."
+}

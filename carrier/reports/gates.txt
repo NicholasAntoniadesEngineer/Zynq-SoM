@@ -1846,10 +1846,10 @@ PLACEMENT-CONTRACT GATE (usbc_otg): PASS (contract=yes, 9 structures)
   unresolved refs: 0
   violations: 0
 placement_flow: PASS — PLACEMENT-FLOW GATE: PASS (9 external contract(s); board_area=24381mm^2, flow_budget=121.9mm)
-  fails: flow=0/7 facing=0/2 far=0/5 near_max=0/5
+  fails: flow=0/7 facing=0/2 far=0/5 near_max=0/4
   unresolved: 0
   violations: 0
-  detail: 19
+  detail: 18
     facing power->power_som: dot=+82.18 angle=66.7deg (output@(135.135, 82.8782) zone@(149.5598, 85.481) down@(141.7339, 97.2792))
     facing power_som->@som: dot=+559.80 angle=21.5deg (output@(129.0351, 94.8749) zone@(141.7339, 97.2792) down@(96.0, 106.0))
     far ethernet vs power: 92.02mm / >= 10mm
@@ -1868,7 +1868,6 @@ placement_flow: PASS — PLACEMENT-FLOW GATE: PASS (9 external contract(s); boar
     near_max hdmi_rx_term to som_j2: 6.51mm gap / <= 10mm
     near_max motor_sense to motor_pwm: 1.80mm gap / <= 20mm
     near_max uart_bridge to usb_uart_connector: 7.52mm gap / <= 40mm
-    near_max usb_pd to pd_input: 2.12mm gap / <= 10mm
 contract_coverage: PASS (advisory) — CONTRACT COVERAGE: 23 wired(gated) / 0 inert-met / 0 inert-VIOLATED  (authored SI/PI intent not yet placer-enforced)
   board_qwiic            WIRED-gated      1 chk  0 viol  
   camera                 WIRED-gated      7 chk  0 viol  
@@ -1893,8 +1892,8 @@ contract_coverage: PASS (advisory) — CONTRACT COVERAGE: 23 wired(gated) / 0 in
   usb_pd                 WIRED-gated      6 chk  0 viol  
   usb_uart_connector     WIRED-gated      4 chk  0 viol  
   usbc_otg               WIRED-gated      9 chk  0 viol  
-floorplan_composition: PASS (advisory) — FLOORPLAN COMPOSITION (T1): 18 hard / 1 soft terms; hard RED 0, soft RED 0 (advisory)
-  hard margins (mm): measured 16, unresolved 0, sum 848.83, min 3.48 (informational)
+floorplan_composition: PASS (advisory) — FLOORPLAN COMPOSITION (T1): 17 hard / 2 soft terms; hard RED 0, soft RED 0 (advisory)
+  hard margins (mm): measured 15, unresolved 0, sum 840.96, min 3.48 (informational)
   hard margins (degrees): measured 2, unresolved 0, sum 91.81, min 23.33 (informational)
   hard terms:
     HARD facing power->power_som: 66.67 vs 90.00 (margin +23.33) ok [facing/output_roles [placement/v2]] dot=+82.18
@@ -1914,9 +1913,9 @@ floorplan_composition: PASS (advisory) — FLOORPLAN COMPOSITION (T1): 18 hard /
     HARD near_max hdmi_rx_term->som_j2: 6.51 vs 10.00 (margin +3.48) ok [XAPP460 p.23 (term AT the receiver) — island at the SoM mezzanine bank-33 RX escape|judgment:10.0 edge-gap (D11)]
     HARD near_max motor_sense->motor_pwm: 1.80 vs 20.00 (margin +18.20) ok [judgment:20.0 (D9) — motor telemetry beside the PWM out]
     HARD near_max uart_bridge->usb_uart_connector: 7.52 vs 40.00 (margin +32.48) ok [judgment:10.0 (D11 edge-gap) — CP2102N's USB DP/DM pair terminates at the UART USB-C; measured 365mm of cross-board airwire (avg 122mm) with the block anchored mid-board and a STALE floorplan near-intent pointing at rj45_connector]
-    HARD near_max usb_pd->pd_input: 2.12 vs 10.00 (margin +7.88) ok [judgment:10.0 (D11 edge-gap metric) — keep the CC net short end-to-end; onsemi numbers no inter-part CC-run length]
   soft terms (advisory ledger — repair triggers, never gates):
     soft near_intent power_mon->power_som: 13.39 vs 0.00 (margin +0.00) ok [carrier/floorplan.json near-intent (advisory)] advisory
+    soft near_intent usb_pd->pd_input: 2.12 vs 0.00 (margin +0.00) ok [carrier/floorplan.json near-intent (advisory)] advisory
   T2 escape corridors (D13 never-close): 6 loaded, 0 UNMANAGED part intrusion(s), 0 T2-coexistence-managed
   D13 channel hotspots (>= 6 cross-airwires; corridor = 2 + 0.2/net mm):
     bringup_en_modules | bringup_rails: 24 airwires (625.7 mm) -> corridor >= 6.8 mm
@@ -2569,47 +2568,47 @@ fallbacks: PASS — FALLBACK RATCHET: PASS — 3 registered paths, 0 firing
 SEARCH EFFORT: observational, no acceptance ceiling; counts include rejected work. Exhaustion is not proof of infeasibility. Hardware gates remain independent.
   bottom_variant_contract_reject: 0
   cand_cap_truncated: 232
-  contract_group_orientation_retry: 0
+  contract_group_orientation_retry: 2
   corridor_evict_moved: 0
   edge_geometry_replan_retry: 1
   edge_run_translation: 0
   facing_replan_retry: 0
-  interior_failed_first_retry: 24
-  interior_reseat_incoming_shape_trial: 608
-  interior_reseat_pair_pose_budget: 62
-  interior_reseat_pair_pose_cap: 90
+  interior_failed_first_retry: 40
+  interior_reseat_incoming_shape_trial: 2503
+  interior_reseat_pair_pose_budget: 93
+  interior_reseat_pair_pose_cap: 144
   interior_reseat_pair_pose_recovered: 0
-  interior_reseat_pair_pose_search: 152
-  interior_reseat_pair_pose_trial: 685
-  interior_reseat_pair_recovered: 6
-  interior_reseat_pair_rejected: 1528
-  interior_reseat_pair_trial: 1534
+  interior_reseat_pair_pose_search: 237
+  interior_reseat_pair_pose_trial: 1079
+  interior_reseat_pair_recovered: 17
+  interior_reseat_pair_rejected: 2812
+  interior_reseat_pair_trial: 2829
   interior_reseat_pose_budget: 0
-  interior_reseat_pose_cap: 50
+  interior_reseat_pose_cap: 80
   interior_reseat_pose_hint: 0
   interior_reseat_pose_resume: 0
-  interior_reseat_pose_search: 378
+  interior_reseat_pose_search: 734
   interior_reseat_pose_skip: 0
-  interior_reseat_pose_trial: 350
-  interior_reseat_retry: 28
-  interior_reseat_shape_retry: 24
-  interior_reseat_shape_trial: 5641
+  interior_reseat_pose_trial: 566
+  interior_reseat_retry: 58
+  interior_reseat_shape_retry: 40
+  interior_reseat_shape_trial: 19818
   interior_shape_choice_budget: 0
   interior_shape_choice_hint: 0
   interior_shape_choice_replay: 0
-  legalize_facing_retry: 20
-  legalize_joint_axis: 61605
-  legalize_joint_axis_reuse: 45491
-  legalize_joint_budget: 90
-  legalize_joint_domain_probe: 26088
-  legalize_joint_domain_reject: 10075
-  legalize_joint_proposal: 5333
-  legalize_joint_reject: 5327
-  legalize_joint_retry: 118
-  legalize_joint_state: 93343
-  legalize_neighbour_retry: 7
+  legalize_facing_retry: 36
+  legalize_joint_axis: 136503
+  legalize_joint_axis_reuse: 97262
+  legalize_joint_budget: 197
+  legalize_joint_domain_probe: 58784
+  legalize_joint_domain_reject: 22714
+  legalize_joint_proposal: 12140
+  legalize_joint_reject: 12134
+  legalize_joint_retry: 246
+  legalize_joint_state: 203912
+  legalize_neighbour_retry: 15
   legalize_only_compaction: 0
-  legalize_reservation_retry: 20
+  legalize_reservation_retry: 38
   punch_free_plan_rejected: 2
   screened_incumbent_retained: 0
   seat_node_budget: 0
@@ -2624,71 +2623,71 @@ pipeline_doc: PASS — unchanged
 === board native exclusive timing (wall s; audits included) ===
 Nested scopes pause parents; parallel batches use launch/join wall time, never summed worker spans.
 Scope: pipeline entry through build-ledger publication; excludes final summary publications and caller/process setup. Mixed stages remain mixed; not a generation-only total.
-pipeline_setup_and_other: 0.005760
-inputs: 0.001631
-authoring_audit: 15.704314
-authoring_guard_reporting_and_recheck: 0.001162
-input_factory_generation_and_ir_conversion: 0.265508
-input_circuit_validation: 0.007099
-input_publication: 0.011031
-subsystem_structure: 0.003986
-carrier_structure: 0.011047
-sheet_prepare_other: 0.005338
-sheet_electrical_validation: 0.002995
-sheet_place_route_with_internal_checks: 0.098534
-sheet_cc_validation: 0.005998
-sheet_emit_and_publish: 0.039771
-sheet_visual_validation: 0.015271
-sheet_parallel_checks_and_render_wall: 25.310158
-symbol_law: 0.000255
-link: 0.001598
-constraints: 0.001191
-diagram: 0.001628
-board_schematic: 5.970390
-bom_footprints: 0.000334
-power_tree: 0.001805
-rail_ampacity: 0.000348
-testpoints: 0.000413
-design_rules: 0.001505
-part_rules: 0.001633
-bom_values: 0.001198
-footprint_pads: 0.003958
-pin_completeness: 0.000754
-spice: 0.076714
-pcb: 0.025833
-pcb_input_loading_and_netlist_validation: 1.459978
-pcb_build_model_with_internal_checks: 80.399420
-pcb_render: 0.027693
-placement_requirements: 0.001600
-pcb_drc: 1.419822
-pcb_geometry: 0.043041
-assembly: 0.422219
-ratsnest_images: 0.667256
-thermal: 0.025816
-copper_debt: 0.038534
-cpl: 0.229626
-fab_profile: 0.026508
+pipeline_setup_and_other: 0.006833
+inputs: 0.001487
+authoring_audit: 16.501749
+authoring_guard_reporting_and_recheck: 0.000914
+input_factory_generation_and_ir_conversion: 0.276254
+input_circuit_validation: 0.007185
+input_publication: 0.010239
+subsystem_structure: 0.004263
+carrier_structure: 0.012117
+sheet_prepare_other: 0.005907
+sheet_electrical_validation: 0.003287
+sheet_place_route_with_internal_checks: 0.105641
+sheet_cc_validation: 0.006416
+sheet_emit_and_publish: 0.043652
+sheet_visual_validation: 0.016320
+sheet_parallel_checks_and_render_wall: 28.516166
+symbol_law: 0.000242
+link: 0.001519
+constraints: 0.001194
+diagram: 0.001611
+board_schematic: 7.360736
+bom_footprints: 0.000401
+power_tree: 0.001856
+rail_ampacity: 0.000239
+testpoints: 0.000408
+design_rules: 0.001650
+part_rules: 0.001716
+bom_values: 0.001405
+footprint_pads: 0.004300
+pin_completeness: 0.000851
+spice: 0.088735
+pcb: 0.052670
+pcb_input_loading_and_netlist_validation: 1.632176
+pcb_build_model_with_internal_checks: 298.290107
+pcb_render: 0.028928
+placement_requirements: 0.001746
+pcb_drc: 1.438522
+pcb_geometry: 0.053480
+assembly: 0.421497
+ratsnest_images: 0.667107
+thermal: 0.026092
+copper_debt: 0.037617
+cpl: 0.232762
+fab_profile: 0.027363
 stage_movement: 0.000002
-xdc: 0.861288
-vivado: 0.000343
-devicetree: 0.000649
-firmware: 0.861716
-manual: 0.000734
-scfw: 0.002560
-testplan: 0.000516
-power_sequence: 0.000409
-floorplan: 0.000354
-model3d: 1.675421
-render3d: 27.609651
-gallery: 0.001095
-si: 0.000899
-manifest: 0.035997
-golden: 1.506183
-contract_coverage_lint: 0.001329
-fallbacks: 0.000241
-ledger_import: 0.000774
-quantize_census: 0.000313
-source_audit: 109.601965
-pipeline_doc: 0.001007
-MEASURED SCOPE TOTAL (not process wall): 274.504121
+xdc: 0.891594
+vivado: 0.000302
+devicetree: 0.000621
+firmware: 0.873560
+manual: 0.000711
+scfw: 0.002859
+testplan: 0.000473
+power_sequence: 0.000363
+floorplan: 0.000374
+model3d: 1.663793
+render3d: 27.583885
+gallery: 0.001455
+si: 0.000939
+manifest: 0.036905
+golden: 1.523401
+contract_coverage_lint: 0.001353
+fallbacks: 0.000250
+ledger_import: 0.000764
+quantize_census: 0.000311
+source_audit: 109.031754
+pipeline_doc: 0.001032
+MEASURED SCOPE TOTAL (not process wall): 497.512064
 BOARD: PASS (37 sheets)

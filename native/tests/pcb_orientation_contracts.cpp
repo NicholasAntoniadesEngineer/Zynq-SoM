@@ -437,6 +437,20 @@ void live(const std::filesystem::path& root){
   demand(before.fallback_events==after.fallback_events,"orientation manufactured fallback");
   std::cout<<project<<" appended="<<added<<" incumbent/prefix/old receipts unchanged\n";
   if(std::string(project)=="carrier") {
+   auto reviewed=f.input;
+   reviewed.contracts.at("usb_pd")=parse_json_file((root/"subsystems/usb_pd/placement_contract.json").string());
+   reviewed.floorplan.spec=load_floorplan_spec((root/"carrier/floorplan.json").string());
+   const auto reviewed_zones=build_pcb_zone_geometry(reviewed);
+   const auto reviewed_plan=prepare_pcb_floorplan(reviewed,reviewed_zones);
+   demand(std::none_of(reviewed_plan.compose.index.hard.begin(),reviewed_plan.compose.index.hard.end(),
+       [](const auto& t){return t.kind=="near_max"&&t.subject=="usb_pd"&&t.target_raw=="pd_input";}),
+       "judgment-based CC edge-gap must not become a hard hardware limit");
+   demand(std::any_of(reviewed_plan.compose.index.soft.begin(),reviewed_plan.compose.index.soft.end(),
+       [](const auto& t){return t.kind=="near_intent"&&t.subject=="usb_pd"&&t.target_raw=="pd_input"&&!t.enforced;}),
+       "reviewed CC policy must retain the explicit advisory inlet preference");
+   const auto* structures=object_field(reviewed.contracts.at("usb_pd"),"structures");
+   demand(structures&&structures->array_value.size()==6,
+       "external CC policy review must preserve all six local placement structures");
    auto power_input=f.input;
    for(const auto* sheet:{"power","power_som"})power_input.floorplan.spec->interior.at(sheet).layer="either";
    const auto power_zones=build_pcb_zone_geometry(power_input);

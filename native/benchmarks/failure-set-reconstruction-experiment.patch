@@ -1,0 +1,55 @@
+diff --git a/native/src/floorplan_internal.hpp b/native/src/floorplan_internal.hpp
+index d2908a17..7ba012d2 100644
+--- a/native/src/floorplan_internal.hpp
++++ b/native/src/floorplan_internal.hpp
+@@ -194,7 +194,8 @@ public:
+     bool attempt_pack_impl(bool compact,bool* order_independent_failure=nullptr,
+                            const std::string& promote={},std::string* failed_subject=nullptr,
+                            std::size_t first_pose_skip=0,bool* selected_pose=nullptr,
+-                           bool victim_shapes=false,bool incoming_shapes=false);
++                           bool victim_shapes=false,bool incoming_shapes=false,
++                           const std::set<std::string>* priority_subjects=nullptr);
+     double refine_screened_incumbent(double incumbent_estimate);
+     void choose_connector_shapes();
+     PackAnchorIn anchor_row(const FloorplanBlock& b,
+diff --git a/native/src/floorplan_pack.cpp b/native/src/floorplan_pack.cpp
+index 2f0902ee..4feac212 100644
+--- a/native/src/floorplan_pack.cpp
++++ b/native/src/floorplan_pack.cpp
+@@ -205,6 +205,17 @@ bool Engine::attempt_pack(bool compact) {
+                             if(ok)plan.composition.push_back("failure-directed shape recovery: "+failed+" first");
+                         }
+                     }
++                    if(!ok&&recovery&&!order_independent_failure&&rejected_subjects.size()>1) {
++                        const auto subjects=rejected_subjects;
++                        for(const auto& leader:subjects) {
++                            restore();
++                            fallback("interior_failed_first_retry");
++                            const bool shape_retry=in.experiment->reseat_pose_limits&&in.experiment->reseat_pose_limits->victim_shapes;
++                            if(shape_retry)fallback("interior_reseat_shape_retry");
++                            ok=attempt_pack_impl(compact,nullptr,leader,nullptr,0,nullptr,shape_retry,shape_retry,&subjects);
++                            if(ok){plan.composition.push_back("failure-set reconstruction: "+leader+" first");break;}
++                        }
++                    }
+                     if(!ok&&transactional)restore();
+                     compact_order=saved_order;
+                     return ok;
+@@ -247,7 +258,8 @@ bool Engine::attempt_pack(bool compact) {
+ }
+ bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure,
+                               const std::string& promote,std::string* failed_subject,
+-                              std::size_t first_pose_skip,bool* selected_pose,bool victim_shapes,bool incoming_shapes) {
++                              std::size_t first_pose_skip,bool* selected_pose,bool victim_shapes,bool incoming_shapes,
++                              const std::set<std::string>* priority_subjects) {
+     if(in.experiment)for(const auto& [sheet,tag]:in.experiment->offered_shape_tags)
+         if(std::none_of(plan.interior_blocks.begin(),plan.interior_blocks.end(),
+                         [name=sheet](const auto& block){return block.name==name;}))
+@@ -386,6 +398,8 @@ bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure,
+             return awh.first*awh.second>bwh.first*bwh.second;
+         });
+     }
++    if(priority_subjects)std::stable_partition(order.begin(),order.end(),
++        [&](const auto* b){return priority_subjects->count(b->name)!=0;});
+     if(!promote.empty()) {
+         const auto found=std::find_if(order.begin(),order.end(),[&](const auto* b){return b->name==promote;});
+         if(found!=order.end())std::rotate(order.begin(),found,found+1);

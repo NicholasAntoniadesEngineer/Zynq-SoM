@@ -1,0 +1,17 @@
+{
+  "base_commit": "0d6d4e46",
+  "question": "Does the one-victim relocation region exclude positions that removal could enable?",
+  "source_review": "Incoming placement uses evict_window, enclosing all primary/child rectangles and their maximum pair clearance. Displaced-group reseating searches board-wide subject to hard near domains. Two-victim incoming seating is also board-wide.",
+  "test": "native/tests/occupancy_child_halo_contracts.cpp::eviction_region_properties",
+  "coverage": "54 combinations of primary masks 1/2/3, opposite-face children, negative/zero/positive child offsets, symmetric/asymmetric halo configurations and signed directional insets. Enumerate 64x64 half-millimetre origins, retaining board-legal candidates. Independently decompose rectangle pairs and verify collision status against exhaustive occupancy before testing containment.",
+  "result": {
+    "passed": true,
+    "affected_poses_inside_region": 12837,
+    "unaffected_poses": 168765,
+    "entire_child_halo_suite_checks": 244304,
+    "log": "native/build/eviction-region-tests.log"
+  },
+  "decision": "Do not remove or widen the region without a counterexample; this finite property set found no lost opportunity. It is not a proof over all real-valued geometry.",
+  "next_direction": "Two-victim retry currently explores alternate positions only for the first victim's selected legal shape. If that shape seats but blocks the second victim, alternate first-victim shapes are not explored as a coupled choice. Investigate that combination with rollback/accounting tests and a measured carrier screen.",
+  "limits": "No production algorithm change, new smaller layout, full-board qualification or exhaustive project test run. No hardware restrictions weakened."
+}

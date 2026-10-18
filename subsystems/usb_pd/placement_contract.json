@@ -100,13 +100,6 @@
       "pd_input",
       "usb_pd",
       "power"
-    ],
-    "near_max": [
-      {
-        "other": "pd_input",
-        "max_mm": 10.0,
-        "basis": "judgment:10.0 (D11 edge-gap metric) — keep the CC net short end-to-end; onsemi numbers no inter-part CC-run length"
-      }
     ]
   }
 }

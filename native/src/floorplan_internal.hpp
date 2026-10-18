@@ -122,6 +122,8 @@ public:
     FloorplanPlan run();
     const FloorplanInput& in;
     FloorplanPlan plan;
+    // Search history must survive restoration of a candidate layout.
+    std::set<std::string> rejected_subjects;
     std::map<std::string, const CircuitSheetIr*> sheets;
     std::map<std::string, CachedFootprint> footprint_cache;
     std::map<std::string, FloorplanPoint> zbox;

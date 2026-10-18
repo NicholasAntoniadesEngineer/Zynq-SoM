@@ -137,13 +137,19 @@ void contract_retry(const std::filesystem::path& root){
         if(mode==3)throw FloorplanSpecError("controlled invalid specification");
         // Both reservation policies now execute before the parent orientation
         // retry. Reject both to exercise that retry, not just its first pass.
-        if(mode==1||attempts<=2)throw FloorplanPackingInfeasible("controlled packing rejection");
+        if(mode==1||attempts<=2)throw FloorplanPackingInfeasible("controlled packing rejection",
+                {"controlled-pass-"+std::to_string(attempts)});
     };
     fixture.input.floorplan.experiment=observer;
     ExecutionFailureReceipt failure;ExecutionAccounting receipt;bool failed=false;
     begin();
     try {receipt=pcb_placement_accounting(build_pcb_model(fixture.input,&failure));}
-    catch(const FloorplanPackingInfeasible& e){failed=true;receipt=failure.accounting;if(mode==0)std::cerr<<e.what()<<'\n';}
+    catch(const FloorplanPackingInfeasible& e){
+        failed=true;receipt=failure.accounting;if(mode==0)std::cerr<<e.what()<<'\n';
+        if(mode==1)for(int pass=1;pass<=4;++pass)
+            require(e.rejected_subjects.count("controlled-pass-"+std::to_string(pass)),
+                    "terminal retry lost a prior reservation-pass rejection subject");
+    }
     catch(const Injected&){failed=true;receipt=failure.accounting;}
     catch(const FloorplanSpecError&){failed=true;receipt=failure.accounting;}
     observing=false;
@@ -262,7 +268,7 @@ void model_search(const std::filesystem::path& root){
     auto observer=std::make_shared<PcbPlacementExperiment>();
     std::size_t starts=0;
     observer->checkpoint=[&](const PcbPlacementObservation& row){
-        if(row.stage=="zone_pack"&&++starts==2)throw FloorplanPackingInfeasible("injected challenger infeasible");
+        if(row.stage=="zone_pack"&&++starts==2)throw FloorplanPackingInfeasible("injected challenger infeasible",{"power","logic"});
     };
     fixture.input.experiment=observer;
     for(int kind=0;kind<3;++kind) {
@@ -283,6 +289,9 @@ void model_search(const std::filesystem::path& root){
             retained.attempts[1].status=="construction_failed"&&
             retained.attempts[1].detail=="injected challenger infeasible",
             "failed challenger displaced incumbent or lost failure detail");
+    require(retained.attempts[0].rejected_subjects.empty()&&
+            retained.attempts[1].rejected_subjects==std::set<std::string>{"logic","power"},
+            "search retains typed failure hints without attributing challenger failures to incumbent");
     verify(retained.accounting,"complete model portfolio");
     ExecutionAccounting sum;
     for(const auto& row:retained.attempts)append_execution_accounting(sum,row.accounting);

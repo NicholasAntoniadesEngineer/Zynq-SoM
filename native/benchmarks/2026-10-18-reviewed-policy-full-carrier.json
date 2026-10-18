@@ -1,0 +1,23 @@
+{
+  "source_commit": "4c123b60",
+  "build": "cmake --build native/build/fast --parallel 2 --target schgen: PASS",
+  "recipe": "October 18 carrier release command from docs/RELEASE-2026-10-16.md with interior-order 0 and carrier-162x150p5-connectivity.floorplan.json, all audits and rendering enabled; isolated --output native/build/reviewed-policy-full-carrier. Sequential execution; no source edits or concurrent campaign.",
+  "pipeline": {
+    "exit_code": 0,"board_ok":true,"complete":true,"sheets":37,
+    "wall_seconds":480.19,"user_seconds":1004.90,"system_seconds":69.67,
+    "stage_seconds": {"authoring_audit":15.797077,"source_audit":109.666330,"pcb_model_with_internal_checks":285.718488,"sheet_parallel_checks_and_render":25.053147,"render3d":27.410627,"measured_scope_not_process_wall":479.496372},
+    "dimensions_mm":[162,150.5],"parts":{"total":566,"top":349,"bottom":217},
+    "pcb_sha256":"d1dcca5723a788338e72db784272cc0a5a53017eba5174b4dd8c3f09a4068957",
+    "manifest_artifacts":99,"manifest_hash_mismatches":0,
+    "png_files":119,"invalid_png_headers_or_dimensions":0,
+    "visual_review":"Fresh top and bottom 3D renders inspected; reference PCB bytes unchanged.",
+    "drc":{"non_unrouted_errors":0,"unrouted":499},
+    "advisory_failures":["return_path","golden","contract_coverage_lint"],
+    "log":"native/build/reviewed-policy-full-carrier.log",
+    "log_sha256":"b368961ad4539beed59f3b61677c7e6eb97057ca465c06993df8a661b10f405c"
+  },
+  "prior_isolated_reference": {"evidence":"2026-10-18-frontier-key-full-qualification.json","wall_seconds":276.72,"model_seconds":80.803321,"source_audit_seconds":110.064623,"render3d_seconds":27.617093},
+  "interpretation":"The slowdown is present in the normal one-configured-strategy board pipeline, not only the baseline-plus-challenger profiler. Final PCB geometry is identical; model search increased by about 205 seconds while audit/render stages stayed similar. Single historical samples do not establish a precise statistical ratio.",
+  "next_direction":"Compare actual search accounting between the two identical-output builds and identify newly entered retries after removing the unsupported proximity cutoff. Preserve advisory guidance without reinstating a false hardware acceptance limit.",
+  "limits":"Carrier full qualification only; devkit previously passed model diagnostics with identical hash, not a new full pipeline here. No exhaustive CTest run, smaller carrier or new master publication. Routing/CC parasitics and other unknown hardware requirements remain unverified; not fabrication readiness or goal completion."
+}

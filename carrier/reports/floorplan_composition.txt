@@ -1,5 +1,5 @@
-FLOORPLAN COMPOSITION (T1): 18 hard / 1 soft terms; hard RED 0, soft RED 0 (advisory)
-  hard margins (mm): measured 16, unresolved 0, sum 848.83, min 3.48 (informational)
+FLOORPLAN COMPOSITION (T1): 17 hard / 2 soft terms; hard RED 0, soft RED 0 (advisory)
+  hard margins (mm): measured 15, unresolved 0, sum 840.96, min 3.48 (informational)
   hard margins (degrees): measured 2, unresolved 0, sum 91.81, min 23.33 (informational)
   hard terms:
     HARD facing power->power_som: 66.67 vs 90.00 (margin +23.33) ok [facing/output_roles [placement/v2]] dot=+82.18
@@ -19,9 +19,9 @@ FLOORPLAN COMPOSITION (T1): 18 hard / 1 soft terms; hard RED 0, soft RED 0 (advi
     HARD near_max hdmi_rx_term->som_j2: 6.51 vs 10.00 (margin +3.48) ok [XAPP460 p.23 (term AT the receiver) — island at the SoM mezzanine bank-33 RX escape|judgment:10.0 edge-gap (D11)]
     HARD near_max motor_sense->motor_pwm: 1.80 vs 20.00 (margin +18.20) ok [judgment:20.0 (D9) — motor telemetry beside the PWM out]
     HARD near_max uart_bridge->usb_uart_connector: 7.52 vs 40.00 (margin +32.48) ok [judgment:10.0 (D11 edge-gap) — CP2102N's USB DP/DM pair terminates at the UART USB-C; measured 365mm of cross-board airwire (avg 122mm) with the block anchored mid-board and a STALE floorplan near-intent pointing at rj45_connector]
-    HARD near_max usb_pd->pd_input: 2.12 vs 10.00 (margin +7.88) ok [judgment:10.0 (D11 edge-gap metric) — keep the CC net short end-to-end; onsemi numbers no inter-part CC-run length]
   soft terms (advisory ledger — repair triggers, never gates):
     soft near_intent power_mon->power_som: 13.39 vs 0.00 (margin +0.00) ok [carrier/floorplan.json near-intent (advisory)] advisory
+    soft near_intent usb_pd->pd_input: 2.12 vs 0.00 (margin +0.00) ok [carrier/floorplan.json near-intent (advisory)] advisory
   T2 escape corridors (D13 never-close): 6 loaded, 0 UNMANAGED part intrusion(s), 0 T2-coexistence-managed
   D13 channel hotspots (>= 6 cross-airwires; corridor = 2 + 0.2/net mm):
     bringup_en_modules | bringup_rails: 24 airwires (625.7 mm) -> corridor >= 6.8 mm

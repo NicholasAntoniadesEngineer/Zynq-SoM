@@ -1,0 +1,36 @@
+{
+  "base_commit": "3262cfd3",
+  "change": "Carry sorted observed rejection subjects through typed floorplan failures and multi-strategy search attempts; expose them in compact-stage diagnostics independently of optional observer callbacks.",
+  "semantics": "Union of nonempty subjects from actual rejected seating/required-shape checks across attempted policies and outlines. Not a collision-cause proof, exhaustive blocker list or geometric infeasibility proof. No search pruning or hardware relaxation.",
+  "tests": {
+    "native_floorplan_contracts": {"passed": true, "seconds": 9.84},
+    "native_model_failure_receipt_contracts": {"passed": true, "seconds": 30.57},
+    "native_policy_audits_contracts": {"passed": true, "seconds": 44.24},
+    "coverage": "Real fixed and automatic failures, both reservation policies, observer-on/off subject identity and accounting equality; message-only errors invent no subjects; failed challenger hints survive without contaminating retained incumbent."
+  },
+  "carrier_screen": {
+    "outline_mm": [162, 150],
+    "recipe": "2026-10-18-three-group-screen.json tighter-screen recipe, production catalogue unchanged; compact_stage_profile baseline plus granular-minor+vertical+estimator-first",
+    "exit_code": 1,
+    "elapsed_seconds": 46.270298125,
+    "completed_outer_attempts": 8,
+    "baseline_rejected_subjects": ["power", "usb_jtag"],
+    "challenger_rejected_subjects": ["fmc", "power", "usb_jtag"],
+    "receipt_captured": true,
+    "receipt_unavailable": false,
+    "fallback_events": 15022,
+    "exact_accounting_match": true,
+    "log": "native/build/failure-subject-carrier-162x150.log"
+  },
+  "retry_transport_followup": {
+    "base_commit": "6b15d722",
+    "defect": "A terminal orientation retry replaced the first solve error, dropping its subjects. Typed failures originating in callbacks also lost subjects at reservation-policy catch boundaries.",
+    "correction": "Union typed subjects at fixed/automatic policy boundaries and into a failed orientation retry; retain the terminal error message and complete existing execution accounting.",
+    "regressions": "Distinct controlled subjects in both fixed and automatic reservation policies; four distinct subjects across both policies before and after orientation expansion, tested with one and multiple eligible sheets. Existing independent work accounting, incumbent preservation and unexpected-error tests remain active.",
+    "tests": {"native_model_failure_receipt_contracts_seconds": 30.18, "native_floorplan_contracts_seconds": 9.66, "passed": 2, "failed": 0},
+    "log": "native/build/failure-subject-union-tests.log",
+    "limits": "No new carrier sizing screen or full qualification performed for this evidence-transport correction. Earlier screen observations remain historical, not a claim of exhaustive subjects under the corrected transport."
+  },
+  "next_direction": "Use subject hints to prioritise targeted expansion or rearrangement, not to exclude other sheets. FMC appears only in the alternative strategy, reinforcing the need to handle interactions rather than eagerly expanding power alone.",
+  "limits": "No new accepted smaller board, full board qualification or exhaustive test run. Published master images unchanged. Goal remains incomplete."
+}

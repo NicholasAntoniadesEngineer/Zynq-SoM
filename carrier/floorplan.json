@@ -99,7 +99,7 @@
         "weight": 60.0,
         "face": "inboard",
         "exclusive": true,
-        "basis": "D11 edge-seat override, migrated from _EDGE_SEAT_BLOCKS (T1 P3): FUSB302 PD PHY seats at its Type-C inlet - CC-run near_max (judgment:10.0 edge-gap) + usb_pd->power flow budget"
+        "basis": "Advisory placement preference: keep the FUSB302 PD PHY near its Type-C inlet. The former judgment-based 10 mm subsystem edge-gap cutoff is not a manufacturer CC routing limit. Routed CC capacitance and signal integrity remain unverified; usb_pd->power flow policy is unchanged."
       }
     },
     "user_io": {

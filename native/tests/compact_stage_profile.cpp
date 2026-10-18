@@ -600,6 +600,9 @@ std::string trial(const PcbPlacementInput& source, bool compact, int run, int ge
                 const auto& attempt=search.attempts[i];
                 std::cout<<"search_attempt index="<<i<<" strategy="<<(i?search_strategies.at(i-1):"baseline")
                          <<" status="<<attempt.status<<" detail="<<std::quoted(attempt.detail)<<'\n';
+                for(const auto& subject:attempt.rejected_subjects)
+                    std::cout<<"search_rejected_subject attempt="<<i<<" subject="<<std::quoted(subject)
+                             <<" scope=observed_failure_not_causal_proof\n";
                 receipt("search_attempt_"+std::to_string(i),attempt.accounting.quantization_engagements);
                 for(std::size_t event=0;event<attempt.accounting.fallback_events.size();++event)
                     std::cout<<"search_fallback attempt="<<i<<" index="<<event
