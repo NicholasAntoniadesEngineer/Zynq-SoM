@@ -1,0 +1,43 @@
+{
+  "parent_commit": "ddf1b8bf",
+  "source": "native/src/pcb_placement_moves.cpp",
+  "source_sha256": "32f7c03b6dcbc426ffbaf105ee22e5e7fab0c37148d43803cb665b61a9b17b80",
+  "cause": "The refit_facing stage moved TP20002 from (88.5304,141.7653), rotation 90, into (57.4,162.3552), rotation 270, beside stationary R18003 at (56.6283,163.441). All coordinates are emitted page mm. The seed through breathe was separated. Fanout excludes test pads and therefore did not detect the new short. Temporary trace instrumentation was removed.",
+  "trace_log": "native/build/collision-stage-trace.log",
+  "trace_sha256": "bc792e162ff2b42a0269eff445134ac8a7a4335a1221613ed8e1031613791002",
+  "fix": "Before applying any refit, compare emitted-pose courtyard/pad unions for pairs involving moved parts. Same-face pairs and either-side through-hole occupancy cannot lose the configured clearance or worsen existing tight geometry. Test pads have no physical exemption. Preserve the incumbent and already executed accounting on rejection. Use parsed pad types for THT detection.",
+  "tests": {
+    "focused_refit": "PASS 4.39s: explicit fanout-exempt collision witness, same/opposite faces, THT, exact and sub-clearance, absent subjects, tight-geometry non-regression, emission projection, noncompact boundary and thermal pull",
+    "related": "Owned eviction, placement gates and source-policy audits PASS. Initial accounting fixture failed because the archived power-centroid gate relied on an unsafe refit. Current-board accounting now loads the reviewed live power contract; historical kernel/compose baseline unchanged. Accounting rerun PASS 7.68s, independently instrumented and repeatable.",
+    "complete_suite": "Full rebuild PASS; complete 278-test suite running at evidence creation. No complete-suite pass claimed. Log native/build/refit-full-tests.log; exec session 46239."
+  },
+  "carrier": {
+    "output": "native/build/carrier-162x150-refit-clearance", "exit_code": 0,
+    "sheets": 37, "board_ok": true, "complete": true,
+    "dimensions_mm": [162,150], "area_mm2": 24300,
+    "area_reduction_from_published_162x150p5_mm2": 81,
+    "footprints": 566, "top": 345, "bottom": 221,
+    "pcb_sha256": "632231ec9bcea0b616f943dd9df7f47510eb1044c741b94e4f44e4aae7aa59a7",
+    "non_unrouted_drc_errors": 0, "unrouted": 499,
+    "hard_red": 0, "soft_red": 1,
+    "minimum_hard_distance_margin_mm": 3.48, "minimum_hard_facing_margin_degrees": 28.88,
+    "wall_seconds": 284.38, "model_seconds": 74.322809,
+    "render3d_seconds": 29.894650, "source_audit_seconds": 115.509463,
+    "log_sha256": "13324fe3d38c3d7a29efdec93e8347b801fe430d474a94d4ec5fcafc0b573d4d",
+    "manifest_artifacts": 99, "manifest_mismatches": 0, "valid_pngs": 119
+  },
+  "devkit": {
+    "output": "native/build/devkit-refit-clearance", "exit_code": 0,
+    "sheets": 12, "board_ok": true, "complete": true,
+    "dimensions_mm": [98,98], "footprints": 160, "top": 105, "bottom": 55,
+    "pcb_sha256": "922a86f90ed8bd3fcf1b3c219774a5f483fa660995e0e775dd64ac212bc05239",
+    "non_unrouted_drc_errors": 0, "unrouted": 408,
+    "hard_red": 0, "soft_red": 1,
+    "wall_seconds": 184.50, "model_seconds": 0.113565,
+    "render3d_seconds": 17.850617, "source_audit_seconds": 122.435207,
+    "log_sha256": "19e257b0704320e58ac55b3966fe75fa74e1d533f8241b42b8dc27ebfed15fc3",
+    "manifest_artifacts": 73, "manifest_mismatches": 0, "valid_pngs": 45
+  },
+  "verification": "Both boards top and bottom images inspected. 164 PNG signatures/dimensions valid, 172 manifest artifact hashes matched. Published master outputs untouched. Full commands use the prior release recipe with carrier-162x150-advisory-facing.floorplan.json and separate output directories.",
+  "limits": "Both retain advisory floorplan_composition, return_path, golden and contract_coverage_lint failures. Unknown hardware requirements remain unverified. Bounds are conservative unions, not a replacement for independent DRC. Routing is excluded; no fabrication readiness or overall completion. Timings overlap other qualification/build work and are not controlled Python comparisons."
+}
