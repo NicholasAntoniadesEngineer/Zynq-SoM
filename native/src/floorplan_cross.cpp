@@ -187,6 +187,10 @@ std::vector<std::pair<std::string,Box4>> Engine::current_escape_corridors() {
 }
 
 double Engine::estimate(const std::vector<const FloorplanBlock*>& blocks, const std::string& only_sheet) {
+    return evaluate_estimate(blocks,only_sheet,true).value();
+}
+std::optional<double> Engine::evaluate_estimate(const std::vector<const FloorplanBlock*>& blocks,
+                                               const std::string& only_sheet,bool score) {
     // Immutable labels avoid allocating a temporary string at every coordinate.
     // Counters belong to this solve; observational probes use their private Engine.
     static const std::string position_label="estimate_position_precision",pad_label="estimate_pad_precision";
@@ -254,7 +258,7 @@ double Engine::estimate(const std::vector<const FloorplanBlock*>& blocks, const 
     std::vector<std::size_t> net_indices;
     if (only_sheet.empty()) { net_indices.resize(cross_nets.size()); std::iota(net_indices.begin(),net_indices.end(),0); }
     else net_indices=get(nets_by_sheet,only_sheet);
-    cross_cost_memo.resize(cross_nets.size());
+    if(score)cross_cost_memo.resize(cross_nets.size());
     double cross=0;
     for (const auto index:net_indices) {
         const auto& net=cross_nets[index];
@@ -282,6 +286,7 @@ double Engine::estimate(const std::vector<const FloorplanBlock*>& blocks, const 
             for (const auto& [rx,ry]:pad->second) points.emplace_back(pad_precision(positions[pin.part]->first+rx),
                 pad_precision(positions[pin.part]->second+ry),added.first->second,side);
         }
+        if(!score)continue;
         auto& memo=cross_cost_memo[index];
         // Prepare and validate every endpoint above even on a hit; scalar
         // receipts still describe all executed coordinate work. Reuse only
@@ -293,6 +298,7 @@ double Engine::estimate(const std::vector<const FloorplanBlock*>& blocks, const 
         }
         cross+=memo.value;
     }
+    if(!score)return std::nullopt;
     observe_floorplan_experiment_estimate(in.experiment.get(), cross, only_sheet.empty());
     return cross;
 }

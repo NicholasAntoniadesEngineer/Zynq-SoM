@@ -1,0 +1,61 @@
+{
+  "base_commit": "ff43b701",
+  "status": "QUALIFIED; full rebuilt integrated suite PASS 278/278 without exclusions; targeted adversarial and both reference-board regressions pass",
+  "implementation": "Separate endpoint preparation/validation from optional pure net-cost scoring. Validation-only returns nullopt, does not populate the MST memo or emit a fabricated estimate observer event. In unobserved area-first selection, score minimum-area candidates plus the first two diagnostic incumbents; validate every other candidate. Complete-selection observers keep the original full-scoring path. Equal-area ranking retains exact area/cost/width/height order and original first-winner ties. Replay tracing remains before selection observer callbacks.",
+  "tests": {
+    "build": "PASS targeted rebuild; native/build/area-first-pruning-rebuild.log",
+    "suites": ["native_floorplan_contracts", "native_compact_retry_contracts"],
+    "status": "PASS 2/2, 4.38 seconds",
+    "log": "native/build/area-first-pruning-verified-tests.log",
+    "log_sha256": "f2559a01e46a062ce837760edd5ab6df237a6f5ca51b1625821d88b6009198ae",
+    "coverage": "Validation-only returns no score and does not populate net-cost memo, preserves all coordinate operations, and rejects invalid prepared shape selections. Synthetic compact selection matches the complete-observer path in layout, reported side offers and scalar receipts, across required-bottom/non-required and equal-area/non-equal-area cases. Existing broader floorplan/compact retry tests pass.",
+    "corrected_test": "Initial synthetic full-scoring reference enabled required-bottom before supplying shapes after Engine construction. Moved that fixture requirement to after setup, matching the original fixture; no production eligibility rule weakened."
+  },
+  "carrier_screen": {
+    "session": 63404,
+    "status": "TERMINAL exit 1; no screened incumbent in baseline or granular-minor+vertical+area-first; not an infeasibility proof",
+    "elapsed_seconds": 22.743260416999998,
+    "completed_outer_attempts": 8,
+    "fallback_events": 18069,
+    "exact_accounting_match": true,
+    "log_sha256": "b55669fe7815304b374aaeba4f8b380ebd7ec7f9bd3abab4d610f8419349d990",
+    "log": "native/build/area-first-pruning-carrier-screen.log",
+    "configuration": "Carrier, reviewed 161x150 floorplan, order0, compact-search, edge-feasibility, owned-quality-first/face-cohesion, contract faces usb_jtag/power/power_som/power_mon, bottom-required power_mon/bringup_modules/bringup_en_modules, joint1024/reseat8/frontier4096/continuations3/victim-shapes, board_aux=owned-face-a1.000000, failed-first-retry, shape-area-first, strategy granular-minor+vertical+area-first; baseline retained"
+  },
+  "connected_followup": {
+    "status": "PASS 4/4, 34.26 seconds",
+    "suites": ["native_compact_retry_contracts", "native_pack_plain_source_contracts", "native_output_precision_source_contracts", "native_pack_search_source"],
+    "log": "native/build/area-first-connected-tests.log",
+    "log_sha256": "d32aba968ab7b1f253452b7a0d99e70b6bf9fae30708781e3dbafdd8ed8093be",
+    "coverage": "Twelve deterministic connected-net geometries, six offers each, with actual nonzero scores and mixed primary faces. Full-observer and pruned paths agree on layout, side-offer values and exact coordinate receipts. An observed strictly larger candidate beyond the first two diagnostic offers has its prepared geometry deliberately removed; both paths reject it."
+  },
+  "paired_diagnostic": {
+    "session": 5438,
+    "status": "TERMINAL exit 0; both models constructed with screening checks passing, not full acceptance",
+    "pruned_model_seconds": 26.980741458000001,
+    "complete_model_seconds": 27.994581166,
+    "pcb_sha256_both": "5401a2c7ac6bf910cf4743193c55a8166fc9f4692dbdecb7559fcd690cd3696d",
+    "dimensions_mm": [168,163],
+    "parts": 566,
+    "top": 442,
+    "bottom": 124,
+    "exact_receipt_and_geometry_comparison": "330 selected lines identical across receipt, fallback, owned_final and courtyard_coverage prefixes; equal emitted PCB SHA-256. Fanout, ratsnest, local placement contract and flow screening pass with hard_red=0.",
+    "off_log_sha256": "16e84cdf6d4492c0460b860103ed176d93225696c36c0e3f7159cd33b0070e5c",
+    "on_log_sha256": "effd22dae462786110fe3c38d6ec69ca6f809ab15c0782780c0a8e95969eb4ff",
+    "logs": ["native/build/area-first-matched-off.log", "native/build/area-first-matched-on.log"],
+    "configuration": "Same direct carrier configuration as the opportunity trace, with outline override 168x163. Only owned-selection-trace changes: off exercises pruning, on requires all exact offer costs.",
+    "limitation": "Diagnostic outline only, not a replacement for the published 161x150 reference. Trace-on additionally formats/writes diagnostic rows; wall timing does not isolate pure scoring speedup."
+  },
+  "observer_exception": {"status": "PASS", "log": "native/build/area-first-observer-tests.log", "seconds": 1.94, "coverage": "Throwing selection observer propagates the original exception and restores incumbent poses/side offers. External replay trace is recorded before the callback, preserving ordering."},
+  "devkit_regression": {"status": "TERMINAL exit 0, model screen PASS", "log": "native/build/area-first-devkit-regression.log", "model_seconds": 0.115203958, "dimensions_mm": [98,98], "top": 105, "bottom": 55, "pcb_sha256": "1b12fecbcbbaa5e6084c2459da93cb144a660ff19805e6e4e3f75f9c22689fdb", "checks": "fanout/ratsnest/local-contract/flow PASS, hard_red=0; exact published reference PCB"},
+  "current_processes": {
+    "carrier_reference": {"session": 78574, "log": "native/build/area-first-carrier-reference-regression.log", "status": "TERMINAL exit 0, model screen PASS", "configuration": "Published 161x150 reviewed-facing carrier options; baseline plus granular-minor+vertical+estimator-first strategy, no area-first override", "model_seconds": 75.342985459000005, "dimensions_mm": [161,150], "top": 345, "bottom": 221, "parts": 566, "pcb_sha256": "2c5fe226dccd5427554e3c9e3fa9c916bcfa93b8d81ad18a9a05d19c8c769f43", "log_sha256": "df95e1e67ed3f902308c22caaf128e147607416be47357509954f84c9581e4cd", "checks": "fanout/ratsnest/local-contract/flow PASS, hard_red=0; exact published PCB; baseline failed then granular-minor+vertical+estimator-first retained as incumbent", "timing_scope": "Includes baseline plus strategy and concurrent rebuild; not an isolated performance comparison"},
+    "complete_build": {"session": 15955, "log": "native/build/area-first-complete-build.log", "status": "TERMINAL PASS exit 0", "log_sha256": "125e339a988f5a6873c749d2e3f62c4c2e3cb5cd17b847252ae58f77a25ec403"},
+    "integrated_suite": {"session": 7979, "log": "native/build/area-first-integrated-tests.log", "status": "TERMINAL PASS, exit 0", "passed": 278, "failed": 0, "seconds": 869.67, "log_sha256": "2154fff855619adbfeffc2f7baca3faaacb81049b27429c50dc7074f1418cc77", "command": "ctest --test-dir native/build/fast --parallel 2 --output-on-failure", "note": "Complete suite on stable rebuilt source; no exclusions. All sessions in this evidence file are terminal; do not repoll or restart."}
+  },
+  "remaining": [
+    "Continue smaller-carrier search using this qualified implementation; no new smaller finalist has been accepted.",
+    "Observed diagnostic timing includes trace overhead; do not claim an isolated scoring speedup from it."
+  ],
+  "limits": "Full-suite pass establishes integrated regression evidence, not an isolated speedup or a smaller-board result. Published master remains unchanged; the broader optimisation goal is active."
+}

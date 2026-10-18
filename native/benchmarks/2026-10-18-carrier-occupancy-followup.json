@@ -1,0 +1,19 @@
+{
+  "status": "Read-only bottleneck review while area-first qualification runs; no hardware policy or source changes",
+  "reference": "native/build/area-first-carrier-reference-regression.log; exact published 161x150 PCB hash 2c5fe226dccd5427554e3c9e3fa9c916bcfa93b8d81ad18a9a05d19c8c769f43",
+  "observations": {
+    "usb_jtag": {"envelope_mm2": 939.65488920000007, "primary_union_mm2": 165.02751999999984, "opposite_union_mm2": 97.629400000000217, "primary_parts": 12, "opposite_parts": 7},
+    "fmc": {"envelope_mm2": 1151.55655, "primary_union_mm2": 358.79570000000018, "opposite_union_mm2": 0, "primary_parts": 8, "opposite_parts": 0},
+    "board_services": {"envelope_mm2": 480.16800000000001, "primary_union_mm2": 341.15426399999933, "opposite_union_mm2": 21.607999999999969, "primary_parts": 4, "opposite_parts": 5}
+  },
+  "interpretation": "Large envelopes relative to component courtyard unions are a search-coverage lead, not reclaimable-area estimates: gaps may serve fanout, functional relationships, access and through-hole occupancy. USB-JTAG already has seven opposite-face components in this model. Its top-primary label does not imply all-top placement.",
+  "prior_evidence_reused": "2026-10-18-face-catalog-review.json: scoped USB-JTAG component-primary occupancy at 160x150 already failed after 18 outer attempts and 41787 exactly reconciled fallback events. Do not repeat that same campaign or claim envelope decomposition alone solves placement. 2026-10-16-component-scoped-screen.json records additional individual/combined scoped trials on older source.",
+  "top_face_rule_review": {
+    "group_rule": "native/src/pcb_placement_variants.cpp pins connector anchors, explicit face-top/through-hole parts and endpoints on impedance-class nets before forming rigid groups.",
+    "whole_sheet_rule": "native/src/pcb_placement_zones.cpp rejects bottom/either sheet assignments carrying impedance-controlled classes with the diagnostic B.Cu has no emitted reference plane.",
+    "emission_evidence": "native/src/emit.cpp declares In1.Cu as L2 (GND) and In2.Cu as L3 (PWR); copper_debt.cpp and thermal_checks.cpp explicitly verify emitted In1 ground copper. This review does not establish an equivalent bottom reference plane or signal-integrity qualification.",
+    "decision": "Retain current impedance-side protection. Class membership is not a universal law requiring top-side parts, but this generator's emitted reference-plane capability is a real dependency. Do not remove it merely to make bottom placement pass or infer safe routing from placement geometry."
+  },
+  "next_direction": "Focus bounded experiments on independently legal same-face group orientations and compact group shapes around the existing opposite-face assignments. Avoid the previous unbounded rotation-catalog cost; preserve current incumbents and use exact physical/geometry qualification. Additional high-speed bottom eligibility would need a separately evidenced emitted-reference/transition model, not an arbitrary gate waiver.",
+  "limits": "No new smaller board, extra usable area, hardware safety or routing/fabrication readiness claimed. The separate area-first implementation batch subsequently passed all 278 integrated tests; see 2026-10-18-area-first-pruning.json."
+}

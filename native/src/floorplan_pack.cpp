@@ -503,23 +503,43 @@ bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure,
             for (const auto& e:plan.edge_blocks) partial.push_back(&e);
             partial.insert(partial.end(),placed.begin(),placed.end());
             partial.push_back(&b);
-            auto judge=[&](const SeatShapeHit& h) {
+            auto evaluate=[&](const SeatShapeHit& h,bool score) {
                 const auto saved=b;
                 pose(b,{h.x,h.y,h.w,h.h}); b.shape_idx=h.index; b.side=h.side;
-                double value;
-                try { value=estimate(partial,b.name); } catch (...) { b=saved; throw; }
+                std::optional<double> value;
+                try { value=evaluate_estimate(partial,b.name,score); } catch (...) { b=saved; throw; }
                 b=saved; return value;
             };
+            const auto judge=[&](const SeatShapeHit& h){return evaluate(h,true).value();};
             const double incumbent=judge(hits[0]),challenger=judge(hits[1]);
             const auto quality=in.owned_shape_quality.lower_bound({b.name,0});
             const bool has_quality=in.compact_search && quality!=in.owned_shape_quality.end() &&
                 quality->first.first==b.name;
             const bool observe_selection=in.experiment&&bool(in.experiment->owned_shape_selection_completed);
             const bool area_first=in.compact_search&&in.experiment&&in.experiment->shape_area_first;
+            double selected=incumbent;
             std::vector<double> evaluated;
+            if(area_first&&!observe_selection) {
+                // Area is the first exact ranking key. Validate every offer,
+                // but only score the minimum-area set (plus the two diagnostic
+                // incumbents above). Never invent a score for a skipped offer.
+                std::vector<double> areas;areas.reserve(hits.size());
+                for(const auto& h:hits)areas.push_back(block_area(h.w,h.h,counts));
+                const double minimum=*std::min_element(areas.begin(),areas.end());
+                std::optional<OutlineCandidate> rank;
+                for(std::size_t i=0;i<hits.size();++i) {
+                    const auto& h=hits[i];
+                    const bool competitive=areas[i]==minimum;
+                    const auto value=i==0?std::optional<double>(incumbent):i==1?
+                        std::optional<double>(challenger):evaluate(h,competitive);
+                    if(!competitive)continue;
+                    const OutlineCandidate candidate{areas[i],h.w,h.h,value.value(),0};
+                    if(!rank||prefer_outline(candidate,*rank)){rank=candidate;best=h;selected=*value;}
+                }
+            } else {
             if (has_quality||observe_selection||area_first) { evaluated.reserve(hits.size()); evaluated={incumbent,challenger}; }
             if (pick_sided_challenger(incumbent,challenger,1e-6)) best=hits[1];
-            double selected=best.index==hits[1].index ? challenger:incumbent;
+            selected=best.index==hits[1].index ? challenger:incumbent;
             if (in.compact_search) for (std::size_t i=2;i<hits.size();++i) {
                 const double value=judge(hits[i]);
                 if (has_quality||observe_selection||area_first) evaluated.push_back(value);
@@ -562,6 +582,7 @@ bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure,
                         rank=candidate;best=h;selected=evaluated.at(i);
                     }
                 }
+            }
             }
             if(trace_choices&&traced_choices.insert(b.name).second) {
                 auto indices=face_diverse_replay_indices(hits,best);

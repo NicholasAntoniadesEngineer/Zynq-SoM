@@ -513,7 +513,7 @@ void victim_shape_portfolio_contract(){
     require(shape_area_trial_order({}).empty(),"empty retry catalog must remain empty");
     require(shape_area_trial_order({8,2,2,6,1})==std::vector<std::size_t>({4,1,2,3,0}),
             "area-ordered retries must retain every alternative and stable equal-area order");
-    for(bool bottom:{false,true}) {
+    for(bool bottom:{false,true})for(bool equal_area:{false,true}) {
         auto in=input();auto config=std::make_shared<FloorplanExperiment>();
         config->shape_area_first=true;in.experiment=config;
         Engine e(in);setup(e,Case{70,50,{{16,12,4,0}}});
@@ -521,10 +521,82 @@ void victim_shape_portfolio_contract(){
         auto& shapes=e.shape_sets[1]["b0"];
         shapes[1].w=14;shapes[1].h=10;
         shapes[2].w=8;shapes[2].h=8;
-        shapes[3].w=12;shapes[3].h=8;
+        shapes[3].w=equal_area?16:12;shapes[3].h=equal_area?4:8;
         require(e.attempt_pack_impl(false),"area-first fixture must pack");
         require(e.plan.interior_blocks.front().shape_idx==(bottom?3:2),
                 "area-first must select smallest eligible envelope and preserve face constraint");
+        std::size_t observed=0;
+        config->owned_shape_selection_completed=[&](const auto&,const auto& alternatives,const auto&,int){
+            ++observed;for(const auto& candidate:alternatives)
+                require(std::isfinite(candidate.estimator),"observer must receive exact finite scores");
+        };
+        // This synthetic fixture supplies shapes after Engine construction.
+        config->require_bottom_sheets.erase("b0");
+        Engine complete(in);setup(complete,Case{70,50,{{16,12,4,0}}});
+        complete.shape_sets[1]["b0"]=shapes;
+        if(bottom)config->require_bottom_sheets.insert("b0");
+        require(complete.attempt_pack_impl(false)&&observed>0,"full-scoring reference must exercise observer");
+        require(equal(layout(complete.plan),layout(e.plan))&&offers(complete)==offers(e),
+                "area-pruned selection differs from complete-scoring reference");
+        require(complete.plan.accounting.quantization_engagements==e.plan.accounting.quantization_engagements,
+                "area-pruned validation changed actual scalar work receipts");
+    }
+    // Nonzero connected nets exercise cost tie-breaking and actual face costs,
+    // not just envelope ranking with the empty-net fixture above.
+    for(int seed=0;seed<12;++seed) {
+        auto in=input();auto config=std::make_shared<FloorplanExperiment>();
+        config->shape_area_first=true;in.experiment=config;
+        for(int k=0;k<6;++k){FloorplanZoneShape s;s.w=s.h=16;s.side=k%2?"bottom":"top";
+            s.top_off["U1"]={0,0};in.geometry.shapes["b0"].push_back(s);}
+        const auto prepare=[&](Engine& e){
+            setup(e,Case{70,50,{{16,12,6,0}}});
+            auto& shapes=e.shape_sets[1]["b0"];
+            shapes[2].w=shapes[2].h=8;shapes[4].w=shapes[4].h=8;
+            floorplan_detail::CrossPart moving{};moving.owner=floorplan_detail::CrossPart::Owner::Zone;
+            moving.ref="U1";moving.sheet=moving.key="b0";moving.base_side="top";
+            for(int k=0;k<6;++k){moving.pad_positions[k]["1"]={{0,0}};
+                if(k)moving.shape_offsets[k]={double((seed*7+k*3)%11),double((seed*3+k*5)%13)};}
+            auto fixed=moving;fixed.owner=floorplan_detail::CrossPart::Owner::MountingHole;
+            fixed.ref="J1";fixed.sheet=fixed.key="fixed";fixed.owner_index=0;
+            e.cross_parts={moving,fixed};e.cross_nets.push_back({"signal",{{0,"1"},{1,"1"}},7.2});
+            e.nets_by_sheet["b0"]={0};
+        };
+        Engine pruned(in);prepare(pruned);
+        require(pruned.attempt_pack_impl(false),"connected pruned fixture must pack");
+        std::vector<OwnedShapeTieRank> observed;
+        config->owned_shape_selection_completed=[&](const auto&,const auto& candidates,const auto&,int){observed=candidates;};
+        Engine full(in);prepare(full);require(full.attempt_pack_impl(false),"connected complete fixture must pack");
+        require(observed.size()==6&&std::all_of(observed.begin(),observed.end(),[](const auto& r){return r.estimator>0&&std::isfinite(r.estimator);}),
+                "connected fixture must produce six real nonzero scores");
+        require(equal(layout(full.plan),layout(pruned.plan))&&offers(full)==offers(pruned),
+                "connected area-pruned result differs from full scoring");
+        require(full.plan.accounting.quantization_engagements==pruned.plan.accounting.quantization_engagements,
+                "connected pruning changed endpoint/area scalar accounting");
+        // Select a definitely dominated candidate beyond the two always-scored
+        // diagnostic offers. Both paths must reject its missing geometry.
+        const auto bad=std::find_if(observed.begin()+2,observed.end(),[](const auto& r){return r.w*r.h>64&&r.index>0;});
+        require(bad!=observed.end(),"dominated validation witness missing");
+        for(bool observe:{false,true}) {
+            if(!observe)config->owned_shape_selection_completed={};
+            else config->owned_shape_selection_completed=[](const auto&,const auto&,const auto&,int){};
+            Engine invalid(in);prepare(invalid);invalid.cross_parts.front().shape_offsets.erase(bad->index);
+            bool rejected=false;try{(void)invalid.attempt_pack_impl(false);}
+            catch(const FloorplanError& ex){rejected=std::string(ex.what()).find("has no prepared geometry for U1")!=std::string::npos;}
+            require(rejected,"dominated malformed geometry must reject in both paths");
+        }
+        if(seed==0) {
+            config->owned_shape_selection_completed=[](const auto&,const auto&,const auto&,int){
+                throw std::runtime_error("selection observer stop");
+            };
+            Engine interrupted(in);prepare(interrupted);
+            const auto initial=layout(interrupted.plan);const auto initial_offers=offers(interrupted);
+            Engine::ShapeChoiceTrace trace;interrupted.shape_replay_trace=&trace;
+            bool stopped=false;try{(void)interrupted.attempt_pack(false);}
+            catch(const std::runtime_error& ex){stopped=std::string(ex.what())=="selection observer stop";}
+            require(stopped&&equal(layout(interrupted.plan),initial)&&offers(interrupted)==initial_offers,
+                    "selection observer exception must restore incumbent poses and offers");
+            require(!trace.empty(),"replay tracing must precede selection observer callback");
+        }
     }
     using schgen::floorplan_detail::permitted_shape_count;
     for(std::size_t n=0;n<128;++n){
