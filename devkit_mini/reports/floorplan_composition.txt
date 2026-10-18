@@ -1,11 +1,11 @@
-FLOORPLAN COMPOSITION (T1): 3 hard / 1 soft terms; hard RED 0, soft RED 0 (advisory)
+FLOORPLAN COMPOSITION (T1): 2 hard / 2 soft terms; hard RED 0, soft RED 0 (advisory)
   hard margins (mm): measured 2, unresolved 0, sum 99.79, min 38.28 (informational)
-  hard margins (degrees): measured 1, unresolved 0, sum 50.64, min 50.64 (informational)
+  hard margins (degrees): measured 0, unresolved 0, sum 0.0, min unavailable (informational)
   hard terms:
-    HARD facing power->power_som: 39.36 vs 90.00 (margin +50.64) ok [facing/output_roles [placement/v2]] dot=+427.55
     HARD flow_hop power->power_som: 40.05 vs 101.56 (margin +61.51) ok [flow chain [placement/v2]]
     HARD near_max uart_bridge->usb_uart_connector: 1.72 vs 40.00 (margin +38.28) ok [judgment:10.0 (D11 edge-gap) — CP2102N's USB DP/DM pair terminates at the UART USB-C; measured 365mm of cross-board airwire (avg 122mm) with the block anchored mid-board and a STALE floorplan near-intent pointing at rj45_connector]
   soft terms (advisory ledger — repair triggers, never gates):
+    soft facing power->power_som: 39.36 vs 90.00 (margin +50.64) ok [ADVISORY centroid preference: Reviewed 2026-10-18: all-component centroid direction changes when unrelated test points move; it is a placement preference, not a hardware limit. SNVSBD5D Rev. D section 11.1 requires local loop/layout and power-path quality, not a 90-degree subsystem-centroid cutoff. See native/benchmarks/2026-10-18-facing-centroid-review.json; routing and parasitics remain unverified.] dot=+427.55
     soft near_intent power_mon->power_som: 18.66 vs 0.00 (margin +0.00) ok [carrier/floorplan.json near-intent (advisory)] advisory
   n/a terms (endpoint subsystem not instantiated by this project — project-scoped resolution):
     n/a far_min power->ethernet.line_side [judgment:10.0 — buck switching node vs Ethernet MDI/magnetics analog line side; datasheet silent on inter-subsystem spacing (SNVSBD5D covers intra-stage only)]

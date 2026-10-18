@@ -61,6 +61,11 @@ void frontier_rejection_properties() {
             if(grid.fits_exhaustive(x,y,2,2,{},{},mask,children))
                 expected.emplace_back(py_round(std::abs(x+1-anchor)+std::abs(y+1-anchor),1),x,y);
         std::sort(expected.begin(),expected.end());
+        const auto nearest=grid.place_near(anchor,anchor,2,2,{},{},mask,children,0,12,0,12);
+        require(nearest.has_value()==!expected.empty(),"direct nearest scan changed feasibility");
+        if(nearest)require(nearest->x==std::get<1>(expected.front())&&
+                           nearest->y==std::get<2>(expected.front()),
+                           "direct nearest scan changed masked-child oracle result");
         const auto all=grid.place_near_candidates(anchor,anchor,2,2,{},{},mask,children,
                                                  0,12,0,12,200,1000);
         require(all.search_complete&&!all.budget_exhausted,"exhaustive frontier did not finish");
@@ -78,12 +83,16 @@ void frontier_rejection_properties() {
 }
 void frontier_shape_properties() {
     // Include singleton rows/columns, uneven row lengths and many equal keys.
-    for(int width:{1,2,3,7})for(int height:{1,2,6,11})for(double anchor:{0.,2.5,9.05}) {
+    for(int width:{1,2,3,7})for(int height:{1,2,6,11})for(double anchor:{0.,2.5,3.,3.5,9.05}) {
         Occupancy grid(width,height,0,2,3,1,.05);
         std::vector<std::tuple<double,double,double>> expected;
         for(int x=0;x<width;++x)for(int y=0;y<height;++y)
             expected.emplace_back(py_round(std::abs(x+.5-anchor)+std::abs(y+.5-anchor),1),x,y);
         std::sort(expected.begin(),expected.end());
+        const auto nearest=grid.place_near(anchor,anchor,1,1,{},{},1,{},0,width,0,height);
+        require(nearest&&nearest->x==std::get<1>(expected.front())&&
+                         nearest->y==std::get<2>(expected.front()),
+                         "direct nearest scan changed exhaustive distance/x/y ordering");
         const auto all=grid.place_near_candidates(anchor,anchor,1,1,{},{},1,{},
                                                  0,width,0,height,1000,1000);
         require(all.search_complete&&all.frontier_nodes==expected.size(),"frontier lost a row successor");
@@ -91,6 +100,18 @@ void frontier_shape_properties() {
         for(std::size_t i=0;i<expected.size();++i)
             require(all.poses[i].x==std::get<1>(expected[i])&&all.poses[i].y==std::get<2>(expected[i]),
                     "frontier replacement changed independent exhaustive ordering");
+        // Exercise budgets ending inside equal-distance row successors and
+        // rounded buckets. Every consumed cell counts, even before flushing.
+        for(std::size_t budget=1;budget<expected.size();++budget) {
+            const auto limited=grid.place_near_candidates(anchor,anchor,1,1,{},{},1,{},
+                                                          0,width,0,height,1000,budget);
+            require(limited.budget_exhausted&&!limited.search_complete&&
+                    limited.frontier_nodes==budget,"tied successor escaped frontier budget");
+            require(limited.poses.size()<=all.poses.size(),"budget added poses");
+            for(std::size_t i=0;i<limited.poses.size();++i)
+                require(limited.poses[i].x==all.poses[i].x&&limited.poses[i].y==all.poses[i].y,
+                        "tied successor budget changed legal prefix");
+        }
     }
 }
 void fractional_hash_properties() {

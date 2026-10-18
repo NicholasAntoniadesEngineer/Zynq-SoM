@@ -56,6 +56,21 @@ std::optional<Point> FinalGeometry::members(const std::string &sheet,
 
 namespace schgen {
 using namespace placement_gates;
+std::optional<std::string> pcb_facing_advisory_basis(const JsonNode& contract) {
+    const auto* ext=object_field(contract,"external");
+    const auto* basis=ext?object_field(*ext,"facing_advisory_basis"):nullptr;
+    if(!basis)return std::nullopt;
+    const auto* downstream=object_field(*ext,"downstream");
+    const auto* roles=object_field(*ext,"output_roles");
+    if(basis->kind!=JsonKind::String||basis->string_value.find_first_not_of(" \t\r\n")==std::string::npos||
+       !downstream||downstream->kind!=JsonKind::String||downstream->string_value.empty()||
+       !roles||roles->kind!=JsonKind::Array||roles->array_value.empty())
+        throw std::invalid_argument("facing_advisory_basis requires nonempty provenance, downstream and output_roles");
+    for(const auto& role:roles->array_value)
+        if(role.kind!=JsonKind::String||role.string_value.empty())
+            throw std::invalid_argument("advisory facing output_roles must contain nonempty strings");
+    return basis->string_value;
+}
 PcbPlacementFlowResult check_pcb_placement_flow(const PcbCheckInput &in,
                                                 const PcbPlacementGatePolicy &policy,
                                                 const std::map<std::string, JsonNode> *selected, QuantizationCounts* counts) {
@@ -88,6 +103,7 @@ PcbPlacementFlowResult check_pcb_placement_flow(const PcbCheckInput &in,
     };
     auto add = [&](const std::string &s) { res.violations.push_back(s); };
     for (const auto &[sheet, c] : *selected) {
+        const auto advisory_basis=pcb_facing_advisory_basis(c);
         const auto &ext = opt(c, "external");
         if (!truth(ext))
             continue;
@@ -183,8 +199,12 @@ PcbPlacementFlowResult check_pcb_placement_flow(const PcbCheckInput &in,
                                              "deg (output@" + point_repr(*o) + " zone@" +
                                              point_repr(*a) + " down@" + point_repr(*b) + ")");
                         res.terms.push_back({"facing", sheet, downstream, angle, 90, dot > 0,
-                                             str(c, "contract", "?")});
-                        if (dot <= 0) {
+                                             advisory_basis.value_or(str(c, "contract", "?")),bool(advisory_basis)});
+                        if(advisory_basis)
+                            res.advisories.push_back("facing "+sheet+"->"+downstream+
+                                (dot>0?": preference satisfied":": preference NOT satisfied")+
+                                " (angle="+f(angle,1)+"deg; not hardware qualification) ["+*advisory_basis+"]");
+                        if (dot <= 0 && !advisory_basis) {
                             ++res.facing_fail;
                             add("facing " + sheet + "->" + downstream +
                                 ": output parts face AWAY (dot=" + sign(dot, 2) + " <= 0, angle=" +
@@ -279,6 +299,7 @@ std::string PcbPlacementFlowResult::summary() const {
     if (!na.empty())
         append("n/a (subsystem not in this project)", na);
     append("violations", violations);
+    if(!advisories.empty())append("advisory preferences (not hardware qualification)",advisories,"ADVISORY ");
     append("detail", detail);
     return join(lines);
 }

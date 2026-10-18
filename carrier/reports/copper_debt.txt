@@ -11,7 +11,7 @@ emitted copper inventory: 8 fill zones (with In1.Cu GND plane), 3 rule areas, 34
 CD-01  LM61460 pour-aware effective RthJA (58.7 -> 35 C/W)   [EMITTED]
   assumes: full-board In1.Cu GND plane + per-buck thermal-via field (>=6 x 0.6/0.3) at PGND1/PGND2 + local F.Cu/B.Cu GND pours (TI SNVSBD5D 7.3 bare 58.7 C/W vs 25 C/W on a 4-layer board; 11.1.1 layout)
   where:   native/src/copper_debt.cpp:50
-  emits:   In1.Cu GND plane: YES; U20001: 8 GND vias<=5.2mm, F.Cu pour YES, B.Cu pour YES; U20002: 8 GND vias<=5.2mm, F.Cu pour YES, B.Cu pour YES; U22004: 13 GND vias<=5.2mm, F.Cu pour YES, B.Cu pour YES
+  emits:   In1.Cu GND plane: YES; U20001: 8 GND vias<=5.2mm, F.Cu pour YES, B.Cu pour YES; U20002: 8 GND vias<=5.2mm, F.Cu pour YES, B.Cu pour YES; U22004: 8 GND vias<=5.2mm, F.Cu pour YES, B.Cu pour YES
   risk:    without this copper Tj(power:U1, 2.42 W) backs out to ~192 C at the bare 58.7 C/W against the 140 C guard — a board-dead thermal PASS-on-fiction (the GAP1 CRITICAL). The thermal gate now HARD-verifies this copper per build.
 
 CD-02  TLV75725 DYD EP thermal-pad RthJA (92.5 C/W)   [EMITTED]

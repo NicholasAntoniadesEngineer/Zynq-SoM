@@ -111,7 +111,7 @@ std::vector<FloorplanTermEval> evaluate(const FloorplanLegalizeInput& in,
     std::vector<std::size_t> strict_indices, guarded_indices;
     for (std::size_t i = 0; i < terms.size(); ++i) {
         const auto& t = *terms[i];
-        const bool strict = t.kind == "facing" && t.enforced && t.require_positive_facing;
+        const bool strict = t.kind == "facing" && (!t.enforced || t.require_positive_facing);
         (strict ? strict_rows : guarded_rows).push_back(rows[i]);
         (strict ? strict_indices : guarded_indices).push_back(i);
     }
@@ -130,7 +130,9 @@ std::vector<FloorplanTermEval> evaluate(const FloorplanLegalizeInput& in,
             for (std::size_t i = 0; i < guarded_indices.size(); ++i)
                 values[guarded_indices[i]] = evaluated[i];
         }
-        // Only strict facing loses L4 deferral. Far/flow guards remain intact.
+        // Strict facing and advisory measurements lose L4 deferral: an advisory
+        // must report its real negative value, not a guarded false-green.
+        // Far/flow guards remain intact.
         // Evaluate each row once and import actual work even on rejection.
         const auto evaluated = evaluate_terms(in.board_w, in.board_h, in.som_core_page,
             {poses.begin(), poses.end()}, metrics, strict_rows, {},
@@ -603,31 +605,51 @@ private:
                     const auto* v=by_name.at(name);
                     const double lo=in.clear,hi=(x?in.board_w-v->w:in.board_h-v->h)-in.clear;
                     const double other_lo=in.clear,other_hi=(x?in.board_h-v->h:in.board_w-v->w)-in.clear;
-                    std::vector<std::pair<double,double>> blocked;
+                    struct Blocked {double lo,hi,cross_lo,cross_hi;};
+                    std::vector<Blocked> blocked;
+                    // Free space can change only at an obstacle contact or
+                    // board boundary. Sweep those coordinates, combining the
+                    // perpendicular open intervals of all active obstacles.
+                    // This also detects strips covered by several rectangles.
+                    std::vector<double> contacts{lo,hi};
                     for(const auto& [fixed_name,b]:frect) {
                         if(!in.primary_fanout.empty()) {
                             const auto& a=in.primary_fanout.at(name);
                             const auto& f=in.primary_fanout.at(fixed_name);
-                            // Only an actual shared-face primary rectangle
-                            // proves a full strip blocked. Component-only
-                            // envelopes and opposite faces may contain pockets.
+                            // An envelope of component-only geometry or a
+                            // different face does not prove a blocked strip.
                             if(a.component_only||f.component_only||!(a.mask&f.mask))continue;
                         }
-                        const double cross_lo=(x?b.y0-v->h:b.x0-v->w)-in.clear;
-                        const double cross_hi=(x?b.y1:b.x1)+in.clear;
-                        if(cross_lo<other_lo&&cross_hi>other_hi)
-                            blocked.emplace_back((x?b.x0-v->w:b.y0-v->h)-in.clear,
-                                                 (x?b.x1:b.y1)+in.clear);
+                        const double a=(x?b.x0-v->w:b.y0-v->h)-in.clear;
+                        const double z=(x?b.x1:b.y1)+in.clear;
+                        blocked.push_back({a,z,(x?b.y0-v->h:b.x0-v->w)-in.clear,
+                                             (x?b.y1:b.x1)+in.clear});
+                        if(a>=lo&&a<=hi)contacts.push_back(a);
+                        if(z>=lo&&z<=hi)contacts.push_back(z);
                     }
-                    std::sort(blocked.begin(),blocked.end());
+                    std::sort(contacts.begin(),contacts.end());
+                    contacts.erase(std::unique(contacts.begin(),contacts.end()),contacts.end());
+                    std::sort(blocked.begin(),blocked.end(),[](const auto& a,const auto& b){
+                        return std::tie(a.cross_lo,a.cross_hi)<std::tie(b.cross_lo,b.cross_hi);
+                    });
+                    const auto available=[&](double coordinate) {
+                        double cursor=other_lo;
+                        for(const auto& b:blocked) {
+                            if(!(b.lo<coordinate&&coordinate<b.hi))continue;
+                            if(b.cross_lo>=cursor)break; // Open intervals retain exact contact.
+                            if(cursor<b.cross_hi)cursor=b.cross_hi;
+                            if(cursor>other_hi)return false;
+                        }
+                        return cursor<=other_hi;
+                    };
                     double lower=lo,upper=hi;
-                    // Collision intervals are open: exact-clearance contact
-                    // remains available. Overlapping strips are propagated in
-                    // order without excluding an isolated legal contact point.
-                    for(const auto& [a,b]:blocked)if(a<lower&&lower<b)lower=b;
-                    for(auto it=blocked.rbegin();it!=blocked.rend();++it)
-                        if(it->first<upper&&upper<it->second)upper=it->first;
-                    if(lower>upper){lower=lo;upper=hi;} // No feasibility claim; the solver still rejects.
+                    const auto first=std::find_if(contacts.begin(),contacts.end(),available);
+                    if(first!=contacts.end()) {
+                        lower=*first;
+                        upper=*std::find_if(contacts.rbegin(),contacts.rend(),available);
+                    }
+                    // No free contact is not an acceptance verdict. Retain
+                    // broad bounds and let the exact solver reject the layout.
                     return std::make_pair(local+lower,local+upper);
                 };
                 const auto capacity=[&](bool x,double a) {

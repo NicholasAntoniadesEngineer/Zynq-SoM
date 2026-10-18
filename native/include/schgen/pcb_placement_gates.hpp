@@ -3,6 +3,9 @@
 #include "schgen/ratsnest.hpp"
 
 namespace schgen {
+// A reviewed centroid heuristic may be advisory only with explicit provenance.
+// Malformed declarations throw; unresolved geometry remains a gate failure.
+std::optional<std::string> pcb_facing_advisory_basis(const JsonNode& contract);
 struct PcbContractSourcePart {
     std::string footprint;
     PcbCheckFootprintPtr mod;
@@ -61,12 +64,14 @@ struct PcbPlacementFlowTerm {
     double measured = 0, bound = 0;
     bool ok = false;
     std::string basis;
+    bool advisory = false;
 };
 struct PcbPlacementFlowResult {
     bool ok = true;
     int n_contracts = 0, flow_checked = 0, flow_fail = 0, facing_checked = 0, facing_fail = 0,
         far_checked = 0, far_fail = 0, near_max_checked = 0, near_max_fail = 0;
     std::vector<std::string> unresolved, na, violations, detail;
+    std::vector<std::string> advisories;
     double board_area = 0, flow_budget_mm = 0;
     std::vector<PcbPlacementFlowTerm> terms;
     std::string summary() const;

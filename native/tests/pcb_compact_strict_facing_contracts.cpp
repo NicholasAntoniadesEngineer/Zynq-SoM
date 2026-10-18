@@ -39,7 +39,7 @@ void oracle(const FloorplanLegalizeInput& in) {
     require(actual.size()==terms.size(),"row population");
     for(std::size_t k=0;k<terms.size();++k) {
         const auto& t=terms[k];
-        const bool strict=t.enforced && t.kind=="facing" && t.require_positive_facing;
+        const bool strict=t.kind=="facing" && (!t.enforced || t.require_positive_facing);
         const std::vector<std::pair<std::string,double>> guards=strict?
             std::vector<std::pair<std::string,double>>{}:
             std::vector<std::pair<std::string,double>>{{"ethernet",14},{"power_som",25}};
@@ -125,8 +125,8 @@ void tests() {
         const auto guard=subject_guard?14:25;
         require(values[0].bound==10+guard,"far clearance guard removed");
         require(values[2].note.find("L4")!=std::string::npos,"flow guard removed");
-        require(values[3].ok && values[3].note.find("gate-arbitrated")!=std::string::npos,
-                "non-enforced legacy term semantics changed");
+        require(!values[3].ok && values[3].note.find("gate-arbitrated")==std::string::npos,
+                "advisory measurement hidden behind legacy guard");
     }
     auto empty=input();empty.index={};oracle(empty);
 }

@@ -179,7 +179,7 @@ void boundary_frontier() {
     Occupancy blocked(6,6,1,2,1,1,.05);blocked.add(0,0,6,6,{},{},1,{});
     QuantizationCounts counts;
     measured(counts,[&]{require(!blocked.place_near(3,3,2,2,{},{},1,{},-1,7,-1,7,&counts),"blocked lattice unexpectedly fits");});
-    require(counts.at(names[2])==3,"nine legal-boundary cells have exactly three distinct raw distances");
+    require(!counts.count(names[2]),"blocked unbounded scan must not rank illegal poses");
     require(counts.at(names[4])==4,"one blocking body should need one spatial lookup, not nine");
     QuantizationCounts oversized;
     measured(oversized,[&]{require(!blocked.place_near(3,3,5,2,{},{},1,{},-1,7,-1,7,&oversized),"oversized body unexpectedly fits");});
@@ -250,10 +250,13 @@ void alternative_poses() {
             oracle.emplace_back(occupancy_frontier_key1dp(std::abs(x+.5-ax)+std::abs(y+.5-2.65)),x,y);
         }
         std::sort(oracle.begin(),oracle.end());
-        QuantizationCounts legacy_counts,one_counts;
-        const auto first=scene.place_near(ax,2.65,1,1,{},{},mask,children,.5,6,.5,5,&legacy_counts);
-        const auto one=scene.place_near_candidates(ax,2.65,1,1,{},{},mask,children,.5,6,.5,5,1,10000,&one_counts);
-        require(legacy_counts==one_counts&&bool(first)==!one.poses.empty(),"single-result adapter changed receipts or feasibility");
+        QuantizationCounts direct_counts,one_counts;
+        std::optional<Pose> first;NearPoseCandidates one;
+        measured(direct_counts,[&]{first=scene.place_near(ax,2.65,1,1,{},{},mask,children,.5,6,.5,5,&direct_counts);});
+        measured(one_counts,[&]{one=scene.place_near_candidates(ax,2.65,1,1,{},{},mask,children,.5,6,.5,5,1,10000,&one_counts);});
+        // Different traversals must each report their actual calls, not pretend
+        // to execute identical work; their selected geometry must still agree.
+        require(bool(first)==!one.poses.empty(),"direct and bounded queries disagree on feasibility");
         if(first)require(first->x==one.poses[0].x&&first->y==one.poses[0].y,"single-result adapter changed incumbent");
         for(std::size_t limit:{1u,4u,10000u})for(std::size_t budget:{1u,3u,10000u}) {
             QuantizationCounts counts;NearPoseCandidates result;
@@ -334,7 +337,7 @@ void child_rejection_cache() {
     const std::vector<Comp> children{{0,0,2,2,1}};
     QuantizationCounts counts;
     measured(counts,[&]{require(!blocked.place_near(3,3,2,2,{},{},2,children,-1,7,-1,7,&counts),"opposite-face child obstruction missed");});
-    require(counts.at(names[2])==3&&counts.at(names[4])==8,
+    require(!counts.count(names[2])&&counts.at(names[4])==8,
             "child rejection must reuse its exact offset/mask after the initial body+child lookup");
     QuantizationCounts repeated;
     measured(repeated,[&]{require(!blocked.place_near(3,3,2,2,{},{},2,children,-1,7,-1,7,&repeated),"repeat lost obstruction");});

@@ -1,0 +1,34 @@
+{
+  "source_commit": "6ea00609",
+  "decision": "Reject equal-distance heap-root shortcut: no meaningful observed end-to-end improvement. Production source restored; retain expanded tie/budget properties.",
+  "profile": {
+    "path": "native/build/reviewed-policy-sample.txt",
+    "sha256": "a3733d4a34b8f869b507c65ba649b55f4d50783a2d5f37dac08dacc195f9e87c",
+    "scope": "20-second sampling of earlier 162x150 carrier diagnostic; not a whole-run profile",
+    "main_thread_samples": 15443,
+    "place_near_impl_self_samples": 8509,
+    "fits_indexed_self_samples": 1028,
+    "mst_manhattan_self_samples": 845,
+    "interpretation": "Nearest-position frontier is the dominant sampled CPU consumer. Increased legalizer event counts alone do not locate the CPU bottleneck."
+  },
+  "experiment": "FrontierHeap::replace_top directly replaces the root when successor distance and row index equal the old root; only one live node per row exists. Every visited node and quantization call remains accounted for.",
+  "workload": "Carrier 162x150 diagnostic, granular-minor+vertical+estimator-first, interior order 0, failed-first, owned quality/cohesion, group faces usb_jtag/power/power_som/power_mon, bottom power_mon/bringup_modules/bringup_en_modules, 1024 joint states, 8 poses, 4096 frontier, 3 continuations, victim shapes and board_aux=owned-face-a1.000000. Same options as reviewed-policy-sampled run.",
+  "before": {
+    "seconds": 72.908873084,
+    "log": "native/build/heap-tie-before.log",
+    "sha256": "26ae0b4e1394339aed58c506dc3a6c9a2af1a04d132da48d7d2b0729b1c7a514"
+  },
+  "after": {
+    "seconds": 72.887775292,
+    "log": "native/build/heap-tie-after.log",
+    "sha256": "d17a501e66a161a56db32e28e5ed1ac245fbb2753546e6f04318d196eb2dc868"
+  },
+  "both": {
+    "exit_code": 1, "status": "search_failed", "completed_outer_attempts": 8,
+    "fallback_events": 71937, "exact_accounting_match": true,
+    "exactly_equal_ordered_receipt_event_and_subject_lines": 72262
+  },
+  "tests": "Expanded exhaustive frontier properties from 48 to 80 width/height/anchor cases, including symmetric ties; every positive frontier budget below exhaustive grid size checks exact node consumption and accepted-prefix preservation. Child-halo and instrumented numerical precision suites passed with experiment; rerun on restored production recorded separately.",
+  "restored_production_tests": "Both suites PASS, 6.61 seconds total; native/build/heap-tie-restored-tests.log. Production generator and profiler rebuilt with shortcut removed.",
+  "limitations": "Single screening pair; baseline briefly overlapped compilation/testing. No statistically supported speedup, smaller accepted board, full qualification, or Python comparison is claimed. Sample is partial and contains inlined work. Next optimization should address frontier traversal volume/data structure cost rather than assume event counts directly represent CPU cost."
+}

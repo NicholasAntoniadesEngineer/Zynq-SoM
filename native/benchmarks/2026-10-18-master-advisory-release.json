@@ -1,0 +1,40 @@
+{
+  "source_commit": "4665936d",
+  "generator_sha256": "218007df0d638c3b4bbe09d43566540340e4bb5b94397480d68cbdfcf22add22",
+  "build": "Complete native target rebuild PASS; native/build/master-publication-compile.log",
+  "build_log_sha256": "537bd0227a76957a1021d2d124fa51df738e508c49ef9df4ed21eb28bb8310ec",
+  "regression_suite": {
+    "command": "ctest --test-dir native/build/fast --parallel 2 --output-on-failure",
+    "passed": 278, "failed": 0, "excluded": 0, "wall_seconds": 860.95,
+    "log": "native/build/master-publication-tests.log",
+    "log_sha256": "5f425461002fb451d9edbf1c5dde05b0a3d47b8f2ec7b9176f8d5989399375a6"
+  },
+  "scope": "Both full production board pipelines into tracked release paths; all mandatory audits and rendering enabled. Carrier order 0, carrier-162x150p5-connectivity.floorplan.json, same release options documented in docs/RELEASE-2026-10-16.md. Concurrent with compilation and tests; not isolated performance measurements.",
+  "carrier": {
+    "exit_code": 0, "board_ok": true, "complete": true, "sheets": 37,
+    "wall_seconds": 293.45, "model_seconds": 53.786457,
+    "render3d_seconds": 33.168827, "source_audit_seconds": 135.551255,
+    "dimensions_mm": [162, 150.5], "footprints": 566, "top": 345, "bottom": 221,
+    "fresh_pngs": 119, "manifest_artifacts": 103, "manifest_hash_mismatches": 0,
+    "pcb_sha256": "c5555bc28e45f3930fe7fa4ddc758cbbc1345166aa3049a0ab849cf2d02c2774",
+    "non_unrouted_drc_errors": 0, "unrouted_connections": 499,
+    "hard_red": 0, "soft_red": 1,
+    "advisory_failures": ["floorplan_composition", "return_path", "golden", "contract_coverage_lint"],
+    "log": "native/build/master-publication-carrier.log",
+    "log_sha256": "925260a6dd562f2dd06dfaeb00c3b19deaca6b65a8f3ddb787a93ba9f41d0c06"
+  },
+  "devkit_mini": {
+    "exit_code": 0, "board_ok": true, "complete": true, "sheets": 12,
+    "wall_seconds": 204.55, "model_seconds": 0.168127,
+    "render3d_seconds": 21.275305, "source_audit_seconds": 137.742442,
+    "dimensions_mm": [98, 98], "footprints": 160, "top": 105, "bottom": 55,
+    "fresh_pngs": 45, "manifest_artifacts": 73, "manifest_hash_mismatches": 0,
+    "pcb_sha256": "1b12fecbcbbaa5e6084c2459da93cb144a660ff19805e6e4e3f75f9c22689fdb",
+    "non_unrouted_drc_errors": 0, "unrouted_connections": 408,
+    "advisory_failures": ["return_path", "golden", "contract_coverage_lint"],
+    "log": "native/build/master-publication-devkit.log",
+    "log_sha256": "091cae3f039f25547e94d72e7506867e26c58907947ca878c8a4ac473f446421"
+  },
+  "image_verification": "All 164 release PNGs newer than their pipeline log creation, valid PNG signatures and positive dimensions. Top and bottom views of both boards visually inspected. All 176 manifest artifact hashes independently matched. Historical experiment images excluded; byte-identical regenerated files retain existing Git blobs.",
+  "limits": "Power centroid facing preference is explicitly unsatisfied (172.9 degrees), not hardware qualification. Missing geometry and other mandatory constraints remain failures. Unknown hardware requirements remain unverified; routing excluded; not fabrication readiness or overall goal completion. No new matched Python comparison."
+}

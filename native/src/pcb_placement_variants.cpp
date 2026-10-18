@@ -102,7 +102,7 @@ bool orientation_eligible(const Context& ctx, const Geometry& g, const std::stri
             const auto& schema=optional(contract->second,"contract");
             if(!board_checked_external||!ctx.wired.count(sheet)||schema.kind!=JsonKind::String||
                schema.string_value!="placement/v2"||external.kind!=JsonKind::Object)return false;
-            const std::set<std::string> supported{"flow","downstream","output_roles","far","near_max","media_faces_near_max"};
+            const std::set<std::string> supported{"flow","downstream","output_roles","far","near_max","media_faces_near_max","facing_advisory_basis"};
             for(const auto& [key,value]:external.object_value){(void)value;if(!supported.count(key))return false;}
         }
     }
