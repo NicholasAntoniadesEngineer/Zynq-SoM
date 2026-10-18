@@ -1301,6 +1301,41 @@ void frozen(const std::filesystem::path& dir,const std::string& name,bool geomet
     require(!load_floorplan_spec((publication.directory/"missing.json").string()),name+": missing optional spec");
 }
 void repair_choice_contracts() {
+    for(bool compact:{false,true})for(bool transpose:{false,true}) {
+        FloorplanLegalizeInput in;in.board_w=20;in.board_h=10;in.clear=.3;
+        in.compact=compact;
+        in.fixed_rects={{"barrier",{8,0,12,10}}};
+        in.metrics["v"]={{{"p",1,1}},{{"p",0,0,2,2}},{2,2}};
+        in.som_j_rects["som_j1"]={14,4,15,5};
+        in.index.hard.push_back({"near_max","v","v","som_j1",20,"axis repair witness",true,{},{}});
+        std::vector<FloorplanLegalizeVar> vars{{"v",2,2,{9,11},9,11},{"w",2,2,{10,11},10,11}};
+        if(transpose) {
+            std::swap(in.board_w,in.board_h);
+            in.fixed_rects={{"barrier",{0,8,10,12}}};
+            in.som_j_rects["som_j1"]={4,14,5,15};
+            for(auto& v:vars){std::swap(v.x,v.y);std::swap(v.seed.first,v.seed.second);}
+        }
+        const auto initial=vars;
+        std::vector<std::string> log;
+        QuantizationCounts counts;
+        const bool ok=floorplan_legalize_compact_accounted(in,vars,log,counts);
+        require(ok,"Y repair must re-solve newly constrained X axis");
+        const auto axis=[&](const auto& v){return transpose?v.y:v.x;};
+        // Compare emitted 0.0001 mm grid units, without binary addition noise.
+        require(std::llround(axis(vars[0])*10000)>=123000&&
+            std::llround(axis(vars[1])*10000)-std::llround(axis(vars[0])*10000)>=23000,
+            "coupled bodies must clear barrier and one another");
+        for(const auto& v:vars)require(v.x>=in.clear&&v.y>=in.clear&&
+            v.x+v.w<=in.board_w-in.clear&&v.y+v.h<=in.board_h-in.clear,
+            "reconciliation must retain every board boundary");
+        if(!transpose)require(std::count(log.begin(),log.end(),"repair: reconcile x constraints without flips")==1,
+            "coupled repair must record exactly one zero-flip reconciliation");
+        auto repeat=initial;std::vector<std::string> repeat_log;QuantizationCounts repeat_counts;
+        require(floorplan_legalize_compact_accounted(in,repeat,repeat_log,repeat_counts)&&
+            repeat_log==log&&repeat_counts==counts,"reconciliation must reproduce receipts and accounting");
+        for(std::size_t i=0;i<vars.size();++i)require(vars[i].x==repeat[i].x&&vars[i].y==repeat[i].y,
+            "reconciliation must reproduce positions");
+    }
     for(bool compact:{false,true})for(bool horizontal:{false,true}) {
         FloorplanLegalizeInput in;in.board_w=12;in.board_h=6;in.clear=.3;in.compact=compact;
         in.fixed_rects={{"barrier",{4,0,12,6}}};in.fixed_poses["barrier"]={4,0};

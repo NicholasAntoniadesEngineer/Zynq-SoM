@@ -370,11 +370,23 @@ public:
         if (!edges_ok(true, pos_x) || !edges_ok(false, pos_y)) {
             if (!repair(true, pos_x) || !repair(false, pos_y)) return false;
             descend(true);
+            // Y repair can move a separation onto X after X was solved.
+            // Coordinate descent cannot always restore feasibility: a chain
+            // may need several bodies to move together before any one body's
+            // interval is nonempty. Solve the final constraint assignment,
+            // without allowing another flip to invalidate the opposite axis.
+            bool reconciled=false;
+            for(bool x:{true,false})if(!edges_ok(x,x?pos_x:pos_y)) {
+                log.push_back(std::string("repair: reconcile ")+(x?"x":"y")+" constraints without flips");
+                if(!repair(x,x?pos_x:pos_y,0))return false;
+                reconciled=true;
+            }
+            if(reconciled)descend(true);
             for (bool x : {true, false}) for (const auto& e : edges(x)) {
                 if (violated(e.edge, x ? pos_x : pos_y)) {
                     log.push_back(std::string("REJECT: ") + (x ? "x" : "y") +
                         "-edge unsatisfied after axis solve (" + e.kind + " " + e.edge.src + "|" +
-                        e.edge.dst + ") — repair flip landed on an already-solved axis");
+                        e.edge.dst + ") — fixed-axis reconciliation failed");
                     return false;
                 }
             }
@@ -891,12 +903,12 @@ private:
         for (const auto& e : edges(x)) if (violated(e.edge, pos)) return false;
         return true;
     }
-    bool repair(bool x, std::vector<double>& pos) {
+    bool repair(bool x, std::vector<double>& pos, int flip_budget=repair_max) {
         std::vector<NamedEdge> additional;
         const auto additional_terms=extra(x);
         for (const auto& e : additional_terms) additional.push_back(e.edge);
         auto r = legalize_repair_axis(x, names, sizes(x), x ? in.board_w : in.board_h,
-            in.clear, seps, {frect.begin(), frect.end()}, additional, repair_max);
+            in.clear, seps, {frect.begin(), frect.end()}, additional, flip_budget);
         for(const auto& [lo,hi,was_x]:r.flips)
             flip_order_differs|=reverse_perpendicular(lo,hi,was_x);
         if(perpendicular_order)for(const auto& [lo,hi,was_x]:r.flips)
@@ -905,7 +917,8 @@ private:
         seps = std::move(r.seps);
         if (!r.ok) {
             log.push_back(std::string("INFEASIBLE ") + (x ? "x" : "y") +
-                (r.fail == "exhausted" ? ": REPAIR_MAX exhausted" : ": negative cycle"));
+                (flip_budget==0 ? ": final separation assignment has a negative cycle (no flips allowed)" :
+                 r.fail == "exhausted" ? ": REPAIR_MAX exhausted" : ": negative cycle"));
             if(in.report_infeasible_cycle)for(std::size_t i=0;i<r.infeasible_cycle.size();++i) {
                 const auto& edge=r.infeasible_cycle[i];
                 auto origin=r.infeasible_cycle_origins.at(i);
