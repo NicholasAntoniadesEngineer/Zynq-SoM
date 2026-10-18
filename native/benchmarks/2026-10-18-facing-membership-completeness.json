@@ -1,0 +1,36 @@
+{
+  "parent_commit": "a8d00ede",
+  "finding": "Final flow and composition measurements could compute a facing centroid from a surviving subset of declared outputs. Removing C19's mapping from the actual carrier power_som contract was accepted instead of reported unresolved.",
+  "before_log": "native/build/facing-completeness-before.log",
+  "before_log_sha256": "85262d07c21b85476e676f42519e897a9b63117eb6abd0cd18e04a8a54399cf8",
+  "correction": "Require nonempty one-to-one output mappings and exactly one finite-position instance for every requested member on its declared sheet. Apply identical member completeness to final flow and composition measurement, including explicit output refs. Incomplete or ambiguous evidence stays UNRESOLVED even when the preference is advisory. Complete input measurements and policy are unchanged.",
+  "regressions": {
+    "coverage": "Actual carrier SoM contract, four coordinate reflections, two testpoint positions, strict and advisory terms. Mutations remove a mapping or instance, move a member to the wrong sheet, alias two mappings, or duplicate an instance. Composition additionally tests explicit missing, empty and duplicated refs. Existing complete-input and missing-SoM assertions retained.",
+    "build": "PASS complete native rebuild",
+    "build_log": "native/build/facing-completeness-full-build.log",
+    "build_log_sha256": "d5b3ae0432e911badb58ce1ee3f486f2b8f4c4dbadf435c293414a894035e0eb",
+    "targeted_suites": 8, "passed": 8, "failed": 0, "seconds": 44.99,
+    "test_log": "native/build/facing-completeness-regressions.log",
+    "test_log_sha256": "45fffec35980e8be30562ea57117c884c68d58676b99fef25a7eb6ed91971402",
+    "scope": "Placement gates, source-policy audits, floorplan, failure receipts, legalize/precision accounting, compact facing and refit-clearance. Not a fresh exhaustive suite."
+  },
+  "carrier": {
+    "dimensions_mm": [161,150], "parts": 566, "top": 345, "bottom": 221,
+    "pcb_sha256": "2c5fe226dccd5427554e3c9e3fa9c916bcfa93b8d81ad18a9a05d19c8c769f43",
+    "model_seconds": 62.867586125,
+    "checks": "fanout, ratsnest, placement contracts and flow true; hard_red=0",
+    "log": "native/build/facing-completeness-carrier-screen.log",
+    "log_sha256": "014eb17266c99b0f370a13e43975f825178695218f36d895dcfdbe6fd62e4209",
+    "prior_full_qualification": "2026-10-18-carrier-161x150-qualification.json"
+  },
+  "devkit": {
+    "dimensions_mm": [98,98], "parts": 160, "top": 105, "bottom": 55,
+    "pcb_sha256": "1b12fecbcbbaa5e6084c2459da93cb144a660ff19805e6e4e3f75f9c22689fdb",
+    "model_seconds": 0.128073708,
+    "checks": "fanout, ratsnest, placement contracts and flow true; hard_red=0",
+    "log": "native/build/facing-completeness-devkit-screen.log",
+    "log_sha256": "18c85e89df2879277e11d05578b19416d769545681baedb66a47c8c599963cde",
+    "prior_full_qualification": "2026-10-18-refit-release.json"
+  },
+  "limits": "Both board models exactly match their previously fully qualified PCB bytes; physical/rendering evidence reused, not a claim of fresh full pipelines. No layout improvement or controlled timing comparison claimed in this correctness batch. Published master unchanged. Unknown hardware requirements and routing remain open; no fabrication readiness or overall completion claim."
+}

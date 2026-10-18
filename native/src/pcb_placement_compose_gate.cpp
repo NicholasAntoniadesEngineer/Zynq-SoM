@@ -120,16 +120,16 @@ std::vector<FloorplanTermEval> measure_pcb_compose_terms(const PcbCheckInput &in
                 out.push_back({t, d, bound, py_round(d - bound, 4), d >= bound, ""});
             } else if (t.kind == "facing") {
                 std::set<std::string> members(t.out_refs.begin(), t.out_refs.end());
+                bool complete=members.size()==t.out_refs.size()&&!members.count("");
                 if (members.empty()) {
                     const auto &map = refs(policy, t.subject);
                     for (const auto &r : t.output_roles) {
                         auto p = map.find(r);
-                        if (p != map.end())
-                            members.insert(p->second);
+                        if(p==map.end()||p->second.empty()||!members.insert(p->second).second)complete=false;
                     }
                 }
                 auto a = geom.centroid(t.subject), b = geom.centroid(target),
-                     o = geom.members(t.subject, members);
+                     o = complete?geom.members(t.subject, members):std::nullopt;
                 if (!a || !b || !o) {
                     out.push_back({t, 180, 90, -90, false, "UNRESOLVED"});
                     continue;

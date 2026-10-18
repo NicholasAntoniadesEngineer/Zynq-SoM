@@ -607,6 +607,39 @@ void power_som_centroid_policy(const std::filesystem::path& root) {
         require(soft.ok&&soft.facing_fail==0&&soft.advisories.size()==1&&soft.terms.size()==1&&
             soft.terms[0].advisory&&soft.terms[0].ok!=moved,
             "reviewed SoM preference must retain negative evidence without hardware PASS claim");
+        for(int mode=0;mode<5;++mode)for(bool advisory:{false,true}) {
+            auto broken=model;auto partial=policy;
+            partial.contracts["power_som"]=advisory?contract:strict;
+            if(mode==0)partial.ref_maps["power_som"].erase("C19");
+            if(mode==1)broken.insts.erase(broken.insts.begin()+2);
+            if(mode==2)broken.insts[2].sheet="unrelated";
+            if(mode==3)partial.ref_maps["power_som"]["C19"]="C18";
+            if(mode==4)broken.insts.push_back(broken.insts[2]);
+            const auto bad=check_pcb_placement_flow(PcbCheckInput(broken),partial);
+            require(!bad.ok&&bad.facing_fail==1&&!bad.unresolved.empty()&&bad.advisories.empty(),
+                "partial or ambiguous output centroid must remain unresolved, mode="+std::to_string(mode));
+            FloorplanTerm term;term.kind="facing";term.subject="power_som";term.target_raw="@som";
+            term.output_roles={"C18","C19"};term.enforced=!advisory;
+            FloorplanTermIndex index;(advisory?index.soft:index.hard).push_back(term);
+            const auto measured=measure_pcb_compose_terms(PcbCheckInput(broken),index,partial);
+            require(measured.size()==1&&!measured[0].ok&&measured[0].note=="UNRESOLVED",
+                "composition must not report a partial output centroid as measured");
+            if(mode==1||mode==2||mode==4) {
+                auto& direct=(advisory?index.soft:index.hard).front();
+                direct.out_refs={"C18","C19"};direct.output_roles.clear();
+                const auto explicit_refs=measure_pcb_compose_terms(PcbCheckInput(broken),index,partial);
+                require(explicit_refs.size()==1&&!explicit_refs[0].ok&&explicit_refs[0].note=="UNRESOLVED",
+                    "explicit output refs must also require complete unique model members");
+            }
+        }
+        for(const auto& refs:std::vector<std::vector<std::string>>{
+            {"C18","C18"},{"C18",""},{"C18","absent"}}) {
+            FloorplanTerm term;term.kind="facing";term.subject="power_som";term.target_raw="@som";term.out_refs=refs;
+            FloorplanTermIndex index;index.soft.push_back(term);
+            const auto measured=measure_pcb_compose_terms(PcbCheckInput(model),index,policy);
+            require(measured.size()==1&&!measured[0].ok&&measured[0].note=="UNRESOLVED",
+                "malformed explicit output membership must not become a partial centroid");
+        }
         model.som_core.reset();
         const auto unresolved=check_pcb_placement_flow(PcbCheckInput(model),policy);
         require(!unresolved.ok&&!unresolved.unresolved.empty(),"missing SoM geometry must remain a failure");

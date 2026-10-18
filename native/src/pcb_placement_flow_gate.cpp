@@ -47,10 +47,14 @@ std::optional<Box4> FinalGeometry::bbox(const std::string &name) const {
 std::optional<Point> FinalGeometry::members(const std::string &sheet,
                                             const std::set<std::string> &refs) const {
     std::vector<Point> points;
+    std::set<std::string> found;
     for (const auto &i : input.model().insts)
-        if (i.sheet == sheet && refs.count(i.ref))
+        if (i.sheet == sheet && refs.count(i.ref)) {
+            if(!found.insert(i.ref).second||!std::isfinite(i.x)||!std::isfinite(i.y))return {};
             points.emplace_back(i.x, i.y);
-    return points.empty() ? std::nullopt : std::optional<Point>(rounded_centroid(points, 4, counts));
+        }
+    // A centroid of a surviving subset is not evidence for all declared outputs.
+    return points.empty()||found.size()!=refs.size() ? std::nullopt : std::optional<Point>(rounded_centroid(points, 4, counts));
 }
 } // namespace schgen::placement_gates
 
@@ -168,14 +172,14 @@ PcbPlacementFlowResult check_pcb_placement_flow(const PcbCheckInput &in,
                         {"facing", sheet, downstream, inf, 90, false, str(c, "contract", "?")});
                 } else {
                     std::set<std::string> brefs;
+                    bool complete=true;
                     const auto &map = refs(policy, sheet);
                     for (const auto &r : libs) {
                         auto p = map.find(r);
-                        if (p != map.end())
-                            brefs.insert(p->second);
+                        if(p==map.end()||p->second.empty()||!brefs.insert(p->second).second)complete=false;
                     }
                     auto a = geom.centroid(sheet), b = geom.centroid(downstream),
-                         o = geom.members(sheet, brefs);
+                         o = complete?geom.members(sheet, brefs):std::nullopt;
                     if (!a || !b || !o) {
                         std::vector<std::string> missing;
                         if (!a)
