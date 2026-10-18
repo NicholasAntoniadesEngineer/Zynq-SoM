@@ -85,6 +85,8 @@ void validate(const FloorplanLegalizeInput& in) {
     for (const auto* terms : {&in.index.hard, &in.index.soft}) for (const auto& t : *terms) {
         if (!kinds.count(t.kind))
             throw FloorplanError("floorplan compose: unknown term kind " + t.kind);
+        if(t.prefer_short_flow&&t.kind!="flow_hop")
+            throw FloorplanError("floorplan compose: flow preference on non-flow term");
         if (t.subject.empty() || t.target().empty())
             throw FloorplanError("floorplan compose: empty term endpoint");
         if (t.bound) finite(*t.bound, "term bound");
@@ -270,6 +272,7 @@ public:
         distance_envelope = joint;
         full_distance_envelope = joint&&authored_distance;
         if (movable.empty() || (in.index.hard.empty()&&
+            std::none_of(in.index.soft.begin(),in.index.soft.end(),[](const auto& t){return t.prefer_short_flow;})&&
             std::none_of(in.primary_fanout.begin(),in.primary_fanout.end(),
                 [](const auto& entry){return entry.second.component_only;}))) return true;
         std::vector<Box4> seeds, fixed_boxes;
@@ -968,8 +971,8 @@ private:
         }
         for (const auto& [n, r] : frect) { (void)r; centers.emplace_back(n, cent_off(n)); }
         std::vector<std::pair<std::string, std::string>> hops;
-        if (!seed_only) for (const auto& t : in.index.hard)
-            if (t.kind == "flow_hop") hops.emplace_back(t.subject, t.target());
+        if (!seed_only) for(const auto* terms:{&in.index.hard,&in.index.soft})for (const auto& t : *terms)
+            if (t.kind == "flow_hop"&&(terms==&in.index.hard||t.prefer_short_flow)) hops.emplace_back(t.subject, t.target());
         const auto& core = in.som_core_page;
         auto result = legalize_descend_passes_accounted(names, pos_x, pos_y, sx, sy, ex, ey, hops, centers,
             {fixed.begin(), fixed.end()}, (core.x0 + core.x1) / 2 - in.origin.first,

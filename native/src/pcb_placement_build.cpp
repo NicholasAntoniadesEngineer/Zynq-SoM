@@ -23,6 +23,7 @@ FloorplanTermIndex term_index(const Context &ctx) {
         }
         old.enforced = old.enforced || t.enforced;
         old.require_positive_facing = old.require_positive_facing || t.require_positive_facing;
+        old.prefer_short_flow = old.prefer_short_flow || t.prefer_short_flow;
         if (old.output_roles.empty())
             old.output_roles = t.output_roles;
         if (old.out_refs.empty())
@@ -59,8 +60,12 @@ FloorplanTermIndex term_index(const Context &ctx) {
         };
         const auto basis = text(contract, "contract", "?");
         const auto flow = strings(ext, "flow");
-        for (std::size_t k = 1; k < flow.size(); ++k)
-            add(make("flow_hop", flow[k - 1], flow[k], "flow chain [" + basis + "]"));
+        for (std::size_t k = 1; k < flow.size(); ++k) {
+            auto t=make("flow_hop",flow[k-1],flow[k],"ADVISORY board-size-derived flow preference ["+basis+"]");
+            t.prefer_short_flow=t.enforced;
+            t.enforced=false;
+            add(std::move(t));
+        }
         for (const auto &n : optional(ext, "near_max").array_value) {
             auto t = make("near_max", sheet, text(n, "other", "?"), text(n, "basis"));
             t.bound = number(n, "max_mm");

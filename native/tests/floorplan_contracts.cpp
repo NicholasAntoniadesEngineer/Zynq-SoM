@@ -232,6 +232,31 @@ void compose_contracts(const std::filesystem::path& dir) {
     require(log.empty(),"malformed compose inputs never append acceptance logs");
     require(floorplan_evaluate_terms(base,{}).empty(),"empty term index evaluates without fabricated terms");
 }
+void flow_preference_contracts() {
+    for(bool compact:{false,true}) {
+        FloorplanLegalizeInput in;in.board_w=80;in.board_h=20;in.compact=compact;in.clear=.3;
+        in.fixed_rects={{"barrier",{8,0,58,20}}};
+        for(const auto* name:{"a","b"})in.metrics[name]={{{"pin",1,1}},{{"pin",0,0,2,2}},{2,2}};
+        FloorplanTerm flow;flow.kind="flow_hop";flow.subject="a";flow.target_raw="b";
+        in.index.soft={flow};
+        const std::vector<FloorplanLegalizeVar> seed{{"a",2,2,{5,5},5,5},{"b",2,2,{65,5},65,5}};
+        auto inert=seed;std::vector<std::string> log;
+        require(floorplan_legalize_compact(in,inert,log)&&inert[0].x==5&&inert[1].x==65,"unwired flow intent must remain inert");
+        in.index.soft.front().prefer_short_flow=true;
+        auto active=seed;log.clear();
+        require(floorplan_legalize_compact(in,active,log),"unsatisfied flow preference rejected physically legal pockets");
+        require(compact?active[1].x-active[0].x<60:active[1].x-active[0].x==60,
+                "flow attraction must apply in compact mode without changing noncompact semantics");
+        require(active[0].x+2+.3<=8&&active[1].x>=58+.3,"flow preference crossed a hard obstacle");
+        const auto measured=floorplan_evaluate_terms(in,{{"a",{active[0].x,active[0].y}},{"b",{active[1].x,active[1].y}}});
+        require(measured.size()==1&&!measured[0].ok&&measured[0].margin<0,"negative flow preference hidden or relabelled satisfied");
+        auto near=flow;near.kind="near_max";near.bound=2;near.enforced=true;in.index.hard={near};
+        auto rejected=seed;log.clear();
+        require(!floorplan_legalize_compact(in,rejected,log),"flow preference weakened authored physical proximity");
+        in.index.soft.front().kind="near_max";
+        throws([&]{auto vars=seed;std::vector<std::string> logs;(void)floorplan_legalize_compact(in,vars,logs);},"flow preference on non-flow term");
+    }
+}
 void facing_projection_contracts() {
     for(bool swap_axes:{false,true})for(bool reflect:{false,true})for(bool compact:{false,true})for(bool feasible:{false,true}) {
         // Physical clearance is not a minimum directional projection. A
@@ -1885,7 +1910,7 @@ int main(int argc,char** argv) {
         near_distance_envelope_contracts();
         joint_separation_contracts();
         joint_composer_contracts();
-        facing_projection_contracts();fixed_face_recovery();
+        flow_preference_contracts();facing_projection_contracts();fixed_face_recovery();
         compose_contracts(dir);primary_fanout_contracts();output_grid_contracts();mutations();pack_behavior();cross_behavior();frozen(dir,"devkit_mini",geometry_only);frozen(dir,"carrier",geometry_only);
         std::cout<<"floorplan contracts: "<<checks<<" checks passed"<<(geometry_only ? " (geometry/estimator slice)":"")<<"\n";
         return 0;

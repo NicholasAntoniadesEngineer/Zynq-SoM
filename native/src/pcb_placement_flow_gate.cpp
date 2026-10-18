@@ -141,12 +141,14 @@ PcbPlacementFlowResult check_pcb_placement_flow(const PcbCheckInput &in,
             auto d = hypot_xy(ca->first, ca->second, cb->first, cb->second);
             res.detail.push_back("flow " + a + "->" + b + ": " + f(d, 2) + "mm / " + f(budget, 1) +
                                  "mm budget");
-            res.terms.push_back({"flow", a, b, d, py_round(budget, 4), d <= budget, ""});
-            if (d > budget) {
-                ++res.flow_fail;
-                add("flow " + a + "->" + b + ": " + f(d, 2) + "mm > " + f(budget, 1) +
-                    "mm budget (FLOW_K=0.35 free + SoM detour)");
-            }
+            // The budget depends on empty board area and all-part centroids,
+            // not a specified electrical path. Preserve the actual comparison
+            // without rejecting a valid smaller outline. Unresolved endpoints
+            // above and authored near/far/local constraints remain mandatory.
+            res.terms.push_back({"flow", a, b, d, py_round(budget, 4), d <= budget, "", true});
+            res.advisories.push_back("flow "+a+"->"+b+": "+f(d,2)+"mm / "+f(budget,1)+
+                "mm heuristic reference; preference "+(d<=budget?"satisfied":"NOT satisfied")+
+                "; not a trace-length or hardware limit");
         }
         auto downstream = str(ext, "downstream");
         auto role_list = strings(opt(ext, "output_roles"));

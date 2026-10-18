@@ -128,6 +128,9 @@ struct FloorplanTerm {
     // Compact hard-facing terms cannot defer their sign check to a later gate.
     // Transport with the term so legalize(false) fallback retains enforcement.
     bool require_positive_facing = false;
+    // Optimisation intent is distinct from feasibility. In particular an
+    // area-derived flow distance is not an authored hardware upper bound.
+    bool prefer_short_flow = false;
     std::string target() const;
 };
 struct FloorplanTermIndex {

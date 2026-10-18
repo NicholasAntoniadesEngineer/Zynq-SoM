@@ -787,7 +787,13 @@ void live(const std::filesystem::path& root){
    }
    demand(vertical_count>0,"vertical compaction regression witness disappeared");
    const auto som_prepared=prepare_pcb_floorplan(f.input,som_split);
-   for(const auto* kind:{"flow_hop","facing","far_min"})
+   demand(std::any_of(som_prepared.compose.index.soft.begin(),som_prepared.compose.index.soft.end(),
+       [](const auto& term){return term.sheet=="power_som"&&term.kind=="flow_hop"&&!term.enforced&&term.prefer_short_flow;}),
+       "SoM power expansion lost active flow preference");
+   demand(std::none_of(som_prepared.compose.index.hard.begin(),som_prepared.compose.index.hard.end(),
+       [](const auto& term){return term.sheet=="power_som"&&term.kind=="flow_hop";}),
+       "SoM power expansion hardened heuristic flow preference");
+   for(const auto* kind:{"facing","far_min"})
     demand(std::any_of(som_prepared.compose.index.hard.begin(),som_prepared.compose.index.hard.end(),
         [&](const auto& term){return term.sheet=="power_som"&&term.kind==kind&&term.enforced;}),
         std::string("SoM power expansion lost an enforced board constraint: ")+kind);
@@ -903,7 +909,13 @@ void live(const std::filesystem::path& root){
            "power expansion accepted unknown or unenforced external requirements");
    }
    const auto power_prepared=prepare_pcb_floorplan(f.input,power_split);
-   for(const auto* kind:{"flow_hop","facing","far_min"})
+   demand(std::any_of(power_prepared.compose.index.soft.begin(),power_prepared.compose.index.soft.end(),
+       [](const auto& term){return term.sheet=="power"&&term.kind=="flow_hop"&&!term.enforced&&term.prefer_short_flow;}),
+       "mixed-face power lost active flow preference");
+   demand(std::none_of(power_prepared.compose.index.hard.begin(),power_prepared.compose.index.hard.end(),
+       [](const auto& term){return term.sheet=="power"&&term.kind=="flow_hop";}),
+       "mixed-face power hardened heuristic flow preference");
+   for(const auto* kind:{"facing","far_min"})
     demand(std::any_of(power_prepared.compose.index.hard.begin(),power_prepared.compose.index.hard.end(),
         [&](const auto& term){return term.sheet=="power"&&term.kind==kind&&term.enforced;}),
         std::string("mixed-face power lost an enforced external requirement: ")+kind);
