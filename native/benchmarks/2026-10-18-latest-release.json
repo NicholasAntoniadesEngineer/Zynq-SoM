@@ -1,0 +1,33 @@
+{
+  "source_commit": "179c2455",
+  "generator_sha256": "030799efdcea2f05e04ce82c515a360250fa758b7da7cd694696d51051b3dfd1",
+  "build": "PASS complete native rebuild; native/build/latest-release-compile.log",
+  "tests": {
+    "passed": 278, "failed": 0,
+    "evidence": "2026-10-18-reviewed-facing-integrated-suite.json",
+    "reuse_basis": "No generator or test source changes since the complete suite; current native rebuild passed."
+  },
+  "carrier": {
+    "board_ok": true, "complete": true, "exit_code": 0, "sheets": 37,
+    "dimensions_mm": [161,150], "parts": 566, "top": 345, "bottom": 221,
+    "manifest_artifacts": 103, "hash_mismatches": 0, "fresh_pngs": 119,
+    "pcb_sha256": "2c5fe226dccd5427554e3c9e3fa9c916bcfa93b8d81ad18a9a05d19c8c769f43",
+    "wall_seconds": 262.17, "render3d_seconds": 29.537799, "source_audit_seconds": 113.535289,
+    "advisory_failures": ["floorplan_composition", "return_path", "golden", "contract_coverage_lint"],
+    "log": "native/build/latest-release-carrier.log",
+    "log_sha256": "a768349e40448fc939eae6b3fec9e75213bac0365c73f302bec8354755fad1a4"
+  },
+  "devkit_mini": {
+    "board_ok": true, "complete": true, "exit_code": 0, "sheets": 12,
+    "dimensions_mm": [98,98], "parts": 160, "top": 105, "bottom": 55,
+    "manifest_artifacts": 73, "hash_mismatches": 0, "fresh_pngs": 45,
+    "pcb_sha256": "1b12fecbcbbaa5e6084c2459da93cb144a660ff19805e6e4e3f75f9c22689fdb",
+    "wall_seconds": 183.15, "render3d_seconds": 18.341553, "source_audit_seconds": 122.513641,
+    "advisory_failures": ["return_path", "golden", "contract_coverage_lint"],
+    "log": "native/build/latest-release-devkit.log",
+    "log_sha256": "9797bf85bebafafb4b7705369efd8c5654a8491f17929897af9cbd8974429743"
+  },
+  "verification": "Both full pipelines generated directly into tracked release paths, mandatory checks and audits enabled. Independently verified all 176 manifest hashes and all 164 release PNG signatures, positive dimensions and freshness after pipeline start. Both boards top/bottom renders visually inspected. PCB hashes match independently qualified layouts. Byte-identical regenerated files retain existing Git blobs; historical experiment images are excluded.",
+  "timing_scope": "Concurrent full pipeline process wall, including rendering and audits but excluding compilation; not isolated benchmarks or matched Python comparisons.",
+  "limits": "Advisory findings remain visible. Unknown hardware requirements remain unverified. Routing excluded; not fabrication readiness or overall optimisation goal completion."
+}

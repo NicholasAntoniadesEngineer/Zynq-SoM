@@ -1,9 +1,9 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1448 1020" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="11">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1442 1020" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="11">
 <defs><pattern id="keepout" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="6" stroke="#dc2626" stroke-width="1.2"/></pattern></defs>
-<rect width="1448" height="1020" fill="white"/>
+<rect width="1442" height="1020" fill="white"/>
 <text x="46.0" y="26" font-size="16" font-weight="bold">carrier floorplan — SUGGESTION, not constraint</text>
 <text x="46.0" y="44" fill="#6b7280">to scale; derived from the netlists + som/Zynq_SoM.kicad_pcb — regenerate with `schgen floorplan`; the user owns the outline (PLAN.md round 2)</text>
-<rect x="46.0" y="64.0" width="972" height="900" fill="#fcfcfd" stroke="#111827" stroke-width="2" stroke-dasharray="9,5"/>
+<rect x="46.0" y="64.0" width="966" height="900" fill="#fcfcfd" stroke="#111827" stroke-width="2" stroke-dasharray="9,5"/>
 <line x1="106.0" y1="64.0" x2="106.0" y2="964.0" stroke="#eceef1" stroke-width="1"/>
 <text x="106.0" y="60.0" fill="#9ca3af" font-size="8" text-anchor="middle">10</text>
 <line x1="166.0" y1="64.0" x2="166.0" y2="964.0" stroke="#eceef1" stroke-width="1"/>
@@ -36,265 +36,265 @@
 <text x="946.0" y="60.0" fill="#9ca3af" font-size="8" text-anchor="middle">150</text>
 <line x1="1006.0" y1="64.0" x2="1006.0" y2="964.0" stroke="#eceef1" stroke-width="1"/>
 <text x="1006.0" y="60.0" fill="#9ca3af" font-size="8" text-anchor="middle">160</text>
-<line x1="46.0" y1="124.0" x2="1018.0" y2="124.0" stroke="#eceef1" stroke-width="1"/>
+<line x1="46.0" y1="124.0" x2="1012.0" y2="124.0" stroke="#eceef1" stroke-width="1"/>
 <text x="40.0" y="127.0" fill="#9ca3af" font-size="8" text-anchor="end">10</text>
-<line x1="46.0" y1="184.0" x2="1018.0" y2="184.0" stroke="#eceef1" stroke-width="1"/>
+<line x1="46.0" y1="184.0" x2="1012.0" y2="184.0" stroke="#eceef1" stroke-width="1"/>
 <text x="40.0" y="187.0" fill="#9ca3af" font-size="8" text-anchor="end">20</text>
-<line x1="46.0" y1="244.0" x2="1018.0" y2="244.0" stroke="#eceef1" stroke-width="1"/>
+<line x1="46.0" y1="244.0" x2="1012.0" y2="244.0" stroke="#eceef1" stroke-width="1"/>
 <text x="40.0" y="247.0" fill="#9ca3af" font-size="8" text-anchor="end">30</text>
-<line x1="46.0" y1="304.0" x2="1018.0" y2="304.0" stroke="#eceef1" stroke-width="1"/>
+<line x1="46.0" y1="304.0" x2="1012.0" y2="304.0" stroke="#eceef1" stroke-width="1"/>
 <text x="40.0" y="307.0" fill="#9ca3af" font-size="8" text-anchor="end">40</text>
-<line x1="46.0" y1="364.0" x2="1018.0" y2="364.0" stroke="#eceef1" stroke-width="1"/>
+<line x1="46.0" y1="364.0" x2="1012.0" y2="364.0" stroke="#eceef1" stroke-width="1"/>
 <text x="40.0" y="367.0" fill="#9ca3af" font-size="8" text-anchor="end">50</text>
-<line x1="46.0" y1="424.0" x2="1018.0" y2="424.0" stroke="#eceef1" stroke-width="1"/>
+<line x1="46.0" y1="424.0" x2="1012.0" y2="424.0" stroke="#eceef1" stroke-width="1"/>
 <text x="40.0" y="427.0" fill="#9ca3af" font-size="8" text-anchor="end">60</text>
-<line x1="46.0" y1="484.0" x2="1018.0" y2="484.0" stroke="#eceef1" stroke-width="1"/>
+<line x1="46.0" y1="484.0" x2="1012.0" y2="484.0" stroke="#eceef1" stroke-width="1"/>
 <text x="40.0" y="487.0" fill="#9ca3af" font-size="8" text-anchor="end">70</text>
-<line x1="46.0" y1="544.0" x2="1018.0" y2="544.0" stroke="#eceef1" stroke-width="1"/>
+<line x1="46.0" y1="544.0" x2="1012.0" y2="544.0" stroke="#eceef1" stroke-width="1"/>
 <text x="40.0" y="547.0" fill="#9ca3af" font-size="8" text-anchor="end">80</text>
-<line x1="46.0" y1="604.0" x2="1018.0" y2="604.0" stroke="#eceef1" stroke-width="1"/>
+<line x1="46.0" y1="604.0" x2="1012.0" y2="604.0" stroke="#eceef1" stroke-width="1"/>
 <text x="40.0" y="607.0" fill="#9ca3af" font-size="8" text-anchor="end">90</text>
-<line x1="46.0" y1="664.0" x2="1018.0" y2="664.0" stroke="#eceef1" stroke-width="1"/>
+<line x1="46.0" y1="664.0" x2="1012.0" y2="664.0" stroke="#eceef1" stroke-width="1"/>
 <text x="40.0" y="667.0" fill="#9ca3af" font-size="8" text-anchor="end">100</text>
-<line x1="46.0" y1="724.0" x2="1018.0" y2="724.0" stroke="#eceef1" stroke-width="1"/>
+<line x1="46.0" y1="724.0" x2="1012.0" y2="724.0" stroke="#eceef1" stroke-width="1"/>
 <text x="40.0" y="727.0" fill="#9ca3af" font-size="8" text-anchor="end">110</text>
-<line x1="46.0" y1="784.0" x2="1018.0" y2="784.0" stroke="#eceef1" stroke-width="1"/>
+<line x1="46.0" y1="784.0" x2="1012.0" y2="784.0" stroke="#eceef1" stroke-width="1"/>
 <text x="40.0" y="787.0" fill="#9ca3af" font-size="8" text-anchor="end">120</text>
-<line x1="46.0" y1="844.0" x2="1018.0" y2="844.0" stroke="#eceef1" stroke-width="1"/>
+<line x1="46.0" y1="844.0" x2="1012.0" y2="844.0" stroke="#eceef1" stroke-width="1"/>
 <text x="40.0" y="847.0" fill="#9ca3af" font-size="8" text-anchor="end">130</text>
-<line x1="46.0" y1="904.0" x2="1018.0" y2="904.0" stroke="#eceef1" stroke-width="1"/>
+<line x1="46.0" y1="904.0" x2="1012.0" y2="904.0" stroke="#eceef1" stroke-width="1"/>
 <text x="40.0" y="907.0" fill="#9ca3af" font-size="8" text-anchor="end">140</text>
-<text x="46.0" y="980.0" fill="#6b7280">derived outline 162 x 150 mm (SoM + connector bands + component area + perimeter keepout)</text>
-<rect x="886.0" y="712.0" width="68.52" height="109.662" rx="3" fill="#f9fafb" stroke="#374151" stroke-width="1.4"/>
-<text x="920.3" y="766.8" text-anchor="middle" font-size="11.0" font-weight="bold">board_aux</text>
-<text x="920.3" y="776.8" text-anchor="middle" font-size="7.5" fill="#6b7280">18p</text>
-<rect x="942.2" y="180.6" width="66.8106" height="41.9994" rx="3" fill="#eff6ff" stroke="#1e3a8a" stroke-width="1.4"/>
-<text x="975.6" y="201.6" text-anchor="middle" font-size="8.9" font-weight="bold">board_qwiic</text>
-<text x="975.6" y="211.6" text-anchor="middle" font-size="7.5" fill="#6b7280">2p</text>
-<rect x="208.0" y="436.0" width="93.222" height="199.08" rx="3" fill="#f9fafb" stroke="#374151" stroke-width="1.4"/>
-<text x="254.6" y="535.5" text-anchor="middle" font-size="10.0" font-weight="bold">board_services</text>
-<text x="254.6" y="545.5" text-anchor="middle" font-size="7.5" fill="#6b7280">9p</text>
-<rect x="640.0" y="586.0" width="86.4" height="49.2" rx="3" fill="#ecfdf5" stroke="#047857" stroke-width="1.4"/>
-<text x="683.2" y="610.6" text-anchor="middle" font-size="11.0" font-weight="bold">bringup_en</text>
-<text x="683.2" y="620.6" text-anchor="middle" font-size="7.5" fill="#6b7280">15p</text>
-<rect x="712.0" y="292.0" width="45.12" height="512.16" rx="3" fill="#ecfdf5" stroke="#047857" stroke-width="1.4"/>
-<text x="734.6" y="548.1" text-anchor="middle" font-size="7.0" font-weight="bold">bringup_en_modules</text>
-<text x="734.6" y="558.1" text-anchor="middle" font-size="7.5" fill="#6b7280">54p</text>
-<rect x="760.0" y="604.0" width="112.98" height="170.034" rx="3" fill="#ecfdf5" stroke="#047857" stroke-width="1.4"/>
-<text x="816.5" y="689.0" text-anchor="middle" font-size="11.0" font-weight="bold">bringup_modules</text>
-<text x="816.5" y="699.0" text-anchor="middle" font-size="7.5" fill="#6b7280">71p</text>
-<circle cx="760" cy="604" r="7" fill="white" stroke="#111827" stroke-width="1.2"/>
-<text x="760" y="607" text-anchor="middle" font-size="9" font-weight="bold">12</text>
-<rect x="772.0" y="334.0" width="101.364" height="248.1" rx="3" fill="#ecfdf5" stroke="#047857" stroke-width="1.4"/>
-<text x="822.7" y="458.0" text-anchor="middle" font-size="11.0" font-weight="bold">bringup_rails</text>
-<text x="822.7" y="468.0" text-anchor="middle" font-size="7.5" fill="#6b7280">23p</text>
-<circle cx="772" cy="334" r="7" fill="white" stroke="#111827" stroke-width="1.2"/>
-<text x="772" y="337" text-anchor="middle" font-size="9" font-weight="bold">13</text>
+<text x="46.0" y="980.0" fill="#6b7280">derived outline 161 x 150 mm (SoM + connector bands + component area + perimeter keepout)</text>
+<rect x="634.0" y="676.0" width="68.52" height="109.662" rx="3" fill="#f9fafb" stroke="#374151" stroke-width="1.4"/>
+<text x="668.3" y="730.8" text-anchor="middle" font-size="11.0" font-weight="bold">board_aux</text>
+<text x="668.3" y="740.8" text-anchor="middle" font-size="7.5" fill="#6b7280">18p</text>
+<rect x="936.2" y="180.6" width="66.8106" height="41.9994" rx="3" fill="#eff6ff" stroke="#1e3a8a" stroke-width="1.4"/>
+<text x="969.6" y="201.6" text-anchor="middle" font-size="8.9" font-weight="bold">board_qwiic</text>
+<text x="969.6" y="211.6" text-anchor="middle" font-size="7.5" fill="#6b7280">2p</text>
+<rect x="880.0" y="712.0" width="126.36" height="136.8" rx="3" fill="#f9fafb" stroke="#374151" stroke-width="1.4"/>
+<text x="943.2" y="780.4" text-anchor="middle" font-size="11.0" font-weight="bold">board_services</text>
+<text x="943.2" y="790.4" text-anchor="middle" font-size="7.5" fill="#6b7280">9p</text>
+<rect x="634.0" y="586.0" width="49.2" height="86.4" rx="3" fill="#ecfdf5" stroke="#047857" stroke-width="1.4"/>
+<text x="658.6" y="629.2" text-anchor="middle" font-size="7.0" font-weight="bold">bringup_en</text>
+<text x="658.6" y="639.2" text-anchor="middle" font-size="7.5" fill="#6b7280">15p</text>
+<rect x="706.0" y="292.0" width="45.12" height="512.16" rx="3" fill="#ecfdf5" stroke="#047857" stroke-width="1.4"/>
+<text x="728.6" y="548.1" text-anchor="middle" font-size="7.0" font-weight="bold">bringup_en_modules</text>
+<text x="728.6" y="558.1" text-anchor="middle" font-size="7.5" fill="#6b7280">54p</text>
+<rect x="754.0" y="604.0" width="112.98" height="170.034" rx="3" fill="#ecfdf5" stroke="#047857" stroke-width="1.4"/>
+<text x="810.5" y="689.0" text-anchor="middle" font-size="11.0" font-weight="bold">bringup_modules</text>
+<text x="810.5" y="699.0" text-anchor="middle" font-size="7.5" fill="#6b7280">71p</text>
+<circle cx="754" cy="604" r="7" fill="white" stroke="#111827" stroke-width="1.2"/>
+<text x="754" y="607" text-anchor="middle" font-size="9" font-weight="bold">12</text>
+<rect x="766.0" y="334.0" width="101.364" height="248.1" rx="3" fill="#ecfdf5" stroke="#047857" stroke-width="1.4"/>
+<text x="816.7" y="458.0" text-anchor="middle" font-size="11.0" font-weight="bold">bringup_rails</text>
+<text x="816.7" y="468.0" text-anchor="middle" font-size="7.5" fill="#6b7280">23p</text>
+<circle cx="766" cy="334" r="7" fill="white" stroke="#111827" stroke-width="1.2"/>
+<text x="766" y="337" text-anchor="middle" font-size="9" font-weight="bold">13</text>
 <rect x="55.0" y="644.8" width="96.1806" height="174.451" rx="3" fill="#eff6ff" stroke="#1e3a8a" stroke-width="1.4"/>
 <rect x="55.0" y="669.6" width="39.3" height="124.8" fill="#bfdbfe" stroke="#1e3a8a" stroke-width="1.2"/>
 <text x="100.1" y="732.0" text-anchor="middle" font-size="11.0" font-weight="bold" transform="rotate(-90 100.1 732.0)">camera</text>
 <text x="111.1" y="732.0" text-anchor="middle" font-size="7.5" fill="#6b7280" transform="rotate(-90 111.1 732.0)">13p</text>
 <circle cx="55" cy="644.8" r="7" fill="white" stroke="#111827" stroke-width="1.2"/>
 <text x="55" y="647.8" text-anchor="middle" font-size="9" font-weight="bold">8</text>
-<rect x="514.0" y="694.0" width="189.48" height="97.5" rx="3" fill="#f9fafb" stroke="#374151" stroke-width="1.4"/>
-<text x="608.7" y="742.8" text-anchor="middle" font-size="11.0" font-weight="bold">debug_boot</text>
-<text x="608.7" y="752.8" text-anchor="middle" font-size="7.5" fill="#6b7280">10p</text>
-<circle cx="514" cy="694" r="7" fill="white" stroke="#111827" stroke-width="1.2"/>
-<text x="514" y="697" text-anchor="middle" font-size="9" font-weight="bold">14</text>
+<rect x="166.0" y="646.0" width="106.5" height="207.564" rx="3" fill="#f9fafb" stroke="#374151" stroke-width="1.4"/>
+<text x="219.2" y="749.8" text-anchor="middle" font-size="11.0" font-weight="bold">debug_boot</text>
+<text x="219.2" y="759.8" text-anchor="middle" font-size="7.5" fill="#6b7280">10p</text>
+<circle cx="166" cy="646" r="7" fill="white" stroke="#111827" stroke-width="1.2"/>
+<text x="166" y="649" text-anchor="middle" font-size="9" font-weight="bold">14</text>
 <rect x="220.0" y="262.0" width="151.546" height="130.47" rx="3" fill="#f9fafb" stroke="#374151" stroke-width="1.4" stroke-dasharray="5,4"/>
 <rect x="220" y="262" width="151.546" height="65.235" fill="url(#keepout)" opacity="0.5"/>
 <text x="295.8" y="327.2" text-anchor="middle" font-size="11.0" font-weight="bold">ethernet</text>
 <text x="295.8" y="337.2" text-anchor="middle" font-size="7.5" fill="#6b7280">10p</text>
 <circle cx="220" cy="262" r="7" fill="white" stroke="#111827" stroke-width="1.2"/>
 <text x="220" y="265" text-anchor="middle" font-size="9" font-weight="bold">15</text>
-<rect x="652.0" y="214.0" width="112.11" height="369.78" rx="3" fill="#f9fafb" stroke="#374151" stroke-width="1.4"/>
-<text x="708.1" y="398.9" text-anchor="middle" font-size="11.0" font-weight="bold">fmc</text>
-<text x="708.1" y="408.9" text-anchor="middle" font-size="7.5" fill="#6b7280">8p</text>
-<circle cx="652" cy="214" r="7" fill="white" stroke="#111827" stroke-width="1.2"/>
-<text x="652" y="217" text-anchor="middle" font-size="9" font-weight="bold">16</text>
-<rect x="480.2" y="854.8" width="143.787" height="100.216" rx="3" fill="#eff6ff" stroke="#1e3a8a" stroke-width="1.4"/>
-<rect x="507.0" y="885.2" width="90.18" height="69.78" fill="#bfdbfe" stroke="#1e3a8a" stroke-width="1.2"/>
-<text x="552.1" y="904.9" text-anchor="middle" font-size="11.0" font-weight="bold">hdmi_rx</text>
-<text x="552.1" y="914.9" text-anchor="middle" font-size="7.5" fill="#6b7280">10p</text>
-<circle cx="480.2" cy="854.8" r="7" fill="white" stroke="#111827" stroke-width="1.2"/>
-<text x="480.2" y="857.8" text-anchor="middle" font-size="9" font-weight="bold">10</text>
+<rect x="646.0" y="214.0" width="112.11" height="369.78" rx="3" fill="#f9fafb" stroke="#374151" stroke-width="1.4"/>
+<text x="702.1" y="398.9" text-anchor="middle" font-size="11.0" font-weight="bold">fmc</text>
+<text x="702.1" y="408.9" text-anchor="middle" font-size="7.5" fill="#6b7280">8p</text>
+<circle cx="646" cy="214" r="7" fill="white" stroke="#111827" stroke-width="1.2"/>
+<text x="646" y="217" text-anchor="middle" font-size="9" font-weight="bold">16</text>
+<rect x="477.2" y="854.8" width="143.787" height="100.216" rx="3" fill="#eff6ff" stroke="#1e3a8a" stroke-width="1.4"/>
+<rect x="504.0" y="885.2" width="90.18" height="69.78" fill="#bfdbfe" stroke="#1e3a8a" stroke-width="1.2"/>
+<text x="549.1" y="904.9" text-anchor="middle" font-size="11.0" font-weight="bold">hdmi_rx</text>
+<text x="549.1" y="914.9" text-anchor="middle" font-size="7.5" fill="#6b7280">10p</text>
+<circle cx="477.2" cy="854.8" r="7" fill="white" stroke="#111827" stroke-width="1.2"/>
+<text x="477.2" y="857.8" text-anchor="middle" font-size="9" font-weight="bold">10</text>
 <rect x="436.0" y="700.5" width="70.83" height="46.83" rx="3" fill="#f9fafb" stroke="#374151" stroke-width="1.4"/>
 <text x="471.4" y="724.0" text-anchor="middle" font-size="8.7" font-weight="bold">hdmi_rx_term</text>
 <text x="471.4" y="734.0" text-anchor="middle" font-size="7.5" fill="#6b7280">10p</text>
-<rect x="212.5" y="73.0" width="101.399" height="171.016" rx="3" fill="#eff6ff" stroke="#1e3a8a" stroke-width="1.4"/>
-<rect x="218.1" y="73.0" width="90.18" height="69.78" fill="#bfdbfe" stroke="#1e3a8a" stroke-width="1.2"/>
-<text x="263.2" y="158.5" text-anchor="middle" font-size="11.0" font-weight="bold">hdmi_tx</text>
-<text x="263.2" y="168.5" text-anchor="middle" font-size="7.5" fill="#6b7280">12p</text>
-<circle cx="212.5" cy="73" r="7" fill="white" stroke="#111827" stroke-width="1.2"/>
-<text x="212.5" y="76" text-anchor="middle" font-size="9" font-weight="bold">1</text>
+<rect x="209.5" y="73.0" width="101.399" height="171.016" rx="3" fill="#eff6ff" stroke="#1e3a8a" stroke-width="1.4"/>
+<rect x="215.1" y="73.0" width="90.18" height="69.78" fill="#bfdbfe" stroke="#1e3a8a" stroke-width="1.2"/>
+<text x="260.2" y="158.5" text-anchor="middle" font-size="11.0" font-weight="bold">hdmi_tx</text>
+<text x="260.2" y="168.5" text-anchor="middle" font-size="7.5" fill="#6b7280">12p</text>
+<circle cx="209.5" cy="73" r="7" fill="white" stroke="#111827" stroke-width="1.2"/>
+<text x="209.5" y="76" text-anchor="middle" font-size="9" font-weight="bold">1</text>
 <rect x="55.0" y="375.0" width="142.26" height="267.93" rx="3" fill="#eff6ff" stroke="#1e3a8a" stroke-width="1.4"/>
 <rect x="55.0" y="430.7" width="38.4" height="156.6" fill="#bfdbfe" stroke="#1e3a8a" stroke-width="1.2"/>
 <text x="123.1" y="509.0" text-anchor="middle" font-size="11.0" font-weight="bold" transform="rotate(-90 123.1 509.0)">lcd</text>
 <text x="134.1" y="509.0" text-anchor="middle" font-size="7.5" fill="#6b7280" transform="rotate(-90 134.1 509.0)">20p</text>
 <circle cx="55" cy="375" r="7" fill="white" stroke="#111827" stroke-width="1.2"/>
 <text x="55" y="378" text-anchor="middle" font-size="9" font-weight="bold">7</text>
-<rect x="154.0" y="646.0" width="78" height="78" rx="3" fill="#f9fafb" stroke="#374151" stroke-width="1.4"/>
-<text x="193.0" y="685.0" text-anchor="middle" font-size="11.0" font-weight="bold">mechanical</text>
-<text x="193.0" y="695.0" text-anchor="middle" font-size="7.5" fill="#6b7280">4p</text>
-<rect x="331.9" y="73.0" width="116.846" height="181.78" rx="3" fill="#eff6ff" stroke="#1e3a8a" stroke-width="1.4"/>
-<rect x="344.0" y="73.0" width="92.76" height="90.3" fill="#bfdbfe" stroke="#1e3a8a" stroke-width="1.2"/>
-<text x="390.3" y="163.9" text-anchor="middle" font-size="11.0" font-weight="bold">microsd</text>
-<text x="390.3" y="173.9" text-anchor="middle" font-size="7.5" fill="#6b7280">15p</text>
-<circle cx="331.9" cy="73" r="7" fill="white" stroke="#111827" stroke-width="1.2"/>
-<text x="331.9" y="76" text-anchor="middle" font-size="9" font-weight="bold">2</text>
-<rect x="741.6" y="587.6" width="267.361" height="118.8" rx="3" fill="#eff6ff" stroke="#1e3a8a" stroke-width="1.4"/>
-<text x="875.3" y="647.0" text-anchor="middle" font-size="11.0" font-weight="bold">motor_pwm</text>
-<text x="875.3" y="657.0" text-anchor="middle" font-size="7.5" fill="#6b7280">13p</text>
-<rect x="883.4" y="229.8" width="125.55" height="352.124" rx="3" fill="#eff6ff" stroke="#1e3a8a" stroke-width="1.4"/>
-<rect x="916.1" y="274.6" width="92.94" height="108.9" fill="#bfdbfe" stroke="#1e3a8a" stroke-width="1.2"/>
-<rect x="916.1" y="428.3" width="92.94" height="108.9" fill="#bfdbfe" stroke="#1e3a8a" stroke-width="1.2"/>
-<text x="943.2" y="405.9" text-anchor="middle" font-size="11.0" font-weight="bold" transform="rotate(-90 943.2 405.9)">motor_sense</text>
-<text x="954.2" y="405.9" text-anchor="middle" font-size="7.5" fill="#6b7280" transform="rotate(-90 954.2 405.9)">10p</text>
-<rect x="450.6" y="73.0" width="146.732" height="132.158" rx="3" fill="#eff6ff" stroke="#1e3a8a" stroke-width="1.4"/>
-<rect x="497.0" y="73.0" width="53.82" height="47.1" fill="#bfdbfe" stroke="#1e3a8a" stroke-width="1.2"/>
-<text x="523.9" y="139.1" text-anchor="middle" font-size="11.0" font-weight="bold">pd_input</text>
-<text x="523.9" y="149.1" text-anchor="middle" font-size="7.5" fill="#6b7280">13p</text>
-<circle cx="450.6" cy="73" r="7" fill="white" stroke="#111827" stroke-width="1.2"/>
-<text x="450.6" y="76" text-anchor="middle" font-size="9" font-weight="bold">3</text>
-<rect x="211.6" y="867.5" width="250.59" height="87.504" rx="3" fill="#eff6ff" stroke="#1e3a8a" stroke-width="1.4"/>
-<rect x="232.2" y="876.8" width="94.44" height="78.24" fill="#bfdbfe" stroke="#1e3a8a" stroke-width="1.2"/>
-<rect x="347.2" y="876.8" width="94.44" height="78.24" fill="#bfdbfe" stroke="#1e3a8a" stroke-width="1.2"/>
-<text x="336.9" y="911.2" text-anchor="middle" font-size="11.0" font-weight="bold">pmod</text>
-<text x="336.9" y="921.2" text-anchor="middle" font-size="7.5" fill="#6b7280">26p</text>
-<circle cx="211.6" cy="867.5" r="7" fill="white" stroke="#111827" stroke-width="1.2"/>
-<text x="211.6" y="870.5" text-anchor="middle" font-size="9" font-weight="bold">9</text>
-<rect x="642.0" y="828.7" width="236.61" height="126.318" rx="3" fill="#eff6ff" stroke="#1e3a8a" stroke-width="1.4"/>
-<rect x="713.1" y="876.8" width="94.44" height="78.24" fill="#bfdbfe" stroke="#1e3a8a" stroke-width="1.2"/>
-<text x="760.3" y="891.8" text-anchor="middle" font-size="11.0" font-weight="bold">pmod_expansion</text>
-<text x="760.3" y="901.8" text-anchor="middle" font-size="7.5" fill="#6b7280">15p</text>
-<circle cx="642" cy="828.7" r="7" fill="white" stroke="#111827" stroke-width="1.2"/>
-<text x="642" y="831.7" text-anchor="middle" font-size="9" font-weight="bold">11</text>
-<rect x="172.0" y="753.8" width="319.262" height="143.609" rx="3" fill="#ecfdf5" stroke="#047857" stroke-width="1.4"/>
-<text x="331.6" y="825.6" text-anchor="middle" font-size="11.0" font-weight="bold">power</text>
-<text x="331.6" y="835.6" text-anchor="middle" font-size="7.5" fill="#6b7280">51p</text>
-<circle cx="172" cy="753.8" r="7" fill="white" stroke="#111827" stroke-width="1.2"/>
-<text x="172" y="756.8" text-anchor="middle" font-size="9" font-weight="bold">17</text>
-<rect x="585.5" y="431.0" width="72.981" height="160.539" rx="3" fill="#ecfdf5" stroke="#047857" stroke-width="1.4"/>
-<text x="622.0" y="511.3" text-anchor="middle" font-size="11.0" font-weight="bold">power_mon</text>
-<text x="622.0" y="521.3" text-anchor="middle" font-size="7.5" fill="#6b7280">10p</text>
-<circle cx="585.5" cy="431" r="7" fill="white" stroke="#111827" stroke-width="1.2"/>
-<text x="585.5" y="434" text-anchor="middle" font-size="9" font-weight="bold">18</text>
-<rect x="238.3" y="688.0" width="143.609" height="145.021" rx="3" fill="#ecfdf5" stroke="#047857" stroke-width="1.4"/>
-<text x="310.1" y="760.5" text-anchor="middle" font-size="11.0" font-weight="bold">power_som</text>
-<text x="310.1" y="770.5" text-anchor="middle" font-size="7.5" fill="#6b7280">20p</text>
+<rect x="538.0" y="688.0" width="78" height="78" rx="3" fill="#f9fafb" stroke="#374151" stroke-width="1.4"/>
+<text x="577.0" y="727.0" text-anchor="middle" font-size="11.0" font-weight="bold">mechanical</text>
+<text x="577.0" y="737.0" text-anchor="middle" font-size="7.5" fill="#6b7280">4p</text>
+<rect x="328.9" y="73.0" width="116.846" height="181.78" rx="3" fill="#eff6ff" stroke="#1e3a8a" stroke-width="1.4"/>
+<rect x="341.0" y="73.0" width="92.76" height="90.3" fill="#bfdbfe" stroke="#1e3a8a" stroke-width="1.2"/>
+<text x="387.3" y="163.9" text-anchor="middle" font-size="11.0" font-weight="bold">microsd</text>
+<text x="387.3" y="173.9" text-anchor="middle" font-size="7.5" fill="#6b7280">15p</text>
+<circle cx="328.9" cy="73" r="7" fill="white" stroke="#111827" stroke-width="1.2"/>
+<text x="328.9" y="76" text-anchor="middle" font-size="9" font-weight="bold">2</text>
+<rect x="735.6" y="587.6" width="267.361" height="118.8" rx="3" fill="#eff6ff" stroke="#1e3a8a" stroke-width="1.4"/>
+<text x="869.3" y="647.0" text-anchor="middle" font-size="11.0" font-weight="bold">motor_pwm</text>
+<text x="869.3" y="657.0" text-anchor="middle" font-size="7.5" fill="#6b7280">13p</text>
+<rect x="877.4" y="229.8" width="125.55" height="352.124" rx="3" fill="#eff6ff" stroke="#1e3a8a" stroke-width="1.4"/>
+<rect x="910.1" y="274.6" width="92.94" height="108.9" fill="#bfdbfe" stroke="#1e3a8a" stroke-width="1.2"/>
+<rect x="910.1" y="428.3" width="92.94" height="108.9" fill="#bfdbfe" stroke="#1e3a8a" stroke-width="1.2"/>
+<text x="937.2" y="405.9" text-anchor="middle" font-size="11.0" font-weight="bold" transform="rotate(-90 937.2 405.9)">motor_sense</text>
+<text x="948.2" y="405.9" text-anchor="middle" font-size="7.5" fill="#6b7280" transform="rotate(-90 948.2 405.9)">10p</text>
+<rect x="447.6" y="73.0" width="146.732" height="132.158" rx="3" fill="#eff6ff" stroke="#1e3a8a" stroke-width="1.4"/>
+<rect x="494.0" y="73.0" width="53.82" height="47.1" fill="#bfdbfe" stroke="#1e3a8a" stroke-width="1.2"/>
+<text x="520.9" y="139.1" text-anchor="middle" font-size="11.0" font-weight="bold">pd_input</text>
+<text x="520.9" y="149.1" text-anchor="middle" font-size="7.5" fill="#6b7280">13p</text>
+<circle cx="447.6" cy="73" r="7" fill="white" stroke="#111827" stroke-width="1.2"/>
+<text x="447.6" y="76" text-anchor="middle" font-size="9" font-weight="bold">3</text>
+<rect x="208.6" y="867.5" width="250.59" height="87.504" rx="3" fill="#eff6ff" stroke="#1e3a8a" stroke-width="1.4"/>
+<rect x="229.2" y="876.8" width="94.44" height="78.24" fill="#bfdbfe" stroke="#1e3a8a" stroke-width="1.2"/>
+<rect x="344.2" y="876.8" width="94.44" height="78.24" fill="#bfdbfe" stroke="#1e3a8a" stroke-width="1.2"/>
+<text x="333.9" y="911.2" text-anchor="middle" font-size="11.0" font-weight="bold">pmod</text>
+<text x="333.9" y="921.2" text-anchor="middle" font-size="7.5" fill="#6b7280">26p</text>
+<circle cx="208.6" cy="867.5" r="7" fill="white" stroke="#111827" stroke-width="1.2"/>
+<text x="208.6" y="870.5" text-anchor="middle" font-size="9" font-weight="bold">9</text>
+<rect x="639.0" y="828.7" width="236.61" height="126.318" rx="3" fill="#eff6ff" stroke="#1e3a8a" stroke-width="1.4"/>
+<rect x="710.1" y="876.8" width="94.44" height="78.24" fill="#bfdbfe" stroke="#1e3a8a" stroke-width="1.2"/>
+<text x="757.3" y="891.8" text-anchor="middle" font-size="11.0" font-weight="bold">pmod_expansion</text>
+<text x="757.3" y="901.8" text-anchor="middle" font-size="7.5" fill="#6b7280">15p</text>
+<circle cx="639" cy="828.7" r="7" fill="white" stroke="#111827" stroke-width="1.2"/>
+<text x="639" y="831.7" text-anchor="middle" font-size="9" font-weight="bold">11</text>
+<rect x="321.5" y="712.3" width="320.162" height="143.609" rx="3" fill="#ecfdf5" stroke="#047857" stroke-width="1.4"/>
+<text x="481.5" y="784.1" text-anchor="middle" font-size="11.0" font-weight="bold">power</text>
+<text x="481.5" y="794.1" text-anchor="middle" font-size="7.5" fill="#6b7280">51p</text>
+<circle cx="321.5" cy="712.3" r="7" fill="white" stroke="#111827" stroke-width="1.2"/>
+<text x="321.5" y="715.3" text-anchor="middle" font-size="9" font-weight="bold">17</text>
+<rect x="550.9" y="308.4" width="72.981" height="160.539" rx="3" fill="#ecfdf5" stroke="#047857" stroke-width="1.4"/>
+<text x="587.4" y="388.7" text-anchor="middle" font-size="11.0" font-weight="bold">power_mon</text>
+<text x="587.4" y="398.7" text-anchor="middle" font-size="7.5" fill="#6b7280">10p</text>
+<circle cx="550.9" cy="308.4" r="7" fill="white" stroke="#111827" stroke-width="1.2"/>
+<text x="550.9" y="311.4" text-anchor="middle" font-size="9" font-weight="bold">18</text>
+<rect x="290.6" y="688.0" width="143.609" height="145.021" rx="3" fill="#ecfdf5" stroke="#047857" stroke-width="1.4"/>
+<text x="362.4" y="760.5" text-anchor="middle" font-size="11.0" font-weight="bold">power_som</text>
+<text x="362.4" y="770.5" text-anchor="middle" font-size="7.5" fill="#6b7280">20p</text>
 <rect x="55.0" y="249.9" width="162.12" height="116.4" rx="3" fill="#eff6ff" stroke="#1e3a8a" stroke-width="1.4"/>
 <text x="136.1" y="308.1" text-anchor="middle" font-size="11.0" font-weight="bold">rj45_connector</text>
 <text x="136.1" y="318.1" text-anchor="middle" font-size="7.5" fill="#6b7280">3p</text>
-<rect x="814.0" y="184.0" width="64.83" height="100.68" rx="3" fill="#f9fafb" stroke="#374151" stroke-width="1.4" stroke-dasharray="5,4"/>
-<text x="846.4" y="234.3" text-anchor="middle" font-size="8.6" font-weight="bold">uart_bridge</text>
-<text x="846.4" y="244.3" text-anchor="middle" font-size="7.5" fill="#6b7280">10p</text>
-<circle cx="814" cy="184" r="7" fill="white" stroke="#111827" stroke-width="1.2"/>
-<text x="814" y="187" text-anchor="middle" font-size="9" font-weight="bold">19</text>
-<rect x="454.0" y="226.0" width="193.476" height="174.841" rx="3" fill="#f9fafb" stroke="#374151" stroke-width="1.4"/>
-<text x="550.7" y="313.4" text-anchor="middle" font-size="11.0" font-weight="bold">usb_jtag</text>
-<text x="550.7" y="323.4" text-anchor="middle" font-size="7.5" fill="#6b7280">19p</text>
-<rect x="761.2" y="73.0" width="65.9286" height="107.605" rx="3" fill="#eff6ff" stroke="#1e3a8a" stroke-width="1.4"/>
-<rect x="767.3" y="73.0" width="53.82" height="47.1" fill="#bfdbfe" stroke="#1e3a8a" stroke-width="1.2"/>
-<text x="794.2" y="126.8" text-anchor="middle" font-size="7.0" font-weight="bold">usb_jtag_connector</text>
-<text x="794.2" y="136.8" text-anchor="middle" font-size="7.5" fill="#6b7280">6p</text>
-<circle cx="761.2" cy="73" r="7" fill="white" stroke="#111827" stroke-width="1.2"/>
-<text x="761.2" y="76" text-anchor="middle" font-size="9" font-weight="bold">5</text>
-<rect x="400.0" y="262.0" width="49.08" height="61.68" rx="3" fill="#f9fafb" stroke="#374151" stroke-width="1.4"/>
-<text x="424.5" y="292.8" text-anchor="middle" font-size="11.0" font-weight="bold">usb_pd</text>
-<text x="424.5" y="302.8" text-anchor="middle" font-size="7.5" fill="#6b7280">6p</text>
-<circle cx="400" cy="262" r="7" fill="white" stroke="#111827" stroke-width="1.2"/>
-<text x="400" y="265" text-anchor="middle" font-size="9" font-weight="bold">20</text>
-<rect x="835.9" y="73.0" width="65.9286" height="75.8046" rx="3" fill="#eff6ff" stroke="#1e3a8a" stroke-width="1.4"/>
-<rect x="841.9" y="73.0" width="53.82" height="47.1" fill="#bfdbfe" stroke="#1e3a8a" stroke-width="1.2"/>
-<text x="868.8" y="110.9" text-anchor="middle" font-size="7.0" font-weight="bold">usb_uart_connector</text>
-<text x="868.8" y="120.9" text-anchor="middle" font-size="7.5" fill="#6b7280">5p</text>
-<circle cx="835.9" cy="73" r="7" fill="white" stroke="#111827" stroke-width="1.2"/>
-<text x="835.9" y="76" text-anchor="middle" font-size="9" font-weight="bold">6</text>
-<rect x="607.5" y="73.0" width="145.008" height="133.609" rx="3" fill="#eff6ff" stroke="#1e3a8a" stroke-width="1.4"/>
-<rect x="653.1" y="73.0" width="53.82" height="47.1" fill="#bfdbfe" stroke="#1e3a8a" stroke-width="1.2"/>
-<text x="680.0" y="139.8" text-anchor="middle" font-size="11.0" font-weight="bold">usbc_otg</text>
-<text x="680.0" y="149.8" text-anchor="middle" font-size="7.5" fill="#6b7280">12p</text>
-<circle cx="607.5" cy="73" r="7" fill="white" stroke="#111827" stroke-width="1.2"/>
-<text x="607.5" y="76" text-anchor="middle" font-size="9" font-weight="bold">4</text>
-<rect x="58.0" y="136.0" width="148.92" height="109.8" rx="3" fill="#f9fafb" stroke="#374151" stroke-width="1.4"/>
-<text x="132.5" y="190.9" text-anchor="middle" font-size="11.0" font-weight="bold">user_io</text>
-<text x="132.5" y="200.9" text-anchor="middle" font-size="7.5" fill="#6b7280">17p</text>
-<circle cx="58" cy="136" r="7" fill="white" stroke="#111827" stroke-width="1.2"/>
-<text x="58" y="139" text-anchor="middle" font-size="9" font-weight="bold">21</text>
-<rect x="322.0" y="424.0" width="300" height="252" rx="8" fill="#fef3c7" stroke="#92400e" stroke-width="2" opacity="0.95"/>
-<text x="472" y="544" text-anchor="middle" font-size="13" font-weight="bold" fill="#92400e">Zynq SoM 50 x 42</text>
-<text x="472" y="560" text-anchor="middle" font-size="8.5" fill="#92400e">(bottom view: DF40 positions mirrored from the SoM PCB)</text>
-<rect x="388.6" y="433.7" width="118.8" height="22.68" fill="#92400e"/>
-<text x="448.0" y="448.5" text-anchor="middle" font-size="10" font-weight="bold" fill="white">J1</text>
-<rect x="388.6" y="643.7" width="118.8" height="22.68" fill="#92400e"/>
-<text x="448.0" y="658.5" text-anchor="middle" font-size="10" font-weight="bold" fill="white">J2</text>
-<rect x="328.7" y="490.6" width="22.68" height="118.8" fill="#92400e"/>
-<text x="340.0" y="553.5" text-anchor="middle" font-size="10" font-weight="bold" fill="white" transform="rotate(-90 340.0 553.5)">J3</text>
+<rect x="808.0" y="184.0" width="64.83" height="100.68" rx="3" fill="#f9fafb" stroke="#374151" stroke-width="1.4" stroke-dasharray="5,4"/>
+<text x="840.4" y="234.3" text-anchor="middle" font-size="8.6" font-weight="bold">uart_bridge</text>
+<text x="840.4" y="244.3" text-anchor="middle" font-size="7.5" fill="#6b7280">10p</text>
+<circle cx="808" cy="184" r="7" fill="white" stroke="#111827" stroke-width="1.2"/>
+<text x="808" y="187" text-anchor="middle" font-size="9" font-weight="bold">19</text>
+<rect x="448.0" y="226.0" width="193.476" height="174.841" rx="3" fill="#f9fafb" stroke="#374151" stroke-width="1.4"/>
+<text x="544.7" y="313.4" text-anchor="middle" font-size="11.0" font-weight="bold">usb_jtag</text>
+<text x="544.7" y="323.4" text-anchor="middle" font-size="7.5" fill="#6b7280">19p</text>
+<rect x="758.2" y="73.0" width="65.9286" height="107.605" rx="3" fill="#eff6ff" stroke="#1e3a8a" stroke-width="1.4"/>
+<rect x="764.3" y="73.0" width="53.82" height="47.1" fill="#bfdbfe" stroke="#1e3a8a" stroke-width="1.2"/>
+<text x="791.2" y="126.8" text-anchor="middle" font-size="7.0" font-weight="bold">usb_jtag_connector</text>
+<text x="791.2" y="136.8" text-anchor="middle" font-size="7.5" fill="#6b7280">6p</text>
+<circle cx="758.2" cy="73" r="7" fill="white" stroke="#111827" stroke-width="1.2"/>
+<text x="758.2" y="76" text-anchor="middle" font-size="9" font-weight="bold">5</text>
+<rect x="397.1" y="262.0" width="49.08" height="61.68" rx="3" fill="#f9fafb" stroke="#374151" stroke-width="1.4"/>
+<text x="421.7" y="292.8" text-anchor="middle" font-size="11.0" font-weight="bold">usb_pd</text>
+<text x="421.7" y="302.8" text-anchor="middle" font-size="7.5" fill="#6b7280">6p</text>
+<circle cx="397.1" cy="262" r="7" fill="white" stroke="#111827" stroke-width="1.2"/>
+<text x="397.1" y="265" text-anchor="middle" font-size="9" font-weight="bold">20</text>
+<rect x="832.9" y="73.0" width="65.9286" height="75.8046" rx="3" fill="#eff6ff" stroke="#1e3a8a" stroke-width="1.4"/>
+<rect x="838.9" y="73.0" width="53.82" height="47.1" fill="#bfdbfe" stroke="#1e3a8a" stroke-width="1.2"/>
+<text x="865.8" y="110.9" text-anchor="middle" font-size="7.0" font-weight="bold">usb_uart_connector</text>
+<text x="865.8" y="120.9" text-anchor="middle" font-size="7.5" fill="#6b7280">5p</text>
+<circle cx="832.9" cy="73" r="7" fill="white" stroke="#111827" stroke-width="1.2"/>
+<text x="832.9" y="76" text-anchor="middle" font-size="9" font-weight="bold">6</text>
+<rect x="604.5" y="73.0" width="145.008" height="133.609" rx="3" fill="#eff6ff" stroke="#1e3a8a" stroke-width="1.4"/>
+<rect x="650.1" y="73.0" width="53.82" height="47.1" fill="#bfdbfe" stroke="#1e3a8a" stroke-width="1.2"/>
+<text x="677.0" y="139.8" text-anchor="middle" font-size="11.0" font-weight="bold">usbc_otg</text>
+<text x="677.0" y="149.8" text-anchor="middle" font-size="7.5" fill="#6b7280">12p</text>
+<circle cx="604.5" cy="73" r="7" fill="white" stroke="#111827" stroke-width="1.2"/>
+<text x="604.5" y="76" text-anchor="middle" font-size="9" font-weight="bold">4</text>
+<rect x="52.0" y="136.0" width="148.92" height="109.8" rx="3" fill="#f9fafb" stroke="#374151" stroke-width="1.4"/>
+<text x="126.5" y="190.9" text-anchor="middle" font-size="11.0" font-weight="bold">user_io</text>
+<text x="126.5" y="200.9" text-anchor="middle" font-size="7.5" fill="#6b7280">17p</text>
+<circle cx="52" cy="136" r="7" fill="white" stroke="#111827" stroke-width="1.2"/>
+<text x="52" y="139" text-anchor="middle" font-size="9" font-weight="bold">21</text>
+<rect x="319.0" y="424.0" width="300" height="252" rx="8" fill="#fef3c7" stroke="#92400e" stroke-width="2" opacity="0.95"/>
+<text x="469" y="544" text-anchor="middle" font-size="13" font-weight="bold" fill="#92400e">Zynq SoM 50 x 42</text>
+<text x="469" y="560" text-anchor="middle" font-size="8.5" fill="#92400e">(bottom view: DF40 positions mirrored from the SoM PCB)</text>
+<rect x="385.6" y="433.7" width="118.8" height="22.68" fill="#92400e"/>
+<text x="445.0" y="448.5" text-anchor="middle" font-size="10" font-weight="bold" fill="white">J1</text>
+<rect x="385.6" y="643.7" width="118.8" height="22.68" fill="#92400e"/>
+<text x="445.0" y="658.5" text-anchor="middle" font-size="10" font-weight="bold" fill="white">J2</text>
+<rect x="325.7" y="490.6" width="22.68" height="118.8" fill="#92400e"/>
+<text x="337.0" y="553.5" text-anchor="middle" font-size="10" font-weight="bold" fill="white" transform="rotate(-90 337.0 553.5)">J3</text>
 <line x1="46.0" y1="994.0" x2="166.0" y2="994.0" stroke="#111827" stroke-width="3"/>
 <text x="106.0" y="1008.0" text-anchor="middle" fill="#6b7280">20 mm</text>
-<text x="1048" y="68" font-size="13" font-weight="bold">placement notes (derived)</text>
-<circle cx="1056" cy="86" r="8" fill="white" stroke="#111827" stroke-width="1.2"/>
-<text x="1056" y="89" text-anchor="middle" font-size="9" font-weight="bold">1</text>
-<text x="1072" y="90">4 TMDS pairs 100R; companion IC at connector</text>
-<circle cx="1056" cy="108" r="8" fill="white" stroke="#111827" stroke-width="1.2"/>
-<text x="1056" y="111" text-anchor="middle" font-size="9" font-weight="bold">2</text>
-<text x="1072" y="112">SDIO 1.8V island: TXS02612 splits 1.8V / 3.3V sides</text>
-<circle cx="1056" cy="130" r="8" fill="white" stroke="#111827" stroke-width="1.2"/>
-<text x="1056" y="133" text-anchor="middle" font-size="9" font-weight="bold">3</text>
-<text x="1072" y="134">power inlet: VBUS-&gt;TVS-&gt;bulk-&gt;+VIN; CC pair to FUSB302</text>
-<circle cx="1056" cy="152" r="8" fill="white" stroke="#111827" stroke-width="1.2"/>
-<text x="1056" y="155" text-anchor="middle" font-size="9" font-weight="bold">4</text>
-<text x="1072" y="156">USB-C OTG: 90R HS pair short + matched; ESD at conn</text>
-<circle cx="1056" cy="174" r="8" fill="white" stroke="#111827" stroke-width="1.2"/>
-<text x="1056" y="177" text-anchor="middle" font-size="9" font-weight="bold">5</text>
-<text x="1072" y="178">USB-C OTG: 90R HS pair short + matched; ESD at conn</text>
-<circle cx="1056" cy="196" r="8" fill="white" stroke="#111827" stroke-width="1.2"/>
-<text x="1056" y="199" text-anchor="middle" font-size="9" font-weight="bold">6</text>
-<text x="1072" y="200">USB-C OTG: 90R HS pair short + matched; ESD at conn</text>
-<circle cx="1056" cy="218" r="8" fill="white" stroke="#111827" stroke-width="1.2"/>
-<text x="1056" y="221" text-anchor="middle" font-size="9" font-weight="bold">7</text>
-<text x="1072" y="222">LCD FFC exit; backlight boost loop tight</text>
-<circle cx="1056" cy="240" r="8" fill="white" stroke="#111827" stroke-width="1.2"/>
-<text x="1056" y="243" text-anchor="middle" font-size="9" font-weight="bold">8</text>
-<text x="1072" y="244">camera FFC: 3 CSI-2 pairs 100R to J3 side</text>
-<circle cx="1056" cy="262" r="8" fill="white" stroke="#111827" stroke-width="1.2"/>
-<text x="1056" y="265" text-anchor="middle" font-size="9" font-weight="bold">9</text>
-<text x="1072" y="266">PMOD pair on gated +3V3_PMOD rail</text>
-<circle cx="1056" cy="284" r="8" fill="white" stroke="#111827" stroke-width="1.2"/>
-<text x="1056" y="287" text-anchor="middle" font-size="9" font-weight="bold">10</text>
-<text x="1072" y="288">4 TMDS pairs 100R; companion IC at connector</text>
-<circle cx="1056" cy="306" r="8" fill="white" stroke="#111827" stroke-width="1.2"/>
-<text x="1056" y="309" text-anchor="middle" font-size="9" font-weight="bold">11</text>
-<text x="1072" y="310">PMOD pair on gated +3V3_PMOD rail</text>
-<circle cx="1056" cy="328" r="8" fill="white" stroke="#111827" stroke-width="1.2"/>
-<text x="1056" y="331" text-anchor="middle" font-size="9" font-weight="bold">12</text>
-<text x="1072" y="332">10 load switches: gated-rail star points</text>
-<circle cx="1056" cy="350" r="8" fill="white" stroke="#111827" stroke-width="1.2"/>
-<text x="1056" y="353" text-anchor="middle" font-size="9" font-weight="bold">13</text>
-<text x="1072" y="354">rail-EN DIPs + PG LEDs: human access</text>
-<circle cx="1056" cy="372" r="8" fill="white" stroke="#111827" stroke-width="1.2"/>
-<text x="1056" y="375" text-anchor="middle" font-size="9" font-weight="bold">14</text>
-<text x="1072" y="376">JTAG/SWD headers vertical: probe clearance</text>
-<circle cx="1056" cy="394" r="8" fill="white" stroke="#111827" stroke-width="1.2"/>
-<text x="1056" y="397" text-anchor="middle" font-size="9" font-weight="bold">15</text>
-<text x="1072" y="398">magnetics keep-out: no planes line-side; 100R MDI</text>
-<circle cx="1056" cy="416" r="8" fill="white" stroke="#111827" stroke-width="1.2"/>
-<text x="1056" y="419" text-anchor="middle" font-size="9" font-weight="bold">16</text>
-<text x="1072" y="420">bank-35 IO header: VADJ LDO copper</text>
-<circle cx="1056" cy="438" r="8" fill="white" stroke="#111827" stroke-width="1.2"/>
-<text x="1056" y="441" text-anchor="middle" font-size="9" font-weight="bold">17</text>
-<text x="1072" y="442">2 bucks: thermal copper + vias; keep SW loops tight</text>
-<circle cx="1056" cy="460" r="8" fill="white" stroke="#111827" stroke-width="1.2"/>
-<text x="1056" y="463" text-anchor="middle" font-size="9" font-weight="bold">18</text>
-<text x="1072" y="464">INA3221 shunts sit IN the rail path</text>
-<circle cx="1056" cy="482" r="8" fill="white" stroke="#111827" stroke-width="1.2"/>
-<text x="1056" y="485" text-anchor="middle" font-size="9" font-weight="bold">19</text>
-<text x="1072" y="486">USB-UART conn deferred; TPs on TX/RX</text>
-<circle cx="1056" cy="504" r="8" fill="white" stroke="#111827" stroke-width="1.2"/>
-<text x="1056" y="507" text-anchor="middle" font-size="9" font-weight="bold">20</text>
-<text x="1072" y="508">FUSB302 beside inlet: short CC stubs</text>
-<circle cx="1056" cy="526" r="8" fill="white" stroke="#111827" stroke-width="1.2"/>
-<text x="1056" y="529" text-anchor="middle" font-size="9" font-weight="bold">21</text>
-<text x="1072" y="530">LEDs + buttons human-facing</text>
-<text x="1048" y="564" fill="#6b7280" font-size="10">block area = courtyards (big parts raw, small x3.5) — see FLOORPLAN.md</text>
+<text x="1042" y="68" font-size="13" font-weight="bold">placement notes (derived)</text>
+<circle cx="1050" cy="86" r="8" fill="white" stroke="#111827" stroke-width="1.2"/>
+<text x="1050" y="89" text-anchor="middle" font-size="9" font-weight="bold">1</text>
+<text x="1066" y="90">4 TMDS pairs 100R; companion IC at connector</text>
+<circle cx="1050" cy="108" r="8" fill="white" stroke="#111827" stroke-width="1.2"/>
+<text x="1050" y="111" text-anchor="middle" font-size="9" font-weight="bold">2</text>
+<text x="1066" y="112">SDIO 1.8V island: TXS02612 splits 1.8V / 3.3V sides</text>
+<circle cx="1050" cy="130" r="8" fill="white" stroke="#111827" stroke-width="1.2"/>
+<text x="1050" y="133" text-anchor="middle" font-size="9" font-weight="bold">3</text>
+<text x="1066" y="134">power inlet: VBUS-&gt;TVS-&gt;bulk-&gt;+VIN; CC pair to FUSB302</text>
+<circle cx="1050" cy="152" r="8" fill="white" stroke="#111827" stroke-width="1.2"/>
+<text x="1050" y="155" text-anchor="middle" font-size="9" font-weight="bold">4</text>
+<text x="1066" y="156">USB-C OTG: 90R HS pair short + matched; ESD at conn</text>
+<circle cx="1050" cy="174" r="8" fill="white" stroke="#111827" stroke-width="1.2"/>
+<text x="1050" y="177" text-anchor="middle" font-size="9" font-weight="bold">5</text>
+<text x="1066" y="178">USB-C OTG: 90R HS pair short + matched; ESD at conn</text>
+<circle cx="1050" cy="196" r="8" fill="white" stroke="#111827" stroke-width="1.2"/>
+<text x="1050" y="199" text-anchor="middle" font-size="9" font-weight="bold">6</text>
+<text x="1066" y="200">USB-C OTG: 90R HS pair short + matched; ESD at conn</text>
+<circle cx="1050" cy="218" r="8" fill="white" stroke="#111827" stroke-width="1.2"/>
+<text x="1050" y="221" text-anchor="middle" font-size="9" font-weight="bold">7</text>
+<text x="1066" y="222">LCD FFC exit; backlight boost loop tight</text>
+<circle cx="1050" cy="240" r="8" fill="white" stroke="#111827" stroke-width="1.2"/>
+<text x="1050" y="243" text-anchor="middle" font-size="9" font-weight="bold">8</text>
+<text x="1066" y="244">camera FFC: 3 CSI-2 pairs 100R to J3 side</text>
+<circle cx="1050" cy="262" r="8" fill="white" stroke="#111827" stroke-width="1.2"/>
+<text x="1050" y="265" text-anchor="middle" font-size="9" font-weight="bold">9</text>
+<text x="1066" y="266">PMOD pair on gated +3V3_PMOD rail</text>
+<circle cx="1050" cy="284" r="8" fill="white" stroke="#111827" stroke-width="1.2"/>
+<text x="1050" y="287" text-anchor="middle" font-size="9" font-weight="bold">10</text>
+<text x="1066" y="288">4 TMDS pairs 100R; companion IC at connector</text>
+<circle cx="1050" cy="306" r="8" fill="white" stroke="#111827" stroke-width="1.2"/>
+<text x="1050" y="309" text-anchor="middle" font-size="9" font-weight="bold">11</text>
+<text x="1066" y="310">PMOD pair on gated +3V3_PMOD rail</text>
+<circle cx="1050" cy="328" r="8" fill="white" stroke="#111827" stroke-width="1.2"/>
+<text x="1050" y="331" text-anchor="middle" font-size="9" font-weight="bold">12</text>
+<text x="1066" y="332">10 load switches: gated-rail star points</text>
+<circle cx="1050" cy="350" r="8" fill="white" stroke="#111827" stroke-width="1.2"/>
+<text x="1050" y="353" text-anchor="middle" font-size="9" font-weight="bold">13</text>
+<text x="1066" y="354">rail-EN DIPs + PG LEDs: human access</text>
+<circle cx="1050" cy="372" r="8" fill="white" stroke="#111827" stroke-width="1.2"/>
+<text x="1050" y="375" text-anchor="middle" font-size="9" font-weight="bold">14</text>
+<text x="1066" y="376">JTAG/SWD headers vertical: probe clearance</text>
+<circle cx="1050" cy="394" r="8" fill="white" stroke="#111827" stroke-width="1.2"/>
+<text x="1050" y="397" text-anchor="middle" font-size="9" font-weight="bold">15</text>
+<text x="1066" y="398">magnetics keep-out: no planes line-side; 100R MDI</text>
+<circle cx="1050" cy="416" r="8" fill="white" stroke="#111827" stroke-width="1.2"/>
+<text x="1050" y="419" text-anchor="middle" font-size="9" font-weight="bold">16</text>
+<text x="1066" y="420">bank-35 IO header: VADJ LDO copper</text>
+<circle cx="1050" cy="438" r="8" fill="white" stroke="#111827" stroke-width="1.2"/>
+<text x="1050" y="441" text-anchor="middle" font-size="9" font-weight="bold">17</text>
+<text x="1066" y="442">2 bucks: thermal copper + vias; keep SW loops tight</text>
+<circle cx="1050" cy="460" r="8" fill="white" stroke="#111827" stroke-width="1.2"/>
+<text x="1050" y="463" text-anchor="middle" font-size="9" font-weight="bold">18</text>
+<text x="1066" y="464">INA3221 shunts sit IN the rail path</text>
+<circle cx="1050" cy="482" r="8" fill="white" stroke="#111827" stroke-width="1.2"/>
+<text x="1050" y="485" text-anchor="middle" font-size="9" font-weight="bold">19</text>
+<text x="1066" y="486">USB-UART conn deferred; TPs on TX/RX</text>
+<circle cx="1050" cy="504" r="8" fill="white" stroke="#111827" stroke-width="1.2"/>
+<text x="1050" y="507" text-anchor="middle" font-size="9" font-weight="bold">20</text>
+<text x="1066" y="508">FUSB302 beside inlet: short CC stubs</text>
+<circle cx="1050" cy="526" r="8" fill="white" stroke="#111827" stroke-width="1.2"/>
+<text x="1050" y="529" text-anchor="middle" font-size="9" font-weight="bold">21</text>
+<text x="1066" y="530">LEDs + buttons human-facing</text>
+<text x="1042" y="564" fill="#6b7280" font-size="10">block area = courtyards (big parts raw, small x3.5) — see FLOORPLAN.md</text>
 </svg>

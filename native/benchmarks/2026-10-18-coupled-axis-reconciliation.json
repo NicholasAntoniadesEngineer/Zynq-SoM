@@ -1,0 +1,50 @@
+{
+  "parent_commit": "4e3f9bae",
+  "source_sha256": "9e4531c0bc67db0e7bd95b5a248937d4018a2ee29afb2428c6f7f83ef60f7665",
+  "finding": "Y-axis repair may flip separations onto an already solved X axis. Coordinate descent cannot necessarily restore a feasible chain because individual coordinate intervals can be empty until several bodies move together. Previously this caused rejection without solving the final assignment.",
+  "correction": "Only after existing repair/descent leaves invalid edges, solve each invalid axis with zero permitted flips, record each reconciliation, then descend and validate all edges and existing physical/hard constraints. At most one reconciliation per axis; no extra separation search or relaxed hardware constraints. Contradictory assignments remain rejected with explicit negative-cycle diagnostics.",
+  "witness": {
+    "board_mm": [20,10], "clearance_mm": 0.3,
+    "fixed_barrier": [8,0,12,10],
+    "moving_bodies": "Two 2x2 bodies seeded at (9,11) and (10,11), with a loose active proximity requirement. Y repair moves both barrier separations to X; a valid right-hand chain exists.",
+    "before": "REJECT: x-edge unsatisfied after axis solve (sep v|#0) — repair flip landed on an already-solved axis",
+    "before_log_sha256": "237459fdd4406ef1f283d22e82c7cb402ccb20a00be65ae1484dea531e606104",
+    "coverage": "Compact/noncompact and transposed fixtures independently check board boundaries and separation in emitted grid units; repeated runs require identical positions, logs and quantization accounting. Existing impossible-board and bounded joint-search cases retained. Floorplan suite: 37288 checks."
+  },
+  "verification": {
+    "build": "PASS complete native rebuild",
+    "build_log": "native/build/coupled-axis-final-build.log",
+    "build_log_sha256": "1e6cfd8b99d81bdd1269a8856099af0edabeaa715d2c229d725ab097fffb5285",
+    "targeted_tests": 10, "passed": 10, "failed": 0, "seconds": 52.35,
+    "test_log": "native/build/coupled-axis-final-regressions.log",
+    "test_log_sha256": "670ede1b065c6f17a450bda2577d62b4a6d6180ea7c4093a25c70f12fdbadccd",
+    "scope": "Floorplan geometry/precision, legalize accounting/registry, precision accounting, source-policy audits, failure receipts, compact facing, refit clearance and compose repair. Not a new exhaustive suite.",
+    "intermediate_failure": "Earlier ten-test run passed nine; source audit correctly rejected a diagnostic source edit during its scan. Final run used unchanged final source and passed all ten."
+  },
+  "carrier_161x150": {
+    "accepted": false, "elapsed_seconds": 43.911123834,
+    "outer_attempts": 8, "fallback_events": 42232, "independent_accounting_match": true,
+    "finding": "Both baseline and granular-minor+vertical+estimator-first failed. Reconciliation exposes an actual cycle in a selected assignment: power X <= 18.20790000000001 from power -> HDMI RX while power X >= 69.1683 from PMOD -> power. This is assignment-specific, not proof of physical board infeasibility.",
+    "log": "native/build/coupled-axis-161x150-screen.log",
+    "log_sha256": "52bcc2a62ce5a5ec75aa0c48738e62e37bf66ca478a40ff6a35925355feeb2dd",
+    "revision_note": "Screen before final diagnostic-only wording change; solving logic identical."
+  },
+  "carrier_162x150": {
+    "scope": "Model screen, not full board acceptance",
+    "model_seconds": 79.577176417, "parts": 566, "top": 345, "bottom": 221,
+    "pcb_sha256": "632231ec9bcea0b616f943dd9df7f47510eb1044c741b94e4f44e4aae7aa59a7",
+    "checks": "fanout, ratsnest, placement contracts and placement flow true; hard_red=0",
+    "log": "native/build/coupled-axis-162x150-screen.log",
+    "log_sha256": "e0873a5b9747f8bfb8db4c9a37004acd0af1e6a72d7b033e8766d09b5b2c303b"
+  },
+  "devkit": {
+    "scope": "Model screen, not full board acceptance",
+    "model_seconds": 0.123106166, "dimensions_mm": [98,98], "parts": 160, "top": 105, "bottom": 55,
+    "pcb_sha256": "1b12fecbcbbaa5e6084c2459da93cb144a660ff19805e6e4e3f75f9c22689fdb",
+    "log": "native/build/coupled-axis-devkit-screen.log",
+    "log_sha256": "79ed12aec33c24211602b87ea39afa954f9c1526de4e4674a05a875d508c161c",
+    "revision_note": "Screen before final diagnostic-only wording change; solving logic identical."
+  },
+  "evidence_reuse": "Both PCB hashes exactly match the fully qualified and visually reviewed release in 2026-10-18-refit-release.json. Physical evidence reused for unchanged PCB bytes; no claim of fresh full pipelines or rendering on the corrected source.",
+  "limits": "No smaller carrier accepted, no controlled speedup or Python comparison claimed. Published master and release outputs unchanged. Unknown hardware requirements and advisory findings remain; routing excluded and no fabrication readiness claimed."
+}

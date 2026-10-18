@@ -1,0 +1,45 @@
+{
+  "parent_commit": "a880d30a",
+  "policy_review": "2026-10-18-power-som-facing-review.json",
+  "floorplan": "carrier-161x150-reviewed-facing.floorplan.json",
+  "output": "native/build/carrier-161x150-reviewed-facing",
+  "board_ok": true, "complete": true, "exit_code": 0, "sheets": 37,
+  "dimensions_mm": [161,150], "area_mm2": 24150,
+  "published_reference_mm": [162,150], "area_saved_mm2": 150, "area_reduction_percent": 0.617283950617284,
+  "parts": 566, "top": 345, "bottom": 221,
+  "pcb_sha256": "2c5fe226dccd5427554e3c9e3fa9c916bcfa93b8d81ad18a9a05d19c8c769f43",
+  "pcb_matches_screen": true,
+  "non_unrouted_drc_errors": 0, "unrouted_connections": 499,
+  "hard_red": 0, "soft_red": 1,
+  "minimum_reported_hard_distance_margin_mm": 3.48,
+  "power_centroid_preference_deg": 74.83,
+  "power_som_centroid_preference_deg": 104.59,
+  "unsatisfied_preference": "power_som -> @som, -14.59 degree margin, explicitly advisory and not marked satisfied",
+  "advisory_failures": ["floorplan_composition", "return_path", "golden", "contract_coverage_lint"],
+  "verification": {
+    "fresh_pngs": 119, "invalid_pngs": 0,
+    "manifest_artifacts": 99, "hash_mismatches": 0,
+    "visual_review": "Fresh 3D top and bottom renders inspected. All PNG signatures, positive dimensions and timestamps checked independently; every manifest artifact hash independently matched."
+  },
+  "timing": {
+    "process_wall_seconds": 244.86,
+    "model_with_internal_checks_seconds": 50.870959,
+    "render3d_seconds": 27.086269,
+    "source_audit_seconds": 109.332123,
+    "scope": "Full pipeline including rendering/audits, excluding compilation. Some overlap with targeted test execution; not isolated benchmarking or a matched Python comparison."
+  },
+  "log": "native/build/carrier-161x150-reviewed-facing.log",
+  "log_sha256": "6ed610850c824dc3fec158977e6400e952dfc892acd0b3f16a1c3faaf9a5a2f3",
+  "devkit_regression": {
+    "scope": "Model screen; prior full physical evidence reused for exact unchanged PCB bytes",
+    "dimensions_mm": [98,98], "parts": 160, "top": 105, "bottom": 55,
+    "model_seconds": 0.12464275,
+    "pcb_sha256": "1b12fecbcbbaa5e6084c2459da93cb144a660ff19805e6e4e3f75f9c22689fdb",
+    "checks": "fanout, ratsnest, local placement contracts and flow true; hard_red=0",
+    "log": "native/build/power-som-policy-devkit-screen.log",
+    "log_sha256": "08e705f864c28295ffca02474ce7b43d3b6797c8e7c969a172cfd13c91b0b15b",
+    "full_qualification_reference": "2026-10-18-refit-release.json"
+  },
+  "reproduction": "Use the full carrier release command in docs/RELEASE-2026-10-16.md with --interior-order 0, this floorplan file, and a separate --output path. Keep all mandatory checks and audit-projections 2 enabled.",
+  "limits": "This candidate passes current mandatory checks, not a claim of complete hardware qualification or fabrication readiness. Unknown hardware requirements, routing/parasitics and advisory findings remain open. Published master and its release artifacts unchanged. Goal not complete."
+}

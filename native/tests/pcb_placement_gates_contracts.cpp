@@ -579,6 +579,72 @@ void advisory_facing_policy() {
         require(rejected,"invalid advisory provenance accepted");
     }
 }
+void power_som_centroid_policy(const std::filesystem::path& root) {
+    const auto contract=parse_json_file((root/"carrier/subsystems/power_som/placement_contract.json").string());
+    require(pcb_facing_advisory_basis(contract).has_value(),"reviewed SoM centroid policy needs explicit provenance");
+    auto strict=contract;
+    for(auto& [key,value]:strict.object_value)if(key=="external")
+        value.object_value.erase(std::remove_if(value.object_value.begin(),value.object_value.end(),
+            [](const auto& p){return p.first=="facing_advisory_basis";}),value.object_value.end());
+    for(bool flip_x:{false,true})for(bool flip_y:{false,true})for(bool moved:{false,true}) {
+        const auto point=[&](double x,double y){return std::make_pair(flip_x?60-x:x,flip_y?60-y:y);};
+        PcbPlacementGatePolicy policy;policy.wired_sheets={"power_som"};policy.project_zones={"power_som"};
+        policy.ref_maps["power_som"]={{"U4","U4"},{"C18","C18"},{"C19","C19"}};
+        PcbCheckModel model;model.board_w=model.board_h=60;
+        const auto load=point(20,20);model.som_core=Box4{load.first-1,load.second-1,load.first+1,load.second+1};
+        for(const auto& [ref,x,y]:std::vector<std::tuple<std::string,double,double>>{
+            {"U4",10,10},{"C18",12,10},{"C19",12,10},{"TP1",10,moved?30.:11.}}) {
+            const auto p=point(x,y);PcbCheckInstance i;i.ref=ref;i.sheet="power_som";i.x=p.first;i.y=p.second;
+            model.insts.push_back(i);
+        }
+        // Deliberately isolated centroid diagnostic, not physical board qualification.
+        policy.contracts["power_som"]=strict;
+        const auto hard=check_pcb_placement_flow(PcbCheckInput(model),policy);
+        require(hard.facing_checked==1&&hard.facing_fail==(moved?1:0)&&hard.ok!=moved,
+            "actual SoM centroid rule must expose sensitivity to unrelated testpoint movement");
+        policy.contracts["power_som"]=contract;
+        const auto soft=check_pcb_placement_flow(PcbCheckInput(model),policy);
+        require(soft.ok&&soft.facing_fail==0&&soft.advisories.size()==1&&soft.terms.size()==1&&
+            soft.terms[0].advisory&&soft.terms[0].ok!=moved,
+            "reviewed SoM preference must retain negative evidence without hardware PASS claim");
+        for(int mode=0;mode<5;++mode)for(bool advisory:{false,true}) {
+            auto broken=model;auto partial=policy;
+            partial.contracts["power_som"]=advisory?contract:strict;
+            if(mode==0)partial.ref_maps["power_som"].erase("C19");
+            if(mode==1)broken.insts.erase(broken.insts.begin()+2);
+            if(mode==2)broken.insts[2].sheet="unrelated";
+            if(mode==3)partial.ref_maps["power_som"]["C19"]="C18";
+            if(mode==4)broken.insts.push_back(broken.insts[2]);
+            const auto bad=check_pcb_placement_flow(PcbCheckInput(broken),partial);
+            require(!bad.ok&&bad.facing_fail==1&&!bad.unresolved.empty()&&bad.advisories.empty(),
+                "partial or ambiguous output centroid must remain unresolved, mode="+std::to_string(mode));
+            FloorplanTerm term;term.kind="facing";term.subject="power_som";term.target_raw="@som";
+            term.output_roles={"C18","C19"};term.enforced=!advisory;
+            FloorplanTermIndex index;(advisory?index.soft:index.hard).push_back(term);
+            const auto measured=measure_pcb_compose_terms(PcbCheckInput(broken),index,partial);
+            require(measured.size()==1&&!measured[0].ok&&measured[0].note=="UNRESOLVED",
+                "composition must not report a partial output centroid as measured");
+            if(mode==1||mode==2||mode==4) {
+                auto& direct=(advisory?index.soft:index.hard).front();
+                direct.out_refs={"C18","C19"};direct.output_roles.clear();
+                const auto explicit_refs=measure_pcb_compose_terms(PcbCheckInput(broken),index,partial);
+                require(explicit_refs.size()==1&&!explicit_refs[0].ok&&explicit_refs[0].note=="UNRESOLVED",
+                    "explicit output refs must also require complete unique model members");
+            }
+        }
+        for(const auto& refs:std::vector<std::vector<std::string>>{
+            {"C18","C18"},{"C18",""},{"C18","absent"}}) {
+            FloorplanTerm term;term.kind="facing";term.subject="power_som";term.target_raw="@som";term.out_refs=refs;
+            FloorplanTermIndex index;index.soft.push_back(term);
+            const auto measured=measure_pcb_compose_terms(PcbCheckInput(model),index,policy);
+            require(measured.size()==1&&!measured[0].ok&&measured[0].note=="UNRESOLVED",
+                "malformed explicit output membership must not become a partial centroid");
+        }
+        model.som_core.reset();
+        const auto unresolved=check_pcb_placement_flow(PcbCheckInput(model),policy);
+        require(!unresolved.ok&&!unresolved.unresolved.empty(),"missing SoM geometry must remain a failure");
+    }
+}
 } // namespace
 int main(int argc, char **argv) {
     try {
@@ -588,6 +654,7 @@ int main(int argc, char **argv) {
         adversarial(argv[1]);
         typed_guards();
         advisory_facing_policy();
+        power_som_centroid_policy(argv[1]);
         baseline(argv[1], "carrier");
         baseline(argv[1], "devkit_mini");
         std::cout << "PCB independent placement gates: " << checks << " assertions passed\n";

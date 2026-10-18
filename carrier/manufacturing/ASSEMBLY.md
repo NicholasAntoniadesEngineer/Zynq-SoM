@@ -1,6 +1,6 @@
 # Assembly order — carrier
 
-Board 162 x 150 mm. 561 placed parts (340 top / 221 bottom); 5 fiducials are bare-copper marks, excluded from every phase and step.
+Board 161 x 150 mm. 561 placed parts (340 top / 221 bottom); 5 fiducials are bare-copper marks, excluded from every phase and step.
 Section A is the staged hand-assembly + bring-up order; section B is the PCBA process order. Every part appears in exactly one phase and exactly one step.
 
 ## A. Incremental bring-up order

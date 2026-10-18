@@ -1,0 +1,16 @@
+{
+  "source_commit": "d70748a9",
+  "branch_at_completion": "codex/two-sided-layout",
+  "head_at_completion": "f77e2237",
+  "source_stability": "The only committed difference from d70748a9 to f77e2237 was 2026-10-18-post-review-outline-screen.json. No source, test, binary or hardware policy changes occurred during the run.",
+  "build_reference": "Complete native rebuild in 2026-10-18-facing-membership-completeness.json",
+  "command": "ctest --test-dir native/build/fast --parallel 2 --output-on-failure",
+  "total": 278, "passed": 278, "failed": 0, "excluded": 0,
+  "wall_seconds": 845.07, "exit_code": 0,
+  "live_kicad_tests": 10, "live_kicad_process_seconds": 576.93,
+  "log": "native/build/reviewed-facing-integrated-tests.log",
+  "log_sha256": "0a9ec5024362916834dc71c8fd93ed0459bdbd635cc4096d28123aed08deb0bb",
+  "scope": "Exhaustive configured native regression suite, including live board/CLI tests, geometry, operation accounting, source audits, authoring purity census/closure and serialized audit queue tests. This verifies the integrated coupled-axis, reviewed centroid policy and membership-completeness changes; no exclusion or failure waiver.",
+  "qualification_reference": "The fully built and inspected 161x150 carrier remains documented in 2026-10-18-carrier-161x150-qualification.json. Exact unchanged carrier/devkit PCB hashes under the latest gate source are recorded in 2026-10-18-facing-membership-completeness.json.",
+  "limits": "Tests overlapped bounded diagnostic screens; suite wall time is not a compile/build benchmark or Python comparison. Passing the suite does not prove every hardware requirement or complete the optimisation goal. Master and published release artifacts unchanged."
+}

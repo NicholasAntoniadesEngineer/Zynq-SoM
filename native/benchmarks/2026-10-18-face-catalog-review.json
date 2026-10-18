@@ -1,0 +1,43 @@
+{
+  "source_commit": "d70748a9",
+  "scope": "Read-only single-strategy candidate catalogue and one scoped component-reservation retest. No production code, hardware policy, accepted board or master publication changed.",
+  "catalogue": {
+    "command_basis": "Use the carrier profile recipe in 2026-10-18-post-review-outline-screen.json at 161x150, omit --search-strategy and add --owned-selection-trace on. This is a baseline catalogue, not the qualified multi-strategy finalist.",
+    "seconds": 12.098332583, "outer_attempts": 4, "exit_code": 1,
+    "result": "Baseline construction failed; catalogue and selection observations remain valid diagnostics, not board acceptance.",
+    "offers": {
+      "usb_jtag": {"all_tagged": 96, "contract_bottom": 92},
+      "power": {"all_tagged": 133, "contract_bottom": 125},
+      "power_mon": {"all_tagged": 64, "contract_bottom": 56},
+      "power_som": {"all_tagged": 7, "contract_bottom": 3}
+    },
+    "usb_jtag_selected_events": 108,
+    "selected_index_frequency": {"12": 21, "16": 12, "4": 21, "56": 52, "36": 2},
+    "selection_interpretation": "Every selected USB-JTAG index names a contract-bottom single/pair variant, including rotated whole-sheet variants. A primary side of top is not evidence that all physical components are on top. These are repeated selection observations during failed attempts, not 108 accepted layouts.",
+    "log": "native/build/face-catalog-single-strategy.log",
+    "log_sha256": "3f2f7220e71ba81cf8f82dd51462a702fdc7f617b5a5085a639d2e2d5eb84586"
+  },
+  "qualified_reference_census": {
+    "source": "native/build/carrier-161x150-reviewed-facing/manufacturing/Zynq_Carrier_cpl.csv",
+    "sha256": "3b22368c860ad81f67901af54b6c74d9a834e605cbcb9ec2eab4aeaffad4800d",
+    "bottom": ["U28004 AP2112K-3.3TRG1", "U28002 SN74LVC125ADR", "C28001", "C28002", "C28007"],
+    "top": ["U28001 CH347T", "Y28001 8MHz", "C28004"],
+    "scope": "Selected owner/support examples, not an exhaustive component census. Confirms both independent non-USB owner groups already use the bottom face."
+  },
+  "component_reservation_retest": {
+    "outline_mm": [160,150],
+    "strategy": "granular-minor+vertical+estimator-first+component-primary:usb_jtag",
+    "why_retest": "The previous scoped reservation experiment on older source also encountered power-facing failures. Those policies have since been reviewed; this trial tests whether the remaining envelope restriction alone explains the smaller-outline failure.",
+    "exit_code": 1, "screened_incumbent": false, "seconds": 80.033262417,
+    "completed_outer_attempts": 18, "fallback_events": 41787, "independent_accounting_match": true,
+    "observed_seating_subjects": ["usb_jtag", "fmc", "power", "board_services"],
+    "log": "native/build/reviewed-facing-usb-component-160x150.log",
+    "log_sha256": "0eca0ce645cf2730d98ba98179be8e1a24cb295c8b9ef1719be38d680aa3044f"
+  },
+  "next_algorithm_hypothesis": {
+    "finding": "append_contract_group_faces skips groups with required_top_refs before its group-rotation loop. Thus the optional group rotations only rotate bottom-side moves. Whole-sheet rotations exist, but do not independently rotate the top-pinned USB bridge/crystal group relative to other owners.",
+    "experiment": "Test independently qualified same-face rigid-group rotations while retaining top-side requirements, connector anchoring, local bypass/crystal relationships, exact pad geometry, incumbent preservation and complete operation accounting. Establish synthetic coverage and measure live catalogue/search cost before enabling any default.",
+    "limits": "This is a search-coverage hypothesis, not proof of smaller-board feasibility. No high-speed top-side rule was relaxed. Do not infer that more candidates necessarily improve search performance."
+  },
+  "limits": "Concurrent regression tests affect timings; no controlled speedup or matched Python comparison claimed. Failed candidates were not rendered or promoted. Qualified carrier remains 161x150, devkit 98x98; routing and unknown hardware requirements remain open."
+}
