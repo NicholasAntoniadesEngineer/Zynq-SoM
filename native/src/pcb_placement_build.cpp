@@ -417,6 +417,14 @@ PcbPlacementSearchResult search_pcb_models(const PcbPlacementInput& input,
                 if(!input.floorplan.experiment->contract_group_face_sheets.count(sheet))
                     throw std::invalid_argument("component primary sheet is not an explicit contract-group sheet: "+sheet);
         }
+        for(const auto& strategy:strategies)if(!strategy.contract_group_rotation_sheets.empty()) {
+            if(strategy.contract_group_rotations.value_or(false))
+                throw std::invalid_argument("group rotations cannot mix all-sheet and scoped selection");
+            for(const auto& sheet:strategy.contract_group_rotation_sheets)
+                if(!input.floorplan.compact_search||!input.floorplan.experiment||
+                   !input.floorplan.experiment->contract_group_face_sheets.count(sheet))
+                    throw std::invalid_argument("rotation sheet requires compact mode and explicit contract-group sheet: "+sheet);
+        }
         for(std::size_t attempt=0;attempt<=strategies.size();++attempt) {
             auto trial=input;
             if(attempt) {
@@ -426,7 +434,14 @@ PcbPlacementSearchResult search_pcb_models(const PcbPlacementInput& input,
                 const auto& strategy=strategies[attempt-1];
                 if(strategy.shape_area_first)policy->shape_area_first=*strategy.shape_area_first;
                 if(strategy.owned_extent_alternatives)policy->owned_extent_alternatives=*strategy.owned_extent_alternatives;
-                if(strategy.contract_group_rotations)policy->contract_group_rotations=*strategy.contract_group_rotations;
+                if(strategy.contract_group_rotations) {
+                    policy->contract_group_rotations=*strategy.contract_group_rotations;
+                    policy->contract_group_rotation_sheets.clear();
+                }
+                if(!strategy.contract_group_rotation_sheets.empty()) {
+                    policy->contract_group_rotations=false;
+                    policy->contract_group_rotation_sheets=strategy.contract_group_rotation_sheets;
+                }
                 if(strategy.granular_minor_occupancy)policy->granular_minor_occupancy=true;
                 if(strategy.dual_primary_reservations)policy->dual_primary_reservations=true;
                 if(strategy.component_primary_reservations||!strategy.component_primary_sheets.empty()) {

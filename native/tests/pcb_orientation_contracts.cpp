@@ -959,6 +959,24 @@ void live(const std::filesystem::path& root){
    const auto group_repeat=build_pcb_zone_geometry(f.input);
    demand(group_turns.quantization_engagements==group_repeat.quantization_engagements,
           "group-only rotation receipts not reproducible");
+   experiment->contract_group_rotations=false;
+   experiment->contract_group_rotation_sheets={"usb_jtag"};
+   experiment->contract_group_face_sheets={"usb_jtag","power","power_mon"};
+   const auto scoped_turns=build_pcb_zone_geometry(f.input);
+   for(const auto& [name,actual]:scoped_turns.geometry.shapes) {
+    const auto& expected=(name=="usb_jtag"?group_turns:combined).geometry.shapes.at(name);
+    demand(actual.size()==expected.size(),"scoped rotations changed unrelated offer count: "+name);
+    for(std::size_t i=0;i<actual.size();++i)demand(equal(actual[i],expected[i]),"scoped rotation geometry mismatch: "+name);
+   }
+   for(const auto& [key,n]:scoped_turns.quantization_engagements)
+    demand(n+count(split,key)==count(group_turns,key)+count(combined,key),"scoped rotation operation accounting mismatch: "+key);
+   experiment->contract_group_rotation_sheets={"missing-sheet"};
+   bool invalid_scope=false;
+   try{(void)build_pcb_zone_geometry(f.input);}catch(const std::invalid_argument&){invalid_scope=true;}
+   demand(invalid_scope,"unknown rotation scope silently ignored");
+   experiment->contract_group_rotation_sheets.clear();
+   experiment->contract_group_face_sheets={"usb_jtag"};
+   experiment->contract_group_rotations=true;
    const auto& offers=group_turns.geometry.shapes.at("usb_jtag");
    const auto& originals=split.geometry.shapes.at("usb_jtag");
    demand(offers.size()>originals.size(),"group-only rotations added no candidates");

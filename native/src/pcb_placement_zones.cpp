@@ -11,6 +11,14 @@ PcbZoneResult pcb_placement::build_zones_for_search(const PcbPlacementInput &in,
     PcbZoneResult out;
     ExecutionFailureReceipt child;
     try {
+    if(in.floorplan.experiment) {
+        const auto& policy=*in.floorplan.experiment;
+        if(policy.contract_group_rotations&&!policy.contract_group_rotation_sheets.empty())
+            throw std::invalid_argument("group rotations cannot mix all-sheet and scoped selection");
+        for(const auto& sheet:policy.contract_group_rotation_sheets)
+            if(!in.floorplan.compact_search||!policy.contract_group_face_sheets.count(sheet))
+                throw std::invalid_argument("rotation sheet requires compact mode and explicit contract-group sheet: "+sheet);
+    }
     if(in.floorplan.experiment&&in.floorplan.experiment->dual_primary_reservations&&
        (!in.floorplan.compact_search||!in.floorplan.experiment->granular_minor_occupancy))
         throw std::invalid_argument("dual primary reservations require compact mode and granular minority occupancy");
@@ -237,7 +245,8 @@ PcbZoneResult pcb_placement::build_zones_for_search(const PcbPlacementInput &in,
                 !templated && !edge && !conn_rot.count(sheet) &&
                 !sheet_edges.count(sheet) && !connector_class.count(sheet), &child);
         if(in.floorplan.experiment&&in.floorplan.experiment->contract_group_face_sheets.count(sheet))
-            append_contract_group_faces(ctx,g,sheet,shape(p,"base"),in.floorplan.experiment->contract_group_rotations,
+            append_contract_group_faces(ctx,g,sheet,shape(p,"base"),in.floorplan.experiment->contract_group_rotations||
+                                        in.floorplan.experiment->contract_group_rotation_sheets.count(sheet),
                                         vertical_compaction);
         if(in.floorplan.experiment&&in.floorplan.experiment->owned_face_cohesion)
             append_owned_face_zone_shapes(ctx,out,sheet,shape(p,"base"),
