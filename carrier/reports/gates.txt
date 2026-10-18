@@ -1636,20 +1636,20 @@ placement_requirements: PASS — board_aux: hard ownership/identity/top-switch r
 bringup_rails: hard ownership/identity/top-switch requirements met
 Scope: hard ownership/pin-net/top-switch checks only. Qualitative evidence is separately UNVERIFIED in placement_requirements_unverified.txt; no movement permission added.
 pcb_drc: PASS — 0 non-unrouted errors; 499 unrouted (expected); 
-ratsnest: PASS — LAW-5 RATSNEST GATE: PASS (board 162 x 150 mm)
+ratsnest: PASS — LAW-5 RATSNEST GATE: PASS (board 161 x 150 mm)
   off-board parts: 0
   dispersed subsystems: 0 (threshold 9x)
-  cross-subsystem airwire: 15333.9 mm (advisory reference 15433 mm, OK; 427 edges; 15333.9/22873.2 mm = 67.0% of total)
+  cross-subsystem airwire: 15396.9 mm (advisory reference 15385 mm, OVER; 411 edges; 15396.9/23089 mm = 66.7% of total)
   per-subsystem clusters (n, bbox mm, dispersion):
     som_decoupling         n=18  bbox_area=     813 disp=  8.8
-    debug_boot             n=10  bbox_area=    1484 disp=  4.7
+    board_aux              n=18  bbox_area=     764 disp=  5.0
     lcd                    n=20  bbox_area=    1121 disp=  3.7
     pmod_expansion         n=15  bbox_area=    1271 disp=  3.5
     usb_jtag               n=19  bbox_area=     895 disp=  3.4
-    user_io                n=17  bbox_area=     629 disp=  3.2
+    user_io                n=17  bbox_area=     628 disp=  3.2
+    debug_boot             n=10  bbox_area=     974 disp=  3.1
     fmc                    n=8   bbox_area=    1109 disp=  3.1
     power_mon              n=10  bbox_area=     302 disp=  3.1
-    board_services         n=9   bbox_area=    1081 disp=  3.0
     power_som              n=20  bbox_area=     556 disp=  2.9
     usbc_otg               n=12  bbox_area=     577 disp=  2.9
     motor_pwm              n=13  bbox_area=     825 disp=  2.8
@@ -1663,19 +1663,19 @@ ratsnest: PASS — LAW-5 RATSNEST GATE: PASS (board 162 x 150 mm)
     microsd                n=15  bbox_area=     639 disp=  1.9
     usb_jtag_connector     n=6   bbox_area=     207 disp=  1.8
     pmod                   n=26  bbox_area=    1038 disp=  1.8
+    bringup_en             n=15  bbox_area=     177 disp=  1.8
     hdmi_tx                n=12  bbox_area=     530 disp=  1.7
     board_qwiic            n=2   bbox_area=      76 disp=  1.7
     rj45_connector         n=3   bbox_area=     534 disp=  1.7
     motor_sense            n=10  bbox_area=    1286 disp=  1.6
     ethernet               n=10  bbox_area=     533 disp=  1.6
     bringup_en_modules     n=54  bbox_area=     541 disp=  1.5
-    bringup_rails          n=23  bbox_area=     702 disp=  1.5
+    board_services         n=9   bbox_area=     541 disp=  1.5
     usb_uart_connector     n=5   bbox_area=     157 disp=  1.5
+    bringup_rails          n=23  bbox_area=     692 disp=  1.5
     bringup_modules        n=71  bbox_area=     483 disp=  1.3
-    board_aux              n=18  bbox_area=     177 disp=  1.2
-    bringup_en             n=15  bbox_area=      94 disp=  0.9
-placement_mech: PASS — LAW-6 PLACEMENT (mechanical) GATE: PASS (board 162 x 150 mm)
-  SoM module-body core: (70.2,84.4)..(121.8,127.6) mm — bottom-passives-only, TOP keepout
+placement_mech: PASS — LAW-6 PLACEMENT (mechanical) GATE: PASS (board 161 x 150 mm)
+  SoM module-body core: (69.8,84.4)..(121.2,127.6) mm — bottom-passives-only, TOP keepout
   off-board connectors: 16 (0 mis-placed)
     OK  J12001    HDMI-019S        edge=S rot=  0 mouth->(0, 1) flush=-2.8mm
     OK  J14001    HDMI-019S        edge=N rot=180 mouth->(0, -1) flush=-2.8mm
@@ -1718,7 +1718,7 @@ connector_model: PASS — LAW-6 CONNECTOR-MODEL ORIENTATION GATE: PASS
   non-zero model-Z (flipped opening): 0
   geometry-cross-checked (through-shell): 6 -> 0 conflict(s)
   reviewed geometry exceptions: 7
-connector_spacing: PASS — CONNECTOR OVERMOLD SPACING GATE: PASS (board 162 x 150 mm)
+connector_spacing: PASS — CONNECTOR OVERMOLD SPACING GATE: PASS (board 161 x 150 mm)
   same-edge overmold connector pairs: 10 (0 too tight)
     OK  J14001    <-> J16001    HDMI-019S|1  gap=  3.60mm along x (need >= 3mm)
     OK  J12001    <-> J18002    HDMI-019S|1  gap= 10.02mm along x (need >= 3mm)
@@ -1845,27 +1845,28 @@ PLACEMENT-CONTRACT GATE (usbc_otg): PASS (contract=yes, 9 structures)
   fails: hot_loop=0 same_side=0 bulk=0 bulk_out=0 sw_node=0 fb=0 boot=0 vcc=0 bias=0 rt=0 ldo=0 proximity=0 unknown=0
   unresolved refs: 0
   violations: 0
-placement_flow: PASS — PLACEMENT-FLOW GATE: PASS (9 external contract(s); board_area=24300mm^2, flow_budget=121.8mm)
+placement_flow: PASS — PLACEMENT-FLOW GATE: PASS (9 external contract(s); board_area=24150mm^2, flow_budget=121.6mm)
   fails: flow=0/7 facing=0/2 far=0/5 near_max=0/4
   unresolved: 0
   violations: 0
-  advisory preferences (not hardware qualification): 1
-    ADVISORY facing power->power_som: preference NOT satisfied (angle=123.9deg; not hardware qualification) [Reviewed 2026-10-18: all-component centroid direction changes when unrelated test points move; it is a placement preference, not a hardware limit. SNVSBD5D Rev. D section 11.1 requires local loop/layout and power-path quality, not a 90-degree subsystem-centroid cutoff. See native/benchmarks/2026-10-18-facing-centroid-review.json; routing and parasitics remain unverified.]
+  advisory preferences (not hardware qualification): 2
+    ADVISORY facing power->power_som: preference satisfied (angle=74.8deg; not hardware qualification) [Reviewed 2026-10-18: all-component centroid direction changes when unrelated test points move; it is a placement preference, not a hardware limit. SNVSBD5D Rev. D section 11.1 requires local loop/layout and power-path quality, not a 90-degree subsystem-centroid cutoff. See native/benchmarks/2026-10-18-facing-centroid-review.json; routing and parasitics remain unverified.]
+    ADVISORY facing power_som->@som: preference NOT satisfied (angle=104.6deg; not hardware qualification) [Reviewed 2026-10-18: the all-component centroid angle to the SoM body is a placement preference, not an electrical limit; moving an unrelated test point can reverse it while regulator, output capacitors and load remain fixed. SNVSBD5D Rev. D section 11.1 specifies local loops, feedback, wide/direct power paths and thermal copper, not a 90-degree subsystem-centroid cutoff. See native/benchmarks/2026-10-18-power-som-facing-review.json. Local placement checks remain mandatory; routing, parasitics and thermal performance remain unverified.]
   detail: 18
-    facing power->power_som: dot=-82.41 angle=123.9deg (output@(71.8782, 162.8752) zone@(74.481, 148.4504) down@(67.2602, 141.4343))
-    facing power_som->@som: dot=+284.22 angle=61.1deg (output@(79.9554, 143.7101) zone@(67.2602, 141.4343) down@(96.0, 106.0))
-    far ethernet vs power: 82.23mm / >= 10mm
-    far motor_sense vs power: 130.01mm / >= 10mm
-    far motor_sense vs power_som: 131.63mm / >= 10mm
-    far power vs ethernet.line_side: 82.23mm / >= 10mm
-    far power_som vs ethernet.line_side: 74.22mm / >= 10mm
-    flow camera->@som: 68.02mm / 121.8mm budget
-    flow hdmi_tx->@som: 71.74mm / 121.8mm budget
-    flow pd_input->usb_pd: 29.04mm / 121.8mm budget
-    flow power->power_som: 10.07mm / 121.8mm budget
-    flow power_mon->power_som: 67.05mm / 121.8mm budget
-    flow usb_pd->power: 86.57mm / 121.8mm budget
-    flow usb_pd->power: 86.57mm / 121.8mm budget
+    facing power->power_som: dot=+69.34 angle=74.8deg (output@(98.422, 134.0703) zone@(95.8141, 148.4951) down@(79.4853, 140.7359))
+    facing power_som->@som: dot=-124.26 angle=104.6deg (output@(66.7901, 138.4601) zone@(79.4853, 140.7359) down@(95.5, 106.0))
+    far ethernet vs power: 88.72mm / >= 10mm
+    far motor_sense vs power: 113.50mm / >= 10mm
+    far motor_sense vs power_som: 120.52mm / >= 10mm
+    far power vs ethernet.line_side: 88.72mm / >= 10mm
+    far power_som vs ethernet.line_side: 75.83mm / >= 10mm
+    flow camera->@som: 67.57mm / 121.6mm budget
+    flow hdmi_tx->@som: 71.74mm / 121.6mm budget
+    flow pd_input->usb_pd: 29.03mm / 121.6mm budget
+    flow power->power_som: 18.08mm / 121.6mm budget
+    flow power_mon->power_som: 69.29mm / 121.6mm budget
+    flow usb_pd->power: 86.11mm / 121.6mm budget
+    flow usb_pd->power: 86.11mm / 121.6mm budget
     near_max ethernet to rj45_connector: 1.58mm gap / <= 20mm
     near_max hdmi_rx_term to som_j2: 6.51mm gap / <= 10mm
     near_max motor_sense to motor_pwm: 1.80mm gap / <= 20mm
@@ -1894,38 +1895,38 @@ contract_coverage: PASS (advisory) — CONTRACT COVERAGE: 23 wired(gated) / 0 in
   usb_pd                 WIRED-gated      6 chk  0 viol  
   usb_uart_connector     WIRED-gated      4 chk  0 viol  
   usbc_otg               WIRED-gated      9 chk  0 viol  
-floorplan_composition: FAIL (advisory) — FLOORPLAN COMPOSITION (T1): 16 hard / 3 soft terms; hard RED 0, soft RED 1 (advisory)
-  hard margins (mm): measured 15, unresolved 0, sum 921.31, min 3.48 (informational)
-  hard margins (degrees): measured 1, unresolved 0, sum 28.88, min 28.88 (informational)
+floorplan_composition: FAIL (advisory) — FLOORPLAN COMPOSITION (T1): 15 hard / 4 soft terms; hard RED 0, soft RED 1 (advisory)
+  hard margins (mm): measured 15, unresolved 0, sum 897.95, min 3.48 (informational)
+  hard margins (degrees): measured 0, unresolved 0, sum 0.0, min unavailable (informational)
   hard terms:
-    HARD facing power_som->@som: 61.12 vs 90.00 (margin +28.88) ok [facing/output_roles [placement/v2]] dot=+284.22
-    HARD far_min ethernet->power: 82.23 vs 10.00 (margin +72.23) ok [judgment:10.0 — buck switching node vs Ethernet media/magnetics analog line side]
-    HARD far_min motor_sense->power: 130.01 vs 10.00 (margin +120.01) ok [judgment:10.0 — SBOS576C 7.4.1 noise coupling: buck switching node vs the current-sense node]
-    HARD far_min motor_sense->power_som: 131.63 vs 10.00 (margin +121.63) ok [judgment:10.0 — SBOS576C 7.4.1 noise coupling: buck switching node vs the current-sense node]
-    HARD far_min power->ethernet.line_side: 82.23 vs 10.00 (margin +72.23) ok [judgment:10.0 — buck switching node vs Ethernet MDI/magnetics analog line side; datasheet silent on inter-subsystem spacing (SNVSBD5D covers intra-stage only)]
-    HARD far_min power_som->ethernet.line_side: 74.22 vs 10.00 (margin +64.22) ok [judgment:10.0 — same rationale as the power pilot]
-    HARD flow_hop camera->@som: 68.02 vs 121.82 (margin +53.80) ok [flow chain [placement/v2]]
-    HARD flow_hop hdmi_tx->@som: 71.74 vs 121.82 (margin +50.08) ok [flow chain [placement/v2]]
-    HARD flow_hop pd_input->usb_pd: 29.04 vs 121.82 (margin +92.78) ok [flow chain [placement/v2]]
-    HARD flow_hop power->power_som: 10.07 vs 121.82 (margin +111.75) ok [flow chain [placement/v2]]
-    HARD flow_hop power_mon->power_som: 67.05 vs 121.82 (margin +54.76) ok [flow chain [placement/v2]]
-    HARD flow_hop usb_pd->power: 86.57 vs 121.82 (margin +35.25) ok [flow chain [placement/v2]]
+    HARD far_min ethernet->power: 88.72 vs 10.00 (margin +78.72) ok [judgment:10.0 — buck switching node vs Ethernet media/magnetics analog line side]
+    HARD far_min motor_sense->power: 113.50 vs 10.00 (margin +103.50) ok [judgment:10.0 — SBOS576C 7.4.1 noise coupling: buck switching node vs the current-sense node]
+    HARD far_min motor_sense->power_som: 120.52 vs 10.00 (margin +110.52) ok [judgment:10.0 — SBOS576C 7.4.1 noise coupling: buck switching node vs the current-sense node]
+    HARD far_min power->ethernet.line_side: 88.72 vs 10.00 (margin +78.72) ok [judgment:10.0 — buck switching node vs Ethernet MDI/magnetics analog line side; datasheet silent on inter-subsystem spacing (SNVSBD5D covers intra-stage only)]
+    HARD far_min power_som->ethernet.line_side: 75.83 vs 10.00 (margin +65.83) ok [judgment:10.0 — same rationale as the power pilot]
+    HARD flow_hop camera->@som: 67.57 vs 121.65 (margin +54.08) ok [flow chain [placement/v2]]
+    HARD flow_hop hdmi_tx->@som: 71.74 vs 121.65 (margin +49.91) ok [flow chain [placement/v2]]
+    HARD flow_hop pd_input->usb_pd: 29.03 vs 121.65 (margin +92.62) ok [flow chain [placement/v2]]
+    HARD flow_hop power->power_som: 18.08 vs 121.65 (margin +103.57) ok [flow chain [placement/v2]]
+    HARD flow_hop power_mon->power_som: 69.29 vs 121.65 (margin +52.36) ok [flow chain [placement/v2]]
+    HARD flow_hop usb_pd->power: 86.11 vs 121.65 (margin +35.54) ok [flow chain [placement/v2]]
     HARD near_max ethernet->rj45_connector: 1.58 vs 20.00 (margin +18.41) ok [Pulse v7 p.1 <=25mm part-to-part|judgment:20.0 edge-gap proxy (D11)]
     HARD near_max hdmi_rx_term->som_j2: 6.51 vs 10.00 (margin +3.48) ok [XAPP460 p.23 (term AT the receiver) — island at the SoM mezzanine bank-33 RX escape|judgment:10.0 edge-gap (D11)]
     HARD near_max motor_sense->motor_pwm: 1.80 vs 20.00 (margin +18.20) ok [judgment:20.0 (D9) — motor telemetry beside the PWM out]
     HARD near_max uart_bridge->usb_uart_connector: 7.52 vs 40.00 (margin +32.48) ok [judgment:10.0 (D11 edge-gap) — CP2102N's USB DP/DM pair terminates at the UART USB-C; measured 365mm of cross-board airwire (avg 122mm) with the block anchored mid-board and a STALE floorplan near-intent pointing at rj45_connector]
   soft terms (advisory ledger — repair triggers, never gates):
-    soft facing power->power_som: 123.95 vs 90.00 (margin -33.95) RED [ADVISORY centroid preference: Reviewed 2026-10-18: all-component centroid direction changes when unrelated test points move; it is a placement preference, not a hardware limit. SNVSBD5D Rev. D section 11.1 requires local loop/layout and power-path quality, not a 90-degree subsystem-centroid cutoff. See native/benchmarks/2026-10-18-facing-centroid-review.json; routing and parasitics remain unverified.] dot=-82.41
-    soft near_intent power_mon->power_som: 38.68 vs 0.00 (margin +0.00) ok [carrier/floorplan.json near-intent (advisory)] advisory
+    soft facing power->power_som: 74.83 vs 90.00 (margin +15.17) ok [ADVISORY centroid preference: Reviewed 2026-10-18: all-component centroid direction changes when unrelated test points move; it is a placement preference, not a hardware limit. SNVSBD5D Rev. D section 11.1 requires local loop/layout and power-path quality, not a 90-degree subsystem-centroid cutoff. See native/benchmarks/2026-10-18-facing-centroid-review.json; routing and parasitics remain unverified.] dot=+69.34
+    soft facing power_som->@som: 104.59 vs 90.00 (margin -14.59) RED [ADVISORY centroid preference: Reviewed 2026-10-18: the all-component centroid angle to the SoM body is a placement preference, not an electrical limit; moving an unrelated test point can reverse it while regulator, output capacitors and load remain fixed. SNVSBD5D Rev. D section 11.1 specifies local loops, feedback, wide/direct power paths and thermal copper, not a 90-degree subsystem-centroid cutoff. See native/benchmarks/2026-10-18-power-som-facing-review.json. Local placement checks remain mandatory; routing, parasitics and thermal performance remain unverified.] dot=-124.26
+    soft near_intent power_mon->power_som: 42.30 vs 0.00 (margin +0.00) ok [carrier/floorplan.json near-intent (advisory)] advisory
     soft near_intent usb_pd->pd_input: 11.18 vs 0.00 (margin +0.00) ok [carrier/floorplan.json near-intent (advisory)] advisory
   T2 escape corridors (D13 never-close): 6 loaded, 0 UNMANAGED part intrusion(s), 0 T2-coexistence-managed
   D13 channel hotspots (>= 6 cross-airwires; corridor = 2 + 0.2/net mm):
-    bringup_en_modules | bringup_rails: 30 airwires (584.9 mm) -> corridor >= 8.0 mm
+    bringup_en_modules | bringup_rails: 30 airwires (564.9 mm) -> corridor >= 8.0 mm
     bringup_modules | motor_pwm: 12 airwires (45.8 mm) -> corridor >= 4.4 mm
-    power | power_som: 12 airwires (24.8 mm) -> corridor >= 4.4 mm
     bringup_en_modules | bringup_modules: 10 airwires (136.8 mm) -> corridor >= 4.0 mm
     ethernet | rj45_connector: 9 airwires (213.3 mm) -> corridor >= 3.8 mm
-    hdmi_rx | hdmi_rx_term: 8 airwires (263.2 mm) -> corridor >= 3.6 mm
+    hdmi_rx | hdmi_rx_term: 8 airwires (262.0 mm) -> corridor >= 3.6 mm
+    power | power_som: 7 airwires (31.7 mm) -> corridor >= 3.4 mm
 return_stitch: PASS — RETURN-STITCH GATE (return-path v2): PASS (radius 2.0 mm, HARD, class-blind)
   remediation set (v1-failing contacts): 29
   covered by som_escape GND vias        : 29
@@ -2069,15 +2070,15 @@ fanout: PASS — FAN-OUT CLEARANCE GATE (D13, report-first ratchet): PASS
     (none)
   (tightest PASSING subjects:)
     ok      J29001    usb_jtag_connector  16pin clr=2.050 need=2.00 slack=+0.050
+    ok      J9001     debug_boot        14pin clr=2.050 need=2.00 slack=+0.050
+    ok      J9002     debug_boot        10pin clr=2.050 need=2.00 slack=+0.050
     ok      SW7003    bringup_rails      4pin clr=1.550 need=1.50 slack=+0.050
     ok      SW7004    bringup_rails      4pin clr=1.550 need=1.50 slack=+0.050
-    ok      U4002     bringup_en         5pin clr=1.550 need=1.50 slack=+0.050
-    ok      U4003     bringup_en         5pin clr=1.550 need=1.50 slack=+0.050
 pcb_geometry: PASS — independent final-board gates complete
 assembly: PASS — ASSEMBLY: 4 steps + 34 phases, 561 parts -> carrier/manufacturing/ASSEMBLY.md + carrier/renders/assembly (38 PNGs)
 ratsnest_images: PASS (advisory) — ratsnest: carrier/renders/ratsnest_top.png + carrier/renders/ratsnest_bottom.png + carrier/docs/RATSNEST.svg
-  board 162 x 150 mm  (top 345 / bottom 221)
-  airwires: 22873.2 mm total, 15333.9 mm cross-subsystem (427 edges, 67.0% of length)
+  board 161 x 150 mm  (top 345 / bottom 221)
+  airwires: 23089 mm total, 15396.9 mm cross-subsystem (411 edges, 66.7% of length)
 
 thermal: PASS — schgen per-device thermal (Tj) gate
 ==============================================================================
@@ -2121,7 +2122,7 @@ datasheet provenance (every RthJA / Tj_max / Rds_on cited):
 
 pour-aware effective RthJA (* rows) — basis, per part (bare->credited, cited; conservative, bench-verify at bring-up):
   LM61460AANRJRR   bare 58.7 -> eff 35 C/W ; DS 7.3: bare 58.7 C/W (JESD51-7) vs 25 C/W on a 4-layer PCB (DS note + LM61460-Q1 EVM). Credit gated on EMITTED copper, verified in the .kicad_pcb per build: In1.Cu GND plane + 8-via PGND field + local F.Cu/B.Cu pours (SNVSBD5D 11.1.1). Credited 35 C/W — 10 C/W above the DS 4-layer 25, ~30% of the bare->4L delta held back (0.5-oz inner plane, modest pours vs the EVM, 3-buck mutual heating)
-                   emitted-copper evidence (verified in the board file): In1 GND plane + U20001: 9/6 GND vias<=5.2mm, local B+F pour YES; U20002: 8/6 GND vias<=5.2mm, local B+F pour YES; U22004: 9/6 GND vias<=5.2mm, local F+B pour YES
+                   emitted-copper evidence (verified in the board file): In1 GND plane + U20001: 8/6 GND vias<=5.2mm, local B+F pour YES; U20002: 8/6 GND vias<=5.2mm, local B+F pour YES; U22004: 8/6 GND vias<=5.2mm, local F+B pour YES
   TLV75725PDYDR    bare 231 -> eff 92.5 C/W ; DS DYD RthJA 92.5 C/W presumes the JESD51-5 stackup (thermal pad soldered + vias into a buried plane). Credit gated on EMITTED copper, verified per build: In1.Cu GND plane + >=2 GND vias beside the pad + local F.Cu pour. Fallback without it: DBV bare 231 C/W (no pad benefit claimable)
                    emitted-copper evidence (verified in the board file): In1 GND plane + U11001: 3/2 GND vias<=3mm, local F pour YES
 
@@ -2141,7 +2142,7 @@ emitted copper inventory: 8 fill zones (with In1.Cu GND plane), 3 rule areas, 34
 CD-01  LM61460 pour-aware effective RthJA (58.7 -> 35 C/W)   [EMITTED]
   assumes: full-board In1.Cu GND plane + per-buck thermal-via field (>=6 x 0.6/0.3) at PGND1/PGND2 + local F.Cu/B.Cu GND pours (TI SNVSBD5D 7.3 bare 58.7 C/W vs 25 C/W on a 4-layer board; 11.1.1 layout)
   where:   native/src/copper_debt.cpp:50
-  emits:   In1.Cu GND plane: YES; U20001: 9 GND vias<=5.2mm, F.Cu pour YES, B.Cu pour YES; U20002: 8 GND vias<=5.2mm, F.Cu pour YES, B.Cu pour YES; U22004: 9 GND vias<=5.2mm, F.Cu pour YES, B.Cu pour YES
+  emits:   In1.Cu GND plane: YES; U20001: 8 GND vias<=5.2mm, F.Cu pour YES, B.Cu pour YES; U20002: 8 GND vias<=5.2mm, F.Cu pour YES, B.Cu pour YES; U22004: 8 GND vias<=5.2mm, F.Cu pour YES, B.Cu pour YES
   risk:    without this copper Tj(power:U1, 2.42 W) backs out to ~192 C at the bare 58.7 C/W against the 140 C guard — a board-dead thermal PASS-on-fiction (the GAP1 CRITICAL). The thermal gate now HARD-verifies this copper per build.
 
 CD-02  TLV75725 DYD EP thermal-pad RthJA (92.5 C/W)   [EMITTED]
@@ -2177,7 +2178,7 @@ CD-06  Ethernet isolation moat (In1 plane voids)   [PARTIAL]
 CD-07  DP90/DP100 L2 reference plane   [EMITTED]
   assumes: the DP90_USB / DP100_TMDS trace geometry (widths/gaps in the .kicad_dru + net classes) is an OUTER-layer microstrip referenced to a CONTINUOUS L2 GND plane through one 7628 prepreg sheet
   where:   native/src/copper_debt.cpp:56
-  emits:   In1.Cu GND plane zone 25.5,25.5 -> 186.5,174.5 mm (unfilled-on-disk, DRC-refilled); ethernet voids punch it locally (CD-06)
+  emits:   In1.Cu GND plane zone 25.5,25.5 -> 185.5,174.5 mm (unfilled-on-disk, DRC-refilled); ethernet voids punch it locally (CD-06)
   risk:    without the L2 plane every impedance number in the dru is unmoored (return path undefined, impedance wrong by design); with the plane emitted the residual risk is fill VOIDS/splits under a future route path (checked at the routing wave)
 
 CD-08  Under-SoM decoupling fanout vias   [PARTIAL]
@@ -2233,7 +2234,7 @@ si: PASS — SI constraints: 37 diff pairs, 10 length-match groups emitted — e
 manifest: PASS — artifacts hashed after SI; final reports rehashed at publication
 golden: FAIL (advisory) — golden renders: DRIFT (explicit --bless to accept):
 3d_persp: drift 14/256 bits
-3d_persp_rear: drift 21/256 bits
+3d_persp_rear: drift 22/256 bits
 3d_top: drift 18/256 bits
 board_aux: drift 44/256 bits
 bringup_en_modules: drift 16/256 bits
@@ -2569,53 +2570,53 @@ fallbacks: PASS — FALLBACK RATCHET: PASS — 3 registered paths, 0 firing
 SEARCH EFFORT: observational, no acceptance ceiling; counts include rejected work. Exhaustion is not proof of infeasibility. Hardware gates remain independent.
   bottom_variant_contract_reject: 0
   cand_cap_truncated: 232
-  contract_group_orientation_retry: 0
+  contract_group_orientation_retry: 1
   corridor_evict_moved: 0
   edge_geometry_replan_retry: 1
   edge_run_translation: 0
   facing_replan_retry: 0
-  interior_failed_first_retry: 24
-  interior_reseat_incoming_shape_trial: 312
-  interior_reseat_pair_pose_budget: 64
-  interior_reseat_pair_pose_cap: 74
+  interior_failed_first_retry: 28
+  interior_reseat_incoming_shape_trial: 1258
+  interior_reseat_pair_pose_budget: 78
+  interior_reseat_pair_pose_cap: 116
   interior_reseat_pair_pose_recovered: 0
-  interior_reseat_pair_pose_search: 138
-  interior_reseat_pair_pose_trial: 549
-  interior_reseat_pair_recovered: 6
-  interior_reseat_pair_rejected: 2348
-  interior_reseat_pair_trial: 2354
-  interior_reseat_pose_budget: 0
-  interior_reseat_pose_cap: 32
+  interior_reseat_pair_pose_search: 194
+  interior_reseat_pair_pose_trial: 880
+  interior_reseat_pair_recovered: 9
+  interior_reseat_pair_rejected: 1968
+  interior_reseat_pair_trial: 1977
+  interior_reseat_pose_budget: 6
+  interior_reseat_pose_cap: 61
   interior_reseat_pose_hint: 0
   interior_reseat_pose_resume: 0
-  interior_reseat_pose_search: 516
+  interior_reseat_pose_search: 590
   interior_reseat_pose_skip: 0
-  interior_reseat_pose_trial: 236
-  interior_reseat_retry: 38
-  interior_reseat_shape_retry: 24
-  interior_reseat_shape_trial: 4458
+  interior_reseat_pose_trial: 457
+  interior_reseat_retry: 28
+  interior_reseat_shape_retry: 28
+  interior_reseat_shape_trial: 10448
   interior_shape_choice_budget: 0
   interior_shape_choice_hint: 0
   interior_shape_choice_replay: 0
-  legalize_facing_retry: 4
-  legalize_joint_axis: 12052
-  legalize_joint_axis_reuse: 13170
-  legalize_joint_budget: 21
-  legalize_joint_domain_probe: 4082
-  legalize_joint_domain_reject: 1302
-  legalize_joint_proposal: 715
-  legalize_joint_reject: 715
-  legalize_joint_retry: 24
-  legalize_joint_state: 22050
-  legalize_neighbour_retry: 2
+  legalize_facing_retry: 0
+  legalize_joint_axis: 2
+  legalize_joint_axis_reuse: 0
+  legalize_joint_budget: 0
+  legalize_joint_domain_probe: 0
+  legalize_joint_domain_reject: 0
+  legalize_joint_proposal: 1
+  legalize_joint_reject: 0
+  legalize_joint_retry: 1
+  legalize_joint_state: 1
+  legalize_neighbour_retry: 0
   legalize_only_compaction: 0
-  legalize_reservation_retry: 10
+  legalize_reservation_retry: 8
   punch_free_plan_rejected: 0
   screened_incumbent_retained: 0
   seat_node_budget: 0
-  thermal_repair_moved: 2
-  thermal_repair_rejected: 98
-  thermal_repair_trial: 100
+  thermal_repair_moved: 5
+  thermal_repair_rejected: 149
+  thermal_repair_trial: 154
 ledger_import: PASS — actual floorplan decisions imported once; no geometry replay
 quantize_census: PASS — NATIVE POLICY AUDIT: PASS — 70 C++ files, 75 constants, 156 registered transforms
 ledger: PASS — NATIVE POLICY AUDIT: PASS — 70 C++ files, 75 constants, 156 registered transforms
@@ -2624,71 +2625,71 @@ pipeline_doc: PASS — unchanged
 === board native exclusive timing (wall s; audits included) ===
 Nested scopes pause parents; parallel batches use launch/join wall time, never summed worker spans.
 Scope: pipeline entry through build-ledger publication; excludes final summary publications and caller/process setup. Mixed stages remain mixed; not a generation-only total.
-pipeline_setup_and_other: 0.006893
-inputs: 0.001463
-authoring_audit: 16.504397
-authoring_guard_reporting_and_recheck: 0.001936
-input_factory_generation_and_ir_conversion: 0.278233
-input_circuit_validation: 0.007463
-input_publication: 0.010953
-subsystem_structure: 0.004206
-carrier_structure: 0.011916
-sheet_prepare_other: 0.005849
-sheet_electrical_validation: 0.003323
-sheet_place_route_with_internal_checks: 0.105091
-sheet_cc_validation: 0.006279
-sheet_emit_and_publish: 0.042280
-sheet_visual_validation: 0.016825
-sheet_parallel_checks_and_render_wall: 31.949597
-symbol_law: 0.000405
-link: 0.001553
-constraints: 0.000993
-diagram: 0.001499
-board_schematic: 8.229632
-bom_footprints: 0.000709
-power_tree: 0.002107
-rail_ampacity: 0.000250
-testpoints: 0.000606
-design_rules: 0.001651
-part_rules: 0.001919
-bom_values: 0.001297
-footprint_pads: 0.005117
-pin_completeness: 0.000934
-spice: 0.094969
-pcb: 0.011866
-pcb_input_loading_and_netlist_validation: 1.670580
-pcb_build_model_with_internal_checks: 74.338324
-pcb_render: 0.029797
-placement_requirements: 0.002066
-pcb_drc: 1.458504
-pcb_geometry: 0.048603
-assembly: 0.438591
-ratsnest_images: 0.699383
-thermal: 0.027777
-copper_debt: 0.042137
-cpl: 0.259006
-fab_profile: 0.028733
+pipeline_setup_and_other: 0.005879
+inputs: 0.001455
+authoring_audit: 16.299837
+authoring_guard_reporting_and_recheck: 0.001584
+input_factory_generation_and_ir_conversion: 0.278773
+input_circuit_validation: 0.007134
+input_publication: 0.010952
+subsystem_structure: 0.004123
+carrier_structure: 0.011730
+sheet_prepare_other: 0.005842
+sheet_electrical_validation: 0.003236
+sheet_place_route_with_internal_checks: 0.103695
+sheet_cc_validation: 0.006293
+sheet_emit_and_publish: 0.042083
+sheet_visual_validation: 0.016295
+sheet_parallel_checks_and_render_wall: 29.543558
+symbol_law: 0.000233
+link: 0.001568
+constraints: 0.000994
+diagram: 0.001605
+board_schematic: 7.389881
+bom_footprints: 0.000514
+power_tree: 0.001880
+rail_ampacity: 0.000264
+testpoints: 0.000429
+design_rules: 0.001576
+part_rules: 0.001665
+bom_values: 0.001317
+footprint_pads: 0.004095
+pin_completeness: 0.000802
+spice: 0.096900
+pcb: 0.009453
+pcb_input_loading_and_netlist_validation: 1.672554
+pcb_build_model_with_internal_checks: 54.756852
+pcb_render: 0.031367
+placement_requirements: 0.002259
+pcb_drc: 1.572636
+pcb_geometry: 0.042619
+assembly: 0.462345
+ratsnest_images: 0.714047
+thermal: 0.027702
+copper_debt: 0.041191
+cpl: 0.268571
+fab_profile: 0.030847
 stage_movement: 0.000002
-xdc: 0.978498
-vivado: 0.000378
-devicetree: 0.000791
-firmware: 0.965400
-manual: 0.000829
-scfw: 0.003016
-testplan: 0.000588
-power_sequence: 0.000301
-floorplan: 0.000378
-model3d: 1.770692
-render3d: 29.997725
-gallery: 0.001666
-si: 0.000961
-manifest: 0.037846
-golden: 1.606409
-contract_coverage_lint: 0.001369
-fallbacks: 0.000277
-ledger_import: 0.000799
-quantize_census: 0.000290
-source_audit: 110.612057
-pipeline_doc: 0.001032
-MEASURED SCOPE TOTAL (not process wall): 282.337017
+xdc: 0.986055
+vivado: 0.000355
+devicetree: 0.001119
+firmware: 0.976086
+manual: 0.000876
+scfw: 0.003525
+testplan: 0.000531
+power_sequence: 0.000299
+floorplan: 0.000586
+model3d: 1.872959
+render3d: 29.537799
+gallery: 0.002849
+si: 0.001621
+manifest: 0.039018
+golden: 1.604558
+contract_coverage_lint: 0.001652
+fallbacks: 0.000470
+ledger_import: 0.000914
+quantize_census: 0.000316
+source_audit: 113.535289
+pipeline_doc: 0.001017
+MEASURED SCOPE TOTAL (not process wall): 262.046527
 BOARD: PASS (37 sheets)
