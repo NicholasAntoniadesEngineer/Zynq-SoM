@@ -8,7 +8,7 @@ int main(){try {
     int tested=0,misses=0;
     for(bool swap:{false,true})for(bool fx:{false,true})for(bool fy:{false,true})
     for(bool compact:{false,true})for(bool contradictory:{false,true})for(bool inset_pocket:{false,true})
-    for(bool face_aware:{false,true}) {
+    for(bool face_aware:{false,true})for(bool partial_strip:{false,true}) {
         FloorplanLegalizeInput in;in.board_w=in.board_h=60;in.clear=.3;
         in.compact=compact;in.joint_separation_states=64;
         const auto box=[&](Box4 b) {
@@ -24,7 +24,9 @@ int main(){try {
         in.fixed_poses["target"]=target;
         in.fixed_rects={{"target",box({30,30,32,32})},
                         {"strip",box({0,0,33,28})},{"column",box({0,28,28,60})}};
-        if(inset_pocket)in.fixed_rects.emplace_back("inset_strip",box({0,0,60,8}));
+        // Partial strips jointly cover the board edge even when neither
+        // spans it alone. The independently checked witness remains legal.
+        if(inset_pocket)in.fixed_rects.emplace_back("inset_strip",box({partial_strip?33.:0.,0,60,8}));
         if(face_aware) {
             for(const auto& [name,b]:in.fixed_rects){(void)b;in.primary_fanout[name]={{},{},1,1,std::vector<Comp>{}};}
             in.primary_fanout["source"]={{},{},1,1,std::vector<Comp>{}};

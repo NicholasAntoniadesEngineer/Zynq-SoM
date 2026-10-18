@@ -1,0 +1,53 @@
+{
+  "parent_commit": "dc441af1",
+  "source_sha256": "df7c15a493139603e055ed0ebae2decc62f4d33e89799fec9d999f0bba883227",
+  "defect": "Facing capacity bounds recognised individual full-width obstacle strips but missed partial rectangles whose union covers the same strip. The resulting extreme projection allocation could be impossible despite a valid layout.",
+  "reproduction": {
+    "board_mm": [60,60], "clearance_mm": 0.3,
+    "source_size_mm": [2,2], "source_seed": [40,40],
+    "source_output_offset": [2,2], "source_input_offset": [0,0],
+    "target_pose": [30,30], "target_size_mm": [2,2],
+    "fixed_obstacle_boxes": [[0,0,33,28],[0,28,28,60],[33,0,60,8]],
+    "independently_valid_witness": [34,10],
+    "before": "Rejected after four paired start/completion callbacks; incumbent preserved at 40,40",
+    "after": "Accepted 40,8.3 after three paired callbacks; full-width control case also remains accepted"
+  },
+  "implementation": "Sweep board boundaries and obstacle contact coordinates. At each candidate, union active perpendicular open intervals to determine whether any legal contact survives. Exact-touch points remain legal. Opposite-face and component-only envelopes are not used to prove blocked strips. No-free-contact cases keep broad bounds for exact solver rejection. Existing final geometry and facing gates remain authoritative.",
+  "verification": {
+    "transformed_facing_cases": 256, "known_feasible_misses": 0,
+    "coverage": "Axis swaps, reflections, compact/noncompact, contradictory directions, full/partial strips, opposite-face exclusions, deterministic geometry/receipts, incumbent preservation, paired callbacks and mixed per-term constraints",
+    "separately_linked_floorplan_checks": 37258,
+    "integrated_suites_passed": ["native_policy_audits_contracts", "native_facing_projection_contracts", "native_floorplan_contracts", "native_legalize_accounting_contracts"],
+    "integrated_test_seconds": 55.22,
+    "log": "native/build/obstacle-union-tests.log",
+    "log_sha256": "c64c9807414369abe89a6ab4f4c9e19d935fc184de8ab4253d1faf8c78e53c8b"
+  },
+  "carrier_smaller_screen": {
+    "dimensions_mm": [162,150], "status": "search_failed", "outer_attempts": 8,
+    "fallback_events": 88948, "exact_accounting_match": true,
+    "seconds": 48.343310167,
+    "log": "/private/tmp/zynq-facing-witness.LIMba5/carrier-screen.log",
+    "sha256": "92636b7172ee641c0b2892dcc05a430f0638d29b2dd3e6454bef87da96f26dc9"
+  },
+  "carrier_reference_model": {
+    "dimensions_mm": [162,150.5], "parts_top_bottom": [349,217],
+    "pcb_sha256": "d1dcca5723a788338e72db784272cc0a5a53017eba5174b4dd8c3f09a4068957",
+    "fanout_ok": true, "ratsnest_ok": true, "placement_contract_ok": true,
+    "placement_flow_ok": true, "hard_red": 0,
+    "model_seconds": 226.961460833,
+    "log": "/private/tmp/zynq-facing-witness.LIMba5/carrier-reference.log",
+    "sha256": "d2e3a9b3023ece3b51438bb507cefedb09ed95fbddc3037ce5b41eb46b5d2663",
+    "scope": "Separately linked prototype with the same implementation, before integration comments; runs concurrently with the production full-suite check. Not a performance comparison or full acceptance."
+  },
+  "devkit_reference_model": {
+    "dimensions_mm": [98,98], "parts_top_bottom": [105,55],
+    "pcb_sha256": "1b12fecbcbbaa5e6084c2459da93cb144a660ff19805e6e4e3f75f9c22689fdb",
+    "fanout_ok": true, "ratsnest_ok": true, "placement_contract_ok": true,
+    "placement_flow_ok": true, "hard_red": 0,
+    "model_seconds": 0.12556725,
+    "log": "native/build/obstacle-union-devkit.log",
+    "sha256": "859a759b1a6ff2ba9e972af412bbf45e0f719a7322bbcf011f6e4578d094b61e",
+    "scope": "Integrated production executable model diagnostic, not full acceptance"
+  },
+  "limits": "The full 278-test pass in 2026-10-18-direct-scan-full-suite.json precedes this fix. No new full board pipelines/renders, smaller accepted carrier, speedup, Python comparison, master publication, fabrication readiness or broader goal completion claimed. Geometry matches prior fully qualified references; unknown hardware requirements remain unverified."
+}
