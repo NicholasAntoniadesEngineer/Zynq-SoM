@@ -1,5 +1,6 @@
 {
-  "status": "Both full pipelines PASS; images inspected and hashes verified; full suite PASS 278/278; generated files published to tracked project paths, merge/push pending",
+  "status": "PUBLISHED to GitHub master with no-fast-forward merge 6a692a7e; both full pipelines and 278/278 tests PASS; images inspected and manifest hashes verified",
+  "publication": {"release_commit": "36642f5e4029138c4c9e89b628e1ee686a93c33d", "merge_commit": "6a692a7ee086170ae3d2de93bbc5d0cec3cd4148", "first_parent": "91caabb76227f38689f01f2b2c2889ed1bfa7bcd", "second_parent": "36642f5e4029138c4c9e89b628e1ee686a93c33d", "remote_verification": "git ls-remote confirmed master=6a692a7e and codex/two-sided-layout=36642f5e after successful push; merge tree equals tested release tree"},
   "source_commit": "0e0a59bc",
   "base_commit": "570d04f6",
   "source_state": "Qualified flow preference integration committed as 0e0a59bc; source/test files held stable during full qualification.",
@@ -71,5 +72,5 @@
     "images": "All release PNGs regenerated; only eight 3D PNGs per board differ in bytes. Identical regenerated schematic/assembly images correctly reuse existing Git blobs.",
     "state": "Read-only preflight; no tracked board files overwritten. Full suite confirmed live, 22/278 completed without failures at observation."
   },
-  "limits": "Isolated output directories avoided modifying tracked fixtures while tests ran. Concurrent process timings are not controlled benchmarks or matched Python comparisons. No smaller board, fabrication readiness, successful merge or goal completion claimed."
+  "limits": "Isolated output directories avoided modifying tracked fixtures while tests ran. Concurrent process timings are not controlled benchmarks or matched Python comparisons. No smaller board, fabrication readiness or overall goal completion claimed."
 }
