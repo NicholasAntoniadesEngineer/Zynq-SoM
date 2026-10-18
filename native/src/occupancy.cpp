@@ -784,6 +784,30 @@ std::optional<Pose> Occupancy::place_near_impl(
         if(alternatives)alternatives->search_complete=true;
         return std::nullopt;
     }
+    // Unbounded nearest queries need only the best legal pose, not an ordered
+    // stream of rejected cells. Screen geometry directly and rank legal poses.
+    // Bounded alternative queries retain their frontier and exact visit budget.
+    if(!alternatives) {
+        std::optional<std::tuple<double,double,double>> best;
+        OccupancyFrontierSlot frontier_count(counts);
+        Rejection rejection;
+        for(const auto& [xcost,x]:xs)for(const auto& [ycost,y]:ys) {
+            std::optional<double> key;
+            if(best) {
+                key=occupancy_frontier_key1dp(xcost+ycost,frontier_count);
+                // Y costs are sorted and rounding is monotone. Once the row
+                // is strictly worse, later cells cannot beat the incumbent.
+                // Equal keys still need x/y tie breaking and geometry checks.
+                if(*key>std::get<0>(*best))break;
+            }
+            if(!fits_indexed(x,y,w,h,reach,inset,mask,comps,counts,&rejection))continue;
+            const auto candidate=std::make_tuple(
+                key?*key:occupancy_frontier_key1dp(xcost+ycost,frontier_count),x,y);
+            if(!best||candidate<*best)best=candidate;
+        }
+        if(best)return Pose{std::get<1>(*best),std::get<2>(*best),w,h};
+        return std::nullopt;
+    }
     FrontierHeap heap;
     heap.push(HeapNode{xs[0].first + ys[0].first, 0, 0});
     // The raw-distance frontier is monotone, and decimal rounding is

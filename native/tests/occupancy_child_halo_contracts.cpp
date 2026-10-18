@@ -61,6 +61,11 @@ void frontier_rejection_properties() {
             if(grid.fits_exhaustive(x,y,2,2,{},{},mask,children))
                 expected.emplace_back(py_round(std::abs(x+1-anchor)+std::abs(y+1-anchor),1),x,y);
         std::sort(expected.begin(),expected.end());
+        const auto nearest=grid.place_near(anchor,anchor,2,2,{},{},mask,children,0,12,0,12);
+        require(nearest.has_value()==!expected.empty(),"direct nearest scan changed feasibility");
+        if(nearest)require(nearest->x==std::get<1>(expected.front())&&
+                           nearest->y==std::get<2>(expected.front()),
+                           "direct nearest scan changed masked-child oracle result");
         const auto all=grid.place_near_candidates(anchor,anchor,2,2,{},{},mask,children,
                                                  0,12,0,12,200,1000);
         require(all.search_complete&&!all.budget_exhausted,"exhaustive frontier did not finish");
@@ -84,6 +89,10 @@ void frontier_shape_properties() {
         for(int x=0;x<width;++x)for(int y=0;y<height;++y)
             expected.emplace_back(py_round(std::abs(x+.5-anchor)+std::abs(y+.5-anchor),1),x,y);
         std::sort(expected.begin(),expected.end());
+        const auto nearest=grid.place_near(anchor,anchor,1,1,{},{},1,{},0,width,0,height);
+        require(nearest&&nearest->x==std::get<1>(expected.front())&&
+                         nearest->y==std::get<2>(expected.front()),
+                         "direct nearest scan changed exhaustive distance/x/y ordering");
         const auto all=grid.place_near_candidates(anchor,anchor,1,1,{},{},1,{},
                                                  0,width,0,height,1000,1000);
         require(all.search_complete&&all.frontier_nodes==expected.size(),"frontier lost a row successor");

@@ -1,0 +1,58 @@
+{
+  "parent_commit": "a5fd5400",
+  "occupancy_source_sha256": "4d5897025b65599885ab2965c9741d93a479d5a9328468fd57baf7bdd9a75873",
+  "implementation": "Unbounded nearest-position queries screen legal geometry directly and rank by exact rounded distance/x/y. Sorted y costs permit pruning a row only when its rounded distance is strictly worse than the best legal incumbent. Bounded alternative searches retain their frontier, ordering and node-budget semantics. No hardware limits or acceptance gates changed.",
+  "tests": {
+    "full_native_rebuild": "PASS",
+    "targeted_suites_passed": ["native_occupancy_child_halo_contracts", "native_model_failure_receipt_contracts", "native_compact_retry_contracts", "native_pcb_orientation_contracts", "native_occupancy_precision_contracts", "native_policy_audits_contracts", "native_occupancy_cell_counter_contracts"],
+    "logs": ["native/build/pruned-scan-integration-tests.log", "native/build/pruned-scan-policy-tests.log", "native/build/pruned-scan-cell-tests.log"],
+    "accounting_changes": "Three fully blocked fixtures now explicitly require zero distance-key calls. The old cross-algorithm receipt-equality assertion was replaced by independently instrumenting each path and retaining geometric equality. Initial stale assertions failed visibly; final cell-counter rerun passes. Actual scalar calls remain counted, not hypothetical heap work.",
+    "oracle_coverage": "Direct nearest poses compared to independent exhaustive geometry/ranking across asymmetric children, face masks, ties, windows and lattice sizes. Existing fractional-boundary and mutation oracles retained. Bounded frontier properties unchanged."
+  },
+  "smaller_carrier_screen": {
+    "dimensions_mm": [162,150],
+    "status": "search_failed", "completed_outer_attempts": 8,
+    "heap_seconds": 72.908873084, "direct_unpruned_seconds": 43.955691625, "direct_pruned_seconds": 44.687321459,
+    "fallback_events_each": 71937, "exactly_equal_ordered_event_and_subject_lines": 71943,
+    "exact_accounting_match_each": true,
+    "heap_cell_index_calls": 440556036, "pruned_cell_index_calls": 2455748296,
+    "heap_distance_key_calls": 73608144, "pruned_distance_key_calls": 33372942,
+    "logs": ["native/build/heap-tie-before.log", "native/build/direct-scan-carrier.log", "native/build/pruned-scan-carrier.log"],
+    "limits": "Functional screens, not controlled timing comparison: heap and pruned runs overlapped compilation/tests. No smaller accepted board. Spatial lookups increase while avoiding ordered traversal of rejected cells."
+  },
+  "full_qualification": {
+    "scope": "Sequential isolated full board commands, all mandatory audits and rendering enabled. Carrier release recipe order 0 with carrier-162x150p5-connectivity.floorplan.json; devkit multiscale-outline. No concurrent campaign or source changes.",
+    "carrier": {
+      "exit_code": 0, "board_ok": true, "complete": true, "sheets": 37,
+      "wall_seconds": 385.45, "user_seconds": 908.48, "system_seconds": 68.38,
+      "model_seconds": 191.698046, "source_audit_seconds": 109.053141,
+      "authoring_audit_seconds": 16.133460, "render3d_seconds": 27.450798,
+      "dimensions_mm": [162,150.5], "parts_top_bottom": [349,217],
+      "pcb_sha256": "d1dcca5723a788338e72db784272cc0a5a53017eba5174b4dd8c3f09a4068957",
+      "manifest_artifacts": 99, "manifest_hash_mismatches": 0, "fresh_valid_pngs": 119,
+      "log": "native/build/pruned-scan-full-carrier.log",
+      "log_sha256": "16ea6211f2be2abe541c8c9dcfe1d5235cb4078c99f204337b763ba68e9cb3d9"
+    },
+    "devkit": {
+      "exit_code": 0, "board_ok": true, "complete": true, "sheets": 12,
+      "wall_seconds": 160.44, "user_seconds": 554.38, "system_seconds": 40.86,
+      "model_seconds": 0.110365, "source_audit_seconds": 109.458045,
+      "authoring_audit_seconds": 17.056523, "render3d_seconds": 16.760835,
+      "dimensions_mm": [98,98], "parts_top_bottom": [105,55],
+      "pcb_sha256": "1b12fecbcbbaa5e6084c2459da93cb144a660ff19805e6e4e3f75f9c22689fdb",
+      "manifest_artifacts": 73, "manifest_hash_mismatches": 0, "fresh_valid_pngs": 45,
+      "log": "native/build/pruned-scan-full-devkit.log",
+      "log_sha256": "96b9ab5073e0d5d5425855541d194227e4a5e38f34ce5a60604a8d344d9991dc"
+    },
+    "visual_review": "Fresh top and bottom renders inspected for both boards; all PNG signatures/dimensions and timestamps checked; both PCB hashes match accepted references.",
+    "advisory_failures_both": ["return_path", "golden", "contract_coverage_lint"]
+  },
+  "carrier_prior_isolated_reference": {
+    "evidence": "2026-10-18-reviewed-policy-full-carrier.json",
+    "wall_seconds": 480.19, "model_seconds": 285.718488,
+    "observed_wall_change_percent": -19.72969033,
+    "observed_model_change_percent": -32.90667071,
+    "limits": "Single historical before/after samples, same recipe and PCB hash, not a repeated statistical benchmark or language comparison."
+  },
+  "limits": "No new exhaustive CTest run, Python comparison, master publication or smaller carrier claimed. Compile time excluded from board wall times. Existing advisory failures and unknown hardware requirements remain. Routing is excluded; no fabrication readiness or broader goal completion."
+}
