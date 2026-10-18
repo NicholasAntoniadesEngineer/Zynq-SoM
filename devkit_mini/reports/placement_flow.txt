@@ -5,8 +5,9 @@ PLACEMENT-FLOW GATE: PASS (2 external contract(s); board_area=9604mm^2, flow_bud
     far power vs ethernet.line_side: n/a — 'ethernet' not a subsystem of this project
     flow usb_pd->power: n/a — usb_pd not a subsystem of this project
   violations: 0
-  advisory preferences (not hardware qualification): 1
+  advisory preferences (not hardware qualification): 2
     ADVISORY facing power->power_som: preference satisfied (angle=39.4deg; not hardware qualification) [Reviewed 2026-10-18: all-component centroid direction changes when unrelated test points move; it is a placement preference, not a hardware limit. SNVSBD5D Rev. D section 11.1 requires local loop/layout and power-path quality, not a 90-degree subsystem-centroid cutoff. See native/benchmarks/2026-10-18-facing-centroid-review.json; routing and parasitics remain unverified.]
+    ADVISORY flow power->power_som: 40.05mm / 101.6mm heuristic reference; preference satisfied; not a trace-length or hardware limit
   detail: 3
     facing power->power_som: dot=+427.55 angle=39.4deg (output@(64.6178, 98.08) zone@(60.1333, 111.1389) down@(94.209, 90.1007))
     flow power->power_som: 40.05mm / 101.6mm budget

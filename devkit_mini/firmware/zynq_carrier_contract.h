@@ -8,18 +8,18 @@
  * sources:
  *   /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/devkit_mini/som_interface.json
  *   /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/som/Zynq_SoM.kicad_sch (U9 pin map, live kicad-cli extraction)
- *   /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/devkit_mini/subsystems/debug_boot/circuit.json
- *   /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/devkit_mini/subsystems/mechanical/circuit.json
- *   /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/devkit_mini/subsystems/pd_input/circuit.json
- *   /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/devkit_mini/subsystems/power/circuit.json
- *   /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/devkit_mini/subsystems/power_mon/circuit.json
- *   /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/devkit_mini/subsystems/power_som/circuit.json
- *   /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/devkit_mini/subsystems/som_decoupling/circuit.json
- *   /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/devkit_mini/subsystems/som_j1/circuit.json
- *   /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/devkit_mini/subsystems/som_j2/circuit.json
- *   /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/devkit_mini/subsystems/som_j3/circuit.json
- *   /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/devkit_mini/subsystems/uart_bridge/circuit.json
- *   /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/devkit_mini/subsystems/usb_uart_connector/circuit.json
+ *   /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/native/build/flow-policy-release-devkit/subsystems/debug_boot/circuit.json
+ *   /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/native/build/flow-policy-release-devkit/subsystems/mechanical/circuit.json
+ *   /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/native/build/flow-policy-release-devkit/subsystems/pd_input/circuit.json
+ *   /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/native/build/flow-policy-release-devkit/subsystems/power/circuit.json
+ *   /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/native/build/flow-policy-release-devkit/subsystems/power_mon/circuit.json
+ *   /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/native/build/flow-policy-release-devkit/subsystems/power_som/circuit.json
+ *   /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/native/build/flow-policy-release-devkit/subsystems/som_decoupling/circuit.json
+ *   /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/native/build/flow-policy-release-devkit/subsystems/som_j1/circuit.json
+ *   /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/native/build/flow-policy-release-devkit/subsystems/som_j2/circuit.json
+ *   /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/native/build/flow-policy-release-devkit/subsystems/som_j3/circuit.json
+ *   /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/native/build/flow-policy-release-devkit/subsystems/uart_bridge/circuit.json
+ *   /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/native/build/flow-policy-release-devkit/subsystems/usb_uart_connector/circuit.json
  * absent on this project (their sections are omitted):
  *   bringup_rails, bringup_en, bringup_en_modules, bringup_modules, usb_pd, board_services
  *

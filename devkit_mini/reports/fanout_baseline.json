@@ -1,0 +1,4 @@
+{
+ "starved_baseline": 0,
+ "note": "fan-out ratchet ceiling — may only DECREASE; a build whose starved count exceeds this FAILS. Reach 0 to promote the gate to HARD."
+}
