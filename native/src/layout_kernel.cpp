@@ -37,6 +37,16 @@ bool courts_overlap(const std::vector<Box>& boxes, const std::vector<Disc>& disc
     return false;
 }
 
+enum Slot : std::size_t { north_slot, south_slot, west_slot, east_slot };
+
+bool beside_escape(const std::array<bool, edge_count>& escape, Box subject, Box crowder, Nm guard) {
+    const bool beside = std::min(subject.x1, crowder.x1) - std::max(subject.x0, crowder.x0) <= guard;
+    const bool above = std::min(subject.y1, crowder.y1) - std::max(subject.y0, crowder.y0) <= guard;
+    if (!beside && !above) return true;
+    return (beside && escape[crowder.x0 + crowder.x1 >= subject.x0 + subject.x1 ? east_slot : west_slot]) ||
+           (above && escape[crowder.y0 + crowder.y1 >= subject.y0 + subject.y1 ? south_slot : north_slot]);
+}
+
 double area_of(Box box) {
     return static_cast<double>(box.width()) * static_cast<double>(box.height());
 }
@@ -196,7 +206,7 @@ std::optional<Violation> Kernel::breach_at(std::size_t part, Nm guard, const std
     const Pose& pose = placement_[part];
     if (const auto breach = self_breach(part, shape, pose)) return Violation{*breach, part, part};
     for (const std::size_t other : neighbours(shape.bound, part))
-        if (const auto breach = pair_breach(part, shape, pose.face, other, shapes_[other], placement_[other].face))
+        if (const auto breach = pair_breach(part, shape, pose.face, other, shapes_[other], placement_[other].face, guard))
             return Violation{*breach, part, other};
     if (item.cohesion_member && group_dispersed(item.group, placement_.size(), nullptr))
         return Violation{Breach::dispersion, part, part};
@@ -233,7 +243,9 @@ bool Kernel::attempt(const std::vector<Move>& moves, std::vector<std::size_t>* b
         if (self_breach(part, shape, pose)) sound = false;
         for (const std::size_t other : neighbours(shape.bound, part)) {
             if (!sound) break;
-            if (!pair_breach(part, shape, pose.face, other, shapes_[other], placement_[other].face)) continue;
+            if (!pair_breach(part, shape, pose.face, other, shapes_[other], placement_[other].face,
+                             problem_.rules.compare_guard))
+                continue;
             if (!blockers || moved[other] || problem_.parts[other].fixed) sound = false;
             else blockers->push_back(other);
         }
@@ -283,6 +295,13 @@ Kernel::Shape Kernel::shape_of(std::size_t part, const Pose& pose) const {
     Shape shape;
     shape.gate = placed(variant.gate_box, pose.at, pose.turn);
     shape.bound = shape.gate;
+    const std::array<Point, edge_count> sides{Point{0, -1}, Point{0, 1}, Point{-1, 0}, Point{1, 0}};
+    const auto& escape = problem_.parts[part].escape_on(pose.face);
+    for (std::size_t side = 0; side < edge_count; ++side) {
+        if (!escape[side]) continue;
+        const Point out = turned(sides[side], pose.turn);
+        shape.escape[out.y < 0 ? north_slot : out.y > 0 ? south_slot : out.x < 0 ? west_slot : east_slot] = true;
+    }
     for (const auto& box : variant.court_boxes) shape.courts.push_back(placed(box, pose.at, pose.turn));
     for (const auto& disc : variant.court_discs) shape.discs.push_back(placed(disc, pose.at, pose.turn));
     const auto& nets = problem_.parts[part].pad_nets;
@@ -445,7 +464,7 @@ std::optional<Breach> Kernel::self_breach(std::size_t part, const Shape& shape, 
 
 std::optional<Breach> Kernel::pair_breach(std::size_t first, const Shape& first_shape, Face first_face,
                                           std::size_t second, const Shape& second_shape,
-                                          Face second_face) const {
+                                          Face second_face, Nm guard) const {
     if (first_face != second_face) {
         if (courts_overlap(first_shape.holes, {}, second_shape.courts, second_shape.discs) ||
             courts_overlap(second_shape.holes, {}, first_shape.courts, first_shape.discs))
@@ -458,11 +477,11 @@ std::optional<Breach> Kernel::pair_breach(std::size_t first, const Shape& first_
     if (!lands_clear(first_shape, first_face, second_shape, second_face)) return Breach::copper;
     const Part& a = problem_.parts[first];
     const Part& b = problem_.parts[second];
-    if (a.fanout_subject && crowds(b, a) &&
-        !gap_at_least(first_shape.gate, second_shape.gate, a.fanout_need))
+    if (a.fanout_subject && crowds(b, a) && !gap_at_least(first_shape.gate, second_shape.gate, a.fanout_need) &&
+        beside_escape(first_shape.escape, first_shape.gate, second_shape.gate, guard))
         return Breach::fanout;
-    if (b.fanout_subject && crowds(a, b) &&
-        !gap_at_least(first_shape.gate, second_shape.gate, b.fanout_need))
+    if (b.fanout_subject && crowds(a, b) && !gap_at_least(first_shape.gate, second_shape.gate, b.fanout_need) &&
+        beside_escape(second_shape.escape, second_shape.gate, first_shape.gate, guard))
         return Breach::fanout;
     return std::nullopt;
 }
@@ -683,7 +702,7 @@ std::vector<Violation> Kernel::violations() const {
         for (const std::size_t other : neighbours(shapes_[part].bound, part)) {
             if (other < part) continue;
             if (const auto breach = pair_breach(part, shapes_[part], placement_[part].face, other,
-                                                shapes_[other], placement_[other].face))
+                                                shapes_[other], placement_[other].face, 0))
                 found.push_back({*breach, part, other});
         }
     }
@@ -727,7 +746,7 @@ std::optional<Violation> Kernel::rejection(std::size_t part, const Pose& pose) c
     if (const auto breach = self_breach(part, shape, pose)) return Violation{*breach, part, part};
     for (const std::size_t other : neighbours(shape.bound, part))
         if (const auto breach = pair_breach(part, shape, pose.face, other, shapes_[other],
-                                            placement_[other].face))
+                                            placement_[other].face, problem_.rules.compare_guard))
             return Violation{*breach, part, other};
     if (item.cohesion_member && group_dispersed(item.group, part, &shape))
         return Violation{Breach::dispersion, part, part};

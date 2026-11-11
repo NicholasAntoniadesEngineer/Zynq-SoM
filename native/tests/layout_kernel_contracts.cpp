@@ -108,6 +108,8 @@ struct Scene {
         part.pad_nets.assign(problem.footprints[shape].top.pads.size(), no_net);
         part.fanout_pins = static_cast<int>(part.pad_nets.size());
         part.fanout_need = fixture::passive_need;
+        part.escape_top.fill(true);
+        part.escape_bottom.fill(true);
         problem.parts.push_back(std::move(part));
         placement.push_back({at, Turn::none, face});
         return problem.parts.back();
@@ -167,6 +169,11 @@ void fanout_follows_the_gate_rule() {
             "another group's passive still crowds");
     scene.problem.parts.back().group = "one";
     require(Kernel(scene.problem, scene.placement).violations().empty(), "own cluster passive may sit close");
+    scene.problem.parts.back().group = "two";
+    scene.problem.parts.front().escape_top = {true, true, true, false};
+    require(Kernel(scene.problem, scene.placement).violations().empty(), "a side without pins needs no ring");
+    scene.problem.parts.front().escape_top = {false, false, false, true};
+    require(has(Kernel(scene.problem, scene.placement).violations(), Breach::fanout), "a pin side keeps its ring");
 }
 
 void single_part_rules_hold() {

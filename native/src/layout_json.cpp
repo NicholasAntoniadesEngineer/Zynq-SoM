@@ -13,7 +13,7 @@ using json_text::integer;
 using json_text::object;
 using json_text::text_value;
 
-const char* const schema_name = "schgen.layout-problem/2";
+const char* const schema_name = "schgen.layout-problem/3";
 inline constexpr std::size_t point_fields = 2, disc_fields = 3, box_fields = 4;
 
 std::string point_json(Point point) { return array({integer(point.x), integer(point.y)}); }
@@ -122,6 +122,22 @@ Face face_of(const std::string& name) {
     if (name == "top") return Face::top;
     if (name == "bottom") return Face::bottom;
     throw LayoutError("layout: unknown face " + name);
+}
+
+std::string flags_json(const std::array<bool, edge_count>& flags) {
+    std::vector<std::string> items;
+    for (const bool flag : flags) items.push_back(boolean(flag));
+    return array(items);
+}
+
+std::array<bool, edge_count> flags_of(const JsonNode& node) {
+    if (node.array_value.size() != edge_count) throw LayoutError("layout: escape flags need one entry per side");
+    std::array<bool, edge_count> flags{};
+    for (std::size_t side = 0; side < edge_count; ++side) {
+        if (node.array_value[side].kind != JsonKind::Bool) throw LayoutError("layout: escape flag is not a boolean");
+        flags[side] = node.array_value[side].bool_value;
+    }
+    return flags;
 }
 
 std::string indices_json(const std::vector<std::size_t>& values) {
@@ -268,6 +284,8 @@ std::string document_json(const Problem& problem, const Placement& placement) {
                                 {"fanout_pins", integer(part.fanout_pins)},
                                 {"fanout_need", integer(part.fanout_need)},
                                 {"fanout_subject", boolean(part.fanout_subject)},
+                                {"escape_top", flags_json(part.escape_top)},
+                                {"escape_bottom", flags_json(part.escape_bottom)},
                                 {"never_crowds", boolean(part.never_crowds)},
                                 {"cluster_passive", boolean(part.cluster_passive)},
                                 {"fixed", boolean(part.fixed)},
@@ -379,7 +397,8 @@ Document read_document(const JsonNode& root) {
     }
     for (const auto& entry : field(root, "parts", JsonKind::Array).array_value) {
         reject_unknown_keys(entry, {"reference", "group", "value", "footprint_name", "footprint", "pad_nets",
-                                    "fanout_pins", "fanout_need", "fanout_subject", "never_crowds",
+                                    "fanout_pins", "fanout_need", "fanout_subject", "escape_top",
+                                    "escape_bottom", "never_crowds",
                                     "cluster_passive", "fixed", "top_only", "core_exempt", "cohesion_member",
                                     "connector", "overmold", "edge", "corner", "tie", "owner"},
                             "layout part");
@@ -392,6 +411,8 @@ Document read_document(const JsonNode& root) {
         part.fanout_pins = static_cast<int>(whole(field(entry, "fanout_pins", JsonKind::Number)));
         part.fanout_need = whole(field(entry, "fanout_need", JsonKind::Number));
         part.fanout_subject = flag(entry, "fanout_subject");
+        part.escape_top = flags_of(field(entry, "escape_top", JsonKind::Array));
+        part.escape_bottom = flags_of(field(entry, "escape_bottom", JsonKind::Array));
         part.never_crowds = flag(entry, "never_crowds");
         part.cluster_passive = flag(entry, "cluster_passive");
         part.fixed = flag(entry, "fixed");

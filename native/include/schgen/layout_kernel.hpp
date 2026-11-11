@@ -84,6 +84,7 @@ private:
     };
     struct Shape {
         Box gate, bound;
+        std::array<bool, edge_count> escape{};
         std::vector<Land> lands;
         std::vector<Box> named;
         std::vector<Box> courts, holes;
@@ -103,7 +104,8 @@ private:
     std::vector<std::size_t> neighbours(Box box, std::size_t self) const;
     std::optional<Breach> self_breach(std::size_t part, const Shape& shape, const Pose& pose) const;
     std::optional<Breach> pair_breach(std::size_t first, const Shape& first_shape, Face first_face,
-                                      std::size_t second, const Shape& second_shape, Face second_face) const;
+                                      std::size_t second, const Shape& second_shape, Face second_face,
+                                      Nm guard) const;
     bool crowds(const Part& crowder, const Part& subject) const;
     bool copper_clear(const Shape& shape, Face face) const;
     Nm land_clearance(int net) const;

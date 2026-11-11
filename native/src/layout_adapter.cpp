@@ -393,6 +393,27 @@ void mark_connectors(const PcbModel& model, const AdapterOptions& options, const
     rules.boot_gap = to_nm(constants::boot_gap.value);
 }
 
+std::array<bool, edge_count> escape_flags(const Variant& variant, const Part& part, const Problem& problem) {
+    std::vector<PcbEscapePad> pads;
+    for (std::size_t name = 0; name < variant.names.size(); ++name) {
+        bool connected = false, through = false, plane = false;
+        for (std::size_t pad = 0; pad < variant.pads.size(); ++pad) {
+            if (variant.pads[pad].name != variant.names[name]) continue;
+            through = through || variant.pads[pad].through;
+            if (part.pad_nets[pad] == no_net) continue;
+            connected = true;
+            plane = plane || problem.nets[static_cast<std::size_t>(part.pad_nets[pad])].name == pcb_ground_plane_net;
+        }
+        const Box& box = variant.name_boxes[name];
+        pads.push_back({Box4{to_mm(box.x0), to_mm(box.y0), to_mm(box.x1), to_mm(box.y1)},
+                        connected && !(through && plane)});
+    }
+    const Box& gate = variant.gate_box;
+    const PcbEscapeSides sides = pcb_escape_sides(
+        Box4{to_mm(gate.x0), to_mm(gate.y0), to_mm(gate.x1), to_mm(gate.y1)}, pads, constants::escape_tie.value);
+    return {sides.north, sides.south, sides.west, sides.east};
+}
+
 std::optional<CornerRule> corner_rule(const Board& board, Point at) {
     CornerRule rule;
     rule.east = 2 * (at.x - board.origin.x) > board.width;
@@ -502,8 +523,9 @@ ModelBinding bind_model(const PcbModel& model, const PcbEmitPolicy& policy, cons
         part.footprint_name = instance.footprint;
         part.footprint = found->second;
         part.fanout_pins = pins;
-        part.fanout_need = to_nm(pcb_fanout_need(pins).first);
-        part.fanout_subject = !mezzanine && pins >= static_cast<int>(constants::fanout_floor.value);
+        const int escape_nets = pcb_escape_nets(instance);
+        part.fanout_need = to_nm(pcb_escape_need(escape_nets).first);
+        part.fanout_subject = !mezzanine && escape_nets >= static_cast<int>(constants::fanout_floor.value);
         part.never_crowds = !foreign;
         part.cluster_passive = foreign && !own;
         part.top_only = user_facing(instance) ||
@@ -525,6 +547,8 @@ ModelBinding bind_model(const PcbModel& model, const PcbEmitPolicy& policy, cons
             part.pad_nets.push_back(static_cast<int>(index));
             problem.nets[index].pins.push_back({part_index, pad});
         }
+        part.escape_top = escape_flags(problem.footprints[found->second].top, part, problem);
+        part.escape_bottom = escape_flags(problem.footprints[found->second].bottom, part, problem);
         problem.parts.push_back(std::move(part));
         binding.placement.push_back({{to_nm(instance.x), to_nm(instance.y)}, turn_of(instance.rotation), face});
     }

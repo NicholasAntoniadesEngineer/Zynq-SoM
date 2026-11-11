@@ -56,6 +56,10 @@ struct Part {
     std::vector<int> pad_nets;
     int fanout_pins = 0;
     Nm fanout_need = 0;
+    std::array<bool, edge_count> escape_top{}, escape_bottom{};
+    const std::array<bool, edge_count>& escape_on(Face face) const {
+        return face == Face::top ? escape_top : escape_bottom;
+    }
     bool fanout_subject = false, never_crowds = false, cluster_passive = false;
     bool fixed = false, top_only = false, core_exempt = false, cohesion_member = true;
     bool connector = false, overmold = false;

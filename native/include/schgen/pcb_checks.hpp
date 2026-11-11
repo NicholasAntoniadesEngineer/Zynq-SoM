@@ -162,8 +162,23 @@ bool pcb_is_df40_part(const std::string& sheet, int pins);
 bool pcb_counts_as_crowder(const std::string& ref, const std::string& sheet,
     int pins, const std::string& footprint, const std::string& subject_sheet);
 std::pair<double, std::string> pcb_fanout_need(int pins);
+std::pair<double, std::string> pcb_escape_need(int nets);
+inline constexpr const char* pcb_ground_plane_net = "GND";
+inline constexpr double pcb_escape_tie_mm = 1e-3;
+struct PcbEscapeSides {
+    bool north = false, south = false, west = false, east = false;
+};
+struct PcbEscapePad {
+    Box4 box;
+    bool counted = false;
+};
+int pcb_escape_nets(const PcbCheckInstance&);
+std::vector<PcbEscapePad> pcb_escape_pads(const PcbCheckInstance&, const PcbCheckGeometry&);
+PcbEscapeSides pcb_escape_sides(const Box4& courtyard, const std::vector<PcbEscapePad>&, double tie);
+bool pcb_crowds_escape(const Box4& subject, const PcbEscapeSides&, const Box4& crowder);
 // Caller supplies a persisted ratchet. nullopt retains first-run self-pinning.
 PcbFanoutResult check_fanout(const PcbCheckInput&, std::optional<int> baseline);
+PcbFanoutResult check_fanout_strict(const PcbCheckInput&, std::optional<int> baseline);
 int pcb_fanout_ratchet(int n_starved, std::optional<int> previous);
 struct RefdesOverlapResult {
     bool ok = true;

@@ -13,7 +13,7 @@ namespace constants {
 inline constexpr NamedConstant core_tolerance{"core_tolerance", 0.5, "mm2", "policy",
     "the mechanical gate ignores module-core overlaps up to this area"};
 inline constexpr NamedConstant fanout_floor{"fanout_floor", 3.0, "pins", "policy",
-    "the fan-out gate judges only parts with at least this many pins"};
+    "the fan-out gate judges only parts with at least this many connected nets"};
 inline constexpr NamedConstant relief_reach{"relief_reach", 1.0, "mm", "physical",
     "thermal gap 0.5 plus bridge width 0.5 that the emitter writes for every zone"};
 inline constexpr NamedConstant edge_reach{"edge_reach", 0.6, "mm", "policy",
@@ -36,11 +36,14 @@ inline constexpr NamedConstant hole_inset{"hole_inset", 5.0, "mm", "policy",
     "distance of a corner mounting hole from both edges of its corner, before the fixed-part grid"};
 inline constexpr NamedConstant mark_inset{"mark_inset", 9.0, "mm", "policy",
     "distance of a corner fiducial from both edges of its corner"};
+inline constexpr NamedConstant escape_tie{"escape_tie", 2e-3, "mm", "policy",
+    "tie width when choosing a pad's nearest courtyard side; twice the gate's, so the kernel never rings fewer sides"};
 inline constexpr NamedConstant area_guard{"area_guard", 1e-6, "mm2", "policy",
     "slack demanded of a module-core overlap so the mechanical gate's floating-point area cannot disagree at the limit"};
 inline constexpr std::array adapter_registry{core_tolerance, fanout_floor, relief_reach, edge_reach, owner_reach,
                                              connector_overlap, band_share, overmold_gap, boot_gap,
-                                             compare_guard, group_guard, hole_inset, mark_inset, area_guard};
+                                             compare_guard, group_guard, hole_inset, mark_inset, area_guard,
+                                             escape_tie};
 }
 
 struct AdapterOptions {

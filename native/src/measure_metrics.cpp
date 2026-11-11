@@ -3,6 +3,7 @@
 #include "schgen/board_decision_policy.hpp"
 #include "schgen/pcb_checks.hpp"
 
+#include <set>
 #include <algorithm>
 #include <cmath>
 #include <limits>
@@ -50,6 +51,13 @@ Rect united(Rect a, Rect b) {
     return {std::min(a.x0, b.x0), std::min(a.y0, b.y0), std::max(a.x1, b.x1), std::max(a.y1, b.y1)};
 }
 
+int net_count(const Part& part) {
+    std::set<std::string> nets;
+    for (const auto& pad : part.pads)
+        if (!pad.net.empty()) nets.insert(pad.net);
+    return static_cast<int>(nets.size());
+}
+
 double separation(Rect a, Rect b) {
     const double dx = std::max({a.x0 - b.x1, b.x0 - a.x1, 0.0});
     const double dy = std::max({a.y0 - b.y1, b.y0 - a.y1, 0.0});
@@ -77,7 +85,7 @@ FaceShapes face_shapes(const Board& board, const Options& options, Face face) {
     const double clearance = board_decision_policy::placement::clear / 2;
     for (const auto& part : board.parts) {
         if (part.face == face) {
-            const double fanout = pcb_fanout_need(part.pin_count).first / 2;
+            const double fanout = pcb_escape_need(net_count(part)).first / 2;
             shapes.plain.push_back(clipped(part.courtyard, board.outline));
             shapes.clearance.push_back(clipped(grown(part.courtyard, clearance), board.outline));
             shapes.fanout.push_back(clipped(grown(part.courtyard, fanout), board.outline));
@@ -378,7 +386,7 @@ std::vector<GapTier> gap_metrics(const Board& board) {
             if (&other != &part && other.face == part.face)
                 nearest = std::min(nearest, separation(part.courtyard, other.courtyard));
         if (std::isinf(nearest)) continue;
-        tiers[pcb_fanout_need(part.pin_count).first].push_back(nearest);
+        tiers[pcb_escape_need(net_count(part)).first].push_back(nearest);
     }
     std::vector<GapTier> out;
     for (const auto& [need, gaps] : tiers) {
