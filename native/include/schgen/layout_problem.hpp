@@ -32,8 +32,15 @@ struct Variant {
 };
 
 struct EdgeRule {
-    Point mouth;
-    Nm reach = 0;
+    Point mouth, rear_mouth;
+    Nm reach = 0, seat = 0;
+    Point mouth_on(Face face) const { return face == Face::top ? mouth : rear_mouth; }
+};
+
+struct CornerRule {
+    bool east = false, south = false;
+    Point inset;
+    Nm grid = 0;
 };
 
 struct Footprint {
@@ -53,6 +60,7 @@ struct Part {
     bool fixed = false, top_only = false, core_exempt = false, cohesion_member = true;
     bool connector = false, overmold = false;
     std::optional<EdgeRule> edge;
+    std::optional<CornerRule> corner;
 };
 
 struct Pin {
@@ -69,7 +77,7 @@ struct Net {
 struct Board {
     Point origin;
     Nm width = 0, height = 0;
-    std::optional<Box> module_core;
+    std::optional<Box> module_core, module_body;
     Box outline() const { return {origin.x, origin.y, origin.x + width, origin.y + height}; }
 };
 
@@ -136,12 +144,13 @@ struct Constraints {
 
 struct Reserve {
     Box box;
+    std::vector<std::size_t> members;
     std::string source;
 };
 
 struct Rules {
     Nm compare_guard = 0, group_guard = 0;
-    Nm core_tolerance = 0, copper_clearance = 0, edge_clearance = 0, plane_margin = 0;
+    Nm core_tolerance = 0, copper_clearance = 0, edge_clearance = 0, edge_setback = 0, plane_margin = 0;
     double dispersion_limit = 0;
     std::size_t dispersion_floor = 0;
 };
@@ -171,6 +180,9 @@ struct Problem {
     std::vector<Ownership> ownership;
 };
 
+Point corner_site(const Board& board, const CornerRule& rule);
+std::optional<bool> mirrors_across_x(const Footprint& footprint);
+Box gate_at(const Problem& problem, std::size_t part, const Pose& pose);
 void index_names(Variant& variant);
 void derive_ownership(Problem& problem, Nm owner_reach);
 const char* tie_name(Tie tie);

@@ -313,7 +313,7 @@ void connectors_stay_at_their_edge() {
     for (const Point site : {fixture::north_first, fixture::north_second}) {
         Part& part = scene.add("J", "one", jack, site);
         part.connector = part.overmold = true;
-        part.edge = EdgeRule{{0, -1}, fixture::edge_reach};
+        part.edge = EdgeRule{{0, -1}, {0, 1}, fixture::edge_reach, fixture::north_first.y};
     }
     require(has(Kernel(scene.problem, scene.placement).violations(), Breach::connector_gap),
             "two overmolded plugs need their gap");
@@ -327,6 +327,9 @@ void connectors_stay_at_their_edge() {
     require(kind({fixture::inland_site, Turn::none, Face::top}) == Breach::edge_mount, "a connector may not leave its edge");
     require(kind({fixture::north_first, Turn::half, Face::top}) == Breach::edge_mount, "the mouth must face off the board");
     require(!kind({fixture::north_slide, Turn::none, Face::top}), "a connector may slide along its edge");
+    require(!kind({fixture::north_slide, Turn::half, Face::bottom}), "a connector may mount on the rear, mouth outward");
+    require(kind({fixture::north_slide, Turn::none, Face::bottom}) == Breach::edge_mount,
+            "a rear connector may not face inward");
     require(kind({fixture::north_crowd, Turn::none, Face::top}) == Breach::connector_gap, "sliding into the boot gap breaks");
 }
 

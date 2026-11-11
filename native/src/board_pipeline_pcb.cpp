@@ -131,6 +131,15 @@ void pcb_stages(Context& c){
         // One receipt owns all actual plan/zone/placement work, not the legacy
         // fallback prefix. Import before emission so failures retain work done.
         c.inbox.merge_once("pcb/placement",pcb_placement_accounting(stage.placement));
+        if(c.options.layout){
+            auto squeezed=c.measure("pcb_layout_squeeze",[&]{
+                return layout::squeeze_stage(stage.inputs,stage.placement.model,pcb_emit_policy(stage.inputs.floorplan.project),
+                    {c.options.layout->plane_net,
+                     layout::project_edge_clearance(parse_json_file((c.paths.project_root/"Zynq_Carrier.kicad_pro").string())),
+                     c.options.layout->overmold_parts,stage.inputs.floorplan.place_clear});});
+            c.report("layout_squeeze.txt",squeezed.report);
+            stage.placement.model=std::move(squeezed.model);
+        }
         stage.emission=precision_receipt(c,"pcb/emission/precision",[&](auto& counts){
             return c.measure("pcb_render",[&]{return render_pcb(stage.placement.model,pcb_emit_policy(stage.inputs.floorplan.project),&counts);});});
         c.inbox.merge_once("pcb/emission",NativeAccountingBatch{{},stage.emission.fallback_events});

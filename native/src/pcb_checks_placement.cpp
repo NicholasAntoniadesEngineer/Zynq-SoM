@@ -16,7 +16,7 @@ PlacementMechResult check_placement_mech(const PcbCheckInput& input){
     for(std::size_t i=0;i<m.insts.size();++i){const auto& inst=m.insts[i];auto part=mpn(inst);if(part.empty())continue;++res.n_connectors;
         const auto b=input.courtyard_at(i);std::vector<std::pair<std::string,double>> distances={{"N",b.y0-m.origin_y},{"S",m.origin_y+m.board_h-b.y1},{"W",b.x0-m.origin_x},{"E",m.origin_x+m.board_w-b.x1}};
         auto edge=std::min_element(distances.begin(),distances.end(),[](const auto& a,const auto& b){return a.second<b.second;});
-        auto vec=turn_point(part=="XT60PW-M"?1:0,part=="XT60PW-M"?0:1,inst.rotation);std::pair<int,int> face{direction_component(vec.first),direction_component(vec.second)};
+        auto vec=turn_point(part=="XT60PW-M"?1:0,part=="XT60PW-M"?0:(inst.mirror?-1:1),inst.rotation);std::pair<int,int> face{direction_component(vec.first),direction_component(vec.second)};
         bool on_edge=edge->second<=0.6,mouth=face==outward.at(edge->first),ok=on_edge&&mouth;
         res.connectors.push_back({inst.ref,part,edge->first,inst.rotation,edge->second,face,ok});
         if(!ok){std::vector<std::string> why;if(!on_edge)why.push_back("interior ("+f(edge->second,1)+"mm > 0.6mm off the "+edge->first+" edge)");if(!mouth)why.push_back("mouth "+pair_repr(face)+" faces inward (off-board for the "+edge->first+" edge is "+pair_repr(outward.at(edge->first))+")");res.bad_connectors.push_back(inst.ref+" ("+inst.sheet+") "+part+": "+join(why,"; "));}

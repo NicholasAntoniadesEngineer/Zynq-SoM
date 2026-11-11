@@ -42,7 +42,8 @@ int report(const layout::Problem& problem, const layout::Placement& placement) {
               << problem.obstacles.size() << " fixed copper items\n"
               << "layout: airwire mm signal " << layout::to_mm(length.signal) << " power "
               << layout::to_mm(length.power) << " plane " << layout::to_mm(length.plane) << "\n"
-              << "layout: " << found.size() << " hard-rule violations\n";
+              << "layout: " << found.size() << " hard-rule violations, outline "
+              << (kernel.outline_holds() ? "holds" : "loses") << " the module and fixed copper\n";
     std::map<std::string, std::pair<std::size_t, double>> tightest;
     for (const auto& margin : kernel.margins()) {
         auto [entry, fresh] = tightest.emplace(margin.kind, std::make_pair(std::size_t{1}, margin.value));
@@ -57,7 +58,7 @@ int report(const layout::Problem& problem, const layout::Placement& placement) {
         std::cout << "  " << layout::breach_name(found[index].kind) << " "
                   << problem.parts[found[index].part].reference << " / "
                   << problem.parts[found[index].other].reference << "\n";
-    return found.empty() ? 0 : 1;
+    return found.empty() && kernel.outline_holds() ? 0 : 1;
 }
 
 int export_problem(int argc, char** argv) {
@@ -88,7 +89,7 @@ int export_problem(int argc, char** argv) {
     const auto gates = pcb_placement_gate_policy(input);
     const auto binding = layout::bind_model(placed.model, policy, &gates,
         {arguments.plane_net, layout::project_edge_clearance(parse_json_file(arguments.project_file)),
-         arguments.overmold_parts});
+         arguments.overmold_parts, input.floorplan.place_clear});
     const std::string text = layout::document_json(binding.problem, binding.placement);
     write_atomic_file(arguments.output, std::vector<uint8_t>(text.begin(), text.end()));
     std::cout << "layout: problem written to " << arguments.output << "\n";

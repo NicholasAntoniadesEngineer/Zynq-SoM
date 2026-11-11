@@ -1,6 +1,7 @@
 #pragma once
 #include "schgen/board_schematic.hpp"
 #include "schgen/board_pcb.hpp"
+#include "schgen/layout_stage.hpp"
 #include "schgen/native_audit_state.hpp"
 #include "schgen/spice.hpp"
 #include "schgen/manufacturing_exports.hpp"
@@ -70,6 +71,7 @@ void publish_board_pipeline_inputs(BoardAuthoredProject&,const ProjectPaths&,
     const std::filesystem::path& output);
 
 struct BoardPipelineOptions {
+    std::optional<layout::StageOptions> layout;
     // Explicit output tree. Empty means paths.project_root, as cmd_board.
     // Inputs remain rooted at ProjectPaths; no chdir/environment modification.
     std::filesystem::path output_root;

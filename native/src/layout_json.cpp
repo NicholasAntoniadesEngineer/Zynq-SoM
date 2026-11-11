@@ -13,7 +13,7 @@ using json_text::integer;
 using json_text::object;
 using json_text::text_value;
 
-const char* const schema_name = "schgen.layout-problem/1";
+const char* const schema_name = "schgen.layout-problem/2";
 inline constexpr std::size_t point_fields = 2, disc_fields = 3, box_fields = 4;
 
 std::string point_json(Point point) { return array({integer(point.x), integer(point.y)}); }
@@ -280,8 +280,15 @@ std::string document_json(const Problem& problem, const Placement& placement) {
                                 {"connector", boolean(part.connector)},
                                 {"overmold", boolean(part.overmold)},
                                 {"edge", part.edge ? object({{"mouth", point_json(part.edge->mouth)},
-                                                             {"reach", integer(part.edge->reach)}})
-                                                   : "null"}}));
+                                                             {"rear_mouth", point_json(part.edge->rear_mouth)},
+                                                             {"reach", integer(part.edge->reach)},
+                                                             {"seat", integer(part.edge->seat)}})
+                                                   : "null"},
+                                {"corner", part.corner ? object({{"east", boolean(part.corner->east)},
+                                                                 {"south", boolean(part.corner->south)},
+                                                                 {"inset", point_json(part.corner->inset)},
+                                                                 {"grid", integer(part.corner->grid)}})
+                                                       : "null"}}));
     }
     for (const auto& pose : placement)
         poses.push_back(object({{"at", point_json(pose.at)},
@@ -296,7 +303,9 @@ std::string document_json(const Problem& problem, const Placement& placement) {
                                     {"net", integer(obstacle.net)}}));
     std::vector<std::string> reserves;
     for (const auto& reserve : problem.reserves)
-        reserves.push_back(object({{"box", box_json(reserve.box)}, {"source", text_value(reserve.source)}}));
+        reserves.push_back(object({{"box", box_json(reserve.box)},
+                                   {"members", indices_json(reserve.members)},
+                                   {"source", text_value(reserve.source)}}));
     const Board& board = problem.board;
     return json_text::pretty(object({
         {"schema", text_value(schema_name)},
@@ -304,12 +313,14 @@ std::string document_json(const Problem& problem, const Placement& placement) {
         {"board", object({{"origin", point_json(board.origin)},
                           {"width", integer(board.width)},
                           {"height", integer(board.height)},
-                          {"module_core", board.module_core ? box_json(*board.module_core) : "null"}})},
+                          {"module_core", board.module_core ? box_json(*board.module_core) : "null"},
+                          {"module_body", board.module_body ? box_json(*board.module_body) : "null"}})},
         {"rules", object({{"compare_guard", integer(problem.rules.compare_guard)},
                           {"group_guard", integer(problem.rules.group_guard)},
                           {"core_tolerance", integer(problem.rules.core_tolerance)},
                           {"copper_clearance", integer(problem.rules.copper_clearance)},
                           {"edge_clearance", integer(problem.rules.edge_clearance)},
+                          {"edge_setback", integer(problem.rules.edge_setback)},
                           {"plane_margin", integer(problem.rules.plane_margin)},
                           {"dispersion_limit", json_text::number(problem.rules.dispersion_limit)},
                           {"dispersion_floor", integer(static_cast<long long>(problem.rules.dispersion_floor))}})},
@@ -331,21 +342,26 @@ Document read_document(const JsonNode& root) {
     Document document;
     Problem& problem = document.problem;
     const JsonNode& board = field(root, "board", JsonKind::Object);
-    reject_unknown_keys(board, {"origin", "width", "height", "module_core"}, "layout board");
+    reject_unknown_keys(board, {"origin", "width", "height", "module_core", "module_body"}, "layout board");
     problem.board.origin = point_of(field(board, "origin", JsonKind::Array));
     problem.board.width = whole(field(board, "width", JsonKind::Number));
     problem.board.height = whole(field(board, "height", JsonKind::Number));
     const JsonNode* core = object_field(board, "module_core");
     if (!core) throw LayoutError("layout: field module_core is missing");
     if (core->kind != JsonKind::Null) problem.board.module_core = box_of(*core);
+    const JsonNode* body = object_field(board, "module_body");
+    if (!body) throw LayoutError("layout: field module_body is missing");
+    if (body->kind != JsonKind::Null) problem.board.module_body = box_of(*body);
     const JsonNode& rules = field(root, "rules", JsonKind::Object);
     reject_unknown_keys(rules, {"compare_guard", "group_guard", "core_tolerance", "copper_clearance",
-                                "edge_clearance", "plane_margin", "dispersion_limit", "dispersion_floor"},
+                                "edge_clearance", "edge_setback", "plane_margin", "dispersion_limit",
+                                "dispersion_floor"},
                         "layout rules");
     problem.rules.compare_guard = whole(field(rules, "compare_guard", JsonKind::Number));
     problem.rules.group_guard = whole(field(rules, "group_guard", JsonKind::Number));
     problem.rules.copper_clearance = whole(field(rules, "copper_clearance", JsonKind::Number));
     problem.rules.edge_clearance = whole(field(rules, "edge_clearance", JsonKind::Number));
+    problem.rules.edge_setback = whole(field(rules, "edge_setback", JsonKind::Number));
     problem.rules.plane_margin = whole(field(rules, "plane_margin", JsonKind::Number));
     problem.rules.core_tolerance = whole(field(rules, "core_tolerance", JsonKind::Number));
     problem.rules.dispersion_limit = field(rules, "dispersion_limit", JsonKind::Number).number_value;
@@ -365,7 +381,7 @@ Document read_document(const JsonNode& root) {
         reject_unknown_keys(entry, {"reference", "group", "value", "footprint_name", "footprint", "pad_nets",
                                     "fanout_pins", "fanout_need", "fanout_subject", "never_crowds",
                                     "cluster_passive", "fixed", "top_only", "core_exempt", "cohesion_member",
-                                    "connector", "overmold", "edge", "tie", "owner"},
+                                    "connector", "overmold", "edge", "corner", "tie", "owner"},
                             "layout part");
         Part part;
         part.reference = text(entry, "reference");
@@ -395,9 +411,19 @@ Document read_document(const JsonNode& root) {
         const JsonNode* edge = object_field(entry, "edge");
         if (!edge) throw LayoutError("layout: field edge is missing");
         if (edge->kind != JsonKind::Null) {
-            reject_unknown_keys(*edge, {"mouth", "reach"}, "layout edge rule");
+            reject_unknown_keys(*edge, {"mouth", "rear_mouth", "reach", "seat"}, "layout edge rule");
             part.edge = EdgeRule{point_of(field(*edge, "mouth", JsonKind::Array)),
-                                 whole(field(*edge, "reach", JsonKind::Number))};
+                                 point_of(field(*edge, "rear_mouth", JsonKind::Array)),
+                                 whole(field(*edge, "reach", JsonKind::Number)),
+                                 whole(field(*edge, "seat", JsonKind::Number))};
+        }
+        const JsonNode* corner = object_field(entry, "corner");
+        if (!corner) throw LayoutError("layout: field corner is missing");
+        if (corner->kind != JsonKind::Null) {
+            reject_unknown_keys(*corner, {"east", "south", "inset", "grid"}, "layout corner rule");
+            part.corner = CornerRule{flag(*corner, "east"), flag(*corner, "south"),
+                                     point_of(field(*corner, "inset", JsonKind::Array)),
+                                     whole(field(*corner, "grid", JsonKind::Number))};
         }
         const std::size_t index = problem.parts.size();
         for (const auto& net : field(entry, "pad_nets", JsonKind::Array).array_value) {
@@ -426,8 +452,9 @@ Document read_document(const JsonNode& root) {
         problem.obstacles.push_back(obstacle);
     }
     for (const auto& entry : field(root, "reserves", JsonKind::Array).array_value) {
-        reject_unknown_keys(entry, {"box", "source"}, "layout reserve");
-        problem.reserves.push_back({box_of(field(entry, "box", JsonKind::Array)), text(entry, "source")});
+        reject_unknown_keys(entry, {"box", "members", "source"}, "layout reserve");
+        problem.reserves.push_back({box_of(field(entry, "box", JsonKind::Array)),
+                                    indices_of(field(entry, "members", JsonKind::Array)), text(entry, "source")});
     }
     problem.constraints = constraints_of(field(root, "constraints", JsonKind::Object));
     for (const auto& entry : field(root, "placement", JsonKind::Array).array_value) {

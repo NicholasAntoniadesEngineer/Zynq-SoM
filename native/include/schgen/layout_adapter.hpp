@@ -32,15 +32,22 @@ inline constexpr NamedConstant group_guard{"group_guard", 200.0, "nm", "policy",
     "slack for subsystem distances, which the flow gate rounds to four decimals"};
 inline constexpr NamedConstant owner_reach{"owner_reach", 3.0, "mm", "policy",
     "preferred distance from an owned two-pin part to the pin it serves; a soft preference, never a hard rule"};
+inline constexpr NamedConstant hole_inset{"hole_inset", 5.0, "mm", "policy",
+    "distance of a corner mounting hole from both edges of its corner, before the fixed-part grid"};
+inline constexpr NamedConstant mark_inset{"mark_inset", 9.0, "mm", "policy",
+    "distance of a corner fiducial from both edges of its corner"};
+inline constexpr NamedConstant area_guard{"area_guard", 1e-6, "mm2", "policy",
+    "slack demanded of a module-core overlap so the mechanical gate's floating-point area cannot disagree at the limit"};
 inline constexpr std::array adapter_registry{core_tolerance, fanout_floor, relief_reach, edge_reach, owner_reach,
                                              connector_overlap, band_share, overmold_gap, boot_gap,
-                                             compare_guard, group_guard};
+                                             compare_guard, group_guard, hole_inset, mark_inset, area_guard};
 }
 
 struct AdapterOptions {
     std::string plane_net;
     double edge_clearance = 0;
     std::vector<std::string> overmold_parts;
+    double edge_setback = 0;
 };
 
 struct ModelBinding {
@@ -54,5 +61,15 @@ ModelBinding bind_model(const PcbModel& model, const PcbEmitPolicy& policy, cons
                         const AdapterOptions& options);
 double project_edge_clearance(const JsonNode& project_file);
 PcbModel model_with(const PcbModel& base, const ModelBinding& binding, const Placement& placement);
+PcbModel model_with(const PcbModel& base, const ModelBinding& binding, const Placement& placement,
+                    const Board& board);
+
+struct GateVerdict {
+    bool fanout = false, mechanical = false, on_board = false, grouped = false, contracts = false, spacing = false;
+    bool ok() const { return fanout && mechanical && on_board && grouped && contracts && spacing; }
+    std::string text() const;
+};
+
+GateVerdict judge_model(const PcbPlacementInput& inputs, const PcbModel& model);
 
 }

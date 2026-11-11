@@ -2,12 +2,14 @@
 #include "schgen/layout_adapter.hpp"
 #include "schgen/layout_json.hpp"
 #include "schgen/layout_kernel.hpp"
+#include "schgen/layout_stage.hpp"
 #include "schgen/measure.hpp"
 #include "schgen/pcb_drc.hpp"
 #include "schgen/ratsnest_gate.hpp"
 #include "schgen/thermal_checks.hpp"
 #include "fresh_project_schematic.hpp"
 
+#include <algorithm>
 #include <cmath>
 #include <fstream>
 #include <iostream>
@@ -29,18 +31,8 @@ constexpr double length_tolerance = 1e-3;
 constexpr std::size_t report_limit = 8;
 const char* const plane_net = "GND";
 const char* const overmold_part = "HDMI-019S";
+const char* const repeat_project = "devkit_mini";
 }
-
-struct Verdict {
-    bool fanout = false, mechanical = false, on_board = false, grouped = false, contracts = false, spacing = false;
-    bool ok() const { return fanout && mechanical && on_board && grouped && contracts && spacing; }
-    std::string text() const {
-        const auto word = [](bool pass) { return pass ? "pass" : "FAIL"; };
-        return std::string("fanout=") + word(fanout) + " mechanical=" + word(mechanical) + " on_board=" +
-               word(on_board) + " grouped=" + word(grouped) + " contracts=" + word(contracts) + " spacing=" +
-               word(spacing);
-    }
-};
 
 void require(bool condition, const std::string& what) {
     if (!condition) throw std::runtime_error("layout replay contract failed: " + what);
@@ -50,14 +42,6 @@ std::string file_text(const std::filesystem::path& path) {
     std::ifstream stream(path, std::ios::binary);
     if (!stream) throw std::runtime_error("layout replay cannot read " + path.string());
     return {std::istreambuf_iterator<char>(stream), std::istreambuf_iterator<char>()};
-}
-
-Verdict judge(const PcbPlacementInput& inputs, const PcbModel& model) {
-    const PcbCheckInput input(model);
-    const auto ratsnest = check_ratsnest(input);
-    return {check_fanout(input, 0).ok, check_placement_mech(input).ok, ratsnest.off_board.empty(),
-            ratsnest.dispersed.empty(), check_pcb_placement_gates(inputs, model).ok(),
-            check_connector_spacing(input).ok};
 }
 
 void margins_match_the_flow_gate(const PcbModel& model, const PcbPlacementGatePolicy& gates, const Kernel& kernel) {
@@ -183,7 +167,7 @@ void differential_walk(const std::string& project, const PcbPlacementInput& inpu
                 Placement trial = kernel.placement();
                 trial[part] = pose;
                 ++probes;
-                if (judge(inputs, model_with(model, binding, trial)).ok()) ++stricter[breach_name(refusal->kind)];
+                if (judge_model(inputs, model_with(model, binding, trial)).ok()) ++stricter[breach_name(refusal->kind)];
             }
             continue;
         }
@@ -191,7 +175,7 @@ void differential_walk(const std::string& project, const PcbPlacementInput& inpu
         require(kernel.move(part, pose), "accepted pose applies");
         ++accepted;
         const PcbModel moved = model_with(model, binding, kernel.placement());
-        const Verdict verdict = judge(inputs, moved);
+        const GateVerdict verdict = judge_model(inputs, moved);
         if (!verdict.ok())
             throw std::runtime_error("layout replay contract failed: " + project + " state " +
                 std::to_string(accepted) + ": kernel accepted " + binding.problem.parts[part].reference +
@@ -222,17 +206,43 @@ void differential_walk(const std::string& project, const PcbPlacementInput& inpu
         std::cout << "    kernel stricter than the gates on " << kind << ": " << count << "\n";
 }
 
+void squeezed_board_passes(const std::string& project, const PcbPlacementInput& inputs, const PcbModel& model,
+                           const PcbEmitPolicy& policy, const AdapterOptions& options,
+                           const std::filesystem::path& scratch, const std::filesystem::path& project_file) {
+    const StageResult stage = squeeze_stage(inputs, model, policy, options);
+    std::cout << stage.report;
+    const double before = to_mm(stage.squeeze.before.width) * to_mm(stage.squeeze.before.height);
+    const double after = to_mm(stage.squeeze.after.width) * to_mm(stage.squeeze.after.height);
+    require(after < before, project + " squeeze shrinks the board");
+    const GateVerdict verdict = judge_model(inputs, stage.model);
+    require(verdict.ok(), project + " squeezed board passes its gates: " + verdict.text());
+    const auto rendered = render_pcb(stage.model, policy);
+    require(thermal_drills(rendered.document) == thermal_drills(render_pcb(model, policy).document),
+            project + " squeeze keeps every thermal via");
+    const auto directory = scratch / project / "squeezed";
+    std::filesystem::create_directories(directory);
+    std::filesystem::copy_file(project_file, directory / project_file.filename(),
+                               std::filesystem::copy_options::overwrite_existing);
+    std::ofstream(directory / "Zynq_Carrier.kicad_pcb", std::ios::binary) << rendered.pcb;
+    const auto drc = run_pcb_drc(directory / "Zynq_Carrier.kicad_pcb");
+    require(drc.n_errors && *drc.n_errors == 0, project + " squeezed board has no KiCad design-rule errors");
+    if (project == fixture::repeat_project)
+        require(render_pcb(squeeze_stage(inputs, model, policy, options).model, policy).pcb == rendered.pcb,
+                project + " squeeze repeats exactly");
+}
+
 void replay(const std::filesystem::path& root, const std::string& project, std::size_t states,
-            std::size_t drc_samples, const std::filesystem::path& scratch) {
+            std::size_t drc_samples, bool squeezes, const std::filesystem::path& scratch) {
     const auto paths = resolve_project_paths(root, std::filesystem::path(project));
     const auto schematic = test::fresh_project_schematic(paths, load_project_circuits(paths));
     const auto stage = prepare_board_pcb(paths, {}, {}, schematic);
     const PcbModel& model = stage.placement.model;
     const PcbEmitPolicy policy = pcb_emit_policy(load_project_config(paths));
     const PcbPlacementGatePolicy gates = pcb_placement_gate_policy(stage.inputs);
-    const ModelBinding binding = bind_model(model, policy, &gates, {fixture::plane_net,
+    const AdapterOptions options{fixture::plane_net,
         project_edge_clearance(parse_json_text(file_text(paths.project_root / "Zynq_Carrier.kicad_pro"))),
-        {fixture::overmold_part}});
+        {fixture::overmold_part}, 0};
+    const ModelBinding binding = bind_model(model, policy, &gates, options);
     const Constraints& rules = binding.problem.constraints;
     std::map<std::string, std::size_t> ties;
     std::size_t small_parts = 0, owned_parts = 0;
@@ -254,7 +264,7 @@ void replay(const std::filesystem::path& root, const std::string& project, std::
     require(render_pcb(model_with(model, binding, binding.placement), policy).pcb == original,
             project + " round trip is byte-identical");
     geometry_matches_the_gates(model, binding);
-    require(judge(stage.inputs, model).ok(), project + " baseline passes its gates");
+    require(judge_model(stage.inputs, model).ok(), project + " baseline passes its gates");
     const Kernel kernel(binding.problem, binding.placement);
     const auto found = kernel.violations();
     for (std::size_t index = 0; index < found.size() && index < fixture::report_limit; ++index)
@@ -262,6 +272,7 @@ void replay(const std::filesystem::path& root, const std::string& project, std::
                   << binding.problem.parts[found[index].part].reference << " / "
                   << binding.problem.parts[found[index].other].reference << "\n";
     require(found.empty(), project + " baseline is legal in the kernel (" + std::to_string(found.size()) + " violations)");
+    require(kernel.outline_holds(), project + " baseline outline holds the module and fixed copper");
     airwire_matches_measure(paths, original, kernel, policy.power_class);
     margins_match_the_flow_gate(model, gates, kernel);
     const std::string exported = document_json(binding.problem, binding.placement);
@@ -273,17 +284,26 @@ void replay(const std::filesystem::path& root, const std::string& project, std::
     if (states)
         differential_walk(project, stage.inputs, model, binding, policy, states, drc_samples, scratch,
                           paths.project_root / "Zynq_Carrier.kicad_pro");
+    if (squeezes) {
+        AdapterOptions strict = options;
+        strict.edge_setback = stage.inputs.floorplan.place_clear;
+        squeezed_board_passes(project, stage.inputs, model, policy, strict, scratch,
+                              paths.project_root / "Zynq_Carrier.kicad_pro");
+    }
 }
 
 }
 
 int main(int argc, char** argv) {
     try {
-        if (argc != 5) throw std::runtime_error("usage: layout_replay_contracts REPOSITORY SCRATCH STATES DRC_SAMPLES");
+        if (argc != 6)
+            throw std::runtime_error("usage: layout_replay_contracts REPOSITORY SCRATCH STATES DRC_SAMPLES SQUEEZES");
         const auto root = std::filesystem::absolute(argv[1]);
         const std::filesystem::path scratch = argv[2];
         const std::size_t states = std::stoull(argv[3]), drc_samples = std::stoull(argv[4]);
-        for (const char* project : {"carrier", "devkit_mini"}) replay(root, project, states, drc_samples, scratch);
+        const bool squeezes = std::stoull(argv[5]) != 0;
+        for (const char* project : {"carrier", "devkit_mini"})
+            replay(root, project, states, drc_samples, squeezes, scratch);
         std::cout << "layout replay contracts ok\n";
         return 0;
     } catch (const std::exception& error) {

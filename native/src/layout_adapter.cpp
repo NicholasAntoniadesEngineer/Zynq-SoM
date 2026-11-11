@@ -4,6 +4,7 @@
 #include "pcb_placement_gates_internal.hpp"
 #include "schgen/mirror.hpp"
 #include "schgen/pack.hpp"
+#include "schgen/quantize.hpp"
 #include "schgen/ratsnest_gate.hpp"
 #include "schgen/thermal_checks.hpp"
 #include "schgen/turn.hpp"
@@ -131,7 +132,7 @@ bool mechanical_file(const PcbCheckInstance& instance) {
 
 bool user_facing(const PcbCheckInstance& instance) {
     const std::string prefix = ref_prefix(instance.ref);
-    return prefix == "TP" || prefix == "LED" || prefix == "SW" ||
+    return prefix == "TP" || prefix == "LED" || prefix == "SW" || prefix == "J" || prefix == "BT" ||
            instance.footprint.find("TestPoint") != std::string::npos ||
            starts_with(instance.footprint, "LED_") || starts_with(instance.footprint, "Switch:");
 }
@@ -350,12 +351,12 @@ void reserve_thermal_fields(const PcbModel& model, const PcbEmitPolicy& policy, 
         if (std::any_of(problem.reserves.begin(), problem.reserves.end(),
                         [&](const Reserve& known) { return known.box == box; }))
             continue;
-        problem.reserves.push_back({box, zone.name});
+        problem.reserves.push_back({box, {}, zone.name});
         for (std::size_t index = 0; index < problem.parts.size(); ++index) {
             const Variant& variant = problem.footprints[problem.parts[index].footprint].on(placement[index].face);
             Box bound = placed(variant.gate_box, placement[index].at, placement[index].turn);
             if (variant.pad_hull) bound = united(bound, placed(*variant.pad_hull, placement[index].at, placement[index].turn));
-            if (overlaps(bound, box)) problem.parts[index].fixed = true;
+            if (overlaps(bound, box)) problem.reserves.back().members.push_back(index);
         }
     }
 }
@@ -370,17 +371,41 @@ void mark_connectors(const PcbModel& model, const AdapterOptions& options, const
         if (row == rows.end()) continue;
         if (!row->second.ok) throw LayoutError("layout: connector " + part.reference + " is not mounted at an edge");
         const auto back = static_cast<Turn>((turn_count - static_cast<int>(placement[index].turn)) % turn_count);
-        part.connector = part.top_only = true;
+        part.connector = true;
         part.overmold = std::find(options.overmold_parts.begin(), options.overmold_parts.end(), row->second.mpn) !=
                         options.overmold_parts.end();
-        part.edge = EdgeRule{turned(Point{row->second.face_dir.first, row->second.face_dir.second}, back),
-                             to_nm(constants::edge_reach.value)};
+        const Point out{row->second.face_dir.first, row->second.face_dir.second};
+        const Box outline = problem.board.outline();
+        const Point at = placement[index].at;
+        const Nm seat = out.y < 0 ? at.y - outline.y0 : out.y > 0 ? outline.y1 - at.y
+                        : out.x < 0 ? at.x - outline.x0 : outline.x1 - at.x;
+        const Point mouth = turned(out, back);
+        const Footprint& footprint = problem.footprints[part.footprint];
+        const auto across_x = footprint.flippable ? mirrors_across_x(footprint) : std::nullopt;
+        part.top_only = !across_x.has_value();
+        const Point rear = !across_x ? mouth : *across_x ? Point{-mouth.x, mouth.y} : Point{mouth.x, -mouth.y};
+        part.edge = EdgeRule{mouth, rear, to_nm(constants::edge_reach.value), seat};
     }
     ConnectorRules& rules = problem.constraints.connectors;
     rules.overlap_slack = to_nm(constants::connector_overlap.value);
     rules.band_share = constants::band_share.value;
     rules.overmold_gap = to_nm(constants::overmold_gap.value);
     rules.boot_gap = to_nm(constants::boot_gap.value);
+}
+
+std::optional<CornerRule> corner_rule(const Board& board, Point at) {
+    CornerRule rule;
+    rule.east = 2 * (at.x - board.origin.x) > board.width;
+    rule.south = 2 * (at.y - board.origin.y) > board.height;
+    const std::array<std::pair<Nm, Nm>, 2> choices{
+        std::make_pair(to_nm(constants::hole_inset.value), to_nm(quantization_policy::kGridMm)),
+        std::make_pair(to_nm(constants::mark_inset.value), Nm{0})};
+    for (const auto& [inset, grid] : choices) {
+        rule.inset = {rule.east ? -inset : inset, rule.south ? -inset : inset};
+        rule.grid = grid;
+        if (corner_site(board, rule) == at) return rule;
+    }
+    return std::nullopt;
 }
 
 ModelBinding bind_model(const PcbModel& model, const PcbEmitPolicy& policy, const PcbPlacementGatePolicy* gates,
@@ -393,8 +418,13 @@ ModelBinding bind_model(const PcbModel& model, const PcbEmitPolicy& policy, cons
     if (model.som_core)
         problem.board.module_core = box_nm(model.som_core->x0, model.som_core->y0,
                                            model.som_core->x1, model.som_core->y1);
+    if (model.som_keepout)
+        problem.board.module_body = box_nm(model.som_keepout->x0, model.som_keepout->y0,
+                                           model.som_keepout->x1, model.som_keepout->y1);
+    problem.rules.edge_setback = to_nm(options.edge_setback);
     const double scale = constants::nano_scale.value;
-    problem.rules.core_tolerance = static_cast<Nm>(constants::core_tolerance.value * scale * scale);
+    problem.rules.core_tolerance =
+        static_cast<Nm>((constants::core_tolerance.value - constants::area_guard.value) * scale * scale);
     problem.rules.dispersion_limit = ratsnest_dispersion_max;
     problem.rules.dispersion_floor = static_cast<std::size_t>(ratsnest_small_n);
 
@@ -476,10 +506,14 @@ ModelBinding bind_model(const PcbModel& model, const PcbEmitPolicy& policy, cons
         part.fanout_subject = !mezzanine && pins >= static_cast<int>(constants::fanout_floor.value);
         part.never_crowds = !foreign;
         part.cluster_passive = foreign && !own;
-        part.top_only = user_facing(instance);
+        part.top_only = user_facing(instance) ||
+                        (face == Face::top && std::any_of(variant.pads.begin(), variant.pads.end(),
+                                                          [](const PadShape& pad) { return pad.through; }));
         part.core_exempt = mechanical_file(instance) || starts_with(instance.sheet, "som_j");
         part.cohesion_member = !part.core_exempt;
         part.fixed = part.core_exempt || mezzanine;
+        if (mechanical_file(instance))
+            part.corner = corner_rule(problem.board, {to_nm(instance.x), to_nm(instance.y)});
         const std::size_t part_index = problem.parts.size();
         for (std::size_t pad = 0; pad < variant.pads.size(); ++pad) {
             const auto net = instance.pad_nets.find(variant.pads[pad].name);
@@ -514,11 +548,37 @@ double project_edge_clearance(const JsonNode& project_file) {
     return node->number_value;
 }
 
+std::string GateVerdict::text() const {
+    const auto word = [](bool pass) { return pass ? "pass" : "FAIL"; };
+    return std::string("fanout=") + word(fanout) + " mechanical=" + word(mechanical) + " on_board=" +
+           word(on_board) + " grouped=" + word(grouped) + " contracts=" + word(contracts) + " spacing=" +
+           word(spacing);
+}
+
+GateVerdict judge_model(const PcbPlacementInput& inputs, const PcbModel& model) {
+    const PcbCheckInput input(model);
+    const auto ratsnest = check_ratsnest(input);
+    return {check_fanout(input, 0).ok, check_placement_mech(input).ok, ratsnest.off_board.empty(),
+            ratsnest.dispersed.empty(), check_pcb_placement_gates(inputs, model).ok(),
+            check_connector_spacing(input).ok};
+}
+
 PcbModel model_with(const PcbModel& base, const ModelBinding& binding, const Placement& placement) {
+    return model_with(base, binding, placement, binding.problem.board);
+}
+
+PcbModel model_with(const PcbModel& base, const ModelBinding& binding, const Placement& placement,
+                    const Board& board) {
     validate(binding.problem, placement);
     if (base.insts.size() != placement.size())
         throw LayoutError("layout: placement does not match the base model");
     PcbModel model = base;
+    if (board.outline() != binding.problem.board.outline()) {
+        model.origin_x = to_mm(board.origin.x);
+        model.origin_y = to_mm(board.origin.y);
+        model.board_w = to_mm(board.width);
+        model.board_h = to_mm(board.height);
+    }
     model.n_top = model.n_bottom = 0;
     for (std::size_t index = 0; index < placement.size(); ++index) {
         const Pose& pose = placement[index];

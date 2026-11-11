@@ -95,6 +95,36 @@ void derive_ownership(Problem& problem, Nm owner_reach) {
     }
 }
 
+std::optional<bool> mirrors_across_x(const Footprint& footprint) {
+    const auto mirrored = [](Box box, bool across_x) {
+        return across_x ? Box{-box.x1, box.y0, -box.x0, box.y1} : Box{box.x0, -box.y1, box.x1, -box.y0};
+    };
+    for (const bool across_x : {true, false}) {
+        bool same = mirrored(footprint.top.gate_box, across_x) == footprint.bottom.gate_box &&
+                    footprint.top.pads.size() == footprint.bottom.pads.size();
+        for (std::size_t pad = 0; same && pad < footprint.top.pads.size(); ++pad)
+            same = mirrored(footprint.top.pads[pad].box, across_x) == footprint.bottom.pads[pad].box;
+        if (same) return across_x;
+    }
+    return std::nullopt;
+}
+
+Box gate_at(const Problem& problem, std::size_t part, const Pose& pose) {
+    return placed(problem.footprints[problem.parts[part].footprint].on(pose.face).gate_box, pose.at, pose.turn);
+}
+
+Point corner_site(const Board& board, const CornerRule& rule) {
+    const auto snapped = [&](Nm value) {
+        if (rule.grid <= 0) return value;
+        const Nm below = value / rule.grid - (value % rule.grid < 0 ? 1 : 0);
+        const Nm rest = value - below * rule.grid;
+        const bool up = 2 * rest > rule.grid || (2 * rest == rule.grid && below % 2 != 0);
+        return (below + (up ? 1 : 0)) * rule.grid;
+    };
+    return {snapped((rule.east ? board.origin.x + board.width : board.origin.x) + rule.inset.x),
+            snapped((rule.south ? board.origin.y + board.height : board.origin.y) + rule.inset.y)};
+}
+
 void validate(const Problem& problem, const Placement& placement) {
     if (placement.size() != problem.parts.size())
         throw LayoutError("layout: placement size differs from the part count");
@@ -110,7 +140,13 @@ void validate(const Problem& problem, const Placement& placement) {
         for (const int net : part.pad_nets)
             if (net != no_net && (net < 0 || static_cast<std::size_t>(net) >= problem.nets.size()))
                 throw LayoutError("layout: part " + part.reference + " names no net");
+        if (part.corner && !part.fixed)
+            throw LayoutError("layout: corner part " + part.reference + " is not fixed");
     }
+    for (const auto& reserve : problem.reserves)
+        for (const std::size_t member : reserve.members)
+            if (member >= problem.parts.size())
+                throw LayoutError("layout: reserved field names an unknown part: " + reserve.source);
     const auto part_known = [&](std::size_t part) { return part < problem.parts.size(); };
     const auto names_known = [&](std::size_t part, const std::vector<std::size_t>& names) {
         const auto& known = problem.footprints[problem.parts[part].footprint].top.names;
