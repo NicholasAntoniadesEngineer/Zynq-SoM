@@ -30,6 +30,7 @@ inline constexpr std::array geometry_registry{nano_scale, quarter_degrees, latti
 using Nm = std::int64_t;
 
 inline constexpr int turn_count = 4;
+inline constexpr std::size_t edge_count = 4;
 
 enum class Turn : std::uint8_t { none, quarter, half, three_quarter };
 

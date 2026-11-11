@@ -32,6 +32,13 @@ constexpr Nm round_radius = 2 * unit;
 constexpr Nm copper_clearance = unit / 5, via_radius = 3 * unit / 10;
 constexpr Point clear_site{21 * unit, 20 * unit}, margin_site{unit, 40 * unit};
 constexpr Point touching_site{11 * unit, 10 * unit}, spaced_site{56 * unit / 5, 10 * unit};
+constexpr Nm strip_reach = 3 * unit / 2, strip_pad = unit / 4, edge_reach = 3 * unit / 5;
+constexpr Point limit_site{91 * unit / 4, 20 * unit}, inside_site{45 * unit / 2, 20 * unit};
+constexpr Point outside_site{47 * unit / 2, 20 * unit}, apart_site{20 * unit, 91 * unit / 4};
+constexpr Point close_site{20 * unit, 22 * unit}, beside_site{35 * unit / 2, 20 * unit};
+constexpr Point north_first{30 * unit, 6 * unit / 5}, north_second{40 * unit, 6 * unit / 5};
+constexpr Point inland_site{30 * unit, 3 * unit}, north_slide{20 * unit, 6 * unit / 5};
+constexpr Point north_crowd{37 * unit, 6 * unit / 5};
 constexpr std::uint64_t walk_seed = 20261111;
 constexpr int walk_steps = 400;
 constexpr Nm walk_range = 4 * unit, walk_grid = unit / 20;
@@ -50,6 +57,20 @@ Variant square_variant(Nm half, int pads, bool through) {
         variant.pads.push_back({std::to_string(pad + 1), {0, 0}, box, through, 0});
         variant.pad_hull = box;
     }
+    index_names(variant);
+    return variant;
+}
+
+Variant strip_variant() {
+    Variant variant;
+    variant.gate_box = {-fixture::strip_reach, -fixture::pad_half, fixture::strip_reach, fixture::pad_half};
+    variant.court_boxes.push_back(variant.gate_box);
+    for (const Nm x : {-fixture::unit, fixture::unit}) {
+        const Box box{x - fixture::strip_pad, -fixture::strip_pad, x + fixture::strip_pad, fixture::strip_pad};
+        variant.pads.push_back({std::to_string(variant.pads.size() + 1), {x, 0}, box, false, 0});
+        variant.pad_hull = variant.pad_hull ? united(*variant.pad_hull, box) : box;
+    }
+    index_names(variant);
     return variant;
 }
 
@@ -235,6 +256,80 @@ void pads_keep_copper_clearance() {
     require(Kernel(scene.problem, scene.placement).violations().empty(), "same-net pads may touch");
 }
 
+void contract_rules_bind_pads() {
+    Scene scene;
+    scene.problem.rules.compare_guard = 1;
+    const auto strip = scene.footprint("strip", strip_variant());
+    const auto small = scene.footprint("small", square_variant(fixture::pad_half, fixture::passive_pins, false));
+    scene.add("U", "one", strip, fixture::subject_site);
+    scene.add("C", "one", small, fixture::limit_site);
+    scene.add("R", "one", small, fixture::apart_site);
+    scene.add("N", "one", small, fixture::beside_site);
+    scene.add("F", "two", small, fixture::remote_site);
+    Constraints& rules = scene.problem.constraints;
+    rules.pad_gaps.push_back({0, 1, {1}, fixture::unit, Sense::at_most, "near"});
+    rules.pad_gaps.push_back({0, 2, {}, 2 * fixture::unit, Sense::at_least, "far"});
+    rules.nearest_gaps.push_back({0, {0}, {3, 4}, fixture::unit, true, "nearest"});
+    rules.face_pairs.push_back({1, 0, "face"});
+    const Kernel kernel(scene.problem, scene.placement);
+    require(kernel.violations().empty(), "rules at their limits are legal");
+    const auto kind = [&](std::size_t part, Pose pose) {
+        const auto found = kernel.rejection(part, pose);
+        return found ? std::optional<Breach>(found->kind) : std::nullopt;
+    };
+    require(kind(1, {fixture::limit_site, Turn::none, Face::top}) == Breach::contract,
+            "a moved part needs the guard beyond the exact limit");
+    require(!kind(1, {fixture::inside_site, Turn::none, Face::top}), "a pad inside the limit is legal");
+    require(kind(1, {fixture::outside_site, Turn::none, Face::top}) == Breach::contract, "a pad beyond the limit breaks");
+    require(kind(1, {fixture::inside_site, Turn::none, Face::bottom}) == Breach::contract, "paired parts share a face");
+    require(kind(2, {fixture::close_site, Turn::none, Face::top}) == Breach::contract, "a part inside its keep-away breaks");
+    require(kind(3, {fixture::beside_site, Turn::none, Face::bottom}) == Breach::contract,
+            "the nearest same-face member must stay within reach");
+    for (const auto& margin : kernel.margins()) require(margin.value >= 0, "margin of " + margin.source);
+}
+
+void subsystem_rules_bind_groups() {
+    Scene scene;
+    scene.problem.rules.group_guard = 1;
+    const auto small = scene.footprint("small", square_variant(fixture::pad_half, fixture::passive_pins, false));
+    scene.add("A", "one", small, fixture::cluster_first);
+    scene.add("B", "two", small, fixture::cluster_second);
+    scene.add("C", "three", small, fixture::remote_site);
+    Constraints& rules = scene.problem.constraints;
+    rules.group_gaps.push_back({"one", "two", false, GroupMeasure::hull_gap, 5 * fixture::unit, Sense::at_most, "near"});
+    rules.group_gaps.push_back({"one", "three", false, GroupMeasure::centre_distance, 10 * fixture::unit, Sense::at_least, "far"});
+    const Kernel kernel(scene.problem, scene.placement);
+    require(kernel.violations().empty(), "groups within their bounds are legal");
+    require(kernel.rejection(1, {fixture::remote_site, Turn::none, Face::bottom})->kind == Breach::group_bound,
+            "a subsystem may not leave its neighbour");
+    require(kernel.rejection(2, {fixture::cluster_third, Turn::none, Face::top})->kind == Breach::group_bound,
+            "a subsystem may not approach one it must avoid");
+}
+
+void connectors_stay_at_their_edge() {
+    Scene scene;
+    scene.problem.constraints.connectors = {fixture::unit / 20, 18 * fixture::unit, 3 * fixture::unit, 0.5};
+    const auto jack = scene.footprint("jack", square_variant(fixture::body_half, fixture::passive_pins, false));
+    for (const Point site : {fixture::north_first, fixture::north_second}) {
+        Part& part = scene.add("J", "one", jack, site);
+        part.connector = part.overmold = true;
+        part.edge = EdgeRule{{0, -1}, fixture::edge_reach};
+    }
+    require(has(Kernel(scene.problem, scene.placement).violations(), Breach::connector_gap),
+            "two overmolded plugs need their gap");
+    scene.problem.parts.back().overmold = false;
+    const Kernel kernel(scene.problem, scene.placement);
+    require(kernel.violations().empty(), "a plain neighbour needs only the boot gap");
+    const auto kind = [&](Pose pose) {
+        const auto found = kernel.rejection(0, pose);
+        return found ? std::optional<Breach>(found->kind) : std::nullopt;
+    };
+    require(kind({fixture::inland_site, Turn::none, Face::top}) == Breach::edge_mount, "a connector may not leave its edge");
+    require(kind({fixture::north_first, Turn::half, Face::top}) == Breach::edge_mount, "the mouth must face off the board");
+    require(!kind({fixture::north_slide, Turn::none, Face::top}), "a connector may slide along its edge");
+    require(kind({fixture::north_crowd, Turn::none, Face::top}) == Breach::connector_gap, "sliding into the boot gap breaks");
+}
+
 void groups_stay_together() {
     Scene scene;
     const auto smd = scene.footprint("smd", square_variant(fixture::body_half, fixture::passive_pins, false));
@@ -325,6 +420,9 @@ int main() {
         single_part_rules_hold();
         fixed_copper_keeps_its_clearance();
         pads_keep_copper_clearance();
+        contract_rules_bind_pads();
+        subsystem_rules_bind_groups();
+        connectors_stay_at_their_edge();
         groups_stay_together();
         walks_repeat_exactly();
         std::cout << "layout kernel contracts ok\n";

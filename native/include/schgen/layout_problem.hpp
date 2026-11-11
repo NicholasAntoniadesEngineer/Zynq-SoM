@@ -27,6 +27,13 @@ struct Variant {
     std::vector<Disc> court_discs;
     std::vector<PadShape> pads;
     std::optional<Box> pad_hull;
+    std::vector<std::string> names;
+    std::vector<Box> name_boxes;
+};
+
+struct EdgeRule {
+    Point mouth;
+    Nm reach = 0;
 };
 
 struct Footprint {
@@ -44,6 +51,8 @@ struct Part {
     Nm fanout_need = 0;
     bool fanout_subject = false, never_crowds = false, cluster_passive = false;
     bool fixed = false, top_only = false, core_exempt = false, cohesion_member = true;
+    bool connector = false, overmold = false;
+    std::optional<EdgeRule> edge;
 };
 
 struct Pin {
@@ -71,7 +80,67 @@ struct Obstacle {
     int net = no_net;
 };
 
+enum class Sense : std::uint8_t { at_most, at_least };
+
+enum class GroupMeasure : std::uint8_t { hull_gap, centre_distance };
+
+struct PadGap {
+    std::size_t anchor = 0, member = 0;
+    std::vector<std::size_t> anchor_names;
+    Nm limit = 0;
+    Sense sense = Sense::at_most;
+    std::string source;
+};
+
+struct NearestGap {
+    std::size_t anchor = 0;
+    std::vector<std::size_t> anchor_names, members;
+    Nm limit = 0;
+    bool same_face = false;
+    std::string source;
+};
+
+struct FacePair {
+    std::size_t first = 0, second = 0;
+    std::string source;
+};
+
+struct GroupGap {
+    std::string first, second;
+    bool second_is_core = false;
+    GroupMeasure measure = GroupMeasure::hull_gap;
+    Nm limit = 0;
+    Sense sense = Sense::at_most;
+    std::string source;
+};
+
+struct ConnectorRules {
+    Nm overlap_slack = 0, overmold_gap = 0, boot_gap = 0;
+    double band_share = 0;
+};
+
+enum class Tie : std::uint8_t { none, contract, signal, rail, shared, bridge, unattached };
+
+struct Ownership {
+    Tie tie = Tie::none;
+    std::optional<std::size_t> owner;
+};
+
+struct Constraints {
+    std::vector<PadGap> pad_gaps, soft_gaps;
+    std::vector<NearestGap> nearest_gaps;
+    std::vector<FacePair> face_pairs;
+    std::vector<GroupGap> group_gaps;
+    ConnectorRules connectors;
+};
+
+struct Reserve {
+    Box box;
+    std::string source;
+};
+
 struct Rules {
+    Nm compare_guard = 0, group_guard = 0;
     Nm core_tolerance = 0, copper_clearance = 0, edge_clearance = 0, plane_margin = 0;
     double dispersion_limit = 0;
     std::size_t dispersion_floor = 0;
@@ -97,7 +166,14 @@ struct Problem {
     std::vector<Part> parts;
     std::vector<Net> nets;
     std::vector<Obstacle> obstacles;
+    std::vector<Reserve> reserves;
+    Constraints constraints;
+    std::vector<Ownership> ownership;
 };
+
+void index_names(Variant& variant);
+void derive_ownership(Problem& problem, Nm owner_reach);
+const char* tie_name(Tie tie);
 
 void validate(const Problem& problem, const Placement& placement);
 

@@ -15,11 +15,19 @@ inline constexpr NamedConstant key_shift{"key_shift", 32.0, "bits", "standard",
 inline constexpr std::array kernel_registry{hash_cell, key_shift};
 }
 
-enum class Breach : std::uint8_t { overlap, off_board, fanout, module_core, bottom_face, dispersion, copper, locked };
+enum class Breach : std::uint8_t {
+    overlap, off_board, fanout, module_core, bottom_face, dispersion, copper, contract, group_bound,
+    edge_mount, connector_gap, reserved, locked
+};
 
 struct Violation {
     Breach kind = Breach::overlap;
     std::size_t part = 0, other = 0;
+};
+
+struct Margin {
+    std::string kind, source;
+    double value = 0;
 };
 
 struct Wirelength {
@@ -39,6 +47,7 @@ public:
     Nm routed_length() const { return routed_; }
     Wirelength measured_wirelength() const;
     void verify() const;
+    std::vector<Margin> margins() const;
 
 private:
     struct Land {
@@ -50,9 +59,14 @@ private:
     struct Shape {
         Box gate, bound;
         std::vector<Land> lands;
+        std::vector<Box> named;
         std::vector<Box> courts, holes;
         std::vector<Disc> discs;
         std::optional<Box> pads;
+    };
+    struct GroupSummary {
+        std::optional<Box> hull;
+        double x = 0, y = 0, count = 0;
     };
     using Key = std::uint64_t;
 
@@ -69,6 +83,18 @@ private:
     Nm land_clearance(int net) const;
     bool lands_clear(const Shape& first, Face first_face, const Shape& second, Face second_face) const;
     bool group_dispersed(const std::string& group, std::size_t moved, const Shape* shape) const;
+    Nm named_gap(const Shape& anchor, const std::vector<std::size_t>& names, const Shape& member) const;
+    bool pad_gap_met(const PadGap& rule, const Shape& anchor, const Shape& member, Nm guard) const;
+    bool nearest_met(const NearestGap& rule, std::size_t moved, const Shape* shape, const Pose* pose, Nm guard) const;
+    bool group_gap_met(const GroupGap& rule, std::size_t moved, const Shape* shape, const Pose* pose, Nm guard) const;
+    GroupSummary summarise(const GroupGap& rule, bool second, std::size_t moved, const Shape* shape,
+                           const Pose* pose) const;
+    std::optional<double> group_distance(const GroupGap& rule, std::size_t moved, const Shape* shape,
+                                         const Pose* pose) const;
+    bool edge_met(const Part& item, const Shape& shape, const Pose& pose) const;
+    bool connectors_met(std::size_t part, const Shape& shape, std::size_t other, const Shape& other_shape, Nm guard) const;
+    std::optional<Breach> rule_breach(std::size_t part, const Shape& shape, const Pose& pose, Nm guard,
+                                      std::size_t* other) const;
     void insert(std::size_t part);
     void remove(std::size_t part);
 
@@ -76,7 +102,10 @@ private:
     Placement placement_;
     std::vector<Shape> shapes_;
     std::unordered_map<Key, std::vector<std::size_t>> cells_;
-    std::map<std::string, std::vector<std::size_t>> groups_;
+    std::map<std::string, std::vector<std::size_t>> groups_, members_;
+    std::map<std::string, std::vector<std::size_t>> group_rules_;
+    std::vector<std::vector<std::size_t>> pad_rules_, nearest_rules_, face_rules_;
+    std::vector<std::size_t> connectors_;
     std::vector<Nm> net_lengths_;
     Nm routed_ = 0, reach_ = 0;
 };

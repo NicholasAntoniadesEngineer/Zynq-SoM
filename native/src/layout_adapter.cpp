@@ -1,14 +1,18 @@
 #include "schgen/layout_adapter.hpp"
 
 #include "pcb_checks_internal.hpp"
+#include "pcb_placement_gates_internal.hpp"
 #include "schgen/mirror.hpp"
 #include "schgen/pack.hpp"
 #include "schgen/ratsnest_gate.hpp"
+#include "schgen/thermal_checks.hpp"
 #include "schgen/turn.hpp"
 
+#include <algorithm>
 #include <cmath>
 #include <filesystem>
 #include <map>
+#include <set>
 #include <tuple>
 
 namespace schgen::layout {
@@ -112,6 +116,7 @@ Variant read_variant(const PcbCheckFootprint& footprint) {
         variant.pad_hull = variant.pad_hull ? united(*variant.pad_hull, pad.box) : pad.box;
         variant.pads.push_back(std::move(pad));
     }
+    index_names(variant);
     return variant;
 }
 
@@ -188,7 +193,198 @@ PcbCheckFootprintPtr opposite_document(const PcbCheckInstance& instance, const T
 
 }
 
-ModelBinding bind_model(const PcbModel& model, const PcbEmitPolicy& policy, const AdapterOptions& options) {
+struct Translator {
+    Problem& problem;
+    std::string sheet;
+    const std::map<std::string, std::string>& references;
+    const std::map<std::string, std::size_t>& parts;
+    std::string source;
+
+    std::size_t part(const std::string& name) const {
+        const auto reference = references.find(name);
+        const auto found = reference == references.end() ? parts.end() : parts.find(reference->second);
+        if (found == parts.end())
+            throw LayoutError("layout: contract " + source + " names an unplaced part " + name);
+        return found->second;
+    }
+    std::vector<std::size_t> names(std::size_t index, const std::vector<std::string>& pins) const {
+        const auto& known = problem.footprints[problem.parts[index].footprint].top.names;
+        std::vector<std::size_t> out;
+        for (const auto& pin : pins) {
+            const auto found = std::find(known.begin(), known.end(), pin);
+            if (found == known.end())
+                throw LayoutError("layout: contract " + source + " names an unknown pin " + pin);
+            out.push_back(static_cast<std::size_t>(found - known.begin()));
+        }
+        return out;
+    }
+    void gap(const std::string& anchor, const std::vector<std::string>& pins, const std::string& member,
+             double limit, Sense sense) const {
+        const std::size_t index = part(anchor);
+        problem.constraints.pad_gaps.push_back({index, part(member), names(index, pins), to_nm(limit), sense, source});
+    }
+    void together(const std::string& first, const std::string& second) const {
+        problem.constraints.face_pairs.push_back({part(first), part(second), source});
+    }
+};
+
+void translate_structure(const Translator& to, const JsonNode& contract, const JsonNode& entry) {
+    using namespace placement_gates;
+    const std::string type = str(entry, "type"), chip = str(entry, "ic");
+    const double limit = num(entry, "max_pad_to_pin_mm");
+    const bool same_side = truth(opt(entry, "same_side"));
+    if (type == "hot_loop") {
+        const std::size_t anchor = to.part(chip);
+        std::vector<std::size_t> members;
+        for (const auto& cap : strings(opt(entry, "caps"))) members.push_back(to.part(cap));
+        for (const auto& pair : array(opt(entry, "pin_pairs")))
+            to.problem.constraints.nearest_gaps.push_back(
+                {anchor, to.names(anchor, strings(pair)), members, to_nm(limit), same_side, to.source});
+    } else if (type == "bulk_in") {
+        for (const auto& cap : strings(opt(entry, "caps")))
+            to.gap(chip, strings(opt(entry, "vin_pins")), cap, limit, Sense::at_most);
+    } else if (type == "bulk_out") {
+        for (const auto& cap : strings(opt(entry, "caps"))) {
+            if (same_side) to.together(cap, chip);
+            to.gap(str(entry, "inductor"), {str(entry, "inductor_out_pin")}, cap, limit, Sense::at_most);
+        }
+    } else if (type == "sw_node") {
+        to.gap(chip, {str(entry, "sw_pin")}, str(entry, "inductor"), limit, Sense::at_most);
+    } else if (type == "fb_cluster") {
+        const std::string foreign = str(entry, "foreign_ic"), foreign_coil = str(entry, "foreign_inductor");
+        const std::string foreign_pin = str(entry, "foreign_sw_pin");
+        for (const auto& member : strings(opt(entry, "members"))) {
+            to.gap(chip, {str(entry, "fb_pin")}, member, num(entry, "max_to_fb_mm"), Sense::at_most);
+            to.gap(chip, {str(entry, "own_sw_pin")}, member, num(entry, "min_to_own_sw_mm"), Sense::at_least);
+            to.gap(str(entry, "own_inductor"), {}, member, num(entry, "min_to_own_sw_mm"), Sense::at_least);
+            if (opt(entry, "foreign_ic").kind == JsonKind::Null) continue;
+            if (!foreign.empty() && !foreign_pin.empty())
+                to.gap(foreign, {foreign_pin}, member, num(entry, "min_to_foreign_sw_mm"), Sense::at_least);
+            if (!foreign_coil.empty())
+                to.gap(foreign_coil, {}, member, num(entry, "min_to_foreign_sw_mm"), Sense::at_least);
+        }
+    } else if (type == "boot") {
+        to.gap(chip, strings(opt(entry, "pins")), str(entry, "cap"), limit, Sense::at_most);
+    } else if (type == "vcc_cap" || type == "bias_cap") {
+        to.gap(chip, {str(entry, "pin")}, str(entry, "cap"), limit, Sense::at_most);
+    } else if (type == "rt_r") {
+        to.gap(chip, {str(entry, "pin")}, str(entry, "resistor"), limit, Sense::at_most);
+    } else if (type == "ldo_stage") {
+        to.gap(chip, {str(entry, "cin_pin")}, str(entry, "cin"), limit, Sense::at_most);
+        to.gap(chip, {str(entry, "cout_pin")}, str(entry, "cout"), limit, Sense::at_most);
+    } else if (type == "proximity") {
+        const std::string anchor = str(entry, "anchor");
+        for (const auto& member : strings(opt(entry, "members"))) {
+            to.gap(anchor, strings(opt(entry, "anchor_pins")), member, num(entry, "max_mm"), Sense::at_most);
+            if (same_side) to.together(member, anchor);
+            for (const auto& apart : array(opt(entry, "min_from"))) {
+                const std::string pin = str(apart, "pin");
+                to.gap(str(apart, "part"), pin.empty() ? std::vector<std::string>{} : std::vector<std::string>{pin},
+                       member, num(apart, "min_mm"), Sense::at_least);
+            }
+        }
+    } else if (type == "same_side") {
+        for (const auto& lead : strings(opt(entry, "ics"))) {
+            std::set<std::string> followers;
+            for (const auto& other : array(opt(contract, "structures"))) {
+                if (str(other, "type") == "same_side" || (str(other, "ic") != lead && str(other, "anchor") != lead))
+                    continue;
+                for (const char* key : {"cap", "inductor", "resistor", "cin", "cout"})
+                    if (opt(other, key).kind != JsonKind::Null) followers.insert(str(other, key));
+                for (const char* key : {"caps", "members"})
+                    for (const auto& name : strings(opt(other, key))) followers.insert(name);
+            }
+            for (const auto& follower : followers) to.together(follower, lead);
+        }
+    } else {
+        throw LayoutError("layout: contract " + to.source + " has an unknown structure type " + type);
+    }
+}
+
+void translate_gates(const PcbModel& model, const PcbPlacementGatePolicy& gates, Problem& problem) {
+    using namespace placement_gates;
+    std::map<std::string, std::map<std::string, std::size_t>> parts;
+    for (std::size_t index = 0; index < problem.parts.size(); ++index)
+        parts[problem.parts[index].group][problem.parts[index].reference] = index;
+    static const std::map<std::string, std::string> no_references;
+    for (const auto& sheet : gates.wired_sheets) {
+        const auto contract = gates.contracts.find(sheet);
+        if (contract == gates.contracts.end()) continue;
+        const auto references = gates.ref_maps.find(sheet);
+        std::size_t position = 0;
+        for (const auto& entry : array(opt(contract->second, "structures"))) {
+            const Translator to{problem, sheet, references == gates.ref_maps.end() ? no_references : references->second,
+                                parts[sheet], sheet + "/" + str(entry, "type") + "#" + std::to_string(position++)};
+            translate_structure(to, contract->second, entry);
+        }
+    }
+    for (const auto& term : check_pcb_placement_flow(PcbCheckInput(model), gates).terms) {
+        if (term.advisory || (term.kind != "far" && term.kind != "near_max")) continue;
+        GroupGap rule;
+        rule.first = term.subject;
+        rule.limit = to_nm(term.bound);
+        rule.source = term.kind + " " + term.subject + " -> " + term.target;
+        if (term.kind == "far") {
+            rule.second = root(term.target);
+            rule.measure = GroupMeasure::centre_distance;
+            rule.sense = Sense::at_least;
+        } else {
+            rule.second_is_core = term.target == "@som";
+            rule.second = rule.second_is_core ? std::string() : term.target;
+        }
+        problem.constraints.group_gaps.push_back(std::move(rule));
+    }
+}
+
+void reserve_thermal_fields(const PcbModel& model, const PcbEmitPolicy& policy, const Placement& placement,
+                            Problem& problem) {
+    const ThermalCopper copper = scan_thermal_copper(render_pcb(model, policy).document, "layout");
+    std::set<std::string> outer;
+    for (const char* layer : {"F.Cu", "B.Cu"}) outer.insert(layer);
+    for (const auto& zone : copper.zones) {
+        const bool pour = zone.filled && !zone.keepout && !zone.net_name.empty() && !zone.layers.empty() &&
+                          std::all_of(zone.layers.begin(), zone.layers.end(),
+                                      [&](const std::string& layer) { return outer.count(layer) != 0; });
+        if (!pour) continue;
+        const Box box{nearest_nm(zone.bbox[0]), nearest_nm(zone.bbox[1]), nearest_nm(zone.bbox[2]), nearest_nm(zone.bbox.back())};
+        if (std::any_of(problem.reserves.begin(), problem.reserves.end(),
+                        [&](const Reserve& known) { return known.box == box; }))
+            continue;
+        problem.reserves.push_back({box, zone.name});
+        for (std::size_t index = 0; index < problem.parts.size(); ++index) {
+            const Variant& variant = problem.footprints[problem.parts[index].footprint].on(placement[index].face);
+            Box bound = placed(variant.gate_box, placement[index].at, placement[index].turn);
+            if (variant.pad_hull) bound = united(bound, placed(*variant.pad_hull, placement[index].at, placement[index].turn));
+            if (overlaps(bound, box)) problem.parts[index].fixed = true;
+        }
+    }
+}
+
+void mark_connectors(const PcbModel& model, const AdapterOptions& options, const Placement& placement,
+                     Problem& problem) {
+    std::map<std::string, PlacementMechRow> rows;
+    for (const auto& row : check_placement_mech(PcbCheckInput(model)).connectors) rows[row.ref] = row;
+    for (std::size_t index = 0; index < problem.parts.size(); ++index) {
+        Part& part = problem.parts[index];
+        const auto row = rows.find(part.reference);
+        if (row == rows.end()) continue;
+        if (!row->second.ok) throw LayoutError("layout: connector " + part.reference + " is not mounted at an edge");
+        const auto back = static_cast<Turn>((turn_count - static_cast<int>(placement[index].turn)) % turn_count);
+        part.connector = part.top_only = true;
+        part.overmold = std::find(options.overmold_parts.begin(), options.overmold_parts.end(), row->second.mpn) !=
+                        options.overmold_parts.end();
+        part.edge = EdgeRule{turned(Point{row->second.face_dir.first, row->second.face_dir.second}, back),
+                             to_nm(constants::edge_reach.value)};
+    }
+    ConnectorRules& rules = problem.constraints.connectors;
+    rules.overlap_slack = to_nm(constants::connector_overlap.value);
+    rules.band_share = constants::band_share.value;
+    rules.overmold_gap = to_nm(constants::overmold_gap.value);
+    rules.boot_gap = to_nm(constants::boot_gap.value);
+}
+
+ModelBinding bind_model(const PcbModel& model, const PcbEmitPolicy& policy, const PcbPlacementGatePolicy* gates,
+                        const AdapterOptions& options) {
     ModelBinding binding;
     Problem& problem = binding.problem;
     problem.board.origin = {to_nm(model.origin_x), to_nm(model.origin_y)};
@@ -283,7 +479,7 @@ ModelBinding bind_model(const PcbModel& model, const PcbEmitPolicy& policy, cons
         part.top_only = user_facing(instance);
         part.core_exempt = mechanical_file(instance) || starts_with(instance.sheet, "som_j");
         part.cohesion_member = !part.core_exempt;
-        part.fixed = part.core_exempt || mezzanine || !pcb_checks::mpn(instance).empty();
+        part.fixed = part.core_exempt || mezzanine;
         const std::size_t part_index = problem.parts.size();
         for (std::size_t pad = 0; pad < variant.pads.size(); ++pad) {
             const auto net = instance.pad_nets.find(variant.pads[pad].name);
@@ -298,6 +494,12 @@ ModelBinding bind_model(const PcbModel& model, const PcbEmitPolicy& policy, cons
         problem.parts.push_back(std::move(part));
         binding.placement.push_back({{to_nm(instance.x), to_nm(instance.y)}, turn_of(instance.rotation), face});
     }
+    problem.rules.compare_guard = static_cast<Nm>(constants::compare_guard.value);
+    problem.rules.group_guard = static_cast<Nm>(constants::group_guard.value);
+    mark_connectors(model, options, binding.placement, problem);
+    reserve_thermal_fields(model, policy, binding.placement, problem);
+    if (gates) translate_gates(model, *gates, problem);
+    derive_ownership(problem, to_nm(constants::owner_reach.value));
     validate(problem, binding.placement);
     return binding;
 }

@@ -10,6 +10,7 @@
 
 #include <algorithm>
 #include <iostream>
+#include <map>
 
 namespace schgen {
 namespace {
@@ -20,7 +21,7 @@ inline constexpr std::size_t report_limit = 20;
 
 const char* const usage =
     "usage: schgen layout-export [--repo DIR] [--project NAME] [--kicad-cli PATH]\n"
-    "                            --project-file FILE --plane-net NAME -o FILE\n"
+    "                            --project-file FILE --plane-net NAME [--overmold-part MPN]... -o FILE\n"
     "       schgen layout-check FILE\n"
     "  layout-export builds the current placed board and writes it as a layout problem.\n"
     "  layout-check replays a layout problem and reports every hard-rule violation.\n";
@@ -29,6 +30,7 @@ struct ExportArguments {
     std::filesystem::path repository = std::filesystem::current_path();
     std::optional<std::filesystem::path> project;
     std::string kicad_cli = "kicad-cli", project_file, plane_net, output;
+    std::vector<std::string> overmold_parts;
 };
 
 int report(const layout::Problem& problem, const layout::Placement& placement) {
@@ -41,6 +43,16 @@ int report(const layout::Problem& problem, const layout::Placement& placement) {
               << "layout: airwire mm signal " << layout::to_mm(length.signal) << " power "
               << layout::to_mm(length.power) << " plane " << layout::to_mm(length.plane) << "\n"
               << "layout: " << found.size() << " hard-rule violations\n";
+    std::map<std::string, std::pair<std::size_t, double>> tightest;
+    for (const auto& margin : kernel.margins()) {
+        auto [entry, fresh] = tightest.emplace(margin.kind, std::make_pair(std::size_t{1}, margin.value));
+        if (fresh) continue;
+        ++entry->second.first;
+        entry->second.second = std::min(entry->second.second, margin.value);
+    }
+    for (const auto& [kind, summary] : tightest)
+        std::cout << "layout: " << summary.first << " " << kind << " rules, tightest margin "
+                  << summary.second / layout::constants::nano_scale.value << " mm\n";
     for (std::size_t index = 0; index < found.size() && index < report_limit; ++index)
         std::cout << "  " << layout::breach_name(found[index].kind) << " "
                   << problem.parts[found[index].part].reference << " / "
@@ -59,6 +71,7 @@ int export_problem(int argc, char** argv) {
         else if (name == "--kicad-cli") arguments.kicad_cli = value;
         else if (name == "--project-file") arguments.project_file = value;
         else if (name == "--plane-net") arguments.plane_net = value;
+        else if (name == "--overmold-part") arguments.overmold_parts.push_back(value);
         else if (name == "-o" || name == "--output") arguments.output = value;
         else throw LayoutError("layout-export: unknown option " + name);
     }
@@ -69,10 +82,13 @@ int export_problem(int argc, char** argv) {
         throw LayoutError("layout-export: cannot open the part catalog");
     NetlistExtractOptions extraction;
     extraction.kicad_cli = arguments.kicad_cli;
-    const auto placed = build_pcb_model(load_geometry_board_inputs(paths, extraction));
+    const auto input = load_geometry_board_inputs(paths, extraction);
+    const auto placed = build_pcb_model(input);
     const auto policy = pcb_emit_policy(load_project_config(paths));
-    const auto binding = layout::bind_model(placed.model, policy,
-        {arguments.plane_net, layout::project_edge_clearance(parse_json_file(arguments.project_file))});
+    const auto gates = pcb_placement_gate_policy(input);
+    const auto binding = layout::bind_model(placed.model, policy, &gates,
+        {arguments.plane_net, layout::project_edge_clearance(parse_json_file(arguments.project_file)),
+         arguments.overmold_parts});
     const std::string text = layout::document_json(binding.problem, binding.placement);
     write_atomic_file(arguments.output, std::vector<uint8_t>(text.begin(), text.end()));
     std::cout << "layout: problem written to " << arguments.output << "\n";

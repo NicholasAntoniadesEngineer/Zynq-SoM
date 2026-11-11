@@ -5,6 +5,7 @@
 #include "schgen/measure.hpp"
 #include "schgen/pcb_drc.hpp"
 #include "schgen/ratsnest_gate.hpp"
+#include "schgen/thermal_checks.hpp"
 #include "fresh_project_schematic.hpp"
 
 #include <cmath>
@@ -27,15 +28,17 @@ constexpr Nm hull_tolerance = 500;
 constexpr double length_tolerance = 1e-3;
 constexpr std::size_t report_limit = 8;
 const char* const plane_net = "GND";
+const char* const overmold_part = "HDMI-019S";
 }
 
 struct Verdict {
-    bool fanout = false, mechanical = false, on_board = false, grouped = false;
-    bool ok() const { return fanout && mechanical && on_board && grouped; }
+    bool fanout = false, mechanical = false, on_board = false, grouped = false, contracts = false, spacing = false;
+    bool ok() const { return fanout && mechanical && on_board && grouped && contracts && spacing; }
     std::string text() const {
-        return std::string("fanout=") + (fanout ? "pass" : "FAIL") + " mechanical=" +
-               (mechanical ? "pass" : "FAIL") + " on_board=" + (on_board ? "pass" : "FAIL") +
-               " grouped=" + (grouped ? "pass" : "FAIL");
+        const auto word = [](bool pass) { return pass ? "pass" : "FAIL"; };
+        return std::string("fanout=") + word(fanout) + " mechanical=" + word(mechanical) + " on_board=" +
+               word(on_board) + " grouped=" + word(grouped) + " contracts=" + word(contracts) + " spacing=" +
+               word(spacing);
     }
 };
 
@@ -49,11 +52,36 @@ std::string file_text(const std::filesystem::path& path) {
     return {std::istreambuf_iterator<char>(stream), std::istreambuf_iterator<char>()};
 }
 
-Verdict judge(const PcbModel& model) {
+Verdict judge(const PcbPlacementInput& inputs, const PcbModel& model) {
     const PcbCheckInput input(model);
     const auto ratsnest = check_ratsnest(input);
     return {check_fanout(input, 0).ok, check_placement_mech(input).ok, ratsnest.off_board.empty(),
-            ratsnest.dispersed.empty()};
+            ratsnest.dispersed.empty(), check_pcb_placement_gates(inputs, model).ok(),
+            check_connector_spacing(input).ok};
+}
+
+void margins_match_the_flow_gate(const PcbModel& model, const PcbPlacementGatePolicy& gates, const Kernel& kernel) {
+    std::vector<double> expected;
+    for (const auto& term : check_pcb_placement_flow(PcbCheckInput(model), gates).terms)
+        if (!term.advisory && (term.kind == "far" || term.kind == "near_max"))
+            expected.push_back(term.kind == "far" ? term.measured - term.bound : term.bound - term.measured);
+    std::size_t matched = 0;
+    std::size_t soft_rules = 0, soft_met = 0;
+    for (const auto& margin : kernel.margins()) {
+        if (margin.kind == "soft_gap") {
+            ++soft_rules;
+            if (margin.value >= 0) ++soft_met;
+            continue;
+        }
+        require(margin.value >= 0, "baseline margin of " + margin.source);
+        if (margin.kind != "group_gap") continue;
+        require(matched < expected.size() &&
+                std::fabs(margin.value / constants::nano_scale.value - expected[matched]) <= fixture::length_tolerance,
+                "kernel margin equals the flow gate for " + margin.source);
+        ++matched;
+    }
+    require(matched == expected.size(), "every flow-gate bound has a kernel rule");
+    std::cout << "  soft owner rules met on the baseline: " << soft_met << " of " << soft_rules << "\n";
 }
 
 std::string pose_text(const layout::Pose& pose) {
@@ -102,6 +130,14 @@ void airwire_matches_measure(const ProjectPaths& paths, const std::string& pcb, 
     require(length.plane > 0 && report.airwire.plane.manhattan > 0, "plane airwire is measured on both sides");
 }
 
+std::map<std::string, std::size_t> thermal_drills(const Sexpr& document) {
+    std::map<std::string, std::size_t> drills;
+    for (const auto& footprint : scan_thermal_copper(document, "layout").footprints)
+        for (const auto& pad : footprint.pads)
+            if (pad.drill > 0) ++drills[footprint.ref];
+    return drills;
+}
+
 bool may_flip(const ModelBinding& binding, std::size_t part) {
     const Part& item = binding.problem.parts[part];
     const Footprint& footprint = binding.problem.footprints[item.footprint];
@@ -111,10 +147,12 @@ bool may_flip(const ModelBinding& binding, std::size_t part) {
     return true;
 }
 
-void differential_walk(const std::string& project, const PcbModel& model, const ModelBinding& binding,
+void differential_walk(const std::string& project, const PcbPlacementInput& inputs, const PcbModel& model,
+                       const ModelBinding& binding,
                        const PcbEmitPolicy& policy, std::size_t states, std::size_t drc_samples,
                        const std::filesystem::path& scratch, const std::filesystem::path& project_file) {
     Kernel kernel(binding.problem, binding.placement);
+    const auto thermal_baseline = thermal_drills(render_pcb(model, policy).document);
     std::vector<std::size_t> movable;
     for (std::size_t part = 0; part < binding.problem.parts.size(); ++part)
         if (!binding.problem.parts[part].fixed) movable.push_back(part);
@@ -130,8 +168,14 @@ void differential_walk(const std::string& project, const PcbModel& model, const 
         layout::Pose pose = kernel.placement()[part];
         pose.at.x += (static_cast<Nm>(random() % static_cast<std::uint64_t>(span)) - span / 2) * fixture::walk_grid;
         pose.at.y += (static_cast<Nm>(random() % static_cast<std::uint64_t>(span)) - span / 2) * fixture::walk_grid;
-        pose.turn = static_cast<Turn>(random() % turn_count);
-        if (random() % fixture::flip_odds == 0 && may_flip(binding, part)) pose.face = opposite(pose.face);
+        if (const auto& edge = binding.problem.parts[part].edge) {
+            const bool sideways = turned(edge->mouth, pose.turn).x != 0;
+            pose.at.x = sideways ? kernel.placement()[part].at.x : pose.at.x;
+            pose.at.y = sideways ? pose.at.y : kernel.placement()[part].at.y;
+        } else {
+            pose.turn = static_cast<Turn>(random() % turn_count);
+            if (random() % fixture::flip_odds == 0 && may_flip(binding, part)) pose.face = opposite(pose.face);
+        }
         const auto refusal = kernel.rejection(part, pose);
         if (refusal) {
             ++rejected[breach_name(refusal->kind)];
@@ -139,7 +183,7 @@ void differential_walk(const std::string& project, const PcbModel& model, const 
                 Placement trial = kernel.placement();
                 trial[part] = pose;
                 ++probes;
-                if (judge(model_with(model, binding, trial)).ok()) ++stricter[breach_name(refusal->kind)];
+                if (judge(inputs, model_with(model, binding, trial)).ok()) ++stricter[breach_name(refusal->kind)];
             }
             continue;
         }
@@ -147,7 +191,7 @@ void differential_walk(const std::string& project, const PcbModel& model, const 
         require(kernel.move(part, pose), "accepted pose applies");
         ++accepted;
         const PcbModel moved = model_with(model, binding, kernel.placement());
-        const Verdict verdict = judge(moved);
+        const Verdict verdict = judge(inputs, moved);
         if (!verdict.ok())
             throw std::runtime_error("layout replay contract failed: " + project + " state " +
                 std::to_string(accepted) + ": kernel accepted " + binding.problem.parts[part].reference +
@@ -165,6 +209,8 @@ void differential_walk(const std::string& project, const PcbModel& model, const 
                     project + " state " + std::to_string(accepted) + ": KiCad reports courtyard overlap");
             require(drc.n_errors && *drc.n_errors == 0,
                     project + " state " + std::to_string(accepted) + ": KiCad reports design-rule errors");
+            require(thermal_drills(render_pcb(moved, policy).document) == thermal_baseline,
+                    project + " state " + std::to_string(accepted) + ": thermal vias changed");
         }
     }
     kernel.verify();
@@ -183,8 +229,24 @@ void replay(const std::filesystem::path& root, const std::string& project, std::
     const auto stage = prepare_board_pcb(paths, {}, {}, schematic);
     const PcbModel& model = stage.placement.model;
     const PcbEmitPolicy policy = pcb_emit_policy(load_project_config(paths));
-    const ModelBinding binding = bind_model(model, policy, {fixture::plane_net,
-        project_edge_clearance(parse_json_text(file_text(paths.project_root / "Zynq_Carrier.kicad_pro")))});
+    const PcbPlacementGatePolicy gates = pcb_placement_gate_policy(stage.inputs);
+    const ModelBinding binding = bind_model(model, policy, &gates, {fixture::plane_net,
+        project_edge_clearance(parse_json_text(file_text(paths.project_root / "Zynq_Carrier.kicad_pro"))),
+        {fixture::overmold_part}});
+    const Constraints& rules = binding.problem.constraints;
+    std::map<std::string, std::size_t> ties;
+    std::size_t small_parts = 0, owned_parts = 0;
+    for (const auto& entry : binding.problem.ownership) {
+        if (entry.tie == Tie::none) continue;
+        ++small_parts;
+        ++ties[tie_name(entry.tie)];
+        if (entry.owner) ++owned_parts;
+    }
+    std::cout << "  ownership: " << owned_parts << " of " << small_parts << " movable two-pin parts have an owner (";
+    for (const auto& [tie, count] : ties) std::cout << tie << " " << count << " ";
+    std::cout << "), " << rules.soft_gaps.size() << " soft rules\n";
+    std::cout << "  rules: " << rules.pad_gaps.size() << " pad gaps, " << rules.nearest_gaps.size() << " nearest, "
+              << rules.face_pairs.size() << " face pairs, " << rules.group_gaps.size() << " subsystem bounds\n";
     std::cout << project << ": " << model.board_w << " x " << model.board_h << " mm, "
               << binding.problem.parts.size() << " parts, " << binding.problem.footprints.size()
               << " footprints, " << binding.problem.nets.size() << " nets\n";
@@ -192,7 +254,7 @@ void replay(const std::filesystem::path& root, const std::string& project, std::
     require(render_pcb(model_with(model, binding, binding.placement), policy).pcb == original,
             project + " round trip is byte-identical");
     geometry_matches_the_gates(model, binding);
-    require(judge(model).ok(), project + " baseline passes its gates");
+    require(judge(stage.inputs, model).ok(), project + " baseline passes its gates");
     const Kernel kernel(binding.problem, binding.placement);
     const auto found = kernel.violations();
     for (std::size_t index = 0; index < found.size() && index < fixture::report_limit; ++index)
@@ -201,6 +263,7 @@ void replay(const std::filesystem::path& root, const std::string& project, std::
                   << binding.problem.parts[found[index].other].reference << "\n";
     require(found.empty(), project + " baseline is legal in the kernel (" + std::to_string(found.size()) + " violations)");
     airwire_matches_measure(paths, original, kernel, policy.power_class);
+    margins_match_the_flow_gate(model, gates, kernel);
     const std::string exported = document_json(binding.problem, binding.placement);
     const Document restored = read_document(parse_json_text(exported));
     require(document_json(restored.problem, restored.placement) == exported, project + " export round trip");
@@ -208,7 +271,7 @@ void replay(const std::filesystem::path& root, const std::string& project, std::
     require(reloaded.violations().empty() && reloaded.routed_length() == kernel.routed_length(),
             project + " reloaded problem behaves identically");
     if (states)
-        differential_walk(project, model, binding, policy, states, drc_samples, scratch,
+        differential_walk(project, stage.inputs, model, binding, policy, states, drc_samples, scratch,
                           paths.project_root / "Zynq_Carrier.kicad_pro");
 }
 
