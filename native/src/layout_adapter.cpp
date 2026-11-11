@@ -1,0 +1,343 @@
+#include "schgen/layout_adapter.hpp"
+
+#include "pcb_checks_internal.hpp"
+#include "schgen/mirror.hpp"
+#include "schgen/pack.hpp"
+#include "schgen/ratsnest_gate.hpp"
+#include "schgen/turn.hpp"
+
+#include <cmath>
+#include <filesystem>
+#include <map>
+#include <tuple>
+
+namespace schgen::layout {
+namespace {
+
+inline constexpr std::size_t first_field = 1, second_field = 2, form_field = 3;
+const char* const foreign_group = "\x01layout-foreign-group";
+
+const SexprList* as_list(const Sexpr& node) { return std::get_if<SexprList>(&node.v); }
+
+std::string as_text(const Sexpr& node) {
+    if (const auto* text = std::get_if<std::string>(&node.v)) return *text;
+    if (const auto* symbol = std::get_if<Sexpr::Sym>(&node.v)) return symbol->name;
+    return {};
+}
+
+const SexprList* child(const SexprList& items, std::string_view name) {
+    for (const auto& item : items) {
+        const auto* list = as_list(item);
+        if (list && !list->empty() && as_text(list->front()) == name) return list;
+    }
+    return nullptr;
+}
+
+bool starts_with(const std::string& text, std::string_view head) {
+    return text.size() >= head.size() && text.compare(0, head.size(), head) == 0;
+}
+
+double number_at(const SexprList& items, std::size_t index, const std::string& what) {
+    if (items.size() <= index || !std::holds_alternative<double>(items[index].v))
+        throw LayoutError("layout: number required for " + what);
+    return std::get<double>(items[index].v);
+}
+
+std::size_t face_slot(Face face) { return face == Face::top ? 0 : 1; }
+
+Face face_named(const std::string& side) {
+    if (side == "top") return Face::top;
+    if (side == "bottom") return Face::bottom;
+    throw LayoutError("layout: unknown side " + side);
+}
+
+std::string side_name(Face face) { return face == Face::top ? "top" : "bottom"; }
+
+void read_courtyard(const PcbCheckFootprint& footprint, Variant& variant) {
+    const auto* root = as_list(footprint.document);
+    if (!root) throw LayoutError("layout: footprint document is not a list: " + footprint.source);
+    bool other_shapes = false;
+    for (const auto& node : *root) {
+        const auto* item = as_list(node);
+        if (!item || item->empty()) continue;
+        const std::string kind = as_text(item->front());
+        if (!starts_with(kind, "fp_")) continue;
+        const auto* layer = child(*item, "layer");
+        if (!layer || layer->size() <= first_field ||
+            as_text((*layer)[first_field]).find("CrtYd") == std::string::npos)
+            continue;
+        const auto* centre = child(*item, "center");
+        const auto* rim = child(*item, "end");
+        if (kind != "fp_circle" || !centre || !rim) {
+            other_shapes = true;
+            continue;
+        }
+        const double x = number_at(*centre, first_field, "circle centre");
+        const double y = number_at(*centre, second_field, "circle centre");
+        const double radius = std::hypot(number_at(*rim, first_field, "circle end") - x,
+                                         number_at(*rim, second_field, "circle end") - y);
+        variant.court_discs.push_back({{nearest_nm(x), nearest_nm(y)}, ceil_nm(radius)});
+    }
+    if (other_shapes || variant.court_discs.empty()) variant.court_boxes.push_back(variant.gate_box);
+}
+
+std::vector<std::string> pad_forms(const PcbCheckFootprint& footprint) {
+    std::vector<std::string> forms;
+    for (const auto& node : *as_list(footprint.document)) {
+        const auto* item = as_list(node);
+        if (item && item->size() > form_field && as_text(item->front()) == "pad")
+            forms.push_back(as_text((*item)[form_field]));
+    }
+    if (forms.size() != footprint.pads.size())
+        throw LayoutError("layout: pad list of " + footprint.source + " disagrees with its document");
+    return forms;
+}
+
+Variant read_variant(const PcbCheckFootprint& footprint) {
+    if (!footprint.bbox) throw LayoutError("layout: footprint has no courtyard extent: " + footprint.source);
+    Variant variant;
+    variant.gate_box = box_nm(footprint.bbox->x0, footprint.bbox->y0, footprint.bbox->x1, footprint.bbox->y1);
+    read_courtyard(footprint, variant);
+    const auto forms = pad_forms(footprint);
+    for (const auto& [name, type, x, y, rotation, width, height] : footprint.pads) {
+        const auto half = pad_half_extent(width, height, rotation);
+        const Point centre{nearest_nm(x), nearest_nm(y)};
+        const Nm reach_x = ceil_nm(half.first), reach_y = ceil_nm(half.second);
+        PadShape pad;
+        pad.name = name;
+        pad.centre = centre;
+        pad.box = {centre.x - reach_x, centre.y - reach_y, centre.x + reach_x, centre.y + reach_y};
+        pad.through = type == "thru_hole" || type == "np_thru_hole";
+        if (forms[variant.pads.size()] == "circle") pad.radius = ceil_nm(std::max(width, height) / 2);
+        variant.pad_hull = variant.pad_hull ? united(*variant.pad_hull, pad.box) : pad.box;
+        variant.pads.push_back(std::move(pad));
+    }
+    return variant;
+}
+
+std::string file_name(const PcbCheckInstance& instance) {
+    return std::filesystem::path(instance.mod->source).filename().string();
+}
+
+bool mechanical_file(const PcbCheckInstance& instance) {
+    const std::string name = file_name(instance);
+    return starts_with(name, "MountingHole") || starts_with(name, "Fiducial");
+}
+
+bool user_facing(const PcbCheckInstance& instance) {
+    const std::string prefix = ref_prefix(instance.ref);
+    return prefix == "TP" || prefix == "LED" || prefix == "SW" ||
+           instance.footprint.find("TestPoint") != std::string::npos ||
+           starts_with(instance.footprint, "LED_") || starts_with(instance.footprint, "Switch:");
+}
+
+Category category_of(const PcbModel& model, const PcbEmitPolicy& policy, const AdapterOptions& options,
+                     const std::string& net) {
+    if (net == options.plane_net) return Category::plane;
+    const auto found = model.netclass_of.find(net);
+    if (found != model.netclass_of.end() && found->second == policy.power_class) return Category::power;
+    return Category::signal;
+}
+
+bool model_overridden(const PcbCheckInstance& instance, const PcbEmitPolicy& policy) {
+    for (const auto& entry : policy.model_overrides)
+        if (instance.value == entry.value && instance.footprint == entry.footprint) return true;
+    return false;
+}
+
+PcbCheckFootprintPtr mirrored_document(const PcbCheckFootprintPtr& source) {
+    Sexpr mirrored = mirrored_footprint(source->document);
+    const std::filesystem::path origin(source->source);
+    std::string library = origin.parent_path().filename().string();
+    const std::string suffix = ".pretty";
+    if (library.size() >= suffix.size() &&
+        library.compare(library.size() - suffix.size(), suffix.size(), suffix) == 0)
+        library.resize(library.size() - suffix.size());
+    const std::string path =
+        (std::filesystem::path(".mirrored_fp") / (library + "__" + origin.stem().string() + ".kicad_mod")).string();
+    return pcb_check_footprint(path, sexpr_dumps(mirrored) + "\n", std::move(mirrored));
+}
+
+struct Twins {
+    PcbCheckFootprintPtr plain, mirrored;
+};
+
+std::map<std::string, Twins> twins_by_name(const PcbModel& model) {
+    std::map<std::string, Twins> twins;
+    for (const auto& instance : model.insts) {
+        if (!instance.mod) throw LayoutError("layout: unresolved footprint for " + instance.ref);
+        Twins& entry = twins[instance.footprint];
+        if (instance.mirror) {
+            if (!entry.mirrored) entry.mirrored = instance.mod;
+        } else if (!entry.plain) {
+            entry.plain = instance.mod;
+        }
+    }
+    return twins;
+}
+
+PcbCheckFootprintPtr opposite_document(const PcbCheckInstance& instance, const Twins& twins) {
+    if (instance.side == "bottom") return instance.mirror ? twins.plain : instance.mod;
+    if (twins.mirrored) return twins.mirrored;
+    try {
+        return mirrored_document(instance.mod);
+    } catch (const MirrorUnsupported&) {
+        return nullptr;
+    }
+}
+
+}
+
+ModelBinding bind_model(const PcbModel& model, const PcbEmitPolicy& policy, const AdapterOptions& options) {
+    ModelBinding binding;
+    Problem& problem = binding.problem;
+    problem.board.origin = {to_nm(model.origin_x), to_nm(model.origin_y)};
+    problem.board.width = to_nm(model.board_w);
+    problem.board.height = to_nm(model.board_h);
+    if (model.som_core)
+        problem.board.module_core = box_nm(model.som_core->x0, model.som_core->y0,
+                                           model.som_core->x1, model.som_core->y1);
+    const double scale = constants::nano_scale.value;
+    problem.rules.core_tolerance = static_cast<Nm>(constants::core_tolerance.value * scale * scale);
+    problem.rules.dispersion_limit = ratsnest_dispersion_max;
+    problem.rules.dispersion_floor = static_cast<std::size_t>(ratsnest_small_n);
+
+    std::map<std::string, std::size_t> net_index;
+    for (const auto& instance : model.insts)
+        for (const auto& [pad, net] : instance.pad_nets)
+            if (!net.second.empty()) net_index.emplace(net.second, 0);
+    for (auto& [name, index] : net_index) {
+        index = problem.nets.size();
+        const Category category = category_of(model, policy, options, name);
+        const double clearance = category == Category::power ? policy.power_clearance : policy.default_clearance;
+        problem.nets.push_back({name, category, to_nm(clearance), {}});
+    }
+
+    problem.rules.copper_clearance = to_nm(std::max(policy.default_clearance, policy.power_clearance));
+    problem.rules.edge_clearance = to_nm(options.edge_clearance);
+    problem.rules.plane_margin = to_nm(policy.gnd_plane_edge_back + constants::relief_reach.value);
+    for (const auto& copper : model.copper) {
+        Obstacle obstacle;
+        const auto net = net_index.find(copper.net_name);
+        obstacle.net = net == net_index.end() ? no_net : static_cast<int>(net->second);
+        if (copper.kind == "via") {
+            const Disc disc{{nearest_nm(copper.x), nearest_nm(copper.y)}, ceil_nm(copper.size / 2)};
+            obstacle.disc = disc;
+            obstacle.box = grown({disc.centre.x, disc.centre.y, disc.centre.x, disc.centre.y}, disc.radius);
+            obstacle.top = obstacle.bottom = true;
+        } else if (copper.kind == "segment") {
+            const Point first{nearest_nm(copper.x1), nearest_nm(copper.y1)};
+            const Point second{nearest_nm(copper.x2), nearest_nm(copper.y2)};
+            obstacle.box = grown(spanning(first, second), ceil_nm(copper.width / 2));
+            obstacle.top = copper.layer == "F.Cu";
+            obstacle.bottom = copper.layer == "B.Cu";
+        } else {
+            throw LayoutError("layout: unknown fixed copper kind " + copper.kind);
+        }
+        problem.obstacles.push_back(obstacle);
+    }
+
+    const auto twins = twins_by_name(model);
+    std::map<std::tuple<const PcbCheckFootprint*, Face, bool, bool>, std::size_t> footprint_index;
+    for (const auto& instance : model.insts) {
+        const Face face = face_named(instance.side);
+        const bool overridden = model_overridden(instance, policy);
+        const auto key = std::make_tuple(instance.mod.get(), face, instance.mirror, overridden);
+        auto found = footprint_index.find(key);
+        if (found == footprint_index.end()) {
+            Footprint footprint;
+            footprint.key = instance.footprint + "@" + side_name(face) + (instance.mirror ? "/mirrored" : "");
+            std::array<PcbCheckFootprintPtr, 2> documents;
+            documents[face_slot(face)] = instance.mod;
+            if (!overridden)
+                documents[face_slot(opposite(face))] = opposite_document(instance, twins.at(instance.footprint));
+            const auto& other_document = documents[face_slot(opposite(face))];
+            const Variant own = read_variant(*instance.mod);
+            const Variant other = other_document ? read_variant(*other_document) : own;
+            footprint.flippable = other_document != nullptr;
+            footprint.top = face == Face::top ? own : other;
+            footprint.bottom = face == Face::top ? other : own;
+            found = footprint_index.emplace(key, problem.footprints.size()).first;
+            problem.footprints.push_back(std::move(footprint));
+            binding.documents.push_back(std::move(documents));
+            binding.mirrors_bottom.push_back(face == Face::top || instance.mirror);
+        }
+        const Variant& variant = problem.footprints[found->second].on(face);
+        const int pins = static_cast<int>(instance.pad_nets.size());
+        const bool mezzanine = pcb_is_df40_part(instance.sheet, pins);
+        const bool foreign = pcb_counts_as_crowder(instance.ref, instance.sheet, pins,
+                                                   instance.footprint, foreign_group);
+        const bool own = pcb_counts_as_crowder(instance.ref, instance.sheet, pins,
+                                               instance.footprint, instance.sheet);
+        Part part;
+        part.reference = instance.ref;
+        part.group = instance.sheet;
+        part.value = instance.value;
+        part.footprint_name = instance.footprint;
+        part.footprint = found->second;
+        part.fanout_pins = pins;
+        part.fanout_need = to_nm(pcb_fanout_need(pins).first);
+        part.fanout_subject = !mezzanine && pins >= static_cast<int>(constants::fanout_floor.value);
+        part.never_crowds = !foreign;
+        part.cluster_passive = foreign && !own;
+        part.top_only = user_facing(instance);
+        part.core_exempt = mechanical_file(instance) || starts_with(instance.sheet, "som_j");
+        part.cohesion_member = !part.core_exempt;
+        part.fixed = part.core_exempt || mezzanine || !pcb_checks::mpn(instance).empty();
+        const std::size_t part_index = problem.parts.size();
+        for (std::size_t pad = 0; pad < variant.pads.size(); ++pad) {
+            const auto net = instance.pad_nets.find(variant.pads[pad].name);
+            if (net == instance.pad_nets.end() || net->second.second.empty()) {
+                part.pad_nets.push_back(no_net);
+                continue;
+            }
+            const std::size_t index = net_index.at(net->second.second);
+            part.pad_nets.push_back(static_cast<int>(index));
+            problem.nets[index].pins.push_back({part_index, pad});
+        }
+        problem.parts.push_back(std::move(part));
+        binding.placement.push_back({{to_nm(instance.x), to_nm(instance.y)}, turn_of(instance.rotation), face});
+    }
+    validate(problem, binding.placement);
+    return binding;
+}
+
+double project_edge_clearance(const JsonNode& project_file) {
+    const JsonNode* node = &project_file;
+    for (const char* key : {"board", "design_settings", "rules", "min_copper_edge_clearance"}) {
+        node = object_field(*node, key);
+        if (!node) throw LayoutError(std::string("layout: project file lacks ") + key);
+    }
+    if (node->kind != JsonKind::Number) throw LayoutError("layout: copper edge clearance is not a number");
+    return node->number_value;
+}
+
+PcbModel model_with(const PcbModel& base, const ModelBinding& binding, const Placement& placement) {
+    validate(binding.problem, placement);
+    if (base.insts.size() != placement.size())
+        throw LayoutError("layout: placement does not match the base model");
+    PcbModel model = base;
+    model.n_top = model.n_bottom = 0;
+    for (std::size_t index = 0; index < placement.size(); ++index) {
+        const Pose& pose = placement[index];
+        auto& instance = model.insts[index];
+        if (pose != binding.placement[index]) {
+            const std::size_t footprint = binding.problem.parts[index].footprint;
+            const auto& document = binding.documents[footprint][face_slot(pose.face)];
+            if (!document) throw LayoutError("layout: no footprint variant for " + instance.ref);
+            instance.x = to_mm(pose.at.x);
+            instance.y = to_mm(pose.at.y);
+            instance.rotation = degrees_of(pose.turn);
+            if (pose.face != binding.placement[index].face) {
+                instance.side = side_name(pose.face);
+                instance.mod = document;
+                instance.mirror = pose.face == Face::bottom && binding.mirrors_bottom[footprint];
+            }
+        }
+        if (instance.side == "bottom") ++model.n_bottom;
+        else ++model.n_top;
+    }
+    return model;
+}
+
+}

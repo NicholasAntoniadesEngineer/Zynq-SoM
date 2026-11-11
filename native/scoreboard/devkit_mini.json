@@ -1,0 +1,165 @@
+{
+  "schema": "schgen.measure/1",
+  "inputs": [
+    {"name": "Zynq_Carrier.kicad_pcb", "sha256": "1b12fecbcbbaa5e6084c2459da93cb144a660ff19805e6e4e3f75f9c22689fdb"},
+    {"name": "Zynq_Carrier.kicad_pro", "sha256": "06e6ea2ba2b9dafbe714a946b81eb3ee50a40b0f55b39ab89163771ea1baa180"},
+    {"name": "sheet_index.json", "sha256": "cf6fb9e14adc3e50fadf6879828ed4b35a211e21826aa9ca5d95d47b7a9a6d0f"}
+  ],
+  "options": {
+    "keepouts": [
+      {"face": "top", "zone": "SoM_body_keepout"}
+    ],
+    "power_classes": ["POWER"],
+    "excluded_groups": ["mechanical"]
+  },
+  "board": {
+    "width_mm": 98,
+    "height_mm": 98,
+    "area_mm2": 9604,
+    "signal_layers": 2,
+    "power_layers": 2,
+    "parts": 160,
+    "through_hole_parts": 8,
+    "courtyards_from_pads": 0,
+    "without_geometry": []
+  },
+  "faces": {
+    "top": {"parts": 105, "courtyard_mm2": 1472.803, "occupied_mm2": 1446.42, "occupied_clearance_mm2": 1829.082, "occupied_fanout_mm2": 2045.451, "keepout_mm2": 2288, "usable_mm2": 7316, "utilisation": 0.1797, "utilisation_fanout": 0.2405},
+    "bottom": {"parts": 55, "courtyard_mm2": 273.53, "occupied_mm2": 501.566, "occupied_clearance_mm2": 644.086, "occupied_fanout_mm2": 555.274, "keepout_mm2": 0, "usable_mm2": 9604, "utilisation": 0.0522, "utilisation_fanout": 0.0578}
+  },
+  "subsystems": {
+    "box_total_mm2": 5288.986,
+    "courtyard_total_mm2": 1524.643,
+    "box_ratio": 3.469,
+    "median_box_ratio": 2.991,
+    "box_share_of_face": 0.5507,
+    "groups": [
+      {"name": "debug_boot", "parts": 15, "bottom_parts": 8, "courtyard_mm2": 283.8, "box_width_mm": 27.397, "box_height_mm": 37.622, "box_mm2": 1030.715, "box_ratio": 3.6318, "busiest_face_fill": 0.2418, "excluded": false},
+      {"name": "mechanical", "parts": 4, "bottom_parts": 0, "courtyard_mm2": 190.44, "box_width_mm": 94.53, "box_height_mm": 94.53, "box_mm2": 8935.921, "box_ratio": 46.9225, "busiest_face_fill": 0.0213, "excluded": true},
+      {"name": "pd_input", "parts": 13, "bottom_parts": 0, "courtyard_mm2": 185.066, "box_width_mm": 23.65, "box_height_mm": 23.996, "box_mm2": 567.52, "box_ratio": 3.0666, "busiest_face_fill": 0.3261, "excluded": false},
+      {"name": "power", "parts": 54, "bottom_parts": 5, "courtyard_mm2": 432.913, "box_width_mm": 54.89, "box_height_mm": 23.59, "box_mm2": 1294.859, "box_ratio": 2.991, "busiest_face_fill": 0.3176, "excluded": false},
+      {"name": "power_mon", "parts": 13, "bottom_parts": 8, "courtyard_mm2": 89.909, "box_width_mm": 19.396, "box_height_mm": 14.945, "box_mm2": 289.873, "box_ratio": 3.2241, "busiest_face_fill": 0.1751, "excluded": false},
+      {"name": "power_som", "parts": 20, "bottom_parts": 16, "courtyard_mm2": 174.919, "box_width_mm": 39.656, "box_height_mm": 21.785, "box_mm2": 863.892, "box_ratio": 4.9388, "busiest_face_fill": 0.1025, "excluded": false},
+      {"name": "som_decoupling", "parts": 18, "bottom_parts": 18, "courtyard_mm2": 91.843, "box_width_mm": 33.58, "box_height_mm": 24.21, "box_mm2": 812.972, "box_ratio": 8.8517, "busiest_face_fill": 0.113, "excluded": false},
+      {"name": "som_j1", "parts": 1, "bottom_parts": 0, "courtyard_mm2": 39.775, "box_width_mm": 21.5, "box_height_mm": 1.85, "box_mm2": 39.775, "box_ratio": 1, "busiest_face_fill": 1, "excluded": false},
+      {"name": "som_j2", "parts": 1, "bottom_parts": 0, "courtyard_mm2": 39.775, "box_width_mm": 21.5, "box_height_mm": 1.85, "box_mm2": 39.775, "box_ratio": 1, "busiest_face_fill": 1, "excluded": false},
+      {"name": "som_j3", "parts": 1, "bottom_parts": 0, "courtyard_mm2": 39.775, "box_width_mm": 1.85, "box_height_mm": 21.5, "box_mm2": 39.775, "box_ratio": 1, "busiest_face_fill": 1, "excluded": false},
+      {"name": "uart_bridge", "parts": 10, "bottom_parts": 0, "courtyard_mm2": 61.094, "box_width_mm": 15.23, "box_height_mm": 10.46, "box_mm2": 159.307, "box_ratio": 2.6076, "busiest_face_fill": 0.3835, "excluded": false},
+      {"name": "usb_uart_connector", "parts": 5, "bottom_parts": 0, "courtyard_mm2": 85.774, "box_width_mm": 9.933, "box_height_mm": 15.154, "box_mm2": 150.524, "box_ratio": 1.7549, "busiest_face_fill": 0.5698, "excluded": false}
+    ]
+  },
+  "airwire": {
+    "plane": {"nets": 1, "connections": 204, "euclid_mm": 623.484, "manhattan_mm": 684.248, "cross_euclid_mm": 121.19, "cross_manhattan_mm": 142.373},
+    "power": {"nets": 11, "connections": 176, "euclid_mm": 1100.572, "manhattan_mm": 1306.335, "cross_euclid_mm": 478.813, "cross_manhattan_mm": 536.677},
+    "signal": {"nets": 72, "connections": 152, "euclid_mm": 1793.21, "manhattan_mm": 2229.044, "cross_euclid_mm": 927.344, "cross_manhattan_mm": 1225.169},
+    "longest_signal": [
+      {"net": "CHASSIS_GND", "manhattan_mm": 278.68, "pads": 12},
+      {"net": "STM32_I2C2_SCL", "manhattan_mm": 106.385, "pads": 5},
+      {"net": "STM32_I2C2_SDA", "manhattan_mm": 102.394, "pads": 5},
+      {"net": "ZYNQ_PS_UART0_CTS_N", "manhattan_mm": 80.55, "pads": 2},
+      {"net": "ZYNQ_PS_UART0_RTS_N", "manhattan_mm": 80.242, "pads": 2},
+      {"net": "SDIO_CLK", "manhattan_mm": 68.819, "pads": 2},
+      {"net": "STM32_NRST", "manhattan_mm": 67.789, "pads": 4},
+      {"net": "SDIO_CMD", "manhattan_mm": 66.619, "pads": 2},
+      {"net": "EN_1V8", "manhattan_mm": 65.923, "pads": 2},
+      {"net": "VBUS_OUT_EN", "manhattan_mm": 64.509, "pads": 2}
+    ]
+  },
+  "demand": {
+    "bin_mm": 5,
+    "columns": 20,
+    "rows": 20,
+    "default_pitch_mm": 0.3532,
+    "mean": 0.0413,
+    "peak": 0.2791,
+    "high_quantile": 0.2578,
+    "upper_quantile": 0.1208,
+    "median": 0.0121,
+    "congested_bins": 0,
+    "bins": [
+      [0, 0.0041, 0.0045, 0.0045, 0.0045, 0.0045, 0.0045, 0.0125, 0.0045, 0.0045, 0.0045, 0.0045, 0.0045, 0.0045, 0.0045, 0.0045, 0.0045, 0.0045, 0.0028, 0],
+      [0, 0.0055, 0.0061, 0.0061, 0.0061, 0.0061, 0.0061, 0.0252, 0.025, 0.0525, 0.1039, 0.0061, 0.157, 0.0782, 0.0091, 0.0061, 0.0061, 0.0061, 0.0038, 0],
+      [0, 0.0055, 0.0061, 0.0061, 0.0061, 0.0061, 0.0061, 0.0219, 0.0572, 0.0879, 0.0655, 0.0061, 0.1537, 0.1483, 0.04, 0.0061, 0.0061, 0.0061, 0.0038, 0],
+      [0, 0.0055, 0.0061, 0.0061, 0.0061, 0.0061, 0.0061, 0.0097, 0.0578, 0.1267, 0.0777, 0.0217, 0.1066, 0.1405, 0.0489, 0.0061, 0.0061, 0.0061, 0.0038, 0],
+      [0, 0.0055, 0.0061, 0.0061, 0.0061, 0.0061, 0.0061, 0.0086, 0.0418, 0.1351, 0.1036, 0.0604, 0.0697, 0.1362, 0.062, 0.0061, 0.0061, 0.0061, 0.0038, 0],
+      [0, 0.0055, 0.0062, 0.007, 0.007, 0.007, 0.007, 0.0125, 0.0521, 0.1479, 0.1252, 0.0871, 0.0871, 0.0871, 0.0736, 0.0217, 0.0121, 0.007, 0.0038, 0],
+      [0, 0.0055, 0.0066, 0.0201, 0.0205, 0.0205, 0.0205, 0.026, 0.0505, 0.1191, 0.2118, 0.2578, 0.2578, 0.2639, 0.2791, 0.227, 0.0806, 0.0176, 0.0038, 0],
+      [0, 0.0055, 0.0066, 0.0242, 0.0249, 0.0249, 0.0249, 0.0305, 0.0428, 0.0698, 0.1734, 0.2386, 0.2386, 0.2407, 0.2613, 0.2517, 0.1112, 0.0193, 0.0038, 0],
+      [0, 0.0055, 0.0066, 0.0242, 0.0249, 0.0249, 0.0249, 0.0305, 0.0428, 0.0698, 0.137, 0.1585, 0.1585, 0.1567, 0.1396, 0.1166, 0.0708, 0.0193, 0.0038, 0],
+      [0, 0.0055, 0.0066, 0.0242, 0.0249, 0.0249, 0.0249, 0.0305, 0.0428, 0.0698, 0.1302, 0.1397, 0.1397, 0.1379, 0.1208, 0.0978, 0.0635, 0.0193, 0.0038, 0],
+      [0, 0.0055, 0.0066, 0.0242, 0.0249, 0.0249, 0.0249, 0.0305, 0.0428, 0.0583, 0.0969, 0.1064, 0.1064, 0.1046, 0.0875, 0.0645, 0.0375, 0.0133, 0.0038, 0],
+      [0, 0.0055, 0.0066, 0.0373, 0.0455, 0.0249, 0.0249, 0.0305, 0.0428, 0.0521, 0.0779, 0.0848, 0.0848, 0.083, 0.0659, 0.0429, 0.0198, 0.009, 0.0038, 0],
+      [0, 0.0055, 0.0066, 0.0575, 0.0772, 0.0249, 0.0249, 0.0305, 0.0428, 0.0518, 0.0757, 0.0898, 0.1245, 0.1029, 0.1195, 0.1398, 0.0475, 0.0087, 0.0038, 0],
+      [0, 0.0055, 0.0062, 0.0108, 0.0114, 0.0103, 0.0103, 0.0134, 0.0202, 0.0204, 0.0317, 0.0469, 0.0469, 0.0504, 0.1354, 0.2318, 0.0887, 0.028, 0.0038, 0],
+      [0, 0.0055, 0.012, 0.0274, 0.0061, 0.0061, 0.0061, 0.0061, 0.0061, 0.0061, 0.0114, 0.0266, 0.0266, 0.0305, 0.1107, 0.2091, 0.0811, 0.0248, 0.0038, 0],
+      [0, 0.0055, 0.0359, 0.1361, 0.0121, 0.0121, 0.0121, 0.0121, 0.0121, 0.0121, 0.0132, 0.0163, 0.0163, 0.0159, 0.0383, 0.0541, 0.0308, 0.0061, 0.0038, 0],
+      [0, 0.0055, 0.0274, 0.118, 0.0268, 0.0609, 0.0385, 0.023, 0.023, 0.023, 0.06, 0.0432, 0.023, 0.0109, 0.0074, 0.0074, 0.007, 0.0061, 0.0038, 0],
+      [0, 0.0055, 0.0197, 0.1011, 0.0791, 0.1666, 0.0833, 0.0357, 0.0357, 0.0369, 0.1308, 0.0767, 0.023, 0.0107, 0.0061, 0.0061, 0.0061, 0.0061, 0.0038, 0],
+      [0, 0.0034, 0.0051, 0.0305, 0.0626, 0.1282, 0.117, 0.0349, 0.0349, 0.0503, 0.121, 0.1075, 0.008, 0.0049, 0.0038, 0.0038, 0.0038, 0.0038, 0.0024, 0],
+      [0, 0, 0, 0, 0, 0.0005, 0.0004, 0, 0, 0, 0.0002, 0.0007, 0, 0, 0, 0, 0, 0, 0, 0]
+    ]
+  },
+  "gaps": [
+    {"need_mm": 0.2, "parts": 135, "below_need": 3, "min_mm": 0, "lower_quartile_mm": 0.5, "median_mm": 0.515, "upper_quartile_mm": 0.7, "max_mm": 13.479},
+    {"need_mm": 1.5, "parts": 6, "below_need": 4, "min_mm": 0.5, "lower_quartile_mm": 0.5, "median_mm": 0.57, "upper_quartile_mm": 1.787, "max_mm": 4.822},
+    {"need_mm": 2, "parts": 14, "below_need": 7, "min_mm": 0.645, "lower_quartile_mm": 0.87, "median_mm": 1.02, "upper_quartile_mm": 2.96, "max_mm": 6.85}
+  ],
+  "edges": [
+    {
+      "name": "north",
+      "length_mm": 98,
+      "run_mm": 17.88,
+      "ratio": 0.1824,
+      "parts": [
+        {"reference": "J12001", "width_mm": 8.94},
+        {"reference": "J3001", "width_mm": 8.94}
+      ]
+    },
+    {
+      "name": "east",
+      "length_mm": 98,
+      "run_mm": 0,
+      "ratio": 0,
+      "parts": []
+    },
+    {
+      "name": "south",
+      "length_mm": 98,
+      "run_mm": 0,
+      "ratio": 0,
+      "parts": []
+    },
+    {
+      "name": "west",
+      "length_mm": 98,
+      "run_mm": 0,
+      "ratio": 0,
+      "parts": []
+    }
+  ],
+  "bounds": {"top_demand_mm2": 4047.446, "bottom_demand_mm2": 555.274, "balanced_demand_mm2": 2301.36, "outline_to_balanced": 4.1732, "perimeter_run_mm": 17.88, "perimeter_ratio": 0.0456},
+  "constants": [
+    {"name": "reference_stride", "value": 1000, "unit": "count", "proof": "standard", "basis": "schgen reference numbering is sheet index times this stride plus the local number"},
+    {"name": "straight_angle", "value": 180, "unit": "deg", "proof": "standard", "basis": "degrees in half a turn"},
+    {"name": "half_turn", "value": 3.14159265358979, "unit": "rad", "proof": "standard", "basis": "radians in half a turn"},
+    {"name": "touch_tolerance", "value": 1e-06, "unit": "mm", "proof": "policy", "basis": "geometric comparisons closer than this are treated as equal"},
+    {"name": "demand_bin", "value": 5, "unit": "mm", "proof": "policy", "basis": "edge length of one routing-demand map bin"},
+    {"name": "demand_alert", "value": 0.5, "unit": "ratio", "proof": "policy", "basis": "bin utilisation above which a bin is counted as congested"},
+    {"name": "edge_band", "value": 2.5, "unit": "mm", "proof": "policy", "basis": "a through-hole part within this distance of the outline counts as edge mounted"},
+    {"name": "high_quantile", "value": 0.99, "unit": "ratio", "proof": "policy", "basis": "upper tail reported for demand bins"},
+    {"name": "upper_quantile", "value": 0.9, "unit": "ratio", "proof": "policy", "basis": "second tail reported for demand bins"},
+    {"name": "middle_quantile", "value": 0.5, "unit": "ratio", "proof": "standard", "basis": "median"},
+    {"name": "lower_quartile", "value": 0.25, "unit": "ratio", "proof": "standard", "basis": "first quartile"},
+    {"name": "upper_quartile", "value": 0.75, "unit": "ratio", "proof": "standard", "basis": "third quartile"},
+    {"name": "longest_count", "value": 10, "unit": "count", "proof": "policy", "basis": "number of longest signal nets listed"},
+    {"name": "length_decimals", "value": 3, "unit": "digits", "proof": "policy", "basis": "decimal places for lengths and areas in the report"},
+    {"name": "ratio_decimals", "value": 4, "unit": "digits", "proof": "policy", "basis": "decimal places for ratios in the report"},
+    {"name": "map_scale", "value": 4, "unit": "px/mm", "proof": "policy", "basis": "rendered size of the map"},
+    {"name": "map_margin", "value": 6, "unit": "mm", "proof": "policy", "basis": "blank border around each map panel"},
+    {"name": "map_header", "value": 9, "unit": "mm", "proof": "policy", "basis": "height reserved above each map panel for its caption"},
+    {"name": "map_stroke", "value": 0.15, "unit": "mm", "proof": "policy", "basis": "line width of map outlines"},
+    {"name": "map_text", "value": 3.2, "unit": "mm", "proof": "policy", "basis": "caption text height on the map"},
+    {"name": "part_opacity", "value": 0.55, "unit": "ratio", "proof": "policy", "basis": "fill opacity of courtyards on the map"}
+  ],
+  "exempt_literals": [0, 1, 2]
+}
