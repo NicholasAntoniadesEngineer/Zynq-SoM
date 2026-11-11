@@ -57,6 +57,7 @@ struct SqueezeReport {
     Nm routed_before = 0, routed_after = 0;
     std::vector<Attempt> attempts;
     std::vector<double> tried;
+    std::size_t fallen = 0;
 };
 
 SqueezeReport squeeze(Kernel& kernel, const SqueezeOptions& options);

@@ -13,7 +13,7 @@ using json_text::integer;
 using json_text::object;
 using json_text::text_value;
 
-const char* const schema_name = "schgen.layout-problem/3";
+const char* const schema_name = "schgen.layout-problem/4";
 inline constexpr std::size_t point_fields = 2, disc_fields = 3, box_fields = 4;
 
 std::string point_json(Point point) { return array({integer(point.x), integer(point.y)}); }
@@ -179,7 +179,9 @@ std::string constraints_json(const Constraints& rules) {
                        {"anchor_names", indices_json(rule.anchor_names)},
                        {"limit", integer(rule.limit)},
                        {"sense", text_value(sense_name(rule.sense))},
-                       {"source", text_value(rule.source)}});
+                       {"source", text_value(rule.source)},
+                       {"rigid", boolean(rule.rigid)},
+                       {"derived", boolean(rule.derived)}});
     };
     for (const auto& rule : rules.pad_gaps) pad_gaps.push_back(gap_json(rule));
     for (const auto& rule : rules.soft_gaps) soft_gaps.push_back(gap_json(rule));
@@ -218,11 +220,12 @@ Constraints constraints_of(const JsonNode& node) {
                         "layout constraints");
     Constraints rules;
     const auto gap_of = [](const JsonNode& entry) {
-        reject_unknown_keys(entry, {"anchor", "member", "anchor_names", "limit", "sense", "source"}, "layout pad gap");
+        reject_unknown_keys(entry, {"anchor", "member", "anchor_names", "limit", "sense", "source", "rigid", "derived"},
+                            "layout pad gap");
         return PadGap{index_of(entry, "anchor"), index_of(entry, "member"),
                       indices_of(field(entry, "anchor_names", JsonKind::Array)),
                       whole(field(entry, "limit", JsonKind::Number)), sense_of(text(entry, "sense")),
-                      text(entry, "source")};
+                      text(entry, "source"), flag(entry, "rigid"), flag(entry, "derived")};
     };
     for (const auto& entry : field(node, "pad_gaps", JsonKind::Array).array_value) rules.pad_gaps.push_back(gap_of(entry));
     for (const auto& entry : field(node, "soft_gaps", JsonKind::Array).array_value) rules.soft_gaps.push_back(gap_of(entry));
@@ -323,7 +326,9 @@ std::string document_json(const Problem& problem, const Placement& placement) {
     for (const auto& reserve : problem.reserves)
         reserves.push_back(object({{"box", box_json(reserve.box)},
                                    {"members", indices_json(reserve.members)},
-                                   {"source", text_value(reserve.source)}}));
+                                   {"source", text_value(reserve.source)},
+                                   {"top", boolean(reserve.top)},
+                                   {"bottom", boolean(reserve.bottom)}}));
     const Board& board = problem.board;
     return json_text::pretty(object({
         {"schema", text_value(schema_name)},
@@ -473,9 +478,10 @@ Document read_document(const JsonNode& root) {
         problem.obstacles.push_back(obstacle);
     }
     for (const auto& entry : field(root, "reserves", JsonKind::Array).array_value) {
-        reject_unknown_keys(entry, {"box", "members", "source"}, "layout reserve");
+        reject_unknown_keys(entry, {"box", "members", "source", "top", "bottom"}, "layout reserve");
         problem.reserves.push_back({box_of(field(entry, "box", JsonKind::Array)),
-                                    indices_of(field(entry, "members", JsonKind::Array)), text(entry, "source")});
+                                    indices_of(field(entry, "members", JsonKind::Array)), text(entry, "source"),
+                                    flag(entry, "top"), flag(entry, "bottom")});
     }
     problem.constraints = constraints_of(field(root, "constraints", JsonKind::Object));
     for (const auto& entry : field(root, "placement", JsonKind::Array).array_value) {

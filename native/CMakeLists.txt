@@ -79,7 +79,7 @@ target_sources(schgen_core PRIVATE src/regression_cli.cpp)
 target_sources(schgen_core PRIVATE src/measure_board.cpp src/measure_metrics.cpp src/measure_report.cpp src/measure_cli.cpp)
 target_sources(schgen_core PRIVATE src/json_text.cpp src/layout_geometry.cpp src/layout_problem.cpp src/layout_kernel.cpp
     src/layout_adapter.cpp src/layout_json.cpp src/layout_cli.cpp src/layout_squeeze.cpp src/layout_stage.cpp
-    src/layout_sink.cpp)
+    src/layout_sink.cpp src/placement_integrity.cpp)
 target_sources(schgen_core PRIVATE src/geometry_cli.cpp src/audit_ast_projection.cpp)
 target_sources(schgen_core PRIVATE src/authoring_purity.cpp src/authoring_purity_scope.cpp src/authoring_purity_config.cpp src/native_authoring_guard.cpp)
 target_link_libraries(schgen_core PUBLIC ${CMAKE_DL_LIBS})
@@ -171,7 +171,7 @@ set_source_files_properties(src/turn.cpp src/pack_anchor.cpp src/symbols.cpp
                             src/pack_edges.cpp src/power_checks.cpp src/thermal_checks.cpp src/part_checks.cpp
                             src/bom_values.cpp src/spice.cpp src/spice_process.cpp
                             src/pcb_checks_model.cpp src/pcb_checks_connectors.cpp src/pcb_checks_placement.cpp
-                            src/pcb_checks_return_path.cpp src/pcb_checks_ampacity.cpp src/pcb_checks_escape.cpp src/pcb_checks_stitch.cpp PROPERTIES
+                            src/pcb_checks_return_path.cpp src/pcb_checks_ampacity.cpp src/pcb_checks_escape.cpp src/pcb_checks_stitch.cpp src/placement_integrity.cpp PROPERTIES
     COMPILE_OPTIONS "-ffp-contract=off")
 
 add_executable(schgen src/main.cpp src/project_cli.cpp)

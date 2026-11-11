@@ -17,14 +17,6 @@ std::vector<Box> named_boxes(const Problem& problem, std::size_t part, const Pos
     return boxes;
 }
 
-Nm rule_gap(const Problem& problem, const PadGap& rule, const Pose& anchor, const Pose& member) {
-    Nm best = std::numeric_limits<Nm>::max();
-    for (const auto& first : named_boxes(problem, rule.anchor, anchor, rule.anchor_names))
-        for (const auto& second : named_boxes(problem, rule.member, member, {}))
-            best = std::min(best, squared_gap(first, second));
-    return best;
-}
-
 }
 
 std::vector<Point> seat_ring(Nm pitch, Nm reach, Point preferred) {
@@ -186,7 +178,7 @@ AttractReport attract(Kernel& kernel, Nm pitch, Nm reach) {
     report.routed_before = kernel.routed_length();
     const std::vector<Point> offsets = seat_ring(pitch, reach, {0, 0});
     const auto met = [&](const PadGap& rule) {
-        return rule_gap(problem, rule, kernel.placement()[rule.anchor], kernel.placement()[rule.member]) <=
+        return squared_pad_gap(problem, rule, kernel.placement()[rule.anchor], kernel.placement()[rule.member]) <=
                squared(rule.limit);
     };
     for (const auto& rule : problem.constraints.soft_gaps) {
@@ -198,7 +190,7 @@ AttractReport attract(Kernel& kernel, Nm pitch, Nm reach) {
         ++report.wanted;
         const std::size_t part = rule.member;
         const Pose from = kernel.placement()[part];
-        const Nm before = rule_gap(problem, rule, kernel.placement()[rule.anchor], from);
+        const Nm before = squared_pad_gap(problem, rule, kernel.placement()[rule.anchor], from);
         std::vector<Box> pins = named_boxes(problem, rule.anchor, kernel.placement()[rule.anchor], rule.anchor_names);
         if (pins.empty()) continue;
         Box pin = pins.front();
@@ -211,7 +203,7 @@ AttractReport attract(Kernel& kernel, Nm pitch, Nm reach) {
                 if (face != from.face && !flips) continue;
                 for (int turn = 0; turn < turn_count && !seated; ++turn) {
                     const Pose pose{shifted(target, by), static_cast<Turn>(turn), face};
-                    if (rule_gap(problem, rule, kernel.placement()[rule.anchor], pose) >= before) continue;
+                    if (squared_pad_gap(problem, rule, kernel.placement()[rule.anchor], pose) >= before) continue;
                     if (crowds_escape(problem, kernel.placement(), part, pose)) continue;
                     if (kernel.rejection(part, pose)) continue;
                     seated = kernel.move(part, pose);

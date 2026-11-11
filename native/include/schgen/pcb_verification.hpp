@@ -1,6 +1,7 @@
 #pragma once
 #include "schgen/board_pcb.hpp"
 #include "schgen/pcb_placement_gates.hpp"
+#include "schgen/placement_integrity.hpp"
 #include "schgen/ratsnest_gate.hpp"
 
 namespace schgen {
@@ -18,6 +19,7 @@ struct PcbVerificationResult {
     ReturnPathResult return_path;
     ReturnStitchResult return_stitch;
     EscapeLaneResult escape_lanes;
+    PlacementIntegrityResult integrity;
     QuantizationCounts quantization_engagements;
     // Fixed SoM contact-level v1 findings and placement coverage/composition
     // stay visible but advisory. Actual carrier return-stitch coverage is hard.

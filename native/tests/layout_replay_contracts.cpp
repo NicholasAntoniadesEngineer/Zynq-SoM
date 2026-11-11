@@ -5,6 +5,8 @@
 #include "schgen/layout_stage.hpp"
 #include "schgen/measure.hpp"
 #include "schgen/pcb_drc.hpp"
+#include "schgen/pcb_escape.hpp"
+#include "schgen/placement_integrity.hpp"
 #include "schgen/ratsnest_gate.hpp"
 #include "schgen/thermal_checks.hpp"
 #include "fresh_project_schematic.hpp"
@@ -206,6 +208,53 @@ void differential_walk(const std::string& project, const PcbPlacementInput& inpu
         std::cout << "    kernel stricter than the gates on " << kind << ": " << count << "\n";
 }
 
+void integrity_gate_catches(const std::string& project, const PcbModel& model) {
+    const auto judged = [](const PcbModel& candidate) {
+        return check_placement_integrity(PcbCheckInput(candidate), candidate);
+    };
+    const auto module_connector = [](const PcbCheckInstance& instance) {
+        return pcb_is_df40_part(instance.sheet, static_cast<int>(instance.pad_nets.size()));
+    };
+    const PlacementIntegrityResult baseline = judged(model);
+    std::cout << baseline.summary();
+    require(baseline.ok, project + " baseline passes the integrity gate");
+    require(baseline.corridors > 0 && baseline.corridor_subjects > 0, project + " has escape corridors to judge");
+    const auto controlled = [&](const PcbCheckInstance& instance) {
+        return instance.side == "top" &&
+               std::any_of(instance.pad_nets.begin(), instance.pad_nets.end(), [&](const auto& pad) {
+                   const auto klass = model.netclass_of.find(pad.second.second);
+                   if (klass == model.netclass_of.end()) return false;
+                   const auto geometry = model.classes.find(klass->second);
+                   return geometry != model.classes.end() && geometry->second.has_value();
+               });
+    };
+    const auto exposed = std::find_if(model.insts.begin(), model.insts.end(), controlled);
+    require((exposed != model.insts.end()) == (baseline.controlled_parts > 0),
+            project + " integrity gate counts the controlled parts the model holds");
+    if (exposed != model.insts.end()) {
+        PcbModel flipped = model;
+        flipped.insts[static_cast<std::size_t>(exposed - model.insts.begin())].side = "bottom";
+        const PlacementIntegrityResult verdict = judged(flipped);
+        require(!verdict.ok && verdict.rear_controlled.size() == 1,
+                project + " integrity gate rejects a controlled part on the rear");
+    }
+    const auto connector = std::find_if(model.insts.begin(), model.insts.end(), module_connector);
+    const auto rear = std::find_if(model.insts.begin(), model.insts.end(), [&](const PcbCheckInstance& instance) {
+        return instance.side == "bottom" && !module_connector(instance);
+    });
+    require(connector != model.insts.end() && rear != model.insts.end(),
+            project + " has a module connector and a rear part");
+    const Box4 corridor =
+        pcb_escape_corridor_board(*connector->mod, connector->x, connector->y, connector->rotation);
+    PcbModel intruding = model;
+    auto& moved = intruding.insts[static_cast<std::size_t>(rear - model.insts.begin())];
+    moved.x = (corridor.x0 + corridor.x1) / 2;
+    moved.y = (corridor.y0 + corridor.y1) / 2;
+    const PlacementIntegrityResult verdict = judged(intruding);
+    require(!verdict.ok && !verdict.corridor_intrusions.empty(),
+            project + " integrity gate rejects a rear part inside an escape corridor");
+}
+
 void squeezed_board_passes(const std::string& project, const PcbPlacementInput& inputs, const PcbModel& model,
                            const PcbEmitPolicy& policy, const AdapterOptions& options,
                            const std::filesystem::path& scratch, const std::filesystem::path& project_file) {
@@ -265,6 +314,7 @@ void replay(const std::filesystem::path& root, const std::string& project, std::
             project + " round trip is byte-identical");
     geometry_matches_the_gates(model, binding);
     require(judge_model(stage.inputs, model).ok(), project + " baseline passes its gates");
+    integrity_gate_catches(project, model);
     const Kernel kernel(binding.problem, binding.placement);
     const auto found = kernel.violations();
     for (std::size_t index = 0; index < found.size() && index < fixture::report_limit; ++index)

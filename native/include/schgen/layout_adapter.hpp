@@ -36,6 +36,10 @@ inline constexpr NamedConstant hole_inset{"hole_inset", 5.0, "mm", "policy",
     "distance of a corner mounting hole from both edges of its corner, before the fixed-part grid"};
 inline constexpr NamedConstant mark_inset{"mark_inset", 9.0, "mm", "policy",
     "distance of a corner fiducial from both edges of its corner"};
+inline constexpr NamedConstant hold_slack{"hold_slack", 0.25, "mm", "policy",
+    "room an owned part keeps beyond its present distance from the pin it serves; one search pitch"};
+inline constexpr NamedConstant tether_slack{"tether_slack", 5.0, "mm", "policy",
+    "room a part between two multi-pin parts keeps beyond its present distance from each"};
 inline constexpr NamedConstant escape_tie{"escape_tie", 2e-3, "mm", "policy",
     "tie width when choosing a pad's nearest courtyard side; twice the gate's, so the kernel never rings fewer sides"};
 inline constexpr NamedConstant area_guard{"area_guard", 1e-6, "mm2", "policy",
@@ -43,7 +47,7 @@ inline constexpr NamedConstant area_guard{"area_guard", 1e-6, "mm2", "policy",
 inline constexpr std::array adapter_registry{core_tolerance, fanout_floor, relief_reach, edge_reach, owner_reach,
                                              connector_overlap, band_share, overmold_gap, boot_gap,
                                              compare_guard, group_guard, hole_inset, mark_inset, area_guard,
-                                             escape_tie};
+                                             escape_tie, hold_slack, tether_slack};
 }
 
 struct AdapterOptions {
@@ -60,6 +64,7 @@ struct ModelBinding {
     std::vector<bool> mirrors_bottom;
 };
 
+HoldPolicy hold_policy();
 ModelBinding bind_model(const PcbModel& model, const PcbEmitPolicy& policy, const PcbPlacementGatePolicy* gates,
                         const AdapterOptions& options);
 double project_edge_clearance(const JsonNode& project_file);
@@ -68,8 +73,9 @@ PcbModel model_with(const PcbModel& base, const ModelBinding& binding, const Pla
                     const Board& board);
 
 struct GateVerdict {
-    bool fanout = false, mechanical = false, on_board = false, grouped = false, contracts = false, spacing = false;
-    bool ok() const { return fanout && mechanical && on_board && grouped && contracts && spacing; }
+    bool fanout = false, mechanical = false, on_board = false, grouped = false, contracts = false, spacing = false,
+         integrity = false;
+    bool ok() const { return fanout && mechanical && on_board && grouped && contracts && spacing && integrity; }
     std::string text() const;
 };
 

@@ -78,6 +78,7 @@ public:
             bool progress = true;
             while (progress) {
                 progress = false;
+                for (const bool along_x : {true, false}) report.fallen += fall(along_x);
                 for (const bool along_x : {true, false}) {
                     Attempt attempt;
                     attempt.step = step;
@@ -116,13 +117,57 @@ private:
         return kept;
     }
 
+    Nm pivot_of(bool along_x) const {
+        const Box outline = kernel_.board().outline();
+        const auto& core = kernel_.board().module_core;
+        if (core) return (along_x ? core->x0 + core->x1 : core->y0 + core->y1) / 2;
+        return (along_x ? outline.x0 + outline.x1 : outline.y0 + outline.y1) / 2;
+    }
+
+    std::size_t fall(bool along_x) {
+        const Nm pivot = pivot_of(along_x);
+        const Side low_side = along_x ? Side::west : Side::north, high_side = along_x ? Side::east : Side::south;
+        struct Faller {
+            std::size_t unit = 0;
+            Nm centre = 0;
+        };
+        std::vector<Faller> fallers;
+        for (std::size_t unit = 0; unit < bundles_.units.size(); ++unit) {
+            const auto& members = bundles_.units[unit];
+            if (problem_.parts[members.front()].fixed) continue;
+            bool held = false;
+            Box hull = gate_at(problem_, members.front(), kernel_.placement()[members.front()]);
+            for (const std::size_t member : members) {
+                const Part& item = problem_.parts[member];
+                const Pose& pose = kernel_.placement()[member];
+                hull = united(hull, gate_at(problem_, member, pose));
+                held = held || (item.edge && (facing(item, pose) == low_side || facing(item, pose) == high_side));
+            }
+            if (!held) fallers.push_back({unit, along_x ? (hull.x0 + hull.x1) / 2 : (hull.y0 + hull.y1) / 2});
+        }
+        std::stable_sort(fallers.begin(), fallers.end(), [&](const Faller& a, const Faller& b) {
+            const Nm far_a = a.centre < pivot ? pivot - a.centre : a.centre - pivot;
+            const Nm far_b = b.centre < pivot ? pivot - b.centre : b.centre - pivot;
+            return far_a < far_b;
+        });
+        std::size_t moved = 0;
+        for (const auto& faller : fallers) {
+            const Nm reach = faller.centre < pivot ? pivot - faller.centre : faller.centre - pivot;
+            const Nm step = faller.centre < pivot ? options_.pitch : -options_.pitch;
+            for (Nm gone = options_.pitch; gone <= reach; gone += options_.pitch) {
+                if (!kernel_.move_many(carried(faller.unit, along_x ? Point{step, 0} : Point{0, step}))) break;
+                ++moved;
+            }
+        }
+        return moved;
+    }
+
     bool take_scale(Attempt& attempt) {
         const Board old = kernel_.board();
         const Box outline = old.outline();
         const bool along_x = attempt.along_x;
         const Nm low = along_x ? outline.x0 : outline.y0, high = along_x ? outline.x1 : outline.y1;
-        const auto& core = old.module_core;
-        const Nm pivot = core ? (along_x ? core->x0 + core->x1 : core->y0 + core->y1) / 2 : (low + high) / 2;
+        const Nm pivot = pivot_of(along_x);
         const Nm span = std::max(pivot - low, high - pivot);
         if (pivot <= low || pivot >= high) {
             attempt.blocker = "the outline no longer surrounds its centre";
@@ -356,7 +401,7 @@ Bundles bundle(const Problem& problem) {
         if (a != b) parent[std::max(a, b)] = std::min(a, b);
     };
     for (const auto& rule : problem.constraints.pad_gaps)
-        if (rule.sense == Sense::at_most) join(rule.anchor, rule.member);
+        if (rule.sense == Sense::at_most && rule.rigid) join(rule.anchor, rule.member);
     for (const auto& rule : problem.constraints.nearest_gaps)
         for (const std::size_t member : rule.members) join(rule.anchor, member);
     for (const auto& reserve : problem.reserves) {

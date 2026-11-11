@@ -102,6 +102,7 @@ struct PadGap {
     Nm limit = 0;
     Sense sense = Sense::at_most;
     std::string source;
+    bool rigid = true, derived = false;
 };
 
 struct NearestGap {
@@ -150,6 +151,7 @@ struct Reserve {
     Box box;
     std::vector<std::size_t> members;
     std::string source;
+    bool top = true, bottom = true;
 };
 
 struct Rules {
@@ -188,7 +190,13 @@ Point corner_site(const Board& board, const CornerRule& rule);
 std::optional<bool> mirrors_across_x(const Footprint& footprint);
 Box gate_at(const Problem& problem, std::size_t part, const Pose& pose);
 void index_names(Variant& variant);
-void derive_ownership(Problem& problem, Nm owner_reach);
+struct HoldPolicy {
+    Nm owner_reach = 0, hold_slack = 0, tether_slack = 0;
+};
+Nm squared_pad_gap(const Problem& problem, const PadGap& rule, const Pose& anchor, const Pose& member);
+Nm pad_gap_length(const Problem& problem, const PadGap& rule, const Placement& placement);
+void derive_ownership(Problem& problem, const Placement& placement, const HoldPolicy& policy);
+void tighten_holds(Problem& problem, const Placement& placement, const HoldPolicy& policy);
 const char* tie_name(Tie tie);
 
 void validate(const Problem& problem, const Placement& placement);

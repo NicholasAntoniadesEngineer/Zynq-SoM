@@ -4,6 +4,8 @@
 #include "pcb_placement_gates_internal.hpp"
 #include "schgen/mirror.hpp"
 #include "schgen/pack.hpp"
+#include "schgen/pcb_escape.hpp"
+#include "schgen/placement_integrity.hpp"
 #include "schgen/quantize.hpp"
 #include "schgen/ratsnest_gate.hpp"
 #include "schgen/thermal_checks.hpp"
@@ -528,7 +530,13 @@ ModelBinding bind_model(const PcbModel& model, const PcbEmitPolicy& policy, cons
         part.fanout_subject = !mezzanine && escape_nets >= static_cast<int>(constants::fanout_floor.value);
         part.never_crowds = !foreign;
         part.cluster_passive = foreign && !own;
-        part.top_only = user_facing(instance) ||
+        const bool controlled = std::any_of(instance.pad_nets.begin(), instance.pad_nets.end(), [&](const auto& pad) {
+            const auto klass = model.netclass_of.find(pad.second.second);
+            if (klass == model.netclass_of.end()) return false;
+            const auto geometry = model.classes.find(klass->second);
+            return geometry != model.classes.end() && geometry->second.has_value();
+        });
+        part.top_only = controlled || user_facing(instance) ||
                         (face == Face::top && std::any_of(variant.pads.begin(), variant.pads.end(),
                                                           [](const PadShape& pad) { return pad.through; }));
         part.core_exempt = mechanical_file(instance) || starts_with(instance.sheet, "som_j");
@@ -557,9 +565,22 @@ ModelBinding bind_model(const PcbModel& model, const PcbEmitPolicy& policy, cons
     mark_connectors(model, options, binding.placement, problem);
     reserve_thermal_fields(model, policy, binding.placement, problem);
     if (gates) translate_gates(model, *gates, problem);
-    derive_ownership(problem, to_nm(constants::owner_reach.value));
+    for (std::size_t index = 0; index < model.insts.size(); ++index) {
+        const auto& instance = model.insts[index];
+        if (!pcb_is_df40_part(instance.sheet, static_cast<int>(instance.pad_nets.size()))) continue;
+        const Box4 corridor = pcb_escape_corridor_board(*instance.mod, instance.x, instance.y, instance.rotation);
+        problem.reserves.push_back({Box{nearest_nm(corridor.x0), nearest_nm(corridor.y0), nearest_nm(corridor.x1),
+                                        nearest_nm(corridor.y1)},
+                                    {index}, "escape corridor of " + instance.ref, false, true});
+    }
+    derive_ownership(problem, binding.placement, hold_policy());
     validate(problem, binding.placement);
     return binding;
+}
+
+HoldPolicy hold_policy() {
+    return {to_nm(constants::owner_reach.value), to_nm(constants::hold_slack.value),
+            to_nm(constants::tether_slack.value)};
 }
 
 double project_edge_clearance(const JsonNode& project_file) {
@@ -576,7 +597,7 @@ std::string GateVerdict::text() const {
     const auto word = [](bool pass) { return pass ? "pass" : "FAIL"; };
     return std::string("fanout=") + word(fanout) + " mechanical=" + word(mechanical) + " on_board=" +
            word(on_board) + " grouped=" + word(grouped) + " contracts=" + word(contracts) + " spacing=" +
-           word(spacing);
+           word(spacing) + " integrity=" + word(integrity);
 }
 
 GateVerdict judge_model(const PcbPlacementInput& inputs, const PcbModel& model) {
@@ -584,7 +605,7 @@ GateVerdict judge_model(const PcbPlacementInput& inputs, const PcbModel& model) 
     const auto ratsnest = check_ratsnest(input);
     return {check_fanout(input, 0).ok, check_placement_mech(input).ok, ratsnest.off_board.empty(),
             ratsnest.dispersed.empty(), check_pcb_placement_gates(inputs, model).ok(),
-            check_connector_spacing(input).ok};
+            check_connector_spacing(input).ok, check_placement_integrity(input, model).ok};
 }
 
 PcbModel model_with(const PcbModel& base, const ModelBinding& binding, const Placement& placement) {

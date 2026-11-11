@@ -441,8 +441,12 @@ std::optional<Breach> Kernel::self_breach(std::size_t part, const Shape& shape, 
         return Breach::off_board;
     if (item.corner && pose.at != corner_site(board_, *item.corner)) return Breach::corner;
     if (!item.fixed && !copper_clear(shape, pose.face)) return Breach::copper;
-    for (std::size_t reserve = 0; reserve < reserve_boxes_.size(); ++reserve)
-        if (!owns(reserve, part) && overlaps(shape.bound, reserve_boxes_[reserve])) return Breach::reserved;
+    for (std::size_t reserve = 0; reserve < reserve_boxes_.size(); ++reserve) {
+        const Reserve& field = problem_.reserves[reserve];
+        const bool faced = pose.face == Face::top ? field.top : field.bottom;
+        if ((!faced && shape.holes.empty()) || owns(reserve, part)) continue;
+        if (overlaps(shape.bound, reserve_boxes_[reserve])) return Breach::reserved;
+    }
     if (!item.fixed && problem_.rules.plane_margin > 0) {
         const Box outline = board_.outline();
         Box relief = grown(outline, -problem_.rules.plane_margin);

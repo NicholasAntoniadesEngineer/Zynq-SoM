@@ -176,6 +176,7 @@ void pcb_stages(Context& c){
         gate("contract_coverage",r.placement.coverage_report.violated==0,r.placement.coverage_report.text);
         gate("floorplan_composition",r.placement.composition.hard_red==0&&r.placement.composition.soft_red==0,r.placement.composition.text());
         gate("return_stitch",r.return_stitch.ok,r.return_stitch.summary());gate("escape_lanes",r.escape_lanes.ok,r.escape_lanes.summary());
+        gate("placement_integrity",r.integrity.ok,r.integrity.summary());
         gate("return_path",r.return_path.ok,"REPORT-ONLY: fixed SoM interface; remediation judged by return_stitch.\n"+r.return_path.summary());
         gate("fanout",r.fanout.ok,r.fanout.summary());
         if(r.fanout.ok){const auto old=baseline(bp);const auto n=old?std::min(*old,r.fanout.n_starved):r.fanout.n_starved;

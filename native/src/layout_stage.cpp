@@ -42,6 +42,7 @@ std::string squeeze_summary(const SqueezeReport& report) {
          << "  " << kept << " of " << report.attempts.size() << " edge steps kept, " << relocated
          << " relocations, " << pushed << " pushes, " << sunk << " parts sunk to the rear\n";
     for (const auto& [side, blocker] : stops) text << "  " << side << " stopped by " << blocker << "\n";
+    text << "  " << report.fallen << " cluster steps taken toward the module before the edges moved\n";
     if (!report.tried.empty()) {
         text << "  best of " << report.tried.size() << " edge orders, areas mm2:";
         for (const double area : report.tried) text << " " << area;
@@ -54,15 +55,18 @@ StageResult squeeze_stage(const PcbPlacementInput& inputs, const PcbModel& model
                           const AdapterOptions& options) {
     const PcbPlacementGatePolicy gates = pcb_placement_gate_policy(inputs);
     const ModelBinding binding = bind_model(model, policy, &gates, options);
-    Kernel kernel(binding.problem, binding.placement);
+    Kernel attracted(binding.problem, binding.placement);
     const auto rear = [](const Placement& placement) {
         return static_cast<std::size_t>(std::count_if(placement.begin(), placement.end(),
             [](const Pose& pose) { return pose.face == Face::bottom; }));
     };
     StageResult result;
-    result.rear_before = rear(kernel.placement());
+    result.rear_before = rear(attracted.placement());
     const SqueezeOptions settings = default_squeeze();
-    result.attract = attract(kernel, settings.pitch, static_cast<Nm>(constants::sink_reach.value));
+    result.attract = attract(attracted, settings.pitch, static_cast<Nm>(constants::sink_reach.value));
+    Problem held = binding.problem;
+    tighten_holds(held, attracted.placement(), hold_policy());
+    Kernel kernel(held, attracted.placement());
     const auto area = [](const SqueezeReport& report) {
         return to_mm(report.after.width) * to_mm(report.after.height);
     };
@@ -88,7 +92,17 @@ StageResult squeeze_stage(const PcbPlacementInput& inputs, const PcbModel& model
         fields.push_back(reserve.box);
     if (ordered(fields) != ordered(kernel.reserves()))
         throw LayoutError("layout: thermal fields did not follow their parts");
+    std::size_t holds = 0;
+    Nm held_before = 0, held_after = 0;
+    for (const auto& rule : held.constraints.pad_gaps) {
+        if (!rule.derived || !rule.rigid) continue;
+        ++holds;
+        held_before = std::max(held_before, pad_gap_length(held, rule, binding.placement));
+        held_after = std::max(held_after, pad_gap_length(held, rule, kernel.placement()));
+    }
     std::ostringstream text;
+    text << "OWNER HOLDS: " << holds << " small parts held to the pin they serve; farthest " << to_mm(held_before)
+         << " mm before, " << to_mm(held_after) << " mm after\n";
     text << "OWNER ATTRACTION: " << result.attract.wanted << " parts wanted a seat at the pin they serve, "
          << result.attract.seated << " seated (" << result.attract.to_rear << " to the rear); preferences met "
          << result.attract.met_before << " to " << result.attract.met_after << " of "

@@ -1,5 +1,7 @@
 #include "schgen/layout_problem.hpp"
 
+#include <limits>
+#include <cmath>
 #include <algorithm>
 
 namespace schgen::layout {
@@ -32,12 +34,36 @@ const char* tie_name(Tie tie) {
     return "none";
 }
 
-void derive_ownership(Problem& problem, Nm owner_reach) {
+Nm squared_pad_gap(const Problem& problem, const PadGap& rule, const Pose& anchor, const Pose& member) {
+    const auto boxes = [&](std::size_t part, const Pose& pose, const std::vector<std::size_t>& names) {
+        const Variant& variant = problem.footprints[problem.parts[part].footprint].on(pose.face);
+        std::vector<Box> out;
+        if (names.empty())
+            for (const auto& box : variant.name_boxes) out.push_back(placed(box, pose.at, pose.turn));
+        else
+            for (const std::size_t name : names) out.push_back(placed(variant.name_boxes[name], pose.at, pose.turn));
+        return out;
+    };
+    Nm best = std::numeric_limits<Nm>::max();
+    for (const auto& first : boxes(rule.anchor, anchor, rule.anchor_names))
+        for (const auto& second : boxes(rule.member, member, {})) best = std::min(best, squared_gap(first, second));
+    return best;
+}
+
+Nm pad_gap_length(const Problem& problem, const PadGap& rule, const Placement& placement) {
+    const Nm squared_length = squared_pad_gap(problem, rule, placement[rule.anchor], placement[rule.member]);
+    if (squared_length == std::numeric_limits<Nm>::max()) return squared_length;
+    return static_cast<Nm>(std::ceil(std::sqrt(static_cast<double>(squared_length)))) + 1;
+}
+
+void derive_ownership(Problem& problem, const Placement& placement, const HoldPolicy& policy) {
     const std::size_t count = problem.parts.size();
     problem.ownership.assign(count, {});
     problem.constraints.soft_gaps.clear();
+    auto& gaps = problem.constraints.pad_gaps;
+    gaps.erase(std::remove_if(gaps.begin(), gaps.end(), [](const PadGap& rule) { return rule.derived; }), gaps.end());
     std::vector<std::optional<std::size_t>> contracted(count);
-    for (const auto& rule : problem.constraints.pad_gaps)
+    for (const auto& rule : gaps)
         if (rule.sense == Sense::at_most && !contracted[rule.member]) contracted[rule.member] = rule.anchor;
     for (const auto& rule : problem.constraints.nearest_gaps)
         for (const std::size_t member : rule.members)
@@ -56,7 +82,7 @@ void derive_ownership(Problem& problem, Nm owner_reach) {
         }
         return found;
     };
-    const auto soften = [&](std::size_t part, std::size_t owner, int net) {
+    const auto bond = [&](std::size_t part, std::size_t owner, int net) {
         const Footprint& footprint = problem.footprints[problem.parts[owner].footprint];
         std::vector<std::size_t> names;
         for (std::size_t pad = 0; pad < footprint.top.pads.size(); ++pad) {
@@ -65,8 +91,18 @@ void derive_ownership(Problem& problem, Nm owner_reach) {
             const auto slot = static_cast<std::size_t>(name - footprint.top.names.begin());
             if (std::find(names.begin(), names.end(), slot) == names.end()) names.push_back(slot);
         }
-        problem.constraints.soft_gaps.push_back({owner, part, names, owner_reach, Sense::at_most,
-                                                 std::string("owner of ") + problem.parts[part].reference});
+        return PadGap{owner, part, names, policy.owner_reach, Sense::at_most, {}, true, true};
+    };
+    std::vector<PadGap> holds;
+    const auto own = [&](std::size_t part, std::size_t owner, int net) {
+        PadGap rule = bond(part, owner, net);
+        rule.source = "owner of " + problem.parts[part].reference;
+        rule.derived = false;
+        problem.constraints.soft_gaps.push_back(rule);
+        rule.source = "hold of " + problem.parts[part].reference;
+        rule.derived = true;
+        rule.limit = std::max(policy.owner_reach, pad_gap_length(problem, rule, placement)) + policy.hold_slack;
+        holds.push_back(std::move(rule));
     };
     for (std::size_t part = 0; part < count; ++part) {
         if (!small(part) || problem.parts[part].fixed || problem.parts[part].connector) continue;
@@ -78,20 +114,45 @@ void derive_ownership(Problem& problem, Nm owner_reach) {
         const auto signal = peers(part, Category::signal, false);
         if (signal.size() == 1) {
             entry = {Tie::signal, signal.front().first};
-            soften(part, signal.front().first, signal.front().second);
+            own(part, signal.front().first, signal.front().second);
             continue;
         }
         if (signal.size() > 1) {
             entry.tie = Tie::bridge;
+            for (const auto& [peer, net] : signal) {
+                PadGap rule = bond(part, peer, net);
+                rule.source = "tether of " + problem.parts[part].reference;
+                rule.rigid = false;
+                rule.limit = std::max(policy.owner_reach, pad_gap_length(problem, rule, placement)) + policy.tether_slack;
+                holds.push_back(std::move(rule));
+            }
             continue;
         }
         const auto rail = peers(part, Category::power, true);
-        if (rail.size() == 1) {
-            entry = {Tie::rail, rail.front().first};
-            soften(part, rail.front().first, rail.front().second);
-        } else {
-            entry.tie = rail.empty() ? Tie::unattached : Tie::shared;
+        if (rail.empty()) {
+            entry.tie = Tie::unattached;
+            continue;
         }
+        std::size_t nearest = 0;
+        Nm best = std::numeric_limits<Nm>::max();
+        for (std::size_t index = 0; index < rail.size(); ++index) {
+            const Nm gap = pad_gap_length(problem, bond(part, rail[index].first, rail[index].second), placement);
+            if (gap < best) {
+                best = gap;
+                nearest = index;
+            }
+        }
+        entry = {rail.size() == 1 ? Tie::rail : Tie::shared, rail[nearest].first};
+        own(part, rail[nearest].first, rail[nearest].second);
+    }
+    gaps.insert(gaps.end(), holds.begin(), holds.end());
+}
+
+void tighten_holds(Problem& problem, const Placement& placement, const HoldPolicy& policy) {
+    for (auto& rule : problem.constraints.pad_gaps) {
+        if (!rule.derived || !rule.rigid) continue;
+        rule.limit = std::min(rule.limit,
+                              std::max(policy.owner_reach, pad_gap_length(problem, rule, placement)) + policy.hold_slack);
     }
 }
 
