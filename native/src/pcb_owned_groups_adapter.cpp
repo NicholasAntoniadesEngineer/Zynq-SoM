@@ -183,7 +183,7 @@ OwnedShapeQuality quality(const Context& ctx, const TrustedOwnedGroups& t,
         const auto result = check_pcb_placement_contract(checked, t.circuit.name, &contract->second, t.refs);
         if (!result.ok) q.diagnostics.push_back(result.summary());
     }
-    q.fanout_starved = check_fanout(checked, std::nullopt).n_starved;
+    q.fanout_starved = check_fanout_strict(checked, std::nullopt).n_starved;
     if (q.diagnostics.empty()) q.state = OwnedShapeQualityState::Measured;
     return q;
 }

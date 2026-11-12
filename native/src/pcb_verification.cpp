@@ -3,7 +3,7 @@
 namespace schgen {
 bool PcbVerificationResult::ok() const {
     return complete && ratsnest.ok && mechanical.ok && connector_models.ok && connector_spacing.ok &&
-        refdes.ok && placement.ok() && fanout.ok && return_stitch.ok && escape_lanes.ok;
+        refdes.ok && placement.ok() && fanout.ok && return_stitch.ok && escape_lanes.ok && integrity.ok;
 }
 PcbVerificationResult verify_pcb_geometry(const BoardPcbStage& stage,
         const PcbEmittedBoard& emitted, std::optional<int> baseline, QuantizationCounts* counts) {
@@ -35,6 +35,7 @@ PcbVerificationResult verify_pcb_geometry(const BoardPcbStage& stage,
     out.return_stitch = check_return_stitch(prepared, out.return_path, triage, input.interface_bytes, &emitted);
     out.escape_lanes = check_escape_lanes(model,
         pcb_escape_population_from_json(input.floorplan.project.escape), input.interface_bytes);
+    out.integrity = check_placement_integrity(prepared, model);
     out.complete = true;
     return out;
 }

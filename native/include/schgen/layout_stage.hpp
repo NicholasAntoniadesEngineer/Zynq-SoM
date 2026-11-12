@@ -1,0 +1,29 @@
+#pragma once
+
+#include "schgen/layout_adapter.hpp"
+#include "schgen/layout_sink.hpp"
+#include "schgen/layout_squeeze.hpp"
+
+namespace schgen::layout {
+
+struct StageOptions {
+    std::string plane_net;
+    std::vector<std::string> overmold_parts;
+};
+
+struct StageResult {
+    PcbModel model;
+    AttractReport attract;
+    SqueezeReport squeeze;
+    BalanceReport balance;
+    bool balanced = false;
+    double plain_area = 0, balanced_area = 0;
+    std::size_t rear_before = 0, rear_after = 0;
+    std::string report;
+};
+
+std::string squeeze_summary(const SqueezeReport& report);
+StageResult squeeze_stage(const PcbPlacementInput& inputs, const PcbModel& model, const PcbEmitPolicy& policy,
+                          const AdapterOptions& options);
+
+}

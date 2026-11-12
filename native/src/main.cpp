@@ -9,6 +9,8 @@
 #include "schgen/project_cli.hpp"
 #include "schgen/regression_cli.hpp"
 #include "schgen/geometry_cli.hpp"
+#include "schgen/measure.hpp"
+#include "schgen/layout_cli.hpp"
 #include "schgen/part_import.hpp"
 #include "schgen/selftest_full.hpp"
 
@@ -39,6 +41,8 @@ int main(int argc, char** argv) {
                          "  w12-bound TAG | w12-stageprobe TAG [SHEET ...] [--project NAME] [--cons-only] (private probes)\n"
                          "  pcb-stage [--project NAME] [--kicad-cli PATH] [--compact-placement] -o DIRECTORY (construction only)\n"
                          "  pcb-drc [--project NAME] [--pcb FILE] [-o REPORT]\n"
+                         "  measure --pcb FILE --project-file FILE --sheet-index FILE [-o REPORT] [--map SVG] (placed-board scoreboard)\n"
+                         "  layout-export [--repo DIR] [--project NAME] --project-file FILE --plane-net NAME -o FILE | layout-check FILE\n"
                          "  subsystem-new NAME [--repo DIRECTORY] (new C++ package; never overwrites)\n"
                          "  part-import --parts-root DIRECTORY (--from-json FILE | --lcsc ID) [--name NAME] [--overwrite] [--catalog FILE]\n"
                          "  render3d | model3d-check [--project NAME] [-o DIRECTORY]\n"
@@ -72,6 +76,8 @@ int main(int argc, char** argv) {
             std::cout << schgen::selftest_worker_emit(schgen::parse_json_file(argv[2]), argv[3]);
             return 0;
         }
+        if (const auto status = schgen::run_measure_command(argc, argv)) return *status;
+        if (const auto status = schgen::run_layout_command(argc, argv)) return *status;
         if (const auto status = schgen::run_part_import_command(argc, argv)) return *status;
         if (const auto status = schgen::run_regression_command(argc, argv)) return *status;
         if (const auto status = schgen::run_geometry_command(argc, argv)) return *status;

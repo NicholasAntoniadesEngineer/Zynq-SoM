@@ -477,7 +477,7 @@ PcbPlacementSearchResult search_pcb_models(const PcbPlacementInput& input,
                 catch(const std::overflow_error&) {invalidate_execution_failure(&child);throw;}
                 const auto gates=check_pcb_placement_gates(trial,candidate->model,&pending.quantization_engagements);
                 const PcbCheckInput checked(candidate->model);
-                const auto fanout=check_fanout(checked,0);
+                const auto fanout=check_fanout_strict(checked,0);
                 const auto ratsnest=check_ratsnest(checked);
                 const auto& m=candidate->model;
                 const double area=m.board_w*m.board_h;

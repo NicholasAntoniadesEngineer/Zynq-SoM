@@ -264,7 +264,7 @@ void append_contract_group_faces(Context& ctx,Geometry& g,const std::string& she
         candidate.w=placement_variant_dimension_precision4dp(right+seed.w-old_right,&ctx.quantization);
         candidate.h=placement_variant_dimension_precision4dp(bottom+seed.h-old_bottom,&ctx.quantization);
         // Face assignments may help global packing without reducing local area.
-        if(!orientation_holds(ctx,g,sheet,candidate)||!check_fanout(model(candidate),0).ok)return false;
+        if(!orientation_holds(ctx,g,sheet,candidate)||!check_fanout_strict(model(candidate),0).ok)return false;
         return true;
     };
     const auto append_checked=[&](Shape candidate) {

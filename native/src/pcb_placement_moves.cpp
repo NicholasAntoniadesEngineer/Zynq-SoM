@@ -81,8 +81,8 @@ PcbCheckInput refit_fanout_geometry(const Placer &placer, const PcbStageRefitPos
     return PcbCheckInput(std::move(model));
 }
 bool refit_preserves_fanout(const PcbCheckInput &incumbent, const PcbCheckInput &trial) {
-    const auto before = check_fanout(incumbent, 0);
-    const auto after = check_fanout(trial, 0);
+    const auto before = check_fanout_strict(incumbent, 0);
+    const auto after = check_fanout_strict(trial, 0);
     if (before.records.size() != after.records.size()) return false;
     std::map<std::string, PcbFanoutRecord> prior;
     for (const auto &record : before.records) prior.emplace(record.ref, record);
@@ -263,7 +263,7 @@ bool evict_legal(const Placer &p, const PcbCheckInput &before, const PcbCheckInp
     }
     if (!refit_preserves_fanout(before,after)) return reject("fanout_regression");
     if (rigid)
-        for (const auto &record : check_fanout(after,0).records)
+        for (const auto &record : check_fanout_strict(after,0).records)
             if (record.starved()) return reject("rigid_fanout:"+record.ref);
     // Body separation is face-aware, but thermal vias penetrate both faces.
     // A corridor exit must not repair one constraint by consuming another

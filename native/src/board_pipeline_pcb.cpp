@@ -131,6 +131,15 @@ void pcb_stages(Context& c){
         // One receipt owns all actual plan/zone/placement work, not the legacy
         // fallback prefix. Import before emission so failures retain work done.
         c.inbox.merge_once("pcb/placement",pcb_placement_accounting(stage.placement));
+        if(c.options.layout){
+            auto squeezed=c.measure("pcb_layout_squeeze",[&]{
+                return layout::squeeze_stage(stage.inputs,stage.placement.model,pcb_emit_policy(stage.inputs.floorplan.project),
+                    {c.options.layout->plane_net,
+                     layout::project_edge_clearance(parse_json_file((c.paths.project_root/"Zynq_Carrier.kicad_pro").string())),
+                     c.options.layout->overmold_parts,stage.inputs.floorplan.place_clear});});
+            c.report("layout_squeeze.txt",squeezed.report);
+            stage.placement.model=std::move(squeezed.model);
+        }
         stage.emission=precision_receipt(c,"pcb/emission/precision",[&](auto& counts){
             return c.measure("pcb_render",[&]{return render_pcb(stage.placement.model,pcb_emit_policy(stage.inputs.floorplan.project),&counts);});});
         c.inbox.merge_once("pcb/emission",NativeAccountingBatch{{},stage.emission.fallback_events});
@@ -167,6 +176,7 @@ void pcb_stages(Context& c){
         gate("contract_coverage",r.placement.coverage_report.violated==0,r.placement.coverage_report.text);
         gate("floorplan_composition",r.placement.composition.hard_red==0&&r.placement.composition.soft_red==0,r.placement.composition.text());
         gate("return_stitch",r.return_stitch.ok,r.return_stitch.summary());gate("escape_lanes",r.escape_lanes.ok,r.escape_lanes.summary());
+        gate("placement_integrity",r.integrity.ok,r.integrity.summary());
         gate("return_path",r.return_path.ok,"REPORT-ONLY: fixed SoM interface; remediation judged by return_stitch.\n"+r.return_path.summary());
         gate("fanout",r.fanout.ok,r.fanout.summary());
         if(r.fanout.ok){const auto old=baseline(bp);const auto n=old?std::min(*old,r.fanout.n_starved):r.fanout.n_starved;

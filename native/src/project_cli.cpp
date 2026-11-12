@@ -64,6 +64,9 @@ struct Options {
     bool no_render = false, timing = false, conservative_only = false;
     std::size_t audit_projection_slots=1;
     bool compact_search = false;
+    bool layout_squeeze = false;
+    std::string plane_net;
+    std::vector<std::string> overmold_parts;
     bool multiscale_outline = false;
     bool edge_feasibility = false;
     bool failed_first_retry = false;
@@ -202,6 +205,17 @@ Options parse(int argc, char** argv) {
             if(!seen.insert(arg).second)throw ProjectError("duplicate option "+arg);
             out.compact_search=true;continue;
         }
+        if(arg=="--layout-squeeze"){
+            if(!seen.insert(arg).second)throw ProjectError("duplicate option "+arg);
+            out.layout_squeeze=true;continue;
+        }
+        if(arg=="--plane-net"||arg=="--overmold-part"){
+            if(++i==argc||std::string(argv[i]).empty()||std::string(argv[i]).front()=='-')
+                throw ProjectError(arg.substr(2)+" requires a value");
+            if(arg=="--overmold-part"){out.overmold_parts.push_back(argv[i]);seen.insert(arg);continue;}
+            if(!seen.insert(arg).second)throw ProjectError("duplicate option "+arg);
+            out.plane_net=argv[i];continue;
+        }
         if(arg=="--cons-only"){
             if(!seen.insert(arg).second)throw ProjectError("duplicate option "+arg);
             out.conservative_only=true;continue;
@@ -287,6 +301,7 @@ Options parse(int argc, char** argv) {
         allowed.insert("--audit-projections");
         allowed.insert("--reseat-victim-shapes");
         allowed.insert("--compact-placement");
+        allowed.insert("--layout-squeeze");allowed.insert("--plane-net");allowed.insert("--overmold-part");
         allowed.insert("--multiscale-outline");
         allowed.insert("--edge-feasibility");
         allowed.insert("--joint-separation-states");
@@ -357,6 +372,8 @@ Options parse(int argc, char** argv) {
         experiment.interior_order=out.interior_order;experiment.failed_first_retry=out.failed_first_retry;
         validate_floorplan_experiment(experiment);
     }
+    if(out.layout_squeeze!=!out.plane_net.empty()||(!out.layout_squeeze&&!out.overmold_parts.empty()))
+        throw ProjectError("layout-squeeze and --plane-net NAME are given together; --overmold-part needs both");
     if(out.edge_feasibility&&!out.compact_search)
         throw ProjectError("edge-feasibility requires --compact-placement");
     if(out.joint_states&&!out.compact_search)
@@ -554,6 +571,7 @@ std::optional<int> run_project_command(int argc, char** argv) {
         build.audit.projection_slots = options.audit_projection_slots;
         build.native_policy = true;
         build.pcb.compact_search = options.compact_search;
+        if(options.layout_squeeze)build.layout=layout::StageOptions{options.plane_net,options.overmold_parts};
         build.pcb.floorplan_spec = options.floorplan_spec;
         if(options.initial_outline || options.interior_order || options.multiscale_outline || options.edge_feasibility || options.owned_quality_first || options.shape_area_first || options.granular_minor_occupancy || options.vertical_compaction || options.owned_extent_alternatives || options.owned_face_cohesion || !options.owned_shapes.empty() || !options.contract_group_face_sheets.empty() || !options.require_bottom_sheets.empty() || options.joint_states || options.reseat_pose_limits){
             auto experiment=std::make_shared<FloorplanExperiment>();
