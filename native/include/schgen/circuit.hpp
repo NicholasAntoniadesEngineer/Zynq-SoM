@@ -78,6 +78,24 @@ struct CircuitWaiverIr {
     std::string reason;
 };
 
+struct CircuitServiceIr {
+    std::string part;
+    std::string role;
+    CircuitPinRefIr owner;
+    std::string net;
+    std::string target;
+};
+
+struct CircuitFreeIr {
+    std::string part;
+    std::string reason;
+};
+
+struct CircuitLayoutIr {
+    std::vector<CircuitServiceIr> serves;
+    std::vector<CircuitFreeIr> free;
+};
+
 struct CircuitSheetIr {
     std::string schema;
     std::string name;
@@ -89,7 +107,22 @@ struct CircuitSheetIr {
     std::vector<CircuitHintIr> hints;
     std::vector<CircuitLoadIr> loads;
     std::vector<CircuitWaiverIr> waivers;
+    CircuitLayoutIr layout;
 };
+
+const std::vector<std::string>& circuit_service_roles();
+void validate_circuit_layout(const CircuitSheetIr& sheet);
+JsonNode circuit_layout_json(const CircuitSheetIr& sheet);
+CircuitLayoutIr parse_circuit_layout(const JsonNode& document, const CircuitSheetIr& sheet);
+CircuitLayoutIr load_circuit_layout(const std::filesystem::path& path, const CircuitSheetIr& sheet);
+
+struct LayoutIntentResult {
+    bool ok = true;
+    std::size_t support_parts = 0, served = 0, released = 0;
+    std::vector<std::string> undeclared;
+    std::string summary() const;
+};
+LayoutIntentResult check_layout_intent(const std::vector<CircuitSheetIr>& sheets);
 
 // Authoritative canonical JSON loader, also used by catalog compilation.
 // Preserves source ordering and validates expanded IR electrical invariants.

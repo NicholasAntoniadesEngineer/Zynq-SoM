@@ -153,7 +153,8 @@ BoardPipelineResult run_board_pipeline(const ProjectPaths& p,const BoardPipeline
             c.report("authoring_purity.txt",purity.report());c.gate("authoring_purity",purity.ok(),purity.report());
         },c.timing);c.measure("input_publication",[&]{publish_board_pipeline_inputs(*c.authored,p,c.out);});c.circuits=c.authored->circuits;
         std::vector<std::string> names;for(const auto& sc:c.circuits){c.sheets.push_back(sc.circuit);names.push_back(sc.name);}
-        c.index=extend_sheet_index(load_sheet_index(p),names).index;c.result.sheets=c.sheets.size();c.loaded=true;c.gate("inputs",true,"live C++ factories authored once; canonical snapshots published; actual IR retained");});
+        c.index=extend_sheet_index(load_sheet_index(p),names).index;c.result.sheets=c.sheets.size();c.loaded=true;c.gate("inputs",true,"live C++ factories authored once; canonical snapshots published; actual IR retained");
+        const auto intent=check_layout_intent(c.sheets);c.report("layout_intent.txt",intent.summary());c.gate("layout_intent",intent.ok,intent.summary());});
     if(c.loaded){schematic_stage(c);electrical_stages(c);pcb_stages(c);document_stages(c);audit_stages(c);}
     for(const auto& name:required)if(std::none_of(c.result.gates.begin(),c.result.gates.end(),[&](const auto& g){return g.name==name;}))c.gate(name,false,"stage did not run; prerequisite unavailable");
     c.result.quantization=c.quantizations.engagements();c.result.fallbacks=c.fallbacks.census();c.result.ledger=c.ledger.render();

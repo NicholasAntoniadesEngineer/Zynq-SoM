@@ -268,6 +268,13 @@ CircuitSheetIr carrier_bringup_rails(const SubsystemMeta& meta, const AuthoringC
     c.field("R6", "LCSC", "C25804");
     c.field("R7", "LCSC", "C25804");
     c.field("R8", "LCSC", "C25804");
+    c.serves("C2", "SW3.1", "filter");
+    c.serves("C3", "SW4.1", "filter");
+    c.serves("C4", "SW5.1", "filter");
+    c.serves("R1", "U1.P10", "pull");
+    c.serves("R2", "U1.P16", "pull");
+    c.serves("R3", "U1.P17", "pull");
+    c.serves_module("R9", "PUDC_34", "pull");
     return meta.finish(c);
 }
 } // namespace schgen::project_builders

@@ -83,6 +83,8 @@ CircuitSheetIr rj45_connector(const SubsystemMeta& meta, const AuthoringContext&
     c.net("GND", {"J1.12"}, std::nullopt);
     c.net("CHASSIS_GND", {"J1.13"}, std::nullopt);
     c.draws("+VLED", 0.008, meta.note("draws", "RJ45 housing LEDs (2x 330R port-present indicator)"));
+    c.serves("R1", "J1.9", "indicate");
+    c.serves("R2", "J1.11", "indicate");
     return meta.finish(c);
 }
 } // namespace schgen::subsystem_builders

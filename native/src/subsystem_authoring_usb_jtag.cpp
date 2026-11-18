@@ -138,6 +138,11 @@ CircuitSheetIr usb_jtag(const SubsystemMeta& meta, const AuthoringContext& conte
     c.field("R1", "LCSC", "C25804");
     c.field("C7", "LCSC", "C14663");
     c.field("R4", "LCSC", "C25803");
+    c.serves("C5", "Y1.1", "timing");
+    c.serves("C6", "Y1.3", "timing");
+    c.serves("R2", "U1.10", "pull");
+    c.serves("R3", "U1.13", "pull");
+    c.serves("Y1", "U1.19", "timing");
     return meta.finish(c);
 }
 } // namespace schgen::subsystem_builders

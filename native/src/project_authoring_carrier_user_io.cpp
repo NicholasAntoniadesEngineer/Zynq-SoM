@@ -97,6 +97,19 @@ CircuitSheetIr carrier_user_io(const SubsystemMeta& meta, const AuthoringContext
     c.net("GND", {"SW4.3", "SW4.4"}, std::nullopt);
     c.draws("+3V3_USER_LED", 0.012, "red ~1.3 mA (1k) + green/blue/white up to ~3.5 mA each (200R)");
     c.draws("+3V3", 0.002, "4x button 10k pull-ups when pressed");
+    c.serves("C1", "D2.2", "bypass");
+    c.free("D1", "user LED on the gated +3V3_USER_LED rail; sunk through R1 by a SoM pin on another sheet");
+    c.free("D2", "user LED on the gated +3V3_USER_LED rail; sunk through R2 by a SoM pin on another sheet");
+    c.free("D3", "user LED on the gated +3V3_USER_LED rail; sunk through R3 by a SoM pin on another sheet");
+    c.free("D4", "user LED on the gated +3V3_USER_LED rail; sunk through R4 by a SoM pin on another sheet");
+    c.serves("R1", "D1.1", "indicate");
+    c.serves("R2", "D2.1", "indicate");
+    c.serves("R3", "D3.1", "indicate");
+    c.serves("R4", "D4.1", "indicate");
+    c.serves("R5", "SW1.1", "pull");
+    c.serves("R6", "SW2.1", "pull");
+    c.serves("R7", "SW3.1", "pull");
+    c.serves("R8", "SW4.1", "pull");
     return meta.finish(c);
 }
 } // namespace schgen::project_builders

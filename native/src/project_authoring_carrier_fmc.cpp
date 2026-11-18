@@ -247,6 +247,11 @@ CircuitSheetIr carrier_fmc(const SubsystemMeta& meta, const AuthoringContext& co
     c.testpoint("+2V5_VADJ", std::nullopt);
     c.draws("+3V3", 0.5, "bank-35 IO header +3V3 add-on allowance");
     c.draws("+2V5_VADJ", 0.35, "VADJ bank-35 VCCO budget (TLV75725 DYD 0.40 A envelope less ~0.05 A bank-35 VCCO)");
+    c.serves("C1", "J1.1", "reservoir");
+    c.serves("C2", "J1.1", "bypass");
+    c.serves("C3", "U1.1", "reservoir");
+    c.serves("C4", "U1.5", "reservoir");
+    c.serves("C5", "J1.2", "bypass");
     return meta.finish(c);
 }
 } // namespace schgen::project_builders

@@ -112,6 +112,15 @@ CircuitSheetIr camera(const SubsystemMeta& meta, const AuthoringContext& context
     c.testpoint("CAM_SDA", std::nullopt);
     c.testpoint("CAM_EN", std::nullopt);
     c.draws("+VDD_CAM", 0.3, meta.note("draws", "RPi camera module budget (V2/IMX219 typ ~250 mA incl. I2C pull-ups)"));
+    c.serves("C1", "J1.15", "bypass");
+    c.serves("C2", "J1.15", "reservoir");
+    c.serves_module("R1", "CSI_D0_P", "terminate");
+    c.serves_module("R2", "CSI_D1_P", "terminate");
+    c.serves_module("R3", "CSI_CLK_P", "terminate");
+    c.serves("R4", "J1.13", "pull");
+    c.serves("R5", "J1.14", "pull");
+    c.serves("U1", "J1.3", "protect");
+    c.serves("U2", "J1.9", "protect");
     return meta.finish(c);
 }
 } // namespace schgen::subsystem_builders

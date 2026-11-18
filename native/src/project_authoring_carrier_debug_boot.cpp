@@ -99,6 +99,12 @@ CircuitSheetIr carrier_debug_boot(const SubsystemMeta& meta, const AuthoringCont
     c.net("+3V3_SC", {"R4.1", "R5.1", "R6.1"}, std::nullopt);
     c.draws("+3V3_SC", 0.004, "BOOT0 strap ~2 mA closed + BOOTSEL pulls");
     c.draws("+3V3", 0.002, "JTAG TMS/TDI 4k7 insurance pulls when driven");
+    c.serves("R1", "J1.4", "pull");
+    c.serves("R2", "J1.10", "pull");
+    c.serves("R3", "SW1.8", "pull");
+    c.serves("R4", "SW1.2", "pull");
+    c.serves("R5", "SW1.3", "pull");
+    c.serves("R6", "SW1.4", "pull");
     return meta.finish(c);
 }
 } // namespace schgen::project_builders

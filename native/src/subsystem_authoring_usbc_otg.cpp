@@ -90,6 +90,14 @@ CircuitSheetIr usbc_otg(const SubsystemMeta& meta, const AuthoringContext& conte
     c.draws("+VBUS_SUPPLY", 0.5, meta.note("draws_vbus", "downstream USB device budget, TPS2051C current-limited"));
     c.draws("+VDD_LOGIC", 0.0005, meta.note("draws_flt", "FLT# 100k pull-up on the logic rail"));
     c.field("C1", "LCSC", "C14663");
+    c.serves("C2", "J2.A4B9", "reservoir");
+    c.serves("C3", "J2.B4A9", "reservoir");
+    c.serves("R1", "J2.CC1", "pull");
+    c.serves("R2", "J2.CC2", "pull");
+    c.serves("R3", "U1.FLT#", "pull");
+    c.free("R4", "identification strap on a slow line; its position is not critical");
+    c.serves("R5", "U1.EN(EN#)", "pull");
+    c.serves("U2", "J2.DP1", "protect");
     return meta.finish(c);
 }
 } // namespace schgen::subsystem_builders

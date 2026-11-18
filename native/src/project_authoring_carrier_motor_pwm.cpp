@@ -129,6 +129,12 @@ CircuitSheetIr carrier_motor_pwm(const SubsystemMeta& meta, const AuthoringConte
     c.field("C1", "LCSC", "C14663");
     c.field("R1", "LCSC", "C25804");
     c.field("C2", "LCSC", "C14663");
+    c.serves("C3", "U3.OUT", "reservoir");
+    c.serves("D1", "J1.2", "protect");
+    c.serves("D2", "J1.6", "protect");
+    c.serves("R2", "U3.ISET", "set");
+    c.serves("RN1", "U1.B2", "series");
+    c.serves("RN2", "U1.B6", "series");
     return meta.finish(c);
 }
 } // namespace schgen::project_builders

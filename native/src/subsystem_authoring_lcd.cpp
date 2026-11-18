@@ -251,6 +251,21 @@ CircuitSheetIr lcd(const SubsystemMeta& meta, const AuthoringContext& context) {
     c.draws("+VBOOST_IN", 0.45, meta.note("draws_boost", "SY7201 boost input @133 mA LED string (operating point + margin)"));
     c.waive("reset_waivers", "TP_RST", "GPIO-driven reset, held by 100k pull-down until PL releases");
     c.waive("part_rule_waivers", "C2", "MLCC 50V on LCD_VLED_P: the 30V is the rare open-LED OVP-clamp transient, not continuous (string ~9.6V); 50V/X7R dossier-sized for it (lcd_backlight.md). 2x derate targets continuous DC bias, not a fault clamp");
+    c.serves("C1", "U1.IN", "reservoir");
+    c.serves("C2", "D1.1", "switching");
+    c.serves("C3", "J1.4", "bypass");
+    c.serves("C4", "J1.4", "reservoir");
+    c.serves("C5", "U1.IN", "bypass");
+    c.serves("D1", "U1.LX", "switching");
+    c.serves("L1", "U1.LX", "switching");
+    c.serves("R1", "U1.FB", "sense");
+    c.serves("R2", "U2.6", "pull");
+    c.serves("R3", "U2.4", "pull");
+    c.serves("R4", "U1.EN/PWM", "pull");
+    c.serves("R5", "J1.39", "pull");
+    c.serves("R6", "J1.31", "pull");
+    c.serves_module("R7", "LCD_PCLK", "series");
+    c.serves("U2", "J1.37", "protect");
     return meta.finish(c);
 }
 } // namespace schgen::subsystem_builders

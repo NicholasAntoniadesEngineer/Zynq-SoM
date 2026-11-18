@@ -122,6 +122,14 @@ CircuitSheetIr hdmi_rx(const SubsystemMeta& meta, const AuthoringContext& contex
     c.net("CHASSIS_GND", {"J1.20", "J1.21", "J1.22", "J1.23"}, std::nullopt);
     c.nc({"J1.14"});
     c.draws("+VDD_LOGIC", 0.001, meta.note("draws", "CEC 27k pull-up (EEPROM + EDID WC# are cable-5V-fed)"));
+    c.serves("C1", "U1.8", "bypass");
+    c.serves("R1", "J1.19", "pull");
+    c.serves("R2", "J1.13", "pull");
+    c.serves("R3", "J1.18", "sense");
+    c.serves("R4", "R3.2", "sense");
+    c.serves("U2", "J1.3", "protect");
+    c.serves("U3", "J1.9", "protect");
+    c.serves("U4", "J1.16", "protect");
     return meta.finish(c);
 }
 } // namespace schgen::subsystem_builders

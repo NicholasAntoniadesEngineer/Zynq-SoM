@@ -26,7 +26,7 @@ add_library(schgen_core STATIC
     src/pack_grid_precision.cpp
     src/pack_anchor.cpp src/place_search.cpp src/cc.cpp src/embed_fp.cpp
     src/pack_edges.cpp src/pcb_scan.cpp src/pack_refine.cpp src/place_geom.cpp
-    src/catalog.cpp src/json.cpp src/circuit.cpp src/reorder.cpp src/atomic_file.cpp
+    src/catalog.cpp src/json.cpp src/circuit.cpp src/circuit_layout.cpp src/reorder.cpp src/atomic_file.cpp
     src/ratsnest.cpp src/footprint_library.cpp src/xdc.cpp src/vivado.cpp
     src/bom.cpp src/project.cpp src/project_catalog.cpp src/project_outputs.cpp src/som_interface.cpp
     src/link.cpp src/devicetree.cpp src/symbols.cpp src/validation.cpp
@@ -223,6 +223,10 @@ if(BUILD_TESTING)
     target_link_libraries(schgen_layout_squeeze_contracts PRIVATE schgen_core)
     target_compile_options(schgen_layout_squeeze_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror -ffp-contract=off)
     add_test(NAME native_layout_squeeze_contracts COMMAND schgen_layout_squeeze_contracts)
+    add_executable(schgen_circuit_layout_contracts tests/circuit_layout_contracts.cpp)
+    target_link_libraries(schgen_circuit_layout_contracts PRIVATE schgen_core)
+    target_compile_options(schgen_circuit_layout_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror)
+    add_test(NAME native_circuit_layout_contracts COMMAND schgen_circuit_layout_contracts)
     add_executable(schgen_layout_replay_contracts tests/layout_replay_contracts.cpp)
     target_link_libraries(schgen_layout_replay_contracts PRIVATE schgen_core)
     target_compile_options(schgen_layout_replay_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror -ffp-contract=off)

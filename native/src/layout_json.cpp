@@ -13,7 +13,7 @@ using json_text::integer;
 using json_text::object;
 using json_text::text_value;
 
-const char* const schema_name = "schgen.layout-problem/4";
+const char* const schema_name = "schgen.layout-problem/5";
 inline constexpr std::size_t point_fields = 2, disc_fields = 3, box_fields = 4;
 
 std::string point_json(Point point) { return array({integer(point.x), integer(point.y)}); }
@@ -181,7 +181,8 @@ std::string constraints_json(const Constraints& rules) {
                        {"sense", text_value(sense_name(rule.sense))},
                        {"source", text_value(rule.source)},
                        {"rigid", boolean(rule.rigid)},
-                       {"derived", boolean(rule.derived)}});
+                       {"derived", boolean(rule.derived)},
+                       {"reach", integer(rule.reach)}});
     };
     for (const auto& rule : rules.pad_gaps) pad_gaps.push_back(gap_json(rule));
     for (const auto& rule : rules.soft_gaps) soft_gaps.push_back(gap_json(rule));
@@ -220,12 +221,13 @@ Constraints constraints_of(const JsonNode& node) {
                         "layout constraints");
     Constraints rules;
     const auto gap_of = [](const JsonNode& entry) {
-        reject_unknown_keys(entry, {"anchor", "member", "anchor_names", "limit", "sense", "source", "rigid", "derived"},
+        reject_unknown_keys(entry, {"anchor", "member", "anchor_names", "limit", "sense", "source", "rigid", "derived", "reach"},
                             "layout pad gap");
         return PadGap{index_of(entry, "anchor"), index_of(entry, "member"),
                       indices_of(field(entry, "anchor_names", JsonKind::Array)),
                       whole(field(entry, "limit", JsonKind::Number)), sense_of(text(entry, "sense")),
-                      text(entry, "source"), flag(entry, "rigid"), flag(entry, "derived")};
+                      text(entry, "source"), flag(entry, "rigid"), flag(entry, "derived"),
+                      whole(field(entry, "reach", JsonKind::Number))};
     };
     for (const auto& entry : field(node, "pad_gaps", JsonKind::Array).array_value) rules.pad_gaps.push_back(gap_of(entry));
     for (const auto& entry : field(node, "soft_gaps", JsonKind::Array).array_value) rules.soft_gaps.push_back(gap_of(entry));
@@ -295,6 +297,7 @@ std::string document_json(const Problem& problem, const Placement& placement) {
                                 {"top_only", boolean(part.top_only)},
                                 {"core_exempt", boolean(part.core_exempt)},
                                 {"cohesion_member", boolean(part.cohesion_member)},
+                                {"module", boolean(part.module)},
                                 {"tie", text_value(tie_name(problem.ownership.empty() ? Tie::none : problem.ownership[parts.size()].tie))},
                                 {"owner", integer(problem.ownership.empty() || !problem.ownership[parts.size()].owner
                                                       ? -1 : static_cast<long long>(*problem.ownership[parts.size()].owner))},
@@ -404,7 +407,7 @@ Document read_document(const JsonNode& root) {
         reject_unknown_keys(entry, {"reference", "group", "value", "footprint_name", "footprint", "pad_nets",
                                     "fanout_pins", "fanout_need", "fanout_subject", "escape_top",
                                     "escape_bottom", "never_crowds",
-                                    "cluster_passive", "fixed", "top_only", "core_exempt", "cohesion_member",
+                                    "cluster_passive", "fixed", "top_only", "core_exempt", "cohesion_member", "module",
                                     "connector", "overmold", "edge", "corner", "tie", "owner"},
                             "layout part");
         Part part;
@@ -424,9 +427,11 @@ Document read_document(const JsonNode& root) {
         part.top_only = flag(entry, "top_only");
         part.core_exempt = flag(entry, "core_exempt");
         part.cohesion_member = flag(entry, "cohesion_member");
+        part.module = flag(entry, "module");
         Ownership ownership;
         const std::string tie = text(entry, "tie");
-        for (const Tie candidate : {Tie::none, Tie::contract, Tie::signal, Tie::rail, Tie::shared, Tie::bridge, Tie::unattached})
+        for (const Tie candidate : {Tie::none, Tie::contract, Tie::authored, Tie::released, Tie::signal, Tie::rail, Tie::shared, Tie::bridge,
+                                    Tie::unattached})
             if (tie == tie_name(candidate)) ownership.tie = candidate;
         if (tie != tie_name(ownership.tie)) throw LayoutError("layout: unknown ownership tie " + tie);
         const Nm owner = whole(field(entry, "owner", JsonKind::Number));

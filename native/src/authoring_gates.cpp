@@ -44,6 +44,10 @@ void native_companion(const fs::path& path,const CircuitSheetIr& built,std::vect
     const auto companion=load_circuit_json(path);
     if(!authoring_json_equal(authored_circuit_json(companion),authored_circuit_json(built)))
         errors.push_back("circuit.json differs from the native authoring factory");
+    const auto layout=path.parent_path()/"layout.json";
+    if(!fs::is_regular_file(layout))errors.push_back("layout.json is missing beside circuit.json");
+    else if(!authoring_json_equal(parse_json_file(layout.string()),circuit_layout_json(built)))
+        errors.push_back("layout.json differs from the native authoring factory");
 }
 }
 std::vector<SubsystemPackageFactory> native_subsystem_factories(const AuthoringContext& context) {
@@ -74,8 +78,8 @@ std::vector<std::string> subsystem_required_files(const std::string& name,Author
 }
 std::vector<std::string> carrier_required_files(const std::string& name,bool adapter,AuthoringPackageMode mode) {
     if(mode==AuthoringPackageMode::native_assets) {
-        if(adapter)return {"circuit.json"};
-        return {"circuit.json","README.md",name+".cir"};
+        if(adapter)return {"circuit.json","layout.json"};
+        return {"circuit.json","layout.json","README.md",name+".cir"};
     }
     if(adapter)return {name+".py","test_"+name+".py"};
     return {name+".py","__init__.py","README.md","test_"+name+".py",name+".cir"};
@@ -95,7 +99,7 @@ SubsystemPackageReport check_subsystem_package(const std::string& name,const fs:
     try {
         c=factory->circuit_meta?factory->circuit_meta(SubsystemMeta{}):factory->circuit();
         if(native) {
-            c=parse_circuit_ir(authored_circuit_json(c));
+            {auto layout=std::move(c.layout);c=parse_circuit_ir(authored_circuit_json(c));c.layout=std::move(layout);}
             if(c.name!=name)r.errors.push_back("native circuit name does not match package name");
             if(fs::exists(r.path/"circuit.json"))native_companion(r.path/"circuit.json",c,r.errors);
             const std::set<std::string> unique(r.declared_interface.begin(),r.declared_interface.end());
@@ -140,7 +144,8 @@ CarrierPackageReport check_carrier_package(const std::string& name,const fs::pat
         try {
             if(r.adapter&&r.has_meta)(void)SubsystemMeta(*factory->meta);
             if(r.has_circuit) {
-                const auto c=parse_circuit_ir(authored_circuit_json(factory->circuit()));
+                auto authored=factory->circuit();auto c=parse_circuit_ir(authored_circuit_json(authored));
+                c.layout=std::move(authored.layout);
                 if(c.name!=name)r.errors.push_back("native circuit name does not match package name");
                 if(fs::is_regular_file(r.path/"circuit.json"))native_companion(r.path/"circuit.json",c,r.errors);
             }

@@ -45,7 +45,8 @@ BoardAuthoredProject author_board_pipeline_inputs(const ProjectPaths& paths,
     for(auto& f:out.factories){
         if(!f.circuit)throw ProjectError("missing native board factory: "+f.name);
         auto ir=[&]{ExecutionTimings::Scope generate(timing,"input_factory_generation_and_ir_conversion");
-            return parse_circuit_ir(authored_circuit_json(f.circuit()));}();
+            auto authored=f.circuit();auto canonical=parse_circuit_ir(authored_circuit_json(authored));
+            canonical.layout=std::move(authored.layout);validate_circuit_layout(canonical);return canonical;}();
         if(ir.name!=f.name)throw ProjectError("native board factory name mismatch: "+f.name);
         {ExecutionTimings::Scope validate(timing,"input_circuit_validation");validate_circuit(ir,library);}
         out.circuits.push_back({f.name,paths.subsystems_dir/f.name/"circuit.json",ir});
@@ -64,6 +65,7 @@ void publish_board_pipeline_inputs(BoardAuthoredProject& project,const ProjectPa
     for(const auto& sc:project.circuits){package_name(sc.name);const auto target=output/"subsystems"/sc.name;
         if(fs::is_symlink(target))throw ProjectError("symlinked native board output package: "+sc.name);
         files.emplace_back(target/"circuit.json",json(authored_circuit_json(sc.circuit))+"\n");
+        files.emplace_back(target/"layout.json",json(circuit_layout_json(sc.circuit))+"\n");
         if(fs::weakly_canonical(target)!=fs::weakly_canonical(paths.subsystems_dir/sc.name))
             for(const auto& asset:{std::string("README.md"),sc.name+".cir"}){
                 const auto source=paths.subsystems_dir/sc.name/asset;

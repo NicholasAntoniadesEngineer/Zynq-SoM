@@ -136,7 +136,7 @@ void pcb_stages(Context& c){
                 return layout::squeeze_stage(stage.inputs,stage.placement.model,pcb_emit_policy(stage.inputs.floorplan.project),
                     {c.options.layout->plane_net,
                      layout::project_edge_clearance(parse_json_file((c.paths.project_root/"Zynq_Carrier.kicad_pro").string())),
-                     c.options.layout->overmold_parts,stage.inputs.floorplan.place_clear});});
+                     c.options.layout->overmold_parts,stage.inputs.floorplan.place_clear,layout::authored_intent(stage.inputs)});});
             c.report("layout_squeeze.txt",squeezed.report);
             stage.placement.model=std::move(squeezed.model);
         }

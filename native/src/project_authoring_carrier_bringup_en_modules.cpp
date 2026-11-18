@@ -300,6 +300,17 @@ CircuitSheetIr carrier_bringup_en_modules(const SubsystemMeta& meta, const Autho
     c.field("C10", "LCSC", "C14663");
     c.field("R21", "LCSC", "C25803");
     c.field("C11", "LCSC", "C14663");
+    c.serves("R1", "U1.1", "pull");
+    c.serves("R3", "U2.1", "pull");
+    c.serves("R5", "U3.1", "pull");
+    c.serves("R7", "U4.1", "pull");
+    c.serves("R9", "U5.1", "pull");
+    c.serves("R11", "U6.1", "pull");
+    c.serves("R13", "U7.1", "pull");
+    c.serves("R15", "U8.1", "pull");
+    c.serves("R17", "U9.1", "pull");
+    c.serves("R18", "U10.1", "pull");
+    c.serves("R20", "U11.1", "pull");
     return meta.finish(c);
 }
 } // namespace schgen::project_builders

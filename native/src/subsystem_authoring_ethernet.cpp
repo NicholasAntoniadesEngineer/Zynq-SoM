@@ -157,6 +157,15 @@ CircuitSheetIr ethernet(const SubsystemMeta& meta, const AuthoringContext& conte
     c.net("BS_COMMON", {"C5.1"}, std::nullopt);
     c.net("CHASSIS_GND", {"C5.2"}, std::nullopt);
     c.field("T1", "ALT_LCSC", "C47575004");
+    c.serves("C1", "T1.24", "terminate");
+    c.serves("C2", "T1.21", "terminate");
+    c.serves("C3", "T1.18", "terminate");
+    c.serves("C4", "T1.15", "terminate");
+    c.serves("C5", "R3.2", "terminate");
+    c.serves("R1", "T1.24", "terminate");
+    c.serves("R2", "T1.21", "terminate");
+    c.serves("R3", "T1.18", "terminate");
+    c.serves("R4", "T1.15", "terminate");
     return meta.finish(c);
 }
 } // namespace schgen::subsystem_builders

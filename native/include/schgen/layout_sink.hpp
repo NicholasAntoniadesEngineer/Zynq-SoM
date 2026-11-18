@@ -9,11 +9,21 @@ namespace schgen::layout {
 namespace constants {
 inline constexpr NamedConstant sink_reach{"sink_reach", 3e6, "nm", "policy",
     "largest distance from its target at which a part is seated when it changes face or joins its owner"};
-inline constexpr std::array sink_registry{sink_reach};
+inline constexpr NamedConstant seat_margin{"seat_margin", 1e6, "nm", "policy",
+    "room searched beyond a role's reach, so a part's body may lie outside the reach while its pad lies inside"};
+inline constexpr NamedConstant ring_limit{"ring_limit", 8e6, "nm", "policy",
+    "largest radius searched for a seat at a pin; seats farther out are no better and cost time"};
+inline constexpr NamedConstant aside_reach{"aside_reach", 4e6, "nm", "policy",
+    "farthest a blocking small part is moved aside to free a seat at a pin"};
+inline constexpr NamedConstant evict_tries{"evict_tries", 6, "seats", "policy",
+    "number of best seats within reach at which blockers are moved aside for one part"};
+inline constexpr NamedConstant small_pins{"small_pins", 2, "pins", "policy",
+    "a part with at most this many connected pins may be moved aside for a part that serves a pin"};
+inline constexpr std::array sink_registry{sink_reach, seat_margin, ring_limit, aside_reach, evict_tries, small_pins};
 }
 
 struct AttractReport {
-    std::size_t wanted = 0, seated = 0, to_rear = 0, met_before = 0, met_after = 0;
+    std::size_t wanted = 0, seated = 0, to_rear = 0, met_before = 0, met_after = 0, moved_aside = 0;
     Nm routed_before = 0, routed_after = 0;
 };
 

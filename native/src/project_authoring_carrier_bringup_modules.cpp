@@ -308,6 +308,37 @@ CircuitSheetIr carrier_bringup_modules(const SubsystemMeta& meta, const Authorin
     c.field("C18", "LCSC", "C14663");
     c.field("C19", "LCSC", "C14663");
     c.field("C20", "LCSC", "C14663");
+    c.free("D1", "status LED across the gated +3V3_HDMI_TX rail; no pin drives it");
+    c.free("D2", "status LED across the gated +3V3_HDMI_RX rail; no pin drives it");
+    c.free("D3", "status LED across the gated +3V3_LCD rail; no pin drives it");
+    c.free("D4", "status LED across the gated +3V3_CAM rail; no pin drives it");
+    c.free("D5", "status LED across the gated +3V3_SD rail; no pin drives it");
+    c.free("D6", "status LED across the gated +5V_USB rail; no pin drives it");
+    c.free("D7", "status LED across the gated +3V3_PMOD rail; no pin drives it");
+    c.free("D8", "status LED across the gated +3V3_USER_LED rail; no pin drives it");
+    c.free("D9", "status LED across the gated +5V_HDMI_TX rail; no pin drives it");
+    c.free("D10", "status LED across the gated +5V_LCD rail; no pin drives it");
+    c.serves("R1", "U1.ISET", "set");
+    c.serves("R2", "D1.1", "indicate");
+    c.serves("R3", "U2.ISET", "set");
+    c.serves("R4", "D2.1", "indicate");
+    c.serves("R5", "U3.ISET", "set");
+    c.serves("R6", "D3.1", "indicate");
+    c.serves("R7", "U4.ISET", "set");
+    c.serves("R8", "D4.1", "indicate");
+    c.serves("R9", "U5.ISET", "set");
+    c.serves("R10", "D5.1", "indicate");
+    c.serves("R11", "U6.ISET", "set");
+    c.serves("R12", "D6.1", "indicate");
+    c.serves("R13", "U7.ISET", "set");
+    c.serves("R14", "D7.1", "indicate");
+    c.serves("R15", "U8.ISET", "set");
+    c.serves("R16", "D8.1", "indicate");
+    c.serves("R17", "U9.ISET", "set");
+    c.serves("R18", "D9.1", "indicate");
+    c.serves("R19", "U10.ISET", "set");
+    c.serves("R20", "D10.1", "indicate");
+    c.serves("R21", "U5.OUT", "pull");
     return meta.finish(c);
 }
 } // namespace schgen::project_builders

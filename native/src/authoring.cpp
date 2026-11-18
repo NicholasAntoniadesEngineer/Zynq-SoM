@@ -17,9 +17,7 @@ bool same(const CircuitPortIr& a, const CircuitPortIr& b) {
         a.has_expect==b.has_expect && a.expect==b.expect;
 }
 std::string spec(const CircuitPinRefIr& p) { return p.ref+"."+p.pin; }
-std::string footprint(const std::string& lib, const std::string& value) {
-    if (lib=="Device:R") return "Resistor_SMD:R_0603_1608Metric";
-    if (lib!="Device:C") return {};
+double microfarads(const std::string& value) {
     std::smatch m;
     double uf=0;
     if (std::regex_match(value,m,std::regex(R"(\s*([0-9.]+)\s*([pnu]?)F?\s*)"))) {
@@ -30,7 +28,13 @@ std::string footprint(const std::string& lib, const std::string& value) {
         if(m[2]=="p") uf*=1e-6;
         else if(m[2]=="n") uf*=1e-3;
     }
-    return uf>=1 ? "Capacitor_SMD:C_0805_2012Metric" : "Capacitor_SMD:C_0603_1608Metric";
+    return uf;
+}
+constexpr double bulk_microfarads=1;
+std::string footprint(const std::string& lib, const std::string& value) {
+    if (lib=="Device:R") return "Resistor_SMD:R_0603_1608Metric";
+    if (lib!="Device:C") return {};
+    return microfarads(value)>=bulk_microfarads ? "Capacitor_SMD:C_0805_2012Metric" : "Capacitor_SMD:C_0603_1608Metric";
 }
 std::vector<CircuitPortIr>::iterator by_net(std::vector<CircuitPortIr>& entries, const std::string& net) {
     return std::find_if(entries.begin(),entries.end(),[&](const CircuitPortIr& x){return x.net==net;});
@@ -69,7 +73,29 @@ CircuitAuthor::CircuitAuthor(CircuitSheetIr circuit, AuthoringContext context)
     }
 }
 CircuitSheetIr CircuitAuthor::finish() const {
-    return parse_circuit_ir(authored_circuit_json(circuit_));
+    CircuitSheetIr out=parse_circuit_ir(authored_circuit_json(circuit_));
+    out.layout=circuit_.layout;
+    try { validate_circuit_layout(out); }
+    catch(const std::exception& error) { throw CircuitAuthoringError(error.what()); }
+    return out;
+}
+void CircuitAuthor::serves(const std::string& part,const std::string& owner_pin,const std::string& role) {
+    (void)find_part(part);
+    circuit_.layout.serves.push_back({part,role,single_pin(owner_pin),{},{}});
+}
+void CircuitAuthor::serves_net(const std::string& part,const std::string& net,const std::string& role) {
+    (void)find_part(part);
+    if(!find_net(net))throw CircuitAuthoringError("serves_net("+repr(part)+"): "+repr(net)+" is not a declared net");
+    circuit_.layout.serves.push_back({part,role,{},net,{}});
+}
+void CircuitAuthor::serves_module(const std::string& part,const std::string& net,const std::string& role) {
+    (void)find_part(part);
+    if(!find_net(net))throw CircuitAuthoringError("serves_module("+repr(part)+"): "+repr(net)+" is not a declared net");
+    circuit_.layout.serves.push_back({part,role,{},net,"module"});
+}
+void CircuitAuthor::free(const std::string& part,const std::string& reason) {
+    (void)find_part(part);
+    circuit_.layout.free.push_back({part,trim(reason)});
 }
 const CircuitNetIr* CircuitAuthor::find_net(const std::string& name) const {
     auto i=std::find_if(circuit_.nets.begin(),circuit_.nets.end(),[&](const auto& n){return n.name==name;});
@@ -287,6 +313,7 @@ void CircuitAuthor::bind(const AuthoringStrings& mapping) {
     for(auto& p:circuit_.port_types){rename(p.net);if(p.has_pair_with)rename(p.pair_with);}
     for(auto& l:circuit_.loads)rename(l.rail);
     for(auto& h:circuit_.hints)rename(h.net);
+    for(auto& s:circuit_.layout.serves)if(!s.net.empty())rename(s.net);
     for(auto& w:circuit_.waivers)if(w.kind!="thermal_waivers"&&w.kind!="part_rule_waivers")rename(w.key);
     for(auto& p:circuit_.parts)if(p.lib_id=="Connector:TestPoint"||p.lib_id=="Mechanical:MountingHole_Pad")rename(p.value);
 }
@@ -329,16 +356,16 @@ std::string CircuitAuthor::mounting_hole(const std::string& name,const std::opti
     const auto r=ref?*ref:auto_ref("H");return add_mounting_hole(circuit_,name,r).ref;
 }
 std::vector<std::string> CircuitAuthor::decouple(const std::string& pin,const std::vector<std::string>& values,
-    const std::optional<std::string>& rail,const std::string& gnd,const std::string& lib,const std::string& fp) {
+    const std::optional<std::string>& rail,const std::string& gnd,const std::string& lib,const std::string& fp,const std::string& role) {
     auto p=single_pin(pin);auto r=rail&&!rail->empty()?rail:net_of(p);
     if(!r)throw CircuitAuthoringError("decouple("+spec(p)+"): rail unknown — net the pin first");
     std::vector<std::string> out;
-    for(const auto& v:values){auto ref=auto_ref("C");part(ref,lib,v,fp);net(*r,{ref+".1"});net(gnd,{ref+".2"});out.push_back(ref);}return out;
+    for(const auto& v:values){auto ref=auto_ref("C");part(ref,lib,v,fp);net(*r,{ref+".1"});net(gnd,{ref+".2"});circuit_.layout.serves.push_back({ref,!role.empty()?role:microfarads(v)>=bulk_microfarads?"reservoir":"bypass",p,{},{}});out.push_back(ref);}return out;
 }
-std::string CircuitAuthor::pullup(const std::string& pin,const std::string& value,const std::string& rail,const std::string& lib,const std::string& fp) {
+std::string CircuitAuthor::pullup(const std::string& pin,const std::string& value,const std::string& rail,const std::string& lib,const std::string& fp,const std::string& role) {
     const auto p=single_pin(pin);const auto sig=net_of(p);
     if(!sig)throw CircuitAuthoringError("pullup("+spec(p)+"): net the signal pin first");
-    auto ref=auto_ref("R");part(ref,lib,value,fp);net(*sig,{ref+".2"});net(rail,{ref+".1"});return ref;
+    auto ref=auto_ref("R");part(ref,lib,value,fp);net(*sig,{ref+".2"});net(rail,{ref+".1"});circuit_.layout.serves.push_back({ref,role,p,{},{}});return ref;
 }
 std::string CircuitAuthor::series(const std::string& in,const std::string& out,const std::string& value,const std::string& prefix,const std::string& lib,const std::string& fp) {
     auto ref=auto_ref(prefix);part(ref,lib,value,fp);net(in,{ref+".1"});net(out,{ref+".2"});return ref;

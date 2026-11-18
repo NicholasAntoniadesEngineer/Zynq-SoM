@@ -24,6 +24,8 @@ void index_names(Variant& variant) {
 const char* tie_name(Tie tie) {
     switch (tie) {
     case Tie::contract: return "contract";
+    case Tie::authored: return "authored";
+    case Tie::released: return "released";
     case Tie::signal: return "signal";
     case Tie::rail: return "rail";
     case Tie::shared: return "shared";
@@ -56,7 +58,7 @@ Nm pad_gap_length(const Problem& problem, const PadGap& rule, const Placement& p
     return static_cast<Nm>(std::ceil(std::sqrt(static_cast<double>(squared_length)))) + 1;
 }
 
-void derive_ownership(Problem& problem, const Placement& placement, const HoldPolicy& policy) {
+void derive_ownership(Problem& problem, const Placement& placement, const HoldPolicy& policy, const Intent& intent) {
     const std::size_t count = problem.parts.size();
     problem.ownership.assign(count, {});
     problem.constraints.soft_gaps.clear();
@@ -68,6 +70,17 @@ void derive_ownership(Problem& problem, const Placement& placement, const HoldPo
     for (const auto& rule : problem.constraints.nearest_gaps)
         for (const std::size_t member : rule.members)
             if (!contracted[member]) contracted[member] = rule.anchor;
+    std::vector<const Claim*> claimed(count, nullptr);
+    for (const auto& claim : intent.claims) {
+        if (claim.part >= count || claim.owner >= count) throw LayoutError("layout: an ownership claim names a part outside the problem");
+        if (claimed[claim.part]) throw LayoutError("layout: " + problem.parts[claim.part].reference + " is claimed twice");
+        claimed[claim.part] = &claim;
+    }
+    std::vector<bool> released(count, false);
+    for (const std::size_t part : intent.released) {
+        if (part >= count) throw LayoutError("layout: a released part lies outside the problem");
+        released[part] = true;
+    }
     const auto small = [&](std::size_t part) { return problem.parts[part].fanout_pins <= 2; };
     const auto peers = [&](std::size_t part, Category category, bool same_group) {
         std::vector<std::pair<std::size_t, int>> found;
@@ -82,7 +95,7 @@ void derive_ownership(Problem& problem, const Placement& placement, const HoldPo
         }
         return found;
     };
-    const auto bond = [&](std::size_t part, std::size_t owner, int net) {
+    const auto shared_names = [&](std::size_t owner, int net) {
         const Footprint& footprint = problem.footprints[problem.parts[owner].footprint];
         std::vector<std::size_t> names;
         for (std::size_t pad = 0; pad < footprint.top.pads.size(); ++pad) {
@@ -91,38 +104,46 @@ void derive_ownership(Problem& problem, const Placement& placement, const HoldPo
             const auto slot = static_cast<std::size_t>(name - footprint.top.names.begin());
             if (std::find(names.begin(), names.end(), slot) == names.end()) names.push_back(slot);
         }
-        return PadGap{owner, part, names, policy.owner_reach, Sense::at_most, {}, true, true};
+        return names;
     };
     std::vector<PadGap> holds;
-    const auto own = [&](std::size_t part, std::size_t owner, int net) {
-        PadGap rule = bond(part, owner, net);
-        rule.source = "owner of " + problem.parts[part].reference;
-        rule.derived = false;
+    const auto own = [&](std::size_t part, std::size_t owner, std::vector<std::size_t> names, Nm reach) {
+        PadGap rule{owner, part, std::move(names), reach, Sense::at_most, "owner of " + problem.parts[part].reference,
+                    true, false, reach};
         problem.constraints.soft_gaps.push_back(rule);
         rule.source = "hold of " + problem.parts[part].reference;
         rule.derived = true;
-        rule.limit = std::max(policy.owner_reach, pad_gap_length(problem, rule, placement)) + policy.hold_slack;
+        rule.limit = std::max(reach, pad_gap_length(problem, rule, placement)) + policy.hold_slack;
         holds.push_back(std::move(rule));
     };
     for (std::size_t part = 0; part < count; ++part) {
-        if (!small(part) || problem.parts[part].fixed || problem.parts[part].connector) continue;
+        if (problem.parts[part].fixed || problem.parts[part].connector) continue;
         Ownership& entry = problem.ownership[part];
+        if (claimed[part]) {
+            entry = {Tie::authored, claimed[part]->owner};
+            own(part, claimed[part]->owner, claimed[part]->names, claimed[part]->reach);
+            continue;
+        }
+        if (!small(part)) continue;
         if (contracted[part]) {
             entry = {Tie::contract, contracted[part]};
+            continue;
+        }
+        if (released[part]) {
+            entry.tie = Tie::released;
             continue;
         }
         const auto signal = peers(part, Category::signal, false);
         if (signal.size() == 1) {
             entry = {Tie::signal, signal.front().first};
-            own(part, signal.front().first, signal.front().second);
+            own(part, signal.front().first, shared_names(signal.front().first, signal.front().second), policy.owner_reach);
             continue;
         }
         if (signal.size() > 1) {
             entry.tie = Tie::bridge;
             for (const auto& [peer, net] : signal) {
-                PadGap rule = bond(part, peer, net);
-                rule.source = "tether of " + problem.parts[part].reference;
-                rule.rigid = false;
+                PadGap rule{peer, part, shared_names(peer, net), policy.owner_reach, Sense::at_most,
+                            "tether of " + problem.parts[part].reference, false, true, policy.owner_reach};
                 rule.limit = std::max(policy.owner_reach, pad_gap_length(problem, rule, placement)) + policy.tether_slack;
                 holds.push_back(std::move(rule));
             }
@@ -136,23 +157,23 @@ void derive_ownership(Problem& problem, const Placement& placement, const HoldPo
         std::size_t nearest = 0;
         Nm best = std::numeric_limits<Nm>::max();
         for (std::size_t index = 0; index < rail.size(); ++index) {
-            const Nm gap = pad_gap_length(problem, bond(part, rail[index].first, rail[index].second), placement);
+            const PadGap probe{rail[index].first, part, shared_names(rail[index].first, rail[index].second),
+                               policy.owner_reach, Sense::at_most, {}, true, true, policy.owner_reach};
+            const Nm gap = pad_gap_length(problem, probe, placement);
             if (gap < best) {
                 best = gap;
                 nearest = index;
             }
         }
         entry = {rail.size() == 1 ? Tie::rail : Tie::shared, rail[nearest].first};
-        own(part, rail[nearest].first, rail[nearest].second);
+        own(part, rail[nearest].first, shared_names(rail[nearest].first, rail[nearest].second), policy.owner_reach);
     }
     gaps.insert(gaps.end(), holds.begin(), holds.end());
 }
-
 void tighten_holds(Problem& problem, const Placement& placement, const HoldPolicy& policy) {
     for (auto& rule : problem.constraints.pad_gaps) {
         if (!rule.derived || !rule.rigid) continue;
-        rule.limit = std::min(rule.limit,
-                              std::max(policy.owner_reach, pad_gap_length(problem, rule, placement)) + policy.hold_slack);
+        rule.limit = std::min(rule.limit, std::max(rule.reach, pad_gap_length(problem, rule, placement)) + policy.hold_slack);
     }
 }
 
