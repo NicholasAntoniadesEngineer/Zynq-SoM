@@ -66,6 +66,24 @@ CircuitSheetIr carrier_power_som(const SubsystemMeta& meta, const AuthoringConte
     c.nc({"U4.5"});
     c.testpoint("+5V_SOM", std::nullopt);
     c.draws("+5V_SOM", 0.004, "PG LED (KT-0603R + 1k, ~3 mA) + FB divider 60 uA (SoM module load declared on som_j1)");
+    c.serves("C14", "U4.8", "bypass");
+    c.serves("C15", "U4.8", "reservoir");
+    c.serves("C16", "U4.12", "reservoir");
+    c.serves("C17", "U4.14", "switching");
+    c.serves("C18", "L3.2", "reservoir");
+    c.serves("C19", "L3.2", "reservoir");
+    c.serves("C21", "R19.1", "feedback");
+    c.serves("C22", "U4.2", "bypass");
+    c.serves("C23", "U4.1", "bypass");
+    c.serves("C25", "U4.12", "bypass");
+    c.free("D4", "power-good LED across the +5V_SOM rail; no pin drives it");
+    c.serves("L3", "U4.10", "switching");
+    c.serves("R14", "U4.4", "feedback");
+    c.serves("R15", "U4.4", "feedback");
+    c.serves("R16", "D4.1", "indicate");
+    c.serves("R17", "U4.1", "filter");
+    c.serves("R18", "U4.6", "feedback");
+    c.serves("R19", "U4.4", "feedback");
     return meta.finish(c);
 }
 } // namespace schgen::project_builders

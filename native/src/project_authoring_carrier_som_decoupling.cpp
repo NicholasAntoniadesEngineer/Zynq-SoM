@@ -58,6 +58,24 @@ CircuitSheetIr carrier_som_decoupling(const SubsystemMeta& meta, const Authoring
     c.part("C18", "Device:C", "100n", "Capacitor_SMD:C_0603_1608Metric", {{"LCSC", "C14663"}});
     c.net("+3V3_SC", {"C18.1"}, std::nullopt);
     c.net("GND", {"C18.2"}, std::nullopt);
+    c.serves_module("C1", "+5V_SOM", "reservoir");
+    c.serves_module("C2", "+5V_SOM", "reservoir");
+    c.serves_module("C3", "+5V_SOM", "bypass");
+    c.serves_module("C4", "+5V_SOM", "bypass");
+    c.serves_module("C5", "+5V_SOM", "bypass");
+    c.serves_module("C6", "+5V_SOM", "bypass");
+    c.serves_module("C7", "+3V3", "reservoir");
+    c.serves_module("C8", "+3V3", "reservoir");
+    c.serves_module("C9", "+3V3", "bypass");
+    c.serves_module("C10", "+3V3", "bypass");
+    c.serves_module("C11", "+3V3", "bypass");
+    c.serves_module("C12", "+3V3", "bypass");
+    c.serves_module("C13", "+3V3_SC", "reservoir");
+    c.serves_module("C14", "+3V3_SC", "reservoir");
+    c.serves_module("C15", "+3V3_SC", "bypass");
+    c.serves_module("C16", "+3V3_SC", "bypass");
+    c.serves_module("C17", "+3V3_SC", "bypass");
+    c.serves_module("C18", "+3V3_SC", "bypass");
     return meta.finish(c);
 }
 } // namespace schgen::project_builders

@@ -86,6 +86,9 @@ CircuitSheetIr carrier_bringup_en(const SubsystemMeta& meta, const AuthoringCont
     c.field("C2", "LCSC", "C14663");
     c.field("R6", "LCSC", "C25803");
     c.field("C3", "LCSC", "C14663");
+    c.serves("R1", "U1.1", "pull");
+    c.serves("R3", "U2.1", "pull");
+    c.serves("R5", "U3.1", "pull");
     return meta.finish(c);
 }
 } // namespace schgen::project_builders

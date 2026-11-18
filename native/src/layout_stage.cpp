@@ -9,6 +9,7 @@ namespace schgen::layout {
 namespace {
 
 inline constexpr double percent = 100;
+inline constexpr std::size_t straggler_rows = 12;
 
 std::vector<Box> ordered(std::vector<Box> boxes) {
     std::sort(boxes.begin(), boxes.end(), [](const Box& a, const Box& b) {
@@ -100,11 +101,39 @@ StageResult squeeze_stage(const PcbPlacementInput& inputs, const PcbModel& model
         held_before = std::max(held_before, pad_gap_length(held, rule, binding.placement));
         held_after = std::max(held_after, pad_gap_length(held, rule, kernel.placement()));
     }
+    std::map<std::string, std::size_t> ties;
+    for (const auto& entry : binding.problem.ownership)
+        if (entry.tie != Tie::none) ++ties[tie_name(entry.tie)];
+    std::size_t reached_before = 0, reached_after = 0;
+    for (const auto& rule : binding.problem.constraints.soft_gaps) {
+        if (pad_gap_length(binding.problem, rule, binding.placement) <= rule.reach) ++reached_before;
+        if (pad_gap_length(binding.problem, rule, kernel.placement()) <= rule.reach) ++reached_after;
+    }
+    std::vector<std::pair<Nm, std::size_t>> stragglers;
+    for (std::size_t index = 0; index < binding.problem.constraints.soft_gaps.size(); ++index) {
+        const auto& rule = binding.problem.constraints.soft_gaps[index];
+        const Nm gap = pad_gap_length(binding.problem, rule, kernel.placement());
+        if (gap > rule.reach) stragglers.emplace_back(gap, index);
+    }
+    std::sort(stragglers.begin(), stragglers.end(), [](const auto& a, const auto& b) {
+        return a.first != b.first ? a.first > b.first : a.second < b.second;
+    });
     std::ostringstream text;
+    text << "OWNERSHIP:";
+    for (const auto& [tie, parts] : ties) text << " " << parts << " " << tie;
+    text << "; " << binding.unresolved.size() << " off-sheet owners not found\n"
+         << "  parts within reach of the pin they serve: " << reached_before << " to " << reached_after << " of "
+         << binding.problem.constraints.soft_gaps.size() << "\n";
+    for (std::size_t index = 0; index < stragglers.size() && index < straggler_rows; ++index) {
+        const auto& rule = binding.problem.constraints.soft_gaps[stragglers[index].second];
+        text << "    " << binding.problem.parts[rule.member].reference << " is " << to_mm(stragglers[index].first)
+             << " mm from " << binding.problem.parts[rule.anchor].reference << " (reach " << to_mm(rule.reach) << " mm)\n";
+    }
     text << "OWNER HOLDS: " << holds << " small parts held to the pin they serve; farthest " << to_mm(held_before)
          << " mm before, " << to_mm(held_after) << " mm after\n";
     text << "OWNER ATTRACTION: " << result.attract.wanted << " parts wanted a seat at the pin they serve, "
-         << result.attract.seated << " seated (" << result.attract.to_rear << " to the rear); preferences met "
+         << result.attract.seated << " seated (" << result.attract.to_rear << " to the rear, "
+         << result.attract.moved_aside << " blockers moved aside); preferences met "
          << result.attract.met_before << " to " << result.attract.met_after << " of "
          << binding.problem.constraints.soft_gaps.size() << "\n"
          << "  routed airwire " << to_mm(result.attract.routed_before) << " to "

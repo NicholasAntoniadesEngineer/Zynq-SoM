@@ -138,6 +138,9 @@ CircuitSheetIr hdmi_tx(const SubsystemMeta& meta, const AuthoringContext& contex
     c.field("C2", "LCSC", "C14663");
     c.field("R1", "LCSC", "C25804");
     c.field("R2", "LCSC", "C25804");
+    c.serves("C3", "U1.13", "bypass");
+    c.serves("C4", "U1.13", "reservoir");
+    c.serves("C5", "U1.24", "reservoir");
     return meta.finish(c);
 }
 } // namespace schgen::subsystem_builders

@@ -123,6 +123,15 @@ CircuitSheetIr microsd(const SubsystemMeta& meta, const AuthoringContext& contex
     c.draws("+VDD_HOST", 0.005, meta.note("draws_host", "TXS02612 VCCA (host-side level)"));
     c.field("C1", "LCSC", "C14663");
     c.field("C4", "LCSC", "C14663");
+    c.serves("C2", "U1.VCCB0", "bypass");
+    c.serves("C3", "J1.VDD", "reservoir");
+    c.serves("R1", "U1.CMDB0", "pull");
+    c.serves("R2", "U1.DAT0B0", "pull");
+    c.serves("R3", "U1.DAT1B0", "pull");
+    c.serves("R4", "U1.DAT2B0", "pull");
+    c.serves("R5", "U1.DAT3B0", "pull");
+    c.serves("R6", "J1.CD", "pull");
+    c.serves("U2", "J1.CLK(SCLK)", "protect");
     return meta.finish(c);
 }
 } // namespace schgen::subsystem_builders

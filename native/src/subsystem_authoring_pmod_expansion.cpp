@@ -111,6 +111,15 @@ CircuitSheetIr pmod_expansion(const SubsystemMeta& meta, const AuthoringContext&
     c.draws("+VSW_PMOD", 0.104, meta.note("draws_pmod", "1x Pmod module budget ~100 mA (Digilent spec) + status LED"));
     c.field("C1", "LCSC", "C14663");
     c.field("C3", "LCSC", "C14663");
+    c.serves("C2", "U1.IN", "reservoir");
+    c.serves("C4", "J1.11", "bypass");
+    c.serves("C5", "J1.12", "reservoir");
+    c.free("D1", "status LED across the gated +VSW_PMOD rail; no pin drives it");
+    c.serves("R1", "U1.ISET", "set");
+    c.serves("R2", "U1.EN", "pull");
+    c.serves("R3", "D1.1", "indicate");
+    c.serves("U2", "J1.3", "protect");
+    c.serves("U3", "J1.4", "protect");
     return meta.finish(c);
 }
 } // namespace schgen::subsystem_builders

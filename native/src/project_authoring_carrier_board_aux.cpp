@@ -92,11 +92,11 @@ CircuitSheetIr carrier_board_aux(const SubsystemMeta& meta, const AuthoringConte
         c.port("AUX_I2C_SDA", {"U2.SDA2"}, t, true);
     }
     c.net("AUX_ISO_REF", {"U2.VREF2"}, std::nullopt);
-    c.pullup("U2.VREF2", "100k", "+3V3_AUX", "Device:R", "Resistor_SMD:R_0603_1608Metric");
+    c.pullup("U2.VREF2", "100k", "+3V3_AUX", "Device:R", "Resistor_SMD:R_0603_1608Metric", "set");
     c.pullup("U2.SCL2", "4k7", "+3V3_AUX", "Device:R", "Resistor_SMD:R_0603_1608Metric");
     c.pullup("U2.SDA2", "4k7", "+3V3_AUX", "Device:R", "Resistor_SMD:R_0603_1608Metric");
     // SCPS113O 11.1: 100pF reference filter, not a 100nF rail bypass.
-    c.decouple("U2.VREF2", {"100p"}, std::nullopt, "GND", "Device:C", "Capacitor_SMD:C_0603_1608Metric");
+    c.decouple("U2.VREF2", {"100p"}, std::nullopt, "GND", "Device:C", "Capacitor_SMD:C_0603_1608Metric", "filter");
     c.draws("+3V3_AUX", 0.006, "status LED 3.9mA + 2x4k7 AUX-bus pull-ups");
     c.testpoint("+3V3_AUX", std::nullopt);
     c.testpoint("AUX_I2C_SCL", std::nullopt);
@@ -108,6 +108,11 @@ CircuitSheetIr carrier_board_aux(const SubsystemMeta& meta, const AuthoringConte
     c.field("R5", "LCSC", "C23162");
     c.field("R6", "LCSC", "C23162");
     c.field("C5", "LCSC", "C14858");
+    c.serves("C3", "U1.OUT", "reservoir");
+    c.free("D1", "status LED across the gated +3V3_AUX rail; no pin drives it");
+    c.serves("R1", "U1.ISET", "set");
+    c.serves("R2", "U1.EN", "pull");
+    c.serves("R3", "D1.1", "indicate");
     return meta.finish(c);
 }
 } // namespace schgen::project_builders

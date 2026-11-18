@@ -62,6 +62,8 @@ CircuitSheetIr usb_pd(const SubsystemMeta& meta, const AuthoringContext& context
     c.field("C1", "LCSC", "C14663");
     c.field("C2", "LCSC", "C15850");
     c.field("C3", "LCSC", "C14663");
+    c.serves("C4", "U1.11", "filter");
+    c.serves("C5", "U1.14", "filter");
     return meta.finish(c);
 }
 } // namespace schgen::subsystem_builders

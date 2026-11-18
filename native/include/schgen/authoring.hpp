@@ -55,12 +55,18 @@ public:
                              const std::optional<std::string>& ref = std::nullopt);
     std::vector<std::string> decouple(const std::string& pin, const std::vector<std::string>& values,
         const std::optional<std::string>& rail = std::nullopt, const std::string& gnd = "GND",
-        const std::string& lib_id = "Device:C", const std::string& footprint = {});
+        const std::string& lib_id = "Device:C", const std::string& footprint = {},
+        const std::string& role = {});
     std::string pullup(const std::string& pin, const std::string& value, const std::string& rail,
-        const std::string& lib_id = "Device:R", const std::string& footprint = {});
+        const std::string& lib_id = "Device:R", const std::string& footprint = {},
+        const std::string& role = "pull");
     std::string series(const std::string& in, const std::string& out, const std::string& value,
         const std::string& prefix = "R", const std::string& lib_id = "Device:R",
         const std::string& footprint = {});
+    void serves(const std::string& part, const std::string& owner_pin, const std::string& role);
+    void serves_net(const std::string& part, const std::string& net, const std::string& role);
+    void serves_module(const std::string& part, const std::string& net, const std::string& role);
+    void free(const std::string& part, const std::string& reason);
     std::vector<CircuitPinRefIr> expand_pin(const std::string& pin) const;
     std::optional<std::string> net_of(const CircuitPinRefIr& pin) const;
     // Page snapshots can retain a differential mate on another page. This is

@@ -65,6 +65,16 @@ CircuitSheetIr carrier_hdmi_rx_term(const SubsystemMeta& meta, const AuthoringCo
     c.net("+3V3", {"C1.1", "C2.1"}, std::nullopt);
     c.net("GND", {"C1.2", "C2.2"}, std::nullopt);
     c.draws("+3V3", 0.064, "8x TMDS sink termination 49.9R to AVCC (~8 mA/line driven low)");
+    c.serves("C1", "R1.2", "bypass");
+    c.serves("C2", "R1.2", "reservoir");
+    c.serves_module("R1", "HDMI_RX_D2_P", "terminate");
+    c.serves_module("R2", "HDMI_RX_D2_N", "terminate");
+    c.serves_module("R3", "HDMI_RX_D1_P", "terminate");
+    c.serves_module("R4", "HDMI_RX_D1_N", "terminate");
+    c.serves_module("R5", "HDMI_RX_D0_P", "terminate");
+    c.serves_module("R6", "HDMI_RX_D0_N", "terminate");
+    c.serves_module("R7", "HDMI_RX_CLK_P", "terminate");
+    c.serves_module("R8", "HDMI_RX_CLK_N", "terminate");
     return meta.finish(c);
 }
 } // namespace schgen::project_builders

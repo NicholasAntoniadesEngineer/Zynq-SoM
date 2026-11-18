@@ -51,9 +51,9 @@ void default_mode_contracts(const fs::path& root) {
         "default failed library result must not use report-first exit status");
     require(subsystem_required_files("widget")==std::vector<std::string>{"README.md","widget.cir"},
         "default library requirements retained Python");
-    require(carrier_required_files("widget",true)==std::vector<std::string>{"circuit.json"},
+    require(carrier_required_files("widget",true)==std::vector<std::string>{"circuit.json","layout.json"},
         "default adapter requirements retained Python");
-    require(carrier_required_files("widget",false)==std::vector<std::string>{"circuit.json","README.md","widget.cir"},
+    require(carrier_required_files("widget",false)==std::vector<std::string>{"circuit.json","layout.json","README.md","widget.cir"},
         "default local requirements retained Python");
 
     Scratch s;const auto empty=s.path/"empty",missing=s.path/"missing";
@@ -312,6 +312,7 @@ void native_packages(const fs::path& root) {
     write(widget/"README.md","fixture");write(widget/"widget.cir","* fixture\n.end\n");
     const std::string widget_json=R"({"schema":"schgen.circuit/1","name":"widget","title":"widget","parts":[],"nets":[{"name":"GND","net_class":"ground","pins":[]}],"nc":[],"port_types":{},"hints":{},"loads":{},"tp_waivers":{},"decap_waivers":{},"pull_waivers":{},"reset_waivers":{},"strap_waivers":{},"ep_waivers":{},"thermal_waivers":{},"part_rule_waivers":{}})";
     write(widget/"circuit.json",widget_json);
+    write(widget/"layout.json",R"({"schema":"schgen.subsystem-layout/1","name":"widget","serves":[],"free":[]})");
     SubsystemPackageFactory factory{"widget",{"GND"},[](const SubsystemMeta& m){CircuitAuthor c("widget");c.net("GND");return m.finish(c);},{}};
     require(check_subsystem_package("widget",library,&factory,mode).ok(),"valid optional native library JSON rejected");
     factory.circuit_meta=[](const SubsystemMeta& m){CircuitAuthor c("widget","changed");c.net("GND");return m.finish(c);};

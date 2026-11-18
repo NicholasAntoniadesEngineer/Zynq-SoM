@@ -92,6 +92,12 @@ CircuitSheetIr devkit_mini_power_mon(const SubsystemMeta& meta, const AuthoringC
     c.waive("tp_waivers", "+1V8_REG", "reg-side of RS4 — probe across the shunt (the +1V8 TP is the post-shunt/load side)");
     c.field("C1", "LCSC", "C14663");
     c.field("C2", "LCSC", "C14663");
+    c.serves("C3", "U1.VS", "reservoir");
+    c.serves("R1", "U1.CRITICAL", "pull");
+    c.serves("RS1", "U1.IN+1", "sense");
+    c.serves("RS2", "U1.IN+2", "sense");
+    c.serves("RS3", "U1.IN+3", "sense");
+    c.serves("RS4", "U2.IN+1", "sense");
     return meta.finish(c);
 }
 } // namespace schgen::project_builders

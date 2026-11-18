@@ -72,6 +72,8 @@ CircuitSheetIr uart_bridge(const SubsystemMeta& meta, const AuthoringContext& co
     c.field("R1", "LCSC", "C21190");
     c.field("R2", "LCSC", "C25961");
     c.field("R3", "LCSC", "C23061");
+    c.serves("R2", "U1.8", "sense");
+    c.serves("R3", "U1.8", "sense");
     return meta.finish(c);
 }
 } // namespace schgen::subsystem_builders

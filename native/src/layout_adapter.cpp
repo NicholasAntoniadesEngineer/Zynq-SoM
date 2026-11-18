@@ -1,5 +1,7 @@
 #include "schgen/layout_adapter.hpp"
 
+#include "schgen/board_schematic.hpp"
+
 #include "pcb_checks_internal.hpp"
 #include "pcb_placement_gates_internal.hpp"
 #include "schgen/mirror.hpp"
@@ -431,6 +433,94 @@ std::optional<CornerRule> corner_rule(const Board& board, Point at) {
     return std::nullopt;
 }
 
+namespace {
+
+Intent resolved_intent(const Problem& problem, const Placement& placement, const AuthoredIntent& authored,
+                       std::vector<std::string>& unresolved) {
+    std::map<std::string, std::size_t> index;
+    for (std::size_t part = 0; part < problem.parts.size(); ++part) index.emplace(problem.parts[part].reference, part);
+    const auto located = [&](const std::string& reference) {
+        const auto found = index.find(reference);
+        if (found == index.end()) throw LayoutError("layout: " + reference + " has layout intent but is not on the board");
+        return found->second;
+    };
+    const auto slot_of = [&](std::size_t part, const std::string& name) {
+        const auto& names = problem.footprints[problem.parts[part].footprint].top.names;
+        const auto found = std::find(names.begin(), names.end(), name);
+        if (found == names.end())
+            throw LayoutError("layout: " + problem.parts[part].reference + " has no pad named " + name);
+        return static_cast<std::size_t>(found - names.begin());
+    };
+    const auto pads_named = [&](std::size_t part, const std::string& name) {
+        const auto& pads = problem.footprints[problem.parts[part].footprint].top.pads;
+        std::vector<std::size_t> found;
+        for (std::size_t pad = 0; pad < pads.size(); ++pad)
+            if (pads[pad].name == name) found.push_back(pad);
+        return found;
+    };
+    const auto names_on = [&](std::size_t part, int net) {
+        const Footprint& footprint = problem.footprints[problem.parts[part].footprint];
+        std::vector<std::size_t> names;
+        for (std::size_t pad = 0; pad < footprint.top.pads.size(); ++pad) {
+            if (problem.parts[part].pad_nets[pad] != net) continue;
+            const std::size_t slot = slot_of(part, footprint.top.pads[pad].name);
+            if (std::find(names.begin(), names.end(), slot) == names.end()) names.push_back(slot);
+        }
+        return names;
+    };
+    Intent intent;
+    for (const auto& service : authored.services) {
+        const std::size_t part = located(service.part);
+        Claim claim{part, 0, {}, to_nm(role_reach(service.role)), service.role};
+        if (!service.owner.empty()) {
+            claim.owner = located(service.owner);
+            claim.names = {slot_of(claim.owner, service.pin)};
+            intent.claims.push_back(std::move(claim));
+            continue;
+        }
+        const auto pads = pads_named(part, service.via);
+        if (pads.empty()) throw LayoutError("layout: " + service.part + " has no pad named " + service.via);
+        const int net = problem.parts[part].pad_nets[pads.front()];
+        std::vector<std::size_t> candidates;
+        if (net != no_net)
+            for (const auto& pin : problem.nets[static_cast<std::size_t>(net)].pins) {
+                const Part& other = problem.parts[pin.part];
+                const bool eligible = service.to_module
+                                          ? other.module
+                                          : other.group != problem.parts[part].group && other.fanout_pins > 2;
+                if (pin.part != part && eligible &&
+                    std::find(candidates.begin(), candidates.end(), pin.part) == candidates.end())
+                    candidates.push_back(pin.part);
+            }
+        if (candidates.empty()) {
+            unresolved.push_back(service.part);
+            continue;
+        }
+        if (!service.to_module && candidates.size() > 1) {
+            std::string names;
+            for (const std::size_t candidate : candidates) names += " " + problem.parts[candidate].reference;
+            throw LayoutError("layout: " + service.part + " (" + service.sheet + ") serves a net that reaches several parts on other sheets:" +
+                              names + "; name the owner");
+        }
+        std::optional<Claim> nearest;
+        Nm best = std::numeric_limits<Nm>::max();
+        for (const std::size_t candidate : candidates) {
+            Claim offer{part, candidate, names_on(candidate, net), claim.reach, service.role};
+            const PadGap probe{offer.owner, part, offer.names, claim.reach, Sense::at_most, {}, true, true, claim.reach};
+            const Nm gap = pad_gap_length(problem, probe, placement);
+            if (gap < best) {
+                best = gap;
+                nearest = std::move(offer);
+            }
+        }
+        intent.claims.push_back(std::move(*nearest));
+    }
+    for (const auto& reference : authored.released) intent.released.push_back(located(reference));
+    return intent;
+}
+
+}
+
 ModelBinding bind_model(const PcbModel& model, const PcbEmitPolicy& policy, const PcbPlacementGatePolicy* gates,
                         const AdapterOptions& options) {
     ModelBinding binding;
@@ -542,6 +632,7 @@ ModelBinding bind_model(const PcbModel& model, const PcbEmitPolicy& policy, cons
         part.core_exempt = mechanical_file(instance) || starts_with(instance.sheet, "som_j");
         part.cohesion_member = !part.core_exempt;
         part.fixed = part.core_exempt || mezzanine;
+        part.module = mezzanine;
         if (mechanical_file(instance))
             part.corner = corner_rule(problem.board, {to_nm(instance.x), to_nm(instance.y)});
         const std::size_t part_index = problem.parts.size();
@@ -573,9 +664,55 @@ ModelBinding bind_model(const PcbModel& model, const PcbEmitPolicy& policy, cons
                                         nearest_nm(corridor.y1)},
                                     {index}, "escape corridor of " + instance.ref, false, true});
     }
-    derive_ownership(problem, binding.placement, hold_policy());
+    derive_ownership(problem, binding.placement, hold_policy(),
+                     resolved_intent(problem, binding.placement, options.intent, binding.unresolved));
     validate(problem, binding.placement);
     return binding;
+}
+
+double role_reach(const std::string& role) {
+    static const std::map<std::string, const NamedConstant*> reaches{
+        {"bypass", &constants::bypass_reach},       {"reservoir", &constants::reservoir_reach},
+        {"pull", &constants::pull_reach},           {"series", &constants::series_reach},
+        {"terminate", &constants::terminate_reach}, {"filter", &constants::filter_reach},
+        {"feedback", &constants::feedback_reach},   {"switching", &constants::switching_reach},
+        {"timing", &constants::timing_reach},       {"protect", &constants::protect_reach},
+        {"sense", &constants::sense_reach},         {"indicate", &constants::indicate_reach},
+        {"set", &constants::set_reach}};
+    const auto found = reaches.find(role);
+    if (found == reaches.end()) throw LayoutError("layout: no reach is defined for role " + role);
+    return found->second->value;
+}
+
+AuthoredIntent authored_intent(const PcbPlacementInput& inputs) {
+    std::map<std::string, std::int64_t> bands;
+    for (const auto& [sheet, band] : inputs.floorplan.sheet_index) bands.emplace(sheet, band);
+    AuthoredIntent intent;
+    for (const auto& sheet : inputs.floorplan.sheets) {
+        if (sheet.layout.serves.empty() && sheet.layout.free.empty()) continue;
+        const auto band = bands.find(sheet.name);
+        if (band == bands.end()) throw LayoutError("layout: sheet " + sheet.name + " has layout intent but no band");
+        const auto renamed = [&](const std::string& reference) {
+            return board_renamed_ref(reference, band->second, sheet.name);
+        };
+        for (const auto& service : sheet.layout.serves) {
+            ServiceInput entry{renamed(service.part), service.role, {}, {}, {}, sheet.name, service.target == "module"};
+            if (!service.owner.ref.empty()) {
+                entry.owner = renamed(service.owner.ref);
+                entry.pin = service.owner.pin;
+            } else {
+                for (const auto& net : sheet.nets)
+                    if (net.name == service.net)
+                        for (const auto& pin : net.pins)
+                            if (pin.ref == service.part && entry.via.empty()) entry.via = pin.pin;
+                if (entry.via.empty())
+                    throw LayoutError("layout: " + sheet.name + " " + service.part + " has no pin on net " + service.net);
+            }
+            intent.services.push_back(std::move(entry));
+        }
+        for (const auto& entry : sheet.layout.free) intent.released.push_back(renamed(entry.part));
+    }
+    return intent;
 }
 
 HoldPolicy hold_policy() {

@@ -290,7 +290,7 @@ void replay(const std::filesystem::path& root, const std::string& project, std::
     const PcbPlacementGatePolicy gates = pcb_placement_gate_policy(stage.inputs);
     const AdapterOptions options{fixture::plane_net,
         project_edge_clearance(parse_json_text(file_text(paths.project_root / "Zynq_Carrier.kicad_pro"))),
-        {fixture::overmold_part}, 0};
+        {fixture::overmold_part}, 0, authored_intent(stage.inputs)};
     const ModelBinding binding = bind_model(model, policy, &gates, options);
     const Constraints& rules = binding.problem.constraints;
     std::map<std::string, std::size_t> ties;

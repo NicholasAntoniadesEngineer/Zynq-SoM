@@ -40,6 +40,7 @@ CircuitSheetIr carrier_board_qwiic(const SubsystemMeta& meta, const AuthoringCon
     c.net("+3V3", {"U1.5"}, std::nullopt);
     c.net("GND", {"U1.2"}, std::nullopt);
     c.draws("+3V3_AUX", 0.2, "QWIIC external module budget (200 mA)");
+    c.serves("U1", "J1.3", "protect");
     return meta.finish(c);
 }
 } // namespace schgen::project_builders

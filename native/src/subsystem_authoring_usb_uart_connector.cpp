@@ -49,6 +49,10 @@ CircuitSheetIr usb_uart_connector(const SubsystemMeta& meta, const AuthoringCont
     c.net("CHASSIS_GND", {"J1.EH"}, std::nullopt);
     c.net("GND", {"J1.GND"}, std::nullopt);
     c.nc({"J1.SBU1", "J1.SBU2"});
+    c.serves("C1", "J1.A4B9", "reservoir");
+    c.serves("R1", "J1.CC1", "pull");
+    c.serves("R2", "J1.CC2", "pull");
+    c.serves("U1", "J1.DP1", "protect");
     return meta.finish(c);
 }
 } // namespace schgen::subsystem_builders

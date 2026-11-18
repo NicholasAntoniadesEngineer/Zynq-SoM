@@ -75,6 +75,15 @@ CircuitSheetIr pd_input(const SubsystemMeta& meta, const AuthoringContext& conte
     c.testpoint("+VBUS_CONN", std::nullopt);
     c.testpoint("+VBUS_OUT", std::nullopt);
     c.waive("tp_waivers", "CHASSIS_GND", "chassis island is probeable at every connector shell tab (USB-C/HDMI/magjack); no pad needed");
+    c.serves("C1", "U1.2", "bypass");
+    c.serves("C2", "U1.19", "reservoir");
+    c.serves("C3", "U1.dVdT", "set");
+    c.serves("D1", "J1.A4B9", "protect");
+    c.serves("R3", "U1.OVP", "sense");
+    c.serves("R4", "U1.OVP", "sense");
+    c.serves("R5", "U1.ILIM", "set");
+    c.serves("R6", "U1.FLT#", "pull");
+    c.serves("U2", "J1.DP1", "protect");
     return meta.finish(c);
 }
 } // namespace schgen::subsystem_builders

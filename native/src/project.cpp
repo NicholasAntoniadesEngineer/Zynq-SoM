@@ -222,6 +222,8 @@ ProjectCircuit load_project_circuit(const ProjectPaths& paths, const std::string
         if (fs::is_symlink(path.parent_path())) fail(name, "symlinked subsystem directory is not canonical");
         auto circuit = load_circuit_json(path);
         if (circuit.name != name) fail(path.string(), "circuit name '" + circuit.name + "' does not match subsystem '" + name + "'");
+        const auto layout = path.parent_path() / "layout.json";
+        if (fs::is_regular_file(layout)) circuit.layout = load_circuit_layout(layout, circuit);
         return ProjectCircuit{name, path, std::move(circuit)};
     });
 }

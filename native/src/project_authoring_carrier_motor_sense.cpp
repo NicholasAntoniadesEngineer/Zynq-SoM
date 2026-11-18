@@ -84,6 +84,11 @@ CircuitSheetIr carrier_motor_sense(const SubsystemMeta& meta, const AuthoringCon
     c.draws("+3V3_SC", 0.002, "INA3221 ~0.35 mA + CRITICAL pull-up");
     c.field("C2", "LCSC", "C14663");
     c.field("R1", "LCSC", "C25804");
+    c.serves("C1", "J2.+", "bypass");
+    c.serves("C3", "U2.VS", "reservoir");
+    c.serves("C4", "J3.+", "reservoir");
+    c.serves("D1", "J2.+", "protect");
+    c.serves("RS1", "U2.IN+1", "sense");
     return meta.finish(c);
 }
 } // namespace schgen::project_builders

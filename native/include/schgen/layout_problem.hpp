@@ -62,7 +62,7 @@ struct Part {
     }
     bool fanout_subject = false, never_crowds = false, cluster_passive = false;
     bool fixed = false, top_only = false, core_exempt = false, cohesion_member = true;
-    bool connector = false, overmold = false;
+    bool connector = false, overmold = false, module = false;
     std::optional<EdgeRule> edge;
     std::optional<CornerRule> corner;
 };
@@ -103,6 +103,7 @@ struct PadGap {
     Sense sense = Sense::at_most;
     std::string source;
     bool rigid = true, derived = false;
+    Nm reach = 0;
 };
 
 struct NearestGap {
@@ -132,7 +133,7 @@ struct ConnectorRules {
     double band_share = 0;
 };
 
-enum class Tie : std::uint8_t { none, contract, signal, rail, shared, bridge, unattached };
+enum class Tie : std::uint8_t { none, contract, authored, released, signal, rail, shared, bridge, unattached };
 
 struct Ownership {
     Tie tie = Tie::none;
@@ -193,9 +194,19 @@ void index_names(Variant& variant);
 struct HoldPolicy {
     Nm owner_reach = 0, hold_slack = 0, tether_slack = 0;
 };
+struct Claim {
+    std::size_t part = 0, owner = 0;
+    std::vector<std::size_t> names;
+    Nm reach = 0;
+    std::string role;
+};
+struct Intent {
+    std::vector<Claim> claims;
+    std::vector<std::size_t> released;
+};
 Nm squared_pad_gap(const Problem& problem, const PadGap& rule, const Pose& anchor, const Pose& member);
 Nm pad_gap_length(const Problem& problem, const PadGap& rule, const Placement& placement);
-void derive_ownership(Problem& problem, const Placement& placement, const HoldPolicy& policy);
+void derive_ownership(Problem& problem, const Placement& placement, const HoldPolicy& policy, const Intent& intent);
 void tighten_holds(Problem& problem, const Placement& placement, const HoldPolicy& policy);
 const char* tie_name(Tie tie);
 

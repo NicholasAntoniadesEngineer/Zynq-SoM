@@ -158,6 +158,30 @@ CircuitSheetIr pmod(const SubsystemMeta& meta, const AuthoringContext& context) 
     c.net("GND", {"J1.9", "J1.10", "J2.9", "J2.10", "U1.2", "U2.2", "U3.2", "U4.2", "C1.2", "C2.2", "C3.2", "C4.2"}, std::nullopt);
     c.nc({"U1.5", "U2.5", "U3.5", "U4.5"});
     c.draws("+VCC_PMOD", 0.2, meta.note("draws", "2x Pmod module budget ~100 mA each"));
+    c.serves("C1", "J1.11", "bypass");
+    c.serves("C2", "J1.12", "reservoir");
+    c.serves("C3", "J2.11", "bypass");
+    c.serves("C4", "J2.12", "reservoir");
+    c.serves("R1", "J1.1", "series");
+    c.serves("R2", "J1.3", "series");
+    c.serves("R3", "J1.5", "series");
+    c.serves("R4", "J1.7", "series");
+    c.serves("R5", "J1.2", "series");
+    c.serves("R6", "J1.4", "series");
+    c.serves("R7", "J1.6", "series");
+    c.serves("R8", "J1.8", "series");
+    c.serves("R9", "J2.1", "series");
+    c.serves("R10", "J2.3", "series");
+    c.serves("R11", "J2.5", "series");
+    c.serves("R12", "J2.7", "series");
+    c.serves("R13", "J2.2", "series");
+    c.serves("R14", "J2.4", "series");
+    c.serves("R15", "J2.6", "series");
+    c.serves("R16", "J2.8", "series");
+    c.serves("U1", "R2.1", "protect");
+    c.serves("U2", "R6.1", "protect");
+    c.serves("U3", "R10.1", "protect");
+    c.serves("U4", "R14.1", "protect");
     return meta.finish(c);
 }
 } // namespace schgen::subsystem_builders
