@@ -19,11 +19,6 @@ CircuitSheetIr carrier_power_mon(const SubsystemMeta&, const AuthoringContext&);
 CircuitSheetIr carrier_power_som(const SubsystemMeta&, const AuthoringContext&);
 CircuitSheetIr carrier_som_decoupling(const SubsystemMeta&, const AuthoringContext&);
 CircuitSheetIr carrier_user_io(const SubsystemMeta&, const AuthoringContext&);
-CircuitSheetIr devkit_mini_debug_boot(const SubsystemMeta&, const AuthoringContext&);
-CircuitSheetIr devkit_mini_mechanical(const SubsystemMeta&, const AuthoringContext&);
-CircuitSheetIr devkit_mini_power_mon(const SubsystemMeta&, const AuthoringContext&);
-CircuitSheetIr devkit_mini_power_som(const SubsystemMeta&, const AuthoringContext&);
-CircuitSheetIr devkit_mini_som_decoupling(const SubsystemMeta&, const AuthoringContext&);
 }
 CircuitSheetIr author_registered_project_definition(const ProjectSubsystemDefinition& definition,
     const SubsystemMeta& meta, const AuthoringContext& context) {
@@ -67,16 +62,16 @@ CircuitSheetIr author_registered_project_definition(const ProjectSubsystemDefini
         return project_builders::carrier_som_decoupling(meta,context);
     if (definition.project=="carrier" && definition.name=="user_io" && *target==&project_builders::carrier_user_io)
         return project_builders::carrier_user_io(meta,context);
-    if (definition.project=="devkit_mini" && definition.name=="debug_boot" && *target==&project_builders::devkit_mini_debug_boot)
-        return project_builders::devkit_mini_debug_boot(meta,context);
-    if (definition.project=="devkit_mini" && definition.name=="mechanical" && *target==&project_builders::devkit_mini_mechanical)
-        return project_builders::devkit_mini_mechanical(meta,context);
-    if (definition.project=="devkit_mini" && definition.name=="power_mon" && *target==&project_builders::devkit_mini_power_mon)
-        return project_builders::devkit_mini_power_mon(meta,context);
-    if (definition.project=="devkit_mini" && definition.name=="power_som" && *target==&project_builders::devkit_mini_power_som)
-        return project_builders::devkit_mini_power_som(meta,context);
-    if (definition.project=="devkit_mini" && definition.name=="som_decoupling" && *target==&project_builders::devkit_mini_som_decoupling)
-        return project_builders::devkit_mini_som_decoupling(meta,context);
+    if (definition.project=="devkit_mini" && definition.name=="debug_boot" && *target==&project_builders::carrier_debug_boot)
+        return project_builders::carrier_debug_boot(meta,context);
+    if (definition.project=="devkit_mini" && definition.name=="mechanical" && *target==&project_builders::carrier_mechanical)
+        return project_builders::carrier_mechanical(meta,context);
+    if (definition.project=="devkit_mini" && definition.name=="power_mon" && *target==&project_builders::carrier_power_mon)
+        return project_builders::carrier_power_mon(meta,context);
+    if (definition.project=="devkit_mini" && definition.name=="power_som" && *target==&project_builders::carrier_power_som)
+        return project_builders::carrier_power_som(meta,context);
+    if (definition.project=="devkit_mini" && definition.name=="som_decoupling" && *target==&project_builders::carrier_som_decoupling)
+        return project_builders::carrier_som_decoupling(meta,context);
     throw CircuitAuthoringError("unregistered native project constructor target "+definition.project+":"+definition.name);
 }
 const std::vector<ProjectSubsystemDefinition>& project_subsystem_definitions() {
@@ -119,13 +114,13 @@ const std::vector<ProjectSubsystemDefinition>& project_subsystem_definitions() {
         {"carrier", "usb_uart_connector", true, obj({{"bind", obj({{"GND", j("GND")}, {"CHASSIS_GND", j("CHASSIS_GND")}, {"VBUS", j("USB_UART_VBUS")}, {"USB_DP", j("USB_UART_DP")}, {"USB_DM", j("USB_UART_DM")}})}}), {}, {}, {}},
         {"carrier", "usbc_otg", true, obj({{"bind", obj({{"+VBUS_SUPPLY", j("+5V_USB")}, {"+VDD_LOGIC", j("+3V3_SC")}, {"GND", j("GND")}, {"CHASSIS_GND", j("CHASSIS_GND")}, {"USB_DP", j("USB_D+")}, {"USB_DM", j("USB_D-")}, {"VBUS", j("USB_VBUS")}, {"VBUS_EN", j("VBUS_OUT_EN")}, {"FLT_N", j("USBOTG_FLT_N")}, {"USB_ID", j("USB_ID")}})}, {"expects", obj({{"VBUS_EN", j("som_j1_connector (STM32 GPIO function map)")}, {"USB_ID", j("som_j1_connector (STM32 GPIO function map)")}, {"FLT_N", j("bringup (TCA9535 expander port P14)")}})}, {"notes", obj({{"draws_vbus", j("downstream USB device budget, TPS2051C current-limited")}, {"draws_flt", j("USBOTG_FLT# 100k pull-up (G4 re-rail)")}})}}), {}, {}, {}},
         {"carrier", "user_io", false, {}, project_builders::carrier_user_io, {}, {}},
-        {"devkit_mini", "debug_boot", false, {}, project_builders::devkit_mini_debug_boot, {}, {}},
-        {"devkit_mini", "mechanical", false, {}, project_builders::devkit_mini_mechanical, {}, {}},
+        {"devkit_mini", "debug_boot", false, {}, project_builders::carrier_debug_boot, {}, {}},
+        {"devkit_mini", "mechanical", false, {}, project_builders::carrier_mechanical, {}, {}},
         {"devkit_mini", "pd_input", true, obj({{"bind", obj({{"+VBUS_CONN", j("+VBUS_IN")}, {"+VBUS_OUT", j("+VIN")}, {"+VDD_LOGIC", j("+3V3_SC")}, {"GND", j("GND")}, {"CHASSIS_GND", j("CHASSIS_GND")}, {"CC1", j("STM32_USB_CC1")}, {"CC2", j("STM32_USB_CC2")}, {"USB_D_P", j("STM32_USB_D_P")}, {"USB_D_N", j("STM32_USB_D_N")}, {"FLT_N", j("PD_FLT_N")}})}, {"expects", obj({{"FLT_N", j("bringup (TCA9535 expander port P15)")}})}}), {}, {}, {}},
         {"devkit_mini", "power", true, obj({{"bind", obj({{"+VIN", j("+VIN_SYS")}, {"+VOUT_5V_REG", j("+5V_REG")}, {"+VOUT_3V3_REG", j("+3V3_REG")}, {"+VOUT_1V8_REG", j("+1V8_REG")}, {"+VOUT_5V", j("+5V")}, {"+VOUT_3V3", j("+3V3")}, {"+VOUT_1V8", j("+1V8")}, {"GND", j("GND")}, {"EN_VOUT_5V", j("EN_5V0")}, {"EN_VOUT_3V3", j("EN_3V3")}, {"EN_VOUT_1V8", j("EN_1V8")}})}, {"expects", obj({{"EN_VOUT_5V", j("bringup (wave 2 rail-enable cells, dossier section 3.1)")}, {"EN_VOUT_3V3", j("bringup (wave 2 rail-enable cells, dossier section 3.1)")}, {"EN_VOUT_1V8", j("bringup (wave 2 rail-enable cells, dossier section 3.1)")}})}, {"notes", obj({{"draws_5v", j("PG LED (KT-0603R + 1k, ~3 mA) + FB divider 60 uA")}, {"draws_3v3", j("PG LED (330R ~3.9 mA) + 1V8 PG sense LED chain (330R ~3.9 mA) + FB divider 27 uA")}, {"draws_1v8", j("PG FET gate divider 10k+100k (16 uA), rounded up")}})}}), {}, {}, {}},
-        {"devkit_mini", "power_mon", false, {}, project_builders::devkit_mini_power_mon, {}, {}},
-        {"devkit_mini", "power_som", false, {}, project_builders::devkit_mini_power_som, {}, {}},
-        {"devkit_mini", "som_decoupling", false, {}, project_builders::devkit_mini_som_decoupling, {}, {}},
+        {"devkit_mini", "power_mon", false, {}, project_builders::carrier_power_mon, {}, {}},
+        {"devkit_mini", "power_som", false, {}, project_builders::carrier_power_som, {}, {}},
+        {"devkit_mini", "som_decoupling", false, {}, project_builders::carrier_som_decoupling, {}, {}},
         {"devkit_mini", "som_j1", false, {}, {}, "J1", "SoM J1: power / USB / STM32 / JTAG / SDIO / ETH MDI"},
         {"devkit_mini", "som_j2", false, {}, {}, "J2", "SoM J2: FPGA bank 13/33 IO + VCCO rails"},
         {"devkit_mini", "som_j3", false, {}, {}, "J3", "SoM J3: FPGA bank 33/34/35 IO + VCCO rails"},
