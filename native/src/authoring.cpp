@@ -349,7 +349,8 @@ std::string CircuitAuthor::testpoint(const std::string& name,const std::optional
     if(n->net_class=="signal")throw CircuitAuthoringError(prefix+"internal SIGNAL net — probe points cover rails and PORT buses (make it a port or waive)");
     if(n->pins.empty())throw CircuitAuthoringError(prefix+"net has no pins yet — declare the circuit first");
     const auto r=ref?*ref:auto_ref("TP");
-    part(r,"Connector:TestPoint",name,"TestPoint:TestPoint_Pad_D1.5mm",{{"BOM","exclude"}});net(name,{r+".1"});return r;
+    part(r,"Connector:TestPoint",name,"TestPoint:TestPoint_Pad_D1.5mm",{{"BOM","exclude"}});net(name,{r+".1"});
+    circuit_.layout.free.push_back({r,"probe point; it follows its net"});return r;
 }
 std::string CircuitAuthor::mounting_hole(const std::string& name,const std::optional<std::string>& ref) {
     validate_mounting_hole_net(circuit_,name);

@@ -11,7 +11,7 @@
 * FB divider + feedforward) terminate on PRIVATE control nodes and so are
 * NOT subckt elements; they are documented below for completeness.
 *
-* Values mirror native/src/project_authoring_devkit_mini_power_som.cpp.
+* Values mirror native/src/project_authoring_carrier_power_som.cpp.
 * This retained passive-only model does not qualify startup or transients.
 * External-spanning netlist caps:
 *   C14 100n  VIN1/PGND1 HF bypass   (+VIN_SYS -> GND)

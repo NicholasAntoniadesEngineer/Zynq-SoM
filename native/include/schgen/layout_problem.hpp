@@ -187,6 +187,9 @@ struct Problem {
     std::vector<Ownership> ownership;
 };
 
+inline bool counts_as_crowder(const Part& crowder, const Part& subject) {
+    return !crowder.never_crowds && !(crowder.cluster_passive && crowder.group == subject.group);
+}
 Point corner_site(const Board& board, const CornerRule& rule);
 std::optional<bool> mirrors_across_x(const Footprint& footprint);
 Box gate_at(const Problem& problem, std::size_t part, const Pose& pose);

@@ -16,9 +16,7 @@ AuthoringPurityScope native_authoring_purity_scope() {
     for (const auto* name : {"carrier_board_aux", "carrier_board_qwiic", "carrier_board_services",
             "carrier_bringup_en", "carrier_bringup_en_modules", "carrier_bringup_modules", "carrier_bringup_rails",
             "carrier_debug_boot", "carrier_fmc", "carrier_hdmi_rx_term", "carrier_mechanical", "carrier_motor_pwm",
-            "carrier_motor_sense", "carrier_power_mon", "carrier_power_som", "carrier_som_decoupling", "carrier_user_io",
-            "devkit_mini_debug_boot", "devkit_mini_mechanical", "devkit_mini_power_mon", "devkit_mini_power_som",
-            "devkit_mini_som_decoupling"}) {
+            "carrier_motor_sense", "carrier_power_mon", "carrier_power_som", "carrier_som_decoupling", "carrier_user_io"}) {
         const auto file = std::string("native/src/project_authoring_") + name + ".cpp";
         s.units.push_back(file);
         s.constructors.push_back(file + "::schgen::project_builders::" + name + signature);

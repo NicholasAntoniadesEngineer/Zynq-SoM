@@ -7,7 +7,7 @@ The dedicated step-down converter that feeds the SoM's `VIN` pin. The SoM is a
 
 This is a **carrier-LOCAL** subsystem: it wires the carrier's real net names
 directly (no abstract interface / `META` bind contract). Its maintained authoring
-implementation is `native/src/project_authoring_devkit_mini_power_som.cpp`.
+implementation is `native/src/project_authoring_carrier_power_som.cpp`.
 
 ## Interface
 

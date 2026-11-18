@@ -3,6 +3,10 @@
 
 namespace schgen {
 namespace {
+constexpr std::int32_t i2c_fast_hz=400000;
+constexpr double sdio_volts=1.8,i2c_pull_amps=0.0015;
+}
+namespace {
 const ProjectSubsystemDefinition& definition(const std::string& project,const std::string& name) {
     for(const auto& d:project_subsystem_definitions())if(d.project==project&&d.name==name)return d;
     throw CircuitAuthoringError("unknown project subsystem "+project+":"+name);
@@ -67,6 +71,33 @@ CircuitSheetIr author_project_subsystem(const std::string& project,const std::st
     if(project=="devkit_mini"&&name=="power") {
         CircuitAuthor add(std::move(c),input.context);
         for(const auto* net:{"EN_5V0","EN_3V3","EN_1V8"})add.testpoint(net);
+        c=add.finish();
+    }
+    if(project=="devkit_mini"&&name=="power_mon") {
+        CircuitAuthor add(std::move(c),input.context);
+        for(const auto* net:{"+3V3_SC","STM32_I2C2_SCL","STM32_I2C2_SDA"})add.testpoint(net);
+        c=add.finish();
+    }
+    if(project=="devkit_mini"&&name=="debug_boot") {
+        CircuitAuthor add(std::move(c),input.context);
+        const std::string owner="som_j1_connector";
+        for(const auto& [role,net]:std::vector<std::pair<std::string,std::string>>{{"scl","STM32_I2C2_SCL"},{"sda","STM32_I2C2_SDA"}}) {
+            const auto ref=add.auto_ref("R");
+            add.part(ref,"Device:R","4k7","Resistor_SMD:R_0603_1608Metric",{{"LCSC","C23162"}});
+            add.net("+3V3_SC",{ref+".1"});
+            AuthoringPort bus;bus.kind="i2c";bus.role=role;bus.bus="STM32_I2C2";bus.speed_hz=i2c_fast_hz;bus.expect=owner;
+            add.port(net,{ref+".2"},bus,true);
+            add.serves_module(ref,net,"pull");
+        }
+        for(const auto* net:{"SDIO_CLK","SDIO_CMD","VBUS_OUT_EN"}) {
+            const auto ref=add.auto_ref("TP");
+            add.part(ref,"Connector:TestPoint",net,"TestPoint:TestPoint_Pad_D1.5mm",{{"BOM","exclude"}});
+            AuthoringPort probe;probe.expect=owner;
+            if(std::string(net)!="VBUS_OUT_EN"){probe.kind="sd_bus";probe.bus="SDIO";probe.level_v=sdio_volts;}
+            add.port(net,{ref+".1"},probe,true);
+            add.free(ref,"probe point; it follows its net");
+        }
+        add.draws("+3V3_SC",i2c_pull_amps,"2x4k7 STM32_I2C2 pull-ups");
         c=add.finish();
     }
     return c;

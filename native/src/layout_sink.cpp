@@ -47,6 +47,7 @@ bool crowds_escape(const Problem& problem, const Placement& placement, std::size
     for (std::size_t other = 0; other < problem.parts.size(); ++other) {
         const Part& subject = problem.parts[other];
         if (other == part || !subject.fanout_subject || placement[other].face == pose.face) continue;
+        if (!counts_as_crowder(problem.parts[part], subject)) continue;
         const Box body = gate_at(problem, other, placement[other]);
         if (!inside(gate, body) && !gap_at_least(gate, body, subject.fanout_need)) return true;
     }
@@ -242,6 +243,21 @@ AttractReport attract(Kernel& kernel, Nm pitch, Nm reach) {
     for (const std::size_t index : order)
         if (met(rules[index])) ++report.met_before;
     std::vector<char> settled(problem.parts.size(), 0);
+    std::vector<std::vector<std::size_t>> served(problem.parts.size());
+    for (const std::size_t index : order) served[rules[index].anchor].push_back(rules[index].member);
+    const auto train = [&](std::size_t head, const Pose& pose) {
+        const Point from = kernel.placement()[head].at;
+        const Point by{pose.at.x - from.x, pose.at.y - from.y};
+        std::vector<Move> moves{{head, pose}};
+        for (std::size_t next = 0; next < moves.size(); ++next)
+            for (const std::size_t follower : served[moves[next].part]) {
+                if (std::any_of(moves.begin(), moves.end(), [&](const Move& move) { return move.part == follower; })) continue;
+                Pose carried = kernel.placement()[follower];
+                carried.at = shifted(carried.at, by);
+                moves.push_back({follower, carried});
+            }
+        return moves;
+    };
     std::map<Nm, std::vector<Point>> rings;
     const std::vector<Point> aside = seat_ring(pitch, static_cast<Nm>(constants::aside_reach.value), {0, 0});
     for (const std::size_t index : order) {
@@ -260,8 +276,7 @@ AttractReport attract(Kernel& kernel, Nm pitch, Nm reach) {
         Box pin = pins.front();
         for (const auto& box : pins) pin = united(pin, box);
         const Point target{(pin.x0 + pin.x1) / 2, (pin.y0 + pin.y1) / 2};
-        const Nm radius = std::max(reach, std::min(rule.limit + static_cast<Nm>(constants::seat_margin.value),
-                                                   static_cast<Nm>(constants::ring_limit.value)));
+        const Nm radius = std::max(reach, static_cast<Nm>(constants::ring_limit.value));
         auto ring = rings.find(radius);
         if (ring == rings.end()) ring = rings.emplace(radius, seat_ring(pitch, radius, {0, 0})).first;
         const bool flips = may_sink(problem, kernel.placement(), part) || from.face == Face::bottom;
@@ -286,7 +301,9 @@ AttractReport attract(Kernel& kernel, Nm pitch, Nm reach) {
         std::size_t tries = 0;
         for (const Seat& seat : seats) {
             if (crowds_escape(problem, kernel.placement(), part, seat.pose)) continue;
-            if (!kernel.rejection(part, seat.pose)) {
+            if (!served[part].empty()) {
+                seated = kernel.move_many(train(part, seat.pose));
+            } else if (!kernel.rejection(part, seat.pose)) {
                 seated = kernel.move(part, seat.pose);
             } else if (seat.gap <= squared(rule.limit) && tries < static_cast<std::size_t>(constants::evict_tries.value)) {
                 ++tries;
