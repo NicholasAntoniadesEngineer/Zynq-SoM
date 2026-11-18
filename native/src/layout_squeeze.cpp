@@ -154,9 +154,20 @@ private:
         for (const auto& faller : fallers) {
             const Nm reach = faller.centre < pivot ? pivot - faller.centre : faller.centre - pivot;
             const Nm step = faller.centre < pivot ? options_.pitch : -options_.pitch;
-            for (Nm gone = options_.pitch; gone <= reach; gone += options_.pitch) {
-                if (!kernel_.move_many(carried(faller.unit, along_x ? Point{step, 0} : Point{0, step}))) break;
-                ++moved;
+            Nm left = reach / options_.pitch, stride = 1;
+            while (stride * 2 <= left) stride *= 2;
+            while (stride > 0 && left > 0) {
+                if (stride > left) {
+                    stride /= 2;
+                    continue;
+                }
+                const Nm by = step * stride;
+                if (kernel_.move_many(carried(faller.unit, along_x ? Point{by, 0} : Point{0, by}))) {
+                    moved += static_cast<std::size_t>(stride);
+                    left -= stride;
+                } else {
+                    stride /= 2;
+                }
             }
         }
         return moved;
@@ -312,6 +323,16 @@ private:
         const Point in = attempt.scaled ? Point{0, 0} : inward(attempt.side);
         const std::vector<Point> near = ring(options_.pitch, options_.part_reach, in);
         const std::vector<Point> far = ring(options_.pitch, options_.unit_reach, in);
+        const std::vector<Point> wide = ring(static_cast<Nm>(constants::wide_pitch.value),
+                                             static_cast<Nm>(constants::wide_reach.value), in);
+        const auto frees = [&](std::size_t part, const Violation& breach) {
+            const std::size_t partner = breach.part == part ? breach.other : breach.part;
+            for (const std::size_t mover : {part, partner}) {
+                if (mover >= problem_.parts.size() || problem_.parts[mover].fixed) continue;
+                if (move_unit(bundles_.unit_of[mover], wide) || sink_part(kernel_, mover, wide)) return true;
+            }
+            return false;
+        };
         std::deque<std::size_t> fresh, held;
         std::vector<char> queued(problem_.parts.size(), 0), stuck(problem_.parts.size(), 0);
         const auto enqueue = [&](std::size_t part) {
@@ -354,6 +375,10 @@ private:
                     continue;
                 }
                 const auto blockers = settled_[unit] ? std::nullopt : push_unit(unit, far);
+                if (!blockers && frees(part, *breach)) {
+                    ++attempt.freed;
+                    continue;
+                }
                 if (!blockers) {
                     stuck[part] = 1;
                     if (attempt.blocker.empty()) attempt.blocker = named(*breach);

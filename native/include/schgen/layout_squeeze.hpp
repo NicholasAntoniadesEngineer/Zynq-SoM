@@ -21,8 +21,12 @@ inline constexpr NamedConstant step_ratio{"step_ratio", 2.0, "ratio", "policy",
     "factor between successive edge steps"};
 inline constexpr NamedConstant settle_rounds{"settle_rounds", 4.0, "count", "policy",
     "full rule sweeps allowed while one edge step settles"};
+inline constexpr NamedConstant wide_reach{"wide_reach", 24e6, "nm", "policy",
+    "largest relocation tried for a jammed part or its partner before an edge step is given up"};
+inline constexpr NamedConstant wide_pitch{"wide_pitch", 1e6, "nm", "policy",
+    "lattice pitch of the wide relocation search; coarse because it only has to find room, not a best seat"};
 inline constexpr std::array squeeze_registry{search_pitch, part_reach, unit_reach, first_step, last_step,
-                                             step_ratio, settle_rounds};
+                                             step_ratio, settle_rounds, wide_reach, wide_pitch};
 }
 
 enum class Side : std::uint8_t { north, south, west, east };
@@ -48,7 +52,7 @@ struct Attempt {
     Side side = Side::north;
     Nm step = 0;
     bool kept = false, scaled = false, along_x = false;
-    std::size_t relocated = 0, pushed = 0, sunk = 0;
+    std::size_t relocated = 0, pushed = 0, sunk = 0, freed = 0;
     std::string blocker;
 };
 

@@ -393,7 +393,7 @@ std::vector<std::size_t> Kernel::neighbours(Box box, std::size_t self) const {
 }
 
 bool Kernel::crowds(const Part& crowder, const Part& subject) const {
-    return !crowder.never_crowds && !(crowder.cluster_passive && crowder.group == subject.group);
+    return counts_as_crowder(crowder, subject);
 }
 
 bool Kernel::copper_clear(const Shape& shape, Face face) const {

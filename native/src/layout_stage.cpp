@@ -21,7 +21,7 @@ std::vector<Box> ordered(std::vector<Box> boxes) {
 }
 
 std::string squeeze_summary(const SqueezeReport& report) {
-    std::size_t kept = 0, relocated = 0, pushed = 0, sunk = 0;
+    std::size_t kept = 0, relocated = 0, pushed = 0, sunk = 0, freed = 0;
     std::map<std::string, std::string> stops;
     for (const auto& attempt : report.attempts) {
         if (attempt.kept) {
@@ -29,6 +29,7 @@ std::string squeeze_summary(const SqueezeReport& report) {
             relocated += attempt.relocated;
             pushed += attempt.pushed;
             sunk += attempt.sunk;
+            freed += attempt.freed;
         } else {
             stops[attempt.scaled ? (attempt.along_x ? "width" : "height") : side_name(attempt.side)] = attempt.blocker;
         }
@@ -41,7 +42,7 @@ std::string squeeze_summary(const SqueezeReport& report) {
          << after << " mm2 (" << percent * (after - before) / before << "%)\n"
          << "  routed airwire " << to_mm(report.routed_before) << " to " << to_mm(report.routed_after) << " mm\n"
          << "  " << kept << " of " << report.attempts.size() << " edge steps kept, " << relocated
-         << " relocations, " << pushed << " pushes, " << sunk << " parts sunk to the rear\n";
+         << " relocations, " << pushed << " pushes, " << sunk << " parts sunk to the rear, " << freed << " jams freed\n";
     for (const auto& [side, blocker] : stops) text << "  " << side << " stopped by " << blocker << "\n";
     text << "  " << report.fallen << " cluster steps taken toward the module before the edges moved\n";
     if (!report.tried.empty()) {
