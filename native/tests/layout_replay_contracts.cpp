@@ -34,6 +34,7 @@ constexpr std::size_t report_limit = 8;
 const char* const plane_net = "GND";
 const char* const overmold_part = "HDMI-019S";
 const char* const repeat_project = "devkit_mini";
+constexpr int argument_count = 7, project_argument = 3, states_argument = 4, samples_argument = 5, squeeze_argument = 6;
 }
 
 void require(bool condition, const std::string& what) {
@@ -346,14 +347,16 @@ void replay(const std::filesystem::path& root, const std::string& project, std::
 
 int main(int argc, char** argv) {
     try {
-        if (argc != 6)
-            throw std::runtime_error("usage: layout_replay_contracts REPOSITORY SCRATCH STATES DRC_SAMPLES SQUEEZES");
+        if (argc != fixture::argument_count)
+            throw std::runtime_error(
+                "usage: layout_replay_contracts REPOSITORY SCRATCH PROJECT STATES DRC_SAMPLES SQUEEZES");
         const auto root = std::filesystem::absolute(argv[1]);
         const std::filesystem::path scratch = argv[2];
-        const std::size_t states = std::stoull(argv[3]), drc_samples = std::stoull(argv[4]);
-        const bool squeezes = std::stoull(argv[5]) != 0;
-        for (const char* project : {"carrier", "devkit_mini"})
-            replay(root, project, states, drc_samples, squeezes, scratch);
+        const std::string project = argv[fixture::project_argument];
+        const std::size_t states = std::stoull(argv[fixture::states_argument]);
+        const std::size_t drc_samples = std::stoull(argv[fixture::samples_argument]);
+        const bool squeezes = std::stoull(argv[fixture::squeeze_argument]) != 0;
+        replay(root, project, states, drc_samples, squeezes, scratch);
         std::cout << "layout replay contracts ok\n";
         return 0;
     } catch (const std::exception& error) {
