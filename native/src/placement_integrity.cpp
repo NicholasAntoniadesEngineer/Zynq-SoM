@@ -4,6 +4,7 @@
 #include "schgen/pack.hpp"
 #include "schgen/pcb_escape.hpp"
 #include "schgen/pcb_scan.hpp"
+#include "schgen/stackup.hpp"
 
 #include <algorithm>
 #include <sstream>
@@ -33,6 +34,7 @@ double intrusion(const Box4& part, const Box4& corridor) {
 
 PlacementIntegrityResult check_placement_integrity(const PcbCheckInput& input, const PcbModel& model) {
     PlacementIntegrityResult result;
+    const Stackup& stackup = board_stackup();
     const auto& parts = input.model().insts;
     const auto module_connector = [](const PcbCheckInstance& instance) {
         return pcb_is_df40_part(instance.sheet, static_cast<int>(instance.pad_nets.size()));
@@ -54,9 +56,13 @@ PlacementIntegrityResult check_placement_integrity(const PcbCheckInput& input, c
         const std::string net = controlled_net(instance, model);
         if (!net.empty()) {
             ++result.controlled_parts;
-            if (rear)
-                result.rear_controlled.push_back(instance.ref + " (" + instance.sheet + ") carries impedance-controlled net " +
-                                                 net + " on the rear copper, which has no reference plane");
+            if (!stackup.ground_referenced(rear)) {
+                const CopperLayer& reference = stackup.reference_of(rear);
+                result.unreferenced_controlled.push_back(
+                    instance.ref + " (" + instance.sheet + ") carries impedance-controlled net " + net + " on the " +
+                    (rear ? "rear" : "top") + " copper, whose neighbour " + reference.name + " is a " +
+                    copper_role_name(reference.role) + " layer, not a ground plane");
+            }
         }
         if (module_connector(instance)) continue;
         if (!instance.mod) {
@@ -78,18 +84,18 @@ PlacementIntegrityResult check_placement_integrity(const PcbCheckInput& input, c
             result.corridor_intrusions.push_back(row.str());
         }
     }
-    result.ok = result.rear_controlled.empty() && result.corridor_intrusions.empty() && result.unresolved.empty();
+    result.ok = result.unreferenced_controlled.empty() && result.corridor_intrusions.empty() && result.unresolved.empty();
     return result;
 }
 
 std::string PlacementIntegrityResult::summary() const {
     std::ostringstream text;
     text << "PLACEMENT INTEGRITY GATE: " << (ok ? "PASS" : "FAIL") << "\n"
-         << "  parts on impedance-controlled nets: " << controlled_parts << " (" << rear_controlled.size()
-         << " on the rear copper)\n"
+         << "  parts on impedance-controlled nets: " << controlled_parts << " (" << unreferenced_controlled.size()
+         << " on a face with no ground plane beneath it)\n"
          << "  module escape corridors: " << corridors << "; rear and through-hole parts judged: " << corridor_subjects
          << " (" << corridor_intrusions.size() << " intruding)\n";
-    for (const auto* rows : {&rear_controlled, &corridor_intrusions, &unresolved})
+    for (const auto* rows : {&unreferenced_controlled, &corridor_intrusions, &unresolved})
         for (const auto& row : *rows) text << "    FAIL " << row << "\n";
     return text.str();
 }

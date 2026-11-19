@@ -1,3 +1,4 @@
+#include "schgen/stackup.hpp"
 #include "schgen/board_pcb.hpp"
 #include "schgen/layout_adapter.hpp"
 #include "schgen/layout_json.hpp"
@@ -236,8 +237,9 @@ void integrity_gate_catches(const std::string& project, const PcbModel& model) {
         PcbModel flipped = model;
         flipped.insts[static_cast<std::size_t>(exposed - model.insts.begin())].side = "bottom";
         const PlacementIntegrityResult verdict = judged(flipped);
-        require(!verdict.ok && verdict.rear_controlled.size() == 1,
-                project + " integrity gate rejects a controlled part on the rear");
+        const bool referenced = board_stackup().ground_referenced(true);
+        require(verdict.unreferenced_controlled.size() == (referenced ? 0 : 1),
+                project + " integrity gate judges a controlled rear part by the plane beneath it");
     }
     const auto connector = std::find_if(model.insts.begin(), model.insts.end(), module_connector);
     const auto rear = std::find_if(model.insts.begin(), model.insts.end(), [&](const PcbCheckInstance& instance) {

@@ -50,6 +50,11 @@ int main(int argc,char** argv) {
         require(differential_geometry(90)->width_mm==0.2611,"90-ohm width differs");
         require(differential_geometry(100)->gap_mm==0.2032,"100-ohm gap differs");
         require(!differential_geometry(85),"uncited impedance fabricated geometry");
+        const Stackup& stackup=board_stackup();
+        require(stackup.dielectric.size()+1==stackup.copper.size(),"stack-up dielectrics do not separate its copper");
+        require(stackup.ground_referenced(false),"top copper lost its ground reference");
+        require(stackup.ground_referenced(true)==(stackup.reference_of(true).role==CopperRole::ground),"rear reference role misread");
+        require(stackup.reference_of(false).name!=stackup.reference_of(true).name,"both faces share one reference layer");
         std::cout<<"layout constraints: "<<checks<<" checks passed\n";return 0;
     }catch(const std::exception& error){std::cerr<<error.what()<<'\n';return 1;}
 }

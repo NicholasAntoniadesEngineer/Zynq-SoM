@@ -3,6 +3,7 @@
 #include "schgen/layout_sink.hpp"
 
 #include <algorithm>
+#include <cstdlib>
 #include <deque>
 #include <numeric>
 
@@ -28,12 +29,6 @@ Board shrunk(Board board, Side side, Nm step) {
     return board;
 }
 
-Side facing(const Part& part, const Pose& pose) {
-    const Point out = turned(part.edge->mouth_on(pose.face), pose.turn);
-    if (out.y < 0) return Side::north;
-    if (out.y > 0) return Side::south;
-    return out.x < 0 ? Side::west : Side::east;
-}
 
 std::vector<Point> ring(Nm pitch, Nm reach, Point in) {
     std::vector<Point> offsets;
@@ -402,6 +397,13 @@ private:
 
 }
 
+Side facing(const Part& part, const Pose& pose) {
+    const Point out = turned(part.edge->mouth_on(pose.face), pose.turn);
+    if (out.y < 0) return Side::north;
+    if (out.y > 0) return Side::south;
+    return out.x < 0 ? Side::west : Side::east;
+}
+
 const char* side_name(Side side) {
     switch (side) {
     case Side::north: return "north";
@@ -472,8 +474,10 @@ SqueezeReport squeeze_best(Kernel& kernel, const SqueezeOptions& options) {
     std::optional<SqueezeReport> best;
     Snapshot kept = start;
     std::vector<double> tried;
+    std::size_t idle = 0;
     for (std::size_t first = 0; first < edge_count; ++first)
         for (const bool backwards : {false, true}) {
+            if (idle >= static_cast<std::size_t>(constants::order_patience.value)) continue;
             SqueezeOptions variant = options;
             for (std::size_t index = 0; index < edge_count; ++index)
                 variant.order[index] =
@@ -483,6 +487,7 @@ SqueezeReport squeeze_best(Kernel& kernel, const SqueezeOptions& options) {
             tried.push_back(area(report));
             const bool better = !best || area(report) < area(*best) ||
                                 (area(report) == area(*best) && report.routed_after < best->routed_after);
+            idle = better ? 0 : idle + 1;
             if (!better) continue;
             best = std::move(report);
             kept = kernel.snapshot();

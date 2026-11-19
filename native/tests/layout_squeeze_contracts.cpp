@@ -270,7 +270,15 @@ void squeeze_packs_a_bundle_against_a_wall() {
     Row row;
     Kernel kernel(row.scene.problem, row.scene.placement);
     const SqueezeReport best = squeeze_best(kernel, default_squeeze());
-    require(best.tried.size() == 2 * edge_count && kernel.violations().empty(), "every edge order is tried");
+    const std::size_t patience = static_cast<std::size_t>(constants::order_patience.value);
+    require(best.tried.size() > patience && best.tried.size() <= 2 * edge_count && kernel.violations().empty(),
+            "the edge order search tries more orders than its patience and no more than exist");
+    if (best.tried.size() < 2 * edge_count) {
+        const auto idle_from = best.tried.end() - static_cast<std::ptrdiff_t>(patience);
+        const double leading = *std::min_element(best.tried.begin(), idle_from);
+        require(std::all_of(idle_from, best.tried.end(), [&](double area) { return area >= leading; }),
+                "the edge order search stops only after its patience of orders with no smaller board");
+    }
     for (const double area : best.tried)
         require(to_mm(best.after.width) * to_mm(best.after.height) <= area, "the smallest outline is kept");
     require(kernel.board().outline() == best.after.outline(), "the kernel holds the kept outline");

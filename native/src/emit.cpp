@@ -1,4 +1,5 @@
 #include "schgen/emit.hpp"
+#include "schgen/stackup.hpp"
 
 #include <cmath>
 #include <cstddef>
@@ -509,10 +510,6 @@ Sexpr emit_layers_node() {
         const char* user;
     };
     const Layer layers[] = {
-        {0, "F.Cu", "signal", "L1 (Sig)"},
-        {1, "In1.Cu", "power", "L2 (GND)"},
-        {2, "In2.Cu", "power", "L3 (PWR)"},
-        {31, "B.Cu", "signal", "L4 (Sig)"},
         {32, "B.Adhes", "user", "B.Adhesive"},
         {33, "F.Adhes", "user", "F.Adhesive"},
         {34, "B.Paste", "user", nullptr},
@@ -533,6 +530,9 @@ Sexpr emit_layers_node() {
         {49, "F.Fab", "user", nullptr},
     };
     SexprList node{S("layers")};
+    for (const CopperLayer& copper : board_stackup().copper)
+        node.push_back(L({N(static_cast<double>(copper.ordinal)), T(copper.name),
+                          S(copper.role == CopperRole::signal ? "signal" : "power"), T(copper.label)}));
     for (const Layer& layer : layers) {
         SexprList entry{N(static_cast<double>(layer.idx)), T(layer.name),
                         S(layer.ltype)};
@@ -545,35 +545,33 @@ Sexpr emit_layers_node() {
 }
 
 Sexpr emit_stackup_node() {
-    auto cu = [](const char* name, double th) {
-        return L({S("layer"), T(name), L({S("type"), T("copper")}),
-                  L({S("thickness"), N(th)})});
-    };
-    auto diel = [](const char* name, const char* dtype, double th, double er) {
-        return L({S("layer"), T(name), L({S("type"), T(dtype)}),
-                  L({S("thickness"), N(th)}), L({S("material"), T("FR4")}),
-                  L({S("epsilon_r"), N(er)}), L({S("loss_tangent"), N(0.02)})});
-    };
-    return L({
+    const Stackup& stackup = board_stackup();
+    if (stackup.dielectric.size() + 1 != stackup.copper.size())
+        throw std::logic_error(stackup.fabricator_name + ": every copper layer pair needs one dielectric between them");
+    SexprList node{
         S("stackup"),
         L({S("layer"), T("F.SilkS"), L({S("type"), T("Top Silk Screen")})}),
         L({S("layer"), T("F.Paste"), L({S("type"), T("Top Solder Paste")})}),
         L({S("layer"), T("F.Mask"), L({S("type"), T("Top Solder Mask")}),
            L({S("thickness"), N(0.01)})}),
-        cu("F.Cu", 0.035),
-        diel("dielectric 1", "prepreg", 0.2104, 4.6),
-        cu("In1.Cu", 0.0152),
-        diel("dielectric 2", "core", 1.065, 4.6),
-        cu("In2.Cu", 0.0152),
-        diel("dielectric 3", "prepreg", 0.2104, 4.6),
-        cu("B.Cu", 0.035),
-        L({S("layer"), T("B.Mask"), L({S("type"), T("Bottom Solder Mask")}),
-           L({S("thickness"), N(0.01)})}),
-        L({S("layer"), T("B.Paste"), L({S("type"), T("Bottom Solder Paste")})}),
-        L({S("layer"), T("B.SilkS"), L({S("type"), T("Bottom Silk Screen")})}),
-        L({S("copper_finish"), T("ENIG")}),
-        L({S("dielectric_constraints"), S("no")}),
-    });
+    };
+    for (std::size_t index = 0; index < stackup.copper.size(); ++index) {
+        const CopperLayer& copper = stackup.copper[index];
+        node.push_back(L({S("layer"), T(copper.name), L({S("type"), T("copper")}),
+                          L({S("thickness"), N(copper.thickness_mm)})}));
+        if (index == stackup.dielectric.size()) continue;
+        const DielectricLayer& sheet = stackup.dielectric[index];
+        node.push_back(L({S("layer"), T(sheet.name), L({S("type"), T(sheet.kind)}),
+                          L({S("thickness"), N(sheet.thickness_mm)}), L({S("material"), T("FR4")}),
+                          L({S("epsilon_r"), N(sheet.permittivity)}), L({S("loss_tangent"), N(0.02)})}));
+    }
+    node.push_back(L({S("layer"), T("B.Mask"), L({S("type"), T("Bottom Solder Mask")}),
+                      L({S("thickness"), N(0.01)})}));
+    node.push_back(L({S("layer"), T("B.Paste"), L({S("type"), T("Bottom Solder Paste")})}));
+    node.push_back(L({S("layer"), T("B.SilkS"), L({S("type"), T("Bottom Silk Screen")})}));
+    node.push_back(L({S("copper_finish"), T("ENIG")}));
+    node.push_back(L({S("dielectric_constraints"), S("no")}));
+    return Sexpr{std::move(node)};
 }
 
 Sexpr emit_wire(double x0, double y0, double x1, double y1,
