@@ -1,7 +1,6 @@
 #include "schgen/roles.hpp"
 #include "schgen/rules.hpp"
 
-#include "schgen/pack.hpp"
 #include "schgen/seat.hpp"
 
 #include <algorithm>
@@ -12,9 +11,6 @@
 namespace schgen::rules {
 namespace {
 
-const char* const capacitor_class = "C";
-const char* const inductor_class = "L";
-const char* const connector_class = "J";
 const std::array<std::string_view, 3> input_heads{"VIN", "PVIN", "IN"};
 
 bool input_name(const std::string& name) {
@@ -162,18 +158,16 @@ bool RuleContext::rear(std::size_t part) const { return parts()[part].side == "b
 
 bool RuleContext::ground_beneath(std::size_t part) const { return stackup_.ground_referenced(rear(part)); }
 
-bool RuleContext::module_connector(std::size_t part) const {
-    return pcb_is_df40_part(parts()[part].sheet, static_cast<int>(parts()[part].pad_nets.size()));
-}
+PartClass RuleContext::part_class(std::size_t part) const { return part_class_of(parts()[part]); }
 
-bool RuleContext::capacitor(std::size_t part) const { return ref_prefix(parts()[part].ref) == capacitor_class; }
+bool RuleContext::module_connector(std::size_t part) const { return part_class(part) == PartClass::module_connector; }
 
-bool reads_as_inductor(const std::string& reference) { return ref_prefix(reference) == inductor_class; }
+bool RuleContext::capacitor(std::size_t part) const { return part_class(part) == PartClass::capacitor; }
 
-bool RuleContext::inductor(std::size_t part) const { return reads_as_inductor(parts()[part].ref); }
+bool RuleContext::inductor(std::size_t part) const { return part_class(part) == PartClass::inductor; }
 
 bool RuleContext::connector(std::size_t part) const {
-    return ref_prefix(parts()[part].ref) == connector_class && !module_connector(part);
+    return part_class(part) == PartClass::connector || part_class(part) == PartClass::header;
 }
 
 std::string RuleContext::label(std::size_t part) const { return parts()[part].ref + " (" + parts()[part].sheet + ")"; }

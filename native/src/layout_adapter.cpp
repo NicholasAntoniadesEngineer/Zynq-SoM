@@ -129,20 +129,8 @@ Variant read_variant(const PcbCheckFootprint& footprint) {
     return variant;
 }
 
-std::string file_name(const PcbCheckInstance& instance) {
-    return std::filesystem::path(instance.mod->source).filename().string();
-}
-
-bool mechanical_file(const PcbCheckInstance& instance) {
-    const std::string name = file_name(instance);
-    return starts_with(name, "MountingHole") || starts_with(name, "Fiducial");
-}
-
-bool user_facing(const PcbCheckInstance& instance) {
-    const std::string prefix = ref_prefix(instance.ref);
-    return prefix == "TP" || prefix == "LED" || prefix == "SW" || prefix == "J" || prefix == "BT" ||
-           instance.footprint.find("TestPoint") != std::string::npos ||
-           starts_with(instance.footprint, "LED_") || starts_with(instance.footprint, "Switch:");
+bool corner_mark(PartClass part_class) {
+    return part_class == PartClass::mounting_hole || part_class == PartClass::fiducial;
 }
 
 Category category_of(const PcbModel& model, const PcbEmitPolicy& policy, const AdapterOptions& options,
@@ -624,7 +612,8 @@ ModelBinding bind_model(const PcbModel& model, const PcbEmitPolicy& policy, cons
         }
         const Variant& variant = problem.footprints[found->second].on(face);
         const int pins = static_cast<int>(instance.pad_nets.size());
-        const bool mezzanine = pcb_is_df40_part(instance.sheet, pins);
+        const PartClass part_class = part_class_of(instance);
+        const bool mezzanine = part_class == PartClass::module_connector;
         const bool foreign = pcb_counts_as_crowder(instance.ref, instance.sheet, pins,
                                                    instance.footprint, foreign_group);
         const bool own = pcb_counts_as_crowder(instance.ref, instance.sheet, pins,
@@ -634,6 +623,8 @@ ModelBinding bind_model(const PcbModel& model, const PcbEmitPolicy& policy, cons
         part.group = instance.sheet;
         part.value = instance.value;
         part.footprint_name = instance.footprint;
+        part.part_class = part_class;
+        part.height = to_nm(part_height_of(instance).mm);
         part.footprint = found->second;
         part.fanout_pins = pins;
         const int escape_nets = pcb_escape_nets(instance);
@@ -643,13 +634,13 @@ ModelBinding bind_model(const PcbModel& model, const PcbEmitPolicy& policy, cons
         part.cluster_passive = foreign && !own;
         const bool controlled = !controlled_net(instance, model).empty();
         const bool drilled = drilled_part(instance);
-        part.top_only = (controlled && !board_stackup().ground_referenced(true)) || user_facing(instance) ||
+        part.top_only = (controlled && !board_stackup().ground_referenced(true)) || presents_on_top(part_class) ||
                         (face == Face::top && drilled);
         part.core_exempt = module_clearance_exempt(instance);
         part.cohesion_member = !part.core_exempt;
         part.fixed = part.core_exempt || mezzanine;
         part.module = mezzanine;
-        if (mechanical_file(instance))
+        if (corner_mark(part_class))
             part.corner = corner_rule(problem.board, {to_nm(instance.x), to_nm(instance.y)});
         const std::size_t part_index = problem.parts.size();
         for (std::size_t pad = 0; pad < variant.pads.size(); ++pad) {
@@ -674,7 +665,7 @@ ModelBinding bind_model(const PcbModel& model, const PcbEmitPolicy& policy, cons
     if (gates) translate_gates(model, *gates, problem);
     for (std::size_t index = 0; index < model.insts.size(); ++index) {
         const auto& instance = model.insts[index];
-        if (!pcb_is_df40_part(instance.sheet, static_cast<int>(instance.pad_nets.size()))) continue;
+        if (part_class_of(instance) != PartClass::module_connector) continue;
         const Box4 corridor = pcb_escape_corridor_board(*instance.mod, instance.x, instance.y, instance.rotation);
         problem.reserves.push_back({Box{nearest_nm(corridor.x0), nearest_nm(corridor.y0), nearest_nm(corridor.x1),
                                         nearest_nm(corridor.y1)},
@@ -685,7 +676,7 @@ ModelBinding bind_model(const PcbModel& model, const PcbEmitPolicy& policy, cons
     for (const Claim& claim : intent.claims) {
         if (!rules::role_rule(claim.role).marks_regulator) continue;
         regulator[claim.owner] = 1;
-        if (rules::reads_as_inductor(problem.parts[claim.part].reference)) loop_inductor[claim.part] = 1;
+        if (problem.parts[claim.part].part_class == PartClass::inductor) loop_inductor[claim.part] = 1;
     }
     for (Claim& claim : intent.claims) {
         const rules::RoleRule& role = rules::role_rule(claim.role);

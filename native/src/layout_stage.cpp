@@ -227,14 +227,29 @@ StageResult squeeze_stage(const PcbPlacementInput& inputs, const PcbModel& model
             const Part& item = held.parts[part];
             if (item.fixed || item.top_only || !held.footprints[item.footprint].flippable) pinned[root(part)] = 1;
         }
-        const std::array<const char*, 6> kinds{"top-only test points", "top-only LEDs", "top-only switches",
-                                               "top-only connectors and headers", "top-only battery holder",
-                                               "top-only parts on controlled nets or with through holes"};
-        const auto kind_of = [](const std::string& reference) -> std::size_t {
-            const std::array<const char*, 5> prefixes{"TP", "LED", "SW", "J", "BT"};
-            for (std::size_t index = 0; index < prefixes.size(); ++index)
-                if (reference.rfind(prefixes[index], 0) == 0) return index;
-            return prefixes.size();
+        const auto kind_of = [](const Part& item) -> const char* {
+            if (!item.part_class) throw LayoutError("layout: " + item.reference + " carries no part class");
+            switch (*item.part_class) {
+            case PartClass::test_point: return "top-only test points";
+            case PartClass::led: return "top-only LEDs";
+            case PartClass::control_switch: return "top-only switches";
+            case PartClass::connector:
+            case PartClass::header:
+            case PartClass::module_connector: return "top-only connectors and headers";
+            case PartClass::battery_holder: return "top-only battery holder";
+            case PartClass::resistor:
+            case PartClass::capacitor:
+            case PartClass::inductor:
+            case PartClass::ferrite:
+            case PartClass::transformer:
+            case PartClass::diode:
+            case PartClass::transistor:
+            case PartClass::integrated_circuit:
+            case PartClass::crystal:
+            case PartClass::mounting_hole:
+            case PartClass::fiducial: return "top-only parts on controlled nets or with through holes";
+            }
+            throw LayoutError("layout: " + item.reference + " has a part class with no face reason");
         };
         std::map<std::string, double> top;
         double rear = 0;
@@ -248,7 +263,7 @@ StageResult squeeze_stage(const PcbPlacementInput& inputs, const PcbModel& model
             }
             const char* why = item.edge ? "edge connectors"
                               : item.fixed ? "fixed parts"
-                              : item.top_only ? kinds[kind_of(item.reference)]
+                              : item.top_only ? kind_of(item)
                               : !held.footprints[item.footprint].flippable ? "parts that cannot be mirrored"
                               : pinned[root(part)] ? "parts tied to the face of a top-bound part"
                               : "parts free to go to the rear";

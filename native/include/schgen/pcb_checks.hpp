@@ -1,6 +1,7 @@
 #pragma once
 
 #include "schgen/link.hpp"
+#include "schgen/part_facts.hpp"
 #include "schgen/execution_accounting.hpp"
 #include "schgen/pcb_scan.hpp"
 #include "schgen/project.hpp"
@@ -33,7 +34,11 @@ struct PcbCheckInstance {
     std::map<std::string, std::pair<int, std::string>> pad_nets;
     PcbCheckFootprintPtr mod;  // null is unresolved, never synthetic geometry
     bool mirror = false;      // geometry is the supplied, already mirrored mod
+    std::optional<PartClass> part_class;
+    std::optional<PartHeight> height;
 };
+PartClass part_class_of(const PcbCheckInstance& instance);
+const PartHeight& part_height_of(const PcbCheckInstance& instance);
 struct PcbCheckCopper {
     std::string kind, group, conn, role, net_name, layer = "F.Cu";
     int net = 0;

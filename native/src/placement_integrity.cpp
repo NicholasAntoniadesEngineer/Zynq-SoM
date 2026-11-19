@@ -3,7 +3,6 @@
 #include "schgen/pcb_scan.hpp"
 #include "schgen/stackup.hpp"
 
-#include <filesystem>
 #include <sstream>
 #include <stdexcept>
 
@@ -26,9 +25,9 @@ bool drilled_part(const PcbCheckInstance& instance) {
 
 bool module_clearance_exempt(const PcbCheckInstance& instance) {
     if (!instance.mod) return false;
-    const std::string name = std::filesystem::path(instance.mod->source).filename().string();
-    const auto starts = [](const std::string& text, const char* head) { return text.rfind(head, 0) == 0; };
-    return starts(name, "MountingHole") || starts(name, "Fiducial") || starts(instance.sheet, "som_j");
+    const PartClass part_class = part_class_of(instance);
+    return part_class == PartClass::mounting_hole || part_class == PartClass::fiducial ||
+           part_class == PartClass::module_connector;
 }
 
 PlacementIntegrityResult check_placement_integrity(const PcbCheckInput& input, const PcbModel& model,

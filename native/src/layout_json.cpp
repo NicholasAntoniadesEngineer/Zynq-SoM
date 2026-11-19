@@ -286,6 +286,9 @@ std::string document_json(const Problem& problem, const Placement& placement) {
                                 {"group", text_value(part.group)},
                                 {"value", text_value(part.value)},
                                 {"footprint_name", text_value(part.footprint_name)},
+                                {"part_class", part.part_class ? text_value(std::string(part_class_name(*part.part_class)))
+                                                               : "null"},
+                                {"height", part.height ? integer(*part.height) : "null"},
                                 {"footprint", integer(static_cast<long long>(part.footprint))},
                                 {"pad_nets", array(pad_nets)},
                                 {"fanout_pins", integer(part.fanout_pins)},
@@ -417,7 +420,7 @@ Document read_document(const JsonNode& root) {
                                       variant_of(field(entry, "bottom", JsonKind::Object))});
     }
     for (const auto& entry : field(root, "parts", JsonKind::Array).array_value) {
-        reject_unknown_keys(entry, {"reference", "group", "value", "footprint_name", "footprint", "pad_nets",
+        reject_unknown_keys(entry, {"reference", "group", "value", "footprint_name", "part_class", "height", "footprint", "pad_nets",
                                     "fanout_pins", "fanout_need", "fanout_subject", "escape_top",
                                     "escape_bottom", "never_crowds",
                                     "cluster_passive", "fixed", "top_only", "core_exempt", "cohesion_member", "module",
@@ -428,6 +431,12 @@ Document read_document(const JsonNode& root) {
         part.group = text(entry, "group");
         part.value = text(entry, "value");
         part.footprint_name = text(entry, "footprint_name");
+        const JsonNode* part_class = object_field(entry, "part_class");
+        if (!part_class) throw LayoutError("layout: field part_class is missing");
+        if (part_class->kind != JsonKind::Null) part.part_class = part_class_named(text(entry, "part_class"));
+        const JsonNode* height = object_field(entry, "height");
+        if (!height) throw LayoutError("layout: field height is missing");
+        if (height->kind != JsonKind::Null) part.height = whole(field(entry, "height", JsonKind::Number));
         part.footprint = static_cast<std::size_t>(whole(field(entry, "footprint", JsonKind::Number)));
         part.fanout_pins = static_cast<int>(whole(field(entry, "fanout_pins", JsonKind::Number)));
         part.fanout_need = whole(field(entry, "fanout_need", JsonKind::Number));

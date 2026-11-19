@@ -1,6 +1,7 @@
 #pragma once
 
 #include "schgen/layout_geometry.hpp"
+#include "schgen/part_facts.hpp"
 
 #include <optional>
 #include <string>
@@ -52,6 +53,8 @@ struct Footprint {
 
 struct Part {
     std::string reference, group, value, footprint_name;
+    std::optional<PartClass> part_class;
+    std::optional<Nm> height;
     std::size_t footprint = 0;
     std::vector<int> pad_nets;
     int fanout_pins = 0;

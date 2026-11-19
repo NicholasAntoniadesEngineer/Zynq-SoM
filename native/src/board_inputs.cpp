@@ -1,5 +1,7 @@
 #include "schgen/board_inputs.hpp"
+#include "schgen/model3d.hpp"
 #include "schgen/pcb_emit.hpp"
+#include <algorithm>
 #include <fstream>
 #include <iterator>
 #include <set>
@@ -8,6 +10,8 @@
 namespace schgen {
 namespace {
 namespace fs = std::filesystem;
+const char* const part_facts_file = "part_facts.json";
+const char* const fiducial_footprint = "Fiducial:Fiducial_1mm_Mask2mm";
 std::string read(const fs::path& path) {
     std::ifstream input(path, std::ios::binary);
     if (!input) throw std::runtime_error("cannot read board input " + path.string());
@@ -78,7 +82,7 @@ PcbPlacementInput load_board_inputs(const ProjectPaths& paths,
         result.footprints.emplace(key, parsed);
         return parsed;
     };
-    footprint_ids.insert("Fiducial:Fiducial_1mm_Mask2mm");
+    footprint_ids.insert(fiducial_footprint);
     for (const auto& id : footprint_ids) {
         const auto alias = resolution.aliases.find(id);
         const auto file = resolve_footprint(alias == resolution.aliases.end() ? id : alias->second, libraries, resolution);
@@ -97,6 +101,31 @@ PcbPlacementInput load_board_inputs(const ProjectPaths& paths,
                 if (const auto dims = courtyard_dims_from_text(snapshot(dossier)->bytes)) floor.courtyard_dims.emplace(lib, *dims);
         }
     }
+    const PartFacts facts = load_part_facts(resolution.parts_dir / part_facts_file);
+    const ModelRoots roots{default_model3d_directory(), paths.project_file.parent_path(), resolution.parts_dir};
+    std::map<std::string, PartHeight> measured;
+    const auto height_of = [&](const std::string& footprint, const std::string& value, const std::string& part) {
+        const auto document = floor.footprints.find(floor.footprint_of.at(footprint));
+        const auto override = std::find_if(policy.model_overrides.begin(), policy.model_overrides.end(),
+            [&](const PcbModelOverride& entry) { return entry.value == value && entry.footprint == footprint; });
+        const bool overridden = override != policy.model_overrides.end();
+        const std::string key = overridden ? override->path : footprint;
+        auto known = measured.find(key);
+        if (known == measured.end())
+            known = measured.emplace(key, overridden ? model_height(override->path, roots, part)
+                                                     : footprint_height(facts, footprint, document->second.document,
+                                                                        roots, part)).first;
+        return known->second;
+    };
+    for (const auto& sheet : circuits)
+        for (const auto& part : sheet.circuit.parts) {
+            if (!floor.footprint_of.count(part.footprint)) continue;
+            const std::string label = part.ref + " (" + sheet.name + ")";
+            result.part_facts.emplace(std::make_pair(sheet.name, part.ref),
+                PartFact{symbol_class(facts, part.lib_id, label), height_of(part.footprint, part.value, label)});
+        }
+    if (floor.footprint_of.count(fiducial_footprint))
+        result.fiducial_height = height_of(fiducial_footprint, {}, fiducial_footprint);
     result.interface_bytes = read(paths.som_interface_file);
     result.som_interface = som_interface_from_json(
         parse_json_text(result.interface_bytes, paths.som_interface_file.string()), paths.som_interface_file.string());

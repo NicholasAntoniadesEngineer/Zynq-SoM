@@ -79,6 +79,7 @@ public:
     bool placed(std::size_t part) const;
     bool rear(std::size_t part) const;
     bool ground_beneath(std::size_t part) const;
+    PartClass part_class(std::size_t part) const;
     bool module_connector(std::size_t part) const;
     bool capacitor(std::size_t part) const;
     bool inductor(std::size_t part) const;
@@ -117,7 +118,5 @@ const std::vector<RuleEntry>& rule_book();
 const char* enforcement_name(Enforcement enforcement);
 std::string rule_book_markdown();
 std::optional<int> run_rules_command(int argc, char** argv);
-
-bool reads_as_inductor(const std::string& reference);
 
 }

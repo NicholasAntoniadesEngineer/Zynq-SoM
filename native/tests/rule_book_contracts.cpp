@@ -23,7 +23,8 @@ constexpr double inductor_x = 24, output_capacitor_x = 27, logic_x = 40, sense_x
 constexpr double connector_y = 40, clamp_y = 42, bystander_y = 50, intruder_x = 21, intruder_y = 41;
 constexpr double spare_x = 60, spare_y = 60, module_low = 100, module_high = 130, module_centre = 115;
 constexpr double module_capacitor_x = 112, module_capacitor_y = 96, crowding_x = 98.5, crowding_y = 110;
-constexpr double far_x = 10, far_termination_x = 26;
+constexpr double far_x = 10, far_termination_x = 26, low_height = 1, tall_height = 5;
+const char* const height_source = "fixture";
 constexpr int pair_impedance = 90;
 const char* const module_footprint = "parts/DF40C-100DS-0.4V_51/DF40C-100DS-0.4V_51.kicad_mod";
 const std::set<std::string> areas{"mechanical", "high_speed", "power", "protection", "decoupling", "sensing", "timing"};
@@ -80,11 +81,13 @@ struct Scene {
         require(found != model.insts.end(), "fixture holds " + reference);
         return *found;
     }
-    void add(const std::string& reference, const std::string& sheet, double x, double y, PcbCheckFootprintPtr mod,
-             const std::vector<std::pair<std::string, std::string>>& nets) {
+    void add(const std::string& reference, const std::string& sheet, PartClass part_class, double x, double y,
+             PcbCheckFootprintPtr mod, const std::vector<std::pair<std::string, std::string>>& nets) {
         PcbCheckInstance instance;
         instance.ref = reference;
         instance.sheet = sheet;
+        instance.part_class = part_class;
+        instance.height = PartHeight{fixture::low_height, fixture::height_source};
         instance.footprint = "fixture";
         instance.x = x;
         instance.y = y;
@@ -134,29 +137,29 @@ Scene baseline(const std::filesystem::path& repository) {
     scene.model.som_keepout = Box4{fixture::module_low, fixture::module_low, fixture::module_high, fixture::module_high};
     scene.model.netclass_of["DP"] = "USB";
     scene.model.classes["USB"] = DifferentialGeometry{fixture::pair_impedance, 0, 0, "fixture"};
-    scene.add("U1", "power", fixture::regulator_x, fixture::regulator_y, chip(),
+    scene.add("U1", "power", PartClass::integrated_circuit, fixture::regulator_x, fixture::regulator_y, chip(),
               {{"1", "VIN"}, {"2", "SW"}, {"3", "FB"}, {"4", "GND"}});
-    scene.add("C1", "power", fixture::input_capacitor_x, fixture::upper_row, small(), {{"1", "GND"}, {"2", "VIN"}});
-    scene.add("L1", "power", fixture::inductor_x, fixture::upper_row, small(), {{"1", "SW"}, {"2", "VOUT"}});
-    scene.add("C2", "power", fixture::output_capacitor_x, fixture::upper_row, small(), {{"1", "VOUT"}, {"2", "GND"}});
-    scene.add("R1", "power", fixture::input_capacitor_x, fixture::lower_row, small(), {{"1", "GND"}, {"2", "FB"}});
-    scene.add("U2", "logic", fixture::logic_x, fixture::regulator_y, chip(),
+    scene.add("C1", "power", PartClass::capacitor, fixture::input_capacitor_x, fixture::upper_row, small(), {{"1", "GND"}, {"2", "VIN"}});
+    scene.add("L1", "power", PartClass::inductor, fixture::inductor_x, fixture::upper_row, small(), {{"1", "SW"}, {"2", "VOUT"}});
+    scene.add("C2", "power", PartClass::capacitor, fixture::output_capacitor_x, fixture::upper_row, small(), {{"1", "VOUT"}, {"2", "GND"}});
+    scene.add("R1", "power", PartClass::resistor, fixture::input_capacitor_x, fixture::lower_row, small(), {{"1", "GND"}, {"2", "FB"}});
+    scene.add("U2", "logic", PartClass::integrated_circuit, fixture::logic_x, fixture::regulator_y, chip(),
               {{"1", "SENSE"}, {"2", "XI"}, {"3", "LINE"}, {"4", "GND"}});
-    scene.add("RS1", "logic", fixture::sense_x, fixture::upper_row, small(), {{"1", "LOAD"}, {"2", "SENSE"}});
-    scene.add("Y1", "logic", fixture::crystal_x, fixture::upper_row, small(), {{"1", "XI"}, {"2", "GND"}});
-    scene.add("C3", "logic", fixture::crystal_x, fixture::load_y, small(), {{"1", "XI"}, {"2", "GND"}});
-    scene.add("R2", "logic", fixture::sense_x, fixture::lower_row, small(), {{"1", "RAIL"}, {"2", "LINE"}});
-    scene.add("J1", "usb", fixture::regulator_x, fixture::connector_y, small(), {{"1", "DP"}, {"2", "GND"}});
-    scene.add("U3", "usb", fixture::regulator_x, fixture::clamp_y, small(), {{"1", "DP"}, {"2", "GND"}});
-    scene.add("U4", "usb", fixture::regulator_x, fixture::bystander_y, chip(), {{"1", "DP"}, {"4", "GND"}});
-    scene.add("C9", "spare", fixture::spare_x, fixture::spare_y, small(), {});
+    scene.add("RS1", "logic", PartClass::resistor, fixture::sense_x, fixture::upper_row, small(), {{"1", "LOAD"}, {"2", "SENSE"}});
+    scene.add("Y1", "logic", PartClass::crystal, fixture::crystal_x, fixture::upper_row, small(), {{"1", "XI"}, {"2", "GND"}});
+    scene.add("C3", "logic", PartClass::capacitor, fixture::crystal_x, fixture::load_y, small(), {{"1", "XI"}, {"2", "GND"}});
+    scene.add("R2", "logic", PartClass::resistor, fixture::sense_x, fixture::lower_row, small(), {{"1", "RAIL"}, {"2", "LINE"}});
+    scene.add("J1", "usb", PartClass::connector, fixture::regulator_x, fixture::connector_y, small(), {{"1", "DP"}, {"2", "GND"}});
+    scene.add("U3", "usb", PartClass::diode, fixture::regulator_x, fixture::clamp_y, small(), {{"1", "DP"}, {"2", "GND"}});
+    scene.add("U4", "usb", PartClass::integrated_circuit, fixture::regulator_x, fixture::bystander_y, chip(), {{"1", "DP"}, {"4", "GND"}});
+    scene.add("C9", "spare", PartClass::capacitor, fixture::spare_x, fixture::spare_y, small(), {});
     scene.sink("C9");
     const std::string bytes = file_text(repository / fixture::module_footprint);
     const PcbCheckFootprintPtr module = pcb_check_footprint(fixture::module_footprint, bytes);
     std::vector<std::pair<std::string, std::string>> module_nets;
     for (const auto& pad : module->pads) module_nets.emplace_back(std::get<0>(pad), "M" + std::get<0>(pad));
-    scene.add("J9", "som_j1", fixture::module_centre, fixture::module_centre, module, module_nets);
-    scene.add("C7", "module_power", fixture::module_capacitor_x, fixture::module_capacitor_y, small(),
+    scene.add("J9", "som_j1", PartClass::module_connector, fixture::module_centre, fixture::module_centre, module, module_nets);
+    scene.add("C7", "module_power", PartClass::capacitor, fixture::module_capacitor_x, fixture::module_capacitor_y, small(),
               {{"1", module_nets.front().second}, {"2", "GND"}});
     scene.serve("C1", "bypass", "U1", "1");
     scene.serve("L1", "switching", "U1", "2");
@@ -219,6 +222,31 @@ void rules_judge(const std::filesystem::path& repository) {
         require(scene.findings("module-clearance") == 1, "a top part inside the module clearance is found");
         scene.sink("R1");
         require(scene.findings("module-clearance") == 0, "a rear part is not judged against the module clearance");
+    }
+    {
+        Scene scene = good;
+        require(good.judge("tall-part-beside-module").measurements.empty(), "a board of low parts lists no tall part");
+        scene.part("U1").height = PartHeight{fixture::tall_height, fixture::height_source};
+        scene.part("C7").height = PartHeight{fixture::tall_height, fixture::height_source};
+        const RuleResult listed = scene.judge("tall-part-beside-module");
+        require(listed.findings.empty() && listed.measurements.size() == 2 &&
+                listed.measurements.front().rfind("C7", 0) == 0,
+                "tall top parts are listed with the one nearest the module first");
+        scene.sink("U1");
+        require(scene.judge("tall-part-beside-module").measurements.size() == 1, "a tall rear part is not listed");
+        scene.part("C7").height.reset();
+        require(scene.findings("tall-part-beside-module") == 1, "a top part with no height is a finding, never a skip");
+    }
+    {
+        Scene scene = good;
+        scene.part("C1").part_class.reset();
+        bool refused = false;
+        try {
+            scene.judge("regulator-loop-one-face");
+        } catch (const std::runtime_error& error) {
+            refused = std::string(error.what()).find("C1") != std::string::npos;
+        }
+        require(refused, "a part with no class stops the rule book and is named");
     }
     {
         Scene scene = good;
