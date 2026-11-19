@@ -149,7 +149,7 @@ private:
     std::unordered_map<Key, std::vector<std::size_t>> cells_;
     std::map<std::string, std::vector<std::size_t>> groups_, members_;
     std::map<std::string, std::vector<std::size_t>> group_rules_;
-    std::vector<std::vector<std::size_t>> pad_rules_, nearest_rules_, face_rules_;
+    std::vector<std::vector<std::size_t>> pad_rules_, nearest_rules_, face_rules_, order_rules_;
     std::vector<std::size_t> connectors_;
     std::vector<Nm> net_lengths_;
     Nm routed_ = 0, reach_ = 0;

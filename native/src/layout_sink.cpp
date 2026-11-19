@@ -271,6 +271,66 @@ std::string seat_obstacles(const Kernel& kernel, const PadGap& rule, Nm pitch) {
     return text;
 }
 
+OrderReport lead_first(Kernel& kernel, Nm pitch) {
+    const Problem& problem = kernel.problem();
+    OrderReport report;
+    const std::vector<Point> ring = seat_ring(pitch, static_cast<Nm>(constants::ring_limit.value), {0, 0});
+    for (const NetOrder& rule : net_orders_of(problem)) {
+        ++report.wanted;
+        const auto met = [&] { return net_order_met(problem, rule, kernel.placement(), rule.lead, nullptr); };
+        if (met()) {
+            ++report.met_before;
+            ++report.met_after;
+            continue;
+        }
+        const Pose anchor = kernel.placement()[rule.anchor];
+        const Nm bound = rival_bound(problem, rule, kernel.placement());
+        const Nm now = squared_net_gap(problem, rule.anchor, anchor, rule.anchor_names, rule.lead,
+                                       kernel.placement()[rule.lead], rule.net);
+        const std::vector<Box> pins = named_boxes(problem, rule.anchor, anchor, rule.anchor_names);
+        Box pin = pins.front();
+        for (const auto& box : pins) pin = united(pin, box);
+        const Point target{(pin.x0 + pin.x1) / 2, (pin.y0 + pin.y1) / 2};
+        std::vector<Seat> seats;
+        for (const Point by : ring)
+            for (int turn = 0; turn < turn_count; ++turn) {
+                const Pose pose{shifted(target, by), static_cast<Turn>(turn), anchor.face};
+                const Nm gap = squared_net_gap(problem, rule.anchor, anchor, rule.anchor_names, rule.lead, pose, rule.net);
+                if (gap <= bound || gap < now) seats.push_back({pose, gap});
+            }
+        std::stable_sort(seats.begin(), seats.end(), [](const Seat& a, const Seat& b) { return a.gap < b.gap; });
+        for (const Seat& seat : seats) {
+            if (crowds_escape(problem, kernel.placement(), rule.lead, seat.pose) || kernel.rejection(rule.lead, seat.pose))
+                continue;
+            if (kernel.move(rule.lead, seat.pose)) break;
+        }
+        const bool nearer = met();
+        const Nm lead = squared_net_gap(problem, rule.anchor, anchor, rule.anchor_names, rule.lead,
+                                        kernel.placement()[rule.lead], rule.net);
+        for (const std::size_t rival : rule.rivals) {
+            const Pose from = kernel.placement()[rival];
+            const auto gap = [&](const Pose& pose) {
+                return squared_net_gap(problem, rule.anchor, anchor, rule.anchor_names, rival, pose, rule.net);
+            };
+            if (nearer || problem.parts[rival].fixed || gap(from) >= lead) continue;
+            for (const Point by : ring) {
+                const Pose pose{shifted(from.at, by), from.turn, from.face};
+                if (gap(pose) < lead || crowds_escape(problem, kernel.placement(), rival, pose) ||
+                    kernel.rejection(rival, pose))
+                    continue;
+                if (kernel.move(rival, pose)) {
+                    ++report.moved_back;
+                    break;
+                }
+            }
+        }
+        if (!met()) continue;
+        if (nearer) ++report.reseated;
+        ++report.met_after;
+    }
+    return report;
+}
+
 AttractReport attract(Kernel& kernel, Nm pitch, Nm reach) {
     const Problem& problem = kernel.problem();
     AttractReport report;

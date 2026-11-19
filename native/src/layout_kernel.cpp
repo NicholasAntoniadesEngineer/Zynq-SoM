@@ -93,6 +93,7 @@ Kernel::Kernel(const Problem& problem, Placement placement)
     pad_rules_.resize(placement_.size());
     nearest_rules_.resize(placement_.size());
     face_rules_.resize(placement_.size());
+    order_rules_.resize(placement_.size());
     for (std::size_t rule = 0; rule < rules.pad_gaps.size(); ++rule) {
         pad_rules_[rules.pad_gaps[rule].anchor].push_back(rule);
         if (rules.pad_gaps[rule].member != rules.pad_gaps[rule].anchor)
@@ -108,6 +109,11 @@ Kernel::Kernel(const Problem& problem, Placement placement)
     for (std::size_t rule = 0; rule < rules.face_pairs.size(); ++rule) {
         face_rules_[rules.face_pairs[rule].first].push_back(rule);
         face_rules_[rules.face_pairs[rule].second].push_back(rule);
+    }
+    for (std::size_t rule = 0; rule < rules.net_orders.size(); ++rule) {
+        order_rules_[rules.net_orders[rule].anchor].push_back(rule);
+        order_rules_[rules.net_orders[rule].lead].push_back(rule);
+        for (const std::size_t rival : rules.net_orders[rule].rivals) order_rules_[rival].push_back(rule);
     }
     for (std::size_t rule = 0; rule < rules.group_gaps.size(); ++rule) {
         if (members_.find(rules.group_gaps[rule].first) == members_.end())
@@ -744,6 +750,13 @@ bool Kernel::rule_breaches(std::size_t part, const Shape& shape, const Pose& pos
         if (!pair_faced(problem_, board_, rule.first, first ? pose : placement_[peer], rule.second,
                         first ? placement_[peer] : pose, rule.or_under) &&
             sink(Violation{Breach::contract, part, peer}))
+            return true;
+    }
+    for (const std::size_t index : order_rules_[part]) {
+        const NetOrder& rule = rules.net_orders[index];
+        if (owned && rule.lead != part) continue;
+        if (!net_order_met(problem_, rule, placement_, part, &pose) &&
+            sink(Violation{Breach::contract, part, rule.lead == part ? rule.anchor : rule.lead}))
             return true;
     }
     const auto found = group_rules_.find(item.group);

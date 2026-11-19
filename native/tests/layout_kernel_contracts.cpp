@@ -40,6 +40,7 @@ constexpr Point close_site{20 * unit, 22 * unit}, beside_site{35 * unit / 2, 20 
 constexpr Point north_first{30 * unit, 6 * unit / 5}, north_second{40 * unit, 6 * unit / 5};
 constexpr Point inland_site{30 * unit, 3 * unit}, north_slide{20 * unit, 6 * unit / 5};
 constexpr Point north_crowd{37 * unit, 6 * unit / 5};
+constexpr Point order_lead{16 * unit, 20 * unit}, order_rival{13 * unit, 20 * unit}, order_past{10 * unit, 20 * unit};
 constexpr std::uint64_t walk_seed = 20261111;
 constexpr int walk_steps = 400;
 constexpr Nm walk_range = 4 * unit, walk_grid = unit / 20;
@@ -291,6 +292,30 @@ void pads_keep_copper_clearance() {
     require(Kernel(scene.problem, scene.placement).violations().empty(), "same-net pads may touch");
 }
 
+void protection_leads_its_net() {
+    Scene scene;
+    const auto strip = scene.footprint("strip", strip_variant());
+    const auto small = scene.footprint("small", square_variant(fixture::pad_half, fixture::passive_pins, false));
+    scene.add("J", "one", strip, fixture::subject_site);
+    scene.add("D", "one", small, fixture::order_lead);
+    scene.add("U", "one", small, fixture::order_rival);
+    const auto net = scene.net("VBUS", Category::signal);
+    for (std::size_t part = 0; part < scene.problem.parts.size(); ++part) scene.connect(net, part);
+    scene.problem.constraints.net_orders.push_back({0, 1, {0}, static_cast<int>(net), {2}, "order"});
+    const Kernel kernel(scene.problem, scene.placement);
+    require(kernel.violations().empty(), "a lead nearer the pin than its rival is legal");
+    const auto kind = [&](std::size_t part, Point at) {
+        const auto found = kernel.rejection(part, {at, Turn::none, Face::top});
+        return found ? std::optional<Breach>(found->kind) : std::nullopt;
+    };
+    require(kind(2, fixture::beside_site) == Breach::contract, "a rival may not pass the protection part");
+    require(kind(1, fixture::order_past) == Breach::contract, "the protection part may not fall behind a rival");
+    require(!kind(2, fixture::order_past), "a rival may move farther from the pin");
+    scene.placement[2].at = fixture::beside_site;
+    require(has(Kernel(scene.problem, scene.placement).violations(), Breach::contract),
+            "a rival ahead of the protection part is a violation");
+}
+
 void contract_rules_bind_pads() {
     Scene scene;
     scene.problem.rules.compare_guard = 1;
@@ -460,6 +485,7 @@ int main() {
         fixed_copper_keeps_its_clearance();
         pads_keep_copper_clearance();
         contract_rules_bind_pads();
+        protection_leads_its_net();
         subsystem_rules_bind_groups();
         connectors_stay_at_their_edge();
         groups_stay_together();

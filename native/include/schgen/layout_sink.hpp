@@ -29,6 +29,10 @@ struct AttractReport {
     Nm routed_before = 0, routed_after = 0;
 };
 
+struct OrderReport {
+    std::size_t wanted = 0, met_before = 0, reseated = 0, moved_back = 0, met_after = 0;
+};
+
 std::vector<Point> seat_ring(Nm pitch, Nm reach, Point preferred);
 bool may_sink(const Problem& problem, const Placement& placement, std::size_t part);
 bool crowds_escape(const Problem& problem, const Placement& placement, std::size_t part, const Pose& pose);
@@ -40,6 +44,7 @@ struct BalanceReport {
 
 BalanceReport balance_faces(Kernel& kernel, Nm pitch, Nm reach);
 AttractReport attract(Kernel& kernel, Nm pitch, Nm reach);
+OrderReport lead_first(Kernel& kernel, Nm pitch);
 std::string seat_obstacles(const Kernel& kernel, const PadGap& rule, Nm pitch);
 
 }

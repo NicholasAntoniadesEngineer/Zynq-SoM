@@ -36,6 +36,7 @@ struct PcbCheckInstance {
     bool mirror = false;      // geometry is the supplied, already mirrored mod
     std::optional<PartClass> part_class;
     std::optional<PartHeight> height;
+    bool at_module = false;
 };
 PartClass part_class_of(const PcbCheckInstance& instance);
 const PartHeight& part_height_of(const PcbCheckInstance& instance);

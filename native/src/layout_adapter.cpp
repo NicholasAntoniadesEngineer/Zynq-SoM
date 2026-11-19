@@ -639,7 +639,7 @@ ModelBinding bind_model(const PcbModel& model, const PcbEmitPolicy& policy, cons
         part.top_only = (controlled && !board_stackup().ground_referenced(true)) || presents_on_top(part_class) ||
                         (face == Face::top && drilled);
         part.core_exempt = module_clearance_exempt(instance);
-        part.cohesion_member = !part.core_exempt;
+        part.cohesion_member = !part.core_exempt && !instance.at_module;
         part.fixed = part.core_exempt || mezzanine;
         part.module = mezzanine;
         if (corner_mark(part_class))
@@ -731,6 +731,13 @@ AuthoredIntent authored_intent(const PcbPlacementInput& inputs) {
                 for (const auto& number : name.numbers) intent.pin_names[renamed(part.ref)][number] = name.name;
     }
     return intent;
+}
+
+std::set<std::string> module_served(const PcbPlacementInput& inputs) {
+    std::set<std::string> references;
+    for (const auto& service : authored_intent(inputs).services)
+        if (service.to_module) references.insert(service.part);
+    return references;
 }
 
 HoldPolicy hold_policy() {

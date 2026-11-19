@@ -19,6 +19,7 @@ const std::vector<RoleRule>& role_catalogue() {
         add("pull", reach::pull_reach);
         add("series", reach::series_reach).terminates_line = true;
         add("terminate", reach::terminate_reach).terminates_line = true;
+        add("limit", reach::limit_reach);
         add("filter", reach::filter_reach);
         add("feedback", reach::feedback_reach).loop_member = true;
         rows.back().field_sensitive = true;

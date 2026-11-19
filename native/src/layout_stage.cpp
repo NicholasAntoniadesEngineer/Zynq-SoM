@@ -73,7 +73,11 @@ StageResult squeeze_stage(const PcbPlacementInput& inputs, const PcbModel& model
     result.rear_before = rear(attracted.placement());
     const SqueezeOptions settings = default_squeeze();
     result.attract = attract(attracted, settings.pitch, static_cast<Nm>(constants::sink_reach.value));
+    result.order = lead_first(attracted, settings.pitch);
     Problem held = binding.problem;
+    for (NetOrder& rule : net_orders_of(binding.problem))
+        if (net_order_met(binding.problem, rule, attracted.placement(), rule.lead, nullptr))
+            held.constraints.net_orders.push_back(std::move(rule));
     for (const PadGap& rule : binding.problem.constraints.soft_gaps)
         if (rule.same_face && pair_faced(binding.problem, attracted.board(), rule.anchor,
                                           attracted.placement()[rule.anchor], rule.member,
@@ -152,6 +156,10 @@ StageResult squeeze_stage(const PcbPlacementInput& inputs, const PcbModel& model
     std::ostringstream text;
     text << "SAME FACE: " << result.faced << " parts held on the face of the pin they serve (regulator loops, timing parts); "
          << result.unfaced << " could not be brought to that face\n";
+    text << "PROTECTION ORDER: " << result.order.met_after << " of " << result.order.wanted
+         << " protection parts are the first part on their net after the connector pin and are held so; "
+         << result.order.reseated << " were moved nearer to become so, and "
+         << result.order.moved_back << " parts ahead of one were moved back\n";
     text << "TALL PARTS: " << result.cleared << " clusters moved to give parts taller than the module's underside "
          << constants::tall_module_clearance.value << " mm from the module\n";
     text << "CLUSTER ARRANGEMENT: " << result.arrange.clusters << " tied clusters; parts and module span "

@@ -130,19 +130,6 @@
     },
     {
       "type": "proximity",
-      "anchor": "J1",
-      "anchor_pins": [
-        "30"
-      ],
-      "members": [
-        "R7"
-      ],
-      "max_mm": 8.0,
-      "same_side": true,
-      "basis": "PCLK 22R source-series damping at its FFC pad (lcd.py host-end series R; 2-pin LCD_PCLK_PANEL net)|judgment:8.0"
-    },
-    {
-      "type": "proximity",
       "anchor": "U2",
       "anchor_pins": [
         "6"

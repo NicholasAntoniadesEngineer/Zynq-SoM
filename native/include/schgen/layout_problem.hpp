@@ -125,6 +125,14 @@ struct FacePair {
     bool or_under = false;
 };
 
+struct NetOrder {
+    std::size_t anchor = 0, lead = 0;
+    std::vector<std::size_t> anchor_names;
+    int net = no_net;
+    std::vector<std::size_t> rivals;
+    std::string source;
+};
+
 struct GroupGap {
     std::string first, second;
     bool second_is_core = false;
@@ -150,6 +158,7 @@ struct Constraints {
     std::vector<PadGap> pad_gaps, soft_gaps;
     std::vector<NearestGap> nearest_gaps;
     std::vector<FacePair> face_pairs;
+    std::vector<NetOrder> net_orders;
     std::vector<GroupGap> group_gaps;
     ConnectorRules connectors;
 };
@@ -228,6 +237,13 @@ struct Intent {
 };
 Nm squared_pad_gap(const Problem& problem, const PadGap& rule, const Pose& anchor, const Pose& member);
 Nm pad_gap_length(const Problem& problem, const PadGap& rule, const Placement& placement);
+Nm squared_net_gap(const Problem& problem, std::size_t anchor, const Pose& anchor_pose,
+                   const std::vector<std::size_t>& names, std::size_t member, const Pose& member_pose, int net);
+std::optional<NetOrder> net_order_of(const Problem& problem, const PadGap& claim);
+std::vector<NetOrder> net_orders_of(const Problem& problem);
+Nm rival_bound(const Problem& problem, const NetOrder& rule, const Placement& placement);
+bool net_order_met(const Problem& problem, const NetOrder& rule, const Placement& placement, std::size_t moved,
+                   const Pose* pose);
 void derive_ownership(Problem& problem, const Placement& placement, const HoldPolicy& policy, const Intent& intent);
 void tighten_holds(Problem& problem, const Placement& placement, const HoldPolicy& policy);
 const char* tie_name(Tie tie);

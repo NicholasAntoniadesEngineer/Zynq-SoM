@@ -14,7 +14,7 @@ using json_text::object;
 using json_text::text_value;
 
 inline constexpr std::size_t reserve_corners = 4;
-const char* const schema_name = "schgen.layout-problem/9";
+const char* const schema_name = "schgen.layout-problem/10";
 inline constexpr std::size_t point_fields = 2, disc_fields = 3, box_fields = 4;
 
 std::string point_json(Point point) { return array({integer(point.x), integer(point.y)}); }
@@ -173,7 +173,7 @@ Sense sense_of(const std::string& name) {
 }
 
 std::string constraints_json(const Constraints& rules) {
-    std::vector<std::string> pad_gaps, soft_gaps, nearest_gaps, face_pairs, group_gaps;
+    std::vector<std::string> pad_gaps, soft_gaps, nearest_gaps, face_pairs, net_orders, group_gaps;
     const auto gap_json = [](const PadGap& rule) {
         return object({{"anchor", integer(static_cast<long long>(rule.anchor))},
                        {"member", integer(static_cast<long long>(rule.member))},
@@ -202,6 +202,13 @@ std::string constraints_json(const Constraints& rules) {
                                      {"second", integer(static_cast<long long>(rule.second))},
                                      {"source", text_value(rule.source)},
                                      {"or_under", boolean(rule.or_under)}}));
+    for (const auto& rule : rules.net_orders)
+        net_orders.push_back(object({{"anchor", integer(static_cast<long long>(rule.anchor))},
+                                     {"lead", integer(static_cast<long long>(rule.lead))},
+                                     {"anchor_names", indices_json(rule.anchor_names)},
+                                     {"net", integer(rule.net)},
+                                     {"rivals", indices_json(rule.rivals)},
+                                     {"source", text_value(rule.source)}}));
     for (const auto& rule : rules.group_gaps)
         group_gaps.push_back(object({{"first", text_value(rule.first)},
                                      {"second", text_value(rule.second)},
@@ -214,6 +221,7 @@ std::string constraints_json(const Constraints& rules) {
                    {"soft_gaps", array(soft_gaps)},
                    {"nearest_gaps", array(nearest_gaps)},
                    {"face_pairs", array(face_pairs)},
+                   {"net_orders", array(net_orders)},
                    {"group_gaps", array(group_gaps)},
                    {"connectors", object({{"overlap_slack", integer(rules.connectors.overlap_slack)},
                                           {"overmold_gap", integer(rules.connectors.overmold_gap)},
@@ -222,7 +230,7 @@ std::string constraints_json(const Constraints& rules) {
 }
 
 Constraints constraints_of(const JsonNode& node) {
-    reject_unknown_keys(node, {"pad_gaps", "soft_gaps", "nearest_gaps", "face_pairs", "group_gaps", "connectors"},
+    reject_unknown_keys(node, {"pad_gaps", "soft_gaps", "nearest_gaps", "face_pairs", "net_orders", "group_gaps", "connectors"},
                         "layout constraints");
     Constraints rules;
     const auto gap_of = [](const JsonNode& entry) {
@@ -250,6 +258,13 @@ Constraints constraints_of(const JsonNode& node) {
         reject_unknown_keys(entry, {"first", "second", "source", "or_under"}, "layout face pair");
         rules.face_pairs.push_back({index_of(entry, "first"), index_of(entry, "second"), text(entry, "source"),
                                     flag(entry, "or_under")});
+    }
+    for (const auto& entry : field(node, "net_orders", JsonKind::Array).array_value) {
+        reject_unknown_keys(entry, {"anchor", "lead", "anchor_names", "net", "rivals", "source"}, "layout net order");
+        rules.net_orders.push_back({index_of(entry, "anchor"), index_of(entry, "lead"),
+                                    indices_of(field(entry, "anchor_names", JsonKind::Array)),
+                                    static_cast<int>(whole(field(entry, "net", JsonKind::Number))),
+                                    indices_of(field(entry, "rivals", JsonKind::Array)), text(entry, "source")});
     }
     for (const auto& entry : field(node, "group_gaps", JsonKind::Array).array_value) {
         reject_unknown_keys(entry, {"first", "second", "second_is_core", "measure", "limit", "sense", "source"},

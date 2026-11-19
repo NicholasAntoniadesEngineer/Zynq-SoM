@@ -1,4 +1,5 @@
 #include "pcb_placement_internal.hpp"
+#include "schgen/layout_adapter.hpp"
 
 namespace schgen::pcb_placement {
 Placer::Placer(const PcbPlacementInput &in, const PcbZoneResult &zones, const FloorplanStage &stage)
@@ -185,6 +186,7 @@ void Placer::instantiate() {
     m.netclass_of = ctx.netclass_of;
     m.classes = ctx.classes;
     m.deferred = geometry.deferred;
+    const std::set<std::string> at_module = layout::module_served(ctx.in);
     for (const auto &[r, key] : geometry.resolvable) {
         (void)key;
         const auto &p = ctx.by_ref.at(r);
@@ -204,6 +206,7 @@ void Placer::instantiate() {
         inst.mod = mod(r);
         inst.rotation = rot(r);
         inst.mirror = geometry.mirror_refs.count(r);
+        inst.at_module = at_module.count(r) != 0;
         if (p.fact) {
             inst.part_class = p.fact->part_class;
             inst.height = p.fact->height;
