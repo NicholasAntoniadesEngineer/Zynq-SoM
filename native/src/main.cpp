@@ -12,6 +12,7 @@
 #include "schgen/geometry_cli.hpp"
 #include "schgen/measure.hpp"
 #include "schgen/layout_cli.hpp"
+#include "schgen/rules.hpp"
 #include "schgen/part_import.hpp"
 #include "schgen/selftest_full.hpp"
 
@@ -49,6 +50,7 @@ int main(int argc, char** argv) {
                          "  pcb-drc [--project NAME] [--pcb FILE] [-o REPORT]\n"
                          "  measure --pcb FILE --project-file FILE --sheet-index FILE [-o REPORT] [--map SVG] (placed-board scoreboard)\n"
                          "  layout-export [--repo DIR] [--project NAME] --project-file FILE --plane-net NAME -o FILE | layout-check FILE\n"
+                         "  rules (print the placement rule book as markdown)\n"
                          "  subsystem-new NAME [--repo DIRECTORY] (new C++ package; never overwrites)\n"
                          "  part-import --parts-root DIRECTORY (--from-json FILE | --lcsc ID) [--name NAME] [--overwrite] [--catalog FILE]\n"
                          "  render3d | model3d-check [--project NAME] [-o DIRECTORY]\n"
@@ -84,6 +86,7 @@ int main(int argc, char** argv) {
         }
         if (const auto status = schgen::run_measure_command(argc, argv)) return *status;
         if (const auto status = schgen::run_layout_command(argc, argv)) return *status;
+        if (const auto status = schgen::rules::run_rules_command(argc, argv)) return *status;
         if (const auto status = schgen::run_part_import_command(argc, argv)) return *status;
         if (const auto status = schgen::run_regression_command(argc, argv)) return *status;
         if (const auto status = schgen::run_geometry_command(argc, argv)) return *status;

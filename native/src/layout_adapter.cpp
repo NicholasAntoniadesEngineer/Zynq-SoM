@@ -725,6 +725,9 @@ AuthoredIntent authored_intent(const PcbPlacementInput& inputs) {
             intent.services.push_back(std::move(entry));
         }
         for (const auto& entry : sheet.layout.free) intent.released.push_back(renamed(entry.part));
+        for (const auto& part : sheet.parts)
+            for (const auto& name : part.pin_names)
+                for (const auto& number : name.numbers) intent.pin_names[renamed(part.ref)][number] = name.name;
     }
     return intent;
 }
@@ -756,7 +759,7 @@ GateVerdict judge_model(const PcbPlacementInput& inputs, const PcbModel& model) 
     const auto ratsnest = check_ratsnest(input);
     return {check_fanout(input, 0).ok, check_placement_mech(input).ok, ratsnest.off_board.empty(),
             ratsnest.dispersed.empty(), check_pcb_placement_gates(inputs, model).ok(),
-            check_connector_spacing(input).ok, check_placement_integrity(input, model).ok};
+            check_connector_spacing(input).ok, check_placement_integrity(input, model, authored_intent(inputs)).ok};
 }
 
 PcbModel model_with(const PcbModel& base, const ModelBinding& binding, const Placement& placement) {

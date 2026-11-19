@@ -35,6 +35,8 @@ constexpr std::size_t report_limit = 8;
 const char* const plane_net = "GND";
 const char* const overmold_part = "HDMI-019S";
 const char* const repeat_project = "devkit_mini";
+const char* const corridor_rule = "module-escape-corridor";
+const char* const controlled_rule = "controlled-net-needs-ground";
 constexpr int argument_count = 7, project_argument = 3, states_argument = 4, samples_argument = 5, squeeze_argument = 6;
 }
 
@@ -210,9 +212,9 @@ void differential_walk(const std::string& project, const PcbPlacementInput& inpu
         std::cout << "    kernel stricter than the gates on " << kind << ": " << count << "\n";
 }
 
-void integrity_gate_catches(const std::string& project, const PcbModel& model) {
-    const auto judged = [](const PcbModel& candidate) {
-        return check_placement_integrity(PcbCheckInput(candidate), candidate);
+void integrity_gate_catches(const std::string& project, const PcbModel& model, const AuthoredIntent& intent) {
+    const auto judged = [&](const PcbModel& candidate) {
+        return check_placement_integrity(PcbCheckInput(candidate), candidate, intent);
     };
     const auto module_connector = [](const PcbCheckInstance& instance) {
         return pcb_is_df40_part(instance.sheet, static_cast<int>(instance.pad_nets.size()));
@@ -220,7 +222,7 @@ void integrity_gate_catches(const std::string& project, const PcbModel& model) {
     const PlacementIntegrityResult baseline = judged(model);
     std::cout << baseline.summary();
     require(baseline.ok, project + " baseline passes the integrity gate");
-    require(baseline.corridors > 0 && baseline.corridor_subjects > 0, project + " has escape corridors to judge");
+    require(baseline.of(fixture::corridor_rule).checked > 0, project + " has escape corridors to judge");
     const auto controlled = [&](const PcbCheckInstance& instance) {
         return instance.side == "top" &&
                std::any_of(instance.pad_nets.begin(), instance.pad_nets.end(), [&](const auto& pad) {
@@ -231,14 +233,14 @@ void integrity_gate_catches(const std::string& project, const PcbModel& model) {
                });
     };
     const auto exposed = std::find_if(model.insts.begin(), model.insts.end(), controlled);
-    require((exposed != model.insts.end()) == (baseline.controlled_parts > 0),
+    require((exposed != model.insts.end()) == (baseline.of(fixture::controlled_rule).checked > 0),
             project + " integrity gate counts the controlled parts the model holds");
     if (exposed != model.insts.end()) {
         PcbModel flipped = model;
         flipped.insts[static_cast<std::size_t>(exposed - model.insts.begin())].side = "bottom";
         const PlacementIntegrityResult verdict = judged(flipped);
         const bool referenced = board_stackup().ground_referenced(true);
-        require(verdict.unreferenced_controlled.size() == (referenced ? 0 : 1),
+        require(verdict.of(fixture::controlled_rule).findings.size() == (referenced ? 0 : 1),
                 project + " integrity gate judges a controlled rear part by the plane beneath it");
     }
     const auto connector = std::find_if(model.insts.begin(), model.insts.end(), module_connector);
@@ -254,7 +256,7 @@ void integrity_gate_catches(const std::string& project, const PcbModel& model) {
     moved.x = (corridor.x0 + corridor.x1) / 2;
     moved.y = (corridor.y0 + corridor.y1) / 2;
     const PlacementIntegrityResult verdict = judged(intruding);
-    require(!verdict.ok && !verdict.corridor_intrusions.empty(),
+    require(!verdict.ok && !verdict.of(fixture::corridor_rule).findings.empty(),
             project + " integrity gate rejects a rear part inside an escape corridor");
 }
 
@@ -317,7 +319,7 @@ void replay(const std::filesystem::path& root, const std::string& project, std::
             project + " round trip is byte-identical");
     geometry_matches_the_gates(model, binding);
     require(judge_model(stage.inputs, model).ok(), project + " baseline passes its gates");
-    integrity_gate_catches(project, model);
+    integrity_gate_catches(project, model, options.intent);
     const Kernel kernel(binding.problem, binding.placement);
     const auto found = kernel.violations();
     for (std::size_t index = 0; index < found.size() && index < fixture::report_limit; ++index)

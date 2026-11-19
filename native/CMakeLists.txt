@@ -81,6 +81,16 @@ target_sources(schgen_core PRIVATE src/measure_board.cpp src/measure_metrics.cpp
 target_sources(schgen_core PRIVATE src/json_text.cpp src/layout_geometry.cpp src/layout_problem.cpp src/layout_kernel.cpp
     src/layout_adapter.cpp src/layout_json.cpp src/layout_cli.cpp src/layout_squeeze.cpp src/layout_arrange.cpp src/layout_stage.cpp
     src/layout_sink.cpp src/placement_integrity.cpp)
+set(SCHGEN_RULE_SOURCES
+    src/rules/rule_context.cpp src/rules/rule_book.cpp src/rules/rule_index.cpp
+    src/rules/mechanical/module_clearance.cpp src/rules/mechanical/module_escape_corridor.cpp
+    src/rules/high_speed/controlled_net_needs_ground.cpp src/rules/high_speed/termination_distance_report.cpp
+    src/rules/power/regulator_loop_one_face.cpp src/rules/power/regulator_over_ground.cpp
+    src/rules/power/input_capacitor_nearest.cpp src/rules/power/nothing_sensitive_under_inductor.cpp
+    src/rules/protection/protect_first_after_connector.cpp src/rules/decoupling/bypass_on_pin_face_or_under.cpp
+    src/rules/sensing/sense_distance_report.cpp src/rules/timing/timing_parts_on_crystal_face.cpp)
+target_sources(schgen_core PRIVATE ${SCHGEN_RULE_SOURCES})
+set_source_files_properties(${SCHGEN_RULE_SOURCES} PROPERTIES COMPILE_OPTIONS "-ffp-contract=off")
 target_sources(schgen_core PRIVATE src/geometry_cli.cpp src/audit_ast_projection.cpp)
 target_sources(schgen_core PRIVATE src/authoring_purity.cpp src/authoring_purity_scope.cpp src/authoring_purity_config.cpp src/native_authoring_guard.cpp)
 target_link_libraries(schgen_core PUBLIC ${CMAKE_DL_LIBS})
@@ -228,6 +238,10 @@ if(BUILD_TESTING)
     target_link_libraries(schgen_circuit_layout_contracts PRIVATE schgen_core)
     target_compile_options(schgen_circuit_layout_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror)
     add_test(NAME native_circuit_layout_contracts COMMAND schgen_circuit_layout_contracts)
+    add_executable(schgen_rule_book_contracts tests/rule_book_contracts.cpp)
+    target_link_libraries(schgen_rule_book_contracts PRIVATE schgen_core)
+    target_compile_options(schgen_rule_book_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror -ffp-contract=off)
+    add_test(NAME native_rule_book_contracts COMMAND schgen_rule_book_contracts "${CMAKE_CURRENT_SOURCE_DIR}/..")
     add_executable(schgen_layout_replay_contracts tests/layout_replay_contracts.cpp)
     target_link_libraries(schgen_layout_replay_contracts PRIVATE schgen_core)
     target_compile_options(schgen_layout_replay_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror -ffp-contract=off)
