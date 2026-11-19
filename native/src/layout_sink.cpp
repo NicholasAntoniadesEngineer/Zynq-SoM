@@ -1,5 +1,7 @@
 #include "schgen/layout_sink.hpp"
 
+#include "schgen/roles.hpp"
+
 #include <algorithm>
 #include <limits>
 #include <map>
@@ -270,8 +272,16 @@ AttractReport attract(Kernel& kernel, Nm pitch, Nm reach) {
     AttractReport report;
     report.routed_before = kernel.routed_length();
     const auto& rules = problem.constraints.soft_gaps;
+    const auto faced = [&](const PadGap& rule, const Pose& anchor, const Pose& member) {
+        if (!rule.same_face || anchor.face == member.face) return true;
+        if (!rule.or_under) return false;
+        const bool body = rules::under_region(problem.parts[rule.anchor].module) == rules::UnderRegion::module_body &&
+                          kernel.board().module_body;
+        const Box region = body ? *kernel.board().module_body : gate_at(problem, rule.anchor, anchor);
+        return overlaps(gate_at(problem, rule.member, member), region);
+    };
     const auto met = [&](const PadGap& rule) {
-        if (rule.same_face && kernel.placement()[rule.anchor].face != kernel.placement()[rule.member].face) return false;
+        if (!faced(rule, kernel.placement()[rule.anchor], kernel.placement()[rule.member])) return false;
         return squared_pad_gap(problem, rule, kernel.placement()[rule.anchor], kernel.placement()[rule.member]) <=
                squared(rule.limit);
     };
@@ -279,7 +289,10 @@ AttractReport attract(Kernel& kernel, Nm pitch, Nm reach) {
     for (std::size_t index = 0; index < rules.size(); ++index)
         if (rules[index].sense == Sense::at_most) order.push_back(index);
     std::stable_sort(order.begin(), order.end(),
-                     [&](std::size_t a, std::size_t b) { return rules[a].limit < rules[b].limit; });
+                     [&](std::size_t a, std::size_t b) {
+                         if (rules[a].first != rules[b].first) return rules[a].first;
+                         return rules[a].limit < rules[b].limit;
+                     });
     for (const std::size_t index : order)
         if (met(rules[index])) ++report.met_before;
     std::vector<char> settled(problem.parts.size(), 0);
@@ -326,11 +339,12 @@ AttractReport attract(Kernel& kernel, Nm pitch, Nm reach) {
             for (const Point by : offsets)
                 for (const Face face : {Face::bottom, Face::top}) {
                     if (face != from.face && !flips) continue;
-                    if (rule.same_face && face != anchor.face) continue;
+                    if (rule.same_face && !rule.or_under && face != anchor.face) continue;
                     for (int turn = 0; turn < turn_count; ++turn) {
                         const Pose pose{shifted(target, by), static_cast<Turn>(turn), face};
                         const Nm gap = squared_pad_gap(problem, rule, anchor, pose);
-                        if (gap < before || (rule.same_face && from.face != anchor.face)) seats.push_back({pose, gap});
+                        if (!faced(rule, anchor, pose)) continue;
+                        if (gap < before || !faced(rule, anchor, from)) seats.push_back({pose, gap});
                     }
                 }
             std::stable_sort(seats.begin(), seats.end(), [&](const Seat& a, const Seat& b) {

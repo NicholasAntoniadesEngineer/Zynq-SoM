@@ -199,9 +199,12 @@ Box4 RuleContext::body(std::size_t part) const {
             std::max(court.y1, pads.y1)};
 }
 
-double RuleContext::overlap(std::size_t first, std::size_t second) const {
-    const Box4 a = courtyard(first), b = courtyard(second);
+double RuleContext::overlap(const Box4& a, const Box4& b) {
     return std::min(std::min(a.x1, b.x1) - std::max(a.x0, b.x0), std::min(a.y1, b.y1) - std::max(a.y0, b.y0));
+}
+
+double RuleContext::overlap(std::size_t first, std::size_t second) const {
+    return overlap(courtyard(first), courtyard(second));
 }
 
 double RuleContext::centre_distance(std::size_t first, std::size_t second) const {

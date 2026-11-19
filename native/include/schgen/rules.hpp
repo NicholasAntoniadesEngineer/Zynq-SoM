@@ -92,6 +92,7 @@ public:
     Box4 courtyard(std::size_t part) const;
     Box4 body(std::size_t part) const;
     double overlap(std::size_t first, std::size_t second) const;
+    static double overlap(const Box4& a, const Box4& b);
     double centre_distance(std::size_t first, std::size_t second) const;
     std::optional<double> pad_gap(std::size_t owner, const std::vector<std::string>& pads, std::size_t member) const;
     std::optional<double> net_gap(std::size_t owner, const std::vector<std::string>& pads, std::size_t member,

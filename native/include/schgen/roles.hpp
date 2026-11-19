@@ -2,6 +2,7 @@
 
 #include "schgen/named_constant.hpp"
 
+#include <cstdint>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -56,5 +57,15 @@ const std::vector<RoleRule>& role_catalogue();
 const RoleRule& role_rule(std::string_view name);
 std::vector<std::string_view> roles_with(bool RoleRule::*trait);
 bool keeps_owner_face(const RoleRule& role, bool owner_is_regulator, bool owner_is_loop_inductor);
+
+struct FaceDemand {
+    bool owner_face = false, or_under = false;
+};
+
+FaceDemand face_demand(const RoleRule& role, bool owner_is_regulator, bool owner_is_loop_inductor);
+
+enum class UnderRegion : std::uint8_t { owner_courtyard, module_body };
+
+UnderRegion under_region(bool owner_is_module_connector);
 
 }

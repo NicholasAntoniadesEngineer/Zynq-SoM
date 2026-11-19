@@ -1,5 +1,6 @@
 #include "schgen/placement_integrity.hpp"
 
+#include <set>
 #include <sstream>
 
 namespace schgen::rules {
@@ -7,7 +8,7 @@ namespace {
 
 constexpr Rule rule{
     "protect-first-after-connector", "protection",
-    "A protection part that serves a connector pin sits on the connector's face, and no other part on that net is nearer the connector pin than it is.",
+    "A protection part that serves a connector pin sits on the connector's face, and no part on that net other than another protection part is nearer the connector pin than it is.",
     "A surge must meet the clamp before anything else; every millimetre and every via ahead of the clamp adds inductance, and so volts, to what the protected parts see.",
     "ST USBLC6-2 datasheet, layout section, https://www.st.com/resource/en/datasheet/usblc6-2.pdf; "
     "TI SLVA680, ESD Protection Layout Guide, https://www.ti.com/lit/an/slva680/slva680.pdf",
@@ -15,6 +16,8 @@ constexpr Rule rule{
 
 RuleResult check(const RuleContext& context) {
     RuleResult result{&rule, 0, context.unresolved(roles_with(&RoleRule::protects_connector)), {}};
+    std::set<std::size_t> guards;
+    for (const Service* service : context.serving(roles_with(&RoleRule::protects_connector))) guards.insert(service->part);
     for (const Service* service : context.serving(roles_with(&RoleRule::protects_connector))) {
         const std::size_t part = service->part, owner = service->owner;
         if (!context.connector(owner)) {
@@ -39,7 +42,7 @@ RuleResult check(const RuleContext& context) {
         std::optional<std::size_t> nearer;
         double least = *own - constants::judging_resolution.value;
         for (std::size_t other = 0; other < context.parts().size(); ++other) {
-            if (other == part || other == owner || !context.placed(other)) continue;
+            if (other == part || other == owner || !context.placed(other) || guards.count(other)) continue;
             const auto gap = context.net_gap(owner, service->pads, other, net);
             if (!gap || *gap >= least) continue;
             least = *gap;

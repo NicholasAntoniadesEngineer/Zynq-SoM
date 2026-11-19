@@ -108,7 +108,7 @@ struct PadGap {
     std::string source;
     bool rigid = true, derived = false;
     Nm reach = 0;
-    bool same_face = false;
+    bool same_face = false, or_under = false, first = false;
 };
 
 struct NearestGap {
@@ -217,7 +217,7 @@ struct Claim {
     std::vector<std::size_t> names;
     Nm reach = 0;
     std::string role;
-    bool same_face = false;
+    bool same_face = false, or_under = false, first = false;
 };
 struct Intent {
     std::vector<Claim> claims;

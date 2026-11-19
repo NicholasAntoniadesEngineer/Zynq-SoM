@@ -75,10 +75,11 @@ StageResult squeeze_stage(const PcbPlacementInput& inputs, const PcbModel& model
     result.attract = attract(attracted, settings.pitch, static_cast<Nm>(constants::sink_reach.value));
     Problem held = binding.problem;
     for (const PadGap& rule : binding.problem.constraints.soft_gaps)
-        if (rule.same_face && attracted.placement()[rule.anchor].face == attracted.placement()[rule.member].face) {
+        if (rule.same_face && !rule.or_under &&
+            attracted.placement()[rule.anchor].face == attracted.placement()[rule.member].face) {
             held.constraints.face_pairs.push_back({rule.anchor, rule.member, "same face as " + rule.source});
             ++result.faced;
-        } else if (rule.same_face) {
+        } else if (rule.same_face && !rule.or_under) {
             ++result.unfaced;
         }
     tighten_holds(held, attracted.placement(), hold_policy());
