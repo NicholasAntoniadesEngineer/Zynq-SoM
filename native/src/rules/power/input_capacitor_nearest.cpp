@@ -15,7 +15,7 @@ constexpr Rule rule{
     "primary vendor document", Enforcement::measured};
 
 RuleResult check(const RuleContext& context) {
-    RuleResult result{&rule, 0, context.unresolved({"switching"}), {}};
+    RuleResult result{&rule, 0, context.unresolved(roles_with(&RoleRule::marks_regulator)), {}};
     for (const Regulator& regulator : context.regulators()) {
         const std::string subject = context.label(regulator.part);
         if (regulator.inputs.empty())

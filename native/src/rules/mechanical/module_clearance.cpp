@@ -1,6 +1,8 @@
+#include "schgen/layout_geometry.hpp"
 #include "schgen/placement_integrity.hpp"
 
 #include <algorithm>
+#include <cmath>
 #include <sstream>
 
 namespace schgen::rules {
@@ -26,8 +28,7 @@ RuleResult check(const RuleContext& context) {
         }
         ++result.checked;
         const Box4 body = context.body(part);
-        const double apart =
-            std::max({module.x0 - body.x1, body.x0 - module.x1, module.y0 - body.y1, body.y0 - module.y1});
+        const double apart = std::sqrt(layout::squared_box_gap(body, module));
         if (apart >= required - constants::judging_resolution.value) continue;
         std::ostringstream detail;
         detail << "is " << apart << " mm from the module body; " << required << " mm is required";

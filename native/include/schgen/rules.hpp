@@ -1,5 +1,6 @@
 #pragma once
 
+#include "schgen/roles.hpp"
 #include "schgen/layout_adapter.hpp"
 #include "schgen/named_constant.hpp"
 #include "schgen/pcb_model.hpp"
@@ -73,8 +74,8 @@ public:
     const std::vector<PcbCheckInstance>& parts() const { return input_.model().insts; }
     const std::vector<Service>& services() const { return services_; }
     const std::vector<Regulator>& regulators() const { return regulators_; }
-    std::vector<const Service*> serving(std::initializer_list<std::string_view> roles) const;
-    std::vector<Finding> unresolved(std::initializer_list<std::string_view> roles) const;
+    std::vector<const Service*> serving(const std::vector<std::string_view>& roles) const;
+    std::vector<Finding> unresolved(const std::vector<std::string_view>& roles) const;
     bool placed(std::size_t part) const;
     bool rear(std::size_t part) const;
     bool ground_beneath(std::size_t part) const;
@@ -116,5 +117,7 @@ const std::vector<RuleEntry>& rule_book();
 const char* enforcement_name(Enforcement enforcement);
 std::string rule_book_markdown();
 std::optional<int> run_rules_command(int argc, char** argv);
+
+bool reads_as_inductor(const std::string& reference);
 
 }

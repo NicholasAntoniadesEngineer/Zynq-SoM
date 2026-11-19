@@ -14,11 +14,17 @@ constexpr Rule rule{
     "TI SNVA021 (AN-1149), Layout Guidelines for Switching Power Supplies, https://www.ti.com/lit/an/snva021c/snva021c.pdf",
     "primary vendor document", Enforcement::gate};
 
+std::vector<std::string_view> sensitive_and_loop_roles() {
+    std::vector<std::string_view> roles = roles_with(&RoleRule::marks_regulator);
+    for (const std::string_view role : roles_with(&RoleRule::field_sensitive)) roles.push_back(role);
+    return roles;
+}
+
 RuleResult check(const RuleContext& context) {
-    RuleResult result{&rule, 0, context.unresolved({"switching", "sense", "timing", "feedback"}), {}};
+    RuleResult result{&rule, 0, context.unresolved(sensitive_and_loop_roles()), {}};
     for (const Regulator& regulator : context.regulators()) {
         for (const std::size_t inductor : regulator.inductors) {
-            for (const Service* service : context.serving({"sense", "timing", "feedback"})) {
+            for (const Service* service : context.serving(roles_with(&RoleRule::field_sensitive))) {
                 ++result.checked;
                 const double depth = context.overlap(inductor, service->part);
                 if (context.rear(service->part) == context.rear(inductor) || depth <= constants::judging_resolution.value)
@@ -29,7 +35,7 @@ RuleResult check(const RuleContext& context) {
                 result.findings.push_back({context.label(service->part), detail.str()});
             }
             std::optional<std::size_t> nearest;
-            for (const Service* service : context.serving({"sense", "timing"}))
+            for (const Service* service : context.serving(roles_with(&RoleRule::field_reported)))
                 if (!nearest || context.centre_distance(inductor, service->part) < context.centre_distance(inductor, *nearest))
                     nearest = service->part;
             std::ostringstream row;

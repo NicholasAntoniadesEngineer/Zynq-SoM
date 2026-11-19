@@ -1,3 +1,4 @@
+#include "schgen/roles.hpp"
 #include "schgen/rules.hpp"
 
 #include "schgen/pack.hpp"
@@ -14,8 +15,6 @@ namespace {
 const char* const capacitor_class = "C";
 const char* const inductor_class = "L";
 const char* const connector_class = "J";
-const char* const switching_role = "switching";
-const std::array<std::string_view, 2> input_roles{"bypass", "reservoir"};
 const std::array<std::string_view, 3> input_heads{"VIN", "PVIN", "IN"};
 
 bool input_name(const std::string& name) {
@@ -101,7 +100,7 @@ RuleContext::RuleContext(const PcbCheckInput& input, const PcbModel& model, cons
     }
     std::vector<std::size_t> owners;
     for (const auto& service : services_)
-        if (service.role == switching_role && all[service.owner].pad_nets.size() > 2 &&
+        if (role_rule(service.role).marks_regulator && all[service.owner].pad_nets.size() > 2 &&
             std::find(owners.begin(), owners.end(), service.owner) == owners.end())
             owners.push_back(service.owner);
     std::sort(owners.begin(), owners.end());
@@ -116,7 +115,7 @@ RuleContext::RuleContext(const PcbCheckInput& input, const PcbModel& model, cons
         for (const auto& service : services_) {
             if (service.owner != owner) continue;
             regulator.supports.push_back(service.part);
-            if (service.role != switching_role) continue;
+            if (!role_rule(service.role).marks_regulator) continue;
             if (inductor(service.part)) regulator.inductors.push_back(service.part);
             RegulatorOutput output{service.part, {}, {}};
             for (const auto& load : services_) {
@@ -134,7 +133,7 @@ RuleContext::RuleContext(const PcbCheckInput& input, const PcbModel& model, cons
             RegulatorInput entry{pad, name, {}};
             for (const auto& service : services_)
                 if (service.owner == owner && service.pads.front() == pad && capacitor(service.part) &&
-                    std::find(input_roles.begin(), input_roles.end(), service.role) != input_roles.end())
+                    role_rule(service.role).loop_capacitor)
                     entry.capacitors.push_back(service.part);
             nearest_first(owner, pad, entry.capacitors);
             regulator.inputs.push_back(std::move(entry));
@@ -143,14 +142,14 @@ RuleContext::RuleContext(const PcbCheckInput& input, const PcbModel& model, cons
     }
 }
 
-std::vector<const Service*> RuleContext::serving(std::initializer_list<std::string_view> roles) const {
+std::vector<const Service*> RuleContext::serving(const std::vector<std::string_view>& roles) const {
     std::vector<const Service*> found;
     for (const auto& service : services_)
         if (std::find(roles.begin(), roles.end(), service.role) != roles.end()) found.push_back(&service);
     return found;
 }
 
-std::vector<Finding> RuleContext::unresolved(std::initializer_list<std::string_view> roles) const {
+std::vector<Finding> RuleContext::unresolved(const std::vector<std::string_view>& roles) const {
     std::vector<Finding> found;
     for (const auto& [role, finding] : unresolved_)
         if (std::find(roles.begin(), roles.end(), role) != roles.end()) found.push_back(finding);
@@ -169,7 +168,9 @@ bool RuleContext::module_connector(std::size_t part) const {
 
 bool RuleContext::capacitor(std::size_t part) const { return ref_prefix(parts()[part].ref) == capacitor_class; }
 
-bool RuleContext::inductor(std::size_t part) const { return ref_prefix(parts()[part].ref) == inductor_class; }
+bool reads_as_inductor(const std::string& reference) { return ref_prefix(reference) == inductor_class; }
+
+bool RuleContext::inductor(std::size_t part) const { return reads_as_inductor(parts()[part].ref); }
 
 bool RuleContext::connector(std::size_t part) const {
     return ref_prefix(parts()[part].ref) == connector_class && !module_connector(part);

@@ -10,6 +10,8 @@
 #include "schgen/pcb_scan.hpp"
 #include "schgen/placement_integrity.hpp"
 #include "schgen/quantize.hpp"
+#include "schgen/roles.hpp"
+#include "schgen/rules.hpp"
 #include "schgen/ratsnest_gate.hpp"
 #include "schgen/stackup.hpp"
 #include "schgen/thermal_checks.hpp"
@@ -678,25 +680,26 @@ ModelBinding bind_model(const PcbModel& model, const PcbEmitPolicy& policy, cons
                                         nearest_nm(corridor.y1)},
                                     {index}, "escape corridor of " + instance.ref, false, true});
     }
-    derive_ownership(problem, binding.placement, hold_policy(),
-                     resolved_intent(problem, binding.placement, options.intent, binding.unresolved));
+    Intent intent = resolved_intent(problem, binding.placement, options.intent, binding.unresolved);
+    std::vector<char> regulator(problem.parts.size(), 0), loop_inductor(problem.parts.size(), 0);
+    for (const Claim& claim : intent.claims) {
+        if (!rules::role_rule(claim.role).marks_regulator) continue;
+        regulator[claim.owner] = 1;
+        if (rules::reads_as_inductor(problem.parts[claim.part].reference)) loop_inductor[claim.part] = 1;
+    }
+    for (Claim& claim : intent.claims) {
+        const rules::RoleRule& role = rules::role_rule(claim.role);
+        claim.same_face = rules::keeps_owner_face(role, regulator[claim.owner] != 0, loop_inductor[claim.owner] != 0);
+        Part& part = problem.parts[claim.part];
+        part.field_sensitive = part.field_sensitive || role.field_sensitive;
+        part.field_source = part.field_source || loop_inductor[claim.part] != 0;
+    }
+    derive_ownership(problem, binding.placement, hold_policy(), intent);
     validate(problem, binding.placement);
     return binding;
 }
 
-double role_reach(const std::string& role) {
-    static const std::map<std::string, const NamedConstant*> reaches{
-        {"bypass", &constants::bypass_reach},       {"reservoir", &constants::reservoir_reach},
-        {"pull", &constants::pull_reach},           {"series", &constants::series_reach},
-        {"terminate", &constants::terminate_reach}, {"filter", &constants::filter_reach},
-        {"feedback", &constants::feedback_reach},   {"switching", &constants::switching_reach},
-        {"timing", &constants::timing_reach},       {"protect", &constants::protect_reach},
-        {"sense", &constants::sense_reach},         {"indicate", &constants::indicate_reach},
-        {"set", &constants::set_reach}};
-    const auto found = reaches.find(role);
-    if (found == reaches.end()) throw LayoutError("layout: no reach is defined for role " + role);
-    return found->second->value;
-}
+double role_reach(const std::string& role) { return rules::role_rule(role).reach->value; }
 
 AuthoredIntent authored_intent(const PcbPlacementInput& inputs) {
     std::map<std::string, std::int64_t> bands;

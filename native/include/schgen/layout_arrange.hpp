@@ -18,11 +18,15 @@ inline constexpr NamedConstant tighten_rounds{"tighten_rounds", 8, "rounds", "po
     "passes in which a cluster holding the span out is offered a place that shrinks it"};
 inline constexpr NamedConstant arrange_tries{"arrange_tries", 600, "positions", "policy",
     "positions checked against every rule for one block before it is left where it is"};
+inline constexpr NamedConstant rehome_pitch{"rehome_pitch", 2e6, "nm", "policy",
+    "lattice pitch of the whole-board search for a cluster that would otherwise stop an edge; coarse because it only has to find room"};
+inline constexpr NamedConstant rehome_tries{"rehome_tries", 20000, "positions", "policy",
+    "positions anywhere on the board, nearest first and in any rotation, checked for a cluster that would otherwise stop an edge"};
 inline constexpr NamedConstant arrange_choices{"arrange_choices", 6, "positions", "policy",
     "legal positions compared by airwire length before one is taken for a block"};
 inline constexpr NamedConstant arrange_finalists{"arrange_finalists", 2, "plans", "policy",
     "plans with the smallest span that are squeezed to find which gives the smallest board"};
-inline constexpr std::array arrange_registry{arrange_pitch, arrange_gap, room_factor, tighten_rounds, arrange_tries, arrange_choices,
+inline constexpr std::array arrange_registry{arrange_pitch, arrange_gap, room_factor, rehome_pitch, rehome_tries, tighten_rounds, arrange_tries, arrange_choices,
                                              arrange_finalists};
 }
 
@@ -48,5 +52,6 @@ struct ArrangeReport {
 Box held_extent(const Kernel& kernel);
 std::string extent_holders(const Kernel& kernel);
 ArrangeReport arrange(Kernel& kernel, const SqueezeOptions& options);
+bool rehome(Kernel& kernel, const std::vector<std::size_t>& members);
 
 }

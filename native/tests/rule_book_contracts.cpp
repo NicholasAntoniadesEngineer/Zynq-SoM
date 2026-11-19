@@ -1,3 +1,4 @@
+#include "schgen/roles.hpp"
 #include "schgen/placement_integrity.hpp"
 #include "schgen/rules.hpp"
 
@@ -342,11 +343,41 @@ void runner_gates(const std::filesystem::path& repository) {
 
 }
 
+void roles_live_in_one_place(const std::filesystem::path& repository) {
+    const std::filesystem::path sources = repository / "native/src";
+    std::vector<std::filesystem::path> files;
+    for (const auto& entry : std::filesystem::recursive_directory_iterator(sources / "rules"))
+        if (entry.path().extension() == ".cpp") files.push_back(entry.path());
+    for (const auto& entry : std::filesystem::directory_iterator(sources)) {
+        const std::string name = entry.path().filename().string();
+        if (name.rfind("layout_", 0) == 0 && name != "layout_json.cpp") files.push_back(entry.path());
+    }
+    files.push_back(sources / "circuit_layout.cpp");
+    files.push_back(sources / "placement_integrity.cpp");
+    for (const auto& file : files) {
+        std::ifstream stream(file);
+        const std::string text((std::istreambuf_iterator<char>(stream)), std::istreambuf_iterator<char>());
+        for (const schgen::rules::RoleRule& role : schgen::rules::role_catalogue()) {
+            const std::string quoted = "\"" + std::string(role.name) + "\"";
+            std::size_t at = text.find(quoted);
+            while (at != std::string::npos) {
+                const std::size_t line = text.rfind('\n', at);
+                const std::string before = text.substr(line == std::string::npos ? 0 : line, at - (line == std::string::npos ? 0 : line));
+                if (before.find("constexpr Rule") == std::string::npos && text.compare(at + quoted.size(), 1, ",") != 0)
+                    throw std::runtime_error(file.filename().string() + " names the role " + quoted +
+                                             " itself; role knowledge belongs in roles.cpp");
+                at = text.find(quoted, at + quoted.size());
+            }
+        }
+    }
+}
+
 int main(int argc, char** argv) {
     try {
         if (argc != 2) throw std::runtime_error("usage: rule_book_contracts REPOSITORY");
         const auto repository = std::filesystem::absolute(argv[1]);
         book_is_indexed(repository);
+        roles_live_in_one_place(repository);
         rules_judge(repository);
         runner_gates(repository);
         std::cout << "rule book contracts ok\n";

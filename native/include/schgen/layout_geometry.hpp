@@ -108,15 +108,20 @@ constexpr bool inside(Box inner, Box outer) {
     return inner.x0 >= outer.x0 && inner.y0 >= outer.y0 && inner.x1 <= outer.x1 && inner.y1 <= outer.y1;
 }
 
-constexpr Nm axis_gap(Nm low_a, Nm high_a, Nm low_b, Nm high_b) {
-    return std::max({low_a - high_b, low_b - high_a, Nm{0}});
+template <typename Length>
+constexpr Length axis_gap(Length low_a, Length high_a, Length low_b, Length high_b) {
+    return std::max({low_a - high_b, low_b - high_a, Length{0}});
 }
 
 constexpr Nm squared(Nm value) { return value * value; }
 
-constexpr Nm squared_gap(Box a, Box b) {
-    return squared(axis_gap(a.x0, a.x1, b.x0, b.x1)) + squared(axis_gap(a.y0, a.y1, b.y0, b.y1));
+template <typename Rectangle>
+constexpr auto squared_box_gap(const Rectangle& a, const Rectangle& b) {
+    const auto across = axis_gap(a.x0, a.x1, b.x0, b.x1), along = axis_gap(a.y0, a.y1, b.y0, b.y1);
+    return across * across + along * along;
 }
+
+constexpr Nm squared_gap(Box a, Box b) { return squared_box_gap(a, b); }
 
 constexpr bool overlaps(Box a, Box b) {
     return std::min(a.x1, b.x1) > std::max(a.x0, b.x0) && std::min(a.y1, b.y1) > std::max(a.y0, b.y0);

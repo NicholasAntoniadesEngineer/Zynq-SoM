@@ -12,8 +12,8 @@ constexpr Rule rule{
     "primary vendor document", Enforcement::gate};
 
 RuleResult check(const RuleContext& context) {
-    RuleResult result{&rule, 0, context.unresolved({"timing"}), {}};
-    for (const Service* service : context.serving({"timing"})) {
+    RuleResult result{&rule, 0, context.unresolved(roles_with(&RoleRule::owner_face)), {}};
+    for (const Service* service : context.serving(roles_with(&RoleRule::owner_face))) {
         ++result.checked;
         if (context.rear(service->part) == context.rear(service->owner)) continue;
         result.findings.push_back({context.label(service->part), "is on the " + context.face(service->part) +

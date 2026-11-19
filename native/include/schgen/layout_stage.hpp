@@ -20,7 +20,7 @@ struct StageResult {
     ArrangeReport arrange;
     bool balanced = false;
     double plain_area = 0, balanced_area = 0;
-    std::size_t rear_before = 0, rear_after = 0;
+    std::size_t rear_before = 0, rear_after = 0, faced = 0, unfaced = 0;
     std::string report;
 };
 

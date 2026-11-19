@@ -109,9 +109,10 @@ void derive_ownership(Problem& problem, const Placement& placement, const HoldPo
         return names;
     };
     std::vector<PadGap> holds;
-    const auto own = [&](std::size_t part, std::size_t owner, std::vector<std::size_t> names, Nm reach) {
+    const auto own = [&](std::size_t part, std::size_t owner, std::vector<std::size_t> names, Nm reach,
+                         bool same_face = false) {
         PadGap rule{owner, part, std::move(names), reach, Sense::at_most, "owner of " + problem.parts[part].reference,
-                    true, false, reach};
+                    true, false, reach, same_face};
         problem.constraints.soft_gaps.push_back(rule);
         rule.source = "hold of " + problem.parts[part].reference;
         rule.derived = true;
@@ -123,7 +124,7 @@ void derive_ownership(Problem& problem, const Placement& placement, const HoldPo
         Ownership& entry = problem.ownership[part];
         if (claimed[part]) {
             entry = {Tie::authored, claimed[part]->owner};
-            own(part, claimed[part]->owner, claimed[part]->names, claimed[part]->reach);
+            own(part, claimed[part]->owner, claimed[part]->names, claimed[part]->reach, claimed[part]->same_face);
             continue;
         }
         if (!small(part)) continue;
