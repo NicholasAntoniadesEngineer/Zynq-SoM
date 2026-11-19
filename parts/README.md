@@ -56,6 +56,32 @@ To refresh only the catalog after changing part metadata:
 native/bin/schgen catalog-compile parts native/catalog.bin
 ```
 
+## Part facts (`part_facts.json`)
+
+`parts/part_facts.json` (`schema: schgen.part_facts/1`) is the one reviewed,
+hand-kept file in this folder. It holds what the generator cannot know:
+
+- `classes` — the class of every schematic symbol the boards may place, keyed
+  by symbol id (`Device:R`, `TF-01A:TF-01A`). The class is one of `resistor`,
+  `capacitor`, `inductor`, `ferrite`, `transformer`, `diode`, `led`,
+  `transistor`, `integrated_circuit`, `connector`, `header`,
+  `module_connector`, `switch`, `test_point`, `crystal`, `battery_holder`,
+  `mounting_hole`, `fiducial`. A `connector` mates with a cable or card from
+  outside the board; a `header` is a pin header reached from above. The key is
+  the symbol id because that is the one identity every authored part carries:
+  a part authored with a stock KiCad symbol keeps no link to a part folder.
+- `stated_heights` — the height above the board face, in millimetres, of every
+  footprint that names no 3D model, keyed by footprint id, each with its
+  `basis` and the date it was `reviewed`.
+
+Every other height is measured from the 3D model the part's footprint names
+(the highest mesh point of a `.wrl`, the highest vertex of a `.step`, with the
+footprint's own offset and scale applied; a model path that starts
+`${KIPRJMOD}/../parts/` is read from this folder). The board build fails, naming the
+part, when a placed part's symbol has no class, when its footprint has neither
+a model nor a stated height, or when it has both. After importing a new part,
+add its symbol to `classes`.
+
 ## What the generator produces
 
 - **Symbol (`.kicad_sym`)** — drawn by the generator's own layout rules, not a

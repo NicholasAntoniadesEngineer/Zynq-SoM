@@ -17,7 +17,9 @@ Context::Context(const PcbPlacementInput &input)
         auto band = bands.count(sheet.name) ? bands.at(sheet.name) : static_cast<int>(i + 1);
         for (const auto &p : sheet.parts) {
             auto ref = board_renamed_ref(p.ref, band, sheet.name);
-            BoardPart b{ref, p.ref, sheet.name, p.footprint, p.value, p.lib_id};
+            const auto fact = in.part_facts.find({sheet.name, p.ref});
+            BoardPart b{ref, p.ref, sheet.name, p.footprint, p.value, p.lib_id,
+                        fact == in.part_facts.end() ? std::nullopt : std::optional<PartFact>(fact->second)};
             parts.push_back(b);
             by_ref.emplace(ref, b);
             board_refs[sheet.name][p.ref] = ref;

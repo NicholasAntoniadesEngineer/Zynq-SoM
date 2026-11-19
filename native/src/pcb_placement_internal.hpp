@@ -18,6 +18,7 @@ using Offsets = FloorplanOffsets;
 using Rotations = FloorplanRotations;
 struct BoardPart {
     std::string ref, lib_ref, sheet, footprint, value, lib_id;
+    std::optional<PartFact> fact = std::nullopt;
 };
 struct Context {
     explicit Context(const PcbPlacementInput &);

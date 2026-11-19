@@ -217,7 +217,7 @@ void integrity_gate_catches(const std::string& project, const PcbModel& model, c
         return check_placement_integrity(PcbCheckInput(candidate), candidate, intent);
     };
     const auto module_connector = [](const PcbCheckInstance& instance) {
-        return pcb_is_df40_part(instance.sheet, static_cast<int>(instance.pad_nets.size()));
+        return part_class_of(instance) == PartClass::module_connector;
     };
     const PlacementIntegrityResult baseline = judged(model);
     std::cout << baseline.summary();

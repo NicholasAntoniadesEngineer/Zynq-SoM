@@ -204,6 +204,10 @@ void Placer::instantiate() {
         inst.mod = mod(r);
         inst.rotation = rot(r);
         inst.mirror = geometry.mirror_refs.count(r);
+        if (p.fact) {
+            inst.part_class = p.fact->part_class;
+            inst.height = p.fact->height;
+        }
         for (const auto &pad : pad_names_from_text(inst.mod->bytes)) {
             auto n = pin_net.find({r, pad});
             inst.pad_nets[pad] =
@@ -237,6 +241,8 @@ void Placer::instantiate() {
             i.y = placement_fiducial_precision4dp(xy.second, &ctx.quantization);
             i.mod = fid;
             i.sheet = "mechanical";
+            i.part_class = PartClass::fiducial;
+            i.height = ctx.in.fiducial_height;
             m.insts.push_back(i);
             ++m.placed;
             ++m.n_top;

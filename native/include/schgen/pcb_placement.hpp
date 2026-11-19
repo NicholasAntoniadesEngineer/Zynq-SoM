@@ -19,6 +19,8 @@ struct PcbPlacementInput {
     // Opaque footprint keys agree with floorplan.footprint_of. These are exact
     // source documents, not posed models. Mirroring stays in memory.
     PcbFootprintPool footprints;
+    std::map<std::pair<std::string, std::string>, PartFact> part_facts;
+    std::optional<PartHeight> fiducial_height;
     std::map<std::string, JsonNode> contracts; // all authored, including inert
     KicadNetlist netlist; // independently extracted board schematic connectivity
     SomInterface som_interface;
