@@ -62,7 +62,8 @@ struct FaceDemand {
     bool owner_face = false, or_under = false;
 };
 
-FaceDemand face_demand(const RoleRule& role, bool owner_is_regulator, bool owner_is_loop_inductor);
+FaceDemand face_demand(const RoleRule& role, bool owner_is_regulator, bool owner_is_loop_inductor,
+                       bool owner_is_module_connector);
 
 enum class UnderRegion : std::uint8_t { owner_courtyard, module_body };
 

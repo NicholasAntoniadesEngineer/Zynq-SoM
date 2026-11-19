@@ -12,7 +12,7 @@ constexpr Rule rule{
     "What limits a bypass capacitor is the inductance of its path to the pin; that path is short only beside the pin or straight through the board beneath it.",
     "AMD/Xilinx UG933, Zynq-7000 SoC PCB Design Guide, https://docs.amd.com/v/u/en-US/ug933-Zynq-7000-PCB; "
     "TI SLUA366, PCB Layout Guidelines for Power Controllers, https://www.ti.com/lit/pdf/slua366",
-    "primary vendor document", Enforcement::measured};
+    "primary vendor document", Enforcement::gate, Stage::layout};
 
 RuleResult check(const RuleContext& context) {
     RuleResult result{&rule, 0, context.unresolved(roles_with(&RoleRule::bypasses_pin)), {}};

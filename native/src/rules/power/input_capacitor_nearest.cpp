@@ -12,7 +12,7 @@ constexpr Rule rule{
     "The input capacitor closes the loop with the fastest current edges, so it is placed first and nothing may take its place at the pin.",
     "TI SLYT614, Five steps to a great PCB layout for a step-down converter, https://www.ti.com/lit/an/slyt614/slyt614.pdf; "
     "TI LM61460 datasheet, section 11 Layout, https://www.ti.com/lit/ds/symlink/lm61460.pdf",
-    "primary vendor document", Enforcement::measured};
+    "primary vendor document", Enforcement::measured, Stage::layout};
 
 RuleResult check(const RuleContext& context) {
     RuleResult result{&rule, 0, context.unresolved(roles_with(&RoleRule::marks_regulator)), {}};

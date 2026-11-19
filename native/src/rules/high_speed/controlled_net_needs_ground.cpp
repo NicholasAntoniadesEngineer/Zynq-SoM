@@ -9,7 +9,7 @@ constexpr Rule rule{
     "A controlled trace takes its impedance and its return current from the plane beside it; a power or signal neighbour gives neither.",
     "TI SPRAAR7J, High-Speed Interface Layout Guidelines, section 2.4, https://www.ti.com/lit/an/spraar7j/spraar7j.pdf; "
     "AMD/Xilinx UG483, 7 Series FPGAs PCB Design Guide, chapter 4, https://docs.amd.com/go/en-US/ug483_7Series_PCB",
-    "primary vendor document", Enforcement::gate};
+    "primary vendor document", Enforcement::gate, Stage::placement};
 
 RuleResult check(const RuleContext& context) {
     RuleResult result{&rule, 0, {}, {}};

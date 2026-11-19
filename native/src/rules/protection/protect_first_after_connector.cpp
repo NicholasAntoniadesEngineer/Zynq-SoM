@@ -12,7 +12,7 @@ constexpr Rule rule{
     "A surge must meet the clamp before anything else; every millimetre and every via ahead of the clamp adds inductance, and so volts, to what the protected parts see.",
     "ST USBLC6-2 datasheet, layout section, https://www.st.com/resource/en/datasheet/usblc6-2.pdf; "
     "TI SLVA680, ESD Protection Layout Guide, https://www.ti.com/lit/an/slva680/slva680.pdf",
-    "primary vendor document", Enforcement::measured};
+    "primary vendor document", Enforcement::measured, Stage::layout};
 
 RuleResult check(const RuleContext& context) {
     RuleResult result{&rule, 0, context.unresolved(roles_with(&RoleRule::protects_connector)), {}};

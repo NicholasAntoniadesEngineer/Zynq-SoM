@@ -19,7 +19,7 @@ inline constexpr NamedConstant small_pins{"small_pins", 2, "pins", "policy",
     "a part with at most this many connected pins may be moved aside for a part that serves a pin"};
 inline constexpr NamedConstant far_pitch{"far_pitch", 1e6, "nm", "policy",
     "lattice pitch of the widening search for a part with no seat near the pin it serves; it only has to find the nearest room"};
-inline constexpr NamedConstant obstacle_rows{"obstacle_rows", 3, "rows", "report",
+inline constexpr NamedConstant obstacle_rows{"obstacle_rows", 8, "rows", "report",
     "number of most frequent obstacles named for a part that is not within reach of the pin it serves"};
 inline constexpr std::array sink_registry{sink_reach, ring_limit, aside_reach, evict_tries, small_pins, far_pitch, obstacle_rows};
 }

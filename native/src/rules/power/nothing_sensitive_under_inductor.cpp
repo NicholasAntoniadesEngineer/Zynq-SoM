@@ -12,7 +12,7 @@ constexpr Rule rule{
     "Analog Devices RAQ 164, Guidelines for Placing the Inductor on a Switch Mode Power Supply PCB, "
     "https://www.analog.com/en/resources/analog-dialogue/raqs/raq-issue-164.html; "
     "TI SNVA021 (AN-1149), Layout Guidelines for Switching Power Supplies, https://www.ti.com/lit/an/snva021c/snva021c.pdf",
-    "primary vendor document", Enforcement::gate};
+    "primary vendor document", Enforcement::gate, Stage::placement};
 
 std::vector<std::string_view> sensitive_and_loop_roles() {
     std::vector<std::string_view> roles = roles_with(&RoleRule::marks_regulator);

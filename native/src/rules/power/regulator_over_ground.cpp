@@ -8,7 +8,7 @@ constexpr Rule rule{
     "A switching regulator and its inductor sit only on a face whose neighbouring copper layer is a ground plane.",
     "The image current in a ground plane directly beneath the switching loop cancels most of the loop's field; without it the loop inductance is many times larger.",
     "Analog Devices AN-139, Power Supply Layout and EMI, https://www.analog.com/media/en/technical-documentation/application-notes/an139f.pdf",
-    "primary vendor document", Enforcement::gate};
+    "primary vendor document", Enforcement::gate, Stage::placement};
 
 RuleResult check(const RuleContext& context) {
     RuleResult result{&rule, 0, context.unresolved(roles_with(&RoleRule::marks_regulator)), {}};

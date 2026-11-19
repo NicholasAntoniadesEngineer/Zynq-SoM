@@ -348,13 +348,13 @@ void runner_gates(const std::filesystem::path& repository) {
     const auto judged = [&] { return check_placement_integrity(PcbCheckInput(scene.model), scene.model, scene.intent); };
     const PlacementIntegrityResult sound = judged();
     require(sound.ok && sound.rules.size() == rule_book().size(), "the gate runs every rule and passes the sound board");
-    const std::string summary = sound.summary();
+    const std::string summary = sound.summary(rules::Stage::layout);
     for (const auto& entry : rule_book())
         require(summary.find(std::string(entry.rule.area) + "/" + std::string(entry.rule.id) + ": checked ") != std::string::npos,
                 "the summary has a line for " + std::string(entry.rule.id));
     scene.move("C9", fixture::module_centre, fixture::module_centre);
     const PlacementIntegrityResult broken = judged();
-    require(!broken.ok && broken.summary().find("FAIL module-escape-corridor: C9") != std::string::npos,
+    require(!broken.ok && broken.summary(rules::Stage::layout).find("FAIL module-escape-corridor: C9") != std::string::npos,
             "a gate rule with findings fails the board and names them");
     for (const auto& result : broken.rules)
         if (result.rule->enforcement == Enforcement::measured)
@@ -365,7 +365,7 @@ void runner_gates(const std::filesystem::path& repository) {
         check_placement_integrity(PcbCheckInput(measured.model), measured.model, measured.intent);
     require(reported.of("termination-distance-report").rule->enforcement == Enforcement::measured && reported.ok &&
             reported.of("termination-distance-report").findings.size() == 1 &&
-            reported.summary().find("FOUND termination-distance-report: R2") != std::string::npos,
+            reported.summary(rules::Stage::layout).find("FOUND termination-distance-report: R2") != std::string::npos,
             "a measured rule reports its findings without failing the board");
 }
 

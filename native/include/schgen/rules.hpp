@@ -25,9 +25,12 @@ inline constexpr std::array rule_registry{judging_resolution};
 
 enum class Enforcement : std::uint8_t { gate, measured };
 
+enum class Stage : std::uint8_t { placement, layout };
+
 struct Rule {
     std::string_view id, area, statement, why, source, confidence;
     Enforcement enforcement = Enforcement::measured;
+    Stage met_by = Stage::placement;
 };
 
 struct Finding {

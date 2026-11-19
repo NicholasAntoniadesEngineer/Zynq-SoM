@@ -11,7 +11,7 @@ constexpr Rule rule{
     "The distance from every sense part to the pin it serves is reported, farthest first; no source gives a limit, so none is judged.",
     "Sense lines carry small differential voltages; length adds series resistance and pickup, so the distances are worth seeing.",
     "TI INA226 datasheet, section 8.4 Layout, https://www.ti.com/lit/ds/symlink/ina226.pdf",
-    "primary vendor document", Enforcement::measured};
+    "primary vendor document", Enforcement::measured, Stage::placement};
 
 RuleResult check(const RuleContext& context) {
     RuleResult result{&rule, 0, context.unresolved(roles_with(&RoleRule::senses)), {}};

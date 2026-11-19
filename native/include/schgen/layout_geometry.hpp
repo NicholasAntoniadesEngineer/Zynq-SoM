@@ -123,6 +123,11 @@ constexpr auto squared_box_gap(const Rectangle& a, const Rectangle& b) {
 
 constexpr Nm squared_gap(Box a, Box b) { return squared_box_gap(a, b); }
 
+template <typename Length>
+constexpr Length module_gap_needed(Length height, Length stack, Length low, Length tall) {
+    return height > stack ? tall : low;
+}
+
 constexpr bool overlaps(Box a, Box b) {
     return std::min(a.x1, b.x1) > std::max(a.x0, b.x0) && std::min(a.y1, b.y1) > std::max(a.y0, b.y0);
 }

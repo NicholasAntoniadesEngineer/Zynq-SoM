@@ -1,3 +1,4 @@
+#include "schgen/layout_adapter.hpp"
 #include "schgen/placement_integrity.hpp"
 
 #include "schgen/seat.hpp"
@@ -7,10 +8,6 @@
 
 namespace schgen::rules {
 namespace {
-
-inline constexpr NamedConstant module_stack_height{"module_stack_height", 1.5, "mm", "physical",
-    "board-to-board distance of the mated Hirose DF40C-100DS-0.4V(51) receptacle and DF40C-100DP-0.4V(51) header; "
-    "Hirose DF40 Series catalog 2013.11, pages 3 and 4: a receptacle with no stacking-height code stacks at 1.5 mm"};
 
 constexpr Rule rule{
     "tall-part-beside-module", "mechanical",
@@ -22,13 +19,13 @@ constexpr Rule rule{
     "Connectors), 2013.11, pages 3 and 4: a receptacle with no stacking-height code stacks at 1.5 mm and "
     "DF40C-100DS-0.4V(51) is listed under Receptacle (Stacking height 1.5 mm), "
     "https://www.hirose.com/product/series/DF40; part heights come from each part's 3D model or parts/part_facts.json",
-    "primary vendor document", Enforcement::measured};
+    "primary vendor document", Enforcement::measured, Stage::placement};
 
 RuleResult check(const RuleContext& context) {
     RuleResult result{&rule, 0, {}, {}};
     if (!context.model().som_keepout) return result;
     const Box4& module = *context.model().som_keepout;
-    const double gap = module_stack_height.value;
+    const double gap = layout::constants::module_stack_height.value;
     struct Row {
         double distance = 0, height = 0;
         std::size_t part = 0;

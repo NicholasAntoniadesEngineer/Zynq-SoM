@@ -238,11 +238,15 @@ std::string seat_obstacles(const Kernel& kernel, const PadGap& rule, Nm pitch) {
     const bool flips = may_sink(problem, kernel.placement(), part) || from.face == Face::bottom;
     std::map<std::string, std::size_t> tally;
     std::size_t seats = 0;
-    for (const Point by : seat_ring(pitch, rule.reach + pitch, {0, 0}))
+    const Nm apart = pad_gap_length(problem, rule, kernel.placement());
+    const Nm coarse = static_cast<Nm>(constants::far_pitch.value);
+    const bool far = apart > 2 * static_cast<Nm>(constants::ring_limit.value);
+    const Nm bound = far ? apart : rule.reach;
+    for (const Point by : seat_ring(far ? coarse : pitch, bound + pitch, {0, 0}))
         for (const Face face : {Face::bottom, Face::top})
             for (int turn = 0; turn < turn_count; ++turn) {
                 const Pose pose{shifted(target, by), static_cast<Turn>(turn), face};
-                if (squared_pad_gap(problem, rule, anchor, pose) > squared(rule.reach)) continue;
+                if (squared_pad_gap(problem, rule, anchor, pose) > squared(bound)) continue;
                 ++seats;
                 if (face != from.face && !flips) {
                     ++tally[face == Face::bottom ? "rear face not permitted" : "top face not permitted"];
@@ -261,7 +265,7 @@ std::string seat_obstacles(const Kernel& kernel, const PadGap& rule, Nm pitch) {
     std::sort(ranked.begin(), ranked.end(), [](const auto& a, const auto& b) {
         return a.first != b.first ? a.first > b.first : a.second < b.second;
     });
-    std::string text = std::to_string(seats) + " seats within reach";
+    std::string text = std::to_string(seats) + (far ? " seats nearer than it is now" : " seats within reach");
     for (std::size_t index = 0; index < ranked.size() && index < static_cast<std::size_t>(constants::obstacle_rows.value); ++index)
         text += "; " + std::to_string(ranked[index].first) + " " + ranked[index].second;
     return text;
@@ -273,12 +277,8 @@ AttractReport attract(Kernel& kernel, Nm pitch, Nm reach) {
     report.routed_before = kernel.routed_length();
     const auto& rules = problem.constraints.soft_gaps;
     const auto faced = [&](const PadGap& rule, const Pose& anchor, const Pose& member) {
-        if (!rule.same_face || anchor.face == member.face) return true;
-        if (!rule.or_under) return false;
-        const bool body = rules::under_region(problem.parts[rule.anchor].module) == rules::UnderRegion::module_body &&
-                          kernel.board().module_body;
-        const Box region = body ? *kernel.board().module_body : gate_at(problem, rule.anchor, anchor);
-        return overlaps(gate_at(problem, rule.member, member), region);
+        return !rule.same_face ||
+               pair_faced(problem, kernel.board(), rule.anchor, anchor, rule.member, member, rule.or_under);
     };
     const auto met = [&](const PadGap& rule) {
         if (!faced(rule, kernel.placement()[rule.anchor], kernel.placement()[rule.member])) return false;

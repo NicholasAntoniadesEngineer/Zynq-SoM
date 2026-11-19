@@ -173,7 +173,7 @@ void differential_walk(const std::string& project, const PcbPlacementInput& inpu
                 Placement trial = kernel.placement();
                 trial[part] = pose;
                 ++probes;
-                if (judge_model(inputs, model_with(model, binding, trial)).ok()) ++stricter[breach_name(refusal->kind)];
+                if (judge_model(inputs, model_with(model, binding, trial)).ok_as_placed()) ++stricter[breach_name(refusal->kind)];
             }
             continue;
         }
@@ -182,7 +182,7 @@ void differential_walk(const std::string& project, const PcbPlacementInput& inpu
         ++accepted;
         const PcbModel moved = model_with(model, binding, kernel.placement());
         const GateVerdict verdict = judge_model(inputs, moved);
-        if (!verdict.ok())
+        if (!verdict.ok_as_placed())
             throw std::runtime_error("layout replay contract failed: " + project + " state " +
                 std::to_string(accepted) + ": kernel accepted " + binding.problem.parts[part].reference +
                 " from " + pose_text(before) + " to " + pose_text(pose) + " but gates say " + verdict.text());
@@ -220,8 +220,8 @@ void integrity_gate_catches(const std::string& project, const PcbModel& model, c
         return part_class_of(instance) == PartClass::module_connector;
     };
     const PlacementIntegrityResult baseline = judged(model);
-    std::cout << baseline.summary();
-    require(baseline.ok, project + " baseline passes the integrity gate");
+    std::cout << baseline.summary(rules::Stage::placement);
+    require(baseline.placement_ok, project + " baseline passes every integrity gate the starting placement must meet");
     require(baseline.of(fixture::corridor_rule).checked > 0, project + " has escape corridors to judge");
     const auto controlled = [&](const PcbCheckInstance& instance) {
         return instance.side == "top" &&
@@ -318,7 +318,7 @@ void replay(const std::filesystem::path& root, const std::string& project, std::
     require(render_pcb(model_with(model, binding, binding.placement), policy).pcb == original,
             project + " round trip is byte-identical");
     geometry_matches_the_gates(model, binding);
-    require(judge_model(stage.inputs, model).ok(), project + " baseline passes its gates");
+    require(judge_model(stage.inputs, model).ok_as_placed(), project + " baseline passes the gates the starting placement must meet");
     integrity_gate_catches(project, model, options.intent);
     const Kernel kernel(binding.problem, binding.placement);
     const auto found = kernel.violations();

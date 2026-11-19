@@ -13,7 +13,7 @@ constexpr Rule rule{
     "No rear part and no drilled part sits inside the escape corridor of a module connector.",
     "The corridor is where the module connector's pins break out on the rear copper; a part or a drill there blocks the breakout.",
     "owner decision, 2026-11-11 (module escape corridors reserved against rear and through-hole parts)",
-    "owner decision", Enforcement::gate};
+    "owner decision", Enforcement::gate, Stage::placement};
 
 RuleResult check(const RuleContext& context) {
     RuleResult result{&rule, 0, {}, {}};

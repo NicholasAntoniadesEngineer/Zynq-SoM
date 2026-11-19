@@ -6,10 +6,11 @@
 namespace schgen {
 
 struct PlacementIntegrityResult {
-    bool ok = true;
+    bool ok = true, placement_ok = true;
     std::vector<rules::RuleResult> rules;
     const rules::RuleResult& of(std::string_view id) const;
-    std::string summary() const;
+    bool ok_at(rules::Stage reached) const { return reached == rules::Stage::layout ? ok : placement_ok; }
+    std::string summary(rules::Stage reached) const;
 };
 
 std::string controlled_net(const PcbCheckInstance& instance, const PcbModel& model);

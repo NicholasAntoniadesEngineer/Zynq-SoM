@@ -75,15 +75,26 @@ StageResult squeeze_stage(const PcbPlacementInput& inputs, const PcbModel& model
     result.attract = attract(attracted, settings.pitch, static_cast<Nm>(constants::sink_reach.value));
     Problem held = binding.problem;
     for (const PadGap& rule : binding.problem.constraints.soft_gaps)
-        if (rule.same_face && !rule.or_under &&
-            attracted.placement()[rule.anchor].face == attracted.placement()[rule.member].face) {
-            held.constraints.face_pairs.push_back({rule.anchor, rule.member, "same face as " + rule.source});
+        if (rule.same_face && pair_faced(binding.problem, attracted.board(), rule.anchor,
+                                          attracted.placement()[rule.anchor], rule.member,
+                                          attracted.placement()[rule.member], rule.or_under)) {
+            held.constraints.face_pairs.push_back({rule.anchor, rule.member, "face of " + rule.source, rule.or_under});
             ++result.faced;
-        } else if (rule.same_face && !rule.or_under) {
+        } else if (rule.same_face) {
             ++result.unfaced;
         }
     tighten_holds(held, attracted.placement(), hold_policy());
+    held.rules.tall_module_clearance = to_nm(constants::tall_module_clearance.value);
     Kernel kernel(held, attracted.placement());
+    const Bundles clusters = bundle(held);
+    for (const Violation& crowding : kernel.violations()) {
+        if (crowding.kind != Breach::module_core) continue;
+        if (!kernel.breach(crowding.part)) continue;
+        if (!rehome(kernel, clusters.units[clusters.unit_of[crowding.part]]))
+            throw LayoutError("layout: " + held.parts[crowding.part].reference +
+                              " is taller than the module's underside and no place clears the module by the tall-part margin");
+        ++result.cleared;
+    }
     const auto area = [](const SqueezeReport& report) {
         return to_mm(report.after.width) * to_mm(report.after.height);
     };
@@ -141,6 +152,8 @@ StageResult squeeze_stage(const PcbPlacementInput& inputs, const PcbModel& model
     std::ostringstream text;
     text << "SAME FACE: " << result.faced << " parts held on the face of the pin they serve (regulator loops, timing parts); "
          << result.unfaced << " could not be brought to that face\n";
+    text << "TALL PARTS: " << result.cleared << " clusters moved to give parts taller than the module's underside "
+         << constants::tall_module_clearance.value << " mm from the module\n";
     text << "CLUSTER ARRANGEMENT: " << result.arrange.clusters << " tied clusters; parts and module span "
          << to_mm(result.arrange.before.width()) << " x " << to_mm(result.arrange.before.height())
          << " mm as placed; squeezes to " << result.arrange.unarranged << " mm2 without rearranging\n";
@@ -273,7 +286,7 @@ StageResult squeeze_stage(const PcbPlacementInput& inputs, const PcbModel& model
         text << "TOP FACE courtyard area by reason (rear holds " << rear << " mm2):\n";
         for (const auto& [why, area] : top) text << "    " << area << " mm2 " << why << "\n";
     }
-    text << check_placement_integrity(PcbCheckInput(result.model), result.model, options.intent).summary();
+    text << check_placement_integrity(PcbCheckInput(result.model), result.model, options.intent).summary(rules::Stage::layout);
     result.report = text.str();
     return result;
 }
