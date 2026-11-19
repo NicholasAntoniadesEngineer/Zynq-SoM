@@ -1,3 +1,4 @@
+#include "schgen/run_config.hpp"
 #include "schgen/catalog.hpp"
 #include "schgen/circuit.hpp"
 #include "schgen/legalize.hpp"
@@ -20,7 +21,12 @@
 
 int main(int argc, char** argv) {
     try {
-        if (argc == 1 || (argc == 2 && std::string(argv[1]) == "--help")) {
+        if (argc == 2 && std::string(argv[1]) == "--help") {
+            std::cout << schgen::run_usage();
+            return 0;
+        }
+        if (const auto status = schgen::run_config_command(argc, argv)) return *status;
+        if (argc == 2 && std::string(argv[1]) == "tools") {
             std::cout << "usage: schgen <command>\n"
                          "  self-check\n"
                          "  check --tests-dir BUILD [--repo ROOT] [--project NAME_OR_PATH] [-o DIRECTORY]\n"

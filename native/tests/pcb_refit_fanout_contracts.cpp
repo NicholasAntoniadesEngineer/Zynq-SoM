@@ -1,5 +1,6 @@
 // Standalone test TU includes the owned implementation to exercise private policy helpers.
 // Link schgen_core; do not also compile pcb_placement_moves.cpp into this executable.
+#include "schgen/run_config.hpp"
 #include "../src/pcb_placement_moves.cpp"
 #include "pcb_placement_fixture.hpp"
 #include <iostream>
@@ -188,6 +189,7 @@ void thermal_pull(const std::filesystem::path& root) {
 int main(int argc, char** argv) {
     try {
         if(argc!=2) return 2;
+        schgen::apply_run_config(std::filesystem::path(argv[1])/schgen::run_config_file,"carrier");
         physical_clearance();
         require(refit_preserves_fanout(model(2,2), model(1.5,2)), "exact floor accepted");
         require(!refit_preserves_fanout(model(2,2), model(1.485,2)), "new starvation rejected");

@@ -148,8 +148,8 @@ void verify_sources(const CopperDebtSources& s) {
         "CD-06","isolation/reference-layer policy differs from claim");
     for(const auto impedance:{90,100}) {
         const auto g=std::find_if(s.geometry.begin(),s.geometry.end(),[&](const auto& x){return x.impedance==impedance;});
-        claim(g!=s.geometry.end() && g->width_mm==(impedance==90 ? 0.2611 : 0.2052) &&
-            g->gap_mm==0.2032 && g->source=="JLCPCB calculator, JLC04161H-7628 outer/L2",
+        claim(g!=s.geometry.end() && g->width_mm==(impedance==90 ? 0.1455 : 0.1148) &&
+            g->gap_mm==0.2032 && g->source=="field solve on JLCPCB parameters, 3313 outer prepreg",
             "CD-07","live researched impedance geometry differs from claim");
     }
 }
@@ -210,7 +210,7 @@ CopperDebtResult analyze_copper_debt(const ThermalCopper* c,const CopperDebtSour
     const auto voids=zones(*c,"ethernet_isolation_void");
     std::string names;
     for(const auto* z:voids) { if(!names.empty()) names+=", "; names+=z->name; }
-    result.entries[5].emits="In1 rule-area voids: "+(names.empty()?"none":names)+"; corridor between them: NOT voided (debt)";
+    result.entries[5].emits="plane rule-area voids: "+(names.empty()?"none":names)+"; corridor between them: NOT voided (debt)";
     result.entries[5].status=(!plane ? !voids.empty() : voids.size()>=2) ? "PARTIAL" : "NOTHING";
     auto& dp=result.entries[6]; dp.status="NOTHING"; dp.emits="no GND fill zone on In1.Cu";
     for(const auto& z:c->zones) if(!z.keepout && z.filled && z.net_name=="GND" &&

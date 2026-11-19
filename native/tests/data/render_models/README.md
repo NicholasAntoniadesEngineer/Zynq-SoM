@@ -150,7 +150,13 @@ Captured from untouched Python implementations before adapter integration:
   SHA-256 `c233558629102d5885d7dd3ad845e2894ee9107794b3ab57fa08b8fac6968a2c`.
 - `render_reference.json`: original Python/KiCad eight-view captures for both
   real boards and original PyMuPDF schematic geometry.
-  SHA-256 `92c8f067a7937462b4235ee2dcb88c5ceaa7eda4b22caf2f5932f29b393c6ff8`.
+  SHA-256 `235238bdd34dbb1d051ce7dc45f81d0a8c525367c63934b5a98f84979280f775`.
+  Stack-up refresh (2026-11-19): the two `input_sha256` scene identities were
+  re-pinned because `pcb_emit/*.kicad_pcb` now carry the six-layer JLC06161H-3313
+  stack-up (layer table, dielectrics, a second ground plane on In4.Cu and Ethernet
+  isolation voids on In3.Cu and In4.Cu). No footprint, pad, net or pose changed;
+  the captured views, image hashes and `raster_tiles.json` are untouched and the
+  unchanged tile comparison still accepts the devkit scene.
 - `asset_complete.kicad_pcb` + `asset_complete_reference.json`: isolated positive
   hardware-render fixture; only `@MODEL@` is replaced with AO3400A's actual path.
   Reference SHA-256 `2e4b5c6b812687c49f1d35d9d5104bfd38286252c0a78c5d92dd0ef8ee008830`.

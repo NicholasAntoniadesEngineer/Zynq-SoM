@@ -1,3 +1,4 @@
+#include "schgen/run_config.hpp"
 #include "schgen/board_policy.hpp"
 #include "schgen/board_decision_policy.hpp"
 #include "floorplan_internal.hpp"
@@ -156,6 +157,7 @@ void precision(){
 }
 int main(int argc,char** argv){try{
     if(argc!=2)throw std::runtime_error("usage: board_policy_migration_contracts ROOT");
+    schgen::apply_run_config(std::filesystem::path(argv[1])/schgen::run_config_file,"carrier");
     provenance(argv[1]);via(argv[1]);precision();
     for(const auto* board:{"carrier","devkit_mini"})full_import(argv[1],board);
     std::cout<<"Native board policy migration: "<<checks<<" contracts passed\n";return 0;

@@ -1,5 +1,10 @@
 # Frozen floorplan contracts
 
+Stack-up refresh (2026-11-19): the board moved to the six-layer JLC06161H-3313
+stack-up, so the two Markdown expectations now name it and carry its differential
+pair widths (90 ohm 0.1455 mm, 100 ohm 0.1148 mm). Only those lines changed; captured
+geometry, inputs, SVG bytes and seeds are unchanged.
+
 Documentation-only refresh (2026-10-03): the Markdown electrical source paths
 and the two carrier HDMI note citations now name the current native C++ producers.
 Only those expected text fields were updated; captured geometry, inputs, historical

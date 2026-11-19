@@ -1,6 +1,7 @@
 // Independently observes math-function entry, not producer counter increments.
 // Compile quantize.cpp and native_audit_quantize.cpp with -finstrument-functions
 // -fno-inline for this executable ONLY. Do not instrument this test TU.
+#include "schgen/run_config.hpp"
 #include "pcb_placement_fixture.hpp"
 #include "floorplan_precision_fixture.hpp"
 #include <sstream>
@@ -159,6 +160,7 @@ extern "C" void __cyg_profile_func_enter(void* fn,void*) {
 extern "C" void __cyg_profile_func_exit(void*,void*) {}
 int main(int argc,char** argv){try{
     require(argc==2,"usage: producer_accounting_contracts <repo-root>");
+    schgen::apply_run_config(std::filesystem::path(argv[1])/schgen::run_config_file,"carrier");
     calls={};legalize_pose_quantum(0);require(calls.legal==1,"independent observer missing: compile quantize.cpp with -finstrument-functions -fno-inline");
     overflow();legalizer();refit();ownership();live(argv[1],"devkit_mini");live(argv[1],"carrier");
     std::cout<<"Producer accounting: "<<checks<<" independent call-entry contracts passed\n";return 0;

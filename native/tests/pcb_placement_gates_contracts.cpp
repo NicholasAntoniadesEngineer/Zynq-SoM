@@ -1,3 +1,4 @@
+#include "schgen/run_config.hpp"
 #include "pcb_placement_fixture.hpp"
 #include "schgen/pcb_placement_gates.hpp"
 #include "schgen/ratsnest_gate.hpp"
@@ -745,6 +746,7 @@ int main(int argc, char **argv) {
     try {
         if (argc != 2)
             throw std::runtime_error("repo root required");
+        schgen::apply_run_config(std::filesystem::path(argv[1])/schgen::run_config_file,"carrier");
         synthetic(argv[1]);
         adversarial(argv[1]);
         typed_guards();

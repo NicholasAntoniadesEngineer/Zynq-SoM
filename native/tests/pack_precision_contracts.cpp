@@ -1,3 +1,4 @@
+#include "schgen/run_config.hpp"
 #include "placement_precision_fixture.hpp"
 // Compile pack_precision.cpp alone with function-entry instrumentation. The
 // immutable baseline mode compiles against the saved pre-extraction sources.
@@ -230,6 +231,7 @@ extern "C" void __cyg_profile_func_enter(void* fn,void*) {
 extern "C" void __cyg_profile_func_exit(void*,void*) {}
 int main(int argc,char** argv) { try {
     require(argc==2,"expected repository root");
+    schgen::apply_run_config(std::filesystem::path(argv[1])/schgen::run_config_file,"carrier");
 #ifndef PACK_PRECISION_BASELINE
     scalar_contracts();
 #endif

@@ -1,3 +1,4 @@
+#include "schgen/run_config.hpp"
 #include "schgen/occupancy.hpp"
 #include "schgen/pack_refine.hpp"
 #include "schgen/floorplan.hpp"
@@ -403,6 +404,7 @@ int main(int argc,char** argv){try{
     axis_order_contracts();
     remembered_collision_contracts();
     if(argc>2)throw std::runtime_error("usage: occupancy_precision_contracts [repo]");
+    if(argc==2)schgen::apply_run_config(std::filesystem::path(argv[1])/schgen::run_config_file,"carrier");
 #ifndef OCCUPANCY_LEGACY_PROBE
     concurrent_keys_and_overflow();
 #endif

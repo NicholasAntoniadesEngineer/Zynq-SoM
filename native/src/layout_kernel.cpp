@@ -460,8 +460,8 @@ std::optional<Breach> Kernel::self_breach(std::size_t part, const Shape& shape, 
                 return Breach::off_board;
     }
     if (pose.face == Face::bottom && item.top_only) return Breach::bottom_face;
-    if (board_.module_core && pose.face == Face::top && !item.core_exempt &&
-        overlap_area(shape.gate, *board_.module_core) > problem_.rules.core_tolerance)
+    if (board_.module_body && pose.face == Face::top && !item.core_exempt &&
+        !gap_at_least(shape.gate, *board_.module_body, problem_.rules.module_clearance))
         return Breach::module_core;
     return std::nullopt;
 }

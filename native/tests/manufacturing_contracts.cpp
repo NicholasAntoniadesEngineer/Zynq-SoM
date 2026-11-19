@@ -1,3 +1,4 @@
+#include "schgen/run_config.hpp"
 #include "schgen/assembly_documents.hpp"
 #include "schgen/manufacturing_checks.hpp"
 #include "schgen/atomic_file.hpp"
@@ -147,6 +148,7 @@ void misc(const fs::path& root,const fs::path& scratch){
 int main(int argc,char** argv){
     try{
         require(argc==3,"usage: manufacturing_contracts REPOSITORY SCRATCH_PARENT");
+        schgen::apply_run_config(std::filesystem::path(argv[1])/schgen::run_config_file,"carrier");
         const auto root=fs::absolute(argv[1]),parent=fs::absolute(argv[2]);
         fs::create_directories(parent);auto pattern=(parent/"run-XXXXXX").string();
         if(!::mkdtemp(pattern.data()))throw std::runtime_error("cannot create contract scratch directory");

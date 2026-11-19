@@ -1,3 +1,4 @@
+#include "schgen/run_config.hpp"
 #include "pcb_placement_fixture.hpp"
 #include "schgen/experiment_observers.hpp"
 #include "schgen/quantize.hpp"
@@ -190,6 +191,7 @@ void live(const std::filesystem::path &root, const std::string &project) {
 int main(int argc, char **argv) {
     try {
         if (argc < 2 || argc > 3) throw std::runtime_error("usage: experiment_observer_contracts ROOT [--live]");
+        schgen::apply_run_config(std::filesystem::path(argv[1])/schgen::run_config_file,"carrier");
         unit(argv[1]);
         if (argc == 3 && std::string(argv[2]) == "--live")
             for (const auto *project : {"carrier", "devkit_mini"}) live(argv[1], project);

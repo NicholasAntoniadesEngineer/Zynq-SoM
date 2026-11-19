@@ -12,7 +12,7 @@ struct ManufacturingFabProfile {
         min_via_annular_mm, min_hole_to_hole_mm;
     std::string source;
 };
-const ManufacturingFabProfile& manufacturing_jlcpcb_4l();
+const ManufacturingFabProfile& manufacturing_jlcpcb_multilayer();
 struct ManufacturingBoardDemand {
     std::optional<double> min_trace_mm, min_clearance_mm, min_drill_mm,
         min_via_dia_mm, min_via_annular_mm, min_hole_to_hole_mm, pro_via_annular_mm;
@@ -31,11 +31,11 @@ ManufacturingBoardDemand measure_manufacturing_board(const Sexpr& pcb,
 ManufacturingBoardDemand measure_manufacturing_board(const std::filesystem::path& pcb,
     const std::filesystem::path& dru, const std::filesystem::path& project);
 ManufacturingFabResult check_manufacturing_fab(const ManufacturingBoardDemand&,
-    const ManufacturingFabProfile& = manufacturing_jlcpcb_4l());
+    const ManufacturingFabProfile& = manufacturing_jlcpcb_multilayer());
 ManufacturingFabResult run_manufacturing_fab(const std::filesystem::path& reports,
     const std::filesystem::path& pcb, const std::filesystem::path& dru,
     const std::filesystem::path& project,
-    const ManufacturingFabProfile& = manufacturing_jlcpcb_4l());
+    const ManufacturingFabProfile& = manufacturing_jlcpcb_multilayer());
 struct ManufacturingFallbackResult {
     bool ok = true, pinned = false;
     std::size_t n_names = 0, n_fired = 0;

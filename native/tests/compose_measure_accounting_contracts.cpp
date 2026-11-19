@@ -1,3 +1,4 @@
+#include "schgen/run_config.hpp"
 #include "pcb_placement_fixture.hpp"
 #include "schgen/compose_repair.hpp"
 #include "schgen/atomic_file.hpp"
@@ -135,6 +136,7 @@ void commands(const std::filesystem::path& root) {
 int main(int argc, char** argv) {
     try {
         if (argc != 2) throw std::runtime_error("usage: compose_measure_accounting_contracts REPO_ROOT");
+        schgen::apply_run_config(std::filesystem::path(argv[1])/schgen::run_config_file,"carrier");
         const std::string old="header\n  edit: predicted agg-hard-margin 37.5, area 10000.0\ntail\n";
         require(test::compose_workflow_output(old,old),"unchanged workflow rejected");
         require(test::compose_workflow_output("header\n  edit: predicted min margin 38.2791 mm / unavailable degrees, area 9604.0 mm^2\ntail\n",old),"unit-safe single-spatial-term workflow rejected");

@@ -1,3 +1,4 @@
+#include "schgen/run_config.hpp"
 #include "pcb_placement_fixture.hpp"
 #include "pcb_placement_requirements.hpp"
 #include "floorplan_precision_fixture.hpp"
@@ -24,6 +25,7 @@ void finish(const QuantizationCounts& q,const std::string& label){
 }
 int main(int argc,char** argv){try{
  if(argc!=2)throw std::runtime_error("frozen fixture root required");
+ schgen::apply_run_config(std::filesystem::path(argv[1])/schgen::run_config_file,"carrier");
  for(const std::string name:{"carrier","devkit_mini"}){
   auto f=placement_fixture::load(argv[1],name);
   placement_fixture::reviewed_power_policy(f.input,argv[1]);

@@ -12,14 +12,16 @@
 		(company "Zynq SoM Carrier")
 		(comment
 			1
-			"FOUNDATION: derived outline + SoM-body keep-out + 4L stackup + net classes + 2-side placement (SoM-mirror mezzanine, per-subsystem ratsnest bundles). NOT routed — schgen-generated (do not hand-edit)."
+			"FOUNDATION: derived outline + SoM-body keep-out + 6L stackup + net classes + 2-side placement (SoM-mirror mezzanine, per-subsystem ratsnest bundles). NOT routed — schgen-generated (do not hand-edit)."
 		)
 	)
 	(layers
 		(0 "F.Cu" signal "L1 (Sig)")
 		(1 "In1.Cu" power "L2 (GND)")
-		(2 "In2.Cu" power "L3 (PWR)")
-		(31 "B.Cu" signal "L4 (Sig)")
+		(2 "In2.Cu" signal "L3 (Sig)")
+		(3 "In3.Cu" power "L4 (PWR)")
+		(4 "In4.Cu" power "L5 (GND)")
+		(31 "B.Cu" signal "L6 (Sig)")
 		(32 "B.Adhes" user "B.Adhesive")
 		(33 "F.Adhes" user "F.Adhesive")
 		(34 "B.Paste" user)
@@ -62,9 +64,9 @@
 			(layer
 				"dielectric 1"
 				(type "prepreg")
-				(thickness 0.2104)
+				(thickness 0.0994)
 				(material "FR4")
-				(epsilon_r 4.6)
+				(epsilon_r 4.1)
 				(loss_tangent 0.02)
 			)
 			(layer
@@ -75,9 +77,9 @@
 			(layer
 				"dielectric 2"
 				(type "core")
-				(thickness 1.065)
+				(thickness 0.55)
 				(material "FR4")
-				(epsilon_r 4.6)
+				(epsilon_r 4.41)
 				(loss_tangent 0.02)
 			)
 			(layer
@@ -88,9 +90,35 @@
 			(layer
 				"dielectric 3"
 				(type "prepreg")
-				(thickness 0.2104)
+				(thickness 0.1088)
 				(material "FR4")
-				(epsilon_r 4.6)
+				(epsilon_r 4.16)
+				(loss_tangent 0.02)
+			)
+			(layer
+				"In3.Cu"
+				(type "copper")
+				(thickness 0.0152)
+			)
+			(layer
+				"dielectric 4"
+				(type "core")
+				(thickness 0.55)
+				(material "FR4")
+				(epsilon_r 4.41)
+				(loss_tangent 0.02)
+			)
+			(layer
+				"In4.Cu"
+				(type "copper")
+				(thickness 0.0152)
+			)
+			(layer
+				"dielectric 5"
+				(type "prepreg")
+				(thickness 0.0994)
+				(material "FR4")
+				(epsilon_r 4.1)
 				(loss_tangent 0.02)
 			)
 			(layer
@@ -462,6 +490,32 @@
 		(layer "In1.Cu")
 		(uuid "054d0e0e-d6df-534e-9231-268c1af35e9d")
 		(name "GND_plane_In1")
+		(hatch edge 0.5)
+		(connect_pads
+			(clearance 0.3)
+		)
+		(min_thickness 0.25)
+		(filled_areas_thickness no)
+		(fill
+			yes
+			(thermal_gap 0.5)
+			(thermal_bridge_width 0.5)
+		)
+		(polygon
+			(pts
+				(xy 25.5 25.5)
+				(xy 124.5 25.5)
+				(xy 124.5 124.5)
+				(xy 25.5 124.5)
+			)
+		)
+	)
+	(zone
+		(net 38)
+		(net_name "GND")
+		(layer "In4.Cu")
+		(uuid "6a2dbfac-1ec4-59de-8a9a-d83c64c7495e")
+		(name "GND_plane_In4")
 		(hatch edge 0.5)
 		(connect_pads
 			(clearance 0.3)

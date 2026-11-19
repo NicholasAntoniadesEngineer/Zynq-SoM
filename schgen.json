@@ -1,0 +1,19 @@
+{
+  "schema": "schgen.run/1",
+  "boards": ["carrier", "devkit_mini"],
+  "output": "out",
+  "squeeze": true,
+  "renders": true,
+  "labels": false,
+  "timing": true,
+  "plane_net": "GND",
+  "audit_projections": 2,
+  "stackup": {
+    "carrier": "JLC06161H-3313",
+    "devkit_mini": "JLC06161H-3313"
+  },
+  "overmold_parts": {
+    "carrier": ["HDMI-019S"],
+    "devkit_mini": []
+  }
+}

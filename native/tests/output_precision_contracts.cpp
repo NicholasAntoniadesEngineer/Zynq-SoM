@@ -1,3 +1,4 @@
+#include "schgen/run_config.hpp"
 #include "pcb_placement_fixture.hpp"
 #include "pcb_placement_requirements.hpp"
 #include "ledger_accounting_fixture.hpp"
@@ -325,6 +326,7 @@ extern "C" void __cyg_profile_func_enter(void* fn,void*){
 extern "C" void __cyg_profile_func_exit(void*,void*){}
 int main(int argc,char** argv){try{
     require(argc>=2&&argc<=4,"repository root [independent baseline output] [--full]");
+    schgen::apply_run_config(std::filesystem::path(argv[1])/schgen::run_config_file,"carrier");
 #ifndef OUTPUT_PRECISION_LEGACY
     scalars();
 #endif

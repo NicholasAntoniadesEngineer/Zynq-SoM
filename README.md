@@ -1,120 +1,60 @@
-# Zynq-SoM
+# schgen
 
-A Zynq-7000 system-on-module + carrier board, with `schgen` — a netlist-first
-KiCad schematic **and PCB** generator using C++ netlist definitions
-to produce checked schematics and placed boards with component models and
-multi-angle renders. Routing is deferred; these are not fabrication-ready boards.
+Generates the Zynq carrier and devkit boards from their C++ circuit definitions:
+checked schematics, a placed board, design rules, manufacturing files and renders.
+Routing is not done yet.
 
-The current published placement review is a **162×151 mm carrier** and
-**98×98 mm devkit**. See the [release generation recipe and limitations](docs/RELEASE-2026-10-16.md)
-to reproduce the committed images; the default commands below do not select
-the carrier's qualified compact-placement recipe.
+## Build
 
-## Native build and test entry point
-
-The C++ migration's Python-free build, dependency bootstrap and complete native
-CTest entry point are documented in [`native/ci/README.md`](native/ci/README.md).
-Use that path for native production builds. The transitional Python extension
-and its build script are retired. Native `schgen check --tests-dir BUILD` runs
-the full board, mutation/determinism selftest and complete CTest inventory.
-All 393 inventoried tracked Python sources and tests are retired, along with
-their dependency and lint configuration. Clean-tree acceptance is still in
-progress; the commands below use the native executable.
-All verification remains local, as required by the repository's no-CI policy.
-No hosted workflow or gate bypass is introduced.
-
-## The layers
-
-1. **`parts/`** — one folder per physical part, named by MPN, GENERATED from
-   LCSC/EasyEDA (`native/bin/schgen part-import --parts-root parts --lcsc C…`):
-   pin table, symbol, footprint, 3D.
-   See `parts/README.md`.
-2. **`subsystems/`** — project-agnostic subsystem assets: interface contracts,
-   READMEs, SPICE subcircuits and independent reference data. C++ netlist
-   factories live in `native/src/authoring_*.cpp`; project adapters supply
-   `bind`/`expects`/`buses`/`notes` metadata through the native registry.
-   Scaffold a new one with `native/bin/schgen subsystem-new <name>`. See
-   `subsystems/README.md`.
-3. **`carrier/subsystems/`** — board subsystem assets and generated circuit
-   projections. C++ project factories and adapters in `native/src/project_*.cpp`
-   define the netlists; the J1/J2/J3 connector contract is extracted live from
-   the SoM. Parts are resolved by library identity and named pins. See
-   `carrier/README.md` and `carrier/subsystems/README.md`.
-4. **The board** — `schgen` derives ALL geometry from netlist topology,
-   proves it (netlist-equivalence + ERC + zero-overlap visual gates) and
-   links the sheets into one KiCad project.
-
-Plus `som/` — the hand-authored Zynq SoM KiCad project (open
-`som/Zynq_SoM.kicad_pro`, KiCad 9+; its custom libs live in `som/lib/`).
-The SoM↔carrier contract `carrier/som_interface.json` is extracted
-programmatically (`schgen som-interface`), never hand-edited.
-
-## Native regeneration
-
-```bash
-native/bin/schgen board --project carrier --timing
-native/bin/schgen board --project devkit_mini --timing
-# Diagnostic generation without output renders:
-native/bin/schgen board --project carrier --no-render --timing
+```sh
+./build
 ```
 
-`--no-render` is diagnostic: it skips output renders, not mandatory electrical,
-geometry or source-policy gates. Omit it for rendered acceptance. Use `--timing`
-to measure this native implementation; historical Python timings do not apply.
+Compiles the tool and runs the test suite (about 17 minutes). `./build --no-tests`
+only compiles. Needs CMake, Ninja, ccache, a C++17 compiler, KiCad 10 and the
+libraries listed in [native/ci/README.md](native/ci/README.md).
 
-`schgen build <name>` gates a single sheet (preview into a tempdir, nothing
-committed). `schgen board` regenerates the committed outputs in place:
-`carrier/Zynq_Carrier.kicad_pro` (open in KiCad), `schematic/`, `renders/`
-(golden-snapshot drift detection), `reports/`,
-`manufacturing/` (JLC BOM + layout constraints), and
-`fpga/Zynq_Carrier_pins.xdc` — Vivado PACKAGE_PIN + IOSTANDARD for every
-carrier port on a Zynq PL ball, ball map live-extracted from the SoM and
-cross-checked against `som_interface.json` (also standalone: `schgen xdc`).
+## Run
 
-## The gate model
-
-Every build fails unless every gate passes — the gates are judges, not knobs.
-Schematic gates: **netlist** (KiCad's extracted netlist == the declared netlist,
-pin for pin, so a junction that merges two nets is caught as a short), **ERC**
-(zero errors), **visual** (zero overlap, zero wire crossings, junction-aware
-short detection, fits the page). PCB gates: **DRC** (zero KiCad errors),
-**3D-model** coverage + placement, **ratsnest** subsystem clustering, and
-**connector** mating-face / spacing (off-board mouths, edge-flush). Architecture
-+ gate definitions: `schgen/DESIGN.md`.
-
-Local generation always runs its gates; native CTest is an additional check,
-not a replacement. `schgen selftest` mutation-tests the gates themselves:
-it injects one defect per class (pin swap, deleted wire, relabel, stray
-no-connect, foreign-net junction short) and proves a gate kills each, then
-builds twice and byte-compares for determinism.
-
-```bash
-native/bin/schgen selftest
+```sh
+./run
 ```
 
-## Process + where to read more
+Builds every board listed in `schgen.json` into `out/<board>/`. To build one board,
+name it: `./run carrier`. A run ends with `BOARD: PASS` or `BOARD: FAIL`.
 
-- The working rules and process contract (the immutable LAWs, the gate stack,
-  the worktree/commit discipline) live in
-  [`WORKING_GUIDELINES.txt`](docs/WORKING_GUIDELINES.txt).
-- Layer guides: [`parts/README.md`](parts/README.md),
-  [`subsystems/README.md`](subsystems/README.md) (the reusable library),
-  [`carrier/README.md`](carrier/README.md),
-  [`carrier/subsystems/README.md`](carrier/subsystems/README.md),
-  and the engine contract [`schgen/DESIGN.md`](schgen/DESIGN.md).
+## Settings
 
-<!-- schgen:gallery -->
-<!-- GENERATED by `schgen gallery` — edits between these markers are overwritten -->
-## Generated board + schematics
+Every setting lives in [`schgen.json`](schgen.json). Edit the file and run again;
+nothing needs recompiling. A misspelt or unknown key stops the run with an error.
 
-`schgen board` regenerates the placed-board 3D views, the block diagram and all 37 carrier sheets,
-each PNG passing the netlist, ERC and visual gates.
+| Key | Default | Meaning |
+|---|---|---|
+| `boards` | `["carrier", "devkit_mini"]` | Boards to build, each a folder in this repository |
+| `output` | `"out"` | Folder that receives one sub-folder per board |
+| `squeeze` | `true` | Compact the placed board to the smallest outline that passes every rule |
+| `renders` | `true` | Produce the 3D and per-sheet images |
+| `labels` | `false` | Draw silkscreen reference and function labels |
+| `timing` | `true` | Print how long each stage took |
+| `plane_net` | `"GND"` | Net of the reference planes |
+| `audit_projections` | `2` | Source audits run side by side (1 or 2) |
+| `stackup` | `JLC06161H-3313` per board | Layer build-up, by name from the catalogue below |
+| `overmold_parts` | `["HDMI-019S"]` on the carrier | Connectors whose cable overmould needs side clearance |
 
-<img src="carrier/renders/3d_persp.png" alt="Generated 3D board render (perspective)" width="900">
+## Layer build-ups
 
-<img src="carrier/docs/block_diagram.svg" alt="Generated block diagram" width="900">
+[`native/stackups.json`](native/stackups.json) lists the fabricator's standard
+4, 6, 8 and 10-layer builds. To try another, put its name under `stackup` and run
+again. The placed layout carries over between any two builds that have a ground
+plane under both faces. To add a build, add an entry to that file.
 
-[<img src="carrier/renders/ratsnest_top.png" alt="Board ratsnest (top)" width="420">](carrier/README.md#ratsnest-views)<br>**[Ratsnest views](carrier/README.md#ratsnest-views)** — airwires per subsystem.
+## Where things are
 
-See **[carrier/README.md](carrier/README.md#generated-3d-board-views)** for all 8 board views + the full sheet gallery (thumbnails + descriptions).
-<!-- /schgen:gallery -->
+| Folder | Holds |
+|---|---|
+| `carrier/`, `devkit_mini/` | Each board's design data and generated outputs |
+| `subsystems/`, `parts/` | Shared circuit blocks and part data |
+| `native/` | The tool's source and tests |
+| `docs/` | Background; start with [docs/OVERVIEW.md](docs/OVERVIEW.md) |
+
+`native/bin/schgen tools` lists the individual commands used for diagnosis.

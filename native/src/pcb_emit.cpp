@@ -1,3 +1,4 @@
+#include "schgen/stackup.hpp"
 #include "pcb_emit_internal.hpp"
 #include "schgen/schematic.hpp"
 
@@ -72,6 +73,7 @@ const PcbEmitPolicy &default_pcb_emit_policy() {
 PcbEmitPolicy pcb_emit_policy(const ProjectConfig &c) {
     auto p = default_pcb_emit_policy();
     p.interface_reference_labels_only = true;
+    p.labels = c.labels;
     p.header_descriptions = c.header_desc;
     p.switch_descriptions = c.switch_desc;
     p.model_overrides = project_pcb_model_overrides();
@@ -137,7 +139,7 @@ PcbEmissionResult render_pcb(const PcbModel &m, const PcbEmitPolicy &p, Quantiza
                node("company", {str("Zynq SoM Carrier")}),
                node("comment",
                     {num(1),
-                     str("FOUNDATION: derived outline + SoM-body keep-out + 4L stackup + net "
+                     str("FOUNDATION: derived outline + SoM-body keep-out + " + std::to_string(board_stackup().copper.size()) + "L stackup + net "
                          "classes + 2-side placement (SoM-mirror mezzanine, per-subsystem ratsnest "
                          "bundles). NOT routed — schgen-generated (do not hand-edit).")})}),
          emit_layers_node()});
@@ -169,17 +171,24 @@ PcbEmissionResult render_pcb(const PcbModel &m, const PcbEmitPolicy &p, Quantiza
         auto box = round_box({m.origin_x + b, m.origin_y + b, m.origin_x + m.board_w - b,
                               m.origin_y + m.board_h - b},
                              3, counts);
-        root.push_back(emit_fill_zone(g->second, "GND", "GND_plane_In1", p.ground_layer,
-                                      rect_corners_ccw(box), uid("gnd-plane"),
-                                      p.gnd_plane_clearance, false, p.zone_min_thickness));
+        for (const std::string& layer : board_stackup().ground_layers()) {
+            const std::string inner = layer.substr(0, layer.find('.'));
+            root.push_back(emit_fill_zone(g->second, "GND", "GND_plane_" + inner, layer, rect_corners_ccw(box),
+                                          uid(layer == p.ground_layer ? "gnd-plane" : "gnd-plane:" + layer),
+                                          p.gnd_plane_clearance, false, p.zone_min_thickness));
+        }
     }
     for (const auto &i : m.insts)
         if (std::any_of(p.isolation_prefixes.begin(), p.isolation_prefixes.end(),
                         [&](const auto &prefix) { return starts(i.value, prefix); }))
-            root.push_back(emit_iso_void_zone(
-                rect_corners_ccw(isolation_void_rect(courtyard(i), p.isolation_margin, counts)),
-                uid("iso-void:" + i.ref), "ethernet_isolation_void_" + i.ref, p.ground_layer,
-                p.zone_min_thickness));
+            for (const CopperLayer& layer : board_stackup().copper) {
+                if (layer.role == CopperRole::signal) continue;
+                root.push_back(emit_iso_void_zone(
+                    rect_corners_ccw(isolation_void_rect(courtyard(i), p.isolation_margin, counts)),
+                    uid(layer.name == p.ground_layer ? "iso-void:" + i.ref : "iso-void:" + i.ref + ":" + layer.name),
+                    "ethernet_isolation_void_" + i.ref + (layer.name == p.ground_layer ? "" : "_" + layer.name.substr(0, layer.name.find('.'))),
+                    layer.name, p.zone_min_thickness));
+            }
     auto thermal = thermal_nodes(m, p, uid, result, counts);
     root.insert(root.end(), thermal.zones.begin(), thermal.zones.end());
     if (m.som_core) {
@@ -205,7 +214,7 @@ PcbEmissionResult render_pcb(const PcbModel &m, const PcbEmitPolicy &p, Quantiza
         result.hidden_bottom_references = hidden.second;
     }
     // Reacquire the list after the value-returning hide transform.
-    auto labels = descriptors(m, p, uid, doc, counts);
+    auto labels = p.labels ? descriptors(m, p, uid, doc, counts) : std::vector<Sexpr>{};
     auto &final = std::get<SexprList>(doc.v);
     final.insert(final.end(), labels.begin(), labels.end());
     result.moved_references = declutter(m, doc, counts);
