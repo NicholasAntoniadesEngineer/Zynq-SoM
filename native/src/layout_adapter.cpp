@@ -680,7 +680,11 @@ ModelBinding bind_model(const PcbModel& model, const PcbEmitPolicy& policy, cons
     }
     for (Claim& claim : intent.claims) {
         const rules::RoleRule& role = rules::role_rule(claim.role);
-        claim.same_face = rules::keeps_owner_face(role, regulator[claim.owner] != 0, loop_inductor[claim.owner] != 0);
+        const rules::FaceDemand demand =
+            rules::face_demand(role, regulator[claim.owner] != 0, loop_inductor[claim.owner] != 0);
+        claim.same_face = demand.owner_face;
+        claim.or_under = demand.or_under;
+        claim.first = role.protects_connector;
         Part& part = problem.parts[claim.part];
         part.field_sensitive = part.field_sensitive || role.field_sensitive;
         part.field_source = part.field_source || loop_inductor[claim.part] != 0;

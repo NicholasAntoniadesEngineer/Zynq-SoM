@@ -14,7 +14,7 @@ using json_text::object;
 using json_text::text_value;
 
 inline constexpr std::size_t reserve_corners = 4;
-const char* const schema_name = "schgen.layout-problem/7";
+const char* const schema_name = "schgen.layout-problem/8";
 inline constexpr std::size_t point_fields = 2, disc_fields = 3, box_fields = 4;
 
 std::string point_json(Point point) { return array({integer(point.x), integer(point.y)}); }
@@ -184,7 +184,9 @@ std::string constraints_json(const Constraints& rules) {
                        {"rigid", boolean(rule.rigid)},
                        {"derived", boolean(rule.derived)},
                        {"reach", integer(rule.reach)},
-                       {"same_face", boolean(rule.same_face)}});
+                       {"same_face", boolean(rule.same_face)},
+                       {"or_under", boolean(rule.or_under)},
+                       {"first", boolean(rule.first)}});
     };
     for (const auto& rule : rules.pad_gaps) pad_gaps.push_back(gap_json(rule));
     for (const auto& rule : rules.soft_gaps) soft_gaps.push_back(gap_json(rule));
@@ -223,13 +225,14 @@ Constraints constraints_of(const JsonNode& node) {
                         "layout constraints");
     Constraints rules;
     const auto gap_of = [](const JsonNode& entry) {
-        reject_unknown_keys(entry, {"anchor", "member", "anchor_names", "limit", "sense", "source", "rigid", "derived", "reach", "same_face"},
+        reject_unknown_keys(entry, {"anchor", "member", "anchor_names", "limit", "sense", "source", "rigid", "derived", "reach", "same_face", "or_under", "first"},
                             "layout pad gap");
         return PadGap{index_of(entry, "anchor"), index_of(entry, "member"),
                       indices_of(field(entry, "anchor_names", JsonKind::Array)),
                       whole(field(entry, "limit", JsonKind::Number)), sense_of(text(entry, "sense")),
                       text(entry, "source"), flag(entry, "rigid"), flag(entry, "derived"),
-                      whole(field(entry, "reach", JsonKind::Number)), flag(entry, "same_face")};
+                      whole(field(entry, "reach", JsonKind::Number)), flag(entry, "same_face"),
+                      flag(entry, "or_under"), flag(entry, "first")};
     };
     for (const auto& entry : field(node, "pad_gaps", JsonKind::Array).array_value) rules.pad_gaps.push_back(gap_of(entry));
     for (const auto& entry : field(node, "soft_gaps", JsonKind::Array).array_value) rules.soft_gaps.push_back(gap_of(entry));
