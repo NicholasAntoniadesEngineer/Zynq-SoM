@@ -11,7 +11,7 @@ constexpr Rule rule{
     "primary vendor document", Enforcement::gate};
 
 RuleResult check(const RuleContext& context) {
-    RuleResult result{&rule, 0, context.unresolved({"switching"}), {}};
+    RuleResult result{&rule, 0, context.unresolved(roles_with(&RoleRule::marks_regulator)), {}};
     const auto judge = [&](std::size_t part, const std::string& what) {
         ++result.checked;
         if (context.ground_beneath(part)) return;

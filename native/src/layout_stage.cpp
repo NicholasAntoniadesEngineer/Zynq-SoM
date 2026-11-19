@@ -24,7 +24,7 @@ std::vector<Box> ordered(std::vector<Box> boxes) {
 }
 
 std::string squeeze_summary(const SqueezeReport& report) {
-    std::size_t kept = 0, relocated = 0, pushed = 0, sunk = 0, freed = 0;
+    std::size_t kept = 0, relocated = 0, pushed = 0, sunk = 0, freed = 0, ejected = 0, rehomed = 0;
     std::map<std::string, std::string> stops;
     for (const auto& attempt : report.attempts) {
         if (attempt.kept) {
@@ -33,6 +33,8 @@ std::string squeeze_summary(const SqueezeReport& report) {
             pushed += attempt.pushed;
             sunk += attempt.sunk;
             freed += attempt.freed;
+            ejected += attempt.ejected;
+            rehomed += attempt.rehomed;
         } else {
             stops[attempt.scaled ? (attempt.along_x ? "width" : "height") : side_name(attempt.side)] = attempt.blocker;
         }
@@ -45,7 +47,9 @@ std::string squeeze_summary(const SqueezeReport& report) {
          << after << " mm2 (" << percent * (after - before) / before << "%)\n"
          << "  routed airwire " << to_mm(report.routed_before) << " to " << to_mm(report.routed_after) << " mm\n"
          << "  " << kept << " of " << report.attempts.size() << " edge steps kept, " << relocated
-         << " relocations, " << pushed << " pushes, " << sunk << " parts sunk to the rear, " << freed << " jams freed\n";
+         << " relocations, " << pushed << " pushes, " << sunk << " parts sunk to the rear, " << freed << " jams freed (" << ejected
+         << " by moving neighbours aside in a chain, " << rehomed
+         << " by re-seating the cluster elsewhere on the board)\n";
     for (const auto& [side, blocker] : stops) text << "  " << side << " stopped by " << blocker << "\n";
     text << "  " << report.fallen << " cluster steps taken toward the module before the edges moved\n";
     if (!report.tried.empty()) {
@@ -70,6 +74,13 @@ StageResult squeeze_stage(const PcbPlacementInput& inputs, const PcbModel& model
     const SqueezeOptions settings = default_squeeze();
     result.attract = attract(attracted, settings.pitch, static_cast<Nm>(constants::sink_reach.value));
     Problem held = binding.problem;
+    for (const PadGap& rule : binding.problem.constraints.soft_gaps)
+        if (rule.same_face && attracted.placement()[rule.anchor].face == attracted.placement()[rule.member].face) {
+            held.constraints.face_pairs.push_back({rule.anchor, rule.member, "same face as " + rule.source});
+            ++result.faced;
+        } else if (rule.same_face) {
+            ++result.unfaced;
+        }
     tighten_holds(held, attracted.placement(), hold_policy());
     Kernel kernel(held, attracted.placement());
     const auto area = [](const SqueezeReport& report) {
@@ -127,6 +138,8 @@ StageResult squeeze_stage(const PcbPlacementInput& inputs, const PcbModel& model
         return a.first != b.first ? a.first > b.first : a.second < b.second;
     });
     std::ostringstream text;
+    text << "SAME FACE: " << result.faced << " parts held on the face of the pin they serve (regulator loops, timing parts); "
+         << result.unfaced << " could not be brought to that face\n";
     text << "CLUSTER ARRANGEMENT: " << result.arrange.clusters << " tied clusters; parts and module span "
          << to_mm(result.arrange.before.width()) << " x " << to_mm(result.arrange.before.height())
          << " mm as placed; squeezes to " << result.arrange.unarranged << " mm2 without rearranging\n";

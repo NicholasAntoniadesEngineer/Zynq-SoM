@@ -63,6 +63,7 @@ struct Part {
     bool fanout_subject = false, never_crowds = false, cluster_passive = false;
     bool fixed = false, top_only = false, core_exempt = false, cohesion_member = true;
     bool connector = false, overmold = false, module = false;
+    bool field_source = false, field_sensitive = false;
     std::optional<EdgeRule> edge;
     std::optional<CornerRule> corner;
 };
@@ -104,6 +105,7 @@ struct PadGap {
     std::string source;
     bool rigid = true, derived = false;
     Nm reach = 0;
+    bool same_face = false;
 };
 
 struct NearestGap {
@@ -212,6 +214,7 @@ struct Claim {
     std::vector<std::size_t> names;
     Nm reach = 0;
     std::string role;
+    bool same_face = false;
 };
 struct Intent {
     std::vector<Claim> claims;

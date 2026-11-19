@@ -69,6 +69,7 @@ const char* breach_name(Breach breach) {
     case Breach::reserved: return "reserved";
     case Breach::locked: return "locked";
     case Breach::corner: return "corner";
+    case Breach::under_inductor: return "under_inductor";
     }
     return "unknown";
 }
@@ -134,10 +135,13 @@ void Kernel::rebuild() {
 }
 
 void Kernel::restore(const Snapshot& snapshot) {
-    placement_ = snapshot.placement;
     board_ = snapshot.board;
     reserve_boxes_ = snapshot.reserves;
-    rebuild();
+    std::vector<Move> changed;
+    for (std::size_t part = 0; part < placement_.size(); ++part)
+        if (placement_[part] != snapshot.placement[part]) changed.push_back({part, snapshot.placement[part]});
+    for (const Move& move : changed) place(move.part, move.pose);
+    refresh_nets(changed);
 }
 
 void Kernel::place(std::size_t part, const Pose& pose) {
@@ -505,7 +509,7 @@ std::optional<Breach> Kernel::self_breach(std::size_t part, const Shape& shape, 
     }
     if (pose.face == Face::bottom && item.top_only) return Breach::bottom_face;
     if (board_.module_body && pose.face == Face::top && !item.core_exempt &&
-        !gap_at_least(shape.gate, *board_.module_body, problem_.rules.module_clearance))
+        !gap_at_least(shape.bound, *board_.module_body, problem_.rules.module_clearance))
         return Breach::module_core;
     return std::nullopt;
 }
@@ -514,6 +518,11 @@ std::optional<Breach> Kernel::pair_breach(std::size_t first, const Shape& first_
                                           std::size_t second, const Shape& second_shape,
                                           Face second_face, Nm guard) const {
     if (first_face != second_face) {
+        const Part& above = problem_.parts[first];
+        const Part& below = problem_.parts[second];
+        if (((above.field_source && below.field_sensitive) || (below.field_source && above.field_sensitive)) &&
+            courts_overlap(first_shape.courts, first_shape.discs, second_shape.courts, second_shape.discs))
+            return Breach::under_inductor;
         if (courts_overlap(first_shape.holes, {}, second_shape.courts, second_shape.discs) ||
             courts_overlap(second_shape.holes, {}, first_shape.courts, first_shape.discs))
             return Breach::overlap;

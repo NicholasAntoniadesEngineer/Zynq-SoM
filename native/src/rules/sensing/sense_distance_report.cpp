@@ -14,9 +14,9 @@ constexpr Rule rule{
     "primary vendor document", Enforcement::measured};
 
 RuleResult check(const RuleContext& context) {
-    RuleResult result{&rule, 0, context.unresolved({"sense"}), {}};
+    RuleResult result{&rule, 0, context.unresolved(roles_with(&RoleRule::senses)), {}};
     std::vector<std::pair<double, const Service*>> rows;
-    for (const Service* service : context.serving({"sense"}))
+    for (const Service* service : context.serving(roles_with(&RoleRule::senses)))
         rows.emplace_back(*context.pad_gap(service->owner, service->pads, service->part), service);
     std::stable_sort(rows.begin(), rows.end(), [](const auto& first, const auto& second) { return first.first > second.first; });
     for (const auto& [gap, service] : rows) {

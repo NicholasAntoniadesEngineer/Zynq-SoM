@@ -271,6 +271,7 @@ AttractReport attract(Kernel& kernel, Nm pitch, Nm reach) {
     report.routed_before = kernel.routed_length();
     const auto& rules = problem.constraints.soft_gaps;
     const auto met = [&](const PadGap& rule) {
+        if (rule.same_face && kernel.placement()[rule.anchor].face != kernel.placement()[rule.member].face) return false;
         return squared_pad_gap(problem, rule, kernel.placement()[rule.anchor], kernel.placement()[rule.member]) <=
                squared(rule.limit);
     };
@@ -325,10 +326,11 @@ AttractReport attract(Kernel& kernel, Nm pitch, Nm reach) {
             for (const Point by : offsets)
                 for (const Face face : {Face::bottom, Face::top}) {
                     if (face != from.face && !flips) continue;
+                    if (rule.same_face && face != anchor.face) continue;
                     for (int turn = 0; turn < turn_count; ++turn) {
                         const Pose pose{shifted(target, by), static_cast<Turn>(turn), face};
                         const Nm gap = squared_pad_gap(problem, rule, anchor, pose);
-                        if (gap < before) seats.push_back({pose, gap});
+                        if (gap < before || (rule.same_face && from.face != anchor.face)) seats.push_back({pose, gap});
                     }
                 }
             std::stable_sort(seats.begin(), seats.end(), [&](const Seat& a, const Seat& b) {

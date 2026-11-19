@@ -190,8 +190,8 @@ Box beyond(const Box& outline, const Box& body, Side side) {
 
 template <typename Rank>
 bool seat_block(Kernel& kernel, const std::vector<Block>& blocks, const Box& within, const Rank& rank,
-                bool by_airwire, std::string* why) {
-    const Nm pitch = static_cast<Nm>(constants::arrange_pitch.value);
+                bool by_airwire, std::size_t tries, std::string* why,
+                Nm pitch = static_cast<Nm>(constants::arrange_pitch.value)) {
     const std::optional<Box> body = kernel.board().module_body;
     std::vector<std::pair<std::size_t, Option>> options;
     for (std::size_t block = 0; block < blocks.size(); ++block)
@@ -228,7 +228,7 @@ bool seat_block(Kernel& kernel, const std::vector<Block>& blocks, const Box& wit
     Nm best_routed = 0;
     std::size_t legal = 0;
     const std::size_t wanted = by_airwire ? static_cast<std::size_t>(constants::arrange_choices.value) : 1;
-    const std::size_t limit = std::min(seats.size(), static_cast<std::size_t>(constants::arrange_tries.value));
+    const std::size_t limit = std::min(seats.size(), tries);
     for (std::size_t index = 0; index < limit && legal < wanted; ++index) {
         if (!kernel.move_many(moves_at(seats[index]))) continue;
         ++legal;
@@ -298,14 +298,14 @@ ArrangePlan evacuate(Kernel& kernel, const std::vector<Cluster>& clusters, const
         });
         if (!displaced) continue;
         std::string why;
-        if (seat_block(kernel, repacked(kernel, members), outline, near_module, true, &why)) {
+        if (seat_block(kernel, repacked(kernel, members), outline, near_module, true, static_cast<std::size_t>(constants::arrange_tries.value), &why)) {
             plan.moved += members.size();
             continue;
         }
         bool any_left = false;
         for (const Cluster* cluster : members) {
             if (!shut(hull_of(kernel, cluster->members))) continue;
-            if (seat_block(kernel, {as_placed(kernel, cluster->members)}, outline, near_module, true, &why)) {
+            if (seat_block(kernel, {as_placed(kernel, cluster->members)}, outline, near_module, true, static_cast<std::size_t>(constants::arrange_tries.value), &why)) {
                 ++plan.moved;
                 continue;
             }
@@ -337,7 +337,7 @@ std::size_t tighten(Kernel& kernel, const std::vector<Cluster>& clusters) {
                 const double area = area_mm2(united(rest, swept));
                 return area < current ? std::optional<double>(area) : std::nullopt;
             };
-            if (!seat_block(kernel, {as_placed(kernel, cluster.members)}, extent, smaller, false, nullptr)) continue;
+            if (!seat_block(kernel, {as_placed(kernel, cluster.members)}, extent, smaller, false, static_cast<std::size_t>(constants::arrange_tries.value), nullptr)) continue;
             ++moved;
             improved = true;
         }
@@ -357,6 +357,18 @@ Box held_extent(const Kernel& kernel) {
         extent = extent ? united(*extent, box) : box;
     }
     return extent ? *extent : kernel.board().outline();
+}
+
+bool rehome(Kernel& kernel, const std::vector<std::size_t>& members) {
+    const Problem& problem = kernel.problem();
+    const bool held = std::any_of(members.begin(), members.end(), [&](std::size_t part) {
+        return problem.parts[part].fixed || rides_the_outline(problem.parts[part]);
+    });
+    if (held) return false;
+    const auto nearest = [](const Box&) -> std::optional<double> { return 0.0; };
+    return seat_block(kernel, {as_placed(kernel, members)}, kernel.board().outline(), nearest, false,
+                      static_cast<std::size_t>(constants::rehome_tries.value), nullptr,
+                      static_cast<Nm>(constants::rehome_pitch.value));
 }
 
 std::string extent_holders(const Kernel& kernel) {
@@ -429,6 +441,14 @@ ArrangeReport arrange(Kernel& kernel, const SqueezeOptions& options) {
     }
     const auto arranged = std::chrono::steady_clock::now();
     report.plan_seconds = std::chrono::duration<double>(arranged - started).count();
+    const bool unchanged = std::all_of(report.plans.begin(), report.plans.end(), [](const ArrangePlan& plan) {
+        return plan.moved == 0 && plan.tightened == 0;
+    });
+    if (unchanged) {
+        kernel.restore(start);
+        report.holders = extent_holders(kernel);
+        return report;
+    }
     std::vector<std::size_t> ranked(report.plans.size());
     for (std::size_t index = 0; index < ranked.size(); ++index) ranked[index] = index;
     std::stable_sort(ranked.begin(), ranked.end(), [&](std::size_t a, std::size_t b) {

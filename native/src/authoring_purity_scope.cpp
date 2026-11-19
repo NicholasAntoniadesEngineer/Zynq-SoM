@@ -24,10 +24,11 @@ AuthoringPurityScope native_authoring_purity_scope() {
     for (const auto* name : {"authoring", "authoring_ir", "circuit_helpers", "subsystem_authoring",
             "subsystem_registration", "project_authoring", "project_authoring_registry", "example_devkit"})
         s.units.push_back(std::string("native/src/") + name + ".cpp");
-    for (const auto* name : {"json", "circuit", "circuit_layout", "catalog", "link", "som_interface", "authoring_context", "symbols", "sexpr",
+    for (const auto* name : {"json", "circuit", "circuit_layout", "roles", "catalog", "link", "som_interface", "authoring_context", "symbols", "sexpr",
             "occupancy"})
         s.providers.push_back(std::string("native/src/") + name + ".cpp");
-    for (const auto* name : {"authoring_context", "symbols", "sexpr", "occupancy", "turn", "seat", "quantize", "execution_accounting"})
+    for (const auto* name : {"authoring_context", "symbols", "sexpr", "occupancy", "turn", "seat", "quantize", "execution_accounting", "roles",
+            "named_constant"})
         s.provider_headers.push_back(std::string("native/include/schgen/") + name + ".hpp");
     const std::string guard="native/src/authoring_context.cpp::schgen::require_native_authoring_context | void (const schgen::AuthoringContext &)";
     s.capabilities = {

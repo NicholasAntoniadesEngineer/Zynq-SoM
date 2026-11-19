@@ -1,3 +1,4 @@
+#include "schgen/roles.hpp"
 #include "schgen/circuit.hpp"
 
 #include <algorithm>
@@ -68,9 +69,11 @@ void only(const JsonNode& node, const std::set<std::string>& allowed, const Circ
 }
 
 const std::vector<std::string>& circuit_service_roles() {
-    static const std::vector<std::string> roles{"bypass", "reservoir", "pull",   "series",  "terminate",
-                                                "filter", "feedback",  "switching", "timing", "protect",
-                                                "sense",  "indicate",  "set"};
+    static const std::vector<std::string> roles = [] {
+        std::vector<std::string> names;
+        for (const rules::RoleRule& row : rules::role_catalogue()) names.emplace_back(row.name);
+        return names;
+    }();
     return roles;
 }
 

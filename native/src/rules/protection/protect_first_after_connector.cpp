@@ -14,8 +14,8 @@ constexpr Rule rule{
     "primary vendor document", Enforcement::measured};
 
 RuleResult check(const RuleContext& context) {
-    RuleResult result{&rule, 0, context.unresolved({"protect"}), {}};
-    for (const Service* service : context.serving({"protect"})) {
+    RuleResult result{&rule, 0, context.unresolved(roles_with(&RoleRule::protects_connector)), {}};
+    for (const Service* service : context.serving(roles_with(&RoleRule::protects_connector))) {
         const std::size_t part = service->part, owner = service->owner;
         if (!context.connector(owner)) {
             result.measurements.push_back(context.label(part) + " protects " + service->pin +

@@ -15,11 +15,12 @@ constexpr Rule rule{
     "primary vendor document", Enforcement::measured};
 
 RuleResult check(const RuleContext& context) {
-    RuleResult result{&rule, 0, context.unresolved({"bypass"}), {}};
-    const double reach = layout::role_reach("bypass");
+    RuleResult result{&rule, 0, context.unresolved(roles_with(&RoleRule::bypasses_pin)), {}};
+    const double reach = role_rule(roles_with(&RoleRule::bypasses_pin).front()).reach->value;
+
     std::vector<double> gaps;
     std::size_t beside = 0, under = 0;
-    for (const Service* service : context.serving({"bypass"})) {
+    for (const Service* service : context.serving(roles_with(&RoleRule::bypasses_pin))) {
         ++result.checked;
         const std::size_t part = service->part, owner = service->owner;
         gaps.push_back(*context.pad_gap(owner, service->pads, part));

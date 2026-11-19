@@ -14,7 +14,7 @@ using json_text::object;
 using json_text::text_value;
 
 inline constexpr std::size_t reserve_corners = 4;
-const char* const schema_name = "schgen.layout-problem/6";
+const char* const schema_name = "schgen.layout-problem/7";
 inline constexpr std::size_t point_fields = 2, disc_fields = 3, box_fields = 4;
 
 std::string point_json(Point point) { return array({integer(point.x), integer(point.y)}); }
@@ -183,7 +183,8 @@ std::string constraints_json(const Constraints& rules) {
                        {"source", text_value(rule.source)},
                        {"rigid", boolean(rule.rigid)},
                        {"derived", boolean(rule.derived)},
-                       {"reach", integer(rule.reach)}});
+                       {"reach", integer(rule.reach)},
+                       {"same_face", boolean(rule.same_face)}});
     };
     for (const auto& rule : rules.pad_gaps) pad_gaps.push_back(gap_json(rule));
     for (const auto& rule : rules.soft_gaps) soft_gaps.push_back(gap_json(rule));
@@ -222,13 +223,13 @@ Constraints constraints_of(const JsonNode& node) {
                         "layout constraints");
     Constraints rules;
     const auto gap_of = [](const JsonNode& entry) {
-        reject_unknown_keys(entry, {"anchor", "member", "anchor_names", "limit", "sense", "source", "rigid", "derived", "reach"},
+        reject_unknown_keys(entry, {"anchor", "member", "anchor_names", "limit", "sense", "source", "rigid", "derived", "reach", "same_face"},
                             "layout pad gap");
         return PadGap{index_of(entry, "anchor"), index_of(entry, "member"),
                       indices_of(field(entry, "anchor_names", JsonKind::Array)),
                       whole(field(entry, "limit", JsonKind::Number)), sense_of(text(entry, "sense")),
                       text(entry, "source"), flag(entry, "rigid"), flag(entry, "derived"),
-                      whole(field(entry, "reach", JsonKind::Number))};
+                      whole(field(entry, "reach", JsonKind::Number)), flag(entry, "same_face")};
     };
     for (const auto& entry : field(node, "pad_gaps", JsonKind::Array).array_value) rules.pad_gaps.push_back(gap_of(entry));
     for (const auto& entry : field(node, "soft_gaps", JsonKind::Array).array_value) rules.soft_gaps.push_back(gap_of(entry));
@@ -299,6 +300,8 @@ std::string document_json(const Problem& problem, const Placement& placement) {
                                 {"core_exempt", boolean(part.core_exempt)},
                                 {"cohesion_member", boolean(part.cohesion_member)},
                                 {"module", boolean(part.module)},
+                                {"field_source", boolean(part.field_source)},
+                                {"field_sensitive", boolean(part.field_sensitive)},
                                 {"tie", text_value(tie_name(problem.ownership.empty() ? Tie::none : problem.ownership[parts.size()].tie))},
                                 {"owner", integer(problem.ownership.empty() || !problem.ownership[parts.size()].owner
                                                       ? -1 : static_cast<long long>(*problem.ownership[parts.size()].owner))},
@@ -418,7 +421,7 @@ Document read_document(const JsonNode& root) {
                                     "fanout_pins", "fanout_need", "fanout_subject", "escape_top",
                                     "escape_bottom", "never_crowds",
                                     "cluster_passive", "fixed", "top_only", "core_exempt", "cohesion_member", "module",
-                                    "connector", "overmold", "edge", "corner", "tie", "owner"},
+                                    "field_source", "field_sensitive", "connector", "overmold", "edge", "corner", "tie", "owner"},
                             "layout part");
         Part part;
         part.reference = text(entry, "reference");
@@ -438,6 +441,8 @@ Document read_document(const JsonNode& root) {
         part.core_exempt = flag(entry, "core_exempt");
         part.cohesion_member = flag(entry, "cohesion_member");
         part.module = flag(entry, "module");
+        part.field_source = flag(entry, "field_source");
+        part.field_sensitive = flag(entry, "field_sensitive");
         Ownership ownership;
         const std::string tie = text(entry, "tie");
         for (const Tie candidate : {Tie::none, Tie::contract, Tie::authored, Tie::released, Tie::signal, Tie::rail, Tie::shared, Tie::bridge,

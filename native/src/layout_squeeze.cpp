@@ -1,8 +1,11 @@
 #include "schgen/layout_squeeze.hpp"
 
+#include "schgen/layout_arrange.hpp"
+
 #include "schgen/layout_sink.hpp"
 
 #include <algorithm>
+#include <map>
 #include <cstdlib>
 #include <deque>
 #include <numeric>
@@ -316,6 +319,86 @@ private:
         return std::nullopt;
     }
 
+    bool eject(std::size_t unit, std::size_t depth, std::vector<char>& busy, const std::vector<Point>& offsets,
+               std::size_t& budget) {
+        const auto& members = bundles_.units[unit];
+        if (std::any_of(members.begin(), members.end(), [&](std::size_t part) { return problem_.parts[part].fixed; }))
+            return false;
+        std::size_t branches = 0;
+        for (const Point by : offsets) {
+            if (budget == 0) return false;
+            --budget;
+            const std::vector<Move> moves = carried(unit, by);
+            const Probe probe = kernel_.probe(moves);
+            if (!probe.placeable) continue;
+            if (probe.blockers.empty()) {
+                if (kernel_.move_many(moves)) return true;
+                continue;
+            }
+            if (depth == 0 || branches == static_cast<std::size_t>(constants::eject_branch.value)) continue;
+            std::vector<std::size_t> pushed;
+            for (const std::size_t blocker : probe.blockers) pushed.push_back(bundles_.unit_of[blocker]);
+            std::sort(pushed.begin(), pushed.end());
+            pushed.erase(std::unique(pushed.begin(), pushed.end()), pushed.end());
+            if (pushed.size() > static_cast<std::size_t>(constants::eject_width.value) ||
+                std::any_of(pushed.begin(), pushed.end(), [&](std::size_t other) { return busy[other] != 0; }))
+                continue;
+            ++branches;
+            const Snapshot before = kernel_.snapshot();
+            if (!kernel_.force(moves)) continue;
+            busy[unit] = 1;
+            bool sound = true;
+            for (std::size_t index = 0; sound && index < pushed.size(); ++index)
+                sound = eject(pushed[index], depth - 1, busy, offsets, budget);
+            busy[unit] = 0;
+            for (std::size_t index = 0; sound && index < members.size(); ++index)
+                sound = !kernel_.breach(members[index]);
+            if (sound) return true;
+            kernel_.restore(before);
+        }
+        return false;
+    }
+
+    std::string pinned(std::size_t part, const std::vector<Point>& offsets) {
+        const std::size_t unit = bundles_.unit_of[part];
+        std::map<std::string, std::size_t> tally;
+        for (const Point by : offsets) {
+            const std::vector<Move> moves = carried(unit, by);
+            const Probe probe = kernel_.probe(moves);
+            if (probe.placeable) {
+                ++tally[probe.blockers.empty() ? "free" : "free once " + problem_.parts[probe.blockers.front()].reference +
+                                                              " moves"];
+                continue;
+            }
+            const Snapshot before = kernel_.snapshot();
+            std::string reason = "a reserved field cannot follow";
+            if (kernel_.force(moves)) {
+                reason = "the cluster as a whole";
+                for (const Move& move : moves)
+                    if (const auto found = kernel_.breach(move.part)) {
+                        const std::size_t other = found->part == move.part ? found->other : found->part;
+                        reason = std::string(breach_name(found->kind)) + " against " +
+                                 (other != move.part && other < problem_.parts.size() ? problem_.parts[other].reference
+                                                                                      : std::string("the board"));
+                        break;
+                    }
+            }
+            kernel_.restore(before);
+            ++tally[reason];
+        }
+        std::vector<std::pair<std::size_t, std::string>> ranked;
+        for (const auto& [reason, count] : tally) ranked.emplace_back(count, reason);
+        std::sort(ranked.begin(), ranked.end(), [](const auto& a, const auto& b) {
+            return a.first != b.first ? a.first > b.first : a.second < b.second;
+        });
+        std::string text = "; of " + std::to_string(offsets.size()) + " nearby positions for " +
+                           problem_.parts[part].reference + " (cluster of " +
+                           std::to_string(bundles_.units[unit].size()) + ")";
+        for (std::size_t index = 0; index < ranked.size() && index < static_cast<std::size_t>(constants::pinned_rows.value); ++index)
+            text += ", " + std::to_string(ranked[index].first) + " " + ranked[index].second;
+        return text;
+    }
+
     std::string named(const Violation& violation) const {
         return problem_.parts[violation.part].reference + " " + breach_name(violation.kind) + " " +
                problem_.parts[violation.other].reference;
@@ -332,6 +415,23 @@ private:
             for (const std::size_t mover : {part, partner}) {
                 if (mover >= problem_.parts.size() || problem_.parts[mover].fixed) continue;
                 if (move_unit(bundles_.unit_of[mover], wide) || sink_part(kernel_, mover, wide)) return true;
+            }
+            for (const std::size_t mover : {part, partner}) {
+                if (mover >= problem_.parts.size() || problem_.parts[mover].fixed) continue;
+                std::vector<char> busy(bundles_.units.size(), 0);
+                std::size_t budget = static_cast<std::size_t>(constants::eject_budget.value);
+                if (!eject(bundles_.unit_of[mover], static_cast<std::size_t>(constants::eject_depth.value), busy, wide,
+                           budget))
+                    continue;
+                ++attempt.ejected;
+                return true;
+            }
+            if (attempt.step != options_.last_step) return false;
+            for (const std::size_t mover : {part, partner}) {
+                if (mover >= problem_.parts.size() || problem_.parts[mover].fixed) continue;
+                if (!rehome(kernel_, bundles_.units[bundles_.unit_of[mover]])) continue;
+                ++attempt.rehomed;
+                return true;
             }
             return false;
         };
@@ -383,7 +483,8 @@ private:
                 }
                 if (!blockers) {
                     stuck[part] = 1;
-                    if (attempt.blocker.empty()) attempt.blocker = named(*breach);
+                    if (attempt.blocker.empty())
+                        attempt.blocker = named(*breach) + (attempt.step == options_.last_step ? pinned(part, wide) : std::string());
                     continue;
                 }
                 ++attempt.pushed;

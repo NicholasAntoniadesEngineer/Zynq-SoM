@@ -25,10 +25,21 @@ inline constexpr NamedConstant wide_reach{"wide_reach", 24e6, "nm", "policy",
     "largest relocation tried for a jammed part or its partner before an edge step is given up"};
 inline constexpr NamedConstant wide_pitch{"wide_pitch", 1e6, "nm", "policy",
     "lattice pitch of the wide relocation search; coarse because it only has to find room, not a best seat"};
+inline constexpr NamedConstant eject_depth{"eject_depth", 3, "moves", "policy",
+    "neighbours in a row that may be moved aside, each to make room for the one before, to free a jammed cluster"};
+inline constexpr NamedConstant eject_width{"eject_width", 3, "clusters", "policy",
+    "clusters a single move may displace at once when freeing a jam"};
+inline constexpr NamedConstant eject_branch{"eject_branch", 6, "positions", "policy",
+    "positions that displace neighbours tried for one cluster before it is left jammed"};
+inline constexpr NamedConstant eject_budget{"eject_budget", 4000, "positions", "policy",
+    "positions checked in total to free one jam"};
+inline constexpr NamedConstant pinned_rows{"pinned_rows", 4, "rows", "report",
+    "most frequent reasons named for a cluster that stops an edge"};
 inline constexpr NamedConstant order_patience{"order_patience", 1, "orders", "policy",
     "edge orders tried in a row without a smaller board or shorter airwire before the search stops"};
 inline constexpr std::array squeeze_registry{search_pitch, part_reach, unit_reach, first_step, last_step,
-                                             step_ratio, settle_rounds, wide_reach, wide_pitch, order_patience};
+                                             step_ratio, settle_rounds, wide_reach, wide_pitch, order_patience, eject_depth,
+                                             eject_width, eject_branch, eject_budget, pinned_rows};
 }
 
 enum class Side : std::uint8_t { north, south, west, east };
@@ -55,7 +66,7 @@ struct Attempt {
     Side side = Side::north;
     Nm step = 0;
     bool kept = false, scaled = false, along_x = false;
-    std::size_t relocated = 0, pushed = 0, sunk = 0, freed = 0;
+    std::size_t relocated = 0, pushed = 0, sunk = 0, freed = 0, ejected = 0, rehomed = 0;
     std::string blocker;
 };
 

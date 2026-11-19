@@ -82,7 +82,7 @@ target_sources(schgen_core PRIVATE src/json_text.cpp src/layout_geometry.cpp src
     src/layout_adapter.cpp src/layout_json.cpp src/layout_cli.cpp src/layout_squeeze.cpp src/layout_arrange.cpp src/layout_stage.cpp
     src/layout_sink.cpp src/placement_integrity.cpp)
 set(SCHGEN_RULE_SOURCES
-    src/rules/rule_context.cpp src/rules/rule_book.cpp src/rules/rule_index.cpp
+    src/rules/rule_context.cpp src/roles.cpp src/rules/rule_book.cpp src/rules/rule_index.cpp
     src/rules/mechanical/module_clearance.cpp src/rules/mechanical/module_escape_corridor.cpp
     src/rules/high_speed/controlled_net_needs_ground.cpp src/rules/high_speed/termination_distance_report.cpp
     src/rules/power/regulator_loop_one_face.cpp src/rules/power/regulator_over_ground.cpp
