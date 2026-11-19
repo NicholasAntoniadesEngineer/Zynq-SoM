@@ -12,14 +12,16 @@
 		(company "Zynq SoM Carrier")
 		(comment
 			1
-			"FOUNDATION: derived outline + SoM-body keep-out + 4L stackup + net classes + 2-side placement (SoM-mirror mezzanine, per-subsystem ratsnest bundles). NOT routed — schgen-generated (do not hand-edit)."
+			"FOUNDATION: derived outline + SoM-body keep-out + 6L stackup + net classes + 2-side placement (SoM-mirror mezzanine, per-subsystem ratsnest bundles). NOT routed — schgen-generated (do not hand-edit)."
 		)
 	)
 	(layers
 		(0 "F.Cu" signal "L1 (Sig)")
 		(1 "In1.Cu" power "L2 (GND)")
-		(2 "In2.Cu" power "L3 (PWR)")
-		(31 "B.Cu" signal "L4 (Sig)")
+		(2 "In2.Cu" signal "L3 (Sig)")
+		(3 "In3.Cu" power "L4 (PWR)")
+		(4 "In4.Cu" power "L5 (GND)")
+		(31 "B.Cu" signal "L6 (Sig)")
 		(32 "B.Adhes" user "B.Adhesive")
 		(33 "F.Adhes" user "F.Adhesive")
 		(34 "B.Paste" user)
@@ -62,9 +64,9 @@
 			(layer
 				"dielectric 1"
 				(type "prepreg")
-				(thickness 0.2104)
+				(thickness 0.0994)
 				(material "FR4")
-				(epsilon_r 4.6)
+				(epsilon_r 4.1)
 				(loss_tangent 0.02)
 			)
 			(layer
@@ -75,9 +77,9 @@
 			(layer
 				"dielectric 2"
 				(type "core")
-				(thickness 1.065)
+				(thickness 0.55)
 				(material "FR4")
-				(epsilon_r 4.6)
+				(epsilon_r 4.41)
 				(loss_tangent 0.02)
 			)
 			(layer
@@ -88,9 +90,35 @@
 			(layer
 				"dielectric 3"
 				(type "prepreg")
-				(thickness 0.2104)
+				(thickness 0.1088)
 				(material "FR4")
-				(epsilon_r 4.6)
+				(epsilon_r 4.16)
+				(loss_tangent 0.02)
+			)
+			(layer
+				"In3.Cu"
+				(type "copper")
+				(thickness 0.0152)
+			)
+			(layer
+				"dielectric 4"
+				(type "core")
+				(thickness 0.55)
+				(material "FR4")
+				(epsilon_r 4.41)
+				(loss_tangent 0.02)
+			)
+			(layer
+				"In4.Cu"
+				(type "copper")
+				(thickness 0.0152)
+			)
+			(layer
+				"dielectric 5"
+				(type "prepreg")
+				(thickness 0.0994)
+				(material "FR4")
+				(epsilon_r 4.1)
 				(loss_tangent 0.02)
 			)
 			(layer
@@ -669,6 +697,32 @@
 		)
 	)
 	(zone
+		(net 209)
+		(net_name "GND")
+		(layer "In4.Cu")
+		(uuid "6a2dbfac-1ec4-59de-8a9a-d83c64c7495e")
+		(name "GND_plane_In4")
+		(hatch edge 0.5)
+		(connect_pads
+			(clearance 0.3)
+		)
+		(min_thickness 0.25)
+		(filled_areas_thickness no)
+		(fill
+			yes
+			(thermal_gap 0.5)
+			(thermal_bridge_width 0.5)
+		)
+		(polygon
+			(pts
+				(xy 25.5 25.5)
+				(xy 192.5 25.5)
+				(xy 192.5 187.5)
+				(xy 25.5 187.5)
+			)
+		)
+	)
+	(zone
 		(net 0)
 		(net_name "")
 		(layers "In1.Cu")
@@ -702,9 +756,133 @@
 	(zone
 		(net 0)
 		(net_name "")
+		(layers "In3.Cu")
+		(uuid "e2f5ec7b-34be-5d91-be52-cc52d7d431ef")
+		(name "ethernet_isolation_void_J23001_In3")
+		(hatch edge 0.5)
+		(connect_pads
+			(clearance 0)
+		)
+		(min_thickness 0.25)
+		(keepout
+			(tracks allowed)
+			(vias allowed)
+			(pads allowed)
+			(copperpour not_allowed)
+			(footprints allowed)
+		)
+		(fill
+			(thermal_gap 0.5)
+			(thermal_bridge_width 0.5)
+		)
+		(polygon
+			(pts
+				(xy 23.2 62.433)
+				(xy 41.1 62.433)
+				(xy 41.1 81.933)
+				(xy 23.2 81.933)
+			)
+		)
+	)
+	(zone
+		(net 0)
+		(net_name "")
+		(layers "In4.Cu")
+		(uuid "ceb179f8-cd8b-5e77-b78c-e06d05d0307e")
+		(name "ethernet_isolation_void_J23001_In4")
+		(hatch edge 0.5)
+		(connect_pads
+			(clearance 0)
+		)
+		(min_thickness 0.25)
+		(keepout
+			(tracks allowed)
+			(vias allowed)
+			(pads allowed)
+			(copperpour not_allowed)
+			(footprints allowed)
+		)
+		(fill
+			(thermal_gap 0.5)
+			(thermal_bridge_width 0.5)
+		)
+		(polygon
+			(pts
+				(xy 23.2 62.433)
+				(xy 41.1 62.433)
+				(xy 41.1 81.933)
+				(xy 23.2 81.933)
+			)
+		)
+	)
+	(zone
+		(net 0)
+		(net_name "")
 		(layers "In1.Cu")
 		(uuid "a877f63b-f054-5b91-b2b2-7975cb264773")
 		(name "ethernet_isolation_void_T10001")
+		(hatch edge 0.5)
+		(connect_pads
+			(clearance 0)
+		)
+		(min_thickness 0.25)
+		(keepout
+			(tracks allowed)
+			(vias allowed)
+			(pads allowed)
+			(copperpour not_allowed)
+			(footprints allowed)
+		)
+		(fill
+			(thermal_gap 0.5)
+			(thermal_bridge_width 0.5)
+		)
+		(polygon
+			(pts
+				(xy 56.5 59.7)
+				(xy 70.9 59.7)
+				(xy 70.9 80.46)
+				(xy 56.5 80.46)
+			)
+		)
+	)
+	(zone
+		(net 0)
+		(net_name "")
+		(layers "In3.Cu")
+		(uuid "0d5c2bf2-6d25-52a8-9617-970ec155557f")
+		(name "ethernet_isolation_void_T10001_In3")
+		(hatch edge 0.5)
+		(connect_pads
+			(clearance 0)
+		)
+		(min_thickness 0.25)
+		(keepout
+			(tracks allowed)
+			(vias allowed)
+			(pads allowed)
+			(copperpour not_allowed)
+			(footprints allowed)
+		)
+		(fill
+			(thermal_gap 0.5)
+			(thermal_bridge_width 0.5)
+		)
+		(polygon
+			(pts
+				(xy 56.5 59.7)
+				(xy 70.9 59.7)
+				(xy 70.9 80.46)
+				(xy 56.5 80.46)
+			)
+		)
+	)
+	(zone
+		(net 0)
+		(net_name "")
+		(layers "In4.Cu")
+		(uuid "dc79d691-68f8-5ee6-a459-a61aef08cd91")
+		(name "ethernet_isolation_void_T10001_In4")
 		(hatch edge 0.5)
 		(connect_pads
 			(clearance 0)

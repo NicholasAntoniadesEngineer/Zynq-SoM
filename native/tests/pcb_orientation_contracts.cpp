@@ -1,3 +1,4 @@
+#include "schgen/run_config.hpp"
 #include "pcb_placement_orientations.hpp"
 #include "pcb_placement_fixture.hpp"
 #include "contract_rigid_groups_internal.hpp"
@@ -1291,6 +1292,6 @@ extern "C" void __cyg_profile_func_enter(void* fn,void*) {
  if(fn==reinterpret_cast<void*>(&placement_variant_dimension_precision4dp))++variant_dimensions;
 }
 extern "C" void __cyg_profile_func_exit(void*,void*) {}
-int main(int argc,char** argv){try{demand(argc==2,"fixture root required");unit();live(argv[1]);
+int main(int argc,char** argv){try{demand(argc==2,"fixture root required");schgen::apply_run_config(std::filesystem::path(argv[1])/schgen::run_config_file,"carrier");unit();live(argv[1]);
  std::cout<<"PASS rigid orientation, chirality, identity, eligibility, negatives and incumbent contracts\n";
 }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}

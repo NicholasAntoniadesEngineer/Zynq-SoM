@@ -1,3 +1,4 @@
+#include "schgen/run_config.hpp"
 #include "pcb_placement_fixture.hpp"
 #include "historical_input_contracts.hpp"
 #include "direct_enable_reference.hpp"
@@ -549,6 +550,7 @@ int main(int argc,char **argv) {
     try {
         if(argc<2||argc>3||(argc==3&&std::string(argv[2])!="--live"&&std::string(argv[2])!="--catalogs"))
             throw std::runtime_error("usage: experiment_tools_contracts ROOT [--live|--catalogs]");
+        schgen::apply_run_config(std::filesystem::path(argv[1])/schgen::run_config_file,"carrier");
         unit(argv[1]);
         if(argc==3 && std::string(argv[2])=="--live") {
             for(const auto *name:{"carrier","devkit_mini"})probes(argv[1],name);

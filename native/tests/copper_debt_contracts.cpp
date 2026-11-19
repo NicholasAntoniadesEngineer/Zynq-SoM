@@ -1,3 +1,4 @@
+#include "schgen/run_config.hpp"
 #include "schgen/copper_debt.hpp"
 #include <algorithm>
 #include <fstream>
@@ -21,6 +22,7 @@ CircuitSheetIr& sheet(CopperDebtSources& s,const std::string& scope,const std::s
 int main(int argc,char** argv) {
     try {
         require(argc==2,"usage: copper_debt_contracts REPOSITORY");
+        schgen::apply_run_config(std::filesystem::path(argv[1])/schgen::run_config_file,"carrier");
         const std::filesystem::path root=argv[1];
         require(open_part_catalog((root/"native/catalog.bin").string()),"catalog");
         const auto sources=author_copper_debt_sources(root);

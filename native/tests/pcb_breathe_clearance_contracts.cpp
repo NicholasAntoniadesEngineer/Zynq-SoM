@@ -1,3 +1,4 @@
+#include "schgen/run_config.hpp"
 #include "pcb_placement_fixture.hpp"
 #include "pcb_placement_internal.hpp"
 #include <iomanip>
@@ -199,6 +200,7 @@ void run(const std::filesystem::path& root,const std::string& name,bool compact,
 int main(int argc,char** argv) {
     try {
         if(argc!=2) throw std::runtime_error("usage: pcb_breathe_clearance_contracts REPOSITORY");
+        schgen::apply_run_config(std::filesystem::path(argv[1])/schgen::run_config_file,"carrier");
         std::cout<<std::setprecision(17);
         for(const auto* name:{"carrier","devkit_mini"})
             for(bool compact:{false,true}) for(bool reverse:{false,true}) run(argv[1],name,compact,reverse);

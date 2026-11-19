@@ -1,3 +1,4 @@
+#include "schgen/run_config.hpp"
 #include "pack_plain_observer.hpp"
 #include "schgen/pcb_emit.hpp"
 #include "schgen/pcb_placement_gates.hpp"
@@ -30,6 +31,7 @@ void node(const JsonNode& n){
 
 int main(int argc,char** argv){try{
  require(argc==2,"repository root required");
+ schgen::apply_run_config(std::filesystem::path(argv[1])/schgen::run_config_file,"carrier");
  pack_geometry_adapter_contracts::run();
  pack_plain_adapter_contracts::run();
 

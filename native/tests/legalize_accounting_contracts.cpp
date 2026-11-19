@@ -1,3 +1,4 @@
+#include "schgen/run_config.hpp"
 #include "pcb_placement_fixture.hpp"
 #include "pcb_placement_requirements.hpp"
 #include "floorplan_precision_fixture.hpp"
@@ -250,7 +251,7 @@ extern "C" void __cyg_profile_func_enter(void* fn,void*){if(!observing)return;
 }
 extern "C" void __cyg_profile_func_exit(void*,void*){}
 int main(int argc,char** argv){try{
-    require(argc==2||argc==3,"repo [baseline]");std::ostringstream out;out<<std::hexfloat;
+    require(argc==2||argc==3,"repo [baseline]");schgen::apply_run_config(std::filesystem::path(argv[1])/schgen::run_config_file,"carrier");std::ostringstream out;out<<std::hexfloat;
 #ifndef LEGALIZE_LEGACY_PROBE
     scalars();pad_retry_accounting();perpendicular_retry_accounting();
 #endif

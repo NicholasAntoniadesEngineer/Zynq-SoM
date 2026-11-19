@@ -1,5 +1,6 @@
 // Instrument ONLY precision_ops.cpp with -finstrument-functions -fno-inline.
 // The independent observer below is never production accounting.
+#include "schgen/run_config.hpp"
 #include "floorplan_precision_fixture.hpp"
 #include "pcb_placement_requirements.hpp"
 #include "floorplan_internal.hpp"
@@ -165,6 +166,7 @@ extern "C" void __cyg_profile_func_enter(void* fn,void*){if(!observing.load(std:
 extern "C" void __cyg_profile_func_exit(void*,void*){}
 int main(int argc,char** argv){try{
     if(argc<2||argc>4||(argc==4&&std::string(argv[3])!="--capture-additive"))throw std::runtime_error("repo [fixture-directory [--capture-additive]]");
+    schgen::apply_run_config(std::filesystem::path(argv[1])/schgen::run_config_file,"carrier");
     const auto root=std::filesystem::path(argv[1]);const auto data=argc>=3?std::filesystem::path(argv[2]):root/"native/tests/data/floorplan_precision";
     scalars();ledger_boundaries();inherited_accounting();boards(root,data,argc==4);std::cerr<<checks<<" floorplan precision contracts passed\n";return 0;
 }catch(const std::exception& e){std::cerr<<"Floorplan precision FAILED: "<<e.what()<<'\n';return 1;}}

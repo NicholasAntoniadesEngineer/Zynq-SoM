@@ -1,0 +1,668 @@
+{
+ "schema": "schgen.stackups/1",
+ "source": "JLCPCB impedance calculator stack-up list, 1.6 mm, 1 oz outer and 0.5 oz inner copper, read 2026-11-19",
+ "stackups": [
+  {
+   "name": "JLC04161H-7628",
+   "fabricator": "JLCPCB",
+   "thickness_mm": 1.6,
+   "outer_copper_mm": 0.035,
+   "inner_copper_mm": 0.0152,
+   "roles": "SGPS",
+   "between": [
+    [
+     {
+      "kind": "prepreg",
+      "material": "7628",
+      "thickness_mm": 0.2104,
+      "permittivity": 4.4
+     }
+    ],
+    [
+     {
+      "kind": "core",
+      "material": "core",
+      "thickness_mm": 1.065,
+      "permittivity": 4.38
+     }
+    ],
+    [
+     {
+      "kind": "prepreg",
+      "material": "7628",
+      "thickness_mm": 0.2104,
+      "permittivity": 4.4
+     }
+    ]
+   ],
+   "pair_basis": "JLCPCB impedance calculator, outer layer over its neighbour",
+   "pairs": [
+    {
+     "impedance": 90,
+     "width_mm": 0.2611,
+     "gap_mm": 0.2032,
+     "source": "JLCPCB calculator, JLC04161H-7628 outer/L2"
+    },
+    {
+     "impedance": 100,
+     "width_mm": 0.2052,
+     "gap_mm": 0.2032,
+     "source": "JLCPCB calculator, JLC04161H-7628 outer/L2"
+    }
+   ]
+  },
+  {
+   "name": "JLC04161H-3313",
+   "fabricator": "JLCPCB",
+   "thickness_mm": 1.6,
+   "outer_copper_mm": 0.035,
+   "inner_copper_mm": 0.0152,
+   "roles": "SGPS",
+   "between": [
+    [
+     {
+      "kind": "prepreg",
+      "material": "3313",
+      "thickness_mm": 0.0994,
+      "permittivity": 4.1
+     }
+    ],
+    [
+     {
+      "kind": "core",
+      "material": "core",
+      "thickness_mm": 1.265,
+      "permittivity": 4.42
+     }
+    ],
+    [
+     {
+      "kind": "prepreg",
+      "material": "3313",
+      "thickness_mm": 0.0994,
+      "permittivity": 4.1
+     }
+    ]
+   ],
+   "pair_basis": "field solve on JLCPCB's published calculation parameters, checked against its calculator on JLC04161H-7628",
+   "pairs": [
+    {
+     "impedance": 90,
+     "width_mm": 0.1455,
+     "gap_mm": 0.2032,
+     "source": "field solve on JLCPCB parameters, 3313 outer prepreg"
+    },
+    {
+     "impedance": 100,
+     "width_mm": 0.1148,
+     "gap_mm": 0.2032,
+     "source": "field solve on JLCPCB parameters, 3313 outer prepreg"
+    }
+   ]
+  },
+  {
+   "name": "JLC06161H-3313",
+   "fabricator": "JLCPCB",
+   "thickness_mm": 1.6,
+   "outer_copper_mm": 0.035,
+   "inner_copper_mm": 0.0152,
+   "roles": "SGSPGS",
+   "between": [
+    [
+     {
+      "kind": "prepreg",
+      "material": "3313",
+      "thickness_mm": 0.0994,
+      "permittivity": 4.1
+     }
+    ],
+    [
+     {
+      "kind": "core",
+      "material": "core",
+      "thickness_mm": 0.55,
+      "permittivity": 4.41
+     }
+    ],
+    [
+     {
+      "kind": "prepreg",
+      "material": "2116",
+      "thickness_mm": 0.1088,
+      "permittivity": 4.16
+     }
+    ],
+    [
+     {
+      "kind": "core",
+      "material": "core",
+      "thickness_mm": 0.55,
+      "permittivity": 4.41
+     }
+    ],
+    [
+     {
+      "kind": "prepreg",
+      "material": "3313",
+      "thickness_mm": 0.0994,
+      "permittivity": 4.1
+     }
+    ]
+   ],
+   "pair_basis": "field solve on JLCPCB's published calculation parameters, checked against its calculator on JLC04161H-7628",
+   "pairs": [
+    {
+     "impedance": 90,
+     "width_mm": 0.1455,
+     "gap_mm": 0.2032,
+     "source": "field solve on JLCPCB parameters, 3313 outer prepreg"
+    },
+    {
+     "impedance": 100,
+     "width_mm": 0.1148,
+     "gap_mm": 0.2032,
+     "source": "field solve on JLCPCB parameters, 3313 outer prepreg"
+    }
+   ]
+  },
+  {
+   "name": "JLC06161H-7628",
+   "fabricator": "JLCPCB",
+   "thickness_mm": 1.6,
+   "outer_copper_mm": 0.035,
+   "inner_copper_mm": 0.0152,
+   "roles": "SGSPGS",
+   "between": [
+    [
+     {
+      "kind": "prepreg",
+      "material": "7628",
+      "thickness_mm": 0.2104,
+      "permittivity": 4.4
+     }
+    ],
+    [
+     {
+      "kind": "core",
+      "material": "core",
+      "thickness_mm": 0.4,
+      "permittivity": 4.36
+     }
+    ],
+    [
+     {
+      "kind": "prepreg",
+      "material": "7628",
+      "thickness_mm": 0.2028,
+      "permittivity": 4.4
+     }
+    ],
+    [
+     {
+      "kind": "core",
+      "material": "core",
+      "thickness_mm": 0.4,
+      "permittivity": 4.36
+     }
+    ],
+    [
+     {
+      "kind": "prepreg",
+      "material": "7628",
+      "thickness_mm": 0.2104,
+      "permittivity": 4.4
+     }
+    ]
+   ],
+   "pair_basis": "JLCPCB impedance calculator, outer layer over its neighbour",
+   "pairs": [
+    {
+     "impedance": 90,
+     "width_mm": 0.2611,
+     "gap_mm": 0.2032,
+     "source": "JLCPCB calculator, JLC04161H-7628 outer/L2"
+    },
+    {
+     "impedance": 100,
+     "width_mm": 0.2052,
+     "gap_mm": 0.2032,
+     "source": "JLCPCB calculator, JLC04161H-7628 outer/L2"
+    }
+   ]
+  },
+  {
+   "name": "JLC08161H-7628",
+   "fabricator": "JLCPCB",
+   "thickness_mm": 1.6,
+   "outer_copper_mm": 0.035,
+   "inner_copper_mm": 0.0152,
+   "roles": "SGSPGSGS",
+   "between": [
+    [
+     {
+      "kind": "prepreg",
+      "material": "7628",
+      "thickness_mm": 0.2104,
+      "permittivity": 4.4
+     }
+    ],
+    [
+     {
+      "kind": "core",
+      "material": "core",
+      "thickness_mm": 0.2,
+      "permittivity": 4.36
+     }
+    ],
+    [
+     {
+      "kind": "prepreg",
+      "material": "7628",
+      "thickness_mm": 0.2028,
+      "permittivity": 4.4
+     }
+    ],
+    [
+     {
+      "kind": "core",
+      "material": "core",
+      "thickness_mm": 0.2,
+      "permittivity": 4.36
+     }
+    ],
+    [
+     {
+      "kind": "prepreg",
+      "material": "7628",
+      "thickness_mm": 0.2028,
+      "permittivity": 4.4
+     }
+    ],
+    [
+     {
+      "kind": "core",
+      "material": "core",
+      "thickness_mm": 0.2,
+      "permittivity": 4.36
+     }
+    ],
+    [
+     {
+      "kind": "prepreg",
+      "material": "7628",
+      "thickness_mm": 0.2104,
+      "permittivity": 4.4
+     }
+    ]
+   ],
+   "pair_basis": "JLCPCB impedance calculator, outer layer over its neighbour",
+   "pairs": [
+    {
+     "impedance": 90,
+     "width_mm": 0.2611,
+     "gap_mm": 0.2032,
+     "source": "JLCPCB calculator, JLC04161H-7628 outer/L2"
+    },
+    {
+     "impedance": 100,
+     "width_mm": 0.2052,
+     "gap_mm": 0.2032,
+     "source": "JLCPCB calculator, JLC04161H-7628 outer/L2"
+    }
+   ]
+  },
+  {
+   "name": "JLC08161H-3313",
+   "fabricator": "JLCPCB",
+   "thickness_mm": 1.6,
+   "outer_copper_mm": 0.035,
+   "inner_copper_mm": 0.0152,
+   "roles": "SGSPGSGS",
+   "between": [
+    [
+     {
+      "kind": "prepreg",
+      "material": "3313",
+      "thickness_mm": 0.0994,
+      "permittivity": 4.1
+     }
+    ],
+    [
+     {
+      "kind": "core",
+      "material": "core",
+      "thickness_mm": 0.1,
+      "permittivity": 4.36
+     }
+    ],
+    [
+     {
+      "kind": "prepreg",
+      "material": "2116",
+      "thickness_mm": 0.1164,
+      "permittivity": 4.16
+     },
+     {
+      "kind": "prepreg",
+      "material": "2116",
+      "thickness_mm": 0.124,
+      "permittivity": 4.16
+     },
+     {
+      "kind": "prepreg",
+      "material": "2116",
+      "thickness_mm": 0.1164,
+      "permittivity": 4.16
+     }
+    ],
+    [
+     {
+      "kind": "core",
+      "material": "core",
+      "thickness_mm": 0.3,
+      "permittivity": 4.41
+     }
+    ],
+    [
+     {
+      "kind": "prepreg",
+      "material": "2116",
+      "thickness_mm": 0.1164,
+      "permittivity": 4.16
+     },
+     {
+      "kind": "prepreg",
+      "material": "2116",
+      "thickness_mm": 0.124,
+      "permittivity": 4.16
+     },
+     {
+      "kind": "prepreg",
+      "material": "2116",
+      "thickness_mm": 0.1164,
+      "permittivity": 4.16
+     }
+    ],
+    [
+     {
+      "kind": "core",
+      "material": "core",
+      "thickness_mm": 0.1,
+      "permittivity": 4.36
+     }
+    ],
+    [
+     {
+      "kind": "prepreg",
+      "material": "3313",
+      "thickness_mm": 0.0994,
+      "permittivity": 4.1
+     }
+    ]
+   ],
+   "pair_basis": "field solve on JLCPCB's published calculation parameters, checked against its calculator on JLC04161H-7628",
+   "pairs": [
+    {
+     "impedance": 90,
+     "width_mm": 0.1455,
+     "gap_mm": 0.2032,
+     "source": "field solve on JLCPCB parameters, 3313 outer prepreg"
+    },
+    {
+     "impedance": 100,
+     "width_mm": 0.1148,
+     "gap_mm": 0.2032,
+     "source": "field solve on JLCPCB parameters, 3313 outer prepreg"
+    }
+   ]
+  },
+  {
+   "name": "JLC10161H-7628",
+   "fabricator": "JLCPCB",
+   "thickness_mm": 1.6,
+   "outer_copper_mm": 0.035,
+   "inner_copper_mm": 0.0152,
+   "roles": "SGSSPGSSGS",
+   "between": [
+    [
+     {
+      "kind": "prepreg",
+      "material": "7628",
+      "thickness_mm": 0.2084,
+      "permittivity": 4.46
+     }
+    ],
+    [
+     {
+      "kind": "core",
+      "material": "core",
+      "thickness_mm": 0.1,
+      "permittivity": 4.11
+     }
+    ],
+    [
+     {
+      "kind": "prepreg",
+      "material": "7628",
+      "thickness_mm": 0.2008,
+      "permittivity": 4.46
+     }
+    ],
+    [
+     {
+      "kind": "core",
+      "material": "core",
+      "thickness_mm": 0.1,
+      "permittivity": 4.11
+     }
+    ],
+    [
+     {
+      "kind": "prepreg",
+      "material": "7628",
+      "thickness_mm": 0.2008,
+      "permittivity": 4.46
+     }
+    ],
+    [
+     {
+      "kind": "core",
+      "material": "core",
+      "thickness_mm": 0.1,
+      "permittivity": 4.11
+     }
+    ],
+    [
+     {
+      "kind": "prepreg",
+      "material": "7628",
+      "thickness_mm": 0.2008,
+      "permittivity": 4.46
+     }
+    ],
+    [
+     {
+      "kind": "core",
+      "material": "core",
+      "thickness_mm": 0.1,
+      "permittivity": 4.11
+     }
+    ],
+    [
+     {
+      "kind": "prepreg",
+      "material": "7628",
+      "thickness_mm": 0.2084,
+      "permittivity": 4.46
+     }
+    ]
+   ],
+   "pair_basis": "",
+   "pairs": []
+  },
+  {
+   "name": "JLC08161H-2116",
+   "fabricator": "JLCPCB",
+   "thickness_mm": 1.6,
+   "outer_copper_mm": 0.035,
+   "inner_copper_mm": 0.0152,
+   "roles": "SGSPGSGS",
+   "between": [
+    [
+     {
+      "kind": "prepreg",
+      "material": "2116",
+      "thickness_mm": 0.1164,
+      "permittivity": 4.16
+     }
+    ],
+    [
+     {
+      "kind": "core",
+      "material": "core",
+      "thickness_mm": 0.3,
+      "permittivity": 4.41
+     }
+    ],
+    [
+     {
+      "kind": "prepreg",
+      "material": "1080",
+      "thickness_mm": 0.0764,
+      "permittivity": 3.91
+     },
+     {
+      "kind": "prepreg",
+      "material": "1080",
+      "thickness_mm": 0.0764,
+      "permittivity": 3.91
+     }
+    ],
+    [
+     {
+      "kind": "core",
+      "material": "core",
+      "thickness_mm": 0.3,
+      "permittivity": 4.41
+     }
+    ],
+    [
+     {
+      "kind": "prepreg",
+      "material": "1080",
+      "thickness_mm": 0.0764,
+      "permittivity": 3.91
+     },
+     {
+      "kind": "prepreg",
+      "material": "1080",
+      "thickness_mm": 0.0764,
+      "permittivity": 3.91
+     }
+    ],
+    [
+     {
+      "kind": "core",
+      "material": "core",
+      "thickness_mm": 0.3,
+      "permittivity": 4.41
+     }
+    ],
+    [
+     {
+      "kind": "prepreg",
+      "material": "2116",
+      "thickness_mm": 0.1164,
+      "permittivity": 4.16
+     }
+    ]
+   ],
+   "pair_basis": "",
+   "pairs": []
+  },
+  {
+   "name": "JLC10161H-2116",
+   "fabricator": "JLCPCB",
+   "thickness_mm": 1.6,
+   "outer_copper_mm": 0.035,
+   "inner_copper_mm": 0.0152,
+   "roles": "SGSSPGSSGS",
+   "between": [
+    [
+     {
+      "kind": "prepreg",
+      "material": "2116",
+      "thickness_mm": 0.1194,
+      "permittivity": 4.29
+     }
+    ],
+    [
+     {
+      "kind": "core",
+      "material": "core",
+      "thickness_mm": 0.2,
+      "permittivity": 4.42
+     }
+    ],
+    [
+     {
+      "kind": "prepreg",
+      "material": "2116",
+      "thickness_mm": 0.1118,
+      "permittivity": 4.29
+     }
+    ],
+    [
+     {
+      "kind": "core",
+      "material": "core",
+      "thickness_mm": 0.2,
+      "permittivity": 4.42
+     }
+    ],
+    [
+     {
+      "kind": "prepreg",
+      "material": "2116",
+      "thickness_mm": 0.1118,
+      "permittivity": 4.29
+     }
+    ],
+    [
+     {
+      "kind": "core",
+      "material": "core",
+      "thickness_mm": 0.2,
+      "permittivity": 4.42
+     }
+    ],
+    [
+     {
+      "kind": "prepreg",
+      "material": "2116",
+      "thickness_mm": 0.1118,
+      "permittivity": 4.29
+     }
+    ],
+    [
+     {
+      "kind": "core",
+      "material": "core",
+      "thickness_mm": 0.2,
+      "permittivity": 4.42
+     }
+    ],
+    [
+     {
+      "kind": "prepreg",
+      "material": "2116",
+      "thickness_mm": 0.1194,
+      "permittivity": 4.29
+     }
+    ]
+   ],
+   "pair_basis": "",
+   "pairs": []
+  }
+ ]
+}

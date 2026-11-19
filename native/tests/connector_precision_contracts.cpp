@@ -1,5 +1,6 @@
 // Instrument ONLY precision_ops.cpp with -finstrument-functions -fno-inline.
 // The observer is test-only and never supplies production accounting.
+#include "schgen/run_config.hpp"
 #include "connector_precision_fixture.hpp"
 #include "ledger_accounting_fixture.hpp"
 #include "schgen/native_audit_state.hpp"
@@ -119,4 +120,4 @@ void boards(const std::filesystem::path& root,bool capture){
 }
 extern "C" void __cyg_profile_func_enter(void* fn,void*){if(!observing.load(std::memory_order_relaxed))return;if(fn==reinterpret_cast<void*>(&schgen::mechanical_direction_component))++entries[0];else if(fn==reinterpret_cast<void*>(&schgen::stage_direction_component))++entries[1];}
 extern "C" void __cyg_profile_func_exit(void*,void*){}
-int main(int argc,char** argv){try{if(argc<2||argc>3||(argc==3&&std::string(argv[2])!="--capture-additive"))throw std::runtime_error("repo [--capture-additive]");scalars();registry();mechanical_mutations();boards(argv[1],argc==3);std::cerr<<checks<<" connector precision contracts passed\n";return 0;}catch(const std::exception& e){std::cerr<<"Connector precision FAILED: "<<e.what()<<'\n';return 1;}}
+int main(int argc,char** argv){try{if(argc<2||argc>3||(argc==3&&std::string(argv[2])!="--capture-additive"))throw std::runtime_error("repo [--capture-additive]");schgen::apply_run_config(std::filesystem::path(argv[1])/schgen::run_config_file,"carrier");scalars();registry();mechanical_mutations();boards(argv[1],argc==3);std::cerr<<checks<<" connector precision contracts passed\n";return 0;}catch(const std::exception& e){std::cerr<<"Connector precision FAILED: "<<e.what()<<'\n';return 1;}}

@@ -157,7 +157,7 @@ struct Reserve {
 
 struct Rules {
     Nm compare_guard = 0, group_guard = 0;
-    Nm core_tolerance = 0, copper_clearance = 0, edge_clearance = 0, edge_setback = 0, plane_margin = 0;
+    Nm module_clearance = 0, copper_clearance = 0, edge_clearance = 0, edge_setback = 0, plane_margin = 0;
     double dispersion_limit = 0;
     std::size_t dispersion_floor = 0;
 };

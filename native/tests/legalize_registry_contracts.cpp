@@ -1,3 +1,4 @@
+#include "schgen/run_config.hpp"
 #include "schgen/legalize_precision.hpp"
 #include "schgen/native_audit_state.hpp"
 #include "schgen/board_policy.hpp"
@@ -114,7 +115,7 @@ extern "C" void __cyg_profile_func_enter(void* fn,void*){
 }
 extern "C" void __cyg_profile_func_exit(void*,void*){}
 int main(int argc,char** argv){try{
-    require(argc==2,"repo root required");declarations();adapters();
+    require(argc==2,"repo root required");schgen::apply_run_config(std::filesystem::path(argv[1])/schgen::run_config_file,"carrier");declarations();adapters();
     for(const auto* project:{"carrier","devkit_mini"})board_receipt(argv[1],project);
     std::cout<<"Legalizer registry, exact-family adapters, both-board physical and independent receipts PASS\n";return 0;
 }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}

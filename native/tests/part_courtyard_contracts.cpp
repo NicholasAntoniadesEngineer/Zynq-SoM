@@ -1,3 +1,4 @@
+#include "schgen/run_config.hpp"
 #include "schgen/part_import.hpp"
 #include "schgen/pcb_emit.hpp"
 #include "schgen/mirror.hpp"
@@ -95,6 +96,7 @@ void synthetic(JsonNode result, const PartImportInfo& info) {
 int main(int argc, char** argv) {
     try {
         require(argc == 4 || argc == 5, "REPO CORRECTED_MOD OUTPUT [FAILING_BOARD]");
+        schgen::apply_run_config(std::filesystem::path(argv[1])/schgen::run_config_file,"carrier");
         const fs::path root(argv[1]), output(argv[3]); fs::create_directories(output);
         const std::string name = "RV-3028-C7-32.768kHz-1ppm-TA-QC";
         const auto corrected = sexpr_loads(read(argv[2]));

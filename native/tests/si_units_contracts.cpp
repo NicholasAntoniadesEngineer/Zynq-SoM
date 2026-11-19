@@ -1,6 +1,7 @@
 // Independent repository policy from test_si_units.py, not a second SI engine.
 // Fresh native authoring -> real research -> actual CSV/DRU/Markdown consumers.
 // No Python, saved circuit.json, generated board, subprocess, or output writes.
+#include "schgen/run_config.hpp"
 #include "schgen/manufacturing_exports.hpp"
 #include "schgen/project_authoring.hpp"
 
@@ -223,7 +224,7 @@ void mutations_for(const std::vector<ProjectCircuit>& sheets,const JsonNode& raw
 } // namespace
 int main(int argc,char** argv) {
     try{
-        require(argc==2,"usage: si_units_contracts REPOSITORY");const std::filesystem::path root=argv[1];
+        require(argc==2,"usage: si_units_contracts REPOSITORY");schgen::apply_run_config(std::filesystem::path(argv[1])/schgen::run_config_file,"carrier");const std::filesystem::path root=argv[1];
         require(open_part_catalog((root/"native/catalog.bin").string()),"real native part catalog unavailable");
         struct Close { ~Close(){close_part_catalog();} } close;
         std::size_t lookups=0;ProjectAuthoringInput author;author.project_root=root/"carrier";

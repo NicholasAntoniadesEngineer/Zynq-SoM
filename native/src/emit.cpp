@@ -546,8 +546,6 @@ Sexpr emit_layers_node() {
 
 Sexpr emit_stackup_node() {
     const Stackup& stackup = board_stackup();
-    if (stackup.dielectric.size() + 1 != stackup.copper.size())
-        throw std::logic_error(stackup.fabricator_name + ": every copper layer pair needs one dielectric between them");
     SexprList node{
         S("stackup"),
         L({S("layer"), T("F.SilkS"), L({S("type"), T("Top Silk Screen")})}),
@@ -559,11 +557,12 @@ Sexpr emit_stackup_node() {
         const CopperLayer& copper = stackup.copper[index];
         node.push_back(L({S("layer"), T(copper.name), L({S("type"), T("copper")}),
                           L({S("thickness"), N(copper.thickness_mm)})}));
-        if (index == stackup.dielectric.size()) continue;
-        const DielectricLayer& sheet = stackup.dielectric[index];
-        node.push_back(L({S("layer"), T(sheet.name), L({S("type"), T(sheet.kind)}),
-                          L({S("thickness"), N(sheet.thickness_mm)}), L({S("material"), T("FR4")}),
-                          L({S("epsilon_r"), N(sheet.permittivity)}), L({S("loss_tangent"), N(0.02)})}));
+        for (const DielectricLayer& sheet : stackup.dielectric) {
+            if (sheet.above != index) continue;
+            node.push_back(L({S("layer"), T(sheet.name), L({S("type"), T(sheet.kind)}),
+                              L({S("thickness"), N(sheet.thickness_mm)}), L({S("material"), T("FR4")}),
+                              L({S("epsilon_r"), N(sheet.permittivity)}), L({S("loss_tangent"), N(0.02)})}));
+        }
     }
     node.push_back(L({S("layer"), T("B.Mask"), L({S("type"), T("Bottom Solder Mask")}),
                       L({S("thickness"), N(0.01)})}));

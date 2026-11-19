@@ -74,7 +74,7 @@
           "subsystems/ethernet/ethernet.py:12",
           "schgen/generate/pcb/constants.py:179"
         ],
-        "emits": "In1 rule-area voids: none; corridor between them: NOT voided (debt)",
+        "emits": "plane rule-area voids: none; corridor between them: NOT voided (debt)",
         "status": "NOTHING",
         "risk": "a continuous plane under the magnetics bridges the isolation barrier capacitively and violates the 2kV creepage intent; the RJ45<->magnetics media CORRIDOR void remains routing-wave debt"
       },
@@ -210,7 +210,7 @@
           "subsystems/ethernet/ethernet.py:12",
           "schgen/generate/pcb/constants.py:179"
         ],
-        "emits": "In1 rule-area voids: none; corridor between them: NOT voided (debt)",
+        "emits": "plane rule-area voids: none; corridor between them: NOT voided (debt)",
         "status": "NOTHING",
         "risk": "a continuous plane under the magnetics bridges the isolation barrier capacitively and violates the 2kV creepage intent; the RJ45<->magnetics media CORRIDOR void remains routing-wave debt"
       },
@@ -362,7 +362,7 @@
           "subsystems/ethernet/ethernet.py:12",
           "schgen/generate/pcb/constants.py:179"
         ],
-        "emits": "In1 rule-area voids: none; corridor between them: NOT voided (debt)",
+        "emits": "plane rule-area voids: none; corridor between them: NOT voided (debt)",
         "status": "NOTHING",
         "risk": "a continuous plane under the magnetics bridges the isolation barrier capacitively and violates the 2kV creepage intent; the RJ45<->magnetics media CORRIDOR void remains routing-wave debt"
       },
@@ -555,7 +555,7 @@
           "subsystems/ethernet/ethernet.py:12",
           "schgen/generate/pcb/constants.py:179"
         ],
-        "emits": "In1 rule-area voids: none; corridor between them: NOT voided (debt)",
+        "emits": "plane rule-area voids: none; corridor between them: NOT voided (debt)",
         "status": "NOTHING",
         "risk": "a continuous plane under the magnetics bridges the isolation barrier capacitively and violates the 2kV creepage intent; the RJ45<->magnetics media CORRIDOR void remains routing-wave debt"
       },
@@ -799,7 +799,7 @@
           "subsystems/ethernet/ethernet.py:12",
           "schgen/generate/pcb/constants.py:179"
         ],
-        "emits": "In1 rule-area voids: none; corridor between them: NOT voided (debt)",
+        "emits": "plane rule-area voids: none; corridor between them: NOT voided (debt)",
         "status": "NOTHING",
         "risk": "a continuous plane under the magnetics bridges the isolation barrier capacitively and violates the 2kV creepage intent; the RJ45<->magnetics media CORRIDOR void remains routing-wave debt"
       },
@@ -1073,7 +1073,7 @@
           "subsystems/ethernet/ethernet.py:12",
           "schgen/generate/pcb/constants.py:179"
         ],
-        "emits": "In1 rule-area voids: none; corridor between them: NOT voided (debt)",
+        "emits": "plane rule-area voids: none; corridor between them: NOT voided (debt)",
         "status": "NOTHING",
         "risk": "a continuous plane under the magnetics bridges the isolation barrier capacitively and violates the 2kV creepage intent; the RJ45<->magnetics media CORRIDOR void remains routing-wave debt"
       },
@@ -1357,7 +1357,7 @@
           "subsystems/ethernet/ethernet.py:12",
           "schgen/generate/pcb/constants.py:179"
         ],
-        "emits": "In1 rule-area voids: none; corridor between them: NOT voided (debt)",
+        "emits": "plane rule-area voids: none; corridor between them: NOT voided (debt)",
         "status": "NOTHING",
         "risk": "a continuous plane under the magnetics bridges the isolation barrier capacitively and violates the 2kV creepage intent; the RJ45<->magnetics media CORRIDOR void remains routing-wave debt"
       },
@@ -1656,7 +1656,7 @@
           "subsystems/ethernet/ethernet.py:12",
           "schgen/generate/pcb/constants.py:179"
         ],
-        "emits": "In1 rule-area voids: ethernet_isolation_void_1; corridor between them: NOT voided (debt)",
+        "emits": "plane rule-area voids: ethernet_isolation_void_1; corridor between them: NOT voided (debt)",
         "status": "NOTHING",
         "risk": "a continuous plane under the magnetics bridges the isolation barrier capacitively and violates the 2kV creepage intent; the RJ45<->magnetics media CORRIDOR void remains routing-wave debt"
       },
@@ -1985,7 +1985,7 @@
           "subsystems/ethernet/ethernet.py:12",
           "schgen/generate/pcb/constants.py:179"
         ],
-        "emits": "In1 rule-area voids: ethernet_isolation_void_1, ethernet_isolation_void_2; corridor between them: NOT voided (debt)",
+        "emits": "plane rule-area voids: ethernet_isolation_void_1, ethernet_isolation_void_2; corridor between them: NOT voided (debt)",
         "status": "PARTIAL",
         "risk": "a continuous plane under the magnetics bridges the isolation barrier capacitively and violates the 2kV creepage intent; the RJ45<->magnetics media CORRIDOR void remains routing-wave debt"
       },
@@ -2299,7 +2299,7 @@
           "subsystems/ethernet/ethernet.py:12",
           "schgen/generate/pcb/constants.py:179"
         ],
-        "emits": "In1 rule-area voids: ethernet_isolation_void_1, ethernet_isolation_void_2; corridor between them: NOT voided (debt)",
+        "emits": "plane rule-area voids: ethernet_isolation_void_1, ethernet_isolation_void_2; corridor between them: NOT voided (debt)",
         "status": "PARTIAL",
         "risk": "a continuous plane under the magnetics bridges the isolation barrier capacitively and violates the 2kV creepage intent; the RJ45<->magnetics media CORRIDOR void remains routing-wave debt"
       },

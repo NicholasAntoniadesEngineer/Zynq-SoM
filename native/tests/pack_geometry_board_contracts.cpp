@@ -1,3 +1,4 @@
+#include "schgen/run_config.hpp"
 #include "pack_geometry_observer.hpp"
 #include "pack_geometry_adapter_contracts.hpp"
 #include "placement_precision_fixture.hpp"
@@ -83,6 +84,7 @@ void scalars(){
 #endif
 int main(int argc,char** argv){try{
  require(argc==2,"repository root required");
+ schgen::apply_run_config(std::filesystem::path(argv[1])/schgen::run_config_file,"carrier");
  pack_geometry_adapter_contracts::run();
 #ifdef PACK_GEOMETRY_CANDIDATE
  scalars();

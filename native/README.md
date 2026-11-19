@@ -1,5 +1,8 @@
 # Native migration
 
+To build and run the tool, use `./build` and `./run` from the repository root; see the [root README](../README.md).
+This page is the history of the move from Python to C++.
+
 The target is a complete C++ generator, including design loading, placement,
 routing, emission, verification, CLI, and tests. The Python extension and the
 393 inventoried Python sources/tests are retired. Native kernels alone do not complete the port.

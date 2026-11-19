@@ -16,7 +16,7 @@ endif()
 # Compile one engine shared by the standalone CLI and native contracts.
 include(cmake/AuthoringPurity.cmake)
 add_library(schgen_core STATIC
-    src/occupancy.cpp src/occupancy_precision.cpp src/seat.cpp src/sexpr.cpp src/route.cpp src/emit.cpp src/stackup.cpp
+    src/occupancy.cpp src/occupancy_precision.cpp src/seat.cpp src/sexpr.cpp src/route.cpp src/emit.cpp src/stackup.cpp src/run_config.cpp
     src/legalize.cpp src/quantize.cpp src/precision_ops.cpp src/turn.cpp src/pack.cpp
     src/legalize_precision.cpp src/stage_precision.cpp
     src/placement_precision.cpp src/output_precision.cpp src/pack_precision.cpp
@@ -41,6 +41,7 @@ add_library(schgen_core STATIC
     src/firmware_docs_testplan.cpp src/firmware_docs_scfw.cpp src/firmware_docs_power_sequence.cpp
     src/pcb_checks_model.cpp src/pcb_checks_connectors.cpp src/pcb_checks_placement.cpp
     src/pcb_checks_return_path.cpp src/pcb_checks_ampacity.cpp src/pcb_checks_escape.cpp src/pcb_checks_stitch.cpp)
+target_compile_definitions(schgen_core PRIVATE SCHGEN_STACKUP_CATALOG="${CMAKE_CURRENT_SOURCE_DIR}/stackups.json")
 set(SCHGEN_FLOORPLAN_SOURCES
     src/floorplan_spec.cpp src/floorplan_geometry.cpp src/floorplan_cross.cpp
     src/floorplan_pack.cpp src/floorplan_compose.cpp src/floorplan_build.cpp
@@ -174,7 +175,7 @@ set_source_files_properties(src/turn.cpp src/pack_anchor.cpp src/symbols.cpp
                             src/pcb_checks_return_path.cpp src/pcb_checks_ampacity.cpp src/pcb_checks_escape.cpp src/pcb_checks_stitch.cpp src/placement_integrity.cpp PROPERTIES
     COMPILE_OPTIONS "-ffp-contract=off")
 
-add_executable(schgen src/main.cpp src/project_cli.cpp)
+add_executable(schgen src/main.cpp src/project_cli.cpp src/run_cli.cpp)
 target_link_libraries(schgen PRIVATE schgen_core)
 target_compile_options(schgen PRIVATE -Wall -Wextra -Wpedantic -Werror)
 set_target_properties(schgen PROPERTIES
@@ -690,14 +691,15 @@ if(BUILD_TESTING)
     target_link_libraries(schgen_floorplan_contracts PRIVATE schgen_core)
     target_compile_options(schgen_floorplan_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror -ffp-contract=off)
     add_test(NAME native_floorplan_contracts COMMAND schgen_floorplan_contracts
-        "${CMAKE_CURRENT_SOURCE_DIR}/tests/data/floorplan")
+        "${CMAKE_CURRENT_SOURCE_DIR}/tests/data/floorplan" "${CMAKE_CURRENT_SOURCE_DIR}/..")
     add_test(NAME native_floorplan_geometry_contracts COMMAND schgen_floorplan_contracts
-        "${CMAKE_CURRENT_SOURCE_DIR}/tests/data/floorplan" --geometry-only)
+        "${CMAKE_CURRENT_SOURCE_DIR}/tests/data/floorplan" "${CMAKE_CURRENT_SOURCE_DIR}/.." --geometry-only)
     add_executable(schgen_pcb_emit_contracts tests/pcb_emit_contracts.cpp)
     target_link_libraries(schgen_pcb_emit_contracts PRIVATE schgen_core)
     target_compile_options(schgen_pcb_emit_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror -ffp-contract=off)
     add_test(NAME native_pcb_emit_contracts COMMAND schgen_pcb_emit_contracts
-        "${CMAKE_CURRENT_SOURCE_DIR}/tests/data/pcb_emit" "${CMAKE_CURRENT_BINARY_DIR}/pcb-emit-contract-output")
+        "${CMAKE_CURRENT_SOURCE_DIR}/tests/data/pcb_emit" "${CMAKE_CURRENT_BINARY_DIR}/pcb-emit-contract-output"
+        "${CMAKE_CURRENT_SOURCE_DIR}/..")
     add_executable(schgen_pcb_checks_contracts tests/pcb_checks_contracts.cpp)
     target_link_libraries(schgen_pcb_checks_contracts PRIVATE schgen_core)
     target_compile_options(schgen_pcb_checks_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror -ffp-contract=off)

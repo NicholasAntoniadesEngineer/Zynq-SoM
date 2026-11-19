@@ -14,7 +14,7 @@ namespace fixture {
 constexpr Nm unit = 1000000;
 constexpr Nm board_width = 100 * unit, board_height = 80 * unit;
 constexpr Box module_core{40 * unit, 30 * unit, 60 * unit, 50 * unit};
-constexpr Nm core_tolerance = unit * unit / 2;
+constexpr Nm module_clearance = unit;
 constexpr double dispersion_limit = 9;
 constexpr std::size_t dispersion_floor = 3;
 constexpr Nm body_half = unit, pad_half = unit / 2, wide_half = 3 * unit;
@@ -87,7 +87,7 @@ struct Scene {
     Scene() {
         problem.board.width = fixture::board_width;
         problem.board.height = fixture::board_height;
-        problem.rules.core_tolerance = fixture::core_tolerance;
+        problem.rules.module_clearance = fixture::module_clearance;
         problem.rules.dispersion_limit = fixture::dispersion_limit;
         problem.rules.dispersion_floor = fixture::dispersion_floor;
     }
@@ -179,6 +179,7 @@ void fanout_follows_the_gate_rule() {
 void single_part_rules_hold() {
     Scene scene;
     scene.problem.board.module_core = fixture::module_core;
+    scene.problem.board.module_body = fixture::module_core;
     const auto smd = scene.footprint("smd", square_variant(fixture::body_half, fixture::passive_pins, false));
     const auto rigid = scene.footprint("rigid", square_variant(fixture::body_half, fixture::passive_pins, false), false);
     scene.add("A", "one", smd, fixture::first_site);
@@ -193,6 +194,11 @@ void single_part_rules_hold() {
     require(kind(0, {fixture::edge_site, Turn::none, Face::top}) == Breach::off_board, "pads leave the board");
     require(kind(0, {fixture::core_site, Turn::none, Face::top}) == Breach::module_core, "top over the module core");
     require(!kind(0, {fixture::core_site, Turn::none, Face::bottom}), "bottom under the module is free");
+    const Nm beside = fixture::module_core.x0 - fixture::body_half;
+    require(kind(0, {{beside - fixture::module_clearance / 2, 40 * fixture::unit}, Turn::none, Face::top}) ==
+                Breach::module_core, "a top part closer to the module than its clearance is rejected");
+    require(kind(0, {{beside - 2 * fixture::module_clearance, 40 * fixture::unit}, Turn::none, Face::top}) !=
+                Breach::module_core, "a top part beyond the module clearance is not held by the module");
     require(kind(1, {fixture::subject_site, Turn::none, Face::bottom}) == Breach::locked, "rigid footprint cannot flip");
     require(kind(2, {fixture::first_site, Turn::none, Face::top}) == Breach::locked, "fixed part cannot move");
     scene.problem.rules.edge_clearance = fixture::body_half;

@@ -1,3 +1,4 @@
+#include "schgen/run_config.hpp"
 #include "pcb_placement_fixture.hpp"
 #include "schgen/pcb_emit.hpp"
 #include "schgen/pcb_placement_gates.hpp"
@@ -603,6 +604,7 @@ int main(int argc, char **argv) {
              mode != "--single" && mode != "--rigid-groups-only"))
             throw std::runtime_error(
                 "repo root [--zones-only|--production|--placed-only|--single|--rigid-groups-only]");
+        schgen::apply_run_config(std::filesystem::path(argv[1])/schgen::run_config_file,"carrier");
         if(mode=="--rigid-groups-only") {
             rigid_group_contracts(argv[1]);
             power_rigid_group_contracts(argv[1]);

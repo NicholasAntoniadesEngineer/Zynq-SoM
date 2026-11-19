@@ -1,3 +1,4 @@
+#include "schgen/run_config.hpp"
 #include "pack_grid_precision_fixture.hpp"
 #include "floorplan_precision_fixture.hpp"
 #include "connector_precision_fixture.hpp"
@@ -220,6 +221,7 @@ extern "C" void __cyg_profile_func_enter(void* fn,void*) {
 extern "C" void __cyg_profile_func_exit(void*,void*) {}
 int main(int argc,char** argv) {try {
     demand(argc==2||argc==3,"root [--boards] required");
+    schgen::apply_run_config(std::filesystem::path(argv[1])/schgen::run_config_file,"carrier");
     adapters();scalars();grids();registry();
     if(argc==3){demand(std::string(argv[2])=="--boards","unknown mode");boards(argv[1]);}
     std::cout<<"PASS grid/silk actual-entry, scalar, negative, mutation, registry and adapter contracts\n";

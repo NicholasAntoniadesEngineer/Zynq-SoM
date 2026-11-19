@@ -1,3 +1,4 @@
+#include "schgen/run_config.hpp"
 #include "pcb_placement_fixture.hpp"
 #include "schgen/compose_repair.hpp"
 #include "schgen/atomic_file.hpp"
@@ -421,6 +422,7 @@ void kernels(const std::filesystem::path &root) {
 int main(int argc,char **argv) {
     try {
         if(argc!=2)throw std::runtime_error("usage: compose_repair_contracts REPO_ROOT");
+        schgen::apply_run_config(std::filesystem::path(argv[1])/schgen::run_config_file,"carrier");
         const std::filesystem::path root=argv[1];acceptance_evidence();flow_preference_repairs();units(root/"native/tests/data/compose_repair");
         for(const auto *project:{"carrier","devkit_mini"})real_ledgers(root,project);
         workflow(root);

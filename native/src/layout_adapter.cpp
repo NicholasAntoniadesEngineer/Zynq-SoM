@@ -7,6 +7,7 @@
 #include "schgen/mirror.hpp"
 #include "schgen/pack.hpp"
 #include "schgen/pcb_escape.hpp"
+#include "schgen/pcb_scan.hpp"
 #include "schgen/placement_integrity.hpp"
 #include "schgen/quantize.hpp"
 #include "schgen/ratsnest_gate.hpp"
@@ -390,6 +391,7 @@ void mark_connectors(const PcbModel& model, const AdapterOptions& options, const
         part.top_only = !across_x.has_value();
         const Point rear = !across_x ? mouth : *across_x ? Point{-mouth.x, mouth.y} : Point{mouth.x, -mouth.y};
         part.edge = EdgeRule{mouth, rear, to_nm(constants::edge_reach.value), seat};
+        part.top_only = part.top_only || placement[index].face == Face::top;
     }
     ConnectorRules& rules = problem.constraints.connectors;
     rules.overlap_slack = to_nm(constants::connector_overlap.value);
@@ -536,9 +538,7 @@ ModelBinding bind_model(const PcbModel& model, const PcbEmitPolicy& policy, cons
         problem.board.module_body = box_nm(model.som_keepout->x0, model.som_keepout->y0,
                                            model.som_keepout->x1, model.som_keepout->y1);
     problem.rules.edge_setback = to_nm(options.edge_setback);
-    const double scale = constants::nano_scale.value;
-    problem.rules.core_tolerance =
-        static_cast<Nm>((constants::core_tolerance.value - constants::area_guard.value) * scale * scale);
+    problem.rules.module_clearance = to_nm(constants::module_clearance.value);
     problem.rules.dispersion_limit = ratsnest_dispersion_max;
     problem.rules.dispersion_floor = static_cast<std::size_t>(ratsnest_small_n);
 
@@ -627,9 +627,11 @@ ModelBinding bind_model(const PcbModel& model, const PcbEmitPolicy& policy, cons
             const auto geometry = model.classes.find(klass->second);
             return geometry != model.classes.end() && geometry->second.has_value();
         });
+        const bool drilled = std::any_of(variant.pads.begin(), variant.pads.end(),
+                                         [](const PadShape& pad) { return pad.through; }) ||
+                             (instance.mod && has_thru_pads_from_text(instance.mod->bytes));
         part.top_only = (controlled && !board_stackup().ground_referenced(true)) || user_facing(instance) ||
-                        (face == Face::top && std::any_of(variant.pads.begin(), variant.pads.end(),
-                                                          [](const PadShape& pad) { return pad.through; }));
+                        (face == Face::top && drilled);
         part.core_exempt = mechanical_file(instance) || starts_with(instance.sheet, "som_j");
         part.cohesion_member = !part.core_exempt;
         part.fixed = part.core_exempt || mezzanine;

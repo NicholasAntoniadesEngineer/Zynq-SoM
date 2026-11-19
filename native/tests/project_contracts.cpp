@@ -1,6 +1,7 @@
 // Standalone contracts: real repository inputs, no Python or shared outputs.
 #include "schgen/project.hpp"
 #include "schgen/project_catalog.hpp"
+#include "schgen/run_config.hpp"
 
 #include <algorithm>
 #include <cstdlib>
@@ -145,11 +146,15 @@ void fixture_contracts(Suite& suite, const fs::path& repo) {
     const auto fixture_dir = repo / "native/tests/data/project";
     const auto config_text = read(fixture_dir / "project.json");
     const auto circuit_text = read(fixture_dir / "circuit.json");
+    const auto run_text = read(fixture_dir / run_config_file);
     suite.run("config defaults and source order", [&] {
+        TempDir root;
         TempDir tmp;
+        write(root.path / run_config_file, run_text);
         write(tmp.path / "project.json", config_text);
-        const auto paths = resolve_project_paths(repo, tmp.path);
+        const auto paths = resolve_project_paths(root.path, tmp.path);
         const auto config = load_project_config(paths);
+        require(config.stackup == "JLC06161H-3313" && config.labels, "run configuration not applied");
         require(config.name == "fixture" && config.wired_sheets == std::vector<std::string>{"zeta", "alpha"}, "name/order changed");
         require(config.module_offset == std::array<double, 2>{-10, 6.25}, "offset changed");
         require(config.module_face_anchors == ProjectStrings{{"zeta", "E"}, {"alpha", "S"}}, "anchor order changed");
@@ -160,7 +165,7 @@ void fixture_contracts(Suite& suite, const fs::path& repo) {
         require(default_engine_config.grid == 1.27 && default_engine_config.char_w == 0.95
                 && default_engine_config.misplaced_overlap == 0.20 && default_engine_config.cross_k == 3.0
                 && default_engine_config.visual_clearance_mm == 0.2, "engine defaults changed");
-        require(!paths.is_default_project && paths.parts_dir == repo / "parts", "external project paths wrong");
+        require(!paths.is_default_project && paths.parts_dir == fs::canonical(root.path) / "parts", "external project paths wrong");
         require(load_sheet_index(paths).empty() && !fs::exists(paths.sheet_index_file), "missing index was written");
         rejects([&] { load_project_manifest(paths); }, {paths.manifest_file.string()});
         require(read(paths.project_file) == config_text, "config load changed source");
@@ -177,9 +182,11 @@ void fixture_contracts(Suite& suite, const fs::path& repo) {
         {"{", "json"}, {"[]", "object"}};
     for (std::size_t i = 0; i < invalid_configs.size(); ++i) {
         suite.run("malformed config " + std::to_string(i), [&] {
+            TempDir root;
             TempDir tmp;
+            write(root.path / run_config_file, run_text);
             write(tmp.path / "project.json", invalid_configs[i].first);
-            const auto paths = resolve_project_paths(repo, tmp.path);
+            const auto paths = resolve_project_paths(root.path, tmp.path);
             rejects([&] { load_project_config(paths); }, {paths.project_file.string(), invalid_configs[i].second});
         });
     }
@@ -518,6 +525,7 @@ void repository_contracts(Suite& suite, const fs::path& repo) {
             const auto original = resolve_project_paths(repo, name);
             const auto expected = load_project_circuits(original);
             const auto copy = tmp.path / name;
+            write(tmp.path / run_config_file, read(original.repository_root / run_config_file));
             write(copy / "project.json", read(original.project_file));
             write(copy / "sheet_index.json", read(original.sheet_index_file));
             for (const auto& circuit : expected) write(copy / "subsystems" / circuit.name / "circuit.json", read(circuit.path));

@@ -1,5 +1,6 @@
 // Frozen primitive/formatter operands plus current solver requirements.
 // No Python, installed footprint library, live board output, or source inspection.
+#include "schgen/run_config.hpp"
 #include "../src/floorplan_internal.hpp"
 #include "board_policy_ledger_reference.hpp"
 #include "floorplan_precision_fixture.hpp"
@@ -1910,14 +1911,16 @@ void near_distance_envelope_contracts() {
 }  // namespace
 int main(int argc,char** argv) {
     try {
-        const std::filesystem::path dir=argc>1 ? argv[1]:"native/tests/data/floorplan";
-        const bool geometry_only=argc>2 && std::string(argv[2])=="--geometry-only";
+        if(argc<3||argc>4)throw std::runtime_error("usage: floorplan_contracts FIXTURES REPOSITORY [--geometry-only]");
+        const std::filesystem::path dir=argv[1],run_file=std::filesystem::path(argv[2])/run_config_file;
+        const bool geometry_only=argc>3 && std::string(argv[3])=="--geometry-only";
+        apply_run_config(run_file,"carrier");
         repair_choice_contracts();
         near_distance_envelope_contracts();
         joint_separation_contracts();
         joint_composer_contracts();
         flow_preference_contracts();facing_projection_contracts();fixed_face_recovery();
-        compose_contracts(dir);primary_fanout_contracts();output_grid_contracts();mutations();pack_behavior();cross_behavior();frozen(dir,"devkit_mini",geometry_only);frozen(dir,"carrier",geometry_only);
+        compose_contracts(dir);primary_fanout_contracts();output_grid_contracts();mutations();pack_behavior();cross_behavior();apply_run_config(run_file,"devkit_mini");frozen(dir,"devkit_mini",geometry_only);apply_run_config(run_file,"carrier");frozen(dir,"carrier",geometry_only);
         std::cout<<"floorplan contracts: "<<checks<<" checks passed"<<(geometry_only ? " (geometry/estimator slice)":"")<<"\n";
         return 0;
     } catch (const std::exception& e) { std::cerr<<"floorplan contracts: "<<e.what()<<"\n";return 1; }

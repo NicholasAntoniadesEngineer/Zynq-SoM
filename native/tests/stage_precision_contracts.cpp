@@ -1,6 +1,7 @@
 // Independent compiled-entry observer: instrument stage_precision.cpp ONLY.
 // Baseline builds link the pre-extraction stage sources and capture all old
 // geometry/counters. The same legacy fixtures execute through a narrow adapter.
+#include "schgen/run_config.hpp"
 #include "schgen/pcb_stage_templates.hpp"
 namespace schgen { PcbStageResult stage_precision_fixture_build(const PcbStageInput&); }
 #define build_pcb_stage_zone stage_precision_fixture_build
@@ -222,6 +223,7 @@ extern "C" void __cyg_profile_func_exit(void*,void*){}
 int main(int argc,char** argv){try{
     using namespace stage_test;
     if(argc<2||argc>3)throw std::runtime_error("repo [--capture]");
+    schgen::apply_run_config(std::filesystem::path(argv[1])/schgen::run_config_file,"carrier");
     const std::filesystem::path root=argv[1];capture=argc==3;
     if(capture&&std::string(argv[2])!="--capture")throw std::runtime_error("unknown option");
 #ifndef STAGE_PRECISION_BASELINE

@@ -293,7 +293,7 @@ svg 26591
 </svg>
 
 silk legacy_py_round_entries 17634
-pcb 2178805
+pcb 2181813
 (kicad_pcb
 	(version 20260206)
 	(generator "schgen")
@@ -308,14 +308,16 @@ pcb 2178805
 		(company "Zynq SoM Carrier")
 		(comment
 			1
-			"FOUNDATION: derived outline + SoM-body keep-out + 4L stackup + net classes + 2-side placement (SoM-mirror mezzanine, per-subsystem ratsnest bundles). NOT routed — schgen-generated (do not hand-edit)."
+			"FOUNDATION: derived outline + SoM-body keep-out + 6L stackup + net classes + 2-side placement (SoM-mirror mezzanine, per-subsystem ratsnest bundles). NOT routed — schgen-generated (do not hand-edit)."
 		)
 	)
 	(layers
 		(0 "F.Cu" signal "L1 (Sig)")
 		(1 "In1.Cu" power "L2 (GND)")
-		(2 "In2.Cu" power "L3 (PWR)")
-		(31 "B.Cu" signal "L4 (Sig)")
+		(2 "In2.Cu" signal "L3 (Sig)")
+		(3 "In3.Cu" power "L4 (PWR)")
+		(4 "In4.Cu" power "L5 (GND)")
+		(31 "B.Cu" signal "L6 (Sig)")
 		(32 "B.Adhes" user "B.Adhesive")
 		(33 "F.Adhes" user "F.Adhesive")
 		(34 "B.Paste" user)
@@ -358,9 +360,9 @@ pcb 2178805
 			(layer
 				"dielectric 1"
 				(type "prepreg")
-				(thickness 0.2104)
+				(thickness 0.0994)
 				(material "FR4")
-				(epsilon_r 4.6)
+				(epsilon_r 4.1)
 				(loss_tangent 0.02)
 			)
 			(layer
@@ -371,9 +373,9 @@ pcb 2178805
 			(layer
 				"dielectric 2"
 				(type "core")
-				(thickness 1.065)
+				(thickness 0.55)
 				(material "FR4")
-				(epsilon_r 4.6)
+				(epsilon_r 4.41)
 				(loss_tangent 0.02)
 			)
 			(layer
@@ -384,9 +386,35 @@ pcb 2178805
 			(layer
 				"dielectric 3"
 				(type "prepreg")
-				(thickness 0.2104)
+				(thickness 0.1088)
 				(material "FR4")
-				(epsilon_r 4.6)
+				(epsilon_r 4.16)
+				(loss_tangent 0.02)
+			)
+			(layer
+				"In3.Cu"
+				(type "copper")
+				(thickness 0.0152)
+			)
+			(layer
+				"dielectric 4"
+				(type "core")
+				(thickness 0.55)
+				(material "FR4")
+				(epsilon_r 4.41)
+				(loss_tangent 0.02)
+			)
+			(layer
+				"In4.Cu"
+				(type "copper")
+				(thickness 0.0152)
+			)
+			(layer
+				"dielectric 5"
+				(type "prepreg")
+				(thickness 0.0994)
+				(material "FR4")
+				(epsilon_r 4.1)
 				(loss_tangent 0.02)
 			)
 			(layer
@@ -965,6 +993,32 @@ pcb 2178805
 		)
 	)
 	(zone
+		(net 209)
+		(net_name "GND")
+		(layer "In4.Cu")
+		(uuid "6a2dbfac-1ec4-59de-8a9a-d83c64c7495e")
+		(name "GND_plane_In4")
+		(hatch edge 0.5)
+		(connect_pads
+			(clearance 0.3)
+		)
+		(min_thickness 0.25)
+		(filled_areas_thickness no)
+		(fill
+			yes
+			(thermal_gap 0.5)
+			(thermal_bridge_width 0.5)
+		)
+		(polygon
+			(pts
+				(xy 25.5 25.5)
+				(xy 192.5 25.5)
+				(xy 192.5 187.5)
+				(xy 25.5 187.5)
+			)
+		)
+	)
+	(zone
 		(net 0)
 		(net_name "")
 		(layers "In1.Cu")
@@ -998,9 +1052,133 @@ pcb 2178805
 	(zone
 		(net 0)
 		(net_name "")
+		(layers "In3.Cu")
+		(uuid "e2f5ec7b-34be-5d91-be52-cc52d7d431ef")
+		(name "ethernet_isolation_void_J23001_In3")
+		(hatch edge 0.5)
+		(connect_pads
+			(clearance 0)
+		)
+		(min_thickness 0.25)
+		(keepout
+			(tracks allowed)
+			(vias allowed)
+			(pads allowed)
+			(copperpour not_allowed)
+			(footprints allowed)
+		)
+		(fill
+			(thermal_gap 0.5)
+			(thermal_bridge_width 0.5)
+		)
+		(polygon
+			(pts
+				(xy 23.2 62.433)
+				(xy 41.1 62.433)
+				(xy 41.1 81.933)
+				(xy 23.2 81.933)
+			)
+		)
+	)
+	(zone
+		(net 0)
+		(net_name "")
+		(layers "In4.Cu")
+		(uuid "ceb179f8-cd8b-5e77-b78c-e06d05d0307e")
+		(name "ethernet_isolation_void_J23001_In4")
+		(hatch edge 0.5)
+		(connect_pads
+			(clearance 0)
+		)
+		(min_thickness 0.25)
+		(keepout
+			(tracks allowed)
+			(vias allowed)
+			(pads allowed)
+			(copperpour not_allowed)
+			(footprints allowed)
+		)
+		(fill
+			(thermal_gap 0.5)
+			(thermal_bridge_width 0.5)
+		)
+		(polygon
+			(pts
+				(xy 23.2 62.433)
+				(xy 41.1 62.433)
+				(xy 41.1 81.933)
+				(xy 23.2 81.933)
+			)
+		)
+	)
+	(zone
+		(net 0)
+		(net_name "")
 		(layers "In1.Cu")
 		(uuid "a877f63b-f054-5b91-b2b2-7975cb264773")
 		(name "ethernet_isolation_void_T10001")
+		(hatch edge 0.5)
+		(connect_pads
+			(clearance 0)
+		)
+		(min_thickness 0.25)
+		(keepout
+			(tracks allowed)
+			(vias allowed)
+			(pads allowed)
+			(copperpour not_allowed)
+			(footprints allowed)
+		)
+		(fill
+			(thermal_gap 0.5)
+			(thermal_bridge_width 0.5)
+		)
+		(polygon
+			(pts
+				(xy 56.5 59.7)
+				(xy 70.9 59.7)
+				(xy 70.9 80.46)
+				(xy 56.5 80.46)
+			)
+		)
+	)
+	(zone
+		(net 0)
+		(net_name "")
+		(layers "In3.Cu")
+		(uuid "0d5c2bf2-6d25-52a8-9617-970ec155557f")
+		(name "ethernet_isolation_void_T10001_In3")
+		(hatch edge 0.5)
+		(connect_pads
+			(clearance 0)
+		)
+		(min_thickness 0.25)
+		(keepout
+			(tracks allowed)
+			(vias allowed)
+			(pads allowed)
+			(copperpour not_allowed)
+			(footprints allowed)
+		)
+		(fill
+			(thermal_gap 0.5)
+			(thermal_bridge_width 0.5)
+		)
+		(polygon
+			(pts
+				(xy 56.5 59.7)
+				(xy 70.9 59.7)
+				(xy 70.9 80.46)
+				(xy 56.5 80.46)
+			)
+		)
+	)
+	(zone
+		(net 0)
+		(net_name "")
+		(layers "In4.Cu")
+		(uuid "dc79d691-68f8-5ee6-a459-a61aef08cd91")
+		(name "ethernet_isolation_void_T10001_In4")
 		(hatch edge 0.5)
 		(connect_pads
 			(clearance 0)
@@ -118430,7 +118608,7 @@ project 22929
         "clearance": 0.15,
         "diff_pair_gap": 0.2032,
         "diff_pair_via_gap": 0.25,
-        "diff_pair_width": 0.2052,
+        "diff_pair_width": 0.1148,
         "line_style": 0,
         "microvia_diameter": 0.3,
         "microvia_drill": 0.1,
@@ -118438,7 +118616,7 @@ project 22929
         "pcb_color": "rgba(0, 0, 0, 0.000)",
         "priority": 5,
         "schematic_color": "rgba(0, 0, 0, 0.000)",
-        "track_width": 0.2052,
+        "track_width": 0.1148,
         "tuning_profile": "",
         "via_diameter": 0.6,
         "via_drill": 0.3,
@@ -118449,7 +118627,7 @@ project 22929
         "clearance": 0.15,
         "diff_pair_gap": 0.2032,
         "diff_pair_via_gap": 0.25,
-        "diff_pair_width": 0.2052,
+        "diff_pair_width": 0.1148,
         "line_style": 0,
         "microvia_diameter": 0.3,
         "microvia_drill": 0.1,
@@ -118457,7 +118635,7 @@ project 22929
         "pcb_color": "rgba(0, 0, 0, 0.000)",
         "priority": 5,
         "schematic_color": "rgba(0, 0, 0, 0.000)",
-        "track_width": 0.2052,
+        "track_width": 0.1148,
         "tuning_profile": "",
         "via_diameter": 0.6,
         "via_drill": 0.3,
@@ -118468,7 +118646,7 @@ project 22929
         "clearance": 0.15,
         "diff_pair_gap": 0.2032,
         "diff_pair_via_gap": 0.25,
-        "diff_pair_width": 0.2611,
+        "diff_pair_width": 0.1455,
         "line_style": 0,
         "microvia_diameter": 0.3,
         "microvia_drill": 0.1,
@@ -118476,7 +118654,7 @@ project 22929
         "pcb_color": "rgba(0, 0, 0, 0.000)",
         "priority": 5,
         "schematic_color": "rgba(0, 0, 0, 0.000)",
-        "track_width": 0.2611,
+        "track_width": 0.1455,
         "tuning_profile": "",
         "via_diameter": 0.6,
         "via_drill": 0.3,
@@ -119367,7 +119545,7 @@ project 22929
         "clearance": 0.15,
         "diff_pair_gap": 0.2032,
         "diff_pair_via_gap": 0.25,
-        "diff_pair_width": 0.2052,
+        "diff_pair_width": 0.1148,
         "line_style": 0,
         "microvia_diameter": 0.3,
         "microvia_drill": 0.1,
@@ -119375,7 +119553,7 @@ project 22929
         "pcb_color": "rgba(0, 0, 0, 0.000)",
         "priority": 5,
         "schematic_color": "rgba(0, 0, 0, 0.000)",
-        "track_width": 0.2052,
+        "track_width": 0.1148,
         "tuning_profile": "",
         "via_diameter": 0.6,
         "via_drill": 0.3,
@@ -119386,7 +119564,7 @@ project 22929
         "clearance": 0.15,
         "diff_pair_gap": 0.2032,
         "diff_pair_via_gap": 0.25,
-        "diff_pair_width": 0.2052,
+        "diff_pair_width": 0.1148,
         "line_style": 0,
         "microvia_diameter": 0.3,
         "microvia_drill": 0.1,
@@ -119394,7 +119572,7 @@ project 22929
         "pcb_color": "rgba(0, 0, 0, 0.000)",
         "priority": 5,
         "schematic_color": "rgba(0, 0, 0, 0.000)",
-        "track_width": 0.2052,
+        "track_width": 0.1148,
         "tuning_profile": "",
         "via_diameter": 0.6,
         "via_drill": 0.3,
@@ -119405,7 +119583,7 @@ project 22929
         "clearance": 0.15,
         "diff_pair_gap": 0.2032,
         "diff_pair_via_gap": 0.25,
-        "diff_pair_width": 0.2611,
+        "diff_pair_width": 0.1455,
         "line_style": 0,
         "microvia_diameter": 0.3,
         "microvia_drill": 0.1,
@@ -119413,7 +119591,7 @@ project 22929
         "pcb_color": "rgba(0, 0, 0, 0.000)",
         "priority": 5,
         "schematic_color": "rgba(0, 0, 0, 0.000)",
-        "track_width": 0.2611,
+        "track_width": 0.1455,
         "tuning_profile": "",
         "via_diameter": 0.6,
         "via_drill": 0.3,
@@ -123448,7 +123626,7 @@ escape plan legacy_py_round_entries 1212
 2 0x1.72428f5c28f5cp+6
 
 "layer" 3 "F.Cu"
-"width" 2 0x1.a43fe5c91d14ep-3
+"width" 2 0x1.d63886594af4fp-4
 "si_class" 3 "GENUINE"
 "bus_group" 0 
 
@@ -123474,7 +123652,7 @@ escape plan legacy_py_round_entries 1212
 2 0x1.72428f5c28f5cp+6
 
 "layer" 3 "F.Cu"
-"width" 2 0x1.a43fe5c91d14ep-3
+"width" 2 0x1.d63886594af4fp-4
 "si_class" 3 "GENUINE"
 "bus_group" 0 
 
@@ -123513,7 +123691,7 @@ escape plan legacy_py_round_entries 1212
 2 0x1.72428f5c28f5cp+6
 
 "layer" 3 "F.Cu"
-"width" 2 0x1.a43fe5c91d14ep-3
+"width" 2 0x1.d63886594af4fp-4
 "si_class" 3 "MODERATE"
 "bus_group" 0 
 
@@ -123526,7 +123704,7 @@ escape plan legacy_py_round_entries 1212
 2 0x1.72428f5c28f5cp+6
 
 "layer" 3 "F.Cu"
-"width" 2 0x1.a43fe5c91d14ep-3
+"width" 2 0x1.d63886594af4fp-4
 "si_class" 3 "GENUINE"
 "bus_group" 0 
 
@@ -123539,7 +123717,7 @@ escape plan legacy_py_round_entries 1212
 2 0x1.72428f5c28f5cp+6
 
 "layer" 3 "F.Cu"
-"width" 2 0x1.a43fe5c91d14ep-3
+"width" 2 0x1.d63886594af4fp-4
 "si_class" 3 "MODERATE"
 "bus_group" 0 
 
@@ -123552,7 +123730,7 @@ escape plan legacy_py_round_entries 1212
 2 0x1.72428f5c28f5cp+6
 
 "layer" 3 "F.Cu"
-"width" 2 0x1.a43fe5c91d14ep-3
+"width" 2 0x1.d63886594af4fp-4
 "si_class" 3 "GENUINE"
 "bus_group" 0 
 
@@ -123565,7 +123743,7 @@ escape plan legacy_py_round_entries 1212
 2 0x1.72428f5c28f5cp+6
 
 "layer" 3 "F.Cu"
-"width" 2 0x1.a43fe5c91d14ep-3
+"width" 2 0x1.d63886594af4fp-4
 "si_class" 3 "MODERATE"
 "bus_group" 0 
 
@@ -123604,7 +123782,7 @@ escape plan legacy_py_round_entries 1212
 2 0x1.72428f5c28f5cp+6
 
 "layer" 3 "F.Cu"
-"width" 2 0x1.a43fe5c91d14ep-3
+"width" 2 0x1.d63886594af4fp-4
 "si_class" 3 "GENUINE"
 "bus_group" 0 
 
@@ -123617,7 +123795,7 @@ escape plan legacy_py_round_entries 1212
 2 0x1.72428f5c28f5cp+6
 
 "layer" 3 "F.Cu"
-"width" 2 0x1.a43fe5c91d14ep-3
+"width" 2 0x1.d63886594af4fp-4
 "si_class" 3 "MODERATE"
 "bus_group" 0 
 
@@ -123630,7 +123808,7 @@ escape plan legacy_py_round_entries 1212
 2 0x1.72428f5c28f5cp+6
 
 "layer" 3 "F.Cu"
-"width" 2 0x1.a43fe5c91d14ep-3
+"width" 2 0x1.d63886594af4fp-4
 "si_class" 3 "GENUINE"
 "bus_group" 0 
 
@@ -123669,7 +123847,7 @@ escape plan legacy_py_round_entries 1212
 2 0x1.72428f5c28f5cp+6
 
 "layer" 3 "F.Cu"
-"width" 2 0x1.a43fe5c91d14ep-3
+"width" 2 0x1.d63886594af4fp-4
 "si_class" 3 "MODERATE"
 "bus_group" 0 
 
@@ -123682,7 +123860,7 @@ escape plan legacy_py_round_entries 1212
 2 0x1.72428f5c28f5cp+6
 
 "layer" 3 "F.Cu"
-"width" 2 0x1.a43fe5c91d14ep-3
+"width" 2 0x1.d63886594af4fp-4
 "si_class" 3 "GENUINE"
 "bus_group" 0 
 
@@ -123695,7 +123873,7 @@ escape plan legacy_py_round_entries 1212
 2 0x1.72428f5c28f5cp+6
 
 "layer" 3 "F.Cu"
-"width" 2 0x1.a43fe5c91d14ep-3
+"width" 2 0x1.d63886594af4fp-4
 "si_class" 3 "MODERATE"
 "bus_group" 0 
 
@@ -123708,7 +123886,7 @@ escape plan legacy_py_round_entries 1212
 2 0x1.72428f5c28f5cp+6
 
 "layer" 3 "F.Cu"
-"width" 2 0x1.a43fe5c91d14ep-3
+"width" 2 0x1.d63886594af4fp-4
 "si_class" 3 "GENUINE"
 "bus_group" 0 
 
@@ -123721,7 +123899,7 @@ escape plan legacy_py_round_entries 1212
 2 0x1.72428f5c28f5cp+6
 
 "layer" 3 "F.Cu"
-"width" 2 0x1.a43fe5c91d14ep-3
+"width" 2 0x1.d63886594af4fp-4
 "si_class" 3 "MODERATE"
 "bus_group" 0 
 
@@ -123747,7 +123925,7 @@ escape plan legacy_py_round_entries 1212
 2 0x1.72428f5c28f5cp+6
 
 "layer" 3 "F.Cu"
-"width" 2 0x1.a43fe5c91d14ep-3
+"width" 2 0x1.d63886594af4fp-4
 "si_class" 3 "MODERATE"
 "bus_group" 0 
 
@@ -124254,7 +124432,7 @@ escape plan legacy_py_round_entries 1212
 2 0x1.87bd70a3d70a4p+6
 
 "layer" 3 "F.Cu"
-"width" 2 0x1.0b5dcc63f1412p-2
+"width" 2 0x1.29fbe76c8b439p-3
 "si_class" 3 "MODERATE"
 "bus_group" 0 
 
@@ -124280,7 +124458,7 @@ escape plan legacy_py_round_entries 1212
 2 0x1.87bd70a3d70a4p+6
 
 "layer" 3 "F.Cu"
-"width" 2 0x1.0b5dcc63f1412p-2
+"width" 2 0x1.29fbe76c8b439p-3
 "si_class" 3 "MODERATE"
 "bus_group" 0 
 
@@ -124345,7 +124523,7 @@ escape plan legacy_py_round_entries 1212
 2 0x1.87bd70a3d70a4p+6
 
 "layer" 3 "F.Cu"
-"width" 2 0x1.0b5dcc63f1412p-2
+"width" 2 0x1.29fbe76c8b439p-3
 "si_class" 3 "GENUINE"
 "bus_group" 0 
 
@@ -124371,7 +124549,7 @@ escape plan legacy_py_round_entries 1212
 2 0x1.87bd70a3d70a4p+6
 
 "layer" 3 "F.Cu"
-"width" 2 0x1.0b5dcc63f1412p-2
+"width" 2 0x1.29fbe76c8b439p-3
 "si_class" 3 "GENUINE"
 "bus_group" 0 
 
@@ -124697,7 +124875,7 @@ escape plan legacy_py_round_entries 1212
 2 0x1.fb6b851eb851fp+6
 
 "layer" 3 "F.Cu"
-"width" 2 0x1.a43fe5c91d14ep-3
+"width" 2 0x1.d63886594af4fp-4
 "si_class" 3 "GENUINE"
 "bus_group" 0 
 
@@ -124723,7 +124901,7 @@ escape plan legacy_py_round_entries 1212
 2 0x1.fb6b851eb851fp+6
 
 "layer" 3 "F.Cu"
-"width" 2 0x1.a43fe5c91d14ep-3
+"width" 2 0x1.d63886594af4fp-4
 "si_class" 3 "GENUINE"
 "bus_group" 0 
 
@@ -124749,7 +124927,7 @@ escape plan legacy_py_round_entries 1212
 2 0x1.fb6b851eb851fp+6
 
 "layer" 3 "F.Cu"
-"width" 2 0x1.a43fe5c91d14ep-3
+"width" 2 0x1.d63886594af4fp-4
 "si_class" 3 "GENUINE"
 "bus_group" 0 
 
@@ -124775,7 +124953,7 @@ escape plan legacy_py_round_entries 1212
 2 0x1.fb6b851eb851fp+6
 
 "layer" 3 "F.Cu"
-"width" 2 0x1.a43fe5c91d14ep-3
+"width" 2 0x1.d63886594af4fp-4
 "si_class" 3 "GENUINE"
 "bus_group" 0 
 
@@ -124827,7 +125005,7 @@ escape plan legacy_py_round_entries 1212
 2 0x1.fb6b851eb851fp+6
 
 "layer" 3 "F.Cu"
-"width" 2 0x1.a43fe5c91d14ep-3
+"width" 2 0x1.d63886594af4fp-4
 "si_class" 3 "GENUINE"
 "bus_group" 0 
 
@@ -124853,7 +125031,7 @@ escape plan legacy_py_round_entries 1212
 2 0x1.fb6b851eb851fp+6
 
 "layer" 3 "F.Cu"
-"width" 2 0x1.a43fe5c91d14ep-3
+"width" 2 0x1.d63886594af4fp-4
 "si_class" 3 "GENUINE"
 "bus_group" 0 
 
@@ -124879,7 +125057,7 @@ escape plan legacy_py_round_entries 1212
 2 0x1.fb6b851eb851fp+6
 
 "layer" 3 "F.Cu"
-"width" 2 0x1.a43fe5c91d14ep-3
+"width" 2 0x1.d63886594af4fp-4
 "si_class" 3 "GENUINE"
 "bus_group" 0 
 
@@ -124905,7 +125083,7 @@ escape plan legacy_py_round_entries 1212
 2 0x1.fb6b851eb851fp+6
 
 "layer" 3 "F.Cu"
-"width" 2 0x1.a43fe5c91d14ep-3
+"width" 2 0x1.d63886594af4fp-4
 "si_class" 3 "GENUINE"
 "bus_group" 0 
 
@@ -124957,7 +125135,7 @@ escape plan legacy_py_round_entries 1212
 2 0x1.fb6b851eb851fp+6
 
 "layer" 3 "F.Cu"
-"width" 2 0x1.a43fe5c91d14ep-3
+"width" 2 0x1.d63886594af4fp-4
 "si_class" 3 "GENUINE"
 "bus_group" 0 
 
@@ -124970,7 +125148,7 @@ escape plan legacy_py_round_entries 1212
 2 0x1.fb6b851eb851fp+6
 
 "layer" 3 "F.Cu"
-"width" 2 0x1.a43fe5c91d14ep-3
+"width" 2 0x1.d63886594af4fp-4
 "si_class" 3 "GENUINE"
 "bus_group" 0 
 
@@ -124983,7 +125161,7 @@ escape plan legacy_py_round_entries 1212
 2 0x1.fb6b851eb851fp+6
 
 "layer" 3 "F.Cu"
-"width" 2 0x1.a43fe5c91d14ep-3
+"width" 2 0x1.d63886594af4fp-4
 "si_class" 3 "GENUINE"
 "bus_group" 0 
 
@@ -124996,7 +125174,7 @@ escape plan legacy_py_round_entries 1212
 2 0x1.fb6b851eb851fp+6
 
 "layer" 3 "F.Cu"
-"width" 2 0x1.a43fe5c91d14ep-3
+"width" 2 0x1.d63886594af4fp-4
 "si_class" 3 "GENUINE"
 "bus_group" 0 
 
@@ -125009,7 +125187,7 @@ escape plan legacy_py_round_entries 1212
 2 0x1.fb6b851eb851fp+6
 
 "layer" 3 "F.Cu"
-"width" 2 0x1.a43fe5c91d14ep-3
+"width" 2 0x1.d63886594af4fp-4
 "si_class" 3 "GENUINE"
 "bus_group" 0 
 
@@ -125022,7 +125200,7 @@ escape plan legacy_py_round_entries 1212
 2 0x1.fb6b851eb851fp+6
 
 "layer" 3 "F.Cu"
-"width" 2 0x1.a43fe5c91d14ep-3
+"width" 2 0x1.d63886594af4fp-4
 "si_class" 3 "GENUINE"
 "bus_group" 0 
 
@@ -125035,7 +125213,7 @@ escape plan legacy_py_round_entries 1212
 2 0x1.fb6b851eb851fp+6
 
 "layer" 3 "F.Cu"
-"width" 2 0x1.a43fe5c91d14ep-3
+"width" 2 0x1.d63886594af4fp-4
 "si_class" 3 "GENUINE"
 "bus_group" 0 
 
@@ -125048,7 +125226,7 @@ escape plan legacy_py_round_entries 1212
 2 0x1.fb6b851eb851fp+6
 
 "layer" 3 "F.Cu"
-"width" 2 0x1.a43fe5c91d14ep-3
+"width" 2 0x1.d63886594af4fp-4
 "si_class" 3 "GENUINE"
 "bus_group" 0 
 
@@ -126544,7 +126722,7 @@ escape plan legacy_py_round_entries 1212
 2 0x1.9e851eb851eb8p+6
 
 "layer" 3 "F.Cu"
-"width" 2 0x1.a43fe5c91d14ep-3
+"width" 2 0x1.d63886594af4fp-4
 "si_class" 3 "MODERATE"
 "bus_group" 0 
 
@@ -126557,7 +126735,7 @@ escape plan legacy_py_round_entries 1212
 2 0x1.9ceb851eb851fp+6
 
 "layer" 3 "F.Cu"
-"width" 2 0x1.a43fe5c91d14ep-3
+"width" 2 0x1.d63886594af4fp-4
 "si_class" 3 "MODERATE"
 "bus_group" 0 
 
@@ -126622,7 +126800,7 @@ escape plan legacy_py_round_entries 1212
 2 0x1.e4eb851eb851fp+6
 
 "layer" 3 "F.Cu"
-"width" 2 0x1.a43fe5c91d14ep-3
+"width" 2 0x1.d63886594af4fp-4
 "si_class" 3 "GENUINE"
 "bus_group" 0 
 
@@ -126648,7 +126826,7 @@ escape plan legacy_py_round_entries 1212
 2 0x1.e1b851eb851ecp+6
 
 "layer" 3 "F.Cu"
-"width" 2 0x1.a43fe5c91d14ep-3
+"width" 2 0x1.d63886594af4fp-4
 "si_class" 3 "GENUINE"
 "bus_group" 0 
 
@@ -126661,7 +126839,7 @@ escape plan legacy_py_round_entries 1212
 2 0x1.e01eb851eb852p+6
 
 "layer" 3 "F.Cu"
-"width" 2 0x1.a43fe5c91d14ep-3
+"width" 2 0x1.d63886594af4fp-4
 "si_class" 3 "MODERATE"
 "bus_group" 0 
 
@@ -126674,7 +126852,7 @@ escape plan legacy_py_round_entries 1212
 2 0x1.de851eb851eb8p+6
 
 "layer" 3 "F.Cu"
-"width" 2 0x1.a43fe5c91d14ep-3
+"width" 2 0x1.d63886594af4fp-4
 "si_class" 3 "GENUINE"
 "bus_group" 0 
 
@@ -126687,7 +126865,7 @@ escape plan legacy_py_round_entries 1212
 2 0x1.dceb851eb851fp+6
 
 "layer" 3 "F.Cu"
-"width" 2 0x1.a43fe5c91d14ep-3
+"width" 2 0x1.d63886594af4fp-4
 "si_class" 3 "MODERATE"
 "bus_group" 0 
 
@@ -126700,7 +126878,7 @@ escape plan legacy_py_round_entries 1212
 2 0x1.db51eb851eb85p+6
 
 "layer" 3 "F.Cu"
-"width" 2 0x1.a43fe5c91d14ep-3
+"width" 2 0x1.d63886594af4fp-4
 "si_class" 3 "GENUINE"
 "bus_group" 0 
 
@@ -126739,7 +126917,7 @@ escape plan legacy_py_round_entries 1212
 2 0x1.d6851eb851eb8p+6
 
 "layer" 3 "F.Cu"
-"width" 2 0x1.a43fe5c91d14ep-3
+"width" 2 0x1.d63886594af4fp-4
 "si_class" 3 "MODERATE"
 "bus_group" 0 
 
@@ -126752,7 +126930,7 @@ escape plan legacy_py_round_entries 1212
 2 0x1.d4eb851eb851fp+6
 
 "layer" 3 "F.Cu"
-"width" 2 0x1.a43fe5c91d14ep-3
+"width" 2 0x1.d63886594af4fp-4
 "si_class" 3 "GENUINE"
 "bus_group" 0 
 
@@ -126765,7 +126943,7 @@ escape plan legacy_py_round_entries 1212
 2 0x1.d351eb851eb85p+6
 
 "layer" 3 "F.Cu"
-"width" 2 0x1.a43fe5c91d14ep-3
+"width" 2 0x1.d63886594af4fp-4
 "si_class" 3 "MODERATE"
 "bus_group" 0 
 
@@ -126778,7 +126956,7 @@ escape plan legacy_py_round_entries 1212
 2 0x1.d1b851eb851ecp+6
 
 "layer" 3 "F.Cu"
-"width" 2 0x1.a43fe5c91d14ep-3
+"width" 2 0x1.d63886594af4fp-4
 "si_class" 3 "GENUINE"
 "bus_group" 0 
 
@@ -126817,7 +126995,7 @@ escape plan legacy_py_round_entries 1212
 2 0x1.cceb851eb851fp+6
 
 "layer" 3 "F.Cu"
-"width" 2 0x1.a43fe5c91d14ep-3
+"width" 2 0x1.d63886594af4fp-4
 "si_class" 3 "MODERATE"
 "bus_group" 0 
 
@@ -126843,7 +127021,7 @@ escape plan legacy_py_round_entries 1212
 2 0x1.c9b851eb851ecp+6
 
 "layer" 3 "F.Cu"
-"width" 2 0x1.a43fe5c91d14ep-3
+"width" 2 0x1.d63886594af4fp-4
 "si_class" 3 "MODERATE"
 "bus_group" 0 
 
@@ -126869,7 +127047,7 @@ escape plan legacy_py_round_entries 1212
 2 0x1.c6851eb851eb8p+6
 
 "layer" 3 "F.Cu"
-"width" 2 0x1.a43fe5c91d14ep-3
+"width" 2 0x1.d63886594af4fp-4
 "si_class" 3 "MODERATE"
 "bus_group" 0 
 
@@ -126895,7 +127073,7 @@ escape plan legacy_py_round_entries 1212
 2 0x1.c351eb851eb85p+6
 
 "layer" 3 "F.Cu"
-"width" 2 0x1.a43fe5c91d14ep-3
+"width" 2 0x1.d63886594af4fp-4
 "si_class" 3 "MODERATE"
 "bus_group" 0 
 
@@ -126973,7 +127151,7 @@ escape plan legacy_py_round_entries 1212
 2 0x1.b9b851eb851ecp+6
 
 "layer" 3 "F.Cu"
-"width" 2 0x1.a43fe5c91d14ep-3
+"width" 2 0x1.d63886594af4fp-4
 "si_class" 3 "MODERATE"
 "bus_group" 0 
 
@@ -126999,7 +127177,7 @@ escape plan legacy_py_round_entries 1212
 2 0x1.b6851eb851eb8p+6
 
 "layer" 3 "F.Cu"
-"width" 2 0x1.a43fe5c91d14ep-3
+"width" 2 0x1.d63886594af4fp-4
 "si_class" 3 "MODERATE"
 "bus_group" 0 
 
@@ -127012,7 +127190,7 @@ escape plan legacy_py_round_entries 1212
 2 0x1.b4eb851eb851fp+6
 
 "layer" 3 "F.Cu"
-"width" 2 0x1.a43fe5c91d14ep-3
+"width" 2 0x1.d63886594af4fp-4
 "si_class" 3 "MODERATE"
 "bus_group" 0 
 
@@ -127038,7 +127216,7 @@ escape plan legacy_py_round_entries 1212
 2 0x1.b1b851eb851ecp+6
 
 "layer" 3 "F.Cu"
-"width" 2 0x1.a43fe5c91d14ep-3
+"width" 2 0x1.d63886594af4fp-4
 "si_class" 3 "MODERATE"
 "bus_group" 0 
 
@@ -127103,7 +127281,7 @@ escape plan legacy_py_round_entries 1212
 2 0x1.a9b851eb851ecp+6
 
 "layer" 3 "F.Cu"
-"width" 2 0x1.a43fe5c91d14ep-3
+"width" 2 0x1.d63886594af4fp-4
 "si_class" 3 "MODERATE"
 "bus_group" 0 
 
@@ -127129,7 +127307,7 @@ escape plan legacy_py_round_entries 1212
 2 0x1.a6851eb851eb8p+6
 
 "layer" 3 "F.Cu"
-"width" 2 0x1.a43fe5c91d14ep-3
+"width" 2 0x1.d63886594af4fp-4
 "si_class" 3 "MODERATE"
 "bus_group" 0 
 
@@ -127142,7 +127320,7 @@ escape plan legacy_py_round_entries 1212
 2 0x1.a4eb851eb851fp+6
 
 "layer" 3 "F.Cu"
-"width" 2 0x1.a43fe5c91d14ep-3
+"width" 2 0x1.d63886594af4fp-4
 "si_class" 3 "MODERATE"
 "bus_group" 0 
 
@@ -127168,7 +127346,7 @@ escape plan legacy_py_round_entries 1212
 2 0x1.a1b851eb851ecp+6
 
 "layer" 3 "F.Cu"
-"width" 2 0x1.a43fe5c91d14ep-3
+"width" 2 0x1.d63886594af4fp-4
 "si_class" 3 "MODERATE"
 "bus_group" 0 
 
@@ -127194,7 +127372,7 @@ escape plan legacy_py_round_entries 1212
 2 0x1.9e851eb851eb8p+6
 
 "layer" 3 "F.Cu"
-"width" 2 0x1.a43fe5c91d14ep-3
+"width" 2 0x1.d63886594af4fp-4
 "si_class" 3 "MODERATE"
 "bus_group" 0 
 
@@ -127207,7 +127385,7 @@ escape plan legacy_py_round_entries 1212
 2 0x1.9ceb851eb851fp+6
 
 "layer" 3 "F.Cu"
-"width" 2 0x1.a43fe5c91d14ep-3
+"width" 2 0x1.d63886594af4fp-4
 "si_class" 3 "MODERATE"
 "bus_group" 0 
 
@@ -127914,7 +128092,7 @@ escape block 83944
     ],
     "row": -1,
     "si_class": "GENUINE",
-    "width": 0.2052
+    "width": 0.1148
    },
    {
     "bus_group": null,
@@ -127944,7 +128122,7 @@ escape block 83944
     ],
     "row": -1,
     "si_class": "GENUINE",
-    "width": 0.2052
+    "width": 0.1148
    },
    {
     "bus_group": null,
@@ -127989,7 +128167,7 @@ escape block 83944
     ],
     "row": -1,
     "si_class": "MODERATE",
-    "width": 0.2052
+    "width": 0.1148
    },
    {
     "bus_group": null,
@@ -128004,7 +128182,7 @@ escape block 83944
     ],
     "row": -1,
     "si_class": "GENUINE",
-    "width": 0.2052
+    "width": 0.1148
    },
    {
     "bus_group": null,
@@ -128019,7 +128197,7 @@ escape block 83944
     ],
     "row": -1,
     "si_class": "MODERATE",
-    "width": 0.2052
+    "width": 0.1148
    },
    {
     "bus_group": null,
@@ -128034,7 +128212,7 @@ escape block 83944
     ],
     "row": -1,
     "si_class": "GENUINE",
-    "width": 0.2052
+    "width": 0.1148
    },
    {
     "bus_group": null,
@@ -128049,7 +128227,7 @@ escape block 83944
     ],
     "row": -1,
     "si_class": "MODERATE",
-    "width": 0.2052
+    "width": 0.1148
    },
    {
     "bus_group": null,
@@ -128094,7 +128272,7 @@ escape block 83944
     ],
     "row": -1,
     "si_class": "GENUINE",
-    "width": 0.2052
+    "width": 0.1148
    },
    {
     "bus_group": null,
@@ -128109,7 +128287,7 @@ escape block 83944
     ],
     "row": -1,
     "si_class": "MODERATE",
-    "width": 0.2052
+    "width": 0.1148
    },
    {
     "bus_group": null,
@@ -128124,7 +128302,7 @@ escape block 83944
     ],
     "row": -1,
     "si_class": "GENUINE",
-    "width": 0.2052
+    "width": 0.1148
    },
    {
     "bus_group": null,
@@ -128169,7 +128347,7 @@ escape block 83944
     ],
     "row": -1,
     "si_class": "MODERATE",
-    "width": 0.2052
+    "width": 0.1148
    },
    {
     "bus_group": null,
@@ -128184,7 +128362,7 @@ escape block 83944
     ],
     "row": -1,
     "si_class": "GENUINE",
-    "width": 0.2052
+    "width": 0.1148
    },
    {
     "bus_group": null,
@@ -128199,7 +128377,7 @@ escape block 83944
     ],
     "row": -1,
     "si_class": "MODERATE",
-    "width": 0.2052
+    "width": 0.1148
    },
    {
     "bus_group": null,
@@ -128214,7 +128392,7 @@ escape block 83944
     ],
     "row": -1,
     "si_class": "GENUINE",
-    "width": 0.2052
+    "width": 0.1148
    },
    {
     "bus_group": null,
@@ -128229,7 +128407,7 @@ escape block 83944
     ],
     "row": -1,
     "si_class": "MODERATE",
-    "width": 0.2052
+    "width": 0.1148
    },
    {
     "bus_group": null,
@@ -128259,7 +128437,7 @@ escape block 83944
     ],
     "row": -1,
     "si_class": "MODERATE",
-    "width": 0.2052
+    "width": 0.1148
    },
    {
     "bus_group": null,
@@ -128844,7 +129022,7 @@ escape block 83944
     ],
     "row": 1,
     "si_class": "MODERATE",
-    "width": 0.2611
+    "width": 0.1455
    },
    {
     "bus_group": null,
@@ -128874,7 +129052,7 @@ escape block 83944
     ],
     "row": 1,
     "si_class": "MODERATE",
-    "width": 0.2611
+    "width": 0.1455
    },
    {
     "bus_group": null,
@@ -128949,7 +129127,7 @@ escape block 83944
     ],
     "row": 1,
     "si_class": "GENUINE",
-    "width": 0.2611
+    "width": 0.1455
    },
    {
     "bus_group": null,
@@ -128979,7 +129157,7 @@ escape block 83944
     ],
     "row": 1,
     "si_class": "GENUINE",
-    "width": 0.2611
+    "width": 0.1455
    },
    {
     "bus_group": null,
@@ -129356,7 +129534,7 @@ escape block 83944
     ],
     "row": -1,
     "si_class": "GENUINE",
-    "width": 0.2052
+    "width": 0.1148
    },
    {
     "bus_group": null,
@@ -129386,7 +129564,7 @@ escape block 83944
     ],
     "row": -1,
     "si_class": "GENUINE",
-    "width": 0.2052
+    "width": 0.1148
    },
    {
     "bus_group": null,
@@ -129416,7 +129594,7 @@ escape block 83944
     ],
     "row": -1,
     "si_class": "GENUINE",
-    "width": 0.2052
+    "width": 0.1148
    },
    {
     "bus_group": null,
@@ -129446,7 +129624,7 @@ escape block 83944
     ],
     "row": -1,
     "si_class": "GENUINE",
-    "width": 0.2052
+    "width": 0.1148
    },
    {
     "bus_group": null,
@@ -129506,7 +129684,7 @@ escape block 83944
     ],
     "row": -1,
     "si_class": "GENUINE",
-    "width": 0.2052
+    "width": 0.1148
    },
    {
     "bus_group": null,
@@ -129536,7 +129714,7 @@ escape block 83944
     ],
     "row": -1,
     "si_class": "GENUINE",
-    "width": 0.2052
+    "width": 0.1148
    },
    {
     "bus_group": null,
@@ -129566,7 +129744,7 @@ escape block 83944
     ],
     "row": -1,
     "si_class": "GENUINE",
-    "width": 0.2052
+    "width": 0.1148
    },
    {
     "bus_group": null,
@@ -129596,7 +129774,7 @@ escape block 83944
     ],
     "row": -1,
     "si_class": "GENUINE",
-    "width": 0.2052
+    "width": 0.1148
    },
    {
     "bus_group": null,
@@ -129656,7 +129834,7 @@ escape block 83944
     ],
     "row": -1,
     "si_class": "GENUINE",
-    "width": 0.2052
+    "width": 0.1148
    },
    {
     "bus_group": null,
@@ -129671,7 +129849,7 @@ escape block 83944
     ],
     "row": -1,
     "si_class": "GENUINE",
-    "width": 0.2052
+    "width": 0.1148
    },
    {
     "bus_group": null,
@@ -129686,7 +129864,7 @@ escape block 83944
     ],
     "row": -1,
     "si_class": "GENUINE",
-    "width": 0.2052
+    "width": 0.1148
    },
    {
     "bus_group": null,
@@ -129701,7 +129879,7 @@ escape block 83944
     ],
     "row": -1,
     "si_class": "GENUINE",
-    "width": 0.2052
+    "width": 0.1148
    },
    {
     "bus_group": null,
@@ -129716,7 +129894,7 @@ escape block 83944
     ],
     "row": -1,
     "si_class": "GENUINE",
-    "width": 0.2052
+    "width": 0.1148
    },
    {
     "bus_group": null,
@@ -129731,7 +129909,7 @@ escape block 83944
     ],
     "row": -1,
     "si_class": "GENUINE",
-    "width": 0.2052
+    "width": 0.1148
    },
    {
     "bus_group": null,
@@ -129746,7 +129924,7 @@ escape block 83944
     ],
     "row": -1,
     "si_class": "GENUINE",
-    "width": 0.2052
+    "width": 0.1148
    },
    {
     "bus_group": null,
@@ -129761,7 +129939,7 @@ escape block 83944
     ],
     "row": -1,
     "si_class": "GENUINE",
-    "width": 0.2052
+    "width": 0.1148
    },
    {
     "bus_group": null,
@@ -131488,7 +131666,7 @@ escape block 83944
     ],
     "row": -1,
     "si_class": "MODERATE",
-    "width": 0.2052
+    "width": 0.1148
    },
    {
     "bus_group": null,
@@ -131503,7 +131681,7 @@ escape block 83944
     ],
     "row": -1,
     "si_class": "MODERATE",
-    "width": 0.2052
+    "width": 0.1148
    },
    {
     "bus_group": "J3:+2V5_VADJ:1",
@@ -131578,7 +131756,7 @@ escape block 83944
     ],
     "row": 1,
     "si_class": "GENUINE",
-    "width": 0.2052
+    "width": 0.1148
    },
    {
     "bus_group": null,
@@ -131608,7 +131786,7 @@ escape block 83944
     ],
     "row": 1,
     "si_class": "GENUINE",
-    "width": 0.2052
+    "width": 0.1148
    },
    {
     "bus_group": null,
@@ -131623,7 +131801,7 @@ escape block 83944
     ],
     "row": 1,
     "si_class": "MODERATE",
-    "width": 0.2052
+    "width": 0.1148
    },
    {
     "bus_group": null,
@@ -131638,7 +131816,7 @@ escape block 83944
     ],
     "row": 1,
     "si_class": "GENUINE",
-    "width": 0.2052
+    "width": 0.1148
    },
    {
     "bus_group": null,
@@ -131653,7 +131831,7 @@ escape block 83944
     ],
     "row": 1,
     "si_class": "MODERATE",
-    "width": 0.2052
+    "width": 0.1148
    },
    {
     "bus_group": null,
@@ -131668,7 +131846,7 @@ escape block 83944
     ],
     "row": 1,
     "si_class": "GENUINE",
-    "width": 0.2052
+    "width": 0.1148
    },
    {
     "bus_group": null,
@@ -131713,7 +131891,7 @@ escape block 83944
     ],
     "row": 1,
     "si_class": "MODERATE",
-    "width": 0.2052
+    "width": 0.1148
    },
    {
     "bus_group": null,
@@ -131728,7 +131906,7 @@ escape block 83944
     ],
     "row": 1,
     "si_class": "GENUINE",
-    "width": 0.2052
+    "width": 0.1148
    },
    {
     "bus_group": null,
@@ -131743,7 +131921,7 @@ escape block 83944
     ],
     "row": 1,
     "si_class": "MODERATE",
-    "width": 0.2052
+    "width": 0.1148
    },
    {
     "bus_group": null,
@@ -131758,7 +131936,7 @@ escape block 83944
     ],
     "row": 1,
     "si_class": "GENUINE",
-    "width": 0.2052
+    "width": 0.1148
    },
    {
     "bus_group": null,
@@ -131803,7 +131981,7 @@ escape block 83944
     ],
     "row": 1,
     "si_class": "MODERATE",
-    "width": 0.2052
+    "width": 0.1148
    },
    {
     "bus_group": null,
@@ -131833,7 +132011,7 @@ escape block 83944
     ],
     "row": 1,
     "si_class": "MODERATE",
-    "width": 0.2052
+    "width": 0.1148
    },
    {
     "bus_group": null,
@@ -131863,7 +132041,7 @@ escape block 83944
     ],
     "row": 1,
     "si_class": "MODERATE",
-    "width": 0.2052
+    "width": 0.1148
    },
    {
     "bus_group": null,
@@ -131893,7 +132071,7 @@ escape block 83944
     ],
     "row": 1,
     "si_class": "MODERATE",
-    "width": 0.2052
+    "width": 0.1148
    },
    {
     "bus_group": null,
@@ -131983,7 +132161,7 @@ escape block 83944
     ],
     "row": 1,
     "si_class": "MODERATE",
-    "width": 0.2052
+    "width": 0.1148
    },
    {
     "bus_group": null,
@@ -132013,7 +132191,7 @@ escape block 83944
     ],
     "row": 1,
     "si_class": "MODERATE",
-    "width": 0.2052
+    "width": 0.1148
    },
    {
     "bus_group": null,
@@ -132028,7 +132206,7 @@ escape block 83944
     ],
     "row": 1,
     "si_class": "MODERATE",
-    "width": 0.2052
+    "width": 0.1148
    },
    {
     "bus_group": null,
@@ -132058,7 +132236,7 @@ escape block 83944
     ],
     "row": 1,
     "si_class": "MODERATE",
-    "width": 0.2052
+    "width": 0.1148
    },
    {
     "bus_group": null,
@@ -132133,7 +132311,7 @@ escape block 83944
     ],
     "row": 1,
     "si_class": "MODERATE",
-    "width": 0.2052
+    "width": 0.1148
    },
    {
     "bus_group": null,
@@ -132163,7 +132341,7 @@ escape block 83944
     ],
     "row": 1,
     "si_class": "MODERATE",
-    "width": 0.2052
+    "width": 0.1148
    },
    {
     "bus_group": null,
@@ -132178,7 +132356,7 @@ escape block 83944
     ],
     "row": 1,
     "si_class": "MODERATE",
-    "width": 0.2052
+    "width": 0.1148
    },
    {
     "bus_group": null,
@@ -132208,7 +132386,7 @@ escape block 83944
     ],
     "row": 1,
     "si_class": "MODERATE",
-    "width": 0.2052
+    "width": 0.1148
    },
    {
     "bus_group": null,
@@ -132238,7 +132416,7 @@ escape block 83944
     ],
     "row": 1,
     "si_class": "MODERATE",
-    "width": 0.2052
+    "width": 0.1148
    },
    {
     "bus_group": null,
@@ -132253,7 +132431,7 @@ escape block 83944
     ],
     "row": 1,
     "si_class": "MODERATE",
-    "width": 0.2052
+    "width": 0.1148
    }
   ]
  },
@@ -132922,7 +133100,7 @@ svg 10229
 </svg>
 
 silk legacy_py_round_entries 11922
-pcb 635040
+pcb 635951
 (kicad_pcb
 	(version 20260206)
 	(generator "schgen")
@@ -132937,14 +133115,16 @@ pcb 635040
 		(company "Zynq SoM Carrier")
 		(comment
 			1
-			"FOUNDATION: derived outline + SoM-body keep-out + 4L stackup + net classes + 2-side placement (SoM-mirror mezzanine, per-subsystem ratsnest bundles). NOT routed — schgen-generated (do not hand-edit)."
+			"FOUNDATION: derived outline + SoM-body keep-out + 6L stackup + net classes + 2-side placement (SoM-mirror mezzanine, per-subsystem ratsnest bundles). NOT routed — schgen-generated (do not hand-edit)."
 		)
 	)
 	(layers
 		(0 "F.Cu" signal "L1 (Sig)")
 		(1 "In1.Cu" power "L2 (GND)")
-		(2 "In2.Cu" power "L3 (PWR)")
-		(31 "B.Cu" signal "L4 (Sig)")
+		(2 "In2.Cu" signal "L3 (Sig)")
+		(3 "In3.Cu" power "L4 (PWR)")
+		(4 "In4.Cu" power "L5 (GND)")
+		(31 "B.Cu" signal "L6 (Sig)")
 		(32 "B.Adhes" user "B.Adhesive")
 		(33 "F.Adhes" user "F.Adhesive")
 		(34 "B.Paste" user)
@@ -132987,9 +133167,9 @@ pcb 635040
 			(layer
 				"dielectric 1"
 				(type "prepreg")
-				(thickness 0.2104)
+				(thickness 0.0994)
 				(material "FR4")
-				(epsilon_r 4.6)
+				(epsilon_r 4.1)
 				(loss_tangent 0.02)
 			)
 			(layer
@@ -133000,9 +133180,9 @@ pcb 635040
 			(layer
 				"dielectric 2"
 				(type "core")
-				(thickness 1.065)
+				(thickness 0.55)
 				(material "FR4")
-				(epsilon_r 4.6)
+				(epsilon_r 4.41)
 				(loss_tangent 0.02)
 			)
 			(layer
@@ -133013,9 +133193,35 @@ pcb 635040
 			(layer
 				"dielectric 3"
 				(type "prepreg")
-				(thickness 0.2104)
+				(thickness 0.1088)
 				(material "FR4")
-				(epsilon_r 4.6)
+				(epsilon_r 4.16)
+				(loss_tangent 0.02)
+			)
+			(layer
+				"In3.Cu"
+				(type "copper")
+				(thickness 0.0152)
+			)
+			(layer
+				"dielectric 4"
+				(type "core")
+				(thickness 0.55)
+				(material "FR4")
+				(epsilon_r 4.41)
+				(loss_tangent 0.02)
+			)
+			(layer
+				"In4.Cu"
+				(type "copper")
+				(thickness 0.0152)
+			)
+			(layer
+				"dielectric 5"
+				(type "prepreg")
+				(thickness 0.0994)
+				(material "FR4")
+				(epsilon_r 4.1)
 				(loss_tangent 0.02)
 			)
 			(layer
@@ -133387,6 +133593,32 @@ pcb 635040
 		(layer "In1.Cu")
 		(uuid "054d0e0e-d6df-534e-9231-268c1af35e9d")
 		(name "GND_plane_In1")
+		(hatch edge 0.5)
+		(connect_pads
+			(clearance 0.3)
+		)
+		(min_thickness 0.25)
+		(filled_areas_thickness no)
+		(fill
+			yes
+			(thermal_gap 0.5)
+			(thermal_bridge_width 0.5)
+		)
+		(polygon
+			(pts
+				(xy 25.5 25.5)
+				(xy 124.5 25.5)
+				(xy 124.5 124.5)
+				(xy 25.5 124.5)
+			)
+		)
+	)
+	(zone
+		(net 38)
+		(net_name "GND")
+		(layer "In4.Cu")
+		(uuid "6a2dbfac-1ec4-59de-8a9a-d83c64c7495e")
+		(name "GND_plane_In4")
 		(hatch edge 0.5)
 		(connect_pads
 			(clearance 0.3)
@@ -167520,7 +167752,7 @@ project 15372
         "clearance": 0.15,
         "diff_pair_gap": 0.2032,
         "diff_pair_via_gap": 0.25,
-        "diff_pair_width": 0.2052,
+        "diff_pair_width": 0.1148,
         "line_style": 0,
         "microvia_diameter": 0.3,
         "microvia_drill": 0.1,
@@ -167528,7 +167760,7 @@ project 15372
         "pcb_color": "rgba(0, 0, 0, 0.000)",
         "priority": 5,
         "schematic_color": "rgba(0, 0, 0, 0.000)",
-        "track_width": 0.2052,
+        "track_width": 0.1148,
         "tuning_profile": "",
         "via_diameter": 0.6,
         "via_drill": 0.3,
@@ -167539,7 +167771,7 @@ project 15372
         "clearance": 0.15,
         "diff_pair_gap": 0.2032,
         "diff_pair_via_gap": 0.25,
-        "diff_pair_width": 0.2611,
+        "diff_pair_width": 0.1455,
         "line_style": 0,
         "microvia_diameter": 0.3,
         "microvia_drill": 0.1,
@@ -167547,7 +167779,7 @@ project 15372
         "pcb_color": "rgba(0, 0, 0, 0.000)",
         "priority": 5,
         "schematic_color": "rgba(0, 0, 0, 0.000)",
-        "track_width": 0.2611,
+        "track_width": 0.1455,
         "tuning_profile": "",
         "via_diameter": 0.6,
         "via_drill": 0.3,
@@ -168102,7 +168334,7 @@ project 15372
         "clearance": 0.15,
         "diff_pair_gap": 0.2032,
         "diff_pair_via_gap": 0.25,
-        "diff_pair_width": 0.2052,
+        "diff_pair_width": 0.1148,
         "line_style": 0,
         "microvia_diameter": 0.3,
         "microvia_drill": 0.1,
@@ -168110,7 +168342,7 @@ project 15372
         "pcb_color": "rgba(0, 0, 0, 0.000)",
         "priority": 5,
         "schematic_color": "rgba(0, 0, 0, 0.000)",
-        "track_width": 0.2052,
+        "track_width": 0.1148,
         "tuning_profile": "",
         "via_diameter": 0.6,
         "via_drill": 0.3,
@@ -168121,7 +168353,7 @@ project 15372
         "clearance": 0.15,
         "diff_pair_gap": 0.2032,
         "diff_pair_via_gap": 0.25,
-        "diff_pair_width": 0.2611,
+        "diff_pair_width": 0.1455,
         "line_style": 0,
         "microvia_diameter": 0.3,
         "microvia_drill": 0.1,
@@ -168129,7 +168361,7 @@ project 15372
         "pcb_color": "rgba(0, 0, 0, 0.000)",
         "priority": 5,
         "schematic_color": "rgba(0, 0, 0, 0.000)",
-        "track_width": 0.2611,
+        "track_width": 0.1455,
         "tuning_profile": "",
         "via_diameter": 0.6,
         "via_drill": 0.3,
@@ -170104,7 +170336,7 @@ escape plan legacy_py_round_entries 1212
 2 0x1.b3b851eb851ecp+5
 
 "layer" 3 "F.Cu"
-"width" 2 0x1.a43fe5c91d14ep-3
+"width" 2 0x1.d63886594af4fp-4
 "si_class" 3 "GENUINE"
 "bus_group" 0 
 
@@ -170130,7 +170362,7 @@ escape plan legacy_py_round_entries 1212
 2 0x1.b3b851eb851ecp+5
 
 "layer" 3 "F.Cu"
-"width" 2 0x1.a43fe5c91d14ep-3
+"width" 2 0x1.d63886594af4fp-4
 "si_class" 3 "GENUINE"
 "bus_group" 0 
 
@@ -170182,7 +170414,7 @@ escape plan legacy_py_round_entries 1212
 2 0x1.b3b851eb851ecp+5
 
 "layer" 3 "F.Cu"
-"width" 2 0x1.a43fe5c91d14ep-3
+"width" 2 0x1.d63886594af4fp-4
 "si_class" 3 "GENUINE"
 "bus_group" 0 
 
@@ -170208,7 +170440,7 @@ escape plan legacy_py_round_entries 1212
 2 0x1.b3b851eb851ecp+5
 
 "layer" 3 "F.Cu"
-"width" 2 0x1.a43fe5c91d14ep-3
+"width" 2 0x1.d63886594af4fp-4
 "si_class" 3 "GENUINE"
 "bus_group" 0 
 
@@ -170260,7 +170492,7 @@ escape plan legacy_py_round_entries 1212
 2 0x1.b3b851eb851ecp+5
 
 "layer" 3 "F.Cu"
-"width" 2 0x1.a43fe5c91d14ep-3
+"width" 2 0x1.d63886594af4fp-4
 "si_class" 3 "GENUINE"
 "bus_group" 0 
 
@@ -170286,7 +170518,7 @@ escape plan legacy_py_round_entries 1212
 2 0x1.b3b851eb851ecp+5
 
 "layer" 3 "F.Cu"
-"width" 2 0x1.a43fe5c91d14ep-3
+"width" 2 0x1.d63886594af4fp-4
 "si_class" 3 "GENUINE"
 "bus_group" 0 
 
@@ -170338,7 +170570,7 @@ escape plan legacy_py_round_entries 1212
 2 0x1.b3b851eb851ecp+5
 
 "layer" 3 "F.Cu"
-"width" 2 0x1.a43fe5c91d14ep-3
+"width" 2 0x1.d63886594af4fp-4
 "si_class" 3 "GENUINE"
 "bus_group" 0 
 
@@ -170364,7 +170596,7 @@ escape plan legacy_py_round_entries 1212
 2 0x1.b3b851eb851ecp+5
 
 "layer" 3 "F.Cu"
-"width" 2 0x1.a43fe5c91d14ep-3
+"width" 2 0x1.d63886594af4fp-4
 "si_class" 3 "GENUINE"
 "bus_group" 0 
 
@@ -170910,7 +171142,7 @@ escape plan legacy_py_round_entries 1212
 2 0x1.deae147ae147bp+5
 
 "layer" 3 "F.Cu"
-"width" 2 0x1.0b5dcc63f1412p-2
+"width" 2 0x1.29fbe76c8b439p-3
 "si_class" 3 "MODERATE"
 "bus_group" 0 
 
@@ -170936,7 +171168,7 @@ escape plan legacy_py_round_entries 1212
 2 0x1.deae147ae147bp+5
 
 "layer" 3 "F.Cu"
-"width" 2 0x1.0b5dcc63f1412p-2
+"width" 2 0x1.29fbe76c8b439p-3
 "si_class" 3 "MODERATE"
 "bus_group" 0 
 
@@ -171001,7 +171233,7 @@ escape plan legacy_py_round_entries 1212
 2 0x1.deae147ae147bp+5
 
 "layer" 3 "F.Cu"
-"width" 2 0x1.0b5dcc63f1412p-2
+"width" 2 0x1.29fbe76c8b439p-3
 "si_class" 3 "GENUINE"
 "bus_group" 0 
 
@@ -171027,7 +171259,7 @@ escape plan legacy_py_round_entries 1212
 2 0x1.deae147ae147bp+5
 
 "layer" 3 "F.Cu"
-"width" 2 0x1.0b5dcc63f1412p-2
+"width" 2 0x1.29fbe76c8b439p-3
 "si_class" 3 "GENUINE"
 "bus_group" 0 
 
@@ -174811,7 +175043,7 @@ escape block 87890
     ],
     "row": -1,
     "si_class": "GENUINE",
-    "width": 0.2052
+    "width": 0.1148
    },
    {
     "bus_group": null,
@@ -174841,7 +175073,7 @@ escape block 87890
     ],
     "row": -1,
     "si_class": "GENUINE",
-    "width": 0.2052
+    "width": 0.1148
    },
    {
     "bus_group": null,
@@ -174901,7 +175133,7 @@ escape block 87890
     ],
     "row": -1,
     "si_class": "GENUINE",
-    "width": 0.2052
+    "width": 0.1148
    },
    {
     "bus_group": null,
@@ -174931,7 +175163,7 @@ escape block 87890
     ],
     "row": -1,
     "si_class": "GENUINE",
-    "width": 0.2052
+    "width": 0.1148
    },
    {
     "bus_group": null,
@@ -174991,7 +175223,7 @@ escape block 87890
     ],
     "row": -1,
     "si_class": "GENUINE",
-    "width": 0.2052
+    "width": 0.1148
    },
    {
     "bus_group": null,
@@ -175021,7 +175253,7 @@ escape block 87890
     ],
     "row": -1,
     "si_class": "GENUINE",
-    "width": 0.2052
+    "width": 0.1148
    },
    {
     "bus_group": null,
@@ -175081,7 +175313,7 @@ escape block 87890
     ],
     "row": -1,
     "si_class": "GENUINE",
-    "width": 0.2052
+    "width": 0.1148
    },
    {
     "bus_group": null,
@@ -175111,7 +175343,7 @@ escape block 87890
     ],
     "row": -1,
     "si_class": "GENUINE",
-    "width": 0.2052
+    "width": 0.1148
    },
    {
     "bus_group": null,
@@ -175741,7 +175973,7 @@ escape block 87890
     ],
     "row": 1,
     "si_class": "MODERATE",
-    "width": 0.2611
+    "width": 0.1455
    },
    {
     "bus_group": null,
@@ -175771,7 +176003,7 @@ escape block 87890
     ],
     "row": 1,
     "si_class": "MODERATE",
-    "width": 0.2611
+    "width": 0.1455
    },
    {
     "bus_group": null,
@@ -175846,7 +176078,7 @@ escape block 87890
     ],
     "row": 1,
     "si_class": "GENUINE",
-    "width": 0.2611
+    "width": 0.1455
    },
    {
     "bus_group": null,
@@ -175876,7 +176108,7 @@ escape block 87890
     ],
     "row": 1,
     "si_class": "GENUINE",
-    "width": 0.2611
+    "width": 0.1455
    },
    {
     "bus_group": null,

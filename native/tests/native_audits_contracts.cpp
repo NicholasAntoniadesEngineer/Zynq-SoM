@@ -1,3 +1,4 @@
+#include "schgen/run_config.hpp"
 #include "schgen/native_audit_state.hpp"
 #include "schgen/quantize.hpp"
 #include "verification_internal.hpp"
@@ -196,7 +197,7 @@ void source_contracts(const fs::path& root,const fs::path& scratch){
 }
 }
 int main(int argc,char** argv){try{
-    require(argc==2||(argc==3&&std::string(argv[2])=="--sources-only"),"usage: native_audits_contracts <repo-root> [--sources-only]");const fs::path root=fs::absolute(argv[1]);Scratch tmp;
+    require(argc==2||(argc==3&&std::string(argv[2])=="--sources-only"),"usage: native_audits_contracts <repo-root> [--sources-only]");schgen::apply_run_config(std::filesystem::path(argv[1])/schgen::run_config_file,"carrier");const fs::path root=fs::absolute(argv[1]);Scratch tmp;
     if(argc==3){source_contracts(root,tmp.path);std::cout<<"Native C++ source audits: "<<checks<<" contracts passed\n";return 0;}
     const auto reference=parse_json_file((root/"native/tests/data/verification_audits/python_state.json").string());
     ledger_contracts(reference);registry_contracts(reference);

@@ -1,3 +1,4 @@
+#include "schgen/run_config.hpp"
 #include "pcb_placement_fixture.hpp"
 #include "pcb_placement_requirements.hpp"
 #include "ledger_accounting_fixture.hpp"
@@ -273,6 +274,7 @@ extern "C" void __cyg_profile_func_enter(void* fn,void*){
 extern "C" void __cyg_profile_func_exit(void*,void*){}
 int main(int argc,char** argv){try{
     require(argc==2||argc==3,"repo [--capture-legacy|--capture-counts]");
+    schgen::apply_run_config(std::filesystem::path(argv[1])/schgen::run_config_file,"carrier");
     const auto root=std::filesystem::path(argv[1]),data=root/"native/tests/data/placement_precision";
     const std::string mode=argc==3?argv[2]:"";capture_counts=mode=="--capture-counts";
     require(mode.empty()||mode=="--capture-legacy"||mode=="--capture-counts","unknown capture mode");

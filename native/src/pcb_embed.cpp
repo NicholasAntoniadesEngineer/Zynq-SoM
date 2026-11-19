@@ -66,6 +66,7 @@ Sexpr embed(const PcbFootprintInst &i, const PcbEmitPolicy &p, const Uid &uid) {
                 lookup(p.switch_descriptions, i.ref) ||
                 i.footprint.find("TestPoint") != std::string::npos;
     if(p.interface_reference_labels_only)hide=!interface_label_part(i,p);
+    if(!p.labels)hide=true;
     return embed_footprint_decorate(std::move(doc), i.ref, i.value, i.rotation, hide, nets,
                                     inherited, uid);
 }

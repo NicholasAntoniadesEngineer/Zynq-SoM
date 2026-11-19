@@ -1,3 +1,4 @@
+#include "schgen/run_config.hpp"
 #include "pcb_placement_fixture.hpp"
 #include "pcb_placement_internal.hpp"
 #include "schgen/pcb_placement_gates.hpp"
@@ -111,6 +112,6 @@ void run(const std::filesystem::path& root) {
 }
 }
 int main(int argc, char** argv) {
-    try { if (argc != 2) return 2; run(argv[1]); return 0; }
+    try { if (argc != 2) return 2;schgen::apply_run_config(std::filesystem::path(argv[1])/schgen::run_config_file,"carrier"); run(argv[1]); return 0; }
     catch (const std::exception& e) { std::cerr << e.what() << '\n'; return 1; }
 }

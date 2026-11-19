@@ -1,0 +1,8 @@
+#!/bin/sh
+set -eu
+cd "$(dirname "$0")/native"
+cmake --preset native-fast
+cmake --build --preset native-fast
+if [ "${1:-}" != "--no-tests" ]; then
+    ctest --test-dir build/fast -j 7 --output-on-failure
+fi

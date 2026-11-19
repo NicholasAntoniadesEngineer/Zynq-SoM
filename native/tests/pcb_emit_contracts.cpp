@@ -1,3 +1,4 @@
+#include "schgen/run_config.hpp"
 #include "schgen/atomic_file.hpp"
 #include "schgen/pcb_emit.hpp"
 #include "schgen/thermal_via_planning.hpp"
@@ -559,12 +560,15 @@ void boundaries(const fs::path &fixtures, const fs::path &output) {
 } // namespace
 int main(int argc, char **argv) {
     try {
-        if (argc != 3)
-            throw std::runtime_error("usage: pcb_emit_contracts FIXTURES TEMP_OUTPUT");
-        fs::path fixtures = argv[1], output = argv[2];
+        if (argc != 4)
+            throw std::runtime_error("usage: pcb_emit_contracts FIXTURES TEMP_OUTPUT REPOSITORY");
+        fs::path fixtures = argv[1], output = argv[2], run_file = fs::path(argv[3]) / run_config_file;
+        apply_run_config(run_file, "carrier");
         fs::create_directories(output);
         fixture_integrity(fixtures);
+        apply_run_config(run_file, "devkit_mini");
         project(fixtures, output, "devkit_mini");
+        apply_run_config(run_file, "carrier");
         project(fixtures, output, "carrier");
         mutations(fixtures, output, "mutations.json");
         mutations(fixtures, output, "edge_cases.json");

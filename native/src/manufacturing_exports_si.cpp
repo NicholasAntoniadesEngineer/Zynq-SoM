@@ -73,7 +73,7 @@ Source of targets: `carrier/research/si_spec.json` (researched, standard-cited);
 
 ## Stackup
 
-JLCPCB )"<<board_stackup().fabricator_name<<", "<<board_stackup().summary<<R"(. Diff-pair trace geometry (width/gap) per class lives in the `.kicad_pro` net_settings + `.kicad_dru`: )"<<board_stackup().pair_list("R = "," mm",", ")<<R"( (JLCPCB impedance calculator, this stackup).
+JLCPCB )"<<board_stackup().fabricator_name<<", "<<board_stackup().summary<<R"(. Diff-pair trace geometry (width/gap) per class lives in the `.kicad_pro` net_settings + `.kicad_dru`: )"<<board_stackup().pair_list("R = "," mm",", ")<<" ("<<board_stackup().pair_basis<<R"().
 
 ## Differential pairs
 

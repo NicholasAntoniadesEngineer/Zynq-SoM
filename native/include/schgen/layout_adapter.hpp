@@ -11,8 +11,8 @@
 namespace schgen::layout {
 
 namespace constants {
-inline constexpr NamedConstant core_tolerance{"core_tolerance", 0.5, "mm2", "policy",
-    "the mechanical gate ignores module-core overlaps up to this area"};
+inline constexpr NamedConstant module_clearance{"module_clearance", 1.0, "mm", "policy",
+    "gap every top-face courtyard keeps from the module body, for its outline and mating tolerance and for seating and lifting it"};
 inline constexpr NamedConstant fanout_floor{"fanout_floor", 3.0, "pins", "policy",
     "the fan-out gate judges only parts with at least this many connected nets"};
 inline constexpr NamedConstant relief_reach{"relief_reach", 1.0, "mm", "physical",
@@ -71,7 +71,7 @@ inline constexpr NamedConstant indicate_reach{"indicate_reach", 15.0, "mm", "pol
     "an indicator carries a slow signal and may sit where it is visible"};
 inline constexpr NamedConstant set_reach{"set_reach", 6.0, "mm", "policy",
     "a programming element sets a quiet node; short traces keep the setting accurate"};
-inline constexpr std::array adapter_registry{core_tolerance, fanout_floor, relief_reach, edge_reach, owner_reach,
+inline constexpr std::array adapter_registry{module_clearance, fanout_floor, relief_reach, edge_reach, owner_reach,
                                              connector_overlap, band_share, overmold_gap, boot_gap,
                                              compare_guard, group_guard, hole_inset, mark_inset, area_guard,
                                              escape_tie, hold_slack, tether_slack, bypass_reach, reservoir_reach,
