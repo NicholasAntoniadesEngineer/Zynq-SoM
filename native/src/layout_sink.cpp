@@ -71,8 +71,6 @@ bool sink_part(Kernel& kernel, std::size_t part, const std::vector<Point>& offse
 
 namespace {
 
-double area_of(Box box) { return to_mm(box.width()) * to_mm(box.height()); }
-
 }
 
 BalanceReport balance_faces(Kernel& kernel, Nm pitch, Nm reach) {
@@ -100,7 +98,7 @@ BalanceReport balance_faces(Kernel& kernel, Nm pitch, Nm reach) {
     const auto face_area = [&](Face face) {
         double total = 0;
         for (std::size_t part = 0; part < count; ++part)
-            if (kernel.placement()[part].face == face) total += area_of(gate_at(problem, part, kernel.placement()[part]));
+            if (kernel.placement()[part].face == face) total += area_mm2(gate_at(problem, part, kernel.placement()[part]));
         return total;
     };
     report.top_before = face_area(Face::top);
@@ -120,7 +118,7 @@ BalanceReport balance_faces(Kernel& kernel, Nm pitch, Nm reach) {
         });
         if (!movable) continue;
         double area = 0;
-        for (const std::size_t part : members) area += area_of(gate_at(problem, part, kernel.placement()[part]));
+        for (const std::size_t part : members) area += area_mm2(gate_at(problem, part, kernel.placement()[part]));
         candidates.push_back({lead, area});
     }
     std::stable_sort(candidates.begin(), candidates.end(),
@@ -130,8 +128,7 @@ BalanceReport balance_faces(Kernel& kernel, Nm pitch, Nm reach) {
     for (const auto& candidate : candidates) {
         if (rear + candidate.area > top - candidate.area) continue;
         const auto& members = sets[candidate.lead];
-        Box hull = gate_at(problem, members.front(), kernel.placement()[members.front()]);
-        for (const std::size_t part : members) hull = united(hull, gate_at(problem, part, kernel.placement()[part]));
+        const Box hull = hull_at(problem, kernel.placement(), members);
         std::size_t along_x = 0, along_y = 0;
         for (const std::size_t part : members) {
             const Part& item = problem.parts[part];

@@ -25,7 +25,7 @@ inline constexpr NamedConstant wide_reach{"wide_reach", 24e6, "nm", "policy",
     "largest relocation tried for a jammed part or its partner before an edge step is given up"};
 inline constexpr NamedConstant wide_pitch{"wide_pitch", 1e6, "nm", "policy",
     "lattice pitch of the wide relocation search; coarse because it only has to find room, not a best seat"};
-inline constexpr NamedConstant order_patience{"order_patience", 2, "orders", "policy",
+inline constexpr NamedConstant order_patience{"order_patience", 1, "orders", "policy",
     "edge orders tried in a row without a smaller board or shorter airwire before the search stops"};
 inline constexpr std::array squeeze_registry{search_pitch, part_reach, unit_reach, first_step, last_step,
                                              step_ratio, settle_rounds, wide_reach, wide_pitch, order_patience};
@@ -68,6 +68,7 @@ struct SqueezeReport {
 };
 
 SqueezeReport squeeze(Kernel& kernel, const SqueezeOptions& options);
+bool widen(Kernel& kernel, const SqueezeOptions& options, Side side, Nm by);
 SqueezeReport squeeze_best(Kernel& kernel, const SqueezeOptions& options);
 
 }

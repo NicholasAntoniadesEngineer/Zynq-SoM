@@ -169,6 +169,7 @@ ProjectConfig load_project_config(const ProjectPaths& paths) {
         const RunConfig run = apply_run_config(paths.repository_root / run_config_file, out.name);
         out.stackup = run.stackup_of(out.name);
         out.labels = run.labels;
+        out.arrange = run.arrange;
         const auto& placement = field(out.raw, "placement");
         out.wired_sheets = strings(field(placement, "wired_sheets"), "placement.wired_sheets");
         out.pilot_prox_sheets = strings(field(placement, "pilot_prox_sheets"), "placement.pilot_prox_sheets");

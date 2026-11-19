@@ -13,7 +13,7 @@ namespace schgen {
 struct RunConfig {
     std::vector<std::string> boards;
     std::filesystem::path output;
-    bool squeeze = false, renders = false, labels = false, timing = false;
+    bool squeeze = false, arrange = false, renders = false, labels = false, timing = false;
     std::string plane_net;
     int audit_projections = 0;
     std::map<std::string, std::string> stackup;

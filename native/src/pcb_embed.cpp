@@ -136,11 +136,10 @@ ThermalNodes thermal_nodes(const PcbModel &m, const PcbEmitPolicy &p, const Uid 
         auto spec = match->second;
         if (spec.via_sites.empty())
             throw PcbEmissionError(i.ref + ": thermal copper requires preferred via sites");
-        if (i.mirror) {
-            spec.pour = {spec.pour.x0, 0.0 - spec.pour.y1, spec.pour.x1, 0.0 - spec.pour.y0};
+        spec.pour = thermal_pour_local(spec.pour, i.mirror);
+        if (i.mirror)
             for (auto &xy : spec.via_sites)
                 xy.second = 0.0 - xy.second;
-        }
         if (i.side == "bottom")
             for (auto &l : spec.pour_layers) {
                 if (l == "F.Cu")
@@ -150,10 +149,9 @@ ThermalNodes thermal_nodes(const PcbModel &m, const PcbEmitPolicy &p, const Uid 
                 else
                     throw PcbEmissionError("unknown thermal copper layer: " + l);
             }
-        auto corners = corners_rot(
-            spec.pour, i.rotation, i.x, i.y, m.origin_x + p.gnd_plane_edge_back,
-            m.origin_y + p.gnd_plane_edge_back, m.origin_x + m.board_w - p.gnd_plane_edge_back,
-            m.origin_y + m.board_h - p.gnd_plane_edge_back, 3);
+        auto corners = thermal_pour_corners(
+            spec.pour, i.rotation, i.x, i.y,
+            ground_plane_box(m.origin_x, m.origin_y, m.board_w, m.board_h, p.gnd_plane_edge_back));
         for (const auto &l : spec.pour_layers) {
             out.zones.push_back(emit_fill_zone(
                 g->second, "GND", "thermal_pour_" + i.ref + "_" + l.substr(0, l.find('.')), l,

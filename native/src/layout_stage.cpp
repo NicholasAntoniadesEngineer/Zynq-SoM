@@ -10,6 +10,7 @@ namespace {
 
 inline constexpr double percent = 100;
 inline constexpr std::size_t straggler_rows = 12;
+inline constexpr std::size_t stuck_rows = 4;
 
 std::vector<Box> ordered(std::vector<Box> boxes) {
     std::sort(boxes.begin(), boxes.end(), [](const Box& a, const Box& b) {
@@ -72,12 +73,15 @@ StageResult squeeze_stage(const PcbPlacementInput& inputs, const PcbModel& model
     const auto area = [](const SqueezeReport& report) {
         return to_mm(report.after.width) * to_mm(report.after.height);
     };
+    if (inputs.floorplan.project.arrange) result.arrange = arrange(kernel, settings);
     const Snapshot seated = kernel.snapshot();
     SqueezeReport plain = squeeze_best(kernel, settings);
     const Snapshot plain_state = kernel.snapshot();
     kernel.restore(seated);
     result.balance = balance_faces(kernel, settings.pitch, static_cast<Nm>(constants::sink_reach.value));
-    SqueezeReport balanced = squeeze_best(kernel, settings);
+    SqueezeReport balanced = plain;
+    if (result.balance.flipped == 0) kernel.restore(plain_state);
+    else balanced = squeeze_best(kernel, settings);
     result.plain_area = area(plain);
     result.balanced_area = area(balanced);
     result.balanced = result.balanced_area < result.plain_area ||
@@ -121,6 +125,26 @@ StageResult squeeze_stage(const PcbPlacementInput& inputs, const PcbModel& model
         return a.first != b.first ? a.first > b.first : a.second < b.second;
     });
     std::ostringstream text;
+    text << "CLUSTER ARRANGEMENT: " << result.arrange.clusters << " tied clusters; parts and module span "
+         << to_mm(result.arrange.before.width()) << " x " << to_mm(result.arrange.before.height())
+         << " mm as placed; squeezes to " << result.arrange.unarranged << " mm2 without rearranging\n";
+    for (std::size_t index = 0; index < result.arrange.plans.size(); ++index) {
+        const ArrangePlan& plan = result.arrange.plans[index];
+        text << (index + 1 == result.arrange.chosen ? "  TAKEN " : "        ") << "keep " << plan.kept_sides << ": span "
+             << to_mm(plan.span.width()) << " x " << to_mm(plan.span.height()) << " mm, " << plan.moved
+             << " clusters moved after opening " << to_mm(plan.widened) << " mm on the kept sides, " << plan.tightened
+             << " tightening moves";
+        if (plan.squeezed > 0) text << ", squeezes to " << plan.squeezed << " mm2";
+        text << ", " << plan.stuck.size() << " could not leave";
+        for (std::size_t stuck = 0; stuck < plan.stuck.size() && stuck < stuck_rows; ++stuck)
+            text << (stuck ? ", " : ": ") << plan.stuck[stuck];
+        text << "\n";
+    }
+    text << "  span of the taken arrangement is held by: " << result.arrange.holders << "\n"
+         << "  sides that cannot be cleared because a fixed or edge-bound cluster sits there: "
+         << (result.arrange.anchored_sides.empty() ? "none" : result.arrange.anchored_sides) << "\n"
+         << "  arranging took " << result.arrange.plan_seconds << " s for " << result.arrange.plans.size()
+         << " plans and " << result.arrange.squeeze_seconds << " s to squeeze the finalists\n";
     text << "OWNERSHIP:";
     for (const auto& [tie, parts] : ties) text << " " << parts << " " << tie;
     text << "; " << binding.unresolved.size() << " off-sheet owners not found\n"

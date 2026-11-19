@@ -89,4 +89,9 @@ std::string render_pcb_design_rules(const PcbModel &,
 void write_pcb_design_rules(const PcbModel &, const std::filesystem::path &,
                             const PcbEmitPolicy & = default_pcb_emit_policy());
 
+Box4 ground_plane_box(double origin_x, double origin_y, double width, double height, double edge_back);
+Box4 thermal_pour_local(const Box4& pour, bool mirror);
+std::vector<std::pair<double, double>> thermal_pour_corners(const Box4& local, double rotation, double x, double y,
+                                                            const Box4& plane);
+Box4 thermal_pour_extent(const Box4& pour, bool mirror, double rotation, double x, double y, const Box4& plane);
 } // namespace schgen

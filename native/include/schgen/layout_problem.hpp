@@ -148,11 +148,19 @@ struct Constraints {
     ConnectorRules connectors;
 };
 
+struct PourRule {
+    std::size_t owner = 0;
+    std::array<double, 4> local{};
+    double edge_back = 0;
+    bool mirror = false;
+};
+
 struct Reserve {
     Box box;
     std::vector<std::size_t> members;
     std::string source;
     bool top = true, bottom = true;
+    std::optional<PourRule> pour = std::nullopt;
 };
 
 struct Rules {
@@ -193,6 +201,8 @@ inline bool counts_as_crowder(const Part& crowder, const Part& subject) {
 Point corner_site(const Board& board, const CornerRule& rule);
 std::optional<bool> mirrors_across_x(const Footprint& footprint);
 Box gate_at(const Problem& problem, std::size_t part, const Pose& pose);
+Box pour_box(const PourRule& rule, const Pose& owner, const Board& board);
+Box hull_at(const Problem& problem, const Placement& placement, const std::vector<std::size_t>& parts);
 void index_names(Variant& variant);
 struct HoldPolicy {
     Nm owner_reach = 0, hold_slack = 0, tether_slack = 0;

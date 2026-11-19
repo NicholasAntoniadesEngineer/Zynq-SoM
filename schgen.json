@@ -3,6 +3,7 @@
   "boards": ["carrier", "devkit_mini"],
   "output": "out",
   "squeeze": true,
+  "arrange": true,
   "renders": true,
   "labels": false,
   "timing": true,
