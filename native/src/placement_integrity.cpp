@@ -37,7 +37,9 @@ PlacementIntegrityResult check_placement_integrity(const PcbCheckInput& input, c
     for (const auto& entry : rules::rule_book()) {
         result.rules.push_back(entry.check(context));
         const rules::RuleResult& judged = result.rules.back();
-        if (judged.rule->enforcement == rules::Enforcement::gate && !judged.findings.empty()) result.ok = false;
+        if (judged.rule->enforcement != rules::Enforcement::gate || judged.findings.empty()) continue;
+        result.ok = false;
+        if (judged.rule->met_by == rules::Stage::placement) result.placement_ok = false;
     }
     return result;
 }
@@ -48,14 +50,17 @@ const rules::RuleResult& PlacementIntegrityResult::of(std::string_view id) const
     throw std::out_of_range("placement integrity: no rule named " + std::string(id));
 }
 
-std::string PlacementIntegrityResult::summary() const {
+std::string PlacementIntegrityResult::summary(rules::Stage reached) const {
     std::ostringstream text;
-    text << "PLACEMENT INTEGRITY GATE: " << (ok ? "PASS" : "FAIL") << "\n";
+    const bool laid_out = reached == rules::Stage::layout;
+    text << "PLACEMENT INTEGRITY GATE" << (laid_out ? "" : " (starting placement; rules the layout stage meets are listed, not judged)")
+         << ": " << (ok_at(reached) ? "PASS" : "FAIL") << "\n";
     for (const auto& judged : rules)
         text << "  " << judged.rule->area << "/" << judged.rule->id << ": checked " << judged.checked << ", findings "
              << judged.findings.size() << " [" << rules::enforcement_name(judged.rule->enforcement) << "]\n";
     for (const auto& judged : rules) {
-        const bool gate = judged.rule->enforcement == rules::Enforcement::gate;
+        const bool gate = judged.rule->enforcement == rules::Enforcement::gate &&
+                          (laid_out || judged.rule->met_by == rules::Stage::placement);
         for (const auto& finding : judged.findings)
             text << "    " << (gate ? "FAIL " : "FOUND ") << judged.rule->id << ": " << finding.subject << " "
                  << finding.detail << "\n";

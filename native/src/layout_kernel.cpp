@@ -110,6 +110,8 @@ Kernel::Kernel(const Problem& problem, Placement placement)
         face_rules_[rules.face_pairs[rule].second].push_back(rule);
     }
     for (std::size_t rule = 0; rule < rules.group_gaps.size(); ++rule) {
+        if (members_.find(rules.group_gaps[rule].first) == members_.end())
+            throw LayoutError("layout: a group rule names " + rules.group_gaps[rule].first + ", which has no parts");
         group_rules_[rules.group_gaps[rule].first].push_back(rule);
         if (!rules.group_gaps[rule].second_is_core && rules.group_gaps[rule].second != rules.group_gaps[rule].first)
             group_rules_[rules.group_gaps[rule].second].push_back(rule);
@@ -230,18 +232,7 @@ bool Kernel::force(const std::vector<Move>& moves) {
 }
 
 std::optional<Violation> Kernel::breach_at(std::size_t part, Nm guard, const std::vector<char>* moved) const {
-    const Part& item = problem_.parts[part];
-    const Shape& shape = shapes_[part];
-    const Pose& pose = placement_[part];
-    if (const auto breach = self_breach(part, shape, pose)) return Violation{*breach, part, part};
-    for (const std::size_t other : neighbours(shape.bound, part))
-        if (const auto breach = pair_breach(part, shape, pose.face, other, shapes_[other], placement_[other].face, guard))
-            return Violation{*breach, part, other};
-    if (item.cohesion_member && group_dispersed(item.group, placement_.size(), nullptr))
-        return Violation{Breach::dispersion, part, part};
-    std::size_t other = part;
-    if (const auto breach = rule_breach(part, shape, pose, guard, &other, moved)) return Violation{*breach, part, other};
-    return std::nullopt;
+    return first_breach(part, shapes_[part], placement_[part], guard, moved);
 }
 
 bool Kernel::attempt(const std::vector<Move>& moves, std::vector<std::size_t>* blockers, bool keep) {
@@ -272,20 +263,19 @@ bool Kernel::attempt(const std::vector<Move>& moves, std::vector<std::size_t>* b
     bool sound = true;
     for (std::size_t index = 0; sound && index < moves.size(); ++index) {
         const std::size_t part = moves[index].part;
-        const Part& item = problem_.parts[part];
         const Shape& shape = shapes_[part];
         const Pose& pose = placement_[part];
-        if (self_breach(part, shape, pose)) sound = false;
-        for (const std::size_t other : neighbours(shape.bound, part)) {
-            if (!sound) break;
-            if (!pair_breach(part, shape, pose.face, other, shapes_[other], placement_[other].face,
-                             problem_.rules.compare_guard))
-                continue;
-            if (!blockers || moved[other] || problem_.parts[other].fixed) sound = false;
-            else blockers->push_back(other);
-        }
-        if (sound && item.cohesion_member && group_dispersed(item.group, placement_.size(), nullptr)) sound = false;
-        if (sound && rule_breach(part, shape, pose, problem_.rules.compare_guard, nullptr, &moved)) sound = false;
+        const Nm guard = problem_.rules.compare_guard;
+        geometry_breaches(part, shape, pose, guard, false, [&](const Violation& found) {
+            if (found.other != part && blockers && !moved[found.other] && !problem_.parts[found.other].fixed) {
+                blockers->push_back(found.other);
+                return false;
+            }
+            sound = false;
+            return true;
+        });
+        if (sound && rule_breaches(part, shape, pose, guard, &moved, false, [](const Violation&) { return true; }))
+            sound = false;
     }
     for (std::size_t index = 0; sound && index < carried.size(); ++index) {
         const Box field = reserve_boxes_[carried[index]];
@@ -509,7 +499,10 @@ std::optional<Breach> Kernel::self_breach(std::size_t part, const Shape& shape, 
     }
     if (pose.face == Face::bottom && item.top_only) return Breach::bottom_face;
     if (board_.module_body && pose.face == Face::top && !item.core_exempt &&
-        !gap_at_least(shape.bound, *board_.module_body, problem_.rules.module_clearance))
+        !gap_at_least(shape.bound, *board_.module_body,
+                      module_gap_needed(item.height ? *item.height : Nm{0}, problem_.rules.module_stack_height,
+                                                   problem_.rules.module_clearance,
+                                                   problem_.rules.tall_module_clearance)))
         return Breach::module_core;
     return std::nullopt;
 }
@@ -695,47 +688,86 @@ bool Kernel::connectors_met(std::size_t part, const Shape& shape, std::size_t ot
     return gap >= (first_boot && second_boot ? rules.overmold_gap : rules.boot_gap) + guard;
 }
 
-std::optional<Breach> Kernel::rule_breach(std::size_t part, const Shape& shape, const Pose& pose, Nm guard,
-                                          std::size_t* other, const std::vector<char>* moved) const {
+template <typename Sink>
+bool Kernel::geometry_breaches(std::size_t part, const Shape& shape, const Pose& pose, Nm guard, bool owned,
+                               Sink&& sink) const {
+    if (const auto breach = self_breach(part, shape, pose)) {
+        if (sink(Violation{*breach, part, part})) return true;
+    }
+    for (const std::size_t other : neighbours(shape.bound, part)) {
+        if (owned && other < part) continue;
+        if (const auto breach = pair_breach(part, shape, pose.face, other, shapes_[other], placement_[other].face,
+                                            guard)) {
+            if (sink(Violation{*breach, part, other})) return true;
+        }
+    }
+    return false;
+}
+
+template <typename Sink>
+bool Kernel::rule_breaches(std::size_t part, const Shape& shape, const Pose& pose, Nm guard,
+                           const std::vector<char>* moved, bool owned, Sink&& sink) const {
     const auto guard_for = [&](std::size_t peer) { return moved && (*moved)[peer] ? Nm{0} : guard; };
     const Part& item = problem_.parts[part];
     const Constraints& rules = problem_.constraints;
-    if (item.edge && !edge_met(item, shape, pose)) return Breach::edge_mount;
+    if (item.cohesion_member && (!owned || groups_.at(item.group).front() == part) &&
+        group_dispersed(item.group, part, &shape) && sink(Violation{Breach::dispersion, part, part}))
+        return true;
+    if (item.edge && !edge_met(item, shape, pose) && sink(Violation{Breach::edge_mount, part, part})) return true;
     if (item.connector)
-        for (const std::size_t peer : connectors_)
-            if (peer != part && !connectors_met(part, shape, peer, shapes_[peer], guard)) {
-                if (other) *other = peer;
-                return Breach::connector_gap;
-            }
+        for (const std::size_t peer : connectors_) {
+            if (peer == part || (owned && peer < part)) continue;
+            if (!connectors_met(part, shape, peer, shapes_[peer], guard) &&
+                sink(Violation{Breach::connector_gap, part, peer}))
+                return true;
+        }
     for (const std::size_t index : pad_rules_[part]) {
         const PadGap& rule = rules.pad_gaps[index];
+        if (owned && rule.anchor != part) continue;
+        const std::size_t peer = rule.anchor == part ? rule.member : rule.anchor;
         const Shape& anchor = rule.anchor == part ? shape : shapes_[rule.anchor];
         const Shape& member = rule.member == part ? shape : shapes_[rule.member];
-        if (!pad_gap_met(rule, anchor, member, guard_for(rule.anchor == part ? rule.member : rule.anchor))) {
-            if (other) *other = rule.anchor == part ? rule.member : rule.anchor;
-            return Breach::contract;
-        }
+        if (!pad_gap_met(rule, anchor, member, guard_for(peer)) && sink(Violation{Breach::contract, part, peer}))
+            return true;
     }
-    for (const std::size_t index : nearest_rules_[part])
-        if (!nearest_met(rules.nearest_gaps[index], part, &shape, &pose, guard)) {
-            if (other) *other = rules.nearest_gaps[index].anchor;
-            return Breach::contract;
-        }
+    for (const std::size_t index : nearest_rules_[part]) {
+        const NearestGap& rule = rules.nearest_gaps[index];
+        if (owned && rule.anchor != part) continue;
+        if (!nearest_met(rule, part, &shape, &pose, guard) && sink(Violation{Breach::contract, part, rule.anchor}))
+            return true;
+    }
     for (const std::size_t index : face_rules_[part]) {
         const FacePair& rule = rules.face_pairs[index];
-        const std::size_t peer = rule.first == part ? rule.second : rule.first;
-        if (peer != part && placement_[peer].face != pose.face) {
-            if (other) *other = peer;
-            return Breach::contract;
-        }
+        const bool first = rule.first == part;
+        const std::size_t peer = first ? rule.second : rule.first;
+        if (peer == part || (owned && !first)) continue;
+        if (!pair_faced(problem_, board_, rule.first, first ? pose : placement_[peer], rule.second,
+                        first ? placement_[peer] : pose, rule.or_under) &&
+            sink(Violation{Breach::contract, part, peer}))
+            return true;
     }
     const auto found = group_rules_.find(item.group);
     if (found != group_rules_.end())
-        for (const std::size_t index : found->second)
-            if (!group_gap_met(rules.group_gaps[index], part, &shape, &pose,
-                               guard > 0 ? problem_.rules.group_guard : 0))
-                return Breach::group_bound;
-    return std::nullopt;
+        for (const std::size_t index : found->second) {
+            const GroupGap& rule = rules.group_gaps[index];
+            if (owned && (rule.first != item.group || members_.at(rule.first).front() != part)) continue;
+            if (!group_gap_met(rule, part, &shape, &pose, guard > 0 ? problem_.rules.group_guard : 0) &&
+                sink(Violation{Breach::group_bound, part, part}))
+                return true;
+        }
+    return false;
+}
+
+std::optional<Violation> Kernel::first_breach(std::size_t part, const Shape& shape, const Pose& pose, Nm guard,
+                                              const std::vector<char>* moved) const {
+    std::optional<Violation> found;
+    const auto take = [&](const Violation& violation) {
+        found = violation;
+        return true;
+    };
+    if (!geometry_breaches(part, shape, pose, guard, false, take))
+        rule_breaches(part, shape, pose, guard, moved, false, take);
+    return found;
 }
 
 bool Kernel::group_dispersed(const std::string& group, std::size_t moved, const Shape* shape) const {
@@ -753,44 +785,14 @@ bool Kernel::group_dispersed(const std::string& group, std::size_t moved, const 
 
 std::vector<Violation> Kernel::violations() const {
     std::vector<Violation> found;
-    for (std::size_t part = 0; part < placement_.size(); ++part) {
-        if (const auto breach = self_breach(part, shapes_[part], placement_[part]))
-            found.push_back({*breach, part, part});
-        for (const std::size_t other : neighbours(shapes_[part].bound, part)) {
-            if (other < part) continue;
-            if (const auto breach = pair_breach(part, shapes_[part], placement_[part].face, other,
-                                                shapes_[other], placement_[other].face, 0))
-                found.push_back({*breach, part, other});
-        }
-    }
-    for (const auto& [group, members] : groups_)
-        if (group_dispersed(group, placement_.size(), nullptr))
-            found.push_back({Breach::dispersion, members.front(), members.front()});
-    const Constraints& rules = problem_.constraints;
-    for (std::size_t part = 0; part < placement_.size(); ++part) {
-        const Part& item = problem_.parts[part];
-        if (item.edge && !edge_met(item, shapes_[part], placement_[part]))
-            found.push_back({Breach::edge_mount, part, part});
-        if (item.connector)
-            for (const std::size_t peer : connectors_)
-                if (peer > part && !connectors_met(part, shapes_[part], peer, shapes_[peer], 0))
-                    found.push_back({Breach::connector_gap, part, peer});
-    }
-    for (const auto& rule : rules.pad_gaps)
-        if (!pad_gap_met(rule, shapes_[rule.anchor], shapes_[rule.member], 0))
-            found.push_back({Breach::contract, rule.anchor, rule.member});
-    for (const auto& rule : rules.nearest_gaps)
-        if (!nearest_met(rule, placement_.size(), nullptr, nullptr, 0))
-            found.push_back({Breach::contract, rule.anchor, rule.anchor});
-    for (const auto& rule : rules.face_pairs)
-        if (placement_[rule.first].face != placement_[rule.second].face)
-            found.push_back({Breach::contract, rule.first, rule.second});
-    for (const auto& rule : rules.group_gaps)
-        if (!group_gap_met(rule, placement_.size(), nullptr, nullptr, 0)) {
-            const auto members = members_.find(rule.first);
-            const std::size_t part = members == members_.end() ? 0 : members->second.front();
-            found.push_back({Breach::group_bound, part, part});
-        }
+    const auto keep = [&](const Violation& violation) {
+        found.push_back(violation);
+        return false;
+    };
+    for (std::size_t part = 0; part < placement_.size(); ++part)
+        geometry_breaches(part, shapes_[part], placement_[part], 0, true, keep);
+    for (std::size_t part = 0; part < placement_.size(); ++part)
+        rule_breaches(part, shapes_[part], placement_[part], 0, nullptr, true, keep);
     return found;
 }
 
@@ -799,18 +801,7 @@ std::optional<Violation> Kernel::rejection(std::size_t part, const Pose& pose) c
     if (item.fixed || !fields_[part].empty()) return Violation{Breach::locked, part, part};
     if (pose.face != placement_[part].face && !problem_.footprints[item.footprint].flippable)
         return Violation{Breach::locked, part, part};
-    const Shape shape = shape_of(part, pose);
-    if (const auto breach = self_breach(part, shape, pose)) return Violation{*breach, part, part};
-    for (const std::size_t other : neighbours(shape.bound, part))
-        if (const auto breach = pair_breach(part, shape, pose.face, other, shapes_[other],
-                                            placement_[other].face, problem_.rules.compare_guard))
-            return Violation{*breach, part, other};
-    if (item.cohesion_member && group_dispersed(item.group, part, &shape))
-        return Violation{Breach::dispersion, part, part};
-    std::size_t other = part;
-    if (const auto breach = rule_breach(part, shape, pose, problem_.rules.compare_guard, &other, nullptr))
-        return Violation{*breach, part, other};
-    return std::nullopt;
+    return first_breach(part, shape_of(part, pose), pose, problem_.rules.compare_guard, nullptr);
 }
 
 bool Kernel::move(std::size_t part, const Pose& pose) { return move_many({{part, pose}}); }

@@ -14,7 +14,7 @@ using json_text::object;
 using json_text::text_value;
 
 inline constexpr std::size_t reserve_corners = 4;
-const char* const schema_name = "schgen.layout-problem/8";
+const char* const schema_name = "schgen.layout-problem/9";
 inline constexpr std::size_t point_fields = 2, disc_fields = 3, box_fields = 4;
 
 std::string point_json(Point point) { return array({integer(point.x), integer(point.y)}); }
@@ -200,7 +200,8 @@ std::string constraints_json(const Constraints& rules) {
     for (const auto& rule : rules.face_pairs)
         face_pairs.push_back(object({{"first", integer(static_cast<long long>(rule.first))},
                                      {"second", integer(static_cast<long long>(rule.second))},
-                                     {"source", text_value(rule.source)}}));
+                                     {"source", text_value(rule.source)},
+                                     {"or_under", boolean(rule.or_under)}}));
     for (const auto& rule : rules.group_gaps)
         group_gaps.push_back(object({{"first", text_value(rule.first)},
                                      {"second", text_value(rule.second)},
@@ -246,8 +247,9 @@ Constraints constraints_of(const JsonNode& node) {
                                       text(entry, "source")});
     }
     for (const auto& entry : field(node, "face_pairs", JsonKind::Array).array_value) {
-        reject_unknown_keys(entry, {"first", "second", "source"}, "layout face pair");
-        rules.face_pairs.push_back({index_of(entry, "first"), index_of(entry, "second"), text(entry, "source")});
+        reject_unknown_keys(entry, {"first", "second", "source", "or_under"}, "layout face pair");
+        rules.face_pairs.push_back({index_of(entry, "first"), index_of(entry, "second"), text(entry, "source"),
+                                    flag(entry, "or_under")});
     }
     for (const auto& entry : field(node, "group_gaps", JsonKind::Array).array_value) {
         reject_unknown_keys(entry, {"first", "second", "second_is_core", "measure", "limit", "sense", "source"},
@@ -363,6 +365,8 @@ std::string document_json(const Problem& problem, const Placement& placement) {
         {"rules", object({{"compare_guard", integer(problem.rules.compare_guard)},
                           {"group_guard", integer(problem.rules.group_guard)},
                           {"module_clearance", integer(problem.rules.module_clearance)},
+                          {"module_stack_height", integer(problem.rules.module_stack_height)},
+                          {"tall_module_clearance", integer(problem.rules.tall_module_clearance)},
                           {"copper_clearance", integer(problem.rules.copper_clearance)},
                           {"edge_clearance", integer(problem.rules.edge_clearance)},
                           {"edge_setback", integer(problem.rules.edge_setback)},
@@ -398,7 +402,8 @@ Document read_document(const JsonNode& root) {
     if (!body) throw LayoutError("layout: field module_body is missing");
     if (body->kind != JsonKind::Null) problem.board.module_body = box_of(*body);
     const JsonNode& rules = field(root, "rules", JsonKind::Object);
-    reject_unknown_keys(rules, {"compare_guard", "group_guard", "module_clearance", "copper_clearance",
+    reject_unknown_keys(rules, {"compare_guard", "group_guard", "module_clearance", "module_stack_height",
+                                "tall_module_clearance", "copper_clearance",
                                 "edge_clearance", "edge_setback", "plane_margin", "dispersion_limit",
                                 "dispersion_floor"},
                         "layout rules");
@@ -409,6 +414,8 @@ Document read_document(const JsonNode& root) {
     problem.rules.edge_setback = whole(field(rules, "edge_setback", JsonKind::Number));
     problem.rules.plane_margin = whole(field(rules, "plane_margin", JsonKind::Number));
     problem.rules.module_clearance = whole(field(rules, "module_clearance", JsonKind::Number));
+    problem.rules.module_stack_height = whole(field(rules, "module_stack_height", JsonKind::Number));
+    problem.rules.tall_module_clearance = whole(field(rules, "tall_module_clearance", JsonKind::Number));
     problem.rules.dispersion_limit = field(rules, "dispersion_limit", JsonKind::Number).number_value;
     problem.rules.dispersion_floor = static_cast<std::size_t>(whole(field(rules, "dispersion_floor", JsonKind::Number)));
     for (const auto& entry : field(root, "nets", JsonKind::Array).array_value) {

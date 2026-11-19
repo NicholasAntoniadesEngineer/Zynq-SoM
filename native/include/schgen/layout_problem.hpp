@@ -122,6 +122,7 @@ struct NearestGap {
 struct FacePair {
     std::size_t first = 0, second = 0;
     std::string source;
+    bool or_under = false;
 };
 
 struct GroupGap {
@@ -170,7 +171,7 @@ struct Reserve {
 
 struct Rules {
     Nm compare_guard = 0, group_guard = 0;
-    Nm module_clearance = 0, copper_clearance = 0, edge_clearance = 0, edge_setback = 0, plane_margin = 0;
+    Nm module_clearance = 0, module_stack_height = 0, tall_module_clearance = 0, copper_clearance = 0, edge_clearance = 0, edge_setback = 0, plane_margin = 0;
     double dispersion_limit = 0;
     std::size_t dispersion_floor = 0;
 };
@@ -207,6 +208,8 @@ Point corner_site(const Board& board, const CornerRule& rule);
 std::optional<bool> mirrors_across_x(const Footprint& footprint);
 Box gate_at(const Problem& problem, std::size_t part, const Pose& pose);
 Box pour_box(const PourRule& rule, const Pose& owner, const Board& board);
+bool pair_faced(const Problem& problem, const Board& board, std::size_t owner, const Pose& owner_pose,
+                std::size_t member, const Pose& member_pose, bool or_under);
 Box hull_at(const Problem& problem, const Placement& placement, const std::vector<std::size_t>& parts);
 void index_names(Variant& variant);
 struct HoldPolicy {

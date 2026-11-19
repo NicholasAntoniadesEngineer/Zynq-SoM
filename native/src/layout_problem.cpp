@@ -1,5 +1,6 @@
 #include "schgen/layout_problem.hpp"
 
+#include "schgen/roles.hpp"
 #include "schgen/pcb_emit.hpp"
 
 #include <limits>
@@ -193,6 +194,16 @@ std::optional<bool> mirrors_across_x(const Footprint& footprint) {
         if (same) return across_x;
     }
     return std::nullopt;
+}
+
+bool pair_faced(const Problem& problem, const Board& board, std::size_t owner, const Pose& owner_pose,
+                std::size_t member, const Pose& member_pose, bool or_under) {
+    if (owner_pose.face == member_pose.face) return true;
+    if (!or_under) return false;
+    const bool body = rules::under_region(problem.parts[owner].module) == rules::UnderRegion::module_body &&
+                      board.module_body.has_value();
+    const Box region = body ? *board.module_body : gate_at(problem, owner, owner_pose);
+    return overlaps(gate_at(problem, member, member_pose), region);
 }
 
 Box hull_at(const Problem& problem, const Placement& placement, const std::vector<std::size_t>& parts) {

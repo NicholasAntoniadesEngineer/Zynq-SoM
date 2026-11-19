@@ -2,6 +2,7 @@
 #include "schgen/board_inputs.hpp"
 #include "schgen/netlist_gate.hpp"
 #include "schgen/pcb_emit.hpp"
+#include "schgen/rules.hpp"
 
 namespace schgen {
 // Validate complete connected-pin partitions against live authored circuits.
@@ -13,6 +14,7 @@ struct BoardPcbStage {
     PcbPlacementInput inputs;
     PcbPlacementResult placement;
     PcbEmissionResult emission;
+    rules::Stage reached = rules::Stage::placement;
 };
 // Complete live construction, not an aggregate verification verdict. No cached
 // netlist or placed-board input; callers must apply independent final gates.

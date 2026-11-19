@@ -121,8 +121,14 @@ private:
                                          const Pose* pose) const;
     bool edge_met(const Part& item, const Shape& shape, const Pose& pose) const;
     bool connectors_met(std::size_t part, const Shape& shape, std::size_t other, const Shape& other_shape, Nm guard) const;
-    std::optional<Breach> rule_breach(std::size_t part, const Shape& shape, const Pose& pose, Nm guard,
-                                      std::size_t* other, const std::vector<char>* moved) const;
+    template <typename Sink>
+    bool geometry_breaches(std::size_t part, const Shape& shape, const Pose& pose, Nm guard, bool owned,
+                           Sink&& sink) const;
+    template <typename Sink>
+    bool rule_breaches(std::size_t part, const Shape& shape, const Pose& pose, Nm guard, const std::vector<char>* moved,
+                       bool owned, Sink&& sink) const;
+    std::optional<Violation> first_breach(std::size_t part, const Shape& shape, const Pose& pose, Nm guard,
+                                          const std::vector<char>* moved) const;
     std::optional<Violation> breach_at(std::size_t part, Nm guard, const std::vector<char>* moved) const;
     bool reserves_follow(const std::vector<Move>& moves, const std::vector<char>& moved, std::vector<Box>& boxes,
                          std::vector<std::size_t>& carried) const;

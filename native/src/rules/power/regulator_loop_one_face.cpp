@@ -9,7 +9,7 @@ constexpr Rule rule{
     "A via inside a switching current loop adds inductance exactly where the current changes fastest, which becomes ringing and radiated noise.",
     "TI SLYT614, Five steps to a great PCB layout for a step-down converter, https://www.ti.com/lit/an/slyt614/slyt614.pdf; "
     "TI LM61460 datasheet, section 11 Layout, https://www.ti.com/lit/ds/symlink/lm61460.pdf",
-    "primary vendor document", Enforcement::measured};
+    "primary vendor document", Enforcement::gate, Stage::layout};
 
 RuleResult check(const RuleContext& context) {
     RuleResult result{&rule, 0, context.unresolved(roles_with(&RoleRule::marks_regulator)), {}};

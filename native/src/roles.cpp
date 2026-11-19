@@ -59,9 +59,10 @@ bool keeps_owner_face(const RoleRule& role, bool owner_is_regulator, bool owner_
     return role.loop_capacitor && (owner_is_regulator || owner_is_loop_inductor);
 }
 
-FaceDemand face_demand(const RoleRule& role, bool owner_is_regulator, bool owner_is_loop_inductor) {
+FaceDemand face_demand(const RoleRule& role, bool owner_is_regulator, bool owner_is_loop_inductor,
+                       bool owner_is_module_connector) {
     if (keeps_owner_face(role, owner_is_regulator, owner_is_loop_inductor) || role.protects_connector) return {true, false};
-    if (role.bypasses_pin) return {true, true};
+    if (role.bypasses_pin || (role.terminates_line && owner_is_module_connector)) return {true, true};
     return {};
 }
 

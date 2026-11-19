@@ -9,7 +9,7 @@ constexpr Rule rule{
     "A via in an oscillator node adds stray capacitance that detunes it and length that picks up and radiates noise.",
     "ST AN2867, Oscillator design guide for STM8/STM32, section 7.1, "
     "https://www.st.com/resource/en/application_note/an2867-oscillator-design-guide-for-stm8afals-stm32-mcus-and-mpus-stmicroelectronics.pdf",
-    "primary vendor document", Enforcement::gate};
+    "primary vendor document", Enforcement::gate, Stage::placement};
 
 RuleResult check(const RuleContext& context) {
     RuleResult result{&rule, 0, context.unresolved(roles_with(&RoleRule::owner_face)), {}};

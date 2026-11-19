@@ -20,6 +20,7 @@ struct PcbVerificationResult {
     ReturnStitchResult return_stitch;
     EscapeLaneResult escape_lanes;
     PlacementIntegrityResult integrity;
+    rules::Stage reached = rules::Stage::placement;
     QuantizationCounts quantization_engagements;
     // Fixed SoM contact-level v1 findings and placement coverage/composition
     // stay visible but advisory. Actual carrier return-stitch coverage is hard.

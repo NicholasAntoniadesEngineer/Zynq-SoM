@@ -15,6 +15,11 @@ namespace schgen::layout {
 namespace constants {
 inline constexpr NamedConstant module_clearance{"module_clearance", 1.0, "mm", "policy",
     "gap every top-face courtyard keeps from the module body, for its outline and mating tolerance and for seating and lifting it"};
+inline constexpr NamedConstant module_stack_height{"module_stack_height", 1.5, "mm", "physical",
+    "board-to-board distance of the mated Hirose DF40C-100DS-0.4V(51) receptacle and DF40C-100DP-0.4V(51) header; "
+    "Hirose DF40 Series catalog 2013.11, pages 3 and 4: a receptacle with no stacking-height code stacks at 1.5 mm"};
+inline constexpr NamedConstant tall_module_clearance{"tall_module_clearance", 3.0, "mm", "policy",
+    "gap a top-face part taller than the module's underside keeps from the module body, so the module can be gripped, seated and lifted beside it"};
 inline constexpr NamedConstant fanout_floor{"fanout_floor", 3.0, "pins", "policy",
     "the fan-out gate judges only parts with at least this many connected nets"};
 inline constexpr NamedConstant relief_reach{"relief_reach", 1.0, "mm", "physical",
@@ -47,7 +52,7 @@ inline constexpr NamedConstant escape_tie{"escape_tie", 2e-3, "mm", "policy",
     "tie width when choosing a pad's nearest courtyard side; twice the gate's, so the kernel never rings fewer sides"};
 inline constexpr NamedConstant area_guard{"area_guard", 1e-6, "mm2", "policy",
     "slack demanded of a module-core overlap so the mechanical gate's floating-point area cannot disagree at the limit"};
-inline constexpr std::array adapter_registry{module_clearance, fanout_floor, relief_reach, edge_reach, owner_reach,
+inline constexpr std::array adapter_registry{module_clearance, module_stack_height, tall_module_clearance, fanout_floor, relief_reach, edge_reach, owner_reach,
                                              connector_overlap, band_share, overmold_gap, boot_gap,
                                              compare_guard, group_guard, hole_inset, mark_inset, area_guard,
                                              escape_tie, hold_slack, tether_slack, bypass_reach, reservoir_reach,
@@ -96,8 +101,11 @@ PcbModel model_with(const PcbModel& base, const ModelBinding& binding, const Pla
 
 struct GateVerdict {
     bool fanout = false, mechanical = false, on_board = false, grouped = false, contracts = false, spacing = false,
-         integrity = false;
+         integrity = false, integrity_as_placed = false;
     bool ok() const { return fanout && mechanical && on_board && grouped && contracts && spacing && integrity; }
+    bool ok_as_placed() const {
+        return fanout && mechanical && on_board && grouped && contracts && spacing && integrity_as_placed;
+    }
     std::string text() const;
 };
 

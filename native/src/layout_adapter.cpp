@@ -547,6 +547,8 @@ ModelBinding bind_model(const PcbModel& model, const PcbEmitPolicy& policy, cons
                                            model.som_keepout->x1, model.som_keepout->y1);
     problem.rules.edge_setback = to_nm(options.edge_setback);
     problem.rules.module_clearance = to_nm(constants::module_clearance.value);
+    problem.rules.module_stack_height = to_nm(constants::module_stack_height.value);
+    problem.rules.tall_module_clearance = problem.rules.module_clearance;
     problem.rules.dispersion_limit = ratsnest_dispersion_max;
     problem.rules.dispersion_floor = static_cast<std::size_t>(ratsnest_small_n);
 
@@ -681,7 +683,8 @@ ModelBinding bind_model(const PcbModel& model, const PcbEmitPolicy& policy, cons
     for (Claim& claim : intent.claims) {
         const rules::RoleRule& role = rules::role_rule(claim.role);
         const rules::FaceDemand demand =
-            rules::face_demand(role, regulator[claim.owner] != 0, loop_inductor[claim.owner] != 0);
+            rules::face_demand(role, regulator[claim.owner] != 0, loop_inductor[claim.owner] != 0,
+                               problem.parts[claim.owner].module);
         claim.same_face = demand.owner_face;
         claim.or_under = demand.or_under;
         claim.first = role.protects_connector;
@@ -755,9 +758,10 @@ std::string GateVerdict::text() const {
 GateVerdict judge_model(const PcbPlacementInput& inputs, const PcbModel& model) {
     const PcbCheckInput input(model);
     const auto ratsnest = check_ratsnest(input);
+    const PlacementIntegrityResult integrity = check_placement_integrity(input, model, authored_intent(inputs));
     return {check_fanout(input, 0).ok, check_placement_mech(input).ok, ratsnest.off_board.empty(),
             ratsnest.dispersed.empty(), check_pcb_placement_gates(inputs, model).ok(),
-            check_connector_spacing(input).ok, check_placement_integrity(input, model, authored_intent(inputs)).ok};
+            check_connector_spacing(input).ok, integrity.ok, integrity.placement_ok};
 }
 
 PcbModel model_with(const PcbModel& base, const ModelBinding& binding, const Placement& placement) {
