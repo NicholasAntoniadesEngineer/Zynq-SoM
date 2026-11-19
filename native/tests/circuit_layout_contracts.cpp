@@ -159,7 +159,7 @@ void documents_are_strict() {
     require(broken([&](JsonNode& d) { field(field(d, "serves").array_value.front(), "pin").string_value = "U1"; }),
             "an owner that is not REF.PIN is rejected");
     require(broken([&](JsonNode& d) { d.object_value.emplace_back("extra", JsonNode{}); }), "an unknown field is rejected");
-    require(circuit_service_roles().size() == std::size_t{13}, "the role vocabulary is the documented one");
+    require(circuit_service_roles().size() == std::size_t{14}, "the role vocabulary is the documented one");
 }
 
 }

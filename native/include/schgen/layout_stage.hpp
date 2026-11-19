@@ -15,6 +15,7 @@ struct StageOptions {
 struct StageResult {
     PcbModel model;
     AttractReport attract, reseat;
+    OrderReport order;
     SqueezeReport squeeze;
     BalanceReport balance;
     ArrangeReport arrange;

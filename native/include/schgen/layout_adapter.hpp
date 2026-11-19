@@ -9,6 +9,7 @@
 
 #include <array>
 #include <map>
+#include <set>
 
 namespace schgen::layout {
 
@@ -58,7 +59,7 @@ inline constexpr std::array adapter_registry{module_clearance, module_stack_heig
                                              escape_tie, hold_slack, tether_slack, bypass_reach, reservoir_reach,
                                              pull_reach, series_reach, terminate_reach, filter_reach,
                                              feedback_reach, switching_reach, timing_reach, protect_reach,
-                                             sense_reach, indicate_reach, set_reach};
+                                             sense_reach, indicate_reach, set_reach, limit_reach};
 }
 
 struct ServiceInput {
@@ -89,6 +90,7 @@ struct ModelBinding {
 };
 
 AuthoredIntent authored_intent(const PcbPlacementInput& inputs);
+std::set<std::string> module_served(const PcbPlacementInput& inputs);
 double role_reach(const std::string& role);
 
 HoldPolicy hold_policy();

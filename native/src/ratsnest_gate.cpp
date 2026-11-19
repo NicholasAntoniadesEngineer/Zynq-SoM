@@ -35,6 +35,7 @@ RatsnestGateResult check_ratsnest(const PcbCheckInput& input, const RatsnestNets
                 f(p.x1,1)+","+f(p.y1,1)+") outside Edge.Cuts ("+f(x0,0)+","+f(y0,0)+")..("+f(x1,0)+","+f(y1,0)+")");
         const auto file=std::filesystem::path(inst.mod->source).filename().string();
         if(starts(file,"MountingHole")||starts(file,"Fiducial"))continue;
+        if(inst.at_module)continue;
         by_sheet[inst.sheet].push_back(c);
     }
     for(const auto& [name,boxes]:by_sheet) {

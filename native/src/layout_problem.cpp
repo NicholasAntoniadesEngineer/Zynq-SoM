@@ -61,6 +61,70 @@ Nm pad_gap_length(const Problem& problem, const PadGap& rule, const Placement& p
     return static_cast<Nm>(std::ceil(std::sqrt(static_cast<double>(squared_length)))) + 1;
 }
 
+Nm squared_net_gap(const Problem& problem, std::size_t anchor, const Pose& anchor_pose,
+                   const std::vector<std::size_t>& names, std::size_t member, const Pose& member_pose, int net) {
+    const Variant& held = problem.footprints[problem.parts[anchor].footprint].on(anchor_pose.face);
+    const Variant& variant = problem.footprints[problem.parts[member].footprint].on(member_pose.face);
+    const auto& nets = problem.parts[member].pad_nets;
+    Nm best = std::numeric_limits<Nm>::max();
+    for (const std::size_t name : names) {
+        const Box pin = placed(held.name_boxes[name], anchor_pose.at, anchor_pose.turn);
+        for (std::size_t pad = 0; pad < variant.pads.size(); ++pad)
+            if (nets[pad] == net)
+                best = std::min(best, squared_gap(pin, placed(variant.pads[pad].box, member_pose.at, member_pose.turn)));
+    }
+    return best;
+}
+
+std::optional<NetOrder> net_order_of(const Problem& problem, const PadGap& claim) {
+    const Part& owner = problem.parts[claim.anchor];
+    const bool plugs = owner.part_class == PartClass::connector || owner.part_class == PartClass::header;
+    if (!claim.first || !plugs || claim.anchor_names.empty()) return std::nullopt;
+    const Variant& variant = problem.footprints[owner.footprint].top;
+    int net = no_net;
+    for (std::size_t pad = 0; pad < variant.pads.size() && net == no_net; ++pad)
+        if (variant.pads[pad].name == variant.names[claim.anchor_names.front()]) net = owner.pad_nets[pad];
+    if (net == no_net) return std::nullopt;
+    const auto& served = problem.parts[claim.member].pad_nets;
+    if (std::find(served.begin(), served.end(), net) == served.end()) return std::nullopt;
+    NetOrder order{claim.anchor, claim.member, claim.anchor_names, net, {}, "first on its net after " + claim.source};
+    for (const auto& pin : problem.nets[static_cast<std::size_t>(net)].pins) {
+        const bool guards = std::any_of(problem.constraints.soft_gaps.begin(), problem.constraints.soft_gaps.end(),
+                                        [&](const PadGap& other) { return other.first && other.member == pin.part; });
+        if (pin.part == claim.anchor || guards ||
+            std::find(order.rivals.begin(), order.rivals.end(), pin.part) != order.rivals.end())
+            continue;
+        order.rivals.push_back(pin.part);
+    }
+    return order;
+}
+
+std::vector<NetOrder> net_orders_of(const Problem& problem) {
+    std::vector<NetOrder> orders;
+    for (const PadGap& claim : problem.constraints.soft_gaps)
+        if (auto order = net_order_of(problem, claim)) orders.push_back(std::move(*order));
+    return orders;
+}
+
+Nm rival_bound(const Problem& problem, const NetOrder& rule, const Placement& placement) {
+    Nm bound = std::numeric_limits<Nm>::max();
+    for (const std::size_t rival : rule.rivals)
+        bound = std::min(bound, squared_net_gap(problem, rule.anchor, placement[rule.anchor], rule.anchor_names, rival,
+                                                placement[rival], rule.net));
+    return bound;
+}
+
+bool net_order_met(const Problem& problem, const NetOrder& rule, const Placement& placement, std::size_t moved,
+                   const Pose* pose) {
+    const auto at = [&](std::size_t part) -> const Pose& { return pose && part == moved ? *pose : placement[part]; };
+    const auto gap = [&](std::size_t part) {
+        return squared_net_gap(problem, rule.anchor, at(rule.anchor), rule.anchor_names, part, at(part), rule.net);
+    };
+    const Nm lead = gap(rule.lead);
+    if (pose && moved != rule.anchor && moved != rule.lead) return gap(moved) >= lead;
+    return std::all_of(rule.rivals.begin(), rule.rivals.end(), [&](std::size_t rival) { return gap(rival) >= lead; });
+}
+
 void derive_ownership(Problem& problem, const Placement& placement, const HoldPolicy& policy, const Intent& intent) {
     const std::size_t count = problem.parts.size();
     problem.ownership.assign(count, {});
@@ -280,6 +344,12 @@ void validate(const Problem& problem, const Placement& placement) {
     for (const auto& rule : problem.constraints.face_pairs)
         if (!part_known(rule.first) || !part_known(rule.second))
             throw LayoutError("layout: face rule names an unknown part: " + rule.source);
+    for (const auto& rule : problem.constraints.net_orders) {
+        const bool known = part_known(rule.anchor) && part_known(rule.lead) && rule.net != no_net &&
+                           static_cast<std::size_t>(rule.net) < problem.nets.size() &&
+                           std::all_of(rule.rivals.begin(), rule.rivals.end(), part_known);
+        if (!known) throw LayoutError("layout: net order names an unknown part or net: " + rule.source);
+    }
     for (const auto& net : problem.nets)
         for (const auto& pin : net.pins)
             if (pin.part >= problem.parts.size() ||

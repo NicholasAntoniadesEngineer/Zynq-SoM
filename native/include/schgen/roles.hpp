@@ -16,6 +16,8 @@ inline constexpr NamedConstant pull_reach{"pull_reach", 12.0, "mm", "policy",
     "a pull resistor only sets a level; distance costs stub length, not function"};
 inline constexpr NamedConstant series_reach{"series_reach", 4.0, "mm", "policy",
     "a series element belongs at the source so the trace beyond it is the damped line"};
+inline constexpr NamedConstant limit_reach{"limit_reach", 8.0, "mm", "policy",
+    "a current-limiting resistor at a connector guards the parts behind it against a short or overdrive at the pin; it carries no fast edge, so it only has to sit between the connector and the first part it guards"};
 inline constexpr NamedConstant terminate_reach{"terminate_reach", 3.0, "mm", "policy",
     "a termination more than a few mm from its receiver leaves an unterminated stub"};
 inline constexpr NamedConstant filter_reach{"filter_reach", 4.0, "mm", "policy",
