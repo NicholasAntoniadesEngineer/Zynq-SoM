@@ -15,6 +15,7 @@ constexpr Nm unit = 1000000;
 constexpr Nm board_width = 100 * unit, board_height = 80 * unit;
 constexpr Box module_core{40 * unit, 30 * unit, 60 * unit, 50 * unit};
 constexpr Nm module_clearance = unit;
+constexpr double pour_spread = 3.0;
 constexpr double dispersion_limit = 9;
 constexpr std::size_t dispersion_floor = 3;
 constexpr Nm body_half = unit, pad_half = unit / 2, wide_half = 3 * unit;
@@ -174,6 +175,27 @@ void fanout_follows_the_gate_rule() {
     require(Kernel(scene.problem, scene.placement).violations().empty(), "a side without pins needs no ring");
     scene.problem.parts.front().escape_top = {false, false, false, true};
     require(has(Kernel(scene.problem, scene.placement).violations(), Breach::fanout), "a pin side keeps its ring");
+}
+
+void pours_follow_their_owner() {
+    Scene scene;
+    const auto smd = scene.footprint("smd", square_variant(fixture::body_half, fixture::passive_pins, false));
+    scene.add("U", "one", smd, fixture::subject_site);
+    const double reach = to_mm(fixture::body_half) * fixture::pour_spread;
+    const PourRule rule{0, {-reach, -reach / fixture::pour_spread, reach, reach / fixture::pour_spread}, 0.0, false};
+    scene.problem.reserves.push_back(
+        {pour_box(rule, scene.placement.front(), scene.problem.board), {0}, "thermal_pour_U_F", true, true, rule});
+    Kernel kernel(scene.problem, scene.placement);
+    const Box before = kernel.reserves().front();
+    const Pose swung{fixture::subject_site, Turn::quarter, Face::top};
+    require(kernel.move_many({{0, swung}}), "a part with a thermal area may turn");
+    require(kernel.reserves().front() == pour_box(rule, swung, scene.problem.board),
+            "the thermal area is recomputed for the new orientation");
+    require(kernel.reserves().front().width() == before.height() && kernel.reserves().front().height() == before.width(),
+            "a quarter turn exchanges the thermal area's sides");
+    Pose flipped = swung;
+    flipped.face = Face::bottom;
+    require(!kernel.move_many({{0, flipped}}), "a thermal area does not change face");
 }
 
 void single_part_rules_hold() {
@@ -433,7 +455,8 @@ int main() {
         courtyards_block_their_face();
         round_courtyards_use_their_shape();
         fanout_follows_the_gate_rule();
-        single_part_rules_hold();
+        pours_follow_their_owner();
+    single_part_rules_hold();
         fixed_copper_keeps_its_clearance();
         pads_keep_copper_clearance();
         contract_rules_bind_pads();

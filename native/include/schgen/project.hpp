@@ -36,7 +36,7 @@ struct ProjectPaths {
 
 struct ProjectConfig {
     std::string name, stackup;
-    bool labels = true;
+    bool labels = true, arrange = false;
     // Set-like membership in Python; retained in source order here.
     std::vector<std::string> wired_sheets, pilot_prox_sheets;
     std::array<double, 2> module_offset{};

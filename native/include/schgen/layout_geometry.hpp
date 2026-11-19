@@ -156,6 +156,7 @@ constexpr Nm overlap_area(Box a, Box b) {
 }
 
 Nm to_nm(double millimetres);
+double area_mm2(Box box);
 Nm ceil_nm(double millimetres);
 Nm nearest_nm(double millimetres);
 double to_mm(Nm value);

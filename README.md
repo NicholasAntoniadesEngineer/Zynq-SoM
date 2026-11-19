@@ -33,6 +33,7 @@ nothing needs recompiling. A misspelt or unknown key stops the run with an error
 | `boards` | `["carrier", "devkit_mini"]` | Boards to build, each a folder in this repository |
 | `output` | `"out"` | Folder that receives one sub-folder per board |
 | `squeeze` | `true` | Compact the placed board to the smallest outline that passes every rule |
+| `arrange` | `true` | Before squeezing, move clusters of parts off sides of the module so those sides can close up; needs `squeeze` |
 | `renders` | `true` | Produce the 3D and per-sheet images |
 | `labels` | `false` | Draw silkscreen reference and function labels |
 | `timing` | `true` | Print how long each stage took |

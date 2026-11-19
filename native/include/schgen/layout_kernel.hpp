@@ -58,7 +58,7 @@ public:
     const Problem& problem() const { return problem_; }
     const Placement& placement() const { return placement_; }
     const Board& board() const { return board_; }
-    void set_board(const Board& board) { board_ = board; }
+    void set_board(const Board& board);
     Snapshot snapshot() const { return {placement_, board_, reserve_boxes_}; }
     void restore(const Snapshot& snapshot);
     const std::vector<Box>& reserves() const { return reserve_boxes_; }

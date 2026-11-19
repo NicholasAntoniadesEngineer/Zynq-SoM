@@ -1,3 +1,4 @@
+#include "schgen/turn.hpp"
 #include "schgen/stackup.hpp"
 #include "pcb_emit_internal.hpp"
 #include "schgen/schematic.hpp"
@@ -69,6 +70,27 @@ const PcbEmitPolicy &default_pcb_emit_policy() {
         return p;
     }();
     return policy;
+}
+Box4 ground_plane_box(double origin_x, double origin_y, double width, double height, double edge_back) {
+    return {origin_x + edge_back, origin_y + edge_back, origin_x + width - edge_back, origin_y + height - edge_back};
+}
+Box4 thermal_pour_local(const Box4& pour, bool mirror) {
+    return mirror ? Box4{pour.x0, 0.0 - pour.y1, pour.x1, 0.0 - pour.y0} : pour;
+}
+std::vector<std::pair<double, double>> thermal_pour_corners(const Box4& local, double rotation, double x, double y,
+                                                            const Box4& plane) {
+    return corners_rot(local, rotation, x, y, plane.x0, plane.y0, plane.x1, plane.y1, 3);
+}
+Box4 thermal_pour_extent(const Box4& pour, bool mirror, double rotation, double x, double y, const Box4& plane) {
+    const auto corners = thermal_pour_corners(thermal_pour_local(pour, mirror), rotation, x, y, plane);
+    Box4 extent{corners.front().first, corners.front().second, corners.front().first, corners.front().second};
+    for (const auto& [cx, cy] : corners) {
+        extent.x0 = std::min(extent.x0, cx);
+        extent.y0 = std::min(extent.y0, cy);
+        extent.x1 = std::max(extent.x1, cx);
+        extent.y1 = std::max(extent.y1, cy);
+    }
+    return extent;
 }
 PcbEmitPolicy pcb_emit_policy(const ProjectConfig &c) {
     auto p = default_pcb_emit_policy();
@@ -167,9 +189,7 @@ PcbEmissionResult render_pcb(const PcbModel &m, const PcbEmitPolicy &p, Quantiza
     }
     auto g = m.net_numbers.find("GND");
     if (g != m.net_numbers.end() && g->second) {
-        double b = p.gnd_plane_edge_back;
-        auto box = round_box({m.origin_x + b, m.origin_y + b, m.origin_x + m.board_w - b,
-                              m.origin_y + m.board_h - b},
+        auto box = round_box(ground_plane_box(m.origin_x, m.origin_y, m.board_w, m.board_h, p.gnd_plane_edge_back),
                              3, counts);
         for (const std::string& layer : board_stackup().ground_layers()) {
             const std::string inner = layer.substr(0, layer.find('.'));

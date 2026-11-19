@@ -20,6 +20,8 @@ bool on_lattice(double scaled) {
 
 }
 
+double area_mm2(Box box) { return to_mm(box.width()) * to_mm(box.height()); }
+
 Nm to_nm(double millimetres) {
     const double scaled = lattice_value(millimetres);
     if (!on_lattice(scaled))

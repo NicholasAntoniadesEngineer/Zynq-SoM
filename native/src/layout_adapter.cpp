@@ -358,12 +358,30 @@ void reserve_thermal_fields(const PcbModel& model, const PcbEmitPolicy& policy, 
                         [&](const Reserve& known) { return known.box == box; }))
             continue;
         problem.reserves.push_back({box, {}, zone.name});
+        Reserve& reserve = problem.reserves.back();
         for (std::size_t index = 0; index < problem.parts.size(); ++index) {
             const Variant& variant = problem.footprints[problem.parts[index].footprint].on(placement[index].face);
             Box bound = placed(variant.gate_box, placement[index].at, placement[index].turn);
             if (variant.pad_hull) bound = united(bound, placed(*variant.pad_hull, placement[index].at, placement[index].turn));
-            if (overlaps(bound, box)) problem.reserves.back().members.push_back(index);
+            if (overlaps(bound, box)) reserve.members.push_back(index);
         }
+        const std::string head = "thermal_pour_";
+        if (!starts_with(zone.name, head)) continue;
+        const std::string owner_name = zone.name.substr(head.size(), zone.name.rfind('_') - head.size());
+        const auto owner = std::find_if(model.insts.begin(), model.insts.end(),
+                                        [&](const PcbCheckInstance& instance) { return instance.ref == owner_name; });
+        if (owner == model.insts.end()) throw LayoutError("layout: thermal pour " + zone.name + " names no part");
+        const auto spec = std::find_if(policy.thermal_copper.begin(), policy.thermal_copper.end(),
+                                       [&](const auto& row) { return starts_with(owner->value, row.first); });
+        if (spec == policy.thermal_copper.end())
+            throw LayoutError("layout: thermal pour " + zone.name + " has no pour rule for " + owner->value);
+        const std::size_t index = static_cast<std::size_t>(owner - model.insts.begin());
+        const Box4& local = spec->second.pour;
+        reserve.pour = PourRule{index, {local.x0, local.y0, local.x1, local.y1}, policy.gnd_plane_edge_back, owner->mirror};
+        if (std::find(reserve.members.begin(), reserve.members.end(), index) == reserve.members.end())
+            reserve.members.push_back(index);
+        if (pour_box(*reserve.pour, placement[index], problem.board) != box)
+            throw LayoutError("layout: thermal pour " + zone.name + " is not where its rule puts it");
     }
 }
 
@@ -621,18 +639,11 @@ ModelBinding bind_model(const PcbModel& model, const PcbEmitPolicy& policy, cons
         part.fanout_subject = !mezzanine && escape_nets >= static_cast<int>(constants::fanout_floor.value);
         part.never_crowds = !foreign;
         part.cluster_passive = foreign && !own;
-        const bool controlled = std::any_of(instance.pad_nets.begin(), instance.pad_nets.end(), [&](const auto& pad) {
-            const auto klass = model.netclass_of.find(pad.second.second);
-            if (klass == model.netclass_of.end()) return false;
-            const auto geometry = model.classes.find(klass->second);
-            return geometry != model.classes.end() && geometry->second.has_value();
-        });
-        const bool drilled = std::any_of(variant.pads.begin(), variant.pads.end(),
-                                         [](const PadShape& pad) { return pad.through; }) ||
-                             (instance.mod && has_thru_pads_from_text(instance.mod->bytes));
+        const bool controlled = !controlled_net(instance, model).empty();
+        const bool drilled = drilled_part(instance);
         part.top_only = (controlled && !board_stackup().ground_referenced(true)) || user_facing(instance) ||
                         (face == Face::top && drilled);
-        part.core_exempt = mechanical_file(instance) || starts_with(instance.sheet, "som_j");
+        part.core_exempt = module_clearance_exempt(instance);
         part.cohesion_member = !part.core_exempt;
         part.fixed = part.core_exempt || mezzanine;
         part.module = mezzanine;

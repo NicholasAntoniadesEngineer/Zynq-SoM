@@ -165,6 +165,14 @@ bool Kernel::owns(std::size_t reserve, std::size_t part) const {
     return std::find(fields.begin(), fields.end(), reserve) != fields.end();
 }
 
+void Kernel::set_board(const Board& board) {
+    board_ = board;
+    for (std::size_t reserve = 0; reserve < problem_.reserves.size(); ++reserve) {
+        const std::optional<PourRule>& pour = problem_.reserves[reserve].pour;
+        if (pour) reserve_boxes_[reserve] = pour_box(*pour, placement_[pour->owner], board_);
+    }
+}
+
 bool Kernel::reserves_follow(const std::vector<Move>& moves, const std::vector<char>& moved,
                              std::vector<Box>& boxes, std::vector<std::size_t>& carried) const {
     for (std::size_t reserve = 0; reserve < problem_.reserves.size(); ++reserve) {
@@ -173,16 +181,33 @@ bool Kernel::reserves_follow(const std::vector<Move>& moves, const std::vector<c
             [&](std::size_t member) { return moved[member] != 0; }));
         if (count == 0) continue;
         if (count != members.size()) return false;
-        std::optional<Point> shift;
+        const std::optional<PourRule>& pour = problem_.reserves[reserve].pour;
+        std::optional<Turn> swing;
+        std::optional<Pose> owner;
+        Point from{}, to{};
         for (const auto& move : moves) {
             if (!owns(reserve, move.part)) continue;
             const Pose& before = placement_[move.part];
-            if (move.pose.turn != before.turn || move.pose.face != before.face) return false;
-            const Point delta{move.pose.at.x - before.at.x, move.pose.at.y - before.at.y};
-            if (shift && *shift != delta) return false;
-            shift = delta;
+            if (move.pose.face != before.face) return false;
+            const Turn turn = static_cast<Turn>(
+                (static_cast<int>(move.pose.turn) + turn_count - static_cast<int>(before.turn)) % turn_count);
+            if (pour && pour->owner == move.part) owner = move.pose;
+            if (!swing) {
+                swing = turn;
+                from = before.at;
+                to = move.pose.at;
+                continue;
+            }
+            const Point arm{before.at.x - from.x, before.at.y - from.y};
+            if (turn != *swing || shifted(to, turned(arm, *swing)) != move.pose.at) return false;
         }
-        boxes[reserve] = shifted(boxes[reserve], *shift);
+        if (pour) {
+            if (!owner) return false;
+            boxes[reserve] = pour_box(*pour, *owner, board_);
+        } else {
+            if (*swing != Turn::none) return false;
+            boxes[reserve] = shifted(boxes[reserve], Point{to.x - from.x, to.y - from.y});
+        }
         carried.push_back(reserve);
     }
     return true;
@@ -228,10 +253,16 @@ bool Kernel::attempt(const std::vector<Move>& moves, std::vector<std::size_t>* b
     std::vector<std::size_t> carried;
     if (!reserves_follow(moves, moved, boxes, carried)) return false;
     std::vector<Pose> before;
+    std::vector<Shape> shapes_before;
     before.reserve(moves.size());
+    shapes_before.reserve(moves.size());
     for (const auto& move : moves) {
         before.push_back(placement_[move.part]);
-        place(move.part, move.pose);
+        remove(move.part);
+        shapes_before.push_back(std::move(shapes_[move.part]));
+        placement_[move.part] = move.pose;
+        shapes_[move.part] = shape_of(move.part, move.pose);
+        insert(move.part);
     }
     std::swap(reserve_boxes_, boxes);
     bool sound = true;
@@ -267,7 +298,13 @@ bool Kernel::attempt(const std::vector<Move>& moves, std::vector<std::size_t>* b
         refresh_nets(moves);
         return true;
     }
-    for (std::size_t index = 0; index < moves.size(); ++index) place(moves[index].part, before[index]);
+    for (std::size_t index = 0; index < moves.size(); ++index) {
+        const std::size_t part = moves[index].part;
+        remove(part);
+        placement_[part] = before[index];
+        shapes_[part] = std::move(shapes_before[index]);
+        insert(part);
+    }
     std::swap(reserve_boxes_, boxes);
     return sound;
 }
@@ -368,25 +405,32 @@ std::vector<Kernel::Key> Kernel::keys_of(Box box) const {
 }
 
 void Kernel::insert(std::size_t part) {
-    for (const Key key : keys_of(shapes_[part].bound)) cells_[key].push_back(part);
+    const Box box = shapes_[part].bound;
+    for (Nm column = cell_of(box.x0); column <= cell_of(box.x1); ++column)
+        for (Nm row = cell_of(box.y0); row <= cell_of(box.y1); ++row) cells_[key_of(column, row)].push_back(part);
 }
 
 void Kernel::remove(std::size_t part) {
-    for (const Key key : keys_of(shapes_[part].bound)) {
-        auto& members = cells_[key];
-        members.erase(std::remove(members.begin(), members.end(), part), members.end());
-        if (members.empty()) cells_.erase(key);
-    }
+    const Box box = shapes_[part].bound;
+    for (Nm column = cell_of(box.x0); column <= cell_of(box.x1); ++column)
+        for (Nm row = cell_of(box.y0); row <= cell_of(box.y1); ++row) {
+            const auto cell = cells_.find(key_of(column, row));
+            if (cell == cells_.end()) continue;
+            auto& members = cell->second;
+            members.erase(std::remove(members.begin(), members.end(), part), members.end());
+        }
 }
 
 std::vector<std::size_t> Kernel::neighbours(Box box, std::size_t self) const {
     std::vector<std::size_t> found;
-    for (const Key key : keys_of(grown(box, reach_))) {
-        const auto cell = cells_.find(key);
-        if (cell == cells_.end()) continue;
-        for (const std::size_t part : cell->second)
-            if (part != self) found.push_back(part);
-    }
+    const Box reach = grown(box, reach_);
+    for (Nm column = cell_of(reach.x0); column <= cell_of(reach.x1); ++column)
+        for (Nm row = cell_of(reach.y0); row <= cell_of(reach.y1); ++row) {
+            const auto cell = cells_.find(key_of(column, row));
+            if (cell == cells_.end()) continue;
+            for (const std::size_t part : cell->second)
+                if (part != self) found.push_back(part);
+        }
     std::sort(found.begin(), found.end());
     found.erase(std::unique(found.begin(), found.end()), found.end());
     return found;
@@ -786,8 +830,10 @@ void Kernel::verify() const {
             throw LayoutError("layout: stored shape differs from a full recompute");
         for (const Key key : keys_of(shape.bound)) cells[key].push_back(part);
     }
-    if (cells.size() != cells_.size())
-        throw LayoutError("layout: spatial hash differs from a full recompute");
+    const auto occupied = static_cast<std::size_t>(std::count_if(cells_.begin(), cells_.end(), [](const auto& cell) {
+        return !cell.second.empty();
+    }));
+    if (cells.size() != occupied) throw LayoutError("layout: spatial hash differs from a full recompute");
     for (auto& [key, members] : cells) {
         auto stored = cells_.at(key);
         std::sort(stored.begin(), stored.end());

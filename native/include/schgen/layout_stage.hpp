@@ -2,6 +2,7 @@
 
 #include "schgen/layout_adapter.hpp"
 #include "schgen/layout_sink.hpp"
+#include "schgen/layout_arrange.hpp"
 #include "schgen/layout_squeeze.hpp"
 
 namespace schgen::layout {
@@ -16,6 +17,7 @@ struct StageResult {
     AttractReport attract, reseat;
     SqueezeReport squeeze;
     BalanceReport balance;
+    ArrangeReport arrange;
     bool balanced = false;
     double plain_area = 0, balanced_area = 0;
     std::size_t rear_before = 0, rear_after = 0;

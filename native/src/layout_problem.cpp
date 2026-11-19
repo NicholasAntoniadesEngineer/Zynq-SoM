@@ -1,5 +1,7 @@
 #include "schgen/layout_problem.hpp"
 
+#include "schgen/pcb_emit.hpp"
+
 #include <limits>
 #include <cmath>
 #include <algorithm>
@@ -189,6 +191,20 @@ std::optional<bool> mirrors_across_x(const Footprint& footprint) {
         if (same) return across_x;
     }
     return std::nullopt;
+}
+
+Box hull_at(const Problem& problem, const Placement& placement, const std::vector<std::size_t>& parts) {
+    Box hull = gate_at(problem, parts.front(), placement[parts.front()]);
+    for (const std::size_t part : parts) hull = united(hull, gate_at(problem, part, placement[part]));
+    return hull;
+}
+
+Box pour_box(const PourRule& rule, const Pose& owner, const Board& board) {
+    const Box4 plane = ground_plane_box(to_mm(board.origin.x), to_mm(board.origin.y), to_mm(board.width),
+                                        to_mm(board.height), rule.edge_back);
+    const Box4 extent = thermal_pour_extent({rule.local[0], rule.local[1], rule.local[2], rule.local[3]}, rule.mirror,
+                                            degrees_of(owner.turn), to_mm(owner.at.x), to_mm(owner.at.y), plane);
+    return {nearest_nm(extent.x0), nearest_nm(extent.y0), nearest_nm(extent.x1), nearest_nm(extent.y1)};
 }
 
 Box gate_at(const Problem& problem, std::size_t part, const Pose& pose) {

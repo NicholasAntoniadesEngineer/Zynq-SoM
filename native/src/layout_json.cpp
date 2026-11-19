@@ -13,7 +13,8 @@ using json_text::integer;
 using json_text::object;
 using json_text::text_value;
 
-const char* const schema_name = "schgen.layout-problem/5";
+inline constexpr std::size_t reserve_corners = 4;
+const char* const schema_name = "schgen.layout-problem/6";
 inline constexpr std::size_t point_fields = 2, disc_fields = 3, box_fields = 4;
 
 std::string point_json(Point point) { return array({integer(point.x), integer(point.y)}); }
@@ -331,7 +332,16 @@ std::string document_json(const Problem& problem, const Placement& placement) {
                                    {"members", indices_json(reserve.members)},
                                    {"source", text_value(reserve.source)},
                                    {"top", boolean(reserve.top)},
-                                   {"bottom", boolean(reserve.bottom)}}));
+                                   {"bottom", boolean(reserve.bottom)},
+                                   {"pour", reserve.pour
+                                                ? object({{"owner", integer(static_cast<Nm>(reserve.pour->owner))},
+                                                          {"local", array({json_text::number(reserve.pour->local[0]),
+                                                                           json_text::number(reserve.pour->local[1]),
+                                                                           json_text::number(reserve.pour->local[2]),
+                                                                           json_text::number(reserve.pour->local[3])})},
+                                                          {"edge_back", json_text::number(reserve.pour->edge_back)},
+                                                          {"mirror", boolean(reserve.pour->mirror)}})
+                                                : std::string("null")}}));
     const Board& board = problem.board;
     return json_text::pretty(object({
         {"schema", text_value(schema_name)},
@@ -483,10 +493,24 @@ Document read_document(const JsonNode& root) {
         problem.obstacles.push_back(obstacle);
     }
     for (const auto& entry : field(root, "reserves", JsonKind::Array).array_value) {
-        reject_unknown_keys(entry, {"box", "members", "source", "top", "bottom"}, "layout reserve");
-        problem.reserves.push_back({box_of(field(entry, "box", JsonKind::Array)),
-                                    indices_of(field(entry, "members", JsonKind::Array)), text(entry, "source"),
-                                    flag(entry, "top"), flag(entry, "bottom")});
+        reject_unknown_keys(entry, {"box", "members", "source", "top", "bottom", "pour"}, "layout reserve");
+        Reserve reserve{box_of(field(entry, "box", JsonKind::Array)),
+                        indices_of(field(entry, "members", JsonKind::Array)), text(entry, "source"),
+                        flag(entry, "top"), flag(entry, "bottom")};
+        const JsonNode* pour = object_field(entry, "pour");
+        if (!pour) throw LayoutError("layout: field pour is missing");
+        if (pour->kind != JsonKind::Null) {
+            reject_unknown_keys(*pour, {"owner", "local", "edge_back", "mirror"}, "layout pour");
+            const auto& local = field(*pour, "local", JsonKind::Array).array_value;
+            if (local.size() != reserve_corners) throw LayoutError("layout: a pour needs four local bounds");
+            PourRule rule;
+            rule.owner = static_cast<std::size_t>(whole(field(*pour, "owner", JsonKind::Number)));
+            for (std::size_t index = 0; index < reserve_corners; ++index) rule.local[index] = local[index].number_value;
+            rule.edge_back = field(*pour, "edge_back", JsonKind::Number).number_value;
+            rule.mirror = flag(*pour, "mirror");
+            reserve.pour = rule;
+        }
+        problem.reserves.push_back(std::move(reserve));
     }
     problem.constraints = constraints_of(field(root, "constraints", JsonKind::Object));
     for (const auto& entry : field(root, "placement", JsonKind::Array).array_value) {
