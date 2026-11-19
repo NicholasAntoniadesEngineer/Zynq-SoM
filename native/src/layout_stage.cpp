@@ -1,5 +1,7 @@
 #include "schgen/layout_stage.hpp"
 
+#include "schgen/placement_integrity.hpp"
+
 #include <algorithm>
 #include <map>
 #include <sstream>
@@ -242,6 +244,7 @@ StageResult squeeze_stage(const PcbPlacementInput& inputs, const PcbModel& model
         text << "TOP FACE courtyard area by reason (rear holds " << rear << " mm2):\n";
         for (const auto& [why, area] : top) text << "    " << area << " mm2 " << why << "\n";
     }
+    text << check_placement_integrity(PcbCheckInput(result.model), result.model, options.intent).summary();
     result.report = text.str();
     return result;
 }

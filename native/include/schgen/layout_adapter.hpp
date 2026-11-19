@@ -7,6 +7,7 @@
 #include "schgen/pcb_placement.hpp"
 
 #include <array>
+#include <map>
 
 namespace schgen::layout {
 
@@ -88,6 +89,7 @@ struct ServiceInput {
 struct AuthoredIntent {
     std::vector<ServiceInput> services;
     std::vector<std::string> released;
+    std::map<std::string, std::map<std::string, std::string>> pin_names;
 };
 
 struct AdapterOptions {
