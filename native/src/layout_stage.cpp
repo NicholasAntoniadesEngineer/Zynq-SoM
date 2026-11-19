@@ -84,6 +84,7 @@ StageResult squeeze_stage(const PcbPlacementInput& inputs, const PcbModel& model
                       (result.balanced_area == result.plain_area && balanced.routed_after < plain.routed_after);
     if (!result.balanced) kernel.restore(plain_state);
     result.squeeze = result.balanced ? std::move(balanced) : std::move(plain);
+    result.reseat = attract(kernel, settings.pitch, static_cast<Nm>(constants::sink_reach.value));
     result.rear_after = rear(kernel.placement());
     kernel.verify();
     if (!kernel.violations().empty() || !kernel.outline_holds())
@@ -128,13 +129,15 @@ StageResult squeeze_stage(const PcbPlacementInput& inputs, const PcbModel& model
     for (std::size_t index = 0; index < stragglers.size() && index < straggler_rows; ++index) {
         const auto& rule = binding.problem.constraints.soft_gaps[stragglers[index].second];
         text << "    " << binding.problem.parts[rule.member].reference << " is " << to_mm(stragglers[index].first)
-             << " mm from " << binding.problem.parts[rule.anchor].reference << " (reach " << to_mm(rule.reach) << " mm)\n";
+             << " mm from " << binding.problem.parts[rule.anchor].reference << " (reach " << to_mm(rule.reach) << " mm): "
+             << seat_obstacles(kernel, rule, settings.pitch) << "\n";
     }
     text << "OWNER HOLDS: " << holds << " small parts held to the pin they serve; farthest " << to_mm(held_before)
          << " mm before, " << to_mm(held_after) << " mm after\n";
     text << "OWNER ATTRACTION: " << result.attract.wanted << " parts wanted a seat at the pin they serve, "
          << result.attract.seated << " seated (" << result.attract.to_rear << " to the rear, "
-         << result.attract.moved_aside << " blockers moved aside); preferences met "
+         << result.attract.moved_aside << " blockers moved aside, " << result.attract.far_seated
+         << " took the nearest room beyond the first search); preferences met "
          << result.attract.met_before << " to " << result.attract.met_after << " of "
          << binding.problem.constraints.soft_gaps.size() << "\n"
          << "  routed airwire " << to_mm(result.attract.routed_before) << " to "
@@ -145,9 +148,76 @@ StageResult squeeze_stage(const PcbPlacementInput& inputs, const PcbModel& model
          << result.balance.rear_before << " to " << result.balance.rear_after << " mm2\n"
          << "  squeezed area with mirroring " << result.balanced_area << " mm2, without " << result.plain_area
          << " mm2; kept the " << (result.balanced ? "mirrored" : "unmirrored") << " board\n"
-         << squeeze_summary(result.squeeze) << "FACES: top "
+         << squeeze_summary(result.squeeze) << "RESEAT AFTER SQUEEZE: " << result.reseat.wanted
+         << " parts had drifted from the pin they serve, " << result.reseat.seated << " reseated ("
+         << result.reseat.to_rear << " to the rear, " << result.reseat.far_seated
+         << " to the nearest room beyond the first search); preferences met " << result.reseat.met_before << " to "
+         << result.reseat.met_after << "\n"
+         << "FACES: top "
          << binding.placement.size() - result.rear_before << " to " << binding.placement.size() - result.rear_after
          << ", rear " << result.rear_before << " to " << result.rear_after << "\n";
+    for (const Side side : {Side::north, Side::south, Side::west, Side::east}) {
+        const bool along_x = side == Side::north || side == Side::south;
+        std::vector<std::pair<Nm, std::size_t>> row;
+        Nm bodies = 0;
+        for (std::size_t part = 0; part < held.parts.size(); ++part) {
+            const Part& item = held.parts[part];
+            if (!item.edge || facing(item, kernel.placement()[part]) != side) continue;
+            const Box gate = gate_at(held, part, kernel.placement()[part]);
+            row.emplace_back(along_x ? gate.x0 : gate.y0, part);
+            bodies += along_x ? gate.width() : gate.height();
+        }
+        std::sort(row.begin(), row.end());
+        const Nm length = along_x ? kernel.board().width : kernel.board().height;
+        text << "EDGE " << side_name(side) << ": " << to_mm(length) << " mm long, connector bodies " << to_mm(bodies)
+             << " mm (" << percent * static_cast<double>(bodies) / static_cast<double>(length) << "%):";
+        for (const auto& [at, part] : row) text << " " << held.parts[part].reference;
+        text << "\n";
+    }
+    {
+        const std::size_t count = held.parts.size();
+        std::vector<std::size_t> lead(count);
+        for (std::size_t part = 0; part < count; ++part) lead[part] = part;
+        const auto root = [&](std::size_t part) {
+            while (lead[part] != part) part = lead[part] = lead[lead[part]];
+            return part;
+        };
+        for (const auto& pair : held.constraints.face_pairs) lead[root(pair.first)] = root(pair.second);
+        std::vector<char> pinned(count, 0);
+        for (std::size_t part = 0; part < count; ++part) {
+            const Part& item = held.parts[part];
+            if (item.fixed || item.top_only || !held.footprints[item.footprint].flippable) pinned[root(part)] = 1;
+        }
+        const std::array<const char*, 6> kinds{"top-only test points", "top-only LEDs", "top-only switches",
+                                               "top-only connectors and headers", "top-only battery holder",
+                                               "top-only parts on controlled nets or with through holes"};
+        const auto kind_of = [](const std::string& reference) -> std::size_t {
+            const std::array<const char*, 5> prefixes{"TP", "LED", "SW", "J", "BT"};
+            for (std::size_t index = 0; index < prefixes.size(); ++index)
+                if (reference.rfind(prefixes[index], 0) == 0) return index;
+            return prefixes.size();
+        };
+        std::map<std::string, double> top;
+        double rear = 0;
+        for (std::size_t part = 0; part < count; ++part) {
+            const Part& item = held.parts[part];
+            const Box gate = gate_at(held, part, kernel.placement()[part]);
+            const double area = to_mm(gate.width()) * to_mm(gate.height());
+            if (kernel.placement()[part].face == Face::bottom) {
+                rear += area;
+                continue;
+            }
+            const char* why = item.edge ? "edge connectors"
+                              : item.fixed ? "fixed parts"
+                              : item.top_only ? kinds[kind_of(item.reference)]
+                              : !held.footprints[item.footprint].flippable ? "parts that cannot be mirrored"
+                              : pinned[root(part)] ? "parts tied to the face of a top-bound part"
+                              : "parts free to go to the rear";
+            top[why] += area;
+        }
+        text << "TOP FACE courtyard area by reason (rear holds " << rear << " mm2):\n";
+        for (const auto& [why, area] : top) text << "    " << area << " mm2 " << why << "\n";
+    }
     result.report = text.str();
     return result;
 }

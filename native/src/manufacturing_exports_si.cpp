@@ -1,3 +1,4 @@
+#include "schgen/stackup.hpp"
 #include "schgen/manufacturing_exports.hpp"
 #include "manufacturing_exports_internal.hpp"
 
@@ -72,7 +73,7 @@ Source of targets: `carrier/research/si_spec.json` (researched, standard-cited);
 
 ## Stackup
 
-JLCPCB JLC04161H-7628, 4-layer 1.6 mm (Sig / GND / PWR / Sig). Diff-pair trace geometry (width/gap) per class lives in the `.kicad_pro` net_settings + `.kicad_dru`: 90R = 0.2611/0.2032 mm, 100R = 0.2052/0.2032 mm (JLCPCB impedance calculator, this stackup).
+JLCPCB )"<<board_stackup().fabricator_name<<", "<<board_stackup().summary<<R"(. Diff-pair trace geometry (width/gap) per class lives in the `.kicad_pro` net_settings + `.kicad_dru`: )"<<board_stackup().pair_list("R = "," mm",", ")<<R"( (JLCPCB impedance calculator, this stackup).
 
 ## Differential pairs
 

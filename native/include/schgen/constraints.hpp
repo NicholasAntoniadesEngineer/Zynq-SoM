@@ -1,5 +1,6 @@
 #pragma once
 #include "schgen/project.hpp"
+#include "schgen/stackup.hpp"
 
 namespace schgen {
 struct PairSignalSpec {
@@ -13,11 +14,6 @@ struct PairSignalSpec {
 };
 std::vector<PairSignalSpec> parse_signal_specs(const JsonNode&);
 std::vector<PairSignalSpec> load_signal_specs(const std::filesystem::path&);
-struct DifferentialGeometry {
-    int impedance = 0;
-    double width_mm = 0.0, gap_mm = 0.0;
-    std::string source;
-};
 const DifferentialGeometry* differential_geometry(int impedance);
 std::string port_net_class(const CircuitPortIr&);
 bool needs_signal_specs(const std::vector<ProjectCircuit>&);

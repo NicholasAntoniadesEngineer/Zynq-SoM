@@ -16,7 +16,7 @@ endif()
 # Compile one engine shared by the standalone CLI and native contracts.
 include(cmake/AuthoringPurity.cmake)
 add_library(schgen_core STATIC
-    src/occupancy.cpp src/occupancy_precision.cpp src/seat.cpp src/sexpr.cpp src/route.cpp src/emit.cpp
+    src/occupancy.cpp src/occupancy_precision.cpp src/seat.cpp src/sexpr.cpp src/route.cpp src/emit.cpp src/stackup.cpp
     src/legalize.cpp src/quantize.cpp src/precision_ops.cpp src/turn.cpp src/pack.cpp
     src/legalize_precision.cpp src/stage_precision.cpp
     src/placement_precision.cpp src/output_precision.cpp src/pack_precision.cpp

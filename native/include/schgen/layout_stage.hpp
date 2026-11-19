@@ -13,7 +13,7 @@ struct StageOptions {
 
 struct StageResult {
     PcbModel model;
-    AttractReport attract;
+    AttractReport attract, reseat;
     SqueezeReport squeeze;
     BalanceReport balance;
     bool balanced = false;

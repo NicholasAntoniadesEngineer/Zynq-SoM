@@ -10,6 +10,7 @@
 #include "schgen/placement_integrity.hpp"
 #include "schgen/quantize.hpp"
 #include "schgen/ratsnest_gate.hpp"
+#include "schgen/stackup.hpp"
 #include "schgen/thermal_checks.hpp"
 #include "schgen/turn.hpp"
 
@@ -626,7 +627,7 @@ ModelBinding bind_model(const PcbModel& model, const PcbEmitPolicy& policy, cons
             const auto geometry = model.classes.find(klass->second);
             return geometry != model.classes.end() && geometry->second.has_value();
         });
-        part.top_only = controlled || user_facing(instance) ||
+        part.top_only = (controlled && !board_stackup().ground_referenced(true)) || user_facing(instance) ||
                         (face == Face::top && std::any_of(variant.pads.begin(), variant.pads.end(),
                                                           [](const PadShape& pad) { return pad.through; }));
         part.core_exempt = mechanical_file(instance) || starts_with(instance.sheet, "som_j");
