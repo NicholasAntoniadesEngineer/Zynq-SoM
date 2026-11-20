@@ -9,6 +9,11 @@
 namespace {
 using namespace schgen;
 namespace fs = std::filesystem;
+PcbEmitPolicy stemmed_policy() {
+    auto policy = default_pcb_emit_policy();
+    policy.board_stem = "Fixture_Board";
+    return policy;
+}
 void require(bool ok, const std::string& message) {
     if (!ok) throw std::runtime_error(message);
 }
@@ -152,7 +157,7 @@ int main(int argc, char** argv) {
             const auto doc = bottom ? mirrored_footprint(corrected) : corrected;
             i.mod = pcb_check_footprint(bottom ? ".mirrored_fp/RV.kicad_mod" : "RV.kicad_mod", sexpr_dumps(doc), doc);
             m.insts.push_back(i); m.n_top = bottom ? 0 : 1; m.n_bottom = bottom ? 1 : 0;
-            write(output / (i.side + "-" + std::to_string(angle) + ".kicad_pcb"), render_pcb(m).pcb);
+            write(output / (i.side + "-" + std::to_string(angle) + ".kicad_pcb"), render_pcb(m, stemmed_policy()).pcb);
         }
         if (argc == 5) {
             auto board = sexpr_loads(read(argv[4])); std::size_t hits = 0;

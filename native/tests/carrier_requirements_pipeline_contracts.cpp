@@ -104,6 +104,25 @@ void tests(const fs::path& repo) {
     f.paths.project_file=resolve_project_paths(repo,"devkit_mini").project_file;
     const auto na=f.run("devkit-nonapplicable",[](Context& c){c.pcb.reset();c.schematic.reset();c.circuits.clear();});
     require(na.gates.front().status==BoardGateStatus::passed&&na.gates.front().report.find("NOT APPLICABLE")!=std::string::npos,"explicit devkit applicability, no carrier inputs required");
+    const auto carrier_settings=read(repo/"carrier/project.json");
+    const std::string scope_text="\"placement_requirements\": {\"applicable\": true}";
+    require(carrier_settings.find(scope_text)!=std::string::npos,"carrier states its requirements scope");
+    const auto with_scope=[&](const std::string& name,const std::string& replacement){
+        auto text=carrier_settings;text.replace(text.find(scope_text),scope_text.size(),replacement);
+        f.paths.project_file=f.scratch.root/(name+".json");publish_text(f.paths.project_file,text);
+    };
+    const auto scope_fail=[&](const std::string& name,const std::string& replacement,const std::string& why){
+        with_scope(name,replacement);
+        const auto r=f.run(name,[](Context& c){c.pcb.reset();c.schematic.reset();c.circuits.clear();});
+        require(r.gates.front().status==BoardGateStatus::failed&&r.gates.front().report.find(why)!=std::string::npos,"requirements scope rejected: "+name+": "+r.gates.front().report);
+    };
+    scope_fail("scope-missing-key","\"unrelated_key\": 1","'placement_requirements' is missing");
+    scope_fail("scope-not-object","\"placement_requirements\": 1","'placement_requirements' is missing");
+    scope_fail("scope-no-applicable","\"placement_requirements\": {}","needs 'applicable'");
+    scope_fail("scope-unknown-key","\"placement_requirements\": {\"applicable\": true, \"note\": \"x\"}","note");
+    scope_fail("scope-applicable-statement","\"placement_requirements\": {\"applicable\": true, \"statement\": \"x\"}","although it is applicable");
+    scope_fail("scope-missing-statement","\"placement_requirements\": {\"applicable\": false}","needs a non-empty 'statement'");
+    scope_fail("scope-empty-statement","\"placement_requirements\": {\"applicable\": false, \"statement\": \"\"}","needs a non-empty 'statement'");
 }
 }
 int main(int argc,char** argv) {

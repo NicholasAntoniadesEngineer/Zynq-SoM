@@ -77,7 +77,7 @@ JsonNode jarray(std::vector<JsonNode> values);
 JsonNode point_json(FloorplanPoint point);
 JsonNode halo_json(Halo halo);
 int side_mask(const std::string& side);
-bool overmold(const FloorplanBlock& block);
+bool overmold(const ConnectorFacts& facts, const FloorplanBlock& block);
 
 struct CachedFootprint {
     Box4 bbox;

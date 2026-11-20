@@ -18,17 +18,18 @@ std::string description(const PcbCheckInstance& i,const PcbEmitPolicy& p) {
     return lookup(p.connector_descriptions,i.sheet);
 }
 std::vector<std::string> connector_notes(const PcbModel& m,Indices ids,const PcbEmitPolicy& p) {
-    sort_indices(ids,m);std::vector<std::string> out,som;Indices xt;
-    for(auto n:ids){const auto& i=m.insts.at(n);const auto face=lookup(p.connector_mating_faces,stem(i));
+    sort_indices(ids,m);std::vector<std::string> out,som;std::map<std::string,Indices> pairs;
+    for(auto n:ids){const auto& i=m.insts.at(n);const auto* fact=connector_fact(p.connectors,stem(i));
         if(starts(i.sheet,"som_j"))som.push_back(i.ref);
-        if(stem(i)=="XT60PW-M")xt.push_back(n);
-        if(face.empty())continue;
-        const auto v=turn_point(face=="+X"?1:face=="-X"?-1:0,face=="+Y"?1:face=="-Y"?-1:0,i.rotation);
+        if(fact&&fact->pair_label)pairs[*fact->pair_label].push_back(n);
+        if(!fact)continue;
+        const auto face=mating_face_vector(*fact);
+        const auto v=turn_point(face.first,face.second,i.rotation);
         const auto x=rounded(v.first),y=rounded(v.second);
         std::string edge;if(x==0&&y==-1)edge="N";else if(x==0&&y==1)edge="S";else if(x==1&&y==0)edge="E";else if(x==-1&&y==0)edge="W";else throw ProjectError(i.ref+": non-cardinal connector mating face");
         auto desc=description(i,p);out.push_back(i.ref+" "+i.value+(desc.empty()?"":" ("+desc+")")+": mating face toward the "+edge+" board edge");
     }
-    if(xt.size()==2){const auto& a=m.insts[xt[0]];const auto& b=m.insts[xt[1]];out.push_back("XT60 pair: "+a.ref+" ("+description(a,p)+") / "+b.ref+" ("+description(b,p)+") — IN/OUT per silkscreen label");}
+    for(const auto& [label,xt]:pairs)if(xt.size()==2){const auto& a=m.insts[xt[0]];const auto& b=m.insts[xt[1]];out.push_back(label+" pair: "+a.ref+" ("+description(a,p)+") / "+b.ref+" ("+description(b,p)+") — IN/OUT per silkscreen label");}
     if(!som.empty())out.push_back(join(som,", ")+": DF40C SoM receptacles — the SoM module mates onto them (bring-up section, mate phase)");
     return out;
 }
@@ -69,7 +70,7 @@ std::vector<AssemblyPhase> assembly_bringup_phases(const PcbModel& m,const Power
     for(const auto& i:m.insts){auto& nets=touched[i.sheet];for(const auto& [pad,net]:i.pad_nets){(void)pad;if(universe.count(net.second))nets.insert(net.second);}
     }
     // Connector roots use only each connector's own pads, never all sheet pads.
-    for(const auto& i:m.insts)if(!lookup(policy.connector_mating_faces,stem(i)).empty())for(const auto& [pad,net]:i.pad_nets){(void)pad;if(universe.count(net.second)&&!all_produced.count(net.second))roots[i.sheet].insert(net.second);}
+    for(const auto& i:m.insts)if(connector_fact(policy.connectors,stem(i)))for(const auto& [pad,net]:i.pad_nets){(void)pad;if(universe.count(net.second)&&!all_produced.count(net.second))roots[i.sheet].insert(net.second);}
     Indices ordered;for(std::size_t n=0;n<m.insts.size();++n)ordered.push_back(n);sort_indices(ordered,m);
     std::map<std::string,std::string> tp;
     for(auto n:ordered){const auto& i=m.insts[n];if(!starts(i.ref,"TP"))continue;std::vector<std::pair<int,std::string>> nets;for(const auto& [pad,v]:i.pad_nets){(void)pad;nets.push_back(v);}std::sort(nets.begin(),nets.end());for(const auto& v:nets)if(!v.second.empty())tp.emplace(v.second,i.ref);}

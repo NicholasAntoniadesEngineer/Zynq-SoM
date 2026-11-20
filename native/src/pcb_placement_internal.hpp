@@ -50,7 +50,7 @@ struct Context {
     PcbStageInput stage_input(const std::string &, const Geometry &) const;
 };
 bool face_top(const BoardPart &);
-bool edge_family(const std::string &);
+bool edge_family(const ConnectorFacts &, const std::string &);
 PcbStageResult pack_zone(const Context &, const Geometry &, const std::vector<std::string> &,
                          double, const Rotations & = {}, const std::string & = "",
                          const std::set<std::string> & = {},

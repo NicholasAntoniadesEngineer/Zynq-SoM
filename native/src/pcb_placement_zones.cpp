@@ -57,7 +57,7 @@ PcbZoneResult pcb_placement::build_zones_for_search(const PcbPlacementInput &in,
         if (p.sheet == "som_decoupling" ||
             (p.sheet.rfind("som_j", 0) == 0 && p.ref.rfind("J", 0) == 0))
             continue;
-        if (edge_family(p.value))
+        if (edge_family(in.floorplan.project.connectors, p.value))
             edges.insert(p.sheet);
         if (p.lib_id.rfind("Mechanical:MountingHole", 0) == 0) {
             g.mh_refs.push_back(p.ref);
@@ -80,7 +80,7 @@ PcbZoneResult pcb_placement::build_zones_for_search(const PcbPlacementInput &in,
         if (face_top(p))
             faces[p.sheet].insert(p.ref);
         else if (!connector_class.count(p.sheet)) {
-            bool conn = connector_value(p.value);
+            bool conn = connector_value(in.floorplan.project.connectors, p.value);
             for (const auto &token : {"PinHeader", "PinSocket", "Conn", "DF40"})
                 conn |= p.lib_id.find(token) != std::string::npos ||
                         p.footprint.find(token) != std::string::npos;
@@ -91,8 +91,8 @@ PcbZoneResult pcb_placement::build_zones_for_search(const PcbPlacementInput &in,
             if (conn)
                 connector_class[p.sheet] = p.ref;
         }
-        if (connector_value(p.value) && sheet_edges.count(p.sheet)) {
-            double rot = connector_rotation(p.value, sheet_edges.at(p.sheet), ctx.quantization);
+        if (connector_value(in.floorplan.project.connectors, p.value) && sheet_edges.count(p.sheet)) {
+            double rot = connector_rotation(in.floorplan.project.connectors, p.value, sheet_edges.at(p.sheet), ctx.quantization);
             g.conn_rot[p.ref] = rot;
             g.conn_edge[p.ref] = sheet_edges.at(p.sheet);
             conn_rot[p.sheet][p.ref] = rot;

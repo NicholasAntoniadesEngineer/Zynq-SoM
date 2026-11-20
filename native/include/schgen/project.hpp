@@ -2,6 +2,7 @@
 
 #include "schgen/circuit.hpp"
 #include "schgen/json.hpp"
+#include "schgen/part_facts.hpp"
 
 #include <array>
 #include <cstdint>
@@ -31,11 +32,13 @@ struct ProjectPaths {
     std::filesystem::path parts_dir, part_catalog_file, som_schematic;
     std::filesystem::path circuit_catalog_file;
     std::filesystem::path schematic_dir, reports_dir, fpga_dir;
-    bool is_default_project = false;
+    std::optional<std::filesystem::path> run_config;
+    std::string file_stem;
+    bool root_readme = false, owned_groups = false;
 };
 
 struct ProjectConfig {
-    std::string name, stackup;
+    std::string name, stackup, file_stem;
     bool labels = true, arrange = false;
     // Set-like membership in Python; retained in source order here.
     std::vector<std::string> wired_sheets, pilot_prox_sheets;
@@ -43,6 +46,7 @@ struct ProjectConfig {
     ProjectStrings module_face_anchors;
     std::vector<std::string> reg_band_prefixes;
     ProjectStrings bank_rails, header_desc, switch_desc;
+    ConnectorFacts connectors;
     JsonNode escape;  // Object, defaults to {} as in ProjectSpec.
     JsonNode raw;     // Complete project.json, including extension metadata.
 };
@@ -87,7 +91,6 @@ struct ProjectManifest {
     JsonNode raw;  // Preserve rails, BOM, GPIO/I2C, XDC and future sections.
 };
 
-// Explicit selection wins over SCHGEN_PROJECT, then defaults to carrier.
 // Relative project paths are relative to repository_root, never the cwd.
 // Paths are absolute with existing symlinks resolved; existing directories and the
 // project.json file are required. Other inputs are checked only when loaded.

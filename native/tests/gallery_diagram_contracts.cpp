@@ -75,7 +75,7 @@ GalleryInput gallery(const JsonNode &n) {
     GalleryInput in;
     in.repository_root = str(n, "repo");
     in.project_root = str(n, "project");
-    in.is_default_project = field(n, "default").bool_value;
+    in.root_readme = field(n, "default").bool_value;
     for (const auto &s : field(n, "sheets").array_value)
         in.sheets.push_back({str(s, "name"), str(s, "title")});
     const auto renders = strings(field(n, "render_files")), wired = strings(field(n, "wired"));
@@ -214,6 +214,7 @@ void live_projects(const JsonNode &all, const fs::path &repo) {
         // no Python process. All generated documents remain under test output.
         const auto clone = output / "json-only" / name;
         write(clone / "project.json", read(paths.project_file));
+        write(clone / "board.json", read(paths.project_root / "board.json"));
         write(clone / "som_interface.json", read(paths.som_interface_file));
         write(clone / "som_mapping.json", read(paths.project_root / "som_mapping.json"));
         for (const auto &c : loaded)
@@ -239,11 +240,11 @@ void live_projects(const JsonNode &all, const fs::path &repo) {
         equal_bytes(render_gallery_full(actual, cp.project_root), str(*g, "expected_full"),
                     "live-native-gallery-" + name);
         const auto changed = generate_gallery(cp);
-        require(changed.size() == (cp.is_default_project ? 2u : 1u),
+        require(changed.size() == (cp.root_readme ? 2u : 1u),
                 "gallery native writer targets");
         equal_bytes(read(cp.project_root / "README.md"), str(*g, "expected_full") + "\n",
                     "live-native-readme-" + name);
-        if (cp.is_default_project) {
+        if (cp.root_readme) {
             equal_bytes(read(cp.repository_root / "README.md"), str(*g, "expected_compact") + "\n",
                         "live-native-root-readme-" + name);
             require(changed.front() == cp.repository_root / "README.md" &&
@@ -253,7 +254,7 @@ void live_projects(const JsonNode &all, const fs::path &repo) {
         equal_bytes(gallery_summary(actual, changed),
                     "GALLERY: " + std::to_string(actual.sheets.size()) + " sheets -> " +
                         str(*g, "expected_targets") + " (" +
-                        (cp.is_default_project ? "README.md, " : "") + name + "/README.md)",
+                        (cp.root_readme ? "README.md, " : "") + name + "/README.md)",
                     "live-gallery-command-summary-" + name);
         require(generate_gallery(cp).empty(), "gallery idempotent publication");
         require(gallery_summary(actual, {}).find("(unchanged)") != std::string::npos,

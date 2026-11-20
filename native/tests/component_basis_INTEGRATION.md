@@ -5,10 +5,9 @@ Parent owns CMake, module, CLI, catalogs, shared builds and commits.
 
 ## Parent integration
 
-Add exactly these new sources to `schgen_core`:
+Add exactly these sources to `schgen_core`:
 
 * `src/component_basis.cpp`
-* `src/component_basis_registry.cpp`
 * `src/copper_debt.cpp`
 
 Use strict C++17 and `-Wall -Wextra -Wpedantic -Werror -ffp-contract=off`.
@@ -33,9 +32,10 @@ new audit sources and contracts without modifying shared binaries.
 ## Native pipeline calls
 
 Open the current part catalog through the normal explicit boundary. Build the
-66 live circuits using `author_component_basis_inputs(repository)`, or supply
+66 live circuits using `author_component_basis_inputs(repository, policy)`, or supply
 caller-owned `ComponentBasisInput {scope, sheet, circuit}` records.
-Call `audit_component_basis(inputs)`; a false `ok()` must fail the component
+Load the policy with `load_component_basis_policy(repository)` (it reads `subsystems/component_basis.json` and each board folder's `component_basis.json`) and the scopes with `component_basis_scopes(repository)`.
+Call `audit_component_basis(inputs, scopes, policy)`; a false `ok()` must fail the component
 basis gate. Publish `component_basis_report(result)` if desired.
 
 The scopes library/carrier/devkit_mini are independently manifested. Missing,

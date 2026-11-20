@@ -21,6 +21,8 @@ namespace {
 namespace fs = std::filesystem;
 using namespace schgen;
 
+const std::string board_text = R"({"files": {"stem": "Fixture_Board"}, "root_readme": false, "owned_groups": false})";
+
 void require(bool value, const std::string& message) {
     if (!value) throw std::runtime_error(message);  // Also active under NDEBUG.
 }
@@ -152,6 +154,7 @@ void fixture_contracts(Suite& suite, const fs::path& repo) {
         TempDir tmp;
         write(root.path / run_config_file, run_text);
         write(tmp.path / "project.json", config_text);
+        write(tmp.path / "board.json", board_text);
         const auto paths = resolve_project_paths(root.path, tmp.path);
         const auto config = load_project_config(paths);
         require(config.stackup == "JLC06161H-3313" && config.labels, "run configuration not applied");
@@ -165,7 +168,7 @@ void fixture_contracts(Suite& suite, const fs::path& repo) {
         require(default_engine_config.grid == 1.27 && default_engine_config.char_w == 0.95
                 && default_engine_config.misplaced_overlap == 0.20 && default_engine_config.cross_k == 3.0
                 && default_engine_config.visual_clearance_mm == 0.2, "engine defaults changed");
-        require(!paths.is_default_project && paths.parts_dir == fs::canonical(root.path) / "parts", "external project paths wrong");
+        require(paths.file_stem == "Fixture_Board" && paths.parts_dir == fs::canonical(root.path) / "parts", "external project paths wrong");
         require(load_sheet_index(paths).empty() && !fs::exists(paths.sheet_index_file), "missing index was written");
         rejects([&] { load_project_manifest(paths); }, {paths.manifest_file.string()});
         require(read(paths.project_file) == config_text, "config load changed source");
@@ -186,6 +189,7 @@ void fixture_contracts(Suite& suite, const fs::path& repo) {
             TempDir tmp;
             write(root.path / run_config_file, run_text);
             write(tmp.path / "project.json", invalid_configs[i].first);
+            write(tmp.path / "board.json", board_text);
             const auto paths = resolve_project_paths(root.path, tmp.path);
             rejects([&] { load_project_config(paths); }, {paths.project_file.string(), invalid_configs[i].second});
         });
@@ -329,6 +333,7 @@ void fixture_contracts(Suite& suite, const fs::path& repo) {
     suite.run("discovery precedence, missing JSON and explicit order", [&] {
         TempDir tmp;
         write(tmp.path / "project.json", config_text);
+        write(tmp.path / "board.json", board_text);
         const auto paths = resolve_project_paths(repo, tmp.path);
         const auto add = [&](const std::string& name) {
             write(paths.subsystems_dir / name / "circuit.json", changed(circuit_text, "\"name\": \"fixture\"", "\"name\": \"" + name + "\""));
@@ -367,6 +372,7 @@ void fixture_contracts(Suite& suite, const fs::path& repo) {
     suite.run("missing and empty subsystem directories", [&] {
         TempDir tmp;
         write(tmp.path / "project.json", config_text);
+        write(tmp.path / "board.json", board_text);
         const auto paths = resolve_project_paths(repo, tmp.path);
         rejects([&] { inventory_project_circuits(paths); }, {paths.subsystems_dir.string(), "directory"});
         fs::create_directory(paths.subsystems_dir);
@@ -389,6 +395,7 @@ void fixture_contracts(Suite& suite, const fs::path& repo) {
         rejects([&] { extend_sheet_index({{"a", std::numeric_limits<int32_t>::max()}}, {"b"}); }, {"overflow"});
         TempDir tmp;
         write(tmp.path / "project.json", config_text);
+        write(tmp.path / "board.json", board_text);
         const auto paths = resolve_project_paths(repo, tmp.path);
         const std::string index_text = "{\"zeta\":8,\"retired\":3}";
         write(paths.sheet_index_file, index_text);
@@ -403,6 +410,7 @@ void fixture_contracts(Suite& suite, const fs::path& repo) {
     suite.run("manifest null device and extension records", [&] {
         TempDir tmp;
         write(tmp.path / "project.json", config_text);
+        write(tmp.path / "board.json", board_text);
         const auto paths = resolve_project_paths(repo, tmp.path);
         write(paths.manifest_file, "{\"device\":null,\"artifacts\":[{\"path\":\"report.txt\",\"sha256\":\"abc\"}],\"rails\":[{\"name\":\"VIN\"}]}");
         const auto manifest = load_project_manifest(paths);
@@ -415,17 +423,29 @@ void repository_contracts(Suite& suite, const fs::path& repo) {
     suite.run("selection precedence and stable paths", [&] {
         Environment env;
         ::unsetenv("SCHGEN_PROJECT");
-        const auto carrier = resolve_project_paths(repo);
-        require(carrier.is_default_project && carrier.project_root == repo / "carrier", "default project changed");
+        rejects([&] { resolve_project_paths(repo); }, {"no board selected"});
+        const auto carrier = resolve_project_paths(repo, "carrier");
+        require(carrier.project_root == repo / "carrier", "explicit selection changed");
         ::setenv("SCHGEN_PROJECT", "devkit_mini", 1);
         require(resolve_project_paths(repo).project_root == repo / "devkit_mini", "environment selection ignored");
-        require(resolve_project_paths(repo, "carrier").is_default_project, "explicit selection did not override environment");
+        require(resolve_project_paths(repo, "carrier").project_root == repo / "carrier", "explicit selection did not override environment");
         require(resolve_project_paths(repo, repo / "devkit_mini").project_root == repo / "devkit_mini", "absolute selection changed");
-        require(resolve_project_paths(repo, "devkit_mini/../carrier/").is_default_project, "lexical normalization changed");
+        require(resolve_project_paths(repo, "devkit_mini/../carrier/").project_root == repo / "carrier", "lexical normalization changed");
         require(carrier.som_interface_file == repo / "carrier/som_interface.json" && carrier.som_schematic == repo / "som/Zynq_SoM.kicad_sch", "SoM paths wrong");
         require(carrier.part_catalog_file == repo / "native/catalog.bin" && carrier.fpga_dir == repo / "carrier/fpga", "downstream paths wrong");
         const auto catalogs = project_catalog_paths(repo, "carrier");
         require(carrier.part_catalog_file == catalogs.part_catalog && carrier.circuit_catalog_file == catalogs.circuit_catalog, "catalog paths diverged");
+        require(carrier.root_readme && carrier.owned_groups, "carrier states its gallery and owned-group flags");
+        const auto devkit = resolve_project_paths(repo, "devkit_mini");
+        require(!devkit.root_readme && !devkit.owned_groups, "devkit_mini states its gallery and owned-group flags");
+        require(carrier.file_stem == "Zynq_Carrier" && devkit.file_stem == "Zynq_Carrier", "board file stem is read from board.json");
+        {
+            TempDir bare;
+            write(bare.path / "project.json", "{}");
+            rejects([&] { resolve_project_paths(repo, bare.path); }, {"board.json", "is missing"});
+            write(bare.path / "board.json", R"({"files": {"stem": "Fixture_Board"}, "root_readme": false})");
+            rejects([&] { resolve_project_paths(repo, bare.path); }, {"board.json", "field 'owned_groups' is missing"});
+        }
         rejects([&] { resolve_project_paths(repo, "missing-project"); }, {"missing-project"});
         rejects([&] { resolve_project_paths(repo, "parts"); }, {"parts/project.json", "missing"});
     });
@@ -527,6 +547,7 @@ void repository_contracts(Suite& suite, const fs::path& repo) {
             const auto copy = tmp.path / name;
             write(tmp.path / run_config_file, read(original.repository_root / run_config_file));
             write(copy / "project.json", read(original.project_file));
+            write(copy / "board.json", read(original.project_root / "board.json"));
             write(copy / "sheet_index.json", read(original.sheet_index_file));
             for (const auto& circuit : expected) write(copy / "subsystems" / circuit.name / "circuit.json", read(circuit.path));
             const auto paths = resolve_project_paths(tmp.path, name);

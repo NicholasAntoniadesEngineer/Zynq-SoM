@@ -1,5 +1,6 @@
 {
   "name": "devkit_mini",
+  "placement_requirements": {"applicable": false, "statement": "NOT APPLICABLE: reviewed ownership declarations cover carrier board_aux/bringup_rails only; devkit_mini has neither requirement set. No qualitative placement approval implied."},
   "_comment": "PROJECT SPEC (U1g) - minimal second carrier for the same Zynq SoM, built by the unmodified schgen engine via --project devkit_mini.",
   "placement": {
     "wired_sheets": [

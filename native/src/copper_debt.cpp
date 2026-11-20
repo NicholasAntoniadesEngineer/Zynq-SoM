@@ -59,7 +59,7 @@ std::vector<CopperDebtEntry> entries() {
     return out;
 }
 void verify_sources(const CopperDebtSources& s) {
-    const auto audited = audit_component_basis(s.circuits);
+    const auto audited = audit_component_basis(s.circuits,s.basis_scopes,s.basis);
     claim(audited.ok(),"basis",component_basis_report(audited));
     const auto thermal = [&](const std::string& id,const CircuitPartIr& p,const std::string& prefix,
                              double bare,std::optional<double> poured,const std::string& evidence) {
@@ -157,7 +157,8 @@ void verify_sources(const CopperDebtSources& s) {
 } // namespace
 CopperDebtSources author_copper_debt_sources(const std::filesystem::path& repository) {
     CopperDebtSources s;
-    s.circuits=author_component_basis_inputs(repository);
+    s.basis=load_component_basis_policy(repository); s.basis_scopes=component_basis_scopes(repository);
+    s.circuits=author_component_basis_inputs(repository,s.basis);
     s.thermal=default_thermal_policy(); s.emission=default_pcb_emit_policy();
     for(const int impedance:{90,100}) {
         const auto* g=differential_geometry(impedance);

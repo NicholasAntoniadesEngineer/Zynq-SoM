@@ -30,7 +30,7 @@ SiConstraintsModel load_si_constraints(const std::vector<ProjectCircuit>&,
 SiConstraintsVerdict check_si_constraints(const SiConstraintsModel&);
 std::string render_si_design_rules(const SiConstraintsModel&,
     std::string base = "(version 1)\n");
-std::string render_si_markdown(const SiConstraintsModel&);
+std::string render_si_markdown(const SiConstraintsModel&, const std::string& rules_file);
 
 struct ManufacturingXdc { std::size_t count = 0; std::vector<int> banks; std::optional<std::string> device; };
 struct ManufacturingCoverage { std::size_t covered = 0, required = 0, waived = 0; };
@@ -44,10 +44,11 @@ struct ManufacturingManifestInput {
     std::optional<std::string> device;
     ManufacturingPreflight preflight;
     std::vector<ProjectArtifact> artifacts;
+    std::string file_stem;
 };
 // Selection and content hashing are separate from pure manifest rendering.
 std::vector<ProjectArtifact> manufacturing_artifacts(const std::filesystem::path& project_root,
-    const std::filesystem::path& output_path);
+    const std::filesystem::path& output_path, const std::string& file_stem);
 std::optional<std::string> manufacturing_xdc_device(const std::filesystem::path&);
 JsonNode manufacturing_manifest(const ManufacturingManifestInput&,
     const PowerPolicy& = default_power_policy());

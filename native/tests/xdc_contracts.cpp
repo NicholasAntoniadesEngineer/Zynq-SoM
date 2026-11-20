@@ -17,6 +17,7 @@ void require(bool condition, const std::string& message) {
 
 schgen::XdcInput corpus() {
     schgen::XdcInput in;
+    in.pins_file = "Zynq_Carrier_pins.xdc";
     in.connectors = {
         {"J1", {{"10", "IO_SINGLE"}, {"2", "IO_N"}, {"1", "IO_P"},
                 {"3", "GND"}, {"4", "VIN"}, {"5", "unconnected-1"}, {"6", "PS_MIO"}}},

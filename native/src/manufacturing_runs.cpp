@@ -22,12 +22,12 @@ ManufacturingManifestInput prepare_manufacturing_manifest(std::vector<ProjectCir
     in.power=analyze_power(in.sheets,policy);return in;
 }
 std::filesystem::path run_manufacturing_manifest(ManufacturingManifestInput in,const std::filesystem::path& root,const std::filesystem::path& output,const PowerPolicy& policy) {
-    in.artifacts=manufacturing_artifacts(root,output);publish(output,render_manufacturing_manifest(in,policy));return output;
+    in.artifacts=manufacturing_artifacts(root,output,in.file_stem);publish(output,render_manufacturing_manifest(in,policy));return output;
 }
 ManufacturingSiRun run_si_constraints(const std::vector<ProjectCircuit>& sheets,const std::filesystem::path& spec,const std::filesystem::path& dru,const std::filesystem::path& md) {
     distinct(dru,md);distinct(spec,dru);distinct(spec,md);
     ManufacturingSiRun out;out.dru=dru;out.md=md;out.model=load_si_constraints(sheets,spec);out.verdict=check_si_constraints(out.model);
-    const auto rules=render_si_design_rules(out.model,std::filesystem::exists(dru)?read(dru):"(version 1)\n");const auto table=render_si_markdown(out.model);
+    const auto rules=render_si_design_rules(out.model,std::filesystem::exists(dru)?read(dru):"(version 1)\n");const auto table=render_si_markdown(out.model,dru.filename().string());
     publish(dru,rules);publish(md,table);return out;
 }
 ManufacturingFabResult run_manufacturing_fab(const std::filesystem::path& reports,const std::filesystem::path& pcb,const std::filesystem::path& dru,const std::filesystem::path& project,const ManufacturingFabProfile& profile) {

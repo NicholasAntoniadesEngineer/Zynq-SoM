@@ -165,7 +165,7 @@ std::string render(const DeviceTreeInput& in, const DeviceTreeOutput& out) {
         " *   ball map : " + in.som_source + " (kicad-cli; PS = reaches no PL ball)",
         " *   renames  : " + in.mapping_source + " function_map + pudc_straps (MIO -> carrier function net)",
         " *",
-        " * This is the PS-side twin of carrier/fpga/Zynq_Carrier_pins.xdc:",
+        " * This is the PS-side twin of carrier/fpga/" + in.pins_file + ":",
         " * the XDC owns every carrier net that reaches a PL ball; THIS",
         " * fragment documents the PS-side nets the XDC drops -- the",
         " * microSD bus and the bare PS MIO pins routed out on J1.",
@@ -236,13 +236,14 @@ std::string render(const DeviceTreeInput& in, const DeviceTreeOutput& out) {
 }  // namespace
 
 DeviceTreeInput load_devicetree_input(const fs::path& repository, const fs::path& project,
-                                     const SomZynq& live, const fs::path& contract,
+                                     const SomZynq& live, const std::string& pins_file, const fs::path& contract,
                                      const std::vector<std::string>& refs) {
     const auto contract_path = contract.empty() ? project / "som_interface.json" : contract;
     const auto mapping_path = project / "som_mapping.json";
     DeviceTreeInput in;
     in.contract = load_som_interface(contract_path);
     in.live = live;
+    in.pins_file = pins_file;
     in.refs = refs;
     const auto mapping = parse_json_file(mapping_path.string());
     const auto where = mapping_path.string();
@@ -261,6 +262,7 @@ DeviceTreeInput load_devicetree_input(const fs::path& repository, const fs::path
 }
 
 DeviceTreeOutput generate_devicetree(const DeviceTreeInput& in) {
+    if (in.pins_file.empty()) throw DeviceTreeError("the device tree input names no pin constraints file");
     std::map<std::string, std::string> pin_names, functions;
     for (const auto& item : in.live.pin_names) pin_names[item.first] = item.second;
     for (const auto& item : in.function_map) functions[item.first] = item.second;

@@ -1,4 +1,5 @@
 #include "pcb_emit_internal.hpp"
+#include "schgen/label_seats.hpp"
 #include "schgen/output_precision.hpp"
 
 namespace schgen::pcb_emission {
@@ -71,7 +72,8 @@ std::string trim(std::string s) {
 }
 } // namespace
 std::vector<Sexpr> descriptors(const PcbModel &m, const PcbEmitPolicy &p, const Uid &uid,
-                               const Sexpr &doc, QuantizationCounts* counts) {
+                               const Sexpr &doc, QuantizationCounts* counts,
+                               const labels::LabelSeating* seats) {
     std::vector<Sexpr> out;
     Box4 bounds{m.origin_x, m.origin_y, m.origin_x + m.board_w, m.origin_y + m.board_h};
     SilkBoxIndex occupied(8);
@@ -79,23 +81,31 @@ std::vector<Sexpr> descriptors(const PcbModel &m, const PcbEmitPolicy &p, const 
         occupied.add(courtyard(i), counts);
     for (auto b : collect_emitted_text_boxes(doc, true, 1))
         occupied.add(b, counts);
-    std::vector<std::string> pmods;
+    if (seats)
+        for (const auto &seat : seats->seats)
+            if (seat.seat != labels::Seat::hidden && seat.face == layout::Face::top)
+                occupied.add({layout::to_mm(seat.box.x0), layout::to_mm(seat.box.y0), layout::to_mm(seat.box.x1),
+                              layout::to_mm(seat.box.y1)},
+                             counts);
+    std::map<std::string, std::vector<std::string>> numbered;
     for (const auto &i : m.insts)
-        if (i.value == "DS1024-2x6R2")
-            pmods.push_back(i.ref);
-    std::sort(pmods.begin(), pmods.end());
-    std::map<std::string, int> ordinal;
-    for (std::size_t n = 0; n < pmods.size(); ++n)
-        ordinal[pmods[n]] = static_cast<int>(n);
+        if (const auto *fact = connector_fact(p.connectors, i.value); fact && fact->numbered_label)
+            numbered[*fact->numbered_label].push_back(i.ref);
+    std::map<std::string, std::string> ordinal;
+    for (auto &[label, refs] : numbered) {
+        std::sort(refs.begin(), refs.end());
+        for (std::size_t n = 0; n < refs.size(); ++n)
+            ordinal[refs[n]] = label + std::to_string(n);
+    }
     for (const auto &i : m.insts) {
-        if (!lookup(p.connector_mating_faces, i.value))
+        if (!connector_fact(p.connectors, i.value))
             continue;
         auto text = lookup(p.connector_descriptions, i.sheet);
         if (!text)
             continue;
         std::string desc = *text;
         if (ordinal.count(i.ref))
-            desc = "PMOD" + std::to_string(ordinal.at(i.ref));
+            desc = ordinal.at(i.ref);
         auto b = courtyard(i);
         std::array<double, 4> distances{b.y0 - bounds.y0, bounds.y1 - b.y1, b.x0 - bounds.x0,
                                         bounds.x1 - b.x1};
@@ -162,6 +172,58 @@ std::vector<Sexpr> descriptors(const PcbModel &m, const PcbEmitPolicy &p, const 
         out.push_back(silk_text(text, seat.x, seat.y, size, uid(prefix + ":" + i.ref), counts));
     }
     return out;
+}
+void seat_references(const PcbModel &m, Sexpr &doc, const labels::LabelSeating &seating) {
+    if (seating.seats.size() != m.insts.size())
+        throw PcbEmissionError("label seats do not match the placed parts");
+    std::unordered_map<std::string, const labels::LabelSeat *> seats;
+    std::size_t shown = 0, applied = 0;
+    for (const auto &seat : seating.seats) {
+        if (!seats.emplace(seat.reference, &seat).second)
+            throw PcbEmissionError(seat.reference + ": two label seats share one reference");
+        if (seat.seat != labels::Seat::hidden)
+            ++shown;
+    }
+    for (auto &footprint : std::get<SexprList>(doc.v)) {
+        if (!tag(footprint, "footprint"))
+            continue;
+        for (auto &prop : std::get<SexprList>(footprint.v)) {
+            auto *fields = std::get_if<SexprList>(&prop.v);
+            if (!fields || !tag(prop, "property") || fields->size() <= 2)
+                continue;
+            const auto *name = std::get_if<std::string>(&(*fields)[1].v);
+            const auto *ref = std::get_if<std::string>(&(*fields)[2].v);
+            if (!name || *name != "Reference")
+                continue;
+            const auto found = ref ? seats.find(*ref) : seats.end();
+            if (found == seats.end())
+                throw PcbEmissionError("a placed reference has no label seat");
+            const auto &seat = *found->second;
+            fields->erase(std::remove_if(fields->begin(), fields->end(),
+                                         [](const Sexpr &field) { return tag(field, "hide"); }),
+                          fields->end());
+            if (seat.seat == labels::Seat::hidden) {
+                const auto layer = std::find_if(fields->begin(), fields->end(),
+                                                [](const Sexpr &field) { return tag(field, "layer"); });
+                if (layer == fields->end())
+                    throw PcbEmissionError(seat.reference + ": reference has no layer to hide on");
+                fields->insert(layer + 1, node("hide", {sym("yes")}));
+                break;
+            }
+            auto *at = child(prop, "at");
+            if (!at)
+                throw PcbEmissionError(seat.reference + ": reference lost its placement");
+            *at = node("at", {num(layout::to_mm(seat.local.x)), num(layout::to_mm(seat.local.y)),
+                              num(seat.upright ? layout::constants::quarter_degrees.value : 0)});
+            prop = set_font_size(std::move(prop), seat.height);
+            if (font_size(prop, 0) != seat.height)
+                throw PcbEmissionError(seat.reference + ": reference has no font to size");
+            ++applied;
+            break;
+        }
+    }
+    if (applied != shown)
+        throw PcbEmissionError("a seated label has no reference to carry it");
 }
 int declutter(const PcbModel &m, Sexpr &doc, QuantizationCounts* counts) {
     Box4 bounds{m.origin_x, m.origin_y, m.origin_x + m.board_w, m.origin_y + m.board_h};

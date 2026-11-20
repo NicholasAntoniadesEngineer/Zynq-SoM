@@ -32,6 +32,83 @@ bool dimension(const ComponentBasisDeclaration& d, const ComponentBasisUse& u) {
     if(u.type == "Device:L" || (!u.target.empty() && u.target[0] == 'L')) return d.unit == "H";
     return true;
 }
+const char* const basis_schema = "schgen.component_basis/1";
+const char* const basis_file = "component_basis.json";
+const char* const library_scope = "library";
+const char* const library_folder = "subsystems";
+const std::set<std::string> library_keys{"schema","declarations","uses","sheets","board_scope_only"}, board_keys{"schema","uses","sheets"},
+    declaration_keys{"name","value","unit","basis","class","numeric"}, use_keys{"sheet","target","attribute","declaration","type"};
+const JsonNode& basis_array(const JsonNode& root, const std::string& key, const std::string& file) {
+    const auto* v = object_field(root, key);
+    if(!v) throw ModelCheckError(file + ": missing required field '" + key + "'");
+    if(v->kind != JsonKind::Array) throw ModelCheckError(file + ": field '" + key + "' must be an array");
+    return *v;
+}
+std::string basis_row(const std::string& file, const std::string& key, std::size_t index) {
+    return file + " " + key + " row " + std::to_string(index + 1);
+}
+void read_basis_file(const std::filesystem::path& path, const std::string& scope, bool library, ComponentBasisPolicy& policy) {
+    const auto file = path.string();
+    if(!std::filesystem::is_regular_file(path)) throw ModelCheckError("the component basis file is missing: " + file);
+    const auto root = parse_json_file(file);
+    reject_unknown_keys(root, library ? library_keys : board_keys, file);
+    if(require_string(root, "schema", false, file) != basis_schema) throw ModelCheckError(file + ": schema must be " + basis_schema);
+    std::set<std::string> declared;
+    if(library) {
+        const auto& rows = basis_array(root, "declarations", file);
+        for(std::size_t i = 0; i < rows.array_value.size(); ++i) {
+            const auto& row = rows.array_value[i];
+            const auto where = basis_row(file, "declarations", i);
+            reject_unknown_keys(row, declaration_keys, where);
+            ComponentBasisDeclaration d;
+            d.name = require_string(row, "name", false, where); d.value = require_string(row, "value", false, where);
+            d.unit = require_string(row, "unit", false, where); d.basis = require_string(row, "basis", false, where);
+            d.klass = require_string(row, "class", false, where);
+            const auto* numeric = object_field(row, "numeric");
+            if(!numeric) throw ModelCheckError(where + ": missing required field 'numeric'");
+            if(numeric->kind != JsonKind::Bool) throw ModelCheckError(where + ": field 'numeric' must be a boolean");
+            d.numeric = numeric->bool_value;
+            d.site = std::string(library_folder) + "/" + basis_file + ":" + d.name;
+            if(!declared.insert(d.name).second) throw ModelCheckError(where + ": declaration " + d.name + " is listed twice");
+            policy.declarations.push_back(std::move(d));
+        }
+    } else for(const auto& d : policy.declarations) declared.insert(d.name);
+    std::set<std::string> sheets;
+    const auto& sheet_rows = basis_array(root, "sheets", file);
+    for(std::size_t i = 0; i < sheet_rows.array_value.size(); ++i) {
+        const auto& row = sheet_rows.array_value[i];
+        const auto where = basis_row(file, "sheets", i);
+        if(row.kind != JsonKind::String) throw ModelCheckError(where + ": must be a string");
+        if(row.string_value.empty()) throw ModelCheckError(where + ": must not be empty");
+        if(!sheets.insert(row.string_value).second) throw ModelCheckError(where + ": sheet " + row.string_value + " is listed twice");
+        policy.sheets.push_back({scope, row.string_value});
+    }
+    if(library) {
+        const auto& only_rows = basis_array(root, "board_scope_only", file);
+        std::set<std::string> only;
+        for(std::size_t i = 0; i < only_rows.array_value.size(); ++i) {
+            const auto& row = only_rows.array_value[i];
+            const auto where = basis_row(file, "board_scope_only", i);
+            if(row.kind != JsonKind::String) throw ModelCheckError(where + ": must be a string");
+            if(row.string_value.empty()) throw ModelCheckError(where + ": must not be empty");
+            if(!only.insert(row.string_value).second) throw ModelCheckError(where + ": " + row.string_value + " is listed twice");
+            policy.board_scope_only.push_back(row.string_value);
+        }
+    }
+    const auto& use_rows = basis_array(root, "uses", file);
+    for(std::size_t i = 0; i < use_rows.array_value.size(); ++i) {
+        const auto& row = use_rows.array_value[i];
+        const auto where = basis_row(file, "uses", i);
+        reject_unknown_keys(row, use_keys, where);
+        ComponentBasisUse u;
+        u.scope = scope; u.sheet = require_string(row, "sheet", false, where); u.target = require_string(row, "target", false, where);
+        u.attribute = require_string(row, "attribute", false, where); u.declaration = require_string(row, "declaration", false, where);
+        u.type = require_string(row, "type", false, where);
+        if(!sheets.count(u.sheet)) throw ModelCheckError(where + ": sheet " + u.sheet + " is not in this file's sheets");
+        if(!declared.count(u.declaration)) throw ModelCheckError(where + ": declaration " + u.declaration + " does not exist");
+        policy.uses.push_back(std::move(u));
+    }
+}
 }
 ComponentBasisResult audit_component_basis(const std::vector<ComponentBasisInput>& input,
     const std::set<std::string>& scopes, const ComponentBasisPolicy& policy) {
@@ -118,23 +195,44 @@ ComponentBasisResult audit_component_basis(const std::vector<ComponentBasisInput
     r.n_registered = relevant.size();
     return r;
 }
-std::vector<ComponentBasisInput> author_component_basis_inputs(const std::filesystem::path& root) {
+ComponentBasisPolicy load_component_basis_policy(const std::filesystem::path& repository) {
+    ComponentBasisPolicy policy;
+    read_basis_file(repository / library_folder / basis_file, library_scope, true, policy);
+    for(const auto& folder : board_folders(repository)) read_basis_file(folder / basis_file, folder.filename().string(), false, policy);
+    for(const auto& name : policy.board_scope_only)
+        if(std::none_of(policy.sheets.begin(), policy.sheets.end(), [&](const ComponentBasisSheet& s) { return s.scope != library_scope && s.name == name; }))
+            throw ModelCheckError((repository / library_folder / basis_file).string() + ": board_scope_only " + name + " is in the sheets of no board");
+    return policy;
+}
+std::set<std::string> component_basis_scopes(const std::filesystem::path& repository) {
+    std::set<std::string> scopes{library_scope};
+    for(const auto& folder : board_folders(repository)) scopes.insert(folder.filename().string());
+    return scopes;
+}
+std::vector<ComponentBasisInput> author_component_basis_inputs(const std::filesystem::path& root, const ComponentBasisPolicy& policy) {
     const auto context = make_authoring_context(root);
     std::vector<ComponentBasisInput> out;
-    std::vector<ProjectSubsystemDefinition> sheets;
-    for(const auto& folder : board_folders(root))
-        for(auto& sheet : project_subsystem_definitions(folder)) sheets.push_back(std::move(sheet));
-    const auto used_as_filed = [&](const std::string& name) {
-        return std::any_of(sheets.begin(), sheets.end(), [&](const ProjectSubsystemDefinition& p) {
-            return p.name == name && p.adapter && p.meta.kind == JsonKind::Object && p.meta.object_value.empty();
-        });
+    const auto file = (root / library_folder / basis_file).string();
+    const auto library = subsystem_library(context);
+    const auto is_library = [&](const std::string& name) {
+        return std::any_of(library.begin(), library.end(), [&](const auto& d) { return d.name == name; });
     };
-    for(const auto& d : subsystem_library(context))
-        if(!used_as_filed(d.name)) out.push_back({"library", d.name, author_subsystem(d.name, SubsystemMeta{}, context)});
-    for(const auto& d : sheets) {
-        ProjectAuthoringInput input; input.context = context; input.project_root = root / d.project;
-        out.push_back({d.project, d.name, author_project_subsystem(d.project, d.name, input)});
+    for(const auto& s : policy.sheets)
+        if(s.scope == library_scope && !is_library(s.name)) throw ModelCheckError(file + ": sheets names " + s.name + ", which is not a library subsystem");
+    for(const auto& name : policy.board_scope_only)
+        if(!is_library(name)) throw ModelCheckError(file + ": board_scope_only names " + name + ", which is not a library subsystem");
+    for(const auto& d : library) {
+        const bool listed = std::any_of(policy.sheets.begin(), policy.sheets.end(), [&](const ComponentBasisSheet& s) { return s.scope == library_scope && s.name == d.name; });
+        const bool board_only = std::find(policy.board_scope_only.begin(), policy.board_scope_only.end(), d.name) != policy.board_scope_only.end();
+        if(listed == board_only)
+            throw ModelCheckError("library subsystem " + d.name + (listed ? " is in both sheets and board_scope_only of " : " is neither in sheets nor in board_scope_only of ") + file);
+        if(listed) out.push_back({library_scope, d.name, author_subsystem(d.name, SubsystemMeta{}, context)});
     }
+    for(const auto& folder : board_folders(root))
+        for(const auto& d : project_subsystem_definitions(folder)) {
+            ProjectAuthoringInput input; input.context = context; input.project_root = root / d.project;
+            out.push_back({d.project, d.name, author_project_subsystem(d.project, d.name, input)});
+        }
     return out;
 }
 std::string component_basis_report(const ComponentBasisResult& r) {

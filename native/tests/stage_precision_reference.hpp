@@ -1,6 +1,7 @@
 // Frozen loader and independent geometry/mutation assertions copied from
 // pcb_stage_contracts.cpp at 6a580efe. No existing reference fixture is edited.
 #include "schgen/pcb_stage_templates.hpp"
+#include "connector_facts_fixture.hpp"
 #include <iostream>
 #include <limits>
 #include <stdexcept>
@@ -62,6 +63,7 @@ PcbCheckFootprintPtr footprint(const PcbFootprintPool &pool, const std::string &
 }
 PcbStageInput input(const JsonNode &fixture, const JsonNode &row, const PcbFootprintPool &pool) {
     PcbStageInput in;
+    in.connectors = repository_connector_facts();
     in.sheet = field(row, "sheet").string_value;
     in.contract = field(row, "contract");
     in.refs = strings(field(row, "refs"));

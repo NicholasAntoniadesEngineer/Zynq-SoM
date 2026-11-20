@@ -47,7 +47,7 @@ PlacementRequirementReport identity(const TrustedOwnedGroups& t, const PcbCheckI
 TrustedOwnedGroupInputs resolve_owned_group_inputs(const ProjectPaths& paths,
     const std::vector<ProjectCircuit>& circuits, const PcbPlacementInput& in) {
     TrustedOwnedGroupInputs result;
-    if (!in.floorplan.compact_search || !paths.is_default_project) return result;
+    if (!in.floorplan.compact_search || !paths.owned_groups) return result;
     std::map<std::string, int> bands;
     std::set<int> used_bands;
     for (const auto& [sheet, band] : in.floorplan.sheet_index)
@@ -133,6 +133,7 @@ PcbCheckModel local_model(const Context& ctx, const Geometry& g, const std::stri
     PcbCheckModel model; model.origin_x = model.origin_y = 0;
     model.board_w = shape.w; model.board_h = shape.h;
     model.net_numbers = trusted.net_numbers;
+    model.connectors = ctx.in.floorplan.project.connectors;
     std::set<std::string> seen;
     for (const auto* offsets : {&shape.top_off, &shape.bot_off})
         for (const auto& [ref, xy] : *offsets) {

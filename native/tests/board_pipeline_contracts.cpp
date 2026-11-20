@@ -233,7 +233,7 @@ void board_search_accounting(){
 void final_manifest(const fs::path& root){
     Temp tmp;ProjectPaths p;p.repository_root=root;p.project_root=tmp.path/"source";
     BoardPipelineOptions o;o.output_root=tmp.path/"out";
-    Context c(p,o);c.manifest_input=ManufacturingManifestInput{};
+    Context c(p,o);c.manifest_input=ManufacturingManifestInput{};c.manifest_input->file_stem="Fixture_Board";
     c.gate("manifest",true,"prepared");
     publish_text(c.reports/"gates.txt","old run");
     run_manufacturing_manifest(*c.manifest_input,c.out,c.out/"manifest.json");
@@ -253,7 +253,7 @@ void final_manifest(const fs::path& root){
     c.result.timing_seconds={{"fixture",2.5}};publish_final_reports(c);check();
     require(read(c.out/"manifest.json")!=first,"changed final summary rehashed");
     o.output_root=tmp.path/"failed";Context failed(p,o);
-    failed.manifest_input=ManufacturingManifestInput{};failed.gate("manifest",true,"prepared");
+    failed.manifest_input=ManufacturingManifestInput{};failed.manifest_input->file_stem="Fixture_Board";failed.gate("manifest",true,"prepared");
     fs::create_directory(failed.out/"manifest.json");
     publish_final_reports(failed);
     const auto& last=failed.result.gates.back();

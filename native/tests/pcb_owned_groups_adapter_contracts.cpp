@@ -146,7 +146,7 @@ int main(int argc, char** argv) {
             "reference filter must use its explicit VREF2 owner and pin-local placement policy");
         auto disabled = in; disabled.floorplan.compact_search = false;
         require(resolve_owned_group_inputs(paths, {}, disabled).empty(), "default resolver must be a no-op");
-        auto unrelated = paths; unrelated.is_default_project = false;
+        auto unrelated = paths; unrelated.owned_groups = false;
         require(resolve_owned_group_inputs(unrelated, {}, in).empty(), "no carrier policy injected into other project");
 
         auto bad = in; bad.floorplan.sheet_index.push_back(bad.floorplan.sheet_index.front());

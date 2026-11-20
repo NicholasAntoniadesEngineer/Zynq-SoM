@@ -1,4 +1,5 @@
 #include "schgen/board_schematic.hpp"
+#include "schgen/board_files.hpp"
 
 #include "schgen/atomic_file.hpp"
 #include "schgen/pack.hpp"
@@ -428,7 +429,7 @@ std::string board_project_json(const JsonNode& existing, const std::string& root
     safe_leaf(root_name, "board root");
     if (existing.kind != JsonKind::Object) throw BoardSchematicError("board project JSON must be an object");
     auto result = existing;
-    put(result, "meta", object({{"filename",string(root_name + ".kicad_pro")},{"version",number(3)}}));
+    put(result, "meta", object({{"filename",string(board_file_name(root_name, BoardFileKind::Project))},{"version",number(3)}}));
     put(result, "erc", object({{"rule_severities",object({{"pin_not_driven",string("warning")}})}}));
     return dump(result) + "\n";
 }
@@ -497,8 +498,8 @@ BoardSchematicResult build_board_schematic(const std::vector<BoardSheetInput>& i
             out.per_sheet_failures.push_back(sheet.name + (first.empty() ? "" : ": " + first));
         }
     }
-    out.root_path = outdir / (options.root_name + ".kicad_sch");
-    out.project_path = outdir / (options.root_name + ".kicad_pro");
+    out.root_path = outdir / board_file_name(options.root_name, BoardFileKind::Schematic);
+    out.project_path = outdir / board_file_name(options.root_name, BoardFileKind::Project);
     write(out.root_path, emit_schematic(hierarchy.root, resolver(library), {"",options.root_name,hierarchy.root_uuid,options.project_name}).text);
     const auto existing = fs::exists(out.project_path) ? parse_json_file(out.project_path.string()) : object();
     write(out.project_path, board_project_json(existing, options.root_name));

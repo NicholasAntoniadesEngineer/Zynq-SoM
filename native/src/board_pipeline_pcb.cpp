@@ -1,4 +1,5 @@
 #include "board_pipeline_internal.hpp"
+#include "schgen/board_files.hpp"
 #include "precision_receipt.hpp"
 #include "schgen/board_policy.hpp"
 #include "schgen/pcb_drc.hpp"
@@ -9,6 +10,7 @@
 #include "schgen/manufacturing_checks.hpp"
 #include "schgen/process.hpp"
 #include "schgen/placement_requirements.hpp"
+#include "schgen/label_seats.hpp"
 #include <cmath>
 #include <climits>
 #include <cstdlib>
@@ -26,6 +28,20 @@ template<class F> auto precision_receipt(Context& c,const std::string& id,F&& ru
 std::optional<int> baseline(const fs::path& p){try{const auto j=parse_json_file(p.string());const auto* n=object_field(j,"starved_baseline");
     if(!n||n->kind!=JsonKind::Number||!std::isfinite(n->number_value)||n->number_value<0||n->number_value>INT_MAX||std::floor(n->number_value)!=n->number_value)return {};
     return static_cast<int>(n->number_value);}catch(const std::bad_alloc&){throw;}catch(const std::exception&){return {};}}
+struct RequirementsScope{bool applicable=false;std::string statement;};
+RequirementsScope requirements_scope(const JsonNode& project,const std::string& file){
+    const auto fail=[&](const std::string& what)->RequirementsScope{throw ProjectError(file+": 'placement_requirements' "+what);};
+    const auto* node=object_field(project,"placement_requirements");
+    if(!node||node->kind!=JsonKind::Object)return fail("is missing or is not an object");
+    reject_unknown_keys(*node,{"applicable","statement"},file+" 'placement_requirements'");
+    const auto* applicable=object_field(*node,"applicable");
+    if(!applicable||applicable->kind!=JsonKind::Bool)return fail("needs 'applicable' as true or false");
+    const auto* statement=object_field(*node,"statement");
+    RequirementsScope scope;scope.applicable=applicable->bool_value;
+    if(scope.applicable){if(statement)return fail("holds a 'statement' although it is applicable");return scope;}
+    if(!statement||statement->kind!=JsonKind::String||statement->string_value.empty())return fail("is not applicable and needs a non-empty 'statement'");
+    scope.statement=statement->string_value;return scope;
+}
 PcbDrcResult drc(const fs::path& pcb,const std::string& executable,bool warnings){
     auto pattern=(fs::temp_directory_path()/"schgen_pipeline_drc_XXXXXX").string();if(!::mkdtemp(pattern.data()))throw ProjectError("cannot create DRC scratch");
     struct Cleanup{fs::path p;~Cleanup(){std::error_code e;fs::remove_all(p,e);}}cleanup{pattern};
@@ -39,13 +55,12 @@ void carrier_surface_requirements_stage(Context& c) {
     const std::string gate_name="placement_requirements";
     c.attempt(gate_name,[&]{
         c.report("placement_requirements_unverified.txt","UNVERIFIED: current invocation requirement checks have not completed; no prior measurements may be reused.");
-        const auto project=load_project_config(c.paths).name;
-        if(project=="devkit_mini") {
-            const std::string applicability="NOT APPLICABLE: reviewed ownership declarations cover carrier board_aux/bringup_rails only; devkit_mini has neither requirement set. No qualitative placement approval implied.";
+        const auto scope=requirements_scope(load_project_config(c.paths).raw,c.paths.project_file.string());
+        if(!scope.applicable) {
+            const std::string& applicability=scope.statement;
             c.report("placement_requirements_unverified.txt",applicability);
             c.report(gate_name+".txt",applicability);c.gate(gate_name,true,applicability);return;
         }
-        if(project!="carrier")throw ProjectError("placement requirement applicability is not reviewed for project "+project);
         if(!c.pcb||!c.pcb_published||!c.schematic||!c.schematic->ok())
             throw ProjectError("current PCB and successfully gated hierarchy required");
         if(c.index!=c.pcb->inputs.floorplan.sheet_index)
@@ -105,7 +120,7 @@ void carrier_surface_requirements_stage(Context& c) {
     });
 }
 void pcb_stages(Context& c){
-    const auto pcb_path=c.out/"Zynq_Carrier.kicad_pcb";
+    const auto pcb_path=c.out/board_file_name(c.paths.file_stem,BoardFileKind::Pcb);
     const auto report_root=c.out==c.paths.project_root?c.paths.repository_root:c.out;
     c.attempt("pcb",[&]{if(!c.schematic||!c.schematic->ok()||!c.link||!c.link->ok())throw ProjectError("current qualified schematic/valid link required; refusing incomplete or stale board inputs");
         BoardPcbStage stage;stage.circuits=c.circuits;
@@ -135,14 +150,20 @@ void pcb_stages(Context& c){
             auto squeezed=c.measure("pcb_layout_squeeze",[&]{
                 return layout::squeeze_stage(stage.inputs,stage.placement.model,pcb_emit_policy(stage.inputs.floorplan.project),
                     {c.options.layout->plane_net,
-                     layout::project_edge_clearance(parse_json_file((c.paths.project_root/"Zynq_Carrier.kicad_pro").string())),
+                     layout::project_edge_clearance(parse_json_file((c.paths.project_root/board_file_name(c.paths.file_stem,BoardFileKind::Project)).string())),
                      c.options.layout->overmold_parts,stage.inputs.floorplan.place_clear,layout::authored_intent(stage.inputs)});});
             c.report("layout_squeeze.txt",squeezed.report);
             stage.placement.model=std::move(squeezed.model);
             stage.reached=rules::Stage::layout;
         }
+        const auto emit_policy=pcb_emit_policy(stage.inputs.floorplan.project);
+        std::optional<labels::LabelSeating> seats;
+        if(emit_policy.labels){
+            seats=c.measure("pcb_label_seats",[&]{return labels::seat_labels(stage.placement.model,emit_policy);});
+            c.report("label_seats.txt",seats->report);
+        }
         stage.emission=precision_receipt(c,"pcb/emission/precision",[&](auto& counts){
-            return c.measure("pcb_render",[&]{return render_pcb(stage.placement.model,pcb_emit_policy(stage.inputs.floorplan.project),&counts);});});
+            return c.measure("pcb_render",[&]{return render_pcb(stage.placement.model,emit_policy,&counts,seats?&*seats:nullptr);});});
         c.inbox.merge_once("pcb/emission",NativeAccountingBatch{{},stage.emission.fallback_events});
         c.pcb=std::move(stage);
         precision_receipt(c,"pcb/publication/precision",[&](auto& counts){publish_board_pcb(*c.pcb,c.out,&counts);return true;});
@@ -195,12 +216,12 @@ void pcb_stages(Context& c){
         if(c.pcb)sources.emission=pcb_emit_policy(c.pcb->inputs.floorplan.project);
         std::optional<ThermalCopper> copper;if(c.pcb_published)copper=scan_thermal_copper(pcb_path);
         const auto r=analyze_copper_debt(copper?&*copper:nullptr,sources);c.report("copper_debt.txt",copper_debt_report(r));c.gate("copper_debt",true,copper_debt_report(r));});
-    c.attempt("cpl",[&]{if(!c.pcb_published)throw ProjectError("PCB unavailable");const auto destination=c.manufacturing/"Zynq_Carrier_cpl.csv";
-        const auto temporary=c.manufacturing/"Zynq_Carrier_cpl.pipeline.csv";
+    c.attempt("cpl",[&]{if(!c.pcb_published)throw ProjectError("PCB unavailable");const auto destination=c.manufacturing/board_file_name(c.paths.file_stem,BoardFileKind::Placements);
+        const auto temporary=c.manufacturing/board_file_name(c.paths.file_stem,BoardFileKind::PlacementsScratch);
         if(fs::exists(temporary))throw ProjectError("CPL temporary destination already exists");
         const auto r=run_process({c.options.extraction.kicad_cli,"pcb","export","pos","--format","csv","--units","mm","--side","both","--output",temporary.string(),pcb_path.string()},std::chrono::seconds{120});
         if(r.exit_code!=0)throw ProjectError("CPL export failed: "+r.stderr_text);const auto bytes=read(temporary);publish_text(destination,bytes);fs::remove(temporary);c.gate("cpl",true,destination.string());});
-    c.attempt("fab_profile",[&]{if(!c.pcb_published)throw ProjectError("PCB unavailable");const auto r=run_manufacturing_fab(c.reports,pcb_path,c.manufacturing/"Zynq_Carrier_pcb.kicad_dru",c.out/"Zynq_Carrier.kicad_pro");c.gate("fab_profile",r.ok,r.report());});
+    c.attempt("fab_profile",[&]{if(!c.pcb_published)throw ProjectError("PCB unavailable");const auto r=run_manufacturing_fab(c.reports,pcb_path,c.manufacturing/board_file_name(c.paths.file_stem,BoardFileKind::DesignRules),c.out/board_file_name(c.paths.file_stem,BoardFileKind::Project));c.gate("fab_profile",r.ok,r.report());});
     c.attempt("stage_movement",[&]{if(!c.pcb)throw ProjectError("tracker did not run");const auto& moves=c.pcb->placement.model.stage_moves;
         for(const auto* name:{"l4_pull","edge_seat","breathe","refit_facing","reorder","corridor_eviction","instantiate","escape_copper"})if(!moves.count(name))throw ProjectError(std::string("tracker missing stage ")+name);
         if(moves.at("instantiate")!=0||moves.at("escape_copper")!=0)throw ProjectError("frozen stage moved a part");

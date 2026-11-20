@@ -21,7 +21,8 @@ struct RunConfig {
     std::map<std::string, std::vector<std::string>> overmold_parts;
     std::vector<std::string> study_stackups;
     const std::string& stackup_of(const std::string& board) const;
-    std::vector<std::string> board_arguments(const std::string& board) const;
+    const std::vector<std::string>& overmold_parts_of(const std::string& board) const;
+    std::vector<std::string> board_arguments(const std::string& board, const std::filesystem::path& file) const;
 };
 
 struct RunArguments {
@@ -35,7 +36,7 @@ inline constexpr const char* run_config_file = "schgen.json";
 RunArguments parse_run_arguments(const std::vector<std::string>& arguments, const std::set<std::string>& valued);
 std::vector<std::string> chosen_boards(const RunConfig& config, const std::vector<std::string>& chosen);
 void study_stackup(std::optional<std::string> name);
-int run_board(const RunConfig& config, const std::string& board);
+int run_board(const RunConfig& config, const std::string& board, const std::filesystem::path& file);
 
 RunConfig parse_run_config(const JsonNode& document);
 RunConfig load_run_config(const std::filesystem::path& file);

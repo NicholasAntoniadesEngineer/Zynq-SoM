@@ -102,6 +102,7 @@ PcbPlacementInput load_board_inputs(const ProjectPaths& paths,
         }
     }
     const PartFacts facts = load_part_facts(resolution.parts_dir / part_facts_file);
+    floor.project.connectors = facts.connectors;
     const ModelRoots roots{default_model3d_directory(), paths.project_file.parent_path(), resolution.parts_dir};
     std::map<std::string, PartHeight> measured;
     const auto height_of = [&](const std::string& footprint, const std::string& value, const std::string& part) {

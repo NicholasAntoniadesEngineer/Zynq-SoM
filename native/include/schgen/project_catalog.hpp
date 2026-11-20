@@ -27,7 +27,7 @@ struct ProjectSubsystem {
 // parts use the repository's shared native/catalog.bin.
 ProjectCatalogPaths project_catalog_paths(
     const std::filesystem::path& repository_root,
-    const std::filesystem::path& project = "carrier");
+    const std::filesystem::path& project);
 
 // Canonical layout: subsystems/<name>/circuit.json, matching schema and name.
 // Hidden/private directories are not sheets. Flat/foldered authoring Python

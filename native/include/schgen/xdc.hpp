@@ -24,7 +24,7 @@ struct XdcInput {
     // Optional diagnostic presentation order. The Python adapter supplies its
     // historical set iteration order; standalone callers use sorted bank IDs.
     std::vector<std::string> drift_order;
-    std::string device, zynq_ref;
+    std::string device, zynq_ref, pins_file;
     // Filesystem presentation is supplied by the caller; the engine does no I/O.
     std::string contract_path, contract_source, som_source;
 };

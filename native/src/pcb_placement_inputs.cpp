@@ -96,6 +96,7 @@ PcbStageInput Context::stage_input(const std::string &sheet, const Geometry &g) 
     s.pilot = pilot.count(sheet);
     s.partners = partners;
     s.place_clear = clearance;
+    s.connectors = in.floorplan.project.connectors;
     for (const auto &[ref, k] : g.resolvable)
         s.footprints[ref] = pool.at(k);
     for (const auto &sc : in.floorplan.sheets)
@@ -151,11 +152,9 @@ bool face_top(const BoardPart &p) {
            p.lib_id.find("TestPoint") != std::string::npos || p.footprint.rfind("LED_", 0) == 0 ||
            p.lib_id.rfind("Switch:", 0) == 0;
 }
-bool edge_family(const std::string &value) {
-    static const std::set<std::string> values{"TYPE-C-31-M-12", "HDMI-019S", "AFC07-S40FCA-00",
-                                              "SFW15R-1STE1LF", "TF-01A",    "DS1024-2x6R2",
-                                              "XT60PW-M"};
-    return values.count(value) != 0;
+bool edge_family(const ConnectorFacts &facts, const std::string &value) {
+    const ConnectorFact *fact = connector_fact(facts, value);
+    return fact && fact->edge_pinned;
 }
 Shape turned(const Shape &s, QuantizationCounts* counts) {
     Shape out = s;

@@ -66,8 +66,10 @@ SomZynq live_from(const JsonNode& node) {
     out.jpin_net=pairs(field(node,"jpin_net"));
     return out;
 }
+const std::string pins_name="Zynq_Carrier_pins.xdc";
 DeviceTreeInput input_from(const JsonNode& node) {
     DeviceTreeInput in;
+    in.pins_file=pins_name;
     const auto& contract=field(node,"contract");
     in.contract.source=str(contract,"source");
     for(const auto& [ref,data]:field(contract,"connectors").object_value) {
@@ -152,7 +154,7 @@ void contracts(const fs::path& fixtures,const std::optional<fs::path>& repo) {
     write(mapping,valid);
     s.run("JSON function mapping overlay retains insertion order",[&] {
         auto live=in.live;live.source=(temp.path/"not-a-schematic.kicad_sch").string();
-        const auto loaded=load_devicetree_input(temp.path,project,live);
+        const auto loaded=load_devicetree_input(temp.path,project,live,pins_name);
         require(loaded.function_map==XdcStrings{{"ZYNQ_PS_MIO10","ZYNQ_PS_UART0_RXD"},
             {"ZYNQ_PS_MIO11","ZYNQ_PS_UART0_TXD"},{"strap","renamed"}},"pudc override/order changed");
         require(loaded.mapping_source=="project/som_mapping.json" && loaded.contract_source=="project/som_interface.json",
@@ -163,7 +165,7 @@ void contracts(const fs::path& fixtures,const std::optional<fs::path>& repo) {
     s.run("explicit contract and refs",[&] {
         const auto override=temp.path/"alternate.json";
         write(override,som_interface_json(in.contract));
-        const auto loaded=load_devicetree_input(temp.path,project,in.live,override,{"J1"});
+        const auto loaded=load_devicetree_input(temp.path,project,in.live,pins_name,override,{"J1"});
         require(loaded.refs==std::vector<std::string>{"J1"} && loaded.contract_path==override.string(),
                 "explicit selection lost");
         require(generate_devicetree(loaded).mio_rows.size()==4,"selected connector walk failed");
@@ -179,7 +181,7 @@ void contracts(const fs::path& fixtures,const std::optional<fs::path>& repo) {
             {"empty mapping value",R"({"schema":"schgen.som_mapping.v1","function_map":{},"pudc_straps":{"a":""}})"}}) {
         s.run(label,[&, invalid = bad] {
             write(mapping,invalid);
-            try {load_devicetree_input(temp.path,project,in.live);}
+            try {load_devicetree_input(temp.path,project,in.live,pins_name);}
             catch(const DeviceTreeError& e){require(std::string(e.what()).find(mapping.string())!=std::string::npos,
                 "mapping failure lost source path");return;}
             throw std::runtime_error("invalid mapping accepted");
@@ -193,7 +195,7 @@ void contracts(const fs::path& fixtures,const std::optional<fs::path>& repo) {
             const auto empty=bad.find("\"loaded\",}");
             if(empty!=std::string::npos)bad.erase(empty+8,1);
             write(mapping,bad);
-            try {load_devicetree_input(temp.path,project,in.live);}
+            try {load_devicetree_input(temp.path,project,in.live,pins_name);}
             catch(const DeviceTreeError& e){
                 const std::string message=e.what();
                 require(message.find("BOOT")!=std::string::npos && message.find("strap")!=std::string::npos,
@@ -207,7 +209,7 @@ void contracts(const fs::path& fixtures,const std::optional<fs::path>& repo) {
         const auto snapshot=parse_json_file((fixtures/"som_real_baseline.json").string());
         auto live=live_from(field(snapshot,"zynq"));
         live.source=(*repo/"som/Zynq_SoM.kicad_sch").string();
-        const auto loaded=load_devicetree_input(*repo,*repo/name,live);
+        const auto loaded=load_devicetree_input(*repo,*repo/name,live,pins_name);
         const auto out=generate_devicetree(loaded);
         same_text(out.text,native_expected(read(fixtures/("devicetree_"+std::string(name)+"_golden.dtsi")),
                   std::string(name)+"/som_mapping.json"));

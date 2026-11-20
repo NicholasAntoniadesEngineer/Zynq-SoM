@@ -1,3 +1,4 @@
+#include "schgen/label_seats.hpp"
 #include "schgen/board_pcb.hpp"
 #include "schgen/pcb_verification.hpp"
 #include "fresh_project_schematic.hpp"
@@ -98,7 +99,9 @@ int main(int argc, char** argv) {
             if(std::string(project)=="carrier"){
                 auto strict=pcb_emit_policy(stage.inputs.floorplan.project);
                 strict.thermal_credit_needs={{"LM61460",1000,10.0,{"F.Cu","B.Cu"}}};
-                const auto changed=render_pcb(stage.placement.model,strict);
+                std::optional<labels::LabelSeating> seats;
+                if(strict.labels)seats=labels::seat_labels(stage.placement.model,strict);
+                const auto changed=render_pcb(stage.placement.model,strict,nullptr,seats?&*seats:nullptr);
                 if(changed.pcb!=stage.emission.pcb)
                     throw std::runtime_error("thermal evidence reporting must not change emitted copper");
                 bool warning=false;

@@ -88,7 +88,7 @@ struct Outputs { Rows csv_rows; std::string dru, md; };
 Outputs outputs(const std::vector<ProjectCircuit>& sheets,const std::vector<PairSignalSpec>& specs,
                 const SiConstraintsModel& model) {
     return {csv(generate_layout_constraints(sheets,specs,"independent SI contract").csv),
-            render_si_design_rules(model),render_si_markdown(model)};
+            render_si_design_rules(model),render_si_markdown(model,"rules.kicad_dru")};
 }
 std::string line_with(const std::string& doc,const std::string& needle) {
     const auto at=doc.find(needle);if(at==std::string::npos)return {};

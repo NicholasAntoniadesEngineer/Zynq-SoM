@@ -1,4 +1,5 @@
 #include "board_pipeline_internal.hpp"
+#include "schgen/board_files.hpp"
 #include "schgen/devicetree.hpp"
 #include "schgen/vivado.hpp"
 #include "schgen/gallery.hpp"
@@ -20,15 +21,15 @@ void golden_stage(Context& c){
 void document_stages(Context& c){
     std::optional<SomZynq> live;std::optional<XdcInput> xi;std::optional<XdcOutput> xo;
     c.attempt("xdc",[&]{live=extract_som_zynq(c.paths.som_schematic,"U2",{"J1","J2","J3"},c.options.extraction);
-        XdcInput raw;raw.refs={"J1","J2","J3"};apply_som_to_xdc(raw,*live);
+        XdcInput raw;raw.refs={"J1","J2","J3"};raw.pins_file=board_file_name(c.paths.file_stem,BoardFileKind::PinConstraints);apply_som_to_xdc(raw,*live);
         xi=load_project_xdc_input(c.paths.repository_root,c.paths.project_root,c.sheets,raw,c.paths.som_schematic,c.paths.som_interface_file);
-        xo=generate_xdc(*xi);publish_text(c.out/"fpga/Zynq_Carrier_pins.xdc",xo->text);
+        xo=generate_xdc(*xi);publish_text(c.out/"fpga"/xi->pins_file,xo->text);
         ManufacturingXdc manifest;manifest.count=xo->entries.size();manifest.device=xi->device;
         std::set<int> banks;for(const auto& pin:xo->entries)banks.insert(std::stoi(pin.bank));manifest.banks.assign(banks.begin(),banks.end());c.xdc=manifest;
         c.gate("xdc",true,join(xo->checks,"\n"));});
     c.attempt("vivado",[&]{if(!xi||!xo)throw ProjectError("validated live XDC inputs unavailable");
-        publish_text(c.out/"fpga/create_project.tcl",render_vivado(*xo,xi->device,xi->zynq_ref,"Zynq_Carrier_pins.xdc",xi->refs));c.gate("vivado",true,"project Tcl published");});
-    c.attempt("devicetree",[&]{if(!live)throw ProjectError("live SoM extraction unavailable");const auto r=generate_devicetree(load_devicetree_input(c.paths.repository_root,c.paths.project_root,*live,c.paths.som_interface_file));publish_text(c.out/"firmware/carrier_pl.dtsi",r.text);c.gate("devicetree",true,"device tree published");});
+        publish_text(c.out/"fpga/create_project.tcl",render_vivado(*xo,xi->device,xi->zynq_ref,xi->pins_file,xi->refs));c.gate("vivado",true,"project Tcl published");});
+    c.attempt("devicetree",[&]{if(!live)throw ProjectError("live SoM extraction unavailable");const auto r=generate_devicetree(load_devicetree_input(c.paths.repository_root,c.paths.project_root,*live,board_file_name(c.paths.file_stem,BoardFileKind::PinConstraints),c.paths.som_interface_file));publish_text(c.out/"firmware/carrier_pl.dtsi",r.text);c.gate("devicetree",true,"device tree published");});
     c.attempt("firmware",[&]{FirmwareDocsInput in;in.sheets=c.circuits;
         in.firmware_sources={c.paths.som_interface_file.string(),c.paths.som_schematic.string()+" (U9 pin map, live kicad-cli extraction)"};
         for(const auto& sc:c.circuits)in.firmware_sources.push_back(sc.path.string());
@@ -48,12 +49,12 @@ void document_stages(Context& c){
     c.attempt("render3d",[&]{if(c.options.no_render){c.status("render3d",BoardGateStatus::skipped,"--no-render");return;}if(!c.pcb_published)throw ProjectError("PCB unavailable");
         Render3dOptions ro;ro.kicad_cli=c.options.extraction.kicad_cli;if(!c.options.model_directory.empty())ro.model_directory=c.options.model_directory;
         ro.source_project_directory=c.paths.project_root;
-        const auto r=render_board_3d(c.out/"Zynq_Carrier.kicad_pcb",c.renders,ro);c.gate("render3d",r.ok(),r.summary());});
-    c.attempt("gallery",[&]{auto paths=c.paths;paths.project_root=c.out;if(c.out!=c.paths.project_root){paths.is_default_project=false;paths.repository_root=c.out.parent_path();}
+        const auto r=render_board_3d(c.out/board_file_name(c.paths.file_stem,BoardFileKind::Pcb),c.renders,ro);c.gate("render3d",r.ok(),r.summary());});
+    c.attempt("gallery",[&]{auto paths=c.paths;paths.project_root=c.out;if(c.out!=c.paths.project_root){paths.root_readme=false;paths.repository_root=c.out.parent_path();}
         const auto input=load_gallery_input(paths,c.circuits);const auto changed=write_gallery(input);c.gate("gallery",true,gallery_summary(input,changed));});
-    c.attempt("si",[&]{if(!c.pcb_published)throw ProjectError("PCB emission must precede SI extension");const auto r=run_si_constraints(c.circuits,c.paths.project_root/"research/si_spec.json",c.manufacturing/"Zynq_Carrier_pcb.kicad_dru",c.manufacturing/"SI_CONSTRAINTS.md");c.gate("si",r.verdict.ok,r.verdict.summary());});
+    c.attempt("si",[&]{if(!c.pcb_published)throw ProjectError("PCB emission must precede SI extension");const auto r=run_si_constraints(c.circuits,c.paths.project_root/"research/si_spec.json",c.manufacturing/board_file_name(c.paths.file_stem,BoardFileKind::DesignRules),c.manufacturing/"SI_CONSTRAINTS.md");c.gate("si",r.verdict.ok,r.verdict.summary());});
     c.attempt("manifest",[&]{if(!c.power||!c.testpoints||!c.firmware)throw ProjectError("power/coverage/live STM32 facts unavailable");
-        ManufacturingManifestInput in;in.sheets=c.circuits;in.power=*c.power;in.stm32=c.firmware->stm32;in.xdc=c.xdc;
+        ManufacturingManifestInput in;in.file_stem=c.paths.file_stem;in.sheets=c.circuits;in.power=*c.power;in.stm32=c.firmware->stm32;in.xdc=c.xdc;
         in.coverage={c.testpoints->covered(),c.testpoints->required.size(),c.testpoints->waived.size()};
         if(c.xdc)in.device=c.xdc->device;run_manufacturing_manifest(in,c.out,c.out/"manifest.json");
         c.manifest_input=std::move(in);

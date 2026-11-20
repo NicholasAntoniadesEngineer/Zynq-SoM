@@ -27,6 +27,7 @@ struct PcbStageInput {
     std::map<std::string, std::string> side_of, board_refs;
     std::map<std::string, Box4> bbox_of;
     std::map<std::string, PcbCheckFootprintPtr> footprints;
+    ConnectorFacts connectors;
     PcbPadNets pad_nets;
     PcbInterNets inter_nets;
     std::map<std::string, PcbStagePartner> partners;
