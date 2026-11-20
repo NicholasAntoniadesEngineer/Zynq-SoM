@@ -13,6 +13,12 @@ bool hit(Box4 b, const std::vector<Box4> &boxes) {
                        [&](Box4 other) { return rects_intersect_open(b, other); });
 }
 using SubjectMap = std::map<std::string, std::pair<std::string, Box4>>;
+Box4 emitted_escape_corridor(const Placer &placer, const std::string &ref) {
+    const auto &at = placer.pos.at(ref);
+    return pcb_escape_corridor_board(*placer.mod(ref), placer.ctx.corridor_grid(25, at.first),
+                                     placer.ctx.corridor_grid(25, at.second), placer.rot(ref),
+                                     &placer.ctx.quantization);
+}
 std::set<std::string> independently_locked_owned_members(const Placer &placer) {
     std::set<std::string> members, caps;
     if (!placer.ctx.in.floorplan.compact_search) return members;
@@ -318,9 +324,7 @@ void compact_recover_thermal(Placer& p) {
     for (const auto& [ref,connector] : p.som_refs) {
         (void)connector;
         if (p.pos.count(ref) && p.geometry.resolvable.count(ref))
-            corridors.push_back(pcb_escape_corridor_board(*p.mod(ref),
-                p.ctx.corridor_grid(25,p.pos.at(ref).first),
-                p.ctx.corridor_grid(25,p.pos.at(ref).second),p.rot(ref),&p.ctx.quantization));
+            corridors.push_back(emitted_escape_corridor(p,ref));
     }
     const auto policy=pcb_emit_policy(p.ctx.in.floorplan.project);
     PcbPlacementGatePolicy contracts;
@@ -463,9 +467,7 @@ void compact_evict(Placer &p) {
     for (const auto &[r,j] : p.som_refs) {
         (void)j;
         if (p.pos.count(r) && p.geometry.resolvable.count(r))
-            corridors.push_back(pcb_escape_corridor_board(*p.mod(r),
-                p.ctx.corridor_grid(25,p.pos.at(r).first),
-                p.ctx.corridor_grid(25,p.pos.at(r).second),p.rot(r),&p.ctx.quantization));
+            corridors.push_back(emitted_escape_corridor(p,r));
     }
     if (corridors.empty()) return;
     const auto entry=p.pos;
@@ -581,8 +583,7 @@ void Placer::l4_pull() {
         for (const auto &[r, j] : som_refs) {
             (void)j;
             if (geometry.resolvable.count(r) && pos.count(r))
-                corridors.push_back(
-                    pcb_escape_corridor_board(*mod(r), pos.at(r).first, pos.at(r).second, rot(r), &ctx.quantization));
+                corridors.push_back(emitted_escape_corridor(*this, r));
         }
     for (const auto &[sheet, origin] : origins) {
         (void)origin;
@@ -949,9 +950,7 @@ void Placer::evict() {
     for (const auto &[r, j] : som_refs) {
         (void)j;
         if (pos.count(r) && geometry.resolvable.count(r))
-            corridors.push_back(
-                pcb_escape_corridor_board(*mod(r), ctx.corridor_grid(25, pos.at(r).first),
-                                          ctx.corridor_grid(25, pos.at(r).second), rot(r), &ctx.quantization));
+            corridors.push_back(emitted_escape_corridor(*this, r));
     }
     for (const auto &[r, p] : pos) {
         if (!geometry.bbox_of.count(r))
