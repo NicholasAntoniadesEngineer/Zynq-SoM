@@ -91,6 +91,10 @@ void project(const fs::path& root,const fs::path& scratch,const std::string& nam
         require(pos!=std::string::npos&&current_expected.find(before,pos+before.size())==std::string::npos,"unique historical BOM-line preimage");
         current_expected.replace(pos,before.size(),after);
     }
+    const std::string reviewed_parts=name=="carrier"?"\"parts\": 499":"\"parts\": 133",current_parts=name=="carrier"?"\"parts\": 500":"\"parts\": 134";
+    const auto parts_pos=current_expected.find(reviewed_parts);
+    require(parts_pos!=std::string::npos&&current_expected.find(reviewed_parts,parts_pos+reviewed_parts.size())==std::string::npos,"unique reviewed part-count preimage");
+    current_expected.replace(parts_pos,reviewed_parts.size(),current_parts);
     const auto current_manifest=render_manufacturing_manifest(in);write(output/"manifest.json",current_manifest);
     require(current_manifest==current_expected,"current manifest differs beyond reviewed reference-filter BOM group");
     std::cout<<name<<": SI and live-analysis manifest exact\n";

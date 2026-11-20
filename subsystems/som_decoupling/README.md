@@ -76,3 +76,5 @@ that every rail carries exactly 2 × 22 µF + 4 × 100 nF to GND.
 ```
 pytest carrier/subsystems/som_decoupling/test_som_decoupling.py
 ```
+
+**`+3V3_SC` capacitance check.** The carrier places about 76 µF on `+3V3_SC` in total. The module regulator (TPS7A20) needs an effective output capacitance of 0.47 µF to 200 µF for stability (TI SBVS338H section 5.3, note 3), and the declared carrier load is about 22 mA of its 300 mA, so no change is needed.

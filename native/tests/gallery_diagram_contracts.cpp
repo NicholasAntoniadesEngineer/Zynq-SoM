@@ -207,8 +207,10 @@ void live_projects(const JsonNode &all, const fs::path &repo) {
         const auto &rows = field(all, "diagrams").array_value;
         const auto item = std::find_if(rows.begin(), rows.end(),
                                        [&](const auto &c) { return str(c, "name") == name; });
-        equal_bytes(render_block_diagram(linked, som), str(*item, "expected"),
-                    "live-native-diagram-" + name);
+        const std::string live_expected =
+            name == "carrier" ? read(repo / "native/tests/data/gallery_diagram/live_carrier_reset_removed.svg")
+                              : str(*item, "expected");
+        equal_bytes(render_block_diagram(linked, som), live_expected, "live-native-diagram-" + name);
 
         // Canonical JSON-only clone: no authoring .py files, no circuit catalog,
         // no Python process. All generated documents remain under test output.
@@ -275,8 +277,7 @@ void live_projects(const JsonNode &all, const fs::path &repo) {
                 return out;
             }(),
             som, policy);
-        equal_bytes(render_block_diagram(json_link, som), str(*item, "expected"),
-                    "json-only-native-diagram-" + name);
+        equal_bytes(render_block_diagram(json_link, som), live_expected, "json-only-native-diagram-" + name);
         std::cout << name
                   << ": live JSON-only native loader/linker SVG + Markdown byte parity PASS\n";
     }

@@ -16,7 +16,7 @@ the reading sits inside `[min .. max]`. A blank (unprogrammed) system
 controller is fine for every electrical step; the I2C scan and functional
 checks below need SC firmware running.
 
-Source spice gate: 16 checks, analytic (gate) + ngspice .op cross-check on 7 divider(s), 1% agreement enforced.
+Source spice gate: 15 checks, analytic (gate) + ngspice .op cross-check on 7 divider(s), 1% agreement enforced.
 
 ## Electrical acceptance — by bring-up stage
 
@@ -83,12 +83,10 @@ Netlist topology (not a bench measurement): [PASS] power_som: LM61460 direct VIN
 | step | net | probe pad | expected | min | max | measured | pass? |
 |---|---|---|---|---|---|---|---|
 | 5.1 BOOT0 strap VIH | `BOOT0_SET` | — | 3.09375 V | 2.31 V | 3.3 V | `______` | [ ] |
-| 5.2 RC STM32_NRST | `STM32_NRST` | — | 4 ms | 0.2 ms | 20 ms | `______` | [ ] |
 
 <details><summary>step rationale (from the spice gate detail)</summary>
 
 - **5.1 BOOT0 strap VIH** (debug_boot): DIP closed: 3.3 V through R3=100R vs the SoM 1k5 pull-down (contract) -> must exceed STM32 VIH = 0.7*VDD = 2.31 V
-- **5.2 RC STM32_NRST** (bringup_rails): debounce/reset ramp: STM32 internal ~40k NRST pull-up (contract) with C4=100n -> tau must mask >=0.2 ms bounce, release <20 ms
 
 </details>
 

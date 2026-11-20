@@ -159,3 +159,5 @@ contract.
 ```bash
 PYTHONPATH=. python3 -m pytest subsystems/lcd/test_lcd.py -q
 ```
+
+**ESD array supply capacitor.** C6 (100 nF, 0603, C14663) sits at the USBLC6-2 VBUS pin (pin 5) on `+VDD_TP_CLAMP`, as ST recommends (USBLC6-2 datasheet Rev 2, section 3, figure 7).

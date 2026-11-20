@@ -7,12 +7,19 @@
   "checks": {"dividers": [], "divider_sources": [], "iset_window_ma": null},
   "parts": [
     {"ref": "J1", "part": "ZX-SH1.0-4PWT"},
-    {"ref": "U1", "part": "USBLC6-2SC6"}
+    {"ref": "U1", "part": "USBLC6-2SC6"},
+    {
+      "ref": "C1",
+      "symbol": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {"LCSC": "C14663"}
+    }
   ],
   "nets": [
     {
       "name": "GND",
-      "pins": ["J1.1", "J1.5", "J1.6", "U1.2"]
+      "pins": ["J1.1", "J1.5", "J1.6", "U1.2", "C1.2"]
     },
     {
       "name": "+3V3_AUX",
@@ -38,7 +45,7 @@
     },
     {
       "name": "+3V3",
-      "pins": ["U1.5"]
+      "pins": ["U1.5", "C1.1"]
     }
   ],
   "unconnected": [],
@@ -52,7 +59,8 @@
   ],
   "waivers": [],
   "purpose": [
-    {"part": "U1", "role": "protect", "pin": "J1.3"}
+    {"part": "U1", "role": "protect", "pin": "J1.3"},
+    {"part": "C1", "role": "bypass", "pin": "U1.5"}
   ],
   "free": []
 }

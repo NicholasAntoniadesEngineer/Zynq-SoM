@@ -6,7 +6,8 @@
   "citations": [],
   "roles": {
     "J1": "qwiic_receptacle",
-    "U1": "esd_array"
+    "U1": "esd_array",
+    "C1": "esd_supply_bypass"
   },
   "structures": [
     {
@@ -18,6 +19,19 @@
       "max_mm": 5.0,
       "same_side": true,
       "basis": "judgment:5.0 — ESD at port entry (lightweight tier)"
+    },
+    {
+      "type": "proximity",
+      "anchor": "U1",
+      "anchor_pins": [
+        "5"
+      ],
+      "members": [
+        "C1"
+      ],
+      "max_mm": 2.0,
+      "same_side": true,
+      "basis": "ST USBLC6-2 Rev 2 sec.3 fig.7: 100 nF close to the device between VBUS and ground|judgment:2.0"
     }
   ]
 }

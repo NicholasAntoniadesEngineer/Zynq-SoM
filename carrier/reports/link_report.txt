@@ -7,7 +7,7 @@ alias map (rails only, exact, enumerated):
   carrier '+5V_SOM' == SoM 'VIN'  (P0 REBIND, not a spelling alias — wave3_function_map.md P0)
   (identity rails +3V3 / +1V8 / GND need no entry; signals are never aliased)
 
-bound ports (529):
+bound ports (528):
   board_aux:STM32_I2C2_SCL [i2c] -> sheet bringup_rails:STM32_I2C2_SCL; sheet motor_sense:STM32_I2C2_SCL; sheet power_mon:STM32_I2C2_SCL; sheet som_j1:STM32_I2C2_SCL; sheet usb_pd:STM32_I2C2_SCL
   board_aux:STM32_I2C2_SDA [i2c] -> sheet bringup_rails:STM32_I2C2_SDA; sheet motor_sense:STM32_I2C2_SDA; sheet power_mon:STM32_I2C2_SDA; sheet som_j1:STM32_I2C2_SDA; sheet usb_pd:STM32_I2C2_SDA
   board_aux:AUX_I2C_SCL [i2c] -> sheet board_qwiic:AUX_I2C_SCL; sheet board_services:AUX_I2C_SCL
@@ -102,7 +102,6 @@ bound ports (529):
   bringup_rails:SC_INT_N -> sheet som_j1:SC_INT_N; sheet usb_pd:SC_INT_N
   bringup_rails:PL_BTN0 -> sheet som_j2:PL_BTN0
   bringup_rails:PL_BTN1 -> sheet som_j2:PL_BTN1
-  bringup_rails:STM32_NRST -> sheet debug_boot:STM32_NRST; sheet som_j1:STM32_NRST; SoM STM32_NRST (J1.47)
   bringup_rails:PUDC_34 -> sheet som_j3:PUDC_34
   camera:CAM_D0_P [diff_pair] -> sheet som_j3:CAM_D0_P
   camera:CAM_D0_N [diff_pair] -> sheet som_j3:CAM_D0_N
@@ -120,7 +119,7 @@ bound ports (529):
   debug_boot:ZYNQ_TDI -> sheet som_j1:ZYNQ_TDI; sheet usb_jtag:ZYNQ_TDI; SoM ZYNQ_TDI (J1.70)
   debug_boot:STM32_GPIO6 -> sheet som_j1:STM32_GPIO6; SoM STM32_GPIO6 (J1.45)
   debug_boot:STM32_GPIO5 -> sheet som_j1:STM32_GPIO5; SoM STM32_GPIO5 (J1.53)
-  debug_boot:STM32_NRST -> sheet bringup_rails:STM32_NRST; sheet som_j1:STM32_NRST; SoM STM32_NRST (J1.47)
+  debug_boot:STM32_NRST -> sheet som_j1:STM32_NRST; SoM STM32_NRST (J1.47)
   debug_boot:STM32_BOOT0 -> sheet som_j1:STM32_BOOT0; SoM STM32_BOOT0 (J1.57)
   debug_boot:STM32_GPIO7 -> sheet som_j1:STM32_GPIO7; SoM STM32_GPIO7 (J1.59)
   debug_boot:STM32_GPIO8 -> sheet som_j1:STM32_GPIO8; SoM STM32_GPIO8 (J1.54)
@@ -312,7 +311,7 @@ bound ports (529):
   som_j1:STM32_RAIL_EN_1V8 -> sheet bringup_en:STM32_RAIL_EN_1V8
   som_j1:STM32_GPIO6 -> sheet debug_boot:STM32_GPIO6; SoM STM32_GPIO6 (J1.45)
   som_j1:ZYNQ_PS_MIO12 -> SoM ZYNQ_PS_MIO12 (J1.46)
-  som_j1:STM32_NRST -> sheet bringup_rails:STM32_NRST; sheet debug_boot:STM32_NRST; SoM STM32_NRST (J1.47)
+  som_j1:STM32_NRST -> sheet debug_boot:STM32_NRST; SoM STM32_NRST (J1.47)
   som_j1:ZYNQ_PS_UART0_TXD -> sheet uart_bridge:ZYNQ_PS_UART0_TXD
   som_j1:STM32_I2C2_SDA -> sheet board_aux:STM32_I2C2_SDA; sheet bringup_rails:STM32_I2C2_SDA; sheet motor_sense:STM32_I2C2_SDA; sheet power_mon:STM32_I2C2_SDA; sheet usb_pd:STM32_I2C2_SDA
   som_j1:ZYNQ_PS_MIO0 -> SoM ZYNQ_PS_MIO0 (J1.50)

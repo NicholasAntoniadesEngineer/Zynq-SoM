@@ -67,7 +67,7 @@ PlacementRequirementDeclaration carrier_surface_requirement_declaration(const st
     } else if(sheet=="bringup_rails") {
         d.owner_mpn={{"U1","TCA9535PWR"}};
         d.required.ownership={{"U1","24","VCC","C1","1","2","+3V3_SC","GND","100n","supply_bypass"}};
-        d.required.top_switches={"SW1","SW2","SW3","SW4","SW5","SW6"};
+        d.required.top_switches={"SW1","SW2","SW3","SW4","SW6"};
     } else throw std::runtime_error("no reviewed carrier surface requirements for "+sheet);
     return d;
 }

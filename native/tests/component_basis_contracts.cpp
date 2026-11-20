@@ -17,6 +17,32 @@ const std::string schema_line = "\"schema\":\"schgen.component_basis/1\"";
 const std::string declaration_row = "{\"name\":\"d.one\",\"value\":\"1k\",\"unit\":\"ohm\",\"basis\":\"reason\",\"class\":\"policy\",\"numeric\":false}";
 const std::string library_use = "{\"sheet\":\"s\",\"target\":\"R1\",\"attribute\":\"value\",\"declaration\":\"d.one\",\"type\":\"Device:R\"}";
 const std::string board_use = "{\"sheet\":\"b\",\"target\":\"R1\",\"attribute\":\"value\",\"declaration\":\"d.one\",\"type\":\"Device:R\"}";
+struct ReviewedMigration { std::string scope, sheet, target, original, migrated; };
+struct ReviewedBasisText { std::string name, basis; };
+struct ReviewedDeclaration { std::string name, value; };
+std::vector<ReviewedMigration> reviewed_migrations() {
+    std::vector<ReviewedMigration> rows = {
+        {"carrier","board_aux","C1","carrier.board_aux.decap","carrier.board_aux.in_reservoir"},
+        {"carrier","board_aux","C5","carrier.board_aux.decap","carrier.board_aux.reference_filter"}};
+    for(const char* target : {"C1","C3","C5","C7","C9","C11","C13","C15","C17","C19"})
+        rows.push_back({"carrier","bringup_modules",target,"carrier.bringup_modules.switch_decap","carrier.bringup_modules.in_reservoir"});
+    for(const char* target : {"C4","C12","C16","C18"})
+        rows.push_back({"carrier","bringup_modules",target,"carrier.bringup_modules.switch_decap","carrier.bringup_modules.out_reservoir"});
+    rows.push_back({"carrier","motor_pwm","C2","carrier.motor_pwm.switch_decap","carrier.motor_pwm.in_reservoir"});
+    return rows;
+}
+std::vector<ReviewedBasisText> reviewed_basis_texts() {
+    return {
+        {"carrier.bringup_modules.switch_decap","Local HF bypass on each SY6280 OUT whose gated rail already carries at least 10uF nominal on the net from the module sheets (dossier 3.2 wiring note). LCSC C14663."},
+        {"carrier.motor_pwm.switch_decap","HCT245 VCC bypass at U1. LCSC C14663."},
+        {"carrier.bringup_modules.sd_bleed","ONLY the SD rail gets this. A microSD power-cycle re-init needs VDD below ~0.5 V. The fitted SY6280AAC has an auto output discharge (120 ohm typical, Silergy SY6280/A application note Rev1.0C p.1 ordering table and p.4), so a switched-off output does not strand above 0.5 V; the resistor is kept as a defined bleed path on +3V3_SD, not as the only discharge. 0.33 mA static is far under the 1 A limit and cannot mis-trip (research R5; audit 2026-06-20). LCSC C25804."}};
+}
+std::vector<ReviewedDeclaration> reviewed_new_declarations() {
+    return {
+        {"carrier.bringup_modules.in_reservoir","10u"},{"carrier.bringup_modules.out_reservoir","10u"},
+        {"carrier.motor_pwm.in_reservoir","10u"},{"carrier.board_qwiic.clamp_bypass","100n"},
+        {"subsystems.LCD_TOUCH_CLAMP_BYPASS","100n"},{"subsystems.PD_INPUT_CLAMP_BYPASS","100n"}};
+}
 const char* const loader_board = "board_x";
 const char* const loader_file = "component_basis.json";
 std::string library_text(const std::string& declarations, const std::string& uses, const std::string& sheets) {
@@ -64,9 +90,11 @@ int main(int argc, char** argv) {
         const auto live = author_component_basis_inputs(root,policy);
         const auto fixture = parse_json_file((root/"native/tests/data/component_basis/python_basis.json").string());
         require(live.size() == 66 && policy.sheets.size() == 66,"complete live coverage");
-        require(policy.declarations.size() == 212 && policy.uses.size() == 681,"expectation coverage");
+        require(policy.declarations.size() == 218 && policy.uses.size() == 686,"expectation coverage");
         const std::vector<std::string> retired={"carrier.power_som.en_series_r","carrier.power_som.en_bypass","devkit_mini.power_som.en_series_r","devkit_mini.power_som.en_bypass"};
-        std::size_t reviewed_basis_corrections = 0,retired_declarations=0,retired_uses=0;
+        std::size_t reviewed_basis_corrections = 0,reviewed_text_corrections = 0,retired_declarations=0,retired_uses=0;
+        const auto migrations = reviewed_migrations();
+        const auto basis_texts = reviewed_basis_texts();
         for(const auto& row : at(fixture,"declarations").array_value) {
             const auto& a = row.array_value;
             const auto it = std::find_if(policy.declarations.begin(),policy.declarations.end(),
@@ -87,11 +115,25 @@ int main(int argc, char** argv) {
                     "reviewed isolation uncertainty must not become a datasheet approval");
                 continue;
             }
+            const auto reviewed_text = std::find_if(basis_texts.begin(),basis_texts.end(),[&](const auto& t) { return t.name == it->name; });
+            if(reviewed_text != basis_texts.end()) {
+                ++reviewed_text_corrections;
+                require(it->value == value && it->unit == a[2].string_value && it->klass == a[4].string_value &&
+                    it->numeric == (a[1].kind == JsonKind::Number) && a[3].string_value != reviewed_text->basis &&
+                    it->basis == reviewed_text->basis, "reviewed basis text changed beyond its review");
+                continue;
+            }
             require(it->value == value && it->unit == a[2].string_value &&
                 it->basis == a[3].string_value && it->klass == a[4].string_value &&
                 it->numeric == (a[1].kind == JsonKind::Number),"declaration differs from original Python");
         }
         require(reviewed_basis_corrections == 1, "exactly one reviewed basis correction");
+        require(reviewed_text_corrections == basis_texts.size() && basis_texts.size() == 3, "exactly three reviewed basis texts");
+        for(const auto& expected : reviewed_new_declarations()) {
+            const auto found = std::find_if(policy.declarations.begin(),policy.declarations.end(),[&](const auto& d) { return d.name == expected.name; });
+            require(found != policy.declarations.end() && found->value == expected.value && found->unit == "F" &&
+                found->klass == "datasheet" && !found->numeric, "reviewed new declaration changed: " + expected.name);
+        }
         require(retired_declarations==4,"exactly four retired enable declarations");
         auto result = audit_component_basis(live,scopes,policy);
         std::size_t reviewed_migrations = 0;
@@ -105,30 +147,28 @@ int main(int argc, char** argv) {
             }
             // Preserve the historical trace: only this independently reviewed
             // hardware correction may differ from its original binding.
-            const bool c1 = a[0].string_value == "carrier" &&
-                a[1].string_value == "board_aux" && a[2].string_value == "C1";
-            const bool c5 = a[0].string_value == "carrier" &&
-                a[1].string_value == "board_aux" && a[2].string_value == "C5";
-            if(c1) {
+            if(a[0].string_value == "carrier" && a[1].string_value == "bringup_rails" && a[2].string_value == "C4") {
+                require(std::none_of(policy.uses.begin(),policy.uses.end(),[&](const auto& u){return u.scope==a[0].string_value&&u.sheet==a[1].string_value&&u.target==a[2].string_value;}),
+                        "removed reset capacitor kept a stale value binding");
+                ++retired_uses;continue;
+            }
+            const auto migration = std::find_if(migrations.begin(),migrations.end(),[&](const auto& m) {
+                return m.scope == a[0].string_value && m.sheet == a[1].string_value && m.target == a[2].string_value; });
+            if(migration != migrations.end()) {
                 ++reviewed_migrations;
                 require(a[3].string_value == "Device:C" && a[4].string_value == "100n" &&
-                    a[5].string_value == "carrier.board_aux.decap", "original C1 trace changed");
-            }
-            if(c5) {
-                ++reviewed_migrations;
-                require(a[3].string_value=="Device:C"&&a[4].string_value=="100n"&&
-                    a[5].string_value=="carrier.board_aux.decap","original C5 trace changed");
+                    a[5].string_value == migration->original, "original " + migration->target + " trace changed");
             }
             const auto match=std::find_if(policy.uses.begin(),policy.uses.end(),[&](const auto& u) {
                 return u.scope==a[0].string_value && u.sheet==a[1].string_value &&
                     u.target==a[2].string_value && u.attribute=="value" &&
-                    u.declaration==(c1 ? "carrier.board_aux.in_reservoir" : c5 ? "carrier.board_aux.reference_filter" : a[5].string_value) &&
+                    u.declaration==(migration != migrations.end() ? migration->migrated : a[5].string_value) &&
                     u.type==a[3].string_value;
             });
             require(match!=policy.uses.end(),"obligation differs from independent Python trace");
         }
-        require(reviewed_migrations == 2, "exactly two reviewed capacitor migrations");
-        require(retired_uses==4,"exactly four retired enable uses");
+        require(reviewed_migrations == migrations.size() && migrations.size() == 17, "exactly seventeen reviewed capacitor migrations");
+        require(retired_uses==5,"exactly four retired enable uses and the retired reset capacitor");
         const auto filter=std::find_if(policy.declarations.begin(),policy.declarations.end(),
             [](const auto& d){return d.name=="carrier.board_aux.reference_filter";});
         require(filter!=policy.declarations.end()&&filter->value=="100p"&&filter->unit=="F"&&
@@ -150,7 +190,7 @@ int main(int argc, char** argv) {
             }),"port obligation differs from independent Python trace");
         }
         require(result.ok(), component_basis_report(result));
-        require(result.n_files == 66 && result.n_registered == 212 && result.n_sites == 681,"audit counts");
+        require(result.n_files == 66 && result.n_registered == 218 && result.n_sites == 686,"audit counts");
         {
             auto old_c1 = live;
             auto& aux = std::find_if(old_c1.begin(),old_c1.end(),[](const auto& x) {

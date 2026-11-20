@@ -6,6 +6,7 @@
 #include "../src/experiment_tools_internal.hpp"
 #include "experiment_metric_contracts.hpp"
 #include <iostream>
+#include <set>
 #include <unistd.h>
 
 namespace {
@@ -431,6 +432,10 @@ void probes(const std::filesystem::path &root, const std::string &project) {
     }
     std::cout<<project<<": independent complete stage report passed\n";
 }
+bool reviewed_projection_sheet(const std::string &project, const std::string &name) {
+    const std::set<std::string> carrier{"board_aux","bringup_modules","motor_pwm","board_qwiic","lcd","pd_input","bringup_rails"};
+    return project=="carrier" ? carrier.count(name)!=0 : project=="devkit_mini" && name=="pd_input";
+}
 void catalogs(const std::filesystem::path &root) {
     require(open_part_catalog((root/"native/catalog.bin").string()),"open existing part catalog read-only");
     const auto reference=parse_json_file((root/"native/tests/data/experiment_tools/catalog_reference.json").string());
@@ -442,16 +447,16 @@ void catalogs(const std::filesystem::path &root) {
         for(std::size_t i=0;i<prepared.size();++i) {
             const auto &dump=prepared[i];const auto &e=expected[i];
             require(dump.path==paths.subsystems_dir/string(e,"name")/"circuit.json","native canonical output path");
-            if (std::string(project)=="carrier" && string(e,"name")=="board_aux") {
+            if (reviewed_projection_sheet(project,string(e,"name"))) {
                 const auto live = parse_circuit_ir(parse_json_text(dump.bytes, "live native dump"));
                 // Keep the current dump intact for publication below. Its exact
                 // serializer roundtrip plus the projected historical byte hash
                 // cover formatting as well as the independently asserted delta.
-                const auto handle = paths.subsystems_dir/"board_aux/board_aux.cpp";
+                const auto handle = paths.subsystems_dir/string(e,"name")/(string(e,"name")+".cpp");
                 require(experiment_circuit_json_path(handle) == dump.path,
                     "native C++ handle preserves canonical output path");
                 require(prepare_native_circuit_dump(live, handle).bytes == dump.bytes,
-                    "current board_aux canonical dump roundtrip bytes");
+                    "current " + string(e,"name") + " canonical dump roundtrip bytes");
                 historical_input_contracts::check(live, project, [&](const auto& projected) {
                     const auto bytes = prepare_native_circuit_dump(projected, handle).bytes;
                     return bytes.size()==number(e,"bytes") && pcb_sha256(bytes)==string(e,"sha256");

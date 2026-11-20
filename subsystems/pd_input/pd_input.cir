@@ -17,6 +17,7 @@
 *   R4 5.49k  OVP divider bottom      (PD_OVP_SET -> GND)
 *   R5 5.1k   ILIM strap              (PD_ILIM_SET -> GND)
 *   R6 100k   FLT# pull-up            (+VDD_LOGIC -> FLT_N)
+*   C4 100n   USBLC6 VBUS bypass      (+VDD_LOGIC -> GND, ST USBLC6-2 Rev 2 fig.7)
 *
 * Port order: VBUS_CONN VBUS_OUT VDD_LOGIC CC1 CC2 USB_D_P USB_D_N FLT_N GND
 * (GND last, by convention. The eFuse strap internal nodes PD_OVP_SET /
@@ -37,6 +38,9 @@ C3 PD_DVDT GND 47n
 
 * FLT# open-drain fault pull-up to the always-on logic rail
 R6 VDD_LOGIC FLT_N 100k
+
+* USBLC6-2 VBUS (U2.5) clamp-reference bypass
+C4 VDD_LOGIC GND 100n
 
 .ends pd_input
 

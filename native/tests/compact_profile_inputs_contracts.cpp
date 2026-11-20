@@ -272,9 +272,9 @@ void reviewed_profile_identity(const schgen::PcbPlacementInput& input) {
     (void)historical_input_contracts::project(sheet, "carrier");
 }
 void reviewed_profile_counts(const std::map<std::string, std::size_t>& counts) {
-    const std::map<std::string, std::size_t> expected{{"board_aux", 36}, {"bringup_rails", 24}};
+    const std::map<std::string, std::size_t> expected{{"board_aux", 36}, {"bringup_rails", 22}};
     if (counts != expected)
-        throw std::runtime_error("profile must exercise board_aux=36, bringup_rails=24 owned alternatives only");
+        throw std::runtime_error("profile must exercise board_aux=36, bringup_rails=22 owned alternatives only");
 }
 void observer_free_equivalence(const schgen::PcbPlacementInput& input){
     std::array<std::string,2> hashes,receipts;
@@ -383,7 +383,7 @@ int main(int argc, char** argv) {
             rejects([&] { reviewed_profile_identity(changed); });
         }
         std::cout << "PASS actual profile loader: reviewed C1 10u/0805/C15850; default no ownership; "
-            "compact board_aux=36 + bringup_rails=24, 60 alternatives; identity/count mutations rejected\n";
+            "compact board_aux=36 + bringup_rails=22, 58 alternatives; identity/count mutations rejected\n";
         return 0;
     } catch (const std::exception& error) {
         std::cerr << error.what() << '\n';

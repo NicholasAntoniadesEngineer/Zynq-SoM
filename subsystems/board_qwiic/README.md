@@ -54,6 +54,7 @@ Carrier-local: it wires real carrier net names directly and exposes no abstract
 |-----|-------|----------|------|
 | J1  | QWIIC receptacle (4-pin JST-SH) | `ZX-SH1.0-4PWT` | parts lib |
 | U1  | low-capacitance ESD array | `USBLC6-2SC6` | parts lib |
+| C1  | 100n | `Device:C` 0603 (VBUS bypass, U1.5) | C14663 |
 
 ## Build & test
 
@@ -63,3 +64,5 @@ always-on-clamp-ref / gated-connector-power invariants:
 ```bash
 PYTHONPATH=. python3 -m pytest carrier/subsystems/board_qwiic/test_board_qwiic.py -q
 ```
+
+**ESD array supply capacitor.** C1 (100 nF, 0603, C14663) sits at the USBLC6-2 VBUS pin (pin 5) on `+3V3`, as ST recommends (USBLC6-2 datasheet Rev 2, section 3, figure 7) so the clamp sees a constant rail during a positive surge.

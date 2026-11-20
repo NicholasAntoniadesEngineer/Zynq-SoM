@@ -1,5 +1,5 @@
 CONTRACT COVERAGE LINT — every wired-sheet part in >=1 contract structure or explicitly free
-CONTRACT COVERAGE LINT (advisory): 37 sheets, 561 parts — 275 structured / 0 free / 286 UNGATED
+CONTRACT COVERAGE LINT (advisory): 37 sheets, 562 parts — 276 structured / 0 free / 286 UNGATED
 
 board_aux            parts= 18  structured=  0  free= 0  UNGATED= 18  (no contract)
     UNGATED C1     -> C1001    10u                    nets: +3V3, GND
@@ -20,7 +20,7 @@ board_aux            parts= 18  structured=  0  free= 0  UNGATED= 18  (no contra
     UNGATED TP3    -> TP1003   AUX_I2C_SDA            nets: AUX_I2C_SDA
     UNGATED U1     -> U1001    SY6280AAC              nets: +3V3, +3V3_AUX, BS_ISET_AUX, EN_AUX, GND
     UNGATED U2     -> U1002    PCA9306DCUR            nets: +3V3_AUX, +3V3_SC, AUX_I2C_SCL, AUX_I2C_SDA, AUX_ISO_REF, GND (+2 more)
-board_qwiic          parts=  2  structured=  2  free= 0  UNGATED=  0
+board_qwiic          parts=  3  structured=  3  free= 0  UNGATED=  0
 board_services       parts=  9  structured=  0  free= 0  UNGATED=  9  (no contract)
     UNGATED BT1    -> BT3001   KH-CR1220-2            nets: GND, V_RTC_BAT
     UNGATED C1     -> C3001    100n                   nets: +3V3_AUX, GND
@@ -103,25 +103,25 @@ bringup_en_modules   parts= 54  structured=  0  free= 0  UNGATED= 54  (no contra
     UNGATED U10    -> U5010    SN74LVC1G08            nets: +3V3_SC, BU_DIP_HDMI_TX_5V, BU_OVR_HDMI_TX_5V, EN_HDMI_TX_5V, GND
     UNGATED U11    -> U5011    SN74LVC1G08            nets: +3V3_SC, BU_DIP_LCD_5V, BU_OVR_LCD_5V, EN_LCD_5V, GND
 bringup_modules      parts= 71  structured=  0  free= 0  UNGATED= 71  (no contract)
-    UNGATED C1     -> C6001    100n                   nets: +3V3, GND
+    UNGATED C1     -> C6001    10u                    nets: +3V3, GND
     UNGATED C2     -> C6002    100n                   nets: +3V3_HDMI_TX, GND
-    UNGATED C3     -> C6003    100n                   nets: +3V3, GND
-    UNGATED C4     -> C6004    100n                   nets: +3V3_HDMI_RX, GND
-    UNGATED C5     -> C6005    100n                   nets: +3V3, GND
+    UNGATED C3     -> C6003    10u                    nets: +3V3, GND
+    UNGATED C4     -> C6004    10u                    nets: +3V3_HDMI_RX, GND
+    UNGATED C5     -> C6005    10u                    nets: +3V3, GND
     UNGATED C6     -> C6006    100n                   nets: +3V3_LCD, GND
-    UNGATED C7     -> C6007    100n                   nets: +3V3, GND
+    UNGATED C7     -> C6007    10u                    nets: +3V3, GND
     UNGATED C8     -> C6008    100n                   nets: +3V3_CAM, GND
-    UNGATED C9     -> C6009    100n                   nets: +3V3, GND
+    UNGATED C9     -> C6009    10u                    nets: +3V3, GND
     UNGATED C10    -> C6010    100n                   nets: +3V3_SD, GND
-    UNGATED C11    -> C6011    100n                   nets: +5V, GND
-    UNGATED C12    -> C6012    100n                   nets: +5V_USB, GND
-    UNGATED C13    -> C6013    100n                   nets: +3V3, GND
+    UNGATED C11    -> C6011    10u                    nets: +5V, GND
+    UNGATED C12    -> C6012    10u                    nets: +5V_USB, GND
+    UNGATED C13    -> C6013    10u                    nets: +3V3, GND
     UNGATED C14    -> C6014    100n                   nets: +3V3_PMOD, GND
-    UNGATED C15    -> C6015    100n                   nets: +3V3, GND
-    UNGATED C16    -> C6016    100n                   nets: +3V3_USER_LED, GND
-    UNGATED C17    -> C6017    100n                   nets: +5V, GND
-    UNGATED C18    -> C6018    100n                   nets: +5V_HDMI_TX, GND
-    UNGATED C19    -> C6019    100n                   nets: +5V, GND
+    UNGATED C15    -> C6015    10u                    nets: +3V3, GND
+    UNGATED C16    -> C6016    10u                    nets: +3V3_USER_LED, GND
+    UNGATED C17    -> C6017    10u                    nets: +5V, GND
+    UNGATED C18    -> C6018    10u                    nets: +5V_HDMI_TX, GND
+    UNGATED C19    -> C6019    10u                    nets: +5V, GND
     UNGATED C20    -> C6020    100n                   nets: +5V_LCD, GND
     UNGATED D1     -> D6001    red                    nets: +3V3_HDMI_TX, BU_PG_HDMI_TX
     UNGATED D2     -> D6002    red                    nets: +3V3_HDMI_RX, BU_PG_HDMI_RX
@@ -174,11 +174,10 @@ bringup_modules      parts= 71  structured=  0  free= 0  UNGATED= 71  (no contra
     UNGATED U8     -> U6008    SY6280AAC              nets: +3V3, +3V3_USER_LED, BU_ISET_USER_LED, EN_USER_LED, GND
     UNGATED U9     -> U6009    SY6280AAC              nets: +5V, +5V_HDMI_TX, BU_ISET_HDMI_TX_5V, EN_HDMI_TX_5V, GND
     UNGATED U10    -> U6010    SY6280AAC              nets: +5V, +5V_LCD, BU_ISET_LCD_5V, EN_LCD_5V, GND
-bringup_rails        parts= 23  structured=  0  free= 0  UNGATED= 23  (no contract)
+bringup_rails        parts= 21  structured=  0  free= 0  UNGATED= 21  (no contract)
     UNGATED C1     -> C7001    100n                   nets: +3V3_SC, GND
     UNGATED C2     -> C7002    100n                   nets: GND, PL_BTN0
     UNGATED C3     -> C7003    100n                   nets: GND, PL_BTN1
-    UNGATED C4     -> C7004    100n                   nets: GND, STM32_NRST
     UNGATED R1     -> R7001    100k                   nets: BU_OVR_LCD_BL, GND
     UNGATED R2     -> R7002    100k                   nets: BU_P16, GND
     UNGATED R3     -> R7003    100k                   nets: BU_P17, GND
@@ -192,7 +191,6 @@ bringup_rails        parts= 23  structured=  0  free= 0  UNGATED= 23  (no contra
     UNGATED SW2    -> SW7002   DSHP08TSGER            nets: +3V3_SC, BU_DIP_CAM, BU_DIP_HDMI_RX, BU_DIP_HDMI_TX, BU_DIP_LCD, BU_DIP_PMOD (+3 more)
     UNGATED SW3    -> SW7003   TS-1187A-B-A-B         nets: GND, PL_BTN0
     UNGATED SW4    -> SW7004   TS-1187A-B-A-B         nets: GND, PL_BTN1
-    UNGATED SW5    -> SW7005   TS-1187A-B-A-B         nets: GND, STM32_NRST
     UNGATED SW6    -> SW7006   DSHP04TSGER            nets: +3V3_SC, BU_DIP_HDMI_TX_5V, BU_DIP_LCD_5V
     UNGATED TP1    -> TP7001   +3V3_SC                nets: +3V3_SC
     UNGATED TP2    -> TP7002   STM32_I2C2_SDA         nets: STM32_I2C2_SDA
@@ -222,7 +220,8 @@ hdmi_tx              parts= 12  structured=  9  free= 0  UNGATED=  3
     UNGATED TP1    -> TP14001  +5V_HDMI_TX            nets: +5V_HDMI_TX
     UNGATED TP2    -> TP14002  ZYNQ_HDMI_TX_SCL       nets: ZYNQ_HDMI_TX_SCL
     UNGATED TP3    -> TP14003  ZYNQ_HDMI_TX_SDA       nets: ZYNQ_HDMI_TX_SDA
-lcd                  parts= 20  structured= 17  free= 0  UNGATED=  3
+lcd                  parts= 21  structured= 17  free= 0  UNGATED=  4
+    UNGATED C6     -> C15006   100n                   nets: +3V3, GND
     UNGATED TP1    -> TP15001  +5V_LCD                nets: +5V_LCD
     UNGATED TP2    -> TP15002  LCD_CTP_SDA            nets: LCD_CTP_SDA
     UNGATED TP3    -> TP15003  LCD_CTP_SCL            nets: LCD_CTP_SCL
@@ -237,7 +236,8 @@ microsd              parts= 15  structured= 13  free= 0  UNGATED=  2
 motor_pwm            parts= 13  structured= 12  free= 0  UNGATED=  1
     UNGATED TP1    -> TP36001  +5V_MOTOR_IO           nets: +5V_MOTOR_IO
 motor_sense          parts= 10  structured= 10  free= 0  UNGATED=  0
-pd_input             parts= 13  structured= 11  free= 0  UNGATED=  2
+pd_input             parts= 14  structured= 11  free= 0  UNGATED=  3
+    UNGATED C4     -> C17004   100n                   nets: +3V3_SC, GND
     UNGATED TP1    -> TP17001  +VBUS_IN               nets: +VBUS_IN
     UNGATED TP2    -> TP17002  +VIN                   nets: +VIN
 pmod                 parts= 26  structured= 26  free= 0  UNGATED=  0

@@ -170,7 +170,7 @@ only *requests* a mode. Decode (dossier section (c)): `BOOTSEL[1:0]` =
 
 ### Reset
 
-`debug_boot.SW2` (and `bringup_rails.SW5`) pull `STM32_NRST` low — resetting
+`debug_boot.SW2` pulls `STM32_NRST` low — resetting
 the SC re-runs its power/boot supervision = whole-system reset (the SoM owns
 the RC debounce).
 
