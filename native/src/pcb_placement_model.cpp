@@ -183,6 +183,7 @@ void Placer::instantiate() {
     m.board_h = height;
     m.two_side = ctx.in.two_side;
     m.connectors = ctx.in.floorplan.project.connectors;
+    m.isolation = ctx.in.floorplan.project.isolation;
     m.net_numbers = net_numbers;
     m.netclass_of = ctx.netclass_of;
     m.classes = ctx.classes;

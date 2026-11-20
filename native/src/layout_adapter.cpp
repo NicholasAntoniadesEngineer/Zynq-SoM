@@ -142,9 +142,8 @@ Category category_of(const PcbModel& model, const PcbEmitPolicy& policy, const A
 }
 
 bool model_overridden(const PcbCheckInstance& instance, const PcbEmitPolicy& policy) {
-    for (const auto& entry : policy.model_overrides)
-        if (instance.value == entry.value && instance.footprint == entry.footprint) return true;
-    return false;
+    const ModelOverrideFact* found = part_fact_for(policy.model_overrides, instance.value, instance.footprint);
+    return found && found->footprint == instance.footprint;
 }
 
 PcbCheckFootprintPtr mirrored_document(const PcbCheckFootprintPtr& source) {

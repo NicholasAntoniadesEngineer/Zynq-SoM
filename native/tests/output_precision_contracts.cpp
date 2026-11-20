@@ -111,7 +111,8 @@ void rats(std::ostream& out,const RatsnestGateResult& r){
 }
 void board(std::ostream& out,const std::filesystem::path& root,const std::string& name){
     auto f=placement_fixture::load(root,name);
-    const auto model=pcb_model_from_json(f.model,f.expected_pool);
+    auto model=pcb_model_from_json(f.model,f.expected_pool);
+    model.isolation=f.input.floorplan.project.isolation;
     auto policy=pcb_emit_policy(f.input.floorplan.project);
     // This immutable rendering baseline predates service-only PCB labels.
     // Match its explicit input policy; live full-board construction below

@@ -1,5 +1,6 @@
 #include "schgen/occupancy.hpp"
 #include "schgen/pcb_escape.hpp"
+#include "connector_facts_fixture.hpp"
 #include <algorithm>
 #include <cmath>
 #include <fstream>
@@ -111,6 +112,7 @@ Fixture load(const fs::path &root, const std::string &name) {
     f.model.board_h = number(m, "board_h");
     f.model.som_keepout = box(field(m, "som_keepout"));
     f.model.som_core = box(field(m, "som_core"));
+    f.model.isolation = repository_part_facts().isolation;
     std::map<std::string, PcbCheckFootprintPtr> pool;
     for (const auto &[path, bytes] : field(f.raw, "footprints").object_value)
         pool[path] = pcb_check_footprint(path, bytes.string_value);
@@ -234,7 +236,7 @@ void real_mutations(const fs::path &root, const std::string &name) {
             f.model.board_w = 1;
         else if (id == "isolation_intrusion") {
             obstacle(f, conn, 0, 0, 1, 1);
-            f.model.insts.back().value = "HX5008-mutant";
+            f.model.insts.back().value = repository_part_facts().isolation.begin()->first;
         } else if (id == "foreign_barrel" || id == "no_net_barrel" || id == "npth_barrel") {
             obstacle(f, conn, 15, 0, .5, .5, "top",
                      id == "npth_barrel" ? "np_thru_hole" : "thru_hole",

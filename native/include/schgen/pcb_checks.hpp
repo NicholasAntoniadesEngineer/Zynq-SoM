@@ -79,6 +79,7 @@ struct PcbCheckModel {
     // nullopt means no metadata, "" means present metadata missing the hash.
     std::optional<std::string> escape_interface_sha256;
     ConnectorFacts connectors;
+    IsolationFacts isolation;
 };
 struct PcbCheckGeometry {
     std::optional<Box4> courtyard, pad_bbox;

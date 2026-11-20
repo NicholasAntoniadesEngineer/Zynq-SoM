@@ -165,6 +165,12 @@ const Fact* part_fact(const std::map<std::string, Fact>& section, const std::str
 }
 
 template <typename Fact>
+const Fact* part_fact_for(const std::map<std::string, Fact>& section, const std::string& value, const std::string& footprint) {
+    if (const Fact* fact = part_fact(section, value)) return fact;
+    return part_fact(section, footprint.substr(footprint.find_last_of(':') + 1));
+}
+
+template <typename Fact>
 const Fact& part_fact_of(const std::map<std::string, Fact>& section, const std::string& name, const std::string& section_name) {
     const Fact* fact = part_fact(section, name);
     if (!fact) throw std::runtime_error("part facts: " + name + " has no " + section_name + " entry in the part facts");

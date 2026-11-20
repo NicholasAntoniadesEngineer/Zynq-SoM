@@ -95,13 +95,22 @@
   "thermal": {},
   "thermal_copper": {},
   "ep_vias": {},
-  "isolation": {},
+  "isolation": {
+    "HX5008NLT": {"margin_mm": 0.6},
+    "KH-5224-8P8C-D": {"margin_mm": 0.6}
+  },
   "regulators": {},
   "zeners": {},
   "reference_pins": {},
-  "control_grid": {},
-  "model_overrides": {},
-  "footprint_aliases": {},
+  "control_grid": {
+    "TS-1187A-B-A-B": {"button_gap_mm": 2.0}
+  },
+  "model_overrides": {
+    "FUSB302BMPX": {"footprint": "Package_DFN_QFN:WQFN-14-1EP_2.5x2.5mm_P0.5mm_EP1.45x1.45mm", "path": "${KIPRJMOD}/../parts/FUSB302BMPX/FUSB302BMPX.wrl", "rotation_z_deg": 90}
+  },
+  "footprint_aliases": {
+    "Capacitor_SMD:C_1206_3225Metric": {"footprint": "Capacitor_SMD:C_1206_3216Metric"}
+  },
   "stated_heights": {
     "Fiducial:Fiducial_1mm_Mask2mm": {
       "mm": 0,

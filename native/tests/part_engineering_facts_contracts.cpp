@@ -255,12 +255,22 @@ void alias_facts(const std::filesystem::path& scratch) {
             "footprint_aliases: an absent section is refused");
 }
 
-void repository_sections_are_empty(const std::filesystem::path& repository) {
+void repository_sections_hold_their_rows(const std::filesystem::path& repository) {
     const PartFacts facts = load_part_facts(repository / "parts" / "part_facts.json");
-    require(facts.thermal.empty() && facts.thermal_copper.empty() && facts.ep_vias.empty() && facts.isolation.empty() &&
-                facts.regulators.empty() && facts.zeners.empty() && facts.reference_pins.empty() && facts.control_grid.empty() &&
-                facts.model_overrides.empty() && facts.footprint_aliases.empty(),
-            "the repository file carries every engineering section, empty");
+    require(facts.thermal.empty() && facts.thermal_copper.empty() && facts.ep_vias.empty() && facts.regulators.empty() &&
+                facts.zeners.empty() && facts.reference_pins.empty(),
+            "the sections still to be filled are empty");
+    require(facts.isolation.size() == 2 && part_fact_of(facts.isolation, "HX5008NLT", "isolation").margin_mm == 0.6 &&
+                part_fact_of(facts.isolation, "KH-5224-8P8C-D", "isolation").margin_mm == 0.6,
+            "the repository isolation rows");
+    require(facts.control_grid.size() == 1 && part_fact_of(facts.control_grid, "TS-1187A-B-A-B", "control_grid").button_gap_mm == 2,
+            "the repository control grid row");
+    require(facts.model_overrides.size() == 1 && part_fact_of(facts.model_overrides, "FUSB302BMPX", "model_overrides").rotation_z_deg == 90,
+            "the repository model override row");
+    require(facts.footprint_aliases.size() == 1 &&
+                part_fact_of(facts.footprint_aliases, "Capacitor_SMD:C_1206_3225Metric", "footprint_aliases").footprint ==
+                    "Capacitor_SMD:C_1206_3216Metric",
+            "the repository footprint alias row");
 }
 
 }
@@ -276,7 +286,7 @@ int main(int argc, char** argv) {
         small_facts(scratch);
         regulator_facts(scratch);
         alias_facts(scratch);
-        repository_sections_are_empty(std::filesystem::absolute(argv[1]));
+        repository_sections_hold_their_rows(std::filesystem::absolute(argv[1]));
         std::cout << "part engineering facts contracts ok\n";
         return 0;
     } catch (const std::exception& error) {

@@ -93,7 +93,7 @@ void kernels(){
     PcbPlacementInput input;Context ctx(input);Geometry g;
     const auto fp=pcb_check_footprint("Test.pretty/R.kicad_mod","(footprint R (layer F.Cu) (pad 1 smd rect (at -0.5 0) (size 0.4 0.4) (layers F.Cu)) (pad 2 smd rect (at 0.5 0) (size 0.4 0.4) (layers F.Cu)))");
     ctx.pool["fp"]=fp;g.refs_by_sheet["synthetic"]={"R1","R2","R3"};
-    for(const auto& r:g.refs_by_sheet["synthetic"]){g.resolvable[r]="fp";g.bbox_of[r]={-1,-1,1,1};g.side_of[r]="top";}
+    for(const auto& r:g.refs_by_sheet["synthetic"]){ctx.by_ref[r]=BoardPart{r,"","synthetic","Device:R","1k","Device:R"};g.resolvable[r]="fp";g.bbox_of[r]={-1,-1,1,1};g.side_of[r]="top";}
     g.side_of["R3"]="bottom";
     begin();
     for(const auto& outer:{"N","S","W","E"}){
