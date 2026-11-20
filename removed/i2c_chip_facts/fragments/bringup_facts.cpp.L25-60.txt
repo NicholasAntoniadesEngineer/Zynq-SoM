@@ -1,0 +1,36 @@
+BringupExpander bringup_expander(const CircuitSheetIr& c) {
+    Index ix(c);const auto refs=ix.matching("TCA9535");
+    if(refs.size()!=1)throw FirmwareDocsError(c.name+": expected exactly one TCA9535, found "+repr(refs));
+    const auto ref=refs.front();const auto vcc=ix.named(ref,"VCC");int addr=0x20;
+    for(int bit=0;bit<3;++bit) {
+        const auto strap="A"+std::to_string(bit);const auto net=ix.named(ref,strap);
+        if(net==vcc)addr|=1<<bit;
+        else if(net!=std::optional<std::string>("GND"))throw FirmwareDocsError(c.name+": TCA9535 "+strap+" on "+repr(net)+" — not a valid GND/VCC strap");
+    }
+    BringupExpander out{ref,addr,{}};static const std::regex port("P[01][0-7]");
+    for(const auto& p:ix.part(ref).pin_names)if(std::regex_match(p.name,port))out.ports.emplace_back(p.name,ix.at(ref,p.numbers.at(0)).value_or("?"));
+    return out;
+}
+std::vector<BringupMonitor> ina3221_monitors(const CircuitSheetIr& c) {
+    Index ix(c);std::vector<BringupMonitor> out;
+    for(const auto& ref:ix.matching("INA3221")) {
+        const auto a0=ix.named(ref,"A0");
+        const std::vector<std::optional<std::string>> straps{std::string("GND"),ix.named(ref,"VS"),ix.named(ref,"SDA"),ix.named(ref,"SCL")};
+        int strap=-1;for(int i=0;i<4;++i)if(straps[i]==a0)strap=i; // Python dict: last duplicate key wins.
+        if(strap<0)throw FirmwareDocsError(c.name+": "+ref+" A0 on "+repr(a0)+" — unknown strap");
+        BringupMonitor m{ref,0x40+strap,{}};
+        for(int ch=1;ch<=3;++ch)m.channels[ch]={ix.named(ref,"IN+"+std::to_string(ch)).value_or("?"),ix.named(ref,"IN-"+std::to_string(ch)).value_or("?")};
+        out.push_back(std::move(m));
+    }std::stable_sort(out.begin(),out.end(),[](const auto& a,const auto& b){return a.addr<b.addr;});return out;
+}
+int bringup_id_eeprom_addr(const CircuitSheetIr& c) {
+    Index ix(c);const CircuitPartIr* part=nullptr;
+    for(const auto& p:c.parts)if(has(p.lib_id,"24AA025E48")){part=&p;break;}
+    if(!part)throw FirmwareDocsError("board_services no longer carries a 24AA025E48 ID-EEPROM — I2C address map stale");
+    int addr=0x50;
+    for(int bit=0;bit<2;++bit) {
+        const auto pin=std::to_string(5-bit);const auto* net=ix.net(part->ref,pin);
+        if(!net)throw FirmwareDocsError("ID-EEPROM A"+std::to_string(bit)+" strap (pin "+pin+") floats");
+        if(net->net_class=="power")addr|=1<<bit;
+    }return addr;
+}

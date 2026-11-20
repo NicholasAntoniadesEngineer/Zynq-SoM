@@ -70,45 +70,6 @@ inline std::pair<char,int> ref_key(const std::string& ref) {
     const bool digits=!tail.empty() && std::all_of(tail.begin(),tail.end(),[](unsigned char c){return c>='0'&&c<='9';});
     return {ref.empty()?'\0':ref.front(), digits?std::stoi(tail):0};
 }
-struct Index {
-    const CircuitSheetIr& c;
-    std::unordered_map<std::string,const CircuitPartIr*> parts;
-    std::unordered_map<std::string,const CircuitNetIr*> pin_net;
-    std::unordered_map<std::string,std::vector<const CircuitNetIr*>> ref_nets;
-    explicit Index(const CircuitSheetIr& circuit):c(circuit) {
-        for(const auto& p:c.parts) parts.emplace(p.ref,&p);
-        for(const auto& n:c.nets) {
-            std::set<std::string> seen;
-            for(const auto& p:n.pins) {
-                pin_net.emplace(p.ref+"."+p.pin,&n);
-                if(seen.insert(p.ref).second) ref_nets[p.ref].push_back(&n);
-            }
-        }
-    }
-    const CircuitPartIr& part(const std::string& ref) const {
-        const auto p=parts.find(ref); if(p==parts.end()) throw FirmwareDocsError(c.name+": missing part "+ref);
-        return *p->second;
-    }
-    const CircuitNetIr* net(const std::string& ref,const std::string& pin) const {
-        auto p=pin_net.find(ref+"."+pin); return p==pin_net.end()?nullptr:p->second;
-    }
-    std::optional<std::string> at(const std::string& ref,const std::string& pin) const {
-        auto n=net(ref,pin); return n?std::optional<std::string>(n->name):std::nullopt;
-    }
-    std::string named_pin(const std::string& ref,const std::string& name) const {
-        for(const auto& n:part(ref).pin_names) if(n.name==name && !n.numbers.empty()) return n.numbers.front();
-        throw FirmwareDocsError(c.name+": "+ref+" missing pin name "+name);
-    }
-    std::optional<std::string> named(const std::string& ref,const std::string& name) const { return at(ref,named_pin(ref,name)); }
-    const std::vector<const CircuitNetIr*>& nets(const std::string& ref) const {
-        static const std::vector<const CircuitNetIr*> empty;
-        auto p=ref_nets.find(ref); return p==ref_nets.end()?empty:p->second;
-    }
-    std::vector<std::string> matching(const std::string& s) const {
-        std::vector<std::string> out; for(const auto& p:c.parts) if(has(p.value,s)||has(p.lib_id,s)) out.push_back(p.ref);
-        std::sort(out.begin(),out.end()); return out;
-    }
-};
 inline std::string lookup(const ProjectStrings& v,const std::string& key,const std::string& fallback="") {
     for(const auto& p:v) if(p.first==key) return p.second; return fallback;
 }

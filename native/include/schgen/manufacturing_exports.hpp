@@ -46,7 +46,6 @@ struct ManufacturingManifestInput {
     std::vector<ProjectArtifact> artifacts;
     std::string file_stem;
 };
-void check_i2c_address_collisions(const std::vector<ProjectCircuit>&);
 // Selection and content hashing are separate from pure manifest rendering.
 std::vector<ProjectArtifact> manufacturing_artifacts(const std::filesystem::path& project_root,
     const std::filesystem::path& output_path, const std::string& file_stem);

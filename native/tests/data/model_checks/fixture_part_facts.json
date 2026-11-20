@@ -1,5 +1,5 @@
 {
-  "schema": "schgen.part_facts/3",
+  "schema": "schgen.part_facts/4",
   "classes": {},
   "connectors": {},
   "stated_heights": {},
@@ -43,5 +43,7 @@
   "reference_pins": {},
   "control_grid": {},
   "model_overrides": {},
-  "footprint_aliases": {}
+  "footprint_aliases": {},
+  "i2c_devices": {},
+  "i2c_bridges": {}
 }

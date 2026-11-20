@@ -1,0 +1,14 @@
+void check_i2c_address_collisions(const std::vector<ProjectCircuit>& sheets){
+    const auto sheet_at=[&](const std::string& name){return std::find_if(sheets.begin(),sheets.end(),[&](const auto& sc){return sc.name==name;});};
+    const auto rails=sheet_at(expander_sheet),pmon=sheet_at(monitor_sheet),usbpd=sheet_at(usb_sheet),services=sheet_at(services_sheet);
+    std::vector<std::pair<std::string,int>> addresses;
+    if(rails!=sheets.end()){const auto expander=bringup_expander(rails->circuit);addresses.emplace_back(std::string(expander_sheet)+":"+expander.ref,expander.addr);}
+    const auto monitors=pmon!=sheets.end()?ina3221_monitors(pmon->circuit):std::vector<BringupMonitor>{};
+    if(usbpd!=sheets.end()&&!std::any_of(usbpd->circuit.parts.begin(),usbpd->circuit.parts.end(),[](const auto& p){return has(p.value,fusb302_part);}))throw FirmwareDocsError(std::string(usb_sheet)+" netlist no longer carries a "+fusb302_part+" — I2C address map stale");
+    if(usbpd!=sheets.end())addresses.emplace_back(usb_sheet,fusb302_fixed_address);
+    for(const auto& m:monitors)addresses.emplace_back(std::string(monitor_sheet)+":"+m.ref,m.addr);
+    if(services!=sheets.end()){addresses.emplace_back(std::string(services_sheet)+":memory",bringup_id_eeprom_addr(services->circuit));addresses.emplace_back(std::string(services_sheet)+":clock",rtc_fixed_address);}
+    std::set<int> unique;std::vector<std::string> collision;
+    for(const auto& [device,address]:addresses){unique.insert(address);collision.push_back(device+"=0x"+hex(address,0,false));}
+    if(unique.size()!=addresses.size())throw FirmwareDocsError("I2C address collision: "+join(collision,", "));
+}

@@ -1,5 +1,5 @@
 {
-  "schema": "schgen.part_facts/3",
+  "schema": "schgen.part_facts/4",
   "classes": {
     "74xGxx:74LVC1G08": "integrated_circuit",
     "Connector:TestPoint": "test_point",
@@ -143,6 +143,18 @@
   },
   "footprint_aliases": {
     "Capacitor_SMD:C_1206_3225Metric": {"footprint": "Capacitor_SMD:C_1206_3216Metric"}
+  },
+  "i2c_devices": {
+    "24AA025E48T-I_OT": {"label": "24AA025E48", "base": 80, "data_pin": "SDA", "clock_pin": "SCL", "straps": [{"pin": "A0", "selects": {"VSS": 0, "VCC": 1}}, {"pin": "A1", "selects": {"VSS": 0, "VCC": 2}}], "cite": "Microchip DS22124D sections 2.3 and 5.0, Figure 5-1: control code 1010 then A2 A1 A0; the 6-pin SOT-23 has no A2 pin and its bit is 0"},
+    "FUSB302BMPX": {"label": "FUSB302B", "base": 34, "data_pin": "SDA", "clock_pin": "SCL", "straps": [], "cite": "onsemi FUSB302B/D Rev. 5 Table 15: FUSB302BMPX slave address 0100010"},
+    "INA3221AIRGVR": {"label": "INA3221", "base": 64, "data_pin": "SDA", "clock_pin": "SCL", "straps": [{"pin": "A0", "selects": {"GND": 0, "VS": 1, "SDA": 2, "SCL": 3}}], "cite": "TI SBOS576C section 7.5.1.1 Table 7-1: A0 to GND, VS, SDA, SCL gives 1000000, 1000001, 1000010, 1000011"},
+    "M24C02-WMN6TP": {"label": "M24C02", "base": 80, "data_pin": "SDA", "clock_pin": "SCL", "straps": [{"pin": "E0", "selects": {"VSS": 0, "VCC": 1}}, {"pin": "E1", "selects": {"VSS": 0, "VCC": 2}}, {"pin": "E2", "selects": {"VSS": 0, "VCC": 4}}], "cite": "ST DocID024020 Rev 3 sections 2.3 and 4.5 Table 2: device select code 1010 E2 E1 E0, chip enable inputs tied to VCC or VSS"},
+    "RV-3028-C7-32.768kHz-1ppm-TA-QC": {"label": "RV-3028", "base": 82, "data_pin": "SDA", "clock_pin": "SCL", "straps": [], "cite": "Micro Crystal RV-3028-C7 Application Manual Rev. 1.4 section 5.6: 7-bit slave address 1010010b"},
+    "TCA9535PWR": {"label": "TCA9535", "base": 32, "data_pin": "SDA", "clock_pin": "SCL", "straps": [{"pin": "A0", "selects": {"GND": 0, "VCC": 1}}, {"pin": "A1", "selects": {"GND": 0, "VCC": 2}}, {"pin": "A2", "selects": {"GND": 0, "VCC": 4}}], "cite": "TI SCPS201F section 6.5.2 Figure 6-11 and Table 6-2: target address 0100 A2 A1 A0"}
+  },
+  "i2c_bridges": {
+    "PCA9306DCUR": {"joins": [["SDA1", "SDA2"], ["SCL1", "SCL2"]], "shares_addresses": true, "cite": "TI SCPS113O: when EN is high the translator switch is on and SCL1, SDA1 are connected to SCL2, SDA2; a pass switch, no address translation"},
+    "TPD12S016PWR": {"joins": [["SDA_A", "SDA_B"], ["SCL_A", "SCL_B"]], "shares_addresses": true, "cite": "TI SLLSE96F Pin Functions: SCL_A, SDA_A controller side and SCL_B, SDA_B connector side of the auto-direction I2C level shifter"}
   },
   "stated_heights": {
     "Fiducial:Fiducial_1mm_Mask2mm": {

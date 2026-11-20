@@ -13,8 +13,9 @@ namespace {
 using namespace schgen;
 
 namespace fixture {
-const std::array<std::string, 10> sections{"thermal", "thermal_copper", "ep_vias", "isolation", "regulators",
-                                           "zeners", "reference_pins", "control_grid", "model_overrides", "footprint_aliases"};
+const std::array<std::string, 12> sections{"thermal", "thermal_copper", "ep_vias", "isolation", "regulators",
+                                           "zeners", "reference_pins", "control_grid", "model_overrides", "footprint_aliases",
+                                           "i2c_devices", "i2c_bridges"};
 const std::string part = "P1";
 const std::string thermal_row =
     "{\"rth_ja\": 118.9, \"tj_max\": 125.0, \"rds_on\": 0.0, \"eff\": 0.85, \"package\": \"SOT-23-THIN-6\", \"cite\": \"fixture\", "
@@ -41,6 +42,15 @@ const std::string grid_row = "{\"button_gap_mm\": 2.0}";
 const std::string override_row =
     "{\"footprint\": \"Package_DFN_QFN:fixture\", \"path\": \"${KIPRJMOD}/../parts/P1/P1.wrl\", \"rotation_z_deg\": 90}";
 const std::string alias_row = "{\"footprint\": \"Capacitor_SMD:C_1206_3216Metric\"}";
+const std::string catalogue_pins =
+    "{\"pins\": [{\"num\": \"1\", \"name\": \"SCL\"}, {\"num\": \"2\", \"name\": \"GND\"}, {\"num\": \"3\", \"name\": \"SDA\"}, "
+    "{\"num\": \"4\", \"name\": \"A0\"}, {\"num\": \"5\", \"name\": \"VCC\"}, {\"num\": \"6\", \"name\": \"NC\"}, {\"num\": \"7\", \"name\": \"NC\"}, "
+    "{\"num\": \"8\", \"name\": \"SDA2\"}, {\"num\": \"9\", \"name\": \"SCL2\"}]}";
+const std::string device_row =
+    "{\"label\": \"D1\", \"base\": 80, \"data_pin\": \"SDA\", \"clock_pin\": \"SCL\", "
+    "\"straps\": [{\"pin\": \"A0\", \"selects\": {\"GND\": 0, \"VCC\": 1}}], \"cite\": \"fixture\"}";
+const std::string bridge_row =
+    "{\"joins\": [[\"SDA\", \"SDA2\"], [\"SCL\", \"SCL2\"]], \"shares_addresses\": true, \"cite\": \"fixture\"}";
 }
 
 void require(bool condition, const std::string& what) {
@@ -63,7 +73,7 @@ std::filesystem::path write_facts(const std::filesystem::path& scratch, const st
     std::filesystem::create_directories(scratch / fixture::part);
     const auto file = scratch / "facts.json";
     std::ofstream out(file, std::ios::binary);
-    out << "{\"schema\": \"schgen.part_facts/3\", \"classes\": {\"Device:R\": \"resistor\"}, \"connectors\": {}, \"stated_heights\": {}";
+    out << "{\"schema\": \"schgen.part_facts/4\", \"classes\": {\"Device:R\": \"resistor\"}, \"connectors\": {}, \"stated_heights\": {}";
     for (const std::string& name : fixture::sections) {
         if (name == section && leave_out) continue;
         out << ", \"" << name << "\": " << (name == section ? body : std::string("{}"));
@@ -289,6 +299,57 @@ void alias_facts(const std::filesystem::path& scratch) {
             "footprint_aliases: an absent section is refused");
 }
 
+void i2c_facts(const std::filesystem::path& scratch) {
+    std::filesystem::create_directories(scratch / fixture::part);
+    {
+        std::ofstream out(scratch / fixture::part / "part.json", std::ios::binary);
+        out << fixture::catalogue_pins;
+    }
+    const PartFacts good = facts_from(scratch, "i2c_devices", rows(fixture::device_row));
+    const I2cDeviceFact& d = part_fact_of(good.i2c_devices, "P1", "i2c_devices");
+    require(d.label == "D1" && d.base == 80 && d.data.number == "3" && d.clock.number == "1" && d.cite == "fixture",
+            "an i2c_devices row carries its label, base and resolved bus pins");
+    require(d.straps.size() == 1 && d.straps.front().pin.number == "4" && d.straps.front().selects.size() == 2 &&
+                d.straps.front().selects.back().first.number == "5" && d.straps.front().selects.back().second == 1,
+            "an i2c_devices strap resolves its pin and its select targets by name");
+    refused_everywhere(scratch, "i2c_devices", fixture::device_row);
+    refuses([&] { facts_from(scratch, "i2c_devices", rows(with(fixture::device_row, "\"cite\": \"fixture\"", "\"note\": \"fixture\""))); }, "note",
+            "i2c_devices: a row with an unknown key in place of its citation is refused");
+    refuses([&] { facts_from(scratch, "i2c_devices", rows(with(fixture::device_row, ", \"cite\": \"fixture\"", ""))); }, "cite",
+            "i2c_devices: a row without a citation is refused");
+    refuses([&] { facts_from(scratch, "i2c_devices", rows(with(fixture::device_row, "\"data_pin\": \"SDA\"", "\"data_pin\": \"SDX\""))); },
+            "no pin named SDX", "i2c_devices: a pin name the catalogue does not hold is refused");
+    refuses([&] { facts_from(scratch, "i2c_devices", rows(with(fixture::device_row, "\"pin\": \"A0\"", "\"pin\": \"NC\""))); },
+            "2 pins are named NC", "i2c_devices: a pin name that picks two pins is refused");
+    refuses([&] { facts_from(scratch, "i2c_devices", rows(with(fixture::device_row, "\"clock_pin\": \"SCL\"", "\"clock_pin\": \"SDA\""))); },
+            "must differ", "i2c_devices: one pin for data and clock is refused");
+    refuses([&] { facts_from(scratch, "i2c_devices", rows(with(fixture::device_row, "\"pin\": \"A0\"", "\"pin\": \"SDA\""))); },
+            "is the data or clock pin", "i2c_devices: a strap on the data pin is refused");
+    refuses([&] { facts_from(scratch, "i2c_devices", rows(with(fixture::device_row, "\"base\": 80", "\"base\": 127"))); },
+            "beyond a seven-bit address", "i2c_devices: an address that can pass 127 is refused");
+    refuses([&] { facts_from(scratch, "i2c_devices", rows(with(fixture::device_row, "\"VCC\": 1", "\"VCC\": 1.5"))); },
+            "whole number", "i2c_devices: a fractional select value is refused");
+    refuses([&] { facts_from(scratch, "i2c_devices", rows(with(fixture::device_row, "{\"GND\": 0, \"VCC\": 1}", "{}"))); },
+            "selects must not be empty", "i2c_devices: a strap selecting nothing is refused");
+    refuses([&] { facts_from(scratch, "i2c_devices", rows(with(fixture::device_row, "\"selects\"", "\"choices\""))); },
+            "choices", "i2c_devices: an unknown key inside a strap is refused");
+    const PartFacts bridged = facts_from(scratch, "i2c_bridges", rows(fixture::bridge_row));
+    const I2cBridgeFact& b = part_fact_of(bridged.i2c_bridges, "P1", "i2c_bridges");
+    require(b.joins.size() == 2 && b.joins.front().first.number == "3" && b.joins.front().second.number == "8" && b.shares_addresses &&
+                b.cite == "fixture",
+            "an i2c_bridges row resolves its joined pins");
+    refused_everywhere(scratch, "i2c_bridges", fixture::bridge_row);
+    refuses([&] { facts_from(scratch, "i2c_bridges", rows(with(fixture::bridge_row, "\"shares_addresses\": true", "\"shares_addresses\": 1"))); },
+            "shares_addresses", "i2c_bridges: a sharing flag that is not true or false is refused");
+    refuses([&] { facts_from(scratch, "i2c_bridges", rows(with(fixture::bridge_row, "[\"SDA\", \"SDA2\"]", "[\"SDA\"]"))); },
+            "pairs of pin names", "i2c_bridges: a join that is not a pair is refused");
+    refuses([&] { facts_from(scratch, "i2c_bridges", rows(with(fixture::bridge_row, "[\"SDA\", \"SDA2\"]", "[\"SDA\", \"SDA\"]"))); },
+            "two different pins", "i2c_bridges: a join of one pin to itself is refused");
+    std::filesystem::remove(scratch / fixture::part / "part.json");
+    refuses([&] { facts_from(scratch, "i2c_bridges", rows(fixture::bridge_row)); }, "part.json",
+            "i2c_bridges: a part with no catalogue file is refused");
+}
+
 void repository_sections_load(const std::filesystem::path& repository) {
     const PartFacts facts = load_part_facts(repository / "parts" / "part_facts.json");
     const RegulatorFact& buck = part_fact_of(facts.regulators, "LM61460AANRJRR", "regulators");
@@ -321,6 +382,12 @@ void repository_sections_load(const std::filesystem::path& repository) {
                 part_fact_of(facts.footprint_aliases, "Capacitor_SMD:C_1206_3225Metric", "footprint_aliases").footprint ==
                     "Capacitor_SMD:C_1206_3216Metric",
             "the repository footprint alias row");
+    require(facts.i2c_devices.size() == 6 && part_fact_of(facts.i2c_devices, "INA3221AIRGVR", "i2c_devices").base == 64 &&
+                part_fact_of(facts.i2c_devices, "INA3221AIRGVR", "i2c_devices").straps.front().selects.size() == 4 &&
+                part_fact_of(facts.i2c_devices, "FUSB302BMPX", "i2c_devices").data.number == "7",
+            "the repository I2C device rows");
+    require(facts.i2c_bridges.size() == 2 && part_fact_of(facts.i2c_bridges, "PCA9306DCUR", "i2c_bridges").shares_addresses,
+            "the repository I2C bridge rows");
 }
 
 }
@@ -337,6 +404,7 @@ int main(int argc, char** argv) {
         zener_facts(scratch);
         regulator_facts(scratch);
         alias_facts(scratch);
+        i2c_facts(scratch);
         repository_sections_load(std::filesystem::absolute(argv[1]));
         std::cout << "part engineering facts contracts ok\n";
         return 0;

@@ -18,7 +18,7 @@
 namespace schgen {
 namespace {
 
-const char* const facts_schema = "schgen.part_facts/3";
+const char* const facts_schema = "schgen.part_facts/4";
 const char* const vrml_extension = ".wrl";
 const char* const step_extension = ".step";
 const std::string_view vrml_points = "point";
@@ -34,6 +34,7 @@ const std::string_view blanks = " \t\r\n";
 const std::string_view separators = " \t\r\n,";
 constexpr std::size_t axis_count = 3;
 const char* const facts_file_name = "part_facts.json";
+const char* const part_file_name = "part.json";
 const std::string_view face_signs = "+-";
 const std::string_view face_axes = "XY";
 constexpr std::size_t face_length = 2;
@@ -519,6 +520,106 @@ std::map<std::string, Fact> section_from(const JsonNode& root, const std::filesy
     return out;
 }
 
+using PinTable = std::map<std::string, std::vector<std::string>>;
+
+PinTable pin_table(const std::filesystem::path& part_file, const std::string& where) {
+    if (!std::filesystem::is_regular_file(part_file)) refuse(where + " needs the catalogue file " + part_file.string());
+    const JsonNode part = parse_json_file(part_file.string());
+    const JsonNode& pins = array_required(part, "pins", part_file.string());
+    PinTable out;
+    for (const JsonNode& pin : pins.array_value) {
+        if (pin.kind != JsonKind::Object) refuse(part_file.string() + ": every pin must be an object");
+        out[text_required(pin, "name", part_file.string())].push_back(text_required(pin, "num", part_file.string()));
+    }
+    return out;
+}
+
+I2cPinFact pin_named(const PinTable& pins, const std::string& name, const std::string& where) {
+    const auto found = pins.find(name);
+    if (found == pins.end()) refuse(where + ": the part has no pin named " + name);
+    if (found->second.size() != 1) refuse(where + ": " + std::to_string(found->second.size()) + " pins are named " + name + ", so the name does not pick one");
+    return I2cPinFact{name, found->second.front()};
+}
+
+int whole_of(const JsonNode& value, const std::string& key, const std::string& where) {
+    if (value.kind != JsonKind::Number || !std::isfinite(value.number_value) || value.number_value < 0 ||
+        std::floor(value.number_value) != value.number_value || value.number_value > part_fact_constants::i2c_address_max.value)
+        refuse(where + ": " + key + " must be a whole number from 0 to " + std::to_string(static_cast<int>(part_fact_constants::i2c_address_max.value)));
+    return static_cast<int>(value.number_value);
+}
+
+I2cDeviceFact i2c_device_from(const JsonNode& entry, const std::string& where, const PinTable& pins) {
+    reject_unknown_keys(entry, {"label", "base", "data_pin", "clock_pin", "straps", "cite"}, where);
+    I2cDeviceFact fact;
+    fact.label = text_required(entry, "label", where);
+    const JsonNode* base = object_field(entry, "base");
+    if (!base) refuse(where + ": base must be a number");
+    fact.base = whole_of(*base, "base", where);
+    fact.data = pin_named(pins, text_required(entry, "data_pin", where), where + " data_pin");
+    fact.clock = pin_named(pins, text_required(entry, "clock_pin", where), where + " clock_pin");
+    if (fact.data.number == fact.clock.number) refuse(where + ": data_pin and clock_pin must differ");
+    fact.cite = text_required(entry, "cite", where);
+    int highest = fact.base;
+    for (const JsonNode& row : array_required(entry, "straps", where).array_value) {
+        const std::string strap_where = where + " straps";
+        if (row.kind != JsonKind::Object) refuse(strap_where + ": every strap must be an object");
+        reject_unknown_keys(row, {"pin", "selects"}, strap_where);
+        I2cStrapFact strap;
+        strap.pin = pin_named(pins, text_required(row, "pin", strap_where), strap_where + " pin");
+        if (strap.pin.number == fact.data.number || strap.pin.number == fact.clock.number)
+            refuse(strap_where + ": strap pin " + strap.pin.name + " is the data or clock pin");
+        if (std::any_of(fact.straps.begin(), fact.straps.end(), [&](const I2cStrapFact& s) { return s.pin.number == strap.pin.number; }))
+            refuse(strap_where + ": strap pin " + strap.pin.name + " is listed twice");
+        const JsonNode& selects = object_required(row, "selects", strap_where);
+        if (selects.object_value.empty()) refuse(strap_where + " " + strap.pin.name + ": selects must not be empty");
+        int most = 0;
+        for (const auto& [target, value] : selects.object_value) {
+            const std::string select_where = strap_where + " " + strap.pin.name + " selects";
+            const int chosen = whole_of(value, target, select_where);
+            strap.selects.emplace_back(pin_named(pins, target, select_where), chosen);
+            most = std::max(most, chosen);
+        }
+        highest += most;
+        fact.straps.push_back(std::move(strap));
+    }
+    if (highest > part_fact_constants::i2c_address_max.value)
+        refuse(where + ": base plus the largest strap values reaches " + std::to_string(highest) + ", beyond a seven-bit address");
+    return fact;
+}
+
+I2cBridgeFact i2c_bridge_from(const JsonNode& entry, const std::string& where, const PinTable& pins) {
+    reject_unknown_keys(entry, {"joins", "shares_addresses", "cite"}, where);
+    I2cBridgeFact fact;
+    for (const JsonNode& pair : array_required(entry, "joins", where).array_value) {
+        if (pair.kind != JsonKind::Array || pair.array_value.size() != pair_length || pair.array_value.front().kind != JsonKind::String ||
+            pair.array_value.back().kind != JsonKind::String)
+            refuse(where + ": joins must hold pairs of pin names");
+        const I2cPinFact from = pin_named(pins, pair.array_value.front().string_value, where + " joins");
+        const I2cPinFact to = pin_named(pins, pair.array_value.back().string_value, where + " joins");
+        if (from.number == to.number) refuse(where + ": a join must name two different pins");
+        fact.joins.emplace_back(from, to);
+    }
+    if (fact.joins.empty()) refuse(where + ": joins must not be empty");
+    fact.shares_addresses = flag_of(entry, "shares_addresses", where);
+    fact.cite = text_required(entry, "cite", where);
+    return fact;
+}
+
+template <typename Fact, typename Read>
+std::map<std::string, Fact> pinned_section_from(const JsonNode& root, const std::filesystem::path& file, const std::string& section, Read read) {
+    const JsonNode* node = object_field(root, section);
+    if (!node || node->kind != JsonKind::Object) refuse(file.string() + " needs an object named " + section);
+    std::map<std::string, Fact> out;
+    for (const auto& [key, entry] : node->object_value) {
+        const std::string where = file.string() + " " + section + " " + key;
+        if (entry.kind != JsonKind::Object) refuse(where + " must be an object");
+        if (!plain_folder_name(key) || !std::filesystem::is_directory(file.parent_path() / key))
+            refuse(where + " names a part with no folder in " + file.parent_path().string());
+        out.emplace(key, read(entry, where, pin_table(file.parent_path() / key / part_file_name, where)));
+    }
+    return out;
+}
+
 ConnectorFacts connectors_from(const JsonNode& section, const std::map<std::string, PartClass>& classes,
                                const std::string& file) {
     ConnectorFacts out;
@@ -577,7 +678,7 @@ ConnectorFacts load_connector_facts(const std::filesystem::path& parts_directory
 PartFacts load_part_facts(const std::filesystem::path& file) {
     if (!std::filesystem::is_regular_file(file)) refuse("the part facts file is missing: " + file.string());
     const JsonNode root = parse_json_file(file.string());
-    reject_unknown_keys(root, {"schema", "classes", "stated_heights", "connectors", "thermal", "thermal_copper", "ep_vias", "isolation", "regulators", "zeners", "reference_pins", "control_grid", "model_overrides", "footprint_aliases"}, file.string());
+    reject_unknown_keys(root, {"schema", "classes", "stated_heights", "connectors", "thermal", "thermal_copper", "ep_vias", "isolation", "regulators", "zeners", "reference_pins", "control_grid", "model_overrides", "footprint_aliases", "i2c_devices", "i2c_bridges"}, file.string());
     if (require_string(root, "schema", false, "part facts") != facts_schema)
         refuse(file.string() + " schema must be " + facts_schema);
     PartFacts facts;
@@ -617,6 +718,8 @@ PartFacts load_part_facts(const std::filesystem::path& file) {
     facts.control_grid = section_from<ControlGridFact>(root, file, "control_grid", true, control_grid_from);
     facts.model_overrides = section_from<ModelOverrideFact>(root, file, "model_overrides", true, model_override_from);
     facts.footprint_aliases = section_from<FootprintAliasFact>(root, file, "footprint_aliases", false, footprint_alias_from);
+    facts.i2c_devices = pinned_section_from<I2cDeviceFact>(root, file, "i2c_devices", i2c_device_from);
+    facts.i2c_bridges = pinned_section_from<I2cBridgeFact>(root, file, "i2c_bridges", i2c_bridge_from);
     return facts;
 }
 

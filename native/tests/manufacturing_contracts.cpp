@@ -82,6 +82,12 @@ void project(const fs::path& root,const fs::path& scratch,const std::string& nam
                 "removed enable network must not reappear: "+std::string(ref));
     replace_once(name=="carrier"?"\"lines\": 105":"\"lines\": 43",name=="carrier"?"\"lines\": 104":"\"lines\": 42");
     replace_once(name=="carrier"?"\"parts\": 502":"\"parts\": 136",name=="carrier"?"\"parts\": 499":"\"parts\": 133");
+    if(name=="carrier"){
+        const auto edid=std::find_if(in.sheets.begin(),in.sheets.end(),[](const auto& s){return s.circuit.name=="hdmi_rx";});
+        require(edid!=in.sheets.end()&&std::any_of(edid->circuit.parts.begin(),edid->circuit.parts.end(),[](const auto& p){return p.ref=="U1"&&p.value=="M24C02-WMN6TP";}),
+                "the EDID EEPROM the inventory adds is on the HDMI receive sheet");
+        replace_once("      \"sheet\": \"motor_sense\"\n    },\n","      \"sheet\": \"motor_sense\"\n    },\n    {\n      \"addr\": 80,\n      \"addr_hex\": \"0x50\",\n      \"bus\": \"hdmi_rx/HDMI_RX_SDA\",\n      \"device\": \"M24C02\",\n      \"ref\": \"U1\",\n      \"sheet\": \"hdmi_rx\"\n    },\n");
+    }
     require(render_manufacturing_manifest(historical)==reviewed_expected,"manifest differs beyond reviewed direct-enable removal");
     auto current_expected=reviewed_expected;
     if(name=="carrier") {
