@@ -106,6 +106,20 @@ CircuitPartIr& CircuitAuthor::find_part(const std::string& ref) {
     if(i==circuit_.parts.end()) throw CircuitAuthoringError("unknown part "+repr(ref));
     return *i;
 }
+void CircuitAuthor::renumber_pins(const std::string& ref,const std::string& lib_id,const std::map<std::string,std::string>& numbers) {
+    auto& p=find_part(ref);
+    for(const auto& net:circuit_.nets)for(const auto& pin:net.pins)if(pin.ref==ref&&numbers.count(pin.pin))
+        throw CircuitAuthoringError(ref+"."+pin.pin+" carries a net and cannot take another pad name");
+    for(const auto& [from,to]:numbers) {
+        const auto at=std::find(p.pin_numbers.begin(),p.pin_numbers.end(),from);
+        if(at==p.pin_numbers.end())throw CircuitAuthoringError(ref+" has no pin "+repr(from)+" to name "+repr(to));
+        if(std::find(p.pin_numbers.begin(),p.pin_numbers.end(),to)!=p.pin_numbers.end())
+            throw CircuitAuthoringError(ref+" already has a pin numbered "+repr(to));
+        *at=to;
+        for(auto& name:p.pin_names)for(auto& number:name.numbers)if(number==from)number=to;
+    }
+    p.lib_id=lib_id;
+}
 std::string CircuitAuthor::auto_ref(const std::string& prefix) {
     auto& n=counters_[prefix];
     std::string ref;

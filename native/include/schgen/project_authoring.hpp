@@ -20,6 +20,8 @@ struct ConnectorAuthoringPolicy {
     std::vector<std::string> sd_bus;
     std::vector<ConnectorAuthoringPair> pairs;
     std::vector<ConnectorAuthoringLoad> loads;
+    std::string mate_symbol;
+    std::map<std::string, std::string> mate_pad_names;
 };
 struct ProjectAuthoringInput {
     // Required only for connectors when an in-memory contract/mapping is absent.

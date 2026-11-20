@@ -159,7 +159,18 @@ PcbPlacementInput load_board_inputs(const ProjectPaths& paths,
                                             " is not in the module footprint table " + module_resolution.library_tables.front().string());
         std::set<std::string> pins;
         for (const auto& [pin, net] : connector->second.pins) { (void)net; pins.insert(pin); }
-        jack = fit_module_mate(jack, *snapshot(*file), pins);
+        const auto mate = snapshot(*file);
+        jack = fit_module_mate(jack, *mate, pins);
+        const auto nickname = mate_id.substr(0, mate_id.find(':'));
+        for (const auto& id : footprint_ids)
+            if (id != mate_id && id.substr(0, id.find(':')) == nickname)
+                throw std::runtime_error(mate_id + ": its library " + nickname + " also supplies " + id +
+                                         ", so its courtyard cannot be keyed by library");
+        const auto dims = courtyard_dims_from_text(mate->bytes);
+        if (!dims) throw std::runtime_error(mate_id + ": the mate land pattern has no courtyard");
+        const auto known = floor.courtyard_dims.emplace(nickname, *dims);
+        if (!known.second && known.first->second != *dims)
+            throw std::runtime_error(mate_id + ": two module connector land patterns disagree on their courtyard");
     }
     const auto mapping = link_mapping_from_json(parse_json_file((paths.project_root / "som_mapping.json").string()), paths.module.do_not_load_straps);
     auto functions = mapping.function_map;

@@ -77,6 +77,8 @@ private:
 // Parse an already standalone/flattened symbol. Rejects unresolved extends.
 // Library::get additionally checks all pin positions against symbol_grid.
 SymbolDef parse_symbol(const std::string& lib_id, const Sexpr& block);
+SymbolDef renumbered_symbol(const SymbolDef& base, const std::string& lib_id,
+                            const std::map<std::string, std::string>& numbers);
 bool symbol_on_grid(double value);
 // Four decimal places, Python expression grouping (including noncardinal input).
 std::pair<double, double> pin_page_position(const SymbolPin& pin, double anchor_x,

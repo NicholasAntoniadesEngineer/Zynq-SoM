@@ -1,4 +1,5 @@
 #include "board_pipeline_internal.hpp"
+#include "schgen/module_symbols.hpp"
 #include <cmath>
 #include <iomanip>
 #include <set>
@@ -39,7 +40,7 @@ std::string join(const std::vector<std::string>& values,const std::string& separ
 }
 Context::Context(const ProjectPaths& p,const BoardPipelineOptions& o):paths(p),options(o),
     out(o.output_root.empty()?p.project_root:fs::absolute(o.output_root)),reports(out/"reports"),docs(out/"docs"),
-    renders(out/"renders"),manufacturing(out/"manufacturing"),library(p.repository_root),inbox(quantizations,fallbacks) {
+    renders(out/"renders"),manufacturing(out/"manufacturing"),library(project_symbol_library(p)),inbox(quantizations,fallbacks) {
     result.output_root=out;
     for(const auto& d:{out,reports,docs,renders,manufacturing,out/"fpga",out/"firmware"})fs::create_directories(d);
     register_native_quantizations(quantizations);register_native_fallbacks(fallbacks);

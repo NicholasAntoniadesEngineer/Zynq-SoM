@@ -75,7 +75,28 @@ inline void restore_reset_button(schgen::CircuitSheetIr& live) {
     reset.name = "STM32_NRST"; reset.net_class = "port"; reset.pins = {{"SW5", "1"}, {"SW5", "2"}, {"C4", "1"}};
     live.nets.insert(before, reset);
 }
+inline void restore_module_connector(schgen::CircuitSheetIr& live, const std::string& ref) {
+    auto& part = unique_part(live, ref);
+    require(part.lib_id == "DF40C-100DP-0.4V_51:DF40C-100DP-0.4V_51_module_mate" &&
+            part.footprint == "Mylibrary:HRS_DF40C-100DP-0.4V_51_" && lcsc_code(part) == "C531031",
+            "reviewed module connector identity " + live.name + "." + ref);
+    part.lib_id = "DF40C-100DP-0.4V_51:DF40C-100DP-0.4V_51";
+    part.footprint = "DF40C-100DP-0.4V_51:DF40C-100DP-0.4V_51";
+    const std::vector<std::pair<std::string, std::string>> pads{{"S4", "101"}, {"S3", "102"}, {"S2", "103"}, {"S1", "104"}};
+    for (const auto& [mate, symbol] : pads) {
+        require(std::count(part.pin_numbers.begin(), part.pin_numbers.end(), mate) == 1, "reviewed mate pad " + ref + "." + mate);
+        *std::find(part.pin_numbers.begin(), part.pin_numbers.end(), mate) = symbol;
+        for (auto& name : part.pin_names)
+            for (auto& number : name.numbers)
+                if (number == mate) number = symbol;
+        for (auto& pin : live.nc)
+            if (pin.ref == ref && pin.pin == mate) pin.pin = symbol;
+    }
+}
 inline schgen::CircuitSheetIr project_reviewed_circuit(schgen::CircuitSheetIr live, const std::string& project_name) {
+    if (live.name == "som_j1") restore_module_connector(live, "J1");
+    if (live.name == "som_j2") restore_module_connector(live, "J2");
+    if (live.name == "som_j3") restore_module_connector(live, "J3");
     if (project_name == "carrier" && live.name == "bringup_modules") {
         for (const auto* ref : {"C1", "C3", "C5", "C7", "C9", "C11", "C13", "C15", "C17", "C19", "C4", "C12", "C16", "C18"})
             restore_capacitor(live, ref);

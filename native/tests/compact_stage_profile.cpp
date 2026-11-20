@@ -4,6 +4,7 @@
 // target_compile_options(schgen_compact_stage_profile PRIVATE
 //     -Wall -Wextra -Wpedantic -Werror -ffp-contract=off)
 #include "schgen/board_pcb.hpp"
+#include "schgen/module_symbols.hpp"
 #include "schgen/catalog.hpp"
 #include "schgen/experiment_observers.hpp"
 #include "schgen/legalize.hpp"
@@ -374,7 +375,7 @@ LoadResult load(const ProjectPaths& paths, const NetlistExtractOptions& extracti
     const auto circuits = load_project_circuits(paths);
     out.circuits = circuits.size();
     tick("circuit_load");
-    SymbolLibrary library(paths.repository_root);
+    SymbolLibrary library = project_symbol_library(paths);
     std::vector<CircuitSheetIr> sheets;
     for (const auto& source : circuits) {
         validate_circuit(source.circuit, library);

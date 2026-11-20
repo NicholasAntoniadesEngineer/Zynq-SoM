@@ -27,6 +27,7 @@ ConnectorAuthoringPolicy connector_policy_of(const BoardDefinition& board) {
     p.module_draw_connector=module.draw.connector;p.module_draw_rail=module.draw.rail;
     p.module_draw_note=module.draw.note;p.module_draw_a=module.draw.amps;
     p.sdio_level_v=module.sdio_level_v;p.sd_bus=module.sd_bus;
+    p.mate_symbol=module.mate_symbol;p.mate_pad_names=module.mate_pad_names;
     for(const auto* pairs:{&module.pairs,&board.module.pairs})for(const BoardPair& pair:*pairs)
         p.pairs.push_back({pair.positive,pair.negative,pair.kind,pair.impedance?std::optional<int32_t>(*pair.impedance):std::nullopt});
     for(const BoardLoad& load:board.module.loads)p.loads.push_back({load.connector,load.rail,load.amps,load.note});
@@ -68,7 +69,11 @@ CircuitSheetIr author_som_connector(const std::string& ref,const std::string& na
     std::vector<std::string> unused;
     for(const auto& pin:placed->pin_numbers)if(!interface_pins.count(pin))unused.push_back(pin);
     std::stable_sort(unused.begin(),unused.end(),[&](const std::string& a,const std::string& b){return numeric(a)<numeric(b);});
-    for(const auto& pin:unused)c.nc({ref+"."+pin});
+    if(!policy.mate_symbol.empty())c.renumber_pins(ref,policy.mate_symbol,policy.mate_pad_names);
+    for(const auto& pin:unused){
+        const auto renamed=policy.mate_pad_names.find(pin);
+        c.nc({ref+"."+(renamed==policy.mate_pad_names.end()?pin:renamed->second)});
+    }
     std::set<std::string> seen;
     const auto bound=[&](const std::string& som_net){
         for(const auto* map:{&mapping.rebound_som_rails,&mapping.vcco_rail_map,&mapping.function_map,&mapping.pudc_straps}) {

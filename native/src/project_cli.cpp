@@ -1,4 +1,5 @@
 #include "schgen/project_cli.hpp"
+#include "schgen/module_symbols.hpp"
 #include "schgen/board_files.hpp"
 #include "schgen/native_authoring_guard.hpp"
 
@@ -532,7 +533,7 @@ std::optional<int> run_project_command(int argc, char** argv) {
         for(const auto& sheet:sheets){const auto band=std::find_if(index.begin(),index.end(),[&](const auto& entry){return entry.first==sheet.name;});
             if(band==index.end())throw ProjectError("probe sheet index missing "+sheet.name);
             inputs.push_back({sheet,band->second,std::nullopt});}
-        SymbolLibrary library(paths.repository_root);BoardSchematicOptions schematic;
+        SymbolLibrary library = project_symbol_library(paths);BoardSchematicOptions schematic;
         schematic.root_name=paths.file_stem;schematic.extraction.kicad_cli=options.kicad_cli;
         schematic.reports_dir=scratch.path/"reports";
         const auto board=build_board_schematic(inputs,library,scratch.path,schematic);
@@ -558,7 +559,7 @@ std::optional<int> run_project_command(int argc, char** argv) {
             const auto created=::mkdtemp(pattern.data());if(!created)throw ProjectError("cannot create subsystem build scratch");
             scratch.path=created;output=scratch.path;
         }
-        SymbolLibrary library(paths.repository_root);SubsystemBuildOptions build;
+        SymbolLibrary library = project_symbol_library(paths);SubsystemBuildOptions build;
         build.no_render=options.no_render;build.extraction.kicad_cli=options.kicad_cli;
         build.project_name=load_project_config(paths).name;
         const auto result=build_subsystem_sheet(circuit,library,output,build);
@@ -689,7 +690,7 @@ std::optional<int> run_project_command(int argc, char** argv) {
         run.extraction.kicad_cli = options.kicad_cli;
         run.worker_command = {fs::absolute(*executable).string(), "selftest-worker"};
         run.progress = [](const std::string& text) { std::cout << text << std::flush; };
-        SymbolLibrary library(paths.repository_root);
+        SymbolLibrary library = project_symbol_library(paths);
         const auto result = run_full_selftest(inputs,
             selftest_model_fixtures(pcb_check_footprint(resistor->string(), bytes)), library, run);
         if (!options.output.empty()) publish_text(options.output, result.report);
@@ -820,7 +821,7 @@ std::optional<int> run_project_command(int argc, char** argv) {
             auto r=extract_spice_checks(circuits);SpiceRunOptions run;run.allow_ngspice=!options.no_ngspice;
             run_ngspice_crosschecks(r,run);report=spice_report(r,ngspice_available().has_value());ok=r.ok();
         } else {
-            SymbolLibrary library(paths.repository_root);
+            SymbolLibrary library = project_symbol_library(paths);
             if(options.command=="pin-completeness") {
                 const auto r=check_pin_completeness(circuits,library,load_nc_allowlist(data/"nc_allowlist.json"));
                 report=r.report();ok=r.ok;
@@ -883,7 +884,7 @@ std::optional<int> run_project_command(int argc, char** argv) {
                 throw std::runtime_error("missing persistent sheet-index band for " + c.name);
             input.push_back({c.circuit, band->second, std::nullopt});
         }
-        SymbolLibrary library(paths.repository_root);
+        SymbolLibrary library = project_symbol_library(paths);
         BoardSchematicOptions build;
         build.root_name = paths.file_stem;
         build.sheet_subdir = "schematic";
@@ -899,7 +900,7 @@ std::optional<int> run_project_command(int argc, char** argv) {
         std::string report;
         bool ok;
         if (options.command == "design-rules") {
-            SymbolLibrary library(paths.repository_root);
+            SymbolLibrary library = project_symbol_library(paths);
             const auto result = check_design_rules(sheets,
                 [&](const std::string& id) -> const SymbolDef& { return library.get(id); });
             report = result.report();
@@ -914,7 +915,7 @@ std::optional<int> run_project_command(int argc, char** argv) {
         return ok ? 0 : 1;
     }
     if (options.command == "circuit-check") {
-        SymbolLibrary library(paths.repository_root);
+        SymbolLibrary library = project_symbol_library(paths);
         bool ok = true;
         for (const auto& sheet : sheets) {
             const auto result = check_circuit_electrical(sheet, library);
@@ -924,7 +925,7 @@ std::optional<int> run_project_command(int argc, char** argv) {
         return ok ? 0 : 1;
     }
     if (options.command == "link" || options.command == "diagram") {
-        SymbolLibrary library(paths.repository_root);
+        SymbolLibrary library = project_symbol_library(paths);
         for (const auto& sheet : sheets) validate_circuit(sheet, library);
         const auto contract = options.contract.empty() ? paths.som_interface_file : options.contract;
         const auto contract_json = parse_json_file(contract.string());

@@ -1,6 +1,7 @@
 // Exercise the diagnostic's actual loader, not a second copy of its logic.
 #define main compact_stage_profile_entry
 #include "compact_stage_profile.cpp"
+#include "schgen/module_symbols.hpp"
 #undef main
 #include "historical_input_contracts.hpp"
 #include "pcb_placement_requirements.hpp"
@@ -315,7 +316,7 @@ int main(int argc, char** argv) {
             if(band==index.end())throw std::runtime_error("missing persistent sheet reference band");
             inputs.push_back({circuit.circuit,band->second,std::nullopt});
         }
-        schgen::SymbolLibrary library(paths.repository_root);
+        schgen::SymbolLibrary library = schgen::project_symbol_library(paths);
         schgen::BoardSchematicOptions schematic_options;
         schematic_options.root_name="Zynq_Carrier";schematic_options.sheet_subdir="schematic";
         schematic_options.reports_dir=scratch/"reports";

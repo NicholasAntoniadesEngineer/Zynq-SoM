@@ -1,4 +1,5 @@
 #include "board_pipeline_internal.hpp"
+#include "schgen/module_symbols.hpp"
 #include "schgen/validation.hpp"
 #include "schgen/native_authoring_guard.hpp"
 #include "bringup_unicode.hpp"
@@ -41,7 +42,7 @@ BoardAuthoredProject author_board_pipeline_inputs(const ProjectPaths& paths,
         if(entry.is_directory()&&!names.count(name))throw ProjectError("unregistered native board package: "+name);
         if(entry.is_directory()&&entry.is_symlink())throw ProjectError("symlinked native board package: "+name);
     }
-    SymbolLibrary library(paths.repository_root);
+    SymbolLibrary library = project_symbol_library(paths);
     for(auto& f:out.factories){
         if(!f.circuit)throw ProjectError("missing native board factory: "+f.name);
         auto ir=[&]{ExecutionTimings::Scope generate(timing,"input_factory_generation_and_ir_conversion");
