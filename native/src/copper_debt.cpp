@@ -148,8 +148,9 @@ void verify_sources(const CopperDebtSources& s) {
         "CD-06","isolation/reference-layer policy differs from claim");
     for(const auto impedance:{90,100}) {
         const auto g=std::find_if(s.geometry.begin(),s.geometry.end(),[&](const auto& x){return x.impedance==impedance;});
-        claim(g!=s.geometry.end() && g->width_mm==(impedance==90 ? 0.1455 : 0.1148) &&
-            g->gap_mm==0.2032 && g->source=="field solve on JLCPCB parameters, 3313 outer prepreg",
+        const auto* live=differential_geometry(impedance);
+        claim(g!=s.geometry.end() && live && board_stackup().ground_referenced(false) && g->width_mm==live->width_mm &&
+            g->gap_mm==live->gap_mm && g->source==live->source && !g->source.empty(),
             "CD-07","live researched impedance geometry differs from claim");
     }
 }
