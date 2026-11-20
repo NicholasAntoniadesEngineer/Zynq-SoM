@@ -51,7 +51,7 @@ Context::Context(const PcbPlacementInput &input)
                 if (fp && j != in.floorplan.som.js.end()) {
                     PcbStagePartner partner;
                     partner.footprint = fp;
-                    partner.rotation = j->w < j->h ? 90 : 0;
+                    partner.rotation = j->turn;
                     for (const auto &net : sheet.nets)
                         for (const auto &pin : net.pins)
                             if (pin.ref == ref)

@@ -98,6 +98,8 @@ PcbEmitPolicy pcb_emit_policy(const ProjectConfig &c) {
     p.header_descriptions = c.header_desc;
     p.switch_descriptions = c.switch_desc;
     p.model_overrides = project_pcb_model_overrides();
+    for (const auto& [value, fact] : c.model_overrides)
+        p.model_overrides.push_back({value, fact.footprint, fact.path, fact.rotation_z_deg});
     return p;
 }
 const std::vector<PcbModelOverride>& project_pcb_model_overrides() {

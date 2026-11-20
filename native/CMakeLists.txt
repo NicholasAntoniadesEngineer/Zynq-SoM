@@ -25,7 +25,7 @@ add_library(schgen_core STATIC
     src/pack_plain_precision.cpp
     src/pack_grid_precision.cpp
     src/pack_anchor.cpp src/place_search.cpp src/cc.cpp src/embed_fp.cpp
-    src/pack_edges.cpp src/pcb_scan.cpp src/pack_refine.cpp src/place_geom.cpp
+    src/pack_edges.cpp src/pcb_scan.cpp src/module_mating.cpp src/pack_refine.cpp src/place_geom.cpp
     src/catalog.cpp src/part_facts.cpp src/json.cpp src/circuit.cpp src/circuit_layout.cpp src/reorder.cpp src/atomic_file.cpp
     src/ratsnest.cpp src/footprint_library.cpp src/xdc.cpp src/vivado.cpp
     src/bom.cpp src/project.cpp src/project_catalog.cpp src/project_outputs.cpp src/som_interface.cpp
@@ -85,7 +85,7 @@ target_sources(schgen_core PRIVATE src/json_text.cpp src/layout_geometry.cpp src
 set(SCHGEN_RULE_SOURCES
     src/rules/rule_context.cpp src/roles.cpp src/rules/rule_book.cpp src/rules/rule_index.cpp
     src/rules/mechanical/module_clearance.cpp src/rules/mechanical/module_escape_corridor.cpp
-    src/rules/mechanical/tall_part_beside_module.cpp
+    src/rules/mechanical/tall_part_beside_module.cpp src/rules/mechanical/module_mating.cpp
     src/rules/high_speed/controlled_net_needs_ground.cpp src/rules/high_speed/termination_distance_report.cpp
     src/rules/power/regulator_loop_one_face.cpp src/rules/power/regulator_over_ground.cpp
     src/rules/power/input_capacitor_nearest.cpp src/rules/power/nothing_sensitive_under_inductor.cpp
@@ -1193,6 +1193,10 @@ if(BUILD_TESTING)
     target_link_libraries(schgen_part_ratings_contracts PRIVATE schgen_core)
     target_compile_options(schgen_part_ratings_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror)
     add_test(NAME native_part_ratings_contracts COMMAND schgen_part_ratings_contracts)
+    add_executable(schgen_module_mating_contracts tests/module_mating_contracts.cpp)
+    target_link_libraries(schgen_module_mating_contracts PRIVATE schgen_core)
+    target_compile_options(schgen_module_mating_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror)
+    add_test(NAME native_module_mating_contracts COMMAND schgen_module_mating_contracts "${CMAKE_CURRENT_SOURCE_DIR}/..")
     add_executable(schgen_part_connector_facts_contracts tests/part_connector_facts_contracts.cpp)
     target_link_libraries(schgen_part_connector_facts_contracts PRIVATE schgen_core)
     target_compile_options(schgen_part_connector_facts_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror)

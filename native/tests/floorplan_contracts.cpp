@@ -89,7 +89,7 @@ FloorplanZoneShape shape(const J& n) {
 }
 SomOutline som(const J& n) {
     SomOutline out; out.w=num(n,"w"); out.h=num(n,"h");
-    for (const auto& j:field(n,"js").array_value) out.js.push_back({str(j,"ref"),num(j,"pcb_x"),num(j,"pcb_y"),num(j,"rot"),num(j,"x"),num(j,"y"),num(j,"w"),num(j,"h")});
+    for (const auto& j:field(n,"js").array_value) out.js.push_back({str(j,"ref"),num(j,"pcb_x"),num(j,"pcb_y"),num(j,"rot"),num(j,"x"),num(j,"y"),num(j,"w"),num(j,"h"),num(j,"w")<num(j,"h")?90.0:0.0,{},{}});
     return out;
 }
 FloorplanInput input(const J& n) {
@@ -825,7 +825,7 @@ void pack_behavior() {
     std::map<std::pair<bool,std::string>,FloorplanPoint> forward_edge_poses;
     for(const bool reversed:{false,true})for(const bool edge_target:{false,true})for(const bool shaped:{false,true})for(const std::string hint:{"E","N","S","W"}) {
         if(reversed&&!edge_target)continue; // Edge-to-interior authored terms.
-        auto constrained=in;SomJGeom jack;jack.ref="J2";jack.x=0;jack.y=5;jack.w=2;jack.h=10;
+        auto constrained=in;ModuleConnectorGeom jack;jack.ref="J2";jack.x=0;jack.y=5;jack.w=2;jack.h=10;
         constrained.som.js={jack};
         FloorplanTerm term;term.kind="near_max";term.subject="logic";term.target_raw=edge_target?"connector":"som_j2";term.bound=5;
         if(reversed)std::swap(term.subject,term.target_raw);

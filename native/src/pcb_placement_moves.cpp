@@ -16,9 +16,7 @@ bool hit(Box4 b, const std::vector<Box4> &boxes) {
 using SubjectMap = std::map<std::string, std::pair<std::string, Box4>>;
 Box4 emitted_escape_corridor(const Placer &placer, const std::string &ref) {
     const auto &at = placer.pos.at(ref);
-    return pcb_escape_corridor_board(*placer.mod(ref), placer.ctx.corridor_grid(kPageOriginMm, at.first),
-                                     placer.ctx.corridor_grid(kPageOriginMm, at.second), placer.rot(ref),
-                                     &placer.ctx.quantization);
+    return pcb_escape_corridor_board(*placer.mod(ref), at.first, at.second, placer.rot(ref), &placer.ctx.quantization);
 }
 std::set<std::string> independently_locked_owned_members(const Placer &placer) {
     std::set<std::string> members, caps;
@@ -76,7 +74,7 @@ PcbCheckInput refit_fanout_geometry(const Placer &placer, const PcbStageRefitPos
         }
         // Evaluate the coordinates that instantiate() will actually emit.
         // Count these real trial projections even if the move is rejected.
-        if (placer.grid_placed.count(ref)) {
+        if (placer.grid_placed.count(ref) || placer.som_refs.count(ref)) {
             part.x = placement_emission_pose_precision4dp(kPageOriginMm + part.x, &placer.ctx.quantization);
             part.y = placement_emission_pose_precision4dp(kPageOriginMm + part.y, &placer.ctx.quantization);
         } else {

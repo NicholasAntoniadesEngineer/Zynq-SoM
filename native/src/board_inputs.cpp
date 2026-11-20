@@ -1,4 +1,5 @@
 #include "schgen/board_inputs.hpp"
+#include "schgen/module_mating.hpp"
 #include "schgen/model3d.hpp"
 #include "schgen/pcb_emit.hpp"
 #include <algorithm>
@@ -12,6 +13,8 @@ namespace {
 namespace fs = std::filesystem;
 const char* const part_facts_file = "part_facts.json";
 const char* const fiducial_footprint = "Fiducial:Fiducial_1mm_Mask2mm";
+const char* const kicad_footprint_table = "fp-lib-table";
+const char* const part_record_file = "part.json";
 std::string read(const fs::path& path) {
     std::ifstream input(path, std::ios::binary);
     if (!input) throw std::runtime_error("cannot read board input " + path.string());
@@ -58,8 +61,13 @@ PcbPlacementInput load_board_inputs(const ProjectPaths& paths,
         }
     }
     floor.spec = load_floorplan_spec(options.floorplan_spec.value_or(paths.project_root / "floorplan.json").string(), names);
+    result.interface_bytes = read(paths.som_interface_file);
+    result.som_interface = som_interface_from_json(
+        parse_json_text(result.interface_bytes, paths.som_interface_file.string()), paths.som_interface_file.string());
+    std::vector<std::string> module_connectors;
+    for (const auto& [ref, connector] : result.som_interface.connectors) module_connectors.push_back(ref);
     const auto som_path = options.som_pcb.value_or(paths.som_pcb);
-    floor.som = extract_som_scan(read(som_path));
+    floor.som = extract_som_scan(read(som_path), module_connectors);
     floor.som_source = relative_source(som_path, paths.repository_root);
     const auto si_path = paths.project_root / "research/si_spec.json";
     if (fs::is_regular_file(si_path) || needs_signal_specs(circuits)) floor.si_pairs = load_signal_specs(si_path);
@@ -71,6 +79,19 @@ PcbPlacementInput load_board_inputs(const ProjectPaths& paths,
         for (const auto* root : {"/Applications/KiCad/KiCad.app/Contents/SharedSupport/footprints",
                                 "/usr/share/kicad/footprints", "/usr/local/share/kicad/footprints"})
             if (fs::is_directory(root)) { resolution.kicad_footprint_root = root; break; }
+    const auto module_table = paths.module_root / kicad_footprint_table;
+    if (std::find(resolution.library_tables.begin(), resolution.library_tables.end(), module_table) == resolution.library_tables.end())
+        resolution.library_tables.push_back(module_table);
+    const PartFacts facts = load_part_facts(resolution.parts_dir / part_facts_file);
+    floor.project.connectors = facts.connectors;
+    for (const auto& [folder, fact] : facts.model_overrides) {
+        const auto part_file = resolution.parts_dir / folder / part_record_file;
+        const auto part = parse_json_file(part_file.string());
+        const auto* mpn = object_field(part, "mpn");
+        if (!mpn || mpn->kind != JsonKind::String || mpn->string_value.empty())
+            throw std::runtime_error(part_file.string() + ": mpn is required for its model override");
+        floor.project.model_overrides.emplace_back(mpn->string_value, fact);
+    }
     const auto policy = pcb_emit_policy(floor.project);
     for (const auto& [from, to] : policy.footprint_aliases) resolution.aliases.emplace(from, to);
     const auto libraries = load_footprint_library_tables(resolution);
@@ -101,8 +122,6 @@ PcbPlacementInput load_board_inputs(const ProjectPaths& paths,
                 if (const auto dims = courtyard_dims_from_text(snapshot(dossier)->bytes)) floor.courtyard_dims.emplace(lib, *dims);
         }
     }
-    const PartFacts facts = load_part_facts(resolution.parts_dir / part_facts_file);
-    floor.project.connectors = facts.connectors;
     const ModelRoots roots{default_model3d_directory(), paths.project_file.parent_path(), resolution.parts_dir};
     std::map<std::string, PartHeight> measured;
     const auto height_of = [&](const std::string& footprint, const std::string& value, const std::string& part) {
@@ -127,9 +146,21 @@ PcbPlacementInput load_board_inputs(const ProjectPaths& paths,
         }
     if (floor.footprint_of.count(fiducial_footprint))
         result.fiducial_height = height_of(fiducial_footprint, {}, fiducial_footprint);
-    result.interface_bytes = read(paths.som_interface_file);
-    result.som_interface = som_interface_from_json(
-        parse_json_text(result.interface_bytes, paths.som_interface_file.string()), paths.som_interface_file.string());
+    FootprintResolutionOptions module_resolution;
+    module_resolution.library_tables = {paths.module_root / kicad_footprint_table};
+    const auto module_libraries = load_footprint_library_tables(module_resolution);
+    for (auto& jack : floor.som.js) {
+        const auto connector = std::find_if(result.som_interface.connectors.begin(), result.som_interface.connectors.end(),
+                                            [&](const auto& row) { return row.first == jack.ref; });
+        const auto mate_id = connector->second.footprint.value_or("");
+        if (mate_id.empty()) throw std::runtime_error(paths.som_interface_file.string() + ": connector " + jack.ref + " names no mate footprint");
+        const auto file = resolve_footprint(mate_id, module_libraries, module_resolution);
+        if (!file) throw std::runtime_error(paths.som_interface_file.string() + ": mate footprint " + mate_id + " of " + jack.ref +
+                                            " is not in the module footprint table " + module_resolution.library_tables.front().string());
+        std::set<std::string> pins;
+        for (const auto& [pin, net] : connector->second.pins) { (void)net; pins.insert(pin); }
+        jack = fit_module_mate(jack, *snapshot(*file), pins);
+    }
     const auto mapping = link_mapping_from_json(parse_json_file((paths.project_root / "som_mapping.json").string()), paths.module.do_not_load_straps);
     auto functions = mapping.function_map;
     for (const auto& [key, value] : mapping.pudc_straps) functions[key] = value;

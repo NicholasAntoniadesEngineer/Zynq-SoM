@@ -49,6 +49,7 @@ struct ProjectConfig {
     std::vector<std::string> reg_band_prefixes;
     ProjectStrings bank_rails, header_desc, switch_desc;
     ConnectorFacts connectors;
+    std::vector<std::pair<std::string, ModelOverrideFact>> model_overrides;
     ModuleDefinition module;
     JsonNode escape;  // Object, defaults to {} as in ProjectSpec.
     JsonNode raw;     // Complete project.json, including extension metadata.

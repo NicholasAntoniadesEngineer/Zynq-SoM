@@ -123,7 +123,7 @@ PcbPlacementObservation capture_pcb_experiment_frame(const PcbExperimentFrame &f
         inst.mirror = frame.mirror_refs.count(ref) != 0;
         const auto x = frame.origin_x + position->second.first;
         const auto y = frame.origin_y + position->second.second;
-        const bool grid = frame.grid_placed.count(ref) != 0;
+        const bool grid = frame.grid_placed.count(ref) != 0 || frame.som_refs.count(ref) != 0;
         inst.x = grid ? py_round(x, 4) : fixed_part_grid(x);
         inst.y = grid ? py_round(y, 4) : fixed_part_grid(y);
         for (const auto &name : pad_names_from_text(mod->bytes)) {

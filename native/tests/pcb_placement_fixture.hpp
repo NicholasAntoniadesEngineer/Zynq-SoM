@@ -40,7 +40,8 @@ inline SomOutline som(const J &n) {
     s.h = number(n, "h");
     for (const auto &j : field(n, "js").array_value)
         s.js.push_back({string(j, "ref"), number(j, "pcb_x"), number(j, "pcb_y"), number(j, "rot"),
-                        number(j, "x"), number(j, "y"), number(j, "w"), number(j, "h")});
+                        number(j, "x"), number(j, "y"), number(j, "w"), number(j, "h"),
+                        number(j, "w") < number(j, "h") ? 90.0 : 0.0, {}, {}});
     return s;
 }
 struct Fixture {

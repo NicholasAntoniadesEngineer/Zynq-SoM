@@ -105,7 +105,15 @@ std::pair<Sexpr, int> hide_undersom_bottom_refs(
 
 Box4 footprint_bbox(const Sexpr& doc, int decimals);
 
-struct SomJGeom {
+struct SomPad {
+    std::string pin;
+    double x = 0.0;
+    double y = 0.0;
+    double w = 0.0;
+    double h = 0.0;
+};
+
+struct ModuleConnectorGeom {
     std::string ref;
     double pcb_x = 0.0;
     double pcb_y = 0.0;
@@ -114,15 +122,18 @@ struct SomJGeom {
     double y = 0.0;
     double w = 0.0;
     double h = 0.0;
+    double turn = 0.0;
+    std::vector<SomPad> pads;
+    std::vector<SomPad> mate;
 };
 
 struct SomOutline {
     double w = 0.0;
     double h = 0.0;
-    std::vector<SomJGeom> js;
+    std::vector<ModuleConnectorGeom> js;
 };
 
-SomOutline extract_som_scan(const std::string& text);
+SomOutline extract_som_scan(const std::string& text, const std::vector<std::string>& connectors);
 
 std::vector<std::tuple<std::string, double, double, double, double>>
 pad_boxes_named(

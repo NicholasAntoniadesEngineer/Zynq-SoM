@@ -53,8 +53,8 @@ PackAnchorIn Engine::anchor_row(const FloorplanBlock& b,
         // anchors using the actual connector rectangle, not the E fallback.
         for(const auto& jack:plan.som.js)
             if(!jack.ref.empty()&&jack.ref.front()=='J'&&b.zone=="@som_j"+jack.ref.substr(1)) {
-                a.zone_ax=plan.som_x+jack.x+jack.w/2;
-                a.zone_ay=plan.som_y+jack.y+jack.h/2;
+                a.zone_ax=plan.som_x+jack.x;
+                a.zone_ay=plan.som_y+jack.y;
                 break;
             }
     }
@@ -424,8 +424,8 @@ bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure,
             std::optional<Box4> target;
             for(const auto& jack:plan.som.js) {
                 if(jack.ref.empty()||jack.ref.front()!='J'||other!="som_j"+jack.ref.substr(1))continue;
-                target=Box4{plan.som_x+jack.x,plan.som_y+jack.y,
-                    plan.som_x+jack.x+jack.w,plan.som_y+jack.y+jack.h};
+                target=Box4{plan.som_x+jack.x-jack.w/2,plan.som_y+jack.y-jack.h/2,
+                    plan.som_x+jack.x+jack.w/2,plan.som_y+jack.y+jack.h/2};
                 break;
             }
             // Edge blocks have their final poses before interior seating.

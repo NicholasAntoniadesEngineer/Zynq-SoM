@@ -122,7 +122,7 @@ void Placer::seed() {
     std::map<std::string, double> som_rot;
     for (const auto &j : plan.som.js) {
         som_rel[j.ref] = {j.x, j.y};
-        som_rot[j.ref] = j.w < j.h ? 90 : 0;
+        som_rot[j.ref] = j.turn;
     }
     for (const auto &p : ctx.parts)
         if (geometry.resolvable.count(p.ref) && p.sheet.size() >= 6 &&
@@ -218,10 +218,11 @@ void Placer::instantiate() {
             inst.pad_nets[pad] =
                 n == pin_net.end() ? std::pair<int, std::string>{0, ""} : n->second;
         }
-        inst.x = grid_placed.count(r) ? placement_emission_pose_precision4dp(kPageOriginMm + xy->second.first, &ctx.quantization)
-                                      : ctx.fixed_grid(kPageOriginMm + xy->second.first);
-        inst.y = grid_placed.count(r) ? placement_emission_pose_precision4dp(kPageOriginMm + xy->second.second, &ctx.quantization)
-                                      : ctx.fixed_grid(kPageOriginMm + xy->second.second);
+        const bool exact = grid_placed.count(r) || som_refs.count(r);
+        inst.x = exact ? placement_emission_pose_precision4dp(kPageOriginMm + xy->second.first, &ctx.quantization)
+                       : ctx.fixed_grid(kPageOriginMm + xy->second.first);
+        inst.y = exact ? placement_emission_pose_precision4dp(kPageOriginMm + xy->second.second, &ctx.quantization)
+                       : ctx.fixed_grid(kPageOriginMm + xy->second.second);
         m.insts.push_back(inst);
         ++m.placed;
         if (face == "bottom")
@@ -254,6 +255,22 @@ void Placer::instantiate() {
         }
     }
     m.som_keepout = offset_rect(keepout, kPageOriginMm, kPageOriginMm);
+    m.module_origin = std::make_pair(kPageOriginMm + plan.som_x, kPageOriginMm + plan.som_y);
+    for (const auto &entry : som_refs) {
+        const std::string &r = entry.first, &connector = entry.second;
+        const auto jack = std::find_if(plan.som.js.begin(), plan.som.js.end(), [&](const auto &j) { return j.ref == connector; });
+        if (jack == plan.som.js.end() || jack->mate.empty()) continue;
+        ModuleMate mate;
+        mate.connector = connector;
+        mate.ref = r;
+        mate.turn = jack->turn;
+        mate.mate = jack->mate;
+        std::set<std::string> pins;
+        for (const auto &pad : jack->mate) pins.insert(pad.pin);
+        for (const auto &pad : jack->pads)
+            if (pins.count(pad.pin)) mate.receptacle.push_back(pad);
+        m.module_mates.push_back(std::move(mate));
+    }
     m.som_core = som_core_rect(plan.som_x, plan.som_y, plan.som.w, plan.som.h, kPageOriginMm, kPageOriginMm, .03);
     checkpoint("instantiate");
     checkpoint("emission_frame", true);
