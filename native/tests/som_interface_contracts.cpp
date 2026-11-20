@@ -3,6 +3,7 @@
 // The optional real-source test runs KiCad; all other tests are hermetic C++.
 // JSON baselines came from executing the unchanged Python extractor on the
 // synthetic XML and KiCad 10.0.2's real SoM export on 2026-09-18.
+#include "schgen/board_definition.hpp"
 #include "schgen/som_interface.hpp"
 #include "schgen/json.hpp"
 
@@ -283,7 +284,7 @@ void contracts(const fs::path& fixtures, const fs::path& self, const std::option
         device.source=contract.source=source;
         compare(device,field(real,"zynq")); compare(contract,field(real,"interface"));
         for(const auto* project:{"carrier","devkit_mini"}) {
-            const auto saved=load_som_interface(*repo/project/"som_interface.json");
+            const auto saved=load_som_interface(*repo/"som"/module_interface_file);
             for(const auto& [ref,conn]:saved.connectors) {
                 const auto found=std::find_if(contract.connectors.begin(),contract.connectors.end(),
                     [target_ref = ref](const auto& item){return item.first==target_ref;});

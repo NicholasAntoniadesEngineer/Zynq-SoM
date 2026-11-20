@@ -172,7 +172,7 @@ PcbPlacementInput load_geometry_board_inputs(const ProjectPaths& paths, const Ne
     for (const auto& circuit : authored.circuits) { sheets.push_back(circuit.circuit); names.push_back(circuit.name); }
     const auto index = extend_sheet_index(load_sheet_index(paths), names).index;
     const auto link = link_sheets(sheets, parse_json_file(paths.som_interface_file.string()),
-        parse_json_file((paths.project_root / "som_mapping.json").string()));
+        parse_json_file((paths.project_root / "som_mapping.json").string()), paths.module.do_not_load_straps);
     if (!link.ok()) throw ProjectError("geometry link failed: " + link.report());
     std::vector<BoardSheetInput> inputs;
     for (const auto& sheet : sheets) {

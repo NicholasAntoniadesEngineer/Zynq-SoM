@@ -382,7 +382,7 @@ LoadResult load(const ProjectPaths& paths, const NetlistExtractOptions& extracti
     }
     tick("circuit_validate");
     const auto link = link_sheets(sheets, parse_json_file(paths.som_interface_file.string()),
-        parse_json_file((paths.project_root / "som_mapping.json").string()));
+        parse_json_file((paths.project_root / "som_mapping.json").string()), paths.module.do_not_load_straps);
     if (!link.ok()) throw ProjectError(link.report());
     tick("link");
     const auto source=schematic.empty()?paths.project_root / "Zynq_Carrier.kicad_sch":schematic;

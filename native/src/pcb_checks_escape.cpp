@@ -23,8 +23,8 @@ EscapeLaneResult check_escape_lanes(const PcbCheckModel& m,const PcbEscapePopula
     EscapeLaneResult res;auto fail=[&](std::string s){res.ok=false;res.violations.push_back(std::move(s));};
     if(!m.escape_plan){fail("model.escape_plan is None — build_escape_plan did not run (this IS the red-on-before state)");return res;}const auto& plan=*m.escape_plan;
     for(const auto& [ref,lanes]:plan.lanes){(void)ref;res.n_lanes+=static_cast<int>(lanes.size());}
-    if(!population.netted_contacts||!population.genuine_pairs)fail("project.json declares no escape.netted_contacts / escape.genuine_pairs — pin the project's measured population (the drift alarm has no basis without it)");
-    if(population.netted_contacts)for(const auto& [ref,n]:*population.netted_contacts){auto live=plan.netted_counts.find(ref);if(live==plan.netted_counts.end()||live->second!=n)fail(ref+": netted contacts "+(live==plan.netted_counts.end()?"None":std::to_string(live->second))+" != pinned "+std::to_string(n)+" — SoM interface drift; re-derive the plan deliberately");}
+    if(!population.genuine_pairs)fail("project.json declares no escape.genuine_pairs — pin the project's measured population (the drift alarm has no basis without it)");
+    for(const auto& [ref,n]:population.netted_contacts){auto live=plan.netted_counts.find(ref);if(live==plan.netted_counts.end()||live->second!=n)fail(ref+": netted contacts "+(live==plan.netted_counts.end()?"None":std::to_string(live->second))+" != pinned "+std::to_string(n)+" — SoM interface drift; re-derive the plan deliberately");}
     for(const auto& [ref,lanes]:plan.lanes){
         for(int row:{-1,1}){std::vector<const PcbEscapeLane*> out;for(const auto& ln:lanes)if(ln.row==row&&ln.direction=="outward")out.push_back(&ln);
             if(!std::is_sorted(out.begin(),out.end(),[](auto a,auto b){return a->lane<b->lane;}))fail(ref+" row "+std::to_string(row)+": lane order not monotonic");
@@ -46,5 +46,5 @@ PcbEscapePlan pcb_escape_plan_from_json(const JsonNode& raw){
     if(auto pairs=object_field(raw,"pairs"))for(const auto& p:kind(*pairs,JsonKind::Array).array_value)plan.pairs.push_back({jstr(required(p,"base")),jstr(required(p,"conn")),jstr(required(p,"si_class")),kind(required(p,"same_row"),JsonKind::Bool).bool_value,integer(required(p,"delta_lane"))});
     if(auto genuine=object_field(raw,"genuine_pairs"))for(const auto& s:kind(*genuine,JsonKind::Array).array_value)plan.genuine_pairs.push_back(jstr(s));if(auto key=object_field(raw,"content_key"))plan.content_key=jstr(*key);return plan;
 }
-PcbEscapePopulation pcb_escape_population_from_json(const JsonNode& raw){PcbEscapePopulation out;kind(raw,JsonKind::Object);if(auto n=object_field(raw,"netted_contacts"))if(n->kind==JsonKind::Object){out.netted_contacts.emplace();for(const auto& [ref,v]:n->object_value)(*out.netted_contacts)[ref]=integer(v);}if(auto n=object_field(raw,"genuine_pairs"))if(n->kind!=JsonKind::Null)out.genuine_pairs=integer(*n);return out;}
+PcbEscapePopulation pcb_escape_population_from_json(const JsonNode& raw,const ModuleDefinition& module){PcbEscapePopulation out;kind(raw,JsonKind::Object);if(object_field(raw,"netted_contacts"))throw std::runtime_error("project.json escape.netted_contacts belongs to the module's module.json escape_population");out.netted_contacts=module.netted_contacts;out.return_path=module.return_path;if(auto n=object_field(raw,"genuine_pairs"))if(n->kind!=JsonKind::Null)out.genuine_pairs=integer(*n);return out;}
 } // namespace schgen

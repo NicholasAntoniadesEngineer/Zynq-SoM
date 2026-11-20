@@ -1,6 +1,8 @@
 #include "schgen/board_definition.hpp"
 #include "schgen/board_files.hpp"
 
+#include <filesystem>
+#include <fstream>
 #include <iostream>
 #include <stdexcept>
 
@@ -39,12 +41,8 @@ const char* const small = R"json({
   "root_readme": false,
   "owned_groups": true,
   "module": {
-    "connector_part": "DF40C-100DP-0.4V_51",
-    "draw": {"connector": "J1", "rail": "+5V_SOM", "amps": 2.15, "note": "module supply"},
-    "sdio_level_v": 1.8,
-    "sd_bus": ["SDIO_CLK", "SDIO_CMD"],
-    "pairs": [{"positive": "USB_P", "negative": "USB_N", "kind": "usb_hs_pair"},
-              {"positive": "ETH_P", "negative": "ETH_N", "kind": "diff_pair", "impedance": 100}],
+    "folder": "bench_module",
+    "pairs": [{"positive": "BOARD_P", "negative": "BOARD_N", "kind": "diff_pair", "impedance": 90}],
     "loads": [{"connector": "J2", "rail": "+3V3", "amps": 0.02, "note": "bank supply"}]
   },
   "sheets": [
@@ -54,7 +52,42 @@ const char* const small = R"json({
   ]
 })json";
 
-BoardDefinition parsed(const std::string& text) { return parse_board(parse_json_text(text), "fixture"); }
+const char* const small_module = R"json({
+  "schema": "schgen.module/1",
+  "schematic": "Bench_Module.kicad_sch",
+  "pcb": "Bench_Module.kicad_pcb",
+  "connector_part": "DF40C-100DP-0.4V_51",
+  "draw": {"connector": "J1", "rail": "VIN", "amps": 2.15, "note": "module supply"},
+  "sdio_level_v": 1.8,
+  "sd_bus": ["SDIO_CLK", "SDIO_CMD"],
+  "pairs": [{"positive": "USB_P", "negative": "USB_N", "kind": "usb_hs_pair"},
+            {"positive": "ETH_P", "negative": "ETH_N", "kind": "diff_pair", "impedance": 100}],
+  "escape_population": {
+    "netted_contacts": {"J1": 93, "J2": 100},
+    "return_path": {"n_pairs": 69, "n_pair_contacts": 138, "n_fail": 29, "worst_distance": 4}
+  },
+  "escape_triage": [{"pattern": "USB_.*", "class": "GENUINE", "note": "pair"}],
+  "do_not_load_straps": ["MIO7"]
+})json";
+
+BoardDefinition parsed(const std::string& text) {
+    return parse_board(parse_json_text(text), "fixture", parse_module(parse_json_text(small_module), "fixture module"));
+}
+
+ModuleDefinition module_parsed(const std::string& text) { return parse_module(parse_json_text(text), "fixture module"); }
+
+struct Scratch {
+    std::filesystem::path root;
+    Scratch() : root(std::filesystem::temp_directory_path() / "schgen_board_definition_contracts") {
+        std::filesystem::remove_all(root);
+        std::filesystem::create_directories(root / "bench");
+        std::filesystem::create_directories(root / "bench_module");
+    }
+    ~Scratch() { std::filesystem::remove_all(root); }
+    void put(const std::string& relative, const std::string& text) const {
+        std::ofstream(root / relative, std::ios::binary) << text;
+    }
+};
 
 void reads_a_board() {
     const BoardDefinition board = parsed(small);
@@ -65,9 +98,12 @@ void reads_a_board() {
     require(!board.sheet("power").from_module() && board.sheet("power").additions.has_value(), "a library sheet carries its settings and additions");
     require(board.sheet("mechanical").settings.kind == JsonKind::Object && board.sheet("mechanical").settings.object_value.empty(),
             "a sheet with no settings has an empty settings object");
-    require(board.module.pairs.size() == 2 && !board.module.pairs.front().impedance && board.module.pairs.back().impedance,
-            "pair impedance is optional and kept when given");
-    require(board.module.draw.rail == "+5V_SOM" && board.module.loads.front().connector == "J2", "module draw and loads are read");
+    require(board.module.folder == "bench_module", "the module folder is named by the board");
+    require(board.module.pairs.size() == 1 && board.module.pairs.front().impedance == 90 && board.module.loads.front().connector == "J2",
+            "board pairs and loads are read");
+    require(board.module_definition.draw.rail == "VIN" && board.module_definition.pairs.size() == 2 && !board.module_definition.pairs.front().impedance &&
+                board.module_definition.pairs.back().impedance,
+            "module draw is read and pair impedance is optional and kept when given");
     rejects([&] { board.sheet("absent"); }, "has no sheet absent");
 }
 
@@ -85,11 +121,17 @@ void names_board_files() {
 void refuses_bad_boards() {
     rejects([] { parsed(replaced(small, "schgen.board/1", "schgen.board/0")); }, "schema is not");
     rejects([] { parsed(replaced(small, "\"name\": \"mechanical\"", "\"name\": \"power\"")); }, "listed twice");
-    rejects([] { parsed(replaced(small, "\"amps\": 2.15", "\"amps\": 0")); }, "not above zero");
+    rejects([] { parsed(replaced(small, "\"amps\": 0.02", "\"amps\": 0")); }, "not above zero");
+    rejects([] { parsed(replaced(small, "\"folder\": \"bench_module\"", "\"folder\": \"\"")); }, "field 'folder' is empty");
+    rejects([] { parsed(replaced(small, "\"folder\": \"bench_module\"", "\"folder\": \"a/b\"")); }, "not a single folder or file name");
+    rejects([] { parsed(replaced(small, "\"folder\": \"bench_module\"", "\"folder\": \"..\"")); }, "not a single folder or file name");
+    rejects([] { parsed(replaced(small, "    \"folder\": \"bench_module\",\n", "")); }, "field 'folder' is missing");
+    rejects([] { parsed(replaced(small, "    \"folder\": \"bench_module\",\n", "    \"folder\": \"bench_module\", \"draw\": {},\n")); }, "unknown key 'draw'");
+    rejects([] { parsed(replaced(small, ",\n    \"loads\": [{\"connector\": \"J2\", \"rail\": \"+3V3\", \"amps\": 0.02, \"note\": \"bank supply\"}]", "")); }, "field 'loads' is missing");
     rejects([] { parsed(replaced(small, "{\"name\": \"mechanical\"}", "{\"name\": \"mechanical\", \"title\": \"x\"}")); },
             "not a module connector sheet");
     rejects([] { parsed(replaced(small, "\"sheets\": [", "\"extra\": 1, \"sheets\": [")); }, "extra");
-    rejects([] { parsed(replaced(small, "\"impedance\": 100", "\"impedance\": 100.5")); }, "not a whole number");
+    rejects([] { parsed(replaced(small, "\"impedance\": 90", "\"impedance\": 90.5")); }, "not a whole number");
     rejects([] { parsed(replaced(small, "  \"files\": {\"stem\": \"Bench_Board\"},\n", "")); }, "field 'files' is missing");
     rejects([] { parsed(replaced(small, "\"stem\": \"Bench_Board\"", "\"stem\": \"\"")); }, "field 'stem' is empty");
     rejects([] { parsed(replaced(small, "\"stem\": \"Bench_Board\"", "\"stem\": \"a/b\"")); }, "holds a path separator");
@@ -101,6 +143,77 @@ void refuses_bad_boards() {
     rejects([] { parsed(replaced(small, "\"owned_groups\": true", "\"owned_groups\": 1")); }, "field 'owned_groups' is missing or has the wrong type");
 }
 
+void reads_a_module() {
+    const ModuleDefinition module = module_parsed(small_module);
+    require(module.schematic == "Bench_Module.kicad_sch" && module.pcb == "Bench_Module.kicad_pcb", "module project files are read");
+    require(module.connector_part == "DF40C-100DP-0.4V_51" && module.sdio_level_v == 1.8 && module.sd_bus.size() == 2, "module connector policy is read");
+    require(module.netted_contacts.size() == 2 && module.netted_contacts.at("J2") == 100, "netted contacts are read");
+    require(module.return_path.n_pairs == 69 && module.return_path.n_pair_contacts == 138 && module.return_path.n_fail == 29 &&
+                module.return_path.worst_distance == 4,
+            "return path population is read");
+    require(module.escape_triage.size() == 1 && module.escape_triage.front().klass == "GENUINE", "triage rules are read");
+    require(module.do_not_load_straps.size() == 1 && module.do_not_load_straps.front() == "MIO7", "boot straps are read");
+}
+
+void refuses_bad_modules() {
+    rejects([] { module_parsed(replaced(small_module, "schgen.module/1", "schgen.module/0")); }, "schema is not");
+    rejects([] { module_parsed(replaced(small_module, "  \"schema\": \"schgen.module/1\",\n", "")); }, "field 'schema' is missing");
+    rejects([] { module_parsed(replaced(small_module, "  \"schema\": \"schgen.module/1\",", "  \"schema\": \"schgen.module/1\", \"extra\": 1,")); }, "extra");
+    rejects([] { module_parsed("[]"); }, "the document is not an object");
+    rejects([] { module_parsed(replaced(small_module, "  \"schematic\": \"Bench_Module.kicad_sch\",\n", "")); }, "field 'schematic' is missing");
+    rejects([] { module_parsed(replaced(small_module, "  \"pcb\": \"Bench_Module.kicad_pcb\",\n", "")); }, "field 'pcb' is missing");
+    rejects([] { module_parsed(replaced(small_module, "\"Bench_Module.kicad_pcb\"", "\"x/Bench_Module.kicad_pcb\"")); }, "not a single folder or file name");
+    rejects([] { module_parsed(replaced(small_module, "  \"connector_part\": \"DF40C-100DP-0.4V_51\",\n", "")); }, "field 'connector_part' is missing");
+    rejects([] { module_parsed(replaced(small_module, "  \"draw\": {\"connector\": \"J1\", \"rail\": \"VIN\", \"amps\": 2.15, \"note\": \"module supply\"},\n", "")); }, "field 'draw' is missing");
+    rejects([] { module_parsed(replaced(small_module, "\"amps\": 2.15", "\"amps\": 0")); }, "not above zero");
+    rejects([] { module_parsed(replaced(small_module, "  \"sdio_level_v\": 1.8,\n", "")); }, "field 'sdio_level_v' is missing");
+    rejects([] { module_parsed(replaced(small_module, "  \"sd_bus\": [\"SDIO_CLK\", \"SDIO_CMD\"],\n", "")); }, "field 'sd_bus' is missing");
+    rejects([] { module_parsed(replaced(small_module, "\"impedance\": 100", "\"impedance\": 100.5")); }, "not a whole number");
+    const std::string population_block =
+        "  \"escape_population\": {\n    \"netted_contacts\": {\"J1\": 93, \"J2\": 100},\n    \"return_path\": {\"n_pairs\": 69, \"n_pair_contacts\": 138, \"n_fail\": 29, \"worst_distance\": 4}\n  },\n";
+    rejects([&] { module_parsed(replaced(small_module, population_block, "")); }, "field 'escape_population' is missing");
+    rejects([&] { module_parsed(replaced(small_module, population_block, "  \"escape_population\": {\"x\": 1},\n")); }, "unknown key 'x'");
+    rejects([] { module_parsed(replaced(small_module, "    \"netted_contacts\": {\"J1\": 93, \"J2\": 100},\n", "")); }, "field 'netted_contacts' is missing");
+    rejects([] { module_parsed(replaced(small_module, "\"netted_contacts\": {\"J1\": 93, \"J2\": 100}", "\"netted_contacts\": {}")); }, "netted_contacts is empty");
+    rejects([] { module_parsed(replaced(small_module, "\"J1\": 93", "\"J1\": -1")); }, "netted_contacts.J1 is not a whole number");
+    rejects([] { module_parsed(replaced(small_module, "\"J1\": 93", "\"J1\": 93.5")); }, "netted_contacts.J1 is not a whole number");
+    rejects([] { module_parsed(replaced(small_module, ",\n    \"return_path\": {\"n_pairs\": 69, \"n_pair_contacts\": 138, \"n_fail\": 29, \"worst_distance\": 4}", "")); }, "field 'return_path' is missing");
+    rejects([] { module_parsed(replaced(small_module, "\"n_pairs\": 69, ", "")); }, "field 'n_pairs' is missing");
+    rejects([] { module_parsed(replaced(small_module, "\"n_pair_contacts\": 138, ", "")); }, "field 'n_pair_contacts' is missing");
+    rejects([] { module_parsed(replaced(small_module, "\"n_fail\": 29, ", "")); }, "field 'n_fail' is missing");
+    rejects([] { module_parsed(replaced(small_module, ", \"worst_distance\": 4", "")); }, "field 'worst_distance' is missing");
+    rejects([] { module_parsed(replaced(small_module, "\"n_fail\": 29", "\"n_fail\": -1")); }, "field 'n_fail' is not a whole number");
+    rejects([] { module_parsed(replaced(small_module, "\"n_fail\": 29", "\"n_fail\": 29, \"extra\": 1")); }, "extra");
+    rejects([] { module_parsed(replaced(small_module, "\"escape_triage\": [{\"pattern\": \"USB_.*\", \"class\": \"GENUINE\", \"note\": \"pair\"}],", "")); }, "field 'escape_triage' is missing");
+    rejects([] { module_parsed(replaced(small_module, "[{\"pattern\": \"USB_.*\", \"class\": \"GENUINE\", \"note\": \"pair\"}]", "[]")); }, "field 'escape_triage' is empty");
+    rejects([] { module_parsed(replaced(small_module, "\"note\": \"pair\"}", "\"note\": \"pair\", \"extra\": 1}")); }, "extra");
+    rejects([] { module_parsed(replaced(small_module, "\"pattern\": \"USB_.*\", ", "")); }, "missing");
+    rejects([] { module_parsed(replaced(small_module, "\"do_not_load_straps\": [\"MIO7\"]", "\"do_not_load_straps\": [\"\"]")); }, "not a name");
+    rejects([] { module_parsed(replaced(small_module, ",\n  \"do_not_load_straps\": [\"MIO7\"]", "")); }, "field 'do_not_load_straps' is missing");
+}
+
+void loads_a_module_folder() {
+    const Scratch scratch;
+    const std::string board_text = small;
+    rejects([&] { load_board(scratch.root / "bench"); }, "is missing");
+    scratch.put("bench/board.json", replaced(board_text, "\"name\": \"bench\"", "\"name\": \"bench\""));
+    rejects([&] { load_board(scratch.root / "bench"); }, "bench_module/module.json is missing");
+    rejects([&] { load_board_module(scratch.root / "bench"); }, "bench_module/module.json is missing");
+    scratch.put("bench_module/module.json", small_module);
+    const BoardDefinition board = load_board(scratch.root / "bench");
+    require(board.module_definition.connector_part == "DF40C-100DP-0.4V_51" && board.module.folder == "bench_module",
+            "a board reads the module file from the folder it names");
+    require(module_root_of(scratch.root / "bench") == scratch.root / "bench_module", "the module folder sits beside the board folder");
+    require(module_root_in(scratch.root, scratch.root / "bench") == scratch.root / "bench_module", "the module folder is found from the repository root");
+    require(load_board_header(scratch.root / "bench").module_folder == "bench_module", "the header names the module folder");
+    scratch.put("bench_module/module.json", replaced(small_module, "\"pcb\"", "\"unknown\": 1, \"pcb\""));
+    rejects([&] { load_board(scratch.root / "bench"); }, "unknown key 'unknown'");
+    rejects([&] { load_board(scratch.root / "bench"); }, "module.json");
+    std::filesystem::remove(scratch.root / "bench_module/module.json");
+    std::filesystem::remove_all(scratch.root / "bench_module");
+    rejects([&] { load_board(scratch.root / "bench"); }, "bench_module/module.json is missing");
+}
+
 void reads_the_real_boards(const std::filesystem::path& repository) {
     for (const char* name : {"carrier", "devkit_mini"}) {
         const BoardDefinition board = load_board(repository / name);
@@ -109,6 +222,8 @@ void reads_the_real_boards(const std::filesystem::path& repository) {
         std::size_t connectors = 0;
         for (const BoardSheet& sheet : board.sheets) connectors += sheet.from_module() ? 1 : 0;
         require(connectors > 0, std::string(name) + " has module connector sheets");
+        require(board.module.folder == "som" && board.module_definition.pcb == "Zynq_SoM.kicad_pcb" && !board.module_definition.escape_triage.empty(),
+                std::string(name) + " reads the shared module folder");
     }
     rejects([&] { load_board(repository / "subsystems"); }, "is missing");
 }
@@ -121,6 +236,9 @@ int main(int argc, char** argv) {
         reads_a_board();
         names_board_files();
         refuses_bad_boards();
+        reads_a_module();
+        refuses_bad_modules();
+        loads_a_module_folder();
         reads_the_real_boards(argv[1]);
         std::cout << "board definition contracts: " << checks << " checks passed\n";
         return 0;

@@ -10,6 +10,7 @@
 #include <cstdlib>
 #include <fstream>
 #include <iterator>
+#include <limits>
 #include <stdexcept>
 #include <unordered_map>
 #include <vector>
@@ -17,7 +18,7 @@
 namespace schgen {
 namespace {
 
-const char* const facts_schema = "schgen.part_facts/2";
+const char* const facts_schema = "schgen.part_facts/3";
 const char* const vrml_extension = ".wrl";
 const char* const step_extension = ".step";
 const std::string_view vrml_points = "point";
@@ -36,6 +37,7 @@ const char* const facts_file_name = "part_facts.json";
 const std::string_view face_signs = "+-";
 const std::string_view face_axes = "XY";
 constexpr std::size_t face_length = 2;
+constexpr std::size_t pair_length = 2;
 
 const std::pair<PartClass, std::string_view> class_names[] = {
     {PartClass::resistor, "resistor"},
@@ -281,6 +283,221 @@ std::optional<std::string> text_of(const JsonNode& entry, const std::string& key
     return value->string_value;
 }
 
+constexpr std::size_t box_length = 4;
+
+double number_of(const JsonNode& entry, const std::string& key, const std::string& where, bool positive) {
+    const JsonNode* value = object_field(entry, key);
+    if (!value || value->kind != JsonKind::Number || !std::isfinite(value->number_value))
+        refuse(where + ": " + key + " must be a number");
+    if (positive ? !(value->number_value > 0) : value->number_value < 0)
+        refuse(where + ": " + key + (positive ? " must be above zero" : " must not be negative"));
+    return value->number_value;
+}
+
+std::optional<double> optional_number_of(const JsonNode& entry, const std::string& key, const std::string& where) {
+    if (!object_field(entry, key)) return std::nullopt;
+    return number_of(entry, key, where, true);
+}
+
+int count_of(const JsonNode& entry, const std::string& key, const std::string& where) {
+    const double value = number_of(entry, key, where, true);
+    if (std::floor(value) != value || value > std::numeric_limits<int>::max())
+        refuse(where + ": " + key + " must be a whole number");
+    return static_cast<int>(value);
+}
+
+std::string text_required(const JsonNode& entry, const std::string& key, const std::string& where) {
+    return require_string(entry, key, false, where);
+}
+
+const JsonNode& object_required(const JsonNode& entry, const std::string& key, const std::string& where) {
+    const JsonNode* value = object_field(entry, key);
+    if (!value || value->kind != JsonKind::Object) refuse(where + ": " + key + " must be an object");
+    return *value;
+}
+
+const JsonNode& array_required(const JsonNode& entry, const std::string& key, const std::string& where) {
+    const JsonNode* value = object_field(entry, key);
+    if (!value || value->kind != JsonKind::Array) refuse(where + ": " + key + " must be an array");
+    return *value;
+}
+
+std::vector<std::string> texts_of(const JsonNode& entry, const std::string& key, const std::string& where) {
+    std::vector<std::string> out;
+    for (const JsonNode& item : array_required(entry, key, where).array_value) {
+        if (item.kind != JsonKind::String || item.string_value.empty())
+            refuse(where + ": " + key + " must hold non-empty strings");
+        out.push_back(item.string_value);
+    }
+    if (out.empty()) refuse(where + ": " + key + " must not be empty");
+    return out;
+}
+
+std::array<double, box_length> box_of(const JsonNode& entry, const std::string& key, const std::string& where) {
+    const JsonNode& list = array_required(entry, key, where);
+    if (list.array_value.size() != box_length) refuse(where + ": " + key + " must hold x0, y0, x1, y1");
+    std::array<double, box_length> out{};
+    for (std::size_t i = 0; i < box_length; ++i) {
+        if (list.array_value[i].kind != JsonKind::Number || !std::isfinite(list.array_value[i].number_value))
+            refuse(where + ": " + key + " must hold numbers");
+        out[i] = list.array_value[i].number_value;
+    }
+    if (!(out[0] < out[2]) || !(out[1] < out[3])) refuse(where + ": " + key + " must have x0 < x1 and y0 < y1");
+    return out;
+}
+
+std::vector<std::pair<double, double>> offsets_of(const JsonNode& entry, const std::string& key, const std::string& where) {
+    std::vector<std::pair<double, double>> out;
+    for (const JsonNode& item : array_required(entry, key, where).array_value) {
+        if (item.kind != JsonKind::Array || item.array_value.size() != pair_length ||
+            item.array_value.front().kind != JsonKind::Number || item.array_value.back().kind != JsonKind::Number ||
+            !std::isfinite(item.array_value.front().number_value) || !std::isfinite(item.array_value.back().number_value))
+            refuse(where + ": " + key + " must hold [x, y] pairs of numbers");
+        out.emplace_back(item.array_value.front().number_value, item.array_value.back().number_value);
+    }
+    if (out.empty()) refuse(where + ": " + key + " must not be empty");
+    return out;
+}
+
+ThermalFact thermal_from(const JsonNode& entry, const std::string& where) {
+    reject_unknown_keys(entry, {"rth_ja", "tj_max", "rds_on", "eff", "package", "cite", "pour"}, where);
+    ThermalFact fact;
+    fact.rth_ja = number_of(entry, "rth_ja", where, true);
+    fact.tj_max = number_of(entry, "tj_max", where, true);
+    fact.rds_on = number_of(entry, "rds_on", where, false);
+    fact.eff = number_of(entry, "eff", where, true);
+    if (fact.eff > 1) refuse(where + ": eff must not exceed 1");
+    fact.package = text_required(entry, "package", where);
+    fact.cite = text_required(entry, "cite", where);
+    if (object_field(entry, "pour")) {
+        const JsonNode& pour = object_required(entry, "pour", where);
+        const std::string pour_where = where + " pour";
+        reject_unknown_keys(pour, {"rth_ja", "cite", "evidence"}, pour_where);
+        fact.pour = ThermalPourFact{number_of(pour, "rth_ja", pour_where, true), text_required(pour, "cite", pour_where),
+                                    text_required(pour, "evidence", pour_where)};
+    }
+    return fact;
+}
+
+ThermalCopperFact thermal_copper_from(const JsonNode& entry, const std::string& where) {
+    reject_unknown_keys(entry, {"need", "field"}, where);
+    ThermalCopperFact fact;
+    const JsonNode& need = object_required(entry, "need", where);
+    const std::string need_where = where + " need";
+    reject_unknown_keys(need, {"min_vias", "radius_mm", "pour_layers"}, need_where);
+    fact.need = ThermalNeedFact{count_of(need, "min_vias", need_where), number_of(need, "radius_mm", need_where, true),
+                                texts_of(need, "pour_layers", need_where)};
+    const JsonNode& field = object_required(entry, "field", where);
+    const std::string field_where = where + " field";
+    reject_unknown_keys(field, {"via_offsets_mm", "max_vias", "pour_box_mm", "pour_layers", "cite"}, field_where);
+    fact.field.via_offsets_mm = offsets_of(field, "via_offsets_mm", field_where);
+    fact.field.max_vias = count_of(field, "max_vias", field_where);
+    fact.field.pour_box_mm = box_of(field, "pour_box_mm", field_where);
+    fact.field.pour_layers = texts_of(field, "pour_layers", field_where);
+    fact.field.cite = text_required(field, "cite", field_where);
+    return fact;
+}
+
+EpViaFact ep_via_from(const JsonNode& entry, const std::string& where) {
+    reject_unknown_keys(entry, {"min_pads", "radius_mm"}, where);
+    return EpViaFact{count_of(entry, "min_pads", where), number_of(entry, "radius_mm", where, true)};
+}
+
+IsolationFact isolation_from(const JsonNode& entry, const std::string& where) {
+    reject_unknown_keys(entry, {"margin_mm"}, where);
+    return IsolationFact{number_of(entry, "margin_mm", where, true)};
+}
+
+RegulatorEnableFact enable_from(const JsonNode& entry, const std::string& where) {
+    reject_unknown_keys(entry, {"en_pin", "vin_pins", "ihys_a", "recommended_max_v", "threshold_v"}, where);
+    RegulatorEnableFact fact;
+    const bool pins = object_field(entry, "en_pin") || object_field(entry, "vin_pins");
+    const bool network = object_field(entry, "ihys_a") || object_field(entry, "recommended_max_v") || object_field(entry, "threshold_v");
+    if (!pins && !network) refuse(where + " must state en_pin with vin_pins or ihys_a with recommended_max_v and threshold_v");
+    if (pins) fact.direct = RegulatorDirectEnable{text_required(entry, "en_pin", where), texts_of(entry, "vin_pins", where)};
+    if (network)
+        fact.network = RegulatorEnableNetwork{number_of(entry, "ihys_a", where, true),
+                                              number_of(entry, "recommended_max_v", where, true),
+                                              number_of(entry, "threshold_v", where, true)};
+    return fact;
+}
+
+RegulatorFact regulator_from(const JsonNode& entry, const std::string& where) {
+    reject_unknown_keys(entry, {"kind", "limit_a", "eff", "in_pin", "out_pin", "iset_pin", "ilim_num", "note", "fb_vref",
+                                "iset_v", "enable"}, where);
+    RegulatorFact fact;
+    fact.kind = text_required(entry, "kind", where);
+    fact.limit_a = optional_number_of(entry, "limit_a", where);
+    fact.eff = number_of(entry, "eff", where, true);
+    if (fact.eff > 1) refuse(where + ": eff must not exceed 1");
+    fact.in_pin = text_required(entry, "in_pin", where);
+    fact.out_pin = text_required(entry, "out_pin", where);
+    fact.iset_pin = text_of(entry, "iset_pin", where);
+    fact.ilim_num = number_of(entry, "ilim_num", where, true);
+    fact.note = text_required(entry, "note", where);
+    fact.fb_vref = optional_number_of(entry, "fb_vref", where);
+    fact.iset_v = optional_number_of(entry, "iset_v", where);
+    if (object_field(entry, "enable")) fact.enable = enable_from(object_required(entry, "enable", where), where + " enable");
+    return fact;
+}
+
+ZenerFact zener_from(const JsonNode& entry, const std::string& where) {
+    reject_unknown_keys(entry, {"vz_min_v", "vz_max_v", "izt_a", "zzt_ohm"}, where);
+    ZenerFact fact{number_of(entry, "vz_min_v", where, true), number_of(entry, "vz_max_v", where, true),
+                   number_of(entry, "izt_a", where, true), number_of(entry, "zzt_ohm", where, true)};
+    if (!(fact.vz_min_v < fact.vz_max_v)) refuse(where + ": vz_min_v must be below vz_max_v");
+    return fact;
+}
+
+ReferencePinFact reference_pin_from(const JsonNode& entry, const std::string& where) {
+    reject_unknown_keys(entry, {"vref1_pin", "vref2_pin"}, where);
+    ReferencePinFact fact{text_required(entry, "vref1_pin", where), text_required(entry, "vref2_pin", where)};
+    if (fact.vref1_pin == fact.vref2_pin) refuse(where + ": vref1_pin and vref2_pin must differ");
+    return fact;
+}
+
+ControlGridFact control_grid_from(const JsonNode& entry, const std::string& where) {
+    reject_unknown_keys(entry, {"button_gap_mm"}, where);
+    return ControlGridFact{number_of(entry, "button_gap_mm", where, true)};
+}
+
+ModelOverrideFact model_override_from(const JsonNode& entry, const std::string& where) {
+    reject_unknown_keys(entry, {"footprint", "path", "rotation_z_deg"}, where);
+    ModelOverrideFact fact;
+    fact.footprint = text_required(entry, "footprint", where);
+    fact.path = text_required(entry, "path", where);
+    const JsonNode* turn = object_field(entry, "rotation_z_deg");
+    if (!turn || turn->kind != JsonKind::Number || !std::isfinite(turn->number_value))
+        refuse(where + ": rotation_z_deg must be a number");
+    fact.rotation_z_deg = turn->number_value;
+    return fact;
+}
+
+FootprintAliasFact footprint_alias_from(const JsonNode& entry, const std::string& where) {
+    reject_unknown_keys(entry, {"footprint"}, where);
+    return FootprintAliasFact{text_required(entry, "footprint", where)};
+}
+
+bool plain_folder_name(const std::string& name) {
+    return name != "." && name != ".." && std::filesystem::path(name).filename() == std::filesystem::path(name);
+}
+
+template <typename Fact, typename Read>
+std::map<std::string, Fact> section_from(const JsonNode& root, const std::filesystem::path& file, const std::string& section,
+                                         bool names_a_part, Read read) {
+    const JsonNode* node = object_field(root, section);
+    if (!node || node->kind != JsonKind::Object) refuse(file.string() + " needs an object named " + section);
+    std::map<std::string, Fact> out;
+    for (const auto& [key, entry] : node->object_value) {
+        const std::string where = file.string() + " " + section + " " + key;
+        if (entry.kind != JsonKind::Object) refuse(where + " must be an object");
+        if (names_a_part && (!plain_folder_name(key) || !std::filesystem::is_directory(file.parent_path() / key)))
+            refuse(where + " names a part with no folder in " + file.parent_path().string());
+        out.emplace(key, read(entry, where));
+    }
+    return out;
+}
+
 ConnectorFacts connectors_from(const JsonNode& section, const std::map<std::string, PartClass>& classes,
                                const std::string& file) {
     ConnectorFacts out;
@@ -339,7 +556,7 @@ ConnectorFacts load_connector_facts(const std::filesystem::path& parts_directory
 PartFacts load_part_facts(const std::filesystem::path& file) {
     if (!std::filesystem::is_regular_file(file)) refuse("the part facts file is missing: " + file.string());
     const JsonNode root = parse_json_file(file.string());
-    reject_unknown_keys(root, {"schema", "classes", "stated_heights", "connectors"}, file.string());
+    reject_unknown_keys(root, {"schema", "classes", "stated_heights", "connectors", "thermal", "thermal_copper", "ep_vias", "isolation", "regulators", "zeners", "reference_pins", "control_grid", "model_overrides", "footprint_aliases"}, file.string());
     if (require_string(root, "schema", false, "part facts") != facts_schema)
         refuse(file.string() + " schema must be " + facts_schema);
     PartFacts facts;
@@ -369,6 +586,16 @@ PartFacts load_part_facts(const std::filesystem::path& file) {
     const JsonNode* connectors = object_field(root, "connectors");
     if (!connectors || connectors->kind != JsonKind::Object) refuse(file.string() + " needs an object named connectors");
     facts.connectors = connectors_from(*connectors, facts.classes, file.string());
+    facts.thermal = section_from<ThermalFact>(root, file, "thermal", true, thermal_from);
+    facts.thermal_copper = section_from<ThermalCopperFact>(root, file, "thermal_copper", true, thermal_copper_from);
+    facts.ep_vias = section_from<EpViaFact>(root, file, "ep_vias", true, ep_via_from);
+    facts.isolation = section_from<IsolationFact>(root, file, "isolation", true, isolation_from);
+    facts.regulators = section_from<RegulatorFact>(root, file, "regulators", true, regulator_from);
+    facts.zeners = section_from<ZenerFact>(root, file, "zeners", true, zener_from);
+    facts.reference_pins = section_from<ReferencePinFact>(root, file, "reference_pins", true, reference_pin_from);
+    facts.control_grid = section_from<ControlGridFact>(root, file, "control_grid", true, control_grid_from);
+    facts.model_overrides = section_from<ModelOverrideFact>(root, file, "model_overrides", true, model_override_from);
+    facts.footprint_aliases = section_from<FootprintAliasFact>(root, file, "footprint_aliases", false, footprint_alias_from);
     return facts;
 }
 

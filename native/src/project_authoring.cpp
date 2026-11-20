@@ -21,19 +21,19 @@ std::vector<std::filesystem::path> board_folders(const std::filesystem::path& re
     std::sort(folders.begin(),folders.end());
     return folders;
 }
-ConnectorAuthoringPolicy connector_policy_of(const BoardModule& module) {
-    ConnectorAuthoringPolicy p;
+ConnectorAuthoringPolicy connector_policy_of(const BoardDefinition& board) {
+    ConnectorAuthoringPolicy p;const ModuleDefinition& module=board.module_definition;
     p.part=module.connector_part;
     p.module_draw_connector=module.draw.connector;p.module_draw_rail=module.draw.rail;
     p.module_draw_note=module.draw.note;p.module_draw_a=module.draw.amps;
     p.sdio_level_v=module.sdio_level_v;p.sd_bus=module.sd_bus;
-    for(const BoardPair& pair:module.pairs)
+    for(const auto* pairs:{&module.pairs,&board.module.pairs})for(const BoardPair& pair:*pairs)
         p.pairs.push_back({pair.positive,pair.negative,pair.kind,pair.impedance?std::optional<int32_t>(*pair.impedance):std::nullopt});
-    for(const BoardLoad& load:module.loads)p.loads.push_back({load.connector,load.rail,load.amps,load.note});
+    for(const BoardLoad& load:board.module.loads)p.loads.push_back({load.connector,load.rail,load.amps,load.note});
     return p;
 }
 ConnectorAuthoringPolicy project_connector_policy(const std::filesystem::path& project_root) {
-    return connector_policy_of(load_board(project_root).module);
+    return connector_policy_of(load_board(project_root));
 }
 namespace {
 ProjectSubsystemDefinition definition(const std::string& project,const std::string& name,const ProjectAuthoringInput& input) {
@@ -62,12 +62,15 @@ CircuitSheetIr author_som_connector(const std::string& ref,const std::string& na
     CircuitAuthor c(name,title,context);AuthoringPartSelection selection;selection.ref=ref;c.use_part(policy.part,selection);
     for(const auto* pin:{"101","102","103","104"})c.nc({ref+"."+pin});
     std::set<std::string> seen;
+    const auto bound=[&](const std::string& som_net){
+        for(const auto* map:{&mapping.rebound_som_rails,&mapping.vcco_rail_map,&mapping.function_map,&mapping.pudc_straps}) {
+            auto i=map->find(som_net);if(i!=map->end())return i->second;
+        }
+        return som_net;
+    };
     for(const auto& [pin,som_net]:pins) {
         if(mapping.isolated_som_rails.count(som_net)){c.nc({ref+"."+pin});continue;}
-        auto net=som_net;
-        for(const auto* map:{&mapping.rebound_som_rails,&mapping.vcco_rail_map,&mapping.function_map,&mapping.pudc_straps}) {
-            auto i=map->find(som_net);if(i!=map->end()){net=i->second;break;}
-        }
+        const auto net=bound(som_net);
         const auto cls=CircuitAuthor::classify(net);
         if(cls=="power"||cls=="ground")c.net(net,{ref+"."+pin});
         else {
@@ -82,7 +85,7 @@ CircuitSheetIr author_som_connector(const std::string& ref,const std::string& na
     if(std::all_of(policy.sd_bus.begin(),policy.sd_bus.end(),has))for(const auto& s:policy.sd_bus) {
         AuthoringPort t;t.kind="sd_bus";t.bus="SDIO";t.level_v=policy.sdio_level_v;c.port_type(s,t);
     }
-    if(ref==policy.module_draw_connector)c.draws(policy.module_draw_rail,policy.module_draw_a,policy.module_draw_note);
+    if(ref==policy.module_draw_connector)c.draws(bound(policy.module_draw_rail),policy.module_draw_a,policy.module_draw_note);
     auto loads=policy.loads;
     std::stable_sort(loads.begin(),loads.end(),[](const ConnectorAuthoringLoad& a,const ConnectorAuthoringLoad& b){return a.rail<b.rail;});
     for(const auto& l:loads)if(l.connector==ref&&has(l.rail))c.draws(l.rail,l.amps,l.note);
@@ -93,9 +96,9 @@ CircuitSheetIr author_project_subsystem(const std::string& project,const std::st
     const SubsystemMeta meta(metadata(d,input));
     if(!d.connector_ref.empty()) {
         if(input.project_root.empty()&&(!input.som||!input.mapping))throw CircuitAuthoringError("SoM authoring needs project_root or explicit som and mapping");
-        const auto som=input.som?*input.som:load_som_interface(input.project_root/"som_interface.json");
-        const auto map=input.mapping?*input.mapping:link_mapping_from_json(parse_json_file((input.project_root/"som_mapping.json").string()));
-        const auto policy=input.connector_policy?*input.connector_policy:input.board?connector_policy_of(input.board->module):project_connector_policy(input.project_root);
+        const auto som=input.som?*input.som:load_som_interface(module_root_of(input.project_root)/module_interface_file);
+        const auto map=input.mapping?*input.mapping:link_mapping_from_json(parse_json_file((input.project_root/"som_mapping.json").string()),input.board?input.board->module_definition.do_not_load_straps:load_board_module(input.project_root).do_not_load_straps);
+        const auto policy=input.connector_policy?*input.connector_policy:input.board?connector_policy_of(*input.board):project_connector_policy(input.project_root);
         CircuitAuthor c(author_som_connector(d.connector_ref,d.name,d.connector_title,som,map,policy,input.context),input.context);
         return meta.finish(c);
     }

@@ -6,7 +6,7 @@
  * regenerate:   PYTHONPATH=. python -m schgen devicetree
  * PS device:    XC7Z020-CLG484 (from the SoM netlist)
  * sources:
- *   contract : carrier/som_interface.json (net <- J pin, same walk as schgen firmware/xdc)
+ *   contract : som/som_interface.json (net <- J pin, same walk as schgen firmware/xdc)
  *   ball map : som/Zynq_SoM.kicad_sch (kicad-cli; PS = reaches no PL ball)
  *   renames  : carrier/som_conn_gen FUNCTION_MAP (MIO -> carrier function net)
  *

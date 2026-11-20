@@ -21,7 +21,7 @@ namespace {
 namespace fs = std::filesystem;
 using namespace schgen;
 
-const std::string board_text = R"({"files": {"stem": "Fixture_Board"}, "root_readme": false, "owned_groups": false})";
+const std::string board_text = R"({"files": {"stem": "Fixture_Board"}, "root_readme": false, "owned_groups": false, "module": {"folder": "som"}})";
 
 void require(bool value, const std::string& message) {
     if (!value) throw std::runtime_error(message);  // Also active under NDEBUG.
@@ -153,6 +153,7 @@ void fixture_contracts(Suite& suite, const fs::path& repo) {
         TempDir root;
         TempDir tmp;
         write(root.path / run_config_file, run_text);
+        write(root.path / "som" / module_file, read(repo / "som" / module_file));
         write(tmp.path / "project.json", config_text);
         write(tmp.path / "board.json", board_text);
         const auto paths = resolve_project_paths(root.path, tmp.path);
@@ -188,6 +189,8 @@ void fixture_contracts(Suite& suite, const fs::path& repo) {
             TempDir root;
             TempDir tmp;
             write(root.path / run_config_file, run_text);
+            write(root.path / "som" / module_file, read(repo / "som" / module_file));
+        write(root.path / "som" / module_file, read(repo / "som" / module_file));
             write(tmp.path / "project.json", invalid_configs[i].first);
             write(tmp.path / "board.json", board_text);
             const auto paths = resolve_project_paths(root.path, tmp.path);
@@ -431,7 +434,8 @@ void repository_contracts(Suite& suite, const fs::path& repo) {
         require(resolve_project_paths(repo, "carrier").project_root == repo / "carrier", "explicit selection did not override environment");
         require(resolve_project_paths(repo, repo / "devkit_mini").project_root == repo / "devkit_mini", "absolute selection changed");
         require(resolve_project_paths(repo, "devkit_mini/../carrier/").project_root == repo / "carrier", "lexical normalization changed");
-        require(carrier.som_interface_file == repo / "carrier/som_interface.json" && carrier.som_schematic == repo / "som/Zynq_SoM.kicad_sch", "SoM paths wrong");
+        require(carrier.som_interface_file == repo / "som/som_interface.json" && carrier.som_schematic == repo / "som/Zynq_SoM.kicad_sch" &&
+                    carrier.som_pcb == repo / "som/Zynq_SoM.kicad_pcb" && carrier.module_root == repo / "som" && carrier.module.connector_part == "DF40C-100DP-0.4V_51", "SoM paths wrong");
         require(carrier.part_catalog_file == repo / "native/catalog.bin" && carrier.fpga_dir == repo / "carrier/fpga", "downstream paths wrong");
         const auto catalogs = project_catalog_paths(repo, "carrier");
         require(carrier.part_catalog_file == catalogs.part_catalog && carrier.circuit_catalog_file == catalogs.circuit_catalog, "catalog paths diverged");
@@ -445,6 +449,10 @@ void repository_contracts(Suite& suite, const fs::path& repo) {
             rejects([&] { resolve_project_paths(repo, bare.path); }, {"board.json", "is missing"});
             write(bare.path / "board.json", R"({"files": {"stem": "Fixture_Board"}, "root_readme": false})");
             rejects([&] { resolve_project_paths(repo, bare.path); }, {"board.json", "field 'owned_groups' is missing"});
+            write(bare.path / "board.json", R"({"files": {"stem": "Fixture_Board"}, "root_readme": false, "owned_groups": false})");
+            rejects([&] { resolve_project_paths(repo, bare.path); }, {"board.json", "field 'module' is missing"});
+            write(bare.path / "board.json", R"({"files": {"stem": "Fixture_Board"}, "root_readme": false, "owned_groups": false, "module": {"folder": "absent_module"}})");
+            rejects([&] { resolve_project_paths(repo, bare.path); }, {"absent_module", "module.json", "is missing"});
         }
         rejects([&] { resolve_project_paths(repo, "missing-project"); }, {"missing-project"});
         rejects([&] { resolve_project_paths(repo, "parts"); }, {"parts/project.json", "missing"});
@@ -548,6 +556,7 @@ void repository_contracts(Suite& suite, const fs::path& repo) {
             write(tmp.path / run_config_file, read(original.repository_root / run_config_file));
             write(copy / "project.json", read(original.project_file));
             write(copy / "board.json", read(original.project_root / "board.json"));
+            write(tmp.path / "som" / module_file, read(original.module_root / module_file));
             write(copy / "sheet_index.json", read(original.sheet_index_file));
             for (const auto& circuit : expected) write(copy / "subsystems" / circuit.name / "circuit.json", read(circuit.path));
             const auto paths = resolve_project_paths(tmp.path, name);

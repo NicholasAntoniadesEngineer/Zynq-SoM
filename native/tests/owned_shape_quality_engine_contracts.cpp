@@ -334,7 +334,7 @@ void pilots(const char* root, const char* catalog) {
     std::vector<CircuitSheetIr> sheets;
     for (const auto& c : circuits) sheets.push_back(c.circuit);
     const auto link = link_sheets(sheets, parse_json_file(paths.som_interface_file.string()),
-        parse_json_file((paths.project_root / "som_mapping.json").string()));
+        parse_json_file((paths.project_root / "som_mapping.json").string()), paths.module.do_not_load_straps);
     require(link.ok(), "live link failed");
     BoardInputOptions options; options.compact_search = true;
     auto in = load_board_inputs(paths, circuits, link,

@@ -63,7 +63,7 @@ struct Replay {
         in.floorplan.project.wired_sheets=strings(field(placement,"wired_sheets"));
         in.floorplan.project.pilot_prox_sheets=strings(field(placement,"pilot_prox_sheets"));
         in.floorplan.compact_search=compact;
-        in.escape_triage=load_escape_triage(root/name);
+        in.escape_triage=load_escape_triage(root/name,load_board_module(root/name).escape_triage,"module.json");
         for(const auto& [s,c]:field(a,"contracts").object_value) in.contracts[s]=c;
         const auto& expected=field(fp,"expected");
         const auto& plan=field(expected,"plan");

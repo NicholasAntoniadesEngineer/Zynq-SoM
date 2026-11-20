@@ -69,7 +69,7 @@ BoardPcbStage prepare_board_pcb(const ProjectPaths& paths,
         sheets.push_back(source.circuit);
     }
     const auto link = link_sheets(sheets, parse_json_file(paths.som_interface_file.string()),
-        parse_json_file((paths.project_root / "som_mapping.json").string()));
+        parse_json_file((paths.project_root / "som_mapping.json").string()), paths.module.do_not_load_straps);
     if (!link.ok()) throw ProjectError(link.report());
     const auto nets = extract_netlist(schematic.empty()?paths.project_root / board_file_name(paths.file_stem, BoardFileKind::Schematic):schematic, extraction);
     validate_board_input_connectivity(circuits,load_sheet_index(paths),nets);

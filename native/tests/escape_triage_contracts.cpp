@@ -38,7 +38,11 @@ struct Scratch {
     ~Scratch() { fs::remove_all(root); }
     PcbEscapeTriage load(const std::string& text) const {
         std::ofstream(root / "escape_triage.json", std::ios::binary) << text;
-        return load_escape_triage(root);
+        return load_escape_triage(root, {}, "no module");
+    }
+    PcbEscapeTriage load_with(const std::string& text, const std::vector<ModuleTriageRule>& module_rules) const {
+        std::ofstream(root / "escape_triage.json", std::ios::binary) << text;
+        return load_escape_triage(root, module_rules, "bench module.json");
     }
 };
 
@@ -50,16 +54,42 @@ std::string row(const std::string& pattern, const std::string& klass, const std:
     return R"({"pattern": ")" + pattern + R"(", "class": ")" + klass + R"(", "note": ")" + note + R"("})";
 }
 
+PcbEscapeTriage real_triage(const fs::path& repository, const char* board) {
+    const auto module = load_board_module(repository / board);
+    return load_escape_triage(repository / board, module.escape_triage, (module_root_of(repository / board) / module_file).string());
+}
+
 void real_files_load(const fs::path& repository) {
-    const auto carrier = load_escape_triage(repository / "carrier");
-    const auto devkit = load_escape_triage(repository / "devkit_mini");
-    require(!carrier.rules.empty(), "carrier has no rules");
-    require(carrier.rules.size() == devkit.rules.size(), "boards differ in rule count");
-    for (std::size_t i = 0; i < carrier.rules.size(); ++i)
-        require(carrier.rules[i].source == devkit.rules[i].source &&
-                    carrier.rules[i].klass == devkit.rules[i].klass &&
-                    carrier.rules[i].note == devkit.rules[i].note,
-                "boards differ at rule " + std::to_string(i));
+    const auto module = load_board_module(repository / "carrier");
+    require(!module.escape_triage.empty(), "the module has no rules");
+    const auto carrier = real_triage(repository, "carrier");
+    const auto devkit = real_triage(repository, "devkit_mini");
+    require(carrier.rules.size() > module.escape_triage.size() && devkit.rules.size() > module.escape_triage.size(),
+            "a board holds rules of its own before the module rules");
+    for (const auto* triage : {&carrier, &devkit}) {
+        const std::size_t first_module = triage->rules.size() - module.escape_triage.size();
+        for (std::size_t i = 0; i < module.escape_triage.size(); ++i)
+            require(triage->rules[first_module + i].source == module.escape_triage[i].pattern &&
+                        triage->rules[first_module + i].klass == module.escape_triage[i].klass &&
+                        triage->rules[first_module + i].note == module.escape_triage[i].note,
+                    "module rule " + std::to_string(i) + " follows the board rules unchanged");
+    }
+    require(carrier.rules.size() > devkit.rules.size(), "the carrier keeps rules for its own function-mapped nets");
+}
+
+void module_rules_follow_board_rules(const Scratch& scratch) {
+    const std::vector<ModuleTriageRule> module_rules = {{"AB.*", "LOW", "module"}, {"MODONLY", "MODERATE", "module only"}};
+    const auto triage = scratch.load_with(rule_file(row("ABC", "GENUINE", "board")), module_rules);
+    require(triage.rules.size() == 3, "board rules then module rules");
+    require(classify_pcb_escape_signal("ABC", {}, triage).basis == "board", "a board rule wins over a module rule");
+    require(classify_pcb_escape_signal("ABD", {}, triage).basis == "module", "a module rule classifies what the board does not");
+    require(classify_pcb_escape_signal("MODONLY", {}, triage).klass == "MODERATE", "a module-only net is classified");
+    const auto module_only = scratch.load_with(rule_file(""), module_rules);
+    require(module_only.rules.size() == 2, "a board file may hold no rules when the module holds them");
+    rejects([&] { scratch.load_with(rule_file(""), {}); }, "'rules' is empty");
+    rejects([&] { scratch.load_with(rule_file(row("A", "LOW", "n")), {{"B", "CRITICAL", "n"}}); }, "module rule 0 pattern B has unknown class CRITICAL");
+    rejects([&] { scratch.load_with(rule_file(row("A", "LOW", "n")), {{"B", "CRITICAL", "n"}}); }, "bench module.json");
+    rejects([&] { scratch.load_with(rule_file(row("A", "LOW", "n")), {{"(unclosed", "LOW", "n"}}); }, "module rule 0 pattern (unclosed");
 }
 
 void first_match_wins(const Scratch& scratch) {
@@ -91,7 +121,7 @@ void function_map_is_applied(const Scratch& scratch) {
 
 void rejections(const Scratch& scratch) {
     const std::string good = row("A", "LOW", "n");
-    rejects([&] { load_escape_triage(scratch.root / "absent"); }, "file is missing");
+    rejects([&] { load_escape_triage(scratch.root / "absent", {}, "no module"); }, "file is missing");
     rejects([&] { scratch.load(R"({"rules": [)" + good + "]}"); }, "missing required field 'schema'");
     rejects([&] { scratch.load(R"({"schema": "schgen.escape_triage/2", "rules": [)" + good + "]}"); }, "schema is not");
     rejects([&] { scratch.load(R"({"schema": "schgen.escape_triage/1"})"); }, "'rules' is missing");
@@ -119,7 +149,7 @@ struct Expectation {
 };
 
 void carrier_classification(const fs::path& repository) {
-    const auto triage = load_escape_triage(repository / "carrier");
+    const auto triage = real_triage(repository, "carrier");
     const std::vector<Expectation> expected = {
         {"HDMI_RX_D0_P", "GENUINE", "TMDS sink lane, 742.5 Mbps/lane at 720p60 \xE2\x80\x94 eye budget is real"},
         {"ZYNQ_HDMI_TX_TMDS_CLK_N", "GENUINE", "TMDS source lane, 742.5 Mbps/lane at 720p60 \xE2\x80\x94 eye budget is real"},
@@ -146,6 +176,14 @@ void carrier_classification(const fs::path& repository) {
     }
 }
 
+void devkit_classification(const fs::path& repository) {
+    const auto triage = real_triage(repository, "devkit_mini");
+    require(classify_pcb_escape_signal("ZYNQ_PS_UART0_TXD", {}, triage).klass == "LOW", "devkit UART net class");
+    require(classify_pcb_escape_signal("ETH_PHY_MDI1_P", {}, triage).klass == "GENUINE", "devkit module net class");
+    require(classify_pcb_escape_signal("IO_L1_P_13", {}, triage).klass == "LOW", "devkit module IO net class");
+    rejects([&] { classify_pcb_escape_signal("HDMI_RX_D0_P", {}, triage); }, "uncurated DF40 signal net");
+}
+
 }
 
 int main(int argc, char** argv) {
@@ -158,8 +196,10 @@ int main(int argc, char** argv) {
         full_match_only(scratch);
         unmatched_net_has_no_default(scratch);
         function_map_is_applied(scratch);
+        module_rules_follow_board_rules(scratch);
         rejections(scratch);
         carrier_classification(repository);
+        devkit_classification(repository);
         std::cout << "escape triage contracts: " << checks << " checks passed\n";
         return 0;
     } catch (const std::exception& error) {

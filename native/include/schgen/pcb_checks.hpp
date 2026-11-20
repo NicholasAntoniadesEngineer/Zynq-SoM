@@ -65,8 +65,9 @@ struct PcbEscapePlan {
     std::string content_key;
 };
 struct PcbEscapePopulation {
-    std::optional<std::map<std::string, int>> netted_contacts;
+    std::map<std::string, int> netted_contacts;
     std::optional<int> genuine_pairs;
+    ModuleReturnPath return_path;
 };
 struct PcbCheckModel {
     double board_w = 0, board_h = 0, origin_x = 25, origin_y = 25;
@@ -242,7 +243,7 @@ std::string pcb_escape_content_key(const PcbCheckModel&, std::string_view interf
 EscapeLaneResult check_escape_lanes(const PcbCheckModel&, const PcbEscapePopulation&,
                                     std::string_view interface_bytes);
 PcbEscapePlan pcb_escape_plan_from_json(const JsonNode&);
-PcbEscapePopulation pcb_escape_population_from_json(const JsonNode& escape);
+PcbEscapePopulation pcb_escape_population_from_json(const JsonNode& escape, const ModuleDefinition& module);
 
 struct ReturnStitchClass { int rank = 0; std::string klass, function; };
 struct ReturnStitchCoverage {
@@ -269,7 +270,7 @@ struct PcbEmittedBoard {
 // classification controls presentation only, never coverage requirements.
 ReturnStitchResult check_return_stitch(const PcbCheckInput&, const ReturnPathResult& v1,
     const std::map<std::string, ReturnStitchClass>& triage,
-    std::string_view interface_bytes, const PcbEmittedBoard* emitted = nullptr);
+    std::string_view interface_bytes, const ModuleReturnPath& pinned, const PcbEmittedBoard* emitted = nullptr);
 std::string pcb_escape_file_parity(const PcbEmittedBoard&,
                                  const std::vector<PcbCheckCopper>& escape);
 

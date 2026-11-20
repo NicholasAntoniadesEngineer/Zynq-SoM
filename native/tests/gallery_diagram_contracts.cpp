@@ -202,7 +202,7 @@ void live_projects(const JsonNode &all, const fs::path &repo) {
         const auto som =
             link_som_nets_from_json(parse_json_file(paths.som_interface_file.string()));
         const auto policy = link_mapping_from_json(
-            parse_json_file((paths.project_root / "som_mapping.json").string()));
+            parse_json_file((paths.project_root / "som_mapping.json").string()), paths.module.do_not_load_straps);
         const auto linked = link_sheets(sheets, som, policy);
         const auto &rows = field(all, "diagrams").array_value;
         const auto item = std::find_if(rows.begin(), rows.end(),
@@ -215,7 +215,8 @@ void live_projects(const JsonNode &all, const fs::path &repo) {
         const auto clone = output / "json-only" / name;
         write(clone / "project.json", read(paths.project_file));
         write(clone / "board.json", read(paths.project_root / "board.json"));
-        write(clone / "som_interface.json", read(paths.som_interface_file));
+        write(output / "json-only" / "som" / module_file, read(paths.module_root / module_file));
+        write(output / "json-only" / "som" / module_interface_file, read(paths.som_interface_file));
         write(clone / "som_mapping.json", read(paths.project_root / "som_mapping.json"));
         for (const auto &c : loaded)
             write(clone / "subsystems" / c.name / "circuit.json", read(c.path));

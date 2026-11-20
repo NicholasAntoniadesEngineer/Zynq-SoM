@@ -1,5 +1,5 @@
 {
-  "schema": "schgen.part_facts/2",
+  "schema": "schgen.part_facts/3",
   "classes": {
     "74xGxx:74LVC1G08": "integrated_circuit",
     "Connector:TestPoint": "test_point",
@@ -92,6 +92,16 @@
     "XT60PW-M": {"mating_face": "+X", "edge_pinned": true, "overmold": false, "pad_row_face_check": false, "description": "XT60 ESC power inlet (horizontal)", "pair_label": "XT60"},
     "ZX-SH1.0-4PWT": {"mating_face": "+Y", "edge_pinned": false, "overmold": false, "pad_row_face_check": false}
   },
+  "thermal": {},
+  "thermal_copper": {},
+  "ep_vias": {},
+  "isolation": {},
+  "regulators": {},
+  "zeners": {},
+  "reference_pins": {},
+  "control_grid": {},
+  "model_overrides": {},
+  "footprint_aliases": {},
   "stated_heights": {
     "Fiducial:Fiducial_1mm_Mask2mm": {
       "mm": 0,

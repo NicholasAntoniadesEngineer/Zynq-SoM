@@ -5,17 +5,8 @@
   "root_readme": true,
   "owned_groups": true,
   "module": {
-    "connector_part": "DF40C-100DP-0.4V_51",
-    "draw": {"connector": "J1", "rail": "+5V_SOM", "amps": 2.15, "note": "SoM module (Zynq+DDR3L+PHYs) ~10 W class at the regulated 4.65 V (P0 rebind) — estimate, refine at bring-up"},
-    "sdio_level_v": 1.8,
-    "sd_bus": ["SDIO_CLK", "SDIO_CMD", "SDIO_D0", "SDIO_D1", "SDIO_D2", "SDIO_D3"],
+    "folder": "som",
     "pairs": [
-      {"positive": "ETH_PHY_MDI0_P", "negative": "ETH_PHY_MDI0_N", "kind": "diff_pair", "impedance": 100},
-      {"positive": "ETH_PHY_MDI1_P", "negative": "ETH_PHY_MDI1_N", "kind": "diff_pair", "impedance": 100},
-      {"positive": "ETH_PHY_MDI2_P", "negative": "ETH_PHY_MDI2_N", "kind": "diff_pair", "impedance": 100},
-      {"positive": "ETH_PHY_MDI3_P", "negative": "ETH_PHY_MDI3_N", "kind": "diff_pair", "impedance": 100},
-      {"positive": "STM32_USB_D_P", "negative": "STM32_USB_D_N", "kind": "usb_hs_pair"},
-      {"positive": "USB_D+", "negative": "USB_D-", "kind": "usb_hs_pair"},
       {"positive": "ZYNQ_HDMI_TX_TMDS_CLK_P", "negative": "ZYNQ_HDMI_TX_TMDS_CLK_N", "kind": "tmds_pair"},
       {"positive": "ZYNQ_HDMI_TX_TMDS_0_P", "negative": "ZYNQ_HDMI_TX_TMDS_0_N", "kind": "tmds_pair"},
       {"positive": "ZYNQ_HDMI_TX_TMDS_1_P", "negative": "ZYNQ_HDMI_TX_TMDS_1_N", "kind": "tmds_pair"},
